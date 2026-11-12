@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/doc_picker.dart';
 import 'package:notlar/core/utils/markdown.dart';
@@ -10,6 +12,8 @@ import 'package:notlar/features/notes/data/import_service.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/file_use_sheet.dart';
+import 'package:notlar/features/notes/presentation/viewers/transcript_screen.dart';
+import 'package:notlar/l10n/generated/app_localizations.dart';
 
 /// P54 (kullanıcı 2026-11-12: ".md desteklenmeli notlarda"): .md dosyası
 /// her giriş yolunda nota/ek olarak okunur gelir.
@@ -90,5 +94,46 @@ void main() {
     expect(has('android:mimeType="text/markdown"'), isTrue);
     expect(has('android:mimeType="text/x-markdown"'), isTrue);
     expect(has(r'.*\\.md"'), isTrue);
+  });
+
+  test('P54b: .md\'den yeni not başlığı # başlık, yoksa dosya adı', () {
+    expect(markdownTitle('plan.md', '\n# Haftalık plan\n- bir'), 'Haftalık plan');
+    expect(markdownTitle('yapilacak.markdown', '- bir'), 'yapilacak');
+    expect(markdownTitle('a.md', 'düz yazı\n# sonra'), 'a');
+  });
+
+  test('P54b: yeni not gövdesi başlık satırını tekrar etmez', () {
+    expect(markdownBodyWithoutTitle('Plan\nbir\niki', 'Plan'), 'bir\niki');
+    expect(markdownBodyWithoutTitle('bir\niki', 'Plan'), 'bir\niki');
+  });
+
+  testWidgets('P54b: .md okuma ekranının başlığı dosya adı, "Transkript" değil', (
+    tester,
+  ) async {
+    final a = markdownAttachment('plan.md', utf8.encode('# Plan\n- bir'));
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: TranscriptScreen(transcript: a, onCreateNote: (_) async {}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final appBar = find.byType(AppBar);
+    expect(
+      find.descendant(of: appBar, matching: find.text('plan.md')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: appBar, matching: find.text('Markdown')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: appBar, matching: find.text('Transkript')),
+      findsNothing,
+    );
   });
 }

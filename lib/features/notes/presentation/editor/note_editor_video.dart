@@ -257,11 +257,16 @@ extension _EditorVideo on _NoteEditorScreenState {
     final name = media.isWebVideo
         ? media.fileName
         : media.fileName.replaceAll(RegExp(r'\.[A-Za-z0-9]{1,5}$'), '');
-    final title = context.l10n.transcriptNoteTitle(name);
+    // .md eki (P54b): başlık `# başlık` (yoksa dosya adı), "transkript" değil;
+    // okunur metnin başındaki aynı satır gövdede tekrar etmez.
+    final markdown = isMarkdownFile(media.fileName, mime: media.mimeType);
+    final title = markdown
+        ? markdownTitle(media.fileName, media.text)
+        : context.l10n.transcriptNoteTitle(name);
     final id = await repo.createNote(
       NoteType.text,
       title: title,
-      body: text.trim(),
+      body: (markdown ? markdownBodyWithoutTitle(text, title) : text).trim(),
       folderId: _note?.folderId,
     );
     if (mounted) unawaited(context.pushNote(noteRoutePath(id)));
