@@ -7,7 +7,7 @@ ekler/PDF → görünüm → takvim/hesap. Sorun görünce adım numarasıyla bi
 **[K]** gerçek kalem · **[2]** ikinci hesap · **[S]** ses/mikrofon · köşeli parantez sonu = eski madde no.
 
 Kural: tura yeni adım girerse doğrulanmış bir adım çıkar. Tavan: cihaz başına 40 adım
-(bugün telefon 40, tablet 27, web 20). Geçen adım `[x]` olur, tarihle.
+(bugün telefon 40, tablet 28, web 23). Geçen adım `[x]` olur, tarihle.
 
 ## A. Telefon (Mi Note 10 Lite, parmak; ~40 dk, iki oturuma bölünebilir)
 
@@ -93,6 +93,7 @@ Kural: tura yeni adım girerse doğrulanmış bir adım çıkar. Tavan: cihaz ba
 25. [ ] Tablette telefon düzeni: `adb shell wm size 1080x2400; adb shell wm density 420` (iş bitince `wm size reset; wm density reset`). [Ölçüm kapısı]
 26. [ ] Ölçüm: `tool/perf/ab_klavye.py` ve `ab_kalem.py` (boş + dolu sayfa): UI/LAYOUT ms tabana göre ≤ +%20. [F59.5]
 27. [ ] Kalem akışı kararı (K-O5) uygulanırsa: kalem kipi açık, sayfa çevirince ayar korunur. [P15]
+28. [ ] Ayarlar → yazı boyutu en büyük (≈ 1,3×), telefon düzeninde: ana ekranın takvim şeridinde gün adları kesilmez (küçülür); menüler, ayarlar, not ekranı taşmaz. Sabit PDF'in çubuğu bu boyda taşıyorsa yaz (bilinen, sabit ek çubuğu kararı kullanıcıda). [DENEYIM F80.2]
 
 ## C. Web (Chrome; ~15 dk)
 
@@ -116,6 +117,9 @@ Kural: tura yeni adım girerse doğrulanmış bir adım çıkar. Tavan: cihaz ba
 18. [ ] 200+ notla kaydırma akıcı (Chrome performans sekmesi); takvim zemini açıkken de. [#50, #97]
 19. [ ] Sabit PDF sürekli dikey kaydırma web'de: 300 sayfa fırlatma, sağ altta sayfa hapı. [F65.8]
 20. [ ] Konsol: `RenderFollowerLayer` uyarısı yalnız debug'da; yayın derlemesinde yok. [Bilinen sınır]
+21. [ ] Tab ile gez: odaklı düğme/kart çevresinde 2 dp vurgu rengi halka; sıra arama → klasör şeridi → kartlar; fareyle tıklayınca halka kaybolur, metin kutusunda halka yok. [DENEYIM F80.3]
+22. [ ] Ctrl+/ kısayol penceresi: listedeki her tuş çalışır (Ctrl+N, Ctrl+K, Ctrl+\, Ctrl+,, Alt+1…8, Alt+Home, Alt+↑/↓); geniş pencerede bölüm başlığının yanında yarım kalan çizgi yok. [DENEYIM F80.3]
+23. [ ] Koyu tema (Adaçayı, Lavanta, Krem, Saman sırayla): kartlar masadan ayrılır; PDF'li kartın kapağı göz almaz; not menüsünde "Sil" satırı dolu kırmızı blok değil. [DENEYIM F80.1]
 
 ## D. F60.6 taraması — ek sayacı/rozet tutarlılığı (2026-11-11)
 
