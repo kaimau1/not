@@ -294,6 +294,7 @@ class _ReorderableNoteCell extends StatelessWidget {
 
 class _SearchField extends ConsumerWidget {
   const _SearchField({
+    this.compact = false,
     required this.controller,
     this.focusNode,
     this.trailing = const [],
@@ -306,6 +307,9 @@ class _SearchField extends ConsumerWidget {
   /// 2026-11-06: "üst arama çubuğu profil ve 3 noktayı da kapsasın, güzel
   /// bir alan olsun" — üç ayrı parça yerine tek hap.
   final List<Widget> trailing;
+
+  /// Dar liste bölmesi (F67.3): AI anahtarı ve süz gizli — ikisi de ⋮'te.
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -407,28 +411,37 @@ class _SearchField extends ConsumerWidget {
             // gizli — üst çubukta yer aramaya kalsın, ipucu kesilmesin.
             // HEP GÖRÜNÜR (kullanıcı bulgusu 2026-11-06: "boştayken AI tuşu
             // görünmüyor"). TextFieldTapRegion: dokunuş odağı düşürmesin.
-            TextFieldTapRegion(
-              child: _SemanticToggle(
-                on: semantic,
-                onTap: () =>
-                    ref.read(semanticSearchEnabledProvider.notifier).toggle(),
+            Offstage(
+              offstage: compact,
+              child: TextFieldTapRegion(
+                child: _SemanticToggle(
+                  on: semantic,
+                  onTap: () =>
+                      ref.read(semanticSearchEnabledProvider.notifier).toggle(),
+                ),
               ),
             ),
             // AYIRAÇ: AI anahtarı ile düz simgeler (süz, hesap, ⋮) arası
             // (kullanıcı örneği 2026-11-06).
-            Container(
-              width: 1,
-              height: 22,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              color: AppTokens.of(context).hairline,
+            Offstage(
+              offstage: compact,
+              child: Container(
+                width: 1,
+                height: 22,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                color: AppTokens.of(context).hairline,
+              ),
             ),
             // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
             // kişiselleştirmede gizlenebilir.
-            const Customizable(
-              id: UiItem.homeFilter,
-              child: Padding(
-                padding: EdgeInsetsDirectional.only(start: 2),
-                child: HomeFilterButton(),
+            Offstage(
+              offstage: compact,
+              child: const Customizable(
+                id: UiItem.homeFilter,
+                child: Padding(
+                  padding: EdgeInsetsDirectional.only(start: 2),
+                  child: HomeFilterButton(),
+                ),
               ),
             ),
             ...trailing,

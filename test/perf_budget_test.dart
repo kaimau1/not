@@ -559,10 +559,25 @@ void main() {
   testWidgets('S12: 1280×800 bölünmüş — açık nota 20 karakter + kayıt', (
     tester,
   ) async {
+    // Hepsi bugün düzenlenmiş: kayıt notu başka tarih bölümüne taşımasın
+    // (bölüm değişimi bütün ızgarayı yeniden dizer — ölçülen o değil).
+    final now = DateTime.now();
     final all = [
-      _text,
+      Note(
+        id: 'n',
+        type: NoteType.text,
+        title: 'Kısa',
+        body: 'yazı',
+        updatedAt: now,
+      ),
       for (var i = 0; i < 12; i++)
-        Note(id: 'x$i', type: NoteType.text, title: 'Not $i', body: 'gövde $i'),
+        Note(
+          id: 'x$i',
+          type: NoteType.text,
+          title: 'Not $i',
+          body: 'gövde $i',
+          updatedAt: now,
+        ),
     ];
     final list = StreamController<List<Note>>.broadcast();
     addTearDown(list.close);
@@ -585,13 +600,72 @@ void main() {
     expect(find.byType(NoteCard), findsWidgets);
     await tester.tap(find.widgetWithText(TextField, 'yazı').first);
     await tester.pump(const Duration(milliseconds: 400));
+    // Yazarken + kayıt (2 sn boşluk): liste açık notun ESKİ örneğini tutar.
     final c = await _count(() async {
       await _type(tester, 'yazı');
-      await tester.pump(const Duration(seconds: 4));
+      await tester.pump(const Duration(milliseconds: 2500));
     });
     expect(repo.updateNoteCalls, greaterThan(0));
+    // Yazma durunca (son tuştan 3 sn) tutma bırakılır: yalnız o kart.
+    final after = await _count(() async {
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump(const Duration(seconds: 1));
+    });
     _expectBudget('S12', {
       'dashboard_kurulum': c['DashboardScreen'] ?? 0,
+      'note_card': c['NoteCard'] ?? 0,
+      'durunca_dashboard_kurulum': after['DashboardScreen'] ?? 0,
+      'durunca_note_card': after['NoteCard'] ?? 0,
+    });
+    final card = tester
+        .widgetList<NoteCard>(find.byType(NoteCard))
+        .firstWhere((w) => w.note.id == 'n');
+    expect(card.note.body, startsWith('yazı' 'a'), reason: 'kart güncel');
+    await endEditor(tester);
+  });
+
+  // F68.2 kapısı: ızgara girdisi (liste örneği, sütun, kipler) değişmeyen bir
+  // gezinme panoyu kurmamalı — kurarsa gövdeyi bölmenin kanıtı budur.
+  testWidgets('S12b: 1280×800 bölünmüş — açık nottan başka nota geç', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final all = [
+      for (var i = 0; i < 13; i++)
+        Note(
+          id: 'x$i',
+          type: NoteType.text,
+          title: 'Not $i',
+          body: 'gövde $i',
+          updatedAt: now,
+        ),
+    ];
+    final repo = _LiveRepo(FakeFirebaseFirestore());
+    final col = repo.db.collection('users').doc('u').collection('notes');
+    await col.doc('x3').set(all[3].toMap());
+    await col.doc('x5').set(all[5].toMap());
+    await _pumpHome(
+      tester,
+      size: const Size(1280, 800),
+      notes: Stream.value(all),
+      location: '/note/x3',
+      repo: repo,
+    );
+    await tester.pump(const Duration(seconds: 1));
+    final router = GoRouter.of(tester.element(find.byType(DashboardScreen)));
+    final c = await _count(() async {
+      router.go('/note/x5');
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 1));
+    });
+    expect(
+      tester.widget<NoteEditorScreen>(find.byType(NoteEditorScreen)).noteId,
+      'x5',
+    );
+    _expectBudget('S12b', {
+      'dashboard_kurulum': c['DashboardScreen'] ?? 0,
+      'hucre': c['_ReorderableNoteCell'] ?? 0,
       'note_card': c['NoteCard'] ?? 0,
     });
     await endEditor(tester);

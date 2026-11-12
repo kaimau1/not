@@ -71,7 +71,7 @@ Gözetimsiz yürütmenin sırası ve kuralları: `OTOMASYON.md`.
 | 65 | Ekler: yerleşim, çubuklar, yükleme güvenilirliği | Bekliyor | | KALEM_PLANI K6–K7 burada |
 | 66 | Telefon: ana ekran ve not ekranı yoğunluğu | Bekliyor | | |
 | 67 | Tablet ve geniş ekran | Bekliyor | | |
-| 68 | Liste ve senkron yükü | Bekliyor | | AKICILIK F22.4 burada |
+| 68 | Liste ve senkron yükü | Sürüyor (F68.1 bitti, F68.2 kısmen — 2026-11-12) | | AKICILIK F22.4 burada |
 | 69 | Doğrulama turu ve kapanış | Bekliyor | | |
 | 70 | Yazım düzeltici v2 (baştan) | Bekliyor | | Opus |
 | 71 | Güvenlik denetimi ve altyapısı | Bitti (cihazda/yayında doğrulanmadı; KARAR: yedek şifresi) | 2026-11-11 | rapor `docs/guvenlik_denetimi.md`; 9 bulgu düzeltildi, açık kritik/yüksek yok |
@@ -1053,12 +1053,12 @@ tur `telefon-*.png`.
   `telefon-uzun 393×851`. Klavyeli hâl: `TOUR_KEYBOARD=300` → `viewInsets.bottom`. Çıkan
   görüntülerde taşma/sıkışma madde olarak listelenir.
   **Yapıldı (2026-11-11, P07):** 5 boyut (+`telefon-yatay 851×393`), `TOUR_KEYBOARD`, `TOUR_SIZES` süzgeci. ana/n1/n4/e-pdf-sabit 5 boyutta + telefon-yatay klavyeli (220): taşma istisnası YOK. Göze çarpan: telefon-yatay+klavye'de yazı alanı ~70 dp (üst çubuk + hızlı satır) → F67.4 kapsamı; telefon-yatay ana ekranda takvim + zamanı gelen şeridi ~130 dp yiyor.
-- [ ] **F67.3 Bölünmüş görünümde liste bölmesi (B15).** Liste bölmesi < 420 dp iken:
+- [x] **F67.3 Bölünmüş görünümde liste bölmesi (B15).** *(2026-11-12, P18: `kNarrowListPane` < 420 dp → takvim/zamanı gelen şeridi Offstage, arama hapında AI+süz ⋮ levhasına, mikrofon gizli. Yapılmadı: "+" liste başlığına taşınmadı (sabah bakılacak). Tablette doğrulanmadı.)* Liste bölmesi < 420 dp iken:
   takvim şeridi ve zamanı gelen şeridi çizilmez (tam ekran listede durur), arama hapı
   kısalır (AI hapı ve süz ⋮'e iner), "+"/mikrofon yüzen düğmeleri yerine liste başlığında
   tek "+" (rayın çekmece olduğu durumda). Ağaç şekli sabit kalsın (`Offstage`/koşullu
   sliver, State korunur — HAFIZA "Tek liste örneği").
-- [ ] **F67.4 Yatay + klavye yükseklik bütçesi.** 1024×640 dp, klavye 300 dp: görünür
+- [x] **F67.4 Yatay + klavye yükseklik bütçesi.** *(2026-11-12, P18: `ShortKeyboardBarHide` alt çubuğu kararlı klavye boşluğuyla tek adımda gizler (Offstage), sabit medya en küçük, pencere < 480 dp üst çubuk 40 dp; tur matepad-yatay+klavye300 yazı alanı 73 → 197 dp. ≥ 873 dp pencerede bağlanmıyor (S17 bütçesi). Tablette doğrulanmadı.)* 1024×640 dp, klavye 300 dp: görünür
   içerik ≥ 200 dp olmalı. Bugünkü kesintiler: üst çubuk 48 + hızlı satır + alt çubuk 50 +
   (sabit ek çubuğu 40). `WindowHeight.short` (klavye sonrası kalan < 480) iken: alt çubuk
   gizli (hızlı satır yeter), üst çubuk 40 dp, sabit bölme en küçük boyda. Boy değişimi TEK
@@ -1083,7 +1083,7 @@ tur `telefon-*.png`.
 `openNoteIdsProvider`), `dashboard_screen.dart` `build`, `dashboard_slivers.dart`,
 `AKICILIK_PLANI.md` Faz 21–22, `tool/perf/prof_save.py`, `ab_liste.py`.
 
-- [ ] **F68.1 Açık notun kartı yazarken beklesin (B8).** Bölünmüş görünümde liste
+- [x] **F68.1 Açık notun kartı yazarken beklesin (B8).** *(2026-11-12, P19: `heldNotePreviewProvider` (kimlik → değişiklik öncesi örnek, editörün `_mutate`'inden; 3 sn tek seferlik `Timer`, kapanışta/anında kayıtta bırakılır) → `filteredNotesProvider` tutulan örneği verir. S12 kırmızı 1/13 → yazarken+kayıt 0/0, durunca pano 1 / kart 1. Eski "13 kart" ölçüm artığıydı: kayıt notu "Bugün" bölümüne taşıyıp ızgarayı yeniden diziyordu (düzenek artık hepsi bugün). Cihazda doğrulanmadı.)* Bölünmüş görünümde liste
   görünürken, editörü açık ve son 3 sn içinde değişmiş notun listeye giden örneği TUTULUR
   (sıralama tutmasının içerik karşılığı: `heldNotePreviewProvider`, not kimliği → tutulan
   örnek). Yazma 3 sn durunca ya da not kapanınca bırakılır (tek seferlik `Timer`; editörün
@@ -1092,7 +1092,7 @@ tur `telefon-*.png`.
   *Tuzak:* tutulan örnek YALNIZ listeye gider; depoya/editöre/hatırlatıcı servisine değil
   (HAFIZA `home_snapshot` tuzağıyla aynı sınıf).
   *Kabul:* S12 (yazarken `DashboardScreen` kurulumu 0; durunca ≤ 1 kart).
-- [ ] **F68.2 Pano gövdesini böl (ölçüm kapılı).** F68.1'den sonra tablette not kapanış
+- [ ] **F68.2 Pano gövdesini böl (ölçüm kapılı).** *(2026-11-12, P19 — KISMEN, sabah bakılacak: cihazsız kanıtı üretilen tek boşa kurulum düzeltildi — açık nottan başka nota geçişte `DashboardPaneScope` çapa notu değişince bütün pano kuruluyordu (yeni bütçe S12b: pano 1 / hücre 13 → 0 / 0; çapa artık bildirim sebebi değil). Gövdeyi üçe bölme YAZILMADI — üretilemedi: S12/S12b'de girdisi değişmeyen pano kurulumu kalmadı; yatay bölünmüşte not aç/kapa sütun sayısını değiştiriyor (meşru yeniden dizim), kapı koşulu "tablette kapanış karesi > 33 ms" cihaz ölçümü ister. Cihazda `ab_klavye.py` tablet evresi > 33 ms verirse bölme ayrı iş.)* F68.1'den sonra tablette not kapanış
   karesi hâlâ > 33 ms ise: `dashboard_screen.dart` `build`'in üç parçası ayrı widget:
   başlık yığını, klasör şeridi, ızgara. Her biri kendi `ref.watch` kümesiyle. Izgara girdisi
   (sıralı kimlikler + sütun sayısı) değişmedikçe `sliverBalancedNoteColumns` ve
@@ -1193,7 +1193,7 @@ Numaralar ait oldukları fazı gösterir; o fazın "Önce oku" listesi geçerlid
   Kabul: tur görüntülerinde taşma/üst üste binme yok; `wide_screen_*` testleri
   telefon-yatay için "bölünme yok" der; cihazda döndür → not aç → yaz → kapat.
   **Kısmen (2026-11-11, P07):** kök düzeldi — telefon cihazı yatayda bölünmüyor (`splitActiveFor` + not açılış hareketi aynı kural), kalem tepsisi yatay telefonda sütun değil alt dok; ray zaten yükseklik < 500'de yoktu. Döndürmede aynı örnek kaldığı için sütun değişince kaydırma ORANI yeniden uygulanıyor (`wide_screen_doors` F18.11 testi bu yüzden kırmızıya düştü → yeşil). YAPILMADI (sabah bakılacak): kısa yükseklikte üst çubuk 40 dp, yazarken alt çubuk gizleme, sabit ek yanda, takvim/zamanı gelen şeridi kapalı (F67.4 ve K-O10 ile birlikte; kural 6/7 gereği cihaz A/B ister). Cihazda döndür→aç→yaz→kapat doğrulanmadı.
-- [ ] **F67.9 [Opus] "Not menüsü sağa alınabilsin (tablette)".** Anlam belirsiz. Gözetimsiz
+- [x] **F67.9 [Opus] "Not menüsü sağa alınabilsin (tablette)".** *(2026-11-12, P18, en olası anlam — sabah bakılacak: `listPaneRightProvider` (`list_pane_right`), SplitShell Row `textDirection` ters, ayraçta uzun bas/sağ tık menüsü + Ayarlar → Görünüm; ray yerinde kaldı. Tablette doğrulanmadı.)* Anlam belirsiz. Gözetimsiz
   oturumda yalnız EN OLASI anlam yapılır: **not listesi bölmesi sağa alınabilsin**
   (`SplitShell`: cihaz tercihi `list_pane_side`; ayraçta uzun bas → "Listeyi sağa / sola
   al" + Ayarlar → Görünüm; ray da aynı tarafa; menteşe ve "çekerek tam ekran" yönü
@@ -1351,7 +1351,8 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S9 | Biçim panelini aç → kapat | tuval kurulumu | 2 | 0 | 64 |
 | S10 | Paketi aç → maddeye odaklan → Biçim'e dokun | paket açık mı / mount edilen `TextField` | F60.2 (`note_package_open_test`) | açık / ≤ üye sayısı | 60.2 |
 | S11 | Kendi kaydının akış yankısı | kök kurulum | 0 | 0 | — |
-| S12 | 1280×800 bölünmüş: açık nota 20 karakter + kayıt | `DashboardScreen` kurulumu / kurulan `NoteCard` | 1 / 13 | 0 / ≤ 1 | 68.1 |
+| S12 | 1280×800 bölünmüş: açık nota 20 karakter + kayıt | `DashboardScreen` kurulumu / kurulan `NoteCard` | 1 / 13 → **0 / 0** yazarken+kayıt; durunca 1 / 1 (F68.1, 2026-11-12) | 0 / ≤ 1 | 68.1 |
+| S12b | 1280×800 bölünmüş: açık nottan başka nota geç (içerik aynı) | `DashboardScreen` / hücre / `NoteCard` | 1 / 13 / 2 → **0 / 0 / 2** (F68.2, 2026-11-12) | 0 / 0 / ≤ 2 | 68.2 |
 | S13 | Ana ekran, 300 not, 3 ekran kaydır | kurulan `NoteCard` | 24 (300 notun) | ≤ görünür + önbellek | — |
 | S14 | Sabitle / yıldızla | tuval kurulumu | 1 (yıldız) | 0 | 64 |
 | S15 | 2000 çizgi varken etkin çizgiye 1 nokta | çizim çağrısı (`TestRecordingCanvas`) | 2001 | ≤ 8 | 62.1 |

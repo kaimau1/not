@@ -56,6 +56,25 @@ void main() {
     await pumpEventQueue();
   }
 
+  // F68.1: az önce değişen notun LİSTEDEKİ örneği tutulur (liste aynı örnek
+  // → pano kurulmaz); akışın kendisi (depo/editör/hatırlatıcı) hep güncel.
+  test('önizleme tutma: liste eski örnekte, akış güncel; bırakınca yeni', () async {
+    final a = n('a', 1), b = n('b', 2);
+    final c = await ready([b, a]);
+    final before = c.read(filteredNotesProvider).requireValue;
+    final hold = c.read(heldNotePreviewProvider.notifier)..touch('a');
+    final a2 = n('a', 3);
+    await emit([b, a2]);
+    expect(c.read(filteredNotesProvider).requireValue, same(before));
+    expect(c.read(notesStreamProvider).requireValue.last, same(a2));
+    hold.release('a');
+    await pumpEventQueue();
+    expect(
+      c.read(filteredNotesProvider).requireValue.firstWhere((x) => x.id == 'a'),
+      same(a2),
+    );
+  });
+
   for (final sort in [NoteSort.updated, NoteSort.manual]) {
     test('$sort: açık not kayıtta yerinde, bırakınca tepeye', () async {
       // Elle sıralamada akış depo sırasıyla gelir (yeni → eski).

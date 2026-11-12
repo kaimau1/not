@@ -568,6 +568,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Izgaranın son genişliği ve sütun sayısı (döndürmede oran geri yüklemesi).
   (double, int)? _gridColumnsAt;
 
+  /// Son kurulumda liste bölmesi dar mıydı (F67.3; ⋮ levhası ve mikrofon
+  /// okur). Izgaranın LayoutBuilder'ında ölçülür; yüzen düğmeler onun
+  /// dışında olduğundan bildirici kare sonunda güncellenir.
+  final _narrowPaneN = ValueNotifier<bool>(false);
+  bool get _narrowPane => _narrowPaneN.value;
+
   /// Geniş ekranda sol panelin son sütun kipi (tek sütun = not açık).
   bool? _singleColumn;
 
@@ -643,6 +649,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (identical(homeDoors, this)) homeDoors = null;
     _stopFileDrops();
     WidgetsBinding.instance.removeObserver(this);
+    _narrowPaneN.dispose();
     _liveQuery.dispose();
     _searchController.dispose();
     _searchFocus.dispose();
@@ -1435,6 +1442,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // Telefon döndürülünce (F66.7'den beri yatayda da aynı
                     // örnek kalır) sütun sayısı değişir; piksel konumu başka
                     // kartlara denk gelir → ORAN yeniden uygulanır (F18.11).
+                    // DAR LİSTE BÖLMESİ (F67.3, B15): bölünmüş görünümde
+                    // liste < 420 dp iken şeritler çizilmez, arama hapı
+                    // kısalır (AI ve süz ⋮'e iner), mikrofon gizlenir.
+                    // Ağaç şekli sabit: Offstage (State korunur).
+                    final narrowPane =
+                        DashboardPaneScope.singleColumnOf(context) &&
+                        constraints.maxWidth < kNarrowListPane;
+                    if (narrowPane != _narrowPaneN.value) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) _narrowPaneN.value = narrowPane;
+                      });
+                    }
                     final lastCols = _gridColumnsAt;
                     _gridColumnsAt = (constraints.maxWidth, columns);
                     if (lastCols != null &&
@@ -1614,6 +1633,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 title: SizedBox(
                                   width: double.infinity,
                                   child: _SearchField(
+                                    compact: narrowPane,
                                     controller: _searchController,
                                     focusNode: _searchFocus,
                                     // HESAP SİMGESİ ve ⋮ ARTIK KUTUNUN İÇİNDE
@@ -1688,9 +1708,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // YENİ SÜRÜM ŞERİDİ (2026-11-10): kalıcı, kapatılamaz;
                         // yeni sürüm yokken sıfır yer.
                         const UpdateBanner(),
-                        const HomeCalendarStrip(),
+                        Offstage(
+                          offstage: narrowPane,
+                          child: const HomeCalendarStrip(),
+                        ),
                         // Zamanı gelen hatırlatıcı/görev şeridi (2026-11-08).
-                        const DueBanner(),
+                        Offstage(
+                          offstage: narrowPane,
+                          child: const DueBanner(),
+                        ),
                         const HomeInvites(),
                         const DashboardFilterRow(),
                         // Buluta yüklenmeyi bekleyen ekler — yoksa sıfır yer.
@@ -2164,7 +2190,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           // tahmin edilemezdi. AI ile sesli not Yapay Zekâ
                           // ekranının en üstünde; basılı tutmak kısayol olarak
                           // onu açar.
-                          Customizable(
+                          ValueListenableBuilder<bool>(
+                            valueListenable: _narrowPaneN,
+                            builder: (_, narrow, mic) =>
+                                Offstage(offstage: narrow, child: mic),
+                            child: Customizable(
                             id: UiItem.homeMic,
                             child: Padding(
                               padding: const EdgeInsetsDirectional.only(end: 12),
@@ -2176,6 +2206,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 onLongPress: _captureVoiceNote,
                               ),
                             ),
+                          ),
                           ),
                           // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
                           // Dört kapılı "+" (F3.2). Sesli not menüde YOK:
