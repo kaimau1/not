@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart' show CharacterRange;
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/search_fold.dart';
 import '../domain/note.dart';
+import '../domain/note_item.dart';
 import '../domain/sensitive_text.dart';
 import 'notes_providers.dart' show bodySearchMatch;
 
@@ -130,6 +131,59 @@ bool _visibleAtStart(String plain, int end, int maxLines) {
   }
   rows += math.max(1, ((end - lineStart) / _lineChars).ceil());
   return rows <= maxLines;
+}
+
+/// Kartın madde dilimi (bkz. [cardItemSlice]): çizilecek maddeler, "+N madde
+/// daha" sayısı, özete inen işaretli sayısı (0 = özet satırı yok) ve "hepsi
+/// tamam" hâli.
+typedef CardItemSlice = ({
+  List<NoteItem> shown,
+  int more,
+  int done,
+  bool allDone,
+});
+
+/// **KARTTA İŞARETLİLER TEK SATIR** (F74.4, K-D5): işaretsiz madde varken
+/// kart yalnız onları gösterir (dilim sınırı [max] aynı), işaretliler tek
+/// satır "✓ N tamamlandı"ya iner — uzun listede kart üstü çizili satır
+/// duvarıydı, okunacak madde görünmüyordu. Hepsi işaretliyse ilk iki madde
+/// (üstü çizili) + "✓ Hepsi tamam (N)". [ordered] işaretsizler önce sıralı;
+/// [collapseChecked] kapalıyken (`card_show_checked` açık) bugünkü görünüm.
+CardItemSlice cardItemSlice(
+  List<NoteItem> ordered,
+  int max, {
+  required bool collapseChecked,
+}) {
+  bool isDone(NoteItem i) => i.checked && !i.header;
+  final done = collapseChecked ? ordered.where(isDone).length : 0;
+  if (done == 0) {
+    final shown = ordered.take(max).toList();
+    return (
+      shown: shown,
+      more: ordered.length - shown.length,
+      done: 0,
+      allDone: false,
+    );
+  }
+  final open = [
+    for (final i in ordered)
+      if (!isDone(i)) i,
+  ];
+  if (open.any((i) => !i.header)) {
+    final shown = open.take(max).toList();
+    return (
+      shown: shown,
+      more: open.length - shown.length,
+      done: done,
+      allDone: false,
+    );
+  }
+  return (
+    shown: ordered.where(isDone).take(2).toList(),
+    more: 0,
+    done: done,
+    allDone: true,
+  );
 }
 
 /// **KARTIN HAZIR ÖNİZLEMESİ** — not ÖRNEĞİ başına bir kez (F21.2).

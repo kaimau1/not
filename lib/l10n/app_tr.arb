@@ -2776,6 +2776,25 @@
   "cardElementsHeader": "Kartta görünenler",
   "cardShowProgress": "İlerleme sayacı (ör. 3/10)",
   "cardShowProgressInfo": "Yapılacaklar listesinde kaç maddenin işaretlendiğini çubuk ve sayıyla gösterir.",
+  "cardShowChecked": "Tamamlanan maddeler",
+  "cardShowCheckedInfo": "Kapalıyken işaretli maddeler kartta tek satır özet olur: ✓ 3 tamamlandı.",
+  "cardItemsDone": "✓ {count} tamamlandı",
+  "@cardItemsDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cardItemsAllDone": "✓ Hepsi tamam ({count})",
+  "@cardItemsAllDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "emptyNotesFirstAction": "İlk notunu yaz",
   "cardShowMoreCount": "“+N madde daha” satırı",
   "cardShowStatusIcons": "Durum simgeleri",
   "cardShowStatusIconsInfo": "Sabit, yıldız, hatırlatıcı, ortak not, yalnız bu cihaz…",

@@ -29,7 +29,8 @@ void main() {
   testWidgets('işaretli kutu işareti kaldırmaz, boş kutu işaretler', (
     tester,
   ) async {
-    SharedPreferences.setMockInitialValues({});
+    // İşaretli madde kartta görünsün (F74.4: varsayılan tek satır özet).
+    SharedPreferences.setMockInitialValues({'card_show_checked': true});
     final prefs = await SharedPreferences.getInstance();
     final repo = _Repo();
     const note = Note(

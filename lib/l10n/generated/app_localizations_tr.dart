@@ -5688,6 +5688,26 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yapılacaklar listesinde kaç maddenin işaretlendiğini çubuk ve sayıyla gösterir.';
 
   @override
+  String get cardShowChecked => 'Tamamlanan maddeler';
+
+  @override
+  String get cardShowCheckedInfo =>
+      'Kapalıyken işaretli maddeler kartta tek satır özet olur: ✓ 3 tamamlandı.';
+
+  @override
+  String cardItemsDone(int count) {
+    return '✓ $count tamamlandı';
+  }
+
+  @override
+  String cardItemsAllDone(int count) {
+    return '✓ Hepsi tamam ($count)';
+  }
+
+  @override
+  String get emptyNotesFirstAction => 'İlk notunu yaz';
+
+  @override
   String get cardShowMoreCount => '“+N madde daha” satırı';
 
   @override

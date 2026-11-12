@@ -10130,6 +10130,36 @@ abstract class AppLocalizations {
   /// **'Yapılacaklar listesinde kaç maddenin işaretlendiğini çubuk ve sayıyla gösterir.'**
   String get cardShowProgressInfo;
 
+  /// No description provided for @cardShowChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlanan maddeler'**
+  String get cardShowChecked;
+
+  /// No description provided for @cardShowCheckedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalıyken işaretli maddeler kartta tek satır özet olur: ✓ 3 tamamlandı.'**
+  String get cardShowCheckedInfo;
+
+  /// No description provided for @cardItemsDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'✓ {count} tamamlandı'**
+  String cardItemsDone(int count);
+
+  /// No description provided for @cardItemsAllDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'✓ Hepsi tamam ({count})'**
+  String cardItemsAllDone(int count);
+
+  /// No description provided for @emptyNotesFirstAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk notunu yaz'**
+  String get emptyNotesFirstAction;
+
   /// No description provided for @cardShowMoreCount.
   ///
   /// In tr, this message translates to:

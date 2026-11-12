@@ -858,6 +858,7 @@ class NoteCard extends ConsumerWidget {
               rich: richPreview,
               showProgress: display.progress,
               showMoreCount: display.moreCount,
+              collapseChecked: !display.checked,
               onToggle: canToggle
                   ? (item) => toggleCardItem(ref, note, item)
                   : null,
@@ -1177,22 +1178,27 @@ class NoteCard extends ConsumerWidget {
                                 padding: const EdgeInsets.all(6),
                                 // Kapağın üstünde düğme koyu yuvarlakla okunur
                                 // kalır (açık renkli fotoğrafta kaybolmasın).
+                                // F74.4(b): düz kartta soluk (krom susar),
+                                // görselli kartta 28 dp siyah %32 daire.
                                 child: !hasCover
                                     ? Icon(
                                         Icons.more_vert,
-                                        size: 18,
-                                        color: scheme.onSurfaceVariant,
+                                        size: AppIconSize.s,
+                                        color: scheme.onSurfaceVariant
+                                            .withValues(alpha: AppAlpha.muted),
                                       )
                                     : DecoratedBox(
-                                        decoration: const BoxDecoration(
-                                          color: Color(0x66000000),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: AppAlpha.scrim,
+                                          ),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: const Padding(
-                                          padding: EdgeInsets.all(2),
+                                        child: const SizedBox.square(
+                                          dimension: 28,
                                           child: Icon(
                                             Icons.more_vert,
-                                            size: 18,
+                                            size: AppIconSize.s,
                                             color: Colors.white,
                                           ),
                                         ),
@@ -1583,6 +1589,33 @@ class _CardDividerPainter extends CustomPainter {
       old.raw != raw || old.color != color;
 }
 
+/// İşaretlilerin kartta tek satır özeti (F74.4, K-D5): "✓ N tamamlandı" ya da
+/// hepsi bitmişse "✓ Hepsi tamam (N)". `meta` rolü, notun vurgu tonunda.
+class _CardDoneLine extends StatelessWidget {
+  const _CardDoneLine({required this.done, required this.allDone});
+
+  final int done;
+  final bool allDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = _cardThemeOf(context);
+    final accent = NoteAccent.maybeOf(context)?.accent;
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text(
+        allDone ? l10n.cardItemsAllDone(done) : l10n.cardItemsDone(done),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppText.of(theme).meta.copyWith(
+          color: accent ?? theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
 /// Uzun yapılacaklar listesinin kartta İLERLEMESİ (2026-10-20 iyileştirme
 /// turu): "+40 öğe daha" kaç tanesinin bittiğini söylemiyordu. Yalnız en az
 /// 4 maddeli ve en az biri işaretli listede çizilir.
@@ -1723,6 +1756,7 @@ class _NotePreview extends StatelessWidget {
     this.onToggle,
     this.showProgress = false,
     this.showMoreCount = true,
+    this.collapseChecked = false,
   });
 
   final Note note;
@@ -1735,6 +1769,9 @@ class _NotePreview extends StatelessWidget {
   /// (Ayarlar → Görünüm → Kartlar).
   final bool showProgress;
   final bool showMoreCount;
+
+  /// İşaretliler tek satır özete insin mi (F74.4; `card_show_checked` kapalı).
+  final bool collapseChecked;
   final ValueListenable<String> highlightQuery;
 
   /// Madde kutucuğuna dokunuş (D6); null = salt gösterim.
@@ -1842,6 +1879,11 @@ class _NotePreview extends StatelessWidget {
         // 4 satır (8 satır 2 sütunlu ızgarada metin duvarına dönüşüyordu).
         final maxItems = hasBody ? 3 : 5;
         final bodyLines = items.isEmpty ? 4 : 2;
+        final slice = cardItemSlice(
+          items,
+          maxItems,
+          collapseChecked: collapseChecked,
+        );
         // Aramada eşleşme gövdenin görünen başında değilse onun çevresi
         // gösterilir (F21.3) — yoksa vurgu kartta hiç görünmezdi.
         // Kesit sorgunun KENDİSİNE bağlı (eşleşmenin konumu) — yalnız bu
@@ -1860,7 +1902,7 @@ class _NotePreview extends StatelessWidget {
               ),
             if (items.isNotEmpty) ...[
               if (hasBody) const SizedBox(height: 6),
-              for (final item in items.take(maxItems))
+              for (final item in slice.shown)
                 _CardItemRow(
                   item: item,
                   text: preview.item(item.text),
@@ -1870,16 +1912,18 @@ class _NotePreview extends StatelessWidget {
                   checkbox: true,
                   onToggle: onToggle,
                 ),
-              if (showMoreCount && items.length > maxItems)
+              if (showMoreCount && slice.more > 0)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    _moreItemsLabel(context, items.length - maxItems),
+                    _moreItemsLabel(context, slice.more),
                     style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
                 ),
+              if (slice.done > 0)
+                _CardDoneLine(done: slice.done, allDone: slice.allDone),
               if (showProgress) _ChecklistProgress(items: items),
             ],
           ],
@@ -1901,8 +1945,15 @@ class _NotePreview extends StatelessWidget {
               ]
             : raw;
         if (visible.isEmpty) return const SizedBox.shrink();
-        final shown = visible.take(6).toList();
-        final remaining = visible.length - shown.length;
+        // Sıralı listede numara sırası anlamlı: işaretliler özete inmez.
+        final slice = cardItemSlice(
+          visible,
+          6,
+          collapseChecked:
+              collapseChecked && note.type == NoteType.checklist,
+        );
+        final shown = slice.shown;
+        final remaining = slice.more;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -1930,6 +1981,8 @@ class _NotePreview extends StatelessWidget {
                   ),
                 ),
               ),
+            if (slice.done > 0)
+              _CardDoneLine(done: slice.done, allDone: slice.allDone),
             if (showProgress && note.type == NoteType.checklist)
               _ChecklistProgress(items: visible),
           ],

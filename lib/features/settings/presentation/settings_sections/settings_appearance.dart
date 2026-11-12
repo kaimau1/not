@@ -786,6 +786,7 @@ class CardElementsRow extends ConsumerWidget {
     cardRichPreviewProvider,
     cardHideSensitiveProvider,
     cardShowProgressProvider,
+    cardShowCheckedProvider,
     cardShowMoreCountProvider,
     cardShowStatusIconsProvider,
     cardShowTagProvider,
@@ -889,6 +890,13 @@ class CardElementsSheet extends ConsumerWidget {
                   icon: Icons.linear_scale,
                   title: l10n.cardShowProgress,
                   subtitle: l10n.cardShowProgressInfo,
+                ),
+                _PrefSwitch(
+                  key: const ValueKey('settings-card-checked'),
+                  provider: cardShowCheckedProvider,
+                  icon: Icons.check_box_outlined,
+                  title: l10n.cardShowChecked,
+                  subtitle: l10n.cardShowCheckedInfo,
                 ),
                 _PrefSwitch(
                   provider: cardShowMoreCountProvider,
