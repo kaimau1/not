@@ -20,7 +20,6 @@ import 'zoom_math.dart';
 import '../editor/attachment_clipboard.dart';
 import '../editor/pen_tray.dart';
 import '../../../../core/widgets/delayed_spinner.dart';
-import '../../../../core/widgets/fade_in_frame.dart';
 import '../../../../app/theme/app_tokens.dart';
 
 /// Tam ekran görsel görüntüleyici (yakınlaştırma/kaydırma destekli).
@@ -520,7 +519,6 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
         // eski kareyi göstermeye devam eder (bkz. [_rotate]).
         key: ValueKey('${a.localPath}#$_reloadKey'),
         fit: BoxFit.contain,
-        frameBuilder: fadeInFrame,
         cacheWidth: decodeWidthBucket(
           MediaQuery.sizeOf(context).width * 2,
           MediaQuery.devicePixelRatioOf(context),

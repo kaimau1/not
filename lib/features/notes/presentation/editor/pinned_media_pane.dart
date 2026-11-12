@@ -19,7 +19,6 @@ import '../../domain/attachment.dart';
 import '../drive_ui.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
 import '../viewers/pen_policy.dart';
-import 'media_loading_cover.dart';
 import 'pinned_side.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
@@ -871,10 +870,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
               // açarken ufak donma"): oynatıcı/belge görüntüleyicisi rota
               // geçişi bitince kurulur (bkz. AfterRouteTransition).
               child: AfterRouteTransition(
-                // Yüklenirken gri kutu değil ekin küçük resmi (F78.3b).
-                placeholder: isPdf || isVideo
-                    ? MediaLoadingCover(attachment: widget.media)
-                    : ColoredBox(color: scheme.surfaceContainerHigh),
+                placeholder: ColoredBox(
+                  color: isVideo ? Colors.black : scheme.surfaceContainerHigh,
+                ),
                 child: isText
                     // METİN (2026-10-17): kaydırılan, seçilebilen kâğıt. Basılı
                     // tutmak metni SEÇER (görseldeki "aşağı çekip bırak"

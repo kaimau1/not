@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/core/widgets/delayed_spinner.dart';
-import 'package:notlar/core/widgets/fade_in_frame.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/presentation/editor/media_loading_cover.dart';
 import 'package:notlar/features/notes/presentation/note_card_media.dart';
@@ -70,29 +69,6 @@ void main() {
     });
   });
 
-  group('fadeInFrame (F78.3c)', () {
-    testWidgets('eşzamanlı gelen solmaz; geç gelen 0 → 1', (tester) async {
-      late BuildContext ctx;
-      await tester.pumpWidget(
-        host(
-          Builder(
-            builder: (c) {
-              ctx = c;
-              return const SizedBox();
-            },
-          ),
-        ),
-      );
-      const child = SizedBox();
-      expect(fadeInFrame(ctx, child, 0, true), same(child));
-      expect(
-        (fadeInFrame(ctx, child, null, false) as AnimatedOpacity).opacity,
-        0,
-      );
-      expect((fadeInFrame(ctx, child, 0, false) as AnimatedOpacity).opacity, 1);
-    });
-  });
-
   testWidgets('kart kapağı: görsel gelmeden ve geldikten sonra boy aynı, '
       'görselin en/boy oranında (F78.3c)', (tester) async {
     late File file;
@@ -135,20 +111,13 @@ void main() {
     );
     final before = tester.getSize(find.byType(CardHeroMedia));
     expect(before.height, 100); // 200 / (40/20)
-    // Görsel henüz çözülmedi: görünmez (solarak gelecek).
-    expect(
-      tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
-      0,
-    );
-    double shown() =>
-        tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity;
-    for (var i = 0; i < 40 && shown() == 0; i++) {
+    // Görsel çözülsün (gerçek dosya okuması).
+    for (var i = 0; i < 6; i++) {
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 50)),
       );
       await tester.pump();
     }
-    expect(shown(), 1);
     await tester.pump(const Duration(milliseconds: 200));
     expect(tester.getSize(find.byType(CardHeroMedia)), before);
   });

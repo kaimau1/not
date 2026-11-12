@@ -19,7 +19,7 @@ Yeni içerik halkası yazarken: `const Center(child: DelayedSpinner())`.
 | Tarama düzenleme: görsel çözülürken | `scan_edit_screen.dart` |
 | Kılavuz, Gizlilik metni; ses listesi | `guide_screen.dart`, `privacy_screen.dart`, `settings_sections/settings_voice.dart` |
 | Giriş: otomatik oturum açma | `login_screen.dart` |
-| Sabit/gömülü PDF belge açılırken, sabit PDF/video rota geçişinde | `editor/media_loading_cover.dart` (`MediaLoadingCover`: küçük resim + %24 perde + gecikmeli halka; `pdf_page_box.dart`, `pinned_media_pane.dart`) |
+| Sabit/gömülü PDF belgesi açılırken (rota geçişi BİTTİKTEN sonra) | `editor/media_loading_cover.dart` (`MediaLoadingCover`: küçük resim + %24 perde + gecikmeli halka; `pdf_page_box.dart` `_document(null)`) |
 
 ## Olduğu gibi kalanlar
 
@@ -33,9 +33,15 @@ Yeni içerik halkası yazarken: `const Center(child: DelayedSpinner())`.
 
 ## Görseller (F78.3c)
 
-- Kart (`note_card_media.dart`) ve görüntüleyici (`image_viewer.dart`): yerel görsel
-  `frameBuilder: fadeInFrame` ile 150 ms solarak gelir; bellek önbelleğinden eşzamanlı
-  gelen solmaz (geri kaydırmada yanıp sönme yok). Ağ görseli zaten `fadeInDuration` 150 ms.
+- Görüntüleyicide ağ görseli: `fadeInDuration` 500 → 150 ms (350 ms erken tam görünür).
 - Kart kapağının boyu görselden değil ekin `width/height` bilgisinden
-  (`CardMediaPlan.heroHeight`) — görsel gelince kart zıplamaz. Test:
-  `test/loading_states_test.dart`.
+  (`CardMediaPlan.heroHeight`) — görsel gelince kart zıplamaz; kartta ağ görseli zaten
+  150 ms soluyor. Test: `test/loading_states_test.dart`.
+
+## Yapılmadı — iyileşme kanıtlanamadı (2026-11-12 kuralı: kötüleşme kabul edilmez)
+
+- **Yerel görsele solma** (kart + görüntüleyici): bugün ilk karede TAM görünür; solma tam
+  görünürlüğü 150 ms geciktirir ve listede kaydırırken kart başına saydamlık katmanı ekler.
+- **Rota geçişi sırasında küçük resim** (sabit bölmenin `AfterRouteTransition` yer tutucusu):
+  yer tutucu bilerek tek `ColoredBox` (2026-10-20 "notu açarken ufak donma" kök nedeni);
+  küçük resim geçiş karelerine görsel çözme + 8 widget ekler. Sabit videoda da aynı.

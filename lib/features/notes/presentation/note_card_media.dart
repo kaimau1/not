@@ -25,7 +25,6 @@ import '../domain/note.dart';
 import '../domain/note_type.dart';
 import '../../../core/app_icons.dart';
 import '../../../app/theme/app_tokens.dart';
-import '../../../core/widgets/fade_in_frame.dart';
 
 /// **KARTIN MEDYA PLANI** — ana ekran kartında hangi ekin nasıl görüneceği.
 ///
@@ -830,7 +829,6 @@ class CardMediaTile extends StatelessWidget {
         fit: BoxFit.cover,
         cacheWidth: 480,
         gaplessPlayback: true,
-        frameBuilder: fadeInFrame,
         errorBuilder: (_, _, _) => const _MissingTile(icon: Icons.image),
       );
     }
