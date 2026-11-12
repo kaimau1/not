@@ -22,6 +22,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/delayed_spinner.dart';
+import '../../../core/widgets/press_scale.dart';
 
 /// **PAYLAŞILAN KLASÖRÜN SOHBETİ** (kullanıcı isteği 2026-08-18: "birde
 /// birbirine mesaj gönderme alanı olabilir").
@@ -408,7 +409,9 @@ class _MessageBubble extends ConsumerWidget {
     borderRadius: BorderRadius.circular(10),
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 260),
-      child: GestureDetector(
+      // Basma tepkisi (F78.4).
+      child: PressScale(
+        child: GestureDetector(
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => _ChatImageViewer(url: message.imageUrl),
@@ -427,6 +430,7 @@ class _MessageBubble extends ConsumerWidget {
           ),
           errorWidget: (context, _, _) =>
               const SizedBox(height: 80, child: Icon(Icons.broken_image)),
+        ),
         ),
       ),
     ),
