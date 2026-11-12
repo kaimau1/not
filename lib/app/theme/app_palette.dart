@@ -225,7 +225,10 @@ abstract final class FamilyPalettes {
   static const _sageDark = FamilyTokens(
     ground: Color(0xFF131916),
     lowest: Color(0xFF0D120F),
-    card: Color(0xFF1C221E),
+    // F80.1-5 (2026-11-12, ölçüldü): 1C221E zeminden 0,038 L açıktı — kart
+    // koyuda masaya karışıyordu; +1/kanal → 0,043 (`theme_contrast_test`; aynı
+    // düzeltme lavanta, saman, krem koyusunda).
+    card: Color(0xFF1D231F),
     sheet: Color(0xFF202723),
     field: Color(0xFF202723),
     high: Color(0xFF29302C),
@@ -402,7 +405,8 @@ abstract final class FamilyPalettes {
   static const _lavenderDark = FamilyTokens(
     ground: Color(0xFF16151B),
     lowest: Color(0xFF100F14),
-    card: Color(0xFF1F1D26),
+    // F80.1-5: 1F1D26 → 0,037 L; +1/kanal → 0,042.
+    card: Color(0xFF201E27),
     sheet: Color(0xFF24222B),
     field: Color(0xFF24222B),
     high: Color(0xFF2D2B35),
@@ -729,7 +733,8 @@ abstract final class FamilyPalettes {
   static const _strawDark = FamilyTokens(
     ground: Color(0xFF1A1711),
     lowest: Color(0xFF13110C),
-    card: Color(0xFF24201A),
+    // F80.1-5: 24201A → 0,0399 L; +1/kanal → 0,044.
+    card: Color(0xFF25211B),
     sheet: Color(0xFF29251E),
     field: Color(0xFF29251E),
     high: Color(0xFF322D25),
@@ -788,7 +793,8 @@ abstract final class FamilyPalettes {
   static const _creamDark = FamilyTokens(
     ground: Color(0xFF1B1914),
     lowest: Color(0xFF141210),
-    card: Color(0xFF25221C),
+    // F80.1-5: 25221C → 0,039 L; +1/kanal → 0,043.
+    card: Color(0xFF26231D),
     sheet: Color(0xFF2A2721),
     field: Color(0xFF2A2721),
     high: Color(0xFF333029),
