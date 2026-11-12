@@ -17,6 +17,7 @@ import 'notes_providers.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/a11y/min_tap_target.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/confirm_dialog.dart';
 
 /// Süz levhası — eski çip barının yerini alır.
 ///
@@ -689,28 +690,14 @@ Future<void> _manageTag(BuildContext context, WidgetRef ref, String tag) async {
     return;
   }
 
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(l10n.tagDelete),
-      content: Text(l10n.tagDeleteConfirm(tag)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext, false),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(dialogContext).colorScheme.error,
-            foregroundColor: Theme.of(dialogContext).colorScheme.onError,
-          ),
-          onPressed: () => Navigator.pop(dialogContext, true),
-          child: Text(l10n.delete),
-        ),
-      ],
-    ),
+  final confirmed = await showConfirmDialog(
+    context,
+    title: l10n.tagDelete,
+    message: l10n.tagDeleteConfirm(tag),
+    confirmLabel: l10n.delete,
+    destructive: true,
   );
-  if (!(confirmed ?? false)) return;
+  if (!confirmed) return;
   if (ref.read(selectedTagProvider) == tag) {
     ref.read(selectedTagProvider.notifier).set(null);
   }

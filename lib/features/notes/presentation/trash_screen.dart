@@ -21,6 +21,7 @@ import '../domain/note.dart';
 import 'editor/title_fit.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/confirm_dialog.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
 ///
@@ -67,28 +68,14 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
   Future<void> _emptyTrash(List<Note> notes) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.emptyTrash),
-        content: Text(l10n.emptyTrashConfirm(notes.length)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.deleteForever),
-          ),
-        ],
-      ),
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.emptyTrash,
+      message: l10n.emptyTrashConfirm(notes.length),
+      confirmLabel: l10n.deleteForever,
+      destructive: true,
     );
-    if (!(confirmed ?? false)) return;
+    if (!confirmed) return;
     // İçlerinde kilitli not varsa toplu boşaltma da doğrulama ister.
     if (notes.any((n) => n.locked) &&
         !await authenticateForNote(l10n.unlockAuthReason)) {
@@ -398,24 +385,15 @@ class _TrashCard extends ConsumerWidget {
       return;
     }
     if (!context.mounted) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteForever),
-        content: Text(l10n.deleteForeverConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    // Geri alınamaz: onay `error` tonunda (DENEYIM F76.4).
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l10n.deleteForever,
+      message: l10n.deleteForeverConfirm,
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
-    if (confirmed ?? false) {
+    if (confirmed) {
       // Ekler de Storage'dan silinsin; yalnız dokümanı silmek dosya bırakır.
       await ref.read(notesRepositoryProvider)?.deleteNotePermanently(note);
     }

@@ -21,6 +21,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../auth/presentation/account_required.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/confirm_dialog.dart';
 
 /// Klasör oluşturma/düzenleme diyaloğu: ad alanı + simge seçici.
 /// [existing] verilirse düzenleme modunda açılır. Oluşturulan/düzenlenen
@@ -312,24 +313,15 @@ Future<void> showFolderActionsSheet(
         );
       }
     case 'delete':
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text(l10n.deleteFolder),
-          content: Text(l10n.deleteFolderConfirm(folder.name)),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(l10n.delete),
-            ),
-          ],
-        ),
+      // Yıkıcı onay: ortak pencere, onay `error` tonunda (DENEYIM F76.4).
+      final confirmed = await showConfirmDialog(
+        context,
+        title: l10n.deleteFolder,
+        message: l10n.deleteFolderConfirm(folder.name),
+        confirmLabel: l10n.delete,
+        destructive: true,
       );
-      if (confirmed ?? false) {
+      if (confirmed) {
         await ref
             .read(foldersRepositoryProvider)
             ?.deleteFolder(folder.id, shared: folder.isShared);
@@ -678,24 +670,14 @@ class _FolderOrderPanelState extends ConsumerState<FolderOrderPanel> {
 
   Future<void> _confirmDelete(NoteFolder folder) async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteFolder),
-        content: Text(l10n.deleteFolderConfirm(folder.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final ok = await showConfirmDialog(
+      context,
+      title: l10n.deleteFolder,
+      message: l10n.deleteFolderConfirm(folder.name),
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     if (ref.read(selectedFolderProvider) == folder.id) {
       ref.read(selectedFolderProvider.notifier).set(null);
     }
