@@ -776,7 +776,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: AppIcons.guide,
                 title: l10n.guideTitle,
                 subtitle: l10n.guideMenuInfo,
-                color: scheme.secondary,
+                // Nötr (DENEYIM §2.2 K-D1): kısayol eylem/dikkat değil.
+                color: scheme.onSurfaceVariant,
                 onTap: () => context.push('/guide'),
               ),
               _ShortcutTile(
@@ -784,7 +785,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 icon: Icons.tune_rounded,
                 title: l10n.personalizeTitle,
                 subtitle: l10n.personalizeInfo,
-                color: scheme.primary,
+                color: scheme.onSurfaceVariant,
                 onTap: () async {
                   final result = await context.push<String>('/personalize');
                   // Kişiselleştir'den düzenleme modu başlatıldıysa ayarlar

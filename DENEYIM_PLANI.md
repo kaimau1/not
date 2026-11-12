@@ -62,7 +62,7 @@ dosya geçerli).
 | Faz | Konu | Paket | Model | Durum |
 |---|---|---|---|---|
 | 72 | Zemin: belirteçler, mandal testi, ortak bileşenler | P33 | Opus | F72.1–F72.4 bitti, F72.5 kısmi (dalda, 2026-11-12) |
-| 73 | Renk rolleri + sakin tipografi | P34 | Opus | Bekliyor |
+| 73 | Renk rolleri + sakin tipografi | P34 | Opus | F73.1–F73.4 bitti (dalda, 2026-11-12; F73.1-2 P36'ya) |
 | 74 | Ana ekran cilası | P35 | Opus | Bekliyor |
 | 75 | Not ekranı alt çubuğu | P36 | Fable | Bekliyor |
 | 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | Bekliyor |
@@ -360,7 +360,7 @@ Bu faz, F72.5'teki bölüm adı puntosu dışında **ekranda hiçbir şeyi deği
 **Önce oku:** `app_palette.dart` (başlık + `FamilyTokens`), `test/theme_contrast_test.dart`,
 `test/visual_consistency_test.dart`, `test/note_accent_consistency_test.dart`, `due_banner.dart`.
 
-- [ ] **F73.1 Rol sözleşmesi + bekçi (K-D1).** §2.2 tablosu `app_palette.dart` başlığına.
+- [x] **F73.1 Rol sözleşmesi + bekçi (K-D1).** *(2026-11-12: 1,3,4,5,6 yapıldı + `test/color_roles_test.dart` (eski `due_banner` ile kırmızı → yeşil); **2 (`_addToolButton`) YAPILMADI — `editor/` P36'nın (Ek D.1), sabah bakılacak**; AiIcon dolu düğmede/devre dışıyken miras renkte.)* §2.2 tablosu `app_palette.dart` başlığına.
   Düzeltilecekler:
   1. `due_banner.dart`: `tertiaryContainer/onTertiaryContainer` → `secondaryContainer/
      onSecondaryContainer`.
@@ -378,15 +378,15 @@ Bu faz, F72.5'teki bölüm adı puntosu dışında **ekranda hiçbir şeyi deği
   izin listesine gerekçesiyle yazılır — liste testte).
   *Tuzak:* `theme_contrast_test` 20 ailede dener; `balloon_list_theme_fixes_test` vurgu
   doygunluğu > 0,2 ister.
-- [ ] **F73.2 Krom ağırlığı (K-D2).** `token_sayim.py fontWeight` dökümü: w700/w800/bold →
+- [x] **F73.2 Krom ağırlığı (K-D2).** *(2026-11-12: 83 yer w700/w800 → `AppWeight.strong`; dışarıda: kullanıcı içeriği (balon/sunum/görsel notu kalını), `note_card`, `action_menu_sheet` (P37), takvimde bugün; bütçe fontWeight 225→142.)* `token_sayim.py fontWeight` dökümü: w700/w800/bold →
   `AppWeight.strong`. DOKUNMA: `rich_text.dart`, `text_wrap*`, `format_bar.dart`'ın "B"
   düğmesi, `noteTitleStyle`, dışa aktarım (PDF/Word), takvimde bugünün günü, `editor/`
   klasörü (P36/P20'nin alanı). Tur farkı beklenir (ayarlar, menüler, levhalar).
-- [ ] **F73.3 Punto (D20).** `token_sayim.py fontSize`: 12'nin altındaki 45 kullanımın her
+- [x] **F73.3 Punto (D20).** *(2026-11-12: 10 yer 12-altı (okunan 12, rozet 11) + 23 yarım punto; dışarıda: takvim ay/hafta/yıl (Ek D.1 kimsede değil), şerit + kart (P35), AI merkezi (Y15), not menüsü (P37).)* `token_sayim.py fontSize`: 12'nin altındaki 45 kullanımın her
   biri — okunan metinse 12, rozet/sayıysa 11. İSTİSNA (dokunma): klasör çipindeki üst simge
   sayısı (§4 Y2), takvim ay hücresi çipleri (§4 Y12), `editor/` klasörü. Yarım puntolar
   §2.1 eşlemesiyle.
-- [ ] **F73.4 Tema seçici grupları (K-D9).** `theme_picker.dart` `themeChoiceOptions`: sıra
+- [x] **F73.4 Tema seçici grupları (K-D9).** *(2026-11-12: `themeChoiceGroupOrder` + `SectionLabel`; "Koyu" listede yoktu → Sakin'in sonunda, sabah bakılacak; bekçi `test/theme_picker_groups_test.dart`.)* `theme_picker.dart` `themeChoiceOptions`: sıra
   ve üç `SectionLabel`: **Sakin** (Sistem, Adaçayı, Porselen, Kil, Lavanta, Zeytin, Nane,
   Şeftali) · **Kâğıt** (Beyaz, Saman, Krem + `classic`, `newsprint`, `notebook`, `graphite`,
   `ledger`) · **Canlı** (Okyanus, Gül, Mandalina, Zümrüt, Ametist). Önizleme kartı ve alçak
