@@ -59,6 +59,10 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
    Yürütücü kontrol eder, sonra `git checkout main && git merge --no-ff oto/<no>` (başlık
    `Birleştir: <paket adı>`), push. **Durum için ayrı commit/push atma** — her main push'u
    CI'ı baştan koşturur ve süren APK'yı iptal eder.
+   **Temizlik (kullanıcı kararı 2026-11-12):** birleştirince o paketin çalışma kopyası
+   (`git worktree remove --force <ağaç>`), uzak dalı (`git push origin --delete oto/<no>-*`)
+   ve yerel dalı silinir; A/B taban ağacı (`../not_ab`) ölçüm bitince silinir. 34 kopya
+   (~onlarca GB) birikmişti. Silinemeyen klasörü tutan Gradle sürecini durdur.
 8. **APK noktası** (Kuyruk'ta APK = `evet`): birleştirme başlığına `[apk]`; aynı commit'te
    `assets/guide/release_notes_tr.md` + `_en.md`'ye günün bölümü (kullanıcı diliyle, o
    APK'ya giren bütün paketler). Push'tan sonra APK işi BİTENE dek main'e başka push yok
