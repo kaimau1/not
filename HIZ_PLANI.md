@@ -1,0 +1,69 @@
+# HIZ_PLANI — hız güvencesi: her yüzey ölçülür, hiçbir güncelleme kasma geri getirmez
+
+**Kullanıcı isteği (2026-11-12):** "Ölçüm olarak tüm sistemler var mı? Çok hızlı, akıcı bir
+program olmalıyız. Gerekirse yeni faz yaz (Fable/Opus). Bir daha yaşanmaması için tedbir al;
+ileride ek özellik ve güncellemelerde aynı kasmaları tekrar yaşamamak için kaydet."
+
+Bu plan YENİ ÖZELLİK EKLEMEZ. İki işi var: (1) ölçülmeyen yüzeyleri ölçülür yapmak,
+(2) kasmanın geri gelmesini otomatik engellemek. Bulunan gerçek yavaşlıklar Faz 84'te düzeltilir.
+Protokol: OTURTMA_PLANI başındaki gibi — önce kanıt (ölçüm), sonra düzeltme, aynı ölçüm yeşil.
+Hız kuralı (OTOMASYON 6. adım, kullanıcı kararı 2026-11-12): **hiçbir evre kötüleşmez**;
+madde başı ayrı commit, kötüleştiren tek commit geri alınır, iyiler birleşir.
+
+## 0. Bugün ne var (envanter, 2026-11-12)
+
+| Katman | Araç | Kapsadığı | Kapsamadığı |
+|---|---|---|---|
+| Cihazsız (CI, her push) | `test/perf_budget_test.dart` S1–S17 (`budgets.json`, mandal yalnız düşer) | editör yazma/madde/kalem/klavye inset kurulum sayıları, bölünmüş görünüm, 300 not kaydırma, 2000 çizgi | ekran geçişleri, soğuk açılışın ilk karesi, levha/menü açma, arama yazma, takvim, klasör geçişi, görsel çözme boyutu |
+| Cihazsız bekçiler | `keyboard_jank_guard_test`, `items_editor_row_cache_test`, `editor_leak_test`, `design_tokens_guard_test` | CLAUDE.md kasma listesi md. 1–2, 6–7 | md. 3–5 (kök `setState`, env'e her build'de yeni nesne, koşullu ağaç şekli) için genel tarama yok |
+| Cihaz A/B (elle tetiklenir) | `ab_klavye.py` (klavye aç/kapa, yazma, not kapanışı), `ab_liste.py` (ana ekran fırlatma), `ab_kalem.py` | editör + liste + kalem | soğuk açılış, not AÇMA, yeni not, PDF aç/kaydır, levha açma, arama, takvim, klasör kaydırma, uzun oturum birikimi |
+| Cihaz taban | `taban.py` (açılış, kaydırma, 4 not aç/kapa, yazma), `prof_cold.py`, `prof_new.py` (P39, hiç koşmadı), `video.py` | duman testi | A/B karşılaştırması ve otomatik karar yok; sonuçlar geçici klasörde kalıyor, geçmiş yok |
+| CI cihaz | "Kare ölçümü" işi (yalnız `perf` bayrağıyla) | — | her `[apk]`'da koşmuyor |
+
+**Açıklar (kanıtlı):**
+- A1. A/B kapısı yalnız 4 editör evresine bakıyor; P39'da açılış/yeni not için ölçüm aracı vardı ama A/B'ye bağlı değildi.
+- A2. Karar elle ve "2. koşu" ile veriliyor: P36'da not kapanışı A2 = 520 ms, A1 = 170 ms (tek sapkın koşu kararı çeviriyordu); "son klavye kapa" +%35 gürültü mü değil mi elle yorumlandı.
+- A3. **Kümülatif kayma görünmüyor:** her `[apk]` yalnız bir öncekine karşı %20 ile ölçülüyor; 5 ardışık +%15 geçer ama toplam +%100 olur. Sabit bir "altın taban" ve geçmiş çizelgesi yok.
+- A4. Ölçüm sonuçları depoya yazılmıyor (`PERF_OUT` geçici) → bir ay sonra "eskiden kaç ms'ydi" sorusunun cevabı yok.
+- A5. Kasma listesinin md. 3–5'i yalnız okunarak uygulanıyor; bekçi testi yok.
+- A6. Uzun oturum (30 dk kullanım) birikimi ölçülmüyor (F60.S2 kullanıcı bildirdi, üretilemedi).
+
+## FAZ 81 — Tek komutla tam hız ölçümü + otomatik karar [Opus · P43 · cihaz]
+
+- [ ] **F81.1 `tool/perf/ab_hepsi.py`:** iki APK yolu alır; A,B,A,B,A,B sırasıyla (ısınma dengesi) her evreyi 3 kez koşar; evreler: soğuk açılış (ilk kare ms, `prof_cold` mantığı), ana ekran fırlatma (`ab_liste`), not açma (kart → editör ilk kare), klavye aç/kapa + yazma + not kapanışı (`ab_klavye`), yeni not ("+" → imleç), sabit PDF'li not aç + 3 sayfa kaydır, not menüsü (⋮) levhası açma, arama yazma (5 harf), klasör yana kaydırma. Her evrede UI kare sayısı, UI ms, LAYOUT ms, en uzun kare, > 16 ms kare sayısı. Var olan `perf.py`/`scen.py` yardımcılarını kullan, yeni çatı yazma.
+- [ ] **F81.2 Otomatik karar:** evre başına ORTANCA (3 koşu); karar kuralı: B ortancası A'nın en kötü koşusundan da kötüyse VE fark > %10 VE > 3 ms → "KÖTÜLEŞTİ"; aksi "aynı/iyi". Hız paketlerinde (OTOMASYON 6. adım) tek "KÖTÜLEŞTİ" = birleştirme yok. Çıktı: markdown tablo + `KARAR: GEÇTİ|KALDI` son satırı. Sıcaklık > 37 °C koşuyu geçersiz sayar ve bekler.
+- [ ] **F81.3 Kalıcı kayıt:** her koşu `docs/perf/gecmis.csv`'ye bir satır/evre ekler (tarih, commit, APK etiketi, evre, ortanca UI ms, LAYOUT ms, kare, sıcaklık). Depoya girer (küçük metin).
+- [ ] **F81.4 Altın taban:** `docs/perf/altin_taban.json` = bugünkü main (9c837495) ölçümü. `ab_hepsi.py --altin` B'yi ayrıca altın tabana karşı yazar; bir evre altın tabandan **%15'ten fazla** kötüyse (kümülatif kayma, A3) karar KALDI. Altın taban yalnız İYİLEŞME olunca güncellenir (mandal).
+- [ ] **F81.5** OTOMASYON 6. adımı ve CLAUDE.md ÖLÇÜM KAPISI `ab_klavye.py` yerine `ab_hepsi.py`'ye geçer (ölçüm Sonnet alt ajanda kalır; istem kısalır: "iki APK, `ab_hepsi.py`, son satırı getir").
+- Kabul: aynı APK'yı A ve B diye verince 3 tekrarda üçü de GEÇTİ (yanlış alarm yok); bilerek yavaşlatılmış B (örn. `ItemsEditor`'a 5 ms bekleme) KALDI.
+
+## FAZ 82 — Cihazsız bekçileri genişlet (her push'ta, telefonsuz) [Opus · P44]
+
+- [ ] **F82.1 Bütçe senaryoları S18–S25** (`perf_budget_test`, OTURTMA Ek A'ya satır): S18 ana ekran → not açma geçişi (kurulan `NoteCard`/kök kurulum, geçiş karesi başına build); S19 not kapanışı → ana ekran (kartlar yeniden kurulmaz); S20 not menüsü levhası açma (levha dışında kurulum 0); S21 arama kutusuna 5 harf (harf başına kurulan kart ≤ görünür); S22 takvim hafta kaydırma; S23 klasör yana kaydırma (komşu sayfa önceden kurulu, yeniden kurulmaz); S24 soğuk açılış ilk kare kadar kurulan widget sayısı (taban + mandal); S25 görsel ekli 50 not listesinde decode boyutu ≤ kart boyu × dpr (`cacheWidth` unutulmasın). Her biri önce bugünkü değeri ölçer, `budgets.json`'a o yazılır (mandal).
+- [ ] **F82.2 Kasma listesi md. 3–5 bekçisi** `test/jank_patterns_guard_test.dart` (`keyboard_jank_guard_test` kalıbı, kaynak tarama): editör ve pano kök durumlarında yeni `setState` sayısı mandalı; `_syncRowCache` env'ine satır içi `{}`/`[]`/kapanış yasak; `MediaQuery.of(context)` kabuk/kök dosyalarında yasak (`sizeOf`/`viewInsetsOf`); editör Column/Row içinde `AnimatedSize`/`AnimatedContainer` yasak (md. 6 zaten var — tek dosyada birleştir). Her kural bozma denemesinde kırmızı.
+- [ ] **F82.3 Uzun oturum bekçisi:** widget testinde 200 kez not aç/kapa + 50 klavye döngüsü; sonunda canlı `TextEditingController`/`AnimationController`/akış aboneliği sayısı başlangıçla aynı (`editor_leak_test` genişlet). F60.S2'nin cihazsız karşılığı.
+- Kabul: hepsi CI'da yeşil; her yeni kural için bozma denemesi commit mesajında.
+
+## FAZ 83 — Her `[apk]`'da otomatik ölçüm ve geçmiş [Sonnet · P45]
+
+- [ ] **F83.1** OTOMASYON 8. adımı (APK noktası): birleştirmeden ÖNCE `ab_hepsi.py --altin` zorunlu (paket A/B istemese bile — yerleşim/levha/ekler de hızı bozabiliyor). Telefon yoksa `[apk]` ertelenir, birleştirme `[apk]`'sız yapılır.
+- [ ] **F83.2** `docs/perf/README.md`: gecmis.csv'yi okuyan tek sayfalık özet (`python tool/perf/gecmis.py` → evre başına son 10 `[apk]` eğilimi, altın tabana göre %). Haftalık zamanlanmış tur bunu okuyup kayma > %10 olan evreyi Kuyruk'a "hız: <evre>" satırı olarak ekler.
+- [ ] **F83.3** CI "Kare ölçümü" işi: neden yalnız `perf` bayrağında koştuğunu kanıtla (süre/gürültü); emülatör sayıları kararlıysa (aynı commit 3 koşu, sapma < %10) `[apk]` koşularında da koşsun, değilse işi kaldır ve neden plana yaz.
+
+## FAZ 84 — Ölçümün bulduğu yavaşlıkları düzelt [Fable · P46 · A/B]
+
+- [ ] **F84.1** F81 + F82'nin ilk tam ölçümünde altın tabanın en kötü 3 evresi (en uzun kare > 32 ms ya da ortanca UI ms en yüksek) için kök neden dökümü (`vmsvc.py` CPU örnekleri + widget build profili) ve düzeltme. Hedef: her evrede > 16 ms kare sayısı yarıya.
+- [ ] **F84.2** P36 ölçümünde görülen: yazmada en uzun kare 29 → 42 ms (B1'de 59 ms), sayısı eşit — kök neden (tek uzun kare nedir: yazım düzeltici? kayıt? kart önbelleği?) ve düzeltme.
+- [ ] **F84.3** Soğuk açılış (P39 F78.1 sonrası): ilk kare ≤ 600 ms hedefi, `prof_cold.py` dökümüyle.
+- Kural: her madde ayrı commit; `ab_hepsi.py` KALDI veren commit geri alınır.
+
+## Kalıcı tedbirler (bu planla birlikte yürürlüğe girer)
+
+1. CLAUDE.md "Hız sözleşmesi" (kasma listesinin altında): yeni özellik/güncelleme hangi yüzeye dokunursa o yüzeyin bütçe senaryosu (yoksa YAZILIR) + `[apk]` öncesi `ab_hepsi.py --altin`. Ölçümsüz "akıcı" denmez.
+2. Mandallar yalnız düşer: `budgets.json`, `design_tokens/budget.json`, `altin_taban.json`.
+3. Hız/akıcılık paketlerinde kötüleşme sıfır (OTOMASYON 6. adım); diğer paketlerde %20 + altın taban %15.
+4. Yeni ekran/levha/akış ekleyen her iş, Ek A'ya bir S satırı ve `ab_hepsi.py`'ye bir evre ekler (yoksa iş bitmiş sayılmaz).
+
+## Sıra ve model
+
+P39 (açık, cihaz A/B) → **P43 = Faz 81** (Opus) → **P44 = Faz 82** (Opus) → **P45 = Faz 83** (Sonnet) → **P46 = Faz 84** (Fable; Fable limiti %55 üstüyse Opus) → kalan kuyruk (P20 ölçüm altyapısı kurulduktan sonra daha güvenli).
