@@ -1342,12 +1342,25 @@ class _DayHeader extends StatelessWidget {
 }
 
 /// Satır kabuğu: solda renk şeridi, kart zemini.
+///
+/// F79.1 (D16) ölçü birliği: başlık her türde `rowTitle`, alt satır `meta`;
+/// en az 56 dp (tek satır) / 64 dp (alt satırlı), içerik dikeyde ortada.
+/// Yerleşim (şerit, kart, sağdaki çöp düğmesi) aynen.
 class _EntryShell extends StatelessWidget {
-  const _EntryShell({required this.accent, required this.child, this.onTap});
+  const _EntryShell({
+    required this.accent,
+    required this.child,
+    this.onTap,
+    this.twoLine = false,
+  });
 
   final Color accent;
   final Widget child;
   final VoidCallback? onTap;
+  final bool twoLine;
+
+  static const double oneLineHeight = 56;
+  static const double twoLineHeight = 64;
 
   @override
   Widget build(BuildContext context) {
@@ -1366,9 +1379,22 @@ class _EntryShell extends StatelessWidget {
               children: [
                 Container(width: 4, color: accent),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                    child: child,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: twoLine ? twoLineHeight : oneLineHeight,
+                    ),
+                    child: Padding(
+                      // Dikey dolgu ince: yüksekliği alt sınır verir; görevin
+                      // onay kutusu (48 dp dokunma alanı) 56'yı aşmasın.
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.m,
+                        vertical: AppSpace.xs,
+                      ),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: child,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -1395,8 +1421,12 @@ class _EventTile extends StatelessWidget {
         ? l10n.eventAllDay
         : '${time.format(occurrence.start)} – ${time.format(occurrence.end)}';
     final sub = [when, if (e.location.isNotEmpty) e.location].join(' · ');
+    final text = AppText.of(Theme.of(context));
+    // Sağdaki durum simgeleri (🔔 ↻ bulut, not): 18 dp, `onSurfaceVariant`.
+    const status = AppIconSize.s;
     return _EntryShell(
       accent: e.color != null ? Color(e.color!) : scheme.primary,
+      twoLine: true,
       onTap: () => e.fromGoogle
           ? showGoogleEventSheet(context, e, occurrence.start)
           : showEventEditor(
@@ -1408,21 +1438,19 @@ class _EventTile extends StatelessWidget {
         children: [
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   e.title.isEmpty ? l10n.eventUntitled : e.title,
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: text.rowTitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpace.xxs),
                 Text(
                   sub,
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 13,
-                  ),
+                  style: text.meta,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1433,7 +1461,7 @@ class _EventTile extends StatelessWidget {
           if (e.fromGoogle)
             Icon(
               Icons.cloud_outlined,
-              size: 16,
+              size: status,
               color: scheme.onSurfaceVariant,
               semanticLabel: l10n.gcalTitle,
             ),
@@ -1458,19 +1486,26 @@ class _EventTile extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 4),
                 child: Icon(
                   Icons.sticky_note_2_outlined,
-                  size: 16,
+                  size: status,
                   color: scheme.onSurfaceVariant,
                 ),
               ),
             ),
           if (e.repeats)
-            Icon(Icons.repeat, size: 16, color: scheme.onSurfaceVariant),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: AppSpace.xs),
+              child: Icon(
+                Icons.repeat,
+                size: status,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           if (e.reminders.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 4),
+              padding: const EdgeInsetsDirectional.only(start: AppSpace.xs),
               child: Icon(
                 Icons.notifications_none,
-                size: 16,
+                size: status,
                 color: scheme.onSurfaceVariant,
               ),
             ),
@@ -1503,7 +1538,9 @@ class _TaskTile extends ConsumerWidget {
           Expanded(
             child: Text(
               task.title,
-              style: TextStyle(
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppText.of(Theme.of(context)).rowTitle.copyWith(
                 decoration: task.completed ? TextDecoration.lineThrough : null,
                 color: task.completed ? scheme.onSurfaceVariant : null,
               ),
@@ -1512,7 +1549,7 @@ class _TaskTile extends ConsumerWidget {
           if (task.hasTime)
             Text(
               DateFormat.Hm().format(task.dueAt!),
-              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
+              style: AppText.of(Theme.of(context)).meta,
             ),
         ],
       ),
@@ -1535,8 +1572,10 @@ class _ReminderTile extends StatelessWidget {
         : note.locked
         ? l10n.remindersUntitled
         : note.toPlainText().split('\n').first.trim();
+    final text = AppText.of(Theme.of(context));
     return _EntryShell(
       accent: scheme.secondary,
+      twoLine: true,
       onTap: () => unawaited(context.pushNote(noteRoutePath(note.id))),
       child: Row(
         children: [
@@ -1544,19 +1583,19 @@ class _ReminderTile extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title.isEmpty ? l10n.remindersUntitled : title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                  style: text.rowTitle,
                 ),
+                const SizedBox(height: AppSpace.xxs),
                 Text(
                   '${DateFormat.Hm().format(entry.at)} · ${l10n.calendarReminderTag}',
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 13,
-                  ),
+                  style: text.meta,
                 ),
               ],
             ),
@@ -1578,8 +1617,10 @@ class _RoutineTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final r = entry.routine;
     final color = r.color == null ? scheme.primary : Color(r.color!);
+    final text = AppText.of(Theme.of(context));
     return _EntryShell(
       accent: color,
+      twoLine: true,
       onTap: () => unawaited(showRoutineDaySheet(context, r, entry.day)),
       child: Row(
         children: [
@@ -1591,22 +1632,22 @@ class _RoutineTile extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   r.title.trim().isEmpty ? l10n.eventUntitled : r.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
+                  style: text.rowTitle,
                 ),
+                const SizedBox(height: AppSpace.xxs),
                 Text(
                   [
                     if (!entry.allDay) DateFormat.Hm().format(entry.at),
                     routineProgressLabel(l10n, r, entry.log),
                   ].join(' · '),
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 13,
-                  ),
+                  style: text.meta,
                 ),
               ],
             ),

@@ -230,6 +230,28 @@ void main() {
       expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
+    // F79.1 (DENEYIM D16): ajanda satırı ölçü birliği — iki satırlı kayıt
+    // 64 dp, başlık 16, alt satır 12; çöp düğmesi KALIR (§4 Y11), 48 dp
+    // hedef, simge 18.
+    testWidgets('ajanda satırı: 64 dp, başlık 16 / alt 12, çöp 48 dp', (
+      tester,
+    ) async {
+      phone(tester);
+      await tester.pumpWidget(app(events: [meeting]));
+      await tester.pumpAndSettle();
+      final title = tester.widget<Text>(find.text('Toplantı'));
+      expect(title.style?.fontSize, 16);
+      final sub = tester.widget<Text>(find.text('14:00 – 15:00'));
+      expect(sub.style?.fontSize, 12);
+      final row = find
+          .ancestor(of: find.text('Toplantı'), matching: find.byType(InkWell))
+          .first;
+      expect(tester.getSize(row).height, 64);
+      final delete = find.byKey(const ValueKey('calendar-entry-delete')).first;
+      expect(tester.getSize(delete).width, greaterThanOrEqualTo(48));
+      expect(tester.widget<IconButton>(delete).iconSize, 18);
+    });
+
     testWidgets(
       'telefonda ay ızgarası başlıktan açılır, güne dokununca kapanır',
       (tester) async {
