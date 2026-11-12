@@ -8056,6 +8056,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get themeLedger => 'Klasik yeşil';
 
   @override
+  String get themeGroupCalm => 'Sakin';
+
+  @override
+  String get themeGroupPaper => 'Kâğıt';
+
+  @override
+  String get themeGroupVivid => 'Canlı';
+
+  @override
   String get spellLearnedTitle => 'Öğrenilen yazımlar';
 
   @override

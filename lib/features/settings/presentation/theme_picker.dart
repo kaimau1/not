@@ -8,15 +8,71 @@ import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/sheet_header.dart';
 import '../settings_providers.dart';
 
-/// Tema seçeneklerinin TEK listesi (Ayarlar → Görünüm ve ana ekrandaki tema
-/// levhası aynı sırayı gösterir). Üçüncü öğe önizlemede çizilen tema(lar):
-/// Sistem açık + koyu iki yarım.
-List<(AppThemeChoice, String, List<ThemeData>)> themeChoiceOptions(
+typedef ThemeOption = (AppThemeChoice, String, List<ThemeData>);
+
+/// **ÜÇ GRUP** (DENEYIM_PLANI F73.4, K-D9): Sakin · Kâğıt · Canlı. Aile
+/// silinmez, yalnız sıra ve grup adı. "Koyu" Sakin'in sonunda (planın
+/// listesinde yoktu — sabah bakılacak).
+const themeChoiceGroupOrder = <List<AppThemeChoice>>[
+  [
+    AppThemeChoice.system,
+    AppThemeChoice.sage,
+    AppThemeChoice.porcelain,
+    AppThemeChoice.clay,
+    AppThemeChoice.lavender,
+    AppThemeChoice.olive,
+    AppThemeChoice.mint,
+    AppThemeChoice.peach,
+    AppThemeChoice.dark,
+  ],
+  [
+    AppThemeChoice.white,
+    AppThemeChoice.straw,
+    AppThemeChoice.cream,
+    AppThemeChoice.classic,
+    AppThemeChoice.newsprint,
+    AppThemeChoice.notebook,
+    AppThemeChoice.graphite,
+    AppThemeChoice.ledger,
+  ],
+  [
+    AppThemeChoice.ocean,
+    AppThemeChoice.rose,
+    AppThemeChoice.tangerine,
+    AppThemeChoice.emerald,
+    AppThemeChoice.amethyst,
+  ],
+];
+
+/// Gruplu tema seçenekleri: (grup adı, seçenekler).
+List<(String, List<ThemeOption>)> themeChoiceGroups(
   BuildContext context,
   String font,
 ) {
+  final l10n = context.l10n;
+  final all = {for (final o in _allThemeOptions(context, font)) o.$1: o};
+  final names = [
+    l10n.themeGroupCalm,
+    l10n.themeGroupPaper,
+    l10n.themeGroupVivid,
+  ];
+  return [
+    for (var i = 0; i < themeChoiceGroupOrder.length; i++)
+      (names[i], [for (final c in themeChoiceGroupOrder[i]) all[c]!]),
+  ];
+}
+
+/// Tema seçeneklerinin TEK listesi (Ayarlar → Görünüm ve ana ekrandaki tema
+/// levhası aynı sırayı gösterir) — gruplar sırasıyla düzleştirilmiş.
+List<ThemeOption> themeChoiceOptions(BuildContext context, String font) => [
+  for (final g in themeChoiceGroups(context, font)) ...g.$2,
+];
+
+/// Üçüncü öğe önizlemede çizilen tema(lar): Sistem açık + koyu iki yarım.
+List<ThemeOption> _allThemeOptions(BuildContext context, String font) {
   final l10n = context.l10n;
   ThemeData of(ThemeFamily f, Brightness b) => AppTheme.of(f, b, font: font);
   ThemeData light(ThemeFamily f) => of(f, Brightness.light);
@@ -89,29 +145,44 @@ class ThemeChoiceGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final choice = ref.watch(themeChoiceProvider);
-    final options = themeChoiceOptions(context, ref.watch(appFontProvider));
+    final groups = themeChoiceGroups(context, ref.watch(appFontProvider));
     // Dar ekranda üçlü sıralar, ortada altı, genişte dokuz sütun.
     return LayoutBuilder(
       builder: (context, constraints) {
-        const gap = 8.0;
+        const gap = AppSpace.s;
         final w = constraints.maxWidth;
         final perRow = w < 440 ? 3 : (w < 760 ? 6 : 9);
         final width = (w - gap * (perRow - 1)) / perRow;
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final option in options)
-              SizedBox(
-                width: width,
-                child: ThemeChoiceCard(
-                  label: option.$2,
-                  themes: option.$3,
-                  selected: choice == option.$1,
-                  onTap: () =>
-                      ref.read(themeChoiceProvider.notifier).set(option.$1),
+            for (var g = 0; g < groups.length; g++) ...[
+              Padding(
+                padding: EdgeInsets.only(
+                  top: g == 0 ? 0 : AppSpace.l,
+                  bottom: AppSpace.s,
                 ),
+                child: SectionLabel(groups[g].$1),
               ),
+              Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final option in groups[g].$2)
+                    SizedBox(
+                      width: width,
+                      child: ThemeChoiceCard(
+                        label: option.$2,
+                        themes: option.$3,
+                        selected: choice == option.$1,
+                        onTap: () => ref
+                            .read(themeChoiceProvider.notifier)
+                            .set(option.$1),
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ],
         );
       },
@@ -135,6 +206,14 @@ Future<void> showThemePickerSheet(BuildContext context) {
   );
 }
 
+/// Levha sırası (gruplar düzleştirilmiş) ve grup başlarının indeksleri.
+final List<AppThemeChoice> _themeOrder = [
+  for (final g in themeChoiceGroupOrder) ...g,
+];
+final Set<int> _groupStarts = {
+  for (final g in themeChoiceGroupOrder) _themeOrder.indexOf(g.first),
+};
+
 class _ThemePickerSheet extends ConsumerStatefulWidget {
   const _ThemePickerSheet({required this.initial});
 
@@ -149,7 +228,7 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
   late final ScrollController _scroll = ScrollController(
     initialScrollOffset: math.max(
       0,
-      (AppThemeChoice.values.indexOf(widget.initial) - 1) * 88.0,
+      (_themeOrder.indexOf(widget.initial) - 1) * 88.0,
     ),
   );
 
@@ -209,7 +288,11 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 controller: _scroll,
                 itemCount: options.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                // Alçak levhada grup adı yok: grup sınırında 12 dp boşluk
+                // (F73.4).
+                separatorBuilder: (_, i) => SizedBox(
+                  width: _groupStarts.contains(i + 1) ? AppSpace.m : AppSpace.s,
+                ),
                 itemBuilder: (context, i) {
                   final o = options[i];
                   return SizedBox(

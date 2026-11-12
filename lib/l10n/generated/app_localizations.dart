@@ -14390,6 +14390,24 @@ abstract class AppLocalizations {
   /// **'Klasik yeşil'**
   String get themeLedger;
 
+  /// No description provided for @themeGroupCalm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sakin'**
+  String get themeGroupCalm;
+
+  /// No description provided for @themeGroupPaper.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kâğıt'**
+  String get themeGroupPaper;
+
+  /// No description provided for @themeGroupVivid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Canlı'**
+  String get themeGroupVivid;
+
   /// No description provided for @spellLearnedTitle.
   ///
   /// In tr, this message translates to:

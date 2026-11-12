@@ -8077,6 +8077,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeLedger => 'Ledger';
 
   @override
+  String get themeGroupCalm => 'Calm';
+
+  @override
+  String get themeGroupPaper => 'Paper';
+
+  @override
+  String get themeGroupVivid => 'Vivid';
+
+  @override
   String get spellLearnedTitle => 'Learned spellings';
 
   @override
