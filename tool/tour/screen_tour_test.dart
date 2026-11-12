@@ -15,6 +15,7 @@ import 'package:notlar/features/notes/data/upload_queue.dart'
 //   TOUR_EMPTY=1  boş hâller (F79.5): ana, klasör, arşiv, çöp, Gelen, arama
 //   TOUR_OFFLINE=1  çevrimdışı hâller (F79.6): bekleyen yazım/ek, AI, hata
 //   TOUR_KEYBOARD=300  klavyeli hâl (viewInsets.bottom dp; ada `-klavye`)
+//   TOUR_FONT=1.3  büyük yazı (F80.2): uygulama yazı ölçeği; ada `-yazi130`
 //   TOUR_COMPARE=<eski klasör>  önce/sonra: her PNG için değişen piksel yüzdesi
 //   basılır (`TOUR_FARK ad %x`), özet `<çıktı>/_fark.txt`.
 //
@@ -409,6 +410,10 @@ final _tourEmpty = Platform.environment['TOUR_EMPTY'] == '1';
 /// bekliyor, uzaktan okunan listeler `unavailable` hatası veriyor.
 final _tourOffline = Platform.environment['TOUR_OFFLINE'] == '1';
 
+/// TOUR_FONT=1.3: büyük yazı turu (F80.2) — Ayarlar'daki yazı ölçeği gibi
+/// bütün arayüze uygulanır.
+final _tourFont = double.tryParse(Platform.environment['TOUR_FONT'] ?? '');
+
 /// Firestore'un çevrimdışı hatası (`friendlyError` → "bağlantı yok").
 final _offlineError = FirebaseException(
   plugin: 'cloud_firestore',
@@ -574,7 +579,11 @@ Future<void> _pumpApp(
             // Uygulamadaki gibi: tarihler etkin dilde (bkz. app.dart).
             Intl.defaultLocale = Localizations.localeOf(context)
                 .toLanguageTag();
-            return fixedTypography(context, child ?? const SizedBox(), 1);
+            return fixedTypography(
+              context,
+              child ?? const SizedBox(),
+              _tourFont ?? 1,
+            );
           },
         ),
       ),
@@ -713,7 +722,8 @@ void main() {
         await _shot(
           tester,
           key,
-          '${size.name}-$id${dark ? '-koyu' : ''}${kb != null ? '-klavye' : ''}',
+          '${size.name}-$id${dark ? '-koyu' : ''}${kb != null ? '-klavye' : ''}'
+          '${_tourFont != null ? '-yazi${(_tourFont! * 100).round()}' : ''}',
         );
         await _end(tester);
       });

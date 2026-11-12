@@ -64,13 +64,13 @@ dosya geçerli).
 | 72 | Zemin: belirteçler, mandal testi, ortak bileşenler | P33 | Opus | F72.1–F72.4 bitti, F72.5 kısmi (dalda, 2026-11-12) |
 | 73 | Renk rolleri + sakin tipografi | P34 | Opus | F73.1–F73.4 bitti (dalda, 2026-11-12; F73.1-2 P36'ya) |
 | 74 | Ana ekran cilası | P35 | Opus | Dalda (oto/P35-ana-ekran), cihaz A/B bekliyor |
-| 75 | Not ekranı alt çubuğu | P36 | Fable | Bekliyor |
-| 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | F76.1–F76.4 bitti (dalda `oto/P37-levhalar`, 2026-11-12; F76.3 kalanı sabah bakılacak) |
+| 75 | Not ekranı alt çubuğu | P36 | Fable | F75.1–F75.3 bitti, main'de (2026-11-12; cihaz A/B ile birleşti) |
+| 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | F76.1–F76.4 bitti, main'de (2026-11-12; F76.3 kalanı sabah bakılacak) |
 | 77 | Hareket ve dokunsal dil | P38 | Opus | Bekliyor |
 | 78 | Hız hissi (açılış, yeni not, yükleme hâlleri) | P39 | Fable | F78.1–F78.5 yazıldı (dalda `oto/P39-hiz-hissi`, 2026-11-12); F78.1 beyaz kare ve F78.2 sayısı cihazda ölçülecek |
-| 79 | İkincil ekranlar + boş/çevrimdışı hâller | P40 | Opus | F79.1–F79.6 bitti (dalda `oto/P40-ikincil-ekranlar`, 2026-11-12) |
+| 79 | İkincil ekranlar + boş/çevrimdışı hâller | P40 | Opus | F79.1–F79.6 bitti, main'de (2026-11-12) |
 | 72.6 | Belirteç göçü (mekanik) | P41 | Sonnet | Bekliyor |
-| 80 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | P42 | Sonnet + Opus | Bekliyor |
+| 80 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | P42 | Sonnet + Opus | F80.1–F80.4 bitti, F80.5 kısmi (dalda `oto/P42-koyu-kucuk-web`, 2026-11-12; once-sonra.md, sabit PDF çubuğu 1,3× taşması ve şerit çipleri sabah bakılacak) |
 
 **Sıra (Ek D'de gerekçesi):** P19 + P18 (ikisi de dalda sürüyor) → **P33 → P34 → P35 → P36 → P37 → P38 →
 P39 → P40 → P41 → P42** → P20 → P21 → P22.
@@ -360,7 +360,7 @@ Bu faz, F72.5'teki bölüm adı puntosu dışında **ekranda hiçbir şeyi deği
 **Önce oku:** `app_palette.dart` (başlık + `FamilyTokens`), `test/theme_contrast_test.dart`,
 `test/visual_consistency_test.dart`, `test/note_accent_consistency_test.dart`, `due_banner.dart`.
 
-- [x] **F73.1 Rol sözleşmesi + bekçi (K-D1).** *(2026-11-12: 1,3,4,5,6 yapıldı + `test/color_roles_test.dart` (eski `due_banner` ile kırmızı → yeşil); **2 (`_addToolButton`) YAPILMADI — `editor/` P36'nın (Ek D.1), sabah bakılacak**; AiIcon dolu düğmede/devre dışıyken miras renkte.)* §2.2 tablosu `app_palette.dart` başlığına.
+- [x] **F73.1 Rol sözleşmesi + bekçi (K-D1).** *(2026-11-12: 1,3,4,5,6 yapıldı + `test/color_roles_test.dart` (eski `due_banner` ile kırmızı → yeşil); 2 (`_addToolButton`) P36'da yapıldı (2026-11-12); AiIcon dolu düğmede/devre dışıyken miras renkte.)* §2.2 tablosu `app_palette.dart` başlığına.
   Düzeltilecekler:
   1. `due_banner.dart`: `tertiaryContainer/onTertiaryContainer` → `secondaryContainer/
      onSecondaryContainer`.
@@ -455,18 +455,18 @@ Yerleşim DEĞİŞMEZ (arama hapı, şeritler, çipler, "+" paneli bugünkü yer
 ek çubuğu, hızlı satır, çubuk YÜKSEKLİĞİ ve klavyeyle gizlenme (P23, P25; OTURTMA F67.4 —
 P18'in işi) DEĞİŞMEZ.
 
-- [ ] **F75.1 Sol kapsülde Kalem (D8, K-D6).** Sıra: Biçim · Ekle · **Kalem** · Ara ·
+- [x] **F75.1 Sol kapsülde Kalem (D8, K-D6).** *(2026-11-12: sıra Biçim · Ekle · Kalem · Ara · Ekler · ☑|Seç; `planEditorBar`'dan `share` kalktı, 36 dp adımı geldi; 360/393/412 dp testte taşma yok. YENİ KARAR (en güvenli, sabah bakılacak): 360 dp + ekli metin notunda Kalem sığmıyor (24 dp) → o durumda Kalem kapsülden düşer (`plan.pen`; hızlı satırda duruyor), ☑/Ekler eski yerinde kalır — kesik kapsül yerine. Çit dışı zorunlu dokunuş, sabah bakılacak: `UiItem.barPen` + kişiselleştirme satırı (Paylaş → Kalem), `_barHasShare`; tur sahnesi `n4-paylas` artık atlanıyor.)* Sıra: Biçim · Ekle · **Kalem** · Ara ·
   (Ekler) · (☑|Seç). Kalem = hızlı satırdaki kalem düğmesinin yaptığı iş (aynı işlev
   çağrılır; yeni durum yok). Paylaş kapsülden çıkar (`planEditorBar`'ın `share` alanı ve
   "önce Paylaş'ı düşür" adımı kalkar; "Ara'yı düşür" kalır). Belge notundaki ayrı kalem
   düğmesi (`_penWidth`) bu segmentle birleşir — iki kalem düğmesi yan yana durmaz.
   `planEditorBar` testine 360 / 393 / 412 dp: taşma yok.
   HAFIZA `arayuz.md`'deki "Alt çubuk sırası sabit: …" satırı yeni sırayla güncellenir.
-- [ ] **F75.2 Dokunma hedefi (D8).** Segmentin GÖRÜNEN boyu ve çubuk yüksekliği aynı kalır;
+- [x] **F75.2 Dokunma hedefi (D8).** *(2026-11-12: 8 segment `MinTapTarget`, 48 dp yüksek, yatayda segment + boşluk (`minWidth` eklendi — çit dışı, sabah bakılacak); kapsül dolgusu Row'un içine alındı (yoksa pay yakalanmıyordu); görünen boy 40, çubuk 50 dp aynı; `accessibility_test` "not alt çubuğu".)* Segmentin GÖRÜNEN boyu ve çubuk yüksekliği aynı kalır;
   her segment `MinTapTarget` ile 48 dp'lik dokunma alanı alır (komşu alanlar çakışmasın:
   yatayda segment + boşluk payı, dikeyde çubuğun tamamı). `accessibility_test`'e not ekranı
   alt çubuğu satırı.
-- [ ] **F75.3 Renkli notta kapsül rengi (D8, K-D6).** `NoteAccent` doluyken (renkli not):
+- [x] **F75.3 Renkli notta kapsül rengi (D8, K-D6).** *(2026-11-12: `_barInk`/`_barPage` build'de `NoteAccent` değerlerinden; açık kayıt/dikte düğmesi dolu not tonu; `note_accent_consistency_test` 3 yeni test; tur `telefon-n1`/`n4` çubukta petrol yok; saydamlıklar belirteçten — %14/%18 yerine `AppAlpha.pressed` (%12; §2.1 eşlemesi, `design_tokens_guard_test` elle değer kabul etmiyor). Koyu tur ve cihazda A/B (`ab_klavye.py`) YAPILMADI — yürütücüde.)* `NoteAccent` doluyken (renkli not):
   sol kapsül zemini `Color.alphaBlend(noteInk %8, sayfa rengi)`, çerçeve `noteInk %12`; sağ
   kapsül (`_aiCapsule`) `noteInk %14`, çerçevesiz; simgeler `noteInk`; etkin segment
   `noteInk %18`; "+" rozeti `noteInk %18`. Renksiz notta bugünkü renkler (F73.1'in rozet
@@ -632,7 +632,7 @@ dosyaları kullanıcı isteğiyle dolu — §4 Y11–Y13).
 
 ## FAZ 80 — Koyu tema, küçük ekran, web cilası [Sonnet döküm + Opus düzeltme · P42 · `[apk]`]
 
-- [ ] **F80.1 Koyu tema (D24).** `TOUR_DARK=1` 3 boyutta (telefon, matepad-yatay, masaustu).
+- [x] **F80.1 Koyu tema (D24).** — 2026-11-12: döküm `docs/deneyim/koyu.md`; 1 ve 2 zaten çözülmüş (doğrulandı), 3 PDF önizlemesine koyuda %8 perde, 4 `DestructiveRow` koyuda %24 (%50 dolu blok kalıyordu), 5 ölçüldü: adaçayı/lavanta/krem/saman koyusu < 0,04 L → +1/kanal, bekçi `theme_contrast_test`. `TOUR_DARK=1` 3 boyutta (telefon, matepad-yatay, masaustu).
   Bu incelemede görülenler (dosya adı `telefon-<sahne>-koyu.png`):
   1. İki parlak yüzey (ev düğmesi + "+") — F74.1 çözer; doğrula.
   2. Koyu renkli not kartı koyu zeminde kayboluyor (`telefon-ana-koyu.png` sol üst mor
@@ -646,21 +646,27 @@ dosyaları kullanıcı isteğiyle dolu — §4 Y11–Y13).
      < 0,04 olanlar dökülür; düzeltme palet değerinde, `theme_contrast_test`'e "kart
      zeminden en az 0,04 L açık" satırı. Ölçmeden değer değiştirme.
   Döküm `docs/deneyim/koyu.md`.
-- [ ] **F80.2 Küçük ekran + büyük yazı.** OTURTMA F66.4'ü P18 yaptı (2026-11-12:
+- [x] **F80.2 Küçük ekran + büyük yazı.** — 2026-11-12: tura `TOUR_FONT` eklendi; krom sonrası küçük/uzun telefon turu taşmasız (yalnız bilinen `e-pdf-balonlu`); 1,3× turda takvim şeridinde gün adı kesiliyordu → küçülür (bekçi `calendar_backdrop_themes_test`). Sabit PDF çubuğu (`pinned_media_pane.dart:1226`) 1,3× + 360/393 dp'de 46/13 dp taşıyor — çubuk K-O6 alanı, dokunulmadı, **sabah bakılacak**. OTURTMA F66.4'ü P18 yaptı (2026-11-12:
   telefon-kucuk/uzun turu taşmasız) — o iş TEKRARLANMAZ. Burada yalnız: bu planın krom
   değişikliklerinden SONRA aynı turun yeniden koşulması (`TOUR_SIZES=telefon-kucuk,
   telefon-uzun` + `TOUR_COMPARE`) ve yeni olan büyük yazı turu (tura `TOUR_FONT=1.3`):
   taşan/kesilen her yer madde olur ve düzeltilir.
-- [ ] **F80.3 Web / masaüstü (OTURTMA F67.7 — P18'den buraya taşındı).** (a) D22: bölüm
+- [x] **F80.3 Web / masaüstü (OTURTMA F67.7 — P18'den buraya taşındı).** (a) D22: bölüm
   çizgisi ızgara genişliğinde bitsin ya da ≥ 840 dp'de çizilmesin (turda hangisi temizse).
   (b) Fareyle üstüne gelme: kart, karo, satır, çip — yalnız `touchFirst == false`. (c) Odak
   halkası: klavyeyle gezinirken 2 dp `primary`. (d) F67.7'nin kalanı: kısayol levhası
   (Ctrl+/; `app.dart` `shortcuts` haritasından üretilir), kart ve maddede sağ tık = uzun
   basış menüsü, Tab sırası. OTURTMA'da F67.7 `[x]` + "→ DENEYIM F80.3".
-- [ ] **F80.4 Dokunma hedefi taraması.** `accessibility_test` kalıbıyla: ana ekran, not
+  — 2026-11-12: (a) başlık ≥ 840 dp iken çizgi yok (dar liste bölmesinde kalır); (b) kart/karo/
+  çip/satır Material üstüne gelme yalnız fare işaretçisinde (+ kartta ⋮ belirir) — doğrulandı;
+  (c) `KeyboardFocusRing` (yalnız klavye kipinde, metin alanında yok; bekçi
+  `keyboard_focus_ring_test`); (d) kısayol levhası + bağlama tek tablodan `kAppShortcuts`
+  (`shortcut_table_test`); sağ tık kart ve maddede zaten var. Tab sırası cihaz turunda elle
+  (`docs/cihaz_turu.md` C).
+- [x] **F80.4 Dokunma hedefi taraması.** — 2026-11-12: `test/tap_targets_test.dart` (6 sahne). Not menüsü ve ayarlar 0; kalan 27 küçük hedef gerekçeli istisna: not alt çubuğu 8 (P36), editör içi 10 (P20/P36), arama hapı 4 (Y1), klasör şeridi 3 (K-D3, sabah bakılacak), takvim ‹ › 2 (Y13). Yeni küçük hedef testi kırar. `accessibility_test` kalıbıyla: ana ekran, not
   ekranı (klavyeli/klavyesiz), menü, takvim, ayarlar — 48 dp altı hedef 0 (istisna listesi
   testte, gerekçeli).
-- [ ] **F80.5 Önce/sonra dosyası.** `docs/deneyim/once-sonra.md`: 12 sahnenin önce/sonra
+- [ ] **F80.5 Önce/sonra dosyası.** — 2026-11-12 kısmi: `docs/cihaz_turu.md`'ye adımlar eklendi (web 21–23, tablet 28); `once-sonra.md` YAZILMADI (limit) — **sabah bakılacak** (önce turu `build/tour-once*`, sonra turu koyu/yazı bitti, açık tam tur yarıda kaldı). `docs/deneyim/once-sonra.md`: 12 sahnenin önce/sonra
   görüntü adları + ölçülen sayılar (mandal bütçeleri, A/B tabloları, `prof_new.py`, beyaz
   kare). `docs/cihaz_turu.md`'ye bu planın elle bakılacak adımları. **HAFIZA / CLAUDE.md /
   KALANLAR toparlaması BURADA YAPILMAZ — P21'in (F69.5) işidir; tek kapanış.**

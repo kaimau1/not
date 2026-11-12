@@ -141,5 +141,48 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     });
+
+    // DENEYIM F80.2: 1,3× yazıda 360 dp'de "Cmt" hücreye sığmayıp "Cm"
+    // diye kesiliyordu (`telefon-kucuk-ana-yazi130.png`): gün adı küçülür.
+    testWidgets('büyük yazıda (1,3×) gün adı kesilmez, küçülür', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.3)),
+            child: child!,
+          ),
+          home: Scaffold(
+            body: HomeCalendarStripView(
+              today: DateTime(2026, 11, 6),
+              onDayTap: (_) {},
+              data: const CalendarData(),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      final name = find.text(DateFormat.E().format(DateTime(2026, 11, 7)));
+      // İki cumartesi (7 ve 14 Kasım); ikisi de küçülebilir kutuda.
+      expect(name, findsNWidgets(2));
+      for (final e in name.evaluate()) {
+        expect(
+          find.ancestor(
+            of: find.byWidget(e.widget),
+            matching: find.byType(FittedBox),
+          ),
+          findsWidgets,
+        );
+      }
+    });
   });
 }

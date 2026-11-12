@@ -301,20 +301,18 @@ void main() {
 
     test('alt çubuk: gizlenen AI düğmeleri yer açar', () {
       final full = planEditorBar(
-        width: 300,
-        fixedSegments: 2,
+        width: 260,
+        fixedSegments: 1,
         attachments: false,
-        pen: false,
       );
       final noAi = planEditorBar(
-        width: 300,
-        fixedSegments: 2,
+        width: 260,
+        fixedSegments: 1,
         attachments: false,
-        pen: false,
         aiButtons: 0,
       );
-      expect(noAi.share, isTrue);
-      expect(full.share, isFalse);
+      expect(noAi.search, isTrue);
+      expect(full.search, isFalse);
     });
   });
 

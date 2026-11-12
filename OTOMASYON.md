@@ -52,7 +52,12 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
    aşağıda. **Ölçümü yürütücü KENDİ yapmaz (kullanıcı kararı 2026-11-10):** derlemeler
    bitince `Agent` ile `model: "sonnet"` alt ajana verilir (istem: iki APK yolu, telefon
    kuralları, `ab_klavye.py` A sonra B ikişer koşu, ikinci koşuların tablosu); kararı
-   yürütücü verir. Bir evrede UI ms ya da LAYOUT ms %20'den fazla kötüyse birleştirme YOK:
+   yürütücü verir. **Hız hissi / açılış / yükleme / akıcılık paketlerinde (P39 ve benzeri;
+   kullanıcı kararı 2026-11-12) eşik %20 DEĞİL: hiçbir evre kötüleşmez, hedef evre ölçülebilir
+   iyileşir.** Kötüleşme çıkarsa paket çöpe gitmez: maddeler ayrı commit'tir (DEVIR'de madde →
+   commit), şüpheli commit'i çıkarıp yeniden ölç, kötüleştireni `git revert` et + maddeye
+   "iyileşme kanıtlanamadı", iyi maddeleri yeniden ölçüp birleştir.
+   Bir evrede UI ms ya da LAYOUT ms %20'den fazla kötüyse birleştirme YOK:
    satır `takıldı: ölçüm` + sayılar, sıradaki pakete geç. Telefon yoksa/ısınmışsa satır
    `cihaz bekliyor` olur, birleştirme `[apk]`'sız yapılır ve ilk APK noktası ertelenir.
 7. **Birleştir.** Dalda: Kuyruk satırını `bitti` + tek satır sonuç yap, `OTURTMA_PLANI.md`
@@ -93,6 +98,9 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
 - Doğrulama: değişenin testi `--reporter failures-only`; push'tan önce tam
   `flutter analyze` (CI info düzeyini de hata sayar). Tam test takımını yerelde koşma.
   `dart format lib` yok.
+- **Hız hissi işi (kullanıcı kararı 2026-11-12):** kötüleşme kabul edilmez, her değişiklik
+  ölçülebilir iyileşme getirir (önce/sonra kanıtı DEVIR'e); kanıtlanamayan değişiklik yapılmaz.
+  Her madde AYRI, bağımsız commit (kötüleşen tek başına geri alınabilsin). Sık ara commit + push.
 - KARAR çıkarsa plandaki **"En güvenli"** seçenek + maddeye "sabah bakılacak". Kullanıcıya
   soru sorma. Madde kapsamı dışına çıkma, yeni özellik ekleme.
 - **Dokunma:** `config/app` bayrakları (`inkV2Write`, `minClient`), veri silen/taşıyan göç,
@@ -155,13 +163,13 @@ Sıra önceliktir: önce kullanıcının bildirdiği hatalar, sonra kalem/perfor
 | P33 | Tasarım zemini: belirteç, mandal testi, ortak bileşen (görünüm değişmez) | opus | DENEYIM F72.1–F72.5 | | | bitti (2026-11-12): belirteçler (`AppSpace/AppRadius/AppIconSize/AppAlpha/AppWeight`, `AppMotion.quick/long`), `AppText.of` 8 rol, mandal testi `design_tokens_guard_test` (bozma denemesinde kırmızı), `SheetTile`/`DestructiveRow`/`SheetTileGrid`/`DelayedSpinner`, `SectionLabel` = `AppText.section` (w700 → w600; boyut zaten 14). Tur 274 PNG %0 fark. F72.5 kısmen: SheetHeader/EmptyState ölçüleri ve K-D7 tutamak görünür değişiklik → P37 F76.1/F76.3 ve P40 F79.5 (sabah bakılacak). Cihazda yazı ağırlığı görülmedi |
 | P34 | Renk rolleri + sakin tipografi | opus | DENEYIM F73.1–F73.4 | | evet | bitti (2026-11-12): renk rolleri (zamanı gelen şeridi sıcak, AI tertiary, paylaş/ayarlar daireleri nötr; sözleşme `app_palette.dart` başında, bekçi `color_roles_test`), yazı boyu 33 yer (< 12 → 12), ağırlık 83 yer → `AppWeight.strong` (mandal fontWeight 225 → 142), tema seçici Sakin/Kâğıt/Canlı. Tur 79 PNG değişti, kabul PNG'lerine bakıldı. Sabah bakılacak: editör `_addToolButton` rengi → P36; "Koyu" Sakin'in sonunda; Görünüm'de "Tema" + "Sakin" iki başlık üst üste. Cihazda görülmedi |
 | P35 | Ana ekran cilası (yerleşim değişmez) | opus | DENEYIM F74.1–F74.6 | A/B | evet | bitti (2026-11-12): ev düğmesi primaryContainer, takvim şeridi üç harf gün, zamanı gelen şeridi ✕ 48 dp, kartta işaretliler tek satır özet (yeni `card_show_checked`, varsayılan kapalı — sabah bakılacak: P32 isteğiyle birlikte gözden geçir), soluk kart ⋮, nötr mikrofon, "İlk notunu yaz". Cihaz A/B (taban 8b5c24db, 2. koşular): klavye aç +%5/+%5, yazma +%3/+%4, liste kaydırma +%5,5/+%7 (B daha sıcak) — regresyon yok. Sabah bakılacak: kart yükseklik tahmini özeti saymıyor |
-| P36 | Not ekranı alt çubuğu (kalem, dokunma alanı, renkli notta ton) | fable | DENEYIM F75.1–F75.3 | A/B | evet | bekliyor |
+| P36 | Not ekranı alt çubuğu (kalem, dokunma alanı, renkli notta ton) | fable | DENEYIM F75.1–F75.3 | A/B | evet | bitti (2026-11-12): Kalem sol kapsülde, Paylaş ⋮ menüsünde, her segment 48 dp (`MinTapTarget.minWidth`), renkli notta çubuk notun tonunda; 360 dp + ekli metin notunda Kalem çubuktan düşer (en güvenli, sabah bakılacak). Cihaz A/B (taban 32a20103, aday P36+P37+P40 3595df5c, 2. koşular): klavye kapa −%8/−%2, aç −%4/+%6, yazma −%4/−%10, not kapanış gürültülü (A2 sapkın) — regresyon yok; son klavye kapa LAYOUT 9,9 → 13,4 ms (B1 7,4, gürültü). Yazmada en uzun kare 29 → 42 ms, sayısı eşit — sabah bakılacak. Tur sahnesi `n4-paylas` ⋮ üzerinden açılmalı. APK: P36+P37+P40 |
 | P37 | Levhalar: ortak başlık, ortak karo | opus | DENEYIM F76.1–F76.4 | | evet | bitti (2026-11-12, bulut): not menüsü 775 → 670 dp (tutamak yok, ⚙ açılır menü: Menüyü/Ekranı düzenle · Ayarlar, Sil `DestructiveRow`), küçük telefonda Sil 96 → 50 dp kaydırma; AI/Paylaş `SheetTile.rich`; `SheetHeader` 56 dp/18 pt; onaylar `showConfirmDialog` (yıkıcı = error); 84 levha dökümü `docs/deneyim/levhalar.md`. Cihazda bakılmadı; sabah bakılacak: kapsam dışı levhalarda tutamak+✕, 34 levha kendi 16 pt başlığı, error tonsuz 5 onay |
 | P38 | Hareket ve dokunsal dil | opus | DENEYIM F77.1–F77.4 | A/B | evet | bekliyor |
 | P39 | Hız hissi (açılış, yeni not, yükleme hâlleri) | fable | DENEYIM F78.1–F78.5 | cihaz | evet | bekliyor |
 | P40 | İkincil ekranlar + boş/çevrimdışı hâller | opus | DENEYIM F79.1–F79.6 (OTURTMA F66.6 dahil) | | evet | bitti (2026-11-12, bulut): `EmptyState` §2.3 ölçüsü + "Burada … yok" kalıbı (terminology bekçisi), `ErrorState` "Bağlantı yok"/"Yüklenemedi" (Gelen hatada artık boş görünmüyor), boş klasör 72 dp + ızgaradaki Yeni klasör karosu kalktı, Çöp/Arşiv Ara+⋮ ve etiketli Geri al·Sil, Ayarlar nötr 40 dp kutular + misafir kartı, ajanda 56/64 dp; tur `TOUR_EMPTY`/`TOUR_OFFLINE` 6+6. Sabah bakılacak: ana ekran Gelen süzgeci hatada boş hâl (P19 alanı), AI levhası çevrimdışı düğmeler, bekleyen ek şeridi çevrimdışı "yükleniyor" |
 | P41 | Belirteç göçü (mekanik; editör klasörü hariç; açık dal yokken) | sonnet | DENEYIM F72.6 | | | bekliyor |
-| P42 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | sonnet + opus | DENEYIM F80.1–F80.5 (OTURTMA F67.7 dahil) | | evet | bulutta: ccr-9a8f1352 (2026-11-12, kullanıcı isteğiyle başlatıldı — zincir ATLAR, dala dokunmaz) |
+| P42 | Koyu tema, küçük ekran, web cilası, önce/sonra dosyası | sonnet + opus | DENEYIM F80.1–F80.5 (OTURTMA F67.7 dahil) | | evet | bitti (2026-11-12, bulut; kullanıcı isteğiyle birleştirildi): koyu temada kart/PDF perdesi/Sil ayrışması (`docs/deneyim/koyu.md`, bekçiler `theme_contrast_test`, `dark_theme_polish_test`), tura `TOUR_FONT=1.3`, takvim şeridi büyük yazıda küçülür, web odak halkası `KeyboardFocusRing` + kısayollar `kAppShortcuts`, `tap_targets_test` (27 gerekçeli istisna); F80.5 kısmi (cihaz turu web 21–23, tablet 28). Sabah bakılacak: `docs/deneyim/once-sonra.md` yazılmadı, sabit PDF çubuğu 1,3× + 360/393 dp taşıyor (`pinned_media_pane.dart`), şerit çipleri 32 dp. Cihazda bakılmadı |
 | P20 | Editör çekirdeği (başlama şartı tutuyorsa) | fable | Faz 64 | A/B | evet | bekliyor |
 | P21 | Kapanış: konsol listesi, plan/HAFIZA toparlama | sonnet | F69.4, F69.5 | | | bekliyor |
 | P22 | SON PAKET: açıkta kalan her maddeyi değerlendir ve uygun biçimde yap | opus | P01–P21'de adı geçmeyen açık `[ ]` maddeler (F58.1, F58.4, F60.5, F60.7, F61.7, F61.8, F62.4, F62.6, F63.6, F63.7, F65.1–3, F65.6, F66.1–3, F66.5, F67.5, F67.6, F67.8, F68.3–5, F69.1–3) + F60.S2 + "cihazda doğrulanmadı" / "tablette doğrulanmadı" işaretli maddeler + açık K-O kararları | gerekirse | gerekirse | bekliyor — protokol aşağıda |

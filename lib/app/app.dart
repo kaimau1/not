@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/widgets/focus_ring.dart';
 import '../core/app_update.dart';
 import 'release_notes_toast.dart';
 import '../core/l10n_ext.dart';
@@ -261,7 +262,10 @@ class NotlarApp extends ConsumerWidget {
             // DÜZENLEME MODU şeridi bütün ekranların üstünde (bkz.
             // customizable.dart) — mod kapalıyken ağaca hiçbir şey eklemez.
             // Uygulama kilidi (F18.6, varsayılan kapalı) her şeyin üstünde.
-            AppLockGate(
+            // Klavye odak halkası (F80.3) gezginin, levhaların ve
+            // pencerelerin ÜSTÜNDE boyanır; dokunmatikte çizilmez.
+            KeyboardFocusRing(
+              child: AppLockGate(
               child: CustomizeModeHost(
               // Eski istemci kapısı (F1.5): `config/app.minClient` bu
               // sürümün veri sürümünü aştıysa tepede "güncelle" şeridi.
@@ -278,6 +282,7 @@ class NotlarApp extends ConsumerWidget {
                   ),
                 ),
               ),
+            ),
             ),
             ),
             fontScale,

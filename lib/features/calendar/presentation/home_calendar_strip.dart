@@ -286,17 +286,23 @@ class _DayCell extends StatelessWidget {
                               // "P" Pazartesi mi Perşembe mi Pazar mı
                               // söylemiyordu. 360 dp'de hücre içi ~26 dp,
                               // "Cmt" 11 pt sığar; daha darda tek harf.
+                              // Büyük yazıda (1,3×) "Cmt" hücreye sığmayıp
+                              // "Cm" diye kesiliyordu (F80.2): sığmazsa
+                              // küçülür, kesilmez.
                               : Center(
-                                  child: Text(
-                                    c.maxWidth >= 24
-                                        ? weekday
-                                        : weekday.characters.first,
-                                    maxLines: 1,
-                                    style: AppText.of(Theme.of(context)).badge
-                                        .copyWith(
-                                          height: 1.15,
-                                          color: scheme.onSurfaceVariant,
-                                        ),
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      c.maxWidth >= 24
+                                          ? weekday
+                                          : weekday.characters.first,
+                                      maxLines: 1,
+                                      style: AppText.of(Theme.of(context)).badge
+                                          .copyWith(
+                                            height: 1.15,
+                                            color: scheme.onSurfaceVariant,
+                                          ),
+                                    ),
                                   ),
                                 ))
                         : wide && title != null
