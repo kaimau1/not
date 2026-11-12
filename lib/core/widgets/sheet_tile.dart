@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/app_tokens.dart';
 import '../a11y/min_tap_target.dart';
+import '../app_icons.dart';
 
 /// **LEVHA KAROLARI** (DENEYIM_PLANI §2.3, F72.4): levhalardaki "simge + ad"
 /// düğmelerinin tek kılığı. Zemin `surfaceContainer`, köşe `AppRadius.m`,
@@ -17,7 +18,8 @@ class SheetTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-  }) : description = null;
+  }) : description = null,
+       badge = null;
 
   /// Zengin karo: en az 64 dp, simge 24 solda, `rowTitle` + `meta`
   /// açıklama (en çok 2 satır), sağda ›.
@@ -27,12 +29,16 @@ class SheetTile extends StatelessWidget {
     required this.label,
     required String this.description,
     required this.onTap,
+    this.badge,
   });
 
   final IconData icon;
   final String label;
   final String? description;
   final VoidCallback? onTap;
+
+  /// Zengin karoda ›'nin solunda küçük işaret (ör. misafirde hesap kilidi).
+  final Widget? badge;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +69,7 @@ class SheetTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(
+              AppIcons.glyph(
                 icon,
                 size: rich ? AppIconSize.l : AppIconSize.m,
                 color: scheme.primary,
@@ -86,6 +92,10 @@ class SheetTile extends StatelessWidget {
                       )
                     : title,
               ),
+              if (badge case final b?) ...[
+                const SizedBox(width: AppSpace.s),
+                b,
+              ],
               if (rich)
                 Icon(
                   Icons.chevron_right,
