@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/app/theme/app_palette.dart';
 import 'package:notlar/app/theme/app_theme.dart';
+import 'package:notlar/app/theme/app_tokens.dart';
 import 'package:notlar/app/theme/note_colors.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
@@ -228,11 +229,11 @@ void main() {
     final page = NoteColors.noteSurfaceIn(_light, note);
     expect(
       capsuleFill(tester, 'editor-tool-capsule'),
-      Color.alphaBlend(ink.withValues(alpha: 0.08), page),
+      Color.alphaBlend(ink.withValues(alpha: AppAlpha.hairline), page),
     );
     expect(
       capsuleFill(tester, 'editor-ai-capsule'),
-      Color.alphaBlend(ink.withValues(alpha: 0.14), page),
+      Color.alphaBlend(ink.withValues(alpha: AppAlpha.pressed), page),
     );
     expect(barIcons(tester), isNotEmpty);
     for (final icon in barIcons(tester)) {

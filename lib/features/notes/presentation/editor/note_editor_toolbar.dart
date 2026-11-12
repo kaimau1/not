@@ -10,7 +10,8 @@ extension _EditorToolbar on _NoteEditorScreenState {
   /// Alt bardaki araç segmentlerinden biri.
   ///
   /// RENKLİ NOTTA (F75.3, K-D6) çubuk notun tonunda: [_barInk] doluysa simge
-  /// ve etkin zemin ondan, yoksa temanın renkleri.
+  /// ve etkin zemin ondan, yoksa temanın renkleri. Saydamlıklar belirteçten
+  /// (plandaki %14 / %18 → `AppAlpha.pressed`, DENEYIM §2.1 göç eşlemesi).
   Widget _toolSegment({
     Key? key,
     required IconData icon,
@@ -27,7 +28,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
         child: Material(
           color: !active
               ? Colors.transparent
-              : ink?.withValues(alpha: 0.18) ?? scheme.primaryContainer,
+              : ink?.withValues(alpha: AppAlpha.pressed) ?? scheme.primaryContainer,
           borderRadius: BorderRadius.circular(10),
           child: InkWell(
             key: key,
@@ -111,7 +112,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
           final glow = Color.lerp(
             !open
                 ? Colors.transparent
-                : noteInk?.withValues(alpha: 0.18) ?? scheme.secondaryContainer,
+                : noteInk?.withValues(alpha: AppAlpha.pressed) ?? scheme.secondaryContainer,
             noteInk ?? scheme.primary,
             t,
           )!;
@@ -223,7 +224,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
     final ink = _barInk;
     final fill = ink == null
         ? scheme.primaryContainer
-        : Color.alphaBlend(ink.withValues(alpha: 0.14), _barPage);
+        : Color.alphaBlend(ink.withValues(alpha: AppAlpha.pressed), _barPage);
     // Dolgu yatayda; dikeyde Row kapsülün tam boyunda (48 dp) — düğmelerin
     // dokunma payı yakalansın (F75.2). Görünüş aynı.
     return DecoratedBox(
@@ -278,7 +279,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color:
-                      ink?.withValues(alpha: 0.18) ?? scheme.primaryContainer,
+                      ink?.withValues(alpha: AppAlpha.pressed) ?? scheme.primaryContainer,
                   shape: BoxShape.circle,
                 ),
                 child: SizedBox.square(

@@ -466,7 +466,7 @@ P18'in işi) DEĞİŞMEZ.
   her segment `MinTapTarget` ile 48 dp'lik dokunma alanı alır (komşu alanlar çakışmasın:
   yatayda segment + boşluk payı, dikeyde çubuğun tamamı). `accessibility_test`'e not ekranı
   alt çubuğu satırı.
-- [x] **F75.3 Renkli notta kapsül rengi (D8, K-D6).** *(2026-11-12: `_barInk`/`_barPage` build'de `NoteAccent` değerlerinden; açık kayıt/dikte düğmesi dolu not tonu; `note_accent_consistency_test` 3 yeni test; tur `telefon-n1`/`n4` çubukta petrol yok. Koyu tur ve cihazda A/B (`ab_klavye.py`) YAPILMADI — yürütücüde.)* `NoteAccent` doluyken (renkli not):
+- [x] **F75.3 Renkli notta kapsül rengi (D8, K-D6).** *(2026-11-12: `_barInk`/`_barPage` build'de `NoteAccent` değerlerinden; açık kayıt/dikte düğmesi dolu not tonu; `note_accent_consistency_test` 3 yeni test; tur `telefon-n1`/`n4` çubukta petrol yok; saydamlıklar belirteçten — %14/%18 yerine `AppAlpha.pressed` (%12; §2.1 eşlemesi, `design_tokens_guard_test` elle değer kabul etmiyor). Koyu tur ve cihazda A/B (`ab_klavye.py`) YAPILMADI — yürütücüde.)* `NoteAccent` doluyken (renkli not):
   sol kapsül zemini `Color.alphaBlend(noteInk %8, sayfa rengi)`, çerçeve `noteInk %12`; sağ
   kapsül (`_aiCapsule`) `noteInk %14`, çerçevesiz; simgeler `noteInk`; etkin segment
   `noteInk %18`; "+" rozeti `noteInk %18`. Renksiz notta bugünkü renkler (F73.1'in rozet

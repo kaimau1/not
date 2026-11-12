@@ -9,6 +9,7 @@ import '../reminders_screen.dart'
     show maybeShowAutoStartHint;
 import '../reminder_sheet.dart';
 import '../../domain/reminder_repeat.dart';
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/a11y/min_tap_target.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
@@ -4580,13 +4581,17 @@ child: NoteFindBar(
                                   color: noteAccent == null
                                       ? _themeOf(context).colorScheme.surface
                                       : Color.alphaBlend(
-                                          noteAccent.withValues(alpha: 0.08),
+                                          noteAccent.withValues(
+                                            alpha: AppAlpha.hairline,
+                                          ),
                                           background,
                                         ),
                                   borderRadius: BorderRadius.circular(13),
                                   border: Border.all(
                                     color:
-                                        noteAccent?.withValues(alpha: 0.12) ??
+                                        noteAccent?.withValues(
+                                          alpha: AppAlpha.pressed,
+                                        ) ??
                                         _themeOf(
                                           context,
                                         ).colorScheme.outlineVariant,
