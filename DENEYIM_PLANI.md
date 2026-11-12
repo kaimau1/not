@@ -571,18 +571,18 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
   *Tuzak:* `FlutterFragmentActivity`; iki uygulama kimliği (kişisel / `dev.kaimau.notlar.olcum`);
   P10'un güncelleme yolu (`ApkGuncelleme.kt`, `GuncellemeSonrasiAc.kt`) açılışla aynı
   Activity'yi kullanır — güncelleme sonrası açılışı da dene.
-- [x] *(2026-11-12: `tool/perf/prof_new.py` yazıldı, cihazda ölçülmedi — sayı yok; ≤ 450 ms ise kod gerekmez, üstündeyse kök neden ayrı iş. Sabah bakılacak.)* **F78.2 "Yeni not" süresi.** Yeni ölçüm `tool/perf/prof_new.py`: "+" → "Metin notu"
+- [x] *(2026-11-12: `tool/perf/prof_new.py` yazıldı, cihazda ölçülmedi — sayı yok; **iyileşme kanıtlanamadı** (ölçüm yok → kod değişikliği yok); ≤ 450 ms ise kod gerekmez, üstündeyse kök neden ayrı iş. Sabah bakılacak.)* **F78.2 "Yeni not" süresi.** Yeni ölçüm `tool/perf/prof_new.py`: "+" → "Metin notu"
   dokunuşundan editörün ilk karesi + klavye görünür (`dumpsys input_method` `mInputShown`)
   olana dek. 5 koşu ortanca. Hedef ≤ 450 ms. Üstündeyse kök neden + düzeltme; altındaysa
   yalnız sayı yazılır, kod yok.
-- [x] *(2026-11-12: (a) 20 içerik halkası `DelayedSpinner`, döküm `docs/deneyim/yukleme.md`; (b) `MediaLoadingCover` — sabit/gömülü PDF + sabit video; (c) yerel görsel `fadeInFrame` 150 ms, kart kapağı boyu zaten ekin oranından. `test/loading_states_test.dart`.)* **F78.3 Yükleme hâlleri (D15).** (a) `DelayedSpinner`: içerik alanındaki halkalar
+- [x] *(2026-11-12: (a) 20 içerik halkası `DelayedSpinner`, döküm `docs/deneyim/yukleme.md`; (b) `MediaLoadingCover` yalnız PDF belgesi açılırken (rota geçişinden SONRA); geçiş yer tutucusu ve sabit video: **iyileşme kanıtlanamadı** (geçiş karelerine iş ekler) — yapılmadı; (c) görüntüleyicide ağ görseli 500 → 150 ms, kart boyu zaten ekin oranından; yerel görsele solma: **iyileşme kanıtlanamadı** (tam görünürlüğü 150 ms geciktirir) — yapılmadı. `test/loading_states_test.dart`.)* **F78.3 Yükleme hâlleri (D15).** (a) `DelayedSpinner`: içerik alanındaki halkalar
   (liste, levha gövdesi, önizleme kutusu) buna çevrilir; düğme içi halkalar kalır. Döküm
   `docs/deneyim/yukleme.md`. (b) Sabit/gömülü PDF ve video bölmesi yüklenirken gri kutu
   yerine ekin `thumbUrl`/yerel küçük resmi (P17/F65.5 ile var) + %24 siyah perde +
   `DelayedSpinner`; küçük resim yoksa `surfaceContainer` + tür simgesi. Bölmenin boyu ve
   çubuğu DEĞİŞMEZ. (c) Kart ve görüntüleyicide görseller 150 ms solarak gelir; yer tutucu
   görselin en/boy oranında (test: görsel gelmeden ve geldikten sonra kart yüksekliği aynı).
-- [x] *(2026-11-12: 42 `GestureDetector(onTap:)` dökümü `docs/deneyim/dokunus.md`; başka yere götüren 3 yüzey `PressScale` (paylaşım hedefi kartı, not hedefi hücresi, sohbet görseli); gerisi aynı karede durum değiştiriyor ya da kapsam dışı.)* **F78.4 Dokunuş tepkisi denetimi.** `GestureDetector(onTap:` kullanımları: görünür
+- [x] *(2026-11-12: 42 `GestureDetector(onTap:)` dökümü `docs/deneyim/dokunus.md`; başka yere götüren 2 yüzey `PressScale` (paylaşım hedefi kartı, not hedefi hücresi); gerisi aynı karede durum değiştiriyor ya da kapsam dışı.)* **F78.4 Dokunuş tepkisi denetimi.** `GestureDetector(onTap:` kullanımları: görünür
   basma tepkisi olmayanların dökümü; sık dokunulan yüzeyler düzeltilir. Jest alanları
   (kalem yüzeyi, ayraç, tutamak) kapsam dışı.
 - [x] *(2026-11-12: kanıt yeşil, kod değişmedi — bütün yollar ateşle-unut (`updateFields`/`batchUpdate` beklenmiyor). `test/optimistic_actions_test.dart`: onayı hiç gelmeyen depoyla arşivle/sabitle/yıldızla/çöp/madde + toplu yazımı `await` eden arayüze kaynak bekçisi.)* **F78.5 İyimser işlemler.** Sabitle, yıldızla, arşivle, çöpe at, madde işaretle,
