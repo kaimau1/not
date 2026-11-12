@@ -20,6 +20,7 @@ import '../../notes/presentation/editor/note_images.dart';
 import '../data/folder_chat_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **PAYLAŞILAN KLASÖRÜN SOHBETİ** (kullanıcı isteği 2026-08-18: "birde
 /// birbirine mesaj gönderme alanı olabilir").
@@ -519,7 +520,7 @@ class _MessageBubble extends ConsumerWidget {
                   message.senderName,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppWeight.strong,
                     color: scheme.primary,
                   ),
                 ),

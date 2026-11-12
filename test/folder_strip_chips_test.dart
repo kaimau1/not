@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:notlar/app/theme/app_tokens.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folder_activity.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
@@ -141,7 +142,7 @@ void main() {
     Set<String> highlighted() => {
       for (final label in keys.keys)
         if (tester.widget<Text>(chipLabel(label)).style?.fontWeight ==
-            FontWeight.w700)
+            AppWeight.strong)
           label,
     };
 

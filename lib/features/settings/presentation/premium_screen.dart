@@ -11,6 +11,7 @@ import '../../ai/data/api_key_store.dart';
 import '../../auth/presentation/auth_providers.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/app_icons.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Premium sayfası: mevcut durum + ücretsiz/premium karşılaştırması + gözden
 /// kaçan özelliklerin vitrini.
@@ -228,7 +229,7 @@ class _PerkRow extends StatelessWidget {
               paid,
               style: TextStyle(
                 color: scheme.primary,
-                fontWeight: FontWeight.w700,
+                fontWeight: AppWeight.strong,
               ),
             ),
           ],

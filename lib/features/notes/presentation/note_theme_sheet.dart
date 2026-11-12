@@ -13,6 +13,7 @@ import '../../../core/widgets/color_palette.dart';
 import '../domain/note.dart';
 import 'color_picker_sheet.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Görünüm levhasının alt satırındaki seçenekler.
 enum NoteAppearanceAction { color, frame, image, paper }
@@ -346,7 +347,7 @@ class _ThemeTile extends StatelessWidget {
               maxLines: 1,
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: selected ? AppWeight.strong : FontWeight.w500,
                 color: selected ? scheme.primary : scheme.onSurfaceVariant,
               ),
             ),

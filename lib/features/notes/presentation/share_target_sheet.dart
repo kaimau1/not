@@ -10,6 +10,7 @@ import '../domain/note_type.dart';
 import 'capture_mode_sheet.dart';
 import 'note_grid.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Paylaşımla / "Birlikte aç" ile gelen içeriğin levhada görünen özeti.
 @immutable
@@ -192,7 +193,7 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
             Text(
               l10n.shareTargetTitle,
               style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppWeight.strong,
               ),
             ),
             const SizedBox(height: 10),

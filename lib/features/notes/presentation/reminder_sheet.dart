@@ -6,6 +6,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../domain/reminder_repeat.dart';
 import 'reminder_level_ui.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Hatırlatıcı levhasının sonucu: [at] null ise hatırlatıcı KALDIRILDI.
 typedef ReminderChoice = ({DateTime? at, String repeat, String level});
@@ -219,7 +220,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
                               Text(
                                 timeLabel,
                                 style: theme.textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: AppWeight.strong,
                                   color: _past
                                       ? scheme.onErrorContainer
                                       : scheme.onPrimaryContainer,

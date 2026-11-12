@@ -29,7 +29,7 @@ class _FriendsRow extends ConsumerWidget {
                 '$requestCount',
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppWeight.strong,
                   color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
@@ -66,7 +66,7 @@ class _InboxRow extends ConsumerWidget {
                 '$count',
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppWeight.strong,
                   color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),

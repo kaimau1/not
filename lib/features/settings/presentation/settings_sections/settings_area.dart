@@ -802,7 +802,7 @@ class _ShortcutTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppWeight.strong,
                         ),
                       ),
                       Text(

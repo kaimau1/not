@@ -12,6 +12,7 @@ import '../features/settings/presentation/guide_screen.dart'
 import '../features/settings/settings_providers.dart'
     show sharedPreferencesProvider;
 import 'router.dart' show routerProvider;
+import '../app/theme/app_tokens.dart';
 
 /// **GÜNCELLEMEDEN SONRA "YENİLİKLER" TOSTU** (2026-11-10, kullanıcı: *"sürüm
 /// notları sürüm bazlı, son kullanıcının anlayacağı şekilde ana ekranda tost
@@ -84,7 +85,7 @@ class _ReleaseNotesToastState extends ConsumerState<ReleaseNotesToast> {
               children: [
                 Text(
                   l10n.releaseNotesToastTitle(version),
-                  style: TextStyle(fontWeight: FontWeight.w700, color: color),
+                  style: TextStyle(fontWeight: AppWeight.strong, color: color),
                 ),
                 const SizedBox(height: 4),
                 for (final line in shown)

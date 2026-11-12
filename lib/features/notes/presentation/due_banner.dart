@@ -9,6 +9,7 @@ import '../../../core/l10n_ext.dart';
 import '../data/due_state.dart';
 import '../data/reminder_service.dart' show reminderTimePrefix;
 import '../domain/due_items.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **ANA EKRANDA ZAMANI GELENLER** (kullanıcı isteği 2026-11-08): tek
 /// satırlık şerit — ilk maddenin başlığı ve saati, fazlası "+N". Dokununca
@@ -120,7 +121,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                       '+${items.length - 1}',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: scheme.onSecondaryContainer,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppWeight.strong,
                       ),
                     ),
                   ),

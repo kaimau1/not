@@ -12,6 +12,7 @@ import '../../notes/presentation/add_catalog.dart';
 import '../../notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
 import '../settings_providers.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **KİŞİSELLEŞTİR** ekranı — bütün kişisel düzen TEK menüde.
 ///
@@ -171,7 +172,7 @@ class _EditModeCard extends StatelessWidget {
                   child: Text(
                     l10n.customizeStartTitle,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppWeight.strong,
                       color: scheme.onPrimaryContainer,
                     ),
                   ),

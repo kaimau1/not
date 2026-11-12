@@ -19,6 +19,7 @@ import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_nav.dart';
 import 'folder_sheets.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **ANA EKRANDAKİ KLASÖR KAROSU.**
 ///
@@ -626,7 +627,7 @@ class _ChipShell extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: selected ? AppWeight.strong : FontWeight.w500,
                     color: subtle || dimmed ? muted : scheme.onSurface,
                   ),
                 ),
@@ -681,7 +682,7 @@ class _CornerCount extends StatelessWidget {
         style: TextStyle(
           fontSize: 9,
           height: 1.15,
-          fontWeight: FontWeight.w800,
+          fontWeight: AppWeight.strong,
           color: alert ? scheme.onError : color,
         ),
       ),
@@ -720,7 +721,7 @@ class FolderUnreadBadge extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             height: 1.1,
-            fontWeight: FontWeight.w700,
+            fontWeight: AppWeight.strong,
             color: scheme.onError,
           ),
         ),

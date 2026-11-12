@@ -13,6 +13,7 @@ import 'ink_pen.dart';
 import 'ink_recognize.dart';
 import 'ink_stroke_paint.dart';
 import 'ink_tools.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// PDF ve slayt görüntüleyicilerinin ortak elle-yazma katmanı. Çizim dosyaya
 /// gömülmez; sayfa/slayt oranlı (0–1) vektör olarak [InkStroke] listesinde
@@ -2331,7 +2332,7 @@ class InkSettingsSheet extends StatelessWidget {
             Text(
               l10n.inkSettings,
               style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppWeight.strong,
               ),
             ),
             const SizedBox(height: 12),

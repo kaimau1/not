@@ -14,6 +14,7 @@ import '../data/inbox_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **NOTU ARKADAŞA GÖNDER** (kullanıcı isteği 2026-08-18: "not paylaş
 /// seçeneği de lazım"). Arkadaş listesinden seçilen kişinin GELEN NOTLAR
@@ -54,7 +55,7 @@ Future<void> showSendNoteToFriendSheet(
                 Text(
                   l10n.sendNoteTitle,
                   style: Theme.of(sheetContext).textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                      ?.copyWith(fontWeight: AppWeight.strong),
                 ),
                 const SizedBox(height: 4),
                 Text(

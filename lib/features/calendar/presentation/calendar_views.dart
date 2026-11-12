@@ -13,6 +13,7 @@ import '../domain/routine.dart';
 import '../domain/task_item.dart';
 import 'month_grid.dart' show gridStartFor;
 import 'pinch_zoom.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Takvimin görünümleri; yakınlaştırma sırası yıl → ay → hafta.
 enum CalendarView { year, month, week, agenda }
@@ -1266,7 +1267,7 @@ class _MiniMonth extends StatelessWidget {
                       DateFormat.MMMM().format(month),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: current ? scheme.primary : scheme.onSurface,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppWeight.strong,
                       ),
                     ),
                   ),

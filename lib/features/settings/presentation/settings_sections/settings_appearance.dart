@@ -679,7 +679,7 @@ class _FontChoiceCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: selected ? AppWeight.strong : FontWeight.w500,
                 color: selected ? scheme.primary : null,
               ),
             ),

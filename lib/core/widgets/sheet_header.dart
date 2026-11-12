@@ -76,7 +76,7 @@ class SheetHeader extends StatelessWidget {
 /// (ör. önizlemeli Paylaş) bunu kullanır.
 TextStyle? sheetTitleStyle(BuildContext context) =>
     Theme.of(context).textTheme.titleMedium
-        ?.copyWith(fontWeight: FontWeight.w700);
+        ?.copyWith(fontWeight: AppWeight.strong);
 
 /// Bölüm başlığı stili: CÜMLE DÜZENİ (`toUpperCase` yok — Türkçede
 /// "i" → "I" bozuyordu), `AppText.section` (14/20 w600, DENEYIM F72.5),

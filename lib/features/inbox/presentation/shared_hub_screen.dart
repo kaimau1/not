@@ -212,7 +212,7 @@ class HubSourceTag extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               height: 1.2,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppWeight.strong,
               color: color,
             ),
           ),
@@ -246,7 +246,7 @@ class HubCountBadge extends StatelessWidget {
         style: TextStyle(
           fontSize: 11,
           height: 1.2,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppWeight.strong,
           color: scheme.onError,
         ),
       ),

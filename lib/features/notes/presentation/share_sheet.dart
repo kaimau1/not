@@ -29,6 +29,7 @@ import 'pdf_export_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Notun PAYLAŞ levhası.
 ///
@@ -171,7 +172,7 @@ class _ShareSheetState extends State<_ShareSheet> {
         label,
         style: theme.textTheme.labelMedium?.copyWith(
           color: scheme.primary,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppWeight.strong,
         ),
       ),
     );

@@ -81,7 +81,7 @@ class SharedNoteCell extends StatelessWidget {
                       l10n.sharedNoteNew,
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppWeight.strong,
                         color: scheme.onError,
                       ),
                     ),
@@ -103,7 +103,7 @@ class SharedNoteCell extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: isNew ? scheme.error : scheme.onSurfaceVariant,
-                      fontWeight: isNew ? FontWeight.w700 : null,
+                      fontWeight: isNew ? AppWeight.strong : null,
                     ),
                   ),
                 ),
@@ -230,7 +230,7 @@ class SharedNotesHomeSection extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: isNew ? scheme.error : scheme.onSurfaceVariant,
-                          fontWeight: isNew ? FontWeight.w700 : null,
+                          fontWeight: isNew ? AppWeight.strong : null,
                         ),
                       ),
                     ),

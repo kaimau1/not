@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/l10n_ext.dart';
 import '../data/user_templates.dart';
 import '../domain/note_type.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **ŞABLON OLUŞTUR / DÜZENLE** (kullanıcı isteği 2026-10-02: "şablon
 /// oluşturma ve düzenleme, şablonları geliştir").
@@ -307,7 +308,7 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
             : '${l10n.templateItems} · ${_rows.length}',
         style: theme.textTheme.labelLarge?.copyWith(
           color: scheme.primary,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppWeight.strong,
         ),
       ),
       const SizedBox(height: 6),

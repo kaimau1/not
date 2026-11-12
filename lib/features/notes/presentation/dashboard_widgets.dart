@@ -104,7 +104,7 @@ class _ReorderTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppWeight.strong,
                     ),
                   ),
                 ),
@@ -113,7 +113,7 @@ class _ReorderTile extends StatelessWidget {
                   '$order',
                   style: TextStyle(
                     fontSize: 11,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppWeight.strong,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
@@ -484,7 +484,7 @@ class _RecentSearches extends ConsumerWidget {
                 l10n.recentSearches,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppWeight.strong,
                   color: scheme.onSurfaceVariant,
                 ),
               ),

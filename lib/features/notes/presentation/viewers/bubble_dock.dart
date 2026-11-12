@@ -436,7 +436,7 @@ class _BubbleDockState extends State<BubbleDock> {
 
   static const _titleStyle = TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.w700,
+    fontWeight: AppWeight.strong,
   );
   static const _bodyStyle = TextStyle(fontSize: 14, height: 1.35);
 
@@ -559,7 +559,7 @@ class _BubbleDockState extends State<BubbleDock> {
                   excludeSemantics: true,
                   child: const Text(
                     'Aa',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 15, fontWeight: AppWeight.strong),
                   ),
                 ),
               ),

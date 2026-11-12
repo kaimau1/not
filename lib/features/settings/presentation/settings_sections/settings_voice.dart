@@ -210,7 +210,7 @@ class _VoiceSection extends ConsumerWidget {
           l10n.ttsSectionTitle,
           style: Theme.of(
             context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ).textTheme.titleSmall?.copyWith(fontWeight: AppWeight.strong),
         ),
         const SizedBox(height: 10),
         SegmentedButton<TtsEngine>(
@@ -606,7 +606,7 @@ class _VoicePickerSheetState extends ConsumerState<_VoicePickerSheet> {
               l10n.speechVoicePickerTitle,
               style: Theme.of(
                 context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ).textTheme.titleMedium?.copyWith(fontWeight: AppWeight.strong),
             ),
             const SizedBox(height: 10),
             if (_languages.length > 1)

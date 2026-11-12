@@ -17,6 +17,7 @@ import '../domain/recurrence.dart';
 import '../domain/routine.dart';
 import '../domain/routine_from_note.dart';
 import '../../notes/presentation/note_target_picker.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **RUTİNLER** (TAKVIM_PLANI Faz 53, K9): liste + seri + son 30 gün şeridi.
 /// Rutin, zamanı gelen gün ajandada görünür; adımları gün levhasında tiklenir.
@@ -138,7 +139,7 @@ class _RoutineCard extends StatelessWidget {
                       key: ValueKey('routine-streak-${routine.id}'),
                       style: TextStyle(
                         color: color,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppWeight.strong,
                       ),
                     ),
                 ],
