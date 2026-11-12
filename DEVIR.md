@@ -4,7 +4,7 @@
 - **YAPILMAYAN / sabah bakılacak:** F73.1-2 `_addToolButton` rozeti (`editor/note_editor_toolbar.dart`) — Ek D.1 "P34 `editor/`'e girmez", P36 yapsın. "Koyu" seçeneği plan listesinde yoktu → Sakin'in sonunda. Tema bölümünde "Tema" başlığının hemen altında "Sakin" etiketi (iki etiket üst üste) — P37/P42 bakabilir.
 - **Dışarıda bırakılanlar (bilerek):** takvim ay/hafta/yıl ızgarası (Ek D.1 kimsede değil, Y12), klasör çipi üst sayısı (Y2), `home_calendar_strip`/`note_card` (P35), `ai_hub_screen` puntosu (Y15), `action_menu_sheet` (P37), kullanıcı içeriği kalını (balon/sunum/görsel notu, rich_text).
 - **Tur:** `build/tour-once` (taban) ↔ `build/tour`; %0,5 üstü 79 PNG (çoğu ağırlık/punto). Kabul: `build/tour/telefon-ana.png`, `telefon-ayarlar.png`, `telefon-n4-paylas.png`, `telefon-ayarlar-gorunum.png`.
-- **Doğrulanmadı:** koyu tur (`TOUR_DARK=1`) koşulmadı; cihaz yok (renk/yazı işi — ölçüm kapısı gerektirmez, editör/çubuk/liste düzenine dokunulmadı).
+- **Doğrulanmadı:** koyu tur yalnız telefon ana/ayarlar/n4 (`build/tour-koyu`, okunur); cihaz yok (renk/yazı işi — ölçüm kapısı gerektirmez, editör/çubuk/liste düzenine dokunulmadı).
 - **Sıradaki:** CI'ı izle; yeşilse P34 birleştirmesi `[apk]` + sürüm notu (aşağıda).
 - **Açık test komutu:** `flutter test test/color_roles_test.dart test/theme_picker_groups_test.dart test/design_tokens_guard_test.dart test/theme_contrast_test.dart test/folder_strip_chips_test.dart --reporter failures-only`
 
