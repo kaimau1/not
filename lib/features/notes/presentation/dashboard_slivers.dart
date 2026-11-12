@@ -20,6 +20,22 @@ class HomeSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    // Ölçü başlığın KENDİ genişliği: bölünmüş görünümün dar liste
+    // bölmesinde çizgi kalır, yalnız geniş ızgarada düşer.
+    return LayoutBuilder(
+      builder: (context, constraints) => _build(
+        context,
+        scheme,
+        hideLine: constraints.maxWidth >= kSectionLineHideWidth,
+      ),
+    );
+  }
+
+  Widget _build(
+    BuildContext context,
+    ColorScheme scheme, {
+    required bool hideLine,
+  }) {
     return Padding(
       // Üst 8 (2026-11-09, 14'tü): üstteki takvim/klasör şeridiyle arada
       // boş bant kalıyordu.
@@ -45,7 +61,7 @@ class HomeSectionHeader extends StatelessWidget {
               const SizedBox(width: 8),
               // Ağaç şekli sabit: genişte çizginin yerinde boş kutu.
               Expanded(
-                child: MediaQuery.sizeOf(context).width >= kSectionLineHideWidth
+                child: hideLine
                     ? const SizedBox(height: 1)
                     : Divider(height: 1, color: scheme.outlineVariant),
               ),
