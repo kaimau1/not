@@ -557,6 +557,10 @@ class _DocumentCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(5),
               border: Border.all(color: scheme.outlineVariant),
             ),
+            foregroundDecoration: BoxDecoration(
+              color: documentPreviewScrim(Theme.of(context).brightness),
+              borderRadius: BorderRadius.circular(5),
+            ),
             clipBehavior: Clip.antiAlias,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -610,6 +614,15 @@ class _DocumentCard extends StatelessWidget {
   }
 }
 
+/// Koyu temada kartın belge ÖNİZLEMESİNİN üstüne %8 siyah perde (DENEYIM
+/// F80.1-3): beyaz sayfa koyu ekranda tek parlak leke oluyordu
+/// (`telefon-ana-koyu.png`). Açık belgenin kendisi ve görsel kartları
+/// değişmez. Ağaç şekli sabit: açıkta saydam.
+Color documentPreviewScrim(Brightness brightness) =>
+    brightness == Brightness.dark
+    ? Colors.black.withValues(alpha: AppAlpha.hairline)
+    : Colors.transparent;
+
 /// BALONLU notun kapağı: belgenin ilk sayfası kartın tepesinde KENARDAN
 /// KENARA — video/görsel kapağıyla aynı yer, aynı dil.
 ///
@@ -642,9 +655,15 @@ class CardDocumentCover extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (pdf)
-              ColoredBox(
-                color: Colors.white,
-                child: _PdfFirstPage(attachment: document, iconSize: 36),
+              DecoratedBox(
+                position: DecorationPosition.foreground,
+                decoration: BoxDecoration(
+                  color: documentPreviewScrim(Theme.of(context).brightness),
+                ),
+                child: ColoredBox(
+                  color: Colors.white,
+                  child: _PdfFirstPage(attachment: document, iconSize: 36),
+                ),
               )
             else
               DecoratedBox(
