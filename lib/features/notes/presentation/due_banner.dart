@@ -70,7 +70,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
       padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
       child: Material(
         key: const ValueKey('due-banner'),
-        color: scheme.tertiaryContainer,
+        color: scheme.secondaryContainer,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
@@ -85,7 +85,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                       ? Icons.alarm_rounded
                       : Icons.task_alt_rounded,
                   size: 20,
-                  color: scheme.onTertiaryContainer,
+                  color: scheme.onSecondaryContainer,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -102,7 +102,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium
-                        ?.copyWith(color: scheme.onTertiaryContainer),
+                        ?.copyWith(color: scheme.onSecondaryContainer),
                   ),
                 ),
                 if (items.length > 1)
@@ -113,13 +113,13 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: scheme.onTertiaryContainer.withValues(alpha: 0.12),
+                      color: scheme.onSecondaryContainer.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '+${items.length - 1}',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onTertiaryContainer,
+                        color: scheme.onSecondaryContainer,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -131,7 +131,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                   icon: Icon(
                     Icons.close_rounded,
                     size: 18,
-                    color: scheme.onTertiaryContainer,
+                    color: scheme.onSecondaryContainer,
                   ),
                   onPressed: () => ref
                       .read(dueDismissedProvider.notifier)

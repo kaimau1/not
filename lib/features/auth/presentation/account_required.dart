@@ -217,12 +217,22 @@ class AiIcon extends ConsumerWidget {
   final double? size;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Icon(
-    ref.watch(aiAvailabilityProvider) == AiAvailability.ready
-        ? Icons.auto_awesome
-        : Icons.lock_outline,
-    size: size,
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ready = ref.watch(aiAvailabilityProvider) == AiAvailability.ready;
+    // AI kimliği = tertiary (DENEYIM §2.2 K-D1). Dolu düğmenin içinde
+    // (onPrimary) ya da devre dışıyken (saydam) miras renk kalır — okunurluk.
+    final scheme = Theme.of(context).colorScheme;
+    final inherited = IconTheme.of(context).color;
+    final keep =
+        !ready ||
+        inherited == scheme.onPrimary ||
+        (inherited != null && inherited.a < 1);
+    return Icon(
+      ready ? Icons.auto_awesome : Icons.lock_outline,
+      size: size,
+      color: keep ? null : scheme.tertiary,
+    );
+  }
 }
 
 /// Yapay zekâ kapalıyken araçları soluk ve dokunulamaz gösterir (açıklama

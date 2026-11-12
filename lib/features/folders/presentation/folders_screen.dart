@@ -63,6 +63,13 @@ class FoldersScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 12),
             child: FilledButton.tonalIcon(
+              // Oluşturma = primary rolü (DENEYIM §2.2 K-D1); tonal varsayılanı
+              // secondaryContainer (sıcak = zaman/dikkat) idi.
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                foregroundColor:
+                    Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
               onPressed: () async {
                 final id = await showFolderEditorDialog(context, ref);
                 if (id != null && context.mounted) {

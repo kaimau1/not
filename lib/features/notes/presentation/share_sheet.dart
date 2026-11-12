@@ -399,8 +399,9 @@ class _QuickShareButton extends StatelessWidget {
     final enabled = onTap != null;
     final background = primary
         ? scheme.primary
-        : scheme.secondaryContainer.withValues(alpha: 0.8);
-    final foreground = primary ? scheme.onPrimary : scheme.onSecondaryContainer;
+        // Nötr daire (DENEYIM §2.2 K-D1): sıcak secondary zaman/dikkat içindir.
+        : scheme.surfaceContainerHigh;
+    final foreground = primary ? scheme.onPrimary : scheme.onSurfaceVariant;
     final button = Semantics(
       button: true,
       enabled: enabled,

@@ -75,16 +75,10 @@ class _Area {
 /// seçili alan (tablet / web).
 const double _kSettingsWide = 900;
 
-/// Alanın simge rengi (tema rolünden; sabit renk yok). Kategoriler göz
-/// ucuyla ayırt edilsin diye her alan kendi rengini taşır.
-({Color bg, Color fg}) _areaColors(ColorScheme s, String id) => switch (id) {
-  'account' || 'sync' => (bg: s.primaryContainer, fg: s.onPrimaryContainer),
-  'friends' || 'notes' => (bg: s.tertiaryContainer, fg: s.onTertiaryContainer),
-  'ai' => (bg: s.primary, fg: s.onPrimary),
-  'appearance' ||
-  'permissions' => (bg: s.secondaryContainer, fg: s.onSecondaryContainer),
-  _ => (bg: s.surfaceContainerHighest, fg: s.onSurfaceVariant),
-};
+/// Alanın simge rengi: hepsi nötr (DENEYIM §2.2 K-D1 — renk yalnız durum
+/// ya da tek birincil eylem; eskiden her alan ayrı rol rengi taşıyordu).
+({Color bg, Color fg}) _areaColors(ColorScheme s, String id) =>
+    (bg: s.surfaceContainerHigh, fg: s.onSurfaceVariant);
 
 class _AreaIcon extends StatelessWidget {
   const _AreaIcon({required this.area, this.size = 40});
