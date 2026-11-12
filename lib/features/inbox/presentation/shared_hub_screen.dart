@@ -70,6 +70,15 @@ class SharedHubBody extends ConsumerWidget {
     final entries = sharedNoteEntries(ref);
     if (inbox.isEmpty && entries.isEmpty) {
       if (inboxAsync.isLoading) return const NoteListSkeleton();
+      // F79.6: bağlantı yokken (ya da okuma hatasında) "burada not yok"
+      // demek yalandı — Gelen dolu olabilir. Diğer listelerle aynı hata
+      // görünümü + "Tekrar dene".
+      if (inboxAsync.hasError) {
+        return ErrorState(
+          error: inboxAsync.error!,
+          onRetry: () => ref.invalidate(inboxNotesProvider),
+        );
+      }
       return EmptyState(
         icon: AppIcons.inbox,
         title: l10n.sharedHubEmpty,

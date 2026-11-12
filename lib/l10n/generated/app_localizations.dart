@@ -179,13 +179,13 @@ abstract class AppLocalizations {
   /// No description provided for @emptyNotes.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz not yok'**
+  /// **'Burada henüz not yok'**
   String get emptyNotes;
 
   /// No description provided for @emptyFilter.
   ///
   /// In tr, this message translates to:
-  /// **'Bu süzgeçle not yok'**
+  /// **'Burada bu süzgece uyan not yok'**
   String get emptyFilter;
 
   /// No description provided for @clearFilter.
@@ -197,7 +197,7 @@ abstract class AppLocalizations {
   /// No description provided for @emptyFolderTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Bu klasör boş'**
+  /// **'Burada henüz not yok'**
   String get emptyFolderTitle;
 
   /// No description provided for @newNoteAction.
@@ -209,7 +209,7 @@ abstract class AppLocalizations {
   /// No description provided for @emptySearch.
   ///
   /// In tr, this message translates to:
-  /// **'Sonuç bulunamadı'**
+  /// **'Burada aramana uyan not yok'**
   String get emptySearch;
 
   /// No description provided for @newTextNote.
@@ -1199,7 +1199,7 @@ abstract class AppLocalizations {
   /// No description provided for @archiveEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Arşivde not yok'**
+  /// **'Burada arşivlenmiş not yok'**
   String get archiveEmpty;
 
   /// No description provided for @trashTitle.
@@ -1211,7 +1211,7 @@ abstract class AppLocalizations {
   /// No description provided for @trashEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Çöp kutusu boş'**
+  /// **'Burada silinmiş not yok'**
   String get trashEmpty;
 
   /// No description provided for @trashInfo.
@@ -1565,13 +1565,13 @@ abstract class AppLocalizations {
   /// No description provided for @remindersEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Hatırlatıcı yok'**
+  /// **'Burada hatırlatıcı yok'**
   String get remindersEmpty;
 
   /// No description provided for @remindersEmptyHint.
   ///
   /// In tr, this message translates to:
-  /// **'Bir nota hatırlatıcı ekle veya + düğmesiyle yeni bir hatırlatıcılı not oluştur'**
+  /// **'Bir nota hatırlatıcı ekle ya da + ile hatırlatıcılı yeni bir not yaz.'**
   String get remindersEmptyHint;
 
   /// No description provided for @remindersUpcoming.
@@ -3656,6 +3656,18 @@ abstract class AppLocalizations {
   /// **'Yerel hesap'**
   String get localAccountBadge;
 
+  /// No description provided for @profileGuestName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Misafir'**
+  String get profileGuestName;
+
+  /// No description provided for @profileGuestSignIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giriş yap'**
+  String get profileGuestSignIn;
+
   /// No description provided for @linkGoogleAccount.
   ///
   /// In tr, this message translates to:
@@ -5375,7 +5387,7 @@ abstract class AppLocalizations {
   /// No description provided for @folderEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Bu klasör boş'**
+  /// **'Burada henüz not yok'**
   String get folderEmpty;
 
   /// No description provided for @folderNoteCount.
@@ -5383,6 +5395,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} not'**
   String folderNoteCount(int count);
+
+  /// No description provided for @folderCardEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş'**
+  String get folderCardEmpty;
 
   /// No description provided for @folderEmptyHint.
   ///
@@ -5441,7 +5459,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendsEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz kimse yok. E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.'**
+  /// **'E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.'**
   String get friendsEmpty;
 
   /// No description provided for @friendsRequestsTitle.
@@ -5669,7 +5687,7 @@ abstract class AppLocalizations {
   /// No description provided for @folderChatEmptyTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz mesaj yok'**
+  /// **'Burada henüz mesaj yok'**
   String get folderChatEmptyTitle;
 
   /// No description provided for @folderChatEmptyHint.
@@ -5741,7 +5759,7 @@ abstract class AppLocalizations {
   /// No description provided for @inboxEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Gelen not yok'**
+  /// **'Burada gelen not yok'**
   String get inboxEmpty;
 
   /// No description provided for @inboxEmptyHint.
@@ -10160,6 +10178,42 @@ abstract class AppLocalizations {
   /// **'İlk notunu yaz'**
   String get emptyNotesFirstAction;
 
+  /// No description provided for @emptyNotesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazdığın notlar burada kart olarak görünür.'**
+  String get emptyNotesHint;
+
+  /// No description provided for @emptyFolderHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu klasöre eklediğin notlar burada toplanır.'**
+  String get emptyFolderHint;
+
+  /// No description provided for @emptyFilterHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süzgeci kaldırınca bütün notların yeniden görünür.'**
+  String get emptyFilterHint;
+
+  /// No description provided for @emptySearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka bir sözcükle dene.'**
+  String get emptySearchHint;
+
+  /// No description provided for @archiveEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivlediğin notlar ana ekrandan kalkar, burada saklanır.'**
+  String get archiveEmptyHint;
+
+  /// No description provided for @trashEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sildiğin notlar 30 gün burada kalır; o sürede geri alabilirsin.'**
+  String get trashEmptyHint;
+
   /// No description provided for @cardShowMoreCount.
   ///
   /// In tr, this message translates to:
@@ -11156,6 +11210,18 @@ abstract class AppLocalizations {
   /// **'Beklenmeyen bir sorun oldu. Ayrıntı hata günlüğünde.'**
   String get errorUnknown;
 
+  /// No description provided for @errorStateTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüklenemedi'**
+  String get errorStateTitle;
+
+  /// No description provided for @errorStateOfflineTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı yok'**
+  String get errorStateOfflineTitle;
+
   /// No description provided for @copyErrorDetail.
   ///
   /// In tr, this message translates to:
@@ -11351,7 +11417,7 @@ abstract class AppLocalizations {
   /// No description provided for @sharedHubEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Gelen ya da seninle paylaşılan not yok'**
+  /// **'Burada gelen ya da paylaşılan not yok'**
   String get sharedHubEmpty;
 
   /// No description provided for @sharedHubEmptyHint.
@@ -11753,7 +11819,7 @@ abstract class AppLocalizations {
   /// No description provided for @studyCardsEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Bugün tekrar edilecek kart yok'**
+  /// **'Burada bugün tekrar edilecek kart yok'**
   String get studyCardsEmpty;
 
   /// No description provided for @studyCardsDone.
@@ -11921,7 +11987,7 @@ abstract class AppLocalizations {
   /// No description provided for @gmailEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'E-posta yok'**
+  /// **'Burada e-posta yok'**
   String get gmailEmpty;
 
   /// No description provided for @gmailLoadMore.
@@ -12611,7 +12677,7 @@ abstract class AppLocalizations {
   /// No description provided for @calendarEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Takvim boş'**
+  /// **'Burada henüz etkinlik yok'**
   String get calendarEmpty;
 
   /// No description provided for @calendarEmptyHint.
@@ -12845,7 +12911,7 @@ abstract class AppLocalizations {
   /// No description provided for @tasksEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Görev yok'**
+  /// **'Burada görev yok'**
   String get tasksEmpty;
 
   /// No description provided for @tasksEmptyHint.
@@ -13301,7 +13367,7 @@ abstract class AppLocalizations {
   /// No description provided for @routinesEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz rutin yok'**
+  /// **'Burada henüz rutin yok'**
   String get routinesEmpty;
 
   /// No description provided for @routinesEmptyHint.
@@ -13559,7 +13625,7 @@ abstract class AppLocalizations {
   /// No description provided for @gmailNoResults.
   ///
   /// In tr, this message translates to:
-  /// **'Aramaya uyan e-posta yok'**
+  /// **'Burada aramana uyan e-posta yok'**
   String get gmailNoResults;
 
   /// No description provided for @gmailFilterInbox.
@@ -13649,7 +13715,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendsEmptyTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Henüz kişi yok'**
+  /// **'Burada henüz kişi yok'**
   String get friendsEmptyTitle;
 
   /// No description provided for @friendsFilterHint.

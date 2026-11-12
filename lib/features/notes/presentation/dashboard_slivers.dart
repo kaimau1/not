@@ -69,6 +69,7 @@ class HomeEmptyNotes extends ConsumerWidget {
       return EmptyState(
         icon: Icons.search_off,
         title: l10n.emptySearch,
+        subtitle: l10n.emptySearchHint,
         actionLabel: l10n.clearSearch,
         actionIcon: Icons.close,
         onAction: onClearSearch,
@@ -79,6 +80,7 @@ class HomeEmptyNotes extends ConsumerWidget {
       return EmptyState(
         icon: Icons.filter_alt_off_outlined,
         title: l10n.emptyFilter,
+        subtitle: l10n.emptyFilterHint,
         actionLabel: l10n.clearFilter,
         actionIcon: Icons.close,
         onAction: () {
@@ -91,6 +93,7 @@ class HomeEmptyNotes extends ConsumerWidget {
     return EmptyState(
       icon: Icons.sticky_note_2_outlined,
       title: inFolder ? l10n.emptyFolderTitle : l10n.emptyNotes,
+      subtitle: inFolder ? l10n.emptyFolderHint : l10n.emptyNotesHint,
       // Hiç not yokken tek, davetkâr eylem (F74.6, D23): "+" panelindeki
       // Metin notunun aynısı — yeni iş yok.
       actionLabel: inFolder ? l10n.newNoteAction : l10n.emptyNotesFirstAction,

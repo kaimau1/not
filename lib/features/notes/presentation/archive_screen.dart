@@ -74,22 +74,28 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
                     ),
                 ],
               ),
+        // Üst çubuk: Ara + ⋮ (F79.4, D19 — Çöp'le aynı düzen). Özet ve
+        // sıralama ⋮ menüsünde.
         actions: [
-          // ARŞİV ÖZETİ (D5): "Arşivimde neler var?" — çöp analizinin
-          // arşiv karşılığı.
-          if (!_search.open && (count ?? 0) > 0)
-            IconButton(
-              tooltip: l10n.archiveInsights,
-              icon: const Icon(Icons.insights_outlined),
-              onPressed: () =>
-                  showArchiveInsightsSheet(context, archived.value ?? const []),
-            ),
           ...screenSearchActions(context, _search),
           // Ölçüt ana ekranla ORTAK (klasör sayfasındaki kuralla aynı):
           // kullanıcının seçtiği düzen her yerde aynı olsun.
           NoteSortMenu(
             current: ref.watch(noteSortProvider),
             onPick: (sort) => ref.read(noteSortProvider.notifier).set(sort),
+            extras: [
+              // ARŞİV ÖZETİ (D5): "Arşivimde neler var?" — çöp analizinin
+              // arşiv karşılığı.
+              if (!_search.open && (count ?? 0) > 0)
+                NoteMenuExtra(
+                  icon: Icons.insights_outlined,
+                  label: l10n.archiveInsights,
+                  onTap: () => showArchiveInsightsSheet(
+                    context,
+                    archived.value ?? const [],
+                  ),
+                ),
+            ],
           ),
         ],
       )),
@@ -119,10 +125,12 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
                   ? EmptyState(
                       icon: AppIcons.archive,
                       title: l10n.archiveEmpty,
+                      subtitle: l10n.archiveEmptyHint,
                     )
                   : EmptyState(
                       icon: Icons.search_off,
-                      title: l10n.noteSearchNoHit,
+                      title: l10n.emptySearch,
+                      subtitle: l10n.emptySearchHint,
                     );
             }
             return Column(

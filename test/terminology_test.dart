@@ -110,4 +110,50 @@ void main() {
       isEmpty,
     );
   });
+
+  // F79.5 (DENEYIM D23): boş hâller tek kalıp — başlık "Burada … yok",
+  // açıklama TEK cümle, düğme bir sonraki adım. `EmptyState(`'in başlık ve
+  // açıklama anahtarları koddan toplanır; kalıba girmeyenler (hata, giriş
+  // gereği, yetki, "bitti") adıyla dışarıda.
+  test('F79.5: boş hâl başlığı "Burada … yok", açıklaması tek cümle', () {
+    const notEmpty = {
+      'genericError',
+      'errorStateTitle',
+      'errorStateOfflineTitle',
+      'gmailGoogleOnly',
+      'folderWriteOnlyTitle',
+      'folderWriteOnlyHint',
+      'studyCardsDone',
+    };
+    final titles = <String>{}, hints = <String>{};
+    final field = RegExp(
+      r'\b(title|subtitle):\s*([^\n]*(?:\n\s+[?:][^\n]*)*)',
+    );
+    for (final f in Directory('lib').listSync(recursive: true)) {
+      if (f is! File || !f.path.endsWith('.dart')) continue;
+      final src = f.readAsStringSync();
+      for (final m in RegExp(r'\bEmptyState\(').allMatches(src)) {
+        final end = src.indexOf(RegExp(r'\n\s*\)[,;]'), m.end);
+        final call = src.substring(m.end, end < 0 ? src.length : end);
+        for (final fm in field.allMatches(call)) {
+          for (final k in RegExp(r'l10n\.(\w+)').allMatches(fm.group(2)!)) {
+            final key = k.group(1)!;
+            if (notEmpty.contains(key)) continue;
+            (fm.group(1) == 'title' ? titles : hints).add(key);
+          }
+        }
+      }
+    }
+    expect(titles.length, greaterThanOrEqualTo(15));
+    expect([
+      for (final k in titles)
+        if (!RegExp(r'^Burada .+ yok$').hasMatch(texts[k] ?? '')) '$k: ${texts[k]}',
+    ], isEmpty);
+    expect([
+      for (final k in hints)
+        if (!(texts[k] ?? '').endsWith('.') ||
+            RegExp(r'[.!?] ').hasMatch(texts[k]!))
+          '$k: ${texts[k]}',
+    ], isEmpty);
+  });
 }

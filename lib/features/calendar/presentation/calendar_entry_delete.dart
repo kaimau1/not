@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../../../app/theme/app_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -123,7 +125,9 @@ Future<void> quickDeleteEntry(
   }
 }
 
-/// Satırın sonundaki küçük çöp düğmesi.
+/// Satırın sonundaki küçük çöp düğmesi — KALIR (DENEYIM §4 Y11). F79.1
+/// (D16): sessiz ama görünür — simge 18 dp, `onSurfaceVariant` %60;
+/// dokunma hedefi 48 dp (eskiden sıkı 40).
 class QuickDeleteButton extends ConsumerWidget {
   const QuickDeleteButton({super.key, required this.entry});
 
@@ -133,11 +137,13 @@ class QuickDeleteButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => IconButton(
     key: const ValueKey('calendar-entry-delete'),
     tooltip: context.l10n.delete,
-    visualDensity: VisualDensity.compact,
-    iconSize: 20,
+    iconSize: AppIconSize.s,
+    constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
     icon: Icon(
       Icons.delete_outline,
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      color: Theme.of(
+        context,
+      ).colorScheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
     ),
     onPressed: () => unawaited(quickDeleteEntry(context, ref, entry)),
   );
