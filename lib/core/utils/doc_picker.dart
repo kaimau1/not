@@ -178,7 +178,8 @@ abstract final class DocPicker {
   static const byExtension = <String, String>{
     'pdf': 'application/pdf',
     'txt': 'text/plain',
-    'md': 'text/plain',
+    'md': 'text/markdown',
+    'markdown': 'text/markdown',
     'json': 'application/json',
     'docx':
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',

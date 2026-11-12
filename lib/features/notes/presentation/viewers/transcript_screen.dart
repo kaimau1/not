@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/markdown.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../data/attachment_repository.dart';
@@ -127,7 +128,14 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     if (cache != null && identical(cache.$1, _text) && cache.$2 == _showTimes) {
       return cache.$3;
     }
-    final value = _showTimes ? _text : Transcripts.stripTimestamps(_text);
+    // Markdown eki (P54) ham işaretlerle değil okunur hâliyle gösterilir;
+    // "nota ekle" de bu hâli alır.
+    final saved = _saved;
+    final text = saved != null &&
+            isMarkdownFile(saved.fileName, mime: saved.mimeType)
+        ? markdownReadable(_text)
+        : _text;
+    final value = _showTimes ? text : Transcripts.stripTimestamps(text);
     _shownCache = (_text, _showTimes, value);
     return value;
   }
