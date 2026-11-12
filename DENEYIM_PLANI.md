@@ -63,7 +63,7 @@ dosya geçerli).
 |---|---|---|---|---|
 | 72 | Zemin: belirteçler, mandal testi, ortak bileşenler | P33 | Opus | F72.1–F72.4 bitti, F72.5 kısmi (dalda, 2026-11-12) |
 | 73 | Renk rolleri + sakin tipografi | P34 | Opus | F73.1–F73.4 bitti (dalda, 2026-11-12; F73.1-2 P36'ya) |
-| 74 | Ana ekran cilası | P35 | Opus | Bekliyor |
+| 74 | Ana ekran cilası | P35 | Opus | Dalda (oto/P35-ana-ekran), cihaz A/B bekliyor |
 | 75 | Not ekranı alt çubuğu | P36 | Fable | Bekliyor |
 | 76 | Levhalar: ortak başlık, ortak karo | P37 | Opus | Bekliyor |
 | 77 | Hareket ve dokunsal dil | P38 | Opus | Bekliyor |
@@ -408,19 +408,19 @@ Bekçiler: `folder_strip_chips_test`, `folder_strip_fixed_test`, `card_checked_i
 Yerleşim DEĞİŞMEZ (arama hapı, şeritler, çipler, "+" paneli bugünkü yerinde ve biçiminde —
 §4 Y1–Y4, Y14, Y16). `dashboard_screen.dart`'a girilmez (P19'un alanı — Ek D.1).
 
-- [ ] **F74.1 Ev düğmesi sessizleşir (D4, K-D3).** `dashboard_shelf.dart`: `home-strip-at-home`
+- [x] **F74.1 Ev düğmesi sessizleşir (D4, K-D3).** *(2026-11-12: `primaryContainer` + `onPrimaryContainer`, boy klasördekiyle aynı (IconButton 40/48) — `folder_strip_chips_test` renk + boy.)* `dashboard_shelf.dart`: `home-strip-at-home`
   `IconButton.filled` → 40 dp, zemin `primaryContainer`, simge `onPrimaryContainer` (dolu
   ev); `home-strip-go-home` bugünkü `filledTonal`, 40 dp. Dokunma hedefi 48 (`MinTapTarget`),
   şerit yüksekliği ve düğmenin kapladığı YATAY yer aynı kalsın (giriş/çıkışta şerit
   sıçramasın — 2026-11-07 kök nedeni). Koyu temada da bak (`telefon-ana-koyu.png`).
-- [ ] **F74.2 Takvim şeridinde gün adı (D7, K-D4).** `home_calendar_strip.dart` `_DayCell`:
+- [x] **F74.2 Takvim şeridinde gün adı (D7, K-D4).** *(2026-11-12: üç harf `badge` 11 pt; hücre içi < 24 dp'de tek harf — 360'ta sığıyor; `calendar_backdrop_themes_test`.)* `home_calendar_strip.dart` `_DayCell`:
   dar düzende `weekday.characters.first` yerine `weekday` (üç harf: Pzt, Sal, Çar…), `badge`
   rolü 11 pt. Gün sayısı (10) ve iki satır yükseklik AYNI. 360 dp'de hücre 36 dp — sığdığını
   `telefon-kucuk-ana.png`'de gör; sığmıyorsa yalnız 360'ın altında tek harfe düş.
-- [ ] **F74.3 Zamanı gelen şeridi.** Renk F73.1'de. Köşe `m`, başlık `label`, tarih `meta`;
+- [x] **F74.3 Zamanı gelen şeridi.** *(2026-11-12: köşe m, `label`/`meta`/`badge`, ✕ `MinTapTarget` 48; şerit 44 dp aynı — `due_items_test`.)* Renk F73.1'de. Köşe `m`, başlık `label`, tarih `meta`;
   ✕ hedefi 48 (görünen simge 18). Tek satır ve "+N" davranışı (kullanıcı isteği 2026-11-08)
   aynen.
-- [ ] **F74.4 Kart sakinleşmesi (D6, K-D5).**
+- [x] **F74.4 Kart sakinleşmesi (D6, K-D5).** *(2026-11-12: `cardItemSlice` (card_preview) + `_CardDoneLine`; sıralı listede özet yok; `card_show_checked` `CardDisplay`'e girdi (kart env'i); ⋮ %60 / 28 dp %32 daire — `card_checked_collapse_test` yeni; tahmini kart boyu özeti bilmiyor, sabah bakılacak.)*
   (a) `card_preview.dart`: işaretsiz madde varsa önce onlar (dilim sınırı aynı), işaretliler
   tek satır "✓ N tamamlandı" (`meta`, `NoteAccent` tonunda). Hepsi işaretliyse: ilk 2 madde
   üstü çizili + "✓ Hepsi tamam (N)". Yeni tercih `card_show_checked` (varsayılan kapalı;
@@ -430,10 +430,10 @@ Yerleşim DEĞİŞMEZ (arama hapı, şeritler, çipler, "+" paneli bugünkü yer
   `perf_budget_test` yeşil.
   (b) Kart ⋮: düz kartta simge 18, renk `onSurfaceVariant` %60; görselli kartta daire 28,
   zemin siyah %32. Dokunma hedefi 48 KALIR.
-- [ ] **F74.5 "+" kümesi.** "+" tek dolu birincil yüzey (bugünkü). Yanındaki mikrofonun
+- [x] **F74.5 "+" kümesi.** *(2026-11-12: `_DashVoiceButton` `surfaceContainerHigh` + `onSurface`; bekçi `color_roles_test`.)* "+" tek dolu birincil yüzey (bugünkü). Yanındaki mikrofonun
   zemini `primaryContainer` → `surfaceContainerHigh`, simge `onSurface`. Panel ve davranış
   aynı.
-- [ ] **F74.6 Boş ana ekran (D23).** Hiç not yokken `EmptyState` (§2.3) + tek düğme "İlk
+- [x] **F74.6 Boş ana ekran (D23).** *(2026-11-12: `HomeEmptyNotes` ana sayfada "İlk notunu yaz" (createNote(text)); `EmptyState`'in §2.3 ölçüsü F79.6'ya (P40, Ek D.2) kaldı; tur `TOUR_EMPTY=1` → `ana-bos`.)* Hiç not yokken `EmptyState` (§2.3) + tek düğme "İlk
   notunu yaz" ("+" panelindeki Metin notu işi; yeni iş yok). Tura `TOUR_EMPTY=1` (`ana-bos`).
 - Kabul: `telefon-ana.png` ve `-koyu` — dolu `primary` yüzey yalnız "+" ve bugünün günü;
   gün adları üç harf; ilk iki kartta işaretsiz madde okunuyor; `ab_liste.py` + `ab_klavye.py`
