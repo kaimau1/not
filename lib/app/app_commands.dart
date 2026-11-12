@@ -226,29 +226,142 @@ Future<void> closeOpenNote(GoRouter router) async {
   }
 }
 
-/// Kısayolların tek listesi — hem bağlama hem de yardım penceresi buradan
-/// okur; biri değişip öbürü eski kalmasın.
-List<({String keys, String label})> shortcutHelpRows(BuildContext context) {
-  final l10n = context.l10n;
-  return [
-    (keys: 'Ctrl + N', label: l10n.newNoteShort),
-    (keys: 'Ctrl + K', label: l10n.shortcutSearch),
-    (keys: 'Ctrl + \\', label: l10n.shortcutToggleList),
-    (keys: 'Ctrl + ,', label: l10n.settings),
-    (keys: 'Alt + 1…8', label: l10n.shortcutSections),
-    (keys: 'Alt + Home', label: l10n.goHome),
-    (keys: 'Ctrl + Shift + F', label: l10n.shortcutFullscreen),
-    (keys: 'Esc', label: l10n.shortcutEscape),
-    (keys: 'Alt + ↑ / ↓', label: l10n.shortcutAdjacentNote),
-    (keys: 'Alt + ← / →', label: l10n.shortcutSwitchFolder),
-    (keys: 'Ctrl + ${l10n.shortcutMouseWheel}', label: l10n.shortcutGridColumns),
-    (keys: 'Ctrl + A', label: l10n.shortcutSelectAll),
-    (keys: 'Delete', label: l10n.shortcutDeleteSelected),
-    // Web'de Ctrl+W tarayıcı sekmesini kapatır; sayfaya hiç ulaşmaz.
-    if (!kIsWeb) (keys: 'Ctrl + W', label: l10n.shortcutCloseNote),
-    (keys: 'Ctrl + /', label: l10n.shortcutHelp),
-  ];
+/// Kısayol kimlikleri — tablo ([kAppShortcuts]) ile bağlama ([AppShortcuts])
+/// arasındaki tek anahtar.
+enum AppShortcutId {
+  newNote,
+  search,
+  toggleList,
+  settings,
+  sections,
+  home,
+  fullscreen,
+  escape,
+  adjacentNote,
+  switchFolder,
+  gridColumns,
+  selectAll,
+  deleteSelected,
+  closeNote,
+  help,
 }
+
+/// **KISAYOLLARIN TEK TABLOSU** (DENEYIM F80.3d, OTURTMA F67.7): hem bağlama
+/// ([AppShortcuts]) hem yardım penceresi (Ctrl+/) BURADAN üretilir; tuş
+/// yazısı [describeShortcut] ile tuşun kendisinden çıkar — elle liste yok.
+/// `elsewhere`: başka yerde bağlı (Esc `app.dart`, tam ekran kabukta,
+/// Alt+←/→ [AppShortcuts] içindeki klasör dinleyicisi, Ctrl+tekerlek
+/// ızgarada); yardımda yine görünür. `test/shortcut_table_test.dart` eşler.
+typedef AppShortcutRow = ({
+  AppShortcutId id,
+  List<SingleActivator> keys,
+  bool elsewhere,
+});
+
+final List<AppShortcutRow> kAppShortcuts = [
+  _row(AppShortcutId.newNote, [_ctrl(LogicalKeyboardKey.keyN)]),
+  _row(AppShortcutId.search, [_ctrl(LogicalKeyboardKey.keyK)]),
+  _row(AppShortcutId.toggleList, [_ctrl(LogicalKeyboardKey.backslash)]),
+  _row(AppShortcutId.settings, [_ctrl(LogicalKeyboardKey.comma)]),
+  _row(AppShortcutId.sections, [
+    for (final k in _digitKeys) SingleActivator(k, alt: true),
+  ]),
+  _row(AppShortcutId.home, [
+    const SingleActivator(LogicalKeyboardKey.home, alt: true),
+  ]),
+  _row(AppShortcutId.fullscreen, [
+    const SingleActivator(LogicalKeyboardKey.keyF, control: true, shift: true),
+  ], elsewhere: true),
+  _row(AppShortcutId.escape, [
+    const SingleActivator(LogicalKeyboardKey.escape),
+  ], elsewhere: true),
+  _row(AppShortcutId.adjacentNote, [
+    const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true),
+    const SingleActivator(LogicalKeyboardKey.arrowDown, alt: true),
+  ]),
+  _row(AppShortcutId.switchFolder, [
+    const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true),
+    const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true),
+  ], elsewhere: true),
+  // Ctrl + fare tekerleği: tuş değil, yazısı yardımda dile göre.
+  _row(AppShortcutId.gridColumns, const [], elsewhere: true),
+  _row(AppShortcutId.selectAll, [_ctrl(LogicalKeyboardKey.keyA)]),
+  _row(AppShortcutId.deleteSelected, [
+    const SingleActivator(LogicalKeyboardKey.delete),
+  ]),
+  // Web'de Ctrl+W tarayıcı sekmesini kapatır; sayfaya hiç ulaşmaz.
+  if (!kIsWeb) _row(AppShortcutId.closeNote, [_ctrl(LogicalKeyboardKey.keyW)]),
+  _row(AppShortcutId.help, [_ctrl(LogicalKeyboardKey.slash)]),
+];
+
+AppShortcutRow _row(
+  AppShortcutId id,
+  List<SingleActivator> keys, {
+  bool elsewhere = false,
+}) => (id: id, keys: keys, elsewhere: elsewhere);
+
+SingleActivator _ctrl(LogicalKeyboardKey key) =>
+    SingleActivator(key, control: true);
+
+/// Tuş birleşiminin yardımda okunan yazısı: "Ctrl + N", "Alt + ↑ / ↓",
+/// "Alt + 1…8". Değiştiriciler ilk tuştan alınır (satırdakiler ortak).
+String describeShortcut(List<SingleActivator> keys) {
+  if (keys.isEmpty) return '';
+  final first = keys.first;
+  final mods = [
+    if (first.control) 'Ctrl',
+    if (first.alt) 'Alt',
+    if (first.shift) 'Shift',
+    if (first.meta) 'Meta',
+  ];
+  String name(LogicalKeyboardKey k) => switch (k) {
+    LogicalKeyboardKey.arrowUp => '↑',
+    LogicalKeyboardKey.arrowDown => '↓',
+    LogicalKeyboardKey.arrowLeft => '←',
+    LogicalKeyboardKey.arrowRight => '→',
+    LogicalKeyboardKey.escape => 'Esc',
+    LogicalKeyboardKey.home => 'Home',
+    LogicalKeyboardKey.delete => 'Delete',
+    _ => k.keyLabel.toUpperCase(),
+  };
+  final names = [for (final k in keys) name(k.trigger)];
+  final tail = names.length > 2
+      ? '${names.first}…${names.last}'
+      : names.join(' / ');
+  return [...mods, tail].join(' + ');
+}
+
+String _shortcutLabel(BuildContext context, AppShortcutId id) {
+  final l10n = context.l10n;
+  return switch (id) {
+    AppShortcutId.newNote => l10n.newNoteShort,
+    AppShortcutId.search => l10n.shortcutSearch,
+    AppShortcutId.toggleList => l10n.shortcutToggleList,
+    AppShortcutId.settings => l10n.settings,
+    AppShortcutId.sections => l10n.shortcutSections,
+    AppShortcutId.home => l10n.goHome,
+    AppShortcutId.fullscreen => l10n.shortcutFullscreen,
+    AppShortcutId.escape => l10n.shortcutEscape,
+    AppShortcutId.adjacentNote => l10n.shortcutAdjacentNote,
+    AppShortcutId.switchFolder => l10n.shortcutSwitchFolder,
+    AppShortcutId.gridColumns => l10n.shortcutGridColumns,
+    AppShortcutId.selectAll => l10n.shortcutSelectAll,
+    AppShortcutId.deleteSelected => l10n.shortcutDeleteSelected,
+    AppShortcutId.closeNote => l10n.shortcutCloseNote,
+    AppShortcutId.help => l10n.shortcutHelp,
+  };
+}
+
+/// Yardım penceresinin satırları — [kAppShortcuts]'tan üretilir.
+List<({String keys, String label})> shortcutHelpRows(BuildContext context) => [
+  for (final row in kAppShortcuts)
+    (
+      keys: row.id == AppShortcutId.gridColumns
+          ? 'Ctrl + ${context.l10n.shortcutMouseWheel}'
+          : describeShortcut(row.keys),
+      label: _shortcutLabel(context, row.id),
+    ),
+];
 
 Future<void> showShortcutsHelp(BuildContext context) => showDialog<void>(
   context: context,
@@ -329,37 +442,29 @@ class AppShortcuts extends ConsumerWidget {
     final selecting = ref.watch(
       selectedNoteIdsProvider.select((ids) => ids.isNotEmpty),
     );
+    final actions = <AppShortcutId, VoidCallback>{
+      if (selecting) ...{
+        AppShortcutId.selectAll: () => homeDoors?.selectAllVisible(),
+        AppShortcutId.deleteSelected: () => homeDoors?.deleteSelection(),
+      },
+      AppShortcutId.newNote: () => createAndOpenNote(context, ref, router),
+      AppShortcutId.search: () {
+        openSection(router, AppSection.notes);
+        ref.read(searchFocusRequestProvider.notifier).request();
+      },
+      AppShortcutId.settings: () => openSection(router, AppSection.settings),
+      AppShortcutId.toggleList: onToggleList,
+      AppShortcutId.help: () => showShortcutsHelp(context),
+      AppShortcutId.closeNote: () => closeOpenNote(router),
+      AppShortcutId.home: () => goHome(ref, router),
+    };
     return CallbackShortcuts(
+      // Tablodan üretilir (F80.3d): yardımda görünen her tuş burada bağlı.
       bindings: {
-        if (selecting) ...{
-          const SingleActivator(LogicalKeyboardKey.keyA, control: true): () =>
-              homeDoors?.selectAllVisible(),
-          const SingleActivator(LogicalKeyboardKey.delete): () =>
-              homeDoors?.deleteSelection(),
-        },
-        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
-            createAndOpenNote(context, ref, router),
-        const SingleActivator(LogicalKeyboardKey.keyK, control: true): () {
-          openSection(router, AppSection.notes);
-          ref.read(searchFocusRequestProvider.notifier).request();
-        },
-        const SingleActivator(LogicalKeyboardKey.comma, control: true): () =>
-            openSection(router, AppSection.settings),
-        const SingleActivator(LogicalKeyboardKey.backslash, control: true):
-            onToggleList,
-        const SingleActivator(LogicalKeyboardKey.slash, control: true): () =>
-            showShortcutsHelp(context),
-        const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): () =>
-            openAdjacentNote(router, -1),
-        const SingleActivator(LogicalKeyboardKey.arrowDown, alt: true): () =>
-            openAdjacentNote(router, 1),
-        const SingleActivator(LogicalKeyboardKey.keyW, control: true): () =>
-            closeOpenNote(router),
-        const SingleActivator(LogicalKeyboardKey.home, alt: true): () =>
-            goHome(ref, router),
-        for (final (i, section) in AppSection.values.indexed)
-          SingleActivator(_digitKeys[i], alt: true): () =>
-              openSection(router, section),
+        for (final row in kAppShortcuts)
+          if (!row.elsewhere)
+            for (final (i, key) in row.keys.indexed)
+              key: ?_actionFor(row.id, i, actions, router),
       },
       child: Focus(
         canRequestFocus: false,
@@ -369,6 +474,21 @@ class AppShortcuts extends ConsumerWidget {
       ),
     );
   }
+
+  /// Tablodaki satırın [index]'inci tuşunun işi; seçim yokken Ctrl+A/Delete
+  /// bağlanmaz (metin alanının kendi kısayolu çalışsın).
+  static VoidCallback? _actionFor(
+    AppShortcutId id,
+    int index,
+    Map<AppShortcutId, VoidCallback> actions,
+    GoRouter router,
+  ) => switch (id) {
+    AppShortcutId.sections => () =>
+        openSection(router, AppSection.values[index]),
+    AppShortcutId.adjacentNote => () =>
+        openAdjacentNote(router, index == 0 ? -1 : 1),
+    _ => actions[id],
+  };
 
   /// Alt+←/→ klasör geçişi (F44.5). Yazarken GEÇMEZ (Option+ok macOS'ta kelime
   /// atlar), liste görünmüyorsa olay tarayıcıya kalır (Alt+← geri).
