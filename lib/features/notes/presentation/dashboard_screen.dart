@@ -885,6 +885,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final order = _dragOrder;
     final id = _dragNoteId;
     if (order == null || id == null) return;
+    // Çöpe yaklaşırken sıra önizlemesi DONAR (kullanıcı bulgusu 2026-11-12:
+    // kart küçüldükçe üstüne gelen hücreler değişip notlar hızla zıplıyordu).
+    if (DragTrashTarget.pullOf(DragTrashTarget.pull.value) > 0) return;
     final from = order.indexWhere((n) => n.id == id);
     if (from < 0 || from == toIndex) return;
     final next = List.of(order);
