@@ -33,3 +33,6 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 ## 2026-11-07 — Tablet turu (HUAWEI MatePad 11, GMS'siz, M-Pencil) — kök nedenler
 - **Ayarlar/uygulama gri ekran:** web'de JS `1.0`'ı Firestore'a TAMSAYI yazıyor; ayar senkronu `setInt` → `getDouble('font_scale')` çöküyordu (senkron gelir gelmez bütün uygulama). `writeLocalPref` `kDoublePrefKeys`'te double yazar, `FontScaleNotifier` num okur. Yeni ondalık senkron tercih eklenirse `kDoublePrefKeys`'e ekle.
 
+
+## 2026-11-12 — P48 web yazı seçimi
+- KÖK NEDEN ("webte yazı seçerken sorun, yazı tipi olabilir" — yazı tipi DEĞİL): `sentence_select.dart` cümle genişletici seçimin kaynağına bakmıyordu; fareyle çift tıklama bütün cümleyi, shift+ok ya da kelime içi fare sürüklemesi bütün kelimeyi seçiyordu. Genişletme artık yalnız dokunmatik (son `PointerDownEvent` türü fare/izleme dörtgeni değilse ve shift basılı değilse). Webde üretme: `build web --release --wasm` + `python -m http.server` + misafir kip; karşılaştırma için arama alanı (genişleticisiz) doğru seçer.
