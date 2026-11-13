@@ -168,7 +168,16 @@ class InkController extends ChangeNotifier {
     }
     // Parmak kalkana dek silme sürmez (bkz. pointerMove: _snapped).
     _snapped = true;
-    penOffer.value = (page: page, at: at);
+    _showOffer(penOffer, page, at);
+  }
+
+  /// Basılı tutma önerisini (silgi / kalem) gösterir: tek titreşim yolu.
+  void _showOffer(
+    ValueNotifier<({int page, Offset at})?> offer,
+    int page,
+    Offset at,
+  ) {
+    offer.value = (page: page, at: at);
     HapticFeedback.selectionClick();
     notifyListeners();
   }
@@ -197,9 +206,7 @@ class InkController extends ChangeNotifier {
     if (base != null) _ink = base;
     _active = null;
     _snapped = true;
-    eraserOffer.value = (page: page, at: at);
-    HapticFeedback.selectionClick();
-    notifyListeners();
+    _showOffer(eraserOffer, page, at);
   }
 
   /// Katmanın üstündeki bir düğme (düzeltme işaretçisi) bu dokunuşu aldı:

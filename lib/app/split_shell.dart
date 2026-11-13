@@ -259,7 +259,7 @@ class _SplitShellState extends ConsumerState<SplitShell>
   Timer? _closing;
 
   /// Rotanın geri dönüş geçişiyle aynı (MaterialRoute 300 ms).
-  static const _kCloseHold = Duration(milliseconds: 300);
+  static const _kCloseHold = AppMotion.medium;
 
   @override
   void dispose() {
