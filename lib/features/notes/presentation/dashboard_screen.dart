@@ -885,7 +885,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _hoverRetry?.cancel();
     final wait = _hoverGate.remaining();
     if (wait == null) return;
-    _hoverRetry = Timer(wait + const Duration(milliseconds: 1), () {
+    _hoverRetry = Timer(wait, () {
       if (!mounted || _hoverGate.candidate != targetId) return;
       final index = _dragOrder?.indexWhere((n) => n.id == targetId) ?? -1;
       if (index >= 0) _previewCardDrop(index);

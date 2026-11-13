@@ -1,3 +1,5 @@
+import '../../../app/theme/app_tokens.dart';
+
 /// Sürükle-sırala önizlemesinin HEDEF KAPISI (P56, kullanıcı 2026-11-13:
 /// "not sıralama iki sütunun arasında geldiğinde anlık bir sağa bir sola
 /// geçtiği için aşırı zıplamalar oluyor").
@@ -18,8 +20,9 @@
 /// Saf Dart; saat dışarıdan verilebilir (test).
 class ReorderHoverGate {
   ReorderHoverGate({
-    this.dwell = const Duration(milliseconds: 120),
-    this.cooldown = const Duration(milliseconds: 250),
+    this.dwell = AppMotion.instant,
+    // Kartların yerine oturma süresi kadar (AnimatedSlide/ızgara geçişi).
+    this.cooldown = AppMotion.medium,
     DateTime Function()? clock,
   }) : _clock = clock ?? DateTime.now;
 

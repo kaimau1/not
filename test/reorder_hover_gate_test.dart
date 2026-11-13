@@ -73,7 +73,7 @@ void main() {
     expect(gate.remaining(), isNull);
     gate.offer('A');
     advance(50);
-    expect(gate.remaining(), const Duration(milliseconds: 70));
+    expect(gate.remaining(), const Duration(milliseconds: 50));
     advance(100);
     expect(gate.remaining(), Duration.zero);
     expect(gate.offer('A'), isTrue);
