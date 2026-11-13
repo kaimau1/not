@@ -52,7 +52,7 @@ madde başı ayrı commit, kötüleştiren tek commit geri alınır, iyiler birl
 - [ ] **F83.2** `docs/perf/README.md`: gecmis.csv'yi okuyan tek sayfalık özet (`python tool/perf/gecmis.py` → evre başına son 10 `[apk]` eğilimi, altın tabana göre %). Haftalık zamanlanmış tur bunu okuyup kayma > %10 olan evreyi Kuyruk'a "hız: <evre>" satırı olarak ekler.
 - [ ] **F83.3** CI "Kare ölçümü" işi: neden yalnız `perf` bayrağında koştuğunu kanıtla (süre/gürültü); emülatör sayıları kararlıysa (aynı commit 3 koşu, sapma < %10) `[apk]` koşularında da koşsun, değilse işi kaldır ve neden plana yaz.
 
-## FAZ 84 — Ölçümün bulduğu yavaşlıkları düzelt [Fable · P46 · A/B]
+## FAZ 84 — Ölçümün bulduğu yavaşlıkları düzelt [Opus · P46 · A/B] — F84.0 main'de (2026-11-13, [apk]); F84.1–3 → P55
 
 - [x] **F84.0 Cihazsız bekçi bulguları (P43'ün 6 bulgusu)** — 2026-11-13 (P46): S25 21 → 0, S21 114 → 56, S22 979 → 509, S23 en ağır kare 2941 → 2361, S9 gövde boy karesi 34 → 2 (jank mandalı 4 → 2), S18 ikinci kare 788 → 285; mandallar düşürüldü; cihazda ölçülmedi. Ses hapı `AnimatedSize`ı kanıtsız, açık.
 - [ ] **F84.1** *(→ P55, cihazlı)* F81 + F82'nin ilk tam ölçümünde altın tabanın en kötü 3 evresi (en uzun kare > 32 ms ya da ortanca UI ms en yüksek) için kök neden dökümü (`vmsvc.py` CPU örnekleri + widget build profili) ve düzeltme. Hedef: her evrede > 16 ms kare sayısı yarıya.
