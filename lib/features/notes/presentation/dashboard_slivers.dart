@@ -340,6 +340,7 @@ extension _DashSlivers on _DashboardScreenState {
               inSection: (id) => items.any((n) => n.id == id),
               onDragStart: () => _startCardDrag(note.id, items),
               onHover: () => _previewCardDrop(index),
+              onHoverLeave: () => _leaveCardHover(note.id),
               onDragEnd: _endCardDrag,
               feedback: SizedBox(
                 width: cellWidth,
@@ -423,6 +424,7 @@ extension _DashSlivers on _DashboardScreenState {
               inSection: (id) => items.any((n) => n.id == id),
               onDragStart: () => _startCardDrag(note.id, items),
               onHover: () => _previewCardDrop(index),
+              onHoverLeave: () => _leaveCardHover(note.id),
               onDragEnd: () => _endCardDrag(select),
               onDragUpdate: (d) => _dragTravel += d.delta.distance,
               feedback: SizedBox(
@@ -456,6 +458,7 @@ extension _DashSlivers on _DashboardScreenState {
                   inSection: (id) => items.any((n) => n.id == id),
                   onDragStart: () => _startCardDrag(note.id, items),
                   onHover: () => _previewCardDrop(index),
+                  onHoverLeave: () => _leaveCardHover(note.id),
                   onDragEnd: _endCardDrag,
                   feedback: SizedBox(
                     width: cellWidth,
@@ -474,6 +477,7 @@ extension _DashSlivers on _DashboardScreenState {
           inSection: (id) => items.any((n) => n.id == id),
           onDragStart: () => _startCardDrag(note.id, items),
           onHover: () => _previewCardDrop(index),
+          onHoverLeave: () => _leaveCardHover(note.id),
           onDragEnd: _endCardDrag,
           feedback: SizedBox(
             width: cellWidth,

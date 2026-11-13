@@ -22,6 +22,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/app_commands.dart';
 import 'due_banner.dart';
 import 'drag_trash_target.dart';
+import 'reorder_hover_gate.dart';
 import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../app/split_shell.dart';
@@ -649,6 +650,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // Dar↔geniş geçişinde yeni örnek önce kurulur, kapıyı ondan alma.
     if (identical(homeDoors, this)) homeDoors = null;
     _stopFileDrops();
+    _hoverRetry?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _narrowPaneN.dispose();
     _liveQuery.dispose();
@@ -872,7 +874,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Sürüklemede parmağın aldığı yol (dp): ~0 = yalnız basılı tutuldu.
   double _dragTravel = 0;
 
+  /// P56: önizleme hedefine histerezis (durma + soğuma + itilen kartı
+  /// kilitle) — iki sütun sınırında kart sağ/sol gidip gelmesin.
+  final ReorderHoverGate _hoverGate = ReorderHoverGate();
+  Timer? _hoverRetry;
+
+  /// Parmak hedefte durdu ama `onMove` yeniden gelmedi (fare/kalem durgun):
+  /// süre dolunca aynı hedef bir kez daha denenir.
+  void _scheduleHoverRetry(String targetId) {
+    _hoverRetry?.cancel();
+    final wait = _hoverGate.remaining();
+    if (wait == null) return;
+    _hoverRetry = Timer(wait + const Duration(milliseconds: 1), () {
+      if (!mounted || _hoverGate.candidate != targetId) return;
+      final index = _dragOrder?.indexWhere((n) => n.id == targetId) ?? -1;
+      if (index >= 0) _previewCardDrop(index);
+    });
+  }
+
+  void _leaveCardHover(String targetId) => _hoverGate.leave(targetId);
+
   void _startCardDrag(String id, List<Note> section) {
+    _hoverRetry?.cancel();
+    _hoverGate.reset();
     setState(() {
       _dragNoteId = id;
       _dragOrder = List.of(section);
@@ -891,6 +915,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (DragTrashTarget.pullOf(DragTrashTarget.pull.value) > 0) return;
     final from = order.indexWhere((n) => n.id == id);
     if (from < 0 || from == toIndex) return;
+    if (toIndex < 0 || toIndex >= order.length) return;
+    final targetId = order[toIndex].id;
+    if (!_hoverGate.offer(targetId)) {
+      _scheduleHoverRetry(targetId);
+      return;
+    }
+    _hoverRetry?.cancel();
     final next = List.of(order);
     final item = next.removeAt(from);
     next.insert(toIndex.clamp(0, next.length), item);
@@ -908,6 +939,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final order = _dragOrder;
     final id = _dragNoteId;
     final original = _dragOriginal;
+    _hoverRetry?.cancel();
+    _hoverGate.reset();
     setState(() {
       _dragNoteId = null;
       _dragOrder = null;
@@ -939,6 +972,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// diye kaydetmesin. Silme olağan yoldan: kilitli not doğrulama ister,
   /// kart küçülüp solar ([leavingNotesProvider]), geri al çubuğu çıkar.
   Future<void> _trashDraggedNote(String id) async {
+    _hoverRetry?.cancel();
     _dragOrder = null;
     _dragOriginal = null;
     final repo = ref.read(notesRepositoryProvider);
