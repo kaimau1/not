@@ -5,6 +5,8 @@ What changed in each update, newest first. The version number is at the bottom o
 ## 13 November 2026 {#2026-11-13}
 - **Text selection on the web fixed:** double-clicking with the mouse now selects just the word (not the whole sentence); shift+arrow selection moves letter by letter instead of jumping to the whole word.
 - **Calendar events on every device:** new events now show on all your devices by default ("All devices"); pick Google in the editor to save to Google Calendar instead.
+- **Smoother transitions:** opening a note, typing the first letter of a search, swiping between filters/folders and flipping weeks in the calendar now do less work; the writing area no longer jitters while the format panel opens or closes.
+- **Lighter Drive previews on cards:** thumbnails are decoded at card size, so scrolling the list uses less memory.
 
 ## 12 November 2026 {#2026-11-12}
 - **Markdown (.md) files:** add a .md from "Add file" inside a note or by drag and drop; tapping it opens a clean, readable view and you can add all or part of it to the note. A .md shared from another app or opened with "Open with" becomes a new note with its title, items and checkboxes.
