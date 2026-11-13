@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../friendly_error.dart';
@@ -19,8 +21,16 @@ final rootScaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 /// aç", "AI ile düzelt" hiç görünmüyordu. Bildirimi çizen EN DIŞ Scaffold
 /// klavyeyi kendi hesaplıyorsa dokunulmaz (geniş ekran kabuğu, Ayarlar).
 EdgeInsetsGeometry? snackBarMarginOverKeyboard([EdgeInsetsGeometry? base]) {
+  final lift = math.max(_keyboardLift(), snackBarBottomObstacle.value);
+  if (lift <= 0) return base;
+  // Temanın (M3) varsayılan boşluğu: 15, 5, 15, 10.
+  final start = base ?? const EdgeInsets.fromLTRB(15, 5, 15, 10);
+  return start.add(EdgeInsets.only(bottom: lift));
+}
+
+double _keyboardLift() {
   final focus = FocusManager.instance.primaryFocus?.context;
-  if (focus == null) return base;
+  if (focus == null) return 0;
   ScaffoldState? root;
   focus.visitAncestorElements((element) {
     if (element is StatefulElement && element.state is ScaffoldState) {
@@ -28,15 +38,46 @@ EdgeInsetsGeometry? snackBarMarginOverKeyboard([EdgeInsetsGeometry? base]) {
     }
     return true;
   });
-  if (root?.widget.resizeToAvoidBottomInset != false) return base;
+  if (root?.widget.resizeToAvoidBottomInset != false) return 0;
   // MediaQuery değil: odaktaki alana bağımlılık kurar, klavye kayarken her
   // karede yeniden kurulurdu.
   final view = WidgetsBinding.instance.platformDispatcher.views.first;
-  final lift = view.viewInsets.bottom / view.devicePixelRatio;
-  if (lift <= 0) return base;
-  // Temanın (M3) varsayılan boşluğu: 15, 5, 15, 10.
-  final start = base ?? const EdgeInsets.fromLTRB(15, 5, 15, 10);
-  return start.add(EdgeInsets.only(bottom: lift));
+  return view.viewInsets.bottom / view.devicePixelRatio;
+}
+
+/// **ALTTAKİ ENGEL** (P49 (d), kullanıcı 2026-11-12: "'kalem yazar, parmak
+/// dokunur' gibi ipuçları alt kalem panelini KAPATMASIN"): ekranın dibine
+/// yapışık bir panel (editörün kalem tepsisi) açıkken yüksekliği burada;
+/// bildirimler onun ÜSTÜNDE çıkar. Paneli [SnackBarObstacle] ile sar.
+final snackBarBottomObstacle = ValueNotifier<double>(0);
+
+/// Çocuğunun boyunu [snackBarBottomObstacle]'a yazar (dizilimden sonra, ek
+/// kare kurmadan); sökülünce siler. Yalnız ekranın DİBİNE yapışık panel için.
+class SnackBarObstacle extends SingleChildRenderObjectWidget {
+  const SnackBarObstacle({super.key, super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderSnackBarObstacle();
+}
+
+class _RenderSnackBarObstacle extends RenderProxyBox {
+  @override
+  void performLayout() {
+    super.performLayout();
+    final h = size.height;
+    if (snackBarBottomObstacle.value != h) {
+      // Dinleyicisi yok (değer bildirim kurulurken okunur): dizilim
+      // sırasında yazmak güvenli.
+      snackBarBottomObstacle.value = h;
+    }
+  }
+
+  @override
+  void detach() {
+    snackBarBottomObstacle.value = 0;
+    super.detach();
+  }
 }
 
 /// Silme sonrası kompakt "geri al" bildirimi. Ekranın tümünü kaplamaz; kalan
@@ -197,11 +238,15 @@ extension AppMessages on ScaffoldMessengerState {
     final shown = detail == null ? duration : const Duration(seconds: 6);
     showSnackBar(
       act == null
-          ? SnackBar(
-              content: Text(message),
-              duration: shown,
-              margin: snackBarMarginOverKeyboard(),
-            )
+          ? () {
+              final margin = snackBarMarginOverKeyboard();
+              return SnackBar(
+                content: Text(message),
+                duration: shown,
+                behavior: margin == null ? null : SnackBarBehavior.floating,
+                margin: margin,
+              );
+            }()
           : timedSnackBar(
               content: Text(message),
               action: act,

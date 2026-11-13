@@ -59,4 +59,31 @@ void main() {
     expect(PinnedSideMemory.next(PinnedSide.left), PinnedSide.right);
     expect(PinnedSideMemory.next(PinnedSide.right), PinnedSide.top);
   });
+
+  test('F65.2 (K-O7): seçilmemişse geniş yatay pencerede ek solda', () async {
+    SharedPreferences.setMockInitialValues({});
+    PinnedSideMemory.attach(await SharedPreferences.getInstance());
+    // Geniş yatay pencere (tablet 1024×640, web) → solda.
+    expect(
+      PinnedSideMemory.preferred(PinnedSide.top, const Size(1024, 640)),
+      PinnedSide.left,
+    );
+    // Dikey tablet, telefon yatay (< 840) → üstte.
+    expect(
+      PinnedSideMemory.preferred(PinnedSide.top, const Size(800, 1280)),
+      PinnedSide.top,
+    );
+    expect(
+      PinnedSideMemory.preferred(PinnedSide.top, const Size(780, 393)),
+      PinnedSide.top,
+    );
+    // Kullanıcı bir kez seçince hep o (üst dahil).
+    PinnedSideMemory.setSide(PinnedSide.top);
+    expect(
+      PinnedSideMemory.preferred(PinnedSide.top, const Size(1024, 640)),
+      PinnedSide.top,
+    );
+    PinnedSideMemory.attach(await SharedPreferences.getInstance());
+    expect(PinnedSideMemory.chosen, isTrue);
+  });
 }

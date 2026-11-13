@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../viewers/ink_tools.dart';
 
 /// **YÜZEN KALEM DÜĞMESİ: "kalem yazar / kalem dokunur"** (kullanıcı isteği
@@ -122,11 +123,22 @@ class _StylusToggleButton extends StatelessWidget {
               onTap: () {
                 HapticFeedback.selectionClick();
                 InkToolMemory.saveAutoStylus(!on);
+                // SÜREKLİ ÇIKMASIN (P49 (d), kullanıcı 2026-11-12: "'kalem
+                // yazar, parmak dokunur' gibi ipuçları alt kalem panelini
+                // kapatmasın, sürekli çıkmasın"): düğmenin simgesi ve rengi
+                // durumu zaten gösteriyor; yazı her durum için OTURUMDA BİR
+                // KEZ, kalem tepsisinin üstünde.
+                if (!InkToolMemory.stylusHintsTold.add(!on)) return;
+                final margin = snackBarMarginOverKeyboard();
                 ScaffoldMessenger.maybeOf(context)
                   ?..hideCurrentSnackBar()
                   ..showSnackBar(
                     SnackBar(
                       duration: const Duration(milliseconds: 1600),
+                      behavior: margin == null
+                          ? null
+                          : SnackBarBehavior.floating,
+                      margin: margin,
                       content: Text(
                         !on ? l10n.stylusTogglesOn : l10n.stylusTogglesOff,
                       ),

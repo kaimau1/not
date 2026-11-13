@@ -330,6 +330,11 @@ Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5
 - L5 **Alt çubuk (P57):** Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk": "Geri al" ve "Hatırlatıcı"yı aç, "Ara"yı tutamaçtan en üste sürükle → nota gir: çubukta Ara en solda, geri al ve hatırlatıcı var, çalışıyorlar. 360 dp'lik dar ekranda çok düğme açınca çubuk taşmıyor (önce küçülür, sonra kayar). "Alt çubuğu varsayılana döndür" → eski düzen.
 - L6 **Klasörde çöpe sürükle (P58):** bir klasör seç → notu basılı tut, sürükle: altta çöp belirir, üstüne bırak → not silinir, "Geri al" çıkar. Sürüklerken diğer kartlar yer değiştirmez. Oynatmadan bırakınca not seçilir. Başkasının paylaştığı klasörde sürükleme yok.
 
+### L7–L9 (2026-11-13 bulut — P49 sabit ek baştan; yazıldı, cihazda doğrulanmadı)
+- L7 **Sabit ek çubuğu (P49):** nota PDF ve video ekleyip sabitle → telefonda çubukta yalnız ⛶ · (oynat) · tutamak · Not al · ✏ · ⋮; ⋮ bizim stilde levha açar: Görünüm (Sabit/Yüzen/Ek), Balonlar, PDF (sayfalara göz at, yer imi…), ek işleri, en altta kırmızı Kaldır. Ayarlar'da yazı boyunu büyüt → çubuk taşmıyor. Tablette (≥ 600 dp) anahtar ve balon çubukta da.
+- L8 **Kalem senkronu + ipuçları:** sabit PDF'te yüzen kalem düğmesini aç → bölmedeki ✏ açık görünür (kaybolmaz); bölmedeki ✏'yi kapat → yüzen düğme "kalem dokunur"a geçer, kalem kipi kapanır. Bölmeden ✏ açınca çubukta silgi · geri al · yinele · ayar. Yüzen düğmeye art arda bas: "kalem yazar/dokunur" yazısı her biri için bir kez çıkar, sonra çıkmaz. Kalem kipinde bildirim alttaki kalem tepsisinin ÜSTÜNDE görünür.
+- L9 **Tablette yanda sabit ek (F65.2):** temiz kurulumda (ya da yerleşimi hiç değiştirmemişken) tableti yatay tut, nota sabit PDF ekle → ek solda, not sağda. Dikey tut → üstte. ⇆ ile üste alınca yatayda da üstte kalır. Sabit ekli notta klavye aç/kapa: bölme ve klavye takılmıyor (A/B: `ab_hepsi.py --altin` sabit PDF klavye evresi).
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

@@ -381,6 +381,76 @@ class KeyboardSlide extends StatelessWidget {
 /// Klavyenin EVRESİ: açık mı, açılırken tahmini yüksekliği ne.
 typedef KeyboardPhase = ({bool open, double estimate});
 
+/// Klavyenin AŞAMASI — [KeyboardPhase]'in kapanışı ayrı söyleyen biçimi (bkz.
+/// [KeyboardStageWatcher]). [open]: klavye ekranda (kapanırken de);
+/// [closing]: iniyor; [estimate]: tam boy tahmini.
+typedef KeyboardStage = ({bool open, bool closing, double estimate});
+
+/// Klavyenin aşamasını HİÇBİR WIDGET KURMADAN izler (P49): pencere ölçüsü
+/// değişince ([WidgetsBindingObserver.didChangeMetrics]) [stage] güncellenir
+/// — yalnız aşama DEĞİŞİNCE haber verir (klavye görününce, inmeye
+/// başlayınca, bitince; tahmin büyürse).
+///
+/// Neden [KeyboardPhaseListener] değil: o, klavyenin her karesinde kurulur;
+/// bir `LayoutBuilder`'ın altındaysa her kurulum o `LayoutBuilder`'ı da
+/// dizilmek üzere işaretler (S17 "dizilen sınır"). Ayrıca evreyi bir kare
+/// SONRA bildirir. Sabit ek bölmesi boyunu klavyenin göründüğü ve bittiği
+/// karede TEK ADIMDA değiştirir (kasma listesi §6); bunun için aşamayı o
+/// karenin kurulumundan ÖNCE bilmesi gerekir.
+class KeyboardStageWatcher with WidgetsBindingObserver {
+  KeyboardStageWatcher() {
+    WidgetsBinding.instance.addObserver(this);
+    didChangeMetrics();
+  }
+
+  final stage = ValueNotifier<KeyboardStage>((
+    open: false,
+    closing: false,
+    estimate: 0,
+  ));
+
+  double _last = 0;
+  double _cycleMax = 0;
+  bool _closing = false;
+
+  @override
+  void didChangeMetrics() {
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final live = view.viewInsets.bottom / view.devicePixelRatio;
+    if (live <= 0) {
+      if (_cycleMax > 0) _KeyboardPhaseListenerState._memory = _cycleMax;
+      _cycleMax = 0;
+      _closing = false;
+    } else {
+      _cycleMax = math.max(_cycleMax, live);
+      if (live > _last) {
+        _closing = false;
+      } else if (live < _last && live < _cycleMax * 0.85) {
+        _closing = true;
+      }
+    }
+    _last = live;
+    final memory = _KeyboardPhaseListenerState._memory;
+    stage.value = (
+      open: live > 0,
+      closing: _closing,
+      estimate: live <= 0
+          ? 0
+          : math.max(
+              _cycleMax,
+              memory > 0
+                  ? memory
+                  : view.physicalSize.height / view.devicePixelRatio * 0.38,
+            ),
+    );
+  }
+
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    stage.dispose();
+  }
+}
+
 /// Klavyenin AÇILIŞ/KAPANIŞ EVRESİNİ bildiren dinleyici — kare kare DEĞİL,
 /// yalnız evre değişince ([onChanged]).
 ///

@@ -310,12 +310,17 @@ void main() {
       ),
     );
     expect(tester.takeException(), isNull);
+    await tester.tap(find.byKey(const ValueKey('pinned-note-at')));
+    expect(noted, 1);
+    // P49 (K-O6): dar çubukta görünüm anahtarı TEK ⋮ levhasında.
+    expect(find.byKey(const ValueKey('attachment-view-switch')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('pinned-media-menu')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
     expect(
       find.byKey(const ValueKey('attachment-view-switch')),
       findsOneWidget,
     );
-    await tester.tap(find.byKey(const ValueKey('pinned-note-at')));
-    expect(noted, 1);
   });
 
   group('görsel → balonlu belge', () {
@@ -399,9 +404,10 @@ void main() {
       ),
     );
     final add = find.byKey(const ValueKey('pinned-add-bubble'));
-    expect(add, findsOneWidget);
-    // Düğme tür menüsü açar: Balon · Açık metin.
-    await tester.tap(add);
+    // P49 (K-O6): dar çubukta (< 600 dp) balon seçenekleri ⋮ levhasında;
+    // bırakma kipi açıkken çubukta ✓ belirir.
+    expect(add, findsNothing);
+    await tester.tap(find.byKey(const ValueKey('pinned-media-menu')));
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('pinned-add-bubble-plain')),
@@ -410,7 +416,38 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('pinned-add-bubble-note')));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.check), findsOneWidget);
-    // Kapatınca eski hâline döner.
+    // Kapatınca eski hâline döner (✓ çubuktan kalkar).
+    await tester.tap(add);
+    await tester.pump();
+    expect(add, findsNothing);
+    expect(find.byIcon(Icons.check), findsNothing);
+  });
+
+  testWidgets('GENİŞ çubukta Balon ekle düğmesi çubukta, tür menüsü açar', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(
+        PinnedMediaPane(
+          media: image.copyWith(pinHeight: 200),
+          onHeightChanged: (_) {},
+          onUnpin: () {},
+          onOpen: () {},
+          onChanged: (_) {},
+          child: const Text('not gövdesi'),
+        ),
+      ),
+    );
+    final add = find.byKey(const ValueKey('pinned-add-bubble'));
+    expect(add, findsOneWidget);
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('pinned-add-bubble-note')));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.check), findsOneWidget);
     await tester.tap(add);
     await tester.pump();
     expect(find.byIcon(Icons.add_comment_outlined), findsOneWidget);
