@@ -3,6 +3,7 @@
 HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski hâl: `HAFIZA_ARSIV_3.md`.
 
 ## Riverpod / performans
+- **Riverpod 3 akış hatasında kendiliğinden yeniden dener** (2026-11-13, F79.6): o sırada durum `isLoading && hasError`. Elle dallanan yer tutucuda (`if (async.isLoading) iskelet; if (async.hasError) hata`) HATAYA ÖNCE bak — yoksa hata hiç görünmez, iskelet döner (Gelen ekranı böyleydi). Bağlantı ipucu tek kaynak: `core/connectivity.dart` `isOfflineProvider` (eklenti yoksa `false`).
 - Riverpod 3 görünmeyen ekranın ve DİNLENMEYEN sağlayıcının aboneliğini
   DURAKLATIR: oturum boyu servisler `lib/app/app_services.dart`ta; testte
   sağlayıcıyı okumadan önce `container.listen`. Tek nota/klasöre bağlı akış

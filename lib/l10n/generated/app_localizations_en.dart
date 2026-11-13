@@ -1113,6 +1113,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String pendingUploadsOffline(int count) {
+    return '$count attachments waiting — will upload when you are online';
+  }
+
+  @override
+  String get aiOfflineTitle => 'No connection';
+
+  @override
+  String get aiOfflineBody =>
+      'AI features need the internet. The buttons turn on when you are back online.';
+
+  @override
   String get pendingUploadsInfo =>
       'Attachments are safe on this device. They upload automatically when you are online; until then they do not appear on your other devices.';
 

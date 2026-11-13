@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Bağlantı yokken dürüst ekranlar:** internet yokken "Gelen" süzgeci "burada not yok" yerine "Bağlantı yok" ve Tekrar dene gösterir; yapay zekâ levhası önce bağlantı olmadığını söyler (düğmeler bağlantı gelince açılır); bekleyen ekler "yükleniyor" yerine "bağlantı gelince yüklenecek" der.
 - **Webde yazı seçimi düzeldi:** fareyle çift tıklama artık yalnız kelimeyi seçer (bütün cümleyi değil); shift+ok ile seçim harf harf ilerler, kendiliğinden kelimeye büyümez.
 - **Takvim etkinlikleri her cihazda:** yeni etkinlikler varsayılan olarak bütün cihazlarında görünür ("Tüm cihazlar"); Google Takvim'e kaydetmek istersen düzenleyicide Google'ı seç.
 

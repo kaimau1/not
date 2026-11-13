@@ -143,15 +143,12 @@ extension _DashSlivers on _DashboardScreenState {
       cellWidth: cellWidth,
     );
     if (slivers.isNotEmpty) return slivers;
-    final l10n = context.l10n;
+    // F79.6 (3): boşken ayrı ekranla aynı yer tutucu (yükleniyor / hata +
+    // Tekrar dene / gerçekten boş) — hatada "burada not yok" demez.
     return [
       SliverFillRemaining(
         hasScrollBody: false,
-        child: EmptyState(
-          icon: AppIcons.inbox,
-          title: l10n.sharedHubEmpty,
-          subtitle: l10n.sharedHubEmptyHint,
-        ),
+        child: sharedHubPlaceholder(context, ref, skeleton: false),
       ),
     ];
   }

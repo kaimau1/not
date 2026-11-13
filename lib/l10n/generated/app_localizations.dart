@@ -2084,6 +2084,24 @@ abstract class AppLocalizations {
   /// **'{count} ek yüklenemedi, yeniden denenecek'**
   String pendingUploadsFailed(int count);
 
+  /// No description provided for @pendingUploadsOffline.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek bekliyor — bağlantı gelince yüklenecek'**
+  String pendingUploadsOffline(int count);
+
+  /// No description provided for @aiOfflineTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı yok'**
+  String get aiOfflineTitle;
+
+  /// No description provided for @aiOfflineBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.'**
+  String get aiOfflineBody;
+
   /// No description provided for @pendingUploadsInfo.
   ///
   /// In tr, this message translates to:

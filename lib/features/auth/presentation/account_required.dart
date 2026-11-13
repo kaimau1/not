@@ -237,6 +237,53 @@ class AiIcon extends ConsumerWidget {
 
 /// Yapay zekâ kapalıyken araçları soluk ve dokunulamaz gösterir (açıklama
 /// [AiStatusCard]da).
+/// Çevrimdışı AI kartı (DENEYIM F79.6 (4)): [AiStatusCard] ile aynı yer ve
+/// görünüş, kilit yerine bulut simgesi; eylem yok — bağlantı gelince
+/// `isOfflineProvider` değişir, kart kendiliğinden kalkar.
+class AiOfflineCard extends StatelessWidget {
+  const AiOfflineCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      key: const ValueKey('ai-offline-card'),
+      margin: EdgeInsets.zero,
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  color: scheme.onSecondaryContainer,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.aiOfflineTitle,
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(color: scheme.onSecondaryContainer),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.aiOfflineBody,
+              style: TextStyle(color: scheme.onSecondaryContainer),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class AiStatusDim extends StatelessWidget {
   const AiStatusDim({super.key, required this.locked, required this.child});
 

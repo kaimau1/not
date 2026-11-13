@@ -504,6 +504,16 @@
       }
     }
   },
+  "pendingUploadsOffline": "{count} ek bekliyor — bağlantı gelince yüklenecek",
+  "@pendingUploadsOffline": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiOfflineTitle": "Bağlantı yok",
+  "aiOfflineBody": "Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.",
   "pendingUploadsInfo": "Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.",
   "checkedHeader": "İşaretliler ({count})",
   "@checkedHeader": {

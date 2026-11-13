@@ -352,6 +352,9 @@
   "noteArchived": "Note archived",
   "pendingUploads": "{count} attachments uploading",
   "pendingUploadsFailed": "{count} attachments failed, will retry",
+  "pendingUploadsOffline": "{count} attachments waiting — will upload when you are online",
+  "aiOfflineTitle": "No connection",
+  "aiOfflineBody": "AI features need the internet. The buttons turn on when you are back online.",
   "pendingUploadsInfo": "Attachments are safe on this device. They upload automatically when you are online; until then they do not appear on your other devices.",
   "checkedHeader": "Checked ({count})",
   "@checkedHeader": {

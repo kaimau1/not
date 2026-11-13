@@ -1110,6 +1110,18 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String pendingUploadsOffline(int count) {
+    return '$count ek bekliyor — bağlantı gelince yüklenecek';
+  }
+
+  @override
+  String get aiOfflineTitle => 'Bağlantı yok';
+
+  @override
+  String get aiOfflineBody =>
+      'Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.';
+
+  @override
   String get pendingUploadsInfo =>
       'Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.';
 
