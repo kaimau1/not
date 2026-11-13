@@ -179,7 +179,11 @@ class _ReorderableNoteCell extends StatelessWidget {
     this.draggable = true,
     this.onLongPress,
     this.onDragUpdate,
+    this.onHoverLeave,
   });
+
+  /// Sürüklenen kart bu hücreden ÇIKTI (P56: itilen kartın kilidi açılır).
+  final VoidCallback? onHoverLeave;
 
   /// Sürüklenen parmağın her adımı (yol ölçümü: hiç oynamadı mı?).
   final DragUpdateCallback? onDragUpdate;
@@ -216,6 +220,7 @@ class _ReorderableNoteCell extends StatelessWidget {
       // Parmak bu hücrenin üzerine geldi: sıra CANLI önizlenir. Bırakma
       // (`onAccept`) beklenmez — kullanıcı sonucu sürüklerken görmeli.
       onMove: (_) => onHover(),
+      onLeave: (_) => onHoverLeave?.call(),
       onAcceptWithDetails: (_) {},
       builder: (context, candidate, rejected) {
         final hovering = candidate.isNotEmpty;

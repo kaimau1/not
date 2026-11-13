@@ -4,6 +4,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 ## Riverpod / performans
 - **Çok sayıda küçük çizim çağrısı Impeller'da her karede yeniden üçgenlenir** (2026-11-13, madde ayırıcı): tekrar eden çizgi/nokta `drawPoints` ile TEK çağrı, eğri yol kısa (yarım dalga başına bir `quadraticBezierTo`). Bekçi `item_divider_paint_test.dart` (≤ 2 çağrı).
+- **Sürükle-sırala hedefi histerezissiz olmaz** (P56, 2026-11-13): `DragTarget.onMove` her olayda sırayı değiştirirse dengeli ızgarada kart sınırda sağ/sol gidip gelir. Önizleme `ReorderHoverGate`ten geçer (durma + soğuma + itilen kart `onLeave`e dek kilitli).
 - **Riverpod 3 akış hatasında kendiliğinden yeniden dener** (2026-11-13, F79.6): o sırada durum `isLoading && hasError`. Elle dallanan yer tutucuda (`if (async.isLoading) iskelet; if (async.hasError) hata`) HATAYA ÖNCE bak — yoksa hata hiç görünmez, iskelet döner (Gelen ekranı böyleydi). Bağlantı ipucu tek kaynak: `core/connectivity.dart` `isOfflineProvider` (eklenti yoksa `false`).
 - Riverpod 3 görünmeyen ekranın ve DİNLENMEYEN sağlayıcının aboneliğini
   DURAKLATIR: oturum boyu servisler `lib/app/app_services.dart`ta; testte

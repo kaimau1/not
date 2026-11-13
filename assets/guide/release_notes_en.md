@@ -7,6 +7,7 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Smaller floating attachment menu on tablets:** on wide screens the menu under an attachment is a single row under it instead of two full-width rows.
 - **Smaller voice recordings on the page:** a floating recording is no longer a long strip on wide screens, just a shorter, lower pill.
 - **The bottom bar no longer vanishes while the keyboard opens or closes:** on some phones (Android 14 and older, button navigation) it hid under the keyboard's suggestion strip and popped in once the keyboard stopped; now it rides right on top of the keyboard the whole way.
+- **No more jumping while reordering notes:** holding a dragged note between the two columns no longer makes notes flip left and right; notes swap once you pause briefly over one.
 - **Active formatting shows in the quick menu:** when the cursor is in bold, italic, underlined, highlighted or colored text, or in a heading, its quick menu button looks pressed.
 - **Easier quick menu editing:** ⋮ → "Edit quick menu" now opens a sheet with "In the menu" and "Available" tiles; tap to add or remove, no saving needed, with a live preview on top. The same editor is in Settings → Personalize, so a quick menu that disappeared can be brought back.
 - **Back transition on tablets:** leaving a note slides and fades the list in instead of jumping.
