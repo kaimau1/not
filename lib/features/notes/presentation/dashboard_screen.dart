@@ -197,8 +197,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Kartların izlediği canlı arama sorgusu (F21.6).
   final _liveQuery = ValueNotifier<String>('');
 
-  Widget _cachedCard(Note note, String query) {
-    final searching = query.isNotEmpty;
+  /// [searching] ızgaranın GECİKTİRİLMİŞ arama durumudur (hücre sarmalayıcısı
+  /// da onunla değişir): anlık sorguyla kurulunca ilk harfte kartlar iki kez
+  /// kuruluyordu — önce tuşta, sonra gecikme dolup sarmalayıcı değişince
+  /// (P46, bütçe S21: harf başına 114 → 57).
+  Widget _cachedCard(Note note, {required bool searching}) {
     final hit = _cardCache[note.id];
     if (hit != null && identical(hit.$1, note) && hit.$2 == searching) {
       return hit.$3;
