@@ -20,8 +20,11 @@ Kaynak: KUYRUK_AYRINTI.md §P46 (6 cihazsız bekçi bulgusu) + HIZ_PLANI F84 + O
 - S23: ızgarayı `ValueListenableBuilder`'a sarmak S24 ilk kareyi 930 → 931 yaptı (mandal); öğenin kendisi dinliyor.
 - Bulgu 5 ses hapı `AnimatedSize`: testte kayıt eklentisi yok, kanıt üretilemedi → dokunulmadı.
 
+## Şu anki adım (çalışma ağacında, commit'lenmedi)
+- Bulgu 6 / S18: kök neden `_measureBodyTop` (note_editor_screen.dart) — başlık ölçümü ilk kareden sonra kök `setState` yapıyor, editör 2. karede baştan kuruluyor (786). Düzeltme: `_bodyTopN` ValueNotifier + tuvalin çevresinde `ValueListenableBuilder` (yalnız NotePageCanvas kurulur). Ölçülecek: S18 gecis_karesi; S17/S18 ilk kare +1 katman mandalı aşmasın.
+
 ## Sıradaki
-- Bulgu 6 (S18 ikinci kare 788). Sonra belgeler (Kuyruk, plan, regresyon, hafıza, sürüm notu), tam `flutter analyze`, CI.
+- Sonra belgeler (Kuyruk, plan, regresyon, hafıza, sürüm notu), tam `flutter analyze`, CI.
 - F84.1–3, F60.S2, F60.5, F68.3: cihaz/profil ister — bu oturumda YAPILMADI.
 
 ## Komut
