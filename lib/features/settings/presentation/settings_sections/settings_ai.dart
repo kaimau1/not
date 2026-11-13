@@ -35,7 +35,7 @@ class _BuiltInAiStatus extends ConsumerWidget {
       // Satır artık Premium sayfasına götürüyor: kota/puan farkının ne
       // kazandırdığı hiçbir yerde anlatılmıyordu (premium çalışması).
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.s),
         onTap: () => context.push('/premium'),
         child: Row(
           children: [
@@ -72,7 +72,7 @@ InputDecoration _aiFieldDecoration(
   final scheme = Theme.of(context).colorScheme;
   OutlineInputBorder border(Color color, [double width = 1]) =>
       OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         borderSide: BorderSide(color: color, width: width),
       );
   return InputDecoration(
@@ -342,9 +342,9 @@ Widget _modelPickerTile({
     padding: const EdgeInsets.only(bottom: 8),
     child: Material(
       color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         onTap: () async {
           final picked = await showAppSheet<_ModelChoice>(
             context: context,
@@ -365,7 +365,7 @@ Widget _modelPickerTile({
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.m),
             border: Border.all(color: scheme.outlineVariant),
           ),
           child: Row(

@@ -305,7 +305,7 @@ class _GuideScreenState extends State<GuideScreen> {
                         filled: true,
                         isDense: true,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.m),
                           borderSide: BorderSide.none,
                         ),
                         suffixIcon: query.isEmpty

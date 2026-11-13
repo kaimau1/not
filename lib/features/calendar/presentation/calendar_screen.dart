@@ -515,7 +515,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       title: _view == CalendarView.agenda && !wide
           ? InkWell(
               key: const ValueKey('calendar-month-toggle'),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.s),
               onTap: () => setState(() => _monthOpen = !_monthOpen),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
@@ -1394,7 +1394,7 @@ class _EntryShell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Material(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,

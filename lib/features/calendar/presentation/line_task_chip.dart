@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -104,7 +105,7 @@ class LineTaskChip extends ConsumerWidget {
         ? l10n.taskNoDue
         : reminderTimePrefix(due, now: now, l10n: l10n);
     final fg = task.completed
-        ? scheme.onSurfaceVariant.withValues(alpha: 0.6)
+        ? scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted)
         : overdue
         ? scheme.error
         : scheme.primary;

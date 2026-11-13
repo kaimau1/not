@@ -116,7 +116,7 @@ class _RoutineCard extends StatelessWidget {
     final todayLog = logs[dayKey(today)];
     return Card(
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         onTap: () => unawaited(showRoutineEditor(context, existing: routine)),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
@@ -169,7 +169,7 @@ class _RoutineCard extends StatelessWidget {
                               : s
                               ? color
                               : color.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(AppRadius.hair),
                         ),
                       ),
                     ),

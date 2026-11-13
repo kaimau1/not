@@ -438,7 +438,7 @@ class _TypographySection extends ConsumerWidget {
         const SizedBox(height: 8),
         // Yazı tipi satırı: seçili ad KENDİ yazı tipiyle yazılır.
         InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: () => _showAppFontSheet(context, ref),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
