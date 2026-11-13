@@ -12,7 +12,7 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
   oturum ölür, sonraki tetik **kaldığı yerden** sürer. Durum: aşağıdaki Kuyruk.
 - Zamanlanmış oturum YENİ OTURUM AÇAMAZ. Başka model gereken paket
   `Agent` aracıyla ALT AJANA verilir: `model: "fable" | "opus" | "sonnet"`,
-  `isolation: "worktree"`, istem = aşağıdaki "İşçi kuralları" + paketin satırı. `Agent`
+  `isolation: "worktree"`, istem = "`isci` skill'ini uygula" + paketin satırı. `Agent`
   reddedilirse ya da o model yoksa paket BU oturumda yapılır; Kuyruk'a gerçek model yazılır.
 - **Yürütücü ince kalır (kullanıcı kararı 2026-11-12: "alt ajanlar daha çok işi yapabilir"):**
   CI izleme, kırmızı CI düzeltme, DEVIR, plan `[x]`, Kuyruk satırı güncellemesi ve sürüm notu
@@ -21,128 +21,21 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
   her alt ajan sıfırdan başlar). Alt ajan beklerken yoklama yok, bildirimi bekle.
 - Aynı anda TEK yürütücü. Kilit: `.git/oto.lock` (içinde ISO zaman).
 
-## Bir turun adımları
+## Bir turun adımları → `oto-tur` skill'i
 
-0. **Kilit.** `.git/oto.lock` varsa ve son değişimi 60 dakikadan yeniyse: hiçbir şey
-   yapmadan "başka yürütücü çalışıyor" de ve BİTİR. Değilse kilidi şimdi yaz. Aşağıdaki
-   her adımın başında kilidi tazele. Tur nasıl biterse bitsin kilidi sil.
-   Kilit yalnız adım başında tek `date >` ile tazelenir; arka plan döngüsüyle ASLA (oturum
-   ölünce döngü yaşar, kilit sonsuza dek taze kalır). Eşik tek: 60 dk (zamanlanmış görevle aynı).
-1. **Depo.** `git status` temiz olmalı (değilse: `git stash -u` + Kuyruk notuna yaz),
-   `git checkout main && git pull --ff-only`.
-2. **main sağlığı.** `gh run list -b main -L 3` (yoksa GitHub MCP `actions_list`). Son
-   BİTEN koşu kırmızıysa bu turun işi onu düzeltmektir (yalnız kırmızı işin kaydının
-   kuyruğunu oku). `[apk]` koşusu SÜRÜYORSA bitene dek main'e push YOK (iptal eder) —
-   bu sırada dalda çalışılır.
-3. **Paketi seç.** Durumu `bulutta:` ile başlayan satır başka (bulut) oturumundur: ATLA,
-   dalına dokunma; yalnız Cihaz = `A/B` ve "cihaz bekliyor" olunca ölçümü sen yaparsın.
-   Kuyruk'ta ilk `sürüyor` (yarım kalmış: dalı `oto/<no>` uzakta varsa
-   oradan sür) yoksa ilk `bekliyor`. Satırı `sürüyor` yap (yalnız yerelde; ayrıca push yok).
-4. **Yaptır.** Alt ajanı başlat (yukarıdaki gibi). Bitince raporunu OKU ama güvenme:
-   `git log oto/<no>`, diff özeti ve test çıktısına kendin bak.
-5. **Doğrula.** Dal push'lu olmalı. CI: `gh run list -b oto/<no> -L 1` → sürüyorsa
-   `gh run watch <id> --exit-status` (arka planda; yoklama döngüsü kurma). Kırmızıysa
-   alt ajana YALNIZ kırmızı işin kayıt kuyruğuyla geri ver (en çok 2 tur; sonra `takıldı`).
-6. **Cihaz kapısı** (Kuyruk'ta Cihaz = `A/B`): CLAUDE.md ÖLÇÜM KAPISI. Taban = son `[apk]`
-   commit'i (`git worktree add ../not_ab <commit>` → profil derlemesi). Telefon kuralları
-   aşağıda. **Ölçümü yürütücü KENDİ yapmaz:** derlemeler bitince `Agent` `model: "sonnet"`
-   alt ajana ("iki APK, `ab_hepsi.py <A> <B> --altin`, tabloyu ve son satırı getir"); karar
-   `KARAR:` satırıdır (F81.2 kuralı + altın taban %15). **Hız hissi / açılış / yükleme / akıcılık
-   paketlerinde (P39 vb.) eşik %20 DEĞİL: hiçbir evre kötüleşmez, hedef evre ölçülebilir
-   iyileşir.** Kötüleşirse paket çöpe gitmez: maddeler ayrı commit; kötüleştiren `git revert`
-   + maddeye "iyileşme kanıtlanamadı", iyiler yeniden ölçülüp birleşir.
-   Bir evrede UI ms ya da LAYOUT ms %20'den fazla kötüyse birleştirme YOK:
-   satır `takıldı: ölçüm` + sayılar, sıradaki pakete geç. Telefon yoksa/ısınmışsa satır
-   `cihaz bekliyor`, birleştirme `[apk]`'sız, ilk APK noktası ertelenir.
-7. **Birleştir.** Alt ajan dalda yapmış olmalı: Kuyruk satırı `bitti` + tek satır sonuç, plan
-   maddesi `[x]` + tarih + sonuç, `docs/regresyon_listesi.md` satırı, HAFIZA (kök neden varsa).
-   Yürütücü kontrol eder, sonra `git checkout main && git merge --no-ff oto/<no>` (başlık
-   `Birleştir: <paket adı>`), push. **Durum için ayrı commit/push atma** — her main push'u
-   CI'ı baştan koşturur ve süren APK'yı iptal eder.
-   **Temizlik (kullanıcı kararı 2026-11-12):** birleştirince o paketin çalışma kopyası
-   (`git worktree remove --force <ağaç>`), uzak dalı (`git push origin --delete oto/<no>-*`)
-   ve yerel dalı silinir; A/B taban ağacı (`../not_ab`) ölçüm bitince silinir. 34 kopya
-   (~onlarca GB) birikmişti. Silinemeyen klasörü tutan Gradle sürecini durdur.
-   **Yarım iş devri (kullanıcı kararı 2026-11-12):** paket yarıda kalırsa (limit/durdurma) Kuyruk
-   satırı HEMEN `sürüyor — dal <ad> (<commit>): bitti <x>, kalan <y>; DEVIR.md'den sür` olur ve main'e
-   push edilir ("bekliyor" kalırsa sonraki tur sıfırdan başlar). Önce `git log origin/<dal>..HEAD`
-   boş olmalı. Ölçüm ham sayıları DEVIR'e/plana yazılır, sohbette kalmaz. Tur başında uzaktaki
-   `oto/*` dallarına bak; satırı olmayan dalı DEVIR'iyle satıra bağla.
-8. **APK noktası** (Kuyruk'ta APK = `evet`): birleştirmeden ÖNCE `ab_hepsi.py <A> <B> --altin` ZORUNLU (paket A/B istemese bile; F83.1) — telefon yoksa `[apk]` ertelenir, birleştirme `[apk]`'sız; birleştirme başlığına `[apk]`; aynı commit'te
-   `assets/guide/release_notes_tr.md` + `_en.md`'ye günün bölümü (kullanıcı diliyle, o
-   APK'ya giren bütün paketler).
-   **APK izlenmez (kullanıcı kararı 2026-11-12):** dal CI'ı yeşilse main APK'sı da yeşil olur;
-   birleştir, push, özeti ver, sıradaki pakete geç. Yalnız sonraki main push'undan ÖNCE tek bakış:
-   `gh run list -b main -L 1` — APK işi sürüyorsa push'u bekletip dalda çalışmaya devam et
-   (yeni push süren APK'yı iptal eder). main kırmızıysa 2. adım (main sağlığı) yakalar.
-9. **Regresyon turu** (protokol madde 8): her APK noktasından önce `docs/regresyon_listesi.md`
-   baştan koşulur.
-10. **Limit freni (%90).** Paket başında, alt ajan dönünce, birleştirmeden önce
-    `mcp__ccd_session_mgmt__get_usage` (ToolSearch ile yükle). "5-hour limit" `percentUsed` ≥ 90:
-    yeni paket/alt ajan YOK; çalışana "commit + push yap ve dur" de; satır `sürüyor` kalsın;
-    kilidi sil; `resetsAt`'ı özetine yaz, bitir (tur başında ≥ 90 ise hiçbir şey yapmadan bitir).
-    ≥ 80: yeni paket başlatma, elindekini bitir. Araç `unavailable` ise frensiz devam (özetine yaz).
-    **Devam.** Limit elverdikçe 3. adıma dön.
-    **Limiti boş bırakma (kullanıcı kararı 2026-11-13: "gece boyu ufacık işler yapıp durmuş"):**
-    aynı anda EN ÇOK 2 paket alt ajanı (dosyaları çakışmayan iki paket; cihaz/A-B ölçümü tek
-    seferde bir tane). Biri bitince hemen sıradakini başlat. Limit < %80 ve Kuyruk'ta iş varken
-    tur BİTMEZ (yalnız kilit/limit/3 takıldı ile biter). Cihaz kabul ölçümü (A=A, altın taban)
-    en çok 2 tur; yine kırmızıysa satıra `kullanıcı kararı` yaz, aracı/işi birleştir, sıradakine
-    geç — saatlerce ölçüm döngüsü yok.
-    **Uzun alt ajanı DİRİLTME (2026-11-13: limit açılınca iki Fable ajanı SendMessage ile
-    sürdürüldü, 1 dakikada 0 → %43):** sürdürülen ajan bütün eski konuşmasını önbelleksiz yeniden
-    gönderir. Limit yenilenince ya da 5 dk'dan uzun aradan sonra eski ajana mesaj atma; aynı
-    paket için YENİ alt ajan aç, istem "dalın DEVIR.md'sinden sür" olsun. **Haftalık Fable kotası
-    SONUNA KADAR kullanılır (kullanıcı 2026-11-13):** haftalık Fable sınırı yok; Fable satırları
-    Fable'la yapılır, haftalık kota bitince Opus. Dur ve bitir: art arda 3 `takıldı`; main iki
-    kez üst üste kırmızı; Kuyruk boş. Bitirirken kilidi sil, 5 satır özet yaz.
+Yürütücü: **`oto-tur` skill'i** (`.claude/skills/oto-tur/SKILL.md`; kilit, main sağlığı, paket
+seçimi, alt ajan, doğrulama, birleştirme/[apk], temizlik, yarım iş devri, limit freni, FABLE
+KURALI, diriltme yasağı, takılma önleme, bitiriş — kullanıcı kararları tarihleriyle orada).
+Taşındı 2026-11-14 (her oturuma yüklenen bağlam küçülsün).
 
-11. **Takılma önleme.** Her arka plan bekleme süre sınırlı: `timeout 2700 gh run watch <id>
-    --exit-status` (45 dk; yalnız tek koşu, döngü yok); dolunca `gh run view <id> --json
-    status,conclusion`. Alt ajandan 90 dk bildirim gelmezse `SendMessage` ile "commit + push +
-    dur"; yine dönmezse `TaskStop`, satır `sürüyor` kalır (DEVIR.md devralana yeter). Tur
-    bitince (başarılı/takıldı/limit): kendi arka plan görevlerini `TaskStop`, telefon ekranını
-    kapat (`KEYCODE_SLEEP`), kilidi sil — kilidi silmeden özet yazma.
+## İşçi kuralları → `isci` skill'i
 
-## İşçi kuralları (alt ajana aynen verilir)
+Alt ajan istemi: "`isci` skill'ini uygula" + paketin Kuyruk satırı + `KUYRUK_AYRINTI.md` bölümü.
 
-- Depo: Flutter not uygulaması, `C:\Users\sena\Desktop\not`. Önce `CLAUDE.md`, sonra
-  `OTURTMA_PLANI.md`'de (hız paketleri: `HIZ_PLANI.md`; görünüş: `DENEYIM_PLANI.md`) ve `KUYRUK_AYRINTI.md`'de paketin maddeleri (protokol (a)–(e): önce kanıtı üret → düzelt →
-  aynı kanıt yeşil). `HAFIZA.md`'yi BAŞTAN SONA OKUMA (109 KB): konunu `Grep` ile ara.
-- Dal: `oto/<no>-<kısa-ad>` (yeni çalışma ağacında önce `flutter pub get`; Flutter yolu
-  `C:/src/flutter/bin/flutter.bat`). Küçük adımlarla commit + **her commit'ten sonra push**
-  (limit oturumu her an kesebilir; yarım iş dalda kalsın). main'e push YOK.
-- **Devir notu:** dalın kökünde `DEVIR.md`, HER push'tan önce güncel (en çok 25 satır):
-  yapılanlar (madde + commit) · şu anki adım · kök neden/kanıt (dosya:satır) · işe
-  yaramayanlar · sıradaki adım · test/ölçüm komutu. Devralan işçi ÖNCE bunu
-  okur, baştan keşfetmez. Yürütücü birleştirmeden önce `DEVIR.md`'yi daldan SİLER
-  (main'e girmez).
-- Doğrulama: değişenin testi `--reporter failures-only`; push'tan önce tam
-  `flutter analyze` (CI info düzeyini de hata sayar). Tam test takımını yerelde koşma.
-  `dart format lib` yok.
-- **Hız hissi işi:** kötüleşme yok; her değişiklik ölçülebilir iyileşir (önce/sonra DEVIR'e);
-  kanıtsız değişiklik yapılmaz. Her madde AYRI commit (geri alınabilsin).
-- KARAR çıkarsa plandaki **"En güvenli"** seçenek + maddeye "sabah bakılacak". Kullanıcıya
-  soru sorma. Madde kapsamı dışına çıkma, yeni özellik ekleme.
-- **Dokunma:** `config/app` bayrakları (`inkV2Write`, `minClient`), veri silen/taşıyan göç,
-  erişimi GEVŞETEN kural, imza anahtarı, kişisel dosyalar, telefondaki varsayılan kimlikli
-  uygulama (`flutter run/drive` varsayılan kimlikle ASLA — veri gider; ölçüm uygulaması
-  `dev.kaimau.notlar.olcum`).
-- Kanıt üretilemiyorsa düzeltme yazma: maddeye "üretilemedi: <ne denendi>" yaz, bitir.
-- Arka planda başlattığın her komut (`flutter`, `gh run watch`, `adb`, betik) `timeout` ile; raporu yazmadan önce hepsini bitir/öldür.
-- Rapor ≤ 15 satır: ne değişti (dosyalar), hangi test/ölçüm kırmızıdan yeşile döndü,
-  doğrulanamayan ne kaldı, dal adı ve son commit.
+## Telefon kuralları → `ab-olcum` skill'i
 
-## Telefon kuralları (Mi Note 10 Lite, USB)
-
-- `adb devices` boşsa cihaz işi atlanır (`cihaz bekliyor`).
-- Ekran yalnız ölçüm/tur sırasında: `adb shell input keyevent KEYCODE_WAKEUP` → yukarı
-  kaydır (`adb shell input swipe 540 1800 540 600`); iş bitince `KEYCODE_SLEEP`.
-  Derleme beklerken ekran KAPALI.
-- Ölçümden önce `adb shell dumpsys battery | grep temperature` < 370 (37 °C); değilse bekle.
-- Telefonda misafir hesap: Google/Drive/Gmail akışları "denenmedi".
-- Kalem/tablet yok: kalem ölçümü telefonda parmakla (`ab_kalem.py`); tablet isteyen ölçüt "tablette doğrulanmadı".
-- Koordinatla basmadan önce ekran yönüne ve klavyeye bak (HAFIZA "Cihaz turu tuzakları").
+Mi Note 10 Lite, USB: uyandır/kaydır/uyut, sıcaklık < 370, varsayılan kimlikli uygulamaya
+dokunma, misafir hesap, tablette telefon düzeni — `.claude/skills/ab-olcum/SKILL.md`.
 
 ## Kuyruk
 
