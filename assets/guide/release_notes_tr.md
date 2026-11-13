@@ -3,6 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Silerken yazı boyu değişmiyor:** kısmi silgiyle bir yeri silince kalan yazı kalınlaşmıyor ya da incelmiyor.
+- **Sayfadan taşan yazı da siliniyor:** PDF'te alt sayfada başlayıp üst sayfaya taşan kalem yazısı üst sayfada da silinebiliyor.
+- **Sabit panelde balon düğmesi:** telefonda da balon ekleme düğmesi sabit panelin çubuğunda.
+- **Kalem düğmesi kendini gösteriyor:** kalem ilk algılandığında yüzen kalem düğmesi birkaç kez yanıp söner.
+- **Parmakla yazma uyarısı:** "yalnız kalem" kapalıyken kalem düğmesinin yanında "Parmakla da yazılıyor" uyarısı çıkar; dokununca yalnız kaleme geçer.
 - **Sabit PDF'te kalem rengi:** panelden kalemi açınca çubukta renk noktası çıkar, dokununca tüm renkler açılır; tablette siyah, mavi, kırmızı ve yeşil doğrudan çubukta.
 - **Silgi belli oluyor:** silgi açıkken düğmesi dolu renkli zeminle görünür.
 - **Silgiye basınca yazılar kaybolmuyor:** sabit ya da gömülü PDF'e kalemle yazıp silgiye (veya kalem düğmesine) basınca yazıların bir an kaybolup tekrar basınca geri gelmesi düzeltildi.

@@ -1595,12 +1595,15 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         // PDF'te belge kutusunda.
         // "T" düğmesi kaldırıldı (kullanıcı isteği 2026-11-12): Açık metin
         // balon menüsünde; gizle/göster de orada.
-        if (_canEditBubbles && !tools && (wide || _bubbleEdit))
+        // BALON DÜĞMESİ DAR ÇUBUKTA DA (kullanıcı isteği 2026-11-13: "sabit
+        // panelin altında balon butonu olmalı"): yalnız en dar bölmede
+        // (< 220 dp) ⋮ levhasında kalır.
+        if (_canEditBubbles && !tools && (!tiny || _bubbleEdit))
           _addBubbleButton(context, active: _bubbleEdit)
         else if (_canEditPdfBubbles && !tools)
           ValueListenableBuilder<bool>(
             valueListenable: _pdfAdding,
-            builder: (context, adding, _) => wide || adding
+            builder: (context, adding, _) => !tiny || adding
                 ? _addBubbleButton(context, active: adding)
                 : const SizedBox.shrink(),
           ),
