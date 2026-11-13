@@ -303,6 +303,11 @@ def worst_of(runs):
     return out
 
 
+# Kullanıcı kararı 2026-11-13: `yaz` LAYOUT oturumlar arası 302–377 ms oynuyor (aynı APK
+# A=A'da altına karşı +%16) → gürültü payı. Diğer evreler %15.
+ALTIN_PAY = {("yaz", "layout_ms"): 0.25}
+
+
 def decide(a_runs, b_runs, golden=None):
     """F81.2 kuralı (+ --altin). Dönüş: (tablo satırları, kaldı mı)."""
     am, bm, aw = median_of(a_runs), median_of(b_runs), worst_of(a_runs)
@@ -322,7 +327,7 @@ def decide(a_runs, b_runs, golden=None):
         if golden and ph in golden:
             for m in ms:
                 gv = golden[ph].get(m, 0)
-                if gv > 3 and bm[ph][m] > gv * 1.15:
+                if gv > 3 and bm[ph][m] > gv * (1 + ALTIN_PAY.get((ph, m), 0.15)):
                     g = f"altın +{(bm[ph][m] / gv - 1) * 100:.0f}% ({m})"
                     failed = True
             g = g or "altın içinde"

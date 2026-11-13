@@ -25,7 +25,7 @@ Model: fable (limit %55 üstü → opus) · Cihaz: A/B · APK: evet
 
 **Plan maddeleri:** HIZ_PLANI F84.1–F84.3 + OTURTMA F60.S2, F60.5, F68.3 (P22'den alındı: klavye birikim kasması, yazma ana bloğu, liste akışı K-O13)
 
-**Durum:** bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ: sabit ek + klavye kasması P49'da (aynı dosya iki kez değişmesin); ölçüm sabit ekte yavaşlık bulursa bulguyu P49 satırına yaz
+**Durum:** bitti (2026-11-13) — cihazsız 6 bekçi bulgusu düzeltildi, dal `oto/P46-hiz-duzelt`: S25 küçük resim çözme 21 → 0; S21 arama harf başına kart 114 → 56; S22 takvim hafta 979 → 509 (WeekPage 3 → 1); S23 süzgeç geçişi en ağır kare 2941 → 2361; S9 biçim paneli gövde boy karesi 34 → 2 (jank mandalı 4 → 2); S18 not açma ikinci kare 788 → 285. CİHAZDA ÖLÇÜLMEDİ (A/B yürütücüde). Ses hapı `AnimatedSize`ı: cihazsız kanıt üretilemedi, dokunulmadı. Cihaz maddeleri (F84.1–3, F60.S2, F60.5, F68.3) → P55. `pinned_media_pane.dart`'a dokunulmadı. Kök nedenler: (1) S21 kart önbelleği anlık sorguyla, hücre sarmalayıcısı geciktirilmiş `searchActive` ile değişiyordu → iki dalga; (2) S25 `thumbUrl` dallarında `memCacheWidth` yoktu; (3) S22 `onPageChanged` → `setState` canlı hafta sayfalarını yeni örnekle baştan kuruyordu → `_weekPage` önbelleği; (4) S23 gelen ızgara ilk karede 1600 px payı da kuruyordu → geçiş boyunca 250 px, 500 ms sonra boşta genişler (`_GridScrollView`); (5) biçim paneli ↔ alt çubuk takasında iki `AnimatedSize` gövdeyi 34 kare diziyordu → boy tek adım, hareket `RevealUp`; (6) S18 `_measureBodyTop` kök `setState` → `_bodyTopN` ValueNotifier, yalnız tuval kurulur. Davranış notu: aramada vurgu artık süzmeyle birlikte (350 ms gecikmeyle) gelir; biçim paneli/alt çubuk boyu anında değişir, içerik süzülerek belirir — cihazda his bakılacak.
 
 **P43 cihaz ölçüm bulguları (2026-11-13, `ab_hepsi.py`, A=9c837495 B=P39 02ebd989, 3'er koşu, ortanca; gürültü ±%15):** P39'da `klasor` LAYOUT 82→108 ms (+%33, aynı APK tekrarında 87 — gerçek olabilir), `menu` LAYOUT 44→50, `sabit_kay` UI 877→967 ms (sabit ek → P49). En ağırlar: `sabit_kb` 2,3–2,5 sn UI/4 klavye geçişi (373 kare; sabit ek → P49), `liste` 1,24–1,37 sn/8 fırlatma, > 16 ms %2,3–3,3 (F68.4), `arama` en uzun kare 62–82 ms, `not_ac` en uzun 61–89 ms, ilk kare 378–413 ms.
 
@@ -91,7 +91,7 @@ Model: sonnet · Cihaz: - · APK: -
 
 Model: opus · Cihaz: gerekirse · APK: gerekirse
 
-**Plan maddeleri:** Kalan açık `[ ]` maddeler (2026-11-12 ayıklandı): kalem/mürekkep F61.7, F61.8, F62.4, F62.6, F63.6, F63.7 · tablet F67.6, F67.8 · F66.5 (yalnız rapor) · F68.5 (park) · cihaz turu F69.1–F69.3 · P40'ın "sabah bakılacak"ları (Gelen süzgeci hata hâli, AI levhası çevrimdışı, bekleyen ek şeridi). BAŞKA PAKETE TAŞINDI, burada YAPILMAZ: F58.1/F58.4 → P53, F60.5/F60.S2/F68.3 → P46, F68.4 → P43, F65.1/F65.2/F65.3/F67.5 → P49, F65.6 → P48; F60.7, F66.1–3 zaten kapandı (Ek D) + "cihazda doğrulanmadı" / "tablette doğrulanmadı" işaretli maddeler + açık K-O kararları
+**Plan maddeleri:** Kalan açık `[ ]` maddeler (2026-11-12 ayıklandı): kalem/mürekkep F61.7, F61.8, F62.4, F62.6, F63.6, F63.7 · tablet F67.6, F67.8 · F66.5 (yalnız rapor) · F68.5 (park) · cihaz turu F69.1–F69.3. (P40'ın "sabah bakılacak"ları — Gelen süzgeci hata hâli, AI levhası çevrimdışı, bekleyen ek şeridi — bulutta yapıldı 2026-11-13, DENEYIM F79.6; cihazda doğrulanmadı.) BAŞKA PAKETE TAŞINDI, burada YAPILMAZ: F58.1/F58.4 → P53, F60.5/F60.S2/F68.3 → P46, F68.4 → P43, F65.1/F65.2/F65.3/F67.5 → P49, F65.6 → P48; F60.7, F66.1–3 zaten kapandı (Ek D) + "cihazda doğrulanmadı" / "tablette doğrulanmadı" işaretli maddeler + açık K-O kararları
 
 **Durum:** bekliyor — protokol aşağıda
 
@@ -140,3 +140,36 @@ F60.7, F63.5, F66.1, F66.2, F66.3, F66.4, F66.6, F67.7. **K-O6 / F65.1: kullanı
 Atlananlar (kullanıcı kararı bekliyor, gözetimsiz yapılmaz): K-O1, K-O3 (v2 yazımını açma),
 K-O4, K-O6, K-O7, K-O8, K-O10, K-O11, K-O12, K-O14, F63.6, F65.6 (kullanıcıdan hata metni),
 F69.1–F69.3 (elle cihaz turu).
+
+## P55 — KASMA KÖKTEN: not aç/kapa, klavye, alt panel titremesi
+
+Model: opus (kullanıcı 2026-11-13) · Cihaz: A/B · APK: evet
+
+**P46'dan katıldı (kullanıcı 2026-11-13):** HIZ_PLANI F84.1–F84.3 + OTURTMA F60.S2 (klavye birikim kasması), F60.5 (yazma ana bloğu), F68.3 (liste akışı K-O13). P46 dalının DEVIR.md'sindeki bulgulardan sür; P46 birleştikten sonra main'den başla.
+
+**Kullanıcı (2026-11-13):** "genel olarak not açılış kapanış, klavye açılış kapanışlarda kasma, akıcı açılamama, titreme sorunları var; bunların artık kökten çözülmesi gerekiyor, ne gerekiyorsa yapın." Ayrıca: (a) "Alt çizgi varken madde altında kasma oluyor klavye açılırken." — **bulutta (2026-11-13) kısmen:** testte ayırıcılı/ayırıcısız madde arasında kurulum ve boyama sayısı farkı YOK (klavye açılışı, 60 madde); kök neden adayı raster: kesikli/noktalı ayırıcı satır başına 30–70 ayrı `drawLine`, dalgalı ~250 noktalı yol — Impeller her karede yeniden üçgenliyor. `paintItemDivider` tek `drawPoints`/`drawPath` (dalga yarım dalga başına tek eğri); bekçi `test/item_divider_paint_test.dart` (önce 7 kırmızı → yeşil). CİHAZDA DOĞRULANMADI: düz çizgide kasma sürüyorsa kök neden başka — timeline izi gerek (protokol 1). (b) "Alt panel hâlâ titriyor — ona özel test yaptır."
+
+**Protokol (yama değil, kök neden):**
+1. Kanıt: telefonda (ölçüm kimliği `dev.kaimau.notlar.olcum`, profil derleme) her evre için timeline izi: not aç, not kapat, klavye aç, klavye kapat, yazma, alt çizgili madde + klavye aç. Kare başına en pahalı build/layout/paint düğümlerini ve kaç kez kurulduğunu çıkar (`tool/perf/` araçları, `ab_hepsi.py` evreleri; gerekirse iz ayrıştıran küçük betik). Bulgular DEVIR.md + HIZ_PLANI'na sayılarla.
+2. Her kök neden için cihazsız bekçi (`test/perf_budget_test.dart` senaryo + `budgets.json` mandalı ya da `keyboard_jank_guard_test` kalıbı) — önce KIRMIZI.
+3. **Alt panel titremesi özel testi:** klavye açılış/kapanış animasyonunu kare kare süren widget testi; alt panelin/alt çubuğun dikey konumu her karede tekdüze (monoton) olmalı, ileri-geri salınım (yön değişimi) ve 1 px üstü sıçrama = KIRMIZI. Hem telefon hem tablet düzeni. Cihazda da: ekran kaydı/kare izinde konum dizisi.
+4. Düzelt (CLAUDE.md kasma kontrol listesi 1–8; boy tek adımda, hareket yalnız boyamada; KeyboardSwitch sökmez), aynı kanıt yeşil, cihazda A/B iyileşme. Her kök neden AYRI commit.
+4b. P49 bulgusu (2026-11-13): sabit ekli notta ilk klavye açılışında bir `AnimatedSize` 6 kare Scaffold'u dizdiriyor (editör alt çubuğu adaylarından; hangisi belirsiz) — bul ve düzelt.
+5. Kapsam: editör açılış geçişi (S18 ikinci kare), kapanış, klavye inset'iyle yeniden dizilen her şey, alt çizgi/biçimli madde satırının klavye açılırken yeniden dizilmesi. `pinned_media_pane.dart` P49'da ise dokunmadan bulguyu P49 satırına yaz.
+
+## P56 — Not sürükle-sırala: iki sütun arasında zıplama
+
+Model: opus · Cihaz: A/B · APK: evet
+
+**Kullanıcı (2026-11-13):** "Not sıralama iki sütunun arasında geldiğinde anlık bir sağa bir sola geçtiği için aşırı zıplamalar oluyor."
+
+**Kök neden adayı:** iki sütunlu ızgarada sürüklenen kart iki sütunun sınırındayken hedef indeks her karede değişiyor (histerezis yok) → kartlar sağ/sol arasında gidip geliyor. Çözüm: hedef değişimine histerezis/eşik (sınırdan belirli pay geçmeden ve kısa süre kalmadan yer değiştirme yok) ve yer değiştirme animasyonu sırasında yeniden hedeflememe. Önce tekrar üreten widget testi (sınırda küçük titreşimli sürükleme → hedef indeks değişim sayısı ≤ 1), sonra düzelt. P47 çöpe sürükleme ve `_previewCardDrop` korunur.
+
+## P57 — Alt çubuk: her düğme eklenip çıkarılabilir, sıralanabilir
+
+Model: opus · Cihaz: - · APK: evet
+
+**Kullanıcı (2026-11-13, ekran görüntüsüyle):** "Alt paneldeki tüm butonları değiştirilebilmesi; kişi istediğini koyabilmeli, istediğini çıkarabilmeli; bunu da ayarlarda yapılabilen seçenekler geniş olsun."
+
+**Durum:** bitti (bulut 2026-11-13). `core/personalize.dart`: `UiPrefs.barOrder` / `aiOrder` (boş = varsayılan; `UiPrefs.orderOf` yeni düğmeyi varsayılan yerine göre sona ekler, yinelenen/bilinmeyen kimliği atlar) + `UiItem.barLeftDefault`/`barRightDefault`; eklenebilir (varsayılan gizli, `optIn`) düğmeler: geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara, renk, paylaş (eski `barShare` kimliği). Editör çubuğu kimlik → düğme haritasından kullanıcı sırasıyla dizilir; sığmazsa plan (`planEditorBar`) önce düğmeleri küçültür, sonra kapsül yatay kayar. Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk": iki grup (araçlar / yapay zekâ ve ses), tutamaçla sürükle-sırala, anahtarla ekle/çıkar, "Alt çubuğu varsayılana döndür". Düzenleme modundaki dokunarak gizleme aynen sürer. Testler `test/editor_bar_customize_test.dart`. Kalan (P50'ye): düğmeyi iki kapsül arasında taşıma; üst çubuk için aynı liste.
+

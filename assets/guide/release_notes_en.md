@@ -3,8 +3,14 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **Drag to trash inside folders too:** with a folder, filter or search open you can still long-press a note and drag it onto the trash bin to delete it.
+- **Make the bottom bar yours:** in Settings → Personalize → "Note screen · bottom bar" drag buttons to reorder them, remove the ones you don't use, and add undo, redo, reminder, photo, camera, scan, color and share.
+- **Smoother underlined items:** dotted, dashed and wavy item underlines are drawn with far less work, so opening the keyboard and scrolling should stutter less.
+- **Honest screens when offline:** without internet the "Inbox" filter shows "No connection" with Retry instead of "nothing here"; the AI sheet tells you up front that you are offline (buttons turn on when you are back); waiting attachments say "will upload when you are online" instead of "uploading".
 - **Text selection on the web fixed:** double-clicking with the mouse now selects just the word (not the whole sentence); shift+arrow selection moves letter by letter instead of jumping to the whole word.
 - **Calendar events on every device:** new events now show on all your devices by default ("All devices"); pick Google in the editor to save to Google Calendar instead.
+- **Smoother transitions:** opening a note, typing the first letter of a search, swiping between filters/folders and flipping weeks in the calendar now do less work; the writing area no longer jitters while the format panel opens or closes.
+- **Lighter Drive previews on cards:** thumbnails are decoded at card size, so scrolling the list uses less memory.
 
 ## 12 November 2026 {#2026-11-12}
 - **Markdown (.md) files:** add a .md from "Add file" inside a note or by drag and drop; tapping it opens a clean, readable view and you can add all or part of it to the note. A .md shared from another app or opened with "Open with" becomes a new note with its title, items and checkboxes.

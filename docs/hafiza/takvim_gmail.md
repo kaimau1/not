@@ -37,4 +37,4 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 
 ## 2026-11-12 — P48 "telefonda eklediğim etkinlik tablette yok"
-- KÖK NEDEN: Google Takvim bağlantısı CİHAZA özgü (`gcal_cache_<uid>` SharedPreferences, Firestore'da iz yok). Bağlı cihazda yeni etkinlik varsayılan Google'a gidiyordu (K2) → Google'ı bağlamamış cihaz görmez. "Bu cihaz" etiketi yanlıştı (Firestore etkinliği bütün cihazlarda). Varsayılan artık Firestore, etiket "Tüm cihazlar" (K2 sapması, sabah bakılacak). Google'a kaydedilmiş eski etkinlikler yalnız Google'ı bağlayan cihazda görünür.
+- KÖK NEDEN: Google Takvim bağlantısı CİHAZA özgü (`gcal_cache_<uid>` SharedPreferences, Firestore'da iz yok). Bağlı cihazda yeni etkinlik varsayılan Google'a gidiyordu (K2) → Google'ı bağlamamış cihaz görmez. "Bu cihaz" etiketi yanlıştı (Firestore etkinliği bütün cihazlarda). Varsayılan artık Firestore, etiket "Tüm cihazlar" (K2 sapması — KULLANICI ONAYLADI 2026-11-13: "etkinlik her yerde görünecek"). Google'a kaydedilmiş eski etkinlikler yalnız Google'ı bağlayan cihazda görünür.

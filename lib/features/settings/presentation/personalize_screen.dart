@@ -11,6 +11,7 @@ import '../../notes/presentation/editor/video_transport.dart' show SeekIcon;
 import '../../notes/presentation/add_catalog.dart';
 import '../../notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
 import '../settings_providers.dart';
+import 'personalize_bar_list.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
 
@@ -453,53 +454,8 @@ class _EditorSection extends StatelessWidget {
         _Section(
           title: l10n.personalizeEditorBar,
           icon: Icons.space_bar_rounded,
-          info: l10n.personalizeChipsInfo,
-          child: _VisibilityChips(
-            items: [
-              (
-                id: UiItem.barFormat,
-                icon: Icons.text_format,
-                label: l10n.formatTitle,
-              ),
-              (id: UiItem.barAdd, icon: Icons.add, label: l10n.addAttachment),
-              (
-                id: UiItem.barCheckbox,
-                icon: Icons.check_box_outlined,
-                label: l10n.checkboxToggle,
-              ),
-              (
-                id: UiItem.barSelect,
-                icon: Icons.select_all,
-                label: l10n.select,
-              ),
-              (
-                id: UiItem.barSearch,
-                icon: Icons.search,
-                label: l10n.noteSearchTitle,
-              ),
-              (
-                id: UiItem.barPen,
-                icon: Icons.draw_outlined,
-                label: l10n.quickRowPen,
-              ),
-              (
-                id: UiItem.barAttachments,
-                icon: Icons.attach_file,
-                label: l10n.uiItemAttachments,
-              ),
-              (id: UiItem.barAi, icon: Icons.auto_awesome, label: l10n.aiTitle),
-              (
-                id: UiItem.barDictation,
-                icon: AppIcons.dictation,
-                label: l10n.liveDictation,
-              ),
-              (
-                id: UiItem.barVoiceRecord,
-                icon: AppIcons.voiceRecord,
-                label: l10n.recordAudio,
-              ),
-            ],
-          ),
+          info: l10n.personalizeBarInfo,
+          child: const PersonalizeBarList(),
         ),
         _Section(
           title: l10n.personalizeEditorTop,

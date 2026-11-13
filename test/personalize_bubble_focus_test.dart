@@ -60,11 +60,11 @@ void main() {
       expect(Personalize.prefs.value.shows(UiItem.barAi), isTrue);
     });
 
-    testWidgets('çipe iki kez dokunmak geri açar (bayat değer yazılmaz)', (
-      tester,
-    ) async {
+    testWidgets('düğme anahtarına iki kez dokunmak geri açar (bayat değer '
+        'yazılmaz)', (tester) async {
       await pumpPersonalize(tester);
-      final chip = find.byKey(ValueKey('ui-chip-${UiItem.barFormat}'));
+      // Alt çubuk 2026-11-13'ten beri sıralanabilir liste (çip yerine anahtar).
+      final chip = find.byKey(ValueKey('bar-switch-${UiItem.barFormat}'));
       await tester.scrollUntilVisible(
         chip,
         300,

@@ -3,8 +3,14 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Klasörlerde de çöpe sürükle:** klasör, süzgeç ya da arama açıkken de notu basılı tutup alttaki çöp kutusuna sürükleyerek silebilirsin.
+- **Alt çubuğu sen düzenle:** Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk"ta düğmeleri sürükleyerek sıralayabilir, istemediğini çıkarabilir, geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara, renk ve paylaş düğmelerini çubuğa ekleyebilirsin.
+- **Alt çizgili maddelerde daha akıcı:** noktalı, kesikli ve dalgalı alt çizgiler çok daha az işle çiziliyor; klavye açılırken ve kaydırırken takılma azalmalı.
+- **Bağlantı yokken dürüst ekranlar:** internet yokken "Gelen" süzgeci "burada not yok" yerine "Bağlantı yok" ve Tekrar dene gösterir; yapay zekâ levhası önce bağlantı olmadığını söyler (düğmeler bağlantı gelince açılır); bekleyen ekler "yükleniyor" yerine "bağlantı gelince yüklenecek" der.
 - **Webde yazı seçimi düzeldi:** fareyle çift tıklama artık yalnız kelimeyi seçer (bütün cümleyi değil); shift+ok ile seçim harf harf ilerler, kendiliğinden kelimeye büyümez.
 - **Takvim etkinlikleri her cihazda:** yeni etkinlikler varsayılan olarak bütün cihazlarında görünür ("Tüm cihazlar"); Google Takvim'e kaydetmek istersen düzenleyicide Google'ı seç.
+- **Daha akıcı geçişler:** not açılırken, aramaya ilk harf yazılırken, süzgeç/klasör arasında yana kaydırırken ve takvimde hafta çevirirken ekran daha az iş yapar; biçim paneli açılıp kapanırken yazı alanı titremez.
+- **Kartlarda Drive önizlemeleri daha hafif:** küçük resimler kart boyunda çözülür, liste kaydırma daha az bellek kullanır.
 
 ## 12 Kasım 2026 {#2026-11-12}
 - **Markdown (.md) dosyaları:** notun içinden "Dosya ekle" ile ya da sürükleyip bırakarak .md eklenebilir; dokununca işaretsiz, okunur hâliyle açılır ve tamamı ya da seçilen kısmı nota eklenir. Başka uygulamadan paylaşılan ya da "Birlikte aç" ile açılan .md dosyası başlığı, maddeleri ve onay kutularıyla yeni not olur.

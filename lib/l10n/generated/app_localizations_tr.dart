@@ -1110,6 +1110,18 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String pendingUploadsOffline(int count) {
+    return '$count ek bekliyor — bağlantı gelince yüklenecek';
+  }
+
+  @override
+  String get aiOfflineTitle => 'Bağlantı yok';
+
+  @override
+  String get aiOfflineBody =>
+      'Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.';
+
+  @override
   String get pendingUploadsInfo =>
       'Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.';
 
@@ -4816,6 +4828,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get personalizeEditorBar => 'Not ekranı · alt çubuk';
+
+  @override
+  String get personalizeBarInfo =>
+      'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.';
+
+  @override
+  String get personalizeBarLeft => 'Sol kapsül · araçlar';
+
+  @override
+  String get personalizeBarRight => 'Sağ kapsül · yapay zekâ ve ses';
+
+  @override
+  String get personalizeBarReset => 'Alt çubuğu varsayılana döndür';
+
+  @override
+  String get reorderHandle => 'Sırala';
 
   @override
   String get personalizeEditorTop => 'Not ekranı · üst çubuk ve alanlar';

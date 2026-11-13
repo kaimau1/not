@@ -15,6 +15,7 @@ import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
 import 'package:notlar/features/notes/presentation/drag_trash_target.dart';
+import 'package:notlar/features/notes/presentation/notes_providers.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -37,7 +38,7 @@ class _TrashRepo extends NotesRepository {
 /// sürüklenirken altta çöp kutusu; hedefe girip BIRAKMAK yeter (bekleme
 /// yok), hedef dışında bırakılan not yerinde kalır; yaklaştıkça kart küçülür.
 void main() {
-  Future<_TrashRepo> pump(WidgetTester tester) async {
+  Future<_TrashRepo> pump(WidgetTester tester, {String? folder}) async {
     tester.view.physicalSize = const Size(412, 915);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -53,13 +54,26 @@ void main() {
         foldersRepositoryProvider.overrideWithValue(null),
         friendsRepositoryProvider.overrideWithValue(null),
         notesStreamProvider.overrideWith(
-          (ref) => Stream.value(const [
-            Note(id: 'a', type: NoteType.text, title: 'Birinci not'),
-            Note(id: 'b', type: NoteType.text, title: 'İkinci not'),
+          (ref) => Stream.value([
+            Note(
+              id: 'a',
+              type: NoteType.text,
+              title: 'Birinci not',
+              folderId: folder,
+            ),
+            Note(
+              id: 'b',
+              type: NoteType.text,
+              title: 'İkinci not',
+              folderId: folder,
+            ),
           ]),
         ),
         foldersStreamProvider.overrideWith(
-          (ref) => Stream.value(const <NoteFolder>[]),
+          (ref) => Stream.value([
+            if (folder != null)
+              NoteFolder(id: folder, name: 'İş', ownerId: 'ben'),
+          ]),
         ),
         sharedFolderRefsProvider.overrideWith(
           (ref) => Stream.value(const <SharedFolderRef>[]),
@@ -90,6 +104,9 @@ void main() {
         ),
       ),
     );
+    if (folder != null) {
+      container.read(selectedFolderProvider.notifier).set(folder);
+    }
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
@@ -139,6 +156,42 @@ void main() {
     await tester.pump();
     return g;
   }
+
+  // Kullanıcı isteği 2026-11-13: "klasörlerin içinde de çöp kutusu olsun,
+  // basılı tutup sürüklerken aynı dashboarddaki gibi". Klasörde elle sıra
+  // kapalı (alt küme) — sürükleme yalnız çöpe, sıra yazılmaz.
+  testWidgets('klasörün içinde de basılı tut + çöpe bırak = silinir', (
+    tester,
+  ) async {
+    final repo = await pump(tester, folder: 'f1');
+    final g = await dragToTrash(tester);
+    await g.up();
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(repo.deleted, ['a']);
+    expect(repo.reorders, 0, reason: 'klasörde sıra yazılmaz');
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('klasörde oynatmadan bırakınca eskisi gibi seçer', (
+    tester,
+  ) async {
+    final repo = await pump(tester, folder: 'f1');
+    final card = find.ancestor(
+      of: find.text('Birinci not'),
+      matching: find.byType(NoteCard),
+    );
+    final g = await tester.startGesture(tester.getCenter(card));
+    await tester.pump(const Duration(milliseconds: 700));
+    await g.up();
+    await tester.pump(const Duration(milliseconds: 300));
+    final c = ProviderScope.containerOf(tester.element(card));
+    expect(c.read(selectedNoteIdsProvider), {'a'});
+    expect(repo.deleted, isEmpty);
+    expect(repo.reorders, 0);
+    await tester.pump(const Duration(seconds: 5));
+  });
 
   testWidgets('hedefe gelip hemen bırakınca not çöpe gider', (tester) async {
     final repo = await pump(tester);

@@ -82,7 +82,19 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
     yeni paket/alt ajan YOK; çalışana "commit + push yap ve dur" de; satır `sürüyor` kalsın;
     kilidi sil; `resetsAt`'ı özetine yaz, bitir (tur başında ≥ 90 ise hiçbir şey yapmadan bitir).
     ≥ 80: yeni paket başlatma, elindekini bitir. Araç `unavailable` ise frensiz devam (özetine yaz).
-    **Devam.** Limit elverdikçe 3. adıma dön. Dur ve bitir: art arda 3 `takıldı`; main iki
+    **Devam.** Limit elverdikçe 3. adıma dön.
+    **Limiti boş bırakma (kullanıcı kararı 2026-11-13: "gece boyu ufacık işler yapıp durmuş"):**
+    aynı anda EN ÇOK 2 paket alt ajanı (dosyaları çakışmayan iki paket; cihaz/A-B ölçümü tek
+    seferde bir tane). Biri bitince hemen sıradakini başlat. Limit < %80 ve Kuyruk'ta iş varken
+    tur BİTMEZ (yalnız kilit/limit/3 takıldı ile biter). Cihaz kabul ölçümü (A=A, altın taban)
+    en çok 2 tur; yine kırmızıysa satıra `kullanıcı kararı` yaz, aracı/işi birleştir, sıradakine
+    geç — saatlerce ölçüm döngüsü yok.
+    **Uzun alt ajanı DİRİLTME (2026-11-13: limit açılınca iki Fable ajanı SendMessage ile
+    sürdürüldü, 1 dakikada 0 → %43):** sürdürülen ajan bütün eski konuşmasını önbelleksiz yeniden
+    gönderir. Limit yenilenince ya da 5 dk'dan uzun aradan sonra eski ajana mesaj atma; aynı
+    paket için YENİ alt ajan aç, istem "dalın DEVIR.md'sinden sür" olsun. **Haftalık Fable kotası
+    SONUNA KADAR kullanılır (kullanıcı 2026-11-13):** haftalık Fable sınırı yok; Fable satırları
+    Fable'la yapılır, haftalık kota bitince Opus. Dur ve bitir: art arda 3 `takıldı`; main iki
     kez üst üste kırmızı; Kuyruk boş. Bitirirken kilidi sil, 5 satır özet yaz.
 
 11. **Takılma önleme.** Her arka plan bekleme süre sınırlı: `timeout 2700 gh run watch <id>
@@ -141,18 +153,22 @@ Biten paketler: P01–P19, P23–P37, P39, P40, P42, P47 (39; P39 cihaz A/B 2026
 | No | Paket | Model | Plan maddeleri | Cihaz | APK | Durum / sonuç |
 |---|---|---|---|---|---|---|
 | P54b | .md başlık düzeltmesi | opus | P54 devamı | | evet | bitti — main'e birleştirildi 2026-11-13 |
-| P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | araç main'e birleştirildi 2026-11-13 (kabul açık, KULLANICI KARARI: altın %15 eşiği / `yaz` LAYOUT gürültüsü) — F82 main'de; F81 araç+altın taban bitti, KABUL KALDI (2. tur: A/B %20 eşikle A=A 2/2 GEÇTİ; altına karşı `yaz` LAYOUT +%16 yanlış alarm — sabah bakılacak); F68.4 ölçüldü (%2,3–3,3) → P46; ayrıntı: KUYRUK_AYRINTI.md §P43 |
+| P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | araç main'e birleştirildi 2026-11-13 (kabul: kullanıcı 2026-11-13 `yaz` LAYOUT'a gürültü payı verdi (ab_hepsi ALTIN_PAY %25) → kapandı) — F82 main'de; F81 araç+altın taban bitti, KABUL KALDI (2. tur: A/B %20 eşikle A=A 2/2 GEÇTİ; altına karşı `yaz` LAYOUT +%16 yanlış alarm — sabah bakılacak); F68.4 ölçüldü (%2,3–3,3) → P46; ayrıntı: KUYRUK_AYRINTI.md §P43 |
+| P55 | KASMA KÖKTEN: not aç/kapa, klavye aç/kapa, alt panel titremesi, alt çizgili madde + P46'nın cihaz maddeleri (F84.1–3, F60.S2, F60.5, F68.3) | opus | kullanıcı 2026-11-13 | A/B | evet | bekliyor — EN ÖNCELİKLİ — limit açılınca HEMEN başlat (opus); P46 main'e girmediyse `oto/P46-hiz-duzelt` üstünden dallan; cihaz izi (timeline) ile kök neden; alt panel titremesine özel test; ayrıntı: KUYRUK_AYRINTI.md §P55 |
+| P56 | Not sürükle-sırala: iki sütun arasında zıplama | opus | kullanıcı 2026-11-13 | A/B | evet | bekliyor — boşta bir alt ajan yeri olunca hemen; ayrıntı: KUYRUK_AYRINTI.md §P56 |
+| P57 | Alt çubuk: her düğme eklenip çıkarılabilir, sıralanabilir (Ayarlar) | opus | kullanıcı 2026-11-13 |  | evet | bitti — bulut 2026-11-13, main'e [apk]: `UiPrefs.barOrder/aiOrder` + 8 eklenebilir düğme (geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara, renk, paylaş); Ayarlar → Kişiselleştir → alt çubuk sürükle-sırala + anahtar; varsayılan görünüş aynı; cihazda doğrulanmadı (KALANLAR L5); kalan: düğmeyi iki kapsül arasında taşıma yok — P50'ye; ayrıntı: KUYRUK_AYRINTI.md §P57 |
+| P58 | Klasörde/süzgeçte de basılı tut → çöpe sürükle | opus | kullanıcı 2026-11-13 |  | evet | bitti — bulut 2026-11-13, main'e [apk]: elle sıra kapalı görünümlerde (klasör, süzgeç, arama, etiket) sürükleme yalnız çöp hedefine (`inSection` false → sıra önizlemesi yok, sıra yazılmaz); oynamadan bırakma eskisi gibi seçer; başkasının paylaşılan klasöründe kapalı; kanıt `drag_trash_target_test` (önce kırmızı); cihazda doğrulanmadı (KALANLAR L6) |
 | P45 | Hız: her [apk]'da ölçüm + geçmiş | sonnet | HIZ_PLANI F83.1–F83.3 | cihaz |  | bekliyor — HIZ_PLANI F83; ayrıntı: KUYRUK_AYRINTI.md §P45 |
-| P46 | Hız: ölçümün bulduğu yavaşlıkları düzelt | fable (limit %55 üstü → opus) | HIZ_PLANI F84 + F60.S2/F60.5/F68.3 | A/B | evet | bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ (P49'un); sabit ekte bulgu P49 satırına yazılır; ayrıntı: KUYRUK_AYRINTI.md §P46 |
-| P48 | Web yazı seçimi + takvim senkronu + web ek | opus | kullanıcı 2026-11-12 | cihaz (b) | evet | bitti — main'e birleştirildi [apk] 2026-11-13: web fare/klavye seçimi genişletilmiyor; yeni etkinlik varsayılanı Firestore "Tüm cihazlar" (K2 sapması: sabah bakılacak); (c) web ek üretilemedi; cihazda doğrulanmadı; ayrıntı: KUYRUK_AYRINTI.md §P48 |
-| P49 | Sabit ek baştan: tasarım, tuşlar, özellikler | fable (limit %55 üstü → opus) | kullanıcı 2026-11-12 | A/B | evet | bekliyor — BAŞTAN TASARIM; kesin istekler (a)–(g) + KORU ayrıntıda; önce `istek_tara.py`; ayrıntı: KUYRUK_AYRINTI.md §P49 |
-| P50 | Düzenleme modu baştan + hızlı menü | fable (limit %55 üstü → opus) | kullanıcı 2026-11-12 |  | evet | bekliyor — P49'DAN SONRA; `pinned_media_pane.dart`'a dokunmaz; kasma listesi §3–§4; ayrıntı: KUYRUK_AYRINTI.md §P50 |
+| P46 | Hız: ölçümün bulduğu yavaşlıkları düzelt | opus | HIZ_PLANI F84 + F60.S2/F60.5/F68.3 | A/B | evet | bitti — main'e birleştirildi [apk] 2026-11-13 KULLANICI KARARIYLA (cihaz A/B sonucu bu oturumda görülmedi; `Desktop/ab_P46.log` bakılacak, kötüleşme varsa madde başı commit `git revert`); S9/S18/S21/S22/S23/S25 bütçeleri düştü; cihaz maddeleri → P55 |
+| P48 | Web yazı seçimi + takvim senkronu + web ek | opus | kullanıcı 2026-11-12 | cihaz (b) | evet | bitti — main'e birleştirildi [apk] 2026-11-13: web fare/klavye seçimi genişletilmiyor; yeni etkinlik varsayılanı Firestore "Tüm cihazlar" (K2 sapması kullanıcıca onaylandı 2026-11-13: etkinlik her yerde); (c) web ek üretilemedi; cihazda doğrulanmadı; ayrıntı: KUYRUK_AYRINTI.md §P48 |
+| P49 | Sabit ek baştan: tasarım, tuşlar, özellikler | opus (kullanıcı 2026-11-13: tasarım bitti, kalanı Opus sürdürür) | kullanıcı 2026-11-12 | A/B | evet | bulutta: 2026-11-13 bulut oturumu sürdürüyor (dal `ccr-19fffecc-wapyva`, `oto/P49-sabit-ek` üstünden) — yerel zincir ATLAR, dala dokunmaz; bitince main'e [apk]; cihaz A/B sonra |
+| P50 | Düzenleme modu baştan + hızlı menü | fable (limit %55 üstü → opus) | kullanıcı 2026-11-12 |  | evet | bekliyor — kullanıcı 2026-11-13 yineledi: "düzenleme modu baştan tasarlanmalı"; P49'DAN SONRA; `pinned_media_pane.dart`'a dokunmaz; kasma listesi §3–§4; ayrıntı: KUYRUK_AYRINTI.md §P50 |
 | P38 | Hareket ve dokunsal dil | opus | DENEYIM F77.1–F77.4 | A/B | evet | bekliyor — P47 çöp sürükleme haptiği/`_previewCardDrop` korunur, yalnız `AppHaptics`e sarılır; ayrıntı: KUYRUK_AYRINTI.md §P38 |
 | P20 | Editör çekirdeği | fable | Faz 64 | A/B | evet | bekliyor — P49 ve P50 BİTTİKTEN sonra; onların editör bloklarını AYNEN taşır; ayrıntı: KUYRUK_AYRINTI.md §P20 |
 | P41 | Belirteç göçü | sonnet | DENEYIM F72.6 |  |  | bekliyor — P22'den önce, açık dal yokken (mekanik; editör hariç); kapanış toparlaması P53'te; ayrıntı: KUYRUK_AYRINTI.md §P41 |
 | P22 | SON PAKET: açıkta kalan maddeler | opus | kalan `[ ]` maddeler | gerekirse | gerekirse | bekliyor — kalan `[ ]` maddeler + taşınanlar listesi ayrıntıda; ayrıntı: KUYRUK_AYRINTI.md §P22 |
 | P53 | BÜYÜK TOPARLAMA: tek plan, tek kontrol listesi | opus | kullanıcı 2026-11-12 + F69.4/5, F58.1/4 |  |  | bekliyor — EN SON (P22'den sonra); protokol ayrıntıda; ayrıntı: KUYRUK_AYRINTI.md §P53 |
 
-**SIRA (kullanıcı kararı 2026-11-12):** HIZ önce: P39 → P43 → P45 → P46. FABLE sonra: P36 → P39 → P49 → P50 → P20; sonra Opus/Sonnet: P37 → P38 → P40 → P48 → P42 → P41 → P22 → P53 (EN SON). Fable paketi yalnız 5 saatlik limit %55 altındayken başlar; üstündeyse sıradaki Opus/Sonnet paketi yapılır, Fable paketi `bekliyor` kalır ve limit yenilenince EN BAŞTA alınır. P20 yalnız P33 bitmişse. P41 yalnız Kuyruk'ta `sürüyor`/`bulutta:` satırı yokken.
+**SIRA (kullanıcı 2026-11-13): P55 + P56 EN ÖNDE** (kasma/titreme/akıcı açılmama kökten çözülecek). **SIRA (kullanıcı kararı 2026-11-12):** HIZ önce: P39 → P43 → P45 → P46. FABLE sonra: P36 → P39 → P49 → P50 → P20; sonra Opus/Sonnet: P37 → P38 → P40 → P48 → P42 → P41 → P22 → P53 (EN SON). Fable paketi yalnız 5 saatlik limit %55 altındayken başlar; üstündeyse sıradaki Opus/Sonnet paketi yapılır, Fable paketi `bekliyor` kalır ve limit yenilenince EN BAŞTA alınır. P20 yalnız P33 bitmişse. P41 yalnız Kuyruk'ta `sürüyor`/`bulutta:` satırı yokken.
 
 Paket protokolleri (P22, P53, P33–P42 = `DENEYIM_PLANI.md` kuralları: K-D kararları verildi, kapsam çiti Ek D, `istek_tara.py`, "Atlananlar") ve satırların tam metni: **`KUYRUK_AYRINTI.md`**; alt ajana paketin ayrıntı bölümünü de ver.
