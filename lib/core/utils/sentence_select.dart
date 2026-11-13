@@ -210,7 +210,7 @@ TextRange tokenRangeAt(String text, TextRange range) {
 /// Ayrı bir `dispose` gerekmez: dinleyici denetleyicinin kendisiyle birlikte
 /// ölür (controller.dispose listeleri boşaltır).
 void attachSentenceSelection(TextEditingController controller) {
-  _trackPointerKind();
+  trackSelectionPointerKind();
   final expander = _SentenceExpander(controller);
   controller.addListener(expander.onChanged);
 }
@@ -233,11 +233,12 @@ void withoutSentenceExpansion(VoidCallback action) {
   }
 }
 
-/// Son basılan işaretçinin türü (fare mi parmak mı).
+/// Son basılan işaretçinin türü (fare mi parmak mı). Uygulama ömürlü TEK
+/// genel yol ([trackSelectionPointerKind], tekrar çağrı eklemez) — sızıntı değil.
 PointerDeviceKind? _lastPointerKind;
 bool _tracking = false;
 
-void _trackPointerKind() {
+void trackSelectionPointerKind() {
   if (_tracking) return;
   try {
     GestureBinding.instance.pointerRouter.addGlobalRoute((event) {

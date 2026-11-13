@@ -25,6 +25,7 @@ import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:notlar/core/utils/hard_keyboard.dart';
+import 'package:notlar/core/utils/sentence_select.dart';
 import 'package:notlar/core/widgets/note_route_closing.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
@@ -193,6 +194,9 @@ void main() {
       await tester.pump(const Duration(seconds: 30));
     }
 
+    // Seçim işaretçi takibi uygulama ömürlü TEK genel yoldur (P48), editör
+    // başına değil; tabandan önce kurulur ki birikim ölçülsün.
+    trackSelectionPointerKind();
     final before = _globals();
     // Isınma: ilk açılışın tek seferlik kurulumları (önbellek, ipucu).
     for (var i = 0; i < 3; i++) {
