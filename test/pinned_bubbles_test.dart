@@ -78,7 +78,14 @@ void main() {
   });
 
   Future<void> startAdding(WidgetTester tester, {required bool plain}) async {
-    await tester.tap(find.byKey(const ValueKey('pinned-add-bubble')));
+    // P49 (K-O6): dar çubukta balon seçenekleri TEK ⋮ levhasında; geniş
+    // çubukta balon menü düğmesi çubukta.
+    final button = find.byKey(const ValueKey('pinned-add-bubble'));
+    await tester.tap(
+      button.evaluate().isNotEmpty
+          ? button
+          : find.byKey(const ValueKey('pinned-media-menu')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(
