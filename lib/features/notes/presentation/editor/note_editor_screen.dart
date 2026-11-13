@@ -12,6 +12,7 @@ import '../../domain/reminder_repeat.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/a11y/min_tap_target.dart';
 import '../../../../core/app_icons.dart';
+import '../../../../core/haptics.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;

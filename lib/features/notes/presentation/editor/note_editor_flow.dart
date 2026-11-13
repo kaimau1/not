@@ -346,7 +346,7 @@ extension _EditorFlowX on _NoteEditorScreenState {
   void _toggleChecklistLine() {
     final note = _note;
     if (note == null || note.type != NoteType.text) return;
-    unawaited(HapticFeedback.selectionClick());
+    unawaited(AppHaptics.tick());
     final items = _itemsEditorKey.currentState;
     final focused = items?.focusedItemId;
     if (items != null && focused != null) {

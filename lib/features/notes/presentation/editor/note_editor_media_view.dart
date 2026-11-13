@@ -53,10 +53,10 @@ extension _EditorMediaView on _NoteEditorScreenState {
     final pos = textPagePosition(note);
     final next = pos.index + delta;
     if (next < 0 || next >= pos.count) {
-      unawaited(HapticFeedback.lightImpact());
+      unawaited(AppHaptics.thud());
       return;
     }
-    unawaited(HapticFeedback.selectionClick());
+    unawaited(AppHaptics.tick());
     _stepPage(delta);
   }
 
@@ -247,7 +247,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
       ),
       immediate: true,
     );
-    HapticFeedback.mediumImpact();
+    AppHaptics.heavy();
     final l10n = context.l10n;
     _showSnack(
       hadText
@@ -288,7 +288,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
         ],
       );
     }, immediate: true);
-    HapticFeedback.mediumImpact();
+    AppHaptics.heavy();
     if (announce) _showSnack(context.l10n.docViewSwitchedClassic);
   }
 
@@ -362,7 +362,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
       ),
       immediate: true,
     );
-    HapticFeedback.mediumImpact();
+    AppHaptics.heavy();
   }
 
   /// Ek üstteki sabit bölmede mi çiziliyor (o zaman şeritte gösterilmez).
@@ -518,7 +518,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
         if (!next.offPage) next = next.placedOnPage(false);
         if (!identical(next, latest)) {
           _updateAttachment(next);
-          unawaited(HapticFeedback.selectionClick());
+          unawaited(AppHaptics.tick());
         }
         // Şerit kapalıysa açılır: ek nereye gitti diye aranmasın.
         if (!ref.read(attachmentsExpandedProvider)) {
@@ -592,7 +592,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
     }
     if (identical(next, latest)) return;
     _updateAttachment(next);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
   }
 
   /// GÖRSEL → BALONLU: görsel tek sayfalık bir belgeye çevrilir (yakalama
@@ -797,7 +797,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
         if (a.kind == AttachmentKind.video || a.kind == AttachmentKind.audio) a,
     ];
     if (media.isEmpty) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     final pinned = media.where((a) => _inPinnedPane(note, a)).firstOrNull;
     final source = _videoHub.target(preferId: pinned?.id);
     if (source != null) {
@@ -853,7 +853,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
     final note = _note;
     if (note == null || _readOnly) return;
     final stamp = formatVideoTimestamp(position);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     final target = _formatTarget?.controller;
     final itemsState = _itemsEditorKey.currentState;
     final isList =
@@ -897,7 +897,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
       quote: quote,
       turkish: Localizations.localeOf(context).languageCode == 'tr',
     );
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     final target = _formatTarget?.controller;
     final itemsState = _itemsEditorKey.currentState;
     final isList =
@@ -950,7 +950,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
     if (note == null) return;
     final pdf = _pdfForRefs(note);
     if (pdf == null) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     if (pdf.pdfPage != page) _updateAttachment(pdf.copyWith(pdfPage: page));
   }
 
