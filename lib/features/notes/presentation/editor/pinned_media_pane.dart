@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/window_class.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
@@ -230,7 +231,8 @@ class PinnedMediaPane extends StatefulWidget {
   State<PinnedMediaPane> createState() => _PinnedMediaPaneState();
 }
 
-class _PinnedMediaPaneState extends State<PinnedMediaPane> {
+class _PinnedMediaPaneState extends State<PinnedMediaPane>
+    with SingleTickerProviderStateMixin {
   /// Sabit görselin üstündeki balonların denetleyicisi (bkz.
   /// [PinnedMediaPane.bubbleDoc]); aç/kapa durumu yazılmaz — görselin
   /// uzayındaki kopya belgeye geri yazılamaz, okuma için yeter.
@@ -549,6 +551,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   void initState() {
     super.initState();
     _imageZoom.addListener(_onImageZoom);
+    _watcher.stage.addListener(_onStage);
+    _onStage();
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
   }
 
@@ -592,6 +596,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     _imageBubbles?.dispose();
     _pdfAdding.dispose();
     _keyboardN.dispose();
+    _watcher.dispose();
+    _slide.dispose();
+    _dy.dispose();
     _pdfBar.dispose();
     _pdfPlain.dispose();
     // Ağaç kilitliyken üst ekranın setState'i çağrılmaz: kare sonuna.
@@ -680,15 +687,75 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     return _stableHeight;
   }
 
-  /// Klavyenin evresi (bkz. [KeyboardPhaseListener]).
+  /// Klavye ekranda mı ve tam boy tahmini (bkz. [_watcher]; `open`
+  /// kapanırken de true — boy klavye BİTİNCE geri döner).
   ///
-  /// BİLDİRİCİ, `setState` değil (F60.S5): evre klavye açılırken ve
-  /// kapanırken değişir; eskiden her değişimde BÜTÜN bölme (medya, çubuk
-  /// düğmeleri, ipuçları ≈ 230 widget) klavye animasyonunun ortasında
-  /// yeniden kuruluyordu — çevrim başına 4 kez. Evreyi yalnız medyanın
+  /// BİLDİRİCİ, `setState` değil (F60.S5): eskiden her değişimde BÜTÜN bölme
+  /// (medya, çubuk düğmeleri, ipuçları ≈ 230 widget) klavye animasyonunun
+  /// ortasında yeniden kuruluyordu — çevrim başına 4 kez. Yalnız medyanın
   /// görünür penceresi dinler (bkz. [build] içindeki dinleyici).
   final _keyboardN = ValueNotifier<KeyboardPhase>((open: false, estimate: 0));
   KeyboardPhase get _keyboard => _keyboardN.value;
+
+  /// **BOY TEK ADIMDA, HAREKET BOYAMADA** (P49; kullanıcı 2026-11-12: "sabit
+  /// ek varken klavye açılırken hem sabit ek paneli hem klavye kasıyor").
+  ///
+  /// KÖK NEDEN: pencerenin BOYU 260 ms boyunca kare kare değişiyordu
+  /// (`KeyboardClipWindow`): bölmenin sütunu ve altındaki editör gövdesi her
+  /// karede yeniden diziliyordu (kasma listesi §6). Artık pencerenin
+  /// yerleşim boyu ([_laid]) yalnız klavye GÖRÜNDÜĞÜ ve BİTTİĞİ karede
+  /// değişir; aradaki yumuşak geçiş [_dy] kadar boyamada: pencere kırpması,
+  /// küçülme ölçeği ve alttaki çubuk + notun kayması (`Flow`, yerleşim yok).
+  /// Kapanırken (klavye inerken) boy hiç değişmez, yalnız [_dy] büyür.
+  /// Aşama kurulumsuz izlenir ([KeyboardStageWatcher]): klavye karelerinde
+  /// bölmede HİÇBİR widget kurulmaz.
+  final _watcher = KeyboardStageWatcher();
+  bool _closing = false;
+
+  /// Pencerenin yerleşim boyu (−1: henüz yerleşmedi) ve medyanın tam boyu.
+  double _laid = -1;
+  double _full = 0;
+
+  /// Görünen boy − yerleşim boyu (dp); boyama katmanları bunu dinler.
+  final _dy = ValueNotifier<double>(0);
+  double _dyFrom = 0;
+  double _dyTo = 0;
+  late final AnimationController _slide = AnimationController(vsync: this)
+    ..addListener(
+      () => _dy.value =
+          _dyFrom +
+          (_dyTo - _dyFrom) * AppMotion.enter.transform(_slide.value),
+    );
+  late final _shift = _ShiftFlow(_dy);
+
+  void _onStage() {
+    final stage = _watcher.stage.value;
+    _keyboardN.value = (open: stage.open, estimate: stage.estimate);
+    if (stage.closing != _closing) {
+      _closing = stage.closing;
+      if (_laid >= 0) _retarget(_laid, animate: true);
+    }
+  }
+
+  /// Yerleşim boyu [laid] oldu: görünen boy olduğu yerden hedefe kayar.
+  void _retarget(double laid, {required bool animate}) {
+    final first = _laid < 0;
+    final from = first ? 0.0 : _laid + _dy.value - laid;
+    _laid = laid;
+    final to = _closing ? math.max(0.0, _full - laid) : 0.0;
+    if (first || !animate || (from - to).abs() < 0.5) {
+      _slide.stop();
+      _dyFrom = _dyTo = to;
+      _dy.value = to;
+      return;
+    }
+    if (_slide.isAnimating && to == _dyTo) return;
+    _dyFrom = from;
+    _dyTo = to;
+    _slide
+      ..duration = AppMotion.of(context, AppMotion.short)
+      ..forward(from: 0);
+  }
 
   /// **KLAVYE AÇILINCA MEDYA KÜÇÜLMEZ** (kullanıcı bulgusu 2026-10-20:
   /// "görsel/video/PDF sabitken klavye açılınca odak kayması, görselin boyut
@@ -781,15 +848,36 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
     final isVideo = widget.media.kind == AttachmentKind.video;
     final isPdf = widget.media.kind == AttachmentKind.pdf;
     final isText = widget.media.kind == AttachmentKind.text;
     final isAudio = widget.media.kind == AttachmentKind.audio;
-    final isSlide = widget.media.kind == AttachmentKind.slide;
-    final isImage = widget.media.kind == AttachmentKind.image;
     // Zamanlı medya: denetim çubuğu ve ilerleme çizgisi (video + ses).
     final timed = isVideo || isAudio;
+    final background = isVideo ? Colors.black : scheme.surfaceContainerHigh;
+    // BİR KEZ KURULUR (P49): medya, çubuk ve not `build`'de kurulur; klavye
+    // gövdeyi kısaltıp `LayoutBuilder` yeniden koşunca AYNI örnekler döner,
+    // alt ağaçlar yeniden kurulmaz (S17 geçiş karesi).
+    //
+    // NOT AÇILIŞI HAFİF (kullanıcı bulgusu 2026-10-20: "notu açarken ufak
+    // donma"): oynatıcı/belge görüntüleyicisi rota geçişi bitince kurulur
+    // (bkz. AfterRouteTransition).
+    final media = RepaintBoundary(
+      child: AfterRouteTransition(
+        placeholder: ColoredBox(color: background),
+        child: _media(context),
+      ),
+    );
+    // Yazarken not AĞAÇTA kalır (durumu, imleci korunur) ama yer kaplamaz
+    // ve çizilmez; çubuk kalkar.
+    final lower = RepaintBoundary(
+      child: Column(
+        children: [
+          if (!_writing) _bar(context, timed: timed),
+          Expanded(child: Offstage(offstage: _writing, child: widget.child)),
+        ],
+      ),
+    );
     final layout = LayoutBuilder(
       builder: (context, constraints) {
         final stable = _stable(constraints);
@@ -845,35 +933,71 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
         var snap = _takeSnap();
         // Balon yazılırken medya bölmenin TAMAMI (bkz. [_writing]).
         final writing = _writing && constraints.maxHeight.isFinite;
+        _dragHeight = height;
+        _dragMax = max;
+        _dragNatural = natural;
         return Column(
           children: [
             ValueListenableBuilder<KeyboardPhase>(
               valueListenable: _keyboardN,
+              child: media,
               builder: (_, _, media) {
-                final animate = live == null && !writing && !snap;
+                // Balon yazılırken medya bölmenin TAMAMI (bkz. [_writing]).
+                final full = writing ? constraints.maxHeight : height;
+                final laid = writing ? full : math.min(full, visible());
+                _full = full;
+                _retarget(laid, animate: live == null && !writing && !snap);
                 snap = false;
-                return KeyboardClipWindow(
-                  full: writing ? constraints.maxHeight : height,
-                  visible: writing ? constraints.maxHeight : visible(),
-                  animate: animate,
-                  // Görsel/video/sunum klavye açılınca KIRPILMAZ, küçülür
-                  // (kullanıcı isteği 2026-10-20); metin, belge ve ses
-                  // kartı okunur kalsın diye kırpılır.
-                  shrink: !isText && !isPdf && !isAudio,
-                  background: isVideo
-                      ? Colors.black
-                      : scheme.surfaceContainerHigh,
-                  child: media!,
+                return SizedBox(
+                  key: const ValueKey('pinned-media-window'),
+                  height: laid,
+                  child: OverflowBox(
+                    alignment: Alignment.topCenter,
+                    minHeight: full,
+                    maxHeight: full,
+                    child: ClipRect(
+                      clipper: _WindowClip(laid, _dy),
+                      child: ColoredBox(
+                        color: background,
+                        child: Flow(
+                          delegate: _FitFlow(
+                            laid: laid,
+                            full: full,
+                            dy: _dy,
+                            // Görsel/video/sunum klavye açılınca KIRPILMAZ,
+                            // küçülür (kullanıcı isteği 2026-10-20); metin,
+                            // belge ve ses kartı okunur kalsın diye kırpılır.
+                            shrink: !isText && !isPdf && !isAudio,
+                          ),
+                          children: [media!],
+                        ),
+                      ),
+                    ),
+                  ),
                 );
               },
-              // NOT AÇILIŞI HAFİF (kullanıcı bulgusu 2026-10-20: "notu
-              // açarken ufak donma"): oynatıcı/belge görüntüleyicisi rota
-              // geçişi bitince kurulur (bkz. AfterRouteTransition).
-              child: AfterRouteTransition(
-                placeholder: ColoredBox(
-                  color: isVideo ? Colors.black : scheme.surfaceContainerHigh,
-                ),
-                child: isText
+            ),
+            Expanded(
+              child: Flow(delegate: _shift, children: [lower]),
+            ),
+          ],
+        );
+      },
+    );
+    return layout;
+  }
+
+  /// Bölmenin içi: türüne göre okuyucu / oynatıcı / belge / görsel.
+  Widget _media(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final isVideo = widget.media.kind == AttachmentKind.video;
+    final isPdf = widget.media.kind == AttachmentKind.pdf;
+    final isText = widget.media.kind == AttachmentKind.text;
+    final isAudio = widget.media.kind == AttachmentKind.audio;
+    final isSlide = widget.media.kind == AttachmentKind.slide;
+    final isImage = widget.media.kind == AttachmentKind.image;
+                return isText
                     // METİN (2026-10-17): kaydırılan, seçilebilen kâğıt. Basılı
                     // tutmak metni SEÇER (görseldeki "aşağı çekip bırak"
                     // jesti yok) — bölmeden çıkış anahtardan/menüden.
@@ -1131,31 +1255,38 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                           ],
                         ),
                         ),
-                      ),
-              ),
-            ),
-            // AYRAÇ ÇUBUĞU: dikey sürükleme bölmeyi boyutlar; düğmeler de
-            // BURADA (kullanıcı bulgusu 2026-10-11: medyanın üstüne konan
-            // düğmeler YouTube oynatıcısının kendi sağ üst düğmeleriyle üst
-            // üste geliyordu). Çubuk medyanın DIŞINDA, hiçbir şeyi örtmez.
-            if (!writing)
-            GestureDetector(
+                      );
+  }
+
+  /// Sürüklemenin tabanı: son yerleşimde hesaplanan boy ve sınırlar (çubuk
+  /// `build`'de bir kez kurulduğu için kapanışla taşınmaz).
+  double _dragHeight = 0;
+  double _dragMax = 0;
+  double _dragNatural = double.infinity;
+
+  /// AYRAÇ ÇUBUĞU: dikey sürükleme bölmeyi boyutlar; düğmeler de BURADA
+  /// (kullanıcı bulgusu 2026-10-11: medyanın üstüne konan düğmeler YouTube
+  /// oynatıcısının kendi sağ üst düğmeleriyle üst üste geliyordu). Çubuk
+  /// medyanın DIŞINDA, hiçbir şeyi örtmez.
+  Widget _bar(BuildContext context, {required bool timed}) {
+    final scheme = Theme.of(context).colorScheme;
+    return GestureDetector(
               key: const ValueKey('pinned-media-bar'),
               behavior: HitTestBehavior.opaque,
               onVerticalDragStart: widget.fill
                   ? null
-                  : (_) => setState(() => _live = height),
+                  : (_) => setState(() => _live = _dragHeight),
               onVerticalDragUpdate: widget.fill
                   ? null
                   : (d) =>
-                        setState(() => _live = (_live ?? height) + d.delta.dy),
+                        setState(() => _live = (_live ?? _dragHeight) + d.delta.dy),
               onVerticalDragEnd: widget.fill ? null : (_) {
-                final raw = _live ?? height;
+                final raw = _live ?? _dragHeight;
                 setState(() => _live = null);
                 if (raw < kPinnedUnpinHeight) {
                   widget.onUnpin();
                 } else {
-                  widget.onHeightChanged(_clamp(math.min(raw, natural), max));
+                  widget.onHeightChanged(_clamp(math.min(raw, _dragNatural), _dragMax));
                 }
               },
               onVerticalDragCancel: () => setState(() => _live = null),
@@ -1186,22 +1317,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                   ),
                 ),
               ),
-            ),
-            // Yazarken not AĞAÇTA kalır (durumu, imleci korunur) ama yer
-            // kaplamaz ve çizilmez.
-            Expanded(
-              child: Offstage(offstage: writing, child: widget.child),
-            ),
-          ],
-        );
-      },
-    );
-    return KeyboardPhaseListener(
-      onChanged: (phase) {
-        if (mounted) _keyboardN.value = phase;
-      },
-      child: layout,
-    );
+            );
   }
 
   /// Son çizilen çubuk genişliği: döndür düğmesi çubukta mı menüde mi.
@@ -1601,4 +1717,86 @@ class _UnpinHint extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Alt parçayı (çubuk + not) [dy] kadar aşağıda boyar — yerleşim yok.
+class _ShiftFlow extends FlowDelegate {
+  _ShiftFlow(this.dy) : super(repaint: dy);
+
+  final ValueListenable<double> dy;
+
+  @override
+  BoxConstraints getConstraintsForChild(int i, BoxConstraints constraints) =>
+      BoxConstraints.tight(constraints.biggest);
+
+  @override
+  void paintChildren(FlowPaintingContext context) => context.paintChild(
+    0,
+    transform: Matrix4.translationValues(0, dy.value, 0),
+  );
+
+  @override
+  bool shouldRepaint(_ShiftFlow oldDelegate) => oldDelegate.dy != dy;
+}
+
+/// Medyayı tam boyunda ([full]) yerleştirir; [shrink] ise görünen boya
+/// (`laid + dy`) sığacak kadar küçülterek boyar (üst ortadan).
+class _FitFlow extends FlowDelegate {
+  _FitFlow({
+    required this.laid,
+    required this.full,
+    required this.dy,
+    required this.shrink,
+  }) : super(repaint: dy);
+
+  final double laid;
+  final double full;
+  final ValueListenable<double> dy;
+  final bool shrink;
+
+  @override
+  BoxConstraints getConstraintsForChild(int i, BoxConstraints constraints) =>
+      BoxConstraints.tight(constraints.biggest);
+
+  @override
+  void paintChildren(FlowPaintingContext context) {
+    final scale = !shrink || full <= 0
+        ? 1.0
+        : ((laid + dy.value) / full).clamp(0.0, 1.0);
+    final width = context.size.width;
+    context.paintChild(
+      0,
+      transform: Matrix4.identity()
+        ..translateByDouble(width * (1 - scale) / 2, 0, 0, 1)
+        ..scaleByDouble(scale, scale, 1, 1),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_FitFlow oldDelegate) =>
+      oldDelegate.laid != laid ||
+      oldDelegate.full != full ||
+      oldDelegate.shrink != shrink ||
+      oldDelegate.dy != dy;
+}
+
+/// Pencerenin görünen kısmı: üstten `laid + dy` (boyama; [dy] değişince
+/// yeniden kırpılır, yerleşim yok).
+class _WindowClip extends CustomClipper<Rect> {
+  _WindowClip(this.laid, this.dy) : super(reclip: dy);
+
+  final double laid;
+  final ValueListenable<double> dy;
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTWH(
+    0,
+    0,
+    size.width,
+    (laid + dy.value).clamp(0.0, size.height),
+  );
+
+  @override
+  bool shouldReclip(_WindowClip oldClipper) =>
+      oldClipper.laid != laid || oldClipper.dy != dy;
 }
