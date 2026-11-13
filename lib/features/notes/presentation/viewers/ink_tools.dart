@@ -388,8 +388,6 @@ class InkToolMemory {
     _prefs?.setStringList(_kRecent, [for (final c in recentColors) '$c']);
   }
 
-  /// Testler için: hafızayı varsayılana döndürür.
-  @visibleForTesting
   /// **SÜREKLİ ÇIKMASIN** (P49 (d), kullanıcı 2026-11-12): bu OTURUMDA
   /// yazıyla söylenmiş kalem durumları. Yüzen düğmenin "kalem yazar /
   /// dokunur" yazısı her durum için bir kez ([stylusHintsTold]); editörün
@@ -398,6 +396,8 @@ class InkToolMemory {
   static final Set<bool> stylusHintsTold = {};
   static bool? lastPenOnlyHint;
 
+  /// Testler için: hafızayı varsayılana döndürür.
+  @visibleForTesting
   static void reset() {
     stylusHintsTold.clear();
     lastPenOnlyHint = null;
