@@ -203,7 +203,7 @@ extension _DashShelf on _DashboardScreenState {
                             .set(null);
                         ref.read(sharedHubOnHomeProvider.notifier).set(false);
                         _closeOpenNote();
-                        unawaited(HapticFeedback.selectionClick());
+                        unawaited(AppHaptics.tick());
                       },
                     )
                   // SESSİZ (K-D3, F74.1): dolu `primary` ekranın en

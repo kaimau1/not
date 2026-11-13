@@ -117,7 +117,7 @@ extension _DashSelection on _DashboardScreenState {
   /// Liste satırını SAĞA çekmek: sabitle / sabitlemeyi kaldır.
   void _swipePin(Note note) {
     ref.read(notesRepositoryProvider)?.setPinned(note.id, !note.pinned);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
   }
 
   /// Liste satırını SOLA çekmek: arşivle (geri alınabilir).
@@ -125,7 +125,7 @@ extension _DashSelection on _DashboardScreenState {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     repo.setArchived(note.id, true);
-    HapticFeedback.mediumImpact();
+    AppHaptics.heavy();
     showUndoSnackBar(
       context,
       message: context.l10n.noteArchived,

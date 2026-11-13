@@ -1022,7 +1022,7 @@ class _PinchColumnsState extends State<PinchColumns>
     final shown = target == _baseColumns ? null : target;
     if (shown != _target.value) {
       _target.value = shown;
-      unawaited(HapticFeedback.selectionClick());
+      unawaited(AppHaptics.tick());
     }
   }
 
@@ -1362,7 +1362,7 @@ class _FolderSwipeState extends State<FolderSwipe>
         _label != null && _raw.abs() >= _width * FolderSwipe.commitFraction;
     if (past != _past) {
       setState(() => _past = past);
-      if (past) unawaited(HapticFeedback.selectionClick());
+      if (past) unawaited(AppHaptics.tick());
     }
   }
 

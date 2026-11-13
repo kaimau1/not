@@ -1,3 +1,4 @@
+import '../../../core/haptics.dart';
 import '../../../app/window_class.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../../../core/utils/web_file_drop.dart';
@@ -551,7 +552,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void _setFolderPull(double pull) {
     final before = _folderPull.value >= _kFolderPullDistance;
     final after = pull >= _kFolderPullDistance;
-    if (after && !before) unawaited(HapticFeedback.selectionClick());
+    if (after && !before) unawaited(AppHaptics.tick());
     if (_folderPull.value != pull) _folderPull.value = pull;
   }
 
@@ -799,7 +800,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   void _cycleFilterFolder(int direction) {
     if (_swipeOpensCalendar(direction)) {
-      HapticFeedback.selectionClick();
+      AppHaptics.tick();
       unawaited(context.push('/calendar'));
       return;
     }
@@ -811,21 +812,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final sharedStop = _sharedStopOf(stop.folderId);
     if (sharedStop != null) {
       openFolder(context, sharedStop.folderId, ownerId: sharedStop.ownerId);
-      HapticFeedback.selectionClick();
+      AppHaptics.tick();
       return;
     }
     ref.read(selectedSharedFolderProvider.notifier).set(null);
     if (stop.folderId == kSharedHubFolderId) {
       ref.read(sharedHubOnHomeProvider.notifier).set(false);
       showSharedHubOnHome(context);
-      HapticFeedback.selectionClick();
+      AppHaptics.tick();
       return;
     }
     ref.read(sharedHubOnHomeProvider.notifier).set(false);
     ref.read(selectedFolderProvider.notifier).set(stop.folderId);
     ref.read(noteFilterProvider.notifier).set(stop.filter);
     ref.read(selectedTagProvider.notifier).set(stop.tag);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
   }
 
   /// Klasör düğmesinden seçim: süzgeçsiz o klasör (Tümü = null).
@@ -833,7 +834,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _swipeForward = true;
     if (folderId == kSharedHubFolderId) {
       if (!ref.read(sharedHubOnHomeProvider)) showSharedHubOnHome(context);
-      HapticFeedback.selectionClick();
+      AppHaptics.tick();
       return;
     }
     ref.read(selectedSharedFolderProvider.notifier).set(null);
@@ -841,7 +842,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ref.read(selectedFolderProvider.notifier).set(folderId);
     ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
     ref.read(selectedTagProvider.notifier).set(null);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
   }
 
   SharedFolderRef? _sharedStopOf(String? stopId) => stopId == null
@@ -1010,7 +1011,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final item = next.removeAt(from);
     next.insert(toIndex.clamp(0, next.length), item);
     setState(() => _dragOrder = next);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
   }
 
   /// Parmak kalktı: GÖRÜNEN sıra kaydedilir. Bırakma bir kartın üstünde
@@ -1046,7 +1047,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ref.read(noteSortProvider.notifier).set(NoteSort.manual);
     }
     repo.reorderNotes(order);
-    HapticFeedback.mediumImpact();
+    AppHaptics.heavy();
   }
 
   /// Sürüklenen not "silmeye hazır" çöp hedefine bırakıldı (F60.S9).
