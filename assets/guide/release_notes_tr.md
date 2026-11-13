@@ -3,6 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Sabit ek paneli yenilendi:** telefonda çubukta yalnız tam ekran, Not al, kalem ve ⋮ var; görünüm (Sabit/Yüzen/Ek), balonlar, PDF'te sayfalara göz at ve yer imi, paylaş ve kaldır tek ⋮ menüsünde. Büyük yazıda ve dar ekranda çubuk artık taşmıyor.
+- **Kalem düğmeleri birbirini biliyor:** yüzen kalem düğmesini açınca paneldeki kalem kaybolmaz, açık görünür; paneldeki kalemi kapatınca yüzen düğme ve kalem kipi de kapanır. Panelden kalemi açınca çubukta silgi, geri al, yinele ve kalem ayarı çıkar.
+- **Kalem ipuçları araya girmiyor:** "kalem yazar / parmak dokunur" gibi yazılar alttaki kalem panelinin üstünde çıkar ve her durum için bir kez söylenir.
+- **Tablette sabit ek yanda:** yerleşimi hiç değiştirmediysen geniş ekranı yatay tutunca sabit ek solda, not sağda açılır; dikeyde üstte. Değiştirdiğin yerleşim hatırlanır.
+- **Sabit ekli notta klavye daha akıcı:** klavye açılıp kapanırken sabit ek paneli her karede yeniden dizilmiyor.
 - **Klasörlerde de çöpe sürükle:** klasör, süzgeç ya da arama açıkken de notu basılı tutup alttaki çöp kutusuna sürükleyerek silebilirsin.
 - **Alt çubuğu sen düzenle:** Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk"ta düğmeleri sürükleyerek sıralayabilir, istemediğini çıkarabilir, geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara, renk ve paylaş düğmelerini çubuğa ekleyebilirsin.
 - **Alt çizgili maddelerde daha akıcı:** noktalı, kesikli ve dalgalı alt çizgiler çok daha az işle çiziliyor; klavye açılırken ve kaydırırken takılma azalmalı.

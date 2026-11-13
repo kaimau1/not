@@ -980,9 +980,14 @@ extension _EditorMediaView on _NoteEditorScreenState {
         builder: (context, side, _) => LayoutBuilder(
           builder: (context, box) {
             final wide = box.maxWidth >= kPinnedSideMinWidth;
-            final effective = wide ? side : PinnedSide.top;
+            // F65.2 (K-O7): seçilmemişse geniş yatay pencerede yanda.
+            final preferred = PinnedSideMemory.preferred(
+              side,
+              MediaQuery.sizeOf(context),
+            );
+            final effective = wide ? preferred : PinnedSide.top;
             void cycle() =>
-                PinnedSideMemory.setSide(PinnedSideMemory.next(side));
+                PinnedSideMemory.setSide(PinnedSideMemory.next(preferred));
             if (effective == PinnedSide.top) {
               return _pinnedPane(
                 note,

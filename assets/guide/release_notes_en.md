@@ -3,6 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **Pinned attachment panel redesigned:** on phones the bar shows only full screen, Take note, pen and ⋮; view (Pinned/Floating/Attachment), bubbles, browse pages and bookmarks for PDFs, share and remove all live in a single ⋮ menu. The bar no longer overflows with large text or on narrow screens.
+- **Pen buttons stay in sync:** turning on the floating pen button no longer hides the panel's pen, it shows as on; turning the panel's pen off also turns off the floating button and pen mode. Turning the pen on from the panel shows eraser, undo, redo and pen settings in the bar.
+- **Pen hints stay out of the way:** messages like "pen writes / finger touches" appear above the pen panel at the bottom and are shown once per state.
+- **Pinned attachment on the side on tablets:** if you never changed the layout, holding a wide screen in landscape opens the pinned attachment on the left and the note on the right; portrait keeps it on top. A layout you pick is remembered.
+- **Smoother keyboard with a pinned attachment:** the pinned panel is no longer laid out on every frame while the keyboard opens and closes.
 - **Drag to trash inside folders too:** with a folder, filter or search open you can still long-press a note and drag it onto the trash bin to delete it.
 - **Make the bottom bar yours:** in Settings → Personalize → "Note screen · bottom bar" drag buttons to reorder them, remove the ones you don't use, and add undo, redo, reminder, photo, camera, scan, color and share.
 - **Smoother underlined items:** dotted, dashed and wavy item underlines are drawn with far less work, so opening the keyboard and scrolling should stutter less.

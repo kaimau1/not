@@ -972,17 +972,17 @@ pahalı olan senaryo yoksa (S3, S4, S9, S14 ≤ hedef ve cihazda kök `build` < 
 `editor/attachment_status.dart`, `data/upload_queue.dart`, `data/drive_store.dart`,
 tur görüntüleri `*-e-*.png`.
 
-- [ ] **F65.1 Bölme çubuğu sadeleşmesi — KARAR K-O6 (§0 "Yanlış gidenler" madde 6).** Bugün
+- [x] **F65.1 Bölme çubuğu sadeleşmesi — KARAR K-O6** *(2026-11-13 P49: dar çubuk (< 600 dp) ⛶ · [oynatma] · tutamak · Not al · ✏ · ⋮; anahtar, balon, yer imi, PDF ve ek işleri TEK ⋮ levhasında; geniş çubukta anahtar/balon/yer imi çubukta da. Bekçi `pinned_bar_redesign_test` (360/393 dp × 1,3 taşmaz) — G4 kapandı. Önce/sonra tur görüntüsü çekilmedi (bulut); cihazda doğrulanmadı.)* **— (§0 "Yanlış gidenler" madde 6).** Bugün
   telefonda sabit PDF çubuğu: ⛶ · ✏ · • · Not al · T · balon+ · [Sabit|Yüzen|Ek] · bağlantı
   · ⋮ (10 denetim, hepsi simge). Öneri: ⛶ · tutamak · **birincil iş** (PDF: "Not al";
   görsel: "T"; video: "Not al") · ✏ · ⋮. ⋮ levhasının başında görünüm anahtarı (anahtar
   KALIR, eşanlamlı madde yok — TUTARLILIK K6 korunur), altında balon, bağlantı, yer imi,
   döndür, paylaş (`attachmentActionsFor` sırası). ≥ 600 dp'de bugünkü geniş çubuk kalabilir.
   Önce/sonra tur görüntüsü kullanıcıya gösterilir. `G4` (≤ 360 dp taşma) bununla kapanır.
-- [ ] **F65.2 Yatayda yandan sabitleme varsayılanı — KARAR K-O7.** `PinnedSideMemory`
+- [x] **F65.2 Yatayda yandan sabitleme varsayılanı — KARAR K-O7.** *(2026-11-13 P49, K-O7 kullanıcı kararı "tablette/webde yanda": `PinnedSideMemory.preferred` — tercih yazılmamışsa ve pencere ≥ 840 dp + yataysa sol; seçim bir kez yapılınca hep o. Bekçi `pinned_side_layout_test`. Tablette doğrulanmadı.)* `PinnedSideMemory`
   hiç yazılmamışsa ve pencere ≥ 840 dp + yataysa `side = start`. 1024×640 dp'de (gerçek
   tablet) üstte sabit ek + 3 çubuk + klavye içerik bırakmıyor (F67.4 ile birlikte ölç).
-- [ ] **F65.3 Birden çok sabit ek — KARAR K-O8.**
+- [ ] **F65.3 Birden çok sabit ek — KARAR K-O8.** *(2026-11-13 P49: en güvenli = tek sabit ek, dokunulmadı — sabah bakılacak.)*
 - [x] **F65.4 Yükleme güvenilirliği (B13) — KARAR K-O9.** *(2026-11-11: K-O9 en güvenli = bildirim, sabah bakılacak. Kanıt `test/attachment_status_test.dart` kırmızı (bekleyen ekte düğme yok, `pendingUploadNotice` yok) → yeşil. `ReminderService` `AppLifecycleListener`: arka plana geçerken bekleyen ek varsa (Drive bağlantısı beklemiyorsa) 15 dk sonra sessiz tek bildirim (`upload` kanalı, yük `upload`), dönünce/kuyruk boşalınca iptal; bekleyen ek rozetinde "Şimdi dene" → `retryNow`. Cihazda doğrulanmadı.)* Öneri (bağımlılıksız): uygulama
   `paused` olurken kuyrukta bekleyen ek varsa `ReminderService` üzerinden 15 dk sonrasına
   sessiz tek bildirim ("N ek yüklenmeyi bekliyor — açınca yüklenir", yük `upload:` — `note:`
@@ -1081,7 +1081,7 @@ tur `telefon-*.png`.
   gizli (hızlı satır yeter), üst çubuk 40 dp, sabit bölme en küçük boyda. Boy değişimi TEK
   ADIMDA (kural 6), `KeyboardSwitch` kuralı (7) korunur. Tur `matepad-yatay` + klavye ile
   doğrula.
-- [ ] **F67.5 Yandan sabitleme varsayılanı (F65.2 ile aynı karar).**
+- [x] **F67.5 Yandan sabitleme varsayılanı (F65.2 ile aynı karar).** *(2026-11-13: F65.2 ile yapıldı.)*
 - [ ] **F67.6 İki not yan yana — KARAR K-O12 (öneri: şimdilik yok).**
 - [x] **F67.7 Klavye ve fare.** → DENEYIM F80.3 (P42, 2026-11-12: kısayol levhası tablodan, odak halkası, D22; sağ tık/üstüne gelme doğrulandı). Kısayol listesi levhası (Ctrl+/; `app.dart` `shortcuts`
   haritasından üretilir, elle liste tutulmaz); kart ve madde üzerinde sağ tık = uzun basış
