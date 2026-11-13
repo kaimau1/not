@@ -1,3 +1,4 @@
+import '../../app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Belirtilen süre boyunca dolu→boş küçülen ince bir çubuk. Otomatik kapanan
@@ -22,7 +23,7 @@ class CountdownBar extends StatelessWidget {
       duration: duration,
       onEnd: onEnd,
       builder: (context, value, _) => ClipRRect(
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(AppRadius.hair),
         child: LinearProgressIndicator(
           value: value,
           minHeight: 3,

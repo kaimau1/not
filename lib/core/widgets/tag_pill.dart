@@ -1,3 +1,4 @@
+import '../../app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Etiket hapının renkleri (kullanıcı isteği 2026-11-05: "etiketler çok
@@ -14,7 +15,7 @@ import 'package:flutter/material.dart';
     return (background: accent.withValues(alpha: 0.14), foreground: accent);
   }
   return (
-    background: scheme.secondaryContainer.withValues(alpha: 0.85),
+    background: scheme.secondaryContainer.withValues(alpha: AppAlpha.strong),
     foreground: scheme.onSecondaryContainer,
   );
 }
@@ -40,7 +41,7 @@ class TagPill extends StatelessWidget {
     Widget pill = DecoratedBox(
       decoration: BoxDecoration(
         color: colors.background,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.s),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),

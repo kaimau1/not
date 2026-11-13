@@ -1,3 +1,4 @@
+import '../../app/theme/app_tokens.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -53,7 +54,7 @@ class HoldProgressRing extends StatelessWidget {
               painter: _RingPainter(
                 progress: shown,
                 color: c,
-                track: scheme.surface.withValues(alpha: 0.85),
+                track: scheme.surface.withValues(alpha: AppAlpha.strong),
               ),
               child: icon == null
                   ? null

@@ -1,3 +1,4 @@
+import '../../app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_theme.dart';
@@ -59,7 +60,7 @@ class _SetupRequiredScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                   child: const SelectableText(
                     'dart pub global activate flutterfire_cli\n'

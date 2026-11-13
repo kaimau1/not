@@ -1,3 +1,4 @@
+import '../../app/theme/app_tokens.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -353,7 +354,7 @@ class _OverlayUndoState extends State<_OverlayUndo> {
             key: const ValueKey('overlay-undo'),
             color: scheme.inverseSurface,
             elevation: 6,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.m),
             child: Padding(
               padding: const EdgeInsetsDirectional.only(start: 16, end: 4),
               child: Row(

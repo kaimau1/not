@@ -1,3 +1,4 @@
+import '../app/theme/app_tokens.dart';
 import '../features/auth/presentation/account_required.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import 'dart:async';
@@ -522,7 +523,7 @@ class _DrawerHandle extends StatelessWidget {
                 key: const ValueKey('rail-drawer-handle'),
                 onTap: onTap,
                 borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(12),
+                  right: Radius.circular(AppRadius.m),
                 ),
                 child: SizedBox(
                   width: 20,

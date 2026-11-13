@@ -207,7 +207,7 @@ class _TipBannerState extends State<_TipBanner> {
                 child: Material(
                   color: scheme.inverseSurface,
                   elevation: 4,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.m),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
