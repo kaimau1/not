@@ -12,8 +12,11 @@ import '../../../../app/window_class.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/after_route_transition.dart';
+import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/customizable.dart';
+import '../../../../core/widgets/sheet_header.dart';
+import '../../../../core/widgets/sheet_tile.dart';
 import '../../../../core/widgets/wheel_scroll_viewer.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
@@ -29,6 +32,7 @@ import 'page_ink_layer.dart' show InkClaim;
 import 'attachment_actions.dart';
 import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
+import 'pen_tray.dart' show showInkSettings;
 import 'slide_page_box.dart';
 import 'text_page_box.dart';
 import 'video_hub_scope.dart';
@@ -119,7 +123,8 @@ class PinnedMediaPane extends StatefulWidget {
     this.onChanged,
     this.onInkChanged,
     this.viewSwitch,
-    this.onShowViews,
+    this.sheetViewSwitch,
+    this.onPenOff,
     this.onCaption,
     this.onNoteAt,
     this.bubbleDoc,
@@ -137,7 +142,8 @@ class PinnedMediaPane extends StatefulWidget {
 
   /// Editörün kalem kipi açık: sabit PDF'in üstüne doğrudan yazılır
   /// (kullanıcı isteği 2026-11-08). Kapalıyken bölmenin çubuğundaki kalem
-  /// düğmesi aynı katmanı yalnız bu bölme için açar.
+  /// düğmesi aynı katmanı yalnız bu bölme için açar. Düğme iki durumda da
+  /// görünür ve açık durumu gösterir (bkz. `_togglePen`).
   final bool penActive;
 
   /// YAN YERLEŞİM (2026-11-09): medya bölmenin TAMAMINI kaplar (not öbür
@@ -214,12 +220,18 @@ class PinnedMediaPane extends StatefulWidget {
   /// kök kurmadan, gecikmeli kaydeder. null ise [onChanged]'e düşer.
   final ValueChanged<Attachment>? onInkChanged;
 
-  /// Ayraç çubuğunun sağındaki görünüm anahtarı (Sabit / Yüzen / Balonlu —
-  /// bkz. `AttachmentViewSwitch`). null ise eski "sayfaya geri koy" düğmesi.
+  /// Görünüm anahtarı (Sabit / Yüzen / Ek — bkz. `AttachmentViewSwitch`):
+  /// GENİŞ çubukta çubuğun sağında, dar çubukta ⋮ levhasında (bkz.
+  /// [sheetViewSwitch]). null ise eski "sayfaya geri koy" düğmesi.
   final Widget? viewSwitch;
 
-  /// Dar çubukta anahtar sığmayınca ⋮ → Görünüm bunu açar.
-  final VoidCallback? onShowViews;
+  /// DAR çubukta anahtar ⋮ levhasının başında durur (K-O6): levhanın
+  /// bağlamıyla kurulur ki seçim levhayı da kapatsın. null ise [viewSwitch].
+  final Widget? Function(BuildContext sheet)? sheetViewSwitch;
+
+  /// Bölmenin kalem düğmesi kalemi KAPATTI ve editörün kalem kipi açıktı
+  /// ([penActive]): editör kendi kipini de kapatır (tam senkron, P49).
+  final VoidCallback? onPenOff;
 
   /// Görsel açıklamasını yazar (⋮, bant).
   final VoidCallback? onCaption;
@@ -1324,6 +1336,92 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   double _barWidth = 0;
   bool get _rotateInMenu => _barWidth < 430;
 
+  /// **ÇUBUK DÜZENİ** (P49; OTURTMA F65.1, KARAR K-O6 — kullanıcı
+  /// 2026-11-12: "sabit ek tasarımı, tuşları, özellikleri baştan").
+  ///
+  /// DAR çubuk (telefon, < 600 dp) en çok beş denetim: ⛶ · [oynatma] ·
+  /// tutamak · birincil iş ("Not al") · ✏ · ⋮. Görünüm anahtarı, balon, yer
+  /// imi, belge menüsü ve ek işleri TEK ⋮ levhasında ([_openSheet]) — hiçbiri
+  /// silinmedi. GENİŞ çubukta (tablet/web) anahtar, balon ve yer imi çubukta
+  /// da durur. Yanda en dar bölmede (< 220 dp) ⛶ ve "Not al" da levhaya iner.
+  bool get _wideBar => _barWidth >= 600;
+  bool get _tinyBar => _barWidth < 220;
+
+  /// Bu eke kalemle yazılabilir mi (yazılabilir not; PDF ya da ölçüsü
+  /// bilinen görsel).
+  bool get _canPen =>
+      widget.onChanged != null &&
+      (widget.media.kind == AttachmentKind.pdf ||
+          (widget.media.kind == AttachmentKind.image &&
+              (widget.media.width ?? 0) > 0 &&
+              (widget.media.height ?? 0) > 0));
+
+  /// **PANELDEKİ KALEM ↔ YÜZEN DÜĞME TAM SENKRON** (P49 (b)).
+  ///
+  /// KÖK NEDEN: düğme yalnız `!penActive` iken çiziliyordu — yüzen düğme
+  /// editörün kalem kipini açınca paneldeki KAYBOLUYORDU; panelden açılan
+  /// kalem ise yalnız yerel [_ownPen]'di, yüzen düğme "kalem dokunur"da
+  /// kalıyordu. Artık düğme HEP görünür ve tek soruyu gösterir: "bu eke
+  /// şimdi kalem yazar mı" ([PenPolicy.layerActive]). Açmak yüzen düğmeyi de
+  /// "kalem yazar"a alır; kapatmak yüzen düğmeyi "kalem dokunur"a alır ve
+  /// editörün kalem kipini kapatır ([PinnedMediaPane.onPenOff]).
+  void _togglePen() {
+    final on = _policy.layerActive;
+    setState(() => _ownPen = !on);
+    if (on) {
+      if (widget.penActive) widget.onPenOff?.call();
+      if (InkToolMemory.stylusEver && InkToolMemory.autoStylus) {
+        InkToolMemory.saveAutoStylus(false);
+      }
+    } else if (!InkToolMemory.autoStylus) {
+      InkToolMemory.saveAutoStylus(true);
+    }
+  }
+
+  /// **HIZLI KALEM** (P49 (c): "paneldeki kalem açılınca silgili hızlı kalem
+  /// menüsü"). Bölmenin kendi kalemi açıkken (editörün kalem tepsisi yokken)
+  /// çubuğun solu kalem araçlarına döner: silgi · geri al · yinele · kalem
+  /// ayarları. Araç seçimi ortak (`InkToolMemory`): tepsiyle aynı silgi.
+  bool get _penTools => _ownPen && !widget.penActive && _canPen;
+
+  Widget _penQuickTools(BuildContext context) {
+    final l10n = context.l10n;
+    final ink = _inkFor(widget.media);
+    return ListenableBuilder(
+      listenable: ink,
+      builder: (context, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _BarButton(
+            key: const ValueKey('pinned-pen-eraser'),
+            tooltip: l10n.eraser,
+            icon: Icons.auto_fix_normal_outlined,
+            selected: ink.eraser,
+            onPressed: () => ink.setEraser(!ink.eraser),
+          ),
+          _BarButton(
+            key: const ValueKey('pinned-pen-undo'),
+            tooltip: l10n.undo,
+            icon: Icons.undo,
+            onPressed: ink.canUndo ? ink.undo : null,
+          ),
+          _BarButton(
+            key: const ValueKey('pinned-pen-redo'),
+            tooltip: l10n.redo,
+            icon: Icons.redo,
+            onPressed: ink.canRedo ? ink.redo : null,
+          ),
+          _BarButton(
+            key: const ValueKey('pinned-pen-settings'),
+            tooltip: l10n.inkSettings,
+            icon: Icons.tune,
+            onPressed: () => showInkSettings(context, ink),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _barRow(BuildContext context, double width) {
     _barWidth = width;
     final scheme = Theme.of(context).colorScheme;
@@ -1332,13 +1430,17 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     final isAudio = widget.media.kind == AttachmentKind.audio;
     final isPdf = widget.media.kind == AttachmentKind.pdf;
     final timed = isVideo || isAudio;
-    // PDF'te sayfa denetimleri de bu çubukta: dar ekranda "Not al" yazısı
-    // düşer (simge kalır).
-    final noteAtLabel = isPdf ? width >= 420 : (!timed || width >= 430);
+    final wide = _wideBar;
+    final tiny = _tinyBar;
+    final tools = _penTools;
+    // 1,3× YAZIDA TAŞMA (P42 kalanı): yazılı düğmelerin eşiği yazı ölçeğiyle
+    // büyür — büyük yazıda yazı düşer, simge kalır.
+    final room = width / MediaQuery.textScalerOf(context).scale(1);
+    final noteAtLabel = timed ? room >= 430 : room >= 330;
     // PDF'te "Not al" o anki SAYFAYA not açar (zamanlı medyada o ANA).
     final noteAtIcon = isPdf ? Icons.edit_note : Icons.more_time;
     final noteAtTooltip = isPdf ? l10n.pdfNoteAtPage : l10n.videoNoteAtTime;
-    final showLink = !isVideo || width >= 360;
+    final penOn = _policy.layerActive;
     return Row(
       children: [
         // ÜST / SOL / SAĞ (geniş ekranda, 2026-11-09).
@@ -1353,44 +1455,39 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             },
             onPressed: widget.onCycleSide!,
           ),
-        // Sesin tam ekranı yok (kart kendisi oynatıcı).
-        if (!isAudio)
-          _BarButton(
-            tooltip: l10n.fullscreen,
-            icon: Icons.fullscreen,
-            onPressed: widget.onOpen,
-          ),
-        // VİDEO DENETİMİ (kullanıcı isteği 2026-10-16): ±10 sn ve
-        // oynat/durdur medyanın HEMEN ALTINDA — oynatıcının
-        // üstünü örtmez. Ses de aynı çubuğu kullanır (2026-10-17).
-        if (timed)
-          VideoTransportControls(
-            video: widget.media,
-            showTime: width >= 500,
-            showSpeed: width >= 400,
-            // Çubukta < 430 dp'de sığmaz (⋮ taşıyordu): orada menüde
-            // (bkz. [_rotateInMenu]; cihaz turu 2026-11-05).
-            showRotate: width >= 430,
-          ),
-        // BELGE DENETİMLERİ (eski yüzen şeritten): ‹ n/N › · balonlar ·
-        // yer imi · belge menüsü.
-        // ÜZERİNE YAZ (kullanıcı isteği 2026-11-08): editörün kalemi
-        // kapalıyken de sabit belgeye doğrudan kalemle yazılır.
-        if (isPdf && widget.onChanged != null && !widget.penActive)
-          _BarButton(
-            key: const ValueKey('pinned-pen'),
-            tooltip: l10n.pinnedPenWrite,
-            icon: _ownPen ? Icons.draw : Icons.draw_outlined,
-            onPressed: () => setState(() => _ownPen = !_ownPen),
-          ),
-        if (isPdf)
-          ListenableBuilder(
-            listenable: _pdfBar,
-            builder: (context, _) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: _pdfBar.buildControls(context, width),
+        if (tools)
+          _penQuickTools(context)
+        else ...[
+          // Sesin tam ekranı yok (kart kendisi oynatıcı).
+          if (!isAudio && !tiny)
+            _BarButton(
+              key: const ValueKey('pinned-fullscreen'),
+              tooltip: l10n.fullscreen,
+              icon: Icons.fullscreen,
+              onPressed: widget.onOpen,
             ),
-          ),
+          // VİDEO DENETİMİ (kullanıcı isteği 2026-10-16): ±10 sn ve
+          // oynat/durdur medyanın HEMEN ALTINDA — oynatıcının
+          // üstünü örtmez. Ses de aynı çubuğu kullanır (2026-10-17).
+          if (timed)
+            VideoTransportControls(
+              video: widget.media,
+              showTime: room >= 500,
+              showSpeed: room >= 400,
+              // Çubukta < 430 dp'de sığmaz (⋮ taşıyordu): orada menüde
+              // (bkz. [_rotateInMenu]; cihaz turu 2026-11-05).
+              showRotate: width >= 430,
+            ),
+          // Geniş çubukta yer imi (dar çubukta ⋮ levhasında).
+          if (isPdf)
+            ListenableBuilder(
+              listenable: _pdfBar,
+              builder: (context, _) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: _pdfBar.buildControls(context, width),
+              ),
+            ),
+        ],
         Expanded(
           child: Semantics(
             label: l10n.pinnedMediaResize,
@@ -1406,35 +1503,40 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                 message: _fitTarget == null ? '' : l10n.pinnedMediaFit,
                 child: Center(
                   child: Container(
-                width: 36,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: _live != null
-                      ? scheme.primary
-                      : scheme.onSurfaceVariant.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(3),
+                    width: 36,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: _live != null
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant.withValues(
+                              alpha: AppAlpha.muted,
+                            ),
+                      borderRadius: BorderRadius.circular(AppRadius.hair),
+                    ),
+                  ),
                 ),
-              ),
-            ),
               ),
             ),
           ),
         ),
-        // Kişiselleştirmede gizlenebilir (bkz. UiItem.videoNoteAt).
-        if (widget.onNoteAt != null)
+        // BİRİNCİL İŞ: "Not al". Kişiselleştirmede gizlenebilir (bkz.
+        // UiItem.videoNoteAt).
+        if (!tools && !tiny && widget.onNoteAt != null)
           Customizable(
             id: UiItem.videoNoteAt,
             child: noteAtLabel
                 ? Padding(
-                    padding: const EdgeInsets.only(right: 2),
+                    padding: const EdgeInsets.only(right: AppSpace.xxs),
                     child: TextButton.icon(
                       key: const ValueKey('pinned-note-at'),
                       style: TextButton.styleFrom(
                         visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.s,
+                        ),
                       ),
                       onPressed: widget.onNoteAt,
-                      icon: Icon(noteAtIcon, size: 18),
+                      icon: Icon(noteAtIcon, size: AppIconSize.s),
                       label: Text(l10n.videoNoteAtTimeShort),
                     ),
                   )
@@ -1442,55 +1544,28 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                     key: const ValueKey('pinned-note-at'),
                     tooltip: noteAtTooltip,
                     visualDensity: VisualDensity.compact,
-                    iconSize: 20,
+                    iconSize: AppIconSize.m,
                     color: scheme.primary,
                     icon: Icon(noteAtIcon),
                     onPressed: widget.onNoteAt,
                   ),
           ),
-        // BALON EKLE: dokunarak bırakma kipini aç/kapa. Görselde kip burada,
-        // PDF'te belge kutusunda (düğme her ikisinde de bu çubukta — sayfa
-        // şeridi kendiliğinden söndüğü için orada görünmüyordu).
-        // AÇIK METİN TEK DOKUNUŞ (kullanıcı isteği 2026-11-09): menüye
-        // girmeden "T" → görsele/PDF'e dokunulan yere yazı kutusu. Kip
-        // açıkken düğme ✓ (yanındaki balon düğmesi de) ve kipi kapatır.
+        // BALON EKLE: geniş çubukta menü düğmesi; dar çubukta levhada. Bırakma
+        // kipi açıkken HER genişlikte ✓ (kipi kapatır). Görselde kip burada,
+        // PDF'te belge kutusunda.
         // "T" düğmesi kaldırıldı (kullanıcı isteği 2026-11-12): Açık metin
-        // balon menüsünde; gizle/göster de oraya taşındı.
-        if (_canEditBubbles)
-          _addBubbleButton(
-            context,
-            active: _bubbleEdit,
-            hideCtl: isVideo ? null : _ownController(),
-          )
-        else if (_canEditPdfBubbles)
+        // balon menüsünde; gizle/göster de orada.
+        if (_canEditBubbles && !tools && (wide || _bubbleEdit))
+          _addBubbleButton(context, active: _bubbleEdit)
+        else if (_canEditPdfBubbles && !tools)
           ValueListenableBuilder<bool>(
             valueListenable: _pdfAdding,
-            builder: (context, adding, _) =>
-                _addBubbleButton(context, active: adding),
+            builder: (context, adding, _) => wide || adding
+                ? _addBubbleButton(context, active: adding)
+                : const SizedBox.shrink(),
           ),
-        // Salt okunurda görselden türetilmiş belgenin balonları.
-        if (widget.bubbleDoc case final doc?
-            when doc.bubbles.isNotEmpty &&
-                !isVideo &&
-                !_canEditBubbles &&
-                widget.onChanged != null)
-          IconButton(
-            key: const ValueKey('pinned-bubbles-toggle'),
-            tooltip: doc.bubblesHidden ? l10n.bubblesShow : l10n.bubblesHide,
-            visualDensity: VisualDensity.compact,
-            iconSize: 20,
-            isSelected: doc.bubblesHidden,
-            icon: Icon(
-              doc.bubblesHidden
-                  ? Icons.speaker_notes_off_outlined
-                  : Icons.chat_bubble_outline,
-            ),
-            onPressed: () => widget.onChanged?.call(
-              doc.copyWith(bubblesHidden: !doc.bubblesHidden),
-            ),
-          ),
-        if (showLink &&
-            !hasMenu &&
+        if (!_hasSheet &&
+            (!isVideo || width >= 360) &&
             widget.onCopyLink != null &&
             widget.media.isWebVideo)
           _BarButton(
@@ -1498,57 +1573,80 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             icon: Icons.link,
             onPressed: widget.onCopyLink!,
           ),
-        // Dar çubukta (< 340 dp) ⋮ menüsü varken anahtar düşer: menüde
-        // "Görünüm" satırı aynı anahtarı açar.
-        if (widget.viewSwitch case final viewSwitch?
-            when width >= 340 || !hasMenu)
+        if (widget.viewSwitch case final viewSwitch? when wide && !tools)
           Padding(
-            padding: const EdgeInsets.only(left: 2, right: 2),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
             child: viewSwitch,
           )
-        else if (!hasMenu)
+        else if (widget.viewSwitch == null && !hasMenu)
           _BarButton(
             tooltip: l10n.viewModeFloatingHint,
             icon: Icons.vertical_align_bottom,
             onPressed: widget.onUnpin,
           ),
-        if (hasMenu)
-          _menu(context, viewRow: widget.viewSwitch != null && width < 340),
+        // ÜZERİNE YAZ (kullanıcı isteği 2026-11-08): sabit belgeye/görsele
+        // doğrudan kalemle yazılır. Düğme HEP burada (bkz. [_togglePen]).
+        if (_canPen)
+          _BarButton(
+            key: const ValueKey('pinned-pen'),
+            tooltip: l10n.pinnedPenWrite,
+            icon: penOn ? Icons.draw : Icons.draw_outlined,
+            selected: penOn,
+            onPressed: _togglePen,
+          ),
+        if (_hasSheet)
+          _BarButton(
+            key: const ValueKey('pinned-media-menu'),
+            tooltip: l10n.more,
+            icon: Icons.more_vert,
+            onPressed: () => unawaited(_openSheet()),
+          ),
       ],
+    );
+  }
+
+  /// Balon göster/gizle (balon varsa): görselde denetleyicide, PDF'te ekte.
+  ({bool hidden, VoidCallback flip})? _bubbleToggle() {
+    if (_canEditBubbles) {
+      final own = _ownController();
+      if (own.bubbles.isEmpty) return null;
+      return (hidden: own.hidden, flip: () => own.setHidden(!own.hidden));
+    }
+    final a = widget.media;
+    if (!_canEditPdfBubbles || a.bubbles.isEmpty) return null;
+    return (
+      hidden: a.bubblesHidden,
+      flip: () =>
+          widget.onChanged?.call(a.copyWith(bubblesHidden: !a.bubblesHidden)),
     );
   }
 
   /// **BALON EKLE MENÜSÜ** (kullanıcı bulgusu 2026-11-05: "açık metin
   /// yazma kısmını bulamadım"): tür seçimi eskiden yalnız bırakma kipinin
   /// araç kartındaydı ve kip basılı tutmakla atlanınca kart hiç
-  /// görünmüyordu. Artık düğme iki YAZILI seçenek açar — **Balon** (tutamaçlı
-  /// not) · **Açık metin** (sayfanın üstüne doğrudan yazı) —, seçilen türle
-  /// bırakma kipi açılır; kip açıkken düğme ✓ olur ve kipi kapatır.
-  Widget _addBubbleButton(
-    BuildContext context, {
-    required bool active,
-    BubbleController? hideCtl,
-  }) {
+  /// görünmüyordu. Düğme YAZILI seçenekler açar — **Balon** (tutamaçlı
+  /// not) · **Açık metin** (sayfanın üstüne doğrudan yazı) · balon varsa
+  /// **gizle/göster** —, seçilen türle bırakma kipi açılır; kip açıkken
+  /// düğme ✓ olur ve kipi kapatır. Dar çubukta aynı üç seçenek ⋮
+  /// levhasının "Balonlar" bölümünde.
+  Widget _addBubbleButton(BuildContext context, {required bool active}) {
     final l10n = context.l10n;
     if (active) {
-      return IconButton(
+      return _BarButton(
         key: const ValueKey('pinned-add-bubble'),
         tooltip: l10n.bubbleAddDone,
-        visualDensity: VisualDensity.compact,
-        iconSize: 20,
-        color: Theme.of(context).colorScheme.primary,
-        icon: const Icon(Icons.check),
+        icon: Icons.check,
+        selected: true,
         onPressed: _stopAdding,
       );
     }
-    final canToggle = hideCtl != null && hideCtl.bubbles.isNotEmpty;
+    final toggle = _bubbleToggle();
     return PopupMenuButton<String>(
       key: const ValueKey('pinned-add-bubble'),
       tooltip: l10n.bubbleAdd,
-      icon: const Icon(Icons.add_comment_outlined, size: 20),
-      onSelected: (v) => v == 'toggle'
-          ? hideCtl!.setHidden(!hideCtl.hidden)
-          : _startAdding(plain: v == 'plain'),
+      icon: const Icon(Icons.add_comment_outlined, size: AppIconSize.m),
+      onSelected: (v) =>
+          v == 'toggle' ? toggle?.flip() : _startAdding(plain: v == 'plain'),
       itemBuilder: (context) => [
         PopupMenuItem(
           key: const ValueKey('pinned-add-bubble-note'),
@@ -1572,7 +1670,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             subtitle: Text(l10n.bubbleAddPlainHint),
           ),
         ),
-        if (canToggle)
+        if (toggle != null)
           PopupMenuItem(
             key: const ValueKey('pinned-bubbles-toggle'),
             value: 'toggle',
@@ -1580,30 +1678,38 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               dense: true,
               contentPadding: EdgeInsets.zero,
               leading: Icon(
-                hideCtl.hidden
+                toggle.hidden
                     ? Icons.speaker_notes_off_outlined
                     : Icons.chat_bubble_outline,
               ),
-              title: Text(
-                hideCtl.hidden ? l10n.bubblesShow : l10n.bubblesHide,
-              ),
+              title: Text(toggle.hidden ? l10n.bubblesShow : l10n.bubblesHide),
             ),
           ),
       ],
     );
   }
 
-  /// Çubuğun ⋮ menüsü verilmiş mi (salt okunurda kaldır/ek yok).
+  /// Ek işleri verilmiş mi (salt okunurda kaldır/paylaş yok).
   bool get hasMenu =>
       widget.onRemove != null ||
       widget.onTranscribe != null ||
       widget.onSaveAs != null ||
       widget.onShare != null;
 
+  /// ⋮ levhasında gösterilecek bir şey var mı.
+  bool get _hasSheet =>
+      hasMenu ||
+      widget.media.kind == AttachmentKind.pdf ||
+      (!_wideBar &&
+          (widget.viewSwitch != null ||
+              _canEditBubbles ||
+              _canEditPdfBubbles)) ||
+      (_tinyBar &&
+          (widget.media.kind != AttachmentKind.audio ||
+              widget.onNoteAt != null));
+
   void _run(AttachmentAction action) {
     switch (action) {
-      case AttachmentAction.view:
-        widget.onShowViews?.call();
       case AttachmentAction.open:
         widget.onOpen();
       case AttachmentAction.rotate:
@@ -1629,25 +1735,22 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     }
   }
 
-  List<AttachmentAction> _actions(
-    AttachmentSurface surface, {
-    bool viewRow = false,
-  }) => attachmentActionsFor(
-    widget.media,
-    surface,
-    AttachmentCaps(
-      viewRow: viewRow && widget.onShowViews != null,
-      rotate: _rotateInMenu,
-      caption: widget.onCaption != null,
-      transcribe: widget.onTranscribe != null,
-      extractText: widget.onExtractText != null,
-      copy: widget.onCopy != null,
-      share: widget.onShare != null,
-      saveAs: widget.onSaveAs != null,
-      copyLink: widget.onCopyLink != null,
-      remove: widget.onRemove != null,
-    ),
-  );
+  List<AttachmentAction> _actions(AttachmentSurface surface) =>
+      attachmentActionsFor(
+        widget.media,
+        surface,
+        AttachmentCaps(
+          rotate: _rotateInMenu,
+          caption: widget.onCaption != null,
+          transcribe: widget.onTranscribe != null,
+          extractText: widget.onExtractText != null,
+          copy: widget.onCopy != null,
+          share: widget.onShare != null,
+          saveAs: widget.onSaveAs != null,
+          copyLink: widget.onCopyLink != null,
+          remove: widget.onRemove != null,
+        ),
+      );
 
   /// Eke sağ tık (masaüstü, F40.8): aynı liste, imlecin yanında.
   Future<void> _showContextMenu(Offset global) async {
@@ -1659,19 +1762,174 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     if (action != null && mounted) _run(action);
   }
 
-  /// Tek ek menüsü (bkz. [attachmentActionsFor]); dar çubukta anahtar buraya
-  /// satır olarak iner.
-  Widget _menu(BuildContext context, {required bool viewRow}) =>
-      PopupMenuButton<AttachmentAction>(
-        key: const ValueKey('pinned-media-menu'),
-        tooltip: context.l10n.more,
-        icon: const Icon(Icons.more_vert, size: 20),
-        onSelected: _run,
-        itemBuilder: (context) => attachmentPopupItems(
-          context,
-          _actions(AttachmentSurface.pinned, viewRow: viewRow),
+  /// **TEK ⋮ LEVHASI** (P49 (a), kullanıcı 2026-11-12: "⋮ ile sayfalara göz
+  /// at menüleri tek ⋮ menüde; kart düğmesi bizim stilde, yer açılır").
+  ///
+  /// Eskiden çubukta iki ayrı açılır menü vardı (belge menüsü + ek menüsü),
+  /// yanlarında görünüm anahtarı ve balon düğmesi: telefonda 10 denetim.
+  /// Şimdi hepsi tek levhada, uygulamanın karolarıyla (DENEYIM §2.3):
+  /// Görünüm anahtarı · Balonlar · PDF (sayfalara göz at, yer imi…) · ek
+  /// işleri (tek katalog, bkz. [attachmentActionsFor]) · Kaldır. Seçim
+  /// levhayı kapatır, iş kapandıktan SONRA koşar.
+  Future<void> _openSheet() async {
+    final run = await showAppSheet<VoidCallback>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: _sheet,
+    );
+    if (run != null && mounted) run();
+  }
+
+  Widget _sheet(BuildContext sheet) {
+    final l10n = sheet.l10n;
+    final media = widget.media;
+    final wide = _wideBar;
+    void pick(VoidCallback run) => Navigator.pop(sheet, run);
+    Widget tile(String key, IconData icon, String label, VoidCallback run) =>
+        SheetTile.tile(
+          key: ValueKey(key),
+          icon: icon,
+          label: label,
+          onTap: () => pick(run),
+        );
+    Widget section(String text) => Padding(
+      padding: const EdgeInsets.only(top: AppSpace.xl, bottom: AppSpace.s),
+      child: SectionLabel(text),
+    );
+
+    final viewSwitch = wide
+        ? null
+        : widget.sheetViewSwitch?.call(sheet) ?? widget.viewSwitch;
+    final bubbles = !wide && (_canEditBubbles || _canEditPdfBubbles);
+    final toggle = _bubbleToggle();
+    final document = media.kind == AttachmentKind.pdf
+        ? _pdfBar.menuActions(sheet)
+        : const <PdfMenuAction>[];
+    final actions = _actions(AttachmentSurface.pinned);
+    final others = [
+      // En dar bölmede çubuktan inenler.
+      if (_tinyBar && media.kind != AttachmentKind.audio)
+        tile(
+          'pinned-action-open',
+          Icons.fullscreen,
+          l10n.fullscreen,
+          widget.onOpen,
         ),
-      );
+      if (_tinyBar && widget.onNoteAt != null)
+        tile(
+          'pinned-action-note-at',
+          media.kind == AttachmentKind.pdf ? Icons.edit_note : Icons.more_time,
+          media.kind == AttachmentKind.pdf
+              ? l10n.pdfNoteAtPage
+              : l10n.videoNoteAtTime,
+          widget.onNoteAt!,
+        ),
+      for (final action in actions)
+        if (action != AttachmentAction.remove)
+          Builder(
+            key: ValueKey('pinned-action-${action.name}'),
+            builder: (context) {
+              final look = attachmentActionLook(context, action);
+              return SheetTile.tile(
+                icon: look.icon,
+                label: look.label,
+                onTap: () => pick(() => _run(action)),
+              );
+            },
+          ),
+    ];
+    final grouped = viewSwitch != null || bubbles || document.isNotEmpty;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        0,
+        AppSpace.l,
+        AppSpace.l,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SheetHeader(
+            title: media.fileName.isEmpty ? l10n.more : media.fileName,
+            padding: EdgeInsets.zero,
+          ),
+          if (viewSwitch != null) ...[
+            section(l10n.viewModeTitle),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: viewSwitch,
+              ),
+            ),
+          ],
+          if (bubbles) ...[
+            section(l10n.bubblesOverviewTitle),
+            SheetTileGrid(
+              children: [
+                tile(
+                  'pinned-add-bubble-note',
+                  Icons.chat_bubble_outline,
+                  l10n.bubbleModeBubble,
+                  () => _startAdding(plain: false),
+                ),
+                tile(
+                  'pinned-add-bubble-plain',
+                  Icons.text_fields,
+                  l10n.bubbleAddPlainTitle,
+                  () => _startAdding(plain: true),
+                ),
+                if (toggle != null)
+                  tile(
+                    'pinned-bubbles-toggle',
+                    toggle.hidden
+                        ? Icons.speaker_notes_off_outlined
+                        : Icons.chat_bubble_outline,
+                    toggle.hidden ? l10n.bubblesShow : l10n.bubblesHide,
+                    toggle.flip,
+                  ),
+              ],
+            ),
+          ],
+          if (document.isNotEmpty) ...[
+            section(l10n.cardKindPdf),
+            SheetTileGrid(
+              children: [
+                for (final a in document)
+                  tile('pinned-pdf-${a.id}', a.icon, a.label, a.run),
+              ],
+            ),
+          ],
+          if (others.isNotEmpty) ...[
+            if (grouped)
+              section(l10n.more)
+            else
+              const SizedBox(height: AppSpace.s),
+            SheetTileGrid(children: others),
+          ],
+          if (actions.contains(AttachmentAction.remove)) ...[
+            const SizedBox(height: AppSpace.l),
+            Builder(
+              builder: (context) {
+                final look = attachmentActionLook(
+                  context,
+                  AttachmentAction.remove,
+                );
+                return DestructiveRow(
+                  key: const ValueKey('pinned-action-remove'),
+                  icon: look.icon,
+                  label: look.label,
+                  onTap: () => pick(() => _run(AttachmentAction.remove)),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _BarButton extends StatelessWidget {
@@ -1680,17 +1938,24 @@ class _BarButton extends StatelessWidget {
     required this.tooltip,
     required this.icon,
     required this.onPressed,
+    this.selected = false,
   });
 
   final String tooltip;
   final IconData icon;
-  final VoidCallback onPressed;
+
+  /// null = kapalı (ör. geri alınacak çizgi yok).
+  final VoidCallback? onPressed;
+
+  /// Açık kip (kalem, silgi, balon bırakma): simge `primary`.
+  final bool selected;
 
   @override
   Widget build(BuildContext context) => IconButton(
     tooltip: tooltip,
     visualDensity: VisualDensity.compact,
-    iconSize: 20,
+    iconSize: AppIconSize.m,
+    color: selected ? Theme.of(context).colorScheme.primary : null,
     icon: Icon(icon),
     onPressed: onPressed,
   );

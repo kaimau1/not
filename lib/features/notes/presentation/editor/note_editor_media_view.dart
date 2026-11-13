@@ -433,47 +433,24 @@ extension _EditorMediaView on _NoteEditorScreenState {
     if (latest.caption != text) _updateAttachment(latest.copyWith(caption: text));
   }
 
-  /// Çubukta anahtarın sığmadığı yerde (⋮ → Görünüm) aynı anahtar levhada.
-  void _showViewSheet(Attachment a) {
+  /// Sabit bölmenin ⋮ levhasının başındaki anahtar (dar çubuk, K-O6): aynı
+  /// anahtar, seçim levhayı da kapatır.
+  Widget? _sheetViewSwitch(Attachment a, BuildContext sheet) {
     final note = _note;
-    if (note == null) return;
-    unawaited(
-      showAppSheet<void>(
-        context: context,
-        showDragHandle: true,
-        useSafeArea: true,
-        builder: (sheet) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                sheet.l10n.viewModeTitle,
-                style: Theme.of(sheet).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 12),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: AttachmentViewSwitch(
-                  current: _viewOf(note, a),
-                  available: availableViews(a),
-                  onChanged: (view) {
-                    Navigator.pop(sheet);
-                    unawaited(_setAttachmentView(a, view));
-                  },
-                  onEmbed: note.type.isPageNoteType
-                      ? null
-                      : () {
-                          Navigator.pop(sheet);
-                          _startPendingEmbed(a);
-                        },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    if (note == null || _readOnly || availableViews(a).length < 2) return null;
+    return AttachmentViewSwitch(
+      current: _viewOf(note, a),
+      available: availableViews(a),
+      onChanged: (view) {
+        Navigator.pop(sheet);
+        unawaited(_setAttachmentView(a, view));
+      },
+      onEmbed: note.type.isPageNoteType
+          ? null
+          : () {
+              Navigator.pop(sheet);
+              _startPendingEmbed(a);
+            },
     );
   }
 
@@ -1069,7 +1046,9 @@ extension _EditorMediaView on _NoteEditorScreenState {
             // klavyenin hemen üstünde, belge ekranın geri kalanında.
             onImmersiveChanged: _setImmersiveBubble,
             viewSwitch: _viewSwitchFor(note, pinned, dense: true),
-            onShowViews: () => _showViewSheet(pinned),
+            sheetViewSwitch: (sheet) => _sheetViewSwitch(pinned, sheet),
+            // Paneldeki kalem kapatıldı: editörün kalem kipi de kapanır.
+            onPenOff: () => _update(() => _penMode = false),
             onCaption: _readOnly || pinned.kind != AttachmentKind.image
                 ? null
                 : () => unawaited(_editCaption(pinned)),
