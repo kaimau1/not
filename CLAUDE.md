@@ -26,27 +26,16 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 ## Sürüm notları (kullanıcı isteği 2026-11-10)
 Her `[apk]` birleştirmesinde `assets/guide/release_notes_tr.md` ve `_en.md`'ye günün bölümü (`## 10 Kasım 2026 {#2026-11-10}`, en yenisi üstte) kullanıcı diliyle "ne değişti" maddesi eklenir (commit başlığı değil). İki dosyada tarih kimlikleri aynı (`test/guide_screen_test.dart` bekçisi).
 
-## Gece / zamanlanmış görev kuralı (kullanıcı kararı 2026-11-03)
-- **Gözetimsiz zincir (2026-11-09 izni):** yürütme düzeni, işçi/telefon kuralları ve iş kuyruğu `OTOMASYON.md`'de (paket ayrıntıları `KUYRUK_AYRINTI.md`); zamanlanmış oturum önce onu okur, "Bir turun adımları"nı uygular.
-- Plan dosyalarındaki KARAR maddeleri verilmiştir (**KARAR (kullanıcı, 2026-11-03)**): SORMADAN uygula; yeni karar çıkarsa en güvenli seçeneği uygula, maddeye "sabah bakılacak" yaz.
-- Akış: kendi dalında çalış → değişenin testi → push → **CI yeşilse main'e birleştir, başlıkta `[apk]`** (kişisel APK; CI'da `NOTLAR_KISISEL=1`) → main CI'ını izle; kırmızıysa düzelt ya da birleştirmeyi geri al (`git revert -m 1`). CI kırmızıyken main'e ASLA birleştirme.
-- Telefon gerektiren ölçüm yapılamaz: "yazıldı, cihazda doğrulanmadı" işaretle, `KALANLAR.md` §2'ye adım ekle.
-- Veri göçü / kayıt sıfırlama (F22.4, F28.2): önce yerel tam yedek, göç geri alınabilir, kural testleri (`rules-test`) yeşil.
+## Gece / zamanlanmış görev kuralı (kullanıcı kararı 2026-11-03; zincir izni 2026-11-09)
+- Gözetimsiz zincir: yürütücü **`oto-tur` skill'ini**, alt ajan **`isci` skill'ini** uygular; Kuyruk ve SIRA `OTOMASYON.md`'de (ayrıntı `KUYRUK_AYRINTI.md`).
+- Plan KARAR maddeleri verilmiştir (**KARAR (kullanıcı, 2026-11-03)**): SORMADAN uygula; yeni karar → en güvenli seçenek + "sabah bakılacak".
+- Dalda çalış → CI yeşilse main'e birleştir (`[apk]`, kişisel APK, `NOTLAR_KISISEL=1`); **CI kırmızıyken main'e ASLA birleştirme**, main kırmızıysa düzelt ya da `git revert -m 1`.
+- Telefon gerektiren ölçüm yapılamazsa "yazıldı, cihazda doğrulanmadı" + `KALANLAR.md` §2. Veri göçü / kayıt sıfırlama (F22.4, F28.2): önce yerel tam yedek, geri alınabilir göç, `rules-test` yeşil.
 
-## Kasma kontrol listesi — "editör baştan kuruluyor" (kullanıcı isteği 2026-11-09)
-Editöre/kart ızgarasına GÖRÜNÜR yeni alan, kip ya da sarmalayıcı eklerken, push'tan ÖNCE:
-1. Yeni madde/not alanı → üç karşılaştırmaya da ekle: `sameItemsVisually` (note_editor_screen), `ItemsEditor._sameItems`, `text_merge._sameItem`. Eksikse Firestore yankısı her kayıtta "değişti" sayılır → editör baştan kurulur.
-2. Satır önbelleği (`ItemsEditor._cachedItemRow`): satırı değiştiren alan anahtara girsin; liste düzeyi girdi `_syncRowCache` env'ine. Env'e HER BUILD'DE YENİ nesne (map, liste, kapanış) koyma — önbellek her karede boşalır.
-3. Yerel UI durumu (aç/kapa, seçim, hover) için editörün KÖK `setState`'i değil, alt widget'ın kendi durumu ya da `ValueNotifier` + dar `ListenableBuilder`.
-4. Sarmalayıcı (Stack, KeyedSubtree, TapRegion) eklediysen ağaç ŞEKLİ koşula göre değişmesin (koşulda `SizedBox.shrink` tut) — şekil değişince alt ağaç ve metin alanları sıfırdan kurulur.
-5. Doğrula: `test/items_editor_row_cache_test.dart` kalıbıyla "girdisi değişmeyen satır `identical`" testi yaz; şüphede `tool/perf/` ile cihazda ölç. Ölçmeden "düzeldi" deme.
-6. **Editör gövdesiyle aynı Column/Row'daki bir şeyin BOYUNU animasyonla değiştirme** (yükseklik, `heightFactor`, `AnimatedSize`, `AnimatedContainer` boyu): gövde her karede yeniden dizilir. Boy TEK ADIMDA değişsin, hareket yalnız boyamada (`Transform`/`FractionalTranslation`/`Opacity`). Bekçi: `keyboard_jank_guard_test.dart`.
-7. Klavyeye bağlı gösterme/gizleme (`KeyboardSwitch`) alt ağacı SÖKMEZ: iki taraf da kurulu, `Offstage` ile değişir. `MediaQuery.of(context)` kök/kabuk bağlamında okunmaz — `viewInsetsOf`/`sizeOf` ya da ayrı küçük öğe.
-8. `test/perf_budget_test.dart` kırmızıysa birleştirme yok (bütçeler `test/perf_budget/budgets.json`, mandal: yalnız DÜŞER; senaryolar OTURTMA Ek A).
-
-**ÖLÇÜM KAPISI (2026-11-10):** editör, klavye, alt/üst çubuk, ana ekran listesi ya da geçişe dokunan iş `[apk]`'ya girmeden önce cihazda A/B ölçülür: `python -u tool/perf/ab_hepsi.py <A.apk> <B.apk> --altin` (13 evre: açılış, liste, ⋮, arama, klasör, yeni not, not aç, klavye, yazma, kapanış, sabit PDF aç/kaydır/klavye; A,B ×3, ortanca, son satır `KARAR: GEÇTİ|KALDI`, sonuç `docs/perf/gecmis.csv`'ye). Taban: önceki `[apk]` commit'inin profil derlemesi (`git worktree add ../not_ab <commit>` → `flutter build apk --profile`). Bir evrede UI ms ya da LAYOUT ms %20'den fazla artarsa birleştirme yok — önce kök neden. Telefon yoksa tablette telefon düzeni: `adb shell wm size 1080x2400; adb shell wm density 420` (sonra `wm size reset; wm density reset`); fiziksel klavye takılıysa ⌨ ile sanal klavye.
-
-**HIZ SÖZLEŞMESİ (2026-11-12):** plan `HIZ_PLANI.md` (Faz 81–84). (1) Yeni özellik/güncelleme hangi yüzeye dokunursa (editör, liste, geçiş, levha, arama, açılış, ekler) o yüzeyin cihazsız bütçe senaryosu `test/perf_budget_test.dart`'ta olmalı — yoksa işin parçası olarak YAZILIR (OTURTMA Ek A'ya S satırı). (2) Her `[apk]` öncesi cihazda tam ölçüm (`tool/perf/ab_hepsi.py --altin`) — önceki `[apk]`'ya karşı %20, altın tabana karşı %15 kayma = birleştirme yok. (3) Hız/akıcılık işlerinde kötüleşme SIFIR; madde başı ayrı commit, kötüleştiren tek commit geri alınır, iyiler birleşir. (4) Mandallar (`budgets.json`, tasarım bütçesi, altın taban) yalnız düşer. Ölçmeden "akıcı/hızlı" denmez.
+## Kasma ve hız kapıları (bağlayıcı)
+- **Kasma kontrol listesi (2026-11-09):** editöre/kart ızgarasına GÖRÜNÜR yeni alan, kip ya da sarmalayıcı eklerken push'tan önce **`kasma-kontrol` skill'ini** uygula (8 madde; `test/perf_budget_test.dart` kırmızıysa birleştirme yok).
+- **ÖLÇÜM KAPISI (2026-11-10):** editör, klavye, alt/üst çubuk, ana ekran listesi ya da geçişe dokunan iş `[apk]`'dan önce cihazda A/B ölçülür (`tool/perf/ab_hepsi.py <A> <B> --altin`, taban = önceki `[apk]` profil derlemesi; evrede UI/LAYOUT ms > %20 = birleştirme yok). Ayrıntı: **`ab-olcum` skill'i**.
+- **HIZ SÖZLEŞMESİ (2026-11-12, `HIZ_PLANI.md` Faz 81–84):** dokunulan yüzeyin bütçe senaryosu `test/perf_budget_test.dart`'ta olmalı; her `[apk]` öncesi tam ölçüm (önceki `[apk]` %20, altın taban %15); hız işlerinde kötüleşme SIFIR; mandallar yalnız düşer. Ölçmeden "akıcı/hızlı" denmez. Ayrıntı: **`ab-olcum` skill'i**.
 
 ## Hafıza (3 katman)
 - Kod yapısı → `graphify-out/` (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .`, otomatik kanca yok; son 2026-11-12 — kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)
