@@ -1123,6 +1123,7 @@ tur `telefon-*.png`.
   takılma oranı; hedef < %2 (eski hedef < %1 Adreno ≤ 650 + GLES'te gerçekçi değil —
   K7). Kalan engel kart raster'ıysa: kart içi `ClipRRect`/gölge/gradyan sayımı
   (`debugDumpLayerTree` ile kart başına katman), fazlasını `DecoratedBox`'a indir.
+  **Ölçüm (2026-11-13, P43, `ab_hepsi.py` `liste` evresi = `ab_liste.py`'nin aynı 8 fırlatması, 9 geçerli koşu):** > 16 ms UI karesi 9c837495'te 5–12 / 305 (%1,6–3,9, ortanca %2,6–3,0), P39 (02ebd989) 10/305 (%3,3), en uzun 22–37 ms → **hedef < %2 TUTMADI.** Kart raster/katman düzeltmesi P46'da (F84 "ölçümün bulduğu yavaşlıklar").
 - [ ] **F68.5 Açılış (park).** 780 ms'nin kalanı motor + Activity; kod işi yok.
 - Kabul: tablette yazarken kayıt anında > 33 ms kare yok (`ab_klavye.py` tablet evresi).
 

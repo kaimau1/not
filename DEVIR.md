@@ -8,8 +8,12 @@
 - Düzeltme: `acilis` evresinde UI ms anlamsız (duraklatılmış başlangıç çoğu koşuda 2 kare yakalıyor:
   ab_hepsi.py cold_start) → karar/altın açılışta `ilk_kare_ms`'ye bakar (decide()).
 
-## Nerede kaldım
-- Kabul testi (aynı APK A=A → GEÇTİ beklenir) sırada; sonra F68.4 `ab_liste.py`.
+## Nerede kaldım (P43 iş olarak bitti; F81 kabulü KALDI — sabah bakılacak)
+- Kabul A=A (aynı 9c837495 APK, 36,6–36,9 °C): KARAR KALDI — `yaz` LAYOUT 269→300 yanlış alarm;
+  altına karşı `yaz` +%40, `menu` +%28, `not_ac` +%22. Kök: gürültü ±%15 + sıcaklık (HIZ_PLANI F81 Durum).
+  Kural gevşetilmedi (en güvenli). Öneri: A/B eşiği %20, altın 5+ koşu ortancası, başlangıç < 34 °C şarjsız.
+- F68.4 ölçüldü (liste evresi = ab_liste): > 16 ms %2,3–3,3, hedef %2 tutmadı → P46.
+- Belgeler güncel: HIZ_PLANI, OTURTMA F68.4, KUYRUK_AYRINTI §P43, OTOMASYON satırı, regresyon listesi, hafiza/akicilik.
 
 ## Tuzaklar
 - 2. koşuda (A ve B) `liste` evresi 1 kare yakaladı (kök neden bulunamadı; ortanca etkilenmedi).

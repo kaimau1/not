@@ -9,7 +9,7 @@ Model: opus · Cihaz: cihaz · APK: -
 
 **Plan maddeleri:** HIZ_PLANI F81.1–F81.5 + F82.1–F82.3
 
-**Durum:** bekliyor — önce F82 (cihazsız bekçiler S18–S25, kasma kalıpları, uzun oturum), sonra F81 (cihazda ölçüm + altın taban); senaryolara "sabit görsel/PDF + klavye aç/kapa" evresi de girer (kullanıcı 2026-11-12; düzeltmesi P49'da — sabit ek dosyasına tek paket dokunsun); OTURTMA F68.4 kaydırma kabulü ölçümü (`ab_liste.py`) de burada (P22'den alındı)
+**Durum (2026-11-13):** F82 main'de; F81 aracı + ilk tam A/B + altın taban dalda (`oto/P43-hiz-olcum`); **F81 kabulü KALDI** (aynı APK A=A'da `yaz` LAYOUT yanlış alarm, altına karşı +%22–40 sıcaklık kayması — HIZ_PLANI F81 Durum, sabah bakılacak); F68.4 ölçüldü: liste > 16 ms %2,3–3,3, hedef %2 tutmadı → P46. Eski durum: önce F82 (cihazsız bekçiler S18–S25, kasma kalıpları, uzun oturum), sonra F81 (cihazda ölçüm + altın taban); senaryolara "sabit görsel/PDF + klavye aç/kapa" evresi de girer (kullanıcı 2026-11-12; düzeltmesi P49'da — sabit ek dosyasına tek paket dokunsun); OTURTMA F68.4 kaydırma kabulü ölçümü (`ab_liste.py`) de burada (P22'den alındı)
 
 ## P45 — Hız: her [apk]'da ölçüm + geçmiş + CI kare ölçümü kararı
 
@@ -26,6 +26,8 @@ Model: fable (limit %55 üstü → opus) · Cihaz: A/B · APK: evet
 **Plan maddeleri:** HIZ_PLANI F84.1–F84.3 + OTURTMA F60.S2, F60.5, F68.3 (P22'den alındı: klavye birikim kasması, yazma ana bloğu, liste akışı K-O13)
 
 **Durum:** bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ: sabit ek + klavye kasması P49'da (aynı dosya iki kez değişmesin); ölçüm sabit ekte yavaşlık bulursa bulguyu P49 satırına yaz
+
+**P43 cihaz ölçüm bulguları (2026-11-13, `ab_hepsi.py`, A=9c837495 B=P39 02ebd989, 3'er koşu, ortanca; gürültü ±%15):** P39'da `klasor` LAYOUT 82→108 ms (+%33, aynı APK tekrarında 87 — gerçek olabilir), `menu` LAYOUT 44→50, `sabit_kay` UI 877→967 ms (sabit ek → P49). En ağırlar: `sabit_kb` 2,3–2,5 sn UI/4 klavye geçişi (373 kare; sabit ek → P49), `liste` 1,24–1,37 sn/8 fırlatma, > 16 ms %2,3–3,3 (F68.4), `arama` en uzun kare 62–82 ms, `not_ac` en uzun 61–89 ms, ilk kare 378–413 ms.
 
 **P43 cihazsız bekçi bulguları (2026-11-12, mandallı, düzeltilmedi — düzeltince ilgili mandalı düşür):**
 1. S21 arama: harf başına 114 `NoteCard` kuruluyor (görünür 18 — 6 katı).
