@@ -142,6 +142,34 @@ class InkController extends ChangeNotifier {
     setEraser(true);
   }
 
+  /// **SİLGİDE BASILI TUT = KALEM** (P59, kullanıcı 2026-11-14: "silgiden
+  /// tekrar kaleme geçmek zor"): silgi seçiliyken kıpırdamadan 550 ms
+  /// basılı tutunca o noktada kalem düğmesi belirir; dokununca son kalem
+  /// geri gelir. Basılı tutuşun sildiği çizgiler geri konur.
+  final penOffer = ValueNotifier<({int page, Offset at})?>(null);
+
+  void acceptPenOffer() {
+    penOffer.value = null;
+    setPen(pen);
+  }
+
+  void _offerPen(int page) {
+    _clearHold();
+    final at = _eraserHoldAt;
+    _eraserHold = null;
+    if (at == null || _pointers != 1 || !eraser || _tempEraser) return;
+    final base = _gestureBase;
+    if (base != null && !identical(base, _ink)) {
+      _ink = base;
+      _dirty = true;
+    }
+    // Parmak kalkana dek silme sürmez (bkz. pointerMove: _snapped).
+    _snapped = true;
+    penOffer.value = (page: page, at: at);
+    HapticFeedback.selectionClick();
+    notifyListeners();
+  }
+
   bool _inkNear(int page, double x, double y) {
     const r = _eraseRadius * 1.5;
     for (final s in _ink) {
@@ -1084,6 +1112,7 @@ class InkController extends ChangeNotifier {
     hover.value = null;
     if (suggestion.value != null) dismissSuggestion();
     if (eraserOffer.value != null) eraserOffer.value = null;
+    if (penOffer.value != null) penOffer.value = null;
     _gestureBase = _ink;
     _tempEraser = stylusEraser;
     // Seçim tutamağı / düzeltilmiş şeklin kutusu: taşı ya da boyutlandır.
@@ -1143,6 +1172,16 @@ class InkController extends ChangeNotifier {
     }
     if (_erasing) {
       _eraseAt(page, local, size);
+      _eraserHold?.cancel();
+      _eraserHold = null;
+      _snapped = false;
+      if (eraser && !_tempEraser) {
+        final x = local.dx / size.width;
+        final y = local.dy / size.height;
+        _eraserHoldAt = Offset(x, y);
+        _eraserHold = Timer(kInkHoldDuration, () => _offerPen(page));
+        _showHold(page, x, y, eraser: false);
+      }
       notifyListeners();
       return;
     }
@@ -1261,6 +1300,7 @@ class InkController extends ChangeNotifier {
     hover.dispose();
     suggestion.dispose();
     eraserOffer.dispose();
+    penOffer.dispose();
     committedRev.dispose();
     super.dispose();
   }
@@ -1315,6 +1355,19 @@ class InkController extends ChangeNotifier {
       return;
     }
     if (_erasing) {
+      if (_snapped) return; // kalem önerisi çıktı: parmak kalkana dek silme yok
+      final holdAt = _eraserHoldAt;
+      if (_eraserHold != null &&
+          holdAt != null &&
+          math.max(
+                (local.dx / size.width - holdAt.dx).abs(),
+                (local.dy / size.height - holdAt.dy).abs(),
+              ) >
+              0.01) {
+        _eraserHold?.cancel();
+        _eraserHold = null;
+        _clearHold();
+      }
       _eraseAt(page, local, size);
       notifyListeners();
       return;
@@ -1949,6 +2002,8 @@ class InkPageLayer extends StatelessWidget {
                       size: ring,
                       icon: h.eraser
                           ? Icons.auto_fix_normal_outlined
+                          : controller.eraser
+                          ? Icons.edit_outlined
                           : Icons.category_outlined,
                     ),
                   );
@@ -1973,6 +2028,30 @@ class InkPageLayer extends StatelessWidget {
                     child: _EraserOfferButton(
                       onClaim: controller.claimPointer,
                       onAccept: controller.acceptEraserOffer,
+                    ),
+                  );
+                },
+              ),
+              ValueListenableBuilder<({int page, Offset at})?>(
+                valueListenable: controller.penOffer,
+                builder: (context, o, _) {
+                  if (o == null || o.page != page) {
+                    return const SizedBox.shrink();
+                  }
+                  const box = 44.0;
+                  var left = o.at.dx * size.width - box / 2;
+                  var top = o.at.dy * size.height - box - 16;
+                  if (constraints.maxWidth.isFinite) {
+                    left = left.clamp(0.0, constraints.maxWidth - box);
+                  }
+                  if (top < 0) top = o.at.dy * size.height + 16;
+                  return Positioned(
+                    left: left,
+                    top: top,
+                    child: _EraserOfferButton(
+                      toPen: true,
+                      onClaim: controller.claimPointer,
+                      onAccept: controller.acceptPenOffer,
                     ),
                   );
                 },
@@ -2085,15 +2164,22 @@ class InkPageLayer extends StatelessWidget {
 /// [InkController.eraserOffer]). İnişte kabul eder — düzeltme işaretçisiyle
 /// aynı neden (kalem/parmak inişi çizim katmanına kaçmasın).
 class _EraserOfferButton extends StatelessWidget {
-  const _EraserOfferButton({required this.onClaim, required this.onAccept});
+  const _EraserOfferButton({
+    required this.onClaim,
+    required this.onAccept,
+    this.toPen = false,
+  });
 
   final ValueChanged<int> onClaim;
   final VoidCallback onAccept;
 
+  /// true = silgiden kaleme dönüş düğmesi (P59).
+  final bool toPen;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final label = context.l10n.inkEraserOffer;
+    final label = toPen ? context.l10n.inkPenOffer : context.l10n.inkEraserOffer;
     return Semantics(
       button: true,
       label: label,
@@ -2101,7 +2187,7 @@ class _EraserOfferButton extends StatelessWidget {
       child: Tooltip(
         message: label,
         child: Material(
-          key: const ValueKey('ink-eraser-offer'),
+          key: ValueKey(toPen ? 'ink-pen-offer' : 'ink-eraser-offer'),
           color: scheme.tertiaryContainer,
           shape: const CircleBorder(),
           elevation: 4,
@@ -2114,7 +2200,7 @@ class _EraserOfferButton extends StatelessWidget {
             child: SizedBox.square(
               dimension: 44,
               child: Icon(
-                Icons.auto_fix_normal_outlined,
+                toPen ? Icons.edit_outlined : Icons.auto_fix_normal_outlined,
                 size: 22,
                 color: scheme.onTertiaryContainer,
               ),

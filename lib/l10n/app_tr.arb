@@ -3788,6 +3788,7 @@
   "spellRulesOnlySubtitle": "Yalnız bilinen yazım hataları (herşey → her şey) ve senin öğrettiklerin düzeltilir; tahmin yok.",
   "spellRejectedTitle": "Bir daha yapılmayacak düzeltmeler (geri aldıkların ya da değiştirdiklerin)",
   "inkEraserOffer": "Silgiyi seç",
+  "inkPenOffer": "Kaleme dön",
   "tipPenToggle": "Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.",
   "tipPenShapeHold": "Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.",
   "tipPenEraserHold": "Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.",

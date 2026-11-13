@@ -8195,6 +8195,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inkEraserOffer => 'Silgiyi seç';
 
   @override
+  String get inkPenOffer => 'Kaleme dön';
+
+  @override
   String get tipPenToggle =>
       'Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.';
 

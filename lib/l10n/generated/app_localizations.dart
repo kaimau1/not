@@ -14630,6 +14630,12 @@ abstract class AppLocalizations {
   /// **'Silgiyi seç'**
   String get inkEraserOffer;
 
+  /// No description provided for @inkPenOffer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaleme dön'**
+  String get inkPenOffer;
+
   /// No description provided for @tipPenToggle.
   ///
   /// In tr, this message translates to:
