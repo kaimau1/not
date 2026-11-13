@@ -159,9 +159,9 @@
     "senaryo": "Telefon 412×915, 30 not: karttan not aç (gerçek NoteOpenPage geçişi), 40 kare — ana ekran kurulumu, kart kurulumu, ilk kare ve sonraki en ağır kare",
     "note_card": 2,
     "dashboard_kurulum": 0,
-    "ilk_kare_kurulum": 877,
-    "gecis_karesi_kurulum": 788,
-    "bugun": "NoteCard 2 / DashboardScreen 0 / ilk kare 877 / geçiş karesi en çok 788 (2026-11-12)",
+    "ilk_kare_kurulum": 876,
+    "gecis_karesi_kurulum": 285,
+    "bugun": "NoteCard 2 / DashboardScreen 0 / ilk kare 876 / geçiş karesi en çok 285 (2026-11-13, P46: başlık ölçümü kök setState yerine ValueNotifier — ikinci karede yalnız tuval kurulur); önce 877 / 788",
     "hedef": "NoteCard ≤ 1 (yalnız açılan kartın halesi); geçiş kareleri editörü ikinci kez kurmasın",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl) — mandal"
   },
