@@ -35,4 +35,5 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 
 ## 2026-11-12 — P48 web yazı seçimi
+- `trackSelectionPointerKind()` uygulama ömürlü TEK `pointerRouter.addGlobalRoute` kurar (tekrar çağrı eklemez); `editor_leak_test` tabanı bundan sonra alınır — yoksa globalRoutes 1→2 kırmızı (P48 ilk CI).
 - KÖK NEDEN ("webte yazı seçerken sorun, yazı tipi olabilir" — yazı tipi DEĞİL): `sentence_select.dart` cümle genişletici seçimin kaynağına bakmıyordu; fareyle çift tıklama bütün cümleyi, shift+ok ya da kelime içi fare sürüklemesi bütün kelimeyi seçiyordu. Genişletme artık yalnız dokunmatik (son `PointerDownEvent` türü fare/izleme dörtgeni değilse ve shift basılı değilse). Webde üretme: `build web --release --wasm` + `python -m http.server` + misafir kip; karşılaştırma için arama alanı (genişleticisiz) doğru seçer.
