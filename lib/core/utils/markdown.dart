@@ -44,3 +44,26 @@ String markdownReadable(String md) => stripMarkdown(
       )
       .replaceAllMapped(RegExp(r'__(.+?)__'), (m) => m[1]!),
 );
+
+/// `.md`'den doğan notun başlığı (P54b): ilk dolu satır `# başlık`sa o,
+/// değilse uzantısız dosya adı — `parseMarkdownNote` ile aynı kural.
+String markdownTitle(String fileName, String md) {
+  final first = md
+      .split('\n')
+      .firstWhere((l) => l.trim().isNotEmpty, orElse: () => '');
+  final heading = RegExp(r'^\s{0,3}#{1,6}\s+(.*)$').firstMatch(first);
+  if (heading != null) return heading.group(1)!.trim();
+  final base = fileName.split(RegExp(r'[\/]')).last;
+  final dot = base.lastIndexOf('.');
+  return (dot > 0 ? base.substring(0, dot) : base).trim();
+}
+
+/// Okunur metnin başı başlığın kendisiyse (okuma ekranı `# başlık`ı düz
+/// satır gösterir) yeni notta tekrar etmesin diye o satır düşer.
+String markdownBodyWithoutTitle(String text, String title) {
+  final t = text.trimLeft();
+  final nl = t.indexOf('\n');
+  final first = nl < 0 ? t : t.substring(0, nl);
+  if (title.isEmpty || first.trim() != title) return text;
+  return nl < 0 ? '' : t.substring(nl + 1).trimLeft();
+}

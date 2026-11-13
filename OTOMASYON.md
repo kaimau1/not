@@ -140,7 +140,7 @@ Biten paketler: P01–P19, P23–P37, P39, P40, P42, P47 (39; P39 cihaz A/B 2026
 
 | No | Paket | Model | Plan maddeleri | Cihaz | APK | Durum / sonuç |
 |---|---|---|---|---|---|---|
-| P54b | .md başlık düzeltmesi | opus | P54 devamı | | evet | bekliyor — dal `oto/P54b-md-baslik` (119d96f6) CI YEŞİL, yalnız main'e birleştir (sürüm notu P54 maddesinde) |
+| P54b | .md başlık düzeltmesi | opus | P54 devamı | | evet | bitti — main'e birleştirildi 2026-11-13 |
 | P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | sürüyor — dal `oto/P43-hiz-olcum` (663891d1): F82 main'de; F81 aracı `ab_hepsi.py` yazıldı, kalan TAM A/B koşusu + altın taban (telefon < 37 °C) — dalın DEVIR.md'sinden sür; ayrıntı: KUYRUK_AYRINTI.md §P43 |
 | P45 | Hız: her [apk]'da ölçüm + geçmiş | sonnet | HIZ_PLANI F83.1–F83.3 | cihaz |  | bekliyor — HIZ_PLANI F83; ayrıntı: KUYRUK_AYRINTI.md §P45 |
 | P46 | Hız: ölçümün bulduğu yavaşlıkları düzelt | fable (limit %55 üstü → opus) | HIZ_PLANI F84 + F60.S2/F60.5/F68.3 | A/B | evet | bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ (P49'un); sabit ekte bulgu P49 satırına yazılır; ayrıntı: KUYRUK_AYRINTI.md §P46 |
