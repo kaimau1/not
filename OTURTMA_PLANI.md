@@ -223,7 +223,8 @@ Hepsi koddan doğrulandı; "hesap" yazanlar ölçülmedi, ilgili fazın 0. madde
 - **K-O6 — Ek çubuğu sadeleşmesi (F65.1):** **telefonda bölme çubuğu en çok 5 düğme:
   ⛶ · tutamak · birincil iş (Not al / T) · ✏ · ⋮; görünüm anahtarı (Sabit · Yüzen · Ek),
   balon, bağlantı ⋮ levhasının başında** / bugünkü. En güvenli: dokunma.
-- **K-O7 — Yatay geniş ekranda sabit ek:** **≥ 840 dp ve yatayken yeni sabit ek
+- **K-O7 — KARAR (kullanıcı, 2026-11-13): tablette ve webde sabit ek YANDA olabilir** (geniş ekranda yan yerleşim seçilebilir/varsayılan yan; telefonda üstte). Eski metin:
+  **Yatay geniş ekranda sabit ek:** **≥ 840 dp ve yatayken yeni sabit ek
   kendiliğinden YANDA açılır (kullanıcı değiştirirse hatırlanır)** / hep üstte. En güvenli:
   dokunma.
 - **K-O8 — Birden çok sabit ek:** **bölme çubuğunda sekme** / yan yana / tek sabit ek.
