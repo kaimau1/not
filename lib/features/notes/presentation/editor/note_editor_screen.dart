@@ -2491,6 +2491,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       groupId: kNotePackageTapGroup,
       child: EditorQuickRow(
           fit: wide,
+          target: _formatTargetN,
           onBold: () => _applyFormat(RichFormat.bold),
           onBullet: () => _runOnTarget(applyLineBullet),
           onCheckbox: note.type == NoteType.text ? _toggleChecklistLine : null,

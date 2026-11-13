@@ -14,6 +14,7 @@ import '../settings_providers.dart';
 import 'personalize_bar_list.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../notes/presentation/editor/quick_row_editor.dart';
 
 /// **KİŞİSELLEŞTİR** ekranı — bütün kişisel düzen TEK menüde.
 ///
@@ -456,6 +457,14 @@ class _EditorSection extends StatelessWidget {
           icon: Icons.space_bar_rounded,
           info: l10n.personalizeBarInfo,
           child: const PersonalizeBarList(),
+        ),
+        // HIZLI MENÜ (kullanıcı bulgusu 2026-11-13: "hızlı menü kaybolduysa
+        // düzen menüsünde de görülmüyor"): satır yalnız klavye açıkken
+        // çıktığı için gizlenen düğmeyi geri getirecek yer yoktu.
+        _Section(
+          title: l10n.quickRowEditTitle,
+          icon: Icons.keyboard_alt_outlined,
+          child: const QuickRowEditor(inline: true),
         ),
         _Section(
           title: l10n.personalizeEditorTop,

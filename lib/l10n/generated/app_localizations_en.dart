@@ -8482,4 +8482,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listPaneMoveLeft => 'Move list to the left';
+
+  @override
+  String get quickRowEditTitle => 'Quick menu (top, while typing)';
+
+  @override
+  String get quickRowEditInfo =>
+      'Tap to add to or remove from the menu. Changes apply right away, no need to save.';
+
+  @override
+  String get quickRowEditShown => 'In the menu';
+
+  @override
+  String get quickRowEditAvailable => 'Available';
+
+  @override
+  String get quickRowEditEmpty => 'The menu is empty — add buttons below';
+
+  @override
+  String get quickRowEditReset => 'Reset to default';
+
+  @override
+  String get quickRowShortPen => 'Pen';
+
+  @override
+  String get quickRowShortSpell => 'Spell check';
+
+  @override
+  String get quickRowShortColor => 'Text color';
+
+  @override
+  String get quickRowShortHeading => 'Heading';
 }

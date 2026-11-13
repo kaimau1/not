@@ -4,12 +4,17 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
+import '../../../../core/utils/rich_text.dart';
 import 'auto_spell.dart';
+import 'quick_row_editor.dart';
+import 'format_bar.dart' show FormatTarget;
+import 'format_menu.dart';
 
 /// **YAZARKEN ÜSTTE HIZLI İŞLEV SATIRI** (kullanıcı isteği 2026-11-08):
 /// klavye açıkken üst çubukta tarih/etiket satırının yerinde — biçim (kalın,
@@ -55,7 +60,13 @@ class EditorQuickRow extends StatefulWidget {
     this.onColorPick,
     this.favoriteColor,
     this.fit = false,
+    this.target,
   });
+
+  /// Biçimin yazılacağı alan (editörün `_formatTargetN`'i). Verilirse
+  /// imleçteki/seçimdeki ETKİN biçimlerin düğmeleri basılı görünür (kalın,
+  /// eğik, altı çizili, vurgu, renk, başlık).
+  final ValueListenable<FormatTarget?>? target;
 
   /// true = sığan düğmeler satırda, kalanı ⋮ menüsünde (geniş web);
   /// false = hepsi yatay kayar, ⋮ yalnız Düzenle (telefon/tablet).
@@ -121,6 +132,58 @@ class EditorQuickRow extends StatefulWidget {
 }
 
 class _EditorQuickRowState extends State<EditorQuickRow> {
+  // ETKİN BİÇİM BASILI (kullanıcı isteği 2026-11-13: "üst hızlı paneldeki
+  // butonlar aktifken — kırmızı yazma, bold — aktif görülmeli; kendi yeri
+  // de"): biçim şeridiyle aynı hesap ([activeRichFormats]); yalnız sonuç
+  // DEĞİŞİNCE bu satır yeniden çizilir, editör kurulmaz.
+  RichMark _mark = RichMark.none;
+  RichHeading _heading = RichHeading.normal;
+  FormatTarget? _watched;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.target?.addListener(_onTarget);
+    _onTarget();
+  }
+
+  @override
+  void didUpdateWidget(EditorQuickRow old) {
+    super.didUpdateWidget(old);
+    if (old.target != widget.target) {
+      old.target?.removeListener(_onTarget);
+      widget.target?.addListener(_onTarget);
+      _onTarget();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.target?.removeListener(_onTarget);
+    _watched?.controller.removeListener(_refresh);
+    super.dispose();
+  }
+
+  void _onTarget() {
+    final t = widget.target?.value;
+    if (!identical(t?.controller, _watched?.controller)) {
+      _watched?.controller.removeListener(_refresh);
+      t?.controller.addListener(_refresh);
+    }
+    _watched = t;
+    _refresh();
+  }
+
+  void _refresh() {
+    final c = _watched?.controller;
+    final mark = c == null ? RichMark.none : activeRichFormats(c);
+    final heading = c == null ? RichHeading.normal : activeRichHeading(c);
+    if (mark == _mark && heading == _heading) return;
+    _mark = mark;
+    _heading = heading;
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -188,8 +251,16 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
       String key,
       IconData icon,
       String tip,
-      VoidCallback? on,
-    ) => _QuickEntry(key, icon, tip, on, button(key, icon, tip, on));
+      VoidCallback? on, {
+      bool active = false,
+    }) => _QuickEntry(
+      key,
+      icon,
+      tip,
+      on,
+      button(key, icon, tip, on, on: active),
+    );
+    final m = _mark;
     final entries = <_QuickEntry?>[
       if (widget.onPen != null) ...[
         _QuickEntry(
@@ -226,6 +297,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         Icons.title_rounded,
         l10n.quickRowHeading,
         widget.onHeading,
+        active: _heading == RichHeading.h1,
       ),
       if (widget.onSubheading != null)
         plain(
@@ -233,6 +305,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           Icons.short_text_rounded,
           l10n.quickRowSubheading,
           widget.onSubheading,
+          active: _heading == RichHeading.h2,
         ),
       if (widget.onItalic != null)
         plain(
@@ -240,6 +313,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           Icons.format_italic_rounded,
           l10n.quickRowItalic,
           widget.onItalic,
+          active: m.italic,
         ),
       if (widget.onUnderline != null)
         plain(
@@ -247,6 +321,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           Icons.format_underlined_rounded,
           l10n.quickRowUnderline,
           widget.onUnderline,
+          active: m.underline,
         ),
       if (widget.onHighlight != null)
         plain(
@@ -254,6 +329,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           Icons.border_color_outlined,
           l10n.quickRowHighlight,
           widget.onHighlight,
+          active: m.highlight != null,
         ),
       if (widget.onSpell != null)
         _QuickEntry(
@@ -314,6 +390,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         Icons.format_bold_rounded,
         l10n.quickRowBold,
         widget.onBold,
+        active: m.bold,
       ),
       if (widget.onColor != null)
         _QuickEntry(
@@ -399,7 +476,9 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         // gizli/eklenebilir düğmeler çerçeveli görünür.
         PopupMenuItem<VoidCallback>(
           key: const ValueKey('quick-row-customize'),
-          value: Personalize.startEditing,
+          // Eski "aç-düzenle-kaydet" kipi yerine anında uygulanan levha
+          // (kullanıcı isteği 2026-11-13, bkz. [showQuickRowEditor]).
+          value: () => unawaited(showQuickRowEditor(context)),
           child: ListTile(
             dense: true,
             contentPadding: EdgeInsets.zero,
@@ -506,16 +585,24 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
             radius: 20,
             onTap: widget.onColor,
             onLongPress: widget.onColorPick,
-            child: SizedBox(
+            child: Container(
               height: 40,
               width: 40,
+              decoration: _mark.color != null
+                  ? BoxDecoration(
+                      color: scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    )
+                  : null,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.format_color_text_rounded,
                     size: 20,
-                    color: scheme.onSurfaceVariant,
+                    color: _mark.color != null
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurfaceVariant,
                   ),
                   Container(
                     width: 18,

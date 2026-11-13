@@ -3077,5 +3077,15 @@
   "listPaneRight": "Note list on the right",
   "listPaneRightInfo": "In split view (tablet, wide window) the list sits to the right of the note",
   "listPaneMoveRight": "Move list to the right",
-  "listPaneMoveLeft": "Move list to the left"
+  "listPaneMoveLeft": "Move list to the left",
+  "quickRowEditTitle": "Quick menu (top, while typing)",
+  "quickRowEditInfo": "Tap to add to or remove from the menu. Changes apply right away, no need to save.",
+  "quickRowEditShown": "In the menu",
+  "quickRowEditAvailable": "Available",
+  "quickRowEditEmpty": "The menu is empty — add buttons below",
+  "quickRowEditReset": "Reset to default",
+  "quickRowShortPen": "Pen",
+  "quickRowShortSpell": "Spell check",
+  "quickRowShortColor": "Text color",
+  "quickRowShortHeading": "Heading"
 }
