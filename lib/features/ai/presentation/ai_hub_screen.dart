@@ -387,7 +387,7 @@ class _Hero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -409,7 +409,7 @@ class _Hero extends StatelessWidget {
                 height: 52,
                 decoration: BoxDecoration(
                   color: scheme.surface.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.l),
                 ),
                 child: Icon(
                   Icons.auto_awesome,
@@ -479,9 +479,9 @@ class _PointsPill extends StatelessWidget {
       message: l10n.aiPointsToday,
       child: Material(
         color: scheme.surface.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         child: InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8, 8, 14, 8),
@@ -602,7 +602,7 @@ class _HistoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -721,7 +721,7 @@ class _ChatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -787,7 +787,7 @@ class _ChatCard extends StatelessWidget {
                                 color: turn.isUser
                                     ? scheme.primaryContainer
                                     : scheme.surface,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(AppRadius.m),
                               ),
                               child: Text(
                                 turn.text,
@@ -831,7 +831,7 @@ class _ChatCard extends StatelessWidget {
             height: 54,
             decoration: BoxDecoration(
               color: scheme.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.l),
               border: Border.all(
                 color: hasText ? scheme.primary : scheme.outlineVariant,
                 width: hasText ? 1.5 : 1,
@@ -905,7 +905,7 @@ class _ChatCard extends StatelessWidget {
                       foregroundColor: scheme.onSurface,
                       side: BorderSide(color: scheme.outlineVariant),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.m),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       textStyle: const TextStyle(
@@ -976,7 +976,7 @@ class _ToolCard extends StatelessWidget {
         color: scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

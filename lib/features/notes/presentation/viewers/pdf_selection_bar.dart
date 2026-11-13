@@ -1,3 +1,4 @@
+import '../../../../app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pdfrx/pdfrx.dart';
@@ -111,7 +112,7 @@ class PdfSelectionBar extends StatelessWidget {
       return Center(
         child: Material(
           color: Colors.black.withValues(alpha: 0.80),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             child: Row(

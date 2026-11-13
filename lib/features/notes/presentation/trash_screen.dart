@@ -601,8 +601,8 @@ class _TrashCard extends ConsumerWidget {
     return Material(
       color: surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

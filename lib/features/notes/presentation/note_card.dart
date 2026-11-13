@@ -1170,7 +1170,7 @@ class NoteCard extends ConsumerWidget {
                         color: Colors.transparent,
                         child: InkWell(
                           key: const ValueKey('note-card-menu'),
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
                           onTap: () => showNoteActionsSheet(context, ref, note),
                           child: SizedBox(
                             width: kMinInteractiveDimension,
@@ -1342,9 +1342,9 @@ class _FolderBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color:
-            accent?.withValues(alpha: 0.12) ??
+            accent?.withValues(alpha: AppAlpha.pressed) ??
             scheme.secondaryContainer.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.s),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1544,7 +1544,7 @@ class _CardItemRow extends StatelessWidget {
                 : struck
                 ? style.copyWith(
                     decoration: TextDecoration.lineThrough,
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
                   )
                 : style,
           ),
@@ -1560,7 +1560,7 @@ class _CardItemRow extends StatelessWidget {
       child: CustomPaint(
         foregroundPainter: _CardDividerPainter(
           item.divider,
-          scheme.primary.withValues(alpha: 0.6),
+          scheme.primary.withValues(alpha: AppAlpha.muted),
         ),
         child: Padding(padding: const EdgeInsets.only(bottom: 3), child: row),
       ),
@@ -1640,13 +1640,13 @@ class _ChecklistProgress extends StatelessWidget {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(AppRadius.hair),
               child: LinearProgressIndicator(
                 value: done / total,
                 minHeight: 3,
                 backgroundColor:
                     (accent ?? scheme.outlineVariant).withValues(alpha: 0.18),
-                color: (accent ?? scheme.primary).withValues(alpha: 0.85),
+                color: (accent ?? scheme.primary).withValues(alpha: AppAlpha.strong),
               ),
             ),
           ),
@@ -1795,7 +1795,7 @@ class _NotePreview extends StatelessWidget {
     final bodyStyle = applyNoteOpacity(
       applyNoteFont(
         cardBase.copyWith(
-          color: scheme.onSurface.withValues(alpha: 0.85),
+          color: scheme.onSurface.withValues(alpha: AppAlpha.strong),
           fontSize: (cardBase.fontSize ?? 12) * note.fontScale.clamp(0.8, 1.4),
         ),
         note.fontFamily,
@@ -1823,7 +1823,7 @@ class _NotePreview extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: scheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.s),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

@@ -1,3 +1,4 @@
+import '../../../../app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -126,7 +127,7 @@ class _PatternPainter extends CustomPainter {
       canvas.drawCircle(
         center(i),
         on ? 12 : 7,
-        Paint()..color = on ? color : idle.withValues(alpha: 0.6),
+        Paint()..color = on ? color : idle.withValues(alpha: AppAlpha.muted),
       );
     }
   }

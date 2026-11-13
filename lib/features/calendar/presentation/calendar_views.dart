@@ -327,7 +327,7 @@ class _MonthCell extends StatelessWidget {
     // bütçesi); hücre kendi `Material`ı: dokunma dalgası zeminin üstünde.
     final weekend = day.weekday >= DateTime.saturday;
     final off = holiday?.isOff ?? false;
-    final radius = BorderRadius.circular(8);
+    final radius = BorderRadius.circular(AppRadius.s);
     final Color fill;
     if (hovering) {
       fill = scheme.primaryContainer.withValues(alpha: 0.7);
@@ -338,17 +338,17 @@ class _MonthCell extends StatelessWidget {
     } else if (off) {
       fill = Color.alphaBlend(
         scheme.error.withValues(alpha: 0.07),
-        scheme.surfaceContainerLowest.withValues(alpha: 0.85),
+        scheme.surfaceContainerLowest.withValues(alpha: AppAlpha.strong),
       );
     } else if (weekend) {
-      fill = scheme.surfaceContainerHigh.withValues(alpha: 0.85);
+      fill = scheme.surfaceContainerHigh.withValues(alpha: AppAlpha.strong);
     } else {
-      fill = scheme.surfaceContainerLowest.withValues(alpha: 0.85);
+      fill = scheme.surfaceContainerLowest.withValues(alpha: AppAlpha.strong);
     }
     final side = isToday
         ? BorderSide(color: scheme.primary, width: 1.5)
         : isSelected
-        ? BorderSide(color: scheme.primary.withValues(alpha: 0.6))
+        ? BorderSide(color: scheme.primary.withValues(alpha: AppAlpha.muted))
         : BorderSide(color: line, width: 0.8);
     final dayColor = isToday
         ? scheme.onPrimary
@@ -481,7 +481,7 @@ Widget _chipBox({
     alignment: Alignment.centerLeft,
     decoration: BoxDecoration(
       color: background,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(AppRadius.xs),
       border: border,
     ),
     child: Text(
@@ -577,13 +577,13 @@ class HolidayChip extends StatelessWidget {
         lines: lines,
         dim: dim,
         background: off
-            ? scheme.error.withValues(alpha: 0.85)
+            ? scheme.error.withValues(alpha: AppAlpha.strong)
             : scheme.error.withValues(alpha: 0.1),
         foreground: off ? scheme.onError : scheme.error,
         border: off
             ? null
             : Border.all(
-                color: scheme.error.withValues(alpha: 0.6),
+                color: scheme.error.withValues(alpha: AppAlpha.muted),
                 width: 0.8,
               ),
       ),
@@ -1239,9 +1239,9 @@ class _MiniMonth extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(3),
       child: Material(
-        color: scheme.surfaceContainerLowest.withValues(alpha: 0.85),
+        color: scheme.surfaceContainerLowest.withValues(alpha: AppAlpha.strong),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           side: BorderSide(
             color: current
                 ? scheme.primary.withValues(alpha: 0.8)

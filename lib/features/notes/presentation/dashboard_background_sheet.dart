@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
@@ -179,7 +180,7 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
             // görselin kullanıldığı görünsün.
             if (hasImage)
               ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.m),
                 child: Opacity(
                   opacity: background.opacity.clamp(0.05, 1),
                   child: Image.file(

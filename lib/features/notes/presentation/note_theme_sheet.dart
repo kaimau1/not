@@ -390,7 +390,7 @@ class _FlatTile extends StatelessWidget {
         margin: const EdgeInsetsDirectional.only(end: 8),
         padding: const EdgeInsets.all(2.5),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           border: Border.all(
             color: selected ? scheme.primary : Colors.transparent,
             width: 2.5,
@@ -398,7 +398,7 @@ class _FlatTile extends StatelessWidget {
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.s),
             color: fill,
             border: Border.all(color: scheme.outlineVariant, width: 0.6),
             gradient: palette && fill == null
@@ -444,7 +444,7 @@ class _PlainPreview extends StatelessWidget {
                 height: 3,
                 decoration: BoxDecoration(
                   color: scheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppRadius.hair),
                 ),
               ),
           ],

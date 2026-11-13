@@ -220,7 +220,7 @@ class _DayCell extends StatelessWidget {
       ].join(', '),
       excludeSemantics: true,
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.s),
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
@@ -233,7 +233,7 @@ class _DayCell extends StatelessWidget {
                 : count > 0
                 ? scheme.surfaceContainerHigh
                 : null,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppRadius.s),
           ),
           child: LayoutBuilder(
             builder: (context, c) {
@@ -249,7 +249,7 @@ class _DayCell extends StatelessWidget {
                       decoration: isToday
                           ? BoxDecoration(
                               color: scheme.primary,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppRadius.s),
                             )
                           : null,
                       child: Text.rich(

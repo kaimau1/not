@@ -356,7 +356,7 @@ class ThemeChoiceCard extends StatelessWidget {
                 Container(
                   width: 30,
                   height: 3,
-                  color: c.onSurfaceVariant.withValues(alpha: 0.6),
+                  color: c.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
                 ),
                 const SizedBox(height: 3),
                 Container(width: 18, height: 3, color: c.primary),
@@ -391,7 +391,7 @@ class ThemeChoiceCard extends StatelessWidget {
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.m),
                 child: Stack(
                   fit: StackFit.expand,
                   children: [

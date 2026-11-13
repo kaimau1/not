@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -260,7 +261,7 @@ class _QrScanScreenState extends State<QrScanScreen>
                 height: 240,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white70, width: 2),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.l),
                 ),
               ),
             ),

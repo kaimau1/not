@@ -44,7 +44,7 @@ class AccountAvatarButton extends ConsumerWidget {
         button: true,
         child: InkWell(
           key: const ValueKey('home-account-avatar'),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
           onTap: () => showAccountSheet(context),
           child: SizedBox(
             width: 42,
@@ -301,8 +301,8 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(12),
+      color: color.withValues(alpha: AppAlpha.pressed),
+      borderRadius: BorderRadius.circular(AppRadius.m),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,

@@ -136,7 +136,7 @@ class _CategoryGroup extends StatelessWidget {
               Divider(
                 height: 1,
                 indent: 68,
-                color: scheme.outlineVariant.withValues(alpha: 0.6),
+                color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
               ),
             _CategoryTile(
               area: areas[i],
@@ -357,7 +357,7 @@ class _VersionLineState extends State<_VersionLine> {
       child: Center(
         child: InkWell(
           key: const ValueKey('settings-version-line'),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: widget.onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -535,7 +535,7 @@ class _VersionFooterState extends State<_VersionFooter>
     return Center(
         child: InkWell(
           key: const ValueKey('settings-version-footer-tap'),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: _installing ? null : _check,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

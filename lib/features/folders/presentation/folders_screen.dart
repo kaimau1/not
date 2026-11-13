@@ -337,7 +337,7 @@ class FolderCard extends StatelessWidget {
         color: scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

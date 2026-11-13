@@ -162,7 +162,7 @@ class _EditModeCard extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: scheme.surface.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                   child: Icon(
                     Icons.touch_app_outlined,
@@ -185,7 +185,7 @@ class _EditModeCard extends StatelessWidget {
             Text(
               l10n.customizeStartInfo,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onPrimaryContainer.withValues(alpha: 0.85),
+                color: scheme.onPrimaryContainer.withValues(alpha: AppAlpha.strong),
                 height: 1.35,
               ),
             ),
@@ -417,7 +417,7 @@ class PersonalizeModuleSwitches extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color: (state == false ? scheme.outline : scheme.primary)
-                        .withValues(alpha: 0.12),
+                        .withValues(alpha: AppAlpha.pressed),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(

@@ -276,7 +276,7 @@ class _StorageUsage extends ConsumerWidget {
         children: [
           const SizedBox(height: 6),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppRadius.xs),
             child: LinearProgressIndicator(
               value: ratio,
               minHeight: 6,

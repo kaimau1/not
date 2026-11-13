@@ -231,7 +231,7 @@ class _ItemDividerSheetState extends State<_ItemDividerSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.m),
               ),
               child: CustomPaint(
                 painter: _PreviewPainter(_style, scheme.primary),

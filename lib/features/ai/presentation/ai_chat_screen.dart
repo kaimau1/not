@@ -606,7 +606,7 @@ class _Bubble extends StatelessWidget {
                   icon: Icon(
                     Icons.flag_outlined,
                     size: 16,
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
                   ),
                   onPressed: () => onReport(turn),
                 ),

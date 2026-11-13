@@ -596,7 +596,7 @@ class _ColorDot extends StatelessWidget {
           shape: BoxShape.circle,
           color: icon == null ? color : null,
           border: Border.all(
-            color: selected ? scheme.onSurface : color.withValues(alpha: 0.6),
+            color: selected ? scheme.onSurface : color.withValues(alpha: AppAlpha.muted),
             width: selected ? 2.5 : 1.5,
           ),
         ),

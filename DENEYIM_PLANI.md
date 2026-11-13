@@ -339,7 +339,7 @@ Bu faz, F72.5'teki bölüm adı puntosu dışında **ekranda hiçbir şeyi deği
   `SectionLabel` iç dolgusu (üst 20 alt 8) ve K-D7 tutamak kaldırma YAPILMADI — her levhada görünür
   fark yaratıyor ("bölüm adı dışında ekran değişmez" kuralıyla çelişki) ve K-D7 ~15 çağıran
   dosyaya (P37/P20 alanı) dokunuyor. Önerilen: P37 F76.1/F76.3'te, `EmptyState` P40 F79.5'te.)*
-- [ ] **F72.6 Göç (mekanik) [Sonnet · P41].** `python tool/design/token_sayim.py radius`
+- [x] *(2026-11-14 P41: yalnız birebir eşit köşe/saydamlık göçtü, bütçe 328→234 / 234→190; eşleşmeyenler, punto/süre/simge/ağırlık görünüşü değiştireceği için atlandı — açık kalan göç ayrı karar; editör hariç)* **F72.6 Göç (mekanik) [Sonnet · P41].** `python tool/design/token_sayim.py radius`
   dökümü üzerinden KLASÖR KLASÖR (sıra: `core/widgets` → `features/settings` →
   `features/calendar` → `features/folders` + `inbox` + `friends` + `gmail` → `features/ai`
   → `features/notes/presentation` kök → `viewers/`). Her klasör ayrı commit; §2.1 eşlemesi
