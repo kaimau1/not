@@ -273,7 +273,7 @@ class _FingerWritesChip extends StatelessWidget {
           child: Material(
             key: const ValueKey('finger-writes-chip'),
             elevation: 2,
-            color: scheme.tertiaryContainer,
+            color: scheme.secondaryContainer,
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: InkWell(
               borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -292,7 +292,7 @@ class _FingerWritesChip extends StatelessWidget {
                     Icon(
                       Icons.back_hand_outlined,
                       size: AppIconSize.xs,
-                      color: scheme.onTertiaryContainer,
+                      color: scheme.onSecondaryContainer,
                     ),
                     const SizedBox(width: AppSpace.xxs),
                     Flexible(
@@ -301,7 +301,7 @@ class _FingerWritesChip extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelSmall
-                            ?.copyWith(color: scheme.onTertiaryContainer),
+                            ?.copyWith(color: scheme.onSecondaryContainer),
                       ),
                     ),
                   ],

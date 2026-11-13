@@ -404,9 +404,9 @@ void main() {
       ),
     );
     final add = find.byKey(const ValueKey('pinned-add-bubble'));
-    // P49 (K-O6): dar çubukta (< 600 dp) balon seçenekleri ⋮ levhasında;
-    // bırakma kipi açıkken çubukta ✓ belirir.
-    expect(add, findsNothing);
+    // 2026-11-13 (kullanıcı isteği): balon düğmesi dar çubukta da; ⋮
+    // levhasında da duruyor. Bırakma kipi açıkken çubukta ✓.
+    expect(add, findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('pinned-media-menu')));
     await tester.pumpAndSettle();
     expect(
@@ -419,7 +419,7 @@ void main() {
     // Kapatınca eski hâline döner (✓ çubuktan kalkar).
     await tester.tap(add);
     await tester.pump();
-    expect(add, findsNothing);
+    expect(add, findsOneWidget);
     expect(find.byIcon(Icons.check), findsNothing);
   });
 
