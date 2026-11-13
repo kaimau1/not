@@ -108,6 +108,68 @@ part 'dashboard_slivers.dart';
 /// geri çekmez. Pay yalnız hızlı kaydırmada boş kart görülmesin diye var.
 const double _kGridCacheExtent = 1600;
 
+/// Ana ekranın kart ızgarası: kaydırma payı [narrow]'a göre (250 px ya da
+/// [_kGridCacheExtent]). [tick] değişince YALNIZ bu görünüm kurulur; sliver'lar
+/// aynı örnekler kaldığı için kart kurulmaz, yerleşim eksik payı tamamlar.
+///
+/// Araya dinleyen bir widget koymak yerine öğenin kendisi dinler: ağaca katman
+/// eklenmez (bütçe S24 ilk kare, mandal).
+///
+/// KÖK NEDEN (aşağı kaydırırken liste yukarı sıçraması, tarihçe): masonry
+/// toplam uzunluğu yerleşmiş kartların ortalamasından TAHMİN ediyordu.
+/// 2026-10-16: masonry kalktı (tembel deterministik sütunlar) — pay artık
+/// yalnız hızlı kaydırma için.
+class _GridScrollView extends CustomScrollView {
+  const _GridScrollView({
+    super.key,
+    super.controller,
+    super.physics,
+    required super.slivers,
+    required this.tick,
+    required this.narrow,
+  });
+
+  final Listenable tick;
+  final bool Function() narrow;
+
+  @override
+  StatelessElement createElement() => _GridScrollElement(this);
+
+  @override
+  Widget buildViewport(
+    BuildContext context,
+    ViewportOffset offset,
+    AxisDirection axisDirection,
+    List<Widget> slivers,
+  ) => Viewport(
+    axisDirection: axisDirection,
+    offset: offset,
+    slivers: slivers,
+    scrollCacheExtent: ScrollCacheExtent.pixels(
+      narrow() ? 250 : _kGridCacheExtent,
+    ),
+  );
+}
+
+class _GridScrollElement extends StatelessElement {
+  _GridScrollElement(_GridScrollView super.widget);
+
+  // [tick] ekranın ömrü boyunca aynı nesne: güncellemede yeniden bağlanmaz.
+  Listenable get _tick => (widget as _GridScrollView).tick;
+
+  @override
+  void mount(Element? parent, Object? newSlot) {
+    super.mount(parent, newSlot);
+    _tick.addListener(markNeedsBuild);
+  }
+
+  @override
+  void unmount() {
+    _tick.removeListener(markNeedsBuild);
+    super.unmount();
+  }
+}
+
 /// Izgaranın altında bırakılan boşluk: sağ alttaki düğme satırı
 /// (mikrofon + "+" yan yana, 56 + alt pay 16 = 72, + 24 nefes payı)
 /// ızgaranın ÜSTÜNDE yüzüyor. 2026-10-20 (B2): üç düğmeli sütun tek satıra
@@ -218,6 +280,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
     _cardCache[note.id] = (note, searching, card);
     return card;
+  }
+
+  /// Yeni gelen bölümün (süzgeç|klasör|etiket) anahtarı: geçiş sürerken
+  /// ızgarası dar kaydırma payıyla kurulur (P46, bütçe S23). Eskiden gelen
+  /// ızgara ilk karesinde görünen kartlara ek 1600 px'lik payı da kuruyordu
+  /// (geçişin en ağır karesi); pay artık geçiş bitince, boşta genişler.
+  String? _freshSegment;
+  Timer? _cacheWiden;
+  final _cacheTick = ValueNotifier<int>(0);
+
+  void _holdNarrowCache(String segmentKey) {
+    _freshSegment = segmentKey;
+    _cacheWiden?.cancel();
+    _cacheWiden = Timer(AppMotion.medium + AppMotion.short, () {
+      _freshSegment = null;
+      _cacheTick.value++;
+    });
   }
 
   /// Silinmiş/ekrandan çıkmış notların kartlarını önbellekten düşürür.
@@ -659,6 +738,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _gridScrolled.dispose();
     _folderPull.dispose();
     _leavingClear?.cancel();
+    _cacheWiden?.cancel();
+    _cacheTick.dispose();
     _gridScroll.dispose();
     super.dispose();
   }
@@ -1487,6 +1568,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         '|${sharedFolder?.folderId ?? ''}'
                         '|${ref.watch(selectedTagProvider) ?? ''}'
                         '|${hubActive ? 'hub' : ''}';
+                    if (segmentKey != _segmentKey && _segmentKey.isNotEmpty) {
+                      _holdNarrowCache(segmentKey);
+                    }
                     _segmentKey = segmentKey;
                     // Başlık (arama/seçim barı + filtre çipleri) kaydırma
                     // görünümünün DIŞINDA sabit durur: liste kayarken çipler
@@ -1886,7 +1970,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           ?currentChild,
                                         ],
                                       ),
-                                  child: CustomScrollView(
+                                  child: _GridScrollView(
                                     key: ValueKey(segmentKey),
                                     // Az notta da tepeden aşağı çekilebilsin
                                     // (klasör menüsü — [_trackFolderPull]).
@@ -1894,28 +1978,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         const AlwaysScrollableScrollPhysics(),
                                     // "Başa dön" düğmesi buradan tepeye döner.
                                     controller: _gridScroll,
-                                    // KÖK NEDEN (aşağı kaydırırken liste yukarı
-                                    // sıçraması): SliverMasonryGrid tembeldir ve
-                                    // toplam kaydırma uzunluğunu yalnızca O AN
-                                    // yerleşmiş kartların ORTALAMA yüksekliğinden
-                                    // TAHMİN eder. Masonry'de kart boyları çok
-                                    // farklı olduğundan tahmin her karede oynuyor;
-                                    // tahmin o anki konumun altına düştüğü an
-                                    // ScrollPosition kendini düzeltip listeyi
-                                    // yukarı çekiyordu (sona yaklaşıldıkça sık).
-                                    // 2026-10-16: masonry kalktı (tembel
-                                    // deterministik sütunlar) — pay artık
-                                    // yalnız hızlı kaydırma için (bkz.
-                                    // [_kGridCacheExtent]).
-                                    scrollCacheExtent:
-                                        ScrollCacheExtent.pixels(
-                            // Her sorguda sonuç ızgarası baştan kurulur,
-                            // açılışın ilk içerik karesi de: ekran dışı kart
-                            // bekletmesin.
-                            searchActive || notesAsync.isLoading
-                                ? 250
-                                : _kGridCacheExtent,
-                          ),
+                                    tick: _cacheTick,
+                                    // Her sorguda sonuç ızgarası baştan kurulur,
+                                    // açılışın ilk içerik karesi ve yeni gelen bölüm
+                                    // de: ekran dışı kart bekletmesin.
+                                    narrow: () =>
+                                        searchActive ||
+                                        notesAsync.isLoading ||
+                                        _freshSegment == segmentKey,
                                     slivers: [
                                       // Misafir hesap hatırlatması (F4.3).
                                       if (!searchActive && !reorderActive)

@@ -202,8 +202,8 @@
     "ileri_kart": 30,
     "geri_kart": 30,
     "ileri_dashboard_kurulum": 1,
-    "kare_kurulum": 2941,
-    "bugun": "ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2941 (2026-11-12)",
+    "kare_kurulum": 2361,
+    "bugun": "ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2361 (2026-11-13, P46: gelen ızgara geçiş sürerken 250 px payla kurulur, 1600 px payı 500 ms sonra boşta genişler — kalan 9 kart o karede, 413–668 kurulum); önce 2941",
     "hedef": "gelen görünümün görünür kartları kadar; tek kare ≤ ilk açılış karesi",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl). FolderSwipe komşu sayfayı BİLEREK kurmaz (dashboard_widgets.dart FolderSwipe belgesi); geçişte giden + gelen ızgara aynı karede"
   },
