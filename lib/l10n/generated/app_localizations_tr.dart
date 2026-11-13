@@ -4830,6 +4830,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get personalizeEditorBar => 'Not ekranı · alt çubuk';
 
   @override
+  String get personalizeBarInfo =>
+      'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.';
+
+  @override
+  String get personalizeBarLeft => 'Sol kapsül · araçlar';
+
+  @override
+  String get personalizeBarRight => 'Sağ kapsül · yapay zekâ ve ses';
+
+  @override
+  String get personalizeBarReset => 'Alt çubuğu varsayılana döndür';
+
+  @override
+  String get reorderHandle => 'Sırala';
+
+  @override
   String get personalizeEditorTop => 'Not ekranı · üst çubuk ve alanlar';
 
   @override

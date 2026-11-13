@@ -164,3 +164,12 @@ Model: opus · Cihaz: A/B · APK: evet
 **Kullanıcı (2026-11-13):** "Not sıralama iki sütunun arasında geldiğinde anlık bir sağa bir sola geçtiği için aşırı zıplamalar oluyor."
 
 **Kök neden adayı:** iki sütunlu ızgarada sürüklenen kart iki sütunun sınırındayken hedef indeks her karede değişiyor (histerezis yok) → kartlar sağ/sol arasında gidip geliyor. Çözüm: hedef değişimine histerezis/eşik (sınırdan belirli pay geçmeden ve kısa süre kalmadan yer değiştirme yok) ve yer değiştirme animasyonu sırasında yeniden hedeflememe. Önce tekrar üreten widget testi (sınırda küçük titreşimli sürükleme → hedef indeks değişim sayısı ≤ 1), sonra düzelt. P47 çöpe sürükleme ve `_previewCardDrop` korunur.
+
+## P57 — Alt çubuk: her düğme eklenip çıkarılabilir, sıralanabilir
+
+Model: opus · Cihaz: - · APK: evet
+
+**Kullanıcı (2026-11-13, ekran görüntüsüyle):** "Alt paneldeki tüm butonları değiştirilebilmesi; kişi istediğini koyabilmeli, istediğini çıkarabilmeli; bunu da ayarlarda yapılabilen seçenekler geniş olsun."
+
+**Durum:** bitti (bulut 2026-11-13). `core/personalize.dart`: `UiPrefs.barOrder` / `aiOrder` (boş = varsayılan; `UiPrefs.orderOf` yeni düğmeyi varsayılan yerine göre sona ekler, yinelenen/bilinmeyen kimliği atlar) + `UiItem.barLeftDefault`/`barRightDefault`; eklenebilir (varsayılan gizli, `optIn`) düğmeler: geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara, renk, paylaş (eski `barShare` kimliği). Editör çubuğu kimlik → düğme haritasından kullanıcı sırasıyla dizilir; sığmazsa plan (`planEditorBar`) önce düğmeleri küçültür, sonra kapsül yatay kayar. Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk": iki grup (araçlar / yapay zekâ ve ses), tutamaçla sürükle-sırala, anahtarla ekle/çıkar, "Alt çubuğu varsayılana döndür". Düzenleme modundaki dokunarak gizleme aynen sürer. Testler `test/editor_bar_customize_test.dart`. Kalan (P50'ye): düğmeyi iki kapsül arasında taşıma; üst çubuk için aynı liste.
+

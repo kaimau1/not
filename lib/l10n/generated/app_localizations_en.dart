@@ -4849,6 +4849,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personalizeEditorBar => 'Note screen · bottom bar';
 
   @override
+  String get personalizeBarInfo =>
+      'Drag the handle to reorder buttons; use the switch to add or remove them from the bar. Buttons that are off (undo, reminder, camera…) can be added any time.';
+
+  @override
+  String get personalizeBarLeft => 'Left capsule · tools';
+
+  @override
+  String get personalizeBarRight => 'Right capsule · AI and voice';
+
+  @override
+  String get personalizeBarReset => 'Reset bottom bar';
+
+  @override
+  String get reorderHandle => 'Reorder';
+
+  @override
   String get personalizeEditorTop => 'Note screen · top bar and areas';
 
   @override

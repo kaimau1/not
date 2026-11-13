@@ -4462,6 +4462,19 @@ child: NoteFindBar(
                         showDictation,
                         showVoiceRecord,
                       ].where((v) => v).length;
+                      // SONRADAN EKLENEN düğmeler (kullanıcı isteği
+                      // 2026-11-13: Ayarlar → Kişiselleştir → Alt çubuk).
+                      // Varsayılan gizli; açılınca kapsüle sırasıyla girer.
+                      final extras = <String>[
+                        if (!_readOnly) UiItem.barUndo,
+                        if (!_readOnly) UiItem.barRedo,
+                        UiItem.barReminder,
+                        if (!_readOnly) UiItem.barPhoto,
+                        if (!_readOnly && !kIsWeb) UiItem.barCamera,
+                        if (!_readOnly && !kIsWeb) UiItem.barScan,
+                        UiItem.barColor,
+                        UiItem.barShare,
+                      ].where(on).toList();
                       // Genişliğe göre plan: taşma/kesik kapsül yerine önce
                       // düğmeler küçülür, sonra ⋮ menüsünde de bulunan
                       // Ara, en son Kalem kapsülden çıkar (bkz.
@@ -4472,7 +4485,8 @@ child: NoteFindBar(
                             (showFormat ? 1 : 0) +
                             (showAdd ? 1 : 0) +
                             (showCheckbox ? 1 : 0) +
-                            (showSelect ? 1 : 0),
+                            (showSelect ? 1 : 0) +
+                            extras.length,
                         attachments: showAttachments,
                         pen: wantPen,
                         aiButtons: aiCount,
@@ -4490,76 +4504,163 @@ child: NoteFindBar(
                       // (2026-09-01) ve ⋮ menüsünde de; PAYLAŞ'ın yerine
                       // KALEM (K-D6, 2026-11-12 — Paylaş ⋮ menüsünün hızlı
                       // satırında); EKLER şeridin aç/kapası (2026-08-08).
-                      final segments = <Widget>[
+                      Widget tool(
+                        String id,
+                        IconData icon,
+                        String label,
+                        VoidCallback onTap, {
+                        bool active = false,
+                      }) => Customizable(
+                        id: id,
+                        child: _toolSegment(
+                          icon: icon,
+                          label: label,
+                          active: active,
+                          onTap: onTap,
+                        ),
+                      );
+                      // Kimlik → düğme(ler). Sıra KULLANICININ
+                      // ([UiPrefs.barOrder]); varsayılan sıra
+                      // [UiItem.barLeftDefault] (türe özgü ☑/Seç sonda).
+                      final byId = <String, List<Widget>>{
                         if (showFormat)
-                          Customizable(
-                            id: UiItem.barFormat,
-                            child: _toolSegment(
-                              icon: Icons.text_format,
-                              label: l10n.formatTitle,
-                              active: _formatBarOpen,
-                              onTap: () => setState(
+                          UiItem.barFormat: [
+                            tool(
+                              UiItem.barFormat,
+                              Icons.text_format,
+                              l10n.formatTitle,
+                              () => setState(
                                 () => _formatBarOpen = !_formatBarOpen,
                               ),
+                              active: _formatBarOpen,
                             ),
-                          ),
-                        // Panel kapalıyken imlecin biçimleri (B/I/U, renk).
-                        if (showFormat)
-                          ActiveFormatBadges(target: _formatTargetN),
+                            // Panel kapalıyken imlecin biçimleri (B/I/U, renk).
+                            ActiveFormatBadges(target: _formatTargetN),
+                          ],
                         if (showAdd)
-                          Customizable(
-                            id: UiItem.barAdd,
-                            child: _addToolButton(l10n),
-                          ),
+                          UiItem.barAdd: [
+                            Customizable(
+                              id: UiItem.barAdd,
+                              child: _addToolButton(l10n),
+                            ),
+                          ],
                         if (showPen)
-                          Customizable(
-                            id: UiItem.barPen,
-                            child: _penSegment(l10n, note),
-                          ),
+                          UiItem.barPen: [
+                            Customizable(
+                              id: UiItem.barPen,
+                              child: _penSegment(l10n, note),
+                            ),
+                          ],
                         if (showSearch)
-                          Customizable(
-                            id: UiItem.barSearch,
-                            child: _toolSegment(
-                              icon: Icons.search,
-                              label: l10n.noteSearchTitle,
-                              onTap: _openNoteSearch,
+                          UiItem.barSearch: [
+                            tool(
+                              UiItem.barSearch,
+                              Icons.search,
+                              l10n.noteSearchTitle,
+                              _openNoteSearch,
                             ),
-                          ),
-                        // EKLER ortak dörtlüden SONRA (F12.3): yalnız ekli
-                        // notta var; önde dururken Ara'yı nota göre
-                        // kaydırıyordu. Plan (planEditorBar) eki hesaba
-                        // katıp önce Ara'yı düşürdüğü için kaydırma
-                        // dışında kalmaz (2026-10-17 bulgusunun kök nedeni).
+                          ],
+                        // EKLER (F12.3): yalnız ekli notta; plan
+                        // (planEditorBar) eki hesaba katar.
                         if (showAttachments)
-                          Customizable(
-                            id: UiItem.barAttachments,
-                            child: _attachmentsToggle(
-                              l10n,
-                              fileAttachments.length,
+                          UiItem.barAttachments: [
+                            Customizable(
+                              id: UiItem.barAttachments,
+                              child: _attachmentsToggle(
+                                l10n,
+                                fileAttachments.length,
+                              ),
                             ),
-                          ),
-                        // TÜRE ÖZGÜ düğme (☑ metinde, Seç listede) HER ZAMAN
-                        // sol grubun EN SONUNDA (F12.3, kas hafızası): aynı
-                        // konumdaki düğme türe göre başka iş yapıyordu.
+                          ],
                         if (showCheckbox)
-                          Customizable(
-                            id: UiItem.barCheckbox,
-                            child: _toolSegment(
-                              icon: Icons.check_box_outlined,
-                              label: l10n.checkboxToggle,
-                              onTap: _toggleChecklistLine,
+                          UiItem.barCheckbox: [
+                            tool(
+                              UiItem.barCheckbox,
+                              Icons.check_box_outlined,
+                              l10n.checkboxToggle,
+                              _toggleChecklistLine,
                             ),
-                          ),
+                          ],
                         if (showSelect)
-                          Customizable(
-                            id: UiItem.barSelect,
-                            child: _toolSegment(
-                              icon: Icons.select_all,
-                              label: l10n.select,
-                              onTap: () => _itemsEditorKey.currentState
+                          UiItem.barSelect: [
+                            tool(
+                              UiItem.barSelect,
+                              Icons.select_all,
+                              l10n.select,
+                              () => _itemsEditorKey.currentState
                                   ?.startSelection(),
                             ),
-                          ),
+                          ],
+                        for (final id in extras)
+                          id: [
+                            switch (id) {
+                              UiItem.barUndo => tool(
+                                id,
+                                Icons.undo,
+                                l10n.undo,
+                                () {
+                                  if (_canUndo) _undo();
+                                },
+                              ),
+                              UiItem.barRedo => tool(
+                                id,
+                                Icons.redo,
+                                l10n.redo,
+                                () {
+                                  if (_canRedo) _redo();
+                                },
+                              ),
+                              UiItem.barReminder => tool(
+                                id,
+                                Icons.alarm_add_outlined,
+                                l10n.quickRowReminder,
+                                () => unawaited(_pickReminder()),
+                              ),
+                              UiItem.barPhoto => tool(
+                                id,
+                                Icons.add_photo_alternate_outlined,
+                                l10n.quickRowPhoto,
+                                () {
+                                  _rememberCaret();
+                                  unawaited(_pickImage());
+                                },
+                              ),
+                              UiItem.barCamera => tool(
+                                id,
+                                Icons.photo_camera_outlined,
+                                l10n.quickRowCamera,
+                                () {
+                                  _rememberCaret();
+                                  unawaited(_takePhoto());
+                                },
+                              ),
+                              UiItem.barScan => tool(
+                                id,
+                                Icons.document_scanner_outlined,
+                                l10n.quickRowScan,
+                                () => unawaited(_scanDocument()),
+                              ),
+                              UiItem.barColor => tool(
+                                id,
+                                AppIcons.color,
+                                l10n.color,
+                                () => unawaited(_showColorSheet()),
+                              ),
+                              _ => tool(
+                                id,
+                                Icons.share_outlined,
+                                l10n.share,
+                                () => unawaited(_share()),
+                              ),
+                            },
+                          ],
+                      };
+                      final segments = <Widget>[
+                        for (final id in UiPrefs.orderOf(
+                          UiItem.barLeftDefault,
+                          uiPrefs.barOrder,
+                        ))
+                          ...?byId[id],
                       ];
                       return Row(
                         children: [
@@ -4639,7 +4740,11 @@ child: NoteFindBar(
                               segment: plan.button,
                               gap: plan.gap,
                               children: [
-                                if (showAi)
+                                for (final id in UiPrefs.orderOf(
+                                  UiItem.barRightDefault,
+                                  uiPrefs.aiOrder,
+                                ))
+                                  if (id == UiItem.barAi && showAi)
                                   Customizable(
                                     id: UiItem.barAi,
                                     child: Consumer(
@@ -4668,8 +4773,9 @@ child: NoteFindBar(
                                       ),
                                     ),
                                     ),
-                                  ),
-                                if (showVoiceRecord)
+                                  )
+                                  else if (id == UiItem.barVoiceRecord &&
+                                      showVoiceRecord)
                                   Customizable(
                                     id: UiItem.barVoiceRecord,
                                     child: _voiceButton(
@@ -4686,8 +4792,9 @@ child: NoteFindBar(
                                             : _finishVoiceRecording(),
                                       ),
                                     ),
-                                  ),
-                                if (showDictation)
+                                  )
+                                  else if (id == UiItem.barDictation &&
+                                      showDictation)
                                   Customizable(
                                     id: UiItem.barDictation,
                                     child: _voiceButton(
