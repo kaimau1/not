@@ -10,25 +10,25 @@
   },
   "S2": {
     "senaryo": "30 maddeli liste, bir maddeye 20 karakter",
-    "items_editor": 5,
-    "satir": 15,
-    "bugun": "ItemsEditor 5 / satır 15 (2026-11-11)",
+    "items_editor": 1,
+    "satir": 1,
+    "bugun": "ItemsEditor 1 / satır 1 (2026-11-14, P20 adım 2: telefonda tutamaçsız düz liste; önce 5 / 15)",
     "hedef": "0 / 0",
     "neden": "İlk ölçüm (bugünkü hâl); hedefin üstünde — düşürülecek, yükseltilmez"
   },
   "S3": {
     "senaryo": "30 maddeli liste, bir kutucuğu işaretle",
     "kok_kurulum": 1,
-    "satir": 23,
-    "bugun": "kök 1 / satır 23 — işaretlenen maddeden sonraki bütün satırlar (2026-11-11)",
+    "satir": 1,
+    "bugun": "kök 1 / satır 1 (2026-11-14, P20 adım 2; önce 23 — işaretlenen maddeden sonraki bütün satırlar: SliverReorderableList satırı dizinli GlobalKey ile sarıyordu + sıra no satır önbelleği anahtarındaydı)",
     "hedef": "≤ 1 / ≤ 2 (Faz 64)",
     "neden": "13 ölçüm artığıydı: liste yarım kuruluyken ölçülmüştü (_growBudget). Ölçüm artık kurulum bitince; ESKİ kod da bu ölçümle 23 veriyor (2026-11-11 doğrulandı) — gerileme değil. Satır hedefi Faz 64"
   },
   "S4": {
     "senaryo": "Maddede Enter (yeni madde)",
     "kok_kurulum": 1,
-    "satir": 23,
-    "bugun": "kök 1 / satır 23 (2026-11-11)",
+    "satir": 1,
+    "bugun": "kök 1 / satır 1 (2026-11-14, P20 adım 2; önce 23)",
     "hedef": "≤ 1 / ≤ 2 (Faz 64)",
     "neden": "14 ölçüm artığıydı: liste yarım kuruluyken ölçülmüştü (_growBudget). Ölçüm artık kurulum bitince; ESKİ kod da bu ölçümle 23 veriyor (2026-11-11 doğrulandı) — gerileme değil. Satır hedefi Faz 64"
   },

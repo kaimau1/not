@@ -81,7 +81,7 @@ extension _ItemsRow on ItemsEditorState {
         (text.contains('.') && findLinks(text).isNotEmpty);
   }
 
-  Widget _itemRow(NoteItem item, {int? reorderIndex, int? orderNumber}) {
+  Widget _itemRow(NoteItem item, {bool draggable = false}) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final l10n = context.l10n;
@@ -131,18 +131,21 @@ extension _ItemsRow on ItemsEditorState {
         ? null
         : SizedBox(
             width: ItemsEditorState._kHandleWidth,
-            child: reorderIndex == null
+            child: !draggable
                 ? null
                 : GestureDetector(
                     // Tutamağa dokunmak SEÇMEZ (satırın seçim dokunuşu
                     // dışında kalır); sürükleme dinleyicisi etkilenmez.
                     onTap: () {},
-                    child: ReorderableDragStartListener(
-                      index: reorderIndex,
-                      child: Icon(
-                        Icons.drag_indicator,
-                        size: ItemsEditorState._kHandleIcon,
-                        color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    // Dizin [_RowSlot]'tan: yer değişince yalnız bu kurulur.
+                    child: Builder(
+                      builder: (context) => ReorderableDragStartListener(
+                        index: _RowSlot.of(context)?.reorderIndex ?? 0,
+                        child: Icon(
+                          Icons.drag_indicator,
+                          size: ItemsEditorState._kHandleIcon,
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                        ),
                       ),
                     ),
                   ),
@@ -249,10 +252,13 @@ extension _ItemsRow on ItemsEditorState {
         else
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              '${orderNumber ?? 0}.',
-              style: Theme.of(context).textTheme.bodyLarge
-                  ?.copyWith(color: scheme.onSurfaceVariant),
+            // Numara [_RowSlot]'tan: yer değişince yalnız bu metin kurulur.
+            child: Builder(
+              builder: (context) => Text(
+                '${_RowSlot.of(context)?.orderNumber ?? 0}.',
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
             ),
           ),
       ],

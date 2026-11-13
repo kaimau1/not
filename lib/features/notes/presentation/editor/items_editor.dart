@@ -1967,6 +1967,10 @@ class ItemsEditorState extends State<ItemsEditor>
   List<FloatBox> _rowCacheFloats = const [];
 
   /// Satır düzeyi girdiler değişmediyse önbellekten döndürür.
+  ///
+  /// Satırın listedeki YERİ (sürükleme dizini, sıra numarası) anahtarda
+  /// DEĞİL: [_RowSlot] ile dışarıdan verilir (P20 M1 — bir madde yer
+  /// değiştirince arkasındaki bütün satırlar yeniden kuruluyordu, S3/S4).
   Widget _cachedItemRow(NoteItem item, {int? reorderIndex, int? orderNumber}) {
     // Kayıt (record) yapısal eşitlik kullanır — hash çakışması yok, yani
     // bayat satır dönme riski de yok.
@@ -1982,20 +1986,24 @@ class ItemsEditorState extends State<ItemsEditor>
       item.header,
       item.align,
       item.package,
-      reorderIndex,
-      orderNumber,
+      reorderIndex != null,
       _selected.contains(item.id),
       _movePhase(item.id),
     );
     final hit = _rowCache[item.id];
-    if (hit != null && hit.$1 == key) return hit.$2;
-    final row = _itemRow(
-      item,
+    final Widget row;
+    if (hit != null && hit.$1 == key) {
+      row = hit.$2;
+    } else {
+      row = _itemRow(item, draggable: reorderIndex != null);
+      _rowCache[item.id] = (key, row);
+    }
+    return _RowSlot(
+      key: ValueKey('slot-${item.id}'),
       reorderIndex: reorderIndex,
       orderNumber: orderNumber,
+      child: row,
     );
-    _rowCache[item.id] = (key, row);
-    return row;
   }
 
   /// Liste düzeyi bir girdi değiştiyse önbelleği tümden düşürür; silinen
@@ -2295,7 +2303,36 @@ class ItemsEditorState extends State<ItemsEditor>
       );
     }
 
-    final list = ReorderableListView.builder(
+    // TUTAMAÇ YOKKEN DÜZ LİSTE (P20 M1, S3/S4). `SliverReorderableList` her
+    // satırı DİZİN içeren bir GlobalKey ile sarar (`_ReorderableItemGlobalKey`):
+    // bir madde işaretlenip alta inince ya da araya madde girince arkadaki
+    // bütün satırların öğesi ATILIP baştan kuruluyordu (30 maddede 23 satır).
+    // Sürükleme yalnız tutamaçtan başlıyor (buildDefaultDragHandles: false),
+    // tutamaç yalnız [_showHandles]'ta var → onsuz düz `ListView`; çocuklar
+    // anahtarlı ([_RowSlot]) olduğu için yer değişince öğe korunur.
+    // ponytail: tutamaçlı kipte (tablet/web, Seç) 23 kalır; sıralama orada lazım.
+    final list = !_showHandles
+        ? ListView(
+            padding: EdgeInsets.only(bottom: _selectionMode ? 152 : 96),
+            shrinkWrap: widget.shrinkWrap,
+            physics: widget.shrinkWrap
+                ? const NeverScrollableScrollPhysics()
+                : null,
+            children: [
+              if (widget.header != null) widget.header!,
+              for (var i = 0; i < listItems.length; i++)
+                _packagedRow(
+                  listItems,
+                  i,
+                  _cachedItemRow(
+                    listItems[i],
+                    orderNumber: itemOrderNumber(listItems, i),
+                  ),
+                ),
+              footer,
+            ],
+          )
+        : ReorderableListView.builder(
       // Alt dolgu, altta sabit duran seçim çubuğunun son maddeyi örtmemesi
       // için seçim modunda büyür.
       padding: EdgeInsets.only(bottom: _selectionMode ? 152 : 96),

@@ -179,6 +179,53 @@ void main() {
     expect(identical(before[1], after[1]), isTrue);
     expect(identical(before[2], after[2]), isTrue);
   });
+
+  // P20 M1 (S3/S4): sıra numarası satır önbelleği anahtarındaydı — bir madde
+  // yer değiştirince ARKASINDAKİ bütün satırlar yeniden kuruluyordu.
+  TextField field(WidgetTester tester, String text) =>
+      tester.widget<TextField>(find.widgetWithText(TextField, text));
+
+  // Telefon: tutamaç yalnız Seç'te (tablet/web'de tutamaçlı liste — orada
+  // sürüklenebilir liste dizinle anahtarlar, bkz. ItemsEditor build).
+  void phone(WidgetTester tester) {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
+
+  testWidgets('kutucuk işaretlenince arkadaki satırlar yeniden KURULMAZ', (
+    tester,
+  ) async {
+    phone(tester);
+    await pumpList(tester, sample, showCheckboxes: true);
+    final b = field(tester, 'iki');
+    final c = field(tester, 'uc');
+
+    await tester.tap(find.byType(Checkbox).first);
+    await tester.pumpAndSettle();
+
+    expect(identical(b, field(tester, 'iki')), isTrue, reason: 'iki kuruldu');
+    expect(identical(c, field(tester, 'uc')), isTrue, reason: 'uc kuruldu');
+  });
+
+  testWidgets('araya madde eklenince arkadaki satırlar yeniden KURULMAZ', (
+    tester,
+  ) async {
+    phone(tester);
+    await pumpList(tester, sample);
+    final before = {for (final t in ['bir', 'iki', 'uc']) t: field(tester, t)};
+
+    _setItems([const NoteItem(id: 'x', text: 'yeni'), ...sample]);
+    await tester.pump();
+
+    for (final e in before.entries) {
+      expect(
+        identical(e.value, field(tester, e.key)),
+        isTrue,
+        reason: '${e.key} kuruldu',
+      );
+    }
+  });
 }
 
 late void Function(bool) _setChecks;
