@@ -381,6 +381,11 @@ class KeyboardSlide extends StatelessWidget {
 /// Klavyenin EVRESİ: açık mı, açılırken tahmini yüksekliği ne.
 typedef KeyboardPhase = ({bool open, double estimate});
 
+/// Klavyenin AŞAMASI — [KeyboardPhase]'in aynı karede yazılan, kapanışı ayrı
+/// söyleyen biçimi (bkz. [KeyboardPhaseListener.stage]). [open]: klavye
+/// ekranda (kapanırken de); [closing]: iniyor; [estimate]: tam boy tahmini.
+typedef KeyboardStage = ({bool open, bool closing, double estimate});
+
 /// Klavyenin AÇILIŞ/KAPANIŞ EVRESİNİ bildiren dinleyici — kare kare DEĞİL,
 /// yalnız evre değişince ([onChanged]).
 ///
@@ -400,10 +405,18 @@ class KeyboardPhaseListener extends StatefulWidget {
     super.key,
     required this.onChanged,
     required this.child,
+    this.stage,
   });
 
   final ValueChanged<KeyboardPhase> onChanged;
   final Widget child;
+
+  /// Verilirse aşama buraya KURULUM SIRASINDA (aynı karede) yazılır —
+  /// [onChanged] bir kare sonra gelir. Sabit ek bölmesi boyunu klavyenin
+  /// göründüğü ve bittiği karede TEK ADIMDA değiştirir, aradaki hareket
+  /// yalnız boyamadadır (kasma listesi §6). Yalnız [child]'ın ALT ağacındaki
+  /// dinleyiciler `setState` çağırabilir (kurulum sırasında haber verilir).
+  final ValueNotifier<KeyboardStage>? stage;
 
   @override
   State<KeyboardPhaseListener> createState() => _KeyboardPhaseListenerState();
@@ -417,11 +430,27 @@ class _KeyboardPhaseListenerState extends State<KeyboardPhaseListener> {
   double _last = 0;
   double _cycleMax = 0;
   KeyboardPhase _reported = (open: false, estimate: 0);
+  bool _closing = false;
 
   @override
   Widget build(BuildContext context) {
     final live = KeyboardInset.liveOf(context);
     final screen = MediaQuery.sizeOf(context).height;
+    if (widget.stage case final stage?) {
+      if (live <= 0 || live > _last) {
+        _closing = false;
+      } else if (live < _last && live < _cycleMax * 0.85) {
+        _closing = true;
+      }
+      final top = math.max(_cycleMax, live);
+      stage.value = (
+        open: live > 0,
+        closing: _closing,
+        estimate: live <= 0
+            ? 0
+            : math.max(top, _memory > 0 ? _memory : screen * 0.38),
+      );
+    }
     KeyboardPhase next;
     if (live <= 0) {
       if (_cycleMax > 0) _memory = _cycleMax;
