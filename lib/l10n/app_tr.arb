@@ -504,6 +504,16 @@
       }
     }
   },
+  "pendingUploadsOffline": "{count} ek bekliyor — bağlantı gelince yüklenecek",
+  "@pendingUploadsOffline": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiOfflineTitle": "Bağlantı yok",
+  "aiOfflineBody": "Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.",
   "pendingUploadsInfo": "Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.",
   "checkedHeader": "İşaretliler ({count})",
   "@checkedHeader": {
@@ -2217,6 +2227,11 @@
   "moduleCollaborationInfo": "Not ekranındaki kişi ekle düğmesi",
   "moduleMixed": "kısmen açık",
   "personalizeEditorBar": "Not ekranı · alt çubuk",
+  "personalizeBarInfo": "Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.",
+  "personalizeBarLeft": "Sol kapsül · araçlar",
+  "personalizeBarRight": "Sağ kapsül · yapay zekâ ve ses",
+  "personalizeBarReset": "Alt çubuğu varsayılana döndür",
+  "reorderHandle": "Sırala",
   "personalizeEditorTop": "Not ekranı · üst çubuk ve alanlar",
   "personalizeQuickAdd": "Yeni not menüsü (+)",
   "personalizeAttachSheet": "Ekle levhası (notun içinde +)",

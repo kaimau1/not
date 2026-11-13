@@ -143,15 +143,12 @@ extension _DashSlivers on _DashboardScreenState {
       cellWidth: cellWidth,
     );
     if (slivers.isNotEmpty) return slivers;
-    final l10n = context.l10n;
+    // F79.6 (3): boşken ayrı ekranla aynı yer tutucu (yükleniyor / hata +
+    // Tekrar dene / gerçekten boş) — hatada "burada not yok" demez.
     return [
       SliverFillRemaining(
         hasScrollBody: false,
-        child: EmptyState(
-          icon: AppIcons.inbox,
-          title: l10n.sharedHubEmpty,
-          subtitle: l10n.sharedHubEmptyHint,
-        ),
+        child: sharedHubPlaceholder(context, ref, skeleton: false),
       ),
     ];
   }
@@ -377,6 +374,32 @@ extension _DashSlivers on _DashboardScreenState {
         if (!reorderEnabled) {
           // Süzgeç/arama açıkken: uzun basış yalnız seçer (alt kümede taşımak
           // asıl sırayı bozar).
+          // KLASÖRDE / SÜZGEÇTE DE ÇÖPE SÜRÜKLE (kullanıcı isteği
+          // 2026-11-13: "klasörlerin içinde de çöp kutusu olsun, basılı tutup
+          // sürüklerken aynı dashboarddaki gibi"). Sıra önizlemesi YOK
+          // (alt kümede taşımak asıl sırayı bozar): hiçbir hücre bırakma
+          // hedefi değil (`inSection` false), yalnız çöp hedefi kabul eder.
+          // Kart oynamadan bırakılırsa eskisi gibi seçer. Başkasının
+          // paylaşılan klasöründe kapalı (onun notunu silemeyiz).
+          if (!manualReorderAllowed &&
+              !selectionActive &&
+              ref.read(selectedSharedFolderProvider) == null) {
+            return _ReorderableNoteCell(
+              key: ValueKey(note.id),
+              noteId: note.id,
+              cellWidth: cellWidth,
+              inSection: (_) => false,
+              onDragStart: () => _startCardDrag(note.id, items),
+              onHover: () {},
+              onDragEnd: () => _endCardDrag(select),
+              onDragUpdate: (d) => _dragTravel += d.delta.distance,
+              feedback: SizedBox(
+                width: cellWidth,
+                child: NoteCard(note: note, highlightQuery: query),
+              ),
+              child: card,
+            );
+          }
           if (!manualReorderAllowed) {
             return KeyedSubtree(
               key: ValueKey(note.id),

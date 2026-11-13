@@ -91,7 +91,7 @@ Model: sonnet · Cihaz: - · APK: -
 
 Model: opus · Cihaz: gerekirse · APK: gerekirse
 
-**Plan maddeleri:** Kalan açık `[ ]` maddeler (2026-11-12 ayıklandı): kalem/mürekkep F61.7, F61.8, F62.4, F62.6, F63.6, F63.7 · tablet F67.6, F67.8 · F66.5 (yalnız rapor) · F68.5 (park) · cihaz turu F69.1–F69.3 · P40'ın "sabah bakılacak"ları (Gelen süzgeci hata hâli, AI levhası çevrimdışı, bekleyen ek şeridi). BAŞKA PAKETE TAŞINDI, burada YAPILMAZ: F58.1/F58.4 → P53, F60.5/F60.S2/F68.3 → P46, F68.4 → P43, F65.1/F65.2/F65.3/F67.5 → P49, F65.6 → P48; F60.7, F66.1–3 zaten kapandı (Ek D) + "cihazda doğrulanmadı" / "tablette doğrulanmadı" işaretli maddeler + açık K-O kararları
+**Plan maddeleri:** Kalan açık `[ ]` maddeler (2026-11-12 ayıklandı): kalem/mürekkep F61.7, F61.8, F62.4, F62.6, F63.6, F63.7 · tablet F67.6, F67.8 · F66.5 (yalnız rapor) · F68.5 (park) · cihaz turu F69.1–F69.3. (P40'ın "sabah bakılacak"ları — Gelen süzgeci hata hâli, AI levhası çevrimdışı, bekleyen ek şeridi — bulutta yapıldı 2026-11-13, DENEYIM F79.6; cihazda doğrulanmadı.) BAŞKA PAKETE TAŞINDI, burada YAPILMAZ: F58.1/F58.4 → P53, F60.5/F60.S2/F68.3 → P46, F68.4 → P43, F65.1/F65.2/F65.3/F67.5 → P49, F65.6 → P48; F60.7, F66.1–3 zaten kapandı (Ek D) + "cihazda doğrulanmadı" / "tablette doğrulanmadı" işaretli maddeler + açık K-O kararları
 
 **Durum:** bekliyor — protokol aşağıda
 
@@ -147,7 +147,7 @@ Model: opus (kullanıcı 2026-11-13) · Cihaz: A/B · APK: evet
 
 **P46'dan katıldı (kullanıcı 2026-11-13):** HIZ_PLANI F84.1–F84.3 + OTURTMA F60.S2 (klavye birikim kasması), F60.5 (yazma ana bloğu), F68.3 (liste akışı K-O13). P46 dalının DEVIR.md'sindeki bulgulardan sür; P46 birleştikten sonra main'den başla.
 
-**Kullanıcı (2026-11-13):** "genel olarak not açılış kapanış, klavye açılış kapanışlarda kasma, akıcı açılamama, titreme sorunları var; bunların artık kökten çözülmesi gerekiyor, ne gerekiyorsa yapın." Ayrıca: (a) "Alt çizgi varken madde altında kasma oluyor klavye açılırken." (b) "Alt panel hâlâ titriyor — ona özel test yaptır."
+**Kullanıcı (2026-11-13):** "genel olarak not açılış kapanış, klavye açılış kapanışlarda kasma, akıcı açılamama, titreme sorunları var; bunların artık kökten çözülmesi gerekiyor, ne gerekiyorsa yapın." Ayrıca: (a) "Alt çizgi varken madde altında kasma oluyor klavye açılırken." — **bulutta (2026-11-13) kısmen:** testte ayırıcılı/ayırıcısız madde arasında kurulum ve boyama sayısı farkı YOK (klavye açılışı, 60 madde); kök neden adayı raster: kesikli/noktalı ayırıcı satır başına 30–70 ayrı `drawLine`, dalgalı ~250 noktalı yol — Impeller her karede yeniden üçgenliyor. `paintItemDivider` tek `drawPoints`/`drawPath` (dalga yarım dalga başına tek eğri); bekçi `test/item_divider_paint_test.dart` (önce 7 kırmızı → yeşil). CİHAZDA DOĞRULANMADI: düz çizgide kasma sürüyorsa kök neden başka — timeline izi gerek (protokol 1). (b) "Alt panel hâlâ titriyor — ona özel test yaptır."
 
 **Protokol (yama değil, kök neden):**
 1. Kanıt: telefonda (ölçüm kimliği `dev.kaimau.notlar.olcum`, profil derleme) her evre için timeline izi: not aç, not kapat, klavye aç, klavye kapat, yazma, alt çizgili madde + klavye aç. Kare başına en pahalı build/layout/paint düğümlerini ve kaç kez kurulduğunu çıkar (`tool/perf/` araçları, `ab_hepsi.py` evreleri; gerekirse iz ayrıştıran küçük betik). Bulgular DEVIR.md + HIZ_PLANI'na sayılarla.
@@ -164,3 +164,12 @@ Model: opus · Cihaz: A/B · APK: evet
 **Kullanıcı (2026-11-13):** "Not sıralama iki sütunun arasında geldiğinde anlık bir sağa bir sola geçtiği için aşırı zıplamalar oluyor."
 
 **Kök neden adayı:** iki sütunlu ızgarada sürüklenen kart iki sütunun sınırındayken hedef indeks her karede değişiyor (histerezis yok) → kartlar sağ/sol arasında gidip geliyor. Çözüm: hedef değişimine histerezis/eşik (sınırdan belirli pay geçmeden ve kısa süre kalmadan yer değiştirme yok) ve yer değiştirme animasyonu sırasında yeniden hedeflememe. Önce tekrar üreten widget testi (sınırda küçük titreşimli sürükleme → hedef indeks değişim sayısı ≤ 1), sonra düzelt. P47 çöpe sürükleme ve `_previewCardDrop` korunur.
+
+## P57 — Alt çubuk: her düğme eklenip çıkarılabilir, sıralanabilir
+
+Model: opus · Cihaz: - · APK: evet
+
+**Kullanıcı (2026-11-13, ekran görüntüsüyle):** "Alt paneldeki tüm butonları değiştirilebilmesi; kişi istediğini koyabilmeli, istediğini çıkarabilmeli; bunu da ayarlarda yapılabilen seçenekler geniş olsun."
+
+**Durum:** bitti (bulut 2026-11-13). `core/personalize.dart`: `UiPrefs.barOrder` / `aiOrder` (boş = varsayılan; `UiPrefs.orderOf` yeni düğmeyi varsayılan yerine göre sona ekler, yinelenen/bilinmeyen kimliği atlar) + `UiItem.barLeftDefault`/`barRightDefault`; eklenebilir (varsayılan gizli, `optIn`) düğmeler: geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara, renk, paylaş (eski `barShare` kimliği). Editör çubuğu kimlik → düğme haritasından kullanıcı sırasıyla dizilir; sığmazsa plan (`planEditorBar`) önce düğmeleri küçültür, sonra kapsül yatay kayar. Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk": iki grup (araçlar / yapay zekâ ve ses), tutamaçla sürükle-sırala, anahtarla ekle/çıkar, "Alt çubuğu varsayılana döndür". Düzenleme modundaki dokunarak gizleme aynen sürer. Testler `test/editor_bar_customize_test.dart`. Kalan (P50'ye): düğmeyi iki kapsül arasında taşıma; üst çubuk için aynı liste.
+

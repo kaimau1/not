@@ -322,6 +322,14 @@ Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5
 - K3 **Sabit/gömülü PDF (F78.3b):** PDF'li notu aç: belge açılırken açık gri kutu + halka yerine belgenin küçük resmi (hafif karartılmış), sonra belge. Bölme boyu oynamıyor. A/B: `python -u prof_oc.py pdf <x> <y>` (sabit PDF'li not) — AÇILIŞ kareleri tabandan kötü olmamalı.
 - K4 **A/B kapısı:** `tool/perf/ab_liste.py` ve `ab_klavye.py` — UI ms / LAYOUT ms +%20'yi aşmamalı.
 
+### L1–L3 (2026-11-13 bulut — F79.6 çevrimdışı hâller; yazıldı, cihazda doğrulanmadı)
+- L1 Uçak kipini aç → ana ekranda "Gelen" süzgecini seç (Gelen'i daha önce hiç açmamış taze kurulumda): "burada not yok" DEĞİL, "Bağlantı yok" + Tekrar dene. Uçak kipini kapat → Tekrar dene → liste gelir.
+- L2 Uçak kipi → notta ✨ AI levhası: üstte "Bağlantı yok" kartı, araçlar soluk ve dokunulmuyor. Uçak kipini kapat → kart kalkar, araçlar açılır (levhayı kapatıp açmadan).
+- L3 Uçak kipinde nota fotoğraf ekle → ana ekrandaki şerit "1 ek bekliyor — bağlantı gelince yüklenecek" (bulut-üstü-çizili simge, kırmızı değil). Bağlantı gelince "yükleniyor", sonra şerit kaybolur.
+- L4 Notta birkaç maddeye noktalı, kesikli ve dalgalı "Alt çizgi" ver → bir maddeye dokun, klavye açılsın: takılma yok; çizgiler eskisi gibi görünüyor (noktalar yuvarlak, dalga aynı genlikte). Düz çizgide hâlâ takılıyorsa P55'e not et.
+- L5 **Alt çubuk (P57):** Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk": "Geri al" ve "Hatırlatıcı"yı aç, "Ara"yı tutamaçtan en üste sürükle → nota gir: çubukta Ara en solda, geri al ve hatırlatıcı var, çalışıyorlar. 360 dp'lik dar ekranda çok düğme açınca çubuk taşmıyor (önce küçülür, sonra kayar). "Alt çubuğu varsayılana döndür" → eski düzen.
+- L6 **Klasörde çöpe sürükle (P58):** bir klasör seç → notu basılı tut, sürükle: altta çöp belirir, üstüne bırak → not silinir, "Geri al" çıkar. Sürüklerken diğer kartlar yer değiştirmez. Oynatmadan bırakınca not seçilir. Başkasının paylaştığı klasörde sürükleme yok.
+
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
 - [ ] Web'de tarayıcının geri tuşu tam ekranda önce tam ekrandan çıkmıyor (go_router popstate PopScope'a uğramıyor); Esc/☰/Android geri çıkarıyor (2026-11-02)

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -31,22 +32,30 @@ void paintItemDivider(
     ..strokeWidth = width
     ..style = PaintingStyle.stroke
     ..strokeCap = dotted ? StrokeCap.round : StrokeCap.butt;
+  // TEK ÇİZİM ÇAĞRISI (kullanıcı bulgusu 2026-11-13: "alt çizgi varken
+  // madde altında kasma oluyor klavye açılırken"). KÖK NEDEN adayı: kesikli
+  // ve noktalı çizgi satır başına 30–70 AYRI `drawLine` (noktada yuvarlak
+  // uç), dalgalı çizgi 1,5 px adımlı ~250 noktalı yol çiziyordu. Impeller
+  // her çizgi/yolu her karede yeniden üçgenler — klavye açılırken liste
+  // kaydıkça görünen her ayırıcılı satırda bu iş her karede tekrarlanıyordu.
+  // Artık her tür en çok bir `drawPoints`/`drawPath` (çift çizgi iki
+  // `drawLine`); dalga yarım dalga başına tek eğri. Görünüş aynı.
   switch (style.kind) {
     case NoteItem.dividerDashed:
       final dash = 5 + 2.5 * width;
       final gap = 3 + 1.5 * width;
+      final points = <Offset>[];
       for (var x = left; x < right; x += dash + gap) {
-        canvas.drawLine(
-          Offset(x, y),
-          Offset(math.min(x + dash, right), y),
-          paint,
-        );
+        points
+          ..add(Offset(x, y))
+          ..add(Offset(math.min(x + dash, right), y));
       }
+      canvas.drawPoints(ui.PointMode.lines, points, paint);
     case NoteItem.dividerDotted:
       final step = math.max(5.0, width * 2.2);
-      for (var x = left; x < right; x += step) {
-        canvas.drawLine(Offset(x, y), Offset(x, y), paint);
-      }
+      canvas.drawPoints(ui.PointMode.points, [
+        for (var x = left; x < right; x += step) Offset(x, y),
+      ], paint);
     case NoteItem.dividerDouble:
       // İki ince çizgi: toplam kalınlık tek çizgiyle aynı ağırlıkta dursun.
       final line = math.max(0.8, width * 0.6);
@@ -58,12 +67,26 @@ void paintItemDivider(
     case NoteItem.dividerWavy:
       final amplitude = 1.5 + width * 0.6;
       final wave = 10 + width * 2;
-      final path = Path()..moveTo(left, y - amplitude);
-      for (var x = left; x <= right; x += 1.5) {
-        path.lineTo(
-          x,
-          y - amplitude + math.sin((x - left) / wave * 2 * math.pi) * amplitude,
+      // sin dalgası: orta çizgi y − amplitude; her yarım dalga tek ikinci
+      // derece eğri (tepe/çukur denetim noktası 2× genlikte — eğrinin tepesi
+      // genliğe denk gelir).
+      final mid = y - amplitude;
+      final half = wave / 2;
+      final path = Path()..moveTo(left, mid);
+      var up = true;
+      for (var x = left; x < right; x += half) {
+        final end = math.min(x + half, right);
+        final control = (x + end) / 2;
+        final peak = up ? -amplitude : amplitude;
+        // Ekranda y aşağı artar: eski çizim (`mid + sin·A`) ilk yarım
+        // dalgayı AŞAĞI çiziyordu — burada da ilk eğri aşağı.
+        path.quadraticBezierTo(
+          control,
+          mid - peak * 2 * (end - x) / half,
+          end,
+          mid,
         );
+        up = !up;
       }
       paint.strokeCap = StrokeCap.round;
       canvas.drawPath(path, paint);

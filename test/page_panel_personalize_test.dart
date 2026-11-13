@@ -191,23 +191,23 @@ void main() {
         final store = await SharedPreferences.getInstance();
         Personalize.attach(store);
         Personalize.startEditing();
-        Personalize.toggle(UiItem.barShare);
-        expect(Personalize.current.shows(UiItem.barShare), isFalse);
-        expect(Personalize.prefs.value.shows(UiItem.barShare), isTrue);
+        Personalize.toggle(UiItem.barSearch);
+        expect(Personalize.current.shows(UiItem.barSearch), isFalse);
+        expect(Personalize.prefs.value.shows(UiItem.barSearch), isTrue);
         expect(Personalize.dirty, isTrue);
         Personalize.cancel();
         expect(Personalize.editing, isFalse);
-        expect(Personalize.current.shows(UiItem.barShare), isTrue);
+        expect(Personalize.current.shows(UiItem.barSearch), isTrue);
 
         Personalize.startEditing();
-        Personalize.toggle(UiItem.barShare);
+        Personalize.toggle(UiItem.barSearch);
         Personalize.save();
         expect(Personalize.editing, isFalse);
-        expect(Personalize.prefs.value.shows(UiItem.barShare), isFalse);
+        expect(Personalize.prefs.value.shows(UiItem.barSearch), isFalse);
         // Kalıcı: yeniden bağlanınca okunur.
         Personalize.prefs.value = const UiPrefs();
         Personalize.attach(store);
-        expect(Personalize.prefs.value.shows(UiItem.barShare), isFalse);
+        expect(Personalize.prefs.value.shows(UiItem.barSearch), isFalse);
       },
     );
 

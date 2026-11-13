@@ -38,7 +38,37 @@ class UiPrefs {
     this.hidden = const <String>{},
     this.seekBack = 10,
     this.seekForward = 10,
+    this.barOrder = const <String>[],
+    this.aiOrder = const <String>[],
   });
+
+  /// Not alt çubuğunun SOL kapsülündeki düğmelerin kullanıcı sırası
+  /// (kullanıcı isteği 2026-11-13: "alt paneldeki tüm butonlar
+  /// değiştirilebilsin, kişi istediğini koyabilsin, istediğini çıkarabilsin;
+  /// ayarlarda seçenekler geniş olsun"). Boş = varsayılan sıra; listede
+  /// olmayan (yeni) düğme varsayılan yerine göre sona eklenir — bkz.
+  /// [orderOf].
+  final List<String> barOrder;
+
+  /// Sağdaki AI/ses kapsülünün sırası (aynı kurallar).
+  final List<String> aiOrder;
+
+  /// [defaults] sırasını kullanıcı sırasıyla ([saved]) birleştirir: kayıtlı
+  /// ve hâlâ var olan kimlikler kayıtlı sırada, kalanlar varsayılan sırada
+  /// arkada. Bilinmeyen (eski sürümden kalan) kimlik atlanır.
+  static List<String> orderOf(List<String> defaults, List<String> saved) {
+    final known = defaults.toSet();
+    final seen = <String>{};
+    final out = <String>[
+      // Yinelenen kimlik (bozuk kayıt) düğmeyi iki kez çizmesin.
+      for (final id in saved)
+        if (known.contains(id) && seen.add(id)) id,
+    ];
+    for (final id in defaults) {
+      if (seen.add(id)) out.add(id);
+    }
+    return out;
+  }
 
   /// Gizlenen öğelerin kimlikleri (bkz. [UiItem]).
   final Set<String> hidden;
@@ -85,17 +115,26 @@ class UiPrefs {
     return null;
   }
 
-  UiPrefs copyWith({Set<String>? hidden, int? seekBack, int? seekForward}) =>
-      UiPrefs(
-        hidden: hidden ?? this.hidden,
-        seekBack: seekBack ?? this.seekBack,
-        seekForward: seekForward ?? this.seekForward,
-      );
+  UiPrefs copyWith({
+    Set<String>? hidden,
+    int? seekBack,
+    int? seekForward,
+    List<String>? barOrder,
+    List<String>? aiOrder,
+  }) => UiPrefs(
+    hidden: hidden ?? this.hidden,
+    seekBack: seekBack ?? this.seekBack,
+    seekForward: seekForward ?? this.seekForward,
+    barOrder: barOrder ?? this.barOrder,
+    aiOrder: aiOrder ?? this.aiOrder,
+  );
 
   Map<String, Object?> toJson() => {
     'hidden': (hidden.toList()..sort()),
     'seekBack': seekBack,
     'seekForward': seekForward,
+    if (barOrder.isNotEmpty) 'barOrder': barOrder,
+    if (aiOrder.isNotEmpty) 'aiOrder': aiOrder,
   };
 
   /// Bozuk/eksik kayıt varsayılana düşer; sarma süresi 1–600 sn arasında.
@@ -103,10 +142,14 @@ class UiPrefs {
     if (json is! Map) return const UiPrefs();
     int seconds(Object? v) => v is num ? v.toInt().clamp(1, 600) : 10;
     final hidden = json['hidden'];
+    List<String> ids(Object? v) =>
+        v is List ? [for (final x in v) '$x'] : const <String>[];
     return UiPrefs(
       hidden: hidden is List ? {for (final h in hidden) '$h'} : const {},
       seekBack: seconds(json['seekBack']),
       seekForward: seconds(json['seekForward']),
+      barOrder: ids(json['barOrder']),
+      aiOrder: ids(json['aiOrder']),
     );
   }
 
@@ -115,11 +158,18 @@ class UiPrefs {
       other is UiPrefs &&
       other.seekBack == seekBack &&
       other.seekForward == seekForward &&
-      setEquals(other.hidden, hidden);
+      setEquals(other.hidden, hidden) &&
+      listEquals(other.barOrder, barOrder) &&
+      listEquals(other.aiOrder, aiOrder);
 
   @override
-  int get hashCode =>
-      Object.hash(seekBack, seekForward, Object.hashAllUnordered(hidden));
+  int get hashCode => Object.hash(
+    seekBack,
+    seekForward,
+    Object.hashAllUnordered(hidden),
+    Object.hashAll(barOrder),
+    Object.hashAll(aiOrder),
+  );
 }
 
 /// Gizlenebilir öğelerin kalıcı kimlikleri. Kimlik DEĞİŞTİRİLMEZ (kayıtlı
@@ -144,6 +194,40 @@ abstract final class UiItem {
   static const barVoiceRecord = 'editor.bar.voiceRecord';
   /// ☑ satırı onay kutulu maddeye çevir / kutuyu kaldır (2026-10-28).
   static const barCheckbox = 'editor.bar.checkbox';
+
+  // SONRADAN EKLENEBİLEN alt çubuk düğmeleri (kullanıcı isteği 2026-11-13):
+  // varsayılan GİZLİ ([optIn]); Ayarlar → Kişiselleştir → Alt çubuk'tan
+  // eklenir, sırası orada sürüklenerek değişir.
+  static const barUndo = 'editor.bar.undo';
+  static const barRedo = 'editor.bar.redo';
+  static const barReminder = 'editor.bar.reminder';
+  static const barPhoto = 'editor.bar.photo';
+  static const barCamera = 'editor.bar.camera';
+  static const barScan = 'editor.bar.scan';
+  static const barColor = 'editor.bar.color';
+
+  /// Sol kapsülün VARSAYILAN sırası (Biçim · Ekle · Kalem · Ara · Ekler ·
+  /// ☑/Seç — türe özgü düğme en sonda, F12.3) + eklenebilenler.
+  static const barLeftDefault = <String>[
+    barFormat,
+    barAdd,
+    barPen,
+    barSearch,
+    barAttachments,
+    barCheckbox,
+    barSelect,
+    barUndo,
+    barRedo,
+    barReminder,
+    barPhoto,
+    barCamera,
+    barScan,
+    barColor,
+    barShare,
+  ];
+
+  /// Sağ (AI/ses) kapsülün varsayılan sırası.
+  static const barRightDefault = <String>[barAi, barVoiceRecord, barDictation];
 
   // ── Not ekranının üst çubuğu ──
   static const topSync = 'editor.top.sync';
@@ -186,6 +270,14 @@ abstract final class UiItem {
   /// 2026-11-08: "hızlı menüye istediğimizi ekleyebilelim") — varsayılan
   /// gizli; düzenleme modunda (satırın sonundaki ⚙) dokununca eklenir.
   static final optIn = <String>{
+    barUndo,
+    barRedo,
+    barReminder,
+    barPhoto,
+    barCamera,
+    barScan,
+    barColor,
+    barShare,
     // SADE VARSAYILAN (kullanıcı isteği 2026-11-09: "hızlı panelin varsayılan
     // hali sadeleşmeli — kalem kipi, yazım düzeltici, paket, ek ekle, kalın +
     // favori renk; telefona sığsın, fazlasını kişiler düzenleme alanından

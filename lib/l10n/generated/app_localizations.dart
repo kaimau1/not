@@ -2084,6 +2084,24 @@ abstract class AppLocalizations {
   /// **'{count} ek yüklenemedi, yeniden denenecek'**
   String pendingUploadsFailed(int count);
 
+  /// No description provided for @pendingUploadsOffline.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek bekliyor — bağlantı gelince yüklenecek'**
+  String pendingUploadsOffline(int count);
+
+  /// No description provided for @aiOfflineTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı yok'**
+  String get aiOfflineTitle;
+
+  /// No description provided for @aiOfflineBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.'**
+  String get aiOfflineBody;
+
   /// No description provided for @pendingUploadsInfo.
   ///
   /// In tr, this message translates to:
@@ -8659,6 +8677,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Not ekranı · alt çubuk'**
   String get personalizeEditorBar;
+
+  /// No description provided for @personalizeBarInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.'**
+  String get personalizeBarInfo;
+
+  /// No description provided for @personalizeBarLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sol kapsül · araçlar'**
+  String get personalizeBarLeft;
+
+  /// No description provided for @personalizeBarRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağ kapsül · yapay zekâ ve ses'**
+  String get personalizeBarRight;
+
+  /// No description provided for @personalizeBarReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt çubuğu varsayılana döndür'**
+  String get personalizeBarReset;
+
+  /// No description provided for @reorderHandle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sırala'**
+  String get reorderHandle;
 
   /// No description provided for @personalizeEditorTop.
   ///

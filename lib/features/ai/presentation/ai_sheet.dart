@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/connectivity.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/markdown.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -543,6 +544,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final offline = ref.watch(isOfflineProvider);
     final pdfs = [
       for (final a in widget.note.attachments)
         if (a.kind == AttachmentKind.pdf) a,
@@ -687,7 +689,15 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // bilgi veriyordu (bkz. ai_hub_screen.dart).
                   // Misafir, anahtarsız (F10.5): puan yerine açıklama kartı,
                   // araçlar soluk ve dokunulamaz.
-                  if (ref.watch(aiAvailabilityProvider) != AiAvailability.ready)
+                  // F79.6 (4): çevrimdışıyken düğmeler etkin görünüyor, hata
+                  // ancak dokununca geliyordu — önce söyle, araçları soldur.
+                  if (offline)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 4, 16, 14),
+                      child: AiOfflineCard(),
+                    )
+                  else if (ref.watch(aiAvailabilityProvider) !=
+                      AiAvailability.ready)
                     const Padding(
                       padding: EdgeInsets.fromLTRB(16, 4, 16, 14),
                       child: AiStatusCard(),
@@ -702,8 +712,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     ),
                   AiStatusDim(
                     locked:
+                        offline ||
                         ref.watch(aiAvailabilityProvider) !=
-                        AiAvailability.ready,
+                            AiAvailability.ready,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,

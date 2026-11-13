@@ -1659,6 +1659,22 @@ class _SwipeActions extends StatelessWidget {
   }
 }
 
+/// Bekleyen ek şeridinin metni (F79.6 (5): çevrimdışıyken "yükleniyor"
+/// değil "bekliyor"). Öncelik: Drive bağlantısı > bağlantı yok > hata >
+/// yükleniyor.
+String pendingUploadsBarLabel(
+  AppLocalizations l10n, {
+  required int pending,
+  required int failed,
+  required bool needsDrive,
+  required bool offline,
+}) {
+  if (needsDrive) return l10n.driveWaiting(pending);
+  if (offline) return l10n.pendingUploadsOffline(pending);
+  if (failed > 0) return l10n.pendingUploadsFailed(failed);
+  return l10n.pendingUploads(pending);
+}
+
 /// **SENKRON BEKLEYEN EKLER** göstergesi (kullanıcı isteği 2026-09-23).
 ///
 /// Çevrimdışı eklenen fotoğraf öbür cihazda görünmüyordu ve bunun nedeni
@@ -1691,7 +1707,12 @@ class _PendingUploadsBar extends ConsumerWidget {
         if (context.mounted) unawaited(connectDrive(context, ref));
       });
     }
-    final failing = state.failed > 0 && !needsDrive;
+    // F79.6 (5): bağlantı yokken "yükleniyor" demek yalandı — "bekliyor,
+    // bağlantı gelince yüklenecek" (hata rengi de değil: çevrimdışıyken
+    // başarısız deneme beklenen şey). Yalnız metin/simge değişir, boy aynı.
+    final offline =
+        state.pending > 0 && !needsDrive && ref.watch(isOfflineProvider);
+    final failing = state.failed > 0 && !needsDrive && !offline;
     return AnimatedSize(
       duration: const Duration(milliseconds: 200),
       alignment: Alignment.topCenter,
@@ -1721,7 +1742,7 @@ class _PendingUploadsBar extends ConsumerWidget {
                         Icon(
                           needsDrive
                               ? Icons.add_to_drive_outlined
-                              : failing
+                              : failing || offline
                               ? Icons.cloud_off_outlined
                               : Icons.cloud_upload_outlined,
                           size: 18,
@@ -1732,11 +1753,13 @@ class _PendingUploadsBar extends ConsumerWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            needsDrive
-                                ? l10n.driveWaiting(state.pending)
-                                : failing
-                                ? l10n.pendingUploadsFailed(state.failed)
-                                : l10n.pendingUploads(state.pending),
+                            pendingUploadsBarLabel(
+                              l10n,
+                              pending: state.pending,
+                              failed: state.failed,
+                              needsDrive: needsDrive,
+                              offline: offline,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(

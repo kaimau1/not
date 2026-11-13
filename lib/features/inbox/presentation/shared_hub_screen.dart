@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/router.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../notes/data/note_shares_repository.dart';
 import '../../notes/data/shared_note_activity.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../notes/presentation/note_grid.dart';
@@ -64,26 +65,10 @@ class SharedHubBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final inboxAsync = ref.watch(inboxNotesProvider);
-    final inbox = inboxAsync.value ?? const <InboxNote>[];
+    final inbox = ref.watch(inboxNotesProvider).value ?? const <InboxNote>[];
     final entries = sharedNoteEntries(ref);
     if (inbox.isEmpty && entries.isEmpty) {
-      if (inboxAsync.isLoading) return const NoteListSkeleton();
-      // F79.6: bağlantı yokken (ya da okuma hatasında) "burada not yok"
-      // demek yalandı — Gelen dolu olabilir. Diğer listelerle aynı hata
-      // görünümü + "Tekrar dene".
-      if (inboxAsync.hasError) {
-        return ErrorState(
-          error: inboxAsync.error!,
-          onRetry: () => ref.invalidate(inboxNotesProvider),
-        );
-      }
-      return EmptyState(
-        icon: AppIcons.inbox,
-        title: l10n.sharedHubEmpty,
-        subtitle: l10n.sharedHubEmptyHint,
-      );
+      return sharedHubPlaceholder(context, ref);
     }
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -105,6 +90,50 @@ class SharedHubBody extends ConsumerWidget {
       },
     );
   }
+}
+
+/// Birleşik liste BOŞKEN ne çizileceği — ayrı ekran ([SharedHubBody]) ve
+/// ana ekranın "Gelen" süzgeci aynısını kullanır: yüklenirken iskelet, okuma
+/// hatasında (çoğu kez bağlantı yok) hata görünümü + "Tekrar dene", ancak
+/// gerçekten boşsa "burada not yok".
+///
+/// F79.6 (3): ana ekrandaki "Gelen" süzgeci hatada da "burada not yok"
+/// diyordu — Gelen dolu olabilir, bu yalandı.
+///
+/// [skeleton] false: yüklenirken boş alan (ana ekranda dilim
+/// `SliverFillRemaining(hasScrollBody: false)` içinde; iskeletin
+/// `LayoutBuilder`ı iç boy ölçümünü desteklemez).
+Widget sharedHubPlaceholder(
+  BuildContext context,
+  WidgetRef ref, {
+  bool skeleton = true,
+}) {
+  final l10n = context.l10n;
+  final inboxAsync = ref.watch(inboxNotesProvider);
+  final sharesAsync = ref.watch(sharedNotesWithMeProvider);
+  // Hata ÖNCE: Riverpod 3 akış hatasında kendiliğinden yeniden dener ve o
+  // sırada durum "yükleniyor + hata" olur — yükleniyor önce bakılırsa hata
+  // hiç görünmez, iskelet sonsuza dek döner.
+  final error = inboxAsync.hasError
+      ? inboxAsync.error!
+      : (sharesAsync.hasError ? sharesAsync.error! : null);
+  if (error == null && inboxAsync.isLoading && !inboxAsync.hasValue) {
+    return skeleton ? const NoteListSkeleton() : const SizedBox.shrink();
+  }
+  if (error != null) {
+    return ErrorState(
+      error: error,
+      onRetry: () {
+        ref.invalidate(inboxNotesProvider);
+        ref.invalidate(sharedNotesWithMeProvider);
+      },
+    );
+  }
+  return EmptyState(
+    icon: AppIcons.inbox,
+    title: l10n.sharedHubEmpty,
+    subtitle: l10n.sharedHubEmptyHint,
+  );
 }
 
 /// Birleşik listenin SLIVER'ları — ayrı ekran ([SharedHubBody]) ve ana
