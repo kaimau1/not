@@ -4734,7 +4734,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customizeModeTitle => 'Edit mode';
 
   @override
-  String get customizeModeHint => 'Tap buttons to hide or show them';
+  String get customizeModeHint => 'Tap to hide or show · applied instantly';
 
   @override
   String customizeHiddenCount(int count) {
@@ -4742,10 +4742,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get customizeSave => 'Save';
-
-  @override
-  String get customizeSaved => 'Layout saved';
+  String get customizeDone => 'Done';
 
   @override
   String videoBackSeconds(int seconds) {
@@ -4771,7 +4768,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customizeStartInfo =>
-      'Turn on edit mode, then tap buttons and areas on any screen to hide or show them. When you\'re done, tap Save in the strip at the top.';
+      'Turn on edit mode, then tap buttons and areas on any screen to hide or show them. Changes apply instantly; when you\'re done, tap Done in the strip at the top.';
 
   @override
   String get customizeStart => 'Start edit mode';

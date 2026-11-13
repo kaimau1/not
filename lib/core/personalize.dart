@@ -22,9 +22,11 @@ import 'error_log.dart';
 ///    öğelerinin hepsini gizler. Modülün ayrı bir kaydı YOK (durum öğelerden
 ///    türer) — öğe tek tek açılınca modül "kısmen açık" görünür, iki kayıt
 ///    birbirini ezmez.
-///  * DÜZENLEME MODU bir TASLAK üzerinde çalışır ([draft]): ekranlardaki
-///    öğelere dokununca gizle/göster taslağa yazılır, uygulamanın tepesindeki
-///    şeritte "Kaydet" ile kalıcı olur, "Vazgeç" ile atılır.
+///  * DÜZENLEME MODU ANINDA uygular (P50, kullanıcı isteği 2026-11-13: "aç,
+///    düzenle, kaydet değil"): ekranlardaki öğelere dokununca gizle/göster
+///    hemen kaydedilir; tepedeki şeritte "Geri al" modun açıldığı ana döner,
+///    "Bitti" modu kapatır. [draft] yalnız "mod açık" işaretidir (kayıtla
+///    aynı değeri taşır).
 ///  * Riverpod DEĞİL, statik dinlenebilir (bkz. `BubbleLook`): alt çubuğun
 ///    düğmeleri, video denetimi, + menüsü gibi sağlayıcı kapsamı dışındaki
 ///    (Overlay, levha) yerlerden de okunur; testte bağlanmadan varsayılanla
@@ -410,8 +412,12 @@ abstract final class Personalize {
   /// KAYITLI tercihler.
   static final prefs = ValueNotifier<UiPrefs>(const UiPrefs());
 
-  /// Düzenleme modundaki taslak; mod kapalıyken null.
+  /// Düzenleme modu açıkken geçerli tercihler (kayıtla aynı); kapalıyken
+  /// null.
   static final draft = ValueNotifier<UiPrefs?>(null);
+
+  /// Mod açıldığı andaki kayıt — "Geri al" buna döner.
+  static UiPrefs _before = const UiPrefs();
 
   /// İkisinden biri değişince haber veren birleşik dinlenebilir.
   static final Listenable listenable = Listenable.merge([prefs, draft]);
@@ -423,8 +429,8 @@ abstract final class Personalize {
 
   static bool get editing => draft.value != null;
 
-  /// Taslak kayıttan farklı mı (şeritteki "Kaydet" vurgusu).
-  static bool get dirty => draft.value != null && draft.value != prefs.value;
+  /// Bu oturumda bir şey değişti mi (şeritteki "Geri al" etkin mi).
+  static bool get dirty => draft.value != null && prefs.value != _before;
 
   /// Uygulama açılışında (main) bir kez.
   static void attach(SharedPreferences store) {
@@ -457,22 +463,27 @@ abstract final class Personalize {
     }
   }
 
-  static void startEditing() => draft.value ??= prefs.value;
+  static void startEditing() {
+    if (draft.value != null) return;
+    _before = prefs.value;
+    draft.value = prefs.value;
+  }
 
-  /// Düzenleme modunda bir öğeye dokunuldu: taslakta gizle/göster.
+  /// Düzenleme modunda bir öğeye dokunuldu: gizle/göster, HEMEN kaydedilir.
   static void toggle(String id) {
-    final d = draft.value;
-    if (d == null) return;
-    draft.value = d.withVisible(id, !d.shows(id));
+    if (draft.value == null) return;
+    update((p) => p.withVisible(id, !p.shows(id)));
   }
 
-  static void save() {
-    final d = draft.value;
-    if (d != null) _write(d);
-    draft.value = null;
-  }
+  /// "Bitti": mod kapanır (değişiklikler zaten kayıtlı).
+  static void done() => draft.value = null;
 
-  static void cancel() => draft.value = null;
+  /// "Geri al": modun açıldığı andaki düzene döner; mod açık kalır.
+  static void revert() {
+    if (draft.value == null) return;
+    draft.value = _before;
+    _write(_before);
+  }
 
   /// Varsayılana dön (hepsi görünür, sarma 10/10 sn).
   static void reset() {

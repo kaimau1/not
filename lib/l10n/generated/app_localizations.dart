@@ -8471,7 +8471,7 @@ abstract class AppLocalizations {
   /// No description provided for @customizeModeHint.
   ///
   /// In tr, this message translates to:
-  /// **'Gizlemek/göstermek için düğmelere dokun'**
+  /// **'Dokun: gizle ya da göster · anında uygulanır'**
   String get customizeModeHint;
 
   /// No description provided for @customizeHiddenCount.
@@ -8480,17 +8480,11 @@ abstract class AppLocalizations {
   /// **'{count} düğme gizli · dokunarak değiştir'**
   String customizeHiddenCount(int count);
 
-  /// No description provided for @customizeSave.
+  /// No description provided for @customizeDone.
   ///
   /// In tr, this message translates to:
-  /// **'Kaydet'**
-  String get customizeSave;
-
-  /// No description provided for @customizeSaved.
-  ///
-  /// In tr, this message translates to:
-  /// **'Düzen kaydedildi'**
-  String get customizeSaved;
+  /// **'Bitti'**
+  String get customizeDone;
 
   /// No description provided for @videoBackSeconds.
   ///
@@ -8531,7 +8525,7 @@ abstract class AppLocalizations {
   /// No description provided for @customizeStartInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Bitince üstteki şeritten Kaydet\'e bas.'**
+  /// **'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Değişiklik anında uygulanır; bitince üstteki şeritten Bitti\'ye bas.'**
   String get customizeStartInfo;
 
   /// No description provided for @customizeStart.

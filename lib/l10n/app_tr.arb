@@ -2171,7 +2171,7 @@
   "customizeHideItem": "Gizle",
   "customizeShowItem": "Göster",
   "customizeModeTitle": "Düzenleme modu",
-  "customizeModeHint": "Gizlemek/göstermek için düğmelere dokun",
+  "customizeModeHint": "Dokun: gizle ya da göster · anında uygulanır",
   "customizeHiddenCount": "{count} düğme gizli · dokunarak değiştir",
   "@customizeHiddenCount": {
     "placeholders": {
@@ -2180,8 +2180,7 @@
       }
     }
   },
-  "customizeSave": "Kaydet",
-  "customizeSaved": "Düzen kaydedildi",
+  "customizeDone": "Bitti",
   "videoBackSeconds": "{seconds} sn geri",
   "@videoBackSeconds": {
     "placeholders": {
@@ -2202,7 +2201,7 @@
   "personalizeInfo": "Hangi alan ve düğmeler görünsün, eklentiler",
   "personalizeOpen": "Kişiselleştirmeyi aç",
   "customizeStartTitle": "Ekranda düzenle",
-  "customizeStartInfo": "Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Bitince üstteki şeritten Kaydet'e bas.",
+  "customizeStartInfo": "Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Değişiklik anında uygulanır; bitince üstteki şeritten Bitti'ye bas.",
   "customizeStart": "Düzenleme modunu başlat",
   "customizeActive": "Düzenleme modu açık",
   "customizeModeShort": "Ekranlarda dokunarak gizle/göster",

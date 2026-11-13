@@ -184,27 +184,34 @@ void main() {
       expect(prefs.hidden, isEmpty);
     });
 
+    // P50 (kullanıcı 2026-11-13: "aç, düzenle, kaydet değil"): dokunuş ANINDA
+    // kaydedilir; "Geri al" oturumun başına döner (mod açık kalır), "Bitti"
+    // modu kapatır.
     test(
-      'düzenleme modu TASLAKTA çalışır: Vazgeç atar, Kaydet yazar',
+      'düzenleme modu ANINDA uygular: dokunuş yazar, Geri al başa döner',
       () async {
         SharedPreferences.setMockInitialValues({});
         final store = await SharedPreferences.getInstance();
         Personalize.attach(store);
         Personalize.startEditing();
+        expect(Personalize.dirty, isFalse);
         Personalize.toggle(UiItem.barSearch);
         expect(Personalize.current.shows(UiItem.barSearch), isFalse);
-        expect(Personalize.prefs.value.shows(UiItem.barSearch), isTrue);
+        // Kaydet'e basmadan kalıcı: yeniden bağlanınca okunur.
+        expect(Personalize.prefs.value.shows(UiItem.barSearch), isFalse);
+        expect(store.getString('ui_prefs_v1'), contains(UiItem.barSearch));
         expect(Personalize.dirty, isTrue);
-        Personalize.cancel();
-        expect(Personalize.editing, isFalse);
-        expect(Personalize.current.shows(UiItem.barSearch), isTrue);
 
-        Personalize.startEditing();
+        Personalize.revert();
+        expect(Personalize.editing, isTrue);
+        expect(Personalize.dirty, isFalse);
+        expect(Personalize.prefs.value.shows(UiItem.barSearch), isTrue);
+        expect(store.getString('ui_prefs_v1'), isNot(contains('bar.search')));
+
         Personalize.toggle(UiItem.barSearch);
-        Personalize.save();
+        Personalize.done();
         expect(Personalize.editing, isFalse);
         expect(Personalize.prefs.value.shows(UiItem.barSearch), isFalse);
-        // Kalıcı: yeniden bağlanınca okunur.
         Personalize.prefs.value = const UiPrefs();
         Personalize.attach(store);
         expect(Personalize.prefs.value.shows(UiItem.barSearch), isFalse);
@@ -240,8 +247,10 @@ void main() {
       expect(taps, 0);
       expect(Personalize.current.shows('x'), isTrue);
 
-      // Şeritten Kaydet.
-      await tester.tap(find.byKey(const ValueKey('customize-save')));
+      // Dokunuş anında kayıtta (Kaydet yok).
+      expect(Personalize.prefs.value.shows('x'), isTrue);
+      // Şeritten Bitti.
+      await tester.tap(find.byKey(const ValueKey('customize-done')));
       await tester.pumpAndSettle();
       expect(Personalize.editing, isFalse);
       expect(find.byType(CustomizeFrame), findsNothing);
@@ -259,10 +268,24 @@ void main() {
       expect(find.text('2'), findsOneWidget);
       Personalize.startEditing();
       await tester.pump();
-      expect(find.byKey(const ValueKey('customize-cancel')), findsOneWidget);
+      expect(find.byKey(const ValueKey('customize-done')), findsOneWidget);
+      // Değişiklik yokken Geri al sönük.
+      expect(
+        tester
+            .widget<TextButton>(find.byKey(const ValueKey('customize-undo')))
+            .onPressed,
+        isNull,
+      );
       expect(find.text('2'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('customize-cancel')));
+      Personalize.toggle('x');
       await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('customize-undo')));
+      await tester.pump();
+      expect(Personalize.editing, isTrue);
+      expect(Personalize.prefs.value.shows('x'), isTrue);
+      await tester.tap(find.byKey(const ValueKey('customize-done')));
+      await tester.pump();
+      expect(Personalize.editing, isFalse);
       expect(find.text('2'), findsOneWidget);
     });
 
