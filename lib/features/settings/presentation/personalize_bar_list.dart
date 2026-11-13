@@ -16,6 +16,8 @@ import '../../../core/personalize.dart';
 /// Satırdaki ok düğmeyi ÖBÜR kapsüle taşır (P50): her düğme iki kapsülde de
 /// durabilir, yalnız kılığı değişir.
 ///
+/// Altında ÜST ÇUBUK grubu (P20 M8): aynı satır, kapsül oku yok.
+///
 /// Değişiklik hemen kaydedilir ([Personalize.update]); düzenleme modu açıksa
 /// taslak da aynı değişikliği alır.
 class PersonalizeBarList extends StatelessWidget {
@@ -45,6 +47,11 @@ class PersonalizeBarList extends StatelessWidget {
         UiItem.barAi => (Icons.auto_awesome, l10n.aiTitle),
         UiItem.barDictation => (AppIcons.dictation, l10n.liveDictation),
         UiItem.barVoiceRecord => (AppIcons.voiceRecord, l10n.recordAudio),
+        UiItem.topHome => (Icons.home_outlined, l10n.goHome),
+        UiItem.topSync => (Icons.cloud_done_outlined, l10n.uiItemSync),
+        UiItem.topUndo => (Icons.undo, l10n.undo),
+        UiItem.topPin => (Icons.push_pin_outlined, l10n.pin),
+        UiItem.topFullscreen => (Icons.fullscreen_rounded, l10n.noteFullscreen),
         _ => (Icons.circle_outlined, id),
       };
 
@@ -53,7 +60,8 @@ class PersonalizeBarList extends StatelessWidget {
     listenable: Personalize.prefs,
     builder: (context, _) {
       final l10n = context.l10n;
-      final sides = Personalize.prefs.value.barSides;
+      final prefs = Personalize.prefs.value;
+      final sides = prefs.barSides;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -82,6 +90,13 @@ class PersonalizeBarList extends StatelessWidget {
               label: Text(l10n.personalizeBarReset),
               onPressed: () => Personalize.update(_resetBar),
             ),
+          ),
+          _GroupLabel(l10n.personalizeBarTop),
+          _ReorderGroup(
+            groupKey: 'top',
+            ids: UiPrefs.orderOf(UiItem.topDefault, prefs.topOrder),
+            onReorder: (ids) =>
+                Personalize.update((p) => p.copyWith(topOrder: ids)),
           ),
         ],
       );
@@ -118,7 +133,7 @@ class _ReorderGroup extends StatelessWidget {
   const _ReorderGroup({
     required this.groupKey,
     required this.ids,
-    required this.right,
+    this.right,
     required this.onReorder,
   });
 
@@ -126,7 +141,8 @@ class _ReorderGroup extends StatelessWidget {
   final List<String> ids;
 
   /// Bu grup sağ kapsül mü — satırdaki "taşı" düğmesi öbür tarafa yollar.
-  final bool right;
+  /// null: kapsülsüz grup (üst çubuk), ok yok.
+  final bool? right;
   final ValueChanged<List<String>> onReorder;
 
   @override
@@ -171,22 +187,23 @@ class _ReorderGroup extends StatelessWidget {
                     ),
                     // ÖBÜR KAPSÜLE TAŞI (P50): gruplar alt alta — ok yönü
                     // düğmenin gideceği grubu gösterir.
-                    IconButton(
-                      key: ValueKey('bar-move-$id'),
-                      visualDensity: VisualDensity.compact,
-                      tooltip: right
-                          ? l10n.personalizeBarMoveLeft
-                          : l10n.personalizeBarMoveRight,
-                      icon: Icon(
-                        right
-                            ? Icons.arrow_upward_rounded
-                            : Icons.arrow_downward_rounded,
-                        color: scheme.outline,
+                    if (right case final right?)
+                      IconButton(
+                        key: ValueKey('bar-move-$id'),
+                        visualDensity: VisualDensity.compact,
+                        tooltip: right
+                            ? l10n.personalizeBarMoveLeft
+                            : l10n.personalizeBarMoveRight,
+                        icon: Icon(
+                          right
+                              ? Icons.arrow_upward_rounded
+                              : Icons.arrow_downward_rounded,
+                          color: scheme.outline,
+                        ),
+                        onPressed: () => Personalize.update(
+                          (p) => p.withBarSide(id, right: !right),
+                        ),
                       ),
-                      onPressed: () => Personalize.update(
-                        (p) => p.withBarSide(id, right: !right),
-                      ),
-                    ),
                   ],
                 ),
                 secondary: Row(

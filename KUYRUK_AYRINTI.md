@@ -295,7 +295,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
   bağlı değer satır önbelleğine girmez (`_RowSlot`)". F64.4 maddesine M6 notu ("silinmedi, daraldı — sabah bakılacak").
 - Kabul: bekçi yeşil; plan maddeleri işaretli.
 
-**Adım 7 — Editör titreşim göçü (M9).**
+**[x] Adım 7 — Editör titreşim göçü (M9).** (2026-11-14, ef806113, dal `oto/P20-artik`: 20/21 çağrı `AppHaptics`, tür aynı; `haptic` bütçesi 21→1 — kalan EKRAN:3001 tur 3'te, sonra 0)
 - Dosyalar: `note_editor_media_view.dart`, `note_editor_gestures.dart`, `note_editor_flow.dart`, LİSTE,
   `items_editor_actions.dart`, EKRAN (yalnız 3001), `test/design_tokens/budget.json` (`haptic` 21→0).
 - Ne: 21 çağrıyı M9 eşlemesiyle çevir; tür DEĞİŞMEZ, çağrı eklenmez/silinmez. `lib/core/haptics.dart`'a bak:
@@ -303,7 +303,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
 - Doğrulama: `test/design_tokens_guard_test.dart`, `test/haptics_test.dart`, `test/items_editor_hold_select_test.dart`.
 - Kabul: `haptic` bütçesi 0 (ya da gerekçeli kalan); testler yeşil.
 
-**Adım 8 — Üst çubuk sırası: model + Ayarlar listesi (M8; P50 kalanı).**
+**[x] Adım 8 — Üst çubuk sırası: model + Ayarlar listesi (M8; P50 kalanı).** (2026-11-14, dal `oto/P20-artik`: `UiPrefs.topOrder` + `UiItem.topDefault`; Ayarlar alt çubuk listesinin altında "Üst çubuk" grubu, ok yok; beş öğe "üst çubuk ve alanlar" çiplerinden çıkarıldı (çift anahtar olmasın) — sabah bakılacak; editörde uygulama adım 9)
 - Dosyalar: `lib/core/personalize.dart`, `lib/features/settings/presentation/personalize_bar_list.dart`,
   `personalize_screen.dart`, `lib/l10n/*.arb` (+ `flutter gen-l10n`, üretilen dosyalar `dart format`),
   YENİ `test/personalize_top_order_test.dart`.

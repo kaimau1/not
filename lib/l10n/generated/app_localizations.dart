@@ -8696,6 +8696,12 @@ abstract class AppLocalizations {
   /// **'Alt çubuğu varsayılana döndür'**
   String get personalizeBarReset;
 
+  /// No description provided for @personalizeBarTop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üst çubuk · düğmelerin sırası'**
+  String get personalizeBarTop;
+
   /// No description provided for @personalizeBarMoveRight.
   ///
   /// In tr, this message translates to:

@@ -1814,6 +1814,7 @@
   "personalizeBarLeft": "Left capsule · tools",
   "personalizeBarRight": "Right capsule · AI and voice",
   "personalizeBarReset": "Reset bottom bar",
+  "personalizeBarTop": "Top bar · button order",
   "personalizeBarMoveRight": "Move to right capsule",
   "personalizeBarMoveLeft": "Move to left capsule",
   "reorderHandle": "Reorder",
