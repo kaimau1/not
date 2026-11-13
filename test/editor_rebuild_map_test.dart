@@ -144,9 +144,9 @@ void main() {
     final redo = tester.widget<IconButton>(
       find.byKey(const ValueKey('editor-redo')),
     );
-    // ignore: avoid_print
-    print('HARITA yinele_etkin: ${redo.onPressed != null}');
-    if (redo.onPressed == null) return endEditor(tester);
+    // P20 adım 3: metin geri alınınca kök kurulmuyordu, yinele bayat
+    // `onPressed: null` kalıyordu — artık `_undoN`'u dinliyor.
+    expect(redo.onPressed, isNotNull, reason: 'geri al → yinele etkin');
     await measure(tester, 'yinele', () async {
       await tester.tap(find.byKey(const ValueKey('editor-redo')));
       await settle(tester);

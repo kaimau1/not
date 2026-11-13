@@ -38,6 +38,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_update.dart';
+import 'note_slice.dart';
 import '../../../../app/router.dart';
 import '../../../../app/window_class.dart';
 
@@ -619,7 +620,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// kaydedip yeni sürümün verisini bozmasın.
   bool get _readOnly => widget.readOnly || ref.read(updateRequiredProvider);
 
-  Note? _note;
+  /// Açık not (P20 F64.2): dar dinleyiciler ([NoteSlice]) bunu dinler.
+  final _noteN = LateSafeValue<Note?>(null);
+  Note? get _note => _noteN.value;
+  set _note(Note? v) => _noteN.value = v;
+
+  /// (geri alınabilir, yinelenebilir) — üst çubuktaki düğmeler bunu dinler;
+  /// yığın değişince kök kurulmaz (P20 M3).
+  final _undoN = LateSafeValue<(bool, bool)>((false, false));
+  void _syncUndoN() =>
+      _undoN.value = (_undoStack.canUndo, _undoStack.canRedo);
 
   /// `setState` konu dosyalarındaki uzantılardan (F9.3) — orada korumalı
   /// üyeye doğrudan erişilemez.
@@ -1758,6 +1768,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _notesRepo?.releaseNote(widget.noteId);
     _loadGuard?.cancel();
     _debouncer.dispose();
+    // Geç geri çağrılar yazmaya devam edebilir: LateSafeValue sessiz saklar.
+    _noteN.dispose();
+    _undoN.dispose();
     _sub?.close();
     _titleController.dispose();
     _formatTargetN.dispose();
@@ -1815,6 +1828,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.text = previous.body;
     _mutate((_) => previous, immediate: true);
     _restoring = false;
+    _syncUndoN();
     _showSnack(context.l10n.undone);
   }
 
@@ -1830,6 +1844,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.text = next.body;
     _mutate((_) => next, immediate: true);
     _restoring = false;
+    _syncUndoN();
   }
 
   /// Daire jestinin yapay zekâsı bu OTURUMDA kullanılamıyor mu (TUTARLILIK
@@ -1930,8 +1945,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } else {
       _previewHold?.touch(widget.noteId);
     }
-    final wasUndo = _undoStack.canUndo;
-    final wasRedo = _undoStack.canRedo;
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
     // asla yazılmaz. Gövde hangi yoldan gelirse gelsin burada temizlenir —
     // her çağrı yerine ayrı koruma koymak yerine tek yerde.
@@ -1947,6 +1960,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         : transformed.copyWith(body: clean);
     if (!_restoring) {
       _undoStack.push(note, next, now: DateTime.now());
+      _syncUndoN();
       // YENİ EK (kullanıcının eklediği; akıştan gelen değil — o _mutate'ten
       // geçmez): sayfada yüzüyorsa yerleşim ipucu açılır.
       if (next.attachments.length > note.attachments.length) {
@@ -1963,14 +1977,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (added != null) _placementHintId = added.id;
       }
     }
-    // SAF YAZIM (yalnız başlık/gövde metni değişti, geri al düğmesinin durumu
-    // dahil görünür hiçbir parça etkilenmedi): 3700 satırlık build'i her tuş
+    // SAF YAZIM (yalnız başlık/gövde metni değişti, görünür hiçbir parça
+    // etkilenmedi; geri al düğmesi [_undoN]'u kendisi dinler — P20 M3): 3700 satırlık build'i her tuş
     // vuruşunda çalıştırmak "klavye açılırken kasıyor" şikayetinin başrolüydü
     // — denetleyici metni zaten ekranda, ekran geneli setState atlanır.
-    final pureTyping =
-        _sameVisual(note, next, ignoreAttachments: inkOnly) &&
-        _undoStack.canUndo == wasUndo &&
-        _undoStack.canRedo == wasRedo;
+    final pureTyping = _sameVisual(note, next, ignoreAttachments: inkOnly);
     if (pureTyping) {
       if (inkOnly) {
         for (final a in note.attachments) {
@@ -5236,8 +5247,11 @@ child: NoteFindBar(
               // düğme durmaz.
               // Yazarken geri al / yinele HEP görünür (2026-11-08); okurken
               // yalnız geri alınacak bir şey varken.
-              Builder(
-                builder: (context) {
+              // Yığın durumu [_undoN]'dan: geri al/yinele kökü kurmaz (P20 M3).
+              ValueListenableBuilder<(bool, bool)>(
+                valueListenable: _undoN,
+                builder: (context, undoState, _) {
+                  final (canUndo, canRedo) = undoState;
                   final undo = Customizable(
                 id: UiItem.topUndo,
                 child: Row(
@@ -5254,11 +5268,11 @@ child: NoteFindBar(
                         minWidth: 36,
                         minHeight: 48,
                       ),
-                      onPressed: _canUndo ? _undo : null,
+                      onPressed: canUndo ? _undo : null,
                     ),
                     // Başlık üst çubuktayken yer dar: yinele yalnız
                     // kullanılabilirken.
-                    if (_barTitle == null || _canRedo)
+                    if (_barTitle == null || canRedo)
                       IconButton(
                         key: const ValueKey('editor-redo'),
                         tooltip: l10n.redo,
@@ -5268,14 +5282,14 @@ child: NoteFindBar(
                           minWidth: 36,
                           minHeight: 48,
                         ),
-                        onPressed: _canRedo ? _redo : null,
+                        onPressed: canRedo ? _redo : null,
                       ),
                   ],
                 ),
               );
                   return KeyboardSwitch(
                     open: undo,
-                    closed: (_canUndo || _canRedo) ? undo : null,
+                    closed: (canUndo || canRedo) ? undo : null,
                   );
                 },
               ),

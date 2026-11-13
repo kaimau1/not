@@ -2,9 +2,9 @@
   "_kural": "Mandal: bütçe yalnız DÜŞER. Yükseltmek için commit başlığında [butce] ve girdinin 'neden' alanı. Senaryolar OTURTMA_PLANI.md Ek A.",
   "S1": {
     "senaryo": "Kısa metin notu, gövdeye 20 karakter (telefon)",
-    "kok_kurulum": 1,
+    "kok_kurulum": 0,
     "update_note": 1,
-    "bugun": "1 / 1 (2026-11-11)",
+    "bugun": "0 / 1 (2026-11-14, P20 adım 3: geri al düğmesi _undoN'u dinliyor; önce 1 / 1)",
     "hedef": "≤ 1 (geri al düğmesi)",
     "neden": "İlk ölçüm = hedef: ilk tuşta geri al düğmesi için 1 kök kurulum, kayıt debounce'lu"
   },
