@@ -15013,6 +15013,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Listeyi sola al'**
   String get listPaneMoveLeft;
+
+  /// No description provided for @quickRowEditTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı menü (yazarken üstte)'**
+  String get quickRowEditTitle;
+
+  /// No description provided for @quickRowEditInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dokun: menüye ekle ya da çıkar. Değişiklik hemen uygulanır, kaydetmeye gerek yok.'**
+  String get quickRowEditInfo;
+
+  /// No description provided for @quickRowEditShown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Menüde'**
+  String get quickRowEditShown;
+
+  /// No description provided for @quickRowEditAvailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklenebilir'**
+  String get quickRowEditAvailable;
+
+  /// No description provided for @quickRowEditEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Menü boş — aşağıdan düğme ekle'**
+  String get quickRowEditEmpty;
+
+  /// No description provided for @quickRowEditReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılana dön'**
+  String get quickRowEditReset;
+
+  /// No description provided for @quickRowShortPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem'**
+  String get quickRowShortPen;
+
+  /// No description provided for @quickRowShortSpell.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım düzelt'**
+  String get quickRowShortSpell;
+
+  /// No description provided for @quickRowShortColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı rengi'**
+  String get quickRowShortColor;
+
+  /// No description provided for @quickRowShortHeading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get quickRowShortHeading;
 }
 
 class _AppLocalizationsDelegate

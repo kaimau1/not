@@ -417,7 +417,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       onChanged: (strokes) {
         // En güncel ek kaydı üzerine yazılır (sayfa çevrildi, balon eklendi).
         final live = widget.images.where((i) => i.id == a.id).firstOrNull;
-        _docInkSeen[a.id] = strokes;
+        // `_docInkSeen` burada güncellenmez: kök kurulmadığı için elimizdeki
+        // ek ESKİ listeyi tutar; ona çekilen kayıt bir sonraki çizimde eski
+        // listeyi geri yazıp çizgileri siliyordu (bkz. PinnedMediaPane
+        // `_inkFor`, kullanıcı bulgusu 2026-11-13).
         (widget.onInkChanged ?? widget.onChanged)(
           (live ?? a).copyWith(ink: strokes),
         );

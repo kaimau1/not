@@ -173,6 +173,16 @@ class InkToolMemory {
 
   static const _kPenOnly = 'ink_pen_only';
   static const _kPenOnlyChosen = 'ink_pen_only_chosen';
+  static const _kToggleBlinked = 'ink_pen_toggle_blinked';
+
+  /// Yüzen kalem düğmesi ilk görünüşünde yanıp söndü mü (bir kez,
+  /// kullanıcı isteği 2026-11-13).
+  static bool toggleBlinked = false;
+
+  static void markToggleBlinked() {
+    toggleBlinked = true;
+    _prefs?.setBool(_kToggleBlinked, true);
+  }
   static const _kPressure = 'ink_pressure';
   static const _kColor = 'ink_color';
   static const _kPen = 'ink_pen';
@@ -282,6 +292,7 @@ class InkToolMemory {
     _prefs = prefs;
     penOnly = prefs.getBool(_kPenOnly) ?? false;
     penOnlyChosen = prefs.getBool(_kPenOnlyChosen) ?? false;
+    toggleBlinked = prefs.getBool(_kToggleBlinked) ?? false;
     pressure = prefs.getBool(_kPressure) ?? true;
     color = prefs.getInt(_kColor);
     pen = prefs.getInt(_kPen);
@@ -388,9 +399,19 @@ class InkToolMemory {
     _prefs?.setStringList(_kRecent, [for (final c in recentColors) '$c']);
   }
 
+  /// **SÜREKLİ ÇIKMASIN** (P49 (d), kullanıcı 2026-11-12): bu OTURUMDA
+  /// yazıyla söylenmiş kalem durumları. Yüzen düğmenin "kalem yazar /
+  /// dokunur" yazısı her durum için bir kez ([stylusHintsTold]); editörün
+  /// "yalnız kalem açık/kapalı" ipucu yalnız durum değişince
+  /// ([lastPenOnlyHint]). Kalıcı değil (uygulama açılışında sıfır).
+  static final Set<bool> stylusHintsTold = {};
+  static bool? lastPenOnlyHint;
+
   /// Testler için: hafızayı varsayılana döndürür.
   @visibleForTesting
   static void reset() {
+    stylusHintsTold.clear();
+    lastPenOnlyHint = null;
     _prefs = null;
     eraser = false;
     arrow = false;
@@ -399,6 +420,8 @@ class InkToolMemory {
     _sessions = 0;
     penOnly = false;
     penOnlyChosen = false;
+    // Testte yanıp sönme yok (kare zamanlayıcısı açık kalmasın).
+    toggleBlinked = true;
     pressure = true;
     color = null;
     pen = null;

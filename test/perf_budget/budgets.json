@@ -65,7 +65,8 @@
   "S9": {
     "senaryo": "Biçim panelini aç → kapat",
     "tuval_kurulum": 2,
-    "bugun": "2 (2026-11-11)",
+    "govde_boy_karesi": 2,
+    "bugun": "tuval 2 (2026-11-11); gövde boyunun değiştiği kare 2 — açılış 1 + kapanış 1 (2026-11-13, P46: panel ve alt çubuktaki iki AnimatedSize kalktı, hareket yalnız boyamada; önce 34)",
     "hedef": "0 (Faz 64)",
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 64'te işlenecek"
   },
@@ -140,27 +141,27 @@
     "hareket_karesi_editor_ici": 7,
     "hareket_dizilen_sinir": 0,
     "sabit_pdf_ilk_kare_kurulum": 74,
-    "sabit_pdf_gecis_karesi_kurulum": 323,
-    "sabit_pdf_hareket_karesi_kurulum": 70,
-    "sabit_pdf_hareket_karesi_editor_ici": 11,
-    "sabit_pdf_hareket_dizilen_sinir": 3,
+    "sabit_pdf_gecis_karesi_kurulum": 289,
+    "sabit_pdf_hareket_karesi_kurulum": 68,
+    "sabit_pdf_hareket_karesi_editor_ici": 7,
+    "sabit_pdf_hareket_dizilen_sinir": 2,
     "bugun": "ilk kare 45 / geçiş 67 / hareket 54 (editör içi 7) / dizilen 0 (2026-11-11, F60.S5; önce ilk kare 320, hareket 87–96, editör içi 49, her karede Scaffold kutusu diziliyordu). Sabit PDF: ilk 74 / geçiş 323 (gövdenin tam boya döndüğü kare: bölme yeniden kurulur) / hareket 70 (editör içi 11) / 3 sınır; önce hareket 84 ve evre değişiminde 4 × ≈ 310 (şimdi 2: yalnız oturma + geri dönüş)",
     "hedef": "editör içi ≤ 7 (kapsam + alt çubuk kaydırıcısı); kalan ≈ 45 çerçevenin: kök MediaQuery + metin seçim tutamağı katmanı (EditableText.didChangeMetrics → updateForScroll)",
     "neden": "F60.S5: KeyboardInsetScope (editör Scaffold'ı klavye karelerini görmez) + hızlı satır klavyeden önce kurulur + parlama yalnız boyamada",
     "sabit_gorsel_ilk_kare_kurulum": 63,
-    "sabit_gorsel_gecis_karesi_kurulum": 240,
-    "sabit_gorsel_hareket_karesi_kurulum": 59,
-    "sabit_gorsel_hareket_karesi_editor_ici": 12,
+    "sabit_gorsel_gecis_karesi_kurulum": 238,
+    "sabit_gorsel_hareket_karesi_kurulum": 55,
+    "sabit_gorsel_hareket_karesi_editor_ici": 8,
     "sabit_gorsel_hareket_dizilen_sinir": 2,
-    "sabit_gorsel_bugun": "P43 (2026-11-12) ilk ölçüm: ilk 63 / geçiş 240 / hareket 59 (editör içi 12) / dizilen 2 (_RenderLayoutBuilder, RenderCustomMultiChildLayoutBox — hareket karelerinde sabit bölme diziliyor; düzeltmesi P49)"
+    "sabit_gorsel_bugun": "P49 (2026-11-13): PDF ilk 74 / geçiş 289 / hareket 68 (editör içi 7 = metin notuyla aynı) / dizilen 2; görsel 63 / 238 / 55 (editör içi 8) / 2. Önce (P43): PDF 74 / 291 / 70 (11) / 3, görsel 63 / 240 / 59 (12) / 2 ve bölme HER hareket karesinde diziliyordu (pencere boyu 260 ms kare kare değişiyordu). Şimdi pencerenin boyu yalnız klavyenin göründüğü ve bittiği karede değişir, hareket boyamada (Flow); aşama kurulumsuz izlenir (KeyboardStageWatcher). Kalan dizilenler bölmenin DIŞINDA / test yapısı: RenderCustomMultiChildLayoutBox = editör alt çubuğundaki AnimatedSize (yalnız ilk açılışın ilk 6 karesi — P46'ya bulgu), _RenderTheater = ilk çevrimde tek kare (kaplama), görseldeki _RenderLayoutBuilder = testte hiç yüklenmeyen görselin yükleme animasyonu (yalnız o yaprak kurulur). Geçiş karesi (gövde tam boya dönerken editör bölmeyi yeni örnekle kurar) hâlâ ağır: medya alt ağacını önbelleğe almak ayrı iş."
   },
   "S18": {
     "senaryo": "Telefon 412×915, 30 not: karttan not aç (gerçek NoteOpenPage geçişi), 40 kare — ana ekran kurulumu, kart kurulumu, ilk kare ve sonraki en ağır kare",
     "note_card": 2,
     "dashboard_kurulum": 0,
-    "ilk_kare_kurulum": 877,
-    "gecis_karesi_kurulum": 788,
-    "bugun": "NoteCard 2 / DashboardScreen 0 / ilk kare 877 / geçiş karesi en çok 788 (2026-11-12)",
+    "ilk_kare_kurulum": 876,
+    "gecis_karesi_kurulum": 285,
+    "bugun": "NoteCard 2 / DashboardScreen 0 / ilk kare 876 / geçiş karesi en çok 285 (2026-11-13, P46: başlık ölçümü kök setState yerine ValueNotifier — ikinci karede yalnız tuval kurulur); önce 877 / 788",
     "hedef": "NoteCard ≤ 1 (yalnız açılan kartın halesi); geçiş kareleri editörü ikinci kez kurmasın",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl) — mandal"
   },
@@ -182,18 +183,18 @@
   },
   "S21": {
     "senaryo": "Telefon, 60 not (18 görünür): arama kutusuna 5 harf ('N'…'Not 1'), harf başına kurulan NoteCard (en kötü harf) ve DashboardScreen toplamı",
-    "harf_basina_kart": 114,
+    "harf_basina_kart": 56,
     "dashboard_kurulum": 6,
-    "bugun": "harf başına 114 kart (görünür 18 — 6 katı) / pano 6 (2026-11-12)",
+    "bugun": "harf başına 56 / pano 6 (2026-11-13, P46: kart önbelleği ve hücre sarmalayıcısı aynı geciktirilmiş arama durumuyla; önce 114 = iki dalga). Kalan 56: ilk harfte 1600 px kaydırma payındaki canlı kartlar (aramada kart yapısı değişir); sonraki harfler 0",
     "hedef": "harf başına ≤ görünür (18)",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); hedefin 6 katı — bulgu P46'ya yazıldı, düşürülecek"
   },
   "S22": {
     "senaryo": "Takvim haftalık görünüm (telefon, 21 etkinlik): bir hafta ileri fırlat, 40 kare",
-    "hafta_sayfasi": 3,
-    "toplam_kurulum": 979,
-    "kare_kurulum": 978,
-    "bugun": "WeekPage 3 / toplam 979 / tek karede 978 (2026-11-12)",
+    "hafta_sayfasi": 1,
+    "toplam_kurulum": 509,
+    "kare_kurulum": 508,
+    "bugun": "WeekPage 1 / toplam 509 / tek karede 508 (2026-11-13, P46: hafta sayfası önbelleği — sayfa çevrilince setState giden ve gelen haftayı baştan kurmuyor); önce 3 / 979 / 978",
     "hedef": "yalnız gelen hafta sayfası kurulur (komşu önceden kurulu)",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); tek karede ~980 kurulum — bulgu P46'ya yazıldı"
   },
@@ -202,8 +203,8 @@
     "ileri_kart": 30,
     "geri_kart": 30,
     "ileri_dashboard_kurulum": 1,
-    "kare_kurulum": 2941,
-    "bugun": "ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2941 (2026-11-12)",
+    "kare_kurulum": 2361,
+    "bugun": "ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2361 (2026-11-13, P46: gelen ızgara geçiş sürerken 250 px payla kurulur, 1600 px payı 500 ms sonra boşta genişler — kalan 9 kart o karede, 413–668 kurulum); önce 2941",
     "hedef": "gelen görünümün görünür kartları kadar; tek kare ≤ ilk açılış karesi",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl). FolderSwipe komşu sayfayı BİLEREK kurmaz (dashboard_widgets.dart FolderSwipe belgesi); geçişte giden + gelen ızgara aynı karede"
   },
@@ -218,8 +219,8 @@
   },
   "S25": {
     "senaryo": "Görselli 50 not (dpr 2,625, 6 ekran kaydır): kart küçük resmi çözme boyu sınırsız (memCacheWidth/cacheWidth yok ya da kart boyu × dpr ve 480'den büyük) olan görsel sayısı",
-    "sinirsiz_cozum": 21,
-    "bugun": "21 — hepsi yalnız Drive küçük resmi (thumbUrl) olan ekler: note_card_media.dart _image thumbUrl dalında memCacheWidth yok (2026-11-12)",
+    "sinirsiz_cozum": 0,
+    "bugun": "0 (2026-11-13, P46: thumbUrl dalına memCacheWidth 480); önce 21 — hepsi yalnız Drive küçük resmi (thumbUrl) olan ekler: note_card_media.dart _image thumbUrl dalında memCacheWidth yok (2026-11-12)",
     "hedef": "0",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); bulgu P46'ya yazıldı — düzeltilince 0'a iner"
   }

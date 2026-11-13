@@ -11,6 +11,10 @@ export '../../../../app/window_class.dart' show kPinnedSideMinWidth;
 /// uygulanır — dar ekranda ek yine üstte durur.
 enum PinnedSide { top, left, right }
 
+/// Yan yerleşimin KENDİLİĞİNDEN seçildiği en dar pencere (F65.2; ≥ 840 dp =
+/// geniş pencere sınıfı).
+const double kPinnedSideDefaultWidth = 840;
+
 class PinnedSideMemory {
   PinnedSideMemory._();
 
@@ -24,8 +28,25 @@ class PinnedSideMemory {
   /// Yan bölmenin editör genişliğine oranı (0,25–0,75).
   static double fraction = 0.5;
 
+  /// Kullanıcı yerleşimi hiç seçmedi mi (bkz. [preferred]).
+  static bool chosen = false;
+
+  /// **YATAYDA YANDAN SABİTLEME VARSAYILANI** (OTURTMA F65.2, KARAR K-O7 —
+  /// kullanıcı 2026-11-13: "tablette ve webde sabit ek YANDA olabilir"):
+  /// tercih hiç yazılmamışsa ve pencere geniş ([kPinnedSideDefaultWidth]) +
+  /// yataysa ek SOLDA başlar — 1024×640'ta üstte sabit ek + çubuklar +
+  /// klavye nota yer bırakmıyordu. Telefonda ve dikeyde yine üstte; seçim
+  /// bir kez yapılınca hep o.
+  static PinnedSide preferred(PinnedSide side, Size window) =>
+      !chosen &&
+          window.width >= kPinnedSideDefaultWidth &&
+          window.width > window.height
+      ? PinnedSide.left
+      : side;
+
   static void attach(SharedPreferences prefs) {
     _prefs = prefs;
+    chosen = prefs.containsKey(_kSide);
     final name = prefs.getString(_kSide);
     side.value =
         PinnedSide.values.where((s) => s.name == name).firstOrNull ??
@@ -34,6 +55,7 @@ class PinnedSideMemory {
   }
 
   static void setSide(PinnedSide value) {
+    chosen = true;
     side.value = value;
     _prefs?.setString(_kSide, value.name);
   }
@@ -50,6 +72,7 @@ class PinnedSideMemory {
   @visibleForTesting
   static void reset() {
     _prefs = null;
+    chosen = false;
     side.value = PinnedSide.top;
     fraction = 0.5;
   }

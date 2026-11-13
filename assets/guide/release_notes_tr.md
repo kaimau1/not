@@ -3,12 +3,30 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Hızlı menüde açık biçim belli:** imleç kalın, eğik, altı çizili, vurgulu, renkli yazıdayken ya da başlıktayken hızlı menüdeki düğmesi basılı görünür.
+- **Hızlı menüyü düzenlemek kolay:** ⋮ → "Hızlı menüyü düzenle" artık "Menüde" ve "Eklenebilir" karolarıyla açılan bir levha; dokununca eklenir ya da çıkar, kaydetmeye gerek yok, üstte canlı önizleme var. Aynı düzenleme Ayarlar → Kişiselleştir'de de var, böylece hızlı menü kaybolsa da geri getirilebilir.
+- **Tablette nottan dönüş geçişi:** nottan geri çıkınca liste kısa bir kayma ve solmayla gelir, birden atlamaz.
+- **Silerken yazı boyu değişmiyor:** kısmi silgiyle bir yeri silince kalan yazı kalınlaşmıyor ya da incelmiyor.
+- **Sayfadan taşan yazı da siliniyor:** PDF'te alt sayfada başlayıp üst sayfaya taşan kalem yazısı üst sayfada da silinebiliyor.
+- **Sabit panelde balon düğmesi:** telefonda da balon ekleme düğmesi sabit panelin çubuğunda.
+- **Kalem düğmesi kendini gösteriyor:** kalem ilk algılandığında yüzen kalem düğmesi birkaç kez yanıp söner.
+- **Parmakla yazma uyarısı:** "yalnız kalem" kapalıyken kalem düğmesinin yanında "Parmakla da yazılıyor" uyarısı çıkar; dokununca yalnız kaleme geçer.
+- **Sabit PDF'te kalem rengi:** panelden kalemi açınca çubukta renk noktası çıkar, dokununca tüm renkler açılır; tablette siyah, mavi, kırmızı ve yeşil doğrudan çubukta.
+- **Silgi belli oluyor:** silgi açıkken düğmesi dolu renkli zeminle görünür.
+- **Silgiye basınca yazılar kaybolmuyor:** sabit ya da gömülü PDF'e kalemle yazıp silgiye (veya kalem düğmesine) basınca yazıların bir an kaybolup tekrar basınca geri gelmesi düzeltildi.
+- **Sabit ek paneli yenilendi:** telefonda çubukta yalnız tam ekran, Not al, kalem ve ⋮ var; görünüm (Sabit/Yüzen/Ek), balonlar, PDF'te sayfalara göz at ve yer imi, paylaş ve kaldır tek ⋮ menüsünde. Büyük yazıda ve dar ekranda çubuk artık taşmıyor.
+- **Kalem düğmeleri birbirini biliyor:** yüzen kalem düğmesini açınca paneldeki kalem kaybolmaz, açık görünür; paneldeki kalemi kapatınca yüzen düğme ve kalem kipi de kapanır. Panelden kalemi açınca çubukta silgi, geri al, yinele ve kalem ayarı çıkar.
+- **Kalem ipuçları araya girmiyor:** "kalem yazar / parmak dokunur" gibi yazılar alttaki kalem panelinin üstünde çıkar ve her durum için bir kez söylenir.
+- **Tablette sabit ek yanda:** yerleşimi hiç değiştirmediysen geniş ekranı yatay tutunca sabit ek solda, not sağda açılır; dikeyde üstte. Değiştirdiğin yerleşim hatırlanır.
+- **Sabit ekli notta klavye daha akıcı:** klavye açılıp kapanırken sabit ek paneli her karede yeniden dizilmiyor.
 - **Klasörlerde de çöpe sürükle:** klasör, süzgeç ya da arama açıkken de notu basılı tutup alttaki çöp kutusuna sürükleyerek silebilirsin.
 - **Alt çubuğu sen düzenle:** Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk"ta düğmeleri sürükleyerek sıralayabilir, istemediğini çıkarabilir, geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara, renk ve paylaş düğmelerini çubuğa ekleyebilirsin.
 - **Alt çizgili maddelerde daha akıcı:** noktalı, kesikli ve dalgalı alt çizgiler çok daha az işle çiziliyor; klavye açılırken ve kaydırırken takılma azalmalı.
 - **Bağlantı yokken dürüst ekranlar:** internet yokken "Gelen" süzgeci "burada not yok" yerine "Bağlantı yok" ve Tekrar dene gösterir; yapay zekâ levhası önce bağlantı olmadığını söyler (düğmeler bağlantı gelince açılır); bekleyen ekler "yükleniyor" yerine "bağlantı gelince yüklenecek" der.
 - **Webde yazı seçimi düzeldi:** fareyle çift tıklama artık yalnız kelimeyi seçer (bütün cümleyi değil); shift+ok ile seçim harf harf ilerler, kendiliğinden kelimeye büyümez.
 - **Takvim etkinlikleri her cihazda:** yeni etkinlikler varsayılan olarak bütün cihazlarında görünür ("Tüm cihazlar"); Google Takvim'e kaydetmek istersen düzenleyicide Google'ı seç.
+- **Daha akıcı geçişler:** not açılırken, aramaya ilk harf yazılırken, süzgeç/klasör arasında yana kaydırırken ve takvimde hafta çevirirken ekran daha az iş yapar; biçim paneli açılıp kapanırken yazı alanı titremez.
+- **Kartlarda Drive önizlemeleri daha hafif:** küçük resimler kart boyunda çözülür, liste kaydırma daha az bellek kullanır.
 
 ## 12 Kasım 2026 {#2026-11-12}
 - **Markdown (.md) dosyaları:** notun içinden "Dosya ekle" ile ya da sürükleyip bırakarak .md eklenebilir; dokununca işaretsiz, okunur hâliyle açılır ve tamamı ya da seçilen kısmı nota eklenir. Başka uygulamadan paylaşılan ya da "Birlikte aç" ile açılan .md dosyası başlığı, maddeleri ve onay kutularıyla yeni not olur.

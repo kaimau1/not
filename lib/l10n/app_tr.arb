@@ -3911,5 +3911,15 @@
   "listPaneRight": "Not listesi sağda",
   "listPaneRightInfo": "Bölünmüş görünümde (tablet, geniş pencere) liste notun sağında durur",
   "listPaneMoveRight": "Listeyi sağa al",
-  "listPaneMoveLeft": "Listeyi sola al"
+  "listPaneMoveLeft": "Listeyi sola al",
+  "quickRowEditTitle": "Hızlı menü (yazarken üstte)",
+  "quickRowEditInfo": "Dokun: menüye ekle ya da çıkar. Değişiklik hemen uygulanır, kaydetmeye gerek yok.",
+  "quickRowEditShown": "Menüde",
+  "quickRowEditAvailable": "Eklenebilir",
+  "quickRowEditEmpty": "Menü boş — aşağıdan düğme ekle",
+  "quickRowEditReset": "Varsayılana dön",
+  "quickRowShortPen": "Kalem",
+  "quickRowShortSpell": "Yazım düzelt",
+  "quickRowShortColor": "Yazı rengi",
+  "quickRowShortHeading": "Başlık"
 }

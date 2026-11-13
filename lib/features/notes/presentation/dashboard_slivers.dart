@@ -362,7 +362,7 @@ extension _DashSlivers on _DashboardScreenState {
         // kartın bağlamını bulmaya yarar. Hale kartın İÇİNDEN çizilir
         // ([NoteCard.frame]): odak/açık not kartın tek aboneliğinde, hücrede
         // ayrı Consumer yok (F21.4) — vurgu değişince yalnız o kart kurulur.
-        final card = _cachedCard(note, query);
+        final card = _cachedCard(note, searching: searchActive);
         void select() =>
             ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
         // Olağan hâl: uzun basış toplu seçime girer. SEÇİLİ bir kartta ise

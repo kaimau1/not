@@ -179,6 +179,41 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   int get _firstDow => MaterialLocalizations.of(context).firstDayOfWeekIndex;
 
+  /// Hafta sayfası önbelleği (P46, bütçe S22): sayfa çevrilince
+  /// `onPageChanged` → `setState` ekranı yeniden kurar; girdisi değişmeyen
+  /// sayfa AYNI örnek dönerse alt ağacı (≈ 330 widget) hiç kurulmaz. Eskiden
+  /// her çevirişte giden ve gelen hafta baştan kuruluyordu. "Şimdi" çizgisi
+  /// dakikada bir tazelenir (anahtar: dakika).
+  final _weekPages = <int, (CalendarData, DateTime, int, DateTime, Widget)>{};
+
+  Widget _weekPage(int i, CalendarData data, DateTime now) {
+    final minute = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+    final firstDow = _firstDow;
+    final hit = _weekPages[i];
+    if (hit != null &&
+        identical(hit.$1, data) &&
+        hit.$2 == _today &&
+        hit.$3 == firstDow &&
+        hit.$4 == minute) {
+      return hit.$5;
+    }
+    final page = WeekPage(
+      weekStart: weekAtIndex(i, firstDow),
+      data: data,
+      today: _today,
+      now: now,
+      onSlotTap: (t) => unawaited(showEventEditor(context, start: t)),
+      onEntryTap: _openEntry,
+      // Üstteki güne dokununca o günün sayfası (kullanıcı isteği
+      // 2026-11-07; önceden alttan levha açılıyordu).
+      onDayTap: _openDayPage,
+    );
+    // Yalnız canlı sayfalar (görünen + komşu) tutulur.
+    if (_weekPages.length > 6) _weekPages.clear();
+    _weekPages[i] = (data, _today, firstDow, minute, page);
+    return page;
+  }
+
   GlobalKey<_PagedViewState> get _pagerKey =>
       _pagers.putIfAbsent('${_view.name}#$_epoch', GlobalKey.new);
 
@@ -700,17 +735,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             onMonthTap: (m, at) =>
                 _setView(CalendarView.month, focus: m, from: at),
           ),
-          CalendarView.week => WeekPage(
-            weekStart: weekAtIndex(i, _firstDow),
-            data: data,
-            today: _today,
-            now: now,
-            onSlotTap: (t) => unawaited(showEventEditor(context, start: t)),
-            onEntryTap: _openEntry,
-            // Üstteki güne dokununca o günün sayfası (kullanıcı isteği
-            // 2026-11-07; önceden alttan levha açılıyordu).
-            onDayTap: _openDayPage,
-          ),
+          CalendarView.week => _weekPage(i, data, now),
           _ => MonthPage(
             month: monthAtIndex(i),
             data: data,

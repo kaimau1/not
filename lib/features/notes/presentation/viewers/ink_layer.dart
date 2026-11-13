@@ -1619,6 +1619,23 @@ class InkController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// [s] çizgisinin noktaları [page] sayfasının koordinatında hangi dikey
+  /// kaymayla okunur; komşu sayfa değilse null.
+  ///
+  /// **SAYFADAN TAŞAN ÇİZGİ SİLİNMİYORDU** (kullanıcı bulgusu 2026-11-13:
+  /// "PDF'te alt sayfadan üst sayfaya doğru kalemle yazılıyor ama
+  /// silinmiyor"): çizgi başladığı sayfaya kaydedilir, öbür sayfaya taşan
+  /// kısmı o sayfanın dışındaki (y < 0 ya da y > 1) noktalardır; silgi
+  /// yalnız aynı sayfanın çizgilerine bakıyordu. Komşu sayfanın çizgisi bir
+  /// sayfa boyu kaydırılarak denenir (sayfa arası boşluk silgi yarıçapının
+  /// altında).
+  static double? _pageShift(InkStroke s, int page) {
+    final d = s.page - page;
+    if (d == 0) return 0;
+    if (d.abs() != 1) return null;
+    return d.toDouble();
+  }
+
   void _eraseAt(int page, Offset local, Size size) {
     final x = local.dx / size.width;
     final y = local.dy / size.height;
@@ -1629,14 +1646,15 @@ class InkController extends ChangeNotifier {
     final kept = <InkStroke>[];
     for (final s in _ink) {
       var hit = false;
-      if (s.page == page) {
+      final shift = _pageShift(s, page);
+      if (shift != null) {
         // OK yalnız İKİ nokta taşır; gövdesine dokunmak da silmeli, yoksa
         // yalnız uçlarından yakalanan bir çizgi olurdu. Düz çizgi ve
         // dikdörtgenin kenarları da seyrek noktalı — aynı örnekleme.
         final samples = _sampled(s);
         for (var i = 0; i < samples.length; i += 2) {
           if ((samples[i] - x).abs() < _eraseRadius &&
-              (samples[i + 1] - y).abs() < _eraseRadius) {
+              (samples[i + 1] + shift - y).abs() < _eraseRadius) {
             hit = true;
             break;
           }
@@ -1650,18 +1668,27 @@ class InkController extends ChangeNotifier {
   }
 
   /// KISMİ SİLGİ: çizgi yalnız silginin değdiği yerden kesilir, kalan
-  /// parçalar ayrı çizgiler olur (basınç parçalarla taşınır). Ok bütün
-  /// silinir — yarım ok anlamsız.
+  /// parçalar ayrı çizgiler olur. Ok bütün silinir — yarım ok anlamsız.
+  ///
+  /// **SİLERKEN YAZI BOYU DEĞİŞİYORDU** (kullanıcı bulgusu 2026-11-13):
+  /// parçalar örneklenmiş (ara noktalı) listeden kuruluyordu — seyrek
+  /// noktalı çizgide basınç DÜŞÜYOR (×1'e), dolma kalemde nokta aralığı
+  /// değiştiği için hız inceltmesi de değişiyordu; kalan yazı kalınlaşıyor/
+  /// inceliyordu. Artık parçalar ÖZGÜN noktalardan ve basınçlardan kesilir;
+  /// silgi iki nokta arasından geçiyorsa (seyrek şekil) parça orada kesilir.
   void _erasePartAt(int page, double x, double y) {
-    bool near(double px, double py) =>
-        (px - x).abs() < _eraseRadius && (py - y).abs() < _eraseRadius;
+    const r = _eraseRadius;
     var changed = false;
     final out = <InkStroke>[];
     for (final s in _ink) {
-      if (s.page != page) {
+      final shift = _pageShift(s, page);
+      if (shift == null) {
         out.add(s);
         continue;
       }
+      final ey = y - shift;
+      bool near(double px, double py) =>
+          (px - x).abs() < r && (py - ey).abs() < r;
       final sampled = _sampled(s);
       var touched = false;
       for (var i = 0; i + 1 < sampled.length; i += 2) {
@@ -1676,10 +1703,17 @@ class InkController extends ChangeNotifier {
       }
       changed = true;
       if (s.arrow) continue;
-      // Seyrek çizgide (şekil) örnek noktalarla kesilir; basınç yoksa kaybı
-      // yok, varsa nokta başına eşleştiği için yalnız yoğun çizgide taşınır.
-      final dense = identical(sampled, s.points);
-      final pressures = dense && s.hasPressure ? s.pressures : null;
+      final pts = s.points;
+      final pressures = s.hasPressure ? s.pressures : null;
+      // a → b parçası silginin karesinden geçiyor mu (uçlar dışarıdayken).
+      bool crosses(double ax, double ay, double bx, double by) {
+        final dx = bx - ax, dy = by - ay;
+        final len2 = dx * dx + dy * dy;
+        if (len2 < 1e-12) return false;
+        final t = (((x - ax) * dx + (ey - ay) * dy) / len2).clamp(0.0, 1.0);
+        return near(ax + dx * t, ay + dy * t);
+      }
+
       var run = <double>[];
       var runQ = <double>[];
       void flush() {
@@ -1698,13 +1732,18 @@ class InkController extends ChangeNotifier {
         runQ = <double>[];
       }
 
-      for (var i = 0; i + 1 < sampled.length; i += 2) {
-        if (near(sampled[i], sampled[i + 1])) {
+      for (var i = 0; i + 1 < pts.length; i += 2) {
+        final px = pts[i], py = pts[i + 1];
+        if (near(px, py)) {
           flush();
-        } else {
-          run.addAll([sampled[i], sampled[i + 1]]);
-          if (pressures != null) runQ.add(pressures[i ~/ 2]);
+          continue;
         }
+        if (run.length >= 2 &&
+            crosses(run[run.length - 2], run[run.length - 1], px, py)) {
+          flush();
+        }
+        run.addAll([px, py]);
+        if (pressures != null) runQ.add(pressures[i ~/ 2]);
       }
       flush();
     }

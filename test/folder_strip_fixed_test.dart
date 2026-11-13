@@ -19,7 +19,7 @@ void main() {
     final separator = screen.indexOf(
       '_HeaderSeparator(scrolled: _gridScrolled)',
     );
-    final grid = screen.indexOf('child: CustomScrollView(');
+    final grid = screen.indexOf('child: _GridScrollView(');
     expect(strip, greaterThan(0));
     expect(strip, lessThan(separator));
     expect(separator, lessThan(grid));

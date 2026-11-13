@@ -204,7 +204,7 @@ Hepsi koddan doğrulandı; "hesap" yazanlar ölçülmedi, ilgili fazın 0. madde
 > K-O10, K-O11 ve K-O14 `DENEYIM_PLANI.md` §3'te karara bağlandı (K-D6, K-D4, K-D5, K-D8)
 > ve oradaki fazlarda uygulanır; bu dosyada o kararlara bağlı maddeler (F60.7, F63.5,
 > F66.1–F66.3) ile F66.4, F66.6, F67.7 oraya taşındı (DENEYIM Ek D.2) — burada YAPILMAZ.
-> **K-O6 / F65.1 AÇIK kalır** (çubuktaki düğmeler tek tek kullanıcı isteği; DENEYIM §4 Y10).
+> **K-O6 / F65.1 BİTTİ (2026-11-13, P49)** — çubuktaki düğmeler tek tek kullanıcı isteğiydi (DENEYIM §4 Y10); dar çubuk + tek ⋮ levhası.
 > **Faz 72–80: `DENEYIM_PLANI.md`.**
 
 - **K-O1 — Özellik dondurma:** **Bu plan bitene dek yeni özellik yok; istekler
@@ -449,7 +449,7 @@ doğrulanır).
   Düzenek `pumpEditor`'a `overrides` parametresi eklendi.)* Misafir/yalnız-bu-cihaz
   notunda bulut simgesi yerine "yalnız bu cihazda" simgesi + ipucu (ana ekranla aynı dil).
   `watchPendingWrites` zaten `isLocal` için false döner; gösterge bileşeninde misafir dalı.
-- [ ] **F60.5 Yazma ana bloğu 148 → 229 ms (v1.1.671 → v1.1.701).** `tool/perf/prof_type.py`
+- [ ] **F60.5 Yazma ana bloğu 148 → 229 ms (v1.1.671 → v1.1.701).** *(→ P55, cihazlı; 2026-11-13)* `tool/perf/prof_type.py`
   ile iki sürümü profil derlemesinde karşılaştır; fark F60.1/Faz 59 sonrası sürüyorsa en
   pahalı 5 çerçeveyi maddeye yaz. Düzeltme ayrı madde olarak açılır.
 - [ ] **F60.6 Kart ve liste: ek sayacı/rozet tutarlılığı taraması.** *(2026-11-11: tarama yapıldı, bulgular `docs/cihaz_turu.md` bölüm D — `note_card.dart:1755` ve `share_target_sheet.dart:516` düzeltme adayı; kod değişmedi, düzeltme açık.)* `Note.attachments`'ı
@@ -469,7 +469,7 @@ doğrulanır).
   sıfırlanıyor mu. Cihazda: adb ile bir önceki sürümü kur → Güncelle → `adb logcat` +
   `uiautomator dump`. Kabul: başarı, iptal, ağ hatası üç yolda da ekran kapanır ya da
   hata + "yeniden dene" gösterir; widget testi üç yolu sabitler.
-- [ ] **F60.S2 [Fable] Klavye açılırken alt panel kasıyor ve kullanımla ARTIYOR.**
+- [ ] **F60.S2 [Fable] Klavye açılırken alt panel kasıyor ve kullanımla ARTIYOR.** *(→ P55, cihazlı; 2026-11-13)*
   Kullanıcı: "en başta yok gibi; notlara gir-çık yaptıkça artıyor; önceki fazda
   çözmüştük". Bu **birikim (sızıntı) imzası**: kapanan editörden kalan genel dinleyiciler
   klavyenin her karesinde iş yapıyor. *Önce say:* `lib/features/notes` ve `lib/core`'da
@@ -972,17 +972,17 @@ pahalı olan senaryo yoksa (S3, S4, S9, S14 ≤ hedef ve cihazda kök `build` < 
 `editor/attachment_status.dart`, `data/upload_queue.dart`, `data/drive_store.dart`,
 tur görüntüleri `*-e-*.png`.
 
-- [ ] **F65.1 Bölme çubuğu sadeleşmesi — KARAR K-O6 (§0 "Yanlış gidenler" madde 6).** Bugün
+- [x] **F65.1 Bölme çubuğu sadeleşmesi — KARAR K-O6** *(2026-11-13 P49: dar çubuk (< 600 dp) ⛶ · [oynatma] · tutamak · Not al · ✏ · ⋮; anahtar, balon, yer imi, PDF ve ek işleri TEK ⋮ levhasında; geniş çubukta anahtar/balon/yer imi çubukta da. Bekçi `pinned_bar_redesign_test` (360/393 dp × 1,3 taşmaz) — G4 kapandı. Önce/sonra tur görüntüsü çekilmedi (bulut); cihazda doğrulanmadı.)* **— (§0 "Yanlış gidenler" madde 6).** Bugün
   telefonda sabit PDF çubuğu: ⛶ · ✏ · • · Not al · T · balon+ · [Sabit|Yüzen|Ek] · bağlantı
   · ⋮ (10 denetim, hepsi simge). Öneri: ⛶ · tutamak · **birincil iş** (PDF: "Not al";
   görsel: "T"; video: "Not al") · ✏ · ⋮. ⋮ levhasının başında görünüm anahtarı (anahtar
   KALIR, eşanlamlı madde yok — TUTARLILIK K6 korunur), altında balon, bağlantı, yer imi,
   döndür, paylaş (`attachmentActionsFor` sırası). ≥ 600 dp'de bugünkü geniş çubuk kalabilir.
   Önce/sonra tur görüntüsü kullanıcıya gösterilir. `G4` (≤ 360 dp taşma) bununla kapanır.
-- [ ] **F65.2 Yatayda yandan sabitleme varsayılanı — KARAR K-O7.** `PinnedSideMemory`
+- [x] **F65.2 Yatayda yandan sabitleme varsayılanı — KARAR K-O7.** *(2026-11-13 P49, K-O7 kullanıcı kararı "tablette/webde yanda": `PinnedSideMemory.preferred` — tercih yazılmamışsa ve pencere ≥ 840 dp + yataysa sol; seçim bir kez yapılınca hep o. Bekçi `pinned_side_layout_test`. Tablette doğrulanmadı.)* `PinnedSideMemory`
   hiç yazılmamışsa ve pencere ≥ 840 dp + yataysa `side = start`. 1024×640 dp'de (gerçek
   tablet) üstte sabit ek + 3 çubuk + klavye içerik bırakmıyor (F67.4 ile birlikte ölç).
-- [ ] **F65.3 Birden çok sabit ek — KARAR K-O8.**
+- [ ] **F65.3 Birden çok sabit ek — KARAR K-O8.** *(2026-11-13 P49: en güvenli = tek sabit ek, dokunulmadı — sabah bakılacak.)*
 - [x] **F65.4 Yükleme güvenilirliği (B13) — KARAR K-O9.** *(2026-11-11: K-O9 en güvenli = bildirim, sabah bakılacak. Kanıt `test/attachment_status_test.dart` kırmızı (bekleyen ekte düğme yok, `pendingUploadNotice` yok) → yeşil. `ReminderService` `AppLifecycleListener`: arka plana geçerken bekleyen ek varsa (Drive bağlantısı beklemiyorsa) 15 dk sonra sessiz tek bildirim (`upload` kanalı, yük `upload`), dönünce/kuyruk boşalınca iptal; bekleyen ek rozetinde "Şimdi dene" → `retryNow`. Cihazda doğrulanmadı.)* Öneri (bağımlılıksız): uygulama
   `paused` olurken kuyrukta bekleyen ek varsa `ReminderService` üzerinden 15 dk sonrasına
   sessiz tek bildirim ("N ek yüklenmeyi bekliyor — açınca yüklenir", yük `upload:` — `note:`
@@ -1081,7 +1081,7 @@ tur `telefon-*.png`.
   gizli (hızlı satır yeter), üst çubuk 40 dp, sabit bölme en küçük boyda. Boy değişimi TEK
   ADIMDA (kural 6), `KeyboardSwitch` kuralı (7) korunur. Tur `matepad-yatay` + klavye ile
   doğrula.
-- [ ] **F67.5 Yandan sabitleme varsayılanı (F65.2 ile aynı karar).**
+- [x] **F67.5 Yandan sabitleme varsayılanı (F65.2 ile aynı karar).** *(2026-11-13: F65.2 ile yapıldı.)*
 - [ ] **F67.6 İki not yan yana — KARAR K-O12 (öneri: şimdilik yok).**
 - [x] **F67.7 Klavye ve fare.** → DENEYIM F80.3 (P42, 2026-11-12: kısayol levhası tablodan, odak halkası, D22; sağ tık/üstüne gelme doğrulandı). Kısayol listesi levhası (Ctrl+/; `app.dart` `shortcuts`
   haritasından üretilir, elle liste tutulmaz); kart ve madde üzerinde sağ tık = uzun basış
@@ -1114,7 +1114,7 @@ tur `telefon-*.png`.
   başlık yığını, klasör şeridi, ızgara. Her biri kendi `ref.watch` kümesiyle. Izgara girdisi
   (sıralı kimlikler + sütun sayısı) değişmedikçe `sliverBalancedNoteColumns` ve
   `dateBuckets` yeniden hesaplanmaz (girdi kaydıyla not).
-- [ ] **F68.3 Liste akışının maliyeti — KARAR K-O13 (AKICILIK F22.4).** Önce KULLANICININ
+- [ ] **F68.3 Liste akışının maliyeti — KARAR K-O13 (AKICILIK F22.4).** *(→ P55, cihazlı; 2026-11-13)* Önce KULLANICININ
   GERÇEK hesabında (ölçüm veri seti değil) `prof_save.py`: not sayısı, olay boyutu (KB),
   kayıt sonrası Dart bloğu (ms). ≤ 12 ms → kapat. > 12 ms → "yakın/eski" bölmesi tasarımı
   ayrı madde olarak yazılır (iki sorgu: `updatedAt ≥ T` ve `< T`; birleşimde 500 ms
@@ -1366,7 +1366,7 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S6 | Sabit PDF'e 10 çizgi | kök kurulum / `updateNote` | 10 / 10 → **1 / 1** (F60.1, 2026-11-09) | ≤ 1 / ≤ 1 | 60.1 |
 | S7 | Gömülü PDF'e 10 çizgi | aynı | 10 / 10 → **1 / 1** (F60.1, 2026-11-09) | ≤ 1 / ≤ 1 | 60.1 |
 | S8 | Klavye aç/kapa ×3 (inset kareleri) | gövde kurulumu | kısa not 0; 30 maddede ilk açılış 15 + oturma 3, sonraki turlar 0 | 0 | — |
-| S9 | Biçim panelini aç → kapat | tuval kurulumu | 2 | 0 | 64 |
+| S9 | Biçim panelini aç → kapat | tuval kurulumu / gövde boyunun değiştiği kare | 2 / 2 (2026-11-13, P46; önce 34) | 0 / 2 | 64 |
 | S10 | Paketi aç → maddeye odaklan → Biçim'e dokun | paket açık mı / mount edilen `TextField` | F60.2 (`note_package_open_test`) | açık / ≤ üye sayısı | 60.2 |
 | S11 | Kendi kaydının akış yankısı | kök kurulum | 0 | 0 | — |
 | S12 | 1280×800 bölünmüş: açık nota 20 karakter + kayıt | `DashboardScreen` kurulumu / kurulan `NoteCard` | 1 / 13 → **0 / 0** yazarken+kayıt; durunca 1 / 1 (F68.1, 2026-11-12) | 0 / ≤ 1 | 68.1 |
@@ -1376,14 +1376,14 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S15 | 2000 çizgi varken etkin çizgiye 1 nokta | çizim çağrısı (`TestRecordingCanvas`) | 2001 | ≤ 8 | 62.1 |
 | S16 | 2000 çizgi varken 1 çizgi ekle + kaydet | yazılan belge / bayt | 2 / 448 925 bayt | 1 / ≤ 64 KB | 61.6 |
 | S17 | Klavye aç/kapa ×3, 18 karelik hareket (`keyboard_jank_guard_test`): metin / sabit PDF / **sabit görsel** (P43, 2026-11-12) | kare başına kurulum / editör içi / dizilen sınır | sabit görsel: ilk 63 / geçiş 240 / hareket 59 (editör içi 12) / 2 sınır | editör içi ≤ 7, dizilen 0 | P49 |
-| S18 | Telefon 412×915, 30 not: karttan not aç (`NoteOpenPage`), 40 kare | `NoteCard` / `DashboardScreen` / ilk kare / sonraki en ağır kare | 2 / 0 / 877 / 788 (2026-11-12) | ≤ 1 / 0 / — / editör ikinci kez kurulmaz | 84 |
+| S18 | Telefon 412×915, 30 not: karttan not aç (`NoteOpenPage`), 40 kare | `NoteCard` / `DashboardScreen` / ilk kare / sonraki en ağır kare | 2 / 0 / 876 / 285 (2026-11-13, P46; önce 877 / 788) | ≤ 1 / 0 / — / editör ikinci kez kurulmaz | 84 |
 | S19 | S18'in devamı: sistem geri ile ana ekrana dön | `NoteCard` / `DashboardScreen` / en ağır kare | 2 / 0 / 523 | ≤ 1 / 0 | 84 |
 | S20 | 30 maddeli not: ⋮ levhası aç → kapat | editör gövdesi kurulumu | 0 | 0 | — |
-| S21 | Telefon, 60 not (18 görünür): arama kutusuna 5 harf | harf başına `NoteCard` / pano | **114** (görünürün 6 katı) / 6 | ≤ görünür | 84 |
-| S22 | Takvim haftalık, 21 etkinlik: bir hafta ileri fırlat | `WeekPage` / toplam / tek kare | 3 / 979 / **978** (hepsi tek karede) | yalnız gelen sayfa | 84 |
-| S23 | Ana ekran, `swipe_mode=filters`: yana fırlat → sonraki süzgeç → geri | `NoteCard` ileri / geri / pano / en ağır kare | 30 / 30 / 1 / 2941 | görünür kadar | 84 |
+| S21 | Telefon, 60 not (18 görünür): arama kutusuna 5 harf | harf başına `NoteCard` / pano | 56 / 6 (2026-11-13, P46; önce 114) | ≤ görünür | 84 |
+| S22 | Takvim haftalık, 21 etkinlik: bir hafta ileri fırlat | `WeekPage` / toplam / tek kare | 1 / 509 / 508 (2026-11-13, P46; önce 3 / 979 / 978) | yalnız gelen sayfa | 84 |
+| S23 | Ana ekran, `swipe_mode=filters`: yana fırlat → sonraki süzgeç → geri | `NoteCard` ileri / geri / pano / en ağır kare | 30 / 30 / 1 / 2361 (2026-11-13, P46; önce 2941) | görünür kadar | 84 |
 | S24 | Soğuk açılış (30 not) | kurulum: ilk kare / kartlara dek / 2 sn | 930 / 4019 / 4031 | taban (mandal) | — |
-| S25 | Görselli 50 not, dpr 2,625, 6 ekran kaydır | çözme boyu sınırsız küçük resim | **21** (hepsi `thumbUrl` dalı, `memCacheWidth` yok) | 0 | 84 |
+| S25 | Görselli 50 not, dpr 2,625, 6 ekran kaydır | çözme boyu sınırsız küçük resim | 0 (2026-11-13, P46; önce 21) | 0 | 84 |
 
 ## Ek B — Mürekkep paketi biçimi (F61.1)
 

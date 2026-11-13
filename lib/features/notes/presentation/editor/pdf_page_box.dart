@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/services.dart';
 import 'package:pdfrx/pdfrx.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/pdf_copy_text.dart';
@@ -77,6 +78,16 @@ class PdfBoxBar extends ChangeNotifier {
   List<Widget> buildControls(BuildContext context, double width) =>
       _box?._externalControls(context, width) ?? const [];
 
+  /// Belge menüsünün maddeleri — sabit bölmenin TEK ⋮ levhasında çizilir
+  /// (P49: "⋮ ile sayfalara göz at menüleri tek ⋮ menüde"). Belge
+  /// açılmadıysa boş. Tam ekran bölme çubuğunun kendi düğmesi: burada yok.
+  List<PdfMenuAction> menuActions(BuildContext context) {
+    final box = _box;
+    final document = box?._doc?.document;
+    if (box == null || document == null) return const [];
+    return box._menuActions(context, document, fullScreen: false);
+  }
+
   void _attach(_PdfPageBoxState box) {
     _box = box;
     _signature = null;
@@ -102,6 +113,14 @@ class PdfBoxBar extends ChangeNotifier {
     super.dispose();
   }
 }
+
+/// Belge menüsünün bir maddesi (bkz. [PdfBoxBar.menuActions]).
+typedef PdfMenuAction = ({
+  String id,
+  IconData icon,
+  String label,
+  VoidCallback run,
+});
 
 class PdfPageBox extends StatefulWidget {
   const PdfPageBox({
@@ -1340,64 +1359,97 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     );
   }
 
-  /// Sabit bölme çubuğundaki denetimler ([PdfBoxBar]): balon göster/gizle (balon varsa) · yer imi (yer varsa) ·
-  /// belge menüsü. Balon EKLE bölme çubuğunda zaten var (yinelenmez).
+  /// Sabit bölme çubuğundaki denetimler ([PdfBoxBar]): yalnız GENİŞ çubukta
+  /// (≥ 600 dp) yer imi. Belge menüsü ayrı düğme DEĞİL (P49, K-O6): maddeler
+  /// bölmenin tek ⋮ levhasında ([PdfBoxBar.menuActions]); balon göster/gizle
+  /// balon menüsünde.
   List<Widget> _externalControls(BuildContext context, double width) {
-    final document = _doc?.document;
-    if (document == null) return const [];
+    if (_doc?.document == null || width < 600) return const [];
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final a = widget.attachment;
-    final marked = a.pdfMarks.contains(_page);
-    Widget button({
-      required Key key,
-      required IconData icon,
-      required String tooltip,
-      required VoidCallback? onPressed,
-      bool selected = false,
-    }) => IconButton(
-      key: key,
-      tooltip: tooltip,
-      visualDensity: VisualDensity.compact,
-      iconSize: 20,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 34, minHeight: 40),
-      color: selected ? scheme.primary : null,
-      icon: Icon(icon),
-      onPressed: _busy ? null : onPressed,
-    );
+    final marked = widget.attachment.pdfMarks.contains(_page);
     // Sayfa gezinme (‹ n/N ›) çubukta YOK (F65.8): sayfalar dikey kayar,
     // numara bölmenin sağ altındaki hapta ([PdfPagePill]).
     return [
-      if (widget.showBubbles && a.bubbles.isNotEmpty)
-        button(
-          key: const ValueKey('pinned-pdf-bubbles'),
-          icon: a.bubblesHidden
-              ? Icons.speaker_notes_off_outlined
-              : Icons.chat_bubble_outline,
-          tooltip: a.bubblesHidden ? l10n.bubblesShow : l10n.bubblesHide,
-          selected: a.bubblesHidden,
-          onPressed: () =>
-              widget.onChanged(a.copyWith(bubblesHidden: !a.bubblesHidden)),
-        ),
-      if (width >= 400)
-        button(
-          key: const ValueKey('pinned-pdf-mark'),
-          icon: marked ? Icons.bookmark : Icons.bookmark_border,
-          tooltip: marked ? l10n.pdfBookmarkRemove : l10n.pdfBookmarkAdd,
-          selected: marked,
-          onPressed: _toggleMark,
-        ),
-      // Belge menüsü (küçük resimler, yer imleri, döndür, slayt gösterisi,
-      // sayfa metni, AI yakala, tam ekran) — eski şeridin ⋮'ı.
-      _menu(
-        context,
-        document,
-        big: true,
-        size: 40,
-        key: const ValueKey('pinned-pdf-menu'),
-        icon: Icon(Icons.auto_stories_outlined, color: scheme.onSurfaceVariant),
+      IconButton(
+        key: const ValueKey('pinned-pdf-mark'),
+        tooltip: marked ? l10n.pdfBookmarkRemove : l10n.pdfBookmarkAdd,
+        visualDensity: VisualDensity.compact,
+        iconSize: AppIconSize.m,
+        color: marked ? Theme.of(context).colorScheme.primary : null,
+        icon: Icon(marked ? Icons.bookmark : Icons.bookmark_border),
+        onPressed: _busy ? null : _toggleMark,
       ),
+    ];
+  }
+
+  /// Belge menüsünün maddeleri — kutunun kendi ⋮'ı ve sabit bölmenin levhası
+  /// AYNI listeyi çizer (tek yer).
+  List<PdfMenuAction> _menuActions(
+    BuildContext context,
+    PdfDocument document, {
+    bool fullScreen = true,
+  }) {
+    final l10n = context.l10n;
+    final playing = _autoPlay != null;
+    final marked = widget.attachment.pdfMarks.contains(_page);
+    void guarded(VoidCallback run) {
+      if (mounted && !_busy) run();
+    }
+
+    return [
+      (
+        id: 'pages',
+        icon: Icons.grid_view_outlined,
+        label: l10n.pdfThumbnails,
+        run: () => guarded(() => _openJumpSheet(document)),
+      ),
+      (
+        id: 'mark',
+        icon: marked
+            ? Icons.bookmark_remove_outlined
+            : Icons.bookmark_add_outlined,
+        label: marked ? l10n.pdfBookmarkRemove : l10n.pdfBookmarkAdd,
+        run: () => guarded(_toggleMark),
+      ),
+      (
+        id: 'marks',
+        icon: Icons.bookmarks_outlined,
+        label: l10n.pdfBookmarks,
+        run: () => guarded(_openMarks),
+      ),
+      (
+        id: 'rotate',
+        icon: Icons.rotate_90_degrees_ccw,
+        label: l10n.pdfRotateView,
+        run: () => guarded(_rotate),
+      ),
+      (
+        id: 'play',
+        icon: playing
+            ? Icons.pause_circle_outline
+            : Icons.play_circle_outline,
+        label: playing ? l10n.pdfSlideshowStop : l10n.pdfSlideshow,
+        run: () => guarded(_toggleAutoPlay),
+      ),
+      (
+        id: 'text',
+        icon: Icons.text_snippet_outlined,
+        label: l10n.pdfCopyPageText,
+        run: () => guarded(_copyPageText),
+      ),
+      (
+        id: 'capture',
+        icon: Icons.auto_awesome,
+        label: l10n.pdfCapturePage,
+        run: () => guarded(() => _capturePage(document)),
+      ),
+      if (fullScreen)
+        (
+          id: 'full',
+          icon: Icons.fullscreen,
+          label: l10n.pdfFullScreen,
+          run: () => guarded(_openFullScreen),
+        ),
     ];
   }
 
@@ -1424,67 +1476,23 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     onPressed: _busy ? null : onPressed,
   );
 
-  Widget _menu(
-    BuildContext context,
-    PdfDocument document, {
-    bool big = false,
-    Widget? icon,
-    double? size,
-    Key? key,
-  }) {
-    final l10n = context.l10n;
-    final playing = _autoPlay != null;
+  Widget _menu(BuildContext context, PdfDocument document, {bool big = false}) {
     return SizedBox(
-      key: key,
-      width: size ?? (big ? 32 : 26),
-      height: size ?? (big ? 32 : 26),
+      width: big ? 32 : 26,
+      height: big ? 32 : 26,
       child: PopupMenuButton<String>(
-        tooltip: icon == null ? l10n.more : l10n.pdfThumbnails,
+        tooltip: context.l10n.more,
         iconSize: big ? 20 : 16,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(minWidth: 200),
-        icon: icon ?? const Icon(Icons.more_vert, color: Colors.white),
-        onSelected: (action) {
-          switch (action) {
-            case 'pages':
-              _openJumpSheet(document);
-            case 'mark':
-              _toggleMark();
-            case 'marks':
-              _openMarks();
-            case 'rotate':
-              _rotate();
-            case 'full':
-              _openFullScreen();
-            case 'text':
-              _copyPageText();
-            case 'capture':
-              _capturePage(document);
-            case 'play':
-              _toggleAutoPlay();
-          }
-        },
+        icon: const Icon(Icons.more_vert, color: Colors.white),
+        onSelected: (id) => _menuActions(
+          context,
+          document,
+        ).firstWhere((a) => a.id == id).run(),
         itemBuilder: (context) => [
-          _menuItem('pages', Icons.grid_view_outlined, l10n.pdfThumbnails),
-          _menuItem(
-            'mark',
-            widget.attachment.pdfMarks.contains(_page)
-                ? Icons.bookmark_remove_outlined
-                : Icons.bookmark_add_outlined,
-            widget.attachment.pdfMarks.contains(_page)
-                ? l10n.pdfBookmarkRemove
-                : l10n.pdfBookmarkAdd,
-          ),
-          _menuItem('marks', Icons.bookmarks_outlined, l10n.pdfBookmarks),
-          _menuItem('rotate', Icons.rotate_90_degrees_ccw, l10n.pdfRotateView),
-          _menuItem(
-            'play',
-            playing ? Icons.pause_circle_outline : Icons.play_circle_outline,
-            playing ? l10n.pdfSlideshowStop : l10n.pdfSlideshow,
-          ),
-          _menuItem('text', Icons.text_snippet_outlined, l10n.pdfCopyPageText),
-          _menuItem('capture', Icons.auto_awesome, l10n.pdfCapturePage),
-          _menuItem('full', Icons.fullscreen, l10n.pdfFullScreen),
+          for (final a in _menuActions(context, document))
+            _menuItem(a.id, a.icon, a.label),
         ],
       ),
     );

@@ -39,11 +39,11 @@ const _mediaQueryLatch = {
 };
 
 /// md. 6 — editör kökünde `AnimatedSize` / `AnimatedContainer` (gövdeyle aynı
-/// Column'da boy animasyonu gövdeyi her karede dizer). Bugünkü 4: ses kaydı
-/// hapı, biçim paneli ↔ alt çubuk takası (2), sabitleme bırakma şeridi
-/// (Stack'te, zararsız). Biçim/alt çubuk takası S9'da ölçülüyor; bulgu
-/// OTOMASYON P46'ya yazıldı (2026-11-12).
-const _animatedSizeLatch = 4;
+/// Column'da boy animasyonu gövdeyi her karede dizer). Bugünkü 2: ses kaydı
+/// hapı (cihazsız kanıt üretilemedi — testte kayıt eklentisi yok; dokunulmadı),
+/// sabitleme bırakma şeridi (Stack'te, zararsız). Biçim paneli ↔ alt çubuk
+/// takasındaki ikisi P46'da kalktı (2026-11-13; bütçe S9 `govde_boy_karesi`).
+const _animatedSizeLatch = 2;
 
 String _stripComments(String src) => src
     .replaceAll(RegExp(r'/\*[\s\S]*?\*/'), '')
