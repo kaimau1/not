@@ -176,7 +176,7 @@ failures-only` + `dart analyze <değişen dosyalar>`; push'tan önce tam `flutte
 koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili anahtarı ÖLÇÜLEN değere indir,
 `bugun` alanına "(2026-11-.., P20)" ekle; yükseltme yok.
 
-**Adım 1 — Kök kurulum haritası (F64.1; yalnız test, ürün kodu değişmez).**
+**[x] Adım 1 — Kök kurulum haritası (F64.1; yalnız test, ürün kodu değişmez).** (2026-11-14, 991967bb: öngörü TUTTU — işaretle/Enter satır 23, yıldız/iğne tuval 1, biçim tuval 2, ilk değişiklik kök 1; yeni bulgu: metin geri alınınca kök kurulmuyor → yinele düğmesi `onPressed: null` bayat kalıyor, adım 3 `_undoN` çözer; tablo OTURTMA Ek A "F64.1 haritası")
 - Dosyalar: YENİ `test/editor_rebuild_map_test.dart`; `OTURTMA_PLANI.md` Ek A'nın altına "F64.1 haritası" tablosu.
 - Ne: `test/support/editor_harness.dart`'taki `pumpEditor` + `BuildCounter` ile (BÜTÇE:181 `_count`
   kalıbı) şu eylemlerin her biri için `NoteEditorScreen` / `NotePageCanvas` / `ItemsEditor` /
@@ -190,7 +190,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
   ilk değişiklik kök 1). **Tutmuyorsa DUR**: DEVIR.md'ye farkı yaz, Kuyruk satırını `takıldı — harita
   planla uyuşmuyor` yap; adım 2+ uygulanmaz.
 
-**Adım 2 — Sıra numarası satır önbelleğinin dışına (M1; S3, S4).**
+**[x] Adım 2 — Sıra numarası satır önbelleğinin dışına (M1; S3, S4).** (2026-11-14, a865ef1b: S3/S4 satır 23→1, S2 bonus 5/15→1/1. M1 YARIM DOĞRUYDU: anahtar düzeltmesi tek başına 23'ü düşürmedi — `SliverReorderableList` her satırı DİZİN içeren `_ReorderableItemGlobalKey` ile sarıyor, dizin kayınca öğe atılıp baştan kuruluyor. Ek düzeltme: tutamaç yokken (`!_showHandles`: telefon, Seç dışı) düz `ListView` (anahtarlı çocuklar korunur); tutamaçlı kipte (tablet/web, Seç) 23 kalır — sıralama orada lazım. `_RowSlot` `_cachedItemRow` içinde sarılıyor (üç çağrı yeri birden). Bilinen yan etki: Seç kipine giriş/çıkışta liste türü değişir, satır öğeleri yeniden kurulur (önbellek zaten env ile boşalıyordu; metin denetleyicileri durumda, kaybolmaz); erişilebilirlik "yukarı/aşağı taşı" eylemleri yalnız tutamaçlı kipte — sabah bakılacak)
 - Dosyalar: LİSTE, SATIR, `items_editor_widgets.dart`, `test/items_editor_row_cache_test.dart`, BÜTÇE (yalnız `budgets.json` S3/S4).
 - Önce kanıt (kırmızı): `items_editor_row_cache_test.dart`'a iki test — "kutucuk işaretlenince arkadaki
   satırlar `identical`" ve "araya madde eklenince arkadaki satırlar `identical`" (dosyadaki mevcut
