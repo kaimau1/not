@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:notlar/core/widgets/action_menu_sheet.dart';
@@ -72,8 +73,22 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('reminder-level-urgent')));
     await tester.pump();
+    // F77.2: kaydetmek tek "tamamlandı" titreşimi (lightImpact) verir.
+    final haptics = <Object?>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'HapticFeedback.vibrate') haptics.add(call.arguments);
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null),
+    );
     await tester.tap(find.byKey(const ValueKey('reminder-sheet-save')));
     await tester.pumpAndSettle();
+    expect(haptics, ['HapticFeedbackType.lightImpact']);
     expect(result, isNotNull);
     expect(result!.at!.hour, 9);
     expect(result!.repeat, 'daily');

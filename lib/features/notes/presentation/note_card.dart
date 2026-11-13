@@ -1,3 +1,4 @@
+import '../../../core/haptics.dart';
 import '../../../core/app_icons.dart';
 import '../../calendar/data/task_note_sync.dart';
 import '../../../core/widgets/tag_pill.dart';
@@ -538,8 +539,10 @@ class NoteCard extends ConsumerWidget {
     if (!context.mounted) return;
     switch (action) {
       case 'pin':
+        unawaited(AppHaptics.tick());
         ref.read(notesRepositoryProvider)?.setPinned(note.id, !note.pinned);
       case 'star':
+        unawaited(AppHaptics.tick());
         ref.read(notesRepositoryProvider)?.setStarred(note.id, !note.starred);
       case 'delete':
         _delete(context, ref);
