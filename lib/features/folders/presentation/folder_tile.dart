@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../../core/widgets/press_scale.dart';
 import '../../notes/data/shared_note_activity.dart';
 import '../../notes/presentation/filter_sheet.dart';
 import '../../notes/presentation/notes_providers.dart';
@@ -559,8 +558,7 @@ class _ChipShell extends StatelessWidget {
     // SIFIR SAYI ÇİZİLMEZ (F36.6): "0" rozeti boş çipte bilgi değil gürültü
     // (ekran görüntüsünde Gelen 0, Dualar 0, Genel 0).
     final count = (this.count ?? 0) > 0 ? this.count : null;
-    // F77.3-2: basınca 0,97 (yalnız boyama; jestlere karışmaz).
-    return PressScale(scale: 0.97, child: Material(
+    return Material(
       color: highlight != null
           ? Color.alphaBlend(
               highlight.withValues(alpha: 0.16),
@@ -642,7 +640,7 @@ class _ChipShell extends StatelessWidget {
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -679,18 +677,13 @@ class _CornerCount extends StatelessWidget {
             : Border.all(color: color.withValues(alpha: 0.45), width: 0.8),
       ),
       alignment: Alignment.center,
-      // F77.3-3: sayı değişince soluklaşarak geçer (quick).
-      child: AnimatedSwitcher(
-        duration: AppMotion.of(context, AppMotion.quick),
-        child: Text(
-          text,
-          key: ValueKey(text),
-          style: TextStyle(
-            fontSize: 9,
-            height: 1.15,
-            fontWeight: AppWeight.strong,
-            color: alert ? scheme.onError : color,
-          ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 9,
+          height: 1.15,
+          fontWeight: AppWeight.strong,
+          color: alert ? scheme.onError : color,
         ),
       ),
     );

@@ -4,7 +4,7 @@
 - F77.2 `lib/core/haptics.dart` `AppHaptics` (tick/thud/heavy + `heaviest` = çöpe bırakmanın heavyImpact'i, tür korundu). 53 çağrı göçtü; mandal `haptic` 88 → 35.
 - F77.2 eksik: hatırlatıcı kaydet `thud`, kart ⋮/işlem levhası sabitle/yıldızla `tick`, balon yıldızı `tick`.
 - F77.1 ayar/rehber/AI/klasör sohbet/ipucu/düzen kipi/bölünmüş kabuk süre-eğri `AppMotion.of`'a; mandal süre 219→207, eğri 94→90.
-- F77.3 `TogglePop` (yıldız 1→1,15→1), klasör çipi + levha karosu `PressScale(0.97)`, çip sayısı ve görev Google simgesi `AnimatedSwitcher`.
+- F77.3 `TogglePop` (yıldız 1→1,15→1), levha karosu `PressScale(0.97)`, görev Google simgesi `AnimatedSwitcher`. Klasör çipi 0,97 + sayı solması S24 (soğuk açılış) bütçesini aştı → geri alındı.
 - F77.4 `theme_motion_test` quick/long da kapsar.
 
 ## ÇİT — P55/P56 sonrasına bırakılan
