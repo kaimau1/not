@@ -95,6 +95,25 @@
     @media (prefers-reduced-motion: reduce) {
       #splash img, #splash .bar::after { animation: none; }
     }
+    /* WEB METİN SEÇİMİ (P59, kullanıcı 2026-11-14: seçili kısım başka yazı
+       tipinde, mavi kutu satırdan farklı, solunda gri şerit). KÖK NEDEN:
+       Flutter'ın gizli DOM metin alanının yerel seçimi görünüyordu. Motor
+       onu yalnız `flutter-view input::selection { background: transparent }`
+       ile gizliyor (!important yok, renk yok); sayfaya genel bir
+       `::selection { ... !important }` kuralı gelince (tarayıcı eklentisi,
+       karanlık kip/okuma araçları) DOM seçimi mavi zemin + beyaz, tarayıcı
+       yazı tipiyle Flutter'ın kendi (gri) seçiminin üstüne çiziliyordu.
+       Daha özgül + !important + renk de saydam: hiçbir genel kural ezemez.
+       Bekçi: test/web_selection_css_test.dart. */
+    flt-text-editing-host input::selection,
+    flt-text-editing-host textarea::selection,
+    flt-semantics input::selection,
+    flt-semantics textarea::selection {
+      background: transparent !important;
+      color: transparent !important;
+      -webkit-text-fill-color: transparent !important;
+      text-shadow: none !important;
+    }
   </style>
 </head>
 <body>

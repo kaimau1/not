@@ -142,6 +142,46 @@ class InkController extends ChangeNotifier {
     setEraser(true);
   }
 
+  /// **SİLGİDE BASILI TUT = KALEM** (P59, kullanıcı 2026-11-14: "silgiden
+  /// tekrar kaleme geçmek zor"): silgi seçiliyken kıpırdamadan 550 ms
+  /// basılı tutunca o noktada kalem düğmesi belirir; dokununca son kalem
+  /// geri gelir. Basılı tutuşun sildiği çizgiler geri konur.
+  final penOffer = ValueNotifier<({int page, Offset at})?>(null);
+
+  /// Silgi + kalem önerisi birlikte (katmanda tek dinleyici).
+  late final Listenable offers = Listenable.merge([eraserOffer, penOffer]);
+
+  void acceptPenOffer() {
+    penOffer.value = null;
+    setPen(pen);
+  }
+
+  void _offerPen(int page) {
+    _clearHold();
+    final at = _eraserHoldAt;
+    _eraserHold = null;
+    if (at == null || _pointers != 1 || !eraser || _tempEraser) return;
+    final base = _gestureBase;
+    if (base != null && !identical(base, _ink)) {
+      _ink = base;
+      _dirty = true;
+    }
+    // Parmak kalkana dek silme sürmez (bkz. pointerMove: _snapped).
+    _snapped = true;
+    _showOffer(penOffer, page, at);
+  }
+
+  /// Basılı tutma önerisini (silgi / kalem) gösterir: tek titreşim yolu.
+  void _showOffer(
+    ValueNotifier<({int page, Offset at})?> offer,
+    int page,
+    Offset at,
+  ) {
+    offer.value = (page: page, at: at);
+    AppHaptics.tick();
+    notifyListeners();
+  }
+
   bool _inkNear(int page, double x, double y) {
     const r = _eraseRadius * 1.5;
     for (final s in _ink) {
@@ -166,9 +206,7 @@ class InkController extends ChangeNotifier {
     if (base != null) _ink = base;
     _active = null;
     _snapped = true;
-    eraserOffer.value = (page: page, at: at);
-    AppHaptics.tick();
-    notifyListeners();
+    _showOffer(eraserOffer, page, at);
   }
 
   /// Katmanın üstündeki bir düğme (düzeltme işaretçisi) bu dokunuşu aldı:
@@ -1084,6 +1122,7 @@ class InkController extends ChangeNotifier {
     hover.value = null;
     if (suggestion.value != null) dismissSuggestion();
     if (eraserOffer.value != null) eraserOffer.value = null;
+    if (penOffer.value != null) penOffer.value = null;
     _gestureBase = _ink;
     _tempEraser = stylusEraser;
     // Seçim tutamağı / düzeltilmiş şeklin kutusu: taşı ya da boyutlandır.
@@ -1143,6 +1182,16 @@ class InkController extends ChangeNotifier {
     }
     if (_erasing) {
       _eraseAt(page, local, size);
+      _eraserHold?.cancel();
+      _eraserHold = null;
+      _snapped = false;
+      if (eraser && !_tempEraser) {
+        final x = local.dx / size.width;
+        final y = local.dy / size.height;
+        _eraserHoldAt = Offset(x, y);
+        _eraserHold = Timer(kInkHoldDuration, () => _offerPen(page));
+        _showHold(page, x, y, eraser: false);
+      }
       notifyListeners();
       return;
     }
@@ -1261,6 +1310,7 @@ class InkController extends ChangeNotifier {
     hover.dispose();
     suggestion.dispose();
     eraserOffer.dispose();
+    penOffer.dispose();
     committedRev.dispose();
     super.dispose();
   }
@@ -1315,6 +1365,19 @@ class InkController extends ChangeNotifier {
       return;
     }
     if (_erasing) {
+      if (_snapped) return; // kalem önerisi çıktı: parmak kalkana dek silme yok
+      final holdAt = _eraserHoldAt;
+      if (_eraserHold != null &&
+          holdAt != null &&
+          math.max(
+                (local.dx / size.width - holdAt.dx).abs(),
+                (local.dy / size.height - holdAt.dy).abs(),
+              ) >
+              0.01) {
+        _eraserHold?.cancel();
+        _eraserHold = null;
+        _clearHold();
+      }
       _eraseAt(page, local, size);
       notifyListeners();
       return;
@@ -1949,14 +2012,20 @@ class InkPageLayer extends StatelessWidget {
                       size: ring,
                       icon: h.eraser
                           ? Icons.auto_fix_normal_outlined
+                          : controller.eraser
+                          ? Icons.edit_outlined
                           : Icons.category_outlined,
                     ),
                   );
                 },
               ),
-              ValueListenableBuilder<({int page, Offset at})?>(
-                valueListenable: controller.eraserOffer,
-                builder: (context, o, _) {
+              // Silgi ve kalem önerisi TEK dinleyicide (P59): ikisi aynı anda
+              // olmaz; ayrı olunca her sayfaya bir öğe daha (S18 bütçesi).
+              ListenableBuilder(
+                listenable: controller.offers,
+                builder: (context, _) {
+                  final pen = controller.penOffer.value;
+                  final o = pen ?? controller.eraserOffer.value;
                   if (o == null || o.page != page) {
                     return const SizedBox.shrink();
                   }
@@ -1971,8 +2040,11 @@ class InkPageLayer extends StatelessWidget {
                     left: left,
                     top: top,
                     child: _EraserOfferButton(
+                      toPen: pen != null,
                       onClaim: controller.claimPointer,
-                      onAccept: controller.acceptEraserOffer,
+                      onAccept: pen != null
+                          ? controller.acceptPenOffer
+                          : controller.acceptEraserOffer,
                     ),
                   );
                 },
@@ -2085,15 +2157,22 @@ class InkPageLayer extends StatelessWidget {
 /// [InkController.eraserOffer]). İnişte kabul eder — düzeltme işaretçisiyle
 /// aynı neden (kalem/parmak inişi çizim katmanına kaçmasın).
 class _EraserOfferButton extends StatelessWidget {
-  const _EraserOfferButton({required this.onClaim, required this.onAccept});
+  const _EraserOfferButton({
+    required this.onClaim,
+    required this.onAccept,
+    this.toPen = false,
+  });
 
   final ValueChanged<int> onClaim;
   final VoidCallback onAccept;
 
+  /// true = silgiden kaleme dönüş düğmesi (P59).
+  final bool toPen;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final label = context.l10n.inkEraserOffer;
+    final label = toPen ? context.l10n.inkPenOffer : context.l10n.inkEraserOffer;
     return Semantics(
       button: true,
       label: label,
@@ -2101,7 +2180,7 @@ class _EraserOfferButton extends StatelessWidget {
       child: Tooltip(
         message: label,
         child: Material(
-          key: const ValueKey('ink-eraser-offer'),
+          key: ValueKey(toPen ? 'ink-pen-offer' : 'ink-eraser-offer'),
           color: scheme.tertiaryContainer,
           shape: const CircleBorder(),
           elevation: 4,
@@ -2114,7 +2193,7 @@ class _EraserOfferButton extends StatelessWidget {
             child: SizedBox.square(
               dimension: 44,
               child: Icon(
-                Icons.auto_fix_normal_outlined,
+                toPen ? Icons.edit_outlined : Icons.auto_fix_normal_outlined,
                 size: 22,
                 color: scheme.onTertiaryContainer,
               ),

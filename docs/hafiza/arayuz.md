@@ -215,3 +215,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Alt çubuk düzeni (P57, 2026-11-13):** sıra `UiPrefs.barOrder`/`aiOrder` (boş = varsayılan, `UiPrefs.orderOf`); yeni çubuk düğmesi = `UiItem` kimliği + `barLeftDefault`'a ekle + editördeki `byId` haritası + `PersonalizeBarList.describe`. Varsayılanda görünmemesi gereken düğme `optIn`'e girer (kayıtta `+kimlik`).
 
 - **Titreşim tek kaynak (P38, 2026-11-13):** `HapticFeedback` doğrudan çağrılmaz, `AppHaptics` (`lib/core/haptics.dart`): `tick` seçim, `thud` tamamlandı, `heavy` tutma/yıkıcı, `heaviest` yalnız çöpe bırakma. Göçte tür DEĞİŞMEZ. Mandal `design_tokens/budget.json` `haptic` (yalnız düşer; P55/P56 çitindeki 35 çağrı göçünce 0). Yıldız/iğne tepkisi `core/widgets/toggle_pop.dart` (yalnız boyama, ağaç şekli sabit).
+
+## 2026-11-14 — P59 geniş düzen dönüşü + mini pano ölçeği
+- **Kapanış geçişi:** KÖK "web/tablette nottan dönüşte animasyon yok": rota `/` olur olmaz sağ bölme 0 genişliğe iniyordu → notun çıkış geçişi görünmüyordu (c34ed0ae'nin liste solması yetmedi). `SplitShell._closing`: kapanışta düzen 300 ms "not açık" kalır, sonra TEK ADIMDA tam genişlik + `_back` solması. Bekçi `fullscreen_pull_test` + bütçe S26.
+- **Mini pano:** bölmede sütun `paneColumnsFor(genişlik, paneCardScaleProvider)` = genişlik/(220×ölçek), 1–4; `PinchColumns.onCommit` bölmede `setColumns` (yarım sütun payı). Genel `gridColumnsProvider` yalnız tam genişlik ızgarası. Ölçek alt sınırı 0,5 → dar bölmede 4 sütun çıkmaz (kart ≥ 110 dp).

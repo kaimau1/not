@@ -8216,6 +8216,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inkEraserOffer => 'Pick eraser';
 
   @override
+  String get inkPenOffer => 'Back to pen';
+
+  @override
   String get tipPenToggle =>
       'Pen mode is on. Tap the pen button again (or back) to turn it off. Long-press = pen settings.';
 

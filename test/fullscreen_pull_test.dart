@@ -11,6 +11,7 @@ import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/notes/data/attachment_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
+import 'package:notlar/features/notes/presentation/notes_providers.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -160,6 +161,55 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(tester.getSize(dash).width, shellWidth);
     expect(tester.state(dash), same(before));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  // P59 (kullanıcı 2026-11-14): web/tablette nottan listeye dönüşte geçiş
+  // yoktu — not kapanır kapanmaz sağ bölme sıfır genişliğe iniyor, notun
+  // çıkış geçişi görünmüyordu. Artık geçiş süresince bölme yerinde kalır,
+  // sonra liste TEK ADIMDA tam genişliğe geçer (boy animasyonu yok).
+  testWidgets('not kapanınca çıkış geçişi bölmede görünür, sonra tam genişlik', (
+    tester,
+  ) async {
+    await pump(tester, initial: '/');
+    final dash = find.byType(DashboardScreen);
+    final shellWidth = tester.getSize(find.byType(SplitShell)).width;
+    final router = GoRouter.of(tester.element(dash));
+    router.push('/note/n1').ignore();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    final narrow = tester.getSize(dash).width;
+    expect(narrow, lessThan(shellWidth / 2));
+
+    router.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(find.text('NOT'), findsOneWidget);
+    expect(tester.getSize(find.text('NOT')).width, greaterThan(0));
+    expect(tester.getSize(dash).width, narrow, reason: 'boy kaymaz');
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('NOT'), findsNothing);
+    expect(tester.getSize(dash).width, shellWidth);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  // P59: not açıkken soldaki mini panoda kıstırma/Ctrl+tekerlek sütunu
+  // değiştirir (eskiden genel ızgara tercihine yazılıyor, bölmede yok
+  // sayılıyordu: sütun hep genişlik/220).
+  testWidgets('mini pano kıstırması bölmenin sütununu değiştirir', (
+    tester,
+  ) async {
+    final container = await pump(tester);
+    PinchColumns pinch() => tester.widget<PinchColumns>(find.byType(PinchColumns));
+    final before = pinch().columns;
+    final target = before == 1 ? 2 : 1;
+    pinch().onCommit(target);
+    await tester.pump();
+    expect(pinch().columns, target);
+    expect(container.read(paneCardScaleProvider), isNot(1.0));
+    expect(container.read(gridColumnsProvider), 0, reason: 'genel ızgara aynı');
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 2));
   });

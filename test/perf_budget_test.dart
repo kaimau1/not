@@ -778,6 +778,47 @@ void main() {
     await endEditor(tester);
   });
 
+  // P59 (HIZ SÖZLEŞMESİ 1): geniş düzende nottan listeye dönüş. Bölme
+  // geçiş süresince yerinde bekler, liste tek adımda tam genişliğe geçer.
+  testWidgets('S26: 1280×800 bölünmüş — nottan listeye dön', (tester) async {
+    final now = DateTime.now();
+    final all = [
+      for (var i = 0; i < 13; i++)
+        Note(
+          id: 'x$i',
+          type: NoteType.text,
+          title: 'Not $i',
+          body: 'gövde $i',
+          updatedAt: now,
+        ),
+    ];
+    final repo = _LiveRepo(FakeFirebaseFirestore());
+    final col = repo.db.collection('users').doc('u').collection('notes');
+    await col.doc('x3').set(all[3].toMap());
+    await _pumpHome(
+      tester,
+      size: const Size(1280, 800),
+      notes: Stream.value(all),
+      location: '/note/x3',
+      repo: repo,
+    );
+    await tester.pump(const Duration(seconds: 1));
+    final router = GoRouter.of(tester.element(find.byType(DashboardScreen)));
+    final c = await _count(() async {
+      router.go('/');
+      await tester.pump();
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await tester.pump(const Duration(seconds: 1));
+    });
+    expect(find.byType(NoteEditorScreen), findsNothing);
+    _expectBudget('S26', {
+      'dashboard_kurulum': c['DashboardScreen'] ?? 0,
+      'note_card': c['NoteCard'] ?? 0,
+    });
+  });
+
   testWidgets('S13: ana ekran, 300 not, 3 ekran kaydır', (tester) async {
     final all = [
       for (var i = 0; i < 300; i++)
