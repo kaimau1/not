@@ -356,3 +356,6 @@ Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5
 - [ ] Görev levhasında kişi alanı serbest metin; rehberden seçme ve Gmail iletisini uygulama içinde açma yok (2026-11-08)
 - [ ] Tablette elle kontrol (v801 kurulu): kalemle yazarken avuç, kalemle tek tık kutucuk/metne gidiyor mu, yeni kalem kapsülü, not üst çubuğunda ⌨ düğmesi — klavye algılama doğrulandı, gerisi kullanım sınırı yüzünden yarım (2026-11-07)
 - [x] `tablet-kalem-klavye` dalı main'de (2026-11-09'da doğrulandı)
+
+### P45 (2026-11-14, yazıldı, cihazda doğrulanmadı)
+- P45 **Ölçüm geçmişi:** bir sonraki `[apk]` öncesi `ab_hepsi.py <A> <B> --altin` koştuktan sonra `python tool/perf/gecmis.py` çalıştır: yeni satırlar eğilimde görünmeli, `KAYMA` yalnız gerçek kaymada. `gecmis.py` cihazsız `--self-check` ile ve gerçek csv ile doğrulandı.

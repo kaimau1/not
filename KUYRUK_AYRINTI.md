@@ -17,7 +17,7 @@ Model: sonnet · Cihaz: cihaz · APK: -
 
 **Plan maddeleri:** HIZ_PLANI F83.1–F83.3
 
-**Durum:** bekliyor
+**Durum:** cihaz bekliyor (2026-11-14), dal `oto/P45-olcum-gecmis`: F83.1, F83.2 yazıldı; F83.3 sabah bakılacak (gerekçe HIZ_PLANI'nda).
 
 ## P46 — Hız: ölçümün bulduğu yavaşlıkları düzelt
 
