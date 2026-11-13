@@ -140,3 +140,24 @@ F60.7, F63.5, F66.1, F66.2, F66.3, F66.4, F66.6, F67.7. **K-O6 / F65.1: kullanı
 Atlananlar (kullanıcı kararı bekliyor, gözetimsiz yapılmaz): K-O1, K-O3 (v2 yazımını açma),
 K-O4, K-O6, K-O7, K-O8, K-O10, K-O11, K-O12, K-O14, F63.6, F65.6 (kullanıcıdan hata metni),
 F69.1–F69.3 (elle cihaz turu).
+
+## P55 — KASMA KÖKTEN: not aç/kapa, klavye, alt panel titremesi
+
+Model: fable (limit %65 üstü → opus) · Cihaz: A/B · APK: evet
+
+**Kullanıcı (2026-11-13):** "genel olarak not açılış kapanış, klavye açılış kapanışlarda kasma, akıcı açılamama, titreme sorunları var; bunların artık kökten çözülmesi gerekiyor, ne gerekiyorsa yapın." Ayrıca: (a) "Alt çizgi varken madde altında kasma oluyor klavye açılırken." (b) "Alt panel hâlâ titriyor — ona özel test yaptır."
+
+**Protokol (yama değil, kök neden):**
+1. Kanıt: telefonda (ölçüm kimliği `dev.kaimau.notlar.olcum`, profil derleme) her evre için timeline izi: not aç, not kapat, klavye aç, klavye kapat, yazma, alt çizgili madde + klavye aç. Kare başına en pahalı build/layout/paint düğümlerini ve kaç kez kurulduğunu çıkar (`tool/perf/` araçları, `ab_hepsi.py` evreleri; gerekirse iz ayrıştıran küçük betik). Bulgular DEVIR.md + HIZ_PLANI'na sayılarla.
+2. Her kök neden için cihazsız bekçi (`test/perf_budget_test.dart` senaryo + `budgets.json` mandalı ya da `keyboard_jank_guard_test` kalıbı) — önce KIRMIZI.
+3. **Alt panel titremesi özel testi:** klavye açılış/kapanış animasyonunu kare kare süren widget testi; alt panelin/alt çubuğun dikey konumu her karede tekdüze (monoton) olmalı, ileri-geri salınım (yön değişimi) ve 1 px üstü sıçrama = KIRMIZI. Hem telefon hem tablet düzeni. Cihazda da: ekran kaydı/kare izinde konum dizisi.
+4. Düzelt (CLAUDE.md kasma kontrol listesi 1–8; boy tek adımda, hareket yalnız boyamada; KeyboardSwitch sökmez), aynı kanıt yeşil, cihazda A/B iyileşme. Her kök neden AYRI commit.
+5. Kapsam: editör açılış geçişi (S18 ikinci kare), kapanış, klavye inset'iyle yeniden dizilen her şey, alt çizgi/biçimli madde satırının klavye açılırken yeniden dizilmesi. `pinned_media_pane.dart` P49'da ise dokunmadan bulguyu P49 satırına yaz.
+
+## P56 — Not sürükle-sırala: iki sütun arasında zıplama
+
+Model: opus · Cihaz: A/B · APK: evet
+
+**Kullanıcı (2026-11-13):** "Not sıralama iki sütunun arasında geldiğinde anlık bir sağa bir sola geçtiği için aşırı zıplamalar oluyor."
+
+**Kök neden adayı:** iki sütunlu ızgarada sürüklenen kart iki sütunun sınırındayken hedef indeks her karede değişiyor (histerezis yok) → kartlar sağ/sol arasında gidip geliyor. Çözüm: hedef değişimine histerezis/eşik (sınırdan belirli pay geçmeden ve kısa süre kalmadan yer değiştirme yok) ve yer değiştirme animasyonu sırasında yeniden hedeflememe. Önce tekrar üreten widget testi (sınırda küçük titreşimli sürükleme → hedef indeks değişim sayısı ≤ 1), sonra düzelt. P47 çöpe sürükleme ve `_previewCardDrop` korunur.
