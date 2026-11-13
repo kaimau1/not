@@ -4591,7 +4591,7 @@ child: NoteFindBar(
                                         ? l10n.annotateDone
                                         : l10n.annotate),
                               note.type.isPageNoteType
-                                  ? () => _update(() => _penMode = !_penMode)
+                                  ? _toggleAnnotate
                                   : _togglePen,
                               _penMode,
                             ),
