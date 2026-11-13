@@ -3,7 +3,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/hold_progress_ring.dart';
@@ -14,6 +13,7 @@ import 'ink_recognize.dart';
 import 'ink_stroke_paint.dart';
 import 'ink_tools.dart';
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/haptics.dart';
 
 /// PDF ve slayt görüntüleyicilerinin ortak elle-yazma katmanı. Çizim dosyaya
 /// gömülmez; sayfa/slayt oranlı (0–1) vektör olarak [InkStroke] listesinde
@@ -167,7 +167,7 @@ class InkController extends ChangeNotifier {
     _active = null;
     _snapped = true;
     eraserOffer.value = (page: page, at: at);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     notifyListeners();
   }
 
@@ -267,7 +267,7 @@ class InkController extends ChangeNotifier {
     _fixEdit = !lasso;
     _dirty = true;
     save();
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     notifyListeners();
   }
 
@@ -1245,7 +1245,7 @@ class InkController extends ChangeNotifier {
     } else {
       _snapLineFrom = null;
     }
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     notifyListeners();
   }
 
@@ -1428,7 +1428,7 @@ class InkController extends ChangeNotifier {
       if (n > 0 && inside * 2 > n) picked.add(s);
     }
     _selected = picked;
-    if (picked.isNotEmpty) HapticFeedback.selectionClick();
+    if (picked.isNotEmpty) AppHaptics.tick();
   }
 
   /// Avuç kalemden ÖNCE değdiyse başlattığı her şey (çizgi, silgi, kement)
@@ -1561,7 +1561,7 @@ class InkController extends ChangeNotifier {
         if (hit != null) {
           _selected = [hit];
           _fixEdit = true;
-          HapticFeedback.selectionClick();
+          AppHaptics.tick();
           notifyListeners();
           return;
         }

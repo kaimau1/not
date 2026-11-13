@@ -3,10 +3,10 @@ import 'dart:math' as math;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/haptics.dart';
 
 /// Yuvarlak klasör menüsündeki bir durak. [id] `null` = "Tümü".
 class FolderStop {
@@ -92,7 +92,7 @@ Future<void> openFolderMenu(
     onOpen();
     return;
   }
-  unawaited(HapticFeedback.selectionClick());
+  unawaited(AppHaptics.tick());
   final picked = await showGeneralDialog<int>(
     context: context,
     barrierDismissible: true,
@@ -289,7 +289,7 @@ class _RadialFolderMenu extends StatelessWidget {
   final bool canEdit;
 
   void _pick(BuildContext context, int i) {
-    unawaited(HapticFeedback.selectionClick());
+    unawaited(AppHaptics.tick());
     Navigator.of(context).pop(i);
   }
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
+import '../../../../core/haptics.dart';
 
 /// Bir ekin notta NASIL durduğu.
 ///
@@ -264,7 +264,7 @@ class AttachmentViewSwitch extends StatelessWidget {
                         onTap: v == current
                             ? null
                             : () {
-                                HapticFeedback.selectionClick();
+                                AppHaptics.tick();
                                 onChanged(v);
                               },
                       ),
@@ -383,7 +383,7 @@ class _EmbedButton extends StatelessWidget {
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: () {
-              HapticFeedback.selectionClick();
+              AppHaptics.tick();
               onTap();
             },
             child: SizedBox(

@@ -7,7 +7,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/l10n_ext.dart';
@@ -18,6 +17,7 @@ import 'pen_icons.dart';
 import '../viewers/ink_pen.dart';
 import '../viewers/ink_tools.dart';
 import '../../../../core/a11y/chip_roles.dart';
+import '../../../../core/haptics.dart';
 
 /// Tepsideki araçlar (soldan sağa).
 enum PenTrayTool { lasso, shapes, eraser, pen, fountain, marker, highlighter }
@@ -208,7 +208,7 @@ class _PenTrayState extends State<PenTray> {
   }
 
   void _tap(PenTrayTool tool) {
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     _touched();
     if (tool == _current) {
       _togglePanel();
@@ -468,7 +468,7 @@ class _PenTrayState extends State<PenTray> {
                       key: const ValueKey('pen-dock-quick-eraser'),
                       radius: 20,
                       onTap: () {
-                        HapticFeedback.selectionClick();
+                        AppHaptics.tick();
                         _ink.eraser ? _ink.setPen(_ink.pen) : _ink.setEraser(true);
                       },
                       child: SizedBox(
@@ -519,7 +519,7 @@ class _PenTrayState extends State<PenTray> {
                 size: 26,
                 selected: !_ink.eraser && c.toARGB32() == _ink.color.toARGB32(),
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  AppHaptics.tick();
                   _touched();
                   if (c.toARGB32() == _ink.color.toARGB32()) {
                     _togglePanel();
@@ -774,7 +774,7 @@ class _PenTrayState extends State<PenTray> {
           ? list.sublist(list.length - InkToolMemory.maxPresets)
           : list,
     );
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     _touched();
     setState(() {});
   }
@@ -794,12 +794,12 @@ class _PenTrayState extends State<PenTray> {
             selected: p == current,
             label: l10n.inkPinnedPen,
             onTap: () {
-              HapticFeedback.selectionClick();
+              AppHaptics.tick();
               _touched();
               _ink.applyPreset(p);
             },
             onRemove: () {
-              HapticFeedback.mediumImpact();
+              AppHaptics.heavy();
               InkToolMemory.savePresets([
                 for (final x in InkToolMemory.presets)
                   if (x != p) x,
@@ -1220,7 +1220,7 @@ class _Options extends StatelessWidget {
         child: InkResponse(
           radius: 20,
           onTap: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.tick();
             controller.setColor(color);
           },
           child: AnimatedContainer(

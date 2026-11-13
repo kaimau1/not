@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui' show DisplayFeatureType;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +12,7 @@ import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 import 'window_class.dart';
+import '../core/haptics.dart';
 
 export 'window_class.dart'
     show
@@ -468,7 +468,7 @@ class _SplitShellState extends ConsumerState<SplitShell>
                       _overPull = over;
                       _dragWidth = raw.clamp(_minListPaneWidth, maxPane);
                     });
-                    if (_armed != wasArmed) HapticFeedback.mediumImpact();
+                    if (_armed != wasArmed) AppHaptics.heavy();
                   },
                   onDragEnd: () {
                     if (_armed) {

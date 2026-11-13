@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -11,6 +10,7 @@ import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/attachment.dart';
 import 'video_hub_scope.dart';
 import 'voice_note_recorder.dart';
+import '../../../../core/haptics.dart';
 
 /// Sayfaya gömülen SES kartının ekte saklanan oranı (bkz. `kTextBoxWidth`):
 /// geniş, alçak bir oynatıcı HAPI (2026-10-28: 280 → 190; sayfada boy ayrıca
@@ -110,7 +110,7 @@ class _AudioCardBoxState extends State<AudioCardBox> {
   }
 
   Future<void> _toggle() async {
-    unawaited(HapticFeedback.selectionClick());
+    unawaited(AppHaptics.tick());
     final player = await _ensure();
     if (player == null) return;
     final source = _source;

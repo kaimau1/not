@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
@@ -14,6 +13,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../../../../core/friendly_error.dart';
 import '../../../../core/app_icons.dart';
+import '../../../../core/haptics.dart';
 
 /// Kaydedicinin evresi.
 enum VoiceRecordPhase { starting, recording, paused, finishing }
@@ -107,7 +107,7 @@ class VoiceNoteRecorder extends ChangeNotifier {
         notifyListeners();
       });
       notifyListeners();
-      unawaited(HapticFeedback.mediumImpact());
+      unawaited(AppHaptics.heavy());
       return null;
     } catch (e, s) {
       ErrorLog.record('voice note start', e, s);
@@ -141,7 +141,7 @@ class VoiceNoteRecorder extends ChangeNotifier {
         _clock.start();
         _phase = VoiceRecordPhase.recording;
       }
-      unawaited(HapticFeedback.selectionClick());
+      unawaited(AppHaptics.tick());
       notifyListeners();
     } catch (e, s) {
       ErrorLog.record('voice note pause', e, s);

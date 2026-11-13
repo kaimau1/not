@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -22,6 +21,7 @@ import '../../../core/friendly_error.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../core/app_icons.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/haptics.dart';
 
 /// Sesli yakalama levhası — ana ekran ve not editörünün ORTAK bileşeni.
 ///
@@ -376,7 +376,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   void _showCommandFeedback(VoiceCommand? command) {
     if (command == null || command == VoiceCommand.stop || !mounted) return;
     final l10n = context.l10n;
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     _feedbackTimer?.cancel();
     _feedback = switch (command) {
       VoiceCommand.deleteWords ||
@@ -1332,7 +1332,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   void _pressStart() {
     _pressedAt = DateTime.now();
     setState(() => _pressed = true);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     if (_phase == _Phase.idle) _startListening();
   }
 

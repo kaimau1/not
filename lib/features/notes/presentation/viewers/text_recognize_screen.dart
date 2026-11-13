@@ -20,6 +20,7 @@ import '../../data/scan/recognized_text.dart';
 import '../../data/scan/scan_ocr.dart';
 import '../../domain/attachment.dart';
 import '../editor/note_images.dart';
+import '../../../../core/haptics.dart';
 
 /// **Metni Tanı** — görseldeki yazıyı seçilebilir hâle getiren TEK ekran.
 ///
@@ -549,7 +550,7 @@ class _SelectLayerState extends State<_SelectLayer> {
             _timer?.cancel();
             _timer = Timer(_longPress, () {
               if (!mounted || _downAt == null) return;
-              HapticFeedback.selectionClick();
+              AppHaptics.tick();
               final index = _charAt(_downAt!, box);
               if (index < 0) return;
               final (s, e) = widget.text.wordAt(index);
