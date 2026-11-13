@@ -74,6 +74,10 @@ def ready():
     f = focus()
     if "NotificationShade" in f or "Keyguard" in f:
         wake(); time.sleep(0.6); f = focus()
+    for _ in range(3):  # geçiş anında odak kısa süre null olur (2026-11-13, koşu 1B)
+        if "mCurrentFocus=null" not in f:
+            break
+        time.sleep(1.0); f = focus()
     if f"{OPKG}/" not in f:
         raise NotReady("önde ölçüm uygulaması yok: " + f.strip())
 
