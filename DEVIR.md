@@ -1,79 +1,22 @@
-# DEVIR — P55 KASMA KÖKTEN (dal `oto/P55-kasma`, main 5850b487'den)
+# DEVIR — Entegrasyon P55 + P56 + P38 + P50 (dal `oto/entegre-P55-P56-P38-P50`)
 
-## Yapılanlar
-- 8f2698e2 alt panel titremesi KÖKÜ: Android<35 motoru (`ImeSyncDeferringInsetsCallback.onProgress`) klavye animasyonunda IME boşluğundan gezinme çubuğunu düşüyor (Mi Note 10 Lite API 31: 18→…→253,1→300,7; son adım 47,3 = gezinme). Video: klavye üst kenarı = bildirilen + 47,3 → çubuk öneri şeridinin altında, sonda birden beliriyordu. Düzeltme `keyboard_snap.dart` `KeyboardInsetScope._trackEngine` + `KeyboardInset.navExcludedWhileAnimating` (yerel `sdkInt`, `MainActivity.kt`; `main.dart` init).
-- Kanıt: `test/bottom_panel_jitter_test.dart` (telefon/tablet yatay/dikey × metin/sabit PDF × düz/yarıda dönen/yarıda duran; Android<35 modeli) önce 6 kırmızı → 12 yeşil. Cihaz (ekran kaydı, kare kare): A hareket karelerinin 63/85'inde çubuk görünmez → B 0/85, çubuk–klavye aralığı her karede 6–7 px, ters yön 0.
-- Belgeler: plan maddeleri, regresyon satırı, `docs/hafiza/akicilik.md` P55, sürüm notu (13 Kasım).
+`origin/main` (4b5a0a88) üstüne sırayla `--no-ff`: `oto/P55-kasma`, `oto/P56-surukle-zipla`,
+`oto/P38-hareket`, `oto/P50-duzenleme`. Paket başına ayrıntılı devir notları ilgili dallardaki
+`DEVIR.md`'de (git show origin/oto/<dal>:DEVIR.md).
 
-## Cihaz ölçümleri (B, profil, telefon)
-- F84.3 soğuk açılış ilk kare 36–64 ms ✓ (ilk veri karesi 160–228 ms, kart metin dizimi).
-- Not açma en uzun 61 ms (gövde paragraf dizimi %37, `findLinks`/`_scanPlainness` %24). Yazma 215 kare, 4 > 16 ms, en uzun 38,9.
-- F60.S2: taze vs 30 gir-çık klavye UI en uzun 17,3 → 12,5 ms — birikim yok.
-- 4b (P49 `AnimatedSize` 6 kare): P46 sonrası üretilemedi — S17 sabit PDF'te Scaffold yalnız geçiş karelerinde (çevrimde 4) diziliyor; kalan ses hapı `AnimatedSize` klavyede boy değiştirmiyor.
-
-## Açık / doğrulanamayan
-- F84.1/F84.2 düzeltmesi yok (döküm var): uzun TEK paragrafta her tuş tüm paragrafı tarıyor. F68.3 yapılamadı (gerçek hesap gerekir) — sabah bakılacak.
-- Alt çizgili madde (P55a) cihazda doğrulanmadı. Tablet (API 36) motoru düşmüyor → düzeltme orada etkisiz (beklenen), cihazda bakılmadı.
-- A/B APK: A `scratchpad/apk/A_5850b487.apk`, B `scratchpad/apk/B_p55.apk` (yol raporda).
-
-## Komut
-`flutter test test/bottom_panel_jitter_test.dart test/keyboard_jank_guard_test.dart test/keyboard_snap_test.dart --reporter failures-only`
-# DEVIR — P56 (not sürükle-sırala: iki sütun arasında zıplama)
-
-Dal: `oto/P56-surukle-zipla` (main 2026-11-13 birleştirildi).
+## Çakışma çözümü
+- `OTOMASYON.md`: main'deki P55/P56/P38/P50 satırları dallardakinden yeni ("cihaz bekliyor") → main korundu.
+- Sürüm notları TR/EN: dört paketin maddeleri tek `13 Kasım 2026 {#2026-11-13}` başlığında birleşti.
+- `KALANLAR.md`: P50'nin cihaz adımı L13 → **L14** (L13 tablette dikte); KUYRUK_AYRINTI §P50 ve regresyon listesi buna göre.
+- `lib/core/widgets/customizable.dart` kendiliğinden birleşti: P50 düzenleme modu (anında uygula, Geri al/Bitti) + P38 `AppHaptics.tick`.
 
 ## Durum
-- Kod bitti: `lib/features/notes/presentation/reorder_hover_gate.dart` (durma 100 ms, soğuma 300 ms, itilen kart parmak çıkana dek kilitli); `dashboard_screen.dart` `_previewCardDrop` kapıdan geçer, durgun parmak için `_hoverRetry` zamanlayıcısı; hücrelerde `DragTarget.onLeave` → `_leaveCardHover`.
-- Kanıt: `test/reorder_boundary_jitter_test.dart` (ana ekran, iki sütun sınırında ±6 px titreşim, 60 kare). Kapı kapalı: 60 yer değişimi (KIRMIZI); kapıyla ≤ 1 (YEŞİL). Birim: `test/reorder_hover_gate_test.dart`. `drag_trash_target_test` yeşil (P47/P58 korunur).
-- Belgeler: OTOMASYON P56 satırı, KUYRUK_AYRINTI §P56 Durum, regresyon listesi, hafiza/akicilik.md, sürüm notları 13 Kasım (tr/en).
-- Bütçe: ana ekran yüzeyi S13 (`perf_budget_test`) mevcut; kapı yer değişimi (setState) sayısını yalnız AZALTIR.
+- Kod birleşti, CI dalda; main'e `[apk]` birleştirme cihaz A/B (`tool/perf/ab_hepsi.py --altin`) GEÇTİ'den sonra.
+- A/B APK'ları: `Desktop\ab_apk\A_main.apk` (4b5a0a88), `Desktop\ab_apk\B_entegre.apk` (bu dal).
 
-## Kalan
-- CİHAZ A/B (ÖLÇÜM KAPISI, ana ekran listesi) — yürütücü. Elle: notu iki sütun sınırında tut → zıplama yok; bilinçli taşıma akıcı mı (100 ms durma hissediliyor mu)?
-- Sonra main'e `[apk]` birleştirme.
-# DEVIR — P38 Hareket ve dokunsal dil (dal `oto/P38-hareket`)
-
-## Yapılan (her madde ayrı commit)
-- F77.2 `lib/core/haptics.dart` `AppHaptics` (tick/thud/heavy + `heaviest` = çöpe bırakmanın heavyImpact'i, tür korundu). 53 çağrı göçtü; mandal `haptic` 88 → 35.
-- F77.2 eksik: hatırlatıcı kaydet `thud`, kart ⋮/işlem levhası sabitle/yıldızla `tick`, balon yıldızı `tick`.
-- F77.1 ayar/rehber/AI/klasör sohbet/ipucu/düzen kipi/bölünmüş kabuk süre-eğri `AppMotion.of`'a; mandal süre 219→207, eğri 94→90.
-- F77.3 `TogglePop` (yıldız 1→1,15→1), levha karosu `PressScale(0.97)`, görev Google simgesi `AnimatedSwitcher`. Klasör çipi 0,97 + sayı solması S24 (soğuk açılış) bütçesini aştı → geri alındı.
-- F77.4 `theme_motion_test` quick/long da kapsar.
-
-## ÇİT — P55/P56 sonrasına bırakılan
-- 35 doğrudan `HapticFeedback`: `dashboard_screen.dart` (+ `dashboard_selection/shelf.dart`), `dashboard_widgets.dart`,
-  `note_editor_screen.dart` (+ `note_editor_flow/gestures/media_view.dart`), `items_editor.dart`, `items_editor_actions.dart`.
-  Göç: selectionClick→`AppHaptics.tick`, light→thud, medium→heavy; import kütüphane dosyasına; bütçe 0.
-- Eksik denetim çitte: madde işaretleme `thud`, madde yıldızı `tick`, kart bırakma `thud`; editör iğne/yıldız `TogglePop`; ana/editör bulut simgesi `AnimatedSwitcher`.
-
-## Sabah bakılacak
-- F77.3-5 bildirim şeridi 8 dp kayma yapılmadı (SnackBar hareketi Material içinde).
-- Çekirdek bileşen varsayılan süreleri (pop_in/expand_reveal/scale_settle) editörde de kullanılıyor — dokunulmadı.
-
-## Doğrulanmadı
-- Cihazda titreşim/A/B ölçümü yok (yürütücü yaptıracak). Yerelde `folder_strip_fixed_test` CRLF yüzünden kırmızı (önceden de; dokunulmadı).
-# DEVIR — P50 Düzenleme modu baştan + hızlı menü (dal `oto/P50-duzenleme`)
-
-Main'de ZATEN vardı (yeniden yapılmadı): hızlı menünün kendi düzenleme levhası
-(`quick_row_editor.dart`, ⋮ + Kişiselleştir), alt çubuk sırala/ekle/çıkar (P57).
-
-## Yapılan (her biri ayrı commit)
-- [x] Alt çubuk: düğme iki kapsül arasında taşınır (`UiPrefs.barSides` /
-  `withBarSide`; Ayarlar → Kişiselleştir → alt çubuk satırındaki ok).
-- [x] Düzenleme modu anında uygular: `Personalize.toggle` hemen yazar; şerit
-  Geri al (`revert`) / Bitti (`done`); `save`/`cancel` kalktı.
-- [x] Üst çubuk: Ana sayfa + Tam ekran sarıldı (`UiItem.topHome/topFullscreen`).
-- [x] Belgeler: OTOMASYON, KUYRUK_AYRINTI §P50, regresyon listesi, hafıza
-  (editor.md), sürüm notu TR+EN, KALANLAR L13.
-
-Testler: `page_panel_personalize_test`, `editor_bar_customize_test`,
-`editor_top_customize_test`, `jank_patterns_guard_test` (kök setState 53).
-
-## Yapılmadı / sabah bakılacak
-- Ana ekran (`dashboard_*`) sarmaları: P56 çiti — dokunulmadı.
-- Üst çubuk SIRALAMA listesi: `note_editor_screen.dart` yapısı P20'nin.
-- Düzenleme modunda yerinde sürükle-sırala yok (sıra Ayarlar listesinde).
-- KARAR (en güvenli): "Geri al" modu kapatmaz, yalnız açılış anına döner.
-- Haptik: `customizable.dart`'taki `HapticFeedback.selectionClick` duruyor
-  (P38 `AppHaptics` main'de yok) — P38 birleşince göç etsin.
-- Cihazda doğrulanmadı; `[apk]` öncesi A/B ölçümü (`ab_hepsi.py --altin`) yapılmadı.
+## Paketlerin kalan işi
+- P55: F84.1/F84.2 (uzun tek paragrafta tuş başı tam tarama) düzeltilmedi; F68.3 sabah bakılacak; önceki A/B'de yalnız altın tabana karşı `yaz` LAYOUT +%33.
+- P56: cihazda elle: iki sütun sınırında zıplama yok mu, 100 ms durma hissediliyor mu.
+- P38: çitteki 35 doğrudan `HapticFeedback` (dashboard_*, note_editor_*, items_editor*) `AppHaptics`e göçmedi; bildirim şeridi kayması yapılmadı.
+- P50: ana ekran sarmaları ve üst çubuk sıralama yok (P20); düzenleme modunda yerinde sürükle-sırala yok.
+- Hepsi: cihazda doğrulanmadı (KALANLAR §2).
