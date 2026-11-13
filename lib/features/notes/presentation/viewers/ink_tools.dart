@@ -390,7 +390,17 @@ class InkToolMemory {
 
   /// Testler için: hafızayı varsayılana döndürür.
   @visibleForTesting
+  /// **SÜREKLİ ÇIKMASIN** (P49 (d), kullanıcı 2026-11-12): bu OTURUMDA
+  /// yazıyla söylenmiş kalem durumları. Yüzen düğmenin "kalem yazar /
+  /// dokunur" yazısı her durum için bir kez ([stylusHintsTold]); editörün
+  /// "yalnız kalem açık/kapalı" ipucu yalnız durum değişince
+  /// ([lastPenOnlyHint]). Kalıcı değil (uygulama açılışında sıfır).
+  static final Set<bool> stylusHintsTold = {};
+  static bool? lastPenOnlyHint;
+
   static void reset() {
+    stylusHintsTold.clear();
+    lastPenOnlyHint = null;
     _prefs = null;
     eraser = false;
     arrow = false;

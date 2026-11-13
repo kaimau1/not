@@ -2372,6 +2372,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final penOnly =
         (ink?.penOnly ?? InkToolMemory.penOnly) ||
         (InkToolMemory.stylusEver && !InkToolMemory.penOnlyChosen);
+    // SÜREKLİ ÇIKMASIN (P49 (d), kullanıcı 2026-11-12): durum (yalnız kalem
+    // açık/kapalı) oturumda DEĞİŞMEDİYSE aynı ipucu yinelenmez; değişince
+    // yine söylenir (2026-11-09 isteği: kip açılınca durum söylensin).
+    if (InkToolMemory.lastPenOnlyHint == penOnly) return;
+    InkToolMemory.lastPenOnlyHint = penOnly;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showMessage(
@@ -5385,6 +5390,8 @@ child: NoteFindBar(
                                 // kapatmaz.
                                 child: TapRegion(
                                 groupId: kNotePackageTapGroup,
+                                // P49 (d): bildirimler tepsinin ÜSTÜNDE.
+                                child: SnackBarObstacle(
                                 child: PenTray(
                                 key: const ValueKey('page-pen-dock'),
                                 controller: _pageInkOf(note),
@@ -5399,6 +5406,7 @@ child: NoteFindBar(
                                     _fullscreenButton(l10n),
                                   ..._penEndButtons(l10n),
                                 ],
+                              ),
                               ),
                               ),
                               ),
