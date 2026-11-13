@@ -177,4 +177,56 @@ void main() {
     expect(opened, 1);
     expect(saved, isEmpty);
   });
+
+  testWidgets('editör kökü kurmasa da (bayat ek) yeniden çizim çizgileri '
+      'silmez — "silgiye basınca yazılar kayboluyor"', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final saved = <Attachment>[];
+    late StateSetter rebuild;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('tr'),
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) {
+              rebuild = setState;
+              // Editör gibi: mürekkep kaydı ebeveyni KURMAZ, ek eski kalır.
+              return PinnedMediaPane(
+                media: image,
+                onHeightChanged: (_) {},
+                onUnpin: () {},
+                onOpen: () {},
+                onChanged: saved.add,
+                onInkChanged: saved.add,
+                child: const Text('not gövdesi'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    final origin = tester.getTopLeft(find.byType(PinnedMediaPane));
+    await draw(tester, origin + rect.center);
+    expect(saved.last.ink, hasLength(1));
+    // Silgi düğmesi / kalem düğmesi gibi: bölme eski ekle yeniden çizilir.
+    InkToolMemory.eraser = true;
+    InkToolMemory.toolChanged();
+    rebuild(() {});
+    await tester.pump();
+    InkToolMemory.eraser = false;
+    InkToolMemory.toolChanged();
+    rebuild(() {});
+    await tester.pump();
+    await draw(tester, origin + rect.center + const Offset(0, 30));
+    expect(
+      saved.last.ink,
+      hasLength(2),
+      reason: 'yeniden çizimde eski liste geri yazıldı, ilk çizgi silindi',
+    );
+  });
 }
