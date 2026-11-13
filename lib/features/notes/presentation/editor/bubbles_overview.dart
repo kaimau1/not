@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/search_fold.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../../../core/haptics.dart';
 import '../../../../core/widgets/toggle_pop.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note_share_text.dart';
@@ -267,8 +268,10 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
                                       : Icons.star_border,
                                   color: bubble.starred ? Colors.amber : null,
                                 ),
-                                onPressed: () =>
-                                    widget.controller.toggleStar(bubble.id),
+                                onPressed: () {
+                                  AppHaptics.tick();
+                                  widget.controller.toggleStar(bubble.id);
+                                },
                               ),
                             ),
                             IconButton(

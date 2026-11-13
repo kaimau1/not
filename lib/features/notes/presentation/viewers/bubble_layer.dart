@@ -629,7 +629,6 @@ class BubbleController extends ChangeNotifier {
   void toggleStar(String id) {
     final bubble = byId(id);
     if (bubble == null) return;
-    AppHaptics.tick();
     update(bubble.copyWith(starred: !bubble.starred));
     save();
   }
