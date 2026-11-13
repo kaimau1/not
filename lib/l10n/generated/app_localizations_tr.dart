@@ -7438,7 +7438,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gtasksSynced => 'Görevler eşlendi';
 
   @override
-  String get eventSaveLocal => 'Bu cihaz';
+  String get eventSaveLocal => 'Tüm cihazlar';
 
   @override
   String get gcalWriteDenied => 'Google Takvim\'e yazma izni verilmedi';

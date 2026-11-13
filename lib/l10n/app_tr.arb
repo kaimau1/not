@@ -3530,7 +3530,7 @@
   "gtasksFailed": "Google Görevler ile eşlenemedi",
   "gtasksSyncNow": "Şimdi eşle",
   "gtasksSynced": "Görevler eşlendi",
-  "eventSaveLocal": "Bu cihaz",
+  "eventSaveLocal": "Tüm cihazlar",
   "gcalWriteDenied": "Google Takvim'e yazma izni verilmedi",
   "gcalDeleteConfirm": "Etkinlik Google Takvim'den silinsin mi? Bu geri alınamaz.",
   "gcalEdit": "Düzenle",

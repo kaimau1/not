@@ -18,6 +18,8 @@
 /// büyümüş seçime ikinci çift dokunuş da bu yoldan tek kelimeye iner.)
 library;
 
+import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 /// Cümleyi bitiren noktalama. Türkçede üç nokta tek karakter olarak da
@@ -208,6 +210,7 @@ TextRange tokenRangeAt(String text, TextRange range) {
 /// Ayrı bir `dispose` gerekmez: dinleyici denetleyicinin kendisiyle birlikte
 /// ölür (controller.dispose listeleri boşaltır).
 void attachSentenceSelection(TextEditingController controller) {
+  trackSelectionPointerKind();
   final expander = _SentenceExpander(controller);
   controller.addListener(expander.onChanged);
 }
@@ -228,6 +231,43 @@ void withoutSentenceExpansion(VoidCallback action) {
   } finally {
     _SentenceExpander._suppressed--;
   }
+}
+
+/// Son basılan işaretçinin türü (fare mi parmak mı). Uygulama ömürlü TEK
+/// genel yol ([trackSelectionPointerKind], tekrar çağrı eklemez) — sızıntı değil.
+PointerDeviceKind? _lastPointerKind;
+bool _tracking = false;
+
+void trackSelectionPointerKind() {
+  if (_tracking) return;
+  try {
+    GestureBinding.instance.pointerRouter.addGlobalRoute((event) {
+      if (event is PointerDownEvent) _lastPointerKind = event.kind;
+    });
+    _tracking = true;
+  } catch (_) {
+    // Bağlamsız birim testi: işaretçi yok, genişletme eskisi gibi.
+  }
+}
+
+/// Seçim FARE ya da KLAVYE ile mi yapılıyor — genişletme yalnız dokunmatik
+/// uzun basış / çift dokunuş içindir.
+///
+/// KÖK NEDEN (P48, kullanıcı 2026-11-12: "webte yazı seçerken sorunlar
+/// var"; webde üretildi): genişletici seçimin NASIL geldiğine bakmıyordu.
+/// Fareyle kelimeye çift tıklama (masaüstünde kelime seçimi) bütün cümleyi,
+/// fareyle bir kelimenin içinden harf sürüklemek ya da shift+ok ile üç harf
+/// seçmek bütün kelimeyi (token) seçiyordu — "yazı tipi" sanılan kayma bu.
+bool _mouseOrKeyboardSelection() {
+  try {
+    final keys = HardwareKeyboard.instance.logicalKeysPressed;
+    if (keys.contains(LogicalKeyboardKey.shiftLeft) ||
+        keys.contains(LogicalKeyboardKey.shiftRight)) {
+      return true;
+    }
+  } catch (_) {}
+  return _lastPointerKind == PointerDeviceKind.mouse ||
+      _lastPointerKind == PointerDeviceKind.trackpad;
 }
 
 class _SentenceExpander {
@@ -277,6 +317,11 @@ class _SentenceExpander {
     _previousText = text;
     if (!selection.isValid || selection.isCollapsed) return;
     if (selection.end > text.length) return;
+    if (_mouseOrKeyboardSelection()) {
+      _cycleWord = null;
+      _cycleExpanded = null;
+      return;
+    }
 
     // KÖK NEDEN (v1.0.179): biçim uygulamak metni DEĞİŞTİRİR (işaretler
     // eklenir) ve seçimi programlı olarak yeni konumuna taşır. Kaydırılan

@@ -13283,7 +13283,7 @@ abstract class AppLocalizations {
   /// No description provided for @eventSaveLocal.
   ///
   /// In tr, this message translates to:
-  /// **'Bu cihaz'**
+  /// **'Tüm cihazlar'**
   String get eventSaveLocal;
 
   /// No description provided for @gcalWriteDenied.

@@ -1,4 +1,6 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/sentence_select.dart';
 
@@ -261,6 +263,63 @@ void main() {
       );
       expect(controller.selection.baseOffset, 2);
       expect(controller.selection.extentOffset, 9);
+    });
+  });
+
+  // P48 (kullanıcı 2026-11-12: "webte yazı seçerken sorunlar var"). Webde
+  // yeniden üretildi: fareyle kelimeye çift tıklama BÜTÜN cümleyi, shift+ok
+  // ile üç harf seçmek BÜTÜN kelimeyi seçiyordu. Genişletme yalnız dokunmatik
+  // uzun basış / çift dokunuş içindir; fare ve klavye seçimine karışmaz.
+  group('fare ve klavye seçimi genişletilmez', () {
+    const text = 'Birinci satir burada deneme. Sonra.';
+
+    Future<TextEditingController> field(WidgetTester tester) async {
+      final controller = TextEditingController(text: text);
+      attachSentenceSelection(controller);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TextField(controller: controller, maxLines: null),
+          ),
+        ),
+      );
+      return controller;
+    }
+
+    testWidgets('fareyle çift tıklama yalnız kelimeyi seçer', (tester) async {
+      final controller = await field(tester);
+      final box = tester.getTopLeft(find.byType(EditableText));
+      // "Birinci"nin içi.
+      final at = box + const Offset(20, 8);
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: at);
+      for (var i = 0; i < 2; i++) {
+        await mouse.down(at);
+        await mouse.up();
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await tester.pumpAndSettle();
+      final sel = controller.selection;
+      expect(text.substring(sel.start, sel.end), 'Birinci');
+    });
+
+    testWidgets('shift+ok ile seçilen harfler kelimeye büyümez', (
+      tester,
+    ) async {
+      final controller = await field(tester);
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      controller.selection = const TextSelection.collapsed(offset: 0);
+      await tester.pump();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      for (var i = 0; i < 3; i++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      }
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      final sel = controller.selection;
+      expect(text.substring(sel.start, sel.end), 'Bir');
     });
   });
 }
