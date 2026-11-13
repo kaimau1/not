@@ -1018,7 +1018,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+          duration: AppMotion.of(context, AppMotion.quick),
           height: 44,
           decoration: BoxDecoration(
             color: _aiMode

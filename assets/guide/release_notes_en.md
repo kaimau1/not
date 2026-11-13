@@ -6,6 +6,12 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Voice typing on tablets:** if the device's live speech recognition doesn't work (tablets without Google services), the app notices within a few seconds and switches to the voice note sheet: your speech is recorded and transcribed. Stutter while voice typing is on is also reduced.
 - **Smaller floating attachment menu on tablets:** on wide screens the menu under an attachment is a single row under it instead of two full-width rows.
 - **Smaller voice recordings on the page:** a floating recording is no longer a long strip on wide screens, just a shorter, lower pill.
+- **The bottom bar no longer vanishes while the keyboard opens or closes:** on some phones (Android 14 and older, button navigation) it hid under the keyboard's suggestion strip and popped in once the keyboard stopped; now it rides right on top of the keyboard the whole way.
+- **No more jumping while reordering notes:** holding a dragged note between the two columns no longer makes notes flip left and right; notes swap once you pause briefly over one.
+- **Livelier touches:** stars pop slightly when tapped; sheet tiles press in a little; setting a reminder or pinning from ⋮ gives a short vibration.
+- **Edit mode applies instantly:** in "Edit screen", tapping a button hides or shows it right away, with no Save. In the strip at the top, "Undo" returns to the layout you had when you opened the mode and "Done" closes it.
+- **Move a bottom bar button to the other capsule:** in Settings → Personalize → "Note screen · bottom bar", the arrow on each row moves the button from the left tool capsule to the right one (or back); for example Search can go right and AI can go left.
+- **Two more top bar buttons can be hidden:** the Home button on wide screens and the Full screen button on tablets can now be turned off in edit mode and in Personalize.
 - **Active formatting shows in the quick menu:** when the cursor is in bold, italic, underlined, highlighted or colored text, or in a heading, its quick menu button looks pressed.
 - **Easier quick menu editing:** ⋮ → "Edit quick menu" now opens a sheet with "In the menu" and "Available" tiles; tap to add or remove, no saving needed, with a live preview on top. The same editor is in Settings → Personalize, so a quick menu that disappeared can be brought back.
 - **Back transition on tablets:** leaving a note slides and fades the list in instead of jumping.

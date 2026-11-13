@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui' show DisplayFeatureType;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +12,7 @@ import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 import 'window_class.dart';
+import '../core/haptics.dart';
 
 export 'window_class.dart'
     show
@@ -468,7 +468,7 @@ class _SplitShellState extends ConsumerState<SplitShell>
                       _overPull = over;
                       _dragWidth = raw.clamp(_minListPaneWidth, maxPane);
                     });
-                    if (_armed != wasArmed) HapticFeedback.mediumImpact();
+                    if (_armed != wasArmed) AppHaptics.heavy();
                   },
                   onDragEnd: () {
                     if (_armed) {
@@ -546,7 +546,7 @@ class _FullscreenPullHint extends StatelessWidget {
     return IgnorePointer(
       child: AnimatedContainer(
         key: const ValueKey('fullscreen-pull-hint'),
-        duration: const Duration(milliseconds: 150),
+        duration: AppMotion.of(context, AppMotion.quick),
         padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
         decoration: BoxDecoration(
           color: armed
@@ -668,7 +668,7 @@ class _PaneDividerState extends State<_PaneDivider> {
             alignment: Alignment.center,
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
+                duration: AppMotion.of(context, AppMotion.quick),
                 width: active ? 4 : 1,
                 color: active ? scheme.primary : scheme.outlineVariant,
               ),

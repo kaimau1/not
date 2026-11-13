@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../l10n_ext.dart';
 import '../personalize.dart';
-import 'undo_snackbar.dart';
 import '../../app/theme/app_tokens.dart';
+import '../haptics.dart';
 
 /// Kişiselleştirilebilir bir alan/düğme (bkz. `Personalize`).
 ///
@@ -12,8 +11,8 @@ import '../../app/theme/app_tokens.dart';
 /// şey — yer de kaplamaz).
 ///
 /// DÜZENLEME MODUNDA: öğe gizli olsa da çizilir (soluk), köşesinde göz
-/// rozeti durur ve öğenin KENDİ işi çalışmaz — dokunmak taslakta
-/// gizle/göster yapar. Böylece kullanıcı ekranın kendisinde neyi görmek
+/// rozeti durur ve öğenin KENDİ işi çalışmaz — dokunmak gizle/göster yapar
+/// ve hemen kaydedilir (P50). Böylece kullanıcı ekranın kendisinde neyi görmek
 /// istediğini seçer; ayar düğmeleri ekranda kalıcı yer kaplamaz.
 class Customizable extends StatelessWidget {
   const Customizable({
@@ -46,7 +45,7 @@ class Customizable extends StatelessWidget {
           visible: visible,
           inset: badgeInset,
           onTap: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.tick();
             Personalize.toggle(id);
           },
           child: child,
@@ -89,7 +88,7 @@ class CustomizeFrame extends StatelessWidget {
           children: [
             IgnorePointer(
               child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 150),
+                duration: AppMotion.of(context, AppMotion.quick),
                 opacity: visible ? 1 : 0.32,
                 child: DecoratedBox(
                   position: DecorationPosition.foreground,
@@ -133,7 +132,8 @@ class CustomizeFrame extends StatelessWidget {
 
 /// Uygulamanın TEPESİNDEKİ düzenleme modu şeridi: mod açıkken bütün
 /// ekranların üstünde durur ve içeriği aşağı iter (hiçbir şeyi örtmez).
-/// "Vazgeç" taslağı atar, "Kaydet" kalıcı yapar.
+/// Dokunuşlar anında kaydedilir; "Geri al" modun açıldığı ana döner,
+/// "Bitti" modu kapatır (P50 — eskiden Vazgeç/Kaydet'li taslaktı).
 class CustomizeModeHost extends StatelessWidget {
   const CustomizeModeHost({super.key, required this.child});
 
@@ -152,7 +152,10 @@ class CustomizeModeHost extends StatelessWidget {
       builder: (context, draft, child) => Column(
         children: [
           if (draft != null)
-            _CustomizeStrip(hiddenCount: draft.hidden.length)
+            _CustomizeStrip(
+              hiddenCount: draft.hidden.where((h) => !h.startsWith('+')).length,
+              dirty: Personalize.dirty,
+            )
           else
             const SizedBox.shrink(),
           // **EKRAN BOYU ŞERİDİN ALTINDAKİ ALAN** (kullanıcı bulgusu
@@ -182,9 +185,10 @@ class CustomizeModeHost extends StatelessWidget {
 }
 
 class _CustomizeStrip extends StatelessWidget {
-  const _CustomizeStrip({required this.hiddenCount});
+  const _CustomizeStrip({required this.hiddenCount, required this.dirty});
 
   final int hiddenCount;
+  final bool dirty;
 
   @override
   Widget build(BuildContext context) {
@@ -231,29 +235,27 @@ class _CustomizeStrip extends StatelessWidget {
               ),
             ),
             TextButton(
-              key: const ValueKey('customize-cancel'),
+              key: const ValueKey('customize-undo'),
               style: TextButton.styleFrom(
                 foregroundColor: scheme.onInverseSurface,
+                disabledForegroundColor: scheme.onInverseSurface.withValues(
+                  alpha: AppAlpha.disabled,
+                ),
                 visualDensity: VisualDensity.compact,
               ),
-              onPressed: Personalize.cancel,
-              child: Text(l10n.cancel),
+              onPressed: dirty ? Personalize.revert : null,
+              child: Text(l10n.undo),
             ),
             const SizedBox(width: 4),
             FilledButton(
-              key: const ValueKey('customize-save'),
+              key: const ValueKey('customize-done'),
               style: FilledButton.styleFrom(
                 backgroundColor: scheme.inversePrimary,
                 foregroundColor: scheme.onPrimaryContainer,
                 visualDensity: VisualDensity.compact,
               ),
-              onPressed: () {
-                Personalize.save();
-                ScaffoldMessenger.maybeOf(context)
-                  ?..hideCurrentSnackBar()
-                  ..showMessage(l10n.customizeSaved);
-              },
-              child: Text(l10n.customizeSave),
+              onPressed: Personalize.done,
+              child: Text(l10n.customizeDone),
             ),
           ],
         ),

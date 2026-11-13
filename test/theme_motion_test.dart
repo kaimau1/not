@@ -18,7 +18,14 @@ void main() {
   );
 
   group('F34.7 hareketi azalt', () {
-    for (final d in [AppMotion.instant, AppMotion.short, AppMotion.medium]) {
+    // F77.4: P38 hareketleri (quick, long dahil) azaltılmışta ≤ 150 ms.
+    for (final d in [
+      AppMotion.instant,
+      AppMotion.quick,
+      AppMotion.short,
+      AppMotion.medium,
+      AppMotion.long,
+    ]) {
       testWidgets('$d → en çok 150 ms, doğrusal', (tester) async {
         late BuildContext ctx;
         await tester.pumpWidget(

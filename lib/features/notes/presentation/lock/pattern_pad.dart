@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/haptics.dart';
 
 /// 3×3 KİLİT DESENİ (F4.8). Parmak noktaların üstünden geçtikçe onları sırayla
 /// bağlar; bırakınca [onComplete] noktaların sırasını (0–8) verir. Arada
@@ -46,7 +46,7 @@ class _PatternPadState extends State<PatternPad> {
         if (between && !_dots.contains(mid)) _dots.add(mid);
       }
       _dots.add(i);
-      HapticFeedback.selectionClick();
+      AppHaptics.tick();
       break;
     }
   }

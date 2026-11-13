@@ -4715,7 +4715,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get customizeModeTitle => 'Düzenleme modu';
 
   @override
-  String get customizeModeHint => 'Gizlemek/göstermek için düğmelere dokun';
+  String get customizeModeHint =>
+      'Dokun: gizle ya da göster · anında uygulanır';
 
   @override
   String customizeHiddenCount(int count) {
@@ -4723,10 +4724,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get customizeSave => 'Kaydet';
-
-  @override
-  String get customizeSaved => 'Düzen kaydedildi';
+  String get customizeDone => 'Bitti';
 
   @override
   String videoBackSeconds(int seconds) {
@@ -4752,7 +4750,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get customizeStartInfo =>
-      'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Bitince üstteki şeritten Kaydet\'e bas.';
+      'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Değişiklik anında uygulanır; bitince üstteki şeritten Bitti\'ye bas.';
 
   @override
   String get customizeStart => 'Düzenleme modunu başlat';
@@ -4831,7 +4829,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get personalizeBarInfo =>
-      'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.';
+      'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar, okla öbür kapsüle taşı. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.';
 
   @override
   String get personalizeBarLeft => 'Sol kapsül · araçlar';
@@ -4841,6 +4839,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get personalizeBarReset => 'Alt çubuğu varsayılana döndür';
+
+  @override
+  String get personalizeBarMoveRight => 'Sağ kapsüle taşı';
+
+  @override
+  String get personalizeBarMoveLeft => 'Sol kapsüle taşı';
 
   @override
   String get reorderHandle => 'Sırala';

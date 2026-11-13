@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../core/a11y/motion.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/haptics.dart';
 
 /// **Sürüklerken çöp kutusu** (F60.S9, kullanıcı 2026-11-11; F60.S12,
 /// 2026-11-12): ana ekranda bir not kartı sürüklenirken ekranın altında
@@ -164,7 +164,7 @@ class _DragTrashTargetState extends State<DragTrashTarget>
           child: DragTarget<String>(
             onWillAcceptWithDetails: (_) {
               if (!widget.active) return false;
-              if (!_armed.value) HapticFeedback.mediumImpact();
+              if (!_armed.value) AppHaptics.heavy();
               _setArmed(true);
               return true;
             },
@@ -175,7 +175,7 @@ class _DragTrashTargetState extends State<DragTrashTarget>
               _gulp.forward(from: 0).whenCompleteOrCancel(() {
                 if (mounted && !widget.active) _show.reverse();
               });
-              HapticFeedback.heavyImpact();
+              AppHaptics.heaviest();
               widget.onTrash(details.data);
             },
             // Geniş bölge: hedefin çevresine bırakmak da sayılır.

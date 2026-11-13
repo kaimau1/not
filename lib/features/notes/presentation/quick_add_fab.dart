@@ -16,6 +16,7 @@ import 'add_catalog.dart';
 import 'quick_add_actions.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/haptics.dart';
 
 /// "+" düğmesi: dokununca tek panel açılır — bütün seçenekler gruplu ve TEK
 /// dokunuşla (bkz. [_QuickAddPanel]). Basılı tutmak da açar.
@@ -285,7 +286,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
       },
       child: GestureDetector(
         onLongPress: () {
-          HapticFeedback.mediumImpact();
+          AppHaptics.heavy();
           if (!_open) _openMenu();
         },
         child: _fab(
@@ -686,7 +687,7 @@ class _QuickAddArranger extends StatelessWidget {
               onPressed: locked
                   ? null
                   : () {
-                      HapticFeedback.selectionClick();
+                      AppHaptics.tick();
                       Personalize.update((p) => p.withVisible(_id(o), !shown));
                     },
             ),

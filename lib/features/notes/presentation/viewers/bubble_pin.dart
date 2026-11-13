@@ -645,7 +645,7 @@ class _BubblePinState extends State<_BubblePin>
 
   void _dragStart() {
     if (widget.readOnly) return;
-    HapticFeedback.mediumImpact();
+    AppHaptics.heavy();
     setState(() => _lifted = true);
     widget.controller.setDragging(widget.bubble.id);
   }

@@ -3,7 +3,6 @@ import '../../../core/widgets/sheet_header.dart';
 import '../../../core/app_icons.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../app/theme/note_themes.dart';
@@ -14,6 +13,7 @@ import '../domain/note.dart';
 import 'color_picker_sheet.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/haptics.dart';
 
 /// Görünüm levhasının alt satırındaki seçenekler.
 enum NoteAppearanceAction { color, frame, image, paper }
@@ -97,7 +97,7 @@ class _ThemeSheetState extends State<_ThemeSheet> {
     final onColor = widget.onColor;
     // "Sade" rengi de kaldırır (düz renkler artık aynı levhada).
     if (id.isEmpty && onColor != null && !_plain) {
-      HapticFeedback.selectionClick();
+      AppHaptics.tick();
       setState(() {
         _selected = '';
         _color = NoteColor.none;
@@ -108,13 +108,13 @@ class _ThemeSheetState extends State<_ThemeSheet> {
       return;
     }
     if (id == _selected) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     setState(() => _selected = id);
     widget.onTheme(id);
   }
 
   void _pickColor(NoteColorPick pick) {
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     setState(() {
       _selected = '';
       _color = pick.color;

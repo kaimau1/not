@@ -75,12 +75,16 @@ extension _EditorToolbar on _NoteEditorScreenState {
           ? (_penMode ? l10n.annotateDone : l10n.annotate)
           : l10n.quickRowPen,
       active: _penMode,
-      onTap: document ? () => _update(() => _penMode = !_penMode) : _togglePen,
+      onTap: document ? _toggleAnnotate : _togglePen,
       onLongPress: document
           ? null
           : () => showInkSettings(context, _pageInkOf(note)),
     );
   }
+
+  /// Belge notunda sayfanın üzerine yazma kipi (alt çubuktaki Kalem, hangi
+  /// kapsülde olursa olsun).
+  void _toggleAnnotate() => _update(() => _penMode = !_penMode);
 
   /// Alt çubuğun "Ekle" segmenti: TEK levhayı açar (attach_sheet.dart).
   ///

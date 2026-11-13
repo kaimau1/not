@@ -605,7 +605,10 @@ class _BubbleDockState extends State<BubbleDock> {
                 showCheckmark: false,
                 label: Text(l10n.bubbleStar),
                 selected: bubble.starred,
-                onSelected: (_) => widget.controller.toggleStar(bubble.id),
+                onSelected: (_) {
+                  AppHaptics.tick();
+                  widget.controller.toggleStar(bubble.id);
+                },
               ),
               FilterChip(
                 key: const ValueKey('bubble-mark-urgent'),

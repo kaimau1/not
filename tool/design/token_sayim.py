@@ -30,6 +30,7 @@ SKIP_FILES = (
     'lib/app/theme/note_colors.dart',
     'lib/app/theme/note_themes.dart',
     'lib/app/theme/fixed_colors.dart',
+    'lib/core/haptics.dart',  # AppHaptics: titreşimin tek kaynağı (F77.2)
 )
 
 PATTERNS = {

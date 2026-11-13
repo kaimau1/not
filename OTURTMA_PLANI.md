@@ -449,7 +449,7 @@ doğrulanır).
   Düzenek `pumpEditor`'a `overrides` parametresi eklendi.)* Misafir/yalnız-bu-cihaz
   notunda bulut simgesi yerine "yalnız bu cihazda" simgesi + ipucu (ana ekranla aynı dil).
   `watchPendingWrites` zaten `isLocal` için false döner; gösterge bileşeninde misafir dalı.
-- [ ] **F60.5 Yazma ana bloğu 148 → 229 ms (v1.1.671 → v1.1.701).** *(→ P55, cihazlı; 2026-11-13)* `tool/perf/prof_type.py`
+- [x] **F60.5 Yazma ana bloğu 148 → 229 ms (v1.1.671 → v1.1.701).** *(2026-11-13 P55: eski iki sürüm yeniden derlenmedi; bugünkü profil derlemesinde `prof_type.py` 4 × yazma: 215 kare, en pahalı 5 kare 38,9 / 21,8 / 20,1 / 19,3 / < 16 ms — hepsi LAYOUT ağırlıklı (metin alanı dizimi + düzenlenen paragrafın bağlantı/işaret taraması). Düzeltme F84.2'de)* `tool/perf/prof_type.py`
   ile iki sürümü profil derlemesinde karşılaştır; fark F60.1/Faz 59 sonrası sürüyorsa en
   pahalı 5 çerçeveyi maddeye yaz. Düzeltme ayrı madde olarak açılır.
 - [ ] **F60.6 Kart ve liste: ek sayacı/rozet tutarlılığı taraması.** *(2026-11-11: tarama yapıldı, bulgular `docs/cihaz_turu.md` bölüm D — `note_card.dart:1755` ve `share_target_sheet.dart:516` düzeltme adayı; kod değişmedi, düzeltme açık.)* `Note.attachments`'ı
@@ -469,7 +469,7 @@ doğrulanır).
   sıfırlanıyor mu. Cihazda: adb ile bir önceki sürümü kur → Güncelle → `adb logcat` +
   `uiautomator dump`. Kabul: başarı, iptal, ağ hatası üç yolda da ekran kapanır ya da
   hata + "yeniden dene" gösterir; widget testi üç yolu sabitler.
-- [ ] **F60.S2 [Fable] Klavye açılırken alt panel kasıyor ve kullanımla ARTIYOR.** *(→ P55, cihazlı; 2026-11-13)*
+- [x] **F60.S2 [Fable] Klavye açılırken alt panel kasıyor ve kullanımla ARTIYOR.** *(2026-11-13 P55: cihazda yine birikim YOK — taze ve 30 gir-çık sonrası `prof_kb2.py` klavye aç/kapa UI en uzun kare 17,3 → 12,5 ms, > 16 ms 1 → 0. Kullanıcının gördüğü "alt panel" kusurunun kökü başkaymış: Android < 35 motoru animasyon karelerinde IME boşluğundan gezinme çubuğunu düşüyor, çubuk öneri şeridinin altında kalıyordu (bkz. `docs/hafiza/akicilik.md` P55) — düzeltildi)*
   Kullanıcı: "en başta yok gibi; notlara gir-çık yaptıkça artıyor; önceki fazda
   çözmüştük". Bu **birikim (sızıntı) imzası**: kapanan editörden kalan genel dinleyiciler
   klavyenin her karesinde iş yapıyor. *Önce say:* `lib/features/notes` ve `lib/core`'da
@@ -1114,7 +1114,7 @@ tur `telefon-*.png`.
   başlık yığını, klasör şeridi, ızgara. Her biri kendi `ref.watch` kümesiyle. Izgara girdisi
   (sıralı kimlikler + sütun sayısı) değişmedikçe `sliverBalancedNoteColumns` ve
   `dateBuckets` yeniden hesaplanmaz (girdi kaydıyla not).
-- [ ] **F68.3 Liste akışının maliyeti — KARAR K-O13 (AKICILIK F22.4).** *(→ P55, cihazlı; 2026-11-13)* Önce KULLANICININ
+- [ ] **F68.3 Liste akışının maliyeti — KARAR K-O13 (AKICILIK F22.4).** *(2026-11-13 P55: YAPILAMADI — ölçüm kullanıcının GERÇEK hesabında ister; ölçüm uygulaması ayrı Firebase projesinde, varsayılan kimlikli uygulamaya dokunulmaz. K-O13 en güvenli seçenek uygulandı: hiçbir şey yapılmadı. Sabah bakılacak: kullanıcı kendi telefonunda `prof_save.py`'yi gerçek hesapla koşturmalı)* Önce KULLANICININ
   GERÇEK hesabında (ölçüm veri seti değil) `prof_save.py`: not sayısı, olay boyutu (KB),
   kayıt sonrası Dart bloğu (ms). ≤ 12 ms → kapat. > 12 ms → "yakın/eski" bölmesi tasarımı
   ayrı madde olarak yazılır (iki sorgu: `updatedAt ≥ T` ve `< T`; birleşimde 500 ms

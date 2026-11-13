@@ -8,6 +8,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
+import '../../../core/widgets/toggle_pop.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/presentation/reminder_level_ui.dart';
 import '../../notes/presentation/reminder_repeat_ui.dart';
@@ -251,12 +252,15 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
                   ? l10n.tasksNewTask
                   : l10n.taskEditTitle,
               actions: [
-                IconButton(
-                  tooltip: l10n.taskStar,
-                  isSelected: _starred,
-                  icon: const Icon(Icons.star_outline),
-                  selectedIcon: const Icon(Icons.star),
-                  onPressed: () => setState(() => _starred = !_starred),
+                TogglePop(
+                  on: _starred,
+                  child: IconButton(
+                    tooltip: l10n.taskStar,
+                    isSelected: _starred,
+                    icon: const Icon(Icons.star_outline),
+                    selectedIcon: const Icon(Icons.star),
+                    onPressed: () => setState(() => _starred = !_starred),
+                  ),
                 ),
                 if (widget.existing != null)
                   IconButton(

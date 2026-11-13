@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_tokens.dart';
 import '../a11y/min_tap_target.dart';
 import '../app_icons.dart';
+import 'press_scale.dart';
 
 /// **LEVHA KAROLARI** (DENEYIM_PLANI §2.3, F72.4): levhalardaki "simge + ad"
 /// düğmelerinin tek kılığı. Zemin `surfaceContainer`, köşe `AppRadius.m`,
@@ -208,15 +209,20 @@ class _TileSurface extends StatelessWidget {
       child: Semantics(
         button: true,
         enabled: onTap != null,
-        child: Material(
-          color: color,
-          borderRadius: radius,
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            hoverColor: hover,
+        // F77.3-2: karo basınca 0,97 (yalnız boyama).
+        child: PressScale(
+          scale: 0.97,
+          enabled: onTap != null,
+          child: Material(
+            color: color,
             borderRadius: radius,
-            child: child,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              hoverColor: hover,
+              borderRadius: radius,
+              child: child,
+            ),
           ),
         ),
       ),

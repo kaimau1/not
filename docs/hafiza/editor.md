@@ -162,3 +162,10 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - `EditorQuickRow.target` (= editörün `_formatTargetN`): satır kendi State'inde hedef denetleyiciyi dinler, `activeRichFormats`/`activeRichHeading` DEĞİŞİNCE yalnız satır çizilir (kök kurulmaz). Basılı: kalın, eğik, altı çizili, vurgu, renk, başlık/ara başlık. Madde imi/onay kutusu için durum yok (yapılmadı).
 - Düzenleme: `quick_row_editor.dart` — `quickRowCatalog` + `QuickRowEditor` (levha ya da `inline`), anında `Personalize.update` (taslak/kaydet YOK). ⋮ "Hızlı menüyü düzenle" bunu açar; Kişiselleştir ekranında da bölüm. Eski satır içi düzenleme kipi (Personalize.startEditing) başka yüzeyler için duruyor.
 - Tablet dönüşü: `SplitShell._back` — not kapanınca listeye Fade(0,35→1)+Slide(0,04→0), AppMotion.medium; yalnız boyama.
+
+## 2026-11-13 — P50: düzenleme modu anında, kapsül taşıma
+- **Düzenleme modu taslak DEĞİL** (kullanıcı: "aç, düzenle, kaydet değil"): `Personalize.toggle` → `update` (hemen `prefs` + disk). `draft` yalnız "mod açık" işareti (değeri kayıtla aynı); `_before` modun açıldığı andaki kayıt. Şerit: `customize-undo` (`revert`, mod açık kalır, `dirty` değilse sönük) + `customize-done` (`done`). `save`/`cancel` KALKTI.
+- **Kapsül tarafı** `UiPrefs.barSides`: kimlik `aiOrder`'daysa sağ, `barOrder`'daysa sol, hiçbirinde yoksa varsayılan tarafı; `withBarSide` öbür kapsülün sonuna taşır. Yeni alan yok — iki liste yabancı kimlik de taşır (eski sürüm `orderOf`'ta atlar). Editörde `spec(id)` (simge, ad, iş, etkin) tek kaynak; `leftOf` araç segmenti (Biçim/Ekle/Kalem/Ekler özel), `rightOf` `_voiceButton` (AI özel). Plan: sağa taşınan Ara/Kalem düşürülmez (`planEditorBar(search:)`), sağdaki her düğme `aiButtons`'a sayılır.
+- **Yanlış yol:** `spec` içine `() => _update(...)` yazmak kök setState mandalını (53) aştı → ortak `_toggleAnnotate`. Çubuğa yeni iş eklerken var olan yöntemi geçir.
+- Tam ekran AÇIKKEN `topFullscreen` gizlenmez (çıkış yolu). ⋮ (`editor-more`) hiç sarılmaz.
+- Yapılmadı: ana ekran sarmaları (P56 çiti), üst çubuk sıralama (yapı P20'nin), düzenleme modunda yerinde sürükle-sırala (sıra Ayarlar listesinde).

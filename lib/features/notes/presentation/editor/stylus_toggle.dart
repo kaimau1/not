@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../viewers/ink_tools.dart';
+import '../../../../core/haptics.dart';
 
 /// **YÜZEN KALEM DÜĞMESİ: "kalem yazar / kalem dokunur"** (kullanıcı isteği
 /// 2026-11-09: "kalem varken metne tıklamak istediğimde kalemle yazı yazdığı
@@ -136,7 +136,7 @@ class _StylusToggleButton extends StatelessWidget {
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: () {
-                HapticFeedback.selectionClick();
+                AppHaptics.tick();
                 InkToolMemory.saveAutoStylus(!on);
                 // SÜREKLİ ÇIKMASIN (P49 (d), kullanıcı 2026-11-12: "'kalem
                 // yazar, parmak dokunur' gibi ipuçları alt kalem panelini

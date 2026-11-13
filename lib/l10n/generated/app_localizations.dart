@@ -8471,7 +8471,7 @@ abstract class AppLocalizations {
   /// No description provided for @customizeModeHint.
   ///
   /// In tr, this message translates to:
-  /// **'Gizlemek/göstermek için düğmelere dokun'**
+  /// **'Dokun: gizle ya da göster · anında uygulanır'**
   String get customizeModeHint;
 
   /// No description provided for @customizeHiddenCount.
@@ -8480,17 +8480,11 @@ abstract class AppLocalizations {
   /// **'{count} düğme gizli · dokunarak değiştir'**
   String customizeHiddenCount(int count);
 
-  /// No description provided for @customizeSave.
+  /// No description provided for @customizeDone.
   ///
   /// In tr, this message translates to:
-  /// **'Kaydet'**
-  String get customizeSave;
-
-  /// No description provided for @customizeSaved.
-  ///
-  /// In tr, this message translates to:
-  /// **'Düzen kaydedildi'**
-  String get customizeSaved;
+  /// **'Bitti'**
+  String get customizeDone;
 
   /// No description provided for @videoBackSeconds.
   ///
@@ -8531,7 +8525,7 @@ abstract class AppLocalizations {
   /// No description provided for @customizeStartInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Bitince üstteki şeritten Kaydet\'e bas.'**
+  /// **'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Değişiklik anında uygulanır; bitince üstteki şeritten Bitti\'ye bas.'**
   String get customizeStartInfo;
 
   /// No description provided for @customizeStart.
@@ -8681,7 +8675,7 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeBarInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.'**
+  /// **'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar, okla öbür kapsüle taşı. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.'**
   String get personalizeBarInfo;
 
   /// No description provided for @personalizeBarLeft.
@@ -8701,6 +8695,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Alt çubuğu varsayılana döndür'**
   String get personalizeBarReset;
+
+  /// No description provided for @personalizeBarMoveRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağ kapsüle taşı'**
+  String get personalizeBarMoveRight;
+
+  /// No description provided for @personalizeBarMoveLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sol kapsüle taşı'**
+  String get personalizeBarMoveLeft;
 
   /// No description provided for @reorderHandle.
   ///

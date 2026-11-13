@@ -497,6 +497,17 @@ class _EditorSection extends StatelessWidget {
                 icon: Icons.sell_outlined,
                 label: l10n.moduleTags,
               ),
+              // Geniş ekran / tablet düğmeleri (P50).
+              (
+                id: UiItem.topHome,
+                icon: Icons.home_outlined,
+                label: l10n.goHome,
+              ),
+              (
+                id: UiItem.topFullscreen,
+                icon: Icons.fullscreen_rounded,
+                label: l10n.noteFullscreen,
+              ),
             ],
           ),
         ),

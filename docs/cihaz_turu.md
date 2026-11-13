@@ -133,6 +133,12 @@ görünen yerler (düzeltme adayı, ayrı kod işi):
 - `note_menu_model.dart:78` (`|| cardMediaHidden` ile birlikte), `dashboard_selection.dart:81` (kopyada ekler taşınmaz uyarısı), `note_editor_screen.dart:1676` (içerik var mı) — mantık gereği ham sayım doğru; dokunma.
 Cihazda bakılacak: telefon adım 26.
 
+## D2. P38 dokunsal dil (2026-11-13) — her adımda TEK titreşim
+1. Listede madde işaretle (editörde kutucuk) — hafif tık.
+2. Kart ⋮ → Sabitle — kısa seçim tıkı; yıldız simgesi (menü düzenle) hafifçe atar.
+3. Kartı sürükleyip bırak — tek titreşim.
+4. Kartı çöpe sürükle: hedefe girince orta, bırakınca güçlü — başka titreşim yok.
+
 ## E. Silinen / eskimiş (X) — KALANLAR §2'den turda YOK
 
 C7 (balon el yazısı, kaldırıldı) · #59 (Vulkan cihaz yok; ölçüm işi) · #40, #44 (karar/ölçüm: AKICILIK F25.1/F25.2) ·

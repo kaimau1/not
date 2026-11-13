@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Klavye boşluğunun DAR KANALI (F60.S5, kullanıcı 2026-11-11: "klavye
 /// açılırken alt paneldeki titreme kasmayı kökünden çöz, tekrar yaşanmayacak
@@ -58,6 +61,39 @@ class _KeyboardInsetScopeState extends State<KeyboardInsetScope> {
   double _lastLive = 0;
   Timer? _settle;
 
+  /// Motor şu an ANİMASYON karesi mi veriyor (bkz. [_trackEngine]).
+  bool _animating = false;
+  double _lastStep = double.infinity;
+
+  /// **ALT PANEL TİTREMESİ — KÖK NEDEN** (P55, cihaz izi 2026-11-13, Mi Note
+  /// 10 Lite API 31, 3 düğmeli gezinme): Flutter motoru klavye animasyonu
+  /// sürerken IME boşluğundan gezinme çubuğunu DÜŞÜYOR
+  /// (`ImeSyncDeferringInsetsCallback.onProgress`, `SDK_INT < 35`),
+  /// animasyon bitince tam değeri veriyor: 18 → … → 253,1 → 300,7. Videoda
+  /// klavyenin görünen üst kenarı her karede bildirilen + 47,3 dp. Çubuk
+  /// bildirilen değere oturduğu için açılış/kapanış boyunca öneri şeridinin
+  /// ALTINDA kalıyor, klavye durunca birden beliriyordu. Widget testleri
+  /// göremiyordu: sahte boşluk "gerçek" klavyeydi.
+  ///
+  /// Düzeltme: animasyon karelerinde canlı değer + gezinme çubuğu. Durum
+  /// makinesi: her değişiklik animasyon başlatır (dinlenmeden çıkış —
+  /// kapanışın ilk karesi 300,7 → 253,5 de böyle: + 47,3 = aynı yer); bitiş
+  /// karesi = yavaşlamış hareketin ardından tam gezinme çubuğu boyunda TEK
+  /// yukarı adım (motorun `onEnd`'i) ya da 0; ya da klavye [settle] kadar
+  /// durdu. Yanlış tanırsa çubuk birkaç kare eski yerde (bugünkü hâl) kalır.
+  void _trackEngine(double live, double nav) {
+    final step = live - _lastLive;
+    final endJump =
+        _animating &&
+        step >= nav - 1 &&
+        step <= nav + 3 &&
+        _lastStep >= 0 &&
+        _lastStep < nav / 4 &&
+        live > 2 * nav;
+    _animating = live > 0 && !endJump;
+    _lastStep = step;
+  }
+
   @override
   void dispose() {
     _settle?.cancel();
@@ -69,7 +105,9 @@ class _KeyboardInsetScopeState extends State<KeyboardInsetScope> {
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
     final live = media.viewInsets.bottom;
+    final nav = media.viewPadding.bottom;
     if (live != _lastLive) {
+      _trackEngine(live, nav);
       _lastLive = live;
       // HAREKET HÂLİNDE: gövde tam boyda (bkz. [KeyboardSnap]).
       _stable = 0;
@@ -77,15 +115,21 @@ class _KeyboardInsetScopeState extends State<KeyboardInsetScope> {
       _settle?.cancel();
       _settle = Timer(widget.settle, () {
         KeyboardInset.moving.value = false;
-        if (!mounted || _stable == live) return;
-        setState(() => _stable = live);
+        if (!mounted) return;
+        // Klavye durdu: değer ne olursa olsun artık "animasyon karesi" değil.
+        if (_stable == live && !_animating) return;
+        setState(() {
+          _stable = live;
+          _animating = false;
+        });
       });
     }
     // Android'in kuralı (alt pay = gezinme çubuğu − klavye), ama KARARLI
     // boşlukla: hareket boyunca pay yerinde kalır, oturunca tek adımda kalkar.
-    final nav = media.viewPadding.bottom;
     return _LiveInset(
-      value: live,
+      value: _animating && KeyboardInset.navExcludedWhileAnimating && live > 0
+          ? live + nav
+          : live,
       child: _OpenInset(
         value: live > 0,
         child: _StableInset(
@@ -131,6 +175,25 @@ class _StableInset extends InheritedWidget {
 
 /// Klavye boşluğunu okuyan yaprakların kapısı (bkz. [KeyboardInsetScope]).
 abstract final class KeyboardInset {
+  /// Flutter motoru klavye ANİMASYONU sürerken IME boşluğundan gezinme
+  /// çubuğunu düşüyor mu (Android < 35, bkz. [KeyboardInsetScope]).
+  /// Açılışta [init] doldurur; testte elle.
+  static bool navExcludedWhileAnimating = false;
+
+  /// Android API düzeyini yerel köprüden bir kez okur (ilk kareden sonra).
+  static Future<void> init() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      final sdk = await const MethodChannel(
+        'dev.kaimau.notlar/system',
+      ).invokeMethod<int>('sdkInt');
+      // Motor: `Build.VERSION.SDK_INT < API_35` iken düşer.
+      navExcludedWhileAnimating = sdk != null && sdk < 35;
+    } catch (_) {
+      // Köprü yoksa eski davranış.
+    }
+  }
+
   /// Klavye ŞU AN hareket ediyor mu (açılış/kapanış animasyonu; durunca
   /// [KeyboardInsetScope.settle] sonra false). Kimse dinleyerek kurulmaz:
   /// ertelenebilir işler (ör. uzun listenin kademeli kurulumu,

@@ -655,7 +655,7 @@ class _FontChoiceCard extends StatelessWidget {
         child: Column(
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
+              duration: AppMotion.of(context, AppMotion.quick),
               height: 62,
               alignment: Alignment.center,
               decoration: BoxDecoration(
