@@ -3,6 +3,9 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Düzenleme modu anında uygular:** "Ekranı düzenle"de bir düğmeye dokununca gizleme ya da gösterme hemen geçerli olur, Kaydet yok. Üstteki şeritte "Geri al" modu açtığın andaki düzene döner, "Bitti" modu kapatır.
+- **Alt çubukta düğme öbür kapsüle taşınır:** Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk"ta her satırdaki ok, düğmeyi soldaki araç kapsülünden sağdaki kapsüle (ya da geri) taşır; örneğin Ara sağa, yapay zekâ sola alınabilir.
+- **Üst çubukta iki düğme daha gizlenebilir:** geniş ekrandaki Ana sayfa ve tabletteki Tam ekran düğmeleri de düzenleme modunda ve Kişiselleştir'de açılıp kapatılır.
 - **Hızlı menüde açık biçim belli:** imleç kalın, eğik, altı çizili, vurgulu, renkli yazıdayken ya da başlıktayken hızlı menüdeki düğmesi basılı görünür.
 - **Hızlı menüyü düzenlemek kolay:** ⋮ → "Hızlı menüyü düzenle" artık "Menüde" ve "Eklenebilir" karolarıyla açılan bir levha; dokununca eklenir ya da çıkar, kaydetmeye gerek yok, üstte canlı önizleme var. Aynı düzenleme Ayarlar → Kişiselleştir'de de var, böylece hızlı menü kaybolsa da geri getirilebilir.
 - **Tablette nottan dönüş geçişi:** nottan geri çıkınca liste kısa bir kayma ve solmayla gelir, birden atlamaz.
