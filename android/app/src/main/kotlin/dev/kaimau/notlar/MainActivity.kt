@@ -742,6 +742,9 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                         PlaceReminders.remove(this, call.argument<String>("id") ?: "")
                         result.success(true)
                     }
+                    // Klavye animasyonunda motor IME boşluğundan gezinme
+                    // çubuğunu düşüyor mu (SDK < 35; bkz. keyboard_snap.dart).
+                    "sdkInt" -> result.success(Build.VERSION.SDK_INT)
                     "powerSaveMode" -> {
                         val power = getSystemService(POWER_SERVICE) as? PowerManager
                         result.success(power?.isPowerSaveMode ?: false)
