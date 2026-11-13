@@ -299,6 +299,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         onError: (message) {
           if (mounted) setState(() => _errorMessage = message);
         },
+        // Canlı tanıma bu cihazda çalışmıyor (GMS'siz tablet, 2026-11-13):
+        // levha kayıt + toplu döküm yoluna geçer, kullanıcı yeniden konuşur.
+        onUnavailable: (_) => unawaited(_fallBackToRecording()),
         onSilence: (progress) {
           if (mounted) setState(() => _silence = progress);
         },
@@ -314,6 +317,23 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     } catch (e) {
       _fail(mounted ? friendlyError(context.l10n, e) : '$e');
     }
+  }
+
+  /// Canlı tanıma oturum ortasında "yok" dedi: aynı levhada kayıt yoluna
+  /// geçilir (metin hiç gelmemişti, kaybolan bir şey yok).
+  Future<void> _fallBackToRecording() async {
+    if (!_useSpeech || _phase != _Phase.listening) return;
+    _ticker?.cancel();
+    _ticker = null;
+    await _session?.cancel();
+    _session = null;
+    if (!mounted) return;
+    setState(() {
+      _useSpeech = false;
+      _phase = _Phase.idle;
+      _elapsed = Duration.zero;
+    });
+    await _startListening();
   }
 
   /// Yerleşik tanıma yoksa: dosyaya kaydet, bitince toplu döküm.

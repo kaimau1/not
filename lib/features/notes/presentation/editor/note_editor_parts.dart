@@ -229,28 +229,34 @@ class _DictationPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = _themeOf(context).colorScheme;
     final l10n = context.l10n;
-    return Padding(
+    // KASMA (tablet bulgusu 2026-11-13: "sesle yazma açıkken kasma"): kartın
+    // nabız rozeti ve dalgası HER KARE boyanıyor; kendi katmanı yokken boyama
+    // en yakın sınıra — editör gövdesinin tamamına — yayılıyordu, uzun not
+    // ve geniş tablet ekranında her kare bütün metin yeniden çiziliyordu.
+    return RepaintBoundary(
       key: const ValueKey('dictation-panel'),
-      padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-      child: ListeningCard(
-        mode: ListeningMode.dictation,
-        active: true,
-        title: l10n.voiceListening,
-        subtitle: l10n.dictationPanelHint,
-        clock: ListeningClock(
-          start: start,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+        child: ListeningCard(
+          mode: ListeningMode.dictation,
           active: true,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: scheme.error,
+          title: l10n.voiceListening,
+          subtitle: l10n.dictationPanelHint,
+          clock: ListeningClock(
+            start: start,
+            active: true,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: scheme.error,
+            ),
           ),
-        ),
-        action: ListeningActionButton(
-          key: const ValueKey('dictation-stop'),
-          listening: true,
-          label: l10n.voiceFinish,
-          onPressed: onStop,
+          action: ListeningActionButton(
+            key: const ValueKey('dictation-stop'),
+            listening: true,
+            label: l10n.voiceFinish,
+            onPressed: onStop,
+          ),
         ),
       ),
     );

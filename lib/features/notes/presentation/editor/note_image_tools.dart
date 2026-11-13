@@ -25,7 +25,17 @@ class _ImageTools extends StatelessWidget {
     this.onCaption,
     this.hasCaption = false,
     this.placementHint = false,
+    this.wide = false,
   });
+
+  /// GENİŞ SAYFA (tablet, ≥ 600 dp — kullanıcı bulgusu 2026-11-13: "tablette
+  /// yüzen ek menüsü çok büyük ve yüksek"): panel sayfa boyu iki satır yerine
+  /// TEK SATIR — görünüm anahtarı, kısa genişlik kaydırıcısı ve düğmeler yan
+  /// yana; genişliği çağıran sınırlar (bkz. `_toolbar`).
+  final bool wide;
+
+  /// Geniş kipte kaydırıcının sabit genişliği.
+  static const double wideSliderWidth = 160;
 
   /// Ek AZ ÖNCE eklendi: görünüm anahtarı parlayan çerçeveyle ve "nerede
   /// dursun?" açıklamasıyla öne çıkar (bkz. NotePageCanvas.placementHintId).
@@ -92,17 +102,32 @@ class _ImageTools extends StatelessWidget {
         openExternal: onOpenExternal != null,
       ),
     );
+    final slider = Slider(
+      value: wFrac,
+      min: minWidthFrac,
+      onChanged: onWidthChanged,
+      onChangeEnd: onWidthEnd,
+    );
+    final viewSwitch = this.viewSwitch;
     final tools = Row(
       children: [
-        Icon(Icons.photo_size_select_large, size: 18, color: scheme.primary),
-        Expanded(
-          child: Slider(
-            value: wFrac,
-            min: minWidthFrac,
-            onChanged: onWidthChanged,
-            onChangeEnd: onWidthEnd,
+        if (wide && viewSwitch != null) ...[
+          const SizedBox(width: 4),
+          Flexible(
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: placementHint
+                  ? _PlacementPulse(child: viewSwitch)
+                  : viewSwitch,
+            ),
           ),
-        ),
+          const SizedBox(width: 8),
+        ],
+        Icon(Icons.photo_size_select_large, size: 18, color: scheme.primary),
+        if (wide)
+          SizedBox(width: wideSliderWidth, child: slider)
+        else
+          Expanded(child: slider),
         if (onAddText != null)
           IconButton(
             key: const ValueKey('floating-add-text'),
@@ -166,7 +191,6 @@ class _ImageTools extends StatelessWidget {
           ),
       ],
     );
-    final viewSwitch = this.viewSwitch;
     return Material(
       color: scheme.surfaceContainerHighest,
       elevation: 3,
@@ -186,7 +210,7 @@ class _ImageTools extends StatelessWidget {
                 key: const ValueKey('placement-hint'),
                 text: l10n.placementHintShort(l10n.viewModeFloating),
               ),
-            if (viewSwitch != null)
+            if (viewSwitch != null && !wide)
               LayoutBuilder(
                 builder: (context, constraints) => Row(
                   children: [

@@ -3,6 +3,9 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **Voice typing on tablets:** if the device's live speech recognition doesn't work (tablets without Google services), the app notices within a few seconds and switches to the voice note sheet: your speech is recorded and transcribed. Stutter while voice typing is on is also reduced.
+- **Smaller floating attachment menu on tablets:** on wide screens the menu under an attachment is a single row under it instead of two full-width rows.
+- **Smaller voice recordings on the page:** a floating recording is no longer a long strip on wide screens, just a shorter, lower pill.
 - **Active formatting shows in the quick menu:** when the cursor is in bold, italic, underlined, highlighted or colored text, or in a heading, its quick menu button looks pressed.
 - **Easier quick menu editing:** ⋮ → "Edit quick menu" now opens a sheet with "In the menu" and "Available" tiles; tap to add or remove, no saving needed, with a live preview on top. The same editor is in Settings → Personalize, so a quick menu that disappeared can be brought back.
 - **Back transition on tablets:** leaving a note slides and fades the list in instead of jumping.

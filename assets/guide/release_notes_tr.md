@@ -3,6 +3,9 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Tablette sesle yazma:** cihazın canlı konuşma tanıması çalışmıyorsa (Google hizmetleri olmayan tabletler) uygulama bunu birkaç saniyede fark edip sesli not levhasına geçer: konuşma kaydedilir ve yazıya dökülür. Sesle yazma açıkken yaşanan kasma da azaldı.
+- **Tablette yüzen ek menüsü küçüldü:** ekin altındaki menü geniş ekranda iki satır ve sayfa boyu yerine ekin altında tek satır.
+- **Ses kaydı sayfada daha küçük:** yüzen ses kaydı geniş ekranda uzun bir şerit olmuyor, daha kısa ve alçak bir hap.
 - **Hızlı menüde açık biçim belli:** imleç kalın, eğik, altı çizili, vurgulu, renkli yazıdayken ya da başlıktayken hızlı menüdeki düğmesi basılı görünür.
 - **Hızlı menüyü düzenlemek kolay:** ⋮ → "Hızlı menüyü düzenle" artık "Menüde" ve "Eklenebilir" karolarıyla açılan bir levha; dokununca eklenir ya da çıkar, kaydetmeye gerek yok, üstte canlı önizleme var. Aynı düzenleme Ayarlar → Kişiselleştir'de de var, böylece hızlı menü kaybolsa da geri getirilebilir.
 - **Tablette nottan dönüş geçişi:** nottan geri çıkınca liste kısa bir kayma ve solmayla gelir, birden atlamaz.

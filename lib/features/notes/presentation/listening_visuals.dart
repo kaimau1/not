@@ -118,34 +118,36 @@ class _ListeningBadgeState extends State<ListeningBadge>
         ],
       ),
     );
-    return SizedBox(
-      width: size,
-      height: size,
-      child: AnimatedBuilder(
-        animation: _pulse,
-        child: core,
-        builder: (context, child) {
-          final t = _pulse.value;
-          return Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              if (widget.active)
-                Transform.scale(
-                  scale: 1 + 0.35 * t,
-                  child: Container(
-                    width: size,
-                    height: size,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: accent.withValues(alpha: 0.28 * (1 - t)),
+    return RepaintBoundary(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: AnimatedBuilder(
+          animation: _pulse,
+          child: core,
+          builder: (context, child) {
+            final t = _pulse.value;
+            return Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                if (widget.active)
+                  Transform.scale(
+                    scale: 1 + 0.35 * t,
+                    child: Container(
+                      width: size,
+                      height: size,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: accent.withValues(alpha: 0.28 * (1 - t)),
+                      ),
                     ),
                   ),
-                ),
-              child!,
-            ],
-          );
-        },
+                child!,
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -323,18 +325,21 @@ class _ListeningWaveformState extends State<ListeningWaveform>
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: widget.height,
-      width: double.infinity,
-      child: CustomPaint(
-        painter: _WaveformPainter(
-          elapsed: _elapsed,
-          active: widget.active,
-          bars: widget.bars,
-          color: widget.active
-              ? widget.color
-              : widget.idleColor ??
-                    Theme.of(context).colorScheme.outlineVariant,
+    // Kare başı boyama yalnız dalganın katmanında kalsın (bkz. dikte paneli).
+    return RepaintBoundary(
+      child: SizedBox(
+        height: widget.height,
+        width: double.infinity,
+        child: CustomPaint(
+          painter: _WaveformPainter(
+            elapsed: _elapsed,
+            active: widget.active,
+            bars: widget.bars,
+            color: widget.active
+                ? widget.color
+                : widget.idleColor ??
+                      Theme.of(context).colorScheme.outlineVariant,
+          ),
         ),
       ),
     );
