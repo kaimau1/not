@@ -25,11 +25,12 @@ Evre başına: UI kare sayısı, UI ms toplamı, LAYOUT ms, en uzun kare,
 > 16 ms kare. A ve B için ORTANCA (3 koşu).
 
 KARAR (F81.2): bir evrede B ortancası (UI ms ya da LAYOUT ms) A'nın EN KÖTÜ
-koşusundan da kötü VE fark > %10 VE > 3 ms → KÖTÜLEŞTİ. Tek KÖTÜLEŞTİ =
+koşusundan da kötü VE fark > %20 VE > 3 ms → KÖTÜLEŞTİ (%10 aynı APK
+A=A'da yanlış alarm verdi, 2026-11-13). Tek KÖTÜLEŞTİ =
 `KARAR: KALDI`. `--altin`: B ayrıca `docs/perf/altin_taban.json`'a karşı;
 bir evrede %15'ten fazla kötü → KALDI (kümülatif kayma, A3). `--altin-yaz`:
-A'nın ortancaları altın tabana yazılır — dosya yoksa tümü, varsa yalnız
-İYİLEŞEN evreler (mandal: altın taban yalnız düşer).
+ortancalar altın tabana yazılır (A=B aynı APK ise iki tarafın TÜM koşuları;
+en az 5 koşu) — dosya yoksa tümü, varsa yalnız İYİLEŞEN evreler (mandal).
 
 Kayıt (F81.3): her koşunun evre ortancaları `docs/perf/gecmis.csv`'ye
 (tarih, commit, etiket, evre, UI ms, LAYOUT ms, kare, sıcaklık).
@@ -39,8 +40,9 @@ HAZIRLIK (bir kez): veri seti (`make_dataset.py`, README) + sabit PDF'li not:
 `/sdcard/Download/`'a it (Git Bash'te `MSYS_NO_PATHCONV=1`) → Ayarlar →
 Senkronizasyon → Yedekten geri yükle → Diğer → İndirilenler.
 
-TELEFON KURALLARI (OTOMASYON §Telefon): sıcaklık ≥ 37 °C → koşu bekler
-(ekran kapalı, en çok 20 dk), hâlâ sıcaksa GEÇERSİZ sayılır. Varsayılan kimlikli uygulamaya
+TELEFON KURALLARI (OTOMASYON §Telefon): her koşu < 34 °C'de başlar (37'nin
+altı yetmedi: koşu içinde 40'a ısınıp gürültüyü büyütüyordu) → bekler
+(ekran kapalı, en çok 30 dk), hâlâ sıcaksa GEÇERSİZ sayılır. Varsayılan kimlikli uygulamaya
 dokunulmaz. Her dokunuş grubundan önce `ready()`: ekran açık, kilit yok,
 ÖNDEKİ PENCERE ölçüm uygulaması — değilse koşu durur (yanlış uygulamaya
 basmamak için). Ölçüm penceresinde uiautomator dökümü yok (semantiği açar);
@@ -81,7 +83,7 @@ def temperature():
     return int(m.group(1)) / 10 if m else 0.0
 
 
-def cool_enough(limit=37.0, wait_s=1200):
+def cool_enough(limit=34.0, wait_s=1800):
     t0 = time.time()
     while temperature() >= limit:
         if time.time() - t0 > wait_s:
@@ -309,7 +311,7 @@ def decide(a_runs, b_runs, golden=None):
         ms = ("ilk_kare_ms",) if ph == "acilis" else ("ui_ms", "layout_ms")
         for m in ms:
             a, b, w = am[ph][m], bm[ph][m], aw[ph][m]
-            if b > w and b - a > 3 and b > a * 1.10:
+            if b > w and b - a > 3 and b > a * 1.20:
                 verdict = f"KÖTÜLEŞTİ ({m})"
                 failed = True
         g = ""
@@ -384,9 +386,12 @@ def main():
     t = round(statistics.median(temps), 1) if temps else ""
     record(os.path.join(DOCS, "gecmis.csv"), o.commit, la, am, t)
     record(os.path.join(DOCS, "gecmis.csv"), o.commit, lb, median_of(runs["B"]), t)
-    if o.altin_yaz:
+    src = runs["A"] + (runs["B"] if o.a == o.b else [])
+    if o.altin_yaz and len(src) < 5:
+        print(f"altın taban YAZILMADI: {len(src)} koşu < 5")
+    elif o.altin_yaz:
         g = golden or {}
-        for ph, v in am.items():
+        for ph, v in median_of(src).items():
             if ph not in g or (v["ui_ms"] <= g[ph]["ui_ms"] and v["layout_ms"] <= g[ph]["layout_ms"]):
                 g[ph] = v
         json.dump({"_kural": "Altın taban (HIZ_PLANI F81.4): yalnız İYİLEŞEN evre güncellenir. "
