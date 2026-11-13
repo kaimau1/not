@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **Drag to trash inside folders too:** with a folder, filter or search open you can still long-press a note and drag it onto the trash bin to delete it.
 - **Make the bottom bar yours:** in Settings → Personalize → "Note screen · bottom bar" drag buttons to reorder them, remove the ones you don't use, and add undo, redo, reminder, photo, camera, scan, color and share.
 - **Smoother underlined items:** dotted, dashed and wavy item underlines are drawn with far less work, so opening the keyboard and scrolling should stutter less.
 - **Honest screens when offline:** without internet the "Inbox" filter shows "No connection" with Retry instead of "nothing here"; the AI sheet tells you up front that you are offline (buttons turn on when you are back); waiting attachments say "will upload when you are online" instead of "uploading".

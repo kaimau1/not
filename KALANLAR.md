@@ -328,6 +328,7 @@ Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5
 - L3 Uçak kipinde nota fotoğraf ekle → ana ekrandaki şerit "1 ek bekliyor — bağlantı gelince yüklenecek" (bulut-üstü-çizili simge, kırmızı değil). Bağlantı gelince "yükleniyor", sonra şerit kaybolur.
 - L4 Notta birkaç maddeye noktalı, kesikli ve dalgalı "Alt çizgi" ver → bir maddeye dokun, klavye açılsın: takılma yok; çizgiler eskisi gibi görünüyor (noktalar yuvarlak, dalga aynı genlikte). Düz çizgide hâlâ takılıyorsa P55'e not et.
 - L5 **Alt çubuk (P57):** Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk": "Geri al" ve "Hatırlatıcı"yı aç, "Ara"yı tutamaçtan en üste sürükle → nota gir: çubukta Ara en solda, geri al ve hatırlatıcı var, çalışıyorlar. 360 dp'lik dar ekranda çok düğme açınca çubuk taşmıyor (önce küçülür, sonra kayar). "Alt çubuğu varsayılana döndür" → eski düzen.
+- L6 **Klasörde çöpe sürükle (P58):** bir klasör seç → notu basılı tut, sürükle: altta çöp belirir, üstüne bırak → not silinir, "Geri al" çıkar. Sürüklerken diğer kartlar yer değiştirmez. Oynatmadan bırakınca not seçilir. Başkasının paylaştığı klasörde sürükleme yok.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 
