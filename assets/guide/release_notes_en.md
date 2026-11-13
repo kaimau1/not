@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **No more jumping while reordering notes:** holding a dragged note between the two columns no longer makes notes flip left and right; notes swap once you pause briefly over one.
 - **Active formatting shows in the quick menu:** when the cursor is in bold, italic, underlined, highlighted or colored text, or in a heading, its quick menu button looks pressed.
 - **Easier quick menu editing:** ⋮ → "Edit quick menu" now opens a sheet with "In the menu" and "Available" tiles; tap to add or remove, no saving needed, with a live preview on top. The same editor is in Settings → Personalize, so a quick menu that disappeared can be brought back.
 - **Back transition on tablets:** leaving a note slides and fades the list in instead of jumping.
