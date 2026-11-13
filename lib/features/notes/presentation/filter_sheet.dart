@@ -39,7 +39,7 @@ Future<void> showFilterSheet(BuildContext context) =>
       // aşağı sürüklenerek ve ✕ ile kapanır.
       showDragHandle: false,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.76,
@@ -758,7 +758,7 @@ class _Section extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.l),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

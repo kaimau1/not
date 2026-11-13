@@ -204,7 +204,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
                       color: _past
                           ? scheme.errorContainer
                           : scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(AppRadius.l),
                     ),
                     child: Row(
                       children: [

@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -374,7 +375,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
             Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
                   child: SizedBox(
                     width: 40,
                     height: 40,

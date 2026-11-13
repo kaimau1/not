@@ -1,3 +1,4 @@
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../core/utils/spoken_datetime.dart';
 import '../../../calendar/domain/agenda.dart';
@@ -650,7 +651,7 @@ class _SelectionPainter extends CustomPainter {
       for (final r in recognized) {
         final rr = RRect.fromRectAndRadius(
           r.inflate(1),
-          const Radius.circular(2),
+          const Radius.circular(AppRadius.hair),
         );
         canvas
           ..drawRRect(rr, wash)
@@ -664,7 +665,7 @@ class _SelectionPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     for (final r in rects) {
-      final rr = RRect.fromRectAndRadius(r.inflate(1), const Radius.circular(2));
+      final rr = RRect.fromRectAndRadius(r.inflate(1), const Radius.circular(AppRadius.hair));
       canvas
         ..drawRRect(rr, fill)
         ..drawRRect(rr, stroke);

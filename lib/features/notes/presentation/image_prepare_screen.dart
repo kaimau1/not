@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -197,7 +198,7 @@ class _ImagePrepareScreenState extends State<ImagePrepareScreen> {
                     child: Container(
                       width: 52,
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppRadius.s),
                         border: Border.all(
                           color: i == _index
                               ? scheme.primary

@@ -1,3 +1,4 @@
+import '../../../../app/theme/app_tokens.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -997,7 +998,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
       child: IgnorePointer(
         child: Material(
           color: scheme.inverseSurface.withValues(alpha: 0.86),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.l),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             child: Row(
@@ -1136,7 +1137,7 @@ class _SelectionPainter extends CustomPainter {
     for (final bounds in selectionPdfRects(t, start, end)) {
       final r = bounds.toRect(page: page, scaledPageSize: pageSize);
       path.addRRect(
-        RRect.fromRectAndRadius(r.inflate(0.5), const Radius.circular(2)),
+        RRect.fromRectAndRadius(r.inflate(0.5), const Radius.circular(AppRadius.hair)),
       );
     }
     canvas.drawPath(path, Paint()..color = color);

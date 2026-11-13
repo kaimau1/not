@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
@@ -236,7 +237,7 @@ class _DragTrashTargetState extends State<DragTrashTarget>
                         color: scheme.surfaceContainerHighest.withValues(
                           alpha: 0.92,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.m),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(

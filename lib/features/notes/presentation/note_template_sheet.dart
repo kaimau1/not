@@ -753,7 +753,7 @@ class _TemplateCard extends StatelessWidget {
           side: BorderSide(
             color: favorite
                 ? accent.withValues(alpha: 0.7)
-                : scheme.outlineVariant.withValues(alpha: 0.6),
+                : scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -1160,7 +1160,7 @@ class _TemplateComposerState extends State<TemplateComposer> {
           color: scheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
+            color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
           ),
         ),
         child: Column(

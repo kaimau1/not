@@ -123,7 +123,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: scheme.onSecondaryContainer.withValues(alpha: 0.12),
+                      color: scheme.onSecondaryContainer.withValues(alpha: AppAlpha.pressed),
                       borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
                     child: Text(

@@ -381,7 +381,7 @@ class _FileUseSheetState extends State<_FileUseSheet> {
                   labelText: l10n.captureNoteTitle,
                   isDense: true,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                 ),
               ),

@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/sheet_tile.dart';
 import '../../../core/app_icons.dart';
@@ -529,7 +530,7 @@ class _SharePreviewState extends State<_SharePreview> {
       curve: Curves.easeOutCubic,
       constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        color: scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.muted),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Stack(

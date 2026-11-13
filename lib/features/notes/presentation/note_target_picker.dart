@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -66,10 +67,10 @@ class NoteTargetPicker extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Material(
               color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.l),
               child: InkWell(
                 key: const ValueKey('target-new-note'),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(AppRadius.l),
                 onTap: () =>
                     Navigator.of(context).pop(const NoteTarget.newNote()),
                 child: Padding(
@@ -133,7 +134,7 @@ class NoteTargetPicker extends ConsumerWidget {
                         // dokunuşlar kartın değil hücrenin.
                         child: IgnorePointer(
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.m),
                             child: FittedBox(
                               fit: BoxFit.fitWidth,
                               alignment: Alignment.topCenter,

@@ -400,7 +400,7 @@ class CardMediaBody extends StatelessWidget {
                 if (i > 0) const SizedBox(width: 3),
                 Expanded(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.s),
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -603,7 +603,7 @@ class _DocumentCard extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: small?.copyWith(
-                  color: scheme.onSurface.withValues(alpha: 0.85),
+                  color: scheme.onSurface.withValues(alpha: AppAlpha.strong),
                   fontWeight: FontWeight.w600,
                   height: 1.25,
                 ),

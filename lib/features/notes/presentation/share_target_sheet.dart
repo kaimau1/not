@@ -389,7 +389,7 @@ class _IncomingSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        color: scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.muted),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -522,7 +522,7 @@ class _NoteRow extends StatelessWidget {
     ].join(' · ');
     return Material(
       color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -534,7 +534,7 @@ class _NoteRow extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: scheme.primaryContainer.withValues(alpha: 0.6),
+                  color: scheme.primaryContainer.withValues(alpha: AppAlpha.muted),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(_icon, size: 20, color: scheme.onPrimaryContainer),

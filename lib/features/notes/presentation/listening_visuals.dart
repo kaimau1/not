@@ -170,7 +170,7 @@ class ListeningModeTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.s),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

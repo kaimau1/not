@@ -191,7 +191,7 @@ class _ColorDot extends StatelessWidget {
       excludeSemantics: true,
       onTap: onTap,
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
         onTap: onTap,
         child: Container(
           width: 44,
@@ -246,7 +246,7 @@ class _PaletteDot extends StatelessWidget {
       message: context.l10n.paletteMore,
       child: InkWell(
         key: const ValueKey('note-color-palette'),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppRadius.xl),
         onTap: onTap,
         child: Container(
           width: 44,

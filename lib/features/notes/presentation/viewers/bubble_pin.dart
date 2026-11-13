@@ -135,7 +135,7 @@ class _BubbleReadCard extends StatelessWidget {
       elevation: 6,
       shadowColor: Colors.black38,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.l),
         side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
       ),
       clipBehavior: Clip.antiAlias,
@@ -218,7 +218,7 @@ class _BubbleReadCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
             child: Divider(
               height: 1,
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
+              color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
             ),
           ),
           Padding(
@@ -842,7 +842,7 @@ class _BubblePinState extends State<_BubblePin>
       ),
       boxShadow: [
         if (open)
-          BoxShadow(color: base.withValues(alpha: 0.32), spreadRadius: 3.5),
+          BoxShadow(color: base.withValues(alpha: AppAlpha.scrim), spreadRadius: 3.5),
         BoxShadow(
           color: Colors.black.withValues(alpha: _lifted ? 0.32 : 0.18),
           offset: Offset(0, _lifted ? 3 : 1.5),
@@ -949,7 +949,7 @@ class _BubblePinState extends State<_BubblePin>
     // çevresi siyah. Sabit koyu dış hat, siyah varsayılanla birlikte yazıyı
     // kendi gölgesinde kaybediyordu.
     final outline = color.computeLuminance() < 0.5
-        ? Colors.white.withValues(alpha: 0.85)
+        ? Colors.white.withValues(alpha: AppAlpha.strong)
         : Colors.black.withValues(alpha: 0.7);
     final framed = empty || _lifted || _resizing;
     final body = Container(
@@ -965,7 +965,7 @@ class _BubblePinState extends State<_BubblePin>
               border: framed
                   ? Border.all(color: color.withValues(alpha: 0.8))
                   : null,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
             )
           : null,
       child: empty

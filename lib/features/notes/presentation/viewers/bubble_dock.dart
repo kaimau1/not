@@ -207,7 +207,7 @@ class _BubbleDockState extends State<BubbleDock> {
       final l10n = context.l10n;
       final hintStyle = TextStyle(
         fontSize: 14,
-        color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+        color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
       );
       // **YAZMA ALANI YENİLENDİ** (kullanıcı isteği 2026-10-16: "yazma
       // düzenleme alanı tamamen görsel yenilensin"): başlık satırı balonun

@@ -245,7 +245,7 @@ class _ModeCard extends StatelessWidget {
     final badgeText = badge;
     return Material(
       color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.l)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -431,7 +431,7 @@ class _PreviewPainter extends CustomPainter {
       final notes = Rect.fromLTWH(0, h * 0.63, w, h * 0.37);
       canvas.drawRRect(
         RRect.fromRectAndRadius(notes, Radius.circular(h * 0.03)),
-        Paint()..color = ink.withValues(alpha: 0.08),
+        Paint()..color = ink.withValues(alpha: AppAlpha.hairline),
       );
       for (var i = 0; i < 3; i++) {
         textLine(0.71 + i * 0.09, 0.08, i == 2 ? 0.6 : 0.9);

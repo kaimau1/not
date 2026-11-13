@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -235,7 +236,7 @@ class AddTile extends StatelessWidget {
     // Levha zemini surfaceContainerLow: karo onda da, panelde de seçilsin.
     final tile = Material(
       color: scheme.surfaceContainer,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

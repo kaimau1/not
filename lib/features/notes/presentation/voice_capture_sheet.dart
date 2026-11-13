@@ -844,7 +844,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
           key: const ValueKey('voice-silence-bar'),
           value: _silence,
           minHeight: 3,
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(AppRadius.hair),
         ),
       ),
     );
@@ -1194,7 +1194,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       backgroundColor: background,
       foregroundColor: foreground,
       padding: const EdgeInsets.symmetric(horizontal: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.l)),
     );
     final text = Text(
       label,
@@ -1244,7 +1244,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                 padding: EdgeInsets.zero,
                 side: BorderSide(color: scheme.outlineVariant),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.l),
                 ),
               ),
               child: Tooltip(
@@ -1266,7 +1266,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                   padding: EdgeInsets.zero,
                   side: BorderSide(color: scheme.outlineVariant),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadius.l),
                   ),
                 ),
                 child: Tooltip(

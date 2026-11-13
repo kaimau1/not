@@ -26,7 +26,7 @@ class _HeaderSeparator extends StatelessWidget {
           boxShadow: on
               ? [
                   BoxShadow(
-                    color: scheme.shadow.withValues(alpha: 0.12),
+                    color: scheme.shadow.withValues(alpha: AppAlpha.pressed),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),
@@ -710,7 +710,7 @@ class _FocusHaloState extends State<_FocusHalo>
     if (!widget.focused) {
       return Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.l),
           // Aynı 2 dp: vurgu gelip gidince kart yerinden oynamaz.
           border: Border.all(
             color: widget.open ? scheme.primary : Colors.transparent,
@@ -725,7 +725,7 @@ class _FocusHaloState extends State<_FocusHalo>
       animation: pulse,
       builder: (context, child) => Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.l),
           border: Border.all(
             color: scheme.primary.withValues(alpha: 0.35 + 0.65 * pulse.value),
             width: 2,
@@ -802,7 +802,7 @@ class _QuickCaptureRowState extends ConsumerState<_QuickCaptureRow> {
         height: 46,
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           border: Border.all(color: scheme.outlineVariant),
         ),
         padding: const EdgeInsetsDirectional.only(start: 12, end: 6),
@@ -1136,7 +1136,7 @@ class _ColumnsGlyph extends StatelessWidget {
                   height: 18,
                   decoration: BoxDecoration(
                     color: scheme.primary,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppRadius.hair),
                   ),
                 ),
               ],
@@ -1490,7 +1490,7 @@ class _FolderSwipeState extends State<FolderSwipe>
                         const SizedBox(height: 5),
                         // DOLUM ÇUBUĞU: dolunca bırakmak geçişi yapar.
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
+                          borderRadius: BorderRadius.circular(AppRadius.hair),
                           child: SizedBox(
                             height: 3,
                             child: ValueListenableBuilder<double>(
@@ -1614,7 +1614,7 @@ class _SwipeActions extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.m),
       ),
       alignment: alignment,
       child: Row(
