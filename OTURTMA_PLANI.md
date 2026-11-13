@@ -1386,6 +1386,24 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S25 | Görselli 50 not, dpr 2,625, 6 ekran kaydır | çözme boyu sınırsız küçük resim | 0 (2026-11-13, P46; önce 21) | 0 | 84 |
 | S26 | 1280×800 bölünmüş, nottan listeye dön | DashboardScreen / NoteCard kurulumu | 1 / 14 (2026-11-14, P59) | ≤ 1 / ≤ 14 | — |
 
+### F64.1 haritası (2026-11-14, P20 adım 1; `test/editor_rebuild_map_test.dart`, eylem + 3 sn)
+
+Sütunlar: `NoteEditorScreen` (kök) / `NotePageCanvas` (tuval) / `ItemsEditor` / `_LazyItemField` (satır).
+
+| Eylem | Kök / tuval / liste / satır | Kaynak (P20 planı) |
+|---|---|---|
+| İlk değişiklik (gövdeye 1 harf) | 1 / 1 / 0 / 0 | M3: `canUndo` false→true |
+| İşaretle (30 madde, 8. kutucuk) | 1 / 1 / 1 / 23 | M1: satır anahtarında sıra no |
+| Madde ekle (Enter) | 1 / 1 / 1 / 23 | M1 |
+| Sabitle (üst çubuk iğnesi) | 1 / 1 / 0 / 0 | M4: `_sameVisual` pinned |
+| Yıldız (⋮ hızlı satır) | 1 / 1 / 0 / 0 | M4: `_sameVisual` starred |
+| Biçim paneli aç → kapat | 2 / 2 / 0 / 0 | M5: `_formatBarOpen` kök `setState` |
+| Maddeye 20 harf (S2, bütçeden) | — / — / 5 / 15 | kapsam dışı (P22 listesine) |
+| Arama aç (alt çubuk) | 1 / 1 / 0 / 0 | dokunulmaz (Faz 64 ilk 5 dışı) |
+| Geri al (metin değişikliği) | 0 / 0 / 0 / 0 | **bulgu:** kök kurulmuyor → yinele düğmesi `onPressed: null` kalıyor (bayat); adım 3 `_undoN` çözer |
+| Yinele | ölçülemedi: düğme etkinleşmedi (yukarıdaki bulgu) | adım 3 |
+| Madde sil, sürükle-sırala, kalın, renk, etiket, klasör, hatırlatıcı, ek ekle/sil/görünüm, kalem kipi, sayfa değiştir | üretilmedi: levha/seçici/dosya düzeneği gerekir; M1–M5 öngörüsüne girdi değil | — |
+
 ## Ek B — Mürekkep paketi biçimi (F61.1)
 
 Küçük uçlu (little-endian). `varuint` = LEB128; `zigzag` = `(n << 1) ^ (n >> 63)` sonra LEB128.
