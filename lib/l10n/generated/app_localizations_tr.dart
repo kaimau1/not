@@ -4831,7 +4831,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get personalizeBarInfo =>
-      'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.';
+      'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar, okla öbür kapsüle taşı. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.';
 
   @override
   String get personalizeBarLeft => 'Sol kapsül · araçlar';
@@ -4841,6 +4841,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get personalizeBarReset => 'Alt çubuğu varsayılana döndür';
+
+  @override
+  String get personalizeBarMoveRight => 'Sağ kapsüle taşı';
+
+  @override
+  String get personalizeBarMoveLeft => 'Sol kapsüle taşı';
 
   @override
   String get reorderHandle => 'Sırala';

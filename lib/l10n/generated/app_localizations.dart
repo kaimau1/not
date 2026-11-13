@@ -8681,7 +8681,7 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeBarInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.'**
+  /// **'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar, okla öbür kapsüle taşı. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.'**
   String get personalizeBarInfo;
 
   /// No description provided for @personalizeBarLeft.
@@ -8701,6 +8701,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Alt çubuğu varsayılana döndür'**
   String get personalizeBarReset;
+
+  /// No description provided for @personalizeBarMoveRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağ kapsüle taşı'**
+  String get personalizeBarMoveRight;
+
+  /// No description provided for @personalizeBarMoveLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sol kapsüle taşı'**
+  String get personalizeBarMoveLeft;
 
   /// No description provided for @reorderHandle.
   ///

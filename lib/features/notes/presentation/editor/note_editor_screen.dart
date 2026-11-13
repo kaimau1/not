@@ -4473,11 +4473,6 @@ child: NoteFindBar(
                       final showCheckbox =
                           note.type == NoteType.text &&
                           on(UiItem.barCheckbox);
-                      final aiCount = [
-                        showAi,
-                        showDictation,
-                        showVoiceRecord,
-                      ].where((v) => v).length;
                       // SONRADAN EKLENEN düğmeler (kullanıcı isteği
                       // 2026-11-13: Ayarlar → Kişiselleştir → Alt çubuk).
                       // Varsayılan gizli; açılınca kapsüle sırasıyla girer.
@@ -4491,25 +4486,55 @@ child: NoteFindBar(
                         UiItem.barColor,
                         UiItem.barShare,
                       ].where(on).toList();
+                      // İKİ KAPSÜL ARASI TAŞIMA (P50; P57'den devir): düğmenin
+                      // tarafı kullanıcının ([UiPrefs.barSides]). Plan sola
+                      // düşenleri segment, sağa düşenleri AI düğmesi sayar.
+                      final sides = uiPrefs.barSides;
+                      final rightIds = sides.right.toSet();
+                      final penRight = rightIds.contains(UiItem.barPen);
+                      final searchRight = rightIds.contains(UiItem.barSearch);
+                      final attachRight =
+                          showAttachments &&
+                          rightIds.contains(UiItem.barAttachments);
+                      final wantSearch = on(UiItem.barSearch);
+                      // Plana girmeyen (yer varsa da yoksa da çizilen) düğmeler.
+                      final fixed = <String>{
+                        if (showFormat) UiItem.barFormat,
+                        if (showAdd) UiItem.barAdd,
+                        if (showCheckbox) UiItem.barCheckbox,
+                        if (showSelect) UiItem.barSelect,
+                        ...extras,
+                        if (showAi) UiItem.barAi,
+                        if (showVoiceRecord) UiItem.barVoiceRecord,
+                        if (showDictation) UiItem.barDictation,
+                      };
+                      final fixedRight = fixed.where(rightIds.contains).length;
+                      final aiCount =
+                          fixedRight +
+                          (attachRight ? 1 : 0) +
+                          (wantPen && penRight ? 1 : 0) +
+                          (wantSearch && searchRight ? 1 : 0);
                       // Genişliğe göre plan: taşma/kesik kapsül yerine önce
                       // düğmeler küçülür, sonra ⋮ menüsünde de bulunan
                       // Ara, en son Kalem kapsülden çıkar (bkz.
-                      // planEditorBar).
+                      // planEditorBar). Sağa taşınan Ara/Kalem düşürülmez.
                       final plan = planEditorBar(
                         width: constraints.maxWidth,
-                        fixedSegments:
-                            (showFormat ? 1 : 0) +
-                            (showAdd ? 1 : 0) +
-                            (showCheckbox ? 1 : 0) +
-                            (showSelect ? 1 : 0) +
-                            extras.length,
-                        attachments: showAttachments,
-                        pen: wantPen,
+                        fixedSegments: fixed.length - fixedRight,
+                        attachments: showAttachments && !attachRight,
+                        pen: wantPen && !penRight,
+                        search: !searchRight,
                         aiButtons: aiCount,
                       );
-                      final showPen = plan.pen;
+                      final showPen = wantPen && (penRight || plan.pen);
                       final showSearch =
-                          plan.search && on(UiItem.barSearch);
+                          wantSearch && (searchRight || plan.search);
+                      final shown = <String>{
+                        ...fixed,
+                        if (showAttachments) UiItem.barAttachments,
+                        if (showPen) UiItem.barPen,
+                        if (showSearch) UiItem.barSearch,
+                      };
                       _barHasSearch = showSearch && !editingUi;
                       // Biçim · Ekle · Kalem · Ara · Ekler · (☑ | Seç).
                       // Gerekçeler:
@@ -4538,146 +4563,241 @@ child: NoteFindBar(
                       // Kimlik → düğme(ler). Sıra KULLANICININ
                       // ([UiPrefs.barOrder]); varsayılan sıra
                       // [UiItem.barLeftDefault] (türe özgü ☑/Seç sonda).
-                      final byId = <String, List<Widget>>{
-                        if (showFormat)
-                          UiItem.barFormat: [
-                            tool(
-                              UiItem.barFormat,
+                      // Kimlik → (simge, ad, iş, etkin): düğme HANGİ kapsülde
+                      // olursa olsun aynı işi yapar; yalnız kılığı değişir
+                      // (solda araç segmenti, sağda vurgu renkli düğme).
+                      (IconData, String, VoidCallback, bool) spec(String id) =>
+                          switch (id) {
+                            UiItem.barFormat => (
                               Icons.text_format,
                               l10n.formatTitle,
                               () => setState(() {
                                 _formatBarOpen = !_formatBarOpen;
                                 _barSwapped = true;
                               }),
-                              active: _formatBarOpen,
+                              _formatBarOpen,
                             ),
-                            // Panel kapalıyken imlecin biçimleri (B/I/U, renk).
-                            ActiveFormatBadges(target: _formatTargetN),
-                          ],
-                        if (showAdd)
-                          UiItem.barAdd: [
-                            Customizable(
-                              id: UiItem.barAdd,
-                              child: _addToolButton(l10n),
+                            UiItem.barAdd => (
+                              Icons.add_rounded,
+                              l10n.addAttachment,
+                              _showAttachMenu,
+                              false,
                             ),
-                          ],
-                        if (showPen)
-                          UiItem.barPen: [
-                            Customizable(
-                              id: UiItem.barPen,
-                              child: _penSegment(l10n, note),
+                            UiItem.barPen => (
+                              Icons.draw_outlined,
+                              !note.type.isPageNoteType
+                                  ? l10n.quickRowPen
+                                  : (_penMode
+                                        ? l10n.annotateDone
+                                        : l10n.annotate),
+                              note.type.isPageNoteType
+                                  ? () => _update(() => _penMode = !_penMode)
+                                  : _togglePen,
+                              _penMode,
                             ),
-                          ],
-                        if (showSearch)
-                          UiItem.barSearch: [
-                            tool(
-                              UiItem.barSearch,
+                            UiItem.barSearch => (
                               Icons.search,
                               l10n.noteSearchTitle,
                               _openNoteSearch,
+                              false,
+                            ),
+                            UiItem.barAttachments => (
+                              Icons.attach_file,
+                              l10n.showAttachments,
+                              () => ref
+                                  .read(attachmentsExpandedProvider.notifier)
+                                  .toggle(),
+                              ref.watch(attachmentsExpandedProvider),
+                            ),
+                            UiItem.barCheckbox => (
+                              Icons.check_box_outlined,
+                              l10n.checkboxToggle,
+                              _toggleChecklistLine,
+                              false,
+                            ),
+                            UiItem.barSelect => (
+                              Icons.select_all,
+                              l10n.select,
+                              () => _itemsEditorKey.currentState
+                                  ?.startSelection(),
+                              false,
+                            ),
+                            UiItem.barUndo => (
+                              Icons.undo,
+                              l10n.undo,
+                              () {
+                                if (_canUndo) _undo();
+                              },
+                              false,
+                            ),
+                            UiItem.barRedo => (
+                              Icons.redo,
+                              l10n.redo,
+                              () {
+                                if (_canRedo) _redo();
+                              },
+                              false,
+                            ),
+                            UiItem.barReminder => (
+                              Icons.alarm_add_outlined,
+                              l10n.quickRowReminder,
+                              () => unawaited(_pickReminder()),
+                              false,
+                            ),
+                            UiItem.barPhoto => (
+                              Icons.add_photo_alternate_outlined,
+                              l10n.quickRowPhoto,
+                              () {
+                                _rememberCaret();
+                                unawaited(_pickImage());
+                              },
+                              false,
+                            ),
+                            UiItem.barCamera => (
+                              Icons.photo_camera_outlined,
+                              l10n.quickRowCamera,
+                              () {
+                                _rememberCaret();
+                                unawaited(_takePhoto());
+                              },
+                              false,
+                            ),
+                            UiItem.barScan => (
+                              Icons.document_scanner_outlined,
+                              l10n.quickRowScan,
+                              () => unawaited(_scanDocument()),
+                              false,
+                            ),
+                            UiItem.barColor => (
+                              AppIcons.color,
+                              l10n.color,
+                              () => unawaited(_showColorSheet()),
+                              false,
+                            ),
+                            UiItem.barAi => (
+                              Icons.auto_awesome,
+                              l10n.aiTitle,
+                              () => showAiSheet(
+                                context,
+                                note,
+                                onAppendText: _appendText,
+                                onReplaceText: _replaceText,
+                                onCreateNote: _createNoteFromText,
+                                onTranscribe: _openTranscript,
+                                onVoiceNote: _captureVoice,
+                              ),
+                              false,
+                            ),
+                            UiItem.barVoiceRecord => (
+                              AppIcons.voiceRecord,
+                              _voiceRecorder == null
+                                  ? l10n.recordAudio
+                                  : l10n.stopAndSave,
+                              () => unawaited(
+                                _voiceRecorder == null
+                                    ? _recordAudio()
+                                    : _finishVoiceRecording(),
+                              ),
+                              _voiceRecorder != null,
+                            ),
+                            UiItem.barDictation => (
+                              _dictating ? Icons.stop : AppIcons.dictation,
+                              l10n.liveDictation,
+                              () => unawaited(_toggleDictation()),
+                              _dictating,
+                            ),
+                            _ => (
+                              Icons.share_outlined,
+                              l10n.share,
+                              () => unawaited(_share()),
+                              false,
+                            ),
+                          };
+                      // SOL kapsüldeki kılık: Biçim (+ imleç rozetleri),
+                      // Ekle, Kalem ve Ekler'in kendi segmenti var.
+                      List<Widget> leftOf(String id) {
+                        final (icon, label, onTap, active) = spec(id);
+                        return switch (id) {
+                          UiItem.barFormat => [
+                            tool(id, icon, label, onTap, active: active),
+                            // Panel kapalıyken imlecin biçimleri (B/I/U, renk).
+                            ActiveFormatBadges(target: _formatTargetN),
+                          ],
+                          UiItem.barAdd => [
+                            Customizable(id: id, child: _addToolButton(l10n)),
+                          ],
+                          UiItem.barPen => [
+                            Customizable(
+                              id: id,
+                              child: _penSegment(l10n, note),
                             ),
                           ],
-                        // EKLER (F12.3): yalnız ekli notta; plan
-                        // (planEditorBar) eki hesaba katar.
-                        if (showAttachments)
-                          UiItem.barAttachments: [
+                          // EKLER (F12.3): yalnız ekli notta; plan
+                          // (planEditorBar) eki hesaba katar.
+                          UiItem.barAttachments => [
                             Customizable(
-                              id: UiItem.barAttachments,
+                              id: id,
                               child: _attachmentsToggle(
                                 l10n,
                                 fileAttachments.length,
                               ),
                             ),
                           ],
-                        if (showCheckbox)
-                          UiItem.barCheckbox: [
-                            tool(
-                              UiItem.barCheckbox,
-                              Icons.check_box_outlined,
-                              l10n.checkboxToggle,
-                              _toggleChecklistLine,
-                            ),
-                          ],
-                        if (showSelect)
-                          UiItem.barSelect: [
-                            tool(
-                              UiItem.barSelect,
-                              Icons.select_all,
-                              l10n.select,
-                              () => _itemsEditorKey.currentState
-                                  ?.startSelection(),
-                            ),
-                          ],
-                        for (final id in extras)
-                          id: [
-                            switch (id) {
-                              UiItem.barUndo => tool(
-                                id,
-                                Icons.undo,
-                                l10n.undo,
-                                () {
-                                  if (_canUndo) _undo();
-                                },
-                              ),
-                              UiItem.barRedo => tool(
-                                id,
-                                Icons.redo,
-                                l10n.redo,
-                                () {
-                                  if (_canRedo) _redo();
-                                },
-                              ),
-                              UiItem.barReminder => tool(
-                                id,
-                                Icons.alarm_add_outlined,
-                                l10n.quickRowReminder,
-                                () => unawaited(_pickReminder()),
-                              ),
-                              UiItem.barPhoto => tool(
-                                id,
-                                Icons.add_photo_alternate_outlined,
-                                l10n.quickRowPhoto,
-                                () {
-                                  _rememberCaret();
-                                  unawaited(_pickImage());
-                                },
-                              ),
-                              UiItem.barCamera => tool(
-                                id,
-                                Icons.photo_camera_outlined,
-                                l10n.quickRowCamera,
-                                () {
-                                  _rememberCaret();
-                                  unawaited(_takePhoto());
-                                },
-                              ),
-                              UiItem.barScan => tool(
-                                id,
-                                Icons.document_scanner_outlined,
-                                l10n.quickRowScan,
-                                () => unawaited(_scanDocument()),
-                              ),
-                              UiItem.barColor => tool(
-                                id,
-                                AppIcons.color,
-                                l10n.color,
-                                () => unawaited(_showColorSheet()),
-                              ),
-                              _ => tool(
-                                id,
-                                Icons.share_outlined,
-                                l10n.share,
-                                () => unawaited(_share()),
-                              ),
-                            },
-                          ],
-                      };
+                          _ => [tool(id, icon, label, onTap, active: active)],
+                        };
+                      }
+
+                      // SAĞ kapsüldeki kılık: AI düğmesi durum rozetiyle,
+                      // kalanı düz vurgu düğmesi.
+                      Widget rightOf(String id) {
+                        if (id == UiItem.barAi) {
+                          return Customizable(
+                                    id: UiItem.barAi,
+                                    child: Consumer(
+                                      builder: (context, ref, _) => _voiceButton(
+                                      size: plan.button,
+                                      gap: plan.gap,
+                                      // Rozet görünmeyen için de durum.
+                                      tooltip: aiStatusTitle(
+                                        l10n,
+                                        ref.watch(aiAvailabilityProvider),
+                                      ),
+                                      icon: Icons.auto_awesome,
+                                      badge:
+                                          ref.watch(aiAvailabilityProvider) ==
+                                              AiAvailability.ready
+                                          ? null
+                                          : Icons.lock_outline,
+                                      onTap: () => showAiSheet(
+                                        context,
+                                        note,
+                                        onAppendText: _appendText,
+                                        onReplaceText: _replaceText,
+                                        onCreateNote: _createNoteFromText,
+                                        onTranscribe: _openTranscript,
+                                        onVoiceNote: _captureVoice,
+                                      ),
+                                    ),
+                                    ),
+                                  );
+                        }
+                        final (icon, label, onTap, active) = spec(id);
+                        return Customizable(
+                          id: id,
+                          child: _voiceButton(
+                            size: plan.button,
+                            gap: plan.gap,
+                            tooltip: label,
+                            icon: icon,
+                            active: active,
+                            onTap: onTap,
+                          ),
+                        );
+                      }
+
                       final segments = <Widget>[
-                        for (final id in UiPrefs.orderOf(
-                          UiItem.barLeftDefault,
-                          uiPrefs.barOrder,
-                        ))
-                          ...?byId[id],
+                        for (final id in sides.left)
+                          if (shown.contains(id)) ...leftOf(id),
                       ];
                       return Row(
                         children: [
@@ -4757,75 +4877,8 @@ child: NoteFindBar(
                               segment: plan.button,
                               gap: plan.gap,
                               children: [
-                                for (final id in UiPrefs.orderOf(
-                                  UiItem.barRightDefault,
-                                  uiPrefs.aiOrder,
-                                ))
-                                  if (id == UiItem.barAi && showAi)
-                                  Customizable(
-                                    id: UiItem.barAi,
-                                    child: Consumer(
-                                      builder: (context, ref, _) => _voiceButton(
-                                      size: plan.button,
-                                      gap: plan.gap,
-                                      // Rozet görünmeyen için de durum.
-                                      tooltip: aiStatusTitle(
-                                        l10n,
-                                        ref.watch(aiAvailabilityProvider),
-                                      ),
-                                      icon: Icons.auto_awesome,
-                                      badge:
-                                          ref.watch(aiAvailabilityProvider) ==
-                                              AiAvailability.ready
-                                          ? null
-                                          : Icons.lock_outline,
-                                      onTap: () => showAiSheet(
-                                        context,
-                                        note,
-                                        onAppendText: _appendText,
-                                        onReplaceText: _replaceText,
-                                        onCreateNote: _createNoteFromText,
-                                        onTranscribe: _openTranscript,
-                                        onVoiceNote: _captureVoice,
-                                      ),
-                                    ),
-                                    ),
-                                  )
-                                  else if (id == UiItem.barVoiceRecord &&
-                                      showVoiceRecord)
-                                  Customizable(
-                                    id: UiItem.barVoiceRecord,
-                                    child: _voiceButton(
-                                      size: plan.button,
-                                      gap: plan.gap,
-                                      tooltip: _voiceRecorder == null
-                                          ? l10n.recordAudio
-                                          : l10n.stopAndSave,
-                                      icon: AppIcons.voiceRecord,
-                                      active: _voiceRecorder != null,
-                                      onTap: () => unawaited(
-                                        _voiceRecorder == null
-                                            ? _recordAudio()
-                                            : _finishVoiceRecording(),
-                                      ),
-                                    ),
-                                  )
-                                  else if (id == UiItem.barDictation &&
-                                      showDictation)
-                                  Customizable(
-                                    id: UiItem.barDictation,
-                                    child: _voiceButton(
-                                      size: plan.button,
-                                      gap: plan.gap,
-                                      tooltip: l10n.liveDictation,
-                                      icon: _dictating
-                                          ? Icons.stop
-                                          : AppIcons.dictation,
-                                      active: _dictating,
-                                      onTap: () =>
-                                          unawaited(_toggleDictation()),
-                                    ),
-                                  ),
+                                for (final id in sides.right)
+                                  if (shown.contains(id)) rightOf(id),
                               ],
                             ),
                         ],

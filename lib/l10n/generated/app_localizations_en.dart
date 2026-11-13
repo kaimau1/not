@@ -4850,7 +4850,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get personalizeBarInfo =>
-      'Drag the handle to reorder buttons; use the switch to add or remove them from the bar. Buttons that are off (undo, reminder, camera…) can be added any time.';
+      'Drag the handle to reorder buttons; use the switch to add or remove them from the bar, and the arrow to move one to the other capsule. Buttons that are off (undo, reminder, camera…) can be added any time.';
 
   @override
   String get personalizeBarLeft => 'Left capsule · tools';
@@ -4860,6 +4860,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get personalizeBarReset => 'Reset bottom bar';
+
+  @override
+  String get personalizeBarMoveRight => 'Move to right capsule';
+
+  @override
+  String get personalizeBarMoveLeft => 'Move to left capsule';
 
   @override
   String get reorderHandle => 'Reorder';

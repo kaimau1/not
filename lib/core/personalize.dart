@@ -70,6 +70,35 @@ class UiPrefs {
     return out;
   }
 
+  /// İKİ KAPSÜLÜN düğmeleri, kullanıcı sırasıyla (P50, P57'den devir:
+  /// "düğmeyi iki kapsül arasında taşıma"). Düğmenin tarafı: [aiOrder]'da
+  /// kayıtlıysa SAĞ, [barOrder]'da kayıtlıysa SOL, hiçbirinde yoksa
+  /// varsayılan tarafı. Eski kayıtlar (yalnız kendi tarafının kimlikleri)
+  /// aynen okunur; eski sürüm yabancı kimliği atlar.
+  ({List<String> left, List<String> right}) get barSides {
+    final right = {
+      ...aiOrder,
+      for (final id in UiItem.barRightDefault)
+        if (!barOrder.contains(id)) id,
+    };
+    const l = UiItem.barLeftDefault, r = UiItem.barRightDefault;
+    return (
+      left: orderOf([...l, ...r], barOrder)
+          .where((id) => !right.contains(id))
+          .toList(),
+      right: orderOf([...r, ...l], aiOrder).where(right.contains).toList(),
+    );
+  }
+
+  /// [id] düğmesini öbür kapsülün SONUNA taşır (ya da yerinde bırakır).
+  UiPrefs withBarSide(String id, {required bool right}) {
+    final s = barSides;
+    if (s.right.contains(id) == right) return this;
+    final l = [...s.left]..remove(id), r = [...s.right]..remove(id);
+    (right ? r : l).add(id);
+    return copyWith(barOrder: l, aiOrder: r);
+  }
+
   /// Gizlenen öğelerin kimlikleri (bkz. [UiItem]).
   final Set<String> hidden;
 
