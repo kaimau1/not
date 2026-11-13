@@ -2,6 +2,12 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 14 November 2026 {#2026-11-14}
+- **Text selection on the web:** selected text no longer shows up in a blue box with a different font (it happened with some browser extensions on); only the app's own light highlight remains.
+- **Back from the eraser:** with the eraser on, press and hold still on the page and a "Back to pen" button appears; tap it to return to your last pen. The hold erases nothing.
+- **Leaving a note on tablets and the web:** the note now slides out of the right pane and then the list widens, instead of vanishing at once.
+- **List beside an open note:** pinch or Ctrl+scroll to make the cards bigger or smaller; the list switches between 1 and 4 columns by its width and remembers your choice.
+
 ## 13 November 2026 {#2026-11-13}
 - **Voice typing on tablets:** if the device's live speech recognition doesn't work (tablets without Google services), the app notices within a few seconds and switches to the voice note sheet: your speech is recorded and transcribed. Stutter while voice typing is on is also reduced.
 - **Smaller floating attachment menu on tablets:** on wide screens the menu under an attachment is a single row under it instead of two full-width rows.

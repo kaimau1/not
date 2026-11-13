@@ -2,6 +2,12 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 14 Kasım 2026 {#2026-11-14}
+- **Webde yazı seçimi:** seçilen yazı artık başka yazı tipinde mavi bir kutu içinde görünmüyor (bazı tarayıcı eklentileri açıkken oluyordu); yalnız uygulamanın kendi açık seçimi kalır.
+- **Silgiden kaleme dönüş:** silgi seçiliyken ekrana kıpırdamadan basılı tutunca "Kaleme dön" düğmesi çıkar; dokununca son kalemine dönersin. Basılı tutuş bir şey silmez.
+- **Tablette ve webde nottan çıkış:** not kapanınca sağ bölmeden kayarak çıkar, sonra liste genişler — artık birden kaybolmuyor.
+- **Not açıkken soldaki liste:** iki parmakla kıstırarak ya da Ctrl+tekerlekle kartları büyütüp küçültebilirsin; liste genişliğine göre 1–4 sütun olur ve seçimin hatırlanır.
+
 ## 13 Kasım 2026 {#2026-11-13}
 - **Tablette sesle yazma:** cihazın canlı konuşma tanıması çalışmıyorsa (Google hizmetleri olmayan tabletler) uygulama bunu birkaç saniyede fark edip sesli not levhasına geçer: konuşma kaydedilir ve yazıya dökülür. Sesle yazma açıkken yaşanan kasma da azaldı.
 - **Tablette yüzen ek menüsü küçüldü:** ekin altındaki menü geniş ekranda iki satır ve sayfa boyu yerine ekin altında tek satır.
