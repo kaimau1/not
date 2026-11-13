@@ -527,11 +527,11 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
 | Sayfa (not açılışı, yan kayma) | 420 / 360 | var olan | DOKUNMA |
 | Sıralı giriş | öğe başı 30 ms, en çok 6 öğe | `enter` | |
 
-- [ ] **F77.1 Süre/eğri göçü (D13).** F72.6'nın hareket kısmı burada: `core/`, `settings/`,
+- [x] *(2026-11-13: ayar/rehber/tema seçici, AI/klasör sohbet kaydırması, ipucu balonu, düzen kipi, bölünmüş kabuk ipucu/ayırıcı `AppMotion.of`+belirtece; mandal süre 219→207, eğri 94→90. Çekirdek bileşen varsayılanları (`pop_in` 240, `expand_reveal` 280, `scale_settle` 260) editörde de kullanıldığı için DOKUNULMADI; takvim sayfa kayması "sayfa: dokunma"; ana ekran widget'ları P56 çitinde — sonra.)* **F77.1 Süre/eğri göçü (D13).** F72.6'nın hareket kısmı burada: `core/`, `settings/`,
   `calendar/`, `folders/`, `ai/`, ana ekran widget'ları. KAPSAM DIŞI (cihazda ayarlı):
   `editor/`, `viewers/`, `keyboard_snap.dart`, `note_open_route.dart`, `FolderSwipe`
   (2026-11-06 "akan geçiş"), `PinchColumns`, P29'un uzun basış halkası, P30'un çöp efekti.
-- [ ] **F77.2 `AppHaptics` (D13).** `lib/core/haptics.dart`: `tick()` = `selectionClick`
+- [x] *(2026-11-13: `lib/core/haptics.dart` + `heaviest()` (çöpe bırakmanın heavyImpact'i, tür korundu). 53 çağrı göçtü, mandal 88→35: kalan 35 P55/P56 çitindeki dosyalarda (`dashboard_screen`+parçaları, `dashboard_widgets`, `note_editor_screen`+parçaları, `items_editor*`) — o paketler bitince aynı göç, bütçe 0. Eksik: hatırlatıcı kaydet `thud`, kart ⋮/işlem levhası sabitle/yıldızla `tick`, balon yıldızı `tick` eklendi; madde işaretleme/madde yıldızı/kart bırakma çitte, sonra.)* **F77.2 `AppHaptics` (D13).** `lib/core/haptics.dart`: `tick()` = `selectionClick`
   (seçim, çip, anahtar, eşik) · `thud()` = `lightImpact` (iş TAMAMLANDI: madde işaretlendi,
   sabitlendi, kart bırakıldı, hatırlatıcı kuruldu) · `heavy()` = `mediumImpact` (uzun
   basışla tutma, yıkıcı onay, çöpe atma). 86 doğrudan çağrı buna ÇEVRİLİR — bugünkü çağrının
@@ -539,7 +539,7 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
   titreşimi dahil hiçbir yerde "daha uygun" diye tür değiştirme. Mandal: `haptic` bütçesi →
   `haptics.dart` dışı 0. Eksik denetimi (yoksa ekle): madde işaretleme `thud`, sabitle/
   yıldızla `tick`, kart bırakma `thud`, hatırlatıcı kaydet `thud`.
-- [ ] **F77.3 Eksik mikro-etkileşimler** (önce var mı bak; varsa dokunma):
+- [x] *(2026-11-13: 1 `TogglePop` — menü hızlı yıldızı, görev yıldızı, balon yıldızı (editör iğnesi/yıldızı çitte); `ColorFade` eklenmedi (IconButton simge değişimi). 2 klasör çipi + levha karosu `PressScale(0.97)`. 3 klasör çipi sayısı `AnimatedSwitcher`. 4 görev ekranı Google senkron simgesi (ana/editör bulut simgesi çitte). 5 YAPILMADI — sabah bakılacak: SnackBar giriş hareketi Material içinde, `snackBarAnimationStyle` yalnız süre/eğri verir; 8 dp kayma özel katman ister.)* **F77.3 Eksik mikro-etkileşimler** (önce var mı bak; varsa dokunma):
   1. İğne/yıldız: dokununca `ScaleSettle` 1 → 1,15 → 1 (`quick`) + `ColorFade`.
   2. Klasör çipi ve levha karoları: `PressScale(scale: 0.97)`.
   3. Çip/başlık sayı rozetleri: sayı değişince `AnimatedSwitcher` (`quick`, solma). Kart
@@ -548,7 +548,7 @@ not içi AI levhası (Grep `Bugünkü puan` ARB anahtarı), `test/note_menu_mode
   5. Bildirim şeridi (`showMessage`): alttan 8 dp kayarak + solma (`short`).
   *Yapma:* boy animasyonu; liste yeniden dizilişini canlandırma; ışıltı; paralaks; "+"
   panelinin ve çöp/arşiv efektinin (P30) hareketini değiştirme.
-- [ ] **F77.4 Hareketi azalt.** Yeni her hareket `AppMotion.of/curveOf`'tan geçer; test:
+- [x] *(2026-11-13: yeni hareketler `AppMotion.of`/`motionOf`; `theme_motion_test` quick/long da ≤150.)* **F77.4 Hareketi azalt.** Yeni her hareket `AppMotion.of/curveOf`'tan geçer; test:
   `MediaQuery(disableAnimations: true)` altında süre ≤ 150.
 - Kabul: A/B regresyon yok; mandalda titreşim 0; `docs/cihaz_turu.md`'ye elle bakılacak 4
   adım (işaretle, sabitle, sürükle-bırak, çöpe at: her birinde tek titreşim).

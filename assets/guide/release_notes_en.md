@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **Livelier touches:** stars pop slightly when tapped; folder chips and sheet tiles press in a little; folder counts fade when they change; setting a reminder or pinning from ⋮ gives a short vibration.
 - **Active formatting shows in the quick menu:** when the cursor is in bold, italic, underlined, highlighted or colored text, or in a heading, its quick menu button looks pressed.
 - **Easier quick menu editing:** ⋮ → "Edit quick menu" now opens a sheet with "In the menu" and "Available" tiles; tap to add or remove, no saving needed, with a live preview on top. The same editor is in Settings → Personalize, so a quick menu that disappeared can be brought back.
 - **Back transition on tablets:** leaving a note slides and fades the list in instead of jumping.

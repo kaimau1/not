@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Dokunuşlar daha canlı:** yıldıza dokununca simge hafifçe atar; klasör çipleri ve levha karoları basınca hafifçe çöker; klasör sayısı değişince solarak geçer; hatırlatıcı kurunca ve ⋮'den sabitleyince kısa bir titreşim gelir.
 - **Hızlı menüde açık biçim belli:** imleç kalın, eğik, altı çizili, vurgulu, renkli yazıdayken ya da başlıktayken hızlı menüdeki düğmesi basılı görünür.
 - **Hızlı menüyü düzenlemek kolay:** ⋮ → "Hızlı menüyü düzenle" artık "Menüde" ve "Eklenebilir" karolarıyla açılan bir levha; dokununca eklenir ya da çıkar, kaydetmeye gerek yok, üstte canlı önizleme var. Aynı düzenleme Ayarlar → Kişiselleştir'de de var, böylece hızlı menü kaybolsa da geri getirilebilir.
 - **Tablette nottan dönüş geçişi:** nottan geri çıkınca liste kısa bir kayma ve solmayla gelir, birden atlamaz.
