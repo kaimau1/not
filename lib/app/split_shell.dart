@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/l10n_ext.dart';
+import 'theme/app_tokens.dart';
 import '../core/utils/immersive.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/settings/settings_providers.dart';
@@ -221,7 +222,39 @@ class SplitShell extends ConsumerStatefulWidget {
   ConsumerState<SplitShell> createState() => _SplitShellState();
 }
 
-class _SplitShellState extends ConsumerState<SplitShell> {
+class _SplitShellState extends ConsumerState<SplitShell>
+    with SingleTickerProviderStateMixin {
+  /// **NOTTAN GERİ DÖNÜŞ GEÇİŞİ** (kullanıcı bulgusu 2026-11-13: "tablette
+  /// nottan geri yapıp ana sayfaya dönerken animasyon eksik"). Bölünmüş
+  /// düzende not kapanınca liste tek karede tam genişliğe atlıyordu (rota
+  /// geçişi yok: aynı kabuk). Artık liste kısa bir solma + kayma ile gelir.
+  /// YALNIZ BOYAMA (FadeTransition + SlideTransition = FractionalTranslation):
+  /// boy/yerleşim canlandırılmaz, ağaç şekli sabit (CLAUDE kasma listesi 4, 6).
+  late final AnimationController _back = AnimationController(
+    vsync: this,
+    duration: AppMotion.medium,
+    value: 1,
+  );
+  late final Animation<double> _backCurve = CurvedAnimation(
+    parent: _back,
+    curve: AppMotion.enter,
+  );
+  late final Animation<Offset> _backSlide = Tween<Offset>(
+    begin: const Offset(0.04, 0),
+    end: Offset.zero,
+  ).animate(_backCurve);
+  late final Animation<double> _backFade = Tween<double>(
+    begin: 0.35,
+    end: 1,
+  ).animate(_backCurve);
+  bool _wasNoteOpen = false;
+
+  @override
+  void dispose() {
+    _back.dispose();
+    super.dispose();
+  }
+
   /// Sürükleme sürerken kullanılan geçici genişlik.
   ///
   /// Sürüklemenin her karesinde provider'ı güncelleyip SharedPreferences'a
@@ -252,6 +285,11 @@ class _SplitShellState extends ConsumerState<SplitShell> {
       builder: (context, _) {
         final location = currentLocation(router);
         final noteOpen = isNoteLocation(location);
+        if (_wasNoteOpen && !noteOpen &&
+            !MediaQuery.disableAnimationsOf(context)) {
+          _back.forward(from: 0);
+        }
+        _wasNoteOpen = noteOpen;
         if (location.startsWith('/note/')) {
           _lastNoteId = location.substring('/note/'.length);
         }
@@ -386,7 +424,14 @@ class _SplitShellState extends ConsumerState<SplitShell> {
                     child: MediaQuery.removeViewInsets(
                       context: context,
                       removeBottom: noteOpen,
-                      child: const DashboardScreen(),
+                      child: FadeTransition(
+                        opacity: _backFade,
+                        child: SlideTransition(
+                          position: _backSlide,
+                          textDirection: rowDirection,
+                          child: const DashboardScreen(),
+                        ),
+                      ),
                     ),
                   ),
                 ),

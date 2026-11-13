@@ -8467,4 +8467,35 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get listPaneMoveLeft => 'Listeyi sola al';
+
+  @override
+  String get quickRowEditTitle => 'Hızlı menü (yazarken üstte)';
+
+  @override
+  String get quickRowEditInfo =>
+      'Dokun: menüye ekle ya da çıkar. Değişiklik hemen uygulanır, kaydetmeye gerek yok.';
+
+  @override
+  String get quickRowEditShown => 'Menüde';
+
+  @override
+  String get quickRowEditAvailable => 'Eklenebilir';
+
+  @override
+  String get quickRowEditEmpty => 'Menü boş — aşağıdan düğme ekle';
+
+  @override
+  String get quickRowEditReset => 'Varsayılana dön';
+
+  @override
+  String get quickRowShortPen => 'Kalem';
+
+  @override
+  String get quickRowShortSpell => 'Yazım düzelt';
+
+  @override
+  String get quickRowShortColor => 'Yazı rengi';
+
+  @override
+  String get quickRowShortHeading => 'Başlık';
 }

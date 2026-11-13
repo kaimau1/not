@@ -3,6 +3,9 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **Active formatting shows in the quick menu:** when the cursor is in bold, italic, underlined, highlighted or colored text, or in a heading, its quick menu button looks pressed.
+- **Easier quick menu editing:** ⋮ → "Edit quick menu" now opens a sheet with "In the menu" and "Available" tiles; tap to add or remove, no saving needed, with a live preview on top. The same editor is in Settings → Personalize, so a quick menu that disappeared can be brought back.
+- **Back transition on tablets:** leaving a note slides and fades the list in instead of jumping.
 - **Erasing no longer changes text size:** after erasing part of a stroke the rest no longer gets thicker or thinner.
 - **Writing that crosses pages can be erased:** on PDFs, pen writing that starts on a lower page and runs onto the page above can now be erased there too.
 - **Bubble button on the pinned panel:** phones now get the add-bubble button right in the pinned panel's bar.
