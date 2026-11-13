@@ -69,4 +69,38 @@ void main() {
     expect(c.holdProgress.value, isNull);
     c.dispose();
   });
+
+  // P59 (kullanıcı 2026-11-14): silgiden kaleme dönüş zordu. Silgideyken
+  // aynı hareket (kıpırdamadan basılı tut) kalem düğmesini çıkarır.
+  testWidgets('silgide basılı tut → kalem önerisi → kalem; silinen geri', (
+    tester,
+  ) async {
+    final c = drawn();
+    final pen = c.pen;
+    c.setEraser(true);
+    c.pointerDown(1, const Offset(150, 100), size);
+    expect(c.ink, isEmpty, reason: 'silgi inişte siler');
+    expect(c.holdProgress.value, isNotNull);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(c.penOffer.value, isNotNull);
+    expect(c.ink, hasLength(1), reason: 'basılı tutuş silmez');
+    c.pointerUp();
+    c.acceptPenOffer();
+    expect(c.eraser, isFalse);
+    expect(c.pen, pen);
+    expect(c.penOffer.value, isNull);
+    c.dispose();
+  });
+
+  testWidgets('silgide sürükle → kalem önerisi yok, siler', (tester) async {
+    final c = drawn();
+    c.setEraser(true);
+    c.pointerDown(1, const Offset(100, 300), size);
+    c.pointerMove(1, const Offset(150, 300), size);
+    await tester.pump(const Duration(milliseconds: 600));
+    c.pointerUp();
+    expect(c.penOffer.value, isNull);
+    expect(c.eraser, isTrue);
+    c.dispose();
+  });
 }

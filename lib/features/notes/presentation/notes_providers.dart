@@ -182,6 +182,45 @@ class GridColumnsNotifier extends Notifier<int> {
   }
 }
 
+/// **MİNİ PANO ÖLÇEĞİ** (P59, kullanıcı 2026-11-14): not açıkken soldaki
+/// dar liste bölmesinde kıstırma / Ctrl+tekerlek kartları büyütüp küçültür;
+/// sütun = bölme genişliği / ([kPaneCardWidth] × ölçek), 1–4. Kalıcı (yerel).
+final paneCardScaleProvider = NotifierProvider<PaneCardScaleNotifier, double>(
+  PaneCardScaleNotifier.new,
+);
+
+/// Mini panoda kartın ölçek 1'deki en küçük genişliği.
+const double kPaneCardWidth = 220;
+
+/// [width] genişliğindeki mini panonun sütun sayısı (1–4).
+int paneColumnsFor(double width, double scale) =>
+    (width / (kPaneCardWidth * scale)).floor().clamp(1, 4);
+
+class PaneCardScaleNotifier extends Notifier<double> {
+  static const _key = 'pane_card_scale';
+  static const min = 0.5;
+  static const max = 4.0;
+
+  @override
+  double build() =>
+      (ref.watch(sharedPreferencesProvider).getDouble(_key) ?? 1).clamp(
+        min,
+        max,
+      );
+
+  void set(double value) {
+    final next = value.clamp(min, max);
+    if (next == state) return;
+    state = next;
+    ref.read(sharedPreferencesProvider).setDouble(_key, next);
+  }
+
+  /// Kıstırmanın seçtiği [columns] sütun [width] genişlikte tam otursun:
+  /// ölçek yarım sütun payıyla (kayan nokta yuvarlaması bir eksik vermesin).
+  void setColumns(int columns, double width) =>
+      set(width / (kPaneCardWidth * (columns + 0.5)));
+}
+
 /// Ana ekrandaki tarih grupları.
 enum NoteBucket { today, thisWeek, earlier }
 

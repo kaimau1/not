@@ -223,5 +223,13 @@
     "bugun": "0 (2026-11-13, P46: thumbUrl dalına memCacheWidth 480); önce 21 — hepsi yalnız Drive küçük resmi (thumbUrl) olan ekler: note_card_media.dart _image thumbUrl dalında memCacheWidth yok (2026-11-12)",
     "hedef": "0",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); bulgu P46'ya yazıldı — düzeltilince 0'a iner"
+  },
+  "S26": {
+    "senaryo": "1280×800 bölünmüş: nottan listeye dön (go('/')), 40 kare + oturma",
+    "dashboard_kurulum": 1,
+    "note_card": 14,
+    "bugun": "1 / 14 (2026-11-14; P59 öncesi kod da 1 / 14)",
+    "hedef": "≤ 1 / ≤ 14",
+    "neden": "P59 ilk ölçüm: kapanışta bölme geçiş boyu bekler, liste tek adımda genişler — kurulum sayısı değişmedi"
   }
 }

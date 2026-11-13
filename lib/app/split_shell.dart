@@ -249,8 +249,21 @@ class _SplitShellState extends ConsumerState<SplitShell>
   ).animate(_backCurve);
   bool _wasNoteOpen = false;
 
+  /// **KAPANIŞTA BÖLME YERİNDE BEKLER** (P59, kullanıcı 2026-11-14: "web'de ve
+  /// tablette nottan listeye dönüşte animasyon yok"). KÖK NEDEN: rota `/`
+  /// olur olmaz sağ bölme sıfır genişliğe iniyordu — notun çıkış geçişi
+  /// (rotanın kendi geçişi) sıfır genişlikte oynuyor, görünmüyordu. Artık
+  /// geçiş süresince düzen eski hâlinde kalır (not bölmesinde kayarak/solarak
+  /// çıkar), sonra liste TEK ADIMDA tam genişliğe geçer ve [_back] solması
+  /// oynar. Boy canlandırılmaz (kasma listesi 6), ağaç şekli sabit.
+  Timer? _closing;
+
+  /// Rotanın geri dönüş geçişiyle aynı (MaterialRoute 300 ms).
+  static const _kCloseHold = AppMotion.medium;
+
   @override
   void dispose() {
+    _closing?.cancel();
     _back.dispose();
     super.dispose();
   }
@@ -284,12 +297,25 @@ class _SplitShellState extends ConsumerState<SplitShell>
       listenable: router.routerDelegate,
       builder: (context, _) {
         final location = currentLocation(router);
-        final noteOpen = isNoteLocation(location);
-        if (_wasNoteOpen && !noteOpen &&
-            !MediaQuery.disableAnimationsOf(context)) {
-          _back.forward(from: 0);
+        final routeNoteOpen = isNoteLocation(location);
+        final animated = !MediaQuery.disableAnimationsOf(context);
+        if (routeNoteOpen) {
+          _closing?.cancel();
+          _closing = null;
+        } else if (_wasNoteOpen) {
+          if (animated && splitActiveFor(MediaQuery.sizeOf(context))) {
+            _closing = Timer(_kCloseHold, () {
+              if (!mounted) return;
+              setState(() => _closing = null);
+              _back.forward(from: 0);
+            });
+          } else if (animated) {
+            _back.forward(from: 0);
+          }
         }
-        _wasNoteOpen = noteOpen;
+        _wasNoteOpen = routeNoteOpen;
+        // Kapanış geçişi sürerken düzen "not açık" kalır.
+        final noteOpen = routeNoteOpen || _closing != null;
         if (location.startsWith('/note/')) {
           _lastNoteId = location.substring('/note/'.length);
         }

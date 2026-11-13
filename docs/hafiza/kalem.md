@@ -63,3 +63,6 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Hızlı kalem çubuğu: silgi açıkken dolu `primary` zemin (`_BarButton.filled`), `_InkColorMenu` (MenuAnchor, `kInkPalette`), geniş çubukta (≥ 600) 4 hızlı renk (`_quickInkColors`, tepsiyle aynı kural). Cihazda doğrulanmadı (KALANLAR L10).
 
 - **2. tur (2026-11-13):** kısmi silgi parçaları ÖZGÜN noktalardan/basınçtan kesilir (örneklenmiş liste basıncı düşürüp dolma kalemin hız inceltmesini bozuyordu → yazı boyu değişiyordu); seyrek parçada silgi iki nokta arasından geçerse orada kesilir. Komşu sayfaya taşan çizgi (y<0/y>1) `_pageShift` ile ±1 sayfa kaydırılarak silinir. Yüzen düğme: `_BlinkOnce` (kalıcı `toggleBlinked`; `reset()` testte true), `_FingerWritesChip` (autoStylus && !penOnly). Bekçiler: `ink_eraser_fix_test`, `stylus_toggle_hints_test`.
+
+## 2026-11-14 — P59 silgiden kaleme dönüş
+- Silgideyken (geçici kalem-düğmesi silgisi DEĞİL) inişte `_eraserHold` → 550 ms kıpırdamazsa `_offerPen`: basılı tutuşun sildiği çizgiler `_gestureBase`'den geri, `penOffer` → "Kaleme dön" (`acceptPenOffer` = `setPen(pen)`); `_snapped` parmak kalkana dek silmeyi durdurur. İki öneri tek `ListenableBuilder(controller.offers)` — ayrı dinleyici S18 ilk karesini 1 artırıyordu.

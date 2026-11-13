@@ -2963,6 +2963,7 @@
   "spellRulesOnlySubtitle": "Only known misspellings and the fixes you taught are corrected; no guessing.",
   "spellRejectedTitle": "Fixes that won't be made again (you undid or changed them)",
   "inkEraserOffer": "Pick eraser",
+  "inkPenOffer": "Back to pen",
   "tipPenToggle": "Pen mode is on. Tap the pen button again (or back) to turn it off. Long-press = pen settings.",
   "tipPenShapeHold": "Hold still at the end of a stroke: lines, squares and circles snap to clean shapes.",
   "tipPenEraserHold": "To erase, long-press a stroke → tap the eraser button. Two fingers = scroll/zoom.",
