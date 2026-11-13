@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/search_fold.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../../../core/widgets/toggle_pop.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note_share_text.dart';
 import '../viewers/bubble_layer.dart';
@@ -255,15 +256,20 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              tooltip: l10n.bubbleStar,
-                              visualDensity: VisualDensity.compact,
-                              icon: Icon(
-                                bubble.starred ? Icons.star : Icons.star_border,
-                                color: bubble.starred ? Colors.amber : null,
+                            TogglePop(
+                              on: bubble.starred,
+                              child: IconButton(
+                                tooltip: l10n.bubbleStar,
+                                visualDensity: VisualDensity.compact,
+                                icon: Icon(
+                                  bubble.starred
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: bubble.starred ? Colors.amber : null,
+                                ),
+                                onPressed: () =>
+                                    widget.controller.toggleStar(bubble.id),
                               ),
-                              onPressed: () =>
-                                  widget.controller.toggleStar(bubble.id),
                             ),
                             IconButton(
                               tooltip: l10n.bubbleEdit,
