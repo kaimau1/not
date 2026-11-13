@@ -65,7 +65,8 @@
   "S9": {
     "senaryo": "Biçim panelini aç → kapat",
     "tuval_kurulum": 2,
-    "bugun": "2 (2026-11-11)",
+    "govde_boy_karesi": 2,
+    "bugun": "tuval 2 (2026-11-11); gövde boyunun değiştiği kare 2 — açılış 1 + kapanış 1 (2026-11-13, P46: panel ve alt çubuktaki iki AnimatedSize kalktı, hareket yalnız boyamada; önce 34)",
     "hedef": "0 (Faz 64)",
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 64'te işlenecek"
   },

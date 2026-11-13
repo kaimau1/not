@@ -838,8 +838,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// ve ölçüm kodu da gereksiz kaldı.
   static const double _kToolSegment = kEditorBarSegment;
 
-  /// Biçim paneli ⇄ alt çubuk geçişinin süresi (ikisi aynı eğriyle).
-  static const _kBarSwap = Duration(milliseconds: 260);
+  /// Biçim paneli en az bir kez açıldı mı: alt çubuk panelden DÖNERKEN
+  /// süzülerek belirir ([_barReturn]); notun ilk açılışında oynamaz.
+  bool _barSwapped = false;
+
+  /// Panel ↔ alt çubuk takası (kasma listesi md. 6, P46): boy TEK ADIMDA
+  /// değişir, yumuşaklık yalnız boyamada ([RevealUp]: solma + kayma). Eskiden
+  /// iki `AnimatedSize` 260 ms boyunca gövdeyi her karede yeniden diziyordu
+  /// (bütçe S9 `govde_boy_karesi` 34 → 2).
+  Widget _barReturn(Widget bar) => _barSwapped ? RevealUp(child: bar) : bar;
 
   /// Başlık üstündeki meta çiplerinin (klasör/etiket/hatırlatıcı/"+") ortak
   /// sıkıştırma ayarları: satır üst bar ile başlık arasındaki dar banda
@@ -4202,11 +4209,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   // Paket grubu (F60.2): biçim paneli açık paketi kapatmaz.
                   child: TapRegion(
                   groupId: kNotePackageTapGroup,
-                  child: AnimatedSize(
-                    duration: _kBarSwap,
-                    curve: Curves.easeOutCubic,
-                    alignment: Alignment.bottomCenter,
-                    child: !_formatBarOpen || _findOpen
+                  child: !_formatBarOpen || _findOpen
                         ? const SizedBox.shrink()
                         : RevealUp(
                           child: SingleChildScrollView(
@@ -4324,7 +4327,6 @@ child: FormatBar(
                           ),
                         ),
                   ),
-                  ),
                 ),
                 // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
                 // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
@@ -4372,13 +4374,10 @@ child: NoteFindBar(
                 child: TypingBarHide(
                   hidden: _typingN,
                   enabled: ref.watch(hideBarWhileTypingProvider),
-                  child: AnimatedSize(
-                  duration: _kBarSwap,
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.topCenter,
                   child: _formatBarOpen
                       ? const SizedBox(width: double.infinity)
-                      : Column(
+                      : _barReturn(
+                      Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
@@ -4498,9 +4497,10 @@ child: NoteFindBar(
                               icon: Icons.text_format,
                               label: l10n.formatTitle,
                               active: _formatBarOpen,
-                              onTap: () => setState(
-                                () => _formatBarOpen = !_formatBarOpen,
-                              ),
+                              onTap: () => setState(() {
+                                _formatBarOpen = !_formatBarOpen;
+                                _barSwapped = true;
+                              }),
                             ),
                           ),
                         // Panel kapalıyken imlecin biçimleri (B/I/U, renk).
@@ -4714,7 +4714,7 @@ child: NoteFindBar(
                 ),
                 ],
                 ),
-                ),
+                    ),
                 ),
                 ),
                 ),
