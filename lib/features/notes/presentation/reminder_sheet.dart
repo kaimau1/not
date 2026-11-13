@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -147,6 +148,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
 
   void _save() {
     if (_past) return;
+    AppHaptics.thud(); // F77.2: hatırlatıcı kuruldu
     Navigator.pop<ReminderChoice>(context, (
       at: _at,
       repeat: _repeat().encode(),

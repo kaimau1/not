@@ -28,6 +28,7 @@ import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import 'media_loading_cover.dart';
 import 'pdf_page_column.dart';
+import '../../../../core/haptics.dart';
 
 /// **SAYFAYA GÖMÜLÜ PDF** (kullanıcı isteği 2026-09-06: "PDF'yi sayfaya
 /// entegre etme, aynı görsel gibi sayfaya yerleşir ancak sayfa
@@ -585,7 +586,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final page = _selection.page.value;
     final rects = _selection.rects;
     if (page == 0 || rects.isEmpty) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     _bubbleController().addHighlight(page: page, rects: rects, open: false);
     _clearSelection();
   }

@@ -2,10 +2,10 @@ import '../../../../core/app_icons.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
+import '../../../../core/haptics.dart';
 
 /// Sayfaya gömülen METİN kutusunun ekte saklanan oranı (genişlik × yükseklik;
 /// birimsiz). Görseldeki `width`/`height` alanlarıyla aynı yerde durur ki
@@ -151,7 +151,7 @@ class _TextPageBoxState extends State<TextPageBox> {
     final pages = _pages;
     if (pager == null || pages == null || !pager.hasClients) return;
     final target = (_page - 1 + delta).clamp(0, pages.count - 1);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     pager.animateToPage(
       target,
       duration: const Duration(milliseconds: 320),

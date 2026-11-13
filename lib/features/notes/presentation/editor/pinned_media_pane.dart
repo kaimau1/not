@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/window_class.dart';
@@ -38,6 +37,7 @@ import 'slide_page_box.dart';
 import 'text_page_box.dart';
 import 'video_hub_scope.dart';
 import 'video_transport.dart';
+import '../../../../core/haptics.dart';
 
 /// Sabit bölmenin yüksekliği bu sınırlar arasında kalır (dp / oran).
 const double kPinnedMinHeight = 96;
@@ -1130,13 +1130,13 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                             ? null
                             : () {
                                 if (_bubbleEdit) return;
-                                HapticFeedback.selectionClick();
+                                AppHaptics.tick();
                                 widget.onExtractText!();
                               },
                         onLongPressStart: widget.onExtractText != null
                             ? null
                             : (_) {
-                                HapticFeedback.selectionClick();
+                                AppHaptics.tick();
                                 setState(() {
                                   _pulling = true;
                                   _pullDown = 0;

@@ -8,6 +8,7 @@ import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/pdf/selection_rects.dart';
 import '../../domain/attachment.dart';
 import 'bubble_layer.dart';
+import '../../../../core/haptics.dart';
 
 /// PDF metin seçiminin DURUMU — tam ekran görüntüleyici ile not panosunun
 /// bölmesi aynı davranışı paylaşsın diye ayrı bir denetleyici.
@@ -97,7 +98,7 @@ class PdfSelectionBar extends StatelessWidget {
   void _highlight({required bool open}) {
     final page = selection.page.value;
     if (page == 0 || selection.rects.isEmpty) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     bubbles.addHighlight(page: page, rects: selection.rects, open: open);
     selection.clear();
   }

@@ -26,6 +26,7 @@ import 'app_commands.dart';
 import 'router.dart' show kOutsideShellNotePrefix;
 import 'split_shell.dart';
 import '../core/utils/web_ready.dart';
+import '../core/haptics.dart';
 
 /// Gezinme rayının belirdiği genişlik (Material 3 "orta" pencere sınıfı):
 /// tablet dikey, katlanabilir açık, web penceresi. Altında —
@@ -390,7 +391,7 @@ class _RailFrameState extends State<_RailFrame>
                   onHorizontalDragEnd: (d) {
                     final v = d.primaryVelocity ?? 0;
                     if (_exitPull > 56 || (rtl ? v < -300 : v > 300)) {
-                      HapticFeedback.mediumImpact();
+                      AppHaptics.heavy();
                       ProviderScope.containerOf(context)
                           .read(noteFullscreenProvider.notifier)
                           .set(false);

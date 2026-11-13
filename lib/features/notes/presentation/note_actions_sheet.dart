@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../../calendar/presentation/note_calendar_links.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
@@ -79,8 +82,10 @@ Future<void> _runNoteAction(
     case 'pinHome':
       await pinNoteToHome(context, note);
     case 'pin':
+      unawaited(AppHaptics.tick());
       repo.setPinned(note.id, !note.pinned);
     case 'star':
+      unawaited(AppHaptics.tick());
       repo.setStarred(note.id, !note.starred);
     case 'cardMedia':
       repo.setCardMediaHidden(note.id, !note.cardMediaHidden);

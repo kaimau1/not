@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../l10n_ext.dart';
 import '../personalize.dart';
 import 'undo_snackbar.dart';
 import '../../app/theme/app_tokens.dart';
+import '../haptics.dart';
 
 /// Kişiselleştirilebilir bir alan/düğme (bkz. `Personalize`).
 ///
@@ -46,7 +46,7 @@ class Customizable extends StatelessWidget {
           visible: visible,
           inset: badgeInset,
           onTap: () {
-            HapticFeedback.selectionClick();
+            AppHaptics.tick();
             Personalize.toggle(id);
           },
           child: child,
@@ -89,7 +89,7 @@ class CustomizeFrame extends StatelessWidget {
           children: [
             IgnorePointer(
               child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 150),
+                duration: AppMotion.of(context, AppMotion.quick),
                 opacity: visible ? 1 : 0.32,
                 child: DecoratedBox(
                   position: DecorationPosition.foreground,

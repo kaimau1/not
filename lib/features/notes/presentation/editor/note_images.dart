@@ -8,7 +8,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
@@ -46,6 +45,7 @@ import 'attachment_actions.dart';
 import 'attachment_status.dart';
 import 'view_mode_switch.dart';
 import '../../../../core/widgets/smooth_routes.dart';
+import '../../../../core/haptics.dart';
 
 part 'note_video_boxes.dart';
 part 'note_image_tools.dart';
@@ -515,7 +515,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   void _setPinZone(bool value) {
     if (_inPinZone == value) return;
     _inPinZone = value;
-    if (value) HapticFeedback.mediumImpact();
+    if (value) AppHaptics.heavy();
     widget.onPinHover?.call(value);
   }
 
@@ -628,7 +628,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   }
 
   void _startCaption(Attachment img) {
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     setState(() {
       _selectedId = null;
       _captionEditId = img.id;
@@ -1893,7 +1893,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             _toggleMulti(img.id);
             return;
           }
-          HapticFeedback.selectionClick();
+          AppHaptics.tick();
           if (widget.onPinTop != null) widget.onPinDrag?.call(true);
           setState(() {
             _selectedId = img.id;
@@ -1932,7 +1932,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             topLimit: widget.topLimit,
           );
           if (_guides.isEmpty && snapped.guides.isNotEmpty) {
-            HapticFeedback.selectionClick();
+            AppHaptics.tick();
           }
           setState(() {
             _moveLeft = snapped.left;
@@ -2041,7 +2041,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                       columnWidth: cw,
                     );
                     if (_guides.isEmpty && snapped.guides.isNotEmpty) {
-                      HapticFeedback.selectionClick();
+                      AppHaptics.tick();
                     }
                     setState(() {
                       _resizeRawFrac = raw;

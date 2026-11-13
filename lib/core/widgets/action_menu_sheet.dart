@@ -6,6 +6,7 @@ import '../menu_layout.dart';
 import 'app_sheet.dart';
 import 'sheet_header.dart';
 import 'sheet_tile.dart';
+import 'toggle_pop.dart';
 
 /// Menü levhasındaki tek işlem.
 class MenuAction {
@@ -636,23 +637,26 @@ class _MenuLayoutEditorState extends State<_MenuLayoutEditor> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              key: ValueKey('menu-quick-${a.id}'),
-                              tooltip: l10n.menuQuickRow,
-                              isSelected: _quick.contains(a.id),
-                              icon: const Icon(Icons.star_outline),
-                              selectedIcon: Icon(
-                                Icons.star,
-                                color: scheme.primary,
+                            TogglePop(
+                              on: _quick.contains(a.id),
+                              child: IconButton(
+                                key: ValueKey('menu-quick-${a.id}'),
+                                tooltip: l10n.menuQuickRow,
+                                isSelected: _quick.contains(a.id),
+                                icon: const Icon(Icons.star_outline),
+                                selectedIcon: Icon(
+                                  Icons.star,
+                                  color: scheme.primary,
+                                ),
+                                onPressed: () => setState(() {
+                                  if (_quick.contains(a.id)) {
+                                    _quick.remove(a.id);
+                                  } else if (_quick.length < MenuLayout.maxQuick) {
+                                    _quick.add(a.id);
+                                    _hidden.remove(a.id);
+                                  }
+                                }),
                               ),
-                              onPressed: () => setState(() {
-                                if (_quick.contains(a.id)) {
-                                  _quick.remove(a.id);
-                                } else if (_quick.length < MenuLayout.maxQuick) {
-                                  _quick.add(a.id);
-                                  _hidden.remove(a.id);
-                                }
-                              }),
                             ),
                             IconButton(
                               key: ValueKey('menu-visible-${a.id}'),

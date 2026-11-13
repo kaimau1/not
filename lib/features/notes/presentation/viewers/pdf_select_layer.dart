@@ -8,13 +8,13 @@ import 'package:flutter/gestures.dart'
         PointerHoverEvent,
         kPrimaryButton;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../data/pdf/ocr_page_text.dart' show OcrPageText;
 import '../../data/pdf/pdf_page_ocr.dart';
 import '../../data/pdf/selection_rects.dart';
+import '../../../../core/haptics.dart';
 
 /// PDF sayfası üzerinde **kendi metin seçim katmanımız** — hedef davranış
 /// Chrome'un PDF görüntüleyicisi: yazılmış ya da TARANMIŞ fark etmeden,
@@ -500,7 +500,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
       b = _dragAnchorEnd;
     }
     if (a != _selStart || b != _selEnd) {
-      HapticFeedback.selectionClick();
+      AppHaptics.tick();
       setState(() {
         _anchor = a;
         _extent = b;
@@ -825,7 +825,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     while (b + 1 < s.length && _isWordChar(s[b + 1])) {
       b++;
     }
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     setState(() {
       _anchor = a;
       _extent = b;

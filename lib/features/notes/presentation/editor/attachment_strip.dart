@@ -6,7 +6,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -33,6 +32,7 @@ import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/friendly_error.dart';
 import 'attachment_clipboard.dart' show shareAttachment;
+import '../../../../core/haptics.dart';
 
 /// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
 ///
@@ -676,7 +676,7 @@ class _AttachmentTile extends ConsumerWidget {
             onSecondaryTap: () => _showActions(context, ref),
             // Basılı tutmak da işlem levhasını açar (⋯ ile aynı).
             onLongPress: () {
-              HapticFeedback.mediumImpact();
+              AppHaptics.heavy();
               _showActions(context, ref);
             },
             child: SizedBox(height: previewHeight, child: content),

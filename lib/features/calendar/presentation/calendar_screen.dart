@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -39,6 +38,7 @@ import 'note_calendar_links.dart';
 import 'month_grid.dart';
 import 'pinch_zoom.dart';
 import 'task_editor.dart';
+import '../../../core/haptics.dart';
 
 /// Hatırlatıcılı notlar (gizli klasör bastırması Hatırlatıcılar ekranıyla
 /// aynı kural).
@@ -251,7 +251,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     ZoomDirection direction = ZoomDirection.zoomIn,
   }) {
     if (view == _view && focus == null) return;
-    unawaited(HapticFeedback.selectionClick());
+    unawaited(AppHaptics.tick());
     setState(() {
       _lastZoom = direction;
       _origin = _alignmentAt(from);
@@ -407,7 +407,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       default:
         return;
     }
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     final l10n = context.l10n;
     showUndoSnackBar(
       context,

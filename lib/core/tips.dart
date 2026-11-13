@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../app/theme/app_tokens.dart';
 
 /// **BİR KEZ ÇIKAN İPUÇLARI** (F14.6, 2026-10-31; plandaki öneri uygulandı:
 /// dört jest + oturumda en fazla bir ipucu).
@@ -199,7 +200,7 @@ class _TipBannerState extends State<_TipBanner> {
       child: IgnorePointer(
           child: AnimatedOpacity(
             opacity: _visible ? 1 : 0,
-            duration: const Duration(milliseconds: 200),
+            duration: AppMotion.of(context, AppMotion.short),
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 560),

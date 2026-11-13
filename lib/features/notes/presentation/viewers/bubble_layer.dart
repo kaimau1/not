@@ -10,7 +10,7 @@ import 'package:flutter/gestures.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart'
-    show Clipboard, ClipboardData, HapticFeedback;
+    show Clipboard, ClipboardData;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -24,6 +24,7 @@ import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note_share_text.dart';
+import '../../../../core/haptics.dart';
 
 part 'bubble_pin.dart';
 part 'bubble_dock.dart';
@@ -845,7 +846,7 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
   /// Basılı tutulan noktaya balon bırakır (bkz. [BubblePageLayer.longPressAdd]).
   void _dropAt(Offset local, Size size) {
     if (size.width <= 0 || size.height <= 0) return;
-    HapticFeedback.mediumImpact();
+    AppHaptics.heavy();
     widget.controller.add(
       widget.page,
       local.dx / size.width,
@@ -966,7 +967,7 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTapUp: (d) {
-                    HapticFeedback.selectionClick();
+                    AppHaptics.tick();
                     controller.add(
                       page,
                       d.localPosition.dx / size.width,

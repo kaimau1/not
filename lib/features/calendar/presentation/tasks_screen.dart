@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../app/app_frame.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -247,17 +248,23 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             key: const ValueKey('tasks-google'),
             tooltip: l10n.gtasksTitle,
             onPressed: google.loading ? null : () => unawaited(_googleMenu()),
-            icon: google.loading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    google.connected
-                        ? Icons.cloud_done_outlined
-                        : Icons.cloud_outlined,
-                  ),
+            // F77.3-4: senkron durumu değişince soluklaşarak geçer.
+            icon: AnimatedSwitcher(
+              duration: AppMotion.of(context, AppMotion.quick),
+              child: google.loading
+                  ? const SizedBox(
+                      key: ValueKey('loading'),
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      key: ValueKey(google.connected),
+                      google.connected
+                          ? Icons.cloud_done_outlined
+                          : Icons.cloud_outlined,
+                    ),
+            ),
           ),
         PopupMenuButton<String>(
           onSelected: (v) => _listMenu(v, current, all),

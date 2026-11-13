@@ -1,3 +1,4 @@
+import '../../../app/theme/app_tokens.dart';
 import '../../../app/app_frame.dart';
 import '../../notes/presentation/note_link_ui.dart' show noteLinkLabel;
 import '../../notes/presentation/note_card.dart' show openNoteRoute;
@@ -335,8 +336,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
+          duration: AppMotion.of(context, AppMotion.short),
+          curve: AppMotion.curveOf(context, AppMotion.standard),
         );
       }
     });

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../app/theme/app_tokens.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -13,6 +12,7 @@ import '../data/calendar_repository.dart';
 import '../data/google_calendar_sync.dart';
 import '../domain/agenda.dart';
 import '../domain/task_item.dart';
+import '../../../core/haptics.dart';
 
 /// Kayıt TEK DOKUNUŞLA silinebilir mi (gün levhasındaki çöp düğmesi)?
 /// Rutinin günü silinmez (rutin kendi ekranından yönetilir).
@@ -77,7 +77,7 @@ Future<void> quickDeleteEntry(
         if (onlyThis == null) return;
         if (onlyThis) {
           calendar.skipOccurrence(event.id, start);
-          unawaited(HapticFeedback.selectionClick());
+          unawaited(AppHaptics.tick());
           return;
         }
       }
