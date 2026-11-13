@@ -154,6 +154,7 @@ Model: opus (kullanıcı 2026-11-13) · Cihaz: A/B · APK: evet
 2. Her kök neden için cihazsız bekçi (`test/perf_budget_test.dart` senaryo + `budgets.json` mandalı ya da `keyboard_jank_guard_test` kalıbı) — önce KIRMIZI.
 3. **Alt panel titremesi özel testi:** klavye açılış/kapanış animasyonunu kare kare süren widget testi; alt panelin/alt çubuğun dikey konumu her karede tekdüze (monoton) olmalı, ileri-geri salınım (yön değişimi) ve 1 px üstü sıçrama = KIRMIZI. Hem telefon hem tablet düzeni. Cihazda da: ekran kaydı/kare izinde konum dizisi.
 4. Düzelt (CLAUDE.md kasma kontrol listesi 1–8; boy tek adımda, hareket yalnız boyamada; KeyboardSwitch sökmez), aynı kanıt yeşil, cihazda A/B iyileşme. Her kök neden AYRI commit.
+4b. P49 bulgusu (2026-11-13): sabit ekli notta ilk klavye açılışında bir `AnimatedSize` 6 kare Scaffold'u dizdiriyor (editör alt çubuğu adaylarından; hangisi belirsiz) — bul ve düzelt.
 5. Kapsam: editör açılış geçişi (S18 ikinci kare), kapanış, klavye inset'iyle yeniden dizilen her şey, alt çizgi/biçimli madde satırının klavye açılırken yeniden dizilmesi. `pinned_media_pane.dart` P49'da ise dokunmadan bulguyu P49 satırına yaz.
 
 ## P56 — Not sürükle-sırala: iki sütun arasında zıplama
