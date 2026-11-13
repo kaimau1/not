@@ -138,11 +138,11 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
       child: Material(
-        color: scheme.tertiaryContainer.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
+        color: scheme.tertiaryContainer.withValues(alpha: AppAlpha.muted),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         child: InkWell(
           key: const ValueKey('guest-reminder-strip'),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: () => linkGuestAccount(context, ref),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),

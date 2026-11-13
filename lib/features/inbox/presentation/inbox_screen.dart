@@ -172,7 +172,7 @@ class InboxCard extends ConsumerWidget {
     final preview = _preview().trim();
     return Material(
       color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.l),
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 12, 8, 8),

@@ -155,7 +155,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     elevation: 0,
                     color: scheme.surfaceContainerLow,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                       side: BorderSide(color: scheme.outlineVariant),
                     ),
                     child: Padding(
@@ -300,7 +300,7 @@ class _Showcase extends StatelessWidget {
           colors: [
             scheme.primaryContainer,
             Color.alphaBlend(
-              scheme.tertiaryContainer.withValues(alpha: 0.6),
+              scheme.tertiaryContainer.withValues(alpha: AppAlpha.muted),
               scheme.surface,
             ),
           ],
@@ -356,7 +356,7 @@ class _Showcase extends StatelessWidget {
                             height: 44,
                             decoration: BoxDecoration(
                               color: scheme.surface.withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(AppRadius.m),
                             ),
                             child: Icon(icon, color: scheme.primary),
                           ),

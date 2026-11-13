@@ -593,7 +593,7 @@ class _TagChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: important ? s.tertiaryContainer : s.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.s),
       ),
       child: Text(
         label,
@@ -1312,7 +1312,7 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
       return Expanded(
         child: InkWell(
           key: key,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.l),
           onTap: _busy != null ? null : onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1468,7 +1468,7 @@ class _MailImages extends StatelessWidget {
   Widget _thumb(BuildContext context, ImageProvider image) => Padding(
     padding: const EdgeInsets.only(right: 8),
     child: ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       child: InkWell(
         onTap: () => _open(context, image),
         child: Image(

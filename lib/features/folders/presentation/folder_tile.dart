@@ -141,8 +141,8 @@ class _FolderTileBody extends StatelessWidget {
       child: Material(
         color: scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -261,7 +261,7 @@ class NewFolderTile extends ConsumerWidget {
       child: Material(
         color: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.l),
           side: BorderSide(color: scheme.outlineVariant),
         ),
         clipBehavior: Clip.antiAlias,
