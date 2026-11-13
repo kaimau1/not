@@ -52,3 +52,8 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   kalır (önceki <3 kelimeyse dokunulmaz). `dictationMerge` kısalmayı, düşen kuyruk yeni metinde varsa kabul
   eder (`droppedTailIsRepeat`). Kotlin `commitPartial` önceki satırın baş kısmı olan parçayı eklemez.
   Test `test/speech_segments_test.dart`. Cihazda doğrulanmadı.
+
+## Tablette dikte çalışmıyordu (2026-11-13)
+- Huawei (GMS'siz) tablet: `isRecognitionAvailable` true ama varsayılan servis ya hiç `onReadyForSpeech` demiyor (error=11 gürültü diye yutuluyordu → panel açık, metin yok) ya da metinden önce ölümcül hata veriyor. Ses kaydı (record) çalışıyor.
+- Çözüm (MainActivity): tanıyıcı ADAYLARI (varsayılan + `queryIntentServices(RecognitionService)`); oturum hazır olmadan 4 sn bekçi, metin gelmeden ölümcül hata (ağ/meşgul/izin hariç) ya da metinsiz hızlı restart döngüsü → sıradaki aday; hepsi düşerse `speech_unavailable` + `notlar_speech/broken_at` (7 gün `speechAvailable` false; ilk metinde silinir). Dart: `VoiceListenSession.onUnavailable` → editör dikteyi kapatıp `_captureVoice` (levha kayıt yoluna), levha `_fallBackToRecording`. Kasma: dikte kartının nabız/dalga animasyonu RepaintBoundary'siz editör gövdesini her kare boyuyordu → `_DictationPanel`, `ListeningWaveform`, `ListeningBadge` kendi katmanında (bekçi `voice_unavailable_test`). Cihazda doğrulanmadı (KALANLAR L13).
+

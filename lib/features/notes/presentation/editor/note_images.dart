@@ -91,6 +91,15 @@ void openImageViewer(
 /// Çözdürme genişliğinin YUVARLANDIĞI adım (px). Bkz. [decodeWidthBucket].
 const int kDecodeWidthStep = 256;
 
+/// Yüzen ek panelinin tek satıra geçtiği sayfa genişliği (dp, tablet).
+const double kWideToolsMinPage = 600;
+
+/// Geniş sayfada yüzen ek panelinin en büyük genişliği (dp).
+const double kWideToolsMaxWidth = 620;
+
+/// Sayfada yüzen SES hapının en büyük genişliği (dp).
+const double kAudioFloatMaxWidth = 360;
+
 /// Görselin kaç piksel genişliğinde çözdürüleceği — kutunun genişliğinden
 /// hesaplanır ama [kDecodeWidthStep]'in katına YUVARLANIR.
 ///
@@ -898,8 +907,13 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     // SES bir HAPTIR (2026-10-28): genişlik ne olursa olsun boyu sabit
     // aralıkta — geniş ekranda tam genişlik ses kartı 150 dp'lik bir blok
     // olmasın, dar kutuda da düğmeler sığsın.
+    //
+    // 2026-11-13 (tablet bulgusu: "ses kaydının yüzen görünümü çok büyük ve
+    // yüksek"): geniş sayfada yarım genişlik 600 dp'lik bir şerit oluyordu —
+    // hap en çok [kAudioFloatMaxWidth] geniş, boyu 48–60 dp.
     if (img.kind == AttachmentKind.audio) {
-      return (w: w, h: (w / _aspectOf(img)).clamp(52.0, 76.0).toDouble());
+      final aw = math.min(w, kAudioFloatMaxWidth);
+      return (w: aw, h: (aw / _aspectOf(img)).clamp(48.0, 60.0).toDouble());
     }
     return (w: w, h: w / _aspectOf(img));
   }
@@ -2091,15 +2105,23 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     // Metin ve ses kutusunda görsel işlemleri (OCR, metne dök) anlamsız.
     final isPlain =
         img.kind == AttachmentKind.text || img.kind == AttachmentKind.audio;
+    // Geniş sayfada (tablet) panel tek satır ve ekin altında, sayfa boyu
+    // değil (bkz. [_ImageTools.wide]).
+    final wide = cw >= kWideToolsMinPage;
+    final width = wide ? math.min(cw - 16, kWideToolsMaxWidth) : null;
+    final left = width == null
+        ? 8.0
+        : r.left.clamp(8.0, math.max(8.0, cw - 8 - width)).toDouble();
     return Positioned(
-      left: 8,
-      right: 8,
+      left: left,
+      right: width == null ? 8 : null,
+      width: width,
       top: r.top + r.h + _captionBand(img, r.w) + 6,
       // Panel seçilen ekin altından süzülerek belirir (her yeni seçimde).
       child: PopIn(
         key: ValueKey('tools-${img.id}'),
         duration: const Duration(milliseconds: 200),
-        child: _toolbarBody(context, img, wFrac, isVideo, isPdf, isPlain),
+        child: _toolbarBody(context, img, wFrac, isVideo, isPdf, isPlain, wide),
       ),
     );
   }
@@ -2111,8 +2133,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     bool isVideo,
     bool isPdf,
     bool isPlain,
+    bool wide,
   ) {
     return _ImageTools(
+      wide: wide,
       attachment: img,
       key: _toolbarKey,
       placementHint: _hintId == img.id,

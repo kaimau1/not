@@ -106,6 +106,18 @@ extension _EditorVoice on _NoteEditorScreenState {
         unawaited(_stopDictation(offerFix: false));
         if (mounted) _showSnack(message);
       },
+      // Canlı tanıma bu cihazda yok (GMS'siz tablet): dikte kapanır, konuşma
+      // levhada KAYDEDİLİP yazıya dökülür. Yerli taraf cihazı işaretledi;
+      // sonraki basışlar doğrudan levhaya gider (isAvailable false).
+      onUnavailable: (message) {
+        if (!identical(_dictation, session)) return;
+        unawaited(() async {
+          await _stopDictation(offerFix: false);
+          if (!mounted) return;
+          _showSnack(message);
+          await _captureVoice();
+        }());
+      },
     );
     _update(() {
       _dictation = session;

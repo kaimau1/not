@@ -41,6 +41,7 @@ class VoiceListenSession {
     required this.onEnd,
     required this.autoStop,
     this.onError,
+    this.onUnavailable,
     this.onSilence,
     this.holdOpen,
     this.useDevice = true,
@@ -59,6 +60,12 @@ class VoiceListenSession {
 
   /// Kapanış sayılmayan tanıma hatası (biriken metin korunur).
   final void Function(String message)? onError;
+
+  /// Cihazın canlı tanıması bu cihazda ÇALIŞMIYOR (MainActivity
+  /// `speech_unavailable`: hiçbir tanıyıcı hazır olmadı ya da tek kelime
+  /// gelmeden düştü — GMS'siz tablet, 2026-11-13). Çağıran kayıt + döküm
+  /// yoluna geçer; verilmezse [onError]a düşer.
+  final void Function(String message)? onUnavailable;
 
   /// Sessizlik geri sayımının oranı (0–1); yalnız konuşmadan SONRAKİ
   /// sessizlikte 0'dan büyüktür (açılır açılmaz dolan şerit telaş yaratırdı).
@@ -119,6 +126,12 @@ class VoiceListenSession {
               if (e is PlatformException &&
                   (e.code == 'speech_background' || e.code == 'speech_idle')) {
                 _end(VoiceListenEnd.closed);
+                return;
+              }
+              if (e is PlatformException &&
+                  e.code == 'speech_unavailable' &&
+                  onUnavailable != null) {
+                onUnavailable!(e.message ?? e.code);
                 return;
               }
               onError?.call(

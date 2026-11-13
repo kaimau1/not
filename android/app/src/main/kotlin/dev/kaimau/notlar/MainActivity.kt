@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.PictureInPictureParams
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -132,6 +133,25 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
     // Tanı için: yalnızca uzunluk ve olay tipi yazılır, konuşma METNİ asla
     // loglanmaz (döküm kişisel veridir, logcat'e sızmamalı).
     private val logTag = "NotlarSpeech"
+
+    // TANIYICI ADAYLARI (tablet bulgusu 2026-11-13: "tablette sesle yazma
+    // çalışmıyor ama ses kaydı çalışıyor, sesle yazma açıkken kasma oluyor").
+    // KÖK NEDEN: GMS'siz (Huawei) tablette varsayılan RecognitionService
+    // bağlanıyor ama ya hiç onReadyForSpeech demiyor (error=11 gürültü diye
+    // yutuluyordu → dinleme paneli boşuna açık, metin yok) ya da ilk turda
+    // ölümcül hata veriyordu. Artık oturumun İLK hazır olana dek her aday
+    // denenir: önce sistem varsayılanı, sonra cihazdaki öbür tanıma
+    // servisleri; hiçbiri [readyTimeoutMs] içinde hazır olmazsa ya da metin
+    // gelmeden ölümcül hata verirse "speech_unavailable" gönderilir ve cihaz
+    // [brokenForMs] süre canlı tanımasız sayılır — Dart kayıt + döküm yoluna
+    // düşer (ses kaydı orada çalışıyor).
+    private var candidates: List<ComponentName?> = listOf(null)
+    private var candidateIndex = 0
+    private var everReady = false
+    private var hadText = false
+    private var startGeneration = 0
+    private val readyTimeoutMs = 4_000L
+    private val brokenForMs = 7L * 24 * 60 * 60_000L
 
     // BİP SUSTURMA (kullanıcı bulgusu 2026-10-20: "sesle yazma akışında
     // sürekli dinleme durup tekrar başlıyormuş gibi onay/kapanma sesleri
@@ -410,7 +430,9 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                     // RecognitionService). Yoksa Dart tarafı eski ses yoluna
                     // düşer.
                     "speechAvailable" ->
-                        result.success(SpeechRecognizer.isRecognitionAvailable(this))
+                        result.success(
+                            SpeechRecognizer.isRecognitionAvailable(this) && !speechMarkedBroken()
+                        )
                     // "Ana ekrana yerleştir" — notu başlatıcıya sabit kısayol
                     // olarak koyar (NotKisayolu.kt). Başlatıcı desteklemiyorsa
                     // false döner, Dart tarafı bunu söyler.
@@ -1372,6 +1394,10 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                     listening = true
                     rapidRestarts = 0
                     lastProgressAt = SystemClock.elapsedRealtime()
+                    everReady = false
+                    hadText = false
+                    candidates = recognizerCandidates()
+                    candidateIndex = 0
                     // Argüman "tr-TR" ya da "tr-TR|offline" (internetsiz tanıma
                     // tercihi — bkz. DeviceSpeech.listen).
                     val parts = (arguments as? String ?: "tr-TR").split('|')
@@ -1392,11 +1418,82 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
             if (!listening) return@post
             lastStartAt = SystemClock.elapsedRealtime()
             recognizer?.destroy()
-            val speech = SpeechRecognizer.createSpeechRecognizer(this)
+            val component = candidates.getOrNull(candidateIndex)
+            val speech = try {
+                if (component == null) {
+                    SpeechRecognizer.createSpeechRecognizer(this)
+                } else {
+                    SpeechRecognizer.createSpeechRecognizer(this, component)
+                }
+            } catch (e: Exception) {
+                Log.d(logTag, "taniyici kurulamadi: ${e.javaClass.simpleName}")
+                recognizer = null
+                tryNextCandidate(locale)
+                return@post
+            }
             recognizer = speech
             speech.setRecognitionListener(speechListener(locale))
             speech.startListening(recognizerIntent(locale))
+            // Hazır olmayan aday için bekçi (yalnız oturum hiç hazır
+            // olmadıysa; sonraki turların gecikmesi olağan).
+            if (!everReady) {
+                val generation = ++startGeneration
+                mainHandler.postDelayed({
+                    if (listening && !everReady && generation == startGeneration) {
+                        Log.d(logTag, "aday $candidateIndex hazir olmadi")
+                        tryNextCandidate(locale)
+                    }
+                }, readyTimeoutMs)
+            }
         }
+    }
+
+    // Varsayılan tanıyıcı önce, ardından cihazdaki öbür RecognitionService'ler.
+    private fun recognizerCandidates(): List<ComponentName?> {
+        val out = mutableListOf<ComponentName?>(null)
+        val default = Settings.Secure.getString(contentResolver, "voice_recognition_service")
+            ?.let { ComponentName.unflattenFromString(it) }
+        try {
+            @Suppress("DEPRECATION")
+            val services = packageManager.queryIntentServices(
+                Intent("android.speech.RecognitionService"), 0
+            )
+            for (info in services) {
+                val si = info.serviceInfo ?: continue
+                val name = ComponentName(si.packageName, si.name)
+                if (name != default && !out.contains(name)) out.add(name)
+            }
+        } catch (e: Exception) {
+            Log.d(logTag, "servis listesi okunamadi: ${e.javaClass.simpleName}")
+        }
+        return out
+    }
+
+    // Bu aday çalışmadı: sıradakine geç; kalmadıysa canlı tanıma yok.
+    private fun tryNextCandidate(locale: String) {
+        if (!listening || everReady && hadText) return
+        candidateIndex++
+        recognizer?.cancel()
+        recognizer?.destroy()
+        recognizer = null
+        if (candidateIndex < candidates.size) {
+            Log.d(logTag, "sonraki taniyici adayi: $candidateIndex/${candidates.size}")
+            everReady = false
+            rapidRestarts = 0
+            startRecognizer(locale)
+            return
+        }
+        Log.d(logTag, "canli tanima yok, cihaz isaretlendi")
+        beepPrefs.edit().putLong("broken_at", System.currentTimeMillis()).apply()
+        finishListening(
+            "speech_unavailable",
+            "Bu cihazda canlı konuşma tanıma çalışmıyor; konuşma kaydedilip yazıya dökülecek"
+        )
+    }
+
+    private fun speechMarkedBroken(): Boolean {
+        val at = beepPrefs.getLong("broken_at", 0L)
+        return at > 0 && System.currentTimeMillis() - at < brokenForMs
     }
 
     // Sessizlik kapanışlarından sonra çağrılır. startRecognizer'dan farkı
@@ -1414,6 +1511,11 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
         if (now - lastStartAt < rapidRestartWindowMs) rapidRestarts++ else rapidRestarts = 0
         if (rapidRestarts >= maxRapidRestarts) {
             Log.d(logTag, "restart yok: $rapidRestarts hizli dongu, oturum kapatildi")
+            // Tek kelime gelmeden dönen döngü = bu tanıyıcı bu cihazda bozuk.
+            if (!hadText) {
+                tryNextCandidate(locale)
+                return
+            }
             finishListening("speech_error", "Konuşma tanıma tekrar tekrar başarısız oldu")
             return
         }
@@ -1577,6 +1679,7 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
             if (!continues) commitPartial()
             segmentEnded = false
             lastPartial = text
+            markWorking()
             lastProgressAt = SystemClock.elapsedRealtime()
             speechSink?.success(mapOf("text" to joined(text)))
         }
@@ -1608,6 +1711,7 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
             if (!text.isNullOrBlank()) {
                 lastPartial = text
                 lastProgressAt = SystemClock.elapsedRealtime()
+                markWorking()
             }
             commitPartial()
             segmentEnded = false
@@ -1665,6 +1769,17 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                 restartRecognizer(locale)
                 return
             }
+            // Metin hiç gelmeden ölümcül hata: aday bu cihazda çalışmıyor.
+            // Geçici olanlar (ağ, meşgul) ve izin hatası hariç — onlar
+            // kullanıcıya söylenir, cihaz "bozuk" işaretlenmez.
+            val transient = error == SpeechRecognizer.ERROR_NETWORK ||
+                error == SpeechRecognizer.ERROR_NETWORK_TIMEOUT ||
+                error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
+                error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS
+            if (listening && !hadText && !transient) {
+                tryNextCandidate(locale)
+                return
+            }
             if (listening) {
                 speechSink?.error("speech_error", "Konuşma tanıma hatası: $error", null)
             }
@@ -1672,6 +1787,7 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
 
         // İlk segment hazır: açılış bip'i çaldı, sonrakiler susturulur.
         override fun onReadyForSpeech(params: Bundle?) {
+            everReady = true
             if (listening) scheduleBeepMute()
         }
         override fun onBeginningOfSpeech() {}
@@ -1728,6 +1844,14 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
         if (new.startsWith(old) || old.startsWith(new)) return true
         // Kuyruk düzeltmesi baştaki kelimeyi korur; yeni segment korumaz.
         return new.substringBefore(' ') == old.substringBefore(' ')
+    }
+
+    // Tanıyıcı metin üretti: cihaz canlı tanımayla çalışıyor.
+    private fun markWorking() {
+        if (hadText) return
+        hadText = true
+        everReady = true
+        if (beepPrefs.contains("broken_at")) beepPrefs.edit().remove("broken_at").apply()
     }
 
     private fun firstResult(results: Bundle?): String? =
