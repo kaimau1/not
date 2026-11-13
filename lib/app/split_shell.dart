@@ -546,7 +546,7 @@ class _FullscreenPullHint extends StatelessWidget {
     return IgnorePointer(
       child: AnimatedContainer(
         key: const ValueKey('fullscreen-pull-hint'),
-        duration: const Duration(milliseconds: 150),
+        duration: AppMotion.of(context, AppMotion.quick),
         padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
         decoration: BoxDecoration(
           color: armed
@@ -668,7 +668,7 @@ class _PaneDividerState extends State<_PaneDivider> {
             alignment: Alignment.center,
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 120),
+                duration: AppMotion.of(context, AppMotion.quick),
                 width: active ? 4 : 1,
                 color: active ? scheme.primary : scheme.outlineVariant,
               ),

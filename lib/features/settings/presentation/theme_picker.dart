@@ -381,7 +381,7 @@ class ThemeChoiceCard extends StatelessWidget {
         child: Column(
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
+              duration: AppMotion.of(context, AppMotion.quick),
               height: 62,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),

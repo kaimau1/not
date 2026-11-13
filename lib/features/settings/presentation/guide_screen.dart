@@ -246,8 +246,8 @@ class _GuideScreenState extends State<GuideScreen> {
       if (ctx == null || !ctx.mounted) return;
       Scrollable.ensureVisible(
         ctx,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+        duration: AppMotion.of(ctx, AppMotion.medium),
+        curve: AppMotion.curveOf(ctx, AppMotion.standard),
       );
     });
   }
@@ -414,8 +414,8 @@ class _SectionCard extends StatelessWidget {
             ),
           ),
           AnimatedSize(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
+            duration: AppMotion.of(context, AppMotion.quick),
+            curve: AppMotion.curveOf(context, AppMotion.standard),
             alignment: Alignment.topCenter,
             child: !expanded
                 ? const SizedBox(width: double.infinity)

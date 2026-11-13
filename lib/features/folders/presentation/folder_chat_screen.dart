@@ -225,8 +225,8 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
       if (!_scroll.hasClients) return;
       _scroll.animateTo(
         _scroll.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
+        duration: AppMotion.of(context, AppMotion.short),
+        curve: AppMotion.curveOf(context, AppMotion.standard),
       );
     });
   }

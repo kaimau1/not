@@ -695,7 +695,7 @@ class _ExpandTileState extends State<_ExpandTile> {
           subtitle: widget.subtitle,
           trailing: AnimatedRotation(
             turns: _open ? 0.5 : 0,
-            duration: const Duration(milliseconds: 200),
+            duration: AppMotion.of(context, AppMotion.quick),
             child: Icon(Icons.expand_more, color: scheme.onSurfaceVariant),
           ),
           onTap: () {

@@ -89,7 +89,7 @@ class CustomizeFrame extends StatelessWidget {
           children: [
             IgnorePointer(
               child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 150),
+                duration: AppMotion.of(context, AppMotion.quick),
                 opacity: visible ? 1 : 0.32,
                 child: DecoratedBox(
                   position: DecorationPosition.foreground,
