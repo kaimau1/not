@@ -2039,10 +2039,7 @@ class _InkSwatch extends StatelessWidget {
       selected: selected,
       child: InkResponse(
         radius: size,
-        onTap: () {
-          HapticFeedback.selectionClick();
-          onTap();
-        },
+        onTap: onTap,
         child: SizedBox(
           width: size + 18,
           height: kPinnedBarHeight,
@@ -2065,7 +2062,7 @@ class _InkSwatch extends StatelessWidget {
                   color: color,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: scheme.onSurface.withValues(alpha: 0.25),
+                    color: scheme.onSurface.withValues(alpha: AppAlpha.soft),
                     width: 0.8,
                   ),
                 ),
