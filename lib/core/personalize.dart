@@ -267,6 +267,10 @@ abstract final class UiItem {
   static const topPin = 'editor.top.pin';
   /// Görünüm (tema şeridi) düğmesi (2026-10-28).
   static const topTheme = 'editor.top.theme';
+  /// Geniş ekranda Ana sayfa ve tablette Tam ekran düğmeleri (P50: "her şey
+  /// düzenlenebilsin" — sarmasız kalmışlardı).
+  static const topHome = 'editor.top.home';
+  static const topFullscreen = 'editor.top.fullscreen';
 
   // ── Not ekranının alanları ──
   static const editorTags = 'editor.tags';

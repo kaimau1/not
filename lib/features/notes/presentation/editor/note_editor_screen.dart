@@ -5110,11 +5110,14 @@ child: NoteFindBar(
               if (MediaQuery.sizeOf(context).width >= kRailBreakpoint)
                 _hideWhileTyping(
                   note,
-                  IconButton(
-                    key: const ValueKey('editor-home'),
-                    tooltip: '${l10n.goHome} (Alt+Home)',
-                    icon: const Icon(Icons.home_outlined),
-                    onPressed: () => goHome(ref, GoRouter.of(context)),
+                  Customizable(
+                    id: UiItem.topHome,
+                    child: IconButton(
+                      key: const ValueKey('editor-home'),
+                      tooltip: '${l10n.goHome} (Alt+Home)',
+                      icon: const Icon(Icons.home_outlined),
+                      onPressed: () => goHome(ref, GoRouter.of(context)),
+                    ),
                   ),
                 ),
               // ⌨ SANAL KLAVYE: yalnız fiziksel klavye takılıyken (tablet
@@ -5317,7 +5320,17 @@ child: NoteFindBar(
               // ⋮ artık açılır menü değil, iki sütunlu levha açar
               // (bkz. [noteMenuModel] — kullanıcı isteği 2026-08-09).
               if (PenTray.useRail(context))
-                _hideWhileTyping(note, _fullscreenButton(l10n)),
+                _hideWhileTyping(
+                  note,
+                  // Tam ekran AÇIKKEN düğme gizlenmez — çıkış yolu kalsın
+                  // (dikte/ses kaydı düğmeleriyle aynı kural).
+                  ref.watch(noteFullscreenProvider)
+                      ? _fullscreenButton(l10n)
+                      : Customizable(
+                          id: UiItem.topFullscreen,
+                          child: _fullscreenButton(l10n),
+                        ),
+                ),
               // ⋮ yazarken de görünür: hızlı satırın en sağında (kullanıcı
               // isteği 2026-11-08 — "3 nokta geri gelsin").
               IconButton(
