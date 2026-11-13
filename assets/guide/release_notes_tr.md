@@ -3,6 +3,14 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 13 Kasım 2026 {#2026-11-13}
+- **Silerken yazı boyu değişmiyor:** kısmi silgiyle bir yeri silince kalan yazı kalınlaşmıyor ya da incelmiyor.
+- **Sayfadan taşan yazı da siliniyor:** PDF'te alt sayfada başlayıp üst sayfaya taşan kalem yazısı üst sayfada da silinebiliyor.
+- **Sabit panelde balon düğmesi:** telefonda da balon ekleme düğmesi sabit panelin çubuğunda.
+- **Kalem düğmesi kendini gösteriyor:** kalem ilk algılandığında yüzen kalem düğmesi birkaç kez yanıp söner.
+- **Parmakla yazma uyarısı:** "yalnız kalem" kapalıyken kalem düğmesinin yanında "Parmakla da yazılıyor" uyarısı çıkar; dokununca yalnız kaleme geçer.
+- **Sabit PDF'te kalem rengi:** panelden kalemi açınca çubukta renk noktası çıkar, dokununca tüm renkler açılır; tablette siyah, mavi, kırmızı ve yeşil doğrudan çubukta.
+- **Silgi belli oluyor:** silgi açıkken düğmesi dolu renkli zeminle görünür.
+- **Silgiye basınca yazılar kaybolmuyor:** sabit ya da gömülü PDF'e kalemle yazıp silgiye (veya kalem düğmesine) basınca yazıların bir an kaybolup tekrar basınca geri gelmesi düzeltildi.
 - **Sabit ek paneli yenilendi:** telefonda çubukta yalnız tam ekran, Not al, kalem ve ⋮ var; görünüm (Sabit/Yüzen/Ek), balonlar, PDF'te sayfalara göz at ve yer imi, paylaş ve kaldır tek ⋮ menüsünde. Büyük yazıda ve dar ekranda çubuk artık taşmıyor.
 - **Kalem düğmeleri birbirini biliyor:** yüzen kalem düğmesini açınca paneldeki kalem kaybolmaz, açık görünür; paneldeki kalemi kapatınca yüzen düğme ve kalem kipi de kapanır. Panelden kalemi açınca çubukta silgi, geri al, yinele ve kalem ayarı çıkar.
 - **Kalem ipuçları araya girmiyor:** "kalem yazar / parmak dokunur" gibi yazılar alttaki kalem panelinin üstünde çıkar ve her durum için bir kez söylenir.

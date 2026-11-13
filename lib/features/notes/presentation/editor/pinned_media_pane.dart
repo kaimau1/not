@@ -22,6 +22,7 @@ import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
+import '../viewers/ink_pen.dart';
 import '../viewers/pen_policy.dart';
 import 'pinned_side.dart';
 import '../viewers/bubble_layer.dart';
@@ -387,8 +388,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     if (c == null) {
       c = _ink = InkController(
         initial: a.ink,
+        // [_inkSeen] burada GÜNCELLENMEZ — bkz. aşağıdaki "SİLGİYE BASINCA
+        // YAZILAR KAYBOLUYORDU".
         onChanged: (strokes) {
-          _inkSeen = strokes;
           (widget.onInkChanged ?? widget.onChanged)?.call(
             widget.media.copyWith(ink: strokes),
           );
@@ -405,6 +407,16 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         }
       });
     }
+    // **SİLGİYE BASINCA YAZILAR KAYBOLUYORDU** (kullanıcı bulgusu
+    // 2026-11-13: "kalemle yazdım, silgiye basınca yazılar kayboluyor,
+    // tekrar basınca geri geliyor"). KÖK: editör eke yazılan çizgide kökü
+    // kurmaz (F60.1, `_updateAttachmentInk`) — bu bölmenin [widget.media]'sı
+    // ESKİ çizgi listesini tutar. [_inkSeen] çizimde denetleyicinin listesine
+    // çekiliyordu; sonraki herhangi bir yeniden çizimde (silgi, kalem
+    // düğmesi) eski liste "dışarıdan gelen değişiklik" sanılıp denetleyiciye
+    // geri yazılıyor, çizgiler siliniyordu; kök kurulunca geri geliyordu.
+    // Artık yalnız EKİN KENDİ listesi kimlik değiştirince (tam ekran, geri
+    // al, başka cihaz) işlenir; içerik aynıysa `replace` zaten bir şey yapmaz.
     if (!identical(a.ink, _inkSeen)) {
       _inkSeen = a.ink;
       if (!c.drawing) c.replace(a.ink);
@@ -1392,13 +1404,32 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       builder: (context, _) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // SİLGİ BELİRGİN (kullanıcı bulgusu 2026-11-13: "silgi aktifken
+          // neredeyse hiç belli olmuyor"): yalnız simge rengi değişiyordu;
+          // açıkken dolu daire zemin + dolu simge.
           _BarButton(
             key: const ValueKey('pinned-pen-eraser'),
             tooltip: l10n.eraser,
-            icon: Icons.auto_fix_normal_outlined,
+            icon: ink.eraser
+                ? Icons.auto_fix_normal
+                : Icons.auto_fix_normal_outlined,
             selected: ink.eraser,
+            filled: true,
             onPressed: () => ink.setEraser(!ink.eraser),
           ),
+          // RENK (kullanıcı isteği 2026-11-13: "sabit PDF'te kalemle
+          // yazarken renk seçenekleri olmalı"): geniş çubukta hızlı renkler
+          // çubukta; her genişlikte renk noktası tüm paleti açar.
+          if (_wideBar)
+            for (final c in _quickInkColors(ink))
+              _InkSwatch(
+                key: ValueKey('pinned-pen-color-${c.toARGB32()}'),
+                color: c,
+                selected:
+                    !ink.eraser && c.toARGB32() == ink.color.toARGB32(),
+                onTap: () => ink.setColor(c),
+              ),
+          _InkColorMenu(ink: ink),
           _BarButton(
             key: const ValueKey('pinned-pen-undo'),
             tooltip: l10n.undo,
@@ -1420,6 +1451,15 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         ],
       ),
     );
+  }
+
+  /// Çubuktaki hızlı renkler: siyah, mavi, kırmızı, yeşil; kalemin rengi
+  /// bunlardan değilse sonuncunun yerinde o (kalem tepsisiyle aynı kural).
+  static List<Color> _quickInkColors(InkController ink) {
+    final base = [for (final i in const [0, 5, 2, 4]) kInkPalette[i]];
+    final current = ink.color.toARGB32();
+    if (base.any((c) => c.toARGB32() == current)) return base;
+    return [...base.take(3), Color(current)];
   }
 
   Widget _barRow(BuildContext context, double width) {
@@ -1555,12 +1595,15 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         // PDF'te belge kutusunda.
         // "T" düğmesi kaldırıldı (kullanıcı isteği 2026-11-12): Açık metin
         // balon menüsünde; gizle/göster de orada.
-        if (_canEditBubbles && !tools && (wide || _bubbleEdit))
+        // BALON DÜĞMESİ DAR ÇUBUKTA DA (kullanıcı isteği 2026-11-13: "sabit
+        // panelin altında balon butonu olmalı"): yalnız en dar bölmede
+        // (< 220 dp) ⋮ levhasında kalır.
+        if (_canEditBubbles && !tools && (!tiny || _bubbleEdit))
           _addBubbleButton(context, active: _bubbleEdit)
         else if (_canEditPdfBubbles && !tools)
           ValueListenableBuilder<bool>(
             valueListenable: _pdfAdding,
-            builder: (context, adding, _) => wide || adding
+            builder: (context, adding, _) => !tiny || adding
                 ? _addBubbleButton(context, active: adding)
                 : const SizedBox.shrink(),
           ),
@@ -1939,6 +1982,7 @@ class _BarButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.selected = false,
+    this.filled = false,
   });
 
   final String tooltip;
@@ -1950,15 +1994,144 @@ class _BarButton extends StatelessWidget {
   /// Açık kip (kalem, silgi, balon bırakma): simge `primary`.
   final bool selected;
 
+  /// Açıkken dolu `primary` zemin (silgi: yalnız simge rengi fark
+  /// edilmiyordu).
+  final bool filled;
+
   @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
-    visualDensity: VisualDensity.compact,
-    iconSize: AppIconSize.m,
-    color: selected ? Theme.of(context).colorScheme.primary : null,
-    icon: Icon(icon),
-    onPressed: onPressed,
-  );
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final strong = filled && selected;
+    return IconButton(
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      iconSize: AppIconSize.m,
+      isSelected: selected,
+      color: selected && !strong ? scheme.primary : null,
+      style: strong
+          ? IconButton.styleFrom(
+              backgroundColor: scheme.primary,
+              foregroundColor: scheme.onPrimary,
+            )
+          : null,
+      icon: Icon(icon),
+      onPressed: onPressed,
+    );
+  }
+}
+
+/// Çubukta tek renk noktası (sabit belgenin hızlı kalemi).
+class _InkSwatch extends StatelessWidget {
+  const _InkSwatch({
+    super.key,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+  static const double size = 22;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkResponse(
+        radius: size,
+        onTap: onTap,
+        child: SizedBox(
+          width: size + 18,
+          height: kPinnedBarHeight,
+          child: Center(
+            child: Container(
+              width: size + 6,
+              height: size + 6,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? scheme.primary : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: scheme.onSurface.withValues(alpha: AppAlpha.soft),
+                    width: 0.8,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Kalemin rengini gösteren nokta; dokununca tüm palet açılır (seçince
+/// silgi kapanır, bkz. [InkController.setColor]).
+class _InkColorMenu extends StatefulWidget {
+  const _InkColorMenu({required this.ink});
+
+  final InkController ink;
+
+  @override
+  State<_InkColorMenu> createState() => _InkColorMenuState();
+}
+
+class _InkColorMenuState extends State<_InkColorMenu> {
+  final _menu = MenuController();
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = widget.ink;
+    final current = ink.color.toARGB32();
+    return MenuAnchor(
+      controller: _menu,
+      menuChildren: [
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.xs,
+            vertical: AppSpace.xxs,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final c in kInkPalette)
+                _InkSwatch(
+                  key: ValueKey('pinned-pen-palette-${c.toARGB32()}'),
+                  color: c,
+                  selected: !ink.eraser && c.toARGB32() == current,
+                  onTap: () {
+                    ink.setColor(c);
+                    _menu.close();
+                  },
+                ),
+            ],
+          ),
+        ),
+      ],
+      builder: (context, menu, _) => Tooltip(
+        message: context.l10n.inkColor,
+        child: _InkSwatch(
+          key: const ValueKey('pinned-pen-color'),
+          color: Color(current),
+          selected: menu.isOpen,
+          onTap: () => menu.isOpen ? menu.close() : menu.open(),
+        ),
+      ),
+    );
+  }
 }
 
 class _UnpinHint extends StatelessWidget {

@@ -3,6 +3,14 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **Erasing no longer changes text size:** after erasing part of a stroke the rest no longer gets thicker or thinner.
+- **Writing that crosses pages can be erased:** on PDFs, pen writing that starts on a lower page and runs onto the page above can now be erased there too.
+- **Bubble button on the pinned panel:** phones now get the add-bubble button right in the pinned panel's bar.
+- **Pen button introduces itself:** the first time a pen is detected the floating pen button blinks a few times.
+- **Finger writing notice:** with "pen only" off, a "Finger writes too" notice appears next to the pen button; tap it to switch to pen only.
+- **Pen colors on pinned PDFs:** turning the pen on from the panel shows a color dot in the bar that opens every color; on tablets black, blue, red and green sit right in the bar.
+- **Eraser is easy to see:** when the eraser is on its button has a filled colored background.
+- **Writing no longer vanishes when you tap the eraser:** on pinned or embedded PDFs, handwriting no longer disappears when you tap the eraser (or pen button) and comes back on the next tap.
 - **Pinned attachment panel redesigned:** on phones the bar shows only full screen, Take note, pen and ⋮; view (Pinned/Floating/Attachment), bubbles, browse pages and bookmarks for PDFs, share and remove all live in a single ⋮ menu. The bar no longer overflows with large text or on narrow screens.
 - **Pen buttons stay in sync:** turning on the floating pen button no longer hides the panel's pen, it shows as on; turning the panel's pen off also turns off the floating button and pen mode. Turning the pen on from the panel shows eraser, undo, redo and pen settings in the bar.
 - **Pen hints stay out of the way:** messages like "pen writes / finger touches" appear above the pen panel at the bottom and are shown once per state.

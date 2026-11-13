@@ -120,4 +120,39 @@ void main() {
     expect(eraser, findsNothing);
     expect(find.byKey(const ValueKey('pinned-note-at')), findsOneWidget);
   });
+
+  testWidgets('silgi açıkken dolu zeminli; renk noktası paleti açar, renk '
+      'seçince silgi kapanır (360 ve 700 dp, taşma yok)', (tester) async {
+    for (final width in [360.0, 700.0]) {
+      InkToolMemory.reset();
+      await tester.pumpWidget(const SizedBox());
+      await pump(tester, image, width: width, textScale: 1.3);
+      await tester.tap(find.byKey(const ValueKey('pinned-pen')));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      final eraser = find.byKey(const ValueKey('pinned-pen-eraser'));
+      expect(eraser, findsOneWidget, reason: '$width dp: hızlı kalem yok');
+      IconButton btn() => tester.widget<IconButton>(
+        find.descendant(of: eraser, matching: find.byType(IconButton)),
+      );
+      expect(btn().style, isNull);
+      await tester.tap(eraser);
+      await tester.pump();
+      expect(btn().style, isNotNull, reason: 'açık silgi belirgin değil');
+      expect(InkToolMemory.eraser, isTrue);
+      // Geniş çubukta hızlı renkler çubukta.
+      final quick = find.byKey(ValueKey('pinned-pen-color-${0xFFE53935}'));
+      expect(quick, width >= 600 ? findsOneWidget : findsNothing);
+      await tester.tap(find.byKey(const ValueKey('pinned-pen-color')));
+      await tester.pumpAndSettle();
+      final red = find.byKey(ValueKey('pinned-pen-palette-${0xFFE53935}'));
+      expect(red, findsOneWidget);
+      await tester.tap(red);
+      await tester.pumpAndSettle();
+      expect(InkToolMemory.eraser, isFalse);
+      expect(InkToolMemory.color, 0xFFE53935);
+      expect(btn().style, isNull);
+      expect(tester.takeException(), isNull);
+    }
+  });
 }
