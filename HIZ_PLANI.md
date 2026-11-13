@@ -55,9 +55,9 @@ madde başı ayrı commit, kötüleştiren tek commit geri alınır, iyiler birl
 ## FAZ 84 — Ölçümün bulduğu yavaşlıkları düzelt [Fable · P46 · A/B]
 
 - [x] **F84.0 Cihazsız bekçi bulguları (P43'ün 6 bulgusu)** — 2026-11-13 (P46): S25 21 → 0, S21 114 → 56, S22 979 → 509, S23 en ağır kare 2941 → 2361, S9 gövde boy karesi 34 → 2 (jank mandalı 4 → 2), S18 ikinci kare 788 → 285; mandallar düşürüldü; cihazda ölçülmedi. Ses hapı `AnimatedSize`ı kanıtsız, açık.
-- [ ] **F84.1** *(→ P55, cihazlı)* F81 + F82'nin ilk tam ölçümünde altın tabanın en kötü 3 evresi (en uzun kare > 32 ms ya da ortanca UI ms en yüksek) için kök neden dökümü (`vmsvc.py` CPU örnekleri + widget build profili) ve düzeltme. Hedef: her evrede > 16 ms kare sayısı yarıya.
-- [ ] **F84.2** *(→ P55, cihazlı)* P36 ölçümünde görülen: yazmada en uzun kare 29 → 42 ms (B1'de 59 ms), sayısı eşit — kök neden (tek uzun kare nedir: yazım düzeltici? kayıt? kart önbelleği?) ve düzeltme.
-- [ ] **F84.3** *(→ P55, cihazlı)* Soğuk açılış (P39 F78.1 sonrası): ilk kare ≤ 600 ms hedefi, `prof_cold.py` dökümüyle.
+- [ ] **F84.1** *(→ P55, cihazlı; 2026-11-13 P55 döküm, düzeltme AÇIK: not açma en uzun kare 61 ms = LAYOUT 58,7 — gövde paragraf dizimi `_RenderPageMinHeight` %37 + `findLinks`/`_scanPlainness` %24 (tek uzun paragrafta paragraf önbelleği işe yaramıyor); soğuk açılışın ilk veri karesi 160–228 ms = kart metin dizimi + `richSpans`; liste ölçülmedi. Ayrıntı `docs/hafiza/akicilik.md` P55)* F81 + F82'nin ilk tam ölçümünde altın tabanın en kötü 3 evresi (en uzun kare > 32 ms ya da ortanca UI ms en yüksek) için kök neden dökümü (`vmsvc.py` CPU örnekleri + widget build profili) ve düzeltme. Hedef: her evrede > 16 ms kare sayısı yarıya.
+- [ ] **F84.2** *(→ P55, cihazlı; 2026-11-13 P55: en uzun kare 38,9 ms, 215 karede 4 > 16 ms; tek uzun kare = metin alanı dizimi (%42) + her tuşta düzenlenen paragrafın `findLinks`/`_flagsOf` taraması (%34). Düzeltme açık: uzun paragrafta tarama yalnız değişen satıra)* P36 ölçümünde görülen: yazmada en uzun kare 29 → 42 ms (B1'de 59 ms), sayısı eşit — kök neden (tek uzun kare nedir: yazım düzeltici? kayıt? kart önbelleği?) ve düzeltme.
+- [x] **F84.3** *(2026-11-13 P55, `prof_cold.py` iki koşu: ilk kare resume'dan 36–64 ms — hedef ≤ 600 ✓; ilk VERİ karesi 160–228 ms (kart metin dizimi), 10. kare 509–719 ms)* Soğuk açılış (P39 F78.1 sonrası): ilk kare ≤ 600 ms hedefi, `prof_cold.py` dökümüyle.
 - Kural: her madde ayrı commit; `ab_hepsi.py` KALDI veren commit geri alınır.
 
 ## Kalıcı tedbirler (bu planla birlikte yürürlüğe girer)

@@ -27,6 +27,7 @@ import 'core/utils/image_cache_budget.dart';
 import 'core/utils/local_file.dart';
 import 'core/utils/note_fonts.dart';
 import 'core/utils/prefs_footprint.dart';
+import 'core/widgets/keyboard_snap.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/notes/data/local_notes_store.dart';
 import 'features/notes/data/note_format_memory.dart';
@@ -193,6 +194,7 @@ Future<void> main() async {
       DisplayRate.apply,
       ImageCacheBudget.apply,
       HardKeyboard.init,
+      KeyboardInset.init,
     ]),
   );
   // Eski geçici dosyalar (paylaşım/dışa aktarma/tarama/ses artıkları): açılışı
