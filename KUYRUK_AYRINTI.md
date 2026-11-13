@@ -143,7 +143,9 @@ F69.1–F69.3 (elle cihaz turu).
 
 ## P55 — KASMA KÖKTEN: not aç/kapa, klavye, alt panel titremesi
 
-Model: fable (limit %65 üstü → opus) · Cihaz: A/B · APK: evet
+Model: opus (kullanıcı 2026-11-13) · Cihaz: A/B · APK: evet
+
+**P46'dan katıldı (kullanıcı 2026-11-13):** HIZ_PLANI F84.1–F84.3 + OTURTMA F60.S2 (klavye birikim kasması), F60.5 (yazma ana bloğu), F68.3 (liste akışı K-O13). P46 dalının DEVIR.md'sindeki bulgulardan sür; P46 birleştikten sonra main'den başla.
 
 **Kullanıcı (2026-11-13):** "genel olarak not açılış kapanış, klavye açılış kapanışlarda kasma, akıcı açılamama, titreme sorunları var; bunların artık kökten çözülmesi gerekiyor, ne gerekiyorsa yapın." Ayrıca: (a) "Alt çizgi varken madde altında kasma oluyor klavye açılırken." (b) "Alt panel hâlâ titriyor — ona özel test yaptır."
 
