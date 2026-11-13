@@ -871,6 +871,7 @@ class CardMediaTile extends StatelessWidget {
         imageUrl: a.thumbUrl,
         fit: BoxFit.cover,
         fadeInDuration: const Duration(milliseconds: 150),
+        memCacheWidth: 480,
         placeholder: (context, _) => const ColoredBox(color: Colors.black12),
         errorWidget: (_, _, _) => const _MissingTile(icon: Icons.image),
       );
@@ -1094,6 +1095,7 @@ class _PdfFirstPage extends StatelessWidget {
         fit: BoxFit.cover,
         alignment: Alignment.topCenter,
         fadeInDuration: const Duration(milliseconds: 150),
+        memCacheWidth: 480,
         placeholder: (context, _) => fallback,
         errorWidget: (_, _, _) => fallback,
       );

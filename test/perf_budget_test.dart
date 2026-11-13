@@ -35,6 +35,7 @@ import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
+import 'package:notlar/features/notes/presentation/editor/note_images.dart';
 import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
@@ -595,15 +596,39 @@ void main() {
 
   testWidgets('S9: Biçim panelini aç → kapat', (tester) async {
     await pumpEditor(tester, _text);
+    // Gövdenin (kaydırma görünümü) boyunun değiştiği kare sayısı: boy TEK
+    // ADIMDA değişmeli (kasma listesi md. 6) — açılış 1 + kapanış 1.
+    final body = find
+        .ancestor(
+          of: find.byType(NotePageCanvas),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    var resized = 0;
+    Future<void> frames() async {
+      var last = tester.getSize(body).height;
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        final h = tester.getSize(body).height;
+        if (h != last) resized++;
+        last = h;
+      }
+    }
+
     final c = await _count(() async {
       await tester.tap(find.byTooltip('Biçim'));
+      await frames();
       await _settle(tester);
       expect(find.byType(FormatBar), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('format-close')));
+      await frames();
       await _settle(tester);
     });
     expect(find.byTooltip('Biçim'), findsOneWidget, reason: 'panel kapandı');
-    _expectBudget('S9', {'tuval_kurulum': c['NotePageCanvas'] ?? 0});
+    _expectBudget('S9', {
+      'tuval_kurulum': c['NotePageCanvas'] ?? 0,
+      'govde_boy_karesi': resized,
+    });
     await endEditor(tester);
   });
 

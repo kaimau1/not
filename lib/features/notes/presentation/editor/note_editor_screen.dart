@@ -783,7 +783,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Gövde metninin sayfa tepesinden uzaklığı (başlık + çip satırının altı).
   /// Görseller bunun üzerine çıkamaz; sarma hesabı da buna göre yapılır.
-  double _bodyTop = 0;
+  ///
+  /// [ValueNotifier] (P46, bütçe S18): ölçüm ilk kareden SONRA gelir; eskiden
+  /// kök `setState` ile yazılıyor, editörün tamamı ikinci karede baştan
+  /// kuruluyordu (not açma geçişinin ikinci karesi 786 kurulum). Değeri yalnız
+  /// tuval okur — yalnız o kurulur.
+  final _bodyTopN = ValueNotifier<double>(0);
+  double get _bodyTop => _bodyTopN.value;
   final _bodyTopKey = GlobalKey();
 
   /// Gövde metninin sayfa kenarlarından boşluğu.
@@ -838,8 +844,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// ve ölçüm kodu da gereksiz kaldı.
   static const double _kToolSegment = kEditorBarSegment;
 
-  /// Biçim paneli ⇄ alt çubuk geçişinin süresi (ikisi aynı eğriyle).
-  static const _kBarSwap = Duration(milliseconds: 260);
+  /// Biçim paneli en az bir kez açıldı mı: alt çubuk panelden DÖNERKEN
+  /// süzülerek belirir ([_barReturn]); notun ilk açılışında oynamaz.
+  bool _barSwapped = false;
+
+  /// Panel ↔ alt çubuk takası (kasma listesi md. 6, P46): boy TEK ADIMDA
+  /// değişir, yumuşaklık yalnız boyamada ([RevealUp]: solma + kayma). Eskiden
+  /// iki `AnimatedSize` 260 ms boyunca gövdeyi her karede yeniden diziyordu
+  /// (bütçe S9 `govde_boy_karesi` 34 → 2).
+  Widget _barReturn(Widget bar) => _barSwapped ? RevealUp(child: bar) : bar;
 
   /// Başlık üstündeki meta çiplerinin (klasör/etiket/hatırlatıcı/"+") ortak
   /// sıkıştırma ayarları: satır üst bar ile başlık arasındaki dar banda
@@ -853,7 +866,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Başlık bloğunun yüksekliğini ölçüp [_bodyTop]'u tazeler. Yükseklik
   /// yalnız başlık/çipler değişince oynar (sarma onu etkilemez), bu yüzden
-  /// ölçüm yakınsar ve tek setState'te durur.
+  /// ölçüm yakınsar ve tek bildirimde durur.
   /// Bu kare için başlık ölçümü zaten sıraya girdi mi. Editörün build'i bir
   /// karede birden çok kez koşabiliyor (klavye açılışı, odak, tema); her
   /// kuruluşta ayrı bir kare-sonu geri çağrısı biriktirmenin anlamı yok,
@@ -874,7 +887,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (box is! RenderBox || !box.hasSize) return;
     final h = box.size.height;
     if ((h - _bodyTop).abs() < 0.5) return;
-    setState(() => _bodyTop = h);
+    _bodyTopN.value = h;
   }
 
   /// Tuvaldeki görsellerin sayfa uzayındaki bantları. Gövde metni ve liste
@@ -1758,6 +1771,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _videoHub.dispose();
     _aiTaskN.dispose();
     _busyTaskN.dispose();
+    _bodyTopN.dispose();
     _titleGeneratingN.dispose();
     super.dispose();
   }
@@ -2247,7 +2261,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       page: textPagePosition(note).index + 1,
       penActive: _penMode,
       scroll: _pageScroll,
-      child: NotePageCanvas(
+      child: ValueListenableBuilder<double>(
+      // Başlık ölçümü (bkz. [_measureBodyTop]) yalnız tuvali kurar.
+      valueListenable: _bodyTopN,
+      builder: (context, bodyTop, _) => NotePageCanvas(
       // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
       minHeight: minHeight,
       placementHintId: _placementHintId,
@@ -2276,7 +2293,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onEmbed: _readOnly || note.type.isPageNoteType
           ? null
           : _startPendingEmbed,
-      topLimit: _bodyTop,
+      topLimit: bodyTop,
       // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
       // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
       textTop: _kBodyTextTop,
@@ -2305,7 +2322,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             }
           : null,
       child: KeyedSubtree(key: _pageKey, child: pageContent),
-    ))),
+    ),
+      ))),
       ),
     ),
   );
@@ -4202,11 +4220,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   // Paket grubu (F60.2): biçim paneli açık paketi kapatmaz.
                   child: TapRegion(
                   groupId: kNotePackageTapGroup,
-                  child: AnimatedSize(
-                    duration: _kBarSwap,
-                    curve: Curves.easeOutCubic,
-                    alignment: Alignment.bottomCenter,
-                    child: !_formatBarOpen || _findOpen
+                  child: !_formatBarOpen || _findOpen
                         ? const SizedBox.shrink()
                         : RevealUp(
                           child: SingleChildScrollView(
@@ -4324,7 +4338,6 @@ child: FormatBar(
                           ),
                         ),
                   ),
-                  ),
                 ),
                 // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
                 // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
@@ -4372,13 +4385,10 @@ child: NoteFindBar(
                 child: TypingBarHide(
                   hidden: _typingN,
                   enabled: ref.watch(hideBarWhileTypingProvider),
-                  child: AnimatedSize(
-                  duration: _kBarSwap,
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.topCenter,
                   child: _formatBarOpen
                       ? const SizedBox(width: double.infinity)
-                      : Column(
+                      : _barReturn(
+                      Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
@@ -4529,9 +4539,10 @@ child: NoteFindBar(
                               UiItem.barFormat,
                               Icons.text_format,
                               l10n.formatTitle,
-                              () => setState(
-                                () => _formatBarOpen = !_formatBarOpen,
-                              ),
+                              () => setState(() {
+                                _formatBarOpen = !_formatBarOpen;
+                                _barSwapped = true;
+                              }),
                               active: _formatBarOpen,
                             ),
                             // Panel kapalıyken imlecin biçimleri (B/I/U, renk).
@@ -4821,7 +4832,7 @@ child: NoteFindBar(
                 ),
                 ],
                 ),
-                ),
+                    ),
                 ),
                 ),
                 ),
