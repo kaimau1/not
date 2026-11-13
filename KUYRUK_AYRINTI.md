@@ -81,15 +81,21 @@ Model: fable · Cihaz: A/B · APK: evet
 
 **Durum:** bekliyor — P49 (sabit ek) ve P50 (düzenleme modu) BİTTİKTEN sonra; onların editördeki bloklarını AYNEN taşır
 
+**Katılanlar (yeniden düzen 2026-11-14):** P50 kalanı (üst çubuk sırası; ana ekran `Customizable` sarmaları — P56 çiti kalktı), P38 kalanı: editör `toggle_pop`'u. Başlama şartı: entegrasyon dalı (P55+P56+P38+P50) main'de. P41 aynı anda koşabilir; P41 editör dosyalarına dokunmaz.
+
 ## P41 — Belirteç göçü
 
 Model: sonnet · Cihaz: - · APK: -
 
 **Plan maddeleri:** DENEYIM F72.6
 
-**Durum:** bekliyor — P22'den önce, açık dal yokken (mekanik; editör klasörü hariç). Kapanış toparlaması P53'e taşındı (2026-11-12)
+**Durum:** bekliyor — mekanik; editör klasörü hariç. Kapanış toparlaması P22'de (P53 katıldı).
 
-## P22 — SON PAKET: açıkta kalan her maddeyi değerlendir ve uygun biçimde yap
+**Katılanlar (yeniden düzen 2026-11-14):** P38 kalanı: P55/P56 çitinde bırakılan 35 `HapticFeedback` çağrısı → `AppHaptics` (P38 dalının DEVIR'indeki liste; P47 çöp sürüklemesi davranışı korunur). Şart değişti: "açık dal yokken" yerine P20 ile PARALEL; dosya çiti `lib/features/editor/**`, `note_editor_screen.dart` ve P20'nin değiştirdiği dosyalar.
+
+## P22 — KAPANIŞ: açıkta kalan maddeler + büyük toparlama (P53 katıldı 2026-11-14)
+
+**Yeniden düzen (2026-11-14):** tek ajan, iki evre, aynı dal. 1. evre: aşağıdaki açık maddeler + P45 F83.3 (CI kare ölçümü kararı → kullanıcı listesine). 2. evre: §P53 protokolü (tek plan, tek kullanıcı kontrol listesi, HAFIZA/CLAUDE.md toparlama). Evre arası DEVIR.md ile; limit keserse devralan 2. evreden sürer.
 
 Model: opus · Cihaz: gerekirse · APK: gerekirse
 
@@ -97,7 +103,7 @@ Model: opus · Cihaz: gerekirse · APK: gerekirse
 
 **Durum:** bekliyor — protokol aşağıda
 
-## P53 — BÜYÜK TOPARLAMA: tek plan, tek kontrol listesi
+## P53 — BÜYÜK TOPARLAMA (P22'nin 2. evresi; ayrı paket değil)
 
 Model: opus · Cihaz: - · APK: -
 
