@@ -170,7 +170,7 @@ void main() {
     );
     await tester.pump();
     expect(tapped, 0);
-    await tester.tap(find.byKey(const ValueKey('customize-save')));
+    await tester.tap(find.byKey(const ValueKey('customize-done')));
     await tester.pumpAndSettle();
     expect(Personalize.prefs.value.shows(UiItem.homeMic), isFalse);
     expect(find.byKey(const ValueKey('dictation')), findsNothing);

@@ -63,6 +63,31 @@ void main() {
       }
       expect(p.shows(UiItem.barFormat), isTrue);
     });
+
+    // P50 (P57'den devir): düğme iki kapsül arasında taşınır.
+    test('kapsül tarafı: varsayılan, taşıma, kayıt/okuma', () {
+      const p = UiPrefs();
+      expect(p.barSides.left, UiItem.barLeftDefault);
+      expect(p.barSides.right, UiItem.barRightDefault);
+      final moved = p
+          .withBarSide(UiItem.barSearch, right: true)
+          .withBarSide(UiItem.barAi, right: false);
+      expect(moved.barSides.right, [
+        UiItem.barVoiceRecord,
+        UiItem.barDictation,
+        UiItem.barSearch,
+      ]);
+      expect(moved.barSides.left.last, UiItem.barAi);
+      expect(moved.barSides.left, isNot(contains(UiItem.barSearch)));
+      final back = UiPrefs.fromJson(moved.toJson()).barSides;
+      expect(back.left, moved.barSides.left);
+      expect(back.right, moved.barSides.right);
+      // Geri taşınınca eski tarafına döner.
+      expect(
+        moved.withBarSide(UiItem.barSearch, right: false).barSides.right,
+        isNot(contains(UiItem.barSearch)),
+      );
+    });
   });
 
   group('editör alt çubuğu', () {
@@ -105,6 +130,37 @@ void main() {
       expect(find.byTooltip(l10n.formatTitle), findsNothing);
       await endEditor(tester);
     });
+
+    testWidgets('düğme öbür kapsüle taşınır (Ara sağa, yapay zekâ sola)', (
+      tester,
+    ) async {
+      await pumpEditor(tester, note);
+      Finder inCapsule(String capsule, String tooltip) => find.descendant(
+        of: find.byKey(ValueKey(capsule)),
+        matching: find.byTooltip(tooltip),
+      );
+      expect(
+        inCapsule('editor-tool-capsule', l10n.noteSearchTitle),
+        findsOneWidget,
+      );
+      Personalize.update(
+        (p) => p
+            .withBarSide(UiItem.barSearch, right: true)
+            .withBarSide(UiItem.barAi, right: false),
+      );
+      await tester.pump();
+      expect(
+        inCapsule('editor-ai-capsule', l10n.noteSearchTitle),
+        findsOneWidget,
+      );
+      expect(
+        inCapsule('editor-tool-capsule', l10n.noteSearchTitle),
+        findsNothing,
+      );
+      expect(inCapsule('editor-tool-capsule', l10n.aiTitle), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await endEditor(tester);
+    });
   });
 
   group('Ayarlar listesi', () {
@@ -136,6 +192,27 @@ void main() {
       );
       await tester.pump();
       expect(Personalize.prefs.value.shows(UiItem.barFormat), isFalse);
+    });
+
+    testWidgets('taşı düğmesi düğmeyi öbür kapsülün listesine alır', (
+      tester,
+    ) async {
+      await pumpList(tester);
+      Finder inGroup(String group, String id) => find.descendant(
+        of: find.byKey(ValueKey('personalize-bar-$group')),
+        matching: find.byKey(ValueKey('bar-switch-$id')),
+      );
+      expect(inGroup('left', UiItem.barSearch), findsOneWidget);
+      final move = find.byKey(const ValueKey('bar-move-editor.bar.search'));
+      await tester.ensureVisible(move);
+      await tester.tap(move);
+      await tester.pump();
+      expect(inGroup('right', UiItem.barSearch), findsOneWidget);
+      expect(inGroup('left', UiItem.barSearch), findsNothing);
+      expect(
+        Personalize.prefs.value.barSides.right,
+        contains(UiItem.barSearch),
+      );
     });
 
     testWidgets('varsayılana dön: sıra ve görünürlük sıfırlanır', (

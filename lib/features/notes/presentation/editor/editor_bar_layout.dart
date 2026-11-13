@@ -50,6 +50,8 @@ EditorBarPlan planEditorBar({
   required int fixedSegments,
   required bool attachments,
   bool pen = true,
+  // Ara soldaki kapsülde mi (sağa taşındıysa plan ona yer ayırmaz).
+  bool search = true,
   int aiButtons = 3,
 }) {
   double need(double button, double gap, int optional) {
@@ -77,10 +79,12 @@ EditorBarPlan planEditorBar({
     (40.0, 2.0, false, false),
     (36.0, 2.0, false, false),
   ];
-  for (final (button, gap, search, keepPen) in steps) {
+  for (final (button, gap, keepSearch, keepPen) in steps) {
     final withPen = pen && keepPen;
-    if (need(button, gap, (search ? 1 : 0) + (withPen ? 1 : 0)) <= width) {
-      return (button: button, gap: gap, search: search, pen: withPen);
+    final withSearch = search && keepSearch;
+    if (need(button, gap, (withSearch ? 1 : 0) + (withPen ? 1 : 0)) <=
+        width) {
+      return (button: button, gap: gap, search: keepSearch, pen: withPen);
     }
   }
   // Hiçbiri sığmadı (çok dar pencere): en sıkı plan; kapsül kendi içinde

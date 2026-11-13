@@ -13,6 +13,9 @@ import '../../../core/personalize.dart';
 /// gelen düğmeler (geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara,
 /// renk, paylaş) aynı listede kapalı durur — açınca çubuğa girer.
 ///
+/// Satırdaki ok düğmeyi ÖBÜR kapsüle taşır (P50): her düğme iki kapsülde de
+/// durabilir, yalnız kılığı değişir.
+///
 /// Değişiklik hemen kaydedilir ([Personalize.update]); düzenleme modu açıksa
 /// taslak da aynı değişikliği alır.
 class PersonalizeBarList extends StatelessWidget {
@@ -50,14 +53,15 @@ class PersonalizeBarList extends StatelessWidget {
     listenable: Personalize.prefs,
     builder: (context, _) {
       final l10n = context.l10n;
-      final prefs = Personalize.prefs.value;
+      final sides = Personalize.prefs.value.barSides;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _GroupLabel(l10n.personalizeBarLeft),
           _ReorderGroup(
             groupKey: 'left',
-            ids: UiPrefs.orderOf(UiItem.barLeftDefault, prefs.barOrder),
+            ids: sides.left,
+            right: false,
             onReorder: (ids) =>
                 Personalize.update((p) => p.copyWith(barOrder: ids)),
           ),
@@ -65,7 +69,8 @@ class PersonalizeBarList extends StatelessWidget {
           _GroupLabel(l10n.personalizeBarRight),
           _ReorderGroup(
             groupKey: 'right',
-            ids: UiPrefs.orderOf(UiItem.barRightDefault, prefs.aiOrder),
+            ids: sides.right,
+            right: true,
             onReorder: (ids) =>
                 Personalize.update((p) => p.copyWith(aiOrder: ids)),
           ),
@@ -113,11 +118,15 @@ class _ReorderGroup extends StatelessWidget {
   const _ReorderGroup({
     required this.groupKey,
     required this.ids,
+    required this.right,
     required this.onReorder,
   });
 
   final String groupKey;
   final List<String> ids;
+
+  /// Bu grup sağ kapsül mü — satırdaki "taşı" düğmesi öbür tarafa yollar.
+  final bool right;
   final ValueChanged<List<String>> onReorder;
 
   @override
@@ -152,9 +161,33 @@ class _ReorderGroup extends StatelessWidget {
                 value: on,
                 onChanged: (v) =>
                     Personalize.update((p) => p.withVisible(id, v)),
-                title: Text(
-                  label,
-                  style: on ? null : TextStyle(color: scheme.outline),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: on ? null : TextStyle(color: scheme.outline),
+                      ),
+                    ),
+                    // ÖBÜR KAPSÜLE TAŞI (P50): gruplar alt alta — ok yönü
+                    // düğmenin gideceği grubu gösterir.
+                    IconButton(
+                      key: ValueKey('bar-move-$id'),
+                      visualDensity: VisualDensity.compact,
+                      tooltip: right
+                          ? l10n.personalizeBarMoveLeft
+                          : l10n.personalizeBarMoveRight,
+                      icon: Icon(
+                        right
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
+                        color: scheme.outline,
+                      ),
+                      onPressed: () => Personalize.update(
+                        (p) => p.withBarSide(id, right: !right),
+                      ),
+                    ),
+                  ],
                 ),
                 secondary: Row(
                   mainAxisSize: MainAxisSize.min,
