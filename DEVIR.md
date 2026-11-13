@@ -1,28 +1,22 @@
 # DEVIR — P43 (oto/P43-hiz-olcum)
 
 ## Yapılanlar
-- F82.1–F82.3 bitti, main'de (580e40b1). F81.1–F81.5 `tool/perf/ab_hepsi.py` + kapı metinleri (980cd82c, 3e085383).
-- TAM A/B koşusu (2026-11-13, 25→37 °C, AC'de): A=altin_9c837495, B=P39_02ebd989, 3'er koşu →
-  `docs/perf/altin_taban.json` + `docs/perf/gecmis.csv` yazıldı. KARAR: KALDI — menu LAYOUT 44→50,
-  klasor LAYOUT 82→108 (altın +%33), sabit_kay UI 877→967 ms. Ayrıntı tablo KUYRUK_AYRINTI §P46.
-- Düzeltme: `acilis` evresinde UI ms anlamsız (duraklatılmış başlangıç çoğu koşuda 2 kare yakalıyor:
-  ab_hepsi.py cold_start) → karar/altın açılışta `ilk_kare_ms`'ye bakar (decide()).
+- F82.1–F82.3 main'de (580e40b1). F81.1/3/5 `tool/perf/ab_hepsi.py` (980cd82c, 3e085383), ilk A/B 260effc7.
+- 1. tur kabul KALDI (fd406d24): %10 eşik + 37 °C'de başlama → A=A yanlış alarm.
+- 2. tur (sabah): 0b741b8c eşik %20, < 34 °C başlangıç, `--altin-yaz` ≥ 5 koşu (A=B'de 6);
+  dbfa1233 ready() null odakta bekler; altın taban 6 koşu A=A ile yeniden (bu commit'ten önceki).
+- Kabul A=A: 1. koşu A/B GEÇTİ; 2. koşu `--altin` A/B GEÇTİ, altına karşı `yaz` LAYOUT +%16 → KALDI.
 
-## Şu an (2. işçi, 2026-11-13 sabah)
-- Öneri uygulandı (0b741b8c): A/B eşiği %20, koşu başlangıcı < 34 °C, `--altin-yaz` A=B'de 6 koşu (≥5).
-- dbfa1233: ready() null odakta bekler. Altın taban SİLİNDİ, 6 koşuluk A=A ile yeniden yazılıyor; sonra kabul A=A `--altin`.
-
-## Önceki (F81 kabulü KALDI)
-- Kabul A=A (aynı 9c837495 APK, 36,6–36,9 °C): KARAR KALDI — `yaz` LAYOUT 269→300 yanlış alarm;
-  altına karşı `yaz` +%40, `menu` +%28, `not_ac` +%22. Kök: gürültü ±%15 + sıcaklık (HIZ_PLANI F81 Durum).
-  Kural gevşetilmedi (en güvenli). Öneri: A/B eşiği %20, altın 5+ koşu ortancası, başlangıç < 34 °C şarjsız.
-- F68.4 ölçüldü (liste evresi = ab_liste): > 16 ms %2,3–3,3, hedef %2 tutmadı → P46.
-- Belgeler güncel: HIZ_PLANI, OTURTMA F68.4, KUYRUK_AYRINTI §P43, OTOMASYON satırı, regresyon listesi, hafiza/akicilik.
+## Şu an / sıradaki (sabah bakılacak)
+- %15 altın eşiği HIZ SÖZLEŞMESİ'nde: gevşetilmedi. Karar kullanıcıda: `yaz` LAYOUT (302–377
+  oturumlar arası) için gürültü payı ya da altın dışı. Sonra 3. A=A + yavaşlatılmış B (ItemsEditor +5 ms).
+- F68.4 → P46 (liste > 16 ms %2,3–3,3).
 
 ## Tuzaklar
-- 2. koşuda (A ve B) `liste` evresi 1 kare yakaladı (kök neden bulunamadı; ortanca etkilenmedi).
-- Kilit ekranında yukarı kaydırma USB bildirimini açabiliyor (UsbDetailsActivity) — sonra am start düzeltiyor.
+- `liste` evresi bazı koşularda 1 kare yakalıyor (ortanca etkilenmez).
+- AC şarj kesilemiyor; < 34 °C'de koşu ~5 dk + soğuma ~3 dk, 6 koşu ~45 dk.
 - Ekran ~30 sn'de kilitleniyor: her dokunuştan önce `ready()`. Git Bash'te `adb push` için `MSYS_NO_PATHCONV=1`.
 
 ## Komut
 `cd tool/perf && PYTHONIOENCODING=utf-8 python -u ab_hepsi.py <A.apk> <B.apk> --etiket-a .. --etiket-b .. --commit .. --altin`
+(aynı APK: `C:/Users/sena/Desktop/ab_A_9c837495.apk`)

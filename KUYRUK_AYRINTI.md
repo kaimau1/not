@@ -9,7 +9,7 @@ Model: opus · Cihaz: cihaz · APK: -
 
 **Plan maddeleri:** HIZ_PLANI F81.1–F81.5 + F82.1–F82.3
 
-**Durum (2026-11-13):** F82 main'de; F81 aracı + ilk tam A/B + altın taban dalda (`oto/P43-hiz-olcum`); **F81 kabulü KALDI** (aynı APK A=A'da `yaz` LAYOUT yanlış alarm, altına karşı +%22–40 sıcaklık kayması — HIZ_PLANI F81 Durum, sabah bakılacak); F68.4 ölçüldü: liste > 16 ms %2,3–3,3, hedef %2 tutmadı → P46. Eski durum: önce F82 (cihazsız bekçiler S18–S25, kasma kalıpları, uzun oturum), sonra F81 (cihazda ölçüm + altın taban); senaryolara "sabit görsel/PDF + klavye aç/kapa" evresi de girer (kullanıcı 2026-11-12; düzeltmesi P49'da — sabit ek dosyasına tek paket dokunsun); OTURTMA F68.4 kaydırma kabulü ölçümü (`ab_liste.py`) de burada (P22'den alındı)
+**Durum (2026-11-13):** F82 main'de; F81 aracı + ilk tam A/B + altın taban dalda (`oto/P43-hiz-olcum`); **F81 kabulü KALDI** (aynı APK A=A'da `yaz` LAYOUT yanlış alarm, altına karşı +%22–40 sıcaklık kayması — HIZ_PLANI F81 Durum, sabah bakılacak); 2. tur (sabah): eşik %20 + < 34 °C + 6 koşulu altın → A/B A=A 2/2 GEÇTİ, altına karşı `yaz` LAYOUT +%16 → hâlâ KALDI (HIZ_PLANI F81 Durum 2); F68.4 ölçüldü: liste > 16 ms %2,3–3,3, hedef %2 tutmadı → P46. Eski durum: önce F82 (cihazsız bekçiler S18–S25, kasma kalıpları, uzun oturum), sonra F81 (cihazda ölçüm + altın taban); senaryolara "sabit görsel/PDF + klavye aç/kapa" evresi de girer (kullanıcı 2026-11-12; düzeltmesi P49'da — sabit ek dosyasına tek paket dokunsun); OTURTMA F68.4 kaydırma kabulü ölçümü (`ab_liste.py`) de burada (P22'den alındı)
 
 ## P45 — Hız: her [apk]'da ölçüm + geçmiş + CI kare ölçümü kararı
 
