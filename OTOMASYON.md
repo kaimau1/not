@@ -82,7 +82,13 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
     yeni paket/alt ajan YOK; çalışana "commit + push yap ve dur" de; satır `sürüyor` kalsın;
     kilidi sil; `resetsAt`'ı özetine yaz, bitir (tur başında ≥ 90 ise hiçbir şey yapmadan bitir).
     ≥ 80: yeni paket başlatma, elindekini bitir. Araç `unavailable` ise frensiz devam (özetine yaz).
-    **Devam.** Limit elverdikçe 3. adıma dön. Dur ve bitir: art arda 3 `takıldı`; main iki
+    **Devam.** Limit elverdikçe 3. adıma dön.
+    **Limiti boş bırakma (kullanıcı kararı 2026-11-13: "gece boyu ufacık işler yapıp durmuş"):**
+    aynı anda EN ÇOK 2 paket alt ajanı (dosyaları çakışmayan iki paket; cihaz/A-B ölçümü tek
+    seferde bir tane). Biri bitince hemen sıradakini başlat. Limit < %80 ve Kuyruk'ta iş varken
+    tur BİTMEZ (yalnız kilit/limit/3 takıldı ile biter). Cihaz kabul ölçümü (A=A, altın taban)
+    en çok 2 tur; yine kırmızıysa satıra `kullanıcı kararı` yaz, aracı/işi birleştir, sıradakine
+    geç — saatlerce ölçüm döngüsü yok. Dur ve bitir: art arda 3 `takıldı`; main iki
     kez üst üste kırmızı; Kuyruk boş. Bitirirken kilidi sil, 5 satır özet yaz.
 
 11. **Takılma önleme.** Her arka plan bekleme süre sınırlı: `timeout 2700 gh run watch <id>
