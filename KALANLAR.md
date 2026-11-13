@@ -326,6 +326,7 @@ Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5
 - L1 Uçak kipini aç → ana ekranda "Gelen" süzgecini seç (Gelen'i daha önce hiç açmamış taze kurulumda): "burada not yok" DEĞİL, "Bağlantı yok" + Tekrar dene. Uçak kipini kapat → Tekrar dene → liste gelir.
 - L2 Uçak kipi → notta ✨ AI levhası: üstte "Bağlantı yok" kartı, araçlar soluk ve dokunulmuyor. Uçak kipini kapat → kart kalkar, araçlar açılır (levhayı kapatıp açmadan).
 - L3 Uçak kipinde nota fotoğraf ekle → ana ekrandaki şerit "1 ek bekliyor — bağlantı gelince yüklenecek" (bulut-üstü-çizili simge, kırmızı değil). Bağlantı gelince "yükleniyor", sonra şerit kaybolur.
+- L4 Notta birkaç maddeye noktalı, kesikli ve dalgalı "Alt çizgi" ver → bir maddeye dokun, klavye açılsın: takılma yok; çizgiler eskisi gibi görünüyor (noktalar yuvarlak, dalga aynı genlikte). Düz çizgide hâlâ takılıyorsa P55'e not et.
 
 ## 3. Açık kararlar / bilinen sınırlar → `KALAN_ISLER_PLANI.md` (F18.2–F18.5, F18.11, F18.13, F18.27, "Bilinen sınırlar")
 

@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 13 November 2026 {#2026-11-13}
+- **Smoother underlined items:** dotted, dashed and wavy item underlines are drawn with far less work, so opening the keyboard and scrolling should stutter less.
 - **Honest screens when offline:** without internet the "Inbox" filter shows "No connection" with Retry instead of "nothing here"; the AI sheet tells you up front that you are offline (buttons turn on when you are back); waiting attachments say "will upload when you are online" instead of "uploading".
 - **Text selection on the web fixed:** double-clicking with the mouse now selects just the word (not the whole sentence); shift+arrow selection moves letter by letter instead of jumping to the whole word.
 - **Calendar events on every device:** new events now show on all your devices by default ("All devices"); pick Google in the editor to save to Google Calendar instead.
