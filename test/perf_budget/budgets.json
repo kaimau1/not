@@ -218,8 +218,8 @@
   },
   "S25": {
     "senaryo": "Görselli 50 not (dpr 2,625, 6 ekran kaydır): kart küçük resmi çözme boyu sınırsız (memCacheWidth/cacheWidth yok ya da kart boyu × dpr ve 480'den büyük) olan görsel sayısı",
-    "sinirsiz_cozum": 21,
-    "bugun": "21 — hepsi yalnız Drive küçük resmi (thumbUrl) olan ekler: note_card_media.dart _image thumbUrl dalında memCacheWidth yok (2026-11-12)",
+    "sinirsiz_cozum": 0,
+    "bugun": "0 (2026-11-13, P46: thumbUrl dalına memCacheWidth 480); önce 21 — hepsi yalnız Drive küçük resmi (thumbUrl) olan ekler: note_card_media.dart _image thumbUrl dalında memCacheWidth yok (2026-11-12)",
     "hedef": "0",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); bulgu P46'ya yazıldı — düzeltilince 0'a iner"
   }
