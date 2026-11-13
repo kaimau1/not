@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/markdown.dart';
 import '../../../core/utils/web_blob.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../domain/attachment.dart';
@@ -18,7 +19,10 @@ import 'attachment_repository.dart';
 String saveAsFileName(Attachment a) {
   var name = a.fileName.trim();
   if (name.isEmpty) name = 'ek';
-  if (a.kind == AttachmentKind.text && !name.toLowerCase().endsWith('.txt')) {
+  // `.md` eki (P54) adıyla kalır; `.md.txt` olmasın.
+  if (a.kind == AttachmentKind.text &&
+      !name.toLowerCase().endsWith('.txt') &&
+      !isMarkdownFile(name)) {
     name = '$name.txt';
   }
   return name;

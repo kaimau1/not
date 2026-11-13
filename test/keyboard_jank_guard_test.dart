@@ -9,6 +9,7 @@ import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/editor_quick_row.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
+
 import 'support/editor_harness.dart';
 
 /// Klavye hareketinin kareleri (dp): yavaş başlar (ilk kareler gezinme
@@ -184,7 +185,10 @@ Future<void> _keyboardScene(
     '${worst(moving).inset.toStringAsFixed(0)}), editör içi $editorWorst, '
     'dizilen $laidOut',
   );
-  expect(first.single.builds, lessThanOrEqualTo(_budget('${key}ilk_kare_kurulum')));
+  expect(
+    first.single.builds,
+    lessThanOrEqualTo(_budget('${key}ilk_kare_kurulum')),
+  );
   expect(
     worst(switching).builds,
     lessThanOrEqualTo(_budget('${key}gecis_karesi_kurulum')),
@@ -248,15 +252,40 @@ void main() {
     );
   });
 
+  // HIZ_PLANI P43 (kullanıcı 2026-11-12: "sabit ek varken klavye açılırken
+  // hem sabit ek paneli hem klavye kasıyor"): sabit GÖRSEL evresi. Yalnız
+  // bekçi — düzeltmesi P49'un (pinned_media_pane.dart).
+  testWidgets('sabit görselli notta da: konum tekdüze, hareket kareleri '
+      'bütçede (S17)', (tester) async {
+    await _keyboardScene(
+      tester,
+      _typed.copyWith(
+        attachments: const [
+          Attachment(
+            id: 'g',
+            kind: AttachmentKind.image,
+            fileName: 'g.jpg',
+            mimeType: 'image/jpeg',
+            width: 1200,
+            height: 800,
+            downloadUrl: 'https://x.invalid/g.jpg',
+            pinHeight: 300,
+          ),
+        ],
+      ),
+      name: 'sabit görsel',
+      key: 'sabit_gorsel_',
+    );
+  });
+
   testWidgets('KeyboardSwitch: hızlı satır bir kez kurulur, klavye kapanınca '
       'sökülmez', (tester) async {
     var inits = 0;
     Widget app(double inset) => MaterialApp(
       home: Builder(
         builder: (context) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(viewInsets: EdgeInsets.only(bottom: inset)),
+          data: MediaQuery.of(context)
+              .copyWith(viewInsets: EdgeInsets.only(bottom: inset)),
           // Scaffold DEĞİL: gövdesinden klavye boşluğunu siler (editörde
           // anahtar üst çubukta).
           child: Material(

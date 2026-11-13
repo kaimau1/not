@@ -35,6 +35,10 @@ enum PickedFileKind {
     'pptx',
     ...videoExtensions,
     ...audioExtensions,
+    // Markdown (P54): türü yok — not içinde metin eki, ana ekranda yeni not
+    // olur (bkz. `isMarkdownFile`; [of] null döner).
+    'md',
+    'markdown',
   ];
 
   /// Dosya adının türü; desteklenmiyorsa null.

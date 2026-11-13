@@ -63,10 +63,18 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
    (`git worktree remove --force <ağaç>`), uzak dalı (`git push origin --delete oto/<no>-*`)
    ve yerel dalı silinir; A/B taban ağacı (`../not_ab`) ölçüm bitince silinir. 34 kopya
    (~onlarca GB) birikmişti. Silinemeyen klasörü tutan Gradle sürecini durdur.
+   **Yarım iş devri (kullanıcı kararı 2026-11-12):** paket yarıda kalırsa (limit/durdurma) Kuyruk
+   satırı HEMEN `sürüyor — dal <ad> (<commit>): bitti <x>, kalan <y>; DEVIR.md'den sür` olur ve main'e
+   push edilir ("bekliyor" kalırsa sonraki tur sıfırdan başlar). Önce `git log origin/<dal>..HEAD`
+   boş olmalı. Ölçüm ham sayıları DEVIR'e/plana yazılır, sohbette kalmaz. Tur başında uzaktaki
+   `oto/*` dallarına bak; satırı olmayan dalı DEVIR'iyle satıra bağla.
 8. **APK noktası** (Kuyruk'ta APK = `evet`): birleştirme başlığına `[apk]`; aynı commit'te
    `assets/guide/release_notes_tr.md` + `_en.md`'ye günün bölümü (kullanıcı diliyle, o
-   APK'ya giren bütün paketler). Push'tan sonra APK işi BİTENE dek main'e başka push yok
-   (`gh run watch`). main kırmızıysa düzelt ya da `git revert -m 1`.
+   APK'ya giren bütün paketler).
+   **APK izlenmez (kullanıcı kararı 2026-11-12):** dal CI'ı yeşilse main APK'sı da yeşil olur;
+   birleştir, push, özeti ver, sıradaki pakete geç. Yalnız sonraki main push'undan ÖNCE tek bakış:
+   `gh run list -b main -L 1` — APK işi sürüyorsa push'u bekletip dalda çalışmaya devam et
+   (yeni push süren APK'yı iptal eder). main kırmızıysa 2. adım (main sağlığı) yakalar.
 9. **Regresyon turu** (protokol madde 8): her APK noktasından önce `docs/regresyon_listesi.md`
    baştan koşulur.
 10. **Limit freni (%90).** Paket başında, alt ajan dönünce, birleştirmeden önce
@@ -132,10 +140,11 @@ Biten paketler: P01–P19, P23–P37, P39, P40, P42, P47 (39; P39 cihaz A/B 2026
 
 | No | Paket | Model | Plan maddeleri | Cihaz | APK | Durum / sonuç |
 |---|---|---|---|---|---|---|
-| P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | bekliyor — önce F82, sonra F81; + F68.4; sabit ek düzeltmesi P49'da; ayrıntı: KUYRUK_AYRINTI.md §P43 |
+| P54b | .md başlık düzeltmesi | opus | P54 devamı | | evet | bitti — main'e birleştirildi 2026-11-13 |
+| P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | sürüyor — dal `oto/P43-hiz-olcum` (fd406d24): F81 aracı + altın taban + F82 bitti; KABUL KIRMIZI (aynı APK A=A → KALDI, gürültü ±%15): eşik %20, altın taban ≥5 koşu, <34 °C şarjsız (F81.2/F81.4 açık); F68.4 liste %2,3–3,3 >16 ms → P46; DEVIR.md'den sür; sabah bakılacak |
 | P45 | Hız: her [apk]'da ölçüm + geçmiş | sonnet | HIZ_PLANI F83.1–F83.3 | cihaz |  | bekliyor — HIZ_PLANI F83; ayrıntı: KUYRUK_AYRINTI.md §P45 |
 | P46 | Hız: ölçümün bulduğu yavaşlıkları düzelt | fable (limit %55 üstü → opus) | HIZ_PLANI F84 + F60.S2/F60.5/F68.3 | A/B | evet | bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ (P49'un); sabit ekte bulgu P49 satırına yazılır; ayrıntı: KUYRUK_AYRINTI.md §P46 |
-| P48 | Web yazı seçimi + takvim senkronu + web ek | opus | kullanıcı 2026-11-12 | cihaz (b) | evet | dalda `oto/P48-web-takvim` (2026-11-12): (a) cümle genişletici fare/klavye seçimini büyütüyordu → düzeltildi; (b) Google bağlı cihazda yeni etkinlik Google'a gidiyordu → varsayılan Firestore (K2 sapması, sabah bakılacak); (c) üretilemedi. Cihazda doğrulanmadı; ayrıntı: KUYRUK_AYRINTI.md §P48 |
+| P48 | Web yazı seçimi + takvim senkronu + web ek | opus | kullanıcı 2026-11-12 | cihaz (b) | evet | sürüyor — dal `oto/P48-web-takvim` (e726688a): web seçim + takvim düzeltildi, CI sonucu bakılmadı; CI yeşilse [apk] ile birleştir (takvim varsayılanı K2'ye ters: sabah bakılacak), DEVIR.md'de sürüm notu taslağı; ayrıntı: KUYRUK_AYRINTI.md §P48 |
 | P49 | Sabit ek baştan: tasarım, tuşlar, özellikler | fable (limit %55 üstü → opus) | kullanıcı 2026-11-12 | A/B | evet | bekliyor — BAŞTAN TASARIM; kesin istekler (a)–(g) + KORU ayrıntıda; önce `istek_tara.py`; ayrıntı: KUYRUK_AYRINTI.md §P49 |
 | P50 | Düzenleme modu baştan + hızlı menü | fable (limit %55 üstü → opus) | kullanıcı 2026-11-12 |  | evet | bekliyor — P49'DAN SONRA; `pinned_media_pane.dart`'a dokunmaz; kasma listesi §3–§4; ayrıntı: KUYRUK_AYRINTI.md §P50 |
 | P38 | Hareket ve dokunsal dil | opus | DENEYIM F77.1–F77.4 | A/B | evet | bekliyor — P47 çöp sürükleme haptiği/`_previewCardDrop` korunur, yalnız `AppHaptics`e sarılır; ayrıntı: KUYRUK_AYRINTI.md §P38 |

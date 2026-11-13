@@ -149,6 +149,31 @@
                 <data android:mimeType="application/pdf"/>
                 <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation"/>
             </intent-filter>
+            <!-- MARKDOWN "birlikte aç" (P54, kullanıcı 2026-11-12: ".md
+                 desteklenmeli"): .md dosyası yeni not olur (başlık, maddeler
+                 korunur — bkz. markdownNoteDraft). MIME'ı doğru bildiren
+                 sağlayıcılar için tür; MIME'ı octet-stream veren dosya
+                 yöneticileri için uzantı (.notpaket filtresinin kalıbı).
+                 Paylaş (SEND) yolu `text/*` filtresiyle zaten geliyordu. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="text/markdown"/>
+                <data android:mimeType="text/x-markdown"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:host="*"/>
+                <data android:mimeType="*/*"/>
+                <data android:pathPattern=".*\\.md"/>
+                <data android:pathPattern=".*\\..*\\.md"/>
+                <data android:pathPattern=".*\\.markdown"/>
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND_MULTIPLE"/>
                 <category android:name="android.intent.category.DEFAULT"/>

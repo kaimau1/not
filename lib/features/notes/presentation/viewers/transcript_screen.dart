@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/markdown.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../data/attachment_repository.dart';
@@ -127,7 +128,14 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     if (cache != null && identical(cache.$1, _text) && cache.$2 == _showTimes) {
       return cache.$3;
     }
-    final value = _showTimes ? _text : Transcripts.stripTimestamps(_text);
+    // Markdown eki (P54) ham işaretlerle değil okunur hâliyle gösterilir;
+    // "nota ekle" de bu hâli alır.
+    final saved = _saved;
+    final text = saved != null &&
+            isMarkdownFile(saved.fileName, mime: saved.mimeType)
+        ? markdownReadable(_text)
+        : _text;
+    final value = _showTimes ? text : Transcripts.stripTimestamps(text);
     _shownCache = (_text, _showTimes, value);
     return value;
   }
@@ -317,15 +325,20 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
         _saved?.fileName ?? widget.source?.fileName ?? l10n.transcriptTitle;
     final canRetry = widget.source != null && !_busy;
     final isImage = _kind == AttachmentKind.image;
+    final saved = _saved;
+    final markdown =
+        saved != null && isMarkdownFile(saved.fileName, mime: saved.mimeType);
 
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.transcriptTitle),
+            // .md eki (P54b): üstte dosya adı, altta "Markdown" — transkript
+            // değil.
+            Text(markdown ? title : l10n.transcriptTitle),
             Text(
-              title,
+              markdown ? 'Markdown' : title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(

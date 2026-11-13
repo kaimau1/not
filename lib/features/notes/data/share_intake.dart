@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/router.dart';
 import '../../../core/error_log.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/markdown.dart';
 import '../../../core/utils/youtube.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -26,6 +27,7 @@ import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
+import 'import_service.dart';
 import 'note_package.dart';
 import 'note_share.dart';
 import 'notes_repository.dart';
@@ -133,6 +135,7 @@ final shareIntakeProvider = Provider<void>((ref) {
     }
 
     final bodyParts = <String>[];
+    final mdDrafts = <MarkdownDraft>[];
     final docs = <SharedMediaFile>[];
     for (final f in files) {
       // receive_sharing_intent yalnız SEND'i değil ACTION_VIEW'ı da yakalıyor:
@@ -162,6 +165,21 @@ final shareIntakeProvider = Provider<void>((ref) {
       // içeriği okunur, değilse metnin kendisidir.
       try {
         final file = File(f.path);
+        // MARKDOWN (P54): .md paylaşımı/"birlikte aç" ham işaretlerle değil
+        // nota dönüşmüş gelir — başlık, maddeler, onay kutuları korunur.
+        if (isMarkdownFile(f.path, mime: f.mimeType) &&
+            safeToRead(f.path) &&
+            file.existsSync()) {
+          final draft = markdownNoteDraft(
+            p.basename(f.path),
+            utf8.decode(await file.readAsBytes(), allowMalformed: true),
+          );
+          if (draft != null) {
+            mdDrafts.add(draft);
+            bodyParts.add(draft.text);
+          }
+          continue;
+        }
         // readAsString DEĞİL: UTF-8 olmayan bir .txt (Windows-1254/ANSI
         // Türkçe'de hâlâ yaygın) FormatException atıyor ve paylaşım tek
         // içerikse not hiç oluşmuyordu. allowMalformed geçersiz baytları
@@ -294,12 +312,18 @@ final shareIntakeProvider = Provider<void>((ref) {
                   _ => NoteType.text,
                 }
               : NoteType.text);
+    // Tek .md geldiyse not onun taslağıyla doğar (liste notu olabilir).
+    final md = mdDrafts.length == 1 && files.length == 1 && type == NoteType.text
+        ? mdDrafts.single
+        : null;
+    final typedTitle = choice?.noteTitle ?? '';
     // Levhada yazılan ad hem notun başlığı hem de balonlu kipte üretilen
     // belgenin dosya adı olur (bkz. capture_mode_sheet.dart). TEK yazımda.
     final id = await repo.createNote(
-      type,
-      body: body,
-      title: choice?.noteTitle ?? '',
+      md?.type ?? type,
+      body: md?.body ?? body,
+      items: md?.items,
+      title: typedTitle.isNotEmpty ? typedTitle : md?.title ?? '',
     );
 
     final prepared = await _prepareAttachments(

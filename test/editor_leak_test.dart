@@ -236,6 +236,117 @@ void main() {
     await close();
   });
 
+  // HIZ_PLANI F82.3 — uzun oturum (F60.S2'nin cihazsız karşılığı): 200
+  // gir-çık + 50 klavye turu; sonunda canlı denetleyici ve akış aboneliği
+  // sayısı başlangıçla AYNI (yalnız "artmadı" değil).
+  testWidgets('uzun oturum: 200 gir-çık + 50 klavye turu, denetleyici ve '
+      'akış aboneliği başlangıçla aynı', (tester) async {
+    final nav = GlobalKey<NavigatorState>();
+    var listens = 0;
+    var cancels = 0;
+    final noteStream = StreamController<Note?>.broadcast(
+      onListen: () => listens++,
+      onCancel: () => cancels++,
+    );
+    addTearDown(noteStream.close);
+    final repo = CountingNotesRepository();
+    await pumpEditor(
+      tester,
+      _note,
+      repo: repo,
+      noteStream: noteStream.stream,
+      home: Navigator(
+        key: nav,
+        onGenerateRoute: (_) => MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('ana ekran')),
+        ),
+      ),
+    );
+    final live = <Object>{};
+    void onEvent(ObjectEvent e) {
+      if (e is ObjectCreated) live.add(e.object);
+      if (e is ObjectDisposed) live.remove(e.object);
+    }
+
+    Map<String, int> controllers() {
+      final out = <String, int>{};
+      for (final o in live) {
+        final k = switch (o) {
+          TextEditingController() => 'TextEditingController',
+          AnimationController() => 'AnimationController',
+          FocusNode() => 'FocusNode',
+          ScrollController() => 'ScrollController',
+          _ => null,
+        };
+        if (k != null) out[k] = (out[k] ?? 0) + 1;
+      }
+      return out;
+    }
+
+    Future<void> frame(double inset) async {
+      tester.view.viewInsets = FakeViewPadding(bottom: inset);
+      tester.view.padding = FakeViewPadding(
+        top: 30,
+        bottom: (48 - inset).clamp(0.0, 48.0),
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    var tours = 0;
+    Future<void> cycle(int i) async {
+      unawaited(
+        nav.currentState!.push(
+          MaterialPageRoute<void>(
+            builder: (_) => NoteEditorScreen(noteId: _note.id),
+          ),
+        ),
+      );
+      await tester.pump();
+      noteStream.add(_note);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(NoteEditorScreen), findsOneWidget);
+      // Her 4 açılıştan birinde: odak + yazı + klavye aç/kapa (200/4 = 50).
+      if (i % 4 == 0) {
+        await tester.tap(find.textContaining('Satır 3').first);
+        await tester.pump(const Duration(milliseconds: 100));
+        tester.testTextInput.enterText('${_note.body} $i');
+        await tester.pump(const Duration(milliseconds: 50));
+        for (final inset in [60.0, 200.0, 300.0, 120.0, 0.0]) {
+          await frame(inset);
+        }
+        await tester.pump(const Duration(milliseconds: 300));
+        tours++;
+      }
+      nav.currentState!.pop();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      // Kayıt gecikmesi (2 sn) ve kapanış işleri bitsin.
+      await tester.pump(const Duration(seconds: 4));
+    }
+
+    // Isınma: tek seferlik önbellek / ipucu kurulumları.
+    for (var i = 1; i <= 3; i++) {
+      await cycle(i);
+    }
+    await tester.pump(const Duration(seconds: 30));
+    final subsBefore = listens - cancels;
+    FlutterMemoryAllocations.instance.addListener(onEvent);
+    addTearDown(() => FlutterMemoryAllocations.instance.removeListener(onEvent));
+    for (var i = 0; i < 200; i++) {
+      await cycle(i);
+    }
+    await tester.pump(const Duration(seconds: 30));
+    FlutterMemoryAllocations.instance.removeListener(onEvent);
+    expect(tours, 50);
+    expect(repo.updateNoteCalls, greaterThan(0), reason: 'yazı kaydedildi');
+    // Başlangıçtan sonra yaratılıp hâlâ yaşayan denetleyici: 0.
+    expect(controllers(), isEmpty, reason: 'atılmamış denetleyiciler');
+    expect(listens - cancels, subsBefore, reason: 'not akışı aboneliği');
+    expect(listens, greaterThanOrEqualTo(200), reason: 'her açılış dinledi');
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
   testWidgets('kabukla 15 gir-çık (ana ekran + yönlendirici): birikmez', (
     tester,
   ) async {

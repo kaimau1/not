@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import 'package:xml/xml.dart';
 
+import '../../../core/utils/markdown.dart';
+
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
@@ -277,6 +279,63 @@ String markdownInline(String s) => s
       RegExp(r'(?<![*\w])\*(?!\*)([^*\n]+?)\*(?![*\w])'),
       (m) => '_${m[1]}_',
     );
+
+/// Tek `.md` dosyasından YENİ not taslağı (P54 — paylaşım, "birlikte aç", ana
+/// ekrandan dosya). [parseMarkdownNote] kuralları; liste notu yalnız hiçbir
+/// madde işaretli değilse (createNote maddeleri işaretsiz kurar — işaretli
+/// madde kaybolmasın diye öbür durumda ☐/☑ satırlı metin notu). [text]
+/// gövdeye EKLENECEK hâli (var olan nota paylaşım).
+typedef MarkdownDraft = ({
+  NoteType type,
+  String title,
+  String body,
+  List<String>? items,
+  String text,
+});
+
+MarkdownDraft? markdownNoteDraft(String fileName, String text) {
+  final n = parseMarkdownNote(fileName, text)?.note;
+  if (n == null) return null;
+  if (n.type != NoteType.checklist) {
+    return (
+      type: NoteType.text,
+      title: n.title,
+      body: n.body,
+      items: null,
+      text: n.body,
+    );
+  }
+  final lines = [
+    for (final i in n.items) '${i.checked ? '☑' : '☐'} ${i.text}',
+  ].join('\n');
+  return n.items.any((i) => i.checked)
+      ? (type: NoteType.text, title: n.title, body: lines, items: null, text: lines)
+      : (
+          type: NoteType.checklist,
+          title: n.title,
+          body: '',
+          items: [for (final i in n.items) i.text],
+          text: lines,
+        );
+}
+
+/// Not içinden eklenen `.md` (P54): dosyasız METİN EKİ — içerik kayıtta,
+/// dokununca okuma ekranı ([markdownReadable] ile) açılır.
+Attachment markdownAttachment(String fileName, List<int> bytes) {
+  final text = utf8.decode(bytes, allowMalformed: true);
+  final body = text.length > Attachment.maxTextChars
+      ? text.substring(0, Attachment.maxTextChars)
+      : text;
+  return Attachment(
+    id: _uuid.v4(),
+    kind: AttachmentKind.text,
+    fileName: fileName,
+    mimeType: 'text/markdown',
+    text: body,
+    sizeBytes: utf8.encode(body).length,
+    createdAt: DateTime.now(),
+  );
+}
 
 /// Zip içindeki `.md`/`.markdown`/`.txt` dosyaları.
 List<ImportedNote> parseMarkdownArchive(Archive archive, {List<int>? failed}) {

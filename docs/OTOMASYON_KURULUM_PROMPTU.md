@@ -73,6 +73,42 @@ test cihazı: [USB telefon modeli / yok] · ana model: [ ] · plan: [Pro / Max].
    durdur → cihaz ekranını kapat → kilidi sil → 5 satır özet.
 9. Dur: art arda 3 `takıldı`, main iki kez üst üste kırmızı, Kuyruk boş, limit.
 
+## 2b. İş kaybolmasın: commit + push + main'e gönder
+- Hiçbir iş yalnız yerelde ya da yalnız çalışma kopyasında kalmaz: her anlamlı adımda
+  commit + push (dalda). Limit, uyku ya da çökme her an kesebilir.
+- Paket CI'da yeşil olunca BEKLETMEDEN main'e birleştir ve push et; "turun sonunda toplu
+  birleştiririm" yok. Uzun paket ara noktalarda da (bağımsız, yeşil, kendi başına çalışan
+  kısım bitince) main'e girer — böylece başka oturum/hesap/bulut oturumu güncel main'den
+  başlar, aynı işi baştan yapmaz, çakışma küçük kalır.
+- Yürütücünün yaptığı belge/kuyruk değişikliği de commit'lenir ve push edilir; tur sonunda
+  `git status` temiz ve `git log origin/main..main` BOŞ olmalı (özetin son satırı bunu söyler).
+- İstisna: yayın (APK/deploy) koşusu sürerken main'e push etme — bekle, sonra gönder.
+- Main'e birleştirdikten sonra yayın (APK/deploy) koşusunu İZLEME: dal CI'ı yeşilse yayın da
+  yeşil olur; izlemek boşa token. Birleştir → push → özet → sıradaki iş. Yalnız sonraki main
+  push'undan önce tek `gh run list -b main -L 1` bakışı; yayın sürüyorsa push'u beklet. main
+  kırmızıya dönerse sonraki turun "main sağlığı" adımı yakalar.
+
+## 2c. Yarım iş devredilsin (limit/kesinti anında — ÇOK ÖNEMLİ)
+- Bir paket yarıda kalırsa (limit, durdurma, hata) Kuyruk satırı HEMEN `sürüyor — dal
+  <dal adı> (<son commit>): <ne bitti>, kalan <ne>; dalın DEVIR.md'sinden sür` yapılır ve
+  bu değişiklik commit + main'e push edilir. "bekliyor" kalan yarım paketi sonraki tur
+  SIFIRDAN başlatır, dal ve emek boşa gider.
+- Durdurmadan önce: alt ajana "DEVIR.md'yi güncelle, commit + push, dur" de; sonra
+  `git log origin/<dal> -1` ile dalın GERÇEKTEN uzakta olduğunu ve çalışma kopyasında
+  push edilmemiş commit kalmadığını kontrol et (`git log origin/<dal>..HEAD` boş).
+- Ölçüm/test sonuçları yalnız sohbette ya da geçici dosyada kalmaz: ham sayılar dalın
+  DEVIR.md'sine, biten ölçüm planın maddesine ve birleştirme commit açıklamasına yazılır.
+- Tur başında yürütücü önce `sürüyor` satırlarına ve uzaktaki `oto/*` dallarına bakar;
+  Kuyruk'ta adı olmayan ama uzakta duran dal varsa DEVIR.md'sini okuyup satıra bağlar.
+- CI'ı yeşil olup birleştirilmeyi bekleyen dal için Kuyruk'a ayrı satır: "yalnız birleştir".
+
+## 2d. Telefon ısınması (USB hata ayıklama = sürekli şarj)
+- USB bağlıyken telefon hep şarj olur, ölçümde 40 °C'yi geçip ölçümü durdurur. Tercih:
+  kablosuz hata ayıklama (`adb tcpip 5555` → kabloyu çıkar → `adb connect <ip>:5555`;
+  yeniden başlatınca kabloyla tekrarla). Betikler cihazı `-s <seri/ip>` ile seçer.
+- `dumpsys battery unplug` yalnız kandırır, ısıyı azaltmaz. Ölçümden önce pil dolu,
+  kılıf çıkık, ekran yalnız ölçümde açık; sıcaklık eşiğinin altına inmeden ölçme.
+
 ## 3. İşçi (alt ajan) kuralları
 - Önce `CLAUDE.md`, sonra yalnız kendi paketinin plan bölümü. Protokol: önce kanıtı üret
   (test/ölçüm kırmızı) → düzelt → aynı kanıt yeşil. Kanıt üretilemiyorsa düzeltme YAZMA,
