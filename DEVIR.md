@@ -9,5 +9,5 @@ Kullanıcı 2026-11-14, dört madde — hepsi dalda yazıldı, cihazda doğrulan
    `SplitShell._closing` 300 ms; `fullscreen_pull_test` + bütçe S26 (1/14, önce de 1/14).
 4. Mini pano — `paneCardScaleProvider` (`pane_card_scale`), sütun genişlik/(220×ölçek) 1–4 (`grid_columns_test`).
 
-Kalan: [apk] öncesi cihazda A/B (kapanış evresi, editör); web'de gerçek tarayıcıda eklentiyle bak.
+CI yeşil (83aabd80). Kalan: [apk] öncesi cihazda A/B (kapanış evresi, editör); web'de gerçek tarayıcıda eklentiyle bak.
 Belgeler: OTOMASYON P59, sürüm notu 14 Kasım, regresyon P59, hafıza web/arayuz/kalem.
