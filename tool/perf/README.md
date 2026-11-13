@@ -19,6 +19,7 @@
 | `prof_a11y.py` | erişilebilirlik istemcisi açıkken SEMANTICS maliyeti (F27.2) |
 | `video.py` | ekran videosu, kare farkıyla flaş/zıplama (F26.1, ffmpeg) |
 | `jest.py`, `Pinch.java` | iki parmak zoom + yana kaydırma kareleri (F39); `Pinch` `app_process` ile gerçek çoklu dokunuş enjekte eder |
+| `ab_hepsi.py` | **TAM A/B KAPISI** (HIZ F81, 2026-11-12): iki profil APK'sı A,B ×3 sırayla kurulur; 13 evre (açılış ilk kare, liste, ⋮, arama, klasör, yeni not, not aç, klavye, yazma, kapanış, sabit PDF aç/kaydır/klavye); ortanca + otomatik karar (`KARAR:`), `--altin` altın tabana karşı %15, `--altin-yaz` tabanı yalnız iyileşmeyle günceller; `docs/perf/gecmis.csv`'ye yazar. Hazırlık docstring'de |
 | `ab_klavye.py` | **A/B kapısı** (2026-11-10): klavye aç/kapa ×3, yazma ×4, not kapanışı — evre başına UI kare/ms/LAYOUT; taban = önceki `[apk]`'nın profil derlemesi (CLAUDE.md ÖLÇÜM KAPISI) |
 | `ab_kalem.py` | **A/B kapısı, kalem** (F59.5): kalem kipi açık, parmakla 30 çizgi + kayıt + kapanış — evre başına UI ve raster kare/ms/>16,7, kayıt anında en uzun UI bloğu; `hazirla N` sayfayı N çizgiyle doldurur (dolu sayfa hâli). Kapı: UI ya da raster +%20 → birleştirme yok |
 | `ab_liste.py` | ana ekran 8 fırlatma — UI kare/ms, BUILD/LAYOUT toplamı |

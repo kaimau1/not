@@ -46,8 +46,8 @@ Plan: `OTURTMA_PLANI.md`. Bu dosya yalnız YÜRÜTME düzenidir. Her tur bu dosy
 6. **Cihaz kapısı** (Kuyruk'ta Cihaz = `A/B`): CLAUDE.md ÖLÇÜM KAPISI. Taban = son `[apk]`
    commit'i (`git worktree add ../not_ab <commit>` → profil derlemesi). Telefon kuralları
    aşağıda. **Ölçümü yürütücü KENDİ yapmaz:** derlemeler bitince `Agent` `model: "sonnet"`
-   alt ajana (iki APK yolu, telefon kuralları, `ab_klavye.py` A sonra B ikişer koşu, ikinci
-   koşuların tablosu); kararı yürütücü verir. **Hız hissi / açılış / yükleme / akıcılık
+   alt ajana ("iki APK, `ab_hepsi.py <A> <B> --altin`, tabloyu ve son satırı getir"); karar
+   `KARAR:` satırıdır (F81.2 kuralı + altın taban %15). **Hız hissi / açılış / yükleme / akıcılık
    paketlerinde (P39 vb.) eşik %20 DEĞİL: hiçbir evre kötüleşmez, hedef evre ölçülebilir
    iyileşir.** Kötüleşirse paket çöpe gitmez: maddeler ayrı commit; kötüleştiren `git revert`
    + maddeye "iyileşme kanıtlanamadı", iyiler yeniden ölçülüp birleşir.
@@ -141,10 +141,10 @@ Biten paketler: P01–P19, P23–P37, P39, P40, P42, P47 (39; P39 cihaz A/B 2026
 | No | Paket | Model | Plan maddeleri | Cihaz | APK | Durum / sonuç |
 |---|---|---|---|---|---|---|
 | P54b | .md başlık düzeltmesi | opus | P54 devamı | | evet | bitti — main'e birleştirildi 2026-11-13 |
-| P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | sürüyor — dal `oto/P43-hiz-olcum` (fd406d24): F81 aracı + altın taban + F82 bitti; KABUL KIRMIZI (aynı APK A=A → KALDI, gürültü ±%15): eşik %20, altın taban ≥5 koşu, <34 °C şarjsız (F81.2/F81.4 açık); F68.4 liste %2,3–3,3 >16 ms → P46; DEVIR.md'den sür; sabah bakılacak |
+| P43 | Hız: tek komutla tam ölçüm + karar + altın taban + cihazsız bekçiler (P44 katıldı) | opus | HIZ_PLANI F81–F82 + F68.4 | cihaz |  | araç main'e birleştirildi 2026-11-13 (kabul açık, KULLANICI KARARI: altın %15 eşiği / `yaz` LAYOUT gürültüsü) — F82 main'de; F81 araç+altın taban bitti, KABUL KALDI (2. tur: A/B %20 eşikle A=A 2/2 GEÇTİ; altına karşı `yaz` LAYOUT +%16 yanlış alarm — sabah bakılacak); F68.4 ölçüldü (%2,3–3,3) → P46; ayrıntı: KUYRUK_AYRINTI.md §P43 |
 | P45 | Hız: her [apk]'da ölçüm + geçmiş | sonnet | HIZ_PLANI F83.1–F83.3 | cihaz |  | bekliyor — HIZ_PLANI F83; ayrıntı: KUYRUK_AYRINTI.md §P45 |
 | P46 | Hız: ölçümün bulduğu yavaşlıkları düzelt | fable (limit %55 üstü → opus) | HIZ_PLANI F84 + F60.S2/F60.5/F68.3 | A/B | evet | bekliyor — `pinned_media_pane.dart`'a DOKUNMAZ (P49'un); sabit ekte bulgu P49 satırına yazılır; ayrıntı: KUYRUK_AYRINTI.md §P46 |
-| P48 | Web yazı seçimi + takvim senkronu + web ek | opus | kullanıcı 2026-11-12 | cihaz (b) | evet | bitti — CI yeşil, main'e birleştirme bekliyor (2026-11-13): web fare/klavye seçimi genişletilmiyor; yeni etkinlik varsayılanı Firestore "Tüm cihazlar" (K2 sapması: sabah bakılacak); (c) web ek üretilemedi; cihazda doğrulanmadı; ayrıntı: KUYRUK_AYRINTI.md §P48 |
+| P48 | Web yazı seçimi + takvim senkronu + web ek | opus | kullanıcı 2026-11-12 | cihaz (b) | evet | bitti — main'e birleştirildi [apk] 2026-11-13: web fare/klavye seçimi genişletilmiyor; yeni etkinlik varsayılanı Firestore "Tüm cihazlar" (K2 sapması: sabah bakılacak); (c) web ek üretilemedi; cihazda doğrulanmadı; ayrıntı: KUYRUK_AYRINTI.md §P48 |
 | P49 | Sabit ek baştan: tasarım, tuşlar, özellikler | fable (limit %55 üstü → opus) | kullanıcı 2026-11-12 | A/B | evet | bekliyor — BAŞTAN TASARIM; kesin istekler (a)–(g) + KORU ayrıntıda; önce `istek_tara.py`; ayrıntı: KUYRUK_AYRINTI.md §P49 |
 | P50 | Düzenleme modu baştan + hızlı menü | fable (limit %55 üstü → opus) | kullanıcı 2026-11-12 |  | evet | bekliyor — P49'DAN SONRA; `pinned_media_pane.dart`'a dokunmaz; kasma listesi §3–§4; ayrıntı: KUYRUK_AYRINTI.md §P50 |
 | P38 | Hareket ve dokunsal dil | opus | DENEYIM F77.1–F77.4 | A/B | evet | bekliyor — P47 çöp sürükleme haptiği/`_previewCardDrop` korunur, yalnız `AppHaptics`e sarılır; ayrıntı: KUYRUK_AYRINTI.md §P38 |
