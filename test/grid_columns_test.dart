@@ -53,4 +53,31 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getInt('grid_columns'), 2);
   });
+
+  // P59 (kullanıcı 2026-11-14): mini pano ölçeği → 1–4 sütun, kalıcı.
+  test('mini pano: sütun = genişlik / (220 × ölçek), 1–4', () {
+    expect(paneColumnsFor(300, 1), 1);
+    expect(paneColumnsFor(440, 1), 2);
+    expect(paneColumnsFor(440, 0.5), 4);
+    expect(paneColumnsFor(2000, 0.5), 4);
+    expect(paneColumnsFor(200, 3), 1);
+  });
+
+  test('mini pano: kıstırmanın sütunu o genişlikte tam oturur, kalıcı', () async {
+    final c = await container();
+    addTearDown(c.dispose);
+    expect(c.read(paneCardScaleProvider), 1);
+    for (final w in [260.0, 333.0, 440.0, 517.5, 900.0]) {
+      for (var cols = 1; cols <= 4; cols++) {
+        c.read(paneCardScaleProvider.notifier).setColumns(cols, w);
+        final s = c.read(paneCardScaleProvider);
+        if (s > PaneCardScaleNotifier.min) {
+          expect(paneColumnsFor(w, s), cols, reason: 'w=$w cols=$cols');
+        }
+      }
+    }
+    c.read(paneCardScaleProvider.notifier).setColumns(3, 440);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getDouble('pane_card_scale'), c.read(paneCardScaleProvider));
+  });
 }

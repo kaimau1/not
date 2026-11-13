@@ -1522,8 +1522,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // isteği 2026-11-02, bkz. kNoteSplitBreakpoint); ayraç
                     // sürüklenip genişletilince 2–3 sütun (tablet isteği
                     // 2026-11-09).
-                    final columns = DashboardPaneScope.singleColumnOf(context)
-                        ? (constraints.maxWidth / 220).floor().clamp(1, 3)
+                    // Mini pano (P59): kıstırma/Ctrl+tekerlek ölçeği kartları
+                    // büyütür, sütun genişliğe göre 1–4.
+                    final paneMode = DashboardPaneScope.singleColumnOf(context);
+                    final columns = paneMode
+                        ? paneColumnsFor(
+                            constraints.maxWidth,
+                            ref.watch(paneCardScaleProvider),
+                          )
                         : manualColumns > 0
                         ? manualColumns
                         : (constraints.maxWidth / 220).floor().clamp(2, 6);
@@ -1858,9 +1864,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           distance: _kFolderPullDistance,
                           child: PinchColumns(
                             columns: columns,
-                            onCommit: ref
-                                .read(gridColumnsProvider.notifier)
-                                .set,
+                            onCommit: paneMode
+                                ? (c) => ref
+                                      .read(paneCardScaleProvider.notifier)
+                                      .setColumns(c, constraints.maxWidth)
+                                : ref.read(gridColumnsProvider.notifier).set,
                             child: NotificationListener<ScrollNotification>(
                               onNotification: _onGridScroll,
                               child: FolderSwipe(
