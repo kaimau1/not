@@ -163,4 +163,34 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 2));
   });
+
+  // P59 (kullanıcı 2026-11-14): web/tablette nottan listeye dönüşte geçiş
+  // yoktu — not kapanır kapanmaz sağ bölme sıfır genişliğe iniyor, notun
+  // çıkış geçişi görünmüyordu. Artık geçiş süresince bölme yerinde kalır,
+  // sonra liste TEK ADIMDA tam genişliğe geçer (boy animasyonu yok).
+  testWidgets('not kapanınca çıkış geçişi bölmede görünür, sonra tam genişlik', (
+    tester,
+  ) async {
+    await pump(tester, initial: '/');
+    final dash = find.byType(DashboardScreen);
+    final shellWidth = tester.getSize(find.byType(SplitShell)).width;
+    final router = GoRouter.of(tester.element(dash));
+    router.push('/note/n1').ignore();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    final narrow = tester.getSize(dash).width;
+    expect(narrow, lessThan(shellWidth / 2));
+
+    router.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(find.text('NOT'), findsOneWidget);
+    expect(tester.getSize(find.text('NOT')).width, greaterThan(0));
+    expect(tester.getSize(dash).width, narrow, reason: 'boy kaymaz');
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('NOT'), findsNothing);
+    expect(tester.getSize(dash).width, shellWidth);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 2));
+  });
 }

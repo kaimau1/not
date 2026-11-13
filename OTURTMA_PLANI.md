@@ -1384,6 +1384,7 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S23 | Ana ekran, `swipe_mode=filters`: yana fırlat → sonraki süzgeç → geri | `NoteCard` ileri / geri / pano / en ağır kare | 30 / 30 / 1 / 2361 (2026-11-13, P46; önce 2941) | görünür kadar | 84 |
 | S24 | Soğuk açılış (30 not) | kurulum: ilk kare / kartlara dek / 2 sn | 930 / 4019 / 4031 | taban (mandal) | — |
 | S25 | Görselli 50 not, dpr 2,625, 6 ekran kaydır | çözme boyu sınırsız küçük resim | 0 (2026-11-13, P46; önce 21) | 0 | 84 |
+| S26 | 1280×800 bölünmüş, nottan listeye dön | DashboardScreen / NoteCard kurulumu | 1 / 14 (2026-11-14, P59) | ≤ 1 / ≤ 14 | — |
 
 ## Ek B — Mürekkep paketi biçimi (F61.1)
 
