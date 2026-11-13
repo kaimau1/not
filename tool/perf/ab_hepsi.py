@@ -305,15 +305,17 @@ def decide(a_runs, b_runs, golden=None):
         if ph not in am or ph not in bm:
             continue
         verdict = "aynı/iyi"
-        for m in ("ui_ms", "layout_ms"):
+        # ponytail: açılışta UI ms anlamsız (duraklatılmış başlangıç 2 kare yakalıyor) → ilk kare ms.
+        ms = ("ilk_kare_ms",) if ph == "acilis" else ("ui_ms", "layout_ms")
+        for m in ms:
             a, b, w = am[ph][m], bm[ph][m], aw[ph][m]
             if b > w and b - a > 3 and b > a * 1.10:
                 verdict = f"KÖTÜLEŞTİ ({m})"
                 failed = True
         g = ""
         if golden and ph in golden:
-            for m in ("ui_ms", "layout_ms"):
-                gv = golden[ph][m]
+            for m in ms:
+                gv = golden[ph].get(m, 0)
                 if gv > 3 and bm[ph][m] > gv * 1.15:
                     g = f"altın +{(bm[ph][m] / gv - 1) * 100:.0f}% ({m})"
                     failed = True

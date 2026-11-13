@@ -1,0 +1,99 @@
+{
+ "_kural": "Altın taban (HIZ_PLANI F81.4): yalnız İYİLEŞEN evre güncellenir. B bir evrede %15'ten fazla kötüyse KALDI.",
+ "etiket": "altin_9c837495",
+ "tarih": "2026-11-13",
+ "evreler": {
+  "acilis": {
+   "kare": 2.0,
+   "ui_ms": 0.5,
+   "layout_ms": 0.0,
+   "max_ms": 0.3,
+   "j16": 0.0,
+   "ilk_kare_ms": 378
+  },
+  "liste": {
+   "kare": 305.0,
+   "ui_ms": 1242.4,
+   "layout_ms": 646.5,
+   "max_ms": 24.7,
+   "j16": 9.0
+  },
+  "menu": {
+   "kare": 50.0,
+   "ui_ms": 196.0,
+   "layout_ms": 44.2,
+   "max_ms": 32.4,
+   "j16": 1.0
+  },
+  "arama": {
+   "kare": 17.0,
+   "ui_ms": 356.0,
+   "layout_ms": 248.4,
+   "max_ms": 71.9,
+   "j16": 8.0
+  },
+  "klasor": {
+   "kare": 55.0,
+   "ui_ms": 260.5,
+   "layout_ms": 81.6,
+   "max_ms": 51.9,
+   "j16": 2.0
+  },
+  "yeni_not": {
+   "kare": 86.0,
+   "ui_ms": 500.6,
+   "layout_ms": 148.4,
+   "max_ms": 39.1,
+   "j16": 4.0
+  },
+  "not_ac": {
+   "kare": 28.0,
+   "ui_ms": 197.8,
+   "layout_ms": 107.2,
+   "max_ms": 68.5,
+   "j16": 2.0
+  },
+  "kb": {
+   "kare": 127.0,
+   "ui_ms": 418.6,
+   "layout_ms": 73.9,
+   "max_ms": 13.6,
+   "j16": 0.0
+  },
+  "yaz": {
+   "kare": 212.0,
+   "ui_ms": 967.9,
+   "layout_ms": 213.4,
+   "max_ms": 32.6,
+   "j16": 1.0
+  },
+  "not_kapa": {
+   "kare": 44.0,
+   "ui_ms": 237.5,
+   "layout_ms": 96.0,
+   "max_ms": 32.2,
+   "j16": 2.0
+  },
+  "sabit_ac": {
+   "kare": 167.0,
+   "ui_ms": 1032.5,
+   "layout_ms": 228.3,
+   "max_ms": 66.9,
+   "j16": 2.0
+  },
+  "sabit_kay": {
+   "kare": 227.0,
+   "ui_ms": 876.5,
+   "layout_ms": 135.1,
+   "max_ms": 18.7,
+   "j16": 1.0
+  },
+  "sabit_kb": {
+   "kare": 373.0,
+   "ui_ms": 2298.0,
+   "layout_ms": 319.2,
+   "max_ms": 15.9,
+   "j16": 0.0
+  }
+ }
+}
