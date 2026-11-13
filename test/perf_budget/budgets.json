@@ -190,10 +190,10 @@
   },
   "S22": {
     "senaryo": "Takvim haftalık görünüm (telefon, 21 etkinlik): bir hafta ileri fırlat, 40 kare",
-    "hafta_sayfasi": 3,
-    "toplam_kurulum": 979,
-    "kare_kurulum": 978,
-    "bugun": "WeekPage 3 / toplam 979 / tek karede 978 (2026-11-12)",
+    "hafta_sayfasi": 1,
+    "toplam_kurulum": 509,
+    "kare_kurulum": 508,
+    "bugun": "WeekPage 1 / toplam 509 / tek karede 508 (2026-11-13, P46: hafta sayfası önbelleği — sayfa çevrilince setState giden ve gelen haftayı baştan kurmuyor); önce 3 / 979 / 978",
     "hedef": "yalnız gelen hafta sayfası kurulur (komşu önceden kurulu)",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); tek karede ~980 kurulum — bulgu P46'ya yazıldı"
   },
