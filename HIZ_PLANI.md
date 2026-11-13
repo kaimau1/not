@@ -48,9 +48,9 @@ madde başı ayrı commit, kötüleştiren tek commit geri alınır, iyiler birl
 
 ## FAZ 83 — Her `[apk]`'da otomatik ölçüm ve geçmiş [Sonnet · P45]
 
-- [ ] **F83.1** OTOMASYON 8. adımı (APK noktası): birleştirmeden ÖNCE `ab_hepsi.py --altin` zorunlu (paket A/B istemese bile — yerleşim/levha/ekler de hızı bozabiliyor). Telefon yoksa `[apk]` ertelenir, birleştirme `[apk]`'sız yapılır.
-- [ ] **F83.2** `docs/perf/README.md`: gecmis.csv'yi okuyan tek sayfalık özet (`python tool/perf/gecmis.py` → evre başına son 10 `[apk]` eğilimi, altın tabana göre %). Haftalık zamanlanmış tur bunu okuyup kayma > %10 olan evreyi Kuyruk'a "hız: <evre>" satırı olarak ekler.
-- [ ] **F83.3** CI "Kare ölçümü" işi: neden yalnız `perf` bayrağında koştuğunu kanıtla (süre/gürültü); emülatör sayıları kararlıysa (aynı commit 3 koşu, sapma < %10) `[apk]` koşularında da koşsun, değilse işi kaldır ve neden plana yaz.
+- [x] **F83.1** (2026-11-14: OTOMASYON 8. adıma zorunluluk yazıldı) OTOMASYON 8. adımı (APK noktası): birleştirmeden ÖNCE `ab_hepsi.py --altin` zorunlu (paket A/B istemese bile — yerleşim/levha/ekler de hızı bozabiliyor). Telefon yoksa `[apk]` ertelenir, birleştirme `[apk]`'sız yapılır.
+- [x] **F83.2** (2026-11-14: `tool/perf/gecmis.py` + self-check, `docs/perf/README.md`; bugünkü geçmişte yalnız `menu` +%11,5 KAYMA, bilinen gürültü bandı) `docs/perf/README.md`: gecmis.csv'yi okuyan tek sayfalık özet (`python tool/perf/gecmis.py` → evre başına son 10 `[apk]` eğilimi, altın tabana göre %). Haftalık zamanlanmış tur bunu okuyup kayma > %10 olan evreyi Kuyruk'a "hız: <evre>" satırı olarak ekler.
+- [ ] **F83.3** (2026-11-14 SABAH BAKILACAK, karar verilmedi: 3 aynı-commit CI koşusu ~1 sa + kota ister, `cancel-in-progress` ardışık push'ları iptal eder; emülatör yazılım GPU'su, mutlak sayı cihazı yansıtmaz (ortam_ci.md). Perf işi dokunulmadı: yalnız `[perf]`/elle koşar, maliyeti sıfır. İstenirse: üç boş `[perf]` commit'i, koşu bitişini bekleyerek, `perf-summary` p90 sapması < %10 mu bak) CI "Kare ölçümü" işi: neden yalnız `perf` bayrağında koştuğunu kanıtla (süre/gürültü); emülatör sayıları kararlıysa (aynı commit 3 koşu, sapma < %10) `[apk]` koşularında da koşsun, değilse işi kaldır ve neden plana yaz.
 
 ## FAZ 84 — Ölçümün bulduğu yavaşlıkları düzelt [Fable · P46 · A/B]
 
