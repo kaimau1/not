@@ -14,6 +14,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - `flutter install` DERLEMEZ. Yerel APK'da `--build-number` (yoksa
   versionCode 1 → DOWNGRADE) ve `--dart-define-from-file=env.json` (yoksa
   Google girişi çöker) ZORUNLU.
+- **Bulutta Android emülatörüyle ölçüm YAPILAMAZ** (2026-11-13): kapta `/dev/kvm` yok, işlemci sanallaştırma bayrağı yok, GPU yok → emülatör yazılım taklidinde, sayılar telefondan onlarca kat yavaş ve oynak; ÖLÇÜM KAPISI (`ab_hepsi.py`) yalnız gerçek cihazda. Bulutta yapılabilen: cihazsız bütçe/bekçi testleri, webde Chromium ekran görüntüsü.
 - **Bulutta APK derlenebilir** (2026-11-02'de yine yapıldı, ~15 dk ilk derleme):
   Maven 429 için init betiği YETMEZ — Flutter'ın kendi `flutter_tools/gradle`
   dahil derlemesi ayrı; scratchpad'deki SDK'nın `settings.gradle.kts`ine ayna
