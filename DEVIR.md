@@ -8,7 +8,11 @@
 - Düzeltme: `acilis` evresinde UI ms anlamsız (duraklatılmış başlangıç çoğu koşuda 2 kare yakalıyor:
   ab_hepsi.py cold_start) → karar/altın açılışta `ilk_kare_ms`'ye bakar (decide()).
 
-## Nerede kaldım (P43 iş olarak bitti; F81 kabulü KALDI — sabah bakılacak)
+## Şu an (2. işçi, 2026-11-13 sabah)
+- Öneri uygulandı (0b741b8c): A/B eşiği %20, koşu başlangıcı < 34 °C, `--altin-yaz` A=B'de 6 koşu (≥5).
+- dbfa1233: ready() null odakta bekler. Altın taban SİLİNDİ, 6 koşuluk A=A ile yeniden yazılıyor; sonra kabul A=A `--altin`.
+
+## Önceki (F81 kabulü KALDI)
 - Kabul A=A (aynı 9c837495 APK, 36,6–36,9 °C): KARAR KALDI — `yaz` LAYOUT 269→300 yanlış alarm;
   altına karşı `yaz` +%40, `menu` +%28, `not_ac` +%22. Kök: gürültü ±%15 + sıcaklık (HIZ_PLANI F81 Durum).
   Kural gevşetilmedi (en güvenli). Öneri: A/B eşiği %20, altın 5+ koşu ortancası, başlangıç < 34 °C şarjsız.
