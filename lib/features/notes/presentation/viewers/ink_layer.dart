@@ -148,6 +148,9 @@ class InkController extends ChangeNotifier {
   /// geri gelir. Basılı tutuşun sildiği çizgiler geri konur.
   final penOffer = ValueNotifier<({int page, Offset at})?>(null);
 
+  /// Silgi + kalem önerisi birlikte (katmanda tek dinleyici).
+  late final Listenable offers = Listenable.merge([eraserOffer, penOffer]);
+
   void acceptPenOffer() {
     penOffer.value = null;
     setPen(pen);
@@ -2009,9 +2012,13 @@ class InkPageLayer extends StatelessWidget {
                   );
                 },
               ),
-              ValueListenableBuilder<({int page, Offset at})?>(
-                valueListenable: controller.eraserOffer,
-                builder: (context, o, _) {
+              // Silgi ve kalem önerisi TEK dinleyicide (P59): ikisi aynı anda
+              // olmaz; ayrı olunca her sayfaya bir öğe daha (S18 bütçesi).
+              ListenableBuilder(
+                listenable: controller.offers,
+                builder: (context, _) {
+                  final pen = controller.penOffer.value;
+                  final o = pen ?? controller.eraserOffer.value;
                   if (o == null || o.page != page) {
                     return const SizedBox.shrink();
                   }
@@ -2026,32 +2033,11 @@ class InkPageLayer extends StatelessWidget {
                     left: left,
                     top: top,
                     child: _EraserOfferButton(
+                      toPen: pen != null,
                       onClaim: controller.claimPointer,
-                      onAccept: controller.acceptEraserOffer,
-                    ),
-                  );
-                },
-              ),
-              ValueListenableBuilder<({int page, Offset at})?>(
-                valueListenable: controller.penOffer,
-                builder: (context, o, _) {
-                  if (o == null || o.page != page) {
-                    return const SizedBox.shrink();
-                  }
-                  const box = 44.0;
-                  var left = o.at.dx * size.width - box / 2;
-                  var top = o.at.dy * size.height - box - 16;
-                  if (constraints.maxWidth.isFinite) {
-                    left = left.clamp(0.0, constraints.maxWidth - box);
-                  }
-                  if (top < 0) top = o.at.dy * size.height + 16;
-                  return Positioned(
-                    left: left,
-                    top: top,
-                    child: _EraserOfferButton(
-                      toPen: true,
-                      onClaim: controller.claimPointer,
-                      onAccept: controller.acceptPenOffer,
+                      onAccept: pen != null
+                          ? controller.acceptPenOffer
+                          : controller.acceptEraserOffer,
                     ),
                   );
                 },
