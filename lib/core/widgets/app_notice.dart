@@ -111,9 +111,19 @@ class AppNoticeController extends ChangeNotifier {
 /// Uygulamanın tek bildirim şeridi.
 final appNotice = AppNoticeController();
 
-/// [child]'ın (Navigator) üstünde bildirim şeridini çizer: ekranın DİBİNDE,
-/// klavyenin ve dibe yapışık panelin ([snackBarBottomObstacle]) üstünde,
-/// en çok [maxWidth] genişlikte, ortada. Levha/diyalog da altında kalır.
+/// **ÜST KROMUN BOYU** (dp, güvenli alan hariç): ipucu bunun ALTINDA çıkar,
+/// üst çubuğu / arama hapını örtmez. Üst kromu standart çubuktan uzun ya da
+/// kısa olan ekran (ör. tam ekran görüntüleyici: 0) açılırken yazar,
+/// kapanırken [kToolbarHeight]'a döndürür. Dinlenmez; ipucu kurulurken okunur.
+final noticeTopInset = ValueNotifier<double>(kToolbarHeight);
+
+/// [child]'ın (Navigator) üstünde bildirimleri çizer; levha/diyalog da
+/// altında kalır. İki yer, aynı anda yalnız BİRİ dolu:
+///  * ipucu ÜSTTE, üst kromun ([noticeTopInset]) altında (kullanıcı bulgusu
+///    2026-11-08: alttaki ipucu düğmeleri kapatıyordu);
+///  * ileti / duyuru DİPTE, klavyenin ve dibe yapışık panelin
+///    ([snackBarBottomObstacle]) üstünde.
+/// En çok [maxWidth] genişlikte, ortada.
 ///
 /// [child] bu widget yüzünden yeniden KURULMAZ: bildirim değişince yalnız
 /// şerit kurulur (kasma listesi madde 3, 7).
@@ -131,21 +141,28 @@ class AppNoticeHost extends StatelessWidget {
   Widget build(BuildContext context) => Stack(
     children: [
       child,
-      _NoticeLane(controller: controller ?? appNotice),
+      _NoticeLane(controller: controller ?? appNotice, top: true),
+      _NoticeLane(controller: controller ?? appNotice, top: false),
     ],
   );
 }
 
 class _NoticeLane extends StatelessWidget {
-  const _NoticeLane({required this.controller});
+  const _NoticeLane({required this.controller, required this.top});
 
   final AppNoticeController controller;
+
+  /// true = ipucu şeridi (üstte); false = ileti şeridi (dipte).
+  final bool top;
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: controller,
     builder: (context, _) {
-      final data = controller.current;
+      final shown = controller.current;
+      final data = shown != null && (shown.kind == AppNoticeKind.tip) == top
+          ? shown
+          : null;
       // Engel yüksekliği bildirim KURULURKEN okunur (dinlenmez: değer
       // dizilim sırasında yazılıyor — bkz. snackBarBottomObstacle).
       final lift = math.max(
@@ -156,9 +173,16 @@ class _NoticeLane extends StatelessWidget {
       return Positioned(
         left: AppSpace.m,
         right: AppSpace.m,
-        bottom: lift + MediaQuery.paddingOf(context).bottom + AppSpace.m,
+        top: top
+            ? MediaQuery.paddingOf(context).top +
+                  noticeTopInset.value +
+                  AppSpace.s
+            : null,
+        bottom: top
+            ? null
+            : lift + MediaQuery.paddingOf(context).bottom + AppSpace.m,
         child: Align(
-          alignment: Alignment.bottomCenter,
+          alignment: top ? Alignment.topCenter : Alignment.bottomCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: AppNoticeHost.maxWidth),
             child: AnimatedSwitcher(
@@ -171,7 +195,7 @@ class _NoticeLane extends StatelessWidget {
                 opacity: animation,
                 child: SlideTransition(
                   position: Tween(
-                    begin: const Offset(0, 0.25),
+                    begin: Offset(0, top ? -0.25 : 0.25),
                     end: Offset.zero,
                   ).animate(animation),
                   child: child,

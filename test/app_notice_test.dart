@@ -117,6 +117,15 @@ void main() {
     );
     c.show(_tip);
     await tester.pumpAndSettle();
+    expect(
+      tester.getTopLeft(find.text('ipucu')).dy,
+      lessThan(300),
+      reason: 'ipucu üstte, üst kromun altında',
+    );
+    expect(
+      tester.getTopLeft(find.text('ipucu')).dy,
+      greaterThan(kToolbarHeight),
+    );
     await tester.tap(find.text('ipucu'), warnIfMissed: false);
     await tester.pumpAndSettle();
     expect(taps, 1, reason: 'dokunuş alttaki düğmeye geçti');
