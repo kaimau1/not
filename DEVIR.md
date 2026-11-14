@@ -15,8 +15,10 @@
 - S35 liste boy karesi 28 (hipotez ~24 doğru: R2 gerçek)
 - S36 en ağır kare 673 / toplam 1875 (ilk kare ai 551 / sound 673, sonraki 65 / 262) — hedef (≤ S29 en ağır karesi) TUTMUYOR
 
+- OTURTMA Ek A satırları, plan §7.3 son sütun (hipotez → ölçülen), PA0 [x], Kuyruk satırı, akicilik.md — commit 4
+
 ## Sıradaki
-- OTURTMA Ek A satırları, plan §7.3 "beklenen bugün" sütunu, PA0 [x]
+- CI yeşil → yürütücü main'e [apk]sız birleştirir (DEVIR.md silinir); regresyon_listesi satırı yok (düzeltilen sorun yok, yalnız taban)
 
 ## Test
 `flutter test test/perf_budget_test.dart --reporter failures-only` · `flutter test test/jank_patterns_guard_test.dart`
