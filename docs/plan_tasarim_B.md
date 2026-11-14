@@ -760,3 +760,112 @@ Cihaz A/B: **evet** — editör gövdesiyle aynı sütun; 2026-11-13 tablet bulg
 açıkken kasma") yüzeyi. Evre: "dikte açıkken 30 sn kaydır + yaz" (`ab_hepsi.py`'ye eklenir; taklit
 düzey akışıyla — mikrofon izni gerektirmeyen `--dart-define` yoksa "yazıldı, cihazda doğrulanmadı" +
 `KONTROL_LISTEM.md`).
+
+---
+
+## 5. Madde altı çizgiler ve menüsü — **YARIM** (yalnız kanıt toplandı; hedef/durum/kabul/bütçe YAZILMADI)
+
+> Fable limit yüzünden burada kesildi (2026-11-14). Aşağıdaki kanıt koddan doğrulandı; §5.2–5.5'i,
+> §6'yı ve §7'yi sıradaki ajan §1–§4 biçimiyle yazar. Hedef fikirleri "taslak" diye işaretli —
+> karar değil, `istek_tara.py` ile yeniden süzülmeli.
+
+### 5.1 Mevcut durum (kanıt)
+
+Model `domain/note_item.dart:189-229` (`ItemDivider`: `kind` + `color` + `weight` 0.5–3; beş tür
+`kinds` `:204-210`: solid, dashed, dotted, double, wavy). Çizim tek işlev `paintItemDivider`
+(`presentation/item_divider_style.dart:17-97`), üç kullanıcı: editör satırı
+(`editor/items_editor_widgets.dart:360-384` `_ItemDividerPainter`, `left 8 / right −8`,
+`y = height − 1`, `baseWidth 2.2`; satıra `foregroundPainter` olarak `items_editor_row.dart:331-337`,
+renk vurgu × 0.75 elle), kart (`note_card.dart:1560-1594` `_CardDividerPainter`, `baseWidth 1.2`,
+`AppAlpha.muted`), ayar levhası önizlemesi (`item_divider_style.dart:327-347`).
+
+Menü iki parça:
+- **Biçim çubuğu tepsisi** `_DividerRow` (`editor/format_bar.dart:945-1016`; açan düğme `:791-798`,
+  tepsi seçimi `:583-587`; bağlandığı yer `note_editor_screen.dart:4443-4452` →
+  `ItemsEditorState.dividerKindOf/setDividerOf/editDividerStyleOf`, `items_editor.dart:1410-1424`).
+- **Çizgi ayarları levhası** `showItemDividerSheet` / `_ItemDividerSheet`
+  (`item_divider_style.dart:124-325`), çağıran `items_editor_actions.dart:165-187`
+  (`_editDividerStyle`); tür değiştirme/kaldırma `_setDivider` `:147-161`.
+
+Bulgular:
+1. Tepside yalnız ÜÇ tür var (`format_bar.dart:1000-1002`: solid/dashed/dotted); çift ve dalgalı
+   ancak levhadan seçilir — levhaya giden yol 20 px'lik `Icons.tune` (`:1003-1010`).
+2. Tepsideki örnek çizim gerçek çizimle AYNI DEĞİL: `_DividerSwatchPainter` (`:1019-1045`) kendi
+   döngüsüyle çiziyor (noktalı = 0.5 px'lik tire, tire başına ayrı `drawLine`), `paintItemDivider`
+   kullanmıyor; renk/kalınlık da yansımıyor. Elle ölçüler: köşe 10 (`:967, :973`), boy 32/42
+   (`:970, :989`), kalınlık 1.6, iç pay 10.
+3. Levha ortak levha değil: çıplak `showModalBottomSheet` + `showDragHandle` (`:127-131`); başlık
+   elle `Text` (`:220-225`, `SheetHeader` değil).
+4. Levhada tür seçimi YAZILI çip (`ChoiceChip`, `:251-259`) — çizginin kendisi çipte görünmüyor;
+   yalnız üstteki 52 dp önizleme kutusu (`:228-243`).
+5. Renk noktası 32 dp, seçilince kenar 1 → 3 (`:185-195`); kalem tepsisindeki `_Swatch` ile ayrı
+   kılık (§3 bulgu 6) — aynı iş iki kılık. Sabit renkler `_swatches` (`:146-155`) izinli istisna
+   (kullanıcının çizgi rengi).
+6. Alt satır üç düğme: "Çizgiyi kaldır" `Icons.format_strikethrough` simgesiyle (`:302-307` — yanlış
+   simge: üstü çizili yazı), "Tüm çizgilere uygula" metin (`:309-312`), "Tamam" dolu (`:314-317`).
+   Değişiklik ancak "Tamam"la uygulanıyor (P50 "anında kaydet" kalıbıyla çelişir — taslak hedef:
+   canlı uygula, sayfadaki satırda anında görünür).
+7. Çizgi eklenince/kalkınca geçiş yok (satır `CustomPaint` bir karede değişir).
+8. Elle ölçüler levhada: dolgu 16/0/16/16 (`:215`), aralıklar 12/14/6/8, önizleme boyu 52.
+
+Korunacak istekler (`istek_tara.py`): "alta çizgi ekle biçim menüsüne taşındı" (`format_bar.dart:69`,
+2026-10-30; `items_editor_actions.dart:75`) · madde menüsü SADE kalır, çizgi türleri oraya dönmez
+(`:77`, 2026-10-28) · iki sıra + açılır tepsi, panel küçük (`format_bar.dart:591`, 2026-11-05) ·
+TEK ÇİZİM ÇAĞRISI kasma düzeltmesi (`item_divider_style.dart:35`, 2026-11-13: tür başına en çok bir
+`drawPoints`/`drawPath`) — bozulmaz. Genel yapılmayacak "biçim çubuğunu değiştirmek": kapsam YALNIZ
+`_DividerRow` tepsisinin içi; çubuğun iki sırası, düğmeleri, sırası değişmez.
+Bekçi testler: `test/item_divider_paint_test.dart`, `item_divider_style_test.dart`,
+`items_editor_divider_test.dart`; anahtarlar `format-divider-<tür>`, `format-divider-style`.
+
+### 5.2–5.5 YAZILMADI — taslak yön (karar değil)
+
+- `DividerKindPicker` (iskelet): beş türün HEPSİ, her biri `paintItemDivider` ile çizilmiş örnek
+  (o anki renk + kalınlıkla); tepside ve levhada AYNI bileşen. Seçili = `secondaryContainer` zemin
+  (`AppMotion.selection`, yalnız renk). Aynı türe yeniden dokunmak kaldırır (bugünkü kural).
+- Levha `showAppSheet` + `SheetHeader`; renk noktası §3'teki tek `_Swatch` kılığı; "kaldır" simgesi
+  düzeltilir; canlı uygulama (zevk KARAR'ı — güvenli seçenek: "Tamam" kalır, sabah bakılacak).
+- Çizginin belirişi: soldan sağa çizilme (`CustomPaint` kırpma oranı, yalnız boyama) —
+  **kasma riski yüksek**: satır önbelleği (`_cachedItemRow`, kasma md. 2) ve klavye açılışındaki
+  2026-11-13 bulgusu; ölçülmeden önerilmez.
+- Bütçe **S44**: "30 maddeli liste, 10 çizgili: bir maddeye çizgi ekle → tür değiştir → klavye
+  aç/kapa" — kurulan satır ≤ 1, öbür satırlar `identical`
+  (kalıp `test/items_editor_row_cache_test.dart`, S8 `perf_budget_test.dart:557`). Cihaz A/B: evet.
+
+## 6. İskelet tanımı — **YAZILMADI**
+
+Beş dosya (+ küçük testleri); imzalar bölümlerde: `lib/core/widgets/customize_board.dart` (§1.2,
+`CustomizeBoard`, `CustomizeEntry`) · `lib/features/notes/presentation/template_preview_card.dart`
+(§2.2, `TemplatePreviewCard`, `templatePreviewLines`, `TemplateLineKind`) ·
+`pen_stroke_preview` (§3.2: tür/renk/kalınlık/şeffaflık → S eğrisi, `paintInkStroke`
+`viewers/ink_stroke_paint.dart:21`; `InkStroke.width` sayfa GENİŞLİĞİNİN oranıdır
+`domain/attachment.dart:71`; dolma kalem alfa 0xFE ile tanınır `viewers/ink_pen.dart:40, 91`; aynı
+girdi → aynı `InkStroke` örneği, `compact` kipi) · `voice_level_wave` (§4.2: `level`
+`ValueListenable<double>?`, `active`, `color`, `height 32`; saf işlevler çubuk sayısı / yumuşatma /
+çubuk çarpanı) · `divider_kind_picker` (§5 taslak). Ortak iş: yeni l10n anahtarlarının HEPSİ
+iskelet paketinde eklensin (ör. `inkUnpinPen`, mod şeridi "Sırala") — `.arb` değişimi CI'da tam takım
+koşturur, paketler arası çakışma kaynağı.
+
+## 7. Uygulama paketleri — **YAZILMADI** (taslak bölme)
+
+| Paket | İş | Dosya kümesi | Model | Bağımlılık | Cihaz A/B | Bütçe |
+|---|---|---|---|---|---|---|
+| PB0 | iskelet + tüm l10n + tur/bütçe yer imleri | §6'daki 5 dosya + testleri, `lib/l10n/*` | Opus | — | hayır | — |
+| PB1 | düzen modu çekirdeği (§1) | `core/personalize.dart`, `core/widgets/customizable.dart` | Opus high | PB0; P62 (ipucu) | evet | S40 |
+| PB2 | düzen merkezi + panolar (§1) | `settings/presentation/customize_hub.dart` (yeni), `personalize_screen.dart`, `personalize_bar_list.dart`, `quick_row_editor.dart`, `action_menu_sheet.dart` (yalnız düzenle gövdesi), `quick_add_fab.dart` (yalnız düzenle gövdesi) | Opus | PB1 | hayır | S40 |
+| PB3 | kalem seti (§3) | `editor/pen_tray.dart` | Opus high | PB0; P62 (`AppSurface`); PB1 (yalnız §3.2.1 süzgeci) | evet | S42 |
+| PB4 | şablonlar (§2) | `note_template_sheet.dart`, `template_editor_screen.dart` | Sonnet | PB0 | hayır | S41 |
+| PB5 | sesle yazma (§4) | `listening_visuals.dart`, `voice_capture_sheet.dart`, `data/voice_listen_session.dart`, `editor/note_editor_parts.dart` (`_DictationPanel`), `editor/note_editor_voice.dart` (yalnız oturum kurulumu) | Opus high | PB0; P62 (`AppSurface`) | evet | S43 |
+| PB6 | madde çizgileri (§5) | `item_divider_style.dart`, `editor/format_bar.dart` (yalnız `_DividerRow`), `editor/items_editor_actions.dart` | Opus high | PB0, §5 yazılınca | evet | S44 |
+| PB7 | yeni sarmalar + sıralar (§1 envanter "YAP") | `editor/editor_quick_row.dart`, `attach_sheet.dart`, `video_transport.dart`, `editor/note_editor_screen.dart:3428` çevresi, `editor/pinned_media_pane.dart` | Opus high | PB1, PB2 | evet | S40 |
+
+Paralel koşabilenler (dosya kümesi kesişmez): PB3 ∥ PB4 ∥ PB5 ∥ PB6; PB1 → PB2 → PB7 sıralı.
+Ortak dosyalar (`test/perf_budget_test.dart`, `test/perf_budget/budgets.json`,
+`tool/tour/screen_tour_test.dart` sahne listesi `:656-695`) her pakette değişir → PB0 paket başına
+yer imi yorumu koyar; çakışmada iki taraf da alınır. §1.2'deki "paket D2" = bu tablodaki PB2.
+§0'daki "§8" atfı = P62 belirteçleri: `git show origin/oto/P62-tasarim-A:docs/plan_tasarim_A.md` §1
+(`AppSurface`, `AppTone`, `AppMotion.selection/emphasized/exitOf`, `AppBanner`, `appNotice`).
+
+**Açık KARAR'lar (sabah bakılacak):** S1 kenar rayı hedefleri (dokunma) · S2 biçim çubuğu düğmeleri
+(sabit) · S3 not kartı alanları (kapsam dışı) · S4 düzen rozeti göz simgesi (kalır) · S6 AI rozetinin
+iki renkli dolgusu (kalır) · S7 dikte kartına komut yardımı (eklenmez) · §5 canlı uygulama ("Tamam"
+kalır).
