@@ -105,6 +105,21 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   arşiv, çöp, etiket, görsel/ses, tarih), Markdown/txt (`# başlık`,
   `- [ ]`, `__x__`→`**x**`, `*x*`→`_x_`), Evernote `.enex` (ENML → metin).
   Aynı özet atlaması.
+- **KÖK NEDEN (P60, 2026-11-14: taze kurulumda 240 notluk Keep içe
+  aktarmasından 67 not sessizce kayboldu, ikinci deneme "67 içe aktarıldı").**
+  `cloud_firestore` Android eklentisi her yazımı `cachedThreadPool`ta AYRI iş
+  parçacığında başlatır (`FlutterFirebaseFirestorePlugin.java`
+  `documentReferenceSet`): Dart'ta art arda verilen iki yazımın SIRASI
+  garanti DEĞİL. `NoteShare.import` önce beklenmeyen boş `createNote`
+  (birleştirmesiz `set`) sonra içerikli `updateNote` yazıyordu; boş yazım geç
+  düşünce içerik silindi, boş not 2 dk sonra `cleanupEmptyNotes`la gitti.
+  Artık `newNoteId()` + TEK `updateNote` (`createdBy` `extras`te); bekçi
+  `import_service_test` "geç düşen ilk yazım" (ilk yazımı geciktiren sarmalayıcı).
+  **Kural:** aynı belgeye beklenmeyen yazımdan hemen sonra çakışan alanlı
+  ikinci yazım verme — not tek yazımda doğsun (`createNote(title/body/items)`
+  ya da `newNoteId`). `createNote`+hemen `updateNote` yapan diğer çağıranlar
+  (gmail, asistan, editör eylemleri) aynı riski taşır — açık iş.
+  "Hepsi Bugün'de" hata DEĞİL: kovalar `updatedAt`'e göre (`dateBuckets`).
 
 ## Kısa kurallar (sıkıştırmada tek satıra inenler)
 - `CustomizeModeHost` alanın kendi boyunu `MediaQuery.size` verir (alt çubuk

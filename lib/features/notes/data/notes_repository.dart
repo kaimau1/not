@@ -635,6 +635,13 @@ class NotesRepository {
     return doc.id;
   }
 
+  /// Yazmadan YENİ not kimliği: not sonra TEK yazımda doğar
+  /// (`updateNote`, `createdBy` [Note.extras] içinde). [createNote] + ayrı
+  /// içerik yazımı yerine bu: Android eklentisi her yazımı ayrı iş parçacığında başlatır,
+  /// beklenmeyen boş oluşturma yazımı içerik yazımından SONRA düşüp içeriği
+  /// silebiliyordu (P60, 2026-11-14: içe aktarmada 240 nottan 67'si kayıp).
+  String newNoteId() => _notes.doc().id;
+
   /// Notun bir KOPYASINI oluşturur ve yeni id'sini döner.
   ///
   /// NEDEN: bir notu şablon gibi kullanmanın (haftalık liste, alışveriş

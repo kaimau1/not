@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/data/attachment_repository.dart';
@@ -101,6 +102,103 @@ void main() {
     expect(r2.imported, 0);
     expect(r2.skipped, 2);
   });
+
+  // KÖK NEDEN (P60, 2026-11-14: taze kurulumda 240 notluk Keep içe
+  // aktarmasından 67'si sessizce kayboldu). Android eklentisi her yazımı
+  // ayrı iş parçacığında başlatır (`cachedThreadPool`), yani beklenmeyen bir
+  // yazım SONRA verilen yazımdan sonra düşebilir. Eskiden not önce boş
+  // `createNote` ile (beklenmeden) doğuyor, içerik ayrı yazımla geliyordu:
+  // boş yazım geç düşünce içerik silinir, boş not 2 dk sonra temizlenirdi.
+  test(
+    'içe aktarma: geç düşen ilk yazım içeriği ve bayrakları silmez',
+    () async {
+      final inner = FakeFirebaseFirestore();
+      final repo = NotesRepository(_LateFirstWrite(inner), 'u1');
+      final created = DateTime.utc(2024, 3, 1, 10);
+      final r = await ImportService(notes: repo, attachments: _Mem()).importAll(
+        [
+          ImportedNote(
+            note: const Note(
+              id: '',
+              type: NoteType.text,
+              title: 'Kalıcı',
+              body: 'gövde',
+            ),
+            pinned: true,
+            createdAt: created,
+          ),
+        ],
+        existing: const [],
+      );
+      expect(r.imported, 1);
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      final docs = (await inner.collection('users/u1/notes').get()).docs;
+      expect(docs, hasLength(1));
+      final note = Note.fromDoc(docs.single);
+      expect(note.title, 'Kalıcı');
+      expect(note.body, 'gövde');
+      expect(note.pinned, isTrue);
+      expect(note.createdAt!.toUtc(), created);
+    },
+  );
+}
+
+/// Bir belgeye verilen İLK yazımı geciktirir (eklentinin sırasız iş
+/// parçacığı); sonraki yazımlar hemen düşer.
+// ignore: subtype_of_sealed_class
+class _LateFirstWrite implements FirebaseFirestore {
+  _LateFirstWrite(this.inner);
+  final FakeFirebaseFirestore inner;
+  final seen = <String>{};
+
+  @override
+  CollectionReference<Map<String, dynamic>> collection(String path) =>
+      _Col(this, inner.collection(path));
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+// ignore: subtype_of_sealed_class
+class _Col implements CollectionReference<Map<String, dynamic>> {
+  _Col(this.fs, this.inner);
+  final _LateFirstWrite fs;
+  final CollectionReference<Map<String, dynamic>> inner;
+
+  @override
+  DocumentReference<Map<String, dynamic>> doc([String? path]) =>
+      _Doc(fs, inner.doc(path));
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+// ignore: subtype_of_sealed_class
+class _Doc implements DocumentReference<Map<String, dynamic>> {
+  _Doc(this.fs, this.inner);
+  final _LateFirstWrite fs;
+  final DocumentReference<Map<String, dynamic>> inner;
+
+  @override
+  String get id => inner.id;
+
+  @override
+  String get path => inner.path;
+
+  @override
+  CollectionReference<Map<String, dynamic>> collection(String path) =>
+      _Col(fs, inner.collection(path));
+
+  @override
+  Future<void> set(Map<String, dynamic> data, [SetOptions? options]) async {
+    if (fs.seen.add(inner.path)) {
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+    }
+    await inner.set(data, options);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _Mem implements AttachmentRepository {
