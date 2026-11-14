@@ -268,7 +268,7 @@ kapatma seçeneği olarak kalabilir).**
 
 **Önce oku:** `CLAUDE.md`, `HAFIZA.md` (son kez tamamı), `KALANLAR.md`.
 
-- [ ] **F58.1 Dondurma kuralı (K-O1).** `CLAUDE.md`'ye "Yol haritası" bölümünün başına bu
+- [x] **F58.1 Dondurma kuralı (K-O1).** *(2026-11-14 P53: CLAUDE.md "Yol haritası"na "Dondurma" satırı + `ISTEK_KUTUSU.md`; plan kapandığı için yumuşak biçim: gözetimsiz zincir kendiliğinden yeni özellik açmaz, kullanıcının sohbette istediği iş yapılır. F69.5 "kalkar" diyor — kaldırma kararı kullanıcıda, sabah bakılacak.)* `CLAUDE.md`'ye "Yol haritası" bölümünün başına bu
   dosyanın işaretçisi ve "OTURTMA sürerken yeni özellik yok; istekler `ISTEK_KUTUSU.md`"
   satırı. `ISTEK_KUTUSU.md` oluştur (başlık + boş liste). Kullanıcı onayı şart.
 - [x] **F58.2 HAFIZA ≤ 30 KB.** *(2026-11-10: HAFIZA.md 5 KB; eski hâl HAFIZA_ARSIV_3.md bayt aynı; 10 konu dosyası docs/hafiza/ — anahtar sözcükle girdi başına dağıtıldı, satır kaybı 0; bekçi test/hafiza_size_test.dart; CLAUDE.md güncel. "Her oturumda geçerli kurallar" 30 madde elle yazıldı — sabah gözden geçir, dağılım isabeti de.)* (a) `HAFIZA.md`'nin bugünkü hâlini `HAFIZA_ARSIV_3.md`
@@ -292,7 +292,7 @@ kapatma seçeneği olarak kalabilir).**
   **(X) eskimiş** (özelliği kalkmış/yeniden yazılmış) → sil. `KALANLAR.md` §2 yerine
   `docs/cihaz_turu.md`'ye işaret kalır. Kural: tura yeni adım girerse doğrulanmış bir adım
   çıkar (40 tavanı).
-- [ ] **F58.4 Oturum disiplini (CLAUDE.md'ye 4 satır).** Bir oturum = bir faz/konu; `[apk]`
+- [x] **F58.4 Oturum disiplini (CLAUDE.md'ye 4 satır).** *(2026-11-14 P53: CLAUDE.md "Yol haritası"nda tek madde; sayaç `KONTROL_LISTEM.md`.)* Bir oturum = bir faz/konu; `[apk]`
   başına en çok 5 kullanıcıya görünür değişiklik; her `[apk]`'dan önce Faz 59 bütçe testleri
   yeşil; "yazıldı, cihazda doğrulanmadı" maddesi 40'ı geçerse yeni iş durur, tur yapılır.
 - [x] **F58.5 Ölü kod süpürmesi.** *(2026-11-10: pickReminderWhen + CardSeeThrough (+ kendi testi) silindi, ayrı commitler, analyze temiz. text_window.dart KALDI: windowed_body.dart kullanıyor. Balonlu yalnız-yazma yolları: aranmadı/silinmedi — şüpheli, sabah bakılacak.)* Adayları `Grep` ile doğrula, başvuru yoksa sil:
@@ -1143,7 +1143,7 @@ tur `telefon-*.png`.
   hatırlatıcı, ekran kapalı → çalıyor mu.
 - [x] **F69.4 Kullanıcı konsol işleri (tek liste).** *(2026-11-14 P22: `KONTROL_LISTEM.md` "Konsol / hesap işleri" 24–31.)* KALAN_ISLER F19.A1, A2, A4, A5, B1–B4,
   B10 (Calendar API), KALANLAR J0 (masaüstü OAuth istemcisi), F61.7 bayrakları.
-- [ ] **F69.5 Kapanış.** Bütçe tablosu Ek A'da "hedef" = `budgets.json`; eski planlarda
+- [x] **F69.5 Kapanış.** *(2026-11-14 P53: planlar `docs/arsiv/planlar/`, açık işler `PLAN.md`, kullanıcı listesi `KONTROL_LISTEM.md` (40 madde), KALANLAR arşivde; kalıcı kurallar `docs/hafiza/arayuz.md` + `akicilik.md`; Ek A hedefi = `budgets.json` (dosya kaynak); kod değişmedi → sürüm notu yok; dondurma kaldırılmadı — kullanıcı kararı, sabah bakılacak.)* Bütçe tablosu Ek A'da "hedef" = `budgets.json`; eski planlarda
   buraya taşınan maddelere "→ OTURTMA F6x.y" notu; `KALANLAR.md` sadeleşir; HAFIZA konu
   dosyaları güncel; sürüm notu; dondurma (K-O1) kalkar, `ISTEK_KUTUSU.md` kullanıcıyla
   önceliklendirilir.

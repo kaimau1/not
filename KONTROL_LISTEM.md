@@ -53,6 +53,7 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nerede: Ayarlar → Kişiselleştir → "Not ekranı · alt çubuk" ve "Hızlı menü"; notta ⋮ → Ekranı düzenle.
   Nasıl: bir düğmeyi gizle, birini taşı, sırayı değiştir → nota gir → "Varsayılana döndür".
   Doğruysa: değişiklik hemen ve kalıcı uygulanıyor; dar ekranda taşma yok; varsayılan eski düzeni geri getiriyor.
+  Ayrıca bak (14 Kasım sürümü): not ekranının ÜST çubuğundaki 5 düğme artık Ayarlar'da ayrı "Üst çubuk" grubunda ve sırası notun içinden de değişiyor. Bilinen: "Alt çubuğu varsayılana döndür" üst sırayı sıfırlamıyor; yıldıza basınca küçük bir tepki yok. Bunlar sana dert mi, söyle.
 
 - [ ] **9. Ek sayısı doğru mu**
   Nerede: zemin resmi olan, başka eki olmayan bir not.
@@ -186,3 +187,4 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 - [ ] **37. Ana ekranda tek elle arama** — yeni not düğmesi zaten sağ altta; arama kutusu üstte. Alta bir arama kısayolu ister misin? Şu an: yok.
 - [ ] **38. Bulutta hız ölçümü** — her sürüm öncesi otomatik emülatör ölçümü kurulsun mu (yaklaşık 1 saat ve CI kotası)? Şu an: yok, ölçüm telefonda yapılıyor.
 - [ ] **39. Sabit ek çubuğu yazı en büyükken** — en büyük yazı boyunda sabit PDF çubuğu taşarsa küçültelim mi, kaydıralım mı? Şu an: taşma görülürse sen söyleyince.
+- [ ] **40. Hız ölçümünün karşılaştırma tabanı yenilensin mi** — son ölçümlerde yeni sürüm bir önceki sürümle aynı ya da daha hızlı çıktı; ama eski "en iyi" kayıtla karşılaştırınca açılış ve klasör geçişi %16–19 yavaş görünüyor. Sebep büyük ihtimalle ölçüm telefonundaki deneme notlarının sıfırlanıp yeniden kurulması (240 yerine 170 not); eski sürüm de aynı sapmayı gösterdi. Şu an: taban değişmedi (en güvenli). "Tabanı yenile" dersen telefonda ölçüm yeniden alınır. Ayrıca ölçüm sırasında bir kez içe aktarma 7/240'ta takıldı, 4 denemede tekrar etmedi; telefonda bir yedeği içe aktarırken takılma görürsen söyle.

@@ -1,11 +1,11 @@
 # PLAN — açık işlerin tek listesi (P22/P53, 2026-11-14)
 
-Bitmiş (`[x]`) maddeler burada YOK; geçmiş eski plan dosyalarında ve git'te. Her satırın sonunda
+Bitmiş (`[x]`) maddeler burada YOK; geçmiş `docs/arsiv/planlar/` ve git'te. Her satırın sonunda
 eski kimlik durur. Kullanıcının kendi listesi: `KONTROL_LISTEM.md`.
 
-> **Geçiş notu (2026-11-14):** P43, P55, P59, P20 hâlâ açık ve eski planlara (OTURTMA/HIZ/DENEYIM)
-> adla atıf yapıyor; bu yüzden eski plan dosyaları henüz `docs/arsiv/planlar/`'a TAŞINMADI (P53
-> adım 3–6 ertelendi, sabah bakılacak). O paketler bitene dek ayrıntı eski dosyalarda, bu dosya özet.
+> **Arşiv (P53, 2026-11-14):** eski plan dosyaları, `KALANLAR.md` ve `KUYRUK_AYRINTI.md` → `docs/arsiv/planlar/`
+> (yalnız geçmiş; satır sonundaki kimlikle orada aranır). Kalıcı kurallar `docs/hafiza/arayuz.md` + `akicilik.md`.
+> Yeni paket: `OTOMASYON.md` Kuyruk'a satır + ayrıntısı bu dosyada (C) maddesinin altında.
 
 ## (A) Kullanıcının yapacakları → `KONTROL_LISTEM.md`
 
@@ -16,6 +16,7 @@ eski kimlik durur. Kullanıcının kendi listesi: `KONTROL_LISTEM.md`.
 - Konsol: AI bütçe/kota (24) F19.A1 · sunucu yedeği (25) F19.A5 · Calendar/Tasks API (26) F19.B10 · masaüstü OAuth (27) KALANLAR J0 · Crashlytics (28) F19.B4, YOL_HARITASI · Drive API + Functions (29) F19.B2, F19.B3 · minClient (30) F19.B1, F61.7 · App Check (31) F19.A2, F19.D2
 - Test misafir hesabını sil — F19.C7
 - PPTX portu için depo izni — F19.B8, F18.20
+- Hız ölçüm tabanı yenilensin mi (KONTROL 40) — HIZ F81.2, F81.4 (P43/P55/P59/P20 sabah bakılacakları)
 - Kararlar (KONTROL 32–39) — K-O12/F67.6, K-O3/F61.7, K-O4/F62.6, F63.6, K-O8/F65.3, F69.3 ipucu, F66.5, HIZ F83.3
 
 ## (B) Bekletilenler / park
@@ -40,12 +41,10 @@ eski kimlik durur. Kullanıcının kendi listesi: `KONTROL_LISTEM.md`.
 - **Dolma kalem uç inceltme tabanı** — fable — YORUM F55.4
 - **Büyük PDF (500 MB–1 GB) yerelde açılsın** — opus — F65.9
 - **Web'de ek görünmüyor / paylaşılan notta ek** — kullanıcıdan hata metni gerek — F65.6
-- **Editör bölge çıkarma + `_mutate` kök setState** — P20 kısmi; sabah bakılacak — F64.3, F64.4
+- **Editör bölge çıkarma + `_mutate` kök setState** — P20 kısmi (bölge çıkarılmadı; M6 `_sameVisual` silinmedi, daraldı; M7 kural CLAUDE.md'ye yazılsın mı; Seç kipi/tablette satır 23 kalıyor; ekran okuyucu taşı eylemleri yalnız tutamaçlı kipte) — sabah bakılacak — F64.3, F64.4
+- **Kasma kökten artığı** — P55 [apk] ile bitti (2026-11-14); plan maddeleri `[ ]` kaldı, cihazda his kontrolü KONTROL 3 — HIZ F84.1, F84.2, F68.3
+- **Kaydırma kabulü** — P43/P46 ölçtü (%2,3–3,3); resmî kabul yazılmadı — F68.4, AKICILIK Faz 21
 - **Pano gövdesini böl (ölçüm kapılı)** — F68.2
-- **Kasma kökten (not aç/kapa, klavye, alt panel)** — P55 sürüyor — HIZ F84.1–F84.3, F60.S2, F60.5, F68.3
-- **Kaydırma kabulü** — P43 — F68.4, AKICILIK Faz 21
-- **Hız: otomatik karar, altın taban** — P43 — HIZ F81.2, F81.4
 - **Takvim haftalık ızgarada sürükle, görev elle sırala** — TAKVIM (ayrı faz)
 - **Uçtan uca akış testleri, web ağır işler** — KULLANICI_DENEYIMI F17.2, F17.3
 - **PPTX düzenleme portu** — depo izni sonrası — F18.20
-- **Kapanış toparlaması (P53 adım 3–6)** — eski planları arşive taşı, OTOMASYON Kuyruk sıkıştır, CLAUDE.md "Yol haritası" tek satır + F58.1 dondurma + F58.4 oturum disiplini, HAFIZA bayat adlar — açık P'ler bitince — F58.1, F58.4, F69.5
