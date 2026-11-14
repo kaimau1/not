@@ -183,9 +183,13 @@ void main() {
   });
 
   testWidgets('(c) sistem geri: liste, iki editör de kapanır', (tester) async {
-    final (container, router) = await _pump(tester);
+    // Gerçek yol: liste `/`, not üstüne itilir.
+    final (container, router) = await _pump(tester, location: '/');
+    router.push('/note/a').ignore();
+    await _settle(tester);
     container.read(secondNoteProvider.notifier).open(const SecondNote('b'));
     await _settle(tester);
+    expect(_editorIds(tester), unorderedEquals(['a', 'b']));
     // A0 ölçümü: bölünmüş düzende geri iç gezginden mi geçiyor? Birincilin
     // PopScope zinciri → not rotası kapanır → konum `/`.
     await tester.binding.handlePopRoute();
