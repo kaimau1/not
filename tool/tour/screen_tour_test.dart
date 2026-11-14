@@ -482,8 +482,12 @@ Future<void> _pumpApp(
               ),
             ],
           ),
+          GoRoute(
+            path: '/settings',
+            builder: (c, s) =>
+                SettingsScreen(initialArea: s.uri.queryParameters['area']),
+          ),
           for (final (path, screen) in const <(String, Widget)>[
-            ('/settings', SettingsScreen()),
             ('/folders', FoldersScreen()),
             ('/ai', AiHubScreen()),
             ('/archive', ArchiveScreen()),
@@ -682,6 +686,24 @@ void main() {
       'ayarlar-gorunum',
       '/settings',
       () => find.byKey(const ValueKey('settings-cat-appearance')),
+    ),
+    // P62 (plan_tasarim_A): her ayar alanı kendi sayfasında + hesap levhası.
+    for (final area in const [
+      'account',
+      'friends',
+      'ai',
+      'notes',
+      'writing',
+      'sound',
+      'sync',
+      'permissions',
+      'updates',
+    ])
+      ('ayarlar-$area', '/settings?area=$area', null),
+    (
+      'hesap-levhasi',
+      '/',
+      () => find.byKey(const ValueKey('home-account-avatar')),
     ),
     ('klasorler', '/folders', null),
     ('yapay-zeka', '/ai', null),
