@@ -10,7 +10,8 @@
 - DİKKAT: KUYRUK §P22 "atlananlar" (K-O3/K-O4/K-O12/F63.6) OTURTMA 2026-11-12 KARARLAR'la çelişiyor; kararlar geçerli sayıldı.
 
 ## 2. evre (P53 toparlama)
-- Şu an: PLAN.md + KONTROL_LISTEM.md (ekleyici) yazılıyor.
+- BİTTİ: PLAN.md (A/B/C, eski kimlikli) + KONTROL_LISTEM.md (39 madde). F69.4 [x].
+- Sıradaki: açık P'ler bitince P53 adım 3–6 (KUYRUK_AYRINTI §P53); PLAN.md'yi o günün durumuna göre tazele.
 - ERTELENDİ (en güvenli, sabah bakılacak): plan dosyalarını docs/arsiv/planlar/'a taşıma, OTOMASYON Kuyruk sıkıştırma,
   CLAUDE.md yol haritası tek satır, HAFIZA toparlama — P43/P55/P59/P20 hâlâ açık ve OTURTMA/HIZ/DENEYIM'e adla atıf yapıyor;
   P53 şartı "bütün P'ler bitince". Hepsi bitince P53 adım 3–6 bu daldan ya da yeni daldan sürülür.

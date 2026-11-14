@@ -1141,7 +1141,7 @@ tur `telefon-*.png`.
   alarm izni yokken Ayarlar → İzinler'de uyarı satırı + ilk hatırlatıcıda ipucu (MIUI
   otomatik başlatma satırı var; aynı yere). Telefonda: uygulama kapalı, 10 dk sonraya
   hatırlatıcı, ekran kapalı → çalıyor mu.
-- [ ] **F69.4 Kullanıcı konsol işleri (tek liste).** KALAN_ISLER F19.A1, A2, A4, A5, B1–B4,
+- [x] **F69.4 Kullanıcı konsol işleri (tek liste).** *(2026-11-14 P22: `KONTROL_LISTEM.md` "Konsol / hesap işleri" 24–31.)* KALAN_ISLER F19.A1, A2, A4, A5, B1–B4,
   B10 (Calendar API), KALANLAR J0 (masaüstü OAuth istemcisi), F61.7 bayrakları.
 - [ ] **F69.5 Kapanış.** Bütçe tablosu Ek A'da "hedef" = `budgets.json`; eski planlarda
   buraya taşınan maddelere "→ OTURTMA F6x.y" notu; `KALANLAR.md` sadeleşir; HAFIZA konu
