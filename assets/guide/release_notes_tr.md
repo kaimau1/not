@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 14 Kasım 2026 {#2026-11-14}
+- **Parmağa ayrı iş:** kalem ayarlarında ve Ayarlar → Kalem'de "Parmak: Kaydırır · Çizer · Siler" seçebilirsin. Siler'de kalem yazar, parmak siler; kalemle yazarken avuç değerse silinen geri gelir, iki parmakla yakınlaştırırken bir şey silinmez.
 - **Webde yazı seçimi:** seçilen yazı artık başka yazı tipinde mavi bir kutu içinde görünmüyor (bazı tarayıcı eklentileri açıkken oluyordu); yalnız uygulamanın kendi açık seçimi kalır.
 - **Silgiden kaleme dönüş:** silgi seçiliyken ekrana kıpırdamadan basılı tutunca "Kaleme dön" düğmesi çıkar; dokununca son kalemine dönersin. Basılı tutuş bir şey silmez.
 - **Tablette ve webde nottan çıkış:** not kapanınca sağ bölmeden kayarak çıkar, sonra liste genişler — artık birden kaybolmuyor.

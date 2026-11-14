@@ -231,6 +231,8 @@ yazma), tam ekran giriş/çıkış, geri tuşu. Yapılamazsa "tablette doğrulan
 
 ## §K34 — Kalem ucu tahmini + parmağa ayrı araç
 
+> **Durum (2026-11-14):** kalem ucu tahmini (karar 1–4, B1–B3, S28, `ink_predict`) — **kullanıcı kararıyla çıkarıldı (2026-11-14)**: "yalnız parmak aracı olsun". Parmak aracı (karar 5–9, B0 parmak testleri, B4–B6) YAZILDI, dal `oto/K34-parmak-araci`; tablette doğrulanmadı (KONTROL_LISTEM 41).
+
 ### Bugünkü yapı (kanıt)
 
 - Girdi yolu: `InkPageLayer` `Listener` → `InkController.pointerDown/Move/Up/Cancel`
@@ -258,7 +260,7 @@ yazma), tam ekran giriş/çıkış, geri tuşu. Yapılamazsa "tablette doğrulan
 
 ### Mimari kararlar
 
-**Uç tahmini**
+**Uç tahmini** — **kullanıcı kararıyla çıkarıldı (2026-11-14)**: "yalnız parmak aracı olsun"
 1. Flutter Android'in "predicted points"ini vermez → F62.6'daki gibi **doğrusal, 1 karelik**
    tahmin: son iki HAM olaydan hız, `uç = son + hız × ufuk`. Ufuk sabiti
    `kInkPredictHorizon = 16 ms` (kalibrasyon düğmesi; tablette 240 fps ölçümüyle ayarlanır).
@@ -310,7 +312,7 @@ iki yeni ayar oraya da; "parmak yazıyor" hapı (2026-11-13) korunur. Çelişen 
 
 ### Adımlar (sırayla; her adım AYRI commit + push)
 
-**B0 — Kanıt: kırmızı testler (+ varsa taban gecikme ölçümü).**
+**B0 — Kanıt: kırmızı testler (+ varsa taban gecikme ölçümü).** [x] parmak kısmı (`test/ink_finger_tool_test.dart`); tahmin kısmı — **kullanıcı kararıyla çıkarıldı (2026-11-14)**: "yalnız parmak aracı olsun"
 - Dosya: `test/ink_predict_test.dart`, `test/ink_finger_tool_test.dart` (YENİ; kalıp
   `test/ink_stylus_tools_test.dart`, `InkToolMemory.reset()`).
 - Tahmin (kırmızı): sabit hızla 3 hareket → `predictedTip` son noktanın ilerisinde, boyu
@@ -325,7 +327,7 @@ iki yeni ayar oraya da; "parmak yazıyor" hapı (2026-11-13) korunur. Çelişen 
 - Tablet eldeyse F62.6 taban ölçümü (240 fps ağır çekim: uç–çizgi mesafesi / hız = ms) DEVIR'e;
   yoksa "ölçülemedi: tablet kullanıcıda" yaz, devam et (karar verilmiş, ölçüm kapısı değil).
 
-**B1 — Tahmin: model.**
+**B1 — Tahmin: model.** — **kullanıcı kararıyla çıkarıldı (2026-11-14)**: "yalnız parmak aracı olsun"
 - Dosya: `viewers/ink_tools.dart` (`inkPredictTip`, `kInkPredictHorizon`, `predict` +
   `_kPredict` pref, `attach`/`reset`/`savePredict`), `viewers/ink_layer.dart`
   (`pointerMove`'a isteğe bağlı `Duration? timeStamp`; `_rawLast/_rawAt/_predict`;
@@ -334,21 +336,21 @@ iki yeni ayar oraya da; "parmak yazıyor" hapı (2026-11-13) korunur. Çelişen 
 - Test: B0 tahmin testleri (boyama hariç) yeşil. `pointerMove`'un başka çağıranları
   (`Grep "\.pointerMove("`) derlenmeye devam eder (parametre isteğe bağlı).
 
-**B2 — Tahmin: boyama + bütçe S28.**
+**B2 — Tahmin: boyama + bütçe S28.** — **kullanıcı kararıyla çıkarıldı (2026-11-14)**: "yalnız parmak aracı olsun"
 - Dosya: `viewers/ink_layer.dart` (`ActiveInkPainter.paint` — karar 2, `try/finally`),
   `test/perf_budget_test.dart` (S15'in altına), `budgets.json`.
 - **S28: 2000 çizgi, tahmin AÇIK, etkin çizgiye 1 nokta** → çizim çağrısı **1**; boyama
   sonrası `points.length` değişmedi. S15 (tahminsiz yol) 1 kalır.
 - Kasma: 8; yeni widget/sarmalayıcı yok. Kabul: iki senaryo yeşil.
 
-**B3 — Tahmin: ayar.**
+**B3 — Tahmin: ayar.** — **kullanıcı kararıyla çıkarıldı (2026-11-14)**: "yalnız parmak aracı olsun"
 - Dosya: `ink_layer.dart` `InkSettingsSheet` (basınç anahtarının altına `SwitchListTile`,
   `ValueKey('ink-predict')`), `settings_writing.dart` (aynı ayar + arama anahtar sözcükleri),
   ARB: `inkPredictTitle` "Kalem ucu tahmini" / "Pen tip prediction", `inkPredictInfo` "Çizgi
   kalemin ucuna daha yakın görünür. Garip gelirse kapat." (EN karşılığı).
 - Test: `pen_tray_controls_test.dart` kalıbıyla anahtar aç/kapa → `InkToolMemory.predict`.
 
-**B4 — Parmak aracı: model.**
+**B4 — Parmak aracı: model.** [x] 2026-11-14 (ek: kement seçiminin İÇİNDE parmak silmez, taşır)
 - Dosya: `ink_tools.dart` (`fingerErases` + `_kFingerEraser`, `FingerTool`, `fingerTool` get,
   `saveFingerTool`), `ink_layer.dart` (`setFingerTool`; `pointerDown` — karar 6; ikinci parmak
   ve `beginNav` geri alma — karar 7b; `pointerDown`'a isteğe bağlı `double? touchRadius`,
@@ -356,7 +358,7 @@ iki yeni ayar oraya da; "parmak yazıyor" hapı (2026-11-13) korunur. Çelişen 
 - Test: B0 parmak testleri yeşil; `ink_stylus_tools_test.dart`, `pen_policy_test.dart`,
   `ink_eraser_fix_test.dart`, `ink_eraser_offer_test.dart` yeşil kalır.
 
-**B5 — Parmak aracı: arayüz.**
+**B5 — Parmak aracı: arayüz.** [x] 2026-11-14 (`InkFingerToolPicker`; `inkFingerErasingPill` yerine tek anahtar `inkFingerEraseOn` hap ve tepside ortak)
 - Dosya: `ink_layer.dart` (`InkSettingsSheet` :2546 anahtarı → üçlü seçim,
   `ValueKey('ink-finger-tool')`), `settings_writing.dart` (:32-38 → üçlü seçim),
   `pen_tray.dart` (:745-746, :870-892 etiket/ipucu/simge "Siler" hâli), `drawing_screen.dart`
@@ -370,7 +372,7 @@ iki yeni ayar oraya da; "parmak yazıyor" hapı (2026-11-13) korunur. Çelişen 
   (`note_editor_screen.dart:2400-2422`) "Siler"i söylemez — iki paket birleşince tek satırlık
   iş; Kuyruk sonucuna "sabah bakılacak" olarak yaz.
 
-**B6 — Kapanış.** `isci` "Bitiş": Kuyruk K34, `PLAN.md` (C) iki madde, `KONTROL_LISTEM.md` 34
+**B6 — Kapanış.** [x] 2026-11-14 (telefon A/B [apk] öncesi yürütücüde) `isci` "Bitiş": Kuyruk K34, `PLAN.md` (C) iki madde, `KONTROL_LISTEM.md` 34
 → "Tablette bak" maddeleri, `docs/hafiza/kalem.md` (karar 2 "tahmin boyamada ekle-çıkar",
 karar 6-7; `:40`'taki "bilerek yapılmadı: F55.1" satırı GÜNCELLENİR), regresyon listesi, sürüm
 notu ("Kalem çizgisi ucu daha yakından izler (Ayarlar'dan kapatılabilir)"; "Parmağa ayrı iş

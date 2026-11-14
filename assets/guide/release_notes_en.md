@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 14 November 2026 {#2026-11-14}
+- **A separate job for your finger:** in the pen settings and Settings → Pen you can pick "Finger: Scrolls · Draws · Erases". With Erases, the pen writes and your finger erases; if your palm touches while writing, anything it erased comes back, and pinching to zoom erases nothing.
 - **Text selection on the web:** selected text no longer shows up in a blue box with a different font (it happened with some browser extensions on); only the app's own light highlight remains.
 - **Back from the eraser:** with the eraser on, press and hold still on the page and a "Back to pen" button appears; tap it to return to your last pen. The hold erases nothing.
 - **Leaving a note on tablets and the web:** the note now slides out of the right pane and then the list widens, instead of vanishing at once.
