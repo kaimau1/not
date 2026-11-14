@@ -133,6 +133,62 @@ void main() {
     expect(find.text('ipucu'), findsNothing);
   });
 
+  testWidgets('dip bildirimi yüzen düğme bölgesine girmez', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final c = AppNoticeController();
+    addTearDown(c.dispose);
+    await _pump(tester, c);
+    // Alt-son köşe: 144 × 72 dp (ana ekranın mikrofon / "+" satırı).
+    const zone = Rect.fromLTRB(
+      412 - AppNoticeHost.fabReserve,
+      915 - AppNoticeHost.fabRow,
+      412,
+      915,
+    );
+    Rect card(String text) => tester.getRect(
+      find
+          .ancestor(of: find.text(text), matching: find.byType(DecoratedBox))
+          .first,
+    );
+
+    c.show(const AppNoticeData(text: 'silindi'));
+    await tester.pumpAndSettle();
+    expect(card('silindi').overlaps(zone), isFalse, reason: 'ileti YANINDA');
+    expect(card('silindi').left, AppSpace.m);
+
+    c.show(
+      const AppNoticeData(
+        text: 'yenilikler',
+        kind: AppNoticeKind.announce,
+        details: ['bir', 'iki'],
+      ),
+    );
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    final news = card('yenilikler');
+    expect(news.overlaps(zone), isFalse, reason: 'duyuru ÜSTÜNDE');
+    expect(news.width, 412 - 2 * AppSpace.m, reason: 'duyuru tam genişlik');
+  });
+
+  testWidgets('şerit sökülünce bekleyen bildirim ve zamanlayıcı kalmaz', (
+    tester,
+  ) async {
+    final c = AppNoticeController();
+    addTearDown(c.dispose);
+    expect(c.hosted, isFalse);
+    await _pump(tester, c);
+    expect(c.hosted, isTrue);
+    c.show(_saved);
+    c.show(_news);
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox());
+    expect(c.hosted, isFalse);
+    expect(c.current, isNull);
+    // Zamanlayıcı kalsaydı test "Timer is still pending" ile düşerdi.
+  });
+
   testWidgets('AppBanner: ton rengi, başlık, ilerleme', (tester) async {
     await tester.pumpWidget(
       const MaterialApp(

@@ -94,6 +94,17 @@ class AppNoticeController extends ChangeNotifier {
     _set(_waiting.isEmpty ? null : _waiting.removeFirst());
   }
 
+  /// Şerit ([AppNoticeHost]) ağaçta mı? Yokken (yalın widget testi) çağıran
+  /// eski SnackBar yoluna düşer — ileti sessizce kaybolmaz.
+  bool get hosted => hasListeners;
+
+  /// Görüneni ve sırayı siler. Şerit sökülürken çağrılır: bekleyen
+  /// zamanlayıcı kalmaz (testte "Timer is still pending").
+  void clear() {
+    _waiting.clear();
+    if (_current != null) _set(null);
+  }
+
   void _set(AppNoticeData? data) {
     _timer?.cancel();
     _current = data;
@@ -122,12 +133,17 @@ final noticeTopInset = ValueNotifier<double>(kToolbarHeight);
 ///  * ipucu ÜSTTE, üst kromun ([noticeTopInset]) altında (kullanıcı bulgusu
 ///    2026-11-08: alttaki ipucu düğmeleri kapatıyordu);
 ///  * ileti / duyuru DİPTE, klavyenin ve dibe yapışık panelin
-///    ([snackBarBottomObstacle]) üstünde.
-/// En çok [maxWidth] genişlikte, ortada.
+///    ([snackBarBottomObstacle]) üstünde, alt-BAŞ köşede.
+/// En çok [maxWidth] genişlikte.
+///
+/// **YÜZEN DÜĞME BÖLGESİ**: ekranın alt-SON köşesindeki [fabReserve] ×
+/// [fabRow] dp'lik alana (ana ekranın mikrofon / "+" / yapay zekâ satırı,
+/// öbür ekranların "+"sı) hiçbir bildirim GİRMEZ: ileti o bölgenin YANINDA
+/// durur, geniş içerikli duyuru ([AppNoticeData.details]) ÜSTÜNDE.
 ///
 /// [child] bu widget yüzünden yeniden KURULMAZ: bildirim değişince yalnız
 /// şerit kurulur (kasma listesi madde 3, 7).
-class AppNoticeHost extends StatelessWidget {
+class AppNoticeHost extends StatefulWidget {
   const AppNoticeHost({super.key, required this.child, this.controller});
 
   final Widget child;
@@ -137,12 +153,30 @@ class AppNoticeHost extends StatelessWidget {
 
   static const double maxWidth = 480;
 
+  /// Yüzen düğme bölgesinin eni (ekranın son kenarından) ve boyu (dipten,
+  /// güvenli alan hariç): 56 dp düğme + 16 dp kenar.
+  static const double fabReserve = 144;
+  static const double fabRow = 72;
+
+  @override
+  State<AppNoticeHost> createState() => _AppNoticeHostState();
+}
+
+class _AppNoticeHostState extends State<AppNoticeHost> {
+  AppNoticeController get _controller => widget.controller ?? appNotice;
+
+  @override
+  void dispose() {
+    _controller.clear();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => Stack(
     children: [
-      child,
-      _NoticeLane(controller: controller ?? appNotice, top: true),
-      _NoticeLane(controller: controller ?? appNotice, top: false),
+      widget.child,
+      _NoticeLane(controller: _controller, top: true),
+      _NoticeLane(controller: _controller, top: false),
     ],
   );
 }
@@ -182,7 +216,9 @@ class _NoticeLane extends StatelessWidget {
             ? null
             : lift + MediaQuery.paddingOf(context).bottom + AppSpace.m,
         child: Align(
-          alignment: top ? Alignment.topCenter : Alignment.bottomCenter,
+          alignment: top
+              ? Alignment.topCenter
+              : AlignmentDirectional.bottomStart,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: AppNoticeHost.maxWidth),
             child: AnimatedSwitcher(
@@ -200,6 +236,14 @@ class _NoticeLane extends StatelessWidget {
                   ).animate(animation),
                   child: child,
                 ),
+              ),
+              // Çıkan ve giren bildirim aynı köşeye yaslı (varsayılan orta:
+              // dar ileti çıkarken ortaya zıplardı).
+              layoutBuilder: (current, previous) => Stack(
+                alignment: top
+                    ? Alignment.topCenter
+                    : AlignmentDirectional.bottomStart,
+                children: [...previous, ?current],
               ),
               child: data == null
                   ? const SizedBox.shrink()
@@ -296,6 +340,8 @@ class _NoticeCardState extends State<_NoticeCard> {
                           children: [
                             Text(
                               data.text,
+                              maxLines: 4,
+                              overflow: TextOverflow.ellipsis,
                               style:
                                   (data.details.isEmpty
                                           ? text.body
@@ -350,6 +396,16 @@ class _NoticeCardState extends State<_NoticeCard> {
         ),
       ),
     );
-    return _tip ? IgnorePointer(child: card) : card;
+    if (_tip) return IgnorePointer(child: card);
+    // Yüzen düğme bölgesi (bkz. AppNoticeHost): ileti YANINDA, duyuru
+    // ÜSTÜNDE. Pay kartla birlikte gider (çıkarken yeri değişmez).
+    final wide = data.details.isNotEmpty;
+    return Padding(
+      padding: EdgeInsetsDirectional.only(
+        end: wide ? 0 : AppNoticeHost.fabReserve - AppSpace.m,
+        bottom: wide ? AppNoticeHost.fabRow : 0,
+      ),
+      child: card,
+    );
   }
 }
