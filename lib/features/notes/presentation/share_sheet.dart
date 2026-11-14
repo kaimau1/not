@@ -82,7 +82,6 @@ Future<void> showNoteShareSheet(
     // SheetHeader'da ✕ var → tutamak yok (DENEYIM K-D7).
     showDragHandle: false,
     isScrollControlled: true,
-    useSafeArea: true,
     constraints: const BoxConstraints(maxWidth: 640),
     builder: (_) => _ShareSheet(
       note: note,

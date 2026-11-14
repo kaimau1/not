@@ -554,7 +554,6 @@ extension _EditorActions on _NoteEditorScreenState {
     final chosen = await showAppSheet<Note>(
       context: context,
       showDragHandle: true,
-      useSafeArea: true,
       builder: (sheetContext) => SafeArea(
         child: ListView(
           shrinkWrap: true,

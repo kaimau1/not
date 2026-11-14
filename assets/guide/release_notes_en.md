@@ -3,6 +3,9 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 14 November 2026 {#2026-11-14}
+- **Tidier menus:** the note ⋮ menu, the home ⋮ menu and the pinned attachment's ⋮ menu have a handle at the top — drag down to close; in a long menu the title, ⚙ and ✕ no longer clash with the phone's status bar. The one-item "Other" group in the home ⋮ menu is gone; Archive sits at the end of "App".
+- **Quick row and bubble list on a pinned PDF:** while typing in the "Take a note" field of a note with a pinned PDF, the quick row appears in the top bar. "All bubbles" in the PDF ⋮ menu lists every bubble in the document; tap one to jump to its page.
+- **Title on a video with its preview hidden:** the card shows "YouTube video" on top and the video's name on its own line below — no longer cut off.
 - **A separate job for your finger:** in the pen settings and Settings → Pen you can pick "Finger: Scrolls · Draws · Erases". With Erases, the pen writes and your finger erases; if your palm touches while writing, anything it erased comes back, and pinching to zoom erases nothing.
 - **Text selection on the web:** selected text no longer shows up in a blue box with a different font (it happened with some browser extensions on); only the app's own light highlight remains.
 - **Back from the eraser:** with the eraser on, press and hold still on the page and a "Back to pen" button appears; tap it to return to your last pen. The hold erases nothing.

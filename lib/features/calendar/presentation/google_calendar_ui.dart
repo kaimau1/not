@@ -24,7 +24,6 @@ Future<void> showGoogleCalendarSheet(BuildContext context) =>
     showAppSheet<void>(
       context: context,
       showDragHandle: true,
-      useSafeArea: true,
       isScrollControlled: true,
       builder: (_) => const _GoogleCalendarSheet(),
     );
@@ -288,7 +287,6 @@ Future<void> showGoogleEventSheet(
 ) => showAppSheet<void>(
   context: context,
   showDragHandle: true,
-  useSafeArea: true,
   isScrollControlled: true,
   builder: (_) => _GoogleEventSheet(event: event, start: start),
 );

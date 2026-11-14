@@ -102,9 +102,17 @@ void main() {
     expect(find.text('YouTube videosu · 2 görsel'), findsOneWidget);
   });
 
-  testWidgets('tek YouTube: başlığı eklenir; İngilizce', (tester) async {
+  testWidgets('tek YouTube: tür üstte, başlık altta (iki satır); İngilizce', (
+    tester,
+  ) async {
     await pump(tester, mk(hidden: true, atts: const [youtube]), lang: 'en');
-    expect(find.text('YouTube video · Ön kol hareketleri'), findsOneWidget);
+    // Kullanıcı isteği 2026-11-14: "YouTube videosu · Haci..." tek satırda
+    // kesiliyordu; tür ve başlık ayrı satırlarda.
+    final kind = find.text('YouTube video');
+    final name = find.text('Ön kol hareketleri');
+    expect(kind, findsOneWidget);
+    expect(name, findsOneWidget);
+    expect(tester.getTopLeft(name).dy, greaterThan(tester.getTopLeft(kind).dy));
   });
 
   testWidgets('görsel görünürken özet çıkmaz', (tester) async {

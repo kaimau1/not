@@ -228,6 +228,13 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Kök neden (S27):** editör kökü `ref.watch(notesStreamProvider)` (geri bağlantı çipi) ile liste akışının HER yayınında kuruluyordu (telefonda da her kayıt yankısı) → `select(var mı)` + çip kendi `Consumer`ında. Kabuk klavye karelerinde yeniden kurulunca yandaki bölmeye yeni widget örneği gidiyordu → `_secondPane` örneği saklar.
 - Tek mikrofon: öbür editörde dikte/kayıt sürerken mikrofon alınmaz (`_micBusyElsewhere`, `_live` kümesi).
 
+## 2026-11-14 — Levha tutamağı, güvenli alan, öksüz grup
+- **K-D7 kalktı (kullanıcı isteği):** başlıklı (✕'li) menü levhasında da TUTAMAK var (`showActionMenuSheet`, `showNoteActionsSheet`, sabit ek ⋮ `_openSheet`). Aşağı çekerek kapatma kullanıcının beklediği yol.
+- **`showAppSheet` varsayılanı `useSafeArea: true`:** uzun levha durum çubuğunun altına girmiyordu ⚙/✕ çakışıyordu (KÖK: `useSafeArea:false`'ta modal levha üst dolguyu SİLER, içteki `SafeArea` işe yaramaz). Çağrılarda `useSafeArea: true` yazma (lint: gereksiz argüman).
+- **Öksüz madde (hızlı satırdan düşen):** menünün TEK grubu varsa o grubun sonuna katılır; ayrı tek maddelik "Diğer" yok (ana ekran ⋮ "düzensiz" bulgusu). Çok gruplu menüde "Diğer" kalır.
+- Gizli ek özeti (`CardHiddenMediaLine`): tek ekin adı ikinci satırda; yükseklik tahmini 22 → 38 (`estimateNoteHeight`).
+- Belge notunda (başlık üst çubukta, `_barTitle`) hızlı satır yalnız gövde alanı odaktayken (`_fieldFocusedN`) — çubuktaki başlık alanı düzenlenirken yerinde kalır.
+
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 
 Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.

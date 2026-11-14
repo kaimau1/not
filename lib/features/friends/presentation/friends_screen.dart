@@ -56,7 +56,6 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   Future<void> _add() => showAppSheet<void>(
     context: context,
     isScrollControlled: true,
-    useSafeArea: true,
     showDragHandle: true,
     builder: (_) => const _AddFriendSheet(),
   );

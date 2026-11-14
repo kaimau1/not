@@ -4490,6 +4490,12 @@ abstract class AppLocalizations {
   /// **'Balonlarda ara…'**
   String get bubbleSearchHint;
 
+  /// No description provided for @bubblesListAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm balonlar'**
+  String get bubblesListAll;
+
   /// No description provided for @bubblesOverviewTitle.
   ///
   /// In tr, this message translates to:

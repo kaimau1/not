@@ -310,7 +310,9 @@ class CardHiddenMedia {
     );
   }
 
-  /// Tek satırlık yazı: "YouTube videosu · 2 görsel".
+  /// Tür satırı: "YouTube videosu · 2 görsel". Tek ekin adı ([name]) bu
+  /// satıra katılmaz, altında ikinci satırda durur (kullanıcı isteği
+  /// 2026-11-14: "Haci..." diye kesilmesin, başlık okunsun).
   String label(AppLocalizations l10n) {
     final parts = <String>[
       if (youtube > 0) l10n.cardHiddenYoutube(youtube),
@@ -318,7 +320,6 @@ class CardHiddenMedia {
       if (images > 0) l10n.cardHiddenImage(images),
       if (docs > 0) l10n.cardHiddenDoc(docs),
       if (audio > 0) l10n.cardHiddenAudio(audio),
-      ?name,
     ];
     return parts.join(' · ');
   }
@@ -334,7 +335,9 @@ class CardHiddenMedia {
       : Icons.attach_file;
 }
 
-/// [CardHiddenMedia]'nın kartta çizimi: ikonlu, ikincil renkte tek satır.
+/// [CardHiddenMedia]'nın kartta çizimi: ikonlu, ikincil renkte tür satırı;
+/// tek ekin adı varsa altında ikinci satır (ör. "YouTube videosu" /
+/// "Hacimli ve Damarlı Ön Kollar...").
 class CardHiddenMediaLine extends StatelessWidget {
   const CardHiddenMediaLine({super.key, required this.media});
 
@@ -343,7 +346,10 @@ class CardHiddenMediaLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Row(
+    final style = Theme.of(
+      context,
+    ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant);
+    final kind = Row(
       children: [
         Icon(media.icon, size: 14, color: scheme.onSurfaceVariant),
         const SizedBox(width: 6),
@@ -352,9 +358,26 @@ class CardHiddenMediaLine extends StatelessWidget {
             media.label(context.l10n),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: style,
+          ),
+        ),
+      ],
+    );
+    final name = media.name;
+    if (name == null) return kind;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        kind,
+        const SizedBox(height: 2),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 20),
+          child: Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
           ),
         ),
       ],
