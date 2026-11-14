@@ -23,8 +23,11 @@ S12 {0,0,1,1} · S12b {0,0,2} · S26 {1,14}.
   Kök neden 2: kabuk klavye karelerinde yeniden kuruluyor (dış Scaffold boyu), yandaki bölmeye yeni
   widget örneği → yandaki editör her kare; örnek SecondNote başına saklanır (`_secondPane`).
 
-## Sıradaki
-A6 kenar durumlar · A7 kapanış.
+- A6 tek mikrofon (`_micBusyElsewhere`, birim testi yok: platform kanalı — cihazda), silinen yandaki not (test f), tur `iki-not` (matepad-yatay/tablet-yatay taşmasız). Klavye: S27 klavye_govde 0.
+- A7 Kuyruk/PLAN/KONTROL_LISTEM 32/arayuz.md/regresyon/sürüm notu 14 Kasım (TR+EN).
+
+## Kalan (kullanıcı / yürütücü)
+Tablette KONTROL_LISTEM 32; telefon A/B (`ab-olcum`) [apk] öncesi; Ctrl+\ iki-not kipinde ☰ göz atma yerine odak modunu çevirir (küçük, sabah bakılacak).
 
 ## Test
 `flutter test test/second_note_test.dart test/fullscreen_pull_test.dart test/split_layout_rules_test.dart --reporter failures-only`

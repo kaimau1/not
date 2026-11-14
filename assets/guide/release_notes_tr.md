@@ -11,6 +11,7 @@ Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarla
 - **Üst çubuğun sırası sende:** Ayarlar → Kişiselleştir'deki yeni "Üst çubuk" grubundan not ekranının üstündeki düğmelerin (Ana sayfa, eşitleme, geri al, sabitle, tam ekran) sırasını değiştirebilir, istemediğini gizleyebilirsin; ⋮ hep en sağda kalır.
 - **Ek sayısı:** notun zemini olarak seçtiğin görsel artık arşiv kartındaki ek rozetinde ve paylaşım ekranında "ek" diye sayılmıyor.
 - **Hatırlatıcı uyarısı:** telefonda tam zamanlı alarm izni kapalıysa Ayarlar → İzinler'de "Alarmlar ve hatırlatıcılar" satırı çıkar; dokununca izni açacağın ekran gelir.
+- **Tablette iki not yan yana:** tablet yataydayken bir not açıkken soldaki listede başka bir kartın ⋮ menüsünden "Yanda aç"ı seç; iki not yan yana açılır, ortadaki ayraçla payları değiştirirsin, ✕ yandakini kapatır, geri tuşu ikisini de kapatıp listeye döner.
 
 ## 13 Kasım 2026 {#2026-11-13}
 - **Tablette sesle yazma:** cihazın canlı konuşma tanıması çalışmıyorsa (Google hizmetleri olmayan tabletler) uygulama bunu birkaç saniyede fark edip sesli not levhasına geçer: konuşma kaydedilir ve yazıya dökülür. Sesle yazma açıkken yaşanan kasma da azaldı.
