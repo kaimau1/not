@@ -2,6 +2,10 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 15 Kasım 2026 {#2026-11-15}
+- **Google Keep'ten içe aktarmada not kaybolmuyor:** yeni kurulumda Keep yedeğini içe aktarınca bazı notlar sessizce boş kalıp siliniyordu; artık her not tek seferde, içeriğiyle oluşur.
+- **Aramaya geçiş daha hafif:** arama kutusuna dokunduğunda ekranda görünmeyen kartlar artık boşuna hazırlanmıyor; yazdığın her harfte çizilen kart sayısı yarıdan aza indi.
+
 ## 14 Kasım 2026 {#2026-11-14}
 - **Menüler toparlandı:** not ⋮ menüsünde, ana ekran ⋮'te ve sabit ekin ⋮ menüsünde üstte tutamak var — aşağı çekerek kapatabilirsin; uzun menüde başlık, ⚙ ve ✕ artık telefonun üst çubuğuyla çakışmıyor. Ana ekran ⋮'te tek maddelik "Diğer" grubu kalktı, Arşiv "Uygulama"nın sonunda.
 - **Sabit PDF'te hızlı satır ve balon listesi:** PDF'i sabitlenmiş notta "Not al" alanına yazarken üst çubukta hızlı satır çıkar. PDF ⋮ menüsündeki "Tüm balonlar" belgedeki bütün balonları tek listede gösterir; dokununca o sayfaya gidilir.
