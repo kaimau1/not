@@ -1813,7 +1813,7 @@ class _NotePreview extends StatelessWidget {
       // aynı görününce defterin ne olduğu ancak açınca anlaşılıyordu.
       // Rozet, defterin içindekileri de sayar: kaç dosya, kaç metin girdisi.
       case NoteType.archive:
-        final files = note.attachments.length;
+        final files = note.attachmentsWithoutBackground.length;
         final texts = note.items.where((i) => i.text.trim().isNotEmpty).length;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

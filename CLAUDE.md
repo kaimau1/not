@@ -27,15 +27,15 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 Her `[apk]` birleştirmesinde `assets/guide/release_notes_tr.md` ve `_en.md`'ye günün bölümü (`## 10 Kasım 2026 {#2026-11-10}`, en yenisi üstte) kullanıcı diliyle "ne değişti" maddesi eklenir (commit başlığı değil). İki dosyada tarih kimlikleri aynı (`test/guide_screen_test.dart` bekçisi).
 
 ## Gece / zamanlanmış görev kuralı (kullanıcı kararı 2026-11-03; zincir izni 2026-11-09)
-- Gözetimsiz zincir: yürütücü **`oto-tur` skill'ini**, alt ajan **`isci` skill'ini** uygular; Kuyruk ve SIRA `OTOMASYON.md`'de (ayrıntı `KUYRUK_AYRINTI.md`).
+- Gözetimsiz zincir: yürütücü **`oto-tur` skill'ini**, alt ajan **`isci` skill'ini** uygular; Kuyruk ve SIRA `OTOMASYON.md`'de (ayrıntı Kuyruk satırı + `PLAN.md`).
 - Plan KARAR maddeleri verilmiştir (**KARAR (kullanıcı, 2026-11-03)**): SORMADAN uygula; yeni karar → en güvenli seçenek + "sabah bakılacak".
 - Dalda çalış → CI yeşilse main'e birleştir (`[apk]`, kişisel APK, `NOTLAR_KISISEL=1`); **CI kırmızıyken main'e ASLA birleştirme**, main kırmızıysa düzelt ya da `git revert -m 1`.
-- Telefon gerektiren ölçüm yapılamazsa "yazıldı, cihazda doğrulanmadı" + `KALANLAR.md` §2. Veri göçü / kayıt sıfırlama (F22.4, F28.2): önce yerel tam yedek, geri alınabilir göç, `rules-test` yeşil.
+- Telefon gerektiren ölçüm yapılamazsa "yazıldı, cihazda doğrulanmadı" + `KONTROL_LISTEM.md` "Telefonda bak". Veri göçü / kayıt sıfırlama (F22.4, F28.2): önce yerel tam yedek, geri alınabilir göç, `rules-test` yeşil.
 
 ## Kasma ve hız kapıları (bağlayıcı)
 - **Kasma kontrol listesi (2026-11-09):** editöre/kart ızgarasına GÖRÜNÜR yeni alan, kip ya da sarmalayıcı eklerken push'tan önce **`kasma-kontrol` skill'ini** uygula (8 madde; `test/perf_budget_test.dart` kırmızıysa birleştirme yok).
 - **ÖLÇÜM KAPISI (2026-11-10):** editör, klavye, alt/üst çubuk, ana ekran listesi ya da geçişe dokunan iş `[apk]`'dan önce cihazda A/B ölçülür (`tool/perf/ab_hepsi.py <A> <B> --altin`, taban = önceki `[apk]` profil derlemesi; evrede UI/LAYOUT ms > %20 = birleştirme yok). Ayrıntı: **`ab-olcum` skill'i**.
-- **HIZ SÖZLEŞMESİ (2026-11-12, `HIZ_PLANI.md` Faz 81–84):** dokunulan yüzeyin bütçe senaryosu `test/perf_budget_test.dart`'ta olmalı; her `[apk]` öncesi tam ölçüm (önceki `[apk]` %20, altın taban %15); hız işlerinde kötüleşme SIFIR; mandallar yalnız düşer. Ölçmeden "akıcı/hızlı" denmez. Ayrıntı: **`ab-olcum` skill'i**.
+- **HIZ SÖZLEŞMESİ (2026-11-12; tedbirler `docs/hafiza/akicilik.md` sonu):** dokunulan yüzeyin bütçe senaryosu `test/perf_budget_test.dart`'ta olmalı; her `[apk]` öncesi tam ölçüm (önceki `[apk]` %20, altın taban %15); hız işlerinde kötüleşme SIFIR; mandallar yalnız düşer. Ölçmeden "akıcı/hızlı" denmez. Ayrıntı: **`ab-olcum` skill'i**.
 
 ## Hafıza (3 katman)
 - Kod yapısı → `graphify-out/` (oku: GRAPH_REPORT.md · güncelle: elle `graphify update .`, otomatik kanca yok; son 2026-11-12 — kod ilerledikçe bayatlar, satır/dosya bilgisini koddan doğrula)
@@ -44,7 +44,7 @@ Her `[apk]` birleştirmesinde `assets/guide/release_notes_tr.md` ve `_en.md`'ye 
 Yaz kuralı: kalıcı karar, bug kök nedeni ya da yanlış yol oluştuysa iş bitmeden yaz. Sır/anahtar/kişisel veri hafızaya YAZILMAZ.
 
 ## Yol haritası
-**Açık iş önceliği: `OTOMASYON.md` Kuyruk (ayrıntı `KUYRUK_AYRINTI.md`) → `HIZ_PLANI.md` → `DENEYIM_PLANI.md` → `OTURTMA_PLANI.md`.** "Faz N'i yap" denince dosyanın başındaki protokol: önce kanıtı üret, sonra düzelt; yalnız o faz; KARAR GEREKİR'de sor; bitince `[x]` + Durum + HAFIZA + commit/push. Akıcılık bütçesi (AKICILIK Faz 21/23) bağlayıcı.
-- `HIZ_PLANI.md` — hız güvencesi, Faz 81–84, kuyruk P43–P46. `DENEYIM_PLANI.md` — görünüş/his, Faz 72–80, kuyruk P33–P42; tasarım sözleşmesi §2 (ölçüyü elle yazma), kararlar K-D1…K-D10 verildi. **Bileşenin görünüşünü/yerini değiştirmeden önce `python tool/design/istek_tara.py <dosya>`**; çelişen fikir yapılmaz (§4). `OTURTMA_PLANI.md` — ANA PLAN, Faz 58–69, kararlar K-O1…K-O14 AÇIK; eski planlarla çelişirse bu geçerli.
-- Açık (alt): `KALAN_ISLER_PLANI.md` (Faz 18/19/28; cihaz doğrulama `KALANLAR.md` §2), `TEMA_PLANI.md` (Faz 29–35, kısmen), `TUTARLILIK_PLANI.md` (Faz 36–45; görsel tur `flutter test tool/tour/screen_tour_test.dart`), `TAKVIM_PLANI.md` (Faz 46–53, `lib/features/calendar/`), `YORUM_ANALIZI_PLANI.md` (Faz 54–57), `AKICILIK_PLANI.md` (Faz 20–27, `tool/perf/`).
-- Bitti: `YOL_HARITASI`, `PERFORMANS_TOPARLAMA_PLANI`, `KULLANICI_DENEYIMI_PLANI`.
+**Açık iş: `PLAN.md`; kullanıcının kontrol listesi: `KONTROL_LISTEM.md`; eski planlar `docs/arsiv/planlar/` (yalnız geçmiş; koddaki `TEMA_PLANI F31.4` gibi kimlikler orada).** "Faz N'i yap" denince arşivdeki planın başındaki protokol: önce kanıtı üret, sonra düzelt; yalnız o faz; KARAR GEREKİR'de sor; bitince `[x]` + Durum + HAFIZA + commit/push. Akıcılık bütçesi bağlayıcı.
+- **Bileşenin görünüşünü/yerini değiştirmeden önce `python tool/design/istek_tara.py <dosya>`**; çelişen fikir yapılmaz — tasarım ilkeleri + 16 "yapılmayacak" `docs/hafiza/arayuz.md` sonunda (ölçüyü elle yazma: `AppRadius`/`AppSpace`/`AppText`/`AppMotion`). Görsel tur: `flutter test tool/tour/screen_tour_test.dart`.
+- **Dondurma (K-O1, F58.1):** plan dışı yeni özellik fikirleri `ISTEK_KUTUSU.md`'ye yazılır, gözetimsiz zincir kendiliğinden yeni özellik açmaz; düzeltme, bug fix ve kullanıcının sohbette açıkça istediği iş yapılır. Plan F69.5'e göre kapanışta kalkacaktı — kaldırmak kullanıcı kararı (sabah bakılacak), o güne dek geçerli.
+- **Oturum disiplini (F58.4):** bir oturum = bir faz/konu; `[apk]` başına en çok 5 kullanıcıya görünür değişiklik; her `[apk]`'dan önce bütçe testleri (`test/perf_budget_test.dart`) yeşil; "yazıldı, cihazda doğrulanmadı" maddeleri (`KONTROL_LISTEM.md`) 40'ı geçerse yeni iş durur, cihaz turu yapılır.

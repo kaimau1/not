@@ -1008,6 +1008,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Needed for reminders and the daily briefing';
 
   @override
+  String get permExactAlarm => 'Alarms & reminders';
+
+  @override
+  String get permExactAlarmInfo =>
+      'Off: reminders may fire a few minutes late instead of on the minute. Allow it for Notlar';
+
+  @override
   String get permBattery => 'Battery optimisation';
 
   @override

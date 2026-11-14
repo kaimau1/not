@@ -1898,6 +1898,18 @@ abstract class AppLocalizations {
   /// **'Hatırlatıcılar ve günlük brifing için gerekli'**
   String get permNotificationsInfo;
 
+  /// No description provided for @permExactAlarm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alarmlar ve hatırlatıcılar'**
+  String get permExactAlarm;
+
+  /// No description provided for @permExactAlarmInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir. Notlar için izni aç'**
+  String get permExactAlarmInfo;
+
   /// No description provided for @permBattery.
   ///
   /// In tr, this message translates to:

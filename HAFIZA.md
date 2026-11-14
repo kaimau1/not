@@ -5,7 +5,8 @@
 ekle (tarihli, kısa); bu dosyaya yalnız her oturumu ilgilendiren kural girer. Sır/anahtar/
 kişisel veri YAZILMAZ. **Tavan 30 KB** (`test/hafiza_size_test.dart`). Eski TAM hâl (bölünmeden
 önce, 109 KB): `HAFIZA_ARSIV_3.md`; tarihçe `HAFIZA_ARSIV.md` (→ 2026-10-19),
-`HAFIZA_ARSIV_2.md` (→ 2026-11-02) — üçü de dondurulmuş, `grep` ile ara.
+`HAFIZA_ARSIV_2.md` (→ 2026-11-02) — üçü de dondurulmuş, `grep` ile ara. Açık iş `PLAN.md`,
+kullanıcının listesi `KONTROL_LISTEM.md`, eski planlar `docs/arsiv/planlar/` (P53, 2026-11-14).
 
 ## Ortam
 - Flutter **3.47.9** (CI ile aynı); Windows'ta `C:\src\flutter\bin\flutter.bat` (PATH'te değil).
@@ -52,11 +53,11 @@ kişisel veri YAZILMAZ. **Tavan 30 KB** (`test/hafiza_size_test.dart`). Eski TAM
 |---|---|
 | Ortam, CI, deploy, Android tuzakları, test tuzakları, açık sorular | `ortam_ci.md` |
 | Firestore modeli, kurallar, yedek/içe aktarma, ek senkronu | `veri.md` |
-| Riverpod, kart önbelleği, kasma, açılış/geçiş performansı | `akicilik.md` |
+| Riverpod, kart önbelleği, kasma, açılış/geçiş performansı; hız sözleşmesi (sonda) | `akicilik.md` |
 | Not editörü, klavye, hızlı satır, metin birleştirme, yazım | `editor.md` |
 | Kalem, şekil tanıma, avuç reddi, sabit kalemler, ek üstü çizgi | `kalem.md` |
 | PDF görüntüleyici, balonlu mod, ek modeli, taranan belge | `ekler_pdf.md` |
-| Ana ekran, tema, menüler, ayarlar, geniş ekran/ray, tablet | `arayuz.md` |
+| Ana ekran, tema, menüler, ayarlar, geniş ekran/ray, tablet; tasarım ilkeleri + yapılmayacaklar (sonda) | `arayuz.md` |
 | Web'e özgü davranış (PWA, tarayıcı kısıtları) | `web.md` |
 | Takvim, Görevler, Gmail, hatırlatıcı, tatiller | `takvim_gmail.md` |
 | Sesli komut, dikte, çeviri, asistan, AI özellikleri | `ai_ses.md` |

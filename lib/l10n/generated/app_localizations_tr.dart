@@ -1005,6 +1005,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Hatırlatıcılar ve günlük brifing için gerekli';
 
   @override
+  String get permExactAlarm => 'Alarmlar ve hatırlatıcılar';
+
+  @override
+  String get permExactAlarmInfo =>
+      'Kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir. Notlar için izni aç';
+
+  @override
   String get permBattery => 'Pil optimizasyonu';
 
   @override

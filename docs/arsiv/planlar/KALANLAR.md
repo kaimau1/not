@@ -361,3 +361,8 @@ Tam yedek geri yükleme + ikinci yükleme çoğaltmıyor; #47 Gboard; A2, A4, B5
 
 ### P45 (2026-11-14, yazıldı, cihazda doğrulanmadı)
 - P45 **Ölçüm geçmişi:** bir sonraki `[apk]` öncesi `ab_hepsi.py <A> <B> --altin` koştuktan sonra `python tool/perf/gecmis.py` çalıştır: yeni satırlar eğilimde görünmeli, `KAYMA` yalnız gerçek kaymada. `gecmis.py` cihazsız `--self-check` ile ve gerçek csv ile doğrulandı.
+
+### P22 (2026-11-14, yazıldı, cihazda doğrulanmadı)
+- P22.1 **Zemin görseli ek sayılmaz (F60.6):** nota yalnız zemin görseli koy (ek yok) → başka uygulamadan dosya paylaş → "Var olan nota" listesinde o notta 📎 yok; arşiv defterine zemin koy → kartta "0 dosya" (gerçek ek ekleyince 1).
+- P22.2 **Alarm izni uyarısı (F69.3):** Android ayarları → Uygulamalar → Notlar → "Alarmlar ve hatırlatıcılar" iznini KAPAT → Notlar'da Ayarlar → İzinler: "Alarmlar ve hatırlatıcılar" satırı + "Ayarları aç"; izni aç, geri dön → satır kaybolur. Sonra uygulama kapalı, ekran kapalı, 10 dk sonraya hatırlatıcı → dakikasında çalıyor mu.
+- P22.3 **CI kare ölçümü kararı (HIZ F83.3):** üç aynı-commit `[perf]` koşusuyla emülatör kare taban çizgisi kurulsun mu (≈1 sa CI + kota). Şu an: yapılmadı (en güvenli). İstersen "F83.3'ü yap" de.

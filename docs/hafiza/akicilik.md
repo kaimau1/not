@@ -23,7 +23,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   aynıysa önceki örneği döner (`StableBox`). Toplu işlem tek `WriteBatch`
   (450'lik). Animasyonda `FrameLoop`.
 - **Uzun liste (F24.3, 2026-11-04):** madde düz `RichText` (`items_editor_lazy.dart`), dokununca/`requestFocus`la gerçek alan. Odak için `_LazyFocusNode` (yeni odak yolu da `requestFocus` kullansın). Düz çizim gerçek alanla birebir: `windowedFieldStyle` + 3 dp imleç payı. Düz çizimin bilmediği görünüm/dokunuş ekleyen satır `_needsRealField`e. Testler `debugEagerItemFields` ile gerçek alan kurar. Kademeli: ilk 16, 500 ms sonra kare başına 2 (100 düz satır bile tek karede 163 ms). Ölçüm tuzağı: SF'deki açılış "680 ms" donma değil bekleme boşluğuydu.
-- **Akıcılık ölçümü (2026-11-03, `AKICILIK_PLANI.md`, araçlar `tool/perf/`):**
+- **Akıcılık ölçümü (2026-11-03, `docs/arsiv/planlar/AKICILIK_PLANI.md`, araçlar `tool/perf/`):**
   Flutter 3.47 Android'de Dart UI = ana iş parçacığı (birleşik, KAPATILAMAZ:
   `DisableMergedPlatformUIThread` motorda yasak) → her platform kanalı
   çağrısının Java tarafı kareyi bekletir. Adreno ≤ 650 → Impeller OpenGLES
@@ -126,3 +126,13 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 ## 2026-11-14 — P20: liste satırı önbelleği (S3/S4)
 - **Kök neden:** madde işaretlenince/Enter'da arkadaki 22 satır baştan kuruluyordu: sıra numarası (`reorderIndex`, `orderNumber`) satır önbellek anahtarındaydı VE `SliverReorderableList` her satırı dizinli `GlobalKey` ile sarıyordu. Çözüm `_RowSlot` (sıra önbelleğin dışından) + tutamaçsız kipte düz `ListView`: S3/S4 23→1. Tutamaçlı kipte (tablet/web, Seç) 23 kalır. Ayrıntı `editor.md`.
+
+
+## Hız sözleşmesi — kalıcı tedbirler (HIZ_PLANI, P53 2026-11-14 buraya taşındı)
+
+Tam plan: `docs/arsiv/planlar/HIZ_PLANI.md`. Bütçe senaryoları (S1…) tablosu: `docs/arsiv/planlar/OTURTMA_PLANI.md` Ek A + `test/perf_budget/budgets.json`.
+
+1. CLAUDE.md "Hız sözleşmesi" (kasma listesinin altında): yeni özellik/güncelleme hangi yüzeye dokunursa o yüzeyin bütçe senaryosu (yoksa YAZILIR) + `[apk]` öncesi `ab_hepsi.py --altin`. Ölçümsüz "akıcı" denmez.
+2. Mandallar yalnız düşer: `budgets.json`, `design_tokens/budget.json`, `altin_taban.json`.
+3. Hız/akıcılık paketlerinde kötüleşme sıfır (OTOMASYON 6. adım); diğer paketlerde %20 + altın taban %15.
+4. Yeni ekran/levha/akış ekleyen her iş, Ek A'ya bir S satırı ve `ab_hepsi.py`'ye bir evre ekler (yoksa iş bitmiş sayılmaz).

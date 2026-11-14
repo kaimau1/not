@@ -1,5 +1,5 @@
 {
-  "_kural": "Mandal: bütçe yalnız DÜŞER. Yükseltmek için commit başlığında [butce] ve girdinin 'neden' alanı. Senaryolar OTURTMA_PLANI.md Ek A.",
+  "_kural": "Mandal: bütçe yalnız DÜŞER. Yükseltmek için commit başlığında [butce] ve girdinin 'neden' alanı. Senaryolar docs/arsiv/planlar/OTURTMA_PLANI.md Ek A.",
   "S1": {
     "senaryo": "Kısa metin notu, gövdeye 20 karakter (telefon)",
     "kok_kurulum": 0,

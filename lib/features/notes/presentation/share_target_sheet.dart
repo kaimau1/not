@@ -518,7 +518,8 @@ class _NoteRow extends StatelessWidget {
       if (folderName != null && folderName!.trim().isNotEmpty) folderName!,
       if (updated != null)
         DateFormat.MMMd(context.l10n.localeName).format(updated),
-      if (note.attachments.isNotEmpty) '📎 ${note.attachments.length}',
+      if (note.attachmentsWithoutBackground.isNotEmpty)
+        '📎 ${note.attachmentsWithoutBackground.length}',
     ].join(' · ');
     return Material(
       color: scheme.surfaceContainerLow,

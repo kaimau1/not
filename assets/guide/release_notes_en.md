@@ -9,6 +9,8 @@ What changed in each update, newest first. The version number is at the bottom o
 - **List beside an open note:** pinch or Ctrl+scroll to make the cards bigger or smaller; the list switches between 1 and 4 columns by its width and remembers your choice.
 - **Smoother typing in long lists:** in a list with many items, ticking a box or adding an item with Enter no longer redraws every item after it; star, pin, undo and the format panel no longer rebuild the whole note either.
 - **Arrange the top bar:** the new "Top bar" group in Settings → Personalize lets you reorder the buttons at the top of a note (Home, sync, undo, pin, full screen) and hide the ones you don't want; ⋮ always stays on the far right.
+- **Attachment count:** a picture you chose as the note's background no longer counts as an attachment on the archive card badge or on the share screen.
+- **Reminder warning:** if exact alarms are off on your phone, Settings → Permissions shows an "Alarms and reminders" row; tap it to open the screen where you can allow them.
 
 ## 13 November 2026 {#2026-11-13}
 - **Voice typing on tablets:** if the device's live speech recognition doesn't work (tablets without Google services), the app notices within a few seconds and switches to the voice note sheet: your speech is recorded and transcribed. Stutter while voice typing is on is also reduced.

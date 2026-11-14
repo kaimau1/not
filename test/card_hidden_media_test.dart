@@ -120,4 +120,20 @@ void main() {
     await pump(tester, mk());
     expect(find.text('YouTube videosu · 2 görsel'), findsOneWidget);
   });
+
+  // F60.6: arşiv defteri rozeti de zemin görselini dosya saymaz.
+  testWidgets('arşiv defteri rozeti zemin görselini saymaz', (tester) async {
+    await pump(
+      tester,
+      const Note(
+        id: 'a',
+        type: NoteType.archive,
+        title: 'Defter',
+        attachments: [img, img2],
+        backgroundImageId: 'i1',
+      ),
+    );
+    expect(find.textContaining('1 dosya'), findsOneWidget);
+    expect(find.textContaining('2 dosya'), findsNothing);
+  });
 }

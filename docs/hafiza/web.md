@@ -23,7 +23,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   içeren HER Firebase Storage isteği 400 (ön istek dahil; curl'de aynısı
   403/200). Yükleme (`?name=`) geçer, okuma/silme geçmez → web turunda ek
   gösterme, PDF açma ve "Hesabımı sil" ölçülemez/bitmez. Canlı site etkilenmez.
-- Web turu: Playwright + semantik ağaç (`KULLANICI_DENEYIMI_PLANI.md` Ek A);
+- Web turu: Playwright + semantik ağaç (`docs/arsiv/planlar/KULLANICI_DENEYIMI_PLANI.md` Ek A);
   misafir hesabı tur sonunda sil. App Check web'de anahtarla.
 
 ## Kısa kurallar (sıkıştırmada tek satıra inenler)

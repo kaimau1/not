@@ -14,8 +14,8 @@ taslağı İŞÇİNİN işidir.
 ## Başlangıç
 
 - Depo: Flutter not uygulaması, `C:\Users\sena\Desktop\not`. Önce `CLAUDE.md`, sonra
-  `OTURTMA_PLANI.md`'de (hız paketleri: `HIZ_PLANI.md`; görünüş: `DENEYIM_PLANI.md`) ve
-  `KUYRUK_AYRINTI.md`'de paketin maddeleri. `HAFIZA.md`'yi BAŞTAN SONA OKUMA: konunu `Grep` ile
+  `PLAN.md`'de (açık işlerin tek listesi; eski planlar `docs/arsiv/planlar/`, yalnız geçmiş) ve
+  Kuyruk satırında paketin maddeleri. `HAFIZA.md`'yi BAŞTAN SONA OKUMA: konunu `Grep` ile
   ara. Dal yarımsa ÖNCE dalın `DEVIR.md`'sini oku, baştan keşfetme.
 - Dal: `oto/<no>-<kısa-ad>`. Yeni çalışma ağacında önce `flutter pub get`; Flutter yolu
   `C:/src/flutter/bin/flutter.bat` (PATH'te değil; "command not found" SDK yok demek değil).
@@ -49,7 +49,7 @@ adım · kök neden/kanıt (dosya:satır) · işe yaramayanlar · sıradaki adı
 - Veri göçü / kayıt sıfırlama (F22.4, F28.2): önce yerel tam yedek, göç geri alınabilir, kural
   testleri (`rules-test`) yeşil.
 - Telefon: yalnız işin gerektirdiği an, tek seferde bir iş; kurallar `ab-olcum` skill'inde.
-  Telefon gerektiren ölçüm yapılamazsa "yazıldı, cihazda doğrulanmadı" + `KALANLAR.md` §2'ye adım.
+  Telefon gerektiren ölçüm yapılamazsa "yazıldı, cihazda doğrulanmadı" + `KONTROL_LISTEM.md` "Telefonda bak"a madde.
   Misafir hesap: Google/Drive/Gmail "denenmedi".
 
 ## Doğrulama (DOĞRULAMA = CI, kullanıcı kararı 2026-11-05)

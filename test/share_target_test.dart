@@ -198,6 +198,42 @@ void main() {
       expect(result?.noteId, 'hedef');
     });
 
+    // F60.6 (hayalet ek sayacı): zemin görseli ek DEĞİL; yalnız zemini olan
+    // notun satırında "📎 1" çıkmamalı, gerçek ek varsa sayılmalı.
+    testWidgets('zemin görseli ek sayacına girmez', (tester) async {
+      Attachment img(String id) => Attachment(
+        id: id,
+        kind: AttachmentKind.image,
+        fileName: '$id.jpg',
+        mimeType: 'image/jpeg',
+      );
+      await open(
+        tester,
+        notes: [
+          Note(
+            id: 'z',
+            type: NoteType.text,
+            title: 'Zeminli',
+            attachments: [img('bg')],
+            backgroundImageId: 'bg',
+          ),
+          Note(
+            id: 'e',
+            type: NoteType.text,
+            title: 'Ekli',
+            attachments: [img('bg2'), img('foto')],
+            backgroundImageId: 'bg2',
+          ),
+        ],
+        act: () async {
+          await tester.tap(find.text('Var olan nota'));
+          await tester.pumpAndSettle();
+        },
+      );
+      expect(find.textContaining('📎 1'), findsOneWidget);
+      expect(find.textContaining('📎 2'), findsNothing);
+    });
+
     testWidgets('belge paylaşımında yeni not kipi seçilir', (tester) async {
       final result = await open(
         tester,

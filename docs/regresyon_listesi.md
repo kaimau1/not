@@ -1,6 +1,6 @@
 # Regresyon listesi
 
-Düzeltilen HER sorun tek satır (OTURTMA_PLANI protokol madde 8). Her faz/paket bitiminde
+Düzeltilen HER sorun tek satır (`docs/arsiv/planlar/OTURTMA_PLANI.md` protokol madde 8). Her faz/paket bitiminde
 liste baştan koşulur: otomatik olanlar test, cihaz isteyenler en az ölçümle. Kırmızı çıkan
 şey fazı kapatmaz.
 
@@ -57,3 +57,4 @@ liste baştan koşulur: otomatik olanlar test, cihaz isteyenler en az ölçümle
 | P55 | Klavye açılıp kapanırken alt çubuk kayboluyor, klavye durunca birden beliriyordu ("alt panel titriyor") — Android < 35 motoru animasyon karelerinde IME boşluğundan gezinme çubuğunu düşüyor | `flutter test test/bottom_panel_jitter_test.dart --reporter failures-only`; telefonda notta klavyeyi 3 kez aç/kapa (ekran kaydı: `screenrecord` + kare kare çubuk/klavye üst kenarı) | Yeşil (telefon + tablet, Android<35 modeli dahil); cihazda her hareket karesinde çubuk görünür, klavyenin üst kenarına yapışık (P55: önce 63/85 karede görünmez → 0/85) |
 | P50 | Düzenleme modu aç-düzenle-KAYDET'ti (taslak; Kaydet'e basılmazsa değişiklik kayboluyordu); alt çubukta düğme öbür kapsüle taşınamıyordu; üst çubukta Ana sayfa / Tam ekran gizlenemiyordu | `flutter test test/page_panel_personalize_test.dart test/editor_bar_customize_test.dart test/editor_top_customize_test.dart --reporter failures-only`; KALANLAR L14 | Yeşil; dokunuş anında kayıtta, Geri al başa döner; taşınan düğme öbür kapsülde çalışır |
 | P20 | Uzun listede kutucuk işaretleyince/Enter'a basınca arkadaki bütün satırlar baştan kuruluyordu (sıra numarası önbellek anahtarındaydı); yıldız/iğne/geri al/biçim paneli editör kökünü ve tuvali kuruyordu; üst çubuk sırası değiştirilemiyordu | `flutter test test/perf_budget_test.dart test/editor_rebuild_map_test.dart test/editor_core_guard_test.dart test/editor_top_customize_test.dart test/personalize_top_order_test.dart --reporter failures-only`; cihazda `ab_hepsi.py --altin` | Yeşil; S3/S4 satır ≤ 1, S1 kök 0, S9/S14 tuval 0; Ayarlar'da üst çubuk sırası editöre yansır, ⋮ sonda |
+| F60.6 (P22) | Zemin olarak seçilen görsel arşiv kartı ek rozetinde ve paylaşım hedefinde ek diye sayılıyordu | `flutter test test/share_target_test.dart test/card_hidden_media_test.dart --reporter failures-only` | yeşil |
