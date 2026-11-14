@@ -3,8 +3,9 @@
 Dal: `oto/P62-tasarim-A`. Bu paket YALNIZ plan + iskelet; uygulama `docs/plan_tasarim_A.md` paketleriyle alt modellerde.
 
 ## Plan durumu (`docs/plan_tasarim_A.md`)
-- BİTTİ: §0 kurallar, §1 ortak dil, §2 ayarlar, §3 hesap levhası, §4 Ayarlar → Hesap, **§5 ipucu / uyarı** (2026-11-14).
-- YAZILMADI: **§6 kaydırma, §7 kasma + bütçe senaryoları, §8 uygulama paketleri.** Kanıt (dosya:satır), verilmiş kararlar ve paket taslağı (PA1–PA9: model, dosya kümesi, sıra) planın sonundaki "YARIM" bölümünde — oradan bölümlere aç.
+- BİTTİ: §0 kurallar, §1 ortak dil, §2 ayarlar, §3 hesap levhası, §4 Ayarlar → Hesap, §5 ipucu / uyarı, **§6 kaydırma** (2026-11-14).
+- YAZILMADI: **§7 kasma + bütçe senaryoları, §8 uygulama paketleri.** Kalan kanıt ve paket taslağı planın sonundaki "YARIM" bölümünde.
+- Model kararı (kullanıcı, 2026-11-14): görünüşü belirleyen paket = fable; opus yalnız görsel olmayan altyapı / ölçüm; sonnet yalnız CI / test / mekanik.
 - Düzeltilecek: §2.4 "S28" ve §3.3 "S29" atıfları → P62 numaraları S29–S39 (öneri YARIM bölümünde); bitince baştaki "Durum" satırı.
 
 ## İskelet (commit 12b1842d + 07f9429e)

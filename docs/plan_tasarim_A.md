@@ -1,6 +1,6 @@
 # Görsel tasarım A — plan (P62)
 
-**Durum:** YARIM (2026-11-14, Fable limit): §0–§5 + iskelet yazıldı; §6 kaydırma, §7 kasma+bütçe, §8 paketler YAZILMADI — kanıt ve paket taslağı dosyanın sonundaki "YARIM" bölümünde. Uygulama YAPILMADI.
+**Durum:** YARIM (2026-11-14, Fable limit): §0–§6 + iskelet yazıldı; §7 kasma+bütçe, §8 paketler YAZILMADI — kanıt ve paket taslağı dosyanın sonundaki "YARIM" bölümünde. Uygulama YAPILMADI.
 **Kullanıcı isteği (2026-11-14):** görsel tasarım son kullanıcı için hazır olsun — tertemiz, premium, güzel animasyonlu, göze hitap eden; kasma olmasın; ara commit atılsın.
 **Kapsam:** (1) ayarlar ekranlarının hepsi · (2) ana ekrandaki hesap levhası · (3) Ayarlar → Hesap · (4) ipucu ve uyarıların görünümü/yeri · (5) sağa-sola kaydırma hissi.
 **Kapsam DIŞI (P63'te, dokunma):** `lib/core/widgets/customizable.dart`, `lib/core/personalize.dart`, `lib/features/settings/presentation/personalize_screen.dart`, `personalize_bar_list.dart`, `quick_row_editor.dart`, şablon / kalem / sesle yazma / madde çizgisi dosyaları, `lib/features/notes/presentation/editor/**` ve `viewers/**`.
@@ -275,20 +275,115 @@ Ek olarak:
 - `token_sayim`: `tips.dart`, `release_notes_toast.dart`, `due_banner.dart`, `UpdateBanner`, `_PendingUploadsBar`, `WebAttachmentsBanner` içinde elle köşe / punto / ağırlık / süre SIFIR.
 - Bütçe (§7'de yazılacak): bildirim göster / kaldır ana ekranı kurmaz; şerit belirince ızgara boy karesi ≤ 1.
 
+## 6. Sağa-sola kaydırma hissi / animasyonu
+
+### 6.1 Mevcut durum (kanıt)
+
+Çit dışındaki bütün yana çekişler tarandı (`onHorizontalDrag*`, `PageView`, `Dismissible`; 2026-11-14): ana ekran `FolderSwipe`, liste satırı `Dismissible`, takvim mini ayı, takvim dönem sayfaları, geniş ekran çerçevesi (çekmece + tam ekrandan çıkış), bölme ayracı. Ortak karar kuralı iskelette hazır (`AppSwipe`, `lib/app/theme/app_design.dart:75-116`) ama HİÇBİR yüzey onu kullanmıyor.
+
+| # | Bulgu | Kanıt |
+|---|---|---|
+| K1 | Ana ekran ızgarası parmağı ZATEN izliyor (tek `Transform`, etiket + dolum çubuğu) — iskelet doğru. Karar sayıları elle ve `AppSwipe` ile iki kopya: eşik `0.22`, fiske `300`, lastik `0.25`, sınır `_width * 0.4`, etiket eni `_width * 0.36` | `dashboard_widgets.dart:1273`, `:1370`, `:1356`, `:1354`, `:1351` |
+| K2 | Geri oturma süresi SABİT 200 ms + `standard`: 20 dp'lik çekiş de 160 dp'lik çekiş de aynı sürede döner, bırakış hızı hesaba katılmaz. **Hipotez** (koddan çıkarım, cihazda bakılmadı): kısa çekişte "ağır", hızlı bırakışta "kopuk" his | `dashboard_widgets.dart:1389-1392` |
+| K3 | Titreşim yalnız eşik aşılınca (`_past` değişimi). Eşiği aşmadan FİSKEYLE geçişte titreşim yok — aynı geçiş iki ayrı his veriyor | `dashboard_widgets.dart:1363-1366` ↔ `:1370-1371` |
+| K4 | Etiket kartı tek karede belirir / kaybolur (`if (label != null)`), eşikte rengi tek karede değişir; elle değerler: köşe 14, dolgu 10 / 8, kenar payı 12, simge 16, boşluk 5, çubuk 3 dp, yazı `labelLarge` | `dashboard_widgets.dart:1424`, `:1437-1438`, `:1443-1444`, `:1428-1429`, `:1457`, `:1483`, `:1490`, `:1495`, `:1471` |
+| K5 | Liste görünümünde satır çekişi (`Dismissible`): arşiv zemini `tertiaryContainer` (rol ihlali: `tertiary` yalnız yapay zekâ); eşikte (%35) titreşim yok; elle `FontWeight.w600`, simge 20, boşluk 8 / 20, kenar 8 / 1 | `dashboard_widgets.dart:1632-1660`, `:1651`, `:1636-1639`, `:1627`, `:1623-1624`, `:1613-1614` |
+| K6 | Takvim ajandasındaki mini ay parmağı İZLEMEZ: yalnız bırakış hızına bakar (±200), ay "pat" diye değişir. Takvimin öbür görünümleri (`_PagedView`, `PageView`) izliyor — aynı ekranda iki ayrı his | `month_grid.dart:62-70` ↔ `calendar_screen.dart:904-968` |
+| K7 | Telefonda mini ay `AnimatedSize` ile açılıp kapanıyor, altında `Expanded(list)`: açılış / kapanış boyunca ajanda listesi HER KAREDE yeniden diziliyor (boy animasyonu yasağı) | `calendar_screen.dart:883-888`, `:896` |
+| K8 | Takvimde elle eğri: `Curves.easeOutCubic` (ay ızgarası boyu, sayfa çevirme, gün sayfası adımı) | `calendar_screen.dart:885`, `:942`, `:1728` |
+| K9 | Geniş ekran çerçevesi: tam ekrandan çıkış `_exitPull > 56` ya da hız `300`; çekmece hız `200` ya da `value > 0.4`; çekmece eni `240` iki yerde elle; süre elle 220 ms; eğri `Curves.easeOutCubic` | `app_frame.dart:394`, `:419-420`, `:414`, `:288`, `:432` |
+| K10 | İyi olan, DOKUNULMAYACAK: ana ekranın "akan geçişi" (`AnimatedSwitcher` + `_continueSwipe`), takvim dönem sayfaları, bölme ayracı (doğrudan izliyor), kıstırma geçişi | `dashboard_screen.dart:1931-1990`, `:360-372`; `calendar_screen.dart:711-719`, `:960-967`, `:770-773`; `split_shell.dart:830-834` |
+
+Düzeltme (YARIM notundaki yanlış): `FolderSwipe.commitFraction` testlerde KULLANILMIYOR (`@visibleForTesting` ama tek kullanım `dashboard_widgets.dart:1360, 1362`; `test/home_gestures_test.dart` yalnız davranışı sınar) → takma ad gerekmez, sabit silinir.
+
+`istek_tara` (uyulacak): "akan geçiş" — hızlı geçişte takılma olmasın (2026-11-06, `dashboard_widgets.dart:1255`); etikette DOLUM ÇUBUĞU (2026-11-09, `:1291`); liste satırında sağa çek = sabitle, sola çek = arşivle, geri alınabilir (2026-09-23, `:1573`); takvimde sayfa çevirince SEÇİM DEĞİŞMEZ (2026-11-08, `calendar_screen.dart:722`); telefonda ‹ › okları kalır (2026-11-07, `:539`, Y13); güne dokununca gün sayfası (2026-11-07, `:207`); çekmece (2026-11-02, `app_frame.dart:261`). `month_grid.dart`ta kullanıcı isteği yorumu yok. Hiçbiri tersine çevrilmiyor: jestlerin NE yaptığı aynı, yalnız his.
+
+### 6.2 Hedef: tek karar kuralı, dört yüzey
+
+**Kural:** yana çekişte "geçer mi" kararı `AppSwipe.commits`ten, durak yokken direnç `AppSwipe.rubber`dan, bırakıştan sonraki oturma `AppSwipe.settleFor` + `AppMotion.emphasized`ten gelir. İçerik parmağı İZLER (yalnız `Transform` / kaydırma konumu — dizilim yok). Bırakışta ya geçer ya döner; ortada kalmaz. Geçiş kararı anında tek hafif titreşim (`AppHaptics.tick`).
+
+| Yüzey | İzleme | Karar | Oturma | Titreşim | Değişen |
+|---|---|---|---|---|---|
+| Ana ekran (`FolderSwipe`) | var (aynen) | `AppSwipe.commits(dragged: _raw, extent: _width, velocity)` | geri dönüş `AppSwipe.settleFor(distance: _dx.value, velocity)` + `emphasized` | eşikte (aynen) + fiskeyle geçişte | sayılar belirtece, geri dönüş süresi, etiket kılığı |
+| Liste satırı (`Dismissible`) | var (çerçeveninki) | %35 (aynen — yanlışlıkla arşiv olmasın) | çerçeveninki | eşik aşılınca (`onUpdate`: `reached && !previousReached`) | titreşim, arşiv zemini, belirteçler |
+| Takvim mini ayı (`MonthGrid`) | YENİ: `PageView` | `PageScrollPhysics` (takvimin öbür sayfalarıyla aynı) | `PageView` | yok (öbür takvim sayfalarında da yok) | parmağı izler; aç / kapa boyamada |
+| Çerçeve (çekmece, tam ekrandan çıkış) | çekmece var; çıkış yok (BİLEREK) | `AppSwipe.commits(extent: çekmece eni)` | denetleyici (aynen, kalan yolla orantılı) | çıkışta `heavy` (aynen) | yalnız belirteçler |
+
+**Ana ekran — `FolderSwipe` (`dashboard_widgets.dart:1243-1529`):**
+- `_follow`: `_raw * 0.25` → `_raw * AppSwipe.rubber`; eşik hesapları `FolderSwipe.commitFraction` → `AppSwipe.commitFraction` (sınıftaki sabit silinir). Sınır `_width * 0.4` ve etiket eni `_width * 0.36` düzen oranıdır: dosya içi adlı sabit (`_kFollowLimit`, `_kLabelWidth`), belirteç değil.
+- `_finish`: `final commit = _label != null && AppSwipe.commits(dragged: _raw, extent: _width, velocity: velocity);` — bugünkü `_past || fling` ile aynı sonuç (aynı sayılar). `_past` durumu etiket rengi için KALIR.
+- Fiskeyle geçiş: `commit && !_past` ise `AppHaptics.tick()` (`_past` sıfırlanmadan önce oku).
+- Geri dönüş: `_dx.animateTo(0, duration: AppSwipe.settleFor(distance: _dx.value, velocity: velocity), curve: AppMotion.emphasized)`. "Hareketi azalt"ta `_dx` zaten 0 (`:1357`).
+- Yerinde geçiş dalı (`continuesInPlace` true → `_dx.value = 0`, `:1380-1387`) AYNEN: ayrılan görünümü `dashboard_screen` sürdürür (2026-11-06).
+- Etiket kartı: `AppSurface.paper` kılığı (zemin `tokens.card` + `hairline`), köşe `AppRadius.m`, dolgu `AppSpace.m` / `AppSpace.s`, kenar payı `AppSpace.m`, simge `AppIconSize.xs`, yazı `AppText.label`, çubuk üstü boşluk `AppSpace.xs`. Eşik aşılınca zemin `primaryContainer` (aynen) ama renk `AppMotion.selection` ile solar (§1 "seçim"; `ColorFade` ya da yalnız renk taşıyan `AnimatedContainer` — boy / dolgu sabit). Beliriş: kart `_progress`e bağlı solar (`Opacity`, `(p * 2).clamp(0, 1)` — çekişin ilk yarısında tam görünür olur); ayrı denetleyici YOK, `_progress` dinleyicisi zaten var (`:1496`).
+- Dolum çubuğu (`swipe-progress`), `swipe-next-label` anahtarı, tekerlek zamanlayıcıları (160 / 240 ms — hareket süresi değil, sessizlik eşiği; `:1319`, `:1327`) AYNEN.
+
+**Liste satırı — `_SwipeActions` (`dashboard_widgets.dart:1585-1665`):**
+- `Dismissible`e `onUpdate: (d) { if (d.reached && !d.previousReached) unawaited(AppHaptics.tick()); }`.
+- Arşiv zemini `tertiaryContainer` → `surfaceContainerHighest` / `onSurface` (**Sabah bakılacak**, K6-1). Sabitle zemini `secondaryContainer` AYNEN.
+- Zemin etiketi: `AppText.label` + `AppWeight.strong`, simge `AppIconSize.m`, boşluklar `AppSpace.s` / `AppSpace.xl`, kenar `AppSpace.s`.
+- `dismissThresholds` %35, `confirmDismiss` false kalıbı, `ValueKey('swipe-<id>')` AYNEN.
+
+**Takvim mini ayı — `MonthGrid` (`month_grid.dart`):**
+- `StatelessWidget` → `StatefulWidget` + `PageController(initialPage: monthIndexOf(widget.month))`. Hafta günü başlığı ve (geniş ekrandaki) ay başlığı SABİT kalır; yalnız altı gün satırı `SizedBox(height: 6 × hücre boyu)` içinde `PageView.builder(itemCount: kMonthPages)` olur — sayfa = `monthAtIndex(i)` (`calendar_views.dart:60-70`; yeni dizin hesabı YAZMA).
+- `physics`: `swipeEnabled ? PageScrollPhysics() : NeverScrollableScrollPhysics()` (`calendarSwipeProvider`, `_PagedView` ile aynı, `calendar_screen.dart:962-964`). `allowImplicitScrolling` varsayılan (false) kalır: komşu ay yalnız çekiş başlayınca kurulur.
+- Ay bildirimi MUTLAK olur: `onMonthChange(int delta)` → `onMonthChanged(DateTime month)`; `onPageChanged: (i) => widget.onMonthChanged(monthAtIndex(i))`; çağıran `setState(() => _month = month)`. (Delta ile programlı çok sayfalı geçişte ara sayfalar yanlış ay üretirdi; mutlak bildirim kendiliğinden tutarlı.)
+- Dışarıdan ay değişince (gri güne dokunuş, "Bugün", başlık okları): `didUpdateWidget`ta `monthIndexOf(widget.month) != _controller.page?.round()` ise `_PagedView.animateToPage` kuralı (`calendar_screen.dart:931-946`): fark > 3 → `jumpToPage`, değilse `animateToPage(duration: AppMotion.of(context, AppMotion.medium), curve: AppMotion.emphasized)`. Geniş ekrandaki ‹ › okları doğrudan denetleyiciyi sürer.
+- Dolu gün noktaları: `busy: Set<String>` → `busyOf: Set<String> Function(DateTime month)`; sayfa KURULURKEN bir kez çağrılır (hücre başına değil — sınıf notundaki "hücre başına sağlayıcı yok" kuralı korunur). Çağıran bugünkü hesabı (`calendar_screen.dart:824-831`) aya göre işleve çevirir.
+- Seçim DEĞİŞMEZ (2026-11-08): sayfa çevirmek yalnız `_month`u değiştirir.
+- Hücre: `InkResponse(radius: 22)` / 44 / 32 / 1.5 / `alpha: 0.55` → hücre boyu dosya içi tek sabit (iki yerde yazılmasın), saydamlık `AppAlpha`, yazı `AppText.meta` (başlık) — `token_sayim` düşer.
+- Elle eğriler `calendar_screen.dart:942`, `:1728` → `AppMotion.emphasized` (aynı eğri, görünüş değişmez). `:772-773` (kıstırma geçişi: `easeOutCubic` / `easeInCubic`) DOKUNMA — çıkış eğrisinin belirteç karşılığı farklı.
+
+**Mini ay aç / kapa (telefon; `calendar_screen.dart:881-898`):** boy TEK ADIMDA, hareket boyamada.
+- `Column[AnimatedSize(grid), Divider, BackCloses, Expanded(list)]` → `Stack`: altta ızgara + ayraç (üste yaslı; yalnız açıkken ve kapanış sürerken ağaçta), üstte opak zeminli liste (`Positioned.fill(top: açık ve oturmuş ? ızgara boyu : 0)` içinde `Transform.translate`).
+- Açılış: ızgara listenin ALTINDA kurulur ve ölçülür (liste boyu değişmez) → sonraki karede liste `Transform` ile ızgara boyu kadar aşağı kayar (`AppMotion.short` + `AppMotion.enter`) → animasyon bitince liste üst payı ızgara boyu olur, öteleme 0 (liste boyu BİR kez değişir; üst kenarı aynı pikselde, sıçrama görünmez).
+- Kapanış: liste üst payı hemen 0 (boy BİR kez değişir), öteleme ızgara boyundan 0'a (`exitOf(short)` + `AppMotion.exit`); bitince ızgara ağaçtan düşer.
+- Izgara boyu ölçülür (`GlobalKey` → `context.size`, hafta günü satırı yazı ölçeğine bağlı); animasyon içerik kurulduktan SONRAKİ karede başlar (`ExpandReveal` kalıbı, `expand_reveal.dart:68-75`).
+- "Hareketi azalt": öteleme yok, tek adım.
+- `ValueKey('calendar-month-toggle')`, `BackCloses`, güne dokununca kapanma (`:837`) AYNEN; kapalıyken `MonthGrid` ağaçta YOK (`calendar_screen_test.dart:265, 271`).
+- Geniş ekran (`:872-879`) düzeni aynen (ızgara hep açık).
+
+**Çerçeve (`app_frame.dart`):** his değişmez, yalnız sayılar tek kaynağa bağlanır.
+- Çekmece eni `240` → dosya içi tek sabit (`:414` ve çekmecenin kendi genişliği).
+- Çekmece bırakışı: `AppSwipe.commits(dragged: _drawer.value * en, extent: en, velocity: rtl ? -v : v)` (**Sabah bakılacak** K6-3: eşik %40 → %22, fiske 200 → 300).
+- Tam ekrandan çıkış: `AppSwipe.commits(dragged: _exitPull, extent: en, velocity: rtl ? -v : v)` (56 dp → 52,8 dp; fark hissedilmez — **hipotez**). Parmağı izletme: çıkış bölme düzenini değiştirir (dizilim), izletmek her karede dizilim demek — YAPILMAZ.
+- `Duration(milliseconds: 220)` → `AppMotion.short`; `Curves.easeOutCubic.transform` → `AppMotion.emphasized.transform`.
+- Bölme ayracı (`split_shell.dart`) DOKUNMA.
+
+### 6.3 Tuzaklar
+
+- `FolderSwipe`in `setState`i yalnız kendi `build`ini çalıştırır; `widget.child` aynı örnek kaldıkça ızgara kurulmaz. Etikete eklenen her şey `Stack`in ikinci çocuğunda kalsın; `child`ı SARMA (yeni `Opacity` / `ClipRect` ızgaranın üstüne gelirse kart boyaması katman değiştirir — S23 / S33).
+- Etiket `Opacity`si `_progress` dinleyicisinin İÇİNDE olsun (çekiş karesinde `FolderSwipe` kurulmaz, yalnız etiket boyanır).
+- `S23` (fiskeyle geçiş) sayıları DEĞİŞMEMELİ: `_finish`in geçiş dalına kurulum ekleme.
+- `PageView` komşu ayı çekiş başlarken kurar: `busyOf` o karede bir kez `buildAgenda` çalıştırır (42 gün). Aynı sayfa için her yeniden kurulumda yeniden hesaplanır (bugünkü maliyetle aynı); önbellek EKLEME, ölç (S34).
+- `MonthGrid` geniş ekranda `SingleChildScrollView` içinde (`calendar_screen.dart:875`): `PageView`in boyu sabit `SizedBox` ile verilmezse "sınırsız yükseklik" hatası.
+- `calendar_screen_test.dart:269` güne `find.text('20')` ile dokunuyor: komşu ay sayfası önceden kurulursa iki "20" bulunur — `allowImplicitScrolling` açma.
+- Mini ay `Stack`inde listenin anahtarı ve ağaçtaki yeri iki durumda da AYNI kalmalı (`_AgendaList` kaydırma konumu; kasma listesi md. 4): ızgarayı koşulla ekle / çıkar ama listeyi sarmalayan zincir (`Positioned` → `Transform` → zemin → liste) değişmesin.
+- Açılışta ızgara bir kare listenin altında durur: liste zemini OPAK olmalı (`ColoredBox(scaffoldBackgroundColor)`), yoksa ilk karede ızgara listenin içinden görünür.
+- `app_frame.dart` kabuk dosyası: `MediaQuery.of(` mandalı 1 (`jank_patterns_guard_test.dart:33`) — yeni `MediaQuery.of` ekleme.
+- `_exitPull` yöne göre düzeltilmiş (ileri = artı), `primaryVelocity` fiziksel: `commits`e hız `rtl ? -v : v` olarak ver.
+
+### 6.4 Sabah bakılacak (zevk; güvenli seçenek uygulanır)
+
+- **K6-1** Liste satırında arşiv çekişinin zemini nötr (`surfaceContainerHighest`); bugün `tertiaryContainer` (yapay zekâ rengi). Sabitle zemini değişmez.
+- **K6-2** Telefonda mini ay açılırken liste aşağı KAYAR (boyamada); alternatif: tek adımda belirme + solma.
+- **K6-3** Tablet çekmecesi %22 çekişte açılır (bugün %40), fiske eşiği 300 (bugün 200) — bütün yana çekişler aynı sayıda.
+- **K6-4** Ana ekranda fiskeyle geçişte de hafif titreşim (bugün yalnız yavaş çekip eşiği aşınca).
+
+### 6.5 Kabul ölçütleri
+
+- `test/home_gestures_test.dart` "FolderSwipe" grubu AYNEN yeşil (izleme, yerinde geçiş, eşik altı dönüş, kısa fiske, lastik, sağdan sola, kapalı); eklenir: "fiskeyle geçişte titreşim bir kez", "kısa çekişin dönüş süresi uzun çekişinkinden kısa" (`AppSwipe.settleFor` üzerinden; önce kırmızı).
+- `test/app_design_test.dart` (yoksa yaz): `AppSwipe.commits` / `settleFor` sınırları (0 çekiş, ters yönde fiske, alt / üst süre).
+- `test/calendar_screen_test.dart` eklenir (önce kırmızı): mini ay parmağı izler (bırakmadan 100 dp çekişte komşu ayın günü görünür); yarıdan az çekip bırakınca aynı ay; fiske → başlık sonraki ay ve SEÇİM değişmez; kaydırma ayarı kapalıyken sayfa kaymaz; geniş ekranda ‹ › animasyonla geçer. Var olan `:259-283` testleri yeşil.
+- Bütçe §7: S33 (ana ekran çekişi), S34 (mini ay kaydırma), S35 (mini ay aç / kapa); S22 ve S23 sayıları değişmez.
+- `token_sayim`: `FolderSwipe`, `_SwipeActions`, `month_grid.dart`, `app_frame.dart`ın dokunulan satırlarında elle köşe / punto / ağırlık / süre / eğri SIFIR; `calendar_screen.dart`ta `Curves.` 5 → 2 (kalan: kıstırma geçişi).
+- Hareket turla görülmez (tur durağan kare çeker): `KONTROL_LISTEM.md` "Telefonda bak"a üç madde — ana ekranda yana çekiş (yavaş / fiske / durak yokken), liste satırı çekişi, takvim ajandasında mini ay (kaydır, aç / kapa); tablette çekmece. Cihaz A/B: §7.4.
+
 ---
 
-## YARIM — §6, §7, §8 YAZILMADI (limit; kalanı Opus yazar). Toplanan kanıt ve verilmiş kararlar:
+## YARIM — §7, §8 YAZILMADI (limit; kalanı Opus yazar). Toplanan kanıt ve verilmiş kararlar:
 
 **Numara düzeltmesi:** §2.4 "S28" ve §3.3 "S29" atıfları YANLIŞ — P62'ye ayrılan numaralar **S29–S39** (P63: S40–S44; S28 boş bırakılır). Öneri: S29 ayar alanı açılışı, S30 hesap levhası, S31 bildirim göster/kaldır, S32 şerit belirişi (ızgara boy karesi), S33 ana ekran yana çekiş oturması, S34 takvim mini ay kaydırma, S35 mini ay aç/kapa boy karesi. Bütçeler `test/perf_budget/budgets.json` (mandal: yalnız düşer), yardımcılar `_frames`, `_count`, `_expectBudget`, `_pumpHome` (`perf_budget_test.dart:181-203, 399-430, 295+`); örnek kalıplar S22 (`:1140`), S23 (`:1200`).
-
-**§6 Kaydırma — kanıt:**
-- Ana ekran `FolderSwipe` (`dashboard_widgets.dart:1243-1500`) parmağı ZATEN izler (tek `Transform`, etiket + dolum çubuğu). Kalan: eşikler elle — `commitFraction = 0.22` (`:1273`), fiske `300` (`:1371`), lastik `0.25` (`:1356`), sınır `_width * 0.4` (`:1354`); geri oturma sabit `AppMotion.short` + `standard` (`:1390-1392`) → `AppSwipe.commits` / `AppSwipe.rubber` / `AppSwipe.settleFor` + `AppMotion.emphasized` (`FolderSwipe.commitFraction` testte kullanılıyor: `AppSwipe.commitFraction`a takma ad olarak KALSIN). Etiket kartı elle köşe 14, simge 16, boşluk 10 / 8 / 5 (`:1436-1500`). Fiskeyle (eşik aşılmadan) geçişte titreşim yok (`AppHaptics.tick` yalnız `_past` değişince, `:1363-1366`). Geçişin kendisi `dashboard_screen.dart:1931-1990` (`AnimatedSwitcher`, `_continueSwipe` `:359-371`) — DOKUNMA (2026-11-06 "akan geçiş" isteği, bütçe S23).
-- Liste görünümünde `Dismissible` (`dashboard_widgets.dart:1632-1660`): arşiv zemini `tertiaryContainer` (rol ihlali: tertiary yalnız yapay zekâ) → güvenli seçenek `surfaceContainerHighest` + "Sabah bakılacak"; elle `FontWeight.w600`, simge 20, boşluk 8 / 20.
-- Takvim ajandasındaki mini ay `MonthGrid` (`month_grid.dart:62-70`): yalnız `primaryVelocity` ±200, parmağı İZLEMEZ, ay "pat" diye değişir. Hücre boyu sabit 44 dp × 6 satır = 264 dp (`month_grid.dart:114, 184`) → hedef: gün satırlarını `PageView` (takvimin öbür görünümleri gibi — `_PagedView`, `calendar_screen.dart:904-968`; `PageScrollPhysics` / kapalıyken `NeverScrollableScrollPhysics`, `calendarSwipeProvider`), hafta günü başlığı sabit kalır; `busy` kümesi komşu ayları da kapsasın (`calendar_screen.dart:826-831` aralığı genişlet); dışarıdan ay değişince (`onMonthChange`, başlık okları) `didUpdateWidget` → `animateToPage`. Elle eğri: `Curves.easeOutCubic` `calendar_screen.dart:942, 1731, 884` → `AppMotion.emphasized`.
-- Aynı yerde **boy animasyonu**: telefonda mini ay `AnimatedSize` ile açılıyor, altında `Expanded(list)` (`calendar_screen.dart:882-887`) → tek adım + yalnız boyama (S35).
-- Çerçeve (`app_frame.dart`): tam ekrandan çıkış `_exitPull > 56 || v > 300` (`:393-394`), çekmece `v > 200 || value > 0.4` (`:418-420`), süre elle 220 ms (`:288`), eğri `Curves.easeOutCubic` (`:432`) → `AppSwipe.flingVelocity` / `AppSwipe.commits(extent: 240)` / `AppMotion` belirteçleri. Bölme ayracı (`split_shell.dart:830-834`) doğrudan izliyor — dokunma.
-- Çit içi (DOKUNMA): `pen_tray.dart:633`, `pinned_side.dart:116`, `page_swipe.dart`, görüntüleyici `PageView`leri.
-- Testler: `test/home_gestures_test.dart`, `swipe_stops_test.dart`, `calendar_screen_test.dart` (`MonthGrid` bulucuları `:265-282`), `perf_budget` S22 / S23.
 
 **§7 Kasma — bulunan riskler:** B8 (`_PendingUploadsBar` `AnimatedSize`), takvim mini ay `AnimatedSize`, ayarlarda `_StaggeredRows` yayması KORUNACAK (`settings_area.dart:600-656`: ilk karede 2 satır, sonra kare başına 1), bildirim şeridi `child`ı kurmaz (yalnız `_NoticeLane`), `app.dart`a `MediaQuery.of` eklenmez. `kasma-kontrol` 8 maddesi her yüzey için tabloya dökülecek.
 
