@@ -1,24 +1,23 @@
 # DEVIR — P62 Görsel tasarım A (plan + iskelet)
 
-Dal: `oto/P62-tasarim-A`. Bu paket YALNIZ plan + iskelet (Fable); uygulama `docs/plan_tasarim_A.md` §8 paketleriyle alt modellerde.
+Dal: `oto/P62-tasarim-A`. Bu paket YALNIZ plan + iskelet; uygulama `docs/plan_tasarim_A.md` paketleriyle alt modellerde.
 
-## Yapılanlar
-- İskelet (commit 1): `lib/app/theme/app_design.dart` (`AppTone`, `AppSurface`, `AppSwipe`), `AppMotion.selection/emphasized/exitOf` (`app_tokens.dart`), `lib/core/widgets/app_banner.dart` (`AppBanner`), `lib/core/widgets/app_notice.dart` (`AppNoticeController`, `appNotice`, `AppNoticeHost` — `app.dart`a BAĞLI DEĞİL, görünür davranış değişmedi), `test/app_notice_test.dart` (13 test yeşil).
-- Tur: `tool/tour/screen_tour_test.dart` — `ayarlar-<alan>` (9 alan, `?area=`) ve `hesap-levhasi` sahneleri.
-- Plan: `docs/plan_tasarim_A.md` (bkz. dosyadaki "Durum" satırı).
+## Plan durumu (`docs/plan_tasarim_A.md`)
+- BİTTİ: §0 kurallar, §1 ortak dil, §2 ayarlar, §3 hesap levhası, §4 Ayarlar → Hesap, **§5 ipucu / uyarı** (2026-11-14).
+- YAZILMADI: **§6 kaydırma, §7 kasma + bütçe senaryoları, §8 uygulama paketleri.** Kanıt (dosya:satır), verilmiş kararlar ve paket taslağı (PA1–PA9: model, dosya kümesi, sıra) planın sonundaki "YARIM" bölümünde — oradan bölümlere aç.
+- Düzeltilecek: §2.4 "S28" ve §3.3 "S29" atıfları → P62 numaraları S29–S39 (öneri YARIM bölümünde); bitince baştaki "Durum" satırı.
 
-## Kanıt (kök nedenler)
-- Ayar alan sayfası tek dev kart, içinde düzensiz satırlar: `settings_area.dart:225-262` (`_RowsCard`), hesap alanı 16 `TextButton` (`settings_account.dart`).
-- İpucu üstte arama hapını örter: `tips.dart:196-199`; bildirimler ayrı ayrı yollar (156 çağrı / 68 dosya), sıra/koordinasyon yok.
-- Yana kaydırma eşikleri dağınık: `dashboard_widgets.dart:1371` (300), `month_grid.dart:68` (200, parmağı izlemez), `app_frame.dart:393,419` (300/200).
+## İskelet (commit 12b1842d + 07f9429e)
+- `app_design.dart` (`AppTone`, `AppSurface`, `AppSwipe`), `AppMotion.selection/emphasized/exitOf`, `app_banner.dart`, `app_notice.dart` (`app.dart`a BAĞLI DEĞİL), `test/app_notice_test.dart` (yeşil).
+- 07f9429e: dip bildirimi alt-baş köşe, alt-son 144 × 72 dp yüzen düğme bölgesine girmez (duyuru üstünde); `AppNoticeController.hosted` / `clear()`; şerit sökülünce temizlenir.
 
-## İşe yaramayan / tuzak
-- `snackBarBottomObstacle` DİZİLİM sırasında yazılır → dinleyici eklenirse "setState during layout". `AppNoticeHost` değeri yalnız kurulurken okur.
-- Turda `/settings?area=` çalışmıyordu (rota `const SettingsScreen()`); düzeltildi.
-- Worktree'de `python - <<EOF` ve bileşik komutlar reddediliyor; betiği scratchpad'e yaz, yalın çağır.
+## Tuzaklar
+- `snackBarBottomObstacle` DİZİLİM sırasında yazılır → dinleyici ekleme.
+- Bildirim göçü çağrı yerlerinden DEĞİL dört huniden (§5.3); 237 çağrının 70'i P63 çitinde.
+- Worktree'de heredoc içinde kesme işareti / `python - <<EOF` reddediliyor: içeriği Write ile scratchpad'e yaz, `cat >>` ile ekle.
 
 ## Sıradaki adım
-Plan bölümlerini bitir → commit/push. Sonra yürütücü: Kuyruk satırı + uygulama paketlerini aç (PA1 önce).
+§6–§8'i yaz (Opus) → Durum satırı → yürütücü Kuyruk'a PA1… paketlerini açar (PA1 önce).
 
 ## Komutlar
 - `flutter test test/app_notice_test.dart test/design_tokens_guard_test.dart --reporter failures-only`

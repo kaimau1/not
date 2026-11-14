@@ -1,6 +1,6 @@
 # Görsel tasarım A — plan (P62)
 
-**Durum:** plan + iskelet yazıldı (2026-11-14, Fable). Uygulama YAPILMADI; §8'deki paketler alt modellerde (Opus/Sonnet) yürür.
+**Durum:** YARIM (2026-11-14, Fable limit): §0–§5 + iskelet yazıldı; §6 kaydırma, §7 kasma+bütçe, §8 paketler YAZILMADI — kanıt ve paket taslağı dosyanın sonundaki "YARIM" bölümünde. Uygulama YAPILMADI.
 **Kullanıcı isteği (2026-11-14):** görsel tasarım son kullanıcı için hazır olsun — tertemiz, premium, güzel animasyonlu, göze hitap eden; kasma olmasın; ara commit atılsın.
 **Kapsam:** (1) ayarlar ekranlarının hepsi · (2) ana ekrandaki hesap levhası · (3) Ayarlar → Hesap · (4) ipucu ve uyarıların görünümü/yeri · (5) sağa-sola kaydırma hissi.
 **Kapsam DIŞI (P63'te, dokunma):** `lib/core/widgets/customizable.dart`, `lib/core/personalize.dart`, `lib/features/settings/presentation/personalize_screen.dart`, `personalize_bar_list.dart`, `quick_row_editor.dart`, şablon / kalem / sesle yazma / madde çizgisi dosyaları, `lib/features/notes/presentation/editor/**` ve `viewers/**`.
@@ -178,3 +178,128 @@ Mevcut: A2, A3, A9 (kanıt `build/tour_p62/telefon-kucuk-ayarlar-account.png`). 
 Sıra notu: bugün "Hesabı sil" ikinci sırada. Geri dönüşsüz eylemi en alta almak yer değişikliğidir; `istek_tara settings_account.dart` bu satırın yeri için kullanıcı isteği göstermiyor (yalnız "hesap ayarları üstte" — alanın kendisi). Güvenli seçenek uygulanır: en alta. **Sabah bakılacak.**
 
 Kabul: tur `ayarlar-account` (misafir + girişli; girişli sahne turda yoksa widget testiyle), `test/` altındaki hesap silme / çıkış / bağlama testleri yeşil; anahtarlar aynı.
+
+## 5. İpucu ve uyarıların görünümü / yeri
+
+### 5.1 Mevcut durum (kanıt)
+
+Sayım (yorum satırları ve tanım dosyaları hariç; 2026-11-14): `showMessage` / `showAppMessage` 177 çağrı / 74 dosya · `showUndoSnackBar` 26 / 15 · `timedSnackBar` 10 / 9 · ham `showSnackBar` 16 / 14 · `TipOnce.show` 8 / 6 → **237 çağrı / 94 dosya** (DEVIR'deki 156 / 68 dar sayımdı). Bunların 70'i P63 çitinde (`editor/**`, `viewers/**`, `note_template_sheet.dart`). Ayrıca 81 `hideCurrentSnackBar` (51 dosya).
+
+| # | Bulgu | Kanıt |
+|---|---|---|
+| B1 | İpucu ekranın en tepesinde (`top + 8`): ana ekranda 50 dp'lik arama hapını, editörde üst çubuğu 5 sn örter | `tips.dart:196-199`; hap `dashboard_widgets.dart:339` (`height: 50`), `dashboard_screen.dart:1767` |
+| B2 | DÖRT ayrı yol, aralarında sıra / koordinasyon yok: ipucu kök `Overlay`e girer (`tips.dart:96-118`), "Geri al" KÖK messenger'da (`undo_snackbar.dart:118-135`), levha açıkken ayrı bir `OverlayEntry` (`_OverlayUndo`, `:103-116`, `:274-389`), düz ileti EN YAKIN messenger'da (`:222-257`). İpucu + ileti + levha üstü "Geri al" aynı anda görünebilir | aynı satırlar |
+| B3 | Dört ayrı kılık: M3 varsayılan `SnackBar`, `timedSnackBar` (dolgu 0, 3 dp şerit), `_OverlayUndo` (`elevation: 6`, geri sayım ÇİZGİSİ YOK), `_TipBanner` (`elevation: 4`, elle 12 / 8 / 14 / 10 / 18 / 560 / 220 ms). `elevation` = bulanık gölge (yasak) | `undo_snackbar.dart:156-217`, `:353-357`; `tips.dart:194-236` |
+| B4 | Eylemli ham `SnackBar` iki yerde `timedSnackBar`sız: bu Flutter sürümünde eylemli `SnackBar` varsayılan `persist: true` → kendiliğinden kapanmaz (kök neden notu `undo_snackbar.dart:141-148`, kullanıcı bulgusu 2026-10-17). **Hipotez** (koddan çıkarım, cihazda bakılmadı) | `app_update.dart:452-461` ("kuruluma hazır"), `line_task_chip.dart:209-218` (görev silindi + Geri al) |
+| B5 | Dipteki bildirimi klavyenin üstüne çıkarmak için odaktaki alanın atalarında `Scaffold` aranıyor (kırılgan); levhadan çağrılan düz ileti levhanın ARKASINDA kalıyor (yalnız "Geri al" için çözülmüş) | `undo_snackbar.dart:33-47`, `:98-117` |
+| B6 | "Yenilikler" tostu elle kurulmuş sütun (boşluk 4 / 2, saydamlık 0.75) | `release_notes_toast.dart:73-112` |
+| B7 | KALICI şeritler beş kılıkta: yeni sürüm (köşe 14, 13 / w600, `primaryContainer`), zamanı gelenler (`AppRadius.m`, 44 dp, `secondaryContainer`), bekleyen ekler (köşe 10, 12 / w600), web ekleri (köşe 14, `secondaryContainer` × 0.7), eski sürüm kapısı (`errorContainer`, kenardan kenara); ayarlarda kırmızı düz yazı (A9) | `app_update.dart:540-585`, `:596-628`; `due_banner.dart:72-160`; `dashboard_widgets.dart:1721-1794`; `drive_ui.dart:327-365` |
+| B8 | Bekleyen ekler şeridi `AnimatedSize` (200 ms) — ana ekranın SABİT başlık sütununda, altında `Expanded` ızgara: şerit belirirken / kalkarken ızgara her karede yeniden dizilir (boy animasyonu yasağı; kasma listesi md. 6'nın ana ekrandaki eşi) | `dashboard_widgets.dart:1721`, `dashboard_screen.dart:1855, 1885` |
+
+`istek_tara` (uyulacak): ipuçları ÜSTTE ve DOKUNUŞ GEÇİRGEN (2026-11-08, `tips.dart:91`); eylemli bildirim GERİ SAYIMLA kapanır (2026-10-17, `undo_snackbar.dart:141`); kalem ipuçları (2026-11-08, `tips.dart:50`); "Yenilikler" ana ekranda TOST (2026-11-10, `release_notes_toast.dart:17`); zamanı gelenler TEK SATIR şerit (2026-11-08, `due_banner.dart:15`); web ek şeridi (2026-11-02, `drive_ui.dart:261`); bildirim kalem tepsisini KAPATMAZ (2026-11-12, `undo_snackbar.dart:49`). Hiçbiri tersine çevrilmiyor.
+
+### 5.2 Hedef: iki tür, iki araç
+
+**Kural:** kendiliğinden kalkan her şey `appNotice`ten (GEÇİCİ), kalkmayan her şey `AppBanner`dan (KALICI, içerikle aynı akışta) geçer. Üçüncü yol yok.
+
+**Geçici bildirim** — `AppNoticeHost` (Navigator'ın ÜSTÜNDE tek şerit; levha ve diyalog da altında kalır), aynı anda EN ÇOK BİR bildirim:
+
+| Tür (`AppNoticeKind`) | Yer | Süre | Dokunuş | Sıra kuralı |
+|---|---|---|---|---|
+| `tip` (ipucu) | ÜSTTE, üst kromun (`noticeTopInset`, varsayılan 56 dp) ALTINDA, ortada, en çok 480 dp | 5 sn; ekrana ilk dokunuşta kalkar | GEÇİRGEN (`IgnorePointer`) | yalnız şerit boşken çıkar; çıkamazsa "gösterildi" SAYILMAZ |
+| `message` (kaydedildi, silindi + Geri al, hata) | DİPTE, alt-BAŞ köşe; klavyenin ve dibe yapışık panelin (`snackBarBottomObstacle`) üstünde | 4 sn; hata 6 sn; eylemlide dipte incelen geri sayım çizgisi | eylem düğmesi dokunulur | en yeni kazanır (görüneni değiştirir) |
+| `announce` ("Yenilikler") | DİPTE, tam genişlik (en çok 480 dp), yüzen düğme satırının ÜSTÜNDE | 12 sn | "Tümünü gör" | şerit boşalana dek bekler; ileti araya girerse sıranın başına döner |
+
+- **Yüzen düğme bölgesi** (iskelette, testli — commit 07f9429e): ekranın alt-SON köşesindeki 144 × 72 dp'ye (`AppNoticeHost.fabReserve` × `fabRow`: ana ekranın mikrofon / "+" / yapay zekâ satırı, öbür ekranların "+"sı) hiçbir bildirim girmez — ileti YANINDA, duyuru ÜSTÜNDE. Bugünkü "Geri al"ın `end: 144` payı (`undo_snackbar.dart:129-133`) bütün iletilere genellendi.
+- Kılık (iskelette): `AppSurface.floating` (`inverseSurface`, köşe `AppRadius.m`, ince çizgi + 2 dp BULANIKSIZ alt gölge — `elevation` yok), simge `inversePrimary` (ipucunda `lightbulb_outline`), yazı `AppText.body`, en çok 4 satır; eylem `TextButton` (`inversePrimary`); geri sayım 2 dp, yalnız ölçek (`Transform.scale`).
+- Hareket: §1 "belirme" (solma + kendi boyunun ¼'ü; ipucu yukarıdan, ileti aşağıdan); "hareketi azalt"ta yalnız solma.
+- Erişilebilirlik: `Semantics(liveRegion: true)` (iskelette); ipucu dokunma hedefi değildir; eylem düğmesi 48 dp.
+
+**Kalıcı şerit** — `AppBanner` (§1): hiçbir şeyin üstüne binmez, yer kaplar; boyu ANİMASYONSUZ (görünür / gizli tek adımda; içerik değişimi yalnız metin). Renk yalnız `AppTone`dan.
+
+### 5.3 Göç: çağrı yerlerine DOKUNMADAN, huniden
+
+237 çağrının imzası DEĞİŞMEZ (70'i P63 çitinde, dokunulamaz). Dört huni işlevinin GÖVDESİ değişir:
+
+| Huni | Yeni gövde | Not |
+|---|---|---|
+| `TipOnce.show` (`tips.dart:80`) | `due` → `appNotice.show(AppNoticeData(kind: tip, text, duration))`; **dönüş true ise** `markShown` | Bugün `markShown` eklemeden ÖNCE çağrılıyor (`:98`); sıra ters çevrilir — şerit doluysa ipucu yanmaz, sonraki fırsatta çıkar. `_TipBanner` ve `_current` SİLİNİR. `appNotice.hosted` false ise (yalın test) false döner, `markShown` çağrılmaz |
+| `AppMessages.showMessage` (`undo_snackbar.dart:223`) | `appNotice.hosted` ise `appNotice.show(AppNoticeData(text, actionLabel / onAction ← SnackBarAction, duration))`, değilse BUGÜNKÜ gövde | `errorDetailFor` (ham ayrıntıyı kopyala, 6 sn) aynen; `SnackBarAction` parametresi imzada kalır |
+| `showUndoSnackBar` (`:91`) | `hosted` ise `appNotice.show(...)`; `PopupRoute` dalı ve `_OverlayUndo` SİLİNİR (şerit zaten levhanın üstünde) | `hosted` değilse bugünkü kök messenger yolu |
+| `timedSnackBar` (`:149`) | gövdenin BAŞINDA `appNotice.dismiss()` | çit içindeki 7 çağrı `SnackBar` kalır; iki bildirim üst üste binmesin |
+
+Ek olarak:
+- `showMessage` / `showUndoSnackBar` şerit yoluna girmeden önce görünen `SnackBar`ı kapatır: `rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar()`.
+- Çit DIŞINDAKİ 7 ham `showSnackBar` elle çevrilir: `release_notes_toast.dart:74` → `appNotice.show(AppNoticeData(kind: announce, text: başlık, details: en çok 3 madde (+ "N tane daha" satırı), actionLabel, onAction, duration: 12 sn))`; `app_update.dart:452` ve `:495`, `line_task_chip.dart:209`, `gmail_screen.dart:832`, `dashboard_screen.dart:1131`, `duplicates_sheet.dart:118` → `showMessage(metin, action: …)` (B4 böylece kapanır).
+- Tek başına `hideCurrentSnackBar();` ("hazırlanıyor…" iletisini iş bitince kapatan) çit dışı 6 yer (`drive_ui.dart:101, 437`; `quick_add_actions.dart:232, 608, 651, 770`): `undo_snackbar.dart`a `extension` yöntemi `hideMessage()` = `hideCurrentSnackBar()` + `appNotice.dismiss()`; bu altı yer onu çağırır. Çit içindeki 3 yer (`attachment_clipboard.dart:185`, `note_editor_media_view.dart:657, 734`) kuyruk paketine kalır — o güne dek "hazırlanıyor" iletisi süresini (4 sn) doldurur (zararsız).
+- Şeridin yeri `app.dart`: `UpdateRequiredBanner(child: AppNoticeHost(child: NoteWriteIssueListener(…)))` (`app.dart:273-275`). Kapı şeridinin ALTINDA (üst güvenli alanı o tüketir, ipucu yeri kendiliğinden doğru), uygulama kilidinin (`AppLockGate`) İÇİNDE (kilitliyken bildirim görünmez).
+- Çitte kalan 9 ham `showSnackBar` + 3 `hideCurrentSnackBar` → kuyruk paketi (P63 birleştikten sonra).
+- Reddedilen yol: kök `ScaffoldMessenger`ı alt sınıfla değiştirip `showSnackBar` / `hideCurrentSnackBar`ı orada yakalamak — çağrı yerine hiç dokunmaz ama çerçeve sınıfının iç davranışına yaslanır (kırılgan); huni + kuyruk paketi yeter.
+
+**Mandal** (yeni `test/notice_paths_guard_test.dart`, kaynak taraması, yalnız DÜŞER): `lib/` içinde `undo_snackbar.dart` dışındaki `showSnackBar(` sayısı ≤ 9 (kuyruk paketi sonrası 0); `tips.dart`ta `OverlayEntry` 0; `lib/app/app.dart`ta `AppNoticeHost(` tam 1.
+
+**Testler** (önce kırmızı yazılır): `tip_once_test.dart` "show" (şeritle sar; şerit doluyken `show` false ve `due` hâlâ true), `pen_hint_once_test.dart` 1. test (bildirim kalem panelinin üstünde — `SnackBar` bulucusu yerine şerit kartı), `snackbar_over_keyboard_test.dart` (ilk iki test şeritle; üçüncüsü şerit `Scaffold`dan bağımsız olduğu için "klavyesiz ekranda dipte" testine döner), `undo_over_sheet_test.dart` (şeritle; bulucu `overlay-undo` → `notice-action`), `app_messages_test.dart`, `release_notes_toast_test.dart`. Şeritsiz (yalın `MaterialApp`) kuran öbür testler `hosted == false` dalıyla bugünkü gibi yeşil kalır.
+
+**Tuzaklar:**
+- `snackBarBottomObstacle` DİZİLİM sırasında yazılır (`undo_snackbar.dart:67-74`): dinleyici EKLEME ("setState during layout"). Şerit değeri bildirim kurulurken okur.
+- `appNotice` süreç-genel: şerit sökülürken `clear()` çağırır (iskelette, testli) — testte bekleyen zamanlayıcı kalmaz.
+- `test/perf_budget_test.dart` `_pumpHome` şeritsiz kurar → `TipOnce.show` false döner, ipucu yanmaz; S24 / S13 sayıları değişmemeli (değişirse nedenini yaz, mandalı yükseltme).
+- `jank_patterns_guard_test.dart` `lib/app/app.dart` için `MediaQuery.of(` mandalı 1: `app.dart`a `MediaQuery.of` EKLEME (şerit `viewInsetsOf` / `paddingOf`u kendi küçük öğesinde okur).
+- `await` sonrası `messenger.showMessage` kalıbı aynen çalışır (denetleyici bağlamsız); çağrı yerlerinde `ScaffoldMessenger.of(context)`i KALDIRMA (imza değişmez kuralı).
+- P63 düzenleme modu şeridi (`CustomizeModeHost`, `app.dart:269`) şeridin DIŞINDA, üstte: mod açıkken ipucu onun altında kalmasın diye P63 `noticeTopInset`i yazar (P62 dokunmaz).
+
+### 5.4 Kalıcı şeritlerin tek kılığı (`AppBanner`)
+
+| Şerit | Ton · simge | Sağ parça | Değişmeyen |
+|---|---|---|---|
+| Yeni sürüm (`UpdateBanner`, `app_update.dart:472`) | `action` · `system_update` | ok; indirirken yok; `_busy` iken 18 dp çark | `ValueKey('update-banner')`, üç `ValueNotifier` dinleme düzeni, `progress` = yüzde / 100 |
+| Zamanı gelenler (`DueBanner`, `due_banner.dart:19`) | `attention` · `alarm_rounded` / `task_alt_rounded` | "+N" rozeti (`AppText.badge`, köşe `AppRadius.pill`) + ✕ (`MinTapTarget`) | TEK SATIR, 44 dp (`due_items_test.dart:137`), `due-banner`, `due-banner-close`, `select`li izleme |
+| Bekleyen ekler (`_PendingUploadsBar`, `dashboard_widgets.dart:1692`) | `attention`; başarısızda `danger` · bugünkü simgeler | `link` / `info_outline` | `pendingUploadsBarLabel`, "dönen çark yok" kararı, `_autoAsked`; **`AnimatedSize` KALKAR** (B8) |
+| Web ekleri (`WebAttachmentsBanner`, `drive_ui.dart:268`) | `attention` (saydamlık çarpanı kalkar) | "Göster" metin düğmesi | iki anahtar, iki durumun metni |
+| Eski sürüm kapısı (`UpdateRequiredBanner`, `app_update.dart:588`) | `danger` | "Güncelle" | kenardan kenara ve güvenli alan düzeni AYNEN (köşesiz); yalnız boşluk / yazı belirteçleri |
+| Ayarlar: yedek / senkron uyarıları, misafir | §2.2, §4 | — | — |
+
+- `DueBanner` başlığı iki stilli tek satır (başlık `label`, tarih `meta` — F74.3): `AppBanner`a `detail` (String?, başlıkla AYNI satırda `Text.rich`, `meta` stili; verilince `maxLines: 1`) eklenir. Başka şerit kullanmaz.
+- Ana ekrandaki dizilim (sıra aynen, `dashboard_screen.dart:1842-1855`): her şerit `Padding(horizontal: kGridInset, top: AppSpace.s)` içinde; şerit yokken `SizedBox.shrink` (sıfır yer).
+
+### 5.5 Sabah bakılacak (zevk; güvenli seçenek uygulanır)
+
+- **K5-1** Dip bildirimi alt-BAŞ köşede, yüzen düğmelerin yanında (bugünkü "Geri al" yerleşiminin geneli) — ortada / düğmelerin üstünde değil.
+- **K5-2** Editörde ipucu üst çubuğun ALTINDA (notun ilk satırlarının üstünde 5 sn, dokunuş geçirgen); bugün çubuğun üstündeydi.
+- **K5-3** "Yenilikler" TOST kalır (2026-11-10 isteği); ana ekranda kalıcı şeride çevirmek YAPILMAZ.
+
+### 5.6 Kabul ölçütleri
+
+- `app_notice_test.dart` + yukarıdaki altı test yeşil; mandal testi yeşil.
+- Tur `ana` (telefon-kucuk, açık / koyu): ipucu arama hapının ALTINDA (hapla kesişmez); "Geri al" "+" satırıyla kesişmez. Turda sahne yoksa `tool/tour/screen_tour_test.dart`a `ana-ipucu`, `ana-gerial` eklenir.
+- `token_sayim`: `tips.dart`, `release_notes_toast.dart`, `due_banner.dart`, `UpdateBanner`, `_PendingUploadsBar`, `WebAttachmentsBanner` içinde elle köşe / punto / ağırlık / süre SIFIR.
+- Bütçe (§7'de yazılacak): bildirim göster / kaldır ana ekranı kurmaz; şerit belirince ızgara boy karesi ≤ 1.
+
+---
+
+## YARIM — §6, §7, §8 YAZILMADI (limit; kalanı Opus yazar). Toplanan kanıt ve verilmiş kararlar:
+
+**Numara düzeltmesi:** §2.4 "S28" ve §3.3 "S29" atıfları YANLIŞ — P62'ye ayrılan numaralar **S29–S39** (P63: S40–S44; S28 boş bırakılır). Öneri: S29 ayar alanı açılışı, S30 hesap levhası, S31 bildirim göster/kaldır, S32 şerit belirişi (ızgara boy karesi), S33 ana ekran yana çekiş oturması, S34 takvim mini ay kaydırma, S35 mini ay aç/kapa boy karesi. Bütçeler `test/perf_budget/budgets.json` (mandal: yalnız düşer), yardımcılar `_frames`, `_count`, `_expectBudget`, `_pumpHome` (`perf_budget_test.dart:181-203, 399-430, 295+`); örnek kalıplar S22 (`:1140`), S23 (`:1200`).
+
+**§6 Kaydırma — kanıt:**
+- Ana ekran `FolderSwipe` (`dashboard_widgets.dart:1243-1500`) parmağı ZATEN izler (tek `Transform`, etiket + dolum çubuğu). Kalan: eşikler elle — `commitFraction = 0.22` (`:1273`), fiske `300` (`:1371`), lastik `0.25` (`:1356`), sınır `_width * 0.4` (`:1354`); geri oturma sabit `AppMotion.short` + `standard` (`:1390-1392`) → `AppSwipe.commits` / `AppSwipe.rubber` / `AppSwipe.settleFor` + `AppMotion.emphasized` (`FolderSwipe.commitFraction` testte kullanılıyor: `AppSwipe.commitFraction`a takma ad olarak KALSIN). Etiket kartı elle köşe 14, simge 16, boşluk 10 / 8 / 5 (`:1436-1500`). Fiskeyle (eşik aşılmadan) geçişte titreşim yok (`AppHaptics.tick` yalnız `_past` değişince, `:1363-1366`). Geçişin kendisi `dashboard_screen.dart:1931-1990` (`AnimatedSwitcher`, `_continueSwipe` `:359-371`) — DOKUNMA (2026-11-06 "akan geçiş" isteği, bütçe S23).
+- Liste görünümünde `Dismissible` (`dashboard_widgets.dart:1632-1660`): arşiv zemini `tertiaryContainer` (rol ihlali: tertiary yalnız yapay zekâ) → güvenli seçenek `surfaceContainerHighest` + "Sabah bakılacak"; elle `FontWeight.w600`, simge 20, boşluk 8 / 20.
+- Takvim ajandasındaki mini ay `MonthGrid` (`month_grid.dart:62-70`): yalnız `primaryVelocity` ±200, parmağı İZLEMEZ, ay "pat" diye değişir. Hücre boyu sabit 44 dp × 6 satır = 264 dp (`month_grid.dart:114, 184`) → hedef: gün satırlarını `PageView` (takvimin öbür görünümleri gibi — `_PagedView`, `calendar_screen.dart:904-968`; `PageScrollPhysics` / kapalıyken `NeverScrollableScrollPhysics`, `calendarSwipeProvider`), hafta günü başlığı sabit kalır; `busy` kümesi komşu ayları da kapsasın (`calendar_screen.dart:826-831` aralığı genişlet); dışarıdan ay değişince (`onMonthChange`, başlık okları) `didUpdateWidget` → `animateToPage`. Elle eğri: `Curves.easeOutCubic` `calendar_screen.dart:942, 1731, 884` → `AppMotion.emphasized`.
+- Aynı yerde **boy animasyonu**: telefonda mini ay `AnimatedSize` ile açılıyor, altında `Expanded(list)` (`calendar_screen.dart:882-887`) → tek adım + yalnız boyama (S35).
+- Çerçeve (`app_frame.dart`): tam ekrandan çıkış `_exitPull > 56 || v > 300` (`:393-394`), çekmece `v > 200 || value > 0.4` (`:418-420`), süre elle 220 ms (`:288`), eğri `Curves.easeOutCubic` (`:432`) → `AppSwipe.flingVelocity` / `AppSwipe.commits(extent: 240)` / `AppMotion` belirteçleri. Bölme ayracı (`split_shell.dart:830-834`) doğrudan izliyor — dokunma.
+- Çit içi (DOKUNMA): `pen_tray.dart:633`, `pinned_side.dart:116`, `page_swipe.dart`, görüntüleyici `PageView`leri.
+- Testler: `test/home_gestures_test.dart`, `swipe_stops_test.dart`, `calendar_screen_test.dart` (`MonthGrid` bulucuları `:265-282`), `perf_budget` S22 / S23.
+
+**§7 Kasma — bulunan riskler:** B8 (`_PendingUploadsBar` `AnimatedSize`), takvim mini ay `AnimatedSize`, ayarlarda `_StaggeredRows` yayması KORUNACAK (`settings_area.dart:600-656`: ilk karede 2 satır, sonra kare başına 1), bildirim şeridi `child`ı kurmaz (yalnız `_NoticeLane`), `app.dart`a `MediaQuery.of` eklenmez. `kasma-kontrol` 8 maddesi her yüzey için tabloya dökülecek.
+
+**§8 Paket taslağı (dosya kümeleri ayrık; ayar bölümleri `settings_screen.dart`ın `part`ları — aynı kitaplık, ayrı dosya):**
+- PA1 (Opus high, ÖNCE): ayar satır dili — `settings_area.dart`, `settings_screen.dart` (+ S29).
+- PA2 (Opus): hesap — `account_sheet.dart`, yeni `account_identity_card.dart`, `settings_account.dart`, `sign_out_actions.dart` (+ S30). PA1'den sonra.
+- PA3 (Sonnet): öbür alanlar — `settings_ai / appearance / switches / voice / writing.dart`, `notes_settings.dart`, `theme_picker.dart`, `typing_bar_settings.dart`, `app_lock.dart`. PA1'den sonra, PA2 ile paralel.
+- PA4 (Sonnet): yan ekranlar — `premium_screen`, `privacy_screen`, `guide_screen`, `friends_screen`, `account_required`, `backup_ui`. Bağımsız.
+- PA5 (Opus high): bildirim hunisi — `tips.dart`, `undo_snackbar.dart`, `app.dart`, `release_notes_toast.dart`, `line_task_chip.dart`, `gmail_screen.dart`, `duplicates_sheet.dart`, `drive_ui.dart` (yalnız `hideMessage`), `quick_add_actions.dart`, testler + mandal (+ S31). Bağımsız.
+- PA6 (Sonnet): kalıcı şeritler — `app_banner.dart` (`detail`), `app_update.dart`, `due_banner.dart`, `drive_ui.dart` (şerit), `dashboard_widgets.dart` (`_PendingUploadsBar`) (+ S32). PA5'ten sonra (`app_update.dart`, `drive_ui.dart` ortak).
+- PA7 (Opus high, cihaz A/B): ana ekran kaydırma — `dashboard_widgets.dart` (`FolderSwipe`, `Dismissible`), `app_frame.dart` (+ S33). PA6'dan sonra (`dashboard_widgets.dart` ortak).
+- PA8 (Opus high): takvim mini ay — `month_grid.dart`, `calendar_screen.dart` (+ S34, S35). Bağımsız.
+- PA9 (Sonnet, P63 birleşince): çitte kalan 9 `showSnackBar` + 3 `hideCurrentSnackBar`, mandal 0.
+`dashboard_screen.dart`a yalnız PA5 dokunur (`:1131`). P63 de `dashboard_*` / `app.dart`a dokunabilir — sırayla birleştir.
