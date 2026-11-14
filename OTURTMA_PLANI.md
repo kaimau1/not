@@ -452,7 +452,7 @@ doğrulanır).
 - [x] **F60.5 Yazma ana bloğu 148 → 229 ms (v1.1.671 → v1.1.701).** *(2026-11-13 P55: eski iki sürüm yeniden derlenmedi; bugünkü profil derlemesinde `prof_type.py` 4 × yazma: 215 kare, en pahalı 5 kare 38,9 / 21,8 / 20,1 / 19,3 / < 16 ms — hepsi LAYOUT ağırlıklı (metin alanı dizimi + düzenlenen paragrafın bağlantı/işaret taraması). Düzeltme F84.2'de)* `tool/perf/prof_type.py`
   ile iki sürümü profil derlemesinde karşılaştır; fark F60.1/Faz 59 sonrası sürüyorsa en
   pahalı 5 çerçeveyi maddeye yaz. Düzeltme ayrı madde olarak açılır.
-- [ ] **F60.6 Kart ve liste: ek sayacı/rozet tutarlılığı taraması.** *(2026-11-11: tarama yapıldı, bulgular `docs/cihaz_turu.md` bölüm D — `note_card.dart:1755` ve `share_target_sheet.dart:516` düzeltme adayı; kod değişmedi, düzeltme açık.)* `Note.attachments`'ı
+- [x] **F60.6 Kart ve liste: ek sayacı/rozet tutarlılığı taraması.** *(2026-11-14 P22: düzeltildi — arşiv defteri rozeti (`note_card.dart`) ve paylaşım hedefi "📎 N" (`share_target_sheet.dart`) `attachmentsWithoutBackground` sayar; bekçi `card_hidden_media_test` + `share_target_test` (önce kırmızı → yeşil). İstatistik sayımları (note_stats, trash_analysis, archive_insights) bilinçli ham sayım, dokunulmadı. Cihazda doğrulanmadı: KALANLAR telefon 26.)* *(2026-11-11: tarama yapıldı, bulgular `docs/cihaz_turu.md` bölüm D — `note_card.dart:1755` ve `share_target_sheet.dart:516` düzeltme adayı; kod değişmedi, düzeltme açık.)* `Note.attachments`'ı
   doğrudan sayan yerleri `Grep "attachments.length\|attachments.isNotEmpty"` ile bul;
   zemin görselini saymaması gerekenler `attachmentsWithoutBackground` kullansın (HAFIZA
   "hayalet ek sayacı" kuralı).
