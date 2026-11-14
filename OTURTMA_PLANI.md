@@ -456,7 +456,7 @@ doğrulanır).
   doğrudan sayan yerleri `Grep "attachments.length\|attachments.isNotEmpty"` ile bul;
   zemin görselini saymaması gerekenler `attachmentsWithoutBackground` kullansın (HAFIZA
   "hayalet ek sayacı" kuralı).
-- [ ] **F60.7 MIUI beyaz açılış — KARAR K-O14.**
+- [~] **F60.7 MIUI beyaz açılış — KARAR K-O14.** *(2026-11-14 P22: DENEYIM planıyla kapandı/taşındı (KUYRUK §P22 "P22 ATLAR", Ek D).)*
 - **F60.S Kullanıcının bildirdiği sorunlar (2026-11-09 listesi).** Başka faza düşenler:
   sabit PDF kaydırma → F65.8 · büyük dosyalar → F65.9 · telefon yatay → F66.7 · "not
   menüsü sağa" → F67.9 · yazım düzeltici → Faz 70 · güvenlik → Faz 71 · performans
@@ -740,11 +740,11 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   ≤ 64 KB); göç idempotent (iki kez çalıştır, sonuç aynı); göç yarıda kesilirse (batch
   hatası) not v1 olarak okunmaya devam eder; `duplicateNote`, "yalnız bu cihaz", paylaş,
   tam yedek → geri yükleme v2 notta mürekkebi korur.
-- [ ] **F61.7 Sürüm ve eski istemci (K-O3).** `kClientDataVersion` 3 → 4. Sürüm notu ve
+- [ ] **F61.7 Sürüm ve eski istemci (K-O3).** *(2026-11-14 P22: açık, yapılamaz — kullanıcı kararı K-O3 (v2 yazımı) bekliyor; gözetimsiz açılmaz; kullanıcı listesine.)* `kClientDataVersion` 3 → 4. Sürüm notu ve
   `KALANLAR`'a kullanıcı adımı: "telefon, tablet, web güncel olunca Firebase konsolu →
   `config/app` → `inkV2Write: true`, `minClient: 4`". Bayrak açılmadan önce telefonda bir
   notta debug tercihiyle uçtan uca denenir.
-- [ ] **F61.8 Ölçüm.** F61.0'ın (c) ölçümü yeniden: 1500 çizgili notta kayıt sonrası ana
+- [ ] **F61.8 Ölçüm.** *(2026-11-14 P22: açık, yapılamaz — F61.6 (v2 yazma) yazılmadan ölçülecek şey yok; cihaz; kullanıcı listesine.)* F61.0'ın (c) ölçümü yeniden: 1500 çizgili notta kayıt sonrası ana
   blok **< 4 ms**; kayıt başına yazılan bayt ≤ 64 KB; `ab_kalem.py` dolu sayfa evresinde
   kayıt anında > 16,7 ms kare yok.
 - Kabul: 20 000 çizgili sentetik not açılır, çizilir, kaydedilir; hiçbir belge > 256 KB;
@@ -801,7 +801,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   *Kabul:* 4000 çizgili 10 ekranlık notta çizerken raster p90, boş sayfadakinin ≤ 1,5 katı;
   kaydırırken karo sınırında kesik/eksik çizgi yok (uzun dikey çizgi iki karoda da görünür
   testi).
-- [ ] **F62.4 (yalnız F62.3 yetmezse) Karoyu görüntüye fırınla.** Karo 300 ms değişmezse
+- [ ] **F62.4 (yalnız F62.3 yetmezse) Karoyu görüntüye fırınla.** *(2026-11-14 P22: açık, yapılamaz — koşullu: F62.0/F62.3 cihaz ölçümü yok; kullanıcı listesine.)* Karo 300 ms değişmezse
   `Picture.toImageSync` ile aygıt pikselinde görüntüye çevrilir, çizimde `drawImageRect`;
   değişince düşer. Bellek tavanı 8 karo. Zamanlayıcı YOK (test tuzağı): "değişmeden geçen
   kare sayısı ≥ 18" ile.
@@ -809,7 +809,7 @@ eski biçim okunmaya devam; `rules-test` yeşil; yedek/geri yükleme aynı oturu
   (×0,2–×1,8) + hızla incelme (ardışık nokta aralığı büyüdükçe kalınlık azalır; hız
   bilgisi noktalardan türetilir, şema değişmez). F62.2'nin çokgen yoluyla çizilir.
   Tepside 5. kalem. i/ö/ü noktası: tek noktalı çizgi taban yarıçapla çizilir.
-- [ ] **F62.6 Gecikme ölçümü (YORUM F54.1) + uç tahmini (K-O4).** Ölçüm: 240 fps ağır
+- [ ] **F62.6 Gecikme ölçümü (YORUM F54.1) + uç tahmini (K-O4).** *(2026-11-14 P22: açık, yapılamaz — cihaz ölçümü (240 fps) + K-O4 kararı; kullanıcı listesine.)* Ölçüm: 240 fps ağır
   çekim ya da ekran kaydı + `getevent` zaman damgası; kalem ucu ile çizginin ucu arası
   mesafe / kalem hızı = gecikme (ms). Hedef ≤ 2 kare (33 ms). Fazlaysa: etkin katmanda son
   iki noktadan doğrusal 1 karelik tahmin parçası (yalnız boyanır, çizgiye EKLENMEZ, sonraki
@@ -902,8 +902,8 @@ gömülü `_docInkFor`, görüntüleyiciler) — B3/B4/B5 hataları buradan çı
   çubukta kalem; kalem kipinde iki parmakla kaydırma ipucu (`TipOnce`); sayfa sonunda
   yazdıkça uzayan boşluk (bugün kalem kipinde "sayfa altı boşluğu" var — telefonda yeterli
   mi tur görüntüsüyle bak). Cihaz: tablette telefon düzeni + `input touchscreen`.
-- [~] **F63.6 Parmağa araç (YORUM F55.1) — KARAR, tablette denenmeden yazılmaz.** *(2026-11-14 P22: gözetimsiz yapılmaz (atlananlar listesi); kullanıcı kararı + tablet denemesi.)*
-- [ ] **F63.7 Kalem cihaz turu (YORUM F55.5).** `docs/cihaz_turu.md` kalem bölümü: avuç
+- [ ] **F63.6 Parmağa araç (YORUM F55.1) — KARAR, tablette denenmeden yazılmaz.** *(2026-11-14 P22: karar 2026-11-12 VERİLDİ ("parmağa ayrı araç YAZILIR"); KUYRUK §P22 "atlananlar" listesi bununla çelişiyor (eski). P22'de yazılmadı — kalem işi, fable paketi gerekir → açık kod işi; sabah bakılacak.)*
+- [ ] **F63.7 Kalem cihaz turu (YORUM F55.5).** *(2026-11-14 P22: açık, yapılamaz — kullanıcı tableti; docs/cihaz_turu.md B; kullanıcı listesine.)* `docs/cihaz_turu.md` kalem bölümü: avuç
   reddi (elle), kalem tıkı metne gider, kapsül ↔ hap, şekil/çokgen/çizgi ucu, sabit PDF,
   gömülü PDF, görsel, tam ekran, yüzen düğme, telefonda parmak. Kullanıcı yapar; sonuç
   maddelere işlenir.
@@ -1013,16 +1013,16 @@ tur görüntüleri `*-e-*.png`.
 (Grep `HomeCalendarStrip`), `note_card.dart` (madde önizlemesi), `card_preview.dart`,
 tur `telefon-*.png`.
 
-- [ ] **F66.1 Ana ekran tepesi (B9) — KARAR K-O10.** Öneri: en kısa kenar < 600 dp'de
+- [~] **F66.1 Ana ekran tepesi (B9) — KARAR K-O10.** *(2026-11-14 P22: DENEYIM planıyla kapandı/taşındı (KUYRUK §P22 "P22 ATLAR", Ek D).)* Öneri: en kısa kenar < 600 dp'de
   `homeCalendarStripOpenProvider` varsayılanı KAPALI (tek ince satır: bugünün tarihi +
   varsa etkinlik sayısı; dokununca açılır; kullanıcının seçimi hatırlanır). Zamanı gelen
   şeridi kalır (önemli). Hedef: ilk nota kadar ≤ 150 dp (bugün ~210).
   *Yapma:* şeritleri yükseklik animasyonuyla gizleme (CLAUDE.md kural 6).
-- [ ] **F66.2 Alt çubuk (K-O5, F63.5 ile aynı karar).**
-- [ ] **F66.3 Kartta işaretli maddeler — KARAR K-O11.** `card_preview.dart`: işaretsiz
+- [~] **F66.2 Alt çubuk (K-O5, F63.5 ile aynı karar).** *(2026-11-14 P22: DENEYIM planıyla kapandı/taşındı (KUYRUK §P22 "P22 ATLAR", Ek D).)*
+- [~] **F66.3 Kartta işaretli maddeler — KARAR K-O11.** *(2026-11-14 P22: DENEYIM planıyla kapandı/taşındı (KUYRUK §P22 "P22 ATLAR", Ek D).)* `card_preview.dart`: işaretsiz
   madde varsa önce onlar; işaretliler tek satır "✓ N tamamlandı". Hepsi işaretliyse
   bugünkü. Dilim sınırı (5 satır) değişmez; akıcılık bütçesi (F21) bağlayıcı.
-- [ ] **F66.4 Küçük telefon turu.** Tur boyutlarına `telefon-kucuk 360×640` ve
+- [~] **F66.4 Küçük telefon turu.** *(2026-11-14 P22: DENEYIM planıyla kapandı/taşındı (KUYRUK §P22 "P22 ATLAR", Ek D).)* Tur boyutlarına `telefon-kucuk 360×640` ve
   `telefon-uzun 393×851` (F67.2 ile birlikte). Taşan/kesilen her yer madde olarak yazılır
   ve düzeltilir (ad kesilmesi, çubuk taşması, levha boyu).
 - [x] **F66.5 Tek elle erişim taraması.** *(2026-11-14 P22 rapor — RAPOR_F66_5 aşağıda; kod değişmedi.)* Sık işler (yeni not, ara, klasör değiştir, geri)
@@ -1083,12 +1083,12 @@ tur `telefon-*.png`.
   ADIMDA (kural 6), `KeyboardSwitch` kuralı (7) korunur. Tur `matepad-yatay` + klavye ile
   doğrula.
 - [x] **F67.5 Yandan sabitleme varsayılanı (F65.2 ile aynı karar).** *(2026-11-13: F65.2 ile yapıldı.)*
-- [~] **F67.6 İki not yan yana — KARAR K-O12 (öneri: şimdilik yok).** *(2026-11-14 P22: en güvenli = yapılmadı; kullanıcı kararı → KONTROL listesi, sabah bakılacak.)*
+- [ ] **F67.6 İki not yan yana — KARAR K-O12 (öneri: şimdilik yok).** *(2026-11-14 P22: karar 2026-11-12 VERİLDİ ("tablet yatayda iki not yan yana OLSUN"); P22'de yazılmadı — büyük tablet düzeni işi, ayrı paket gerekir → açık kod işi.)*
 - [x] **F67.7 Klavye ve fare.** → DENEYIM F80.3 (P42, 2026-11-12: kısayol levhası tablodan, odak halkası, D22; sağ tık/üstüne gelme doğrulandı). Kısayol listesi levhası (Ctrl+/; `app.dart` `shortcuts`
   haritasından üretilir, elle liste tutulmaz); kart ve madde üzerinde sağ tık = uzun basış
   menüsü (var olanları doğrula, eksikleri ekle); fareyle üstüne gelince kart ve satır
   vurgusu (yalnız `touchFirst == false`); Tab sırası: arama → klasör şeridi → kartlar.
-- [ ] **F67.8 Tablet cihaz turu.** `docs/cihaz_turu.md` tablet bölümü (yatay/dikey, klavye
+- [ ] **F67.8 Tablet cihaz turu.** *(2026-11-14 P22: açık, yapılamaz — kullanıcı tableti; docs/cihaz_turu.md B; kullanıcı listesine.)* `docs/cihaz_turu.md` tablet bölümü (yatay/dikey, klavye
   takılı/değil, kalem): bölünmüş görünüm, ayraç, tam ekran, yandan sabit, hızlı satır,
   fiziksel klavye uykusu (HAFIZA oturum J). Kullanıcı yapar.
 - Kabul: tur yeni 4 boyutta taşmasız; bekçi yeşil; 1024×640 + klavyede içerik ≥ 200 dp.
@@ -1133,9 +1133,9 @@ tur `telefon-*.png`.
 
 ## FAZ 69 — Doğrulama turu ve kapanış
 
-- [ ] **F69.1 Cihaz turu.** `docs/cihaz_turu.md` telefon + tablet + web (kullanıcı; ~30 dk
+- [ ] **F69.1 Cihaz turu.** *(2026-11-14 P22: açık, yapılamaz — kullanıcı; docs/cihaz_turu.md; kullanıcı listesine.)* `docs/cihaz_turu.md` telefon + tablet + web (kullanıcı; ~30 dk
   cihaz başına). Bulunan her sorun `F60.S` biçiminde maddeye, kök nedenli düzeltmeye.
-- [ ] **F69.2 Yeni cihaza geçiş (YORUM F54.4).** Temiz kurulum → giriş → bütün notlar, el
+- [ ] **F69.2 Yeni cihaza geçiş (YORUM F54.4).** *(2026-11-14 P22: açık, yapılamaz — kullanıcı; temiz kurulum + geri yükleme; kullanıcı listesine.)* Temiz kurulum → giriş → bütün notlar, el
   yazısı (v1 ve v2), ekler, klasörler, takvim geliyor mu; tam yedek → boş hesaba geri yükle.
 - [x] **F69.3 Hatırlatıcı güvenilirliği (YORUM F56.2).** *(2026-11-14 P22: Ayarlar → İzinler'e "Alarmlar ve hatırlatıcılar" satırı — YALNIZ tam zamanlı alarm izni kapalıyken (`canScheduleExactNotifications`), dokununca sistem izin ekranı (`permissions_service.dart`, `settings_account.dart`). Pil muafiyeti okunamıyor (önceki karar), satır her zaman duruyor. "İlk hatırlatıcıda ipucu" YAZILMADI: ayar satırı + MIUI ipucu yeterli sayıldı — sabah bakılacak. Yazıldı, cihazda doğrulanmadı: KALANLAR P22.2.)* Pil iyileştirme açık / tam zamanlı
   alarm izni yokken Ayarlar → İzinler'de uyarı satırı + ilk hatırlatıcıda ipucu (MIUI
