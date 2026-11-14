@@ -316,7 +316,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
   JSON gidiş-dönüş), `test/page_panel_personalize_test.dart`, `test/guide_screen_test.dart` (arb değişti → CI tam takım koşar).
 - Kabul: testler yeşil; eski kayıtlı tercih (`topOrder` yok) bugünkü sırayı verir.
 
-**Adım 9 — Üst çubuk sırasını editörde uygula + ana ekran sarmaları (M8; P50 kalanı).**
+**[x] Adım 9 — Üst çubuk sırasını editörde uygula + ana ekran sarmaları (M8; P50 kalanı).** (2026-11-14: (a) `actions:` `UiPrefs.orderOf(UiItem.topDefault, _topOrder)` sırasıyla `switch` kollarında — öğeler yerinde, ⌨ + ortak düzenleyen Ana sayfa yuvasının ardında, ⋮ sonda; kök YALNIZ `topOrder` değişince kurulur (`_onTopOrder`), test `editor_top_customize_test` "kayıtlı sıra". EKRAN:3001 → `AppHaptics.tick`, `haptic` 1→0. (b) ana ekran: sarmasız tek sürekli çubuk öğesi AI anahtarı (`_SemanticToggle`); `homeAi` ile sarınca S24 ilk kare 927→928 → plan gereği YAPILMADI ("+" ana kapı, ⋮/arama kutusu çit dışı). Tur karşılaştırması koşulmadı: varsayılan sırada aynı widget'lar aynı sırada)
 - Dosyalar: EKRAN (yalnız `actions:` 5107–5340), `dashboard_screen.dart`, `dashboard_widgets.dart`,
   `lib/core/personalize.dart` (yalnız yeni `UiItem.home*` kimlikleri), `personalize_screen.dart` (ana ekran
   öğeleri listesi, 678), `test/editor_top_customize_test.dart`, YENİ `test/home_customize_wraps_test.dart`.
@@ -339,7 +339,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
 - Kabul: varsayılan görünüm piksel olarak aynı (`flutter test tool/tour/screen_tour_test.dart` — `TOUR_COMPARE`
   farkı yalnız bilinçli değişiklikte); bütün bütçeler ≤ mandal.
 
-**Adım 10 — Kapanış (işçi kuralları "Bitiş").**
+**[x] Adım 10 — Kapanış (işçi kuralları "Bitiş").** (2026-11-14: belgeler + sürüm notu; cihaz A/B YAPILMADI — yürütücüde)
 - CI yeşil (`gh run list -b oto/P20-editor-cekirdek -L 1`; kırmızıysa yalnız başarısız işin kuyruğu, en çok 2 tur).
 - **Cihaz kapısı (Cihaz = A/B, hız işi → kötüleşme SIFIR):** `ab-olcum` skill'i; `python -u tool/perf/ab_hepsi.py
   <önceki [apk] profil APK> <dal profil APK> --altin`; tablo + son satır DEVIR.md'ye. Cihaz yoksa:

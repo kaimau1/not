@@ -67,7 +67,7 @@ Gözetimsiz yürütmenin sırası ve kuralları: `OTOMASYON.md`.
 | 61 | Mürekkep deposu v2 (1 MiB tavanı, kayıt maliyeti) | Bekliyor | | veri biçimi; yedek şartı |
 | 62 | Mürekkep çizimi v2 (gecikme, dolu sayfada kasma) | Bekliyor | | |
 | 63 | Kalem akışları (her yüzeyde tek kural) | Sürüyor | 2026-11-11 | F63.1–F63.5 yapıldı (P05, P15; K-O5 açık); F63.6 karar, F63.7 cihaz turu bekliyor |
-| 64 | Editör çekirdeği (dar dinleme) | Sürüyor (P20 adım 1–6, 2026-11-14) | S3/S4/S9/S14 hedefte | cihaz A/B bekliyor |
+| 64 | Editör çekirdeği (dar dinleme) | Sürüyor (P20 adım 1–10 bitti, 2026-11-14) | S3/S4 satır 23→1, S1 kök 1→0, S9 tuval 2→0, S14 tuval 1→0 | cihaz A/B bekliyor; F64.3/F64.4 kısmi (M2, M6) |
 | 65 | Ekler: yerleşim, çubuklar, yükleme güvenilirliği | Bekliyor | | KALEM_PLANI K6–K7 burada |
 | 66 | Telefon: ana ekran ve not ekranı yoğunluğu | Bekliyor | | |
 | 67 | Tablet ve geniş ekran | Bekliyor | | |

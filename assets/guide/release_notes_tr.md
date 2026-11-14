@@ -7,6 +7,8 @@ Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarla
 - **Silgiden kaleme dönüş:** silgi seçiliyken ekrana kıpırdamadan basılı tutunca "Kaleme dön" düğmesi çıkar; dokununca son kalemine dönersin. Basılı tutuş bir şey silmez.
 - **Tablette ve webde nottan çıkış:** not kapanınca sağ bölmeden kayarak çıkar, sonra liste genişler — artık birden kaybolmuyor.
 - **Not açıkken soldaki liste:** iki parmakla kıstırarak ya da Ctrl+tekerlekle kartları büyütüp küçültebilirsin; liste genişliğine göre 1–4 sütun olur ve seçimin hatırlanır.
+- **Uzun listelerde daha akıcı yazma:** çok maddeli bir listede kutucuğu işaretlemek ya da Enter ile yeni madde eklemek artık arkadaki bütün maddeleri baştan çizmiyor; yıldız, sabitleme, geri al ve biçim paneli de notun tamamını yeniden kurmuyor.
+- **Üst çubuğun sırası sende:** Ayarlar → Kişiselleştir'deki yeni "Üst çubuk" grubundan not ekranının üstündeki düğmelerin (Ana sayfa, eşitleme, geri al, sabitle, tam ekran) sırasını değiştirebilir, istemediğini gizleyebilirsin; ⋮ hep en sağda kalır.
 
 ## 13 Kasım 2026 {#2026-11-13}
 - **Tablette sesle yazma:** cihazın canlı konuşma tanıması çalışmıyorsa (Google hizmetleri olmayan tabletler) uygulama bunu birkaç saniyede fark edip sesli not levhasına geçer: konuşma kaydedilir ve yazıya dökülür. Sesle yazma açıkken yaşanan kasma da azaldı.

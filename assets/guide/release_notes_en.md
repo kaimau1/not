@@ -7,6 +7,8 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Back from the eraser:** with the eraser on, press and hold still on the page and a "Back to pen" button appears; tap it to return to your last pen. The hold erases nothing.
 - **Leaving a note on tablets and the web:** the note now slides out of the right pane and then the list widens, instead of vanishing at once.
 - **List beside an open note:** pinch or Ctrl+scroll to make the cards bigger or smaller; the list switches between 1 and 4 columns by its width and remembers your choice.
+- **Smoother typing in long lists:** in a list with many items, ticking a box or adding an item with Enter no longer redraws every item after it; star, pin, undo and the format panel no longer rebuild the whole note either.
+- **Arrange the top bar:** the new "Top bar" group in Settings → Personalize lets you reorder the buttons at the top of a note (Home, sync, undo, pin, full screen) and hide the ones you don't want; ⋮ always stays on the far right.
 
 ## 13 November 2026 {#2026-11-13}
 - **Voice typing on tablets:** if the device's live speech recognition doesn't work (tablets without Google services), the app notices within a few seconds and switches to the voice note sheet: your speech is recorded and transcribed. Stutter while voice typing is on is also reduced.
