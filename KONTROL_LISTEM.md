@@ -89,6 +89,10 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nerede: ana ekran ⋮; bir notun ⋮'i; sabit PDF'li not (ör. Rezilyans) ve onun ⋮ menüsü; görseli gizlenmiş YouTube notu.
   Nasıl: menüleri aç, üstteki tutamaktan aşağı çek; sabit PDF'li notta "Not al"a yaz; PDF ⋮ → PDF → "Tüm balonlar".
   Doğruysa: her menüde tutamak var ve aşağı çekince kapanıyor; ⚙ ve ✕ telefonun üst çubuğunun altında; ana ekran ⋮'te tek maddelik "Diğer" grubu yok (Arşiv "Uygulama"nın sonunda); "Not al"a yazarken üst çubukta hızlı satır çıkıyor, çubuktaki başlığı düzenlerken başlık yerinde kalıyor; balon listesi açılıyor, balona dokununca o sayfaya gidiyor; kartta "YouTube videosu" üstte, video adı altta.
+- [ ] **43. Başka uygulamadan içe aktarma tam geliyor mu**
+  Nerede: ölçüm uygulaması (`pm clear` sonrası, misafir) → Ayarlar → Senkronizasyon → "Başka uygulamadan içe aktar".
+  Nasıl: `keep_olcum.zip` (240 not, 6 sabit) içe aktar, 3 dk bekle, aynı dosyayı bir daha içe aktar.
+  Doğruysa: ana ekranda 240 not ve 6 sabit; ikinci deneme "0 not içe aktarıldı, 240 atlandı" der.
 
 ## Tablette bak
 

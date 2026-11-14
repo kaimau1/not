@@ -45,6 +45,26 @@ const _mediaQueryLatch = {
 /// takasındaki ikisi P46'da kalktı (2026-11-13; bütçe S9 `govde_boy_karesi`).
 const _animatedSizeLatch = 2;
 
+/// md. 6 — ana ekran / takvim şeritlerinde `AnimatedSize(` (P62 plan_tasarim_A
+/// §7.5). Bugün 2 (2026-11-14, PA0): bekleyen ek şeridi
+/// (`dashboard_widgets.dart` `_PendingUploadsBar`) ve takvim mini ayı
+/// (`calendar_screen.dart`); PA6 sonrası 1, PA8 sonrası 0.
+const _homeSizeFiles = [
+  'lib/features/notes/presentation/dashboard_widgets.dart',
+  'lib/features/notes/presentation/dashboard_screen.dart',
+  'lib/features/notes/presentation/due_banner.dart',
+  'lib/core/app_update.dart',
+  'lib/features/notes/presentation/drive_ui.dart',
+  'lib/core/widgets/app_banner.dart',
+  'lib/core/widgets/app_notice.dart',
+  'lib/features/calendar/presentation/calendar_screen.dart',
+  'lib/features/calendar/presentation/month_grid.dart',
+];
+const _homeSizeLatch = 2;
+
+int countAnimatedSize(String src) =>
+    RegExp(r'\bAnimatedSize\(').allMatches(src).length;
+
 String _stripComments(String src) => src
     .replaceAll(RegExp(r'/\*[\s\S]*?\*/'), '')
     .split('\n')
@@ -224,6 +244,29 @@ extension _E on _NoteEditorScreenState {
       expect(countSizeAnimations('AnimatedSize(child: x)'), 1);
       expect(countSizeAnimations('AnimatedContainer(height: h)'), 1);
       expect(countSizeAnimations('AnimatedOpacity(opacity: 1)'), 0);
+    });
+  });
+
+  group('md. 6 — ana ekran / takvim boy animasyonu mandalı', () {
+    test('şerit ve takvim dosyaları', () {
+      final per = {
+        for (final f in _homeSizeFiles) f: countAnimatedSize(_read(f)),
+      };
+      final n = per.values.fold(0, (a, b) => a + b);
+      // ignore: avoid_print
+      print('ana ekran / takvim AnimatedSize: $n $per');
+      expect(
+        n,
+        lessThanOrEqualTo(_homeSizeLatch),
+        reason:
+            'Şerit/mini ay boyu TEK ADIMDA, hareket boyamada '
+            '(plan_tasarim_A §6.2 R1/R2) — kasma listesi md. 6',
+      );
+    });
+    test('bozma denemesi', () {
+      expect(countAnimatedSize('AnimatedSize(child: x)'), 1);
+      expect(countAnimatedSize('AnimatedContainer(height: h)'), 0);
+      expect(countAnimatedSize(_stripComments('// AnimatedSize(')), 0);
     });
   });
 }

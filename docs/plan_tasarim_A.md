@@ -1,6 +1,6 @@
 # Görsel tasarım A — plan (P62)
 
-**Durum:** PLAN TAMAM (2026-11-14): §0–§8 + iskelet yazıldı. Uygulama YAPILMADI — paketler §8'de (PA0–PA9; PA0 önce). Model kararı (kullanıcı, 2026-11-14): görünüşü belirleyen paket fable, opus yalnız görsel olmayan altyapı / ölçüm, sonnet yalnız CI / test / mekanik. §7.3'teki "beklenen bugün" değerleri hipotezdir (PA0 ölçer).
+**Durum:** PLAN TAMAM (2026-11-14): §0–§8 + iskelet yazıldı. Uygulama YAPILMADI — paketler §8'de (PA0–PA9; PA0 önce). Model kararı (kullanıcı, 2026-11-14): görünüşü belirleyen paket fable, opus yalnız görsel olmayan altyapı / ölçüm, sonnet yalnız CI / test / mekanik. §7.3'teki "beklenen bugün" değerleri PA0'da ölçüldü (2026-11-14): S29–S35 hipotezleri doğrulandı, S36 hedefin üstünde (PA1).
 **Kullanıcı isteği (2026-11-14):** görsel tasarım son kullanıcı için hazır olsun — tertemiz, premium, güzel animasyonlu, göze hitap eden; kasma olmasın; ara commit atılsın.
 **Kapsam:** (1) ayarlar ekranlarının hepsi · (2) ana ekrandaki hesap levhası · (3) Ayarlar → Hesap · (4) ipucu ve uyarıların görünümü/yeri · (5) sağa-sola kaydırma hissi.
 **Kapsam DIŞI (P63'te, dokunma):** `lib/core/widgets/customizable.dart`, `lib/core/personalize.dart`, `lib/features/settings/presentation/personalize_screen.dart`, `personalize_bar_list.dart`, `quick_row_editor.dart`, şablon / kalem / sesle yazma / madde çizgisi dosyaları, `lib/features/notes/presentation/editor/**` ve `viewers/**`.
@@ -415,18 +415,18 @@ P62 editöre ve kart ızgarasının HÜCRESİNE dokunmaz; md. 1 (madde alanı ka
 
 ### 7.3 Bütçe senaryoları (S29–S39)
 
-Sayılan şey süre değil SAYI (`BuildCounter`, `test/support/editor_harness.dart:25`; yardımcılar `_count` `:182`, `_expectBudget` `:192`, `_frames` `:399`, `_pumpHome` `:295`). "Bugün" sütunu ÖLÇÜLMEDİ — taban PA0'da ölçülür, `budgets.json`a `bugun` + `neden` ile yazılır; aşağıdaki "beklenen" değerler **hipotez**tir. Hedefi tutmayan taban mandal olarak girer, ilgili paket onu hedefe indirir.
+Sayılan şey süre değil SAYI (`BuildCounter`, `test/support/editor_harness.dart:25`; yardımcılar `_count`, `_expectBudget`, `_frames`, `_pumpHome`, PA0'dan beri `_pumpCalendar`, `_settingsApp`, `_resizedFrames`). **PA0 ölçtü (2026-11-14, bugünkü kod)**: sayılar `budgets.json`da `bugun` + `neden` ile; son sütunda hipotez → ölçülen. Hedefi tutmayan taban mandal olarak girdi, ilgili paket onu hedefe indirir.
 
-| No | Senaryo (düzenek) | Sayılan anahtarlar | Hedef | Beklenen bugün (hipotez) | Tabanı / indiren |
+| No | Senaryo (düzenek) | Sayılan anahtarlar | Hedef | Beklenen bugün (hipotez) → ölçülen (PA0) | Tabanı / indiren |
 |---|---|---|---|---|---|
-| S29 | Ayar alanı açılışı: telefon 412 × 915, doğrudan `SettingsScreen(initialArea: 'ai')` (S22 kalıbı; `_pumpHome`da `/settings` yolu YOK), 40 kare | `ilk_kare_kurulum`, `kare_kurulum` (en ağır kare), `toplam_kurulum` | en ağır kare tabanı AŞMAZ (kılık değişikliği yaymayı bozmadı); toplam en çok grup sarmalayıcıları kadar artar, `neden`e yazılır | yayma çalışıyor: ilk kare 2 satır | PA0 / PA1 |
-| S30 | Hesap levhası: `_pumpHome` telefon, 30 not; `home-account-avatar`a dokun → 30 kare → sistem geri → 30 kare (S20 kalıbı, `:1081`) | `kart_kurulum` (`NoteCard`), `dashboard_kurulum`, `kare_kurulum` | kart 0, pano 0 | 0 / 0 | PA0 / PA2 |
-| S31 | Bildirim: `_pumpHome` + `AppNoticeHost` (düzeneğe `notices: true` seçeneği); ileti göster → 30 kare → kendiliğinden kalksın; ipucu göster → dokunuşla kalksın; ayrıca şerit BOŞKEN alt inset 0 → 300 → 0 (10 adım) | `kart_kurulum`, `dashboard_kurulum`, `kare_kurulum`, `klavye_karesi_kurulum` (inset karesi başına şeritten kurulan) | 0 / 0 / küçük sabit / 0 | 0 / 0 / ? / > 0 (R5) | PA0 (iskelet tabanı) / PA5 |
-| S32 | Kalıcı şerit belirişi: `_pumpHome`, `pendingUploadsProvider` 0 → 2 → 0; her değişimden sonra 30 kare; ızgara kaydırma görünümünün boyunun değiştiği kare sayısı (S9 `govde_boy_karesi` kalıbı, `:598-632`) | `izgara_boy_karesi`, `kart_kurulum` | 2 (belir 1 + kalk 1) / 0 | ~24 (200 ms × 2) / 0 | PA0 / PA6 |
-| S33 | Ana ekran çekişi: `_pumpHome` telefon, 30 not, `swipe_mode: filters` (S23 düzeneği); karttan 6 × 10 dp yana çek (eşik altı), bırak, 30 kare | `kart_kurulum`, `dashboard_kurulum`, `kare_kurulum` | 0 / 0 / etiket + `FolderSwipe` kadar | 0 / 0 | PA0 / PA7 |
+| S29 | Ayar alanı açılışı: telefon 412 × 915, doğrudan `SettingsScreen(initialArea: 'ai')` (S22 kalıbı; `_pumpHome`da `/settings` yolu YOK), 40 kare | `ilk_kare_kurulum`, `kare_kurulum` (en ağır kare), `toplam_kurulum` | en ağır kare tabanı AŞMAZ (kılık değişikliği yaymayı bozmadı); toplam en çok grup sarmalayıcıları kadar artar, `neden`e yazılır | yayma çalışıyor: ilk kare 2 satır → **doğru**: ilk karede 2 satır; ilk kare 367 / sonraki en ağır kare 37 / toplam 488 (`kare_kurulum` = ilk kareden SONRAKİ en ağır kare) | PA0 / PA1 |
+| S30 | Hesap levhası: `_pumpHome` telefon, 30 not; `home-account-avatar`a dokun → 30 kare → sistem geri → 30 kare (S20 kalıbı, `:1081`) | `kart_kurulum` (`NoteCard`), `dashboard_kurulum`, `kare_kurulum` | kart 0, pano 0 | 0 / 0 → **doğru**: 0 / 0; en ağır kare 341 (levha) | PA0 / PA2 |
+| S31 | Bildirim: `_pumpHome` + `AppNoticeHost` (düzeneğe `notices: true` seçeneği); ileti göster → 30 kare → kendiliğinden kalksın; ipucu göster → dokunuşla kalksın; ayrıca şerit BOŞKEN alt inset 0 → 300 → 0 (10 adım) | `kart_kurulum`, `dashboard_kurulum`, `kare_kurulum`, `klavye_karesi_kurulum` (inset karesi başına şeritten kurulan) | 0 / 0 / küçük sabit / 0 | 0 / 0 / ? / > 0 (R5) → **doğru**: 0 / 0 / 28 / 10 (inset karesi başına şeritten 10 widget) | PA0 (iskelet tabanı) / PA5 |
+| S32 | Kalıcı şerit belirişi: `_pumpHome`, `pendingUploadsProvider` 0 → 2 → 0; her değişimden sonra 30 kare; ızgara kaydırma görünümünün boyunun değiştiği kare sayısı (S9 `govde_boy_karesi` kalıbı, `:598-632`) | `izgara_boy_karesi`, `kart_kurulum` | 2 (belir 1 + kalk 1) / 0 | ~24 (200 ms × 2) / 0 → **doğru**: 26 / 0 — R1 gerçek dizilim yükü (ızgara her karede yeniden diziliyor), yalnız kural ihlali değil | PA0 / PA6 |
+| S33 | Ana ekran çekişi: `_pumpHome` telefon, 30 not, `swipe_mode: filters` (S23 düzeneği); karttan 6 × 10 dp yana çek (eşik altı), bırak, 30 kare | `kart_kurulum`, `dashboard_kurulum`, `kare_kurulum` | 0 / 0 / etiket + `FolderSwipe` kadar | 0 / 0 → **doğru**: 0 / 0; en ağır kare 16 (`FolderSwipe`, ipucu şeridi, basılı tutma halkası) | PA0 / PA7 |
 | S34 | Mini ay kaydırma: telefon, `calendar_view: agenda`, ay açık; mini ayı bir ay ileri fırlat, 40 kare (S22 düzeneği, `:1140`) | `ay_sayfasi` (gün sayfası kurulumu), `gun_hucresi` (`_DayCell`), `kare_kurulum` | komşu ay bir kez kurulur; en ağır kare ≤ mini ayın ilk açılış karesi | bugün izleme yok: ay değişince 42 hücre tek karede | PA8 (taban PA8'in ilk commit'i: değişiklikten önce) |
-| S35 | Mini ay aç → kapat: telefon ajanda; `calendar-month-toggle`a iki kez dokun, her birinden sonra 30 kare; ajanda listesinin boyunun değiştiği kare sayısı | `liste_boy_karesi`, `kare_kurulum` | 2 (aç 1 + kapa 1) | ~24 | PA0 / PA8 |
-| S36 | Geniş ekran ayarlar: 1280 × 800 `SettingsScreen`; `settings-cat-ai` → `settings-cat-sound`, her birinden sonra 40 kare | `kare_kurulum`, `toplam_kurulum` | en ağır kare ≤ S29 en ağır karesi (alan değişimi de yayılır) | ? | PA0 / PA1 |
+| S35 | Mini ay aç → kapat: telefon ajanda; `calendar-month-toggle`a iki kez dokun, her birinden sonra 30 kare; ajanda listesinin boyunun değiştiği kare sayısı | `liste_boy_karesi`, `kare_kurulum` | 2 (aç 1 + kapa 1) | ~24 → **doğru**: 28 — R2 gerçek dizilim yükü | PA0 / PA8 |
+| S36 | Geniş ekran ayarlar: 1280 × 800 `SettingsScreen`; `settings-cat-ai` → `settings-cat-sound`, her birinden sonra 40 kare | `kare_kurulum`, `toplam_kurulum` | en ağır kare ≤ S29 en ağır karesi (alan değişimi de yayılır) | ? → en ağır kare 673 / toplam 1875 (alan değişiminin ilk karesi ai 551 / sound 673; sonraki 65 / 262) — **hedefin üstünde**: PA1 indirir | PA0 / PA1 |
 | S37–S39 | boş (yedek) — P62 içinde yeni yüzey çıkarsa buradan verilir, P63 numaralarına (S40–S44) girilmez | | | | |
 
 Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 (not aç / geri), S21 (arama), S23 (yana fırlatma), S24 (soğuk açılış) — PA5, PA6, PA7; S12 / S26 / S27 (bölünmüş kabuk) — PA7 (`app_frame.dart`); S22 (hafta kaydırma) — PA8. Bir sayı YÜKSELİRSE paket durur: kök neden bulunur, mandal yükseltilmez (yükseltme yalnız `[butce]` başlığı + `neden` ile, kullanıcı kararı).
@@ -472,7 +472,7 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 
 | Paket | İş | Model | Bağımlılık | Bütçe | Cihaz A/B | `[apk]` |
 |---|---|---|---|---|---|---|
-| PA0 | Bütçe tabanları S29–S33, S35, S36 + boy animasyonu mandalı + takvim tur sahneleri | opus | — (ÖNCE) | kurar | hayır | — |
+| [x] PA0 | Bütçe tabanları S29–S33, S35, S36 + boy animasyonu mandalı + takvim tur sahneleri | opus | — (ÖNCE) | kurar | hayır | — |
 | PA1 | Ayar satır dili: gruplar, satır kalıbı, kök sayfa, geniş ekran, bütün alanların grup etiketleri | **fable** | PA0 | S29, S36 | hayır | APK-1 |
 | PA2 | Hesap ailesi: kimlik kartı, hesap levhası, Ayarlar → Hesap, `settings_account.dart`taki öbür satırlar | **fable** | PA1 | S30 | hayır | APK-1 |
 | PA3 | Öbür ayar alanları + tema seçici, yazma çubuğu ayarı, kilit karoları | **fable** | PA1 (PA2 ile paralel) | S29 değişmez | hayır | APK-1 |
@@ -485,7 +485,8 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 
 ### 8.3 Paketler
 
-**PA0 — Bütçe tabanları ve mandallar (opus; ÖNCE).** Görsel değişiklik YOK, `lib/`e dokunmaz.
+**[x] PA0 — Bütçe tabanları ve mandallar (opus; ÖNCE).** Görsel değişiklik YOK, `lib/`e dokunmaz.
+- **Durum (2026-11-14, dal `oto/PA0-butce`):** S29–S33, S35, S36 yazıldı ve ölçüldü (sayılar §7.3 son sütun, `budgets.json`, OTURTMA Ek A); boy animasyonu mandalı 2 (`jank_patterns_guard_test.dart`); tura `/calendar` + `takvim-ajanda`, `takvim-ajanda-ay` (ay düğmesi yalnız dar ekranda — genişte ay hep açık, sahne "dokunulacak öğe yok" diye geçilir). Hipotezlerin hepsi doğrulandı; S36 hedefin üstünde (PA1'in işi).
 - Dosyalar: `test/perf_budget_test.dart`, `test/perf_budget/budgets.json`, `test/jank_patterns_guard_test.dart`, `tool/tour/screen_tour_test.dart`, `docs/arsiv/planlar/OTURTMA_PLANI.md` (Ek A'ya S satırları).
 - İş: §7.3'teki S29, S30, S31 (iskelet tabanı: düzenek `AppNoticeHost` ile sarılır, `appNotice.show` doğrudan çağrılır), S32, S33, S35, S36 senaryolarını yaz, BUGÜNKÜ kodda ölç, `budgets.json`a `senaryo` / sayılar / `bugun` / `hedef` / `neden` ile gir (hedefi tutmayan taban mandal olarak girer). §7.5 boy animasyonu mandalı (bugün 2). Tura `/calendar` yolu + `takvim-ajanda`, `takvim-ajanda-ay` (başlığa dokunulmuş) sahneleri (düzenek: S22'deki sağlayıcı geçersiz kılmaları, `perf_budget_test.dart:1162-1172`).
 - Kabul: yeni senaryolar ve mandal CI'da yeşil; ölçülen sayılar DEVIR'de; §7.3 "beklenen bugün" hipotezleri doğrulandı / yanlışlandı diye planın tablosuna işlendi (yanlış çıkan hipotez ilgili paketin işini değiştirir — ör. S32 zaten 2 ise R1 kasma değil yalnız kural ihlalidir).
@@ -581,5 +582,5 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 
 - **PA5 modeli:** kılık iskelette hazır olduğu için opus yazıldı; "bildirimin yeri de görünüştür" denirse PA5 de fable olur (kullanıcı / yürütücü kararı).
 - **`KONTROL_LISTEM.md` 42 açık madde** (eşik 40, F58.4): P62 uygulaması en az 8 "Telefonda bak" maddesi ekler — önce cihaz turu mu, yoksa P62 için eşik esnetilecek mi (kullanıcı kararı).
-- **§7.3 "beklenen bugün" sütunu hipotez:** PA0 ölçünce tablo güncellenir; S32 / S35 bugün zaten hedefteyse R1 / R2 kasma değil yalnız "boy animasyonu yok" kuralı ihlalidir (iş yine yapılır, gerekçe değişir).
+- **§7.3 "beklenen bugün" sütunu PA0'da ölçüldü (2026-11-14): S32 = 26, S35 = 28 — R1 / R2 gerçek kasma.** Eski not: S32 / S35 bugün zaten hedefteyse R1 / R2 kasma değil yalnız "boy animasyonu yok" kuralı ihlalidir (iş yine yapılır, gerekçe değişir).
 - **Dondurma (K-O1):** P62 kullanıcının sohbette açıkça istediği iş; yeni özellik içermez (yeni ekran / ayar / paket yok).

@@ -1386,6 +1386,13 @@ düzeltme KARAR'dır; gözetimsiz oturumda yalnız rapor + kırmayan sıkılaşt
 | S24 | Soğuk açılış (30 not) | kurulum: ilk kare / kartlara dek / 2 sn | 930 / 4019 / 4031 | taban (mandal) | — |
 | S25 | Görselli 50 not, dpr 2,625, 6 ekran kaydır | çözme boyu sınırsız küçük resim | 0 (2026-11-13, P46; önce 21) | 0 | 84 |
 | S26 | 1280×800 bölünmüş, nottan listeye dön | DashboardScreen / NoteCard kurulumu | 1 / 14 (2026-11-14, P59) | ≤ 1 / ≤ 14 | — |
+| S29 | Ayar alanı açılışı (412×915, `SettingsScreen(initialArea: 'ai')`), 40 kare | ilk kare / sonraki en ağır kare / toplam | 367 / 37 / 488 (2026-11-14, P62 PA0; ilk karede 2 satır) | en ağır kare tabanı aşmaz | P62 PA1 |
+| S30 | Hesap levhası aç → sistem geri (30 not) | `NoteCard` / pano / en ağır kare | 0 / 0 / 341 (2026-11-14, P62 PA0) | 0 / 0 | P62 PA2 |
+| S31 | Bildirim şeridi (iskelet `AppNoticeHost`): ileti, ipucu, boş şeritte klavye 0→300→0 | `NoteCard` / pano / en ağır kare / klavye karesi başına şerit | 0 / 0 / 28 / 10 (2026-11-14, P62 PA0) | 0 / 0 / küçük sabit / 0 | P62 PA5 |
+| S32 | Bekleyen ek şeridi 0 → 2 → 0 | ızgara boyunun değiştiği kare / `NoteCard` | 26 / 0 (2026-11-14, P62 PA0) | 2 / 0 | P62 PA6 |
+| S33 | `swipe_mode=filters`, karttan 6 × 10 dp yana çek (eşik altı) | `NoteCard` / pano / en ağır kare | 0 / 0 / 16 (2026-11-14, P62 PA0) | 0 / 0 / FolderSwipe + etiket | P62 PA7 |
+| S35 | Takvim ajanda, mini ay aç → kapat | ajanda listesi boyunun değiştiği kare | 28 (2026-11-14, P62 PA0) | 2 | P62 PA8 |
+| S36 | 1280×800 ayarlar, `ai` → `sound` alanı | en ağır kare / toplam | 673 / 1875 (2026-11-14, P62 PA0) | en ağır kare ≤ S29'unki | P62 PA1 |
 
 ### F64.1 haritası (2026-11-14, P20 adım 1; `test/editor_rebuild_map_test.dart`, eylem + 3 sn)
 

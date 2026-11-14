@@ -241,5 +241,65 @@
     "bugun": "0 / 0 / 0 / 0 (2026-11-14, K32 A5); düzeltme öncesi 1 / 0 / 0 / 24",
     "hedef": "0 / S12 ile aynı (0) / S12 ile aynı (0) / 0 (S8 × 2)",
     "neden": "K32 A5: (1) editör kökü liste akışının tamamını izliyordu (geri bağlantı çipi) — her kayıt yankısı iki editörü de kuruyordu; kök artık yalnız 'geri bağlantı var mı'yı seçer, çip kendi Consumer'ında. (2) kabuk klavye karelerinde yeniden kurulunca yandaki bölmeye yeni widget örneği veriliyordu — örnek artık SecondNote başına saklanır"
+  },
+  "S29": {
+    "senaryo": "Ayar alanı açılışı: telefon 412×915, SettingsScreen(initialArea: ai) doğrudan pompalanır, 40 kare. ilk_kare = pompa karesi (MaterialApp dahil); kare_kurulum = ilk kareden SONRAKİ en ağır kare (satır yayma kareleri)",
+    "ilk_kare_kurulum": 367,
+    "kare_kurulum": 37,
+    "toplam_kurulum": 488,
+    "bugun": "367 / 37 / 488; ilk karede 2 satır — yayma çalışıyor (2026-11-14, PA0)",
+    "hedef": "en ağır kare tabanı AŞMAZ; toplam en çok grup sarmalayıcıları kadar artar (artış neden e yazılır)",
+    "neden": "P62 PA0 ilk ölçüm (taban, mandal); PA1 satır kılığını değiştirirken yaymayı bozmamalı"
+  },
+  "S30": {
+    "senaryo": "Hesap levhası: telefon ana ekran, 30 not; home-account-avatar a dokun → 30 kare → sistem geri → 30 kare",
+    "kart_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "kare_kurulum": 341,
+    "bugun": "kart 0 / pano 0 / en ağır kare 341 (levhanın kendi kurulumu) (2026-11-14, PA0)",
+    "hedef": "kart 0, pano 0",
+    "neden": "P62 PA0 ilk ölçüm = hedef (kart / pano); en ağır kare taban (mandal), PA2 kılık değişikliğinde aşılmamalı"
+  },
+  "S31": {
+    "senaryo": "Bildirim şeridi (iskelet): telefon ana ekran + AppNoticeHost; ileti göster → 30 kare → 4 sn kendiliğinden kalkış → 30 kare; ipucu göster → iptal edilen dokunuşla kalkış; şerit BOŞKEN alt inset 0 → 300 → 0 (10 adım), adım başına _NoticeLane altında kurulan",
+    "kart_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "kare_kurulum": 28,
+    "klavye_karesi_kurulum": 10,
+    "bugun": "0 / 0 / 28 / 10 (2026-11-14, PA0); klavye karesi > 0: iki şerit viewInsetsOf u dinliyor (R5)",
+    "hedef": "0 / 0 / küçük sabit / 0",
+    "neden": "P62 PA0 ilk ölçüm (iskelet tabanı); klavye karesi hedefin üstünde — PA5 0 a indirir, yükseltilmez"
+  },
+  "S32": {
+    "senaryo": "Kalıcı şerit belirişi: telefon ana ekran, 30 not; pendingUploadsProvider 0 → 2 → 0, her değişimden sonra 30 kare; ızgara kaydırma görünümünün boyunun değiştiği kare sayısı (S9 kalıbı)",
+    "izgara_boy_karesi": 26,
+    "kart_kurulum": 0,
+    "bugun": "26 / 0 (2026-11-14, PA0); _PendingUploadsBar AnimatedSize 200 ms × 2 — ızgara her karede yeniden diziliyor",
+    "hedef": "2 (belir 1 + kalk 1) / 0",
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R1 gerçek dizilim yükü, PA6 2 ye indirir"
+  },
+  "S33": {
+    "senaryo": "Ana ekran çekişi: telefon, 30 not, swipe_mode=filters; 5. karttan 6 × 10 dp sola çek (eşik altı, süzgeç değişmez), bırak, 30 kare",
+    "kart_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "kare_kurulum": 16,
+    "bugun": "0 / 0 / 16 (FolderSwipe, _TipBanner, basılı tutma halkası, AnimatedBuilder 18) (2026-11-14, PA0)",
+    "hedef": "0 / 0 / etiket + FolderSwipe kadar",
+    "neden": "P62 PA0 ilk ölçüm = hedef (taban, mandal); PA7 çekiş hissini değiştirirken aşılmamalı"
+  },
+  "S35": {
+    "senaryo": "Takvim mini ayı aç → kapat: telefon, calendar_view=agenda (S22 düzeneği); calendar-month-toggle a iki kez dokun, her birinden sonra 30 kare; ajanda listesinin boyunun değiştiği kare sayısı",
+    "liste_boy_karesi": 28,
+    "bugun": "28 (2026-11-14, PA0); calendar_screen.dart AnimatedSize — liste her karede yeniden diziliyor",
+    "hedef": "2 (aç 1 + kapa 1)",
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R2 gerçek dizilim yükü, PA8 2 ye indirir"
+  },
+  "S36": {
+    "senaryo": "Geniş ekran ayarlar: 1280×800 SettingsScreen; settings-cat-ai → settings-cat-sound (döşeme önce görünüre kaydırılır, ölçüm dışı), her birinden sonra 40 kare",
+    "kare_kurulum": 673,
+    "toplam_kurulum": 1875,
+    "bugun": "en ağır kare 673 / toplam 1875 (2026-11-14, PA0); ilk kare ai 551 / sound 673, sonraki en ağır 65 / 262",
+    "hedef": "en ağır kare ≤ S29 en ağır karesi (alan değişimi de yayılır)",
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hedefin üstünde — alan değişiminin ilk karesi ağır, PA1 indirir, yükseltilmez"
   }
 }

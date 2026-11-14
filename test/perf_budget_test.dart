@@ -16,6 +16,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notlar/app/app_frame.dart';
@@ -23,6 +24,10 @@ import 'package:notlar/app/note_open_route.dart';
 import 'package:notlar/app/second_note.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/core/tips.dart';
+import 'package:notlar/core/widgets/app_notice.dart';
+import 'package:notlar/features/notes/data/upload_queue.dart'
+    show pendingUploadsProvider;
+import 'package:notlar/features/settings/presentation/settings_screen.dart';
 import 'package:notlar/features/notes/presentation/dashboard_scroll_memory.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/core/utils/firestore_size.dart';
@@ -304,6 +309,9 @@ Future<void> _pumpHome(
   // false: yalnız ilk kare (S24 soğuk açılış).
   bool settle = true,
   double dpr = 1,
+  List<Override> overrides = const [],
+  // Uygulamanın bildirim şeridi ([AppNoticeHost]) Navigator'ın üstünde (S31).
+  bool notices = false,
 }) async {
   // Oturum durağanları (önceki testten kalan kaydırma, ipucu hakkı)
   // ölçümü test sırasına bağlamasın.
@@ -363,6 +371,7 @@ Future<void> _pumpHome(
       attachmentRepositoryProvider.overrideWithValue(null),
       foldersRepositoryProvider.overrideWithValue(null),
       notesStreamProvider.overrideWith((ref) => notes),
+      ...overrides,
     ],
   );
   addTearDown(container.dispose);
@@ -371,6 +380,7 @@ Future<void> _pumpHome(
       container: container,
       child: MaterialApp.router(
         routerConfig: router,
+        builder: notices ? (c, child) => AppNoticeHost(child: child!) : null,
         locale: const Locale('tr'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -423,6 +433,102 @@ Future<_FrameStats> _frames(
     worstAfterFirst: rest.isEmpty ? 0 : rest.reduce(max),
     total: _sum(counter.counts),
   );
+}
+
+/// Takvim ekranı (telefon, 21 etkinlik, 6 Kasım 2026) — S22 ve S35 düzeneği.
+Future<void> _pumpCalendar(WidgetTester tester, String view) async {
+  await initializeDateFormatting('tr');
+  tester.view.physicalSize = const Size(412, 915);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  SharedPreferences.setMockInitialValues({
+    'calendar_pinch_hint_v1': true,
+    'calendar_view': view,
+  });
+  final prefs = await SharedPreferences.getInstance();
+  final events = [
+    for (var d = 0; d < 21; d++)
+      CalendarEvent(
+        id: 'e$d',
+        title: 'Etkinlik $d',
+        start: DateTime(2026, 11, 2 + d, 10),
+        end: DateTime(2026, 11, 2 + d, 11),
+      ),
+  ];
+  await tester.pumpWidget(
+    ProviderScope(
+      retry: (_, _) => null,
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        calendarRepositoryProvider.overrideWithValue(
+          CalendarRepository(FakeFirebaseFirestore(), 'u'),
+        ),
+        eventsStreamProvider.overrideWith((ref) => Stream.value(events)),
+        tasksStreamProvider.overrideWith(
+          (ref) => Stream.value(const <TaskItem>[]),
+        ),
+        calendarReminderNotesProvider.overrideWithValue(const []),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: CalendarScreen(now: DateTime(2026, 11, 6, 12)),
+      ),
+    ),
+  );
+}
+
+/// Ayarlar ekranı (misafir) — S29, S36. Kurulacak ağacı döndürür: S29
+/// açılışı pompanın kendisini sayar.
+Future<Widget> _settingsApp(
+  WidgetTester tester,
+  Size size, {
+  String? area,
+}) async {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  final container = ProviderContainer(
+    retry: (_, _) => null,
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      authRepositoryProvider.overrideWithValue(_NoAuth()),
+      currentUidProvider.overrideWithValue(null),
+      isAnonymousProvider.overrideWithValue(true),
+      notesRepositoryProvider.overrideWithValue(null),
+      foldersRepositoryProvider.overrideWithValue(null),
+    ],
+  );
+  addTearDown(container.dispose);
+  return UncontrolledProviderScope(
+    container: container,
+    child: MaterialApp(
+      locale: const Locale('tr'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: SettingsScreen(initialArea: area),
+    ),
+  );
+}
+
+/// [finder]'ın boyunun değiştiği kare sayısı, [frames] kare (S9 kalıbı).
+Future<int> _resizedFrames(
+  WidgetTester tester,
+  Finder finder, {
+  int frames = 30,
+}) async {
+  var resized = 0;
+  var last = tester.getSize(finder).height;
+  for (var i = 0; i < frames; i++) {
+    await tester.pump(const Duration(milliseconds: 16));
+    final h = tester.getSize(finder).height;
+    if (h != last) resized++;
+    last = h;
+  }
+  return resized;
 }
 
 void main() {
@@ -1138,46 +1244,7 @@ void main() {
 
   // S22: takvim haftalık görünümde bir hafta ileri kaydır.
   testWidgets('S22: takvim hafta kaydırma (telefon)', (tester) async {
-    await initializeDateFormatting('tr');
-    tester.view.physicalSize = const Size(412, 915);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    SharedPreferences.setMockInitialValues({
-      'calendar_pinch_hint_v1': true,
-      'calendar_view': 'week',
-    });
-    final prefs = await SharedPreferences.getInstance();
-    final events = [
-      for (var d = 0; d < 21; d++)
-        CalendarEvent(
-          id: 'e$d',
-          title: 'Etkinlik $d',
-          start: DateTime(2026, 11, 2 + d, 10),
-          end: DateTime(2026, 11, 2 + d, 11),
-        ),
-    ];
-    await tester.pumpWidget(
-      ProviderScope(
-        retry: (_, _) => null,
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-          calendarRepositoryProvider.overrideWithValue(
-            CalendarRepository(FakeFirebaseFirestore(), 'u'),
-          ),
-          eventsStreamProvider.overrideWith((ref) => Stream.value(events)),
-          tasksStreamProvider.overrideWith(
-            (ref) => Stream.value(const <TaskItem>[]),
-          ),
-          calendarReminderNotesProvider.overrideWithValue(const []),
-        ],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          locale: const Locale('tr'),
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: CalendarScreen(now: DateTime(2026, 11, 6, 12)),
-        ),
-      ),
-    );
+    await _pumpCalendar(tester, 'week');
     await tester.pumpAndSettle();
     final before = tester.widget<WeekPage>(find.byType(WeekPage)).weekStart;
     final swipe = await _frames(tester, () async {
@@ -1349,5 +1416,281 @@ void main() {
     expect(seen, isNotEmpty, reason: 'kart küçük resmi kuruldu');
     _expectBudget('S25', {'sinirsiz_cozum': over.length});
     await endEditor(tester);
+  });
+  // ── S29–S36 (P62 plan_tasarim_A §7.3; tabanı PA0) ──────────────────────
+
+  List<Note> notes30() => [
+    for (var i = 0; i < 30; i++)
+      Note(id: 'x$i', type: NoteType.text, title: 'Not $i', body: 'gövde'),
+  ];
+
+  // S29: ayar alanı açılışı — satırlar karelere yayılıyor (_StaggeredRows).
+  testWidgets('S29: ayar alanı açılışı (telefon, ai)', (tester) async {
+    final app = await _settingsApp(tester, const Size(412, 915), area: 'ai');
+    var firstRows = -1;
+    final open = await _frames(tester, () async {
+      await tester.pumpWidget(app);
+      // İlk karede kurulan satır sayısı (yayma: 2).
+      final rows = find.byWidgetPredicate(
+        (w) => w.runtimeType.toString() == '_StaggeredRows',
+      );
+      firstRows = tester
+          .widget<Column>(
+            find.descendant(of: rows, matching: find.byType(Column)).first,
+          )
+          .children
+          .length;
+    }, frames: 40);
+    // ignore: avoid_print
+    print('S29: ilk karede satır $firstRows');
+    _expectBudget('S29', {
+      'ilk_kare_kurulum': open.first,
+      'kare_kurulum': open.worstAfterFirst,
+      'toplam_kurulum': open.total,
+    });
+  });
+
+  // S30: hesap levhası aç → geri: kartlar ve pano kurulmaz.
+  testWidgets('S30: hesap levhası aç → kapat (telefon)', (tester) async {
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(notes30()),
+    );
+    final open = await _frames(tester, () async {
+      await tester.tap(find.byKey(const ValueKey('home-account-avatar')));
+    });
+    expect(find.byType(BottomSheet), findsOneWidget, reason: 'levha açık');
+    final close = await _frames(tester, () async {
+      await tester.binding.handlePopRoute();
+    });
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(BottomSheet), findsNothing, reason: 'levha kapandı');
+    _expectBudget('S30', {
+      'kart_kurulum':
+          (open.counts['NoteCard'] ?? 0) + (close.counts['NoteCard'] ?? 0),
+      'dashboard_kurulum':
+          (open.counts['DashboardScreen'] ?? 0) +
+          (close.counts['DashboardScreen'] ?? 0),
+      'kare_kurulum': max(open.worst, close.worst),
+    });
+    await endEditor(tester);
+  });
+
+  // S31: bildirim şeridi (iskelet) — ileti, ipucu, boş şeritte klavye.
+  testWidgets('S31: bildirim şeridi (telefon, iskelet)', (tester) async {
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(notes30()),
+      notices: true,
+    );
+    const message = AppNoticeData(text: 'Kaydedildi');
+    final shown = await _frames(tester, () async {
+      appNotice.show(message);
+    });
+    expect(find.text('Kaydedildi'), findsOneWidget);
+    // Kendiliğinden kalkış (4 sn).
+    final gone = await _frames(tester, () async {
+      await tester.pump(message.duration);
+    });
+    expect(appNotice.current, isNull, reason: 'ileti kalktı');
+    final tip = await _frames(tester, () async {
+      appNotice.show(
+        const AppNoticeData(text: 'İpucu', kind: AppNoticeKind.tip),
+      );
+    });
+    expect(find.text('İpucu'), findsOneWidget);
+    // Dokunuşla kalkış: iptal edilen dokunuş (alttaki karta dokunmasın).
+    final touched = await _frames(tester, () async {
+      final g = await tester.startGesture(const Offset(200, 450));
+      await g.cancel();
+    });
+    expect(appNotice.current, isNull, reason: 'ipucu dokunuşla kalktı');
+    final all = [shown, gone, tip, touched];
+    // Şerit BOŞKEN klavye 0 → 300 → 0 (10 adım): adım başına şeritten
+    // (_NoticeLane ve altı) kurulan widget, en kötü adım.
+    var laneWorst = 0;
+    var lane = 0;
+    debugOnRebuildDirtyWidget = (e, _) {
+      var inLane = e.widget.runtimeType.toString() == '_NoticeLane';
+      if (!inLane) {
+        e.visitAncestorElements((a) {
+          inLane = a.widget.runtimeType.toString() == '_NoticeLane';
+          return !inLane;
+        });
+      }
+      if (inLane) lane++;
+    };
+    try {
+      for (final b in <double>[60, 120, 180, 240, 300, 240, 180, 120, 60, 0]) {
+        lane = 0;
+        tester.view.viewInsets = FakeViewPadding(bottom: b);
+        await tester.pump(const Duration(milliseconds: 16));
+        laneWorst = max(laneWorst, lane);
+      }
+    } finally {
+      debugOnRebuildDirtyWidget = null;
+    }
+    _expectBudget('S31', {
+      'kart_kurulum': all.fold(0, (n, f) => n + (f.counts['NoteCard'] ?? 0)),
+      'dashboard_kurulum': all.fold(
+        0,
+        (n, f) => n + (f.counts['DashboardScreen'] ?? 0),
+      ),
+      'kare_kurulum': all.map((f) => f.worst).reduce(max),
+      'klavye_karesi_kurulum': laneWorst,
+    });
+    await endEditor(tester);
+  });
+
+  // S32: bekleyen ek şeridi belirip kalkarken ızgaranın boyu kaç karede
+  // değişiyor (TEK ADIM hedefi, kasma listesi md. 6).
+  testWidgets('S32: kalıcı şerit belirişi (telefon)', (tester) async {
+    final pending = ValueNotifier(0);
+    addTearDown(pending.dispose);
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(notes30()),
+      overrides: [
+        pendingUploadsProvider.overrideWith((ref) {
+          void changed() => ref.invalidateSelf();
+          pending.addListener(changed);
+          ref.onDispose(() => pending.removeListener(changed));
+          return (pending: pending.value, failed: 0, needsDrive: false);
+        }),
+      ],
+    );
+    final grid = find
+        .ancestor(
+          of: find.byType(NoteCard).first,
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    var resized = 0;
+    final c = await _count(() async {
+      pending.value = 2;
+      resized += await _resizedFrames(tester, grid);
+      expect(
+        find.byIcon(Icons.cloud_upload_outlined),
+        findsOneWidget,
+        reason: 'şerit göründü',
+      );
+      pending.value = 0;
+      resized += await _resizedFrames(tester, grid);
+    });
+    _expectBudget('S32', {
+      'izgara_boy_karesi': resized,
+      'kart_kurulum': c['NoteCard'] ?? 0,
+    });
+    await endEditor(tester);
+  });
+
+  // S33: ana ekranda karttan eşik altı yana çekiş — süzgeç değişmez.
+  testWidgets('S33: ana ekran yana çekiş, eşik altı (telefon)', (tester) async {
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(notes30()),
+      prefsValues: {'swipe_mode': 'filters'},
+    );
+    List<String> ids() => [
+      for (final c in tester.widgetList<NoteCard>(find.byType(NoteCard)))
+        c.note.id,
+    ];
+    final top = ids();
+    final counter = BuildCounter()..start();
+    var worst = 0;
+    var last = 0;
+    void frame() {
+      final now = _sum(counter.counts);
+      worst = max(worst, now - last);
+      last = now;
+    }
+
+    try {
+      final g = await tester.startGesture(
+        tester.getCenter(find.byType(NoteCard).at(4)),
+      );
+      for (var i = 0; i < 6; i++) {
+        await g.moveBy(const Offset(-10, 0));
+        await tester.pump(const Duration(milliseconds: 16));
+        frame();
+      }
+      await g.up();
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        frame();
+      }
+    } finally {
+      counter.stop();
+    }
+    await tester.pump(const Duration(seconds: 1));
+    expect(ids(), top, reason: 'eşik altı: süzgeç değişmedi');
+    _expectBudget('S33', {
+      'kart_kurulum': counter.of('NoteCard'),
+      'dashboard_kurulum': counter.of('DashboardScreen'),
+      'kare_kurulum': worst,
+    });
+    await endEditor(tester);
+  });
+
+  // S35: takvim ajandasında mini ay aç → kapat; ajanda listesinin boyu
+  // kaç karede değişiyor (TEK ADIM hedefi).
+  testWidgets('S35: mini ay aç → kapat (telefon, ajanda)', (tester) async {
+    await _pumpCalendar(tester, 'agenda');
+    await tester.pumpAndSettle();
+    // Ay kapalıyken son kaydırma görünümü ajanda listesi (_AgendaList);
+    // elemanı tutulur (ay açılınca önüne başka kaydırma görünümleri girer).
+    final listElement = find.byType(Scrollable).last.evaluate().single;
+    final agenda = find.byElementPredicate((e) => e == listElement);
+    final toggle = find.byKey(const ValueKey('calendar-month-toggle'));
+    var resized = 0;
+    final c = await _count(() async {
+      await tester.tap(toggle);
+      resized += await _resizedFrames(tester, agenda);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget, reason: 'açık');
+      await tester.tap(toggle);
+      resized += await _resizedFrames(tester, agenda);
+      await tester.pumpAndSettle();
+    });
+    expect(
+      find.byIcon(Icons.arrow_drop_down),
+      findsOneWidget,
+      reason: 'kapalı',
+    );
+    // ignore: avoid_print
+    print('S35: toplam kurulum ${_sum(c)}');
+    _expectBudget('S35', {'liste_boy_karesi': resized});
+  });
+
+  // S36: geniş ekranda ayar alanları arasında geçiş.
+  testWidgets('S36: geniş ekran ayar alanı geçişi (1280×800)', (tester) async {
+    await tester.pumpWidget(await _settingsApp(tester, const Size(1280, 800)));
+    await tester.pump(const Duration(seconds: 1));
+    // Kategori listesi 800 dp'ye sığmıyor: döşeme önce görünüre kaydırılır
+    // (ölçüm dışında).
+    Future<_FrameStats> select(String id) async {
+      final tile = find.byKey(ValueKey('settings-cat-$id'));
+      await tester.ensureVisible(tile);
+      await tester.pump(const Duration(seconds: 1));
+      final f = await _frames(tester, () => tester.tap(tile), frames: 40);
+      expect(find.byKey(ValueKey('settings-area-$id')), findsOneWidget);
+      return f;
+    }
+
+    final ai = await select('ai');
+    final sound = await select('sound');
+    // ignore: avoid_print
+    print(
+      'S36: ilk kare ${ai.first} / ${sound.first}, sonraki en ağır '
+      '${ai.worstAfterFirst} / ${sound.worstAfterFirst}',
+    );
+    _expectBudget('S36', {
+      'kare_kurulum': max(ai.worst, sound.worst),
+      'toplam_kurulum': ai.total + sound.total,
+    });
   });
 }
