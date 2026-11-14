@@ -1413,6 +1413,13 @@ class ItemsEditorState extends State<ItemsEditor>
     return ItemDivider.parse(item.divider)?.kind ?? '';
   }
 
+  /// Maddenin TAM çizgi biçimi (tür + renk + kalınlık; P63 PBT — tepsinin
+  /// seçili hücresi rengini/kalınlığını da göstersin). Çizgi yoksa null.
+  ItemDivider? dividerOf(String id) {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    return item == null ? null : ItemDivider.parse(item.divider);
+  }
+
   /// Biçim panelinin alt çizgi sırası (bkz. [_setDivider]).
   void setDividerOf(String id, String kind) {
     final item = _items.where((i) => i.id == id).firstOrNull;
