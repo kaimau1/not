@@ -287,6 +287,28 @@ class _SplitShellState extends ConsumerState<SplitShell>
   /// Yandaki not ayracı sürüklenirken geçici pay (bkz. [_dragWidth]).
   double? _dragFraction;
 
+  /// Yandaki bölmenin widget'ı AYNI örnek kalır: kabuk klavye karelerinde
+  /// (dış Scaffold boyu) yeniden kurulduğunda yeni örnek yandaki editörü
+  /// her karede kuruyordu (S27 klavye: 24 gövde kurulumu → 0).
+  SecondNote? _paneFor;
+  Widget? _pane;
+
+  Widget _secondPane(SecondNote second) {
+    if (!identical(second, _paneFor)) {
+      _paneFor = second;
+      _pane = SecondNotePane(
+        close: ref.read(secondNoteProvider.notifier).close,
+        child: NoteEditorScreen(
+          key: ValueKey('note-${second.id}'),
+          noteId: second.id,
+          ownerId: second.ownerId,
+          readOnly: second.readOnly,
+        ),
+      );
+    }
+    return _pane!;
+  }
+
   /// Son açık notun kimliği: not kapanınca liste o karta döner.
   String? _lastNoteId;
 
@@ -664,15 +686,7 @@ class _SplitShellState extends ConsumerState<SplitShell>
                   offstage: !showSecond,
                   child: second == null
                       ? const SizedBox.shrink()
-                      : SecondNotePane(
-                          close: ref.read(secondNoteProvider.notifier).close,
-                          child: NoteEditorScreen(
-                            key: ValueKey('note-${second.id}'),
-                            noteId: second.id,
-                            ownerId: second.ownerId,
-                            readOnly: second.readOnly,
-                          ),
-                        ),
+                      : _secondPane(second),
                 ),
               ),
             ],

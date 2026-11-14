@@ -16,8 +16,15 @@ Plan: `docs/plan_K32_K34.md` §K32 (A0–A7). Telefon/adb KULLANILMADI (P60 tele
 ## Bütçe (ikinci not YOKKEN değişmedi)
 S12 {0,0,1,1} · S12b {0,0,2} · S26 {1,14}.
 
+- A4 kart menüsü "Yanda aç" (canOpenSide = SplitScope.twoNotesFit ∧ not ≠ birincil), pushNote aynı-not kapatır (1bdb8cfa).
+- A5 S27 ham: önce {yandaki_kok 1, pano 0, kart 0, klavye_govde 24} → sonra {0,0,0,0}.
+  Kök neden 1: editör kökü `ref.watch(notesStreamProvider)` (geri bağlantı çipi) — her liste yayını
+  editörü kuruyordu (telefonda da birincil için geçerliydi); şimdi select(bool) + Consumer.
+  Kök neden 2: kabuk klavye karelerinde yeniden kuruluyor (dış Scaffold boyu), yandaki bölmeye yeni
+  widget örneği → yandaki editör her kare; örnek SecondNote başına saklanır (`_secondPane`).
+
 ## Sıradaki
-A4 menü "Yanda aç" + router aynı-not · A5 S27 · A6 kenar · A7 kapanış.
+A6 kenar durumlar · A7 kapanış.
 
 ## Test
 `flutter test test/second_note_test.dart test/fullscreen_pull_test.dart test/split_layout_rules_test.dart --reporter failures-only`

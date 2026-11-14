@@ -3458,14 +3458,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // `SizedBox.shrink` çiziyordu ama listede durduğu için şerit hiç boş
       // sayılmıyor, etiketler üst çubuğa taşındıktan sonra başlığın altında
       // 36 dp'lik boş bir bant kalıyordu.
-      if (backlinksTo(
-        note.id,
-        ref.watch(notesStreamProvider).value ?? const <Note>[],
-      ).isNotEmpty)
-        BacklinksChip(
-          noteId: note.id,
-          notes: ref.watch(notesStreamProvider).value ?? const <Note>[],
-          labelStyle: chipLabelStyle,
+      // KÖK KURULUM YOK (K32 S27): kök yalnız "geri bağlantı var mı"yı
+      // dinler; liste akışının her yayını (her kayıt yankısı, yandaki notta
+      // yazmak) bütün editörü yeniden kuruyordu. Sayı/başlıklar çipte.
+      if (ref.watch(
+        notesStreamProvider.select(
+          (v) => backlinksTo(note.id, v.value ?? const <Note>[]).isNotEmpty,
+        ),
+      ))
+        Consumer(
+          builder: (context, ref, _) => BacklinksChip(
+            noteId: note.id,
+            notes: ref.watch(notesStreamProvider).value ?? const <Note>[],
+            labelStyle: chipLabelStyle,
+          ),
         ),
       // Klasör çipi yalnız notun klasörü VARSA; seçmek "+" menüsünden.
       if (noteFolder != null)
