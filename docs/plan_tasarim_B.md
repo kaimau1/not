@@ -381,3 +381,191 @@ karta dokun".** Bütçe: harf başına kurulan `TemplatePreviewCard` ≤ o harft
 
 Cihaz A/B: **hayır** (editör/klavye/çubuk/liste/geçiş değil); `ab_hepsi.py`'ye "şablon levhası aç"
 evresi eklenir (hız sözleşmesi tedbir 4), yürütücü `[apk]` öncesi tam ölçümde görür.
+
+---
+
+## 3. Kalem seti görünümü
+
+### 3.1 Mevcut durum (kanıt)
+
+Tek bileşen: `lib/features/notes/presentation/editor/pen_tray.dart` (1528 satır, `PenTray`), kalem
+resimleri `pen_icons.dart` (`PenToolPainter`), araç hafızası `viewers/ink_tools.dart`
+(`InkToolMemory`, `InkPreset`), gerçek çizgi boyaması `viewers/ink_stroke_paint.dart`
+(`paintInkStroke`, `:21`), ayar levhası `viewers/ink_layer.dart:2525` (`InkSettingsSheet`).
+Üç yerleşim, 9 çağrı yeri:
+
+| Yerleşim | Kurucu | Nerede | Kanıt |
+|---|---|---|---|
+| Kapsül + hap (yüzen) | `_buildDock` `:371-707` | not sayfası kalem kipi | `note_editor_screen.dart:5631` (`dock: true`) |
+| Sütun (tablet) | `_buildRail` `:309-355` | çizim ekranı, PDF bölmesi | `drawing_screen.dart:304`, `pdf_note_pane.dart:452` |
+| Alt şerit | `_build` `:930-984` | çizim ekranı (telefon), PDF/slayt/görsel | `drawing_screen.dart:342`, `pdf_viewer_screen.dart:464`, `slide_viewer_screen.dart:347`, `image_viewer.dart:735`, `pdf_note_pane.dart:459`, `slide_note_pane.dart:556` |
+
+**Bulgular:**
+
+1. **Zıplayan eğri üç yerde** (genel yapılmayacak): hap ↔ kapsül `Curves.easeOutBack` (`:677`),
+   kapsülde kalemin kalkışı (`_DockTool`, `:1030`), şeritte kalemin kalkışı (`_TrayTool`, `:1165`).
+2. **Boy/yerleşim animasyonu:** ayar paneli `AnimatedSize` ile açılıyor — kapsülde (`:644-657`) ve alt
+   şeritte (`:948-955`; şerit belgeyle aynı Column'da olduğu ekranlarda belge her karede yeniden
+   dizilir — *hipotez: çağrı yerlerinin Column'u tek tek doğrulanmadı, PB3 ilk iş olarak bakar*).
+   `_DockTool` kalemi `AnimatedPositioned` ile kaldırıyor (`:1028-1031`, yerleşim animasyonu); renk
+   noktası seçilince 28 → 32 büyüyor (`:1240-1243`), kalınlık noktası `AnimatedContainer` ile
+   boy değiştiriyor (`:1376-1379`).
+3. **Bulanık gölge + sabit siyah:** kapsül yüzeyi iki katlı bulanık gölge (`:392-403`, bulanıklık 20
+   ve 3, `Colors.black`), renk düğmesi (`:842-848`, bulanıklık 6).
+4. **Belirteç yok:** süreler elle 240/160/300/320/200/180/120 ms (`:627, 676, 1029, 1164, 1184, 832,
+   1083, 1241, 1377`), köşe 24 (`:618`), çizgi 0.8 × alfa 0.5 (`:384-386`), dolgu/ölçülerin tamamı
+   elle. "Hareketi azalt" yalnız kapsülde okunuyor (`:378`); `_TrayTool`, `_DockTool`, `_Swatch`,
+   `_colorDot` okumuyor.
+5. **Önizleme çizgiyi göstermiyor:** kalınlık önizlemesi bir NOKTA (`:1371-1388`); sabitlenen kalem
+   çipi de nokta (`_PresetChip`, `:1452-1528` — tür yalnız yuvarlak/kare ipucundan anlaşılır).
+   Fosforlunun saydamlığı, dolma kalemin incelip kalınlaşması görülmüyor; oysa tek çizim yolu
+   `paintInkStroke` hazır ve hiçbir önizleme onu kullanmıyor.
+6. **Ayar paneli üç kılık** (`_Options`, `:1214-1448`): kalemde etiketsiz iki kaydırıcı (kalınlıkta
+   yalnız sayı `:1397-1403`, şeffaflıkta damla simgesi `:1411-1421`), şekilde `ChoiceChip` yığını
+   (`:1281-1301`), silgide metin düğmesi + `SwitchListTile` (`:1331-1347`). Renk noktası iki ayrı
+   bileşen: panelde `dot()` (`:1229-1255`), kapsülde `_Swatch` (`:1063-1126`), sütunda `_colorDot`
+   (`:825-852`).
+7. **Sabit kalemler keşfedilmiyor:** "Kalemi sabitle" yalnız ⋯ menüsünde (`:748-756`), kaldırmak
+   yalnız uzun basış (`:1488`); satır ayrı yüzen hap (`:658-670`).
+8. **Ayar levhası ortak levha değil:** `showInkSettings` telefonda çıplak `showModalBottomSheet`
+   (`:55-62`) — tutamak/üst güvenli alan düzeltmesi (`showAppSheet`, 2026-11-14) buraya ulaşmıyor.
+9. Tepsideki 7 araç düzenlenemez (`PenTrayTool.values` `:324, 589, 961`) — §1.1 envanteri.
+
+**Korunacak eski istekler (`istek_tara.py pen_tray.dart`, 11 kayıt):** araçlar simge değil TEPSİDE
+DURAN KALEMLER, seçili kalem kalkar, ucu çizilen renkte (`:25`, 2026-10-28) · yazarken küçük HAP,
+dokununca tek satır KAPSÜL, panel kapsülü yükseltmez (`:357-370`, 2026-11-02/07) · hap 48 dp, ayraç,
+48 dp hızlı silgi (`:421, :462`, 2026-11-08) · tablette SOLDA sütun (`:94`, 2026-11-02) · çizim
+başlayınca panel/kapsül kapanır (`:158`) · panelin dışına dokununca kapanır (`:282`, 2026-11-09) ·
+şeffaflık panelin içinde (`:1406`) · sabit kalem en çok 5 (`ink_tools.dart:217`) · tablette ayarlar
+açılır pencere (`:38`). **Genel yapılmayacak "kalem tepsisini değiştirmek":** kullanıcı 2026-11-14'te
+kalem setinin GÖRÜNÜMÜNÜ açıkça istedi → kapsam yalnız görünüş ve hareket; yerleşim (üç kip), araç
+sırası, jestler, `pen-tray-*`/`pen-dock-*`/`pen-preset-*` anahtarları ve yukarıdaki dokuz istek
+DEĞİŞMEZ.
+
+### 3.2 Hedef
+
+**Yüzey (üç kip aynı dil):** kapsül, hap, sabit kalem hapı ve ayar paneli
+`AppSurface.floating(theme, radius: …)` — `surfaceContainerHigh`, `hairline` çizgi, 2 dp BULANIKSIZ
+alt gölge. Kapsül/hap köşesi `AppRadius.pill`, panel `AppRadius.xl`. Sütun ve alt şerit
+`surfaceContainerLow` + sayfa tarafında 1 dp `hairline` (bugünkü `Divider` `:942-946` ve sütunun
+çıplak kenarı yerine); gölgesiz.
+
+**Kalem kalkışı (tek kalıp, iki yerde):** `_DockTool` ve `_TrayTool` aynı `AnimatedSlide`'ı kullanır
+(yalnız boyama — `AnimatedPositioned` kalkar); süre `AppMotion.of(context, AppMotion.selection)`, eğri
+`AppMotion.curveOf(context, AppMotion.emphasized)` (TAŞMAZ). Ölçüler aynı kalır: kapsülde 44 × 52
+kırpma içinde 31 × 68 kalem, seçili 12 dp yukarıda (bugünkü `top` 15 → 3 = `Offset(0, 15/68)` →
+`Offset(0, 3/68)`); şeritte `Offset(0, 0.24)` → `Offset(0, 0.02)`. Seçili aracın altındaki 22 × 4
+renk çizgisi (`:1181-1201`) kalır, `AnimatedOpacity` `AppMotion.quick`.
+
+**Hap ↔ kapsül:** `AnimatedSwitcher` kalır (sayfanın ÜSTÜNDE yüzen katman, sayfa yerleşimine
+girmiyor); giriş `AppMotion.short` + `emphasized`, çıkış `AppMotion.exitOf(short)` + `exit`; ölçek
+0.85 → 1 yerine 0.92 → 1 (alt ortadan) + solma. Sabit kalem hapı aynı geçişle belirir (bugün
+geçişsiz, `:658`).
+
+**Ayar paneli açılışı:** `AnimatedSize` iki yerde de kalkar. Panel yerini TEK ADIMDA alır; içerik
+`FadeTransition` + `FractionalTranslation(Offset(0, 0.08) → Offset.zero)`, `AppMotion.short` /
+`enter`; kapanışta `exitOf(short)` / `exit`, bitince tek adımda kalkar (durum `_panel` yanında
+`AnimationController _panelAnim`; ağaç şekli sabit: panel yuvası hep kurulu, kapalıyken
+`SizedBox.shrink`).
+
+**Gerçek çizgi önizlemesi — `PenStrokePreview`** (iskelet §6.3): nokta yerine S biçimli kısa bir
+çizgi, `paintInkStroke` ile — ekranda ne çıkacaksa o (fosforlu saydam ve düz uçlu, dolma kalem
+incelip kalınlaşır, keçeli dolu).
+- Panelde: renk sırasının ÜSTÜNDE tam genişlik, yükseklik 44, zemin `AppTokens.card` (kâğıt), köşe
+  `AppRadius.m`, çizgi `hairline`. Sağ ucunda iğne düğmesi (`ValueKey('pen-panel-pin')`,
+  `Icons.push_pin_outlined` ↔ `Icons.push_pin`, `AppIconSize.s`): seçili kalem sabit değilse sabitler
+  (`_pinCurrent`), sabitse kaldırır — sabitleme artık görünür yerde. ⋯ menüsündeki madde
+  (`pen-tray-pin`) kalır; kalem zaten sabitse yazısı "Sabitlemeyi kaldır" olur (yeni l10n anahtarı
+  `inkUnpinPen`).
+- Sabit kalem çipinde (`_PresetChip`): 40 × 40 dokunma alanı, 30 × 30 daire içinde
+  `PenStrokePreview(compact: true)`; seçili = 2 dp `primary` halka. Uzun basışla kaldırma kalır.
+- Kalınlık satırının başındaki nokta kalkar (önizleme onu karşılar); yerine `Icons.line_weight_rounded`.
+
+**Panel düzeni (`_Options`) — tek kılık:** dolgu `AppSpace.l` / `AppSpace.m`; bölümler arası
+`AppSpace.m`.
+
+```
+┌ önizleme (PenStrokePreview 44) ───────────────────────────── [📌] ┐
+│ ● ● ● ● ● ● ●  ·son renkler·  (◎ tümü)        ← tek renk noktası: _Swatch(size 28)
+│ ≡  ──────●──────────────  12                   ← kalınlık: simge 40 · Slider · değer (AppText.meta, tabular)
+│ 💧 ────────●────────────  %80                  ← şeffaflık: aynı satır kalıbı (ValueKey('pen-tray-opacity') korunur)
+└────────────────────────────────────────────────────────────────────┘
+```
+
+- Renk noktası TEK bileşen `_Swatch`: boy sabit (28); seçili = arada 2 dp boşluklu 2 dp `primary`
+  halka, halka rengi `AppMotion.selection` ile solar (boy değişmez). `dot()` ve `_colorDot` silinir;
+  sütun/şeritteki renk düğmesi `_Swatch(size: 26, selected: _panel)`.
+- Şekil aracı: çipler `radioChip(ChoiceChip)` kalır, simge `AppIconSize.s`, aralık `AppSpace.s`.
+- Silgi: "Tümünü temizle" (`TextButton.icon`, `error` rengi DEĞİL — geri alınabilir) + "Kısmi silgi"
+  anahtarı; satır yüksekliği kalem satırlarıyla aynı (48).
+- Kement: seçim yokken tek satır ipucu (`AppText.meta`), varken iki metin düğmesi (bugünkü).
+- Geniş ekrandaki gökkuşağı halkası (`FixedColors.rainbowSweep`, `:549`) KALIR — uygulamanın "özel
+  renk" simgesi, zemin değil.
+
+**Hap:** yerleşim aynı (48 dp, yatık kalem 28, renk noktası 16, ayraç, hızlı silgi 48, ok). Yalnız
+belirteçler: dolgu `AppSpace.l`/`AppSpace.s`, ayraç `outlineVariant` × `AppAlpha.muted`, simge
+`AppIconSize.m`.
+
+**Ayar levhası:** `showInkSettings` telefonda `showAppSheet`'e geçer (`isScrollControlled: true`;
+`showDragHandle` argümanı yazılmaz — ortak levha tutamağı kendi çizer). Tablette açılır pencere
+kalır. Levhanın İÇERİĞİ (`InkSettingsSheet`, `ink_layer.dart:2525-2720`) bu planın kapsamı DIŞI
+(ayar satırı kılığı P62'nin; P62 birleşince ayrı küçük iş — §7 "sonraya").
+
+**3.2.1 Tepside hangi kalemler dursun (§1.1 envanteri "YAP"):** `UiItem.penTool(t.name)` gizliyse o
+araç üç kipte de çizilmez. `pen` (tükenmez) ve `eraser` GİZLENEMEZ (hub'da karo çıkmaz — hapın hızlı
+silgisi ve "son kalem" dönüşü bunlara bağlı, `:462-473`). O an SEÇİLİ araç gizli olsa da çizilir
+(silgi/şekil başka yoldan seçilebilir). Okuma tek yerde: `_PenTrayState`'te
+`List<PenTrayTool> get _tools` — `Personalize.current.shows(...)` süzgeci; `build`'deki
+`ListenableBuilder` birleşimine `Personalize.listenable` eklenir (kök `setState` yok). Kimlik
+üreteci §1.2'de; hub `pen` yüzeyi PB2'nin, tepsi tarafı PB3'ün (PB3, `UiItem.penTool` yoksa
+süzgeci yazmaz — bağımlılık §7).
+
+### 3.3 Durumlar
+
+Hap · kapsül · kapsül + panel · sütun · alt şerit (`controls` açık/kapalı) · 7 aracın her biri seçili
+· silgi seçili (uç ve alt çizgi `primary`) · kement seçimli/seçimsiz · sabit kalem 0 / 1 / 5 · dar
+(< 640: tek renk düğmesi, yinele ⋯'de) / geniş (4 hızlı renk + gökkuşağı) · koyu tema (kalem gövdesi
+`dark: true`; beyaz mürekkep) · açık zeminde beyaz mürekkep (nokta kenarı `onSurface` × 0.18 korunur,
+önizleme kâğıdında `hairline` içinde görünür) · fosforlu (şeffaflık kaydırıcısı kapalı, %40) · dolma
+kalem (şeffaflık kapalı) · hareketi azalt (kalkış ve geçişler ≤ 150 ms, kaymasız) · yazı 1.3 (panel
+değer metni taşmaz: genişlik 36, `FittedBox` yok — tabular rakam) · gizlenmiş araçlı tepsi (5 kalem).
+
+### 3.4 Kabul ölçütleri
+
+- [ ] `pen_tray.dart`'ta `easeOutBack` 0, `AnimatedSize` 0, `AnimatedPositioned` 0, `blurRadius` 0,
+      `Colors.black` 0, elle `Duration(milliseconds:` 0 (grep ile).
+- [ ] Panelde ve sabit kalem çipinde önizleme `paintInkStroke` ile çizilir
+      (`test/pen_stroke_preview_test.dart`, iskelette; fosforluda boyanan renk alfa 0x66).
+- [ ] Var olan testler değişmeden yeşil: `pen_tray_controls_test`, `pen_single_tool_test`,
+      `pen_icons_test`, `editor_pen_tablet_test`, `handwriting_pen_test` (anahtarlar: `pen-tray-<araç>`,
+      `pen-tray-color`, `pen-tray-undo`, `pen-tray-more`, `pen-tray-pin`, `pen-tray-settings`,
+      `pen-tray-opacity`, `pen-dock-peek`, `pen-dock-open/closed`, `pen-dock-quick-eraser`,
+      `pen-preset-<kod>`, `page-pen-dock`).
+- [ ] `pen-panel-pin` sabitler/kaldırır; 6. kalem en eskiyi düşürür (bugünkü kural, yeni widget testi).
+- [ ] Gizlenen araç üç kipte de yok; seçili araç gizlense de görünür; `pen`/`eraser` gizlenemez
+      (`test/pen_tray_tools_pref_test.dart` yeni).
+- [ ] Tur: `kalem-hap`, `kalem-kapsul`, `kalem-panel`, `kalem-sekil-panel`, `kalem-sutun` (tablet),
+      `cizim-serit` (açık + koyu).
+
+### 3.5 Kasma riski + bütçe (kasma-kontrol 8 madde)
+
+1–2: not alanı/satır yok. 3: panel/kapsül durumu `_PenTrayState`'te kalır; editör kökü `setState`
+almaz (bugün de öyle — tepsi `InkController` + `toolRev` dinler, `:291-303`). 4: panel yuvası ve
+sabit kalem hapı koşulsuz kurulu (`SizedBox.shrink`), `_tools` süzgeci yalnız düğme listesini
+değiştirir (metin alanı yok). 5: önizleme için "aynı (tür, renk, kalınlık, şeffaflık) → aynı
+`InkStroke` örneği" testi (geometri önbelleği `_geom` örneğe bağlı, `ink_stroke_paint.dart:85`).
+6: `AnimatedSize` kalkıyor (yukarıda). 7: klavye yok. 8: aşağıda.
+
+Önizleme boyaması: `PenStrokePreview` kendi `RepaintBoundary`'sinde; kaydırıcı sürüklenirken yalnız
+o katman boyanır. Kalem resimleri (`PenToolPainter`) kalkış sırasında yeniden BOYANMAZ: `AnimatedSlide`
+çocuğu sabit, `shouldRepaint` yalnız `selected/ink/dark` değişince (doğrula: `pen_icons.dart`).
+
+**S42 (yeni) — "Kalem kipi (telefon, 3 sayfalık not): kapsülü aç → 3 araç değiştir → paneli aç →
+kalınlığı 5 adım sürükle → renk seç → 1 çizgi (kapsül kapanır)".** Ölç: `NoteEditorScreen`,
+`NotePageCanvas` kurulumu ve `PenTray` kurulumu. Bütçe: editör kökü 0, sayfa tuvali 0; `PenTray`
+kurulumu ≤ etkileşim sayısı + 2 (araç 3 + panel 1 + kaydırıcı 5 + renk 1 + kapanış 1 = 11 → ≤ 13).
+Kalıp: S5 (`perf_budget_test.dart:520-554`, `_stylusDevice` + `pumpEditor`) ve S9 (`:598`).
+
+Cihaz A/B: **evet** (not sayfasının üstünde yüzen katman; kalemle yazma gecikmesi en hassas yüzey).
+`ab_hepsi.py`'de kalem evresi yoksa "kalem kipi aç → 10 çizgi → kapsül aç/kapa ×3" evresi eklenir
+(*hipotez: evre listesi okunmadı; PB3 `tool/perf/ab_hepsi.py:155` adım tablosuna bakar*).
