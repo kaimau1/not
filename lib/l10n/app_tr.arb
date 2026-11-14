@@ -3917,6 +3917,7 @@
   "listPaneRightInfo": "Bölünmüş görünümde (tablet, geniş pencere) liste notun sağında durur",
   "listPaneMoveRight": "Listeyi sağa al",
   "noteOpenSide": "Yanda aç",
+  "micBusySideNote": "Mikrofon yandaki notta kullanılıyor",
   "noteCloseSide": "Yandaki notu kapat",
   "listPaneMoveLeft": "Listeyi sola al",
   "quickRowEditTitle": "Hızlı menü (yazarken üstte)",

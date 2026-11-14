@@ -45,6 +45,8 @@ final _notes = [
     ),
 ];
 
+late FakeFirebaseFirestore _db;
+
 Future<(ProviderContainer, GoRouter)> _pump(
   WidgetTester tester, {
   Size size = const Size(1024, 640),
@@ -55,7 +57,7 @@ Future<(ProviderContainer, GoRouter)> _pump(
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
-  final db = FakeFirebaseFirestore();
+  final db = _db = FakeFirebaseFirestore();
   final col = db.collection('users').doc('u').collection('notes');
   for (final n in _notes) {
     await col.doc(n.id).set(n.toMap());
@@ -245,6 +247,22 @@ void main() {
     container.read(secondNoteProvider.notifier).open(const SecondNote('b'));
     await _settle(tester);
     expect(_editorIds(tester), ['a']);
+    await _end(tester);
+  });
+
+  // A6: yandaki not BAŞKA yerden çöpe atılırsa (kart menüsü, ikinci cihaz)
+  // yalnız bölme kapanır; birincil yerinde.
+  testWidgets('(f) yandaki not silinince yalnız bölme kapanır', (tester) async {
+    final (container, router) = await _pump(tester);
+    container.read(secondNoteProvider.notifier).open(const SecondNote('b'));
+    await _settle(tester);
+    final primary = tester.state(find.byKey(const ValueKey('note-a')));
+    NotesRepository(_db, 'u').softDelete('b');
+    await _settle(tester);
+    expect(_editorIds(tester), ['a']);
+    expect(container.read(secondNoteProvider), isNull);
+    expect(router.state.uri.path, '/note/a');
+    expect(tester.state(find.byKey(const ValueKey('note-a'))), same(primary));
     await _end(tester);
   });
 }

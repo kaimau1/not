@@ -15044,6 +15044,12 @@ abstract class AppLocalizations {
   /// **'Yanda aç'**
   String get noteOpenSide;
 
+  /// No description provided for @micBusySideNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofon yandaki notta kullanılıyor'**
+  String get micBusySideNote;
+
   /// No description provided for @noteCloseSide.
   ///
   /// In tr, this message translates to:

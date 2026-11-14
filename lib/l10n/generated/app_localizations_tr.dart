@@ -8486,6 +8486,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noteOpenSide => 'Yanda aç';
 
   @override
+  String get micBusySideNote => 'Mikrofon yandaki notta kullanılıyor';
+
+  @override
   String get noteCloseSide => 'Yandaki notu kapat';
 
   @override

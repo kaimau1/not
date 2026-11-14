@@ -1262,6 +1262,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Arka plandaki boş not temizliği bu notu ATLASIN (bkz. cleanupEmptyNotes):
     // kullanıcı yazmaya yeni başladığında doküman kısa bir süre boş görünür.
     openEditorNoteIds.add(widget.noteId);
+    _live.add(this);
     // Listede açık not vurgusu (geniş ekran). Ağaç kurulurken sağlayıcı
     // yazılamaz → mikro görev; dispose'da `ref` yok → notifier saklanır.
     final openNotes = _openNotes = ref.read(openNoteIdsProvider.notifier);
@@ -1720,6 +1721,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
     openEditorNoteIds.remove(widget.noteId);
+    _live.remove(this);
     final openNotes = _openNotes;
     final openId = widget.noteId;
     unawaited(Future.microtask(() => openNotes.close(openId)));
@@ -2456,6 +2458,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _openPen() {
     _update(() => _penMode = true);
     _penModeOpened();
+  }
+
+  /// Açık editörler (K32: yan yana iki not) — tek mikrofon denetimi.
+  static final _live = <_NoteEditorScreenState>{};
+
+  /// **TEK MİKROFON** (K32 A6): öbür bölmede dikte/ses kaydı sürerken bu
+  /// editör mikrofonu ALMAZ (bildirim). Aynı editörde kural ayrı: son açan
+  /// alır (bkz. `_recordAudio`).
+  bool _micBusyElsewhere() {
+    final busy = _live.any(
+      (e) =>
+          !identical(e, this) &&
+          (e._dictation != null || e._voiceRecorder != null),
+    );
+    if (busy) _showSnack(context.l10n.micBusySideNote);
+    return busy;
   }
 
   /// Editör yandaki bölmede mi (K32; bkz. [SecondNotePane])?
