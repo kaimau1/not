@@ -1399,6 +1399,18 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   `level` notifier'ı oturum kapanınca `dispose` EDİLMEZ (dinleyen kart bir kare daha yaşayabilir) —
   sıfırlanır.
 - **Model:** opus. **A/B:** paket görünür değişiklik yapmaz; yalnız evrelerin çalıştığı denenir.
+- [x] **Durum (2026-11-15, G2 dalı oto/G2-sablon-cizgi):** 1 `quickOrder/attachOrder` +
+  `UiItem.pinned/penTool` (`test/personalize_order_test.dart`); 2 `VoiceListenSession.level/silence`
+  (`voice_unavailable_test`'e düzey testi); 3 `dividerOf`; 4 `_stepScenes` + çizgili örnek not `n8`,
+  sahneler `sablon-galeri/-onizleme-liste/-onizleme-yazi/-bos/-duzenle`, `cizgi-satirlar/-tepsi/-levha`
+  ("önce" görüntüleri `build/tour_p63_once`); 5 S41 (0/0/Text 60) ve S44 (seçim satır 3 / kök 3 /
+  tepsi satır 0 / **tepsi açılırken gövde boyu 14 karede değişiyor** — bulgu 13 doğrulandı / klavye 0);
+  6 `ab_hepsi.py` `sablon` + `bicim` evreleri (sona; hazırlık yoksa atlanır) + `make_dataset.py --ink`
+  "OLCUM cizgi" notu — **cihazda denenmedi** (telefon başka ajandaydı; A=A yürütücünün öbek sonu A/B'sinde).
+  **Sapma (sabah bakılacak):** PB1/PB3/PB5'in tur sahneleri (`duzen-serit`, `kisisellestir`, `kalem-*`,
+  `cizim-serit`, `dikte-kart`, `ses-levha-*`), S40/S42/S43 tabanları ve `kalem`/`duzen` evreleri G2'de
+  YAZILMADI — öbek kapsamı şablon+çizgi; o paketlerin "Önce üret" adımı zaten bu tabanları istiyor
+  (G4/G5 kendi başında üretir).
 
 ### 7.3 PB1 — düzen modu: şerit + çerçeve (fable)
 
