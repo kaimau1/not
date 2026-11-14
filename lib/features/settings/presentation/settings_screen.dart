@@ -10,8 +10,19 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart'
-    show kIsWeb, visibleForTesting, defaultTargetPlatform, TargetPlatform;
+    show
+        kIsWeb,
+        listEquals,
+        visibleForTesting,
+        defaultTargetPlatform,
+        TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart'
+    show
+        BoxHitTestResult,
+        ContainerBoxParentData,
+        ContainerRenderObjectMixin,
+        RenderBoxContainerDefaultsMixin;
 
 import '../../../core/widgets/sheet_header.dart';
 
@@ -29,6 +40,7 @@ import '../../ai/data/attachment_text_index.dart';
 import '../../../core/crash_reporting.dart';
 import '../../../core/error_log.dart';
 import '../../../core/constants.dart';
+import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
@@ -206,6 +218,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const NoteLockSettingsTile(),
             title: l10n.lockMethodTitle,
             keywords: 'kilit sifre desen parmak izi gizlilik',
+            group: l10n.settingsGroupLock,
           ),
           _SettingRow(
             const AppLockSettingsTile(),
@@ -238,6 +251,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _DiscoverableSwitch(),
             title: l10n.discoverable,
             keywords: '${l10n.discoverableInfo} arama gizlilik kisi bulun',
+            group: l10n.settingsGroupPrivacyNotify,
           ),
           // Paylaşım bildirimleri PAYLAŞIMIN yanında (2026-09-26): eskiden
           // Görünüm alanındaydı — bildirimi arayan kullanıcı orada bakmıyordu.
@@ -266,6 +280,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _BriefingEditor(),
             title: l10n.briefingSetting,
             keywords: l10n.briefingSettingInfo,
+            group: l10n.settingsGroupAutomatic,
           ),
           _SettingRow(
             const _AutoTagSwitch(),
@@ -293,6 +308,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 '${l10n.aiAdvancedInfo} gemini openai claude openrouter '
                 'api anahtar model tanilama',
+            // Katlanır bölüm kendi başlığını taşıyor: etiketsiz ayrı kart.
+            group: '',
           ),
         ],
       ),
@@ -316,14 +333,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Boşluk seçicinin İÇİNDE: ayrı bir satır olsaydı süzmede tek
             // başına kalıp araya boşluk bırakırdı. Alt başlık da içinde:
             // aramada seçiciyle birlikte gelir.
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SubHeader(l10n.settingsThemeHeader),
-                const _ThemeSelector(),
-                const SizedBox(height: 12),
-              ],
-            ),
+            // Alt başlık artık grup etiketi (P62 PA1); aramada da eşleşir.
+            const _ThemeSelector(),
+            group: l10n.settingsThemeHeader,
             title: l10n.settingsAppearance,
             keywords:
                 'tema ${l10n.themeSystem} ${l10n.themeSage} '
@@ -343,6 +355,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // okunmaz hâle geliyordu.
           _SettingRow(
             const _TypographySection(),
+            group: l10n.settingsGroupText,
             title: '${l10n.appFontSetting} · ${l10n.fontSize}',
             keywords:
                 '${l10n.appFontInfo} font yazi tipi boyut '
@@ -352,6 +365,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           _SettingRow(
             const _LanguageSelector(),
+            group: '',
             title: l10n.settingsLanguage,
             keywords: 'dil language uygulama dili',
           ),
@@ -360,9 +374,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.listPaneRight,
             keywords: '${l10n.listPaneRightInfo} liste sag sol tablet bolunmus',
           ),
-          _SettingRow(_SubHeader(l10n.settingsCardsHeader)),
           _SettingRow(
             const _ExpandListItemsSwitch(),
+            group: l10n.settingsCardsHeader,
             title: l10n.expandListItems,
             keywords: l10n.expandListItemsInfo,
           ),
@@ -585,6 +599,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // seç) toplanıyor.
           _SettingRow(
             const _VoiceSection(),
+            group: l10n.ttsSectionTitle,
             title: l10n.ttsSectionTitle,
             keywords:
                 'seslendirme motor yapay zeka cihaz sesi tts ses tipi '
@@ -598,6 +613,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _SettingRow(const _SpeechPitchSlider(), title: l10n.speechPitch),
           _SettingRow(
             const _VoiceModeSelector(),
+            group: l10n.settingsGroupDictation,
             title: l10n.voiceModeSetting,
             keywords: '${l10n.voiceModeHold} ${l10n.voiceModeTap} mikrofon',
           ),
@@ -662,11 +678,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // ekler kullanıcının Drive'ına, misafir hesapta yalnız metin.
           _SettingRow(
             const AttachmentSyncTile(),
+            group: l10n.settingsGroupAttachments,
             title: l10n.attachmentSyncTitle,
             keywords: 'google drive ek gorsel pdf senkron bagla kota',
           ),
           _SettingRow(
             const _StorageUsage(),
+            group: l10n.deviceStorageTitle,
             title: l10n.storageUsage,
             keywords: 'depolama alan kota gb mb dolu',
           ),
@@ -684,6 +702,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           _SettingRow(
             const _BackupStatus(),
+            group: l10n.settingsGroupBackup,
             keywords: 'yedek durum son bulut eslitleme guvende',
           ),
           _SettingRow(
@@ -814,7 +833,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Widget areaPage(_Area a) => _AreaPage(
       key: ValueKey('settings-area-${a.id}'),
       area: a,
-      rows: [for (final r in a.rows) r.child],
       showHeader: wide,
     );
 

@@ -1430,16 +1430,20 @@ void main() {
     var firstRows = -1;
     final open = await _frames(tester, () async {
       await tester.pumpWidget(app);
-      // İlk karede kurulan satır sayısı (yayma: 2).
-      final rows = find.byWidgetPredicate(
-        (w) => w.runtimeType.toString() == '_StaggeredRows',
+      // İlk karede kurulan satır sayısı (yayma: 2). P62 PA1: satırlar
+      // sarmalayıcısız tek düzen nesnesinde (`_GroupColumn`); etiketler
+      // `settings-group-label-<i>` anahtarlı, gerisi satır.
+      final column = tester.widget<MultiChildRenderObjectWidget>(
+        find.byWidgetPredicate(
+          (w) => w.runtimeType.toString() == '_GroupColumn',
+        ),
       );
-      firstRows = tester
-          .widget<Column>(
-            find.descendant(of: rows, matching: find.byType(Column)).first,
+      firstRows = column.children
+          .where(
+            (c) => !'${c.key}'.contains('settings-group-label-'),
           )
-          .children
           .length;
+      expect(firstRows, 2, reason: 'yayma: ilk karede iki satır');
     }, frames: 40);
     // ignore: avoid_print
     print('S29: ilk karede satır $firstRows');

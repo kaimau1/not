@@ -9,9 +9,19 @@ part of '../settings_screen.dart';
 /// aradigi satiri yine gozle bulmasi gerekiyordu. Satirin aranabilir bir
 /// tanimi olunca suzme satir satir yapilabiliyor.
 class _SettingRow {
-  const _SettingRow(this.child, {this.title = '', this.keywords = ''});
+  const _SettingRow(
+    this.child, {
+    this.title = '',
+    this.keywords = '',
+    this.group,
+  });
 
   final Widget child;
+
+  /// Bu satır yeni bir GRUP kartı başlatır (P62 PA1, plan_tasarim_A §2.2):
+  /// null = önceki satırın grubunda kalır; '' = etiketsiz yeni kart; metin =
+  /// `SectionLabel`lı yeni kart. Yalnız grubun İLK satırı verir.
+  final String? group;
 
   /// Satirin ekranda gorunen basligi (l10n'dan) — ayni metin arandiginda
   /// eslessin diye burada tekrarlanir.
@@ -25,7 +35,8 @@ class _SettingRow {
   bool matches(String query) {
     final q = foldForSearch(query);
     return foldForSearch(title).contains(q) ||
-        foldForSearch(keywords).contains(q);
+        foldForSearch(keywords).contains(q) ||
+        foldForSearch(group ?? '').contains(q);
   }
 }
 
@@ -127,7 +138,7 @@ class _CategoryGroup extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Material(
       color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppRadius.l),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -135,7 +146,8 @@ class _CategoryGroup extends StatelessWidget {
             if (i > 0)
               Divider(
                 height: 1,
-                indent: 68,
+                // Simge kutusunun sağından başlar (dolgu + kutu + ara).
+                indent: AppSpace.m + _kAreaIconBox + AppSpace.m,
                 color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
               ),
             _CategoryTile(
@@ -149,6 +161,9 @@ class _CategoryGroup extends StatelessWidget {
     );
   }
 }
+
+/// Kategori satırının nötr simge kutusu (dp).
+const double _kAreaIconBox = 40;
 
 /// Kategori satırı: renkli simge, ad, DURUM ÖZETİ (alanı açmadan "Adaçayı ·
 /// Orta · Inter" gibi güncel durum okunur), ok.
@@ -171,48 +186,61 @@ class _CategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Material(
-      color: selected ? scheme.secondaryContainer : Colors.transparent,
-      child: InkWell(
-        key: ValueKey('settings-cat-${area.id}'),
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 4 : 14,
-            vertical: compact ? 8 : 12,
-          ),
-          child: Row(
-            children: [
-              _AreaIcon(area: area, size: compact ? 30 : 40),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Satır başlığı `rowTitle`, özet `meta` (F79.2, §2.1).
-                    Text(
-                      area.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: compact
-                          ? AppText.of(theme).label
-                          : AppText.of(theme).rowTitle,
-                    ),
-                    if (area.summary.isNotEmpty && !compact)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpace.xxs),
-                        child: Text(
-                          area.summary,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.of(theme).meta,
+    final text = AppText.of(theme);
+    // P62 PA1 (A5): seçim = `primary` rolü (secondary zaman/dikkat). Geçiş
+    // YALNIZ renk (boy/dolgu sabit — kasma listesi md. 6, R7). Mürekkep
+    // rengin ÜSTÜNDE görünsün diye saydam Material kabın içinde.
+    final fg = selected ? scheme.onPrimaryContainer : null;
+    return AnimatedContainer(
+      duration: AppMotion.of(context, AppMotion.selection),
+      curve: AppMotion.standard,
+      color: selected ? scheme.primaryContainer : Colors.transparent,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          key: ValueKey('settings-cat-${area.id}'),
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? AppSpace.xs : AppSpace.m,
+              vertical: compact ? AppSpace.s : AppSpace.m,
+            ),
+            child: Row(
+              children: [
+                _AreaIcon(area: area, size: compact ? 30 : _kAreaIconBox),
+                const SizedBox(width: AppSpace.m),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Satır başlığı `rowTitle`, özet `meta` (F79.2, §2.1).
+                      Text(
+                        area.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: (compact ? text.label : text.rowTitle).copyWith(
+                          color: fg,
                         ),
                       ),
-                  ],
+                      if (area.summary.isNotEmpty && !compact)
+                        Padding(
+                          padding: const EdgeInsets.only(top: AppSpace.xxs),
+                          child: Text(
+                            area.summary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: text.meta.copyWith(color: fg),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
-            ],
+                Icon(
+                  Icons.chevron_right,
+                  color: fg ?? scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -220,59 +248,242 @@ class _CategoryTile extends StatelessWidget {
   }
 }
 
-/// Ayar satırlarını tek kart içinde, derli toplu (başlık 14/w600, açıklama
-/// küçük ve soluk) çizer.
+/// [_GroupColumn] çocuğunun türü.
+enum _GroupSlot {
+  /// Bölüm etiketi (zeminsiz, kartın üstünde).
+  label,
+
+  /// Yeni grup kartını başlatan satır.
+  start,
+
+  /// Önceki satırın kartında devam eden satır.
+  row,
+}
+
+/// Ayar satırlarını GRUP KARTLARI hâlinde dizen tek düzen nesnesi (P62 PA1
+/// satır dili, plan §2.2): kart zemini (`AppSurface.group` rengi, köşe
+/// [AppRadius.l]), kart içi dolgu, satırlar arası 1 dp ayraç, gruplar arası
+/// boşluk ve etiketler TEK render nesnesinde çizilir.
+///
+/// NEDEN SARMALAYICI DEĞİL (R3, S29): satırlar karelere yayılarak kuruluyor
+/// (bkz. [_StaggeredRows]); her satırı bir kart / dolgu / ayraç widget'ıyla
+/// sarmak, her yayma karesine satır başına fazladan kurulum ekliyordu (S29
+/// en ağır kare 37 → 55 ölçüldü). Burada satır başına SIFIR ek widget:
+/// kare başına kurulan iş eskisi kadar.
+class _GroupColumn extends MultiChildRenderObjectWidget {
+  const _GroupColumn({
+    required this.slots,
+    required this.color,
+    required this.line,
+    required super.children,
+  });
+
+  /// [children] ile aynı uzunlukta.
+  final List<_GroupSlot> slots;
+  final Color color;
+  final Color line;
+
+  @override
+  _RenderGroupColumn createRenderObject(BuildContext context) =>
+      _RenderGroupColumn(slots, color, line);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderGroupColumn r) => r
+    ..slots = slots
+    ..color = color
+    ..line = line;
+}
+
+class _GroupParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderGroupColumn extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _GroupParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _GroupParentData> {
+  _RenderGroupColumn(this._slots, this._color, this._line);
+
+  // Ölçüler (plan §2.2): kart içi yatay dolgu `l`, dikey `xs`; gruplar arası
+  // `m`; etiketin üstü `xl` (sayfanın başında `xs`), altı `s`.
+  static const _padH = AppSpace.l;
+  static const _padV = AppSpace.xs;
+  static const _gap = AppSpace.m;
+  static const _labelTop = AppSpace.xl;
+  static const _labelBottom = AppSpace.s;
+
+  List<_GroupSlot> _slots;
+  set slots(List<_GroupSlot> v) {
+    if (listEquals(v, _slots)) return;
+    _slots = v;
+    markNeedsLayout();
+  }
+
+  Color _color;
+  set color(Color v) {
+    if (v == _color) return;
+    _color = v;
+    markNeedsPaint();
+  }
+
+  Color _line;
+  set line(Color v) {
+    if (v == _line) return;
+    _line = v;
+    markNeedsPaint();
+  }
+
+  /// Son düzendeki kart dikdörtgenleri (boyama için).
+  final List<Rect> _cards = [];
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _GroupParentData) {
+      child.parentData = _GroupParentData();
+    }
+  }
+
+  _GroupSlot _slotAt(int i) =>
+      i < _slots.length ? _slots[i] : _GroupSlot.row;
+
+  @override
+  void performLayout() {
+    final w = constraints.maxWidth;
+    final rowC = BoxConstraints(maxWidth: math.max(0, w - 2 * _padH));
+    final labelC = BoxConstraints(maxWidth: w);
+    _cards.clear();
+    var y = 0.0;
+    double? cardTop;
+    void closeCard() {
+      if (cardTop == null) return;
+      y += _padV;
+      _cards.add(Rect.fromLTRB(0, cardTop!, w, y));
+      cardTop = null;
+    }
+
+    var i = 0;
+    var afterLabel = false;
+    var child = firstChild;
+    while (child != null) {
+      final pd = child.parentData! as _GroupParentData;
+      final slot = _slotAt(i);
+      if (slot == _GroupSlot.label) {
+        closeCard();
+        y += i == 0 ? AppSpace.xs : _labelTop;
+        child.layout(labelC, parentUsesSize: true);
+        pd.offset = Offset(0, y);
+        y += child.size.height + _labelBottom;
+        afterLabel = true;
+      } else {
+        if (slot == _GroupSlot.start || cardTop == null) {
+          final hadCard = cardTop != null || _cards.isNotEmpty;
+          closeCard();
+          if (hadCard && !afterLabel) y += _gap;
+          cardTop = y;
+          y += _padV;
+        }
+        afterLabel = false;
+        child.layout(rowC, parentUsesSize: true);
+        pd.offset = Offset(_padH, y);
+        y += child.size.height;
+      }
+      i++;
+      child = pd.nextSibling;
+    }
+    closeCard();
+    size = constraints.constrain(Size(w, y));
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final canvas = context.canvas;
+    final bg = Paint()..color = _color;
+    for (final r in _cards) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          r.shift(offset),
+          const Radius.circular(AppRadius.l),
+        ),
+        bg,
+      );
+    }
+    // Ayraç: kartta önünde satır olan, görünür (boyu > 0) satırın üstünde.
+    final ink = Paint()
+      ..color = _line
+      ..strokeWidth = 1;
+    var i = 0;
+    var child = firstChild;
+    while (child != null) {
+      final pd = child.parentData! as _GroupParentData;
+      if (_slotAt(i) == _GroupSlot.row && i > 0 && child.size.height > 0) {
+        final top = offset + pd.offset;
+        canvas.drawLine(top, top + Offset(child.size.width, 0), ink);
+      }
+      i++;
+      child = pd.nextSibling;
+    }
+    defaultPaint(context, offset);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      defaultHitTestChildren(result, position: position);
+}
+
+/// Ayar satırlarının kılığı TEK yerden (`ListTileTheme.merge` — 60+ satır
+/// widget'ına tek tek dokunmadan, plan §2.3): başlık `rowTitle`, açıklama
+/// `meta`, simge nötr, satır en az 56 dp.
+Widget _rowsTheme(BuildContext context, Widget child) {
+  final theme = Theme.of(context);
+  final text = AppText.of(theme);
+  return ListTileTheme.merge(
+    titleTextStyle: text.rowTitle,
+    subtitleTextStyle: text.meta,
+    iconColor: theme.colorScheme.onSurfaceVariant,
+    minTileHeight: 56,
+    horizontalTitleGap: AppSpace.m,
+    child: child,
+  );
+}
+
+/// [_GroupColumn]'un renkleri temadan.
+_GroupColumn _groupColumn(
+  ThemeData theme,
+  List<_GroupSlot> slots,
+  List<Widget> children,
+) => _GroupColumn(
+  slots: slots,
+  color: AppSurface.group(theme).color!,
+  line: theme.colorScheme.outlineVariant.withValues(alpha: AppAlpha.muted),
+  children: children,
+);
+
+/// Arama sonuçlarında bir alanın eşleşen satırları: düz TEK kart (grup
+/// etiketi gösterilmez, plan §2.3).
 class _RowsCard extends StatelessWidget {
-  const _RowsCard({required this.rows, this.stagger = false});
+  const _RowsCard({required this.rows});
 
   final List<Widget> rows;
 
-  /// İlk açılışta satırları karelere yay (bkz. [_StaggeredRows]).
-  final bool stagger;
-
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Material(
-      color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(20),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-        child: ListTileTheme.merge(
-          dense: true,
-          titleTextStyle: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-          subtitleTextStyle: theme.textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-            height: 1.3,
-          ),
-          child: stagger
-              ? _StaggeredRows(rows: rows)
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: rows,
-                ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _rowsTheme(
+    context,
+    _groupColumn(Theme.of(context), [
+      for (var i = 0; i < rows.length; i++)
+        i == 0 ? _GroupSlot.start : _GroupSlot.row,
+    ], rows),
+  );
 }
 
-/// Bir alanın kendi sayfası: (iki bölmeli düzende) büyük başlık + özet,
-/// altında satırlar tek kartta.
+/// Bir alanın kendi sayfası: dikey GRUPLAR (P62 PA1, §2.2). Geniş ekranda
+/// tepede büyük başlık + özet; dar ekranda başlık üst çubukta, özet kök
+/// sayfada görünüyor → başlık satırı yok (A8).
 class _AreaPage extends StatelessWidget {
   const _AreaPage({
     super.key,
     required this.area,
-    required this.rows,
     required this.showHeader,
   });
 
   final _Area area;
-  final List<Widget> rows;
 
   /// Dar ekranda başlık zaten üst çubukta; geniş ekranda sayfanın tepesinde.
   final bool showHeader;
@@ -280,32 +491,37 @@ class _AreaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final text = AppText.of(theme);
     return ListView(
       key: PageStorageKey('settings-page-${area.id}'),
       padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        24 + MediaQuery.paddingOf(context).bottom,
+        AppSpace.l,
+        AppSpace.m,
+        AppSpace.l,
+        AppSpace.xxl + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
-        if (showHeader || area.summary.isNotEmpty)
+        if (showHeader)
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 4, 4, 16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.xs,
+              AppSpace.xs,
+              AppSpace.xs,
+              AppSpace.s,
+            ),
             child: Row(
               children: [
-                _AreaIcon(area: area, size: showHeader ? 48 : 36),
-                const SizedBox(width: 14),
+                _AreaIcon(area: area),
+                const SizedBox(width: AppSpace.m),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (showHeader)
-                        Text(area.title, style: theme.textTheme.headlineSmall),
+                      Text(area.title, style: text.screenTitle),
                       if (area.summary.isNotEmpty)
                         Text(
                           area.summary,
-                          style: theme.textTheme.bodyMedium?.copyWith(
+                          style: text.body.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
@@ -315,7 +531,7 @@ class _AreaPage extends StatelessWidget {
               ],
             ),
           ),
-        _RowsCard(rows: rows, stagger: true),
+        _rowsTheme(context, _StaggeredRows(rows: area.rows)),
       ],
     );
   }
@@ -610,7 +826,7 @@ class _VersionFooterState extends State<_VersionFooter>
 class _StaggeredRows extends StatefulWidget {
   const _StaggeredRows({required this.rows});
 
-  final List<Widget> rows;
+  final List<_SettingRow> rows;
 
   @override
   State<_StaggeredRows> createState() => _StaggeredRowsState();
@@ -639,19 +855,42 @@ class _StaggeredRowsState extends State<_StaggeredRows> {
   @override
   void didUpdateWidget(_StaggeredRows old) {
     super.didUpdateWidget(old);
+    _labels.clear();
     // Yayma yalnız İLK açılışta; sonrasında (arama, özet değişimi) satır
     // sayısı neyse o.
     if (_count >= old.rows.length) _count = widget.rows.length;
     if (_count > widget.rows.length) _count = widget.rows.length;
   }
 
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      for (var i = 0; i < _count && i < widget.rows.length; i++) widget.rows[i],
-    ],
+  /// GRUP DÜZENİ YAYMAYI BOZMAZ (P62 PA1, plan §2.3 / R3): sayılan şey yine
+  /// SATIR; kurulan ilk [_count] satır [_GroupColumn]'da gruplara bölünür,
+  /// grup kartı içindeki ilk satır kurulunca belirir. Satırlar sarılmaz;
+  /// etiketler bir kez kurulup saklanır (her karede yeniden kurulmasın).
+  final Map<int, Widget> _labels = {};
+
+  Widget _label(int i, String text) => _labels[i] ??= Padding(
+    key: ValueKey('settings-group-label-$i'),
+    padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+    child: SectionLabel(text),
   );
+
+  @override
+  Widget build(BuildContext context) {
+    final n = math.min(_count, widget.rows.length);
+    final slots = <_GroupSlot>[];
+    final children = <Widget>[];
+    for (var i = 0; i < n; i++) {
+      final r = widget.rows[i];
+      final label = r.group ?? '';
+      if (label.isNotEmpty) {
+        slots.add(_GroupSlot.label);
+        children.add(_label(i, label));
+      }
+      slots.add(r.group != null ? _GroupSlot.start : _GroupSlot.row);
+      children.add(r.child);
+    }
+    return _groupColumn(Theme.of(context), slots, children);
+  }
 }
 
 /// Alanın İÇİNDEKİ katlanır bölüm ("Gelişmiş", "AI tanılama"): başlık

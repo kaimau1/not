@@ -4056,6 +4056,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeHeader => 'Theme';
 
   @override
+  String get settingsGroupPrivacyNotify => 'Privacy and notifications';
+
+  @override
+  String get settingsGroupAutomatic => 'Automatic';
+
+  @override
+  String get settingsGroupText => 'Text';
+
+  @override
+  String get settingsGroupDictation => 'Voice typing';
+
+  @override
+  String get settingsGroupAttachments => 'Attachments';
+
+  @override
+  String get settingsGroupBackup => 'Backup';
+
+  @override
+  String get settingsGroupSession => 'Session';
+
+  @override
+  String get settingsGroupLock => 'Lock';
+
+  @override
+  String get settingsGroupAbout => 'About';
+
+  @override
+  String get settingsGroupVersion => 'Version';
+
+  @override
   String get settingsCardsHeader => 'Cards and lists';
 
   @override

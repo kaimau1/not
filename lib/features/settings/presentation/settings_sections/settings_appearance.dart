@@ -261,24 +261,6 @@ class _ThemeSelector extends StatelessWidget {
   Widget build(BuildContext context) => const ThemeChoiceGrid();
 }
 
-/// Uzun bir ayar alanının içindeki küçük bölüm başlığı (Tema, Kartlar ve
-/// listeler…). Aramada gizlenir (başlığı/anahtar kelimesi yok): arama tek
-/// tek satırları getirir.
-class _SubHeader extends StatelessWidget {
-  const _SubHeader(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(0, 14, 0, 8),
-    child: Text(
-      text,
-      style: sectionLabelStyle(context),
-    ),
-  );
-}
-
 /// Sesli Not Asistanı düğmesinin kullanım şekli: basılı tut (varsayılan)
 /// veya bas-başlat / bas-bitir.
 class _VoiceModeSelector extends ConsumerWidget {
