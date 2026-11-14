@@ -85,6 +85,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nasıl: 10 dk sonraya etkinlik kur; tekrarlı bir etkinliğin yalnız birini sil; bir etkinliği basılı tutup başka güne sürükle.
   Doğruysa: bildirim zamanında geliyor, dokununca takvim açılıyor, "Geri al" çalışıyor.
 
+- [ ] **42. Başka uygulamadan içe aktarma tam geliyor mu**
+  Nerede: ölçüm uygulaması (`pm clear` sonrası, misafir) → Ayarlar → Senkronizasyon → "Başka uygulamadan içe aktar".
+  Nasıl: `keep_olcum.zip` (240 not, 6 sabit) içe aktar, 3 dk bekle, aynı dosyayı bir daha içe aktar.
+  Doğruysa: ana ekranda 240 not ve 6 sabit; ikinci deneme "0 not içe aktarıldı, 240 atlandı" der.
+
 ## Tablette bak
 
 - [ ] **15. Kalemle yazma**
