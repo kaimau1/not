@@ -206,6 +206,7 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
   bool? _mic;
   bool? _camera;
   bool? _notifications;
+  bool _exactAlarms = true;
   bool _xiaomi = false;
 
   @override
@@ -233,8 +234,10 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
     final camera = await service.cameraGranted();
     final notifications = await service.notificationsGranted();
     final xiaomi = await service.isXiaomi();
+    final exactAlarms = await service.exactAlarmsGranted();
     if (mounted) {
       setState(() {
+        _exactAlarms = exactAlarms;
         _xiaomi = xiaomi;
         _mic = mic;
         _camera = camera;
@@ -293,6 +296,20 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
           granted: _notifications,
           onAction: _requestNotifications,
         ),
+        // F69.3: tam zamanlı alarm izni kapalıyken hatırlatıcı dakikasında
+        // çalmayabilir (inexact'e düşer); YALNIZ kapalıyken uyarı satırı.
+        if (!_exactAlarms)
+          _PermissionTile(
+            icon: Icons.alarm_outlined,
+            title: l10n.permExactAlarm,
+            subtitle: l10n.permExactAlarmInfo,
+            granted: false,
+            actionLabel: l10n.permOpenSettings,
+            onAction: () async {
+              await service.requestExactAlarms();
+              await _refresh();
+            },
+          ),
         // Pil muafiyeti durumu güvenilir okunamadığından her zaman "Ayarları
         // aç" gösterir; kullanıcı uygulamayı pil kısıtlamasından muaf tutar.
         _PermissionTile(

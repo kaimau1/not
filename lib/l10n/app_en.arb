@@ -321,6 +321,8 @@
   "permMicInfo": "Needed for AI voice notes, dictation and audio recording",
   "permNotifications": "Notifications",
   "permNotificationsInfo": "Needed for reminders and the daily briefing",
+  "permExactAlarm": "Alarms & reminders",
+  "permExactAlarmInfo": "Off: reminders may fire a few minutes late instead of on the minute. Allow it for Notlar",
   "permBattery": "Battery optimisation",
   "permBatteryInfo": "Exempt the app from battery restrictions so reminders arrive on time",
   "permAutoStart": "Autostart (Xiaomi)",

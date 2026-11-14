@@ -902,7 +902,7 @@ gömülü `_docInkFor`, görüntüleyiciler) — B3/B4/B5 hataları buradan çı
   çubukta kalem; kalem kipinde iki parmakla kaydırma ipucu (`TipOnce`); sayfa sonunda
   yazdıkça uzayan boşluk (bugün kalem kipinde "sayfa altı boşluğu" var — telefonda yeterli
   mi tur görüntüsüyle bak). Cihaz: tablette telefon düzeni + `input touchscreen`.
-- [ ] **F63.6 Parmağa araç (YORUM F55.1) — KARAR, tablette denenmeden yazılmaz.**
+- [~] **F63.6 Parmağa araç (YORUM F55.1) — KARAR, tablette denenmeden yazılmaz.** *(2026-11-14 P22: gözetimsiz yapılmaz (atlananlar listesi); kullanıcı kararı + tablet denemesi.)*
 - [ ] **F63.7 Kalem cihaz turu (YORUM F55.5).** `docs/cihaz_turu.md` kalem bölümü: avuç
   reddi (elle), kalem tıkı metne gider, kapsül ↔ hap, şekil/çokgen/çizgi ucu, sabit PDF,
   gömülü PDF, görsel, tam ekran, yüzen düğme, telefonda parmak. Kullanıcı yapar; sonuç
@@ -1025,9 +1025,10 @@ tur `telefon-*.png`.
 - [ ] **F66.4 Küçük telefon turu.** Tur boyutlarına `telefon-kucuk 360×640` ve
   `telefon-uzun 393×851` (F67.2 ile birlikte). Taşan/kesilen her yer madde olarak yazılır
   ve düzeltilir (ad kesilmesi, çubuk taşması, levha boyu).
-- [ ] **F66.5 Tek elle erişim taraması.** Sık işler (yeni not, ara, klasör değiştir, geri)
+- [x] **F66.5 Tek elle erişim taraması.** *(2026-11-14 P22 rapor — RAPOR_F66_5 aşağıda; kod değişmedi.)* Sık işler (yeni not, ara, klasör değiştir, geri)
   alt yarıda mı: not ekranında "+" (üst sağ) yerine alt çubuktaki "+" yeterli mi — yalnız
   rapor; değişiklik KARAR.
+  *RAPOR_F66_5 (2026-11-14, koddan):* (1) Yeni not: ana ekranda "+" (`QuickAddFab`) ve mikrofon SAĞ ALTTA — tek elle erişilir. (2) Not ekranında üst sağdaki "+" YENİ NOT DEĞİL, not bilgisi menüsü (`note-meta-chip`: klasör/etiket/başlık) — sık değil, üstte kalabilir; yeni not için ayrı düğme gerekmez. (3) Ara: ana ekranda arama kutusu üstte; alt yarıda kısayol yok (not içinde Ara alt çubukta, P57'de taşınabilir). (4) Klasör değiştir: üstteki çip şeridi + SAĞA kaydırma takvim (sola kaydırma yok, #108). (5) Geri: sistem jesti/tuşu. ÖNERİ (KARAR, uygulanmadı — sabah bakılacak): ana ekranda arama için alta kısayol (ör. "+" menüsüne "Ara") istenirse ayrı iş.
 - [x] **F66.6 Boş / hata / çevrimdışı hâlleri.** *(2026-11-12 → DENEYIM F79.6, P40.)* Çevrimdışıyken not ekranı bulut simgesi,
   bekleyen ek, AI düğmeleri ne gösteriyor; uçak kipinde widget testiyle 6 ekran görüntüsü
   (tura `TOUR_OFFLINE=1`). Tutarsızlıklar madde olur.
@@ -1082,7 +1083,7 @@ tur `telefon-*.png`.
   ADIMDA (kural 6), `KeyboardSwitch` kuralı (7) korunur. Tur `matepad-yatay` + klavye ile
   doğrula.
 - [x] **F67.5 Yandan sabitleme varsayılanı (F65.2 ile aynı karar).** *(2026-11-13: F65.2 ile yapıldı.)*
-- [ ] **F67.6 İki not yan yana — KARAR K-O12 (öneri: şimdilik yok).**
+- [~] **F67.6 İki not yan yana — KARAR K-O12 (öneri: şimdilik yok).** *(2026-11-14 P22: en güvenli = yapılmadı; kullanıcı kararı → KONTROL listesi, sabah bakılacak.)*
 - [x] **F67.7 Klavye ve fare.** → DENEYIM F80.3 (P42, 2026-11-12: kısayol levhası tablodan, odak halkası, D22; sağ tık/üstüne gelme doğrulandı). Kısayol listesi levhası (Ctrl+/; `app.dart` `shortcuts`
   haritasından üretilir, elle liste tutulmaz); kart ve madde üzerinde sağ tık = uzun basış
   menüsü (var olanları doğrula, eksikleri ekle); fareyle üstüne gelince kart ve satır
@@ -1125,7 +1126,7 @@ tur `telefon-*.png`.
   K7). Kalan engel kart raster'ıysa: kart içi `ClipRRect`/gölge/gradyan sayımı
   (`debugDumpLayerTree` ile kart başına katman), fazlasını `DecoratedBox`'a indir.
   **Ölçüm (2026-11-13, P43, `ab_hepsi.py` `liste` evresi = `ab_liste.py`'nin aynı 8 fırlatması, 9 geçerli koşu):** > 16 ms UI karesi 9c837495'te 5–12 / 305 (%1,6–3,9, ortanca %2,6–3,0), P39 (02ebd989) 10/305 (%3,3), en uzun 22–37 ms → **hedef < %2 TUTMADI.** Kart raster/katman düzeltmesi P46'da (F84 "ölçümün bulduğu yavaşlıklar").
-- [ ] **F68.5 Açılış (park).** 780 ms'nin kalanı motor + Activity; kod işi yok.
+- [~] **F68.5 Açılış (park).** *(2026-11-14 P22: park — kod işi yok, kalan süre motor + Activity.)* 780 ms'nin kalanı motor + Activity; kod işi yok.
 - Kabul: tablette yazarken kayıt anında > 33 ms kare yok (`ab_klavye.py` tablet evresi).
 
 ---
@@ -1136,7 +1137,7 @@ tur `telefon-*.png`.
   cihaz başına). Bulunan her sorun `F60.S` biçiminde maddeye, kök nedenli düzeltmeye.
 - [ ] **F69.2 Yeni cihaza geçiş (YORUM F54.4).** Temiz kurulum → giriş → bütün notlar, el
   yazısı (v1 ve v2), ekler, klasörler, takvim geliyor mu; tam yedek → boş hesaba geri yükle.
-- [ ] **F69.3 Hatırlatıcı güvenilirliği (YORUM F56.2).** Pil iyileştirme açık / tam zamanlı
+- [x] **F69.3 Hatırlatıcı güvenilirliği (YORUM F56.2).** *(2026-11-14 P22: Ayarlar → İzinler'e "Alarmlar ve hatırlatıcılar" satırı — YALNIZ tam zamanlı alarm izni kapalıyken (`canScheduleExactNotifications`), dokununca sistem izin ekranı (`permissions_service.dart`, `settings_account.dart`). Pil muafiyeti okunamıyor (önceki karar), satır her zaman duruyor. "İlk hatırlatıcıda ipucu" YAZILMADI: ayar satırı + MIUI ipucu yeterli sayıldı — sabah bakılacak. Yazıldı, cihazda doğrulanmadı: KALANLAR P22.2.)* Pil iyileştirme açık / tam zamanlı
   alarm izni yokken Ayarlar → İzinler'de uyarı satırı + ilk hatırlatıcıda ipucu (MIUI
   otomatik başlatma satırı var; aynı yere). Telefonda: uygulama kapalı, 10 dk sonraya
   hatırlatıcı, ekran kapalı → çalıyor mu.

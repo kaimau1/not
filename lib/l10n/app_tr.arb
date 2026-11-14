@@ -445,6 +445,8 @@
   "permMicInfo": "AI sesli not, dikte ve ses kaydı için gerekli",
   "permNotifications": "Bildirimler",
   "permNotificationsInfo": "Hatırlatıcılar ve günlük brifing için gerekli",
+  "permExactAlarm": "Alarmlar ve hatırlatıcılar",
+  "permExactAlarmInfo": "Kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir. Notlar için izni aç",
   "permBattery": "Pil optimizasyonu",
   "permBatteryInfo": "Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut",
   "permAutoStart": "Otomatik başlatma (Xiaomi)",

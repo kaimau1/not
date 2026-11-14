@@ -99,6 +99,37 @@ class PermissionsService {
     }
   }
 
+  /// Tam zamanlı alarm izni (Android 12+). Kapalıysa hatırlatıcılar
+  /// inexact'e düşer ve birkaç dakika kayabilir (F69.3). Okunamazsa true:
+  /// boşuna uyarı satırı çıkmasın.
+  Future<bool> exactAlarmsGranted() async {
+    if (!_isAndroid) return true;
+    try {
+      final android = FlutterLocalNotificationsPlugin()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      return await android?.canScheduleExactNotifications() ?? true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  /// Tam zamanlı alarm izni ekranını açar (Android 12+ "Alarmlar ve
+  /// hatırlatıcılar").
+  Future<void> requestExactAlarms() async {
+    if (!_isAndroid) return;
+    try {
+      final android = FlutterLocalNotificationsPlugin()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      await android?.requestExactAlarmsPermission();
+    } catch (e) {
+      ErrorLog.record('request-exact-alarms', e);
+    }
+  }
+
   /// Uygulama detay ayarlarını açar (kalıcı reddedilen izinler için).
   Future<void> openAppSettings() async {
     if (!_isAndroid) return;
