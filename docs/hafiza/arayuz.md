@@ -233,7 +233,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **`showAppSheet` varsayılanı `useSafeArea: true`:** uzun levha durum çubuğunun altına girmiyordu ⚙/✕ çakışıyordu (KÖK: `useSafeArea:false`'ta modal levha üst dolguyu SİLER, içteki `SafeArea` işe yaramaz). Çağrılarda `useSafeArea: true` yazma (lint: gereksiz argüman).
 - **Öksüz madde (hızlı satırdan düşen):** menünün TEK grubu varsa o grubun sonuna katılır; ayrı tek maddelik "Diğer" yok (ana ekran ⋮ "düzensiz" bulgusu). Çok gruplu menüde "Diğer" kalır.
 - Gizli ek özeti (`CardHiddenMediaLine`): tek ekin adı ikinci satırda; yükseklik tahmini 22 → 38 (`estimateNoteHeight`).
-- Belge notunda (başlık üst çubukta, `_barTitle`) hızlı satır yalnız gövde alanı odaktayken (`_fieldFocusedN`) — çubuktaki başlık alanı düzenlenirken yerinde kalır.
+- Başlığı üst çubukta duran notta (SABİT EKLİ metin notu da! `_barTitle`) hızlı satır hiç kurulmuyordu (KÖK: `title: _barTitle ?? _typingTitle(...)`). Şimdi `KeyboardSwitch(onlyWhileEditing:)` — yalnız gövde alanı odaktayken (`_fieldFocusedN`); çubuktaki başlık düzenlenirken başlık yerinde kalır. TUZAK: anahtarı odakla takıp sökme (ilk kurulum klavye karesine düşer, S17 79→248). `KeyboardSwitch` artık dinleyiciyi kendi tutar (VLB yok), `TickerMode` yalnız `pauseHidden: true` (hızlı satır); `_HintGlow` `TickerMode.getValuesNotifier` dinler → S17 metin ilk kare 45→37.
 
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 

@@ -2653,11 +2653,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ],
         );
       }
-      return ValueListenableBuilder<bool>(
-        valueListenable: _fieldFocusedN,
-        builder: (context, bodyFocused, _) => bodyFocused
-            ? KeyboardSwitch(closed: bar, editing: _fieldFocusedN, open: row)
-            : bar,
+      return KeyboardSwitch(
+        closed: bar,
+        editing: _fieldFocusedN,
+        onlyWhileEditing: true,
+        pauseHidden: true,
+        open: row,
       );
     }
     if (wide) {
@@ -2669,7 +2670,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ],
       );
     }
-    return KeyboardSwitch(closed: idle, editing: _fieldFocusedN, open: row);
+    return KeyboardSwitch(
+      closed: idle,
+      editing: _fieldFocusedN,
+      pauseHidden: true,
+      open: row,
+    );
   }
 
   static Color _favoriteColorValue() {
