@@ -183,9 +183,9 @@
   },
   "S21": {
     "senaryo": "Telefon, 60 not (18 görünür): arama kutusuna 5 harf ('N'…'Not 1'), harf başına kurulan NoteCard (en kötü harf) ve DashboardScreen toplamı",
-    "harf_basina_kart": 56,
+    "harf_basina_kart": 24,
     "dashboard_kurulum": 6,
-    "bugun": "harf başına 56 / pano 6 (2026-11-13, P46: kart önbelleği ve hücre sarmalayıcısı aynı geciktirilmiş arama durumuyla; önce 114 = iki dalga). Kalan 56: ilk harfte 1600 px kaydırma payındaki canlı kartlar (aramada kart yapısı değişir); sonraki harfler 0",
+    "bugun": "harf başına 24 / pano 6 (2026-11-14, P60: not sliver'larının anahtarında arama durumu — arama başlayınca 1600 px paydaki eski kartlar kurulmadan atılır; kalan = 18 görünür + 250 px pay); harf başına 56 / pano 6 (2026-11-13, P46: kart önbelleği ve hücre sarmalayıcısı aynı geciktirilmiş arama durumuyla; önce 114 = iki dalga). Kalan 56: ilk harfte 1600 px kaydırma payındaki canlı kartlar (aramada kart yapısı değişir); sonraki harfler 0",
     "hedef": "harf başına ≤ görünür (18)",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); hedefin 6 katı — bulgu P46'ya yazıldı, düşürülecek"
   },
@@ -203,8 +203,8 @@
     "ileri_kart": 30,
     "geri_kart": 30,
     "ileri_dashboard_kurulum": 1,
-    "kare_kurulum": 2361,
-    "bugun": "ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2361 (2026-11-13, P46: gelen ızgara geçiş sürerken 250 px payla kurulur, 1600 px payı 500 ms sonra boşta genişler — kalan 9 kart o karede, 413–668 kurulum); önce 2941",
+    "kare_kurulum": 2282,
+    "bugun": "en ağır kare 2282 (2026-11-14, P60: main 0fe290ec de 2282 — önceki işlerden düşmüş, mandal indirildi); ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2361 (2026-11-13, P46: gelen ızgara geçiş sürerken 250 px payla kurulur, 1600 px payı 500 ms sonra boşta genişler — kalan 9 kart o karede, 413–668 kurulum); önce 2941",
     "hedef": "gelen görünümün görünür kartları kadar; tek kare ≤ ilk açılış karesi",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl). FolderSwipe komşu sayfayı BİLEREK kurmaz (dashboard_widgets.dart FolderSwipe belgesi); geçişte giden + gelen ızgara aynı karede"
   },

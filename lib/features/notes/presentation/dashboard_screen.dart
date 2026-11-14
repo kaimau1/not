@@ -2101,9 +2101,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       ...notesAsync.when(
                                         data: (notes) => [
                                           ..._afterSkeleton(),
-                                          // Aynı sarmalayıcı özette de var:
-                                          // kartlar yeniden kurulmaz (F25.2).
-                                          for (final sliver
+                                          // Aynı sarmalayıcı (ve anahtar)
+                                          // özette de var: kartlar yeniden
+                                          // kurulmaz (F25.2). Anahtarda arama
+                                          // durumu (P60, bütçe S21): arama
+                                          // başlayınca kart yapısı değişir;
+                                          // eski liste yeniden KURULMAZ, atılır
+                                          // — yoksa 1600 px paydaki canlı
+                                          // kartların hepsi kurulup aynı
+                                          // karede dar payla çöpe gidiyordu.
+                                          for (final (i, sliver)
                                               in _buildNoteSlivers(
                                                 context,
                                                 notes,
@@ -2113,8 +2120,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                                     selectionActive,
                                                 searchActive: searchActive,
                                                 reorderEnabled: reorderActive,
-                                              ))
+                                              ).indexed)
                                             SliverIgnorePointer(
+                                              key: ValueKey(
+                                                ('notlar', i, searchActive),
+                                              ),
                                               ignoring: false,
                                               sliver: SliverRevealFade(
                                                 play: _skeletonShown,
@@ -2143,7 +2153,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                             ];
                                           }
                                           return [
-                                            for (final sliver
+                                            for (final (i, sliver)
                                                 in _buildNoteSlivers(
                                                   context,
                                                   snapshot,
@@ -2152,8 +2162,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                                   selectionActive: false,
                                                   searchActive: false,
                                                   reorderEnabled: false,
-                                                ))
+                                                ).indexed)
                                               SliverIgnorePointer(
+                                                key: ValueKey(
+                                                  ('notlar', i, false),
+                                                ),
                                                 sliver: SliverRevealFade(
                                                   play: false,
                                                   sliver: sliver,
