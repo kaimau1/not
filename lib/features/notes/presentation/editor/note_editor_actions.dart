@@ -929,7 +929,7 @@ extension _EditorActions on _NoteEditorScreenState {
           : n.copyWith(archivedAt: DateTime.now()),
       immediate: true,
     );
-    if (!archived) Navigator.of(context).pop();
+    if (!archived) _closeEditor(() => Navigator.of(context).pop());
   }
 
   /// AI çıktısıyla notun içeriğini değiştirir ("Geliştir" sonuçları için).

@@ -15038,6 +15038,18 @@ abstract class AppLocalizations {
   /// **'Listeyi sağa al'**
   String get listPaneMoveRight;
 
+  /// No description provided for @noteOpenSide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yanda aç'**
+  String get noteOpenSide;
+
+  /// No description provided for @noteCloseSide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yandaki notu kapat'**
+  String get noteCloseSide;
+
   /// No description provided for @listPaneMoveLeft.
   ///
   /// In tr, this message translates to:
