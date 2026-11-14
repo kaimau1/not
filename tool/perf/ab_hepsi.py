@@ -1,6 +1,6 @@
 """TAM HIZ ÖLÇÜMÜ + OTOMATİK KARAR (HIZ_PLANI F81.1–F81.4).
 
-  python -u ab_hepsi.py <A.apk> <B.apk> [--kosu 3] [--altin] [--altin-yaz]
+  python -u ab_hepsi.py <A.apk> <B.apk> [--kosu 3] [--teyit 2] [--altin] [--altin-yaz]
                         [--etiket-a X] [--etiket-b Y] [--commit SHA]
 
 İki PROFİL APK'sı (kimlik `dev.kaimau.notlar.olcum`, "Notlar Ölçüm") sırayla
@@ -27,7 +27,9 @@ Evre başına: UI kare sayısı, UI ms toplamı, LAYOUT ms, en uzun kare,
 KARAR (F81.2): bir evrede B ortancası (UI ms ya da LAYOUT ms) A'nın EN KÖTÜ
 koşusundan da kötü VE fark > %20 VE > 3 ms → KÖTÜLEŞTİ (%10 aynı APK
 A=A'da yanlış alarm verdi, 2026-11-13). Tek KÖTÜLEŞTİ =
-`KARAR: KALDI`. `--altin`: B ayrıca `docs/perf/altin_taban.json`'a karşı;
+`KARAR: KALDI`. TEYİT (P60): ilk karar KALDI ise `--teyit` (2) A,B çifti daha
+koşulur, karar tüm koşularla yeniden verilir (tek seferlik gürültü elenir;
+`--teyit 0` eski davranış). `--altin`: B ayrıca `docs/perf/altin_taban.json`'a karşı;
 bir evrede %15'ten fazla kötü → KALDI (kümülatif kayma, A3). `--altin-yaz`:
 ortancalar altın tabana yazılır (A=B aynı APK ise iki tarafın TÜM koşuları;
 en az 5 koşu) — dosya yoksa tümü, varsa yalnız İYİLEŞEN evreler (mandal).
@@ -42,7 +44,9 @@ Senkronizasyon → Yedekten geri yükle → Diğer → İndirilenler.
 
 TELEFON KURALLARI (OTOMASYON §Telefon): her koşu < 34 °C'de başlar (37'nin
 altı yetmedi: koşu içinde 40'a ısınıp gürültüyü büyütüyordu) → bekler
-(ekran kapalı, en çok 30 dk), hâlâ sıcaksa GEÇERSİZ sayılır. Varsayılan kimlikli uygulamaya
+(ekran kapalı, en çok 30 dk), hâlâ sıcaksa GEÇERSİZ sayılır.
+VERİ (P60): not_ac/kb/yaz ilk OLCUM OLMAYAN kartta ölçülür (adı koşu satırında
+`[...]`); önceki koşuların eklediği " deneme yazisi" pencere dışında silinir. Varsayılan kimlikli uygulamaya
 dokunulmaz. Her dokunuş grubundan önce `ready()`: ekran açık, kilit yok,
 ÖNDEKİ PENCERE ölçüm uygulaması — değilse koşu durur (yanlış uygulamaya
 basmamak için). Ölçüm penceresinde uiautomator dökümü yok (semantiği açar);
@@ -188,7 +192,10 @@ def run_once(label):
     search = edit_boxes(xml)[0]
     menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > 600]
     plus = nodes(xml, "^Yeni not")
-    card_menu = menus[0]
+    # P60 (2026-11-14): veri yeniden kurulunca ilk kart sabitlenmiş "OLCUM kalem pdf"
+    # oldu → not_ac/kb/yaz/not_kapa PDF'li notu ölçtü (~3 kat sıçrama). OLCUM
+    # stres notları atlanır; açılan not her koşuda yazılır (veri doğrulaması).
+    card_menu, card_title = pick_card(xml, menus)
     card = (card_menu[1] - 170, card_menu[2] + 150)  # ⋮ kartın sağ üstünde; gövdesi sol altta
 
     ready()
@@ -237,6 +244,7 @@ def run_once(label):
     fx, fy = (body[0] + body[2]) // 2, min(body[1] + 60, (body[1] + body[3]) // 2)
     ready()
     tap(fx, fy); time.sleep(2.0)
+    trim_typed(fx, fy)
     s.window([("kb", (lambda: key("KEYCODE_BACK")) if i % 2 == 0 else (lambda: tap(fx, fy)),
                1.4 if i % 2 == 0 else 1.6) for i in range(6)])
     key("KEYCODE_MOVE_END")
@@ -282,7 +290,38 @@ def run_once(label):
 
     st = s.stats()
     st["acilis"]["ilk_kare_ms"] = s.first_frame_ms or 0
+    st["_not"] = card_title
     return st
+
+
+def pick_card(xml, menus):
+    """İlk OLCUM olmayan kartın ⋮ düğmesi + kart başlığı."""
+    labels = [n for n in nodes(xml) if n[0] and n[0] != "Not menüsü"]
+    for m in menus:
+        own = [n for n in labels if n[3][0] <= m[1] <= n[3][2] and n[3][1] <= m[2] <= n[3][3]]
+        title = own[0][0] if own else ""
+        if not title.startswith("OLCUM"):
+            return m, title[:40]
+    raise RuntimeError("OLCUM olmayan kart yok (veri seti?)")
+
+
+YAZI = " deneme yazisi"
+
+
+def trim_typed(fx, fy):
+    """Önceki koşuların `yaz` evresinde eklenen metni (pencere DIŞINDA) siler:
+    yoksa ölçülen not her koşuda 56 karakter büyür (P60, kayma kaynağı)."""
+    boxes = [m for m in re.finditer(r'text="([^"]*)"[^>]*?class="android\.widget\.EditText"', ui_dump())]
+    if len(boxes) < 2:
+        return
+    body, n = boxes[1].group(1), 0
+    while body.endswith(YAZI) and n < 40:
+        body, n = body[:-len(YAZI)], n + 1
+    if n:
+        key("KEYCODE_MOVE_END")
+        for i in range(0, n * len(YAZI), 50):
+            sh("input keyevent " + " ".join(["67"] * min(50, n * len(YAZI) - i)))
+        time.sleep(3.5)  # kEditorSaveDelay 2 sn: kayıt kb penceresine taşmasın
 
 
 def median_of(runs):
@@ -350,6 +389,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("a"); ap.add_argument("b")
     ap.add_argument("--kosu", type=int, default=3)
+    ap.add_argument("--teyit", type=int, default=2)
     ap.add_argument("--altin", action="store_true")
     ap.add_argument("--altin-yaz", action="store_true")
     ap.add_argument("--etiket-a", default=None); ap.add_argument("--etiket-b", default=None)
@@ -360,8 +400,11 @@ def main():
     os.makedirs(DOCS, exist_ok=True)
     runs = {"A": [], "B": []}
     temps = []
-    try:
-        for i in range(o.kosu):
+    golden_path = os.path.join(DOCS, "altin_taban.json")
+    golden = json.load(open(golden_path, encoding="utf-8"))["evreler"] if os.path.exists(golden_path) else None
+
+    def pairs(first, count):
+        for i in range(first, first + count):
             for side, apk in (("A", o.a), ("B", o.b)):
                 if not cool_enough():
                     print(f"koşu {i + 1}{side}: SICAK ({temperature()} °C) — GEÇERSİZ", flush=True)
@@ -373,18 +416,28 @@ def main():
                 except NotReady as e:
                     print(f"koşu {i + 1}{side}: DURDU — {e}", flush=True)
                     raise
+                note = st.pop("_not", "")
                 runs[side].append(st)
-                print(f"koşu {i + 1}{side} ({temps[-1]} °C): " + json.dumps(
+                print(f"koşu {i + 1}{side} ({temps[-1]} °C) [{note}]: " + json.dumps(
                     {k: v["ui_ms"] for k, v in st.items()}, ensure_ascii=False), flush=True)
                 json.dump(runs, open(os.path.join(OUT, "ab_hepsi_ham.json"), "w"), ensure_ascii=False)
+
+    try:
+        pairs(0, o.kosu)
+        rows, failed = (decide(runs["A"], runs["B"], golden if o.altin else None)
+                        if runs["A"] and runs["B"] else ([], True))
+        # P60 TEYİT (2026-11-14): son 3 turda her seferinde FARKLI tek evre %20'yi az aştı
+        # (menu, ilk kare, yeni_not) = gürültü. KALDI ise O.TEYIT çift daha koşulur ve
+        # karar TÜM koşularla yeniden verilir; kalıcı kötüleşme yine yakalanır.
+        if failed and o.teyit and runs["A"] and runs["B"]:
+            print(f"teyit: {o.teyit} çift daha (karar tüm koşularla yeniden)", flush=True)
+            pairs(o.kosu, o.teyit)
+            rows, failed = decide(runs["A"], runs["B"], golden if o.altin else None)
     finally:
         sh("input keyevent KEYCODE_SLEEP")
     if not runs["A"] or not runs["B"]:
         print("KARAR: KALDI (ölçülemedi)")
         sys.exit(2)
-    golden_path = os.path.join(DOCS, "altin_taban.json")
-    golden = json.load(open(golden_path, encoding="utf-8"))["evreler"] if os.path.exists(golden_path) else None
-    rows, failed = decide(runs["A"], runs["B"], golden if o.altin else None)
     print(f"\n| evre | A UI ms | B UI ms | A LAYOUT | B LAYOUT | A kare | B kare | B en uzun | B >16 | karar | altın |")
     print("|---|---|---|---|---|---|---|---|---|---|---|")
     for ph, a, b, v, g in rows:
