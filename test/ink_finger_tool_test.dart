@@ -1,6 +1,7 @@
-import 'dart:ui';
-
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -185,5 +186,33 @@ void main() {
     expect(prefs.getBool('ink_finger_eraser'), isTrue);
     expect(prefs.getBool('ink_pen_only'), isFalse);
     expect(prefs.getBool('ink_pen_only_chosen'), isTrue);
+  });
+
+  testWidgets("üçlü seçim: Siler'e dokununca parmak siler; hedefler 48 dp", (
+    tester,
+  ) async {
+    FingerTool? got;
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('tr'),
+        home: Scaffold(
+          body: InkFingerToolPicker(
+            onChanged: (t) {
+              got = t;
+              InkToolMemory.saveFingerTool(t);
+            },
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Kaydırır'), findsOneWidget);
+    await tester.tap(find.text('Siler'));
+    await tester.pump();
+    expect(got, FingerTool.erase);
+    expect(InkToolMemory.fingerTool, FingerTool.erase);
+    final h = tester.getSize(find.byType(SegmentedButton<FingerTool>)).height;
+    expect(h, greaterThanOrEqualTo(48));
   });
 }

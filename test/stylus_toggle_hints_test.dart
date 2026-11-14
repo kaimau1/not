@@ -40,4 +40,18 @@ void main() {
     expect(InkToolMemory.penOnly, isTrue);
     expect(chip, findsNothing);
   });
+
+  testWidgets('parmak Siler kipindeyken hap "parmak siliyor" der (K34)', (
+    tester,
+  ) async {
+    InkToolMemory.saveFingerTool(FingerTool.erase);
+    await pump(tester);
+    expect(find.textContaining('Parmak siliyor'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('finger-writes-chip')));
+    await tester.pump();
+    expect(InkToolMemory.fingerTool, FingerTool.scroll);
+    // Yalnız kalem kapanınca son seçilen öbür hâle (Siler) döner.
+    InkToolMemory.savePenOnly(false, chosen: true);
+    expect(InkToolMemory.fingerTool, FingerTool.erase);
+  });
 }

@@ -5875,6 +5875,25 @@ class AppLocalizationsTr extends AppLocalizations {
       'Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.';
 
   @override
+  String get inkFingerToolTitle => 'Parmak';
+
+  @override
+  String get inkFingerToolInfo =>
+      'Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.';
+
+  @override
+  String get inkFingerScroll => 'Kaydırır';
+
+  @override
+  String get inkFingerDraw => 'Çizer';
+
+  @override
+  String get inkFingerErase => 'Siler';
+
+  @override
+  String get inkFingerEraseOn => 'Parmak siliyor — yalnız kaleme geç';
+
+  @override
   String get inkPressureTitle => 'Basınç algısı';
 
   @override

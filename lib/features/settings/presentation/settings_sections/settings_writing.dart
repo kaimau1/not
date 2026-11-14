@@ -26,16 +26,16 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
     keywords: '${l10n.inkAutoStylusInfo} kalem algila otomatik',
   ),
   _SettingRow(
-    _InkSwitch(
-      key: const ValueKey('settings-ink-pen-only'),
-      icon: Icons.back_hand_outlined,
-      title: l10n.inkPenOnlyTitle,
-      subtitle: l10n.inkPenOnlyInfo,
-      read: () => InkToolMemory.penOnly,
-      write: (v) => InkToolMemory.savePenOnly(v, chosen: true),
+    InkFingerToolPicker(
+      key: const ValueKey('settings-ink-finger-tool'),
+      onChanged: (t) {
+        InkToolMemory.saveFingerTool(t);
+        InkToolMemory.toolChanged();
+      },
     ),
-    title: l10n.inkPenOnlyTitle,
-    keywords: '${l10n.inkPenOnlyInfo} parmak kaydir avuc',
+    title: l10n.inkFingerToolTitle,
+    keywords:
+        '${l10n.inkPenOnlyTitle} ${l10n.inkFingerToolInfo} parmak kaydir ciz sil silgi avuc',
   ),
   _SettingRow(
     _InkSwitch(

@@ -2471,6 +2471,57 @@ class ActiveInkPainter extends CustomPainter {
       old.accent != accent;
 }
 
+/// "Parmak: Kaydırır · Çizer · Siler" (K34, F63.6) — eski "yalnız kalem"
+/// anahtarının yerinde; kalem ayarları sayfası ve Ayarlar → Kalem ortak.
+class InkFingerToolPicker extends StatefulWidget {
+  const InkFingerToolPicker({super.key, required this.onChanged});
+
+  final void Function(FingerTool) onChanged;
+
+  @override
+  State<InkFingerToolPicker> createState() => _InkFingerToolPickerState();
+}
+
+class _InkFingerToolPickerState extends State<InkFingerToolPicker> {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.back_hand_outlined),
+          title: Text(l10n.inkFingerToolTitle),
+          subtitle: Text(l10n.inkFingerToolInfo),
+        ),
+        SegmentedButton<FingerTool>(
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(
+              value: FingerTool.scroll,
+              icon: const Icon(Icons.swipe_vertical_outlined),
+              label: Text(l10n.inkFingerScroll),
+            ),
+            ButtonSegment(
+              value: FingerTool.draw,
+              icon: const Icon(Icons.gesture_rounded),
+              label: Text(l10n.inkFingerDraw),
+            ),
+            ButtonSegment(
+              value: FingerTool.erase,
+              icon: const Icon(Icons.auto_fix_normal_outlined),
+              label: Text(l10n.inkFingerErase),
+            ),
+          ],
+          selected: {InkToolMemory.fingerTool},
+          onSelectionChanged: (s) => setState(() => widget.onChanged(s.first)),
+        ),
+      ],
+    );
+  }
+}
+
 class InkSettingsSheet extends StatelessWidget {
   const InkSettingsSheet({super.key, required this.controller});
 
@@ -2594,13 +2645,9 @@ class InkSettingsSheet extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.draw),
-              title: Text(l10n.inkPenOnlyTitle),
-              subtitle: Text(l10n.inkPenOnlyInfo),
-              value: controller.penOnly,
-              onChanged: controller.setPenOnly,
+            InkFingerToolPicker(
+              key: const ValueKey('ink-finger-tool'),
+              onChanged: controller.setFingerTool,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
