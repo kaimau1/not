@@ -743,7 +743,7 @@ class _PenTrayState extends State<PenTray> {
           CheckedPopupMenuItem(
             value: 1,
             checked: _ink.penOnly,
-            child: Text(_ink.penOnly ? l10n.inkPenOnlyOn : l10n.inkPenOnlyOff),
+            child: Text(_fingerLabel(l10n)),
           ),
           if (!_ink.eraser && !_ink.lasso)
             PopupMenuItem(
@@ -867,10 +867,16 @@ class _PenTrayState extends State<PenTray> {
     ),
     // YALNIZ KALEM: açıkken parmak kaydırır/yakınlaştırır.
     IconButton(
-      tooltip: _ink.penOnly ? l10n.inkPenOnlyOn : l10n.inkPenOnlyOff,
+      tooltip: _fingerLabel(l10n),
       isSelected: _ink.penOnly,
       visualDensity: VisualDensity.compact,
-      icon: Icon(_ink.penOnly ? Icons.draw_rounded : Icons.touch_app_outlined),
+      icon: Icon(
+        _ink.penOnly
+            ? Icons.draw_rounded
+            : InkToolMemory.fingerErases
+            ? Icons.auto_fix_normal_outlined
+            : Icons.touch_app_outlined,
+      ),
       onPressed: () => _ink.setPenOnly(!_ink.penOnly),
     ),
     IconButton(
@@ -881,6 +887,14 @@ class _PenTrayState extends State<PenTray> {
       onPressed: () => showInkSettings(context, _ink),
     ),
   ];
+
+  /// Yalnız kalem aç/kapa etiketi; kapalıyken parmağın işi (K34: Siler da
+  /// olabilir — kapatınca son seçilen Çizer/Siler'e döner).
+  String _fingerLabel(AppLocalizations l10n) => _ink.penOnly
+      ? l10n.inkPenOnlyOn
+      : InkToolMemory.fingerErases
+      ? l10n.inkFingerEraseOn
+      : l10n.inkPenOnlyOff;
 
   /// [PenTray.controls] satırı: solda ipucu, sağda geçmiş ve ayarlar.
   Widget _controlRow(BuildContext context) {

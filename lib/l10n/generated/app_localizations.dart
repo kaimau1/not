@@ -10466,6 +10466,42 @@ abstract class AppLocalizations {
   /// **'Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.'**
   String get inkPenOnlyInfo;
 
+  /// No description provided for @inkFingerToolTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parmak'**
+  String get inkFingerToolTitle;
+
+  /// No description provided for @inkFingerToolInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.'**
+  String get inkFingerToolInfo;
+
+  /// No description provided for @inkFingerScroll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydırır'**
+  String get inkFingerScroll;
+
+  /// No description provided for @inkFingerDraw.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizer'**
+  String get inkFingerDraw;
+
+  /// No description provided for @inkFingerErase.
+  ///
+  /// In tr, this message translates to:
+  /// **'Siler'**
+  String get inkFingerErase;
+
+  /// No description provided for @inkFingerEraseOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parmak siliyor — yalnız kaleme geç'**
+  String get inkFingerEraseOn;
+
   /// No description provided for @inkPressureTitle.
   ///
   /// In tr, this message translates to:

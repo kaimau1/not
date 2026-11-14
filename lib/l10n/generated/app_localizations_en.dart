@@ -5897,6 +5897,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fingers don\'t draw; one finger scrolls, two fingers zoom. Your palm leaves no marks. Turns on automatically the first time a pen touches the screen.';
 
   @override
+  String get inkFingerToolTitle => 'Finger';
+
+  @override
+  String get inkFingerToolInfo =>
+      'Scrolls: only the pen writes, a finger scrolls. Draws: a finger writes with the pen tool too. Erases: a finger erases, two fingers zoom.';
+
+  @override
+  String get inkFingerScroll => 'Scrolls';
+
+  @override
+  String get inkFingerDraw => 'Draws';
+
+  @override
+  String get inkFingerErase => 'Erases';
+
+  @override
+  String get inkFingerEraseOn => 'Finger erases — switch to pen only';
+
+  @override
   String get inkPressureTitle => 'Pressure sensitivity';
 
   @override

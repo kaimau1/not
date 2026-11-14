@@ -160,6 +160,10 @@ bool inkPointInPolygon(double x, double y, List<double> polygon) {
   return inside;
 }
 
+/// Parmak dokunuşunun işi (K34): kaydırır (= "yalnız kalem"), kalemin
+/// aracıyla çizer ya da siler.
+enum FingerTool { scroll, draw, erase }
+
 /// **KALEM TERCİHLERİNİN HAFIZASI** (kullanıcı isteği 2026-10-23: "pratiklik
 /// şart"): son seçilen kalem türü, renk, kalınlık, şeffaflık, "yalnız kalemle
 /// yaz" ve son kullanılan renkler. Her çizim ekranı (el yazısı, PDF, slayt,
@@ -173,6 +177,7 @@ class InkToolMemory {
 
   static const _kPenOnly = 'ink_pen_only';
   static const _kPenOnlyChosen = 'ink_pen_only_chosen';
+  static const _kFingerEraser = 'ink_finger_eraser';
   static const _kToggleBlinked = 'ink_pen_toggle_blinked';
 
   /// Yüzen kalem düğmesi ilk görünüşünde yanıp söndü mü (bir kez,
@@ -238,6 +243,16 @@ class InkToolMemory {
   /// dokunuşunda kendiliğinden açılır (Samsung Notes'taki gibi).
   static bool penOnlyChosen = false;
 
+  /// Parmak SİLER (K34, F63.6): `penOnly` kapalıyken parmak dokunuşu geçici
+  /// silgidir (kalemin yan düğmesi yolu). Ayrı anahtar — eski `ink_pen_only`
+  /// kaydı aynen okunur (yeni anahtar yoksa Kaydırır/Çizer).
+  static bool fingerErases = false;
+
+  /// Parmağın işi: [penOnly] + [fingerErases]'ten TÜRETİLİR (ayrı kayıt yok).
+  static FingerTool get fingerTool => penOnly
+      ? FingerTool.scroll
+      : (fingerErases ? FingerTool.erase : FingerTool.draw);
+
   /// Basınç algısı (kalem) açık mı.
   static bool pressure = true;
 
@@ -292,6 +307,7 @@ class InkToolMemory {
     _prefs = prefs;
     penOnly = prefs.getBool(_kPenOnly) ?? false;
     penOnlyChosen = prefs.getBool(_kPenOnlyChosen) ?? false;
+    fingerErases = prefs.getBool(_kFingerEraser) ?? false;
     toggleBlinked = prefs.getBool(_kToggleBlinked) ?? false;
     pressure = prefs.getBool(_kPressure) ?? true;
     color = prefs.getInt(_kColor);
@@ -324,6 +340,14 @@ class InkToolMemory {
     if (chosen) penOnlyChosen = true;
     _prefs?.setBool(_kPenOnly, value);
     if (chosen) _prefs?.setBool(_kPenOnlyChosen, true);
+  }
+
+  /// Parmak aracını kullanıcı seçti (her zaman `chosen` — ilk kalem
+  /// dokunuşundaki kendiliğinden "yalnız kalem" bunu ezmez).
+  static void saveFingerTool(FingerTool tool) {
+    fingerErases = tool == FingerTool.erase;
+    _prefs?.setBool(_kFingerEraser, fingerErases);
+    savePenOnly(tool == FingerTool.scroll, chosen: true);
   }
 
   static void saveShapeSnap(bool value) {
@@ -420,6 +444,7 @@ class InkToolMemory {
     _sessions = 0;
     penOnly = false;
     penOnlyChosen = false;
+    fingerErases = false;
     // Testte yanıp sönme yok (kare zamanlayıcısı açık kalmasın).
     toggleBlinked = true;
     pressure = true;
