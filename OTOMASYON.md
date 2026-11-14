@@ -46,6 +46,8 @@ Biten paketler: P01–P20, P23–P59 (P21/P53 → P22'ye katıldı; P44 → P43)
 | No | Paket | Model | Plan maddeleri | Cihaz | APK | Durum / sonuç |
 |---|---|---|---|---|---|---|
 | P22 | KAPANIŞ: açık maddeler + büyük toparlama (P53 katıldı) | opus | kalan `[ ]` maddeler + P53 protokolü (F69.4/5, F58.1/4) | gerekirse | gerekirse | cihaz bekliyor — main'e [apk]'sız birleştirildi 2026-11-14 (dal CI yeşil); kullanıcıya görünen F60.6 (zemin görseli ek sayılmıyor) + F69.3 (alarm izni satırı) → sonraki tur: `ab-olcum` ile A/B (A=`../ab_apk/B_main_ce83.apk`, B=main HEAD; altın kolonu veri sıfırlandığı için geçersiz, KONTROL_LISTEM 40) → geçerse [apk]. Önceki sonuç: dal oto/P22-kapanis (2026-11-14): 1. evre F60.6 düzeltme (zemin görseli ek sayılmıyor), F69.3 alarm izni satırı (cihazda doğrulanmadı), F66.5 rapor, açık maddeler değerlendirildi; P53: PLAN.md + KONTROL_LISTEM.md (40 madde), 15 plan + KALANLAR*/KUYRUK_AYRINTI `docs/arsiv/planlar/`'a, kalıcı kurallar docs/hafiza'ya, Kuyruk sıkıştırıldı, CLAUDE.md yol haritası + F58.1/F58.4, F69.5 [x]. Sabah bakılacak: dondurma (K-O1) kalksın mı; SIRA satırı bayat (dokunulmadı); APK = evet (2 görünür değişiklik, sürüm notu yazıldı) |
+| K32 | İki not yan yana (tablet) | opus | docs/plan_K32_K34.md §K32 | tablet | evet | bekliyor — plan hazır |
+| K34 | Kalem ucu tahmini + parmağa ayrı araç | opus | docs/plan_K32_K34.md §K34 | tablet | evet | bekliyor — plan hazır |
 
 **SIRA (2026-11-14):** Kuyruk'ta yalnız P22 (cihaz bekliyor: A/B → [apk]). Sonra boş; yeni iş `PLAN.md`'den kullanıcı isteğiyle (dondurma K-O1, `ISTEK_KUTUSU.md`).
 
