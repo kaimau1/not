@@ -48,4 +48,21 @@ void main() {
     await tester.pump();
     await endEditor(tester);
   });
+  testWidgets('kayıtlı üst çubuk sırası uygulanır, ⋮ hep sonda (P20 M8)', (
+    tester,
+  ) async {
+    await pumpEditor(tester, note, size: const Size(1280, 800));
+    double x(Key k) => tester.getCenter(find.byKey(k)).dx;
+    expect(x(home), lessThan(x(full)));
+
+    Personalize.update(
+      (p) => p.copyWith(topOrder: [UiItem.topFullscreen, UiItem.topHome]),
+    );
+    await tester.pump();
+    expect(x(full), lessThan(x(home)));
+    const more = ValueKey('editor-more');
+    expect(x(more), greaterThan(x(home)));
+    expect(x(more), greaterThan(x(full)));
+    await endEditor(tester);
+  });
 }

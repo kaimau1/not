@@ -1232,6 +1232,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
+  /// Üst çubuk sırası (P20 M8, [UiPrefs.topOrder]). Kök YALNIZ sıra
+  /// değişince kurulur — gizle/göster her öğenin kendi [Customizable]'ında.
+  late List<String> _topOrder;
+
+  void _onTopOrder() {
+    final order = Personalize.current.topOrder;
+    if (listEquals(order, _topOrder)) return;
+    setState(() => _topOrder = order);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1240,6 +1250,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     unawaited(AutoSpell.load().then((_) => _seedSpell()));
     FocusManager.instance.addListener(_onAnyFocusChange);
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
+    _topOrder = Personalize.current.topOrder;
+    Personalize.listenable.addListener(_onTopOrder);
     // Kök gezgin: kapanış önerisi (F52.3) editör atıldıktan sonra açılır.
     _rootNavigator = Navigator.maybeOf(context, rootNavigator: true);
     // Uygulama arka plana alınırken/kapatılırken bekleyen kaydı zorlamak için
@@ -1702,6 +1714,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _typingN.dispose();
     FocusManager.instance.removeListener(_onAnyFocusChange);
     InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
+    Personalize.listenable.removeListener(_onTopOrder);
     _fieldFocusedN.dispose();
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
@@ -3013,7 +3026,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return;
     }
     if (_penMode) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     // Neden açıldığı ve "yalnız kalem" durumu [_penModeOpened]'da söylenir.
     _openPen();
   }
@@ -5145,6 +5158,11 @@ child: NoteFindBar(
                   ),
                 ),
             actions: [
+              // SIRA kullanıcının (P20 M8, [UiPrefs.topOrder]); sabit olanlar:
+              // ⌨ ve ortak düzenleyen Ana sayfa yuvasının ardında, ⋮ en sonda.
+              for (final id in UiPrefs.orderOf(UiItem.topDefault, _topOrder))
+                ...switch (id) {
+                UiItem.topHome => [
               // ANA SAYFAYA DÖN (F28.3): geniş ekranda/web'de ray bu sırada
               // çekmece ya da gizli; tek dokunuşla `/`. Telefonda yok.
               if (MediaQuery.sizeOf(context).width >= kRailBreakpoint)
@@ -5186,6 +5204,8 @@ child: NoteFindBar(
                 noteId: widget.noteId,
                 ownerId: widget.ownerId,
               ),
+                ],
+                UiItem.topSync => [
               // KÖK NEDEN (kasma): bu akış `build`'in en başında izleniyordu.
               // `pendingWrites` her kayıtta false→true→false gidiyor, yani
               // yazarken (debounce 0,5 sn / en geç 3 sn) düzenli aralıklarla
@@ -5246,6 +5266,8 @@ child: NoteFindBar(
                 ),
               ),
               ),
+                ],
+                UiItem.topUndo => [
               // Geri al: son değişikliği (yazma dizisi, madde işaretleme, görsel
               // taşıma, AI ile değiştirme...) tek dokunuşta iptal eder. Yığın
               // boşken pasif durur — düğmenin yerini korur ki araç çubuğu
@@ -5322,6 +5344,8 @@ child: NoteFindBar(
                   );
                 },
               ),
+                ],
+                UiItem.topPin => [
               // ORTAK ÇALIŞAN düğmesi buradaydı; 2026-11-01'den beri
               // başlığın yanındaki etiket/hatırlatıcı çipinde (bkz.
               // [_collabMarker]).
@@ -5364,6 +5388,8 @@ child: NoteFindBar(
                 ),
               ),
               ),
+                ],
+                UiItem.topFullscreen => [
               // HESAP MAKİNESİ ⋮ menüsünün hızlı satırında (2026-10-11):
               // üst çubuk notun DURUMUNA ayrıldı — geri al/yinele, sabitle,
               // ortak çalışan. Araçlar ⋮'te ve alt çubukta.
@@ -5383,6 +5409,9 @@ child: NoteFindBar(
                           child: _fullscreenButton(l10n),
                         ),
                 ),
+                ],
+                _ => const <Widget>[],
+              },
               // ⋮ yazarken de görünür: hızlı satırın en sağında (kullanıcı
               // isteği 2026-11-08 — "3 nokta geri gelsin").
               IconButton(
