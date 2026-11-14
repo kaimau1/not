@@ -715,3 +715,24 @@ class _HoldRingPainter extends CustomPainter {
   bool shouldRepaint(_HoldRingPainter old) =>
       old.state != state || old.color != color;
 }
+
+/// Satırın listedeki yeri: önbellekli satırın DIŞINDAN verilir (P20 M1).
+/// Yer değişince yalnız okuyan küçük parçalar (tutamaç, numara) kurulur.
+class _RowSlot extends InheritedWidget {
+  const _RowSlot({
+    super.key,
+    this.reorderIndex,
+    this.orderNumber,
+    required super.child,
+  });
+
+  final int? reorderIndex;
+  final int? orderNumber;
+
+  static _RowSlot? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_RowSlot>();
+
+  @override
+  bool updateShouldNotify(_RowSlot old) =>
+      old.reorderIndex != reorderIndex || old.orderNumber != orderNumber;
+}

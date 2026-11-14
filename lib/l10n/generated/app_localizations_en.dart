@@ -4859,6 +4859,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personalizeBarReset => 'Reset bottom bar';
 
   @override
+  String get personalizeBarTop => 'Top bar · button order';
+
+  @override
   String get personalizeBarMoveRight => 'Move to right capsule';
 
   @override

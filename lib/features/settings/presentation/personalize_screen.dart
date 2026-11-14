@@ -466,6 +466,9 @@ class _EditorSection extends StatelessWidget {
           icon: Icons.keyboard_alt_outlined,
           child: const QuickRowEditor(inline: true),
         ),
+        // Üst çubuk düğmeleri (eşitle, geri al, sabitle, ana sayfa, tam
+        // ekran) yukarıdaki listede sıralanır/gizlenir (P20 M8); burada
+        // yalnız sıralanmayan alanlar.
         _Section(
           title: l10n.personalizeEditorTop,
           icon: Icons.web_asset_rounded,
@@ -477,36 +480,14 @@ class _EditorSection extends StatelessWidget {
                 label: l10n.uiItemDate,
               ),
               (
-                id: UiItem.topSync,
-                icon: Icons.cloud_done_outlined,
-                label: l10n.uiItemSync,
-              ),
-              (id: UiItem.topUndo, icon: Icons.undo, label: l10n.undo),
-              (
                 id: UiItem.topCollab,
                 icon: Icons.person_add_alt_1_outlined,
                 label: l10n.collaborators,
               ),
               (
-                id: UiItem.topPin,
-                icon: Icons.push_pin_outlined,
-                label: l10n.pin,
-              ),
-              (
                 id: UiItem.editorTags,
                 icon: Icons.sell_outlined,
                 label: l10n.moduleTags,
-              ),
-              // Geniş ekran / tablet düğmeleri (P50).
-              (
-                id: UiItem.topHome,
-                icon: Icons.home_outlined,
-                label: l10n.goHome,
-              ),
-              (
-                id: UiItem.topFullscreen,
-                icon: Icons.fullscreen_rounded,
-                label: l10n.noteFullscreen,
               ),
             ],
           ),

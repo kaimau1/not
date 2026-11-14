@@ -231,7 +231,7 @@ extension _ItemsActions on ItemsEditorState {
   /// yazısı seçili (alanın uzun basışı sözcük seçtiyse genişletilir).
   void _holdSelectText(NoteItem item) {
     if (_selectionMode || !mounted) return;
-    HapticFeedback.lightImpact();
+    AppHaptics.thud();
     final controller = _controllerFor(item);
     final all = TextSelection(
       baseOffset: 0,
@@ -244,7 +244,7 @@ extension _ItemsActions on ItemsEditorState {
 
   void _holdSelect(NoteItem item) {
     if (_selectionMode || !mounted) return;
-    HapticFeedback.lightImpact();
+    AppHaptics.thud();
     final controller = _controllerFor(item);
     final sel = controller.selection;
     if (sel.isValid && !sel.isCollapsed) {

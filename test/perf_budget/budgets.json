@@ -2,33 +2,33 @@
   "_kural": "Mandal: bütçe yalnız DÜŞER. Yükseltmek için commit başlığında [butce] ve girdinin 'neden' alanı. Senaryolar OTURTMA_PLANI.md Ek A.",
   "S1": {
     "senaryo": "Kısa metin notu, gövdeye 20 karakter (telefon)",
-    "kok_kurulum": 1,
+    "kok_kurulum": 0,
     "update_note": 1,
-    "bugun": "1 / 1 (2026-11-11)",
+    "bugun": "0 / 1 (2026-11-14, P20 adım 3: geri al düğmesi _undoN'u dinliyor; önce 1 / 1)",
     "hedef": "≤ 1 (geri al düğmesi)",
     "neden": "İlk ölçüm = hedef: ilk tuşta geri al düğmesi için 1 kök kurulum, kayıt debounce'lu"
   },
   "S2": {
     "senaryo": "30 maddeli liste, bir maddeye 20 karakter",
-    "items_editor": 5,
-    "satir": 15,
-    "bugun": "ItemsEditor 5 / satır 15 (2026-11-11)",
+    "items_editor": 0,
+    "satir": 0,
+    "bugun": "0 / 0 (2026-11-14, P20 adım 3: geri al düğmesi kökü kurmuyor); ItemsEditor 1 / satır 1 (2026-11-14, P20 adım 2: telefonda tutamaçsız düz liste; önce 5 / 15)",
     "hedef": "0 / 0",
     "neden": "İlk ölçüm (bugünkü hâl); hedefin üstünde — düşürülecek, yükseltilmez"
   },
   "S3": {
     "senaryo": "30 maddeli liste, bir kutucuğu işaretle",
     "kok_kurulum": 1,
-    "satir": 23,
-    "bugun": "kök 1 / satır 23 — işaretlenen maddeden sonraki bütün satırlar (2026-11-11)",
+    "satir": 1,
+    "bugun": "kök 1 / satır 1 (2026-11-14, P20 adım 2; önce 23 — işaretlenen maddeden sonraki bütün satırlar: SliverReorderableList satırı dizinli GlobalKey ile sarıyordu + sıra no satır önbelleği anahtarındaydı)",
     "hedef": "≤ 1 / ≤ 2 (Faz 64)",
     "neden": "13 ölçüm artığıydı: liste yarım kuruluyken ölçülmüştü (_growBudget). Ölçüm artık kurulum bitince; ESKİ kod da bu ölçümle 23 veriyor (2026-11-11 doğrulandı) — gerileme değil. Satır hedefi Faz 64"
   },
   "S4": {
     "senaryo": "Maddede Enter (yeni madde)",
     "kok_kurulum": 1,
-    "satir": 23,
-    "bugun": "kök 1 / satır 23 (2026-11-11)",
+    "satir": 1,
+    "bugun": "kök 1 / satır 1 (2026-11-14, P20 adım 2; önce 23)",
     "hedef": "≤ 1 / ≤ 2 (Faz 64)",
     "neden": "14 ölçüm artığıydı: liste yarım kuruluyken ölçülmüştü (_growBudget). Ölçüm artık kurulum bitince; ESKİ kod da bu ölçümle 23 veriyor (2026-11-11 doğrulandı) — gerileme değil. Satır hedefi Faz 64"
   },
@@ -64,9 +64,9 @@
   },
   "S9": {
     "senaryo": "Biçim panelini aç → kapat",
-    "tuval_kurulum": 2,
+    "tuval_kurulum": 0,
     "govde_boy_karesi": 2,
-    "bugun": "tuval 2 (2026-11-11); gövde boyunun değiştiği kare 2 — açılış 1 + kapanış 1 (2026-11-13, P46: panel ve alt çubuktaki iki AnimatedSize kalktı, hareket yalnız boyamada; önce 34)",
+    "bugun": "tuval 0 (2026-11-14, P20 adım 5: biçim kipi ValueNotifier, kök setState yok); tuval 2 (2026-11-11); gövde boyunun değiştiği kare 2 — açılış 1 + kapanış 1 (2026-11-13, P46: panel ve alt çubuktaki iki AnimatedSize kalktı, hareket yalnız boyamada; önce 34)",
     "hedef": "0 (Faz 64)",
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 64'te işlenecek"
   },
@@ -113,8 +113,8 @@
   },
   "S14": {
     "senaryo": "Yıldızla (⋮ levhasından; sabitle aynı _mutate yolu)",
-    "tuval_kurulum": 1,
-    "bugun": "1 (2026-11-11)",
+    "tuval_kurulum": 0,
+    "bugun": "0 (2026-11-14, P20 adım 4: yıldız/iğne NoteSlice); 1 (2026-11-11)",
     "hedef": "0 (Faz 64)",
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 64'te işlenecek"
   },
@@ -159,9 +159,9 @@
     "senaryo": "Telefon 412×915, 30 not: karttan not aç (gerçek NoteOpenPage geçişi), 40 kare — ana ekran kurulumu, kart kurulumu, ilk kare ve sonraki en ağır kare",
     "note_card": 2,
     "dashboard_kurulum": 0,
-    "ilk_kare_kurulum": 876,
+    "ilk_kare_kurulum": 874,
     "gecis_karesi_kurulum": 285,
-    "bugun": "NoteCard 2 / DashboardScreen 0 / ilk kare 876 / geçiş karesi en çok 285 (2026-11-13, P46: başlık ölçümü kök setState yerine ValueNotifier — ikinci karede yalnız tuval kurulur); önce 877 / 788",
+    "bugun": "ilk kare 874 (2026-11-14, P20 adım 4–5: yıldız/iğne dilimi +6, biçim kipi dar dinleyicileri +3, Customizable tek kurulum -11; main 876); NoteCard 2 / DashboardScreen 0 / ilk kare 876 / geçiş karesi en çok 285 (2026-11-13, P46: başlık ölçümü kök setState yerine ValueNotifier — ikinci karede yalnız tuval kurulur); önce 877 / 788",
     "hedef": "NoteCard ≤ 1 (yalnız açılan kartın halesi); geçiş kareleri editörü ikinci kez kurmasın",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl) — mandal"
   },
@@ -210,10 +210,10 @@
   },
   "S24": {
     "senaryo": "Soğuk açılış (telefon, 30 not, AppFrame + SplitShell + DashboardScreen): ilk karede, kartlar görünene dek ve 2 sn içinde kurulan widget (tür toplamı)",
-    "ilk_kare_kurulum": 930,
-    "kartlara_dek_kurulum": 4019,
-    "iki_sn_kurulum": 4031,
-    "bugun": "ilk kare 930 / kartlar (1 kare sonra) 4019 / 2 sn 4031 (2026-11-12)",
+    "ilk_kare_kurulum": 927,
+    "kartlara_dek_kurulum": 4015,
+    "iki_sn_kurulum": 4027,
+    "bugun": "927 / 4015 / 4027 (2026-11-14, P20: Customizable tek kurulum); ilk kare 930 / kartlar (1 kare sonra) 4019 / 2 sn 4031 (2026-11-12)",
     "hedef": "taban + mandal",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (taban) — mandal"
   },

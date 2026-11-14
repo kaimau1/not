@@ -12,6 +12,7 @@ import '../../domain/reminder_repeat.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/a11y/min_tap_target.dart';
 import '../../../../core/app_icons.dart';
+import '../../../../core/haptics.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -38,6 +39,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_update.dart';
+import 'note_slice.dart';
+import '../../../../core/widgets/toggle_pop.dart';
 import '../../../../app/router.dart';
 import '../../../../app/window_class.dart';
 
@@ -619,7 +622,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// kaydedip yeni sürümün verisini bozmasın.
   bool get _readOnly => widget.readOnly || ref.read(updateRequiredProvider);
 
-  Note? _note;
+  /// Açık not (P20 F64.2): dar dinleyiciler ([NoteSlice]) bunu dinler.
+  final _noteN = LateSafeValue<Note?>(null);
+  Note? get _note => _noteN.value;
+  set _note(Note? v) => _noteN.value = v;
+
+  /// (geri alınabilir, yinelenebilir) — üst çubuktaki düğmeler bunu dinler;
+  /// yığın değişince kök kurulmaz (P20 M3).
+  final _undoN = LateSafeValue<(bool, bool)>((false, false));
+  void _syncUndoN() =>
+      _undoN.value = (_undoStack.canUndo, _undoStack.canRedo);
 
   /// `setState` konu dosyalarındaki uzantılardan (F9.3) — orada korumalı
   /// üyeye doğrudan erişilemez.
@@ -929,7 +941,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   // ---- Biçim çubuğu ---------------------------------------------------
 
   /// Biçim çubuğu açık mı (alt çubuktaki "Aa" düğmesi açıp kapatır).
-  bool _formatBarOpen = false;
+  /// Kip notifier'da (P20 M5): panel, alt çubuk ve geri tuşu dar dinler;
+  /// aç/kapa kökü kurmaz.
+  final _formatOpenN = ValueNotifier<bool>(false);
+  bool get _formatBarOpen => _formatOpenN.value;
+  set _formatBarOpen(bool v) => _formatOpenN.value = v;
+
+  /// Panel: kip + hedef alan (etkin biçim vurgusu hedefin imlecinden).
+  late final Listenable _formatPanelL = Listenable.merge([
+    _formatOpenN,
+    _formatTargetN,
+  ]);
 
   /// Yazma sürüyor mu (alt çubuk gizleme, bkz. [TypingBarHide]). Yalnız bu
   /// bildirici değişir: ekran setState ile yeniden kurulmaz.
@@ -1067,15 +1089,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _formatTargetN.value = _formatTarget;
     });
-    if (!_formatBarOpen) return;
-    // KÖK NEDEN (çökme): bu kapanış alanın `dispose`undan geliyor ve bir
-    // widget BUILD FAZINDA da unmount edilebiliyor (belge/tip değişince
-    // pano anahtarı değişir). `mounted` yalnız "dispose edildi mi"yi
-    // korur, "build içindeyiz"i korumaz — `setState() called during build`
-    // istisnası buradan çıkar. Çizim tazelemesi bir kareye ertelenir.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _formatBarOpen) setState(() {});
-    });
+    // Açık panel bu bildirimi [_formatPanelL] ile dinler (P20 M5): kök
+    // setState yok. Bildirim kareye ertelendi (KÖK NEDEN çökme: kapanış
+    // alanın build fazındaki dispose'undan da gelebiliyor).
   }
 
   void _setFormatTarget(
@@ -1120,10 +1136,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Alan yeni odaklandı: imleci klavyenin üstüne al. Bu kapanış gövde,
     // başlık ve madde satırlarının HEPSİNDEN geçtiği için tek yer yeter.
     _revealCaretSoon();
-    // Çubuk AÇIKKEN hedef değişmesi çizimi etkiler: aktif biçim vurgusu yeni
-    // alanın imlecinden hesaplanmalı. Kapalıyken çizim değişmediği için
-    // gereksiz yere setState çağırmıyoruz (odak her satırda değişiyor).
-    if (changed && _formatBarOpen && mounted) setState(() {});
+    // Çubuk AÇIKKEN hedef değişmesi çizimi etkiler: panel [_formatTargetN]'i
+    // dinliyor (yukarıda güncellendi) — kök setState yok (P20 M5).
   }
 
   /// Seçimdeki tüm biçimleri siler.
@@ -1218,6 +1232,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
+  /// Üst çubuk sırası (P20 M8, [UiPrefs.topOrder]). Kök YALNIZ sıra
+  /// değişince kurulur — gizle/göster her öğenin kendi [Customizable]'ında.
+  late List<String> _topOrder;
+
+  void _onTopOrder() {
+    final order = Personalize.current.topOrder;
+    if (listEquals(order, _topOrder)) return;
+    setState(() => _topOrder = order);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1226,6 +1250,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     unawaited(AutoSpell.load().then((_) => _seedSpell()));
     FocusManager.instance.addListener(_onAnyFocusChange);
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
+    _topOrder = Personalize.current.topOrder;
+    Personalize.listenable.addListener(_onTopOrder);
     // Kök gezgin: kapanış önerisi (F52.3) editör atıldıktan sonra açılır.
     _rootNavigator = Navigator.maybeOf(context, rootNavigator: true);
     // Uygulama arka plana alınırken/kapatılırken bekleyen kaydı zorlamak için
@@ -1688,6 +1714,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _typingN.dispose();
     FocusManager.instance.removeListener(_onAnyFocusChange);
     InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
+    Personalize.listenable.removeListener(_onTopOrder);
     _fieldFocusedN.dispose();
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
@@ -1758,9 +1785,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _notesRepo?.releaseNote(widget.noteId);
     _loadGuard?.cancel();
     _debouncer.dispose();
+    // Geç geri çağrılar yazmaya devam edebilir: LateSafeValue sessiz saklar.
+    _noteN.dispose();
+    _undoN.dispose();
     _sub?.close();
     _titleController.dispose();
     _formatTargetN.dispose();
+    _formatOpenN.dispose();
     _titleFocus.dispose();
     _bodyWindow.dispose();
     _bodyController.dispose();
@@ -1815,6 +1846,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.text = previous.body;
     _mutate((_) => previous, immediate: true);
     _restoring = false;
+    _syncUndoN();
     _showSnack(context.l10n.undone);
   }
 
@@ -1830,6 +1862,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.text = next.body;
     _mutate((_) => next, immediate: true);
     _restoring = false;
+    _syncUndoN();
   }
 
   /// Daire jestinin yapay zekâsı bu OTURUMDA kullanılamıyor mu (TUTARLILIK
@@ -1854,8 +1887,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.frameColor == b.frameColor &&
       a.customColor == b.customColor &&
       a.customFrameColor == b.customFrameColor &&
-      a.pinned == b.pinned &&
-      a.starred == b.starred &&
+      // pinned/starred YOK: üst çubukta NoteSlice dinliyor (P20 M4).
       a.locked == b.locked &&
       a.folderId == b.folderId &&
       a.fontFamily == b.fontFamily &&
@@ -1930,8 +1962,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } else {
       _previewHold?.touch(widget.noteId);
     }
-    final wasUndo = _undoStack.canUndo;
-    final wasRedo = _undoStack.canRedo;
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
     // asla yazılmaz. Gövde hangi yoldan gelirse gelsin burada temizlenir —
     // her çağrı yerine ayrı koruma koymak yerine tek yerde.
@@ -1947,6 +1977,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         : transformed.copyWith(body: clean);
     if (!_restoring) {
       _undoStack.push(note, next, now: DateTime.now());
+      _syncUndoN();
       // YENİ EK (kullanıcının eklediği; akıştan gelen değil — o _mutate'ten
       // geçmez): sayfada yüzüyorsa yerleşim ipucu açılır.
       if (next.attachments.length > note.attachments.length) {
@@ -1963,14 +1994,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (added != null) _placementHintId = added.id;
       }
     }
-    // SAF YAZIM (yalnız başlık/gövde metni değişti, geri al düğmesinin durumu
-    // dahil görünür hiçbir parça etkilenmedi): 3700 satırlık build'i her tuş
+    // SAF YAZIM (yalnız başlık/gövde metni değişti, görünür hiçbir parça
+    // etkilenmedi; geri al düğmesi [_undoN]'u kendisi dinler — P20 M3): 3700 satırlık build'i her tuş
     // vuruşunda çalıştırmak "klavye açılırken kasıyor" şikayetinin başrolüydü
     // — denetleyici metni zaten ekranda, ekran geneli setState atlanır.
-    final pureTyping =
-        _sameVisual(note, next, ignoreAttachments: inkOnly) &&
-        _undoStack.canUndo == wasUndo &&
-        _undoStack.canRedo == wasRedo;
+    final pureTyping = _sameVisual(note, next, ignoreAttachments: inkOnly);
     if (pureTyping) {
       if (inkOnly) {
         for (final a in note.attachments) {
@@ -2998,7 +3026,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return;
     }
     if (_penMode) return;
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     // Neden açıldığı ve "yalnız kalem" durumu [_penModeOpened]'da söylenir.
     _openPen();
   }
@@ -4226,7 +4254,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   // Paket grubu (F60.2): biçim paneli açık paketi kapatmaz.
                   child: TapRegion(
                   groupId: kNotePackageTapGroup,
-                  child: !_formatBarOpen || _findOpen
+                  // Kip ve hedef dar dinlenir (P20 M5).
+                  child: ListenableBuilder(
+                    listenable: _formatPanelL,
+                    builder: (context, _) => !_formatBarOpen || _findOpen
                         ? const SizedBox.shrink()
                         : RevealUp(
                           child: SingleChildScrollView(
@@ -4322,8 +4353,7 @@ child: FormatBar(
                                   : (h) => _runOnTarget(
                                       (c) => applyRichHeading(c, h),
                                     ),
-                              onClose: () =>
-                                  setState(() => _formatBarOpen = false),
+                              onClose: () => _formatBarOpen = false,
                               // Hedef MADDEYSE alt çizgi sırası (2026-10-30:
                               // uzun basış menüsünden buraya taşındı).
                               dividerKind: _formatItemId == null
@@ -4343,6 +4373,7 @@ child: FormatBar(
 ),
                           ),
                         ),
+                  ),
                   ),
                 ),
                 // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
@@ -4391,7 +4422,10 @@ child: NoteFindBar(
                 child: TypingBarHide(
                   hidden: _typingN,
                   enabled: ref.watch(hideBarWhileTypingProvider),
-                  child: _formatBarOpen
+                  // Biçim kipi dar dinlenir (P20 M5).
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _formatOpenN,
+                    builder: (context, formatOpen, _) => formatOpen
                       ? const SizedBox(width: double.infinity)
                       : _barReturn(
                       Column(
@@ -4571,10 +4605,12 @@ child: NoteFindBar(
                             UiItem.barFormat => (
                               Icons.text_format,
                               l10n.formatTitle,
-                              () => setState(() {
-                                _formatBarOpen = !_formatBarOpen;
+                              () {
+                                // Önce yer değiştirme bayrağı: kapanınca
+                                // dönen çubuk RevealUp ile gelsin.
                                 _barSwapped = true;
-                              }),
+                                _formatBarOpen = !_formatBarOpen;
+                              },
                               _formatBarOpen,
                             ),
                             UiItem.barAdd => (
@@ -4892,6 +4928,7 @@ child: NoteFindBar(
                 ],
                 ),
                     ),
+                  ),
                 ),
                 ),
                 ),
@@ -4899,6 +4936,7 @@ child: NoteFindBar(
             ),
           );
 
+    final fullscreenNow = ref.watch(noteFullscreenProvider);
     return Actions(
       actions: {
         // Klavyeden Kopyala/Kes (Ctrl+C / Ctrl+X): EditableText bu eylemleri
@@ -4935,14 +4973,17 @@ child: NoteFindBar(
                 .set(!ref.read(noteFullscreenProvider)),
         },
         // Geri tuşu önce CANLI ARAMAYI kapatır, notu değil.
-        child: PopScope(
+        // Biçim kipi dar dinlenir (P20 M5): alt ağaç `child` olarak yerinde.
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _formatOpenN,
+          builder: (context, formatOpen, child) => PopScope(
           // Geri tuşu sırayla: tam ekran → kayıt → biçim paneli → canlı
           // arama → not.
           canPop:
               !_findOpen &&
-              !_formatBarOpen &&
+              !formatOpen &&
               _voiceRecorder == null &&
-              !ref.watch(noteFullscreenProvider),
+              !fullscreenNow,
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
             // Açık bir alt panel (ek şeridi, kalem/biçim tepsisi…) varsa geri
@@ -4966,11 +5007,13 @@ child: NoteFindBar(
             // Biçim paneli açıkken geri PANELİ kapatır (kullanıcı isteği
             // 2026-10-28), notu değil.
             if (_formatBarOpen) {
-              setState(() => _formatBarOpen = false);
+              _formatBarOpen = false;
               return;
             }
             if (_findOpen) _closeFind();
           },
+          child: child!,
+          ),
           // NOT TEMASI (2026-10-28): çizilmiş zemin üst çubuğun da
           // arkasında; sayfa ve üst çubuk saydamlaşır.
           child: NoteThemeBackdrop(
@@ -5086,25 +5129,40 @@ child: NoteFindBar(
                       ),
                       // Yıldızlı göstergesi tarihin yanında; dokununca
                       // yıldız kalkar (menüye gitmeden geri alınabilsin).
-                      if (note.starred)
-                        IconButton(
-                          tooltip: l10n.unstar,
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber.shade600,
-                          ),
-                          onPressed: () => _mutate(
-                            (n) => n.copyWith(starred: false),
-                            immediate: true,
-                          ),
+                      // Dar dinleme (P20 M4): yıldız kökü kurmaz; şekil
+                      // sabit (kasma md. 4), tepki TogglePop (P38).
+                      NoteSlice<bool>(
+                        source: _noteN,
+                        select: (n) => n.starred,
+                        builder: (context, on) => TogglePop(
+                          on: on,
+                          child: on
+                              ? IconButton(
+                                  tooltip: l10n.unstar,
+                                  visualDensity: VisualDensity.compact,
+                                  icon: Icon(
+                                    Icons.star,
+                                    size: 16,
+                                    color: Colors.amber.shade600,
+                                  ),
+                                  onPressed: () => _mutate(
+                                    (n) => n.copyWith(starred: false),
+                                    immediate: true,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
                         ),
+                      ),
                     ],
                   ),
                   ),
                 ),
             actions: [
+              // SIRA kullanıcının (P20 M8, [UiPrefs.topOrder]); sabit olanlar:
+              // ⌨ ve ortak düzenleyen Ana sayfa yuvasının ardında, ⋮ en sonda.
+              for (final id in UiPrefs.orderOf(UiItem.topDefault, _topOrder))
+                ...switch (id) {
+                UiItem.topHome => [
               // ANA SAYFAYA DÖN (F28.3): geniş ekranda/web'de ray bu sırada
               // çekmece ya da gizli; tek dokunuşla `/`. Telefonda yok.
               if (MediaQuery.sizeOf(context).width >= kRailBreakpoint)
@@ -5146,6 +5204,8 @@ child: NoteFindBar(
                 noteId: widget.noteId,
                 ownerId: widget.ownerId,
               ),
+                ],
+                UiItem.topSync => [
               // KÖK NEDEN (kasma): bu akış `build`'in en başında izleniyordu.
               // `pendingWrites` her kayıtta false→true→false gidiyor, yani
               // yazarken (debounce 0,5 sn / en geç 3 sn) düzenli aralıklarla
@@ -5206,6 +5266,8 @@ child: NoteFindBar(
                 ),
               ),
               ),
+                ],
+                UiItem.topUndo => [
               // Geri al: son değişikliği (yazma dizisi, madde işaretleme, görsel
               // taşıma, AI ile değiştirme...) tek dokunuşta iptal eder. Yığın
               // boşken pasif durur — düğmenin yerini korur ki araç çubuğu
@@ -5236,8 +5298,11 @@ child: NoteFindBar(
               // düğme durmaz.
               // Yazarken geri al / yinele HEP görünür (2026-11-08); okurken
               // yalnız geri alınacak bir şey varken.
-              Builder(
-                builder: (context) {
+              // Yığın durumu [_undoN]'dan: geri al/yinele kökü kurmaz (P20 M3).
+              ValueListenableBuilder<(bool, bool)>(
+                valueListenable: _undoN,
+                builder: (context, undoState, _) {
+                  final (canUndo, canRedo) = undoState;
                   final undo = Customizable(
                 id: UiItem.topUndo,
                 child: Row(
@@ -5254,11 +5319,11 @@ child: NoteFindBar(
                         minWidth: 36,
                         minHeight: 48,
                       ),
-                      onPressed: _canUndo ? _undo : null,
+                      onPressed: canUndo ? _undo : null,
                     ),
                     // Başlık üst çubuktayken yer dar: yinele yalnız
                     // kullanılabilirken.
-                    if (_barTitle == null || _canRedo)
+                    if (_barTitle == null || canRedo)
                       IconButton(
                         key: const ValueKey('editor-redo'),
                         tooltip: l10n.redo,
@@ -5268,17 +5333,19 @@ child: NoteFindBar(
                           minWidth: 36,
                           minHeight: 48,
                         ),
-                        onPressed: _canRedo ? _redo : null,
+                        onPressed: canRedo ? _redo : null,
                       ),
                   ],
                 ),
               );
                   return KeyboardSwitch(
                     open: undo,
-                    closed: (_canUndo || _canRedo) ? undo : null,
+                    closed: (canUndo || canRedo) ? undo : null,
                   );
                 },
               ),
+                ],
+                UiItem.topPin => [
               // ORTAK ÇALIŞAN düğmesi buradaydı; 2026-11-01'den beri
               // başlığın yanındaki etiket/hatırlatıcı çipinde (bkz.
               // [_collabMarker]).
@@ -5294,24 +5361,35 @@ child: NoteFindBar(
                 note,
               Customizable(
                 id: UiItem.topPin,
-                child: IconButton(
-                  tooltip: note.pinned ? l10n.unpin : l10n.pin,
-                  isSelected: note.pinned,
-                  icon: Icon(
-                    note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                    // Sabitli not: kartın raptiyesiyle AYNI renk (notun
-                    // koyu tonu, renksizde temanın sıcak vurgusu).
-                    color: note.pinned
-                        ? (noteAccent ?? _themeOf(context).colorScheme.secondary)
-                        : null,
-                  ),
-                  onPressed: () => _mutate(
-                    (n) => n.copyWith(pinned: !n.pinned),
-                    immediate: true,
+                // Dar dinleme (P20 M4): sabitle kökü kurmaz.
+                child: NoteSlice<bool>(
+                  source: _noteN,
+                  select: (n) => n.pinned,
+                  builder: (context, pinned) => IconButton(
+                    tooltip: pinned ? l10n.unpin : l10n.pin,
+                    isSelected: pinned,
+                    icon: TogglePop(
+                      on: pinned,
+                      child: Icon(
+                        pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                        // Sabitli not: kartın raptiyesiyle AYNI renk (notun
+                        // koyu tonu, renksizde temanın sıcak vurgusu).
+                        color: pinned
+                            ? (noteAccent ??
+                                  _themeOf(context).colorScheme.secondary)
+                            : null,
+                      ),
+                    ),
+                    onPressed: () => _mutate(
+                      (n) => n.copyWith(pinned: !n.pinned),
+                      immediate: true,
+                    ),
                   ),
                 ),
               ),
               ),
+                ],
+                UiItem.topFullscreen => [
               // HESAP MAKİNESİ ⋮ menüsünün hızlı satırında (2026-10-11):
               // üst çubuk notun DURUMUNA ayrıldı — geri al/yinele, sabitle,
               // ortak çalışan. Araçlar ⋮'te ve alt çubukta.
@@ -5331,6 +5409,9 @@ child: NoteFindBar(
                           child: _fullscreenButton(l10n),
                         ),
                 ),
+                ],
+                _ => const <Widget>[],
+              },
               // ⋮ yazarken de görünür: hızlı satırın en sağında (kullanıcı
               // isteği 2026-11-08 — "3 nokta geri gelsin").
               IconButton(

@@ -14,7 +14,10 @@ import '../haptics.dart';
 /// rozeti durur ve öğenin KENDİ işi çalışmaz — dokunmak gizle/göster yapar
 /// ve hemen kaydedilir (P50). Böylece kullanıcı ekranın kendisinde neyi görmek
 /// istediğini seçer; ayar düğmeleri ekranda kalıcı yer kaplamaz.
-class Customizable extends StatelessWidget {
+///
+/// Tercihi KENDİ dinler (P20): eskiden `StatelessWidget` + `ListenableBuilder`
+/// — öğe başına iki kurulum; editörün ilk karesinde 11 öğe = 11 boşa kurulum.
+class Customizable extends StatefulWidget {
   const Customizable({
     super.key,
     required this.id,
@@ -34,23 +37,37 @@ class Customizable extends StatelessWidget {
   static bool shows(String id) => Personalize.current.shows(id);
 
   @override
+  State<Customizable> createState() => _CustomizableState();
+}
+
+class _CustomizableState extends State<Customizable> {
+  @override
+  void initState() {
+    super.initState();
+    Personalize.listenable.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    Personalize.listenable.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() => setState(() {});
+
+  @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: Personalize.listenable,
-      builder: (context, _) {
-        final prefs = Personalize.current;
-        final visible = prefs.shows(id);
-        if (!Personalize.editing) return visible ? child : hidden;
-        return CustomizeFrame(
-          visible: visible,
-          inset: badgeInset,
-          onTap: () {
-            AppHaptics.tick();
-            Personalize.toggle(id);
-          },
-          child: child,
-        );
+    final id = widget.id;
+    final visible = Personalize.current.shows(id);
+    if (!Personalize.editing) return visible ? widget.child : widget.hidden;
+    return CustomizeFrame(
+      visible: visible,
+      inset: widget.badgeInset,
+      onTap: () {
+        AppHaptics.tick();
+        Personalize.toggle(id);
       },
+      child: widget.child,
     );
   }
 }

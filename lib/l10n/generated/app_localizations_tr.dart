@@ -4841,6 +4841,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get personalizeBarReset => 'Alt çubuğu varsayılana döndür';
 
   @override
+  String get personalizeBarTop => 'Üst çubuk · düğmelerin sırası';
+
+  @override
   String get personalizeBarMoveRight => 'Sağ kapsüle taşı';
 
   @override
