@@ -225,7 +225,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
   mandalla ve `neden`'e yaz — 23'ten düşüş şart); sürükle-sırala, sıralı liste numaraları ve paket hapı
   testleri yeşil.
 
-**Adım 3 — `_noteN` + `NoteSlice` + geri al dar dinleme (F64.2, M3; S1).**
+**[x] Adım 3 — `_noteN` + `NoteSlice` + geri al dar dinleme (F64.2, M3; S1).** (2026-11-14, 8c4c9a44: S1 kök 1→0, S2 bonus 1/1→0/0; geri al → yinele artık etkin (bekçi `editor_rebuild_map_test`). `_noteN`/`_undoN` = `LateSafeValue` — düz ValueNotifier dispose sonrası yazımda assert, dispose edilmezse `editor_leak_test` kırmızı. Alt çubuk geri al/yinele görünüşü yığına bağlı değil → sarılmadı)
 - Dosyalar: EKRAN, YENİ `lib/features/notes/presentation/editor/note_slice.dart`, YENİ `test/note_slice_test.dart`, `budgets.json` (S1).
 - Ne: (a) `note_slice.dart`: OTURTMA F64.2'deki iskelet AYNEN (State `source`'u dinler, `select` sonucu
   `equals`/`==` ile aynıysa `setState` yok, `didUpdateWidget`'ta abonelik taşınır, `Note? == null` iken
@@ -245,7 +245,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
 - Kabul: S1 `kok_kurulum` 0 (mandal 1→0); geri al düğmesi ilk harften sonra etkin, geri al → yinele etkin
   (mevcut testler + yoksa bir `testWidgets` ekle); S5/S6/S7/S11 değişmedi.
 
-**Adım 4 — Yıldız/iğne dilimi + `TogglePop` (F64.3/F64.4 kısmi, M4, P38 kalanı; S14).**
+**[x] Adım 4 — Yıldız/iğne dilimi + `TogglePop` (F64.3/F64.4 kısmi, M4, P38 kalanı; S14).** (2026-11-14, 63987bd5: S14 tuval 1→0. Dilimler S18 ilk kareye +6 ekledi (mandal 876) → `Customizable` tek StatefulWidget'a indi (öğe başına −1): S18 871, S24 930→927)
 - Dosyalar: EKRAN, `budgets.json` (S14), YENİ `test/editor_star_pin_slice_test.dart`.
 - Ne: (a) EKRAN:5089–5103 `if (note.starred) IconButton(...)` → `NoteSlice<bool>(source: _noteN,
   select: (n) => n.starred, builder: (context, on) => TogglePop(on: on, child: on ? <aynı IconButton> :
@@ -264,7 +264,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
   `test/note_everywhere_same_test.dart`, `test/editor_top_customize_test.dart`.
 - Kabul: S14 `tuval_kurulum` 0; iğne/yıldız görünür tepki veriyor; `haptics_test` yeşil.
 
-**Adım 5 — Biçim paneli kipi dar dinleme (M5; S9).**
+**[x] Adım 5 — Biçim paneli kipi dar dinleme (M5; S9).** (2026-11-14, 627a4da6: S9 tuval 2→0, boy karesi 2; S18 874 (3 dar dinleyici, main 876'nın altında). Geri tuşu bekçisi `test/format_panel_back_test.dart`)
 - Dosyalar: EKRAN, `budgets.json` (S9).
 - Ne: (a) EKRAN:932 → `final _formatOpenN = ValueNotifier<bool>(false); bool get _formatBarOpen =>
   _formatOpenN.value; set _formatBarOpen(bool v) => _formatOpenN.value = v;` (+ dispose). (b) Kök
@@ -285,7 +285,7 @@ koşulmaz (CI). Bütçe mandalı: sayı düştüyse `budgets.json`'da ilgili ana
 - Kabul: S9 `tuval_kurulum` 0, `govde_boy_karesi` ≤ 2; geri tuşu sırası (tam ekran → kayıt → biçim → arama → not)
   bozulmadı; panelde etkin biçim vurgusu imleç başka alana geçince güncelleniyor.
 
-**Adım 6 — Kural + bekçiler (F64.5, M6, M7).**
+**[x] Adım 6 — Kural + bekçiler (F64.5, M6, M7).** (2026-11-14: `test/editor_core_guard_test.dart` (`_update(` ≤ 32, `_sameVisual` ≤ 32 terim, `note.starred/pinned` build'de yok); kural `docs/hafiza/editor.md`; M6/M7 sabah bakılacak)
 - Dosyalar: YENİ `test/editor_core_guard_test.dart`, `docs/hafiza/editor.md`, `OTURTMA_PLANI.md` (F64.1–F64.5 `[x]`/not + Durum tablosu Faz 64).
 - Ne: bekçi (kaynak dosyayı metin olarak okur, `design_tokens_guard_test.dart` kalıbı): (1) `note_editor_*.dart`
   içindeki `_update(` satır sayısı bugünküyü geçemez (ölç, sabitle; bugün 32 satır); (2) `_sameVisual`

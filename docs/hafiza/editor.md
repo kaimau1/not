@@ -169,3 +169,10 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Yanlış yol:** `spec` içine `() => _update(...)` yazmak kök setState mandalını (53) aştı → ortak `_toggleAnnotate`. Çubuğa yeni iş eklerken var olan yöntemi geçir.
 - Tam ekran AÇIKKEN `topFullscreen` gizlenmez (çıkış yolu). ⋮ (`editor-more`) hiç sarılmaz.
 - Yapılmadı: ana ekran sarmaları (P56 çiti), üst çubuk sıralama (yapı P20'nin), düzenleme modunda yerinde sürükle-sırala (sıra Ayarlar listesinde).
+
+## 2026-11-14 — P20: editör çekirdeği dar dinleme (KURAL, F64.5)
+- **KURAL:** editöre yeni görünür parça = `NoteSlice` (`editor/note_slice.dart`, `_noteN`'den dilim) ya da kendi notifier'ını dinleyen ayrı widget; `_NoteEditorScreenState`'e alan/`_update` eklenmez; madde sırasına bağlı değer satır önbelleğine girmez (`_RowSlot`). Bekçi `test/editor_core_guard_test.dart` (`_update(` ≤ 32 satır, `_sameVisual` ≤ 32 terim, `note.starred/pinned` build'de yok).
+- `_note` = `_noteN` (`LateSafeValue`: dispose SONRASI yazım sessiz — `_saveNow`/geç geri çağrılar yazıyor; düz `ValueNotifier` dispose edilince assert, edilmeyince `editor_leak_test` kırmızı). Geri al/yinele `_undoN` (yığını değiştiren 3 yerde `_syncUndoN`): S1 kök 1→0; metin geri alınınca yinele bayat `null` kalıyordu (kök kurulmuyordu) → çözüldü. Yıldız/iğne `NoteSlice` + `TogglePop` (S14 tuval 1→0); biçim kipi `_formatOpenN` + `_formatPanelL` (kip+hedef) (S9 tuval 2→0).
+- **TUZAK:** `NoteSlice` builder'ı dışında kökün yerel `note`'u yeni alanlar için BAYAT olabilir (kök kurulmuyor). Tarih şeridi (yıldız orada) yalnız `updatedAt`/etiket varken çizilir — testte `updatedAt` ver.
+- **Bütçe dengesi:** her dar dinleyici ilk karede +1 kurulum (S18). `Customizable` StatelessWidget+ListenableBuilder → tek StatefulWidget yapıldı (öğe başına −1; editör ilk karesi −11, ana ekran −3) — yeni sarmalayıcı gerekirse önce böyle yer aç.
+- **M6 (sabah bakılacak):** `_sameVisual`/`sameRenderedNote` SİLİNMEDİ, daraldı (pinned/starred çıktı). Tam silme = bütün `note.` okumalarının dilime geçmesi (tuval çıkarma) — kullanıcı kararı. **M7:** kural CLAUDE.md'ye/`kasma-kontrol` md. 1'e işlensin mi — sabah bakılacak.

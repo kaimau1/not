@@ -67,7 +67,7 @@ Gözetimsiz yürütmenin sırası ve kuralları: `OTOMASYON.md`.
 | 61 | Mürekkep deposu v2 (1 MiB tavanı, kayıt maliyeti) | Bekliyor | | veri biçimi; yedek şartı |
 | 62 | Mürekkep çizimi v2 (gecikme, dolu sayfada kasma) | Bekliyor | | |
 | 63 | Kalem akışları (her yüzeyde tek kural) | Sürüyor | 2026-11-11 | F63.1–F63.5 yapıldı (P05, P15; K-O5 açık); F63.6 karar, F63.7 cihaz turu bekliyor |
-| 64 | Editör çekirdeği (dar dinleme) | Bekliyor | | ölçüm kapılı |
+| 64 | Editör çekirdeği (dar dinleme) | Sürüyor (P20 adım 1–6, 2026-11-14) | S3/S4/S9/S14 hedefte | cihaz A/B bekliyor |
 | 65 | Ekler: yerleşim, çubuklar, yükleme güvenilirliği | Bekliyor | | KALEM_PLANI K6–K7 burada |
 | 66 | Telefon: ana ekran ve not ekranı yoğunluğu | Bekliyor | | |
 | 67 | Tablet ve geniş ekran | Bekliyor | | |
@@ -924,12 +924,12 @@ pahalı olan senaryo yoksa (S3, S4, S9, S14 ≤ hedef ve cihazda kök `build` < 
 **Önce oku:** `note_editor_screen.dart` (alanlar 470–1150, `_mutate`, `build` 2876–~4900),
 `note_editor_parts.dart`, `note_editor_toolbar.dart`.
 
-- [ ] **F64.1 Kök kurulum haritası.** Faz 59 düzeneğiyle 25 kullanıcı eylemi için kök
+- [x] *(2026-11-14 P20 adım 1: tablo Ek A "F64.1 haritası".)* **F64.1 Kök kurulum haritası.** Faz 59 düzeneğiyle 25 kullanıcı eylemi için kök
   kurulum sayısı ve (profil derlemesinde) kök `build` süresi: işaretle, madde ekle/sil,
   sürükle-sırala, biçim uygula, renk, sabitle, yıldız, etiket ekle/sil, klasör, hatırlatıcı,
   ek ekle/sil/görünüm değiştir, kalem kipi aç/kapa, arama aç/kapa, sayfa değiştir, geri al.
   Tabloyu Ek A'ya ekle. En pahalı 5 eylem bu fazın kapsamıdır; gerisi dokunulmaz.
-- [ ] **F64.2 Mekanizma (davranış değişmez).** `_note` alanı `ValueNotifier<Note?> _noteN`
+- [x] *(2026-11-14 P20 adım 3: `note_slice.dart` + `_noteN` (`LateSafeValue`) + `_undoN`; S1 kök 1→0.)* **F64.2 Mekanizma (davranış değişmez).** `_note` alanı `ValueNotifier<Note?> _noteN`
   üzerinden (`Note? get _note => _noteN.value`). Yeni dosya `editor/note_slice.dart`:
 
   ```dart
@@ -946,19 +946,19 @@ pahalı olan senaryo yoksa (S3, S4, S9, S14 ≤ hedef ve cihazda kök `build` < 
   ```
 
   Test: dilim dışı alan değişince `builder` çağrılmaz; kaynak değişince abonelik taşınır.
-- [ ] **F64.3 Bölge çıkarma (eylem başına bir commit, F64.1 sırasıyla).** Her bölge kendi
+- [ ] *(2026-11-14 P20: kısmi — bölge ÇIKARILMADI (plan M2); yıldız/iğne dilim, biçim kipi notifier ile kaynağında kesildi: S14 1→0, S9 2→0.)* **F64.3 Bölge çıkarma (eylem başına bir commit, F64.1 sırasıyla).** Her bölge kendi
   dosyasında `StatelessWidget`/`ConsumerWidget`; State'e erişimi yalnız açık parametreler ve
   geri çağrılar (uzantı tear-off TUZAĞI: geri çağrı sınıf yöntemi olmalı). Aday bölgeler:
   üst çubuk, çip şeridi, tuval (gövde + maddeler + yüzen ekler), sabit bölme, alt çubuk.
   Her çıkarmadan sonra: bütçe testi, `note_accent_consistency_test`,
   `note_everywhere_same_test`, `editor_open_at_test`, `editor_pen_tablet_test`, ekran turu
   `TOUR_COMPARE` (%0 fark), cihazda `ab_klavye.py`.
-- [ ] **F64.4 `_mutate` kök `setState`'i bırakır.** Bölgeler dilimle dinlediği için
+- [ ] *(2026-11-14 P20 M6: `_sameVisual` SİLİNMEDİ, daraldı (pinned/starred çıktı, 34→32 terim, bekçi mandallı) — sabah bakılacak.)* **F64.4 `_mutate` kök `setState`'i bırakır.** Bölgeler dilimle dinlediği için
   `_sameVisual` ve `sameRenderedNote` SİLİNİR (akış yankısı da `_noteN.value = …` yapar;
   dilimi değişmeyen bölge kurulmaz). `sameItemsVisually` `ItemsEditor` diliminin `equals`'ı
   olarak kalır. CLAUDE.md kasma listesinin 1. maddesi "yeni madde alanı → `sameItemsVisually`
   + satır önbelleği anahtarı"na iner.
-- [ ] **F64.5 Kural.** CLAUDE.md'ye: "Editöre yeni görünür parça = yeni bölge widget'ı;
+- [x] *(2026-11-14 P20 adım 6: kural `docs/hafiza/editor.md` (M7: CLAUDE.md'ye değil — sabah bakılacak), bekçi `test/editor_core_guard_test.dart` (`_update(` ≤ 32).)* **F64.5 Kural.** CLAUDE.md'ye: "Editöre yeni görünür parça = yeni bölge widget'ı;
   `_NoteEditorScreenState`'e alan/`_update` eklenmez" + bekçi testi: `note_editor_*.dart`
   içindeki `_update(` sayısı bugünkünü (31) geçemez.
 - Kabul: Ek A S3/S4/S9/S14 hedefte; `_sameVisual` yok; cihaz A/B'de hiçbir evre kötüleşmedi.
