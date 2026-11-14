@@ -39,6 +39,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_update.dart';
 import 'note_slice.dart';
+import '../../../../core/widgets/toggle_pop.dart';
 import '../../../../app/router.dart';
 import '../../../../app/window_class.dart';
 
@@ -1869,8 +1870,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.frameColor == b.frameColor &&
       a.customColor == b.customColor &&
       a.customFrameColor == b.customFrameColor &&
-      a.pinned == b.pinned &&
-      a.starred == b.starred &&
+      // pinned/starred YOK: üst çubukta NoteSlice dinliyor (P20 M4).
       a.locked == b.locked &&
       a.folderId == b.folderId &&
       a.fontFamily == b.fontFamily &&
@@ -5097,20 +5097,30 @@ child: NoteFindBar(
                       ),
                       // Yıldızlı göstergesi tarihin yanında; dokununca
                       // yıldız kalkar (menüye gitmeden geri alınabilsin).
-                      if (note.starred)
-                        IconButton(
-                          tooltip: l10n.unstar,
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber.shade600,
-                          ),
-                          onPressed: () => _mutate(
-                            (n) => n.copyWith(starred: false),
-                            immediate: true,
-                          ),
+                      // Dar dinleme (P20 M4): yıldız kökü kurmaz; şekil
+                      // sabit (kasma md. 4), tepki TogglePop (P38).
+                      NoteSlice<bool>(
+                        source: _noteN,
+                        select: (n) => n.starred,
+                        builder: (context, on) => TogglePop(
+                          on: on,
+                          child: on
+                              ? IconButton(
+                                  tooltip: l10n.unstar,
+                                  visualDensity: VisualDensity.compact,
+                                  icon: Icon(
+                                    Icons.star,
+                                    size: 16,
+                                    color: Colors.amber.shade600,
+                                  ),
+                                  onPressed: () => _mutate(
+                                    (n) => n.copyWith(starred: false),
+                                    immediate: true,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
                         ),
+                      ),
                     ],
                   ),
                   ),
@@ -5308,20 +5318,29 @@ child: NoteFindBar(
                 note,
               Customizable(
                 id: UiItem.topPin,
-                child: IconButton(
-                  tooltip: note.pinned ? l10n.unpin : l10n.pin,
-                  isSelected: note.pinned,
-                  icon: Icon(
-                    note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                    // Sabitli not: kartın raptiyesiyle AYNI renk (notun
-                    // koyu tonu, renksizde temanın sıcak vurgusu).
-                    color: note.pinned
-                        ? (noteAccent ?? _themeOf(context).colorScheme.secondary)
-                        : null,
-                  ),
-                  onPressed: () => _mutate(
-                    (n) => n.copyWith(pinned: !n.pinned),
-                    immediate: true,
+                // Dar dinleme (P20 M4): sabitle kökü kurmaz.
+                child: NoteSlice<bool>(
+                  source: _noteN,
+                  select: (n) => n.pinned,
+                  builder: (context, pinned) => IconButton(
+                    tooltip: pinned ? l10n.unpin : l10n.pin,
+                    isSelected: pinned,
+                    icon: TogglePop(
+                      on: pinned,
+                      child: Icon(
+                        pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                        // Sabitli not: kartın raptiyesiyle AYNI renk (notun
+                        // koyu tonu, renksizde temanın sıcak vurgusu).
+                        color: pinned
+                            ? (noteAccent ??
+                                  _themeOf(context).colorScheme.secondary)
+                            : null,
+                      ),
+                    ),
+                    onPressed: () => _mutate(
+                      (n) => n.copyWith(pinned: !n.pinned),
+                      immediate: true,
+                    ),
                   ),
                 ),
               ),

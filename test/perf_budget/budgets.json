@@ -10,9 +10,9 @@
   },
   "S2": {
     "senaryo": "30 maddeli liste, bir maddeye 20 karakter",
-    "items_editor": 1,
-    "satir": 1,
-    "bugun": "ItemsEditor 1 / satır 1 (2026-11-14, P20 adım 2: telefonda tutamaçsız düz liste; önce 5 / 15)",
+    "items_editor": 0,
+    "satir": 0,
+    "bugun": "0 / 0 (2026-11-14, P20 adım 3: geri al düğmesi kökü kurmuyor); ItemsEditor 1 / satır 1 (2026-11-14, P20 adım 2: telefonda tutamaçsız düz liste; önce 5 / 15)",
     "hedef": "0 / 0",
     "neden": "İlk ölçüm (bugünkü hâl); hedefin üstünde — düşürülecek, yükseltilmez"
   },
@@ -113,8 +113,8 @@
   },
   "S14": {
     "senaryo": "Yıldızla (⋮ levhasından; sabitle aynı _mutate yolu)",
-    "tuval_kurulum": 1,
-    "bugun": "1 (2026-11-11)",
+    "tuval_kurulum": 0,
+    "bugun": "0 (2026-11-14, P20 adım 4: yıldız/iğne NoteSlice); 1 (2026-11-11)",
     "hedef": "0 (Faz 64)",
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 64'te işlenecek"
   },
@@ -159,9 +159,9 @@
     "senaryo": "Telefon 412×915, 30 not: karttan not aç (gerçek NoteOpenPage geçişi), 40 kare — ana ekran kurulumu, kart kurulumu, ilk kare ve sonraki en ağır kare",
     "note_card": 2,
     "dashboard_kurulum": 0,
-    "ilk_kare_kurulum": 876,
+    "ilk_kare_kurulum": 871,
     "gecis_karesi_kurulum": 285,
-    "bugun": "NoteCard 2 / DashboardScreen 0 / ilk kare 876 / geçiş karesi en çok 285 (2026-11-13, P46: başlık ölçümü kök setState yerine ValueNotifier — ikinci karede yalnız tuval kurulur); önce 877 / 788",
+    "bugun": "ilk kare 871 (2026-11-14, P20 adım 4: yıldız/iğne dilimi +6, Customizable tek kurulum -11); NoteCard 2 / DashboardScreen 0 / ilk kare 876 / geçiş karesi en çok 285 (2026-11-13, P46: başlık ölçümü kök setState yerine ValueNotifier — ikinci karede yalnız tuval kurulur); önce 877 / 788",
     "hedef": "NoteCard ≤ 1 (yalnız açılan kartın halesi); geçiş kareleri editörü ikinci kez kurmasın",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl) — mandal"
   },
@@ -210,10 +210,10 @@
   },
   "S24": {
     "senaryo": "Soğuk açılış (telefon, 30 not, AppFrame + SplitShell + DashboardScreen): ilk karede, kartlar görünene dek ve 2 sn içinde kurulan widget (tür toplamı)",
-    "ilk_kare_kurulum": 930,
-    "kartlara_dek_kurulum": 4019,
-    "iki_sn_kurulum": 4031,
-    "bugun": "ilk kare 930 / kartlar (1 kare sonra) 4019 / 2 sn 4031 (2026-11-12)",
+    "ilk_kare_kurulum": 927,
+    "kartlara_dek_kurulum": 4015,
+    "iki_sn_kurulum": 4027,
+    "bugun": "927 / 4015 / 4027 (2026-11-14, P20: Customizable tek kurulum); ilk kare 930 / kartlar (1 kare sonra) 4019 / 2 sn 4031 (2026-11-12)",
     "hedef": "taban + mandal",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (taban) — mandal"
   },
