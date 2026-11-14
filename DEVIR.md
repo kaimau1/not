@@ -7,7 +7,7 @@ Tarif: `docs/plan_tasarim_B.md` §6 + §7.1 (ayrıntı §1.2, §2.2, §3.2, §4.
 - CustomizeBoard `lib/core/widgets/customize_board.dart` + `test/customize_board_test.dart` (d972581f)
 - ColorDot mandal düzeltmesi: `withValues(alpha: 0)` → `withAlpha(0)` (tasarım mandalı alpha 191>190) (1d0320b8)
 - TemplatePreviewCard + `test/template_preview_lines_test.dart` (a31b62f1) — yıldız sağ üst köşede (KARAR, §7.11'e yazılacak)
-- PenStrokePreview + `test/pen_stroke_preview_test.dart` (41 nokta, k=0.8; uç yarıçapı < orta × 0.6) (bf? bkz. git log)
+- PenStrokePreview + `test/pen_stroke_preview_test.dart` (41 nokta, k=0.8; uç yarıçapı < orta × 0.6) (1542c956)
 - CI: TemplatePreviewCard push'u (a31b62f1) YEŞİL.
 
 ## ŞU AN: VoiceLevelWave — test yazıldı, bileşen YAZILMADI
