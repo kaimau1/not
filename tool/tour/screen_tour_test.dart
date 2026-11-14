@@ -33,6 +33,7 @@ import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -51,6 +52,10 @@ import 'package:notlar/core/app_update.dart';
 import 'package:notlar/core/tips.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
+import 'package:notlar/features/calendar/data/calendar_repository.dart';
+import 'package:notlar/features/calendar/domain/calendar_event.dart';
+import 'package:notlar/features/calendar/domain/task_item.dart';
+import 'package:notlar/features/calendar/presentation/calendar_screen.dart';
 import 'package:notlar/features/folders/domain/note_folder.dart';
 import 'package:notlar/features/ai/presentation/ai_hub_screen.dart';
 import 'package:notlar/features/folders/presentation/folders_screen.dart';
@@ -283,6 +288,18 @@ final _attachmentNotes = <Note>[
   ),
 ];
 
+/// Takvim sahneleri (P62 PA0): `_now`ın haftasında ve sonrasında günde bir
+/// etkinlik (S22 düzeneğiyle aynı biçim).
+final _events = [
+  for (var d = 0; d < 21; d++)
+    CalendarEvent(
+      id: 'e$d',
+      title: 'Etkinlik $d',
+      start: DateTime(2026, 11, 2 + d, 10),
+      end: DateTime(2026, 11, 2 + d, 11),
+    ),
+];
+
 const _folders = [
   NoteFolder(id: 'f1', name: 'Dualar', ownerId: 'u'),
   NoteFolder(id: 'f2', name: 'Genel', ownerId: 'u'),
@@ -446,6 +463,11 @@ Future<void> _pumpApp(
     ],
     // TOUR_COLUMNS=3|4: dar sütunlu ana ekran (kart sıkışması).
     'grid_columns': ?int.tryParse(Platform.environment['TOUR_COLUMNS'] ?? ''),
+    // Takvim sahneleri ajanda görünümünde, sıkıştırma ipucu gösterilmiş.
+    if (scene.startsWith('takvim')) ...{
+      'calendar_view': 'agenda',
+      'calendar_pinch_hint_v1': true,
+    },
   });
   final sp = await SharedPreferences.getInstance();
   tester.view.physicalSize = Size(size.width, size.height);
@@ -486,6 +508,10 @@ Future<void> _pumpApp(
             path: '/settings',
             builder: (c, s) =>
                 SettingsScreen(initialArea: s.uri.queryParameters['area']),
+          ),
+          GoRoute(
+            path: '/calendar',
+            builder: (c, s) => CalendarScreen(now: _now),
           ),
           for (final (path, screen) in const <(String, Widget)>[
             ('/folders', FoldersScreen()),
@@ -553,6 +579,17 @@ Future<void> _pumpApp(
         ),
       ),
       folderUnreadProvider.overrideWith((ref, key) => 0),
+      // Takvim (S22 düzeneği); öbür sahnelerin ana ekran şeridi değişmesin.
+      if (scene.startsWith('takvim')) ...[
+        calendarRepositoryProvider.overrideWithValue(
+          CalendarRepository(FakeFirebaseFirestore(), 'u'),
+        ),
+        eventsStreamProvider.overrideWith((ref) => Stream.value(_events)),
+        tasksStreamProvider.overrideWith(
+          (ref) => Stream.value(const <TaskItem>[]),
+        ),
+        calendarReminderNotesProvider.overrideWithValue(const []),
+      ],
     ],
   );
   addTearDown(container.dispose);
@@ -704,6 +741,13 @@ void main() {
       'hesap-levhasi',
       '/',
       () => find.byKey(const ValueKey('home-account-avatar')),
+    ),
+    // P62 PA0: takvim ajandası, mini ay kapalı / açık (başlığa dokunulmuş).
+    ('takvim-ajanda', '/calendar', null),
+    (
+      'takvim-ajanda-ay',
+      '/calendar',
+      () => find.byKey(const ValueKey('calendar-month-toggle')),
     ),
     ('klasorler', '/folders', null),
     ('yapay-zeka', '/ai', null),
