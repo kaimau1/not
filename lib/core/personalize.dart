@@ -42,6 +42,7 @@ class UiPrefs {
     this.seekForward = 10,
     this.barOrder = const <String>[],
     this.aiOrder = const <String>[],
+    this.topOrder = const <String>[],
   });
 
   /// Not alt çubuğunun SOL kapsülündeki düğmelerin kullanıcı sırası
@@ -54,6 +55,10 @@ class UiPrefs {
 
   /// Sağdaki AI/ses kapsülünün sırası (aynı kurallar).
   final List<String> aiOrder;
+
+  /// Not ÜST çubuğundaki sıralanabilir düğmelerin sırası (P20 M8; aynı
+  /// kurallar, varsayılan [UiItem.topDefault]). Kapsül yok, taraf yok.
+  final List<String> topOrder;
 
   /// [defaults] sırasını kullanıcı sırasıyla ([saved]) birleştirir: kayıtlı
   /// ve hâlâ var olan kimlikler kayıtlı sırada, kalanlar varsayılan sırada
@@ -152,12 +157,14 @@ class UiPrefs {
     int? seekForward,
     List<String>? barOrder,
     List<String>? aiOrder,
+    List<String>? topOrder,
   }) => UiPrefs(
     hidden: hidden ?? this.hidden,
     seekBack: seekBack ?? this.seekBack,
     seekForward: seekForward ?? this.seekForward,
     barOrder: barOrder ?? this.barOrder,
     aiOrder: aiOrder ?? this.aiOrder,
+    topOrder: topOrder ?? this.topOrder,
   );
 
   Map<String, Object?> toJson() => {
@@ -166,6 +173,7 @@ class UiPrefs {
     'seekForward': seekForward,
     if (barOrder.isNotEmpty) 'barOrder': barOrder,
     if (aiOrder.isNotEmpty) 'aiOrder': aiOrder,
+    if (topOrder.isNotEmpty) 'topOrder': topOrder,
   };
 
   /// Bozuk/eksik kayıt varsayılana düşer; sarma süresi 1–600 sn arasında.
@@ -181,6 +189,7 @@ class UiPrefs {
       seekForward: seconds(json['seekForward']),
       barOrder: ids(json['barOrder']),
       aiOrder: ids(json['aiOrder']),
+      topOrder: ids(json['topOrder']),
     );
   }
 
@@ -191,7 +200,8 @@ class UiPrefs {
       other.seekForward == seekForward &&
       setEquals(other.hidden, hidden) &&
       listEquals(other.barOrder, barOrder) &&
-      listEquals(other.aiOrder, aiOrder);
+      listEquals(other.aiOrder, aiOrder) &&
+      listEquals(other.topOrder, topOrder);
 
   @override
   int get hashCode => Object.hash(
@@ -200,6 +210,7 @@ class UiPrefs {
     Object.hashAllUnordered(hidden),
     Object.hashAll(barOrder),
     Object.hashAll(aiOrder),
+    Object.hashAll(topOrder),
   );
 }
 
@@ -271,6 +282,16 @@ abstract final class UiItem {
   /// düzenlenebilsin" — sarmasız kalmışlardı).
   static const topHome = 'editor.top.home';
   static const topFullscreen = 'editor.top.fullscreen';
+
+  /// Üst çubuğun sıralanabilir düğmeleri, BUGÜNKÜ ekran sırasıyla (P20 M8).
+  /// Yazılım klavyesi düğmesi ve ⋮ sıralamaya girmez.
+  static const topDefault = <String>[
+    topHome,
+    topSync,
+    topUndo,
+    topPin,
+    topFullscreen,
+  ];
 
   // ── Not ekranının alanları ──
   static const editorTags = 'editor.tags';

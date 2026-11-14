@@ -2,6 +2,7 @@ import '../../../../app/window_class.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/app_icons.dart';
+import '../../../../core/haptics.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -1779,7 +1780,7 @@ class ItemsEditorState extends State<ItemsEditor>
       }
       if (_openPackage == pkg) _openPackage = null;
     });
-    unawaited(HapticFeedback.selectionClick());
+    unawaited(AppHaptics.tick());
     _commit();
   }
 
@@ -1862,7 +1863,7 @@ class ItemsEditorState extends State<ItemsEditor>
     }
     final caret = previous.text.length;
     final joined = previous.text + current.text;
-    unawaited(HapticFeedback.selectionClick());
+    unawaited(AppHaptics.tick());
     // Odak ÖNCE üst maddeye geçer: silinen satırla birlikte odak (ve
     // klavye) bir kare için kaybolmasın.
     _focusFor(previous).requestFocus();

@@ -67,7 +67,7 @@ extension _EditorGestures on _NoteEditorScreenState {
       );
     }
     _update(() => _gestureMode = _GestureMode.off);
-    HapticFeedback.selectionClick();
+    AppHaptics.tick();
     _finishPendingEmbed(forcedTarget: target, forcedSelection: selection);
   }
 
@@ -83,10 +83,10 @@ extension _EditorGestures on _NoteEditorScreenState {
     switch (gesture) {
       case InkGesture.strike:
       case InkGesture.check:
-        HapticFeedback.selectionClick();
+        AppHaptics.tick();
         items.toggleCheckedOf(id);
       case InkGesture.scribble:
-        HapticFeedback.mediumImpact();
+        AppHaptics.heavy();
         items.removeItemOf(id);
         // Kazara karalama (parmakla kaydırırken) maddeyi siliyor olabilir:
         // geri alma bildirimin İÇİNDE, üst çubuğa gitmeden (F36.5).
@@ -108,7 +108,7 @@ extension _EditorGestures on _NoteEditorScreenState {
           _showSnack(l10n.gestureFixNeedsAi);
           return;
         }
-        HapticFeedback.selectionClick();
+        AppHaptics.tick();
         unawaited(_fixItemSpelling(id));
       case InkGesture.none:
         break;
