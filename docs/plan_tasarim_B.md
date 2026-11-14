@@ -96,15 +96,15 @@ Mod girişi yalnız iki yerden: Ayarlar → Kişiselleştir kartı (`personalize
 | Hızlı yakalama satırı | ayrı anahtar (ayarlar) | `dashboard_screen.dart:1878`, `personalize_screen.dart:688-694` | **YAP**: aynı (panoda anahtar) |
 | Klasör şeridi, ev düğmesi | düzenlenemez | `dashboard_shelf.dart:197, 214` | **SABİT** (Y3, Y14) |
 | "+" düğmesi, başa dön | düzenlenemez | `dashboard_screen.dart:2338, 2283` | **SABİT** (ilke 2: tek birincil eylem) |
-| Kenar rayı hedefleri (tablet/web) | düzenlenemez | `app_frame.dart:617-647` | **SABAH BAKILACAK** (S1) — varsayılan: dokunma |
+| Kenar rayı hedefleri (tablet/web) | düzenlenemez | `app_frame.dart:617-647` | **SABAH BAKILACAK** (SB1) — varsayılan: dokunma |
 | Not üst çubuğu ⋮ ve klavye düğmesi | bilinçli sabit | `personalize.dart:286-287` | **SABİT** (menüye giriş kaybolmasın) |
-| Biçim çubuğu düğmeleri (12) | düzenlenemez | `format_bar.dart:647-811` | **SABİT** — genel yapılmayacak: "biçim çubuğunu değiştirmek"; S2'de soruldu |
+| Biçim çubuğu düğmeleri (12) | düzenlenemez | `format_bar.dart:647-811` | **SABİT** — genel yapılmayacak: "biçim çubuğunu değiştirmek"; SB2 |
 | Kalem tepsisi araçları (7) | düzenlenemez | `pen_tray.dart:23, 324, 589, 961` (`PenTrayTool.values`) | **YAP** (§3.4): hangi kalemler tepside dursun — `UiItem.penTool(<ad>)` |
 | Sabit ek çubuğu (T, balon, görünüm, kalem, tam ekran, bağlantı…) | yalnız `videoNoteAt` sarmalı | `pinned_media_pane.dart:1412-1689`; sarma `:1565` | **YAP**: gizlenebilir (varsayılan AYNI; Y10 "⋮'e indirme" yasağı varsayılanı korur, kullanıcının kendi gizlemesi K-O6) — `UiItem.pinned(<ad>)` |
 | Sabit ek ⋮ menüsü | `menuId` yok → `MenuLayouts` çalışmaz | `pinned_media_pane.dart` `_openSheet`; `ActionMenu(` yalnız 4 yerde: `dashboard_menu.dart:33,170`, `note_editor_actions.dart:95`, `note_menu_model.dart:49` | **YAP**: `menuId: 'pinned.menu'` |
 | Balon dok düğmeleri | düzenlenemez | `bubble_dock.dart:461-724` | **SABİT** (seçime bağlı bağlam çubuğu; gizlemek işlevi kaybettirir) |
 | Sesli yakalama levhası | düzenlenemez | `voice_capture_sheet.dart` | **SABİT** (§4'te yeniden tasarım) |
-| Not kartı alanları | tek tercih `card_show_checked` | `arayuz.md` "izinli tek yeni tercih" | kapsam dışı (S3) |
+| Not kartı alanları | tek tercih `card_show_checked` | `arayuz.md` "izinli tek yeni tercih" | kapsam dışı (SB3) |
 
 **Mod deneyimi/görünüm eksikleri:**
 
@@ -201,7 +201,7 @@ paket D2 yazar): üstte yatay yüzey çipleri, altında o yüzeyin `CustomizeBoa
 - Çerçeve (`CustomizeFrame`): köşe `AppRadius.m`; görünür öğe = `primary` × `AppAlpha.hairline`
   yıkama + 1 dp `primary` × `AppAlpha.muted` çizgi; gizli öğe = içerik opaklığı `AppAlpha.disabled`
   + KESİKLİ çizgi (`outline`; tek `drawPoints(PointMode.lines)` — `paintItemDivider` kesikli kalıbı,
-  `item_divider_style.dart:44-53`). Rozet 20 dp, simge 12, göz/çizili göz KALIR (S4).
+  `item_divider_style.dart:44-53`). Rozet 20 dp, simge 12, göz/çizili göz KALIR (SB4).
 - Çerçeve hareketi: mod açılınca çerçeve ve rozet `FadeTransition` `AppMotion.short`; dokunuşta rozet
   `ScaleTransition` 0.85 → 1 `AppMotion.instant`, içerik opaklığı `AppMotion.quick` (bugünkü).
   **Titreme/sallanma YOK** (zıplayan eğri yasağı).
@@ -674,7 +674,7 @@ sınıf silinir — iki dalga bileşeni kalmaz):
   simge 12, köşe `AppRadius.s`, zemin vurgu × `AppAlpha.pressed`.
 - Rozet nabzı: halka `Transform.scale` + solma (bugünkü, yalnız boyama) — döngü süresi dosya başında
   adlandırılmış sabit; hareketi azalt açıkken halka durur (sabit %20 opak halka).
-  AI rozetindeki iki renkli dolgu (`:90-98`) → **S6 sabah bakılacak**; güvenli seçenek: KALIR
+  AI rozetindeki iki renkli dolgu (`:90-98`) → **SB6 sabah bakılacak**; güvenli seçenek: KALIR
   (2026-10-20 "farkı ayırt edilebilsin"; rozet 40 dp, zemin değil).
 - Sessizlik geri sayımı kartın İÇİNDE, dalganın altında 2 dp çizgi (`ValueKey('voice-silence-bar')`
   korunur), `ValueListenableBuilder` ile yalnız kendisi kurulur; kart `silence` parametresi alır.
@@ -706,7 +706,7 @@ ayrı özellik; onu saran `AnimatedSize` `note_editor_screen.dart:4277-4290` kas
 (`voice_assistant*.dart`) · Ayarlar → Ses (`settings_voice.dart`, P62) · dikte mantığı
 (`note_editor_voice.dart` yazma/birleştirme kuralları).
 
-**S7 sabah bakılacak:** dikte kartına "akıllı komutlar" yardım düğmesi (levhadaki
+**SB7 sabah bakılacak:** dikte kartına "akıllı komutlar" yardım düğmesi (levhadaki
 `voice-commands-help`) eklensin mi? Güvenli seçenek: EKLENMEZ (açtığı pencere editör odağını
 düşürür; yeni düğme = yeni davranış).
 
@@ -913,7 +913,7 @@ biçimi; kaynak `ItemsEditorState.dividerOf(id)` — PBT ekler); `dividerKind` a
 - Alt satır `OverflowBar` (`alignment: end`, `spacing: AppSpace.s`): "Çizgiyi kaldır"
   (`TextButton.icon`, `Icons.delete_outline_rounded` — bulgu 6; `error` rengi DEĞİL, geri alınabilir)
   · "Tüm çizgilere" (`TextButton`) · "Tamam" (`FilledButton` — levhanın tek dolu düğmesi).
-- **S9 sabah bakılacak — canlı uygulama:** seçim satıra anında mı yansısın ("Tamam"sız, P50 kalıbı)?
+- **SB9 sabah bakılacak — canlı uygulama:** seçim satıra anında mı yansısın ("Tamam"sız, P50 kalıbı)?
   Güvenli seçenek: **"Tamam" KALIR** — canlı uygulama kaydırıcının her adımında `_update` + `_commit`
   (satır kurulumu + kayıt) demek, ölçülmedi; levhanın kendi önizlemesi zaten canlı (`:236-242`).
 
@@ -1031,7 +1031,7 @@ paketlerin işi); böylece PB0 görünür değişiklik üretmez, `[apk]` gerekti
 
 - **Seçim rengi tek kural (P62 planı §2.2):** seçili hücre/segment zemini `primaryContainer` /
   `onPrimaryContainer`, geçiş yalnız renk + `AppMotion.selection`. `DividerKindPicker` ve `ColorDot`
-  halkası buna uyar. İSTİSNA (bugünkü kılık korunur, S8): `CustomizeBoard`'un "görünen" karosu
+  halkası buna uyar. İSTİSNA (bugünkü kılık korunur, SB8): `CustomizeBoard`'un "görünen" karosu
   `secondaryContainer` (kullanıcının 2026-11-13'te istediği hızlı satır düzenleyicisinin kılığı,
   `quick_row_editor.dart:286`) ve M3 çiplerinin varsayılan seçili rengi (§2.2 bölüm çipleri).
 - Elle ölçü yok; her animasyon `AppMotion.of` + `AppMotion.curveOf`; editör/kart dosyalarından
@@ -1258,27 +1258,300 @@ Test `test/color_dot_test.dart`: seçili/seçisiz aynı boyut; dokunuş; `child`
 Paket sırasında yeni metin gerekirse: paket onu KENDİ dalında ekler ve commit başlığına `[tam]` yazar;
 yürütücü o dalı tek başına birleştirir (paralel `.arb` değişimi yok).
 
-## 7. Uygulama paketleri — **YAZILMADI** (taslak bölme)
+## 7. Uygulama paketleri
 
-| Paket | İş | Dosya kümesi | Model | Bağımlılık | Cihaz A/B | Bütçe |
-|---|---|---|---|---|---|---|
-| PB0 | iskelet + tüm l10n + tur/bütçe yer imleri | §6'daki 5 dosya + testleri, `lib/l10n/*` | Opus | — | hayır | — |
-| PB1 | düzen modu çekirdeği (§1) | `core/personalize.dart`, `core/widgets/customizable.dart` | Opus high | PB0; P62 (ipucu) | evet | S40 |
-| PB2 | düzen merkezi + panolar (§1) | `settings/presentation/customize_hub.dart` (yeni), `personalize_screen.dart`, `personalize_bar_list.dart`, `quick_row_editor.dart`, `action_menu_sheet.dart` (yalnız düzenle gövdesi), `quick_add_fab.dart` (yalnız düzenle gövdesi) | Opus | PB1 | hayır | S40 |
-| PB3 | kalem seti (§3) | `editor/pen_tray.dart` | Opus high | PB0; P62 (`AppSurface`); PB1 (yalnız §3.2.1 süzgeci) | evet | S42 |
-| PB4 | şablonlar (§2) | `note_template_sheet.dart`, `template_editor_screen.dart` | Sonnet | PB0 | hayır | S41 |
-| PB5 | sesle yazma (§4) | `listening_visuals.dart`, `voice_capture_sheet.dart`, `data/voice_listen_session.dart`, `editor/note_editor_parts.dart` (`_DictationPanel`), `editor/note_editor_voice.dart` (yalnız oturum kurulumu) | Opus high | PB0; P62 (`AppSurface`) | evet | S43 |
-| PB6 | madde çizgileri (§5) | `item_divider_style.dart`, `editor/format_bar.dart` (yalnız `_DividerRow`), `editor/items_editor_actions.dart` | Opus high | PB0, §5 yazılınca | evet | S44 |
-| PB7 | yeni sarmalar + sıralar (§1 envanter "YAP") | `editor/editor_quick_row.dart`, `attach_sheet.dart`, `video_transport.dart`, `editor/note_editor_screen.dart:3428` çevresi, `editor/pinned_media_pane.dart` | Opus high | PB1, PB2 | evet | S40 |
+### 7.0 Bölme, model, sıra
 
-Paralel koşabilenler (dosya kümesi kesişmez): PB3 ∥ PB4 ∥ PB5 ∥ PB6; PB1 → PB2 → PB7 sıralı.
-Ortak dosyalar (`test/perf_budget_test.dart`, `test/perf_budget/budgets.json`,
-`tool/tour/screen_tour_test.dart` sahne listesi `:656-695`) her pakette değişir → PB0 paket başına
-yer imi yorumu koyar; çakışmada iki taraf da alınır. §1.2'deki "paket D2" = bu tablodaki PB2.
-§0'daki "§8" atfı = P62 belirteçleri: `git show origin/oto/P62-tasarim-A:docs/plan_tasarim_A.md` §1
-(`AppSurface`, `AppTone`, `AppMotion.selection/emphasized/exitOf`, `AppBanner`, `appNotice`).
+**Model kuralı (kullanıcı kararı 2026-11-14):** GÖRÜNÜŞÜ belirleyen her paket **fable** (Opus ve Sonnet
+görsel işi güzel yapamıyor). **opus** yalnız görsel olmayan altyapı ve kasma/ölçüm işleri; **sonnet**
+yalnız CI, test koşturma, birleştirme, sürüm notu gibi mekanik işler. Fable paketleri gece limit
+frenine tabidir: her alt adım AYRI commit + push, `DEVIR.md` güncel — kesilirse sıradaki tur DEVIR'den
+sürer (bu belgenin kendisi iki kez limitte kesildi).
 
-**Açık KARAR'lar (sabah bakılacak):** S1 kenar rayı hedefleri (dokunma) · S2 biçim çubuğu düğmeleri
-(sabit) · S3 not kartı alanları (kapsam dışı) · S4 düzen rozeti göz simgesi (kalır) · S6 AI rozetinin
-iki renkli dolgusu (kalır) · S7 dikte kartına komut yardımı (eklenmez) · §5 canlı uygulama ("Tamam"
-kalır).
+| Paket | İş | Dosya kümesi | Model | Bağımlılık | Görünür | Cihaz A/B | Bütçe |
+|---|---|---|---|---|---|---|---|
+| PB0 | iskelet: altı bileşen + testleri + tüm çeviri anahtarları (§6) | §6.1–6.6 dosyaları, `test/*` (altı yeni test), `lib/l10n/*` | fable | — | hayır | hayır | — |
+| PBT | taban ölçüm + görsel olmayan altyapı | `core/personalize.dart`, `data/voice_listen_session.dart`, `editor/items_editor.dart` (yalnız `dividerOf`), `test/perf_budget_test.dart`, `test/perf_budget/budgets.json`, `tool/tour/screen_tour_test.dart`, `tool/perf/ab_hepsi.py`, `test/personalize_order_test.dart` (yeni) | opus | — (PB0 ile PARALEL) | hayır | hayır (evreler A=A ile denenir) | S40–S44 tabanı |
+| PB1 | düzen modu: şerit + çerçeve (§1.2 "yerinde mod") | `core/widgets/customizable.dart` | fable | PB0, PBT; **P62 iskeleti main'de** | evet | evet | S40 |
+| PB2 | düzen merkezi + panolar (§1.2 `CustomizeHub`, b–e) | `settings/presentation/customize_hub.dart` (yeni), `personalize_screen.dart`, `personalize_bar_list.dart`, `editor/quick_row_editor.dart`, `action_menu_sheet.dart` (yalnız düzenle gövdesi `:560-702`), `quick_add_fab.dart` (yalnız düzenle gövdesi `:595-721`) | fable | PB1 | evet | hayır | S40 |
+| PB3 | kalem seti (§3) | `editor/pen_tray.dart` | fable | PB0, PBT; **P62 iskeleti main'de** | evet | evet | S42 |
+| PB4 | şablonlar (§2) | `note_template_sheet.dart`, `template_editor_screen.dart` | fable | PB0, PBT | evet | hayır | S41 |
+| PB5 | sesle yazma (§4) | `listening_visuals.dart`, `voice_capture_sheet.dart`, `editor/note_editor_parts.dart` (`_DictationPanel`), `editor/note_editor_voice.dart` (yalnız oturum kurulumu), `editor/note_editor_screen.dart` (yalnız `:4291-4295`) | fable | PB0, PBT; **P62 iskeleti main'de** | evet | evet | S43 |
+| PB6 | madde çizgileri (§5) | `item_divider_style.dart`, `editor/format_bar.dart` (yalnız `_DividerRow` + bir girdi), `editor/items_editor_row.dart` (yalnız `:331-337`), `editor/items_editor_widgets.dart` (`_ItemDividerPainter` + `_DividerReveal`), `editor/note_editor_screen.dart` (yalnız `:4443-4452`) | fable | PB0, PBT | evet | evet | S44 |
+| PB7 | yeni sarmalar + sıralar (§1.1 envanter "YAP") | `editor/editor_quick_row.dart`, `attach_sheet.dart`, `video_transport.dart`, `editor/note_editor_screen.dart` (yalnız `:3428` çevresi), `editor/pinned_media_pane.dart`, `dashboard_screen.dart` (yalnız takvim şeridi / hızlı yakalama anahtar bağlantısı gerekiyorsa) | opus (high) | PB1, PB2 | yalnız düzen modunda | evet | S40 |
+| — | CI izleme dışı mekanik işler: birleştirme, `[apk]`, sürüm notu, Kuyruk | — | sonnet (yürütücünün tek CI ajanı) | her paket | — | — | — |
+
+**Sıra:**
+
+```
+PB0 ∥ PBT ──► PB4 ∥ PB6                      (P62 beklemez)
+        └──► [P62 iskeleti main'de] ──► PB1 ∥ PB3 ∥ PB5
+                                        PB1 ──► PB2 ──► PB7
+```
+
+- "P62 iskeleti main'de" = `lib/app/theme/app_design.dart` ve `AppMotion.selection/emphasized/exitOf`
+  main'de derleniyor (P62'nin 12b1842d + 07f9429e commit'leri; P62'nin uygulama paketleri PA1–PA9
+  BEKLENMEZ). PB1/PB3/PB5 başlarken `git grep -n "class AppSurface" origin/main -- lib` boşsa paket
+  BAŞLAMAZ (§0'daki "geçici yerel sabit" kaçışı yalnız PB4/PB6 içindir).
+- Paralel koşanların dosya kümeleri kesişmez; TEK istisna `editor/note_editor_screen.dart` — PB5
+  (`:4291`), PB6 (`:4443`), PB7 (`:3428`) ayrı satırlara dokunur. İkinci birleşen dal önce
+  `git merge origin/main` yapar; `test/jank_patterns_guard_test.dart` (kök dosyadaki
+  `AnimatedSize`/`AnimatedContainer` sayacı) yeşil kalmalı.
+- Ortak dosyalar: `test/perf_budget_test.dart`, `budgets.json` (senaryoları PBT yazar; paketler yalnız
+  KENDİ senaryosunun sayılarını düşürür), `tool/tour/screen_tour_test.dart` (sahneleri PBT yazar;
+  paketler yalnız kendi sahnesinin adımlarını düzeltir). Çakışmada iki taraf da alınır.
+- **`[apk]` öbekleri (F58.4: en çok 5 görünür değişiklik):** (1) PB4 + PB6 · (2) PB3 + PB5 ·
+  (3) PB1 + PB2 + PB7. PB0 ve PBT tek başına `[apk]` üretmez. Her öbekten önce bütçe testleri yeşil +
+  tam ölçüm (`ab-olcum`: önceki `[apk]` %20, altın taban %15).
+- Her paketin sonu (`isci` "Bitiş"): Kuyruk satırı, bu belgede ilgili kabul kutuları `[x]` + tarih,
+  `docs/regresyon_listesi.md`, ilgili `docs/hafiza/*.md` (PB1/PB2/PB7 → `arayuz.md`; PB3 → `kalem.md`;
+  PB5 → `ai_ses.md`; PB6 → `editor.md`; ölçümler → `akicilik.md`), sürüm notu taslağı (tr + en),
+  cihazda bakılamayan her görünür değişiklik `KONTROL_LISTEM.md` "Telefonda bak".
+
+### 7.1 PB0 — iskelet (fable)
+
+- **Kanıt:** §6 (imzalar ve doğrulanmış kod gerçekleri). Bugün altı bileşenin hiçbiri yok
+  (`ls lib/core/widgets/customize_board.dart …` → yok).
+- **Önce üret:** altı test dosyası KIRMIZI (derlenmez): `customize_board_test`,
+  `template_preview_lines_test`, `pen_stroke_preview_test`, `voice_level_wave_test`,
+  `divider_kind_picker_test`, `color_dot_test` (içerikleri §6.1–6.6 "Test" satırları).
+- **Kabul:** altı test yeşil; `flutter analyze` temiz; `test/design_tokens_guard_test.dart` mandalı
+  YÜKSELMEZ (yeni dosyalarda elle ölçü 0 — §6.2 minyatürün 4/9/64'ü ve §6.4 dalganın 3/4/7'si dosya
+  başında adlandırılmış `const`); `test/arb_case_test.dart`, `terminology_test.dart`,
+  `localization_test.dart` yeşil; hiçbir var olan dosya iskeleti içe aktarmıyor (bağlama yok).
+- **Tuzaklar:** P62'yi içe aktarma (§6.0 tablosu) · `.arb` değişimi tam takımı koşturur — tek commit'te
+  topla · üretilmiş çeviri dosyasını elle düzenleme · `PenStrokePreview` `viewers/ink_stroke_paint.dart`'ı
+  içe aktarır (editör → viewers yönü zaten var: `pen_tray.dart:18`) · `ColorDot` `core/`'da — `features/`
+  içe aktaramaz · iskelette yeni `Theme.of(context)` editör dosyasına sızmasın (bileşenler ayrı dosyada).
+- **A/B / bütçe:** yok (görünür değişiklik yok).
+
+### 7.2 PBT — taban ölçüm + görsel olmayan altyapı (opus)
+
+Amaç: protokolün "önce kanıtı üret" adımını BEŞ yüzey için tek seferde, görünüş değişmeden yapmak;
+fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
+
+1. **Tercih alanları** (`core/personalize.dart`): `UiPrefs.quickOrder`, `attachOrder`
+   (`List<String>`, boş = varsayılan; `orderOf` `:66-78` ile birleşir; `toJson` yalnız doluysa yazar;
+   `==`/`hashCode`/`copyWith`/`fromJson`); `UiItem.pinned(key)` → `'pinned.$key'`,
+   `UiItem.penTool(key)` → `'pen.tool.$key'` (kalıp `UiItem.quickRow` `:323`, `attach` `:361`).
+   Test `test/personalize_order_test.dart`: gidiş-dönüş, eski kayıt (alan yok) aynen okunur, bilinmeyen
+   kimlik atlanır. HİÇBİR ekran bu alanları henüz okumaz.
+2. **Ses düzeyi yayını** (`data/voice_listen_session.dart`): `final ValueNotifier<double> level`,
+   `silence`; `:113-114` ve `reportLevel` (`:150`) `level`'ı, `_tick` (`:152`) `silence`'ı besler;
+   `stop` (`:184-199`) ikisini sıfırlar; `onSilence` geri çağrısı AYNEN kalır. Test: sahte akışla
+   düzey olayı → `level.value`; oturum bitince 0.
+3. **Çizgi biçimi okuma** (`editor/items_editor.dart`): `ItemDivider? dividerOf(String id)`
+   (`dividerKindOf` `:1411-1415` yanına; o değişmez).
+4. **Tur altyapısı** (`tool/tour/screen_tour_test.dart`): tek dokunuşlu sahne listesine DOKUNMA
+   (P62 aynı listeye satır ekliyor, `:656-695`); ikinci liste `_stepScenes`:
+   `(String id, String location, Future<void> Function(WidgetTester) steps)` + aynı çekim döngüsü.
+   Örnek notlara bir çizgili liste (beş türden birer çizgi) eklenir. Sahneler (BUGÜNKÜ arayüzle,
+   "önce" görüntüsü): `duzen-serit`, `kisisellestir`, `sablon-galeri`, `sablon-onizleme-liste`,
+   `sablon-onizleme-yazi`, `sablon-bos`, `kalem-hap`, `kalem-kapsul`, `kalem-panel`, `kalem-sutun`,
+   `cizim-serit`, `dikte-kart`, `ses-levha-dinliyor`, `ses-levha-hazir`, `cizgi-tepsi`, `cizgi-levha`,
+   `cizgi-satirlar`. Konuşma kanalı taklidi: `test/voice_unavailable_test.dart:13-27` kalıbı. Bir
+   sahne üretilemezse satırına "üretilemedi: <ne denendi>" yazılır, paket devralır.
+   Komut: `TOUR_ONLY=<sahneler> TOUR_SIZES=telefon-kucuk,matepad-yatay TOUR_OUT=build/tour_p63_once
+   flutter test tool/tour/screen_tour_test.dart` (+ `TOUR_DARK=1`); paketler `TOUR_COMPARE` ile kıyaslar.
+5. **Bütçe tabanları** (`test/perf_budget_test.dart`, `budgets.json`): S40–S44 senaryoları §1.5, §2.5,
+   §3.5, §4.5, §5.5'teki tanımlarla, BUGÜNKÜ kodda koşar; ölçülen değer bütçe ("bugun" alanı tarihli),
+   plandaki sayı "hedef". Sayaç tür ADIYLA sayar (`BuildCounter`, `test/support/editor_harness.dart:25-39`)
+   → özel türler de sayılır (`_TemplateCard`, `_DictationPanel`, `PenTray`). Bugünkü değer plandaki
+   hedeften kötüyse paket onu hedefe İNDİRİR; iyiyse bütçe bugünkü değerdir (mandal yalnız düşer).
+   S44'te ayrıca "tepsi açılırken gövde kurulumu" ölçülür (§5.1 bulgu 13 hipotezinin kanıtı).
+6. **Cihaz evreleri** (`tool/perf/ab_hepsi.py`): bugün evreler `liste, menu, arama, klasor, yeni_not,
+   not_ac, kb, yaz, not_kapa, sabit_ac, sabit_kay, sabit_kb` (`run_once`, `:180-287`) — kalem, biçim,
+   düzen modu, şablon, dikte evresi YOK (§3.5'teki hipotez doğrulandı). Eklenecek: `kalem` (kalem kipi
+   aç → 10 çizgi → kapsül aç/kapa ×3), `bicim` (klavye açık → Biçim → çizgi tepsisi aç/kapa ×3 → tür
+   seç ×3), `duzen` (not ⋮ → düzen modu aç → 3 öğe gizle/göster → Bitti), `sablon` (levha aç → çip →
+   kapat). Dikte evresi mikrofon ister → eklenmez; PB5 "yazıldı, cihazda doğrulanmadı" yazar.
+   Yeni evreler eski evrelerin SONUNA eklenir (var olan evrelerin sayıları kaymasın — altın taban).
+   Telefon varsa bir A=A koşusu (`ab-olcum`); yoksa `KONTROL_LISTEM.md`.
+
+- **Kabul:** yeni/var olan testler yeşil; S40–S44 `budgets.json`'da tabanlı; tur "önce" görüntü listesi
+  ve ölçülen ham sayılar `DEVIR.md`'de; `git diff --stat` içinde `presentation/` altında yalnız
+  `items_editor.dart` (+`dividerOf`).
+- **Tuzaklar:** `budgets.json` mandalı — yeni senaryo eklemek serbest, var olanı yükseltmek `[butce]`
+  ister · tur dosyasında P62 ile çakışma (ana listeye dokunma) · `ab_hepsi.py` evre SIRASI ·
+  `UiPrefs` eşitliği (`==`) yeni alanları kapsamazsa `Personalize` dinleyicileri tetiklenmez ·
+  `level` notifier'ı oturum kapanınca `dispose` EDİLMEZ (dinleyen kart bir kare daha yaşayabilir) —
+  sıfırlanır.
+- **Model:** opus. **A/B:** paket görünür değişiklik yapmaz; yalnız evrelerin çalıştığı denenir.
+
+### 7.3 PB1 — düzen modu: şerit + çerçeve (fable)
+
+- **Kanıt:** §1.1 "Mod deneyimi/görünüm eksikleri" 1, 3, 4 (`customizable.dart:57-147, 216-281`).
+- **Önce üret:** tur `duzen-serit` (PBT'den, açık + koyu, telefon + tablet) "önce"; S40 tabanı;
+  yeni `test/customize_strip_test.dart` KIRMIZI: şerit tek satır (yükseklik = üst güvenli alan + 48),
+  `customize-reorder` düğmesi var, gizli sayısı hapı yalnız sayı > 0 iken, hareketi azalt açıkken
+  geçiş ≤ 150 ms.
+- **Kabul:** §1.4'ün şerit/çerçeve maddeleri; `customizable.dart`'ta elle ölçü 0, `elevation` 0;
+  `Customizable` mod kapalıyken çıplak `child` (`customizable.dart:17-19` P20 notu — `identical`
+  testi); `editor_bar_customize_test`, `editor_top_customize_test`, `personalize_bubble_focus_test`,
+  `page_panel_personalize_test` DEĞİŞMEDEN yeşil (`customize-undo`, `customize-done`); S40 ≤ taban.
+- **Tuzaklar:** şerit yuvası TEK ADIMDA açılır (kasma md. 6; `CustomizeModeHost` Column'u editör
+  gövdesiyle aynı sütunda) · kök `build`'e yeni `Personalize` okuması ekleme
+  (`note_editor_screen.dart:4555` kalıbı) · metin alanı içeren hiçbir şeyi `Customizable` ile sarma ·
+  "Sırala" düğmesi PB2 gelene dek hub yerine BUGÜNKÜ Kişiselleştir ekranını açar (yarım özellik
+  bırakma) · ilk giriş ipucu var olan huniden (`TipOnce.show`, `core/tips.dart:82`) — P62'nin PA5'i huniyi
+  göç ettirince kılık kendiliğinden gelir, `appNotice`'i doğrudan çağırma (`app.dart`'a bağlı değil) ·
+  kesikli çerçeve tek `drawPoints` (`item_divider_style.dart:44-53` kalıbı) · rozet göz simgesi KALIR (SB4).
+- **A/B:** evet — `kb`, `not_ac`, `duzen` evreleri; mod kapalı yol yavaşlamamalı. **Bütçe:** S40.
+
+### 7.4 PB2 — düzen merkezi + panolar (fable)
+
+- **Kanıt:** §1.1 kök bulgu tablosu (b–e) ve envanter; §1.2 `CustomizeHub` tablosu.
+- **Önce üret:** tur `kisisellestir`, `duzen-hub-altcubuk`, `duzen-hub-hizli` "önce" (hub yokken
+  bugünkü ekran/levha); yeni `test/customize_hub_test.dart` KIRMIZI: `surfaceFor(location,
+  keyboard:)` karar tablosu (saf işlev), yüzey çipi değişince pano değişir, `home` yüzeyinde takvim
+  şeridi/hızlı yakalama anahtarları var olan tercihi sürer.
+- **Kabul:** §1.4'ün tamamı (PB7'ye kalan "YAP" sarmaları hariç); b, c, d, e `CustomizeBoard` çizer;
+  `personalize_screen.dart`, `quick_row_editor.dart`, `personalize_bar_list.dart`'ta elle ölçü 0;
+  baş karttaki gradyan (`personalize_screen.dart:141-150`) yok.
+- **Tuzaklar:** **§1.4 "var olan testler değişmeden yeşil" ancak anahtar uyumuyla tutar** (§6.1):
+  `bar-switch-<id>`, `bar-move-<id>` (teste dokunuluyor, `editor_bar_customize_test.dart:206`),
+  `personalize-bar-<grup>` (gizli düğme de KENDİ grubunun içinde bulunmalı, `:202-203`),
+  `personalize-bar-reset`, `quick-row-edit-<k>`, `quick-row-editor-preview`, `personalize-start-edit`,
+  `personalize-reset` · `MenuLayout` veri biçimi değişmez (`core/menu_layout.dart`) · menülerin kendi
+  "Düzenle"si KALIR, yalnız gövdesi pano olur · `ActionMenu`/`quick_add_fab` dosyalarında yalnız
+  düzenle gövdesi — menünün kendisine dokunma (Y-listesi, `arayuz.md`) · değişiklik ANINDA kaydedilir
+  (P50) · Wrap içinde boy animasyonu yok (yalnız `AnimatedOpacity`) · hub levhası açılırken klavye
+  kapatılır (`note_editor_actions.dart:496`) · PB1'deki "Sırala" düğmesi artık hub'ı açar.
+- **A/B:** hayır (ayar ekranı + levha; editör yolu değişmez). **Bütçe:** S40 (hub açıp kapamak gövdeyi
+  kurmaz — senaryoya eklenir).
+
+### 7.5 PB3 — kalem seti (fable)
+
+- **Kanıt:** §3.1 bulgu 1–9.
+- **Önce üret:** tur `kalem-hap`, `kalem-kapsul`, `kalem-panel`, `kalem-sekil-panel`, `kalem-sutun`,
+  `cizim-serit` "önce"; S42 tabanı; grep sayımı DEVIR'e (`easeOutBack`, `AnimatedSize`,
+  `AnimatedPositioned`, `blurRadius`, `Colors.black`, `Duration(milliseconds:` — bugünkü sayılar);
+  yeni testler KIRMIZI: `test/pen_tray_tools_pref_test.dart` (§3.4), `pen-panel-pin` testi.
+- **İlk iş (hipotez kapatma):** alt şeridin (`_build`, `pen_tray.dart:930-984`) altı çağrı yerinde
+  şeridin belgeyle AYNI Column'da olup olmadığına bak (`drawing_screen.dart:342`,
+  `pdf_viewer_screen.dart:464`, `slide_viewer_screen.dart:347`, `image_viewer.dart:735`,
+  `pdf_note_pane.dart:459`, `slide_note_pane.dart:556`); sonucu §3.1 bulgu 2'ye yaz.
+- **Kabul:** §3.4'ün tamamı; S42 ≤ taban ve ≤ 13.
+- **Tuzaklar:** kapsam YALNIZ görünüş + hareket: üç yerleşim, araç sırası, jestler, anahtarlar ve
+  §3.1 sonundaki dokuz istek DEĞİŞMEZ ("kalem tepsisini değiştirmek" yasağı) · `AnimatedSlide` ölçüleri
+  bugünkü `top` değerlerinden türetilir (§3.2) — kırpma kutusu aynı kalmalı (`pen_icons_test`) ·
+  panel yuvası ve sabit kalem hapı KOŞULSUZ kurulu (`SizedBox.shrink`) · `PenStrokePreview` kendi
+  `RepaintBoundary`'sinde; `PenToolPainter.shouldRepaint` kalkışta yeniden boyamamalı (doğrula:
+  `pen_icons.dart`) · `pen`/`eraser` gizlenemez; seçili araç gizli olsa da çizilir · `_tools` süzgeci
+  `Personalize.listenable`'ı `build`'deki `ListenableBuilder` birleşimine ekler, kök `setState` yok ·
+  `showInkSettings` → `showAppSheet` yalnız telefon dalı (`pen_tray.dart:55-62`); levhanın İÇERİĞİ
+  (`ink_layer.dart:2525-2720`) kapsam dışı · sabit kalem çipinde renk saydamlıksız kayıtlı (§6.3) ·
+  `kalem.md`'deki gecikme/avuç içi kurallarına dokunma.
+- **A/B:** evet — `kalem` evresi (PBT) + `not_ac`. Kalemle yazma gecikmesi en hassas yüzey:
+  kötüleşme SIFIR. **Bütçe:** S42.
+
+### 7.6 PB4 — şablonlar (fable)
+
+- **Kanıt:** §2.1 bulgu 1–8.
+- **Önce üret:** tur `sablon-galeri`, `sablon-onizleme-liste`, `sablon-onizleme-yazi`, `sablon-bos`,
+  `sablon-duzenle` "önce"; S41 tabanı (bugünkü `_TemplateCard` sayısıyla); yeni widget testi KIRMIZI:
+  30 maddeli şablonda "Oluştur" ilk karede görünür alanda (bugün kaydırmanın altında).
+- **Kabul:** §2.4'ün tamamı; `test/note_templates_test.dart` DEĞİŞMEDEN yeşil; S41 ≤ taban.
+- **Tuzaklar:** küçük kart düzeni korunur — telefonda 3, genişte 4 sütun (2026-11-05) · favori en çok
+  4 ve `templateFavoritesFull` duyurusu · iki adım (önce önizle, sonra oluştur) kalır · öneri çipleri
+  grup içi alfabetik · anahtarlar `tpl-card-<key>`, `tpl-fav-<ad>`, `tpl-save-as`, `tpl-two-columns`,
+  `tpl-item-<i>-<metin>`, `tpl-editor-*` · minyatürde metin dizimi YOK (S41 `RenderParagraph` sınırı) ·
+  `templatePreviewLines` sonucu şablon başına bir kez (dil değişince önbellek boşalır) · sabit alt
+  bant klavyenin üstüne oturur (levha zaten `viewInsets.bottom` dolgulu, `:47-50`) — çift dolgu verme ·
+  şablon vurgu renkleri izinli sabit renk istisnası · `AnimatedSwitcher` kayması yalnız girişte.
+- **A/B:** hayır (editör/klavye/çubuk/liste/geçiş değil); `sablon` evresi yürütücünün `[apk]` öncesi
+  tam ölçümünde görülür. **Bütçe:** S41.
+
+### 7.7 PB5 — sesle yazma (fable)
+
+- **Kanıt:** §4.1 bulgu 1–7.
+- **Önce üret:** tur `dikte-kart` (telefon + tablet), `ses-levha-dinliyor`, `ses-levha-hazir`,
+  `ses-levha-hata` "önce"; S43 tabanı (metin olayı başına satır kurulumunun BUGÜNKÜ değeri); yeni
+  testler KIRMIZI: düzey olayında `_DictationPanel` ve `ListeningCard` kurulmaz; sessizlik sayımı 0 →
+  0.5 → 1 iken kart yüksekliği sabit; 1280 dp'de çubuk eni 3 dp.
+- **Kabul:** §4.4'ün tamamı; `test/listening_card_bubble_theme_test.dart`'ta TEK izinli değişiklik
+  `:61` tür adı; `voice_unavailable_test`, `voice_capture_test`, `voice_commands_test`,
+  `compact_menus_listening_test` değişmeden yeşil; S43 ≤ taban.
+- **Tuzaklar:** kartın dış `RepaintBoundary`'si KALIR (`note_editor_parts.dart:236`, 2026-11-13 tablet
+  kök nedeni) · `if (_dictating)` ağaç şekli bugünkünden farklılaşmaz; belirme `PopIn`
+  (`core/widgets/pop_in.dart:14`), çıkış geçişi YOK · levhada `idle` ve `listening` AYNI
+  `AnimatedSwitcher` anahtarı (basılı-tut düğmesi ağaçtan kalkmamalı, `voice_capture_sheet.dart:1319-1322`)
+  · sessizlik için `setState` yalnız 0 ↔ > 0 geçişinde · dinlerken `error` rengi durum rengidir, KALIR ·
+  kart orta boy bekçisi (dikte 90–150, AI 130–260 px) · `ListeningWaveform` SİLİNİR (iki dalga kalmaz)
+  · `VoiceRecordPanel`, sesli asistan, Ayarlar → Ses, dikte yazma kuralları kapsam DIŞI;
+  `note_editor_screen.dart:4277-4290`'daki `AnimatedSize` regresyon listesine NOT olarak yazılır ·
+  alt yazı metni var olan `voiceAutoStopSoon` ("Sessizlik — birazdan biter").
+- **A/B:** evet — `kb`, `yaz` evreleri dikte kapalıyken (kapalı yol yavaşlamamalı); dikte açıkken ölçüm
+  mikrofon ister → "yazıldı, cihazda doğrulanmadı" + `KONTROL_LISTEM.md` (tablette sesle yazarken
+  kaydırma). **Bütçe:** S43.
+
+### 7.8 PB6 — madde çizgileri (fable)
+
+- **Kanıt:** §5.1 bulgu 1–12.
+- **Önce üret:** tur `cizgi-tepsi`, `cizgi-levha`, `cizgi-satirlar` "önce"; S44 tabanı; yeni
+  `test/item_divider_sheet_test.dart` KIRMIZI (§5.4); tepside `format-divider-double` /
+  `format-divider-wavy` bulunamaz (kırmızı).
+- **Adımlar (ayrı commit):** (1) tepsi → `DividerKindPicker` + `dividerStyle` girdisi; (2) levha;
+  (3) `kItemDividerAccentAlpha`; (4) beliriş — yalnız (1)–(3) yeşil ve ölçülmüşse, kendi kapısıyla (§5.2).
+- **Kabul:** §5.4'ün tamamı; S44 ≤ taban.
+- **Tuzaklar:** `format_bar.dart`'ta kapsam YALNIZ `_DividerRow` + bir kurucu girdisi — iki sıra,
+  düğmeler, sıra, tepsi kabuğu (`AnimatedSize` `:626-636`) DEĞİŞMEZ · tepsi boyu 42 · çizgi türleri
+  madde uzun basış menüsüne DÖNMEZ · `paintItemDivider`'a dokunma (tek çizim çağrısı bekçisi) ·
+  `note_card.dart`'a dokunma · seçici `TextFieldTapRegion` içinde kalmalı (dışına taşınırsa dokunuş
+  odağı düşürür, klavye kapanır) · levha modal — açılınca editör odağı bugünkü gibi davranır,
+  değiştirme · `_DividerReveal` KOŞULSUZ sarmalayıcı; `initState`'te oynamaz; katman/opaklık yok ·
+  satır önbelleği anahtarına beliriş durumu girmez · "Tamam" kalır (SB9) · `format_bar.dart` editör
+  dosyası: yeni `Theme.of(context)` ekleme.
+- **A/B:** evet — `kb` + `bicim` evreleri, çizgili ölçüm notuyla. **Bütçe:** S44.
+
+### 7.9 PB7 — yeni sarmalar + sıralar (opus high)
+
+- **Kanıt:** §1.1 envanterinde **YAP** yazan satırlar: hızlı satır sırası (`quick_row_editor.dart:122-126`
+  katalog sırası sabit), Ekle levhası sırası (`attach_sheet.dart:63-69, 133`), video hız/süre
+  (`video_transport.dart:162, 203`), ortak çalışan düğmesi (`note_editor_screen.dart:3428`), sabit ek
+  çubuğu (`pinned_media_pane.dart:1412-1689`, sarma yalnız `:1565`), sabit ek ⋮ menüsü (`menuId` yok).
+- **Önce üret:** yeni testler KIRMIZI: `quickOrder` verilince hızlı satır o sırada; `attachOrder`
+  verilince Ekle levhası o sırada; `UiItem.pinned(k)` gizliyken düğme yok, varsayılan AYNI; düzen
+  modunda video/ortak çalışan/sabit ek düğmeleri çerçeveli; S40 senaryosuna "sıra değişince satır
+  kurulumu 0" eklenir.
+- **Kabul:** §1.4 "Envanterde YAP yazan her satır hub'dan düzenlenir ve yerinde modda çerçevelenir" +
+  "sıra yeniden açılınca korunur"; varsayılan tercihle ekran görüntüleri PİKSEL AYNI (tur
+  `TOUR_COMPARE`: n1, n4, `n4-ekle`, `e-pdf-sabit`, `e-video-sabit` farkı 0); S40 ≤ taban.
+- **Tuzaklar:** görünüş paketi DEĞİL — varsayılan görünüm değişmez; yeni kılık gerekirse dur, PB1/PB2
+  sahibine yaz · `quickOrder` satırın `_syncRowCache` env'ine GİRMEZ; sıra listesi `Personalize.prefs`
+  değişince bir kez hesaplanıp `State`'te tutulur (her build'de yeni liste = önbellek her karede boşalır,
+  kasma md. 2) · hızlı satırın `KeyboardSwitch` düzeni değişmez (md. 7; 2026-11-14 "tek KeyboardSwitch"
+  commit'i 0200f8cb) · `Customizable` mod kapalıyken çıplak çocuk — sarma editörün ilk karesine yük
+  bindirmez · Y10: sabit ek düğmeleri varsayılanda ⋮'e İNMEZ (kullanıcının kendi gizlemesi serbest) ·
+  `menuId: 'pinned.menu'` yeni kimlik; var olan kimlikler değişmez · ana ekran ✨, klasör şeridi, "+",
+  başa dön, not ⋮, klavye düğmesi, biçim çubuğu, balon dok SABİT (§1.1) · kenar rayı SB1 (dokunma) ·
+  `UiItem.topTheme` ölü kimlik, silinmez.
+- **Model:** opus (high) — görsel olmayan bağlama + kasma duyarlı editör dosyaları. **A/B:** evet —
+  `kb`, `yaz`, `sabit_ac`, `sabit_kb`, `duzen`. **Bütçe:** S40.
+
+### 7.10 Sonraya (bu planın paketi DEĞİL; regresyon listesine/Kuyruk'a not)
+
+- Kalem ayar levhasının içeriği (`InkSettingsSheet`, `ink_layer.dart:2525-2720`) — ayar satırı kılığı
+  P62'nin; P62 birleşince ayrı küçük iş (§3.2).
+- Sesli not kaydı hapını saran `AnimatedSize` (`note_editor_screen.dart:4277-4290`) — kasma md. 6 adayı.
+- Biçim çubuğu tepsi kabuğunun `AnimatedSize`'ı (`format_bar.dart:626-636`) — PBT ölçümü kötüyse
+  ayrı düzeltme (çubuğun görünüşü değişmeden: boy tek adım, içerik kayarak belirir).
+- Renk paletinin kendi noktası (`core/widgets/color_palette.dart:184`) → `ColorDot`.
+- P62'nin PA9'u: P63 çitindeki 9 `showSnackBar` + 3 `hideCurrentSnackBar` (P63 birleşince, P62 planı).
+
+### 7.11 Açık KARAR'lar (sabah bakılacak — hepsinde güvenli seçenek uygulanır, soru sorulmaz)
+
+| # | Karar | Güvenli seçenek (uygulanacak) |
+|---|---|---|
+| SB1 | Kenar rayı hedefleri (tablet/web) düzenlenebilsin mi | dokunma |
+| SB2 | Biçim çubuğu düğmeleri düzenlenebilsin mi | sabit |
+| SB3 | Not kartı alanları | kapsam dışı |
+| SB4 | Düzen rozeti göz simgesi | kalır |
+| SB6 | AI rozetinin iki renkli dolgusu | kalır |
+| SB7 | Dikte kartına komut yardımı düğmesi | eklenmez |
+| SB8 | Seçim rengi: `CustomizeBoard` "görünen" karosu ve M3 çipleri `secondaryContainer`; P62 seçim = `primaryContainer` | bugünkü kılık kalır (2026-11-13 hızlı satır düzenleyicisi); P62 temaya genel kural koyarsa çipler onunla değişir |
+| SB9 | Çizgi levhasında canlı uygulama ("Tamam"sız) | "Tamam" kalır |
+| SB10 | Çizgi vurgu saydamlığı 0.75 → `AppAlpha.strong` (0.85) — var olan tema renkli çizgiler bir ton koyulaşır | uygulanır (tek sabit); beğenilmezse sabit tek satırda `AppAlpha.muted`'a çekilir |
+| SB11 | Çizginin soldan sağa belirişi | ölçüm kapısını geçerse kalır, geçmezse geri alınır |
+
+(SB5 numarası kullanılmadı. "SB" = sabah bakılacak; bütçe senaryoları S1–S44 ile karışmasın diye ayrı önek.)
