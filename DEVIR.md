@@ -1,10 +1,13 @@
-# DEVIR — P63 / PB0 iskelet (dal oto/PB0-iskelet, taban 4d56c9ab) — YARIDA DURDURULDU (kullanıcı kararı)
+# DEVIR — P63 / PB0 iskelet (dal oto/PB0-iskelet, taban 4d56c9ab) — SÜRÜYOR (2026-11-14 gece, 2. tur)
 
 Tarif: `docs/plan_tasarim_B.md` §6 + §7.1 (ayrıntı §1.2, §2.2, §3.2, §4.2, §5.2). Bileşenler ekrana BAĞLANMAZ. `test/perf_budget_test.dart`'a dokunma.
 
-## Biten (2/6, yerelde test + `dart analyze` yeşil; CI sonucu ALINMADI)
+## Biten (yerelde test + `dart analyze` yeşil)
 - ColorDot `lib/core/widgets/color_dot.dart` + `test/color_dot_test.dart` (b240e20b)
 - CustomizeBoard `lib/core/widgets/customize_board.dart` + `test/customize_board_test.dart` (d972581f)
+- ColorDot mandal düzeltmesi: `withValues(alpha: 0)` → `withAlpha(0)` (tasarım mandalı alpha 191>190) (1d0320b8)
+- TemplatePreviewCard + `test/template_preview_lines_test.dart` (a31b62f1) — yıldız sağ üst köşede (KARAR, §7.11'e yazılacak)
+- PenStrokePreview + `test/pen_stroke_preview_test.dart` (41 nokta, k=0.8; uç yarıçapı < orta × 0.6)
 
 ## Kalan (sırayla, her biri ayrı commit + push; önce test dosyası, derlenmediğini gör, sonra bileşen)
 1. TemplatePreviewCard (§6.2) — hiç başlanmadı. Tuzak: gerçek şablon gövdesinde başlık `# ` DEĞİL, zengin işaret (`buildTemplateText` → `setLineHeading`); `templatePreviewLines` hem `# `/`## ` önekini hem `lineHeadingAt(line, 0) != normal`'i (`core/utils/rich_text.dart:1464`) başlık saysın, öbür önekler `stripRichMarkers` sonrası. Minyatür: 12 dolgu + 5 satır × adım 9 (kalınlık 4) = 64. Tuzak: telefonda kart 104 dp — alt bantta simge + ad + yıldız + 40 dp menü sığmıyor (ada 4 dp kalıyor) → önerim yıldız bugünkü gibi kartın sağ üst köşesinde, bantta simge + ad (+ `more_horiz`); plana sapma notu yaz. Yıldız ipucu: `templateFavorite`/`templateUnfavorite` var.
