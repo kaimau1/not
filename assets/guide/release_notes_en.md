@@ -2,6 +2,10 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 15 November 2026 {#2026-11-15}
+- **No lost notes when importing from Google Keep:** on a fresh install, importing a Keep backup could silently leave some notes empty and remove them; each note is now created in one go, with its content.
+- **Lighter switch to search:** when you tap the search box, cards that are off screen are no longer prepared for nothing; fewer than half as many cards are drawn for each letter you type.
+
 ## 14 November 2026 {#2026-11-14}
 - **Tidier menus:** the note ⋮ menu, the home ⋮ menu and the pinned attachment's ⋮ menu have a handle at the top — drag down to close; in a long menu the title, ⚙ and ✕ no longer clash with the phone's status bar. The one-item "Other" group in the home ⋮ menu is gone; Archive sits at the end of "App".
 - **Quick row and bubble list on a pinned PDF:** while typing in the "Take a note" field of a note with a pinned PDF, the quick row appears in the top bar. "All bubbles" in the PDF ⋮ menu lists every bubble in the document; tap one to jump to its page.

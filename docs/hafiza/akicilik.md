@@ -128,6 +128,13 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 ## 2026-11-14 — P20: liste satırı önbelleği (S3/S4)
 - **Kök neden:** madde işaretlenince/Enter'da arkadaki 22 satır baştan kuruluyordu: sıra numarası (`reorderIndex`, `orderNumber`) satır önbellek anahtarındaydı VE `SliverReorderableList` her satırı dizinli `GlobalKey` ile sarıyordu. Çözüm `_RowSlot` (sıra önbelleğin dışından) + tutamaçsız kipte düz `ListView`: S3/S4 23→1. Tutamaçlı kipte (tablet/web, Seç) 23 kalır. Ayrıntı `editor.md`.
 
+## 2026-11-15 — P60: kalan kasmalar (veri, ölçüm aracı, S21)
+- **"3 kat sıçrama" kökü veriydi:** yeniden kurulan veri setinde ilk kart sabit PDF'li "OLCUM kalem pdf" olmuştu; not_ac/kb/yaz/not_kapa o notu ölçüyordu. `pick_card` OLCUM kartlarını atlar, koşu satırı ölçülen notu yazar (veri doğrulaması).
+- **`yaz` LAYOUT oturum farkı (164 ↔ 225) = ölçülen notun büyümesi:** `trim_typed` liste maddesini okuyamıyordu (madde metni EditText'te değil, üstündeki View'in content-desc'inde) ve `input text` klavyede "Deneme Yazisi" diye büyük harfle düşüyordu; ayrıca sarılı maddede MOVE_END yalnız ilk satır sonuna gider (ek ortaya girer). "Kitap bilet" 1. maddesi ~1600 karaktere şişmişti. Düzeltme: dokunulan noktadaki en uzun text/desc okunur, `deneme|yazisi` (harf duyarsız) sonrası maddenin SON satırına basılarak silinir. Sonra yaz LAYOUT 124–130 ms (A ve B).
+- **S21 (77bcb7f5):** aramaya girişte ekran dışı kartlar kurulmadan atılır (not sliver anahtarına arama durumu); harf başına kart 56 → 24. Cihazda arama UI 321,9 → 320,0 ms (aynı; altın 308,5 içinde).
+- **Son A/B (2026-11-15, A=0fe290ec [apk], B=dal 479bdfef = K32+K34+P60+main, `--teyit 2 --altin`, 5+5 koşu): KARAR GEÇTİ.** Ham sayılar OTOMASYON P60 satırı ve `docs/perf/gecmis.csv`.
+- **Ölçüm aracı açığı:** bu oturumda `liste` evresi 1. çiftten sonra kare yakalamadı (UI ~0,6 ms, A ve B ikisinde; liste elle kaydırınca kayıyor). Tek geçerli çift A 1340,6 / B 1270,9 ms (altın 1324,6). Kök aranmadı (2 tur sınırı) — sonraki A/B'de `liste` 0'sa önce bu.
+- **Düzeltilmeyen (gerekçeli):** S9 gövde boy karesi 2 (0 için panel içeriğin üstünde yüzmeli = tasarım değişikliği); Seç kipi satır 23 (`SliverReorderableList` dizinli GlobalKey — çatallama gerekir); M6 `_sameVisual` kullanıcı kararı.
 
 ## Hız sözleşmesi — kalıcı tedbirler (HIZ_PLANI, P53 2026-11-14 buraya taşındı)
 
