@@ -330,7 +330,7 @@ def trim_typed(fx, fy):
                 t = re.search(attr + r'="([^"]*)"', nd)
                 if t and (best is None or len(t.group(1)) > len(best[0])):
                     best = (t.group(1), (x0, y0, x1, y1))
-        junk = re.search(r"deneme|yazisi", best[0]) if best else None
+        junk = re.search(r"deneme|yazisi", best[0], re.I) if best else None
         if not junk:
             break
         t, (x0, y0, x1, y1) = best
