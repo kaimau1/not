@@ -1341,6 +1341,11 @@ PB0 ∥ PBT ──► PB4 ∥ PB6                      (P62 beklemez)
   içe aktarır (editör → viewers yönü zaten var: `pen_tray.dart:18`) · `ColorDot` `core/`'da — `features/`
   içe aktaramaz · iskelette yeni `Theme.of(context)` editör dosyasına sızmasın (bileşenler ayrı dosyada).
 - **A/B / bütçe:** yok (görünür değişiklik yok).
+- [x] **Durum (2026-11-15, dal oto/PB0-iskelet):** altı bileşen + altı test yeşil, `flutter analyze`
+  temiz, çeviri anahtarları eklendi (eşleme §6.7 sonu). Sapmalar: şablon kartında yıldız sağ üst
+  köşede (SB12); `DividerKindPicker`'a isteğe bağlı `scheme` girdisi (editör `_themeOf` rengini
+  verebilsin) ve açık `DividerSamplePainter`; `VoiceLevelWave` boyayıcısı hareketi azaltta
+  `repaint: level`, hareketliyken ticker'ın `ValueNotifier` karesine bağlı.
 
 ### 7.2 PBT — taban ölçüm + görsel olmayan altyapı (opus)
 
@@ -1570,5 +1575,6 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
 | SB9 | Çizgi levhasında canlı uygulama ("Tamam"sız) | "Tamam" kalır |
 | SB10 | Çizgi vurgu saydamlığı 0.75 → `AppAlpha.strong` (0.85) — var olan tema renkli çizgiler bir ton koyulaşır | uygulanır (tek sabit); beğenilmezse sabit tek satırda `AppAlpha.muted`'a çekilir |
 | SB11 | Çizginin soldan sağa belirişi | ölçüm kapısını geçerse kalır, geçmezse geri alınır |
+| SB12 | Şablon kartında yıldız (PB0'da çıktı): telefonda kart 104 dp, alt bantta simge + ad + yıldız + 40 dp menü sığmıyor (ada 4 dp kalıyor) | yıldız bugünkü gibi kartın sağ üst köşesinde; bantta simge + ad (+ `more_horiz`) |
 
 (SB5 numarası kullanılmadı. "SB" = sabah bakılacak; bütçe senaryoları S1–S44 ile karışmasın diye ayrı önek.)
