@@ -8564,6 +8564,54 @@ abstract class AppLocalizations {
   /// **'Ekranlarda dokunarak gizle/göster'**
   String get customizeModeShort;
 
+  /// No description provided for @customizeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dokun: gizle/göster · Sırala: yerini değiştir'**
+  String get customizeHint;
+
+  /// No description provided for @customizeShown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünenler'**
+  String get customizeShown;
+
+  /// No description provided for @customizeSurfaceBottomBar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt çubuk'**
+  String get customizeSurfaceBottomBar;
+
+  /// No description provided for @customizeSurfaceTopBar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üst çubuk'**
+  String get customizeSurfaceTopBar;
+
+  /// No description provided for @customizeSurfaceQuickRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı satır'**
+  String get customizeSurfaceQuickRow;
+
+  /// No description provided for @customizeSurfaceAddPanel.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"+\" paneli'**
+  String get customizeSurfaceAddPanel;
+
+  /// No description provided for @customizeSurfacePinned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabit ek'**
+  String get customizeSurfacePinned;
+
+  /// No description provided for @customizeSurfacePen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalemler'**
+  String get customizeSurfacePen;
+
   /// No description provided for @personalizeModules.
   ///
   /// In tr, this message translates to:

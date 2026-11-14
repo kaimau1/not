@@ -4790,6 +4790,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customizeModeShort => 'Hide or show by tapping on screens';
 
   @override
+  String get customizeHint => 'Tap: hide/show · Reorder: move it';
+
+  @override
+  String get customizeShown => 'Shown';
+
+  @override
+  String get customizeSurfaceBottomBar => 'Bottom bar';
+
+  @override
+  String get customizeSurfaceTopBar => 'Top bar';
+
+  @override
+  String get customizeSurfaceQuickRow => 'Quick row';
+
+  @override
+  String get customizeSurfaceAddPanel => '\"+\" panel';
+
+  @override
+  String get customizeSurfacePinned => 'Pinned attachment';
+
+  @override
+  String get customizeSurfacePen => 'Pens';
+
+  @override
   String get personalizeModules => 'Plug-ins';
 
   @override
