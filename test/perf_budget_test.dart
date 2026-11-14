@@ -1826,14 +1826,31 @@ void main() {
         find.byKey(const ValueKey('format-divider-wavy')).evaluate().isEmpty
         ? 'dashed'
         : 'wavy';
-    for (final k in ['solid', second, second]) {
-      final c = await _count(() async {
-        await tester.tap(find.byKey(ValueKey('format-divider-$k')));
-        await _settle(tester);
-      });
-      pickRows += c[_row] ?? 0;
-      pickRoots += c['NoteEditorScreen'] ?? 0;
-      pickItems += c['ItemsEditor'] ?? 0;
+    // Beliriş (PB6 §5.2): çizgi eklendikten sonraki 200 ms'de (12 kare)
+    // satır ve ItemsEditor kurulmaz — yalnız çizgi katmanı boyanır.
+    var revealRows = 0, revealItems = 0;
+    for (final (i, k) in ['solid', second, second].indexed) {
+      final parts = [
+        await _count(() async {
+          await tester.tap(find.byKey(ValueKey('format-divider-$k')));
+          await tester.pump();
+        }),
+        await _count(() async {
+          for (var f = 0; f < 12; f++) {
+            await tester.pump(const Duration(milliseconds: 16));
+          }
+        }),
+        await _count(() => _settle(tester)),
+      ];
+      if (i == 0) {
+        revealRows = parts[1][_row] ?? 0;
+        revealItems = parts[1]['ItemsEditor'] ?? 0;
+      }
+      for (final c in parts) {
+        pickRows += c[_row] ?? 0;
+        pickRoots += c['NoteEditorScreen'] ?? 0;
+        pickItems += c['ItemsEditor'] ?? 0;
+      }
     }
     await tester.pump(const Duration(seconds: 3));
     expect(repo.lastSaved!.items[7].divider, isEmpty, reason: 'kaldırıldı');
@@ -1861,6 +1878,8 @@ void main() {
       'tepsi_satir': (trayOpen[_row] ?? 0) + (trayClose[_row] ?? 0),
       'tepsi_govde_boy_karesi': trayResize,
       'klavye_govde': kb,
+      'belirisi_satir': revealRows,
+      'belirisi_items_editor': revealItems,
     });
     await endEditor(tester);
   });

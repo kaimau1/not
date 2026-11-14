@@ -12,7 +12,9 @@ import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/note_colors.dart';
+import '../../../../core/a11y/motion.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
