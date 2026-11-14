@@ -64,9 +64,9 @@
   },
   "S9": {
     "senaryo": "Biçim panelini aç → kapat",
-    "tuval_kurulum": 2,
+    "tuval_kurulum": 0,
     "govde_boy_karesi": 2,
-    "bugun": "tuval 2 (2026-11-11); gövde boyunun değiştiği kare 2 — açılış 1 + kapanış 1 (2026-11-13, P46: panel ve alt çubuktaki iki AnimatedSize kalktı, hareket yalnız boyamada; önce 34)",
+    "bugun": "tuval 0 (2026-11-14, P20 adım 5: biçim kipi ValueNotifier, kök setState yok); tuval 2 (2026-11-11); gövde boyunun değiştiği kare 2 — açılış 1 + kapanış 1 (2026-11-13, P46: panel ve alt çubuktaki iki AnimatedSize kalktı, hareket yalnız boyamada; önce 34)",
     "hedef": "0 (Faz 64)",
     "neden": "İlk ölçüm (bugünkü hâl); hedef Faz 64'te işlenecek"
   },
@@ -159,9 +159,9 @@
     "senaryo": "Telefon 412×915, 30 not: karttan not aç (gerçek NoteOpenPage geçişi), 40 kare — ana ekran kurulumu, kart kurulumu, ilk kare ve sonraki en ağır kare",
     "note_card": 2,
     "dashboard_kurulum": 0,
-    "ilk_kare_kurulum": 871,
+    "ilk_kare_kurulum": 874,
     "gecis_karesi_kurulum": 285,
-    "bugun": "ilk kare 871 (2026-11-14, P20 adım 4: yıldız/iğne dilimi +6, Customizable tek kurulum -11); NoteCard 2 / DashboardScreen 0 / ilk kare 876 / geçiş karesi en çok 285 (2026-11-13, P46: başlık ölçümü kök setState yerine ValueNotifier — ikinci karede yalnız tuval kurulur); önce 877 / 788",
+    "bugun": "ilk kare 874 (2026-11-14, P20 adım 4–5: yıldız/iğne dilimi +6, biçim kipi dar dinleyicileri +3, Customizable tek kurulum -11; main 876); NoteCard 2 / DashboardScreen 0 / ilk kare 876 / geçiş karesi en çok 285 (2026-11-13, P46: başlık ölçümü kök setState yerine ValueNotifier — ikinci karede yalnız tuval kurulur); önce 877 / 788",
     "hedef": "NoteCard ≤ 1 (yalnız açılan kartın halesi); geçiş kareleri editörü ikinci kez kurmasın",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl) — mandal"
   },

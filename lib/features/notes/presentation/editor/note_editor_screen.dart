@@ -940,7 +940,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   // ---- Biçim çubuğu ---------------------------------------------------
 
   /// Biçim çubuğu açık mı (alt çubuktaki "Aa" düğmesi açıp kapatır).
-  bool _formatBarOpen = false;
+  /// Kip notifier'da (P20 M5): panel, alt çubuk ve geri tuşu dar dinler;
+  /// aç/kapa kökü kurmaz.
+  final _formatOpenN = ValueNotifier<bool>(false);
+  bool get _formatBarOpen => _formatOpenN.value;
+  set _formatBarOpen(bool v) => _formatOpenN.value = v;
+
+  /// Panel: kip + hedef alan (etkin biçim vurgusu hedefin imlecinden).
+  late final Listenable _formatPanelL = Listenable.merge([
+    _formatOpenN,
+    _formatTargetN,
+  ]);
 
   /// Yazma sürüyor mu (alt çubuk gizleme, bkz. [TypingBarHide]). Yalnız bu
   /// bildirici değişir: ekran setState ile yeniden kurulmaz.
@@ -1078,15 +1088,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _formatTargetN.value = _formatTarget;
     });
-    if (!_formatBarOpen) return;
-    // KÖK NEDEN (çökme): bu kapanış alanın `dispose`undan geliyor ve bir
-    // widget BUILD FAZINDA da unmount edilebiliyor (belge/tip değişince
-    // pano anahtarı değişir). `mounted` yalnız "dispose edildi mi"yi
-    // korur, "build içindeyiz"i korumaz — `setState() called during build`
-    // istisnası buradan çıkar. Çizim tazelemesi bir kareye ertelenir.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _formatBarOpen) setState(() {});
-    });
+    // Açık panel bu bildirimi [_formatPanelL] ile dinler (P20 M5): kök
+    // setState yok. Bildirim kareye ertelendi (KÖK NEDEN çökme: kapanış
+    // alanın build fazındaki dispose'undan da gelebiliyor).
   }
 
   void _setFormatTarget(
@@ -1131,10 +1135,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Alan yeni odaklandı: imleci klavyenin üstüne al. Bu kapanış gövde,
     // başlık ve madde satırlarının HEPSİNDEN geçtiği için tek yer yeter.
     _revealCaretSoon();
-    // Çubuk AÇIKKEN hedef değişmesi çizimi etkiler: aktif biçim vurgusu yeni
-    // alanın imlecinden hesaplanmalı. Kapalıyken çizim değişmediği için
-    // gereksiz yere setState çağırmıyoruz (odak her satırda değişiyor).
-    if (changed && _formatBarOpen && mounted) setState(() {});
+    // Çubuk AÇIKKEN hedef değişmesi çizimi etkiler: panel [_formatTargetN]'i
+    // dinliyor (yukarıda güncellendi) — kök setState yok (P20 M5).
   }
 
   /// Seçimdeki tüm biçimleri siler.
@@ -1775,6 +1777,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _sub?.close();
     _titleController.dispose();
     _formatTargetN.dispose();
+    _formatOpenN.dispose();
     _titleFocus.dispose();
     _bodyWindow.dispose();
     _bodyController.dispose();
@@ -4237,7 +4240,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   // Paket grubu (F60.2): biçim paneli açık paketi kapatmaz.
                   child: TapRegion(
                   groupId: kNotePackageTapGroup,
-                  child: !_formatBarOpen || _findOpen
+                  // Kip ve hedef dar dinlenir (P20 M5).
+                  child: ListenableBuilder(
+                    listenable: _formatPanelL,
+                    builder: (context, _) => !_formatBarOpen || _findOpen
                         ? const SizedBox.shrink()
                         : RevealUp(
                           child: SingleChildScrollView(
@@ -4333,8 +4339,7 @@ child: FormatBar(
                                   : (h) => _runOnTarget(
                                       (c) => applyRichHeading(c, h),
                                     ),
-                              onClose: () =>
-                                  setState(() => _formatBarOpen = false),
+                              onClose: () => _formatBarOpen = false,
                               // Hedef MADDEYSE alt çizgi sırası (2026-10-30:
                               // uzun basış menüsünden buraya taşındı).
                               dividerKind: _formatItemId == null
@@ -4354,6 +4359,7 @@ child: FormatBar(
 ),
                           ),
                         ),
+                  ),
                   ),
                 ),
                 // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
@@ -4402,7 +4408,10 @@ child: NoteFindBar(
                 child: TypingBarHide(
                   hidden: _typingN,
                   enabled: ref.watch(hideBarWhileTypingProvider),
-                  child: _formatBarOpen
+                  // Biçim kipi dar dinlenir (P20 M5).
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _formatOpenN,
+                    builder: (context, formatOpen, _) => formatOpen
                       ? const SizedBox(width: double.infinity)
                       : _barReturn(
                       Column(
@@ -4582,10 +4591,12 @@ child: NoteFindBar(
                             UiItem.barFormat => (
                               Icons.text_format,
                               l10n.formatTitle,
-                              () => setState(() {
-                                _formatBarOpen = !_formatBarOpen;
+                              () {
+                                // Önce yer değiştirme bayrağı: kapanınca
+                                // dönen çubuk RevealUp ile gelsin.
                                 _barSwapped = true;
-                              }),
+                                _formatBarOpen = !_formatBarOpen;
+                              },
                               _formatBarOpen,
                             ),
                             UiItem.barAdd => (
@@ -4903,6 +4914,7 @@ child: NoteFindBar(
                 ],
                 ),
                     ),
+                  ),
                 ),
                 ),
                 ),
@@ -4910,6 +4922,7 @@ child: NoteFindBar(
             ),
           );
 
+    final fullscreenNow = ref.watch(noteFullscreenProvider);
     return Actions(
       actions: {
         // Klavyeden Kopyala/Kes (Ctrl+C / Ctrl+X): EditableText bu eylemleri
@@ -4946,14 +4959,17 @@ child: NoteFindBar(
                 .set(!ref.read(noteFullscreenProvider)),
         },
         // Geri tuşu önce CANLI ARAMAYI kapatır, notu değil.
-        child: PopScope(
+        // Biçim kipi dar dinlenir (P20 M5): alt ağaç `child` olarak yerinde.
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _formatOpenN,
+          builder: (context, formatOpen, child) => PopScope(
           // Geri tuşu sırayla: tam ekran → kayıt → biçim paneli → canlı
           // arama → not.
           canPop:
               !_findOpen &&
-              !_formatBarOpen &&
+              !formatOpen &&
               _voiceRecorder == null &&
-              !ref.watch(noteFullscreenProvider),
+              !fullscreenNow,
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
             // Açık bir alt panel (ek şeridi, kalem/biçim tepsisi…) varsa geri
@@ -4977,11 +4993,13 @@ child: NoteFindBar(
             // Biçim paneli açıkken geri PANELİ kapatır (kullanıcı isteği
             // 2026-10-28), notu değil.
             if (_formatBarOpen) {
-              setState(() => _formatBarOpen = false);
+              _formatBarOpen = false;
               return;
             }
             if (_findOpen) _closeFind();
           },
+          child: child!,
+          ),
           // NOT TEMASI (2026-10-28): çizilmiş zemin üst çubuğun da
           // arkasında; sayfa ve üst çubuk saydamlaşır.
           child: NoteThemeBackdrop(
