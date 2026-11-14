@@ -4444,6 +4444,11 @@ child: FormatBar(
                                   ? null
                                   : _itemsEditorKey.currentState
                                         ?.dividerKindOf(_formatItemId!),
+                              // Örnekler maddenin renk/kalınlığını taşır (P63).
+                              dividerStyle: _formatItemId == null
+                                  ? null
+                                  : _itemsEditorKey.currentState
+                                        ?.dividerOf(_formatItemId!),
                               onDivider: (kind) => _itemsEditorKey
                                   .currentState
                                   ?.setDividerOf(_formatItemId ?? '', kind),
