@@ -128,3 +128,4 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   → `/guide?doc=notes`. İlk kez: yalnız en yeni bölüm. Test `test/release_notes_toast_test.dart`.
 - Ayarlar sürüm satırı `AppUpdate.progress`'i dinler: indirme nereden başlarsa başlasın yüzde + çubuk; sonra
   "kuruluyor", iptal/hata/tarayıcı sonucu yazılır.
+- **P53 toparlama (2026-11-14):** 15 plan dosyası + `KALANLAR*.md` + `KUYRUK_AYRINTI.md` `git mv` ile `docs/arsiv/planlar/`'a (silinmedi). Hiçbir test/araç bu dosyaları OKUMUYOR (yalnız yorumlarda kimlik: `TEMA_PLANI F31.4` gibi — dokunulmadı, arşivde aranır). Açık iş `PLAN.md`, kullanıcı listesi `KONTROL_LISTEM.md` (≤40 madde; yeni "cihazda doğrulanmadı" maddesi buraya), yeni paket ayrıntısı Kuyruk satırı + `PLAN.md`. Kalıcı kurallar: DENEYIM §2/§4 → `arayuz.md` sonu, HIZ tedbirleri → `akicilik.md` sonu.
