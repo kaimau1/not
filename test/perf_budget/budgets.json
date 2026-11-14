@@ -306,8 +306,8 @@
     "senaryo": "P63 şablon galerisi: telefon, 16 hazır + 6 kendi şablon; levhayı aç → Planlama çipi → aramaya h/ha/haf → karta dokun",
     "cip_fazla_kart": 0,
     "harf_fazla_kart": 0,
-    "acilis_text": 60,
-    "bugun": "0 / 0 / 60 (2026-11-15, PBT; 23 kart, kart başına 2 Text: ad + açıklama)",
+    "acilis_text": 37,
+    "bugun": "0 / 0 / 37 (2026-11-15, PB4: kart = minyatür + tek ad Text; önce 60 — PBT, 23 kart × 2 Text)",
     "hedef": "fazla kart 0; açılış Text ≤ görünen kart × 1 + levha başlıkları",
     "neden": "P63 PBT ilk ölçüm"
   },

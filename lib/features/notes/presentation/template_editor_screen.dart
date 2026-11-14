@@ -4,6 +4,12 @@ import '../../../core/l10n_ext.dart';
 import '../data/user_templates.dart';
 import '../domain/note_type.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/a11y/chip_roles.dart';
+import 'template_preview_card.dart';
+
+/// Canlı kart önizlemesinin göründüğü en dar genişlik ve kartın eni.
+const double _wideEditor = 840;
+const double _previewWidth = 200;
 
 /// **ŞABLON OLUŞTUR / DÜZENLE** (kullanıcı isteği 2026-10-02: "şablon
 /// oluşturma ve düzenleme, şablonları geliştir").
@@ -195,6 +201,129 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final editor = ListView(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        AppSpace.s,
+        AppSpace.l,
+        AppSpace.xxxl,
+      ),
+      children: [
+        TextField(
+          key: const ValueKey('tpl-editor-name'),
+          controller: _name,
+          textCapitalization: TextCapitalization.sentences,
+          onChanged: (_) => _touch(),
+          decoration: InputDecoration(
+            labelText: l10n.templateNameTitle,
+            hintText: l10n.templateNameHint,
+            filled: true,
+            fillColor: scheme.surfaceContainerHigh,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpace.m),
+        Wrap(
+          spacing: AppSpace.s,
+          runSpacing: AppSpace.xs,
+          children: [
+            for (final (type, icon, label) in [
+              (NoteType.checklist, Icons.checklist, l10n.templateListChecks),
+              (
+                NoteType.ordered,
+                Icons.format_list_numbered,
+                l10n.templateListNumbers,
+              ),
+              (NoteType.text, Icons.notes, l10n.templateTypeText),
+            ])
+              radioChip(
+                ChoiceChip(
+                  avatar: Icon(icon, size: AppIconSize.s),
+                  label: Text(label),
+                  selected: _type == type,
+                  showCheckmark: false,
+                  onSelected: (_) => _setType(type),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.m),
+        // KÂĞIT (önizlemeyle aynı): not başlığı + maddeler / yazı.
+        Material(
+          color: tokens.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            side: BorderSide(color: tokens.hairline),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.m,
+              AppSpace.m,
+              AppSpace.xs,
+              AppSpace.m,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: AppSpace.xs,
+                    right: AppSpace.m,
+                  ),
+                  child: TextField(
+                    key: const ValueKey('tpl-editor-title'),
+                    controller: _title,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (_) => _touch(),
+                    style: theme.textTheme.titleLarge,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                      filled: false,
+                      hintText: l10n.captureNoteTitle,
+                      helperText: l10n.templateTitleHelp,
+                    ),
+                  ),
+                ),
+                if (_isList)
+                  ..._listEditor(context)
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      left: AppSpace.xs,
+                      right: AppSpace.m,
+                    ),
+                    child: TextField(
+                      key: const ValueKey('tpl-editor-body'),
+                      controller: _body,
+                      minLines: 8,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      textCapitalization: TextCapitalization.sentences,
+                      onChanged: (_) => _touch(),
+                      style: AppText.of(theme).body,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        filled: false,
+                        hintText: l10n.templateBody,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        if (!_isList) ...[
+          const SizedBox(height: AppSpace.s),
+          Text(l10n.templateHeadingHelp, style: AppText.of(theme).meta),
+        ],
+      ],
+    );
     return PopScope(
       canPop: !_dirty,
       onPopInvokedWithResult: (didPop, _) async {
@@ -207,7 +336,7 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
           title: Text(_isNew ? l10n.templateNew : l10n.templateEdit),
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.only(right: AppSpace.s),
               child: FilledButton(
                 key: const ValueKey('tpl-editor-save'),
                 onPressed: _save,
@@ -216,82 +345,49 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
             ),
           ],
         ),
-        body: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-          children: [
-            TextField(
-              key: const ValueKey('tpl-editor-name'),
-              controller: _name,
-              textCapitalization: TextCapitalization.sentences,
-              onChanged: (_) => _touch(),
-              decoration: InputDecoration(
-                labelText: l10n.templateNameTitle,
-                hintText: l10n.templateNameHint,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 14),
-            SegmentedButton<NoteType>(
-              segments: [
-                ButtonSegment(
-                  value: NoteType.checklist,
-                  icon: const Icon(Icons.checklist),
-                  label: Text(l10n.templateListChecks),
-                ),
-                ButtonSegment(
-                  value: NoteType.ordered,
-                  icon: const Icon(Icons.format_list_numbered),
-                  label: Text(l10n.templateListNumbers),
-                ),
-                ButtonSegment(
-                  value: NoteType.text,
-                  icon: const Icon(Icons.notes),
-                  label: Text(l10n.templateTypeText),
+        // Geniş ekranda (≥ 840) sağda galerideki kartın CANLI önizlemesi.
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < _wideEditor) return editor;
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: editor),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    0,
+                    AppSpace.l,
+                    AppSpace.xxl,
+                    0,
+                  ),
+                  child: SizedBox(
+                    width: _previewWidth,
+                    child: ListenableBuilder(
+                      listenable: Listenable.merge([_name, _body]),
+                      builder: (context, _) => TemplatePreviewCard(
+                        key: const ValueKey('tpl-editor-preview'),
+                        lines: templatePreviewLines(
+                          type: _type,
+                          body: editableToTemplateBody(_body.text),
+                          items: _currentItems(),
+                        ),
+                        accent: scheme.primary,
+                        icon: switch (_type) {
+                          NoteType.checklist => Icons.checklist,
+                          NoteType.ordered => Icons.format_list_numbered,
+                          _ => Icons.notes,
+                        },
+                        name: _name.text.trim().isEmpty
+                            ? l10n.templateUntitled
+                            : _name.text.trim(),
+                        onTap: () {},
+                      ),
+                    ),
+                  ),
                 ),
               ],
-              selected: {_type},
-              showSelectedIcon: false,
-              onSelectionChanged: (v) => _setType(v.first),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              key: const ValueKey('tpl-editor-title'),
-              controller: _title,
-              textCapitalization: TextCapitalization.sentences,
-              onChanged: (_) => _touch(),
-              decoration: InputDecoration(
-                labelText: l10n.captureNoteTitle,
-                helperText: l10n.templateTitleHelp,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 18),
-            if (_isList)
-              ..._listEditor(context)
-            else ...[
-              TextField(
-                key: const ValueKey('tpl-editor-body'),
-                controller: _body,
-                minLines: 8,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                textCapitalization: TextCapitalization.sentences,
-                onChanged: (_) => _touch(),
-                decoration: InputDecoration(
-                  labelText: l10n.templateBody,
-                  alignLabelWithHint: true,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.templateHeadingHelp,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ],
+            );
+          },
         ),
       ),
     );
@@ -302,16 +398,6 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return [
-      Text(
-        _rows.isEmpty
-            ? l10n.templateItems
-            : '${l10n.templateItems} · ${_rows.length}',
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: scheme.primary,
-          fontWeight: AppWeight.strong,
-        ),
-      ),
-      const SizedBox(height: 6),
       ReorderableListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -323,76 +409,116 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
         }),
         itemBuilder: (context, i) {
           final row = _rows[i];
-          return Row(
+          return _FadeIn(
             key: row.key,
-            children: [
-              ReorderableDragStartListener(
-                index: i,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 10,
+            child: Row(
+              children: [
+                ReorderableDragStartListener(
+                  index: i,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.xs,
+                      vertical: AppSpace.s,
+                    ),
+                    child: Icon(Icons.drag_indicator, color: scheme.outline),
                   ),
-                  child: Icon(Icons.drag_indicator, color: scheme.outline),
                 ),
-              ),
-              SizedBox(
-                width: 26,
-                child: _type == NoteType.ordered
-                    ? Text(
-                        '${i + 1}.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                SizedBox(
+                  width: AppSpace.xxl,
+                  child: _type == NoteType.ordered
+                      ? Text(
+                          '${i + 1}.',
+                          style: AppText.of(theme).body
+                              .copyWith(color: scheme.onSurfaceVariant),
+                        )
+                      : Icon(
+                          Icons.check_box_outline_blank,
+                          size: AppIconSize.m,
                           color: scheme.onSurfaceVariant,
                         ),
-                      )
-                    : Icon(
-                        Icons.check_box_outline_blank,
-                        size: 20,
-                        color: scheme.onSurfaceVariant,
-                      ),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: row.controller,
-                  focusNode: row.focus,
-                  textCapitalization: TextCapitalization.sentences,
-                  onChanged: (_) => _touch(),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: row.controller,
+                    focusNode: row.focus,
+                    textCapitalization: TextCapitalization.sentences,
+                    onChanged: (_) => _touch(),
+                    style: AppText.of(theme).body,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                      filled: false,
+                    ),
                   ),
                 ),
-              ),
-              IconButton(
-                tooltip: l10n.delete,
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: () => _removeRow(i),
-              ),
-            ],
+                IconButton(
+                  tooltip: l10n.delete,
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.close, size: AppIconSize.s),
+                  onPressed: () => _removeRow(i),
+                ),
+              ],
+            ),
           );
         },
       ),
-      const SizedBox(height: 6),
-      TextField(
-        key: const ValueKey('tpl-editor-add'),
-        controller: _add,
-        focusNode: _addFocus,
-        textCapitalization: TextCapitalization.sentences,
-        textInputAction: TextInputAction.next,
-        decoration: InputDecoration(
-          isDense: true,
-          prefixIcon: const Icon(Icons.add),
-          hintText: l10n.templateAddItem,
-          border: const OutlineInputBorder(),
-          suffixIcon: IconButton(
+      // Kâğıdın son satırı: "Madde ekle" (simge tutamaç sütununda).
+      Row(
+        children: [
+          const SizedBox(width: AppSpace.s),
+          Icon(Icons.add, color: scheme.onSurfaceVariant),
+          const SizedBox(width: AppSpace.xxl),
+          Expanded(
+            child: TextField(
+              key: const ValueKey('tpl-editor-add'),
+              controller: _add,
+              focusNode: _addFocus,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.next,
+              style: AppText.of(theme).body,
+              decoration: InputDecoration.collapsed(
+                hintText: l10n.templateAddItem,
+              ),
+              onSubmitted: (_) => _addRow(),
+            ),
+          ),
+          IconButton(
             tooltip: l10n.templateAddItem,
             icon: const Icon(Icons.keyboard_return),
             onPressed: _addRow,
           ),
-        ),
-        onSubmitted: (_) => _addRow(),
+        ],
       ),
     ];
   }
+}
+
+/// Yeni eklenen satır SOLARAK belirir (boy tek adımda, yalnız boyama;
+/// ekranı açarken var olan satırlar da bir kez solar — kısa ve sessiz).
+class _FadeIn extends StatefulWidget {
+  const _FadeIn({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<_FadeIn> createState() => _FadeInState();
+}
+
+class _FadeInState extends State<_FadeIn> {
+  bool _shown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _shown = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedOpacity(
+    opacity: _shown ? 1 : 0,
+    duration: AppMotion.of(context, AppMotion.quick),
+    child: widget.child,
+  );
 }

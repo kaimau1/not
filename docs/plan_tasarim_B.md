@@ -367,13 +367,13 @@ geri oku yok) · koyu tema (minyatür sayfa `AppTokens.card` koyuda zeminden aç
 
 ### 2.4 Kabul ölçütleri
 
-- [ ] 16 hazır şablonun her kartında içeriğiyle tutarlı minyatür (liste → kutucuklu satırlar; toplantı
+- [x] 16 hazır şablonun her kartında içeriğiyle tutarlı minyatür (liste → kutucuklu satırlar; toplantı
       → başlık + satırlar). `test/template_preview_lines_test.dart` (iskelette var) + kart widget testi.
-- [ ] `test/note_templates_test.dart` (19 KB) değişmeden yeşil — anahtarlar korunur: `tpl-card-<key>`,
+- [x] `test/note_templates_test.dart` (19 KB) değişmeden yeşil — anahtarlar korunur: `tpl-card-<key>`,
       `tpl-fav-<ad>`, `tpl-save-as`, `tpl-two-columns`, `tpl-item-<i>-<metin>`, `tpl-editor-*`.
-- [ ] "Oluştur" 30 maddeli şablonda kaydırmadan görünür (widget testi: düğme ilk karede görünür alanda).
-- [ ] `note_template_sheet.dart` ve `template_editor_screen.dart`'ta elle ölçü 0, elle süre 0.
-- [ ] Tur: `sablon-galeri`, `sablon-onizleme-liste`, `sablon-onizleme-yazi`, `sablon-bos`,
+- [x] "Oluştur" 30 maddeli şablonda kaydırmadan görünür (widget testi: düğme ilk karede görünür alanda).
+- [x] `note_template_sheet.dart` ve `template_editor_screen.dart`'ta elle ölçü 0, elle süre 0.
+- [x] Tur: `sablon-galeri`, `sablon-onizleme-liste`, `sablon-onizleme-yazi`, `sablon-bos`,
       `sablon-duzenle` (açık + koyu, telefon + tablet).
 
 ### 2.5 Kasma riski + bütçe
@@ -1495,6 +1495,19 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   şablon vurgu renkleri izinli sabit renk istisnası · `AnimatedSwitcher` kayması yalnız girişte.
 - **A/B:** hayır (editör/klavye/çubuk/liste/geçiş değil); `sablon` evresi yürütücünün `[apk]` öncesi
   tam ölçümünde görülür. **Bütçe:** S41.
+- [x] **Durum (2026-11-15, G2 dalı):** kart `TemplatePreviewCard` (minyatür satırları `State`'te şablon
+  başına bir kez, dil/şablon değişince yenilenir; açıklama `Tooltip`'te kaldı) · hap arama alanı · bölüm
+  değişiminde ızgara yalnız solma (`AppMotion.quick`) · tek boş hâl `_EmptyState` · galeri ↔ önizleme
+  `AppMotion.short` + kayma yalnız girişte · önizleme KÂĞIT kartta, seçenek çipleri kâğıdın altında,
+  **"Oluştur" sabit alt bantta** (`test/template_sheet_layout_test.dart` kırmızı → yeşil: 30 maddede düğme
+  bottom 1623 → ekranda) · düzenleyici: dolu ad alanı, üç tür çipi, kâğıt kart, yeni satır solarak
+  belirir, ≥ 840 dp canlı kart önizlemesi. Elle ölçü/süre iki dosyada 0 (yalnız 1 dp ayraç);
+  `design_tokens` bütçesi düştü (radius −5, fontSize −1, duration −2, curve −2, iconSize −8, alpha −3,
+  fontWeight −1). S41 açılış Text 60 → 37 (kart başına tek Text). **Sapmalar (sabah bakılacak):**
+  önizlemede maddeler sıkı özel satır DEĞİL `CheckboxListTile` (dense) — `note_templates_test`
+  `widgetWithText(CheckboxListTile, …)` ile buluyor ve "değişmeden yeşil" şartı var; "Maddeler · x/y"
+  sayacı kalktı (sayı "Oluştur · N madde" düğmesinde); düzenleyicide satır SİLME animasyonsuz (yalnız
+  ekleme solar).
 
 ### 7.7 PB5 — sesle yazma (fable)
 

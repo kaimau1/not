@@ -1,8 +1,11 @@
 import '../../../core/app_icons.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
 import '../../../core/widgets/sheet_header.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -16,6 +19,13 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
+import 'template_preview_card.dart';
+
+/// Galeri ↔ önizleme geçişinde girişin yatay kayması (genişliğin oranı).
+const double _enterShift = 0.03;
+
+/// Boş hâl simgesi (bugünkü 40; minyatür kartın değil, boş galerinin).
+const double _emptyIcon = 40;
 
 /// **ŞABLON GALERİSİ + ÖNİZLEME/DÜZENLEME** (bkz. [NoteTemplate]).
 ///
@@ -104,20 +114,53 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     Navigator.pop(context, content);
   }
 
+  /// Minyatür satırları şablon başına BİR KEZ (S41): hazır şablonda kaynak
+  /// dil kodu, kendi şablonumda şablon nesnesi — değişince yeniden hesaplanır.
+  final Map<String, (Object, List<TemplateLineKind>)> _lines = {};
+
+  List<TemplateLineKind> _linesOf(_Pick pick, AppLocalizations l10n) {
+    final builtin = pick.builtin;
+    final Object source = builtin != null ? l10n.localeName : pick.user!;
+    final cached = _lines[pick.key];
+    if (cached != null && cached.$1 == source) return cached.$2;
+    final NoteTemplateContent c = builtin != null
+        ? buildNoteTemplate(builtin, l10n)
+        : (
+            type: pick.user!.type,
+            title: pick.user!.title,
+            body: pick.user!.body,
+            items: pick.user!.items,
+            columns: 1,
+          );
+    final lines = templatePreviewLines(
+      type: c.type,
+      body: c.body,
+      items: c.items,
+    );
+    _lines[pick.key] = (source, lines);
+    return lines;
+  }
+
   @override
   Widget build(BuildContext context) {
     final picked = _picked;
+    final enter = AppMotion.of(context, AppMotion.short);
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 220),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
+      duration: enter,
+      reverseDuration: AppMotion.exitOf(enter),
+      switchInCurve: AppMotion.curveOf(context, AppMotion.enter),
+      switchOutCurve: AppMotion.curveOf(context, AppMotion.exit),
+      // Kayma yalnız GİRİŞTE (çıkış düz solma); yalnız boyama.
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: animation,
-        child: SlideTransition(
-          position: Tween(
-            begin: const Offset(0.04, 0),
-            end: Offset.zero,
-          ).animate(animation),
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (context, child) => FractionalTranslation(
+            translation: animation.status == AnimationStatus.reverse
+                ? Offset.zero
+                : Offset(_enterShift * (1 - animation.value), 0),
+            child: child,
+          ),
           child: child,
         ),
       ),
@@ -254,7 +297,17 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       ];
       if (mine.isEmpty) {
         sections.add(
-          _EmptyMine(searching: searching, onCreate: _newTemplate),
+          searching
+              ? _EmptyState(
+                  icon: Icons.search_off_rounded,
+                  text: l10n.templatesNoMatch,
+                )
+              : _EmptyState(
+                  icon: Icons.bookmark_add_outlined,
+                  text: l10n.templatesMineEmpty,
+                  actionLabel: l10n.templateNew,
+                  onAction: _newTemplate,
+                ),
         );
       } else {
         addSection(null, mine);
@@ -268,16 +321,9 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       ]);
       if (sections.isEmpty) {
         sections.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Center(
-              child: Text(
-                l10n.templatesNoMatch,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
+          _EmptyState(
+            icon: Icons.search_off_rounded,
+            text: l10n.templatesNoMatch,
           ),
         );
       }
@@ -314,18 +360,23 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        0,
+        AppSpace.l,
+        AppSpace.xl,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 0, 2),
+            padding: const EdgeInsets.only(left: AppSpace.xs),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     l10n.templatesTitle,
-                    style: theme.textTheme.titleLarge,
+                    style: AppText.of(theme).sheetTitle,
                   ),
                 ),
                 TextButton.icon(
@@ -338,23 +389,27 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
-            child: Text(
-              l10n.templatesSubtitle,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.xs,
+              0,
+              AppSpace.xs,
+              AppSpace.m,
             ),
+            child: Text(l10n.templatesSubtitle, style: AppText.of(theme).meta),
           ),
+          // Dolu, çerçevesiz hap arama alanı (plan §2.2).
           TextField(
             controller: _search,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               isDense: true,
+              filled: true,
+              fillColor: scheme.surfaceContainerHigh,
               prefixIcon: const Icon(Icons.search),
               hintText: l10n.templatesSearch,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                borderSide: BorderSide.none,
               ),
               suffixIcon: _query.isEmpty
                   ? null
@@ -369,7 +424,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
             ),
             onChanged: (v) => setState(() => _query = v),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpace.m),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -405,8 +460,21 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
               ],
             ),
           ),
-          const SizedBox(height: 4),
-          ...sections,
+          const SizedBox(height: AppSpace.xs),
+          // Bölüm değişince ızgara yalnız SOLARAK değişir (kayma yok, boy
+          // tek adımda); aramada anahtar aynı → geçiş yok.
+          AnimatedSwitcher(
+            duration: AppMotion.of(context, AppMotion.quick),
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.topCenter,
+              children: [...previous, ?current],
+            ),
+            child: Column(
+              key: ValueKey('tpl-sections-$_category-$_mine'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: sections,
+            ),
+          ),
         ],
       ),
     );
@@ -418,14 +486,16 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     required VoidCallback onTap,
     IconData? icon,
   }) => Padding(
-    padding: const EdgeInsets.only(right: 6),
-    child: radioChip(ChoiceChip(
-      label: Text(label),
-      avatar: icon == null ? null : Icon(icon, size: 16),
-      selected: selected,
-      showCheckmark: false,
-      onSelected: (_) => onTap(),
-    )),
+    padding: const EdgeInsets.only(right: AppSpace.s),
+    child: radioChip(
+      ChoiceChip(
+        label: Text(label),
+        avatar: icon == null ? null : Icon(icon, size: AppIconSize.xs),
+        selected: selected,
+        showCheckmark: false,
+        onSelected: (_) => onTap(),
+      ),
+    ),
   );
 
   Widget _grid(BuildContext context, List<_Pick> picks) => LayoutBuilder(
@@ -433,10 +503,11 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       // KÜÇÜK KARTLAR (kullanıcı isteği 2026-11-05: "şablonların kart boyutu
       // küçültülür"): telefonda 3, genişte 4 sütun, kart dikey ve kısa.
       final columns = constraints.maxWidth > 480 ? 4 : 3;
-      final width = (constraints.maxWidth - 8 * (columns - 1)) / columns;
+      final width =
+          (constraints.maxWidth - AppSpace.s * (columns - 1)) / columns;
       return Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: AppSpace.s,
+        runSpacing: AppSpace.s,
         children: [
           for (final pick in picks)
             SizedBox(width: math.max(0, width), child: _card(context, pick)),
@@ -451,35 +522,33 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     final builtin = pick.builtin;
     final favorite = ref.watch(favoriteTemplatesProvider).contains(pick.key);
     void toggleFavorite() {
-      final ok = ref
-          .read(favoriteTemplatesProvider.notifier)
-          .toggle(pick.key);
+      final ok = ref.read(favoriteTemplatesProvider.notifier).toggle(pick.key);
       if (!ok) _announce(l10n.templateFavoritesFull);
     }
 
-    if (builtin != null) {
-      return _TemplateCard(
+    final user = pick.user;
+    final label = builtin != null
+        ? builtin.label(l10n)
+        : (user!.name.isEmpty ? l10n.remindersUntitled : user.name);
+    // KÜÇÜK KÂĞIT KART (P63 PB4): minyatür içeriği gösterir; açıklama
+    // ipucunda kalır (web fare üstü, uzun basış okuyucusu).
+    return Tooltip(
+      message: builtin != null
+          ? builtin.description(l10n)
+          : _userSummary(user!, l10n),
+      waitDuration: AppMotion.long,
+      child: TemplatePreviewCard(
         key: ValueKey('tpl-card-${pick.key}'),
-        icon: builtin.icon,
-        accent: builtin.accent,
-        label: builtin.label(l10n),
-        description: builtin.description(l10n),
+        lines: _linesOf(pick, l10n),
+        icon: builtin?.icon ?? _userIcon(user!.type),
+        accent: builtin?.accent ?? scheme.primary,
+        name: label,
         favorite: favorite,
         onFavorite: toggleFavorite,
+        favoriteKey: ValueKey('tpl-fav-$label'),
         onTap: () => setState(() => _picked = pick),
-      );
-    }
-    final user = pick.user!;
-    return _TemplateCard(
-      key: ValueKey('tpl-card-${pick.key}'),
-      icon: _userIcon(user.type),
-      accent: scheme.primary,
-      label: user.name.isEmpty ? l10n.remindersUntitled : user.name,
-      description: _userSummary(user, l10n),
-      favorite: favorite,
-      onFavorite: toggleFavorite,
-      onTap: () => setState(() => _picked = pick),
-      onMenu: () => _userMenu(user),
+        onMenu: user == null ? null : () => _userMenu(user),
+      ),
     );
   }
 
@@ -609,13 +678,7 @@ Future<void> saveNoteAsTemplate(
   if (name == null) return;
   ref
       .read(userTemplatesProvider.notifier)
-      .add(
-        UserTemplate.fromNote(
-          note,
-          id: newUserTemplateId(),
-          name: name,
-        ),
-      );
+      .add(UserTemplate.fromNote(note, id: newUserTemplateId(), name: name));
   messenger
     ..hideCurrentSnackBar()
     ..showMessage(l10n.templateSaved(name));
@@ -665,157 +728,61 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 14, 4, 8),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.xs,
+        AppSpace.l,
+        AppSpace.xs,
+        AppSpace.s,
+      ),
       child: SectionLabel(label),
     );
   }
 }
 
-class _EmptyMine extends StatelessWidget {
-  const _EmptyMine({required this.searching, required this.onCreate});
-
-  final bool searching;
-  final VoidCallback onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 12),
-      child: Column(
-        children: [
-          Icon(Icons.bookmark_add_outlined, size: 40, color: scheme.outline),
-          const SizedBox(height: 10),
-          Text(
-            searching ? l10n.templatesNoMatch : l10n.templatesMineEmpty,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-          if (!searching) ...[
-            const SizedBox(height: 14),
-            FilledButton.tonalIcon(
-              onPressed: onCreate,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.templateNew),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _TemplateCard extends StatelessWidget {
-  const _TemplateCard({
-    super.key,
+/// Galerinin TEK boş hâli (P63 PB4): boş "Şablonlarım" ve sonuçsuz arama
+/// aynı kılıkta — simge, tek satır yazı, isteğe bağlı düğme.
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
     required this.icon,
-    required this.accent,
-    required this.label,
-    required this.description,
-    required this.onTap,
-    this.favorite = false,
-    this.onFavorite,
-    this.onMenu,
+    required this.text,
+    this.actionLabel,
+    this.onAction,
   });
 
   final IconData icon;
-  final Color accent;
-  final String label;
-  final String description;
-  final VoidCallback onTap;
-
-  /// Favori mi (yıldız dolu) — favoriler "+" menüsünde görünür.
-  final bool favorite;
-  final VoidCallback? onFavorite;
-
-  /// Kendi şablonumda menü (yeniden adlandır / sil): uzun basış açar.
-  final VoidCallback? onMenu;
+  final String text;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final l10n = context.l10n;
-    // KÜÇÜK DİKEY KART (2026-11-05): simge + ad + tek satır açıklama;
-    // köşede favori yıldızı. Uzun açıklama `Tooltip`te.
-    return Tooltip(
-      message: description,
-      waitDuration: const Duration(milliseconds: 600),
-      child: Material(
-        color: scheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(
-            color: favorite
-                ? accent.withValues(alpha: 0.7)
-                : scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
+    final action = onAction;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpace.xxxl,
+        horizontal: AppSpace.m,
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: _emptyIcon, color: scheme.outline),
+          const SizedBox(height: AppSpace.m),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: AppText.of(theme).body
+                .copyWith(color: scheme.onSurfaceVariant),
           ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          onLongPress: onMenu ?? onFavorite,
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(icon, color: accent, size: 18),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      description,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (onFavorite != null)
-                PositionedDirectional(
-                  top: 0,
-                  end: 0,
-                  child: IconButton(
-                    key: ValueKey('tpl-fav-$label'),
-                    visualDensity: VisualDensity.compact,
-                    iconSize: 18,
-                    tooltip: favorite
-                        ? l10n.templateUnfavorite
-                        : l10n.templateFavorite,
-                    color: favorite ? accent : scheme.outline,
-                    icon: Icon(favorite ? Icons.star : Icons.star_outline),
-                    onPressed: onFavorite,
-                  ),
-                ),
-            ],
-          ),
-        ),
+          if (action != null) ...[
+            const SizedBox(height: AppSpace.l),
+            FilledButton.tonalIcon(
+              onPressed: action,
+              icon: const Icon(Icons.add),
+              label: Text(actionLabel ?? ''),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -955,173 +922,245 @@ class _TemplateComposerState extends State<TemplateComposer> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(12, 0, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              if (widget.onBack != null)
-                IconButton(
-                  tooltip: l10n.back,
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: widget.onBack,
+    final tokens = AppTokens.fromTheme(theme);
+    // Gövde kayar, "Oluştur" SABİT ALT BANTTA (P63 PB4: uzun listede düğme
+    // kaydırmanın altında kalıyordu). Levha zaten klavye payıyla dolgulu.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.m,
+              0,
+              AppSpace.l,
+              AppSpace.l,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    if (widget.onBack != null)
+                      IconButton(
+                        tooltip: l10n.back,
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: widget.onBack,
+                      )
+                    else
+                      const SizedBox(width: AppSpace.xs),
+                    Icon(
+                      widget.icon,
+                      color: widget.accent,
+                      size: AppIconSize.m,
+                    ),
+                    const SizedBox(width: AppSpace.s),
+                    Expanded(
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: AppWeight.strong,
+                        ),
+                      ),
+                    ),
+                    if (widget.onSaveAsTemplate != null)
+                      IconButton(
+                        key: const ValueKey('tpl-save-as'),
+                        tooltip: widget.saveAsEdits
+                            ? l10n.templateEdit
+                            : l10n.templateSaveAsMine,
+                        icon: Icon(
+                          widget.saveAsEdits
+                              ? Icons.edit_outlined
+                              : Icons.bookmark_add_outlined,
+                        ),
+                        onPressed: () => widget.onSaveAsTemplate!(_composed()),
+                      ),
+                  ],
                 ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: widget.accent.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(widget.icon, color: widget.accent, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleLarge,
-                ),
-              ),
-              if (widget.onSaveAsTemplate != null)
-                IconButton(
-                  key: const ValueKey('tpl-save-as'),
-                  tooltip: widget.saveAsEdits
-                      ? l10n.templateEdit
-                      : l10n.templateSaveAsMine,
-                  icon: Icon(
-                    widget.saveAsEdits
-                        ? Icons.edit_outlined
-                        : Icons.bookmark_add_outlined,
+                const SizedBox(height: AppSpace.s),
+                // KÂĞIT: not sayfası gibi — başlık çerçevesiz, maddeler sıkı.
+                // Material: madde satırlarının mürekkebi kâğıdın üstünde.
+                Padding(
+                  padding: const EdgeInsets.only(left: AppSpace.xs),
+                  child: Material(
+                    color: tokens.card,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.l),
+                      side: BorderSide(color: tokens.hairline),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.l,
+                        AppSpace.m,
+                        AppSpace.l,
+                        AppSpace.m,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextField(
+                            controller: _title,
+                            textCapitalization: TextCapitalization.sentences,
+                            style: theme.textTheme.titleLarge,
+                            decoration: InputDecoration.collapsed(
+                              hintText: l10n.captureNoteTitle,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpace.s),
+                          if (_isList)
+                            ..._listRows(context, scheme)
+                          else
+                            ..._textPreview(context),
+                        ],
+                      ),
+                    ),
                   ),
-                  onPressed: () => widget.onSaveAsTemplate!(_composed()),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: TextField(
-              controller: _title,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: InputDecoration(
-                isDense: true,
-                labelText: l10n.captureNoteTitle,
-                border: const OutlineInputBorder(),
-              ),
+                if (_isList) ..._listOptions(context),
+              ],
             ),
           ),
-          if (_isList)
-            ..._listEditor(context, scheme)
-          else
-            _textPreview(context),
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
+        ),
+        Divider(height: 1, thickness: 1, color: tokens.hairline),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              AppSpace.s,
+              AppSpace.l,
+              AppSpace.s,
+            ),
             child: FilledButton.icon(
               onPressed: _submit,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(kMinInteractiveDimension),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+              ),
               icon: const Icon(Icons.check),
               label: Text(
                 _isList && _selectedCount > 0
                     ? l10n.templateCreateWithCount(_selectedCount)
                     : l10n.templateCreate,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  List<Widget> _listEditor(BuildContext context, ColorScheme scheme) {
+  /// Kâğıdın içindeki maddeler + son satırda "Madde ekle".
+  List<Widget> _listRows(BuildContext context, ColorScheme scheme) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     return [
-      const SizedBox(height: 12),
-      Padding(
-        padding: const EdgeInsets.only(left: 4),
-        child: SegmentedButton<NoteType>(
-          segments: [
-            ButtonSegment(
-              value: NoteType.checklist,
-              icon: const Icon(Icons.checklist),
-              label: Text(l10n.templateListChecks),
-            ),
-            ButtonSegment(
-              value: NoteType.ordered,
-              icon: const Icon(Icons.format_list_numbered),
-              label: Text(l10n.templateListNumbers),
-            ),
-          ],
-          selected: {_type},
-          showSelectedIcon: false,
-          onSelectionChanged: (v) => setState(() => _type = v.first),
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.only(left: 4, top: 8),
-        child: Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: FilterChip(
-            key: const ValueKey('tpl-two-columns'),
-            avatar: const Icon(Icons.view_column_outlined, size: 18),
-            label: Text(l10n.templateTwoColumns),
-            selected: _twoColumns,
-            showCheckmark: false,
-            onSelected: (v) => setState(() => _twoColumns = v),
-          ),
-        ),
-      ),
-      _SectionLabel(
-        _items.isEmpty
-            ? l10n.templateItems
-            : '${l10n.templateItems} · $_selectedCount/${_items.length}',
-      ),
       for (var i = 0; i < _items.length; i++)
         CheckboxListTile(
           key: ValueKey('tpl-item-$i-${_items[i].text}'),
           dense: true,
           visualDensity: VisualDensity.compact,
-          contentPadding: const EdgeInsets.only(left: 4),
+          contentPadding: EdgeInsets.zero,
           controlAffinity: ListTileControlAffinity.leading,
           value: _items[i].selected,
           title: Text(
             _items[i].text,
             style: _items[i].selected
-                ? null
-                : TextStyle(
-                    color: scheme.onSurfaceVariant,
+                ? AppText.of(theme).body
+                : AppText.of(theme).body.copyWith(
+                    color: scheme.onSurface.withValues(
+                      alpha: AppAlpha.disabled,
+                    ),
                     decoration: TextDecoration.lineThrough,
                   ),
           ),
           onChanged: (v) => setState(() => _items[i].selected = v ?? false),
         ),
+      // Son satır "Madde ekle": simge kutucuk sütununda, yazı madde hizasında.
       Padding(
-        padding: const EdgeInsets.only(left: 4, top: 4),
-        child: TextField(
-          controller: _add,
-          focusNode: _addFocus,
-          textCapitalization: TextCapitalization.sentences,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            isDense: true,
-            prefixIcon: const Icon(Icons.add),
-            hintText: l10n.templateAddItem,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) => _addTyped(),
+        padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
+        child: Row(
+          children: [
+            const SizedBox(width: AppSpace.m),
+            Icon(Icons.add, color: scheme.onSurfaceVariant),
+            const SizedBox(width: AppSpace.xxl),
+            Expanded(
+              child: TextField(
+                controller: _add,
+                focusNode: _addFocus,
+                textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.next,
+                style: AppText.of(theme).body,
+                decoration: InputDecoration.collapsed(
+                  hintText: l10n.templateAddItem,
+                ),
+                onSubmitted: (_) => _addTyped(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  /// Kâğıdın ALTINDA: tür (☑ / 1.) ve iki sütun çipleri, sonra öneriler.
+  List<Widget> _listOptions(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return [
+      Padding(
+        padding: const EdgeInsets.only(left: AppSpace.xs, top: AppSpace.m),
+        child: Wrap(
+          spacing: AppSpace.s,
+          runSpacing: AppSpace.xs,
+          children: [
+            for (final (type, icon, label) in [
+              (NoteType.checklist, Icons.checklist, l10n.templateListChecks),
+              (
+                NoteType.ordered,
+                Icons.format_list_numbered,
+                l10n.templateListNumbers,
+              ),
+            ])
+              radioChip(
+                ChoiceChip(
+                  avatar: Icon(icon, size: AppIconSize.s),
+                  label: Text(label),
+                  selected: _type == type,
+                  showCheckmark: false,
+                  onSelected: (_) => setState(() => _type = type),
+                ),
+              ),
+            FilterChip(
+              key: const ValueKey('tpl-two-columns'),
+              avatar: const Icon(
+                Icons.view_column_outlined,
+                size: AppIconSize.s,
+              ),
+              label: Text(l10n.templateTwoColumns),
+              selected: _twoColumns,
+              showCheckmark: false,
+              onSelected: (v) => setState(() => _twoColumns = v),
+            ),
+          ],
         ),
       ),
       for (final group in widget.suggestions) ...[
         _SectionLabel(group.label),
         Padding(
-          padding: const EdgeInsets.only(left: 4),
+          padding: const EdgeInsets.only(left: AppSpace.xs),
           child: Wrap(
-            spacing: 6,
-            runSpacing: 2,
+            spacing: AppSpace.s,
+            runSpacing: AppSpace.xxs,
             children: [
               for (final s in group.items)
                 FilterChip(
@@ -1136,58 +1175,44 @@ class _TemplateComposerState extends State<TemplateComposer> {
       ],
       if (widget.suggestions.isNotEmpty)
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.xs,
+            AppSpace.s,
+            AppSpace.xs,
+            0,
+          ),
           child: Text(
             l10n.templateSuggestionsInfo,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: AppText.of(theme).meta,
           ),
         ),
     ];
   }
 
-  Widget _textPreview(BuildContext context) {
+  /// Yazı şablonu: sayfanın başlıkları not sayfasındaki gibi.
+  List<Widget> _textPreview(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final lines = widget.base.body.split('\n');
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 12, 0, 0),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final raw in lines)
-              () {
-                final plain = stripRichMarkers(raw);
-                // Şablonlarda yalnız BAŞLIK satırları işaret taşır.
-                final heading = plain != raw;
-                return Padding(
-                  padding: EdgeInsets.only(top: heading ? 8 : 1),
-                  child: Text(
-                    plain.isEmpty ? ' ' : plain,
-                    style: heading
-                        ? theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: AppWeight.strong,
-                          )
-                        : theme.textTheme.bodyMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                  ),
-                );
-              }(),
-          ],
-        ),
-      ),
-    );
+    return [
+      for (final raw in widget.base.body.split('\n'))
+        () {
+          final plain = stripRichMarkers(raw);
+          // Şablonlarda yalnız BAŞLIK satırları işaret taşır.
+          final heading = plain != raw;
+          return Padding(
+            padding: EdgeInsets.only(top: heading ? AppSpace.s : AppSpace.xxs),
+            child: Text(
+              plain.isEmpty ? ' ' : plain,
+              style: heading
+                  ? theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: AppWeight.strong,
+                    )
+                  : AppText.of(theme).body
+                        .copyWith(color: scheme.onSurfaceVariant),
+            ),
+          );
+        }(),
+    ];
   }
 }
 
