@@ -1,6 +1,6 @@
 # Cihaz turu (F58.3) — elle doğrulama listesi
 
-`KALANLAR.md` §2'nin (143 maddelik duman testi + oturum ekleri) yerine geçer; eski liste orada
+`docs/arsiv/planlar/KALANLAR.md` §2'nin (143 maddelik duman testi + oturum ekleri) yerine geçer; eski liste orada
 olduğu gibi duruyor (arşiv). Her adım **yap → beklenen**. Risk sırası: veri → günlük yazma →
 ekler/PDF → görünüm → takvim/hesap. Sorun görünce adım numarasıyla bildir; yapılamayanı silme,
 "denenmedi" yaz. Etiketler: **[G]** Google hesabı (test telefonu misafir: yapılamaz) ·

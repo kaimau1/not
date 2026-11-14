@@ -115,4 +115,4 @@ Form cevapları Play Console'da kullanıcı tarafından doğrulanmalıdır.
   **cihazdan alınmalı** — F19.C1 duman testinde alınan ekranlar uygundur:
   ana ekran ızgarası · metin notu + biçim · liste notu · yapay zekâ sohbeti ·
   hatırlatıcılar · tablet yan yana düzen. Bulut ortamında gerçek hesapla ekran
-  üretilemediği için bu adım **F19**'dadır (bkz. `KALAN_ISLER_PLANI.md` F19.D).
+  üretilemediği için bu adım **F19**'dadır (bkz. `docs/arsiv/planlar/KALAN_ISLER_PLANI.md` F19.D).

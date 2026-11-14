@@ -1,6 +1,6 @@
 # tool/perf — telefonda akıcılık ölçümü
 
-`AKICILIK_PLANI.md`'deki sayılar bu araçlarla alındı. Python 3 + Pillow, `adb`
+`docs/arsiv/planlar/AKICILIK_PLANI.md`'deki sayılar bu araçlarla alındı. Python 3 + Pillow, `adb`
 (yol `ADB` ortam değişkeniyle), USB hata ayıklaması açık telefon. Çıktılar
 `PERF_OUT` (yoksa sistem geçici klasörü `notlar_perf/`) altına — depoya düşmez.
 

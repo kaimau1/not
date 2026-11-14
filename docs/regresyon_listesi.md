@@ -1,6 +1,6 @@
 # Regresyon listesi
 
-Düzeltilen HER sorun tek satır (OTURTMA_PLANI protokol madde 8). Her faz/paket bitiminde
+Düzeltilen HER sorun tek satır (`docs/arsiv/planlar/OTURTMA_PLANI.md` protokol madde 8). Her faz/paket bitiminde
 liste baştan koşulur: otomatik olanlar test, cihaz isteyenler en az ölçümle. Kırmızı çıkan
 şey fazı kapatmaz.
 

@@ -170,7 +170,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Cihaz notları: MatePad 11 = 1600×2560, 400 dpi (yatay 1024×640 dp); Huawei `adb install` iki onay penceresi ister ("Devam et" → "Yükle"); `input stylus` Android 12'de kalem türü üretmez, `/dev/input` SELinux'la kapalı → gerçek kalem davranışı elle denenmeli. Avast mağaza dışı APK'yı "şüpheli" bildiriyor (sezgisel).
 
 ## 2026-11-07 — Tablet: avuç, kalem tıkı, fiziksel klavye
-- Play yorum analizi ve sonraki fazlar: `YORUM_ANALIZI_PLANI.md`.
+- Play yorum analizi ve sonraki fazlar: `docs/arsiv/planlar/YORUM_ANALIZI_PLANI.md`.
 
 ## 2026-11-08 — Kalem, satır hatırlatıcısı, bildirim düzeyi, kapanış kasması
 - **Bildirim önem düzeyi = kanal** (`domain/reminder_level.dart`): Android kanalının önemi kurulduktan sonra DEĞİŞMEZ, o yüzden düzey başına ayrı kanal. '' = `high` = eski `reminders` kanalı (eski hatırlatıcılar değişmeden çalar; "Sık" etiketi). Acil = `Importance.max` + `fullScreenIntent` + alarm; `USE_FULL_SCREEN_INTENT` YALNIZ `src/kisisel` manifestinde (Play beyanı ister). `showWhenLocked` BİLEREK yok (kilitli notlar kilit ekranında açılmasın). Not alanı `reminderLevel` (gerçek alan, `toMap` koşulsuz).
@@ -219,3 +219,58 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 ## 2026-11-14 — P59 geniş düzen dönüşü + mini pano ölçeği
 - **Kapanış geçişi:** KÖK "web/tablette nottan dönüşte animasyon yok": rota `/` olur olmaz sağ bölme 0 genişliğe iniyordu → notun çıkış geçişi görünmüyordu (c34ed0ae'nin liste solması yetmedi). `SplitShell._closing`: kapanışta düzen 300 ms "not açık" kalır, sonra TEK ADIMDA tam genişlik + `_back` solması. Bekçi `fullscreen_pull_test` + bütçe S26.
 - **Mini pano:** bölmede sütun `paneColumnsFor(genişlik, paneCardScaleProvider)` = genişlik/(220×ölçek), 1–4; `PinchColumns.onCommit` bölmede `setColumns` (yarım sütun payı). Genel `gridColumnsProvider` yalnız tam genişlik ızgarası. Ölçek alt sınırı 0,5 → dar bölmede 4 sütun çıkmaz (kart ≥ 110 dp).
+
+
+## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
+
+Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.
+
+Beş ilke:
+
+1. **İçerik konuşur, krom susar.** Bir ekranda en koyu/en doygun yüzey kullanıcının
+   notudur. Renk yalnız DURUM ya da TEK birincil eylemdir.
+2. **Ekran başına tek dolu birincil düğme** (ana ekranda "+").
+3. **Aynı iş her yerde aynı kılıkta.** Başlık, bölüm adı, karo tek bileşen.
+4. **Hareket yön söyler, süs değildir.** Giriş 200–300 ms, çıkış 2/3'ü; yalnız boyama.
+
+### Yapılmayacaklar — kullanıcının eski istekleriyle çelişir (§4)
+
+
+| # | Fikir | Çeliştiği istek (kod yorumu) |
+|---|---|---|
+| Y1 | Arama hapından ✨ ya da süz düğmesini çıkarmak / gizlemek | 2026-11-06 "boştayken AI tuşu görünmüyor" → HEP GÖRÜNÜR (`dashboard_widgets.dart:408`); 2026-11-06 "arama çubuğu profil ve 3 noktayı da kapsasın" (`:305`) |
+| Y2 | Klasör çipinde sayıyı adın yanına almak | 2026-10-31 "not sayısını simgesinde üssü şeklinde yaz" + "görünür alana maksimum klasör butonu sığsın" (`folder_tile.dart:583, 594`) |
+| Y3 | Ev düğmesini kaldırmak ya da "Tümü" çipiyle birleştirmek | 2026-11-06 "klasörlerde ana menüye dön düğmesi olmalı" (`dashboard_shelf.dart:184`); ayrıca ana sayfa ≠ "Tümü" (`showAllNotesProvider`) |
+| Y4 | Takvim şeridini 7 güne indirmek ya da varsayılan gizlemek | 2026-11-08 "en üstte 2 satır yüksekliğinde takvim satırı; bugünden itibaren 10 gün" (`home_calendar_strip.dart:20`) |
+| Y5 | Etiket hapını nötr yapmak | 2026-11-05 "etiketler çok sönük görünüyor, temaya göre renklendirilebilir" (`tag_pill.dart:3`) |
+| Y6 | Not menüsünü iki sütunlu "simge + yanında yazı" satırlara çevirmek | 2026-10-20 "not menüsü üstteki 4'lü gibi simge olsun, 3 sütun olsun" — iki sütun satır ESKİ hâldi (`action_menu_sheet.dart:375`) |
+| Y7 | Başlık satırındaki "+"yı çip satırına almak / boşken çip satırı açmak | 2026-08-09 "artı butonu başlık satırında olsun; etiket yoksa etiket satırı oluşmasın" (`note_editor_screen.dart:3410`) |
+| Y8 | Not üst çubuğuna geri oku eklemek | 2026-11-03 sıkı üst çubuk, 2026-11-05 "üst alanda sadeleşme" (`:472, :4785`); sistem geri hareketi var |
+| Y9 | Alt kapsüldeki ses düğmelerini birleştirmek / gizlemek / uzun basışa almak | 2026-09-01 "mikrofon direkt sesle yazma olsun, yanına farklı bir mikrofon" (`:2729`); 2026-10-11 tek kapsül (`:4576`); 2026-10-20 (`add_catalog.dart:41`) |
+| Y10 | Sabit ek çubuğundan T / balon / görünüm anahtarı / kalemi ⋮'e indirmek | 2026-11-09 "menüye girmeden T" (`pinned_media_pane.dart:1326`), 2026-11-05 "açık metin kısmını bulamadım" (`:1413`), 2026-10-16 (`:171`), 2026-11-08 (`:1249`) → K-O6 kullanıcıda |
+| Y11 | Ajandada/gün sayfasında satır sonu çöp düğmesini kaldırmak | 2026-11-08 "üzerine tıklayınca ilk açılan yerde silme de olmalı" (`calendar_entry_delete.dart:19`) |
+| Y12 | Ay görünümünde gün kâğıtlarını düz ızgaraya çevirmek; çipleri tek satıra indirmek | 2026-11-07 "çok düz, günler arasında belli belirsiz çizgi var" → KÂĞIT HÜCRELER (`calendar_views.dart:322`); "gerekirse 2 satır" (`:394`) |
+| Y13 | Telefonda takvim ‹ › oklarını kaldırmak | 2026-11-07 "dar ekranda da var; yalnız kaydırma bilinmiyordu" (`calendar_screen.dart:504`) |
+| Y14 | Ana ekranda kaydırınca başlığın çekilmesi | 2026-11-06 ev düğmesi "kaydırılınca kaybolmasın"; 2026-11-07 şerit kök nedeni (HAFIZA "Klasör şeridi sabit") |
+| Y15 | AI merkezini yeniden düzenlemek | 2026-09-23 yeniden tasarım, 2026-10-20 "AI sesli not en üstte" (`ai_hub_screen.dart:93, 113`) |
+| Y16 | "+" tek dokunuşta doğrudan not; Ekle karolarını yeniden biçimlemek | 2026-10-20 "artı menüsü düzeni" tek panel tek dokunuş (`quick_add_fab.dart:367`); 2026-11-11 düzen kipi |
+
+---
+
+### Yapılmayacaklar (genel)
+
+- §4'teki 16 fikir.
+- Yeni özellik, yeni ekran, yeni ayar sayfası. (İzinli tek yeni tercih: `card_show_checked`.)
+- Yeni paket. İzinli tek yerel bağımlılık: `core-splashscreen` (K-D8).
+- Bulanıklık (`BackdropFilter` — "+" panelinden 2026-10-15'te kasma yüzünden kaldırıldı),
+  bulanık gölge, gradyan zemin, ışıltı, paralaks, zıplayan eğri.
+- Boy animasyonu — hiçbir yerde. Çubuk yüksekliği değişimi — hiçbir yerde.
+- Not başlığı/gövdesi stilini, kalem tepsisini, biçim çubuğunu, sayfa geçiş sürelerini
+  değiştirmek.
+- 20 tema ailesinden birini silmek ya da renklerini "iyileştirmek" (F80.1'in ölçümlü koyu
+  düzeltmeleri hariç).
+- `UiItem`, `menuId`, `ValueKey` kimliklerini değiştirmek.
+- `dart format lib`, tam test takımını yerelde koşmak, CI kırmızıyken birleştirmek,
+  ölçmeden "akıcı" yazmak.
+
+---
