@@ -333,7 +333,9 @@ extension _ItemsRow on ItemsEditorState {
             ? null
             : _ItemDividerPainter(
                 item.divider,
-                (_accent?.accent ?? scheme.primary).withValues(alpha: 0.75),
+                (_accent?.accent ?? scheme.primary).withValues(
+                  alpha: kItemDividerAccentAlpha,
+                ),
               ),
         child: Container(
           color: selected

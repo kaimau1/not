@@ -122,9 +122,10 @@ class ItemDividerMemory {
 typedef ItemDividerChoice = ({ItemDivider? style, bool applyAll});
 
 /// Tema renkli (renksiz) çizginin vurgu saydamlığı — satır, levha noktası
-/// ve önizleme AYNI değeri kullanır (P63 PB6 bulgu 11). Kart tarafı
+/// ve önizleme AYNI değeri kullanır (P63 PB6 bulgu 11; 0.75 → `strong`
+/// 0.85 — SB10, beğenilmezse tek satırda `AppAlpha.muted`). Kart tarafı
 /// (`note_card.dart`) kendi `AppAlpha.muted`'ını korur.
-const double kItemDividerAccentAlpha = 0.75;
+const double kItemDividerAccentAlpha = AppAlpha.strong;
 
 /// **ÇİZGİ AYARLARI** levhası (P63 PB6): kâğıt önizleme · beş türün gerçek
 /// çizimli seçicisi · renk noktaları · kalınlık · alt düğmeler. "Tamam"la
