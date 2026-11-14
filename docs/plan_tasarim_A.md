@@ -1,6 +1,6 @@
 # Görsel tasarım A — plan (P62)
 
-**Durum:** YARIM (2026-11-14, Fable limit): §0–§6 + iskelet yazıldı; §7 kasma+bütçe, §8 paketler YAZILMADI — kanıt ve paket taslağı dosyanın sonundaki "YARIM" bölümünde. Uygulama YAPILMADI.
+**Durum:** YARIM (2026-11-14, Fable limit): §0–§7 + iskelet yazıldı; §8 paketler YAZILMADI — kanıt ve paket taslağı dosyanın sonundaki "YARIM" bölümünde. Uygulama YAPILMADI.
 **Kullanıcı isteği (2026-11-14):** görsel tasarım son kullanıcı için hazır olsun — tertemiz, premium, güzel animasyonlu, göze hitap eden; kasma olmasın; ara commit atılsın.
 **Kapsam:** (1) ayarlar ekranlarının hepsi · (2) ana ekrandaki hesap levhası · (3) Ayarlar → Hesap · (4) ipucu ve uyarıların görünümü/yeri · (5) sağa-sola kaydırma hissi.
 **Kapsam DIŞI (P63'te, dokunma):** `lib/core/widgets/customizable.dart`, `lib/core/personalize.dart`, `lib/features/settings/presentation/personalize_screen.dart`, `personalize_bar_list.dart`, `quick_row_editor.dart`, şablon / kalem / sesle yazma / madde çizgisi dosyaları, `lib/features/notes/presentation/editor/**` ve `viewers/**`.
@@ -130,7 +130,7 @@ Grup etiketi için yeni l10n anahtarı gerekirse `app_tr.arb` + `app_en.arb` (pu
 - Tur (`ayarlar`, `ayarlar-gorunum`, dokuz `ayarlar-<alan>`): üç boyut × açık/koyu × yazı 1.0/1.3'te taşma istisnası yok; hiçbir alanda kart içinde kart yok (örnek metin hariç değil — o da dışarıda); metin düğmesi yığını yok; kelime ortasından kırılan etiket yok.
 - `python tool/design/token_sayim.py`: `lib/features/settings/**` ve `lib/features/auth/presentation/**` içinde elle köşe / `fontSize` / `FontWeight.w*` / süre SIFIR (bugün: `settings_account` r3 fs3, `settings_ai` r2 fs5, `settings_appearance` r3 fs2, `theme_picker` r3, `settings_area` r2, `account_sheet` r1 fs2 …).
 - Var olan ayar testleri yeşil (`test/settings*_test.dart`, `test/guide_screen_test.dart`); satır sırası ve anahtarlar değişmediği için test düzeltmesi yalnız bulucu türü (ör. `TextButton` → `ListTile`) olabilir.
-- Bütçe: §7 S28.
+- Bütçe: §7 S29 (alan açılışı), S36 (geniş ekranda kategori değişimi).
 
 ## 3. Ana ekrandaki hesap levhası
 
@@ -162,7 +162,7 @@ Grup etiketi için yeni l10n anahtarı gerekirse `app_tr.arb` + `app_en.arb` (pu
 
 ### 3.3 Kabul
 
-Tur `hesap-levhasi` (üç boyut, açık/koyu, yazı 1.3): kesik metin yok; elle değer sıfır; `test/account_sheet*_test.dart` ve `sign_out` testleri yeşil; bütçe §7 S29 (levha açılırken ana ekran kartı kurulmaz).
+Tur `hesap-levhasi` (üç boyut, açık/koyu, yazı 1.3): kesik metin yok; elle değer sıfır; `test/account_sheet*_test.dart` ve `sign_out` testleri yeşil; bütçe §7 S30 (levha açılırken ana ekran kartı kurulmaz).
 
 ## 4. Ayarlar → Hesap
 
@@ -273,7 +273,7 @@ Ek olarak:
 - `app_notice_test.dart` + yukarıdaki altı test yeşil; mandal testi yeşil.
 - Tur `ana` (telefon-kucuk, açık / koyu): ipucu arama hapının ALTINDA (hapla kesişmez); "Geri al" "+" satırıyla kesişmez. Turda sahne yoksa `tool/tour/screen_tour_test.dart`a `ana-ipucu`, `ana-gerial` eklenir.
 - `token_sayim`: `tips.dart`, `release_notes_toast.dart`, `due_banner.dart`, `UpdateBanner`, `_PendingUploadsBar`, `WebAttachmentsBanner` içinde elle köşe / punto / ağırlık / süre SIFIR.
-- Bütçe (§7'de yazılacak): bildirim göster / kaldır ana ekranı kurmaz; şerit belirince ızgara boy karesi ≤ 1.
+- Bütçe §7 S31 / S32: bildirim göster / kaldır ana ekranı kurmaz; şerit belirince ızgara boy karesi ≤ 1.
 
 ## 6. Sağa-sola kaydırma hissi / animasyonu
 
@@ -379,13 +379,87 @@ Düzeltme (YARIM notundaki yanlış): `FolderSwipe.commitFraction` testlerde KUL
 - `token_sayim`: `FolderSwipe`, `_SwipeActions`, `month_grid.dart`, `app_frame.dart`ın dokunulan satırlarında elle köşe / punto / ağırlık / süre / eğri SIFIR; `calendar_screen.dart`ta `Curves.` 5 → 2 (kalan: kıstırma geçişi).
 - Hareket turla görülmez (tur durağan kare çeker): `KONTROL_LISTEM.md` "Telefonda bak"a üç madde — ana ekranda yana çekiş (yavaş / fiske / durak yokken), liste satırı çekişi, takvim ajandasında mini ay (kaydır, aç / kapa); tablette çekmece. Cihaz A/B: §7.4.
 
+## 7. Kasma: riskler, kontrol listesi, bütçe senaryoları
+
+Kural (HIZ SÖZLEŞMESİ): dokunulan her yüzeyin cihazsız bütçe senaryosu `test/perf_budget_test.dart`ta olmalı; mandallar (`test/perf_budget/budgets.json`, `test/design_tokens/budget.json`) yalnız DÜŞER; ölçmeden "akıcı" denmez. P62'nin numaraları **S29–S39** (S28 boş: kalem ucu tahmini çıkarıldı; P63: S40–S44).
+
+### 7.1 Bulunan riskler (kanıt)
+
+| # | Risk | Kanıt | Önlem / senaryo |
+|---|---|---|---|
+| R1 | Bekleyen ekler şeridi `AnimatedSize` (200 ms), ana ekranın SABİT başlık sütununda; altında `Expanded` ızgara → şerit belirirken / kalkarken ızgara her karede yeniden dizilir (B8) | `dashboard_widgets.dart:1721-1723`; `dashboard_screen.dart:1842-1855, 1885` | `AnimatedSize` kalkar (§5.4) · S32 |
+| R2 | Takvimde mini ay `AnimatedSize`, altında `Expanded(list)` → ajanda her karede yeniden dizilir (K7) | `calendar_screen.dart:883-888`, `:896` | §6.2 "aç / kapa" · S35 |
+| R3 | Ayar alanı TEK karede kurulursa 2026-10-20 kasması geri gelir. Bugün satırlar karelere yayılıyor: ilk karede 2 satır, sonra kare başına 1. Grup kartı düzeni (§2.3) bu yaymayı bozabilir (grup = tek widget → bütün satırları aynı karede) | `settings_area.dart:600-655` (`_first = 2`, `:620`; `_scheduleNext`, `:630-637`) | yayma SATIR bazında kalır · S29 |
+| R4 | `AppNoticeHost` Navigator'ın üstünde, kökte: bildirim gösterilince `child` kurulursa bütün uygulama kurulur. İskelette `child` aynı örnek, yalnız iki `_NoticeLane` denetleyiciyi dinliyor — DOĞRU | `app_notice.dart:175-181`, `:193-194` | S31 `kart_kurulum` / `dashboard_kurulum` = 0 |
+| R5 | İki `_NoticeLane`, şerit BOŞKEN de `MediaQuery.viewInsetsOf` / `paddingOf` okuyor → klavye açılıp kapanırken her inset karesinde ikisi de kurulur (`Positioned` + `Align` + `ConstrainedBox` + `AnimatedSwitcher`). Okuma koşulsuz: kod gerçeği; maliyetin ölçüde görünüp görünmediği **hipotez** (ölçülmedi) | `app_notice.dart:202-205`, `:211-217` | PA5: inset okuması yalnız bildirim VARKEN kurulan küçük öğeye iner · S31 `klavye_karesi_kurulum` · cihazda `klavye` evresi |
+| R6 | `app.dart` ve `app_frame.dart` kabuk dosyaları: `MediaQuery.of(` mandalı 1'er | `jank_patterns_guard_test.dart:32-33` | şerit / çerçeve işinde `MediaQuery.of` EKLEME (`viewInsetsOf` / `sizeOf`, ayrı küçük öğe) |
+| R7 | §1 "seçim" hareketi `AnimatedContainer` ile yazılırsa boy / dolgu da animasyona girebilir (kasma listesi md. 6). Bekçi yalnız editör kökünü sayıyor | `jank_patterns_guard_test.dart:41-46`, `:84` | seçimde `ColorFade` (`lib/core/widgets/color_fade.dart`) ya da `AnimatedContainer`a YALNIZ `color` / `decoration` ver; §7.5 mandalı |
+| R8 | Hesap levhasında avatar fotoğrafı `frameBuilder` ile solarken ya da karoya `PressScale` eklenirken ana ekrana `setState` sızarsa altta 30 kart kurulur | `account_sheet.dart:102-118` (levha kendi `Consumer`ında) | S30 `kart_kurulum` = 0 |
+| R9 | Ana ekran çekişinde etikete eklenen solma / renk geçişi `FolderSwipe.child`ı sararsa ızgara her karede boyanır / kurulur | `dashboard_widgets.dart:1416-1423` (tek `Transform`, `child` aynı örnek) | §6.3 · S33; S23 değişmez |
+| R10 | Mini ay `PageView`i komşu ayı çekiş başlarken kurar (42 hücre + bir `buildAgenda`) | `month_grid.dart:114-141`; `calendar_views.dart:44-53` | S34 |
+| R11 | İpucu göçü: `_pumpHome` şeritsiz kurar → `TipOnce.show` false döner; soğuk açılış / kaydırma sayıları değişirse neden yazılır, mandal yükseltilmez | `perf_budget_test.dart:295-310` (`TipOnce.resetSession`) | S13 / S24 değişmez |
+
+### 7.2 Kasma kontrol listesi (`kasma-kontrol` skill'i, 8 madde) — yüzey yüzey
+
+P62 editöre ve kart ızgarasının HÜCRESİNE dokunmaz; md. 1 (madde alanı karşılaştırmaları), md. 2 (satır önbelleği), md. 5 (satır `identical` testi) hiçbir pakette uygulanmaz. Kalanlar:
+
+| Yüzey (paket) | md. 3 yerel durum kökte değil | md. 4 ağaç şekli sabit | md. 6 boy animasyonu yok | md. 7 `MediaQuery.of` / söküp takma | md. 8 bütçe |
+|---|---|---|---|---|---|
+| Ayar alanları (PA1, PA3) | seçili kategori ve arama `SettingsScreen` durumunda (bugünkü gibi); yeni durum ekleme | grup kartı satır eklenirken aynı kart kalır (anahtar = grup adı) | tek izinli: `ExpandReveal` (var); seçim yalnız renk | `sizeOf` (bugün `settings_screen.dart:741`) | S29, S36 |
+| Hesap levhası, Hesap sayfası (PA2) | basma tepkisi `PressScale`in kendi durumu | misafir / girişli dalları aynı iskelet (`footer` null → `SizedBox.shrink`) | karo boyu sabit (`IntrinsicHeight` bir kez), rozet `PopIn` | — | S30 |
+| Yan ekranlar (PA4) | — | — | yeni animasyon YOK | — | yok (durağan ekran; yeni senaryo gerekmez) |
+| Bildirim şeridi (PA5) | denetleyici (`ChangeNotifier`) + dar `ListenableBuilder` | iki şerit hep ağaçta; boşken `SizedBox.shrink` | solma + ¼ kayma (boyama) | R5, R6 | S31; S13 / S24 değişmez |
+| Kalıcı şeritler (PA6) | her şerit kendi `Consumer`ı (bugünkü gibi) | şerit yokken `SizedBox.shrink` (sütundaki yeri aynı) | R1: görünür / gizli TEK adım | — | S32 |
+| Ana ekran çekişi, çerçeve (PA7) | `_progress` bildiricisi, `FolderSwipe` durumu | `Stack` çocuk sırası aynı; `child` sarılmaz | yalnız `Transform` / `Opacity` | R6 | S33; S23, S12 / S26 / S27 değişmez |
+| Takvim mini ayı (PA8) | sayfa konumu `PageController`da; açık / kapalı `_monthOpen` (var) | liste zinciri iki durumda aynı (§6.3) | R2: boy bir kez, öteleme boyamada | — | S34, S35; S22 değişmez |
+
+### 7.3 Bütçe senaryoları (S29–S39)
+
+Sayılan şey süre değil SAYI (`BuildCounter`, `test/support/editor_harness.dart:25`; yardımcılar `_count` `:182`, `_expectBudget` `:192`, `_frames` `:399`, `_pumpHome` `:295`). "Bugün" sütunu ÖLÇÜLMEDİ — taban PA0'da ölçülür, `budgets.json`a `bugun` + `neden` ile yazılır; aşağıdaki "beklenen" değerler **hipotez**tir. Hedefi tutmayan taban mandal olarak girer, ilgili paket onu hedefe indirir.
+
+| No | Senaryo (düzenek) | Sayılan anahtarlar | Hedef | Beklenen bugün (hipotez) | Tabanı / indiren |
+|---|---|---|---|---|---|
+| S29 | Ayar alanı açılışı: telefon 412 × 915, doğrudan `SettingsScreen(initialArea: 'ai')` (S22 kalıbı; `_pumpHome`da `/settings` yolu YOK), 40 kare | `ilk_kare_kurulum`, `kare_kurulum` (en ağır kare), `toplam_kurulum` | en ağır kare tabanı AŞMAZ (kılık değişikliği yaymayı bozmadı); toplam en çok grup sarmalayıcıları kadar artar, `neden`e yazılır | yayma çalışıyor: ilk kare 2 satır | PA0 / PA1 |
+| S30 | Hesap levhası: `_pumpHome` telefon, 30 not; `home-account-avatar`a dokun → 30 kare → sistem geri → 30 kare (S20 kalıbı, `:1081`) | `kart_kurulum` (`NoteCard`), `dashboard_kurulum`, `kare_kurulum` | kart 0, pano 0 | 0 / 0 | PA0 / PA2 |
+| S31 | Bildirim: `_pumpHome` + `AppNoticeHost` (düzeneğe `notices: true` seçeneği); ileti göster → 30 kare → kendiliğinden kalksın; ipucu göster → dokunuşla kalksın; ayrıca şerit BOŞKEN alt inset 0 → 300 → 0 (10 adım) | `kart_kurulum`, `dashboard_kurulum`, `kare_kurulum`, `klavye_karesi_kurulum` (inset karesi başına şeritten kurulan) | 0 / 0 / küçük sabit / 0 | 0 / 0 / ? / > 0 (R5) | PA0 (iskelet tabanı) / PA5 |
+| S32 | Kalıcı şerit belirişi: `_pumpHome`, `pendingUploadsProvider` 0 → 2 → 0; her değişimden sonra 30 kare; ızgara kaydırma görünümünün boyunun değiştiği kare sayısı (S9 `govde_boy_karesi` kalıbı, `:598-632`) | `izgara_boy_karesi`, `kart_kurulum` | 2 (belir 1 + kalk 1) / 0 | ~24 (200 ms × 2) / 0 | PA0 / PA6 |
+| S33 | Ana ekran çekişi: `_pumpHome` telefon, 30 not, `swipe_mode: filters` (S23 düzeneği); karttan 6 × 10 dp yana çek (eşik altı), bırak, 30 kare | `kart_kurulum`, `dashboard_kurulum`, `kare_kurulum` | 0 / 0 / etiket + `FolderSwipe` kadar | 0 / 0 | PA0 / PA7 |
+| S34 | Mini ay kaydırma: telefon, `calendar_view: agenda`, ay açık; mini ayı bir ay ileri fırlat, 40 kare (S22 düzeneği, `:1140`) | `ay_sayfasi` (gün sayfası kurulumu), `gun_hucresi` (`_DayCell`), `kare_kurulum` | komşu ay bir kez kurulur; en ağır kare ≤ mini ayın ilk açılış karesi | bugün izleme yok: ay değişince 42 hücre tek karede | PA8 (taban PA8'in ilk commit'i: değişiklikten önce) |
+| S35 | Mini ay aç → kapat: telefon ajanda; `calendar-month-toggle`a iki kez dokun, her birinden sonra 30 kare; ajanda listesinin boyunun değiştiği kare sayısı | `liste_boy_karesi`, `kare_kurulum` | 2 (aç 1 + kapa 1) | ~24 | PA0 / PA8 |
+| S36 | Geniş ekran ayarlar: 1280 × 800 `SettingsScreen`; `settings-cat-ai` → `settings-cat-sound`, her birinden sonra 40 kare | `kare_kurulum`, `toplam_kurulum` | en ağır kare ≤ S29 en ağır karesi (alan değişimi de yayılır) | ? | PA0 / PA1 |
+| S37–S39 | boş (yedek) — P62 içinde yeni yüzey çıkarsa buradan verilir, P63 numaralarına (S40–S44) girilmez | | | | |
+
+Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 (not aç / geri), S21 (arama), S23 (yana fırlatma), S24 (soğuk açılış) — PA5, PA6, PA7; S12 / S26 / S27 (bölünmüş kabuk) — PA7 (`app_frame.dart`); S22 (hafta kaydırma) — PA8. Bir sayı YÜKSELİRSE paket durur: kök neden bulunur, mandal yükseltilmez (yükseltme yalnız `[butce]` başlığı + `neden` ile, kullanıcı kararı).
+
+### 7.4 Cihaz ölçümü (ÖLÇÜM KAPISI) ve `[apk]` noktaları
+
+`ab_hepsi.py`nin 13 evresi: açılış, liste, ⋮, arama, klasör (= ızgarada yana çekiş, `tool/perf/ab_hepsi.py:14, 211-212`), yeni not, not aç, klavye, yazma, kapanış, sabit PDF × 3. Ayarlar, hesap levhası ve takvim evrelerde YOK.
+
+| Paket | Kapıya giren yüzey | Paket A/B'si | Bakılacak evre | Cihazda elle (`KONTROL_LISTEM.md`) |
+|---|---|---|---|---|
+| PA0 | yok (yalnız test) | hayır | — | — |
+| PA1, PA2, PA3, PA4 | yok (ayarlar, levha) | hayır | — | ayar alanları arasında gezinme; hesap levhası; Hesap sayfası |
+| PA5 | kök (`app.dart`): her ekranın üstünde şerit | **evet** | açılış, liste, klavye, yazma | ipucu arama hapının altında; "Geri al" "+" ile kesişmiyor; levha üstünde bildirim |
+| PA6 | ana ekran başlık sütunu | **evet** | açılış, liste | şeritlerin kılığı; bekleyen ek şeridi belirirken liste titremiyor |
+| PA7 | ana ekran geçişi, çerçeve | **evet** (hız hissi işi: kötüleşme SIFIR, `klasör` evresi kötüleşmez) | klasör, liste | §6.5'teki üç madde + tablette çekmece |
+| PA8 | yok (takvim) | hayır | — | mini ay kaydırma + aç / kapa |
+| PA9 | editör / görüntüleyici iletileri | hayır (ileti yolu; gövdeye dokunmaz) | — | — |
+
+- Ölçümü yürütücü KENDİ yapmaz (`ab-olcum` skill'i): iki profil APK + `ab_hepsi.py <A> <B> --altin`, sonnet alt ajan; ham sayılar DEVIR'e.
+- `[apk]` başına en çok 5 görünür değişiklik (F58.4) → P62 İKİ `[apk]` noktasına bölünür: **APK-1** = PA1 + PA2 + PA3 + PA4 (ayar satır dili, hesap levhası / kimlik kartı, Hesap sayfası, yan ekranlar); **APK-2** = PA5 + PA6 + PA7 + PA8 (bildirim yeri ve kılığı, kalıcı şeritler, yana çekiş, mini ay). Her `[apk]` öncesi tam ölçüm zorunlu (önceki `[apk]`ya %20, altın tabana %15); telefon yoksa birleştirme `[apk]`sız, satır `cihaz bekliyor`.
+- PA5–PA7 aynı dosyalara sırayla dokunduğu için A/B üçü birleşince TEK koşuda yapılabilir (taban = APK-1); kötüleşme çıkarsa paket commit'leri ayrı olduğundan ikiye bölerek aranır.
+- Telefonda bakılamayan her görünür değişiklik "yazıldı, cihazda doğrulanmadı" + `KONTROL_LISTEM.md`. **Uyarı:** listede bugün 42 açık madde var (`^- [ ]` sayımı, 2026-11-14) — F58.4 eşiği 40; P62 en az 8 madde daha ekler (yürütücü / kullanıcı kararı: önce cihaz turu).
+
+### 7.5 Mandallar (yalnız düşer)
+
+- `test/perf_budget/budgets.json`: S29–S36 (yukarıda).
+- `test/jank_patterns_guard_test.dart`e yeni mandal "ana ekran / takvim boy animasyonu": `dashboard_widgets.dart`, `dashboard_screen.dart`, `due_banner.dart`, `app_update.dart`, `drive_ui.dart`, `app_banner.dart`, `app_notice.dart`, `calendar_screen.dart`, `month_grid.dart` içinde `AnimatedSize(` toplamı — bugün 2 (`dashboard_widgets.dart:1721`, `calendar_screen.dart:883`; ötekiler 0, sayıldı), PA6 sonrası 1, PA8 sonrası 0. Mandalı PA0 kurar (2).
+- `test/notice_paths_guard_test.dart` (§5.3): PA5 kurar, PA9 sıfırlar.
+- `test/design_tokens/budget.json`: her paket dokunduğu dosyadaki elle değerleri belirtece çevirip `python tool/design/token_sayim.py --json` ile DÜŞÜRÜR (§0.4). Paketler aynı dosyaya (`budget.json`) yazar — birleştirmede çakışırsa sayım yeniden üretilir, elle birleştirilmez.
+
 ---
 
-## YARIM — §7, §8 YAZILMADI (limit; kalanı Opus yazar). Toplanan kanıt ve verilmiş kararlar:
-
-**Numara düzeltmesi:** §2.4 "S28" ve §3.3 "S29" atıfları YANLIŞ — P62'ye ayrılan numaralar **S29–S39** (P63: S40–S44; S28 boş bırakılır). Öneri: S29 ayar alanı açılışı, S30 hesap levhası, S31 bildirim göster/kaldır, S32 şerit belirişi (ızgara boy karesi), S33 ana ekran yana çekiş oturması, S34 takvim mini ay kaydırma, S35 mini ay aç/kapa boy karesi. Bütçeler `test/perf_budget/budgets.json` (mandal: yalnız düşer), yardımcılar `_frames`, `_count`, `_expectBudget`, `_pumpHome` (`perf_budget_test.dart:181-203, 399-430, 295+`); örnek kalıplar S22 (`:1140`), S23 (`:1200`).
-
-**§7 Kasma — bulunan riskler:** B8 (`_PendingUploadsBar` `AnimatedSize`), takvim mini ay `AnimatedSize`, ayarlarda `_StaggeredRows` yayması KORUNACAK (`settings_area.dart:600-656`: ilk karede 2 satır, sonra kare başına 1), bildirim şeridi `child`ı kurmaz (yalnız `_NoticeLane`), `app.dart`a `MediaQuery.of` eklenmez. `kasma-kontrol` 8 maddesi her yüzey için tabloya dökülecek.
+## YARIM — §8 YAZILMADI (limit; kalanı Opus yazar). Toplanan kanıt ve verilmiş kararlar:
 
 **§8 Paket taslağı (dosya kümeleri ayrık; ayar bölümleri `settings_screen.dart`ın `part`ları — aynı kitaplık, ayrı dosya):**
 - PA1 (Opus high, ÖNCE): ayar satır dili — `settings_area.dart`, `settings_screen.dart` (+ S29).

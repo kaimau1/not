@@ -3,10 +3,10 @@
 Dal: `oto/P62-tasarim-A`. Bu paket YALNIZ plan + iskelet; uygulama `docs/plan_tasarim_A.md` paketleriyle alt modellerde.
 
 ## Plan durumu (`docs/plan_tasarim_A.md`)
-- BİTTİ: §0 kurallar, §1 ortak dil, §2 ayarlar, §3 hesap levhası, §4 Ayarlar → Hesap, §5 ipucu / uyarı, **§6 kaydırma** (2026-11-14).
-- YAZILMADI: **§7 kasma + bütçe senaryoları, §8 uygulama paketleri.** Kalan kanıt ve paket taslağı planın sonundaki "YARIM" bölümünde.
+- BİTTİ: §0 kurallar, §1 ortak dil, §2 ayarlar, §3 hesap levhası, §4 Ayarlar → Hesap, §5 ipucu / uyarı, §6 kaydırma, **§7 kasma + bütçe senaryoları (S29–S36)** (2026-11-14).
+- YAZILMADI: **§8 uygulama paketleri.** Paket taslağı planın sonundaki "YARIM" bölümünde.
 - Model kararı (kullanıcı, 2026-11-14): görünüşü belirleyen paket = fable; opus yalnız görsel olmayan altyapı / ölçüm; sonnet yalnız CI / test / mekanik.
-- Düzeltilecek: §2.4 "S28" ve §3.3 "S29" atıfları → P62 numaraları S29–S39 (öneri YARIM bölümünde); bitince baştaki "Durum" satırı.
+- S atıfları düzeltildi (§2.4 → S29, S36; §3.3 → S30; §5.6 → S31, S32).
 
 ## İskelet (commit 12b1842d + 07f9429e)
 - `app_design.dart` (`AppTone`, `AppSurface`, `AppSwipe`), `AppMotion.selection/emphasized/exitOf`, `app_banner.dart`, `app_notice.dart` (`app.dart`a BAĞLI DEĞİL), `test/app_notice_test.dart` (yeşil).
