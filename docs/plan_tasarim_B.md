@@ -569,3 +569,194 @@ Kalıp: S5 (`perf_budget_test.dart:520-554`, `_stylusDevice` + `pumpEditor`) ve 
 Cihaz A/B: **evet** (not sayfasının üstünde yüzen katman; kalemle yazma gecikmesi en hassas yüzey).
 `ab_hepsi.py`'de kalem evresi yoksa "kalem kipi aç → 10 çizgi → kapsül aç/kapa ×3" evresi eklenir
 (*hipotez: evre listesi okunmadı; PB3 `tool/perf/ab_hepsi.py:155` adım tablosuna bakar*).
+
+---
+
+## 4. Sesle yazmanın etkin menüsü (hareketli ses alanı + tüm menü)
+
+### 4.1 Mevcut durum (kanıt)
+
+"Etkin menü" = mikrofon açıkken ekranda duran dinleme kartı. Ortak parçalar
+`lib/features/notes/presentation/listening_visuals.dart` (`ListeningCard` `:411-538`, `ListeningBadge`
+`:31-154`, `ListeningModeTag` `:157-200`, `ListeningClock` `:204-264`, `ListeningWaveform`
+`:271-397`, `ListeningActionButton` `:542-585`, `ListeningHeaderButton` `:589-619`). İki kullanıcı:
+
+| Yer | Kurucu | Kanıt |
+|---|---|---|
+| Editörde canlı dikte ("Doğrudan yazım") | `_DictationPanel` | `editor/note_editor_parts.dart:222-264`; ağaca giriş `note_editor_screen.dart:4291-4295` (`if (_dictating)`) |
+| Yapay zekâ ile sesli not levhası | `_VoiceCaptureSheetState._body` | `voice_capture_sheet.dart:759-939` (dinleme `:869-908`, gözden geçirme `:914-938`) |
+
+Oturum: `data/voice_listen_session.dart` (`VoiceListenSession`), yerli köprü `data/device_speech.dart`.
+
+**Bulgular:**
+
+1. **Dalga SAHTE.** `_WaveformPainter._factor` yalnız geçen süreden hesaplıyor (`:363-369`: çubuk
+   başına 560 + i·41 ms periyotlu kosinüs) — fısıldasan da bağırsan da, hiç konuşmasan da aynı
+   salınım. Oysa gerçek ses düzeyi (0–1) zaten geliyor: yerli taraf `onRmsChanged`
+   (`MainActivity.kt:1692-1699`, 0.04'ten küçük değişimi eler) → `DeviceSpeech.listen` (`level`,
+   `device_speech.dart:78-94`) → oturum (`voice_listen_session.dart:113-114`) → YALNIZ sessizlik
+   kapısına gidiyor, arayüze hiç ulaşmıyor. Kayıt yolunda da var (`voice_capture_sheet.dart:361`,
+   200 ms'de bir `reportLevel`). Kullanıcı "beni duyuyor mu?" sorusunun cevabını ekranda göremiyor.
+2. **Geniş ekranda çubuklar şişiyor:** çubuk eni = genişlik / çubuk sayısı (`:374-375`), sayı sabit
+   28 (`:526`) → 1200 dp'lik tablet kartında çubuk ~28 dp. Kartın en sınırı yok
+   (`note_editor_parts.dart:238-240` yalnız 10 dp kenar payı).
+3. **Editör dikte kartında sessizlik geri sayımı yok.** `_toggleDictation` oturuma `onSilence`
+   vermiyor (`note_editor_voice.dart:94-122`); levhada var (`voice-silence-bar`,
+   `voice_capture_sheet.dart:837-849`). Dikte, kullanıcıya haber vermeden kendiliğinden kapanıyor.
+4. **Geçiş yok:** dikte kartı bir karede beliriyor (`note_editor_screen.dart:4291`); levhada dinleme →
+   işleniyor → gözden geçirme evreleri sert değişiyor (`_body` üç ayrı `return`).
+5. **Aynı kabuk üç kez elle yazılmış:** `ListeningCard`'ın `Material`'ı (`:452-460`), levhanın
+   `plainCard`'ı (`voice_capture_sheet.dart:779-795`) ve gözden geçirme başlığı (`_header`,
+   `:943-998` = `ListeningCard` başlık satırının `:467-516` kopyası).
+6. **Belirteç yok / yasaklı gölge:** köşe 22 (`:458`, `voice_capture_sheet.dart:785`), dolgu
+   12/10/10/12 (`:462`), yazı 15/12 ve sabit `FontWeight.w600` (`:480-501, :575`), etiket dolgusu
+   7/2 + simge 11 (`:170-181`), nabız 1400 ms (`:51`), `elevation: 6` + `shadowColor: Colors.black45`
+   (bulanık gölge; `:455-456`, `voice_capture_sheet.dart:782-783, :872`), saat stili elle
+   (`note_editor_parts.dart:248-252`, `voice_capture_sheet.dart:888-895`), hazır düğmeleri 54 dp
+   (`:1204, :1238, :1259`), çip köşesi 10 + yazı 12 (`:1403, :1409, :1422, :1432`).
+   "Hareketi azalt" hiçbir parçada okunmuyor (nabız ve dalga hep döner).
+7. Levha her sessizlik yoklamasında (250 ms) baştan kuruluyor: `onSilence` → `setState`
+   (`voice_capture_sheet.dart:304-306`).
+
+**Korunacak eski istekler (`istek_tara.py`):** iki alan TEK görünüm, fark renk ve simgede
+(`listening_visuals.dart:16`, 2026-10-20) · kart ORTA boy (~120 px; `:402`; bekçi
+`test/listening_card_bubble_theme_test.dart`: yükseklik 90–150) · döküm alanı üç satır, fazlası kayar
+(`voice_capture_sheet.dart:1089`) · bitiş düğmeleri YAN YANA kısa adlarıyla (`:1228`) · üç işlem çipi
+"Diğer" altında (`:1394`, 2026-10-31) · dikte metni imlecin olduğu yere yazar
+(`note_editor_voice.dart:9`) · mikrofon açıkken KAÇIRILAMAYACAK gösterge + durdurma
+(`note_editor_parts.dart:214`) · tablet kasma kök nedeni: kart kendi `RepaintBoundary`'sinde
+(`:232-236`, 2026-11-13). Y9 (alt kapsüldeki ses düğmeleri) ve Y15 (AI merkezi) bu bölümün DIŞINDA,
+dokunulmaz.
+
+### 4.2 Hedef
+
+**Hareketli ses alanı — `VoiceLevelWave`** (iskelet §6.4; `ListeningWaveform`'un YERİNE geçer, eski
+sınıf silinir — iki dalga bileşeni kalmaz):
+
+- Çubuklar GERÇEK ses düzeyini izler. Düzey bir `ValueListenable<double>` (0–1); bileşen kendi
+  tek ticker'ında yumuşatır (yükseliş hızlı ~80 ms, düşüş yavaş ~320 ms — olaylar seyrek gelse de
+  akıcı). Çubuk boyu = `taban + yumuşatılmış düzey × zarf(i) × titreşim(i, t)`; zarf ortada yüksek,
+  uçlarda alçak (çan); titreşim çubuk başına farklı fazlı küçük salınım (canlılık, ±%20).
+- Üç okunur hâl: **konuşuyor** (çubuklar düzeyle yükselir, vurgu rengi) · **dinliyor ama sessiz**
+  (çubuklar %14 tabanda, 2,4 sn'lik hafif nefes ±%4, vurgu × `AppAlpha.muted`) · **kapalı**
+  (`active: false`: 3 dp'lik noktalar, `outlineVariant`, ticker DURUR).
+- Çubuk eni sabit 3 dp, aralık 4 dp, uç yarıçapı tam; çubuk SAYISI genişlikten türetilir
+  (`(genişlik / 7).floor()` → 16–64 arası) — tablette şişmez.
+- TEK ticker + TEK `CustomPaint` + kendi `RepaintBoundary`'si (bugünkü kalıp `:266-347` korunur);
+  kare başına widget kurulmaz. Yükseklik 32 (kart orta boyda kalır).
+- Hareketi azalt: titreşim ve nefes yok; çubuklar yalnız düzey değişince tek adımda güncellenir.
+- Düzey kaynağı: `VoiceListenSession`'a `final ValueNotifier<double> level` (ve aynı kalıpla
+  `silence`) eklenir; `:113-114` ve `reportLevel` (`:150`) onu da besler, `_tick` sessizlik oranını
+  yazar, oturum kapanırken ikisi de `dispose`. `onSilence` geri çağrısı kalır (levha alt başlığı).
+  `level == null` verilirse (düzey bilinmiyor) sabit 0.5 varsayılır — dalga yine yaşar.
+
+**Kart (`ListeningCard`) — aynı orta boy, yeni dil:**
+
+```
+┌──────────────────────────────────────────────────────────────┐  ListeningSurface (yeni, aynı dosyada):
+│ (◉)  Dinliyorum…                            0:07   [ⓘ] [×]   │   AppSurface.floating(radius: AppRadius.xl),
+│      ⌨ Doğrudan yazım · Konuştukça imlece yazılır            │   kenar çizgisi vurgu × AppAlpha.soft
+│ [canlı döküm — yalnız yapay zekâ kipinde, en çok 3 satır]     │
+│ ▁▂▅▇▅▂▁▂▅▇█▇▅▂▁▂▅▇▅▂▁                         [■ Bitir]      │   VoiceLevelWave 32 · eylem hapı 44
+│ ▔▔▔▔▔▔ sessizlik geri sayımı (2 dp) ▔▔▔▔▔▔                    │   yuva HEP ayrılmış; yalnız opaklık değişir
+└──────────────────────────────────────────────────────────────┘
+```
+
+- Kabuk tek bileşen `ListeningSurface({required ListeningMode mode, required Widget child})`:
+  `ListeningCard`, levhanın "işleniyor", "hata" ve "gözden geçirme" evreleri aynı kabuğu kullanır
+  (`plainCard` silinir). Gölge yalnız `AppSurface.floatingShadow` (bulanıksız); `elevation`
+  parametresi kalkar — editördeki şeritte de aynı yüzey (iki yerde tek görünüş, 2026-10-20 isteği).
+- Başlık satırı tek bileşen `ListeningHeader` (rozet · başlık + kip etiketi + alt yazı · süre ·
+  düğmeler); levhanın `_header`'ı silinir, onu kullanır.
+- Yazı: başlık `AppText.rowTitle` + `AppWeight.strong`; alt yazı ve kip etiketi `AppText.meta`;
+  süre `AppText.label` + tabular rakam, dinlerken `error` (kayıt durumu rengi — korunur).
+- Dolgu `AppSpace.m`; satır arası `AppSpace.s`; rozet 40; etiket dolgusu `AppSpace.s`/`AppSpace.xxs`,
+  simge 12, köşe `AppRadius.s`, zemin vurgu × `AppAlpha.pressed`.
+- Rozet nabzı: halka `Transform.scale` + solma (bugünkü, yalnız boyama) — döngü süresi dosya başında
+  adlandırılmış sabit; hareketi azalt açıkken halka durur (sabit %20 opak halka).
+  AI rozetindeki iki renkli dolgu (`:90-98`) → **S6 sabah bakılacak**; güvenli seçenek: KALIR
+  (2026-10-20 "farkı ayırt edilebilsin"; rozet 40 dp, zemin değil).
+- Sessizlik geri sayımı kartın İÇİNDE, dalganın altında 2 dp çizgi (`ValueKey('voice-silence-bar')`
+  korunur), `ValueListenableBuilder` ile yalnız kendisi kurulur; kart `silence` parametresi alır.
+  Editör dikte kartı da gösterir (bulgu 3). Sayım başlayınca alt yazı "Sessizlikte bitecek…"
+  (`voiceAutoStopSoon`, var olan metin) — iki kipte de.
+- En sınırı: kart `ConstrainedBox(maxWidth: 560)` + ortalı (editörde ve levhada) — telefonda etkisiz.
+- `ListeningActionButton`: hap 44, yazı `AppWeight.strong`, dolgu `AppSpace.l`; dinlerken `error`
+  zemin KALIR (kayıt durumu; "kaçırılamayacak gösterge" isteği). `ListeningHeaderButton` aynı.
+
+**Belirme (editör dikte kartı):** yuva TEK ADIMDA açılır (bugünkü `if (_dictating)` — ağaç şekli
+bugünkünden farklılaşmaz); içerik `PopIn` ile (var olan bileşen, `lib/core/widgets/pop_in.dart:14`;
+süre `AppMotion.short`, alttan `rise`). **Çıkış geçişi YOK**: mikrofon kapandığı karede kart kalkar —
+"hâlâ dinliyor" görünen tek kare bile yanıltıcıdır.
+
+**Levhanın evreleri (`voice_capture_sheet.dart`):**
+
+- Evre değişimi (dinleme ↔ işleniyor ↔ gözden geçirme ↔ hata): `AnimatedSwitcher`, yalnız solma,
+  `AppMotion.quick`; boy tek adım. Anahtar EVRE GRUBU: `idle` ve `listening` AYNI anahtar (basılı-tut
+  düğmesi ağaçtan kalkmamalı — `:1319-1322` tuzağı).
+- İşleniyor: `ListeningSurface` içinde 24 dp'lik gösterge + metin `AppText.body`; dolgu `AppSpace.xxl`.
+- Gözden geçirme: `ListeningHeader` + düzenlenebilir döküm (yazı 16/1.45 korunur — okuma metni) +
+  bitiş satırı (düğmeler 48 dp, köşe `AppRadius.m`; "yeniden"/"sürdür" kare 48; YAN YANA düzen ve
+  renk rolleri aynı) + "Diğer" çipi/çipler (köşe `AppRadius.s`, yazı `AppText.meta` + strong).
+- `_silence` için `setState` yalnız 0 ↔ > 0 geçişinde (alt yazı değişimi); oran çizgisi notifier'dan.
+
+**Kapsam dışı (dokunma):** sesli NOT kaydı hapı (`VoiceRecordPanel`, `voice_note_recorder.dart:211` —
+ayrı özellik; onu saran `AnimatedSize` `note_editor_screen.dart:4277-4290` kasma md. 6 adayıdır,
+**regresyon listesine not** olarak yazılır, bu planda düzeltilmez) · sesli asistan
+(`voice_assistant*.dart`) · Ayarlar → Ses (`settings_voice.dart`, P62) · dikte mantığı
+(`note_editor_voice.dart` yazma/birleştirme kuralları).
+
+**S7 sabah bakılacak:** dikte kartına "akıllı komutlar" yardım düğmesi (levhadaki
+`voice-commands-help`) eklensin mi? Güvenli seçenek: EKLENMEZ (açtığı pencere editör odağını
+düşürür; yeni düğme = yeni davranış).
+
+### 4.3 Durumlar
+
+Dikte: sessiz dinliyor · konuşuyor (alçak/yüksek ses) · sessizlik geri sayımı · bitiş (kart tek karede
+kalkar) · klavye açık/kapalı · tablet (kart 560 ortalı) · bölünmüş görünümde ikinci bölme.
+Levha: bekliyor ("Başla" / "Basılı tut") · dinliyor · kilitli (kısa dokunuş) · işleniyor · gözden
+geçirme (metin / ses eki rozeti / söylenen başlık) · hata · komut geri bildirimi (`✓ …`) ·
+kayıt yolu (yerleşik tanıma yok — düzey 200 ms'de bir). Her ikisi: koyu tema · yazı 1.3 (başlık tek
+satır, etiket alt satırda — `:486-488` kuralı korunur) · 360 dp · hareketi azalt · `level == null`.
+
+### 4.4 Kabul ölçütleri
+
+- [ ] Düzey 0 iken çubuklar tabanda, 1 iken tavanda; düzey olayı gelmese de dalga akıcı
+      (`test/voice_level_wave_test.dart`, iskelette: saf işlevler + ticker'lı widget testi).
+- [ ] `listening_visuals.dart`, `voice_capture_sheet.dart` (`_body`, `_header`, `_actions`, `_chips`),
+      `note_editor_parts.dart` (`_DictationPanel`) içinde elle köşe/dolgu/punto/süre 0;
+      `elevation`/`shadowColor`/`Colors.black` 0; `ListeningWaveform` ve `plainCard` yok.
+- [ ] Editör dikte kartında sessizlik çizgisi görünür ve kart yüksekliği dinleme boyunca SABİT
+      (widget testi: sayım 0 → 0.5 → 1 iken kart yüksekliği aynı).
+- [ ] `test/listening_card_bubble_theme_test.dart` (dikte kartı 90–150 px, AI kartı 130–260 px, yazılı
+      "Bitir") yeşil — TEK izinli değişiklik `:61` `find.byType(ListeningWaveform)` →
+      `VoiceLevelWave`; `test/voice_unavailable_test.dart` değişmeden yeşil; anahtarlar korunur:
+      `listening-card-<kip>`, `listening-mode-<kip>`, `dictation-panel`, `dictation-stop`,
+      `voice-listen-action`, `voice-silence-bar`, `voice-commands-help`, `voice-continue`,
+      `voice-more`, `voice-title`.
+- [ ] 1280 dp genişlikte çubuk eni 3 dp (widget testi boyama ölçüsüyle ya da `barsFor(width)`).
+- [ ] Tur: `dikte-kart` (telefon + tablet), `ses-levha-dinliyor`, `ses-levha-hazir`, `ses-levha-hata`
+      (açık + koyu). Konuşma kanalı taklidi: `EventChannel('dev.kaimau.notlar/speech')` +
+      `MockStreamHandler.inline` (kalıp `test/voice_unavailable_test.dart:13-27`).
+
+### 4.5 Kasma riski + bütçe (kasma-kontrol 8 madde)
+
+1–2: not alanı/satır yok. **3:** düzey ve sessizlik `ValueNotifier`'da; editör kökü düzey olayında
+`setState` ALMAZ (kök yalnız başlat/bitir'de kurulur — bugünkü `_update`, `note_editor_voice.dart:123,
+147`); `_DictationPanel` `StatelessWidget` kalır, düzeyi yalnız `VoiceLevelWave` dinler. **4:** yeni
+sarmalayıcı yok; `if (_dictating)` şekli bugünkü. **5:** "düzey olayı → `_DictationPanel` ve
+`ListeningCard` yeniden KURULMAZ" testi (kurulum sayacı). **6:** kartın boyu dinlerken değişmez
+(sessizlik yuvası hep ayrılmış); belirme yalnız boyama. **7:** klavyeye bağlı gizleme yok; kart
+klavyenin üstünde, `_revealCaretSoon` (`:128`) aynen. **8:** aşağıda. Ek: kartın dış
+`RepaintBoundary`'si (`note_editor_parts.dart:236`) KALIR; dalga ve rozet kendi sınırlarında.
+
+**S43 (yeni) — "Dikte (telefon, 30 maddeli liste): başlat → 20 düzey olayı → 5 metin olayı (bir
+maddeye) → sessizlik sayımı → Bitir".** Ölç: `NoteEditorScreen`, `NotePageCanvas`, `_ItemRow`,
+`ListeningCard` kurulumu. Bütçe: düzey ve sessizlik olaylarında dördü de 0; başlat + bitir toplam kök
+kurulumu ≤ 2; metin olayı başına satır kurulumu ≤ 1 (yazılan satır — önce BUGÜNKÜ değer ölçülür,
+bütçe ondan kötü olamaz). Kalıp: S2 (`perf_budget_test.dart:468`) + konuşma kanalı taklidi.
+
+Cihaz A/B: **evet** — editör gövdesiyle aynı sütun; 2026-11-13 tablet bulgusunun ("sesle yazma
+açıkken kasma") yüzeyi. Evre: "dikte açıkken 30 sn kaydır + yaz" (`ab_hepsi.py`'ye eklenir; taklit
+düzey akışıyla — mikrofon izni gerektirmeyen `--dart-define` yoksa "yazıldı, cihazda doğrulanmadı" +
+`KONTROL_LISTEM.md`).
