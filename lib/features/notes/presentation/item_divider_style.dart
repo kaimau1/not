@@ -4,10 +4,13 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/color_dot.dart';
 import '../../../core/widgets/color_palette.dart';
+import '../../../core/widgets/sheet_header.dart';
 import '../domain/note_item.dart';
-import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
+import 'divider_kind_picker.dart';
 
 /// Madde altı ayırıcıyı ([ItemDivider]) çizer — editör satırı ve ana ekran
 /// kartı aynı çizimi kullanır (yalnız temel kalınlık ve kenar payı farklı).
@@ -118,18 +121,27 @@ class ItemDividerMemory {
 /// listedeki TÜM çizgilere uygulansın mı.
 typedef ItemDividerChoice = ({ItemDivider? style, bool applyAll});
 
-/// **ÇİZGİ AYARLARI** levhası: tür (düz, kesikli, noktalı, çift, dalgalı),
-/// renk ve kalınlık; canlı önizlemeyle. "Tüm çizgilere uygula" listedeki
-/// bütün ayırıcıların biçimini birden değiştirir.
+/// Tema renkli (renksiz) çizginin vurgu saydamlığı — satır, levha noktası
+/// ve önizleme AYNI değeri kullanır (P63 PB6 bulgu 11). Kart tarafı
+/// (`note_card.dart`) kendi `AppAlpha.muted`'ını korur.
+const double kItemDividerAccentAlpha = 0.75;
+
+/// **ÇİZGİ AYARLARI** levhası (P63 PB6): kâğıt önizleme · beş türün gerçek
+/// çizimli seçicisi · renk noktaları · kalınlık · alt düğmeler. "Tamam"la
+/// uygulanır (SB9: canlı uygulama ölçülmedi — levhanın önizlemesi canlı).
+/// "Tüm çizgilere" listedeki bütün ayırıcıların biçimini birden değiştirir.
 Future<ItemDividerChoice?> showItemDividerSheet(
   BuildContext context, {
   required ItemDivider initial,
-}) => showModalBottomSheet<ItemDividerChoice>(
+}) => showAppSheet<ItemDividerChoice>(
   context: context,
-  showDragHandle: true,
   isScrollControlled: true,
+  constraints: const BoxConstraints(maxWidth: 640),
   builder: (_) => _ItemDividerSheet(initial: initial),
 );
+
+/// Önizleme kutusunun yüksekliği (bugünkü değer taşındı).
+const double _previewHeight = 52;
 
 class _ItemDividerSheet extends StatefulWidget {
   const _ItemDividerSheet({required this.initial});
@@ -143,6 +155,7 @@ class _ItemDividerSheet extends StatefulWidget {
 class _ItemDividerSheetState extends State<_ItemDividerSheet> {
   late ItemDivider _style = widget.initial;
 
+  /// Kullanıcının seçebildiği çizgi renkleri (izinli sabit renk istisnası).
   static const _swatches = <Color>[
     Color(0xFF424242),
     Color(0xFF9E9E9E),
@@ -154,50 +167,32 @@ class _ItemDividerSheetState extends State<_ItemDividerSheet> {
     Color(0xFF8E24AA),
   ];
 
-  String _kindLabel(String kind) {
-    final l10n = context.l10n;
-    return switch (kind) {
-      NoteItem.dividerDashed => l10n.dividerKindDashed,
-      NoteItem.dividerDotted => l10n.dividerKindDotted,
-      NoteItem.dividerDouble => l10n.dividerKindDouble,
-      NoteItem.dividerWavy => l10n.dividerKindWavy,
-      _ => l10n.dividerKindSolid,
-    };
-  }
-
   void _done({required bool applyAll}) {
     ItemDividerMemory.remember(_style);
     Navigator.pop(context, (style: _style, applyAll: applyAll));
   }
 
-  Widget _swatch(Color? color) {
-    final scheme = Theme.of(context).colorScheme;
+  Widget _dot(Color? color, ColorScheme scheme) {
     final selected = color == null
         ? _style.color == null
         : _style.color == color.toARGB32();
-    return InkWell(
-      customBorder: const CircleBorder(),
+    return ColorDot(
+      color: color ?? scheme.primary.withValues(alpha: kItemDividerAccentAlpha),
+      selected: selected,
+      tooltip: color == null ? context.l10n.dividerColor : null,
       onTap: () => setState(
         () => _style = color == null
             ? _style.copyWith(clearColor: true)
             : _style.copyWith(color: color.toARGB32()),
       ),
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: color ?? scheme.primary.withValues(alpha: 0.75),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: selected ? scheme.onSurface : scheme.outlineVariant,
-            width: selected ? 3 : 1,
-          ),
-        ),
-        // Tema rengi: "otomatik" işareti.
-        child: color == null
-            ? Icon(Icons.auto_awesome, size: 14, color: scheme.onPrimary)
-            : null,
-      ),
+      // Tema rengi: "otomatik" işareti (✨ yalnız yapay zekâ — rol sözleşmesi).
+      child: color == null
+          ? Icon(
+              Icons.brightness_auto_rounded,
+              size: AppIconSize.xs,
+              color: scheme.onPrimary,
+            )
+          : null,
     );
   }
 
@@ -206,116 +201,145 @@ class _ItemDividerSheetState extends State<_ItemDividerSheet> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final custom = _style.color;
     final customOutsideSwatches =
         custom != null && !_swatches.any((c) => c.toARGB32() == custom);
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.dividerSettings,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: AppWeight.strong,
+            SheetHeader(title: l10n.dividerSettings),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.l,
               ),
-            ),
-            const SizedBox(height: 12),
-            // Önizleme: örnek madde + altındaki çizgi.
-            Container(
-              height: 52,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(AppRadius.m),
-              ),
-              child: CustomPaint(
-                painter: _PreviewPainter(_style, scheme.primary),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(l10n.dividerPreviewText),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Text(l10n.dividerKind, style: theme.textTheme.labelLarge),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                for (final kind in ItemDivider.kinds)
-                  radioChip(
-                    ChoiceChip(
-                      label: Text(_kindLabel(kind)),
-                      selected: _style.kind == kind,
-                      onSelected: (_) =>
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Kâğıt önizleme: örnek madde + satırdakiyle AYNI çizgi.
+                  Container(
+                    height: _previewHeight,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.m,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tokens.card,
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                      border: Border.all(color: tokens.hairline),
+                    ),
+                    child: CustomPaint(
+                      painter: _PreviewPainter(_style, scheme.primary),
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(l10n.dividerPreviewText, style: text.body),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.m),
+                  Semantics(
+                    label: l10n.dividerKind,
+                    child: DividerKindPicker(
+                      selected: _style.kind,
+                      style: _style,
+                      keyPrefix: 'divider-sheet-kind-',
+                      onPick: (kind) =>
                           setState(() => _style = _style.copyWith(kind: kind)),
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(l10n.dividerColor, style: theme.textTheme.labelLarge),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _swatch(null),
-                for (final c in _swatches) _swatch(c),
-                if (customOutsideSwatches) _swatch(Color(custom)),
-                PaletteButton(
-                  title: l10n.paletteMore,
-                  current: customOutsideSwatches ? Color(custom) : null,
-                  onPicked: (c) => setState(
-                    () => _style = _style.copyWith(color: c.toARGB32()),
+                  const SizedBox(height: AppSpace.m),
+                  Semantics(
+                    label: l10n.dividerColor,
+                    child: Wrap(
+                      spacing: AppSpace.s,
+                      runSpacing: AppSpace.s,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _dot(null, scheme),
+                        for (final c in _swatches) _dot(c, scheme),
+                        if (customOutsideSwatches) _dot(Color(custom), scheme),
+                        PaletteButton(
+                          title: l10n.paletteMore,
+                          current: customOutsideSwatches ? Color(custom) : null,
+                          onPicked: (c) => setState(
+                            () => _style = _style.copyWith(color: c.toARGB32()),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Text(l10n.dividerWeight, style: theme.textTheme.labelLarge),
-                Expanded(
-                  child: Slider(
-                    value: _style.weight,
-                    min: ItemDivider.minWeight,
-                    max: ItemDivider.maxWeight,
-                    divisions: 10,
-                    label: '${_style.weight.toStringAsFixed(1)}×',
-                    onChanged: (v) =>
-                        setState(() => _style = _style.copyWith(weight: v)),
+                  const SizedBox(height: AppSpace.m),
+                  Semantics(
+                    label: l10n.dividerWeight,
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.s,
+                          ),
+                          child: Icon(
+                            Icons.line_weight_rounded,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        Expanded(
+                          child: Slider(
+                            value: _style.weight,
+                            min: ItemDivider.minWeight,
+                            max: ItemDivider.maxWeight,
+                            divisions: 10,
+                            label: '${_style.weight.toStringAsFixed(1)}×',
+                            onChanged: (v) => setState(
+                              () => _style = _style.copyWith(weight: v),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${_style.weight.toStringAsFixed(1)}×',
+                          style: text.meta.copyWith(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                TextButton.icon(
-                  onPressed: () =>
-                      Navigator.pop(context, (style: null, applyAll: false)),
-                  icon: const Icon(Icons.format_strikethrough),
-                  label: Text(l10n.itemDividerRemove),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => _done(applyAll: true),
-                  child: Text(l10n.dividerApplyAll),
-                ),
-                const SizedBox(width: 4),
-                FilledButton(
-                  onPressed: () => _done(applyAll: false),
-                  child: Text(l10n.ok),
-                ),
-              ],
+                  const SizedBox(height: AppSpace.s),
+                  // Sığmazsa alt alta (yazı 1.3, dar telefon).
+                  OverflowBar(
+                    alignment: MainAxisAlignment.end,
+                    overflowAlignment: OverflowBarAlignment.end,
+                    spacing: AppSpace.s,
+                    children: [
+                      TextButton.icon(
+                        key: const ValueKey('divider-sheet-remove'),
+                        onPressed: () => Navigator.pop(
+                          context,
+                          (style: null, applyAll: false),
+                        ),
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        label: Text(l10n.itemDividerRemove),
+                      ),
+                      TextButton(
+                        key: const ValueKey('divider-sheet-all'),
+                        onPressed: () => _done(applyAll: true),
+                        child: Text(l10n.dividerApplyAll),
+                      ),
+                      FilledButton(
+                        key: const ValueKey('divider-sheet-ok'),
+                        onPressed: () => _done(applyAll: false),
+                        child: Text(l10n.ok),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -334,10 +358,10 @@ class _PreviewPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) => paintItemDivider(
     canvas,
     style: style,
-    fallbackColor: fallback.withValues(alpha: 0.75),
+    fallbackColor: fallback.withValues(alpha: kItemDividerAccentAlpha),
     left: 0,
     right: size.width,
-    y: size.height - 8,
+    y: size.height - AppSpace.s,
     baseWidth: 2.2,
   );
 
