@@ -57,7 +57,7 @@ class ColorDot extends StatelessWidget {
           border: Border.all(
             color: selected
                 ? scheme.primary
-                : scheme.primary.withValues(alpha: 0),
+                : scheme.primary.withAlpha(0),
             width: _ring,
           ),
         ),
