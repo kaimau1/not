@@ -310,17 +310,43 @@ YAZI = " deneme yazisi"
 
 def trim_typed(fx, fy):
     """Önceki koşuların `yaz` evresinde eklenen metni (pencere DIŞINDA) siler:
-    yoksa ölçülen not her koşuda 56 karakter büyür (P60, kayma kaynağı)."""
-    boxes = [m for m in re.finditer(r'text="([^"]*)"[^>]*?class="android\.widget\.EditText"', ui_dump())]
-    if len(boxes) < 2:
-        return
-    body, n = boxes[1].group(1), 0
-    while body.endswith(YAZI) and n < 40:
-        body, n = body[:-len(YAZI)], n + 1
-    if n:
+    yoksa ölçülen not her koşuda 56 karakter büyür (P60, kayma kaynağı).
+    Liste notunda madde metni EditText'te değil, üstündeki View'in content-desc'inde
+    gelir ve sarılan maddede MOVE_END yalnız ilk satır sonuna gider (ek ortaya
+    girer): maddenin SON satırına basılır, 'deneme'den sonrası silinir; rapor
+    edilen metin kısa (kesik) gelirse tur tekrarlanır. Madde boş kalırsa 'Kitap'."""
+    deleted = False
+    for _ in range(6):
+        best = None
+        for m in re.finditer(r'<node [^>]*>', ui_dump()):
+            nd = m.group(0)
+            b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', nd)
+            if not b:
+                continue
+            x0, y0, x1, y1 = map(int, b.groups())
+            if not (x0 <= fx <= x1 and y0 <= fy <= y1):
+                continue
+            for attr in ("text", "content-desc"):
+                t = re.search(attr + r'="([^"]*)"', nd)
+                if t and (best is None or len(t.group(1)) > len(best[0])):
+                    best = (t.group(1), (x0, y0, x1, y1))
+        junk = re.search(r"deneme|yazisi", best[0]) if best else None
+        if not junk:
+            break
+        t, (x0, y0, x1, y1) = best
+        keep = t[:junk.start()].rstrip()
+        n = len(t) - len(keep)
+        tap(x1 - 20, y1 - 20); time.sleep(0.6)
         key("KEYCODE_MOVE_END")
-        for i in range(0, n * len(YAZI), 50):
-            sh("input keyevent " + " ".join(["67"] * min(50, n * len(YAZI) - i)))
+        for i in range(0, n, 50):
+            sh("input keyevent " + " ".join(["67"] * min(50, n - i)))
+        deleted = True
+        time.sleep(1.0)
+    if deleted and (not best or not best[0].strip()):
+        tap(fx, fy); time.sleep(0.6)
+        key("KEYCODE_MOVE_END"); text("Kitap"); time.sleep(0.6)
+    if deleted:
+        tap(fx, fy)
         time.sleep(3.5)  # kEditorSaveDelay 2 sn: kayıt kb penceresine taşmasın
 
 

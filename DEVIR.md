@@ -13,7 +13,7 @@
 - AÇIK SORU: yaz LAYOUT bu oturumda İKİ APK'da da ~225 (altın oturumunda 164). Şüphe: `trim_typed` liste maddesinde eki silemiyor → madde koşu başına büyüyor. Önce telefonda "Kitap bilet" ilk maddesine bak (ek birikmiş mi), gerekirse sil + trim'i düzelt.
 
 ## Sıradaki
-1. "Kitap bilet" ilk madde metnini doğrula/temizle; trim gerekirse düzelt.
+1. [x] 2026-11-15: "Kitap bilet" 1. maddesi ~1600 karakter ekle şişmişti (yaz LAYOUT 164→225 kökü). trim_typed liste maddesini okuyamıyordu (metin View content-desc'inde) + MOVE_END sarılı maddede ilk satır sonu → düzeltildi, madde "Kitap". main birleştirildi (479bdfef), B = ab_apk/B_P60_479b.apk.
 2. `ab_hepsi.py A_0fe290ec.apk B_P60_1.apk --altin` (S21 aramada iyileşme bekleniyor; arama B en uzun kare 60,9 ms, 6/16 kare > 16 ms).
 3. En uzun kareler (A=A): not_ac 77,7 · arama 60,9 · sabit_ac 50,6 · yeni_not 41,9 · not_kapa 41,5 · klasor 40 ms → `scratchpad`taki `prof_evre.py` gibi tek evre profili (vmsvc frame_report + widget_builds) ile kök aranacak.
 4. Bitiş: Kuyruk satırı + önce/sonra tablosu, akicilik.md, regresyon listesi, sürüm notu (S21 cihazda doğrulanırsa).
