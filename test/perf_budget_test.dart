@@ -44,6 +44,8 @@ import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dar
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
 import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
+import 'package:notlar/features/notes/data/user_templates.dart';
+import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1692,5 +1694,174 @@ void main() {
       'kare_kurulum': max(ai.worst, sound.worst),
       'toplam_kurulum': ai.total + sound.total,
     });
+  });
+
+  // S41 (P63 PBT): şablon galerisi — harf/çip başına kurulan kart ≤ o an
+  // görünen kart; açılışta kurulan Text (RenderParagraph vekili).
+  testWidgets('S41: şablon galerisi (telefon, 16 hazır + 6 kendi)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({
+      'user_templates_v1': encodeUserTemplates([
+        for (var i = 0; i < 6; i++)
+          UserTemplate(
+            id: 'u$i',
+            name: 'Benim $i',
+            type: NoteType.checklist,
+            items: const ['bir', 'iki', 'üç'],
+          ),
+      ]),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => showNoteTemplateSheet(context),
+                  child: const Text('aç'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    // Kart türü: bugün `_TemplateCard`, PB4'ten sonra `TemplatePreviewCard`.
+    const cardTypes = ['_TemplateCard', 'TemplatePreviewCard'];
+    final cards = find.byWidgetPredicate(
+      (w) => cardTypes.contains(w.runtimeType.toString()),
+    );
+    int built(Map<String, int> c) =>
+        cardTypes.fold(0, (n, t) => n + (c[t] ?? 0));
+    int present() => cards.evaluate().length;
+    final open = await _count(() async {
+      await tester.tap(find.text('aç'));
+      await tester.pump();
+    });
+    await _settle(tester);
+    final openCards = present();
+    final chip = await _count(() async {
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Planlama'));
+      await _settle(tester);
+    });
+    final chipExcess = built(chip) - present();
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump(const Duration(milliseconds: 400));
+    var letterExcess = 0;
+    for (final q in ['h', 'ha', 'haf']) {
+      final c = await _count(() async {
+        tester.testTextInput.enterText(q);
+        await _settle(tester);
+      });
+      letterExcess = max(letterExcess, built(c) - present());
+    }
+    expect(present(), greaterThan(0), reason: '"haf" haftalık planı bulur');
+    final tap = await _count(() async {
+      await tester.tap(cards.first);
+      await _settle(tester);
+    });
+    // ignore: avoid_print
+    print(
+      'S41: açılış kartı $openCards, açılış Text ${open['Text'] ?? 0}, '
+      'karta dokunuş toplam ${_sum(tap)}',
+    );
+    _expectBudget('S41', {
+      'cip_fazla_kart': chipExcess,
+      'harf_fazla_kart': letterExcess,
+      'acilis_text': open['Text'] ?? 0,
+    });
+  });
+
+  // S44 (P63 PBT): 30 maddeli liste, 10 maddesi çizgili; biçim çubuğunun
+  // çizgi tepsisinden üç seçim + tepsi aç/kapa + klavye aç/kapa.
+  testWidgets('S44: çizgi tepsisi (telefon, 30 madde, 10 çizgili)', (
+    tester,
+  ) async {
+    const kinds = ['solid', 'dashed', 'dotted', 'double', 'wavy'];
+    final note = Note(
+      id: 'n',
+      type: NoteType.checklist,
+      title: 'Liste',
+      items: [
+        for (var i = 0; i < 30; i++)
+          NoteItem(
+            id: 'i$i',
+            text: 'madde $i',
+            divider: i >= 10 && i < 20 ? kinds[(i - 10) ~/ 2] : '',
+          ),
+      ],
+    );
+    final repo = CountingNotesRepository();
+    await pumpEditor(tester, note, repo: repo);
+    await _settleGrowth(tester);
+    await tester.tap(find.text('madde 7'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byTooltip('Biçim'));
+    await _settle(tester);
+    final body = find
+        .ancestor(
+          of: find.byType(NotePageCanvas),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    // Tepsi açılırken gövdenin boyu kaç karede değişiyor (§5.1 bulgu 13).
+    var trayResize = 0;
+    final trayOpen = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('format-divider-menu')));
+      trayResize = await _resizedFrames(tester, body);
+    });
+    var pickRows = 0, pickRoots = 0, pickItems = 0;
+    // PB6 tepsiye beş türü koyunca ikinci seçim dalgalı olur (S44 tanımı).
+    final second =
+        find.byKey(const ValueKey('format-divider-wavy')).evaluate().isEmpty
+        ? 'dashed'
+        : 'wavy';
+    for (final k in ['solid', second, second]) {
+      final c = await _count(() async {
+        await tester.tap(find.byKey(ValueKey('format-divider-$k')));
+        await _settle(tester);
+      });
+      pickRows += c[_row] ?? 0;
+      pickRoots += c['NoteEditorScreen'] ?? 0;
+      pickItems += c['ItemsEditor'] ?? 0;
+    }
+    await tester.pump(const Duration(seconds: 3));
+    expect(repo.lastSaved!.items[7].divider, isEmpty, reason: 'kaldırıldı');
+    final trayClose = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('format-divider-menu')));
+      await _settle(tester);
+    });
+    final counter = BuildCounter()..start();
+    addTearDown(counter.stop);
+    for (final inset in const <double>[20, 60, 120, 200, 300, 200, 120, 60, 20, 0]) {
+      tester.view.viewInsets = FakeViewPadding(bottom: inset);
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    final kb = _bodyTypes.fold(0, (n, t) => n + counter.of(t));
+    counter.stop();
+    // ignore: avoid_print
+    print(
+      'S44: tepsi açılış kurulum ${_sum(trayOpen)}, gövde boy karesi '
+      '$trayResize',
+    );
+    _expectBudget('S44', {
+      'secim_satir': pickRows,
+      'secim_kok': pickRoots,
+      'secim_items_editor': pickItems,
+      'tepsi_satir': (trayOpen[_row] ?? 0) + (trayClose[_row] ?? 0),
+      'tepsi_govde_boy_karesi': trayResize,
+      'klavye_govde': kb,
+    });
+    await endEditor(tester);
   });
 }
