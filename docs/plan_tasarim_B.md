@@ -1004,19 +1004,259 @@ Cihaz A/B: **evet** — klavye açılışında çizgili liste 2026-11-13 bulgusu
 `kb` + yeni `bicim` (not aç → klavye → Biçim → çizgi tepsisi aç/kapa ×3 → tür seç ×3; PBT ekler),
 ölçüm notu çizgili olmalı (HAZIRLIK notuna 10 çizgi).
 
-## 6. İskelet tanımı — **YAZILMADI**
+## 6. İskelet tanımı (PB0 yazar; bu belgede KOD YOK, yalnız sözleşme)
 
-Beş dosya (+ küçük testleri); imzalar bölümlerde: `lib/core/widgets/customize_board.dart` (§1.2,
-`CustomizeBoard`, `CustomizeEntry`) · `lib/features/notes/presentation/template_preview_card.dart`
-(§2.2, `TemplatePreviewCard`, `templatePreviewLines`, `TemplateLineKind`) ·
-`pen_stroke_preview` (§3.2: tür/renk/kalınlık/şeffaflık → S eğrisi, `paintInkStroke`
-`viewers/ink_stroke_paint.dart:21`; `InkStroke.width` sayfa GENİŞLİĞİNİN oranıdır
-`domain/attachment.dart:71`; dolma kalem alfa 0xFE ile tanınır `viewers/ink_pen.dart:40, 91`; aynı
-girdi → aynı `InkStroke` örneği, `compact` kipi) · `voice_level_wave` (§4.2: `level`
-`ValueListenable<double>?`, `active`, `color`, `height 32`; saf işlevler çubuk sayısı / yumuşatma /
-çubuk çarpanı) · `divider_kind_picker` (§5 taslak). Ortak iş: yeni l10n anahtarlarının HEPSİ
-iskelet paketinde eklensin (ör. `inkUnpinPen`, mod şeridi "Sırala") — `.arb` değişimi CI'da tam takım
-koşturur, paketler arası çakışma kaynağı.
+İskelet = altı küçük, kendi başına derlenen ve testli bileşen. Hiçbiri bir ekrana BAĞLANMAZ (bağlamak
+paketlerin işi); böylece PB0 görünür değişiklik üretmez, `[apk]` gerektirmez.
+
+### 6.0 Ortak kurallar ve P62 uyumu
+
+- **P62 iskeleti main'de DEĞİL** (2026-11-14): `origin/oto/P62-tasarim-A` dalında
+  `lib/app/theme/app_design.dart` (`AppTone`, `AppSurface.group/paper/floating/floatingShadow`,
+  `AppSwipe`), `app_tokens.dart` ekleri (`AppMotion.selection = short`,
+  `AppMotion.emphasized = Curves.easeOutCubic`, `AppMotion.exitOf(d) = d × 2/3`),
+  `lib/core/widgets/app_banner.dart`, `app_notice.dart`. Sözleşme: P62 planı
+  (`git show origin/oto/P62-tasarim-A:docs/plan_tasarim_A.md`) §1.
+- **PB0 P62'ye bağımlı OLMAZ:** iskelet dosyaları `app_design.dart`'ı içe aktarmaz. P62 adı gereken
+  yerde EŞDEĞER var olan belirteç + satır sonu notu yazılır, paket (PB3/PB5/PB6) P62 main'e girince
+  çevirir:
+
+  | P62 adı | İskelette yazılacak eşdeğer | Not |
+  |---|---|---|
+  | `AppMotion.selection` | `AppMotion.short` | `// P62: AppMotion.selection` |
+  | `AppMotion.emphasized` | `AppMotion.enter` | `// P62: AppMotion.emphasized` |
+  | `AppMotion.exitOf(d)` | `AppMotion.quick` (short'un çıkışı) | `// P62: AppMotion.exitOf` |
+  | `AppSurface.paper(theme)` | `AppTokens.fromTheme(theme)` → `card` + `hairline` (`app_tokens.dart:69, 72, 85`) | kâğıt zemin |
+  | `AppSurface.floating(...)` | iskelette KULLANILMAZ (kapsül/kart kabuğu PB3/PB5'in) | — |
+
+- **Seçim rengi tek kural (P62 planı §2.2):** seçili hücre/segment zemini `primaryContainer` /
+  `onPrimaryContainer`, geçiş yalnız renk + `AppMotion.selection`. `DividerKindPicker` ve `ColorDot`
+  halkası buna uyar. İSTİSNA (bugünkü kılık korunur, S8): `CustomizeBoard`'un "görünen" karosu
+  `secondaryContainer` (kullanıcının 2026-11-13'te istediği hızlı satır düzenleyicisinin kılığı,
+  `quick_row_editor.dart:286`) ve M3 çiplerinin varsayılan seçili rengi (§2.2 bölüm çipleri).
+- Elle ölçü yok; her animasyon `AppMotion.of` + `AppMotion.curveOf`; editör/kart dosyalarından
+  çağrılacak bileşenler `Theme.of(context)` yerine girdi olarak `ThemeData`/renk alır ya da çağıranın
+  `_themeOf` kalıbına uyar (§0).
+- Yeni dosyalara `dart format` (yalnız kendi dosyan). `lib/l10n/generated` elle düzenlenmez
+  (`flutter gen-l10n` + `dart format lib/l10n/generated`).
+- Her iskelet dosyasının başında tek satır: `// P63 iskelet — docs/plan_tasarim_B.md §6.x`.
+
+### 6.1 `CustomizeBoard` — `lib/core/widgets/customize_board.dart` (§1.2)
+
+```dart
+typedef CustomizeEntry = ({String id, IconData icon, String label});
+
+class CustomizeBoard extends StatelessWidget {
+  const CustomizeBoard({
+    super.key,
+    required this.entries,         // yüzeyin TÜM öğeleri, varsayılan sırada
+    required this.shown,           // görünenlerin kimlikleri, EKRAN sırasıyla
+    required this.onToggle,        // void Function(String id, bool visible)
+    this.onReorder,                // void Function(int oldIndex, int newIndex); null = sırasız
+    this.onReset,                  // null = "Varsayılana dön" çizilmez
+    required this.shownLabel,
+    required this.availableLabel,
+    this.emptyLabel,
+    this.resetLabel,
+    this.keyPrefix = 'customize-', // karo: '$keyPrefix<id>', önizleme: '${keyPrefix}preview', sıfırla: '${keyPrefix}reset'
+    this.trailingOf,               // Widget? Function(String id): karonun sonundaki ikincil düğme
+  });
+}
+```
+
+Doğrulanmış kod gerçekleri:
+- Bugünkü karo kılığı `_Tile` (`quick_row_editor.dart:266-300`): `Material`, köşe `AppRadius.m`,
+  menüde `secondaryContainer`, değilse `surface` + `outlineVariant` çizgi — pano bunu AYNEN taşır.
+- Anahtar uyumu zorunlu (testler dokunuyor): hızlı satır `quick-row-edit-<k>`, `quick-row-edit-reset`,
+  `quick-row-editor-preview` (`quick_row_editor.dart:162, 204, 219, 231`) → çağıran
+  `keyPrefix: 'quick-row-edit-'` verir, önizleme anahtarını `KeyedSubtree` ile kendi sarar. Çubuk
+  listesi `bar-switch-<id>`, `bar-move-<id>`, `personalize-bar-<grup>`, `personalize-bar-reset`
+  (`personalize_bar_list.dart:88, 154, 174, 192`; `test/editor_bar_customize_test.dart:183-231`) →
+  `keyPrefix: 'bar-switch-'`, "öbür kapsüle taşı" `trailingOf` ile `bar-move-<id>` düğmesi olarak
+  KALIR (§1.2'deki "uzun bas = taşı" ek kısayoldur, düğmenin yerine geçmez).
+- Sıra birleştirme `UiPrefs.orderOf(defaults, saved)` (`personalize.dart:66-78`) — pano sıra
+  HESAPLAMAZ, yalnız `shown` listesini çizer.
+- Önizleme şeridi yatay `ReorderableListView` (`buildDefaultDragHandles: false`); `onReorder == null`
+  ise düz `Row`.
+
+Test `test/customize_board_test.dart`: karoya dokun → `onToggle(id, !visible)`; görünenler `shown`
+sırasında; `onReorder == null` iken sürükleme tutamağı yok; tümü görünürken "Eklenebilir" başlığı
+çizilmez; hiç görünen yokken `emptyLabel`; anahtar öneki.
+
+### 6.2 `TemplatePreviewCard` — `lib/features/notes/presentation/template_preview_card.dart` (§2.2)
+
+```dart
+enum TemplateLineKind { heading, check, number, bullet, text, gap }
+
+List<TemplateLineKind> templatePreviewLines({
+  required NoteType type, required String body, required List<String> items, int max = 5,
+});
+
+class TemplatePreviewCard extends StatelessWidget {
+  const TemplatePreviewCard({
+    super.key,                     // çağıran verir: ValueKey('tpl-card-<key>')
+    required this.lines, required this.accent, required this.icon, required this.name,
+    required this.onTap,
+    this.favorite = false, this.onFavorite, this.favoriteKey,   // ValueKey('tpl-fav-<ad>')
+    this.onMenu, this.onLongPress,
+  });
+}
+```
+
+Doğrulanmış kod gerçekleri: içerik türü `NoteTemplateContent = ({NoteType type, String title, String
+body, List<String> items, int columns})` (`domain/note_templates.dart:49-55`); 16 hazır şablon
+`enum NoteTemplate` (`:26-43`), kimlik `key => name`; kendi şablonu `UserTemplate{id, name, type,
+title, body, items}` (`data/user_templates.dart:29-37`); `NoteType { text, checklist, ordered, … }`
+(`domain/note_type.dart:10`). Bugünkü kart `_TemplateCard` (`note_template_sheet.dart:712`) — PB4 onu
+bu bileşenle değiştirir. Minyatür tek `CustomPaint`, metin dizimi YOK (`RenderParagraph` yalnız alt
+banttaki ad).
+
+Test `test/template_preview_lines_test.dart`: liste → `check`×n; sıralı → `number`; `# ` → `heading`;
+`☐`/`•`/`-` satırları; boş satır → `gap`; `max` kırpması; boş içerik → boş liste. Kart widget testi:
+`favorite` yıldızı, `onMenu` hedefi (alt bandın sağ 40 dp'si), yazı 1.3'te ad tek satır.
+
+### 6.3 `PenStrokePreview` — `lib/features/notes/presentation/editor/pen_stroke_preview.dart` (§3.2)
+
+```dart
+class PenStrokePreview extends StatefulWidget {
+  const PenStrokePreview({
+    super.key,
+    required this.argb,      // kalemin SON rengi (saydamlık uygulanmış): InkController.penColor.toARGB32()
+    required this.widthPx,   // InkController.widthPx
+    this.compact = false,    // sabit kalem çipi: 30 × 30 daire içinde kısa çizgi
+  });
+}
+
+/// S eğrisi; [size] önizleme kutusu. Saf işlev — testte doğrudan çağrılır.
+InkStroke penPreviewStroke({required int argb, required double widthPx, required Size size, bool compact = false});
+```
+
+Doğrulanmış kod gerçekleri:
+- Tek çizim yolu `paintInkStroke(Canvas, Size, InkStroke, {bool cache = true})`
+  (`viewers/ink_stroke_paint.dart:21-26`); kalem TÜRÜ renkten okunur — ayrı tür girdisi GEREKMEZ:
+  fosforlu = alfa tam 0x66 → düz uç (`viewers/ink_pen.dart:80-88`, `InkPen.highlighter` `:34`), dolma
+  kalem = alfa 0xFE → değişken kalınlık (`inkIsFountain` `:91`, `ink_stroke_paint.dart:48-49`,
+  `fountainRadii`).
+- `InkStroke.width` sayfa GENİŞLİĞİNİN oranı (`domain/attachment.dart:70-71`); ekranda
+  `widthPx / size.width` ile yazılır (`viewers/ink_layer.dart:1257`) → önizlemede de
+  `width = widthPx / size.width` (ekrandaki gerçek kalınlık). `compact`'ta `widthPx`, kutu boyunun
+  %45'ine kırpılır (46 px'lik fosforlu 30 px daireden taşmasın).
+- Son renk `InkController.penColor` (`ink_layer.dart:575-577`: sabit saydamlıklı kalemde
+  `pen.apply(color)`, öbürlerinde `color.withAlpha(pen.alpha × opacity)`). Sabit kalem kaydı
+  SAYDAMLIKSIZ rengi tutar (`currentPreset`, `ink_layer.dart:880-881`; `InkPreset{pen, color, width}`
+  `ink_tools.dart:470-479`) → çipte `argb = InkPen.values[p.pen].apply(Color(p.color)).toARGB32()`.
+- Geometri önbelleği çizgi ÖRNEĞİNE bağlı (`_geom` `Expando`, `ink_stroke_paint.dart:85`) → bileşen
+  `StatefulWidget`: `InkStroke` yalnız `(argb, widthPx, compact, boyut)` değişince yeniden üretilir
+  (aynı girdi → `identical` örnek; kaydırıcı sürüklenirken adım başına bir kez). Kendi
+  `RepaintBoundary`'si.
+- *Hipotez:* dolma kalemin "hızlı çizgide incelir" etkisi nokta aralığından türüyor
+  (`fountainRadii` okunmadı) — PB0 okur; öyleyse S eğrisinin uçlarında nokta aralığı açılır, değilse
+  örnek `pressures` verilir.
+
+Test `test/pen_stroke_preview_test.dart`: fosforlu girdide boyanan renk alfası 0x66; aynı girdiyle iki
+kurulumda `InkStroke` `identical`; `widthPx` değişince yeni örnek; `compact` kırpması.
+
+### 6.4 `VoiceLevelWave` — `lib/features/notes/presentation/voice_level_wave.dart` (§4.2)
+
+```dart
+class VoiceLevelWave extends StatefulWidget {
+  const VoiceLevelWave({
+    super.key,
+    required this.active,          // false: noktalar, ticker DURUR
+    required this.color,
+    this.level,                    // ValueListenable<double>? (0–1); null = sabit 0.5
+    this.idleColor,                // varsayılan outlineVariant
+    this.height = 32,
+  });
+}
+
+int waveBarsFor(double width);                                        // (width / 7).floor().clamp(16, 64)
+double smoothLevel(double current, double target, Duration dt);       // yükseliş ~80 ms, düşüş ~320 ms
+double waveBarFactor(int i, int n, double level, Duration t, {bool reduceMotion = false});  // 0–1
+```
+
+Doğrulanmış kod gerçekleri: yerini alacağı `ListeningWaveform` (`listening_visuals.dart:271-290`:
+`active`, `color`, `idleColor`, `height = 48`, `bars = 24`; tek `Ticker` + `ValueNotifier<Duration>` +
+tek `CustomPaint`) — kalıp aynen korunur, yalnız girdi ve çarpan değişir. İskelette eski sınıf
+SİLİNMEZ (PB5 siler; `test/listening_card_bubble_theme_test.dart:61` o türe bakıyor). Düzey kaynağı
+PBT'de eklenir: `VoiceListenSession.level` / `.silence` (`ValueNotifier<double>`), besleme noktaları
+`data/voice_listen_session.dart:113-114` (cihaz tanıması), `:150` (`reportLevel`), `:152` (`_tick`),
+kapanış `:184-199` (`stop`).
+
+Test `test/voice_level_wave_test.dart`: `waveBarsFor(360) == 51`, `waveBarsFor(1280) == 64`,
+`waveBarsFor(80) == 16`; `smoothLevel` yükselişte düşüşten hızlı; düzey 0 → çarpan tabanda (≤ 0.2),
+1 → tavanda (≥ 0.8 orta çubukta); `reduceMotion` → zamanla değişmez; widget: `active: false` iken
+`tester.binding.hasScheduledFrame` yanlış; düzey olayı gelince widget KURULMAZ (yalnız boyama).
+
+### 6.5 `DividerKindPicker` — `lib/features/notes/presentation/divider_kind_picker.dart` (§5.2)
+
+```dart
+class DividerKindPicker extends StatelessWidget {
+  const DividerKindPicker({
+    super.key,
+    required this.selected,                 // '' = çizgi yok
+    required this.onPick,                   // ValueChanged<String> (tür)
+    this.style,                             // ItemDivider?: renk + kalınlık örneklere yansır
+    this.compact = false,                   // tepsi: 32 dp, adsız, kalınlık ≤ 1.5; levha: 44 dp + ad
+    this.keyPrefix = 'format-divider-',
+  });
+}
+
+String dividerKindLabel(AppLocalizations l10n, String kind);   // dividerKind* — levhadaki _kindLabel'ın açığa çıkmışı
+```
+
+Doğrulanmış kod gerçekleri: türler `ItemDivider.kinds` (`domain/note_item.dart:204-210`); çizim
+`paintItemDivider(canvas, style:, fallbackColor:, left:, right:, y:, baseWidth:)`
+(`item_divider_style.dart:17-25`); çift/dalgalı `y`'nin üstüne çizer (`:62-66, 73`); adlar
+`_kindLabel` (`:157-166`). Dosya `format_bar.dart`'tan (editör) ve `item_divider_style.dart`'tan
+çağrılır → `Theme.of(context)` yerine renkleri `ColorScheme` girdisiyle ya da `_themeOf` kalıbıyla
+alır (§0 kuralı; `format_bar.dart` bugün `Theme.of` kullanıyor `:601` — PB6 var olanı bozmaz, yenisini
+eklemez).
+
+Test `test/divider_kind_picker_test.dart`: §5.4 birinci madde.
+
+### 6.6 `ColorDot` — `lib/core/widgets/color_dot.dart` (§3.2 "tek renk noktası", §5.2)
+
+```dart
+class ColorDot extends StatelessWidget {
+  const ColorDot({
+    super.key,
+    required this.color,
+    required this.selected,
+    this.size = 28,          // nokta çapı; kapladığı alan HER ZAMAN size + 8 (halka payı) — seçilince boy değişmez
+    this.onTap, this.tooltip,
+    this.child,              // ortadaki işaret (ör. tema rengi simgesi)
+  });
+}
+```
+
+Aynı iş bugün dört ayrı kılıkta: kalem tepsisi `_Swatch` (`pen_tray.dart:1063-1126`), panel `dot()`
+(`:1229-1255`), sütun `_colorDot` (`:825-852`), çizgi levhası `_swatch` (`item_divider_style.dart:173-202`).
+§3.2'de "`_Swatch`" diye geçen bileşen BUDUR: PB3 üçünü, PB6 dördüncüsünü `ColorDot`'a çevirir.
+Seçili = 2 dp boşluk + 2 dp `primary` halka (halka rengi `AppMotion.selection` ile solar); açık renkli
+noktanın ince kenarı `pen_tray.dart` `_Swatch`'taki bugünkü değerle taşınır. Renk paletinin kendi
+`_Swatch`'ı (`core/widgets/color_palette.dart:184`) kapsam DIŞI (§7 "sonraya").
+
+Test `test/color_dot_test.dart`: seçili/seçisiz aynı boyut; dokunuş; `child` ortalı.
+
+### 6.7 Çeviri anahtarları (hepsi PB0'da, iki `.arb` + üretilmiş dosyalar; sonraki paketler `.arb`'ye DOKUNMAZ)
+
+`.arb` değişimi CI'da tam takımı koşturur ve paketler arası çakışmanın baş kaynağıdır. PB0 önce
+`grep` ile var olanı arar; yalnız OLMAYANI ekler (tr + en, `test/arb_case_test.dart` ve
+`test/terminology_test.dart` yeşil):
+
+| Nerede | Metin (tr) | Aday anahtar | Not |
+|---|---|---|---|
+| §1.2 mod şeridi | "Sırala" | `customizeReorder` | düğme ipucu |
+| §1.2 ilk giriş ipucu | "Dokun: gizle/göster · Sırala: yerini değiştir" | `customizeHint` | P62 ipucu bileşeniyle gösterilir |
+| §1.2 pano başlıkları | "Görünenler · {n}", "Eklenebilir · {n}", "Varsayılana dön" | var olanı ara (hızlı satır düzenleyicisi "Menüde / Eklenebilir") | yoksa `customizeShown/Available/Reset` |
+| §1.2 hub yüzey adları | Alt çubuk, Üst çubuk, Hızlı satır, "+" paneli, Ekle, Ana ekran, Video, Sabit ek, Kalemler, Eklentiler | var olanı ara (Kişiselleştir bölüm başlıkları) | yoksa `customizeSurface*` |
+| §3.2 | "Sabitlemeyi kaldır" | `inkUnpinPen` | `inkPinPen` var (`app_tr.arb:3671`) |
+| §4.2 | — | — | `voiceAutoStopSoon` var (`:2406`) |
+| §5.2 | — | — | `dividerKind*`, `dividerSettings`, `itemDividerRemove`, `dividerApplyAll` var (`:2705, :2882-2892`) |
+
+Paket sırasında yeni metin gerekirse: paket onu KENDİ dalında ekler ve commit başlığına `[tam]` yazar;
+yürütücü o dalı tek başına birleştirir (paralel `.arb` değişimi yok).
 
 ## 7. Uygulama paketleri — **YAZILMADI** (taslak bölme)
 
