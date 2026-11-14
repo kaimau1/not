@@ -1264,6 +1264,14 @@ Test `test/color_dot_test.dart`: seçili/seçisiz aynı boyut; dokunuş; `child`
 | §4.2 | — | — | `voiceAutoStopSoon` var (`:2406`) |
 | §5.2 | — | — | `dividerKind*`, `dividerSettings`, `itemDividerRemove`, `dividerApplyAll` var (`:2705, :2882-2892`) |
 
+**PB0'da kesinleşen eşleme (2026-11-15; PB1–PB7 bu adları kullanır, aday adları ARAMAZ):**
+Sırala = `reorderHandle` (`customizeReorder` YOK) · Sabitlemeyi kaldır = `unpin` (`inkUnpinPen` YOK) ·
+Eklenebilir = `quickRowEditAvailable` · Varsayılana dön = `personalizeReset` · Ekle = `addAttachment` ·
+Ana ekran / Video / Eklentiler = `personalizeHome` / `personalizeVideo` / `personalizeModules` ·
+YENİ (tr+en): `customizeHint`, `customizeShown` ("Görünenler"; sayı ` · {n}` çağıran yerde eklenir),
+`customizeSurfaceBottomBar`, `customizeSurfaceTopBar`, `customizeSurfaceQuickRow`,
+`customizeSurfaceAddPanel`, `customizeSurfacePinned`, `customizeSurfacePen`.
+
 Paket sırasında yeni metin gerekirse: paket onu KENDİ dalında ekler ve commit başlığına `[tam]` yazar;
 yürütücü o dalı tek başına birleştirir (paralel `.arb` değişimi yok).
 

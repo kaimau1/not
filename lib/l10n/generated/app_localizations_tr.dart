@@ -4772,6 +4772,30 @@ class AppLocalizationsTr extends AppLocalizations {
   String get customizeModeShort => 'Ekranlarda dokunarak gizle/göster';
 
   @override
+  String get customizeHint => 'Dokun: gizle/göster · Sırala: yerini değiştir';
+
+  @override
+  String get customizeShown => 'Görünenler';
+
+  @override
+  String get customizeSurfaceBottomBar => 'Alt çubuk';
+
+  @override
+  String get customizeSurfaceTopBar => 'Üst çubuk';
+
+  @override
+  String get customizeSurfaceQuickRow => 'Hızlı satır';
+
+  @override
+  String get customizeSurfaceAddPanel => '\"+\" paneli';
+
+  @override
+  String get customizeSurfacePinned => 'Sabit ek';
+
+  @override
+  String get customizeSurfacePen => 'Kalemler';
+
+  @override
   String get personalizeModules => 'Eklentiler';
 
   @override
