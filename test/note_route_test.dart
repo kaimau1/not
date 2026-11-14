@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notlar/app/router.dart';
+import 'package:notlar/app/second_note.dart';
 
 void main() {
   // v1.0.181: rota metni elle kuruluyordu ve kacan bir ters bolu yuzunden
@@ -155,4 +157,34 @@ void main() {
       },
     );
   }
+
+  // K32 karar 6: aynı not iki bölmede olmaz — yandaki not birincil olarak
+  // açılınca önce yandaki kapanır (bir kare sonra itilir).
+  testWidgets('yandaki not birincil acilinca yandaki kapanir', (tester) async {
+    tester.view.physicalSize = const Size(1600, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final router = buildRouter();
+    addTearDown(router.dispose);
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    unawaited(router.pushNote(noteRoutePath('a')));
+    await tester.pumpAndSettle();
+    container.read(secondNoteProvider.notifier).open(const SecondNote('b'));
+    unawaited(tester.element(find.text('NOTE a')).pushNote(noteRoutePath('b')));
+    expect(container.read(secondNoteProvider), isNull);
+    await tester.pumpAndSettle();
+    expect(find.text('NOTE b').hitTestable(), findsOneWidget);
+    // Başka not: yandaki yerinde kalır.
+    container.read(secondNoteProvider.notifier).open(const SecondNote('c'));
+    unawaited(tester.element(find.text('NOTE b')).pushNote(noteRoutePath('a')));
+    await tester.pumpAndSettle();
+    expect(container.read(secondNoteProvider)?.id, 'c');
+  });
 }

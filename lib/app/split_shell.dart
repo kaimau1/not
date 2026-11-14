@@ -71,6 +71,7 @@ class SplitScope extends InheritedWidget {
     required this.singleColumn,
     this.listHidden = false,
     this.listAutoHides = false,
+    this.twoNotesFit = false,
     required super.child,
   });
 
@@ -84,6 +85,10 @@ class SplitScope extends InheritedWidget {
 
   /// Liste bu pencerede kendiliğinden çekiliyor (bkz. [listAutoHidesFor]).
   final bool listAutoHides;
+
+  /// Not açık ve yanına ikinci not sığıyor (K32; yalnız dokunuş anında
+  /// okunur — bildirim KONUSU değil, kimse buna göre yeniden kurulmaz).
+  final bool twoNotesFit;
 
   static SplitScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<SplitScope>();
@@ -424,6 +429,12 @@ class _SplitShellState extends ConsumerState<SplitShell>
       singleColumn: noteOpen,
       listHidden: collapsed,
       listAutoHides: autoHides && noteOpen,
+      twoNotesFit:
+          noteOpen &&
+          twoNotesFit(
+            content: box.maxWidth,
+            landscape: window.width > window.height,
+          ),
       child: _split(
         context,
         box,

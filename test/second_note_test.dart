@@ -16,7 +16,7 @@ import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
-import 'package:notlar/features/notes/presentation/notes_providers.dart';
+import 'package:notlar/features/notes/presentation/note_actions_sheet.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -160,6 +160,10 @@ void main() {
 
   testWidgets('(b) 1024×640: iki editör, liste çekilmiş', (tester) async {
     final (container, _) = await _pump(tester);
+    // Giriş kapısı (A4): açık OLMAYAN not yanda açılabilir.
+    final dash = tester.element(find.byType(DashboardScreen));
+    expect(canOpenSide(dash, 'b'), isTrue);
+    expect(canOpenSide(dash, 'a'), isFalse, reason: 'birincil kendisi');
     container.read(secondNoteProvider.notifier).open(const SecondNote('b'));
     await _settle(tester);
     expect(_editorIds(tester), unorderedEquals(['a', 'b']));
@@ -231,6 +235,13 @@ void main() {
 
   testWidgets('dikey tablette yandaki not çizilmez', (tester) async {
     final (container, _) = await _pump(tester, size: const Size(800, 1280));
+    expect(
+      canOpenSide(
+        tester.element(find.byType(DashboardScreen, skipOffstage: false)),
+        'b',
+      ),
+      isFalse,
+    );
     container.read(secondNoteProvider.notifier).open(const SecondNote('b'));
     await _settle(tester);
     expect(_editorIds(tester), ['a']);
