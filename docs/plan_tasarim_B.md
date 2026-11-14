@@ -763,11 +763,7 @@ düzey akışıyla — mikrofon izni gerektirmeyen `--dart-define` yoksa "yazıl
 
 ---
 
-## 5. Madde altı çizgiler ve menüsü — **YARIM** (yalnız kanıt toplandı; hedef/durum/kabul/bütçe YAZILMADI)
-
-> Fable limit yüzünden burada kesildi (2026-11-14). Aşağıdaki kanıt koddan doğrulandı; §5.2–5.5'i,
-> §6'yı ve §7'yi sıradaki ajan §1–§4 biçimiyle yazar. Hedef fikirleri "taslak" diye işaretli —
-> karar değil, `istek_tara.py` ile yeniden süzülmeli.
+## 5. Madde altı çizgiler ve menüsü
 
 ### 5.1 Mevcut durum (kanıt)
 
@@ -807,8 +803,35 @@ Bulgular:
    canlı uygula, sayfadaki satırda anında görünür).
 7. Çizgi eklenince/kalkınca geçiş yok (satır `CustomPaint` bir karede değişir).
 8. Elle ölçüler levhada: dolgu 16/0/16/16 (`:215`), aralıklar 12/14/6/8, önizleme boyu 52.
+9. Seçili tür zemini `secondaryContainer` (`format_bar.dart:972`) — aynı çubuğun öbür seçili/açık
+   hâllerinin HEPSİ `primaryContainer` (`:856, :1135, :1179, :1250, :1714`); çizgi tepsisi çubuğun
+   içinde tek aykırı renk (P62 kuralı da seçim = `primaryContainer`, P62 planı §2.2).
+10. "Tema rengi (otomatik)" noktasının işareti `Icons.auto_awesome` (`item_divider_style.dart:198`) —
+    uygulamada yapay zekâ simgesi (rol sözleşmesi: ✨ / `tertiary` yalnız AI).
+11. Vurgu saydamlığı elle 0.75, üç yerde ayrı yazılı: satır (`items_editor_row.dart:336`), levha
+    noktası (`item_divider_style.dart:189`), levha önizlemesi (`:337`).
+12. Biçim çubuğu yalnız TÜRÜ biliyor (`FormatBar.dividerKind`, `format_bar.dart:72`;
+    `ItemsEditorState.dividerKindOf`, `items_editor.dart:1411-1415`) — renk/kalınlık tepsiye hiç
+    ulaşmıyor, örnekler bu yüzden hep gri ve aynı kalınlıkta.
+13. Tepsilerin açılışı boy animasyonu: `AnimatedSize`, elle 220 ms + `easeOutCubic`
+    (`format_bar.dart:626-636`); çubuk editör gövdesiyle aynı sütunda (`note_editor_screen.dart:4337`
+    `Flexible`). Kasma md. 6 adayı — *hipotez: gövdenin tepsi açılırken her karede yeniden dizildiği
+    ölçülmedi*. Dört tepsinin ortak kabuğu; "biçim çubuğunu değiştirmek" yasağı kapsamında → bu planda
+    DÜZELTİLMEZ, PBT S44 tabanında ölçülür ve `docs/regresyon_listesi.md`'ye not düşülür (§7 "sonraya").
 
-Korunacak istekler (`istek_tara.py`): "alta çizgi ekle biçim menüsüne taşındı" (`format_bar.dart:69`,
+Satır yapısı (beliriş kararı için doğrulandı): satır ayrı bir `State` DEĞİL — `ItemsEditorState`'in
+`part` dosyasındaki kurucu işlev (`items_editor_row.dart:1` `part of`, `rowBody` `:326`); çizgi satırı
+saran KOŞULSUZ `CustomPaint`'in `foregroundPainter`'ı (`:331-337`, çizgisizde `null`). Satır içinde
+kendi ticker'ı olan küçük durumlu parçalar zaten var (`_CheckPop`, `_CheckMove`,
+`items_editor_widgets.dart:400-525`; üstü çizili geçişi `items_editor_row.dart:425`). `divider` dizesi
+üç karşılaştırmada da var (`note_editor_screen.dart:287`, `items_editor.dart:728`,
+`domain/text_merge.dart:151`) ve satır önbelleği anahtarında (`items_editor.dart:1986`).
+Çift ve dalgalı tür çizgiyi verilen `y`'nin ÜSTÜNE çizer (`item_divider_style.dart:62-66, 73`).
+Beş türün kısa adları çeviride hazır (`dividerKindSolid/Dashed/Dotted/Double/Wavy`,
+`app_tr.arb:2888-2892`).
+
+Korunacak istekler (`istek_tara.py`, 2026-11-14'te `format_bar.dart`, `items_editor_row.dart`,
+`item_divider_style.dart`, `items_editor_actions.dart`, `items_editor_widgets.dart` yeniden süzüldü): "alta çizgi ekle biçim menüsüne taşındı" (`format_bar.dart:69`,
 2026-10-30; `items_editor_actions.dart:75`) · madde menüsü SADE kalır, çizgi türleri oraya dönmez
 (`:77`, 2026-10-28) · iki sıra + açılır tepsi, panel küçük (`format_bar.dart:591`, 2026-11-05) ·
 TEK ÇİZİM ÇAĞRISI kasma düzeltmesi (`item_divider_style.dart:35`, 2026-11-13: tür başına en çok bir
@@ -817,19 +840,169 @@ TEK ÇİZİM ÇAĞRISI kasma düzeltmesi (`item_divider_style.dart:35`, 2026-11-
 Bekçi testler: `test/item_divider_paint_test.dart`, `item_divider_style_test.dart`,
 `items_editor_divider_test.dart`; anahtarlar `format-divider-<tür>`, `format-divider-style`.
 
-### 5.2–5.5 YAZILMADI — taslak yön (karar değil)
+Satır tarafında korunacaklar (`items_editor_row.dart`): satırı opaklık katmanıyla SARMA kasma kök
+nedeniydi (`:351`, 2026-10-30) → beliriş katman açmaz; kutucuk/tutamaç hizaları (`:267, :302`) ve
+seçim kipinde "satırın her yeri seçer" sarmalayıcısının KOŞULSUZ oluşu (`:320-325`) değişmez.
 
-- `DividerKindPicker` (iskelet): beş türün HEPSİ, her biri `paintItemDivider` ile çizilmiş örnek
-  (o anki renk + kalınlıkla); tepside ve levhada AYNI bileşen. Seçili = `secondaryContainer` zemin
-  (`AppMotion.selection`, yalnız renk). Aynı türe yeniden dokunmak kaldırır (bugünkü kural).
-- Levha `showAppSheet` + `SheetHeader`; renk noktası §3'teki tek `_Swatch` kılığı; "kaldır" simgesi
-  düzeltilir; canlı uygulama (zevk KARAR'ı — güvenli seçenek: "Tamam" kalır, sabah bakılacak).
-- Çizginin belirişi: soldan sağa çizilme (`CustomPaint` kırpma oranı, yalnız boyama) —
-  **kasma riski yüksek**: satır önbelleği (`_cachedItemRow`, kasma md. 2) ve klavye açılışındaki
-  2026-11-13 bulgusu; ölçülmeden önerilmez.
-- Bütçe **S44**: "30 maddeli liste, 10 çizgili: bir maddeye çizgi ekle → tür değiştir → klavye
-  aç/kapa" — kurulan satır ≤ 1, öbür satırlar `identical`
-  (kalıp `test/items_editor_row_cache_test.dart`, S8 `perf_budget_test.dart:557`). Cihaz A/B: evet.
+### 5.2 Hedef
+
+**Tek tür seçici — `DividerKindPicker`** (iskelet §6.5; tepside ve levhada AYNI bileşen,
+`_DividerSwatchPainter` silinir):
+
+```
+tepsi (boy 42 — DEĞİŞMEZ):   Alt çizgi  [────] [─ ─ ─] [· · · ·] [════] [∿∿∿∿]  (⚙)
+levha:                       [────]  [─ ─ ─]  [· · · ·]  [════]  [∿∿∿∿]
+                              Düz    Kesikli   Noktalı    Çift    Dalgalı
+```
+
+- Beş türün HEPSİ (`ItemDivider.kinds` sırasıyla); her hücre gerçek çizimle — tek
+  `paintItemDivider` çağrısı (2026-11-13 "tek çizim çağrısı" kuralı hücrede de geçerli).
+- Hücre: `Expanded`, aralık `AppSpace.xs`, çizgi iç payı `AppSpace.s`. Tepside (`compact: true`)
+  yükseklik 32, köşe `AppRadius.s`, `baseWidth` 1.6, etiket yok (ipucu + erişilebilirlik adı
+  `dividerKind*`). Levhada yükseklik 44, köşe `AppRadius.m`, `baseWidth` 2.2 (satırdaki gerçek değer),
+  altında tek satır tür adı (`AppText.meta`, `maxLines: 1`, taşma `ellipsis`) — bugünkü yazılı çiplerin
+  bilgisi kaybolmaz.
+- Örnekler maddenin KENDİ biçimini taşır (bulgu 12): renk = çizginin rengi (yoksa seçili hücrede
+  `onPrimaryContainer`, öbürlerinde `onSurfaceVariant`); kalınlık = çizginin çarpanı — tepside en çok
+  1.5'e kırpılır (28 dp'lik hücrede ×3 kesikli tek tire kalıyor; gerçek kalınlık satırda ve levha
+  önizlemesinde görünür). Çift ve dalgalı türde `y`, `AppSpace.xxs` aşağı alınır (ortalı dursun).
+- Seçili hücre: zemin `primaryContainer` (bulgu 9 — çubuğun kendi dili), `AnimatedContainer` YALNIZ
+  renk, `AppMotion.selection` (boy/dolgu sabit). Basış: `InkWell` mürekkebi; ölçek yok.
+- Kural aynı: aynı türe yeniden dokunmak çizgiyi kaldırır (`format_bar.dart:69`,
+  `items_editor_actions.dart:147-161`); tür değişince renk/kalınlık korunur.
+- Anahtarlar: tepside `format-divider-<tür>` (üçü var; `double`, `wavy` yeni), levhada
+  `divider-sheet-kind-<tür>`; `format-divider-menu`, `format-divider-style` aynen.
+
+**Tepsi (`_DividerRow`, `format_bar.dart:945-1016`) — yalnız içi:** `Alt çizgi` etiketi
+(`labelMedium`, kalır) · `DividerKindPicker(compact: true)` · ayar düğmesi (`Icons.tune_rounded`,
+`AppIconSize.m`, `VisualDensity.compact` kalır). Dolgu `AppSpace.m`, etiket–seçici arası `AppSpace.s`.
+Tepsi boyu 42 ve çubuğun iki sırası, düğmeleri, sırası DEĞİŞMEZ (2026-11-05 "panel küçük" isteği +
+genel yasak). `FormatBar`'a tek yeni isteğe bağlı girdi: `ItemDivider? dividerStyle` (hedef maddenin
+biçimi; kaynak `ItemsEditorState.dividerOf(id)` — PBT ekler); `dividerKind` aynen kalır.
+
+**Çizgi ayarları levhası (`_ItemDividerSheet`) — tek sütun, dört parça:**
+
+```
+┌ SheetHeader: Çizgi ayarları ───────────────────────────── [×] ┐
+│ ┌ kâğıt önizleme (52) ─────────────────────────────────────┐  │  AppTokens.card + hairline, AppRadius.m
+│ │ Örnek madde                                               │  │  çizgi: satırdakiyle AYNI geometri
+│ │ ───────────────────────────────────────────────────────── │  │  (left 8 / right −8, baseWidth 2.2)
+│ └───────────────────────────────────────────────────────────┘  │
+│ [────] [─ ─ ─] [· · ·] [════] [∿∿∿]      ← DividerKindPicker (adlı)
+│ (A) ● ● ● ● ● ● ● ●  (◎ tümü)            ← ColorDot 28 (§6.6); (A) = tema rengi
+│ ≡  ──────●──────────────  1.5×           ← kalınlık: §3 panel satır kalıbı (simge 40 · Slider · değer)
+│ [🗑 Çizgiyi kaldır]            [Tüm çizgilere]  [ Tamam ]      │  OverflowBar: sığmazsa alt alta
+└────────────────────────────────────────────────────────────────┘
+```
+
+- `showAppSheet` (`isScrollControlled: true`, `constraints: BoxConstraints(maxWidth: 640)`;
+  `showDragHandle` yazılmaz) + `SheetHeader(title: dividerSettings)`. Bölüm başlıkları ("Tür", "Renk",
+  "Kalınlık") KALKAR — parçalar kendini anlatıyor; erişilebilirlik adları `Semantics(label:)` ile
+  aynı çeviri anahtarlarından (`dividerKind`, `dividerColor`, `dividerWeight`).
+- Dolgu `AppSpace.l`; parçalar arası `AppSpace.m`. Önizleme boyu 52 bugünkü değerde taşınır (yeni
+  elle değer eklenmez).
+- Renk: `ColorDot` (boy SABİT 28; seçili = 2 dp boşluk + 2 dp `primary` halka, halka
+  `AppMotion.selection` ile solar). Sekiz sabit renk (`_swatches`, izinli istisna) + palet dışı özel
+  renk + `PaletteButton` aynen. Tema rengi noktası: `primary` × `kItemDividerAccentAlpha`, işareti
+  `Icons.brightness_auto_rounded` (bulgu 10).
+- Vurgu saydamlığı tek sabit: `const kItemDividerAccentAlpha = AppAlpha.strong`
+  (`item_divider_style.dart` başında); satır, levha noktası ve önizleme onu kullanır (bulgu 11;
+  0.75 → 0.85 — kart tarafı `AppAlpha.muted` ile AYNEN kalır, `note_card.dart`'a dokunulmaz).
+- Kalınlık satırı: `Icons.line_weight_rounded` (40 dp yuva) · `Slider` (`divisions: 10`, sınırlar
+  `ItemDivider.minWeight/maxWeight`) · değer `1.5×` (`AppText.meta`, tabular rakam, genişlik 36).
+- Alt satır `OverflowBar` (`alignment: end`, `spacing: AppSpace.s`): "Çizgiyi kaldır"
+  (`TextButton.icon`, `Icons.delete_outline_rounded` — bulgu 6; `error` rengi DEĞİL, geri alınabilir)
+  · "Tüm çizgilere" (`TextButton`) · "Tamam" (`FilledButton` — levhanın tek dolu düğmesi).
+- **S9 sabah bakılacak — canlı uygulama:** seçim satıra anında mı yansısın ("Tamam"sız, P50 kalıbı)?
+  Güvenli seçenek: **"Tamam" KALIR** — canlı uygulama kaydırıcının her adımında `_update` + `_commit`
+  (satır kurulumu + kayıt) demek, ölçülmedi; levhanın kendi önizlemesi zaten canlı (`:236-242`).
+
+**Çizginin belirişi (PB6 son adımı, AYRI commit — ölçüm kapısı var):** çizgisiz maddeye çizgi
+eklenince çizgi soldan sağa çizilir; YALNIZ BOYAMA.
+- `items_editor_row.dart:331`'deki `CustomPaint` yerine KOŞULSUZ `_DividerReveal(raw:, color:, child:)`
+  (`items_editor_widgets.dart`, `_CheckPop` kalıbı: `SingleTickerProviderStateMixin`,
+  `didUpdateWidget`). Çizgisiz satırda da aynı sarmalayıcı (painter `null`) — ağaç şekli koşula bağlı
+  değişmez.
+- Tetik YALNIZ `didUpdateWidget`'ta `old.raw.isEmpty && raw.isNotEmpty`. `initState`'te oynamaz (not
+  açılışı, kaydırmayla gelen satır, "Tüm çizgilere" → animasyon YOK). Tür/renk/kalınlık değişimi ve
+  kaldırma tek karede.
+- Denetleyici tembel kurulur (ilk tetikte); süre `AppMotion.of(context, AppMotion.short)`, eğri
+  `AppMotion.curveOf(context, AppMotion.enter)`; hareketi azalt → doğrudan tam çizgi.
+- `_ItemDividerPainter` denetleyiciyi `repaint:` ile dinler (kurulum yok); çizimden önce
+  `canvas.clipRect(Rect.fromLTRB(0, 0, size.width × t, size.height))` — `saveLayer`/opaklık katmanı
+  YOK (`:351` kök nedeni). Yönlülük: sağdan-sola dilde kırpma sağdan başlar.
+- **Kapı:** S44 "beliriş" ölçüsü (aşağıda) + cihaz A/B `kb` ve `bicim` evreleri. Biri kötüleşirse
+  bu commit geri alınır; plan maddesine "beliriş: ölçümde kaldı" yazılır, kalan iş etkilenmez.
+
+**Kapsam dışı (dokunma):** ana ekran kartındaki çizgi (`note_card.dart:1560-1594`) · `ItemDivider`
+veri biçimi ve `paintItemDivider`'ın çizimi (görünüş bekçisi `item_divider_paint_test.dart:62`) ·
+madde uzun basış menüsü (çizgi oraya DÖNMEZ, 2026-10-28) · biçim çubuğunun öbür tepsileri ve
+tepsi kabuğu (bulgu 13).
+
+### 5.3 Durumlar
+
+Tepsi: çizgisiz madde (hiçbir hücre seçili değil) · beş türün her biri seçili · kullanıcı renkli çizgi
+(sarı, açık zeminde) · kalınlık ×3 (hücrede 1.5'e kırpılı) · hedef başlık/gövde (çizgi düğmesi hiç
+yok — `dividerKind == null`, `format_bar.dart:791`) · 360 dp + yazı 1.3 (etiket tek satır, hücrede en
+az 24 dp çizgi) · tablet okuma sütunu · koyu tema · hareketi azalt.
+Levha: çizgisiz maddeden açılış (düz + son kullanılan renk/kalınlık — `ItemDividerMemory.fresh`,
+`items_editor_actions.dart:166-168`) · var olan çizgi · tema rengi · sabit renk · palet dışı özel
+renk (dokuzuncu nokta, `:210-211, :272`) · kalınlık 0.5 / 1 / 3 · "Tüm çizgilere" · kaldır · vazgeç
+(dışına dokun / geri / × → değişiklik yok) · yazı 1.3 (alt düğmeler alt alta) · geniş ekran (640
+ortalı) · koyu tema.
+Satır: çizgi beliriyor · tür değişti (anında) · kalktı (anında) · çizgili defter (`paperLines`: çizgi
+satır çizgisinin üstüne düşer, `items_editor_widgets.dart:373-375`) · işaretliler bloğu · seçim kipi ·
+sürüklenen satır · sağdan-sola dil.
+
+### 5.4 Kabul ölçütleri
+
+- [ ] Tepside ve levhada beş tür; hücre başına tek `paintItemDivider` çağrısı
+      (`test/divider_kind_picker_test.dart`, iskelette: beş anahtar, seçili hücre, dokunuş →
+      `onPick(tür)`, verilen renk/kalınlık boyamaya ulaşır, tepside kalınlık ≤ 1.5).
+- [ ] `format_bar.dart`'ta `_DividerSwatchPainter` yok; `_DividerRow` içinde elle köşe/dolgu 0 (tepsi
+      boyu 42 dışında); seçili zemin `primaryContainer`.
+- [ ] `item_divider_style.dart`'ta `showModalBottomSheet` 0, `Icons.format_strikethrough` 0,
+      `Icons.auto_awesome` 0, elle dolgu/aralık 0 (önizleme boyu 52 ve `_swatches` renkleri dışında);
+      elle `0.75` üç yerde de 0.
+- [ ] Var olan testler DEĞİŞMEDEN yeşil: `item_divider_paint_test`, `item_divider_style_test`,
+      `items_editor_divider_test`, `format_bar_test`, `items_editor_row_cache_test`,
+      `forward_compat_test`, `jank_patterns_guard_test`, `keyboard_jank_guard_test`.
+- [ ] Yeni `test/item_divider_sheet_test.dart`: tür hücresi → önizleme o türde; "Tamam" →
+      `(style, applyAll: false)`; "Tüm çizgilere" → `applyAll: true`; kaldır → `style: null`; dışına
+      dokun → `null`; 360 dp + yazı 1.3'te taşma hatası yok.
+- [ ] Beliriş (yapıldıysa): boş → çizgili geçişte animasyon bir kez oynar ve durur; 10 çizgili not
+      AÇILIRKEN ilk karede çizgiler tam (ticker yok); hareketi azalt açıkken tek kare
+      (`test/item_divider_reveal_test.dart`).
+- [ ] Tur: `cizgi-tepsi`, `cizgi-levha`, `cizgi-satirlar` (beş tür aynı notta) — açık + koyu, telefon
+      + tablet.
+
+### 5.5 Kasma riski + bütçe (kasma-kontrol 8 madde)
+
+**1:** yeni madde alanı yok (`divider` dizesi üç karşılaştırmada var — §5.1). **2:** önbellek
+anahtarında `item.divider` var (`items_editor.dart:1986`); beliriş durumu anahtara GİRMEZ
+(`_DividerReveal`'in kendi `State`'i; satır widget'ı aynı örnek). `dividerStyle` her build'de yeni
+nesne olsa da satır env'ine girmiyor (yalnız `FormatBar` girdisi). **3:** tepside seçim yeni kök
+`setState` EKLEMEZ; bugünkü yol (`setDividerOf` → `_update` + `_commit`) aynen — *hipotez: seçimden
+sonra tepsinin seçili hücresini tazeleyen şey kök kurulumu; PBT tabanda `kok_kurulum`'u ölçer, PB6
+onu aşamaz*. **4:** `CustomPaint` → `_DividerReveal` değişimi koşulsuz (her satırda, her kipte).
+**5:** "çizgi eklenen satır dışındaki 29 satır `identical`" testi (`items_editor_row_cache_test`
+kalıbı, `:106-127`). **6:** tepsi boyu 42 sabit; seçici boy değiştirmez; beliriş yalnız boyama.
+Tepsi kabuğunun `AnimatedSize`'ı var olan, kapsam dışı (bulgu 13). **7:** seçici
+`TextFieldTapRegion` içinde kalır (`format_bar.dart:611` — odak ve klavye düşmez); klavyeye bağlı
+yeni gizleme yok. **8:** aşağıda.
+
+**S44 (yeni) — "30 maddeli liste (telefon), 10 maddesi çizgili (her türden iki): bir maddeye odaklan
+→ Biçim → çizgi tepsisini aç → düz seç → dalgalıya çevir → aynı türe dokun (kaldır) → tepsiyi kapat
+→ klavye aç/kapa ×1 (S8 kareleri)".** Ölç: `NoteEditorScreen`, `ItemsEditor`, satır (S2'nin `satir`
+sayacı) ve klavye karelerinde gövde türleri (S8'in `_bodyTypes`). Bütçe: seçim başına satır kurulumu
+≤ 1 (üç seçim → ≤ 3), öbür 29 satır `identical`; tepsi aç/kapa'da satır 0; klavye karelerinde gövde
+kurulumu S8 bütçesinden kötü olamaz (çizgili liste = çizgisiz liste); kök ve `ItemsEditor` kurulumu
+PBT'nin ölçtüğü BUGÜNKÜ değeri aşamaz. Beliriş ölçüsü: çizgi eklendikten sonraki 200 ms'de (12 kare)
+satır kurulumu 0, `ItemsEditor` kurulumu 0. Kalıp: S8 (`perf_budget_test.dart:557-596`) + S2.
+
+Cihaz A/B: **evet** — klavye açılışında çizgili liste 2026-11-13 bulgusunun yüzeyi. Evreler: var olan
+`kb` + yeni `bicim` (not aç → klavye → Biçim → çizgi tepsisi aç/kapa ×3 → tür seç ×3; PBT ekler),
+ölçüm notu çizgili olmalı (HAZIRLIK notuna 10 çizgi).
 
 ## 6. İskelet tanımı — **YAZILMADI**
 
