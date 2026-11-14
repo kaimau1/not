@@ -1,9 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
 import '../../calendar/presentation/note_calendar_links.dart';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../app/app_commands.dart' show currentLocation;
+import '../../../app/second_note.dart';
+import '../../../app/split_shell.dart' show SplitScope;
 
 import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
@@ -45,6 +52,7 @@ Future<void> showNoteActionsSheet(
     canPinHome: NoteShortcut.supported,
     localOnlyAvailable: localOnlySupported(ref),
     localOnly: note.localOnly,
+    canOpenSide: canOpenSide(context, note.id),
   );
   final action = await showAppSheet<String>(
     context: context,
@@ -58,6 +66,15 @@ Future<void> showNoteActionsSheet(
   );
   if (action == null || !context.mounted) return;
   await _runNoteAction(context, ref, note, action);
+}
+
+/// K32 karar 3 + 6: tablet yatayda bir not açıkken ve iki not sığarken,
+/// açık OLMAYAN not yanda açılabilir. Bağımlılık kurmaz (dokunuş anı).
+bool canOpenSide(BuildContext context, String noteId) {
+  final scope = context.getInheritedWidgetOfExactType<SplitScope>();
+  if (scope == null || !scope.twoNotesFit) return false;
+  final location = currentLocation(GoRouter.of(context));
+  return location.startsWith('/note/') && location != '/note/$noteId';
 }
 
 /// Seçilen işlemi uygular. Kilitli notun içeriğine dokunan işlemler önce
@@ -79,6 +96,9 @@ Future<void> _runNoteAction(
   }
 
   switch (action) {
+    case 'side':
+      if (!await unlockIfNeeded()) return;
+      ref.read(secondNoteProvider.notifier).open(SecondNote(note.id));
     case 'pinHome':
       await pinNoteToHome(context, note);
     case 'pin':

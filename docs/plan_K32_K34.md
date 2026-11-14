@@ -40,7 +40,9 @@ Tablet kullanıcıda: tablet gerektiren doğrulama "yazıldı, tablette doğrula
 
 ---
 
-## §K32 — İki not yan yana (tablet yatay)
+## §K32 — İki not yan yana (tablet yatay) [x]
+
+> **Durum (2026-11-14):** A0–A7 [x] — dal `oto/K32-yan-yana`. Kod + testler (second_note_test 7, S27 0/0/0/0) yeşil; A3/A4/A6 tablet adımları "yazıldı, tablette doğrulanmadı" (KONTROL_LISTEM 32); telefon A/B `[apk]` öncesi (`ab-olcum`). Plandan sapma: yok; ek kök neden S27 (editör kökü liste akışı) düzeltildi.
 
 ### Bugünkü yapı (kanıt)
 

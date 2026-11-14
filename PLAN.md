@@ -35,7 +35,7 @@ eski kimlik durur. Kullanıcının kendi listesi: `KONTROL_LISTEM.md`.
 
 ## (C) Açık kod işi
 
-- **İki not yan yana (tablet yatay)** — opus — K-O12 kararı VERİLDİ (2026-11-12) — F67.6
+- [x] **İki not yan yana (tablet yatay)** — opus — K-O12 kararı VERİLDİ (2026-11-12) — F67.6 — 2026-11-14 kod bitti (K32, dal oto/K32-yan-yana); tablette doğrulama KONTROL_LISTEM 32
 - [x] **Parmağa ayrı araç** — YAZILDI 2026-11-14 (K34, dal `oto/K34-parmak-araci`): Kaydırır/Çizer/Siler, Siler = geçici silgi yolu, avuç/iki parmak geri alma, 22 dp yarıçap süzgeci; tablette doğrulanmadı → KONTROL 41 — F63.6, YORUM F55.1
 - ~~**Kalem ucu tahmini**~~ — kullanıcı kararıyla çıkarıldı (2026-11-14: "yalnız parmak aracı olsun") — F62.6
 - **Dolma kalem** — YAZILDI (`InkPen.fountain`, F62.5; `test/ink_paint_v2_test.dart`), cihazda denenmedi — YORUM F55.4

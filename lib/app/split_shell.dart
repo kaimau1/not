@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show max;
 import 'dart:ui' show DisplayFeatureType;
 
 import 'package:flutter/material.dart';
@@ -9,8 +10,10 @@ import '../core/l10n_ext.dart';
 import 'theme/app_tokens.dart';
 import '../core/utils/immersive.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
+import '../features/notes/presentation/editor/note_editor_screen.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
+import 'second_note.dart';
 import 'window_class.dart';
 import '../core/haptics.dart';
 
@@ -68,6 +71,7 @@ class SplitScope extends InheritedWidget {
     required this.singleColumn,
     this.listHidden = false,
     this.listAutoHides = false,
+    this.twoNotesFit = false,
     required super.child,
   });
 
@@ -81,6 +85,10 @@ class SplitScope extends InheritedWidget {
 
   /// Liste bu pencerede kendiliğinden çekiliyor (bkz. [listAutoHidesFor]).
   final bool listAutoHides;
+
+  /// Not açık ve yanına ikinci not sığıyor (K32; yalnız dokunuş anında
+  /// okunur — bildirim KONUSU değil, kimse buna göre yeniden kurulmaz).
+  final bool twoNotesFit;
 
   static SplitScope? maybeOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<SplitScope>();
@@ -276,6 +284,31 @@ class _SplitShellState extends ConsumerState<SplitShell>
   /// kalıcı kayıt yalnızca BIRAKINCA bir kez yapılır.
   double? _dragWidth;
 
+  /// Yandaki not ayracı sürüklenirken geçici pay (bkz. [_dragWidth]).
+  double? _dragFraction;
+
+  /// Yandaki bölmenin widget'ı AYNI örnek kalır: kabuk klavye karelerinde
+  /// (dış Scaffold boyu) yeniden kurulduğunda yeni örnek yandaki editörü
+  /// her karede kuruyordu (S27 klavye: 24 gövde kurulumu → 0).
+  SecondNote? _paneFor;
+  Widget? _pane;
+
+  Widget _secondPane(SecondNote second) {
+    if (!identical(second, _paneFor)) {
+      _paneFor = second;
+      _pane = SecondNotePane(
+        close: ref.read(secondNoteProvider.notifier).close,
+        child: NoteEditorScreen(
+          key: ValueKey('note-${second.id}'),
+          noteId: second.id,
+          ownerId: second.ownerId,
+          readOnly: second.readOnly,
+        ),
+      );
+    }
+    return _pane!;
+  }
+
   /// Son açık notun kimliği: not kapanınca liste o karta döner.
   String? _lastNoteId;
 
@@ -291,7 +324,6 @@ class _SplitShellState extends ConsumerState<SplitShell>
 
   @override
   Widget build(BuildContext context) {
-    final total = MediaQuery.sizeOf(context).width;
     final router = GoRouter.of(context);
     return ListenableBuilder(
       listenable: router.routerDelegate,
@@ -316,8 +348,19 @@ class _SplitShellState extends ConsumerState<SplitShell>
         _wasNoteOpen = routeNoteOpen;
         // Kapanış geçişi sürerken düzen "not açık" kalır.
         final noteOpen = routeNoteOpen || _closing != null;
-        if (location.startsWith('/note/')) {
-          _lastNoteId = location.substring('/note/'.length);
+        final primaryId = location.startsWith('/note/')
+            ? location.substring('/note/'.length)
+            : null;
+        if (primaryId != null) _lastNoteId = primaryId;
+        // YANDAKİ NOT (K32): birincil kapanınca (kapanış geçişi bitince) ya
+        // da birincil yandaki nota geçince bölme kapanır — aynı not iki
+        // editörde açık kalmaz (`text_merge` yankı çakışması).
+        final second = ref.watch(secondNoteProvider);
+        final secondLive = second != null && noteOpen && second.id != primaryId;
+        if (second != null && !secondLive) {
+          scheduleMicrotask(() {
+            if (mounted) ref.read(secondNoteProvider.notifier).close();
+          });
         }
         if (!splitActiveFor(MediaQuery.sizeOf(context))) {
           return SplitScope(
@@ -326,72 +369,113 @@ class _SplitShellState extends ConsumerState<SplitShell>
             child: widget.child,
           );
         }
-        // Pencere daralınca saklanan genişlik sağ panele yer bırakmayabilir.
-        final maxPane = (total - _minNoteDetailWidth).clamp(
-          _minListPaneWidth,
-          double.infinity,
-        );
-        // KATLANABİLİR (2026-11-02): dikey menteşe varsa ayraç menteşeye
-        // oturur — liste bir yarıda, not öbür yarıda; hiçbir şey kıvrımın
-        // altında kalmaz. Kullanıcı sürüklerse onun seçimi geçerli.
-        final hinge = verticalHingeOf(context);
-        // LİSTE SAĞDA (F67.9): genişlik pencerenin sağ kenarından ölçülür.
-        final right = ref.watch(listPaneRightProvider);
-        final hingeWidth = hinge == null || _dragWidth != null
-            ? null
-            : (right ? total - hinge.center.dx : hinge.center.dx) -
-                  _dividerWidth / 2;
-        // Not yokken liste TAM genişlik (sağda yer tutucu yok — kullanıcı
-        // isteği 2026-11-02). Aynı sol panel örneği genişler: arama, süzgeç
-        // ve kaydırma not açılıp kapanınca korunur.
-        final double stored = ref.watch(notePaneWidthProvider);
-        final double noteWidth = _dragWidth ?? hingeWidth ?? stored;
-        // Açık not yokken liste gizlenmez: gizli liste + boş sağ panel,
-        // kullanıcıya hiçbir şey göstermeyen bir ekran olurdu.
-        final autoHides = listAutoHidesFor(
-          MediaQuery.sizeOf(context),
-          hasHinge: hinge != null,
-        );
-        final collapsed =
-            (ref.watch(listPaneCollapsedProvider) ||
-                ref.watch(noteFullscreenProvider) ||
-                (autoHides &&
-                    ref.watch(listPeekLocationProvider) != location)) &&
-            noteOpen;
-        // **GİZLİ LİSTE KAPANIŞ DÜZENİNDE BEKLER** (ölçüm 2026-11-10, dikey
-        // tablet: not kapanışında 108 ms'lik kare — LAYOUT 85 ms). Liste not
-        // açıkken gizliyken de DAR ve tek sütun tutuluyordu; not kapanınca
-        // tam genişliğe, çok sütuna geçip bütün kartları yeniden kuruyordu.
-        // Kendiliğinden gizlenen (dikey tablet, animasyonsuz) liste gizliyken
-        // tam genişlikte kalır: kapanışta hiçbir şey yeniden dizilmez. ☰ ile
-        // açılınca daralır. Odak/tam ekran (yatay, 240 ms daralma) eskisi gibi
-        // dar kalır — daralırken tam genişlik kırpılmış görünmesin.
-        final listNarrow = noteOpen && !(collapsed && autoHides);
-        final paneWidth = listNarrow
-            ? noteWidth.clamp(_minListPaneWidth, maxPane)
-            : null;
-        return SplitScope(
-          active: true,
-          singleColumn: noteOpen,
-          listHidden: collapsed,
-          listAutoHides: autoHides && noteOpen,
-          child: _split(
+        return LayoutBuilder(
+          builder: (context, box) => _layout(
             context,
-            paneWidth,
-            maxPane,
-            collapsed,
-            noteOpen,
-            listNarrow: listNarrow,
-            animate: !autoHides,
-            right: right,
+            box,
+            location: location,
+            noteOpen: noteOpen,
+            second: secondLive ? second : null,
           ),
         );
       },
     );
   }
 
+  Widget _layout(
+    BuildContext context,
+    BoxConstraints box, {
+    required String location,
+    required bool noteOpen,
+    required SecondNote? second,
+  }) {
+    final total = MediaQuery.sizeOf(context).width;
+    // Pencere daralınca saklanan genişlik sağ panele yer bırakmayabilir.
+    final maxPane = (total - _minNoteDetailWidth).clamp(
+      _minListPaneWidth,
+      double.infinity,
+    );
+    // KATLANABİLİR (2026-11-02): dikey menteşe varsa ayraç menteşeye
+    // oturur — liste bir yarıda, not öbür yarıda; hiçbir şey kıvrımın
+    // altında kalmaz. Kullanıcı sürüklerse onun seçimi geçerli.
+    final hinge = verticalHingeOf(context);
+    // LİSTE SAĞDA (F67.9): genişlik pencerenin sağ kenarından ölçülür.
+    final right = ref.watch(listPaneRightProvider);
+    final hingeWidth = hinge == null || _dragWidth != null
+        ? null
+        : (right ? total - hinge.center.dx : hinge.center.dx) -
+              _dividerWidth / 2;
+    // Not yokken liste TAM genişlik (sağda yer tutucu yok — kullanıcı
+    // isteği 2026-11-02). Aynı sol panel örneği genişler: arama, süzgeç
+    // ve kaydırma not açılıp kapanınca korunur.
+    final double stored = ref.watch(notePaneWidthProvider);
+    final double noteWidth = _dragWidth ?? hingeWidth ?? stored;
+    // Açık not yokken liste gizlenmez: gizli liste + boş sağ panel,
+    // kullanıcıya hiçbir şey göstermeyen bir ekran olurdu.
+    final window = MediaQuery.sizeOf(context);
+    final listWidth = noteWidth.clamp(_minListPaneWidth, maxPane);
+    // İKİ NOT (K32 karar 4): üçü sığmıyorsa liste kendiliğinden çekilir —
+    // dikey tabletteki ☰ "göz atma" düzeni aynen.
+    final twoNotes = twoNoteLayoutFor(
+      content: box.maxWidth,
+      list: listWidth,
+      landscape: window.width > window.height,
+      secondOpen: second != null,
+    );
+    final twoOnly = twoNotes == TwoNoteLayout.twoOnly;
+    final autoHides =
+        listAutoHidesFor(window, hasHinge: hinge != null) || twoOnly;
+    final fullscreen = ref.watch(noteFullscreenProvider);
+    final peeking = ref.watch(listPeekLocationProvider) == location;
+    final collapsed =
+        (ref.watch(listPaneCollapsedProvider) ||
+            fullscreen ||
+            (autoHides && !peeking)) &&
+        noteOpen;
+    // Tam ekranda ve ☰ göz atmada yandaki not GİZLENİR (Offstage, State
+    // korunur); sığmıyorsa hiç kurulmaz (editör dispose'ta kaydeder).
+    final showSecond =
+        twoNotes != TwoNoteLayout.off && !fullscreen && !(twoOnly && peeking);
+    // **GİZLİ LİSTE KAPANIŞ DÜZENİNDE BEKLER** (ölçüm 2026-11-10, dikey
+    // tablet: not kapanışında 108 ms'lik kare — LAYOUT 85 ms). Liste not
+    // açıkken gizliyken de DAR ve tek sütun tutuluyordu; not kapanınca
+    // tam genişliğe, çok sütuna geçip bütün kartları yeniden kuruyordu.
+    // Kendiliğinden gizlenen (dikey tablet, animasyonsuz) liste gizliyken
+    // tam genişlikte kalır: kapanışta hiçbir şey yeniden dizilmez. ☰ ile
+    // açılınca daralır. Odak/tam ekran (yatay, 240 ms daralma) eskisi gibi
+    // dar kalır — daralırken tam genişlik kırpılmış görünmesin.
+    final listNarrow = noteOpen && !(collapsed && autoHides);
+    final paneWidth = listNarrow ? listWidth : null;
+    return SplitScope(
+      active: true,
+      singleColumn: noteOpen,
+      listHidden: collapsed,
+      listAutoHides: autoHides && noteOpen,
+      twoNotesFit:
+          noteOpen &&
+          twoNotesFit(
+            content: box.maxWidth,
+            landscape: window.width > window.height,
+          ),
+      child: _split(
+        context,
+        box,
+        paneWidth,
+        maxPane,
+        collapsed,
+        noteOpen,
+        listNarrow: listNarrow,
+        animate: !autoHides,
+        right: right,
+        second: twoNotes == TwoNoteLayout.off ? null : second,
+        showSecond: showSecond,
+      ),
+    );
+  }
+
   Widget _split(
     BuildContext context,
+    BoxConstraints box,
     double? notePaneWidth,
     double maxPane,
     bool collapsed,
@@ -399,7 +483,10 @@ class _SplitShellState extends ConsumerState<SplitShell>
     required bool listNarrow,
     required bool animate,
     required bool right,
+    required SecondNote? second,
+    required bool showSecond,
   }) {
+    final total = MediaQuery.sizeOf(context).width;
     // Liste sağdaysa Row ters dizilir; çocuk SIRASI aynı kalır — liste ve
     // not State'i yön değişince korunur.
     final ambient = Directionality.of(context);
@@ -417,9 +504,21 @@ class _SplitShellState extends ConsumerState<SplitShell>
       resizeToAvoidBottomInset: false,
       // Not yokken liste kabuğun TAM genişliği (ray düşülmüş hâli; pencere
       // genişliği değil — LayoutBuilder).
-      body: LayoutBuilder(
-        builder: (context, box) {
+      body: Builder(
+        builder: (context) {
           final paneWidth = notePaneWidth ?? box.maxWidth;
+          // Not alanı (liste ve ayracı düşülmüş); yandaki not bunun payı.
+          final noteArea =
+              box.maxWidth - (collapsed ? 0 : paneWidth + _dividerWidth);
+          final split = noteArea - _dividerWidth;
+          final double fraction =
+              _dragFraction ?? ref.watch(secondNoteFractionProvider);
+          final secondWidth = (split * fraction)
+              .clamp(
+                kSecondNoteMinWidth,
+                max(kSecondNoteMinWidth, split - kSecondNoteMinWidth),
+              )
+              .toDouble();
           return Row(
             textDirection: rowDirection,
             children: [
@@ -546,6 +645,50 @@ class _SplitShellState extends ConsumerState<SplitShell>
                   ],
                 ),
               ),
+              // YANDAKİ NOT (K32): iki çocuk HEP var (ağaç şekli sabit, kasma
+              // listesi 4); genişlik tek adımda değişir (animasyon yok, 6).
+              // İç gezgin YOK: editör doğrudan gömülür, alt sayfaları
+              // kabuğun gezginine açılır.
+              SizedBox(
+                width: showSecond ? _dividerWidth : 0,
+                child: showSecond
+                    ? _PaneDivider(
+                        onDrag: (globalX) {
+                          final w = right
+                              ? globalX - (total - box.maxWidth)
+                              : total - globalX;
+                          setState(
+                            () => _dragFraction =
+                                ((w - _dividerWidth / 2) / split).clamp(
+                                  0.3,
+                                  0.7,
+                                ),
+                          );
+                        },
+                        onDragEnd: () {
+                          final f = _dragFraction;
+                          if (f != null) {
+                            ref
+                                .read(secondNoteFractionProvider.notifier)
+                                .set(f);
+                          }
+                          setState(() => _dragFraction = null);
+                        },
+                        onReset: () => ref
+                            .read(secondNoteFractionProvider.notifier)
+                            .set(0.5),
+                      )
+                    : null,
+              ),
+              SizedBox(
+                width: showSecond ? secondWidth : 0,
+                child: Offstage(
+                  offstage: !showSecond,
+                  child: second == null
+                      ? const SizedBox.shrink()
+                      : _secondPane(second),
+                ),
+              ),
             ],
           );
         },
@@ -629,13 +772,13 @@ class _PaneDivider extends StatefulWidget {
     required this.onDrag,
     required this.onDragEnd,
     required this.onReset,
-    required this.onMoveSide,
-    required this.moveSideLabel,
+    this.onMoveSide,
+    this.moveSideLabel,
   });
 
-  /// Uzun basış menüsünün tek maddesi: listeyi öbür yana al.
-  final VoidCallback onMoveSide;
-  final String moveSideLabel;
+  /// Uzun basış menüsünün tek maddesi: listeyi öbür yana al (yoksa menü yok).
+  final VoidCallback? onMoveSide;
+  final String? moveSideLabel;
 
   final void Function(double globalX) onDrag;
   final VoidCallback onDragEnd;
@@ -652,6 +795,8 @@ class _PaneDividerState extends State<_PaneDivider> {
   bool _dragging = false;
 
   Future<void> _sideMenu(Offset at) async {
+    final label = widget.moveSideLabel;
+    if (label == null) return;
     final picked = await showMenu<bool>(
       context: context,
       position: RelativeRect.fromLTRB(at.dx, at.dy, at.dx, at.dy),
@@ -659,11 +804,11 @@ class _PaneDividerState extends State<_PaneDivider> {
         PopupMenuItem(
           key: const ValueKey('list-pane-side'),
           value: true,
-          child: Text(widget.moveSideLabel),
+          child: Text(label),
         ),
       ],
     );
-    if (picked == true) widget.onMoveSide();
+    if (picked == true) widget.onMoveSide?.call();
   }
 
   @override

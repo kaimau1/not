@@ -8516,6 +8516,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listPaneMoveRight => 'Move list to the right';
 
   @override
+  String get noteOpenSide => 'Open side by side';
+
+  @override
+  String get micBusySideNote => 'The microphone is in use in the other note';
+
+  @override
+  String get noteCloseSide => 'Close side note';
+
+  @override
   String get listPaneMoveLeft => 'Move list to the left';
 
   @override

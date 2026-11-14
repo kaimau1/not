@@ -20,6 +20,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notlar/app/app_frame.dart';
 import 'package:notlar/app/note_open_route.dart';
+import 'package:notlar/app/second_note.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/core/tips.dart';
 import 'package:notlar/features/notes/presentation/dashboard_scroll_memory.dart';
@@ -817,6 +818,106 @@ void main() {
       'dashboard_kurulum': c['DashboardScreen'] ?? 0,
       'note_card': c['NoteCard'] ?? 0,
     });
+  });
+
+  // K32 (A5): iki not yan yana — birincile yazmak yandaki editörü ve panoyu
+  // kurmamalı (yankı yalıtımı). Klavye kareleri iki bölmede de kurulumsuz
+  // (S8 tek not 0 → iki not ≤ 2 × 0).
+  testWidgets('S27: 1280×800 iki not — birincile 20 karakter + kayıt', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final all = [
+      Note(
+        id: 'n',
+        type: NoteType.text,
+        title: 'Kısa',
+        body: 'yazı',
+        updatedAt: now,
+      ),
+      Note(
+        id: 's',
+        type: NoteType.text,
+        title: 'Yan',
+        body: 'yandaki',
+        updatedAt: now,
+      ),
+      for (var i = 0; i < 11; i++)
+        Note(
+          id: 'x$i',
+          type: NoteType.text,
+          title: 'Not $i',
+          body: 'gövde $i',
+          updatedAt: now,
+        ),
+    ];
+    final list = StreamController<List<Note>>.broadcast();
+    addTearDown(list.close);
+    final repo = _LiveRepo(FakeFirebaseFirestore());
+    await _noteDoc(repo.db).set(_text.toMap());
+    await _noteCol(repo.db).doc('s').set(all[1].toMap());
+    repo.onSaved = (n) => list.add([n, ...all.skip(1)]);
+    await _pumpHome(
+      tester,
+      size: const Size(1280, 800),
+      notes: list.stream,
+      location: '/note/n',
+      repo: repo,
+    );
+    list.add(all);
+    await tester.pump(const Duration(seconds: 1));
+    ProviderScope.containerOf(
+      tester.element(find.byType(DashboardScreen, skipOffstage: false)),
+      listen: false,
+    ).read(secondNoteProvider.notifier).open(const SecondNote('s'));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(NoteEditorScreen), findsNWidgets(2));
+    expect(find.byType(DashboardScreen), findsOneWidget);
+    // Yandaki editörün kök kurulumu ayrı sayılır (aynı tür iki örnek).
+    var side = 0;
+    final counter = BuildCounter()..start();
+    final base = debugOnRebuildDirtyWidget!;
+    debugOnRebuildDirtyWidget = (e, builtOnce) {
+      base(e, builtOnce);
+      final w = e.widget;
+      if (w is NoteEditorScreen && w.noteId == 's') side++;
+    };
+    addTearDown(counter.stop);
+    await tester.tap(find.widgetWithText(TextField, 'yazı').first);
+    await tester.pump(const Duration(milliseconds: 400));
+    final before = Map.of(counter.counts);
+    side = 0;
+    await _type(tester, 'yazı');
+    await tester.pump(const Duration(milliseconds: 2500));
+    expect(repo.updateNoteCalls, greaterThan(0));
+    int delta(String t) => (counter.counts[t] ?? 0) - (before[t] ?? 0);
+    final typing = (
+      side: side,
+      dash: delta('DashboardScreen'),
+      card: delta('NoteCard'),
+    );
+    // Klavye aç/kapa (S8 kalıbı): iki bölmenin gövde kurulumu.
+    int body() => _bodyTypes.fold(0, (n, t) => n + counter.of(t));
+    final kb0 = body();
+    for (final insets in [
+      [20.0, 120.0, 300.0],
+      [120.0, 20.0, 0.0],
+    ]) {
+      for (final inset in insets) {
+        tester.view.viewInsets = FakeViewPadding(bottom: inset);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+    }
+    final keyboard = body() - kb0;
+    counter.stop();
+    _expectBudget('S27', {
+      'yandaki_kok_kurulum': typing.side,
+      'dashboard_kurulum': typing.dash,
+      'note_card': typing.card,
+      'klavye_govde_kurulum': keyboard,
+    });
+    await endEditor(tester);
   });
 
   testWidgets('S13: ana ekran, 300 not, 3 ekran kaydır', (tester) async {

@@ -220,6 +220,13 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Kapanış geçişi:** KÖK "web/tablette nottan dönüşte animasyon yok": rota `/` olur olmaz sağ bölme 0 genişliğe iniyordu → notun çıkış geçişi görünmüyordu (c34ed0ae'nin liste solması yetmedi). `SplitShell._closing`: kapanışta düzen 300 ms "not açık" kalır, sonra TEK ADIMDA tam genişlik + `_back` solması. Bekçi `fullscreen_pull_test` + bütçe S26.
 - **Mini pano:** bölmede sütun `paneColumnsFor(genişlik, paneCardScaleProvider)` = genişlik/(220×ölçek), 1–4; `PinchColumns.onCommit` bölmede `setColumns` (yarım sütun payı). Genel `gridColumnsProvider` yalnız tam genişlik ızgarası. Ölçek alt sınırı 0,5 → dar bölmede 4 sütun çıkmaz (kart ≥ 110 dp).
 
+## 2026-11-14 — K32 iki not yan yana (tablet yatay)
+- **Karar 1:** ikinci not URL'de DEĞİL — `SplitShell`'in üçüncü sütunu (`lib/app/second_note.dart`: `secondNoteProvider`, `twoNoteLayoutFor`). İç gezgin yok, `NoteEditorScreen` doğrudan gömülür; derin bağlantı/geri/web geçmişi değişmez. Yalnız yatay ∧ içerik ≥ 784 dp; üçü sığmazsa liste `autoHides` (☰ göz atma), tam ekran/göz atmada yandaki Offstage.
+- **Karar 5:** geri = birincilin PopScope zinciri → birincil kapanır → yandaki de (kabuk `_closing` bitince). Yandaki editörün `PopScope.canPop` HEP true (kabuk sayfasına kayıtlı; false kalırsa çıkış kilitlenir).
+- **Karar 6:** aynı not iki bölmede olmaz: `pushNote` hedef yandaysa önce kapatır + bir kare bekler; bağlamsız yollar için kabuk kuralı (birincil = yandaki → kapat).
+- **TUZAK:** yandaki bölmede `context.pop()`/`Navigator.pop` BİRİNCİL notu kapatır. Editörün kendini kapattığı her yer `_closeEditor()` hunisinden geçer (silindi, bulunamadı, kalem bitti, kayıt bitince geri, `_delete`, `_toggleArchive`); yeni kapanış yolu da onu kullanır. Yandakinde tam ekran/☰/ana sayfa çizilmez, genel sağlayıcıları (`noteFullscreenProvider`, `listPeekLocationProvider`) yazmaz.
+- **Kök neden (S27):** editör kökü `ref.watch(notesStreamProvider)` (geri bağlantı çipi) ile liste akışının HER yayınında kuruluyordu (telefonda da her kayıt yankısı) → `select(var mı)` + çip kendi `Consumer`ında. Kabuk klavye karelerinde yeniden kurulunca yandaki bölmeye yeni widget örneği gidiyordu → `_secondPane` örneği saklar.
+- Tek mikrofon: öbür editörde dikte/kayıt sürerken mikrofon alınmaz (`_micBusyElsewhere`, `_live` kümesi).
 
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 

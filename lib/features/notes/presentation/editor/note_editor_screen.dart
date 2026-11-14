@@ -153,6 +153,7 @@ import '../../data/drive_store.dart' show localFilesRevisionProvider;
 import '../drive_ui.dart';
 import '../../../../app/app_commands.dart' show currentLocation, goHome;
 import '../../../../app/app_frame.dart' show HomeInBar, kRailBreakpoint;
+import '../../../../app/second_note.dart';
 import '../../../../app/split_shell.dart';
 import 'page_ink_layer.dart';
 import '../place_reminder_sheet.dart';
@@ -1261,6 +1262,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Arka plandaki boş not temizliği bu notu ATLASIN (bkz. cleanupEmptyNotes):
     // kullanıcı yazmaya yeni başladığında doküman kısa bir süre boş görünür.
     openEditorNoteIds.add(widget.noteId);
+    _live.add(this);
     // Listede açık not vurgusu (geniş ekran). Ağaç kurulurken sağlayıcı
     // yazılamaz → mikro görev; dispose'da `ref` yok → notifier saklanır.
     final openNotes = _openNotes = ref.read(openNoteIdsProvider.notifier);
@@ -1428,7 +1430,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             !_deleted) {
           _deleted = true;
           _debouncer.cancel();
-          if (mounted && context.canPop()) context.pop();
+          if (mounted) _closeEditor();
           return;
         }
         if (_deleted) return;
@@ -1719,6 +1721,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     WidgetsBinding.instance.removeObserver(this);
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
     openEditorNoteIds.remove(widget.noteId);
+    _live.remove(this);
     final openNotes = _openNotes;
     final openId = widget.noteId;
     unawaited(Future.microtask(() => openNotes.close(openId)));
@@ -2457,6 +2460,42 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _penModeOpened();
   }
 
+  /// Açık editörler (K32: yan yana iki not) — tek mikrofon denetimi.
+  static final _live = <_NoteEditorScreenState>{};
+
+  /// **TEK MİKROFON** (K32 A6): öbür bölmede dikte/ses kaydı sürerken bu
+  /// editör mikrofonu ALMAZ (bildirim). Aynı editörde kural ayrı: son açan
+  /// alır (bkz. `_recordAudio`).
+  bool _micBusyElsewhere() {
+    final busy = _live.any(
+      (e) =>
+          !identical(e, this) &&
+          (e._dictation != null || e._voiceRecorder != null),
+    );
+    if (busy) _showSnack(context.l10n.micBusySideNote);
+    return busy;
+  }
+
+  /// Editör yandaki bölmede mi (K32; bkz. [SecondNotePane])?
+  bool get _secondary => SecondNotePane.maybeOf(context) != null;
+
+  /// **TEK KAPANIŞ HUNİSİ** (K32): editörün KENDİNİ kapattığı her yer buradan
+  /// geçer. Yandaki bölmede `context.pop()` BİRİNCİL notu kapatırdı — orada
+  /// yalnız bölme kapanır. [routeClose] verilmezse rota `pop` edilir. Yeni
+  /// kapanış yolu ekleyen bunu kullanır.
+  void _closeEditor([VoidCallback? routeClose]) {
+    final pane = SecondNotePane.maybeOf(context);
+    if (pane != null) {
+      pane.close();
+      return;
+    }
+    if (routeClose != null) {
+      routeClose();
+    } else if (context.canPop()) {
+      context.pop();
+    }
+  }
+
   /// Tablette tam ekran düğmesi.
   Widget _fullscreenButton(AppLocalizations l10n) {
     final on = ref.watch(noteFullscreenProvider);
@@ -2493,6 +2532,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Çubuğun sol yuvası: gizli liste ☰; dikey tablette açılmış liste kapanır.
   Widget? _listLeading(AppLocalizations l10n) {
+    // Yandaki bölme (K32): ☰ yok, kendi kapatması ✕.
+    if (_secondary) {
+      return IconButton(
+        key: const ValueKey('second-note-close'),
+        tooltip: l10n.noteCloseSide,
+        icon: const Icon(Icons.close_rounded),
+        onPressed: _closeEditor,
+      );
+    }
     if (_listHidden(context)) return _showListButton(l10n);
     if (!(SplitScope.maybeOf(context)?.listAutoHides ?? false)) return null;
     return IconButton(
@@ -2696,7 +2744,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           _update(() => _penMode = false);
           if (!widget.startDrawing) return;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) unawaited(Navigator.of(context).maybePop());
+            if (mounted) {
+              _closeEditor(() => unawaited(Navigator.of(context).maybePop()));
+            }
           });
         },
       ),
@@ -3122,7 +3172,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       ),
                       const SizedBox(height: 12),
                       FilledButton.tonal(
-                        onPressed: () => context.pop(),
+                        onPressed: _closeEditor,
                         child: Text(l10n.back),
                       ),
                     ],
@@ -3426,14 +3476,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // `SizedBox.shrink` çiziyordu ama listede durduğu için şerit hiç boş
       // sayılmıyor, etiketler üst çubuğa taşındıktan sonra başlığın altında
       // 36 dp'lik boş bir bant kalıyordu.
-      if (backlinksTo(
-        note.id,
-        ref.watch(notesStreamProvider).value ?? const <Note>[],
-      ).isNotEmpty)
-        BacklinksChip(
-          noteId: note.id,
-          notes: ref.watch(notesStreamProvider).value ?? const <Note>[],
-          labelStyle: chipLabelStyle,
+      // KÖK KURULUM YOK (K32 S27): kök yalnız "geri bağlantı var mı"yı
+      // dinler; liste akışının her yayını (her kayıt yankısı, yandaki notta
+      // yazmak) bütün editörü yeniden kuruyordu. Sayı/başlıklar çipte.
+      if (ref.watch(
+        notesStreamProvider.select(
+          (v) => backlinksTo(note.id, v.value ?? const <Note>[]).isNotEmpty,
+        ),
+      ))
+        Consumer(
+          builder: (context, ref, _) => BacklinksChip(
+            noteId: note.id,
+            notes: ref.watch(notesStreamProvider).value ?? const <Note>[],
+            labelStyle: chipLabelStyle,
+          ),
         ),
       // Klasör çipi yalnız notun klasörü VARSA; seçmek "+" menüsünden.
       if (noteFolder != null)
@@ -4963,7 +5019,7 @@ child: NoteFindBar(
           // kapanacak bir şey yok — ama tuş "işlendi" sayıldığı için
           // uygulamanın [EscBackAction]'ı (geri tuşu yolu: PopScope sırası →
           // tam ekran, arama, not) hiç çalışmıyordu.
-          if (PenTray.useRail(context))
+          if (PenTray.useRail(context) && !_secondary)
             const SingleActivator(
               LogicalKeyboardKey.keyF,
               control: true,
@@ -4979,11 +5035,14 @@ child: NoteFindBar(
           builder: (context, formatOpen, child) => PopScope(
           // Geri tuşu sırayla: tam ekran → kayıt → biçim paneli → canlı
           // arama → not.
+          // Yandaki bölme geri tuşunu hiç ENGELLEMEZ (K32 karar 5): kabuk
+          // sayfasına kayıtlı; `false` kalsaydı uygulamadan çıkış kilitlenirdi.
           canPop:
-              !_findOpen &&
-              !formatOpen &&
-              _voiceRecorder == null &&
-              !fullscreenNow,
+              _secondary ||
+              (!_findOpen &&
+                  !formatOpen &&
+                  _voiceRecorder == null &&
+                  !fullscreenNow),
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
             // Açık bir alt panel (ek şeridi, kalem/biçim tepsisi…) varsa geri
@@ -4999,7 +5058,7 @@ child: NoteFindBar(
               final navigator = Navigator.of(context);
               unawaited(
                 _finishVoiceRecording().whenComplete(() {
-                  if (mounted) navigator.maybePop();
+                  if (mounted) _closeEditor(navigator.maybePop);
                 }),
               );
               return;
@@ -5049,7 +5108,7 @@ child: NoteFindBar(
           // [KeyboardSlide] ile yalnız boyama katmanında yapılıyor.
           resizeToAvoidBottomInset: false,
           // Kalem + tam ekran: üst de sayfa olur (çıkış sütunda).
-          appBar: _pagePen && ref.watch(noteFullscreenProvider)
+          appBar: _pagePen && !_secondary && ref.watch(noteFullscreenProvider)
               ? null
               : HomeInBar(appBar: PreferredSize(
                   preferredSize: Size.fromHeight(toolbarHeight),
@@ -5165,7 +5224,8 @@ child: NoteFindBar(
                 UiItem.topHome => [
               // ANA SAYFAYA DÖN (F28.3): geniş ekranda/web'de ray bu sırada
               // çekmece ya da gizli; tek dokunuşla `/`. Telefonda yok.
-              if (MediaQuery.sizeOf(context).width >= kRailBreakpoint)
+              if (MediaQuery.sizeOf(context).width >= kRailBreakpoint &&
+                  !_secondary)
                 _hideWhileTyping(
                   note,
                   Customizable(
@@ -5397,7 +5457,7 @@ child: NoteFindBar(
               // barın başlık alanındaki göstergelerden okunuyor.
               // ⋮ artık açılır menü değil, iki sütunlu levha açar
               // (bkz. [noteMenuModel] — kullanıcı isteği 2026-08-09).
-              if (PenTray.useRail(context))
+              if (PenTray.useRail(context) && !_secondary)
                 _hideWhileTyping(
                   note,
                   // Tam ekran AÇIKKEN düğme gizlenmez — çıkış yolu kalsın

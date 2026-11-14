@@ -8502,6 +8502,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get listPaneMoveRight => 'Listeyi sağa al';
 
   @override
+  String get noteOpenSide => 'Yanda aç';
+
+  @override
+  String get micBusySideNote => 'Mikrofon yandaki notta kullanılıyor';
+
+  @override
+  String get noteCloseSide => 'Yandaki notu kapat';
+
+  @override
   String get listPaneMoveLeft => 'Listeyi sola al';
 
   @override

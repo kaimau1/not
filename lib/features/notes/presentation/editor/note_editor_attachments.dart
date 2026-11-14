@@ -874,6 +874,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
   /// birlikte hap olarak girer ([_placeNewImage]).
   Future<void> _recordAudio() async {
     if (_voiceRecorder != null) return;
+    if (_micBusyElsewhere()) return;
     // Tek mikrofon: dikte açıksa önce kapanır (son açan alır — bkz. HAFIZA).
     if (_dictating) await _stopDictation(offerFix: false);
     if (!mounted) return;

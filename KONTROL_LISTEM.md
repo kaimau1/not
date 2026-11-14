@@ -124,6 +124,12 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Doğruysa: açılıyor (boyut engeli yok), "yalnız bu cihazda" yazıyor, yazdıkların yerinde.
   Yanlışsa: hangi mesajı gördüğünü yaz.
 
+- [ ] **32. İki not yan yana** (yazıldı, tablette doğrulanmadı)
+  Nerede: tablet YATAY, bir not açıkken soldaki listede başka bir kartın ⋮ menüsü → "Yanda aç".
+  Nasıl: iki notta da yaz (klavye ve kalem); ortadaki ayracı sürükle, çift dokun; ☰ ile listeyi aç-kapa; tabletı dikeye çevir, geri yatay; tam ekrana gir-çık; yandakini ✕ ile kapat; iki not açıkken geri tuşuna bas; birinde dikte sürerken öbüründe mikrofona bas.
+  Doğruysa: iki not yan yana, liste kendiliğinden çekilir; yazdığın bölme yazar, öbürü kıpırdamaz; ☰ açınca yandaki gizlenir, kapatınca döner; dikeyde yandaki kaybolur, yatayda geri gelir; geri tuşu ikisini de kapatıp listeye döner; ikinci mikrofon "Mikrofon yandaki notta kullanılıyor" der. Telefonda ve dikey tablette menüde "Yanda aç" YOK.
+  Yanlışsa: hangi adımda ne olduğunu yaz.
+
 ## Bilgisayarda (web) bak
 
 - [ ] **21. Web temel tur**
@@ -185,7 +191,6 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Karar vermen gerekenler
 
-- [ ] **32. İki not yan yana (tablet)** — 12 Kasım'da "olsun" dedin; henüz yazılmadı (büyük iş, ayrı paket). Şu an: yok. Vazgeçtiysen "iki not yan yana olmasın" de.
 - [ ] **33. Yeni el yazısı kayıt biçimi** — hızlı ve küçük kayıt için hazır ama YAZMA kapalı; açmak için önce telefonda ölçüm, sonra bütün cihazlar güncel olunca konsolda bayrak (30. madde). Şu an: kapalı (en güvenli). Açmak istersen "el yazısı v2'yi aç" de.
 - [ ] **34. Kalem ucu tahmini ve parmağa ayrı araç** — Kalem ucu tahmini: 14 Kasım'da "yalnız parmak aracı olsun" dedin, tahmin YAZILMADI. Parmak aracı: YAZILDI (kalem ayarlarında ve Ayarlar → Kalem'de "Parmak: Kaydırır · Çizer · Siler"), tablette denenmedi → 41. madde. Siler'deyken tek parmak kaydırmaz (iki parmakla kaydır/yakınlaştır); istemezsen söyle.
 - [ ] **35. Birden çok sabit ek** — seçenekler: sekme / yan yana / tek. Şu an: tek sabit ek. Değiştirmek istersen hangisini istediğini söyle.

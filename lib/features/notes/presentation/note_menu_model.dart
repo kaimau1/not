@@ -38,6 +38,8 @@ ActionMenu noteMenuModel(
   bool localOnly = false,
   bool? bubbleView,
   bool canRemoveParts = false,
+  // K32: tablet yatayda kart "Yanda aç" (bkz. `secondNoteProvider`).
+  bool canOpenSide = false,
 }) {
   final editor = surface == NoteMenuSurface.editor;
   final archived = note.archivedAt != null;
@@ -68,6 +70,8 @@ ActionMenu noteMenuModel(
     ],
     sections: [
       MenuSection(l10n.menuSectionOrganize, [
+        if (!editor && canOpenSide)
+          MenuAction('side', l10n.noteOpenSide, Icons.vertical_split_outlined),
         if (!editor)
           MenuAction('select', l10n.select, Icons.check_circle_outline),
         if (!readOnly) ...[

@@ -231,5 +231,15 @@
     "bugun": "1 / 14 (2026-11-14; P59 öncesi kod da 1 / 14)",
     "hedef": "≤ 1 / ≤ 14",
     "neden": "P59 ilk ölçüm: kapanışta bölme geçiş boyu bekler, liste tek adımda genişler — kurulum sayısı değişmedi"
+  },
+  "S27": {
+    "senaryo": "1280×800 iki not yan yana (K32): birincile 20 karakter + kayıt (yandaki editör ve pano), sonra klavye aç/kapa 6 kare (iki bölmenin gövdesi)",
+    "yandaki_kok_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "note_card": 0,
+    "klavye_govde_kurulum": 0,
+    "bugun": "0 / 0 / 0 / 0 (2026-11-14, K32 A5); düzeltme öncesi 1 / 0 / 0 / 24",
+    "hedef": "0 / S12 ile aynı (0) / S12 ile aynı (0) / 0 (S8 × 2)",
+    "neden": "K32 A5: (1) editör kökü liste akışının tamamını izliyordu (geri bağlantı çipi) — her kayıt yankısı iki editörü de kuruyordu; kök artık yalnız 'geri bağlantı var mı'yı seçer, çip kendi Consumer'ında. (2) kabuk klavye karelerinde yeniden kurulunca yandaki bölmeye yeni widget örneği veriliyordu — örnek artık SecondNote başına saklanır"
   }
 }

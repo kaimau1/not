@@ -1,3 +1,4 @@
+import 'package:notlar/app/second_note.dart';
 import 'package:notlar/features/notes/presentation/notes_providers.dart'
     show searchQueryProvider, selectedFolderProvider, sharedFolderNotesProvider;
 import 'package:firebase_core/firebase_core.dart' show FirebaseException;
@@ -556,6 +557,10 @@ Future<void> _pumpApp(
   if (scene == 'klasor-bos') {
     container.read(selectedFolderProvider.notifier).set('f1');
   }
+  // K32: iki not yan yana (yalnız yatay tablette çizilir; telefonda tek not).
+  if (scene == 'iki-not') {
+    container.read(secondNoteProvider.notifier).open(const SecondNote('n2'));
+  }
   if (scene == 'arama-bos') {
     container.read(searchQueryProvider.notifier).set('zqxw');
   }
@@ -651,6 +656,7 @@ void main() {
     ('ana', '/', null),
     ('n1', '/note/n1', null),
     ('n2', '/note/n2', null),
+    ('iki-not', '/note/n1', null),
     ('n4', '/note/n4', null),
     ('n1-menu', '/note/n1', () => find.byTooltip('Not menüsü')),
     ('n4-menu', '/note/n4', () => find.byTooltip('Not menüsü')),
