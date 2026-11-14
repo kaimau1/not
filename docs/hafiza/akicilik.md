@@ -137,3 +137,5 @@ Tam plan: `docs/arsiv/planlar/HIZ_PLANI.md`. Bütçe senaryoları (S1…) tablos
 2. Mandallar yalnız düşer: `budgets.json`, `design_tokens/budget.json`, `altin_taban.json`.
 3. Hız/akıcılık paketlerinde kötüleşme sıfır (OTOMASYON 6. adım); diğer paketlerde %20 + altın taban %15.
 4. Yeni ekran/levha/akış ekleyen her iş, Ek A'ya bir S satırı ve `ab_hepsi.py`'ye bir evre ekler (yoksa iş bitmiş sayılmaz).
+
+- **2026-11-15 P63 G2 bütçeleri:** S41 (şablon galerisi: fazla kart 0/0, açılış Text 60 → 37) ve S44 (çizgi tepsisi: seçim satır 3, kök 3, tepsi satır 0, tepsi gövde boy karesi 14, klavye 0, beliriş 0/0). `ab_hepsi.py`'ye `sablon` + `bicim` evreleri SONA eklendi (hazırlık yoksa atlanır; `make_dataset.py --ink` "OLCUM cizgi" notu) — cihazda henüz koşulmadı.

@@ -965,24 +965,24 @@ sürüklenen satır · sağdan-sola dil.
 
 ### 5.4 Kabul ölçütleri
 
-- [ ] Tepside ve levhada beş tür; hücre başına tek `paintItemDivider` çağrısı
+- [x] Tepside ve levhada beş tür; hücre başına tek `paintItemDivider` çağrısı
       (`test/divider_kind_picker_test.dart`, iskelette: beş anahtar, seçili hücre, dokunuş →
       `onPick(tür)`, verilen renk/kalınlık boyamaya ulaşır, tepside kalınlık ≤ 1.5).
-- [ ] `format_bar.dart`'ta `_DividerSwatchPainter` yok; `_DividerRow` içinde elle köşe/dolgu 0 (tepsi
+- [x] `format_bar.dart`'ta `_DividerSwatchPainter` yok; `_DividerRow` içinde elle köşe/dolgu 0 (tepsi
       boyu 42 dışında); seçili zemin `primaryContainer`.
-- [ ] `item_divider_style.dart`'ta `showModalBottomSheet` 0, `Icons.format_strikethrough` 0,
+- [x] `item_divider_style.dart`'ta `showModalBottomSheet` 0, `Icons.format_strikethrough` 0,
       `Icons.auto_awesome` 0, elle dolgu/aralık 0 (önizleme boyu 52 ve `_swatches` renkleri dışında);
       elle `0.75` üç yerde de 0.
-- [ ] Var olan testler DEĞİŞMEDEN yeşil: `item_divider_paint_test`, `item_divider_style_test`,
+- [x] Var olan testler DEĞİŞMEDEN yeşil: `item_divider_paint_test`, `item_divider_style_test`,
       `items_editor_divider_test`, `format_bar_test`, `items_editor_row_cache_test`,
       `forward_compat_test`, `jank_patterns_guard_test`, `keyboard_jank_guard_test`.
-- [ ] Yeni `test/item_divider_sheet_test.dart`: tür hücresi → önizleme o türde; "Tamam" →
+- [x] Yeni `test/item_divider_sheet_test.dart`: tür hücresi → önizleme o türde; "Tamam" →
       `(style, applyAll: false)`; "Tüm çizgilere" → `applyAll: true`; kaldır → `style: null`; dışına
       dokun → `null`; 360 dp + yazı 1.3'te taşma hatası yok.
-- [ ] Beliriş (yapıldıysa): boş → çizgili geçişte animasyon bir kez oynar ve durur; 10 çizgili not
+- [x] Beliriş (yapıldıysa): boş → çizgili geçişte animasyon bir kez oynar ve durur; 10 çizgili not
       AÇILIRKEN ilk karede çizgiler tam (ticker yok); hareketi azalt açıkken tek kare
       (`test/item_divider_reveal_test.dart`).
-- [ ] Tur: `cizgi-tepsi`, `cizgi-levha`, `cizgi-satirlar` (beş tür aynı notta) — açık + koyu, telefon
+- [x] Tur: `cizgi-tepsi`, `cizgi-levha`, `cizgi-satirlar` (beş tür aynı notta) — açık + koyu, telefon
       + tablet.
 
 ### 5.5 Kasma riski + bütçe (kasma-kontrol 8 madde)
@@ -1550,6 +1550,18 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   satır önbelleği anahtarına beliriş durumu girmez · "Tamam" kalır (SB9) · `format_bar.dart` editör
   dosyası: yeni `Theme.of(context)` ekleme.
 - **A/B:** evet — `kb` + `bicim` evreleri, çizgili ölçüm notuyla. **Bütçe:** S44.
+- [x] **Durum (2026-11-15, G2 dalı; dört ayrı commit):** (1) tepsi `DividerKindPicker(compact)` — beş tür,
+  gerçek çizim, maddenin renk/kalınlığı (`FormatBar.dividerStyle` ← `dividerOf`), seçili zemin
+  `primaryContainer`, `_DividerSwatchPainter` silindi, tepsi boyu 42 aynı; (2) levha `showAppSheet` +
+  `SheetHeader`, kâğıt önizleme, adlı seçici (`divider-sheet-kind-<tür>`), `ColorDot` (tema noktası
+  `brightness_auto_rounded`), kalınlık satırı (simge · Slider · `1.0×`), `OverflowBar` (`divider-sheet-remove/
+  -all/-ok`, kaldır simgesi `delete_outline_rounded`), "Tamam" kalır (SB9) — "önce" turda 360×640'ta levha
+  alttan taşıyordu, artık taşmıyor; (3) `kItemDividerAccentAlpha = AppAlpha.strong` (SB10); (4) beliriş
+  `_DividerReveal` (koşulsuz, yalnız boş→dolu, kırpma, hareketi azaltta tek kare). S44: seçim satır 3 / kök 3
+  / tepsi satır 0 / klavye 0 / beliriş 12 karede satır 0, ItemsEditor 0 (taban aşılmadı). **Beliriş kapısı
+  cihazda AÇIK:** yürütücünün öbek sonu A/B'sinde `kb` + `bicim` kötüleşirse yalnız "PB6 4" commit'i geri
+  alınır (SB11). Bulgu 13 (tepsi kabuğu `AnimatedSize` gövdeyi 14 karede diziyor) DÜZELTİLMEDİ — kapsam dışı,
+  regresyon listesine not (§7.10). Seçim başına 1 kök kurulumu (hipotez doğrulandı) bugünkü yol, PB6 aşmadı.
 
 ### 7.9 PB7 — yeni sarmalar + sıralar (opus high)
 

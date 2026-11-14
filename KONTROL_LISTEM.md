@@ -9,6 +9,12 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Şablonlar ve madde çizgileri (yeni görünüş, cihazda bakılmadı)**
+  Nerede: "+" → Şablondan; bir liste notunda madde → Biçim → Alt çizgi.
+  Nasıl: şablon kartlarına, bir şablonun önizlemesine (alttaki Oluştur düğmesi) ve kendi şablonunu düzenlemeye bak; çizgi tepsisinde beş türü dene, ⚙ ile ayar levhasını aç; çizgisiz maddeye çizgi ekle.
+  Doğruysa: kartlarda küçük sayfa çizimi, Oluştur hep görünür; tepsideki örnekler maddenin rengini taşır; çizgi soldan sağa bir kez çizilir; klavye açılırken takılma yok.
+  Yanlışsa: ekran görüntüsü / kısa kayıt gönder.
+
 - [ ] **1. Yedek gerçekten geri geliyor mu**
   Nerede: Ayarlar → Tam yedek.
   Nasıl: yedek al → başka bir hesapta ya da web'de geri yükle → bir kez daha geri yükle.
