@@ -35,9 +35,9 @@ void main() {
     await tester.tap(find.text('madde 3'));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.tap(find.byTooltip('Biçim'));
-    await tester.pumpAndSettle(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('format-divider-menu')));
-    await tester.pumpAndSettle(const Duration(milliseconds: 100));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('format-divider-solid')));
     await tester.pump();
   }
