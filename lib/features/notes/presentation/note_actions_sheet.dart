@@ -56,8 +56,9 @@ Future<void> showNoteActionsSheet(
   );
   final action = await showAppSheet<String>(
     context: context,
-    // Başlıklı menüde ✕ var, tutamak yok (DENEYIM K-D7).
-    showDragHandle: !menu.hasHeader,
+    // Tutamak her menüde (kullanıcı isteği 2026-11-14, bkz.
+    // showActionMenuSheet).
+    showDragHandle: true,
     // Izgara varsayılan yükseklik sınırına (ekranın 9/16'sı) sığar ama büyük
     // yazı ölçeğinde taşabilir; isScrollControlled + kaydırma güvenlik ağı.
     isScrollControlled: true,

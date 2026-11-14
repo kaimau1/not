@@ -85,6 +85,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nasıl: 10 dk sonraya etkinlik kur; tekrarlı bir etkinliğin yalnız birini sil; bir etkinliği basılı tutup başka güne sürükle.
   Doğruysa: bildirim zamanında geliyor, dokununca takvim açılıyor, "Geri al" çalışıyor.
 
+- [ ] **42. Menüler ve sabit PDF'te hızlı satır (2026-11-14, yazıldı, cihazda doğrulanmadı)**
+  Nerede: ana ekran ⋮; bir notun ⋮'i; sabit PDF'li not (ör. Rezilyans) ve onun ⋮ menüsü; görseli gizlenmiş YouTube notu.
+  Nasıl: menüleri aç, üstteki tutamaktan aşağı çek; sabit PDF'li notta "Not al"a yaz; PDF ⋮ → PDF → "Tüm balonlar".
+  Doğruysa: her menüde tutamak var ve aşağı çekince kapanıyor; ⚙ ve ✕ telefonun üst çubuğunun altında; ana ekran ⋮'te tek maddelik "Diğer" grubu yok (Arşiv "Uygulama"nın sonunda); "Not al"a yazarken üst çubukta hızlı satır çıkıyor, çubuktaki başlığı düzenlerken başlık yerinde kalıyor; balon listesi açılıyor, balona dokununca o sayfaya gidiyor; kartta "YouTube videosu" üstte, video adı altta.
+
 ## Tablette bak
 
 - [ ] **15. Kalemle yazma**

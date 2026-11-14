@@ -1818,7 +1818,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     final run = await showAppSheet<VoidCallback>(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
+      // Tutup aşağı çekerek kapatılır (kullanıcı isteği 2026-11-14).
+      showDragHandle: true,
       builder: _sheet,
     );
     if (run != null && mounted) run();

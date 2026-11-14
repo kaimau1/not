@@ -2431,6 +2431,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bubbleSearchHint => 'Balonlarda ara…';
 
   @override
+  String get bubblesListAll => 'Tüm balonlar';
+
+  @override
   String get bubblesOverviewTitle => 'Balonlar';
 
   @override

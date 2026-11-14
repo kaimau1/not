@@ -21,7 +21,6 @@ Future<void> showAreaActions(BuildContext context, Uint8List png) =>
     showAppSheet<void>(
       context: context,
       showDragHandle: true,
-      useSafeArea: true,
       isScrollControlled: true,
       builder: (sheetContext) => _AreaActionsSheet(png: png),
     );

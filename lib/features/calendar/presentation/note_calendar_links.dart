@@ -126,7 +126,6 @@ Future<void> showLinkNoteToCalendarSheet(BuildContext context, Note note) =>
     showAppSheet<void>(
       context: context,
       showDragHandle: true,
-      useSafeArea: true,
       isScrollControlled: true,
       builder: (_) => _LinkSheet(note: note),
     );

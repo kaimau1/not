@@ -3,6 +3,9 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 14 Kasım 2026 {#2026-11-14}
+- **Menüler toparlandı:** not ⋮ menüsünde, ana ekran ⋮'te ve sabit ekin ⋮ menüsünde üstte tutamak var — aşağı çekerek kapatabilirsin; uzun menüde başlık, ⚙ ve ✕ artık telefonun üst çubuğuyla çakışmıyor. Ana ekran ⋮'te tek maddelik "Diğer" grubu kalktı, Arşiv "Uygulama"nın sonunda.
+- **Sabit PDF'te hızlı satır ve balon listesi:** PDF'i sabitlenmiş notta "Not al" alanına yazarken üst çubukta hızlı satır çıkar. PDF ⋮ menüsündeki "Tüm balonlar" belgedeki bütün balonları tek listede gösterir; dokununca o sayfaya gidilir.
+- **Görseli gizlenmiş videoda başlık:** kartta "YouTube videosu" üstte, videonun adı altta ayrı satırda — ad artık kesilmiyor.
 - **Parmağa ayrı iş:** kalem ayarlarında ve Ayarlar → Kalem'de "Parmak: Kaydırır · Çizer · Siler" seçebilirsin. Siler'de kalem yazar, parmak siler; kalemle yazarken avuç değerse silinen geri gelir, iki parmakla yakınlaştırırken bir şey silinmez.
 - **Webde yazı seçimi:** seçilen yazı artık başka yazı tipinde mavi bir kutu içinde görünmüyor (bazı tarayıcı eklentileri açıkken oluyordu); yalnız uygulamanın kendi açık seçimi kalır.
 - **Silgiden kaleme dönüş:** silgi seçiliyken ekrana kıpırdamadan basılı tutunca "Kaleme dön" düğmesi çıkar; dokununca son kalemine dönersin. Basılı tutuş bir şey silmez.

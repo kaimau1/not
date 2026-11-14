@@ -135,13 +135,13 @@
   },
   "S17": {
     "senaryo": "Klavye aç/kapa ×3, 30 satırlık metin notu, alana dokunulmuş (seçim tutamağı var), 18 karelik hareket (ilk kareler gezinme payının altında): kare başına widget kurulumu ve dizilmek üzere işaretlenen yerleşim sınırı (test/keyboard_jank_guard_test.dart)",
-    "ilk_kare_kurulum": 45,
-    "gecis_karesi_kurulum": 67,
+    "ilk_kare_kurulum": 37,
+    "gecis_karesi_kurulum": 59,
     "hareket_karesi_kurulum": 54,
     "hareket_karesi_editor_ici": 7,
     "hareket_dizilen_sinir": 0,
     "sabit_pdf_ilk_kare_kurulum": 74,
-    "sabit_pdf_gecis_karesi_kurulum": 289,
+    "sabit_pdf_gecis_karesi_kurulum": 234,
     "sabit_pdf_hareket_karesi_kurulum": 68,
     "sabit_pdf_hareket_karesi_editor_ici": 7,
     "sabit_pdf_hareket_dizilen_sinir": 2,
@@ -149,11 +149,11 @@
     "hedef": "editör içi ≤ 7 (kapsam + alt çubuk kaydırıcısı); kalan ≈ 45 çerçevenin: kök MediaQuery + metin seçim tutamağı katmanı (EditableText.didChangeMetrics → updateForScroll)",
     "neden": "F60.S5: KeyboardInsetScope (editör Scaffold'ı klavye karelerini görmez) + hızlı satır klavyeden önce kurulur + parlama yalnız boyamada",
     "sabit_gorsel_ilk_kare_kurulum": 63,
-    "sabit_gorsel_gecis_karesi_kurulum": 238,
+    "sabit_gorsel_gecis_karesi_kurulum": 219,
     "sabit_gorsel_hareket_karesi_kurulum": 55,
     "sabit_gorsel_hareket_karesi_editor_ici": 8,
     "sabit_gorsel_hareket_dizilen_sinir": 2,
-    "sabit_gorsel_bugun": "P49 (2026-11-13): PDF ilk 74 / geçiş 289 / hareket 68 (editör içi 7 = metin notuyla aynı) / dizilen 2; görsel 63 / 238 / 55 (editör içi 8) / 2. Önce (P43): PDF 74 / 291 / 70 (11) / 3, görsel 63 / 240 / 59 (12) / 2 ve bölme HER hareket karesinde diziliyordu (pencere boyu 260 ms kare kare değişiyordu). Şimdi pencerenin boyu yalnız klavyenin göründüğü ve bittiği karede değişir, hareket boyamada (Flow); aşama kurulumsuz izlenir (KeyboardStageWatcher). Kalan dizilenler bölmenin DIŞINDA / test yapısı: RenderCustomMultiChildLayoutBox = editör alt çubuğundaki AnimatedSize (yalnız ilk açılışın ilk 6 karesi — P46'ya bulgu), _RenderTheater = ilk çevrimde tek kare (kaplama), görseldeki _RenderLayoutBuilder = testte hiç yüklenmeyen görselin yükleme animasyonu (yalnız o yaprak kurulur). Geçiş karesi (gövde tam boya dönerken editör bölmeyi yeni örnekle kurar) hâlâ ağır: medya alt ağacını önbelleğe almak ayrı iş."
+    "sabit_gorsel_bugun": "2026-11-14: hızlı satır sabit ekli notta da (başlık üst çubukta, yalnız gövde odaktayken); KeyboardSwitch araya ValueListenableBuilder koymaz, TickerMode yalnız hızlı satırda (pauseHidden), _HintGlow TickerMode'a bağımlılık kurmaz → metin ilk 45→37, geçiş 67→59; PDF ilk 74 (aynı), geçiş 289→234; görsel 63 (aynı), geçiş 238→219. P49 (2026-11-13): PDF ilk 74 / geçiş 289 / hareket 68 (editör içi 7 = metin notuyla aynı) / dizilen 2; görsel 63 / 238 / 55 (editör içi 8) / 2. Önce (P43): PDF 74 / 291 / 70 (11) / 3, görsel 63 / 240 / 59 (12) / 2 ve bölme HER hareket karesinde diziliyordu (pencere boyu 260 ms kare kare değişiyordu). Şimdi pencerenin boyu yalnız klavyenin göründüğü ve bittiği karede değişir, hareket boyamada (Flow); aşama kurulumsuz izlenir (KeyboardStageWatcher). Kalan dizilenler bölmenin DIŞINDA / test yapısı: RenderCustomMultiChildLayoutBox = editör alt çubuğundaki AnimatedSize (yalnız ilk açılışın ilk 6 karesi — P46'ya bulgu), _RenderTheater = ilk çevrimde tek kare (kaplama), görseldeki _RenderLayoutBuilder = testte hiç yüklenmeyen görselin yükleme animasyonu (yalnız o yaprak kurulur). Geçiş karesi (gövde tam boya dönerken editör bölmeyi yeni örnekle kurar) hâlâ ağır: medya alt ağacını önbelleğe almak ayrı iş."
   },
   "S18": {
     "senaryo": "Telefon 412×915, 30 not: karttan not aç (gerçek NoteOpenPage geçişi), 40 kare — ana ekran kurulumu, kart kurulumu, ilk kare ve sonraki en ağır kare",

@@ -2553,8 +2553,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Klavye açıkken üst çubuğun başlık yuvası: hızlı işlev satırı
   /// (2026-11-08); kapalıyken [idle] (tarih + etiketler).
-  Widget? _typingTitle(Note note, Widget? idle) {
-    if (_readOnly || note.type.isPageNoteType) return idle;
+  ///
+  /// [bar]: başlık üst çubukta (belge/PDF notu, bkz. [_barTitle]). Hızlı satır
+  /// orada da gelir (kullanıcı isteği 2026-11-14: "sabitli notlarda üst hızlı
+  /// satır oluşmuyor") ama YALNIZ gövde alanı (ör. "Not al") odaktayken —
+  /// çubuktaki başlığı düzenlerken başlık alanı yerinde kalır.
+  Widget? _typingTitle(Note note, Widget? idle, {Widget? bar}) {
+    if (_readOnly) return bar ?? idle;
     final pen = !note.type.isPageNoteType;
     // GENİŞ WEB'DE HEP AÇIK (kullanıcı isteği 2026-11-09: "webte hızlı menü
     // yok, kalemi açamıyorum"): web'de klavye boşluğu hiç oluşmadığından
@@ -2638,6 +2643,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onHinted: () => _quickRowHinted = true,
       ),
     );
+    if (bar != null) {
+      if (wide) {
+        return Row(
+          children: [
+            Flexible(child: bar),
+            const SizedBox(width: 12),
+            Expanded(flex: 2, child: Align(alignment: AlignmentDirectional.centerStart, child: row)),
+          ],
+        );
+      }
+      return KeyboardSwitch(
+        closed: bar,
+        editing: _fieldFocusedN,
+        onlyWhileEditing: true,
+        pauseHidden: true,
+        open: row,
+      );
+    }
     if (wide) {
       return Row(
         children: [
@@ -2647,7 +2670,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ],
       );
     }
-    return KeyboardSwitch(closed: idle, editing: _fieldFocusedN, open: row);
+    return KeyboardSwitch(
+      closed: idle,
+      editing: _fieldFocusedN,
+      pauseHidden: true,
+      open: row,
+    );
   }
 
   static Color _favoriteColorValue() {
@@ -2712,7 +2740,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// kalır (kullanıcı isteği 2026-11-08): öbür düğmeler klavye açıkken
   /// gizlenir. Yaprak düzeyde ([KeyboardSwitch]) — ekran yeniden kurulmaz.
   Widget _hideWhileTyping(Note note, Widget child) =>
-      _readOnly || note.type.isPageNoteType
+      _readOnly
       ? child
       : KeyboardSwitch(open: const SizedBox.shrink(), closed: child);
 
@@ -5143,9 +5171,9 @@ child: NoteFindBar(
                   _listLeading(l10n) != null ||
                   (Navigator.maybeOf(context)?.canPop() ?? false),
             ),
-            title: _barTitle ??
-                _typingTitle(
+            title: _typingTitle(
                   note,
+                  bar: _barTitle,
                   note.updatedAt == null && note.tags.isEmpty
                 ? null
                 : Customizable(

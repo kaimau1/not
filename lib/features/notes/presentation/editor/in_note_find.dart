@@ -153,7 +153,6 @@ Future<int?> showFindHitsSheet(
   return showAppSheet<int>(
     context: context,
     isScrollControlled: true,
-    useSafeArea: true,
     showDragHandle: true,
     builder: (sheetContext) => DraggableScrollableSheet(
       expand: false,

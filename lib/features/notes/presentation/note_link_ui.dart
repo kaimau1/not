@@ -34,7 +34,6 @@ Future<Note?> showNotePicker(
 }) => showAppSheet<Note>(
   context: context,
   showDragHandle: true,
-  useSafeArea: true,
   isScrollControlled: true,
   constraints: BoxConstraints(
     maxHeight: MediaQuery.sizeOf(context).height * 0.8,

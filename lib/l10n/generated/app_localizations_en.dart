@@ -2437,6 +2437,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bubbleSearchHint => 'Search bubbles…';
 
   @override
+  String get bubblesListAll => 'All bubbles';
+
+  @override
   String get bubblesOverviewTitle => 'Bubbles';
 
   @override
