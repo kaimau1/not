@@ -6,7 +6,14 @@
 > menüsü · **5** madde altı çizgiler ve menüsü. (A = P62: ayarlar, hesap, ipucu/uyarı, sağa-sola
 > kaydırma — ortak tasarım dili P62'de.)
 >
-> Bu belge PLAN + İSKELET'tir (Fable). Uygulamayı Opus/Sonnet alt ajanlar §7'deki paketlerle yapar.
+> **Durum (2026-11-14):** PLAN TAMAM — §0–§7 yazıldı (beş yüzey: kanıt, hedef, durumlar, kabul,
+> kasma + bütçe S40–S44; §6 iskelet sözleşmesi; §7 paketler). İskelet KODU ve uygulama YAPILMADI.
+> Sıradaki: PB0 (iskelet, fable) ∥ PBT (taban ölçüm + altyapı, opus). Açık kararlar §7.11 (SB1–SB11;
+> hepsinde güvenli seçenek uygulanır).
+>
+> Bu belge PLAN'dır; iskeletin sözleşmesi §6'da, kodu PB0'da. Model kuralı (kullanıcı kararı
+> 2026-11-14): görünüşü belirleyen paketler **fable**, görsel olmayan altyapı/ölçüm **opus**,
+> CI/mekanik işler **sonnet** (§7.0).
 > Her paket bu belgeyi ve `isci` skill'ini okuyarak, başka bağlam olmadan uygulanabilir.
 
 ## 0. Her paket için ortak kurallar (önce bunu oku)
@@ -50,13 +57,15 @@ tercihler bağlı). Yeni öğe yeni kimlik alır.
 
 **Doğrulama:** ilgili test `--reporter failures-only` + `flutter analyze` (tam) → push → CI yeşil.
 Her paket: (a) dokunduğu yüzeyin bütçe senaryosu `test/perf_budget_test.dart`'ta (aşağıda S40–S44
-tanımlı; P62 S30–S39'u kullanır, S28 boş kalmıştır), (b) `tool/tour/screen_tour_test.dart`'a yüzeyin
-görüntüsü (bugün tur bu beş yüzeyin HİÇBİRİNİ çekmiyor: `screen_tour_test.dart:656-676` yalnız
-`ana`, `n1…n4`, `n1-menu`, `n4-ekle`, `n4-ai`, `n4-bicim`, `ana-menu`, `ana-hizli`, `n4-paylas`),
+tanımlı, senaryoları PBT yazar; P62 S29–S39'u kullanır, S28 boş kalmıştır), (b) `tool/tour/screen_tour_test.dart`'a yüzeyin
+görüntüsü (bugün tur bu beş yüzeyin HİÇBİRİNİ çekmiyor: `screen_tour_test.dart:656-695` yalnız
+`ana`, `n1…n4`, not/ana menüleri, `n4-ekle`, `n4-ai`, `n4-bicim`, ayarlar, klasör/arşiv/çöp, ek
+notları; sahneler tek dokunuşlu — adımlı sahne döngüsünü PBT ekler, §7.2),
 (c) `istek_tara.py` çıktısındaki istekler bozulmadı, (d) Cihaz=A/B yazan pakette `ab-olcum`.
 `[apk]` başına en çok 5 görünür değişiklik (F58.4) — paketler buna göre bölündü.
 
-**P62 ortak belirteçleri** (§8): yoksa paket, dosyanın başında `// P62 belirteci gelince değiştir`
+**P62 ortak belirteçleri** (P62 planı `docs/plan_tasarim_A.md` §1; uyum tablosu bu belgede §6.0):
+yoksa paket (yalnız PB0, PB4, PB6 — öbürleri P62 iskeleti main'e girmeden başlamaz), dosyanın başında `// P62 belirteci gelince değiştir`
 notlu GEÇİCİ YEREL SABİT kullanır; `app_tokens.dart`'a ekleme yapmaz.
 
 ---
@@ -160,7 +169,7 @@ class CustomizeBoard extends StatelessWidget {
 ```
 
 **Düzen merkezi: `CustomizeHub`** (yeni dosya `lib/features/settings/presentation/customize_hub.dart`,
-paket D2 yazar): üstte yatay yüzey çipleri, altında o yüzeyin `CustomizeBoard`'u.
+PB2 yazar): üstte yatay yüzey çipleri, altında o yüzeyin `CustomizeBoard`'u.
 
 | Yüzey (`CustomizeSurface`) | Öğeler | Sıra kaynağı | Görünürlük |
 |---|---|---|---|
@@ -517,8 +526,8 @@ silgisi ve "son kalem" dönüşü bunlara bağlı, `:462-473`). O an SEÇİLİ a
 (silgi/şekil başka yoldan seçilebilir). Okuma tek yerde: `_PenTrayState`'te
 `List<PenTrayTool> get _tools` — `Personalize.current.shows(...)` süzgeci; `build`'deki
 `ListenableBuilder` birleşimine `Personalize.listenable` eklenir (kök `setState` yok). Kimlik
-üreteci §1.2'de; hub `pen` yüzeyi PB2'nin, tepsi tarafı PB3'ün (PB3, `UiItem.penTool` yoksa
-süzgeci yazmaz — bağımlılık §7).
+üreteci §1.2'de; hub `pen` yüzeyi PB2'nin, tepsi tarafı PB3'ün (`UiItem.penTool`
+üretecini PBT ekler — §7.2).
 
 ### 3.3 Durumlar
 
@@ -567,8 +576,8 @@ kurulumu ≤ etkileşim sayısı + 2 (araç 3 + panel 1 + kaydırıcı 5 + renk 
 Kalıp: S5 (`perf_budget_test.dart:520-554`, `_stylusDevice` + `pumpEditor`) ve S9 (`:598`).
 
 Cihaz A/B: **evet** (not sayfasının üstünde yüzen katman; kalemle yazma gecikmesi en hassas yüzey).
-`ab_hepsi.py`'de kalem evresi yoksa "kalem kipi aç → 10 çizgi → kapsül aç/kapa ×3" evresi eklenir
-(*hipotez: evre listesi okunmadı; PB3 `tool/perf/ab_hepsi.py:155` adım tablosuna bakar*).
+`ab_hepsi.py`'de kalem evresi YOK (doğrulandı: `run_once`, `tool/perf/ab_hepsi.py:180-287` — evreler
+`liste … sabit_kb`); "kalem kipi aç → 10 çizgi → kapsül aç/kapa ×3" evresini PBT ekler (§7.2).
 
 ---
 
@@ -647,7 +656,7 @@ sınıf silinir — iki dalga bileşeni kalmaz):
 - Hareketi azalt: titreşim ve nefes yok; çubuklar yalnız düzey değişince tek adımda güncellenir.
 - Düzey kaynağı: `VoiceListenSession`'a `final ValueNotifier<double> level` (ve aynı kalıpla
   `silence`) eklenir; `:113-114` ve `reportLevel` (`:150`) onu da besler, `_tick` sessizlik oranını
-  yazar, oturum kapanırken ikisi de `dispose`. `onSilence` geri çağrısı kalır (levha alt başlığı).
+  yazar, oturum kapanırken ikisi de SIFIRLANIR (`dispose` edilmez — kapanış karesinde kart hâlâ dinliyor olabilir; alanları PBT ekler, §7.2). `onSilence` geri çağrısı kalır (levha alt başlığı).
   `level == null` verilirse (düzey bilinmiyor) sabit 0.5 varsayılır — dalga yine yaşar.
 
 **Kart (`ListeningCard`) — aynı orta boy, yeni dil:**
@@ -678,8 +687,8 @@ sınıf silinir — iki dalga bileşeni kalmaz):
   (2026-10-20 "farkı ayırt edilebilsin"; rozet 40 dp, zemin değil).
 - Sessizlik geri sayımı kartın İÇİNDE, dalganın altında 2 dp çizgi (`ValueKey('voice-silence-bar')`
   korunur), `ValueListenableBuilder` ile yalnız kendisi kurulur; kart `silence` parametresi alır.
-  Editör dikte kartı da gösterir (bulgu 3). Sayım başlayınca alt yazı "Sessizlikte bitecek…"
-  (`voiceAutoStopSoon`, var olan metin) — iki kipte de.
+  Editör dikte kartı da gösterir (bulgu 3). Sayım başlayınca alt yazı var olan
+  `voiceAutoStopSoon` metni ("Sessizlik — birazdan biter", `app_tr.arb:2406`) — iki kipte de.
 - En sınırı: kart `ConstrainedBox(maxWidth: 560)` + ortalı (editörde ve levhada) — telefonda etkisiz.
 - `ListeningActionButton`: hap 44, yazı `AppWeight.strong`, dolgu `AppSpace.l`; dinlerken `error`
   zemin KALIR (kayıt durumu; "kaçırılamayacak gösterge" isteği). `ListeningHeaderButton` aynı.
