@@ -84,12 +84,14 @@ class MenuSection {
 
 /// [ActionMenu]'yü alt levhada açar; seçilen işlemin anahtarını döner.
 ///
-/// Başlıklı menüde ✕ var → tutamak ÇİZİLMEZ (DENEYIM K-D7; aşağı çekerek
-/// kapatma yine çalışır). Başlıksız menüde ✕ yok, tutamak kalır.
+/// TUTAMAK HER MENÜDE (kullanıcı isteği 2026-11-14: "üstte tutamacı yok,
+/// tutup aşağı çekemiyorum, sadece ✕ kapatıyor" — K-D7'nin "✕ varsa tutamak
+/// yok" kuralı kalktı). Levha durum çubuğunun altında durur ([showAppSheet]
+/// `useSafeArea`): ⚙ ve ✕ telefonun üst çubuğuyla çakışmaz.
 Future<String?> showActionMenuSheet(BuildContext context, ActionMenu menu) =>
     showAppSheet<String>(
       context: context,
-      showDragHandle: !menu.hasHeader,
+      showDragHandle: true,
       // Büyük yazı ölçeğinde levha varsayılan tavanı aşabilir; kaydırma ağı.
       isScrollControlled: true,
       builder: (sheetContext) =>
@@ -175,7 +177,17 @@ class ActionMenu extends StatelessWidget {
       for (final a in quick)
         if (!inQuick.contains(a.id) && !layout.hidden.contains(a.id)) a,
     ], (a) => a.id);
-    if (orphans.isNotEmpty) sectionsOut.add(MenuSection(otherTitle, orphans));
+    if (orphans.isEmpty) return (quickOut, sectionsOut);
+    // TEK GRUPLU MENÜDE (ana ekran ⋮) öksüzler o grubun SONUNA katılır
+    // (kullanıcı bulgusu 2026-11-14: "ana menüdeki 3 nokta düzensiz" —
+    // "Uygulama" ızgarası yarım satırla bitiyor, altında tek maddelik
+    // "Diğer" grubu duruyordu).
+    if (sectionsOut.length == 1) {
+      final only = sectionsOut.single;
+      sectionsOut[0] = MenuSection(only.title, [...only.actions, ...orphans]);
+    } else {
+      sectionsOut.add(MenuSection(otherTitle, orphans));
+    }
     return (quickOut, sectionsOut);
   }
 

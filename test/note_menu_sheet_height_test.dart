@@ -58,13 +58,15 @@ void main() {
     return (sheet.height, overflow < 0 ? 0.0 : overflow);
   }
 
-  testWidgets('412×915: levha ≤ 674 dp, tutamak yok, alt satır yok', (
+  // Tutamak geri geldi (kullanıcı isteği 2026-11-14: "tutup aşağı
+  // çekemiyorum"): tavan 674 + 48 dp tutamak alanı.
+  testWidgets('412×915: levha ≤ 722 dp (tutamaklı), alt satır yok', (
     tester,
   ) async {
     final (h, _) = await measure(tester, const Size(412, 915));
     // ignore: avoid_print
     print('F76.1 levha yüksekliği 412×915: ${h.toStringAsFixed(0)} dp');
-    expect(h, lessThanOrEqualTo(674));
+    expect(h, lessThanOrEqualTo(722));
     expect(find.byKey(const ValueKey('menu-footer-settings')), findsNothing);
   });
 

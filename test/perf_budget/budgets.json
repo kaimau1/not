@@ -135,13 +135,13 @@
   },
   "S17": {
     "senaryo": "Klavye aç/kapa ×3, 30 satırlık metin notu, alana dokunulmuş (seçim tutamağı var), 18 karelik hareket (ilk kareler gezinme payının altında): kare başına widget kurulumu ve dizilmek üzere işaretlenen yerleşim sınırı (test/keyboard_jank_guard_test.dart)",
-    "ilk_kare_kurulum": 45,
-    "gecis_karesi_kurulum": 67,
+    "ilk_kare_kurulum": 37,
+    "gecis_karesi_kurulum": 59,
     "hareket_karesi_kurulum": 54,
     "hareket_karesi_editor_ici": 7,
     "hareket_dizilen_sinir": 0,
     "sabit_pdf_ilk_kare_kurulum": 74,
-    "sabit_pdf_gecis_karesi_kurulum": 289,
+    "sabit_pdf_gecis_karesi_kurulum": 234,
     "sabit_pdf_hareket_karesi_kurulum": 68,
     "sabit_pdf_hareket_karesi_editor_ici": 7,
     "sabit_pdf_hareket_dizilen_sinir": 2,
@@ -149,11 +149,11 @@
     "hedef": "editör içi ≤ 7 (kapsam + alt çubuk kaydırıcısı); kalan ≈ 45 çerçevenin: kök MediaQuery + metin seçim tutamağı katmanı (EditableText.didChangeMetrics → updateForScroll)",
     "neden": "F60.S5: KeyboardInsetScope (editör Scaffold'ı klavye karelerini görmez) + hızlı satır klavyeden önce kurulur + parlama yalnız boyamada",
     "sabit_gorsel_ilk_kare_kurulum": 63,
-    "sabit_gorsel_gecis_karesi_kurulum": 238,
+    "sabit_gorsel_gecis_karesi_kurulum": 219,
     "sabit_gorsel_hareket_karesi_kurulum": 55,
     "sabit_gorsel_hareket_karesi_editor_ici": 8,
     "sabit_gorsel_hareket_dizilen_sinir": 2,
-    "sabit_gorsel_bugun": "P49 (2026-11-13): PDF ilk 74 / geçiş 289 / hareket 68 (editör içi 7 = metin notuyla aynı) / dizilen 2; görsel 63 / 238 / 55 (editör içi 8) / 2. Önce (P43): PDF 74 / 291 / 70 (11) / 3, görsel 63 / 240 / 59 (12) / 2 ve bölme HER hareket karesinde diziliyordu (pencere boyu 260 ms kare kare değişiyordu). Şimdi pencerenin boyu yalnız klavyenin göründüğü ve bittiği karede değişir, hareket boyamada (Flow); aşama kurulumsuz izlenir (KeyboardStageWatcher). Kalan dizilenler bölmenin DIŞINDA / test yapısı: RenderCustomMultiChildLayoutBox = editör alt çubuğundaki AnimatedSize (yalnız ilk açılışın ilk 6 karesi — P46'ya bulgu), _RenderTheater = ilk çevrimde tek kare (kaplama), görseldeki _RenderLayoutBuilder = testte hiç yüklenmeyen görselin yükleme animasyonu (yalnız o yaprak kurulur). Geçiş karesi (gövde tam boya dönerken editör bölmeyi yeni örnekle kurar) hâlâ ağır: medya alt ağacını önbelleğe almak ayrı iş."
+    "sabit_gorsel_bugun": "2026-11-14: hızlı satır sabit ekli notta da (başlık üst çubukta, yalnız gövde odaktayken); KeyboardSwitch araya ValueListenableBuilder koymaz, TickerMode yalnız hızlı satırda (pauseHidden), _HintGlow TickerMode'a bağımlılık kurmaz → metin ilk 45→37, geçiş 67→59; PDF ilk 74 (aynı), geçiş 289→234; görsel 63 (aynı), geçiş 238→219. P49 (2026-11-13): PDF ilk 74 / geçiş 289 / hareket 68 (editör içi 7 = metin notuyla aynı) / dizilen 2; görsel 63 / 238 / 55 (editör içi 8) / 2. Önce (P43): PDF 74 / 291 / 70 (11) / 3, görsel 63 / 240 / 59 (12) / 2 ve bölme HER hareket karesinde diziliyordu (pencere boyu 260 ms kare kare değişiyordu). Şimdi pencerenin boyu yalnız klavyenin göründüğü ve bittiği karede değişir, hareket boyamada (Flow); aşama kurulumsuz izlenir (KeyboardStageWatcher). Kalan dizilenler bölmenin DIŞINDA / test yapısı: RenderCustomMultiChildLayoutBox = editör alt çubuğundaki AnimatedSize (yalnız ilk açılışın ilk 6 karesi — P46'ya bulgu), _RenderTheater = ilk çevrimde tek kare (kaplama), görseldeki _RenderLayoutBuilder = testte hiç yüklenmeyen görselin yükleme animasyonu (yalnız o yaprak kurulur). Geçiş karesi (gövde tam boya dönerken editör bölmeyi yeni örnekle kurar) hâlâ ağır: medya alt ağacını önbelleğe almak ayrı iş."
   },
   "S18": {
     "senaryo": "Telefon 412×915, 30 not: karttan not aç (gerçek NoteOpenPage geçişi), 40 kare — ana ekran kurulumu, kart kurulumu, ilk kare ve sonraki en ağır kare",
@@ -231,5 +231,75 @@
     "bugun": "1 / 14 (2026-11-14; P59 öncesi kod da 1 / 14)",
     "hedef": "≤ 1 / ≤ 14",
     "neden": "P59 ilk ölçüm: kapanışta bölme geçiş boyu bekler, liste tek adımda genişler — kurulum sayısı değişmedi"
+  },
+  "S27": {
+    "senaryo": "1280×800 iki not yan yana (K32): birincile 20 karakter + kayıt (yandaki editör ve pano), sonra klavye aç/kapa 6 kare (iki bölmenin gövdesi)",
+    "yandaki_kok_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "note_card": 0,
+    "klavye_govde_kurulum": 0,
+    "bugun": "0 / 0 / 0 / 0 (2026-11-14, K32 A5); düzeltme öncesi 1 / 0 / 0 / 24",
+    "hedef": "0 / S12 ile aynı (0) / S12 ile aynı (0) / 0 (S8 × 2)",
+    "neden": "K32 A5: (1) editör kökü liste akışının tamamını izliyordu (geri bağlantı çipi) — her kayıt yankısı iki editörü de kuruyordu; kök artık yalnız 'geri bağlantı var mı'yı seçer, çip kendi Consumer'ında. (2) kabuk klavye karelerinde yeniden kurulunca yandaki bölmeye yeni widget örneği veriliyordu — örnek artık SecondNote başına saklanır"
+  },
+  "S29": {
+    "senaryo": "Ayar alanı açılışı: telefon 412×915, SettingsScreen(initialArea: ai) doğrudan pompalanır, 40 kare. ilk_kare = pompa karesi (MaterialApp dahil); kare_kurulum = ilk kareden SONRAKİ en ağır kare (satır yayma kareleri)",
+    "ilk_kare_kurulum": 367,
+    "kare_kurulum": 37,
+    "toplam_kurulum": 488,
+    "bugun": "367 / 37 / 488; ilk karede 2 satır — yayma çalışıyor (2026-11-14, PA0)",
+    "hedef": "en ağır kare tabanı AŞMAZ; toplam en çok grup sarmalayıcıları kadar artar (artış neden e yazılır)",
+    "neden": "P62 PA0 ilk ölçüm (taban, mandal); PA1 satır kılığını değiştirirken yaymayı bozmamalı"
+  },
+  "S30": {
+    "senaryo": "Hesap levhası: telefon ana ekran, 30 not; home-account-avatar a dokun → 30 kare → sistem geri → 30 kare",
+    "kart_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "kare_kurulum": 341,
+    "bugun": "kart 0 / pano 0 / en ağır kare 341 (levhanın kendi kurulumu) (2026-11-14, PA0)",
+    "hedef": "kart 0, pano 0",
+    "neden": "P62 PA0 ilk ölçüm = hedef (kart / pano); en ağır kare taban (mandal), PA2 kılık değişikliğinde aşılmamalı"
+  },
+  "S31": {
+    "senaryo": "Bildirim şeridi (iskelet): telefon ana ekran + AppNoticeHost; ileti göster → 30 kare → 4 sn kendiliğinden kalkış → 30 kare; ipucu göster → iptal edilen dokunuşla kalkış; şerit BOŞKEN alt inset 0 → 300 → 0 (10 adım), adım başına _NoticeLane altında kurulan",
+    "kart_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "kare_kurulum": 28,
+    "klavye_karesi_kurulum": 10,
+    "bugun": "0 / 0 / 28 / 10 (2026-11-14, PA0); klavye karesi > 0: iki şerit viewInsetsOf u dinliyor (R5)",
+    "hedef": "0 / 0 / küçük sabit / 0",
+    "neden": "P62 PA0 ilk ölçüm (iskelet tabanı); klavye karesi hedefin üstünde — PA5 0 a indirir, yükseltilmez"
+  },
+  "S32": {
+    "senaryo": "Kalıcı şerit belirişi: telefon ana ekran, 30 not; pendingUploadsProvider 0 → 2 → 0, her değişimden sonra 30 kare; ızgara kaydırma görünümünün boyunun değiştiği kare sayısı (S9 kalıbı)",
+    "izgara_boy_karesi": 26,
+    "kart_kurulum": 0,
+    "bugun": "26 / 0 (2026-11-14, PA0); _PendingUploadsBar AnimatedSize 200 ms × 2 — ızgara her karede yeniden diziliyor",
+    "hedef": "2 (belir 1 + kalk 1) / 0",
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R1 gerçek dizilim yükü, PA6 2 ye indirir"
+  },
+  "S33": {
+    "senaryo": "Ana ekran çekişi: telefon, 30 not, swipe_mode=filters; 5. karttan 6 × 10 dp sola çek (eşik altı, süzgeç değişmez), bırak, 30 kare",
+    "kart_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "kare_kurulum": 16,
+    "bugun": "0 / 0 / 16 (FolderSwipe, _TipBanner, basılı tutma halkası, AnimatedBuilder 18) (2026-11-14, PA0)",
+    "hedef": "0 / 0 / etiket + FolderSwipe kadar",
+    "neden": "P62 PA0 ilk ölçüm = hedef (taban, mandal); PA7 çekiş hissini değiştirirken aşılmamalı"
+  },
+  "S35": {
+    "senaryo": "Takvim mini ayı aç → kapat: telefon, calendar_view=agenda (S22 düzeneği); calendar-month-toggle a iki kez dokun, her birinden sonra 30 kare; ajanda listesinin boyunun değiştiği kare sayısı",
+    "liste_boy_karesi": 28,
+    "bugun": "28 (2026-11-14, PA0); calendar_screen.dart AnimatedSize — liste her karede yeniden diziliyor",
+    "hedef": "2 (aç 1 + kapa 1)",
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R2 gerçek dizilim yükü, PA8 2 ye indirir"
+  },
+  "S36": {
+    "senaryo": "Geniş ekran ayarlar: 1280×800 SettingsScreen; settings-cat-ai → settings-cat-sound (döşeme önce görünüre kaydırılır, ölçüm dışı), her birinden sonra 40 kare",
+    "kare_kurulum": 673,
+    "toplam_kurulum": 1875,
+    "bugun": "en ağır kare 673 / toplam 1875 (2026-11-14, PA0); ilk kare ai 551 / sound 673, sonraki en ağır 65 / 262",
+    "hedef": "en ağır kare ≤ S29 en ağır karesi (alan değişimi de yayılır)",
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hedefin üstünde — alan değişiminin ilk karesi ağır, PA1 indirir, yükseltilmez"
   }
 }

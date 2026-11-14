@@ -349,7 +349,6 @@ Widget _modelPickerTile({
           final picked = await showAppSheet<_ModelChoice>(
             context: context,
             isScrollControlled: true,
-            useSafeArea: true,
             showDragHandle: true,
             builder: (_) => _ModelPickerSheet(
               title: label,

@@ -47,7 +47,6 @@ Future<void> showNoteSearchSheet(
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
-  useSafeArea: true,
   showDragHandle: true,
   builder: (_) => _NoteSearchSheet(note: note, initialQuery: initialQuery),
 );

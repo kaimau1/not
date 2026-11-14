@@ -33,7 +33,6 @@ Future<void> showFilterSheet(BuildContext context) =>
     showAppSheet<void>(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       // TUTAMAK YOK (2026-11-10, kullanıcı: "üstte ölü boşluk var"): M3
       // tutamağı başlığın üstünde ~48 dp boş şerit açıyordu; levha yine
       // aşağı sürüklenerek ve ✕ ile kapanır.

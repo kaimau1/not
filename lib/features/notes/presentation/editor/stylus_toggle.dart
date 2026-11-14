@@ -297,7 +297,9 @@ class _FingerWritesChip extends StatelessWidget {
                     const SizedBox(width: AppSpace.xxs),
                     Flexible(
                       child: Text(
-                        context.l10n.inkPenOnlyOff,
+                        InkToolMemory.fingerErases
+                            ? context.l10n.inkFingerEraseOn
+                            : context.l10n.inkPenOnlyOff,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelSmall

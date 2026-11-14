@@ -691,6 +691,14 @@ class InkController extends ChangeNotifier {
   bool _tempEraser = false;
   bool get _erasing => eraser || _tempEraser;
 
+  /// Bu jestin geçici silgisi PARMAK aracından mı (K34: parmak "Siler").
+  bool _fingerErase = false;
+
+  /// Bu yarıçaptan (dp, `PointerEvent.radiusMajor`) geniş parmak teması
+  /// avuçtur: parmak-silgi SİLMEZ. 0 = cihaz bildirmiyor → süzülmez.
+  /// ponytail: tahminî eşik — tablette parmak ucu/avuç ölçülüp ayarlanacak.
+  static const kFingerEraserPalmRadius = 22.0;
+
   /// Şekil/ok çiziminin başlangıç noktası (oranlı).
   double _startX = 0, _startY = 0;
 
@@ -907,6 +915,22 @@ class InkController extends ChangeNotifier {
     _toolChanged();
   }
 
+  /// Parmağın işi (K34): Kaydırır / Çizer / Siler. Hep kullanıcı seçimi.
+  void setFingerTool(FingerTool tool) {
+    InkToolMemory.saveFingerTool(tool);
+    _toolChanged();
+  }
+
+  /// Parmak-silgi jesti yakınlaştırma niyetine döndü (ikinci parmak): sildiği
+  /// her şey geri gelir — yakınlaştırırken çizgi kaybolmasın.
+  void _undoFingerErase() {
+    if (!_fingerErase) return;
+    final base = _gestureBase;
+    if (base != null) _ink = base;
+    _fingerErase = false;
+    _tempEraser = false;
+  }
+
   void setPressure(bool value) {
     pressure = value;
     InkToolMemory.savePressure(value);
@@ -1030,6 +1054,7 @@ class InkController extends ChangeNotifier {
     _clearHold();
     _lassoPath = null;
     _moving = false;
+    _undoFingerErase();
     if (_active != null) {
       _ink = [..._ink]..remove(_active);
       _active = null;
@@ -1074,6 +1099,7 @@ class InkController extends ChangeNotifier {
     PointerDeviceKind kind = PointerDeviceKind.touch,
     double? pressure,
     bool stylusEraser = false,
+    double? touchRadius,
   }) {
     final stylus =
         kind == PointerDeviceKind.stylus ||
@@ -1097,6 +1123,12 @@ class InkController extends ChangeNotifier {
       // [claimPointer]); kalemin sayacı yukarıda zaten işlendi.
       if (_claimed.remove(pointer)) return;
       if (!accepts(kind) || isPalm(kind)) return;
+      // Parmak-silgide geniş temas avuçtur (K34): hiç üstlenilmez.
+      if (kind == PointerDeviceKind.touch &&
+          InkToolMemory.fingerErases &&
+          (touchRadius ?? 0) > kFingerEraserPalmRadius) {
+        return;
+      }
       _accepted[pointer] = kind;
     }
     if (!identical(active, this)) {
@@ -1110,6 +1142,7 @@ class InkController extends ChangeNotifier {
     if (_pointers > 1) {
       // İkinci parmak = yakınlaştırma/kaydırma niyeti: yeni başlamış çizgiyi
       // geri al ki ekranda kırıntı kalmasın.
+      _undoFingerErase();
       if (_active != null) _ink = [..._ink]..remove(_active);
       _active = null;
       _holdTimer?.cancel();
@@ -1162,6 +1195,22 @@ class InkController extends ChangeNotifier {
       _fixEdit = false;
       _selected = const [];
     }
+    // Parmak "Siler" (K34): parmak dokunuşu yan düğme silgisiyle aynı yol;
+    // seçimi (tutamak ya da kement içi) yine taşır, kalemin aracı kalemde
+    // kalır.
+    final selBounds = selectionBounds;
+    _fingerErase =
+        kind == PointerDeviceKind.touch &&
+        InkToolMemory.fingerErases &&
+        !penOnly &&
+        !_tempEraser &&
+        !(lasso &&
+            selBounds != null &&
+            selectionPage == page &&
+            selBounds
+                .inflate(0.03)
+                .contains(Offset(local.dx / size.width, local.dy / size.height)));
+    if (_fingerErase) _tempEraser = true;
     if (lasso && !_tempEraser) {
       final x = local.dx / size.width;
       final y = local.dy / size.height;
@@ -1565,6 +1614,7 @@ class InkController extends ChangeNotifier {
     final wasSnapped = _snapped;
     _snapLineFrom = null;
     _tempEraser = false;
+    _fingerErase = false;
     _holdTimer?.cancel();
     _clearHold();
     _eraserHold?.cancel();
@@ -1949,6 +1999,7 @@ class InkPageLayer extends StatelessWidget {
                 stylusEraser:
                     e.kind == PointerDeviceKind.invertedStylus ||
                     e.buttons & kSecondaryStylusButton != 0,
+                touchRadius: e.radiusMajor,
               ),
               onPointerMove: (e) => controller.pointerMove(
                 page,
@@ -2420,6 +2471,57 @@ class ActiveInkPainter extends CustomPainter {
       old.accent != accent;
 }
 
+/// "Parmak: Kaydırır · Çizer · Siler" (K34, F63.6) — eski "yalnız kalem"
+/// anahtarının yerinde; kalem ayarları sayfası ve Ayarlar → Kalem ortak.
+class InkFingerToolPicker extends StatefulWidget {
+  const InkFingerToolPicker({super.key, required this.onChanged});
+
+  final void Function(FingerTool) onChanged;
+
+  @override
+  State<InkFingerToolPicker> createState() => _InkFingerToolPickerState();
+}
+
+class _InkFingerToolPickerState extends State<InkFingerToolPicker> {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.back_hand_outlined),
+          title: Text(l10n.inkFingerToolTitle),
+          subtitle: Text(l10n.inkFingerToolInfo),
+        ),
+        SegmentedButton<FingerTool>(
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(
+              value: FingerTool.scroll,
+              icon: const Icon(Icons.swipe_vertical_outlined),
+              label: Text(l10n.inkFingerScroll),
+            ),
+            ButtonSegment(
+              value: FingerTool.draw,
+              icon: const Icon(Icons.gesture_rounded),
+              label: Text(l10n.inkFingerDraw),
+            ),
+            ButtonSegment(
+              value: FingerTool.erase,
+              icon: const Icon(Icons.auto_fix_normal_outlined),
+              label: Text(l10n.inkFingerErase),
+            ),
+          ],
+          selected: {InkToolMemory.fingerTool},
+          onSelectionChanged: (s) => setState(() => widget.onChanged(s.first)),
+        ),
+      ],
+    );
+  }
+}
+
 class InkSettingsSheet extends StatelessWidget {
   const InkSettingsSheet({super.key, required this.controller});
 
@@ -2543,13 +2645,9 @@ class InkSettingsSheet extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 8),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.draw),
-              title: Text(l10n.inkPenOnlyTitle),
-              subtitle: Text(l10n.inkPenOnlyInfo),
-              value: controller.penOnly,
-              onChanged: controller.setPenOnly,
+            InkFingerToolPicker(
+              key: const ValueKey('ink-finger-tool'),
+              onChanged: controller.setFingerTool,
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

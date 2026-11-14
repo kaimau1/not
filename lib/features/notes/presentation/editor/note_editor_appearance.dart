@@ -473,7 +473,7 @@ extension _EditorAppearance on _NoteEditorScreenState {
     if (repo == null || note == null) return;
     _deleted = true;
     repo.softDelete(note.id);
-    Navigator.of(context).pop();
+    _closeEditor(() => Navigator.of(context).pop());
   }
 
   /// Notun içeriğini (gövde + liste öğeleri) onay alarak temizler;

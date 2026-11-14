@@ -621,7 +621,6 @@ Future<void> showFolderOrderSheet(BuildContext context) =>
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      useSafeArea: true,
       builder: (_) => const FractionallySizedBox(
         heightFactor: 0.8,
         child: FolderOrderPanel(),

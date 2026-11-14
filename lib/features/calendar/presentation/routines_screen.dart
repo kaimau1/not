@@ -211,7 +211,6 @@ Future<void> showRoutineDaySheet(
 ) => showAppSheet<void>(
   context: context,
   showDragHandle: true,
-  useSafeArea: true,
   isScrollControlled: true,
   builder: (_) => _RoutineDaySheet(routine: routine, day: startOfDay(day)),
 );
@@ -274,7 +273,6 @@ Future<void> showRoutineEditor(BuildContext context, {Routine? existing}) =>
     showAppSheet<void>(
       context: context,
       showDragHandle: true,
-      useSafeArea: true,
       isScrollControlled: true,
       builder: (_) => _RoutineEditor(existing: existing),
     );

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../viewers/ink_layer.dart';
+import '../viewers/ink_tools.dart' show InkToolMemory;
 import 'note_images.dart';
 import 'pen_tray.dart';
 import '../../../../core/friendly_error.dart';
@@ -248,7 +249,11 @@ class _DrawingScreenState extends State<DrawingScreen> {
                   CheckedPopupMenuItem(
                     value: 'penOnly',
                     checked: _ink.penOnly,
-                    child: Text(l10n.inkPenOnlyOn),
+                    child: Text(
+                      !_ink.penOnly && InkToolMemory.fingerErases
+                          ? l10n.inkFingerEraseOn
+                          : l10n.inkPenOnlyOn,
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'settings',

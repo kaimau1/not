@@ -122,7 +122,6 @@ Future<VoiceCaptureResult?> showVoiceCaptureSheet(
 }) => showAppSheet<VoiceCaptureResult>(
   context: context,
   isScrollControlled: true,
-  useSafeArea: true,
   // Karartıya dokunuş ve aşağı sürükleme AÇIK: levhanın tek çıkışı sol
   // üstteki çarpı olduğu sürece kapatmak zahmetliydi. İçerik kaybı riski
   // kapıları kilitleyerek değil, çıkarken SORARAK karşılanıyor — dört

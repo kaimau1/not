@@ -2431,6 +2431,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bubbleSearchHint => 'Balonlarda ara…';
 
   @override
+  String get bubblesListAll => 'Tüm balonlar';
+
+  @override
   String get bubblesOverviewTitle => 'Balonlar';
 
   @override
@@ -5875,6 +5878,25 @@ class AppLocalizationsTr extends AppLocalizations {
       'Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.';
 
   @override
+  String get inkFingerToolTitle => 'Parmak';
+
+  @override
+  String get inkFingerToolInfo =>
+      'Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.';
+
+  @override
+  String get inkFingerScroll => 'Kaydırır';
+
+  @override
+  String get inkFingerDraw => 'Çizer';
+
+  @override
+  String get inkFingerErase => 'Siler';
+
+  @override
+  String get inkFingerEraseOn => 'Parmak siliyor — yalnız kaleme geç';
+
+  @override
   String get inkPressureTitle => 'Basınç algısı';
 
   @override
@@ -8481,6 +8503,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get listPaneMoveRight => 'Listeyi sağa al';
+
+  @override
+  String get noteOpenSide => 'Yanda aç';
+
+  @override
+  String get micBusySideNote => 'Mikrofon yandaki notta kullanılıyor';
+
+  @override
+  String get noteCloseSide => 'Yandaki notu kapat';
 
   @override
   String get listPaneMoveLeft => 'Listeyi sola al';

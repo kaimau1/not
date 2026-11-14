@@ -117,13 +117,14 @@ double estimateNoteCardHeight(Note note, double width) {
   if (!note.cardMediaHidden) {
     final media = CardMediaPlan.of(note);
     if (!media.isEmpty) height += media.estimateHeight(width) + 8;
-  } else if (!note.locked &&
-      !CardHiddenMedia.of(
-        note,
-        showVisuals: false,
-        showFiles: false,
-      ).isEmpty) {
-    height += 22; // gizli eklerin özet satırı (F60.S8)
+  } else if (!note.locked) {
+    final hidden = CardHiddenMedia.of(
+      note,
+      showVisuals: false,
+      showFiles: false,
+    );
+    // Gizli eklerin özet satırı (F60.S8); tek ekin adı ikinci satırda.
+    if (!hidden.isEmpty) height += hidden.name == null ? 22 : 38;
   }
 
   // Alt meta satırı (rozet · etiket · tarih) neredeyse her kartta var.

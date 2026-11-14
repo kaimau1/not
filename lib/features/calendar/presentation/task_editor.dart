@@ -41,7 +41,6 @@ Future<void> showTaskEditor(
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
-  useSafeArea: true,
   showDragHandle: true,
   builder: (_) => TaskEditorSheet(
     existing: existing,

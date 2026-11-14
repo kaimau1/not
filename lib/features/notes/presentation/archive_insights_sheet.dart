@@ -28,7 +28,6 @@ Future<void> showArchiveInsightsSheet(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
-  useSafeArea: true,
   builder: (_) => _ArchiveInsightsSheet(notes: archived),
 );
 

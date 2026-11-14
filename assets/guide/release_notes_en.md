@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 14 November 2026 {#2026-11-14}
+- **Tidier menus:** the note ⋮ menu, the home ⋮ menu and the pinned attachment's ⋮ menu have a handle at the top — drag down to close; in a long menu the title, ⚙ and ✕ no longer clash with the phone's status bar. The one-item "Other" group in the home ⋮ menu is gone; Archive sits at the end of "App".
+- **Quick row and bubble list on a pinned PDF:** while typing in the "Take a note" field of a note with a pinned PDF, the quick row appears in the top bar. "All bubbles" in the PDF ⋮ menu lists every bubble in the document; tap one to jump to its page.
+- **Title on a video with its preview hidden:** the card shows "YouTube video" on top and the video's name on its own line below — no longer cut off.
+- **A separate job for your finger:** in the pen settings and Settings → Pen you can pick "Finger: Scrolls · Draws · Erases". With Erases, the pen writes and your finger erases; if your palm touches while writing, anything it erased comes back, and pinching to zoom erases nothing.
 - **Text selection on the web:** selected text no longer shows up in a blue box with a different font (it happened with some browser extensions on); only the app's own light highlight remains.
 - **Back from the eraser:** with the eraser on, press and hold still on the page and a "Back to pen" button appears; tap it to return to your last pen. The hold erases nothing.
 - **Leaving a note on tablets and the web:** the note now slides out of the right pane and then the list widens, instead of vanishing at once.
@@ -11,6 +15,7 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Arrange the top bar:** the new "Top bar" group in Settings → Personalize lets you reorder the buttons at the top of a note (Home, sync, undo, pin, full screen) and hide the ones you don't want; ⋮ always stays on the far right.
 - **Attachment count:** a picture you chose as the note's background no longer counts as an attachment on the archive card badge or on the share screen.
 - **Reminder warning:** if exact alarms are off on your phone, Settings → Permissions shows an "Alarms and reminders" row; tap it to open the screen where you can allow them.
+- **Two notes side by side on tablets:** with the tablet in landscape and a note open, pick "Open side by side" from another card's ⋮ menu in the list; the two notes open next to each other, the divider in the middle sets their widths, ✕ closes the side note and Back closes both and returns to the list.
 
 ## 13 November 2026 {#2026-11-13}
 - **Voice typing on tablets:** if the device's live speech recognition doesn't work (tablets without Google services), the app notices within a few seconds and switches to the voice note sheet: your speech is recorded and transcribed. Stutter while voice typing is on is also reduced.

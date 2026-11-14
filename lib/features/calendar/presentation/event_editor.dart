@@ -62,7 +62,6 @@ Future<void> showEventEditor(
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
-  useSafeArea: true,
   showDragHandle: true,
   builder: (_) => EventEditorSheet(
     existing: existing,

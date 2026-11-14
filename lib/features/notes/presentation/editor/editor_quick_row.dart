@@ -669,11 +669,25 @@ class _HintGlowState extends State<_HintGlow>
   bool _started = false;
   Timer? _fade;
 
+  /// `TickerMode` DİNLENİR, bağımlılık kurulmaz: satır görünür olunca
+  /// parlama kurulumsuz başlar (bağımlılık her klavye geçişinde bu öğeyi
+  /// yeniden kurduruyordu — S17).
+  ValueListenable<TickerModeData>? _ticker;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_started || !widget.hint) return;
-    if (!TickerMode.valuesOf(context).enabled) return;
+    final ticker = TickerMode.getValuesNotifier(context);
+    if (!identical(ticker, _ticker)) {
+      _ticker?.removeListener(_maybeStart);
+      _ticker = ticker..addListener(_maybeStart);
+    }
+    _maybeStart();
+  }
+
+  void _maybeStart() {
+    if (_started || !widget.hint || !mounted) return;
+    if (!(_ticker?.value.enabled ?? true)) return;
     _started = true;
     widget.onHinted?.call();
     _light.value = 1;
@@ -689,6 +703,7 @@ class _HintGlowState extends State<_HintGlow>
 
   @override
   void dispose() {
+    _ticker?.removeListener(_maybeStart);
     _fade?.cancel();
     _light.dispose();
     super.dispose();
@@ -736,11 +751,23 @@ class KeyboardSwitch extends StatefulWidget {
     required this.open,
     this.closed,
     this.editing,
+    this.onlyWhileEditing = false,
+    this.pauseHidden = false,
   });
+
+  /// Gizliyken [open]'ın animasyonları dursun ve ilk görünüşü bilsin
+  /// (`TickerMode`) — yalnız hızlı satır ister (parlama). Geri al / gizlenen
+  /// düğmelerde sarmalayıcı yok: her klavye geçişinde 2 kurulum (S17).
+  final bool pauseHidden;
 
   final Widget open;
   final Widget? closed;
   final ValueListenable<bool>? editing;
+
+  /// [open] YALNIZ [editing] doğruyken (klavye açık olsa da): başlığı üst
+  /// çubukta duran notta başlık alanı düzenlenirken çubuk yerinde kalır
+  /// (2026-11-14). Anahtar hep aynı örnek — kurulum/önden kurma bozulmaz.
+  final bool onlyWhileEditing;
 
   @override
   State<KeyboardSwitch> createState() => _KeyboardSwitchState();
@@ -753,7 +780,6 @@ class KeyboardSwitch extends StatefulWidget {
 /// [open] İLK açılışta bir kez kurulur, sonra ikisi de yerinde durur; yalnız
 /// görünen değişir (Offstage). Kasma kontrol listesi madde 4.
 class _KeyboardSwitchState extends State<KeyboardSwitch> {
-  static final _never = ValueNotifier<bool>(false);
   bool _built = false;
 
   /// **[open] KLAVYEDEN ÖNCE KURULUR** (F60.S5). Eskiden ilk klavye
@@ -788,8 +814,12 @@ class _KeyboardSwitchState extends State<KeyboardSwitch> {
     super.dispose();
   }
 
-  /// Odak geldi: odak karesini ağırlaştırmadan, bir SONRAKİ karede kur.
+  /// Odak değişti: görünen taraf yeniden seçilir (dinleyici bu öğede —
+  /// araya `ValueListenableBuilder` koymak her klavye geçişinde +1 kurulum,
+  /// S17). Odak geldiyse [open] odak karesini ağırlaştırmadan, bir SONRAKİ
+  /// karede kurulur.
   void _onEditing() {
+    if (mounted) setState(() {});
     if (_built || widget.editing?.value != true) return;
     WidgetsBinding.instance.addPostFrameCallback((_) => _prebuild());
     WidgetsBinding.instance.scheduleFrame();
@@ -810,10 +840,12 @@ class _KeyboardSwitchState extends State<KeyboardSwitch> {
           offstage: !showOpen,
           // Görünmeyen taraf animasyon sürmez; ilk görünüşü bekleyenler
           // (satırın parlaması) buradan öğrenir.
-          child: TickerMode(
-            enabled: showOpen,
-            child: _built ? widget.open : const SizedBox.shrink(),
-          ),
+          child: !widget.pauseHidden
+              ? (_built ? widget.open : const SizedBox.shrink())
+              : TickerMode(
+                  enabled: showOpen,
+                  child: _built ? widget.open : const SizedBox.shrink(),
+                ),
         ),
         Offstage(
           offstage: showOpen,
@@ -829,10 +861,10 @@ class _KeyboardSwitchState extends State<KeyboardSwitch> {
     final e = widget.editing;
     final win = WindowClass.of(context);
     final tablet = e != null && win.touchFirst && !win.compactDevice;
-    // Ağaç şekli hep aynı: dinleyici her durumda var.
-    return ValueListenableBuilder<bool>(
-      valueListenable: tablet ? e : _never,
-      builder: (_, on, _) => _pick(keyboard || on),
-    );
+    final on = e?.value ?? false;
+    if (widget.onlyWhileEditing && e != null) {
+      return _pick(on && (keyboard || tablet));
+    }
+    return _pick(keyboard || (tablet && on));
   }
 }

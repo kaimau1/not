@@ -85,6 +85,15 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nasıl: 10 dk sonraya etkinlik kur; tekrarlı bir etkinliğin yalnız birini sil; bir etkinliği basılı tutup başka güne sürükle.
   Doğruysa: bildirim zamanında geliyor, dokununca takvim açılıyor, "Geri al" çalışıyor.
 
+- [ ] **42. Menüler ve sabit PDF'te hızlı satır (2026-11-14, yazıldı, cihazda doğrulanmadı)**
+  Nerede: ana ekran ⋮; bir notun ⋮'i; sabit PDF'li not (ör. Rezilyans) ve onun ⋮ menüsü; görseli gizlenmiş YouTube notu.
+  Nasıl: menüleri aç, üstteki tutamaktan aşağı çek; sabit PDF'li notta "Not al"a yaz; PDF ⋮ → PDF → "Tüm balonlar".
+  Doğruysa: her menüde tutamak var ve aşağı çekince kapanıyor; ⚙ ve ✕ telefonun üst çubuğunun altında; ana ekran ⋮'te tek maddelik "Diğer" grubu yok (Arşiv "Uygulama"nın sonunda); "Not al"a yazarken üst çubukta hızlı satır çıkıyor, çubuktaki başlığı düzenlerken başlık yerinde kalıyor; balon listesi açılıyor, balona dokununca o sayfaya gidiyor; kartta "YouTube videosu" üstte, video adı altta.
+- [ ] **43. Başka uygulamadan içe aktarma tam geliyor mu**
+  Nerede: ölçüm uygulaması (`pm clear` sonrası, misafir) → Ayarlar → Senkronizasyon → "Başka uygulamadan içe aktar".
+  Nasıl: `keep_olcum.zip` (240 not, 6 sabit) içe aktar, 3 dk bekle, aynı dosyayı bir daha içe aktar.
+  Doğruysa: ana ekranda 240 not ve 6 sabit; ikinci deneme "0 not içe aktarıldı, 240 atlandı" der.
+
 ## Tablette bak
 
 - [ ] **15. Kalemle yazma**
@@ -112,11 +121,23 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nasıl: mikrofona bas, konuş.
   Doğruysa: canlı tanıma yoksa birkaç saniye içinde açıklama + sesli not levhası açılıyor, ses yazıya dökülüyor.
 
+- [ ] **41. Parmak siler (yeni araç)**
+  Nerede: el yazısı notu ya da PDF, kalem tepsisi → ayarlar (⚙) → "Parmak: Siler".
+  Nasıl: parmakla bir çizginin üstünden geç; sonra avucunu dayayarak kalemle yaz; iki parmakla yakınlaştır.
+  Doğruysa: parmak siler, kalem yazar; avuç hiçbir şey silmez (silerse kalem değince geri gelir); yakınlaştırırken silinen geri gelir; "geri al" tek adımda geri getirir; yüzen kalem düğmesinin yanındaki hap "Parmak siliyor" der.
+  Yanlışsa: avuç sildiyse ya da parmak ucu silmiyorsa söyle (eşik ayarlanacak).
+
 - [ ] **20. Çok büyük PDF**
   Nerede: tablette ek menüsü.
   Nasıl: 500 MB–1 GB'lık bir PDF ekle, üstüne yaz, kapat-aç.
   Doğruysa: açılıyor (boyut engeli yok), "yalnız bu cihazda" yazıyor, yazdıkların yerinde.
   Yanlışsa: hangi mesajı gördüğünü yaz.
+
+- [ ] **32. İki not yan yana** (yazıldı, tablette doğrulanmadı)
+  Nerede: tablet YATAY, bir not açıkken soldaki listede başka bir kartın ⋮ menüsü → "Yanda aç".
+  Nasıl: iki notta da yaz (klavye ve kalem); ortadaki ayracı sürükle, çift dokun; ☰ ile listeyi aç-kapa; tabletı dikeye çevir, geri yatay; tam ekrana gir-çık; yandakini ✕ ile kapat; iki not açıkken geri tuşuna bas; birinde dikte sürerken öbüründe mikrofona bas.
+  Doğruysa: iki not yan yana, liste kendiliğinden çekilir; yazdığın bölme yazar, öbürü kıpırdamaz; ☰ açınca yandaki gizlenir, kapatınca döner; dikeyde yandaki kaybolur, yatayda geri gelir; geri tuşu ikisini de kapatıp listeye döner; ikinci mikrofon "Mikrofon yandaki notta kullanılıyor" der. Telefonda ve dikey tablette menüde "Yanda aç" YOK.
+  Yanlışsa: hangi adımda ne olduğunu yaz.
 
 ## Bilgisayarda (web) bak
 
@@ -179,9 +200,8 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Karar vermen gerekenler
 
-- [ ] **32. İki not yan yana (tablet)** — 12 Kasım'da "olsun" dedin; henüz yazılmadı (büyük iş, ayrı paket). Şu an: yok. Vazgeçtiysen "iki not yan yana olmasın" de.
 - [ ] **33. Yeni el yazısı kayıt biçimi** — hızlı ve küçük kayıt için hazır ama YAZMA kapalı; açmak için önce telefonda ölçüm, sonra bütün cihazlar güncel olunca konsolda bayrak (30. madde). Şu an: kapalı (en güvenli). Açmak istersen "el yazısı v2'yi aç" de.
-- [ ] **34. Kalem ucu tahmini ve parmağa ayrı araç** — 12 Kasım'da ikisi de "yazılsın" dedin; tablette denenmesi gereken kalem işi olduğu için henüz yazılmadı. Şu an: yok.
+- [ ] **34. Kalem ucu tahmini ve parmağa ayrı araç** — Kalem ucu tahmini: 14 Kasım'da "yalnız parmak aracı olsun" dedin, tahmin YAZILMADI. Parmak aracı: YAZILDI (kalem ayarlarında ve Ayarlar → Kalem'de "Parmak: Kaydırır · Çizer · Siler"), tablette denenmedi → 41. madde. Siler'deyken tek parmak kaydırmaz (iki parmakla kaydır/yakınlaştır); istemezsen söyle.
 - [ ] **35. Birden çok sabit ek** — seçenekler: sekme / yan yana / tek. Şu an: tek sabit ek. Değiştirmek istersen hangisini istediğini söyle.
 - [ ] **36. Hatırlatıcı ipucu** — alarm izni kapalıyken Ayarlar'da uyarı var; ilk hatırlatıcıyı kurarken ayrıca ipucu çıksın mı? Şu an: çıkmıyor.
 - [ ] **37. Ana ekranda tek elle arama** — yeni not düğmesi zaten sağ altta; arama kutusu üstte. Alta bir arama kısayolu ister misin? Şu an: yok.

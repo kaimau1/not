@@ -108,7 +108,6 @@ Future<ShareDestination?> showShareTargetSheet(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
-  useSafeArea: true,
   constraints: const BoxConstraints(maxWidth: 640),
   builder: (sheetContext) => Padding(
     // Klavye (başlık / arama) açılınca levha yukarı kalkar.

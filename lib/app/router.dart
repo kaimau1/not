@@ -33,6 +33,7 @@ import '../features/settings/presentation/personalize_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'app_frame.dart';
 import 'note_open_route.dart';
+import 'second_note.dart';
 import 'split_shell.dart';
 
 /// Editör rotasının yolu.
@@ -94,7 +95,25 @@ extension NoteRoutePush on GoRouter {
 /// rotanın ALTINA — girer, geniş ekranda klasör sayfasının arkasında
 /// görünmez kalırdı. Kabuk dışı eş her zaman güvenli: en üste biner.
 extension NoteContextPush on BuildContext {
-  Future<T?> pushNote<T extends Object?>(String notePath) {
+  Future<T?> pushNote<T extends Object?>(String notePath) async {
+    // **AYNI NOT İKİ BÖLMEDE OLMAZ** (K32 karar 6): hedef yandaki bölmede
+    // açıksa önce o kapanır ve bir kare beklenir — yandaki editör
+    // `dispose`ta kaydını bitirir, birincil güncel notla açılır. (Bağlamsız
+    // yollar için aynı kural kabukta: bkz. SplitShell.)
+    ProviderContainer? container;
+    try {
+      container = ProviderScope.containerOf(this, listen: false);
+    } on StateError {
+      container = null; // Sağlayıcısız düzenek (rota testleri).
+    }
+    final id = Uri.parse(notePath).pathSegments.elementAtOrNull(1);
+    if (container != null &&
+        id != null &&
+        container.read(secondNoteProvider)?.id == id) {
+      container.read(secondNoteProvider.notifier).close();
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return null;
+    }
     final router = GoRouter.of(this);
     final route = ModalRoute.of(this);
     final pageless = route != null && route.settings is! Page;

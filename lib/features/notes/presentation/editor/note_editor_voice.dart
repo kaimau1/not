@@ -56,6 +56,7 @@ extension _EditorVoice on _NoteEditorScreenState {
       await _stopDictation();
       return;
     }
+    if (_micBusyElsewhere()) return;
     final l10n = context.l10n;
     // Yerleşik tanıma yoksa (web) canlı yazma mümkün değil: kullanıcı
     // düğmeye basınca hiçbir şey olmasın diye ses levhasına düşülür —

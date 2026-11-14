@@ -140,4 +140,27 @@ void main() {
     expect(editorTitleSpacing(1160, hasLeading: false), 216);
     expect(editorTitleSpacing(1160, hasLeading: true), 160);
   });
+
+  // K32: "Yanda aç" yalnız kartta ve yalnız koşul sağlanınca (telefonda,
+  // dikey tablette canOpenSide hep false → satır yok).
+  test('Yanda aç yalnız canOpenSide ile kartta', () {
+    expect(
+      flat(menu(NoteMenuSurface.card)).map((e) => e.$2),
+      isNot(contains('side')),
+    );
+    final side = noteMenuModel(
+      l10n,
+      note,
+      surface: NoteMenuSurface.card,
+      canOpenSide: true,
+    );
+    expect(flat(side).firstWhere((e) => e.$1 != 'quick').$2, 'side');
+    final editor = noteMenuModel(
+      l10n,
+      note,
+      surface: NoteMenuSurface.editor,
+      canOpenSide: true,
+    );
+    expect(flat(editor).map((e) => e.$2), isNot(contains('side')));
+  });
 }

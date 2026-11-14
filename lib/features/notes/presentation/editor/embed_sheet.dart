@@ -123,7 +123,6 @@ Future<EmbedPick?> showEmbedPicker(
 }) => showAppSheet<EmbedPick>(
   context: context,
   showDragHandle: true,
-  useSafeArea: true,
   isScrollControlled: true,
   constraints: BoxConstraints(
     maxHeight: MediaQuery.sizeOf(context).height * 0.75,
@@ -372,7 +371,6 @@ Future<void> showEmbedPreview(
 }) => showAppSheet<void>(
   context: context,
   showDragHandle: true,
-  useSafeArea: true,
   isScrollControlled: true,
   builder: (sheetContext) {
     final l10n = sheetContext.l10n;

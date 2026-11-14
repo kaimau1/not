@@ -45,7 +45,10 @@ Future<T?> showAppSheet<T>({
   bool isDismissible = true,
   bool enableDrag = true,
   bool? showDragHandle,
-  bool useSafeArea = false,
+  // DURUM ÇUBUĞUNUN ALTINA GİRMEZ (kullanıcı bulgusu 2026-11-14: uzun not
+  // menüsünde ⚙ ve ✕ telefonun üst çubuğuyla çakışıyordu): levha ekranın
+  // tepesine dek uzasa da üst güvenli alanda durur.
+  bool useSafeArea = true,
   RouteSettings? routeSettings,
   AnimationController? transitionAnimationController,
   Offset? anchorPoint,

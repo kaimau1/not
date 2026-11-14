@@ -96,7 +96,6 @@ Future<void> showAttachmentStatusSheet(
 }) => showAppSheet<void>(
   context: context,
   showDragHandle: true,
-  useSafeArea: true,
   builder: (sheet) => Padding(
     padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
     child: Column(

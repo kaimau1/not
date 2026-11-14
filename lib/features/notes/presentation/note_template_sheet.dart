@@ -43,7 +43,6 @@ Future<NoteTemplateContent?> showNoteTemplateSheet(
   context: context,
   showDragHandle: true,
   isScrollControlled: true,
-  useSafeArea: true,
   constraints: const BoxConstraints(maxWidth: 640),
   builder: (sheetContext) => Padding(
     padding: EdgeInsets.only(

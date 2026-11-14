@@ -34,6 +34,17 @@ abstract final class AppMotion {
   static const Curve enter = Easing.emphasizedDecelerate;
   static const Curve exit = Easing.emphasizedAccelerate;
 
+  /// Seçim halkası, seçili karo/çip vurgusu (P62 ortak dil). [short] ile aynı
+  /// değer; adı niyeti söyler.
+  static const selection = short;
+
+  /// "Vurgulu" oturma eğrisi: hızlı başlar, yumuşak oturur, TAŞMAZ
+  /// (zıplayan eğri yasak — arayuz.md "Yapılmayacaklar (genel)").
+  static const Curve emphasized = Curves.easeOutCubic;
+
+  /// Çıkış süresi = girişin 2/3'ü (tasarım ilkesi 4).
+  static Duration exitOf(Duration enter) => enter * (2 / 3);
+
   /// [duration], hareket azaltılmışsa en çok [reduced].
   static Duration of(BuildContext context, Duration duration) =>
       motionOf(context) || duration <= reduced ? duration : reduced;

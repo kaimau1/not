@@ -2437,6 +2437,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bubbleSearchHint => 'Search bubbles…';
 
   @override
+  String get bubblesListAll => 'All bubbles';
+
+  @override
   String get bubblesOverviewTitle => 'Bubbles';
 
   @override
@@ -5897,6 +5900,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fingers don\'t draw; one finger scrolls, two fingers zoom. Your palm leaves no marks. Turns on automatically the first time a pen touches the screen.';
 
   @override
+  String get inkFingerToolTitle => 'Finger';
+
+  @override
+  String get inkFingerToolInfo =>
+      'Scrolls: only the pen writes, a finger scrolls. Draws: a finger writes with the pen tool too. Erases: a finger erases, two fingers zoom.';
+
+  @override
+  String get inkFingerScroll => 'Scrolls';
+
+  @override
+  String get inkFingerDraw => 'Draws';
+
+  @override
+  String get inkFingerErase => 'Erases';
+
+  @override
+  String get inkFingerEraseOn => 'Finger erases — switch to pen only';
+
+  @override
   String get inkPressureTitle => 'Pressure sensitivity';
 
   @override
@@ -8495,6 +8517,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listPaneMoveRight => 'Move list to the right';
+
+  @override
+  String get noteOpenSide => 'Open side by side';
+
+  @override
+  String get micBusySideNote => 'The microphone is in use in the other note';
+
+  @override
+  String get noteCloseSide => 'Close side note';
 
   @override
   String get listPaneMoveLeft => 'Move list to the left';

@@ -26,6 +26,7 @@ import '../viewers/pdf_selection_bar.dart' show PdfSelectionState;
 import '../viewers/pdf_viewer_screen.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import 'bubbles_overview.dart';
 import 'media_loading_cover.dart';
 import 'pdf_page_column.dart';
 import '../../../../core/haptics.dart';
@@ -860,7 +861,6 @@ class _PdfPageBoxState extends State<PdfPageBox> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      useSafeArea: true,
       builder: (_) => _PdfJumpSheet(
         document: document,
         page: _page,
@@ -1418,6 +1418,16 @@ class _PdfPageBoxState extends State<PdfPageBox> {
         label: l10n.pdfBookmarks,
         run: () => guarded(_openMarks),
       ),
+      // BALONLARIN TOPLU LİSTESİ (kullanıcı bulgusu 2026-11-14: "balonları
+      // toplu gördüğümüz yer kaybolmuş"): sabit bölmede liste düğmesi
+      // yoktu; ⋮ levhasının PDF bölümünde.
+      if (widget.attachment.bubbles.isNotEmpty)
+        (
+          id: 'bubbles',
+          icon: Icons.forum_outlined,
+          label: l10n.bubblesListAll,
+          run: () => guarded(_openBubbleList),
+        ),
       (
         id: 'rotate',
         icon: Icons.rotate_90_degrees_ccw,
@@ -1511,6 +1521,16 @@ class _PdfPageBoxState extends State<PdfPageBox> {
       );
 
   /// Yer imi listesi: konan sayfalara tek dokunuşla atlanır.
+  /// Belgedeki bütün balonlar (arama, yıldız, düzenle, sil, kopyala);
+  /// seçilen balonun sayfasına gidilir ve balon açılır.
+  Future<void> _openBubbleList() async {
+    final bubbles = _bubbleController();
+    final target = await showBubblesOverview(context, bubbles);
+    if (target == null || !mounted) return;
+    _goTo(target.page);
+    bubbles.openOnly(target.id);
+  }
+
   Future<void> _openMarks() async {
     final marks = widget.attachment.pdfMarks;
     final l10n = context.l10n;

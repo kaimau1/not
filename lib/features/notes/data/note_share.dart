@@ -145,17 +145,19 @@ class NoteShare {
   /// Gelen paketi bu hesapta YENİ bir not olarak oluşturur; oluşan notun
   /// kimliğini döner.
   ///
-  /// Sıra önemli: önce not oluşturulur (ek dosyaları not kimliğine bağlı bir
-  /// klasöre yazılıyor), sonra ekler kaydedilir, en sonda not TEK yazımda
-  /// güncellenir. Ekler tek tek yazılsaydı not bir süre yarım görünür ve
-  /// senkron her ek için ayrı bir tur atardı.
+  /// Sıra önemli: önce not KİMLİĞİ alınır (ek dosyaları not kimliğine bağlı
+  /// bir klasöre yazılıyor; belge henüz yazılmaz), sonra ekler kaydedilir, en
+  /// sonda not TEK yazımda oluşturulur. Ekler tek tek yazılsaydı not bir
+  /// süre yarım görünür ve senkron her ek için ayrı bir tur atardı.
   static Future<String> import(
     NotePackage package, {
     required NotesRepository notes,
     required AttachmentRepository? attachments,
   }) async {
     final source = package.note;
-    final id = await notes.createNote(source.type);
+    // Not TEK yazımda doğar (bkz. [NotesRepository.newNoteId]): ayrı,
+    // beklenmeyen boş oluşturma yazımı içeriği ezebiliyordu.
+    final id = notes.newNoteId();
 
     final stored = <Attachment>[];
     if (attachments != null) {
@@ -221,6 +223,7 @@ class NoteShare {
         theme: source.theme,
         textPages: source.textPages,
         activePage: source.activePage,
+        extras: {'createdBy': notes.editorUid},
       ),
     );
     return id;

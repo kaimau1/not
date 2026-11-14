@@ -20,7 +20,6 @@ Future<void> showDuplicatesSheet(BuildContext context) =>
     showAppSheet<void>(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       showDragHandle: true,
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.8,

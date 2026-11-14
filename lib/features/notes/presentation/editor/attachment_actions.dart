@@ -284,7 +284,6 @@ Future<String?> showCaptionSheet(BuildContext context, String initial) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    useSafeArea: true,
     builder: (sheet) => Padding(
       padding: EdgeInsets.fromLTRB(
         20,

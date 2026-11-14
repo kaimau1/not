@@ -28,7 +28,6 @@ Future<void> showTrashAnalysisSheet(BuildContext context, List<Note> trash) =>
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      useSafeArea: true,
       builder: (_) => _TrashAnalysisSheet(initial: trash),
     );
 

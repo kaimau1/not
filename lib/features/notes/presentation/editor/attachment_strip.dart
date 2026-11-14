@@ -801,7 +801,6 @@ class _AttachmentTile extends ConsumerWidget {
     final action = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
-      useSafeArea: true,
       builder: (sheetContext) {
         final scheme = Theme.of(sheetContext).colorScheme;
         return SingleChildScrollView(

@@ -39,7 +39,6 @@ Future<void> showDashboardBackgroundSheet(BuildContext context) =>
     showAppSheet<void>(
       context: context,
       showDragHandle: true,
-      useSafeArea: true,
       builder: (_) => const _DashboardBackgroundSheet(),
     );
 

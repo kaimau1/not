@@ -111,13 +111,14 @@ void main() {
     );
     await tester.tap(find.text('aç'));
     await tester.pumpAndSettle();
-    // Sil'in altında satır YOK; ✕ olan levhada tutamak yok (K-D7).
+    // Sil'in altında satır YOK. ✕ olan levhada da TUTAMAK var (K-D7
+    // kalktı, kullanıcı isteği 2026-11-14: aşağı çekerek kapatma).
     expect(find.byKey(const ValueKey('menu-footer-settings')), findsNothing);
     expect(find.byKey(const ValueKey('sheet-close')), findsOneWidget);
-    // Tutamak (48 dp) çizilseydi ✕ levhanın tepesinden ≥ 48 aşağıda olurdu.
+    // Tutamak (48 dp) çizili: ✕ levhanın tepesinden ≥ 40 aşağıda.
     final sheetTop = tester.getRect(find.byType(BottomSheet)).top;
     final closeTop = tester.getRect(find.byKey(const ValueKey('sheet-close'))).top;
-    expect(closeTop - sheetTop, lessThan(16));
+    expect(closeTop - sheetTop, greaterThanOrEqualTo(40));
     await tester.tap(find.byKey(const ValueKey('menu-edit')));
     await tester.pumpAndSettle();
     final foot = find.byKey(const ValueKey('menu-footer-settings'));

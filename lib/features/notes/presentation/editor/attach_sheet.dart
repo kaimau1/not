@@ -21,7 +21,6 @@ Future<String?> showAttachSheet(
 }) => showAppSheet<String>(
   context: context,
   isScrollControlled: true,
-  useSafeArea: true,
   showDragHandle: true,
   shape: const RoundedRectangleBorder(
     borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

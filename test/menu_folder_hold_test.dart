@@ -43,9 +43,10 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Dört'), findsNothing);
-    // Hızlı satırdan çıkarılan "İki" kaybolmaz: "Diğer" grubunda.
+    // Hızlı satırdan çıkarılan "İki" kaybolmaz: tek gruplu menüde o grubun
+    // sonunda (ayrı tek maddelik "Diğer" grubu yok — 2026-11-14).
     expect(find.text('İki'), findsOneWidget);
-    expect(find.text('Diğer'), findsOneWidget);
+    expect(find.text('Diğer'), findsNothing);
     // Hızlı satır sırası: Üç, Bir.
     final dxC = tester.getCenter(find.text('Üç')).dx;
     final dxA = tester.getCenter(find.text('Bir')).dx;
