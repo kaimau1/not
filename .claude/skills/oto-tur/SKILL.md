@@ -7,7 +7,7 @@ description: Gözetimsiz zincirin yürütücü turu — kilit, main sağlığı,
 
 OTOMASYON.md "Bir turun adımları" + CLAUDE.md "Gece / zamanlanmış görev kuralı" + zamanlanmış
 görev istemi buraya taşındı (2026-11-14), AYNEN. **Kuyruk VERİSİ ve SIRA `OTOMASYON.md`'de**
-(paket ayrıntısı `KUYRUK_AYRINTI.md`); bu skill yalnız yöntemdir.
+(paket ayrıntısı Kuyruk satırında + `PLAN.md`; P53 2026-11-14 öncesi paketler `docs/arsiv/planlar/KUYRUK_AYRINTI.md`); bu skill yalnız yöntemdir.
 
 **Kullanıcı izni (2026-11-09):** işleri otomasyonla başlat, istediğin modelde alt ajan aç, limite
 göre çalış; test telefonu USB'de (şifresiz, ekranı bozuk: yalnız gerekince aç); işi bitir,
@@ -24,7 +24,7 @@ Paketleri büyük tut (her alt ajan sıfırdan başlar). Aynı anda TEK yürüt�
 
 Her araç çağrısı bütün bağlamı yeniden gönderir — az ve toplu çağrı. `OTOMASYON.md`'yi BİR kez
 oku (tek parça); aynı dosyayı/tabloyu ikinci kez dökme. Paket ayrıntısı için yalnız
-`KUYRUK_AYRINTI.md`'nin o bölümü. Büyük çıktıyı `| tail -n 40` / `cut -c1-300` ile kes.
+`PLAN.md`'nin ilgili satırı. Büyük çıktıyı `| tail -n 40` / `cut -c1-300` ile kes.
 HAFIZA/plan dosyalarını baştan okuma, Grep ile ara. Graphify'ı açma. Alt ajan beklerken yoklama
 yok, bildirimi bekle.
 
@@ -47,7 +47,7 @@ yok, bildirimi bekle.
    yaptırırsın. İlk `sürüyor` (yarım: uzakta `oto/<no>-*` varsa oradan, DEVIR.md'den) yoksa ilk
    `bekliyor`. Satırı `sürüyor` yap (yalnız yerelde; ayrıca push yok).
 4. **Yaptır.** `Agent`, `isolation: "worktree"`, `model` Kuyruk satırından (`fable|opus|sonnet`),
-   **fork tipi AÇMA**. İstem = "`isci` skill'ini uygula" + paketin Kuyruk satırı + KUYRUK_AYRINTI
+   **fork tipi AÇMA**. İstem = "`isci` skill'ini uygula" + paketin Kuyruk satırı + `PLAN.md` ilgili
    bölümü (+ dal yarımsa "dalın DEVIR.md'sinden sür"). `Agent` reddedilirse ya da model yoksa
    paket bu oturumda yapılır; Kuyruk'a gerçek model yazılır.
    **Paralellik (kullanıcı kararı 2026-11-13: "gece boyu ufacık işler yapıp durmuş"):** aynı anda

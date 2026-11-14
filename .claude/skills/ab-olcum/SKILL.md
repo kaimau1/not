@@ -13,7 +13,7 @@ kasma yeniden başladı… bunları çözmek için baya zaman ve token harcadık
 
 - **ÖLÇÜM KAPISI (2026-11-10):** editör, klavye, alt/üst çubuk, ana ekran listesi ya da geçişe
   dokunan iş `[apk]`'ya girmeden önce cihazda A/B ölçülür.
-- **HIZ SÖZLEŞMESİ (2026-11-12, plan `HIZ_PLANI.md` Faz 81–84):**
+- **HIZ SÖZLEŞMESİ (2026-11-12, tedbirler `docs/hafiza/akicilik.md` "Hız sözleşmesi"; eski plan `docs/arsiv/planlar/HIZ_PLANI.md`):**
   1. Yeni özellik/güncelleme hangi yüzeye dokunursa (editör, liste, geçiş, levha, arama, açılış,
      ekler) o yüzeyin cihazsız bütçe senaryosu `test/perf_budget_test.dart`'ta olmalı — yoksa
      işin parçası olarak YAZILIR (OTURTMA Ek A'ya S satırı).
@@ -68,7 +68,7 @@ Hazırlık (bir kez): veri seti + sabit PDF'li not ("OLCUM kalem pdf") — betik
 - Ölçüm ham sayıları DEVIR'e/plana yazılır, sohbette kalmaz.
 - Telefon yoksa/ısınmışsa satır `cihaz bekliyor`, birleştirme `[apk]`'sız, ilk APK noktası
   ertelenir. Telefon gerektiren ölçüm yapılamazsa: "yazıldı, cihazda doğrulanmadı" +
-  `KALANLAR.md` §2'ye adım.
+  `KONTROL_LISTEM.md` "Telefonda bak"a madde.
 
 ## Telefon kuralları (Mi Note 10 Lite, USB)
 
