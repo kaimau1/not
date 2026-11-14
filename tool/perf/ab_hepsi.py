@@ -430,7 +430,8 @@ def main():
         # (menu, ilk kare, yeni_not) = gürültü. KALDI ise O.TEYIT çift daha koşulur ve
         # karar TÜM koşularla yeniden verilir; kalıcı kötüleşme yine yakalanır.
         if failed and o.teyit and runs["A"] and runs["B"]:
-            print(f"teyit: {o.teyit} çift daha (karar tüm koşularla yeniden)", flush=True)
+            bad = [f"{ph}: {v} {g}".strip() for ph, _, _, v, g in rows if v != "aynı/iyi" or "+" in g]
+            print(f"teyit: {o.teyit} çift daha (karar tüm koşularla yeniden) — ilk karar: {'; '.join(bad)}", flush=True)
             pairs(o.kosu, o.teyit)
             rows, failed = decide(runs["A"], runs["B"], golden if o.altin else None)
     finally:
