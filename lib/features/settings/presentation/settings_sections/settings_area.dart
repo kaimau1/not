@@ -124,14 +124,18 @@ class _CategoryGroup extends StatelessWidget {
   const _CategoryGroup({
     required this.areas,
     required this.onTap,
-    this.selectedId,
+    required this.fallbackId,
+    this.selection,
   });
 
   final List<_Area> areas;
   final ValueChanged<String> onTap;
 
-  /// İki bölmeli düzende seçili alan (vurgulu); dar ekranda null.
-  final String? selectedId;
+  /// İki bölmeli düzende seçili alanın kimliği (vurgulu); dar ekranda null.
+  final ValueListenable<String>? selection;
+
+  /// Seçim boşken seçili sayılan alan (geniş ekranda ilk alan açık gelir).
+  final String fallbackId;
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +156,8 @@ class _CategoryGroup extends StatelessWidget {
               ),
             _CategoryTile(
               area: areas[i],
-              selected: areas[i].id == selectedId,
+              selection: selection,
+              fallback: areas[i].id == fallbackId,
               onTap: () => onTap(areas[i].id),
             ),
           ],
@@ -167,23 +172,73 @@ const double _kAreaIconBox = 40;
 
 /// Kategori satırı: renkli simge, ad, DURUM ÖZETİ (alanı açmadan "Adaçayı ·
 /// Orta · Inter" gibi güncel durum okunur), ok.
-class _CategoryTile extends StatelessWidget {
+class _CategoryTile extends StatefulWidget {
   const _CategoryTile({
     required this.area,
     required this.onTap,
-    this.selected = false,
+    this.selection,
+    this.fallback = false,
     this.compact = false,
   });
 
   final _Area area;
   final VoidCallback onTap;
-  final bool selected;
+
+  /// Geniş ekranda seçili alan; döşeme YALNIZ kendi seçili/seçisiz hâli
+  /// değişince yeniden kurulur (S36: 11 döşemenin hepsi değil, iki tanesi).
+  final ValueListenable<String>? selection;
+
+  /// Seçim boşken bu döşeme seçili sayılır.
+  final bool fallback;
 
   /// Arama sonuçlarındaki küçük başlık hâli.
   final bool compact;
 
   @override
+  State<_CategoryTile> createState() => _CategoryTileState();
+}
+
+class _CategoryTileState extends State<_CategoryTile> {
+  late bool _selected = _read();
+
+  bool _read() {
+    final v = widget.selection?.value;
+    if (v == null) return false;
+    return v == widget.area.id || (widget.fallback && v.isEmpty);
+  }
+
+  void _changed() {
+    final now = _read();
+    if (now != _selected) setState(() => _selected = now);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.selection?.addListener(_changed);
+  }
+
+  @override
+  void didUpdateWidget(_CategoryTile old) {
+    super.didUpdateWidget(old);
+    if (old.selection != widget.selection) {
+      old.selection?.removeListener(_changed);
+      widget.selection?.addListener(_changed);
+    }
+    _selected = _read();
+  }
+
+  @override
+  void dispose() {
+    widget.selection?.removeListener(_changed);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final area = widget.area;
+    final compact = widget.compact;
+    final selected = _selected;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final text = AppText.of(theme);
@@ -199,7 +254,7 @@ class _CategoryTile extends StatelessWidget {
         type: MaterialType.transparency,
         child: InkWell(
           key: ValueKey('settings-cat-${area.id}'),
-          onTap: onTap,
+          onTap: widget.onTap,
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: compact ? AppSpace.xs : AppSpace.m,
@@ -434,13 +489,26 @@ class _RenderGroupColumn extends RenderBox
 Widget _rowsTheme(BuildContext context, Widget child) {
   final theme = Theme.of(context);
   final text = AppText.of(theme);
+  final scheme = theme.colorScheme;
   return ListTileTheme.merge(
     titleTextStyle: text.rowTitle,
     subtitleTextStyle: text.meta,
-    iconColor: theme.colorScheme.onSurfaceVariant,
+    iconColor: scheme.onSurfaceVariant,
     minTileHeight: 56,
     horizontalTitleGap: AppSpace.m,
-    child: child,
+    // Segment seçimi = `primary` rolü (A4; M3 varsayılanı secondaryContainer
+    // — zaman/dikkat rolü). YALNIZ ayar satırlarında: temaya genel
+    // segmentedButtonTheme editörü ve takvimi de değiştirirdi (sabah
+    // bakılacak, plan §8.5 — güvenli seçenek).
+    child: SegmentedButtonTheme(
+      data: SegmentedButtonThemeData(
+        style: SegmentedButton.styleFrom(
+          selectedBackgroundColor: scheme.primaryContainer,
+          selectedForegroundColor: scheme.onPrimaryContainer,
+        ),
+      ),
+      child: child,
+    ),
   );
 }
 
@@ -569,22 +637,23 @@ class _VersionLineState extends State<_VersionLine> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.only(top: AppSpace.xxl),
       child: Center(
         child: InkWell(
           key: const ValueKey('settings-version-line'),
           borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: widget.onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.l,
+              vertical: AppSpace.s,
+            ),
             child: Text(
               _version == null
                   ? l10n.appName
                   : '${l10n.appName} · v$_version',
               key: const ValueKey('settings-version-footer'),
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: AppText.of(theme).meta,
             ),
           ),
         ),
@@ -697,118 +766,114 @@ class _VersionFooterState extends State<_VersionFooter>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = context.l10n;
-    final muted = theme.colorScheme.onSurfaceVariant;
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Column(
-        children: [
-          // SÜRÜM NOTLARI (2026-11-10): sürümün hemen üstünde.
-          TextButton.icon(
-            key: const ValueKey('settings-release-notes'),
-            onPressed: () => context.push('/guide?doc=notes'),
-            icon: const Icon(Icons.new_releases_outlined, size: 18),
-            label: Text(l10n.releaseNotesTitle),
+    final scheme = theme.colorScheme;
+    // P62 PA1 (A8): ortalı üç parça yerine satır dili — simge + başlık +
+    // (ok | durum | anahtar). Satır sırası aynı; ayraç grup kartındakiyle aynı.
+    final divider = Divider(
+      height: 1,
+      color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // SÜRÜM NOTLARI (2026-11-10): sürümün hemen üstünde.
+        ListTile(
+          key: const ValueKey('settings-release-notes'),
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.new_releases_outlined),
+          title: Text(l10n.releaseNotesTitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/guide?doc=notes'),
+        ),
+        divider,
+        _versionTap(context, theme, l10n),
+        if (_overlay != null) ...[
+          divider,
+          ListTile(
+            key: const ValueKey('settings-update-reopen'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.open_in_new),
+            title: Text(
+              _overlay! ? l10n.updateReopenOn : l10n.updateReopenOff,
+            ),
+            // Verildiyse onay simgesi, değilse sistem ayarına giden ok.
+            trailing: _overlay!
+                ? Icon(Icons.check_circle, color: scheme.primary)
+                : const Icon(Icons.chevron_right),
+            onTap: _overlay! ? null : AppUpdate.openOverlaySettings,
           ),
-          _versionTap(context, theme, l10n, muted),
-          if (_overlay != null)
-            TextButton.icon(
-              key: const ValueKey('settings-update-reopen'),
-              onPressed: _overlay! ? null : AppUpdate.openOverlaySettings,
-              icon: Icon(
-                _overlay! ? Icons.check_circle_outline : Icons.open_in_new,
-                size: 18,
-              ),
-              label: Text(
-                _overlay! ? l10n.updateReopenOn : l10n.updateReopenOff,
-              ),
-            ),
-          // OTO GÜNCELLEME (2026-11-10): açıkken yeni sürüm arka planda iner,
-          // bir sonraki açılışta kurulur. Kapalıyken yalnız ana ekran şeridi.
-          if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android)
-            Consumer(
-              builder: (context, ref, _) => SwitchListTile(
-                key: const ValueKey('settings-auto-update'),
-                dense: true,
-                secondary: const Icon(Icons.system_update_alt, size: 20),
-                title: Text(l10n.autoUpdateTitle),
-                subtitle: Text(l10n.autoUpdateInfo),
-                value: ref.watch(autoUpdateProvider),
-                onChanged: (v) =>
-                    ref.read(autoUpdateProvider.notifier).set(v),
-              ),
-            ),
         ],
-      ),
+        // OTO GÜNCELLEME (2026-11-10): açıkken yeni sürüm arka planda iner,
+        // bir sonraki açılışta kurulur. Kapalıyken yalnız ana ekran şeridi.
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ...[
+          divider,
+          Consumer(
+            builder: (context, ref, _) => SwitchListTile(
+              key: const ValueKey('settings-auto-update'),
+              contentPadding: EdgeInsets.zero,
+              secondary: const Icon(Icons.system_update_alt),
+              title: Text(l10n.autoUpdateTitle),
+              subtitle: Text(l10n.autoUpdateInfo),
+              value: ref.watch(autoUpdateProvider),
+              onChanged: (v) => ref.read(autoUpdateProvider.notifier).set(v),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
+  /// "Notlar · v…" satırı: dokun → denetle / güncelle; altında durum, indirme
+  /// sürerken satırın dibinde ilerleme çizgisi.
   Widget _versionTap(
     BuildContext context,
     ThemeData theme,
     AppLocalizations l10n,
-    Color muted,
   ) {
-    return Center(
-        child: InkWell(
-          key: const ValueKey('settings-version-footer-tap'),
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          onTap: _installing ? null : _check,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _version == null
-                      ? l10n.appName
-                      : '${l10n.appName} · v$_version',
-                  key: const ValueKey('settings-version-footer'),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.labelMedium?.copyWith(color: muted),
+    final scheme = theme.colorScheme;
+    return ListTile(
+      key: const ValueKey('settings-version-footer-tap'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.info_outline),
+      title: Text(
+        _version == null ? l10n.appName : '${l10n.appName} · v$_version',
+        key: const ValueKey('settings-version-footer'),
+      ),
+      onTap: _installing ? null : _check,
+      // Ana ekran şeridiyle AYNI kaynak: indirme nereden başlarsa başlasın
+      // (şerit, oto güncelleme, bu satır) burada görünür.
+      subtitle: ValueListenableBuilder<int?>(
+        valueListenable: AppUpdate.progress,
+        builder: (context, pct, _) {
+          final version = AppUpdate.available.value?.version;
+          final downloading = pct != null && version != null;
+          final status = downloading
+              ? l10n.updateBannerDownloading(version, pct)
+              : _status;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                status ?? l10n.updateTapToCheck,
+                key: const ValueKey('settings-update-status'),
+                style: status == null
+                    ? null
+                    : AppText.of(theme).meta.copyWith(color: scheme.primary),
+              ),
+              if (downloading)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpace.xs),
+                  child: LinearProgressIndicator(
+                    value: pct / 100,
+                    minHeight: AppSpace.xxs,
+                    borderRadius: BorderRadius.circular(AppRadius.hair),
+                  ),
                 ),
-                const SizedBox(height: 2),
-                // Ana ekran şeridiyle AYNI kaynak: indirme nereden başlarsa
-                // başlasın (şerit, oto güncelleme, bu satır) burada görünür.
-                ValueListenableBuilder<int?>(
-                  valueListenable: AppUpdate.progress,
-                  builder: (context, pct, _) {
-                    final version = AppUpdate.available.value?.version;
-                    final downloading = pct != null && version != null;
-                    final status = downloading
-                        ? l10n.updateBannerDownloading(version, pct)
-                        : _status;
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          status ?? l10n.updateTapToCheck,
-                          key: const ValueKey('settings-update-status'),
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: status == null
-                                ? muted
-                                : theme.colorScheme.primary,
-                          ),
-                        ),
-                        if (downloading)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: SizedBox(
-                              width: 180,
-                              child: LinearProgressIndicator(
-                                value: pct / 100,
-                                minHeight: 3,
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -972,7 +1037,7 @@ class _ShortcutTiles extends StatelessWidget {
           return Column(
             children: [
               for (var i = 0; i < tiles.length; i++) ...[
-                if (i > 0) const SizedBox(height: 6),
+                if (i > 0) const SizedBox(height: AppSpace.s),
                 tiles[i],
               ],
             ],
@@ -983,7 +1048,7 @@ class _ShortcutTiles extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (var i = 0; i < tiles.length; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
+                if (i > 0) const SizedBox(width: AppSpace.s),
                 Expanded(child: tiles[i]),
               ],
             ],
