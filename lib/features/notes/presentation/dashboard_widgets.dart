@@ -1391,8 +1391,14 @@ class _FolderSwipeState extends State<FolderSwipe>
     }
     if (commit) widget.onCommit(direction);
     if (_dx.value != 0) {
+      // Kalan yolla orantılı oturma (P62 §6.2, K2): kısa çekiş çabuk, hızlı
+      // bırakış kopmadan döner; eğri taşmaz.
       unawaited(
-        _dx.animateTo(0, duration: AppMotion.short, curve: AppMotion.standard),
+        _dx.animateTo(
+          0,
+          duration: AppSwipe.settleFor(distance: _dx.value, velocity: velocity),
+          curve: AppMotion.emphasized,
+        ),
       );
     }
   }
