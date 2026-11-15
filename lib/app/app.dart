@@ -13,6 +13,7 @@ import '../core/l10n_ext.dart';
 import '../core/widgets/customizable.dart';
 import '../core/widgets/app_notice.dart';
 import '../core/widgets/undo_snackbar.dart';
+import '../features/settings/presentation/customize_hub.dart';
 import '../features/settings/presentation/app_lock.dart';
 import '../features/notes/presentation/note_write_issues.dart';
 import '../features/settings/settings_providers.dart';
@@ -268,6 +269,19 @@ class NotlarApp extends ConsumerWidget {
             KeyboardFocusRing(
               child: AppLockGate(
               child: CustomizeModeHost(
+              // Şeritteki "Sırala": düzen merkezi levhası, o anki ekranın
+              // yüzeyiyle açılır (P63 PB2).
+              onReorder: () {
+                final nav = router.routerDelegate.navigatorKey.currentContext;
+                if (nav == null) return;
+                showCustomizeHub(
+                  nav,
+                  initial: surfaceFor(
+                    router.state.uri.path,
+                    keyboard: MediaQuery.viewInsetsOf(nav).bottom > 0,
+                  ),
+                );
+              },
               // Eski istemci kapısı (F1.5): `config/app.minClient` bu
               // sürümün veri sürümünü aştıysa tepede "güncelle" şeridi.
               child: UpdateRequiredBanner(

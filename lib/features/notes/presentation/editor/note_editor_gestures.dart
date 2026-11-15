@@ -90,14 +90,10 @@ extension _EditorGestures on _NoteEditorScreenState {
         items.removeItemOf(id);
         // Kazara karalama (parmakla kaydırırken) maddeyi siliyor olabilir:
         // geri alma bildirimin İÇİNDE, üst çubuğa gitmeden (F36.5).
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            timedSnackBar(
-              content: Text(l10n.gestureItemDeleted),
-              action: SnackBarAction(label: l10n.undo, onPressed: _undo),
-            ),
-          );
+        ScaffoldMessenger.of(context).showMessage(
+          l10n.gestureItemDeleted,
+          action: SnackBarAction(label: l10n.undo, onPressed: _undo),
+        );
       case InkGesture.circle:
         // Yapay zekâ bu oturumda kullanılamıyorsa (bir kez söylendi) jest
         // sessiz kalır — her kazara dairede hata

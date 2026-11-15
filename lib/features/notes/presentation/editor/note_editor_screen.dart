@@ -1686,26 +1686,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final noteId = note.id;
     unawaited(
       Future.microtask(
-        () => messenger.showSnackBar(
-          timedSnackBar(
-            duration: const Duration(seconds: 6),
-            content: Text(
-              l10n.calendarSuggest(DateFormat.MMMEd().add_Hm().format(hit.at)),
-            ),
-            action: SnackBarAction(
-              label: l10n.calendarSuggestAction,
-              onPressed: () {
-                if (!navigator.mounted) return;
-                unawaited(
-                  showEventEditor(
-                    navigator.context,
-                    start: hit.at,
-                    linkNoteId: noteId,
-                    initialTitle: title,
-                  ),
-                );
-              },
-            ),
+        () => messenger.showMessage(
+          l10n.calendarSuggest(DateFormat.MMMEd().add_Hm().format(hit.at)),
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: l10n.calendarSuggestAction,
+            onPressed: () {
+              if (!navigator.mounted) return;
+              unawaited(
+                showEventEditor(
+                  navigator.context,
+                  start: hit.at,
+                  linkNoteId: noteId,
+                  initialTitle: title,
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -3407,17 +3403,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // düğmesinden ibaret, doldukça büyür.
     // Ortak çalışan eklenebilir mi: yalnız bu cihazdaki not kimseyle
     // paylaşılamaz; kişiselleştirmede "Ortak çalışma" kapatılabilir.
-    final canCollab =
-        Customizable.shows(UiItem.topCollab) &&
-        (widget.ownerId != null ||
-            !(ref.read(notesRepositoryProvider)?.isLocal(widget.noteId) ??
-                false));
+    final collabPossible =
+        widget.ownerId != null ||
+        !(ref.read(notesRepositoryProvider)?.isLocal(widget.noteId) ?? false);
+    final canCollab = Customizable.shows(UiItem.topCollab) && collabPossible;
     // TEK "+" (F38.3): ne dolu olduğu çip şeridinde; paylaşım durumu yanında
     // (paylaşılmışsa). Levha [_openMetaMenu]; `note-meta-chip` anahtarı korunur.
     final actionsMenu = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (canCollab) _collabMarker(theme),
+        // Düzen modunda gizliyken de çerçeveli görünür (P63 PB7); normal
+        // kipte gizliyse yer kaplamaz.
+        if (collabPossible)
+          Customizable(id: UiItem.topCollab, child: _collabMarker(theme)),
         IconButton(
           key: const ValueKey('note-meta-chip'),
           tooltip: l10n.noteMetaMenu,

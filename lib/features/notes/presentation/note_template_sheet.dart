@@ -601,17 +601,13 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       ref.read(favoriteTemplatesProvider.notifier).forget('u:${template.id}');
       // Geri al: yanlışlıkla silinen şablonun içeriği bir daha yazılmaz.
       final messenger = ScaffoldMessenger.maybeOf(context);
-      messenger
-        ?..hideCurrentSnackBar()
-        ..showSnackBar(
-          timedSnackBar(
-            content: Text(l10n.templateDeleted(template.name)),
-            action: SnackBarAction(
-              label: l10n.undo,
-              onPressed: () => notifier.add(template),
-            ),
-          ),
-        );
+      messenger?.showMessage(
+        l10n.templateDeleted(template.name),
+        action: SnackBarAction(
+          label: l10n.undo,
+          onPressed: () => notifier.add(template),
+        ),
+      );
       return;
     }
     final name = await promptTemplateName(context, initial: template.name);

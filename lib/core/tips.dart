@@ -55,6 +55,9 @@ abstract final class TipOnce {
   /// parmak kaydırır.
   static const penTwoFinger = 'pen_two_finger';
 
+  /// Düzen modu ilk kez açıldı: dokun = gizle/göster, Sırala (P63 PB1).
+  static const customizeMode = 'customize_mode';
+
   static bool _sessionUsed = false;
 
   /// Bu ipucu gösterilmeli mi? (Gösterilmemiş ve — sınırlıysa — bu

@@ -556,10 +556,11 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 - Kabul: §6.5; S34, S35 hedefte, S22 değişmez; boy animasyonu mandalı → 0.
 - Tuzaklar: §6.3; seçim değişmez (2026-11-08); ‹ › okları kalır (Y13); kıstırma geçişine (`:770-773`) dokunma.
 
-**PA9 — Çitte kalan iletiler (sonnet; P63 birleştikten sonra).** §5.3 son maddeler.
+**[x] PA9 — Çitte kalan iletiler (sonnet; P63 birleştikten sonra).** §5.3 son maddeler.
 - Dosyalar: çit içindeki 9 ham `showSnackBar` + 3 `hideCurrentSnackBar` çağrısı (`editor/**`, `viewers/**`; liste için `grep -n "showSnackBar(" lib --include=*.dart`), `test/notice_paths_guard_test.dart` (mandal 9 → 0).
 - İş: mekanik çeviri (`showMessage` / `hideMessage`); kılık kararı yok.
 - Kabul: mandal 0; ilgili editör testleri yeşil; editör bütçeleri (S1–S12) değişmez.
+- **Durum (2026-11-15, G5 dalı oto/G5-duzen, opus):** 9 ham `showSnackBar` (`note_template_sheet` şablon silindi, `note_editor_actions` geri al, `note_editor_gestures` karalama sildi, `note_editor_media_view` ×2 görünüm değişti / ek kaldırıldı, `note_editor_screen` takvim önerisi 6 sn, `note_editor_voice` dikte düzelt, `spell_settings_sheet` unutuldu, `stylus_toggle` 1,6 sn) → `showMessage` (eylem + süre aynı; şerit varsa huniden); 3 tek başına `hideCurrentSnackBar` (`note_editor_media_view` ×2, `attachment_clipboard`) → `hideMessage` (şeritteki "Hazırlanıyor…" da kapanır). `notice_paths_guard_test` mandalı 9 → 0. İletilerle ilgili 14 test dosyası + S1–S12 yeşil. Kılık kararı yok.
 
 ### 8.4 Sıra ve paralellik
 

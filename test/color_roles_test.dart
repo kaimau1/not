@@ -39,7 +39,6 @@ const _allowed = <String, (int, String)>{
   'lib/features/notes/presentation/note_card.dart': (2, 'kart — P35 alanı'),
   'lib/features/notes/presentation/note_card_media.dart': (3, 'kart ek türü rengi — P35 alanı'),
   'lib/features/notes/presentation/viewers/ink_layer.dart': (1, 'mürekkep katmanı rozeti'),
-  'lib/features/settings/presentation/personalize_screen.dart': (1, 'kişiselleştirme önizlemesi'),
 };
 
 void main() {

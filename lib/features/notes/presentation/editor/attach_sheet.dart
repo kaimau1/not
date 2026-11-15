@@ -61,8 +61,21 @@ class _AttachSheet extends StatelessWidget {
     // Gizlenen seçenek yer kaplamaz; düzenleme modunda hepsi görünür, dokunmak
     // gizle/göster yapar (bkz. Customizable). Yapıştır içeriğe göre çıkar,
     // gizlenmez.
+    // Kullanıcı sırası (P63 PB7, [UiPrefs.attachOrder]): grup içinde
+    // kayıtlı sırada; kayıt boşsa katalog sırası (aynı liste).
+    final catalog = addCatalog(l10n, AddContext.inNote);
+    final saved = Personalize.current.attachOrder;
+    if (saved.isNotEmpty) {
+      final rank = {
+        for (final (i, id) in UiPrefs.orderOf([
+          for (final e in catalog) e.id,
+        ], saved).indexed)
+          id: i,
+      };
+      catalog.sort((a, b) => rank[a.id]! - rank[b.id]!);
+    }
     final entries = [
-      for (final e in addCatalog(l10n, AddContext.inNote))
+      for (final e in catalog)
         if (!(pageNote && e.group == AddGroup.write) &&
             (e.id != 'embed-attachment' || canEmbed) &&
             (Personalize.editing ||

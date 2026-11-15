@@ -388,5 +388,19 @@
     "bugun": "0 / 50 / 0 / 0 / 0 / 0 (2026-11-15; önce 13 / 50 / 0 / 0 / 0 / 2 — PopIn açılışı, dikte metni çubuğu gizliyordu). Kart açıkken +50 kurulum = kartın kendi rozeti/dalgası (editör 0); kart kapanınca kartsız hâlle birebir: sızıntı yok",
     "hedef": "açılış eksik kare 0; kapanınca kartsız hâlle birebir (0/0); dikte çubuğu oynatmaz (0)",
     "neden": "kullanıcı bulgusu 2026-11-15 (G4 [apk]): ses kartı yarım açılıyor, kart varken/sonra klavyede kasma, alt panel zıplıyor"
+  },
+  "S40": {
+    "senaryo": "P63 G5 düzen modu (telefon, 30 maddeli liste, CustomizeModeHost içinde): startEditing → ilk 3 CustomizeFrame'e dokun → Bitti; gövde = NoteEditorScreen + NotePageCanvas + ItemsEditor",
+    "ac_kok": 1,
+    "ac_govde": 3,
+    "kapa_govde": 3,
+    "dokunus_govde": 0,
+    "dokunus_satir": 0,
+    "hub_govde": 0,
+    "sira_govde": 0,
+    "sira_satir": 0,
+    "bugun": "sıra değişimi gövde 0 / satır 0 (PB7); hub 0 (PB2 düzen merkezi levhası aç/kapa); kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0 (2026-11-15, G5 taban — PB1 öncesi; aç/kapa'da üç gövde türü birer kez = MediaQuery boyu değişince TEK yeniden dizilim)",
+    "hedef": "mod aç/kapa'da tek yeniden dizilim (kök ≤ 1, plan §1.5), dokunuş gövde 0, satır 0",
+    "neden": "P63 G5 ilk ölçüm"
   }
 }

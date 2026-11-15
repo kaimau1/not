@@ -4,6 +4,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
+import '../../../../core/widgets/customize_board.dart';
 
 /// Hızlı satırın (yazarken üstte) bütün düğmeleri: kimlik, simge, kısa ad.
 /// Sıra satırdakiyle aynı.
@@ -125,26 +126,16 @@ class QuickRowEditor extends StatelessWidget {
       listenable: Personalize.listenable,
       builder: (context, _) {
         final prefs = Personalize.prefs.value;
-        final all = quickRowCatalog(l10n);
+        final catalog = quickRowCatalog(l10n);
+        final byKey = {for (final e in catalog) e.key: e};
+        // Kullanıcı sırası (P63 PB2): [UiPrefs.quickOrder].
+        final order = UiPrefs.orderOf([
+          for (final e in catalog) e.key,
+        ], prefs.quickOrder);
         final shown = [
-          for (final e in all)
-            if (prefs.shows(UiItem.quickRow(e.key))) e,
+          for (final k in order)
+            if (prefs.shows(UiItem.quickRow(k))) k,
         ];
-        final available = [
-          for (final e in all)
-            if (!prefs.shows(UiItem.quickRow(e.key))) e,
-        ];
-        void set(String key, bool on) =>
-            Personalize.update((p) => p.withVisible(UiItem.quickRow(key), on));
-        Widget group(String title, int count) => Padding(
-          padding: const EdgeInsets.only(top: AppSpace.m, bottom: AppSpace.s),
-          child: Text(
-            '$title · $count',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-        );
         final body = <Widget>[
           if (!inline) ...[
             Text(l10n.quickRowEditTitle, style: theme.textTheme.titleMedium),
@@ -157,88 +148,43 @@ class QuickRowEditor extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpace.m),
-          // CANLI ÖNİZLEME: satır yazarken nasıl görünecek.
-          Container(
+          // CANLI ÖNİZLEME panonun şeridi: satır yazarken nasıl görünecek;
+          // sürükle = sırala.
+          KeyedSubtree(
             key: const ValueKey('quick-row-editor-preview'),
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(AppRadius.l),
-            ),
-            child: shown.isEmpty
-                ? Center(
-                    child: Text(
-                      l10n.quickRowEditEmpty,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  )
-                : SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        for (final e in shown)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpace.s,
-                            ),
-                            child: Icon(
-                              e.icon,
-                              size: AppIconSize.m,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-          ),
-          group(l10n.quickRowEditShown, shown.length),
-          Wrap(
-            spacing: AppSpace.s,
-            runSpacing: AppSpace.s,
-            children: [
-              for (final e in shown)
-                _Tile(
-                  key: ValueKey('quick-row-edit-${e.key}'),
-                  icon: e.icon,
-                  label: e.label,
-                  inMenu: true,
-                  onTap: () => set(e.key, false),
-                ),
-            ],
-          ),
-          group(l10n.quickRowEditAvailable, available.length),
-          Wrap(
-            spacing: AppSpace.s,
-            runSpacing: AppSpace.s,
-            children: [
-              for (final e in available)
-                _Tile(
-                  key: ValueKey('quick-row-edit-${e.key}'),
-                  icon: e.icon,
-                  label: e.label,
-                  inMenu: false,
-                  onTap: () => set(e.key, true),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpace.m),
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: TextButton.icon(
-              key: const ValueKey('quick-row-edit-reset'),
-              onPressed: () => Personalize.update((p) {
-                var next = p;
-                for (final e in all) {
+            child: CustomizeBoard(
+              entries: [
+                for (final k in order)
+                  (id: k, icon: byKey[k]!.icon, label: byKey[k]!.label),
+              ],
+              shown: shown,
+              onToggle: (k, on) => Personalize.update(
+                (p) => p.withVisible(UiItem.quickRow(k), on),
+              ),
+              onReorder: (from, to) {
+                final moved = List.of(shown);
+                moved.insert(to, moved.removeAt(from));
+                final rest = [
+                  for (final k in order)
+                    if (!shown.contains(k)) k,
+                ];
+                Personalize.update(
+                  (p) => p.copyWith(quickOrder: [...moved, ...rest]),
+                );
+              },
+              onReset: () => Personalize.update((p) {
+                var next = p.copyWith(quickOrder: const []);
+                for (final e in catalog) {
                   final id = UiItem.quickRow(e.key);
                   next = next.withVisible(id, !UiItem.optIn.contains(id));
                 }
                 return next;
               }),
-              icon: const Icon(Icons.restart_alt_rounded),
-              label: Text(l10n.quickRowEditReset),
+              shownLabel: l10n.quickRowEditShown,
+              availableLabel: l10n.quickRowEditAvailable,
+              emptyLabel: l10n.quickRowEditEmpty,
+              resetLabel: l10n.quickRowEditReset,
+              keyPrefix: 'quick-row-edit-',
             ),
           ),
         ];
@@ -259,69 +205,6 @@ class QuickRowEditor extends StatelessWidget {
           children: body,
         );
       },
-    );
-  }
-}
-
-/// Bir düğme karosu: menüdeyse dolu zemin + "−", değilse çerçeve + "+".
-class _Tile extends StatelessWidget {
-  const _Tile({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.inMenu,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool inMenu;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final fg = inMenu ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
-    return Material(
-      color: inMenu ? scheme.secondaryContainer : scheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        side: inMenu
-            ? BorderSide.none
-            : BorderSide(color: scheme.outlineVariant),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpace.m,
-            AppSpace.s,
-            AppSpace.s,
-            AppSpace.s,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: AppIconSize.s, color: fg),
-              const SizedBox(width: AppSpace.s),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelLarge
-                    ?.copyWith(color: fg),
-              ),
-              const SizedBox(width: AppSpace.xs),
-              Icon(
-                inMenu
-                    ? Icons.remove_circle_outline_rounded
-                    : Icons.add_circle_outline_rounded,
-                size: AppIconSize.xs,
-                color: inMenu ? fg : scheme.primary,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

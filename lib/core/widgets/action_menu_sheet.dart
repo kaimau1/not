@@ -4,9 +4,9 @@ import '../../app/theme/app_tokens.dart';
 import '../l10n_ext.dart';
 import '../menu_layout.dart';
 import 'app_sheet.dart';
+import 'customize_board.dart';
 import 'sheet_header.dart';
 import 'sheet_tile.dart';
-import 'toggle_pop.dart';
 
 /// Menü levhasındaki tek işlem.
 class MenuAction {
@@ -544,9 +544,11 @@ class _GridTile extends StatelessWidget {
   }
 }
 
-/// **MENÜYÜ DÜZENLE**: işlemleri sürükleyerek sırala, göz ile gizle/göster,
-/// yıldız ile hızlı satıra al (en çok [MenuLayout.maxQuick]). Kaydet anında
-/// menüye yansır; "Varsayılan" kaydı siler.
+/// **MENÜYÜ DÜZENLE** (P63 PB2: düzen panosu kılığı): üstteki pano menüde
+/// görünenler (dokun = gizle/göster, şeritte sürükle = sırala), alttaki
+/// hızlı satır (en çok [MenuLayout.maxQuick]).
+/// Değişiklik ANINDA kaydedilir (P50); "Bitti" yalnız kapatır, "Varsayılan"
+/// kaydı siler.
 class _MenuLayoutEditor extends StatefulWidget {
   const _MenuLayoutEditor({required this.menu});
 
@@ -579,22 +581,27 @@ class _MenuLayoutEditorState extends State<_MenuLayoutEditor> {
     (id) => id,
   );
 
-  void _save() {
+  /// Her dokunuşta: yerel durum + kayıt (kaydet adımı yok).
+  void _change(VoidCallback edit) {
+    setState(edit);
     MenuLayouts.set(
       widget.menu.menuId!,
-      MenuLayout(
-        hidden: _hidden,
-        quick: _quick,
-        order: _order,
-      ),
+      MenuLayout(hidden: _hidden, quick: _quick, order: _order),
     );
-    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final entries = [
+      for (final id in _order)
+        if (_all[id] case final a?) (id: a.id, icon: a.icon, label: a.label),
+    ];
+    final visible = [
+      for (final e in entries)
+        if (!_hidden.contains(e.id)) e.id,
+    ];
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -605,94 +612,78 @@ class _MenuLayoutEditorState extends State<_MenuLayoutEditor> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SheetHeader(title: l10n.menuEdit),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Text(
-                l10n.menuEditHint(MenuLayout.maxQuick),
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
-              ),
-            ),
             Flexible(
-              child: ReorderableListView(
-                shrinkWrap: true,
-                buildDefaultDragHandles: false,
-                onReorderItem: (from, to) => setState(() {
-                  _order.insert(to, _order.removeAt(from));
-                }),
-                children: [
-                  for (var i = 0; i < _order.length; i++)
-                    if (_all[_order[i]] case final a?)
-                      ListTile(
-                        key: ValueKey('menu-edit-${a.id}'),
-                        leading: ReorderableDragStartListener(
-                          index: i,
-                          child: const Icon(Icons.drag_handle),
-                        ),
-                        title: Row(
-                          children: [
-                            Icon(a.icon, size: 20),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                a.label,
-                                style: TextStyle(
-                                  color: _hidden.contains(a.id)
-                                      ? scheme.onSurfaceVariant.withValues(
-                                          alpha: 0.5,
-                                        )
-                                      : null,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TogglePop(
-                              on: _quick.contains(a.id),
-                              child: IconButton(
-                                key: ValueKey('menu-quick-${a.id}'),
-                                tooltip: l10n.menuQuickRow,
-                                isSelected: _quick.contains(a.id),
-                                icon: const Icon(Icons.star_outline),
-                                selectedIcon: Icon(
-                                  Icons.star,
-                                  color: scheme.primary,
-                                ),
-                                onPressed: () => setState(() {
-                                  if (_quick.contains(a.id)) {
-                                    _quick.remove(a.id);
-                                  } else if (_quick.length < MenuLayout.maxQuick) {
-                                    _quick.add(a.id);
-                                    _hidden.remove(a.id);
-                                  }
-                                }),
-                              ),
-                            ),
-                            IconButton(
-                              key: ValueKey('menu-visible-${a.id}'),
-                              tooltip: l10n.menuShowHide,
-                              icon: Icon(
-                                _hidden.contains(a.id)
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                              ),
-                              onPressed: () => setState(() {
-                                if (!_hidden.remove(a.id)) {
-                                  _hidden.add(a.id);
-                                  _quick.remove(a.id);
-                                }
-                              }),
-                            ),
-                          ],
-                        ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      l10n.menuEditHint(MenuLayout.maxQuick),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
-                ],
+                    ),
+                    const SizedBox(height: AppSpace.m),
+                    CustomizeBoard(
+                      entries: entries,
+                      shown: visible,
+                      onToggle: (id, on) => _change(() {
+                        if (on) {
+                          _hidden.remove(id);
+                        } else {
+                          _hidden.add(id);
+                          _quick.remove(id);
+                        }
+                      }),
+                      onReorder: (from, to) => _change(() {
+                        final moved = List.of(visible);
+                        moved.insert(to, moved.removeAt(from));
+                        final it = moved.iterator;
+                        final next = [
+                          for (final id in _order)
+                            if (_hidden.contains(id) || !_all.containsKey(id))
+                              id
+                            else
+                              (it..moveNext()).current,
+                        ];
+                        _order
+                          ..clear()
+                          ..addAll(next);
+                      }),
+                      shownLabel: l10n.customizeShown,
+                      availableLabel: l10n.quickRowEditAvailable,
+                      keyPrefix: 'menu-visible-',
+                    ),
+                    const SizedBox(height: AppSpace.l),
+                    CustomizeBoard(
+                      entries: entries,
+                      shown: _quick,
+                      onToggle: (id, on) => _change(() {
+                        if (!on) {
+                          _quick.remove(id);
+                        } else if (_quick.length < MenuLayout.maxQuick) {
+                          _quick.add(id);
+                          _hidden.remove(id);
+                        }
+                      }),
+                      onReorder: (from, to) =>
+                          _change(() => _quick.insert(to, _quick.removeAt(from))),
+                      shownLabel: l10n.menuQuickRow,
+                      availableLabel: l10n.quickRowEditAvailable,
+                      keyPrefix: 'menu-edit-quick-',
+                    ),
+                  ],
+                ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                AppSpace.s,
+                AppSpace.l,
+                AppSpace.m,
+              ),
               child: Row(
                 children: [
                   TextButton(
@@ -709,8 +700,8 @@ class _MenuLayoutEditorState extends State<_MenuLayoutEditor> {
                   const Spacer(),
                   FilledButton(
                     key: const ValueKey('menu-edit-save'),
-                    onPressed: _save,
-                    child: Text(l10n.eventSave),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(l10n.customizeDone),
                   ),
                 ],
               ),
@@ -721,4 +712,3 @@ class _MenuLayoutEditorState extends State<_MenuLayoutEditor> {
     );
   }
 }
-

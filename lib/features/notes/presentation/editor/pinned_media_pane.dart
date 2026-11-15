@@ -574,6 +574,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   @override
   void initState() {
     super.initState();
+    Personalize.listenable.addListener(_onPersonalize);
     _imageZoom.addListener(_onImageZoom);
     _watcher.stage.addListener(_onStage);
     _onStage();
@@ -613,6 +614,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
 
   @override
   void dispose() {
+    Personalize.listenable.removeListener(_onPersonalize);
     InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
     _ink?.dispose();
     _ownBubbles?.save();
@@ -1485,26 +1487,32 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       children: [
         // ÜST / SOL / SAĞ (geniş ekranda, 2026-11-09).
         if (widget.onCycleSide != null)
-          _BarButton(
-            key: const ValueKey('pinned-side'),
-            tooltip: l10n.pinnedSideToggle,
-            icon: switch (widget.side) {
-              PinnedSide.top => Icons.vertical_split_outlined,
-              PinnedSide.left => Icons.vertical_split,
-              PinnedSide.right => Icons.horizontal_split_outlined,
-            },
-            onPressed: widget.onCycleSide!,
+          _pinnedItem(
+            'side',
+            _BarButton(
+              key: const ValueKey('pinned-side'),
+              tooltip: l10n.pinnedSideToggle,
+              icon: switch (widget.side) {
+                PinnedSide.top => Icons.vertical_split_outlined,
+                PinnedSide.left => Icons.vertical_split,
+                PinnedSide.right => Icons.horizontal_split_outlined,
+              },
+              onPressed: widget.onCycleSide!,
+            ),
           ),
         if (tools)
           _penQuickTools(context)
         else ...[
           // Sesin tam ekranı yok (kart kendisi oynatıcı).
           if (!isAudio && !tiny)
-            _BarButton(
-              key: const ValueKey('pinned-fullscreen'),
-              tooltip: l10n.fullscreen,
-              icon: Icons.fullscreen,
-              onPressed: widget.onOpen,
+            _pinnedItem(
+              'fullscreen',
+              _BarButton(
+                key: const ValueKey('pinned-fullscreen'),
+                tooltip: l10n.fullscreen,
+                icon: Icons.fullscreen,
+                onPressed: widget.onOpen,
+              ),
             ),
           // VİDEO DENETİMİ (kullanıcı isteği 2026-10-16): ±10 sn ve
           // oynat/durdur medyanın HEMEN ALTINDA — oynatıcının
@@ -1599,22 +1607,28 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         // panelin altında balon butonu olmalı"): yalnız en dar bölmede
         // (< 220 dp) ⋮ levhasında kalır.
         if (_canEditBubbles && !tools && (!tiny || _bubbleEdit))
-          _addBubbleButton(context, active: _bubbleEdit)
+          _pinnedItem('bubble', _addBubbleButton(context, active: _bubbleEdit))
         else if (_canEditPdfBubbles && !tools)
-          ValueListenableBuilder<bool>(
-            valueListenable: _pdfAdding,
-            builder: (context, adding, _) => !tiny || adding
-                ? _addBubbleButton(context, active: adding)
-                : const SizedBox.shrink(),
+          _pinnedItem(
+            'bubble',
+            ValueListenableBuilder<bool>(
+              valueListenable: _pdfAdding,
+              builder: (context, adding, _) => !tiny || adding
+                  ? _addBubbleButton(context, active: adding)
+                  : const SizedBox.shrink(),
+            ),
           ),
         if (!_hasSheet &&
             (!isVideo || width >= 360) &&
             widget.onCopyLink != null &&
             widget.media.isWebVideo)
-          _BarButton(
-            tooltip: l10n.copyVideoLink,
-            icon: Icons.link,
-            onPressed: widget.onCopyLink!,
+          _pinnedItem(
+            'link',
+            _BarButton(
+              tooltip: l10n.copyVideoLink,
+              icon: Icons.link,
+              onPressed: widget.onCopyLink!,
+            ),
           ),
         if (widget.viewSwitch case final viewSwitch? when wide && !tools)
           Padding(
@@ -1622,20 +1636,26 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             child: viewSwitch,
           )
         else if (widget.viewSwitch == null && !hasMenu)
-          _BarButton(
-            tooltip: l10n.viewModeFloatingHint,
-            icon: Icons.vertical_align_bottom,
-            onPressed: widget.onUnpin,
+          _pinnedItem(
+            'unpin',
+            _BarButton(
+              tooltip: l10n.viewModeFloatingHint,
+              icon: Icons.vertical_align_bottom,
+              onPressed: widget.onUnpin,
+            ),
           ),
         // ÜZERİNE YAZ (kullanıcı isteği 2026-11-08): sabit belgeye/görsele
         // doğrudan kalemle yazılır. Düğme HEP burada (bkz. [_togglePen]).
         if (_canPen)
-          _BarButton(
-            key: const ValueKey('pinned-pen'),
-            tooltip: l10n.pinnedPenWrite,
-            icon: penOn ? Icons.draw : Icons.draw_outlined,
-            selected: penOn,
-            onPressed: _togglePen,
+          _pinnedItem(
+            'pen',
+            _BarButton(
+              key: const ValueKey('pinned-pen'),
+              tooltip: l10n.pinnedPenWrite,
+              icon: penOn ? Icons.draw : Icons.draw_outlined,
+              selected: penOn,
+              onPressed: _togglePen,
+            ),
           ),
         if (_hasSheet)
           _BarButton(
@@ -1814,6 +1834,20 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// Görünüm anahtarı · Balonlar · PDF (sayfalara göz at, yer imi…) · ek
   /// işleri (tek katalog, bkz. [attachmentActionsFor]) · Kaldır. Seçim
   /// levhayı kapatır, iş kapandıktan SONRA koşar.
+  /// Sabit ek çubuğunun gizlenebilen düğmesi (P63 PB7, [UiItem.pinned]):
+  /// varsayılan GÖRÜNÜR (Y10: ⋮'e inmez); düzen modunda çerçeveli, normal
+  /// kipte kullanıcı gizlediyse yer kaplamaz. Anahtarlar düzen merkezindeki
+  /// `pinnedCatalog` ile aynı.
+  /// Normal kipte araya öğe girmez (S17 geçiş karesi); kayıt değişince
+  /// bölme [_onPersonalize] ile yeniden kurulur.
+  static Widget _pinnedItem(String key, Widget child) =>
+      Customizable.slot(UiItem.pinned(key), child);
+
+  /// Düzen modu / görünürlük değişti (seyrek): çubuk yeni hâliyle kurulur.
+  void _onPersonalize() {
+    if (mounted) setState(() {});
+  }
+
   Future<void> _openSheet() async {
     final run = await showAppSheet<VoidCallback>(
       context: context,
