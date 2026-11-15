@@ -402,5 +402,20 @@
     "bugun": "sıra değişimi gövde 0 / satır 0 (PB7); hub 0 (PB2 düzen merkezi levhası aç/kapa); kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0 (2026-11-15, G5 taban — PB1 öncesi; aç/kapa'da üç gövde türü birer kez = MediaQuery boyu değişince TEK yeniden dizilim)",
     "hedef": "mod aç/kapa'da tek yeniden dizilim (kök ≤ 1, plan §1.5), dokunuş gövde 0, satır 0",
     "neden": "P63 G5 ilk ölçüm"
+  },
+  "S47": {
+    "senaryo": "Oturum birikimi (test/oturum_birikim_test.dart): ana ekrandan 2 liste + 2 metin notu sırayla 20 kez aç → dokun → klavye aç/kapa → geri; uygulama kökü sarmalayıcıları (odak halkası, düzen modu, bildirim şeridi) dahil. Kare farkı = aynı notun son − ilk açılışı (tur 17−1, 20−4); artışlar tur 20 − tur 4 (GC sonrası)",
+    "kare_kurulum_farki": 0,
+    "kare_dizilme_farki": 0,
+    "kare_boyama_farki": 0,
+    "canli_nesne_artisi": 0,
+    "toplanmayan_artisi": 0,
+    "saglayici_artisi": 0,
+    "kapali_nota_bagli_saglayici": 0,
+    "abone_artisi": 0,
+    "ticker": 0,
+    "bugun": "hepsi 0 (2026-11-15; önce kapali_nota_bagli_saglayici 4 = noteCalendarLinksProvider düz family, açılan her not için kalıcı örnek). Klavye turu tur 1 = 17 (liste 615 kurulum / 173 dizilme / 1612 boyama), tur 4 = 20 (metin 637 / 176 / 2142); canlı nesne, toplanmayan, sağlayıcı (117), abone, ticker, genel dinleyici, rota sabit",
+    "hedef": "20 tur sonra klavye karesi maliyeti = ilk tur; hiçbir sayaç turla artmaz; kapanmış nota bağlı canlı sağlayıcı 0",
+    "neden": "kullanıcı bulgusu 2026-11-15 (1.2.80): uygulama kullanıldıkça kasma artıyor"
   }
 }
