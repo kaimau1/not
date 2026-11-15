@@ -14,6 +14,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nasıl: her kipte 10 kez aç-kapa; hangisinde panel "zıplamadan" geliyor? `tool/perf/panel_kayit.py` sayıları da yanında.
   Doğruysa: seçtiğin kipi söyle — varsayılan o olur (şu an a).
   Yanlışsa: ekran kaydı gönder, hangi kipte olduğunu söyle.
+- [ ] **Şablon kasması (oto/sablon-kasma, cihazda bakılmadı — 2026-11-15)**
+  Nerede: ana ekran "+" → Şablon → Alışveriş listesi; ayrıca Şablonlar → Yeni şablon.
+  Nasıl: "Madde ekle"ye dokun (klavye açılırken takılmamalı), birkaç öneri çipine ve maddenin kutucuğuna dokun, Oluştur; galeride arama kutusuna dokun; Yeni şablonda ad alanına ilk harfi yaz.
+  Doğruysa: klavye ve dokunuşlar takılmadan; yanlışsa: hangi adımda kastığını yaz.
+
 - [ ] **Konfor kararları (oto/konfor, cihazda bakılmadı — 2026-11-15)**
   Nerede: tablette bir not açıkken sol kenar; küçük telefonda ⋮ → Ekranı düzenle; ana ekranda "+" → ayar simgesi (Düzenle).
   Nasıl: sol kenardan çekmeceyi yavaşça az çek (açılmamalı), biraz daha çek (açılmalı), kısa fiske (açılmalı); düzen şeridinin başlığı kesilmeden ("Düzenleme modu" ya da "Düzen") görünsün; "+" → Düzenle "+" panosunu açsın, bir öğeyi gizle/sırala, son görünen öğeyi gizlemeye çalış (uyarı çıkmalı), paneli yeniden aç.

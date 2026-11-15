@@ -49,18 +49,25 @@ Future<NoteTemplateContent?> showNoteTemplateSheet(
   BuildContext context, {
   NoteTemplate? initial,
   UserTemplate? initialUser,
-}) => showAppSheet<NoteTemplateContent>(
-  context: context,
-  showDragHandle: true,
-  isScrollControlled: true,
-  constraints: const BoxConstraints(maxWidth: 640),
-  builder: (sheetContext) => Padding(
-    padding: EdgeInsets.only(
-      bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+}) {
+  // TEK ÖRNEK (kullanıcı bulgusu 2026-11-15 "şablon oluştururken aşırı
+  // kasıyor"): builder klavye payına bağlı, klavyenin her karesinde yeniden
+  // çağrılır. Levha her seferinde YENİ örnek olsaydı bütün galeri/önizleme
+  // (alışverişte 74 öneri çipi) kare başına baştan kurulurdu (S47).
+  final sheet = NoteTemplateSheet(initial: initial, initialUser: initialUser);
+  return showAppSheet<NoteTemplateContent>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    constraints: const BoxConstraints(maxWidth: 640),
+    builder: (sheetContext) => Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+      ),
+      child: sheet,
     ),
-    child: NoteTemplateSheet(initial: initial, initialUser: initialUser),
-  ),
-);
+  );
+}
 
 /// Galeride seçilen şablon: hazır ya da kullanıcının kendi şablonu.
 @immutable
@@ -860,6 +867,35 @@ class _TemplateComposerState extends State<TemplateComposer> {
     super.dispose();
   }
 
+  /// Satır/çip ÖRNEK ÖNBELLEĞİ (S47): bir dokunuş (kutucuk, öneri, madde
+  /// ekle) bütün önizlemeyi `setState` ile kurar; alışverişte 74 öneri çipi
+  /// + satırlar = dokunuş başına ~2300 widget. Değişmeyen satır/çip AYNI
+  /// örnekle döner → Flutter alt ağacı atlar, yalnız değişen kurulur.
+  /// Anahtar metin(+sıra), değer (seçili mi, widget). Tema/dil değişince
+  /// boşaltılır (satır stili dışarıdan verilir).
+  final Map<String, (bool, Widget)> _rowCache = {};
+  final Map<String, (bool, Widget)> _chipCache = {};
+
+  Widget _memo(
+    Map<String, (bool, Widget)> cache,
+    String key,
+    bool selected,
+    Widget Function() build,
+  ) {
+    final hit = cache[key];
+    if (hit != null && hit.$1 == selected) return hit.$2;
+    final w = build();
+    cache[key] = (selected, w);
+    return w;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _rowCache.clear();
+    _chipCache.clear();
+  }
+
   int get _selectedCount => _items.where((i) => i.selected).length;
 
   bool _hasItem(String text) => _items.any(
@@ -1061,25 +1097,30 @@ class _TemplateComposerState extends State<TemplateComposer> {
     final theme = Theme.of(context);
     return [
       for (var i = 0; i < _items.length; i++)
-        CheckboxListTile(
-          key: ValueKey('tpl-item-$i-${_items[i].text}'),
-          dense: true,
-          visualDensity: VisualDensity.compact,
-          contentPadding: EdgeInsets.zero,
-          controlAffinity: ListTileControlAffinity.leading,
-          value: _items[i].selected,
-          title: Text(
-            _items[i].text,
-            style: _items[i].selected
-                ? AppText.of(theme).body
-                : AppText.of(theme).body.copyWith(
-                    color: scheme.onSurface.withValues(
-                      alpha: AppAlpha.disabled,
+        _memo(
+          _rowCache,
+          '$i-${_items[i].text}',
+          _items[i].selected,
+          () => CheckboxListTile(
+            key: ValueKey('tpl-item-$i-${_items[i].text}'),
+            dense: true,
+            visualDensity: VisualDensity.compact,
+            contentPadding: EdgeInsets.zero,
+            controlAffinity: ListTileControlAffinity.leading,
+            value: _items[i].selected,
+            title: Text(
+              _items[i].text,
+              style: _items[i].selected
+                  ? AppText.of(theme).body
+                  : AppText.of(theme).body.copyWith(
+                      color: scheme.onSurface.withValues(
+                        alpha: AppAlpha.disabled,
+                      ),
+                      decoration: TextDecoration.lineThrough,
                     ),
-                    decoration: TextDecoration.lineThrough,
-                  ),
+            ),
+            onChanged: (v) => setState(() => _items[i].selected = v ?? false),
           ),
-          onChanged: (v) => setState(() => _items[i].selected = v ?? false),
         ),
       // Son satır "Madde ekle": simge kutucuk sütununda, yazı madde hizasında.
       Padding(
@@ -1159,11 +1200,16 @@ class _TemplateComposerState extends State<TemplateComposer> {
             runSpacing: AppSpace.xxs,
             children: [
               for (final s in group.items)
-                FilterChip(
-                  label: Text(s),
-                  selected: _hasItem(s),
-                  visualDensity: VisualDensity.compact,
-                  onSelected: (_) => _toggleSuggestion(s),
+                _memo(
+                  _chipCache,
+                  s,
+                  _hasItem(s),
+                  () => FilterChip(
+                    label: Text(s),
+                    selected: _hasItem(s),
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (_) => _toggleSuggestion(s),
+                  ),
                 ),
             ],
           ),

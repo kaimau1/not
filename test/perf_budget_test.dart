@@ -56,6 +56,8 @@ import 'package:notlar/features/notes/presentation/listening_visuals.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/notes/data/user_templates.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
+import 'package:notlar/features/notes/presentation/template_editor_screen.dart';
+import 'package:notlar/features/notes/domain/note_templates.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1968,6 +1970,138 @@ void main() {
       'cip_fazla_kart': chipExcess,
       'harf_fazla_kart': letterExcess,
       'acilis_text': open['Text'] ?? 0,
+    });
+  });
+
+  // S48 (kullanıcı bulgusu 2026-11-15 "şablon oluştururken aşırı kasıyor"):
+  // alışveriş şablonunun önizlemesi (5 madde + 74 öneri çipi) — klavye
+  // açılışı (6 inset karesi), öneri çipi ve kutucuk dokunuşu, "Oluştur";
+  // galeride arama klavyesi; kendi şablon düzenleyicisinde (20 madde) ilk
+  // tuşlar. Kök neden: levha builder'ı klavyenin her karesinde YENİ levha
+  // örneği kuruyordu; her dokunuş bütün çipleri yeniden kuruyordu.
+  testWidgets('S48: şablon önizlemesi + düzenleyici (alışveriş, 74 çip)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    Object? created;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () async => created =
+                        await showNoteTemplateSheet(
+                          context,
+                          initial: NoteTemplate.shopping,
+                        ),
+                    child: const Text('alışveriş'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => showNoteTemplateSheet(context),
+                    child: const Text('galeri'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => showTemplateEditor(
+                      context,
+                      initial: UserTemplate(
+                        id: 'x',
+                        name: 'Benim',
+                        type: NoteType.checklist,
+                        items: [for (var i = 0; i < 20; i++) 'madde $i'],
+                      ),
+                    ),
+                    child: const Text('düzenle'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    Future<(int, int)> keyboard() async {
+      layouts = 0;
+      debugPrint = (String? m, {int? wrapWidth}) {
+        if (m != null && m.startsWith('Laying out')) layouts++;
+      };
+      debugPrintLayouts = true;
+      try {
+        final c = await _count(() async {
+          for (final b in <double>[50, 100, 150, 200, 250, 300]) {
+            tester.view.viewInsets = FakeViewPadding(bottom: b);
+            await tester.pump(const Duration(milliseconds: 16));
+          }
+        });
+        return (_sum(c), layouts);
+      } finally {
+        debugPrintLayouts = false;
+        debugPrint = oldPrint;
+      }
+    }
+
+    // 1) Önizleme: klavye, çip, kutucuk, Oluştur.
+    await tester.tap(find.text('alışveriş'));
+    await _settle(tester);
+    expect(find.byType(FilterChip), findsAtLeastNWidgets(70));
+    final box = await _count(() async {
+      await tester.tap(find.byType(CheckboxListTile).first);
+      await tester.pump();
+    });
+    final chip = await _count(() async {
+      await tester.tap(find.byType(FilterChip).at(3));
+      await tester.pump();
+    });
+    await _settle(tester);
+    await tester.tap(find.byType(TextField).last);
+    await tester.pump(const Duration(milliseconds: 100));
+    final (kbBuilds, kbLayouts) = await keyboard();
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await _settle(tester);
+    await tester.tap(find.textContaining('Oluştur'));
+    await _settle(tester);
+    expect(created, isNotNull, reason: 'Oluştur içeriği döndürür');
+
+    // 2) Galeri: arama alanı + klavye.
+    await tester.tap(find.text('galeri'));
+    await _settle(tester);
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump(const Duration(milliseconds: 100));
+    final (galleryBuilds, _) = await keyboard();
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.binding.handlePopRoute();
+    await _settle(tester);
+
+    // 3) Kendi şablon düzenleyicisi: maddeye 5 tuş.
+    await tester.tap(find.text('düzenle'));
+    await _settle(tester);
+    await tester.tap(find.text('madde 2'));
+    await tester.pump(const Duration(milliseconds: 100));
+    final typing = await _count(() async {
+      for (var i = 1; i <= 5; i++) {
+        tester.testTextInput.enterText('madde 2${'a' * i}');
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    });
+    _expectBudget('S48', {
+      'klavye_kurulum': kbBuilds,
+      'klavye_dizilme': kbLayouts,
+      'cip_kurulum': _sum(chip),
+      'kutu_kurulum': _sum(box),
+      'galeri_klavye_kurulum': galleryBuilds,
+      'duzenleyici_tus_kurulum': _sum(typing),
     });
   });
 
