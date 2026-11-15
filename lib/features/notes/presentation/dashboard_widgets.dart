@@ -1373,6 +1373,8 @@ class _FolderSwipeState extends State<FolderSwipe>
     final commit =
         _label != null &&
         AppSwipe.commits(dragged: _raw, extent: _width, velocity: velocity);
+    // Fiskeyle (eşiği aşmadan) geçiş de aynı hafif titreşimi verir (K3).
+    if (commit && !_past) unawaited(AppHaptics.tick());
     final direction = _direction;
     setState(() {
       _label = null;
