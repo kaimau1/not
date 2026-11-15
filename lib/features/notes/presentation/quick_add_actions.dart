@@ -229,7 +229,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     messenger.showMessage(l10n.videoFramesExtracting);
     final frames = await VideoFrame.sample(picked.path);
     if (!mounted) return;
-    messenger.hideCurrentSnackBar();
+    messenger.hideMessage();
     if (frames.isEmpty) {
       // Kare çıkarılamadı: kip sessizce düşürülmez, klasik nota bağlanır ki
       // çekilen video kaybolmasın.
@@ -605,7 +605,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     try {
       final bytes = await ScanPdf.build(paths);
       if (!mounted) return;
-      messenger.hideCurrentSnackBar();
+      messenger.hideMessage();
       await _createPageNoteWithPdf(
         bytes,
         fallbackName: fallbackName,
@@ -648,7 +648,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
         File(path).delete().ignore();
       }
       if (!mounted) return;
-      messenger.hideCurrentSnackBar();
+      messenger.hideMessage();
       await _createPageNoteWithPdf(
         bytes,
         fallbackName: fallbackName,
@@ -767,7 +767,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
         if (noteTitle.isNotEmpty) 'title': noteTitle,
       });
       if (!mounted) return;
-      messenger.hideCurrentSnackBar();
+      messenger.hideMessage();
       await openNewNote(id);
     } catch (e) {
       messenger

@@ -230,3 +230,240 @@ Map<String, String?> parseModelList(AiProvider provider, Object? body) {
   }
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// GÖREV BAŞINA GEMINI SIRASI (kullanıcı isteği 2026-11-15: "model sıralamasını
+// baştan yap, otomatik modu ayarla").
+//
+// KÖK NEDEN: otomatik zincir ve "Önerilen" bölümü `_recommendations`
+// desenlerinden geliyordu (`flash-lite` → `flash`, yeniden eskiye). Desen
+// kotayı bilmiyor: "Nano Banana 2 Lite" (görüntü modeli, kota 0) ve hesapta
+// olmayan "3.1 Flash Lite Preview" de öneriliyordu; zincir de katalogdaki
+// HER kimliği (TTS, embedding dahil) sırayla deniyordu. Artık sıra AÇIK bir
+// izin listesi.
+//
+// TEK YER: kotalar zamanla değişir — güncelleme yalnız bu tabloda.
+// Kaynak: kullanıcının Google AI Studio ücretsiz katman limit tablosu,
+// 2026-11-15 (RPM / TPM / RPD). Kotası 0 olanlar (2 Flash, 2.5/3.1 Pro,
+// Gemini 4 Argon/Carbon, Omni, tüm Nano Banana'lar, Lyria, 2.5 Pro TTS,
+// Computer Use, Deep Research) ile uygulamaya uymayanlar (Robotics ER,
+// Decision, Antigravity) BİLEREK yok: "Tümünü göster" kapalıyken
+// görünmezler, otomatik zincir onları hiç denemez.
+// ---------------------------------------------------------------------------
+
+/// Otomatik zincirin türü — her görev bunlardan birine eşlenir.
+enum ModelChain {
+  /// Özet, sohbet, brifing, yeniden yazma (kısa işte Gemma yedeği var).
+  general,
+
+  /// Kısa girdi + kısa çıktı: başlık, etiket, ayar arama. Gemma ÖNCE
+  /// (günde 14.400 istek; Flash Lite'ın 500'ünü özete/sohbete bırakır).
+  /// Gemma JSON istemeyen düz metin işlerde denenir (bkz. GeminiService).
+  short,
+
+  /// Uzun / çok kipli işler: PDF, OCR, podcast anlatısı, çeviri. Gemma YOK
+  /// (16K TPM, görsel okumaz).
+  long,
+
+  /// Araç çağrılı sesli not asistanı: standart Flash önce (lite boş not
+  /// üretebiliyordu — 2026-08 madde 15), lite'lar yedek.
+  voice,
+
+  /// Seslendirme (TTS).
+  tts,
+
+  /// Yazıya döküm: Transcribe modeli, sonra çok kipli metin modelleri.
+  transcribe,
+}
+
+/// Tablodaki tek satır.
+class ChainEntry {
+  const ChainEntry(this.pattern, this.note, {this.shortOnly = false});
+
+  /// Normalize edilmiş kimliğe ya da görünen ada (küçük harf, `-`/`_` →
+  /// boşluk) uyan desen. Sonuna ` preview`, ` latest`, sayı gelebilir.
+  final String pattern;
+
+  /// Rozetin altındaki gerekçe (kota özeti).
+  final String note;
+
+  /// Yalnız kısa, düz metin işlerde denenir (Gemma: 16K TPM; JSON ve görsel
+  /// desteklemez).
+  final bool shortOnly;
+}
+
+const _fl35 = ChainEntry(r'gemini 3\.5 flash lite', 'Günde 500 istek — ana model');
+// "3.1 Flash Lite Preview" hesabın tablosunda yok: önizleme eki dışlanır.
+const _fl31 = ChainEntry(
+  r'gemini 3\.1 flash lite(?! preview)',
+  'Günde 500 istek — yedek',
+);
+const _gemma31 = ChainEntry(
+  r'gemma 4 31b( it)?',
+  'Günde 14.400 istek — yalnız kısa işler',
+  shortOnly: true,
+);
+const _gemma26 = ChainEntry(
+  r'gemma 4 26b( a4b)?( it)?',
+  'Günde 14.400 istek — yalnız kısa işler',
+  shortOnly: true,
+);
+const _f38 = ChainEntry(r'gemini 3\.8 flash', 'Günde 20 istek — güçlü');
+const _f3 = ChainEntry(r'gemini 3 flash', 'Günde 20 istek');
+const _f25 = ChainEntry(r'gemini 2\.5 flash', 'Günde 20 istek');
+const _fl25 = ChainEntry(r'gemini 2\.5 flash lite', 'Günde 20 istek');
+const _f36 = ChainEntry(r'gemini 3\.6 flash', 'Günde 20 istek — sık doluyor');
+const _hydrogen = ChainEntry(
+  r'gemini 4 hydrogen',
+  'Günde 20 istek — sık doluyor',
+);
+
+/// Görev → deneme sırası (2026-11-15).
+const geminiChains = <ModelChain, List<ChainEntry>>{
+  ModelChain.general: [
+    _fl35, _fl31, _gemma31, _gemma26, //
+    _f38, _f3, _f25, _fl25, _f36, _hydrogen,
+  ],
+  ModelChain.short: [
+    _gemma31, _gemma26, _fl35, _fl31, //
+    _f38, _f3, _f25, _fl25, _f36, _hydrogen,
+  ],
+  ModelChain.long: [_fl35, _fl31, _f38, _f3, _f25, _fl25, _f36, _hydrogen],
+  ModelChain.voice: [_f38, _f3, _f25, _fl35, _fl31, _fl25, _f36, _hydrogen],
+  ModelChain.tts: [
+    ChainEntry(r'gemini 3\.8 flash tts', 'Günde 10 istek'),
+    ChainEntry(r'gemini 3\.8 flash lite tts', 'Günde 10 istek'),
+    ChainEntry(r'gemini 3\.1 flash tts', 'Günde 10 istek'),
+    ChainEntry(r'gemini 2\.5 flash( preview)? tts', 'Günde 10 istek'),
+  ],
+  ModelChain.transcribe: [
+    ChainEntry(r'gemini 3\.5 transcribe', 'Günde 25 istek — yazıya döküm'),
+    _fl35, _fl31, _f38, _f3, _f25, _fl25, _f36, _hydrogen,
+  ],
+};
+
+String _normalize(String s) => s
+    .toLowerCase()
+    .replaceFirst('models/', '')
+    .replaceAll(RegExp(r'[-_\s]+'), ' ')
+    .trim();
+
+bool _entryMatches(ChainEntry e, String text) => RegExp(
+  '^(?:${e.pattern})(?: preview| latest| \\d+)*\$',
+).hasMatch(_normalize(text));
+
+bool _modelMatches(ChainEntry e, AiModel m) =>
+    _entryMatches(e, m.id) || _entryMatches(e, m.label);
+
+/// Kimlik [chain]'in bir satırına uyuyor mu? (Katalogsuz — eski seçimlerin
+/// göçü için.)
+bool chainAccepts(ModelChain chain, String id) =>
+    geminiChains[chain]!.any((e) => _entryMatches(e, id));
+
+/// Yalnız kısa işlerde denenecek model mi (Gemma)?
+bool isShortOnly(String id) => geminiChains[ModelChain.general]!.any(
+  (e) => e.shortOnly && _entryMatches(e, id),
+);
+
+/// [catalog]'u [chain]'in sırasına sokar: her satır için katalogdaki EN KISA
+/// kimlikli eşleşme (önizlemesiz sürüm önce) — aynı modelin iki kaydı tek
+/// satır olur. Dönenler `recommended: true` ve kota notlu. Katalogda olmayan
+/// satır atlanır (kimlik UYDURULMAZ).
+List<AiModel> orderForChain(ModelChain chain, List<AiModel> catalog) {
+  final out = <AiModel>[];
+  for (final entry in geminiChains[chain]!) {
+    final hits = [
+      for (final m in catalog)
+        if (_modelMatches(entry, m) && !out.any((o) => o.id == m.id)) m,
+    ]..sort((a, b) => a.id.length.compareTo(b.id.length));
+    if (hits.isEmpty) continue;
+    final m = hits.first;
+    out.add(
+      AiModel(
+        id: m.id,
+        label: m.label,
+        recommended: true,
+        note: entry.note,
+        kind: m.kind,
+      ),
+    );
+  }
+  return out;
+}
+
+/// Aynı görünen adlı kayıtları tekilleştirir (ilk gelen kalır) — sağlayıcı
+/// bazı modelleri iki kimlikle döndürüyor ("Nano Banana Pro" ×2).
+List<AiModel> dedupeByLabel(Iterable<AiModel> models) {
+  final seen = <String>{};
+  return [
+    for (final m in models)
+      if (seen.add(_normalize(m.label))) m,
+  ];
+}
+
+/// Kota/erişim hatası alan modeli bir süre zincirden çıkarır (bellekte).
+///
+/// 429 gövdesinde `PerDay` geçiyorsa günlük kota (RPD) dolmuştur: kota
+/// Pasifik gece yarısı sıfırlanır, o ana dek atlanır. Diğer 429'lar (RPM)
+/// bir dakika atlanır. 404 (model bu hesapta yok) da gün sonuna dek.
+class ModelCooldown {
+  ModelCooldown({DateTime Function()? clock}) : _now = clock ?? DateTime.now;
+
+  final DateTime Function() _now;
+  final _until = <String, DateTime>{};
+
+  bool isCooling(String id) {
+    final until = _until[id];
+    return until != null && _now().isBefore(until);
+  }
+
+  void hit(String id, int status, {Object? body}) {
+    final now = _now().toUtc();
+    final daily = status == 404 || '$body'.contains('PerDay');
+    _until[id] = daily
+        ? nextPacificMidnight(now)
+        : now.add(const Duration(minutes: 1));
+  }
+
+  // ponytail: sabit UTC-8; yaz saatinde (PDT) kilit bir saat geç açılır —
+  // zararsız, zincirde başka model var.
+  static DateTime nextPacificMidnight(DateTime utc) {
+    final pacific = utc.toUtc().subtract(const Duration(hours: 8));
+    return DateTime.utc(
+      pacific.year,
+      pacific.month,
+      pacific.day + 1,
+    ).add(const Duration(hours: 8));
+  }
+}
+
+/// Seçici listesi (2026-11-15). Gemini'de "Önerilen" = görevin zinciri;
+/// [showAll] kapalıyken YALNIZ o (kota 0 ve uyumsuzlar gizli), açıkken geri
+/// kalan katalog tekilleştirilip "Diğer" olarak eklenir. Zincirden hiçbir
+/// model eşleşmezse (başka sağlayıcı) null — çağıran eski listeyi kullanır.
+List<AiModel>? pickerModels(
+  ModelChain chain,
+  List<AiModel> catalog, {
+  required bool showAll,
+}) {
+  final ordered = orderForChain(chain, catalog);
+  if (ordered.isEmpty) return null;
+  if (!showAll) return ordered;
+  return dedupeByLabel([
+    ...ordered,
+    for (final m in catalog)
+      if (!ordered.any((o) => o.id == m.id))
+        AiModel(id: m.id, label: m.label, kind: m.kind),
+  ]);
+}
+
+/// Kayıtlı elle seçim hâlâ geçerli mi? Katalogda yoksa (model kaldırıldı ya
+/// da sağlayıcı değişti) null döner: seçim sessizce "Otomatik"e düşer.
+/// Katalog bilinmiyorsa (boş) seçime dokunulmaz.
+String? validChoice(String? value, List<AiModel>? catalog) =>
+    value == null ||
+        catalog == null ||
+        catalog.isEmpty ||
+        catalog.any((m) => m.id == value)
+    ? value
+    : null;

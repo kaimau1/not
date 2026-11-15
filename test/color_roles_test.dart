@@ -30,7 +30,6 @@ const _allowed = <String, (int, String)>{
   'lib/features/gmail/presentation/gmail_screen.dart': (4, 'gönderen avatar paleti + önemli/yıldız'),
   'lib/features/inbox/presentation/shared_hub_screen.dart': (1, 'paylaşılan merkez simgesi'),
   'lib/features/notes/presentation/dashboard_screen.dart': (1, 'P19 alanı (pano gövdesi)'),
-  'lib/features/notes/presentation/dashboard_widgets.dart': (1, 'pano rozeti'),
   'lib/features/notes/presentation/editor/attachment_strip.dart': (2, 'editör — P36/P20 alanı'),
   'lib/features/notes/presentation/editor/items_editor_row.dart': (2, 'editör — P36/P20 alanı'),
   'lib/features/notes/presentation/editor/note_editor_parts.dart': (1, 'editör — P36/P20 alanı'),
@@ -40,7 +39,6 @@ const _allowed = <String, (int, String)>{
   'lib/features/notes/presentation/note_card.dart': (2, 'kart — P35 alanı'),
   'lib/features/notes/presentation/note_card_media.dart': (3, 'kart ek türü rengi — P35 alanı'),
   'lib/features/notes/presentation/viewers/ink_layer.dart': (1, 'mürekkep katmanı rozeti'),
-  'lib/features/settings/presentation/personalize_screen.dart': (1, 'kişiselleştirme önizlemesi'),
 };
 
 void main() {

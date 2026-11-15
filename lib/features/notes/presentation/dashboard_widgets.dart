@@ -1269,12 +1269,14 @@ class FolderSwipe extends StatefulWidget {
   final ValueChanged<int> onCommit;
   final Widget child;
 
-  @visibleForTesting
-  static const commitFraction = 0.22;
-
   @override
   State<FolderSwipe> createState() => _FolderSwipeState();
 }
+
+/// Izgaranın parmağı izleyebileceği en uzak yol ve etiket kartının en geniş
+/// hâli (genişlik oranı; düzen oranı, belirteç değil — P62 §6.2).
+const _kFollowLimit = 0.4;
+const _kLabelWidth = 0.36;
 
 class _FolderSwipeState extends State<FolderSwipe>
     with SingleTickerProviderStateMixin {
@@ -1348,18 +1350,18 @@ class _FolderSwipeState extends State<FolderSwipe>
     final direction = _directionOf(_raw);
     if (direction != _direction) {
       _direction = direction;
-      _labelMax = _width * 0.36;
+      _labelMax = _width * _kLabelWidth;
       setState(() => _label = widget.nextLabel(direction));
     }
-    final limit = _width * 0.4;
+    final limit = _width * _kFollowLimit;
     // Durak yoksa lastik: kısa ve dirençli.
-    final follow = _label == null ? _raw * 0.25 : _raw;
+    final follow = _label == null ? _raw * AppSwipe.rubber : _raw;
     if (motionOf(context)) _dx.value = follow.clamp(-limit, limit);
     _progress.value = _label == null
         ? 0
-        : (_raw.abs() / (_width * FolderSwipe.commitFraction)).clamp(0.0, 1.0);
+        : (_raw.abs() / (_width * AppSwipe.commitFraction)).clamp(0.0, 1.0);
     final past =
-        _label != null && _raw.abs() >= _width * FolderSwipe.commitFraction;
+        _label != null && _raw.abs() >= _width * AppSwipe.commitFraction;
     if (past != _past) {
       setState(() => _past = past);
       if (past) unawaited(AppHaptics.tick());
@@ -1367,8 +1369,12 @@ class _FolderSwipeState extends State<FolderSwipe>
   }
 
   void _finish(double velocity) {
-    final fling = velocity.abs() >= 300 && velocity.sign == _raw.sign;
-    final commit = _label != null && (_past || fling);
+    // Ortak karar kuralı (P62 §6.2): bugünkü `_past || fiske` ile aynı sayı.
+    final commit =
+        _label != null &&
+        AppSwipe.commits(dragged: _raw, extent: _width, velocity: velocity);
+    // Fiskeyle (eşiği aşmadan) geçiş de aynı hafif titreşimi verir (K3).
+    if (commit && !_past) unawaited(AppHaptics.tick());
     final direction = _direction;
     setState(() {
       _label = null;
@@ -1387,8 +1393,14 @@ class _FolderSwipeState extends State<FolderSwipe>
     }
     if (commit) widget.onCommit(direction);
     if (_dx.value != 0) {
+      // Kalan yolla orantılı oturma (P62 §6.2, K2): kısa çekiş çabuk, hızlı
+      // bırakış kopmadan döner; eğri taşmaz.
       unawaited(
-        _dx.animateTo(0, duration: AppMotion.short, curve: AppMotion.standard),
+        _dx.animateTo(
+          0,
+          duration: AppSwipe.settleFor(distance: _dx.value, velocity: velocity),
+          curve: AppMotion.emphasized,
+        ),
       );
     }
   }
@@ -1399,6 +1411,7 @@ class _FolderSwipeState extends State<FolderSwipe>
     final scheme = Theme.of(context).colorScheme;
     final tokens = AppTokens.of(context);
     final forwardEdge = _direction > 0;
+    final ink = _past ? scheme.onPrimaryContainer : scheme.onSurface;
     return Listener(
       onPointerSignal: _onSignal,
       child: GestureDetector(
@@ -1425,99 +1438,104 @@ class _FolderSwipeState extends State<FolderSwipe>
             PositionedDirectional(
               top: 0,
               bottom: 0,
-              start: forwardEdge ? null : 12,
-              end: forwardEdge ? 12 : null,
+              start: forwardEdge ? null : AppSpace.m,
+              end: forwardEdge ? AppSpace.m : null,
               child: IgnorePointer(
                 child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: _labelMax),
-                    child: DecoratedBox(
-                      key: const ValueKey('swipe-next-label'),
-                      decoration: BoxDecoration(
-                        color: _past ? scheme.primaryContainer : tokens.card,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: tokens.hairline),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
+                  // ponytail: çekişe bağlı solma ve eşikteki renk geçişi
+                  // (plan §6.2) S23'ü 2282 → 2300 yaptı (etiket geçişten
+                  // sonra da ağaçta, her tikte kuruluyor) — "S23 değişmez"
+                  // kuralı gereği yapılmadı; renk eşikte tek karede değişir.
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: _labelMax),
+                      child: DecoratedBox(
+                        key: const ValueKey('swipe-next-label'),
+                        decoration: BoxDecoration(
+                          color: _past ? scheme.primaryContainer : tokens.card,
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                          border: Border.all(color: tokens.hairline),
                         ),
-                        child: IntrinsicWidth(
-                          child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!forwardEdge)
-                              Icon(
-                                Icons.arrow_back,
-                                size: 16,
-                                color: _past
-                                    ? scheme.onPrimaryContainer
-                                    : scheme.onSurface,
-                              ),
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                child: Text(
-                                  label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.copyWith(
-                                        color: _past
-                                            ? scheme.onPrimaryContainer
-                                            : scheme.onSurface,
-                                      ),
-                                ),
-                              ),
-                            ),
-                            if (forwardEdge)
-                              Icon(
-                                Icons.arrow_forward,
-                                size: 16,
-                                color: _past
-                                    ? scheme.onPrimaryContainer
-                                    : scheme.onSurface,
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        // DOLUM ÇUBUĞU: dolunca bırakmak geçişi yapar.
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(AppRadius.hair),
-                          child: SizedBox(
-                            height: 3,
-                            child: ValueListenableBuilder<double>(
-                              valueListenable: _progress,
-                              builder: (context, p, _) => Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  ColoredBox(color: tokens.hairline),
-                                  FractionallySizedBox(
-                                    key: const ValueKey('swipe-progress'),
-                                    alignment: forwardEdge
-                                        ? AlignmentDirectional.centerEnd
-                                        : AlignmentDirectional.centerStart,
-                                    widthFactor: p,
-                                    child: ColoredBox(color: scheme.primary),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.m,
+                            vertical: AppSpace.s,
                           ),
-                        ),
-                          ],
+                          child: IntrinsicWidth(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (!forwardEdge)
+                                      Icon(
+                                        Icons.arrow_back,
+                                        size: AppIconSize.xs,
+                                        color: ink,
+                                      ),
+                                    Flexible(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpace.xs,
+                                        ),
+                                        child: Text(
+                                          label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppText.of(
+                                            Theme.of(context),
+                                          ).label.copyWith(color: ink),
+                                        ),
+                                      ),
+                                    ),
+                                    if (forwardEdge)
+                                      Icon(
+                                        Icons.arrow_forward,
+                                        size: AppIconSize.xs,
+                                        color: ink,
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpace.xs),
+                                // DOLUM ÇUBUĞU: dolunca bırakmak geçişi yapar.
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.hair,
+                                  ),
+                                  child: SizedBox(
+                                    height: 3,
+                                    child: ValueListenableBuilder<double>(
+                                      valueListenable: _progress,
+                                      builder: (context, p, _) => Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          ColoredBox(color: tokens.hairline),
+                                          FractionallySizedBox(
+                                            key: const ValueKey(
+                                              'swipe-progress',
+                                            ),
+                                            alignment: forwardEdge
+                                                ? AlignmentDirectional
+                                                      .centerEnd
+                                                : AlignmentDirectional
+                                                      .centerStart,
+                                            widthFactor: p,
+                                            child: ColoredBox(
+                                              color: scheme.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                 ),
               ),
             ),
@@ -1610,8 +1628,11 @@ class _SwipeActions extends StatelessWidget {
       required Color color,
       required Color ink,
     }) => Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpace.s,
+        vertical: 1,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(AppRadius.m),
@@ -1620,11 +1641,13 @@ class _SwipeActions extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: ink, size: 20),
-          const SizedBox(width: 8),
+          Icon(icon, color: ink, size: AppIconSize.m),
+          const SizedBox(width: AppSpace.s),
           Text(
             label,
-            style: TextStyle(color: ink, fontWeight: FontWeight.w600),
+            style: AppText.of(
+              Theme.of(context),
+            ).label.copyWith(color: ink, fontWeight: AppWeight.strong),
           ),
         ],
       ),
@@ -1637,6 +1660,11 @@ class _SwipeActions extends StatelessWidget {
         DismissDirection.startToEnd: 0.35,
         DismissDirection.endToStart: 0.35,
       },
+      // Eşik aşılınca tek hafif titreşim (P62 §6.2, K5): bırakınca ne
+      // olacağı hissedilsin.
+      onUpdate: (d) {
+        if (d.reached && !d.previousReached) unawaited(AppHaptics.tick());
+      },
       background: background(
         alignment: AlignmentDirectional.centerStart,
         icon: note.pinned ? Icons.push_pin_outlined : Icons.push_pin,
@@ -1648,8 +1676,9 @@ class _SwipeActions extends StatelessWidget {
         alignment: AlignmentDirectional.centerEnd,
         icon: AppIcons.archive,
         label: l10n.archive,
-        color: scheme.tertiaryContainer,
-        ink: scheme.onTertiaryContainer,
+        // Nötr (K6-1, sabah bakılacak): `tertiary` yalnız yapay zekâ rengi.
+        color: scheme.surfaceContainerHighest,
+        ink: scheme.onSurface,
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
@@ -1699,7 +1728,6 @@ class _PendingUploadsBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(pendingUploadsProvider);
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     // Google hesabı ama Drive bağlanmadı: ekler bağlantı bekliyor — şerit
     // bunu söyler ve dokununca bağlar (kullanıcı isteği 2026-10-15).
     final needsDrive = state.needsDrive;
@@ -1718,79 +1746,34 @@ class _PendingUploadsBar extends ConsumerWidget {
     final offline =
         state.pending > 0 && !needsDrive && ref.watch(isOfflineProvider);
     final failing = state.failed > 0 && !needsDrive && !offline;
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 200),
-      alignment: Alignment.topCenter,
-      child: state.pending == 0
-          ? const SizedBox(width: double.infinity)
-          : Padding(
-              padding: const EdgeInsets.fromLTRB(kGridInset, 6, kGridInset, 0),
-              child: Material(
-                color: failing
-                    ? scheme.errorContainer
-                    : scheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(10),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: needsDrive
-                      ? () => connectDrive(context, ref)
-                      : () => ScaffoldMessenger.of(context)
-                          ..hideCurrentSnackBar()
-                          ..showMessage(l10n.pendingUploadsInfo),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          needsDrive
-                              ? Icons.add_to_drive_outlined
-                              : failing || offline
-                              ? Icons.cloud_off_outlined
-                              : Icons.cloud_upload_outlined,
-                          size: 18,
-                          color: failing
-                              ? scheme.onErrorContainer
-                              : scheme.onSecondaryContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            pendingUploadsBarLabel(
-                              l10n,
-                              pending: state.pending,
-                              failed: state.failed,
-                              needsDrive: needsDrive,
-                              offline: offline,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: failing
-                                  ? scheme.onErrorContainer
-                                  : scheme.onSecondaryContainer,
-                            ),
-                          ),
-                        ),
-                        // Dönen çark YOK (bilerek): bağlantı yokken şerit
-                        // saatlerce durabilir; sürekli animasyon pili yakardı.
-                        Icon(
-                          needsDrive ? Icons.link : Icons.info_outline,
-                          size: 16,
-                          color: failing
-                              ? scheme.onErrorContainer
-                              : scheme.onSecondaryContainer,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+    // Görünür / gizli TEK ADIMDA (P62 PA6, R1): eskiden AnimatedSize altta
+    // Expanded ızgarayı 200 ms boyunca her karede yeniden diziyordu (S32).
+    if (state.pending == 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(kGridInset, AppSpace.s, kGridInset, 0),
+      child: AppBanner(
+        tone: failing ? AppTone.danger : AppTone.attention,
+        icon: needsDrive
+            ? Icons.add_to_drive_outlined
+            : failing || offline
+            ? Icons.cloud_off_outlined
+            : Icons.cloud_upload_outlined,
+        title: pendingUploadsBarLabel(
+          l10n,
+          pending: state.pending,
+          failed: state.failed,
+          needsDrive: needsDrive,
+          offline: offline,
+        ),
+        onTap: needsDrive
+            ? () => connectDrive(context, ref)
+            : () => ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showMessage(l10n.pendingUploadsInfo),
+        // Dönen çark YOK (bilerek): bağlantı yokken şerit saatlerce
+        // durabilir; sürekli animasyon pili yakardı.
+        trailing: Icon(needsDrive ? Icons.link : Icons.info_outline),
+      ),
     );
   }
 }

@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
+import '../../../core/widgets/customize_board.dart';
+import '../../../app/theme/app_tokens.dart';
+import 'customize_hub.dart' show reorderShown;
 
 /// NOT ALT ÇUBUĞUNUN DÜZENİ (kullanıcı isteği 2026-11-13: "alt paneldeki
 /// tüm butonlar değiştirilebilsin, kişi istediğini koyabilsin, istediğini
 /// çıkarabilsin; bunu da ayarlarda yapılabilen seçenekler geniş olsun").
 ///
-/// İki grup (soldaki araç kapsülü, sağdaki AI/ses kapsülü); her satırda
-/// tutamaçla SÜRÜKLE-SIRALA ve anahtarla GÖSTER/GİZLE. Varsayılanda gizli
+/// İki grup (soldaki araç kapsülü, sağdaki AI/ses kapsülü); her grup bir
+/// [CustomizeBoard]: önizleme şeridinde SÜRÜKLE-SIRALA, karoyla GÖSTER/GİZLE
+/// (P63 PB2 — eskiden anahtarlı satır listesi). Varsayılanda gizli
 /// gelen düğmeler (geri al, yinele, hatırlatıcı, fotoğraf, kamera, tara,
 /// renk, paylaş) aynı listede kapalı durur — açınca çubuğa girer.
 ///
@@ -21,7 +25,13 @@ import '../../../core/personalize.dart';
 /// Değişiklik hemen kaydedilir ([Personalize.update]); düzenleme modu açıksa
 /// taslak da aynı değişikliği alır.
 class PersonalizeBarList extends StatelessWidget {
-  const PersonalizeBarList({super.key});
+  const PersonalizeBarList({super.key, this.bottom = true, this.top = true});
+
+  /// Alt çubuğun iki kapsülü (+ varsayılana dön) çizilsin mi.
+  final bool bottom;
+
+  /// Üst çubuk grubu çizilsin mi.
+  final bool top;
 
   /// Bir düğmenin ayardaki simgesi ve adı (çubuktakiyle aynı).
   static (IconData, String) describe(AppLocalizations l10n, String id) =>
@@ -65,39 +75,43 @@ class PersonalizeBarList extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _GroupLabel(l10n.personalizeBarLeft),
-          _ReorderGroup(
-            groupKey: 'left',
-            ids: sides.left,
-            right: false,
-            onReorder: (ids) =>
-                Personalize.update((p) => p.copyWith(barOrder: ids)),
-          ),
-          const SizedBox(height: 8),
-          _GroupLabel(l10n.personalizeBarRight),
-          _ReorderGroup(
-            groupKey: 'right',
-            ids: sides.right,
-            right: true,
-            onReorder: (ids) =>
-                Personalize.update((p) => p.copyWith(aiOrder: ids)),
-          ),
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: TextButton.icon(
-              key: const ValueKey('personalize-bar-reset'),
-              icon: const Icon(Icons.restart_alt_rounded),
-              label: Text(l10n.personalizeBarReset),
-              onPressed: () => Personalize.update(_resetBar),
+          if (bottom) ...[
+            _GroupLabel(l10n.personalizeBarLeft),
+            _BarGroup(
+              groupKey: 'left',
+              ids: sides.left,
+              right: false,
+              onReorder: (ids) =>
+                  Personalize.update((p) => p.copyWith(barOrder: ids)),
             ),
-          ),
-          _GroupLabel(l10n.personalizeBarTop),
-          _ReorderGroup(
-            groupKey: 'top',
-            ids: UiPrefs.orderOf(UiItem.topDefault, prefs.topOrder),
-            onReorder: (ids) =>
-                Personalize.update((p) => p.copyWith(topOrder: ids)),
-          ),
+            const SizedBox(height: AppSpace.s),
+            _GroupLabel(l10n.personalizeBarRight),
+            _BarGroup(
+              groupKey: 'right',
+              ids: sides.right,
+              right: true,
+              onReorder: (ids) =>
+                  Personalize.update((p) => p.copyWith(aiOrder: ids)),
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton.icon(
+                key: const ValueKey('personalize-bar-reset'),
+                icon: const Icon(Icons.restart_alt_rounded),
+                label: Text(l10n.personalizeBarReset),
+                onPressed: () => Personalize.update(_resetBar),
+              ),
+            ),
+          ],
+          if (top) ...[
+            _GroupLabel(l10n.personalizeBarTop),
+            _BarGroup(
+              groupKey: 'top',
+              ids: UiPrefs.orderOf(UiItem.topDefault, prefs.topOrder),
+              onReorder: (ids) =>
+                  Personalize.update((p) => p.copyWith(topOrder: ids)),
+            ),
+          ],
         ],
       );
     },
@@ -119,18 +133,25 @@ class _GroupLabel extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(4, 4, 4, 2),
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.labelMedium
-          ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpace.m),
+      child: Text(
+        text,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.onSurface,
+        ),
+      ),
+    );
+  }
 }
 
-class _ReorderGroup extends StatelessWidget {
-  const _ReorderGroup({
+/// Bir kapsülün (ya da üst çubuğun) panosu: karo = göster/gizle, önizleme
+/// şeridinde sürükle = sırala; kapsüllü grupta karonun okuyla öbür kapsüle
+/// taşı (P50 — "uzun bas" ek kısayol değil, ok düğmesi kalır).
+class _BarGroup extends StatelessWidget {
+  const _BarGroup({
     required this.groupKey,
     required this.ids,
     this.right,
@@ -138,9 +159,11 @@ class _ReorderGroup extends StatelessWidget {
   });
 
   final String groupKey;
+
+  /// Grubun BÜTÜN düğmeleri (gizliler dahil), kullanıcı sırasıyla.
   final List<String> ids;
 
-  /// Bu grup sağ kapsül mü — satırdaki "taşı" düğmesi öbür tarafa yollar.
+  /// Bu grup sağ kapsül mü — karodaki "taşı" düğmesi öbür tarafa yollar.
   /// null: kapsülsüz grup (üst çubuk), ok yok.
   final bool? right;
   final ValueChanged<List<String>> onReorder;
@@ -150,83 +173,50 @@ class _ReorderGroup extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final prefs = Personalize.prefs.value;
-    return ReorderableListView(
+    final shown = [
+      for (final id in ids)
+        if (prefs.shows(id)) id,
+    ];
+    final right = this.right;
+    return KeyedSubtree(
       key: ValueKey('personalize-bar-$groupKey'),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      buildDefaultDragHandles: false,
-      // onReorderItem: hedef indeks çıkarılan öğeye göre düzeltilmiş gelir.
-      onReorderItem: (from, to) {
-        final next = List.of(ids);
-        final id = next.removeAt(from);
-        next.insert(to, id);
-        onReorder(next);
-      },
-      children: [
-        for (var i = 0; i < ids.length; i++)
-          Builder(
-            key: ValueKey('bar-row-${ids[i]}'),
-            builder: (context) {
-              final id = ids[i];
-              final (icon, label) = PersonalizeBarList.describe(l10n, id);
-              final on = prefs.shows(id);
-              return SwitchListTile(
-                key: ValueKey('bar-switch-$id'),
-                contentPadding: const EdgeInsetsDirectional.only(end: 4),
-                dense: true,
-                value: on,
-                onChanged: (v) =>
-                    Personalize.update((p) => p.withVisible(id, v)),
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: on ? null : TextStyle(color: scheme.outline),
-                      ),
-                    ),
-                    // ÖBÜR KAPSÜLE TAŞI (P50): gruplar alt alta — ok yönü
-                    // düğmenin gideceği grubu gösterir.
-                    if (right case final right?)
-                      IconButton(
-                        key: ValueKey('bar-move-$id'),
-                        visualDensity: VisualDensity.compact,
-                        tooltip: right
-                            ? l10n.personalizeBarMoveLeft
-                            : l10n.personalizeBarMoveRight,
-                        icon: Icon(
-                          right
-                              ? Icons.arrow_upward_rounded
-                              : Icons.arrow_downward_rounded,
-                          color: scheme.outline,
-                        ),
-                        onPressed: () => Personalize.update(
-                          (p) => p.withBarSide(id, right: !right),
-                        ),
-                      ),
-                  ],
+      child: CustomizeBoard(
+        entries: [
+          for (final id in ids)
+            if (PersonalizeBarList.describe(l10n, id) case (
+              final icon,
+              final label,
+            ))
+              (id: id, icon: icon, label: label),
+        ],
+        shown: shown,
+        onToggle: (id, on) => Personalize.update((p) => p.withVisible(id, on)),
+        onReorder: (from, to) => onReorder(reorderShown(ids, shown, from, to)),
+        shownLabel: l10n.customizeShown,
+        availableLabel: l10n.quickRowEditAvailable,
+        emptyLabel: l10n.quickRowEditEmpty,
+        keyPrefix: 'bar-switch-',
+        trailingOf: right == null
+            ? null
+            // ÖBÜR KAPSÜLE TAŞI (P50): gruplar alt alta — ok yönü düğmenin
+            // gideceği grubu gösterir.
+            : (id) => IconButton(
+                key: ValueKey('bar-move-$id'),
+                visualDensity: VisualDensity.compact,
+                tooltip: right
+                    ? l10n.personalizeBarMoveLeft
+                    : l10n.personalizeBarMoveRight,
+                iconSize: AppIconSize.s,
+                icon: Icon(
+                  right
+                      ? Icons.arrow_upward_rounded
+                      : Icons.arrow_downward_rounded,
+                  color: scheme.outline,
                 ),
-                secondary: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ReorderableDragStartListener(
-                      index: i,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Icon(
-                          Icons.drag_indicator,
-                          semanticLabel: l10n.reorderHandle,
-                          color: scheme.outline,
-                        ),
-                      ),
-                    ),
-                    Icon(icon, color: on ? scheme.primary : scheme.outline),
-                  ],
-                ),
-              );
-            },
-          ),
-      ],
+                onPressed: () =>
+                    Personalize.update((p) => p.withBarSide(id, right: !right)),
+              ),
+      ),
     );
   }
 }

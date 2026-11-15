@@ -19,6 +19,7 @@ class AppBanner extends StatelessWidget {
     required this.title,
     this.icon,
     this.subtitle,
+    this.detail,
     this.tone = AppTone.neutral,
     this.trailing,
     this.onTap,
@@ -27,6 +28,10 @@ class AppBanner extends StatelessWidget {
 
   final String title;
   final String? subtitle;
+
+  /// Başlıkla AYNI satırdaki ikincil bilgi (`meta` stili, ör. tarih). Verilince
+  /// şerit TEK SATIR, tam 44 dp (zamanı gelenler şeridi, F74.3).
+  final String? detail;
   final IconData? icon;
   final AppTone tone;
 
@@ -42,6 +47,54 @@ class AppBanner extends StatelessWidget {
     final theme = Theme.of(context);
     final c = tone.colors(theme.colorScheme);
     final text = AppText.of(theme);
+    final row = Row(
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: AppIconSize.m, color: c.fg),
+          const SizedBox(width: AppSpace.s),
+        ],
+        Expanded(
+          child: detail != null
+              ? Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: title,
+                        style: text.label.copyWith(color: c.fg),
+                      ),
+                      TextSpan(
+                        text: '  ·  $detail',
+                        style: text.meta.copyWith(color: c.fg),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.label.copyWith(color: c.fg),
+                    ),
+                    if (subtitle != null)
+                      Text(subtitle!, style: text.meta.copyWith(color: c.fg)),
+                  ],
+                ),
+        ),
+        if (trailing != null) ...[
+          const SizedBox(width: AppSpace.s),
+          IconTheme.merge(
+            data: IconThemeData(size: AppIconSize.m, color: c.fg),
+            child: trailing!,
+          ),
+        ],
+      ],
+    );
     return Material(
       color: c.bg,
       borderRadius: BorderRadius.circular(AppRadius.m),
@@ -51,49 +104,25 @@ class AppBanner extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpace.m,
-                  vertical: AppSpace.s,
+            if (detail != null)
+              SizedBox(
+                height: 44,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.only(start: AppSpace.m),
+                  child: row,
                 ),
-                child: Row(
-                  children: [
-                    if (icon != null) ...[
-                      Icon(icon, size: AppIconSize.m, color: c.fg),
-                      const SizedBox(width: AppSpace.s),
-                    ],
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: text.label.copyWith(color: c.fg),
-                          ),
-                          if (subtitle != null)
-                            Text(
-                              subtitle!,
-                              style: text.meta.copyWith(color: c.fg),
-                            ),
-                        ],
-                      ),
-                    ),
-                    if (trailing != null) ...[
-                      const SizedBox(width: AppSpace.s),
-                      IconTheme.merge(
-                        data: IconThemeData(size: AppIconSize.m, color: c.fg),
-                        child: trailing!,
-                      ),
-                    ],
-                  ],
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 44),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.m,
+                    vertical: AppSpace.s,
+                  ),
+                  child: row,
                 ),
               ),
-            ),
             if (progress != null)
               LinearProgressIndicator(
                 value: progress,

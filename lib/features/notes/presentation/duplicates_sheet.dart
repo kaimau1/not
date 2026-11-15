@@ -113,23 +113,20 @@ class _DuplicatesSheet extends ConsumerWidget {
                     repo.softDelete(id);
                   }
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      timedSnackBar(
-                        content: Text(l10n.duplicatesDone(ids.length)),
-                        // Toplu silmede yanlış eşleşme en pahalı hata:
-                        // çöpten tek tek çıkarmak yerine tek dokunuş.
-                        action: SnackBarAction(
-                          label: l10n.undo,
-                          onPressed: () {
-                            for (final id in ids) {
-                              repo.restore(id);
-                            }
-                          },
-                        ),
-                      ),
-                    );
+                  ScaffoldMessenger.of(context).showMessage(
+                    l10n.duplicatesDone(ids.length),
+                    duration: const Duration(seconds: 5),
+                    // Toplu silmede yanlış eşleşme en pahalı hata:
+                    // çöpten tek tek çıkarmak yerine tek dokunuş.
+                    action: SnackBarAction(
+                      label: l10n.undo,
+                      onPressed: () {
+                        for (final id in ids) {
+                          repo.restore(id);
+                        }
+                      },
+                    ),
+                  );
                 },
               ),
             ),

@@ -476,19 +476,14 @@ extension _EditorMediaView on _NoteEditorScreenState {
     final l10n = context.l10n;
     final fromLabel = AttachmentViewSwitch.labelOf(context, from);
     final toLabel = AttachmentViewSwitch.labelOf(context, view);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        timedSnackBar(
-          content: Text(l10n.viewModeChanged(fromLabel, toLabel)),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () => unawaited(
-              _setAttachmentView(cur, from, announce: false),
-            ),
-          ),
-        ),
-      );
+    ScaffoldMessenger.of(context).showMessage(
+      l10n.viewModeChanged(fromLabel, toLabel),
+      action: SnackBarAction(
+        label: l10n.undo,
+        onPressed: () =>
+            unawaited(_setAttachmentView(cur, from, announce: false)),
+      ),
+    );
   }
 
   Future<void> _applyAttachmentView(
@@ -654,7 +649,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
         (n) => n.copyWith(attachments: [...n.attachments, derived]),
         immediate: true,
       );
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).hideMessage();
       _switchToBubbles(derived);
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
@@ -731,7 +726,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
         ),
         immediate: true,
       );
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).hideMessage();
       _switchToBubbles(derived);
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
@@ -1078,17 +1073,13 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 : () {
                     _removeAttachment(pinned);
                     final l10n = context.l10n;
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        timedSnackBar(
-                          content: Text(l10n.attachmentRemoved),
-                          action: SnackBarAction(
-                            label: l10n.undo,
-                            onPressed: _undo,
-                          ),
-                        ),
-                      );
+                    ScaffoldMessenger.of(context).showMessage(
+                      l10n.attachmentRemoved,
+                      action: SnackBarAction(
+                        label: l10n.undo,
+                        onPressed: _undo,
+                      ),
+                    );
                   },
             // PDF'in seçilebilir metni var; transkript ses/video/görselde.
             onTranscribe: Transcripts.canTranscribe(pinned)

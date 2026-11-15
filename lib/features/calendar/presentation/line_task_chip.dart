@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart' show AppMessages;
 import '../../notes/data/reminder_service.dart' show reminderTimePrefix;
 import '../../notes/domain/reminder_level.dart';
 import '../../notes/presentation/reminder_level_ui.dart';
@@ -204,17 +205,14 @@ class LineTaskChip extends ConsumerWidget {
         case 'delete':
           final all = ref.read(tasksStreamProvider).value ?? const <TaskItem>[];
           repo?.trashTask(task, all);
-          ScaffoldMessenger.maybeOf(context)
-            ?..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(l10n.taskDeleted),
-                action: SnackBarAction(
-                  label: l10n.undo,
-                  onPressed: () => repo?.restoreTask(task.id),
-                ),
-              ),
-            );
+          // showMessage: eylemli ham SnackBar kendiliğinden kapanmıyordu (B4).
+          ScaffoldMessenger.maybeOf(context)?.showMessage(
+            l10n.taskDeleted,
+            action: SnackBarAction(
+              label: l10n.undo,
+              onPressed: () => repo?.restoreTask(task.id),
+            ),
+          );
       }
     }
 

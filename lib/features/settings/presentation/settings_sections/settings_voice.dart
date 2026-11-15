@@ -294,6 +294,8 @@ class _VoiceSection extends ConsumerWidget {
             value: ref.watch(ttsModelProvider),
             autoLabel: l10n.aiModelAuto,
             recommendedLabel: l10n.recommendedModel,
+            chain: ModelChain.tts,
+            catalog: ref.watch(allModelsProvider).value,
             onChanged: (value) =>
                 ref.read(ttsModelProvider.notifier).set(value),
           ),

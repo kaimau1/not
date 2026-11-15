@@ -273,6 +273,73 @@ void main() {
       },
     );
 
+    // P62 PA8 (plan_tasarim_A §6.2): mini ay parmağı izleyen sayfa.
+    Finder monthPages() =>
+        find.byWidgetPredicate((w) => w.runtimeType.toString() == '_MonthPage');
+    MonthGrid grid(WidgetTester t) =>
+        t.widget<MonthGrid>(find.byType(MonthGrid));
+    Future<void> openMonth(WidgetTester tester) async {
+      phone(tester);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('calendar-month-toggle')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('mini ay parmağı izler: çekerken komşu ay da görünür', (
+      tester,
+    ) async {
+      await openMonth(tester);
+      expect(monthPages(), findsOneWidget);
+      final g = await tester.startGesture(
+        tester.getCenter(find.byType(MonthGrid)),
+      );
+      await g.moveBy(const Offset(-20, 0));
+      await tester.pump();
+      await g.moveBy(const Offset(-80, 0));
+      await tester.pump();
+      expect(monthPages(), findsNWidgets(2), reason: 'komşu ay kuruldu');
+      // Yarıdan az çekip bırakınca aynı ay.
+      await tester.pump(const Duration(seconds: 1));
+      await g.up();
+      await tester.pumpAndSettle();
+      expect(grid(tester).month, DateTime(2026, 11));
+    });
+
+    testWidgets('mini ay fiske: sonraki ay, seçim DEĞİŞMEZ', (tester) async {
+      await openMonth(tester);
+      final selected = grid(tester).selected;
+      await tester.fling(find.byType(MonthGrid), const Offset(-300, 0), 1500);
+      await tester.pumpAndSettle();
+      expect(grid(tester).month, DateTime(2026, 12));
+      expect(grid(tester).selected, selected);
+    });
+
+    testWidgets('kaydırma ayarı kapalıyken mini ay kaymaz', (tester) async {
+      await usePrefs({'calendar_view': 'agenda', 'calendar_swipe': false});
+      await openMonth(tester);
+      await tester.fling(find.byType(MonthGrid), const Offset(-300, 0), 1500);
+      await tester.pumpAndSettle();
+      expect(grid(tester).month, DateTime(2026, 11));
+    });
+
+    testWidgets('genişte ‹ › ay ızgarasını animasyonla çevirir', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Sonraki ay').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(monthPages(), findsNWidgets(2), reason: 'geçiş sürüyor');
+      await tester.pumpAndSettle();
+      expect(grid(tester).month, DateTime(2026, 12));
+      expect(find.text('Aralık 2026'), findsWidgets);
+    });
+
     testWidgets('genişte ay ızgarası hep görünür', (tester) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1;

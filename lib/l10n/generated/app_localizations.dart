@@ -1619,8 +1619,14 @@ abstract class AppLocalizations {
   /// No description provided for @aiModelChat.
   ///
   /// In tr, this message translates to:
-  /// **'Özet, başlık, etiket ve sohbet'**
+  /// **'Özet ve sohbet'**
   String get aiModelChat;
+
+  /// No description provided for @aiModelShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık ve etiket'**
+  String get aiModelShort;
 
   /// No description provided for @aiModelDocument.
   ///
@@ -2803,6 +2809,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Çizimleri temizle'**
   String get clearInk;
+
+  /// No description provided for @inkCleared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizimler temizlendi'**
+  String get inkCleared;
+
+  /// No description provided for @inkEraserTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgi (basılı tut: tümünü temizle)'**
+  String get inkEraserTooltip;
 
   /// No description provided for @inkTwoFingerHint.
   ///

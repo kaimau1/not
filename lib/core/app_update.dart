@@ -17,7 +17,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 
 import 'l10n_ext.dart';
-import 'widgets/undo_snackbar.dart' show rootScaffoldMessengerKey;
+import 'widgets/undo_snackbar.dart' show AppMessages, rootScaffoldMessengerKey;
+import '../app/theme/app_design.dart' show AppTone;
+import '../app/theme/app_tokens.dart';
+import 'widgets/app_banner.dart';
 
 /// **İSTEMCİ VERİ SÜRÜMÜ** (F1.5, 2026-10-19). Bu derlemenin güvenle
 /// okuyup YAZABİLDİĞİ veri biçiminin numarası. Yeni bir sürüm, eski
@@ -449,14 +452,13 @@ class _AppUpdateRunnerState extends ConsumerState<AppUpdateRunner>
     final messenger = rootScaffoldMessengerKey.currentState;
     if (messenger == null || !mounted) return;
     final l10n = context.l10n;
-    messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 8),
-        content: Text(l10n.updateReadyToInstall(info.version)),
-        action: SnackBarAction(
-          label: l10n.updateInstallNow,
-          onPressed: () => unawaited(AppUpdate.install(info)),
-        ),
+    // showMessage: eylemli ham SnackBar kendiliğinden kapanmıyordu (B4).
+    messenger.showMessage(
+      l10n.updateReadyToInstall(info.version),
+      duration: const Duration(seconds: 8),
+      action: SnackBarAction(
+        label: l10n.updateInstallNow,
+        onPressed: () => unawaited(AppUpdate.install(info)),
       ),
     );
   }
@@ -492,7 +494,7 @@ class _UpdateBannerState extends State<UpdateBanner> {
         'aborted' || 'done' || 'busy' || 'browser' => null,
         _ => l10n.updateInstallFailed,
       };
-      if (text != null) messenger?.showSnackBar(SnackBar(content: Text(text)));
+      if (text != null) messenger?.showMessage(text);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -520,64 +522,39 @@ class _UpdateBannerState extends State<UpdateBanner> {
     bool downloaded,
     int? pct,
   ) {
-    final scheme = Theme.of(context).colorScheme;
-    final fg = scheme.onPrimaryContainer;
     final l10n = context.l10n;
     final text = pct != null
         ? l10n.updateBannerDownloading(info.version, pct)
         : downloaded
         ? l10n.updateBannerReady(info.version)
         : l10n.updateBanner(info.version);
+    final fg = AppTone.action.colors(Theme.of(context).colorScheme).fg;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 6, 12, 2),
-      child: Material(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.m,
+        AppSpace.s,
+        AppSpace.m,
+        AppSpace.xxs,
+      ),
+      // P62 PA6: tek şerit kılığı (AppBanner, eylem tonu).
+      child: AppBanner(
         key: const ValueKey('update-banner'),
-        color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(14),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: (_busy || pct != null) ? null : () => _tap(info),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+        tone: AppTone.action,
+        icon: Icons.system_update,
+        title: text,
+        onTap: (_busy || pct != null) ? null : () => _tap(info),
+        progress: pct == null ? null : pct / 100,
+        trailing: _busy && pct == null
+            ? SizedBox.square(
+                dimension: AppIconSize.s,
+                child: CircularProgressIndicator(
+                  strokeWidth: AppSpace.xxs,
+                  color: fg,
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.system_update, size: 20, color: fg),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        text,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: fg,
-                        ),
-                      ),
-                    ),
-                    if (_busy && pct == null)
-                      SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: fg,
-                        ),
-                      )
-                    else if (pct == null)
-                      Icon(Icons.chevron_right, size: 20, color: fg),
-                  ],
-                ),
-              ),
-              if (pct != null)
-                LinearProgressIndicator(value: pct / 100, minHeight: 3),
-            ],
-          ),
-        ),
+              )
+            : pct == null
+            ? const Icon(Icons.chevron_right)
+            : null,
       ),
     );
   }
@@ -594,23 +571,30 @@ class UpdateRequiredBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (!ref.watch(updateRequiredProvider)) return child;
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    // Kenardan kenara, köşesiz (güvenli alanı o tüketir); renk tehlike tonu.
+    final c = AppTone.danger.colors(theme.colorScheme);
     return Column(
       children: [
         Material(
-          color: scheme.errorContainer,
+          color: c.bg,
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                AppSpace.l,
+                AppSpace.s,
+                AppSpace.s,
+                AppSpace.s,
+              ),
               child: Row(
                 children: [
-                  Icon(Icons.system_update, color: scheme.onErrorContainer),
-                  const SizedBox(width: 12),
+                  Icon(Icons.system_update, color: c.fg),
+                  const SizedBox(width: AppSpace.m),
                   Expanded(
                     child: Text(
                       l10n.updateRequiredBody,
-                      style: TextStyle(color: scheme.onErrorContainer),
+                      style: AppText.of(theme).body.copyWith(color: c.fg),
                     ),
                   ),
                   TextButton(

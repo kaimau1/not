@@ -1,3 +1,4 @@
+import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/app/second_note.dart';
 import 'package:notlar/features/notes/presentation/notes_providers.dart'
     show searchQueryProvider, selectedFolderProvider, sharedFolderNotesProvider;
@@ -56,7 +57,11 @@ import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/app/theme/app_palette.dart';
 import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/core/app_update.dart';
+import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/tips.dart';
+import 'package:notlar/features/settings/presentation/customize_hub.dart';
+import 'package:notlar/features/settings/presentation/personalize_screen.dart';
+import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/calendar/data/calendar_repository.dart';
@@ -651,7 +656,11 @@ Future<void> _pumpApp(
                 .toLanguageTag();
             return fixedTypography(
               context,
-              child ?? const SizedBox(),
+              // Uygulamadaki gibi bildirim şeridi (P62 PA5).
+              // ve düzen modu şeridi (P63 G5).
+              CustomizeModeHost(
+                child: AppNoticeHost(child: child ?? const SizedBox()),
+              ),
               _tourFont ?? 1,
             );
           },
@@ -728,6 +737,36 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
     await t.tap(find.byKey(const ValueKey('tpl-new')));
     await _settle(t);
   }),
+  // P62 PA5: bildirim şeridi — ipucu üstte (arama hapının altında), "Geri
+  // al" dipte "+" satırının yanında, "Yenilikler" düğme satırının üstünde.
+  ('ana-ipucu', '/', (t) async {
+    appNotice.show(
+      const AppNoticeData(
+        kind: AppNoticeKind.tip,
+        text: 'Klasörler arasında geçmek için ekranı yana kaydır',
+      ),
+    );
+    await _settle(t);
+  }),
+  ('ana-gerial', '/', (t) async {
+    appNotice.show(
+      AppNoticeData(text: 'Not çöpe taşındı', actionLabel: 'Geri al', onAction: () {}),
+    );
+    await _settle(t);
+  }),
+  ('ana-yenilikler', '/', (t) async {
+    appNotice.show(
+      AppNoticeData(
+        kind: AppNoticeKind.announce,
+        text: 'Yenilikler — 1.2.40',
+        details: const ['Bildirimler tek yerde', 'Kalıcı şeritler sade', '2 yenilik daha'],
+        actionLabel: 'Tümünü gör',
+        onAction: () {},
+        duration: const Duration(seconds: 12),
+      ),
+    );
+    await _settle(t);
+  }),
   ('cizgi-satirlar', '/note/n8', (t) async {}),
   ('cizgi-tepsi', '/note/n8', _openDividerTray),
   ('cizgi-levha', '/note/n8', (t) async {
@@ -785,8 +824,43 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
     _speechSink!.error(code: 'network', message: 'Bağlantı kurulamadı');
     await _settle(t);
   }),
-  // PB1 sahneleri (duzen-serit, kisisellestir) sahibi paketin "önce üret"
-  // adımında eklenir (plan §7.2 madde 4 notu).
+  // P63 G5 (PB1/PB2): düzen modu şeridi + çerçeveler, Kişiselleştir ekranı.
+  ('duzen-serit', '/note/n4', (t) async {
+    // ignore: invalid_use_of_visible_for_testing_member
+    addTearDown(Personalize.debugReset);
+    Personalize.startEditing();
+    await _settle(t);
+    // Bir öğe gizli: kesikli çerçeve + gizli sayısı hapı görünsün.
+    await t.tap(find.byType(CustomizeFrame).first);
+    await _settle(t);
+  }),
+  // Turun yönlendiricisinde /personalize yok: ekran ana sayfadan itilir.
+  ('kisisellestir', '/', (t) async {
+    unawaited(
+      Navigator.of(t.element(find.byType(Scaffold).first)).push(
+        MaterialPageRoute<void>(builder: (_) => const PersonalizeScreen()),
+      ),
+    );
+    await _settle(t);
+  }),
+  // PB2: düzen merkezi levhası (şeritteki "Sırala"), not ekranında.
+  for (final (id, surface) in const [
+    ('duzen-hub-altcubuk', CustomizeSurface.bottomBar),
+    ('duzen-hub-hizli', CustomizeSurface.quickRow),
+  ])
+    (id, '/note/n4', (t) async {
+      // ignore: invalid_use_of_visible_for_testing_member
+      addTearDown(Personalize.debugReset);
+      Personalize.startEditing();
+      await _settle(t);
+      unawaited(
+        showCustomizeHub(
+          t.element(find.byType(Scaffold).last),
+          initial: surface,
+        ),
+      );
+      await _settle(t);
+    }),
 ];
 
 /// Konuşma kanalı taklidi: yerleşik tanıma var, olaylar [_speechSink]'ten.

@@ -78,3 +78,10 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Kalkış tek kalıp `_liftSlide` (`AnimatedSlide`, `selection` + `emphasized`); `PenToolPainter.shouldRepaint` yalnız tool/ink/dark/lifted.
 - Gizlenebilir kalemler `UiItem.penTool(t.name)` → `_tools`; kalem/silgi/seçili hep çizilir; `Personalize.listenable` build'deki birleşimde. Panel iğnesi `pen-panel-pin` önizlemenin BAŞINDA (SB13).
 - Sabit kalem çipi `PenStrokePreview(compact)`, renk `pen.apply(color)` (kayıt saydamlıksız).
+
+## 2026-11-15 — Kalem kapsülü sadeleşmesi (kullanıcı isteği, G4 ekran görüntüsü)
+- Kapsülde geri al YOK (`PenTray.showUndo`; editör yalnız üst çubuksuz kalem + tam ekranda açar). Editörün üst geri alı mürekkebi de geri alır: `pageInk` not anlık görüntüsünde, `_pageInkOf` `replaceAll` ile eşitler.
+- × / ✓ kalktı → tek `pen-close` (klavye simgesi, yazıya dön; `save()` + kip kapanır). Çizgi bitince zaten kaydediliyordu. Eski ✓'nin "Sayfaya yaz" hızlı notunu ana ekrana kapatması kalktı (geri tuşu kapatır) — sabah bakılacak.
+- Silgi kapsülde kalem sırasından çıktı, sağda kendi düğmesi `pen-tray-eraser` (yeri sabit; mürekkep yokken soluk). Basılı tut / ⋯ "Çizimleri temizle" = `_clearAll`: etkin yüzeyde `clear()` (geçmişe yazar) + "Geri al" bildirimi (arada yeni çizgi geldiyse geri almaz). S42 kalem resmi 77 → 66.
+- ⋯ korundu (yinele, yalnız kalem, sabitle, ayarlar — kalem kipinde ayarların başka yolu yok).
+

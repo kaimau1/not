@@ -1431,6 +1431,19 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   göç ettirince kılık kendiliğinden gelir, `appNotice`'i doğrudan çağırma (`app.dart`'a bağlı değil) ·
   kesikli çerçeve tek `drawPoints` (`item_divider_style.dart:44-53` kalıbı) · rozet göz simgesi KALIR (SB4).
 - **A/B:** evet — `kb`, `not_ac`, `duzen` evreleri; mod kapalı yol yavaşlamamalı. **Bütçe:** S40.
+- [x] **Durum (2026-11-15, G5 dalı oto/G5-duzen, opus):** şerit tek satır (üst güvenli alan + 48,
+  `elevation` 0, alt çizgi `onInverseSurface`×`pressed`), gizli sayısı hapı (`customize-hidden-count`,
+  yalnız > 0), "Sırala" (`customize-reorder`; `CustomizeModeHost.onReorder`, app.dart → bugünkü
+  `/personalize`), ikinci satır kalktı, ilk giriş ipucu `TipOnce.customizeMode` (huniden). Giriş/çıkış:
+  yuva tek adım, içerik kayma + solma (`short/enter`, `quick/exit`). Çerçeve `AppRadius.m`, görünür =
+  `primary`×`hairline` yıkama + `muted` çizgi, gizli = `disabled` opaklık + kesikli çizgi (tek
+  `drawPoints`), rozet 20/12 adlandırılmış sabit, solarak belirir + dokunuşta 0.85→1. S40 değişmedi
+  (kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0); `customize_strip_test` 5/5; dört var olan test
+  değişmeden yeşil; token bütçesi düştü (radius −1, fontSize −2, iconSize −2, alpha −1).
+  **Sapmalar (sabah bakılacak):** kayma tam boy değil boyun ÇEYREĞİ (tam boyda mod açılır açılmaz basılan
+  Bitti/Geri al kırpığın dışında kalıp kaçıyordu — var olan testler bunu yakaladı); şerit Navigator'ın
+  üstünde olduğundan Tooltip kurulamıyor → "Sırala" ve hap adı yalnız Semantics'te; küçük telefonda
+  başlık "Düzenlem…" diye kısalıyor.
 
 ### 7.4 PB2 — düzen merkezi + panolar (fable)
 
@@ -1453,6 +1466,24 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   kapatılır (`note_editor_actions.dart:496`) · PB1'deki "Sırala" düğmesi artık hub'ı açar.
 - **A/B:** hayır (ayar ekranı + levha; editör yolu değişmez). **Bütçe:** S40 (hub açıp kapamak gövdeyi
   kurmaz — senaryoya eklenir).
+- [x] **Durum (2026-11-15, G5 dalı oto/G5-duzen, opus):** yeni `customize_hub.dart` (`CustomizeSurface`
+  10 yüzey, `surfaceFor`, `showCustomizeHub` levhası 0.7/0.4/0.95 + klavye kapanır, `CustomizeSurfacePanel`,
+  `reorderShown`, `pinnedCatalog`/`penCatalog`); şeritteki "Sırala" artık levhayı o anki ekranın yüzeyiyle
+  açar (app.dart). (c) hızlı satır düzenleyicisi, (d) alt/üst çubuk listesi, (b) menünün "Düzenle"si
+  `CustomizeBoard` çiziyor; hızlı satır sırası `quickOrder`'a, Ekle sırası `attachOrder`'a yazılıyor
+  (satırın/levhanın okuması PB7). Kişiselleştir ekranı: düz baş kart (gradyan yok) + yüzeyler alt alta
+  aynı panolarla + balon boyu; elle ölçü 0 (üç dosyada). `customize_hub_test` 5/5, S40 `hub_govde` 0;
+  §1.4 listesindeki var olan testler + `menu_folder_hold_test` değişmeden yeşil; `color_roles` izin
+  listesinden personalize_screen düştü (1→0); token bütçesi düştü.
+  **Sapmalar (sabah bakılacak):** (1) Kişiselleştir EKRANI çipli tek pano değil, yüzeyler alt alta (aynı
+  panolar) — var olan testler anahtarları ilk açılışta kaydırarak buluyor, çipli ekranda gizli yüzeyin
+  anahtarları ağaçta olmazdı; çipli kılık levhada. (2) (e) "+" panelinin kendi düzenleyicisi
+  DÖNÜŞTÜRÜLMEDİ: `quick_add_edit_test` satır/tutamaç/"son görünür kilitli" davranışını bağlıyor ve panel
+  grupla sıralıyor; "+" yüzeyi hub'da pano ile düzenlenir (aynı kayıt). → §1.4 `grep ReorderableListView`
+  ölçütü: `quick_add_fab.dart` (e) kalıyor. (3) Eklentiler yüzeyi pano değil, üç durumlu anahtar listesi
+  (açıklamalı, `module-<id>` testleri). (4) Menü düzenleyicisinde önce "Menüde", sonra "Hızlı satır"
+  panosu (testteki dokunuş ilk ekranda); "Kaydet" → anında kayıt + "Bitti" (`menu-edit-save` anahtarı
+  korundu).
 
 ### 7.5 PB3 — kalem seti (fable)
 
@@ -1628,6 +1659,19 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   `UiItem.topTheme` ölü kimlik, silinmez.
 - **Model:** opus (high) — görsel olmayan bağlama + kasma duyarlı editör dosyaları. **A/B:** evet —
   `kb`, `yaz`, `sabit_ac`, `sabit_kb`, `duzen`. **Bütçe:** S40.
+- [x] **Durum (2026-11-15, G5 dalı oto/G5-duzen, opus):** hızlı satır `quickOrder` sırasında
+  (`_EditorQuickRowState._ordered`: kayıt boşsa AYNI liste — ayraçlı varsayılan; sıra haritası kayıt
+  değişince bir kez); Ekle levhası `attachOrder` sırasında (grup içinde; boşsa katalog); video hız/süre,
+  sabit ek çubuğu (yan, tam ekran, balon, bağlantı, sabitlemeyi kaldır, kalem — `UiItem.pinned`) düzen
+  modunda çerçeveli: yeni `Customizable.slot` (normal kipte ARAYA ÖĞE GİRMEZ — ilk denemede
+  `Customizable` sarması S17 sabit PDF/görsel geçiş karesini 234→237 / 219→222 yaptı, slot ile 234 / 219;
+  bölme Personalize'ı kendi dinler); ortak çalışan işareti `Customizable` ile sarıldı (gizliyken düzen
+  modunda görünür). Takvim şeridi / hızlı yakalama hub'ın "Ana ekran" yüzeyinde anahtar (dashboard'a
+  dokunulmadı). `customize_wraps_test` 3/3; S40 `sira_govde` 0 / `sira_satir` 0; S17 değişmedi.
+  **Yapılmadı (sabah bakılacak):** sabit ek ⋮ `menuId: 'pinned.menu'` — levha `ActionMenu` değil
+  (SheetTile'lı özel levha); menuId için levhayı ActionMenu'ya çevirmek görünüş değişikliği (PB7 görünüş
+  paketi değil). `TOUR_COMPARE` piksel kıyası koşulmadı (G3 tabanı görüntüsü yok); varsayılan yolda kod
+  aynı ağacı kurar (slot/Customizable mod kapalıyken çıplak çocuk, sıra kaydı boşken sıralama dalı yok).
 
 ### 7.10 Sonraya (bu planın paketi DEĞİL; regresyon listesine/Kuyruk'a not)
 

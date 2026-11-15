@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/core/tips.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,6 +42,7 @@ void main() {
     late BuildContext ctx;
     await tester.pumpWidget(
       MaterialApp(
+        builder: (context, child) => AppNoticeHost(child: child!),
         home: Scaffold(
           body: Builder(
             builder: (context) {
@@ -56,5 +58,51 @@ void main() {
     expect(find.text('İpucu A'), findsOneWidget);
     TipOnce.resetSession();
     expect(TipOnce.show(ctx, prefs, TipOnce.mediaPin, 'İpucu A'), isFalse);
+    await tester.pump(const Duration(seconds: 6));
+  });
+
+  testWidgets('show: şerit doluyken ipucu ertelenir, gösterildi SAYILMAZ', (
+    tester,
+  ) async {
+    late BuildContext ctx;
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => AppNoticeHost(child: child!),
+        home: Builder(
+          builder: (context) {
+            ctx = context;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    appNotice.show(const AppNoticeData(text: 'Kaydedildi'));
+    await tester.pump();
+    expect(TipOnce.show(ctx, prefs, TipOnce.gridSwipe, 'İpucu B'), isFalse);
+    expect(TipOnce.due(prefs, TipOnce.gridSwipe), isTrue);
+    // Ertelendi: ileti kalkınca kendiliğinden çıkar ve o zaman sayılır.
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump();
+    expect(find.text('İpucu B'), findsOneWidget);
+    expect(TipOnce.due(prefs, TipOnce.gridSwipe), isFalse);
+    await tester.pump(const Duration(seconds: 6));
+  });
+
+  testWidgets('show: şerit yokken (yalın test) false, sayılmaz', (
+    tester,
+  ) async {
+    late BuildContext ctx;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            ctx = context;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(TipOnce.show(ctx, prefs, TipOnce.mediaPin, 'İpucu C'), isFalse);
+    expect(TipOnce.due(prefs, TipOnce.mediaPin), isTrue);
   });
 }

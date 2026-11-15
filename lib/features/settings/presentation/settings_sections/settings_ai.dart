@@ -323,19 +323,22 @@ Widget _modelPickerTile({
   required String recommendedLabel,
   required ValueChanged<String?> onChanged,
   bool allowShowAll = false,
+  ModelChain? chain,
+  List<AiModel>? catalog,
 }) {
   final scheme = Theme.of(context).colorScheme;
-  // Kayıtlı model artık listede yoksa (kaldırılmış olabilir ya da sağlayıcı
-  // değişmiş olabilir) yine göster; zincir zaten çalışan bir modele düşer.
-  final items = value != null && !models.any((m) => m.id == value)
-      ? [AiModel(id: value, label: value), ...models]
+  // Kayıtlı model katalogda artık yoksa "Otomatik" görünür — servis de o
+  // seçimi yok sayıp zincire düşüyor (validChoice, 2026-11-15).
+  final choice = validChoice(value, catalog);
+  final items = choice != null && !models.any((m) => m.id == choice)
+      ? [AiModel(id: choice, label: choice), ...models]
       : models;
-  final current = value == null
+  final current = choice == null
       ? autoLabel
       : _ModelSelectors._friendlyModel(
           items.firstWhere(
-            (m) => m.id == value,
-            orElse: () => AiModel(id: value, label: value),
+            (m) => m.id == choice,
+            orElse: () => AiModel(id: choice, label: choice),
           ),
         );
   return Padding(
@@ -353,10 +356,11 @@ Widget _modelPickerTile({
             builder: (_) => _ModelPickerSheet(
               title: label,
               models: items,
-              value: value,
+              value: choice,
               autoLabel: autoLabel,
               recommendedLabel: recommendedLabel,
               allowShowAll: allowShowAll,
+              chain: chain,
             ),
           );
           if (picked != null) onChanged(picked.id);
@@ -411,7 +415,12 @@ class _ModelPickerSheet extends ConsumerStatefulWidget {
     required this.autoLabel,
     required this.recommendedLabel,
     this.allowShowAll = false,
+    this.chain,
   });
+
+  /// Görevin otomatik zinciri: verilirse "Önerilen" o sıradır ve
+  /// "Tümünü göster" kapalıyken yalnız o listelenir (bkz. [pickerModels]).
+  final ModelChain? chain;
 
   final String title;
   final List<AiModel> models;
@@ -455,9 +464,12 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
     final scheme = Theme.of(context).colorScheme;
     // "Tümünü göster" açıksa katalogtaki HER model listelenir (aynı
     // önbellekten gelir, ikinci bir ağ isteği yok).
-    final source = _showAll
-        ? (ref.watch(allModelsProvider).value ?? widget.models)
-        : widget.models;
+    final all = ref.watch(allModelsProvider).value;
+    final chainList = widget.chain == null || all == null
+        ? null
+        : pickerModels(widget.chain!, all, showAll: _showAll);
+    final source =
+        chainList ?? (_showAll ? (all ?? widget.models) : widget.models);
     final shown = [
       for (final m in source)
         if (_matches(m)) m,
@@ -604,6 +616,7 @@ class _ModelSelectors extends ConsumerWidget {
         ref.watch(availableModelsProvider).value ?? const <AiModel>[];
     if (models.isEmpty) return const SizedBox.shrink();
     final selected = ref.watch(aiTaskModelsProvider);
+    final catalog = ref.watch(allModelsProvider).value;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -616,6 +629,8 @@ class _ModelSelectors extends ConsumerWidget {
             autoLabel: l10n.aiModelAuto,
             recommendedLabel: l10n.recommendedModel,
             allowShowAll: true,
+            chain: GeminiService.chainOf(task),
+            catalog: catalog,
             onChanged: (v) =>
                 ref.read(aiTaskModelsProvider.notifier).set(task, v),
           ),
@@ -634,6 +649,7 @@ class _ModelSelectors extends ConsumerWidget {
   static String _taskLabel(AppLocalizations l10n, AiTask task) =>
       switch (task) {
         AiTask.general => l10n.aiModelChat,
+        AiTask.short => l10n.aiModelShort,
         AiTask.document => l10n.aiModelDocument,
         AiTask.podcast => l10n.aiModelPodcast,
         AiTask.translate => l10n.aiModelTranslate,

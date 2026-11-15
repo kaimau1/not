@@ -5,14 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../core/l10n_ext.dart';
-import '../core/widgets/undo_snackbar.dart'
-    show rootScaffoldMessengerKey, timedSnackBar;
+import '../core/widgets/app_notice.dart';
 import '../features/settings/presentation/guide_screen.dart'
     show loadGuideSource;
 import '../features/settings/settings_providers.dart'
     show sharedPreferencesProvider;
 import 'router.dart' show routerProvider;
-import '../app/theme/app_tokens.dart';
 
 /// **GÜNCELLEMEDEN SONRA "YENİLİKLER" TOSTU** (2026-11-10, kullanıcı: *"sürüm
 /// notları sürüm bazlı, son kullanıcının anlayacağı şekilde ana ekranda tost
@@ -66,49 +64,19 @@ class _ReleaseNotesToastState extends ConsumerState<ReleaseNotesToast> {
   }
 
   void _show(String version, List<String> unseen) {
-    final messenger = rootScaffoldMessengerKey.currentState;
-    if (messenger == null) return;
     final l10n = context.l10n;
     final shown = unseen.take(3).map(shortReleaseNote).toList();
     final more = unseen.length - shown.length;
-    messenger.showSnackBar(
-      timedSnackBar(
+    // Bildirim şeridinde DUYURU (P62 PA5): şerit boşalana dek bekler, yüzen
+    // düğme satırının üstünde, tam genişlik.
+    appNotice.show(
+      AppNoticeData(
+        kind: AppNoticeKind.announce,
+        text: l10n.releaseNotesToastTitle(version),
+        details: [...shown, if (more > 0) l10n.releaseNotesToastMore(more)],
+        actionLabel: l10n.releaseNotesToastAll,
+        onAction: () => ref.read(routerProvider).push('/guide?doc=notes'),
         duration: const Duration(seconds: 12),
-        content: Builder(
-          builder: (context) {
-            final theme = Theme.of(context);
-            final color = theme.colorScheme.onInverseSurface;
-            return Column(
-              key: const ValueKey('release-notes-toast'),
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.releaseNotesToastTitle(version),
-                  style: TextStyle(fontWeight: AppWeight.strong, color: color),
-                ),
-                const SizedBox(height: 4),
-                for (final line in shown)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text('• $line', style: TextStyle(color: color)),
-                  ),
-                if (more > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      l10n.releaseNotesToastMore(more),
-                      style: TextStyle(color: color.withValues(alpha: 0.75)),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
-        action: SnackBarAction(
-          label: l10n.releaseNotesToastAll,
-          onPressed: () => ref.read(routerProvider).push('/guide?doc=notes'),
-        ),
       ),
     );
   }

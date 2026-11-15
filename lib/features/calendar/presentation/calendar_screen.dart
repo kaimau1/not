@@ -821,14 +821,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _agendaView(BuildContext context, CalendarData data, bool wide) {
     final l10n = context.l10n;
-    final gridStart = gridStartFor(_month, _firstDow);
-    final busy = data
-        .range(
-          gridStart,
-          DateTime(gridStart.year, gridStart.month, gridStart.day + 42),
-        )
-        .keys
-        .toSet();
+    // Ayın ızgarasındaki dolu günler: mini ay sayfası KURULURKEN bir kez
+    // (komşu ay çekiş başlayınca kendi ayıyla).
+    Set<String> busyOf(DateTime month) {
+      final gridStart = gridStartFor(month, _firstDow);
+      return data
+          .range(
+            gridStart,
+            DateTime(gridStart.year, gridStart.month, gridStart.day + 42),
+          )
+          .keys
+          .toSet();
+    }
     void select(DateTime d) => setState(() {
       _selected = startOfDay(d);
       _focus = _selected;
@@ -839,13 +843,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final grid = MonthGrid(
       month: _month,
       selected: _selected,
-      busy: busy,
+      busyOf: busyOf,
+      busyKey: data,
       now: _today,
       showHeader: wide,
       onSelect: select,
       swipeEnabled: ref.watch(calendarSwipeProvider),
-      onMonthChange: (delta) =>
-          setState(() => _month = DateTime(_month.year, _month.month + delta)),
+      // Seçim DEĞİŞMEZ (2026-11-08): yalnız görünen ay.
+      onMonthChanged: (month) => setState(() => _month = month),
     );
     final isEmpty =
         data.events.isEmpty && data.tasks.isEmpty && data.reminders.isEmpty;
@@ -878,22 +883,162 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ],
       );
     }
-    return Column(
+    return _MonthPanel(
+      open: _monthOpen,
+      grid: grid,
+      onClose: () => setState(() => _monthOpen = false),
+      list: list,
+    );
+  }
+}
+
+/// **TELEFONDA MİNİ AY PANELİ** (P62 PA8, plan_tasarim_A §6.2; R2): ajanda
+/// listesinin boyu animasyonla DEĞİŞMEZ — eskiden `AnimatedSize` listeyi
+/// açılış / kapanış boyunca her karede yeniden diziyordu (S35: 28 kare).
+/// Boy TEK ADIMDA, hareket boyamada: açılışta ızgara listenin ALTINDA kurulup
+/// ölçülür, liste `Transform` ile ızgara boyu kadar aşağı kayar, bitince üst
+/// payı ızgara boyu olur (öteleme 0, aynı piksel); kapanışta üst pay hemen 0,
+/// öteleme ızgara boyundan 0'a, bitince ızgara ağaçtan düşer. Listeyi saran
+/// zincir iki durumda AYNI (kaydırma konumu korunur).
+class _MonthPanel extends StatefulWidget {
+  const _MonthPanel({
+    required this.open,
+    required this.grid,
+    required this.onClose,
+    required this.list,
+  });
+
+  final bool open;
+  final Widget grid;
+  final VoidCallback onClose;
+  final Widget list;
+
+  @override
+  State<_MonthPanel> createState() => _MonthPanelState();
+}
+
+class _MonthPanelState extends State<_MonthPanel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shift = AnimationController(vsync: this);
+  final _gridKey = GlobalKey();
+
+  /// Izgara ağaçta mı (açık ya da kapanış sürüyor).
+  late bool _gridShown = widget.open;
+
+  /// Açılış oturdu: liste üst payı ızgara boyu.
+  late bool _settled = widget.open;
+  double _gridHeight = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.open) _measureThen(() {});
+  }
+
+  @override
+  void didUpdateWidget(_MonthPanel old) {
+    super.didUpdateWidget(old);
+    if (old.open == widget.open) return;
+    if (widget.open) {
+      _gridShown = true;
+      _measureThen(_openSlide);
+    } else {
+      _closeSlide();
+    }
+  }
+
+  /// Izgara kurulduktan SONRAKİ karede boyunu ölçer (ExpandReveal kalıbı).
+  void _measureThen(VoidCallback next) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _gridHeight = _gridKey.currentContext?.size?.height ?? 0;
+      if (!widget.open) return;
+      next();
+      if (_settled) setState(() {});
+    });
+  }
+
+  void _openSlide() {
+    _shift.duration = AppMotion.of(context, AppMotion.short);
+    _shift.value = 0;
+    unawaited(
+      _shift
+          .animateTo(1, curve: AppMotion.curveOf(context, AppMotion.enter))
+          .whenComplete(() {
+            if (!mounted || !widget.open) return;
+            setState(() => _settled = true);
+            _shift.value = 0;
+          }),
+    );
+  }
+
+  void _closeSlide() {
+    final d = AppMotion.exitOf(AppMotion.of(context, AppMotion.short));
+    _settled = false; // didUpdateWidget içinden: kurulum zaten gelir
+    _shift.value = 1;
+    unawaited(
+      _shift
+          .animateTo(
+            0,
+            duration: d,
+            curve: AppMotion.curveOf(context, AppMotion.exit),
+          )
+          .whenComplete(() {
+            if (mounted && !widget.open) setState(() => _gridShown = false);
+          }),
+    );
+  }
+
+  @override
+  void dispose() {
+    _shift.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final background = Theme.of(context).scaffoldBackgroundColor;
+    return Stack(
       children: [
-        AnimatedSize(
-          duration: AppMotion.of(context, AppMotion.short),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: _monthOpen ? grid : const SizedBox(width: double.infinity),
+        if (_gridShown)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Column(
+              key: _gridKey,
+              mainAxisSize: MainAxisSize.min,
+              children: [widget.grid, const Divider(height: 1)],
+            ),
+          )
+        else
+          const SizedBox.shrink(),
+        Positioned.fill(
+          top: _settled ? _gridHeight : 0,
+          child: AnimatedBuilder(
+            animation: _shift,
+            builder: (context, child) => Transform.translate(
+              offset: Offset(0, _shift.value * _gridHeight),
+              child: child,
+            ),
+            // Opak zemin: açılışın ilk karesinde ızgara listenin içinden
+            // görünmesin.
+            child: ColoredBox(
+              color: background,
+              child: Column(
+                children: [
+                  // Açık ay paneli geri tuşuyla önce kapanır (bkz. [BackCloses]).
+                  BackCloses(
+                    open: widget.open,
+                    onClose: widget.onClose,
+                    child: const SizedBox.shrink(),
+                  ),
+                  Expanded(child: widget.list),
+                ],
+              ),
+            ),
+          ),
         ),
-        if (_monthOpen) const Divider(height: 1),
-        // Açık ay paneli geri tuşuyla önce kapanır (bkz. [BackCloses]).
-        BackCloses(
-          open: _monthOpen,
-          onClose: () => setState(() => _monthOpen = false),
-          child: const SizedBox.shrink(),
-        ),
-        Expanded(child: list),
       ],
     );
   }
@@ -939,7 +1084,7 @@ class _PagedViewState extends State<_PagedView> {
         _controller.animateToPage(
           target,
           duration: AppMotion.of(context, AppMotion.medium),
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.emphasized,
         ),
       );
     }
@@ -1725,7 +1870,7 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
       _controller.animateToPage(
         (_controller.page?.round() ?? _kCenter) + delta,
         duration: AppMotion.of(context, AppMotion.medium),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.emphasized,
       ),
     );
   }

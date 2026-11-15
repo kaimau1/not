@@ -852,7 +852,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get remindersRemove => 'Hatırlatıcıyı kaldır';
 
   @override
-  String get aiModelChat => 'Özet, başlık, etiket ve sohbet';
+  String get aiModelChat => 'Özet ve sohbet';
+
+  @override
+  String get aiModelShort => 'Başlık ve etiket';
 
   @override
   String get aiModelDocument => 'Belge sohbeti ve PDF özeti';
@@ -1499,6 +1502,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get clearInk => 'Çizimleri temizle';
+
+  @override
+  String get inkCleared => 'Çizimler temizlendi';
+
+  @override
+  String get inkEraserTooltip => 'Silgi (basılı tut: tümünü temizle)';
 
   @override
   String get inkTwoFingerHint =>

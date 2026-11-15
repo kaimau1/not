@@ -144,21 +144,10 @@ class _StylusToggleButton extends StatelessWidget {
                 // durumu zaten gösteriyor; yazı her durum için OTURUMDA BİR
                 // KEZ, kalem tepsisinin üstünde.
                 if (!InkToolMemory.stylusHintsTold.add(!on)) return;
-                final margin = snackBarMarginOverKeyboard();
-                ScaffoldMessenger.maybeOf(context)
-                  ?..hideCurrentSnackBar()
-                  ..showSnackBar(
-                    SnackBar(
-                      duration: const Duration(milliseconds: 1600),
-                      behavior: margin == null
-                          ? null
-                          : SnackBarBehavior.floating,
-                      margin: margin,
-                      content: Text(
-                        !on ? l10n.stylusTogglesOn : l10n.stylusTogglesOff,
-                      ),
-                    ),
-                  );
+                ScaffoldMessenger.maybeOf(context)?.showMessage(
+                  !on ? l10n.stylusTogglesOn : l10n.stylusTogglesOff,
+                  duration: const Duration(milliseconds: 1600),
+                );
               },
               child: SizedBox.square(
                 dimension: size,

@@ -241,6 +241,13 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Yanlış yol: grup kartını satır başına sarmalayıcıyla kurmak S29'u 353→369 / 474→547 yaptı (geri alındı); `Container` yerine `DecoratedBox` S30'u 349→341 indirdi.
 - Renk bekçisi (`color_roles_test`) izin listesi yalnız düşer: tertiary kalkınca listeden de sil, yoksa CI kırmızı (PA2→PA3'te yaşandı).
 
+## 2026-11-15 — P63 G5 düzen modu + düzen merkezi (PB1, PB2, PB7)
+- **Tek kılık:** düzenleme arayüzleri `CustomizeBoard` (önizleme şeridi sürükle = sırala, karo dokun = gizle/göster, anında kayıt). Yüzeyler `customize_hub.dart` `CustomizeSurface` (10); levha `showCustomizeHub` (şeritteki "Sırala", `surfaceFor(konum, klavye)`), Kişiselleştir ekranı aynı panoları ALT ALTA çizer (çipli tek pano yalnız levhada — testler gizli yüzeyin anahtarlarını ağaçta arıyor). "+" panelinin kendi düzenleyicisi (e) satır/tutamaç olarak KALDI (`quick_add_edit_test` kilit + grup içi sıra) — hub'daki "+" yüzeyi aynı kayda yazar.
+- **Şerit Navigator'ın ÜSTÜNDE** (`CustomizeModeHost`, MaterialApp builder): Overlay yok → Tooltip kurulamaz (ad Semantics'te), levha açmak için `router.routerDelegate.navigatorKey.currentContext`.
+- **Şerit hareketi:** yuva tek adım; içerik boyunun ÇEYREĞİ kadar kayar + solar. Tam boy kayışta mod açılır açılmaz basılan Bitti/Geri al kırpığın dışında kalıp kaçıyordu (var olan testler yakaladı).
+- **`Customizable.slot(id, child)`:** sıkı kurulum bütçeli yerlerde (sabit ek çubuğu, video denetimi) normal kipte araya öğe sokmayan sarma; çağıran Personalize'ı dinler. Düz `Customizable` sarması S17 sabit PDF/görsel geçiş karesini +3 yaptı.
+- Sıra kayıtları: `quickOrder` (satırın `_ordered`'ı; boşsa AYNI ayraçlı liste), `attachOrder` (grup içinde). Sabit ek ⋮ levhası `ActionMenu` değil → `menuId` verilmedi (sabah bakılacak).
+
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 
 Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.

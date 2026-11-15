@@ -9,6 +9,24 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Düzen modu ve "Sırala" (yeni görünüş, cihazda bakılmadı — P63 G5)**
+  Nerede: bir notta ⋮ → Ekranı düzenle; üst şeritteki ⇅ (Sırala); Ayarlar → Kişiselleştir; not ⋮ → Menüyü düzenle.
+  Nasıl: düzen modunu aç (şerit yukarıdan kayarak gelsin), alt çubukta 2–3 düğmeye dokun (gizli olan kesikli çerçeveli, şeritte sayı çıksın), Geri al / Bitti; ⇅ ile levhayı aç — notta "Alt çubuk", klavye açıkken "Hızlı satır" seçili gelsin; üstteki şeritte bir simgeyi basılı tutup sürükleyerek sırala, hızlı satırı yeniden sırala ve klavyeyi açıp satırın o sırada olduğuna bak; Ekle levhasının sırasını değiştir; sabit PDF'li notta düzen modunda çubuktaki düğmeleri gizle/göster; küçük telefonda şerit başlığının sığdığına bak.
+  Doğruysa: titreme/zıplama yok, mod açılıp kapanırken not kaymıyor; sıra uygulama kapanıp açılınca korunuyor; varsayılan düzende hiçbir şey değişmemiş.
+  Yanlışsa: ekran görüntüsü / kısa kayıt gönder.
+- [ ] **Bildirimler, kalıcı şeritler, yana çekiş ve takvim mini ayı (yeni his, cihazda bakılmadı — P62 G3)**
+  Nerede: ana ekran (ipucu, "Geri al", Yenilikler, bekleyen ek / zamanı gelen / yeni sürüm şeritleri), liste görünümünde satır çekişi, takvim → ajanda → başlıktaki ay düğmesi; tablette not açıkken soldan çekmece.
+  Nasıl: bir notu sil → "Geri al" mikrofon / "+" ile çakışmasın; levha açıkken sil → bildirim levhanın üstünde; ana ekranda yana yavaş çek / fiskele / son klasörde çek; liste satırını sağa-sola çek (eşikte hafif titreşim); mini ayı parmakla kaydır, aç-kapa.
+  Doğruysa: ipucu arama çubuğunun altında, bildirimler üst üste binmiyor; şerit belirirken liste titremiyor; çekiş bırakınca yumuşak yerine oturuyor; mini ay parmağı izliyor, açılırken liste aşağı kayıyor (zıplama yok); çekmece %22 çekişte açılıyor.
+  Yanlışsa: ekran görüntüsü / kısa kayıt gönder.
+- [ ] **Ses kartı açılışı + klavye kasması (oto/ses-karti-kasma, cihazda bakılmadı)**
+  Nerede: liste notunda bir maddeye dokun (klavye açık) → alt çubuktan Dikte.
+  Nasıl: kart tek karede tam açılsın (yarım/soluk ara hâl yok); klavye açıkken konuş-sus-konuş: alt çubuk ve kart yerinde kalsın; kart açıkken ve Bitir'den sonra klavyeyi aç-kapa — alt panel akıcı mı? Hâlâ zıplıyorsa ekran kaydı al (P55 `bar_track` kalıbı).
+
+- [ ] **Kalem kapsülü sadeleşti (yazıldı, cihazda doğrulanmadı — 2026-11-15, dal oto/kalem-tepsisi)**
+  Nerede: notta Kalem → kapsülü aç.
+  Nasıl: kapsülde geri al, × ve ✓ YOK; kalemler kapsüle yayılmış mı (sola sıkışık değil); kalem seç, yaz, sağdaki klavye düğmesiyle yazıya dön — çizim duruyor mu; silgi düğmesi mürekkep yokken soluk, yazınca belirgin; silgiye basılı tut → "Çizimler temizlendi" → "Geri al" hepsini geri getiriyor mu; ⋯ → "Çizimleri temizle". Telefon küçük ekran, MatePad ve bölünmüş görünümde taşma yok.
+  Doğruysa: seçim anında geçerli, veri kaybı yok. Yanlışsa: ekran görüntüsü gönder.
 - [ ] **Kalem seti ve sesle yazma kartı (yeni görünüş, cihazda bakılmadı — P63 G4)**
   Nerede: bir notta alt çubuktan Kalem → hap / kapsül / renk paneli; çizim ekranı; PDF üstüne çizim; notta Dikte ve ✨ → sesli not.
   Nasıl: kapsülü aç-kapa, kalem değiştir (kalem yukarı kalkar), paneli aç (üstte gerçek çizgi önizlemesi, soldaki iğneyle sabitle), kalınlığı sürükle; tablette bölünmüş görünümde kapsül taşmasın. Dikte açıkken konuş / sus: dalga sesinle oynasın, susunca alttaki ince çizgi dolsun ve "Sessizlik — birazdan biter" yazsın; dikte açıkken tablette kaydır + yaz.

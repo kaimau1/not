@@ -264,35 +264,44 @@
     "senaryo": "Bildirim şeridi (iskelet): telefon ana ekran + AppNoticeHost; ileti göster → 30 kare → 4 sn kendiliğinden kalkış → 30 kare; ipucu göster → iptal edilen dokunuşla kalkış; şerit BOŞKEN alt inset 0 → 300 → 0 (10 adım), adım başına _NoticeLane altında kurulan",
     "kart_kurulum": 0,
     "dashboard_kurulum": 0,
-    "kare_kurulum": 28,
-    "klavye_karesi_kurulum": 10,
-    "bugun": "0 / 0 / 28 / 10 (2026-11-14, PA0); klavye karesi > 0: iki şerit viewInsetsOf u dinliyor (R5)",
+    "kare_kurulum": 20,
+    "klavye_karesi_kurulum": 0,
+    "bugun": "0 / 0 / 20 / 0 (2026-11-15, PA5). Taban 0 / 0 / 28 / 10 (2026-11-14, PA0): iki şerit boşken de viewInsetsOf / paddingOf okuyordu (R5)",
     "hedef": "0 / 0 / küçük sabit / 0",
-    "neden": "P62 PA0 ilk ölçüm (iskelet tabanı); klavye karesi hedefin üstünde — PA5 0 a indirir, yükseltilmez"
+    "neden": "P62 PA0 ilk ölçüm (iskelet tabanı); PA5 (2026-11-15): inset / güvenli alan okuması görünen karta indi (_NoticeCard), şerit Positioned.fill + Align → boş şerit klavye karesinde kurulmuyor (10 → 0); en ağır kare 28 → 20 (şerit kökü artık inset değişiminde kurulmuyor)"
   },
   "S32": {
     "senaryo": "Kalıcı şerit belirişi: telefon ana ekran, 30 not; pendingUploadsProvider 0 → 2 → 0, her değişimden sonra 30 kare; ızgara kaydırma görünümünün boyunun değiştiği kare sayısı (S9 kalıbı)",
-    "izgara_boy_karesi": 26,
+    "izgara_boy_karesi": 2,
     "kart_kurulum": 0,
-    "bugun": "26 / 0 (2026-11-14, PA0); _PendingUploadsBar AnimatedSize 200 ms × 2 — ızgara her karede yeniden diziliyor",
+    "bugun": "2 / 0 (2026-11-15, PA6: şerit AppBanner, görünür / gizli tek adım). Taban 26 / 0 (2026-11-14, PA0); _PendingUploadsBar AnimatedSize 200 ms × 2 — ızgara her karede yeniden diziliyordu",
     "hedef": "2 (belir 1 + kalk 1) / 0",
-    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R1 gerçek dizilim yükü, PA6 2 ye indirir"
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R1 gerçek dizilim yükü; PA6 (2026-11-15) AnimatedSize kaldırdı → 2 (hedef)"
   },
   "S33": {
     "senaryo": "Ana ekran çekişi: telefon, 30 not, swipe_mode=filters; 5. karttan 6 × 10 dp sola çek (eşik altı, süzgeç değişmez), bırak, 30 kare",
     "kart_kurulum": 0,
     "dashboard_kurulum": 0,
-    "kare_kurulum": 16,
-    "bugun": "0 / 0 / 16 (FolderSwipe, _TipBanner, basılı tutma halkası, AnimatedBuilder 18) (2026-11-14, PA0)",
+    "kare_kurulum": 10,
+    "bugun": "0 / 0 / 10 (2026-11-15, PA5: _TipBanner kalktı — düzenek şeritsiz, ipucu yanmıyor). Taban 0 / 0 / 16 (FolderSwipe, _TipBanner, basılı tutma halkası, AnimatedBuilder 18) (2026-11-14, PA0)",
     "hedef": "0 / 0 / etiket + FolderSwipe kadar",
     "neden": "P62 PA0 ilk ölçüm = hedef (taban, mandal); PA7 çekiş hissini değiştirirken aşılmamalı"
   },
+  "S34": {
+    "senaryo": "Takvim mini ayı kaydırma: telefon, calendar_view=agenda (S22 düzeneği); mini ayı aç, ızgarayı bir ay ileri fırlat (-300 dp, 1500 dp/sn), 40 kare. ay_sayfasi = _MonthPage kurulumu, gun_hucresi = _DayCell, kare_kurulum = en ağır kare",
+    "ay_sayfasi": 1,
+    "gun_hucresi": 42,
+    "kare_kurulum": 747,
+    "bugun": "1 / 42 / 747 (2026-11-15, PA8 aç/kapa paneli sonrası: +3 = _MonthPanel sarmalı çağıranla kurulur; önceki adım 744 dalda kaldı, main e girmedi). PageView — komşu ay çekiş başlayınca BİR kez kurulur, ay sayfa oturunca bildirilir, kurulmuş sayfa önbellekte; açılış karesi 1617). Taban 0 / 42 / 1396 (2026-11-15, PA8 taban — değişiklikten ÖNCE: izleme yok, bırakışta ay tek karede değişiyor, 42 hücre + bütün takvim ekranı o karede; mini ayın açılış karesi 1601)",
+    "hedef": "komşu ay bir kez kurulur; en ağır kare ≤ mini ayın ilk açılış karesi",
+    "neden": "P62 PA8 ilk ölçüm (taban). ay_sayfasi 0 → 1: _MonthPage yeni tür (taban hücreleri sayfasız kuruyordu), hedef = 1. İlk deneme (onPageChanged ile bildirim, önbelleksiz) 3 / 126 / 2767 — geçiş ortasında çağıran yeniden kurulup iki sayfayı birden kuruyordu"
+  },
   "S35": {
     "senaryo": "Takvim mini ayı aç → kapat: telefon, calendar_view=agenda (S22 düzeneği); calendar-month-toggle a iki kez dokun, her birinden sonra 30 kare; ajanda listesinin boyunun değiştiği kare sayısı",
-    "liste_boy_karesi": 28,
-    "bugun": "28 (2026-11-14, PA0); calendar_screen.dart AnimatedSize — liste her karede yeniden diziliyor",
+    "liste_boy_karesi": 2,
+    "bugun": "2 (2026-11-15, PA8: _MonthPanel — boy tek adımda, hareket Transform ile). Taban 28 (2026-11-14, PA0); calendar_screen.dart AnimatedSize — liste her karede yeniden diziliyordu",
     "hedef": "2 (aç 1 + kapa 1)",
-    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R2 gerçek dizilim yükü, PA8 2 ye indirir"
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R2 gerçek dizilim yükü; PA8 (2026-11-15) 2 ye indirdi (hedef)"
   },
   "S36": {
     "senaryo": "Geniş ekran ayarlar: 1280×800 SettingsScreen; settings-cat-ai → settings-cat-sound (döşeme önce görünüre kaydırılır, ölçüm dışı), her birinden sonra 40 kare",
@@ -306,10 +315,10 @@
     "senaryo": "Kart menü levhası: telefon ana ekran, 30 not; ilk kartın note-card-menu düğmesine dokun → 30 kare → sistem geri → 30 kare (cihazdaki menu evresi)",
     "kart_kurulum": 0,
     "dashboard_kurulum": 0,
-    "kare_kurulum": 499,
-    "toplam_kurulum": 1363,
-    "dizilme": 57,
-    "bugun": "kart 0 / pano 0 / en ağır kare 499 / toplam 1363 / dizilme 57 (2026-11-15, P62 G1); main 32176d7e ile G1 632057a1 BİREBİR aynı",
+    "kare_kurulum": 487,
+    "toplam_kurulum": 1337,
+    "dizilme": 56,
+    "bugun": "kart 0 / pano 0 / en ağır kare 499 / toplam 1363 / dizilme 57 (2026-11-15, P62 G1); main 32176d7e ile G1 632057a1 BİREBİR aynı; PA5 (2026-11-15) 487 / 1337 / 56 — ızgara ipucu artık şeritte (düzenek şeritsiz, kök Overlay e _TipBanner girmiyor)",
     "hedef": "kart 0, pano 0; kurulum ve dizilme tabanı aşmaz",
     "neden": "P62 G1 cihaz A/B menu LAYOUT 44 → 63 ms (altın +%19) kanıt araması: levhanın yolu G1 dosyalarına değmiyor, sayılar main ile aynı → cihaz farkı gürültü (menu LAYOUT aynı main APK larında 38–76 ms, gecmis.csv)"
   },
@@ -351,9 +360,9 @@
     "kok_kurulum": 0,
     "sayfa_tuvali": 0,
     "pen_tray": 3,
-    "kalem_resmi": 77,
+    "kalem_resmi": 66,
     "panel": 7,
-    "bugun": "0 / 0 / 3 / kalem resmi (_DockTool) 77 / panel (_Options) 7 (2026-11-15, G4 taban — PB3 öncesi)",
+    "bugun": "0 / 0 / 3 / kalem resmi (_DockTool) 66 / panel (_Options) 7 (2026-11-15 kalem tepsisi sadeleşmesi: silgi kalem sırasından düğmeye, 77 → 66)",
     "hedef": "kök 0, tuval 0, PenTray ≤ 13 (plan §3.5); kalem resmi ve panel tabanı aşmaz",
     "neden": "P63 G4 ilk ölçüm"
   },
@@ -367,5 +376,31 @@
     "bugun": "0 / 0 / 2 / 0 / 0 (2026-11-15, G4 taban — PB5 öncesi: düzey ve sessizlik arayüze hiç ulaşmıyordu; metin olayı satırı kurmuyor, denetleyiciye yazıyor)",
     "hedef": "düzey ve sessizlikte 0; başlat + bitir kök ≤ 2; metin olayı başına satır ≤ 1",
     "neden": "P63 G4 ilk ölçüm"
+  },
+  "S46": {
+    "senaryo": "Ses kartı + klavye (gerçek rota, telefon, 30 maddeli liste): klavye aç/kapa ×2 kartsız → Dikte → 20 kare kartın tam görünmediği kare sayısı → kart açıkken klavye ×2 → Bitir → klavye ×2; sonra klavye AÇIKKEN dikte, 12 metin olayı + 2 sn duraklama boyunca alt çubuğun (TypingBarHide) boy değiştirdiği an sayısı",
+    "acilis_eksik_kare": 0,
+    "kart_acik_fazla_kurulum": 50,
+    "kart_acik_fazla_dizilme": 0,
+    "kapandi_fazla_kurulum": 0,
+    "kapandi_fazla_dizilme": 0,
+    "dikte_cubuk_oynama": 0,
+    "bugun": "0 / 50 / 0 / 0 / 0 / 0 (2026-11-15; önce 13 / 50 / 0 / 0 / 0 / 2 — PopIn açılışı, dikte metni çubuğu gizliyordu). Kart açıkken +50 kurulum = kartın kendi rozeti/dalgası (editör 0); kart kapanınca kartsız hâlle birebir: sızıntı yok",
+    "hedef": "açılış eksik kare 0; kapanınca kartsız hâlle birebir (0/0); dikte çubuğu oynatmaz (0)",
+    "neden": "kullanıcı bulgusu 2026-11-15 (G4 [apk]): ses kartı yarım açılıyor, kart varken/sonra klavyede kasma, alt panel zıplıyor"
+  },
+  "S40": {
+    "senaryo": "P63 G5 düzen modu (telefon, 30 maddeli liste, CustomizeModeHost içinde): startEditing → ilk 3 CustomizeFrame'e dokun → Bitti; gövde = NoteEditorScreen + NotePageCanvas + ItemsEditor",
+    "ac_kok": 1,
+    "ac_govde": 3,
+    "kapa_govde": 3,
+    "dokunus_govde": 0,
+    "dokunus_satir": 0,
+    "hub_govde": 0,
+    "sira_govde": 0,
+    "sira_satir": 0,
+    "bugun": "sıra değişimi gövde 0 / satır 0 (PB7); hub 0 (PB2 düzen merkezi levhası aç/kapa); kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0 (2026-11-15, G5 taban — PB1 öncesi; aç/kapa'da üç gövde türü birer kez = MediaQuery boyu değişince TEK yeniden dizilim)",
+    "hedef": "mod aç/kapa'da tek yeniden dizilim (kök ≤ 1, plan §1.5), dokunuş gövde 0, satır 0",
+    "neden": "P63 G5 ilk ölçüm"
   }
 }

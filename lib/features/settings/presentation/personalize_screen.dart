@@ -1,20 +1,14 @@
 import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../notes/presentation/editor/video_transport.dart' show SeekIcon;
-import '../../notes/presentation/add_catalog.dart';
 import '../../notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
-import '../settings_providers.dart';
-import 'personalize_bar_list.dart';
-import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
-import '../../notes/presentation/editor/quick_row_editor.dart';
+import 'customize_hub.dart';
 
 /// **KİŞİSELLEŞTİR** ekranı — bütün kişisel düzen TEK menüde.
 ///
@@ -64,21 +58,30 @@ class PersonalizeScreen extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView(
             padding: EdgeInsets.fromLTRB(
-              14,
-              8,
-              14,
-              24 + MediaQuery.paddingOf(context).bottom,
+              AppSpace.l,
+              AppSpace.s,
+              AppSpace.l,
+              AppSpace.xxl + MediaQuery.paddingOf(context).bottom,
             ),
-            children: const [
-              _EditModeCard(),
-              SizedBox(height: 14),
-              _ModulesSection(),
-              _EditorSection(),
-              _QuickAddSection(),
-              _AttachSection(),
-              _VideoSection(),
-              _HomeSection(),
-              _BubblesSection(),
+            // DÜZEN MERKEZİNİN yüzeyleri ALT ALTA (P63 PB2): levhadaki
+            // çipli merkezle aynı panolar; burada hepsi tek kaydırmada.
+            children: [
+              const _EditModeCard(),
+              const SizedBox(height: AppSpace.m),
+              for (final s in const [
+                CustomizeSurface.modules,
+                CustomizeSurface.bottomBar,
+                CustomizeSurface.topBar,
+                CustomizeSurface.quickRow,
+                CustomizeSurface.addPanel,
+                CustomizeSurface.attach,
+                CustomizeSurface.video,
+                CustomizeSurface.pinned,
+                CustomizeSurface.pen,
+                CustomizeSurface.home,
+              ])
+                _SurfaceSection(s),
+              const _BubblesSection(),
             ],
           ),
         ),
@@ -127,7 +130,8 @@ class _Live extends StatelessWidget {
   );
 }
 
-/// Ekranın başındaki büyük kart: düzenleme modunu başlatır.
+/// Ekranın başındaki kart: düzenleme modunu başlatır. Düz zemin (P63 PB2 —
+/// gradyan zemin genel yapılmayacaklarda).
 class _EditModeCard extends StatelessWidget {
   const _EditModeCard();
 
@@ -136,60 +140,41 @@ class _EditModeCard extends StatelessWidget {
 
   Widget _build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final editing = Personalize.editing;
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            scheme.primaryContainer,
-            scheme.tertiaryContainer.withValues(alpha: 0.8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppRadius.l),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+        padding: const EdgeInsets.all(AppSpace.l),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: scheme.surface.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
-                  child: Icon(
-                    Icons.touch_app_outlined,
-                    color: scheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(width: 12),
+                Icon(Icons.touch_app_outlined, color: scheme.primary),
+                const SizedBox(width: AppSpace.m),
                 Expanded(
                   child: Text(
                     l10n.customizeStartTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: AppWeight.strong,
-                      color: scheme.onPrimaryContainer,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpace.s),
             Text(
               l10n.customizeStartInfo,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onPrimaryContainer.withValues(alpha: AppAlpha.strong),
-                height: 1.35,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.m),
             Align(
               alignment: AlignmentDirectional.centerEnd,
               child: FilledButton.icon(
@@ -213,62 +198,47 @@ class _EditModeCard extends StatelessWidget {
   }
 }
 
-/// Bölüm başlığı + isteğe bağlı açıklama + içerik kartı.
+/// Bölüm: başlık + içerik kartı (her yüzey aynı kılıkta).
 class _Section extends StatelessWidget {
   const _Section({
     required this.title,
     required this.icon,
     required this.child,
-    this.info,
   });
 
   final String title;
   final IconData icon;
-  final String? info;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSpace.m),
       // Material (DecoratedBox DEĞİL): içindeki anahtar satırları
       // (ListTile) zeminlerini ve dokunma dalgalarını en yakın Material'a
       // çizer; renkli bir DecoratedBox onları örterdi.
       child: Material(
         color: scheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.7)),
+          borderRadius: BorderRadius.circular(AppRadius.l),
         ),
         clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          padding: const EdgeInsets.all(AppSpace.m),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(icon, size: 18, color: scheme.primary),
-                  const SizedBox(width: 8),
+                  Icon(icon, size: AppIconSize.s, color: scheme.primary),
+                  const SizedBox(width: AppSpace.s),
                   Expanded(
-                    child: Text(
-                      title,
-                      style: sectionLabelStyle(context),
-                    ),
+                    child: Text(title, style: sectionLabelStyle(context)),
                   ),
                 ],
               ),
-              if (info != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  info!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpace.s),
               child,
             ],
           ),
@@ -278,68 +248,19 @@ class _Section extends StatelessWidget {
   }
 }
 
-/// Görünürlük çipleri: seçili = görünür.
-class _VisibilityChips extends StatelessWidget {
-  const _VisibilityChips({required this.items});
+/// Bir yüzeyin bölümü (düzen merkeziyle aynı pano).
+class _SurfaceSection extends StatelessWidget {
+  const _SurfaceSection(this.surface);
 
-  final List<({String id, IconData icon, String label})> items;
-
-  @override
-  Widget build(BuildContext context) => _Live(_build);
-
-  Widget _build(BuildContext context) {
-    final prefs = Personalize.prefs.value;
-    final scheme = Theme.of(context).colorScheme;
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        for (final item in items)
-          Builder(
-            builder: (context) {
-              final on = prefs.shows(item.id);
-              // Gizli öğe AÇIKÇA gizli görünsün: üstü çizili göz + soluk
-              // yazı (yalnız zemin tonu farkı gözden kaçıyordu).
-              return FilterChip(
-                key: ValueKey('ui-chip-${item.id}'),
-                avatar: Icon(
-                  on ? item.icon : Icons.visibility_off_outlined,
-                  size: 16,
-                  color: on ? null : scheme.outline,
-                ),
-                label: Text(
-                  item.label,
-                  style: on
-                      ? null
-                      : TextStyle(
-                          color: scheme.outline,
-                          decoration: TextDecoration.lineThrough,
-                        ),
-                ),
-                selected: on,
-                showCheckmark: false,
-                visualDensity: VisualDensity.compact,
-                onSelected: (on) =>
-                    Personalize.update((p) => p.withVisible(item.id, on)),
-              );
-            },
-          ),
-      ],
-    );
-  }
-}
-
-class _ModulesSection extends StatelessWidget {
-  const _ModulesSection();
+  final CustomizeSurface surface;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
+    final (title, icon) = surfaceLabel(context.l10n, surface);
     return _Section(
-      title: l10n.personalizeModules,
-      icon: Icons.extension_outlined,
-      info: l10n.personalizeModulesInfo,
-      child: const PersonalizeModuleSwitches(),
+      title: title,
+      icon: icon,
+      child: CustomizeSurfacePanel(surface: surface),
     );
   }
 }
@@ -418,17 +339,17 @@ class PersonalizeModuleSwitches extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: (state == false ? scheme.outline : scheme.primary)
                         .withValues(alpha: AppAlpha.pressed),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppRadius.s),
                   ),
                   child: Icon(
                     icon,
-                    size: 19,
+                    size: AppIconSize.m,
                     color: state == false ? scheme.outline : scheme.primary,
                   ),
                 ),
                 title: Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontWeight: AppWeight.strong),
                 ),
                 subtitle: Text(
                   state == null ? '$info · ${l10n.moduleMixed}' : info,
@@ -440,259 +361,6 @@ class PersonalizeModuleSwitches extends StatelessWidget {
             },
           ),
       ],
-    );
-  }
-}
-
-class _EditorSection extends StatelessWidget {
-  const _EditorSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Column(
-      children: [
-        _Section(
-          title: l10n.personalizeEditorBar,
-          icon: Icons.space_bar_rounded,
-          info: l10n.personalizeBarInfo,
-          child: const PersonalizeBarList(),
-        ),
-        // HIZLI MENÜ (kullanıcı bulgusu 2026-11-13: "hızlı menü kaybolduysa
-        // düzen menüsünde de görülmüyor"): satır yalnız klavye açıkken
-        // çıktığı için gizlenen düğmeyi geri getirecek yer yoktu.
-        _Section(
-          title: l10n.quickRowEditTitle,
-          icon: Icons.keyboard_alt_outlined,
-          child: const QuickRowEditor(inline: true),
-        ),
-        // Üst çubuk düğmeleri (eşitle, geri al, sabitle, ana sayfa, tam
-        // ekran) yukarıdaki listede sıralanır/gizlenir (P20 M8); burada
-        // yalnız sıralanmayan alanlar.
-        _Section(
-          title: l10n.personalizeEditorTop,
-          icon: Icons.web_asset_rounded,
-          child: _VisibilityChips(
-            items: [
-              (
-                id: UiItem.editorDate,
-                icon: Icons.schedule,
-                label: l10n.uiItemDate,
-              ),
-              (
-                id: UiItem.topCollab,
-                icon: Icons.person_add_alt_1_outlined,
-                label: l10n.collaborators,
-              ),
-              (
-                id: UiItem.editorTags,
-                icon: Icons.sell_outlined,
-                label: l10n.moduleTags,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickAddSection extends StatelessWidget {
-  const _QuickAddSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return _Section(
-      title: l10n.personalizeQuickAdd,
-      icon: Icons.add_circle_outline,
-      info: l10n.personalizeChipsInfo,
-      child: _VisibilityChips(
-        items: [
-          for (final m in addCatalog(l10n, AddContext.newNote))
-            (id: UiItem.quickAdd(m.id), icon: m.icon, label: m.label),
-        ],
-      ),
-    );
-  }
-}
-
-class _AttachSection extends StatelessWidget {
-  const _AttachSection();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return _Section(
-      title: l10n.personalizeAttachSheet,
-      icon: Icons.add_box_outlined,
-      info: l10n.personalizeChipsInfo,
-      child: _VisibilityChips(
-        items: [
-          for (final e in addCatalog(l10n, AddContext.inNote))
-            (id: UiItem.attach(e.id), icon: e.icon, label: e.label),
-        ],
-      ),
-    );
-  }
-}
-
-class _VideoSection extends StatelessWidget {
-  const _VideoSection();
-
-  @override
-  Widget build(BuildContext context) => _Live(_build);
-
-  Widget _build(BuildContext context) {
-    final l10n = context.l10n;
-    final prefs = Personalize.prefs.value;
-    Widget seekRow({
-      required String label,
-      required bool forward,
-      required int value,
-      required void Function(int) onSelected,
-    }) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            SeekIcon(seconds: value, forward: forward, size: 22),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final s in UiPrefs.seekChoices)
-              radioChip(ChoiceChip(
-                key: ValueKey('seek-${forward ? 'fwd' : 'back'}-$s'),
-                label: Text(l10n.secondsShort(s)),
-                selected: value == s,
-                visualDensity: VisualDensity.compact,
-                onSelected: (_) => onSelected(s),
-              )),
-          ],
-        ),
-      ],
-    );
-    return _Section(
-      title: l10n.personalizeVideo,
-      icon: Icons.ondemand_video_rounded,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          seekRow(
-            label: l10n.videoSeekBack,
-            forward: false,
-            value: prefs.seekBack,
-            onSelected: (s) =>
-                Personalize.update((p) => p.copyWith(seekBack: s)),
-          ),
-          const SizedBox(height: 14),
-          seekRow(
-            label: l10n.videoSeekForward,
-            forward: true,
-            value: prefs.seekForward,
-            onSelected: (s) =>
-                Personalize.update((p) => p.copyWith(seekForward: s)),
-          ),
-          const SizedBox(height: 14),
-          _VisibilityChips(
-            items: [
-              (
-                id: UiItem.videoSpeed,
-                icon: Icons.speed_rounded,
-                label: l10n.videoSpeed,
-              ),
-              (
-                id: UiItem.videoTime,
-                icon: Icons.timer_outlined,
-                label: l10n.uiItemVideoTime,
-              ),
-              (
-                id: UiItem.videoNoteAt,
-                icon: Icons.more_time,
-                label: l10n.videoNoteAtTime,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Ana ekranda NE GÖRÜNSÜN. Kartların görünüşü (zengin önizleme, liste
-/// maddeleri) Ayarlar → Görünüm'de — iki yerde aynı anahtar karışıklık
-/// yaratıyordu (toparlama 2026-10-17).
-class _HomeSection extends ConsumerWidget {
-  const _HomeSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    Widget tile(
-      Key key,
-      String title,
-      String info,
-      bool value,
-      ValueChanged<bool> onChanged,
-    ) => SwitchListTile(
-      key: key,
-      contentPadding: EdgeInsets.zero,
-      dense: true,
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(info),
-      value: value,
-      onChanged: onChanged,
-    );
-    return _Section(
-      title: l10n.personalizeHome,
-      icon: Icons.home_outlined,
-      info: l10n.personalizeHomeItemsInfo,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ANA EKRAN ÖĞELERİ (kullanıcı bulgusu 2026-10-16: "ana ekran
-          // kişiselleştirilemiyor"). Düzenleme modunda ana ekranın kendisinde
-          // de dokunarak gizlenir/gösterilir.
-          _VisibilityChips(
-            items: [
-              (
-                id: UiItem.homeAccount,
-                icon: Icons.account_circle_outlined,
-                label: l10n.account,
-              ),
-              (
-                id: UiItem.homeAi,
-                icon: Icons.auto_awesome,
-                label: l10n.aiHubTitle,
-              ),
-              (
-                id: UiItem.homeFilter,
-                icon: Icons.tune,
-                label: l10n.filterSheetTitle,
-              ),
-              (
-                id: UiItem.homeMic,
-                icon: AppIcons.dictation,
-                label: l10n.liveDictation,
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          tile(
-            const ValueKey('home-quick-capture'),
-            l10n.quickCaptureRowSetting,
-            l10n.quickCaptureRowInfo,
-            ref.watch(quickCaptureRowProvider),
-            (v) => ref.read(quickCaptureRowProvider.notifier).set(v),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -712,7 +380,7 @@ class _BubblesSection extends StatelessWidget {
           children: [
             Text(
               l10n.bubbleSizeSetting,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(fontWeight: AppWeight.strong),
             ),
             Expanded(
               child: Slider(
@@ -730,7 +398,7 @@ class _BubblesSection extends StatelessWidget {
               child: Text(
                 '${(scale * 100).round()}%',
                 textAlign: TextAlign.end,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: const TextStyle(fontWeight: AppWeight.strong),
               ),
             ),
           ],

@@ -51,9 +51,9 @@ class AppNoticeData {
 /// ileti, "Geri al" ve duyuruların TEK kapısı. Aynı anda EN ÇOK BİR bildirim
 /// görünür; kurallar [AppNoticeKind]'da.
 ///
-/// Çizen: [AppNoticeHost] (uygulamanın tepesinde tek tane). İSKELET: henüz
-/// `app.dart`a bağlı değil; eski yollar (`TipOnce`, `showMessage`,
-/// `timedSnackBar`, `showUndoSnackBar`) plandaki pakette buraya taşınacak.
+/// Çizen: [AppNoticeHost] (`app.dart`ta, uygulamanın tepesinde tek tane).
+/// Eski yollar (`TipOnce.show`, `showMessage`, `showUndoSnackBar`) şerit
+/// ağaçtayken buraya akar; `timedSnackBar` görüneni kapatır (P62 PA5).
 class AppNoticeController extends ChangeNotifier {
   AppNoticeData? _current;
   final _waiting = Queue<AppNoticeData>();
@@ -95,8 +95,10 @@ class AppNoticeController extends ChangeNotifier {
   }
 
   /// Şerit ([AppNoticeHost]) ağaçta mı? Yokken (yalın widget testi) çağıran
-  /// eski SnackBar yoluna düşer — ileti sessizce kaybolmaz.
-  bool get hosted => hasListeners;
+  /// eski SnackBar yoluna düşer — ileti sessizce kaybolmaz. Dinleyici sayısı
+  /// DEĞİL (ertelenen ipucu da dinler — bkz. TipOnce.show), şerit sayısı.
+  bool get hosted => _hosts > 0;
+  int _hosts = 0;
 
   /// Görüneni ve sırayı siler. Şerit sökülürken çağrılır: bekleyen
   /// zamanlayıcı kalmaz (testte "Timer is still pending").
@@ -166,7 +168,14 @@ class _AppNoticeHostState extends State<AppNoticeHost> {
   AppNoticeController get _controller => widget.controller ?? appNotice;
 
   @override
+  void initState() {
+    super.initState();
+    _controller._hosts++;
+  }
+
+  @override
   void dispose() {
+    _controller._hosts--;
     _controller.clear();
     super.dispose();
   }
@@ -190,74 +199,62 @@ class _NoticeLane extends StatelessWidget {
   final bool top;
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: controller,
-    builder: (context, _) {
-      final shown = controller.current;
-      final data = shown != null && (shown.kind == AppNoticeKind.tip) == top
-          ? shown
-          : null;
-      // Engel yüksekliği bildirim KURULURKEN okunur (dinlenmez: değer
-      // dizilim sırasında yazılıyor — bkz. snackBarBottomObstacle).
-      final lift = math.max(
-        MediaQuery.viewInsetsOf(context).bottom,
-        snackBarBottomObstacle.value,
-      );
-      final enter = AppMotion.of(context, AppMotion.short);
-      return Positioned(
-        left: AppSpace.m,
-        right: AppSpace.m,
-        top: top
-            ? MediaQuery.paddingOf(context).top +
-                  noticeTopInset.value +
-                  AppSpace.s
-            : null,
-        bottom: top
-            ? null
-            : lift + MediaQuery.paddingOf(context).bottom + AppSpace.m,
-        child: Align(
-          alignment: top
-              ? Alignment.topCenter
-              : AlignmentDirectional.bottomStart,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: AppNoticeHost.maxWidth),
-            child: AnimatedSwitcher(
-              duration: enter,
-              reverseDuration: AppMotion.exitOf(enter),
-              switchInCurve: AppMotion.curveOf(context, AppMotion.enter),
-              switchOutCurve: AppMotion.curveOf(context, AppMotion.exit),
-              // Yalnız boyama: solma + kendi boyunun dörtte biri kadar kayma.
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween(
-                    begin: Offset(0, top ? -0.25 : 0.25),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
+  Widget build(BuildContext context) {
+    final align = top ? Alignment.topCenter : AlignmentDirectional.bottomStart;
+    // Şerit BOŞKEN MediaQuery okunmaz (R5, S31 klavye_karesi_kurulum): güvenli
+    // alan / klavye payını görünen KART kendisi okur. Tam ekran Align dokunuş
+    // yakalamaz (çocuğu yokken isabet yok).
+    return Positioned.fill(
+      left: AppSpace.m,
+      right: AppSpace.m,
+      child: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) {
+          final shown = controller.current;
+          final data = shown != null && (shown.kind == AppNoticeKind.tip) == top
+              ? shown
+              : null;
+          final enter = AppMotion.of(context, AppMotion.short);
+          return Align(
+            alignment: align,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppNoticeHost.maxWidth,
+              ),
+              child: AnimatedSwitcher(
+                duration: enter,
+                reverseDuration: AppMotion.exitOf(enter),
+                switchInCurve: AppMotion.curveOf(context, AppMotion.enter),
+                switchOutCurve: AppMotion.curveOf(context, AppMotion.exit),
+                // Yalnız boyama: solma + kendi boyunun dörtte biri kadar kayma.
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: Offset(0, top ? -0.25 : 0.25),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
                 ),
+                // Çıkan ve giren bildirim aynı köşeye yaslı (varsayılan orta:
+                // dar ileti çıkarken ortaya zıplardı).
+                layoutBuilder: (current, previous) =>
+                    Stack(alignment: align, children: [...previous, ?current]),
+                child: data == null
+                    ? const SizedBox.shrink()
+                    : _NoticeCard(
+                        key: ObjectKey(data),
+                        data: data,
+                        controller: controller,
+                      ),
               ),
-              // Çıkan ve giren bildirim aynı köşeye yaslı (varsayılan orta:
-              // dar ileti çıkarken ortaya zıplardı).
-              layoutBuilder: (current, previous) => Stack(
-                alignment: top
-                    ? Alignment.topCenter
-                    : AlignmentDirectional.bottomStart,
-                children: [...previous, ?current],
-              ),
-              child: data == null
-                  ? const SizedBox.shrink()
-                  : _NoticeCard(
-                      key: ObjectKey(data),
-                      data: data,
-                      controller: controller,
-                    ),
             ),
-          ),
-        ),
-      );
-    },
-  );
+          );
+        },
+      ),
+    );
+  }
 }
 
 class _NoticeCard extends StatefulWidget {
@@ -301,109 +298,134 @@ class _NoticeCardState extends State<_NoticeCard> {
     final data = widget.data;
     final ink = scheme.onInverseSurface;
     final icon = data.icon ?? (_tip ? Icons.lightbulb_outline : null);
+    // Navigator'ın ÜSTÜNDE Material atası yok: yazı varsayılanı (sarı alt
+    // çizgi) ve düğme mürekkebi için saydam Material.
     final card = Semantics(
       container: true,
       liveRegion: true,
-      child: DecoratedBox(
-        decoration: AppSurface.floating(theme, color: scheme.inverseSurface),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: EdgeInsetsDirectional.only(
-                  start: AppSpace.l,
-                  end: data.actionLabel == null ? AppSpace.l : AppSpace.xs,
-                  top: AppSpace.s,
-                  bottom: AppSpace.s,
-                ),
-                child: Row(
-                  children: [
-                    if (icon != null) ...[
-                      Icon(
-                        icon,
-                        size: AppIconSize.s,
-                        color: scheme.inversePrimary,
-                      ),
-                      const SizedBox(width: AppSpace.s),
-                    ],
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpace.xs,
+      child: Material(
+        type: MaterialType.transparency,
+        child: DecoratedBox(
+          decoration: AppSurface.floating(theme, color: scheme.inverseSurface),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: EdgeInsetsDirectional.only(
+                    start: AppSpace.l,
+                    end: data.actionLabel == null ? AppSpace.l : AppSpace.xs,
+                    top: AppSpace.s,
+                    bottom: AppSpace.s,
+                  ),
+                  child: Row(
+                    children: [
+                      if (icon != null) ...[
+                        Icon(
+                          icon,
+                          size: AppIconSize.s,
+                          color: scheme.inversePrimary,
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              data.text,
-                              maxLines: 4,
-                              overflow: TextOverflow.ellipsis,
-                              style:
-                                  (data.details.isEmpty
-                                          ? text.body
-                                          : text.label)
-                                      .copyWith(color: ink),
-                            ),
-                            for (final line in data.details)
+                        const SizedBox(width: AppSpace.s),
+                      ],
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpace.xs,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                '• $line',
-                                maxLines: 1,
+                                data.text,
+                                maxLines: 4,
                                 overflow: TextOverflow.ellipsis,
-                                style: text.body.copyWith(color: ink),
+                                style:
+                                    (data.details.isEmpty
+                                            ? text.body
+                                            : text.label)
+                                        .copyWith(color: ink),
                               ),
-                          ],
+                              for (final line in data.details)
+                                Text(
+                                  '• $line',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: text.body.copyWith(color: ink),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
+                      if (data.actionLabel != null)
+                        TextButton(
+                          key: const ValueKey('notice-action'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: scheme.inversePrimary,
+                          ),
+                          onPressed: () {
+                            widget.controller.dismiss(data);
+                            data.onAction!();
+                          },
+                          child: Text(data.actionLabel!),
+                        ),
+                    ],
+                  ),
+                ),
+                // Kalan süre: eylemli bildirimde dipte incelen çizgi (kullanıcı
+                // bulgusu 2026-10-17). Yalnız boyama (ölçek), dizilim yok.
+                if (data.actionLabel != null)
+                  TweenAnimationBuilder<double>(
+                    key: const ValueKey('notice-countdown'),
+                    tween: Tween(begin: 1, end: 0),
+                    duration: data.duration,
+                    builder: (context, value, child) => Transform.scale(
+                      scaleX: value,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: child,
                     ),
-                    if (data.actionLabel != null)
-                      TextButton(
-                        key: const ValueKey('notice-action'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: scheme.inversePrimary,
-                        ),
-                        onPressed: () {
-                          widget.controller.dismiss(data);
-                          data.onAction!();
-                        },
-                        child: Text(data.actionLabel!),
-                      ),
-                  ],
-                ),
-              ),
-              // Kalan süre: eylemli bildirimde dipte incelen çizgi (kullanıcı
-              // bulgusu 2026-10-17). Yalnız boyama (ölçek), dizilim yok.
-              if (data.actionLabel != null)
-                TweenAnimationBuilder<double>(
-                  key: const ValueKey('notice-countdown'),
-                  tween: Tween(begin: 1, end: 0),
-                  duration: data.duration,
-                  builder: (context, value, child) => Transform.scale(
-                    scaleX: value,
-                    alignment: AlignmentDirectional.centerStart,
-                    child: child,
+                    child: ColoredBox(
+                      color: scheme.inversePrimary,
+                      child: const SizedBox(height: AppSpace.xxs),
+                    ),
                   ),
-                  child: ColoredBox(
-                    color: scheme.inversePrimary,
-                    child: const SizedBox(height: AppSpace.xxs),
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
-    if (_tip) return IgnorePointer(child: card);
+    if (_tip) {
+      return Padding(
+        padding: EdgeInsets.only(
+          top:
+              MediaQuery.paddingOf(context).top +
+              noticeTopInset.value +
+              AppSpace.s,
+        ),
+        child: IgnorePointer(child: card),
+      );
+    }
+    // Engel yüksekliği bildirim KURULURKEN okunur (dinlenmez: değer
+    // dizilim sırasında yazılıyor — bkz. snackBarBottomObstacle).
+    final lift = math.max(
+      MediaQuery.viewInsetsOf(context).bottom,
+      snackBarBottomObstacle.value,
+    );
     // Yüzen düğme bölgesi (bkz. AppNoticeHost): ileti YANINDA, duyuru
     // ÜSTÜNDE. Pay kartla birlikte gider (çıkarken yeri değişmez).
     final wide = data.details.isNotEmpty;
     return Padding(
       padding: EdgeInsetsDirectional.only(
         end: wide ? 0 : AppNoticeHost.fabReserve - AppSpace.m,
-        bottom: wide ? AppNoticeHost.fabRow : 0,
+        bottom:
+            lift +
+            MediaQuery.paddingOf(context).bottom +
+            AppSpace.m +
+            (wide ? AppNoticeHost.fabRow : 0),
       ),
       child: card,
     );

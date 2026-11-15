@@ -1,7 +1,6 @@
 import '../note_link_ui.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
-import '../../../../core/widgets/pop_in.dart';
 import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
@@ -985,6 +984,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// yeniden görünme gecikmesi (varsayılan 1,1 sn) — Ayarlar → Kartlar.
   void _noteTyping() {
     if (_keyboardInset <= 0 || !ref.read(hideBarWhileTypingProvider)) return;
+    // DİKTE YAZMA DEĞİL (kullanıcı bulgusu 2026-11-15, S46): tanıyıcının
+    // metni de `_mutate`'ten geçiyor; sayılınca alt çubuk (Bitir düğmesi ve
+    // üstündeki ses kartıyla) her konuşma patlamasında iniyor, duraklamada
+    // kalkıyordu — kart zıplıyor, gövde her seferinde yeniden diziliyordu.
+    if (_dictation != null) return;
     // ÜÇ HARF KURALI (kullanıcı isteği 2026-11-08 üçüncü tur): çubuk tek
     // harflik düzeltmede / tek dokunuşta gitmesin; ancak duraklamasız art
     // arda 3 değişiklikten sonra (gerçekten yazılıyorsa) gizlenir. Sayaç,
@@ -1682,26 +1686,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final noteId = note.id;
     unawaited(
       Future.microtask(
-        () => messenger.showSnackBar(
-          timedSnackBar(
-            duration: const Duration(seconds: 6),
-            content: Text(
-              l10n.calendarSuggest(DateFormat.MMMEd().add_Hm().format(hit.at)),
-            ),
-            action: SnackBarAction(
-              label: l10n.calendarSuggestAction,
-              onPressed: () {
-                if (!navigator.mounted) return;
-                unawaited(
-                  showEventEditor(
-                    navigator.context,
-                    start: hit.at,
-                    linkNoteId: noteId,
-                    initialTitle: title,
-                  ),
-                );
-              },
-            ),
+        () => messenger.showMessage(
+          l10n.calendarSuggest(DateFormat.MMMEd().add_Hm().format(hit.at)),
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: l10n.calendarSuggestAction,
+            onPressed: () {
+              if (!navigator.mounted) return;
+              unawaited(
+                showEventEditor(
+                  navigator.context,
+                  start: hit.at,
+                  linkNoteId: noteId,
+                  initialTitle: title,
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -2745,42 +2745,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ? child
       : KeyboardSwitch(open: const SizedBox.shrink(), closed: child);
 
-  /// Kalem kipinin sonu (tepsi/sütun sonunda): × kalemi kapatır (çizim
-  /// kalır), ✓ bitirir — "Sayfaya yaz" ile açılan hızlı el yazısı notunda
-  /// notu da kapatıp ana ekrana döner (kullanıcı isteği 2026-11-08).
-  List<Widget> _penEndButtons(AppLocalizations l10n) {
-    final scheme = _themeOf(context).colorScheme;
-    return [
-      IconButton.filledTonal(
-        key: const ValueKey('pen-close'),
-        tooltip: l10n.penModeDone,
-        visualDensity: VisualDensity.compact,
-        style: IconButton.styleFrom(
-          backgroundColor: scheme.surfaceContainerHighest,
-          foregroundColor: scheme.onSurfaceVariant,
-        ),
-        icon: const Icon(Icons.close_rounded, size: 20),
-        onPressed: () => _update(() => _penMode = false),
-      ),
-      const SizedBox(width: 4),
-      IconButton.filled(
-        key: const ValueKey('pen-done'),
-        tooltip: l10n.penModeFinish,
-        visualDensity: VisualDensity.compact,
-        icon: const Icon(Icons.check_rounded, size: 20),
-        onPressed: () {
-          _pageInkCtl?.save();
-          _update(() => _penMode = false);
-          if (!widget.startDrawing) return;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _closeEditor(() => unawaited(Navigator.of(context).maybePop()));
-            }
-          });
-        },
-      ),
-    ];
-  }
+  /// Kalem kipinden yazıya dönüş (tepsinin sonunda). Eski × / ✓ ikilisi
+  /// kalktı (kullanıcı isteği 2026-11-15: "onay butonlarına gerek yok, oto
+  /// kaydedilmesi lazım"): çizgi bitince zaten kaydedilir, burada yalnız
+  /// bekleyen varsa yazılır. Geri tuşu ve hızlı satırdaki kalem de kapatır.
+  Widget _penCloseButton(AppLocalizations l10n) => IconButton(
+    key: const ValueKey('pen-close'),
+    tooltip: l10n.penModeDone,
+    visualDensity: VisualDensity.compact,
+    icon: const Icon(Icons.keyboard_outlined),
+    onPressed: () {
+      _pageInkCtl?.save();
+      _update(() => _penMode = false);
+    },
+  );
 
   /// Bu açılışta ipucuna bakıldı mı (bkz. [_maybeShowTip]).
   bool _tipChecked = false;
@@ -3425,17 +3403,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // düğmesinden ibaret, doldukça büyür.
     // Ortak çalışan eklenebilir mi: yalnız bu cihazdaki not kimseyle
     // paylaşılamaz; kişiselleştirmede "Ortak çalışma" kapatılabilir.
-    final canCollab =
-        Customizable.shows(UiItem.topCollab) &&
-        (widget.ownerId != null ||
-            !(ref.read(notesRepositoryProvider)?.isLocal(widget.noteId) ??
-                false));
+    final collabPossible =
+        widget.ownerId != null ||
+        !(ref.read(notesRepositoryProvider)?.isLocal(widget.noteId) ?? false);
+    final canCollab = Customizable.shows(UiItem.topCollab) && collabPossible;
     // TEK "+" (F38.3): ne dolu olduğu çip şeridinde; paylaşım durumu yanında
     // (paylaşılmışsa). Levha [_openMetaMenu]; `note-meta-chip` anahtarı korunur.
     final actionsMenu = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (canCollab) _collabMarker(theme),
+        // Düzen modunda gizliyken de çerçeveli görünür (P63 PB7); normal
+        // kipte gizliyse yer kaplamaz.
+        if (collabPossible)
+          Customizable(id: UiItem.topCollab, child: _collabMarker(theme)),
         IconButton(
           key: const ValueKey('note-meta-chip'),
           tooltip: l10n.noteMetaMenu,
@@ -5640,6 +5620,9 @@ child: NoteFindBar(
                                 controller: _pageInkOf(note),
                                 dock: true,
                                 followActive: true,
+                                // Üst çubuk varken geri al orada.
+                                showUndo: !_secondary &&
+                                    ref.watch(noteFullscreenProvider),
                                 actions: [
                                   // Kalem + tam ekranda üst çubuk yok: listeye
                                   // dönüş tepside.
@@ -5647,7 +5630,7 @@ child: NoteFindBar(
                                     _showListButton(l10n),
                                   if (PenTray.useRail(context))
                                     _fullscreenButton(l10n),
-                                  ..._penEndButtons(l10n),
+                                  _penCloseButton(l10n),
                                 ],
                               ),
                               ),

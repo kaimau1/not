@@ -10,6 +10,7 @@ import 'package:notlar/features/calendar/domain/calendar_event.dart';
 import 'package:notlar/features/calendar/domain/task_item.dart';
 import 'package:notlar/features/calendar/presentation/calendar_screen.dart';
 import 'package:notlar/features/calendar/presentation/calendar_views.dart';
+import 'package:notlar/features/calendar/presentation/month_grid.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
@@ -26,11 +27,14 @@ import 'package:notlar/app/app_frame.dart';
 import 'package:notlar/app/note_open_route.dart';
 import 'package:notlar/app/second_note.dart';
 import 'package:notlar/app/split_shell.dart';
+import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/tips.dart';
+import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/upload_queue.dart'
     show pendingUploadsProvider;
+import 'package:notlar/features/settings/presentation/customize_hub.dart';
 import 'package:notlar/features/settings/presentation/settings_screen.dart';
 import 'package:notlar/features/notes/presentation/dashboard_scroll_memory.dart';
 import 'package:notlar/core/app_update.dart';
@@ -47,6 +51,7 @@ import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
 import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
+import 'package:notlar/features/notes/presentation/listening_visuals.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/notes/data/user_templates.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
@@ -1811,6 +1816,34 @@ void main() {
     _expectBudget('S35', {'liste_boy_karesi': resized});
   });
 
+  // S34: takvim ajandasında açık mini ayı bir ay ileri fırlat (P62 PA8).
+  testWidgets('S34: mini ay kaydırma (telefon, ajanda)', (tester) async {
+    await _pumpCalendar(tester, 'agenda');
+    await tester.pumpAndSettle();
+    // Karşılaştırma: mini ayın ilk açılış karesi (hedef: kaydırmanın en
+    // ağır karesi bunu aşmaz).
+    final open = await _frames(tester, () async {
+      await tester.tap(find.byKey(const ValueKey('calendar-month-toggle')));
+    });
+    await tester.pumpAndSettle();
+    final grid = await _frames(tester, () async {
+      await tester.fling(find.byType(MonthGrid), const Offset(-300, 0), 1500);
+    }, frames: 40);
+    // ignore: avoid_print
+    print('S34: açılış karesi ${open.worst}');
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<MonthGrid>(find.byType(MonthGrid)).month,
+      DateTime(2026, 12),
+      reason: 'ay ilerledi',
+    );
+    _expectBudget('S34', {
+      'ay_sayfasi': grid.counts['_MonthPage'] ?? 0,
+      'gun_hucresi': grid.counts['_DayCell'] ?? 0,
+      'kare_kurulum': grid.worst,
+    });
+  });
+
   // S36: geniş ekranda ayar alanları arasında geçiş.
   testWidgets('S36: geniş ekran ayar alanı geçişi (1280×800)', (tester) async {
     await tester.pumpWidget(await _settingsApp(tester, const Size(1280, 800)));
@@ -2181,6 +2214,242 @@ void main() {
           (start['NoteEditorScreen'] ?? 0) + (stop['NoteEditorScreen'] ?? 0),
       'metin_satir': text[_row] ?? 0,
       'metin_kok': text['NoteEditorScreen'] ?? 0,
+    });
+    await endEditor(tester);
+  });
+
+  testWidgets('S46: dikte kartı + klavye (gerçek rota, telefon)', (
+    tester,
+  ) async {
+    const events = EventChannel('dev.kaimau.notlar/speech');
+    const system = MethodChannel('dev.kaimau.notlar/system');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    MockStreamHandlerEventSink? sink;
+    messenger
+      ..setMockStreamHandler(
+        events,
+        MockStreamHandler.inline(onListen: (_, s) {
+          sink = s;
+        }),
+      )
+      ..setMockMethodCallHandler(system, (_) async => null);
+    DeviceSpeech.debugAvailable = true;
+    addTearDown(() {
+      DeviceSpeech.debugAvailable = null;
+      messenger
+        ..setMockStreamHandler(events, null)
+        ..setMockMethodCallHandler(system, null);
+    });
+    final now = DateTime.now();
+    final all = [
+      for (var i = 0; i < 4; i++)
+        Note(
+          id: 'x$i',
+          type: NoteType.checklist,
+          title: 'Liste $i',
+          items: [
+            for (var j = 0; j < 30; j++)
+              NoteItem(id: 'i$i-$j', text: 'madde $j'),
+          ],
+          updatedAt: now,
+        ),
+    ];
+    final repo = _LiveRepo(FakeFirebaseFirestore());
+    for (final n in all) {
+      await _noteCol(repo.db).doc(n.id).set(n.toMap());
+    }
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(all),
+      repo: repo,
+      openPage: true,
+    );
+    await tester.tap(find.byType(NoteCard).at(2));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.tap(find.text('madde 3'));
+    await tester.pump(const Duration(milliseconds: 400));
+
+
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    debugPrint = (String? m, {int? wrapWidth}) {
+      if (m != null && m.startsWith('Laying out')) layouts++;
+    };
+    try {
+      // Klavye aç/kapa ×2 (S8 kareleri): kurulum ve RenderObject dizilmesi.
+      Future<({int builds, int layouts})> kb() async {
+        final counter = BuildCounter()..start();
+        layouts = 0;
+        debugPrintLayouts = true;
+        for (var r = 0; r < 2; r++) {
+          for (final ins in const [
+            [20.0, 60.0, 120.0, 200.0, 300.0],
+            [200.0, 120.0, 60.0, 20.0, 0.0],
+          ]) {
+            for (final inset in ins) {
+              tester.view.viewInsets = FakeViewPadding(bottom: inset);
+              await tester.pump(const Duration(milliseconds: 16));
+            }
+            await tester.pump(const Duration(milliseconds: 300));
+          }
+        }
+        debugPrintLayouts = false;
+        counter.stop();
+        return (builds: _sum(counter.counts), layouts: layouts);
+      }
+
+      // Kartın görünen hâli tam mı: panel ile kart arasında saydamlık < 1
+      // ya da ölçek ≠ 1 yok.
+      bool cardWhole() {
+        final card = find.byType(ListeningCard);
+        if (card.evaluate().isEmpty) return false;
+        final opacities = find.ancestor(
+          of: card,
+          matching: find.byType(Opacity),
+        );
+        for (final e in opacities.evaluate()) {
+          if ((e.widget as Opacity).opacity < 1) return false;
+        }
+        final transforms = find.ancestor(
+          of: card,
+          matching: find.byType(Transform),
+        );
+        for (final e in transforms.evaluate()) {
+          final m = (e.widget as Transform).transform;
+          if (m.getMaxScaleOnAxis() != 1) return false;
+        }
+        return true;
+      }
+
+      final none = await kb();
+      var partial = 0;
+      await tester.tap(find.byTooltip('Dikte').first);
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        if (!cardWhole()) partial++;
+      }
+      expect(sink, isNotNull, reason: 'dikte başlamadı');
+      final open = await kb();
+      await tester.tap(find.byKey(const ValueKey('dictation-stop')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const ValueKey('dictation-panel')), findsNothing);
+      final closed = await kb();
+
+      // Klavye AÇIKKEN dikte: tanıyıcının metni "yazma" sayılıp alt çubuğu
+      // gizlemez (kart ve çubuk konuşma duraklamalarında inip kalkmaz).
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.tap(find.byTooltip('Dikte').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final bar = find.byType(TypingBarHide);
+      var last = tester.getSize(bar).height;
+      var barMoves = 0;
+      var spoken = '';
+      for (var i = 0; i < 22; i++) {
+        if (i < 12) {
+          spoken = '$spoken kelime$i'.trim();
+          sink!.success({'text': spoken});
+        }
+        await tester.pump(const Duration(milliseconds: 200));
+        final h = tester.getSize(bar).height;
+        if (h != last) barMoves++;
+        last = h;
+      }
+      await tester.tap(find.byKey(const ValueKey('dictation-stop')));
+      await tester.pump();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      _expectBudget('S46', {
+        'acilis_eksik_kare': partial,
+        'kart_acik_fazla_kurulum': open.builds - none.builds,
+        'kart_acik_fazla_dizilme': open.layouts - none.layouts,
+        'kapandi_fazla_kurulum': (closed.builds - none.builds).abs(),
+        'kapandi_fazla_dizilme': (closed.layouts - none.layouts).abs(),
+        'dikte_cubuk_oynama': barMoves,
+      });
+    } finally {
+      debugPrintLayouts = false;
+      debugPrint = oldPrint;
+    }
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.pump(const Duration(seconds: 3));
+    await endEditor(tester);
+  });
+
+  // S40 (P63 G5): düzen modu aç → 3 öğe gizle/göster → Bitti. Mod aç/kapa
+  // MediaQuery boyunu değiştirir (tek yeniden dizilim); dokunuş gövdeyi ve
+  // satırları kurmaz.
+  testWidgets('S40: düzen modu (telefon, 30 madde)', (tester) async {
+    Personalize.debugReset();
+    addTearDown(Personalize.debugReset);
+    await pumpEditor(
+      tester,
+      _list30,
+      home: CustomizeModeHost(child: NoteEditorScreen(noteId: _list30.id)),
+    );
+    await _settleGrowth(tester);
+    const body = ['NoteEditorScreen', 'NotePageCanvas', 'ItemsEditor'];
+    int sum(Map<String, int> c) => body.fold(0, (n, t) => n + (c[t] ?? 0));
+    final open = await _count(() async {
+      Personalize.startEditing();
+      await _settle(tester);
+    });
+    expect(find.byType(CustomizeFrame), findsWidgets);
+    final tap = await _count(() async {
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.byType(CustomizeFrame).at(i));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+    });
+    // Düzen merkezi levhası aç → kapat (P63 PB2): gövde kurulmaz.
+    final hub = await _count(() async {
+      unawaited(
+        showCustomizeHub(tester.element(find.byType(NoteEditorScreen))),
+      );
+      await _settle(tester);
+      expect(find.byType(CustomizeHub), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+    });
+    expect(find.byType(CustomizeHub), findsNothing);
+    final close = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('customize-done')));
+      await _settle(tester);
+    });
+    expect(Personalize.editing, isFalse);
+    // Sıra değişince (P63 PB7: hızlı satır / Ekle sırası) gövde ve satır
+    // kurulmaz.
+    final order = await _count(() async {
+      Personalize.update(
+        (p) => p.copyWith(quickOrder: ['bold', 'spell'], attachOrder: ['file']),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+    });
+    _expectBudget('S40', {
+      'ac_kok': open['NoteEditorScreen'] ?? 0,
+      'ac_govde': sum(open),
+      'kapa_govde': sum(close),
+      'dokunus_govde': sum(tap),
+      'dokunus_satir': tap[_row] ?? 0,
+      'hub_govde': sum(hub),
+      'sira_govde': sum(order),
+      'sira_satir': order[_row] ?? 0,
     });
     await endEditor(tester);
   });

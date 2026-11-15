@@ -462,6 +462,62 @@ void main() {
       expect(commits, [1]);
     });
 
+    // P62 PA7 (plan_tasarim_A §6.2): fiskeyle geçiş de eşiği aşan çekiş
+    // kadar hissettirir — tek hafif titreşim.
+    testWidgets('fiskeyle geçişte titreşim bir kez', (tester) async {
+      final haptics = <String>[];
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'HapticFeedback.vibrate') {
+            haptics.add('${call.arguments}');
+          }
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      await tester.pumpWidget(swipe());
+      await tester.fling(
+        find.byKey(const ValueKey('grid')),
+        const Offset(70, 0),
+        900,
+      );
+      await tester.pumpAndSettle();
+      expect(commits, [-1]);
+      expect(haptics, ['HapticFeedbackType.selectionClick']);
+    });
+
+    // Geri dönüş süresi kalan yolla orantılı (AppSwipe.settleFor): kısa
+    // çekiş çabuk, uzun çekiş daha uzun sürede yerine oturur.
+    testWidgets('kısa çekişin dönüş süresi uzun çekişinkinden kısa', (
+      tester,
+    ) async {
+      // Eşiğin altında (800 dp × 0,22 = 176), hızsız bırakış: geçiş yok.
+      Future<int> settleFrames(double dx) async {
+        await tester.pumpWidget(swipe());
+        final g = await dragTo(tester, dx);
+        await tester.pump(const Duration(seconds: 1));
+        await g.up();
+        var frames = 0;
+        await tester.pump();
+        while (offsetOf(tester) != 0 && frames < 200) {
+          await tester.pump(const Duration(milliseconds: 10));
+          frames++;
+        }
+        return frames;
+      }
+
+      final short = await settleFrames(-10);
+      final long = await settleFrames(-130);
+      expect(commits, isEmpty);
+      expect(short, lessThan(long));
+    });
+
     testWidgets('kapalıyken çekiş yok sayılır', (tester) async {
       await tester.pumpWidget(swipe(enabled: false));
       final g = await dragTo(tester, -200);

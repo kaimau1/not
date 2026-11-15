@@ -161,18 +161,14 @@ extension _EditorVoice on _NoteEditorScreenState {
     if (spoken.trim().length < 12) return;
     if (ref.read(aiAvailabilityProvider) != AiAvailability.ready) return;
     final l10n = context.l10n;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        timedSnackBar(
-          content: Text(l10n.dictationFixOffer),
-          action: SnackBarAction(
-            label: l10n.dictationFixAction,
-            onPressed: () =>
-                unawaited(_fixDictation(target, controller, at, spoken)),
-          ),
-        ),
-      );
+    ScaffoldMessenger.of(context).showMessage(
+      l10n.dictationFixOffer,
+      action: SnackBarAction(
+        label: l10n.dictationFixAction,
+        onPressed: () =>
+            unawaited(_fixDictation(target, controller, at, spoken)),
+      ),
+    );
   }
 
   Future<void> _fixDictation(
