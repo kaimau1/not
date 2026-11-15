@@ -13,6 +13,10 @@ oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
   Nerede: 30–60 maddeli bir yapılacaklar notu.
   Nasıl: art arda 5–6 kutucuk işaretle/kaldır; bir maddede Enter ile yeni madde aç, yaz; boş maddede geri sil ile sil; listeyi kaydır.
   Doğruysa: işaretleme, Enter ve silmede takılma yok; boş maddeye yazınca kutusu hemen etkinleşiyor; tüm maddeler silinince not metne dönüyor. Yanlışsa: hangi adımda takıldığını yaz.
+- [ ] **Kullandıkça artan kasma (oto/birikme-sizinti, cihazda bakılmadı — 2026-11-15)**
+  Nerede: ana ekran → notlar (madde + metin), klavye.
+  Nasıl: uygulamayı tamamen kapatıp aç, bir nota gir, klavyeyi aç/kapa (taze hâl); sonra 30 kez farklı notlara gir-çık, her birinde klavyeyi aç/kapa; aynı notta klavyeyi yine aç/kapa. Telefon ısınmışsa soğuyunca tekrar dene (ısınma da kasma yapar).
+  Doğruysa: 30 gir-çıktan sonra klavye ve kaydırma ilk andaki kadar akıcı. Yanlışsa: ekran kaydı + telefon sıcak mıydı, yaz (ölçüm: `adb shell dumpsys meminfo dev.kaimau.notlar.olcum` taze ↔ 30 tur sonra, `tool/perf/ab_klavye.py`).
 - [ ] **Hızlı liste + Hızlı ekle (cihazda bakılmadı, ÖLÇÜLMEDİ — 2026-11-15)**
   Nerede: "+" → Alışveriş listesi (ya da Şablon → bir liste şablonu); "+" → Hızlı ekle.
   Nasıl: üst satıra "muz elma,armut çilekkivi un yunurta 2 süt" yaz — maddeler canlı eklenmeli, klavye açılırken ve yazarken takılmamalı; mikrofona "süt yumurta iki ekmek" de; alttaki sekmelerden çiplere dokun; iki sütun ↔ tek sütun; Bitti → not listede, iki sütunlu ve reyon sıralı. Hızlı ekle: "alışveriş listesine deterjan ekle" yaz/söyle → doğru not seçilmeli, Ekle → bildirimde Geri al.
