@@ -59,6 +59,8 @@ import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/tips.dart';
+import 'package:notlar/features/settings/presentation/customize_hub.dart';
+import 'package:notlar/features/settings/presentation/personalize_screen.dart';
 import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
@@ -832,9 +834,33 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
     await t.tap(find.byType(CustomizeFrame).first);
     await _settle(t);
   }),
-  ('kisisellestir', '/personalize', (t) async {
+  // Turun yönlendiricisinde /personalize yok: ekran ana sayfadan itilir.
+  ('kisisellestir', '/', (t) async {
+    unawaited(
+      Navigator.of(t.element(find.byType(Scaffold).first)).push(
+        MaterialPageRoute<void>(builder: (_) => const PersonalizeScreen()),
+      ),
+    );
     await _settle(t);
   }),
+  // PB2: düzen merkezi levhası (şeritteki "Sırala"), not ekranında.
+  for (final (id, surface) in const [
+    ('duzen-hub-altcubuk', CustomizeSurface.bottomBar),
+    ('duzen-hub-hizli', CustomizeSurface.quickRow),
+  ])
+    (id, '/note/n4', (t) async {
+      // ignore: invalid_use_of_visible_for_testing_member
+      addTearDown(Personalize.debugReset);
+      Personalize.startEditing();
+      await _settle(t);
+      unawaited(
+        showCustomizeHub(
+          t.element(find.byType(Scaffold).last),
+          initial: surface,
+        ),
+      );
+      await _settle(t);
+    }),
 ];
 
 /// Konuşma kanalı taklidi: yerleşik tanıma var, olaylar [_speechSink]'ten.

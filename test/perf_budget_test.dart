@@ -34,6 +34,7 @@ import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/upload_queue.dart'
     show pendingUploadsProvider;
+import 'package:notlar/features/settings/presentation/customize_hub.dart';
 import 'package:notlar/features/settings/presentation/settings_screen.dart';
 import 'package:notlar/features/notes/presentation/dashboard_scroll_memory.dart';
 import 'package:notlar/core/app_update.dart';
@@ -2242,6 +2243,17 @@ void main() {
         await tester.pump(const Duration(milliseconds: 200));
       }
     });
+    // Düzen merkezi levhası aç → kapat (P63 PB2): gövde kurulmaz.
+    final hub = await _count(() async {
+      unawaited(
+        showCustomizeHub(tester.element(find.byType(NoteEditorScreen))),
+      );
+      await _settle(tester);
+      expect(find.byType(CustomizeHub), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+    });
+    expect(find.byType(CustomizeHub), findsNothing);
     final close = await _count(() async {
       await tester.tap(find.byKey(const ValueKey('customize-done')));
       await _settle(tester);
@@ -2253,6 +2265,7 @@ void main() {
       'kapa_govde': sum(close),
       'dokunus_govde': sum(tap),
       'dokunus_satir': tap[_row] ?? 0,
+      'hub_govde': sum(hub),
     });
     await endEditor(tester);
   });

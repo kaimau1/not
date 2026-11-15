@@ -1466,6 +1466,24 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   kapatılır (`note_editor_actions.dart:496`) · PB1'deki "Sırala" düğmesi artık hub'ı açar.
 - **A/B:** hayır (ayar ekranı + levha; editör yolu değişmez). **Bütçe:** S40 (hub açıp kapamak gövdeyi
   kurmaz — senaryoya eklenir).
+- [x] **Durum (2026-11-15, G5 dalı oto/G5-duzen, opus):** yeni `customize_hub.dart` (`CustomizeSurface`
+  10 yüzey, `surfaceFor`, `showCustomizeHub` levhası 0.7/0.4/0.95 + klavye kapanır, `CustomizeSurfacePanel`,
+  `reorderShown`, `pinnedCatalog`/`penCatalog`); şeritteki "Sırala" artık levhayı o anki ekranın yüzeyiyle
+  açar (app.dart). (c) hızlı satır düzenleyicisi, (d) alt/üst çubuk listesi, (b) menünün "Düzenle"si
+  `CustomizeBoard` çiziyor; hızlı satır sırası `quickOrder`'a, Ekle sırası `attachOrder`'a yazılıyor
+  (satırın/levhanın okuması PB7). Kişiselleştir ekranı: düz baş kart (gradyan yok) + yüzeyler alt alta
+  aynı panolarla + balon boyu; elle ölçü 0 (üç dosyada). `customize_hub_test` 5/5, S40 `hub_govde` 0;
+  §1.4 listesindeki var olan testler + `menu_folder_hold_test` değişmeden yeşil; `color_roles` izin
+  listesinden personalize_screen düştü (1→0); token bütçesi düştü.
+  **Sapmalar (sabah bakılacak):** (1) Kişiselleştir EKRANI çipli tek pano değil, yüzeyler alt alta (aynı
+  panolar) — var olan testler anahtarları ilk açılışta kaydırarak buluyor, çipli ekranda gizli yüzeyin
+  anahtarları ağaçta olmazdı; çipli kılık levhada. (2) (e) "+" panelinin kendi düzenleyicisi
+  DÖNÜŞTÜRÜLMEDİ: `quick_add_edit_test` satır/tutamaç/"son görünür kilitli" davranışını bağlıyor ve panel
+  grupla sıralıyor; "+" yüzeyi hub'da pano ile düzenlenir (aynı kayıt). → §1.4 `grep ReorderableListView`
+  ölçütü: `quick_add_fab.dart` (e) kalıyor. (3) Eklentiler yüzeyi pano değil, üç durumlu anahtar listesi
+  (açıklamalı, `module-<id>` testleri). (4) Menü düzenleyicisinde önce "Menüde", sonra "Hızlı satır"
+  panosu (testteki dokunuş ilk ekranda); "Kaydet" → anında kayıt + "Bitti" (`menu-edit-save` anahtarı
+  korundu).
 
 ### 7.5 PB3 — kalem seti (fable)
 
