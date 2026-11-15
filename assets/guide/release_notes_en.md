@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 15 November 2026 {#2026-11-15}
+- **Smarter meaning search:** searching by meaning and "Related notes" now use Google's newer Embedding 2 model; if it is unavailable, search quietly keeps working with the previous one.
 - **Notices in one place:** tips no longer cover the search bar; "Undo" and other notices appear in one place, never stack, and close on their own.
 - **Smoother swiping:** sideways swipes on the home screen settle more smoothly; the calendar's mini month follows your finger and the list no longer jitters when it opens.
 - **Smoother dictation card:** the card now opens fully in one go, and while you dictate with the keyboard open the bottom bar and card no longer bob up and down.

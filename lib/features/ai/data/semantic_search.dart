@@ -143,6 +143,14 @@ final scopedSemanticSearchProvider = FutureProvider.autoDispose
 /// Bellek içi embedding indeksi: her notun vektörü not değiştikçe yenilenir,
 /// arama kosinüs benzerliğiyle yapılır. Vektörler yalnızca bellekte tutulur.
 ///
+/// **Model (K-S2, 2026-11-15):** önce Gemini Embedding 2; kimlik yok (404),
+/// kota (429), istek reddi (400/403) ya da boş yanıt gelirse bu oturum
+/// boyunca 001'e düşülür ve o çağrıdaki notlar 001 ile yeniden gömülür.
+/// Her vektör kendi model kimliğini taşır; skor yalnız AYNI modelin sorgu
+/// vektörüyle hesaplanır (iki modelin vektörleri karşılaştırılamaz). Kalıcı
+/// vektör deposu olmadığından (yalnız bellek) Firestore göçü / eski vektör
+/// silme gerekmez: uygulama her açılışta Embedding 2'yi yeniden dener.
+///
 /// Vektörler saklanırken NORMALİZE edilir: kosinüs benzerliği düz iç çarpıma
 /// iner (skorlamada norm hesabı tekrarlanmaz) ve sorgu vektörü sorgu metnine
 /// göre önbelleklenir — aynı sorgu (ör. kullanıcı sonucu açıp geri dönünce
@@ -152,8 +160,32 @@ class SemanticIndex {
 
   final Ref _ref;
 
-  /// noteId → (güncellenme zamanı, normalize vektör)
-  final _cache = <String, (DateTime?, Float32List, int)>{};
+  /// noteId → (güncellenme zamanı, normalize vektör, ek metni uzunluğu,
+  /// model kimliği)
+  final _cache = <String, (DateTime?, Float32List, int, String)>{};
+
+  /// Bu oturumda kullanılan gömme modeli; Embedding 2 erişilemezse 001.
+  String _model = GeminiService.embedModelV2;
+
+  @visibleForTesting
+  String get activeModel => _model;
+
+  /// Embedding 2 hatası 001'e düşürür mü? Bağlantı/anahtarsız hatalar
+  /// düşürmez (001 de aynı sebeple başarısız olur), olduğu gibi yükselir.
+  bool _fallBack(String model, GeminiException e) {
+    if (model != GeminiService.embedModelV2) return false;
+    if (!const {
+      GeminiErrorKind.modelNotFound,
+      GeminiErrorKind.rateLimited,
+      GeminiErrorKind.invalidKey,
+      GeminiErrorKind.unavailable,
+    }.contains(e.kind)) {
+      return false;
+    }
+    // ponytail: düşüş oturumluk; kalıcı "2 yok" bayrağı yok, açılışta 1 istek.
+    _model = GeminiService.embedModelV1;
+    return true;
+  }
 
   /// sorgu metni → normalize vektör (küçük, eklenme sıralı; taşınca en eski
   /// atılır — LinkedHashMap sırası eklenme sırasıdır).
@@ -169,7 +201,10 @@ class SemanticIndex {
   int get cachedVectorCount => _cache.length;
 
   @visibleForTesting
-  void debugPut(String id) => _cache[id] = (null, Float32List(0), 0);
+  void debugPut(String id) => _cache[id] = (null, Float32List(0), 0, _model);
+
+  @visibleForTesting
+  String? modelOf(String id) => _cache[id]?.$4;
 
   /// [target]a anlamca en yakın notlar (F18.17 "İlgili notlar"). Vektörler
   /// önbellekteyse yeni çağrı YOK; eksik/bayat olanlar bir kez üretilir.
@@ -184,13 +219,13 @@ class SemanticIndex {
         if (n.id != target.id) n,
     ];
     await _ensureVectors([target, ...others]);
-    final tv = _cache[target.id]?.$2;
-    if (tv == null || tv.isEmpty) return const [];
+    final t = _cache[target.id];
+    if (t == null || t.$2.isEmpty) return const [];
     final scored = <(Note, double)>[];
     for (final n in others) {
-      final v = _cache[n.id]?.$2;
-      if (v == null) continue;
-      scored.add((n, _dot(tv, v)));
+      final e = _cache[n.id];
+      if (e == null || e.$4 != t.$4) continue;
+      scored.add((n, _dot(t.$2, e.$2)));
     }
     scored.sort((a, b) => b.$2.compareTo(a.$2));
     return [
@@ -200,22 +235,14 @@ class SemanticIndex {
   }
 
   Future<List<Note>> search(String query, List<Note> notes) async {
-    final service = _ref.read(geminiServiceProvider);
     await _ensureVectors(notes);
-
-    var queryVector = _queryCache[query];
-    if (queryVector == null) {
-      queryVector = _normalized((await service.embedTexts([query])).first);
-      if (_queryCache.length >= _maxQueryCache) {
-        _queryCache.remove(_queryCache.keys.first);
-      }
-      _queryCache[query] = queryVector;
-    }
+    final (model, queryVector) = await _queryVector(query, notes);
 
     final scored = <(Note, double)>[];
     for (final note in notes) {
       final entry = _cache[note.id];
-      if (entry == null) continue;
+      // Başka modelin vektörü bu sorgu vektörüyle karşılaştırılamaz.
+      if (entry == null || entry.$4 != model) continue;
       scored.add((note, _dot(queryVector, entry.$2)));
     }
     scored.sort((a, b) => b.$2.compareTo(a.$2));
@@ -225,17 +252,66 @@ class SemanticIndex {
     ];
   }
 
-  /// Eksik veya bayat vektörleri toplu üretir (100'erlik gruplar).
+  /// Sorgu vektörü (etkin modelle; modele göre önbellekli). Embedding 2
+  /// burada düşerse notlar 001 ile yeniden gömülür, sorgu 001 ile tekrarlanır.
+  Future<(String, Float32List)> _queryVector(
+    String query,
+    List<Note> notes,
+  ) async {
+    final model = _model;
+    final key = '$model|$query';
+    final cached = _queryCache[key];
+    if (cached != null) return (model, cached);
+    final Float32List v;
+    try {
+      v = _normalized(
+        (await _ref
+                .read(geminiServiceProvider)
+                .embedTexts([query], model: model, query: true))
+            .first,
+      );
+    } on GeminiException catch (e) {
+      if (!_fallBack(model, e)) rethrow;
+      await _ensureVectors(notes);
+      return _queryVector(query, notes);
+    }
+    if (_queryCache.length >= _maxQueryCache) {
+      _queryCache.remove(_queryCache.keys.first);
+    }
+    _queryCache[key] = v;
+    return (model, v);
+  }
+
+  /// Eksik, bayat ya da etkin modelden farklı modelle gömülmüş vektörleri
+  /// toplu üretir (100'erlik gruplar).
   Future<void> _ensureVectors(List<Note> notes) async {
     final service = _ref.read(geminiServiceProvider);
     final extra = _ref.read(attachmentTextProvider);
+    final model = _model;
     final stale = [
       for (final note in notes)
         if (!_cache.containsKey(note.id) ||
             _cache[note.id]!.$1 != note.updatedAt ||
-            _cache[note.id]!.$3 != (extra[note.id]?.length ?? 0))
+            _cache[note.id]!.$3 != (extra[note.id]?.length ?? 0) ||
+            _cache[note.id]!.$4 != model)
           note,
     ];
+    try {
+      await _embedStale(service, extra, model, stale);
+    } on GeminiException catch (e) {
+      if (!_fallBack(model, e)) rethrow;
+      // Yarıda kalan Embedding 2 vektörleri artık "farklı model" → 001 ile
+      // yeniden gömülür; dizin tek modelde kalır.
+      return _ensureVectors(notes);
+    }
+  }
+
+  Future<void> _embedStale(
+    GeminiService service,
+    Map<String, String> extra,
+    String model,
+    List<Note> stale,
+  ) async {
     for (var i = 0; i < stale.length; i += 100) {
       final batch = stale.sublist(i, min(i + 100, stale.length));
       final texts = [
@@ -251,12 +327,13 @@ class SemanticIndex {
             return text.length > 1500 ? text.substring(0, 1500) : text;
           }(),
       ];
-      final vectors = await service.embedTexts(texts);
+      final vectors = await service.embedTexts(texts, model: model);
       for (var j = 0; j < batch.length && j < vectors.length; j++) {
         _cache[batch[j].id] = (
           batch[j].updatedAt,
           _normalized(vectors[j]),
           extra[batch[j].id]?.length ?? 0,
+          model,
         );
       }
     }
