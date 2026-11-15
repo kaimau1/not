@@ -1973,4 +1973,65 @@ void main() {
     });
     await endEditor(tester);
   });
+  // S42 (P63 G4, PB3): kalem kipinde kapsül + ayar paneli. Tepsinin her
+  // etkileşimi yalnız PenTray'i kurar; editör kökü ve sayfa tuvali 0.
+  testWidgets('S42: kalem kapsülü + panel (telefon)', (tester) async {
+    _stylusDevice();
+    await pumpEditor(tester, _text);
+    final page = tester.getRect(find.byType(PageInkStack));
+    Future<void> stroke(int i) async {
+      final pen = await tester.startGesture(
+        page.topLeft + Offset(60, 200.0 + i * 25),
+        kind: PointerDeviceKind.stylus,
+      );
+      await tester.pump();
+      await pen.moveBy(const Offset(60, 6));
+      await tester.pump();
+      await pen.up();
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    Future<void> tap(Finder f) async {
+      await tester.tap(f, warnIfMissed: false);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    // İlk çizgi kalem kipini açar; çekmece 6 sn sonra hapa iner.
+    await stroke(0);
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    final c = await _count(() async {
+      await tap(find.byKey(const ValueKey('pen-dock-peek')));
+      for (final t in const ['marker', 'highlighter', 'pen']) {
+        await tap(find.byKey(ValueKey('pen-tray-$t')));
+      }
+      await tap(find.byKey(const ValueKey('pen-tray-color')));
+      final r = tester.getRect(find.byType(Slider).first);
+      for (var i = 1; i <= 5; i++) {
+        await tester.tapAt(
+          Offset(r.left + r.width * (0.2 + i * 0.1), r.center.dy),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      final options = find.byWidgetPredicate(
+        (w) => w.runtimeType.toString() == '_Options',
+      );
+      await tap(
+        find.descendant(of: options, matching: find.byType(InkResponse)).at(1),
+      );
+      await stroke(1);
+      await tester.pump(const Duration(milliseconds: 400));
+    });
+    expect(find.byKey(const ValueKey('pen-dock-open')), findsNothing);
+    _expectBudget('S42', {
+      'kok_kurulum': c['NoteEditorScreen'] ?? 0,
+      'sayfa_tuvali': c['NotePageCanvas'] ?? 0,
+      'pen_tray': c['PenTray'] ?? 0,
+      'kalem_resmi': c['_DockTool'] ?? 0,
+      'panel': c['_Options'] ?? 0,
+    });
+    await endEditor(tester);
+  });
 }

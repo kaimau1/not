@@ -334,5 +334,16 @@
     "bugun": "173 / 404 / 153 / 1049 (2026-11-15, G2 başı). Birleşme tabanı 05078e55 (PB6 öncesi): 173 / 403 / 153 / 1049 — dizilme AYNI, kurulum +1 (odaklı satırın beliriş sarmalayıcısı)",
     "hedef": "dizilme artmaz (mandal); kapanışta editör satırları yeniden dizilmez",
     "neden": "P63 G2 cihaz A/B not_kapa LAYOUT +%19 (A 84.9 / B 100.9 ms) — kod kanıtı arandı"
+  },
+  "S42": {
+    "senaryo": "P63 G4 kalem kipi (telefon, metin notu): ilk çizgi → hap → kapsülü aç → 3 araç → paneli aç → kalınlık 5 dokunuş → renk → 1 çizgi (kapsül kapanır)",
+    "kok_kurulum": 0,
+    "sayfa_tuvali": 0,
+    "pen_tray": 3,
+    "kalem_resmi": 77,
+    "panel": 7,
+    "bugun": "0 / 0 / 3 / kalem resmi (_DockTool) 77 / panel (_Options) 7 (2026-11-15, G4 taban — PB3 öncesi)",
+    "hedef": "kök 0, tuval 0, PenTray ≤ 13 (plan §3.5); kalem resmi ve panel tabanı aşmaz",
+    "neden": "P63 G4 ilk ölçüm"
   }
 }

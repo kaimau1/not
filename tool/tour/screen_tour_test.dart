@@ -35,7 +35,11 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
+import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
+import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
+import 'package:notlar/features/notes/presentation/editor/drawing_screen.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -729,10 +733,60 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
     await t.tap(find.byKey(const ValueKey('format-divider-style')));
     await _settle(t);
   }),
-  // PB1/PB3/PB5 sahneleri (duzen-serit, kisisellestir, kalem-*, cizim-serit,
-  // dikte-kart, ses-levha-*) sahibi paketin "önce üret" adımında eklenir
-  // (G4/G5; plan §7.2 madde 4 notu).
+  // P63 G4 (PB3): kalem seti — telefonda hap/kapsül/panel, tablette sütun,
+  // çizim ekranında alt şerit.
+  ('kalem-hap', '/note/n4', _penMode),
+  ('kalem-kapsul', '/note/n4', _penDock),
+  ('kalem-panel', '/note/n4', (t) => _penDock(t, tap: 'pen-tray-color')),
+  ('kalem-sekil-panel', '/note/n4', (t) async {
+    await _penDock(t, tap: 'pen-tray-shapes');
+    await t.tap(find.byKey(const ValueKey('pen-tray-shapes')));
+    await _settle(t);
+  }),
+  ('kalem-sutun', '/note/n4', _penMode),
+  ('cizim-serit', '/note/n4', (t) async {
+    unawaited(
+      Navigator.of(t.element(find.byType(NoteEditorScreen))).push(
+        MaterialPageRoute<void>(builder: (_) => const DrawingScreen()),
+      ),
+    );
+    await _settle(t);
+  }),
+  // PB1/PB5 sahneleri (duzen-serit, kisisellestir, dikte-kart, ses-levha-*)
+  // sahibi paketin "önce üret" adımında eklenir (plan §7.2 madde 4 notu).
 ];
+
+/// Kalem kipi: kalemle bir çizgi (kip açılır), ipucu ve çekmece insin.
+Future<void> _penMode(WidgetTester tester) async {
+  InkToolMemory.autoStylus = true;
+  InkToolMemory.stylusEver = true;
+  final page = tester.getRect(find.byType(PageInkStack).first);
+  final pen = await tester.startGesture(
+    page.topLeft + const Offset(60, 160),
+    kind: PointerDeviceKind.stylus,
+  );
+  await tester.pump();
+  for (var i = 0; i < 4; i++) {
+    await pen.moveBy(const Offset(30, 8));
+    await tester.pump();
+  }
+  await pen.up();
+  for (var i = 0; i < 9; i++) {
+    await tester.pump(const Duration(seconds: 1));
+  }
+  await _settle(tester);
+}
+
+/// Kalem kipi → kapsülü aç → (isteğe bağlı) bir düğmeye dokun.
+Future<void> _penDock(WidgetTester tester, {String? tap}) async {
+  await _penMode(tester);
+  await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+  await _settle(tester);
+  if (tap != null) {
+    await tester.tap(find.byKey(ValueKey(tap)));
+    await _settle(tester);
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
