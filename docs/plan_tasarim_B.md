@@ -1562,6 +1562,10 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   cihazda AÇIK:** yürütücünün öbek sonu A/B'sinde `kb` + `bicim` kötüleşirse yalnız "PB6 4" commit'i geri
   alınır (SB11). Bulgu 13 (tepsi kabuğu `AnimatedSize` gövdeyi 14 karede diziyor) DÜZELTİLMEDİ — kapsam dışı,
   regresyon listesine not (§7.10). Seçim başına 1 kök kurulumu (hipotez doğrulandı) bugünkü yol, PB6 aşmadı.
+  **İlk A/B (2026-11-15, run_g2.log):** `kb`/`bicim` aynı/iyi; tek kırmızı `not_kapa` LAYOUT altın +%15 (100.9 /
+  sınır 100.5 ms; A'ya göre kural "aynı"). S45 (yeni): kapanış dizilmesi PB6 öncesiyle birebir (173/153) →
+  PB6 4 GERİ ALINMADI (kök kanıtı yok, geri almak sayıyı değiştirmez); A/B yeniden koşulur, yine kırmızıysa
+  SB11 gereği PB6 4 geri alınır — sabah bakılacak.
 
 ### 7.9 PB7 — yeni sarmalar + sıralar (opus high)
 

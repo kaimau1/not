@@ -15,6 +15,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show debugPrintLayouts;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -1182,6 +1183,95 @@ void main() {
       'dashboard_kurulum': close.counts['DashboardScreen'] ?? 0,
       'kare_kurulum': close.worst,
     });
+    await endEditor(tester);
+  });
+
+  // S45 (P63 G2, not_kapa): cihaz A/B'de liste notunun kapanışı (klavye kapa
+  // + sistem geri) LAYOUT'ta +%19 göründü. Kapanışın dizilme işi sayılır:
+  // `debugPrintLayouts` ile RenderObject dizilmeleri + widget kurulumları.
+  // Çizgili maddeler (her üçüncüsü) dahil — PB6 beliriş sarmalayıcısı da
+  // ağaçta. Birleşme tabanıyla (05078e55) aynı: 173/403 ve 153/1049.
+  testWidgets('S45: liste notu — klavye kapa + nottan ana ekrana dön', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final all = [
+      for (var i = 0; i < 8; i++)
+        Note(
+          id: 'x$i',
+          type: NoteType.checklist,
+          title: 'Liste $i',
+          items: [
+            for (var j = 0; j < 30; j++)
+              NoteItem(
+                id: 'i$i-$j',
+                text: 'madde $j',
+                divider: j % 3 == 0 ? 'dashed' : '',
+              ),
+          ],
+          updatedAt: now,
+        ),
+    ];
+    final repo = _LiveRepo(FakeFirebaseFirestore());
+    for (final n in all) {
+      await _noteCol(repo.db).doc(n.id).set(n.toMap());
+    }
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(all),
+      repo: repo,
+      openPage: true,
+    );
+    await tester.tap(find.byType(NoteCard).at(2));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(NoteEditorScreen), findsOneWidget);
+    await tester.tap(find.text('madde 3'));
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    debugPrint = (String? m, {int? wrapWidth}) {
+      if (m != null && m.startsWith('Laying out')) layouts++;
+    };
+    debugPrintLayouts = true;
+    final counter = BuildCounter()..start();
+    int builds() => counter.counts.values.fold(0, (a, b) => a + b);
+    try {
+      for (final b in [200.0, 100.0, 0.0]) {
+        tester.view.viewInsets = FakeViewPadding(bottom: b);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      FocusManager.instance.primaryFocus?.unfocus();
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      final kbLayouts = layouts;
+      final kbBuilds = builds();
+      await tester.binding.handlePopRoute();
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      debugPrintLayouts = false;
+      debugPrint = oldPrint;
+      counter.stop();
+      _expectBudget('S45', {
+        'klavye_dizilme': kbLayouts,
+        'klavye_kurulum': kbBuilds,
+        'kapa_dizilme': layouts - kbLayouts,
+        'kapa_kurulum': builds() - kbBuilds,
+      });
+    } finally {
+      debugPrintLayouts = false;
+      debugPrint = oldPrint;
+      counter.stop();
+    }
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(NoteEditorScreen), findsNothing);
     await endEditor(tester);
   });
 
