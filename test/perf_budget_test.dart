@@ -31,6 +31,7 @@ import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/tips.dart';
 import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
+import 'package:notlar/core/widgets/keyboard_snap.dart';
 import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/upload_queue.dart'
     show pendingUploadsProvider;
@@ -66,6 +67,7 @@ import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 
 import 'support/editor_harness.dart';
+import 'support/keyboard_track.dart';
 
 /// **AKICILIK BÜTÇESİ** (OTURTMA F59.2, senaryolar Ek A). Sayılan şey süre
 /// değil SAYI (kök kurulum, kayıt): makineden bağımsız. Bütçeler
@@ -2451,6 +2453,65 @@ void main() {
       'sira_govde': sum(order),
       'sira_satir': order[_row] ?? 0,
     });
+    await endEditor(tester);
+  });
+
+  testWidgets('S47: alt panel × düzensiz klavye inset akışı (telefon)', (
+    tester,
+  ) async {
+    addTearDown(() => setAndroid31(false));
+    const size = Size(412, 915);
+    await pumpEditor(
+      tester,
+      Note(
+        id: 'n',
+        type: NoteType.text,
+        title: 'Not',
+        body: List.generate(30, (i) => 'Satır $i').join('\n'),
+      ),
+    );
+    await _settleGrowth(tester);
+    await tester.tap(find.textContaining('Satır 3').last);
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 150));
+    // Üç kip (KeyboardSlide.mode, derlemede ALT_PANEL_KIP): a = birebir
+    // izleme (varsayılan), b = yumuşatma, c = hareket boyunca gizli.
+    final keep = KeyboardSlide.mode;
+    addTearDown(() => KeyboardSlide.mode = keep);
+    final measured = <String, int>{};
+    for (final mode in ['a', 'b', 'c']) {
+      KeyboardSlide.mode = mode;
+      final total = PanelTrack();
+      for (final android31 in [false, true]) {
+        for (final (name, pattern, wiggle, frames) in [
+          ('düzgün', kRegularPattern, const <int>{}, 18),
+          ('faz kayan', kJitterPattern, const <int>{}, 18),
+          ('faz kayan + geri oynama', kJitterPattern, const {9, 15}, 18),
+          // Kısa (hızlı) klavye: kuyruk adımları büyük, bitiş adımı
+          // önceki adımla birleşir (API<35 bitiş tanıma sınırı).
+          ('kısa animasyon, faz kayan', kJitterPattern, const <int>{}, 10),
+        ]) {
+          setAndroid31(android31);
+          final t = await trackPanel(
+            tester,
+            size: size,
+            android31: android31,
+            pattern: pattern,
+            wiggle: wiggle,
+            openFrames: frames,
+          );
+          // ignore: avoid_print
+          print('S47 $mode ${android31 ? "API<35" : "API35+"} $name: $t');
+          total.add(t);
+        }
+      }
+      // ignore: avoid_print
+      print('S47 kip $mode toplam: $total');
+      for (final e in total.toBudget().entries) {
+        measured[mode == 'a' ? e.key : '${mode}_${e.key}'] = e.value;
+      }
+    }
+    _expectBudget('S47', measured);
     await endEditor(tester);
   });
 }

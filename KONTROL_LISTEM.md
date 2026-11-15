@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Alt panel klavye açılırken zıplıyor mu — üç kip karşılaştırması (oto/alt-panel-klavye, cihazda bakılmadı)**
+  Nerede: üç ayrı ölçüm APK'sı (a = bugünkü gibi klavyeyi birebir izler, b = yumuşak izler, c = klavye hareket ederken gizlenip oturunca belirir); bir metin notunda gövdeye dokunup klavyeyi aç-kapa.
+  Nasıl: her kipte 10 kez aç-kapa; hangisinde panel "zıplamadan" geliyor? `tool/perf/panel_kayit.py` sayıları da yanında.
+  Doğruysa: seçtiğin kipi söyle — varsayılan o olur (şu an a).
+  Yanlışsa: ekran kaydı gönder, hangi kipte olduğunu söyle.
 - [ ] **Konfor kararları (oto/konfor, cihazda bakılmadı — 2026-11-15)**
   Nerede: tablette bir not açıkken sol kenar; küçük telefonda ⋮ → Ekranı düzenle; ana ekranda "+" → ayar simgesi (Düzenle).
   Nasıl: sol kenardan çekmeceyi yavaşça az çek (açılmamalı), biraz daha çek (açılmalı), kısa fiske (açılmalı); düzen şeridinin başlığı kesilmeden ("Düzenleme modu" ya da "Düzen") görünsün; "+" → Düzenle "+" panosunu açsın, bir öğeyi gizle/sırala, son görünen öğeyi gizlemeye çalış (uyarı çıkmalı), paneli yeniden aç.

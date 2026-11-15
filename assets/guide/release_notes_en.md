@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 15 November 2026 {#2026-11-15}
+- **Bottom bar no longer jumps with the keyboard:** while the keyboard opens or closes the bottom bar briefly hides, then fades back in place once the keyboard settles — no more stepwise jumping or briefly sitting too high.
 - **Smarter meaning search:** searching by meaning and "Related notes" now use Google's newer Embedding 2 model; if it is unavailable, search quietly keeps working with the previous one.
 - **Faster meaning search after launch:** the search index of your notes is now kept on the device; the whole notebook is no longer reprocessed each time you open the app, only changed notes are updated. It is deleted when you sign out.
 - **Notices in one place:** tips no longer cover the search bar; "Undo" and other notices appear in one place, never stack, and close on their own.
