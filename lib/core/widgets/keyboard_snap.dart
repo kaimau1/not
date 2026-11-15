@@ -447,6 +447,10 @@ class _KeyboardSlideState extends State<KeyboardSlide>
   /// kurulmaz (AnimatedOpacity klavye karesi başına +1 kurulum ekliyordu,
   /// S17/S45 mandalı).
   late final AnimationController _fade = AnimationController(vsync: this);
+  // Tek eğri, bir kez kurulur ve atılır (her geçişte yenisi sızıyordu:
+  // editor_leak_test CurvedAnimation birikimi).
+  late final CurvedAnimation _fadeCurve =
+      CurvedAnimation(parent: _fade, curve: AppMotion.standard);
   // AnimatedOpacity ile aynı eğri: eğri İLERLEMEYE uygulanır (başlangıç →
   // hedef), değere değil — solmada panel aynı karede gizlenir.
   Animation<double> _opacity = const AlwaysStoppedAnimation(1);
@@ -455,6 +459,7 @@ class _KeyboardSlideState extends State<KeyboardSlide>
   @override
   void dispose() {
     _ticker.dispose();
+    _fadeCurve.dispose();
     _fade.dispose();
     super.dispose();
   }
@@ -530,9 +535,10 @@ class _KeyboardSlideState extends State<KeyboardSlide>
       final target = hide ? 0.0 : 1.0;
       if (target != _fadeTarget) {
         _fadeTarget = target;
-        _opacity = Tween(begin: _opacity.value, end: target).animate(
-          CurvedAnimation(parent: _fade, curve: AppMotion.standard),
-        );
+        _opacity = Tween(
+          begin: _opacity.value,
+          end: target,
+        ).animate(_fadeCurve);
         // Solma hızlı (klavyenin ilk karelerinde), beliriş yumuşak.
         _fade.duration = hide
             ? AppMotion.exitOf(AppMotion.instant)
