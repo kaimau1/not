@@ -2468,7 +2468,6 @@ void main() {
         title: 'Not',
         body: List.generate(30, (i) => 'Satır $i').join('\n'),
       ),
-      size: size,
     );
     await _settleGrowth(tester);
     await tester.tap(find.textContaining('Satır 3').last);

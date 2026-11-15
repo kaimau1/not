@@ -81,13 +81,22 @@ class _KeyboardInsetScopeState extends State<KeyboardInsetScope> {
   /// karesi = yavaşlamış hareketin ardından tam gezinme çubuğu boyunda TEK
   /// yukarı adım (motorun `onEnd`'i) ya da 0; ya da klavye [settle] kadar
   /// durdu. Yanlış tanırsa çubuk birkaç kare eski yerde (bugünkü hâl) kalır.
+  ///
+  /// **Birleşen bitiş karesi** (S47, 2026-11-15): `onProgress` platform, kare
+  /// UI iş parçacığında; fazları kayınca bir Flutter karesine son bir-iki
+  /// ilerleme adımı + bitiş BİRLİKTE düşer: adım = gezinme + kuyruk. Eskiden
+  /// yalnız `+ 3` dp kuyruk tanınıyordu; kısa/hızlı klavyede kuyruk daha
+  /// büyük → bitiş "animasyon karesi" sayılıp çubuk 140 ms gezinme boyu kadar
+  /// YUKARIDA kalıyor, sonra iniyordu (S47 oturma sıçraması). Kuyruk artık
+  /// yavaşlayan hareketin en çok iki adımı kadar olabilir.
   void _trackEngine(double live, double nav) {
     final step = live - _lastLive;
+    final tail = math.max(0.0, _lastStep);
     final endJump =
         _animating &&
         step >= nav - 1 &&
-        step <= nav + 3 &&
-        _lastStep >= 0 &&
+        step <= nav + 2 * tail + 3 &&
+        _lastStep > -nav / 4 &&
         _lastStep < nav / 4 &&
         live > 2 * nav;
     _animating = live > 0 && !endJump;
