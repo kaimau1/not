@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 15 Kasım 2026 {#2026-11-15}
+- **Şablonlar akıcı:** şablon seçip not oluştururken (özellikle alışveriş listesinin bol önerili ekranında) klavye açılırken, öneriye ya da maddeye dokunurken artık takılma yok; kendi şablonunu düzenlerken ilk harfte de duraklamıyor.
 - **Anlamca arama yenilendi:** notlarında anlamca arama ve "İlgili notlar" artık Google'ın yeni Embedding 2 modelini kullanıyor; bu model kullanılamazsa arama kendiliğinden eskisiyle sürüyor.
 - **Bildirimler tek yerde:** ipuçları artık arama çubuğunu kapatmıyor; "Geri al" ve diğer bildirimler tek yerde, üst üste binmeden çıkıyor ve kendiliğinden kapanıyor.
 - **Daha yumuşak kaydırma:** ana ekranda yana kaydırma daha yumuşak yerine oturuyor; takvimde küçük ay parmağını izleyerek kayıyor ve açılırken liste titremiyor.
