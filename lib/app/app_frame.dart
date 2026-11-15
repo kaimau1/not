@@ -1,3 +1,4 @@
+import '../app/theme/app_design.dart' show AppSwipe;
 import '../app/theme/app_tokens.dart';
 import '../features/auth/presentation/account_required.dart';
 import '../features/auth/presentation/auth_providers.dart';
@@ -281,11 +282,15 @@ class _RailFrame extends StatefulWidget {
   State<_RailFrame> createState() => _RailFrameState();
 }
 
+/// Çekmece çekişinin ölçeği (dp): parmak bu kadar yol alınca çekmece tam
+/// açık; geçiş kararı bunun [AppSwipe.commitFraction]'ı (P62 §6.2).
+const double _kDrawerPull = 240;
+
 class _RailFrameState extends State<_RailFrame>
     with SingleTickerProviderStateMixin {
   late final AnimationController _drawer = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 220),
+    duration: AppMotion.short,
   );
 
   /// Açık çekmece Esc'i alsın diye odak onda (çerçevenin kökü zaten odaklı,
@@ -391,7 +396,13 @@ class _RailFrameState extends State<_RailFrame>
                       _exitPull += rtl ? -d.delta.dx : d.delta.dx,
                   onHorizontalDragEnd: (d) {
                     final v = d.primaryVelocity ?? 0;
-                    if (_exitPull > 56 || (rtl ? v < -300 : v > 300)) {
+                    // Ortak karar kuralı (P62 §6.2): 56 dp → çekiş ölçeğinin
+                    // %22'si (52,8 dp), fiske 300.
+                    if (AppSwipe.commits(
+                      dragged: _exitPull,
+                      extent: _kDrawerPull,
+                      velocity: rtl ? -v : v,
+                    )) {
                       AppHaptics.heavy();
                       ProviderScope.containerOf(context)
                           .read(noteFullscreenProvider.notifier)
@@ -411,13 +422,19 @@ class _RailFrameState extends State<_RailFrame>
                   key: const ValueKey('rail-drawer-edge'),
                   behavior: HitTestBehavior.translucent,
                   onHorizontalDragUpdate: (d) {
-                    final delta = (rtl ? -d.delta.dx : d.delta.dx) / 240;
+                    final delta =
+                        (rtl ? -d.delta.dx : d.delta.dx) / _kDrawerPull;
                     _drawer.value = (_drawer.value + delta).clamp(0, 1);
                   },
                   onHorizontalDragEnd: (d) {
                     final v = d.primaryVelocity ?? 0;
-                    final open = rtl ? v < -200 : v > 200;
-                    if (open || _drawer.value > 0.4) {
+                    // Ortak karar kuralı (K6-3, sabah bakılacak): eşik %40 →
+                    // %22, fiske 200 → 300 — bütün yana çekişler aynı sayıda.
+                    if (AppSwipe.commits(
+                      dragged: _drawer.value * _kDrawerPull,
+                      extent: _kDrawerPull,
+                      velocity: rtl ? -v : v,
+                    )) {
                       _drawer.forward();
                     } else {
                       _drawer.reverse();
@@ -429,7 +446,7 @@ class _RailFrameState extends State<_RailFrame>
               AnimatedBuilder(
                 animation: _drawer,
                 builder: (context, _) {
-                  final t = Curves.easeOutCubic.transform(_drawer.value);
+                  final t = AppMotion.emphasized.transform(_drawer.value);
                   if (t == 0) return const SizedBox.shrink();
                   final scheme = Theme.of(context).colorScheme;
                   // Açık çekmece geri tuşunu ve Esc'i önce kendisi alır.
