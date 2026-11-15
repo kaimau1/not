@@ -176,7 +176,8 @@ Ana ekrandaki **Yapay zekâ** ekranı (⋮ ya da geniş ekranda soldaki ray):
 - **Kilitle:** notu kilitle; nasıl açılacağını Ayarlar → **Not kilidi**'nden seç (parmak izi, şifre ya da desen; web'de şifre ya da desen). İçeriği aramaya, widget'a ve yapay zekâya hiç sızmaz. Kilit şifreleme değildir: yalnız uygulamanın notu göstermesini engeller.
 - **Not bağlantıları:** yazarken `[[` yaz ya da bir yazıyı seçip **Nota bağla** de; seçtiğin notun adı bağlantı olur, dokununca o not açılır (adı değişse de bağ kalır). Bağlanılan notun başlığının altında **N bağlantı** çipi, ona bağlanan notları listeler. Not ⋮ → **İlgili notlar** benzer notları önerir; **Bağla** tek dokunuşla bağlantı ekler.
 - **Arşiv** ve **Çöp kutusu:** ⋮ menüsünden; çöpten geri yükle.
-- **Şablonlar:** + → Şablondan; hazır şablonları önizle, maddeleri seç; kendi notunu ⋮ → **Şablon olarak kaydet** ile şablon yap, şablon düzenleyicide değiştir.
+- **Hızlı ekle:** + → Hızlı ekle; yaz ya da söyle ("market: süt, ekmek", "alışveriş listesine süt ekle"), var olan nota eklenir.
+- **Şablonlar:** + → Şablondan; liste şablonları doğrudan liste sayfasında açılır (üst satıra yan yana yaz ya da söyle, alttaki önerilere dokun, **Bitti**), yazı şablonları önizlenir; kendi notunu ⋮ → **Şablon olarak kaydet** ile şablon yap, şablon düzenleyicide değiştir.
 - **Defter:** + → Şablon → Defter ya da herhangi bir notta ⋮ → **Defter görünümü**: çizgili/kareli/noktalı kâğıt ve sayfalar. Başka notun eklerini ⋮ → **Deftere topla** ile kopyalarıyla bir deftere toplar.
 
 ## Hatırlatıcılar {#reminders}

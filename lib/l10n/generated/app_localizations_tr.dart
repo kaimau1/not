@@ -8608,4 +8608,103 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickRowShortHeading => 'Başlık';
+
+  @override
+  String get quickEntryHint => 'Yaz ya da söyle: muz elma, 2 süt…';
+
+  @override
+  String get quickEntryListening => 'Dinliyorum…';
+
+  @override
+  String get quickEntryMic => 'Sesle ekle';
+
+  @override
+  String get quickEntryMicStop => 'Dinlemeyi durdur';
+
+  @override
+  String get quickListEmpty =>
+      'Yukarıya yaz, söyle ya da aşağıdan dokun; liste burada oluşur.';
+
+  @override
+  String get quickListDone => 'Bitti';
+
+  @override
+  String get quickListAisleSort => 'Reyon sırasına diz';
+
+  @override
+  String get quickListOpenInNote => 'Notta aç';
+
+  @override
+  String get quickListDiscard => 'Vazgeç';
+
+  @override
+  String get quickListFrequent => 'Sık eklediklerin';
+
+  @override
+  String get quickListLeftovers => 'Geçen seferden';
+
+  @override
+  String get quickListAddAll => 'Hepsini ekle';
+
+  @override
+  String quickListSaved(String title) {
+    return '“$title” kaydedildi';
+  }
+
+  @override
+  String get quickListOpen => 'Aç';
+
+  @override
+  String get quickListRemove => 'Çıkar';
+
+  @override
+  String quickListCorrected(String typed) {
+    return '“$typed” yazmıştın; geri almak için dokun';
+  }
+
+  @override
+  String quickListRestored(String typed) {
+    return '“$typed” olarak bırakıldı; bir daha düzeltilmeyecek';
+  }
+
+  @override
+  String get quickDropTitle => 'Hızlı ekle';
+
+  @override
+  String get quickDropInfo => 'Yaz ya da söyle, seçtiğin nota eklensin';
+
+  @override
+  String get quickDropHint =>
+      'süt, ekmek… ya da “alışveriş listesine süt ekle”';
+
+  @override
+  String get quickDropTarget => 'Nereye eklensin?';
+
+  @override
+  String get quickDropNoNotes =>
+      'Eklenecek not yok. Önce bir liste ya da metin notu oluştur.';
+
+  @override
+  String get quickDropAdd => 'Ekle';
+
+  @override
+  String quickDropAdded(int count, String title) {
+    return '$count madde “$title” notuna eklendi';
+  }
+
+  @override
+  String quickDropAddedText(String title) {
+    return '“$title” notuna eklendi';
+  }
+
+  @override
+  String quickDropNothingNew(String title) {
+    return 'Hepsi zaten “$title” notunda';
+  }
+
+  @override
+  String get quickDropKeyboard => 'Açılınca klavye';
+
+  @override
+  String get quickDropMicAuto => 'Açılınca dinle';
 }

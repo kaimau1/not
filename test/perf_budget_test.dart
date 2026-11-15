@@ -56,6 +56,7 @@ import 'package:notlar/features/notes/presentation/listening_visuals.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/notes/data/user_templates.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
+import 'package:notlar/features/notes/presentation/quick_list_screen.dart';
 import 'package:notlar/features/notes/presentation/template_editor_screen.dart';
 import 'package:notlar/features/notes/domain/note_templates.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
@@ -2102,6 +2103,105 @@ void main() {
       'kutu_kurulum': _sum(box),
       'galeri_klavye_kurulum': galleryBuilds,
       'duzenleyici_tus_kurulum': _sum(typing),
+    });
+  });
+
+  // S49 (kullanıcı isteği 2026-11-15, hızlı liste): liste şablonu artık
+  // levhadaki önizleme yerine QuickListScreen'de kurulur. Alışveriş, 20
+  // madde hazır: klavye açılışı (6 inset karesi), madde ÇIKARMAYAN 5 tuş
+  // (yalnız giriş satırı), bir madde çıkaran yazı (yalnız yeni satır), öneri
+  // çipi dokunuşu.
+  testWidgets('S49: hızlı liste (alışveriş, 20 madde)', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          notesStreamProvider.overrideWith((ref) => const Stream.empty()),
+        ],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () => showQuickList(
+                  context,
+                  quickListArgsFor(context, builtin: NoteTemplate.shopping)!,
+                ),
+                child: const Text('aç'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await _settle(tester);
+    final field = find.byKey(const ValueKey('quick-entry-field'));
+    await tester.enterText(
+      field,
+      'muz, elma, armut, çilek, kivi, un, yumurta, peynir, zeytin, bal, '
+      'domates, biber, patlıcan, kabak, havuç, pirinç, bulgur, makarna, '
+      'tuz, deterjan,',
+    );
+    await _settle(tester);
+    expect(
+      find.byWidgetPredicate((w) => w.runtimeType.toString() == '_QuickRow'),
+      findsNWidgets(20),
+    );
+
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    debugPrint = (String? m, {int? wrapWidth}) {
+      if (m != null && m.startsWith('Laying out')) layouts++;
+    };
+    debugPrintLayouts = true;
+    late final Map<String, int> keyboard;
+    try {
+      keyboard = await _count(() async {
+        for (final b in <double>[50, 100, 150, 200, 250, 300]) {
+          tester.view.viewInsets = FakeViewPadding(bottom: b);
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+      });
+    } finally {
+      debugPrintLayouts = false;
+      debugPrint = oldPrint;
+    }
+    final kbLayouts = layouts;
+
+    final typing = await _count(() async {
+      for (var i = 1; i <= 5; i++) {
+        tester.testTextInput.enterText('nohut'.substring(0, i));
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    });
+    final add = await _count(() async {
+      tester.testTextInput.enterText('nohut,');
+      await tester.pump();
+    });
+    await _settle(tester);
+    final chip = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('quick-chip-Süt')));
+      await tester.pump();
+    });
+    await _settle(tester);
+    tester.view.viewInsets = FakeViewPadding.zero;
+    _expectBudget('S49', {
+      'klavye_kurulum': _sum(keyboard),
+      'klavye_dizilme': kbLayouts,
+      'yazma_kurulum': _sum(typing),
+      'yazma_satir': typing['_QuickRow'] ?? 0,
+      'madde_kurulum': _sum(add),
+      'madde_satir': add['_QuickRow'] ?? 0,
+      'cip_kurulum': _sum(chip),
+      'cip_satir': chip['_QuickRow'] ?? 0,
     });
   });
 

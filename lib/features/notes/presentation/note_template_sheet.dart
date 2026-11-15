@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/rich_text.dart';
+import '../data/quick_entry_memory.dart';
 import '../data/user_templates.dart';
 import '../domain/note.dart';
 import '../domain/note_templates.dart';
@@ -19,6 +20,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
+import 'quick_list_screen.dart';
 import 'template_preview_card.dart';
 
 /// Galeri ↔ önizleme geçişinde girişin yatay kayması (genişliğin oranı).
@@ -55,18 +57,91 @@ Future<NoteTemplateContent?> showNoteTemplateSheet(
   // çağrılır. Levha her seferinde YENİ örnek olsaydı bütün galeri/önizleme
   // (alışverişte 74 öneri çipi) kare başına baştan kurulurdu (S47).
   final sheet = NoteTemplateSheet(initial: initial, initialUser: initialUser);
-  return showAppSheet<NoteTemplateContent>(
-    context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    constraints: const BoxConstraints(maxWidth: 640),
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+  return _showTemplateSheet<NoteTemplateContent>(context, sheet);
+}
+
+Future<T?> _showTemplateSheet<T>(BuildContext context, Widget sheet) =>
+    showAppSheet<T>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 640),
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: sheet,
       ),
-      child: sheet,
-    ),
-  );
+    );
+
+/// Şablon seçiminin sonucu: [open] — not oluşunca editörde açılsın mı;
+/// [quick] — hızlı liste ekranından geldi (kayıt bildirimi gösterilir).
+typedef TemplateOutcome = ({NoteTemplateContent content, bool open, bool quick});
+
+/// Şablon LİSTE ise hızlı liste ekranının girdisi; yazı şablonunda null.
+QuickListArgs? quickListArgsFor(
+  BuildContext context, {
+  NoteTemplate? builtin,
+  UserTemplate? user,
+}) {
+  final l10n = context.l10n;
+  if (builtin != null) {
+    final c = buildNoteTemplate(builtin, l10n);
+    if (c.type != NoteType.checklist && c.type != NoteType.ordered) return null;
+    return QuickListArgs(
+      kind: 'b:${builtin.key}',
+      title: c.title,
+      icon: builtin.icon,
+      accent: builtin.accent,
+      type: c.type,
+      seedItems: c.items,
+      groups: templateSuggestions(builtin, l10n),
+      grocery: builtin == NoteTemplate.shopping,
+    );
+  }
+  if (user != null && user.isList) {
+    final title = user.title.trim().isEmpty ? user.name : user.title.trim();
+    return QuickListArgs(
+      kind: 'u:${user.id}',
+      title: title,
+      icon: _userIcon(user.type),
+      accent: Theme.of(context).colorScheme.primary,
+      type: user.type,
+      initialItems: user.items,
+      grocery: looksLikeGrocery(title, user.items, l10n.localeName),
+    );
+  }
+  return null;
+}
+
+/// **ŞABLONDAN NOT — TEK KAPI** (kullanıcı isteği 2026-11-15). Liste
+/// şablonu levhadaki önizleme yerine HIZLI LİSTE sayfasında kurulur
+/// ([QuickListScreen]); yazı şablonu eskisi gibi levhada önizlenir.
+/// [initial]/[initialUser] liste ise galeri hiç açılmaz.
+Future<TemplateOutcome?> pickTemplate(
+  BuildContext context,
+  WidgetRef ref, {
+  NoteTemplate? initial,
+  UserTemplate? initialUser,
+}) async {
+  var args = quickListArgsFor(context, builtin: initial, user: initialUser);
+  if (args == null) {
+    final sheet = NoteTemplateSheet(
+      initial: initial,
+      initialUser: initialUser,
+      quickLists: true,
+    );
+    final picked = await _showTemplateSheet<Object>(context, sheet);
+    if (picked is NoteTemplateContent) {
+      return (content: picked, open: true, quick: false);
+    }
+    if (picked is! QuickListArgs || !context.mounted) return null;
+    args = picked;
+  }
+  final result = await showQuickList(context, args);
+  if (result == null) return null;
+  ref.read(recentTemplatesProvider.notifier).remember(args.kind);
+  return (content: result.content, open: result.open, quick: true);
 }
 
 /// Galeride seçilen şablon: hazır ya da kullanıcının kendi şablonu.
@@ -84,12 +159,21 @@ class _Pick {
 
 /// Levhanın kendisi (testte doğrudan kurulabilsin diye açık).
 class NoteTemplateSheet extends ConsumerStatefulWidget {
-  const NoteTemplateSheet({super.key, this.initial, this.initialUser});
+  const NoteTemplateSheet({
+    super.key,
+    this.initial,
+    this.initialUser,
+    this.quickLists = false,
+  });
 
   final NoteTemplate? initial;
 
   /// "+" menüsündeki favori KENDİ şablonum: galeri atlanır.
   final UserTemplate? initialUser;
+
+  /// true: LİSTE şablonu seçilince önizleme açılmaz, levha o şablonun
+  /// [QuickListArgs]'ıyla kapanır (bkz. [pickTemplate]).
+  final bool quickLists;
 
   @override
   ConsumerState<NoteTemplateSheet> createState() => _NoteTemplateSheetState();
@@ -111,6 +195,22 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
   void dispose() {
     _search.dispose();
     super.dispose();
+  }
+
+  /// Seçim: liste şablonu hızlı liste sayfasına gider, gerisi önizlemeye.
+  void _pick(_Pick pick) {
+    if (widget.quickLists) {
+      final args = quickListArgsFor(
+        context,
+        builtin: pick.builtin,
+        user: pick.user,
+      );
+      if (args != null) {
+        Navigator.pop<Object>(context, args);
+        return;
+      }
+    }
+    setState(() => _picked = pick);
   }
 
   void _create(NoteTemplateContent content) {
@@ -238,7 +338,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     if (saved == null || !mounted) return;
     ref.read(userTemplatesProvider.notifier).add(saved);
     _announce(context.l10n.templateSaved(saved.name));
-    setState(() => _picked = _Pick.user(saved));
+    _pick(_Pick.user(saved));
   }
 
   Future<void> _newTemplate() async {
@@ -258,7 +358,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     ref.read(userTemplatesProvider.notifier).update(saved);
     // Önizleme açıksa yeni içerikle yeniden kurulur.
     if (_picked?.user?.id == saved.id) {
-      setState(() => _picked = _Pick.user(saved));
+      _pick(_Pick.user(saved));
     }
   }
 
@@ -553,7 +653,7 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
         favorite: favorite,
         onFavorite: toggleFavorite,
         favoriteKey: ValueKey('tpl-fav-$label'),
-        onTap: () => setState(() => _picked = pick),
+        onTap: () => _pick(pick),
         onMenu: user == null ? null : () => _userMenu(user),
       ),
     );

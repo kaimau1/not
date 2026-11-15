@@ -76,6 +76,15 @@ List<AddEntry> addCatalog(
     l10n.newOrderedList,
     quick: 'ordered',
   );
+  // HIZLI EKLE (kullanıcı isteği 2026-11-15): yeni not açmaz, yazılanı ya
+  // da söyleneni VAR OLAN nota ekler (bkz. quick_drop_sheet).
+  row(
+    AddGroup.write,
+    Icons.bolt_outlined,
+    l10n.quickDropTitle,
+    quick: 'quickdrop',
+    info: l10n.quickDropInfo,
+  );
   row(
     AddGroup.write,
     Icons.link,

@@ -8622,4 +8622,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickRowShortHeading => 'Heading';
+
+  @override
+  String get quickEntryHint => 'Type or say: bananas apples, 2 milk…';
+
+  @override
+  String get quickEntryListening => 'Listening…';
+
+  @override
+  String get quickEntryMic => 'Add by voice';
+
+  @override
+  String get quickEntryMicStop => 'Stop listening';
+
+  @override
+  String get quickListEmpty =>
+      'Type above, speak, or tap below; your list builds here.';
+
+  @override
+  String get quickListDone => 'Done';
+
+  @override
+  String get quickListAisleSort => 'Sort by aisle';
+
+  @override
+  String get quickListOpenInNote => 'Open as note';
+
+  @override
+  String get quickListDiscard => 'Discard';
+
+  @override
+  String get quickListFrequent => 'Your usuals';
+
+  @override
+  String get quickListLeftovers => 'From last time';
+
+  @override
+  String get quickListAddAll => 'Add all';
+
+  @override
+  String quickListSaved(String title) {
+    return '“$title” saved';
+  }
+
+  @override
+  String get quickListOpen => 'Open';
+
+  @override
+  String get quickListRemove => 'Remove';
+
+  @override
+  String quickListCorrected(String typed) {
+    return 'You typed “$typed”; tap to undo';
+  }
+
+  @override
+  String quickListRestored(String typed) {
+    return 'Kept as “$typed”; it won\'t be corrected again';
+  }
+
+  @override
+  String get quickDropTitle => 'Quick add';
+
+  @override
+  String get quickDropInfo => 'Type or speak; it goes into the note you pick';
+
+  @override
+  String get quickDropHint => 'milk, bread… or “add milk to shopping list”';
+
+  @override
+  String get quickDropTarget => 'Add to which note?';
+
+  @override
+  String get quickDropNoNotes =>
+      'No note to add to. Create a list or text note first.';
+
+  @override
+  String get quickDropAdd => 'Add';
+
+  @override
+  String quickDropAdded(int count, String title) {
+    return '$count items added to “$title”';
+  }
+
+  @override
+  String quickDropAddedText(String title) {
+    return 'Added to “$title”';
+  }
+
+  @override
+  String quickDropNothingNew(String title) {
+    return 'Everything is already in “$title”';
+  }
+
+  @override
+  String get quickDropKeyboard => 'Keyboard on open';
+
+  @override
+  String get quickDropMicAuto => 'Listen on open';
 }

@@ -441,5 +441,19 @@
     "bugun": "396 / 258 / 354 / 328 / 330 / 191 (2026-11-15; önce 14124 / 5784 / 2302 / 2266 / 7590 / 1840 — levha builder klavye karesinde yeni levha örneği kuruyordu, dokunuş bütün çipleri kuruyordu, düzenleyicide ilk tuş bütün ekranı kuruyordu)",
     "hedef": "klavye karesi levha içeriğini kurmaz; dokunuş yalnız değişen satırı/çipi kurar",
     "neden": "kullanıcı bulgusu 2026-11-15: şablon oluştururken aşırı kasıyor"
+  },
+  "S49": {
+    "senaryo": "Hızlı liste (telefon, alışveriş şablonu, 20 madde hazır, iki sütun): klavye 6 inset karesi; madde çıkarmayan 5 tuş; bir madde çıkaran yazı; öneri çipi dokunuşu",
+    "klavye_kurulum": 420,
+    "klavye_dizilme": 168,
+    "yazma_kurulum": 195,
+    "yazma_satir": 0,
+    "madde_kurulum": 242,
+    "madde_satir": 2,
+    "cip_kurulum": 146,
+    "cip_satir": 1,
+    "bugun": "420 / 168 / 195 / 0 / 242 / 2 / 146 / 1 (2026-11-15 ilk ölçüm). Klavye karesi yalnız iki Scaffold'un iskeletini kurar (satır 0, çip 0); yazarken satır 0; madde eklenince yeni satır + iki sütunda yarı sınırı kayınca sütun değiştiren 1 satır (GlobalKey yeniden bağlanır)",
+    "hedef": "yazarken liste kurulmaz; madde/çip yalnız değişen satırı kurar",
+    "neden": "kullanıcı isteği 2026-11-15: liste şablonu not sayfası gibi açılsın, yazarken canlı dolsun"
   }
 }
