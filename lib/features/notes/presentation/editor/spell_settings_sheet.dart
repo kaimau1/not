@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import 'auto_spell.dart';
 import 'spell_learned_screen.dart';
 
@@ -61,9 +62,9 @@ Future<void> showSpellSettings(
               onTap: () {
                 AutoSpell.forget();
                 Navigator.pop(sheet);
-                ScaffoldMessenger.maybeOf(context)
-                  ?..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(content: Text(l10n.spellForgotten)));
+                ScaffoldMessenger.maybeOf(
+                  context,
+                )?.showMessage(l10n.spellForgotten);
               },
             ),
           ],

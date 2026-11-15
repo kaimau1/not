@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 /// BİLDİRİM YOLLARI MANDALI (P62 PA5, docs/plan_tasarim_A.md §5.3): geçici
 /// bildirimler `appNotice` hunisinden geçer. Sayılar YALNIZ DÜŞER; çitte
-/// (P63: editor/**, note_template_sheet) kalan ham `showSnackBar`lar PA9'da
-/// sıfırlanır.
+/// (P63: editor/**, note_template_sheet) kalan 9 ham `showSnackBar` PA9'da
+/// (2026-11-15) `showMessage`'a çevrildi → 0.
 void main() {
   Iterable<File> dartFiles() =>
       Directory('lib')
@@ -13,7 +13,7 @@ void main() {
           .whereType<File>()
           .where((f) => f.path.endsWith('.dart'));
 
-  test('undo_snackbar.dart dışında ham showSnackBar ≤ 9', () {
+  test('undo_snackbar.dart dışında ham showSnackBar yok', () {
     final hits = <String>[];
     for (final f in dartFiles()) {
       if (f.path.replaceAll('\\', '/').endsWith('undo_snackbar.dart')) {
@@ -26,7 +26,7 @@ void main() {
       0,
       (s, h) => s + int.parse(h.split(': ').last),
     );
-    expect(total, lessThanOrEqualTo(9), reason: hits.join('\n'));
+    expect(total, 0, reason: hits.join('\n'));
   });
 
   test('tips.dart OverlayEntry kullanmaz', () {

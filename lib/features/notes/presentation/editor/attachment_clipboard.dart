@@ -182,7 +182,7 @@ Future<void> shareAttachmentFiles(
       list,
       attachments: ref.read(attachmentRepositoryProvider),
     );
-    messenger.hideCurrentSnackBar();
+    messenger.hideMessage();
     if (files.isEmpty) {
       messenger.showMessage(l10n.shareAttachmentFilesNone);
       return;

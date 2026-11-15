@@ -699,14 +699,10 @@ extension _EditorActions on _NoteEditorScreenState {
   void _showUndoSnack(String message) {
     if (!mounted) return;
     final l10n = context.l10n;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        timedSnackBar(
-          content: Text(message),
-          action: SnackBarAction(label: l10n.undo, onPressed: _undo),
-        ),
-      );
+    ScaffoldMessenger.of(context).showMessage(
+      message,
+      action: SnackBarAction(label: l10n.undo, onPressed: _undo),
+    );
   }
 
   /// "+ Yeni öğe" satırının sağındaki BÖLÜMLER menüsü (yalnız iki bölüm
