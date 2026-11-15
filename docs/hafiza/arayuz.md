@@ -235,6 +235,12 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Gizli ek özeti (`CardHiddenMediaLine`): tek ekin adı ikinci satırda; yükseklik tahmini 22 → 38 (`estimateNoteHeight`).
 - Başlığı üst çubukta duran notta (SABİT EKLİ metin notu da! `_barTitle`) hızlı satır hiç kurulmuyordu (KÖK: `title: _barTitle ?? _typingTitle(...)`). Şimdi `KeyboardSwitch(onlyWhileEditing:)` — yalnız gövde alanı odaktayken (`_fieldFocusedN`); çubuktaki başlık düzenlenirken başlık yerinde kalır. TUZAK: anahtarı odakla takıp sökme (ilk kurulum klavye karesine düşer, S17 79→248). `KeyboardSwitch` artık dinleyiciyi kendi tutar (VLB yok), `TickerMode` yalnız `pauseHidden: true` (hızlı satır); `_HintGlow` `TickerMode.getValuesNotifier` dinler → S17 metin ilk kare 45→37.
 
+## 2026-11-15 — P62 G1 ayarlar (PA1–PA4)
+- Ayar alanı grupları `_GroupColumn` (settings_area.dart): satırlar karelere yayılır, tek render nesnesi — yan ekranlar bunu KULLANMAZ, onlar `GroupCard` (`lib/core/widgets/group_card.dart`). Hesap kimliği tek yerde: `AccountIdentityCard` (levha, ayarlar kökü, Hesap).
+- Kök neden (S36 geniş ekran geçişi 1875→1137): `FocusScope.of(context).unfocus()` bağımlılığı her seçimde ekranı yeniden kuruyordu; seçim `ValueNotifier`.
+- Yanlış yol: grup kartını satır başına sarmalayıcıyla kurmak S29'u 353→369 / 474→547 yaptı (geri alındı); `Container` yerine `DecoratedBox` S30'u 349→341 indirdi.
+- Renk bekçisi (`color_roles_test`) izin listesi yalnız düşer: tertiary kalkınca listeden de sil, yoksa CI kırmızı (PA2→PA3'te yaşandı).
+
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 
 Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.
