@@ -2461,6 +2461,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _penModeOpened();
   }
 
+  /// Alt çubuğun SİLGİSİ (K-S1): kalem kipini silgi seçili açar.
+  void _openEraser(Note note) {
+    _pageInkOf(note).setEraser(true);
+    if (!_penMode) _openPen();
+  }
+
   /// Açık editörler (K32: yan yana iki not) — tek mikrofon denetimi.
   static final _live = <_NoteEditorScreenState>{};
 
@@ -4557,6 +4563,20 @@ child: NoteFindBar(
                       final wantPen =
                           (isDocumentNote || !_readOnly) &&
                           on(UiItem.barPen);
+                      // SİLGİ (K-S1): metin/liste notunda, yazı kipinde,
+                      // mürekkep varken (düzen modunda hep — gizlenebilsin).
+                      // Canlı görünürlük [eraserGate]'te: yalnız düğme
+                      // `committedRev`'i dinler, çubuk/editör kurulmaz.
+                      final eraserInk =
+                          !note.type.isPageNoteType &&
+                              !_readOnly &&
+                              !_penMode &&
+                              on(UiItem.barEraser)
+                          ? _pageInkOf(note)
+                          : null;
+                      final showEraser =
+                          eraserInk != null &&
+                          (editingUi || eraserInk.ink.isNotEmpty);
                       final showAi = on(UiItem.barAi);
                       // "AI ile sesli not" ÇUBUKTAN KALKTI (kullanıcı isteği
                       // 2026-10-20: "AI sesli notu AI menüsünün üzerine
@@ -4608,6 +4628,7 @@ child: NoteFindBar(
                         if (showAdd) UiItem.barAdd,
                         if (showCheckbox) UiItem.barCheckbox,
                         if (showSelect) UiItem.barSelect,
+                        if (showEraser) UiItem.barEraser,
                         ...extras,
                         if (showAi) UiItem.barAi,
                         if (showVoiceRecord) UiItem.barVoiceRecord,
@@ -4701,6 +4722,12 @@ child: NoteFindBar(
                                   ? _toggleAnnotate
                                   : _togglePen,
                               _penMode,
+                            ),
+                            UiItem.barEraser => (
+                              Icons.auto_fix_normal_outlined,
+                              l10n.editorBarEraser,
+                              () => _openEraser(note),
+                              false,
                             ),
                             UiItem.barSearch => (
                               Icons.search,
@@ -4820,6 +4847,16 @@ child: NoteFindBar(
                               false,
                             ),
                           };
+                      // Mürekkep silinince/gelince (eşitleme, geri al) silgi
+                      // kendi kendine kaybolur/belirir.
+                      Widget eraserGate(Widget child) => editingUi
+                          ? child
+                          : ValueListenableBuilder<int>(
+                              valueListenable: eraserInk!.committedRev,
+                              builder: (context, _, _) => eraserInk.ink.isEmpty
+                                  ? const SizedBox.shrink()
+                                  : child,
+                            );
                       // SOL kapsüldeki kılık: Biçim (+ imleç rozetleri),
                       // Ekle, Kalem ve Ekler'in kendi segmenti var.
                       List<Widget> leftOf(String id) {
@@ -4848,6 +4885,11 @@ child: NoteFindBar(
                                 l10n,
                                 fileAttachments.length,
                               ),
+                            ),
+                          ],
+                          UiItem.barEraser => [
+                            eraserGate(
+                              tool(id, icon, label, onTap, active: active),
                             ),
                           ],
                           _ => [tool(id, icon, label, onTap, active: active)],
@@ -4889,6 +4931,20 @@ child: NoteFindBar(
                                   );
                         }
                         final (icon, label, onTap, active) = spec(id);
+                        if (id == UiItem.barEraser) {
+                          return eraserGate(
+                            Customizable(
+                              id: id,
+                              child: _voiceButton(
+                                size: plan.button,
+                                gap: plan.gap,
+                                tooltip: label,
+                                icon: icon,
+                                onTap: onTap,
+                              ),
+                            ),
+                          );
+                        }
                         return Customizable(
                           id: id,
                           child: _voiceButton(

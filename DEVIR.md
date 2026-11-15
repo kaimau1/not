@@ -1,18 +1,11 @@
-# DEVIR — oto/sablon-kasma (kullanıcı bulgusu "şablon oluştururken aşırı kasıyor")
+# DEVIR — oto/silgi-yazi (K-S1, kullanıcı kararı 2026-11-15 "silgi olsun")
 
 Yapılanlar:
-- 8820bba2 `showNoteTemplateSheet`: levha örneği builder dışında bir kez (klavye karesinde yeniden kurulmaz) + `TemplateComposer._memo` satır/çip örnek önbelleği.
-- 36293386 `TemplateEditorScreen`: `_dirty` → `_dirtyN` ValueNotifier, yalnız PopScope dinler.
-- bafc0144 S47 bütçe senaryosu (`test/perf_budget_test.dart`, `budgets.json`) + geri onayı testi (`note_templates_test`).
-- Belgeler: akicilik.md, regresyon_listesi, KONTROL_LISTEM "Telefonda bak", sürüm notu 15 Kasım.
+- `UiItem.barEraser` (`lib/core/personalize.dart`, barLeftDefault'ta Kalem'den sonra, varsayılan görünür) + ayar listesinde simge/ad.
+- `note_editor_screen.dart` alt çubuk: metin/liste notu, !readOnly, !_penMode, mürekkep varken silgi segmenti; `eraserGate` yalnız `committedRev` dinler (dar); `_openEraser` = setEraser(true) + _openPen.
+- Çeviri `editorBarEraser` TR+EN; sürüm notu 16 Kasım; kalem.md, regresyon_listesi, OTOMASYON K-S1 notu.
 
-Kök neden / kanıt (S47, önce → sonra):
-- klavye 6 inset karesi kurulum 14124 → 396, dizilme 5784 → 258 (builder `MediaQuery.viewInsetsOf` okur, her çağrıda yeni `NoteTemplateSheet` → 74 çip + satırlar kare başına baştan)
-- öneri çipi dokunuşu 2302 → 354; kutucuk 2266 → 328 (kök setState bütün çipleri kuruyordu)
-- galeri arama klavyesi 7590 → 330
-- düzenleyici (20 madde) 5 tuş 1840 → 191 (ilk tuşta kök setState)
-
-Dokunulmayan: önizleme açılış ilk karesi ~2400 kurulum (74 çip; sonraya yaymak levha boyunu değiştirir). Aynı builder kalıbı: capture_mode_sheet, file_use_sheet, place_reminder_sheet, share_target_sheet (kapsam dışı).
-
-Test: `flutter test test/perf_budget_test.dart --plain-name S47`; `flutter test test/note_templates_test.dart test/template_sheet_layout_test.dart`.
-Sıradaki: CI yeşil → yürütücü birleştirir (cihaz kanıtı ayrı ajanda).
+Test: `flutter test test/editor_bar_customize_test.dart --reporter failures-only` (4 yeni: yok/var+dokun/düzen modu/gizli).
+Bütçe: `flutter test test/perf_budget_test.dart` tam yeşil (S17, S8, S47 değişmedi); jank/keyboard guard + design_tokens yeşil.
+Cihaz: yok (telefon yok) — "yazıldı, cihazda doğrulanmadı".
+Sıradaki: CI yeşil → yürütücü birleştirir.

@@ -2,6 +2,9 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 16 November 2026 {#2026-11-16}
+- **Eraser one tap away while typing:** if the note has pen drawings, an eraser button appears in the bottom bar; tapping it opens pen mode with the eraser selected. It stays hidden when there are no drawings, and you can hide it while customizing the bottom bar.
+
 ## 15 November 2026 {#2026-11-15}
 - **List templates now open like a note page:** picking Shopping list (or any list template) opens the list page directly. Type items side by side in the top row — "bananas apples, 2 milk, 3 kg tomatoes" — or say them into the microphone; items appear below as you type. Typos and glued words are understood; if a correction is wrong, tap the wand icon on the row and it won't be corrected again. The list starts in two columns (switch to one at the top), ready-made items are no longer pre-ticked, and shopping lists are sorted by aisle. A compact suggestion strip at the bottom shows your usuals, leftovers from last time and the aisles — one tap adds. **Done** or back saves the list to your notes.
 - **Quick add:** a new button in the "+" menu. Type or speak and it goes into the note you pick: "groceries: milk, bread" or "add milk to shopping list". You can also pick the target note from the chips; an item already on the list isn't added twice, and a ticked one is unticked. Keyboard and listening both start on open; turn either off with the two buttons at the top right. No AI, no quota.

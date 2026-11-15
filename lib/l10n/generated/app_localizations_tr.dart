@@ -8005,6 +8005,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickRowPen => 'Kalemle yaz · basılı tut: kalem ayarları';
 
   @override
+  String get editorBarEraser => 'Silgi · kalem kipini silgiyle açar';
+
+  @override
   String get quickRowReminder => 'Hatırlatıcı';
 
   @override

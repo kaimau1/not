@@ -2,6 +2,9 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 16 Kasım 2026 {#2026-11-16}
+- **Yazarken de silgi bir dokunuşta:** notta kalemle çizim varsa alt çubukta silgi düğmesi belirir; dokununca kalem kipi silgi seçili açılır. Çizim yoksa görünmez; istemezsen alt çubuğu düzenlerken gizleyebilirsin.
+
 ## 15 Kasım 2026 {#2026-11-15}
 - **Liste şablonları artık not sayfası gibi açılıyor:** Alışveriş listesi (ve diğer liste şablonları) seçilince doğrudan liste sayfası gelir. Üstteki satıra yan yana yaz — "muz elma, 2 süt, 3 kg domates" — ya da mikrofona söyle; maddeler sen yazarken aşağıda canlı oluşur. Yazım bozuk ya da yapışık olsa da tanır ("yunurta" → Yumurta, "çilekkivi" → Çilek + Kivi); yanlış düzelttiyse satırdaki değnek simgesine dokun, bir daha düzeltmez. Liste iki sütun başlar (üstten tek sütuna geçebilirsin), hazır maddeler işaretli gelmez, alışverişte reyon sırasına dizilir. Altta kompakt öneri şeridi: en çok eklediklerin, geçen seferden kalanlar ve reyonlar — tek dokunuşla eklenir. **Bitti** ya da geri: liste notlarına kaydedilir.
 - **Hızlı ekle:** "+" menüsünde yeni düğme. Yaz ya da söyle, seçtiğin nota eklensin: "market: süt, ekmek" ya da "alışveriş listesine süt ekle". Hedef notu alttaki çiplerden de seçebilirsin; zaten listede olan madde ikinci kez eklenmez, işaretliyse işareti kalkar. Açılınca klavye ve dinleme birlikte gelir; sağ üstteki iki düğmeyle istediğini kapatırsın. Yapay zekâ kullanmaz, kota harcamaz.
