@@ -75,7 +75,11 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
   late final List<_Row> _rows = [
     for (final i in _initial?.items ?? const <String>[]) _Row(i),
   ];
-  bool _dirty = false;
+  /// Değişti mi — yalnız [PopScope] dinler (S47): ilk tuşta `setState`
+  /// bütün düzenleyiciyi (20 maddede ~1600 widget) baştan kuruyordu.
+  final _dirtyN = ValueNotifier(false);
+  bool get _dirty => _dirtyN.value;
+  set _dirty(bool v) => _dirtyN.value = v;
 
   static NoteType _normalize(NoteType t) =>
       t == NoteType.ordered || t == NoteType.checklist ? t : NoteType.text;
@@ -91,6 +95,7 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
     _body.dispose();
     _add.dispose();
     _addFocus.dispose();
+    _dirtyN.dispose();
     for (final r in _rows) {
       r.dispose();
     }
@@ -98,7 +103,7 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
   }
 
   void _touch() {
-    if (!_dirty) setState(() => _dirty = true);
+    _dirty = true;
   }
 
   /// Liste ↔ yazı geçişinde içerik taşınır, kaybolmaz.
@@ -324,13 +329,17 @@ class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
         ],
       ],
     );
-    return PopScope(
-      canPop: !_dirty,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final navigator = Navigator.of(context);
-        if (await _confirmDiscard() && mounted) navigator.pop();
-      },
+    return ValueListenableBuilder<bool>(
+      valueListenable: _dirtyN,
+      builder: (context, dirty, scaffold) => PopScope(
+        canPop: !dirty,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
+          final navigator = Navigator.of(context);
+          if (await _confirmDiscard() && mounted) navigator.pop();
+        },
+        child: scaffold!,
+      ),
       child: Scaffold(
         appBar: AppBar(
           title: Text(_isNew ? l10n.templateNew : l10n.templateEdit),

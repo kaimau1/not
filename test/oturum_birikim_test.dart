@@ -46,14 +46,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/editor_harness.dart';
 
-/// **OTURUM BİRİKİMİ — S47** (kullanıcı bulgusu 2026-11-15, 1.2.80:
+/// **OTURUM BİRİKİMİ — S51** (kullanıcı bulgusu 2026-11-15, 1.2.80:
 /// "uygulama kullanıldıkça kasma artıyor, sonda daha çok"). Ana ekrandan iki
 /// liste + iki metin notu sırayla 20 kez aç → dokun → klavye aç/kapa →
 /// geri. Ölçülen: aynı notun klavye karelerinin kurulum/dizilme/boyama
 /// sayısı (ilk ↔ son açılış), atılmamış nesneler, atılıp TOPLANMAYAN
 /// nesneler (bir dinleyicinin / zamanlayıcının tuttuğu), canlı Riverpod
 /// sağlayıcıları ve kapanmış nota bağlı olanlar, not akışı aboneliği, genel
-/// dinleyiciler, rota yığını, ticker. Bütçe `perf_budget/budgets.json` S47.
+/// dinleyiciler, rota yığını, ticker. Bütçe `perf_budget/budgets.json` S51.
 /// `editor_leak_test.dart`ın tamamlayıcısı (orada sağlayıcı ve GC yok).
 
 class _CountingRepo extends NotesRepository {
@@ -147,11 +147,11 @@ Future<void> _gc() async {
 }
 
 void main() {
-  testWidgets('S47: 20 tur gir-çık + klavye — kare maliyeti, sağlayıcı, '
+  testWidgets('S51: 20 tur gir-çık + klavye — kare maliyeti, sağlayıcı, '
       'dinleyici ve nesne sayıları sabit', (tester) async {
     final budget =
         (jsonDecode(File('test/perf_budget/budgets.json').readAsStringSync())
-                as Map<String, dynamic>)['S47']
+                as Map<String, dynamic>)['S51']
             as Map<String, dynamic>;
     DashboardScrollMemory.clear();
     TipOnce.resetSession();
@@ -377,7 +377,7 @@ void main() {
         'abone': repo.listens - repo.cancels,
       };
       // ignore: avoid_print
-      print('S47 tur $t: ${rows[t]}');
+      print('S51 tur $t: ${rows[t]}');
     }
     debugPrint = oldPrint;
 
@@ -401,12 +401,12 @@ void main() {
       'ticker': n(20, 'ticker'),
     };
     // ignore: avoid_print
-    print('S47: $measured');
+    print('S51: $measured');
     for (final e in measured.entries) {
       expect(
         e.value,
         lessThanOrEqualTo(budget[e.key] as int),
-        reason: 'S47 ${e.key} — kapanmış nota bağlı: ${rows[20]!['notaBagli']}',
+        reason: 'S51 ${e.key} — kapanmış nota bağlı: ${rows[20]!['notaBagli']}',
       );
     }
     expect(

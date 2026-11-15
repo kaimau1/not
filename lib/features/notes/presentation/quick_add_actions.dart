@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -34,6 +35,7 @@ import 'file_use_sheet.dart';
 import 'image_prepare_screen.dart';
 import 'notes_providers.dart';
 import 'qr_scan_screen.dart';
+import 'quick_drop_sheet.dart';
 import 'scan_review_screen.dart';
 import '../../../core/friendly_error.dart';
 
@@ -83,12 +85,14 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     NoteTemplate? template,
     UserTemplate? userTemplate,
   ]) async {
-    final content = await showNoteTemplateSheet(
+    final outcome = await pickTemplate(
       context,
+      ref,
       initial: template,
       initialUser: userTemplate,
     );
-    if (content == null || !mounted) return;
+    if (outcome == null || !mounted) return;
+    final content = outcome.content;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     final id = await repo.createNote(
@@ -99,8 +103,28 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       folderId: quickAddFolderId,
       listColumns: content.columns,
     );
-    await openNewNote(id, type: content.type);
+    if (outcome.open) {
+      await openNewNote(id, type: content.type);
+      return;
+    }
+    // Hızlı liste: liste sayfada kuruldu, not kaydedildi — editör ayrıca
+    // açılmaz; istenirse bildirimden açılır.
+    if (!mounted) return;
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(
+        l10n.quickListSaved(content.title),
+        action: SnackBarAction(
+          label: l10n.quickListOpen,
+          onPressed: () => unawaited(openNewNote(id, type: content.type)),
+        ),
+      );
   }
+
+  /// **HIZLI EKLE**: yazılanı/söyleneni var olan bir nota ekler (yeni not
+  /// açmaz).
+  Future<void> openQuickDrop() => showQuickDropSheet(context);
 
   Future<void> createNote(NoteType type) async {
     final repo = ref.read(notesRepositoryProvider);

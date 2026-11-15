@@ -117,7 +117,8 @@ void main() {
     board(tester).onReorder!(shown.indexOf('text'), shown.length - 1);
     await tester.pumpAndSettle();
     shown = board(tester).shown;
-    expect(shown.take(4), ['ordered', 'checklist', 'text', 'draw']);
+    // Yazma grubunda artık "Hızlı ekle" de var (2026-11-15).
+    expect(shown.take(5), ['ordered', 'checklist', 'quickdrop', 'text', 'draw']);
 
     // Kalıcı: kayıttan yeniden okununca da aynı sıra.
     MenuLayouts.reset();

@@ -1,7 +1,7 @@
 # DEVIR — oto/birikme-sizinti (kullandıkça artan kasma, 1.2.80)
 
 Yapılanlar:
-- Kanıt: `test/oturum_birikim_test.dart` (S47, budgets.json) — gerçek kabuk + kök sarmalayıcılar, 2 liste + 2 metin notu × 20 tur aç/dokun/klavye/geri.
+- Kanıt: `test/oturum_birikim_test.dart` (S51, budgets.json) — gerçek kabuk + kök sarmalayıcılar, 2 liste + 2 metin notu × 20 tur aç/dokun/klavye/geri.
 - Kök neden: `lib/features/calendar/presentation/note_calendar_links.dart` `noteCalendarLinksProvider` düz `Provider.family` → açılan her not için kalıcı örnek (4 not → 4). `autoDispose` → 0.
 - Docs: akicilik.md, regresyon_listesi.md, KONTROL_LISTEM "Telefonda bak", sürüm notu (tr/en 15 Kasım).
 

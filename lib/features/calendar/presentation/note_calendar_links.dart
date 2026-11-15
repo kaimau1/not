@@ -58,7 +58,7 @@ List<NoteCalendarLink> calendarLinksForNote(
   return out;
 }
 
-/// Editördeki notun bağları (tek not izlenir). `autoDispose` ŞART (S47,
+/// Editördeki notun bağları (tek not izlenir). `autoDispose` ŞART (S51,
 /// 2026-11-15): düz `family` iken oturumda açılan HER not için bir örnek
 /// kapanıştan sonra da yaşıyor, takvim akışları her yayında hepsini yeniden
 /// hesaplıyordu (açılan not sayısıyla büyüyen iş).

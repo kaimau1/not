@@ -176,7 +176,8 @@ The **AI** screen (⋮, or the rail on the left on wide screens):
 - **Lock:** lock a note; choose how it opens in Settings → **Note lock** (fingerprint, password or pattern; password or pattern on the web). Its content never leaks into search, widgets or AI. A lock is not encryption: it only stops this app from showing the note.
 - **Archive** and **Bin:** from the ⋮ menu; restore from the bin.
 - **Note links:** type `[[` while writing, or select text and choose **Link to note**; the chosen note's name becomes a link that opens it (the link survives renames). A **N backlinks** chip under the linked note's title lists the notes pointing to it. Note ⋮ → **Related notes** suggests similar notes; **Link** adds one in a tap.
-- **Templates:** + → From template; preview ready-made templates and pick items; turn your own note into one with ⋮ → **Save as template**, and change it in the template editor.
+- **Quick add:** + → Quick add; type or speak ("groceries: milk, bread", "add milk to shopping list") and it goes into an existing note.
+- **Templates:** + → From template; list templates open straight on a list page (type items side by side in the top row or say them, tap the suggestions below, **Done**), text templates are previewed; turn your own note into one with ⋮ → **Save as template**, and change it in the template editor.
 - **Notebook:** + → Templates → Notebook, or ⋮ → **Notebook view** in any note: lined/grid/dotted paper and pages. Collect another note's attachments into a notebook with ⋮ → **Collect into notebook**.
 
 ## Reminders {#reminders}
