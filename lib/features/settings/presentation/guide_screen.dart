@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/app_icons.dart';
-import '../../../app/theme/app_design.dart';
+import '../../../core/widgets/group_card.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/delayed_spinner.dart';
 
@@ -379,14 +379,7 @@ class _SectionCard extends StatelessWidget {
     // P62 PA4: ham Card yerine ayarlarla aynı grup yüzeyi.
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpace.s),
-      child: DecoratedBox(
-      decoration: AppSurface.group(theme),
-      child: ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadius.l),
-      child: Material(
-      type: MaterialType.transparency,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: GroupCard(
         children: [
           InkWell(
             key: ValueKey('guide-section-${section.id}'),
@@ -470,9 +463,6 @@ class _SectionCard extends StatelessWidget {
                   ),
           ),
         ],
-      ),
-      ),
-      ),
       ),
     );
   }

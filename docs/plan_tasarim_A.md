@@ -476,7 +476,7 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 | [x] PA1 | Ayar satır dili: gruplar, satır kalıbı, kök sayfa, geniş ekran, bütün alanların grup etiketleri | **fable** | PA0 | S29, S36 | hayır | APK-1 |
 | [x] PA2 | Hesap ailesi: kimlik kartı, hesap levhası, Ayarlar → Hesap, `settings_account.dart`taki öbür satırlar | **fable** | PA1 | S30 | hayır | APK-1 |
 | [x] PA3 | Öbür ayar alanları + tema seçici, yazma çubuğu ayarı, kilit karoları | **fable** | PA1 (PA2 ile paralel) | S29 değişmez | hayır | APK-1 |
-| PA4 | Yan ekranlar: premium, gizlilik, kılavuz, kişiler, hesap gerekli, yedek diyalogları | **fable** | — (PA1–PA3 ile paralel) | yok | hayır | APK-1 |
+| [x] PA4 | Yan ekranlar: premium, gizlilik, kılavuz, kişiler, hesap gerekli, yedek diyalogları | **fable** | — (PA1–PA3 ile paralel) | yok | hayır | APK-1 |
 | PA5 | Bildirim hunisi: dört huni → `appNotice`, şeridin `app.dart`a bağlanması, mandal, testler | opus (kılık iskelette hazır) | PA0 | S31 | **evet** | APK-2 |
 | PA6 | Kalıcı şeritler tek kılıkta (`AppBanner`) + bildirimlerin görsel son bakışı | **fable** | PA5 | S32 | **evet** | APK-2 |
 | PA7 | Ana ekran yana çekiş hissi, liste satırı çekişi, çerçeve belirteçleri | **fable** (ölçüm koşusu: sonnet) | PA6 | S33 | **evet** (kötüleşme sıfır) | APK-2 |
@@ -516,7 +516,8 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 - Kabul: §2.4 (bu dosyalar); tur "sonra" karşılaştırması; S29 değişmez (ağır alan `ai` — satır içeriği ağırlaşmadı).
 - Tuzaklar: seslendirme TEK blok (2026-08-09); tema seçici önizlemeli kartlar (`theme_picker.dart:139`); yazı boyutu dört kademe (`settings_appearance.dart:697`); eklenti anahtarları ayarlarda kalır; `_ExpandTile` / `ExpandReveal` aynen; kaydırıcılar (`_SpeechRateSlider` …) kendi durumunu tutar — satır sarmalı değişince durum düşmesin (anahtar).
 
-**PA4 — Yan ekranlar (fable).** §2.2 "Yan ekranlar"; bulgu A12.
+**[x] PA4 — Yan ekranlar (fable).** §2.2 "Yan ekranlar"; bulgu A12.
+- **Durum (2026-11-15, dal `oto/G1-ayarlar`, opus):** ortak `GroupCard` (`lib/core/widgets/group_card.dart`: `AppSurface.group`, köşe `AppRadius.l`, ince ayraç); Premium durum + ayrıcalıklar + keşfet TEK grup kartlarında, BYOK `AppBanner`, başlıklar `SectionLabel`; kılavuz bölümleri `GroupCard`; Kişiler istek kartı ve hesap-gerekli AI kartları grup yüzeyi; elle köşe/ikon/punto → belirteç (bütçe radius 219→217, iconSize 433→426, fontSize 193→192, fontWeight 131→130). Gizlilik ve `backup_ui` zaten temizdi (ham `Card`/elle değer yok). İçerik ve sıra aynı. Bekçi `test/side_screens_surface_test.dart` (ham `Card` yok). Tur karşılaştırması yapılmadı (yan ekranlar turda yok) — sabah bakılacak.
 - Dosyalar: `premium_screen.dart`, `privacy_screen.dart`, `guide_screen.dart`, `backup_ui.dart` (settings), `lib/features/friends/presentation/friends_screen.dart`, `lib/features/auth/presentation/account_required.dart`; `test/guide_screen_test.dart`, `test/friends_screen_test.dart`.
 - Önce kanıt: bu ekranların tur sahnesi yoksa ekle (`premium`, `gizlilik`, `kilavuz`, `kisiler` — yol turda varsa; yoksa widget testiyle ekran görüntüsü yerine yapı testi: "ham `Card` yok").
 - İş: ham `Card` + `ListTile` → `AppSurface.group` / `paper` + satır dili; başlıklar `AppText`; premium'da tek dolu düğme.
