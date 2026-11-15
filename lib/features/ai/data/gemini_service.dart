@@ -257,10 +257,36 @@ class GeminiService {
   /// Ayarlardan gelen kullanıcı model seçimleri (null = otomatik).
   final String? Function(AiTask) _taskModel;
 
-  /// Oturum önbelleği: API'den çekilen model kataloğu ve son çalışan model.
+  /// Oturum önbelleği: API'den çekilen model kataloğu.
   List<AiModel>? _catalog;
-  List<String>? _candidates;
-  String? _activeModel;
+
+  /// Kota (429) ya da "model yok" (404) alan modeller bir süre atlanır
+  /// (RPD → Pasifik gece yarısına dek, RPM → 1 dk). Eski "son çalışan modeli
+  /// hatırla" kuralının yerini aldı: zincir artık göreve göre değiştiği için
+  /// kısa işte çalışan Gemma'nın PDF işine taşınmaması gerekiyordu.
+  final cooldown = ModelCooldown();
+
+  /// Görev → otomatik zincir türü.
+  static ModelChain chainOf(AiTask task) => switch (task) {
+    AiTask.general => ModelChain.general,
+    AiTask.voice => ModelChain.voice,
+    AiTask.document || AiTask.podcast || AiTask.translate => ModelChain.long,
+  };
+
+  /// Gemma (16K TPM, JSON/görsel yok) yalnız bu boydan kısa düz metinde.
+  /// ~4 karakter ≈ 1 token; yanıta da pay bırakılır.
+  static const _shortInputChars = 24000;
+
+  static bool _isShortText(List<Map<String, dynamic>> contents) {
+    var chars = 0;
+    for (final c in contents) {
+      for (final p in (c['parts'] as List? ?? const [])) {
+        if (p is! Map || p.keys.any((k) => k != 'text')) return false;
+        chars += '${p['text']}'.length;
+      }
+    }
+    return chars < _shortInputChars;
+  }
 
   /// Anahtarın çalıştığını model listesini çekerek doğrular.
   Future<bool> validateKey(String key) async {
@@ -343,56 +369,88 @@ class GeminiService {
     ];
   }
 
-  /// Deneme sırası: katalogdaki kimlikler. Katalog boşsa (sağlayıcı listeyi
-  /// vermediyse) kullanıcının seçtiği model tek aday olur.
-  Future<List<String>> _fetchCandidates(String key) async {
+  /// Otomatik deneme sırası. Gemini'de görev tablosu (model_catalog.dart
+  /// `geminiChains`), başka sağlayıcıda ya da tablodaki hiçbir model
+  /// katalogda yoksa katalogdaki SOHBET modelleri — eskiden TTS/embedding
+  /// dahil her kimlik deneniyordu.
+  Future<List<String>> chainIds(
+    String key,
+    ModelChain chain, {
+    bool allowShortOnly = false,
+  }) async {
     final catalog = _catalog ??= await _fetchCatalog(key);
-    final ids = [for (final model in catalog) model.id];
-    if (ids.isNotEmpty) return ids;
-    final chosen = _taskModel(AiTask.general);
-    return chosen == null ? const [] : [chosen];
+    if (_provider == AiProvider.gemini) {
+      final ordered = [
+        for (final m in orderForChain(chain, catalog))
+          if (allowShortOnly || !isShortOnly(m.id)) m.id,
+      ];
+      if (ordered.isNotEmpty) return ordered;
+    }
+    return [
+      for (final m in catalog)
+        if (m.kind == AiModelKind.chat) m.id,
+    ];
   }
 
-  /// [run]'ı modellerle sırayla dener: 404 ve 429'da sıradaki modele geçer,
-  /// diğer hatalar aynen fırlatılır. Çalışan model hatırlanır; sonraki
-  /// çağrılar doğrudan onunla başlar. [prefer] verilirse o çağrı için ilk
-  /// sıraya alınır (hız tercihi) ama genel sıralamayı değiştirmez.
+  /// [run]'ı modellerle sırayla dener: 404 ve 429'da sıradaki modele geçer
+  /// ve o modeli bir süre atlar ([cooldown]); diğer hatalar aynen fırlatılır.
+  /// [prefer] (kullanıcının seçimi) katalogda varsa ilk sıraya alınır; artık
+  /// yoksa yok sayılır, yani "Otomatik"e düşülür.
   Future<T> _withModel<T>(
     String key,
     Future<T> Function(String model) run, {
     String? prefer,
+    ModelChain chain = ModelChain.general,
+    bool allowShortOnly = false,
   }) async {
-    final candidates = _candidates ??= await _fetchCandidates(key);
+    final candidates = await chainIds(
+      key,
+      chain,
+      allowShortOnly: allowShortOnly,
+    );
+    final catalog = _catalog ?? const <AiModel>[];
     // Katalog boş VE kullanıcı model seçmediyse denenecek hiçbir şey yok:
-    // `ordered` boş kalır, döngü hiç dönmez ve eskiden `lastSkipped!` null
-    // kontrolünde patlıyordu. Kullanıcıya ne yapacağını söyle.
-    if (candidates.isEmpty && prefer == null && _activeModel == null) {
+    // eskiden `lastSkipped!` null kontrolünde patlıyordu. Kullanıcıya ne
+    // yapacağını söyle.
+    if (candidates.isEmpty && prefer == null) {
       throw GeminiException.of(
         GeminiErrorKind.modelListFailed,
         detail: _provider.label,
       );
     }
     final first =
-        prefer != null && (candidates.isEmpty || candidates.contains(prefer))
+        prefer != null &&
+            (catalog.isEmpty || catalog.any((m) => m.id == prefer))
         ? prefer
-        : _activeModel;
-    final ordered = [?first, ...candidates.where((m) => m != first)];
+        : null;
+    final ordered = [
+      for (final m in [?first, ...candidates.where((m) => m != first)])
+        if (!cooldown.isCooling(m)) m,
+    ];
+    // Hepsi kotada: boşuna istek atmadan söyle.
+    if (ordered.isEmpty) {
+      throw const GeminiException.of(GeminiErrorKind.rateLimited);
+    }
     JsonHttpException? lastSkipped;
     for (final model in ordered) {
       try {
-        final result = await run(model);
-        if (prefer == null) _activeModel = model;
-        return result;
+        return await run(model);
       } on JsonHttpException catch (e) {
-        final status = e.response?.statusCode;
-        if (status == 404 || status == 429) {
+        final status = e.response?.statusCode ?? 0;
+        // Gemma ve Transcribe "yedek" modeller: istek biçimini (JSON, boy)
+        // desteklemiyorsa 400 verir — o zaman da sıradakine geçilir.
+        final lenient =
+            status == 400 &&
+            (isShortOnly(model) || model.contains('transcribe'));
+        if (status == 404 || status == 429 || lenient) {
+          cooldown.hit(model, status, body: e.response?.data);
           lastSkipped = e;
           continue;
         }
         throw _mapDioError(e);
       }
     }
-    // ordered hiç boş olamaz; buraya düştüysek hepsi 404/429 verdi.
+    // ordered boş değil; buraya düştüysek hepsi atlandı.
     throw _mapDioError(lastSkipped!);
   }
 
@@ -400,12 +458,16 @@ class GeminiService {
     List<Map<String, dynamic>> parts, {
     bool jsonOutput = false,
     String? preferModel,
+    AiTask task = AiTask.general,
+    ModelChain? chain,
   }) => _generateFromContents(
     [
       {'role': 'user', 'parts': parts},
     ],
     jsonOutput: jsonOutput,
     preferModel: preferModel,
+    task: task,
+    chain: chain,
   );
 
   /// Baytları base64'e çevirir; büyükse ARKA PLANDA.
@@ -430,7 +492,10 @@ class GeminiService {
     bool jsonOutput = false,
     String? preferModel,
     Duration? timeout,
+    AiTask task = AiTask.general,
+    ModelChain? chain,
   }) async {
+    final prefer = preferModel ?? _taskModel(task);
     // Anahtar yoksa dahili yol: istek Firebase AI Logic üzerinden gider.
     final stored = await _keyStore.read(_provider);
     if (stored == null || stored.isEmpty) {
@@ -441,10 +506,11 @@ class GeminiService {
       return builtIn.generate(
         contents,
         jsonOutput: jsonOutput,
-        preferModel: preferModel ?? _taskModel(AiTask.general),
+        preferModel: prefer,
         timeout: timeout,
       );
     }
+    final useChain = chain ?? chainOf(task);
     final key = stored;
     // İstek gövdesi sağlayıcının tel biçimine BURADA çevrilir; çağrı yerleri
     // (özet, OCR, sohbet...) Gemini şeklini üretmeye devam eder.
@@ -463,7 +529,12 @@ class GeminiService {
             jsonOutput: jsonOutput,
           ),
         ),
-        prefer: preferModel ?? _taskModel(AiTask.general),
+        prefer: prefer,
+        chain: useChain,
+        allowShortOnly:
+            useChain == ModelChain.general &&
+            !jsonOutput &&
+            _isShortText(contents),
       );
     } on UnsupportedContentException catch (e) {
       throw GeminiException.of(e.kind, detail: e.provider);
