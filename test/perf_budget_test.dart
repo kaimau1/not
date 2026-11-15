@@ -10,6 +10,7 @@ import 'package:notlar/features/calendar/domain/calendar_event.dart';
 import 'package:notlar/features/calendar/domain/task_item.dart';
 import 'package:notlar/features/calendar/presentation/calendar_screen.dart';
 import 'package:notlar/features/calendar/presentation/calendar_views.dart';
+import 'package:notlar/features/calendar/presentation/month_grid.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
@@ -1809,6 +1810,34 @@ void main() {
     // ignore: avoid_print
     print('S35: toplam kurulum ${_sum(c)}');
     _expectBudget('S35', {'liste_boy_karesi': resized});
+  });
+
+  // S34: takvim ajandasında açık mini ayı bir ay ileri fırlat (P62 PA8).
+  testWidgets('S34: mini ay kaydırma (telefon, ajanda)', (tester) async {
+    await _pumpCalendar(tester, 'agenda');
+    await tester.pumpAndSettle();
+    // Karşılaştırma: mini ayın ilk açılış karesi (hedef: kaydırmanın en
+    // ağır karesi bunu aşmaz).
+    final open = await _frames(tester, () async {
+      await tester.tap(find.byKey(const ValueKey('calendar-month-toggle')));
+    });
+    await tester.pumpAndSettle();
+    final grid = await _frames(tester, () async {
+      await tester.fling(find.byType(MonthGrid), const Offset(-300, 0), 1500);
+    }, frames: 40);
+    // ignore: avoid_print
+    print('S34: açılış karesi ${open.worst}');
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<MonthGrid>(find.byType(MonthGrid)).month,
+      DateTime(2026, 12),
+      reason: 'ay ilerledi',
+    );
+    _expectBudget('S34', {
+      'ay_sayfasi': grid.counts['_MonthPage'] ?? 0,
+      'gun_hucresi': grid.counts['_DayCell'] ?? 0,
+      'kare_kurulum': grid.worst,
+    });
   });
 
   // S36: geniş ekranda ayar alanları arasında geçiş.

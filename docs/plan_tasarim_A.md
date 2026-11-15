@@ -479,7 +479,7 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 | [x] PA4 | Yan ekranlar: premium, gizlilik, kılavuz, kişiler, hesap gerekli, yedek diyalogları | **fable** | — (PA1–PA3 ile paralel) | yok | hayır | APK-1 |
 | [x] PA5 | Bildirim hunisi: dört huni → `appNotice`, şeridin `app.dart`a bağlanması, mandal, testler | opus (kılık iskelette hazır) | PA0 | S31 | **evet** | APK-2 |
 | [x] PA6 | Kalıcı şeritler tek kılıkta (`AppBanner`) + bildirimlerin görsel son bakışı | **fable** | PA5 | S32 | **evet** | APK-2 |
-| PA7 | Ana ekran yana çekiş hissi, liste satırı çekişi, çerçeve belirteçleri | **fable** (ölçüm koşusu: sonnet) | PA6 | S33 | **evet** (kötüleşme sıfır) | APK-2 |
+| [x] PA7 | Ana ekran yana çekiş hissi, liste satırı çekişi, çerçeve belirteçleri | **fable** (ölçüm koşusu: sonnet) | PA6 | S33 | **evet** (kötüleşme sıfır) | APK-2 |
 | PA8 | Takvim mini ayı: parmağı izleyen sayfa + aç / kapa boyamada | **fable** | PA0 (bağımsız) | S34, S35 | hayır | APK-2 |
 | PA9 | Çitte kalan 9 `showSnackBar` + 3 `hideCurrentSnackBar` | sonnet | PA5 + P63 birleşmiş | mandal 0 | hayır | sonraki |
 
@@ -540,7 +540,8 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 - Kabul: §5.6'nın şerit maddeleri; S32 `izgara_boy_karesi` 2; boy animasyonu mandalı 2 → 1; `due-banner` 44 dp tek satır (`due_items_test.dart:137`); cihaz A/B (açılış, liste).
 - Tuzaklar: `UpdateBanner`ın üç `ValueNotifier` düzeni ve `ValueKey('update-banner')`; "dönen çark yok" kararı; kapı şeridi kenardan kenara KALIR; şerit yokken `SizedBox.shrink`.
 
-**PA7 — Yana çekiş hissi (fable; ölçüm koşusu sonnet).** §6.2 "Ana ekran", "Liste satırı", "Çerçeve"; bulgular K1–K5, K9.
+**[x] PA7 — Yana çekiş hissi (fable; ölçüm koşusu sonnet).** §6.2 "Ana ekran", "Liste satırı", "Çerçeve"; bulgular K1–K5, K9.
+- **Durum (2026-11-15, dal `oto/G3-bildirim-kaydirma`, opus; altı ayrı commit):** (1) `FolderSwipe` eşik / fiske / lastik `AppSwipe`ten, `FolderSwipe.commitFraction` silindi, düzen oranları `_kFollowLimit` / `_kLabelWidth`; yeni `test/app_design_test.dart`. (2) geri dönüş `AppSwipe.settleFor` + `emphasized` (test önce kırmızı: 20 = 20 kare; sonra kısa < uzun). (3) fiskeyle geçişte tek `selectionClick` (test önce kırmızı). (4) etiket kartı belirteçlere (köşe `AppRadius.m`, dolgu `m`/`s`, simge `xs`, yazı `AppText.label`). **Sapma (sabah bakılacak):** çekişe bağlı solma (`Opacity`) ve eşikte renk geçişi (`AnimatedContainer`) S23 en ağır kareyi 2282 → 2300 (yalnız solma: 2286), S33'ü 10 → 13 yaptı — etiket geçişten sonra da ağaçta kalıp tik başına kuruluyor; "S23 değişmez" kuralı gereği YAPILMADI, renk eşikte tek karede değişir (bugünkü gibi). (5) liste satırı: eşikte titreşim (`onUpdate`), arşiv zemini nötr `surfaceContainerHighest` (K6-1), belirteçler. (6) çerçeve: çekmece ve tam ekrandan çıkış `AppSwipe.commits` (`_kDrawerPull` 240; K6-3 %40 → %22, fiske 200 → 300; çıkış 56 → 52,8 dp), süre `AppMotion.short`, eğri `emphasized`. Çekmecenin widget testi yok (önceden de yoktu) — cihazda bakılacak. S23 2282, S33 10, S12 / S26 / S27 değişmedi. Token: radius 199→198, duration 190→189, curve 78→77, iconSize 400→397, fontWeight 118→117.
 - Dosyalar: `dashboard_widgets.dart` (YALNIZ `FolderSwipe` `:1243-1529`, `_SwipeActions` `:1585-1665`), `lib/app/app_frame.dart`; `test/home_gestures_test.dart`, yeni `test/app_design_test.dart`, `test/rail_scope_menu_test.dart` (çekmece testleri varsa).
 - Önce kanıt: S33 tabanı (PA0'dan); kırmızı testler §6.5; taban profil APK'sı (A = APK-1 ya da PA6 sonrası dal başı).
 - İş (ayrı commit — hız hissi kuralı): (1) sayılar `AppSwipe`e; (2) geri dönüş `settleFor`; (3) fiske titreşimi; (4) etiket kılığı + solma; (5) liste satırı; (6) çerçeve.

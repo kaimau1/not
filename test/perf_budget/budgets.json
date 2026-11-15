@@ -287,6 +287,15 @@
     "hedef": "0 / 0 / etiket + FolderSwipe kadar",
     "neden": "P62 PA0 ilk ölçüm = hedef (taban, mandal); PA7 çekiş hissini değiştirirken aşılmamalı"
   },
+  "S34": {
+    "senaryo": "Takvim mini ayı kaydırma: telefon, calendar_view=agenda (S22 düzeneği); mini ayı aç, ızgarayı bir ay ileri fırlat (-300 dp, 1500 dp/sn), 40 kare. ay_sayfasi = _MonthPage kurulumu, gun_hucresi = _DayCell, kare_kurulum = en ağır kare",
+    "ay_sayfasi": 0,
+    "gun_hucresi": 42,
+    "kare_kurulum": 1396,
+    "bugun": "0 / 42 / 1396 (2026-11-15, PA8 taban — değişiklikten ÖNCE: izleme yok, bırakışta ay tek karede değişiyor, 42 hücre + bütün takvim ekranı o karede; mini ayın açılış karesi 1601)",
+    "hedef": "komşu ay bir kez kurulur; en ağır kare ≤ mini ayın ilk açılış karesi",
+    "neden": "P62 PA8 ilk ölçüm (taban)"
+  },
   "S35": {
     "senaryo": "Takvim mini ayı aç → kapat: telefon, calendar_view=agenda (S22 düzeneği); calendar-month-toggle a iki kez dokun, her birinden sonra 30 kare; ajanda listesinin boyunun değiştiği kare sayısı",
     "liste_boy_karesi": 28,
