@@ -1,3 +1,4 @@
+import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/app/second_note.dart';
 import 'package:notlar/features/notes/presentation/notes_providers.dart'
     show searchQueryProvider, selectedFolderProvider, sharedFolderNotesProvider;
@@ -651,7 +652,8 @@ Future<void> _pumpApp(
                 .toLanguageTag();
             return fixedTypography(
               context,
-              child ?? const SizedBox(),
+              // Uygulamadaki gibi bildirim şeridi (P62 PA5).
+              AppNoticeHost(child: child ?? const SizedBox()),
               _tourFont ?? 1,
             );
           },
@@ -726,6 +728,36 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
   ('sablon-duzenle', '/', (t) async {
     await _openTemplates(t);
     await t.tap(find.byKey(const ValueKey('tpl-new')));
+    await _settle(t);
+  }),
+  // P62 PA5: bildirim şeridi — ipucu üstte (arama hapının altında), "Geri
+  // al" dipte "+" satırının yanında, "Yenilikler" düğme satırının üstünde.
+  ('ana-ipucu', '/', (t) async {
+    appNotice.show(
+      const AppNoticeData(
+        kind: AppNoticeKind.tip,
+        text: 'Klasörler arasında geçmek için ekranı yana kaydır',
+      ),
+    );
+    await _settle(t);
+  }),
+  ('ana-gerial', '/', (t) async {
+    appNotice.show(
+      AppNoticeData(text: 'Not çöpe taşındı', actionLabel: 'Geri al', onAction: () {}),
+    );
+    await _settle(t);
+  }),
+  ('ana-yenilikler', '/', (t) async {
+    appNotice.show(
+      AppNoticeData(
+        kind: AppNoticeKind.announce,
+        text: 'Yenilikler — 1.2.40',
+        details: const ['Bildirimler tek yerde', 'Kalıcı şeritler sade', '2 yenilik daha'],
+        actionLabel: 'Tümünü gör',
+        onAction: () {},
+        duration: const Duration(seconds: 12),
+      ),
+    );
     await _settle(t);
   }),
   ('cizgi-satirlar', '/note/n8', (t) async {}),

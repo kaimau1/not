@@ -17,7 +17,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 
 import 'l10n_ext.dart';
-import 'widgets/undo_snackbar.dart' show rootScaffoldMessengerKey;
+import 'widgets/undo_snackbar.dart' show AppMessages, rootScaffoldMessengerKey;
 
 /// **İSTEMCİ VERİ SÜRÜMÜ** (F1.5, 2026-10-19). Bu derlemenin güvenle
 /// okuyup YAZABİLDİĞİ veri biçiminin numarası. Yeni bir sürüm, eski
@@ -449,14 +449,13 @@ class _AppUpdateRunnerState extends ConsumerState<AppUpdateRunner>
     final messenger = rootScaffoldMessengerKey.currentState;
     if (messenger == null || !mounted) return;
     final l10n = context.l10n;
-    messenger.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 8),
-        content: Text(l10n.updateReadyToInstall(info.version)),
-        action: SnackBarAction(
-          label: l10n.updateInstallNow,
-          onPressed: () => unawaited(AppUpdate.install(info)),
-        ),
+    // showMessage: eylemli ham SnackBar kendiliğinden kapanmıyordu (B4).
+    messenger.showMessage(
+      l10n.updateReadyToInstall(info.version),
+      duration: const Duration(seconds: 8),
+      action: SnackBarAction(
+        label: l10n.updateInstallNow,
+        onPressed: () => unawaited(AppUpdate.install(info)),
       ),
     );
   }
@@ -492,7 +491,7 @@ class _UpdateBannerState extends State<UpdateBanner> {
         'aborted' || 'done' || 'busy' || 'browser' => null,
         _ => l10n.updateInstallFailed,
       };
-      if (text != null) messenger?.showSnackBar(SnackBar(content: Text(text)));
+      if (text != null) messenger?.showMessage(text);
     } finally {
       if (mounted) setState(() => _busy = false);
     }

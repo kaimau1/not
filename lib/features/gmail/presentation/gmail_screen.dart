@@ -829,9 +829,7 @@ class _GmailMessageScreenState extends ConsumerState<GmailMessageScreen> {
       });
     } catch (e) {
       ErrorLog.record('gmail-translate', e);
-      messenger.showSnackBar(
-        SnackBar(content: Text(friendlyError(l10n, e))),
-      );
+      messenger.showMessage(friendlyError(l10n, e));
     } finally {
       if (mounted) setState(() => _translating = false);
     }

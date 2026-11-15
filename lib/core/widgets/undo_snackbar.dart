@@ -1,5 +1,3 @@
-import '../../app/theme/app_tokens.dart';
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -7,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../friendly_error.dart';
+import 'app_notice.dart';
 
 /// Uygulama genelinde tek, kök ScaffoldMessenger. MaterialApp'e verilir; bu
 /// sayede bildirimler go_router sayfa geçişlerinden bağımsız, aynı messenger
@@ -95,25 +94,20 @@ void showUndoSnackBar(
   required VoidCallback onUndo,
   Duration duration = const Duration(seconds: 4),
 }) {
-  // LEVHADAN/DİYALOGDAN SİLME (2026-11-09 düzeltme, bekçi
-  // `undo_over_sheet_test`): kök messenger bildirimi alttaki sayfanın
-  // Scaffold'unda çizer; açık levha (ör. takvimin gün levhası, hızlı sil)
-  // onu ÖRTÜYOR, "Geri al"a basılamıyordu. Açılır rotadan çağrılınca en
-  // üst katmanda gösterilir.
-  final route = context.mounted ? ModalRoute.of(context) : null;
-  if (route is PopupRoute && route.isActive) {
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
-    if (overlay != null) {
-      rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
-      _OverlayUndo.show(
-        overlay,
-        message: message,
-        undoLabel: undoLabel,
-        onUndo: onUndo,
+  // BİLDİRİM ŞERİDİ (P62 PA5): şerit Navigator'ın ÜSTÜNDE — açık levha /
+  // diyalog onu örtmez (2026-11-09 levha üstü "Geri al" bulgusu, bekçi
+  // `undo_over_sheet_test`), yüzen düğme bölgesine girmez.
+  if (appNotice.hosted) {
+    rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+    appNotice.show(
+      AppNoticeData(
+        text: message,
+        actionLabel: undoLabel,
+        onAction: onUndo,
         duration: duration,
-      );
-      return;
-    }
+      ),
+    );
+    return;
   }
   final messenger =
       rootScaffoldMessengerKey.currentState ?? ScaffoldMessenger.of(context);
@@ -152,6 +146,9 @@ SnackBar timedSnackBar({
   Duration duration = const Duration(seconds: 5),
   EdgeInsetsGeometry? margin,
 }) {
+  // Şeritteki bildirimle üst üste binmesin (P62 PA5: P63 çitinde kalan
+  // SnackBar'lar).
+  appNotice.dismiss();
   final lifted = snackBarMarginOverKeyboard(margin);
   return SnackBar(
     behavior: lifted == null ? null : SnackBarBehavior.floating,
@@ -237,6 +234,19 @@ extension AppMessages on ScaffoldMessengerState {
                     Clipboard.setData(ClipboardData(text: detail.raw)),
               ));
     final shown = detail == null ? duration : const Duration(seconds: 6);
+    if (appNotice.hosted) {
+      hideCurrentSnackBar();
+      rootScaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      appNotice.show(
+        AppNoticeData(
+          text: message,
+          actionLabel: act?.label,
+          onAction: act?.onPressed,
+          duration: shown,
+        ),
+      );
+      return;
+    }
     showSnackBar(
       act == null
           ? () {
@@ -255,6 +265,13 @@ extension AppMessages on ScaffoldMessengerState {
             ),
     );
   }
+
+  /// "Hazırlanıyor…" gibi iletiyi iş bitince kapatır: messenger'daki
+  /// SnackBar ve şeritteki bildirim.
+  void hideMessage() {
+    hideCurrentSnackBar();
+    appNotice.dismiss();
+  }
 }
 
 /// [AppMessages.showMessage] en yakın messenger'da. `await` sonrası
@@ -267,123 +284,3 @@ void showAppMessage(
 }) =>
     ScaffoldMessenger.of(context)
         .showMessage(message, action: action, duration: duration);
-
-/// Açılır rotanın (levha/diyalog) ÜSTÜNDE duran "Geri al" bildirimi — bkz.
-/// [showUndoSnackBar]. Süre dolunca ya da düğmeye basılınca kalkar; levha
-/// kapansa da süresini doldurur.
-class _OverlayUndo extends StatefulWidget {
-  const _OverlayUndo({
-    required this.message,
-    required this.undoLabel,
-    required this.onUndo,
-    required this.duration,
-    required this.onDone,
-  });
-
-  final String message;
-  final String undoLabel;
-  final VoidCallback onUndo;
-  final Duration duration;
-  final VoidCallback onDone;
-
-  static OverlayEntry? _current;
-
-  static void show(
-    OverlayState overlay, {
-    required String message,
-    required String undoLabel,
-    required VoidCallback onUndo,
-    required Duration duration,
-  }) {
-    _current?.remove();
-    late final OverlayEntry entry;
-    var removed = false;
-    void done() {
-      if (removed) return;
-      removed = true;
-      if (identical(_current, entry)) _current = null;
-      entry.remove();
-    }
-
-    entry = OverlayEntry(
-      builder: (_) => _OverlayUndo(
-        message: message,
-        undoLabel: undoLabel,
-        onUndo: onUndo,
-        duration: duration,
-        onDone: done,
-      ),
-    );
-    _current = entry;
-    overlay.insert(entry);
-  }
-
-  @override
-  State<_OverlayUndo> createState() => _OverlayUndoState();
-}
-
-class _OverlayUndoState extends State<_OverlayUndo> {
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer(widget.duration, widget.onDone);
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final bottom =
-        MediaQuery.viewInsetsOf(context).bottom +
-        MediaQuery.paddingOf(context).bottom;
-    return Positioned(
-      left: 12,
-      right: 12,
-      bottom: bottom + 12,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: Material(
-            key: const ValueKey('overlay-undo'),
-            color: scheme.inverseSurface,
-            elevation: 6,
-            borderRadius: BorderRadius.circular(AppRadius.m),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(start: 16, end: 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.message,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: scheme.onInverseSurface),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _timer?.cancel();
-                      widget.onUndo();
-                      widget.onDone();
-                    },
-                    child: Text(
-                      widget.undoLabel,
-                      style: TextStyle(color: scheme.inversePrimary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

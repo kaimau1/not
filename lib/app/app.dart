@@ -11,6 +11,7 @@ import '../core/app_update.dart';
 import 'release_notes_toast.dart';
 import '../core/l10n_ext.dart';
 import '../core/widgets/customizable.dart';
+import '../core/widgets/app_notice.dart';
 import '../core/widgets/undo_snackbar.dart';
 import '../features/settings/presentation/app_lock.dart';
 import '../features/notes/presentation/note_write_issues.dart';
@@ -270,6 +271,10 @@ class NotlarApp extends ConsumerWidget {
               // Eski istemci kapısı (F1.5): `config/app.minClient` bu
               // sürümün veri sürümünü aştıysa tepede "güncelle" şeridi.
               child: UpdateRequiredBanner(
+                // BİLDİRİM ŞERİDİ (P62 PA5): ipucu / ileti / Geri al /
+                // duyuru tek yerde, Navigator'ın ve levhaların ÜSTÜNDE;
+                // kapı şeridinin altında, kilidin içinde.
+                child: AppNoticeHost(
                 // Not yazım sorunları (F1.6: 1 MiB sınırı / sunucu reddi).
                 child: NoteWriteIssueListener(
                   // Oturum servisleri (F2.4) — ana ekranın build'inden çıktı.
@@ -280,6 +285,7 @@ class NotlarApp extends ConsumerWidget {
                       ),
                     ),
                   ),
+                ),
                 ),
               ),
             ),

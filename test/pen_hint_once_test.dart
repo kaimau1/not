@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/core/widgets/undo_snackbar.dart';
 import 'package:notlar/features/notes/presentation/editor/stylus_toggle.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
@@ -84,5 +85,49 @@ void main() {
     // kapalı (ilk) · açık (ilk) · kapalı (yine) · açık (yine).
     expect(shown, [true, true, false, false]);
     expect(InkToolMemory.autoStylus, isTrue);
+  });
+
+  testWidgets('şeritte de bildirim alttaki panelin ÜSTÜNDE (P62 PA5)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final panel = GlobalKey();
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => AppNoticeHost(child: child!),
+        home: Scaffold(
+          body: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SnackBarObstacle(
+                  child: SizedBox(key: panel, height: 140),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    ScaffoldMessenger.of(tester.element(find.byKey(panel)))
+        .showMessage('kalem yazar');
+    await tester.pumpAndSettle();
+    final card = tester.getRect(
+      find
+          .ancestor(
+            of: find.text('kalem yazar'),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    expect(
+      card.bottom,
+      lessThanOrEqualTo(tester.getRect(find.byKey(panel)).top),
+    );
+    await tester.pump(const Duration(seconds: 5));
   });
 }

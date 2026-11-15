@@ -1,9 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../app/theme/app_tokens.dart';
+
+import 'widgets/app_notice.dart';
 
 /// **BİR KEZ ÇIKAN İPUÇLARI** (F14.6, 2026-10-31; plandaki öneri uygulandı:
 /// dört jest + oturumda en fazla bir ipucu).
@@ -77,8 +75,15 @@ abstract final class TipOnce {
     prefs.setStringList(prefsKey, shown.toList()..sort()).ignore();
   }
 
-  /// İpucunu gerekiyorsa en yakın messenger'da tek satır gösterir. true =
-  /// gösterildi.
+  /// İpucunu gerekiyorsa bildirim şeridinde ([appNotice]) gösterir. true =
+  /// gösterildi. ÜSTTE, DOKUNUŞ GEÇİRGEN, ilk dokunuşta kalkar (kullanıcı
+  /// bulgusu 2026-11-08: "bazı ipuçları tıklanabilir butonları kapatıyor").
+  ///
+  /// Şerit ağaçta yoksa ipucu "gösterildi" SAYILMAZ. Şerit doluysa (başka
+  /// bildirim görünüyor — ör. kalem kipi iletisi ile iki parmak ipucu aynı
+  /// anda) false döner ve ipucu ERTELENİR: şerit boşalınca hâlâ gerekiyorsa
+  /// çıkar, o zaman sayılır (P62 PA5). Tek erteleme yeri: yenisi eskisinin
+  /// yerine geçer.
   static bool show(
     BuildContext context,
     SharedPreferences prefs,
@@ -88,38 +93,38 @@ abstract final class TipOnce {
     Duration duration = const Duration(seconds: 5),
   }) {
     if (!due(prefs, id, sessionLimit: sessionLimit)) return false;
-    // ÜSTTE, DOKUNUŞ GEÇİRGEN (kullanıcı bulgusu 2026-11-08: "bazı ipuçları
-    // tıklanabilir butonları kapatıyor — gömülü eklerin menüsünde"): eskiden
-    // alttaki SnackBar ekin menüsünü/alt çubuğu 5 sn örtüyor, dokunuşu da
-    // yutuyordu. Artık ekranın tepesinde, IgnorePointer: alttaki düğmeye
-    // dokunuş geçer; ilk dokunuşta ipucu kalkar.
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
-    if (overlay == null) return false;
-    markShown(prefs, id);
-    _current?.remove();
-    late final OverlayEntry entry;
-    var removed = false;
-    void remove() {
-      if (removed) return;
-      removed = true;
-      if (identical(_current, entry)) _current = null;
-      entry.remove();
+    if (!appNotice.hosted) return false;
+    bool tryShow() {
+      final shown = appNotice.show(
+        AppNoticeData(text: text, kind: AppNoticeKind.tip, duration: duration),
+      );
+      if (shown) markShown(prefs, id);
+      return shown;
     }
 
-    entry = OverlayEntry(
-      builder: (context) => _TipBanner(
-        key: ValueKey('tip-$id'),
-        text: text,
-        duration: duration,
-        onDone: remove,
-      ),
-    );
-    _current = entry;
-    overlay.insert(entry);
-    return true;
+    _cancelDeferred();
+    if (tryShow()) return true;
+    void retry() {
+      if (appNotice.current != null) return;
+      _cancelDeferred();
+      if (appNotice.hosted && due(prefs, id, sessionLimit: sessionLimit)) {
+        tryShow();
+      }
+    }
+
+    _deferred = retry;
+    appNotice.addListener(retry);
+    return false;
   }
 
-  static OverlayEntry? _current;
+  static VoidCallback? _deferred;
+
+  static void _cancelDeferred() {
+    final d = _deferred;
+    if (d == null) return;
+    _deferred = null;
+    appNotice.removeListener(d);
+  }
 
   /// Ayarlar → "İpuçlarını yeniden göster".
   static Future<void> resetAll(SharedPreferences prefs) async {
@@ -129,112 +134,8 @@ abstract final class TipOnce {
 
   /// Testler arası oturum sınırını sıfırlar.
   @visibleForTesting
-  static void resetSession() => _sessionUsed = false;
-}
-
-/// Üstteki ipucu şeridi: belirir, [duration] sonra ya da ilk dokunuşta
-/// kalkar. Dokunuşu ENGELLEMEZ (Listener translucent + IgnorePointer).
-class _TipBanner extends StatefulWidget {
-  const _TipBanner({
-    super.key,
-    required this.text,
-    required this.duration,
-    required this.onDone,
-  });
-
-  final String text;
-  final Duration duration;
-  final VoidCallback onDone;
-
-  @override
-  State<_TipBanner> createState() => _TipBannerState();
-}
-
-class _TipBannerState extends State<_TipBanner> {
-  bool _visible = false;
-  bool _closing = false;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() => _visible = true);
-    });
-    _timer = Timer(widget.duration, _close);
-    // EKRANIN HERHANGİ BİR YERİNE ilk dokunuşta kalkar (2026-11-09 düzeltme:
-    // eskiden yalnız şeridin kendi kutusundaki dokunuş kaldırıyordu — şeridin
-    // Listener'ı yalnız kendi alanında isabet alır). Genel yol dokunuşu
-    // TÜKETMEZ; alttaki düğme yine çalışır.
-    GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
-  }
-
-  void _onPointer(PointerEvent event) {
-    if (event is PointerDownEvent) _close();
-  }
-
-  @override
-  void dispose() {
-    GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
-    // Zamanlayıcı ağaçla gider (testlerde bekleyen zamanlayıcı kalmasın).
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _close() {
-    if (!mounted || _closing) return;
-    _closing = true;
-    setState(() => _visible = false);
-    _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 220), widget.onDone);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final top = MediaQuery.paddingOf(context).top;
-    return Positioned(
-      left: 12,
-      right: 12,
-      top: top + 8,
-      child: IgnorePointer(
-          child: AnimatedOpacity(
-            opacity: _visible ? 1 : 0,
-            duration: AppMotion.of(context, AppMotion.short),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: Material(
-                  color: scheme.inverseSurface,
-                  elevation: 4,
-                  borderRadius: BorderRadius.circular(AppRadius.m),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          size: 18,
-                          color: scheme.inversePrimary,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            widget.text,
-                            style: TextStyle(color: scheme.onInverseSurface),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-    );
+  static void resetSession() {
+    _sessionUsed = false;
+    _cancelDeferred();
   }
 }

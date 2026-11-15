@@ -98,7 +98,7 @@ Future<bool> fetchAttachmentNow(
       ..showMessage(l10n.attachmentFailed(friendlyError(l10n, e)));
     return false;
   }
-  messenger.hideCurrentSnackBar();
+  messenger.hideMessage();
   ref.read(localFilesRevisionProvider.notifier).bump();
   return localFileExists(attachment.localPath);
 }
@@ -434,7 +434,7 @@ Future<Attachment?> resolveWebDriveAttachment(
     final bytes = await store.downloadBytes(attachment.driveId);
     final url = createBlobUrl(bytes, attachment.mimeType);
     _rememberWebDriveUrl(attachment.driveId, url);
-    messenger.hideCurrentSnackBar();
+    messenger.hideMessage();
     return attachment.copyWith(downloadUrl: url);
   } catch (e) {
     say(l10n.attachmentFailed(friendlyError(l10n, e)));

@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
@@ -61,6 +62,8 @@ Future<ProviderContainer> _pump(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('tr'),
+        // Uygulamadaki gibi bildirim şeridi (ipuçları şeritte çıkar).
+        builder: (context, child) => AppNoticeHost(child: child!),
         home: NoteEditorScreen(noteId: 'n', startDrawing: startDrawing),
       ),
     ),
@@ -256,9 +259,12 @@ void main() {
     await _pump(tester, size: const Size(400, 800), startDrawing: true);
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(PenTray), findsOneWidget);
-    // Parmak çiziyor: kaydırmanın yolu (iki parmak) söylenir.
-    expect(find.byKey(const ValueKey('tip-pen_two_finger')), findsOneWidget);
+    // Parmak çiziyor: kaydırmanın yolu (iki parmak) söylenir — şeritte
+    // kalem kipi iletisi (3 sn) kalkınca (tek bildirim kuralı, P62 PA5).
     final l10n = lookupAppLocalizations(const Locale('tr'));
+    expect(find.text(l10n.inkTwoFingerHint), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump();
     expect(find.text(l10n.inkTwoFingerHint), findsOneWidget);
     // Sayfanın altında yazmaya yer var ve çizgi indikçe uzar.
     final page = find.byType(PageInkStack);
@@ -286,7 +292,10 @@ void main() {
     await _pump(tester, startDrawing: true);
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(PenTray), findsOneWidget);
-    expect(find.byKey(const ValueKey('tip-pen_two_finger')), findsNothing);
+    expect(
+      find.text(lookupAppLocalizations(const Locale('tr')).inkTwoFingerHint),
+      findsNothing,
+    );
     await _end(tester);
   });
 

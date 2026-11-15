@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/core/widgets/app_sheet.dart';
 import 'package:notlar/core/widgets/undo_snackbar.dart';
 
@@ -11,6 +12,8 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         scaffoldMessengerKey: rootScaffoldMessengerKey,
+        // Uygulamadaki gibi bildirim şeridi Navigator'ın üstünde (P62 PA5).
+        builder: (context, child) => AppNoticeHost(child: child!),
         home: Scaffold(
           body: Builder(
             builder: (context) => Center(
@@ -45,8 +48,10 @@ void main() {
     await tester.tap(find.text('sil'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Geri al'), findsOneWidget);
-    await tester.tap(find.text('Geri al'), warnIfMissed: false);
+    expect(find.byKey(const ValueKey('notice-action')), findsOneWidget);
+    // warnIfMissed varsayılan: levha düğmeyi örterse test kırmızı.
+    await tester.tap(find.byKey(const ValueKey('notice-action')));
     expect(undone, isTrue);
+    await tester.pump(const Duration(seconds: 1));
   });
 }

@@ -1126,19 +1126,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ref.read(searchQueryProvider.notifier).set('');
     }
     ref.read(focusedNoteProvider.notifier).focus(id);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        // Geri sayımla kendiliğinden kapanır (bkz. timedSnackBar).
-        timedSnackBar(
-          content: Text(l10n.assistantNoteCreated),
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: l10n.openNote,
-            onPressed: () => _openNew(id),
-          ),
-        ),
-      );
+    // Geri sayımla kendiliğinden kapanır (bildirim şeridi).
+    ScaffoldMessenger.of(context).showMessage(
+      l10n.assistantNoteCreated,
+      action: SnackBarAction(
+        label: l10n.openNote,
+        onPressed: () => _openNew(id),
+      ),
+    );
   }
 
   /// Sağ alttaki asistan düğmesi: ortak dinleme levhasını açar ve seçilen
