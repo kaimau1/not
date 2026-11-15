@@ -16,6 +16,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show debugPrintLayouts;
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +27,7 @@ import 'package:notlar/app/second_note.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/core/tips.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
+import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/upload_queue.dart'
     show pendingUploadsProvider;
 import 'package:notlar/features/settings/presentation/settings_screen.dart';
@@ -2031,6 +2033,92 @@ void main() {
       'pen_tray': c['PenTray'] ?? 0,
       'kalem_resmi': c['_DockTool'] ?? 0,
       'panel': c['_Options'] ?? 0,
+    });
+    await endEditor(tester);
+  });
+  // S43 (P63 G4, PB5): canlı dikte kartı. Düzey ve sessizlik olayları
+  // editörde hiçbir şey kurmaz (yalnız dalga boyanır); metin olayı yalnız
+  // yazılan satırı kurar. Konuşma kanalı taklidi (voice_unavailable_test).
+  testWidgets('S43: dikte kartı (telefon, 30 madde)', (tester) async {
+    const events = EventChannel('dev.kaimau.notlar/speech');
+    const system = MethodChannel('dev.kaimau.notlar/system');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    MockStreamHandlerEventSink? sink;
+    messenger
+      ..setMockStreamHandler(
+        events,
+        MockStreamHandler.inline(onListen: (_, s) {
+          sink = s;
+        }),
+      )
+      ..setMockMethodCallHandler(system, (_) async => null);
+    DeviceSpeech.debugAvailable = true;
+    addTearDown(() {
+      DeviceSpeech.debugAvailable = null;
+      messenger
+        ..setMockStreamHandler(events, null)
+        ..setMockMethodCallHandler(system, null);
+    });
+    final repo = CountingNotesRepository();
+    await pumpEditor(tester, _list30, repo: repo);
+    await _settleGrowth(tester);
+    await tester.tap(find.text('madde 7'));
+    await tester.pump(const Duration(milliseconds: 400));
+    const counted = [
+      'NoteEditorScreen',
+      'NotePageCanvas',
+      _row,
+      'ListeningCard',
+      '_DictationPanel',
+    ];
+    int sum(Map<String, int> c) => counted.fold(0, (n, t) => n + (c[t] ?? 0));
+
+    final start = await _count(() async {
+      await tester.tap(find.byTooltip('Dikte').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    });
+    expect(sink, isNotNull, reason: 'dikte başlamadı');
+    final level = await _count(() async {
+      for (var i = 0; i < 20; i++) {
+        sink!.success({'level': (i % 5) / 4});
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    });
+    final text = await _count(() async {
+      for (final t in const ['bir', 'bir iki', 'bir iki üç', 'dört', 'beş']) {
+        sink!.success({'text': t});
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    });
+    // Sessizlik: konuşmadan sonra düzey 0 → geri sayım ilerler (bitmeden).
+    final silence = await _count(() async {
+      for (var i = 0; i < 6; i++) {
+        sink!.success({'level': 0.0});
+        await tester.pump(const Duration(milliseconds: 250));
+      }
+    });
+    final stop = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('dictation-stop')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      // Kanal iptali gerçek zamanda tamamlanır.
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+    });
+    expect(find.byKey(const ValueKey('dictation-panel')), findsNothing);
+    await tester.pump(const Duration(seconds: 3));
+    expect(repo.lastSaved!.items[7].text, contains('beş'));
+    _expectBudget('S43', {
+      'duzey': sum(level),
+      'sessizlik': sum(silence),
+      'basla_bitir_kok':
+          (start['NoteEditorScreen'] ?? 0) + (stop['NoteEditorScreen'] ?? 0),
+      'metin_satir': text[_row] ?? 0,
+      'metin_kok': text['NoteEditorScreen'] ?? 0,
     });
     await endEditor(tester);
   });

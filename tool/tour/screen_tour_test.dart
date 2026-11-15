@@ -37,6 +37,8 @@ import 'dart:ui' as ui;
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
+import 'package:notlar/features/notes/presentation/voice_capture_sheet.dart';
+import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
 import 'package:notlar/features/notes/presentation/editor/drawing_screen.dart';
@@ -752,9 +754,83 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
     );
     await _settle(t);
   }),
-  // PB1/PB5 sahneleri (duzen-serit, kisisellestir, dikte-kart, ses-levha-*)
-  // sahibi paketin "önce üret" adımında eklenir (plan §7.2 madde 4 notu).
+  // P63 G4 (PB5): sesle yazma — editörde dikte kartı, yapay zekâ levhasının
+  // dinleme / gözden geçirme / hata evreleri (konuşma kanalı taklidi).
+  ('dikte-kart', '/note/n4', (t) async {
+    _mockSpeech(t);
+    await t.tap(find.text('Toplantı notları').first, warnIfMissed: false);
+    await _settle(t);
+    await t.tap(find.byTooltip('Dikte').first);
+    await _settle(t);
+    _speechSink!.success({'text': 'yarın saat onda'});
+    for (final lv in const [0.3, 0.8, 0.6, 0.9]) {
+      _speechSink!.success({'level': lv});
+      await t.pump(const Duration(milliseconds: 60));
+    }
+    await t.pump(const Duration(milliseconds: 200));
+  }),
+  ('ses-levha-dinliyor', '/note/n4', (t) async {
+    await _openVoiceSheet(t);
+  }),
+  ('ses-levha-hazir', '/note/n4', (t) async {
+    await _openVoiceSheet(t);
+    await t.tap(find.byKey(const ValueKey('voice-listen-action')));
+    await _settle(t);
+  }),
+  ('ses-levha-hata', '/note/n4', (t) async {
+    await _openVoiceSheet(t, speak: false);
+    // Dinlerken tanıma hatası: kart açık kalır, hata metni kartın içinde.
+    // (Hata EVRESİ kayıt eklentisi ister — testte eklentinin kurucusu
+    // yakalanmamış istisna atıyor; turda çekilmez.)
+    _speechSink!.error(code: 'network', message: 'Bağlantı kurulamadı');
+    await _settle(t);
+  }),
+  // PB1 sahneleri (duzen-serit, kisisellestir) sahibi paketin "önce üret"
+  // adımında eklenir (plan §7.2 madde 4 notu).
 ];
+
+/// Konuşma kanalı taklidi: yerleşik tanıma var, olaylar [_speechSink]'ten.
+MockStreamHandlerEventSink? _speechSink;
+void _mockSpeech(WidgetTester tester) {
+  final messenger = tester.binding.defaultBinaryMessenger;
+  const events = EventChannel('dev.kaimau.notlar/speech');
+  const system = MethodChannel('dev.kaimau.notlar/system');
+  messenger
+    ..setMockStreamHandler(
+      events,
+      MockStreamHandler.inline(onListen: (_, sink) {
+        _speechSink = sink;
+      }),
+    )
+    ..setMockMethodCallHandler(system, (_) async => null);
+  // ignore: invalid_use_of_visible_for_testing_member
+  DeviceSpeech.debugAvailable = true;
+  addTearDown(() {
+    // ignore: invalid_use_of_visible_for_testing_member
+    DeviceSpeech.debugAvailable = null;
+    _speechSink = null;
+    messenger
+      ..setMockStreamHandler(events, null)
+      ..setMockMethodCallHandler(system, null);
+  });
+}
+
+/// Yapay zekâ ile sesli not levhası (dokunmalı kip: açılınca dinler).
+Future<void> _openVoiceSheet(WidgetTester tester, {bool speak = true}) async {
+  _mockSpeech(tester);
+  final context = tester.element(find.byType(NoteEditorScreen).first);
+  unawaited(
+    showVoiceCaptureSheet(context, target: VoiceCaptureTarget.editor),
+  );
+  await _settle(tester);
+  if (!speak) return;
+  _speechSink!.success({'text': 'yarın saat onda toplantı var'});
+  for (final lv in const [0.3, 0.8, 0.6, 0.9]) {
+    _speechSink!.success({'level': lv});
+    await tester.pump(const Duration(milliseconds: 60));
+  }
+  await tester.pump(const Duration(milliseconds: 200));
+}
 
 /// Kalem kipi: kalemle bir çizgi (kip açılır), ipucu ve çekmece insin.
 Future<void> _penMode(WidgetTester tester) async {

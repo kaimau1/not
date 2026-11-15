@@ -20,9 +20,15 @@ class DeviceSpeech {
   static const _method = MethodChannel('dev.kaimau.notlar/system');
   static const _events = EventChannel('dev.kaimau.notlar/speech');
 
+  /// Testte yerleşik tanıma var sayılır (`Platform.isAndroid` testte
+  /// false; P63 S43 dikte kartını tam editörde ölçer).
+  @visibleForTesting
+  static bool? debugAvailable;
+
   /// Cihazda konuşma tanıma kullanılabilir mi. Android dışında (web)
   /// yerleşik tanıma yoktur; çağıranlar eski ses yoluna düşer.
   static Future<bool> isAvailable() async {
+    if (debugAvailable case final v?) return v;
     if (kIsWeb || !Platform.isAndroid) return false;
     try {
       return await _method.invokeMethod<bool>('speechAvailable') ?? false;
