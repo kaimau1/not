@@ -478,7 +478,7 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 | [x] PA3 | Öbür ayar alanları + tema seçici, yazma çubuğu ayarı, kilit karoları | **fable** | PA1 (PA2 ile paralel) | S29 değişmez | hayır | APK-1 |
 | [x] PA4 | Yan ekranlar: premium, gizlilik, kılavuz, kişiler, hesap gerekli, yedek diyalogları | **fable** | — (PA1–PA3 ile paralel) | yok | hayır | APK-1 |
 | [x] PA5 | Bildirim hunisi: dört huni → `appNotice`, şeridin `app.dart`a bağlanması, mandal, testler | opus (kılık iskelette hazır) | PA0 | S31 | **evet** | APK-2 |
-| PA6 | Kalıcı şeritler tek kılıkta (`AppBanner`) + bildirimlerin görsel son bakışı | **fable** | PA5 | S32 | **evet** | APK-2 |
+| [x] PA6 | Kalıcı şeritler tek kılıkta (`AppBanner`) + bildirimlerin görsel son bakışı | **fable** | PA5 | S32 | **evet** | APK-2 |
 | PA7 | Ana ekran yana çekiş hissi, liste satırı çekişi, çerçeve belirteçleri | **fable** (ölçüm koşusu: sonnet) | PA6 | S33 | **evet** (kötüleşme sıfır) | APK-2 |
 | PA8 | Takvim mini ayı: parmağı izleyen sayfa + aç / kapa boyamada | **fable** | PA0 (bağımsız) | S34, S35 | hayır | APK-2 |
 | PA9 | Çitte kalan 9 `showSnackBar` + 3 `hideCurrentSnackBar` | sonnet | PA5 + P63 birleşmiş | mandal 0 | hayır | sonraki |
@@ -532,7 +532,8 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 - Kabul: §5.6; S31 hedefte; S13 / S24 değişmez; cihaz A/B (açılış, liste, klavye, yazma).
 - Tuzaklar: §5.3 "Tuzaklar"ın tamamı; `app.dart`a `MediaQuery.of` ekleme (R6); `app_update.dart` ve `drive_ui.dart`ta PA6'nın satırlarına (şerit kılığı) dokunma.
 
-**PA6 — Kalıcı şeritler (fable).** §5.4; bulgular B7, B8, A9'un ana ekran eşi. Ayrıca PA5'in görsel son bakışı.
+**[x] PA6 — Kalıcı şeritler (fable).** §5.4; bulgular B7, B8, A9'un ana ekran eşi. Ayrıca PA5'in görsel son bakışı.
+- **Durum (2026-11-15, dal `oto/G3-bildirim-kaydirma`, opus):** bekleyen ekler şeridi `AppBanner` (dikkat / başarısızda tehlike), `AnimatedSize` kalktı → S32 ızgara boy karesi 26 → 2 (hedef), boy animasyonu mandalı 2 → 1. `AppBanner.detail` (başlıkla aynı satır, `meta`, tek satır tam 44 dp); `DueBanner` (dikkat, "+N" hap rozeti `AppRadius.pill`, ✕ `MinTapTarget`, 44 dp korunur), `UpdateBanner` (eylem tonu, çark 18 dp, ilerleme çizgisi şeridin), `WebAttachmentsBanner` (dikkat, saydamlık çarpanı kalktı, "Göster" metin düğmesi), `UpdateRequiredBanner` (tehlike tonu, kenardan kenara aynen, yalnız boşluk/yazı belirteçleri). Yeni `test/app_banner_test.dart`. Token: radius 203→199, fontSize 181→179, duration 191→190, iconSize 405→400, alpha 165→164, fontWeight 120→118. Tur `ana` önce/sonra fark %8,96 (zamanı gelen şeridi 2 dp aşağı: üst pay 6 → `AppSpace.s`). PA5 kareleri (`ana-ipucu` / `ana-gerial` / `ana-yenilikler`) bakıldı — kılıkta düzeltme gerekmedi. S13 / S24 değişmedi.
 - Dosyalar: `lib/core/widgets/app_banner.dart` (`detail`), `lib/core/app_update.dart` (`UpdateBanner`, `UpdateRequiredBanner`), `due_banner.dart`, `drive_ui.dart` (`WebAttachmentsBanner`), `dashboard_widgets.dart` (YALNIZ `_PendingUploadsBar`, `:1692-1796`); `test/due_items_test.dart`, yeni `test/app_banner_test.dart`.
 - Önce kanıt: tur "önce" (`ana`; şeritli durumlar için sahne yoksa `ana-seritler`: yeni sürüm + zamanı gelen + bekleyen ek); S32 tabanı (PA0'dan).
 - İş: beş şerit `AppBanner`a (§5.4 tablosu), `AnimatedSize` kalkar; PA5 sonrası tur `ana-ipucu` / `ana-gerial` / `ana-yenilikler` karelerine bak — kılıkta pürüz varsa `app_notice.dart`ta düzelt (fable kararı).

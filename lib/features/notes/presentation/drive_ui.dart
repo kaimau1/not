@@ -11,6 +11,9 @@ import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/web_blob.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../../app/theme/app_design.dart' show AppTone;
+import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/app_banner.dart';
 import '../data/attachment_repository.dart';
 import '../data/drive_store.dart';
 import '../domain/attachment.dart';
@@ -327,41 +330,29 @@ class _WebAttachmentsBannerState extends ConsumerState<WebAttachmentsBanner> {
         if (!needsConnect && stuck == 0) return const SizedBox.shrink();
         return Padding(
           key: const ValueKey('web-attachments-banner'),
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-          child: Material(
-            color: scheme.secondaryContainer.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(14),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
-              child: Row(
-                children: [
-                  Icon(
-                    needsConnect
-                        ? Icons.add_to_drive_outlined
-                        : Icons.phone_android_outlined,
-                    size: 20,
-                    color: scheme.onSecondaryContainer,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      needsConnect
-                          ? l10n.webDriveBanner(inDrive.length)
-                          : l10n.webAttachmentsOnPhone(stuck),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSecondaryContainer,
-                      ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.m,
+            vertical: AppSpace.xs,
+          ),
+          // P62 PA6: tek şerit kılığı (AppBanner, dikkat tonu).
+          child: AppBanner(
+            tone: AppTone.attention,
+            icon: needsConnect
+                ? Icons.add_to_drive_outlined
+                : Icons.phone_android_outlined,
+            title: needsConnect
+                ? l10n.webDriveBanner(inDrive.length)
+                : l10n.webAttachmentsOnPhone(stuck),
+            trailing: needsConnect
+                ? TextButton(
+                    key: const ValueKey('web-attachments-connect'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTone.attention.colors(scheme).fg,
                     ),
-                  ),
-                  if (needsConnect)
-                    TextButton(
-                      key: const ValueKey('web-attachments-connect'),
-                      onPressed: _busy ? null : () => _connect(inDrive.first),
-                      child: Text(l10n.webDriveShow),
-                    ),
-                ],
-              ),
-            ),
+                    onPressed: _busy ? null : () => _connect(inDrive.first),
+                    child: Text(l10n.webDriveShow),
+                  )
+                : null,
           ),
         );
       },

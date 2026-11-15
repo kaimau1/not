@@ -1,10 +1,10 @@
 {
-  "radius": 203,
-  "fontSize": 181,
-  "duration": 191,
+  "radius": 199,
+  "fontSize": 179,
+  "duration": 190,
   "curve": 78,
-  "iconSize": 405,
-  "alpha": 165,
-  "fontWeight": 120,
+  "iconSize": 400,
+  "alpha": 164,
+  "fontWeight": 118,
   "haptic": 0
 }
