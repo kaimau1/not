@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../ai/data/semantic_search.dart' show SemanticIndex;
 import '../../notes/data/drive_store.dart';
 import '../../notes/data/local_notes_store.dart';
 import '../../notes/domain/ink_plan.dart';
@@ -109,6 +110,7 @@ class AccountService {
         .doc(uid);
     // Yalnız bu cihazda tutulan notlar da hesabın verisidir.
     await LocalNotesStore.forUid(uid)?.clearAll();
+    await SemanticIndex.deleteStore(uid);
     // Drive'daki ekler (bağlıysa): appDataFolder yalnız bu uygulamaya ait,
     // içindeki her şey bu hesabın ekleri. Bağlı değilse/ulaşılamazsa
     // atlanır — dosyalar kullanıcının KENDİ Drive'ında, uygulama silinince

@@ -1736,6 +1736,10 @@ class GeminiService {
   static const embedModelV2 = 'gemini-embedding-2';
   static const embedModelV1 = 'gemini-embedding-001';
 
+  /// İstenen vektör boyu; kalıcı arama önbelleğinin anahtarına da girer
+  /// (değişirse eski kayıtlar bayat sayılır).
+  static const embedDim = 256;
+
   /// Metinleri vektörlere çevirir (semantik arama için, toplu istek).
   /// [query]: arama sorgusu mu (Embedding 2'de önek farklı), yoksa belge mi.
   Future<List<List<double>>> embedTexts(
@@ -1771,7 +1775,7 @@ class GeminiService {
                     {'text': input(text)},
                   ],
                 },
-                'outputDimensionality': 256,
+                'outputDimensionality': embedDim,
               },
           ],
         },
@@ -1794,6 +1798,13 @@ class GeminiService {
           ],
       ];
     } on JsonHttpException catch (e) {
+      // Kota/yok bilgisi ortak soğumaya: RPM 1 dk, RPD (gövdede PerDay) ve
+      // 404 Pasifik gece yarısına dek (SemanticIndex buna göre bekler ya da
+      // 001'e geçer).
+      final status = e.response?.statusCode ?? 0;
+      if (status == 429 || status == 404) {
+        cooldown.hit(model, status, body: e.response?.data);
+      }
       throw _mapDioError(e);
     }
   }

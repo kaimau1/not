@@ -9,6 +9,12 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Anlamca arama açılışta yeniden gömmüyor (kalıcı önbellek, cihazda bakılmadı)**
+  Nerede: ana ekran arama, anlamca arama açık (kendi Gemini anahtarı).
+  Nasıl: bir arama yap, sonuç gelsin; uygulamayı tamamen kapatıp aç, aynı ya da başka bir arama yap. Büyük defterde ilk aramada sonuçlar birkaç dakika içinde tamamlanarak çoğalabilir.
+  Doğruysa: ikinci açılışta sonuç hemen geliyor, düz metin aramasına düşmüyor; çıkış yapıp girince ilk arama yine biraz sürüyor (önbellek silindi).
+  Yanlışsa: hangi adımda ne gördüğünü yaz.
+
 - [ ] **Düzen modu ve "Sırala" (yeni görünüş, cihazda bakılmadı — P63 G5)**
   Nerede: bir notta ⋮ → Ekranı düzenle; üst şeritteki ⇅ (Sırala); Ayarlar → Kişiselleştir; not ⋮ → Menüyü düzenle.
   Nasıl: düzen modunu aç (şerit yukarıdan kayarak gelsin), alt çubukta 2–3 düğmeye dokun (gizli olan kesikli çerçeveli, şeritte sayı çıksın), Geri al / Bitti; ⇅ ile levhayı aç — notta "Alt çubuk", klavye açıkken "Hızlı satır" seçili gelsin; üstteki şeritte bir simgeyi basılı tutup sürükleyerek sırala, hızlı satırı yeniden sırala ve klavyeyi açıp satırın o sırada olduğuna bak; Ekle levhasının sırasını değiştir; sabit PDF'li notta düzen modunda çubuktaki düğmeleri gizle/göster; küçük telefonda şerit başlığının sığdığına bak.
