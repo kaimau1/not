@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/app_icons.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/voice_commands.dart' show SilenceGate;
 import '../../../core/widgets/undo_snackbar.dart';
@@ -342,7 +343,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
                                   foregroundColor: scheme.onPrimary,
                                 )
                               : null,
-                          icon: Icon(on ? Icons.mic : Icons.mic_none),
+                          icon: const Icon(AppIcons.dictation),
                           onPressed: toggleListening,
                         ),
                       ),
