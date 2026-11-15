@@ -1792,6 +1792,7 @@
   "customizeHideItem": "Hide",
   "customizeShowItem": "Show",
   "customizeModeTitle": "Edit mode",
+  "customizeModeTitleShort": "Edit",
   "customizeModeHint": "Tap to hide or show · applied instantly",
   "customizeHiddenCount": "{count} hidden · tap to change",
   "customizeDone": "Done",

@@ -4764,6 +4764,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get customizeModeTitle => 'Düzenleme modu';
 
   @override
+  String get customizeModeTitleShort => 'Düzen';
+
+  @override
   String get customizeModeHint =>
       'Dokun: gizle ya da göster · anında uygulanır';
 

@@ -4783,6 +4783,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customizeModeTitle => 'Edit mode';
 
   @override
+  String get customizeModeTitleShort => 'Edit';
+
+  @override
   String get customizeModeHint => 'Tap to hide or show · applied instantly';
 
   @override

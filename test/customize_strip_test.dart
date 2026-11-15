@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/widgets/customizable.dart';
@@ -114,5 +118,45 @@ void main() {
       return false;
     });
     expect(parent!.widget, isA<Customizable>());
+  });
+
+  // Konfor (2026-11-15): küçük telefonda (360 dp, tur "telefon-kucuk")
+  // başlık "Düzenlem…" diye kesiliyordu. Sığmayınca kısa etiket; tam ad
+  // erişilebilirlik etiketinde.
+  testWidgets('küçük telefonda başlık kesilmez, tam ad semantikte', (
+    tester,
+  ) async {
+    // Testin kutu yazısı (her harf 1 em) gerçekten ~2 kat geniş: ölçü
+    // gerçekçi olsun diye SDK'nın Roboto'su yüklenir (tur da böyle).
+    final sdk = Platform.environment['FLUTTER_ROOT'] ?? '/opt/flutter';
+    for (final w in ['Regular', 'Medium', 'Bold']) {
+      final f = File('$sdk/bin/cache/artifacts/material_fonts/Roboto-$w.ttf');
+      if (!f.existsSync()) continue;
+      await (FontLoader('Roboto')
+            ..addFont(Future.value(ByteData.sublistView(f.readAsBytesSync()))))
+          .load();
+    }
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(app(const Scaffold()));
+    Personalize.startEditing();
+    Personalize.toggle('x'); // gizli sayısı hapı da yer kaplasın
+    await tester.pumpAndSettle();
+    final title = find.descendant(
+      of: find.byKey(const ValueKey('customize-title')),
+      matching: find.byType(RichText),
+    );
+    expect(title, findsOneWidget);
+    final p = tester.renderObject<RenderParagraph>(title);
+    expect(p.didExceedMaxLines, isFalse, reason: 'üç noktayla kesilmesin');
+    final label = tester.widget<Semantics>(
+      find.descendant(
+        of: find.byKey(const ValueKey('customize-title')),
+        matching: find.byType(Semantics),
+      ).first,
+    );
+    expect(label.properties.label, 'Düzenleme modu');
+    expect(label.excludeSemantics, isTrue);
   });
 }

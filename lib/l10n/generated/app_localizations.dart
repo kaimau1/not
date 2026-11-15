@@ -8564,6 +8564,12 @@ abstract class AppLocalizations {
   /// **'Düzenleme modu'**
   String get customizeModeTitle;
 
+  /// No description provided for @customizeModeTitleShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzen'**
+  String get customizeModeTitleShort;
+
   /// No description provided for @customizeModeHint.
   ///
   /// In tr, this message translates to:

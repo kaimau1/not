@@ -2187,6 +2187,7 @@
   "customizeHideItem": "Gizle",
   "customizeShowItem": "Göster",
   "customizeModeTitle": "Düzenleme modu",
+  "customizeModeTitleShort": "Düzen",
   "customizeModeHint": "Dokun: gizle ya da göster · anında uygulanır",
   "customizeHiddenCount": "{count} düğme gizli · dokunarak değiştir",
   "@customizeHiddenCount": {
