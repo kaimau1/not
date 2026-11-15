@@ -49,6 +49,8 @@ HAZIRLIK (bir kez): veri seti (`make_dataset.py`, README) + sabit PDF'li not:
 `python make_dataset.py --ink 40` → `olcum_kalem.notyedek`'i
 `/sdcard/Download/`'a it (Git Bash'te `MSYS_NO_PATHCONV=1`) → Ayarlar →
 Senkronizasyon → Yedekten geri yükle → Diğer → İndirilenler.
+"OLCUM cizgi" yoksa betik koşulardan önce bu yedeği KENDİSİ yükler
+(`ensure_cizgi`; geri yükleme birleştirir, var olan notlar atlanır).
 
 TELEFON KURALLARI (OTOMASYON §Telefon): her koşu < 34 °C'de başlar (37'nin
 altı yetmedi: koşu içinde 40'a ısınıp gürültüyü büyütüyordu) → bekler
@@ -144,7 +146,13 @@ class Session:
         sh(f"am force-stop {OPKG}"); time.sleep(1.2)
         wake()
         sh("logcat -c")
-        sh(f"am start -n {ACT} --ez start-paused true")
+        # 2026-11-15: açılış penceresi P60'tan beri yalnız 2 boş kare (~0,4 ms, LAYOUT 0)
+        # yakalıyordu; 11-04 prof_cold.pkl aynı yöntemle 18 kare + 88 BUILD vermişti.
+        # Erken olaylar kalıp sonrakiler düşüyor = VM'in sabit boy zaman çizelgesi
+        # tamponu açılış seli ile doluyor (varsayım, cihazda doğrulanmadı). Sonsuz
+        # tampon (motor bayrağı, FlutterShellArgs) olay düşürmez; pencereler
+        # clearVMTimeline ile temizlendiğinden bellek büyümez.
+        sh(f"am start -n {ACT} --ez start-paused true --ez endless-trace-buffer true")
         url = None
         for _ in range(60):
             time.sleep(0.3)
@@ -162,6 +170,14 @@ class Session:
         t_res = self.marks[-2][1]
         frames = [e for e in self.evs if e[0] == "Animator::BeginFrame" and e[2] >= t_res]
         self.first_frame_ms = round((frames[0][2] - t_res) / 1000) if frames else None
+        if len(frames) < 5:  # tanı: kayıt mı durdu, uygulama mı boşta?
+            names = {}
+            for e in self.evs:
+                names[e[0]] = names.get(e[0], 0) + 1
+            last = max((e[2] + e[3] for e in self.evs), default=t_res)
+            top = sorted(names.items(), key=lambda kv: -kv[1])[:6]
+            print(f"açılış tanı: {len(frames)} kare, {len(self.evs)} olay, son olay "
+                  f"+{(last - t_res) / 1000:.0f} ms, en sık {top}", flush=True)
         time.sleep(2.0)
 
     def window(self, steps, widgets=False):
@@ -293,9 +309,7 @@ def run_once(label):
     key("KEYCODE_BACK"); time.sleep(0.8)
     key("KEYCODE_BACK"); time.sleep(1.5)
     ready()
-    # Listeyi başa al (sonraki koşu aynı yerden başlasın).
-    for _ in range(6):
-        swipe(x, int(H * .3), x, int(H * .85), 120); time.sleep(0.3)
+    list_top(W, H)  # sonraki koşu aynı yerden başlasın
 
     for phase in (phase_sablon, phase_bicim, phase_kalem):
         try:
@@ -310,6 +324,10 @@ def run_once(label):
                 ready()
             except NotReady:
                 break
+            # run_g3 (2026-11-15): bicim "OLCUM cizgi"yi ararken listeyi 12 kez
+            # aşağı kaydırıp düştü; kalem dipteki OLCUM stres kartlarını görüp
+            # "OLCUM olmayan kart yok" verdi. Düşen evre listeyi başa alır.
+            list_top(W, H)
 
     st = s.stats()
     st["acilis"]["ilk_kare_ms"] = s.first_frame_ms or 0
@@ -371,24 +389,39 @@ def trim_typed(fx, fy):
     if deleted:
         tap(fx, fy)
         time.sleep(3.5)  # kEditorSaveDelay 2 sn: kayıt kb penceresine taşmasın
+
+
+def list_top(W, H):
+    """Ana ekran listesini başa al."""
+    for _ in range(6):
+        swipe(W // 2, int(H * .3), W // 2, int(H * .85), 120); time.sleep(0.3)
+
+
+TPL = "^(Şablondan|From template)"  # l10n fromTemplate (add_catalog.dart)
+
+
 def phase_sablon(s, W, H, plus):
     """P63: "+" → Şablonlar → levha → Planlama çipi → kapat (koordinatlar
     pencere dışında bulunur)."""
-    # G2 (2026-11-15, run_g2.log "'+' menüsünde Şablondan yok"): Şablon grubu
-    # katalogun SONUNDA (add_catalog.dart); "+" paneli SingleChildScrollView ve
-    # telefonda kat altında kalıyor — uiautomator görünmeyen karoyu dökmüyor.
-    # Bulunamazsa panel bir kez yukarı kaydırılır; ölçüm penceresi aynı yolu izler.
+    # Kök neden (run_g2/g3/g4 "'+' menüsünde Şablondan yok"): panel
+    # `SingleChildScrollView(reverse: true)` (quick_add_fab.dart) ve gruplar
+    # TERSTEN dizili → Şablon grubu panelin en ÜSTÜNDE, telefonda ekranın üstünde
+    # kalıyor; uiautomator görünmeyeni dökmüyor. Eski kaydırma "Metin notu"na
+    # doğru ~90 px çekiyordu (yetmez). Başa çıkmak için parmak panelin üst
+    # kısmından AŞAĞI uzun çekilir (taşan panel ekranı doldurur → H*0,2 içinde);
+    # tavanda durur, iki kez çekmek zararsız. Ölçüm penceresi aynı yolu izler.
     tap(plus[0][1], plus[0][2]); time.sleep(1.2)
     xml = dump()
-    tpl = nodes(xml, "^Şablondan")
+    tpl = nodes(xml, TPL)
     roll = None
     if not tpl:
         top = nodes(xml, "^Metin notu")
         if top:
-            px, y0 = top[0][1], top[0][2]
-            roll = (px, plus[0][2] - 250, px, y0, 300)
-            swipe(*roll); time.sleep(1.0)
-            tpl = nodes(dump(), "^Şablondan")
+            px = top[0][1]
+            roll = (px, int(H * .2), px, max(int(H * .2) + 200, top[0][2] - 150), 400)
+            for _ in range(2):
+                swipe(*roll); time.sleep(0.8)
+            tpl = nodes(dump(), TPL)
     if not tpl:
         key("KEYCODE_BACK"); time.sleep(1.0)
         raise RuntimeError("'+' menüsünde Şablondan yok (kaydırınca da)")
@@ -400,7 +433,7 @@ def phase_sablon(s, W, H, plus):
         raise RuntimeError("şablon levhasında 'Planlama' çipi yok")
     ready()
     s.window([("sablon", lambda: tap(plus[0][1], plus[0][2]), 1.0)]
-             + ([("sablon", lambda: swipe(*roll), 1.0)] if roll else [])
+             + ([("sablon", lambda: swipe(*roll), 0.8)] * 2 if roll else [])
              + [("sablon", lambda: tap(tpl[0][1], tpl[0][2]), 1.8),
               ("sablon", lambda: tap(chip[0][1], chip[0][2]), 1.2),
               ("sablon", lambda: key("KEYCODE_BACK"), 1.2)])
@@ -411,15 +444,9 @@ def phase_sablon(s, W, H, plus):
 def phase_bicim(s, W, H, plus):
     """P63: çizgili listede madde → Biçim → çizgi tepsisi aç/kapa ×3 → tür
     seç ×3. Tepsi düğmelerinin erişilebilirlik adları çeviriden gelir."""
-    x = W // 2
-    hit = None
-    for _ in range(12):
-        hit = nodes(dump(), "^OLCUM cizgi")
-        if hit and 500 < hit[0][2] < H - 400:
-            break
-        swipe(x, int(H * .75), x, int(H * .35), 300); time.sleep(1.0)
+    hit = find_in_list("^OLCUM cizgi", W, H)
     if not hit:
-        raise RuntimeError("'OLCUM cizgi' bulunamadı (HAZIRLIK: make_dataset.py --ink)")
+        raise RuntimeError("'OLCUM cizgi' bulunamadı (hazırlık başarısız? koşu başındaki 'hazırlık:' satırı)")
     tap(hit[0][1], hit[0][2]); time.sleep(2.5)
     boxes = edit_boxes(dump())
     if len(boxes) < 3:
@@ -452,8 +479,7 @@ def phase_bicim(s, W, H, plus):
         key("KEYCODE_BACK"); time.sleep(0.8)
     time.sleep(1.0)
     ready()
-    for _ in range(6):
-        swipe(x, int(H * .3), x, int(H * .85), 120); time.sleep(0.3)
+    list_top(W, H)
 
 
 def phase_kalem(s, W, H, plus):
@@ -493,6 +519,58 @@ def phase_kalem(s, W, H, plus):
     key("KEYCODE_BACK"); time.sleep(1.0)   # kalem kipi
     key("KEYCODE_BACK"); time.sleep(1.8)   # not
     ready()
+
+
+def find_in_list(pat, W, H, tries=12):
+    """Ana ekran listesinde kaydırarak kart ara (listeyi baştan tarar)."""
+    for _ in range(tries):
+        hit = nodes(dump(), pat)
+        if hit and 500 < hit[0][2] < H - 400:
+            return hit
+        swipe(W // 2, int(H * .75), W // 2, int(H * .35), 300); time.sleep(1.0)
+    return None
+
+
+def ensure_cizgi(apk):
+    """HAZIRLIK otomatik (2026-11-15, run_g3 "'OLCUM cizgi' bulunamadı"): telefon
+    verisi "OLCUM cizgi" notu (PBT 6, `make_dataset.py --ink`) eklenmeden ÖNCEKİ
+    yedekten kurulmuştu. Not yoksa yedek üretilir, Download'a itilir ve
+    Ayarlar → Senkronizasyon → "Yedekten geri yükle" ile yüklenir. Geri yükleme
+    BİRLEŞTİRİR (backup_service.restore: aynı kimlik / `restoredFrom` / özet
+    atlanır) → yalnız eksik OLCUM notları eklenir, var olan veri değişmez.
+    Koşulardan ÖNCE bir kez; başarısızsa bicim evresi eskisi gibi atlanır."""
+    import make_dataset
+    install(apk)
+    sh(f"am force-stop {OPKG}"); time.sleep(1.0)
+    wake()
+    sh(f"am start -n {ACT}"); time.sleep(5.0)
+    W, H = (int(v) for v in re.search(r"(\d+)x(\d+)", sh("wm size").splitlines()[-1]).groups())
+    try:
+        ready()
+        if find_in_list("^OLCUM cizgi", W, H):
+            return True
+        name = "olcum_kalem.notyedek"
+        make_dataset.main_ink(40)
+        adb("push", os.path.join(os.path.dirname(make_dataset.OUT), name), "/sdcard/Download/" + name)
+        sh(f"am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard/Download/{name}")
+        list_top(W, H)
+        open_import(name, button="^Yedekten geri yükle$")
+        for _ in range(30):  # "Geri yükleniyor" iletişim kutusu → "N not geri yüklendi"
+            time.sleep(3)
+            if not find("Geri yükleniyor"):
+                break
+        for _ in range(4):  # ayarlardan ana ekrana (uygulamadan çıkmadan)
+            if nodes(dump(), "^Not menüsü$"):
+                break
+            key("KEYCODE_BACK"); time.sleep(1.2)
+        ok = bool(find_in_list("^OLCUM cizgi", W, H))
+        print(f"hazırlık: 'OLCUM cizgi' {'eklendi' if ok else 'EKLENEMEDİ (bicim atlanacak)'}", flush=True)
+        return ok
+    except (RuntimeError, IndexError) as e:
+        print(f"hazırlık atlandı: {e}", flush=True)
+        return False
+    finally:
+        sh(f"am force-stop {OPKG}")
 
 
 def median_of(runs):
@@ -594,6 +672,8 @@ def main():
                 json.dump(runs, open(os.path.join(OUT, "ab_hepsi_ham.json"), "w"), ensure_ascii=False)
 
     try:
+        if cool_enough():
+            ensure_cizgi(o.a)
         pairs(0, o.kosu)
         rows, failed = (decide(runs["A"], runs["B"], golden if o.altin else None)
                         if runs["A"] and runs["B"] else ([], True))

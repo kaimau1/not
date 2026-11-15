@@ -266,8 +266,9 @@ def tap_label(pat, idx=0, wait=1.2):
     return hits[idx]
 
 
-def open_import(zip_name):
-    """Ayarlar → Senkronizasyon → Başka uygulamadan içe aktar → dosyayı seç."""
+def open_import(zip_name, button='Başka uygulamadan'):
+    """Ayarlar → Senkronizasyon → [button] → dosyayı seç. Tam yedek için
+    button='^Yedekten geri yükle$' (aynı bölümde; birleştirir, var olanı atlar)."""
     wake()
     focus = sh('dumpsys window | grep mCurrentFocus')
     if 'dev.kaimau.notlar' not in focus:
@@ -276,7 +277,7 @@ def open_import(zip_name):
         tap_label('^Diğer$')
         tap_label('^Ayarlar$', wait=2)
     for i in range(6):
-        if find('Başka uygulamadan'):
+        if find(button):
             break
         hits = find('^Senkronizasyon$')
         if hits:
@@ -284,10 +285,10 @@ def open_import(zip_name):
             continue
         swipe(540, 1800, 540, 900, 300); time.sleep(0.8)
     for i in range(4):
-        if find('Başka uygulamadan'):
+        if find(button):
             break
         swipe(540, 1800, 540, 900, 300); time.sleep(0.8)
-    tap_label('Başka uygulamadan', wait=3)
+    tap_label(button, wait=3)
     if 'dosyaokuyucu' in sh('dumpsys window | grep mCurrentFocus'):
         tap_label('^Diğer$', wait=2)
     time.sleep(1)
