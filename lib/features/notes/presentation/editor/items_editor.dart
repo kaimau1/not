@@ -12,7 +12,9 @@ import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/note_colors.dart';
+import '../../../../core/a11y/motion.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
@@ -1411,6 +1413,13 @@ class ItemsEditorState extends State<ItemsEditor>
     final item = _items.where((i) => i.id == id).firstOrNull;
     if (item == null) return null;
     return ItemDivider.parse(item.divider)?.kind ?? '';
+  }
+
+  /// Maddenin TAM çizgi biçimi (tür + renk + kalınlık; P63 PBT — tepsinin
+  /// seçili hücresi rengini/kalınlığını da göstersin). Çizgi yoksa null.
+  ItemDivider? dividerOf(String id) {
+    final item = _items.where((i) => i.id == id).firstOrNull;
+    return item == null ? null : ItemDivider.parse(item.divider);
   }
 
   /// Biçim panelinin alt çizgi sırası (bkz. [_setDivider]).

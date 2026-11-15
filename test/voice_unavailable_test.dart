@@ -58,6 +58,29 @@ void main() {
     expect(error, 'yok');
   });
 
+  // P63 PBT: düzey olayı `level`'a yazılır, oturum bitince 0 (dispose yok).
+  test('düzey olayı level notifier\'ına; iptalde 0', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(
+          events,
+          MockStreamHandler.inline(
+            onListen: (args, sink) => sink.success({'level': 0.6}),
+          ),
+        );
+    final session = VoiceListenSession(
+      onText: (_) {},
+      onEnd: (_) {},
+      autoStop: () => false,
+    )..start();
+    await Future<void>.delayed(Duration.zero);
+    expect(session.level.value, 0.6);
+    session.reportLevel(0.2);
+    expect(session.level.value, 0.2);
+    await session.cancel();
+    expect(session.level.value, 0);
+    expect(session.silence.value, 0);
+  });
+
   // Kasma bekçisi: sürekli boyanan dalga ve nabız rozeti kendi katmanında
   // (yoksa dikte açıkken her kare editör gövdesi de yeniden boyanır).
   testWidgets('dinleme animasyonları kendi boyama katmanında', (tester) async {

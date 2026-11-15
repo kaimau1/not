@@ -358,29 +358,122 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
 
 /// Madde altı ayırıcı çizgi (bkz. [NoteItem.divider], [ItemDivider]).
 class _ItemDividerPainter extends CustomPainter {
-  _ItemDividerPainter(this.raw, this.color)
-    : style = ItemDivider.parse(raw) ?? const ItemDivider('');
+  _ItemDividerPainter(
+    this.raw,
+    this.color, {
+    this.reveal,
+    this.curve,
+    this.rtl = false,
+  }) : style = ItemDivider.parse(raw) ?? const ItemDivider(''),
+       super(repaint: reveal);
 
   final String raw;
   final ItemDivider style;
   final Color color;
 
+  /// Beliriş ilerlemesi ([_DividerReveal]); null = tam çizgi. Denetleyiciyi
+  /// `repaint:` ile dinler — satır KURULMAZ, yalnız bu katman boyanır.
+  final Animation<double>? reveal;
+  final Curve? curve;
+  final bool rtl;
+
   @override
-  void paint(Canvas canvas, Size size) => paintItemDivider(
-    canvas,
-    style: style,
-    fallbackColor: color,
-    left: 8,
-    right: size.width - 8,
-    // Defterde satır çizgisiyle AYNI yere düşer: ince kalırsa kesik/nokta
-    // altındaki düz çizgide kaybolup "düz çizgi" gibi görünüyordu.
-    y: size.height - 1,
-    baseWidth: 2.2,
-  );
+  void paint(Canvas canvas, Size size) {
+    final r = reveal;
+    final t = r == null ? 1.0 : (curve?.transform(r.value) ?? r.value);
+    if (t <= 0) return;
+    final clip = t < 1;
+    if (clip) {
+      // Kırpma (katman/opaklık YOK — satırı katmanla sarmak kasma kök
+      // nedeniydi, items_editor_row.dart); sağdan-sola dilde sağdan başlar.
+      canvas
+        ..save()
+        ..clipRect(
+          rtl
+              ? Rect.fromLTRB(size.width * (1 - t), 0, size.width, size.height)
+              : Rect.fromLTRB(0, 0, size.width * t, size.height),
+        );
+    }
+    paintItemDivider(
+      canvas,
+      style: style,
+      fallbackColor: color,
+      left: 8,
+      right: size.width - 8,
+      // Defterde satır çizgisiyle AYNI yere düşer: ince kalırsa kesik/nokta
+      // altındaki düz çizgide kaybolup "düz çizgi" gibi görünüyordu.
+      y: size.height - 1,
+      baseWidth: 2.2,
+    );
+    if (clip) canvas.restore();
+  }
 
   @override
   bool shouldRepaint(_ItemDividerPainter old) =>
-      old.raw != raw || old.color != color;
+      old.raw != raw ||
+      old.color != color ||
+      old.reveal != reveal ||
+      old.rtl != rtl;
+}
+
+/// **ÇİZGİNİN BELİRİŞİ** (P63 PB6, plan_tasarim_B §5.2): çizgisiz maddeye
+/// çizgi eklenince çizgi soldan sağa çizilir — YALNIZ BOYAMA.
+///
+/// KOŞULSUZ sarmalayıcı: çizgisiz satırda da aynı ağaç (painter null), ağaç
+/// şekli koşula bağlı değişmez. Tetik YALNIZ boş → dolu geçişinde
+/// ([didUpdateWidget]); not açılışı, kaydırmayla gelen satır ve "Tüm
+/// çizgilere" oynatmaz; tür/renk/kalınlık değişimi ve kaldırma tek karede.
+/// Denetleyici tembel (ilk tetikte); hareketi azalt → doğrudan tam çizgi.
+/// Satır önbelleği anahtarına beliriş durumu GİRMEZ (durum burada).
+class _DividerReveal extends StatefulWidget {
+  const _DividerReveal({
+    required this.raw,
+    required this.color,
+    required this.child,
+  });
+
+  final String raw;
+  final Color color;
+  final Widget child;
+
+  @override
+  State<_DividerReveal> createState() => _DividerRevealState();
+}
+
+class _DividerRevealState extends State<_DividerReveal>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _controller;
+
+  @override
+  void didUpdateWidget(_DividerReveal old) {
+    super.didUpdateWidget(old);
+    if (old.raw.isEmpty && widget.raw.isNotEmpty && motionOf(context)) {
+      final c = _controller ??= AnimationController(vsync: this);
+      c
+        ..duration = AppMotion.of(context, AppMotion.short)
+        ..forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    foregroundPainter: widget.raw.isEmpty
+        ? null
+        : _ItemDividerPainter(
+            widget.raw,
+            widget.color,
+            reveal: _controller,
+            curve: AppMotion.curveOf(context, AppMotion.enter),
+            rtl: Directionality.of(context) == TextDirection.rtl,
+          ),
+    child: widget.child,
+  );
 }
 
 enum _MovePhase { idle, leaving, arriving }

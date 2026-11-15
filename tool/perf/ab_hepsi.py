@@ -20,6 +20,12 @@ koşuda uygulama start-paused açılır ve evreler tek oturumda ölçülür:
   sabit_ac   sabit PDF'li not ("OLCUM kalem pdf") aç
   sabit_kay  sabit bölmede 3 sayfa kaydırma
   sabit_kb   sabit PDF'li notta klavye aç/kapa ×2 (kullanıcı 2026-11-12)
+  sablon     (P63) "+" → Şablonlar levhası aç → "Planlama" çipi → kapat
+  bicim      (P63) "OLCUM cizgi" notunda madde → Biçim → çizgi tepsisi aç/kapa
+             ×3 → tür seç ×3 (düz/kesikli/aynı tür = kaldır)
+P63 evreleri eskilerin SONUNDA (eski evrelerin sayıları kaymasın); hazırlık
+yoksa (şablon düğmesi / "OLCUM cizgi" notu bulunamazsa) evre atlanır, koşu
+düşmez. Kalem (`kalem`) ve düzen modu (`duzen`) evrelerini G4/G5 ekler.
 
 Evre başına: UI kare sayısı, UI ms toplamı, LAYOUT ms, en uzun kare,
 > 16 ms kare. A ve B için ORTANCA (3 koşu).
@@ -60,7 +66,8 @@ ACT = f"{OPKG}/dev.kaimau.notlar.MainActivity"
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DOCS = os.path.join(ROOT, "docs", "perf")
 PHASES = ["acilis", "liste", "menu", "arama", "klasor", "yeni_not", "not_ac",
-          "kb", "yaz", "not_kapa", "sabit_ac", "sabit_kay", "sabit_kb"]
+          "kb", "yaz", "not_kapa", "sabit_ac", "sabit_kay", "sabit_kb",
+          "sablon", "bicim"]
 METRICS = ["kare", "ui_ms", "layout_ms", "max_ms", "j16"]
 
 
@@ -288,6 +295,20 @@ def run_once(label):
     for _ in range(6):
         swipe(x, int(H * .3), x, int(H * .85), 120); time.sleep(0.3)
 
+    for phase in (phase_sablon, phase_bicim):
+        try:
+            phase(s, W, H, plus)
+        except (RuntimeError, IndexError) as e:
+            if isinstance(e, NotReady):
+                raise
+            print(f"evre atlandı ({phase.__name__}): {e}", flush=True)
+            # 2026-11-15: evre kendi BACK'lerini bastı; fazladan BACK uygulamadan
+            # çıkarıp koşuyu düşürüyordu. Hazır değilse kalan evreler atlanır.
+            try:
+                ready()
+            except NotReady:
+                break
+
     st = s.stats()
     st["acilis"]["ilk_kare_ms"] = s.first_frame_ms or 0
     st["_not"] = card_title
@@ -348,6 +369,89 @@ def trim_typed(fx, fy):
     if deleted:
         tap(fx, fy)
         time.sleep(3.5)  # kEditorSaveDelay 2 sn: kayıt kb penceresine taşmasın
+def phase_sablon(s, W, H, plus):
+    """P63: "+" → Şablonlar → levha → Planlama çipi → kapat (koordinatlar
+    pencere dışında bulunur)."""
+    # G2 (2026-11-15, run_g2.log "'+' menüsünde Şablondan yok"): Şablon grubu
+    # katalogun SONUNDA (add_catalog.dart); "+" paneli SingleChildScrollView ve
+    # telefonda kat altında kalıyor — uiautomator görünmeyen karoyu dökmüyor.
+    # Bulunamazsa panel bir kez yukarı kaydırılır; ölçüm penceresi aynı yolu izler.
+    tap(plus[0][1], plus[0][2]); time.sleep(1.2)
+    xml = dump()
+    tpl = nodes(xml, "^Şablondan")
+    roll = None
+    if not tpl:
+        top = nodes(xml, "^Metin notu")
+        if top:
+            px, y0 = top[0][1], top[0][2]
+            roll = (px, plus[0][2] - 250, px, y0, 300)
+            swipe(*roll); time.sleep(1.0)
+            tpl = nodes(dump(), "^Şablondan")
+    if not tpl:
+        key("KEYCODE_BACK"); time.sleep(1.0)
+        raise RuntimeError("'+' menüsünde Şablondan yok (kaydırınca da)")
+    tap(tpl[0][1], tpl[0][2]); time.sleep(1.8)
+    chip = nodes(dump(), "^Planlama")
+    key("KEYCODE_BACK"); time.sleep(1.0)
+    key("KEYCODE_BACK"); time.sleep(1.0)
+    if not chip:
+        raise RuntimeError("şablon levhasında 'Planlama' çipi yok")
+    ready()
+    s.window([("sablon", lambda: tap(plus[0][1], plus[0][2]), 1.0)]
+             + ([("sablon", lambda: swipe(*roll), 1.0)] if roll else [])
+             + [("sablon", lambda: tap(tpl[0][1], tpl[0][2]), 1.8),
+              ("sablon", lambda: tap(chip[0][1], chip[0][2]), 1.2),
+              ("sablon", lambda: key("KEYCODE_BACK"), 1.2)])
+    time.sleep(0.6)
+    ready()
+
+
+def phase_bicim(s, W, H, plus):
+    """P63: çizgili listede madde → Biçim → çizgi tepsisi aç/kapa ×3 → tür
+    seç ×3. Tepsi düğmelerinin erişilebilirlik adları çeviriden gelir."""
+    x = W // 2
+    hit = None
+    for _ in range(12):
+        hit = nodes(dump(), "^OLCUM cizgi")
+        if hit and 500 < hit[0][2] < H - 400:
+            break
+        swipe(x, int(H * .75), x, int(H * .35), 300); time.sleep(1.0)
+    if not hit:
+        raise RuntimeError("'OLCUM cizgi' bulunamadı (HAZIRLIK: make_dataset.py --ink)")
+    tap(hit[0][1], hit[0][2]); time.sleep(2.5)
+    boxes = edit_boxes(dump())
+    if len(boxes) < 3:
+        raise RuntimeError("çizgili listede madde alanı yok")
+    it = boxes[2]
+    tap((it[0] + it[2]) // 2, (it[1] + it[3]) // 2); time.sleep(1.6)
+    fmt = nodes(dump(), "^Biçim$")
+    if not fmt:
+        raise RuntimeError("Biçim düğmesi yok")
+    tap(fmt[0][1], fmt[0][2]); time.sleep(1.2)
+    menu = nodes(dump(), "^Alt çizgi$")
+    if not menu:
+        raise RuntimeError("çizgi tepsisi düğmesi yok")
+    mx, my = menu[-1][1], menu[-1][2]
+    tap(mx, my); time.sleep(1.0)
+    xml = dump()
+    solid = nodes(xml, "^(Düz|Alta çizgi çek)$")
+    dashed = nodes(xml, "^(Kesikli|Alta kesikli çizgi)$")
+    tap(mx, my); time.sleep(1.0)
+    if not solid or not dashed:
+        raise RuntimeError("tepside tür hücreleri yok")
+    ready()
+    s.window([("bicim", lambda: tap(mx, my), 1.0) for _ in range(6)]
+             + [("bicim", lambda: tap(mx, my), 1.0),
+                ("bicim", lambda: tap(solid[0][1], solid[0][2]), 1.0),
+                ("bicim", lambda: tap(dashed[0][1], dashed[0][2]), 1.0),
+                ("bicim", lambda: tap(dashed[0][1], dashed[0][2]), 1.0),
+                ("bicim", lambda: tap(mx, my), 1.0)])
+    for _ in range(3):
+        key("KEYCODE_BACK"); time.sleep(0.8)
+    time.sleep(1.0)
+    ready()
+    for _ in range(6):
+        swipe(x, int(H * .3), x, int(H * .85), 120); time.sleep(0.3)
 
 
 def median_of(runs):

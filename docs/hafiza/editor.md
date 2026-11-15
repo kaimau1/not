@@ -179,3 +179,10 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Üst çubuk sırası (adım 9):** `actions:` = `for id in UiPrefs.orderOf(UiItem.topDefault, _topOrder)` + `switch` kolları (öğe kodu yerinde). Kök yalnız `topOrder` değişince kurulur (`Personalize.listenable` → `_onTopOrder`, `listEquals`); gizle/göster öğenin kendi `Customizable`'ında. ⌨ ve ortak düzenleyen Ana sayfa yuvasına bağlı, ⋮ hep sonda.
 - **Ana ekran sarmaları:** tek aday AI anahtarı; `Customizable` S24 ilk kareyi 927→928 yaptı → yapılmadı. Ana ekran ilk karesine sarmalayıcı = S24 +1; önce başka yerden kurulum düşür.
 - **Kök neden (akicilik):** S3/S4'te 23 satırın kökü sıra numarasının satır önbellek anahtarında olması + `SliverReorderableList`'in dizinli `GlobalKey`'iydi (`_RowSlot` + tutamaçsız düz `ListView`).
+
+## 2026-11-15 — P63 G2: madde çizgileri (PB6) + şablonlar (PB4)
+- **Çizgi seçici TEK bileşen:** `DividerKindPicker` (tepside `compact`, levhada adlı); tepside örnekler maddenin renk/kalınlığını taşır → `FormatBar.dividerStyle` (kaynak `ItemsEditorState.dividerOf`). Tepsi boyu 42, çubuğun iki sırası değişmez.
+- **Vurgu saydamlığı tek sabit** `kItemDividerAccentAlpha` (`item_divider_style.dart`, `AppAlpha.strong`); kart (`note_card.dart`) `AppAlpha.muted` ile ayrı kalır.
+- **Beliriş** `_DividerReveal` (`items_editor_widgets.dart`): koşulsuz sarmalayıcı, tetik yalnız `didUpdateWidget` boş→dolu, denetleyici tembel, boyayıcı `repaint:` ile dinler, `clipRect` (katman YOK). Geri alma = tek commit ("PB6 4").
+- **Ölçüm (S44):** seçim başına 1 kök kurulumu bugünkü yol (`setDividerOf` → `_update`); tepsi kabuğunun `AnimatedSize`'ı gövdeyi 14 karede diziyor — düzeltilmedi, regresyon listesinde.
+- **Şablon levhası (PB4):** `note_templates_test` `CheckboxListTile`/`Icons.check`/`Icons.star_outline` bulucularına bağlı — önizlemede `CheckboxListTile` korundu; "Oluştur" levhanın sabit alt bandında (Column + Flexible kaydırma).

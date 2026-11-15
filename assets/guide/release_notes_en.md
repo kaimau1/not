@@ -3,6 +3,8 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 15 November 2026 {#2026-11-15}
+- **Templates refreshed:** each card now shows a small page sketch of its content; in long templates the "Create" button stays visible, and editing your own template is simpler.
+- **Item dividers:** Format → Divider now offers all five styles (including double and wavy), drawn in the item's own color and thickness; the settings sheet is redesigned and no longer overflows on small screens; a new divider draws in from left to right.
 - **No lost notes when importing from Google Keep:** on a fresh install, importing a Keep backup could silently leave some notes empty and remove them; each note is now created in one go, with its content.
 - **Lighter switch to search:** when you tap the search box, cards that are off screen are no longer prepared for nothing; fewer than half as many cards are drawn for each letter you type.
 

@@ -30,6 +30,7 @@ import 'package:notlar/features/notes/data/upload_queue.dart'
 import 'package:notlar/features/folders/data/folder_activity.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -72,6 +73,7 @@ import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
+import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -170,6 +172,22 @@ final _notes = <Note>[
     body: 'Başlıksız kısa not — market: süt, ekmek, yumurta',
     color: NoteColor.blue,
     updatedAt: _now.subtract(const Duration(days: 4)),
+  ),
+  // P63 PBT: madde altı çizgileri — beş türden birer çizgi (biri renkli,
+  // biri kalın). `cizgi-*` sahneleri bunu açar.
+  Note(
+    id: 'n8',
+    type: NoteType.checklist,
+    title: 'Hafta planı',
+    updatedAt: _now.subtract(const Duration(days: 5)),
+    items: const [
+      NoteItem(id: 'c0', text: 'Pazartesi — rapor', divider: 'solid'),
+      NoteItem(id: 'c1', text: 'Salı — toplantı', divider: 'dashed'),
+      NoteItem(id: 'c2', text: 'Çarşamba — spor', divider: 'dotted|w:2'),
+      NoteItem(id: 'c3', text: 'Perşembe — market', divider: 'double'),
+      NoteItem(id: 'c4', text: 'Cuma — sinema', divider: 'wavy|c:FFE0A030'),
+      NoteItem(id: 'c5', text: 'Hafta sonu — dinlen'),
+    ],
   ),
   Note(
     id: 'n7',
@@ -645,6 +663,77 @@ Future<void> _end(WidgetTester tester) async {
   await tester.pump(const Duration(seconds: 30));
 }
 
+/// Şablon levhasını açık sayfanın üstünde açar (uygulamadaki "+" → Şablonlar
+/// yolunun levhası; sonucu beklenmez).
+Future<void> _openTemplates(WidgetTester tester) async {
+  final context = tester.element(find.byType(DashboardScreen).first);
+  unawaited(showNoteTemplateSheet(context));
+  await _settle(tester);
+}
+
+/// Çizgili notta ilk maddeye odaklan → Biçim → çizgi tepsisi.
+Future<void> _openDividerTray(WidgetTester tester) async {
+  // Madde metni tembel yuvada boyanır (`_LazyItemField`); dokunuş onu açar.
+  await tester.tap(
+    find
+        .byWidgetPredicate(
+          (w) => w.runtimeType.toString() == '_LazyItemField',
+        )
+        .first,
+    warnIfMissed: false,
+  );
+  await _settle(tester);
+  await tester.tap(find.byTooltip('Biçim').first, warnIfMissed: false);
+  await _settle(tester);
+  await tester.tap(
+    find.byKey(const ValueKey('format-divider-menu')),
+    warnIfMissed: false,
+  );
+  await _settle(tester);
+}
+
+/// P63 PBT: ADIMLI sahneler (kimlik, adres, adımlar). Tek dokunuşlu ana
+/// listeye DOKUNULMAZ (P62 aynı listeye satır ekliyor); çekim döngüsü aynı.
+/// Bir sahnenin adımı bulunamazsa sahne "adım yok" diye geçilir.
+final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
+  ('sablon-galeri', '/', _openTemplates),
+  ('sablon-onizleme-liste', '/', (t) async {
+    await _openTemplates(t);
+    await t.tap(find.byKey(const ValueKey('tpl-card-b:shopping')).first);
+    await _settle(t);
+  }),
+  ('sablon-onizleme-yazi', '/', (t) async {
+    await _openTemplates(t);
+    final card = find.byKey(const ValueKey('tpl-card-b:meeting'));
+    await t.scrollUntilVisible(card, 200, scrollable: find.byType(Scrollable).last);
+    await t.tap(card);
+    await _settle(t);
+  }),
+  ('sablon-bos', '/', (t) async {
+    await _openTemplates(t);
+    final mine = find.widgetWithIcon(ChoiceChip, Icons.bookmark_outline);
+    await t.ensureVisible(mine);
+    await _settle(t);
+    await t.tap(mine);
+    await _settle(t);
+  }),
+  ('sablon-duzenle', '/', (t) async {
+    await _openTemplates(t);
+    await t.tap(find.byKey(const ValueKey('tpl-new')));
+    await _settle(t);
+  }),
+  ('cizgi-satirlar', '/note/n8', (t) async {}),
+  ('cizgi-tepsi', '/note/n8', _openDividerTray),
+  ('cizgi-levha', '/note/n8', (t) async {
+    await _openDividerTray(t);
+    await t.tap(find.byKey(const ValueKey('format-divider-style')));
+    await _settle(t);
+  }),
+  // PB1/PB3/PB5 sahneleri (duzen-serit, kisisellestir, kalem-*, cizim-serit,
+  // dikte-kart, ses-levha-*) sahibi paketin "önce üret" adımında eklenir
+  // (G4/G5; plan §7.2 madde 4 notu).
+];
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
@@ -790,6 +879,36 @@ void main() {
           }
           await tester.tap(target, warnIfMissed: false);
           await _settle(tester);
+        }
+        await _shot(
+          tester,
+          key,
+          '${size.name}-$id${dark ? '-koyu' : ''}${kb != null ? '-klavye' : ''}'
+          '${_tourFont != null ? '-yazi${(_tourFont! * 100).round()}' : ''}',
+        );
+        await _end(tester);
+      });
+    }
+    for (final (id, location, steps) in _stepScenes) {
+      if (!wanted(id)) continue;
+      testWidgets('${size.name} · $id', (tester) async {
+        final key = GlobalKey();
+        await _pumpApp(
+          tester,
+          size: size,
+          location: location,
+          key: key,
+          scene: id,
+          brightness: dark ? Brightness.dark : Brightness.light,
+        );
+        try {
+          await steps(tester);
+        } catch (e) {
+          // Bulucu boş (dar ekranda düğme ⋮'te vb.): sahne geçilir.
+          // ignore: avoid_print
+          print('TOUR: $id adım yok ($e)');
+          await _end(tester);
+          return;
         }
         await _shot(
           tester,

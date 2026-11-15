@@ -221,17 +221,23 @@ def minimal_pdf():
 def main_ink(n):
     """`--ink N`: kalem A/B verisi (ab_kalem.py) — TAM YEDEK biçiminde
     (Ayarlar → Yedekten geri yükle): "OLCUM kalem bos" (boş metin notu) ve
-    "OLCUM kalem pdf" (sabit tek sayfa PDF, üstünde N çizgi).
+    "OLCUM kalem pdf" (sabit tek sayfa PDF, üstünde N çizgi) ve "OLCUM cizgi"
+    (30 maddeli liste, 10 maddesi çizgili — her türden iki; P63 `bicim` evresi).
     SINIR: sayfanın kendi el yazısı (`Note.pageInk`) yedek/not paketiyle
     taşınmıyor — N çizgili SAYFA `ab_kalem.py hazirla N` ile cihazda üretilir."""
     iso = time.strftime("%Y-%m-%dT%H:%M:%S")
     pdf = minimal_pdf()
 
-    def entry(nid, title, attachments):
-        digest = hashlib.sha1("\0".join(["text", title, ""]).encode()).hexdigest()
+    def entry(nid, title, attachments, kind="text", items=()):
+        digest = hashlib.sha1("\0".join([kind, title, ""]).encode()).hexdigest()
         return {"id": nid, "digest": digest, "createdAt": iso, "updatedAt": iso,
-                "note": {"v": 1, "type": "text", "title": title, "body": "", "items": [],
+                "note": {"v": 1, "type": kind, "title": title, "body": "", "items": list(items),
                          "attachments": attachments, "tags": []}}
+
+    kinds = ["solid", "dashed", "dotted", "double", "wavy"]
+    cizgi = [dict({"id": f"c{i}", "text": f"madde {i}", "checked": False},
+                  **({"divider": kinds[(i - 10) // 2]} if 10 <= i < 20 else {}))
+             for i in range(30)]
 
     notes = [
         entry("olcum-kalem-bos", "OLCUM kalem bos", []),
@@ -239,6 +245,7 @@ def main_ink(n):
             "id": "olcumpdf", "kind": "pdf", "fileName": "olcum.pdf", "mimeType": "application/pdf",
             "sizeBytes": len(pdf), "width": 595, "height": 842, "align": "center",
             "pinHeight": 300, "ink": ink_strokes(n)}]),
+        entry("olcum-cizgi", "OLCUM cizgi", [], kind="checklist", items=cizgi),
     ]
     out = os.path.join(os.path.dirname(OUT), "olcum_kalem.notyedek")
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:

@@ -15,7 +15,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show debugPrintMarkNeedsLayoutStacks;
+import 'package:flutter/rendering.dart'
+    show debugPrintLayouts, debugPrintMarkNeedsLayoutStacks;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -45,6 +46,8 @@ import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dar
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
 import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
+import 'package:notlar/features/notes/data/user_templates.dart';
+import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1184,6 +1187,95 @@ void main() {
     await endEditor(tester);
   });
 
+  // S45 (P63 G2, not_kapa): cihaz A/B'de liste notunun kapanışı (klavye kapa
+  // + sistem geri) LAYOUT'ta +%19 göründü. Kapanışın dizilme işi sayılır:
+  // `debugPrintLayouts` ile RenderObject dizilmeleri + widget kurulumları.
+  // Çizgili maddeler (her üçüncüsü) dahil — PB6 beliriş sarmalayıcısı da
+  // ağaçta. Birleşme tabanıyla (05078e55) aynı: 173/403 ve 153/1049.
+  testWidgets('S45: liste notu — klavye kapa + nottan ana ekrana dön', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final all = [
+      for (var i = 0; i < 8; i++)
+        Note(
+          id: 'x$i',
+          type: NoteType.checklist,
+          title: 'Liste $i',
+          items: [
+            for (var j = 0; j < 30; j++)
+              NoteItem(
+                id: 'i$i-$j',
+                text: 'madde $j',
+                divider: j % 3 == 0 ? 'dashed' : '',
+              ),
+          ],
+          updatedAt: now,
+        ),
+    ];
+    final repo = _LiveRepo(FakeFirebaseFirestore());
+    for (final n in all) {
+      await _noteCol(repo.db).doc(n.id).set(n.toMap());
+    }
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(all),
+      repo: repo,
+      openPage: true,
+    );
+    await tester.tap(find.byType(NoteCard).at(2));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.byType(NoteEditorScreen), findsOneWidget);
+    await tester.tap(find.text('madde 3'));
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    debugPrint = (String? m, {int? wrapWidth}) {
+      if (m != null && m.startsWith('Laying out')) layouts++;
+    };
+    debugPrintLayouts = true;
+    final counter = BuildCounter()..start();
+    int builds() => counter.counts.values.fold(0, (a, b) => a + b);
+    try {
+      for (final b in [200.0, 100.0, 0.0]) {
+        tester.view.viewInsets = FakeViewPadding(bottom: b);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      FocusManager.instance.primaryFocus?.unfocus();
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      final kbLayouts = layouts;
+      final kbBuilds = builds();
+      await tester.binding.handlePopRoute();
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      debugPrintLayouts = false;
+      debugPrint = oldPrint;
+      counter.stop();
+      _expectBudget('S45', {
+        'klavye_dizilme': kbLayouts,
+        'klavye_kurulum': kbBuilds,
+        'kapa_dizilme': layouts - kbLayouts,
+        'kapa_kurulum': builds() - kbBuilds,
+      });
+    } finally {
+      debugPrintLayouts = false;
+      debugPrint = oldPrint;
+      counter.stop();
+    }
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(NoteEditorScreen), findsNothing);
+    await endEditor(tester);
+  });
+
   // S20: ⋮ levhası açılıp kapanırken editör gövdesi kurulmaz.
   testWidgets('S20: not menüsü (⋮) levhasını aç → kapat', (tester) async {
     await pumpEditor(tester, _list30);
@@ -1754,5 +1846,193 @@ void main() {
       'kare_kurulum': max(ai.worst, sound.worst),
       'toplam_kurulum': ai.total + sound.total,
     });
+  });
+
+  // S41 (P63 PBT): şablon galerisi — harf/çip başına kurulan kart ≤ o an
+  // görünen kart; açılışta kurulan Text (RenderParagraph vekili).
+  testWidgets('S41: şablon galerisi (telefon, 16 hazır + 6 kendi)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({
+      'user_templates_v1': encodeUserTemplates([
+        for (var i = 0; i < 6; i++)
+          UserTemplate(
+            id: 'u$i',
+            name: 'Benim $i',
+            type: NoteType.checklist,
+            items: const ['bir', 'iki', 'üç'],
+          ),
+      ]),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => showNoteTemplateSheet(context),
+                  child: const Text('aç'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    // Kart türü: bugün `_TemplateCard`, PB4'ten sonra `TemplatePreviewCard`.
+    const cardTypes = ['_TemplateCard', 'TemplatePreviewCard'];
+    final cards = find.byWidgetPredicate(
+      (w) => cardTypes.contains(w.runtimeType.toString()),
+    );
+    int built(Map<String, int> c) =>
+        cardTypes.fold(0, (n, t) => n + (c[t] ?? 0));
+    int present() => cards.evaluate().length;
+    final open = await _count(() async {
+      await tester.tap(find.text('aç'));
+      await tester.pump();
+    });
+    await _settle(tester);
+    final openCards = present();
+    final chip = await _count(() async {
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Planlama'));
+      await _settle(tester);
+    });
+    final chipExcess = built(chip) - present();
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump(const Duration(milliseconds: 400));
+    var letterExcess = 0;
+    for (final q in ['h', 'ha', 'haf']) {
+      final c = await _count(() async {
+        tester.testTextInput.enterText(q);
+        await _settle(tester);
+      });
+      letterExcess = max(letterExcess, built(c) - present());
+    }
+    expect(present(), greaterThan(0), reason: '"haf" haftalık planı bulur');
+    final tap = await _count(() async {
+      await tester.tap(cards.first);
+      await _settle(tester);
+    });
+    // ignore: avoid_print
+    print(
+      'S41: açılış kartı $openCards, açılış Text ${open['Text'] ?? 0}, '
+      'karta dokunuş toplam ${_sum(tap)}',
+    );
+    _expectBudget('S41', {
+      'cip_fazla_kart': chipExcess,
+      'harf_fazla_kart': letterExcess,
+      'acilis_text': open['Text'] ?? 0,
+    });
+  });
+
+  // S44 (P63 PBT): 30 maddeli liste, 10 maddesi çizgili; biçim çubuğunun
+  // çizgi tepsisinden üç seçim + tepsi aç/kapa + klavye aç/kapa.
+  testWidgets('S44: çizgi tepsisi (telefon, 30 madde, 10 çizgili)', (
+    tester,
+  ) async {
+    const kinds = ['solid', 'dashed', 'dotted', 'double', 'wavy'];
+    final note = Note(
+      id: 'n',
+      type: NoteType.checklist,
+      title: 'Liste',
+      items: [
+        for (var i = 0; i < 30; i++)
+          NoteItem(
+            id: 'i$i',
+            text: 'madde $i',
+            divider: i >= 10 && i < 20 ? kinds[(i - 10) ~/ 2] : '',
+          ),
+      ],
+    );
+    final repo = CountingNotesRepository();
+    await pumpEditor(tester, note, repo: repo);
+    await _settleGrowth(tester);
+    await tester.tap(find.text('madde 7'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byTooltip('Biçim'));
+    await _settle(tester);
+    final body = find
+        .ancestor(
+          of: find.byType(NotePageCanvas),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    // Tepsi açılırken gövdenin boyu kaç karede değişiyor (§5.1 bulgu 13).
+    var trayResize = 0;
+    final trayOpen = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('format-divider-menu')));
+      trayResize = await _resizedFrames(tester, body);
+    });
+    var pickRows = 0, pickRoots = 0, pickItems = 0;
+    // PB6 tepsiye beş türü koyunca ikinci seçim dalgalı olur (S44 tanımı).
+    final second =
+        find.byKey(const ValueKey('format-divider-wavy')).evaluate().isEmpty
+        ? 'dashed'
+        : 'wavy';
+    // Beliriş (PB6 §5.2): çizgi eklendikten sonraki 200 ms'de (12 kare)
+    // satır ve ItemsEditor kurulmaz — yalnız çizgi katmanı boyanır.
+    var revealRows = 0, revealItems = 0;
+    for (final (i, k) in ['solid', second, second].indexed) {
+      final parts = [
+        await _count(() async {
+          await tester.tap(find.byKey(ValueKey('format-divider-$k')));
+          await tester.pump();
+        }),
+        await _count(() async {
+          for (var f = 0; f < 12; f++) {
+            await tester.pump(const Duration(milliseconds: 16));
+          }
+        }),
+        await _count(() => _settle(tester)),
+      ];
+      if (i == 0) {
+        revealRows = parts[1][_row] ?? 0;
+        revealItems = parts[1]['ItemsEditor'] ?? 0;
+      }
+      for (final c in parts) {
+        pickRows += c[_row] ?? 0;
+        pickRoots += c['NoteEditorScreen'] ?? 0;
+        pickItems += c['ItemsEditor'] ?? 0;
+      }
+    }
+    await tester.pump(const Duration(seconds: 3));
+    expect(repo.lastSaved!.items[7].divider, isEmpty, reason: 'kaldırıldı');
+    final trayClose = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('format-divider-menu')));
+      await _settle(tester);
+    });
+    final counter = BuildCounter()..start();
+    addTearDown(counter.stop);
+    for (final inset in const <double>[20, 60, 120, 200, 300, 200, 120, 60, 20, 0]) {
+      tester.view.viewInsets = FakeViewPadding(bottom: inset);
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    final kb = _bodyTypes.fold(0, (n, t) => n + counter.of(t));
+    counter.stop();
+    // ignore: avoid_print
+    print(
+      'S44: tepsi açılış kurulum ${_sum(trayOpen)}, gövde boy karesi '
+      '$trayResize',
+    );
+    _expectBudget('S44', {
+      'secim_satir': pickRows,
+      'secim_kok': pickRoots,
+      'secim_items_editor': pickItems,
+      'tepsi_satir': (trayOpen[_row] ?? 0) + (trayClose[_row] ?? 0),
+      'tepsi_govde_boy_karesi': trayResize,
+      'klavye_govde': kb,
+      'belirisi_satir': revealRows,
+      'belirisi_items_editor': revealItems,
+    });
+    await endEditor(tester);
   });
 }

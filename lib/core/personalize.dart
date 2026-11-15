@@ -43,6 +43,8 @@ class UiPrefs {
     this.barOrder = const <String>[],
     this.aiOrder = const <String>[],
     this.topOrder = const <String>[],
+    this.quickOrder = const <String>[],
+    this.attachOrder = const <String>[],
   });
 
   /// Not alt çubuğunun SOL kapsülündeki düğmelerin kullanıcı sırası
@@ -59,6 +61,14 @@ class UiPrefs {
   /// Not ÜST çubuğundaki sıralanabilir düğmelerin sırası (P20 M8; aynı
   /// kurallar, varsayılan [UiItem.topDefault]). Kapsül yok, taraf yok.
   final List<String> topOrder;
+
+  /// Yazarken üstteki hızlı satırın kullanıcı sırası ([UiItem.quickRow]
+  /// anahtarları değil, satırın düğme anahtarları; P63 PBT — PB7 bağlar,
+  /// bugün hiçbir ekran okumaz). Boş = varsayılan; [orderOf] kuralları.
+  final List<String> quickOrder;
+
+  /// "Ekle" levhasının seçenek sırası (aynı kurallar; P63 PBT).
+  final List<String> attachOrder;
 
   /// [defaults] sırasını kullanıcı sırasıyla ([saved]) birleştirir: kayıtlı
   /// ve hâlâ var olan kimlikler kayıtlı sırada, kalanlar varsayılan sırada
@@ -158,6 +168,8 @@ class UiPrefs {
     List<String>? barOrder,
     List<String>? aiOrder,
     List<String>? topOrder,
+    List<String>? quickOrder,
+    List<String>? attachOrder,
   }) => UiPrefs(
     hidden: hidden ?? this.hidden,
     seekBack: seekBack ?? this.seekBack,
@@ -165,6 +177,8 @@ class UiPrefs {
     barOrder: barOrder ?? this.barOrder,
     aiOrder: aiOrder ?? this.aiOrder,
     topOrder: topOrder ?? this.topOrder,
+    quickOrder: quickOrder ?? this.quickOrder,
+    attachOrder: attachOrder ?? this.attachOrder,
   );
 
   Map<String, Object?> toJson() => {
@@ -174,6 +188,8 @@ class UiPrefs {
     if (barOrder.isNotEmpty) 'barOrder': barOrder,
     if (aiOrder.isNotEmpty) 'aiOrder': aiOrder,
     if (topOrder.isNotEmpty) 'topOrder': topOrder,
+    if (quickOrder.isNotEmpty) 'quickOrder': quickOrder,
+    if (attachOrder.isNotEmpty) 'attachOrder': attachOrder,
   };
 
   /// Bozuk/eksik kayıt varsayılana düşer; sarma süresi 1–600 sn arasında.
@@ -190,6 +206,8 @@ class UiPrefs {
       barOrder: ids(json['barOrder']),
       aiOrder: ids(json['aiOrder']),
       topOrder: ids(json['topOrder']),
+      quickOrder: ids(json['quickOrder']),
+      attachOrder: ids(json['attachOrder']),
     );
   }
 
@@ -201,7 +219,9 @@ class UiPrefs {
       setEquals(other.hidden, hidden) &&
       listEquals(other.barOrder, barOrder) &&
       listEquals(other.aiOrder, aiOrder) &&
-      listEquals(other.topOrder, topOrder);
+      listEquals(other.topOrder, topOrder) &&
+      listEquals(other.quickOrder, quickOrder) &&
+      listEquals(other.attachOrder, attachOrder);
 
   @override
   int get hashCode => Object.hash(
@@ -211,6 +231,8 @@ class UiPrefs {
     Object.hashAll(barOrder),
     Object.hashAll(aiOrder),
     Object.hashAll(topOrder),
+    Object.hashAll(quickOrder),
+    Object.hashAll(attachOrder),
   );
 }
 
@@ -359,6 +381,12 @@ abstract final class UiItem {
 
   /// Not ekranındaki "Ekle" levhasının seçeneği ([key] = levhanın kimliği).
   static String attach(String key) => 'attach.$key';
+
+  /// Sabit ek çubuğunun düğmesi (P63 PBT; PB7 bağlar).
+  static String pinned(String key) => 'pinned.$key';
+
+  /// Kalem tepsisindeki araç (P63 PBT; PB3 bağlar).
+  static String penTool(String key) => 'pen.tool.$key';
 }
 
 /// "Eklenti": aynı işe ait öğelerin adlı grubu (bkz. [UiPrefs.withModule]).

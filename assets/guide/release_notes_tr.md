@@ -3,6 +3,8 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 15 Kasım 2026 {#2026-11-15}
+- **Şablonlar yenilendi:** her kart şablonun içeriğini küçük bir sayfa çizimiyle gösteriyor; uzun şablonlarda "Oluştur" düğmesi artık hep görünür, kendi şablonunu düzenleme ekranı sadeleşti.
+- **Madde altı çizgiler:** Biçim → Alt çizgi tepsisinde beş türün hepsi (çift ve dalgalı dahil) maddenin kendi rengi ve kalınlığıyla görünüyor; ayar levhası yenilendi, dar ekranda taşmıyor; yeni çizgi soldan sağa çizilerek beliriyor.
 - **Google Keep'ten içe aktarmada not kaybolmuyor:** yeni kurulumda Keep yedeğini içe aktarınca bazı notlar sessizce boş kalıp siliniyordu; artık her not tek seferde, içeriğiyle oluşur.
 - **Aramaya geçiş daha hafif:** arama kutusuna dokunduğunda ekranda görünmeyen kartlar artık boşuna hazırlanmıyor; yazdığın her harfte çizilen kart sayısı yarıdan aza indi.
 
