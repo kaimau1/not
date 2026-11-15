@@ -344,7 +344,7 @@ class _PrefSwitch extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      secondary: icon == null ? null : Icon(icon, size: 20),
+      secondary: icon == null ? null : Icon(icon, size: AppIconSize.m),
       title: Text(title),
       subtitle: subtitle == null ? null : Text(subtitle!),
       value: ref.watch(provider),

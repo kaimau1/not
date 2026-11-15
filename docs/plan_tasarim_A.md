@@ -475,7 +475,7 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 | [x] PA0 | Bütçe tabanları S29–S33, S35, S36 + boy animasyonu mandalı + takvim tur sahneleri | opus | — (ÖNCE) | kurar | hayır | — |
 | [x] PA1 | Ayar satır dili: gruplar, satır kalıbı, kök sayfa, geniş ekran, bütün alanların grup etiketleri | **fable** | PA0 | S29, S36 | hayır | APK-1 |
 | [x] PA2 | Hesap ailesi: kimlik kartı, hesap levhası, Ayarlar → Hesap, `settings_account.dart`taki öbür satırlar | **fable** | PA1 | S30 | hayır | APK-1 |
-| PA3 | Öbür ayar alanları + tema seçici, yazma çubuğu ayarı, kilit karoları | **fable** | PA1 (PA2 ile paralel) | S29 değişmez | hayır | APK-1 |
+| [x] PA3 | Öbür ayar alanları + tema seçici, yazma çubuğu ayarı, kilit karoları | **fable** | PA1 (PA2 ile paralel) | S29 değişmez | hayır | APK-1 |
 | PA4 | Yan ekranlar: premium, gizlilik, kılavuz, kişiler, hesap gerekli, yedek diyalogları | **fable** | — (PA1–PA3 ile paralel) | yok | hayır | APK-1 |
 | PA5 | Bildirim hunisi: dört huni → `appNotice`, şeridin `app.dart`a bağlanması, mandal, testler | opus (kılık iskelette hazır) | PA0 | S31 | **evet** | APK-2 |
 | PA6 | Kalıcı şeritler tek kılıkta (`AppBanner`) + bildirimlerin görsel son bakışı | **fable** | PA5 | S32 | **evet** | APK-2 |
@@ -508,7 +508,8 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 - Kabul: §3.3, §4; S30 kart 0 / pano 0; `profile-google-sign-in`, `home-account-avatar` anahtarları aynı.
 - Tuzaklar: levha kapanınca onay çalışmalı (`sign_out_actions.dart:17`); misafirde çıkış kırmızı KALIR (H6); `showAppSheet` genişliğine dokunma; avatar fotoğrafı solması yer tutucunun boyunu değiştirmez; "Hesabı sil" en alta — **Sabah bakılacak** (§4).
 
-**PA3 — Öbür ayar alanları (fable).** §2.2 alan tablosu (`ai`, `appearance`, `notes`, `writing`, `sound`, `sync` depolama); bulgu A1'in alan içi kalıntıları.
+**[x] PA3 — Öbür ayar alanları (fable).** §2.2 alan tablosu (`ai`, `appearance`, `notes`, `writing`, `sound`, `sync` depolama); bulgu A1'in alan içi kalıntıları.
+- **Durum (2026-11-15, dal `oto/G1-ayarlar`, opus):** örnek metin kartın dışında (`bare` satır, `AppSurface.paper`); Seslendirme ve "Bu cihazda" bölümlerindeki iç başlıklar kalktı (grup etiketinde); AI anahtar satırları ve seçici satırı `rowTitle` / `meta`; ses ve sesle yazma segment etiketleri tek satır; elle simge / köşe / ağırlık → belirteç (token bütçesi radius 227 → 219, iconSize 462 → 433, fontSize 198 → 193, fontWeight 135 → 131). Depolama dökümü zaten "ad + sağda değer"di. S29 değişmedi (353 / 37 / 474). Test `settings_groups_test.dart` (Görünüm / Ses grup sırası, başlık tekrarı yok). theme_picker / app_lock / typing_bar_settings: yalnız belirteç (önizlemeli kartlar aynen).
 - Dosyalar: `settings_sections/settings_ai.dart`, `settings_appearance.dart`, `settings_switches.dart`, `settings_voice.dart`, `settings_writing.dart` (satır İÇERİKLERİ; `group:` PA1'de eklendi), `notes_settings.dart`, `theme_picker.dart`, `typing_bar_settings.dart`, `app_lock.dart`; ilgili testler (`theme_picker_groups_test.dart`, `app_lock_test.dart`, `card_display_settings_test.dart`, `typing_bar_hide_settings_test.dart`).
 - Önce kanıt: tur "önce" (`ayarlar-ai|gorunum|notes|writing|sound|sync`); `python tool/design/token_sayim.py radius` / `fontSize` / `fontWeight` dökümünde bu dosyaların satırları.
 - İş: kalıba uymayan satırlar (metin düğmesi yığını, ortalı parça, kırmızı düz yazı) satır diline; örnek metin kartın dışında `AppSurface.paper`; depolama dökümü "ad + sağda değer"; elle köşe / punto / ağırlık → belirteç.

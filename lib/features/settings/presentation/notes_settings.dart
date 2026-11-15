@@ -168,7 +168,7 @@ class FolderOrderSetting extends ConsumerWidget {
               ),
               TextButton.icon(
                 onPressed: () => showFolderOrderSheet(context),
-                icon: const Icon(Icons.swap_vert, size: 18),
+                icon: const Icon(Icons.swap_vert, size: AppIconSize.s),
                 label: Text(l10n.folderReorder),
               ),
             ],
@@ -342,8 +342,8 @@ class _DeviceStorageSectionState extends State<DeviceStorageSection> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.deviceStorageTitle, style: theme.textTheme.titleSmall),
-              const SizedBox(height: 8),
+              // Başlık grup etiketinde ("Bu cihazda", P62 PA1).
+              const SizedBox(height: AppSpace.m),
               if (snapshot.connectionState == ConnectionState.done &&
                   usage == null)
                 Text(
@@ -357,12 +357,12 @@ class _DeviceStorageSectionState extends State<DeviceStorageSection> {
                 line(l10n.deviceStorageAi, usage?.aiCache),
                 const Divider(height: 12),
                 line(l10n.deviceStorageTotal, usage?.total, bold: true),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppSpace.s),
                 Text(
                   l10n.deviceStorageInfo,
                   style: theme.textTheme.bodySmall?.copyWith(color: muted),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpace.s),
                 OutlinedButton.icon(
                   onPressed: _clearing || usage == null ? null : _clear,
                   icon: _clearing
@@ -371,7 +371,7 @@ class _DeviceStorageSectionState extends State<DeviceStorageSection> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.cleaning_services_outlined, size: 18),
+                      : const Icon(Icons.cleaning_services_outlined, size: AppIconSize.s),
                   label: Text(l10n.deviceStorageClear),
                 ),
               ],

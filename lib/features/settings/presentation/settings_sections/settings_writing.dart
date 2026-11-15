@@ -95,7 +95,7 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
       builder: (_, on, _) => SwitchListTile(
         key: const ValueKey('settings-spell-auto'),
         contentPadding: EdgeInsets.zero,
-        secondary: const Icon(Icons.spellcheck_rounded, size: 20),
+        secondary: const Icon(Icons.spellcheck_rounded, size: AppIconSize.m),
         title: Text(l10n.spellAutoTitle),
         subtitle: Text(l10n.spellAutoSubtitle),
         value: on,
@@ -111,7 +111,7 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
       valueListenable: AutoSpell.learning,
       builder: (_, on, _) => SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        secondary: const Icon(Icons.school_outlined, size: 20),
+        secondary: const Icon(Icons.school_outlined, size: AppIconSize.m),
         title: Text(l10n.spellLearnTitle),
         value: on,
         onChanged: AutoSpell.setLearning,
@@ -124,7 +124,7 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
     Builder(
       builder: (context) => ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: const Icon(AppIcons.notebook, size: 20),
+        leading: const Icon(AppIcons.notebook, size: AppIconSize.m),
         title: Text(l10n.spellLearnedTitle),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => unawaited(showSpellSettings(context)),
@@ -229,7 +229,7 @@ class _InkSwitchState extends State<_InkSwitch> {
   @override
   Widget build(BuildContext context) => SwitchListTile(
     contentPadding: EdgeInsets.zero,
-    secondary: Icon(widget.icon, size: 20),
+    secondary: Icon(widget.icon, size: AppIconSize.m),
     title: Text(widget.title),
     subtitle: Text(widget.subtitle),
     value: widget.read(),

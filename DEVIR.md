@@ -15,7 +15,7 @@
 - S36: taban 673/1875 → 266/1137. Kök neden FocusScope.of(context).unfocus() bağımlılığı (dosya settings_screen.dart openAreaId).
 
 ## Sıradaki
-- PA3 öbür alanlar, PA4 yan ekranlar.
+- PA3 [x] (öbür alanlar: bare önizleme, iç başlıklar, belirteçler). Sıradaki: PA4 yan ekranlar.
 
 ## Komutlar
 - `flutter test test/perf_budget_test.dart --plain-name S29` / `S36` / `S30`

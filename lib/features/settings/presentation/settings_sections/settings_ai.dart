@@ -39,7 +39,7 @@ class _BuiltInAiStatus extends ConsumerWidget {
         onTap: () => context.push('/premium'),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: scheme.primary),
+            Icon(icon, size: AppIconSize.xs, color: scheme.primary),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
@@ -49,7 +49,7 @@ class _BuiltInAiStatus extends ConsumerWidget {
                 ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ),
-            Icon(Icons.chevron_right, size: 16, color: scheme.onSurfaceVariant),
+            Icon(Icons.chevron_right, size: AppIconSize.xs, color: scheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -193,7 +193,7 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
             child: Row(
               children: [
                 Chip(
-                  avatar: const Icon(Icons.key, size: 16),
+                  avatar: const Icon(Icons.key, size: AppIconSize.xs),
                   label: Text('${provider.label}: ${l10n.apiKeySavedBadge}'),
                 ),
                 const SizedBox(width: 8),
@@ -229,7 +229,7 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
               Uri.parse(provider.keyUrl),
               mode: LaunchMode.externalApplication,
             ),
-            icon: const Icon(Icons.open_in_new, size: 18),
+            icon: const Icon(Icons.open_in_new, size: AppIconSize.s),
             label: Text(l10n.getApiKey),
           ),
         ),
@@ -293,7 +293,7 @@ class _AiDiagnosticsTileState extends State<_AiDiagnosticsTile> {
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
               onPressed: () => setState(AiDiagnostics.clear),
-              icon: const Icon(Icons.delete_outline, size: 18),
+              icon: const Icon(Icons.delete_outline, size: AppIconSize.s),
               label: Text(context.l10n.clear),
             ),
           ),
@@ -373,22 +373,13 @@ Widget _modelPickerTile({
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
+                    Text(label, style: AppText.of(Theme.of(context)).meta),
+                    const SizedBox(height: AppSpace.xxs),
                     Text(
                       current,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppText.of(Theme.of(context)).rowTitle,
                     ),
                   ],
                 ),
@@ -500,14 +491,13 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: scheme.primaryContainer,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppRadius.s),
               ),
               child: Text(
                 widget.recommendedLabel,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: scheme.onPrimaryContainer,
-                ),
+                style: AppText.of(
+                  Theme.of(context),
+                ).badge.copyWith(color: scheme.onPrimaryContainer),
               ),
             ),
           ],
@@ -542,7 +532,7 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
               onChanged: (v) => setState(() => _query = v.trim()),
               decoration: InputDecoration(
                 isDense: true,
-                prefixIcon: const Icon(Icons.search, size: 20),
+                prefixIcon: const Icon(Icons.search, size: AppIconSize.m),
                 hintText: l10n.aiModelSearch,
                 border: const OutlineInputBorder(),
               ),
@@ -701,7 +691,7 @@ class _BriefingEditor extends ConsumerWidget {
             spacing: 8,
             children: [
               actionChip(ActionChip(
-                avatar: const Icon(Icons.schedule, size: 16),
+                avatar: const Icon(Icons.schedule, size: AppIconSize.xs),
                 label: Text(time),
                 onPressed: () async {
                   final picked = await showTimePicker(
@@ -720,7 +710,7 @@ class _BriefingEditor extends ConsumerWidget {
               )),
               // Ayar ile ekran birbirine bağlansın: brifing buradan da açılır.
               actionChip(ActionChip(
-                avatar: const Icon(Icons.wb_sunny_outlined, size: 16),
+                avatar: const Icon(Icons.wb_sunny_outlined, size: AppIconSize.xs),
                 label: Text(context.l10n.openBriefing),
                 onPressed: () => context.push('/briefing'),
               )),
@@ -753,12 +743,13 @@ class _AiSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    // Satır dili (P62 PA3): başlık `rowTitle`, açıklama `meta`.
+    final text = AppText.of(Theme.of(context));
     return InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       onTap: () => onChanged(!value),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: AppSpace.m),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -766,26 +757,13 @@ class _AiSwitchTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    info,
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.3,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
+                  Text(title, style: text.rowTitle),
+                  const SizedBox(height: AppSpace.xxs),
+                  Text(info, style: text.meta),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpace.m),
             Switch(value: value, onChanged: onChanged),
           ],
         ),

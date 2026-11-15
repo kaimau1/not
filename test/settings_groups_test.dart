@@ -58,7 +58,10 @@ Future<void> _pump(WidgetTester tester, Size size, {String? area}) async {
 List<String> _labels(WidgetTester tester, String area) => [
   for (final w in tester.widgetList<SectionLabel>(
     find.descendant(
-      of: find.byKey(ValueKey('settings-area-$area')),
+      // Yalnız grup etiketleri (tema seçicinin kendi aile başlıkları değil).
+      of: find.byWidgetPredicate(
+        (w) => '${w.key}'.contains('settings-group-label-'),
+      ),
       matching: find.byType(SectionLabel),
     ),
   ))
@@ -82,6 +85,33 @@ void main() {
     await _pump(tester, const Size(412, 915), area: 'ai');
     final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
     expect(_labels(tester, 'ai'), [l10n.settingsGroupAutomatic]);
+  });
+
+  testWidgets('Görünüm alanı: grup sırası', (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    await _pump(tester, const Size(412, 2400), area: 'appearance');
+    expect(_labels(tester, 'appearance'), [
+      l10n.settingsThemeHeader,
+      l10n.settingsGroupText,
+      l10n.settingsCardsHeader,
+    ]);
+  });
+
+  testWidgets('Ses alanı: grup sırası, "Seslendirme" bir kez', (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    await _pump(tester, const Size(412, 2400), area: 'sound');
+    expect(_labels(tester, 'sound'), [
+      l10n.ttsSectionTitle,
+      l10n.settingsGroupDictation,
+    ]);
+    // "Seslendirme" yalnız grup etiketinde (bölümün içinde ikinci kez yok).
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('settings-area-sound')),
+        matching: find.text(l10n.ttsSectionTitle),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Geniş ekran: seçili kategori primaryContainer, alan değişir', (

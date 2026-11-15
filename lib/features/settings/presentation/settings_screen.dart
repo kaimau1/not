@@ -382,6 +382,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ayrı ayrı seçiliyor ama sonucu ancak notu açınca görülüyordu;
             // örnek bunları BİRLİKTE, gerçek bir notun görünümünde gösterir.
             const _AppearancePreview(),
+            bare: true,
             title: l10n.appearancePreviewTitle,
             keywords: 'ornek metin onizleme gorunum',
           ),
