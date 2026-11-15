@@ -9,9 +9,14 @@ import '../../../core/constants.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../auth/presentation/auth_providers.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../../core/app_icons.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/group_card.dart';
+import '../../../core/widgets/sheet_header.dart' show SectionLabel;
 
 /// Premium sayfası: mevcut durum + ücretsiz/premium karşılaştırması + gözden
 /// kaçan özelliklerin vitrini.
@@ -37,144 +42,128 @@ class PremiumScreen extends ConsumerWidget {
       appBar: HomeInBar(appBar: AppBar(title: Text(l10n.premiumTitle))),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-          16,
-          8,
-          16,
-          24 + MediaQuery.paddingOf(context).bottom,
+          AppSpace.l,
+          AppSpace.s,
+          AppSpace.l,
+          AppSpace.xxl + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
           // Durum kartı.
-          Card(
-            color: premium ? scheme.primaryContainer : scheme.surfaceContainer,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Icon(
-                    premium
-                        ? Icons.workspace_premium
-                        : Icons.workspace_premium_outlined,
-                    size: 36,
-                    color: premium ? scheme.onPrimaryContainer : scheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      premium && until != null
-                          ? l10n.premiumStatusActive(
-                              DateFormat('d MMMM y').format(until),
-                            )
-                          : premium
-                          ? l10n.premiumTitle
-                          : l10n.premiumStatusFree,
-                      style: Theme.of(context).textTheme.titleMedium,
+          // P62 PA4: ham Card yerine ayarlarla aynı grup yüzeyi.
+          GroupCard(
+            color: premium ? scheme.primaryContainer : null,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppSpace.l),
+                child: Row(
+                  children: [
+                    Icon(
+                      premium
+                          ? Icons.workspace_premium
+                          : Icons.workspace_premium_outlined,
+                      size: AppIconSize.l,
+                      color: premium
+                          ? scheme.onPrimaryContainer
+                          : scheme.primary,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: AppSpace.m),
+                    Expanded(
+                      child: Text(
+                        premium && until != null
+                            ? l10n.premiumStatusActive(
+                                DateFormat('d MMMM y').format(until),
+                              )
+                            : premium
+                            ? l10n.premiumTitle
+                            : l10n.premiumStatusFree,
+                        style: AppText.of(Theme.of(context)).rowTitle,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 20),
-
-          Text(
-            l10n.premiumPerksTitle,
-            style: Theme.of(context).textTheme.titleMedium,
+          _Section(l10n.premiumPerksTitle),
+          // Ayrıcalıklar TEK grup kartında, ayraçlı (plan §2.2).
+          GroupCard(
+            children: [
+              _PerkRow(
+                icon: Icons.auto_awesome,
+                title: l10n.premiumPerkAi,
+                free: '${AppConstants.freeDailyAiPoints}',
+                paid: '${AppConstants.premiumDailyAiPoints}',
+              ),
+              _PerkRow(
+                icon: Icons.attach_file,
+                title: l10n.premiumPerkAttach,
+                free: formatBytes(AppConstants.maxFreeAttachmentBytes),
+                paid: formatBytes(AppConstants.maxPremiumAttachmentBytes),
+              ),
+              _PerkRow(
+                icon: Icons.cloud_outlined,
+                title: l10n.premiumPerkStorage,
+                free: formatBytes(AppConstants.maxFreeStorageBytes),
+                paid: formatBytes(AppConstants.maxPremiumStorageBytes),
+              ),
+              ListTile(
+                leading: const Icon(Icons.wb_sunny_outlined),
+                title: Text(l10n.premiumPerkAuto),
+                subtitle: Text(l10n.premiumPerkAutoBody),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          _PerkRow(
-            icon: Icons.auto_awesome,
-            title: l10n.premiumPerkAi,
-            free: '${AppConstants.freeDailyAiPoints}',
-            paid: '${AppConstants.premiumDailyAiPoints}',
-          ),
-          _PerkRow(
-            icon: Icons.attach_file,
-            title: l10n.premiumPerkAttach,
-            free: formatBytes(AppConstants.maxFreeAttachmentBytes),
-            paid: formatBytes(AppConstants.maxPremiumAttachmentBytes),
-          ),
-          _PerkRow(
-            icon: Icons.cloud_outlined,
-            title: l10n.premiumPerkStorage,
-            free: formatBytes(AppConstants.maxFreeStorageBytes),
-            paid: formatBytes(AppConstants.maxPremiumStorageBytes),
-          ),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.wb_sunny_outlined),
-              title: Text(l10n.premiumPerkAuto),
-              subtitle: Text(l10n.premiumPerkAutoBody),
-            ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.m),
           // BYOK her zaman görünür: premium'un alternatifi olduğu saklanmaz —
           // dürüst olmayan bir satış sayfası güveni de satar.
-          Card(
-            color: scheme.surfaceContainerLow,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Icon(Icons.key_outlined, color: scheme.onSurfaceVariant),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      hasKey ? l10n.aiBuiltInByok : l10n.premiumByokHint,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          AppBanner(
+            icon: Icons.key_outlined,
+            title: hasKey ? l10n.aiBuiltInByok : l10n.premiumByokHint,
           ),
           if (!premium) ...[
-            const SizedBox(height: 20),
-            Text(
-              l10n.premiumHowTitle,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              l10n.premiumHowBody,
-              style: Theme.of(context).textTheme.bodyMedium,
+            _Section(l10n.premiumHowTitle),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+              child: Text(
+                l10n.premiumHowBody,
+                style: AppText.of(Theme.of(context)).body,
+              ),
             ),
           ],
-          const SizedBox(height: 24),
-
-          Text(
-            l10n.premiumDiscoverTitle,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          _DiscoverTile(
-            icon: Icons.document_scanner_outlined,
-            title: l10n.scanDocument,
-            body: l10n.discoverScanBody,
-          ),
-          _DiscoverTile(
-            icon: Icons.auto_awesome_outlined,
-            title: l10n.semanticSearchToggle,
-            body: l10n.discoverSemanticBody,
-          ),
-          _DiscoverTile(
-            icon: AppIcons.aiVoiceNote,
-            title: l10n.newVoiceCapture,
-            body: l10n.discoverAssistantBody,
-          ),
-          _DiscoverTile(
-            icon: Icons.lock_outline,
-            title: l10n.lockNote,
-            body: l10n.discoverLockBody,
-          ),
-          _DiscoverTile(
-            icon: Icons.visibility_off_outlined,
-            title: l10n.hiddenFolder,
-            body: l10n.discoverHiddenBody,
-          ),
-          _DiscoverTile(
-            icon: Icons.picture_as_pdf_outlined,
-            title: l10n.exportPdf,
-            body: l10n.discoverExportBody,
+          _Section(l10n.premiumDiscoverTitle),
+          GroupCard(
+            children: [
+              _DiscoverTile(
+                icon: Icons.document_scanner_outlined,
+                title: l10n.scanDocument,
+                body: l10n.discoverScanBody,
+              ),
+              _DiscoverTile(
+                icon: Icons.auto_awesome_outlined,
+                title: l10n.semanticSearchToggle,
+                body: l10n.discoverSemanticBody,
+              ),
+              _DiscoverTile(
+                icon: AppIcons.aiVoiceNote,
+                title: l10n.newVoiceCapture,
+                body: l10n.discoverAssistantBody,
+              ),
+              _DiscoverTile(
+                icon: Icons.lock_outline,
+                title: l10n.lockNote,
+                body: l10n.discoverLockBody,
+              ),
+              _DiscoverTile(
+                icon: Icons.visibility_off_outlined,
+                title: l10n.hiddenFolder,
+                body: l10n.discoverHiddenBody,
+              ),
+              _DiscoverTile(
+                icon: Icons.picture_as_pdf_outlined,
+                title: l10n.exportPdf,
+                body: l10n.discoverExportBody,
+              ),
+            ],
           ),
         ],
       ),
@@ -210,30 +199,28 @@ class _PerkRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Card(
-      child: ListTile(
-        leading: AppIcons.glyph(icon),
-        title: Text(title),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              free,
-              style: TextStyle(
-                color: scheme.onSurfaceVariant,
-                decoration: TextDecoration.lineThrough,
-              ),
+    return ListTile(
+      leading: AppIcons.glyph(icon),
+      title: Text(title),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            free,
+            style: TextStyle(
+              color: scheme.onSurfaceVariant,
+              decoration: TextDecoration.lineThrough,
             ),
-            const SizedBox(width: 8),
-            Text(
-              paid,
-              style: TextStyle(
-                color: scheme.primary,
-                fontWeight: AppWeight.strong,
-              ),
+          ),
+          const SizedBox(width: AppSpace.s),
+          Text(
+            paid,
+            style: TextStyle(
+              color: scheme.primary,
+              fontWeight: AppWeight.strong,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -252,12 +239,28 @@ class _DiscoverTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: AppIcons.glyph(icon),
-        title: Text(title),
-        subtitle: Text(body),
-      ),
+    return ListTile(
+      leading: AppIcons.glyph(icon),
+      title: Text(title),
+      subtitle: Text(body),
     );
   }
+}
+
+/// Bölüm başlığı: ayarlardaki grup etiketiyle aynı (`SectionLabel`).
+class _Section extends StatelessWidget {
+  const _Section(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpace.s,
+      AppSpace.xl,
+      AppSpace.s,
+      AppSpace.s,
+    ),
+    child: SectionLabel(text),
+  );
 }

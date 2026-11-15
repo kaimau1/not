@@ -206,29 +206,40 @@ class _VoiceSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.ttsSectionTitle,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: AppWeight.strong),
-        ),
-        const SizedBox(height: 10),
+        // Başlık artık grup etiketi ("Seslendirme", P62 PA1) — içeride
+        // ikinci kez yazılmaz.
+        const SizedBox(height: AppSpace.s),
         SegmentedButton<TtsEngine>(
           segments: [
             ButtonSegment(
               value: TtsEngine.device,
-              icon: const Icon(Icons.smartphone, size: 18),
-              label: Text(l10n.ttsEngineDevice),
+              icon: const Icon(Icons.smartphone, size: AppIconSize.s),
+              label: Text(
+                l10n.ttsEngineDevice,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             ButtonSegment(
               value: TtsEngine.gemini,
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: Text(l10n.ttsEngineAi),
+              icon: const Icon(Icons.auto_awesome, size: AppIconSize.s),
+              label: Text(
+                l10n.ttsEngineAi,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             ButtonSegment(
               value: TtsEngine.antalia,
-              icon: const Icon(Icons.record_voice_over, size: 18),
-              label: Text(l10n.ttsEngineLocal),
+              icon: const Icon(Icons.record_voice_over, size: AppIconSize.s),
+              label: Text(
+                l10n.ttsEngineLocal,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
           selected: {engine},
@@ -374,7 +385,7 @@ class _AiVoicePreviewButtonState extends ConsumerState<_AiVoicePreviewButton> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.play_arrow, size: 18),
+              : const Icon(Icons.play_arrow, size: AppIconSize.s),
           label: Text(l10n.voicePreview),
         ),
         const SizedBox(width: 10),
@@ -457,7 +468,7 @@ class _AntaliaModelTileState extends ConsumerState<_AntaliaModelTile> {
             const SizedBox(height: 8),
             FilledButton.tonalIcon(
               onPressed: controller.download,
-              icon: const Icon(Icons.download, size: 18),
+              icon: const Icon(Icons.download, size: AppIconSize.s),
               label: Text(l10n.ttsLocalDownload),
             ),
           ],
@@ -494,7 +505,7 @@ class _AntaliaModelTileState extends ConsumerState<_AntaliaModelTile> {
           children: [
             Row(
               children: [
-                Icon(Icons.check_circle, size: 16, color: scheme.primary),
+                Icon(Icons.check_circle, size: AppIconSize.xs, color: scheme.primary),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -516,7 +527,7 @@ class _AntaliaModelTileState extends ConsumerState<_AntaliaModelTile> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.play_arrow, size: 18),
+                      : const Icon(Icons.play_arrow, size: AppIconSize.s),
                   label: Text(l10n.voicePreview),
                 ),
                 TextButton.icon(
@@ -524,7 +535,7 @@ class _AntaliaModelTileState extends ConsumerState<_AntaliaModelTile> {
                     await ref.read(antaliaSpeechProvider.notifier).stop();
                     await controller.delete();
                   },
-                  icon: const Icon(Icons.delete_outline, size: 18),
+                  icon: const Icon(Icons.delete_outline, size: AppIconSize.s),
                   label: Text(l10n.ttsLocalDelete),
                 ),
               ],

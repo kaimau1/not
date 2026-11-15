@@ -10,8 +10,20 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart'
-    show kIsWeb, visibleForTesting, defaultTargetPlatform, TargetPlatform;
+    show
+        kIsWeb,
+        listEquals,
+        ValueListenable,
+        visibleForTesting,
+        defaultTargetPlatform,
+        TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart'
+    show
+        BoxHitTestResult,
+        ContainerBoxParentData,
+        ContainerRenderObjectMixin,
+        RenderBoxContainerDefaultsMixin;
 
 import '../../../core/widgets/sheet_header.dart';
 
@@ -29,6 +41,7 @@ import '../../ai/data/attachment_text_index.dart';
 import '../../../core/crash_reporting.dart';
 import '../../../core/error_log.dart';
 import '../../../core/constants.dart';
+import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
@@ -56,6 +69,7 @@ import '../../ai/data/model_catalog.dart';
 import '../../ai/data/firebase_ai_client.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/data/account_service.dart';
+import '../../auth/presentation/account_identity_card.dart';
 import '../../auth/presentation/auth_errors.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../auth/presentation/sign_out_actions.dart';
@@ -96,10 +110,13 @@ import '../../folders/data/folders_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/delayed_spinner.dart';
 import '../../../core/widgets/press_scale.dart';
+import '../../../core/widgets/pop_in.dart';
+import '../../../core/widgets/app_banner.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../core/a11y/min_tap_target.dart';
+import '../../../core/a11y/motion.dart';
 
 import '../../notes/presentation/viewers/ink_tools.dart' show InkToolMemory;
 import '../../notes/presentation/viewers/ink_layer.dart' show InkFingerToolPicker;
@@ -146,7 +163,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Kalici DEGIL. Hepsi KAPALI gelir (kullanıcı isteği 2026-10-20:
   /// "görünüm menüsü varsayılan açık gelmesin") — yalnız rotadan
   /// `?area=` verildiyse o alan açık.
-  late String _open = widget.initialArea ?? '';
+  ///
+  /// Bildirici (P62 PA1, S36): geniş ekranda kategori seçmek YALNIZ seçili
+  /// iki döşemeyi ve ayrıntı bölmesini kurar — eskiden `setState` bütün
+  /// ekranı (arama kutusu, 11 kategori döşemesi, kısayollar) yeniden
+  /// kuruyordu (alan değişiminin ilk karesi 551/673 widget).
+  late final _openN = ValueNotifier<String>(widget.initialArea ?? '');
+  String get _open => _openN.value;
+  set _open(String id) => _openN.value = id;
   String _query = '';
   final _searchController = TextEditingController();
 
@@ -178,6 +202,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void dispose() {
     Personalize.prefs.removeListener(_onPersonalize);
     _searchController.dispose();
+    _openN.dispose();
     super.dispose();
   }
 
@@ -196,21 +221,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: l10n.account,
         summary: _accountSummary(l10n),
         keywords: 'cikis hesap sil e-posta',
+        // P62 PA2 (plan §4): kimlik + şerit (kart dışı) · Oturum · Kilit ·
+        // Hakkında · en altta geri dönüşsüz "Hesabı sil" (sabah bakılacak:
+        // eskiden ikinci sıradaydı).
         rows: [
           _SettingRow(
             const _AccountSection(),
+            bare: true,
             title: l10n.account,
-            keywords: 'cikis hesap sil e-posta ${l10n.deleteAccount}',
+            keywords: 'hesap e-posta google bagla misafir',
+          ),
+          _SettingRow(
+            const _SignOutRow(),
+            group: l10n.settingsGroupSession,
+            title: l10n.signOut,
+            keywords: 'cikis oturum',
           ),
           _SettingRow(
             const NoteLockSettingsTile(),
             title: l10n.lockMethodTitle,
             keywords: 'kilit sifre desen parmak izi gizlilik',
+            group: l10n.settingsGroupLock,
           ),
           _SettingRow(
             const AppLockSettingsTile(),
             title: l10n.appLockTitle,
             keywords: 'uygulama kilidi acilis kilit gizle son uygulamalar',
+          ),
+          _SettingRow(
+            const _LegalRow(licenses: false),
+            group: l10n.settingsGroupAbout,
+            title: l10n.privacyPolicyTitle,
+            keywords: 'gizlilik politika hukuk',
+          ),
+          _SettingRow(
+            const _LegalRow(licenses: true),
+            title: l10n.licensesTitle,
+            keywords: 'lisans acik kaynak',
+          ),
+          _SettingRow(
+            const _ErrorLogButton(),
+            title: l10n.errorLogShare,
+            keywords: 'hata gunlugu bildir',
+          ),
+          if (CrashReporting.supported)
+            _SettingRow(
+              const _CrashReportsSwitch(),
+              title: l10n.crashReports,
+              keywords: 'cokme rapor',
+            ),
+          _SettingRow(
+            const _AppVersionRow(),
+            title: l10n.appVersion,
+            keywords: 'surum versiyon kopyala',
+          ),
+          _SettingRow(
+            const _DeleteAccountRow(),
+            group: '',
+            title: l10n.deleteAccount,
+            keywords: 'hesap sil veri sil',
           ),
         ],
       ),
@@ -238,6 +307,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _DiscoverableSwitch(),
             title: l10n.discoverable,
             keywords: '${l10n.discoverableInfo} arama gizlilik kisi bulun',
+            group: l10n.settingsGroupPrivacyNotify,
           ),
           // Paylaşım bildirimleri PAYLAŞIMIN yanında (2026-09-26): eskiden
           // Görünüm alanındaydı — bildirimi arayan kullanıcı orada bakmıyordu.
@@ -266,6 +336,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _BriefingEditor(),
             title: l10n.briefingSetting,
             keywords: l10n.briefingSettingInfo,
+            group: l10n.settingsGroupAutomatic,
           ),
           _SettingRow(
             const _AutoTagSwitch(),
@@ -293,6 +364,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 '${l10n.aiAdvancedInfo} gemini openai claude openrouter '
                 'api anahtar model tanilama',
+            // Katlanır bölüm kendi başlığını taşıyor: etiketsiz ayrı kart.
+            group: '',
           ),
         ],
       ),
@@ -309,6 +382,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // ayrı ayrı seçiliyor ama sonucu ancak notu açınca görülüyordu;
             // örnek bunları BİRLİKTE, gerçek bir notun görünümünde gösterir.
             const _AppearancePreview(),
+            bare: true,
             title: l10n.appearancePreviewTitle,
             keywords: 'ornek metin onizleme gorunum',
           ),
@@ -316,14 +390,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             // Boşluk seçicinin İÇİNDE: ayrı bir satır olsaydı süzmede tek
             // başına kalıp araya boşluk bırakırdı. Alt başlık da içinde:
             // aramada seçiciyle birlikte gelir.
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SubHeader(l10n.settingsThemeHeader),
-                const _ThemeSelector(),
-                const SizedBox(height: 12),
-              ],
-            ),
+            // Alt başlık artık grup etiketi (P62 PA1); aramada da eşleşir.
+            const _ThemeSelector(),
+            group: l10n.settingsThemeHeader,
             title: l10n.settingsAppearance,
             keywords:
                 'tema ${l10n.themeSystem} ${l10n.themeSage} '
@@ -343,6 +412,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // okunmaz hâle geliyordu.
           _SettingRow(
             const _TypographySection(),
+            group: l10n.settingsGroupText,
             title: '${l10n.appFontSetting} · ${l10n.fontSize}',
             keywords:
                 '${l10n.appFontInfo} font yazi tipi boyut '
@@ -352,6 +422,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           _SettingRow(
             const _LanguageSelector(),
+            group: '',
             title: l10n.settingsLanguage,
             keywords: 'dil language uygulama dili',
           ),
@@ -360,9 +431,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.listPaneRight,
             keywords: '${l10n.listPaneRightInfo} liste sag sol tablet bolunmus',
           ),
-          _SettingRow(_SubHeader(l10n.settingsCardsHeader)),
           _SettingRow(
             const _ExpandListItemsSwitch(),
+            group: l10n.settingsCardsHeader,
             title: l10n.expandListItems,
             keywords: l10n.expandListItemsInfo,
           ),
@@ -585,6 +656,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // seç) toplanıyor.
           _SettingRow(
             const _VoiceSection(),
+            group: l10n.ttsSectionTitle,
             title: l10n.ttsSectionTitle,
             keywords:
                 'seslendirme motor yapay zeka cihaz sesi tts ses tipi '
@@ -598,6 +670,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _SettingRow(const _SpeechPitchSlider(), title: l10n.speechPitch),
           _SettingRow(
             const _VoiceModeSelector(),
+            group: l10n.settingsGroupDictation,
             title: l10n.voiceModeSetting,
             keywords: '${l10n.voiceModeHold} ${l10n.voiceModeTap} mikrofon',
           ),
@@ -632,6 +705,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         rows: [
           _SettingRow(
             const _VersionFooter(),
+            group: l10n.settingsGroupVersion,
             title: l10n.settingsUpdatesTitle,
             keywords:
                 '${l10n.releaseNotesTitle} ${l10n.autoUpdateTitle} '
@@ -662,11 +736,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // ekler kullanıcının Drive'ına, misafir hesapta yalnız metin.
           _SettingRow(
             const AttachmentSyncTile(),
+            group: l10n.settingsGroupAttachments,
             title: l10n.attachmentSyncTitle,
             keywords: 'google drive ek gorsel pdf senkron bagla kota',
           ),
           _SettingRow(
             const _StorageUsage(),
+            group: l10n.deviceStorageTitle,
             title: l10n.storageUsage,
             keywords: 'depolama alan kota gb mb dolu',
           ),
@@ -684,6 +760,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           _SettingRow(
             const _BackupStatus(),
+            group: l10n.settingsGroupBackup,
+            bare: true,
             keywords: 'yedek durum son bulut eslitleme guvende',
           ),
           _SettingRow(
@@ -749,7 +827,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final inArea = !wide && openArea != null && !searching;
 
     void openAreaId(String id) {
-      FocusScope.of(context).unfocus();
+      // `FocusScope.of` DEĞİL: geri çağrıda bile ekranı odak kapsamına
+      // bağımlı kılıyor, odak değişince BÜTÜN ayarlar yeniden kuruluyordu
+      // (S36 ilk dokunuş 590 widget).
+      FocusManager.instance.primaryFocus?.unfocus();
+      // Geniş ekranda düzen değişmiyor: bildirici yeter (bkz. [_openN]).
+      if (wide && !searching) {
+        _open = id;
+        return;
+      }
       setState(() => _open = id);
     }
 
@@ -758,17 +844,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Widget root() => ListView(
       key: const PageStorageKey('settings-root'),
       padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        16 + MediaQuery.paddingOf(context).bottom + 48,
+        AppSpace.l,
+        AppSpace.m,
+        AppSpace.l,
+        AppSpace.l + MediaQuery.paddingOf(context).bottom + AppSpace.xxxl,
       ),
       children: [
         if (searching)
           ..._searchResults(context, visible, aiKeys != null, openAreaId)
         else ...[
           const _ProfileCard(),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.m),
           // KISAYOLLAR: Kılavuz (ayar arayan çoğu zaman bir özelliğin nasıl
           // kullanıldığını arıyor) ve Kişiselleştir yan yana.
           _ShortcutTiles(
@@ -797,12 +883,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           for (final g in groups) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.s,
+                AppSpace.xl,
+                AppSpace.s,
+                AppSpace.s,
+              ),
               child: SectionLabel(g.title),
             ),
             _CategoryGroup(
               areas: g.areas,
-              selectedId: wide ? openId : null,
+              selection: wide ? _openN : null,
+              fallbackId: areas.first.id,
               onTap: openAreaId,
             ),
           ],
@@ -814,7 +906,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Widget areaPage(_Area a) => _AreaPage(
       key: ValueKey('settings-area-${a.id}'),
       area: a,
-      rows: [for (final r in a.rows) r.child],
       showHeader: wide,
     );
 
@@ -823,37 +914,78 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body = Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(width: 380, child: root()),
+          // Arama kutusu sol sütunun içinde, sütunla aynı hizada (A10).
+          SizedBox(
+            width: 380,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.l,
+                    AppSpace.xs,
+                    AppSpace.l,
+                    AppSpace.xs,
+                  ),
+                  child: _searchBar(context),
+                ),
+                Expanded(child: root()),
+              ],
+            ),
+          ),
           VerticalDivider(width: 1, color: scheme.outlineVariant),
           Expanded(
-            child: searching || openArea == null
+            child: searching
                 ? const SizedBox.shrink()
-                : Align(
-                    alignment: Alignment.topCenter,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 720),
-                      child: areaPage(openArea),
-                    ),
+                : ValueListenableBuilder<String>(
+                    valueListenable: _openN,
+                    builder: (context, id, _) {
+                      final a = byId[id] ?? areas.first;
+                      // Ayrıntı listeye YASLI (KT-10; ortalıyken arada boşluk
+                      // kalıyordu — sabah bakılacak, plan §8.5). Alan değişimi
+                      // yalnız solma.
+                      return Align(
+                        alignment: AlignmentDirectional.topStart,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 720),
+                          child: AnimatedSwitcher(
+                            duration: AppMotion.of(context, AppMotion.quick),
+                            reverseDuration: AppMotion.of(
+                              context,
+                              AppMotion.exitOf(AppMotion.quick),
+                            ),
+                            child: areaPage(a),
+                          ),
+                        ),
+                      );
+                    },
                   ),
           ),
         ],
       );
     } else {
+      // Kök ↔ alan: solma + %6 kayma; giriş `medium`, çıkış onun 2/3'ü
+      // (P62 ortak hareket sözlüğü, A11).
       body = Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
           child: AnimatedSwitcher(
-            duration: AppMotion.of(context, const Duration(milliseconds: 200)),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
+            duration: AppMotion.of(context, AppMotion.medium),
+            reverseDuration: AppMotion.of(
+              context,
+              AppMotion.exitOf(AppMotion.medium),
+            ),
+            switchInCurve: AppMotion.curveOf(context, AppMotion.enter),
+            switchOutCurve: AppMotion.curveOf(context, AppMotion.exit),
             transitionBuilder: (child, anim) => FadeTransition(
               opacity: anim,
               child: SlideTransition(
                 position: Tween(
-                  begin: Offset(
-                    child.key == const ValueKey('root') ? -0.06 : 0.06,
-                    0,
-                  ),
+                  begin: motionOf(context)
+                      ? Offset(
+                          child.key == const ValueKey('root') ? -0.06 : 0.06,
+                          0,
+                        )
+                      : Offset.zero,
                   end: Offset.zero,
                 ).animate(anim),
                 child: child,
@@ -887,12 +1019,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 : null,
             title: Text(inArea ? openArea.title : l10n.settings),
             // AYAR ARA EN ÜSTTE, SABİT (kullanıcı isteği 2026-10-20).
-            bottom: inArea
+            // Geniş ekranda kutu sol sütunun içinde.
+            bottom: inArea || wide
                 ? null
                 : PreferredSize(
                     preferredSize: Size.fromHeight(_aiBusy ? 58 : 54),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.m,
+                        0,
+                        AppSpace.m,
+                        AppSpace.s,
+                      ),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 612),
@@ -1023,24 +1161,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           height: 44,
           decoration: BoxDecoration(
             color: _aiMode
-                ? scheme.primaryContainer.withValues(alpha: 0.45)
+                ? scheme.primaryContainer.withValues(alpha: AppAlpha.muted)
                 : scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.m),
             border: Border.all(
               color: _aiMode
-                  ? scheme.primary.withValues(alpha: 0.5)
+                  ? scheme.primary.withValues(alpha: AppAlpha.muted)
                   : Colors.transparent,
             ),
           ),
-          padding: const EdgeInsetsDirectional.only(start: 12, end: 4),
+          padding: const EdgeInsetsDirectional.only(
+            start: AppSpace.m,
+            end: AppSpace.xs,
+          ),
           child: Row(
             children: [
               Icon(
                 _aiMode ? Icons.auto_awesome : Icons.search,
-                size: 19,
+                size: AppIconSize.s,
                 color: _aiMode ? scheme.primary : scheme.onSurfaceVariant,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpace.s),
               Expanded(
                 child: TextField(
                   key: const ValueKey('settings-search'),
@@ -1056,15 +1197,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onSubmitted: (_) {
                     if (_aiMode) unawaited(_runAiSearch());
                   },
-                  style: const TextStyle(fontSize: 14),
+                  style: AppText.of(Theme.of(context)).body,
                   decoration: InputDecoration(
                     hintText: _aiMode
                         ? l10n.settingsAiSearchHint
                         : l10n.settingsSearchHint,
-                    hintStyle: TextStyle(
-                      fontSize: 13,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    hintStyle: AppText.of(Theme.of(context)).meta,
                     border: InputBorder.none,
                     isDense: true,
                     contentPadding: EdgeInsets.zero,

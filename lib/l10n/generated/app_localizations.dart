@@ -7286,6 +7286,66 @@ abstract class AppLocalizations {
   /// **'Tema'**
   String get settingsThemeHeader;
 
+  /// No description provided for @settingsGroupPrivacyNotify.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlilik ve bildirim'**
+  String get settingsGroupPrivacyNotify;
+
+  /// No description provided for @settingsGroupAutomatic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendiliğinden'**
+  String get settingsGroupAutomatic;
+
+  /// No description provided for @settingsGroupText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı'**
+  String get settingsGroupText;
+
+  /// No description provided for @settingsGroupDictation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesle yazma'**
+  String get settingsGroupDictation;
+
+  /// No description provided for @settingsGroupAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler'**
+  String get settingsGroupAttachments;
+
+  /// No description provided for @settingsGroupBackup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek'**
+  String get settingsGroupBackup;
+
+  /// No description provided for @settingsGroupSession.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oturum'**
+  String get settingsGroupSession;
+
+  /// No description provided for @settingsGroupLock.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilit'**
+  String get settingsGroupLock;
+
+  /// No description provided for @settingsGroupAbout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hakkında'**
+  String get settingsGroupAbout;
+
+  /// No description provided for @settingsGroupVersion.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürüm'**
+  String get settingsGroupVersion;
+
   /// No description provided for @settingsCardsHeader.
   ///
   /// In tr, this message translates to:

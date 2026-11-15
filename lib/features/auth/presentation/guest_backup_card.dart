@@ -118,7 +118,7 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                     ),
                     FilledButton.icon(
                       onPressed: () => linkGuestAccount(context, ref),
-                      icon: const Icon(Icons.login_rounded, size: 18),
+                      icon: const Icon(Icons.login_rounded, size: AppIconSize.s),
                       label: Text(l10n.signInWithGoogle),
                     ),
                   ],
@@ -152,7 +152,7 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                 children: [
                   Icon(
                     Icons.cloud_off_outlined,
-                    size: 18,
+                    size: AppIconSize.s,
                     color: scheme.onTertiaryContainer,
                   ),
                   const SizedBox(width: 10),

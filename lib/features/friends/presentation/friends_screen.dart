@@ -19,6 +19,7 @@ import '../../folders/data/folders_repository.dart';
 import '../data/friends_repository.dart';
 import '../domain/friend.dart';
 import '../domain/friend_list.dart';
+import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/delayed_spinner.dart';
 
@@ -209,7 +210,7 @@ class PersonAvatar extends StatelessWidget {
           personInitial(label),
           style: TextStyle(
             fontSize: size * 0.42,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppWeight.strong,
             color: fg,
           ),
         ),
@@ -247,7 +248,7 @@ class _FriendRow extends ConsumerWidget {
               message: l10n.friendsSharedFolders,
               child: Chip(
                 visualDensity: VisualDensity.compact,
-                avatar: const Icon(Icons.folder_shared_outlined, size: 16),
+                avatar: const Icon(Icons.folder_shared_outlined, size: AppIconSize.xs),
                 label: Text('$shared'),
               ),
             ),
@@ -354,7 +355,7 @@ class _FriendCard extends ConsumerWidget {
                       ScaffoldMessenger.of(context)
                           .showMessage(l10n.friendsEmailCopied);
                     },
-                    icon: const Icon(AppIcons.copy, size: 18),
+                    icon: const Icon(AppIcons.copy, size: AppIconSize.s),
                     label: Text(l10n.friendsCopyEmail),
                   ),
                 ),
@@ -364,7 +365,7 @@ class _FriendCard extends ConsumerWidget {
                     key: const ValueKey('friend-remove'),
                     style: OutlinedButton.styleFrom(foregroundColor: s.error),
                     onPressed: () => _remove(context, ref),
-                    icon: const Icon(Icons.person_remove_outlined, size: 18),
+                    icon: const Icon(Icons.person_remove_outlined, size: AppIconSize.s),
                     label: Text(l10n.friendsRemove),
                   ),
                 ),
@@ -411,13 +412,25 @@ class _RequestCard extends ConsumerWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final label = friendLabel(request.fromName, request.fromEmail);
-    return Card(
+    // P62 PA4: ham Card yerine grup yüzeyi (ayarlarla aynı köşe).
+    return Container(
       key: ValueKey('request-${request.fromUid}'),
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainerHigh,
+      margin: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        AppSpace.xs,
+        AppSpace.l,
+        AppSpace.s,
+      ),
+      decoration: AppSurface.group(
+        theme,
+      ).copyWith(color: theme.colorScheme.surfaceContainerHigh),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          AppSpace.m,
+          AppSpace.l,
+          AppSpace.m,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -623,7 +636,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -714,7 +727,7 @@ class _SentBadge extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.check_circle, size: 18, color: s.primary),
+        Icon(Icons.check_circle, size: AppIconSize.s, color: s.primary),
         const SizedBox(width: 4),
         Text(label, style: TextStyle(color: s.primary)),
       ],

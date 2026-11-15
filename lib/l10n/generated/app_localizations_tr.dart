@@ -4049,6 +4049,36 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsThemeHeader => 'Tema';
 
   @override
+  String get settingsGroupPrivacyNotify => 'Gizlilik ve bildirim';
+
+  @override
+  String get settingsGroupAutomatic => 'Kendiliğinden';
+
+  @override
+  String get settingsGroupText => 'Yazı';
+
+  @override
+  String get settingsGroupDictation => 'Sesle yazma';
+
+  @override
+  String get settingsGroupAttachments => 'Ekler';
+
+  @override
+  String get settingsGroupBackup => 'Yedek';
+
+  @override
+  String get settingsGroupSession => 'Oturum';
+
+  @override
+  String get settingsGroupLock => 'Kilit';
+
+  @override
+  String get settingsGroupAbout => 'Hakkında';
+
+  @override
+  String get settingsGroupVersion => 'Sürüm';
+
+  @override
   String get settingsCardsHeader => 'Kartlar ve listeler';
 
   @override

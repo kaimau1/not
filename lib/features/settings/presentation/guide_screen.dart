@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/utils/search_fold.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/app_icons.dart';
+import '../../../core/widgets/group_card.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/delayed_spinner.dart';
 
@@ -375,17 +376,21 @@ class _SectionCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final meta = guideSectionMeta(section.id);
     final route = meta.route;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+    // P62 PA4: ham Card yerine ayarlarla aynı grup yüzeyi.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.s),
+      child: GroupCard(
         children: [
           InkWell(
             key: ValueKey('guide-section-${section.id}'),
             onTap: onToggle,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.m,
+                AppSpace.m,
+                AppSpace.s,
+                AppSpace.m,
+              ),
               child: Row(
                 children: [
                   Container(
@@ -393,19 +398,19 @@ class _SectionCard extends StatelessWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.m),
                     ),
                     child: Icon(
                       meta.icon,
-                      size: 20,
+                      size: AppIconSize.m,
                       color: scheme.onPrimaryContainer,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpace.m),
                   Expanded(
                     child: Text(
                       section.title,
-                      style: theme.textTheme.titleMedium,
+                      style: AppText.of(theme).rowTitle,
                     ),
                   ),
                   Icon(expanded ? Icons.expand_less : Icons.expand_more),
@@ -420,7 +425,12 @@ class _SectionCard extends StatelessWidget {
             child: !expanded
                 ? const SizedBox(width: double.infinity)
                 : Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.l,
+                      0,
+                      AppSpace.l,
+                      AppSpace.m,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -440,7 +450,10 @@ class _SectionCard extends StatelessWidget {
                                     unawaited(context.push(route));
                                   }
                                 },
-                                icon: const Icon(Icons.open_in_new, size: 18),
+                                icon: const Icon(
+                                  Icons.open_in_new,
+                                  size: AppIconSize.s,
+                                ),
                                 label: Text(context.l10n.guideOpenScreen),
                               ),
                             ),
@@ -515,10 +528,8 @@ class _GuideBlockView extends StatelessWidget {
                 ),
                 child: Text(
                   '${block.number}',
-                  style: TextStyle(
+                  style: AppText.of(theme).badge.copyWith(
                     color: scheme.onPrimary,
-                    fontSize: 12,
-                    fontWeight: AppWeight.strong,
                   ),
                 ),
               ),

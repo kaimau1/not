@@ -9,11 +9,6 @@ part of '../settings_screen.dart';
 /// değiştirir.
 List<_SettingRow> _writingRows(AppLocalizations l10n) => [
   _SettingRow(
-    SectionLabel(l10n.settingsPenSection),
-    title: l10n.settingsPenSection,
-    keywords: 'kalem stylus s pen el yazisi',
-  ),
-  _SettingRow(
     _InkSwitch(
       key: const ValueKey('settings-ink-auto-stylus'),
       icon: Icons.draw_outlined,
@@ -23,7 +18,9 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
       write: InkToolMemory.saveAutoStylus,
     ),
     title: l10n.inkAutoStylusTitle,
-    keywords: '${l10n.inkAutoStylusInfo} kalem algila otomatik',
+    keywords:
+        '${l10n.inkAutoStylusInfo} kalem algila otomatik stylus s pen el yazisi',
+    group: l10n.settingsPenSection,
   ),
   _SettingRow(
     InkFingerToolPicker(
@@ -93,17 +90,12 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
     keywords: '${l10n.inkPartialEraserInfo} silgi',
   ),
   _SettingRow(
-    SectionLabel(l10n.settingsSpellSection),
-    title: l10n.settingsSpellSection,
-    keywords: 'yazim duzelt otomatik',
-  ),
-  _SettingRow(
     ValueListenableBuilder<bool>(
       valueListenable: AutoSpell.enabled,
       builder: (_, on, _) => SwitchListTile(
         key: const ValueKey('settings-spell-auto'),
         contentPadding: EdgeInsets.zero,
-        secondary: const Icon(Icons.spellcheck_rounded, size: 20),
+        secondary: const Icon(Icons.spellcheck_rounded, size: AppIconSize.m),
         title: Text(l10n.spellAutoTitle),
         subtitle: Text(l10n.spellAutoSubtitle),
         value: on,
@@ -111,14 +103,15 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
       ),
     ),
     title: l10n.spellAutoTitle,
-    keywords: '${l10n.spellAutoSubtitle} yazim duzelt',
+    keywords: '${l10n.spellAutoSubtitle} yazim duzelt otomatik',
+    group: l10n.settingsSpellSection,
   ),
   _SettingRow(
     ValueListenableBuilder<bool>(
       valueListenable: AutoSpell.learning,
       builder: (_, on, _) => SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        secondary: const Icon(Icons.school_outlined, size: 20),
+        secondary: const Icon(Icons.school_outlined, size: AppIconSize.m),
         title: Text(l10n.spellLearnTitle),
         value: on,
         onChanged: AutoSpell.setLearning,
@@ -131,7 +124,7 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
     Builder(
       builder: (context) => ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: const Icon(AppIcons.notebook, size: 20),
+        leading: const Icon(AppIcons.notebook, size: AppIconSize.m),
         title: Text(l10n.spellLearnedTitle),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => unawaited(showSpellSettings(context)),
@@ -141,11 +134,6 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
     keywords: 'ogrenilen kelime sozluk sil',
   ),
   _SettingRow(
-    SectionLabel(l10n.settingsScreenSection),
-    title: l10n.settingsScreenSection,
-    keywords: 'ana ekran serit',
-  ),
-  _SettingRow(
     _PrefSwitch(
       provider: homeCalendarStripProvider,
       icon: Icons.calendar_view_week_outlined,
@@ -153,7 +141,8 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
       subtitle: l10n.homeCalendarStripInfo,
     ),
     title: l10n.homeCalendarStrip,
-    keywords: '${l10n.homeCalendarStripInfo} takvim serit',
+    keywords: '${l10n.homeCalendarStripInfo} takvim serit ana ekran serit',
+    group: l10n.settingsScreenSection,
   ),
   _SettingRow(
     _PrefSwitch(
@@ -240,7 +229,7 @@ class _InkSwitchState extends State<_InkSwitch> {
   @override
   Widget build(BuildContext context) => SwitchListTile(
     contentPadding: EdgeInsets.zero,
-    secondary: Icon(widget.icon, size: 20),
+    secondary: Icon(widget.icon, size: AppIconSize.m),
     title: Text(widget.title),
     subtitle: Text(widget.subtitle),
     value: widget.read(),

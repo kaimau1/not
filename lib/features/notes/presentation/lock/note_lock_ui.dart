@@ -441,17 +441,32 @@ class NoteLockSettingsTile extends ConsumerWidget {
             ButtonSegment(
               value: NoteLockMethod.device,
               icon: const Icon(Icons.fingerprint),
-              label: Text(l10n.lockMethodDevice),
+              label: Text(
+                l10n.lockMethodDevice,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             ButtonSegment(
               value: NoteLockMethod.password,
               icon: const Icon(Icons.password),
-              label: Text(l10n.lockMethodPassword),
+              label: Text(
+                l10n.lockMethodPassword,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             ButtonSegment(
               value: NoteLockMethod.pattern,
               icon: const Icon(Icons.pattern),
-              label: Text(l10n.lockMethodPattern),
+              label: Text(
+                l10n.lockMethodPattern,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
           selected: {config.method},

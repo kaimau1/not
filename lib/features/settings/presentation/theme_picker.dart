@@ -343,7 +343,7 @@ class ThemeChoiceCard extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: tokens.card,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppRadius.s),
             border: Border.all(color: tokens.hairline),
           ),
           child: Padding(
@@ -377,14 +377,14 @@ class ThemeChoiceCard extends StatelessWidget {
       label: label,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         child: Column(
           children: [
             AnimatedContainer(
               duration: AppMotion.of(context, AppMotion.quick),
               height: 62,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.m),
                 border: Border.all(
                   color: selected ? scheme.primary : scheme.outlineVariant,
                   width: selected ? 2.5 : 1,
@@ -424,7 +424,7 @@ class ThemeChoiceCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: selected ? AppWeight.strong : FontWeight.w500,
+                fontWeight: selected ? AppWeight.strong : AppWeight.medium,
                 color: selected ? scheme.primary : null,
               ),
             ),

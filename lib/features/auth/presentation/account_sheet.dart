@@ -13,7 +13,11 @@ import '../../friends/presentation/friends_screen.dart';
 import 'auth_providers.dart';
 import 'sign_out_actions.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/pop_in.dart';
+import '../../../core/widgets/press_scale.dart';
+import 'account_identity_card.dart';
 
 /// **ANA EKRANIN HESAP SİMGESİ** — kullanıcı isteği 2026-08-18: "giriş
 /// yapıldıysa üst alanda profil simgesi görülsün, yapılmadıysa yerel hesap
@@ -64,14 +68,20 @@ class AccountAvatarButton extends ConsumerWidget {
                   backgroundImage: photo != null ? NetworkImage(photo) : null,
                   child: photo != null
                       ? null
-                      : const Icon(Icons.person_outline, size: 18),
+                      : const Icon(Icons.person_outline, size: AppIconSize.s),
                 ),
                 if (pending > 0)
                   PositionedDirectional(
                     top: 4,
                     end: 2,
                     child: IgnorePointer(
-                      child: HubCountBadge(count: pending, color: scheme.error),
+                      // İlk belirişte hafifçe büyüyerek (P62 PA2).
+                      child: PopIn(
+                        child: HubCountBadge(
+                          count: pending,
+                          color: scheme.error,
+                        ),
+                      ),
                     ),
                   ),
               ],
@@ -111,131 +121,77 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
       final theme = Theme.of(sheetContext);
       final scheme = theme.colorScheme;
       final tokens = AppTokens.of(sheetContext);
-      final user = ref.watch(authStateProvider).value;
       final anonymous = ref.watch(isAnonymousProvider);
       final requests =
           ref.watch(incomingFriendRequestsProvider).value?.length ?? 0;
       final premium = ref.watch(premiumProvider).value ?? false;
-      final email = user?.email?.trim() ?? '';
-      final name = (user?.displayName?.trim().isNotEmpty ?? false)
-          ? user!.displayName!.trim()
-          : email.isNotEmpty
-          ? email
-          : l10n.localAccountBadge;
-      final photo = user?.photoURL;
 
       void go(VoidCallback action) {
         Navigator.pop(sheetContext);
         action();
       }
 
-      BoxDecoration paper() => BoxDecoration(
-        color: tokens.card,
-        borderRadius: BorderRadius.circular(tokens.cardRadius),
-        border: Border.all(color: tokens.hairline),
-        boxShadow: tokens.cardShadow,
-      );
+      final paper = AppSurface.paper(theme);
 
       return SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.l,
+            0,
+            AppSpace.l,
+            AppSpace.m,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // KİMLİK KARTI
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: paper(),
+              // KİMLİK KARTI — ayarlardakiyle AYNI bileşen (P62 PA2, A7/H4).
+              // Misafirde açıklama kartın altında (hap kısa kalsın, KT-7).
+              AccountIdentityCard(
+                footer: anonymous
+                    ? Text(
+                        l10n.accountSheetLocalInfo,
+                        style: AppText.of(theme).meta,
+                      )
+                    : null,
+              ),
+              const SizedBox(height: AppSpace.m),
+              // KARE KISAYOLLAR — iki karo eşit boyda (alt yazı 2 satıra
+              // kadar; boşsa boy yine eşit).
+              IntrinsicHeight(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: anonymous
-                          ? scheme.surfaceContainerHighest
-                          : scheme.primaryContainer,
-                      foregroundColor: anonymous
-                          ? scheme.onSurfaceVariant
-                          : scheme.onPrimaryContainer,
-                      backgroundImage: photo != null
-                          ? NetworkImage(photo)
-                          : null,
-                      child: photo != null
-                          ? null
-                          : const Icon(Icons.person_outline, size: 28),
-                    ),
-                    const SizedBox(width: 14),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: AppWeight.strong,
-                            ),
-                          ),
-                          if (email.isNotEmpty && email != name)
-                            Text(
-                              email,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          const SizedBox(height: 6),
-                          _StatusPill(
-                            icon: anonymous
-                                ? Icons.phone_android_outlined
-                                : Icons.cloud_done_outlined,
-                            label: anonymous
-                                ? l10n.accountSheetLocalInfo
-                                : l10n.synced,
-                            color: anonymous ? scheme.tertiary : scheme.primary,
-                          ),
-                        ],
+                      child: _Tile(
+                        decoration: paper,
+                        icon: AppIcons.friends,
+                        label: l10n.friendsTitle,
+                        trailing: anonymous
+                            ? const AccountLockBadge()
+                            : (requests > 0 ? _Badge(count: requests) : null),
+                        onTap: () =>
+                            go(() => openFriendsScreenOrExplain(context, ref)),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.m),
+                    Expanded(
+                      child: _Tile(
+                        decoration: paper,
+                        icon: Icons.workspace_premium_outlined,
+                        label: l10n.premiumTitle,
+                        caption: premium ? null : l10n.premiumStatusFree,
+                        onTap: () => go(() => context.push('/premium')),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              // KARE KISAYOLLAR
-              Row(
-                children: [
-                  Expanded(
-                    child: _Tile(
-                      decoration: paper(),
-                      icon: AppIcons.friends,
-                      label: l10n.friendsTitle,
-                      trailing: anonymous
-                          ? const AccountLockBadge()
-                          : (requests > 0 ? _Badge(count: requests) : null),
-                      onTap: () =>
-                          go(() => openFriendsScreenOrExplain(context, ref)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _Tile(
-                      decoration: paper(),
-                      icon: Icons.workspace_premium_outlined,
-                      label: l10n.premiumTitle,
-                      caption: premium ? null : l10n.premiumStatusFree,
-                      onTap: () => go(() => context.push('/premium')),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpace.m),
               // GRUPLU SATIRLAR
-              Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: paper(),
-                child: Material(
+              _clipped(
+                paper,
+                Material(
                   type: MaterialType.transparency,
                   child: Column(
                     children: [
@@ -258,7 +214,7 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpace.m),
               // ÇIKIŞ — ayrı, kenarlı (FilledButton DEĞİL: onay iletişim
               // kutusunun düğmesiyle karışmasın).
               OutlinedButton.icon(
@@ -285,48 +241,7 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
   ),
 );
 
-/// Kimlik kartındaki durum hapı (Senkron / yalnız bu cihazda).
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: AppAlpha.pressed),
-      borderRadius: BorderRadius.circular(AppRadius.m),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-/// Kare kısayol kutusu.
+/// Kare kısayol kutusu: basınca hafifçe çöker (`PressScale`, H5).
 class _Tile extends StatelessWidget {
   const _Tile({
     required this.decoration,
@@ -348,43 +263,44 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: decoration,
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(icon, color: scheme.primary),
-                    const Spacer(),
-                    ?trailing,
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+    final text = AppText.of(theme);
+    return PressScale(
+      child: _clipped(
+        decoration,
+        Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpace.m),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(icon, color: scheme.primary),
+                      const Spacer(),
+                      ?trailing,
+                    ],
                   ),
-                ),
-                Text(
-                  caption ?? ' ',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  const SizedBox(height: AppSpace.s),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.label.copyWith(fontWeight: AppWeight.strong),
                   ),
-                ),
-              ],
+                  // Alt yazı en çok İKİ satır (H1: "Ücretsiz sürümü kulla…"
+                  // tek satırda kesiliyordu).
+                  if (caption != null)
+                    Text(
+                      caption!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.meta,
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -394,7 +310,7 @@ class _Tile extends StatelessWidget {
 }
 
 /// Sayı rozeti; sıfırsa oku (chevron) gösterir — boş bir "0" rozeti kullanıcıya
-/// bir şey bekliyormuş gibi görünüyordu.
+/// bir şey bekliyormuş gibi görünüyordu. İlk belirişte `PopIn`.
 class _Badge extends StatelessWidget {
   const _Badge({required this.count});
 
@@ -403,21 +319,33 @@ class _Badge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (count <= 0) return const Icon(Icons.chevron_right);
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        '$count',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: AppWeight.strong,
-          color: scheme.onPrimary,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return PopIn(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xxs,
+        ),
+        decoration: BoxDecoration(
+          color: scheme.primary,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        child: Text(
+          '$count',
+          style: AppText.of(theme).badge.copyWith(color: scheme.onPrimary),
         ),
       ),
     );
   }
 }
+
+/// Kâğıt yüzey + kırpma, Container'sız (P62 PA2, S30: levha açılış karesi
+/// her bileşen kurulumunu sayar — Container fazladan bir kurulum).
+Widget _clipped(BoxDecoration decoration, Widget child) => DecoratedBox(
+  decoration: decoration,
+  child: ClipRRect(
+    borderRadius: decoration.borderRadius ?? BorderRadius.zero,
+    child: child,
+  ),
+);

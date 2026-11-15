@@ -195,14 +195,12 @@ class _AppearancePreview extends ConsumerWidget {
     // uygular ([_TypographySection]'daki önizlemeyle aynı gerekçe: seçici
     // büyüyünce satır taşıyordu).
     return MediaQuery.withNoTextScaling(
+      // KÂĞIT yüzey (P62 PA3): örnek gerçek bir not kartı gibi görünür ve
+      // grup kartının DIŞINDA durur (kart içinde kart yok).
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: scheme.outlineVariant),
-        ),
+        padding: const EdgeInsets.all(AppSpace.l),
+        decoration: AppSurface.paper(theme),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -212,7 +210,7 @@ class _AppearancePreview extends ConsumerWidget {
               style: styled(theme.textTheme.titleMedium)
                   .copyWith(color: scheme.onSurface),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpace.s),
             Text.rich(
               TextSpan(
                 children: richSpans(
@@ -225,7 +223,7 @@ class _AppearancePreview extends ConsumerWidget {
               ),
               textScaler: TextScaler.linear(step.scale),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpace.s),
             // Madde satırı: liste notlarının görünümü de yazı tipinden
             // etkileniyor, örnek onu da kapsamalı.
             Row(
@@ -261,24 +259,6 @@ class _ThemeSelector extends StatelessWidget {
   Widget build(BuildContext context) => const ThemeChoiceGrid();
 }
 
-/// Uzun bir ayar alanının içindeki küçük bölüm başlığı (Tema, Kartlar ve
-/// listeler…). Aramada gizlenir (başlığı/anahtar kelimesi yok): arama tek
-/// tek satırları getirir.
-class _SubHeader extends StatelessWidget {
-  const _SubHeader(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(0, 14, 0, 8),
-    child: Text(
-      text,
-      style: sectionLabelStyle(context),
-    ),
-  );
-}
-
 /// Sesli Not Asistanı düğmesinin kullanım şekli: basılı tut (varsayılan)
 /// veya bas-başlat / bas-bitir.
 class _VoiceModeSelector extends ConsumerWidget {
@@ -297,12 +277,22 @@ class _VoiceModeSelector extends ConsumerWidget {
           segments: [
             ButtonSegment(
               value: VoiceButtonMode.hold,
-              label: Text(l10n.voiceModeHold),
+              label: Text(
+                l10n.voiceModeHold,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
               icon: const Icon(Icons.touch_app_outlined),
             ),
             ButtonSegment(
               value: VoiceButtonMode.tap,
-              label: Text(l10n.voiceModeTap),
+              label: Text(
+                l10n.voiceModeTap,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
               icon: const Icon(Icons.play_circle_outline),
             ),
           ],
@@ -342,15 +332,30 @@ class _VoiceModeSelector extends ConsumerWidget {
                   segments: [
                     ButtonSegment(
                       value: VoiceSilence.short,
-                      label: Text(l10n.voiceSilenceShort),
+                      label: Text(
+                        l10n.voiceSilenceShort,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     ButtonSegment(
                       value: VoiceSilence.normal,
-                      label: Text(l10n.voiceSilenceNormal),
+                      label: Text(
+                        l10n.voiceSilenceNormal,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     ButtonSegment(
                       value: VoiceSilence.long,
-                      label: Text(l10n.voiceSilenceLong),
+                      label: Text(
+                        l10n.voiceSilenceLong,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                   selected: {ref.watch(voiceSilenceProvider)},
@@ -430,7 +435,7 @@ class _TypographySection extends ConsumerWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.text_fields, size: 18),
+            const Icon(Icons.text_fields, size: AppIconSize.s),
             const SizedBox(width: 8),
             Expanded(child: Text(l10n.appFontSetting)),
           ],
@@ -457,7 +462,7 @@ class _TypographySection extends ConsumerWidget {
                 ),
                 Icon(
                   Icons.unfold_more,
-                  size: 18,
+                  size: AppIconSize.s,
                   color: scheme.onSurfaceVariant,
                 ),
               ],
@@ -467,7 +472,7 @@ class _TypographySection extends ConsumerWidget {
         const SizedBox(height: 12),
         Row(
           children: [
-            const Icon(Icons.format_size, size: 18),
+            const Icon(Icons.format_size, size: AppIconSize.s),
             const SizedBox(width: 8),
             Expanded(child: Text(l10n.fontSize)),
           ],
@@ -651,7 +656,7 @@ class _FontChoiceCard extends StatelessWidget {
       label: font.label,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         child: Column(
           children: [
             AnimatedContainer(
@@ -659,7 +664,7 @@ class _FontChoiceCard extends StatelessWidget {
               height: 62,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.m),
                 border: Border.all(
                   color: selected ? scheme.primary : scheme.outlineVariant,
                   width: selected ? 2.5 : 1,
@@ -679,7 +684,7 @@ class _FontChoiceCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: selected ? AppWeight.strong : FontWeight.w500,
+                fontWeight: selected ? AppWeight.strong : AppWeight.medium,
                 color: selected ? scheme.primary : null,
               ),
             ),
@@ -754,18 +759,18 @@ class _DarkScheduleEditor extends ConsumerWidget {
               const SizedBox(width: 4),
               actionChip(
                 ActionChip(
-                  avatar: const Icon(Icons.dark_mode_outlined, size: 16),
+                  avatar: const Icon(Icons.dark_mode_outlined, size: AppIconSize.xs),
                   label: Text(_format(schedule.startMinutes)),
                   onPressed: () => _pick(context, ref, isStart: true),
                 ),
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Icon(Icons.arrow_forward, size: 14),
+                child: Icon(Icons.arrow_forward, size: AppIconSize.xs),
               ),
               actionChip(
                 ActionChip(
-                  avatar: const Icon(Icons.light_mode_outlined, size: 16),
+                  avatar: const Icon(Icons.light_mode_outlined, size: AppIconSize.xs),
                   label: Text(_format(schedule.endMinutes)),
                   onPressed: () => _pick(context, ref, isStart: false),
                 ),

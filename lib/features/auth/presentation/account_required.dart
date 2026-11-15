@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/theme/app_design.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../settings/presentation/settings_screen.dart';
@@ -117,12 +119,14 @@ class AiStatusCard extends ConsumerWidget {
       ),
     };
     if (status == AiAvailability.ready) return const SizedBox.shrink();
-    return Card(
+    // P62 PA4: ham Card yerine grup yüzeyi; renk dikkat rolü (aynen).
+    return DecoratedBox(
       key: const ValueKey('ai-status-card'),
-      margin: EdgeInsets.zero,
-      color: scheme.secondaryContainer,
+      decoration: AppSurface.group(
+        Theme.of(context),
+      ).copyWith(color: scheme.secondaryContainer),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpace.l),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -247,12 +251,13 @@ class AiOfflineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    return Card(
+    return DecoratedBox(
       key: const ValueKey('ai-offline-card'),
-      margin: EdgeInsets.zero,
-      color: scheme.secondaryContainer,
+      decoration: AppSurface.group(
+        Theme.of(context),
+      ).copyWith(color: scheme.secondaryContainer),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpace.l),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
