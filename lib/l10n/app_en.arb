@@ -503,6 +503,8 @@
   "eraser": "Eraser",
   "inkArrow": "Arrow",
   "clearInk": "Clear annotations",
+  "inkCleared": "Annotations cleared",
+  "inkEraserTooltip": "Eraser (hold: clear all)",
   "inkTwoFingerHint": "One finger draws · two fingers pan and zoom",
   "slideOpenFailed": "The presentation couldn't be opened",
   "newPhotoNote": "Take a photo",

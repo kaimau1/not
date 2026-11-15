@@ -2804,6 +2804,18 @@ abstract class AppLocalizations {
   /// **'Çizimleri temizle'**
   String get clearInk;
 
+  /// No description provided for @inkCleared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizimler temizlendi'**
+  String get inkCleared;
+
+  /// No description provided for @inkEraserTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgi (basılı tut: tümünü temizle)'**
+  String get inkEraserTooltip;
+
   /// No description provided for @inkTwoFingerHint.
   ///
   /// In tr, this message translates to:

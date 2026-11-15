@@ -1506,6 +1506,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearInk => 'Clear annotations';
 
   @override
+  String get inkCleared => 'Annotations cleared';
+
+  @override
+  String get inkEraserTooltip => 'Eraser (hold: clear all)';
+
+  @override
   String get inkTwoFingerHint => 'One finger draws · two fingers pan and zoom';
 
   @override

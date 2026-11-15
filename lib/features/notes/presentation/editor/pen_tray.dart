@@ -15,6 +15,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/sheet_header.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../../core/widgets/color_palette.dart';
 import '../viewers/ink_layer.dart';
 import 'pen_icons.dart';
@@ -78,7 +79,13 @@ class PenTray extends StatefulWidget {
     this.dock = false,
     this.followActive = false,
     this.actions = const [],
+    this.showUndo = true,
   });
+
+  /// Kapsülde geri al / yinele (yalnız [dock]). Editör üst çubuğunda zaten
+  /// geri al varken kapalı (kullanıcı isteği 2026-11-15: "geri butonuna gerek
+  /// yok, üstte zaten var"); üst çubuğun kalktığı kalem + tam ekranda açık.
+  final bool showUndo;
 
   /// **ETKİN YÜZEY** (OTURTMA F63.2, KALEM K4): geri al / yinele son
   /// dokunulan yüzeye ([InkController.active]: sayfa, sabit ya da gömülü ek)
@@ -473,7 +480,8 @@ class _PenTrayState extends State<PenTray>
   /// olsun"). Yazarken sayfanın dibinde yalnız küçük bir HAP kalır (seçili
   /// kalem + renk) — eski çekmecenin yarım görünen 80 dp'lik şeridi yerine
   /// 44 dp. Dokununca ya da yukarı çekince ortada yüzen tek satırlık KAPSÜL
-  /// açılır: kalemler · hızlı renkler · geri al · ⋯ · eylemler. Seçili
+  /// açılır: kalemler · hızlı renkler · silgi · ⋯ · eylemler (2026-11-15:
+  /// geri al üst çubukta, onay düğmeleri yok — seçim anında uygulanır). Seçili
   /// kaleme ya da palet düğmesine dokunmak ayar kartını kapsülün üstünde
   /// açar. Çizim başlayınca / 6 sn dokunulmayınca yine hapa döner.
   Widget _buildDock(BuildContext context) => LayoutBuilder(
@@ -496,7 +504,13 @@ class _PenTrayState extends State<PenTray>
     final bottom = MediaQuery.paddingOf(context).bottom + _kDockGap;
     final open = !_tucked || _panel;
     final inkDot = _ink.eraser ? scheme.primary : _ink.color;
-    final tools = _tools;
+    // Silgi kalem sırasında değil, sağda kendi düğmesinde (kullanıcı isteği
+    // 2026-11-15: "kalem yazısı varken silgi her zaman kolay erişilebilir").
+    final tools = [
+      for (final t in _tools)
+        if (t != PenTrayTool.eraser) t,
+    ];
+    final undo = widget.showUndo;
 
     // Yüzen yüzey (P63 PB3): ortak `AppSurface.floating` — ince çizgi +
     // bulanıksız alt kenar; bulanık gölge ve sabit siyah yok.
@@ -692,22 +706,24 @@ class _PenTrayState extends State<PenTray>
               for (final t in tools) wide ? tool(t) : Expanded(child: tool(t)),
               rule,
               ...colors,
+              _eraserButton(l10n, scheme),
               rule,
-              IconButton(
-                key: const ValueKey('pen-tray-undo'),
-                tooltip: l10n.undo,
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.undo_rounded),
-                onPressed: _hist.canUndo ? () => _hist.undo() : null,
-              ),
-              if (wide)
+              if (undo)
+                IconButton(
+                  key: const ValueKey('pen-tray-undo'),
+                  tooltip: l10n.undo,
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.undo_rounded),
+                  onPressed: _hist.canUndo ? () => _hist.undo() : null,
+                ),
+              if (wide && undo)
                 IconButton(
                   tooltip: l10n.redo,
                   visualDensity: VisualDensity.compact,
                   icon: const Icon(Icons.redo_rounded),
                   onPressed: _hist.canRedo ? () => _hist.redo() : null,
                 ),
-              _moreMenu(l10n, redo: !wide),
+              _moreMenu(l10n, redo: !(wide && undo)),
               ...widget.actions,
             ],
           ),
@@ -829,9 +845,20 @@ class _PenTrayState extends State<PenTray>
           0 => _hist.redo(),
           1 => _ink.setPenOnly(!_ink.penOnly),
           3 => _togglePin(),
+          4 => _clearAll(),
           _ => showInkSettings(context, _ink),
         },
         itemBuilder: (_) => [
+          if (widget.dock)
+            PopupMenuItem(
+              key: const ValueKey('pen-tray-clear'),
+              value: 4,
+              enabled: _hasInk,
+              child: ListTile(
+                leading: const Icon(Icons.delete_sweep_outlined),
+                title: Text(l10n.clearInk),
+              ),
+            ),
           if (redo)
             PopupMenuItem(
               value: 0,
@@ -866,6 +893,74 @@ class _PenTrayState extends State<PenTray>
           ),
         ],
       );
+
+  /// Sayfada (ya da etkin yüzeyde) mürekkep var mı.
+  bool get _hasInk => _ink.ink.isNotEmpty || _hist.ink.isNotEmpty;
+
+  /// TÜM YAZILARI KALDIR (kullanıcı isteği 2026-11-15): etkin yüzeyin bütün
+  /// mürekkebi gider; [InkController.clear] geçmişe yazar, "Geri al"
+  /// bildirimi ve üstteki geri al geri getirir (veri kaybı yok).
+  void _clearAll() {
+    final target = _hist.ink.isNotEmpty ? _hist : _ink;
+    if (target.ink.isEmpty) return;
+    final l10n = context.l10n;
+    AppHaptics.heavy();
+    target.clear();
+    showUndoSnackBar(
+      context,
+      message: l10n.inkCleared,
+      undoLabel: l10n.undo,
+      // Arada yeni çizgi geldiyse onu değil, yalnız temizliği geri al.
+      onUndo: () {
+        if (target.ink.isEmpty) target.undo();
+      },
+    );
+  }
+
+  /// Kapsülün SİLGİSİ: tek dokunuş = silgi (seçiliyken ayarları), basılı
+  /// tut = tüm yazıları kaldır. Mürekkep yokken soluk (yeri sabit kalır).
+  Widget _eraserButton(AppLocalizations l10n, ColorScheme scheme) {
+    final on = _ink.eraser;
+    return Tooltip(
+      message: l10n.inkEraserTooltip,
+      child: Semantics(
+        button: true,
+        selected: on,
+        child: InkResponse(
+          key: const ValueKey('pen-tray-eraser'),
+          radius: AppSpace.xl,
+          onTap: () => _tap(PenTrayTool.eraser),
+          onLongPress: _clearAll,
+          child: SizedBox(
+            width: _kDockSlot,
+            height: _kDockSlot,
+            child: Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: on ? scheme.primaryContainer : null,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.s),
+                  child: Icon(
+                    Icons.auto_fix_normal_outlined,
+                    size: AppIconSize.m,
+                    color: on
+                        ? scheme.onPrimaryContainer
+                        : _hasInk
+                        ? scheme.onSurfaceVariant
+                        : scheme.onSurfaceVariant.withValues(
+                            alpha: AppAlpha.disabled,
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   /// Seçili kalem zaten sabit mi.
   bool get _pinned => InkToolMemory.presets.contains(_ink.currentPreset);
