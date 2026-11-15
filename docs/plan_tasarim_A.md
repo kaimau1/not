@@ -480,7 +480,7 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 | [x] PA5 | Bildirim hunisi: dört huni → `appNotice`, şeridin `app.dart`a bağlanması, mandal, testler | opus (kılık iskelette hazır) | PA0 | S31 | **evet** | APK-2 |
 | [x] PA6 | Kalıcı şeritler tek kılıkta (`AppBanner`) + bildirimlerin görsel son bakışı | **fable** | PA5 | S32 | **evet** | APK-2 |
 | [x] PA7 | Ana ekran yana çekiş hissi, liste satırı çekişi, çerçeve belirteçleri | **fable** (ölçüm koşusu: sonnet) | PA6 | S33 | **evet** (kötüleşme sıfır) | APK-2 |
-| PA8 | Takvim mini ayı: parmağı izleyen sayfa + aç / kapa boyamada | **fable** | PA0 (bağımsız) | S34, S35 | hayır | APK-2 |
+| [x] PA8 | Takvim mini ayı: parmağı izleyen sayfa + aç / kapa boyamada | **fable** | PA0 (bağımsız) | S34, S35 | hayır | APK-2 |
 | PA9 | Çitte kalan 9 `showSnackBar` + 3 `hideCurrentSnackBar` | sonnet | PA5 + P63 birleşmiş | mandal 0 | hayır | sonraki |
 
 ### 8.3 Paketler
@@ -548,7 +548,8 @@ Değişmemesi gereken var olan bütçeler: S13 (ana ekran kaydırma), S18 / S19 
 - Kabul: §6.5; S33 hedefte, S23 ve S12 / S26 / S27 değişmez; cihaz A/B'de `klasör` ve `liste` evreleri KÖTÜLEŞMEZ (kötüleştiren commit `git revert`, maddeye "iyileşme kanıtlanamadı").
 - Tuzaklar: §6.3; `dashboard_screen.dart`a DOKUNMA (akan geçiş, 2026-11-06); `continuesInPlace` dalı aynen.
 
-**PA8 — Takvim mini ayı (fable).** §6.2 "Takvim mini ayı", "Mini ay aç / kapa"; bulgular K6–K8.
+**[x] PA8 — Takvim mini ayı (fable).** §6.2 "Takvim mini ayı", "Mini ay aç / kapa"; bulgular K6–K8.
+- **Durum (2026-11-15, dal `oto/G3-bildirim-kaydirma`, opus):** önce S34 yazıldı ve ölçüldü (taban 0 / 42 / 1396, açılış karesi 1601; ilk commit). (1+2, tek commit — komşu ay doğru noktalarla kurulsun diye `busyOf` PageView ile birlikte) `MonthGrid` → `StatefulWidget` + `PageView.builder` (hafta günü / ay başlığı sabit, gün satırları `6 × _kCell` sabit boy), `busyOf(month)` sayfa kurulurken bir kez, ay bildirimi MUTLAK `onMonthChanged(DateTime)`. **Sapma:** bildirim `onPageChanged` yerine sayfa OTURUNCA (`ScrollEndNotification`) + kurulmuş sayfa önbelleği (`busyKey` = takvim verisi örneği; seçim / bugün / genişlik değişince boşalır) — `onPageChanged` ile çağıran geçiş ortasında kurulup iki sayfayı birden kuruyordu (3 / 126 / 2767); sonra 1 / 42 / 744. ‹ › doğrudan denetleyiciyi sürer; dışarıdan ay değişimi `_PagedView` kuralıyla (> 3 atla), yalnız ay DEĞİŞTİYSE (çekiş sürerken başka kurulum sayfayı geri çekmesin). (3) telefonda aç / kapa `_MonthPanel`: ızgara listenin altında kurulup ölçülür, liste `Transform` ile kayar, boy tek adımda (S35 28 → 2), boy animasyonu mandalı 1 → 0; S34 kare 744 → 747 (+3 panel sarmalı). (4) eğriler `AppMotion.emphasized` (`calendar_screen.dart` `Curves.` 5 → 2, kalan kıstırma geçişi), hücre saydamlıkları `AppAlpha` (0,55 → `muted` 0,60; 0,4 → `disabled` 0,38), ağırlık `AppWeight`, hafta günü `AppText.meta`. Testler (önce 2 kırmızı): parmağı izler, fiske + seçim değişmez, kaydırma kapalı, genişte ‹ › animasyon. S22 değişmedi (509 / 508). Tur `takvim-ajanda-ay` bakıldı.
 - Dosyalar: `lib/features/calendar/presentation/month_grid.dart`, `calendar_screen.dart` (YALNIZ `_agendaView` `:822-898`, eğriler `:942`, `:1728`); `test/calendar_screen_test.dart`.
 - Önce kanıt: tur "önce" (`takvim-ajanda`, `takvim-ajanda-ay`); S35 tabanı (PA0'dan); S34'ü DEĞİŞİKLİKTEN ÖNCE yaz ve ölç (ilk commit); kırmızı testler §6.5.
 - İş (ayrı commit): (1) `MonthGrid` → `PageView`; (2) `busyOf`; (3) aç / kapa `Stack` + öteleme; (4) belirteçler.
