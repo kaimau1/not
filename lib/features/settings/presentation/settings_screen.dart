@@ -69,6 +69,7 @@ import '../../ai/data/model_catalog.dart';
 import '../../ai/data/firebase_ai_client.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/data/account_service.dart';
+import '../../auth/presentation/account_identity_card.dart';
 import '../../auth/presentation/auth_errors.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../auth/presentation/sign_out_actions.dart';
@@ -109,6 +110,8 @@ import '../../folders/data/folders_repository.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/delayed_spinner.dart';
 import '../../../core/widgets/press_scale.dart';
+import '../../../core/widgets/pop_in.dart';
+import '../../../core/widgets/app_banner.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
 import '../../../core/a11y/chip_roles.dart';
@@ -218,11 +221,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: l10n.account,
         summary: _accountSummary(l10n),
         keywords: 'cikis hesap sil e-posta',
+        // P62 PA2 (plan §4): kimlik + şerit (kart dışı) · Oturum · Kilit ·
+        // Hakkında · en altta geri dönüşsüz "Hesabı sil" (sabah bakılacak:
+        // eskiden ikinci sıradaydı).
         rows: [
           _SettingRow(
             const _AccountSection(),
+            bare: true,
             title: l10n.account,
-            keywords: 'cikis hesap sil e-posta ${l10n.deleteAccount}',
+            keywords: 'hesap e-posta google bagla misafir',
+          ),
+          _SettingRow(
+            const _SignOutRow(),
+            group: l10n.settingsGroupSession,
+            title: l10n.signOut,
+            keywords: 'cikis oturum',
           ),
           _SettingRow(
             const NoteLockSettingsTile(),
@@ -234,6 +247,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const AppLockSettingsTile(),
             title: l10n.appLockTitle,
             keywords: 'uygulama kilidi acilis kilit gizle son uygulamalar',
+          ),
+          _SettingRow(
+            const _LegalRow(licenses: false),
+            group: l10n.settingsGroupAbout,
+            title: l10n.privacyPolicyTitle,
+            keywords: 'gizlilik politika hukuk',
+          ),
+          _SettingRow(
+            const _LegalRow(licenses: true),
+            title: l10n.licensesTitle,
+            keywords: 'lisans acik kaynak',
+          ),
+          _SettingRow(
+            const _ErrorLogButton(),
+            title: l10n.errorLogShare,
+            keywords: 'hata gunlugu bildir',
+          ),
+          if (CrashReporting.supported)
+            _SettingRow(
+              const _CrashReportsSwitch(),
+              title: l10n.crashReports,
+              keywords: 'cokme rapor',
+            ),
+          _SettingRow(
+            const _AppVersionRow(),
+            title: l10n.appVersion,
+            keywords: 'surum versiyon kopyala',
+          ),
+          _SettingRow(
+            const _DeleteAccountRow(),
+            group: '',
+            title: l10n.deleteAccount,
+            keywords: 'hesap sil veri sil',
           ),
         ],
       ),
@@ -714,6 +760,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _SettingRow(
             const _BackupStatus(),
             group: l10n.settingsGroupBackup,
+            bare: true,
             keywords: 'yedek durum son bulut eslitleme guvende',
           ),
           _SettingRow(

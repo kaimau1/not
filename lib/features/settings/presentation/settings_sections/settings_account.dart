@@ -19,21 +19,7 @@ class _FriendsRow extends ConsumerWidget {
       trailing: ref.watch(isAnonymousProvider)
           ? const AccountLockBadge()
           : requestCount > 0
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '$requestCount',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: AppWeight.strong,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            )
+          ? _CountBadge(requestCount)
           : const Icon(Icons.chevron_right),
       onTap: () => openFriendsScreenOrExplain(context, ref),
     );
@@ -56,137 +42,65 @@ class _InboxRow extends ConsumerWidget {
       title: Text(l10n.inboxTitle),
       subtitle: Text(l10n.inboxEmptyHint),
       trailing: count > 0
-          ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: AppWeight.strong,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
-              ),
-            )
+          ? _CountBadge(count)
           : const Icon(Icons.chevron_right),
       onTap: () => InboxScreen.open(context),
     );
   }
 }
 
-/// Ayarların en üstündeki kimlik kartı: avatar, ad, e-posta ve senkron durumu.
+/// Satır sonundaki sayı rozeti (bekleyen istek / gelen not): hap köşe,
+/// `AppText.badge`, ilk belirişte `PopIn` (P62 PA2).
+class _CountBadge extends StatelessWidget {
+  const _CountBadge(this.count);
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return PopIn(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xxs,
+        ),
+        decoration: BoxDecoration(
+          color: scheme.primary,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        child: Text(
+          '$count',
+          style: AppText.of(theme).badge.copyWith(color: scheme.onPrimary),
+        ),
+      ),
+    );
+  }
+}
+
+/// Ayarların en üstündeki kimlik kartı — hesap levhasıyla AYNI bileşen
+/// (P62 PA2, A7). Misafirde altında dolu "Giriş yap".
 class _ProfileCard extends ConsumerWidget {
   const _ProfileCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final user = ref.watch(authStateProvider).value;
-    // Yerel (anonim) hesabın adı da e-postası da yok; kart adsız kalmasın —
-    // kullanıcı hangi hesap türünde olduğunu buradan görür.
     final anonymous = ref.watch(isAnonymousProvider);
-    // Misafir (F79.2, D18): "Misafir · Yalnız bu cihazda" + "Giriş yap".
-    // Eskiden ad satırı da durum satırı da "Yerel hesap" diyordu.
-    final name = anonymous
-        ? l10n.profileGuestName
-        : (user?.displayName?.trim().isNotEmpty ?? false)
-        ? user!.displayName!
-        : (user?.email?.trim().isNotEmpty ?? false)
-        ? user!.email!
-        : '';
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: scheme.primary,
-                foregroundColor: scheme.onPrimary,
-                backgroundImage: user?.photoURL != null
-                    ? NetworkImage(user!.photoURL!)
-                    : null,
-                child: user?.photoURL == null
-                    ? const Icon(Icons.person_outline)
-                    : null,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (name.isNotEmpty)
-                      Text(
-                        name,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    if (!anonymous && (user?.email ?? '').isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        user!.email!,
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(color: scheme.onSurfaceVariant),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    const SizedBox(height: 6),
-                    // Anonim hesapta "Senkronize edildi" YANILTICIYDI: veri başka
-                    // cihazdan açılamaz ve hesap kaybolursa geri gelmez. Rozet
-                    // gerçeği söyler; ayrıntısı alttaki yerel hesap kartında.
-                    Row(
-                      children: [
-                        Icon(
-                          ref.watch(isAnonymousProvider)
-                              ? Icons.smartphone
-                              : Icons.cloud_done_outlined,
-                          size: 14,
-                          color: ref.watch(isAnonymousProvider)
-                              ? scheme.onSurfaceVariant
-                              : scheme.primary,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          anonymous ? l10n.localOnlyBadge : l10n.synced,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // GİRİŞ EN ÜSTTE (kullanıcı isteği 2026-10-28: "google girişini
-          // bulmak çok zor, şu an sadece arayan bulur"): bağlama düğmesi
-          // kapalı gelen Hesap alanının içindeydi. Misafirken profil
-          // kartının kendisinde, ayarların en tepesinde durur.
-          if (anonymous) ...[
-            const SizedBox(height: 12),
-            FilledButton.icon(
+    return AccountIdentityCard(
+      // GİRİŞ EN ÜSTTE (kullanıcı isteği 2026-10-28: "google girişini
+      // bulmak çok zor, şu an sadece arayan bulur"): bağlama düğmesi
+      // kapalı gelen Hesap alanının içindeydi. Misafirken profil
+      // kartının kendisinde, ayarların en tepesinde durur.
+      footer: anonymous
+          ? FilledButton.icon(
               key: const ValueKey('profile-google-sign-in'),
               icon: const Icon(Icons.login_rounded),
               label: Text(l10n.profileGuestSignIn),
               onPressed: () => linkGuestAccount(context, ref),
-            ),
-          ],
-        ],
-      ),
+            )
+          : null,
     );
   }
 }
@@ -356,52 +270,22 @@ class _PermissionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isGranted = granted == true;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icon, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: Theme.of(context).textTheme.bodyLarge),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          if (isGranted)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  size: 18,
-                  color: Colors.green.shade600,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  context.l10n.permGranted,
-                  style: TextStyle(color: Colors.green.shade600, fontSize: 12),
-                ),
-              ],
+    // Satır dili (P62 PA2): simge + ad + açıklama + sağda durum. Verildiyse
+    // `primary` onay simgesi (eskiden sabit yeşil), değilse metin düğmesi.
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: granted == true
+          ? Tooltip(
+              message: context.l10n.permGranted,
+              child: Icon(Icons.check_circle, color: scheme.primary),
             )
-          else
-            FilledButton.tonal(
+          : TextButton(
               onPressed: onAction,
               child: Text(actionLabel ?? context.l10n.permGrant),
             ),
-        ],
-      ),
     );
   }
 }
@@ -413,13 +297,14 @@ class _BackupButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Tooltip(
-      message: context.l10n.backupInfo,
-      child: TextButton.icon(
-        icon: const Icon(Icons.file_download_outlined),
-        label: Text(context.l10n.exportBackup),
-        onPressed: () => exportFullBackup(context, ref),
-      ),
+    // Eylem satırı (P62 PA2: metin düğmesi yığını yerine).
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.file_download_outlined),
+      title: Text(context.l10n.exportBackup),
+      subtitle: Text(context.l10n.backupInfo),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => exportFullBackup(context, ref),
     );
   }
 }
@@ -433,7 +318,6 @@ class _BackupStatus extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final guest =
         ref.watch(currentUidProvider) == null ||
         ref.watch(isAnonymousProvider);
@@ -441,56 +325,21 @@ class _BackupStatus extends ConsumerWidget {
       notesStreamProvider.select((a) => a.value?.length ?? 0),
     );
     final last = ref.watch(lastBackupProvider);
-    final style = Theme.of(context).textTheme.bodySmall;
-    Widget line(IconData icon, String text, {bool warn = false}) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: warn ? scheme.error : scheme.onSurfaceVariant,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: style?.copyWith(color: warn ? scheme.error : null),
-            ),
-          ),
-        ],
-      ),
-    );
     final locale = Localizations.localeOf(context).toLanguageTag();
-    return Padding(
+    // ŞERİT (P62 PA2, A9): kırmızı düz yazı yerine grubun üstünde,
+    // kartın dışında `AppBanner`. Misafir / hiç yedek yok = dikkat tonu.
+    final warn = guest;
+    return AppBanner(
       key: const ValueKey('backup-status'),
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          guest
-              ? line(
-                  Icons.cloud_off_outlined,
-                  l10n.backupStatusGuest,
-                  warn: true,
-                )
-              : line(Icons.cloud_done_outlined, l10n.backupStatusCloud(count)),
-          last == null
-              ? line(
-                  Icons.history,
-                  l10n.backupStatusNever,
-                  warn: guest,
-                )
-              : line(
-                  Icons.history,
-                  l10n.backupStatusLast(
-                    DateFormat.yMMMd(locale).add_Hm().format(last.at),
-                    last.count,
-                  ),
-                ),
-        ],
-      ),
+      tone: warn ? AppTone.attention : AppTone.neutral,
+      icon: guest ? Icons.cloud_off_outlined : Icons.cloud_done_outlined,
+      title: guest ? l10n.backupStatusGuest : l10n.backupStatusCloud(count),
+      subtitle: last == null
+          ? l10n.backupStatusNever
+          : l10n.backupStatusLast(
+              DateFormat.yMMMd(locale).add_Hm().format(last.at),
+              last.count,
+            ),
     );
   }
 }
@@ -502,10 +351,12 @@ class _RestoreButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return TextButton.icon(
-      icon: const Icon(Icons.file_upload_outlined),
-      label: Text(context.l10n.importBackup),
-      onPressed: () => restoreBackup(context, ref),
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.file_upload_outlined),
+      title: Text(context.l10n.importBackup),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => restoreBackup(context, ref),
     );
   }
 }
@@ -516,13 +367,13 @@ class _ImportOtherButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Tooltip(
-      message: context.l10n.importOtherInfo,
-      child: TextButton.icon(
-        icon: const Icon(Icons.download_for_offline_outlined),
-        label: Text(context.l10n.importOther),
-        onPressed: () => importFromOtherApps(context, ref),
-      ),
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.download_for_offline_outlined),
+      title: Text(context.l10n.importOther),
+      subtitle: Text(context.l10n.importOtherInfo),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => importFromOtherApps(context, ref),
     );
   }
 }
@@ -536,7 +387,7 @@ Future<void> linkGuestAccount(BuildContext context, WidgetRef ref) =>
 class _AccountSection extends ConsumerWidget {
   const _AccountSection();
 
-  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+  static Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
@@ -730,85 +581,99 @@ class _AccountSection extends ConsumerWidget {
     }
   }
 
+  /// Hesap sayfasının tepesi (P62 PA2, plan §4): kimlik kartı + misafirde
+  /// "yalnız bu cihazda" şeridi. Kartın DIŞINDA durur (`bare` satır).
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    // Kimlik (avatar/ad/e-posta) artık ayarların en üstündeki profil kartında;
-    // burada yalnızca hesap EYLEMLERİ kalır.
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
+        const AccountIdentityCard(),
         // Yerel (anonim) hesapta yükseltme yolu HER ZAMAN görünür olmalı:
         // kullanıcı notlarının yalnız bu cihazda olduğunu bilmeden aylarca
-        // kullanıp uygulamayı silince hepsini kaybedebilir.
+        // kullanıp uygulamayı silince hepsini kaybedebilir. Kökte dolu
+        // "Giriş yap" var; burada ikinci dolu düğme yok (metin düğmesi).
         if (ref.watch(isAnonymousProvider)) ...[
-          Card(
-            margin: EdgeInsets.zero,
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.phonelink_lock_outlined, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.localAccountBadge,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.localAccountInfo,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  FilledButton.tonalIcon(
-                    icon: const Icon(Icons.link, size: 18),
-                    label: Text(l10n.linkGoogleAccount),
-                    onPressed: () => _linkAccount(context, ref),
-                  ),
-                ],
-              ),
+          const SizedBox(height: AppSpace.m),
+          AppBanner(
+            key: const ValueKey('account-guest-banner'),
+            tone: AppTone.attention,
+            icon: Icons.cloud_off_outlined,
+            title: l10n.localOnlyBadge,
+            subtitle: l10n.localAccountInfo,
+            trailing: TextButton(
+              onPressed: () => _linkAccount(context, ref),
+              child: Text(l10n.linkGoogleAccount),
             ),
           ),
-          const SizedBox(height: 12),
         ],
-        TextButton.icon(
-          icon: const Icon(Icons.logout),
-          label: Text(l10n.signOut),
-          onPressed: () => confirmAndSignOut(context),
-        ),
-        TextButton.icon(
-          style: TextButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.error,
-          ),
-          icon: const Icon(Icons.delete_forever_outlined),
-          label: Text(l10n.deleteAccount),
-          onPressed: () => _deleteAccount(context, ref),
-        ),
-        const SizedBox(height: 16),
-        // Hukuki şeffaflık: gizlilik politikası + açık kaynak lisansları.
-        TextButton.icon(
-          icon: const Icon(Icons.privacy_tip_outlined),
-          label: Text(l10n.privacyPolicyTitle),
-          onPressed: () => context.push('/privacy'),
-        ),
-        TextButton.icon(
-          icon: const Icon(Icons.description_outlined),
-          label: Text(l10n.licensesTitle),
-          onPressed: () =>
-              showLicensePage(context: context, applicationName: l10n.appName),
-        ),
-        // Hata günlüğü + çökme raporları (F1.9).
-        const _ErrorLogButton(),
-        if (CrashReporting.supported) const _CrashReportsSwitch(),
-        const _AppVersionRow(),
       ],
+    );
+  }
+}
+
+/// "Oturumu kapat" eylem satırı; misafirde kırmızı (veri kaybı).
+class _SignOutRow extends ConsumerWidget {
+  const _SignOutRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final danger = ref.watch(isAnonymousProvider)
+        ? Theme.of(context).colorScheme.error
+        : null;
+    return ListTile(
+      key: const ValueKey('settings-sign-out'),
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(Icons.logout, color: danger),
+      title: Text(
+        context.l10n.signOut,
+        style: danger == null ? null : TextStyle(color: danger),
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => confirmAndSignOut(context),
+    );
+  }
+}
+
+/// Gizlilik politikası / açık kaynak lisansları (hukuki şeffaflık).
+class _LegalRow extends StatelessWidget {
+  const _LegalRow({required this.licenses});
+
+  final bool licenses;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        licenses ? Icons.description_outlined : Icons.privacy_tip_outlined,
+      ),
+      title: Text(licenses ? l10n.licensesTitle : l10n.privacyPolicyTitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: licenses
+          ? () => showLicensePage(context: context, applicationName: l10n.appName)
+          : () => context.push('/privacy'),
+    );
+  }
+}
+
+/// Geri dönüşsüz eylem (plan §2.2): sayfanın SON grubunda tek satır, başlık
+/// ve simge `error`, ok yok; onay diyaloğu aynen.
+class _DeleteAccountRow extends ConsumerWidget {
+  const _DeleteAccountRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final error = Theme.of(context).colorScheme.error;
+    return ListTile(
+      key: const ValueKey('settings-delete-account'),
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(Icons.delete_forever_outlined, color: error),
+      title: Text(context.l10n.deleteAccount, style: TextStyle(color: error)),
+      onTap: () => _AccountSection._deleteAccount(context, ref),
     );
   }
 }
@@ -822,12 +687,13 @@ class _ErrorLogButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Tooltip(
-      message: l10n.errorLogInfo,
-      child: TextButton.icon(
-        icon: const Icon(Icons.bug_report_outlined),
-        label: Text(l10n.errorLogShare),
-        onPressed: () async {
+    return ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.bug_report_outlined),
+        title: Text(l10n.errorLogShare),
+        subtitle: Text(l10n.errorLogInfo),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
           final messenger = ScaffoldMessenger.of(context);
           if (ErrorLog.entries.isEmpty) {
             messenger.showMessage(l10n.errorLogEmpty);
@@ -860,7 +726,6 @@ class _ErrorLogButton extends StatelessWidget {
             messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
           }
         },
-      ),
     );
   }
 }
@@ -872,6 +737,8 @@ class _CrashReportsSwitch extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      secondary: const Icon(Icons.report_gmailerrorred_outlined),
       title: Text(l10n.crashReports),
       subtitle: Text(l10n.crashReportsInfo),
       value: ref.watch(crashReportsProvider),
@@ -932,13 +799,15 @@ class _AppVersionRowState extends State<_AppVersionRow> {
           mainAxisSize: MainAxisSize.min,
           children: [
             versionRow,
-            TextButton.icon(
+            ListTile(
               key: const ValueKey('update-available-row'),
-              icon: const Icon(Icons.system_update),
-              label: Text(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.system_update),
+              title: Text(
                 '${l10n.updateAvailable(newer)} · ${l10n.updateInstall}',
               ),
-              onPressed: () => unawaited(AppUpdate.downloadAndInstall(info)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => unawaited(AppUpdate.downloadAndInstall(info)),
             ),
           ],
         );
@@ -972,18 +841,17 @@ class _AppVersionRowState extends State<_AppVersionRow> {
     AppLocalizations l10n,
     String version,
   ) {
-    return TextButton.icon(
-      style: TextButton.styleFrom(
-        foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-      icon: const Icon(Icons.info_outline),
-      label: Text('${l10n.appVersion}: $version'),
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.info_outline),
+      title: Text('${l10n.appVersion}: $version'),
+      trailing: const Icon(Icons.copy_rounded, size: AppIconSize.s),
       // Uzun bas → Crashlytics test çökmesi (yalnız raporlama açıkken,
       // Android release derlemesinde). Kurulum doğrulaması için gizli kapı.
       onLongPress: CrashReporting.active
           ? () => _confirmTestCrash(context)
           : null,
-      onPressed: () async {
+      onTap: () async {
         final messenger = ScaffoldMessenger.of(context);
         await Clipboard.setData(
           ClipboardData(text: '${l10n.appName} $version'),

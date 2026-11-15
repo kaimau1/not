@@ -256,7 +256,7 @@
     "kart_kurulum": 0,
     "dashboard_kurulum": 0,
     "kare_kurulum": 341,
-    "bugun": "kart 0 / pano 0 / en ağır kare 341 (levhanın kendi kurulumu) (2026-11-14, PA0)",
+    "bugun": "kart 0 / pano 0 / en ağır kare 341 (levhanın kendi kurulumu) (2026-11-14, PA0); PA2 (2026-11-15) ortak kimlik kartı + PressScale karolar sonrası yine 341 (Container yerine DecoratedBox, avatar işlev)",
     "hedef": "kart 0, pano 0",
     "neden": "P62 PA0 ilk ölçüm = hedef (kart / pano); en ağır kare taban (mandal), PA2 kılık değişikliğinde aşılmamalı"
   },
@@ -296,10 +296,10 @@
   },
   "S36": {
     "senaryo": "Geniş ekran ayarlar: 1280×800 SettingsScreen; settings-cat-ai → settings-cat-sound (döşeme önce görünüre kaydırılır, ölçüm dışı), her birinden sonra 40 kare",
-    "kare_kurulum": 266,
-    "toplam_kurulum": 1137,
+    "kare_kurulum": 265,
+    "toplam_kurulum": 1038,
     "bugun": "en ağır kare 673 / toplam 1875 (2026-11-14, PA0); ilk kare ai 551 / sound 673, sonraki en ağır 65 / 262",
     "hedef": "en ağır kare ≤ S29 en ağır karesi (alan değişimi de yayılır)",
-    "neden": "P62 PA0 ilk ölçüm 673 / 1875; PA1 (2026-11-15) kök neden: dokunuştaki FocusScope.of(context).unfocus() ekranı odak kapsamına bağımlı kılıyor, odak değişince BÜTÜN ayarlar yeniden kuruluyordu + seçim setState ile bütün ekranı kuruyordu → FocusManager.primaryFocus + ValueNotifier (yalnız iki döşeme + ayrıntı bölmesi) → 266 / 1137; hedefte (≤ S29)"
+    "neden": "P62 PA0 ilk ölçüm 673 / 1875; PA1 (2026-11-15) kök neden: dokunuştaki FocusScope.of(context).unfocus() ekranı odak kapsamına bağımlı kılıyor, odak değişince BÜTÜN ayarlar yeniden kuruluyordu + seçim setState ile bütün ekranı kuruyordu → FocusManager.primaryFocus + ValueNotifier (yalnız iki döşeme + ayrıntı bölmesi) → 266 / 1137; hedefte (≤ S29). PA2 (2026-11-15): düzenekte ilk alanın (Hesap, 3 → 11 satır) yayması ve kaydırma sonrası tembel öğeler tek pump karesinde bitmiyor, ölçüm penceresine taşıyordu → ölçüm öncesi 40 / 10 kare oturtuluyor (aynı kod PA1 başında da 1137 ölçüyordu; düzeltilmiş düzenekle 265 / 1038)"
   }
 }

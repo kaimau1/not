@@ -14,7 +14,12 @@ class _SettingRow {
     this.title = '',
     this.keywords = '',
     this.group,
+    this.bare = false,
   });
+
+  /// Satır kartın DIŞINDA, tam genişlikte (kimlik kartı, uyarı şeridi, örnek
+  /// metin). Sonraki satır yeni kart başlatır.
+  final bool bare;
 
   final Widget child;
 
@@ -313,6 +318,10 @@ enum _GroupSlot {
 
   /// Önceki satırın kartında devam eden satır.
   row,
+
+  /// Kartın DIŞINDA, tam genişlikte duran parça (kimlik kartı, uyarı şeridi,
+  /// örnek metin — kart içinde kart olmasın).
+  bare,
 }
 
 /// Ayar satırlarını GRUP KARTLARI hâlinde dizen tek düzen nesnesi (P62 PA1
@@ -415,30 +424,37 @@ class _RenderGroupColumn extends RenderBox
     }
 
     var i = 0;
-    var afterLabel = false;
+    // Bir önceki parça: null (yok), label, card, bare.
+    _GroupSlot? prev;
     var child = firstChild;
     while (child != null) {
       final pd = child.parentData! as _GroupParentData;
       final slot = _slotAt(i);
       if (slot == _GroupSlot.label) {
         closeCard();
-        y += i == 0 ? AppSpace.xs : _labelTop;
+        y += prev == null ? AppSpace.xs : _labelTop;
         child.layout(labelC, parentUsesSize: true);
         pd.offset = Offset(0, y);
         y += child.size.height + _labelBottom;
-        afterLabel = true;
+        prev = _GroupSlot.label;
+      } else if (slot == _GroupSlot.bare) {
+        closeCard();
+        if (prev != null && prev != _GroupSlot.label) y += _gap;
+        child.layout(labelC, parentUsesSize: true);
+        pd.offset = Offset(0, y);
+        y += child.size.height;
+        prev = _GroupSlot.bare;
       } else {
         if (slot == _GroupSlot.start || cardTop == null) {
-          final hadCard = cardTop != null || _cards.isNotEmpty;
           closeCard();
-          if (hadCard && !afterLabel) y += _gap;
+          if (prev != null && prev != _GroupSlot.label) y += _gap;
           cardTop = y;
           y += _padV;
         }
-        afterLabel = false;
         child.layout(rowC, parentUsesSize: true);
         pd.offset = Offset(_padH, y);
         y += child.size.height;
+        prev = _GroupSlot.start;
       }
       i++;
       child = pd.nextSibling;
@@ -468,7 +484,11 @@ class _RenderGroupColumn extends RenderBox
     var child = firstChild;
     while (child != null) {
       final pd = child.parentData! as _GroupParentData;
-      if (_slotAt(i) == _GroupSlot.row && i > 0 && child.size.height > 0) {
+      if (_slotAt(i) == _GroupSlot.row &&
+          i > 0 &&
+          (_slotAt(i - 1) == _GroupSlot.start ||
+              _slotAt(i - 1) == _GroupSlot.row) &&
+          child.size.height > 0) {
         final top = offset + pd.offset;
         canvas.drawLine(top, top + Offset(child.size.width, 0), ink);
       }
@@ -951,7 +971,13 @@ class _StaggeredRowsState extends State<_StaggeredRows> {
         slots.add(_GroupSlot.label);
         children.add(_label(i, label));
       }
-      slots.add(r.group != null ? _GroupSlot.start : _GroupSlot.row);
+      slots.add(
+        r.bare
+            ? _GroupSlot.bare
+            : r.group != null
+            ? _GroupSlot.start
+            : _GroupSlot.row,
+      );
       children.add(r.child);
     }
     return _groupColumn(Theme.of(context), slots, children);

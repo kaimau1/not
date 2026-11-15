@@ -1673,12 +1673,23 @@ void main() {
   // S36: geniş ekranda ayar alanları arasında geçiş.
   testWidgets('S36: geniş ekran ayar alanı geçişi (1280×800)', (tester) async {
     await tester.pumpWidget(await _settingsApp(tester, const Size(1280, 800)));
+    // İlk açılan alanın (Hesap) satırları karelere yayılarak kuruluyor; tek
+    // `pump(1 sn)` TEK kare — yayma ölçüm penceresine taşıyordu (P62 PA2:
+    // Hesap alanı 3 → 11 satır olunca S36 toplamı 1137 → 1322). Önce bitsin.
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
     await tester.pump(const Duration(seconds: 1));
     // Kategori listesi 800 dp'ye sığmıyor: döşeme önce görünüre kaydırılır
     // (ölçüm dışında).
     Future<_FrameStats> select(String id) async {
       final tile = find.byKey(ValueKey('settings-cat-$id'));
       await tester.ensureVisible(tile);
+      // Kaydırmanın ardından tembel kurulan liste öğeleri de ölçüm dışında
+      // otursun (tek `pump` tek kare).
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
       await tester.pump(const Duration(seconds: 1));
       final f = await _frames(tester, () => tester.tap(tile), frames: 40);
       expect(find.byKey(ValueKey('settings-area-$id')), findsOneWidget);
