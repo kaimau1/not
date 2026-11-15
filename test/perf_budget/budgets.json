@@ -301,5 +301,16 @@
     "bugun": "en ağır kare 673 / toplam 1875 (2026-11-14, PA0); ilk kare ai 551 / sound 673, sonraki en ağır 65 / 262",
     "hedef": "en ağır kare ≤ S29 en ağır karesi (alan değişimi de yayılır)",
     "neden": "P62 PA0 ilk ölçüm 673 / 1875; PA1 (2026-11-15) kök neden: dokunuştaki FocusScope.of(context).unfocus() ekranı odak kapsamına bağımlı kılıyor, odak değişince BÜTÜN ayarlar yeniden kuruluyordu + seçim setState ile bütün ekranı kuruyordu → FocusManager.primaryFocus + ValueNotifier (yalnız iki döşeme + ayrıntı bölmesi) → 266 / 1137; hedefte (≤ S29). PA2 (2026-11-15): düzenekte ilk alanın (Hesap, 3 → 11 satır) yayması ve kaydırma sonrası tembel öğeler tek pump karesinde bitmiyor, ölçüm penceresine taşıyordu → ölçüm öncesi 40 / 10 kare oturtuluyor (aynı kod PA1 başında da 1137 ölçüyordu; düzeltilmiş düzenekle 265 / 1038)"
+  },
+  "S37": {
+    "senaryo": "Kart menü levhası: telefon ana ekran, 30 not; ilk kartın note-card-menu düğmesine dokun → 30 kare → sistem geri → 30 kare (cihazdaki menu evresi)",
+    "kart_kurulum": 0,
+    "dashboard_kurulum": 0,
+    "kare_kurulum": 499,
+    "toplam_kurulum": 1363,
+    "dizilme": 57,
+    "bugun": "kart 0 / pano 0 / en ağır kare 499 / toplam 1363 / dizilme 57 (2026-11-15, P62 G1); main 32176d7e ile G1 632057a1 BİREBİR aynı",
+    "hedef": "kart 0, pano 0; kurulum ve dizilme tabanı aşmaz",
+    "neden": "P62 G1 cihaz A/B menu LAYOUT 44 → 63 ms (altın +%19) kanıt araması: levhanın yolu G1 dosyalarına değmiyor, sayılar main ile aynı → cihaz farkı gürültü (menu LAYOUT aynı main APK larında 38–76 ms, gecmis.csv)"
   }
 }

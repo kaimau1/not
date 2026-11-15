@@ -15,6 +15,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show debugPrintMarkNeedsLayoutStacks;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -1477,6 +1478,52 @@ void main() {
           (open.counts['DashboardScreen'] ?? 0) +
           (close.counts['DashboardScreen'] ?? 0),
       'kare_kurulum': max(open.worst, close.worst),
+    });
+    await endEditor(tester);
+  });
+
+  // S37: ana ekran kartının ⋮ levhası aç → kapat (cihazdaki `menu` evresi,
+  // P62 G1 A/B 2026-11-15). Kurulum + yeniden dizilmek üzere işaretlenen
+  // yerleşim sınırı (dizilme) sayısı; kartlar ve pano kurulmaz.
+  testWidgets('S37: kart ⋮ levhası aç → kapat (telefon)', (tester) async {
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(notes30()),
+    );
+    var layouts = 0;
+    final print0 = debugPrint;
+    debugPrint = (String? m, {int? wrapWidth}) {
+      if (m != null && m.startsWith('markNeedsLayout() called for ')) {
+        layouts++;
+      }
+    };
+    debugPrintMarkNeedsLayoutStacks = true;
+    late final _FrameStats open;
+    late final _FrameStats close;
+    try {
+      open = await _frames(tester, () async {
+        await tester.tap(find.byKey(const ValueKey('note-card-menu')).first);
+      });
+      expect(find.byType(BottomSheet), findsOneWidget, reason: 'levha açık');
+      close = await _frames(tester, () async {
+        await tester.binding.handlePopRoute();
+      });
+    } finally {
+      debugPrintMarkNeedsLayoutStacks = false;
+      debugPrint = print0;
+    }
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(BottomSheet), findsNothing, reason: 'levha kapandı');
+    _expectBudget('S37', {
+      'kart_kurulum':
+          (open.counts['NoteCard'] ?? 0) + (close.counts['NoteCard'] ?? 0),
+      'dashboard_kurulum':
+          (open.counts['DashboardScreen'] ?? 0) +
+          (close.counts['DashboardScreen'] ?? 0),
+      'kare_kurulum': max(open.worst, close.worst),
+      'toplam_kurulum': open.total + close.total,
+      'dizilme': layouts,
     });
     await endEditor(tester);
   });

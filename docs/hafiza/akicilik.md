@@ -144,3 +144,5 @@ Tam plan: `docs/arsiv/planlar/HIZ_PLANI.md`. Bütçe senaryoları (S1…) tablos
 2. Mandallar yalnız düşer: `budgets.json`, `design_tokens/budget.json`, `altin_taban.json`.
 3. Hız/akıcılık paketlerinde kötüleşme sıfır (OTOMASYON 6. adım); diğer paketlerde %20 + altın taban %15.
 4. Yeni ekran/levha/akış ekleyen her iş, Ek A'ya bir S satırı ve `ab_hepsi.py`'ye bir evre ekler (yoksa iş bitmiş sayılmaz).
+
+**Ölçüm tuzakları (P62 G1, 2026-11-15):** (a) `menu` evresinin LAYOUT'u aynı main APK'larında 38–76 ms gezer (gecmis.csv); tek başına "altın +%19" kod kanıtı değildir — önce S37 (kart ⋮ aç→kapat: kurulum + dizilme) A/B'de aynı mı bak. (b) Profil APK'sı 60 yerine ~73 MB çıkarsa kod değil: Gradle artımlı paketleme eski `libapp.so`'nun ölü boşluğunu (~14 MB) zip'te bırakır (girişler toplamı aynı); A/B için `flutter clean` ile derle.
