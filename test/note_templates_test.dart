@@ -342,6 +342,46 @@ void main() {
       expect(t.items, isEmpty);
       expect(stripRichMarkers(t.body), '• Ekmek');
     });
+
+    // S48: "değişti" bayrağı ekranı yeniden kurmadan yalnız PopScope'a
+    // gider — yazınca geri tuşu yine onay sorar, yazmadan doğrudan kapanır.
+    testWidgets('yazınca geri onay sorar, yazmadan doğrudan kapanır', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () => showTemplateEditor(context),
+                child: const Text('aç'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(TemplateEditorScreen), findsNothing);
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('tpl-editor-name')),
+        'Pazar',
+      );
+      await tester.pump();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('Değişiklikler kaydedilmesin mi?'), findsOneWidget);
+      await tester.tap(find.text('Vazgeç'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TemplateEditorScreen), findsNothing);
+    });
   });
 
   testWidgets('galeri → önizleme: öneri eklenir, not maddeleriyle doğar', (

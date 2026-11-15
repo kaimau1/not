@@ -15289,6 +15289,174 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Başlık'**
   String get quickRowShortHeading;
+
+  /// No description provided for @quickEntryHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaz ya da söyle: muz elma, 2 süt…'**
+  String get quickEntryHint;
+
+  /// No description provided for @quickEntryListening.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dinliyorum…'**
+  String get quickEntryListening;
+
+  /// No description provided for @quickEntryMic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesle ekle'**
+  String get quickEntryMic;
+
+  /// No description provided for @quickEntryMicStop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dinlemeyi durdur'**
+  String get quickEntryMicStop;
+
+  /// No description provided for @quickListEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yukarıya yaz, söyle ya da aşağıdan dokun; liste burada oluşur.'**
+  String get quickListEmpty;
+
+  /// No description provided for @quickListDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitti'**
+  String get quickListDone;
+
+  /// No description provided for @quickListAisleSort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Reyon sırasına diz'**
+  String get quickListAisleSort;
+
+  /// No description provided for @quickListOpenInNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notta aç'**
+  String get quickListOpenInNote;
+
+  /// No description provided for @quickListDiscard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vazgeç'**
+  String get quickListDiscard;
+
+  /// No description provided for @quickListFrequent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sık eklediklerin'**
+  String get quickListFrequent;
+
+  /// No description provided for @quickListLeftovers.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçen seferden'**
+  String get quickListLeftovers;
+
+  /// No description provided for @quickListAddAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hepsini ekle'**
+  String get quickListAddAll;
+
+  /// No description provided for @quickListSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{title}” kaydedildi'**
+  String quickListSaved(String title);
+
+  /// No description provided for @quickListOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aç'**
+  String get quickListOpen;
+
+  /// No description provided for @quickListRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çıkar'**
+  String get quickListRemove;
+
+  /// No description provided for @quickListCorrected.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{typed}” yazmıştın; geri almak için dokun'**
+  String quickListCorrected(String typed);
+
+  /// No description provided for @quickListRestored.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{typed}” olarak bırakıldı; bir daha düzeltilmeyecek'**
+  String quickListRestored(String typed);
+
+  /// No description provided for @quickDropTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı ekle'**
+  String get quickDropTitle;
+
+  /// No description provided for @quickDropInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaz ya da söyle, seçtiğin nota eklensin'**
+  String get quickDropInfo;
+
+  /// No description provided for @quickDropHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'süt, ekmek… ya da “alışveriş listesine süt ekle”'**
+  String get quickDropHint;
+
+  /// No description provided for @quickDropTarget.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nereye eklensin?'**
+  String get quickDropTarget;
+
+  /// No description provided for @quickDropNoNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklenecek not yok. Önce bir liste ya da metin notu oluştur.'**
+  String get quickDropNoNotes;
+
+  /// No description provided for @quickDropAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get quickDropAdd;
+
+  /// No description provided for @quickDropAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} madde “{title}” notuna eklendi'**
+  String quickDropAdded(int count, String title);
+
+  /// No description provided for @quickDropAddedText.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{title}” notuna eklendi'**
+  String quickDropAddedText(String title);
+
+  /// No description provided for @quickDropNothingNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hepsi zaten “{title}” notunda'**
+  String quickDropNothingNew(String title);
+
+  /// No description provided for @quickDropKeyboard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açılınca klavye'**
+  String get quickDropKeyboard;
+
+  /// No description provided for @quickDropMicAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açılınca dinle'**
+  String get quickDropMicAuto;
 }
 
 class _AppLocalizationsDelegate

@@ -77,3 +77,23 @@ Kart koordinatları liste sırasıyla değişir: `find('OLCUM')` ile bul.
   çizelgesinde görünmez → ikisini birlikte oku (atrace + VM servisi).
 - SF aralıklarında boşta bekleme boşlukları da var (`idle_ms` eşiği); yazma
   senaryolarında güvenilir sayı `hitch.py`'nin "ana meşgul" sütunu.
+
+## Alt panel kipleri (S47, `panel_kayit.py`)
+
+Üç profil APK'sı (ölçüm uygulaması kimliği; her derlemeden sonra APK'yı kopyala,
+aynı yolu ezer):
+
+```bash
+F="C:/src/flutter/bin/flutter.bat"
+for k in a b c; do
+  "$F" build apk --profile --target-platform android-arm64 --dart-define-from-file=env.json \
+      --dart-define=ALT_PANEL_KIP=$k --build-number=<N>
+  cp build/app/outputs/flutter-apk/app-profile.apk "$TMP/panel_$k.apk"
+done
+```
+
+Her kip için: `adb install -r "$TMP/panel_<k>.apk"` → uygulamada bir metin notu aç
+(klavye kapalı) → `adb exec-out screencap -p > s.png` ile panelin üst kenarını (ayraç)
+bir kez oku → `python -u tool/perf/panel_kayit.py <k> <alan_x> <alan_y> --panel-y <px>`
+(10× aç/kapa; `--tekrar`, `--video` ile yeniden çözümleme). Son satır `TOPLAM <k>:`
+geri sıçrama / takılma / gizli / ort-maks sapma. Ham kareler `PERF_OUT/panel_<k>.csv`.

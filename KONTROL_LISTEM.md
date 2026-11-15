@@ -5,9 +5,24 @@ işaretle (`[x]`) ya da bana "3. madde tamam / bozuk" de. Bozuksa: ekran görün
 ekran kaydı alıp gönder, hangi notta olduğunu söyle. Yapamadığını silme, "denemedim" yaz.
 
 (Her maddenin adım adım uzun hâli geliştirici belgelerindeki "cihaz turu" listesinde; gerekmedikçe
-oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
+oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
 
 ## Telefonda bak
+
+- [ ] **Hızlı liste + Hızlı ekle (cihazda bakılmadı, ÖLÇÜLMEDİ — 2026-11-15)**
+  Nerede: "+" → Alışveriş listesi (ya da Şablon → bir liste şablonu); "+" → Hızlı ekle.
+  Nasıl: üst satıra "muz elma,armut çilekkivi un yunurta 2 süt" yaz — maddeler canlı eklenmeli, klavye açılırken ve yazarken takılmamalı; mikrofona "süt yumurta iki ekmek" de; alttaki sekmelerden çiplere dokun; iki sütun ↔ tek sütun; Bitti → not listede, iki sütunlu ve reyon sıralı. Hızlı ekle: "alışveriş listesine deterjan ekle" yaz/söyle → doğru not seçilmeli, Ekle → bildirimde Geri al.
+  Doğruysa: akıcı ve doğru nota ekliyor; yanlışsa: hangi kelimeyi yanlış ayırdığını/düzelttiğini ya da nerede kastığını yaz.
+  Not: yeni ekran editöre dokunmuyor ama cihazda A/B ölçümü yapılmadı (bütçe S49 yalnız widget katmanı).
+- [ ] **Alt panel klavye açılırken zıplıyor mu — üç kip karşılaştırması (oto/alt-panel-klavye, cihazda bakılmadı)**
+  Nerede: üç ayrı ölçüm APK'sı (a = bugünkü gibi klavyeyi birebir izler, b = yumuşak izler, c = klavye hareket ederken gizlenip oturunca belirir); bir metin notunda gövdeye dokunup klavyeyi aç-kapa.
+  Nasıl: her kipte 10 kez aç-kapa; hangisinde panel "zıplamadan" geliyor? `tool/perf/panel_kayit.py` sayıları da yanında.
+  Doğruysa: seçtiğin kipi söyle — varsayılan o olur (şu an a).
+  Yanlışsa: ekran kaydı gönder, hangi kipte olduğunu söyle.
+- [ ] **Şablon kasması (oto/sablon-kasma, cihazda bakılmadı — 2026-11-15)**
+  Nerede: ana ekran "+" → Şablon → Alışveriş listesi; ayrıca Şablonlar → Yeni şablon.
+  Nasıl: "Madde ekle"ye dokun (klavye açılırken takılmamalı), birkaç öneri çipine ve maddenin kutucuğuna dokun, Oluştur; galeride arama kutusuna dokun; Yeni şablonda ad alanına ilk harfi yaz.
+  Doğruysa: klavye ve dokunuşlar takılmadan; yanlışsa: hangi adımda kastığını yaz.
 
 - [ ] **Konfor kararları (oto/konfor, cihazda bakılmadı — 2026-11-15)**
   Nerede: tablette bir not açıkken sol kenar; küçük telefonda ⋮ → Ekranı düzenle; ana ekranda "+" → ayar simgesi (Düzenle).

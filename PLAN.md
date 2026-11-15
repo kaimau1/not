@@ -48,3 +48,4 @@ eski kimlik durur. Kullanıcının kendi listesi: `KONTROL_LISTEM.md`.
 - **Takvim haftalık ızgarada sürükle, görev elle sırala** — ay görünümünde sürükleme VAR (`_MonthCell` DragTarget), `WeekPage`'de yok — TAKVIM (ayrı faz)
 - **Uçtan uca akış testleri** — widget düzeyinde YAPILDI (F18.8: `user_flows_test`, `media_bubbles_share_test`, `backup_service_test`); açık kalan: `integration_test/` emülatör akışları + web ağır işler (F17.3) — F17.2, F17.3
 - **PPTX düzenleme portu** — depo izni sonrası — F18.20
+- **Şablon önizlemesinin liste dalını kaldır** — liste şablonları `QuickListScreen`e taşındı (2026-11-15); `TemplateComposer` liste dalı + `showNoteTemplateSheet` üretimde çağrılmıyor, `note_templates_test` / `template_sheet_layout_test` / bütçe S48 / ekran turu ona bağlı → birlikte taşınıp silinecek; ayrıca hızlı liste + hızlı ekle cihazda A/B ölçülmedi (KONTROL "Telefonda bak") — `docs/hafiza/editor.md` sonu
