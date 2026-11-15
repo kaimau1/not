@@ -2745,42 +2745,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ? child
       : KeyboardSwitch(open: const SizedBox.shrink(), closed: child);
 
-  /// Kalem kipinin sonu (tepsi/sütun sonunda): × kalemi kapatır (çizim
-  /// kalır), ✓ bitirir — "Sayfaya yaz" ile açılan hızlı el yazısı notunda
-  /// notu da kapatıp ana ekrana döner (kullanıcı isteği 2026-11-08).
-  List<Widget> _penEndButtons(AppLocalizations l10n) {
-    final scheme = _themeOf(context).colorScheme;
-    return [
-      IconButton.filledTonal(
-        key: const ValueKey('pen-close'),
-        tooltip: l10n.penModeDone,
-        visualDensity: VisualDensity.compact,
-        style: IconButton.styleFrom(
-          backgroundColor: scheme.surfaceContainerHighest,
-          foregroundColor: scheme.onSurfaceVariant,
-        ),
-        icon: const Icon(Icons.close_rounded, size: 20),
-        onPressed: () => _update(() => _penMode = false),
-      ),
-      const SizedBox(width: 4),
-      IconButton.filled(
-        key: const ValueKey('pen-done'),
-        tooltip: l10n.penModeFinish,
-        visualDensity: VisualDensity.compact,
-        icon: const Icon(Icons.check_rounded, size: 20),
-        onPressed: () {
-          _pageInkCtl?.save();
-          _update(() => _penMode = false);
-          if (!widget.startDrawing) return;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _closeEditor(() => unawaited(Navigator.of(context).maybePop()));
-            }
-          });
-        },
-      ),
-    ];
-  }
+  /// Kalem kipinden yazıya dönüş (tepsinin sonunda). Eski × / ✓ ikilisi
+  /// kalktı (kullanıcı isteği 2026-11-15: "onay butonlarına gerek yok, oto
+  /// kaydedilmesi lazım"): çizgi bitince zaten kaydedilir, burada yalnız
+  /// bekleyen varsa yazılır. Geri tuşu ve hızlı satırdaki kalem de kapatır.
+  Widget _penCloseButton(AppLocalizations l10n) => IconButton(
+    key: const ValueKey('pen-close'),
+    tooltip: l10n.penModeDone,
+    visualDensity: VisualDensity.compact,
+    icon: const Icon(Icons.keyboard_outlined),
+    onPressed: () {
+      _pageInkCtl?.save();
+      _update(() => _penMode = false);
+    },
+  );
 
   /// Bu açılışta ipucuna bakıldı mı (bkz. [_maybeShowTip]).
   bool _tipChecked = false;
@@ -5640,6 +5618,9 @@ child: NoteFindBar(
                                 controller: _pageInkOf(note),
                                 dock: true,
                                 followActive: true,
+                                // Üst çubuk varken geri al orada.
+                                showUndo: !_secondary &&
+                                    ref.watch(noteFullscreenProvider),
                                 actions: [
                                   // Kalem + tam ekranda üst çubuk yok: listeye
                                   // dönüş tepside.
@@ -5647,7 +5628,7 @@ child: NoteFindBar(
                                     _showListButton(l10n),
                                   if (PenTray.useRail(context))
                                     _fullscreenButton(l10n),
-                                  ..._penEndButtons(l10n),
+                                  _penCloseButton(l10n),
                                 ],
                               ),
                               ),

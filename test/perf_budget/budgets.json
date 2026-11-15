@@ -351,9 +351,9 @@
     "kok_kurulum": 0,
     "sayfa_tuvali": 0,
     "pen_tray": 3,
-    "kalem_resmi": 77,
+    "kalem_resmi": 66,
     "panel": 7,
-    "bugun": "0 / 0 / 3 / kalem resmi (_DockTool) 77 / panel (_Options) 7 (2026-11-15, G4 taban — PB3 öncesi)",
+    "bugun": "0 / 0 / 3 / kalem resmi (_DockTool) 66 / panel (_Options) 7 (2026-11-15 kalem tepsisi sadeleşmesi: silgi kalem sırasından düğmeye, 77 → 66)",
     "hedef": "kök 0, tuval 0, PenTray ≤ 13 (plan §3.5); kalem resmi ve panel tabanı aşmaz",
     "neden": "P63 G4 ilk ölçüm"
   },

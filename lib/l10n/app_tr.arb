@@ -690,6 +690,8 @@
   "eraser": "Silgi",
   "inkArrow": "Ok",
   "clearInk": "Çizimleri temizle",
+  "inkCleared": "Çizimler temizlendi",
+  "inkEraserTooltip": "Silgi (basılı tut: tümünü temizle)",
   "inkTwoFingerHint": "Tek parmak çizer · iki parmakla kaydır ve yakınlaştır",
   "slideOpenFailed": "Sunum açılamadı",
   "newPhotoNote": "Fotoğraf çek",

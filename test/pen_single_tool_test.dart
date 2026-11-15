@@ -1,9 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
+import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/pdf_page_box.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_pen.dart';
@@ -183,6 +186,10 @@ void main() {
     _pen(doc, y: 300);
     await tester.pump(const Duration(milliseconds: 400));
     expect(doc.ink, hasLength(2));
+    // Tepsinin geri alı yalnız üst çubuksuz kalem + tam ekranda (2026-11-15).
+    ProviderScope.containerOf(
+      tester.element(find.byType(NoteEditorScreen)),
+    ).read(noteFullscreenProvider.notifier).set(true);
     // Kapsülü aç (önce ilk seferki ipucu kalksın), geri al'a dokun.
     await tester.pump(const Duration(seconds: 6));
     await tester.pump(const Duration(seconds: 1));

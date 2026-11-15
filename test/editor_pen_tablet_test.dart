@@ -171,9 +171,17 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    await tester.tap(find.byKey(const ValueKey('pen-done')));
+    // 2026-11-15: × / ✓ ve kapsülün geri alı yok (üst çubukta); tek çıkış
+    // yazıya dön düğmesi, çizim kaybolmaz.
+    expect(find.byKey(const ValueKey('pen-done')), findsNothing);
+    expect(find.byKey(const ValueKey('pen-tray-undo')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('pen-close')));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.byType(PenTray), findsNothing);
+    expect(
+      tester.widget<PageInkStack>(find.byType(PageInkStack)).ink.ink,
+      hasLength(1),
+    );
     await _end(tester);
   });
 

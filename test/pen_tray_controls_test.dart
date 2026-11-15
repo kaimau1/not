@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/presentation/editor/pen_tray.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
+import 'package:notlar/features/notes/presentation/viewers/ink_pen.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
@@ -174,5 +175,131 @@ void main() {
     await tester.tapAt(const Offset(200, 40));
     await tester.pumpAndSettle();
     expect(find.byType(Slider), findsNothing);
+  });
+
+  // Kullanıcı isteği 2026-11-15 (G4 kapsülü): geri al ve × / ✓ kalktı, seçim
+  // anında uygulanır; silgi mürekkep varken belirgin; "tüm yazıları kaldır"
+  // geri alınabilir.
+  group('kapsül (2026-11-15)', () {
+    Future<InkController> dock(
+      WidgetTester tester, {
+      bool showUndo = false,
+    }) async {
+      final ink = InkController(initial: const [], onChanged: (_) {});
+      addTearDown(ink.dispose);
+      ink.setEditing(true);
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          locale: const Locale('tr'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Stack(
+              children: [
+                PenTray(controller: ink, dock: true, showUndo: showUndo),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return ink;
+    }
+
+    void stroke(InkController ink, double y) {
+      ink
+        ..pointerDown(1, Offset(20, y), const Size(400, 400))
+        ..pointerMove(1, Offset(120, y), const Size(400, 400))
+        ..pointerUp();
+    }
+
+    Future<void> end(WidgetTester tester) async {
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 7));
+    }
+
+    Color eraserColor(WidgetTester tester) => tester
+        .widget<Icon>(
+          find.descendant(
+            of: find.byKey(const ValueKey('pen-tray-eraser')),
+            matching: find.byType(Icon),
+          ),
+        )
+        .color!;
+
+    testWidgets('onay/geri al düğmesi yok, kalem seçimi anında uygulanır', (
+      tester,
+    ) async {
+      final ink = await dock(tester);
+      expect(find.byKey(const ValueKey('pen-tray-undo')), findsNothing);
+      expect(find.byIcon(Icons.check_rounded), findsNothing);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('pen-tray-marker')));
+      await tester.pump();
+      expect(ink.pen, InkPen.marker);
+      // Silgi kalem sırasında değil, tek düğmesinde.
+      expect(find.byKey(const ValueKey('pen-tray-eraser')), findsOneWidget);
+      await end(tester);
+    });
+
+    testWidgets('üst çubuk yokken (showUndo) geri al kapsülde', (tester) async {
+      await dock(tester, showUndo: true);
+      expect(find.byKey(const ValueKey('pen-tray-undo')), findsOneWidget);
+      await end(tester);
+    });
+
+    testWidgets(
+      'silgi mürekkep yokken soluk, varken belirgin; dokununca seçer',
+      (tester) async {
+        final ink = await dock(tester);
+        final faint = eraserColor(tester);
+        stroke(ink, 50);
+        await tester.pump();
+        await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+        await tester.pumpAndSettle();
+        final strong = eraserColor(tester);
+        expect(faint.a, lessThan(strong.a));
+        await tester.tap(find.byKey(const ValueKey('pen-tray-eraser')));
+        await tester.pump();
+        expect(ink.eraser, isTrue);
+        await end(tester);
+      },
+    );
+
+    testWidgets('silgiye basılı tut: tümü silinir, "Geri al" geri getirir', (
+      tester,
+    ) async {
+      final ink = await dock(tester);
+      stroke(ink, 50);
+      stroke(ink, 100);
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+      await tester.pumpAndSettle();
+      await tester.longPress(find.byKey(const ValueKey('pen-tray-eraser')));
+      await tester.pump();
+      expect(ink.ink, isEmpty);
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Çizimler temizlendi'), findsOneWidget);
+      await tester.tap(find.text('Geri al'));
+      await tester.pump();
+      expect(ink.ink, hasLength(2));
+      await end(tester);
+    });
+
+    testWidgets('⋯ menüsünde "Çizimleri temizle"', (tester) async {
+      final ink = await dock(tester);
+      stroke(ink, 50);
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('pen-tray-more')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('pen-tray-clear')));
+      await tester.pumpAndSettle();
+      expect(ink.ink, isEmpty);
+      ink.undo();
+      expect(ink.ink, hasLength(1));
+      await end(tester);
+    });
   });
 }
