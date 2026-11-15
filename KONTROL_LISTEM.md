@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Kalem seti ve sesle yazma kartı (yeni görünüş, cihazda bakılmadı — P63 G4)**
+  Nerede: bir notta alt çubuktan Kalem → hap / kapsül / renk paneli; çizim ekranı; PDF üstüne çizim; notta Dikte ve ✨ → sesli not.
+  Nasıl: kapsülü aç-kapa, kalem değiştir (kalem yukarı kalkar), paneli aç (üstte gerçek çizgi önizlemesi, soldaki iğneyle sabitle), kalınlığı sürükle; tablette bölünmüş görünümde kapsül taşmasın. Dikte açıkken konuş / sus: dalga sesinle oynasın, susunca alttaki ince çizgi dolsun ve "Sessizlik — birazdan biter" yazsın; dikte açıkken tablette kaydır + yaz.
+  Doğruysa: zıplama yok, panel açılırken sayfa oynamıyor, kalemle yazarken gecikme yok; dalga konuşunca yükselir, susunca alçalır; kart boyu sabit.
+  Yanlışsa: ekran görüntüsü / kısa kayıt gönder.
 - [ ] **Şablonlar ve madde çizgileri (yeni görünüş, cihazda bakılmadı)**
   Nerede: "+" → Şablondan; bir liste notunda madde → Biçim → Alt çizgi.
   Nasıl: şablon kartlarına, bir şablonun önizlemesine (alttaki Oluştur düğmesi) ve kendi şablonunu düzenlemeye bak; çizgi tepsisinde beş türü dene, ⚙ ile ayar levhasını aç; çizgisiz maddeye çizgi ekle.

@@ -10,5 +10,9 @@ Yapılanlar:
 - Bulunan hata: tablet bölünmüşte kapsül 150 px taşıyordu (`wide` pencereden) → bölme eninden.
 - Sapma SB13: panel iğnesi önizlemenin başında (sağ uçta yüzen kalem düğmesi örtüyordu).
 
-Şu an: PB5 önce üret (S43, dikte tur sahneleri, kırmızı testler).
+- PB5 önce üret (commit 3): S43 taban 0/0/2/0/0; DeviceSpeech.debugAvailable; tur dikte-kart, ses-levha-*.
+- PB5 (commit 4): ListeningWaveform silindi → VoiceLevelWave; ListeningSurface/ListeningHeader; sessizlik
+  çizgisi kartta; listening_card_level_test kırmızı (derlenmiyordu) → yeşil; S43 sonra 0/0/2/0/0.
+
+Şu an: bitiş (Kuyruk satırı, CI).
 Test: `flutter test test/pen_tray_tools_pref_test.dart`; `flutter test test/perf_budget_test.dart --plain-name S42`.

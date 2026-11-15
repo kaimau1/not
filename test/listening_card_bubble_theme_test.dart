@@ -9,6 +9,7 @@ import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/presentation/listening_visuals.dart';
+import 'package:notlar/features/notes/presentation/voice_level_wave.dart';
 import 'package:notlar/features/notes/presentation/notes_providers.dart';
 import 'package:notlar/features/notes/presentation/viewers/bubble_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/pdf_selection_bar.dart';
@@ -58,7 +59,7 @@ void main() {
           .height;
       expect(height, inInclusiveRange(90, 150));
       // Tam genişlik dalga + yanında yazılı "Bitir".
-      expect(find.byType(ListeningWaveform), findsOneWidget);
+      expect(find.byType(VoiceLevelWave), findsOneWidget);
       expect(find.text('Bitir'), findsOneWidget);
     });
 

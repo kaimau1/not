@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/data/voice_listen_session.dart';
 import 'package:notlar/features/notes/presentation/listening_visuals.dart';
+import 'package:notlar/features/notes/presentation/voice_level_wave.dart';
 
 /// Tablet bulgusu 2026-11-13 ("sesle yazma çalışmıyor ama ses kaydı
 /// çalışıyor"): yerli taraf hiçbir tanıyıcıyı hazır edemezse
@@ -88,13 +89,13 @@ void main() {
       const MaterialApp(
         home: Column(
           children: [
-            ListeningWaveform(active: true, color: Colors.red),
+            VoiceLevelWave(active: true, color: Colors.red),
             ListeningBadge(mode: ListeningMode.dictation, active: true),
           ],
         ),
       ),
     );
-    for (final type in [ListeningWaveform, ListeningBadge]) {
+    for (final type in [VoiceLevelWave, ListeningBadge]) {
       expect(
         find.descendant(
           of: find.byType(type),

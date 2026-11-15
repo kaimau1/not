@@ -220,14 +220,22 @@ class _NoteUploadsBanner extends ConsumerWidget {
 /// yarısını kaplıyordu. Artık ikisi aynı orta boy kart; fark kip rengi,
 /// rozet ve etiket — burada döküm alanı yok, yazı notun içine akıyor.
 class _DictationPanel extends StatelessWidget {
-  const _DictationPanel({required this.start, required this.onStop});
+  const _DictationPanel({
+    required this.start,
+    required this.onStop,
+    required this.session,
+  });
 
   final DateTime start;
   final VoidCallback onStop;
 
+  /// Ses düzeyi ve sessizlik geri sayımı buradan (P63 PB5): düzey olayı bu
+  /// paneli KURMAZ — yalnız dalga boyanır, sayım çizgisi kendini kurar.
+  final VoiceListenSession session;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = _themeOf(context).colorScheme;
+    final theme = _themeOf(context);
     final l10n = context.l10n;
     // KASMA (tablet bulgusu 2026-11-13: "sesle yazma açıkken kasma"): kartın
     // nabız rozeti ve dalgası HER KARE boyanıyor; kendi katmanı yokken boyama
@@ -236,26 +244,38 @@ class _DictationPanel extends StatelessWidget {
     return RepaintBoundary(
       key: const ValueKey('dictation-panel'),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-        child: ListeningCard(
-          mode: ListeningMode.dictation,
-          active: true,
-          title: l10n.voiceListening,
-          subtitle: l10n.dictationPanelHint,
-          clock: ListeningClock(
-            start: start,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xs,
+        ),
+        // Yuva tek adımda açılır; kart yalnız boyamada belirir. Çıkış
+        // geçişi YOK: mikrofon kapandığı karede kart kalkar ("hâlâ dinliyor"
+        // görünen tek kare bile yanıltır).
+        child: PopIn(
+          duration: AppMotion.short,
+          alignment: Alignment.bottomCenter,
+          child: ListeningCard(
+            mode: ListeningMode.dictation,
             active: true,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: scheme.error,
+            title: l10n.voiceListening,
+            subtitle: l10n.dictationPanelHint,
+            level: session.level,
+            silence: session.silence,
+            silenceHint: l10n.voiceAutoStopSoon,
+            clock: ListeningClock(
+              start: start,
+              active: true,
+              style: AppText.of(theme).label.copyWith(
+                fontWeight: AppWeight.strong,
+                color: theme.colorScheme.error,
+              ),
             ),
-          ),
-          action: ListeningActionButton(
-            key: const ValueKey('dictation-stop'),
-            listening: true,
-            label: l10n.voiceFinish,
-            onPressed: onStop,
+            action: ListeningActionButton(
+              key: const ValueKey('dictation-stop'),
+              listening: true,
+              label: l10n.voiceFinish,
+              onPressed: onStop,
+            ),
           ),
         ),
       ),
