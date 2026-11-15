@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Ses kartı açılışı + klavye kasması (oto/ses-karti-kasma, cihazda bakılmadı)**
+  Nerede: liste notunda bir maddeye dokun (klavye açık) → alt çubuktan Dikte.
+  Nasıl: kart tek karede tam açılsın (yarım/soluk ara hâl yok); klavye açıkken konuş-sus-konuş: alt çubuk ve kart yerinde kalsın; kart açıkken ve Bitir'den sonra klavyeyi aç-kapa — alt panel akıcı mı? Hâlâ zıplıyorsa ekran kaydı al (P55 `bar_track` kalıbı).
+
 - [ ] **Kalem seti ve sesle yazma kartı (yeni görünüş, cihazda bakılmadı — P63 G4)**
   Nerede: bir notta alt çubuktan Kalem → hap / kapsül / renk paneli; çizim ekranı; PDF üstüne çizim; notta Dikte ve ✨ → sesli not.
   Nasıl: kapsülü aç-kapa, kalem değiştir (kalem yukarı kalkar), paneli aç (üstte gerçek çizgi önizlemesi, soldaki iğneyle sabitle), kalınlığı sürükle; tablette bölünmüş görünümde kapsül taşmasın. Dikte açıkken konuş / sus: dalga sesinle oynasın, susunca alttaki ince çizgi dolsun ve "Sessizlik — birazdan biter" yazsın; dikte açıkken tablette kaydır + yaz.
