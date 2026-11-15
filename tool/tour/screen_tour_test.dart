@@ -57,7 +57,9 @@ import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/app/theme/app_palette.dart';
 import 'package:notlar/app/theme/app_theme.dart';
 import 'package:notlar/core/app_update.dart';
+import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/tips.dart';
+import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/calendar/data/calendar_repository.dart';
@@ -653,7 +655,10 @@ Future<void> _pumpApp(
             return fixedTypography(
               context,
               // Uygulamadaki gibi bildirim şeridi (P62 PA5).
-              AppNoticeHost(child: child ?? const SizedBox()),
+              // ve düzen modu şeridi (P63 G5).
+              CustomizeModeHost(
+                child: AppNoticeHost(child: child ?? const SizedBox()),
+              ),
               _tourFont ?? 1,
             );
           },
@@ -817,8 +822,18 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
     _speechSink!.error(code: 'network', message: 'Bağlantı kurulamadı');
     await _settle(t);
   }),
-  // PB1 sahneleri (duzen-serit, kisisellestir) sahibi paketin "önce üret"
-  // adımında eklenir (plan §7.2 madde 4 notu).
+  // P63 G5 (PB1/PB2): düzen modu şeridi + çerçeveler, Kişiselleştir ekranı.
+  ('duzen-serit', '/note/n4', (t) async {
+    addTearDown(Personalize.debugReset);
+    Personalize.startEditing();
+    await _settle(t);
+    // Bir öğe gizli: kesikli çerçeve + gizli sayısı hapı görünsün.
+    await t.tap(find.byType(CustomizeFrame).first);
+    await _settle(t);
+  }),
+  ('kisisellestir', '/personalize', (t) async {
+    await _settle(t);
+  }),
 ];
 
 /// Konuşma kanalı taklidi: yerleşik tanıma var, olaylar [_speechSink]'ten.

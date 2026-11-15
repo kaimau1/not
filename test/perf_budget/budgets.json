@@ -376,5 +376,16 @@
     "bugun": "0 / 0 / 2 / 0 / 0 (2026-11-15, G4 taban — PB5 öncesi: düzey ve sessizlik arayüze hiç ulaşmıyordu; metin olayı satırı kurmuyor, denetleyiciye yazıyor)",
     "hedef": "düzey ve sessizlikte 0; başlat + bitir kök ≤ 2; metin olayı başına satır ≤ 1",
     "neden": "P63 G4 ilk ölçüm"
+  },
+  "S40": {
+    "senaryo": "P63 G5 düzen modu (telefon, 30 maddeli liste, CustomizeModeHost içinde): startEditing → ilk 3 CustomizeFrame'e dokun → Bitti; gövde = NoteEditorScreen + NotePageCanvas + ItemsEditor",
+    "ac_kok": 1,
+    "ac_govde": 3,
+    "kapa_govde": 3,
+    "dokunus_govde": 0,
+    "dokunus_satir": 0,
+    "bugun": "kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0 (2026-11-15, G5 taban — PB1 öncesi; aç/kapa'da üç gövde türü birer kez = MediaQuery boyu değişince TEK yeniden dizilim)",
+    "hedef": "mod aç/kapa'da tek yeniden dizilim (kök ≤ 1, plan §1.5), dokunuş gövde 0, satır 0",
+    "neden": "P63 G5 ilk ölçüm"
   }
 }

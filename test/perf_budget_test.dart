@@ -27,7 +27,9 @@ import 'package:notlar/app/app_frame.dart';
 import 'package:notlar/app/note_open_route.dart';
 import 'package:notlar/app/second_note.dart';
 import 'package:notlar/app/split_shell.dart';
+import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/tips.dart';
+import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/upload_queue.dart'
@@ -2210,6 +2212,47 @@ void main() {
           (start['NoteEditorScreen'] ?? 0) + (stop['NoteEditorScreen'] ?? 0),
       'metin_satir': text[_row] ?? 0,
       'metin_kok': text['NoteEditorScreen'] ?? 0,
+    });
+    await endEditor(tester);
+  });
+
+  // S40 (P63 G5): düzen modu aç → 3 öğe gizle/göster → Bitti. Mod aç/kapa
+  // MediaQuery boyunu değiştirir (tek yeniden dizilim); dokunuş gövdeyi ve
+  // satırları kurmaz.
+  testWidgets('S40: düzen modu (telefon, 30 madde)', (tester) async {
+    Personalize.debugReset();
+    addTearDown(Personalize.debugReset);
+    await pumpEditor(
+      tester,
+      _list30,
+      home: CustomizeModeHost(child: NoteEditorScreen(noteId: _list30.id)),
+    );
+    await _settleGrowth(tester);
+    const body = ['NoteEditorScreen', 'NotePageCanvas', 'ItemsEditor'];
+    int sum(Map<String, int> c) => body.fold(0, (n, t) => n + (c[t] ?? 0));
+    final open = await _count(() async {
+      Personalize.startEditing();
+      await _settle(tester);
+    });
+    expect(find.byType(CustomizeFrame), findsWidgets);
+    final tap = await _count(() async {
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.byType(CustomizeFrame).at(i));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+    });
+    final close = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('customize-done')));
+      await _settle(tester);
+    });
+    expect(Personalize.editing, isFalse);
+    _expectBudget('S40', {
+      'ac_kok': open['NoteEditorScreen'] ?? 0,
+      'ac_govde': sum(open),
+      'kapa_govde': sum(close),
+      'dokunus_govde': sum(tap),
+      'dokunus_satir': tap[_row] ?? 0,
     });
     await endEditor(tester);
   });
