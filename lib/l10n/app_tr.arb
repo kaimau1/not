@@ -2187,6 +2187,7 @@
   "customizeHideItem": "Gizle",
   "customizeShowItem": "Göster",
   "customizeModeTitle": "Düzenleme modu",
+  "customizeModeTitleShort": "Düzen",
   "customizeModeHint": "Dokun: gizle ya da göster · anında uygulanır",
   "customizeHiddenCount": "{count} düğme gizli · dokunarak değiştir",
   "@customizeHiddenCount": {
@@ -3932,7 +3933,6 @@
       }
     }
   },
-  "quickAddEditHint": "Sürükleyerek sırala, göz ile gizle ya da göster.",
   "quickAddKeepOne": "En az bir seçenek görünür kalmalı",
   "attachmentUploadNow": "Şimdi dene",
   "uploadPendingTitle": "{count, plural, =1{1 ek yüklenmeyi bekliyor} other{{count} ek yüklenmeyi bekliyor}}",

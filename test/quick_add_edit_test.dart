@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/menu_layout.dart';
 import 'package:notlar/core/personalize.dart';
+import 'package:notlar/core/widgets/customize_board.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/quick_add_actions.dart';
 import 'package:notlar/features/notes/presentation/quick_add_fab.dart';
@@ -10,9 +11,10 @@ import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// F60.S10 — "Not ekle" ("+") menüsü düzenlenebilir: menüdeki "Düzenle" →
-/// her öğede göz (gizle/göster) + tutamaçla sıralama, "Bitti",
-/// "Varsayılana dön". Son görünür öğe gizlenemez.
+/// F60.S10 — "Not ekle" ("+") menüsü düzenlenebilir. 2026-11-15: panelin
+/// "Düzenle"si düzen merkezinin "+" panosunu açar (eski panel içi satır
+/// düzenleyicisi kalktı); kurallar panoda: gizle/göster, sıra GRUP İÇİNDE,
+/// "Varsayılana dön", son görünür öğe gizlenemez.
 void main() {
   late SharedPreferences prefs;
   setUp(() async {
@@ -43,87 +45,93 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> openEditor(WidgetTester tester) async {
+  /// Panel → "Düzenle" → düzen merkezi levhası, "+" panosu seçili.
+  Future<void> openBoard(WidgetTester tester) async {
     await openPanel(tester);
     await tester.tap(find.byKey(const ValueKey('quick-add-edit')));
     await tester.pumpAndSettle();
   }
 
-  Future<void> done(WidgetTester tester) async {
-    await tester.tap(find.byKey(const ValueKey('quick-edit-done')));
+  /// Levhayı kapatıp paneli yeniden aç.
+  Future<void> backToPanel(WidgetTester tester) async {
+    Navigator.of(tester.element(find.byType(CustomizeBoard))).pop();
     await tester.pumpAndSettle();
+    await openPanel(tester);
   }
 
-  Finder eye(String key) => find.byKey(ValueKey('quick-edit-eye-$key'));
+  CustomizeBoard board(WidgetTester tester) =>
+      tester.widget<CustomizeBoard>(find.byType(CustomizeBoard));
   Finder tile(String key) => find.byKey(ValueKey('quick-add-$key'));
 
-  testWidgets('gizle → normal kipte yok; tekrar göster → geri gelir', (
+  testWidgets('"Düzenle" düzen merkezinin "+" panosunu açar', (tester) async {
+    await tester.pumpWidget(host());
+    await openBoard(tester);
+    expect(find.byKey(const ValueKey('quickadd-board-preview')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('customize-surface-addPanel')),
+      findsOneWidget,
+    );
+    expect(tile('text'), findsNothing, reason: 'panel kapandı');
+    expect(board(tester).entries.map((e) => e.id), contains('youtube'));
+  });
+
+  testWidgets('gizle → panelde yok; tekrar göster → geri gelir', (
     tester,
   ) async {
     await tester.pumpWidget(host());
-    await openEditor(tester);
-    // Düzen kipinde öğeler karo değil, satır: karolar yok.
-    expect(tile('youtube'), findsNothing);
-    await tester.ensureVisible(eye('youtube'));
-    await tester.tap(eye('youtube'));
+    await openBoard(tester);
+    final yt = find.byKey(const ValueKey('quickadd-board-youtube'));
+    await tester.ensureVisible(yt);
+    await tester.tap(yt);
     await tester.pumpAndSettle();
-    await done(tester);
-
-    expect(find.text('Metin notu'), findsOneWidget, reason: 'panel açık kalır');
-    expect(tile('youtube'), findsNothing);
-    expect(tile('file'), findsOneWidget);
     expect(
       Personalize.prefs.value.shows(UiItem.quickAdd('youtube')),
       isFalse,
       reason: 'kalıcı (Personalize kaydı)',
     );
+    await backToPanel(tester);
+    expect(tile('youtube'), findsNothing);
+    expect(tile('file'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('quick-add-edit')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(eye('youtube'));
-    await tester.tap(eye('youtube'));
+    board(tester).onToggle('youtube', true); // levha uzun: kaydırmadan
     await tester.pumpAndSettle();
-    await done(tester);
+    await backToPanel(tester);
     expect(tile('youtube'), findsOneWidget);
   });
 
-  testWidgets('sırala → normal kipte sıra uygulanır ve kalıcı', (tester) async {
+  testWidgets('sıra grup içinde: başa al, grup dışına bırakınca grubun ucu', (
+    tester,
+  ) async {
     await tester.pumpWidget(host());
-    await openEditor(tester);
-    final handle = find.byKey(const ValueKey('quick-edit-handle-ordered'));
-    await tester.ensureVisible(handle);
+    await openBoard(tester);
+    var shown = board(tester).shown;
+    expect(shown.take(3), ['text', 'checklist', 'ordered']);
+    // "Sıralı liste" başa.
+    board(tester).onReorder!(shown.indexOf('ordered'), 0);
     await tester.pumpAndSettle();
-    final text = tester.getCenter(
-      find.byKey(const ValueKey('quick-edit-row-text')),
-    );
-    final from = tester.getCenter(handle);
-    final gesture = await tester.startGesture(from);
-    await tester.pump(const Duration(milliseconds: 100));
-    final dy = (text.dy - from.dy) - 20;
-    for (var i = 1; i <= 10; i++) {
-      await gesture.moveBy(Offset(0, dy / 10));
-      await tester.pump(const Duration(milliseconds: 30));
-    }
-    await tester.pump(const Duration(milliseconds: 300));
-    await gesture.up();
+    shown = board(tester).shown;
+    expect(shown.take(3), ['ordered', 'text', 'checklist']);
+    // "Metin"i en sona (başka grubun içine) bırak: yazma grubunun sonuna.
+    board(tester).onReorder!(shown.indexOf('text'), shown.length - 1);
     await tester.pumpAndSettle();
-    await done(tester);
-
-    final ordered = tester.getCenter(tile('ordered'));
-    final textNote = tester.getCenter(tile('text'));
-    expect(
-      ordered.dx,
-      lessThan(textNote.dx),
-      reason: 'Sıralı liste başa geçti',
-    );
+    shown = board(tester).shown;
+    expect(shown.take(4), ['ordered', 'checklist', 'text', 'draw']);
 
     // Kalıcı: kayıttan yeniden okununca da aynı sıra.
     MenuLayouts.reset();
     MenuLayouts.attach(prefs);
     expect(
       MenuLayouts.of(quickAddMenuId)
-          .sorted(['text', 'checklist', 'ordered'], (id) => id),
-      ['ordered', 'text', 'checklist'],
+          .sorted(['text', 'checklist', 'ordered', 'draw'], (id) => id),
+      ['ordered', 'checklist', 'text', 'draw'],
+    );
+    await backToPanel(tester);
+    expect(
+      tester.getCenter(tile('ordered')).dx,
+      lessThan(tester.getCenter(tile('checklist')).dx),
+      reason: 'panel aynı sırayı çizer',
     );
   });
 
@@ -136,66 +144,41 @@ void main() {
       const MenuLayout(order: ['ordered', 'checklist', 'text']),
     );
     await tester.pumpWidget(host());
-    await openPanel(tester);
-    expect(tile('youtube'), findsNothing);
-    expect(
-      tester.getCenter(tile('ordered')).dx,
-      lessThan(tester.getCenter(tile('text')).dx),
-    );
-
-    await tester.tap(find.byKey(const ValueKey('quick-add-edit')));
+    await openBoard(tester);
+    expect(find.byKey(const ValueKey('quickadd-board-reset')), findsOneWidget);
+    board(tester).onReset!();
     await tester.pumpAndSettle();
-    final reset = find.byKey(const ValueKey('quick-edit-reset'));
-    await tester.ensureVisible(reset);
-    await tester.tap(reset);
-    await tester.pumpAndSettle();
-    await done(tester);
-
-    expect(tile('youtube'), findsOneWidget);
-    expect(
-      tester.getCenter(tile('text')).dx,
-      lessThan(tester.getCenter(tile('checklist')).dx),
-    );
-    expect(
-      tester.getCenter(tile('checklist')).dx,
-      lessThan(tester.getCenter(tile('ordered')).dx),
-    );
     expect(MenuLayouts.of(quickAddMenuId).isDefault, isTrue);
     expect(
       Personalize.prefs.value.hidden.where((h) => h.startsWith('quickadd.')),
       isEmpty,
     );
+    await backToPanel(tester);
+    expect(tile('youtube'), findsOneWidget);
+    expect(
+      tester.getCenter(tile('text')).dx,
+      lessThan(tester.getCenter(tile('checklist')).dx),
+    );
   });
 
   testWidgets('son görünür öğe gizlenemez', (tester) async {
     await tester.pumpWidget(host());
-    await openEditor(tester);
-    // Metin notu dışında hepsini gizle.
-    final keys = <String>[
-      for (final w in tester.widgetList(
-        find.byWidgetPredicate(
-          (w) =>
-              w.key is ValueKey<String> &&
-              (w.key! as ValueKey<String>).value.startsWith('quick-edit-eye-'),
-        ),
-      ))
-        (w.key! as ValueKey<String>).value.substring('quick-edit-eye-'.length),
-    ];
-    expect(keys, containsAll(['text', 'checklist', 'youtube']));
-    for (final k in keys) {
-      if (k == 'text') continue;
-      await tester.ensureVisible(eye(k));
-      await tester.tap(eye(k));
-      await tester.pumpAndSettle();
+    await openBoard(tester);
+    final ids = board(tester).shown;
+    expect(ids, containsAll(['text', 'checklist', 'youtube']));
+    for (final k in ids) {
+      if (k != 'text') board(tester).onToggle(k, false);
     }
-    await tester.ensureVisible(eye('text'));
-    final button = tester.widget<IconButton>(eye('text'));
-    expect(button.onPressed, isNull, reason: 'son görünür öğe kilitli');
-    await tester.tap(eye('text'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(board(tester).shown, ['text']);
+    board(tester).onToggle('text', false);
     await tester.pumpAndSettle();
     expect(Personalize.prefs.value.shows(UiItem.quickAdd('text')), isTrue);
-
-    await done(tester);
+    expect(find.text('En az bir seçenek görünür kalmalı'), findsOneWidget);
+    ScaffoldMessenger.of(
+      tester.element(find.byType(CustomizeBoard)),
+    ).removeCurrentSnackBar();
+    await backToPanel(tester);
     expect(tile('text'), findsOneWidget);
   });
 }

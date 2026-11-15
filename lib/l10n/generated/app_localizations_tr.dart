@@ -4764,6 +4764,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get customizeModeTitle => 'Düzenleme modu';
 
   @override
+  String get customizeModeTitleShort => 'Düzen';
+
+  @override
   String get customizeModeHint =>
       'Dokun: gizle ya da göster · anında uygulanır';
 
@@ -8524,10 +8527,6 @@ class AppLocalizationsTr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get quickAddEditHint =>
-      'Sürükleyerek sırala, göz ile gizle ya da göster.';
 
   @override
   String get quickAddKeepOne => 'En az bir seçenek görünür kalmalı';

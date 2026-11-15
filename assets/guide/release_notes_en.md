@@ -18,6 +18,7 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Item dividers:** Format → Divider now offers all five styles (including double and wavy), drawn in the item's own color and thickness; the settings sheet is redesigned and no longer overflows on small screens; a new divider draws in from left to right.
 - **No lost notes when importing from Google Keep:** on a fresh install, importing a Keep backup could silently leave some notes empty and remove them; each note is now created in one go, with its content.
 - **Lighter switch to search:** when you tap the search box, cards that are off screen are no longer prepared for nothing; fewer than half as many cards are drawn for each letter you type.
+- **Easier customizing:** on tablets the side drawer no longer opens by accident while a note is open (pull a bit further or flick quickly); on small phones the edit-mode strip title is no longer cut off; "Edit" in the "+" panel now opens the same tile board as the other screens (favourite templates included).
 
 ## 14 November 2026 {#2026-11-14}
 - **Tidier menus:** the note ⋮ menu, the home ⋮ menu and the pinned attachment's ⋮ menu have a handle at the top — drag down to close; in a long menu the title, ⚙ and ✕ no longer clash with the phone's status bar. The one-item "Other" group in the home ⋮ menu is gone; Archive sits at the end of "App".

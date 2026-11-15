@@ -4783,6 +4783,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customizeModeTitle => 'Edit mode';
 
   @override
+  String get customizeModeTitleShort => 'Edit';
+
+  @override
   String get customizeModeHint => 'Tap to hide or show · applied instantly';
 
   @override
@@ -8538,10 +8541,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get quickAddEditHint =>
-      'Drag to reorder, tap the eye to hide or show.';
 
   @override
   String get quickAddKeepOne => 'At least one option must stay visible';
