@@ -649,6 +649,7 @@ class _ModelSelectors extends ConsumerWidget {
   static String _taskLabel(AppLocalizations l10n, AiTask task) =>
       switch (task) {
         AiTask.general => l10n.aiModelChat,
+        AiTask.short => l10n.aiModelShort,
         AiTask.document => l10n.aiModelDocument,
         AiTask.podcast => l10n.aiModelPodcast,
         AiTask.translate => l10n.aiModelTranslate,

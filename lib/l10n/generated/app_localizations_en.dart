@@ -854,7 +854,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remindersRemove => 'Remove reminder';
 
   @override
-  String get aiModelChat => 'Summaries, titles, tags and chat';
+  String get aiModelChat => 'Summaries and chat';
+
+  @override
+  String get aiModelShort => 'Titles and tags';
 
   @override
   String get aiModelDocument => 'Document chat and PDF summary';

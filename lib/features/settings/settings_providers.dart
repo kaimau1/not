@@ -435,8 +435,11 @@ class DarkScheduleNotifier extends Notifier<DarkSchedule> {
 /// gibi bir tercih kurulamıyordu. Gruplar görev tipine göre ayrıldı: kısa
 /// metin işleri ucuz modelle yeter, uzun belge işi yetenekli model ister.
 enum AiTask {
-  /// Özet, başlık, etiket, iyileştirme, brifing, sohbet.
+  /// Özet, iyileştirme, brifing, sohbet.
   general('model_chat'),
+
+  /// Başlık, etiket, ayar arama — kısa işler (Gemma önce; 2026-11-15).
+  short('model_short'),
 
   /// PDF/not sohbeti — uzun bağlam.
   document('model_document'),
@@ -552,9 +555,22 @@ final aiTaskModelsProvider =
     );
 
 class AiTaskModelsNotifier extends Notifier<Map<AiTask, String?>> {
+  static const _shortMigratedKey = 'model_short_migrated';
+
   @override
   Map<AiTask, String?> build() {
     final prefs = watchPrefs(ref);
+    // GÖÇ (2026-11-15): başlık/etiket eskiden "model_chat" seçimini
+    // kullanıyordu. Elle model seçmiş kullanıcıda yeni görev de onu bir kez
+    // devralır; Otomatik'te (anahtar yok) Otomatik kalır. Bayrak, kullanıcı
+    // sonra kısa işleri Otomatik'e alırsa göçün tekrarlanmasını önler.
+    if (!prefs.containsKey(_shortMigratedKey)) {
+      final old = prefs.getString(AiTask.general.prefsKey);
+      if (old != null && !prefs.containsKey(AiTask.short.prefsKey)) {
+        prefs.setString(AiTask.short.prefsKey, old);
+      }
+      prefs.setBool(_shortMigratedKey, true);
+    }
     return {
       for (final task in AiTask.values) task: prefs.getString(task.prefsKey),
     };
