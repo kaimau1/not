@@ -39,6 +39,7 @@ class PersonalizeBarList extends StatelessWidget {
         UiItem.barFormat => (Icons.text_format, l10n.formatTitle),
         UiItem.barAdd => (Icons.add, l10n.addAttachment),
         UiItem.barPen => (Icons.draw_outlined, l10n.quickRowPen),
+        UiItem.barEraser => (Icons.auto_fix_normal_outlined, l10n.editorBarEraser),
         UiItem.barSearch => (Icons.search, l10n.noteSearchTitle),
         UiItem.barAttachments => (Icons.attach_file, l10n.uiItemAttachments),
         UiItem.barCheckbox => (Icons.check_box_outlined, l10n.checkboxToggle),

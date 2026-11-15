@@ -14300,6 +14300,12 @@ abstract class AppLocalizations {
   /// **'Kalemle yaz · basılı tut: kalem ayarları'**
   String get quickRowPen;
 
+  /// No description provided for @editorBarEraser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgi · kalem kipini silgiyle açar'**
+  String get editorBarEraser;
+
   /// No description provided for @quickRowReminder.
   ///
   /// In tr, this message translates to:

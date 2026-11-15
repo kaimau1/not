@@ -8024,6 +8024,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickRowPen => 'Write with pen · hold: pen settings';
 
   @override
+  String get editorBarEraser => 'Eraser · opens pen mode with the eraser';
+
+  @override
   String get quickRowReminder => 'Reminder';
 
   @override

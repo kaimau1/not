@@ -85,3 +85,6 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Silgi kapsülde kalem sırasından çıktı, sağda kendi düğmesi `pen-tray-eraser` (yeri sabit; mürekkep yokken soluk). Basılı tut / ⋯ "Çizimleri temizle" = `_clearAll`: etkin yüzeyde `clear()` (geçmişe yazar) + "Geri al" bildirimi (arada yeni çizgi geldiyse geri almaz). S42 kalem resmi 77 → 66.
 - ⋯ korundu (yinele, yalnız kalem, sabitle, ayarlar — kalem kipinde ayarların başka yolu yok).
 
+## 2026-11-16 — K-S1 yazı kipinde silgi
+- Alt çubukta `UiItem.barEraser` (varsayılan GÖRÜNÜR, `barLeftDefault`'ta Kalem'den sonra; Ayarlar → Alt çubuk ve düzen modunda gizlenir). Yalnız metin/liste notu, salt okunur değil, kalem kipi KAPALI ve `_pageInkOf(note).ink` dolu iken; düzen modunda mürekkepsiz de çizilir (gizlenebilsin). Dokun = `_openEraser`: `setEraser(true)` + `_openPen`.
+- Canlı görünürlük `eraserGate`: yalnız düğme `committedRev`'i dinler (ağaç şekli sabit, boşken `SizedBox.shrink`); çubuk/editör kurulmaz. Plan (`planEditorBar`) silgiyi çubuk kurulurken mürekkep varsa sayar. Belge notunda yok (Kalem segmenti açıklama kipi). Bekçi: `editor_bar_customize_test` "alt çubuk silgisi".

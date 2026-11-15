@@ -248,6 +248,9 @@ abstract final class UiItem {
   /// eski tercihler için duruyor.
   static const barShare = 'editor.bar.share';
   static const barPen = 'editor.bar.pen';
+  /// SİLGİ (K-S1, kullanıcı kararı 2026-11-15): metin/liste notunda mürekkep
+  /// varken görünür; dokunmak kalem kipini silgi seçili açar.
+  static const barEraser = 'editor.bar.eraser';
   static const barAttachments = 'editor.bar.attachments';
   static const barAi = 'editor.bar.ai';
   /// ESKİ "AI ile sesli not" çubuk düğmesi — 2026-10-20'de yapay zekâ
@@ -276,6 +279,7 @@ abstract final class UiItem {
     barFormat,
     barAdd,
     barPen,
+    barEraser,
     barSearch,
     barAttachments,
     barCheckbox,

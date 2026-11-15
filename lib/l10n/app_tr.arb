@@ -3720,6 +3720,7 @@
   "quickRowPhoto": "Fotoğraf ekle",
   "quickRowFile": "Dosya ekle",
   "quickRowPen": "Kalemle yaz · basılı tut: kalem ayarları",
+  "editorBarEraser": "Silgi · kalem kipini silgiyle açar",
   "quickRowReminder": "Hatırlatıcı",
   "hideBarWhileTyping": "Yazarken alt çubuğu gizle",
   "hideBarWhileTypingInfo": "Yazmaya başlayınca alt çubuk iner, durunca geri gelir.",

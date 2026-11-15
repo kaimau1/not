@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/personalize.dart';
+import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
+import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 import 'package:notlar/features/settings/presentation/personalize_bar_list.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
@@ -159,6 +161,72 @@ void main() {
       );
       expect(inCapsule('editor-tool-capsule', l10n.aiTitle), findsOneWidget);
       expect(tester.takeException(), isNull);
+      await endEditor(tester);
+    });
+  });
+
+  // K-S1 (kullanıcı kararı 2026-11-15: "silgi olsun"): yazı kipinde de
+  // silgi tek dokunuşla — yalnız mürekkep varken.
+  group('alt çubuk silgisi', () {
+    const plain = Note(id: 'n', type: NoteType.text, title: 'T', body: 'y');
+    const inked = Note(
+      id: 'n',
+      type: NoteType.text,
+      title: 'T',
+      body: 'y',
+      pageInk: [
+        InkStroke(
+          page: 1,
+          color: 0xFF000000,
+          width: 0.01,
+          points: [0.1, 0.1, 0.4, 0.4],
+        ),
+      ],
+    );
+    final eraser = find.byTooltip(l10n.editorBarEraser);
+    setUp(InkToolMemory.reset);
+    tearDown(InkToolMemory.reset);
+
+    testWidgets('mürekkep yokken yok', (tester) async {
+      await pumpEditor(tester, plain);
+      expect(eraser, findsNothing);
+      await endEditor(tester);
+    });
+
+    testWidgets('mürekkep varken görünür; dokununca kalem kipi silgiyle', (
+      tester,
+    ) async {
+      await pumpEditor(tester, inked);
+      expect(eraser, findsOneWidget);
+      expect(InkToolMemory.eraser, isFalse);
+      await tester.tap(eraser);
+      await tester.pump();
+      expect(InkToolMemory.eraser, isTrue);
+      // Kalem kipi açıldı: çubuk silgisi çekilir (tepsinin silgisi var).
+      expect(eraser, findsNothing);
+      await endEditor(tester);
+    });
+
+    testWidgets('düzen modunda gizlenebilir', (tester) async {
+      await pumpEditor(tester, plain);
+      Personalize.startEditing();
+      await tester.pump();
+      // Düzen modunda mürekkepsiz de çizilir ki gizlenebilsin.
+      expect(eraser, findsOneWidget);
+      // Düzen modunda dokunuşu Customizable'ın örtüsü alır.
+      await tester.tap(eraser, warnIfMissed: false);
+      await tester.pump();
+      expect(Personalize.prefs.value.shows(UiItem.barEraser), isFalse);
+      Personalize.done();
+      await tester.pump();
+      expect(eraser, findsNothing);
+      await endEditor(tester);
+    });
+
+    testWidgets('gizliyse mürekkep varken de yok', (tester) async {
+      Personalize.update((p) => p.withVisible(UiItem.barEraser, false));
+      await pumpEditor(tester, inked);
+      expect(eraser, findsNothing);
       await endEditor(tester);
     });
   });
