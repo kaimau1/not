@@ -417,6 +417,16 @@ class ModelCooldown {
     return until != null && _now().isBefore(until);
   }
 
+  /// Soğuma bitimine kalan süre; soğumuyorsa sıfır. Gömme yolu (arama
+  /// önbelleği) RPM'de kısa bekleyip AYNI modelle sürer, RPD'de modeli
+  /// değiştirir — ayrım bu süreyle yapılır.
+  Duration remaining(String id) {
+    final until = _until[id];
+    if (until == null) return Duration.zero;
+    final left = until.difference(_now());
+    return left.isNegative ? Duration.zero : left;
+  }
+
   void hit(String id, int status, {Object? body}) {
     final now = _now().toUtc();
     final daily = status == 404 || '$body'.contains('PerDay');

@@ -13,6 +13,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nerede: tablette bir not açıkken sol kenar; küçük telefonda ⋮ → Ekranı düzenle; ana ekranda "+" → ayar simgesi (Düzenle).
   Nasıl: sol kenardan çekmeceyi yavaşça az çek (açılmamalı), biraz daha çek (açılmalı), kısa fiske (açılmalı); düzen şeridinin başlığı kesilmeden ("Düzenleme modu" ya da "Düzen") görünsün; "+" → Düzenle "+" panosunu açsın, bir öğeyi gizle/sırala, son görünen öğeyi gizlemeye çalış (uyarı çıkmalı), paneli yeniden aç.
   Doğruysa: çekmece kazara açılmıyor; panelde sıra/gizleme panodakiyle aynı. Yanlışsa: ekran görüntüsü gönder.
+- [ ] **Anlamca arama açılışta yeniden gömmüyor (kalıcı önbellek, cihazda bakılmadı)**
+  Nerede: ana ekran arama, anlamca arama açık (kendi Gemini anahtarı).
+  Nasıl: bir arama yap, sonuç gelsin; uygulamayı tamamen kapatıp aç, aynı ya da başka bir arama yap. Büyük defterde ilk aramada sonuçlar birkaç dakika içinde tamamlanarak çoğalabilir.
+  Doğruysa: ikinci açılışta sonuç hemen geliyor, düz metin aramasına düşmüyor; çıkış yapıp girince ilk arama yine biraz sürüyor (önbellek silindi).
+  Yanlışsa: hangi adımda ne gördüğünü yaz.
 
 - [ ] **Düzen modu ve "Sırala" (yeni görünüş, cihazda bakılmadı — P63 G5)**
   Nerede: bir notta ⋮ → Ekranı düzenle; üst şeritteki ⇅ (Sırala); Ayarlar → Kişiselleştir; not ⋮ → Menüyü düzenle.
