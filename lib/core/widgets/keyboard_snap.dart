@@ -4,7 +4,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart';
+
+import '../../app/theme/app_tokens.dart';
 
 /// Klavye boşluğunun DAR KANALI (F60.S5, kullanıcı 2026-11-11: "klavye
 /// açılırken alt paneldeki titreme kasmayı kökünden çöz, tekrar yaşanmayacak
@@ -81,13 +84,22 @@ class _KeyboardInsetScopeState extends State<KeyboardInsetScope> {
   /// karesi = yavaşlamış hareketin ardından tam gezinme çubuğu boyunda TEK
   /// yukarı adım (motorun `onEnd`'i) ya da 0; ya da klavye [settle] kadar
   /// durdu. Yanlış tanırsa çubuk birkaç kare eski yerde (bugünkü hâl) kalır.
+  ///
+  /// **Birleşen bitiş karesi** (S47, 2026-11-15): `onProgress` platform, kare
+  /// UI iş parçacığında; fazları kayınca bir Flutter karesine son bir-iki
+  /// ilerleme adımı + bitiş BİRLİKTE düşer: adım = gezinme + kuyruk. Eskiden
+  /// yalnız `+ 3` dp kuyruk tanınıyordu; kısa/hızlı klavyede kuyruk daha
+  /// büyük → bitiş "animasyon karesi" sayılıp çubuk 140 ms gezinme boyu kadar
+  /// YUKARIDA kalıyor, sonra iniyordu (S47 oturma sıçraması). Kuyruk artık
+  /// yavaşlayan hareketin en çok iki adımı kadar olabilir.
   void _trackEngine(double live, double nav) {
     final step = live - _lastLive;
+    final tail = math.max(0.0, _lastStep);
     final endJump =
         _animating &&
         step >= nav - 1 &&
-        step <= nav + 3 &&
-        _lastStep >= 0 &&
+        step <= nav + 2 * tail + 3 &&
+        _lastStep > -nav / 4 &&
         _lastStep < nav / 4 &&
         live > 2 * nav;
     _animating = live > 0 && !endJump;
@@ -387,7 +399,7 @@ class _KeyboardSnapState extends State<KeyboardSnap> {
 /// * Dıştaki `RepaintBoundary` boyama isteğinin ekranın geri kalanına
 ///   yayılmasını keser; çağıranın çocuğa koyduğu sınır sayesinde de çubuğun
 ///   rasteri yeniden çizilmez, hazır katman yalnız yeni konuma taşınır.
-class KeyboardSlide extends StatelessWidget {
+class KeyboardSlide extends StatefulWidget {
   const KeyboardSlide({super.key, required this.inset, required this.child});
 
   /// [KeyboardSnap]'in gövdeye verdiği KARARLI boşluk.
@@ -397,8 +409,88 @@ class KeyboardSlide extends StatelessWidget {
   /// olması beklenir (bkz. sınıf açıklaması).
   final Widget child;
 
+  /// **ALT PANEL KİPİ** (S47, kullanıcı 2026-11-15: "klavye açılırken alt
+  /// panel zıplaya zıplaya açılıyor … panel klavye açılırken gizlenip geri
+  /// gelebilir mesela"). Cihazda kıyaslandı (2026-11-15, test telefonu ekran kaydı): c en akıcı → varsayılan c;
+  /// derlemede `--dart-define=ALT_PANEL_KIP=a|b|c`:
+  /// * `a` — panel iletilen klavye değerini kare kare BİREBİR izler (bugünkü
+  ///   hâl). Klavyeyle konumu hep aynı, ama değerler Flutter karelerine
+  ///   düzensiz düştüğünde (0/1/2 adım) panel takılıp sıçrar.
+  /// * `b` — yumuşatma: panel hedefe her karede kalan yolun [smoothing]
+  ///   oranı kadar yaklaşır (tek yön, aşma yok). Takılma kareleri dolar,
+  ///   bedeli klavyenin biraz gerisinden gelmek.
+  /// * `c` — klavye hareket ederken panel hızla solar, klavye oturunca
+  ///   yerinde belirir.
+  static String mode = const String.fromEnvironment(
+    'ALT_PANEL_KIP',
+    defaultValue: 'c',
+  );
+
+  /// `b` kipinde kare başına kalan yolun kapatılan oranı.
+  static double smoothing = 0.6;
+
+  @override
+  State<KeyboardSlide> createState() => _KeyboardSlideState();
+}
+
+class _KeyboardSlideState extends State<KeyboardSlide>
+    with TickerProviderStateMixin {
+  /// `b`: ekrandaki taban (ekranın dibinden uzaklık) ve hedef.
+  double? _shown;
+  double _target = 0;
+  late final Ticker _ticker = createTicker((_) {
+    if (mounted) setState(() {});
+  });
+
+  /// `c`: panelin görünürlüğü. `FadeTransition` bir RENDER nesnesi
+  /// sarmalayıcısı: animasyon kareleri yalnız boyar, hiçbir öğe yeniden
+  /// kurulmaz (AnimatedOpacity klavye karesi başına +1 kurulum ekliyordu,
+  /// S17/S45 mandalı).
+  late final AnimationController _fade = AnimationController(vsync: this);
+  // Tek eğri, bir kez kurulur ve atılır (her geçişte yenisi sızıyordu:
+  // editor_leak_test CurvedAnimation birikimi).
+  late final CurvedAnimation _fadeCurve =
+      CurvedAnimation(parent: _fade, curve: AppMotion.standard);
+  // AnimatedOpacity ile aynı eğri: eğri İLERLEMEYE uygulanır (başlangıç →
+  // hedef), değere değil — solmada panel aynı karede gizlenir.
+  Animation<double> _opacity = const AlwaysStoppedAnimation(1);
+  double _fadeTarget = 1;
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    _fadeCurve.dispose();
+    _fade.dispose();
+    super.dispose();
+  }
+
+  /// `b`: hedefe kare başına [KeyboardSlide.smoothing] oranında yaklaş;
+  /// hedef ulaşılınca saat durur (boşta kare yok).
+  double _smooth(double target) {
+    final shown = _shown;
+    if (shown == null || KeyboardSlide.mode != 'b') {
+      _shown = target;
+      if (_ticker.isActive) _ticker.stop();
+      return target;
+    }
+    if (target != _target) {
+      _target = target;
+      if (!_ticker.isActive) {
+        // Bu kare değişikliğin karesi: ilk adım burada, sonrakiler saatle.
+        _ticker.start();
+      }
+    }
+    final gap = _target - shown;
+    final next = gap.abs() < 0.5
+        ? _target
+        : shown + gap * KeyboardSlide.smoothing;
+    if (next == _target && _ticker.isActive) _ticker.stop();
+    return _shown = next;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final inset = widget.inset;
     final live = KeyboardInset.liveOf(context);
     // **GEZİNME ÇUBUĞU PAYI BURADA, SABİT** (kullanıcı bulgusu 2026-09-23:
     // "klavye açılırken alt alan hâlâ takılarak, kayarak yukarı çıkıyor").
@@ -421,21 +513,44 @@ class KeyboardSlide extends StatelessWidget {
     // Çubuğun İÇERİĞİNİN ekranın dibinden olması gereken uzaklığı: klavye
     // gezinme çubuğundan alçaksa (kapalı ya da açılışın ilk kareleri)
     // gezinme çubuğunun üstü, değilse klavyenin üstü.
-    final floor = math.max(nav, live);
+    final floor = _smooth(math.max(nav, live));
+    // `c`: klavye hareket ederken (canlı > 0 ama kararlı boşluk henüz
+    // oturmadı) panel görünmez. Ağaç şekli kipten bağımsız (Opacity hep var).
+    final hide = KeyboardSlide.mode == 'c' && live > 0 && inset == 0;
     // Pozitif = AŞAĞI. Yerleşimdeki yer (boşluk + pay) ile olması gereken
     // yer arasındaki fark; boşluk oturunca kendiliğinden sıfırlanır — oturma
     // anı ekranda görünmez.
+    Widget panel = Padding(
+      padding: EdgeInsets.only(bottom: pad),
+      child: MediaQuery.removePadding(
+        context: context,
+        removeBottom: true,
+        child: widget.child,
+      ),
+    );
+    // Solma sarmalayıcısı YALNIZ `c` kipinde (kip derlemede sabit, ağaç
+    // şekli çalışırken değişmez): a/b'de klavye karesi başına +1 kurulum
+    // olurdu (S17 mandalı).
+    if (KeyboardSlide.mode == 'c') {
+      final target = hide ? 0.0 : 1.0;
+      if (target != _fadeTarget) {
+        _fadeTarget = target;
+        _opacity = Tween(
+          begin: _opacity.value,
+          end: target,
+        ).animate(_fadeCurve);
+        // Solma hızlı (klavyenin ilk karelerinde), beliriş yumuşak.
+        _fade.duration = hide
+            ? AppMotion.exitOf(AppMotion.instant)
+            : AppMotion.quick;
+        _fade.forward(from: 0);
+      }
+      panel = FadeTransition(opacity: _opacity, child: panel);
+    }
     return RepaintBoundary(
       child: Transform.translate(
         offset: Offset(0, inset + pad - floor),
-        child: Padding(
-          padding: EdgeInsets.only(bottom: pad),
-          child: MediaQuery.removePadding(
-            context: context,
-            removeBottom: true,
-            child: child,
-          ),
-        ),
+        child: panel,
       ),
     );
   }

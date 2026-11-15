@@ -31,6 +31,7 @@ import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/tips.dart';
 import 'package:notlar/core/widgets/customizable.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
+import 'package:notlar/core/widgets/keyboard_snap.dart';
 import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/upload_queue.dart'
     show pendingUploadsProvider;
@@ -55,6 +56,9 @@ import 'package:notlar/features/notes/presentation/listening_visuals.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/notes/data/user_templates.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
+import 'package:notlar/features/notes/presentation/quick_list_screen.dart';
+import 'package:notlar/features/notes/presentation/template_editor_screen.dart';
+import 'package:notlar/features/notes/domain/note_templates.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,6 +70,7 @@ import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 
 import 'support/editor_harness.dart';
+import 'support/keyboard_track.dart';
 
 /// **AKICILIK BÜTÇESİ** (OTURTMA F59.2, senaryolar Ek A). Sayılan şey süre
 /// değil SAYI (kök kurulum, kayıt): makineden bağımsız. Bütçeler
@@ -634,12 +639,12 @@ void main() {
     await endEditor(tester);
   });
 
-  // S48 (kullanıcı bulgusu 2026-11-15 "normal madde notundaki kasma"): 40
+  // S50 (kullanıcı bulgusu 2026-11-15 "normal madde notundaki kasma"): 40
   // maddeli listede kutucuk, Enter, boş maddede Geri Sil — olay başına TÜM
   // widget kurulumu ve RenderObject dizilmesi. Kök neden: madde değişikliği
   // kökü (çubuklar, ipuçları, ~850 widget) yeniden kuruyordu, liste her
   // kurulumda 40 satırın yuvasını + canlı tutma sarmalayıcılarını kuruyordu.
-  testWidgets('S48: 40 maddeli liste — kutucuk, Enter, Geri Sil (toplam)', (
+  testWidgets('S50: 40 maddeli liste — kutucuk, Enter, Geri Sil (toplam)', (
     tester,
   ) async {
     final repo = CountingNotesRepository();
@@ -693,7 +698,7 @@ void main() {
     final saved = repo.lastSaved!.items;
     expect(saved, hasLength(40));
     expect(saved.where((i) => i.checked).single.id, 'i3');
-    _expectBudget('S48', {
+    _expectBudget('S50', {
       'kutucuk_kurulum': check.$1,
       'kutucuk_dizilme': check.$2,
       'enter_kurulum': enter.$1,
@@ -2040,6 +2045,237 @@ void main() {
     });
   });
 
+  // S48 (kullanıcı bulgusu 2026-11-15 "şablon oluştururken aşırı kasıyor"):
+  // alışveriş şablonunun önizlemesi (5 madde + 74 öneri çipi) — klavye
+  // açılışı (6 inset karesi), öneri çipi ve kutucuk dokunuşu, "Oluştur";
+  // galeride arama klavyesi; kendi şablon düzenleyicisinde (20 madde) ilk
+  // tuşlar. Kök neden: levha builder'ı klavyenin her karesinde YENİ levha
+  // örneği kuruyordu; her dokunuş bütün çipleri yeniden kuruyordu.
+  testWidgets('S48: şablon önizlemesi + düzenleyici (alışveriş, 74 çip)', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    Object? created;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () async => created =
+                        await showNoteTemplateSheet(
+                          context,
+                          initial: NoteTemplate.shopping,
+                        ),
+                    child: const Text('alışveriş'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => showNoteTemplateSheet(context),
+                    child: const Text('galeri'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => showTemplateEditor(
+                      context,
+                      initial: UserTemplate(
+                        id: 'x',
+                        name: 'Benim',
+                        type: NoteType.checklist,
+                        items: [for (var i = 0; i < 20; i++) 'madde $i'],
+                      ),
+                    ),
+                    child: const Text('düzenle'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    Future<(int, int)> keyboard() async {
+      layouts = 0;
+      debugPrint = (String? m, {int? wrapWidth}) {
+        if (m != null && m.startsWith('Laying out')) layouts++;
+      };
+      debugPrintLayouts = true;
+      try {
+        final c = await _count(() async {
+          for (final b in <double>[50, 100, 150, 200, 250, 300]) {
+            tester.view.viewInsets = FakeViewPadding(bottom: b);
+            await tester.pump(const Duration(milliseconds: 16));
+          }
+        });
+        return (_sum(c), layouts);
+      } finally {
+        debugPrintLayouts = false;
+        debugPrint = oldPrint;
+      }
+    }
+
+    // 1) Önizleme: klavye, çip, kutucuk, Oluştur.
+    await tester.tap(find.text('alışveriş'));
+    await _settle(tester);
+    expect(find.byType(FilterChip), findsAtLeastNWidgets(70));
+    final box = await _count(() async {
+      await tester.tap(find.byType(CheckboxListTile).first);
+      await tester.pump();
+    });
+    final chip = await _count(() async {
+      await tester.tap(find.byType(FilterChip).at(3));
+      await tester.pump();
+    });
+    await _settle(tester);
+    await tester.tap(find.byType(TextField).last);
+    await tester.pump(const Duration(milliseconds: 100));
+    final (kbBuilds, kbLayouts) = await keyboard();
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await _settle(tester);
+    await tester.tap(find.textContaining('Oluştur'));
+    await _settle(tester);
+    expect(created, isNotNull, reason: 'Oluştur içeriği döndürür');
+
+    // 2) Galeri: arama alanı + klavye.
+    await tester.tap(find.text('galeri'));
+    await _settle(tester);
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump(const Duration(milliseconds: 100));
+    final (galleryBuilds, _) = await keyboard();
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.binding.handlePopRoute();
+    await _settle(tester);
+
+    // 3) Kendi şablon düzenleyicisi: maddeye 5 tuş.
+    await tester.tap(find.text('düzenle'));
+    await _settle(tester);
+    await tester.tap(find.text('madde 2'));
+    await tester.pump(const Duration(milliseconds: 100));
+    final typing = await _count(() async {
+      for (var i = 1; i <= 5; i++) {
+        tester.testTextInput.enterText('madde 2${'a' * i}');
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    });
+    _expectBudget('S48', {
+      'klavye_kurulum': kbBuilds,
+      'klavye_dizilme': kbLayouts,
+      'cip_kurulum': _sum(chip),
+      'kutu_kurulum': _sum(box),
+      'galeri_klavye_kurulum': galleryBuilds,
+      'duzenleyici_tus_kurulum': _sum(typing),
+    });
+  });
+
+  // S49 (kullanıcı isteği 2026-11-15, hızlı liste): liste şablonu artık
+  // levhadaki önizleme yerine QuickListScreen'de kurulur. Alışveriş, 20
+  // madde hazır: klavye açılışı (6 inset karesi), madde ÇIKARMAYAN 5 tuş
+  // (yalnız giriş satırı), bir madde çıkaran yazı (yalnız yeni satır), öneri
+  // çipi dokunuşu.
+  testWidgets('S49: hızlı liste (alışveriş, 20 madde)', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          notesStreamProvider.overrideWith((ref) => const Stream.empty()),
+        ],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () => showQuickList(
+                  context,
+                  quickListArgsFor(context, builtin: NoteTemplate.shopping)!,
+                ),
+                child: const Text('aç'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await _settle(tester);
+    final field = find.byKey(const ValueKey('quick-entry-field'));
+    await tester.enterText(
+      field,
+      'muz, elma, armut, çilek, kivi, un, yumurta, peynir, zeytin, bal, '
+      'domates, biber, patlıcan, kabak, havuç, pirinç, bulgur, makarna, '
+      'tuz, deterjan,',
+    );
+    await _settle(tester);
+    expect(
+      find.byWidgetPredicate((w) => w.runtimeType.toString() == '_QuickRow'),
+      findsNWidgets(20),
+    );
+
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    debugPrint = (String? m, {int? wrapWidth}) {
+      if (m != null && m.startsWith('Laying out')) layouts++;
+    };
+    debugPrintLayouts = true;
+    late final Map<String, int> keyboard;
+    try {
+      keyboard = await _count(() async {
+        for (final b in <double>[50, 100, 150, 200, 250, 300]) {
+          tester.view.viewInsets = FakeViewPadding(bottom: b);
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+      });
+    } finally {
+      debugPrintLayouts = false;
+      debugPrint = oldPrint;
+    }
+    final kbLayouts = layouts;
+
+    final typing = await _count(() async {
+      for (var i = 1; i <= 5; i++) {
+        tester.testTextInput.enterText('nohut'.substring(0, i));
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    });
+    final add = await _count(() async {
+      tester.testTextInput.enterText('nohut,');
+      await tester.pump();
+    });
+    await _settle(tester);
+    final chip = await _count(() async {
+      await tester.tap(find.byKey(const ValueKey('quick-chip-Süt')));
+      await tester.pump();
+    });
+    await _settle(tester);
+    tester.view.viewInsets = FakeViewPadding.zero;
+    _expectBudget('S49', {
+      'klavye_kurulum': _sum(keyboard),
+      'klavye_dizilme': kbLayouts,
+      'yazma_kurulum': _sum(typing),
+      'yazma_satir': typing['_QuickRow'] ?? 0,
+      'madde_kurulum': _sum(add),
+      'madde_satir': add['_QuickRow'] ?? 0,
+      'cip_kurulum': _sum(chip),
+      'cip_satir': chip['_QuickRow'] ?? 0,
+    });
+  });
+
   // S44 (P63 PBT): 30 maddeli liste, 10 maddesi çizgili; biçim çubuğunun
   // çizgi tepsisinden üç seçim + tepsi aç/kapa + klavye aç/kapa.
   testWidgets('S44: çizgi tepsisi (telefon, 30 madde, 10 çizgili)', (
@@ -2522,6 +2758,65 @@ void main() {
       'sira_govde': sum(order),
       'sira_satir': order[_row] ?? 0,
     });
+    await endEditor(tester);
+  });
+
+  testWidgets('S47: alt panel × düzensiz klavye inset akışı (telefon)', (
+    tester,
+  ) async {
+    addTearDown(() => setAndroid31(false));
+    const size = Size(412, 915);
+    await pumpEditor(
+      tester,
+      Note(
+        id: 'n',
+        type: NoteType.text,
+        title: 'Not',
+        body: List.generate(30, (i) => 'Satır $i').join('\n'),
+      ),
+    );
+    await _settleGrowth(tester);
+    await tester.tap(find.textContaining('Satır 3').last);
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 150));
+    // Üç kip (KeyboardSlide.mode, derlemede ALT_PANEL_KIP): a = birebir
+    // izleme (varsayılan), b = yumuşatma, c = hareket boyunca gizli.
+    final keep = KeyboardSlide.mode;
+    addTearDown(() => KeyboardSlide.mode = keep);
+    final measured = <String, int>{};
+    for (final mode in ['a', 'b', 'c']) {
+      KeyboardSlide.mode = mode;
+      final total = PanelTrack();
+      for (final android31 in [false, true]) {
+        for (final (name, pattern, wiggle, frames) in [
+          ('düzgün', kRegularPattern, const <int>{}, 18),
+          ('faz kayan', kJitterPattern, const <int>{}, 18),
+          ('faz kayan + geri oynama', kJitterPattern, const {9, 15}, 18),
+          // Kısa (hızlı) klavye: kuyruk adımları büyük, bitiş adımı
+          // önceki adımla birleşir (API<35 bitiş tanıma sınırı).
+          ('kısa animasyon, faz kayan', kJitterPattern, const <int>{}, 10),
+        ]) {
+          setAndroid31(android31);
+          final t = await trackPanel(
+            tester,
+            size: size,
+            android31: android31,
+            pattern: pattern,
+            wiggle: wiggle,
+            openFrames: frames,
+          );
+          // ignore: avoid_print
+          print('S47 $mode ${android31 ? "API<35" : "API35+"} $name: $t');
+          total.add(t);
+        }
+      }
+      // ignore: avoid_print
+      print('S47 kip $mode toplam: $total');
+      for (final e in total.toBudget().entries) {
+        measured[mode == 'a' ? e.key : '${mode}_${e.key}'] = e.value;
+      }
+    }
+    _expectBudget('S47', measured);
     await endEditor(tester);
   });
 }

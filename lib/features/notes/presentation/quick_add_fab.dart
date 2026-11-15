@@ -218,6 +218,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
       'file': a.createFromFile,
       'youtube': a.createYouTubeNote,
       'ordered': () => a.createNote(NoteType.ordered),
+      'quickdrop': a.openQuickDrop,
       'draw': a.createHandwritingNote,
       'drawing': a.createDrawingNote,
       'template': a.createFromTemplate,
