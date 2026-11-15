@@ -14,6 +14,10 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
   Nasıl: bir notu sil → "Geri al" mikrofon / "+" ile çakışmasın; levha açıkken sil → bildirim levhanın üstünde; ana ekranda yana yavaş çek / fiskele / son klasörde çek; liste satırını sağa-sola çek (eşikte hafif titreşim); mini ayı parmakla kaydır, aç-kapa.
   Doğruysa: ipucu arama çubuğunun altında, bildirimler üst üste binmiyor; şerit belirirken liste titremiyor; çekiş bırakınca yumuşak yerine oturuyor; mini ay parmağı izliyor, açılırken liste aşağı kayıyor (zıplama yok); çekmece %22 çekişte açılıyor.
   Yanlışsa: ekran görüntüsü / kısa kayıt gönder.
+- [ ] **Ses kartı açılışı + klavye kasması (oto/ses-karti-kasma, cihazda bakılmadı)**
+  Nerede: liste notunda bir maddeye dokun (klavye açık) → alt çubuktan Dikte.
+  Nasıl: kart tek karede tam açılsın (yarım/soluk ara hâl yok); klavye açıkken konuş-sus-konuş: alt çubuk ve kart yerinde kalsın; kart açıkken ve Bitir'den sonra klavyeyi aç-kapa — alt panel akıcı mı? Hâlâ zıplıyorsa ekran kaydı al (P55 `bar_track` kalıbı).
+
 - [ ] **Kalem seti ve sesle yazma kartı (yeni görünüş, cihazda bakılmadı — P63 G4)**
   Nerede: bir notta alt çubuktan Kalem → hap / kapsül / renk paneli; çizim ekranı; PDF üstüne çizim; notta Dikte ve ✨ → sesli not.
   Nasıl: kapsülü aç-kapa, kalem değiştir (kalem yukarı kalkar), paneli aç (üstte gerçek çizgi önizlemesi, soldaki iğneyle sabitle), kalınlığı sürükle; tablette bölünmüş görünümde kapsül taşmasın. Dikte açıkken konuş / sus: dalga sesinle oynasın, susunca alttaki ince çizgi dolsun ve "Sessizlik — birazdan biter" yazsın; dikte açıkken tablette kaydır + yaz.

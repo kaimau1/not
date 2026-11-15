@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 15 Kasım 2026 {#2026-11-15}
+- **Sesle yazma kartı akıcı:** kart artık tek seferde tam açılıyor; klavye açıkken konuşurken alt çubuk ve kart inip kalkmıyor.
 - **Kalem seti yenilendi:** seçtiğin kalem yumuşakça kalkıyor, ayar panelinde kalemin gerçek çizgisini görüyorsun, iğneyle tek dokunuşta sabitleyebiliyorsun. Kullanmadığın kalemleri gizleyebilirsin. Panel açılırken sayfa artık oynamıyor; tablette bölünmüş görünümde kalem çubuğu taşmıyor.
 - **Sesle yazma kartı:** dalga artık sesini gerçekten izliyor — konuşunca yükselir, susunca alçalır. Susunca kartın altında ince bir çizgi dolar ve "Sessizlik — birazdan biter" yazar. Kart tablette ortada, makul genişlikte duruyor.
 - **Ayarlar yenilendi:** her bölüm derli toplu kartlarda, hesap bilgin her yerde aynı kartta, Hesap sayfası daha düzenli (Hesabı sil en altta). Premium, Kılavuz ve Kişiler ekranları da aynı sade görünüme geçti; geniş ekranda ayarlar arasında geçiş daha hızlı.

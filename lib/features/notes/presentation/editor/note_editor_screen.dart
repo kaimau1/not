@@ -1,7 +1,6 @@
 import '../note_link_ui.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
-import '../../../../core/widgets/pop_in.dart';
 import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
@@ -985,6 +984,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// yeniden görünme gecikmesi (varsayılan 1,1 sn) — Ayarlar → Kartlar.
   void _noteTyping() {
     if (_keyboardInset <= 0 || !ref.read(hideBarWhileTypingProvider)) return;
+    // DİKTE YAZMA DEĞİL (kullanıcı bulgusu 2026-11-15, S46): tanıyıcının
+    // metni de `_mutate`'ten geçiyor; sayılınca alt çubuk (Bitir düğmesi ve
+    // üstündeki ses kartıyla) her konuşma patlamasında iniyor, duraklamada
+    // kalkıyordu — kart zıplıyor, gövde her seferinde yeniden diziliyordu.
+    if (_dictation != null) return;
     // ÜÇ HARF KURALI (kullanıcı isteği 2026-11-08 üçüncü tur): çubuk tek
     // harflik düzeltmede / tek dokunuşta gitmesin; ancak duraklamasız art
     // arda 3 değişiklikten sonra (gerçekten yazılıyorsa) gizlenir. Sayaç,
