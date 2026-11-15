@@ -76,6 +76,11 @@ abstract final class AppSwipe {
   /// Genişliğin bu oranı çekilince bırakışta geçer.
   static const double commitFraction = 0.22;
 
+  /// Tablet ray çekmecesinin eşiği (yürütücü kararı 2026-11-15, "kullanıcı
+  /// için hangisi konforluysa"): kenardaki 14 dp şerit kazara çekilmesin diye
+  /// %22 yerine %30; fiske kuralı aynı.
+  static const double drawerCommitFraction = 0.30;
+
   /// Bu hızın (dp/sn) üstündeki fiske, çekişle aynı yöndeyse geçer.
   static const double flingVelocity = 300;
 
@@ -92,9 +97,10 @@ abstract final class AppSwipe {
     required double dragged,
     required double extent,
     required double velocity,
+    double fraction = commitFraction,
   }) {
     if (dragged == 0 || extent <= 0) return false;
-    if (dragged.abs() >= extent * commitFraction) return true;
+    if (dragged.abs() >= extent * fraction) return true;
     return velocity.abs() >= flingVelocity && velocity.sign == dragged.sign;
   }
 

@@ -213,4 +213,45 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 2));
   });
+
+  // Tablet ray çekmecesi (2026-11-15): eşik %30 (240 dp çekişin 72 dp'si),
+  // fiske (300 dp/sn üstü) eşiğin altında da açar. Adımlar 100 ms arayla,
+  // yavaş (bırakışta hız 0).
+  Future<void> slowPull(WidgetTester tester, double effective) async {
+    final g = await tester.startGesture(const Offset(7, 100));
+    var t = Duration.zero;
+    for (var done = 0.0; done < effective; done += 20) {
+      t += const Duration(milliseconds: 100);
+      await g.moveBy(const Offset(20, 0), timeStamp: t);
+      await tester.pump();
+    }
+    await g.up(timeStamp: t + const Duration(milliseconds: 300));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+  }
+
+  final drawerOpen = find.byKey(const ValueKey('rail-new-note'));
+
+  testWidgets('çekmece: %30 altı açmaz (eski %22 üstü bile), üstü açar', (
+    tester,
+  ) async {
+    await pump(tester);
+    expect(drawerOpen, findsNothing);
+    await slowPull(tester, 60); // %25
+    expect(drawerOpen, findsNothing);
+    await slowPull(tester, 80); // %33
+    expect(drawerOpen, findsWidgets);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('çekmece: kısa fiske eşiğin altında da açar', (tester) async {
+    await pump(tester);
+    await tester.flingFrom(const Offset(7, 100), const Offset(50, 0), 1000);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(drawerOpen, findsWidgets);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 2));
+  });
 }
