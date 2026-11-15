@@ -1269,12 +1269,14 @@ class FolderSwipe extends StatefulWidget {
   final ValueChanged<int> onCommit;
   final Widget child;
 
-  @visibleForTesting
-  static const commitFraction = 0.22;
-
   @override
   State<FolderSwipe> createState() => _FolderSwipeState();
 }
+
+/// Izgaranın parmağı izleyebileceği en uzak yol ve etiket kartının en geniş
+/// hâli (genişlik oranı; düzen oranı, belirteç değil — P62 §6.2).
+const _kFollowLimit = 0.4;
+const _kLabelWidth = 0.36;
 
 class _FolderSwipeState extends State<FolderSwipe>
     with SingleTickerProviderStateMixin {
@@ -1348,18 +1350,18 @@ class _FolderSwipeState extends State<FolderSwipe>
     final direction = _directionOf(_raw);
     if (direction != _direction) {
       _direction = direction;
-      _labelMax = _width * 0.36;
+      _labelMax = _width * _kLabelWidth;
       setState(() => _label = widget.nextLabel(direction));
     }
-    final limit = _width * 0.4;
+    final limit = _width * _kFollowLimit;
     // Durak yoksa lastik: kısa ve dirençli.
-    final follow = _label == null ? _raw * 0.25 : _raw;
+    final follow = _label == null ? _raw * AppSwipe.rubber : _raw;
     if (motionOf(context)) _dx.value = follow.clamp(-limit, limit);
     _progress.value = _label == null
         ? 0
-        : (_raw.abs() / (_width * FolderSwipe.commitFraction)).clamp(0.0, 1.0);
+        : (_raw.abs() / (_width * AppSwipe.commitFraction)).clamp(0.0, 1.0);
     final past =
-        _label != null && _raw.abs() >= _width * FolderSwipe.commitFraction;
+        _label != null && _raw.abs() >= _width * AppSwipe.commitFraction;
     if (past != _past) {
       setState(() => _past = past);
       if (past) unawaited(AppHaptics.tick());
@@ -1367,8 +1369,10 @@ class _FolderSwipeState extends State<FolderSwipe>
   }
 
   void _finish(double velocity) {
-    final fling = velocity.abs() >= 300 && velocity.sign == _raw.sign;
-    final commit = _label != null && (_past || fling);
+    // Ortak karar kuralı (P62 §6.2): bugünkü `_past || fiske` ile aynı sayı.
+    final commit =
+        _label != null &&
+        AppSwipe.commits(dragged: _raw, extent: _width, velocity: velocity);
     final direction = _direction;
     setState(() {
       _label = null;

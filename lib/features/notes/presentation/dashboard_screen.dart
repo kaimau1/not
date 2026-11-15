@@ -31,7 +31,7 @@ import '../../../app/theme/note_colors.dart';
 import 'dart:math' as math;
 
 import '../../../app/theme/app_tokens.dart';
-import '../../../app/theme/app_design.dart' show AppTone;
+import '../../../app/theme/app_design.dart' show AppSwipe, AppTone;
 import '../../../core/a11y/motion.dart';
 import '../../../core/widgets/snapshot_when_leaving.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
