@@ -1,0 +1,85 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/notes/data/user_templates.dart';
+import 'package:notlar/features/notes/domain/note_templates.dart';
+import 'package:notlar/features/notes/domain/note_type.dart';
+import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
+import 'package:notlar/features/notes/presentation/template_preview_card.dart';
+import 'package:notlar/features/settings/settings_providers.dart';
+import 'package:notlar/l10n/generated/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// P63 PB4 (plan_tasarim_B §2.4): kart minyatürü ve sabit "Oluştur" bandı.
+void main() {
+  Future<void> open(WidgetTester tester, {UserTemplate? initialUser}) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () =>
+                      showNoteTemplateSheet(context, initialUser: initialUser),
+                  child: const Text('aç'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('30 maddeli şablonda "Oluştur" kaydırmadan görünür', (
+    tester,
+  ) async {
+    await open(
+      tester,
+      initialUser: UserTemplate(
+        id: 'u1',
+        name: 'Uzun',
+        type: NoteType.checklist,
+        items: [for (var i = 0; i < 30; i++) 'madde $i'],
+      ),
+    );
+    final create = find.byIcon(Icons.check);
+    expect(create, findsOneWidget);
+    final rect = tester.getRect(create);
+    expect(rect.bottom, lessThanOrEqualTo(915), reason: 'ekranın içinde');
+    // Kaydırma görünümünün DIŞINDA (sabit alt bant).
+    expect(
+      find.ancestor(of: create, matching: find.byType(SingleChildScrollView)),
+      findsNothing,
+    );
+  });
+
+  testWidgets('galeride her hazır şablon minyatürlü kartla', (tester) async {
+    await open(tester);
+    for (final t in NoteTemplate.values) {
+      final card = find.byKey(ValueKey('tpl-card-b:${t.key}'));
+      expect(card, findsWidgets, reason: t.key);
+      expect(tester.widget(card.first), isA<TemplatePreviewCard>());
+    }
+    final shopping = tester.widget<TemplatePreviewCard>(
+      find.byKey(const ValueKey('tpl-card-b:shopping')).first,
+    );
+    expect(shopping.lines, everyElement(TemplateLineKind.check));
+    final meeting = tester.widget<TemplatePreviewCard>(
+      find.byKey(const ValueKey('tpl-card-b:meeting')).first,
+    );
+    expect(meeting.lines, contains(TemplateLineKind.heading));
+  });
+}

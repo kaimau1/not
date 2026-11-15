@@ -367,13 +367,13 @@ geri oku yok) · koyu tema (minyatür sayfa `AppTokens.card` koyuda zeminden aç
 
 ### 2.4 Kabul ölçütleri
 
-- [ ] 16 hazır şablonun her kartında içeriğiyle tutarlı minyatür (liste → kutucuklu satırlar; toplantı
+- [x] 16 hazır şablonun her kartında içeriğiyle tutarlı minyatür (liste → kutucuklu satırlar; toplantı
       → başlık + satırlar). `test/template_preview_lines_test.dart` (iskelette var) + kart widget testi.
-- [ ] `test/note_templates_test.dart` (19 KB) değişmeden yeşil — anahtarlar korunur: `tpl-card-<key>`,
+- [x] `test/note_templates_test.dart` (19 KB) değişmeden yeşil — anahtarlar korunur: `tpl-card-<key>`,
       `tpl-fav-<ad>`, `tpl-save-as`, `tpl-two-columns`, `tpl-item-<i>-<metin>`, `tpl-editor-*`.
-- [ ] "Oluştur" 30 maddeli şablonda kaydırmadan görünür (widget testi: düğme ilk karede görünür alanda).
-- [ ] `note_template_sheet.dart` ve `template_editor_screen.dart`'ta elle ölçü 0, elle süre 0.
-- [ ] Tur: `sablon-galeri`, `sablon-onizleme-liste`, `sablon-onizleme-yazi`, `sablon-bos`,
+- [x] "Oluştur" 30 maddeli şablonda kaydırmadan görünür (widget testi: düğme ilk karede görünür alanda).
+- [x] `note_template_sheet.dart` ve `template_editor_screen.dart`'ta elle ölçü 0, elle süre 0.
+- [x] Tur: `sablon-galeri`, `sablon-onizleme-liste`, `sablon-onizleme-yazi`, `sablon-bos`,
       `sablon-duzenle` (açık + koyu, telefon + tablet).
 
 ### 2.5 Kasma riski + bütçe
@@ -965,24 +965,24 @@ sürüklenen satır · sağdan-sola dil.
 
 ### 5.4 Kabul ölçütleri
 
-- [ ] Tepside ve levhada beş tür; hücre başına tek `paintItemDivider` çağrısı
+- [x] Tepside ve levhada beş tür; hücre başına tek `paintItemDivider` çağrısı
       (`test/divider_kind_picker_test.dart`, iskelette: beş anahtar, seçili hücre, dokunuş →
       `onPick(tür)`, verilen renk/kalınlık boyamaya ulaşır, tepside kalınlık ≤ 1.5).
-- [ ] `format_bar.dart`'ta `_DividerSwatchPainter` yok; `_DividerRow` içinde elle köşe/dolgu 0 (tepsi
+- [x] `format_bar.dart`'ta `_DividerSwatchPainter` yok; `_DividerRow` içinde elle köşe/dolgu 0 (tepsi
       boyu 42 dışında); seçili zemin `primaryContainer`.
-- [ ] `item_divider_style.dart`'ta `showModalBottomSheet` 0, `Icons.format_strikethrough` 0,
+- [x] `item_divider_style.dart`'ta `showModalBottomSheet` 0, `Icons.format_strikethrough` 0,
       `Icons.auto_awesome` 0, elle dolgu/aralık 0 (önizleme boyu 52 ve `_swatches` renkleri dışında);
       elle `0.75` üç yerde de 0.
-- [ ] Var olan testler DEĞİŞMEDEN yeşil: `item_divider_paint_test`, `item_divider_style_test`,
+- [x] Var olan testler DEĞİŞMEDEN yeşil: `item_divider_paint_test`, `item_divider_style_test`,
       `items_editor_divider_test`, `format_bar_test`, `items_editor_row_cache_test`,
       `forward_compat_test`, `jank_patterns_guard_test`, `keyboard_jank_guard_test`.
-- [ ] Yeni `test/item_divider_sheet_test.dart`: tür hücresi → önizleme o türde; "Tamam" →
+- [x] Yeni `test/item_divider_sheet_test.dart`: tür hücresi → önizleme o türde; "Tamam" →
       `(style, applyAll: false)`; "Tüm çizgilere" → `applyAll: true`; kaldır → `style: null`; dışına
       dokun → `null`; 360 dp + yazı 1.3'te taşma hatası yok.
-- [ ] Beliriş (yapıldıysa): boş → çizgili geçişte animasyon bir kez oynar ve durur; 10 çizgili not
+- [x] Beliriş (yapıldıysa): boş → çizgili geçişte animasyon bir kez oynar ve durur; 10 çizgili not
       AÇILIRKEN ilk karede çizgiler tam (ticker yok); hareketi azalt açıkken tek kare
       (`test/item_divider_reveal_test.dart`).
-- [ ] Tur: `cizgi-tepsi`, `cizgi-levha`, `cizgi-satirlar` (beş tür aynı notta) — açık + koyu, telefon
+- [x] Tur: `cizgi-tepsi`, `cizgi-levha`, `cizgi-satirlar` (beş tür aynı notta) — açık + koyu, telefon
       + tablet.
 
 ### 5.5 Kasma riski + bütçe (kasma-kontrol 8 madde)
@@ -1399,6 +1399,18 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   `level` notifier'ı oturum kapanınca `dispose` EDİLMEZ (dinleyen kart bir kare daha yaşayabilir) —
   sıfırlanır.
 - **Model:** opus. **A/B:** paket görünür değişiklik yapmaz; yalnız evrelerin çalıştığı denenir.
+- [x] **Durum (2026-11-15, G2 dalı oto/G2-sablon-cizgi):** 1 `quickOrder/attachOrder` +
+  `UiItem.pinned/penTool` (`test/personalize_order_test.dart`); 2 `VoiceListenSession.level/silence`
+  (`voice_unavailable_test`'e düzey testi); 3 `dividerOf`; 4 `_stepScenes` + çizgili örnek not `n8`,
+  sahneler `sablon-galeri/-onizleme-liste/-onizleme-yazi/-bos/-duzenle`, `cizgi-satirlar/-tepsi/-levha`
+  ("önce" görüntüleri `build/tour_p63_once`); 5 S41 (0/0/Text 60) ve S44 (seçim satır 3 / kök 3 /
+  tepsi satır 0 / **tepsi açılırken gövde boyu 14 karede değişiyor** — bulgu 13 doğrulandı / klavye 0);
+  6 `ab_hepsi.py` `sablon` + `bicim` evreleri (sona; hazırlık yoksa atlanır) + `make_dataset.py --ink`
+  "OLCUM cizgi" notu — **cihazda denenmedi** (telefon başka ajandaydı; A=A yürütücünün öbek sonu A/B'sinde).
+  **Sapma (sabah bakılacak):** PB1/PB3/PB5'in tur sahneleri (`duzen-serit`, `kisisellestir`, `kalem-*`,
+  `cizim-serit`, `dikte-kart`, `ses-levha-*`), S40/S42/S43 tabanları ve `kalem`/`duzen` evreleri G2'de
+  YAZILMADI — öbek kapsamı şablon+çizgi; o paketlerin "Önce üret" adımı zaten bu tabanları istiyor
+  (G4/G5 kendi başında üretir).
 
 ### 7.3 PB1 — düzen modu: şerit + çerçeve (fable)
 
@@ -1483,6 +1495,19 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   şablon vurgu renkleri izinli sabit renk istisnası · `AnimatedSwitcher` kayması yalnız girişte.
 - **A/B:** hayır (editör/klavye/çubuk/liste/geçiş değil); `sablon` evresi yürütücünün `[apk]` öncesi
   tam ölçümünde görülür. **Bütçe:** S41.
+- [x] **Durum (2026-11-15, G2 dalı):** kart `TemplatePreviewCard` (minyatür satırları `State`'te şablon
+  başına bir kez, dil/şablon değişince yenilenir; açıklama `Tooltip`'te kaldı) · hap arama alanı · bölüm
+  değişiminde ızgara yalnız solma (`AppMotion.quick`) · tek boş hâl `_EmptyState` · galeri ↔ önizleme
+  `AppMotion.short` + kayma yalnız girişte · önizleme KÂĞIT kartta, seçenek çipleri kâğıdın altında,
+  **"Oluştur" sabit alt bantta** (`test/template_sheet_layout_test.dart` kırmızı → yeşil: 30 maddede düğme
+  bottom 1623 → ekranda) · düzenleyici: dolu ad alanı, üç tür çipi, kâğıt kart, yeni satır solarak
+  belirir, ≥ 840 dp canlı kart önizlemesi. Elle ölçü/süre iki dosyada 0 (yalnız 1 dp ayraç);
+  `design_tokens` bütçesi düştü (radius −5, fontSize −1, duration −2, curve −2, iconSize −8, alpha −3,
+  fontWeight −1). S41 açılış Text 60 → 37 (kart başına tek Text). **Sapmalar (sabah bakılacak):**
+  önizlemede maddeler sıkı özel satır DEĞİL `CheckboxListTile` (dense) — `note_templates_test`
+  `widgetWithText(CheckboxListTile, …)` ile buluyor ve "değişmeden yeşil" şartı var; "Maddeler · x/y"
+  sayacı kalktı (sayı "Oluştur · N madde" düğmesinde); düzenleyicide satır SİLME animasyonsuz (yalnız
+  ekleme solar).
 
 ### 7.7 PB5 — sesle yazma (fable)
 
@@ -1525,6 +1550,22 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   satır önbelleği anahtarına beliriş durumu girmez · "Tamam" kalır (SB9) · `format_bar.dart` editör
   dosyası: yeni `Theme.of(context)` ekleme.
 - **A/B:** evet — `kb` + `bicim` evreleri, çizgili ölçüm notuyla. **Bütçe:** S44.
+- [x] **Durum (2026-11-15, G2 dalı; dört ayrı commit):** (1) tepsi `DividerKindPicker(compact)` — beş tür,
+  gerçek çizim, maddenin renk/kalınlığı (`FormatBar.dividerStyle` ← `dividerOf`), seçili zemin
+  `primaryContainer`, `_DividerSwatchPainter` silindi, tepsi boyu 42 aynı; (2) levha `showAppSheet` +
+  `SheetHeader`, kâğıt önizleme, adlı seçici (`divider-sheet-kind-<tür>`), `ColorDot` (tema noktası
+  `brightness_auto_rounded`), kalınlık satırı (simge · Slider · `1.0×`), `OverflowBar` (`divider-sheet-remove/
+  -all/-ok`, kaldır simgesi `delete_outline_rounded`), "Tamam" kalır (SB9) — "önce" turda 360×640'ta levha
+  alttan taşıyordu, artık taşmıyor; (3) `kItemDividerAccentAlpha = AppAlpha.strong` (SB10); (4) beliriş
+  `_DividerReveal` (koşulsuz, yalnız boş→dolu, kırpma, hareketi azaltta tek kare). S44: seçim satır 3 / kök 3
+  / tepsi satır 0 / klavye 0 / beliriş 12 karede satır 0, ItemsEditor 0 (taban aşılmadı). **Beliriş kapısı
+  cihazda AÇIK:** yürütücünün öbek sonu A/B'sinde `kb` + `bicim` kötüleşirse yalnız "PB6 4" commit'i geri
+  alınır (SB11). Bulgu 13 (tepsi kabuğu `AnimatedSize` gövdeyi 14 karede diziyor) DÜZELTİLMEDİ — kapsam dışı,
+  regresyon listesine not (§7.10). Seçim başına 1 kök kurulumu (hipotez doğrulandı) bugünkü yol, PB6 aşmadı.
+  **İlk A/B (2026-11-15, run_g2.log):** `kb`/`bicim` aynı/iyi; tek kırmızı `not_kapa` LAYOUT altın +%15 (100.9 /
+  sınır 100.5 ms; A'ya göre kural "aynı"). S45 (yeni): kapanış dizilmesi PB6 öncesiyle birebir (173/153) →
+  PB6 4 GERİ ALINMADI (kök kanıtı yok, geri almak sayıyı değiştirmez); A/B yeniden koşulur, yine kırmızıysa
+  SB11 gereği PB6 4 geri alınır — sabah bakılacak.
 
 ### 7.9 PB7 — yeni sarmalar + sıralar (opus high)
 

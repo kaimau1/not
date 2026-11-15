@@ -2,7 +2,6 @@ import '../../../../core/widgets/back_closes.dart';
 import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/app_icons.dart';
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +13,9 @@ import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/widgets/color_palette.dart';
+import '../../../../app/theme/app_tokens.dart';
+import '../../domain/note_item.dart';
+import '../divider_kind_picker.dart';
 import 'format_menu.dart';
 import 'text_wrap.dart';
 
@@ -62,6 +64,7 @@ class FormatBar extends StatefulWidget {
     this.target,
     this.onHeading,
     this.dividerKind,
+    this.dividerStyle,
     this.onDivider,
     this.onDividerStyle,
   });
@@ -70,6 +73,10 @@ class FormatBar extends StatefulWidget {
   /// menüsüne taşıyalım"): hedef bir MADDEYSE onun ayırıcı türü ('' = yok);
   /// null ise sıra çizilmez (gövde/başlık). Aynı türe basmak kaldırır.
   final String? dividerKind;
+
+  /// Hedef maddenin TAM çizgi biçimi (renk + kalınlık; P63 PB6): tepsideki
+  /// örnekler onu taşır. null = çizgi yok ya da bilinmiyor.
+  final ItemDivider? dividerStyle;
   final ValueChanged<String>? onDivider;
   final VoidCallback? onDividerStyle;
 
@@ -582,6 +589,7 @@ class _FormatBarState extends State<FormatBar> {
       ),
       _Tray.divider => _DividerRow(
         kind: widget.dividerKind ?? '',
+        style: widget.dividerStyle,
         onPick: (k) => widget.onDivider?.call(k),
         onStyle: widget.onDividerStyle,
       ),
@@ -940,72 +948,48 @@ class _ColorGlyph extends StatelessWidget {
   }
 }
 
-/// Maddenin alt çizgisi: düz · kesikli · noktalı + ayar (bkz.
-/// [FormatBar.dividerKind]).
+/// Maddenin alt çizgisi: beş türün GERÇEK çizimli seçicisi + ayar (P63 PB6;
+/// bkz. [FormatBar.dividerKind]). Tepsi boyu 42 sabit.
 class _DividerRow extends StatelessWidget {
   const _DividerRow({
     required this.kind,
+    required this.style,
     required this.onPick,
     required this.onStyle,
   });
 
   final String kind;
+  final ItemDivider? style;
   final ValueChanged<String> onPick;
   final VoidCallback? onStyle;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    Widget swatch(String value, String tooltip) {
-      final selected = kind == value;
-      return Expanded(
-        child: Tooltip(
-          message: tooltip,
-          child: InkWell(
-            key: ValueKey('format-divider-$value'),
-            borderRadius: BorderRadius.circular(10),
-            onTap: () => onPick(value),
-            child: Ink(
-              height: 32,
-              decoration: BoxDecoration(
-                color: selected ? scheme.secondaryContainer : null,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: CustomPaint(
-                painter: _DividerSwatchPainter(
-                  value,
-                  selected
-                      ? scheme.onSecondaryContainer
-                      : scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
+    final theme = Theme.of(context);
     return SizedBox(
       height: 42,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
         child: Row(
           children: [
-            Text(
-              l10n.itemMenuLine,
-              style: Theme.of(context).textTheme.labelMedium,
+            Text(l10n.itemMenuLine, style: theme.textTheme.labelMedium),
+            const SizedBox(width: AppSpace.s),
+            Expanded(
+              child: DividerKindPicker(
+                selected: kind,
+                style: style,
+                compact: true,
+                scheme: theme.colorScheme,
+                onPick: onPick,
+              ),
             ),
-            const SizedBox(width: 8),
-            swatch('solid', l10n.itemDividerSolid),
-            swatch('dashed', l10n.itemDividerDashed),
-            swatch('dotted', l10n.itemDividerDotted),
             if (onStyle != null)
               IconButton(
                 key: const ValueKey('format-divider-style'),
                 tooltip: l10n.dividerSettings,
                 visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.tune, size: 20),
+                icon: const Icon(Icons.tune_rounded, size: AppIconSize.m),
                 onPressed: onStyle,
               ),
           ],
@@ -1013,37 +997,6 @@ class _DividerRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Çizgi türü örneği: ortadan geçen ince çizgi.
-class _DividerSwatchPainter extends CustomPainter {
-  _DividerSwatchPainter(this.kind, this.color);
-
-  final String kind;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.6
-      ..strokeCap = StrokeCap.round;
-    final y = size.height / 2;
-    const inset = 10.0;
-    final (dash, gap) = switch (kind) {
-      'dashed' => (6.0, 4.0),
-      'dotted' => (0.5, 4.0),
-      _ => (size.width, 0.0),
-    };
-    for (var x = inset; x < size.width - inset; x += dash + gap) {
-      final end = math.min(x + dash, size.width - inset);
-      canvas.drawLine(Offset(x, y), Offset(end, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DividerSwatchPainter old) =>
-      old.kind != kind || old.color != color;
 }
 
 /// Panelin bir sırası: sabit yükseklik, yan pay.

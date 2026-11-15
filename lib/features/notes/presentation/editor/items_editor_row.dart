@@ -328,13 +328,11 @@ extension _ItemsRow on ItemsEditorState {
           ? HitTestBehavior.opaque
           : HitTestBehavior.deferToChild,
       onTap: _selectionMode ? () => _toggleSelection(item) : null,
-      child: CustomPaint(
-        foregroundPainter: item.divider.isEmpty
-            ? null
-            : _ItemDividerPainter(
-                item.divider,
-                (_accent?.accent ?? scheme.primary).withValues(alpha: 0.75),
-              ),
+      child: _DividerReveal(
+        raw: item.divider,
+        color: (_accent?.accent ?? scheme.primary).withValues(
+          alpha: kItemDividerAccentAlpha,
+        ),
         child: Container(
           color: selected
               ? scheme.primaryContainer.withValues(alpha: 0.4)

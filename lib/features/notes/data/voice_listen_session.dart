@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/utils/speech_segments.dart';
@@ -89,8 +90,16 @@ class VoiceListenSession {
   Timer? _timer;
   DateTime? _startedAt;
   String _last = '';
-  double _silence = 0;
   bool _ended = false;
+
+  /// Anlık ses düzeyi (0–1; P63 PBT). Dalga yalnız bunu dinler — düzey olayı
+  /// kimseye `setState` yaptırmaz. Oturum bitince 0'a döner; dispose EDİLMEZ
+  /// (dinleyen kart bir kare daha yaşayabilir).
+  final ValueNotifier<double> level = ValueNotifier<double>(0);
+
+  /// Sessizlik geri sayımının gösterilen oranı (0–1; [onSilence] ile aynı
+  /// değer). Oturum bitince 0.
+  final ValueNotifier<double> silence = ValueNotifier<double>(0);
   bool _active = false;
 
   bool get isActive => _active;
@@ -110,8 +119,8 @@ class VoiceListenSession {
       _sub = DeviceSpeech.listen(locale: locale, preferOffline: preferOffline)
           .listen(
             (event) {
-              final level = event.level;
-              if (level != null) _gate.onLevel(level, DateTime.now());
+              final lv = event.level;
+              if (lv != null) reportLevel(lv);
               final raw = event.text;
               if (raw == null) return;
               // Tanıyıcının aynı cümleyi alt satırda yeniden yazması (klon)
@@ -147,7 +156,10 @@ class VoiceListenSession {
   void reportSpeech() => _gate.onSpeech(DateTime.now());
 
   /// Kayıt yolunda ses seviyesi (0–1).
-  void reportLevel(double level) => _gate.onLevel(level, DateTime.now());
+  void reportLevel(double level) {
+    this.level.value = level.clamp(0.0, 1.0);
+    _gate.onLevel(level, DateTime.now());
+  }
 
   void _tick() {
     if (!_active || _ended) return;
@@ -166,8 +178,9 @@ class VoiceListenSession {
         (useDevice || _gate.heard);
     final progress = enabled ? _gate.progress(now) : 0.0;
     final shown = _gate.heard && progress > 0.3 ? progress : 0.0;
-    if ((shown - _silence).abs() >= 0.05 || (shown == 0) != (_silence == 0)) {
-      _silence = shown;
+    final was = silence.value;
+    if ((shown - was).abs() >= 0.05 || (shown == 0) != (was == 0)) {
+      silence.value = shown;
       onSilence?.call(shown);
     }
     if (enabled && progress >= 1) _end(VoiceListenEnd.silence);
@@ -192,6 +205,12 @@ class VoiceListenSession {
     await _sub?.cancel();
     _sub = null;
     _active = false;
+    _resetMeters();
+  }
+
+  void _resetMeters() {
+    level.value = 0;
+    silence.value = 0;
   }
 
   /// Dinlemeyi bekletmeden bırakır (iptal, ekran kapanışı).
@@ -201,6 +220,7 @@ class VoiceListenSession {
     final sub = _sub;
     _sub = null;
     _active = false;
+    _resetMeters();
     await sub?.cancel();
   }
 }
