@@ -402,5 +402,18 @@
     "bugun": "sıra değişimi gövde 0 / satır 0 (PB7); hub 0 (PB2 düzen merkezi levhası aç/kapa); kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0 (2026-11-15, G5 taban — PB1 öncesi; aç/kapa'da üç gövde türü birer kez = MediaQuery boyu değişince TEK yeniden dizilim)",
     "hedef": "mod aç/kapa'da tek yeniden dizilim (kök ≤ 1, plan §1.5), dokunuş gövde 0, satır 0",
     "neden": "P63 G5 ilk ölçüm"
+  },
+  "S47": {
+    "senaryo": "Alt panel × düzensiz klavye inset akışı (telefon, 412×915): aç 0→300 (18 kare) / kapa (16 kare); API35+ ve API<35 motor modeli × düzgün / faz kayan (0-1-2 adım) / faz kayan + geri oynama iletimi; her karede panelin alt kenarı klavyenin GERÇEK üst kenarıyla karşılaştırılır (test/support/keyboard_track.dart)",
+    "geri_sicrama": 2,
+    "takilma": 26,
+    "sarsinti_px": 65,
+    "maks_sapma_px": 65,
+    "ort_sapma_px10": 31,
+    "oturma_sicrama": 1,
+    "boy_degisimi": 0,
+    "bugun": "2 / 26 / 65 / 65 / 31 / 1 / 0 (2026-11-15, düzeltme öncesi taban: panel iletilen değeri birebir izliyor; takılma/sarsıntı = iletim fazı, oturma sıçraması = API<35 kısa animasyonda bitiş karesi tanınmıyor → 140 ms gezinme boyu kadar yüksek, sonra iniyor)",
+    "hedef": "geri sıçrama 0, oturma sıçraması 0, takılma 0",
+    "neden": "kullanıcı bulgusu 2026-11-15: alt panel klavye açılırken zıplaya zıplaya açılıyor"
   }
 }

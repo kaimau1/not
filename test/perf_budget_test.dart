@@ -66,6 +66,7 @@ import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 
 import 'support/editor_harness.dart';
+import 'support/keyboard_track.dart';
 
 /// **AKICILIK BÜTÇESİ** (OTURTMA F59.2, senaryolar Ek A). Sayılan şey süre
 /// değil SAYI (kök kurulum, kayıt): makineden bağımsız. Bütçeler
@@ -2451,6 +2452,53 @@ void main() {
       'sira_govde': sum(order),
       'sira_satir': order[_row] ?? 0,
     });
+    await endEditor(tester);
+  });
+
+  testWidgets('S47: alt panel × düzensiz klavye inset akışı (telefon)', (
+    tester,
+  ) async {
+    addTearDown(() => setAndroid31(false));
+    const size = Size(412, 915);
+    await pumpEditor(
+      tester,
+      Note(
+        id: 'n',
+        type: NoteType.text,
+        title: 'Not',
+        body: List.generate(30, (i) => 'Satır $i').join('\n'),
+      ),
+      size: size,
+    );
+    await _settleGrowth(tester);
+    await tester.tap(find.textContaining('Satır 3').last);
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 150));
+    final total = PanelTrack();
+    for (final android31 in [false, true]) {
+      for (final (name, pattern, wiggle, frames) in [
+        ('düzgün', kRegularPattern, const <int>{}, 18),
+        ('faz kayan', kJitterPattern, const <int>{}, 18),
+        ('faz kayan + geri oynama', kJitterPattern, const {9, 15}, 18),
+        // Kısa (hızlı) klavye: kuyruk adımları büyük, bitiş adımı
+        // önceki adımla birleşir (API<35 bitiş tanıma sınırı).
+        ('kısa animasyon, faz kayan', kJitterPattern, const <int>{}, 10),
+      ]) {
+        setAndroid31(android31);
+        final t = await trackPanel(
+          tester,
+          size: size,
+          android31: android31,
+          pattern: pattern,
+          wiggle: wiggle,
+          openFrames: frames,
+        );
+        // ignore: avoid_print
+        print('S47 ${android31 ? "API<35" : "API35+"} $name: $t');
+        total.add(t);
+      }
+    }
+    _expectBudget('S47', total.toBudget());
     await endEditor(tester);
   });
 }
