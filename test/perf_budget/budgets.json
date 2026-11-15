@@ -347,13 +347,13 @@
   },
   "S45": {
     "senaryo": "P63 G2 not_kapa: telefon, 8 liste notu (30 madde, her üçüncüsü çizgili); karttan aç, madde 3'e odaklan + klavye 300 → klavye kapa (3 inset karesi + odak bırak, 20 kare) → sistem geri ile ana ekrana dön (40 kare); RenderObject dizilmesi (debugPrintLayouts) ve widget kurulumu",
-    "klavye_dizilme": 173,
+    "klavye_dizilme": 174,
     "klavye_kurulum": 404,
     "kapa_dizilme": 153,
     "kapa_kurulum": 1049,
     "bugun": "173 / 404 / 153 / 1049 (2026-11-15, G2 başı). Birleşme tabanı 05078e55 (PB6 öncesi): 173 / 403 / 153 / 1049 — dizilme AYNI, kurulum +1 (odaklı satırın beliriş sarmalayıcısı)",
     "hedef": "dizilme artmaz (mandal); kapanışta editör satırları yeniden dizilmez",
-    "neden": "P63 G2 cihaz A/B not_kapa LAYOUT +%19 (A 84.9 / B 100.9 ms) — kod kanıtı arandı"
+    "neden": "P63 G2 cihaz A/B not_kapa LAYOUT +%19 (A 84.9 / B 100.9 ms) — kod kanıtı arandı. 2026-11-15 S47 alt panel kip c varsayılan: 173 → 174 — panelin solma katmanı (FadeTransition = RenderAnimatedOpacity, rebuild'siz) panel zincirine 1 proxy düğüm ekler; klavye oturunca pay değiştiği tek karede o düğüm de dizilir (+1, kip a'da 173). Kurulum artmadı (AnimatedOpacity → FadeTransition ile +1 kurulum kaldırıldı). Kip c cihazda en akıcı bulundu (kullanıcı)."
   },
   "S42": {
     "senaryo": "P63 G4 kalem kipi (telefon, metin notu): ilk çizgi → hap → kapsülü aç → 3 araç → paneli aç → kalınlık 5 dokunuş → renk → 1 çizgi (kapsül kapanır)",

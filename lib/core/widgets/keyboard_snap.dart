@@ -434,7 +434,7 @@ class KeyboardSlide extends StatefulWidget {
 }
 
 class _KeyboardSlideState extends State<KeyboardSlide>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   /// `b`: ekrandaki taban (ekranın dibinden uzaklık) ve hedef.
   double? _shown;
   double _target = 0;
@@ -442,9 +442,20 @@ class _KeyboardSlideState extends State<KeyboardSlide>
     if (mounted) setState(() {});
   });
 
+  /// `c`: panelin görünürlüğü. `FadeTransition` bir RENDER nesnesi
+  /// sarmalayıcısı: animasyon kareleri yalnız boyar, hiçbir öğe yeniden
+  /// kurulmaz (AnimatedOpacity klavye karesi başına +1 kurulum ekliyordu,
+  /// S17/S45 mandalı).
+  late final AnimationController _fade = AnimationController(vsync: this);
+  // AnimatedOpacity ile aynı eğri: eğri İLERLEMEYE uygulanır (başlangıç →
+  // hedef), değere değil — solmada panel aynı karede gizlenir.
+  Animation<double> _opacity = const AlwaysStoppedAnimation(1);
+  double _fadeTarget = 1;
+
   @override
   void dispose() {
     _ticker.dispose();
+    _fade.dispose();
     super.dispose();
   }
 
@@ -516,15 +527,19 @@ class _KeyboardSlideState extends State<KeyboardSlide>
     // şekli çalışırken değişmez): a/b'de klavye karesi başına +1 kurulum
     // olurdu (S17 mandalı).
     if (KeyboardSlide.mode == 'c') {
-      panel = AnimatedOpacity(
-        opacity: hide ? 0 : 1,
+      final target = hide ? 0.0 : 1.0;
+      if (target != _fadeTarget) {
+        _fadeTarget = target;
+        _opacity = Tween(begin: _opacity.value, end: target).animate(
+          CurvedAnimation(parent: _fade, curve: AppMotion.standard),
+        );
         // Solma hızlı (klavyenin ilk karelerinde), beliriş yumuşak.
-        duration: hide
+        _fade.duration = hide
             ? AppMotion.exitOf(AppMotion.instant)
-            : AppMotion.quick,
-        curve: AppMotion.standard,
-        child: panel,
-      );
+            : AppMotion.quick;
+        _fade.forward(from: 0);
+      }
+      panel = FadeTransition(opacity: _opacity, child: panel);
     }
     return RepaintBoundary(
       child: Transform.translate(
