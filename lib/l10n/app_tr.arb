@@ -3933,7 +3933,6 @@
       }
     }
   },
-  "quickAddEditHint": "Sürükleyerek sırala, göz ile gizle ya da göster.",
   "quickAddKeepOne": "En az bir seçenek görünür kalmalı",
   "attachmentUploadNow": "Şimdi dene",
   "uploadPendingTitle": "{count, plural, =1{1 ek yüklenmeyi bekliyor} other{{count} ek yüklenmeyi bekliyor}}",

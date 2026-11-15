@@ -248,6 +248,11 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **`Customizable.slot(id, child)`:** sıkı kurulum bütçeli yerlerde (sabit ek çubuğu, video denetimi) normal kipte araya öğe sokmayan sarma; çağıran Personalize'ı dinler. Düz `Customizable` sarması S17 sabit PDF/görsel geçiş karesini +3 yaptı.
 - Sıra kayıtları: `quickOrder` (satırın `_ordered`'ı; boşsa AYNI ayraçlı liste), `attachOrder` (grup içinde). Sabit ek ⋮ levhası `ActionMenu` değil → `menuId` verilmedi (sabah bakılacak).
 
+## 2026-11-15 — Konfor kararları (oto/konfor)
+- Tablet ray çekmecesi eşiği `AppSwipe.drawerCommitFraction` = %30 (öbür yana çekişler `commitFraction` %22); fiske 300 aynı. Test `fullscreen_pull_test` "çekmece:". Testte DİKKAT: kenar şeridindeki sürüklemede slop YENMİYOR (toplam hareket = çekiş).
+- Düzen şeridi başlığı KÖK NEDEN: `Row` içinde `Flexible(başlık)` + `Spacer` boş alanı yarı yarıya bölüşür → başlık yarı paya sıkışır. Başlık+hap `Expanded`'da; sığmazsa `customizeModeTitleShort`. Dar metin testi kutu yazıyla (Ahem, 1 em/harf) anlamsız → SDK Roboto'yu `FontLoader` ile yükle (tur gibi).
+- "+" panelinin ayrı satır düzenleyicisi (`_QuickAddArranger`) KALKTI: "Düzenle" → `showCustomizeHub(addPanel)`. Kurallar `_AddPanelBoard`'da: son görünür kilidi (uyarı `quickAddKeepOne`), grup içi sıra (grup dışına bırakma grubun ucuna), Varsayılana dön, favori şablonlar panoda.
+
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 
 Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.

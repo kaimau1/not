@@ -8,11 +8,15 @@ import '../../../core/menu_layout.dart';
 import '../../../core/personalize.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/customize_board.dart';
+import '../../../core/widgets/undo_snackbar.dart' show showAppMessage;
 import '../../../core/a11y/chip_roles.dart';
 import '../../notes/presentation/add_catalog.dart';
 import '../../notes/presentation/editor/quick_row_editor.dart';
 import '../../notes/presentation/editor/video_transport.dart' show SeekIcon;
-import '../../notes/presentation/quick_add_fab.dart' show quickAddMenuId;
+import '../../notes/presentation/quick_add_fab.dart'
+    show favoriteTemplateOptions, quickAddMenuId;
+import '../../notes/data/user_templates.dart'
+    show favoriteTemplatesProvider, userTemplatesProvider;
 import '../settings_providers.dart';
 import 'personalize_bar_list.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
@@ -320,36 +324,68 @@ class _VisibilityBoard extends StatelessWidget {
   }
 }
 
-/// "+" paneli: gizleme `Personalize`, sıra `MenuLayouts` (panelin kendi
-/// "Düzenle"siyle aynı kayıt).
-class _AddPanelBoard extends StatelessWidget {
+/// "+" paneli: gizleme `Personalize`, sıra `MenuLayouts`. Panelin "Menüyü
+/// düzenle"si de buraya açılır (2026-11-15; eski panel içi düzenleyicinin
+/// kuralları burada): öğeler panelle aynı (favori şablonlar dahil), SON
+/// GÖRÜNÜR öğe gizlenemez, sıra GRUBUN İÇİNDE değişir (panel gruplu çizilir,
+/// gruplar arası taşıma anlamsız), "Varsayılana dön" yalnız bu panoyu sıfırlar.
+class _AddPanelBoard extends ConsumerWidget {
   const _AddPanelBoard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    ref
+      ..watch(favoriteTemplatesProvider)
+      ..watch(userTemplatesProvider);
+    final favorites = favoriteTemplateOptions(context, ref);
+    final all = [
+      for (final m in addCatalog(l10n, AddContext.newNote)) ...[
+        if (m.id == 'template')
+          for (final f in favorites)
+            (id: f.key, group: f.group, icon: f.icon, label: f.label),
+        (id: m.id, group: m.group, icon: m.icon, label: m.label),
+      ],
+    ];
     return ListenableBuilder(
       listenable: Listenable.merge([Personalize.prefs, MenuLayouts.layouts]),
       builder: (context, _) {
         final prefs = Personalize.prefs.value;
-        final layout = MenuLayouts.of(quickAddMenuId);
-        final catalog = layout.sorted(
-          addCatalog(l10n, AddContext.newNote),
-          (e) => e.id,
-        );
-        final entries = [
-          for (final e in catalog) (id: e.id, icon: e.icon, label: e.label),
+        // Kullanıcı sırası, panel gibi gruplu (grup içinde kullanıcı sırası).
+        final sorted = MenuLayouts.of(quickAddMenuId).sorted(all, (e) => e.id);
+        final catalog = [
+          for (final g in AddGroup.values)
+            for (final e in sorted)
+              if (e.group == g) e,
         ];
+        final groupOf = {for (final e in catalog) e.id: e.group};
         final shown = [
           for (final e in catalog)
             if (prefs.shows(UiItem.quickAdd(e.id))) e.id,
         ];
         return CustomizeBoard(
-          entries: entries,
+          entries: [
+            for (final e in catalog) (id: e.id, icon: e.icon, label: e.label),
+          ],
           shown: shown,
-          onToggle: (id, on) =>
-              Personalize.update((p) => p.withVisible(UiItem.quickAdd(id), on)),
+          onToggle: (id, on) {
+            if (!on && shown.length <= 1) {
+              showAppMessage(context, l10n.quickAddKeepOne);
+              return;
+            }
+            Personalize.update((p) => p.withVisible(UiItem.quickAdd(id), on));
+          },
           onReorder: (from, to) {
+            final id = shown[from];
+            final g = groupOf[id];
+            final inGroup = [
+              for (final s in shown)
+                if (groupOf[s] == g) s,
+            ];
+            // Hedef, taşınan öğeden sonra kalan listede kendi grubundan önce
+            // gelen öğe sayısı: grup dışına bırakılırsa grubun ucuna oturur.
+            final rest = [...shown]..removeAt(from);
+            final toG = rest.take(to).where((s) => groupOf[s] == g).length;
             final cur = MenuLayouts.of(quickAddMenuId);
             MenuLayouts.set(
               quickAddMenuId,
@@ -358,13 +394,25 @@ class _AddPanelBoard extends StatelessWidget {
                 quick: cur.quick,
                 order: reorderShown(
                   [for (final e in catalog) e.id],
-                  shown,
-                  from,
-                  to,
+                  inGroup,
+                  inGroup.indexOf(id),
+                  toG,
                 ),
               ),
             );
           },
+          onReset: () {
+            Personalize.update(
+              (p) => p.copyWith(
+                hidden: {
+                  for (final h in p.hidden)
+                    if (!h.startsWith(UiItem.quickAdd(''))) h,
+                },
+              ),
+            );
+            MenuLayouts.set(quickAddMenuId, const MenuLayout());
+          },
+          resetLabel: l10n.personalizeReset,
           shownLabel: l10n.customizeShown,
           availableLabel: l10n.quickRowEditAvailable,
           emptyLabel: l10n.quickRowEditEmpty,

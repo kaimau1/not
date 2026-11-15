@@ -8543,10 +8543,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get quickAddEditHint =>
-      'Drag to reorder, tap the eye to hide or show.';
-
-  @override
   String get quickAddKeepOne => 'At least one option must stay visible';
 
   @override

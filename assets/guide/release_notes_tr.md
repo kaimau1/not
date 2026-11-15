@@ -17,6 +17,7 @@ Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarla
 - **Madde altı çizgiler:** Biçim → Alt çizgi tepsisinde beş türün hepsi (çift ve dalgalı dahil) maddenin kendi rengi ve kalınlığıyla görünüyor; ayar levhası yenilendi, dar ekranda taşmıyor; yeni çizgi soldan sağa çizilerek beliriyor.
 - **Google Keep'ten içe aktarmada not kaybolmuyor:** yeni kurulumda Keep yedeğini içe aktarınca bazı notlar sessizce boş kalıp siliniyordu; artık her not tek seferde, içeriğiyle oluşur.
 - **Aramaya geçiş daha hafif:** arama kutusuna dokunduğunda ekranda görünmeyen kartlar artık boşuna hazırlanmıyor; yazdığın her harfte çizilen kart sayısı yarıdan aza indi.
+- **Daha rahat düzenleme:** tablette not açıkken soldaki çekmece kazara açılmıyor (biraz daha çekmek ya da hızlıca fiskelemek gerekiyor); küçük telefonda düzen şeridinin başlığı artık kesilmiyor; "+" panelindeki "Düzenle" diğer ekranlarla aynı karolu düzen panosunu açıyor (favori şablonlar da orada).
 
 ## 14 Kasım 2026 {#2026-11-14}
 - **Menüler toparlandı:** not ⋮ menüsünde, ana ekran ⋮'te ve sabit ekin ⋮ menüsünde üstte tutamak var — aşağı çekerek kapatabilirsin; uzun menüde başlık, ⚙ ve ✕ artık telefonun üst çubuğuyla çakışmıyor. Ana ekran ⋮'te tek maddelik "Diğer" grubu kalktı, Arşiv "Uygulama"nın sonunda.

@@ -15152,12 +15152,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}'**
   String cardHiddenAudio(int count);
 
-  /// No description provided for @quickAddEditHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sürükleyerek sırala, göz ile gizle ya da göster.'**
-  String get quickAddEditHint;
-
   /// No description provided for @quickAddKeepOne.
   ///
   /// In tr, this message translates to:
