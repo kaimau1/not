@@ -306,10 +306,24 @@ def run_once(label):
 def phase_sablon(s, W, H, plus):
     """P63: "+" → Şablonlar → levha → Planlama çipi → kapat (koordinatlar
     pencere dışında bulunur)."""
+    # G2 (2026-11-15, run_g2.log "'+' menüsünde Şablondan yok"): Şablon grubu
+    # katalogun SONUNDA (add_catalog.dart); "+" paneli SingleChildScrollView ve
+    # telefonda kat altında kalıyor — uiautomator görünmeyen karoyu dökmüyor.
+    # Bulunamazsa panel bir kez yukarı kaydırılır; ölçüm penceresi aynı yolu izler.
     tap(plus[0][1], plus[0][2]); time.sleep(1.2)
-    tpl = nodes(dump(), "^Şablondan")
+    xml = dump()
+    tpl = nodes(xml, "^Şablondan")
+    roll = None
     if not tpl:
-        raise RuntimeError("'+' menüsünde Şablondan yok")
+        top = nodes(xml, "^Metin notu")
+        if top:
+            px, y0 = top[0][1], top[0][2]
+            roll = (px, plus[0][2] - 250, px, y0, 300)
+            swipe(*roll); time.sleep(1.0)
+            tpl = nodes(dump(), "^Şablondan")
+    if not tpl:
+        key("KEYCODE_BACK"); time.sleep(1.0)
+        raise RuntimeError("'+' menüsünde Şablondan yok (kaydırınca da)")
     tap(tpl[0][1], tpl[0][2]); time.sleep(1.8)
     chip = nodes(dump(), "^Planlama")
     key("KEYCODE_BACK"); time.sleep(1.0)
@@ -317,8 +331,9 @@ def phase_sablon(s, W, H, plus):
     if not chip:
         raise RuntimeError("şablon levhasında 'Planlama' çipi yok")
     ready()
-    s.window([("sablon", lambda: tap(plus[0][1], plus[0][2]), 1.0),
-              ("sablon", lambda: tap(tpl[0][1], tpl[0][2]), 1.8),
+    s.window([("sablon", lambda: tap(plus[0][1], plus[0][2]), 1.0)]
+             + ([("sablon", lambda: swipe(*roll), 1.0)] if roll else [])
+             + [("sablon", lambda: tap(tpl[0][1], tpl[0][2]), 1.8),
               ("sablon", lambda: tap(chip[0][1], chip[0][2]), 1.2),
               ("sablon", lambda: key("KEYCODE_BACK"), 1.2)])
     time.sleep(0.6)
