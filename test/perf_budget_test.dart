@@ -639,6 +639,77 @@ void main() {
     await endEditor(tester);
   });
 
+  // S50 (kullanıcı bulgusu 2026-11-15 "normal madde notundaki kasma"): 40
+  // maddeli listede kutucuk, Enter, boş maddede Geri Sil — olay başına TÜM
+  // widget kurulumu ve RenderObject dizilmesi. Kök neden: madde değişikliği
+  // kökü (çubuklar, ipuçları, ~850 widget) yeniden kuruyordu, liste her
+  // kurulumda 40 satırın yuvasını + canlı tutma sarmalayıcılarını kuruyordu.
+  testWidgets('S50: 40 maddeli liste — kutucuk, Enter, Geri Sil (toplam)', (
+    tester,
+  ) async {
+    final repo = CountingNotesRepository();
+    await pumpEditor(
+      tester,
+      Note(
+        id: 'n',
+        type: NoteType.checklist,
+        title: 'Liste',
+        items: [
+          for (var i = 0; i < 40; i++) NoteItem(id: 'i$i', text: 'madde $i'),
+        ],
+      ),
+      repo: repo,
+    );
+    await _settleGrowth(tester);
+    final oldPrint = debugPrint;
+    Future<(int, int, int)> measure(Future<void> Function() body) async {
+      var layouts = 0;
+      debugPrint = (String? m, {int? wrapWidth}) {
+        if (m != null && m.startsWith('Laying out')) layouts++;
+      };
+      debugPrintLayouts = true;
+      try {
+        final c = await _count(body);
+        return (_sum(c), layouts, c['NoteEditorScreen'] ?? 0);
+      } finally {
+        debugPrintLayouts = false;
+        debugPrint = oldPrint;
+      }
+    }
+
+    final check = await measure(() async {
+      await tester.tap(find.byType(Checkbox).at(3));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+    });
+    await tester.tap(find.text('madde 7'));
+    await tester.pump(const Duration(milliseconds: 400));
+    final enter = await measure(() async {
+      tester.testTextInput.enterText('madde 7\n');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    });
+    final back = await measure(() async {
+      await tester.sendKeyEvent(LogicalKeyboardKey.backspace);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    });
+    await tester.pump(const Duration(seconds: 3));
+    final saved = repo.lastSaved!.items;
+    expect(saved, hasLength(40));
+    expect(saved.where((i) => i.checked).single.id, 'i3');
+    _expectBudget('S50', {
+      'kutucuk_kurulum': check.$1,
+      'kutucuk_dizilme': check.$2,
+      'enter_kurulum': enter.$1,
+      'enter_dizilme': enter.$2,
+      'sil_kurulum': back.$1,
+      'sil_dizilme': back.$2,
+      'kok': check.$3 + enter.$3 + back.$3,
+    });
+    await endEditor(tester);
+  });
+
   testWidgets('S5: kalem kipi, sayfaya 10 çizgi', (tester) async {
     _stylusDevice();
     final repo = CountingNotesRepository();

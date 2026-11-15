@@ -18,17 +18,17 @@
   },
   "S3": {
     "senaryo": "30 maddeli liste, bir kutucuğu işaretle",
-    "kok_kurulum": 1,
+    "kok_kurulum": 0,
     "satir": 1,
-    "bugun": "kök 1 / satır 1 (2026-11-14, P20 adım 2; önce 23 — işaretlenen maddeden sonraki bütün satırlar: SliverReorderableList satırı dizinli GlobalKey ile sarıyordu + sıra no satır önbelleği anahtarındaydı)",
+    "bugun": "kök 0 / satır 1 (2026-11-15, oto/madde-kasma: madde değişikliği kökü kurmuyor, _mutate itemsShown); kök 1 / satır 1 (2026-11-14, P20 adım 2; önce 23 — işaretlenen maddeden sonraki bütün satırlar: SliverReorderableList satırı dizinli GlobalKey ile sarıyordu + sıra no satır önbelleği anahtarındaydı)",
     "hedef": "≤ 1 / ≤ 2 (Faz 64)",
     "neden": "13 ölçüm artığıydı: liste yarım kuruluyken ölçülmüştü (_growBudget). Ölçüm artık kurulum bitince; ESKİ kod da bu ölçümle 23 veriyor (2026-11-11 doğrulandı) — gerileme değil. Satır hedefi Faz 64"
   },
   "S4": {
     "senaryo": "Maddede Enter (yeni madde)",
-    "kok_kurulum": 1,
+    "kok_kurulum": 0,
     "satir": 1,
-    "bugun": "kök 1 / satır 1 (2026-11-14, P20 adım 2; önce 23)",
+    "bugun": "kök 0 / satır 1 (2026-11-15, oto/madde-kasma: madde değişikliği kökü kurmuyor, _mutate itemsShown); kök 1 / satır 1 (2026-11-14, P20 adım 2; önce 23)",
     "hedef": "≤ 1 / ≤ 2 (Faz 64)",
     "neden": "14 ölçüm artığıydı: liste yarım kuruluyken ölçülmüştü (_growBudget). Ölçüm artık kurulum bitince; ESKİ kod da bu ölçümle 23 veriyor (2026-11-11 doğrulandı) — gerileme değil. Satır hedefi Faz 64"
   },
@@ -455,5 +455,18 @@
     "bugun": "420 / 168 / 195 / 0 / 242 / 2 / 146 / 1 (2026-11-15 ilk ölçüm). Klavye karesi yalnız iki Scaffold'un iskeletini kurar (satır 0, çip 0); yazarken satır 0; madde eklenince yeni satır + iki sütunda yarı sınırı kayınca sütun değiştiren 1 satır (GlobalKey yeniden bağlanır)",
     "hedef": "yazarken liste kurulmaz; madde/çip yalnız değişen satırı kurar",
     "neden": "kullanıcı isteği 2026-11-15: liste şablonu not sayfası gibi açılsın, yazarken canlı dolsun"
+  },
+  "S50": {
+    "senaryo": "40 maddeli liste (telefon): kutucuk işaretle (+1 sn, alta iniş), madde 7'de Enter (+400 ms), yeni boş maddede Geri Sil (+400 ms) — olay başına TÜM widget kurulumu ve dizilme (debugPrintLayouts); kok = üç olayda NoteEditorScreen",
+    "kutucuk_kurulum": 587,
+    "kutucuk_dizilme": 335,
+    "enter_kurulum": 566,
+    "enter_dizilme": 430,
+    "sil_kurulum": 569,
+    "sil_dizilme": 274,
+    "kok": 0,
+    "bugun": "kutucuk 587 / 335 · Enter 566 / 430 · Geri Sil 569 / 273 · kök 0 (2026-11-15, oto/madde-kasma; önce 2331 / 442 · 1499 / 486 · 1450 / 300 · kök 4)",
+    "hedef": "kök 0; tek maddedeki değişiklik yalnız o satırı kursun",
+    "neden": "kullanıcı bulgusu 2026-11-15 normal madde notunda kasma — ilk ölçüm"
   }
 }
