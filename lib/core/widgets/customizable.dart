@@ -41,6 +41,16 @@ class Customizable extends StatefulWidget {
   /// Düzenleme modunda değilken [id] görünür mü — kurulumda okunur.
   static bool shows(String id) => Personalize.current.shows(id);
 
+  /// SARMALAYICISIZ yuva: düzen modunda [Customizable] (çerçeve), normal
+  /// kipte çıplak [child] ya da hiçbir şey. Kurulum sayısı sıkı yerler için
+  /// (sabit ek çubuğu, video denetimi — klavye geçiş karesi bütçesi S17):
+  /// normal kipte araya öğe girmez. ÇAĞIRAN Personalize'ı dinlemeli (mod ve
+  /// görünürlük değişince yeniden kurulmalı).
+  static Widget slot(String id, Widget child) {
+    if (Personalize.editing) return Customizable(id: id, child: child);
+    return shows(id) ? child : const SizedBox.shrink();
+  }
+
   @override
   State<Customizable> createState() => _CustomizableState();
 }

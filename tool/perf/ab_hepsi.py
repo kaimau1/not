@@ -25,9 +25,12 @@ koşuda uygulama start-paused açılır ve evreler tek oturumda ölçülür:
              ×3 → tür seç ×3 (düz/kesikli/aynı tür = kaldır)
   kalem      (P63 G4) ilk OLCUM olmayan notta "Kalemle yaz" → 10 parmak çizgisi
              → kapsül aç (hap) / geri ×3 → kalem kipinden çık (çizgiler geri al)
+  duzen      (P63 G5) ilk OLCUM olmayan notta ⋮ → "Ekranı düzenle" → alt
+             çubukta 3 öğe gizle + geri göster (6 dokunuş, net değişiklik
+             yok) → Bitti
 P63 evreleri eskilerin SONUNDA (eski evrelerin sayıları kaymasın); hazırlık
 yoksa (şablon düğmesi / "OLCUM cizgi" notu bulunamazsa) evre atlanır, koşu
-düşmez. Düzen modu (`duzen`) evresini G5 ekler.
+düşmez.
 
 Evre başına: UI kare sayısı, UI ms toplamı, LAYOUT ms, en uzun kare,
 > 16 ms kare. A ve B için ORTANCA (3 koşu).
@@ -69,7 +72,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DOCS = os.path.join(ROOT, "docs", "perf")
 PHASES = ["acilis", "liste", "menu", "arama", "klasor", "yeni_not", "not_ac",
           "kb", "yaz", "not_kapa", "sabit_ac", "sabit_kay", "sabit_kb",
-          "sablon", "bicim", "kalem"]
+          "sablon", "bicim", "kalem", "duzen"]
 METRICS = ["kare", "ui_ms", "layout_ms", "max_ms", "j16"]
 
 
@@ -297,7 +300,7 @@ def run_once(label):
     for _ in range(6):
         swipe(x, int(H * .3), x, int(H * .85), 120); time.sleep(0.3)
 
-    for phase in (phase_sablon, phase_bicim, phase_kalem):
+    for phase in (phase_sablon, phase_bicim, phase_kalem, phase_duzen):
         try:
             phase(s, W, H, plus)
         except (RuntimeError, IndexError) as e:
@@ -491,6 +494,47 @@ def phase_kalem(s, W, H, plus):
             tap(undo[-1][1], undo[-1][2]); time.sleep(0.3)
     key("KEYCODE_BACK"); time.sleep(1.0)   # kapsül
     key("KEYCODE_BACK"); time.sleep(1.0)   # kalem kipi
+    key("KEYCODE_BACK"); time.sleep(1.8)   # not
+    ready()
+
+
+def phase_duzen(s, W, H, plus):
+    """P63 G5: not ⋮ ("Not menüsü", üstte) → "Ekranı düzenle" → alt çubuktaki
+    ilk 3 çerçeveye (anlam adı "Gizle") ikişer kez dokun → "Bitti". Kayıt
+    değişmez (gizle + göster)."""
+    xml = dump()
+    menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > 600]
+    m, _ = pick_card(xml, menus)
+    tap(m[1] - 170, m[2] + 150); time.sleep(2.5)
+    more = [n for n in nodes(dump(), "^Not menüsü$") if n[2] < H * .2]
+    if not more:
+        key("KEYCODE_BACK"); time.sleep(1.0)
+        raise RuntimeError("not ⋮ yok")
+    tap(more[0][1], more[0][2]); time.sleep(1.2)
+    item = nodes(dump(), "^Ekranı düzenle")
+    if not item:
+        swipe(W // 2, int(H * .85), W // 2, int(H * .45), 300); time.sleep(0.8)
+        item = nodes(dump(), "^Ekranı düzenle")
+    if not item:
+        key("KEYCODE_BACK"); time.sleep(0.8)
+        key("KEYCODE_BACK"); time.sleep(1.0)
+        raise RuntimeError("'Ekranı düzenle' yok")
+    tap(item[0][1], item[0][2]); time.sleep(1.5)
+    xml = dump()
+    frames = sorted([n for n in nodes(xml, "^Gizle") if n[2] > H * .8],
+                    key=lambda n: n[1])[:3]
+    done = nodes(xml, "^Bitti$")
+    if len(frames) < 3 or not done:
+        if done:
+            tap(done[0][1], done[0][2]); time.sleep(1.0)
+        key("KEYCODE_BACK"); time.sleep(1.5)
+        raise RuntimeError("düzen modu çerçeveleri yok")
+    # Mod açılışı pencere dışında (menü levhası kapanışıyla karışmasın);
+    # ölçülen: 6 dokunuş + Bitti (şeridin çıkışı).
+    ready()
+    s.window([("duzen", lambda f=f: tap(f[1], f[2]), 0.8)
+              for f in frames for _ in range(2)]
+             + [("duzen", lambda: tap(done[0][1], done[0][2]), 1.5)])
     key("KEYCODE_BACK"); time.sleep(1.8)   # not
     ready()
 

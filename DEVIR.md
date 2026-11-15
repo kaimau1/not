@@ -6,8 +6,10 @@
 - PB1 bitti (f4c67acf): şerit + çerçeve; S40 değişmedi; sapma: kayma boyun çeyreği.
 - PB2 bitti: customize_hub.dart + (b)(c)(d) pano; ekran yüzeyleri alt alta; (e) dönüştürülmedi (sabah bakılacak). S40 hub_govde 0.
 
+- PB7 bitti: quickOrder/attachOrder okunuyor, video/pinned `Customizable.slot` (S17 korunur: Customizable sarması geçiş karesini +3 yapıyordu), ortak çalışan sarıldı, ab_hepsi.py `duzen` evresi (cihazda denenmedi). pinned ⋮ menuId yapılmadı (ActionMenu değil).
+
 ## Şu anki adım
-- PB7: editor_quick_row quickOrder, attach_sheet attachOrder, video_transport/ortak çalışan/pinned sarmaları, pinned ⋮ menuId.
+- PA9.
 
 ## Sıradaki
 - PA9 (9 showSnackBar + 3 hide → showMessage/hideMessage, notice_paths_guard 0), bitiş (OTOMASYON P63 satırı, regresyon, hafıza arayuz.md, sürüm notu, KONTROL_LISTEM).

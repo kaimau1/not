@@ -2259,6 +2259,15 @@ void main() {
       await _settle(tester);
     });
     expect(Personalize.editing, isFalse);
+    // Sıra değişince (P63 PB7: hızlı satır / Ekle sırası) gövde ve satır
+    // kurulmaz.
+    final order = await _count(() async {
+      Personalize.update(
+        (p) => p.copyWith(quickOrder: ['bold', 'spell'], attachOrder: ['file']),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+    });
     _expectBudget('S40', {
       'ac_kok': open['NoteEditorScreen'] ?? 0,
       'ac_govde': sum(open),
@@ -2266,6 +2275,8 @@ void main() {
       'dokunus_govde': sum(tap),
       'dokunus_satir': tap[_row] ?? 0,
       'hub_govde': sum(hub),
+      'sira_govde': sum(order),
+      'sira_satir': order[_row] ?? 0,
     });
     await endEditor(tester);
   });

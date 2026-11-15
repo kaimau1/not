@@ -385,7 +385,9 @@
     "dokunus_govde": 0,
     "dokunus_satir": 0,
     "hub_govde": 0,
-    "bugun": "hub 0 (PB2 düzen merkezi levhası aç/kapa); kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0 (2026-11-15, G5 taban — PB1 öncesi; aç/kapa'da üç gövde türü birer kez = MediaQuery boyu değişince TEK yeniden dizilim)",
+    "sira_govde": 0,
+    "sira_satir": 0,
+    "bugun": "sıra değişimi gövde 0 / satır 0 (PB7); hub 0 (PB2 düzen merkezi levhası aç/kapa); kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0 (2026-11-15, G5 taban — PB1 öncesi; aç/kapa'da üç gövde türü birer kez = MediaQuery boyu değişince TEK yeniden dizilim)",
     "hedef": "mod aç/kapa'da tek yeniden dizilim (kök ≤ 1, plan §1.5), dokunuş gövde 0, satır 0",
     "neden": "P63 G5 ilk ölçüm"
   }

@@ -3425,17 +3425,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // düğmesinden ibaret, doldukça büyür.
     // Ortak çalışan eklenebilir mi: yalnız bu cihazdaki not kimseyle
     // paylaşılamaz; kişiselleştirmede "Ortak çalışma" kapatılabilir.
-    final canCollab =
-        Customizable.shows(UiItem.topCollab) &&
-        (widget.ownerId != null ||
-            !(ref.read(notesRepositoryProvider)?.isLocal(widget.noteId) ??
-                false));
+    final collabPossible =
+        widget.ownerId != null ||
+        !(ref.read(notesRepositoryProvider)?.isLocal(widget.noteId) ?? false);
+    final canCollab = Customizable.shows(UiItem.topCollab) && collabPossible;
     // TEK "+" (F38.3): ne dolu olduğu çip şeridinde; paylaşım durumu yanında
     // (paylaşılmışsa). Levha [_openMetaMenu]; `note-meta-chip` anahtarı korunur.
     final actionsMenu = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (canCollab) _collabMarker(theme),
+        // Düzen modunda gizliyken de çerçeveli görünür (P63 PB7); normal
+        // kipte gizliyse yer kaplamaz.
+        if (collabPossible)
+          Customizable(id: UiItem.topCollab, child: _collabMarker(theme)),
         IconButton(
           key: const ValueKey('note-meta-chip'),
           tooltip: l10n.noteMetaMenu,

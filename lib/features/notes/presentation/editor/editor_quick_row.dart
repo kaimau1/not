@@ -1,4 +1,5 @@
 import '../../../../app/window_class.dart';
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -174,6 +175,31 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
     _refresh();
   }
 
+  /// Kullanıcı sırası (P63 PB7, [UiPrefs.quickOrder]): kimlik → yer. Kayıt
+  /// DEĞİŞİNCE bir kez hesaplanır (her kurulumda yeni harita yok).
+  List<String> _rankSrc = const [];
+  Map<String, int> _rank = const {};
+
+  /// [entries] kullanıcı sırasında. Sıra kaydı boşsa AYNI liste (ayraçlı
+  /// varsayılan düzen); doluysa ayraçsız, kayıtlı sırada (bilinmeyenler
+  /// varsayılan yerlerinde sonda — [UiPrefs.orderOf]).
+  List<_QuickEntry?> _ordered(List<_QuickEntry?> entries) {
+    final saved = Personalize.current.quickOrder;
+    if (saved.isEmpty) return entries;
+    final present = [for (final e in entries) ?e];
+    // Düğme takımı (geri çağrıların varlığı) değişirse de yeniden hesapla.
+    if (!identical(saved, _rankSrc) || present.length != _rank.length) {
+      _rankSrc = saved;
+      _rank = {
+        for (final (i, k) in UiPrefs.orderOf([
+          for (final e in present) e.key,
+        ], saved).indexed)
+          k: i,
+      };
+    }
+    return present..sort((a, b) => (_rank[a.key] ?? 0) - (_rank[b.key] ?? 0));
+  }
+
   void _refresh() {
     final c = _watched?.controller;
     final mark = c == null ? RichMark.none : activeRichFormats(c);
@@ -253,15 +279,10 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
       String tip,
       VoidCallback? on, {
       bool active = false,
-    }) => _QuickEntry(
-      key,
-      icon,
-      tip,
-      on,
-      button(key, icon, tip, on, on: active),
-    );
+    }) =>
+        _QuickEntry(key, icon, tip, on, button(key, icon, tip, on, on: active));
     final m = _mark;
-    final entries = <_QuickEntry?>[
+    final all = <_QuickEntry?>[
       if (widget.onPen != null) ...[
         _QuickEntry(
           'pen',
@@ -496,6 +517,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         child: ListenableBuilder(
           listenable: Personalize.listenable,
           builder: (context, _) {
+            final entries = _ordered(all);
             // Düzenleme modunda gizliler de çerçeveli görünmeli: hepsi kayan
             // satırda.
             if (!widget.fit || Personalize.editing) {

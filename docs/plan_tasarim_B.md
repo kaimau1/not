@@ -1659,6 +1659,19 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   `UiItem.topTheme` ölü kimlik, silinmez.
 - **Model:** opus (high) — görsel olmayan bağlama + kasma duyarlı editör dosyaları. **A/B:** evet —
   `kb`, `yaz`, `sabit_ac`, `sabit_kb`, `duzen`. **Bütçe:** S40.
+- [x] **Durum (2026-11-15, G5 dalı oto/G5-duzen, opus):** hızlı satır `quickOrder` sırasında
+  (`_EditorQuickRowState._ordered`: kayıt boşsa AYNI liste — ayraçlı varsayılan; sıra haritası kayıt
+  değişince bir kez); Ekle levhası `attachOrder` sırasında (grup içinde; boşsa katalog); video hız/süre,
+  sabit ek çubuğu (yan, tam ekran, balon, bağlantı, sabitlemeyi kaldır, kalem — `UiItem.pinned`) düzen
+  modunda çerçeveli: yeni `Customizable.slot` (normal kipte ARAYA ÖĞE GİRMEZ — ilk denemede
+  `Customizable` sarması S17 sabit PDF/görsel geçiş karesini 234→237 / 219→222 yaptı, slot ile 234 / 219;
+  bölme Personalize'ı kendi dinler); ortak çalışan işareti `Customizable` ile sarıldı (gizliyken düzen
+  modunda görünür). Takvim şeridi / hızlı yakalama hub'ın "Ana ekran" yüzeyinde anahtar (dashboard'a
+  dokunulmadı). `customize_wraps_test` 3/3; S40 `sira_govde` 0 / `sira_satir` 0; S17 değişmedi.
+  **Yapılmadı (sabah bakılacak):** sabit ek ⋮ `menuId: 'pinned.menu'` — levha `ActionMenu` değil
+  (SheetTile'lı özel levha); menuId için levhayı ActionMenu'ya çevirmek görünüş değişikliği (PB7 görünüş
+  paketi değil). `TOUR_COMPARE` piksel kıyası koşulmadı (G3 tabanı görüntüsü yok); varsayılan yolda kod
+  aynı ağacı kurar (slot/Customizable mod kapalıyken çıplak çocuk, sıra kaydı boşken sıralama dalı yok).
 
 ### 7.10 Sonraya (bu planın paketi DEĞİL; regresyon listesine/Kuyruk'a not)
 

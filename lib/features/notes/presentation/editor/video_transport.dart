@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
+import '../../../../core/widgets/customizable.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
 import 'video_hub_scope.dart';
@@ -159,26 +160,34 @@ class VideoTransportControls extends StatelessWidget {
           icon: SeekIcon(seconds: forward, forward: true, size: iconSize),
           onPressed: source == null ? null : () => seek(forward),
         ),
-        if (showSpeed && source != null && prefs.shows(UiItem.videoSpeed))
-          Tooltip(
-            message: l10n.videoSpeed,
-            child: InkWell(
-              key: const ValueKey('video-speed'),
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                hub.touch(source);
-                source.setSpeed(nextVideoSpeed(source.speed));
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-                child: Text(
-                  formatVideoSpeed(source.speed),
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: source.speed == 1
-                        ? color.withValues(alpha: 0.8)
-                        : (onDark ? Colors.amberAccent : scheme.primary),
+        // Yerinde düzen modunda çerçevelenir (P63 PB7); normal kipte gizliyse
+        // yer kaplamaz (eskiden `prefs.shows` süzgeci — aynı sonuç).
+        if (showSpeed && source != null)
+          Customizable.slot(
+            UiItem.videoSpeed,
+            Tooltip(
+              message: l10n.videoSpeed,
+              child: InkWell(
+                key: const ValueKey('video-speed'),
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  hub.touch(source);
+                  source.setSpeed(nextVideoSpeed(source.speed));
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 6,
+                  ),
+                  child: Text(
+                    formatVideoSpeed(source.speed),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: source.speed == 1
+                          ? color.withValues(alpha: 0.8)
+                          : (onDark ? Colors.amberAccent : scheme.primary),
+                    ),
                   ),
                 ),
               ),
@@ -200,19 +209,22 @@ class VideoTransportControls extends StatelessWidget {
             icon: const Icon(Icons.rotate_90_degrees_cw_outlined),
             onPressed: () => hub.rotate(video.id),
           ),
-        if (showTime && position != null && prefs.shows(UiItem.videoTime))
-          Padding(
-            padding: const EdgeInsets.only(left: 4, right: 2),
-            child: Text(
-              duration == null
-                  ? formatVideoTimestamp(position)
-                  : '${formatVideoTimestamp(position)} / '
-                        '${formatVideoTimestamp(duration)}',
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 12,
-                color: color.withValues(alpha: 0.85),
-                fontFeatures: const [FontFeature.tabularFigures()],
+        if (showTime && position != null)
+          Customizable.slot(
+            UiItem.videoTime,
+            Padding(
+              padding: const EdgeInsets.only(left: 4, right: 2),
+              child: Text(
+                duration == null
+                    ? formatVideoTimestamp(position)
+                    : '${formatVideoTimestamp(position)} / '
+                          '${formatVideoTimestamp(duration)}',
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: color.withValues(alpha: 0.85),
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ),
           ),
