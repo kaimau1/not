@@ -402,5 +402,17 @@
     "bugun": "sıra değişimi gövde 0 / satır 0 (PB7); hub 0 (PB2 düzen merkezi levhası aç/kapa); kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0 (2026-11-15, G5 taban — PB1 öncesi; aç/kapa'da üç gövde türü birer kez = MediaQuery boyu değişince TEK yeniden dizilim)",
     "hedef": "mod aç/kapa'da tek yeniden dizilim (kök ≤ 1, plan §1.5), dokunuş gövde 0, satır 0",
     "neden": "P63 G5 ilk ölçüm"
+  },
+  "S47": {
+    "senaryo": "Şablon oluşturma (telefon): alışveriş önizlemesi (5 madde + 74 öneri çipi) madde ekle alanına odak + klavye 6 inset karesi; öneri çipi; kutucuk; Oluştur. Galeri (16 hazır) arama + klavye 6 kare. Kendi şablon düzenleyicisi (20 madde) maddeye 5 tuş.",
+    "klavye_kurulum": 396,
+    "klavye_dizilme": 258,
+    "cip_kurulum": 354,
+    "kutu_kurulum": 328,
+    "galeri_klavye_kurulum": 330,
+    "duzenleyici_tus_kurulum": 191,
+    "bugun": "396 / 258 / 354 / 328 / 330 / 191 (2026-11-15; önce 14124 / 5784 / 2302 / 2266 / 7590 / 1840 — levha builder klavye karesinde yeni levha örneği kuruyordu, dokunuş bütün çipleri kuruyordu, düzenleyicide ilk tuş bütün ekranı kuruyordu)",
+    "hedef": "klavye karesi levha içeriğini kurmaz; dokunuş yalnız değişen satırı/çipi kurar",
+    "neden": "kullanıcı bulgusu 2026-11-15: şablon oluştururken aşırı kasıyor"
   }
 }
