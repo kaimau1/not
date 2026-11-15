@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Kullandıkça artan kasma (oto/birikme-sizinti, cihazda bakılmadı — 2026-11-15)**
+  Nerede: ana ekran → notlar (madde + metin), klavye.
+  Nasıl: uygulamayı tamamen kapatıp aç, bir nota gir, klavyeyi aç/kapa (taze hâl); sonra 30 kez farklı notlara gir-çık, her birinde klavyeyi aç/kapa; aynı notta klavyeyi yine aç/kapa. Telefon ısınmışsa soğuyunca tekrar dene (ısınma da kasma yapar).
+  Doğruysa: 30 gir-çıktan sonra klavye ve kaydırma ilk andaki kadar akıcı. Yanlışsa: ekran kaydı + telefon sıcak mıydı, yaz (ölçüm: `adb shell dumpsys meminfo dev.kaimau.notlar.olcum` taze ↔ 30 tur sonra, `tool/perf/ab_klavye.py`).
+
 - [ ] **Konfor kararları (oto/konfor, cihazda bakılmadı — 2026-11-15)**
   Nerede: tablette bir not açıkken sol kenar; küçük telefonda ⋮ → Ekranı düzenle; ana ekranda "+" → ayar simgesi (Düzenle).
   Nasıl: sol kenardan çekmeceyi yavaşça az çek (açılmamalı), biraz daha çek (açılmalı), kısa fiske (açılmalı); düzen şeridinin başlığı kesilmeden ("Düzenleme modu" ya da "Düzen") görünsün; "+" → Düzenle "+" panosunu açsın, bir öğeyi gizle/sırala, son görünen öğeyi gizlemeye çalış (uyarı çıkmalı), paneli yeniden aç.

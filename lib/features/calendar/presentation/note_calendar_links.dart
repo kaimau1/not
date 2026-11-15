@@ -58,9 +58,12 @@ List<NoteCalendarLink> calendarLinksForNote(
   return out;
 }
 
-/// Editördeki notun bağları (tek not izlenir).
-final noteCalendarLinksProvider =
-    Provider.family<List<NoteCalendarLink>, String>((ref, noteId) {
+/// Editördeki notun bağları (tek not izlenir). `autoDispose` ŞART (S47,
+/// 2026-11-15): düz `family` iken oturumda açılan HER not için bir örnek
+/// kapanıştan sonra da yaşıyor, takvim akışları her yayında hepsini yeniden
+/// hesaplıyordu (açılan not sayısıyla büyüyen iş).
+final noteCalendarLinksProvider = Provider.autoDispose
+    .family<List<NoteCalendarLink>, String>((ref, noteId) {
       return calendarLinksForNote(
         noteId,
         dayLinks: ref.watch(dayLinksStreamProvider).value ?? const {},
