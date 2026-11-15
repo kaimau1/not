@@ -541,19 +541,19 @@ değer metni taşmaz: genişlik 36, `FittedBox` yok — tabular rakam) · gizlen
 
 ### 3.4 Kabul ölçütleri
 
-- [ ] `pen_tray.dart`'ta `easeOutBack` 0, `AnimatedSize` 0, `AnimatedPositioned` 0, `blurRadius` 0,
+- [x] `pen_tray.dart`'ta `easeOutBack` 0, `AnimatedSize` 0, `AnimatedPositioned` 0, `blurRadius` 0,
       `Colors.black` 0, elle `Duration(milliseconds:` 0 (grep ile).
-- [ ] Panelde ve sabit kalem çipinde önizleme `paintInkStroke` ile çizilir
+- [x] Panelde ve sabit kalem çipinde önizleme `paintInkStroke` ile çizilir
       (`test/pen_stroke_preview_test.dart`, iskelette; fosforluda boyanan renk alfa 0x66).
-- [ ] Var olan testler değişmeden yeşil: `pen_tray_controls_test`, `pen_single_tool_test`,
+- [x] Var olan testler değişmeden yeşil: `pen_tray_controls_test`, `pen_single_tool_test`,
       `pen_icons_test`, `editor_pen_tablet_test`, `handwriting_pen_test` (anahtarlar: `pen-tray-<araç>`,
       `pen-tray-color`, `pen-tray-undo`, `pen-tray-more`, `pen-tray-pin`, `pen-tray-settings`,
       `pen-tray-opacity`, `pen-dock-peek`, `pen-dock-open/closed`, `pen-dock-quick-eraser`,
       `pen-preset-<kod>`, `page-pen-dock`).
-- [ ] `pen-panel-pin` sabitler/kaldırır; 6. kalem en eskiyi düşürür (bugünkü kural, yeni widget testi).
-- [ ] Gizlenen araç üç kipte de yok; seçili araç gizlense de görünür; `pen`/`eraser` gizlenemez
+- [x] `pen-panel-pin` sabitler/kaldırır; 6. kalem en eskiyi düşürür (bugünkü kural, yeni widget testi).
+- [x] Gizlenen araç üç kipte de yok; seçili araç gizlense de görünür; `pen`/`eraser` gizlenemez
       (`test/pen_tray_tools_pref_test.dart` yeni).
-- [ ] Tur: `kalem-hap`, `kalem-kapsul`, `kalem-panel`, `kalem-sekil-panel`, `kalem-sutun` (tablet),
+- [x] Tur: `kalem-hap`, `kalem-kapsul`, `kalem-panel`, `kalem-sekil-panel`, `kalem-sutun` (tablet),
       `cizim-serit` (açık + koyu).
 
 ### 3.5 Kasma riski + bütçe (kasma-kontrol 8 madde)
@@ -1478,6 +1478,23 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   `kalem.md`'deki gecikme/avuç içi kurallarına dokunma.
 - **A/B:** evet — `kalem` evresi (PBT) + `not_ac`. Kalemle yazma gecikmesi en hassas yüzey:
   kötüleşme SIFIR. **Bütçe:** S42.
+- [x] **Durum (2026-11-15, G4 dalı oto/G4-kalem-ses):** önce üret — S42 tabanı (kök 0 / tuval 0 / PenTray 3 /
+  `_DockTool` 77 / `_Options` 7), tur `kalem-hap/-kapsul/-panel/-sekil-panel/-sutun`, `cizim-serit`
+  (`build/tour_p63_once` → `_sonra`), grep önce 3/2/1/3/3/11 → sonra 0/0/0/0/0/0. **Hipotez (bulgu 2):**
+  alt şerit `drawing_screen`'de gövdeyle aynı Flex'te, PDF/slayt/görsel görüntüleyicide
+  `Scaffold.bottomNavigationBar` — panelin `AnimatedSize`'ı 4/6 çağrı yerinde belgeyi her karede yeniden
+  diziyordu (bölmelerde `Positioned`, etkisiz); DOĞRULANDI, panel artık tek adımda + yalnız boyama.
+  Yapılan: `AppSurface.floating` (kapsül/hap/sabit kalem `pill`, panel `xl`), sütun/şerit `surfaceContainerLow`
+  + `hairline`; kalkış tek kalıp `AnimatedSlide` (`selection` + `emphasized`); hap ↔ kapsül ve sabit kalem
+  hapı aynı geçiş (0.92, `short`/`exitOf`); panel `_panelAnim` (yuva koşulsuz, çıkışta son örnek korunur →
+  S42 artmadı); tek `_Swatch` (dot/_colorDot silindi); `PenStrokePreview` panelde (kâğıt, 44) ve sabit kalem
+  çipinde; kalınlık/şeffaflık tek satır kalıbı (simge · Slider · tabular değer); `showInkSettings` →
+  `showAppSheet`; `_tools` süzgeci (`UiItem.penTool`, kalem/silgi gizlenemez, seçili hep çizilir);
+  ⋯ menüsünde sabit kalem "Sabitlemeyi kaldır" (`unpin`). `test/pen_tray_tools_pref_test.dart` 5 kırmızı → yeşil.
+  **Bulunan hata:** tablet bölünmüşte geniş kapsül 150 px TAŞIYORDU (`wide` pencere eninden) — artık bölme
+  eninden (`LayoutBuilder`, kalem + eylem sayısıyla). **Sapma (SB13, sabah bakılacak):** panel iğnesi
+  önizlemenin BAŞINDA (plan: sağ uç) — telefonda sağ kenardaki yüzen kalem düğmesi iğneyi örtüyordu.
+  Cihaz A/B (`kalem`, `not_ac`) yürütücünün öbek sonunda; `kalem` evresi `ab_hepsi.py`'ye bu dalda eklendi.
 
 ### 7.6 PB4 — şablonlar (fable)
 
@@ -1616,6 +1633,7 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
 | SB9 | Çizgi levhasında canlı uygulama ("Tamam"sız) | "Tamam" kalır |
 | SB10 | Çizgi vurgu saydamlığı 0.75 → `AppAlpha.strong` (0.85) — var olan tema renkli çizgiler bir ton koyulaşır | uygulanır (tek sabit); beğenilmezse sabit tek satırda `AppAlpha.muted`'a çekilir |
 | SB11 | Çizginin soldan sağa belirişi | ölçüm kapısını geçerse kalır, geçmezse geri alınır |
+| SB13 | Kalem panelinde iğne düğmesinin yeri (plan: önizlemenin sağ ucu) | önizlemenin başında — telefonda sağ kenardaki yüzen kalem düğmesi sağ ucu örtüyor |
 | SB12 | Şablon kartında yıldız (PB0'da çıktı): telefonda kart 104 dp, alt bantta simge + ad + yıldız + 40 dp menü sığmıyor (ada 4 dp kalıyor) | yıldız bugünkü gibi kartın sağ üst köşesinde; bantta simge + ad (+ `more_horiz`) |
 
 (SB5 numarası kullanılmadı. "SB" = sabah bakılacak; bütçe senaryoları S1–S44 ile karışmasın diye ayrı önek.)

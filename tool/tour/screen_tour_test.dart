@@ -758,6 +758,11 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
 
 /// Kalem kipi: kalemle bir çizgi (kip açılır), ipucu ve çekmece insin.
 Future<void> _penMode(WidgetTester tester) async {
+  // Kalem metin alanına değerse Scribe sorulur (testte yanıt yok).
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.scribe,
+    (_) async => false,
+  );
   InkToolMemory.autoStylus = true;
   InkToolMemory.stylusEver = true;
   final page = tester.getRect(find.byType(PageInkStack).first);
