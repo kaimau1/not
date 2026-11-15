@@ -294,9 +294,12 @@ def run_once(label):
             if isinstance(e, NotReady):
                 raise
             print(f"evre atlandı ({phase.__name__}): {e}", flush=True)
-            for _ in range(3):
-                key("KEYCODE_BACK"); time.sleep(0.6)
-            ready()
+            # 2026-11-15: evre kendi BACK'lerini bastı; fazladan BACK uygulamadan
+            # çıkarıp koşuyu düşürüyordu. Hazır değilse kalan evreler atlanır.
+            try:
+                ready()
+            except NotReady:
+                break
 
     st = s.stats()
     st["acilis"]["ilk_kare_ms"] = s.first_frame_ms or 0
