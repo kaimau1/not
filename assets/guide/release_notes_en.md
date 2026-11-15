@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 15 November 2026 {#2026-11-15}
+- **Bottom bar while the keyboard opens:** on some phones (Android 14 and older) the bottom bar briefly sat too high and then dropped as the keyboard opened; it now stays right on top of the keyboard.
 - **Smoother dictation card:** the card now opens fully in one go, and while you dictate with the keyboard open the bottom bar and card no longer bob up and down.
 - **Simpler pen capsule:** the undo button (already in the top bar) and the confirm buttons are gone — the pen you pick applies right away and your writing saves itself; pens now spread across the capsule. The eraser has its own always-handy button; hold it (or use the ⋯ menu) to clear all annotations, and bring them back with "Undo". Tap the keyboard button to go back to typing.
 - **Refreshed edit mode:** in "Edit screen" the strip at the top is a single line and a small number shows how many buttons are hidden; hidden buttons have a dashed outline. The new "Reorder" button opens the layout of the screen you're on: bottom bar, quick row, "+" panel, Add sheet, pinned attachment, pens — all with the same tiles, tap to hide/show, drag to reorder. The Personalize screen uses the same tiles too.

@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Alt panel klavye açılırken zıplıyor mu — üç kip karşılaştırması (oto/alt-panel-klavye, cihazda bakılmadı)**
+  Nerede: üç ayrı ölçüm APK'sı (a = bugünkü gibi klavyeyi birebir izler, b = yumuşak izler, c = klavye hareket ederken gizlenip oturunca belirir); bir metin notunda gövdeye dokunup klavyeyi aç-kapa.
+  Nasıl: her kipte 10 kez aç-kapa; hangisinde panel "zıplamadan" geliyor? `tool/perf/panel_kayit.py` sayıları da yanında.
+  Doğruysa: seçtiğin kipi söyle — varsayılan o olur (şu an a).
+  Yanlışsa: ekran kaydı gönder, hangi kipte olduğunu söyle.
 - [ ] **Düzen modu ve "Sırala" (yeni görünüş, cihazda bakılmadı — P63 G5)**
   Nerede: bir notta ⋮ → Ekranı düzenle; üst şeritteki ⇅ (Sırala); Ayarlar → Kişiselleştir; not ⋮ → Menüyü düzenle.
   Nasıl: düzen modunu aç (şerit yukarıdan kayarak gelsin), alt çubukta 2–3 düğmeye dokun (gizli olan kesikli çerçeveli, şeritte sayı çıksın), Geri al / Bitti; ⇅ ile levhayı aç — notta "Alt çubuk", klavye açıkken "Hızlı satır" seçili gelsin; üstteki şeritte bir simgeyi basılı tutup sürükleyerek sırala, hızlı satırı yeniden sırala ve klavyeyi açıp satırın o sırada olduğuna bak; Ekle levhasının sırasını değiştir; sabit PDF'li notta düzen modunda çubuktaki düğmeleri gizle/göster; küçük telefonda şerit başlığının sığdığına bak.

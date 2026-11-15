@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 15 Kasım 2026 {#2026-11-15}
+- **Klavye açılırken alt çubuk:** bazı telefonlarda (Android 14 ve öncesi) klavye açılırken alt çubuk bir an fazla yukarıda kalıp aşağı iniyordu; artık klavyeyle aynı yerde duruyor.
 - **Sesle yazma kartı akıcı:** kart artık tek seferde tam açılıyor; klavye açıkken konuşurken alt çubuk ve kart inip kalkmıyor.
 - **Kalem kapsülü sadeleşti:** geri al (üst çubukta zaten var) ve onay düğmeleri kalktı — seçtiğin kalem anında geçerli, yazdıkların kendiliğinden kaydediliyor; kalemler kapsüle rahatça yayılıyor. Silgi kendi düğmesinde hep elinin altında; ona basılı tutarak (ya da ⋯ menüsünden) tüm çizimleri temizleyebilir, "Geri al" ile geri getirebilirsin. Yazıya dönmek için klavye düğmesi.
 - **Düzen modu yenilendi:** "Ekranı düzenle"de üstteki şerit tek satır, kaç düğmenin gizli olduğu küçük bir sayıyla görünüyor; gizli düğmeler kesikli çerçeveyle belli. Yeni "Sırala" düğmesi bulunduğun ekranın düzenini açıyor: alt çubuk, hızlı satır, "+" paneli, Ekle levhası, sabit ek, kalemler — hepsi aynı karolarla, dokun = gizle/göster, sürükle = sırala. Kişiselleştir ekranı da aynı karolara geçti.
