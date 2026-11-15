@@ -1411,6 +1411,7 @@ class _FolderSwipeState extends State<FolderSwipe>
     final scheme = Theme.of(context).colorScheme;
     final tokens = AppTokens.of(context);
     final forwardEdge = _direction > 0;
+    final ink = _past ? scheme.onPrimaryContainer : scheme.onSurface;
     return Listener(
       onPointerSignal: _onSignal,
       child: GestureDetector(
@@ -1437,99 +1438,104 @@ class _FolderSwipeState extends State<FolderSwipe>
             PositionedDirectional(
               top: 0,
               bottom: 0,
-              start: forwardEdge ? null : 12,
-              end: forwardEdge ? 12 : null,
+              start: forwardEdge ? null : AppSpace.m,
+              end: forwardEdge ? AppSpace.m : null,
               child: IgnorePointer(
                 child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: _labelMax),
-                    child: DecoratedBox(
-                      key: const ValueKey('swipe-next-label'),
-                      decoration: BoxDecoration(
-                        color: _past ? scheme.primaryContainer : tokens.card,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: tokens.hairline),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 8,
+                  // ponytail: çekişe bağlı solma ve eşikteki renk geçişi
+                  // (plan §6.2) S23'ü 2282 → 2300 yaptı (etiket geçişten
+                  // sonra da ağaçta, her tikte kuruluyor) — "S23 değişmez"
+                  // kuralı gereği yapılmadı; renk eşikte tek karede değişir.
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: _labelMax),
+                      child: DecoratedBox(
+                        key: const ValueKey('swipe-next-label'),
+                        decoration: BoxDecoration(
+                          color: _past ? scheme.primaryContainer : tokens.card,
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                          border: Border.all(color: tokens.hairline),
                         ),
-                        child: IntrinsicWidth(
-                          child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!forwardEdge)
-                              Icon(
-                                Icons.arrow_back,
-                                size: 16,
-                                color: _past
-                                    ? scheme.onPrimaryContainer
-                                    : scheme.onSurface,
-                              ),
-                            Flexible(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                child: Text(
-                                  label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.copyWith(
-                                        color: _past
-                                            ? scheme.onPrimaryContainer
-                                            : scheme.onSurface,
-                                      ),
-                                ),
-                              ),
-                            ),
-                            if (forwardEdge)
-                              Icon(
-                                Icons.arrow_forward,
-                                size: 16,
-                                color: _past
-                                    ? scheme.onPrimaryContainer
-                                    : scheme.onSurface,
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        // DOLUM ÇUBUĞU: dolunca bırakmak geçişi yapar.
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(AppRadius.hair),
-                          child: SizedBox(
-                            height: 3,
-                            child: ValueListenableBuilder<double>(
-                              valueListenable: _progress,
-                              builder: (context, p, _) => Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  ColoredBox(color: tokens.hairline),
-                                  FractionallySizedBox(
-                                    key: const ValueKey('swipe-progress'),
-                                    alignment: forwardEdge
-                                        ? AlignmentDirectional.centerEnd
-                                        : AlignmentDirectional.centerStart,
-                                    widthFactor: p,
-                                    child: ColoredBox(color: scheme.primary),
-                                  ),
-                                ],
-                              ),
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.m,
+                            vertical: AppSpace.s,
                           ),
-                        ),
-                          ],
+                          child: IntrinsicWidth(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (!forwardEdge)
+                                      Icon(
+                                        Icons.arrow_back,
+                                        size: AppIconSize.xs,
+                                        color: ink,
+                                      ),
+                                    Flexible(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpace.xs,
+                                        ),
+                                        child: Text(
+                                          label,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppText.of(
+                                            Theme.of(context),
+                                          ).label.copyWith(color: ink),
+                                        ),
+                                      ),
+                                    ),
+                                    if (forwardEdge)
+                                      Icon(
+                                        Icons.arrow_forward,
+                                        size: AppIconSize.xs,
+                                        color: ink,
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpace.xs),
+                                // DOLUM ÇUBUĞU: dolunca bırakmak geçişi yapar.
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.hair,
+                                  ),
+                                  child: SizedBox(
+                                    height: 3,
+                                    child: ValueListenableBuilder<double>(
+                                      valueListenable: _progress,
+                                      builder: (context, p, _) => Stack(
+                                        fit: StackFit.expand,
+                                        children: [
+                                          ColoredBox(color: tokens.hairline),
+                                          FractionallySizedBox(
+                                            key: const ValueKey(
+                                              'swipe-progress',
+                                            ),
+                                            alignment: forwardEdge
+                                                ? AlignmentDirectional
+                                                      .centerEnd
+                                                : AlignmentDirectional
+                                                      .centerStart,
+                                            widthFactor: p,
+                                            child: ColoredBox(
+                                              color: scheme.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                 ),
               ),
             ),
