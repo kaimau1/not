@@ -800,7 +800,7 @@ class GeminiService {
               'noktalama ekle. Kayıt bir alışveriş listesi veya yapılacaklar '
               'sayıyorsa madde işaretli liste olarak yaz.',
         },
-      ]);
+      ], chain: ModelChain.transcribe);
 
   /// Satır içi (base64) gönderilebilecek en büyük ses/video. Gemini isteği
   /// ~20 MB'ta keser, base64 %33 büyütür: ham 15 MB güvenli sınır.
@@ -890,7 +890,8 @@ class GeminiService {
             ],
           },
         ],
-        preferModel: _taskModel(AiTask.document),
+        task: AiTask.document,
+        chain: ModelChain.transcribe,
         timeout: transcribeTimeout,
       );
       return stripMarkdown(text).trim();
@@ -937,7 +938,7 @@ class GeminiService {
             '- ÇEVİRME, ÖZETLEME, YORUM EKLEME, uydurma kelime ekleme.\n'
             '- Zaman damgası, tırnak, başlık, markdown koyma; yalnız metni yaz.',
       },
-    ], preferModel: _taskModel(AiTask.document));
+    ], task: AiTask.document);
     return stripMarkdown(text).trim();
   }
 
@@ -1063,7 +1064,7 @@ class GeminiService {
               'tonu koru; biçimlendirmeyi (madde işaretleri, satırlar) aynen '
               'aktar. Yalnızca çeviriyi yaz, açıklama ekleme.\n\n---\n$text',
         },
-      ], preferModel: _taskModel(AiTask.translate));
+      ], task: AiTask.translate);
 
   /// Belgeyi SESLİ DİNLENEBİLİR bir anlatıya çevirir.
   ///
@@ -1098,7 +1099,7 @@ class GeminiService {
           '- Sonunda tek cümlelik kapanış yap.\n'
           'Yalnızca anlatı metnini yaz.\n\n---\n$documentText',
     },
-  ], preferModel: _taskModel(AiTask.podcast) ?? _taskModel(AiTask.document));
+  ], preferModel: _taskModel(AiTask.podcast) ?? _taskModel(AiTask.document), task: AiTask.podcast);
 
 
   /// Metni Gemini'nin SESLENDİRME modeliyle okur ve çalınabilir WAV baytları
@@ -1134,12 +1135,24 @@ class GeminiService {
       }
     }
 
-    addCandidate(model);
-    for (final m in await availableTtsModels()) {
+    final ordered = await availableTtsModels();
+    // Seçilen model katalogda artık yoksa sessizce Otomatik'e düşülür.
+    final catalogTts = _catalog?.where((m) => m.kind == AiModelKind.tts);
+    if (model != null &&
+        (catalogTts == null ||
+            catalogTts.isEmpty ||
+            catalogTts.any((m) => m.id == model))) {
+      addCandidate(model);
+    }
+    for (final m in ordered) {
       addCandidate(m.id);
     }
     for (final id in AppConstants.geminiTtsModelPreference) {
       addCandidate(id);
+    }
+    candidates.removeWhere(cooldown.isCooling);
+    if (candidates.isEmpty) {
+      throw const GeminiException.of(GeminiErrorKind.rateLimited);
     }
 
     GeminiException? lastMissing;
@@ -1168,11 +1181,15 @@ class GeminiService {
           },
         );
       } on JsonHttpException catch (e) {
-        // 404 = model bu hesapta yok, 400 = model bu isteği desteklemiyor.
-        // İkisi de "sonraki adayı dene" demek; başka her hata (kota, ağ,
-        // yetki) zinciri KESER — hepsini denemek kullanıcıyı bekletirdi.
+        // 404 = model bu hesapta yok, 400 = model bu isteği desteklemiyor,
+        // 429 = kota (TTS günde 10 istek; 2026-11-15'ten beri sıradakine
+        // geçilir ve model [cooldown] süresince atlanır). Başka her hata
+        // (ağ, yetki) zinciri KESER — hepsini denemek kullanıcıyı bekletirdi.
         final status = e.response?.statusCode ?? 0;
-        if (status == 404 || status == 400) {
+        if (status == 404 || status == 400 || status == 429) {
+          if (status != 400) {
+            cooldown.hit(ttsModel, status, body: e.response?.data);
+          }
           lastMissing = _mapDioError(e);
           continue;
         }
@@ -1313,9 +1330,15 @@ class GeminiService {
     final stored = await _keyStore.read(_provider);
     if (_provider == AiProvider.gemini && (stored?.isNotEmpty ?? false)) {
       final catalog = _catalog ??= await _fetchCatalog(stored!);
+      // Önce görev tablosunun sırası (model_catalog.dart, ModelChain.tts),
+      // sonra tabloda olmayan TTS modelleri.
+      final ordered = orderForChain(ModelChain.tts, catalog);
       final tts = [
+        ...ordered,
         for (final model in catalog)
-          if (model.kind == AiModelKind.tts) model,
+          if (model.kind == AiModelKind.tts &&
+              !ordered.any((o) => o.id == model.id))
+            AiModel(id: model.id, label: model.label, kind: model.kind),
       ];
       if (tts.isNotEmpty) return tts;
     }
@@ -1354,7 +1377,7 @@ class GeminiService {
             'veya açıklama ekleme.\n\n---\n'
             '${text.length > 600 ? text.substring(0, 600) : text}',
       },
-    ], preferModel: _taskModel(AiTask.general) ?? AppConstants.fastGeminiModel);
+    ]);
     // Model tırnak/yeni satır eklerse temizle, aşırı uzunsa kısalt.
     var title = raw.trim().split('\n').first.trim();
     title = title.replaceAll(RegExp('^["\'#*-]+|["\'.]+\$'), '').trim();
@@ -1438,7 +1461,6 @@ class GeminiService {
       },
     ],
       jsonOutput: true,
-      preferModel: _taskModel(AiTask.general) ?? AppConstants.fastGeminiModel,
     );
     final decoded = jsonDecode(raw);
     if (decoded is! List) return const [];
@@ -1516,7 +1538,7 @@ class GeminiService {
     ];
     return _generateFromContents(
       contents,
-      preferModel: _taskModel(AiTask.document),
+      task: AiTask.document,
     );
   }
 
@@ -1577,7 +1599,7 @@ class GeminiService {
     ];
     return _generateFromContents(
       contents,
-      preferModel: _taskModel(AiTask.document),
+      task: AiTask.document,
     ).then(stripMarkdown);
   }
 
@@ -1600,7 +1622,7 @@ class GeminiService {
             'JSON dizisi olarak ver: ["başlık1", "başlık2"]'
             '\n\n---\n${text.isEmpty ? note.displayTitle : text}',
       },
-    ], jsonOutput: true, preferModel: _taskModel(AiTask.general));
+    ], jsonOutput: true);
     final decoded = jsonDecode(raw);
     if (decoded is! List) return const [];
     return [
@@ -1664,7 +1686,7 @@ class GeminiService {
     ];
     return _generateFromContents(
       contents,
-      preferModel: _taskModel(AiTask.document),
+      task: AiTask.document,
     ).then(stripMarkdown);
   }
 
@@ -1850,16 +1872,26 @@ class GeminiService {
     // Kullanıcı bir model seçmediyse hızlı "lite" yerine daha güvenilir
     // standart flash tercih edilir: lite, araç çağrılı not oluşturmada
     // tipi/içeriği tutarsız verip boş not üretebiliyordu (madde 15).
-    final prefer = _taskModel(AiTask.voice) ?? AppConstants.voiceAssistantModel;
+    // Anahtarlı yolda sıra ModelChain.voice'tan gelir (standart Flash önce).
     final stored = await _keyStore.read(_provider);
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
         throw const GeminiException.of(GeminiErrorKind.noKey);
       }
-      return builtIn.runToolLoop(contents, onToolCall, prefer: prefer);
+      return builtIn.runToolLoop(
+        contents,
+        onToolCall,
+        prefer: _taskModel(AiTask.voice) ?? AppConstants.voiceAssistantModel,
+      );
     }
-    return _runToolLoop(stored, contents, onToolCall, prefer: prefer);
+    return _runToolLoop(
+      stored,
+      contents,
+      onToolCall,
+      prefer: _taskModel(AiTask.voice),
+      chain: ModelChain.voice,
+    );
   }
 
   /// Asistan modu: model gerektiğinde not oluşturma/düzenleme araçlarını
@@ -1946,6 +1978,7 @@ class GeminiService {
     )
     onToolCall, {
     String? prefer,
+    ModelChain chain = ModelChain.general,
   }) async {
     if (_provider.wire != AiWire.gemini) {
       return _runToolLoopCompat(key, contents, onToolCall, prefer: prefer);
@@ -1964,6 +1997,7 @@ class GeminiService {
           },
         ),
         prefer: prefer,
+        chain: chain,
       );
       final data = response.data;
 

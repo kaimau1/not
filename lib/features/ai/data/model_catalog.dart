@@ -427,3 +427,34 @@ class ModelCooldown {
     ).add(const Duration(hours: 8));
   }
 }
+
+/// Seçici listesi (2026-11-15). Gemini'de "Önerilen" = görevin zinciri;
+/// [showAll] kapalıyken YALNIZ o (kota 0 ve uyumsuzlar gizli), açıkken geri
+/// kalan katalog tekilleştirilip "Diğer" olarak eklenir. Zincirden hiçbir
+/// model eşleşmezse (başka sağlayıcı) null — çağıran eski listeyi kullanır.
+List<AiModel>? pickerModels(
+  ModelChain chain,
+  List<AiModel> catalog, {
+  required bool showAll,
+}) {
+  final ordered = orderForChain(chain, catalog);
+  if (ordered.isEmpty) return null;
+  if (!showAll) return ordered;
+  return dedupeByLabel([
+    ...ordered,
+    for (final m in catalog)
+      if (!ordered.any((o) => o.id == m.id))
+        AiModel(id: m.id, label: m.label, kind: m.kind),
+  ]);
+}
+
+/// Kayıtlı elle seçim hâlâ geçerli mi? Katalogda yoksa (model kaldırıldı ya
+/// da sağlayıcı değişti) null döner: seçim sessizce "Otomatik"e düşer.
+/// Katalog bilinmiyorsa (boş) seçime dokunulmaz.
+String? validChoice(String? value, List<AiModel>? catalog) =>
+    value == null ||
+        catalog == null ||
+        catalog.isEmpty ||
+        catalog.any((m) => m.id == value)
+    ? value
+    : null;

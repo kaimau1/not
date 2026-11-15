@@ -109,7 +109,7 @@ abstract final class AppConstants {
   /// podcast modeliyle aynı seçiciye konamaz (bkz. AiTask, ttsModelProvider).
   static const List<String> geminiTtsModelPreference = [
     'gemini-2.5-flash-preview-tts',
-    'gemini-2.5-pro-preview-tts',
+    // 2.5 Pro TTS çıkarıldı (2026-11-15): ücretsiz katmanda kotası 0.
   ];
 
   /// Gemini TTS'in hazır ses adları. Tümü çok dilli (Türkçe dahil); liste
