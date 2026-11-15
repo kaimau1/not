@@ -411,7 +411,7 @@ class KeyboardSlide extends StatefulWidget {
 
   /// **ALT PANEL KİPİ** (S47, kullanıcı 2026-11-15: "klavye açılırken alt
   /// panel zıplaya zıplaya açılıyor … panel klavye açılırken gizlenip geri
-  /// gelebilir mesela"). Cihazda üçü karşılaştırılacak (sabah bakılacak);
+  /// gelebilir mesela"). Cihazda kıyaslandı (2026-11-15, test telefonu ekran kaydı): c en akıcı → varsayılan c;
   /// derlemede `--dart-define=ALT_PANEL_KIP=a|b|c`:
   /// * `a` — panel iletilen klavye değerini kare kare BİREBİR izler (bugünkü
   ///   hâl). Klavyeyle konumu hep aynı, ama değerler Flutter karelerine
@@ -423,7 +423,7 @@ class KeyboardSlide extends StatefulWidget {
   ///   yerinde belirir.
   static String mode = const String.fromEnvironment(
     'ALT_PANEL_KIP',
-    defaultValue: 'a',
+    defaultValue: 'c',
   );
 
   /// `b` kipinde kare başına kalan yolun kapatılan oranı.

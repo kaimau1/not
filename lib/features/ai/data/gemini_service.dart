@@ -1729,8 +1729,24 @@ class GeminiService {
     ).then(stripMarkdown);
   }
 
+  /// Gemini Embedding 2 (K-S2, 2026-11-15). Kimlik resmî belgeden:
+  /// aistudio.google.com/docs/embeddings — `gemini-embedding-2`; `taskType`
+  /// ALANI YOK (görev metne önek olarak yazılır), girdi 8.192 belirteç,
+  /// boyut 128–3072. Vektörleri 001'inkilerle KARŞILAŞTIRILAMAZ.
+  static const embedModelV2 = 'gemini-embedding-2';
+  static const embedModelV1 = 'gemini-embedding-001';
+
+  /// İstenen vektör boyu; kalıcı arama önbelleğinin anahtarına da girer
+  /// (değişirse eski kayıtlar bayat sayılır).
+  static const embedDim = 256;
+
   /// Metinleri vektörlere çevirir (semantik arama için, toplu istek).
-  Future<List<List<double>>> embedTexts(List<String> texts) async {
+  /// [query]: arama sorgusu mu (Embedding 2'de önek farklı), yoksa belge mi.
+  Future<List<List<double>>> embedTexts(
+    List<String> texts, {
+    String model = embedModelV2,
+    bool query = false,
+  }) async {
     if (texts.isEmpty) return const [];
     // Semantik arama vektör gerektirir; sağlayıcılar arasında biçim ve
     // boyut uyuşmadığı için (aynı dizinde karışık vektör arama sonucunu
@@ -1738,7 +1754,13 @@ class GeminiService {
     // gelince düz aramaya düşer — kullanıcı arama yapamaz duruma gelmez.
     _requireGemini(GeminiErrorKind.semanticNeedsGemini);
     final key = await _apiKey();
-    const embedModel = 'models/gemini-embedding-001';
+    final embedModel = 'models/$model';
+    // Embedding 2 görev türünü önekten okur (belgedeki biçim aynen).
+    String input(String text) => model != embedModelV2
+        ? text
+        : query
+        ? 'task: search result | query: $text'
+        : 'title: none | text: $text';
     try {
       final response = await _http.post<Map<String, dynamic>>(
         '/$embedModel:batchEmbedContents',
@@ -1750,10 +1772,10 @@ class GeminiService {
                 'model': embedModel,
                 'content': {
                   'parts': [
-                    {'text': text},
+                    {'text': input(text)},
                   ],
                 },
-                'outputDimensionality': 256,
+                'outputDimensionality': embedDim,
               },
           ],
         },
@@ -1776,6 +1798,13 @@ class GeminiService {
           ],
       ];
     } on JsonHttpException catch (e) {
+      // Kota/yok bilgisi ortak soğumaya: RPM 1 dk, RPD (gövdede PerDay) ve
+      // 404 Pasifik gece yarısına dek (SemanticIndex buna göre bekler ya da
+      // 001'e geçer).
+      final status = e.response?.statusCode ?? 0;
+      if (status == 429 || status == 404) {
+        cooldown.hit(model, status, body: e.response?.data);
+      }
       throw _mapDioError(e);
     }
   }

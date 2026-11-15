@@ -8564,6 +8564,12 @@ abstract class AppLocalizations {
   /// **'Düzenleme modu'**
   String get customizeModeTitle;
 
+  /// No description provided for @customizeModeTitleShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzen'**
+  String get customizeModeTitleShort;
+
   /// No description provided for @customizeModeHint.
   ///
   /// In tr, this message translates to:
@@ -15145,12 +15151,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}'**
   String cardHiddenAudio(int count);
-
-  /// No description provided for @quickAddEditHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sürükleyerek sırala, göz ile gizle ya da göster.'**
-  String get quickAddEditHint;
 
   /// No description provided for @quickAddKeepOne.
   ///

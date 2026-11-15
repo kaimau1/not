@@ -3,7 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 15 November 2026 {#2026-11-15}
-- **Bottom bar while the keyboard opens:** on some phones (Android 14 and older) the bottom bar briefly sat too high and then dropped as the keyboard opened; it now stays right on top of the keyboard.
+- **Bottom bar no longer jumps with the keyboard:** while the keyboard opens or closes the bottom bar briefly hides, then fades back in place once the keyboard settles — no more stepwise jumping or briefly sitting too high.
+- **Smarter meaning search:** searching by meaning and "Related notes" now use Google's newer Embedding 2 model; if it is unavailable, search quietly keeps working with the previous one.
+- **Faster meaning search after launch:** the search index of your notes is now kept on the device; the whole notebook is no longer reprocessed each time you open the app, only changed notes are updated. It is deleted when you sign out.
+- **Notices in one place:** tips no longer cover the search bar; "Undo" and other notices appear in one place, never stack, and close on their own.
+- **Smoother swiping:** sideways swipes on the home screen settle more smoothly; the calendar's mini month follows your finger and the list no longer jitters when it opens.
 - **Smoother dictation card:** the card now opens fully in one go, and while you dictate with the keyboard open the bottom bar and card no longer bob up and down.
 - **Simpler pen capsule:** the undo button (already in the top bar) and the confirm buttons are gone — the pen you pick applies right away and your writing saves itself; pens now spread across the capsule. The eraser has its own always-handy button; hold it (or use the ⋯ menu) to clear all annotations, and bring them back with "Undo". Tap the keyboard button to go back to typing.
 - **Refreshed edit mode:** in "Edit screen" the strip at the top is a single line and a small number shows how many buttons are hidden; hidden buttons have a dashed outline. The new "Reorder" button opens the layout of the screen you're on: bottom bar, quick row, "+" panel, Add sheet, pinned attachment, pens — all with the same tiles, tap to hide/show, drag to reorder. The Personalize screen uses the same tiles too.
@@ -16,6 +20,7 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Item dividers:** Format → Divider now offers all five styles (including double and wavy), drawn in the item's own color and thickness; the settings sheet is redesigned and no longer overflows on small screens; a new divider draws in from left to right.
 - **No lost notes when importing from Google Keep:** on a fresh install, importing a Keep backup could silently leave some notes empty and remove them; each note is now created in one go, with its content.
 - **Lighter switch to search:** when you tap the search box, cards that are off screen are no longer prepared for nothing; fewer than half as many cards are drawn for each letter you type.
+- **Easier customizing:** on tablets the side drawer no longer opens by accident while a note is open (pull a bit further or flick quickly); on small phones the edit-mode strip title is no longer cut off; "Edit" in the "+" panel now opens the same tile board as the other screens (favourite templates included).
 
 ## 14 November 2026 {#2026-11-14}
 - **Tidier menus:** the note ⋮ menu, the home ⋮ menu and the pinned attachment's ⋮ menu have a handle at the top — drag down to close; in a long menu the title, ⚙ and ✕ no longer clash with the phone's status bar. The one-item "Other" group in the home ⋮ menu is gone; Archive sits at the end of "App".

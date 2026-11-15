@@ -1792,6 +1792,7 @@
   "customizeHideItem": "Hide",
   "customizeShowItem": "Show",
   "customizeModeTitle": "Edit mode",
+  "customizeModeTitleShort": "Edit",
   "customizeModeHint": "Tap to hide or show · applied instantly",
   "customizeHiddenCount": "{count} hidden · tap to change",
   "customizeDone": "Done",
@@ -3100,7 +3101,6 @@
       }
     }
   },
-  "quickAddEditHint": "Drag to reorder, tap the eye to hide or show.",
   "quickAddKeepOne": "At least one option must stay visible",
   "attachmentUploadNow": "Try now",
   "uploadPendingTitle": "{count, plural, =1{1 attachment waiting to upload} other{{count} attachments waiting to upload}}",

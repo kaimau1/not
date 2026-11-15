@@ -283,7 +283,7 @@ class _RailFrame extends StatefulWidget {
 }
 
 /// Çekmece çekişinin ölçeği (dp): parmak bu kadar yol alınca çekmece tam
-/// açık; geçiş kararı bunun [AppSwipe.commitFraction]'ı (P62 §6.2).
+/// açık; geçiş kararı bunun [AppSwipe.drawerCommitFraction]'ı.
 const double _kDrawerPull = 240;
 
 class _RailFrameState extends State<_RailFrame>
@@ -428,12 +428,13 @@ class _RailFrameState extends State<_RailFrame>
                   },
                   onHorizontalDragEnd: (d) {
                     final v = d.primaryVelocity ?? 0;
-                    // Ortak karar kuralı (K6-3, sabah bakılacak): eşik %40 →
-                    // %22, fiske 200 → 300 — bütün yana çekişler aynı sayıda.
+                    // Eşik %30 (2026-11-15; G3 PA7'de %40 → %22 olmuştu,
+                    // kazara açılıyordu), fiske 300 ortak kuralla aynı.
                     if (AppSwipe.commits(
                       dragged: _drawer.value * _kDrawerPull,
                       extent: _kDrawerPull,
                       velocity: rtl ? -v : v,
+                      fraction: AppSwipe.drawerCommitFraction,
                     )) {
                       _drawer.forward();
                     } else {

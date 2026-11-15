@@ -3,7 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 15 Kasım 2026 {#2026-11-15}
-- **Klavye açılırken alt çubuk:** bazı telefonlarda (Android 14 ve öncesi) klavye açılırken alt çubuk bir an fazla yukarıda kalıp aşağı iniyordu; artık klavyeyle aynı yerde duruyor.
+- **Klavye açılırken alt çubuk artık zıplamıyor:** klavye açılıp kapanırken alt çubuk kısa bir an gizleniyor, klavye yerine oturunca yumuşakça yerinde beliriyor; kademeli sıçrama ve fazladan yukarıda kalıp düşme yok.
+- **Anlamca arama yenilendi:** notlarında anlamca arama ve "İlgili notlar" artık Google'ın yeni Embedding 2 modelini kullanıyor; bu model kullanılamazsa arama kendiliğinden eskisiyle sürüyor.
+- **Anlamca arama açılışta hızlı:** notların arama dizini artık cihazda saklanıyor; uygulamayı her açtığında bütün defter yeniden işlenmiyor, yalnız değişen notlar güncelleniyor. Çıkış yapınca bu dizin silinir.
+- **Bildirimler tek yerde:** ipuçları artık arama çubuğunu kapatmıyor; "Geri al" ve diğer bildirimler tek yerde, üst üste binmeden çıkıyor ve kendiliğinden kapanıyor.
+- **Daha yumuşak kaydırma:** ana ekranda yana kaydırma daha yumuşak yerine oturuyor; takvimde küçük ay parmağını izleyerek kayıyor ve açılırken liste titremiyor.
 - **Sesle yazma kartı akıcı:** kart artık tek seferde tam açılıyor; klavye açıkken konuşurken alt çubuk ve kart inip kalkmıyor.
 - **Kalem kapsülü sadeleşti:** geri al (üst çubukta zaten var) ve onay düğmeleri kalktı — seçtiğin kalem anında geçerli, yazdıkların kendiliğinden kaydediliyor; kalemler kapsüle rahatça yayılıyor. Silgi kendi düğmesinde hep elinin altında; ona basılı tutarak (ya da ⋯ menüsünden) tüm çizimleri temizleyebilir, "Geri al" ile geri getirebilirsin. Yazıya dönmek için klavye düğmesi.
 - **Düzen modu yenilendi:** "Ekranı düzenle"de üstteki şerit tek satır, kaç düğmenin gizli olduğu küçük bir sayıyla görünüyor; gizli düğmeler kesikli çerçeveyle belli. Yeni "Sırala" düğmesi bulunduğun ekranın düzenini açıyor: alt çubuk, hızlı satır, "+" paneli, Ekle levhası, sabit ek, kalemler — hepsi aynı karolarla, dokun = gizle/göster, sürükle = sırala. Kişiselleştir ekranı da aynı karolara geçti.
@@ -16,6 +20,7 @@ Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarla
 - **Madde altı çizgiler:** Biçim → Alt çizgi tepsisinde beş türün hepsi (çift ve dalgalı dahil) maddenin kendi rengi ve kalınlığıyla görünüyor; ayar levhası yenilendi, dar ekranda taşmıyor; yeni çizgi soldan sağa çizilerek beliriyor.
 - **Google Keep'ten içe aktarmada not kaybolmuyor:** yeni kurulumda Keep yedeğini içe aktarınca bazı notlar sessizce boş kalıp siliniyordu; artık her not tek seferde, içeriğiyle oluşur.
 - **Aramaya geçiş daha hafif:** arama kutusuna dokunduğunda ekranda görünmeyen kartlar artık boşuna hazırlanmıyor; yazdığın her harfte çizilen kart sayısı yarıdan aza indi.
+- **Daha rahat düzenleme:** tablette not açıkken soldaki çekmece kazara açılmıyor (biraz daha çekmek ya da hızlıca fiskelemek gerekiyor); küçük telefonda düzen şeridinin başlığı artık kesilmiyor; "+" panelindeki "Düzenle" diğer ekranlarla aynı karolu düzen panosunu açıyor (favori şablonlar da orada).
 
 ## 14 Kasım 2026 {#2026-11-14}
 - **Menüler toparlandı:** not ⋮ menüsünde, ana ekran ⋮'te ve sabit ekin ⋮ menüsünde üstte tutamak var — aşağı çekerek kapatabilirsin; uzun menüde başlık, ⚙ ve ✕ artık telefonun üst çubuğuyla çakışmıyor. Ana ekran ⋮'te tek maddelik "Diğer" grubu kalktı, Arşiv "Uygulama"nın sonunda.

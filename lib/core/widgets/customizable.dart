@@ -469,46 +469,78 @@ class _CustomizeStrip extends StatelessWidget {
                     children: [
                       Icon(Icons.tune_rounded, size: AppIconSize.s, color: fg),
                       const SizedBox(width: AppSpace.s),
-                      Flexible(
-                        child: Text(
-                          l10n.customizeModeTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: fg,
-                            fontWeight: AppWeight.strong,
-                          ),
-                        ),
-                      ),
-                      if (hidden > 0) ...[
-                        const SizedBox(width: AppSpace.s),
-                        // Şerit Navigator'ın ÜSTÜNDE: Overlay yok, ipucu
-                        // balonu (Tooltip) kurulamaz — ad Semantics'te.
-                        Semantics(
-                          key: const ValueKey('customize-hidden-count'),
-                          label: l10n.customizeHiddenCount(hidden),
-                          excludeSemantics: true,
-                          child: DecoratedBox(
-                            decoration: ShapeDecoration(
-                              color: line,
-                              shape: const StadiumBorder(),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpace.s,
-                                vertical: AppSpace.xxs,
-                              ),
-                              child: Text(
-                                '$hidden',
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: fg,
+                      // Başlık + hap boş alanın TAMAMINI alır (eskiden
+                      // Flexible + Spacer yarı yarıya bölüşüyordu, küçük
+                      // telefonda "Düzenlem…" kesiliyordu). Yine sığmazsa
+                      // kısa etiket; tam ad hep semantikte.
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Flexible(
+                              key: const ValueKey('customize-title'),
+                              child: Semantics(
+                                label: l10n.customizeModeTitle,
+                                excludeSemantics: true,
+                                child: LayoutBuilder(
+                                  builder: (context, box) {
+                                    final style = theme.textTheme.labelLarge
+                                        ?.copyWith(
+                                          color: fg,
+                                          fontWeight: AppWeight.strong,
+                                        );
+                                    final full = l10n.customizeModeTitle;
+                                    final tp = TextPainter(
+                                      text: TextSpan(text: full, style: style),
+                                      maxLines: 1,
+                                      textDirection: Directionality.of(context),
+                                      textScaler: MediaQuery.textScalerOf(
+                                        context,
+                                      ),
+                                    )..layout();
+                                    final fits = tp.width <= box.maxWidth;
+                                    tp.dispose();
+                                    return Text(
+                                      fits
+                                          ? full
+                                          : l10n.customizeModeTitleShort,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: style,
+                                    );
+                                  },
                                 ),
                               ),
                             ),
-                          ),
+                            if (hidden > 0) ...[
+                              const SizedBox(width: AppSpace.s),
+                              // Şerit Navigator'ın ÜSTÜNDE: Overlay yok, ipucu
+                              // balonu (Tooltip) kurulamaz — ad Semantics'te.
+                              Semantics(
+                                key: const ValueKey('customize-hidden-count'),
+                                label: l10n.customizeHiddenCount(hidden),
+                                excludeSemantics: true,
+                                child: DecoratedBox(
+                                  decoration: ShapeDecoration(
+                                    color: line,
+                                    shape: const StadiumBorder(),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpace.s,
+                                      vertical: AppSpace.xxs,
+                                    ),
+                                    child: Text(
+                                      '$hidden',
+                                      style: theme.textTheme.labelMedium
+                                          ?.copyWith(color: fg),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                      ],
-                      const Spacer(),
+                      ),
                       TextButton(
                         key: const ValueKey('customize-undo'),
                         style: TextButton.styleFrom(
