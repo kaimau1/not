@@ -23,9 +23,11 @@ koşuda uygulama start-paused açılır ve evreler tek oturumda ölçülür:
   sablon     (P63) "+" → Şablonlar levhası aç → "Planlama" çipi → kapat
   bicim      (P63) "OLCUM cizgi" notunda madde → Biçim → çizgi tepsisi aç/kapa
              ×3 → tür seç ×3 (düz/kesikli/aynı tür = kaldır)
+  kalem      (P63 G4) ilk OLCUM olmayan notta "Kalemle yaz" → 10 parmak çizgisi
+             → kapsül aç (hap) / geri ×3 → kalem kipinden çık (çizgiler geri al)
 P63 evreleri eskilerin SONUNDA (eski evrelerin sayıları kaymasın); hazırlık
 yoksa (şablon düğmesi / "OLCUM cizgi" notu bulunamazsa) evre atlanır, koşu
-düşmez. Kalem (`kalem`) ve düzen modu (`duzen`) evrelerini G4/G5 ekler.
+düşmez. Düzen modu (`duzen`) evresini G5 ekler.
 
 Evre başına: UI kare sayısı, UI ms toplamı, LAYOUT ms, en uzun kare,
 > 16 ms kare. A ve B için ORTANCA (3 koşu).
@@ -67,7 +69,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DOCS = os.path.join(ROOT, "docs", "perf")
 PHASES = ["acilis", "liste", "menu", "arama", "klasor", "yeni_not", "not_ac",
           "kb", "yaz", "not_kapa", "sabit_ac", "sabit_kay", "sabit_kb",
-          "sablon", "bicim"]
+          "sablon", "bicim", "kalem"]
 METRICS = ["kare", "ui_ms", "layout_ms", "max_ms", "j16"]
 
 
@@ -295,7 +297,7 @@ def run_once(label):
     for _ in range(6):
         swipe(x, int(H * .3), x, int(H * .85), 120); time.sleep(0.3)
 
-    for phase in (phase_sablon, phase_bicim):
+    for phase in (phase_sablon, phase_bicim, phase_kalem):
         try:
             phase(s, W, H, plus)
         except (RuntimeError, IndexError) as e:
@@ -452,6 +454,45 @@ def phase_bicim(s, W, H, plus):
     ready()
     for _ in range(6):
         swipe(x, int(H * .3), x, int(H * .85), 120); time.sleep(0.3)
+
+
+def phase_kalem(s, W, H, plus):
+    """P63 G4: kalem kipi aç → 10 çizgi → kapsül aç/kapa ×3 (geri tuşu kapsülü
+    hapa indirir). Çizgiler sonra geri alınır (not büyümesin); "Kalemle yaz"
+    alt çubukta, hap düğmesi ("Kalem tepsisini aç") çizimden sonra bulunur."""
+    xml = dump()
+    menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > 600]
+    m, _ = pick_card(xml, menus)
+    tap(m[1] - 170, m[2] + 150); time.sleep(2.5)
+    pen = nodes(dump(), "^Kalemle yaz")
+    if not pen:
+        key("KEYCODE_BACK"); time.sleep(1.0)
+        raise RuntimeError("'Kalemle yaz' düğmesi yok")
+    x0, x1 = int(W * .2), int(W * .8)
+    ready()
+    s.window([("kalem", lambda: tap(pen[0][1], pen[0][2]), 1.5)]
+             + [("kalem", lambda i=i: swipe(x0, int(H * .3) + i * 40, x1, int(H * .32) + i * 40, 200), 0.6)
+                for i in range(10)])
+    time.sleep(7.0)  # çekmece 6 sn sonra hapa iner
+    peek = nodes(dump(), "^Kalem tepsisini aç")
+    if not peek:
+        for _ in range(3):
+            key("KEYCODE_BACK"); time.sleep(0.8)
+        raise RuntimeError("kalem hapı yok")
+    ready()
+    s.window([w for _ in range(3) for w in (
+        ("kalem", lambda: tap(peek[0][1], peek[0][2]), 1.2),
+        ("kalem", lambda: key("KEYCODE_BACK"), 1.2))])
+    # Çizgileri kapsülün geri al'ı ile sil (en alttaki "Geri al" = kapsül).
+    tap(peek[0][1], peek[0][2]); time.sleep(1.2)
+    undo = sorted(nodes(dump(), "^Geri al$"), key=lambda n: n[2])
+    if undo and undo[-1][2] > H * .7:
+        for _ in range(10):
+            tap(undo[-1][1], undo[-1][2]); time.sleep(0.3)
+    key("KEYCODE_BACK"); time.sleep(1.0)   # kapsül
+    key("KEYCODE_BACK"); time.sleep(1.0)   # kalem kipi
+    key("KEYCODE_BACK"); time.sleep(1.8)   # not
+    ready()
 
 
 def median_of(runs):

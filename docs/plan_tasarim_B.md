@@ -541,19 +541,19 @@ değer metni taşmaz: genişlik 36, `FittedBox` yok — tabular rakam) · gizlen
 
 ### 3.4 Kabul ölçütleri
 
-- [ ] `pen_tray.dart`'ta `easeOutBack` 0, `AnimatedSize` 0, `AnimatedPositioned` 0, `blurRadius` 0,
+- [x] `pen_tray.dart`'ta `easeOutBack` 0, `AnimatedSize` 0, `AnimatedPositioned` 0, `blurRadius` 0,
       `Colors.black` 0, elle `Duration(milliseconds:` 0 (grep ile).
-- [ ] Panelde ve sabit kalem çipinde önizleme `paintInkStroke` ile çizilir
+- [x] Panelde ve sabit kalem çipinde önizleme `paintInkStroke` ile çizilir
       (`test/pen_stroke_preview_test.dart`, iskelette; fosforluda boyanan renk alfa 0x66).
-- [ ] Var olan testler değişmeden yeşil: `pen_tray_controls_test`, `pen_single_tool_test`,
+- [x] Var olan testler değişmeden yeşil: `pen_tray_controls_test`, `pen_single_tool_test`,
       `pen_icons_test`, `editor_pen_tablet_test`, `handwriting_pen_test` (anahtarlar: `pen-tray-<araç>`,
       `pen-tray-color`, `pen-tray-undo`, `pen-tray-more`, `pen-tray-pin`, `pen-tray-settings`,
       `pen-tray-opacity`, `pen-dock-peek`, `pen-dock-open/closed`, `pen-dock-quick-eraser`,
       `pen-preset-<kod>`, `page-pen-dock`).
-- [ ] `pen-panel-pin` sabitler/kaldırır; 6. kalem en eskiyi düşürür (bugünkü kural, yeni widget testi).
-- [ ] Gizlenen araç üç kipte de yok; seçili araç gizlense de görünür; `pen`/`eraser` gizlenemez
+- [x] `pen-panel-pin` sabitler/kaldırır; 6. kalem en eskiyi düşürür (bugünkü kural, yeni widget testi).
+- [x] Gizlenen araç üç kipte de yok; seçili araç gizlense de görünür; `pen`/`eraser` gizlenemez
       (`test/pen_tray_tools_pref_test.dart` yeni).
-- [ ] Tur: `kalem-hap`, `kalem-kapsul`, `kalem-panel`, `kalem-sekil-panel`, `kalem-sutun` (tablet),
+- [x] Tur: `kalem-hap`, `kalem-kapsul`, `kalem-panel`, `kalem-sekil-panel`, `kalem-sutun` (tablet),
       `cizim-serit` (açık + koyu).
 
 ### 3.5 Kasma riski + bütçe (kasma-kontrol 8 madde)
@@ -730,21 +730,21 @@ satır, etiket alt satırda — `:486-488` kuralı korunur) · 360 dp · hareket
 
 ### 4.4 Kabul ölçütleri
 
-- [ ] Düzey 0 iken çubuklar tabanda, 1 iken tavanda; düzey olayı gelmese de dalga akıcı
+- [x] Düzey 0 iken çubuklar tabanda, 1 iken tavanda; düzey olayı gelmese de dalga akıcı
       (`test/voice_level_wave_test.dart`, iskelette: saf işlevler + ticker'lı widget testi).
-- [ ] `listening_visuals.dart`, `voice_capture_sheet.dart` (`_body`, `_header`, `_actions`, `_chips`),
+- [x] `listening_visuals.dart`, `voice_capture_sheet.dart` (`_body`, `_header`, `_actions`, `_chips`),
       `note_editor_parts.dart` (`_DictationPanel`) içinde elle köşe/dolgu/punto/süre 0;
       `elevation`/`shadowColor`/`Colors.black` 0; `ListeningWaveform` ve `plainCard` yok.
-- [ ] Editör dikte kartında sessizlik çizgisi görünür ve kart yüksekliği dinleme boyunca SABİT
+- [x] Editör dikte kartında sessizlik çizgisi görünür ve kart yüksekliği dinleme boyunca SABİT
       (widget testi: sayım 0 → 0.5 → 1 iken kart yüksekliği aynı).
-- [ ] `test/listening_card_bubble_theme_test.dart` (dikte kartı 90–150 px, AI kartı 130–260 px, yazılı
+- [x] `test/listening_card_bubble_theme_test.dart` (dikte kartı 90–150 px, AI kartı 130–260 px, yazılı
       "Bitir") yeşil — TEK izinli değişiklik `:61` `find.byType(ListeningWaveform)` →
       `VoiceLevelWave`; `test/voice_unavailable_test.dart` değişmeden yeşil; anahtarlar korunur:
       `listening-card-<kip>`, `listening-mode-<kip>`, `dictation-panel`, `dictation-stop`,
       `voice-listen-action`, `voice-silence-bar`, `voice-commands-help`, `voice-continue`,
       `voice-more`, `voice-title`.
-- [ ] 1280 dp genişlikte çubuk eni 3 dp (widget testi boyama ölçüsüyle ya da `barsFor(width)`).
-- [ ] Tur: `dikte-kart` (telefon + tablet), `ses-levha-dinliyor`, `ses-levha-hazir`, `ses-levha-hata`
+- [x] 1280 dp genişlikte çubuk eni 3 dp (widget testi boyama ölçüsüyle ya da `barsFor(width)`).
+- [x] Tur: `dikte-kart` (telefon + tablet), `ses-levha-dinliyor`, `ses-levha-hazir`, `ses-levha-hata`
       (açık + koyu). Konuşma kanalı taklidi: `EventChannel('dev.kaimau.notlar/speech')` +
       `MockStreamHandler.inline` (kalıp `test/voice_unavailable_test.dart:13-27`).
 
@@ -1478,6 +1478,23 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   `kalem.md`'deki gecikme/avuç içi kurallarına dokunma.
 - **A/B:** evet — `kalem` evresi (PBT) + `not_ac`. Kalemle yazma gecikmesi en hassas yüzey:
   kötüleşme SIFIR. **Bütçe:** S42.
+- [x] **Durum (2026-11-15, G4 dalı oto/G4-kalem-ses):** önce üret — S42 tabanı (kök 0 / tuval 0 / PenTray 3 /
+  `_DockTool` 77 / `_Options` 7), tur `kalem-hap/-kapsul/-panel/-sekil-panel/-sutun`, `cizim-serit`
+  (`build/tour_p63_once` → `_sonra`), grep önce 3/2/1/3/3/11 → sonra 0/0/0/0/0/0. **Hipotez (bulgu 2):**
+  alt şerit `drawing_screen`'de gövdeyle aynı Flex'te, PDF/slayt/görsel görüntüleyicide
+  `Scaffold.bottomNavigationBar` — panelin `AnimatedSize`'ı 4/6 çağrı yerinde belgeyi her karede yeniden
+  diziyordu (bölmelerde `Positioned`, etkisiz); DOĞRULANDI, panel artık tek adımda + yalnız boyama.
+  Yapılan: `AppSurface.floating` (kapsül/hap/sabit kalem `pill`, panel `xl`), sütun/şerit `surfaceContainerLow`
+  + `hairline`; kalkış tek kalıp `AnimatedSlide` (`selection` + `emphasized`); hap ↔ kapsül ve sabit kalem
+  hapı aynı geçiş (0.92, `short`/`exitOf`); panel `_panelAnim` (yuva koşulsuz, çıkışta son örnek korunur →
+  S42 artmadı); tek `_Swatch` (dot/_colorDot silindi); `PenStrokePreview` panelde (kâğıt, 44) ve sabit kalem
+  çipinde; kalınlık/şeffaflık tek satır kalıbı (simge · Slider · tabular değer); `showInkSettings` →
+  `showAppSheet`; `_tools` süzgeci (`UiItem.penTool`, kalem/silgi gizlenemez, seçili hep çizilir);
+  ⋯ menüsünde sabit kalem "Sabitlemeyi kaldır" (`unpin`). `test/pen_tray_tools_pref_test.dart` 5 kırmızı → yeşil.
+  **Bulunan hata:** tablet bölünmüşte geniş kapsül 150 px TAŞIYORDU (`wide` pencere eninden) — artık bölme
+  eninden (`LayoutBuilder`, kalem + eylem sayısıyla). **Sapma (SB13, sabah bakılacak):** panel iğnesi
+  önizlemenin BAŞINDA (plan: sağ uç) — telefonda sağ kenardaki yüzen kalem düğmesi iğneyi örtüyordu.
+  Cihaz A/B (`kalem`, `not_ac`) yürütücünün öbek sonunda; `kalem` evresi `ab_hepsi.py`'ye bu dalda eklendi.
 
 ### 7.6 PB4 — şablonlar (fable)
 
@@ -1531,6 +1548,26 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
 - **A/B:** evet — `kb`, `yaz` evreleri dikte kapalıyken (kapalı yol yavaşlamamalı); dikte açıkken ölçüm
   mikrofon ister → "yazıldı, cihazda doğrulanmadı" + `KONTROL_LISTEM.md` (tablette sesle yazarken
   kaydırma). **Bütçe:** S43.
+- [x] **Durum (2026-11-15, G4 dalı oto/G4-kalem-ses):** önce üret — S43 tabanı (düzey 0 / sessizlik 0 /
+  başlat+bitir kök 2 / metin olayı satır 0 / kök 0: düzey ve sessizlik arayüze HİÇ ulaşmıyordu, bulgu 1/3
+  doğrulandı); dikteyi tam editörde ölçmek için `DeviceSpeech.debugAvailable` (yalnız test kapısı); tur
+  `dikte-kart`, `ses-levha-dinliyor/-hazir/-hata` ("önce" `build/tour_p63_once`); yeni
+  `test/listening_card_level_test.dart` (derlenmiyordu → 3 yeşil). Yapılan: `ListeningWaveform` SİLİNDİ, kart
+  `VoiceLevelWave` (gerçek düzey, oturumun `level`'ı; kayıt yolunda `reportLevel`); tek kabuk
+  `ListeningSurface` (`AppSurface.floating`, `AppRadius.xl`, kenar kip rengi × soft, en çok 560 ortalı) —
+  levhanın işleniyor/hata/gözden geçirme evreleri de onu kullanıyor (`plainCard` gitti); tek başlık
+  `ListeningHeader` (levhanın `_header`'ı onu kullanıyor); sessizlik çizgisi kartın içinde, yuvası hep
+  ayrılmış (kart boyu sabit — test), editör dikte kartı da gösteriyor + alt yazı `voiceAutoStopSoon`;
+  levha `setState`'i yalnız 0 ↔ > 0 geçişinde (eskiden her 250 ms); evre değişimi `AnimatedSwitcher`
+  solma (`quick`, bekleme = dinleme anahtarı); dikte kartı `PopIn` ile belirir, çıkış yok; nabız hareketi
+  azaltta durur; elle köşe/dolgu/punto/süre `_body/_header/_actions/_chips/_DictationPanel`'de 0
+  (`_transcript`'in okuma metni 16/1.45 korundu). S43 PB5 sonrası 0/0/2/0/0 (artmadı). **Sapma:**
+  `test/voice_unavailable_test.dart` "değişmeden yeşil" tutamadı — silinen `ListeningWaveform`'u doğrudan
+  kullanıyordu; TEK değişiklik tür adı → `VoiceLevelWave` (bekçinin anlamı aynı). Turda hata EVRESİ
+  çekilemedi (kayıt eklentisinin kurucusu testte yakalanmamış istisna atıyor) — `ses-levha-hata`
+  dinlerken gelen tanıma hatasını çeker. `note_editor_screen.dart:4277` sesli not hapının `AnimatedSize`'ı
+  DÜZELTİLMEDİ (kapsam dışı, regresyon listesine not). Dikte açıkken ölçüm mikrofon ister → cihazda
+  "yazıldı, doğrulanmadı" (`KONTROL_LISTEM.md`).
 
 ### 7.8 PB6 — madde çizgileri (fable)
 
@@ -1616,6 +1653,7 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
 | SB9 | Çizgi levhasında canlı uygulama ("Tamam"sız) | "Tamam" kalır |
 | SB10 | Çizgi vurgu saydamlığı 0.75 → `AppAlpha.strong` (0.85) — var olan tema renkli çizgiler bir ton koyulaşır | uygulanır (tek sabit); beğenilmezse sabit tek satırda `AppAlpha.muted`'a çekilir |
 | SB11 | Çizginin soldan sağa belirişi | ölçüm kapısını geçerse kalır, geçmezse geri alınır |
+| SB13 | Kalem panelinde iğne düğmesinin yeri (plan: önizlemenin sağ ucu) | önizlemenin başında — telefonda sağ kenardaki yüzen kalem düğmesi sağ ucu örtüyor |
 | SB12 | Şablon kartında yıldız (PB0'da çıktı): telefonda kart 104 dp, alt bantta simge + ad + yıldız + 40 dp menü sığmıyor (ada 4 dp kalıyor) | yıldız bugünkü gibi kartın sağ üst köşesinde; bantta simge + ad (+ `more_horiz`) |
 
 (SB5 numarası kullanılmadı. "SB" = sabah bakılacak; bütçe senaryoları S1–S44 ile karışmasın diye ayrı önek.)

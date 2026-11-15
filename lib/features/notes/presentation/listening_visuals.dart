@@ -1,14 +1,15 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/a11y/min_tap_target.dart';
+import '../../../core/a11y/motion.dart';
 import '../../../core/app_icons.dart';
+import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
+import 'voice_level_wave.dart';
 
 /// Dinlemenin KİPİ: sesli yakalama (yapay zekâ levhası) ya da doğrudan
 /// yazdırma (editördeki canlı dikte).
@@ -18,7 +19,7 @@ import '../../../app/theme/app_tokens.dart';
 /// daha güzel bir alan olsun"). Eskiden levha başlıklı, dalga çubuklu bir
 /// kart; dikte ise düz bir bilgi şeridiydi — aynı işin iki yabancı yüzü.
 /// Artık ikisi de aynı parçalardan kurulur ([ListeningBadge], başlık +
-/// [ListeningModeTag], [ListeningWaveform], süre); fark RENK ve SİMGEDE:
+/// [ListeningModeTag], [VoiceLevelWave], süre); fark RENK ve SİMGEDE:
 /// yapay zekâ yıldızlı ve iki renkli geçişli, doğrudan yazım düz mikrofon.
 enum ListeningMode { ai, dictation }
 
@@ -44,25 +45,40 @@ class ListeningBadge extends StatefulWidget {
   State<ListeningBadge> createState() => _ListeningBadgeState();
 }
 
+/// Rozet nabzının bir döngüsü.
+const Duration _kPulsePeriod = Duration(milliseconds: 1400);
+
+/// Nabız halkasının en büyük ölçek artışı ve başlangıç saydamlığı; hareket
+/// azaltılmışken halka durur, sabit [_kPulseRest] opak kalır.
+const double _kPulseGrow = 0.35, _kPulseAlpha = 0.28, _kPulseRest = 0.2;
+
 class _ListeningBadgeState extends State<ListeningBadge>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1400),
+    duration: _kPulsePeriod,
   );
+  bool _motion = true;
 
   @override
-  void initState() {
-    super.initState();
-    if (widget.active) _pulse.repeat();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _motion = motionOf(context);
+    _sync();
   }
 
   @override
   void didUpdateWidget(ListeningBadge old) {
     super.didUpdateWidget(old);
-    if (widget.active && !_pulse.isAnimating) {
+    _sync();
+  }
+
+  /// Nabız yalnız dinlerken ve hareket açıkken döner.
+  void _sync() {
+    final run = widget.active && _motion;
+    if (run && !_pulse.isAnimating) {
       _pulse.repeat();
-    } else if (!widget.active && _pulse.isAnimating) {
+    } else if (!run && _pulse.isAnimating) {
       _pulse
         ..stop()
         ..value = 0;
@@ -127,19 +143,20 @@ class _ListeningBadgeState extends State<ListeningBadge>
           child: core,
           builder: (context, child) {
             final t = _pulse.value;
+            final alpha = _motion ? _kPulseAlpha * (1 - t) : _kPulseRest;
             return Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
                 if (widget.active)
                   Transform.scale(
-                    scale: 1 + 0.35 * t,
+                    scale: 1 + _kPulseGrow * t,
                     child: Container(
                       width: size,
                       height: size,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: accent.withValues(alpha: 0.28 * (1 - t)),
+                        color: accent.withValues(alpha: alpha),
                       ),
                     ),
                   ),
@@ -152,6 +169,9 @@ class _ListeningBadgeState extends State<ListeningBadge>
     );
   }
 }
+
+/// Kip etiketinin simgesi.
+const double _kTagIcon = 12;
 
 /// Küçük kip etiketi ("Yapay zekâ" / "Doğrudan yazım").
 class ListeningModeTag extends StatelessWidget {
@@ -167,9 +187,12 @@ class ListeningModeTag extends StatelessWidget {
     final ai = mode == ListeningMode.ai;
     return Container(
       key: ValueKey('listening-mode-${mode.name}'),
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.s,
+        vertical: AppSpace.xxs,
+      ),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.14),
+        color: accent.withValues(alpha: AppAlpha.pressed),
         borderRadius: BorderRadius.circular(AppRadius.s),
       ),
       child: Row(
@@ -177,20 +200,18 @@ class ListeningModeTag extends StatelessWidget {
         children: [
           Icon(
             ai ? Icons.auto_awesome : Icons.keyboard_alt_outlined,
-            size: 11,
+            size: _kTagIcon,
             color: accent,
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: AppSpace.xs),
           Flexible(
             child: Text(
               ai ? l10n.listeningModeAi : l10n.listeningModeDictation,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: AppWeight.strong,
-                color: accent,
-              ),
+              style: AppText.of(
+                Theme.of(context),
+              ).meta.copyWith(fontWeight: AppWeight.strong, color: accent),
             ),
           ),
         ],
@@ -256,89 +277,54 @@ class _ListeningClockState extends State<ListeningClock> {
     final s = d.inSeconds % 60;
     return Text(
       '$m:${s.toString().padLeft(2, '0')}',
-      style: (widget.style ?? const TextStyle()).copyWith(
+      style: (widget.style ?? AppText.of(Theme.of(context)).label).copyWith(
         fontFeatures: const [FontFeature.tabularFigures()],
       ),
     );
   }
 }
 
-/// Dinlerken salınan dalga çubukları; durunca alçalıp donar.
-///
-/// TEK ticker, TEK CustomPaint: ticker bir ValueNotifier'ı besler, yalnız
-/// painter yeniden ÇİZER — widget ağacı kare başına kurulmaz. Her çubuğun
-/// ölçeği kendi periyodundan (560 + i·41 ms) hesaplanır (kayan dalga).
-class ListeningWaveform extends StatefulWidget {
-  const ListeningWaveform({
+/// Kartın en geniş hâli: tablette/webde ortalı durur, telefonda etkisiz.
+const double _kCardMaxWidth = 560;
+
+/// Sessizlik geri sayımı çizgisinin kalınlığı (yuvası HEP ayrılmış).
+const double _kSilenceBar = 2;
+
+/// Dinleme alanının ORTAK KABUĞU (P63 PB5): editörün dikte kartı ve sesli not
+/// levhasının bütün evreleri (dinleme, işleniyor, hata, gözden geçirme) AYNI
+/// yüzen yüzeyde — `AppSurface.floating`, kenar çizgisi kip rengi × soft;
+/// bulanık gölge yok. En çok 560 dp, ortalı.
+class ListeningSurface extends StatelessWidget {
+  const ListeningSurface({
     super.key,
-    required this.active,
-    required this.color,
-    this.idleColor,
-    this.height = 48,
-    this.bars = 24,
+    required this.mode,
+    required this.child,
+    this.surfaceKey,
   });
 
-  final bool active;
-  final Color color;
-  final Color? idleColor;
-  final double height;
-  final int bars;
+  final ListeningMode mode;
+  final Widget child;
 
-  @override
-  State<ListeningWaveform> createState() => _ListeningWaveformState();
-}
-
-class _ListeningWaveformState extends State<ListeningWaveform>
-    with SingleTickerProviderStateMixin {
-  late final Ticker _ticker;
-  final _elapsed = ValueNotifier<Duration>(Duration.zero);
-
-  @override
-  void initState() {
-    super.initState();
-    _ticker = createTicker((elapsed) {
-      if (!widget.active) return;
-      _elapsed.value = elapsed;
-    });
-    if (widget.active) _ticker.start();
-  }
-
-  @override
-  void didUpdateWidget(ListeningWaveform old) {
-    super.didUpdateWidget(old);
-    if (widget.active && !_ticker.isActive) {
-      _ticker.start();
-    } else if (!widget.active && _ticker.isActive) {
-      _ticker.stop();
-      // Durunca çubuklar bekleme yüksekliğine insin (painter active'e bakar;
-      // notifier'ı dürtmek son bir çizim tetikler).
-      _elapsed.value = Duration.zero;
-    }
-  }
-
-  @override
-  void dispose() {
-    _ticker.dispose();
-    _elapsed.dispose();
-    super.dispose();
-  }
+  /// Yüzeyin kendisinin (en sınırlı kutu) anahtarı — ölçen testler için.
+  final Key? surfaceKey;
 
   @override
   Widget build(BuildContext context) {
-    // Kare başı boyama yalnız dalganın katmanında kalsın (bkz. dikte paneli).
-    return RepaintBoundary(
-      child: SizedBox(
-        height: widget.height,
-        width: double.infinity,
-        child: CustomPaint(
-          painter: _WaveformPainter(
-            elapsed: _elapsed,
-            active: widget.active,
-            bars: widget.bars,
-            color: widget.active
-                ? widget.color
-                : widget.idleColor ??
-                      Theme.of(context).colorScheme.outlineVariant,
+    final theme = Theme.of(context);
+    final accent = listeningAccent(theme.colorScheme, mode);
+    final radius = BorderRadius.circular(AppRadius.xl);
+    return Align(
+      heightFactor: 1,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _kCardMaxWidth),
+        child: DecoratedBox(
+          key: surfaceKey,
+          decoration: AppSurface.floating(theme, radius: AppRadius.xl).copyWith(
+            border: Border.all(color: accent.withValues(alpha: AppAlpha.soft)),
+          ),
+          child: ClipRRect(
+            borderRadius: radius,
+            child: Material(type: MaterialType.transparency, child: child),
           ),
         ),
       ),
@@ -346,54 +332,86 @@ class _ListeningWaveformState extends State<ListeningWaveform>
   }
 }
 
-class _WaveformPainter extends CustomPainter {
-  _WaveformPainter({
-    required this.elapsed,
+/// Kartın BAŞLIK SATIRI — dinleme kartı ve gözden geçirme evresi tek bileşen:
+/// rozet · başlık + (alt satırda) kip etiketi + alt yazı · süre · düğmeler.
+/// [silence] ve [silenceHint] verilirse geri sayım başlayınca alt yazı
+/// [silenceHint] olur (yalnız o metin yeniden kurulur).
+class ListeningHeader extends StatelessWidget {
+  const ListeningHeader({
+    super.key,
+    required this.mode,
     required this.active,
-    required this.color,
-    required this.bars,
-  }) : super(repaint: elapsed);
+    required this.title,
+    required this.subtitle,
+    required this.clock,
+    this.trailing = const [],
+    this.silence,
+    this.silenceHint,
+  });
 
-  final ValueListenable<Duration> elapsed;
+  final ListeningMode mode;
   final bool active;
-  final Color color;
-  final int bars;
-
-  /// Dinleme bitince çubuklar %16'ya iner ve durur.
-  double _factor(int index) {
-    if (!active) return 0.16;
-    final period = 560 + index * 41;
-    final phase = (elapsed.value.inMilliseconds % period) / period;
-    // .32 → 1 → .32 arası yumuşak gidiş geliş.
-    return 0.32 + 0.68 * (0.5 - 0.5 * math.cos(2 * math.pi * phase));
-  }
+  final String title;
+  final String subtitle;
+  final Widget clock;
+  final List<Widget> trailing;
+  final ValueListenable<double>? silence;
+  final String? silenceHint;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    final gap = size.width / bars * 0.35;
-    final barWidth = (size.width - gap * (bars - 1)) / bars;
-    if (barWidth <= 0) return;
-    final radius = Radius.circular(math.min(3, barWidth / 2));
-    for (var i = 0; i < bars; i++) {
-      final height = size.height * _factor(i);
-      final left = i * (barWidth + gap);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(left, (size.height - height) / 2, barWidth, height),
-          radius,
+  Widget build(BuildContext context) {
+    final text = AppText.of(Theme.of(context));
+    final meta = text.meta;
+    Widget sub(String s) =>
+        Text(s, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta);
+    final hint = silenceHint;
+    final quiet = silence;
+    return Row(
+      children: [
+        ListeningBadge(mode: mode, active: active),
+        const SizedBox(width: AppSpace.m),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: text.rowTitle.copyWith(fontWeight: AppWeight.strong),
+              ),
+              const SizedBox(height: AppSpace.xxs),
+              // Kip etiketi ALT satırda, açıklamanın başında: başlık
+              // satırında durunca dar telefonda başlık "D..."ye
+              // iniyordu (sağda süre ve düğmeler de var).
+              Row(
+                children: [
+                  Flexible(child: ListeningModeTag(mode: mode)),
+                  const SizedBox(width: AppSpace.s),
+                  Expanded(
+                    child: hint == null || quiet == null
+                        ? sub(subtitle)
+                        // Yalnız bu metin kurulur (yoklama 250 ms'de bir).
+                        : ValueListenableBuilder<double>(
+                            valueListenable: quiet,
+                            builder: (_, v, _) => sub(v > 0 ? hint : subtitle),
+                          ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        paint,
-      );
-    }
+        const SizedBox(width: AppSpace.s),
+        clock,
+        if (trailing.isNotEmpty) ...[
+          const SizedBox(width: AppSpace.xxs),
+          ...trailing,
+        ],
+      ],
+    );
   }
-
-  @override
-  bool shouldRepaint(_WaveformPainter old) =>
-      old.active != active ||
-      old.color != color ||
-      old.bars != bars ||
-      old.elapsed != elapsed;
 }
 
 /// Dinleme alanının ORTAK KARTI — editörün doğrudan yazdırma şeridi ve
@@ -408,6 +426,10 @@ class _WaveformPainter extends CustomPainter {
 /// rozet + başlık/kip + süre, altta TAM GENİŞLİK dalga ve yanında eylem
 /// düğmesi (~120 px). Yapay zekâ kipinde arada döküm durur ([body]) —
 /// doğrudan yazımda yazı zaten notun içine akıyor.
+///
+/// P63 PB5: dalga GERÇEK ses düzeyini izler ([level]; düzey olayı kartı
+/// kurmaz, yalnız dalga boyanır); sessizlik geri sayımı dalganın altında,
+/// yuvası hep ayrılmış — kart dinleme boyunca boy değiştirmez.
 class ListeningCard extends StatelessWidget {
   const ListeningCard({
     super.key,
@@ -419,14 +441,12 @@ class ListeningCard extends StatelessWidget {
     required this.action,
     this.trailing = const [],
     this.body,
-    this.elevation = 0,
+    this.level,
+    this.silence,
+    this.silenceHint,
   });
 
   final ListeningMode mode;
-
-  /// Levhada (not/listenin üstünde yüzerken) gölge verilir; editörün
-  /// içindeki şeritte düz.
-  final double elevation;
 
   /// Mikrofon şu an açık mı (rozet nabzı, dalga).
   final bool active;
@@ -445,90 +465,72 @@ class ListeningCard extends StatelessWidget {
   /// Başlık ile dalga arasındaki içerik (yapay zekâ kipinde canlı döküm).
   final Widget? body;
 
+  /// Ses düzeyi 0–1 (null: düzey bilinmiyor, dalga yine yaşar).
+  final ValueListenable<double>? level;
+
+  /// Sessizlik geri sayımı 0–1 (null: çizgi yok, yuva yine ayrılmış).
+  final ValueListenable<double>? silence;
+
+  /// Sayım başlayınca alt yazı (null: alt yazı değişmez — çağıran yönetir).
+  final String? silenceHint;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final accent = listeningAccent(scheme, mode);
-    return Material(
-      key: ValueKey('listening-card-${mode.name}'),
-      color: scheme.surfaceContainerLow,
-      elevation: elevation,
-      shadowColor: Colors.black45,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(22),
-        side: BorderSide(color: accent.withValues(alpha: 0.3)),
-      ),
+    final accent = listeningAccent(Theme.of(context).colorScheme, mode);
+    final quiet = silence;
+    return ListeningSurface(
+      surfaceKey: ValueKey('listening-card-${mode.name}'),
+      mode: mode,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 10, 12),
+        padding: const EdgeInsets.all(AppSpace.m),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                ListeningBadge(mode: mode, active: active),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      // Kip etiketi ALT satırda, açıklamanın başında: başlık
-                      // satırında durunca dar telefonda başlık "D..."ye
-                      // iniyordu (sağda süre ve düğmeler de var).
-                      Row(
-                        children: [
-                          Flexible(child: ListeningModeTag(mode: mode)),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              subtitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                clock,
-                if (trailing.isNotEmpty) ...[
-                  const SizedBox(width: 2),
-                  ...trailing,
-                ],
-              ],
+            ListeningHeader(
+              mode: mode,
+              active: active,
+              title: title,
+              subtitle: subtitle,
+              clock: clock,
+              trailing: trailing,
+              silence: silence,
+              silenceHint: silenceHint,
             ),
-            if (body != null) ...[const SizedBox(height: 8), body!],
-            const SizedBox(height: 10),
+            if (body != null) ...[const SizedBox(height: AppSpace.s), body!],
+            const SizedBox(height: AppSpace.s),
             Row(
               children: [
                 Expanded(
-                  child: ListeningWaveform(
+                  child: VoiceLevelWave(
                     active: active,
                     color: accent,
-                    height: 30,
-                    bars: 28,
+                    level: level,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpace.m),
                 action,
               ],
+            ),
+            const SizedBox(height: AppSpace.xs),
+            SizedBox(
+              height: _kSilenceBar,
+              child: quiet == null
+                  ? null
+                  : ValueListenableBuilder<double>(
+                      valueListenable: quiet,
+                      builder: (context, v, _) => AnimatedOpacity(
+                        opacity: active && v > 0 ? 1 : 0,
+                        duration: AppMotion.of(context, AppMotion.quick),
+                        child: LinearProgressIndicator(
+                          key: const ValueKey('voice-silence-bar'),
+                          value: v,
+                          minHeight: _kSilenceBar,
+                          color: accent,
+                          borderRadius: BorderRadius.circular(AppRadius.hair),
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -538,7 +540,8 @@ class ListeningCard extends StatelessWidget {
 }
 
 /// Kartın ana düğmesi: hap biçimli, simge + kısa etiket. Dinlerken kırmızı
-/// "Bitir"; beklerken kipin renginde "Başla" / "Basılı tut".
+/// "Bitir" (kayıt durumu — kaçırılamayacak gösterge); beklerken kipin
+/// renginde "Başla" / "Basılı tut".
 class ListeningActionButton extends StatelessWidget {
   const ListeningActionButton({
     super.key,
@@ -556,13 +559,16 @@ class ListeningActionButton extends StatelessWidget {
   /// çevreleyen `Listener` alır) ama ETKİN görünür.
   final VoidCallback? onPressed;
 
+  /// Hap yüksekliği.
+  static const double height = 44;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final background = listening ? scheme.error : scheme.primaryContainer;
     final foreground = listening ? scheme.onError : scheme.onPrimaryContainer;
     return SizedBox(
-      height: 44,
+      height: height,
       child: FilledButton.icon(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
@@ -570,19 +576,22 @@ class ListeningActionButton extends StatelessWidget {
           foregroundColor: foreground,
           disabledBackgroundColor: background,
           disabledForegroundColor: foreground,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontWeight: AppWeight.strong),
         ),
         icon: Icon(
           icon ?? (listening ? Icons.stop_rounded : AppIcons.dictation),
-          size: 20,
+          size: AppIconSize.m,
         ),
         label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
     );
   }
 }
+
+/// Başlık düğmesinin görünen boyu (dokunma alanı 48).
+const double _kHeaderButton = 34;
 
 /// Kartın başlık satırındaki küçük simge düğmesi (34 dp): üç düğme + süre
 /// dar telefonda başlığı ezmesin.
@@ -592,7 +601,7 @@ class ListeningHeaderButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
-    this.iconSize = 20,
+    this.iconSize = AppIconSize.m,
   });
 
   final IconData icon;
@@ -606,7 +615,10 @@ class ListeningHeaderButton extends StatelessWidget {
     child: IconButton(
       tooltip: tooltip,
       padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+      constraints: const BoxConstraints.tightFor(
+        width: _kHeaderButton,
+        height: _kHeaderButton,
+      ),
       // M3 simge düğmesi 48 dp'lik dokunma kutusuna büyür; sıkı satırda
       // üç düğme 144 dp yiyip başlığı eziyordu.
       style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),

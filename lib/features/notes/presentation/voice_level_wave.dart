@@ -8,8 +8,8 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/a11y/motion.dart';
 
 /// P63 iskelet (docs/plan_tasarim_B.md §6.4): gerçek ses düzeyini izleyen
-/// dalga. `ListeningWaveform` kalıbı (tek Ticker + tek CustomPaint); düzey
-/// olayı widget KURMAZ, yalnız boyar. Ekrana PB5 bağlar.
+/// dalga. Tek Ticker + tek CustomPaint (silinen sahte dalganın kalıbı); düzey
+/// olayı widget KURMAZ, yalnız boyar. Dinleme kartında (PB5) kullanılır.
 
 const double _barWidth = 3;
 const double _barGap = 4;

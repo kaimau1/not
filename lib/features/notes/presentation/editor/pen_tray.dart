@@ -8,12 +8,17 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_design.dart';
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/personalize.dart';
+import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/widgets/color_palette.dart';
 import '../viewers/ink_layer.dart';
 import 'pen_icons.dart';
+import 'pen_stroke_preview.dart';
 import '../viewers/ink_pen.dart';
 import '../viewers/ink_tools.dart';
 import '../../../../core/a11y/chip_roles.dart';
@@ -52,10 +57,10 @@ void showInkSettings(BuildContext context, InkController ink) {
     );
     return;
   }
+  // Ortak levha (P63 PB3): tutamak + üst güvenli alan düzeltmesi buraya da.
   unawaited(
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
-      showDragHandle: true,
       isScrollControlled: true,
       builder: (_) => InkSettingsSheet(controller: ink),
     ),
@@ -126,8 +131,29 @@ class PenTray extends StatefulWidget {
   State<PenTray> createState() => _PenTrayState();
 }
 
-class _PenTrayState extends State<PenTray> {
+class _PenTrayState extends State<PenTray>
+    with SingleTickerProviderStateMixin {
   bool _panel = false;
+
+  /// Ayar panelinin girişi/çıkışı (P63 PB3): yuva TEK ADIMDA açılır, içerik
+  /// yalnız boyamada (solma + kayma) belirir; kapanışta çıkış bitince yuva
+  /// tek adımda kalkar. boy animasyonu YOK — şerit belgeyle aynı sütunda
+  /// olduğu ekranlarda belge her karede yeniden diziliyordu.
+  late final AnimationController _panelAnim = AnimationController(vsync: this)
+    ..addStatusListener((s) {
+      final shown = s != AnimationStatus.dismissed;
+      if (!shown) _panelLeaving = null;
+      _panelShown.value = shown;
+    });
+  CurvedAnimation? _panelCurve;
+
+  /// Yuvayı yalnız kendi küçük kurucusu boşaltır (çıkış bitince tepsinin
+  /// tamamı yeniden kurulmaz).
+  final _panelShown = ValueNotifier(false);
+
+  /// Çıkan panelin son hâli: çıkış süresince AYNI örnek (çizgi olayları onu
+  /// yeniden kurmaz).
+  Widget? _panelLeaving;
 
   /// Çekmece kipinde tepsi aşağıda mı (bkz. [PenTray.dock]).
   bool _tucked = false;
@@ -148,10 +174,79 @@ class _PenTrayState extends State<PenTray> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _panelAnim
+      ..duration = AppMotion.of(context, AppMotion.short)
+      ..reverseDuration = AppMotion.of(
+        context,
+        AppMotion.exitOf(AppMotion.short),
+      );
+    _panelCurve?.dispose();
+    _panelCurve = CurvedAnimation(
+      parent: _panelAnim,
+      curve: AppMotion.curveOf(context, AppMotion.enter),
+      reverseCurve: AppMotion.curveOf(context, AppMotion.exit),
+    );
+  }
+
+  @override
   void dispose() {
     _idle?.cancel();
     if (widget.dock) _ink.removeListener(_onInk);
+    _panelCurve?.dispose();
+    _panelAnim.dispose();
+    _panelShown.dispose();
     super.dispose();
+  }
+
+  /// Paneli aç/kapa: durum + giriş/çıkış hareketi tek yerde.
+  void _setPanel(bool value) {
+    if (value == _panel) return;
+    setState(() => _panel = value);
+    value ? _panelAnim.forward(from: 0) : _panelAnim.reverse();
+  }
+
+  /// Panel yuvası: KOŞULSUZ kurulu (ağaç şekli sabit), kapalıyken boş.
+  Widget _panelSlot(Widget Function() panel) {
+    final Widget? content;
+    if (_panel) {
+      content = _panelLeaving = panel();
+    } else {
+      content = _panelAnim.isDismissed ? null : _panelLeaving;
+    }
+    final a = _panelCurve!;
+    return ValueListenableBuilder<bool>(
+      valueListenable: _panelShown,
+      builder: (_, shown, child) =>
+          shown && child != null ? child : const SizedBox.shrink(),
+      child: content == null
+          ? null
+          : FadeTransition(
+              opacity: a,
+              child: SlideTransition(
+                position: a.drive(
+                  Tween(begin: const Offset(0, _kPanelRise), end: Offset.zero),
+                ),
+                child: content,
+              ),
+            ),
+    );
+  }
+
+  /// Tepside duran araçlar (P63 PB3, plan §3.2.1): kullanıcının gizledikleri
+  /// çıkar; tükenmez ve silgi gizlenemez, o an seçili araç hep çizilir.
+  List<PenTrayTool> get _tools {
+    final prefs = Personalize.current;
+    final current = _current;
+    return [
+      for (final t in PenTrayTool.values)
+        if (t == current ||
+            t == PenTrayTool.pen ||
+            t == PenTrayTool.eraser ||
+            prefs.shows(UiItem.penTool(t.name)))
+          t,
+    ];
   }
 
   /// Çizim değişti (yeni çizgi, silme): kullanıcı sayfayla meşgul — açık
@@ -163,7 +258,7 @@ class _PenTrayState extends State<PenTray> {
     final changed = count != _strokes;
     _strokes = count;
     if (!_ink.drawing && !changed) return;
-    if (_panel) setState(() => _panel = false);
+    _setPanel(false);
     _setTucked(true);
   }
 
@@ -237,7 +332,7 @@ class _PenTrayState extends State<PenTray> {
   void _togglePanel() {
     _touched();
     if (!widget.rail) {
-      setState(() => _panel = !_panel);
+      _setPanel(!_panel);
       return;
     }
     unawaited(
@@ -249,12 +344,15 @@ class _PenTrayState extends State<PenTray> {
             child: ListenableBuilder(
               listenable: _ink,
               builder: (_, _) => SingleChildScrollView(
-                padding: const EdgeInsets.only(top: 12, bottom: 8),
+                padding: const EdgeInsets.only(
+                  top: AppSpace.m,
+                  bottom: AppSpace.s,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SheetHeader(title: _labels(context.l10n)[_current]!),
-                    _Options(controller: _ink, tool: _current),
+                    _options(),
                   ],
                 ),
               ),
@@ -273,7 +371,7 @@ class _PenTrayState extends State<PenTray> {
       open: _panel || (widget.dock && !_tucked),
       onClose: () {
         if (_panel) {
-          setState(() => _panel = false);
+          _setPanel(false);
         } else {
           _idle?.cancel();
           _setTucked(true);
@@ -283,17 +381,18 @@ class _PenTrayState extends State<PenTray> {
       // isteği 2026-11-09: "ekranda bir yere tıklayınca kapanmalı, şu an x'e
       // basana kadar açık kalıyor"). Tepsinin kendi düğmeleri içeride sayılır.
       child: TapRegion(
-        onTapOutside: (_) {
-          if (_panel) setState(() => _panel = false);
-        },
+        onTapOutside: (_) => _setPanel(false),
         // Etkin yüzey değişince (toolRev) onun çizgileri de dinlenir: geri
         // al düğmesi o yüzeyin geçmişine göre açılır.
         child: ValueListenableBuilder(
           valueListenable: InkToolMemory.toolRev,
           builder: (context, _, _) => ListenableBuilder(
-            listenable: identical(_hist, _ink)
-                ? _ink
-                : Listenable.merge([_ink, _hist]),
+            // Personalize: gizlenen kalemler (kök setState yok).
+            listenable: Listenable.merge([
+              _ink,
+              if (!identical(_hist, _ink)) _hist,
+              Personalize.listenable,
+            ]),
             builder: (context, _) => widget.rail
                 ? _buildRail(context)
                 : widget.dock
@@ -311,17 +410,22 @@ class _PenTrayState extends State<PenTray> {
     final scheme = Theme.of(context).colorScheme;
     final current = _current;
     final labels = _labels(l10n);
+    final theme = Theme.of(context);
+    // Sütun: zeminden bir ton, sayfa tarafında ince çizgi; gölgesiz.
     return Material(
       color: scheme.surfaceContainerLow,
+      shape: Border(
+        right: BorderSide(color: AppTokens.fromTheme(theme).hairline),
+      ),
       child: SafeArea(
         right: false,
         child: SizedBox(
           width: 64,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
             child: Column(
               children: [
-                for (final tool in PenTrayTool.values)
+                for (final tool in _tools)
                   SizedBox(
                     width: 64,
                     height: 48,
@@ -337,13 +441,17 @@ class _PenTrayState extends State<PenTray> {
                       ),
                     ),
                   ),
-                const SizedBox(height: 8),
-                _colorDot(scheme, l10n),
+                const SizedBox(height: AppSpace.s),
+                _colorButton(l10n),
                 if (InkToolMemory.presets.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: AppSpace.s),
                   _presetRow(Axis.vertical),
                 ],
-                const Divider(height: 18, indent: 12, endIndent: 12),
+                const Divider(
+                  height: AppSpace.l,
+                  indent: AppSpace.m,
+                  endIndent: AppSpace.m,
+                ),
                 ..._controlButtons(l10n),
                 ...widget.actions,
               ],
@@ -368,46 +476,44 @@ class _PenTrayState extends State<PenTray> {
   /// açılır: kalemler · hızlı renkler · geri al · ⋯ · eylemler. Seçili
   /// kaleme ya da palet düğmesine dokunmak ayar kartını kapsülün üstünde
   /// açar. Çizim başlayınca / 6 sn dokunulmayınca yine hapa döner.
-  Widget _buildDock(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+  Widget _buildDock(BuildContext context) => LayoutBuilder(
+    // Geniş kapsül BÖLMENİN enine göre (pencere değil): bölünmüş görünümde
+    // pencere geniş ama bölme dar olabilir — tek satır taşıyordu (G4 turu).
+    builder: (context, c) => _dock(
+      context,
+      wide:
+          c.maxWidth >=
+          _kWideDockFixed + _kDockSlot * (_tools.length + widget.actions.length),
+    ),
+  );
+
+  Widget _dock(BuildContext context, {required bool wide}) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final l10n = context.l10n;
     final current = _current;
     final labels = _labels(l10n);
-    final wide = MediaQuery.sizeOf(context).width >= 640;
     final bottom = MediaQuery.paddingOf(context).bottom + _kDockGap;
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final open = !_tucked || _panel;
     final inkDot = _ink.eraser ? scheme.primary : _ink.color;
+    final tools = _tools;
 
-    final shape = StadiumBorder(
-      side: BorderSide(
-        color: scheme.outlineVariant.withValues(alpha: 0.5),
-        width: 0.8,
-      ),
-    );
-    Widget surface(Widget child, {ShapeBorder? border}) => DecoratedBox(
-      decoration: ShapeDecoration(
-        shape: border ?? shape,
-        // İki katlı yumuşak gölge: yakın (keskin) + uzak (dağınık).
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+    // Yüzen yüzey (P63 PB3): ortak `AppSurface.floating` — ince çizgi +
+    // bulanıksız alt kenar; bulanık gölge ve sabit siyah yok.
+    Widget surface(Widget child, {double radius = AppRadius.pill}) =>
+        DecoratedBox(
+          decoration: AppSurface.floating(theme, radius: radius),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(radius),
+            child: Material(type: MaterialType.transparency, child: child),
           ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Material(
-        color: scheme.surfaceContainerHigh,
-        shape: border ?? shape,
-        clipBehavior: Clip.antiAlias,
-        child: child,
-      ),
+        );
+
+    final rule = Container(
+      width: 1,
+      height: AppSpace.xxl,
+      margin: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+      color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
     );
 
     final mini = Semantics(
@@ -424,7 +530,10 @@ class _PenTrayState extends State<PenTray> {
           SizedBox(
             height: 48,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 10, 0),
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpace.l,
+                end: AppSpace.s,
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -450,26 +559,25 @@ class _PenTrayState extends State<PenTray> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpace.s),
                   _Swatch(color: inkDot, size: 16, selected: false),
-                  const SizedBox(width: 6),
-                  Container(
-                    width: 1,
-                    height: 22,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    color: scheme.outlineVariant.withValues(alpha: 0.6),
-                  ),
+                  const SizedBox(width: AppSpace.xs),
+                  rule,
                   // HIZLI SİLGİ (kullanıcı isteği 2026-11-08): küçük panelde
                   // hep silgi; silgi seçiliyken yerinde SON kalem — tek
                   // dokunuşla gidip gelinir. `_ink.pen` silgide de korunur.
                   Tooltip(
-                    message: _ink.eraser ? labels[_penToolOf(_ink.pen)]! : l10n.eraser,
+                    message: _ink.eraser
+                        ? labels[_penToolOf(_ink.pen)]!
+                        : l10n.eraser,
                     child: InkResponse(
                       key: const ValueKey('pen-dock-quick-eraser'),
-                      radius: 20,
+                      radius: AppSpace.xl,
                       onTap: () {
                         AppHaptics.tick();
-                        _ink.eraser ? _ink.setPen(_ink.pen) : _ink.setEraser(true);
+                        _ink.eraser
+                            ? _ink.setPen(_ink.pen)
+                            : _ink.setEraser(true);
                       },
                       child: SizedBox(
                         width: 48,
@@ -478,7 +586,7 @@ class _PenTrayState extends State<PenTray> {
                           _ink.eraser
                               ? Icons.edit_outlined
                               : Icons.auto_fix_normal_outlined,
-                          size: 20,
+                          size: AppIconSize.m,
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
@@ -486,7 +594,7 @@ class _PenTrayState extends State<PenTray> {
                   ),
                   Icon(
                     Icons.keyboard_arrow_up_rounded,
-                    size: 20,
+                    size: AppIconSize.m,
                     color: scheme.onSurfaceVariant,
                   ),
                 ],
@@ -497,12 +605,6 @@ class _PenTrayState extends State<PenTray> {
       ),
     );
 
-    final divider = Container(
-      width: 1,
-      height: 24,
-      margin: const EdgeInsets.symmetric(horizontal: 6),
-      color: scheme.outlineVariant.withValues(alpha: 0.6),
-    );
     Widget tool(PenTrayTool t) => _DockTool(
       key: ValueKey('pen-tray-${t.name}'),
       tool: t,
@@ -534,7 +636,7 @@ class _PenTrayState extends State<PenTray> {
               message: l10n.inkColor,
               child: InkResponse(
                 key: const ValueKey('pen-tray-color'),
-                radius: 22,
+                radius: AppSpace.xl,
                 onTap: _togglePanel,
                 child: SizedBox(
                   width: 40,
@@ -543,15 +645,16 @@ class _PenTrayState extends State<PenTray> {
                     child: Container(
                       width: 26,
                       height: 26,
-                      padding: const EdgeInsets.all(3),
+                      padding: const EdgeInsets.all(AppSpace.xs),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: FixedColors.rainbowSweep,
+                        // Seçili halka: bulanıksız, yalnız yayılma.
                         boxShadow: _panel
                             ? [
                                 BoxShadow(
                                   color: scheme.primary,
-                                  spreadRadius: 2,
+                                  spreadRadius: AppSpace.xxs,
                                 ),
                               ]
                             : null,
@@ -582,15 +685,14 @@ class _PenTrayState extends State<PenTray> {
       SizedBox(
         height: 52,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
           child: Row(
             mainAxisSize: wide ? MainAxisSize.min : MainAxisSize.max,
             children: [
-              for (final t in PenTrayTool.values)
-                wide ? tool(t) : Expanded(child: tool(t)),
-              divider,
+              for (final t in tools) wide ? tool(t) : Expanded(child: tool(t)),
+              rule,
               ...colors,
-              divider,
+              rule,
               IconButton(
                 key: const ValueKey('pen-tray-undo'),
                 tooltip: l10n.undo,
@@ -612,19 +714,30 @@ class _PenTrayState extends State<PenTray> {
         ),
       ),
     );
-    final panel = surface(
-      _Options(controller: _ink, tool: current),
-      border: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-          width: 0.8,
+    // Hap ↔ kapsül ve sabit kalem hapı: aynı geçiş — alttan hafif büyüyerek
+    // solar (taşmayan eğri; çıkış girişin 2/3'ü).
+    final enter = AppMotion.of(context, AppMotion.short);
+    final exit = AppMotion.of(context, AppMotion.exitOf(AppMotion.short));
+    Widget swap(Widget child) => AnimatedSwitcher(
+      duration: enter,
+      reverseDuration: exit,
+      switchInCurve: AppMotion.curveOf(context, AppMotion.emphasized),
+      switchOutCurve: AppMotion.curveOf(context, AppMotion.exit),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: ScaleTransition(
+          alignment: Alignment.bottomCenter,
+          scale: Tween(begin: _kSwapScale, end: 1.0).animate(animation),
+          child: child,
         ),
       ),
+      layoutBuilder: (current, previous) => Stack(
+        alignment: Alignment.bottomCenter,
+        children: [...previous, ?current],
+      ),
+      child: child,
     );
-    final duration = reduceMotion
-        ? Duration.zero
-        : const Duration(milliseconds: 240);
+    final presets = open && InkToolMemory.presets.isNotEmpty;
     return Align(
       alignment: Alignment.bottomCenter,
       child: GestureDetector(
@@ -635,60 +748,48 @@ class _PenTrayState extends State<PenTray> {
           if (v < -150) _touched();
         },
         child: Padding(
-          padding: EdgeInsets.fromLTRB(10, 0, 10, bottom),
+          padding: EdgeInsets.fromLTRB(
+            AppSpace.s,
+            0,
+            AppSpace.s,
+            bottom,
+          ),
           child: Listener(
             onPointerDown: (_) => _armIdle(),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                AnimatedSize(
-                  duration: duration,
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.bottomCenter,
-                  child: _panel
+                _panelSlot(
+                  () => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpace.s),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 440),
+                      child: surface(_options(), radius: AppRadius.xl),
+                    ),
+                  ),
+                ),
+                swap(
+                  presets
                       ? Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 440),
-                            child: panel,
+                          key: const ValueKey('pen-dock-presets'),
+                          padding: const EdgeInsets.only(bottom: AppSpace.s),
+                          child: surface(
+                            SizedBox(
+                              height: 44,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpace.xs,
+                                ),
+                                child: _presetRow(Axis.horizontal),
+                              ),
+                            ),
                           ),
                         )
-                      : const SizedBox(width: 0, height: 0),
+                      : const SizedBox.shrink(),
                 ),
-                if (open && InkToolMemory.presets.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: surface(
-                      SizedBox(
-                        height: 44,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: _presetRow(Axis.horizontal),
-                        ),
-                      ),
-                    ),
-                  ),
                 // Hap ↔ kapsül: alttan büyüyerek/küçülerek yer değiştirir.
-                AnimatedSwitcher(
-                  duration: duration,
-                  reverseDuration: reduceMotion
-                      ? Duration.zero
-                      : const Duration(milliseconds: 160),
-                  switchInCurve: Curves.easeOutBack,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(
-                      alignment: Alignment.bottomCenter,
-                      scale: Tween(begin: 0.85, end: 1.0).animate(animation),
-                      child: child,
-                    ),
-                  ),
-                  layoutBuilder: (current, previous) => Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [...previous, ?current],
-                  ),
-                  child: open
+                swap(
+                  open
                       ? KeyedSubtree(
                           key: const ValueKey('pen-dock-open'),
                           child: capsule,
@@ -727,7 +828,7 @@ class _PenTrayState extends State<PenTray> {
         onSelected: (v) => switch (v) {
           0 => _hist.redo(),
           1 => _ink.setPenOnly(!_ink.penOnly),
-          3 => _pinCurrent(),
+          3 => _togglePin(),
           _ => showInkSettings(context, _ink),
         },
         itemBuilder: (_) => [
@@ -750,8 +851,10 @@ class _PenTrayState extends State<PenTray> {
               key: const ValueKey('pen-tray-pin'),
               value: 3,
               child: ListTile(
-                leading: const Icon(Icons.push_pin_outlined),
-                title: Text(l10n.inkPinPen),
+                leading: Icon(
+                  _pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                ),
+                title: Text(_pinned ? l10n.unpin : l10n.inkPinPen),
               ),
             ),
           PopupMenuItem(
@@ -763,6 +866,31 @@ class _PenTrayState extends State<PenTray> {
           ),
         ],
       );
+
+  /// Seçili kalem zaten sabit mi.
+  bool get _pinned => InkToolMemory.presets.contains(_ink.currentPreset);
+
+  /// Sabitle / kaldır (panelin iğnesi ve ⋯ menüsü — P63 PB3: sabitleme
+  /// artık görünür yerde).
+  void _togglePin() {
+    if (!_pinned) return _pinCurrent();
+    final p = _ink.currentPreset;
+    InkToolMemory.savePresets([
+      for (final x in InkToolMemory.presets)
+        if (x != p) x,
+    ]);
+    AppHaptics.tick();
+    _touched();
+    setState(() {});
+  }
+
+  /// Ayar paneli; kalemlerde iğne düğmesiyle.
+  Widget _options() => _Options(
+    controller: _ink,
+    tool: _current,
+    pinned: _ink.eraser || _ink.lasso ? null : _pinned,
+    onPin: _togglePin,
+  );
 
   /// Seçili kalemi (tür + renk + kalınlık) kapsüle sabitler; doluysa en
   /// eskisi düşer (kullanıcı isteği 2026-11-08).
@@ -821,34 +949,15 @@ class _PenTrayState extends State<PenTray> {
     PenTrayTool.highlighter: l10n.penHighlighter,
   };
 
-  /// RENK düğmesi: seçili renk; dokununca panel.
-  Widget _colorDot(ColorScheme scheme, AppLocalizations l10n) => Tooltip(
-    message: l10n.inkColor,
-    child: InkResponse(
-      key: const ValueKey('pen-tray-color'),
-      radius: 26,
-      onTap: _togglePanel,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: _ink.color,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: _panel ? scheme.primary : scheme.outlineVariant,
-            width: _panel ? 3 : 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-      ),
-    ),
+  /// RENK düğmesi (sütun/şerit): seçili renk; dokununca panel. Kapsüldeki
+  /// renk noktasıyla TEK bileşen.
+  Widget _colorButton(AppLocalizations l10n) => _Swatch(
+    key: const ValueKey('pen-tray-color'),
+    color: _ink.color,
+    size: 26,
+    selected: _panel,
+    tooltip: l10n.inkColor,
+    onTap: _togglePanel,
   );
 
   List<Widget> _controlButtons(AppLocalizations l10n) => [
@@ -899,14 +1008,17 @@ class _PenTrayState extends State<PenTray> {
   /// [PenTray.controls] satırı: solda ipucu, sağda geçmiş ve ayarlar.
   Widget _controlRow(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final hint = _ink.lasso
         ? l10n.inkLassoHint
         : _ink.penOnly
         ? l10n.inkPenOnlyHint
         : widget.hint;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 2, 4, 0),
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpace.l,
+        end: AppSpace.xs,
+        top: AppSpace.xxs,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -916,8 +1028,7 @@ class _PenTrayState extends State<PenTray> {
                     hint,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    style: AppText.of(Theme.of(context)).meta,
                   ),
           ),
           ..._controlButtons(l10n),
@@ -932,33 +1043,26 @@ class _PenTrayState extends State<PenTray> {
     final l10n = context.l10n;
     final current = _current;
     final labels = _labels(l10n);
+    // Alt şerit: zeminden bir ton, sayfa tarafında (üstte) ince çizgi.
     return Material(
       color: scheme.surfaceContainerLow,
+      shape: Border(
+        top: BorderSide(color: AppTokens.fromTheme(Theme.of(context)).hairline),
+      ),
       child: SafeArea(
         top: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Divider(
-              height: 1,
-              thickness: 1,
-              color: scheme.outlineVariant.withValues(alpha: 0.5),
-            ),
             if (widget.controls) _controlRow(context),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.easeOutCubic,
-              alignment: Alignment.bottomCenter,
-              child: _panel
-                  ? _Options(controller: _ink, tool: current)
-                  : const SizedBox(width: double.infinity),
-            ),
+            // Panel yuvası tek adımda; içerik yalnız boyamada belirir.
+            _panelSlot(_options),
             SizedBox(
               height: widget.trayHeight,
               child: Row(
                 children: [
-                  const SizedBox(width: 8),
-                  for (final tool in PenTrayTool.values)
+                  const SizedBox(width: AppSpace.s),
+                  for (final tool in _tools)
                     Expanded(
                       child: _TrayTool(
                         key: ValueKey('pen-tray-${tool.name}'),
@@ -971,8 +1075,10 @@ class _PenTrayState extends State<PenTray> {
                     ),
                   // RENK düğmesi: seçili renk; dokununca panel.
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: _colorDot(scheme, l10n),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.s,
+                    ),
+                    child: _colorButton(l10n),
                   ),
                 ],
               ),
@@ -985,10 +1091,46 @@ class _PenTrayState extends State<PenTray> {
 }
 
 /// Kapsül/hap ile ekranın alt kenarı (gezinme çubuğunun üstü) arası.
-const double _kDockGap = 10;
+const double _kDockGap = AppSpace.s;
+
+/// Panel içeriğinin girişteki kayması (kendi boyunun oranı).
+const double _kPanelRise = 0.08;
+
+/// Hap ↔ kapsül geçişinin başlangıç ölçeği (taşmadan, hafif).
+const double _kSwapScale = 0.92;
+
+/// Geniş kapsülün eni ≈ sabit kısım (4 hızlı renk + gökkuşağı, iki ayraç,
+/// geri al/yinele/⋯, kenar payları) + kalem ve eylem başına bir yuva. Bölme
+/// bundan darsa kalemler eşit paylaşır, yinele ⋯'e iner (taşma yok).
+const double _kWideDockFixed = 400, _kDockSlot = 48;
+
+/// Seçili kalemin kalkış hareketi — kapsül ve şerit aynı kalıp (P63 PB3):
+/// yalnız boyama (`AnimatedSlide`), taşmayan eğri; hareketi azaltta kısa.
+Widget _liftSlide(
+  BuildContext context, {
+  required bool selected,
+  required double rest,
+  required double lifted,
+  required Widget child,
+}) => AnimatedSlide(
+  duration: AppMotion.of(context, AppMotion.selection),
+  curve: AppMotion.curveOf(context, AppMotion.emphasized),
+  offset: Offset(0, selected ? lifted : rest),
+  child: child,
+);
+
+/// Kapsüldeki kalemin kırpma kutusu ve kalem resmi (44 × 52 içinde 31 × 68).
+const double _kDockToolW = 44, _kDockToolH = 52;
+const double _kDockPenW = 31, _kDockPenH = 68;
+
+/// Kapsülde kalemin üst kenarı: dururken 15, seçiliyken 3 dp aşağıda.
+const double _kDockRest = 15 / _kDockPenH, _kDockLifted = 3 / _kDockPenH;
+
+/// Kalem resminin çizim kutusu (pen_icons.dart ölçüsü).
+const double _kPenArtW = 44, _kPenArtH = 96;
 
 /// Kapsüldeki tek kalem: dik durur, yalnız üst kısmı görünür; seçili kalem
-/// yaylı biçimde yukarı kalkar, ucu çizilen renktedir.
+/// yukarı kalkar, ucu çizilen renktedir.
 class _DockTool extends StatelessWidget {
   const _DockTool({
     super.key,
@@ -1018,30 +1160,34 @@ class _DockTool extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: SizedBox(
-            width: 44,
-            height: 52,
+            width: _kDockToolW,
+            height: _kDockToolH,
             child: ClipRect(
               child: Stack(
                 clipBehavior: Clip.none,
                 alignment: Alignment.topCenter,
                 children: [
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300),
-                    curve: selected ? Curves.easeOutBack : Curves.easeOutCubic,
-                    top: selected ? 3 : 15,
-                    child: SizedBox(
-                      width: 31,
-                      height: 68,
-                      child: FittedBox(
-                        child: SizedBox(
-                          width: 44,
-                          height: 96,
-                          child: CustomPaint(
-                            painter: PenToolPainter(
-                              tool: tool,
-                              ink: ink,
-                              dark: dark,
-                              lifted: selected,
+                  Positioned(
+                    top: 0,
+                    child: _liftSlide(
+                      context,
+                      selected: selected,
+                      rest: _kDockRest,
+                      lifted: _kDockLifted,
+                      child: SizedBox(
+                        width: _kDockPenW,
+                        height: _kDockPenH,
+                        child: FittedBox(
+                          child: SizedBox(
+                            width: _kPenArtW,
+                            height: _kPenArtH,
+                            child: CustomPaint(
+                              painter: PenToolPainter(
+                                tool: tool,
+                                ink: ink,
+                                dark: dark,
+                                lifted: selected,
+                              ),
                             ),
                           ),
                         ),
@@ -1058,8 +1204,9 @@ class _DockTool extends StatelessWidget {
   }
 }
 
-/// Renk yuvarlağı: seçiliyse arada boşluk bırakan ince halka (renk
-/// kenarına yapışık kalın çerçeve yerine).
+/// Renk yuvarlağı — tepsideki TEK renk noktası (kapsül, panel, sütun,
+/// şerit, hap). Boy sabit; seçiliyse arada boşluk bırakan ince halka, rengi
+/// solarak gelir (boy değişmez).
 class _Swatch extends StatelessWidget {
   const _Swatch({
     super.key,
@@ -1076,19 +1223,22 @@ class _Swatch extends StatelessWidget {
   final VoidCallback? onTap;
   final String? tooltip;
 
+  /// Halka kalınlığı ve halkayla renk arası boşluk.
+  static const double _ring = AppSpace.xxs;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final dot = AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      width: size + 8,
-      height: size + 8,
+      duration: AppMotion.of(context, AppMotion.selection),
+      width: size + 4 * _ring,
+      height: size + 4 * _ring,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? scheme.primary : Colors.transparent,
-          width: 2,
+          color: selected ? scheme.primary : scheme.primary.withValues(alpha: 0),
+          width: _ring,
         ),
       ),
       child: Container(
@@ -1097,9 +1247,10 @@ class _Swatch extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
+          // Açık zeminde beyaz mürekkep de seçilebilsin.
           border: Border.all(
-            color: scheme.onSurface.withValues(alpha: 0.18),
-            width: 0.8,
+            color: scheme.onSurface.withValues(alpha: _kSwatchEdge),
+            width: _kSwatchEdgeW,
           ),
         ),
       ),
@@ -1125,8 +1276,17 @@ class _Swatch extends StatelessWidget {
   }
 }
 
-/// Tepsideki tek araç: seçiliyse yukarı kalkar (yaylı), altında küçük renk
-/// noktası belirir.
+/// Renk noktasının ince kenarı (açık zeminde beyaz mürekkep görünsün).
+const double _kSwatchEdge = 0.18, _kSwatchEdgeW = 0.8;
+
+/// Şeritteki kalem: dururken resmin %24'ü aşağıda, seçiliyken %2.
+const double _kTrayRest = 0.24, _kTrayLifted = 0.02;
+
+/// Seçili aracın altındaki renk çizgisi (22 × 4).
+const double _kTrayBarW = 22, _kTrayBarH = 4;
+
+/// Tepsideki tek araç: seçiliyse yukarı kalkar, altında küçük renk
+/// çizgisi belirir.
 class _TrayTool extends StatelessWidget {
   const _TrayTool({
     super.key,
@@ -1160,13 +1320,14 @@ class _TrayTool extends StatelessWidget {
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
-                AnimatedSlide(
-                  duration: const Duration(milliseconds: 320),
-                  curve: selected ? Curves.easeOutBack : Curves.easeOutCubic,
-                  offset: Offset(0, selected ? 0.02 : 0.24),
+                _liftSlide(
+                  context,
+                  selected: selected,
+                  rest: _kTrayRest,
+                  lifted: _kTrayLifted,
                   child: SizedBox(
-                    width: 44,
-                    height: 96,
+                    width: _kPenArtW,
+                    height: _kPenArtH,
                     child: CustomPaint(
                       painter: PenToolPainter(
                         tool: tool,
@@ -1181,19 +1342,21 @@ class _TrayTool extends StatelessWidget {
                 Positioned(
                   bottom: 0,
                   child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
+                    duration: AppMotion.of(context, AppMotion.quick),
                     opacity: selected ? 1 : 0,
                     child: Container(
-                      width: 22,
-                      height: 4,
-                      margin: const EdgeInsets.only(bottom: 4),
+                      width: _kTrayBarW,
+                      height: _kTrayBarH,
+                      margin: const EdgeInsets.only(bottom: AppSpace.xs),
                       decoration: BoxDecoration(
                         color: tool == PenTrayTool.eraser
                             ? scheme.primary
                             : ink,
-                        borderRadius: BorderRadius.circular(2),
+                        borderRadius: BorderRadius.circular(AppRadius.hair),
                         border: Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.6),
+                          color: scheme.outlineVariant.withValues(
+                            alpha: AppAlpha.muted,
+                          ),
                           width: 0.5,
                         ),
                       ),
@@ -1209,50 +1372,52 @@ class _TrayTool extends StatelessWidget {
   }
 }
 
-/// Tepsinin üstünde açılan ayar paneli: renkler, kalınlık/önizleme, araca
-/// göre şekiller ya da temizle.
+/// Panelin satır ölçüleri: önizleme kâğıdı 44, kaydırıcı satırı 48, satır
+/// başı simge kutusu 40, değer metni 36 (yazı 1.3'te de taşmaz).
+const double _kPreviewH = 44, _kRowH = 48, _kLeadW = 40, _kValueW = 36;
+
+/// Panel renk noktası boyu.
+const double _kPanelSwatch = 28;
+
+/// Tepsinin üstünde açılan ayar paneli — TEK KILIK (P63 PB3): gerçek çizgi
+/// önizlemesi (+ iğne) · renkler · kalınlık · şeffaflık; araca göre şekiller,
+/// kement ya da silgi.
 class _Options extends StatelessWidget {
-  const _Options({required this.controller, required this.tool});
+  const _Options({
+    required this.controller,
+    required this.tool,
+    required this.pinned,
+    required this.onPin,
+  });
 
   final InkController controller;
   final PenTrayTool tool;
 
+  /// Seçili kalem sabit mi; null = sabitlenemez (silgi, kement).
+  final bool? pinned;
+  final VoidCallback onPin;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final l10n = context.l10n;
     final pen = controller.pen;
     final recent = [
       for (final c in InkToolMemory.recentColors.take(4))
         if (!kInkPalette.any((p) => p.toARGB32() == c)) Color(c),
     ];
-    Widget dot(Color color) {
-      final selected =
-          !controller.eraser && controller.color.toARGB32() == color.toARGB32();
-      return Padding(
-        padding: const EdgeInsetsDirectional.only(end: 10),
-        child: InkResponse(
-          radius: 20,
-          onTap: () {
-            AppHaptics.tick();
-            controller.setColor(color);
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            width: selected ? 32 : 28,
-            height: selected ? 32 : 28,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: selected ? scheme.primary : scheme.outlineVariant,
-                width: selected ? 3 : 1,
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+    Widget dot(Color color) => _Swatch(
+      color: color,
+      size: _kPanelSwatch,
+      selected:
+          !controller.eraser && controller.color.toARGB32() == color.toARGB32(),
+      onTap: () {
+        AppHaptics.tick();
+        controller.setColor(color);
+      },
+    );
 
     String shapeLabel(InkShape s) => switch (s) {
       InkShape.line => l10n.inkShapeLine,
@@ -1268,22 +1433,70 @@ class _Options extends StatelessWidget {
       InkShape.triangle => Icons.change_history_rounded,
       InkShape.table => Icons.table_chart_outlined,
     };
+    // Kaydırıcı satırı: simge · kaydırıcı · değer (tabular rakam).
+    Widget sliderRow({
+      Key? key,
+      required IconData icon,
+      required String tooltip,
+      required String value,
+      required Widget slider,
+    }) => SizedBox(
+      key: key,
+      height: _kRowH,
+      child: Row(
+        children: [
+          SizedBox(
+            width: _kLeadW,
+            child: Tooltip(
+              message: tooltip,
+              child: Icon(
+                icon,
+                size: AppIconSize.m,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Expanded(child: slider),
+          SizedBox(
+            width: _kValueW,
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              style: text.meta.copyWith(
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    final opacity = pen.fixedOpacity ?? controller.opacity;
+    final opacityText = '%${(opacity * 100).round()}';
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        AppSpace.m,
+        AppSpace.l,
+        AppSpace.s,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (tool == PenTrayTool.shapes)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: AppSpace.m),
               child: Wrap(
-                spacing: 8,
-                runSpacing: 6,
+                spacing: AppSpace.s,
+                runSpacing: AppSpace.s,
                 children: [
                   ChoiceChip(
-                    avatar: const Icon(Icons.north_east_rounded, size: 18),
+                    avatar: const Icon(
+                      Icons.north_east_rounded,
+                      size: AppIconSize.s,
+                    ),
                     label: Text(l10n.inkArrow),
                     selected: controller.arrow,
                     onSelected: (_) => controller.setArrow(true),
@@ -1291,7 +1504,7 @@ class _Options extends StatelessWidget {
                   for (final s in InkShape.values)
                     radioChip(
                       ChoiceChip(
-                        avatar: Icon(shapeIcon(s), size: 18),
+                        avatar: Icon(shapeIcon(s), size: AppIconSize.s),
                         label: Text(shapeLabel(s)),
                         selected: controller.shape == s,
                         onSelected: (_) => controller.setShape(s),
@@ -1302,10 +1515,10 @@ class _Options extends StatelessWidget {
             ),
           if (tool == PenTrayTool.lasso)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: AppSpace.s),
               child: controller.hasSelection
                   ? Wrap(
-                      spacing: 8,
+                      spacing: AppSpace.s,
                       children: [
                         TextButton.icon(
                           icon: const Icon(Icons.delete_outline),
@@ -1322,19 +1535,19 @@ class _Options extends StatelessWidget {
                         ),
                       ],
                     )
-                  : Text(
-                      l10n.inkLassoHint,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
+                  : Text(l10n.inkLassoHint, style: text.meta),
             ),
           if (tool == PenTrayTool.eraser) ...[
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton.icon(
-                icon: const Icon(Icons.delete_sweep_outlined),
-                label: Text(l10n.clearInk),
-                onPressed: controller.ink.isEmpty ? null : controller.clear,
+            // Geri alınabilir: hata rengi değil.
+            SizedBox(
+              height: _kRowH,
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  icon: const Icon(Icons.delete_sweep_outlined),
+                  label: Text(l10n.clearInk),
+                  onPressed: controller.ink.isEmpty ? null : controller.clear,
+                ),
               ),
             ),
             SwitchListTile(
@@ -1348,6 +1561,46 @@ class _Options extends StatelessWidget {
           ] else if (tool == PenTrayTool.lasso && !controller.hasSelection)
             const SizedBox.shrink()
           else ...[
+            // GERÇEK ÇİZGİ ÖNİZLEMESİ: ekranda ne çıkacaksa o (fosforlu
+            // saydam, dolma kalem incelip kalınlaşır); sağında iğne.
+            Container(
+              height: _kPreviewH,
+              decoration: BoxDecoration(
+                color: AppTokens.fromTheme(theme).card,
+                borderRadius: BorderRadius.circular(AppRadius.m),
+                border: Border.all(color: AppTokens.fromTheme(theme).hairline),
+              ),
+              // İğne BAŞTA (plan: sağ uç): telefonda sağ kenardaki yüzen
+              // kalem düğmesi paneli örtüyor, iğne altında kalıyordu
+              // (G4 turu) — SB13 sabah bakılacak.
+              child: Row(
+                children: [
+                  if (pinned case final p?)
+                    IconButton(
+                      key: const ValueKey('pen-panel-pin'),
+                      tooltip: p ? l10n.unpin : l10n.inkPinPen,
+                      isSelected: p,
+                      visualDensity: VisualDensity.compact,
+                      iconSize: AppIconSize.s,
+                      icon: const Icon(Icons.push_pin_outlined),
+                      selectedIcon: const Icon(Icons.push_pin),
+                      onPressed: onPin,
+                    ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.m,
+                      ),
+                      child: PenStrokePreview(
+                        argb: controller.penColor.toARGB32(),
+                        widthPx: controller.widthPx,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpace.s),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -1356,7 +1609,7 @@ class _Options extends StatelessWidget {
                   for (final color in recent) dot(color),
                   PaletteButton(
                     title: l10n.paletteMore,
-                    size: 28,
+                    size: _kPanelSwatch,
                     current: kInkPalette.contains(controller.color)
                         ? null
                         : controller.color,
@@ -1365,80 +1618,33 @@ class _Options extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                // Kalınlığın CANLI önizlemesi: gerçek çizgi kalınlığında nokta.
-                SizedBox(
-                  width: 48,
-                  height: 48,
-                  child: Center(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 120),
-                      width: controller.widthPx.clamp(2.0, 46.0),
-                      height: controller.widthPx.clamp(2.0, 46.0),
-                      decoration: BoxDecoration(
-                        color: controller.penColor,
-                        shape: pen == InkPen.highlighter
-                            ? BoxShape.rectangle
-                            : BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Slider(
-                    value: pen.clampWidth(controller.widthPx),
-                    min: pen.minWidth,
-                    max: pen.maxWidth,
-                    onChanged: controller.setWidth,
-                  ),
-                ),
-                SizedBox(
-                  width: 30,
-                  child: Text(
-                    controller.widthPx.toStringAsFixed(0),
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                ),
-              ],
+            sliderRow(
+              icon: Icons.line_weight_rounded,
+              tooltip: l10n.inkWidth,
+              value: controller.widthPx.toStringAsFixed(0),
+              slider: Slider(
+                value: pen.clampWidth(controller.widthPx),
+                min: pen.minWidth,
+                max: pen.maxWidth,
+                onChanged: controller.setWidth,
+              ),
             ),
             // Şeffaflık da tepsinin kendi panelinde (kullanıcı isteği
             // 2026-11-08): ayrı ayar sayfasına gitmeden. Fosforlu sabit %40.
-            Row(
+            sliderRow(
               key: const ValueKey('pen-tray-opacity'),
-              children: [
-                SizedBox(
-                  width: 48,
-                  height: 40,
-                  child: Tooltip(
-                    message: l10n.inkOpacity,
-                    child: Icon(
-                      Icons.opacity_rounded,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Slider(
-                    value: pen.fixedOpacity ?? controller.opacity,
-                    min: 0.1,
-                    divisions: 9,
-                    label:
-                        '%${((pen.fixedOpacity ?? controller.opacity) * 100).round()}',
-                    onChanged: pen.fixedOpacity != null
-                        ? null
-                        : controller.setOpacity,
-                  ),
-                ),
-                SizedBox(
-                  width: 30,
-                  child: Text(
-                    '%${((pen.fixedOpacity ?? controller.opacity) * 100).round()}',
-                    style: Theme.of(context).textTheme.labelMedium,
-                  ),
-                ),
-              ],
+              icon: Icons.opacity_rounded,
+              tooltip: l10n.inkOpacity,
+              value: opacityText,
+              slider: Slider(
+                value: opacity,
+                min: 0.1,
+                divisions: 9,
+                label: opacityText,
+                onChanged: pen.fixedOpacity != null
+                    ? null
+                    : controller.setOpacity,
+              ),
             ),
           ],
         ],
@@ -1447,8 +1653,12 @@ class _Options extends StatelessWidget {
   }
 }
 
-/// Sabitlenmiş kalem düğmesi: renkli nokta, boyu kalınlığı, biçimi kalem
-/// türünü gösterir (fosforlu yarı saydam kare, keçeli dolu, tükenmez ince).
+/// Sabit kalem çipi: 40 × 40 dokunma alanı, 30 × 30 dairede kalemin
+/// gerçek çizgisi (tür, renk, kalınlık bir bakışta).
+const double _kChipTap = 40, _kChipDot = 30;
+
+/// Sabitlenmiş kalem düğmesi: dairede kalemin GERÇEK çizgisi
+/// (`PenStrokePreview`) — fosforlu saydam, keçeli dolu, tükenmez ince.
 class _PresetChip extends StatelessWidget {
   const _PresetChip({
     super.key,
@@ -1471,11 +1681,8 @@ class _PresetChip extends StatelessWidget {
     final pen = preset.pen < InkPen.values.length
         ? InkPen.values[preset.pen]
         : InkPen.pen;
-    final color = Color(preset.color);
-    final t = ((preset.width - pen.minWidth) / (pen.maxWidth - pen.minWidth))
-        .clamp(0.0, 1.0);
-    final dot = 8 + 12 * t;
-    final highlighter = pen == InkPen.highlighter;
+    // Sabit kalemde renk saydamlıksız kayıtlı: kalemin kendi saydamlığı.
+    final argb = pen.apply(Color(preset.color)).toARGB32();
     return Semantics(
       button: true,
       selected: selected,
@@ -1487,35 +1694,30 @@ class _PresetChip extends StatelessWidget {
           onTap: onTap,
           onLongPress: onRemove,
           child: SizedBox(
-            width: 40,
-            height: 40,
+            width: _kChipTap,
+            height: _kChipTap,
             child: Center(
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: 30,
-                height: 30,
-                alignment: Alignment.center,
+                duration: AppMotion.of(context, AppMotion.selection),
+                width: _kChipDot,
+                height: _kChipDot,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: scheme.surfaceContainerLowest,
                   border: Border.all(
                     color: selected
                         ? scheme.primary
-                        : scheme.outlineVariant.withValues(alpha: 0.8),
-                    width: selected ? 2 : 1,
+                        : scheme.outlineVariant.withValues(
+                            alpha: AppAlpha.strong,
+                          ),
+                    width: selected ? AppSpace.xxs : 1,
                   ),
                 ),
-                child: Container(
-                  width: highlighter ? 16 : dot,
-                  height: highlighter ? dot * 0.7 + 4 : dot,
-                  decoration: BoxDecoration(
-                    color: highlighter ? color.withAlpha(0x99) : color,
-                    shape: highlighter ? BoxShape.rectangle : BoxShape.circle,
-                    borderRadius: highlighter ? BorderRadius.circular(3) : null,
-                    border: Border.all(
-                      color: scheme.onSurface.withValues(alpha: 0.25),
-                      width: 0.6,
-                    ),
+                child: ClipOval(
+                  child: PenStrokePreview(
+                    argb: argb,
+                    widthPx: preset.width,
+                    compact: true,
                   ),
                 ),
               ),

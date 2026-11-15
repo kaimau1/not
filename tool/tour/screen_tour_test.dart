@@ -35,7 +35,13 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
+import 'package:notlar/features/notes/presentation/voice_capture_sheet.dart';
+import 'package:notlar/features/notes/data/device_speech.dart';
+import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
+import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
+import 'package:notlar/features/notes/presentation/editor/drawing_screen.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -729,10 +735,139 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
     await t.tap(find.byKey(const ValueKey('format-divider-style')));
     await _settle(t);
   }),
-  // PB1/PB3/PB5 sahneleri (duzen-serit, kisisellestir, kalem-*, cizim-serit,
-  // dikte-kart, ses-levha-*) sahibi paketin "önce üret" adımında eklenir
-  // (G4/G5; plan §7.2 madde 4 notu).
+  // P63 G4 (PB3): kalem seti — telefonda hap/kapsül/panel, tablette sütun,
+  // çizim ekranında alt şerit.
+  ('kalem-hap', '/note/n4', _penMode),
+  ('kalem-kapsul', '/note/n4', _penDock),
+  ('kalem-panel', '/note/n4', (t) => _penDock(t, tap: 'pen-tray-color')),
+  ('kalem-sekil-panel', '/note/n4', (t) async {
+    await _penDock(t, tap: 'pen-tray-shapes');
+    await t.tap(find.byKey(const ValueKey('pen-tray-shapes')));
+    await _settle(t);
+  }),
+  ('kalem-sutun', '/note/n4', _penMode),
+  ('cizim-serit', '/note/n4', (t) async {
+    unawaited(
+      Navigator.of(t.element(find.byType(NoteEditorScreen))).push(
+        MaterialPageRoute<void>(builder: (_) => const DrawingScreen()),
+      ),
+    );
+    await _settle(t);
+  }),
+  // P63 G4 (PB5): sesle yazma — editörde dikte kartı, yapay zekâ levhasının
+  // dinleme / gözden geçirme / hata evreleri (konuşma kanalı taklidi).
+  ('dikte-kart', '/note/n4', (t) async {
+    _mockSpeech(t);
+    await t.tap(find.text('Toplantı notları').first, warnIfMissed: false);
+    await _settle(t);
+    await t.tap(find.byTooltip('Dikte').first);
+    await _settle(t);
+    _speechSink!.success({'text': 'yarın saat onda'});
+    for (final lv in const [0.3, 0.8, 0.6, 0.9]) {
+      _speechSink!.success({'level': lv});
+      await t.pump(const Duration(milliseconds: 60));
+    }
+    await t.pump(const Duration(milliseconds: 200));
+  }),
+  ('ses-levha-dinliyor', '/note/n4', (t) async {
+    await _openVoiceSheet(t);
+  }),
+  ('ses-levha-hazir', '/note/n4', (t) async {
+    await _openVoiceSheet(t);
+    await t.tap(find.byKey(const ValueKey('voice-listen-action')));
+    await _settle(t);
+  }),
+  ('ses-levha-hata', '/note/n4', (t) async {
+    await _openVoiceSheet(t, speak: false);
+    // Dinlerken tanıma hatası: kart açık kalır, hata metni kartın içinde.
+    // (Hata EVRESİ kayıt eklentisi ister — testte eklentinin kurucusu
+    // yakalanmamış istisna atıyor; turda çekilmez.)
+    _speechSink!.error(code: 'network', message: 'Bağlantı kurulamadı');
+    await _settle(t);
+  }),
+  // PB1 sahneleri (duzen-serit, kisisellestir) sahibi paketin "önce üret"
+  // adımında eklenir (plan §7.2 madde 4 notu).
 ];
+
+/// Konuşma kanalı taklidi: yerleşik tanıma var, olaylar [_speechSink]'ten.
+MockStreamHandlerEventSink? _speechSink;
+void _mockSpeech(WidgetTester tester) {
+  final messenger = tester.binding.defaultBinaryMessenger;
+  const events = EventChannel('dev.kaimau.notlar/speech');
+  const system = MethodChannel('dev.kaimau.notlar/system');
+  messenger
+    ..setMockStreamHandler(
+      events,
+      MockStreamHandler.inline(onListen: (_, sink) {
+        _speechSink = sink;
+      }),
+    )
+    ..setMockMethodCallHandler(system, (_) async => null);
+  // ignore: invalid_use_of_visible_for_testing_member
+  DeviceSpeech.debugAvailable = true;
+  addTearDown(() {
+    // ignore: invalid_use_of_visible_for_testing_member
+    DeviceSpeech.debugAvailable = null;
+    _speechSink = null;
+    messenger
+      ..setMockStreamHandler(events, null)
+      ..setMockMethodCallHandler(system, null);
+  });
+}
+
+/// Yapay zekâ ile sesli not levhası (dokunmalı kip: açılınca dinler).
+Future<void> _openVoiceSheet(WidgetTester tester, {bool speak = true}) async {
+  _mockSpeech(tester);
+  final context = tester.element(find.byType(NoteEditorScreen).first);
+  unawaited(
+    showVoiceCaptureSheet(context, target: VoiceCaptureTarget.editor),
+  );
+  await _settle(tester);
+  if (!speak) return;
+  _speechSink!.success({'text': 'yarın saat onda toplantı var'});
+  for (final lv in const [0.3, 0.8, 0.6, 0.9]) {
+    _speechSink!.success({'level': lv});
+    await tester.pump(const Duration(milliseconds: 60));
+  }
+  await tester.pump(const Duration(milliseconds: 200));
+}
+
+/// Kalem kipi: kalemle bir çizgi (kip açılır), ipucu ve çekmece insin.
+Future<void> _penMode(WidgetTester tester) async {
+  // Kalem metin alanına değerse Scribe sorulur (testte yanıt yok).
+  tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+    SystemChannels.scribe,
+    (_) async => false,
+  );
+  InkToolMemory.autoStylus = true;
+  InkToolMemory.stylusEver = true;
+  final page = tester.getRect(find.byType(PageInkStack).first);
+  final pen = await tester.startGesture(
+    page.topLeft + const Offset(60, 160),
+    kind: PointerDeviceKind.stylus,
+  );
+  await tester.pump();
+  for (var i = 0; i < 4; i++) {
+    await pen.moveBy(const Offset(30, 8));
+    await tester.pump();
+  }
+  await pen.up();
+  for (var i = 0; i < 9; i++) {
+    await tester.pump(const Duration(seconds: 1));
+  }
+  await _settle(tester);
+}
+
+/// Kalem kipi → kapsülü aç → (isteğe bağlı) bir düğmeye dokun.
+Future<void> _penDock(WidgetTester tester, {String? tap}) async {
+  await _penMode(tester);
+  await tester.tap(find.byKey(const ValueKey('pen-dock-peek')));
+  await _settle(tester);
+  if (tap != null) {
+    await tester.tap(find.byKey(ValueKey(tap)));
+    await _settle(tester);
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

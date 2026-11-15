@@ -116,6 +116,9 @@ String? voiceCaptureInstruction(VoiceCaptureAction action) => switch (action) {
 ///
 /// Tam ekran DEĞİL (en fazla yüksekliğin %74'ü): arkadaki not ya da liste
 /// görünür kalmalı, kullanıcı neyin üstüne konuştuğunu görsün.
+/// Gözden geçirme evresinin düğme boyu ve hata simgesi.
+const double _kReadyButton = 48, _kErrorIcon = 40;
+
 Future<VoiceCaptureResult?> showVoiceCaptureSheet(
   BuildContext context, {
   required VoiceCaptureTarget target,
@@ -301,8 +304,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         // Canlı tanıma bu cihazda çalışmıyor (GMS'siz tablet, 2026-11-13):
         // levha kayıt + toplu döküm yoluna geçer, kullanıcı yeniden konuşur.
         onUnavailable: (_) => unawaited(_fallBackToRecording()),
+        // Oran çizgisi oturumun `silence` notifier'ından kendini kurar;
+        // levha yalnız 0 ↔ > 0 geçişinde (alt yazı) kurulur — eskiden her
+        // 250 ms'lik yoklamada baştan kuruluyordu.
         onSilence: (progress) {
-          if (mounted) setState(() => _silence = progress);
+          final flip = (progress > 0) != (_silence > 0);
+          _silence = progress;
+          if (mounted && flip) setState(() {});
         },
       );
       _session = session;
@@ -752,9 +760,27 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         }
         if (_phase == _Phase.ready) _askBeforeClosing();
       },
-      child: _body(context),
+      // Evre değişimi (dinleme ↔ işleniyor ↔ gözden geçirme ↔ hata) yalnız
+      // solma; boy tek adım. Bekleme ve dinleme AYNI anahtar: basılı-tut
+      // düğmesi ağaçtan kalkmamalı (bkz. [_listenAction]).
+      child: AnimatedSwitcher(
+        duration: AppMotion.of(context, AppMotion.quick),
+        child: KeyedSubtree(
+          key: ValueKey(_phaseGroup),
+          child: _body(context),
+        ),
+      ),
     );
   }
+
+  /// Geçiş anahtarı: bekleme ile dinleme aynı grup.
+  String get _phaseGroup => !_ready || _phase == _Phase.processing
+      ? 'processing'
+      : switch (_phase) {
+          _Phase.error => 'error',
+          _Phase.ready => 'ready',
+          _ => 'listen',
+        };
 
   Widget _body(BuildContext context) {
     final l10n = context.l10n;
@@ -773,38 +799,34 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     // Bütün evreler AYNI yüzen kartın içinde (editörün dikte şeridiyle aynı
     // kenar boşluğu ve köşe — bkz. [ListeningCard]).
     Widget framed(Widget child) => Padding(
-      padding: EdgeInsets.fromLTRB(10, 6, 10, 10 + bottomGap),
+      padding: EdgeInsets.fromLTRB(
+        AppSpace.s,
+        AppSpace.xs,
+        AppSpace.s,
+        AppSpace.s + bottomGap,
+      ),
       child: child,
     );
-    Widget plainCard(Widget child) => framed(
-      Material(
-        color: scheme.surfaceContainerLow,
-        elevation: 6,
-        shadowColor: Colors.black45,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-          side: BorderSide(
-            color: listeningAccent(
-              scheme,
-              ListeningMode.ai,
-            ).withValues(alpha: 0.3),
-          ),
-        ),
-        child: child,
-      ),
-    );
+    // Bütün evreler dinleme kartıyla AYNI kabukta (P63 PB5: üç ayrı elle
+    // yazılmış kabuk tek bileşen oldu).
+    Widget shell(Widget child) =>
+        framed(ListeningSurface(mode: ListeningMode.ai, child: child));
+    final text = AppText.of(Theme.of(context));
 
     if (!_ready || _phase == _Phase.processing) {
-      return plainCard(
+      return shell(
         Padding(
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.all(AppSpace.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(),
+              const SizedBox.square(
+                dimension: AppIconSize.l,
+                child: CircularProgressIndicator(),
+              ),
               if (_phase == _Phase.processing) ...[
-                const SizedBox(height: 16),
-                Text(l10n.dictationProcessing),
+                const SizedBox(height: AppSpace.l),
+                Text(l10n.dictationProcessing, style: text.body),
               ],
             ],
           ),
@@ -813,16 +835,16 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     }
 
     if (_phase == _Phase.error) {
-      return plainCard(
+      return shell(
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+          padding: const EdgeInsets.all(AppSpace.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline, size: 40, color: scheme.error),
-              const SizedBox(height: 12),
-              Text(_errorMessage, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
+              Icon(Icons.error_outline, size: _kErrorIcon, color: scheme.error),
+              const SizedBox(height: AppSpace.m),
+              Text(_errorMessage, textAlign: TextAlign.center, style: text.body),
+              const SizedBox(height: AppSpace.l),
               FilledButton.tonal(
                 onPressed: () => Navigator.pop(context),
                 child: Text(l10n.close),
@@ -833,30 +855,14 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       );
     }
 
-    // Sessizlik geri sayımı: dolunca dinleme kendiliğinden biter.
-    final silenceBar = SizedBox(
-      height: 3,
-      child: AnimatedOpacity(
-        opacity: listening && _silence > 0 ? 1 : 0,
-        duration: const Duration(milliseconds: 200),
-        child: LinearProgressIndicator(
-          key: const ValueKey('voice-silence-bar'),
-          value: _silence,
-          minHeight: 3,
-          borderRadius: BorderRadius.circular(AppRadius.hair),
-        ),
-      ),
-    );
     final error = _errorMessage.isEmpty
         ? null
         : Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: AppSpace.s),
             child: Text(
               _errorMessage,
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.error),
+              style: text.meta.copyWith(color: scheme.error),
             ),
           );
 
@@ -869,7 +875,10 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         ListeningCard(
           mode: ListeningMode.ai,
           active: listening,
-          elevation: 6,
+          // Gerçek ses düzeyi + sessizlik çizgisi (kayıt yolunda da düzey
+          // 200 ms'de bir `reportLevel` ile gelir).
+          level: _session?.level,
+          silence: _session?.silence,
           // Başlık DURUMU söyler: basılı-tut modunda levha açılır açılmaz
           // "Dinliyorum..." yazması yanlıştı — mikrofon o an kapalıydı,
           // kullanıcı konuşup boş dönüyordu.
@@ -883,24 +892,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               : !listening
               ? (holdActive ? l10n.dictationHoldHint : l10n.voiceTapHint)
               : l10n.voiceCapturePunctuation(language),
-          clock: Text(
-            _format(_elapsed),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              // Süre sayacı: tabular rakam olmazsa saniye her tikte genişlik
-              // değiştirip başlığı oynatır.
-              fontFeatures: const [FontFeature.tabularFigures()],
-              color: listening ? scheme.error : scheme.onSurfaceVariant,
-            ),
-          ),
+          clock: _clock(listening ? scheme.error : scheme.onSurfaceVariant),
           trailing: _headerButtons(l10n, scheme, ready: false),
           body: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _transcript(scheme, listening),
-              silenceBar,
               ?error,
             ],
           ),
@@ -911,22 +909,22 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
     // GÖZDEN GEÇİRME: aynı kart, dalga yerine düzenlenebilir döküm ve bitiş
     // düğmeleri.
-    return plainCard(
+    return shell(
       Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 10, 12),
+        padding: const EdgeInsets.all(AppSpace.m),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             _header(l10n, scheme, listening),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpace.s),
             Flexible(child: _transcript(scheme, listening)),
             ?error,
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.m),
             _actions(l10n, scheme, holdMode, listening),
             // Çipler yapay zekâ ister; döküm zaten yapılamadıysa (ses eki
             // yolu) hepsi aynı hatayla düşerdi — gösterilmezler.
             if (_readyAudioPath == null) ...[
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpace.s),
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: _chips(l10n, scheme),
@@ -938,64 +936,28 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     );
   }
 
-  /// Gözden geçirme evresinin başlığı — dinleme kartının ([ListeningCard])
-  /// üst satırıyla AYNI düzen: rozet, durum + kip etiketi, süre, kapat.
-  Widget _header(AppLocalizations l10n, ColorScheme scheme, bool listening) {
-    return Row(
-      children: [
-        ListeningBadge(mode: ListeningMode.ai, active: listening),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.voiceCaptureReady,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Row(
-                children: [
-                  const Flexible(
-                    child: ListeningModeTag(mode: ListeningMode.ai),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      l10n.voiceCaptureEditHint,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Text(
-          _format(_elapsed),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            fontFeatures: const [FontFeature.tabularFigures()],
-            color: scheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(width: 2),
-        ..._headerButtons(l10n, scheme, ready: true),
-      ],
-    );
-  }
+  /// Gözden geçirme evresinin başlığı — dinleme kartının başlık satırıyla
+  /// TEK bileşen ([ListeningHeader]): rozet, durum + kip etiketi, süre, kapat.
+  Widget _header(AppLocalizations l10n, ColorScheme scheme, bool listening) =>
+      ListeningHeader(
+        mode: ListeningMode.ai,
+        active: listening,
+        title: l10n.voiceCaptureReady,
+        subtitle: l10n.voiceCaptureEditHint,
+        clock: _clock(scheme.onSurfaceVariant),
+        trailing: _headerButtons(l10n, scheme, ready: true),
+      );
+
+  /// Süre sayacı: tabular rakam olmazsa saniye her tikte genişlik değiştirip
+  /// başlığı oynatır. Dinlerken kayıt durumu rengi (`error`).
+  Widget _clock(Color color) => Text(
+    _format(_elapsed),
+    style: AppText.of(Theme.of(context)).label.copyWith(
+      fontWeight: AppWeight.strong,
+      fontFeatures: const [FontFeature.tabularFigures()],
+      color: color,
+    ),
+  );
 
   /// Kartın başlık satırındaki küçük düğmeler: akıllı komutlar, kapat.
   /// ("Doğrudan yazdırmaya geç" 2026-10-20'de kalktı: ana ekranın mikrofonu
@@ -1160,7 +1122,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   ) => ListeningHeaderButton(
     key: const ValueKey('voice-commands-help'),
     tooltip: l10n.voiceSmartCommands,
-    iconSize: 18,
+    iconSize: AppIconSize.s,
     icon: Icons.info_outline,
     onPressed: () => showDialog<void>(
       context: context,
@@ -1192,23 +1154,23 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     final style = FilledButton.styleFrom(
       backgroundColor: background,
       foregroundColor: foreground,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.l)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.m)),
     );
     final text = Text(
       label,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: const TextStyle(fontWeight: FontWeight.w600),
+      style: const TextStyle(fontWeight: AppWeight.strong),
     );
     return SizedBox(
-      height: 54,
+      height: _kReadyButton,
       child: icon == null
           ? FilledButton(onPressed: onPressed, style: style, child: text)
           : FilledButton.icon(
               onPressed: onPressed,
               style: style,
-              icon: Icon(icon, size: 18),
+              icon: Icon(icon, size: AppIconSize.s),
               label: text,
             ),
     );
@@ -1235,15 +1197,15 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       return Row(
         children: [
           SizedBox(
-            width: 54,
-            height: 54,
+            width: _kReadyButton,
+            height: _kReadyButton,
             child: OutlinedButton(
               onPressed: _restart,
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.zero,
                 side: BorderSide(color: scheme.outlineVariant),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.l),
+                  borderRadius: BorderRadius.circular(AppRadius.m),
                 ),
               ),
               child: Tooltip(
@@ -1252,12 +1214,12 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpace.s),
           // Ses eki yolunda (döküm yapılamadı) sürdürülecek metin yok.
           if (_readyAudioPath == null) ...[
             SizedBox(
-              width: 54,
-              height: 54,
+              width: _kReadyButton,
+              height: _kReadyButton,
               child: OutlinedButton(
                 key: const ValueKey('voice-continue'),
                 onPressed: _continue,
@@ -1265,7 +1227,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                   padding: EdgeInsets.zero,
                   side: BorderSide(color: scheme.outlineVariant),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.l),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                   ),
                 ),
                 child: Tooltip(
@@ -1274,7 +1236,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpace.s),
           ],
           if (assistant) ...[
             Expanded(
@@ -1286,7 +1248,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
                 onPressed: () => _submit(VoiceCaptureAction.compose),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpace.s),
           ],
           Expanded(
             child: _readyButton(
@@ -1372,6 +1334,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
   Widget _chips(AppLocalizations l10n, ColorScheme scheme) {
     final editor = widget.target == VoiceCaptureTarget.editor;
+    final chipText = AppText.of(
+      Theme.of(context),
+    ).meta.copyWith(fontWeight: AppWeight.strong);
     final entries = <(String, VoiceCaptureAction)>[
       (
         editor ? l10n.voiceChipSummarizeAdd : l10n.voiceChipSummarizeSave,
@@ -1397,39 +1362,32 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     if (!_moreOpen) {
       return actionChip(ActionChip(
         key: const ValueKey('voice-more'),
-        avatar: const Icon(Icons.expand_more, size: 18),
-        label: Text(
-          l10n.more,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        ),
-        labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+        avatar: const Icon(Icons.expand_more, size: AppIconSize.s),
+        label: Text(l10n.more, style: chipText),
+        labelPadding: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
         visualDensity: VisualDensity.compact,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         side: BorderSide(color: scheme.outlineVariant),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+        ),
         onPressed: () => setState(() => _moreOpen = true),
       ));
     }
     return Wrap(
-      spacing: 6,
-      runSpacing: 6,
+      spacing: AppSpace.s,
+      runSpacing: AppSpace.s,
       children: [
         for (final (label, action) in entries)
           actionChip(ActionChip(
-            label: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+            label: Text(label, style: chipText),
+            labelPadding: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
             visualDensity: VisualDensity.compact,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             backgroundColor: scheme.secondaryContainer,
             side: BorderSide.none,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.s),
             ),
             onPressed: () => _submit(action),
           )),

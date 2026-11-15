@@ -3,6 +3,8 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 15 November 2026 {#2026-11-15}
+- **Refreshed pen set:** the selected pen lifts smoothly, the settings panel shows the pen's real stroke, and you can pin it with one tap. You can hide pens you don't use. The page no longer jumps when the panel opens, and the pen bar no longer overflows in tablet split view.
+- **Dictation card:** the wave now follows your voice — it rises when you speak and settles when you pause. When you go quiet, a thin line fills under the card and "Silence — stopping soon" appears. On tablets the card stays centered at a comfortable width.
 - **Settings refreshed:** each section now sits in tidy grouped cards, your account appears on the same card everywhere, and the Account page is better organized (Delete account at the bottom). Premium, Guide and Contacts share the same clean look; switching between settings on wide screens is faster.
 - **Templates refreshed:** each card now shows a small page sketch of its content; in long templates the "Create" button stays visible, and editing your own template is simpler.
 - **Item dividers:** Format → Divider now offers all five styles (including double and wavy), drawn in the item's own color and thickness; the settings sheet is redesigned and no longer overflows on small screens; a new divider draws in from left to right.
