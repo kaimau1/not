@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 15 November 2026 {#2026-11-15}
+- **AI models reordered:** "Automatic" now tries the model with the most free quota first for each task; when one runs out it quietly moves to the next and skips the exhausted one for the rest of the day. Read-aloud only suggests voice models; models without quota or that don't fit the task stay hidden unless "Show all" is on, and duplicates are gone. If your chosen model no longer exists, the app falls back to Automatic.
 - **Refreshed pen set:** the selected pen lifts smoothly, the settings panel shows the pen's real stroke, and you can pin it with one tap. You can hide pens you don't use. The page no longer jumps when the panel opens, and the pen bar no longer overflows in tablet split view.
 - **Dictation card:** the wave now follows your voice — it rises when you speak and settles when you pause. When you go quiet, a thin line fills under the card and "Silence — stopping soon" appears. On tablets the card stays centered at a comfortable width.
 - **Settings refreshed:** each section now sits in tidy grouped cards, your account appears on the same card everywhere, and the Account page is better organized (Delete account at the bottom). Premium, Guide and Contacts share the same clean look; switching between settings on wide screens is faster.

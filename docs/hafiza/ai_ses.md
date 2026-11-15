@@ -61,3 +61,11 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - `ListeningWaveform` silindi → `VoiceLevelWave` (oturumun `level`'ı; kayıt yolunda `reportLevel`). Kabuk `ListeningSurface` (dikte kartı + levhanın bütün evreleri), başlık `ListeningHeader`. Anahtar `listening-card-<kip>` yüzeyin kendisinde (`surfaceKey`; dış `Align` tam en).
 - Sessizlik: kart `silence` notifier'ı alır, 2 dp çizgi yuvası hep ayrılmış (boy sabit); `silenceHint` verilirse alt yazı değişir (editör `voiceAutoStopSoon`); levha `setState`'i yalnız 0 ↔ > 0.
 - Testte dikte: `DeviceSpeech.debugAvailable = true` + `EventChannel('dev.kaimau.notlar/speech')` taklidi + `dev.kaimau.notlar/system` yöntem taklidi; bitişte kanal iptali gerçek zaman ister (`tester.runAsync`). Bütçe S43.
+
+## 2026-11-15 — Görev başına model sırası (dal oto/model-sirasi)
+- Kök neden: otomatik zincir ve "Önerilen" `rankModels` desenlerinden (`flash-lite`→`flash`) geliyordu; desen kotayı bilmiyor → Nano Banana 2 Lite (görüntü, kota 0) ve hesapta olmayan 3.1 Flash Lite Preview öneriliyordu, zincir TTS/embedding dahil HER kimliği deniyordu.
+- Artık tek tablo: `model_catalog.dart` `geminiChains` (ModelChain: general/long/voice/tts/transcribe; desen kimliğe ya da görünen ada, ek ` preview| latest| sayı`). Kaynak kullanıcının AI Studio ücretsiz limit tablosu; kota değişince YALNIZ bu tablo güncellenir. Katalogda olmayan satır atlanır (kimlik uydurulmaz).
+- `GeminiService.chainOf(AiTask)`; çağrı yerleri `task:` geçer (`preferModel` yalnız istisna). Gemma (shortOnly) yalnız general + JSON'suz + düz metin < 24K karakter. Transcribe ve Gemma 400'de de sıradakine geçer.
+- `ModelCooldown` (bellek): 429 gövdesinde `PerDay` ya da 404 → Pasifik gece yarısına dek (sabit UTC-8), diğer 429 → 1 dk. "Son çalışan modeli hatırla" (`_activeModel`) kaldırıldı. TTS (`speech`) de 429'da sıradakine geçer.
+- Seçici: `pickerModels` (Tümünü göster kapalı → yalnız zincir; açık → `dedupeByLabel`), `validChoice` (katalogda olmayan seçim → Otomatik; servis de yok sayar). Test `test/model_chain_test.dart`.
+- Yapılmayanlar: Live API uygulamada yok (canlı çeviri metin yolu, `translate` → long). Embedding `gemini-embedding-001` sabit: Embedding 2'ye geçiş kayıtlı vektörleri geçersiz kılar (yeniden dizinleme gerekir) — sabah bakılacak. Dahili (Firebase) yolun `geminiModelPreference` listesi değişmedi.
