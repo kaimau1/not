@@ -253,8 +253,13 @@ Map<String, String?> parseModelList(AiProvider provider, Object? body) {
 
 /// Otomatik zincirin türü — her görev bunlardan birine eşlenir.
 enum ModelChain {
-  /// Özet, başlık, etiket, sohbet, brifing (kısa işte Gemma yedeği var).
+  /// Özet, sohbet, brifing, yeniden yazma (kısa işte Gemma yedeği var).
   general,
+
+  /// Kısa girdi + kısa çıktı: başlık, etiket, ayar arama. Gemma ÖNCE
+  /// (günde 14.400 istek; Flash Lite'ın 500'ünü özete/sohbete bırakır).
+  /// Gemma JSON istemeyen düz metin işlerde denenir (bkz. GeminiService).
+  short,
 
   /// Uzun / çok kipli işler: PDF, OCR, podcast anlatısı, çeviri. Gemma YOK
   /// (16K TPM, görsel okumaz).
@@ -317,6 +322,10 @@ const _hydrogen = ChainEntry(
 const geminiChains = <ModelChain, List<ChainEntry>>{
   ModelChain.general: [
     _fl35, _fl31, _gemma31, _gemma26, //
+    _f38, _f3, _f25, _fl25, _f36, _hydrogen,
+  ],
+  ModelChain.short: [
+    _gemma31, _gemma26, _fl35, _fl31, //
     _f38, _f3, _f25, _fl25, _f36, _hydrogen,
   ],
   ModelChain.long: [_fl35, _fl31, _f38, _f3, _f25, _fl25, _f36, _hydrogen],

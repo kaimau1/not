@@ -1619,8 +1619,14 @@ abstract class AppLocalizations {
   /// No description provided for @aiModelChat.
   ///
   /// In tr, this message translates to:
-  /// **'Özet, başlık, etiket ve sohbet'**
+  /// **'Özet ve sohbet'**
   String get aiModelChat;
+
+  /// No description provided for @aiModelShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık ve etiket'**
+  String get aiModelShort;
 
   /// No description provided for @aiModelDocument.
   ///

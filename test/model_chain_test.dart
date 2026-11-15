@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -8,7 +9,10 @@ import 'package:notlar/features/ai/data/ai_provider.dart';
 import 'package:notlar/features/ai/data/api_key_store.dart';
 import 'package:notlar/features/ai/data/gemini_service.dart';
 import 'package:notlar/features/ai/data/model_catalog.dart';
+import 'package:notlar/features/notes/domain/note.dart';
+import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Görev başına otomatik model sırası (kullanıcı isteği 2026-11-15:
 /// "model sıralamasını baştan yap, otomatik modu ayarla"). Katalog, hesabın
@@ -53,11 +57,15 @@ class _KeyStore extends ApiKeyStore {
 
 /// `/models` kataloğu döndürür; [fail] içindeki modellere 429 verir.
 class _Net {
-  _Net({this.fail = const {}, this.perDay = false});
+  _Net({this.fail = const {}, this.perDay = false, this.reply = 'tamam'});
 
   final Set<String> fail;
   final bool perDay;
+  final String reply;
   final tried = <String>[];
+
+  /// Model çağrılarının gövdeleri (sırayla).
+  final bodies = <Map<String, dynamic>>[];
 
   late final client = MockClient((request) async {
     final path = request.url.path;
@@ -75,6 +83,7 @@ class _Net {
     }
     final model = path.split('/models/').last.split(':').first;
     tried.add(model);
+    bodies.add(jsonDecode(request.body) as Map<String, dynamic>);
     if (fail.contains(model)) {
       return _json({
         'error': {
@@ -108,7 +117,7 @@ class _Net {
         {
           'content': {
             'parts': [
-              {'text': 'tamam'},
+              {'text': reply},
             ],
           },
         },
@@ -269,6 +278,117 @@ void main() {
       final net = _Net(fail: {'gemini-3.8-flash-tts'});
       await _service(net).speech('merhaba', voice: 'Kore');
       expect(net.tried, ['gemini-3.8-flash-tts', 'gemini-3.8-flash-lite-tts']);
+    });
+  });
+
+  // Kullanıcı isteği 2026-11-15: "etiket ve başlıkta gemma önce olsa onların
+  // modeli seçimi ayrı olsa".
+  group('kısa işler (başlık, etiket, ayar arama)', () {
+    test('sıra: Gemma 31B → 26B → Flash Lite\'lar → Flash zinciri', () {
+      expect(_order(ModelChain.short), [
+        'gemma-4-31b-it',
+        'gemma-4-26b-a4b-it',
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-flash-lite',
+        'gemini-3.8-flash',
+        'gemini-3-flash',
+        'gemini-2.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-4-hydrogen',
+      ]);
+      expect(GeminiService.chainOf(AiTask.short), ModelChain.short);
+    });
+
+    test('başlık önce Gemma 31B ile', () async {
+      final net = _Net(reply: 'Market listesi');
+      final title = await _service(net).generateTitle(
+        const Note(id: 'n', type: NoteType.text, body: 'süt, ekmek'),
+      );
+      expect(net.tried, ['gemma-4-31b-it']);
+      expect(title, 'Market listesi');
+    });
+
+    test(
+      'etiket Gemma\'ya düz metin gider (JSON kipi yok), ayrıştırılır',
+      () async {
+        final net = _Net(reply: 'Etiketler: is, Ev, alisveris, fazla');
+        final tags = await _service(net).suggestTags(
+          const Note(id: 'n', type: NoteType.text, body: 'toplantı notları'),
+        );
+        expect(net.tried, ['gemma-4-31b-it']);
+        expect(
+          jsonEncode(net.bodies.single),
+          isNot(contains('responseMimeType')),
+        );
+        expect(tags, ['is', 'ev', 'alisveris']);
+      },
+    );
+
+    test('uzun not kırpılır, Gemma yine kullanılır (16K TPM)', () async {
+      final net = _Net(reply: 'is');
+      await _service(net)
+          .suggestTags(Note(id: 'n', type: NoteType.text, body: 'a' * 50000));
+      expect(net.tried, ['gemma-4-31b-it']);
+      final sent = jsonEncode(net.bodies.single);
+      expect(sent.length, lessThan(GeminiService.shortTaskInputChars + 1500));
+    });
+
+    test('24K karakteri aşan girdi Gemma\'yı atlar (ayar arama)', () async {
+      final net = _Net(reply: '[1, 0]');
+      final hits = await _service(net)
+          .matchSettings('yazı büyüt', List.filled(400, 'x' * 80));
+      expect(net.tried, ['gemini-3.5-flash-lite']);
+      expect(hits, [1, 0]);
+    });
+
+    test('etiket ayrıştırma: JSON, madde, kod çiti, tekrar', () {
+      expect(GeminiService.parseTagList('["is", "ev"]'), ['is', 'ev']);
+      expect(GeminiService.parseTagList('```json\n["saglik"]\n```'), [
+        'saglik',
+      ]);
+      expect(GeminiService.parseTagList('- #okul\n- Okul\n2. finans.'), [
+        'okul',
+        'finans',
+      ]);
+      expect(GeminiService.parseTagList('alis veris'), ['alis-veris']);
+      expect(GeminiService.parseTagList(''), isEmpty);
+    });
+
+    test('sıra ayrıştırma: aralık dışı ve tekrar atılır', () {
+      expect(GeminiService.parseIndexList('3, 12, 3, 99', 20), [3, 12]);
+      expect(GeminiService.parseIndexList('yok', 20), isEmpty);
+    });
+  });
+
+  group('göç: eski tek seçim → başlık/etiket', () {
+    Future<ProviderContainer> container(Map<String, Object> values) async {
+      SharedPreferences.setMockInitialValues(values);
+      final prefs = await SharedPreferences.getInstance();
+      final c = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    test('elle seçilmiş model iki göreve de geçer', () async {
+      final c = await container({'model_chat': 'gemini-3-flash'});
+      final m = c.read(aiTaskModelsProvider);
+      expect(m[AiTask.general], 'gemini-3-flash');
+      expect(m[AiTask.short], 'gemini-3-flash');
+    });
+
+    test('Otomatik ise Otomatik kalır', () async {
+      final c = await container({});
+      expect(c.read(aiTaskModelsProvider)[AiTask.short], isNull);
+    });
+
+    test('göç bir kez: sonra Otomatik\'e alınan kısa iş geri dönmez', () async {
+      final c = await container({'model_chat': 'gemini-3-flash'});
+      c.read(aiTaskModelsProvider.notifier).set(AiTask.short, null);
+      c.invalidate(aiTaskModelsProvider);
+      expect(c.read(aiTaskModelsProvider)[AiTask.short], isNull);
     });
   });
 }
