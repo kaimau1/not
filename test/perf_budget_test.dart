@@ -47,6 +47,7 @@ import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
 import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
+import 'package:notlar/features/notes/presentation/listening_visuals.dart';
 import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/notes/data/user_templates.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
@@ -2182,6 +2183,178 @@ void main() {
       'metin_satir': text[_row] ?? 0,
       'metin_kok': text['NoteEditorScreen'] ?? 0,
     });
+    await endEditor(tester);
+  });
+
+  testWidgets('S46: dikte kartı + klavye (gerçek rota, telefon)', (
+    tester,
+  ) async {
+    const events = EventChannel('dev.kaimau.notlar/speech');
+    const system = MethodChannel('dev.kaimau.notlar/system');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    MockStreamHandlerEventSink? sink;
+    messenger
+      ..setMockStreamHandler(
+        events,
+        MockStreamHandler.inline(onListen: (_, s) {
+          sink = s;
+        }),
+      )
+      ..setMockMethodCallHandler(system, (_) async => null);
+    DeviceSpeech.debugAvailable = true;
+    addTearDown(() {
+      DeviceSpeech.debugAvailable = null;
+      messenger
+        ..setMockStreamHandler(events, null)
+        ..setMockMethodCallHandler(system, null);
+    });
+    final now = DateTime.now();
+    final all = [
+      for (var i = 0; i < 4; i++)
+        Note(
+          id: 'x$i',
+          type: NoteType.checklist,
+          title: 'Liste $i',
+          items: [
+            for (var j = 0; j < 30; j++)
+              NoteItem(id: 'i$i-$j', text: 'madde $j'),
+          ],
+          updatedAt: now,
+        ),
+    ];
+    final repo = _LiveRepo(FakeFirebaseFirestore());
+    for (final n in all) {
+      await _noteCol(repo.db).doc(n.id).set(n.toMap());
+    }
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value(all),
+      repo: repo,
+      openPage: true,
+    );
+    await tester.tap(find.byType(NoteCard).at(2));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.tap(find.text('madde 3'));
+    await tester.pump(const Duration(milliseconds: 400));
+
+
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    debugPrint = (String? m, {int? wrapWidth}) {
+      if (m != null && m.startsWith('Laying out')) layouts++;
+    };
+    try {
+      // Klavye aç/kapa ×2 (S8 kareleri): kurulum ve RenderObject dizilmesi.
+      Future<({int builds, int layouts})> kb() async {
+        final counter = BuildCounter()..start();
+        layouts = 0;
+        debugPrintLayouts = true;
+        for (var r = 0; r < 2; r++) {
+          for (final ins in const [
+            [20.0, 60.0, 120.0, 200.0, 300.0],
+            [200.0, 120.0, 60.0, 20.0, 0.0],
+          ]) {
+            for (final inset in ins) {
+              tester.view.viewInsets = FakeViewPadding(bottom: inset);
+              await tester.pump(const Duration(milliseconds: 16));
+            }
+            await tester.pump(const Duration(milliseconds: 300));
+          }
+        }
+        debugPrintLayouts = false;
+        counter.stop();
+        return (builds: _sum(counter.counts), layouts: layouts);
+      }
+
+      // Kartın görünen hâli tam mı: panel ile kart arasında saydamlık < 1
+      // ya da ölçek ≠ 1 yok.
+      bool cardWhole() {
+        final card = find.byType(ListeningCard);
+        if (card.evaluate().isEmpty) return false;
+        final opacities = find.ancestor(
+          of: card,
+          matching: find.byType(Opacity),
+        );
+        for (final e in opacities.evaluate()) {
+          if ((e.widget as Opacity).opacity < 1) return false;
+        }
+        final transforms = find.ancestor(
+          of: card,
+          matching: find.byType(Transform),
+        );
+        for (final e in transforms.evaluate()) {
+          final m = (e.widget as Transform).transform;
+          if (m.getMaxScaleOnAxis() != 1) return false;
+        }
+        return true;
+      }
+
+      final none = await kb();
+      var partial = 0;
+      await tester.tap(find.byTooltip('Dikte').first);
+      for (var i = 0; i < 20; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+        if (!cardWhole()) partial++;
+      }
+      expect(sink, isNotNull, reason: 'dikte başlamadı');
+      final open = await kb();
+      await tester.tap(find.byKey(const ValueKey('dictation-stop')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const ValueKey('dictation-panel')), findsNothing);
+      final closed = await kb();
+
+      // Klavye AÇIKKEN dikte: tanıyıcının metni "yazma" sayılıp alt çubuğu
+      // gizlemez (kart ve çubuk konuşma duraklamalarında inip kalkmaz).
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.tap(find.byTooltip('Dikte').first);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      final bar = find.byType(TypingBarHide);
+      var last = tester.getSize(bar).height;
+      var barMoves = 0;
+      var spoken = '';
+      for (var i = 0; i < 22; i++) {
+        if (i < 12) {
+          spoken = '$spoken kelime$i'.trim();
+          sink!.success({'text': spoken});
+        }
+        await tester.pump(const Duration(milliseconds: 200));
+        final h = tester.getSize(bar).height;
+        if (h != last) barMoves++;
+        last = h;
+      }
+      await tester.tap(find.byKey(const ValueKey('dictation-stop')));
+      await tester.pump();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      _expectBudget('S46', {
+        'acilis_eksik_kare': partial,
+        'kart_acik_fazla_kurulum': open.builds - none.builds,
+        'kart_acik_fazla_dizilme': open.layouts - none.layouts,
+        'kapandi_fazla_kurulum': (closed.builds - none.builds).abs(),
+        'kapandi_fazla_dizilme': (closed.layouts - none.layouts).abs(),
+        'dikte_cubuk_oynama': barMoves,
+      });
+    } finally {
+      debugPrintLayouts = false;
+      debugPrint = oldPrint;
+    }
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.pump(const Duration(seconds: 3));
     await endEditor(tester);
   });
 }
