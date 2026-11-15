@@ -49,7 +49,8 @@ const _animatedSizeLatch = 2;
 /// §7.5). Bugün 2 (2026-11-14, PA0): bekleyen ek şeridi
 /// (`dashboard_widgets.dart` `_PendingUploadsBar`) ve takvim mini ayı
 /// (`calendar_screen.dart`); PA6 sonrası 1 (2026-11-15: bekleyen ek şeridi
-/// AppBanner, tek adım), PA8 sonrası 0.
+/// AppBanner, tek adım), PA8 sonrası 0 (2026-11-15: takvim mini ayı
+/// _MonthPanel, boy tek adım + Transform).
 const _homeSizeFiles = [
   'lib/features/notes/presentation/dashboard_widgets.dart',
   'lib/features/notes/presentation/dashboard_screen.dart',
@@ -61,7 +62,7 @@ const _homeSizeFiles = [
   'lib/features/calendar/presentation/calendar_screen.dart',
   'lib/features/calendar/presentation/month_grid.dart',
 ];
-const _homeSizeLatch = 1;
+const _homeSizeLatch = 0;
 
 int countAnimatedSize(String src) =>
     RegExp(r'\bAnimatedSize\(').allMatches(src).length;

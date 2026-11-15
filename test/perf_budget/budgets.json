@@ -291,17 +291,17 @@
     "senaryo": "Takvim mini ayı kaydırma: telefon, calendar_view=agenda (S22 düzeneği); mini ayı aç, ızgarayı bir ay ileri fırlat (-300 dp, 1500 dp/sn), 40 kare. ay_sayfasi = _MonthPage kurulumu, gun_hucresi = _DayCell, kare_kurulum = en ağır kare",
     "ay_sayfasi": 1,
     "gun_hucresi": 42,
-    "kare_kurulum": 744,
-    "bugun": "1 / 42 / 744 (2026-11-15, PA8: PageView — komşu ay çekiş başlayınca BİR kez kurulur, ay sayfa oturunca bildirilir, kurulmuş sayfa önbellekte; açılış karesi 1617). Taban 0 / 42 / 1396 (2026-11-15, PA8 taban — değişiklikten ÖNCE: izleme yok, bırakışta ay tek karede değişiyor, 42 hücre + bütün takvim ekranı o karede; mini ayın açılış karesi 1601)",
+    "kare_kurulum": 747,
+    "bugun": "1 / 42 / 747 (2026-11-15, PA8 aç/kapa paneli sonrası: +3 = _MonthPanel sarmalı çağıranla kurulur; önceki adım 744 dalda kaldı, main e girmedi). PageView — komşu ay çekiş başlayınca BİR kez kurulur, ay sayfa oturunca bildirilir, kurulmuş sayfa önbellekte; açılış karesi 1617). Taban 0 / 42 / 1396 (2026-11-15, PA8 taban — değişiklikten ÖNCE: izleme yok, bırakışta ay tek karede değişiyor, 42 hücre + bütün takvim ekranı o karede; mini ayın açılış karesi 1601)",
     "hedef": "komşu ay bir kez kurulur; en ağır kare ≤ mini ayın ilk açılış karesi",
     "neden": "P62 PA8 ilk ölçüm (taban). ay_sayfasi 0 → 1: _MonthPage yeni tür (taban hücreleri sayfasız kuruyordu), hedef = 1. İlk deneme (onPageChanged ile bildirim, önbelleksiz) 3 / 126 / 2767 — geçiş ortasında çağıran yeniden kurulup iki sayfayı birden kuruyordu"
   },
   "S35": {
     "senaryo": "Takvim mini ayı aç → kapat: telefon, calendar_view=agenda (S22 düzeneği); calendar-month-toggle a iki kez dokun, her birinden sonra 30 kare; ajanda listesinin boyunun değiştiği kare sayısı",
-    "liste_boy_karesi": 28,
-    "bugun": "28 (2026-11-14, PA0); calendar_screen.dart AnimatedSize — liste her karede yeniden diziliyor",
+    "liste_boy_karesi": 2,
+    "bugun": "2 (2026-11-15, PA8: _MonthPanel — boy tek adımda, hareket Transform ile). Taban 28 (2026-11-14, PA0); calendar_screen.dart AnimatedSize — liste her karede yeniden diziliyordu",
     "hedef": "2 (aç 1 + kapa 1)",
-    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R2 gerçek dizilim yükü, PA8 2 ye indirir"
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R2 gerçek dizilim yükü; PA8 (2026-11-15) 2 ye indirdi (hedef)"
   },
   "S36": {
     "senaryo": "Geniş ekran ayarlar: 1280×800 SettingsScreen; settings-cat-ai → settings-cat-sound (döşeme önce görünüre kaydırılır, ölçüm dışı), her birinden sonra 40 kare",
