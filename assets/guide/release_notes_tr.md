@@ -3,6 +3,8 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 15 Kasım 2026 {#2026-11-15}
+- **Düzen modu yenilendi:** "Ekranı düzenle"de üstteki şerit tek satır, kaç düğmenin gizli olduğu küçük bir sayıyla görünüyor; gizli düğmeler kesikli çerçeveyle belli. Yeni "Sırala" düğmesi bulunduğun ekranın düzenini açıyor: alt çubuk, hızlı satır, "+" paneli, Ekle levhası, sabit ek, kalemler — hepsi aynı karolarla, dokun = gizle/göster, sürükle = sırala. Kişiselleştir ekranı da aynı karolara geçti.
+- **Daha çok şey düzenlenebiliyor:** hızlı satırın ve Ekle levhasının düğmelerini istediğin sıraya dizebilirsin; video hızı ve süresi, ortak çalışan düğmesi ve sabit ek çubuğunun düğmeleri de düzen modunda gizlenip gösterilebiliyor.
 - **Kalem seti yenilendi:** seçtiğin kalem yumuşakça kalkıyor, ayar panelinde kalemin gerçek çizgisini görüyorsun, iğneyle tek dokunuşta sabitleyebiliyorsun. Kullanmadığın kalemleri gizleyebilirsin. Panel açılırken sayfa artık oynamıyor; tablette bölünmüş görünümde kalem çubuğu taşmıyor.
 - **Sesle yazma kartı:** dalga artık sesini gerçekten izliyor — konuşunca yükselir, susunca alçalır. Susunca kartın altında ince bir çizgi dolar ve "Sessizlik — birazdan biter" yazar. Kart tablette ortada, makul genişlikte duruyor.
 - **Ayarlar yenilendi:** her bölüm derli toplu kartlarda, hesap bilgin her yerde aynı kartta, Hesap sayfası daha düzenli (Hesabı sil en altta). Premium, Kılavuz ve Kişiler ekranları da aynı sade görünüme geçti; geniş ekranda ayarlar arasında geçiş daha hızlı.

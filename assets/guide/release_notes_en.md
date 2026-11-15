@@ -3,6 +3,8 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 15 November 2026 {#2026-11-15}
+- **Refreshed edit mode:** in "Edit screen" the strip at the top is a single line and a small number shows how many buttons are hidden; hidden buttons have a dashed outline. The new "Reorder" button opens the layout of the screen you're on: bottom bar, quick row, "+" panel, Add sheet, pinned attachment, pens — all with the same tiles, tap to hide/show, drag to reorder. The Personalize screen uses the same tiles too.
+- **More things to customize:** you can arrange the quick row and the Add sheet in any order; video speed and time, the collaborator button and the pinned attachment bar's buttons can also be hidden or shown in edit mode.
 - **Refreshed pen set:** the selected pen lifts smoothly, the settings panel shows the pen's real stroke, and you can pin it with one tap. You can hide pens you don't use. The page no longer jumps when the panel opens, and the pen bar no longer overflows in tablet split view.
 - **Dictation card:** the wave now follows your voice — it rises when you speak and settles when you pause. When you go quiet, a thin line fills under the card and "Silence — stopping soon" appears. On tablets the card stays centered at a comfortable width.
 - **Settings refreshed:** each section now sits in tidy grouped cards, your account appears on the same card everywhere, and the Account page is better organized (Delete account at the bottom). Premium, Guide and Contacts share the same clean look; switching between settings on wide screens is faster.

@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Düzen modu ve "Sırala" (yeni görünüş, cihazda bakılmadı — P63 G5)**
+  Nerede: bir notta ⋮ → Ekranı düzenle; üst şeritteki ⇅ (Sırala); Ayarlar → Kişiselleştir; not ⋮ → Menüyü düzenle.
+  Nasıl: düzen modunu aç (şerit yukarıdan kayarak gelsin), alt çubukta 2–3 düğmeye dokun (gizli olan kesikli çerçeveli, şeritte sayı çıksın), Geri al / Bitti; ⇅ ile levhayı aç — notta "Alt çubuk", klavye açıkken "Hızlı satır" seçili gelsin; üstteki şeritte bir simgeyi basılı tutup sürükleyerek sırala, hızlı satırı yeniden sırala ve klavyeyi açıp satırın o sırada olduğuna bak; Ekle levhasının sırasını değiştir; sabit PDF'li notta düzen modunda çubuktaki düğmeleri gizle/göster; küçük telefonda şerit başlığının sığdığına bak.
+  Doğruysa: titreme/zıplama yok, mod açılıp kapanırken not kaymıyor; sıra uygulama kapanıp açılınca korunuyor; varsayılan düzende hiçbir şey değişmemiş.
+  Yanlışsa: ekran görüntüsü / kısa kayıt gönder.
 - [ ] **Bildirimler, kalıcı şeritler, yana çekiş ve takvim mini ayı (yeni his, cihazda bakılmadı — P62 G3)**
   Nerede: ana ekran (ipucu, "Geri al", Yenilikler, bekleyen ek / zamanı gelen / yeni sürüm şeritleri), liste görünümünde satır çekişi, takvim → ajanda → başlıktaki ay düğmesi; tablette not açıkken soldan çekmece.
   Nasıl: bir notu sil → "Geri al" mikrofon / "+" ile çakışmasın; levha açıkken sil → bildirim levhanın üstünde; ana ekranda yana yavaş çek / fiskele / son klasörde çek; liste satırını sağa-sola çek (eşikte hafif titreşim); mini ayı parmakla kaydır, aç-kapa.
