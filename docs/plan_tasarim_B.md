@@ -1431,6 +1431,19 @@ fable paketlerine yalnız görsel iş kalsın. Her alt adım ayrı commit.
   göç ettirince kılık kendiliğinden gelir, `appNotice`'i doğrudan çağırma (`app.dart`'a bağlı değil) ·
   kesikli çerçeve tek `drawPoints` (`item_divider_style.dart:44-53` kalıbı) · rozet göz simgesi KALIR (SB4).
 - **A/B:** evet — `kb`, `not_ac`, `duzen` evreleri; mod kapalı yol yavaşlamamalı. **Bütçe:** S40.
+- [x] **Durum (2026-11-15, G5 dalı oto/G5-duzen, opus):** şerit tek satır (üst güvenli alan + 48,
+  `elevation` 0, alt çizgi `onInverseSurface`×`pressed`), gizli sayısı hapı (`customize-hidden-count`,
+  yalnız > 0), "Sırala" (`customize-reorder`; `CustomizeModeHost.onReorder`, app.dart → bugünkü
+  `/personalize`), ikinci satır kalktı, ilk giriş ipucu `TipOnce.customizeMode` (huniden). Giriş/çıkış:
+  yuva tek adım, içerik kayma + solma (`short/enter`, `quick/exit`). Çerçeve `AppRadius.m`, görünür =
+  `primary`×`hairline` yıkama + `muted` çizgi, gizli = `disabled` opaklık + kesikli çizgi (tek
+  `drawPoints`), rozet 20/12 adlandırılmış sabit, solarak belirir + dokunuşta 0.85→1. S40 değişmedi
+  (kök 1 / aç 3 / kapa 3 / dokunuş 0 / satır 0); `customize_strip_test` 5/5; dört var olan test
+  değişmeden yeşil; token bütçesi düştü (radius −1, fontSize −2, iconSize −2, alpha −1).
+  **Sapmalar (sabah bakılacak):** kayma tam boy değil boyun ÇEYREĞİ (tam boyda mod açılır açılmaz basılan
+  Bitti/Geri al kırpığın dışında kalıp kaçıyordu — var olan testler bunu yakaladı); şerit Navigator'ın
+  üstünde olduğundan Tooltip kurulamıyor → "Sırala" ve hap adı yalnız Semantics'te; küçük telefonda
+  başlık "Düzenlem…" diye kısalıyor.
 
 ### 7.4 PB2 — düzen merkezi + panolar (fable)
 

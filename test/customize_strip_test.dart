@@ -41,8 +41,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getSize(find.byKey(strip)).height, 24 + 48);
     // İkinci satır (ipucu) yok.
-    expect(find.text('Dokun: gizle ya da göster · anında uygulanır'),
-        findsNothing);
+    expect(
+      find.text('Dokun: gizle ya da göster · anında uygulanır'),
+      findsNothing,
+    );
   });
 
   testWidgets('"Sırala" düğmesi var ve geri çağrıyı çalıştırır', (
@@ -89,7 +91,7 @@ void main() {
     expect(fade.opacity.value, 1);
     await tester.tap(find.byKey(const ValueKey('customize-done')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 150));
+    await tester.pump(const Duration(milliseconds: 151));
     await tester.pump();
     expect(find.byKey(strip), findsNothing);
   });
@@ -99,7 +101,11 @@ void main() {
   ) async {
     const child = Text('düğme');
     await tester.pumpWidget(
-      app(const Center(child: Customizable(id: 'a', child: child))),
+      app(
+        const Center(
+          child: Customizable(id: 'a', child: child),
+        ),
+      ),
     );
     final el = tester.element(find.byWidget(child));
     Element? parent;

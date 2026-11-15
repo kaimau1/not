@@ -824,6 +824,7 @@ final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
   }),
   // P63 G5 (PB1/PB2): düzen modu şeridi + çerçeveler, Kişiselleştir ekranı.
   ('duzen-serit', '/note/n4', (t) async {
+    // ignore: invalid_use_of_visible_for_testing_member
     addTearDown(Personalize.debugReset);
     Personalize.startEditing();
     await _settle(t);

@@ -268,6 +268,8 @@ class NotlarApp extends ConsumerWidget {
             KeyboardFocusRing(
               child: AppLockGate(
               child: CustomizeModeHost(
+              // Şeritteki "Sırala": bugünkü Kişiselleştir ekranı (P63 PB1).
+              onReorder: () => router.push('/personalize'),
               // Eski istemci kapısı (F1.5): `config/app.minClient` bu
               // sürümün veri sürümünü aştıysa tepede "güncelle" şeridi.
               child: UpdateRequiredBanner(
