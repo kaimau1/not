@@ -370,13 +370,13 @@
   },
   "S46": {
     "senaryo": "Ses kartı + klavye (gerçek rota, telefon, 30 maddeli liste): klavye aç/kapa ×2 kartsız → Dikte → 20 kare kartın tam görünmediği kare sayısı → kart açıkken klavye ×2 → Bitir → klavye ×2; sonra klavye AÇIKKEN dikte, 12 metin olayı + 2 sn duraklama boyunca alt çubuğun (TypingBarHide) boy değiştirdiği an sayısı",
-    "acilis_eksik_kare": 99,
-    "kart_acik_fazla_kurulum": 999,
-    "kart_acik_fazla_dizilme": 999,
-    "kapandi_fazla_kurulum": 999,
-    "kapandi_fazla_dizilme": 999,
-    "dikte_cubuk_oynama": 99,
-    "bugun": "ölçülüyor",
+    "acilis_eksik_kare": 0,
+    "kart_acik_fazla_kurulum": 50,
+    "kart_acik_fazla_dizilme": 0,
+    "kapandi_fazla_kurulum": 0,
+    "kapandi_fazla_dizilme": 0,
+    "dikte_cubuk_oynama": 0,
+    "bugun": "0 / 50 / 0 / 0 / 0 / 0 (2026-11-15; önce 13 / 50 / 0 / 0 / 0 / 2 — PopIn açılışı, dikte metni çubuğu gizliyordu). Kart açıkken +50 kurulum = kartın kendi rozeti/dalgası (editör 0); kart kapanınca kartsız hâlle birebir: sızıntı yok",
     "hedef": "açılış eksik kare 0; kapanınca kartsız hâlle birebir (0/0); dikte çubuğu oynatmaz (0)",
     "neden": "kullanıcı bulgusu 2026-11-15 (G4 [apk]): ses kartı yarım açılıyor, kart varken/sonra klavyede kasma, alt panel zıplıyor"
   }

@@ -1,7 +1,6 @@
 import '../note_link_ui.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
-import '../../../../core/widgets/pop_in.dart';
 import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';

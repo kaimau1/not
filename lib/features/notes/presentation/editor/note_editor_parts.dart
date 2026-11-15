@@ -248,13 +248,13 @@ class _DictationPanel extends StatelessWidget {
           horizontal: AppSpace.s,
           vertical: AppSpace.xs,
         ),
-        // Yuva tek adımda açılır; kart yalnız boyamada belirir. Çıkış
-        // geçişi YOK: mikrofon kapandığı karede kart kalkar ("hâlâ dinliyor"
-        // görünen tek kare bile yanıltır).
-        child: PopIn(
-          duration: AppMotion.short,
-          alignment: Alignment.bottomCenter,
-          child: ListeningCard(
+        // Kart İLK KAREDE TAM (kullanıcı bulgusu 2026-11-15: "önce yarım
+        // açılıyor, sonra tam"; S46). Eskiden `PopIn` sarıyordu: yuva tek
+        // adımda açılıyor ama kart saydam + %94 ölçekle başlıyordu, açılış
+        // karesi editörün kök kurulumuyla aynı (ağır) kare olduğundan cihazda
+        // ara hâl görünür kalıyordu. Çıkış geçişi de YOK: mikrofon kapandığı
+        // karede kart kalkar ("hâlâ dinliyor" görünen tek kare bile yanıltır).
+        child: ListeningCard(
             mode: ListeningMode.dictation,
             active: true,
             title: l10n.voiceListening,
@@ -277,7 +277,6 @@ class _DictationPanel extends StatelessWidget {
               onPressed: onStop,
             ),
           ),
-        ),
       ),
     );
   }
