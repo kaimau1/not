@@ -1951,10 +1951,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// [inkOnly]: [transform] yalnız bir ekin mürekkebini değiştirir (OTURTMA
   /// F60.1) — kök kurulmaz, kayıt debounce'lu.
+  ///
+  /// [itemsShown]: değişiklik [ItemsEditor]'dan geliyor ve maddeleri o
+  /// ZATEN kendi `setState`'iyle çizdi. KÖK NEDEN (kullanıcı bulgusu
+  /// 2026-11-15 "normal madde notunda kasma"): işaretleme / Enter / silme
+  /// `sameItemsVisually`'yi bozduğu için her seferinde KÖK de kuruluyordu —
+  /// 40 maddede olay başına ~850 gereksiz widget (çubuklar, ipuçları, düzen
+  /// sarmalayıcıları). Kök maddelerden yalnız "liste boş mu"ya bakar
+  /// (gövde `minLines`, metin/karışık kip, Seç düğmesi); o değişmedikçe
+  /// kök kurulmaz.
   void _mutate(
     Note Function(Note) transform, {
     bool immediate = false,
     bool inkOnly = false,
+    bool itemsShown = false,
   }) {
     final note = _note;
     if (note == null) return;
@@ -2002,7 +2012,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // etkilenmedi; geri al düğmesi [_undoN]'u kendisi dinler — P20 M3): 3700 satırlık build'i her tuş
     // vuruşunda çalıştırmak "klavye açılırken kasıyor" şikayetinin başrolüydü
     // — denetleyici metni zaten ekranda, ekran geneli setState atlanır.
-    final pureTyping = _sameVisual(note, next, ignoreAttachments: inkOnly);
+    final pureTyping = _sameVisual(
+      note,
+      itemsShown && note.items.isEmpty == next.items.isEmpty
+          ? next.copyWith(items: note.items)
+          : next,
+      ignoreAttachments: inkOnly,
+    );
     if (pureTyping) {
       if (inkOnly) {
         for (final a in note.attachments) {
@@ -3932,7 +3948,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         items: note.items,
         showCheckboxes: true,
         expandItems: ref.watch(expandListItemsProvider),
-        onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
+        onChanged: (items) =>
+            _mutate((n) => n.copyWith(items: items), itemsShown: true),
         floats: _floats,
         pageBox: _pageBox,
         shrinkWrap: true,
@@ -3995,7 +4012,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // birkaç satır tutuyor; onları ikiye bölmek yalnız karıştırırdı.
         columns: note.listColumns,
         expandItems: ref.watch(expandListItemsProvider),
-        onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
+        onChanged: (items) =>
+            _mutate((n) => n.copyWith(items: items), itemsShown: true),
         floats: _floats,
         pageBox: _pageBox,
         shrinkWrap: true,

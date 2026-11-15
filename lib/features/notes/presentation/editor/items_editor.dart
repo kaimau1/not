@@ -1006,7 +1006,12 @@ class ItemsEditorState extends State<ItemsEditor>
     if (_items[index].text.isEmpty && RegExp(r'^\s*[☐☑☒]').hasMatch(text)) {
       text = text.substring(_lineMarker.firstMatch(text)!.end);
     }
+    final wasBlank = _items[index].text.trim().isEmpty;
     _items[index] = _items[index].copyWith(text: text);
+    // Boş ↔ dolu: satırın kutusu etkinleşir/pasifleşir (bkz. `_itemRow`).
+    // Eskiden bunu kökün yeniden kurulumu getiriyordu; kök artık madde
+    // değişikliğinde kurulmuyor (bkz. NoteEditorScreen._mutate itemsShown).
+    if (wasBlank != text.trim().isEmpty) setState(() {});
     _commit();
   }
 
@@ -1904,7 +1909,14 @@ class ItemsEditorState extends State<ItemsEditor>
       widget.onFieldDisposed?.call(controller);
       controller.dispose();
     }
-    _focusNodes.remove(id)?.dispose();
+    // Düğüm satır ağaçtan inince (sonraki kare) atılır. HEMEN atılırsa
+    // odaktaki satırda odak bir an "hiç kimsede" kalır; çerçeve yeni odağın
+    // bütün ata zincirini kirli sayar, her ata kendine bağlı bütün `Focus`'ları
+    // (40 maddede ~110 widget) yeniden kurdururdu (2026-11-15 madde kasması).
+    final node = _focusNodes.remove(id);
+    if (node != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => node.dispose());
+    }
     _focusFlags.remove(id)?.dispose();
   }
 
@@ -2008,13 +2020,26 @@ class ItemsEditorState extends State<ItemsEditor>
       row = _itemRow(item, draggable: reorderIndex != null);
       _rowCache[item.id] = (key, row);
     }
-    return _RowSlot(
+    // Yuva da AYNI örnek döner (satır ve yeri değişmediyse): liste her
+    // kurulduğunda 40 maddenin yuvası ve altı yeniden kurulmasın — tek
+    // maddedeki değişiklik yalnız o satırı kursun (2026-11-15 madde kasması).
+    final slot = _slotCache[item.id];
+    if (slot != null &&
+        identical(slot.child, row) &&
+        slot.reorderIndex == reorderIndex &&
+        slot.orderNumber == orderNumber) {
+      return slot;
+    }
+    return _slotCache[item.id] = _RowSlot(
       key: ValueKey('slot-${item.id}'),
       reorderIndex: reorderIndex,
       orderNumber: orderNumber,
       child: row,
     );
   }
+
+  /// Madde kimliği → son [_RowSlot] örneği (bkz. [_cachedItemRow]).
+  final Map<String, _RowSlot> _slotCache = {};
 
   /// Liste düzeyi bir girdi değiştiyse önbelleği tümden düşürür; silinen
   /// maddelerin bayat girdilerini de ayıklar.
@@ -2054,6 +2079,7 @@ class ItemsEditorState extends State<ItemsEditor>
     if (_rowCache.length > _items.length) {
       final live = {for (final i in _items) i.id};
       _rowCache.removeWhere((id, _) => !live.contains(id));
+      _slotCache.removeWhere((id, _) => !live.contains(id));
     }
   }
 
@@ -2325,6 +2351,10 @@ class ItemsEditorState extends State<ItemsEditor>
         ? ListView(
             padding: EdgeInsets.only(bottom: _selectionMode ? 152 : 96),
             shrinkWrap: widget.shrinkWrap,
+            // shrinkWrap'te (editör: dış kaydırma görünümünün içinde) BÜTÜN
+            // satırlar zaten kurulu, canlı tutma sarmalayıcısı (satır başına
+            // 4 widget) her liste kurulumunda boşuna yeniden kuruluyordu.
+            addAutomaticKeepAlives: !widget.shrinkWrap,
             physics: widget.shrinkWrap
                 ? const NeverScrollableScrollPhysics()
                 : null,

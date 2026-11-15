@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 14 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Madde notunda kasma (oto/madde-kasma, cihazda bakılmadı — 2026-11-15)**
+  Nerede: 30–60 maddeli bir yapılacaklar notu.
+  Nasıl: art arda 5–6 kutucuk işaretle/kaldır; bir maddede Enter ile yeni madde aç, yaz; boş maddede geri sil ile sil; listeyi kaydır.
+  Doğruysa: işaretleme, Enter ve silmede takılma yok; boş maddeye yazınca kutusu hemen etkinleşiyor; tüm maddeler silinince not metne dönüyor. Yanlışsa: hangi adımda takıldığını yaz.
 - [ ] **Konfor kararları (oto/konfor, cihazda bakılmadı — 2026-11-15)**
   Nerede: tablette bir not açıkken sol kenar; küçük telefonda ⋮ → Ekranı düzenle; ana ekranda "+" → ayar simgesi (Düzenle).
   Nasıl: sol kenardan çekmeceyi yavaşça az çek (açılmamalı), biraz daha çek (açılmalı), kısa fiske (açılmalı); düzen şeridinin başlığı kesilmeden ("Düzenleme modu" ya da "Düzen") görünsün; "+" → Düzenle "+" panosunu açsın, bir öğeyi gizle/sırala, son görünen öğeyi gizlemeye çalış (uyarı çıkmalı), paneli yeniden aç.

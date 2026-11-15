@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 15 Kasım 2026 {#2026-11-15}
+- **Yapılacaklar listesi akıcı:** uzun bir listede kutucuk işaretlemek, Enter ile yeni madde açmak ve boş maddeyi silmek artık bütün not ekranını yeniden çizmiyor; yalnız değişen satır güncelleniyor.
 - **Anlamca arama yenilendi:** notlarında anlamca arama ve "İlgili notlar" artık Google'ın yeni Embedding 2 modelini kullanıyor; bu model kullanılamazsa arama kendiliğinden eskisiyle sürüyor.
 - **Anlamca arama açılışta hızlı:** notların arama dizini artık cihazda saklanıyor; uygulamayı her açtığında bütün defter yeniden işlenmiyor, yalnız değişen notlar güncelleniyor. Çıkış yapınca bu dizin silinir.
 - **Bildirimler tek yerde:** ipuçları artık arama çubuğunu kapatmıyor; "Geri al" ve diğer bildirimler tek yerde, üst üste binmeden çıkıyor ve kendiliğinden kapanıyor.

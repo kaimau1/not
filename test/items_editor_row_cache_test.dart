@@ -226,6 +226,26 @@ void main() {
       );
     }
   });
+
+  // 2026-11-15 madde kasması: liste kurulunca satırın YUVASI (_RowSlot) da
+  // aynı örnek dönmeli — yoksa 40 maddede her işaret/Enter 40 yuvayı ve
+  // altlarını kurar. Yalnız değişen maddenin yuvası tazelenir.
+  testWidgets('değişmeyen satırın yuvası (slot) da aynı örnek', (tester) async {
+    await pumpList(tester, sample);
+    Widget slot(String id) => tester.widget(find.byKey(ValueKey('slot-$id')));
+    final a = slot('a'), b = slot('b'), c = slot('c');
+
+    _setItems([
+      const NoteItem(id: 'a', text: 'bir'),
+      const NoteItem(id: 'b', text: 'iki DEGISTI'),
+      const NoteItem(id: 'c', text: 'uc'),
+    ]);
+    await tester.pump();
+
+    expect(identical(a, slot('a')), isTrue, reason: 'a yuvası kuruldu');
+    expect(identical(b, slot('b')), isFalse, reason: 'b tazelenmedi');
+    expect(identical(c, slot('c')), isTrue, reason: 'c yuvası kuruldu');
+  });
 }
 
 late void Function(bool) _setChecks;
