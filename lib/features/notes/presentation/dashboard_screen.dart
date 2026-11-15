@@ -31,6 +31,7 @@ import '../../../app/theme/note_colors.dart';
 import 'dart:math' as math;
 
 import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/app_design.dart' show AppTone;
 import '../../../core/a11y/motion.dart';
 import '../../../core/widgets/snapshot_when_leaving.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
@@ -44,6 +45,7 @@ import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/connectivity.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../ai/data/semantic_search.dart';

@@ -272,11 +272,11 @@
   },
   "S32": {
     "senaryo": "Kalıcı şerit belirişi: telefon ana ekran, 30 not; pendingUploadsProvider 0 → 2 → 0, her değişimden sonra 30 kare; ızgara kaydırma görünümünün boyunun değiştiği kare sayısı (S9 kalıbı)",
-    "izgara_boy_karesi": 26,
+    "izgara_boy_karesi": 2,
     "kart_kurulum": 0,
-    "bugun": "26 / 0 (2026-11-14, PA0); _PendingUploadsBar AnimatedSize 200 ms × 2 — ızgara her karede yeniden diziliyor",
+    "bugun": "2 / 0 (2026-11-15, PA6: şerit AppBanner, görünür / gizli tek adım). Taban 26 / 0 (2026-11-14, PA0); _PendingUploadsBar AnimatedSize 200 ms × 2 — ızgara her karede yeniden diziliyordu",
     "hedef": "2 (belir 1 + kalk 1) / 0",
-    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R1 gerçek dizilim yükü, PA6 2 ye indirir"
+    "neden": "P62 PA0 ilk ölçüm (bugünkü hâl); hipotez (~24) doğrulandı — R1 gerçek dizilim yükü; PA6 (2026-11-15) AnimatedSize kaldırdı → 2 (hedef)"
   },
   "S33": {
     "senaryo": "Ana ekran çekişi: telefon, 30 not, swipe_mode=filters; 5. karttan 6 × 10 dp sola çek (eşik altı, süzgeç değişmez), bırak, 30 kare",

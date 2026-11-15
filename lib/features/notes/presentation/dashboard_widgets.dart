@@ -1699,7 +1699,6 @@ class _PendingUploadsBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(pendingUploadsProvider);
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     // Google hesabı ama Drive bağlanmadı: ekler bağlantı bekliyor — şerit
     // bunu söyler ve dokununca bağlar (kullanıcı isteği 2026-10-15).
     final needsDrive = state.needsDrive;
@@ -1718,79 +1717,34 @@ class _PendingUploadsBar extends ConsumerWidget {
     final offline =
         state.pending > 0 && !needsDrive && ref.watch(isOfflineProvider);
     final failing = state.failed > 0 && !needsDrive && !offline;
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 200),
-      alignment: Alignment.topCenter,
-      child: state.pending == 0
-          ? const SizedBox(width: double.infinity)
-          : Padding(
-              padding: const EdgeInsets.fromLTRB(kGridInset, 6, kGridInset, 0),
-              child: Material(
-                color: failing
-                    ? scheme.errorContainer
-                    : scheme.secondaryContainer,
-                borderRadius: BorderRadius.circular(10),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: needsDrive
-                      ? () => connectDrive(context, ref)
-                      : () => ScaffoldMessenger.of(context)
-                          ..hideCurrentSnackBar()
-                          ..showMessage(l10n.pendingUploadsInfo),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          needsDrive
-                              ? Icons.add_to_drive_outlined
-                              : failing || offline
-                              ? Icons.cloud_off_outlined
-                              : Icons.cloud_upload_outlined,
-                          size: 18,
-                          color: failing
-                              ? scheme.onErrorContainer
-                              : scheme.onSecondaryContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            pendingUploadsBarLabel(
-                              l10n,
-                              pending: state.pending,
-                              failed: state.failed,
-                              needsDrive: needsDrive,
-                              offline: offline,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: failing
-                                  ? scheme.onErrorContainer
-                                  : scheme.onSecondaryContainer,
-                            ),
-                          ),
-                        ),
-                        // Dönen çark YOK (bilerek): bağlantı yokken şerit
-                        // saatlerce durabilir; sürekli animasyon pili yakardı.
-                        Icon(
-                          needsDrive ? Icons.link : Icons.info_outline,
-                          size: 16,
-                          color: failing
-                              ? scheme.onErrorContainer
-                              : scheme.onSecondaryContainer,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+    // Görünür / gizli TEK ADIMDA (P62 PA6, R1): eskiden AnimatedSize altta
+    // Expanded ızgarayı 200 ms boyunca her karede yeniden diziyordu (S32).
+    if (state.pending == 0) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(kGridInset, AppSpace.s, kGridInset, 0),
+      child: AppBanner(
+        tone: failing ? AppTone.danger : AppTone.attention,
+        icon: needsDrive
+            ? Icons.add_to_drive_outlined
+            : failing || offline
+            ? Icons.cloud_off_outlined
+            : Icons.cloud_upload_outlined,
+        title: pendingUploadsBarLabel(
+          l10n,
+          pending: state.pending,
+          failed: state.failed,
+          needsDrive: needsDrive,
+          offline: offline,
+        ),
+        onTap: needsDrive
+            ? () => connectDrive(context, ref)
+            : () => ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showMessage(l10n.pendingUploadsInfo),
+        // Dönen çark YOK (bilerek): bağlantı yokken şerit saatlerce
+        // durabilir; sürekli animasyon pili yakardı.
+        trailing: Icon(needsDrive ? Icons.link : Icons.info_outline),
+      ),
     );
   }
 }
