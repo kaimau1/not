@@ -821,14 +821,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _agendaView(BuildContext context, CalendarData data, bool wide) {
     final l10n = context.l10n;
-    final gridStart = gridStartFor(_month, _firstDow);
-    final busy = data
-        .range(
-          gridStart,
-          DateTime(gridStart.year, gridStart.month, gridStart.day + 42),
-        )
-        .keys
-        .toSet();
+    // Ayın ızgarasındaki dolu günler: mini ay sayfası KURULURKEN bir kez
+    // (komşu ay çekiş başlayınca kendi ayıyla).
+    Set<String> busyOf(DateTime month) {
+      final gridStart = gridStartFor(month, _firstDow);
+      return data
+          .range(
+            gridStart,
+            DateTime(gridStart.year, gridStart.month, gridStart.day + 42),
+          )
+          .keys
+          .toSet();
+    }
     void select(DateTime d) => setState(() {
       _selected = startOfDay(d);
       _focus = _selected;
@@ -839,13 +843,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final grid = MonthGrid(
       month: _month,
       selected: _selected,
-      busy: busy,
+      busyOf: busyOf,
+      busyKey: data,
       now: _today,
       showHeader: wide,
       onSelect: select,
       swipeEnabled: ref.watch(calendarSwipeProvider),
-      onMonthChange: (delta) =>
-          setState(() => _month = DateTime(_month.year, _month.month + delta)),
+      // Seçim DEĞİŞMEZ (2026-11-08): yalnız görünen ay.
+      onMonthChanged: (month) => setState(() => _month = month),
     );
     final isEmpty =
         data.events.isEmpty && data.tasks.isEmpty && data.reminders.isEmpty;
