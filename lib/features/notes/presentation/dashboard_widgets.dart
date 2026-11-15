@@ -1628,8 +1628,11 @@ class _SwipeActions extends StatelessWidget {
       required Color color,
       required Color ink,
     }) => Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpace.s,
+        vertical: 1,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(AppRadius.m),
@@ -1638,11 +1641,13 @@ class _SwipeActions extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: ink, size: 20),
-          const SizedBox(width: 8),
+          Icon(icon, color: ink, size: AppIconSize.m),
+          const SizedBox(width: AppSpace.s),
           Text(
             label,
-            style: TextStyle(color: ink, fontWeight: FontWeight.w600),
+            style: AppText.of(
+              Theme.of(context),
+            ).label.copyWith(color: ink, fontWeight: AppWeight.strong),
           ),
         ],
       ),
@@ -1655,6 +1660,11 @@ class _SwipeActions extends StatelessWidget {
         DismissDirection.startToEnd: 0.35,
         DismissDirection.endToStart: 0.35,
       },
+      // Eşik aşılınca tek hafif titreşim (P62 §6.2, K5): bırakınca ne
+      // olacağı hissedilsin.
+      onUpdate: (d) {
+        if (d.reached && !d.previousReached) unawaited(AppHaptics.tick());
+      },
       background: background(
         alignment: AlignmentDirectional.centerStart,
         icon: note.pinned ? Icons.push_pin_outlined : Icons.push_pin,
@@ -1666,8 +1676,9 @@ class _SwipeActions extends StatelessWidget {
         alignment: AlignmentDirectional.centerEnd,
         icon: AppIcons.archive,
         label: l10n.archive,
-        color: scheme.tertiaryContainer,
-        ink: scheme.onTertiaryContainer,
+        // Nötr (K6-1, sabah bakılacak): `tertiary` yalnız yapay zekâ rengi.
+        color: scheme.surfaceContainerHighest,
+        ink: scheme.onSurface,
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
