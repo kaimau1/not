@@ -58,4 +58,12 @@ abstract final class DisplayRate {
       return null;
     }
   }
+
+  /// Sürüm satırlarının eki: " · 120 Hz" ya da okunamazsa boş. Kullanıcının
+  /// gördüğü üç satır da (Ayarlar dibi, "Güncelleme ve sürüm", Hakkında) bunu
+  /// kullanır — 2026-11-16 hatası: ek yalnız görünmeyen satıra eklenmişti.
+  static Future<String> hzSuffix() async {
+    final hz = await activeHz();
+    return hz == null ? '' : ' · ${hz.round()} Hz';
+  }
 }
