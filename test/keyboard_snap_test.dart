@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/widgets/keyboard_snap.dart';
 
@@ -8,6 +9,11 @@ import 'package:notlar/core/widgets/keyboard_snap.dart';
 /// "zıplama" ve "kasma" kusurlarının ikisi de bu ayrımın bozulmasından
 /// doğuyordu (bkz. widget açıklamaları).
 void main() {
+  // Kare kare konum matematiği (kip c'nin ve k'nin yedeğinin yolu); kip k'nin
+  // öngörülü hareketi keyboard_snap_test "kip k" ve perf S47k'da.
+  final keepMode = KeyboardSlide.mode;
+  setUpAll(() => KeyboardSlide.mode = 'c');
+  tearDownAll(() => KeyboardSlide.mode = keepMode);
   const screen = Size(800, 600);
   const barHeight = 60.0;
 
@@ -106,11 +112,11 @@ void main() {
     }
     expect(insets, [0, 300, 0]);
     await tester.pump(const Duration(milliseconds: 200));
-    expect(
-      insets,
-      [0, 300, 0],
-      reason: 'tam açılış+kapanış çevrimi toplam ÜÇ yerleşim',
-    );
+    expect(insets, [
+      0,
+      300,
+      0,
+    ], reason: 'tam açılış+kapanış çevrimi toplam ÜÇ yerleşim');
   });
 
   testWidgets('klavye açıkken gövde klavyenin üstünde kalır', (tester) async {
@@ -126,31 +132,32 @@ void main() {
     expect(barBottom(tester), screen.height - 220);
   });
 
-  testWidgets('boşluk oturunca onSettled ÇAĞRILIR (odaklı alan görünür kalsın)', (
-    tester,
-  ) async {
-    final settled = <double>[];
-    Widget build(double live) => host(
-      live,
-      KeyboardSnap(
-        onSettled: settled.add,
-        builder: (context, inset) => const SizedBox.expand(),
-      ),
-    );
+  testWidgets(
+    'boşluk oturunca onSettled ÇAĞRILIR (odaklı alan görünür kalsın)',
+    (tester) async {
+      final settled = <double>[];
+      Widget build(double live) => host(
+        live,
+        KeyboardSnap(
+          onSettled: settled.add,
+          builder: (context, inset) => const SizedBox.expand(),
+        ),
+      );
 
-    await tester.pumpWidget(build(0));
-    await tester.pumpWidget(build(150));
-    await tester.pumpWidget(build(300));
-    expect(settled, isEmpty, reason: 'animasyon sürerken haber verilmez');
+      await tester.pumpWidget(build(0));
+      await tester.pumpWidget(build(150));
+      await tester.pumpWidget(build(300));
+      expect(settled, isEmpty, reason: 'animasyon sürerken haber verilmez');
 
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(settled, [300]);
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(settled, [300]);
 
-    // Kapanışta boşluk zaten ilk karede kalkıyor; oturma diye bir şey yok.
-    await tester.pumpWidget(build(0));
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(settled, [300]);
-  });
+      // Kapanışta boşluk zaten ilk karede kalkıyor; oturma diye bir şey yok.
+      await tester.pumpWidget(build(0));
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(settled, [300]);
+    },
+  );
 
   testWidgets('üst ekran yeniden kurulunca önbellek düşer (bayat ağaç yok)', (
     tester,
@@ -219,10 +226,7 @@ void main() {
           screen.height - (live > nav ? live : nav),
           reason: '$live dp: çubuk gezinme çubuğunun ya da klavyenin üstünde',
         );
-        expect(
-          tester.getSize(find.byKey(const Key('bar'))).height,
-          barHeight,
-        );
+        expect(tester.getSize(find.byKey(const Key('bar'))).height, barHeight);
       }
       // Açılışın İLK karelerinde (klavye < gezinme çubuğu) bile gövde
       // yeniden kurulmadı: eskiden güvenli alan her karede küçülüyordu.
@@ -366,5 +370,140 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(insets, [0.0, 300.0, 0.0]);
     expect(settled, [300.0], reason: 'kapanışta gelmez');
+  });
+
+  // ---- Kip k (Keep gibi, daha iyisi; 2026-11-16) ----
+  group('kip k: panel klavyenin varacağı yere önceden gider', () {
+    late List<double> insets;
+    late Widget tree;
+    setUp(() {
+      KeyboardSlide.mode = 'k';
+      KeyboardForecast.reset();
+      insets = [];
+      tree = KeyboardInsetScope(
+        child: KeyboardSnap(
+          builder: (context, inset) {
+            insets.add(inset);
+            return Padding(
+              padding: EdgeInsets.only(bottom: inset),
+              child: Column(
+                children: [
+                  const Expanded(child: SizedBox.expand()),
+                  KeyboardSlide(inset: inset, child: bar),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    });
+    tearDown(() {
+      KeyboardSlide.mode = 'c';
+      KeyboardForecast.reset();
+    });
+
+    Future<void> forecast(WidgetTester tester, bool open) =>
+        KeyboardForecast.handle(
+          MethodCall('start', {
+            'open': open,
+            'target': open ? 300 * tester.view.devicePixelRatio : 0,
+            'ms': 250,
+          }),
+        );
+
+    List<double> ease(double a, double b) => [
+      for (var i = 1; i <= 16; i++)
+        a + (b - a) * Curves.fastOutSlowIn.transform(i / 16),
+    ];
+
+    double fade(WidgetTester tester) => tester
+        .widget<FadeTransition>(
+          find.descendant(
+            of: find.byType(KeyboardSlide),
+            matching: find.byType(FadeTransition),
+          ),
+        )
+        .opacity
+        .value;
+
+    /// Klavyeyi [real] boyunca kare kare (16 ms) yürütür; panelin klavyenin
+    /// üstünden uzaklığını döndürür.
+    Future<List<double>> run(WidgetTester tester, List<double> real) async {
+      final out = <double>[];
+      for (final v in real) {
+        await tester.pumpWidget(
+          host(v, tree),
+          duration: const Duration(milliseconds: 16),
+        );
+        out.add(screen.height - barBottom(tester));
+      }
+      return out;
+    }
+
+    testWidgets('öngörülü açılış: ≤ 120 ms hedefte, sonra sabit; örtme 0, '
+        'geri sıçrama 0; kapanış tek monoton hareket', (tester) async {
+      await tester.pumpWidget(host(0, tree));
+      await forecast(tester, true);
+      final real = ease(0, 300);
+      final floor = await run(tester, real);
+      var arrived = -1;
+      var covered = 0;
+      var back = 0;
+      for (var i = 0; i < floor.length; i++) {
+        if (floor[i] < real[i] - 0.5) covered++;
+        if (i > 0 && floor[i] < floor[i - 1] - 0.5) back++;
+        if (arrived < 0 && (floor[i] - 300).abs() < 0.5) arrived = i;
+      }
+      expect(covered, 0, reason: 'klavye paneli örtmez: $floor');
+      expect(back, 0, reason: 'açılışta aşağı oynama yok: $floor');
+      expect((arrived + 1) * 16, lessThanOrEqualTo(120), reason: '$floor');
+      expect(floor.skip(arrived).every((f) => (f - 300).abs() < 0.5), isTrue);
+      // Oturma: kararlı boşluk gelir, panel kıpırdamaz.
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(insets.last, 300);
+      expect(screen.height - barBottom(tester), 300);
+
+      await forecast(tester, false);
+      final down = await run(tester, ease(300, 0));
+      await tester.pump(const Duration(milliseconds: 200));
+      down.add(screen.height - barBottom(tester));
+      for (var i = 1; i < down.length; i++) {
+        expect(down[i], lessThanOrEqualTo(down[i - 1] + 0.01), reason: '$down');
+      }
+      final reach = down.indexWhere((f) => f < 0.5);
+      expect((reach + 1) * 16, lessThanOrEqualTo(120), reason: '$down');
+      expect(down.last, 0);
+    });
+
+    testWidgets('köprü yok, bellek var: ilk karede belleğe gider', (
+      tester,
+    ) async {
+      KeyboardForecast.remember(300);
+      await tester.pumpWidget(host(0, tree));
+      final real = ease(0, 300);
+      final floor = await run(tester, real);
+      for (var i = 0; i < floor.length; i++) {
+        expect(floor[i], greaterThanOrEqualTo(real[i] - 0.5), reason: '$floor');
+      }
+      final arrived = floor.indexWhere((f) => (f - 300).abs() < 0.5);
+      expect((arrived + 1) * 16, lessThanOrEqualTo(120 + 16), reason: '$floor');
+      expect(fade(tester), 1);
+    });
+
+    testWidgets('köprü ve bellek yok: kip c (hareket boyunca gizli), sonra '
+        'bellek dolar', (tester) async {
+      await tester.pumpWidget(host(0, tree));
+      await run(tester, [40, 120]);
+      expect(fade(tester), 0);
+      await run(tester, ease(120, 300).skip(4).toList());
+      for (var i = 0; i < 25; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(fade(tester), 1);
+      expect(screen.height - barBottom(tester), 300);
+      await run(tester, ease(300, 0));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(KeyboardForecast.memory, 300);
+    });
   });
 }

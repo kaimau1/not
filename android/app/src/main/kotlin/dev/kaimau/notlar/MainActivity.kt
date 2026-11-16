@@ -184,6 +184,8 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
     // klavyesi sayılır — M-Pencil ve ses/güç tuşları da kendini "klavye"
     // diye tanıtır. Kapak arkaya katlanınca (hardKeyboardHidden) yok sayılır.
     private var keyboardChannel: MethodChannel? = null
+    // Klavye öngörüsü (IME animasyonu başında hedef yükseklik; KlavyeOngoru).
+    private var imeChannel: MethodChannel? = null
     private var keyboardListener: InputManager.InputDeviceListener? = null
 
     private fun hasHardKeyboard(): Boolean {
@@ -291,6 +293,7 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
         }
         super.onCreate(savedInstanceState)
         GuncellemeSonrasiAc.clear(this)
+        KlavyeOngoru.kur(window.decorView) { imeChannel }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -384,6 +387,7 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
         restoreBeepsFromPrefs()
         configureSpeechChannel(flutterEngine)
         configureKeyboardChannel(flutterEngine)
+        imeChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dev.kaimau.notlar/ime")
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
         systemChannel = channel
         channel

@@ -3,6 +3,8 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 16 Kasım 2026 {#2026-11-16}
+- **Alt panel klavyenin varacağı yerde bekliyor (Keep gibi, daha akıcı):** klavye açılmaya başlarken panel kısa ve yumuşak bir kaymayla klavyenin duracağı yerin hemen üstüne gidiyor; klavye altından gelip yerine oturuyor, panel ne zıplıyor ne kayboluyor. Kapanırken panel tek hamlede aşağı iniyor.
+- **"· 120 Hz" artık görünüyor:** etkin yenileme hızı Ayarlar'ın en altındaki sürüm satırında ve "Güncelleme ve sürüm" ekranında yazıyor (önce yalnız aramayla bulunan bir satırdaydı).
 - **120 Hz:** uygulama ekranın yüksek yenileme hızını artık iki ayrı yoldan istiyor; bazı telefonlarda (Xiaomi gibi) 60 Hz'e düşmesi önlenir. 144 Hz ekranda da 120 seçilir (pil ve ısınma için), pil tasarrufu açıkken seçim telefona bırakılır. Etkin hız Ayarlar'ın en altındaki sürüm satırında yazar ("· 120 Hz").
 - **Klavye açılıp kapanırken alt panel zıplamıyor:** panel klavye kıpırdamaya başladığı anda (hatta yazı alanından çıktığınız/girdiğiniz anda) gizleniyor, klavye durunca beklemeden yerinde beliriyor; kapanışta klavyeden ayrılıp zikzak çizmesi bitti.
 - **Yapılacaklar listesi akıcı:** uzun bir listede kutucuk işaretlemek, Enter ile yeni madde açmak ve boş maddeyi silmek artık bütün not ekranını yeniden çizmiyor; yalnız değişen satır güncelleniyor.

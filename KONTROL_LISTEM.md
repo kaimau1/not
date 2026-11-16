@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Alt panel kip k — Keep gibi (oto/keep-panel, cihazda bakılmadı — 2026-11-16)**
+  Nerede: bir notta yazı alanına dokun / klavyeyi kapat (geri tuşu ve alan dışına dokunma).
+  Nasıl: açılışta panel klavyeden ÖNCE (≈0,1 sn) klavyenin duracağı yere kaymalı, klavye altından gelip oturmalı; panel hiç kaybolmamalı, klavye paneli örtmemeli. Kapanışta panel tek hamlede dibe inmeli (zikzak yok). İlk açılışta da aynı olmalı (Android 11+ yerel öngörü). Kötüyse yedek kip: `--dart-define=ALT_PANEL_KIP=c`.
+  Ayrıca 120 Hz: "· 120 Hz" artık Ayarlar en altındaki "Notlar · v…" satırında ve Güncelleme ve sürüm ekranında.
+
 - [ ] **120 Hz (oto/120hz, cihazda bakılmadı — 2026-11-16)**
   Nerede: Ayarlar → en alt, sürüm satırı.
   Nasıl: satırın sonunda "· 120 Hz" yazmalı (telefon ekran ayarı 120/144 ya da otomatik iken). Pil tasarrufunu aç, uygulamaya dön, Ayarlar'ı yeniden aç: sistemin seçtiği hız yazar (60 olabilir). İstersen Geliştirici seçenekleri → "Yenileme hızını göster" ile not listesini kaydırırken 120 kaldığına bak.

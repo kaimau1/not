@@ -87,6 +87,11 @@ Note _note(String kind) {
 }
 
 void main() {
+  // Kare kare konum matematiği (kip c'nin ve k'nin yedeğinin yolu); kip k'nin
+  // öngörülü hareketi keyboard_snap_test "kip k" ve perf S47k'da.
+  final keepMode = KeyboardSlide.mode;
+  setUpAll(() => KeyboardSlide.mode = 'c');
+  tearDownAll(() => KeyboardSlide.mode = keepMode);
   const layouts = {
     'telefon': Size(412, 915),
     'tablet yatay': Size(1280, 800),

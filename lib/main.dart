@@ -195,6 +195,7 @@ Future<void> main() async {
       ImageCacheBudget.apply,
       HardKeyboard.init,
       KeyboardInset.init,
+      KeyboardForecast.init,
     ]),
   );
   // Eski geçici dosyalar (paylaşım/dışa aktarma/tarama/ses artıkları): açılışı

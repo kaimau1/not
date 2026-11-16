@@ -2904,4 +2904,98 @@ void main() {
     expect(jumps, 0, reason: 'belirme yerinde, sıçramasız');
     await endEditor(tester);
   });
+
+  testWidgets('S47k: kip k (Keep gibi) — açılışta panel hedefe ≤ 120 ms, '
+      'sonra sabit; örtme 0, geri sıçrama 0; kapanış tek monoton hareket', (
+    tester,
+  ) async {
+    const size = Size(412, 915);
+    const nav = 48.0;
+    const kb = 300.0;
+    final keep = KeyboardSlide.mode;
+    addTearDown(() {
+      KeyboardSlide.mode = keep;
+      KeyboardForecast.reset();
+    });
+    KeyboardSlide.mode = 'k';
+    KeyboardForecast.reset();
+    await pumpEditor(
+      tester,
+      Note(
+        id: 'n',
+        type: NoteType.text,
+        title: 'Not',
+        body: List.generate(30, (i) => 'Satır $i').join('\n'),
+      ),
+    );
+    await _settleGrowth(tester);
+    final bar = find.byType(BottomAppBar);
+    double floor() => size.height - tester.getRect(bar).bottom;
+    Future<void> inset(double v) async {
+      tester.view.viewInsets = FakeViewPadding(bottom: v);
+      tester.view.padding = FakeViewPadding(
+        top: 30,
+        bottom: (nav - v).clamp(0.0, nav),
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+      tester.takeException();
+    }
+
+    Future<void> forecast(bool open) => KeyboardForecast.handle(
+      MethodCall('start', {
+        'open': open,
+        'target': open ? kb * tester.view.devicePixelRatio : 0,
+        'ms': 250,
+      }),
+    );
+    List<double> ease(double a, double b) => [
+      for (var i = 1; i <= 16; i++)
+        a + (b - a) * Curves.fastOutSlowIn.transform(i / 16),
+    ];
+
+    await tester.tap(find.textContaining('Satır 3').last);
+    await tester.pump();
+    await forecast(true);
+    var covered = 0;
+    var back = 0;
+    var arrive = -1;
+    var moveAfter = 0;
+    var last = floor();
+    final up = ease(0, kb);
+    for (var i = 0; i < up.length; i++) {
+      await inset(up[i]);
+      final f = floor();
+      if (f < max(nav, up[i]) - 0.5) covered++;
+      if (f < last - 0.5) back++;
+      if (arrive >= 0 && (f - last).abs() > 0.5) moveAfter++;
+      if (arrive < 0 && (f - kb).abs() < 0.5) arrive = i;
+      last = f;
+    }
+    for (var t = 0; t < 400; t += 16) {
+      await tester.pump(const Duration(milliseconds: 16));
+      if ((floor() - last).abs() > 0.5) moveAfter++;
+      last = floor();
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    await forecast(false);
+    var reversals = 0;
+    var reach = -1;
+    final down = ease(kb, 0);
+    for (var i = 0; i < down.length + 25; i++) {
+      await inset(down[min(i, down.length - 1)]);
+      final f = floor();
+      if (f > last + 0.5) reversals++;
+      if (reach < 0 && (f - nav).abs() < 0.5) reach = i;
+      last = f;
+    }
+    _expectBudget('S47k', {
+      'varis_ms': (arrive + 1) * 16,
+      'ortme_kare': covered,
+      'geri_sicrama': back,
+      'varis_sonra_oynama': moveAfter,
+      'kapanis_ters': reversals,
+      'kapanis_ms': (reach + 1) * 16,
+    });
+    await endEditor(tester);
+  });
 }

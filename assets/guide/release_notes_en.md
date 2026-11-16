@@ -3,6 +3,8 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 16 November 2026 {#2026-11-16}
+- **Bottom panel waits where the keyboard will stop (like Keep, but smoother):** as the keyboard starts opening, the panel glides quickly to just above where the keyboard will settle; the keyboard slides in underneath, and the panel neither jumps nor disappears. When closing, the panel drops down in one motion.
+- **"· 120 Hz" is now visible:** the active refresh rate is shown in the version row at the bottom of Settings and on the "Updates and version" screen (it used to be in a row reachable only via search).
 - **120 Hz:** the app now requests the display's high refresh rate in two independent ways, which keeps some phones (such as Xiaomi) from dropping it to 60 Hz. On a 144 Hz display 120 is chosen (battery and heat), and with battery saver on the choice is left to the phone. The active rate is shown in the version row at the bottom of Settings ("· 120 Hz").
 - **Bottom panel no longer jumps with the keyboard:** the panel hides the moment the keyboard starts moving (even as you tap into or out of a text field) and reappears in place as soon as the keyboard stops; the zigzag while closing is gone.
 - **Smoother to-do lists:** in a long list, ticking a box, adding an item with Enter and deleting an empty item no longer redraw the whole note screen; only the changed row is updated.

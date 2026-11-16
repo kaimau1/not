@@ -5,8 +5,10 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/theme/app_tokens.dart';
 
@@ -230,6 +232,78 @@ abstract final class KeyboardInset {
       context.dependOnInheritedWidgetOfExactType<_StableInset>()?.value;
 }
 
+/// Klavyenin VARACAĞI yer (kip `k`, kullanıcı 2026-11-16: "alt panoyu
+/// Keep'teki gibi yapalım; o klavye yükselirken yükseleceği konuma
+/// ışınlanıyor önceden; biz daha iyisini yapalım").
+///
+/// Android 11+ yerel köprü (`KlavyeOngoru.kt`) IME animasyonunun BAŞINDA
+/// hedef yüksekliği bildirir ([next]). Köprü yoksa (iOS, Android < 11, ilk
+/// açılış öncesi) son tam klavye yüksekliği ekran yönüne göre saklanır
+/// ([memory], SharedPreferences) ve hedef o olur; o da yoksa panel kip `c`
+/// gibi davranır.
+abstract final class KeyboardForecast {
+  static const _channel = MethodChannel('dev.kaimau.notlar/ime');
+
+  /// Son öngörü: [open] açılıyor mu, [target] mantıksal px, [seq] aynı değer
+  /// art arda gelse de dinleyici uyansın.
+  static final next = ValueNotifier<({bool open, double target, int seq})?>(
+    null,
+  );
+  static int _seq = 0;
+  static final _memory = <bool, double>{};
+  static SharedPreferences? _prefs;
+
+  static bool get _portrait {
+    final v = WidgetsBinding.instance.platformDispatcher.views.first;
+    return v.physicalSize.height >= v.physicalSize.width;
+  }
+
+  static String _key(bool portrait) => portrait ? 'kb_h_portrait' : 'kb_h_land';
+
+  /// Bu ekran yönünde son tam klavye yüksekliği (yoksa 0).
+  static double get memory => _memory[_portrait] ?? 0;
+
+  static void remember(double h) {
+    final p = _portrait;
+    if (h <= 0 || _memory[p] == h) return;
+    _memory[p] = h;
+    unawaited(_prefs?.setDouble(_key(p), h));
+  }
+
+  /// Açılışta bir kez (ilk kareden sonra).
+  static Future<void> init() async {
+    if (!kIsWeb) _channel.setMethodCallHandler(handle);
+    try {
+      final prefs = _prefs = await SharedPreferences.getInstance();
+      for (final p in [true, false]) {
+        final h = prefs.getDouble(_key(p));
+        if (h != null) _memory[p] ??= h;
+      }
+    } catch (_) {
+      // Depo yoksa yalnız süreç içi bellek.
+    }
+  }
+
+  /// Yerel köprünün çağrısı (testte doğrudan).
+  @visibleForTesting
+  static Future<void> handle(MethodCall call) async {
+    if (call.method != 'start') return;
+    final args = call.arguments as Map;
+    final ratio =
+        WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+    final open = args['open'] == true;
+    final target = (args['target'] as num? ?? 0) / ratio;
+    if (open && target > 0) remember(target);
+    next.value = (open: open, target: target, seq: ++_seq);
+  }
+
+  @visibleForTesting
+  static void reset() {
+    _memory.clear();
+    next.value = null;
+  }
+}
+
 /// Klavye boşluğunu İKİ AYRI yoldan veren sarmalayıcı: gövdeye KARARLI
 /// (yerleşim için), alt çubuğa CANLI (yalnız boyama için).
 ///
@@ -422,9 +496,15 @@ class KeyboardSlide extends StatefulWidget {
   ///   bedeli klavyenin biraz gerisinden gelmek.
   /// * `c` — klavye hareket ederken panel hızla solar, klavye oturunca
   ///   yerinde belirir.
+  /// * `k` (varsayılan, 2026-11-16, "Keep gibi, daha iyisi") — açılış
+  ///   başlarken panel klavyenin VARACAĞI yerin üstüne kısa bir eğriyle
+  ///   ([AppMotion.instant], klavyeden belirgin hızlı) gider ve orada durur;
+  ///   klavye altından gelip oturur, paneli hiç örtmez. Kapanış başlayınca
+  ///   panel aynı kısa eğriyle dibe iner (klavyeyi kare kare izlemez —
+  ///   videodaki zikzak oydu). Hedef [KeyboardForecast]'tan; bilinmiyorsa `c`.
   static String mode = const String.fromEnvironment(
     'ALT_PANEL_KIP',
-    defaultValue: 'c',
+    defaultValue: 'k',
   );
 
   /// `b` kipinde kare başına kalan yolun kapatılan oranı.
@@ -480,6 +560,83 @@ class _KeyboardSlideState extends State<KeyboardSlide>
   double _lastLive = 0;
   Timer? _timer;
 
+  /// `k`: panelin tabanı (ekranın dibinden uzaklık, mantıksal px). Hedefe
+  /// kısa eğriyle gider; kareleri HİÇBİR ŞEY kurmaz — [_KeepShift] yalnız
+  /// yeniden boyar (S45 kurulum mandalı).
+  late final AnimationController _pos;
+  double? _goal;
+  bool _closingK = false;
+
+  /// `k`: hedef bilinmiyor (köprü ve bellek yok) → bu çevrimde kip `c`.
+  bool _fallback = false;
+  double _cycleMax = 0;
+  double _lastLiveK = 0;
+  double _lastInsetK = 0;
+  double _nav = 0;
+  void _goTo(double target) {
+    if (_goal == target) return;
+    final first = _goal == null;
+    _goal = target;
+    if (first) {
+      _pos.value = target;
+    } else {
+      _pos.animateTo(
+        target,
+        duration: AppMotion.instant,
+        curve: AppMotion.standard,
+      );
+    }
+  }
+
+  void _onForecast() {
+    final f = KeyboardForecast.next.value;
+    if (f == null || !mounted || KeyboardSlide.mode != 'k') return;
+    _closingK = !f.open;
+    if (f.open) _fallback = false;
+    _goTo(f.open ? math.max(_nav, f.target) : _nav);
+    setState(() {});
+  }
+
+  /// `k`: canlı değer değişti — açılış/kapanış başlangıcını köprüsüz de
+  /// yakala, çevrimin tam yüksekliğini belleğe yaz.
+  void _trackK(double live, double inset, double nav) {
+    if (live != _lastLiveK) {
+      final prev = _lastLiveK;
+      _lastLiveK = live;
+      if (live <= 0) {
+        if (_cycleMax > 0) KeyboardForecast.remember(_cycleMax);
+        _cycleMax = 0;
+        _closingK = false;
+        _fallback = false;
+        _goTo(nav);
+      } else {
+        if (prev <= 0 && !_closingK && (_goal ?? 0) <= nav + 0.5) {
+          // Açılış başladı, öngörü gelmedi: bellek ya da kip c.
+          final m = KeyboardForecast.memory;
+          if (m > 0) {
+            _goTo(math.max(nav, m));
+          } else {
+            _fallback = true;
+          }
+        }
+        _cycleMax = math.max(_cycleMax, live);
+        if (!_closingK && live < prev && live < _cycleMax * 0.85) {
+          _closingK = true;
+          _goTo(nav);
+        }
+      }
+    }
+    // Klavye oturdu: gerçek yerine (öngörü yanılmışsa kısa düzeltme). Yalnız
+    // kararlı boşluk DEĞİŞİNCE — yoksa canlı değerden önce gelen kapanış
+    // öngörüsü (boşluk hâlâ eski) geri alınırdı.
+    if (inset != _lastInsetK && inset > 0) {
+      _closingK = false;
+      _fallback = false;
+      _goTo(math.max(nav, inset));
+    }
+    _lastInsetK = inset;
+  }
+
   static bool get _softKeyboard =>
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
@@ -488,6 +645,8 @@ class _KeyboardSlideState extends State<KeyboardSlide>
   @override
   void initState() {
     super.initState();
+    _pos = AnimationController.unbounded(vsync: this);
+    KeyboardForecast.next.addListener(_onForecast);
     if (KeyboardSlide.mode == 'c' && _softKeyboard) {
       FocusManager.instance.addListener(_onFocus);
     }
@@ -518,6 +677,8 @@ class _KeyboardSlideState extends State<KeyboardSlide>
   @override
   void dispose() {
     FocusManager.instance.removeListener(_onFocus);
+    KeyboardForecast.next.removeListener(_onForecast);
+    _pos.dispose();
     _timer?.cancel();
     _ticker.dispose();
     _fade.dispose();
@@ -588,13 +749,23 @@ class _KeyboardSlideState extends State<KeyboardSlide>
     // Çubuğun İÇERİĞİNİN ekranın dibinden olması gereken uzaklığı: klavye
     // gezinme çubuğundan alçaksa (kapalı ya da açılışın ilk kareleri)
     // gezinme çubuğunun üstü, değilse klavyenin üstü.
-    final floor = _smooth(math.max(nav, live));
+    final keep = KeyboardSlide.mode == 'k';
+    final fades = keep || KeyboardSlide.mode == 'c';
+    var floor = 0.0;
+    if (keep) {
+      _nav = nav;
+      if (_goal == null) _goTo(nav);
+      _trackK(live, inset, nav);
+    } else {
+      floor = _smooth(math.max(nav, live));
+    }
     // `c`: klavye hareket ederken (canlı > 0 ama kararlı boşluk henüz
     // oturmadı) panel görünmez. Ağaç şekli kipten bağımsız (Opacity hep var).
     final moving = live > 0 && inset == 0;
-    if (KeyboardSlide.mode == 'c') _trackMotion(live, moving);
+    if (fades) _trackMotion(live, moving);
     final hide =
-        KeyboardSlide.mode == 'c' && (_expect || (moving && !_quiet));
+        (KeyboardSlide.mode == 'c' && (_expect || (moving && !_quiet))) ||
+        (keep && _fallback && moving && !_quiet);
     // Pozitif = AŞAĞI. Yerleşimdeki yer (boşluk + pay) ile olması gereken
     // yer arasındaki fark; boşluk oturunca kendiliğinden sıfırlanır — oturma
     // anı ekranda görünmez.
@@ -609,7 +780,7 @@ class _KeyboardSlideState extends State<KeyboardSlide>
     // Solma sarmalayıcısı YALNIZ `c` kipinde (kip derlemede sabit, ağaç
     // şekli çalışırken değişmez): a/b'de klavye karesi başına +1 kurulum
     // olurdu (S17 mandalı).
-    if (KeyboardSlide.mode == 'c') {
+    if (fades) {
       if (hide != _hidden) {
         _hidden = hide;
         if (hide) {
@@ -626,12 +797,129 @@ class _KeyboardSlideState extends State<KeyboardSlide>
       }
       panel = FadeTransition(opacity: _fade, child: panel);
     }
+    if (keep) {
+      return RepaintBoundary(
+        child: _KeepShift(
+          pos: _pos,
+          base: inset + pad,
+          nav: nav,
+          live: math.max(nav, live),
+          kind: _fallback
+              ? _KeepKind.follow
+              : _closingK
+              ? _KeepKind.closing
+              : _KeepKind.open,
+          child: panel,
+        ),
+      );
+    }
     return RepaintBoundary(
       child: Transform.translate(
         offset: Offset(0, inset + pad - floor),
         child: panel,
       ),
     );
+  }
+}
+
+/// Kip `k`'de panelin tabanı nereden: [open] = öngörü ile canlı değerin
+/// büyüğü (klavye paneli asla örtmez), [closing] = yalnız kısa eğri (klavyeyi
+/// izlemez), [follow] = canlı değer (hedef bilinmiyor, kip c yedeği).
+enum _KeepKind { open, closing, follow }
+
+/// Kip `k` ötelemesi BOYAMA katmanında: [pos] her karede yalnız
+/// `markNeedsPaint` — widget kurulmaz, yerleşim yok.
+class _KeepShift extends SingleChildRenderObjectWidget {
+  const _KeepShift({
+    required this.pos,
+    required this.base,
+    required this.nav,
+    required this.live,
+    required this.kind,
+    super.child,
+  });
+
+  final Animation<double> pos;
+  final double base;
+  final double nav;
+  final double live;
+  final _KeepKind kind;
+
+  @override
+  _RenderKeepShift createRenderObject(BuildContext context) =>
+      _RenderKeepShift(pos, base, nav, live, kind);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderKeepShift r) => r
+    ..base = base
+    ..nav = nav
+    ..live = live
+    ..kind = kind;
+}
+
+class _RenderKeepShift extends RenderProxyBox {
+  _RenderKeepShift(this._pos, this._base, this._nav, this._live, this._kind);
+
+  final Animation<double> _pos;
+  double _base;
+  double _nav;
+  double _live;
+  _KeepKind _kind;
+
+  set base(double v) => _set(_base != v, () => _base = v);
+  set nav(double v) => _set(_nav != v, () => _nav = v);
+  set live(double v) => _set(_live != v, () => _live = v);
+  set kind(_KeepKind v) => _set(_kind != v, () => _kind = v);
+
+  void _set(bool changed, VoidCallback apply) {
+    if (!changed) return;
+    apply();
+    markNeedsPaint();
+  }
+
+  /// Pozitif = AŞAĞI (bkz. [KeyboardSlide] Transform yolu).
+  double get _dy {
+    final pos = _pos.value;
+    final floor = switch (_kind) {
+      _KeepKind.follow => _live,
+      _KeepKind.closing => math.max(_nav, pos),
+      _KeepKind.open => math.max(pos, _live),
+    };
+    return _base - floor;
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _pos.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _pos.removeListener(markNeedsPaint);
+    super.detach();
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final c = child;
+    if (c != null) context.paintChild(c, offset.translate(0, _dy));
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final c = child;
+    if (c == null) return false;
+    return result.addWithPaintOffset(
+      offset: Offset(0, _dy),
+      position: position,
+      hitTest: (result, p) => c.hitTest(result, position: p),
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.translateByDouble(0, _dy, 0, 1);
   }
 }
 
