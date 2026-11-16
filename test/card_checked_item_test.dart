@@ -23,12 +23,11 @@ class _Repo extends NotesRepository {
       writes.add(fields);
 }
 
-/// F60.S14: ana ekran kartında işaretli madde tek dokunuşla geri alınmaz;
-/// işaretsiz madde işaretlenmeye devam eder.
+/// Kullanıcı bulgusu 2026-11-16 ("dashboard'da iken madde tiklenebiliyor, bu
+/// olmamalı"): ana ekran kartında kutucuklar SALT GÖRÜNÜM. Boş ya da işaretli
+/// kutuya dokunmak notu değiştirmez; kart dokunuşu gibi notu açar.
 void main() {
-  testWidgets('işaretli kutu işareti kaldırmaz, boş kutu işaretler', (
-    tester,
-  ) async {
+  testWidgets('kart kutucuğu notu değiştirmez, notu açar', (tester) async {
     // İşaretli madde kartta görünsün (F74.4: varsayılan tek satır özet).
     SharedPreferences.setMockInitialValues({'card_show_checked': true});
     final prefs = await SharedPreferences.getInstance();
@@ -42,41 +41,46 @@ void main() {
         NoteItem(id: 'b', text: 'bekliyor'),
       ],
     );
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-          currentUidProvider.overrideWithValue('ben'),
-          notesRepositoryProvider.overrideWithValue(repo),
-          calendarRepositoryProvider.overrideWithValue(null),
-        ],
-        child: MaterialApp.router(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('tr'),
-          routerConfig: GoRouter(
-            routes: [
-              GoRoute(
-                path: '/',
-                builder: (_, _) => const Scaffold(
-                  body: SizedBox(width: 300, child: NoteCard(note: note)),
+    for (final icon in [Icons.check_box_outline_blank, Icons.check_box]) {
+      // Her tur taze ağaç (yeni anahtar): rota yığını sıfırlansın.
+      await tester.pumpWidget(
+        ProviderScope(
+          key: ValueKey(icon),
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            currentUidProvider.overrideWithValue('ben'),
+            notesRepositoryProvider.overrideWithValue(repo),
+            calendarRepositoryProvider.overrideWithValue(null),
+          ],
+          child: MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('tr'),
+            routerConfig: GoRouter(
+              routes: [
+                GoRoute(
+                  path: '/',
+                  builder: (_, _) => const Scaffold(
+                    body: SizedBox(width: 300, child: NoteCard(note: note)),
+                  ),
                 ),
-              ),
-            ],
+                GoRoute(
+                  path: '/note/:id',
+                  builder: (_, s) => Text('editör ${s.pathParameters['id']}'),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pump();
+      );
+      await tester.pump();
 
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank));
-    await tester.pump();
-    expect(repo.writes, hasLength(1), reason: 'boş kutu işaretlenir');
-
-    repo.writes.clear();
-    await tester.tap(find.byIcon(Icons.check_box));
-    await tester.pump();
-    expect(repo.writes, isEmpty, reason: 'işaretli kutu geri alınmaz');
+      await tester.tap(find.byIcon(icon));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(repo.writes, isEmpty, reason: '$icon notu değiştirmez');
+      expect(find.text('editör n'), findsOneWidget, reason: '$icon notu açar');
+    }
     await tester.pump(const Duration(seconds: 2));
   });
 }

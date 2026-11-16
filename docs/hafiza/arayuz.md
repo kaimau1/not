@@ -253,6 +253,9 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Düzen şeridi başlığı KÖK NEDEN: `Row` içinde `Flexible(başlık)` + `Spacer` boş alanı yarı yarıya bölüşür → başlık yarı paya sıkışır. Başlık+hap `Expanded`'da; sığmazsa `customizeModeTitleShort`. Dar metin testi kutu yazıyla (Ahem, 1 em/harf) anlamsız → SDK Roboto'yu `FontLoader` ile yükle (tur gibi).
 - "+" panelinin ayrı satır düzenleyicisi (`_QuickAddArranger`) KALKTI: "Düzenle" → `showCustomizeHub(addPanel)`. Kurallar `_AddPanelBoard`'da: son görünür kilidi (uyarı `quickAddKeepOne`), grup içi sıra (grup dışına bırakma grubun ucuna), Varsayılana dön, favori şablonlar panoda.
 
+## 2026-11-16 — Kart kutucukları salt görünüm (oto/pano-tik-levha)
+- Kullanıcı bulgusu: "dashboard'da iken madde tiklenebiliyor, bu olmamalı". Eski D6 "karttan işaretleme" (KULLANICI_DENEYIMI_PLANI B2 / TUTARLILIK_PLANI B11 — plan önerisiydi, alıntılı kullanıcı isteği değil) KALKTI: `toggleCardItem` + `_CardItemRow.onToggle` silindi, kutucuğa dokunuş kartın InkWell'ine düşer → not açılır. Bekçi `test/card_checked_item_test.dart`. Geri getirme.
+
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 
 Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.
