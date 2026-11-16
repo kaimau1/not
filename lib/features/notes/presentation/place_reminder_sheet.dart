@@ -28,6 +28,10 @@ Future<void> showPlaceReminderSheet(
 ) async {
   await ref.read(placeRemindersProvider.notifier).refresh();
   if (!context.mounted) return;
+  // TEK ÖRNEK (S52, şablon kasmasının kalıbı): builder klavye payına bağlı,
+  // klavyenin her karesinde yeniden çağrılır; içerik dışarıda bir kez kurulur
+  // ki kare başına yalnız dolgu kurulsun.
+  final sheet = _PlaceSheet(note: note);
   await showAppSheet<void>(
     context: context,
     showDragHandle: true,
@@ -36,7 +40,7 @@ Future<void> showPlaceReminderSheet(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
       ),
-      child: _PlaceSheet(note: note),
+      child: sheet,
     ),
   );
 }

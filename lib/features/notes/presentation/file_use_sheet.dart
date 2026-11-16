@@ -182,6 +182,16 @@ Future<FileUseChoice?> showFileUseSheet(
   if (uses.length == 1) {
     return Future.value((use: uses.single, title: ''));
   }
+  // TEK ÖRNEK (S52, şablon kasmasının kalıbı): builder klavye payına bağlı,
+  // klavyenin her karesinde yeniden çağrılır; içerik dışarıda bir kez kurulur
+  // ki kare başına yalnız dolgu kurulsun.
+  final sheet = _FileUseSheet(
+    kind: kind,
+    names: names,
+    uses: uses,
+    preferred: preferred,
+    inNote: inNote,
+  );
   return showAppSheet<FileUseChoice>(
     context: context,
     isScrollControlled: true,
@@ -191,13 +201,7 @@ Future<FileUseChoice?> showFileUseSheet(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
       ),
-      child: _FileUseSheet(
-        kind: kind,
-        names: names,
-        uses: uses,
-        preferred: preferred,
-        inNote: inNote,
-      ),
+      child: sheet,
     ),
   );
 }

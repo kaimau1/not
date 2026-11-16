@@ -83,6 +83,10 @@ Future<CaptureChoice?> showCaptureModeSheet(
   if (preset != null) {
     return Future.value(CaptureChoice(mode: preset, noteTitle: ''));
   }
+  // TEK ÖRNEK (S52, şablon kasmasının kalıbı): builder klavye payına bağlı,
+  // klavyenin her karesinde yeniden çağrılır; içerik dışarıda bir kez kurulur
+  // ki kare başına yalnız dolgu kurulsun.
+  final sheet = _CaptureModeSheet(title: title);
   return showAppSheet<CaptureChoice>(
     context: context,
     isScrollControlled: true,
@@ -92,7 +96,7 @@ Future<CaptureChoice?> showCaptureModeSheet(
       padding: EdgeInsets.only(
         bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
       ),
-      child: _CaptureModeSheet(title: title),
+      child: sheet,
     ),
   ).then((choice) {
     // Yalnız ilk seçim varsayılan olur; "Her seferinde sor" ('ask') kalır.
