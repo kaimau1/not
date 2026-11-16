@@ -1924,8 +1924,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.orderIndex == b.orderIndex &&
       a.deletedAt == b.deletedAt &&
       a.archivedAt == b.archivedAt &&
-      a.reminderAt == b.reminderAt &&
-      a.expiresAt == b.expiresAt &&
+      // Zaman çipleri (hatırlatıcı + ZAMANLI NOT süresi) tek terim.
+      (a.reminderAt, a.expiresAt) == (b.reminderAt, b.expiresAt) &&
       // Tuval ipucu ve gövde alanı gövdenin BOŞLUĞUNA bakıyor; doluluk
       // değişiyorsa çizim de değişmeli.
       isBlankText(a.body) == isBlankText(b.body);
