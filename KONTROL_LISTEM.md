@@ -20,6 +20,10 @@ oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
   Nerede: not aç → başlıktaki "+" → "Şu zamanda arşivle".
   Nasıl: "Tarih ve saat seç" ile 2-3 dakika sonrasını kur; kartta kum saati + "1 dk/2 dk", notta çip görünür. Uygulamayı arkaya al, süre geçince öne getir.
   Beklenen: not ana ekrandan kalkar, Arşiv'de durur, geri alınınca yeniden arşivlenmez. Uygulama kapalıyken süre dolarsa açılışta arşivlenir (arka plan işi yok).
+- [ ] **Alt panel kip k — Keep gibi (oto/keep-panel, cihazda bakılmadı — 2026-11-16)**
+  Nerede: bir notta yazı alanına dokun / klavyeyi kapat (geri tuşu ve alan dışına dokunma).
+  Nasıl: açılışta panel klavyeden ÖNCE (≈0,1 sn) klavyenin duracağı yere kaymalı, klavye altından gelip oturmalı; panel hiç kaybolmamalı, klavye paneli örtmemeli. Kapanışta panel tek hamlede dibe inmeli (zikzak yok). İlk açılışta da aynı olmalı (Android 11+ yerel öngörü). Kötüyse yedek kip: `--dart-define=ALT_PANEL_KIP=c`.
+  Ayrıca 120 Hz: "· 120 Hz" artık Ayarlar en altındaki "Notlar · v…" satırında ve Güncelleme ve sürüm ekranında.
 
 - [ ] **120 Hz (oto/120hz, cihazda bakılmadı — 2026-11-16)**
   Nerede: Ayarlar → en alt, sürüm satırı.

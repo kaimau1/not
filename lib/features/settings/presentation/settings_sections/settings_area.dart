@@ -645,8 +645,9 @@ class _VersionLineState extends State<_VersionLine> {
     super.initState();
     unawaited(
       PackageInfo.fromPlatform()
-          .then((i) {
-            if (mounted) setState(() => _version = i.version);
+          .then((i) async {
+            final hz = await DisplayRate.hzSuffix();
+            if (mounted) setState(() => _version = '${i.version}$hz');
           })
           .catchError((Object _) {}),
     );
@@ -724,8 +725,9 @@ class _VersionFooterState extends State<_VersionFooter>
     unawaited(_readOverlay());
     unawaited(
       PackageInfo.fromPlatform()
-          .then((i) {
-            if (mounted) setState(() => _version = i.version);
+          .then((i) async {
+            final hz = await DisplayRate.hzSuffix();
+            if (mounted) setState(() => _version = '${i.version}$hz');
           })
           .catchError((Object _) {}),
     );

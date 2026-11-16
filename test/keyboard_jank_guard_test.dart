@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/widgets/keyboard_snap.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -215,6 +216,11 @@ Future<void> _keyboardScene(
 /// yavaşlık"). A/B (11-06 tabanı → 11-09): yazarken UI işi ×3,3, klavye
 /// aç/kapa +%65. İki kök neden; ikisi de burada kilitli.
 void main() {
+  // Kare kare konum matematiği (kip c'nin ve k'nin yedeğinin yolu); kip k'nin
+  // öngörülü hareketi keyboard_snap_test "kip k" ve perf S47k'da.
+  final keepMode = KeyboardSlide.mode;
+  setUpAll(() => KeyboardSlide.mode = 'c');
+  tearDownAll(() => KeyboardSlide.mode = keepMode);
   // F60.S5 (kullanıcı 2026-11-11: "klavye açılırken alt paneldeki titreme
   // kasmayı kökünden çöz, tekrar yaşanmayacak şekilde"). İki ölçü:
   // TİTREME = alt çubuğun alt kenarı her karede klavyenin üst kenarında değil
