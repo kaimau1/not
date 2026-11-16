@@ -71,60 +71,59 @@ void main() {
     expect(tester.getRect(find.text('Sil')).center.dy, greaterThan(pin.top));
   });
 
-  testWidgets('"+" paneli tek panel: Metin/Liste altta, seçenekler tek dokunuş', (
-    tester,
-  ) async {
-    final calls = <String>[];
-    await tester.pumpWidget(host(_FabHost(calls)));
+  testWidgets(
+    '"+" paneli tek panel: Metin/Liste altta, seçenekler tek dokunuş',
+    (tester) async {
+      final calls = <String>[];
+      await tester.pumpWidget(host(_FabHost(calls)));
 
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
 
-    final fab = tester.getRect(find.byType(FloatingActionButton).last);
-    final text = tester.getRect(find.text('Metin notu'));
-    final list = tester.getRect(find.text('Liste'));
-    // Birincil ikili yan yana ve PANELİN EN ALTINDA (FAB'a en yakın).
-    expect(text.center.dy, closeTo(list.center.dy, 1));
-    expect(text.center.dx, lessThan(list.center.dx));
-    expect(fab.top - text.bottom, lessThan(60));
-    // Ana ekranda sesli not menüde yok (tek mikrofon, F3.1).
-    expect(find.text('AI sesli not'), findsNothing);
-    // Gruplar başlıklı; başparmaktan yukarı Ekle levhasıyla aynı sıra: Kalem,
-    // Kamera, Dosya, Şablon. Sıralı liste birincil satırda.
-    final pen = tester.getRect(find.byKey(const ValueKey('quick-section-pen')));
-    final camera = tester.getRect(
-      find.byKey(const ValueKey('quick-section-camera')),
-    );
-    final files = tester.getRect(
-      find.byKey(const ValueKey('quick-section-files')),
-    );
-    final template = tester.getRect(
-      find.byKey(const ValueKey('quick-section-template')),
-    );
-    expect(pen.center.dy, lessThan(text.center.dy));
-    expect(camera.center.dy, lessThan(pen.center.dy));
-    expect(files.center.dy, lessThan(camera.center.dy));
-    expect(template.center.dy, lessThan(files.center.dy));
-    expect(
-      tester.getRect(find.text('Sıralı liste')).center.dy,
-      closeTo(text.center.dy, 1),
-    );
-    // Seçenekler PANELDE — kapı levhası yok, tek dokunuşla çalışır.
-    expect(find.text('Dosya ekle'), findsOneWidget);
-    expect(find.text('YouTube videosu'), findsOneWidget);
+      final fab = tester.getRect(find.byType(FloatingActionButton).last);
+      final text = tester.getRect(find.text('Metin notu'));
+      final list = tester.getRect(find.text('Liste'));
+      // Birincil ikili yan yana ve PANELİN EN ALTINDA (FAB'a en yakın).
+      expect(text.center.dy, closeTo(list.center.dy, 1));
+      expect(text.center.dx, lessThan(list.center.dx));
+      expect(fab.top - text.bottom, lessThan(60));
+      // Ana ekranda sesli not menüde yok (tek mikrofon, F3.1).
+      expect(find.text('AI sesli not'), findsNothing);
+      // Gruplar başlıklı; başparmaktan yukarı: Kamera, Şablon. Kalem ve Dosya
+      // karoları varsayılan gizli (kullanıcı isteği 2026-11-16) — bölümleri
+      // boş kalınca hiç çizilmez. Sıralı liste birincil satırda.
+      expect(find.byKey(const ValueKey('quick-section-pen')), findsNothing);
+      expect(find.byKey(const ValueKey('quick-section-files')), findsNothing);
+      final camera = tester.getRect(
+        find.byKey(const ValueKey('quick-section-camera')),
+      );
+      final template = tester.getRect(
+        find.byKey(const ValueKey('quick-section-template')),
+      );
+      expect(camera.center.dy, lessThan(text.center.dy));
+      expect(template.center.dy, lessThan(camera.center.dy));
+      expect(
+        tester.getRect(find.text('Sıralı liste')).center.dy,
+        closeTo(text.center.dy, 1),
+      );
+      // Seçenekler PANELDE — kapı levhası yok, tek dokunuşla çalışır.
+      expect(find.text('Akıllı liste'), findsOneWidget);
+      expect(find.text('Dosya ekle'), findsNothing);
+      expect(find.text('YouTube videosu'), findsNothing);
 
-    await tester.tap(find.text('YouTube videosu'));
-    await tester.pumpAndSettle();
-    expect(find.text('Metin notu'), findsNothing, reason: 'panel kapanır');
-    expect(calls, ['youtube']);
+      await tester.tap(find.text('Akıllı liste'));
+      await tester.pumpAndSettle();
+      expect(find.text('Metin notu'), findsNothing, reason: 'panel kapanır');
+      expect(calls, ['smartlist']);
 
-    // Metin notu tek dokunuş.
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Metin notu'));
-    await tester.pumpAndSettle();
-    expect(calls, ['youtube', 'text']);
-  });
+      // Metin notu tek dokunuş.
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Metin notu'));
+      await tester.pumpAndSettle();
+      expect(calls, ['smartlist', 'text']);
+    },
+  );
 }
 
 class _FabHost extends ConsumerStatefulWidget {
@@ -154,7 +153,7 @@ class _FabHostState extends ConsumerState<_FabHost>
   Future<void> createNote(NoteType type) async => widget.calls.add(type.name);
 
   @override
-  Future<void> createYouTubeNote() async => widget.calls.add('youtube');
+  Future<void> createSmartList() async => widget.calls.add('smartlist');
 
   @override
   Widget build(BuildContext context) => Scaffold(

@@ -132,14 +132,20 @@ List<AddEntry> addCatalog(
     attach: web ? null : 'video',
     info: l10n.videoLocalOnly,
   );
+  // TARA = BELGE + QR (kullanıcı isteği 2026-11-16: "belge tara ve QR
+  // birleşsin, oto algılasın"): "+" menüsünde tek karo; QR kendiliğinden
+  // tanınır ama belgeyi ezmez (bkz. `QrScanScreen.document`). Not içindeki
+  // Ekle levhası iki ayrı satırı korur. Ayrı QR karosu varsayılan gizli
+  // ([UiItem.optIn]).
+  final merged = DocumentScan.available && qrScanSupported;
   if (DocumentScan.available) {
     row(
       AddGroup.camera,
       Icons.document_scanner_outlined,
-      l10n.newScanNote,
+      inNote || !merged ? l10n.newScanNote : l10n.scanAny,
       quick: 'scan',
       attach: 'scan',
-      info: l10n.scanDocumentSubtitle,
+      info: inNote || !merged ? l10n.scanDocumentSubtitle : l10n.scanAnyInfo,
     );
   }
   if (qrScanSupported) {
@@ -181,6 +187,16 @@ List<AddEntry> addCatalog(
     AppIcons.voiceRecord,
     l10n.recordAudio,
     attach: web ? null : 'audio',
+  );
+  // AKILLI LİSTE (kullanıcı isteği 2026-11-16: "otomatik tek tip şablon;
+  // kişinin söylediklerine göre türü belirlensin, gruplansın"): yeni tek tip
+  // sistem; eski şablonlar ayrı adla ("Hazır şablonlar") yanında durur.
+  row(
+    AddGroup.template,
+    Icons.auto_awesome_outlined,
+    l10n.smartList,
+    quick: 'smartlist',
+    info: l10n.smartListInfo,
   );
   row(
     AddGroup.template,

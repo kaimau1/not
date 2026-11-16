@@ -11,12 +11,14 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/menu_layout.dart';
 import '../../../core/personalize.dart';
 import '../../../core/widgets/customizable.dart';
+import '../data/document_scan.dart';
 import '../data/user_templates.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import '../../settings/presentation/customize_hub.dart'
     show CustomizeSurface, showCustomizeHub;
 import 'add_catalog.dart';
+import 'qr_scan_screen.dart' show qrScanSupported;
 import 'quick_add_actions.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../app/theme/app_tokens.dart';
@@ -213,7 +215,10 @@ class _QuickAddFabState extends State<QuickAddFab> {
       'voice': widget.onVoiceCapture,
       'photo': a.createPhotoNote,
       'video': a.createVideoNote,
-      'scan': a.createScanNote,
+      // Belge + QR tek karoda (bkz. addCatalog); yalnız biri varsa eski yol.
+      'scan': DocumentScan.available && qrScanSupported
+          ? a.createScanOrQrNote
+          : a.createScanNote,
       'qr': a.createQrNote,
       'file': a.createFromFile,
       'youtube': a.createYouTubeNote,
@@ -222,6 +227,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
       'draw': a.createHandwritingNote,
       'drawing': a.createDrawingNote,
       'template': a.createFromTemplate,
+      'smartlist': a.createSmartList,
       'archive': a.createNotebook,
     };
     // FAVORİ ŞABLONLAR (kullanıcı isteği 2026-11-05: "favori şablonlar ekle

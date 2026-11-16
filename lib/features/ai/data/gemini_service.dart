@@ -17,6 +17,7 @@ import '../../settings/settings_providers.dart';
 import 'ai_gate.dart';
 import 'ai_provider.dart';
 import 'api_key_store.dart';
+import '../../notes/domain/quick_drop.dart' show parseAiDropAnswer;
 import 'firebase_ai_client.dart';
 import 'model_catalog.dart';
 import 'pcm_wav.dart';
@@ -1495,6 +1496,37 @@ class GeminiService {
       },
     ]);
     return parseIndexList(raw, catalog.length);
+  }
+
+  /// **HIZLI EKLE HEDEFİ** (kullanıcı isteği 2026-11-16: "sonunda 'dosyalara
+  /// ekle' diyebilir; bulamazsak AI'ya gönderelim, en hızlı basit model
+  /// tarasın, doğru nota eklesin"). Yerel eşleşme ([parseDropTarget]) hedefi
+  /// bulamadığında ya da iki not başa baş kaldığında çağrılır. Yalnız not
+  /// BAŞLIKLARI ve kullanıcının cümlesi gider — not içeriği gitmez. Kısa iş
+  /// modeli (hızlı). Yanıt "sıra | içerik" ya da "yok" (bkz.
+  /// [parseAiDropAnswer]).
+  Future<({int index, String content})?> pickDropTarget(
+    String text,
+    List<String> titles,
+  ) async {
+    final lines = [
+      for (var i = 0; i < titles.length; i++) '$i: ${titles[i]}',
+    ].join('\n');
+    final raw = await _generate(task: AiTask.short, [
+      {
+        'text':
+            'Bir not uygulamasında kullanıcı bir şey söyledi ve bunun hangi '
+            'nota ekleneceğini cümlenin SONUNDA söylemiş olabilir ("… '
+            'dosyalara ekle"). Aşağıdaki not başlıklarından kullanıcının '
+            'adlandırdığını seç (ekler, iyelik ve yazım farkı olabilir: '
+            '"dosyalara" → "Dosyalarımdaki hatalar"). Notu adlandırmadıysa '
+            'ya da hiçbiri uymuyorsa yalnız "yok" yaz. Yanıtı YALNIZCA şu '
+            'biçimde ver, açıklama ekleme: <sıra> | <nota eklenecek metin, '
+            'not adı ve "ekle" komutu çıkarılmış>'
+            '\n\nKullanıcının cümlesi: "$text"\n\n---\n$lines',
+      },
+    ]);
+    return parseAiDropAnswer(raw, titles.length);
   }
 
   /// "3, 12" ya da "[3, 12]" → sıralar (Gemma JSON kipini desteklemez; düz

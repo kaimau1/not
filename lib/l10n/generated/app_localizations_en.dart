@@ -4013,7 +4013,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start with a ready layout; you can change everything later.';
 
   @override
-  String get fromTemplate => 'From template';
+  String get fromTemplate => 'Ready-made templates';
 
   @override
   String get tplShoppingName => 'Shopping list';
@@ -8776,4 +8776,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String noteExpiryLeftMinutes(int n) {
     return '${n}m';
   }
+
+  @override
+  String get smartList => 'Smart list';
+
+  @override
+  String get smartListInfo =>
+      'Type or speak; it works out shopping or packing and groups the items';
+
+  @override
+  String get smartListGeneric => 'List';
+
+  @override
+  String get smartListPacking => 'Packing list';
+
+  @override
+  String get scanAny => 'Scan';
+
+  @override
+  String get scanAnyInfo =>
+      'Document or QR code — QR codes are picked up automatically';
+
+  @override
+  String get scanAnyHint =>
+      'QR codes are picked up automatically. For a document, tap “Scan a document”.';
+
+  @override
+  String get scanQrFound => 'QR code found';
+
+  @override
+  String get scanUseQr => 'Use QR code';
+
+  @override
+  String get listToNumbered => 'Make numbered';
+
+  @override
+  String get listToChecklist => 'Make checklist';
+
+  @override
+  String get quickDropWhich => 'Which note should this go in?';
+
+  @override
+  String get quickDropAsking => 'Working out which note…';
+
+  @override
+  String quickDropAddingTo(String title) {
+    return 'Adding to “$title”…';
+  }
+
+  @override
+  String get quickDropWait => 'Wait';
+
+  @override
+  String get quickDropAiToggle => 'Ask AI when unsure';
 }

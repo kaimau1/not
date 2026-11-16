@@ -2240,6 +2240,11 @@ void main() {
           tester.view.viewInsets = FakeViewPadding(bottom: b);
           await tester.pump(const Duration(milliseconds: 16));
         }
+        // Klavye durdu: gövde kararlı boşluğa TEK seferde oturur (2026-11-16,
+        // KeyboardSnap). Oturma klavyenin maliyetidir — yazma ölçümüne
+        // taşmasın.
+        await tester.pump(const Duration(milliseconds: 200));
+        await tester.pump();
       });
     } finally {
       debugPrintLayouts = false;

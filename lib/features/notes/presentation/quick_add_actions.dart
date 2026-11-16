@@ -36,6 +36,7 @@ import 'image_prepare_screen.dart';
 import 'notes_providers.dart';
 import 'qr_scan_screen.dart';
 import 'quick_drop_sheet.dart';
+import 'quick_list_screen.dart' show showQuickList;
 import 'scan_review_screen.dart';
 import '../../../core/friendly_error.dart';
 
@@ -92,6 +93,22 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       initialUser: userTemplate,
     );
     if (outcome == null || !mounted) return;
+    await _createFromOutcome(outcome);
+  }
+
+  /// **AKILLI LİSTE** (kullanıcı isteği 2026-11-16): tek tip liste sayfası;
+  /// türü (alışveriş, bavul, düz liste) yazılanlardan/söylenenlerden kendisi
+  /// bulur, maddeleri reyon/grup sırasına dizer (bkz. `smartListArgs`).
+  Future<void> createSmartList() async {
+    final args = smartListArgs(context);
+    final result = await showQuickList(context, args);
+    if (result == null || !mounted) return;
+    await _createFromOutcome(
+      (content: result.content, open: result.open, quick: true),
+    );
+  }
+
+  Future<void> _createFromOutcome(TemplateOutcome outcome) async {
     final content = outcome.content;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
@@ -800,6 +817,27 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     }
   }
 
+  /// **TARA** (belge + QR tek karo, kullanıcı isteği 2026-11-16): kamera
+  /// QR'ı kendiliğinden tanır ve ÖNERİR; "Belge tara" belge tarayıcısını
+  /// açar (bkz. [openScanAny]). Kamera izni verilmezse yalnız belge taranır
+  /// — belge tarayıcısı izin istemez.
+  Future<void> createScanOrQrNote() async {
+    final perms = ref.read(permissionsServiceProvider);
+    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
+      if (mounted) await createScanNote();
+      return;
+    }
+    if (!mounted) return;
+    final outcome = await openScanAny(context);
+    if (outcome == null || !mounted) return;
+    final code = outcome.code;
+    if (code == null) {
+      await createScanNote();
+      return;
+    }
+    await _noteFromQr(code);
+  }
+
   /// QR kod okur ve içeriğini yeni bir nota yazar. Not tarama BAŞARILI olunca
   /// oluşturulur — iptal edilirse ortada boş not kalmaz.
   Future<void> createQrNote() async {
@@ -816,6 +854,10 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (!mounted) return;
     final code = await openQrScanner(context);
     if (code == null || !mounted) return;
+    await _noteFromQr(code);
+  }
+
+  Future<void> _noteFromQr(String code) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     final id = await repo.createNote(NoteType.text);

@@ -865,6 +865,28 @@ class _RailDoorsState extends ConsumerState<_RailDoors> {
           ),
         ),
       ),
+      // ⚡ HIZLI EKLE (2026-11-16): telefonda ana ekranın yüzen düğmesi,
+      // rayda burada — "+" menüsünde artık varsayılan gizli.
+      Customizable(
+        id: UiItem.homeQuickDrop,
+        child: Tooltip(
+          message: l10n.quickDropTitle,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Material(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                key: const ValueKey('rail-quick-drop'),
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => _atHome((d) => d.quickAddActions.openQuickDrop()),
+                child: Icon(Icons.bolt, size: 24, color: scheme.onSurface),
+              ),
+            ),
+          ),
+        ),
+      ),
       CompositedTransformTarget(
         link: _addLink,
         child: QuickAddFab(
@@ -885,11 +907,21 @@ class _RailDoorsState extends ConsumerState<_RailDoors> {
         widget.extended
             ? Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [others[0], gap, others[1]],
+                children: [
+                  for (var i = 0; i < others.length; i++) ...[
+                    if (i > 0) gap,
+                    others[i],
+                  ],
+                ],
               )
             : Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [others[0], gap, others[1]],
+                children: [
+                  for (var i = 0; i < others.length; i++) ...[
+                    if (i > 0) gap,
+                    others[i],
+                  ],
+                ],
               ),
       ],
     );

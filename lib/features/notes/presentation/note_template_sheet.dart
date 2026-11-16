@@ -78,6 +78,22 @@ Future<T?> _showTemplateSheet<T>(BuildContext context, Widget sheet) =>
 /// [quick] — hızlı liste ekranından geldi (kayıt bildirimi gösterilir).
 typedef TemplateOutcome = ({NoteTemplateContent content, bool open, bool quick});
 
+/// **AKILLI LİSTE** girdisi (kullanıcı isteği 2026-11-16): tek tip liste;
+/// market + bavul sözlüğü birlikte, tür yazılanlardan bulunur. Öneriler
+/// alışveriş ve seyahat şablonlarının grupları; hafıza anahtarı `smart`.
+QuickListArgs smartListArgs(BuildContext context) {
+  final l10n = context.l10n;
+  return QuickListArgs(
+    kind: 'smart',
+    title: l10n.smartListGeneric,
+    icon: Icons.auto_awesome_outlined,
+    accent: Theme.of(context).colorScheme.primary,
+    groups: templateSuggestions(NoteTemplate.shopping, l10n),
+    packingGroups: templateSuggestions(NoteTemplate.travel, l10n),
+    smart: true,
+  );
+}
+
 /// Şablon LİSTE ise hızlı liste ekranının girdisi; yazı şablonunda null.
 QuickListArgs? quickListArgsFor(
   BuildContext context, {

@@ -4651,10 +4651,14 @@ child: NoteFindBar(
                           !kIsWeb &&
                           (_voiceRecorder != null ||
                               on(UiItem.barVoiceRecord));
-                      // ☑ yalnız metin notunda (liste notunda her satır
-                      // zaten madde).
+                      // Türe özgü yuva: metin notunda ☑ (satırı maddeye
+                      // çevir); liste notunda LİSTE ↔ NUMARALI (2026-11-16).
+                      final listKind =
+                          note.type == NoteType.checklist ||
+                          note.type == NoteType.ordered;
                       final showCheckbox =
-                          note.type == NoteType.text &&
+                          (note.type == NoteType.text ||
+                              (listKind && !_readOnly)) &&
                           on(UiItem.barCheckbox);
                       // SONRADAN EKLENEN düğmeler (kullanıcı isteği
                       // 2026-11-13: Ayarlar → Kişiselleştir → Alt çubuk).
@@ -4801,12 +4805,26 @@ child: NoteFindBar(
                                   .toggle(),
                               ref.watch(attachmentsExpandedProvider),
                             ),
-                            UiItem.barCheckbox => (
-                              Icons.check_box_outlined,
-                              l10n.checkboxToggle,
-                              _toggleChecklistLine,
-                              false,
-                            ),
+                            UiItem.barCheckbox => switch (note.type) {
+                              NoteType.checklist => (
+                                Icons.format_list_numbered_rounded,
+                                l10n.listToNumbered,
+                                _toggleListKind,
+                                false,
+                              ),
+                              NoteType.ordered => (
+                                Icons.checklist_rounded,
+                                l10n.listToChecklist,
+                                _toggleListKind,
+                                false,
+                              ),
+                              _ => (
+                                Icons.check_box_outlined,
+                                l10n.checkboxToggle,
+                                _toggleChecklistLine,
+                                false,
+                              ),
+                            },
                             UiItem.barSelect => (
                               Icons.select_all,
                               l10n.select,

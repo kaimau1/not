@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/keyboard_snap.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
@@ -14,6 +15,7 @@ import '../domain/note.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import '../domain/quick_entry.dart';
+import '../domain/smart_list.dart';
 import 'quick_entry_bar.dart';
 
 /// Hızlı liste ekranının girdisi: hangi şablon, hangi öneriler.
@@ -29,6 +31,8 @@ class QuickListArgs {
     this.initialItems = const [],
     this.groups = const [],
     this.grocery = false,
+    this.smart = false,
+    this.packingGroups = const [],
   });
 
   /// Hafıza anahtarı (`b:shopping`, `u:<kimlik>`): sık eklenenler buna göre.
@@ -50,6 +54,14 @@ class QuickListArgs {
 
   /// Market sözlüğü ve reyon sırası kullanılsın mı.
   final bool grocery;
+
+  /// **AKILLI LİSTE** (bkz. `smart_list.dart`): market + bavul sözlüğü
+  /// birlikte; tür maddelerden ya da "bavul listesi" gibi bir öbekten
+  /// bulunur, başlık/öneriler/sıra türe göre değişir. [groups] alışverişin,
+  /// [packingGroups] bavulun öneri grupları.
+  final bool smart;
+
+  final List<TemplateSuggestionGroup> packingGroups;
 }
 
 @immutable
@@ -173,7 +185,49 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
   /// Kapanış: giriş satırı ve öneri şeridi solar, liste (not) kalır.
   late final AnimationController _closing = AnimationController(vsync: this);
 
-  bool get _hasAisles => widget.args.grocery;
+  bool get _hasAisles => widget.args.grocery || widget.args.smart;
+
+  // ── Akıllı liste ──────────────────────────────────────────────────────
+  /// Bulunan tür (akıllı değilse hep düz).
+  final _kind = ValueNotifier<SmartListKind>(SmartListKind.generic);
+
+  /// "bavul listesi" gibi öbekle söylenen tür: maddelerden önce gelir.
+  SmartListKind? _kindSaid;
+  QuickLexicon? _packing;
+  QuickLexicon? _grocery;
+
+  /// Son kendiliğinden konan başlık: kullanıcı başlığı elle değiştirdiyse
+  /// tür değişse de dokunulmaz.
+  late String _autoTitle = widget.args.title;
+
+  int _packingGroupOf(QuickItem i) => _packing?.groupOf(i.name) ?? -1;
+  int _groceryGroupOf(QuickItem i) => _grocery?.groupOf(i.name) ?? -1;
+
+  void _updateKind() {
+    if (!widget.args.smart) return;
+    final kind =
+        _kindSaid ??
+        smartKindOf([
+          for (final r in _rows)
+            (
+              grocery: _groceryGroupOf(r.item) >= 0,
+              packing: _packingGroupOf(r.item) >= 0,
+            ),
+        ]);
+    if (kind == _kind.value) return;
+    _kind.value = kind;
+    _tab.value = 0;
+    final l10n = context.l10n;
+    final title = switch (kind) {
+      SmartListKind.shopping => l10n.tplShoppingName,
+      SmartListKind.packing => l10n.smartListPacking,
+      SmartListKind.generic => l10n.smartListGeneric,
+    };
+    if (_title.text.trim() == _autoTitle.trim()) _title.text = title;
+    _autoTitle = title;
+    // Sıra türe bağlı (bavulda bakım grubu, markette kişisel bakım reyonu).
+    _rev.value++;
+  }
 
   @override
   void initState() {
@@ -211,6 +265,16 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       learned: memory.all(widget.args.kind),
       extra: [...widget.args.seedItems, ...widget.args.initialItems],
     );
+    if (widget.args.smart) {
+      // Market önce eklendi: iki sözlükte de olan madde (şampuan) market
+      // reyonunu taşır; bavul sırası ayrı sözlükten okunur.
+      for (final (text, group) in packingEntries(context.l10n.localeName)) {
+        lex.add(text, group: group);
+      }
+      lex.addAll([for (final g in widget.args.packingGroups) ...g.items]);
+      _packing = packingLexicon(context.l10n.localeName);
+      _grocery = groceryLexicon(context.l10n.localeName);
+    }
     _lexicon = lex;
     _parser = buildQuickParser(lex, memory: memory);
     for (final r in _rows) {
@@ -230,6 +294,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     _twoColumns.dispose();
     _aisle.dispose();
     _tab.dispose();
+    _kind.dispose();
     _pulse.dispose();
     _closing.dispose();
     super.dispose();
@@ -247,7 +312,17 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
 
   void _add(List<QuickItem> items) {
     _Row? touched;
+    var said = false;
     for (final item in items) {
+      // "Bavul listesi", "alışveriş listesi": madde değil, listenin türü.
+      if (widget.args.smart) {
+        final k = smartKindFromPhrase(item.name);
+        if (k != null) {
+          _kindSaid = k;
+          said = true;
+          continue;
+        }
+      }
       final existing = _find(item.text);
       if (existing != null) {
         // Zaten listede: yenisi eklenmez, miktar geldiyse güncellenir.
@@ -263,8 +338,10 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       _lastId = row.id;
       touched = row;
     }
+    if (said) _updateKind();
     if (touched == null) return;
     _rev.value++;
+    _updateKind();
     _reveal(touched);
   }
 
@@ -284,6 +361,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     _rows.remove(row);
     _rowCache.remove(row.id);
     _rev.value++;
+    _updateKind();
   }
 
   /// Otomatik düzeltmeyi geri alır: madde yazıldığı gibi kalır ve bu
@@ -330,9 +408,21 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     });
   }
 
-  List<_Row> _ordered() => _hasAisles && _aisle.value
-      ? quickSortByGroup(_rows, (r) => r.item.group)
-      : _rows;
+  List<_Row> _ordered() {
+    if (!_hasAisles || !_aisle.value) return _rows;
+    if (!widget.args.smart) {
+      return quickSortByGroup(_rows, (r) => r.item.group);
+    }
+    final kind = _kind.value;
+    return quickSortByGroup(
+      _rows,
+      (r) => smartRank(
+        kind,
+        grocery: _groceryGroupOf(r.item),
+        packing: _packingGroupOf(r.item),
+      ),
+    );
+  }
 
   // ── Bitiş ─────────────────────────────────────────────────────────────
 
@@ -393,7 +483,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     return w;
   }
 
-  List<_Tab> _tabs(AppLocalizations l10n) => [
+  List<_Tab> _tabs(AppLocalizations l10n, [SmartListKind? kind]) => [
     if (_frequent.isNotEmpty)
       (
         label: l10n.quickListFrequent,
@@ -408,9 +498,22 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         items: _leftovers,
         all: true,
       ),
-    for (final g in widget.args.groups)
+    for (final g in _groupsFor(kind))
       (label: g.label, icon: null, items: g.items, all: false),
   ];
+
+  /// Öneri grupları: akıllı listede türe göre (düz listede ikisi de).
+  List<TemplateSuggestionGroup> _groupsFor(SmartListKind? kind) {
+    if (!widget.args.smart) return widget.args.groups;
+    return switch (kind ?? _kind.value) {
+      SmartListKind.shopping => widget.args.groups,
+      SmartListKind.packing => widget.args.packingGroups,
+      SmartListKind.generic => [
+        ...widget.args.groups,
+        ...widget.args.packingGroups,
+      ],
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -420,216 +523,257 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     final text = AppText.of(theme);
     final tabs = _tabs(l10n);
     final fade = ReverseAnimation(_closing);
+    // Gövdenin parçaları BİR KEZ kurulur: klavye oturunca [KeyboardSnap]
+    // yalnız dolguyu yeniler, aynı örnekler yeniden kurulmaz.
+    final entry = FadeTransition(
+      opacity: fade,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.m,
+          AppSpace.xs,
+          AppSpace.m,
+          0,
+        ),
+        child: _parser == null
+            ? const SizedBox.shrink()
+            : QuickEntryBar(
+                key: _entry,
+                parser: _parser!,
+                focusNode: _focus,
+                onItems: _add,
+                onTrailingQty: _attachQty,
+              ),
+      ),
+    );
+    final list = ListenableBuilder(
+      listenable: Listenable.merge([_rev, _twoColumns, _aisle]),
+      builder: (context, _) {
+        final rows = _ordered();
+        if (rows.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpace.xxl),
+              child: Text(
+                l10n.quickListEmpty,
+                textAlign: TextAlign.center,
+                style: text.body.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ),
+          );
+        }
+        // İKİ SÜTUN notla AYNI düzen (ItemsEditor): ilk yarı
+        // solda, ikinci yarı sağda.
+        final two = _twoColumns.value;
+        final half = two ? (rows.length + 1) ~/ 2 : rows.length;
+        return SingleChildScrollView(
+          key: const ValueKey('quick-list-scroll'),
+          controller: _scroll,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.s,
+            0,
+            AppSpace.s,
+            AppSpace.l,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [for (var i = 0; i < half; i++) _rowFor(rows[i])],
+                ),
+              ),
+              if (two)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var i = half; i < rows.length; i++) _rowFor(rows[i]),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+    // Şerit yoksa da kayar kutu durur: gezinme çubuğu payını o veriyor,
+    // ağacın şekli de değişmiyor.
+    Widget chipPanel(List<_Tab> tabs) => tabs.isEmpty
+        ? const SizedBox.shrink()
+        : FadeTransition(
+            opacity: fade,
+            child: _ChipPanel(
+              key: ValueKey('quick-chips-${tabs.length}'),
+              tabs: tabs,
+              tab: _tab,
+              rev: _rev,
+              has: (t) => _find(t) != null,
+              onAdd: _addChip,
+              onAddAll: (items) => _add([
+                for (final t in items)
+                  QuickItem(
+                    name: quickBaseName(t),
+                    qty: t == quickBaseName(t)
+                        ? ''
+                        : t
+                              .substring(quickBaseName(t).length)
+                              .trim()
+                              .replaceAll(RegExp(r'^\(|\)$'), ''),
+                    group: _lexicon?.groupOf(t) ?? -1,
+                    how: QuickHow.exact,
+                    typed: t,
+                  ),
+              ]),
+            ),
+          );
+    // Akıllı listede öneriler TÜRLE değişir: yalnız şerit dinler.
+    final chips = widget.args.smart
+        ? ValueListenableBuilder<SmartListKind>(
+            valueListenable: _kind,
+            builder: (context, kind, _) => chipPanel(_tabs(l10n, kind)),
+          )
+        : chipPanel(tabs);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(_finish());
       },
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            tooltip: l10n.back,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: _finish,
-          ),
-          titleSpacing: 0,
-          title: Row(
-            children: [
-              Icon(
-                widget.args.icon,
-                color: widget.args.accent,
-                size: AppIconSize.m,
-              ),
-              const SizedBox(width: AppSpace.s),
-              Expanded(
-                child: TextField(
-                  key: const ValueKey('quick-list-title'),
-                  controller: _title,
-                  style: text.screenTitle,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    hintText: l10n.titleHint,
-                    border: InputBorder.none,
-                    isDense: true,
+      // KLAVYE KASMASI (kullanıcı bulgusu 2026-11-16: "şablon eklenirken,
+      // yazarken, madde eklenirken alttaki hazır maddeler klavye açılıp
+      // kapanırken kasıyor"). KÖK NEDEN editördekiyle aynı (F60.S5): Scaffold
+      // gövdeyi klavyenin HER karesinde kısaltıyordu — iskelet, liste ve öneri
+      // şeridi kare kare kurulup diziliyordu (S49: 6 karede 420 kurulum, 168
+      // dizilim). Artık editörün kanalı: Scaffold kararlı MediaQuery görür,
+      // gövde klavye durunca TEK seferde oturur, öneri şeridi klavyeyi yalnız
+      // boyamada ([KeyboardSlide]) izler.
+      child: KeyboardInsetScope(
+        child: Scaffold(
+          resizeToAvoidBottomInset: false,
+          appBar: AppBar(
+            leading: IconButton(
+              tooltip: l10n.back,
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _finish,
+            ),
+            titleSpacing: 0,
+            title: Row(
+              children: [
+                if (widget.args.smart)
+                  ValueListenableBuilder<SmartListKind>(
+                    valueListenable: _kind,
+                    builder: (context, kind, _) => Icon(
+                      switch (kind) {
+                        SmartListKind.shopping => Icons.shopping_cart_outlined,
+                        SmartListKind.packing => Icons.luggage_outlined,
+                        SmartListKind.generic => widget.args.icon,
+                      },
+                      color: widget.args.accent,
+                      size: AppIconSize.m,
+                    ),
+                  )
+                else
+                  Icon(
+                    widget.args.icon,
+                    color: widget.args.accent,
+                    size: AppIconSize.m,
                   ),
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: TextField(
+                    key: const ValueKey('quick-list-title'),
+                    controller: _title,
+                    style: text.screenTitle,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(
+                      hintText: l10n.titleHint,
+                      border: InputBorder.none,
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              ValueListenableBuilder<bool>(
+                valueListenable: _twoColumns,
+                builder: (context, two, _) => IconButton(
+                  key: const ValueKey('quick-list-columns'),
+                  tooltip: two ? l10n.listOneColumn : l10n.listTwoColumns,
+                  icon: Icon(
+                    two
+                        ? Icons.view_agenda_outlined
+                        : Icons.view_column_outlined,
+                  ),
+                  onPressed: () {
+                    _twoColumns.value = !two;
+                    ref.read(quickListTwoColumnsProvider.notifier).set(!two);
+                  },
+                ),
+              ),
+              PopupMenuButton<String>(
+                key: const ValueKey('quick-list-menu'),
+                onSelected: (v) {
+                  switch (v) {
+                    case 'aisle':
+                      _aisle.value = !_aisle.value;
+                      ref
+                          .read(quickListAisleSortProvider.notifier)
+                          .set(_aisle.value);
+                    case 'open':
+                      unawaited(_finish(open: true));
+                    case 'discard':
+                      unawaited(_finish(discard: true));
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (_hasAisles)
+                    CheckedPopupMenuItem(
+                      value: 'aisle',
+                      checked: _aisle.value,
+                      child: Text(l10n.quickListAisleSort),
+                    ),
+                  PopupMenuItem(
+                    value: 'open',
+                    child: Text(l10n.quickListOpenInNote),
+                  ),
+                  PopupMenuItem(
+                    value: 'discard',
+                    child: Text(l10n.quickListDiscard),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpace.s),
+                child: FilledButton(
+                  key: const ValueKey('quick-list-done'),
+                  onPressed: _finish,
+                  child: Text(l10n.quickListDone),
                 ),
               ),
             ],
           ),
-          actions: [
-            ValueListenableBuilder<bool>(
-              valueListenable: _twoColumns,
-              builder: (context, two, _) => IconButton(
-                key: const ValueKey('quick-list-columns'),
-                tooltip: two ? l10n.listOneColumn : l10n.listTwoColumns,
-                icon: Icon(
-                  two ? Icons.view_agenda_outlined : Icons.view_column_outlined,
-                ),
-                onPressed: () {
-                  _twoColumns.value = !two;
-                  ref.read(quickListTwoColumnsProvider.notifier).set(!two);
-                },
-              ),
-            ),
-            PopupMenuButton<String>(
-              key: const ValueKey('quick-list-menu'),
-              onSelected: (v) {
-                switch (v) {
-                  case 'aisle':
-                    _aisle.value = !_aisle.value;
-                    ref
-                        .read(quickListAisleSortProvider.notifier)
-                        .set(_aisle.value);
-                  case 'open':
-                    unawaited(_finish(open: true));
-                  case 'discard':
-                    unawaited(_finish(discard: true));
-                }
-              },
-              itemBuilder: (context) => [
-                if (_hasAisles)
-                  CheckedPopupMenuItem(
-                    value: 'aisle',
-                    checked: _aisle.value,
-                    child: Text(l10n.quickListAisleSort),
-                  ),
-                PopupMenuItem(
-                  value: 'open',
-                  child: Text(l10n.quickListOpenInNote),
-                ),
-                PopupMenuItem(
-                  value: 'discard',
-                  child: Text(l10n.quickListDiscard),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpace.s),
-              child: FilledButton(
-                key: const ValueKey('quick-list-done'),
-                onPressed: _finish,
-                child: Text(l10n.quickListDone),
-              ),
-            ),
-          ],
-        ),
-        body: SafeArea(
-          top: false,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  FadeTransition(
-                    opacity: fade,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpace.m,
-                        AppSpace.xs,
-                        AppSpace.m,
-                        0,
-                      ),
-                      child: _parser == null
-                          ? const SizedBox.shrink()
-                          : QuickEntryBar(
-                              key: _entry,
-                              parser: _parser!,
-                              focusNode: _focus,
-                              onItems: _add,
-                              onTrailingQty: _attachQty,
-                            ),
+          // Alt güvenli alan payını [KeyboardSlide] veriyor (gezinme çubuğu,
+          // klavye açıkken 0): burada uygulanırsa iki kez sayılırdı.
+          body: SafeArea(
+            top: false,
+            bottom: false,
+            child: KeyboardSnap(
+              builder: (context, inset) => Padding(
+                padding: EdgeInsets.only(bottom: inset),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        entry,
+                        Expanded(child: list),
+                        KeyboardSlide(inset: inset, child: chips),
+                      ],
                     ),
                   ),
-                  Expanded(
-                    child: ListenableBuilder(
-                      listenable: Listenable.merge([_rev, _twoColumns, _aisle]),
-                      builder: (context, _) {
-                        final rows = _ordered();
-                        if (rows.isEmpty) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppSpace.xxl),
-                              child: Text(
-                                l10n.quickListEmpty,
-                                textAlign: TextAlign.center,
-                                style: text.body.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        // İKİ SÜTUN notla AYNI düzen (ItemsEditor): ilk yarı
-                        // solda, ikinci yarı sağda.
-                        final two = _twoColumns.value;
-                        final half = two ? (rows.length + 1) ~/ 2 : rows.length;
-                        return SingleChildScrollView(
-                          key: const ValueKey('quick-list-scroll'),
-                          controller: _scroll,
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpace.s,
-                            0,
-                            AppSpace.s,
-                            AppSpace.l,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    for (var i = 0; i < half; i++)
-                                      _rowFor(rows[i]),
-                                  ],
-                                ),
-                              ),
-                              if (two)
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      for (var i = half; i < rows.length; i++)
-                                        _rowFor(rows[i]),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  if (tabs.isNotEmpty)
-                    FadeTransition(
-                      opacity: fade,
-                      child: _ChipPanel(
-                        tabs: tabs,
-                        tab: _tab,
-                        rev: _rev,
-                        has: (t) => _find(t) != null,
-                        onAdd: _addChip,
-                        onAddAll: (items) => _add([
-                          for (final t in items)
-                            QuickItem(
-                              name: quickBaseName(t),
-                              qty: t == quickBaseName(t)
-                                  ? ''
-                                  : t
-                                        .substring(quickBaseName(t).length)
-                                        .trim()
-                                        .replaceAll(RegExp(r'^\(|\)$'), ''),
-                              group: _lexicon?.groupOf(t) ?? -1,
-                              how: QuickHow.exact,
-                              typed: t,
-                            ),
-                        ]),
-                      ),
-                    ),
-                ],
+                ),
               ),
             ),
           ),
@@ -806,6 +950,7 @@ class _QuickRowState extends State<_QuickRow> with TickerProviderStateMixin {
 /// düşer.
 class _ChipPanel extends StatelessWidget {
   const _ChipPanel({
+    super.key,
     required this.tabs,
     required this.tab,
     required this.rev,

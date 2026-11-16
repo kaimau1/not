@@ -162,6 +162,10 @@ final quickDropKeyboardProvider = boolPref(
   defaultValue: true,
 );
 
+/// Hızlı ekle: hedef bulunamayınca/başa baş kalınca yapay zekâya sorsun mu
+/// (kullanıcı isteği 2026-11-16; yalnız not başlıkları gider).
+final quickDropAiProvider = boolPref('quick_drop_ai', defaultValue: true);
+
 /// Hızlı liste ekranı: reyon sırasına dizsin mi, kaç sütun.
 final quickListAisleSortProvider = boolPref(
   'quick_list_aisle_sort',
