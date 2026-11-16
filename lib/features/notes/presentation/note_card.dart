@@ -31,6 +31,7 @@ import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/archive_paper.dart';
 import '../domain/note.dart';
+import 'expiry_sheet.dart' show noteExpiryLeft;
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import '../domain/page_notes.dart';
@@ -159,6 +160,9 @@ String formatNoteDate(DateTime date) {
   if (date.year == now.year) return _dateFormat('d MMM').format(date);
   return _dateFormat('d MMM y').format(date);
 }
+
+/// Kart durum simgesi boyu (komşu simgelerle aynı 13; belirteç basamağı yok).
+const double _kExpiryIcon = 13;
 
 /// Karttaki yakın hatırlatıcı (F37.2): önümüzdeki 48 saat içindeyse "yarın
 /// 15:17", yoksa null (yalnız simge). Kart yeniden kurulurken hesaplanır
@@ -742,10 +746,23 @@ class NoteCard extends ConsumerWidget {
             size: 13,
             color: accent ?? scheme.onSurfaceVariant,
           ),
+        // ZAMANLI NOT: sessiz kum saati, yanında kalan süre (dar kartta yalnız
+        // simge).
+        if (note.expiresAt != null)
+          Icon(
+            Icons.hourglass_bottom,
+            size: _kExpiryIcon,
+            color: accent ?? scheme.onSurfaceVariant,
+          ),
       ],
     ];
     final reminderLabel = display.statusIcons && note.reminderAt != null
         ? cardReminderLabel(context.l10n, note.reminderAt!, DateTime.now())
+        : null;
+    // ponytail: kart yeniden kurulana dek bayat kalabilir (cardReminderLabel
+    // ile aynı ödünleşim).
+    final expiryLabel = display.statusIcons && note.expiresAt != null
+        ? noteExpiryLeft(context.l10n, note.expiresAt!, DateTime.now())
         : null;
     final showTag = display.tag && note.tags.isNotEmpty;
     final showDate = display.date && note.updatedAt != null;
@@ -942,6 +959,22 @@ class NoteCard extends ConsumerWidget {
                                 fontWeight: FontWeight.w600,
                                 color: accent ?? scheme.onSurfaceVariant,
                               ),
+                            ),
+                          ),
+                        ),
+                      if (expiryLabel != null && squeeze == 0)
+                        Flexible(
+                          flex: 4,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 6),
+                            child: Text(
+                              expiryLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.of(_cardThemeOf(context)).badge
+                                  .copyWith(
+                                    color: accent ?? scheme.onSurfaceVariant,
+                                  ),
                             ),
                           ),
                         ),
@@ -2227,6 +2260,12 @@ class NoteListRow extends ConsumerWidget {
                             ? Icons.alarm
                             : Icons.repeat,
                         size: 13,
+                        color: accent ?? scheme.onSurfaceVariant,
+                      ),
+                    if (note.expiresAt != null)
+                      Icon(
+                        Icons.hourglass_bottom,
+                        size: _kExpiryIcon,
                         color: accent ?? scheme.onSurfaceVariant,
                       ),
                     if (reminderLabel != null)

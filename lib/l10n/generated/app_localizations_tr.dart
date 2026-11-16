@@ -8722,4 +8722,45 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickDropMicAuto => 'Açılınca dinle';
+
+  @override
+  String get noteExpiry => 'Şu zamanda arşivle';
+
+  @override
+  String get noteExpiryDay => '1 gün';
+
+  @override
+  String get noteExpiry3Days => '3 gün';
+
+  @override
+  String get noteExpiryWeek => '1 hafta';
+
+  @override
+  String get noteExpiryMonth => '1 ay';
+
+  @override
+  String get noteExpiryPick => 'Tarih ve saat seç';
+
+  @override
+  String get noteExpiryRemove => 'Süreyi kaldır';
+
+  @override
+  String noteExpiryChip(String date) {
+    return '$date arşivlenir';
+  }
+
+  @override
+  String noteExpiryLeftDays(int n) {
+    return '$n g';
+  }
+
+  @override
+  String noteExpiryLeftHours(int n) {
+    return '$n sa';
+  }
+
+  @override
+  String noteExpiryLeftMinutes(int n) {
+    return '$n dk';
+  }
 }

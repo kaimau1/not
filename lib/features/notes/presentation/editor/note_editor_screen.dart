@@ -7,6 +7,7 @@ import '../../domain/note_links.dart';
 import '../reminder_repeat_ui.dart';
 import '../reminders_screen.dart'
     show maybeShowAutoStartHint;
+import '../expiry_sheet.dart';
 import '../reminder_sheet.dart';
 import '../../domain/reminder_repeat.dart';
 import '../../../../app/theme/app_tokens.dart';
@@ -362,6 +363,7 @@ bool sameRenderedNote(Note a, Note b) {
       a.deletedAt != b.deletedAt ||
       a.archivedAt != b.archivedAt ||
       a.reminderAt != b.reminderAt ||
+      a.expiresAt != b.expiresAt ||
       a.updatedAt != b.updatedAt ||
       a.aiSummary != b.aiSummary ||
       a.title != b.title ||
@@ -1510,6 +1512,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             clearFolderId: incoming.folderId == null,
             archivedAt: incoming.archivedAt,
             clearArchivedAt: incoming.archivedAt == null,
+            expiresAt: incoming.expiresAt,
+            clearExpiresAt: incoming.expiresAt == null,
             reminderAt: incoming.reminderAt,
             clearReminderAt: incoming.reminderAt == null,
             // Sıra ve görünüm ayarları da uzaktan benimsenir: geniş ekranda
@@ -1935,7 +1939,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.orderIndex == b.orderIndex &&
       a.deletedAt == b.deletedAt &&
       a.archivedAt == b.archivedAt &&
-      a.reminderAt == b.reminderAt &&
+      // Zaman çipleri (hatırlatıcı + ZAMANLI NOT süresi) tek terim.
+      (a.reminderAt, a.expiresAt) == (b.reminderAt, b.expiresAt) &&
       // Tuval ipucu ve gövde alanı gövdenin BOŞLUĞUNA bakıyor; doluluk
       // değişiyorsa çizim de değişmeli.
       isBlankText(a.body) == isBlankText(b.body);
@@ -3518,6 +3523,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           deleteIconBoxConstraints: _kChipDeleteBox,
           onPressed: _pickReminder,
           onDeleted: _clearReminder,
+        ),
+      // ZAMANLI NOT: kurulu süre çipte; kurmak ⋮ menüsünden.
+      if (note.expiresAt != null)
+        InputChip(
+          avatar: const Icon(Icons.hourglass_bottom, size: AppIconSize.xs),
+          label: Text(
+            noteExpiryChipText(context.l10n, note.expiresAt!),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          labelStyle: chipLabelStyle,
+          padding: _kChipPadding,
+          visualDensity: _kChipDensity,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          deleteIconBoxConstraints: _kChipDeleteBox,
+          onPressed: _pickExpiry,
+          onDeleted: _clearExpiry,
         ),
       // GERİ BAĞLANTILAR (F18.16): bu nota bağlanan notlar. YALNIZ varken
       // listeye girer — KÖK NEDEN (kullanıcı bulgusu 2026-11-05: "etiket

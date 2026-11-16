@@ -15487,6 +15487,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Açılınca dinle'**
   String get quickDropMicAuto;
+
+  /// No description provided for @noteExpiry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu zamanda arşivle'**
+  String get noteExpiry;
+
+  /// No description provided for @noteExpiryDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'1 gün'**
+  String get noteExpiryDay;
+
+  /// No description provided for @noteExpiry3Days.
+  ///
+  /// In tr, this message translates to:
+  /// **'3 gün'**
+  String get noteExpiry3Days;
+
+  /// No description provided for @noteExpiryWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'1 hafta'**
+  String get noteExpiryWeek;
+
+  /// No description provided for @noteExpiryMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'1 ay'**
+  String get noteExpiryMonth;
+
+  /// No description provided for @noteExpiryPick.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih ve saat seç'**
+  String get noteExpiryPick;
+
+  /// No description provided for @noteExpiryRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süreyi kaldır'**
+  String get noteExpiryRemove;
+
+  /// No description provided for @noteExpiryChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'{date} arşivlenir'**
+  String noteExpiryChip(String date);
+
+  /// No description provided for @noteExpiryLeftDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{n} g'**
+  String noteExpiryLeftDays(int n);
+
+  /// No description provided for @noteExpiryLeftHours.
+  ///
+  /// In tr, this message translates to:
+  /// **'{n} sa'**
+  String noteExpiryLeftHours(int n);
+
+  /// No description provided for @noteExpiryLeftMinutes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{n} dk'**
+  String noteExpiryLeftMinutes(int n);
 }
 
 class _AppLocalizationsDelegate

@@ -130,6 +130,14 @@ extension _EditorActions on _NoteEditorScreenState {
                 l10n.archiveNewPage,
                 Icons.note_add_outlined,
               ),
+            // ZAMANLI NOT (kullanıcı isteği 2026-11-16): süre dolunca arşive.
+            if (!_readOnly)
+              MenuAction(
+                'expiry',
+                l10n.noteExpiry,
+                Icons.hourglass_bottom,
+                selected: note.expiresAt != null,
+              ),
             if (PlaceReminderService.supported)
               MenuAction(
                 'place-reminder',
@@ -169,6 +177,8 @@ extension _EditorActions on _NoteEditorScreenState {
         await _pickReminder();
       case 'calendar-add':
         await _addToCalendar(note);
+      case 'expiry':
+        await _pickExpiry();
       case 'place-reminder':
         unawaited(showPlaceReminderSheet(context, ref, note));
       case 'folder':
@@ -225,6 +235,23 @@ extension _EditorActions on _NoteEditorScreenState {
     if (choice.at != null && mounted) {
       unawaited(maybeShowAutoStartHint(context));
     }
+  }
+
+  /// ZAMANLI NOT: süre seç / kaldır (kart ⋮ ile aynı levha).
+  Future<void> _pickExpiry() async {
+    final note = _note;
+    if (note == null) return;
+    final choice = await pickNoteExpiry(context, current: note.expiresAt);
+    if (choice == null || !mounted) return;
+    final at = choice.at;
+    if (at == null) return _clearExpiry();
+    _mutate((n) => n.copyWith(expiresAt: at), immediate: true);
+  }
+
+  /// Not.toMap boş süreyi YAZMAZ (merge'de silinmez): kaldırma açık yazım.
+  void _clearExpiry() {
+    _mutate((n) => n.copyWith(clearExpiresAt: true), immediate: true);
+    _notesRepo?.updateFields(widget.noteId, {'expiresAt': null});
   }
 
   void _clearReminder() =>
@@ -929,9 +956,12 @@ extension _EditorActions on _NoteEditorScreenState {
     _mutate(
       (n) => archived
           ? n.copyWith(clearArchivedAt: true)
-          : n.copyWith(archivedAt: DateTime.now()),
+          : n.copyWith(archivedAt: DateTime.now(), clearExpiresAt: true),
       immediate: true,
     );
+    if (!archived && note.expiresAt != null) {
+      _notesRepo?.updateFields(widget.noteId, {'expiresAt': null});
+    }
     if (!archived) _closeEditor(() => Navigator.of(context).pop());
   }
 

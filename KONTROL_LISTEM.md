@@ -16,6 +16,10 @@ oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
   Nerede: ana ekran, uzun liste (ekranı aşan).
   Nasıl: aşağıya kaydır, "+" ile ve bir şablondan yeni not oluştur, yaz, geri dön; bir kez de boş not açıp hiç yazmadan dön.
   Beklenen: dönüşte liste yeni nota kayar (görünüyorsa kaymaz), çerçeve ~1,2 sn iki kez yanıp söner; boş notta hiçbir şey. Erişilebilirlik → animasyonları kaldır açıkken tek sabit vurgu.
+- [ ] **Zamanlı not (oto/sureli-not, cihazda bakılmadı — 2026-11-16)**
+  Nerede: not aç → başlıktaki "+" → "Şu zamanda arşivle".
+  Nasıl: "Tarih ve saat seç" ile 2-3 dakika sonrasını kur; kartta kum saati + "1 dk/2 dk", notta çip görünür. Uygulamayı arkaya al, süre geçince öne getir.
+  Beklenen: not ana ekrandan kalkar, Arşiv'de durur, geri alınınca yeniden arşivlenmez. Uygulama kapalıyken süre dolarsa açılışta arşivlenir (arka plan işi yok).
 
 - [ ] **120 Hz (oto/120hz, cihazda bakılmadı — 2026-11-16)**
   Nerede: Ayarlar → en alt, sürüm satırı.

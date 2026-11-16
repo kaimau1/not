@@ -208,6 +208,7 @@ class Note {
     this.updatedAt,
     this.deletedAt,
     this.archivedAt,
+    this.expiresAt,
     this.reminderAt,
     this.reminderRepeat = '',
     this.reminderLevel = '',
@@ -242,7 +243,7 @@ class Note {
     'tagLinks',
     'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
-    'archivedAt', 'reminderAt', 'reminderRepeat', 'reminderLevel', 'cards', 'aiSummary',
+    'archivedAt', 'expiresAt', 'reminderAt', 'reminderRepeat', 'reminderLevel', 'cards', 'aiSummary',
     'schema',
     // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
     // (`createdBy` BİLEREK burada değil: [extras] olarak AYNEN geri yazılır;
@@ -529,6 +530,11 @@ class Note {
 
   /// Arşivlenen notlar dashboard'da görünmez; Arşiv ekranından erişilir.
   final DateTime? archivedAt;
+
+  /// **ZAMANLI NOT** (kullanıcı isteği 2026-11-16: "not bir zaman kadar
+  /// kalır sonra arşivlenir"). Doluysa bu anda not kendiliğinden ARŞİVE
+  /// taşınır (silinmez) ve alan temizlenir — bkz. `NotesRepository.archiveExpired`.
+  final DateTime? expiresAt;
 
   /// Doluysa bu tarihte yerel bildirim planlanır.
   final DateTime? reminderAt;
@@ -834,6 +840,8 @@ class Note {
     bool clearDeletedAt = false,
     DateTime? archivedAt,
     bool clearArchivedAt = false,
+    DateTime? expiresAt,
+    bool clearExpiresAt = false,
     DateTime? reminderAt,
     bool clearReminderAt = false,
     String? reminderRepeat,
@@ -894,6 +902,7 @@ class Note {
     updatedAt: updatedAt,
     deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
+    expiresAt: clearExpiresAt ? null : (expiresAt ?? this.expiresAt),
     reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
     reminderRepeat: clearReminderAt
         ? ''
@@ -1059,6 +1068,7 @@ class Note {
       updatedBy: map['updatedBy'] as String? ?? '',
       deletedAt: (map['deletedAt'] as Timestamp?)?.toDate(),
       archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
+      expiresAt: (map['expiresAt'] as Timestamp?)?.toDate(),
       reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
       reminderRepeat: map['reminderRepeat'] as String? ?? '',
       reminderLevel: map['reminderLevel'] as String? ?? '',
@@ -1179,6 +1189,10 @@ class Note {
     'updatedAt': FieldValue.serverTimestamp(),
     'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
     'archivedAt': archivedAt != null ? Timestamp.fromDate(archivedAt!) : null,
+    // YALNIZ DOLUYKEN (S16 bayt bütçesi): kaldırma merge'de "değişmedi"
+    // sayılacağından açık `{'expiresAt': null}` yazımıyla yapılır
+    // (`setExpiry`, editörde `_clearExpiryField`, arşivleme yolları).
+    'expiresAt': ?(expiresAt == null ? null : Timestamp.fromDate(expiresAt!)),
     'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt!) : null,
     // KOŞULSUZ (kaldırılabilir alan, merge tuzağı): tekrar kapatılınca ''
     // yazılmalı, yoksa sunucudaki eski tekrar kalırdı.
@@ -1207,3 +1221,12 @@ class Note {
   }
   return (urgent: urgent, pinned: pinned, others: others);
 }
+
+/// ZAMANLI NOT: süresi dolmuş (`expiresAt <= now`), henüz arşivlenmemiş notlar.
+Iterable<Note> expiredNotes(Iterable<Note> notes, DateTime now) => notes.where(
+  (n) =>
+      n.expiresAt != null &&
+      n.archivedAt == null &&
+      n.deletedAt == null &&
+      !n.expiresAt!.isAfter(now),
+);

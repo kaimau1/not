@@ -3156,5 +3156,16 @@
   "quickDropAddedText": "Added to “{title}”",
   "quickDropNothingNew": "Everything is already in “{title}”",
   "quickDropKeyboard": "Keyboard on open",
-  "quickDropMicAuto": "Listen on open"
+  "quickDropMicAuto": "Listen on open",
+  "noteExpiry": "Archive at…",
+  "noteExpiryDay": "1 day",
+  "noteExpiry3Days": "3 days",
+  "noteExpiryWeek": "1 week",
+  "noteExpiryMonth": "1 month",
+  "noteExpiryPick": "Pick date & time",
+  "noteExpiryRemove": "Remove timer",
+  "noteExpiryChip": "Archives {date}",
+  "noteExpiryLeftDays": "{n}d",
+  "noteExpiryLeftHours": "{n}h",
+  "noteExpiryLeftMinutes": "{n}m"
 }
