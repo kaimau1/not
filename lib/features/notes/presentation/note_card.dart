@@ -1510,13 +1510,14 @@ class _CardItemRow extends StatelessWidget {
     Widget? leading;
     if (item.header) {
       // Ara başlık: kutucuk/numara yok, kalın (bkz. [NoteItem.header]).
-    } else if (checkbox) {
+    } else if (checkbox || (numbered && item.checked)) {
       // Kutucuk EDİTÖRLE AYNI kural (bkz. [NoteCheckColors]): işaretli kutu
       // notun vurgusuyla dolu ve soluk, boş kutu çerçeve — renkli kartta
-      // notun koyu tonu, renksizde temanın vurgusu.
+      // notun koyu tonu, renksizde temanın vurgusu. Numaralı listede
+      // işaretli madde numara yerine ✓ (bkz. [itemOrderNumber]).
       final accent = NoteAccent.maybeOf(context)?.accent;
       final icon = Icon(
-        item.checked ? Icons.check_box : Icons.check_box_outline_blank,
+        _cardCheckGlyph(item.checked, numbered: !checkbox),
         size: 14,
         color: item.checked
             ? NoteCheckColors.checked(scheme, accent)
@@ -1528,18 +1529,6 @@ class _CardItemRow extends StatelessWidget {
       leading = Padding(
         padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
         child: icon,
-      );
-    } else if (numbered && item.checked) {
-      leading = Padding(
-        padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
-        child: Icon(
-          Icons.check_rounded,
-          size: 14,
-          color: NoteCheckColors.checked(
-            scheme,
-            NoteAccent.maybeOf(context)?.accent,
-          ),
-        ),
       );
     } else if (number != null) {
       leading = Padding(
@@ -2346,3 +2335,9 @@ class _Leaving extends StatelessWidget {
     ),
   );
 }
+
+/// Kart maddesinin işaret simgesi: kutucuklu listede kutu, numaralı listede
+/// (işaretliye numara yerine) ✓.
+IconData _cardCheckGlyph(bool checked, {required bool numbered}) => numbered
+    ? Icons.check_rounded
+    : (checked ? Icons.check_box : Icons.check_box_outline_blank);

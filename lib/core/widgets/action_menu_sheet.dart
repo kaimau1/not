@@ -518,7 +518,9 @@ class _FoldSectionState extends State<_FoldSection> {
                     borderRadius: BorderRadius.circular(AppRadius.m),
                     onTap: _toggle,
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(minHeight: 44),
+                      constraints: const BoxConstraints(
+                        minHeight: kMinInteractiveDimension,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpace.xs,
