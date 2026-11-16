@@ -108,8 +108,10 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       return;
     }
     // Hızlı liste: liste sayfada kuruldu, not kaydedildi — editör ayrıca
-    // açılmaz; istenirse bildirimden açılır.
+    // açılmaz; istenirse bildirimden açılır. Ana ekranda kart yine de
+    // odaklanır (editör kapanışı burada yok — bkz. focusCreated).
     if (!mounted) return;
+    ref.read(focusedNoteProvider.notifier).focusCreated(id);
     final l10n = context.l10n;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()

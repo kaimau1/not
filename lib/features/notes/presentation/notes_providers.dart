@@ -653,6 +653,21 @@ class FocusedNoteNotifier extends Notifier<String?> {
   void focusBrief(String noteId) =>
       _focus(noteId, briefHold, AppMotion.medium);
 
+  /// Yeni not ana ekrana dönüşte TEK yerden odaklanır: [noteId] son doğan
+  /// not ([NotesRepository.lastCreatedId]) ise kimlik TÜKETİLİR ve ana ekran
+  /// yetişince (FreezeWhenHidden, ≤380 ms) [focusBrief]. Çağıranlar: editör
+  /// kapanışı ve editörsüz doğan şablon/hızlı liste ("Bitti"). Kimlik
+  /// tüketildiği için ikinci çağrı (çift tetik) hiçbir şey yapmaz.
+  /// KÖK NEDEN (2026-11-16, "şablon oluşturdum, bitti dedim, odak yok"):
+  /// vurgu yalnız editör kapanışına bağlıydı; hızlı liste editör açmıyor.
+  bool focusCreated(String noteId) {
+    if (NotesRepository.lastCreatedId != noteId) return false;
+    NotesRepository.lastCreatedId = null;
+    // dispose'dan çağrılabilir: ağaç kilitli, durum ertelenmiş yazılmalı.
+    Timer(AppMotion.long, () => focusBrief(noteId));
+    return true;
+  }
+
   void _focus(String noteId, Duration hold, Duration halfPulse) {
     // Editör kapanışından ertelenmiş çağrı: kapsayıcı o arada gitmiş olabilir.
     if (!ref.mounted) return;

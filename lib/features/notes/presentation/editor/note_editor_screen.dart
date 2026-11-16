@@ -1782,15 +1782,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // YENİ NOT hangi yoldan doğmuş olursa olsun (bkz.
       // [NotesRepository.lastCreatedId]): ana ekrana dönünce kartı görünür
       // alana gelip kısa süre yanıp söner. Boş atılan notta (üst dal) yok.
-      if (NotesRepository.lastCreatedId == note.id) {
-        NotesRepository.lastCreatedId = null;
-        final focus = _focusNote;
-        final id = note.id;
-        // Ana ekranın donmuş görüntüsü yetişsin (FreezeWhenHidden, ≤380 ms):
-        // nabız kart ekrana gelmeden bitmesin. dispose'da ağaç kilitli,
-        // sağlayıcı zaten ertelenmiş yazılmalı.
-        Timer(AppMotion.long, () => focus.focusBrief(id));
-      }
+      _focusNote.focusCreated(note.id);
       // İçerik denetimi isEmpty'den AYRI: yalnız hatırlatıcısı olan metinsiz
       // not artık "boş" sayılmıyor (silinmesin diye) ama AI'ya gönderilecek
       // içeriği de yok — boş içerikle model çağırmak puan yakar ve
