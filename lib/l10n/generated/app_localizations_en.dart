@@ -1780,6 +1780,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionPinnedShort => 'Pinned';
 
   @override
+  String get sectionUrgent => 'Urgent';
+
+  @override
+  String get urgentMark => 'Mark urgent';
+
+  @override
+  String get urgentUnmark => 'Remove urgent mark';
+
+  @override
+  String get urgentInfo => 'Shown first on home, with !';
+
+  @override
   String get sectionToday => 'Today';
 
   @override

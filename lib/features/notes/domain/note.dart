@@ -179,6 +179,7 @@ class Note {
     this.customFrameColor,
     this.pinned = false,
     this.starred = false,
+    this.urgent = false,
     this.cardMediaHidden = false,
     this.locked = false,
     this.fontFamily,
@@ -233,7 +234,7 @@ class Note {
   static const knownKeys = <String>{
     'type', 'title', 'body', 'items', 'pageNotes', 'attachments', 'tags',
     'folderId', 'color', 'frameColor', 'customColor', 'customFrameColor',
-    'pinned', 'starred', 'cardMediaHidden', 'locked',
+    'pinned', 'starred', 'urgent', 'cardMediaHidden', 'locked',
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
     'backgroundOpacity', 'theme', 'listColumns', 'classicDocument', 'archivePages',
@@ -343,6 +344,13 @@ class Note {
   /// F3.6'da sabitlemeyle birleştirilmişti; o göç eski yıldızlıları sabitliye
   /// çevirip `starred`ı temizlediği için o notlar sabitli kalır.
   final bool starred;
+
+  /// **ACİL** not (kullanıcı isteği 2026-11-16: "sabit gibi, yıldızlı gibi;
+  /// en üstte görünürler"): ana ekranda SABİTLERİN DE ÜSTÜNDE ayrı "Acil"
+  /// bölümünde durur, kartta ünlem (!) taşır. Not içindeki Ekle levhasından
+  /// ve not menüsünden açılıp kapanır. (PDF balonunun `PageBubble.urgent`
+  /// bayrağıyla ilgisi yok.)
+  final bool urgent;
 
   /// **KARTTA GÖRSEL ÖNİZLEMESİ GİZLİ** (kullanıcı isteği 2026-10-28: "ana
   /// ekran not 3 noktalarında görsel önizlemesini gizle seçeneği"): not
@@ -794,6 +802,7 @@ class Note {
     bool clearCustomFrameColor = false,
     bool? pinned,
     bool? starred,
+    bool? urgent,
     bool? cardMediaHidden,
     bool? locked,
     String? fontFamily,
@@ -852,6 +861,7 @@ class Note {
         : (customFrameColor ?? this.customFrameColor),
     pinned: pinned ?? this.pinned,
     starred: starred ?? this.starred,
+    urgent: urgent ?? this.urgent,
     cardMediaHidden: cardMediaHidden ?? this.cardMediaHidden,
     locked: locked ?? this.locked,
     fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
@@ -991,6 +1001,7 @@ class Note {
       customFrameColor: (map['customFrameColor'] as num?)?.toInt(),
       pinned: map['pinned'] == true,
       starred: map['starred'] == true,
+      urgent: map['urgent'] == true,
       cardMediaHidden: map['cardMediaHidden'] == true,
       locked: map['locked'] as bool? ?? false,
       fontFamily: map['fontFamily'] as String?,
@@ -1105,6 +1116,9 @@ class Note {
     'customFrameColor': customFrameColor,
     'pinned': pinned,
     'starred': starred,
+    // KOŞULLU (S16 bayt bütçesi): kapatma `NotesRepository.setUrgent`
+    // ile açıkça false yazar — merge yazımı eksik alanı silmez.
+    if (urgent) 'urgent': true,
     // KOŞULSUZ (merge tuzağı): gizleme geri alınabilmeli.
     'cardMediaHidden': cardMediaHidden,
     'locked': locked,
@@ -1174,4 +1188,22 @@ class Note {
     'cards': [for (final c in cards) c.toMap()],
     'aiSummary': aiSummary?.toMap(),
   };
+}
+
+/// Ana ekran bölümleri, sırasıyla: ACİL → SABİT → diğerleri (2026-11-16).
+/// Hem acil hem sabit olan not yalnız "Acil"de durur; her grup [notes]
+/// sırasını korur.
+({List<Note> urgent, List<Note> pinned, List<Note> others}) homeSections(
+  Iterable<Note> notes,
+) {
+  final urgent = <Note>[], pinned = <Note>[], others = <Note>[];
+  for (final n in notes) {
+    (n.urgent
+            ? urgent
+            : n.pinned
+            ? pinned
+            : others)
+        .add(n);
+  }
+  return (urgent: urgent, pinned: pinned, others: others);
 }

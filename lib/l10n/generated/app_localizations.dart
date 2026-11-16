@@ -3302,6 +3302,30 @@ abstract class AppLocalizations {
   /// **'Sabit'**
   String get sectionPinnedShort;
 
+  /// No description provided for @sectionUrgent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil'**
+  String get sectionUrgent;
+
+  /// No description provided for @urgentMark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil işaretle'**
+  String get urgentMark;
+
+  /// No description provided for @urgentUnmark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil işaretini kaldır'**
+  String get urgentUnmark;
+
+  /// No description provided for @urgentInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranda en üstte, ünlemle'**
+  String get urgentInfo;
+
   /// No description provided for @sectionToday.
   ///
   /// In tr, this message translates to:

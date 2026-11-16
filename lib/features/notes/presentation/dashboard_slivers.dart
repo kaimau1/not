@@ -204,14 +204,9 @@ extension _DashSlivers on _DashboardScreenState {
     ];
 
     _pruneCardCache(notes);
-    final pinned = [
-      for (final n in notes)
-        if (n.pinned) n,
-    ];
-    final others = [
-      for (final n in notes)
-        if (!n.pinned) n,
-    ];
+    // ACİL notlar (2026-11-16) SABİTLERİN DE ÜSTÜNDE kendi bölümünde; acil
+    // ve sabit olan not yalnız "Acil"de görünür (iki kez çizilmez).
+    final (:urgent, :pinned, :others) = homeSections(notes);
 
     final query = ref.read(searchQueryProvider).trim();
     // Kartların canlı vurgusu (F21.6): kurulum sırasında yazılır — tembel
@@ -533,6 +528,7 @@ extension _DashSlivers on _DashboardScreenState {
         (byFolder[n.folderId] ??= []).add(n);
       }
       final groups = <(String, List<Note>)>[
+        (l10n.sectionUrgent, urgent),
         (l10n.sectionPinnedShort, pinned),
         for (final f in folders)
           if (byFolder[f.id] case final list?) (f.name, list),
@@ -559,7 +555,12 @@ extension _DashSlivers on _DashboardScreenState {
     }
 
     if (!bucketsActive) {
-      if (pinned.isEmpty || others.isEmpty) {
+      final sections = <(String, List<Note>)>[
+        (l10n.sectionUrgent, urgent),
+        (l10n.sectionPinnedShort, pinned),
+        (l10n.sectionOthers, others),
+      ].where((s) => s.$2.isNotEmpty).toList();
+      if (sections.length < 2) {
         return [
           ...countHeader,
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
@@ -571,20 +572,18 @@ extension _DashSlivers on _DashboardScreenState {
       }
       return [
         ...countHeader,
-        header(l10n.sectionPinnedShort, pinned.length),
-        SliverPadding(
-          padding: gridPadding,
-          sliver: listView ? rows(pinned) : grid(pinned),
-        ),
-        header(l10n.sectionOthers, others.length),
-        SliverPadding(
-          padding: gridPadding,
-          sliver: listView ? rows(others) : grid(others),
-        ),
+        for (final (label, list) in sections) ...[
+          header(label, list.length),
+          SliverPadding(
+            padding: gridPadding,
+            sliver: listView ? rows(list) : grid(list),
+          ),
+        ],
       ];
     }
 
     final buckets = <(String, List<Note>)>[
+      (l10n.sectionUrgent, urgent),
       (l10n.sectionPinnedShort, pinned),
       for (final (label, list) in dateBuckets(others, DateTime.now()))
         (

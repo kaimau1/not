@@ -74,12 +74,8 @@ String encodeHomeSnapshot(String uid, List<Note> notes) {
   final list = <Map<String, dynamic>>[];
   // Sabitliler listede tarih sırasında ama ekranda EN ÜSTTE: özete girmezlerse
   // gerçek liste gelince bütün kartları aşağı iterlerdi.
-  final ordered = [
-    for (final n in notes)
-      if (n.pinned) n,
-    for (final n in notes)
-      if (!n.pinned) n,
-  ];
+  final s = homeSections(notes);
+  final ordered = [...s.urgent, ...s.pinned, ...s.others];
   for (final note in ordered.take(kHomeSnapshotNotes)) {
     list.add({
       'id': note.id,

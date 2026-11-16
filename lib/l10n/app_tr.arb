@@ -839,6 +839,10 @@
     }
   },
   "sectionPinnedShort": "Sabit",
+  "sectionUrgent": "Acil",
+  "urgentMark": "Acil işaretle",
+  "urgentUnmark": "Acil işaretini kaldır",
+  "urgentInfo": "Ana ekranda en üstte, ünlemle",
   "sectionToday": "Bugün",
   "sectionThisWeek": "Bu hafta",
   "sectionEarlier": "Daha önce",

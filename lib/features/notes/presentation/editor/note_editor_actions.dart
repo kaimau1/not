@@ -230,6 +230,14 @@ extension _EditorActions on _NoteEditorScreenState {
   void _clearReminder() =>
       _mutate((n) => n.copyWith(clearReminderAt: true), immediate: true);
 
+  /// ACİL aç/kapa. `toMap` alanı yalnız açıkken yazar (her nota bayt eklemez,
+  /// S16 bütçesi); birleştirme yazımı eksik alanı silmediği için kapatmak
+  /// açıkça `false` yazar.
+  void _setUrgent(bool on) {
+    _mutate((n) => n.copyWith(urgent: on), immediate: true);
+    if (!on) _notesRepo?.setUrgent(widget.noteId, false);
+  }
+
   Future<void> _addTag() async {
     final controller = TextEditingController();
     final l10n = context.l10n;

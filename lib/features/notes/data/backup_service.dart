@@ -240,6 +240,7 @@ class BackupService {
       await notes.updateFieldsAndWait(id, {
         'pinned': map['pinned'] == true,
         'starred': map['starred'] == true,
+        'urgent': map['urgent'] == true,
         'locked': map['locked'] == true,
         'folderId': ?folderId,
         if (ts('createdAt') != null) 'createdAt': ts('createdAt'),
@@ -355,6 +356,7 @@ class BackupService {
       await notes.updateFieldsAndWait(id, {
         'pinned': map['pinned'] as bool? ?? false,
         'starred': map['starred'] as bool? ?? false,
+        'urgent': map['urgent'] as bool? ?? false,
         'locked': map['locked'] as bool? ?? false,
         if (ts('createdAt') != null) 'createdAt': ts('createdAt'),
         if (ts('archivedAt') != null) 'archivedAt': ts('archivedAt'),
@@ -410,6 +412,7 @@ Map<String, dynamic> encodeBackupEntry(Note note) => {
   if (note.folderId != null) 'folderId': note.folderId,
   if (note.pinned) 'pinned': true,
   if (note.starred) 'starred': true,
+  if (note.urgent) 'urgent': true,
   if (note.locked) 'locked': true,
   if (note.localOnly) 'localOnly': true,
   'createdAt': ?note.createdAt?.toIso8601String(),

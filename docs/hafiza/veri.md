@@ -141,3 +141,10 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - CI `guvenlik` işi uyarı düzeyinde (işi düşürmez); yanlış alarm `.gitleaks.toml`.
   Action sürümü yükseltirken etiketi değil SHA'yı değiştir
   (`gh api repos/<sahip>/<ad>/commits/<etiket> --jq .sha`).
+- **Acil not (`Note.urgent`, alan `urgent`, 2026-11-16):** sabit/yıldız gibi not bayrağı; ana
+  ekranda `homeSections` (note.dart) sırası acil → sabit → diğer (acil+sabit yalnız acilde),
+  kartta ünlem (durum simgeleri kapalıyken de). `toMap` alanı YALNIZ açıkken yazar (S16 bayt
+  bütçesi) — merge yazımı eksik alanı silmediği için kapatma `NotesRepository.setUrgent(false)`
+  ile açıkça yazılır (editörde `_setUrgent`). ⋮ menüsüne konmadı: levha boyu bütçesi
+  (`note_menu_sheet_height_test`, S37) aşıldı; yalnız + levhası, editör göstergesi ve kart sağ tık.
+  PDF balonunun `PageBubble.urgent`'iyle ilgisi yok.
