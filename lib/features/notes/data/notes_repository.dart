@@ -204,6 +204,12 @@ final pendingWritesProvider = StreamProvider.autoDispose.family<bool, String>((
 /// bağlantı gelince arka planda senkronlar — kesintisiz otomatik senkronun
 /// temeli budur.
 class NotesRepository {
+  /// Son DOĞAN notun kimliği (hangi yoldan olursa olsun: "+", şablon, ses,
+  /// paylaşım, tarama, içe aktarma). Editör kapanırken bu notsa ve boş
+  /// atılmadıysa ana ekran kartı odaklar (bkz. `NoteEditorScreen.dispose`,
+  /// `focusedNoteProvider`). Tek yer: her oluşturma yoluna ayrı yama yok.
+  static String? lastCreatedId;
+
   NotesRepository(
     this._firestore,
     this.uid, {
@@ -602,6 +608,7 @@ class NotesRepository {
     int listColumns = 1,
   }) async {
     final doc = _notes.doc();
+    lastCreatedId = doc.id;
     // [items]: ŞABLONDAN doğan listenin maddeleri (bkz. note_templates) —
     // not TEK yazımda dolu doğar; ardından ayrı bir güncelleme yazılsaydı
     // arada boş not görünüp boş-not temizliğine yakalanabilirdi.
@@ -640,7 +647,7 @@ class NotesRepository {
   /// içerik yazımı yerine bu: Android eklentisi her yazımı ayrı iş parçacığında başlatır,
   /// beklenmeyen boş oluşturma yazımı içerik yazımından SONRA düşüp içeriği
   /// silebiliyordu (P60, 2026-11-14: içe aktarmada 240 nottan 67'si kayıp).
-  String newNoteId() => _notes.doc().id;
+  String newNoteId() => lastCreatedId = _notes.doc().id;
 
   /// Notun bir KOPYASINI oluşturur ve yeni id'sini döner.
   ///
@@ -659,6 +666,7 @@ class NotesRepository {
   /// hâli kopyalansa bile kopya ana listeye gelir.
   Future<String> duplicateNote(Note note) async {
     final doc = _notes.doc();
+    lastCreatedId = doc.id;
     final copy = Note(
       id: doc.id,
       type: note.type,

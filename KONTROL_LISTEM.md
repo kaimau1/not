@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Yeni not odağı (oto/yeni-not-odak, cihazda bakılmadı — 2026-11-16)**
+  Nerede: ana ekran, uzun liste (ekranı aşan).
+  Nasıl: aşağıya kaydır, "+" ile ve bir şablondan yeni not oluştur, yaz, geri dön; bir kez de boş not açıp hiç yazmadan dön.
+  Beklenen: dönüşte liste yeni nota kayar (görünüyorsa kaymaz), çerçeve ~1,2 sn iki kez yanıp söner; boş notta hiçbir şey. Erişilebilirlik → animasyonları kaldır açıkken tek sabit vurgu.
+
 - [ ] **120 Hz (oto/120hz, cihazda bakılmadı — 2026-11-16)**
   Nerede: Ayarlar → en alt, sürüm satırı.
   Nasıl: satırın sonunda "· 120 Hz" yazmalı (telefon ekran ayarı 120/144 ya da otomatik iken). Pil tasarrufunu aç, uygulamaya dön, Ayarlar'ı yeniden aç: sistemin seçtiği hız yazar (60 olabilir). İstersen Geliştirici seçenekleri → "Yenileme hızını göster" ile not listesini kaydırırken 120 kaldığına bak.

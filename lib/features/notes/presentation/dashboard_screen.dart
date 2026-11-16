@@ -687,8 +687,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// [noteId]'nin kartı kuruluysa (kaydırma önbelleğinde) görünür alana
   /// kaydırır. Kartlar `ValueKey(note.id)` ile sarılı (dashboard_slivers).
-  void _revealCard(String noteId) {
-    if (!mounted) return;
+  Element? _cardElement(String noteId) {
     final key = ValueKey(noteId);
     Element? found;
     void visit(Element e) {
@@ -701,7 +700,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
 
     context.visitChildElements(visit);
-    final card = found;
+    return found;
+  }
+
+  /// Odaklanan notun kartı TEMBEL listede henüz kurulmadıysa (kaydırma
+  /// payının dışında) `_FocusHalo` kendini kaydıramaz: liste, notun görünür
+  /// sıradaki yerine ORANLA atlatılır; kart kurulunca hale kendini ortalar.
+  /// Not görünümde yoksa (başka klasör/süzgeç dışı) sessizce hiçbir şey.
+  void _revealFocused(String noteId, [int tries = 0]) {
+    if (!mounted || !_gridScroll.hasClients || tries > 6) return;
+    if (ref.read(focusedNoteProvider) != noteId) return;
+    if (_cardElement(noteId) != null) return;
+    final notes = ref.read(filteredNotesProvider).value ?? const <Note>[];
+    final i = notes.indexWhere((n) => n.id == noteId);
+    final positions = _gridScroll.positions.toList();
+    if (i < 0 || positions.length != 1) return;
+    final p = positions.single;
+    // ponytail: oran tahmini (bölüm/sütun dağılımı yok sayılır); tembel
+    // uzunluk tahmini oturdukça birkaç karede düzelir.
+    p.jumpTo(
+      (p.maxScrollExtent * i / math.max(1, notes.length - 1)).clamp(
+        0.0,
+        p.maxScrollExtent,
+      ),
+    );
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _revealFocused(noteId, tries + 1),
+    );
+  }
+
+  void _revealCard(String noteId) {
+    if (!mounted) return;
+    final card = _cardElement(noteId);
     if (card == null) return;
     Scrollable.ensureVisible(
       card,
@@ -1086,17 +1116,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-  /// Yeni notu açar; DÖNÜŞTE o notu ana ekranda vurgular.
-  ///
-  /// Kullanıcı isteği: "kişi yeni bir not oluşturup dashboard'a döndüğünde o
-  /// nota odak gitmeli ve notun çerçevesi hafif yanıp sönmeli" — uzun bir
-  /// listede yeni notun nereye düştüğü görünmüyordu (asistanın oluşturduğu
-  /// notlarda bu zaten vardı, aynı yol elle oluşturulanlara da açıldı).
+  /// Yeni notu açar. DÖNÜŞTEKİ vurgu artık burada değil, editörün
+  /// kapanışında (bkz. [NotesRepository.lastCreatedId]): hangi yoldan doğarsa
+  /// doğsun yeni not odaklanır, boş atılan notta vurgu olmaz.
   Future<void> _openNew(String id, {String query = '', NoteType? type}) async {
     if (!mounted) return;
     await context.pushNote(noteRoutePath(id, query: query));
-    if (!mounted) return;
-    ref.read(focusedNoteProvider.notifier).focus(id);
   }
 
   /// Ana ekranda (hızlı yakalama satırı ya da sesli yakalama) not oluşturuldu:
@@ -1349,6 +1374,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         baseOffset: 0,
         extentOffset: _searchController.text.length,
       );
+    });
+    ref.listen(focusedNoteProvider, (_, id) {
+      if (id == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _revealFocused(id));
     });
     ref.listen(voiceAutostartProvider, (previous, next) {
       if (next) {

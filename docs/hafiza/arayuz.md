@@ -256,6 +256,11 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 ## 2026-11-16 — Kart kutucukları salt görünüm (oto/pano-tik-levha)
 - Kullanıcı bulgusu: "dashboard'da iken madde tiklenebiliyor, bu olmamalı". Eski D6 "karttan işaretleme" (KULLANICI_DENEYIMI_PLANI B2 / TUTARLILIK_PLANI B11 — plan önerisiydi, alıntılı kullanıcı isteği değil) KALKTI: `toggleCardItem` + `_CardItemRow.onToggle` silindi, kutucuğa dokunuş kartın InkWell'ine düşer → not açılır. Bekçi `test/card_checked_item_test.dart`. Geri getirme.
 
+## 2026-11-16 — Yeni not odağı (oto/yeni-not-odak)
+- Tek bağlantı noktası: `NotesRepository.lastCreatedId` (`createNote`, `newNoteId`, `duplicateNote` yazar). Editör `dispose`ta not bu kimlikse ve boş atılmadıysa `AppMotion.long` sonra `focusedNoteProvider.focusBrief` (1,2 sn, yarım nabız `AppMotion.medium` = 2 nabız). Her oluşturma yoluna ayrı yama YOK; `_openNew`'daki eski odak kaldırıldı.
+- `_FocusHalo`: hareketi azalt → sabit vurgu; kart tamamen görünüyorsa kaydırmaz, değilse ortalar (asistan odağı da). Kart tembel listede kurulmamışsa `_revealFocused` görünür listedeki sıra oranıyla atlatır (≤6 kare), kart kurulunca hale ortalar. Not görünümde yoksa (klasör/süzgeç) sessiz.
+- Test: `test/new_note_focus_test.dart`. Not: testte FreezeWhenHidden yetişmesi yüzünden kaydırma birkaç kare gecikir; dönüşte kare kare pompala.
+
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 
 Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.
