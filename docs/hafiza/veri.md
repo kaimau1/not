@@ -89,6 +89,11 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   (`StudyCard`, SM-2 `reviewCard`), yeni koleksiyon yok (hesap silme/kural
   değişmedi). Editör ⋮ "Kart üret" (AI), `/cards` "Bugünün kartları".
 
+### Zamanlı not `expiresAt` (2026-11-16, oto/sureli-not)
+- Not alanı `expiresAt` (Timestamp, isteğe bağlı). Süre dolunca `NotesRepository.archiveExpired` → `archivedAt = expiresAt` (şimdi değil: iki cihaz aynı değeri yazar, idempotent) + `expiresAt: null`. Tetik: `notesStreamProvider` her yayın (O(n) tarama) + dashboard öne geliş. Açık editördeki not atlanır. Arka plan işi YOK (uygulama kapalıyken arşivlenmez, açılışta olur).
+- `toMap` boş süreyi YAZMAZ (S16 bayt bütçesi) → kaldırma her zaman açık `{'expiresAt': null}` (`setExpiry`, editör `_clearExpiry`, `setArchived(true)`/`setArchivedAll`, editör `_toggleArchive`). Editör uzak birleştirmesi `expiresAt`ı benimser; iki "aynı mı" karşılaştırmasında var. Kural değişmedi (not alanları serbest).
+- Kart ⋮ menüsüne EKLENMEDİ: menü boyu bekçisi (`note_menu_sheet_height_test`) ve S37 aşılıyordu; yer editörün "+" menüsü (Hatırlat'ın grubu). Test `test/sureli_not_test.dart`.
+
 ## Yedek ve içe aktarma (F18.4/F18.5/F18.15, 2026-11-02)
 - Tam yedek `.notyedek` (ZIP): `yedek.json` (`kind: full-backup`, not
   girdisi = `encodeNoteJson` + hesap alanları + içerik özeti) +

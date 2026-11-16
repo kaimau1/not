@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 16 Kasım 2026 {#2026-11-16}
+- **Zamanlı notlar:** notun "+" menüsünden "Şu zamanda arşivle" ile 1 gün, 3 gün, 1 hafta, 1 ay ya da istediğin tarih-saati seç; süre dolunca not kendiliğinden Arşiv'e taşınır (silinmez, oradan geri alınır). Kartta küçük kum saati ve kalan süre ("2 g"), notta "… arşivlenir" çipi; çipteki ✕ süreyi kaldırır.
 - **120 Hz:** uygulama ekranın yüksek yenileme hızını artık iki ayrı yoldan istiyor; bazı telefonlarda (Xiaomi gibi) 60 Hz'e düşmesi önlenir. 144 Hz ekranda da 120 seçilir (pil ve ısınma için), pil tasarrufu açıkken seçim telefona bırakılır. Etkin hız Ayarlar'ın en altındaki sürüm satırında yazar ("· 120 Hz").
 - **Klavye açılıp kapanırken alt panel zıplamıyor:** panel klavye kıpırdamaya başladığı anda (hatta yazı alanından çıktığınız/girdiğiniz anda) gizleniyor, klavye durunca beklemeden yerinde beliriyor; kapanışta klavyeden ayrılıp zikzak çizmesi bitti.
 - **Yapılacaklar listesi akıcı:** uzun bir listede kutucuk işaretlemek, Enter ile yeni madde açmak ve boş maddeyi silmek artık bütün not ekranını yeniden çizmiyor; yalnız değişen satır güncelleniyor.

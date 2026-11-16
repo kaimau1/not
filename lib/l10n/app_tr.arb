@@ -3992,5 +3992,20 @@
   "quickDropNothingNew": "Hepsi zaten “{title}” notunda",
   "@quickDropNothingNew": {"placeholders": {"title": {"type": "String"}}},
   "quickDropKeyboard": "Açılınca klavye",
-  "quickDropMicAuto": "Açılınca dinle"
+  "quickDropMicAuto": "Açılınca dinle",
+  "noteExpiry": "Şu zamanda arşivle",
+  "noteExpiryDay": "1 gün",
+  "noteExpiry3Days": "3 gün",
+  "noteExpiryWeek": "1 hafta",
+  "noteExpiryMonth": "1 ay",
+  "noteExpiryPick": "Tarih ve saat seç",
+  "noteExpiryRemove": "Süreyi kaldır",
+  "noteExpiryChip": "{date} arşivlenir",
+  "@noteExpiryChip": {"placeholders": {"date": {"type": "String"}}},
+  "noteExpiryLeftDays": "{n} g",
+  "@noteExpiryLeftDays": {"placeholders": {"n": {"type": "int"}}},
+  "noteExpiryLeftHours": "{n} sa",
+  "@noteExpiryLeftHours": {"placeholders": {"n": {"type": "int"}}},
+  "noteExpiryLeftMinutes": "{n} dk",
+  "@noteExpiryLeftMinutes": {"placeholders": {"n": {"type": "int"}}}
 }

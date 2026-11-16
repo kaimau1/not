@@ -85,6 +85,11 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   var lastCleanup = DateTime.fromMillisecondsSinceEpoch(0);
   return repo.watchNotes().map((notes) {
     final now = DateTime.now();
+    // ZAMANLI NOT: her yayında ucuz tarama (O(n), yazım yalnız süresi
+    // dolmuş not varsa). Öne gelişte dashboard da çağırır.
+    if (expiredNotes(notes, now).isNotEmpty) {
+      unawaited(repo.archiveExpired(notes, now: now).catchError((Object _) {}));
+    }
     if (now.difference(lastCleanup) > const Duration(seconds: 30)) {
       lastCleanup = now;
       unawaited(
@@ -1129,7 +1134,33 @@ class NotesRepository {
       batchUpdate(noteIds, {'deletedAt': null});
 
   Future<void> setArchivedAll(Iterable<String> noteIds, bool archived) =>
-      batchUpdate(noteIds, {'archivedAt': archived ? Timestamp.now() : null});
+      batchUpdate(noteIds, {
+        'archivedAt': archived ? Timestamp.now() : null,
+        if (archived) 'expiresAt': null,
+      });
+
+  /// **ZAMANLI NOT**: süresi dolmuş notları arşive taşır, süreyi temizler.
+  /// `archivedAt` = süre anı (şimdi değil): iki cihaz aynı anda yazsa da aynı
+  /// değer — idempotent. Açık editördeki not atlanır (yazarken kaybolmasın;
+  /// editör kapanınca gelen yayında arşivlenir).
+  // ponytail: yalnız açılış / öne geliş / akış yayınında denetlenir; uygulama
+  // kapalıyken arşivleme yok (açılınca hemen olur). Arka planda gerekirse
+  // WorkManager benzeri periyodik iş eklenir.
+  Future<void> archiveExpired(List<Note> notes, {DateTime? now}) {
+    final at = now ?? DateTime.now();
+    return batchUpdateEach({
+      for (final n in expiredNotes(notes, at))
+        if (!openEditorNoteIds.contains(n.id))
+          n.id: {
+            'archivedAt': Timestamp.fromDate(n.expiresAt!),
+            'expiresAt': null,
+          },
+    });
+  }
+
+  void setExpiry(String noteId, DateTime? at) => updateFields(noteId, {
+    'expiresAt': at != null ? Timestamp.fromDate(at) : null,
+  });
 
   /// Notların elle sıralamasını (madde 1: basılı tutup sürükle) kalıcılaştırır.
   /// Verilen liste yeni görünüm sırasıdır; her nota eşit aralıklı bir
@@ -1227,8 +1258,10 @@ class NotesRepository {
 
   void restore(String noteId) => updateFields(noteId, {'deletedAt': null});
 
-  void setArchived(String noteId, bool archived) =>
-      updateFields(noteId, {'archivedAt': archived ? Timestamp.now() : null});
+  void setArchived(String noteId, bool archived) => updateFields(noteId, {
+    'archivedAt': archived ? Timestamp.now() : null,
+    if (archived) 'expiresAt': null,
+  });
 
   /// [repeat] verilmezse tekrar alanına dokunulmaz (ertele/ilerlet); hatırlatıcı
   /// kaldırılınca (null) tekrar da silinir (F18.14).

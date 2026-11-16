@@ -8723,4 +8723,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickDropMicAuto => 'Listen on open';
+
+  @override
+  String get noteExpiry => 'Archive at…';
+
+  @override
+  String get noteExpiryDay => '1 day';
+
+  @override
+  String get noteExpiry3Days => '3 days';
+
+  @override
+  String get noteExpiryWeek => '1 week';
+
+  @override
+  String get noteExpiryMonth => '1 month';
+
+  @override
+  String get noteExpiryPick => 'Pick date & time';
+
+  @override
+  String get noteExpiryRemove => 'Remove timer';
+
+  @override
+  String noteExpiryChip(String date) {
+    return 'Archives $date';
+  }
+
+  @override
+  String noteExpiryLeftDays(int n) {
+    return '${n}d';
+  }
+
+  @override
+  String noteExpiryLeftHours(int n) {
+    return '${n}h';
+  }
+
+  @override
+  String noteExpiryLeftMinutes(int n) {
+    return '${n}m';
+  }
 }

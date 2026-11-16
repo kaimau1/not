@@ -447,7 +447,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) _syncOwnDirectoryEntry();
+    if (state == AppLifecycleState.resumed) {
+      _syncOwnDirectoryEntry();
+      // ZAMANLI NOT: arkadayken süresi dolanlar öne gelişte arşive (akış o
+      // an yayın yapmayabilir).
+      final notes = ref.read(notesStreamProvider).value;
+      if (notes != null) {
+        unawaited(
+          ref.read(notesRepositoryProvider)?.archiveExpired(notes) ??
+              Future<void>.value(),
+        );
+      }
+    }
     if (state == AppLifecycleState.paused &&
         _isDefaultHome(
           searchActive: ref.read(searchQueryProvider).trim().isNotEmpty,
