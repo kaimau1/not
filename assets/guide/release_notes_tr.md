@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 16 Kasım 2026 {#2026-11-16}
+- **120 Hz:** uygulama ekranın yüksek yenileme hızını artık iki ayrı yoldan istiyor; bazı telefonlarda (Xiaomi gibi) 60 Hz'e düşmesi önlenir. 144 Hz ekranda da 120 seçilir (pil ve ısınma için), pil tasarrufu açıkken seçim telefona bırakılır. Etkin hız Ayarlar'ın en altındaki sürüm satırında yazar ("· 120 Hz").
 - **Yapılacaklar listesi akıcı:** uzun bir listede kutucuk işaretlemek, Enter ile yeni madde açmak ve boş maddeyi silmek artık bütün not ekranını yeniden çizmiyor; yalnız değişen satır güncelleniyor.
 - **Uzun kullanımda daha hafif:** açıp kapattığın her not için takvim bağlarını izleyen küçük bir hesap, not kapandıktan sonra da arka planda çalışmayı sürdürüyordu; uygulama kullanıldıkça birikiyordu. Artık not kapanınca duruyor.
 - **Yazarken de silgi bir dokunuşta:** notta kalemle çizim varsa alt çubukta silgi düğmesi belirir; dokununca kalem kipi silgi seçili açılır. Çizim yoksa görünmez; istemezsen alt çubuğu düzenlerken gizleyebilirsin.

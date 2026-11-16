@@ -51,6 +51,7 @@ import 'theme_picker.dart';
 import 'typing_bar_settings.dart';
 import '../../../core/utils/channel_counter.dart';
 import '../../../core/utils/diagnostics.dart';
+import '../../../core/utils/display_rate.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/widgets/expand_reveal.dart';
 import '../../../core/utils/format_bytes.dart';

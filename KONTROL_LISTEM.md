@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **120 Hz (oto/120hz, cihazda bakılmadı — 2026-11-16)**
+  Nerede: Ayarlar → en alt, sürüm satırı.
+  Nasıl: satırın sonunda "· 120 Hz" yazmalı (telefon ekran ayarı 120/144 ya da otomatik iken). Pil tasarrufunu aç, uygulamaya dön, Ayarlar'ı yeniden aç: sistemin seçtiği hız yazar (60 olabilir). İstersen Geliştirici seçenekleri → "Yenileme hızını göster" ile not listesini kaydırırken 120 kaldığına bak.
+  Beklenen: kaydırma ve klavye açılışında 120; çözünürlük değişmez. 60 yazıyorsa: `adb logcat -s NotlarEkran` çıktısı (etkin / istenen / modlar) lazım.
+
 - [ ] **Madde notunda kasma (oto/madde-kasma, cihazda bakılmadı — 2026-11-15)**
   Nerede: 30–60 maddeli bir yapılacaklar notu.
   Nasıl: art arda 5–6 kutucuk işaretle/kaldır; bir maddede Enter ile yeni madde aç, yaz; boş maddede geri sil ile sil; listeyi kaydır.

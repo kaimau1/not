@@ -61,6 +61,7 @@ private val sharedMediaExecutor: java.util.concurrent.ExecutorService by lazy {
 class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
     // İlk Flutter karesi çizildi mi (FlutterFragment bu Activity'ye bildirir).
     @Volatile private var firstFrameShown = false
+    private val yenilemeHizi = YenilemeHizi(this)
 
     override fun onFlutterUiDisplayed() {
         firstFrameShown = true
@@ -771,6 +772,11 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                         val power = getSystemService(POWER_SERVICE) as? PowerManager
                         result.success(power?.isPowerSaveMode ?: false)
                     }
+                    // 120 Hz (bkz. YenilemeHizi, display_rate.dart).
+                    "setRefreshRate" -> result.success(
+                        yenilemeHizi.uygula(call.argument<Boolean>("high") ?: true)
+                    )
+                    "refreshRate" -> result.success(yenilemeHizi.etkinHz())
                     // Düşük RAM'li cihaz: sistem bayrağı ya da toplam RAM <= 4 GB
                     // (F7.6 — görsel önbellek bütçesi küçülür).
                     "lowMemoryDevice" -> {
@@ -1617,6 +1623,7 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
             (getSystemService(INPUT_SERVICE) as InputManager).unregisterInputDeviceListener(it)
         }
         keyboardListener = null
+        yenilemeHizi.birak()
         restoreBeeps()
         super.onDestroy()
     }
