@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 16 Kasım 2026 {#2026-11-16}
+- **Klavye açılıp kapanırken alt panel zıplamıyor:** panel klavye kıpırdamaya başladığı anda (hatta yazı alanından çıktığınız/girdiğiniz anda) gizleniyor, klavye durunca beklemeden yerinde beliriyor; kapanışta klavyeden ayrılıp zikzak çizmesi bitti.
 - **Yapılacaklar listesi akıcı:** uzun bir listede kutucuk işaretlemek, Enter ile yeni madde açmak ve boş maddeyi silmek artık bütün not ekranını yeniden çizmiyor; yalnız değişen satır güncelleniyor.
 - **Uzun kullanımda daha hafif:** açıp kapattığın her not için takvim bağlarını izleyen küçük bir hesap, not kapandıktan sonra da arka planda çalışmayı sürdürüyordu; uygulama kullanıldıkça birikiyordu. Artık not kapanınca duruyor.
 - **Yazarken de silgi bir dokunuşta:** notta kalemle çizim varsa alt çubukta silgi düğmesi belirir; dokununca kalem kipi silgi seçili açılır. Çizim yoksa görünmez; istemezsen alt çubuğu düzenlerken gizleyebilirsin.

@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Alt panel klavyeyle zıplamıyor (oto/alt-panel-kalici, cihazda bakılmadı — 2026-11-16)**
+  Nerede: bir metin notu, alt panel (biçim/ekle çubuğu).
+  Nasıl: yazı alanına dokunup klavyeyi aç; boş bir yere dokunarak kapat; bir de geri tuşuyla kapat; 5'er kez.
+  Doğruysa: panel klavye kıpırdarken hiç görünmüyor, klavye durunca hemen yerinde beliriyor; kapanışta klavyeden ayrılıp zikzak çizmiyor. Yanlışsa: açılış mı kapanış mı, geri tuşu mu dokunuş mu yaz (`tool/perf/panel_kayit.py` ile kayıt).
 - [ ] **Madde notunda kasma (oto/madde-kasma, cihazda bakılmadı — 2026-11-15)**
   Nerede: 30–60 maddeli bir yapılacaklar notu.
   Nasıl: art arda 5–6 kutucuk işaretle/kaldır; bir maddede Enter ile yeni madde aç, yaz; boş maddede geri sil ile sil; listeyi kaydır.
