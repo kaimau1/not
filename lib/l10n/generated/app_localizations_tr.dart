@@ -1612,6 +1612,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get checkSelectedItems => 'Seçilenleri işaretle';
 
   @override
+  String get itemUncheck => 'İşareti kaldır';
+
+  @override
   String get uncheckSelectedItems => 'Seçilenlerin işaretini kaldır';
 
   @override

@@ -155,11 +155,12 @@ void main() {
     await endEditor(tester);
   });
 
-  testWidgets('arama aç (alt çubuk → Notta ara)', (tester) async {
+  testWidgets('arama aç (üst çubuk → Notta ara)', (tester) async {
     await pumpEditor(tester, text);
     final fields = find.byType(TextField).evaluate().length;
     await measure(tester, 'arama_ac', () async {
-      await tester.tap(find.byTooltip('Notta ara'));
+      // Notta ara üst çubukta (kullanıcı isteği 2026-11-16).
+      await tester.tap(find.byKey(const ValueKey('editor-top-search')));
       await settle(tester);
     });
     expect(find.byType(TextField).evaluate().length, greaterThan(fields));

@@ -1484,6 +1484,7 @@ class _CardItemRow extends StatelessWidget {
     required this.rich,
     this.checkbox = false,
     this.number,
+    this.numbered = false,
   });
 
   final NoteItem item;
@@ -1497,20 +1498,26 @@ class _CardItemRow extends StatelessWidget {
   final bool checkbox;
   final int? number;
 
+  /// Numaralı liste satırı mı (işaretliye numara yerine ✓).
+  final bool numbered;
+
   @override
   Widget build(BuildContext context) {
     final scheme = _cardThemeOf(context).colorScheme;
-    final struck = checkbox && item.checked && !item.header;
+    // Numaralı listede de işaretli madde üstü çizili, numara yerine ✓
+    // (bkz. [itemOrderNumber]).
+    final struck = (checkbox || numbered) && item.checked && !item.header;
     Widget? leading;
     if (item.header) {
       // Ara başlık: kutucuk/numara yok, kalın (bkz. [NoteItem.header]).
-    } else if (checkbox) {
+    } else if (checkbox || (numbered && item.checked)) {
       // Kutucuk EDİTÖRLE AYNI kural (bkz. [NoteCheckColors]): işaretli kutu
       // notun vurgusuyla dolu ve soluk, boş kutu çerçeve — renkli kartta
-      // notun koyu tonu, renksizde temanın vurgusu.
+      // notun koyu tonu, renksizde temanın vurgusu. Numaralı listede
+      // işaretli madde numara yerine ✓ (bkz. [itemOrderNumber]).
       final accent = NoteAccent.maybeOf(context)?.accent;
       final icon = Icon(
-        item.checked ? Icons.check_box : Icons.check_box_outline_blank,
+        _cardCheckGlyph(item.checked, numbered: !checkbox),
         size: 14,
         color: item.checked
             ? NoteCheckColors.checked(scheme, accent)
@@ -1979,6 +1986,7 @@ class _NotePreview extends StatelessWidget {
                 query: highlightQuery,
                 rich: rich,
                 checkbox: note.type == NoteType.checklist,
+                numbered: note.type == NoteType.ordered,
                 number: note.type == NoteType.ordered
                     ? itemOrderNumber(shown, i)
                     : null,
@@ -2327,3 +2335,9 @@ class _Leaving extends StatelessWidget {
     ),
   );
 }
+
+/// Kart maddesinin işaret simgesi: kutucuklu listede kutu, numaralı listede
+/// (işaretliye numara yerine) ✓.
+IconData _cardCheckGlyph(bool checked, {required bool numbered}) => numbered
+    ? Icons.check_rounded
+    : (checked ? Icons.check_box : Icons.check_box_outline_blank);

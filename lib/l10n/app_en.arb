@@ -537,6 +537,7 @@
   "showAttachments": "Show",
   "selectAllItems": "Select all",
   "checkSelectedItems": "Check selected",
+  "itemUncheck": "Uncheck",
   "uncheckSelectedItems": "Uncheck selected",
   "hiddenFolder": "Hidden folder",
   "hiddenFolderInfo": "A hidden folder and the notes in it don't appear on the home screen. To show them, pick \"Hidden folders\" from the ⋮ menu and verify your identity.",

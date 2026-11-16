@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../app/theme/app_design.dart';
 import '../../app/theme/app_tokens.dart';
@@ -278,12 +280,56 @@ class _NoticeCardState extends State<_NoticeCard> {
     if (_tip) GestureBinding.instance.pointerRouter.addGlobalRoute(_onPointer);
   }
 
+  // ── Kolay kapanış: dokun ya da yana / aşağı it ─────────────────────────
+  final _drag = ValueNotifier<Offset>(Offset.zero);
+  bool _gone = false;
+
+  /// Bu kadar itiş (dp) ya da bu hız (dp/sn) kapatır.
+  static const double _distance = 56;
+  static const double _speed = 400;
+
+  late final List<GestureRecognizer> _recognizers = [
+    TapGestureRecognizer(debugOwner: this)..onTap = _dismissByHand,
+    HorizontalDragGestureRecognizer(debugOwner: this)
+      ..onUpdate = (d) {
+        _drag.value = Offset(_drag.value.dx + d.delta.dx, 0);
+      }
+      ..onEnd = (d) => _dragEnd(d.velocity, horizontal: true),
+    VerticalDragGestureRecognizer(debugOwner: this)
+      ..onUpdate = (d) {
+        _drag.value = Offset(0, math.max(0, _drag.value.dy + d.delta.dy));
+      }
+      ..onEnd = (d) => _dragEnd(d.velocity, horizontal: false),
+  ];
+
+  void _dismissByHand() {
+    if (_gone) return;
+    _gone = true;
+    widget.controller.dismiss(widget.data);
+  }
+
+  void _dragEnd(Velocity velocity, {required bool horizontal}) {
+    final o = _drag.value;
+    final v = velocity.pixelsPerSecond;
+    final far = horizontal ? o.dx.abs() > _distance : o.dy > _distance * 0.6;
+    final fast = horizontal ? v.dx.abs() > _speed : v.dy > _speed;
+    if (far || fast) {
+      _dismissByHand();
+    } else {
+      _drag.value = Offset.zero;
+    }
+  }
+
   void _onPointer(PointerEvent event) {
     if (event is PointerDownEvent) widget.controller.dismiss(widget.data);
   }
 
   @override
   void dispose() {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _drag.dispose();
     if (_tip) {
       GestureBinding.instance.pointerRouter.removeGlobalRoute(_onPointer);
     }
@@ -378,19 +424,10 @@ class _NoticeCardState extends State<_NoticeCard> {
                 // Kalan süre: eylemli bildirimde dipte incelen çizgi (kullanıcı
                 // bulgusu 2026-10-17). Yalnız boyama (ölçek), dizilim yok.
                 if (data.actionLabel != null)
-                  TweenAnimationBuilder<double>(
+                  SteppedCountdown(
                     key: const ValueKey('notice-countdown'),
-                    tween: Tween(begin: 1, end: 0),
                     duration: data.duration,
-                    builder: (context, value, child) => Transform.scale(
-                      scaleX: value,
-                      alignment: AlignmentDirectional.centerStart,
-                      child: child,
-                    ),
-                    child: ColoredBox(
-                      color: scheme.inversePrimary,
-                      child: const SizedBox(height: AppSpace.xxs),
-                    ),
+                    color: scheme.inversePrimary,
                   ),
               ],
             ),
@@ -427,7 +464,199 @@ class _NoticeCardState extends State<_NoticeCard> {
             AppSpace.m +
             (wide ? AppNoticeHost.fabRow : 0),
       ),
-      child: card,
+      // KOLAY KAPANIŞ (kullanıcı bulgusu 2026-11-16: "bildirimleri kapatmak
+      // zor, bayağı kapanmıyor"): karta dokunmak ya da yana / aşağı itmek
+      // kapatır; eylem düğmesi kendi dokunuşunu alır (iç düğme kazanır).
+      // Kurulum bütçesi (S31): tek boyama nesnesi hem kaydırır hem
+      // dokunuşu tanır; kayarken hiçbir widget kurulmaz.
+      child: _DragPaint(
+        key: const ValueKey('notice-swipe'),
+        offset: _drag,
+        recognizers: _recognizers,
+        child: card,
+      ),
     );
   }
+}
+
+/// Çocuğunu [offset] kadar kaydırıp itiş arttıkça soldurur — yalnız
+/// BOYAMA ve isabet testi; kayarken hiçbir widget kurulmaz (S31 bütçesi).
+class _DragPaint extends SingleChildRenderObjectWidget {
+  const _DragPaint({
+    super.key,
+    required this.offset,
+    required this.recognizers,
+    super.child,
+  });
+
+  final ValueNotifier<Offset> offset;
+
+  /// Karta inen her parmak bunlara verilir (iç düğme arenada kazanır).
+  final List<GestureRecognizer> recognizers;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderDragPaint(offset)..recognizers = recognizers;
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderDragPaint render) =>
+      render
+        ..offset = offset
+        ..recognizers = recognizers;
+}
+
+class _RenderDragPaint extends RenderProxyBox {
+  _RenderDragPaint(this._offset);
+
+  List<GestureRecognizer> recognizers = const [];
+
+  @override
+  bool hitTestSelf(Offset position) => true;
+
+  @override
+  void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
+    if (event is! PointerDownEvent) return;
+    for (final r in recognizers) {
+      r.addPointer(event);
+    }
+  }
+
+  ValueNotifier<Offset> _offset;
+  set offset(ValueNotifier<Offset> value) {
+    if (identical(value, _offset)) return;
+    if (attached) {
+      _offset.removeListener(markNeedsPaint);
+      value.addListener(markNeedsPaint);
+    }
+    _offset = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _offset.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _offset.removeListener(markNeedsPaint);
+    super.detach();
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => child != null;
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      result.addWithPaintOffset(
+        offset: _offset.value,
+        position: position,
+        hitTest: (result, p) => super.hitTestChildren(result, position: p),
+      );
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+    final o = _offset.value;
+    final alpha = (255 * (1 - (o.dx.abs() + o.dy) / 240).clamp(0.2, 1.0))
+        .round();
+    layer = context.pushOpacity(
+      offset + o,
+      alpha,
+      (context, at) => context.paintChild(child, at),
+      oldLayer: layer as OpacityLayer?,
+    );
+  }
+}
+
+/// **KADEMELİ GERİ SAYIM ÇİZGİSİ** (kullanıcı bulgusu 2026-11-16: "bildirim
+/// varken kasma var"). KÖK NEDEN: eski çizgi `TweenAnimationBuilder` ile HER
+/// KAREDE (120 Hz) yeniden çiziliyordu; bildirim açık kaldığı 4-6 sn boyunca
+/// uygulama hiç boşta kalmıyor, her kare tüm sahne yeniden birleştirilip
+/// rasterleniyordu — yazarken klavye/editör kareleriyle yarışıyordu. Şimdi
+/// çizgi saniyede [steps] kez ilerler (kare üretimi ~15 kat azalır); kurulum
+/// yok, yalnız kendi katmanında boyama ([CustomPaint.painter] dinler).
+class SteppedCountdown extends StatefulWidget {
+  const SteppedCountdown({
+    super.key,
+    required this.duration,
+    required this.color,
+    this.height = AppSpace.xxs,
+  });
+
+  final Duration duration;
+  final Color color;
+  final double height;
+
+  /// Saniyedeki adım sayısı.
+  static const int steps = 8;
+
+  @override
+  State<SteppedCountdown> createState() => _SteppedCountdownState();
+}
+
+class _SteppedCountdownState extends State<SteppedCountdown> {
+  final _left = ValueNotifier<double>(1);
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    final total = widget.duration.inMicroseconds;
+    if (total <= 0) {
+      _left.value = 0;
+      return;
+    }
+    const step = 1000000 ~/ SteppedCountdown.steps;
+    _timer = Timer.periodic(const Duration(microseconds: step), (t) {
+      final left = 1 - t.tick * step / total;
+      _left.value = left <= 0 ? 0 : left;
+      if (left <= 0) t.cancel();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _left.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RepaintBoundary(
+    child: CustomPaint(
+      size: Size(double.infinity, widget.height),
+      painter: _CountdownPainter(
+        _left,
+        widget.color,
+        Directionality.of(context),
+      ),
+    ),
+  );
+}
+
+class _CountdownPainter extends CustomPainter {
+  _CountdownPainter(this.left, this.color, this.direction)
+    : super(repaint: left);
+
+  final ValueListenable<double> left;
+  final Color color;
+  final TextDirection direction;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width * left.value;
+    if (w <= 0) return;
+    final x = direction == TextDirection.rtl ? size.width - w : 0.0;
+    canvas.drawRect(
+      Rect.fromLTWH(x, 0, w, size.height),
+      Paint()..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CountdownPainter old) =>
+      old.color != color || old.direction != direction || old.left != left;
 }

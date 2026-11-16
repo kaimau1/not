@@ -291,7 +291,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
 
   // ── Konuşma bitti: geri sayım / yapay zekâ / sor ──────────────────────
 
-  void _onSpeechEnd() {
+  /// [now]: kullanıcı "bitti" dedi — hedef belliyse geri sayım yok.
+  void _onSpeechEnd({bool now = false}) {
     _resolve(_bar.currentState?.text ?? '');
     final st = _state.value;
     final parsed = _parsed;
@@ -310,7 +311,12 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       }
       return;
     }
-    if (st.id != null) _startCountdown();
+    if (st.id == null) return;
+    if (now) {
+      _apply(resolve: false);
+    } else {
+      _startCountdown();
+    }
   }
 
   bool get _aiUsable =>
@@ -513,6 +519,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               onRawSubmitted: (_) => _apply(),
               // "Söyle, eklensin": konuşma bitince kısa geri sayımla eklenir.
               onSpeechEnd: _onSpeechEnd,
+              // "… bitti" dendi: geri sayım beklemeden hemen eklenir.
+              onDoneWord: () => _onSpeechEnd(now: true),
               onItems: (_) {},
             ),
             // DURUM SATIRI, boyu SABİT (levha zıplamasın): nereye / hangi

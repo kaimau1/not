@@ -431,7 +431,8 @@ extension _EditorActions on _NoteEditorScreenState {
         // raptiye ve görünüm çubuktan düşer, menüye gelir.
         visibleElsewhere: {
           if (_barTitle == null && Customizable.shows(UiItem.topPin)) 'pin',
-          if (_barHasSearch) 'search',
+          // Notta ara üst çubukta (⋮'nin solunda) hep duruyor.
+          'search',
         },
         // bubbleView verilmez: balonlu görünüm kalktı (2026-11-05).
         canRemoveParts: !_readOnly && _hasBothParts(note),

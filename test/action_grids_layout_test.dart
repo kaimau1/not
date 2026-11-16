@@ -53,19 +53,25 @@ void main() {
     expect(find.text('Kitaplık planı'), findsOneWidget);
     // Kopyala/Arkadaşa gönder/Dışa aktar Paylaş levhasında (2026-10-17).
     expect(find.text('Arkadaşa gönder'), findsNothing);
-    for (final label in ['Sabitle', 'Paylaş', 'Notu çoğalt', 'Seç', 'Sil']) {
+    for (final label in ['Sabitle', 'Paylaş', 'Yıldızla', 'Seç', 'Sil']) {
       expect(find.text(label), findsOneWidget, reason: '$label görünmeli');
     }
+    // Gruplar katlanır çekmece (2026-11-16): Kopyala kapalı, dokununca açılır.
+    expect(find.text('Notu çoğalt'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('menu-fold-head-Kopyala')));
+    await tester.pumpAndSettle();
+    expect(find.text('Notu çoğalt'), findsOneWidget);
 
-    // Hızlı satır: "Sabitle", "Yıldızla" (2026-10-20'de geri geldi) ve
-    // "Paylaş" AYNI satırda, bu sırayla yan yana.
+    // Hızlı satır ÖNEM SIRASIYLA (kullanıcı isteği 2026-11-16): Sabitle ·
+    // Zemin rengi · Çerçeve · Paylaş · Klasöre taşı, AYNI satırda.
     final pin = tester.getRect(find.text('Sabitle'));
-    final star = tester.getRect(find.text('Yıldızla'));
+    final color = tester.getRect(find.text('Zemin rengi'));
     final share = tester.getRect(find.text('Paylaş'));
-    expect(pin.center.dy, closeTo(star.center.dy, 1));
-    expect(pin.center.dy, closeTo(share.center.dy, 1));
-    expect(pin.center.dx, lessThan(star.center.dx));
-    expect(star.center.dx, lessThan(share.center.dx));
+    // Üst kenar: uzun ad iki satıra inebilir.
+    expect(pin.top, closeTo(color.top, 1));
+    expect(pin.top, closeTo(share.top, 1));
+    expect(pin.center.dx, lessThan(color.center.dx));
+    expect(color.center.dx, lessThan(share.center.dx));
 
     // "Sil" tek başına, alt satırda ve tam genişlikte.
     expect(tester.getRect(find.text('Sil')).center.dy, greaterThan(pin.top));

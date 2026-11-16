@@ -745,6 +745,7 @@
   "showAttachments": "Göster",
   "selectAllItems": "Tümünü seç",
   "checkSelectedItems": "Seçilenleri işaretle",
+  "itemUncheck": "İşareti kaldır",
   "uncheckSelectedItems": "Seçilenlerin işaretini kaldır",
   "hiddenFolder": "Gizli klasör",
   "hiddenFolderInfo": "Gizli klasör ve içindeki notlar ana ekranda görünmez. Göstermek için ⋮ menüsünden \"Gizli klasörler\" seçilir ve kimlik doğrulanır.",
