@@ -66,7 +66,10 @@ void main() {
   testWidgets('"Düzenle" düzen merkezinin "+" panosunu açar', (tester) async {
     await tester.pumpWidget(host());
     await openBoard(tester);
-    expect(find.byKey(const ValueKey('quickadd-board-preview')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('quickadd-board-preview')),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('customize-surface-addPanel')),
       findsOneWidget,
@@ -75,30 +78,73 @@ void main() {
     expect(board(tester).entries.map((e) => e.id), contains('youtube'));
   });
 
+  // 2026-11-16 (kullanıcı isteği, ekran görüntüsünde çarpılanlar): dosya,
+  // YouTube, kalem, çizim, defter, Hızlı ekle ve favori şablonlar varsayılan
+  // gizli; panoda durur, geri eklenir. Tara (belge+QR) tek karo; Akıllı liste
+  // ve Hazır şablonlar şablon bölümünde.
+  testWidgets('sade varsayılan: çarpılanlar gizli, panodan geri eklenir', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host());
+    await openPanel(tester);
+    for (final k in const [
+      'file',
+      'youtube',
+      'draw',
+      'drawing',
+      'archive',
+      'quickdrop',
+      'fav-b:shopping',
+    ]) {
+      expect(tile(k), findsNothing, reason: k);
+    }
+    expect(tile('smartlist'), findsOneWidget);
+    expect(tile('template'), findsOneWidget);
+    expect(find.text('Hazır şablonlar'), findsOneWidget);
+    expect(find.text('Akıllı liste'), findsOneWidget);
+    // Birincil satır: üç karo, eşit genişlikte (tam ortada).
+    final w = [
+      for (final k in const ['text', 'checklist', 'ordered'])
+        tester.getSize(tile(k)).width,
+    ];
+    expect(w[0], closeTo(w[1], 0.5));
+    expect(w[1], closeTo(w[2], 0.5));
+
+    await tester.tap(find.byKey(const ValueKey('quick-add-edit')));
+    await tester.pumpAndSettle();
+    final ids = board(tester).entries.map((e) => e.id);
+    expect(ids, containsAll(['file', 'youtube', 'quickdrop', 'archive']));
+    expect(board(tester).shown, isNot(contains('youtube')));
+    board(tester).onToggle('youtube', true);
+    await tester.pumpAndSettle();
+    await backToPanel(tester);
+    expect(tile('youtube'), findsOneWidget);
+  });
+
   testWidgets('gizle → panelde yok; tekrar göster → geri gelir', (
     tester,
   ) async {
     await tester.pumpWidget(host());
     await openBoard(tester);
-    final yt = find.byKey(const ValueKey('quickadd-board-youtube'));
-    await tester.ensureVisible(yt);
-    await tester.tap(yt);
+    final photo = find.byKey(const ValueKey('quickadd-board-photo'));
+    await tester.ensureVisible(photo);
+    await tester.tap(photo);
     await tester.pumpAndSettle();
     expect(
-      Personalize.prefs.value.shows(UiItem.quickAdd('youtube')),
+      Personalize.prefs.value.shows(UiItem.quickAdd('photo')),
       isFalse,
       reason: 'kalıcı (Personalize kaydı)',
     );
     await backToPanel(tester);
-    expect(tile('youtube'), findsNothing);
-    expect(tile('file'), findsOneWidget);
+    expect(tile('photo'), findsNothing);
+    expect(tile('video'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('quick-add-edit')));
     await tester.pumpAndSettle();
-    board(tester).onToggle('youtube', true); // levha uzun: kaydırmadan
+    board(tester).onToggle('photo', true); // levha uzun: kaydırmadan
     await tester.pumpAndSettle();
     await backToPanel(tester);
-    expect(tile('youtube'), findsOneWidget);
+    expect(tile('photo'), findsOneWidget);
   });
 
   testWidgets('sıra grup içinde: başa al, grup dışına bırakınca grubun ucu', (
@@ -117,8 +163,9 @@ void main() {
     board(tester).onReorder!(shown.indexOf('text'), shown.length - 1);
     await tester.pumpAndSettle();
     shown = board(tester).shown;
-    // Yazma grubunda artık "Hızlı ekle" de var (2026-11-15).
-    expect(shown.take(5), ['ordered', 'checklist', 'quickdrop', 'text', 'draw']);
+    // "Hızlı ekle" ve kalem karoları varsayılan gizli (2026-11-16): yazma
+    // grubundan sonra kamera grubu gelir.
+    expect(shown.take(4), ['ordered', 'checklist', 'text', 'photo']);
 
     // Kalıcı: kayıttan yeniden okununca da aynı sıra.
     MenuLayouts.reset();
@@ -139,7 +186,7 @@ void main() {
   testWidgets('varsayılana dön: gizliler görünür, sıra varsayılan', (
     tester,
   ) async {
-    Personalize.update((p) => p.withVisible(UiItem.quickAdd('youtube'), false));
+    Personalize.update((p) => p.withVisible(UiItem.quickAdd('photo'), false));
     MenuLayouts.set(
       quickAddMenuId,
       const MenuLayout(order: ['ordered', 'checklist', 'text']),
@@ -155,7 +202,8 @@ void main() {
       isEmpty,
     );
     await backToPanel(tester);
-    expect(tile('youtube'), findsOneWidget);
+    expect(tile('photo'), findsOneWidget);
+    expect(tile('youtube'), findsNothing, reason: 'varsayılan gizli');
     expect(
       tester.getCenter(tile('text')).dx,
       lessThan(tester.getCenter(tile('checklist')).dx),
@@ -166,7 +214,7 @@ void main() {
     await tester.pumpWidget(host());
     await openBoard(tester);
     final ids = board(tester).shown;
-    expect(ids, containsAll(['text', 'checklist', 'youtube']));
+    expect(ids, containsAll(['text', 'checklist', 'photo']));
     for (final k in ids) {
       if (k != 'text') board(tester).onToggle(k, false);
     }
@@ -176,9 +224,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(Personalize.prefs.value.shows(UiItem.quickAdd('text')), isTrue);
     expect(find.text('En az bir seçenek görünür kalmalı'), findsOneWidget);
-    ScaffoldMessenger.of(
-      tester.element(find.byType(CustomizeBoard)),
-    ).removeCurrentSnackBar();
+    ScaffoldMessenger.of(tester.element(find.byType(CustomizeBoard)))
+        .removeCurrentSnackBar();
     await backToPanel(tester);
     expect(tile('text'), findsOneWidget);
   });

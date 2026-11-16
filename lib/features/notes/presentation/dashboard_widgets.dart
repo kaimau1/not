@@ -1571,6 +1571,87 @@ class _FolderSwipeState extends State<FolderSwipe>
 /// Ana ekranın sağ alt sütunundaki mikrofon düğmesi: dokunuş doğrudan
 /// yazdırır (editörün alt çubuğundaki sade mikrofonla aynı simge), basılı
 /// tutmak yapay zekâ ile sesli notu açar.
+/// İlk kareden SONRA kurulan çocuk. Ana ekranın ilk karesi bütçeli (S24:
+/// soğuk açılışta ilk kare); ikincil düğmeler (⚡ Hızlı ekle) bir kare sonra
+/// gelir — 16 ms, gözle görülmez, kartlarla aynı karede.
+/// Ana ekranın nötr kare düğmelerinin (mikrofon, ⚡) köşesi — tek yerde.
+const _kDashButtonRadius = BorderRadius.all(Radius.circular(14));
+
+/// Ana ekranın ⚡ Hızlı ekle düğmesi (mikrofonun solunda, aynı nötr kare).
+class _QuickDropFab extends StatelessWidget {
+  const _QuickDropFab();
+
+  // ODAK/İPUCU KATMANSIZ (InkWell + Tooltip değil): ikisi de levha
+  // açılıp kapanınca (odak kapsamı, rota) yeniden kuruluyordu — ana ekranın
+  // levha aç/kapa bütçeleri (S18/S30/S37/S45) her seferinde +1/+2. Ad
+  // Semantics'te, basınca küçülür ([PressScale]); dokunma alanı 48 dp.
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Customizable(
+      id: UiItem.homeQuickDrop,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(end: 12),
+        child: Semantics(
+          button: true,
+          label: context.l10n.quickDropTitle,
+          excludeSemantics: true,
+          child: PressScale(
+            scale: 0.92,
+            child: GestureDetector(
+              key: const ValueKey('home-quick-drop'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                unawaited(AppHaptics.tick());
+                unawaited(showQuickDropSheet(context));
+              },
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: _kDashButtonRadius,
+                ),
+                child: SizedBox.square(
+                  dimension: 48,
+                  child: Icon(
+                    Icons.bolt,
+                    size: AppIconSize.l,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AfterFirstFrame extends StatefulWidget {
+  const _AfterFirstFrame({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_AfterFirstFrame> createState() => _AfterFirstFrameState();
+}
+
+class _AfterFirstFrameState extends State<_AfterFirstFrame> {
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _ready = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      _ready ? widget.child : const SizedBox.shrink();
+}
+
 class _DashVoiceButton extends StatelessWidget {
   const _DashVoiceButton({
     super.key,
@@ -1597,12 +1678,12 @@ class _DashVoiceButton extends StatelessWidget {
         // mikrofon onunla yarışmasın. Yer, boy ve davranış aynı.
         child: Material(
           color: scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: _kDashButtonRadius,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: _kDashButtonRadius,
             onTap: onTap,
             onLongPress: onLongPress,
-            child: Icon(icon, size: 24, color: scheme.onSurface),
+            child: Icon(icon, size: AppIconSize.l, color: scheme.onSurface),
           ),
         ),
       ),

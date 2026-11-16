@@ -649,6 +649,22 @@ extension _EditorActions on _NoteEditorScreenState {
     _showSnack(context.l10n.imagesToAttachmentsDone(count));
   }
 
+  /// **LİSTE ↔ NUMARALI** (kullanıcı isteği 2026-11-16: "madde notlarında
+  /// numaralıya geçiş, numaralıda maddeye geçiş olsun alt panelde"). Alt
+  /// çubuğun türe özgü yuvası ([UiItem.barCheckbox]; metin notunda ☑).
+  /// Maddeler, işaretler ve sıra aynen kalır; üst çubuktan geri alınır.
+  void _toggleListKind() {
+    final note = _note;
+    if (note == null) return;
+    final next = switch (note.type) {
+      NoteType.checklist => NoteType.ordered,
+      NoteType.ordered => NoteType.checklist,
+      _ => null,
+    };
+    if (next == null) return;
+    _mutate((n) => n.copyWith(type: next), immediate: true);
+  }
+
   /// Liste notunu DÜZ METİN notuna çevirir — model çağırmadan.
   ///
   /// Maddeler gövdenin SONUNA eklenir (gövdede zaten bir açıklama olabilir)

@@ -130,14 +130,14 @@ class UiPrefs {
 
   /// [UiItem.optIn] öğeleri varsayılan GİZLİ: açılınca kümede `+kimlik`
   /// tutulur (kayıt biçimi aynı kalsın diye tek küme).
-  bool shows(String id) => UiItem.optIn.contains(id)
+  bool shows(String id) => UiItem.isOptIn(id)
       ? hidden.contains('+$id')
       : !hidden.contains(id);
 
   UiPrefs withVisible(String id, bool visible) {
     if (shows(id) == visible) return this;
     final next = {...hidden};
-    if (UiItem.optIn.contains(id)) {
+    if (UiItem.isOptIn(id)) {
       visible ? next.add('+$id') : next.remove('+$id');
     } else {
       visible ? next.remove(id) : next.add(id);
@@ -145,18 +145,28 @@ class UiPrefs {
     return copyWith(hidden: next);
   }
 
+  /// Eklentiyi açar/kapatır. Kapatmak HEPSİNİ gizler; açmak varsayılanına
+  /// döndürür — sonradan eklenebilen ([UiItem.isOptIn]) öğe kendiliğinden
+  /// açılmaz (2026-11-16: "+" menüsünde YouTube varsayılan gizli).
   UiPrefs withModule(UiModule module, bool on) {
-    final next = {...hidden};
+    var next = this;
     for (final id in module.items) {
-      on ? next.remove(id) : next.add(id);
+      if (on && UiItem.isOptIn(id)) continue;
+      next = next.withVisible(id, on);
     }
-    return copyWith(hidden: next);
+    return next;
   }
 
   /// Modülün durumu: true hepsi açık, false hepsi kapalı, null karışık.
+  /// Varsayılan gizli öğe, açılmadıkça sayılmaz.
   bool? moduleState(UiModule module) {
-    final shown = module.items.where(shows).length;
-    if (shown == module.items.length) return true;
+    final counted = [
+      for (final id in module.items)
+        if (!UiItem.isOptIn(id) || shows(id)) id,
+    ];
+    if (counted.isEmpty) return false;
+    final shown = counted.where(shows).length;
+    if (shown == counted.length) return true;
     if (shown == 0) return false;
     return null;
   }
@@ -335,6 +345,10 @@ abstract final class UiItem {
   /// düğmesininki — gizleme tercihi korunur.
   static const homeMic = 'home.voiceAi';
 
+  /// Ana ekranın ⚡ HIZLI EKLE yüzen düğmesi (kullanıcı isteği 2026-11-16:
+  /// "hızlı ekleyi yüzen buton yap").
+  static const homeQuickDrop = 'home.quickDrop';
+
   // ── Video denetimi ──
   static const videoSpeed = 'video.speed';
   static const videoTime = 'video.time';
@@ -381,7 +395,29 @@ abstract final class UiItem {
       'scan',
     ])
       quickRow(k),
+    // SADE "+" MENÜSÜ (kullanıcı isteği 2026-11-16: ekran görüntüsünde
+    // çarpılanlar): dosya, YouTube, kalem, ayrı çizim, defter ve Hızlı ekle
+    // karosu (artık ana ekranda kendi yüzen düğmesi var) varsayılan gizli;
+    // "Menüyü düzenle"den geri eklenir. QR, "Tara" karosunda belgeyle
+    // birleşti (bkz. `addCatalog`).
+    for (final k in const [
+      'file',
+      'youtube',
+      'shopping',
+      'draw',
+      'drawing',
+      'archive',
+      'quickdrop',
+      'qr',
+    ])
+      quickAdd(k),
   };
+
+  /// Varsayılan gizli mi: [optIn] kümesi + favori şablon karoları
+  /// (`quickadd.fav-…`, kimlikleri kullanıcıya göre değişir; 2026-11-16'dan
+  /// beri "+" menüsünde varsayılan gizli — yerlerini "Akıllı liste" aldı).
+  static bool isOptIn(String id) =>
+      optIn.contains(id) || id.startsWith('quickadd.fav-');
 
   /// Not ekranındaki "Ekle" levhasının seçeneği ([key] = levhanın kimliği).
   static String attach(String key) => 'attach.$key';

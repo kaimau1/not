@@ -1,4 +1,5 @@
 import '../../../core/haptics.dart';
+import '../../../core/widgets/press_scale.dart';
 import '../../../app/window_class.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../../../core/utils/web_file_drop.dart';
@@ -83,6 +84,7 @@ import '../../inbox/presentation/shared_hub_screen.dart' show sharedHubPlacehold
 import 'notes_providers.dart';
 import 'quick_add_actions.dart';
 import 'quick_add_fab.dart';
+import 'quick_drop_sheet.dart' show showQuickDropSheet;
 import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
 import 'voice_capture_sheet.dart';
@@ -670,6 +672,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// okur). Izgaranın LayoutBuilder'ında ölçülür; yüzen düğmeler onun
   /// dışında olduğundan bildirici kare sonunda güncellenir.
   final _narrowPaneN = ValueNotifier<bool>(false);
+
+  /// ⚡ HIZLI EKLE yüzen düğmesi (kullanıcı isteği 2026-11-16: "hızlı ekleyi
+  /// yüzen buton yap"). TEK ÖRNEK: ana ekran her kurulduğunda aynı örnek
+  /// döner, alt ağaç kurulmaz (bütçe S18/S23/S30/S37/S45); dar bölmede
+  /// mikrofonla birlikte gizlenir; ilk kareden sonra belirir (S24).
+  late final Widget _quickDropFab = _AfterFirstFrame(
+    child: ValueListenableBuilder<bool>(
+      valueListenable: _narrowPaneN,
+      builder: (_, narrow, button) => Offstage(offstage: narrow, child: button),
+      child: const _QuickDropFab(),
+    ),
+  );
   bool get _narrowPane => _narrowPaneN.value;
 
   /// Geniş ekranda sol panelin son sütun kipi (tek sütun = not açık).
@@ -2352,6 +2366,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             : Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // ⚡ HIZLI EKLE (kullanıcı isteği 2026-11-16) —
+                          // TEK ÖRNEK: ana ekran kurulsa da kurulmaz.
+                          _quickDropFab,
                           // TEK MİKROFON (F3.1) = DOĞRUDAN YAZDIR (kullanıcı
                           // isteği 2026-10-20: "AI sesli notu AI menüsüne
                           // alalım, ana ekrandaki doğrudan yazma olsun").

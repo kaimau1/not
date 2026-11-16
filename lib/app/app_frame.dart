@@ -786,6 +786,9 @@ class _RailDoors extends ConsumerStatefulWidget {
   ConsumerState<_RailDoors> createState() => _RailDoorsState();
 }
 
+/// Raydaki kare düğmelerin (mikrofon, ⚡) köşesi — tek yerde.
+const _kRailButtonRadius = BorderRadius.all(Radius.circular(14));
+
 class _RailDoorsState extends ConsumerState<_RailDoors> {
   final _addLink = LayerLink();
 
@@ -849,16 +852,42 @@ class _RailDoorsState extends ConsumerState<_RailDoors> {
             height: 48,
             child: Material(
               color: scheme.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: _kRailButtonRadius,
               child: InkWell(
                 key: const ValueKey('home-mic'),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: _kRailButtonRadius,
                 onTap: () => _atHome((d) => d.dictateNote()),
                 onLongPress: () => _atHome((d) => d.captureVoiceNote()),
                 child: Icon(
                   AppIcons.dictation,
-                  size: 24,
+                  size: AppIconSize.l,
                   color: scheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      // ⚡ HIZLI EKLE (2026-11-16): telefonda ana ekranın yüzen düğmesi,
+      // rayda burada — "+" menüsünde artık varsayılan gizli.
+      Customizable(
+        id: UiItem.homeQuickDrop,
+        child: Tooltip(
+          message: l10n.quickDropTitle,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Material(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: _kRailButtonRadius,
+              child: InkWell(
+                key: const ValueKey('rail-quick-drop'),
+                borderRadius: _kRailButtonRadius,
+                onTap: () => _atHome((d) => d.quickAddActions.openQuickDrop()),
+                child: Icon(
+                  Icons.bolt,
+                  size: AppIconSize.l,
+                  color: scheme.onSurface,
                 ),
               ),
             ),
@@ -885,11 +914,21 @@ class _RailDoorsState extends ConsumerState<_RailDoors> {
         widget.extended
             ? Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [others[0], gap, others[1]],
+                children: [
+                  for (var i = 0; i < others.length; i++) ...[
+                    if (i > 0) gap,
+                    others[i],
+                  ],
+                ],
               )
             : Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [others[0], gap, others[1]],
+                children: [
+                  for (var i = 0; i < others.length; i++) ...[
+                    if (i > 0) gap,
+                    others[i],
+                  ],
+                ],
               ),
       ],
     );

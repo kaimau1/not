@@ -28,6 +28,38 @@ Future<String?> openQrScanner(BuildContext context) =>
       MaterialPageRoute<String>(builder: (_) => const QrScanScreen()),
     );
 
+/// Birleşik "Tara" ekranının sonucu: belge taraması istendi ya da QR okundu.
+@immutable
+class ScanAnyOutcome {
+  const ScanAnyOutcome.document() : code = null;
+  const ScanAnyOutcome.qr(String this.code);
+
+  /// Okunan QR metni; belge istendiyse null.
+  final String? code;
+
+  bool get document => code == null;
+}
+
+/// Belge düğmesinin ekrandan dönüş işareti (rota sonucu `Object`).
+const _documentRequested = #scanDocument;
+
+/// **TARA — BELGE + QR** (kullanıcı isteği 2026-11-16: "belge tara ve QR da
+/// birleşsin, oto algılasın; taranan belgede QR varsa karışmamalı").
+/// Kamera açılır, QR kendiliğinden tanınır ama ekranı KAPATMAZ: altta
+/// "QR kod bulundu" kartı belirir, kullanmak bir dokunuş. Belge için "Belge
+/// tara" belge tarayıcısını açar — üzerinde QR olan bir belge böylece QR
+/// akışına kaçmaz; taranan sayfalarda QR hiç aranmaz.
+Future<ScanAnyOutcome?> openScanAny(BuildContext context) async {
+  final result = await Navigator.of(context).push<Object>(
+    MaterialPageRoute<Object>(
+      builder: (_) => const QrScanScreen(document: true),
+    ),
+  );
+  if (result == _documentRequested) return const ScanAnyOutcome.document();
+  if (result is String) return ScanAnyOutcome.qr(result);
+  return null;
+}
+
 /// Kameradan ya da galerideki bir fotoğraftan QR/barkod okur.
 ///
 /// İki yol tek ekranda: kamera önizlemesi sürekli tarar, alttaki düğme ise
@@ -35,7 +67,11 @@ Future<String?> openQrScanner(BuildContext context) =>
 /// çözer — kod ekrandaysa (WhatsApp'tan gelen bir görsel gibi) kamerayı
 /// başka bir ekrana tutmak gerekmez.
 class QrScanScreen extends StatefulWidget {
-  const QrScanScreen({super.key});
+  const QrScanScreen({super.key, this.document = false});
+
+  /// Birleşik kip (bkz. [openScanAny]): okunan QR ekranı kapatmaz, kart
+  /// olarak önerilir; "Belge tara" düğmesi var.
+  final bool document;
 
   @override
   State<QrScanScreen> createState() => _QrScanScreenState();
@@ -54,6 +90,9 @@ class _QrScanScreenState extends State<QrScanScreen>
   bool _handled = false;
   bool _torchOn = false;
   bool _analyzing = false;
+
+  /// Birleşik kipte görülen son QR (kart); null = yok.
+  final _found = ValueNotifier<String?>(null);
 
   @override
   void initState() {
@@ -80,6 +119,7 @@ class _QrScanScreenState extends State<QrScanScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _found.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -223,7 +263,7 @@ class _QrScanScreenState extends State<QrScanScreen>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
-        title: Text(l10n.qrScanTitle),
+        title: Text(widget.document ? l10n.scanAny : l10n.qrScanTitle),
         actions: [
           IconButton(
             tooltip: l10n.qrTorch,
@@ -240,7 +280,14 @@ class _QrScanScreenState extends State<QrScanScreen>
             controller: _controller,
             onDetect: (capture) {
               final code = _firstValue(capture);
-              if (code != null) _finish(code);
+              if (code == null) return;
+              // Birleşik kipte QR yalnız ÖNERİLİR: belge taranırken
+              // üzerindeki QR akışı kaçırmasın.
+              if (widget.document) {
+                _found.value = code.trim();
+              } else {
+                _finish(code);
+              }
             },
             errorBuilder: (context, error) => Center(
               child: Padding(
@@ -281,23 +328,103 @@ class _QrScanScreenState extends State<QrScanScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (widget.document)
+                      ValueListenableBuilder<String?>(
+                        valueListenable: _found,
+                        builder: (context, code, _) => code == null
+                            ? const SizedBox.shrink()
+                            : _FoundCard(
+                                code: code,
+                                onUse: () => _finish(code),
+                              ),
+                      ),
                     Text(
-                      l10n.qrScanHint,
+                      widget.document ? l10n.scanAnyHint : l10n.qrScanHint,
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.white70),
                     ),
                     const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: _analyzing ? null : _fromGallery,
-                      icon: const Icon(Icons.photo_library_outlined),
-                      label: Text(l10n.qrFromPhoto),
-                    ),
+                    if (widget.document) ...[
+                      FilledButton.icon(
+                        key: const ValueKey('scan-any-document'),
+                        onPressed: () =>
+                            Navigator.of(context).pop(_documentRequested),
+                        icon: const Icon(Icons.document_scanner_outlined),
+                        label: Text(l10n.newScanNote),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side: const BorderSide(color: Colors.white54),
+                        ),
+                        onPressed: _analyzing ? null : _fromGallery,
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: Text(l10n.qrFromPhoto),
+                      ),
+                    ] else
+                      FilledButton.icon(
+                        onPressed: _analyzing ? null : _fromGallery,
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: Text(l10n.qrFromPhoto),
+                      ),
                   ],
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Birleşik kipte okunan QR'ın önerisi: metnin başı + "QR'ı kullan".
+class _FoundCard extends StatelessWidget {
+  const _FoundCard({required this.code, required this.onUse});
+
+  final String code;
+  final VoidCallback onUse;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        key: const ValueKey('scan-any-qr-card'),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 8, 10),
+          child: Row(
+            children: [
+              Icon(Icons.qr_code_2, color: theme.colorScheme.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.scanQrFound, style: theme.textTheme.titleSmall),
+                    Text(
+                      code,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                key: const ValueKey('scan-any-use-qr'),
+                onPressed: onUse,
+                child: Text(l10n.scanUseQr),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

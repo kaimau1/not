@@ -181,7 +181,18 @@ void main() {
       prefs = prefs.withVisible('quickadd.youtube', true);
       expect(prefs.moduleState(UiModule.video), isNull);
       prefs = prefs.withModule(UiModule.video, true);
-      expect(prefs.hidden, isEmpty);
+      expect(prefs.moduleState(UiModule.video), isTrue);
+      // Açmak varsayılana döndürür: "+" menüsünün YouTube'u varsayılan gizli
+      // (2026-11-16), elle açılmışsa açık kalır.
+      expect(prefs.shows('quickadd.video'), isTrue);
+      expect(prefs.shows('quickadd.youtube'), isTrue);
+      expect(
+        const UiPrefs()
+            .withModule(UiModule.video, false)
+            .withModule(UiModule.video, true)
+            .shows('quickadd.youtube'),
+        isFalse,
+      );
     });
 
     // P50 (kullanıcı 2026-11-13: "aç, düzenle, kaydet değil"): dokunuş ANINDA

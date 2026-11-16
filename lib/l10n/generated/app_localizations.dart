@@ -7205,7 +7205,7 @@ abstract class AppLocalizations {
   /// No description provided for @fromTemplate.
   ///
   /// In tr, this message translates to:
-  /// **'Şablondan'**
+  /// **'Hazır şablonlar'**
   String get fromTemplate;
 
   /// No description provided for @tplShoppingName.
@@ -15553,6 +15553,102 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{n} dk'**
   String noteExpiryLeftMinutes(int n);
+
+  /// No description provided for @smartList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı liste'**
+  String get smartList;
+
+  /// No description provided for @smartListInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaz ya da söyle; alışveriş mi bavul mu kendisi anlar, maddeleri reyon reyon dizer'**
+  String get smartListInfo;
+
+  /// No description provided for @smartListGeneric.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get smartListGeneric;
+
+  /// No description provided for @smartListPacking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul listesi'**
+  String get smartListPacking;
+
+  /// No description provided for @scanAny.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tara'**
+  String get scanAny;
+
+  /// No description provided for @scanAnyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge ya da QR kod — QR kendiliğinden tanınır'**
+  String get scanAnyInfo;
+
+  /// No description provided for @scanAnyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR kod kendiliğinden tanınır. Belge için “Belge tara”ya dokun.'**
+  String get scanAnyHint;
+
+  /// No description provided for @scanQrFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR kod bulundu'**
+  String get scanQrFound;
+
+  /// No description provided for @scanUseQr.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR\'ı kullan'**
+  String get scanUseQr;
+
+  /// No description provided for @listToNumbered.
+  ///
+  /// In tr, this message translates to:
+  /// **'Numaralıya çevir'**
+  String get listToNumbered;
+
+  /// No description provided for @listToChecklist.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onay kutulu listeye çevir'**
+  String get listToChecklist;
+
+  /// No description provided for @quickDropWhich.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi nota eklensin?'**
+  String get quickDropWhich;
+
+  /// No description provided for @quickDropAsking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi not olduğunu soruyorum…'**
+  String get quickDropAsking;
+
+  /// No description provided for @quickDropAddingTo.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{title}” notuna ekleniyor…'**
+  String quickDropAddingTo(String title);
+
+  /// No description provided for @quickDropWait.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekle'**
+  String get quickDropWait;
+
+  /// No description provided for @quickDropAiToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Emin olunamazsa yapay zekâya sor'**
+  String get quickDropAiToggle;
 }
 
 class _AppLocalizationsDelegate

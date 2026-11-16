@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -9,6 +10,8 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../ai/data/ai_gate.dart';
+import '../../ai/data/gemini_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/notes_repository.dart';
 import '../data/quick_entry_memory.dart';
@@ -85,11 +88,22 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
   QuickEntryMemory memory = const QuickEntryMemory(),
   String Function()? newId,
 }) {
-  final text = content.trim();
+  // Art arda söylenenler ("süt al bir de faturayı öde") ayrı madde/satır.
+  final text = quickDropSeparate(content.trim());
   if (text.isEmpty) return (fields: const {}, added: 0);
   if (note.type == NoteType.text) {
+    final lines = [
+      for (final l in text.split(', '))
+        if (l.trim().isNotEmpty) l.trim(),
+    ];
+    final joined = text.contains(', ') && lines.length > 1
+        ? lines.join('\n')
+        : content.trim();
     final body = note.body.trimRight();
-    return (fields: {'body': body.isEmpty ? text : '$body\n$text'}, added: 1);
+    return (
+      fields: {'body': body.isEmpty ? joined : '$body\n$joined'},
+      added: joined.split('\n').length,
+    );
   }
   final grocery = looksLikeGrocery(note.displayTitle, [
     for (final i in note.items) i.text,
@@ -147,9 +161,15 @@ Future<void> showQuickDropSheet(BuildContext context) => showAppSheet<void>(
 /// kapatılabilir; yazarım, söylerim, şu nota ekle derim, o ekler").
 ///
 /// Tek satır + mikrofon; altında hedef not çipleri. Hedef metinden de
-/// çözülür ("market: süt", "alışveriş listesine süt ekle" — bkz.
-/// [parseDropTarget]); çözülemezse seçili çip (son kullanılan not) geçerlidir.
-/// Model/kota kullanmaz.
+/// çözülür ("market: süt", "… dosyalara ekle" — bkz. [parseDropTarget]);
+/// çözülemezse seçili çip (son kullanılan not) geçerlidir.
+///
+/// 2026-11-16 (kullanıcı bulgusu: konuşma bitince hedefi söylemeden yanlış
+/// nota ekliyordu): konuşma bitince HEMEN eklenmez — kısa geri sayım
+/// ("“Notlar” notuna ekleniyor… Bekle"); bu arada çipe dokunmak hedefi
+/// değiştirir. İki not başa baş kalırsa ya da "… ekle" dendiği hâlde ad
+/// bulunamazsa önce yapay zekâya (yalnız başlıklar gider, kapatılabilir),
+/// olmazsa kullanıcıya "Hangi nota eklensin?" diye sorulur.
 class QuickDropSheet extends ConsumerStatefulWidget {
   const QuickDropSheet({super.key});
 
@@ -157,7 +177,38 @@ class QuickDropSheet extends ConsumerStatefulWidget {
   ConsumerState<QuickDropSheet> createState() => _QuickDropSheetState();
 }
 
-class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
+/// Levhanın durumu: hedef not, eklenecek içerik, başa baş kalanlar ve
+/// "kullanıcıya sor" işareti.
+@immutable
+class _Drop {
+  const _Drop({
+    this.id,
+    this.content = '',
+    this.ties = const [],
+    this.ask = false,
+  });
+
+  final String? id;
+  final String content;
+  final List<String> ties;
+  final bool ask;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _Drop &&
+      other.id == id &&
+      other.content == content &&
+      other.ask == ask &&
+      listEquals(other.ties, ties);
+
+  @override
+  int get hashCode => Object.hash(id, content, ask, Object.hashAll(ties));
+}
+
+enum _Phase { idle, counting, thinking }
+
+class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
+    with SingleTickerProviderStateMixin {
   final _focus = FocusNode();
   final _bar = GlobalKey<QuickEntryBarState>();
   late final List<Note> _candidates;
@@ -166,9 +217,18 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
   /// Elle seçilen hedef (çipe dokunuldu); null = metinden/sondan.
   String? _chosenId;
 
-  /// (hedef not kimliği, eklenecek içerik) — yalnız bu değişince alt kısım
-  /// kurulur.
-  final _state = ValueNotifier<(String?, String)>((null, ''));
+  /// Son çözümleme (konuşma sonunda karar için).
+  QuickDropTarget? _parsed;
+
+  final _state = ValueNotifier<_Drop>(const _Drop());
+  final _phase = ValueNotifier<_Phase>(_Phase.idle);
+
+  /// Konuşma sonrası geri sayım (bitince eklenir).
+  late final AnimationController _count = AnimationController(
+    vsync: this,
+    // Bekleme süresi (hareket değil): tepki için iki saniye.
+    duration: const Duration(seconds: 2),
+  )..addStatusListener(_onCountStatus);
 
   @override
   void initState() {
@@ -177,35 +237,156 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
       ref.read(notesStreamProvider).value ?? const <Note>[],
       ref.read(quickDropRecentProvider),
     );
-    _state.value = (_candidates.isEmpty ? null : _candidates.first.id, '');
+    _state.value = _Drop(id: _candidates.isEmpty ? null : _candidates.first.id);
     if (ref.read(quickDropKeyboardProvider)) focusAfterRouteOpens(this, _focus);
   }
 
   @override
   void dispose() {
+    _count.dispose();
     _focus.dispose();
     _state.dispose();
+    _phase.dispose();
     super.dispose();
   }
 
+  String? get _fallbackId =>
+      _chosenId ?? (_candidates.isEmpty ? null : _candidates.first.id);
+
   void _onText(String text) {
+    _stopCountdown();
+    _resolve(text);
+  }
+
+  void _resolve(String text) {
     final parsed = parseDropTarget(text, [
       for (final n in _candidates) n.displayTitle,
     ]);
-    final fromText = parsed.index == null
-        ? null
-        : _candidates[parsed.index!].id;
-    final id =
-        fromText ??
-        _chosenId ??
-        (_candidates.isEmpty ? null : _candidates.first.id);
-    final next = (id, parsed.content);
+    _parsed = parsed;
+    final ties = [for (final i in parsed.ties) _candidates[i].id];
+    final _Drop next;
+    if (parsed.index != null) {
+      next = _Drop(id: _candidates[parsed.index!].id, content: parsed.content);
+    } else if (ties.isNotEmpty) {
+      // Başa baş: elle seçilen aralarındaysa o, değilse sorulur.
+      final chosen = ties.contains(_chosenId) ? _chosenId : null;
+      next = _Drop(
+        id: chosen,
+        content: parsed.content,
+        ties: ties,
+        ask: chosen == null,
+      );
+    } else {
+      next = _Drop(id: _fallbackId, content: parsed.content);
+    }
     if (next != _state.value) _state.value = next;
   }
 
   void _choose(Note note) {
+    _stopCountdown();
+    if (_phase.value == _Phase.thinking) _phase.value = _Phase.idle;
     _chosenId = note.id;
-    _state.value = (note.id, _state.value.$2);
+    _state.value = _Drop(id: note.id, content: _state.value.content);
+  }
+
+  // ── Konuşma bitti: geri sayım / yapay zekâ / sor ──────────────────────
+
+  void _onSpeechEnd() {
+    _resolve(_bar.currentState?.text ?? '');
+    final st = _state.value;
+    final parsed = _parsed;
+    if (st.content.trim().isEmpty || parsed == null) return;
+    // "… ekle" dendi ama ad çözülmedi ya da başa baş: kullanıcı bir not
+    // adlandırdı, tahminle başka nota eklenmez.
+    final named = st.ask || (parsed.command && parsed.index == null);
+    if (named && _chosenId == null) {
+      if (_aiUsable) {
+        unawaited(_askAi());
+        return;
+      }
+      if (st.ties.isEmpty) {
+        // Yapay zekâ yok: son kullanılan not seçili kalır ama SORULUR.
+        _state.value = _Drop(id: st.id, content: st.content, ask: true);
+      }
+      return;
+    }
+    if (st.id != null) _startCountdown();
+  }
+
+  bool get _aiUsable =>
+      ref.read(quickDropAiProvider) &&
+      ref.read(aiAvailabilityProvider) == AiAvailability.ready;
+
+  Future<void> _askAi() async {
+    final st = _state.value;
+    final text = _bar.currentState?.text ?? '';
+    final pool = st.ties.isNotEmpty
+        ? [
+            for (final n in _candidates)
+              if (st.ties.contains(n.id)) n,
+          ]
+        : _candidates.take(40).toList();
+    _phase.value = _Phase.thinking;
+    ({int index, String content})? hit;
+    try {
+      hit = await ref
+          .read(geminiServiceProvider)
+          .pickDropTarget(text, [for (final n in pool) n.displayTitle])
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {
+      hit = null;
+    }
+    // Kullanıcı bu arada çipe dokunduysa ya da yazdıysa karar onun.
+    if (!mounted || _phase.value != _Phase.thinking) return;
+    _phase.value = _Phase.idle;
+    if (hit == null) {
+      _state.value = _Drop(
+        id: st.ties.isEmpty ? st.id : null,
+        content: st.content,
+        ties: st.ties,
+        ask: true,
+      );
+      return;
+    }
+    final note = pool[hit.index];
+    _state.value = _Drop(
+      id: note.id,
+      content: _trustedContent(hit.content, text) ?? st.content,
+    );
+    _startCountdown();
+  }
+
+  /// Yapay zekânın içeriği ancak kullanıcının söylediği kelimelerden
+  /// oluşuyorsa kullanılır (uydurma/yeniden yazma eklenmesin).
+  static String? _trustedContent(String ai, String said) {
+    final words = quickAscii(said).split(RegExp(r'[^a-z0-9]+')).toSet();
+    final got = [
+      for (final w in quickAscii(ai).split(RegExp(r'[^a-z0-9]+')))
+        if (w.isNotEmpty) w,
+    ];
+    if (got.isEmpty || !got.every(words.contains)) return null;
+    return ai.trim();
+  }
+
+  void _startCountdown() {
+    _phase.value = _Phase.counting;
+    unawaited(_count.forward(from: 0));
+  }
+
+  void _stopCountdown() {
+    if (_phase.value != _Phase.counting) return;
+    _count.stop();
+    _count.value = 0;
+    _phase.value = _Phase.idle;
+  }
+
+  void _onCountStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed &&
+        _phase.value == _Phase.counting &&
+        mounted) {
+      _phase.value = _Phase.idle;
+      _apply(resolve: false);
+    }
   }
 
   Note? _noteOf(String? id) {
@@ -215,12 +396,16 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
     return null;
   }
 
-  void _apply() {
-    _onText(_bar.currentState?.text ?? '');
-    final (id, content) = _state.value;
-    final note = _noteOf(id);
+  /// [resolve]: metni yeniden çöz (Enter/Ekle); geri sayım ve yapay zekâ
+  /// sonucunu ezmemek için onlarda false.
+  void _apply({bool resolve = true}) {
+    _stopCountdown();
+    if (resolve) _resolve(_bar.currentState?.text ?? '');
+    final st = _state.value;
+    final note = _noteOf(st.id);
     final repo = ref.read(notesRepositoryProvider);
-    if (note == null || repo == null || content.trim().isEmpty) return;
+    if (note == null || repo == null || st.content.trim().isEmpty) return;
+    final content = st.content;
     final l10n = context.l10n;
     final memory = ref.read(quickEntryMemoryProvider);
     final result = quickDropFields(
@@ -249,7 +434,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
     messenger
       ..hideCurrentSnackBar()
       ..showMessage(
-        note.type == NoteType.text
+        note.type == NoteType.text && result.added <= 1
             ? l10n.quickDropAddedText(title)
             : l10n.quickDropAdded(result.added, title),
         action: SnackBarAction(
@@ -267,6 +452,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
     final text = AppText.of(theme);
     final autoMic = ref.watch(quickDropMicProvider);
     final keyboard = ref.watch(quickDropKeyboardProvider);
+    final ai = ref.watch(quickDropAiProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpace.l, 0, AppSpace.l, AppSpace.l),
       child: Column(
@@ -277,6 +463,15 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
             children: [
               Expanded(
                 child: Text(l10n.quickDropTitle, style: text.sheetTitle),
+              ),
+              IconButton(
+                key: const ValueKey('quick-drop-ai'),
+                tooltip: l10n.quickDropAiToggle,
+                isSelected: ai,
+                icon: const Icon(Icons.auto_awesome_outlined),
+                selectedIcon: Icon(Icons.auto_awesome, color: scheme.primary),
+                onPressed: () =>
+                    ref.read(quickDropAiProvider.notifier).set(!ai),
               ),
               IconButton(
                 key: const ValueKey('quick-drop-keyboard'),
@@ -316,21 +511,101 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
               autoListen: autoMic,
               onRawChanged: _onText,
               onRawSubmitted: (_) => _apply(),
-              // "Söyle, eklensin": konuşma kendiliğinden bitince eklenir.
-              onSpeechEnd: _apply,
+              // "Söyle, eklensin": konuşma bitince kısa geri sayımla eklenir.
+              onSpeechEnd: _onSpeechEnd,
               onItems: (_) {},
             ),
-            Text(l10n.quickDropTarget, style: text.meta),
+            // DURUM SATIRI, boyu SABİT (levha zıplamasın): nereye / hangi
+            // not? / soruyorum / ekleniyor + Bekle.
+            SizedBox(
+              height: AppSpace.xxl,
+              child: ListenableBuilder(
+                listenable: Listenable.merge([_state, _phase]),
+                builder: (context, _) {
+                  final st = _state.value;
+                  switch (_phase.value) {
+                    case _Phase.thinking:
+                      return Row(
+                        key: const ValueKey('quick-drop-thinking'),
+                        children: [
+                          const SizedBox.square(
+                            dimension: AppIconSize.xs,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: AppSpace.s),
+                          Text(l10n.quickDropAsking, style: text.meta),
+                        ],
+                      );
+                    case _Phase.counting:
+                      final title = _noteOf(st.id)?.displayTitle.trim() ?? '';
+                      return Row(
+                        key: const ValueKey('quick-drop-counting'),
+                        children: [
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.quickDropAddingTo(title),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: text.meta.copyWith(
+                                    color: scheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpace.xs),
+                                AnimatedBuilder(
+                                  animation: _count,
+                                  builder: (context, _) =>
+                                      LinearProgressIndicator(
+                                        value: _count.value,
+                                        minHeight: 2,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            key: const ValueKey('quick-drop-wait'),
+                            onPressed: _stopCountdown,
+                            child: Text(l10n.quickDropWait),
+                          ),
+                        ],
+                      );
+                    case _Phase.idle:
+                      return Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: st.ask
+                            ? Text(
+                                l10n.quickDropWhich,
+                                key: const ValueKey('quick-drop-ask'),
+                                style: text.meta.copyWith(
+                                  color: scheme.primary,
+                                  fontWeight: AppWeight.strong,
+                                ),
+                              )
+                            : Text(l10n.quickDropTarget, style: text.meta),
+                      );
+                  }
+                },
+              ),
+            ),
             SizedBox(
               height: AppSpace.xxxl + AppSpace.m,
-              child: ValueListenableBuilder<(String?, String)>(
+              child: ValueListenableBuilder<_Drop>(
                 valueListenable: _state,
-                builder: (context, state, _) {
-                  // Seçili hedef hep başta görünür.
+                builder: (context, st, _) {
+                  // Seçili hedef hep başta, sonra başa baş kalanlar.
+                  final first = [
+                    ?_noteOf(st.id),
+                    for (final id in st.ties)
+                      if (id != st.id) ?_noteOf(id),
+                  ];
                   final shown = [
-                    ?_noteOf(state.$1),
+                    ...first,
                     for (final n in _candidates.take(12))
-                      if (n.id != state.$1) n,
+                      if (!first.contains(n)) n,
                   ];
                   return ListView.separated(
                     key: const ValueKey('quick-drop-targets'),
@@ -340,6 +615,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
                         const SizedBox(width: AppSpace.s),
                     itemBuilder: (context, i) {
                       final n = shown[i];
+                      final tie = st.ties.contains(n.id);
                       return Center(
                         child: ChoiceChip(
                           key: ValueKey('quick-drop-target-${n.id}'),
@@ -354,8 +630,11 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          side: tie && n.id != st.id
+                              ? BorderSide(color: scheme.primary)
+                              : null,
                           showCheckmark: false,
-                          selected: n.id == state.$1,
+                          selected: n.id == st.id,
                           onSelected: (_) => _choose(n),
                         ),
                       );
@@ -365,18 +644,20 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet> {
               ),
             ),
             const SizedBox(height: AppSpace.s),
-            ValueListenableBuilder<(String?, String)>(
+            ValueListenableBuilder<_Drop>(
               valueListenable: _state,
-              builder: (context, state, _) => FilledButton.icon(
+              builder: (context, st, _) => FilledButton.icon(
                 key: const ValueKey('quick-drop-add'),
-                onPressed: state.$1 == null || state.$2.trim().isEmpty
+                onPressed: st.id == null || st.content.trim().isEmpty
                     ? null
                     : _apply,
                 icon: const Icon(Icons.add),
                 label: Text(
-                  state.$2.trim().isEmpty
+                  st.id == null && st.ask
+                      ? l10n.quickDropWhich
+                      : st.content.trim().isEmpty
                       ? l10n.quickDropAdd
-                      : '${l10n.quickDropAdd} · ${state.$2.trim()}',
+                      : '${l10n.quickDropAdd} · ${st.content.trim()}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

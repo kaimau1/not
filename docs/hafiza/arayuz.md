@@ -261,6 +261,12 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - `_FocusHalo`: hareketi azalt → sabit vurgu; kart tamamen görünüyorsa kaydırmaz, değilse ortalar (asistan odağı da). Kart tembel listede kurulmamışsa `_revealFocused` görünür listedeki sıra oranıyla atlatır (≤6 kare), kart kurulunca hale ortalar. Not görünümde yoksa (klasör/süzgeç) sessiz.
 - Test: `test/new_note_focus_test.dart`. Not: testte FreezeWhenHidden yetişmesi yüzünden kaydırma birkaç kare gecikir; dönüşte kare kare pompala.
 
+## 2026-11-16 — Sade "+" menüsü, ⚡ yüzen düğme, Tara (ccr-f6c2108b)
+- **Varsayılan gizli "+" karoları** `UiItem.optIn` (`quickadd.file/youtube/shopping/draw/drawing/archive/quickdrop/qr`) + `UiItem.isOptIn` (`quickadd.fav-*` önekli favori şablonlar). `shows`/`withVisible` `isOptIn` okur; `withModule(on)` gizli-varsayılanı kendiliğinden AÇMAZ, `moduleState` açılmamış optIn'i saymaz.
+- **⚡ Hızlı ekle** `UiItem.homeQuickDrop`: telefonda `_quickDropFab` TEK ÖRNEK (`late final`, ana ekran kurulsa da kurulmaz), `_AfterFirstFrame` (S24 ilk kare), InkWell/Tooltip YOK — `Focus`/ipucu katmanı levha aç/kapada yeniden kuruluyordu (S18/S30/S37/S45 +2..+4). Rayda `app_frame` `others` (döngüyle çizilir — eskiden `others[0..1]` sabit dizindi).
+- **Tara = belge + QR** (`openScanAny`, `QrScanScreen(document: true)`): QR ekranı kapatmaz, kart önerir; "Belge tara" → `createScanNote`. Kamera izni yoksa yalnız belge. Not içi Ekle levhası iki satırı korur.
+- **Adlar:** yeni tek tip sistem "Akıllı liste" (`smartlist`), eski şablonlar "Hazır şablonlar" (`fromTemplate`). Foto/video birleşmedi (kullanıcı: "olmuyorsa zorlamayalım" — sistem kamerası içinde foto↔video geçişi yönetilemiyor).
+
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 
 Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.

@@ -5,9 +5,15 @@ işaretle (`[x]`) ya da bana "3. madde tamam / bozuk" de. Bozuksa: ekran görün
 ekran kaydı alıp gönder, hangi notta olduğunu söyle. Yapamadığını silme, "denemedim" yaz.
 
 (Her maddenin adım adım uzun hâli geliştirici belgelerindeki "cihaz turu" listesinde; gerekmedikçe
-oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
+oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
+
+- [ ] **Hızlı ekle hedefi + ⚡ düğmesi + Akıllı liste + sade "+" menüsü (ccr-f6c2108b, cihazda bakılmadı, ÖLÇÜLMEDİ — 2026-11-16)**
+  Nerede: ana ekran sağ alt ⚡ (mikrofonun solunda); "+" menüsü; "+" → Şablon → Akıllı liste; "+" → Tara; bir liste notunun alt çubuğu.
+  Nasıl: ⚡ → "deneme maddesi dosyalara ekle" söyle (ya da adı ekli bir notunu söyle) → doğru not seçilmeli, "… ekleniyor" geri sayımı, Bekle durdurmalı; hiç ad söylemeden konuş → son kullanılan nota geri sayım; "projeye ekle" gibi iki nota uyan ad → "Hangi nota eklensin?". Akıllı liste: "tişört şort pasaport" → başlık Bavul listesi, belgeler önce; "et domates ekmek" → Alışveriş listesi, manav-fırın-kasap sırası; yazarken/klavye açılıp kapanırken alttaki öneri şeridi takılmamalı. Tara: üzerinde QR olan bir belgeyi göster → QR kartı çıkmalı ama ekran kapanmamalı; "Belge tara" belge tarayıcısını açmalı. Liste notunda alt çubuk "Numaralıya çevir" → numaralı olur, geri döner.
+  Doğruysa: hepsi akıcı ve doğru nota ekliyor. Yanlışsa: hangi cümleyi söylediğini ve hangi nota gittiğini yaz.
+  Not: yapay zekâ yedeği (başlıklar gider) cihazda denenmedi; hızlı liste klavye düzeltmesi yalnız bütçe testinde ölçüldü (S49), cihazda A/B yapılmadı.
 
 - [ ] **Acil notlar (oto/acil-sabit, cihazda bakılmadı — 2026-11-16)**
   Nerede: bir not → alt çubuk **+** → Yaz grubunda "Acil işaretle"; sonra ana ekran.

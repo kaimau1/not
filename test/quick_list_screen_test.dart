@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/data/quick_entry_memory.dart';
 import 'package:notlar/features/notes/domain/note.dart';
@@ -11,11 +12,25 @@ import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
 import 'package:notlar/features/notes/presentation/quick_drop_sheet.dart';
+import 'package:notlar/features/notes/presentation/quick_entry_bar.dart';
 import 'package:notlar/features/notes/presentation/quick_list_screen.dart';
 import 'package:notlar/core/utils/spell_learn.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'support/editor_harness.dart' show CountingNotesRepository;
+
+/// Hızlı ekle yazımlarını yakalayan depo.
+class _DropRepo extends CountingNotesRepository {
+  final writes = <String, Map<String, dynamic>>{};
+
+  @override
+  Future<void> updateFields(String noteId, Map<String, dynamic> fields) {
+    writes[noteId] = fields;
+    return Future.value();
+  }
+}
 
 /// Hızlı liste ekranı ve "Hızlı ekle" (kullanıcı isteği 2026-11-15).
 void main() {
@@ -30,6 +45,7 @@ void main() {
     List<Note> notes = const [],
     Map<String, Object> prefs = const {},
     Size size = const Size(412, 915),
+    NotesRepository? repo,
   }) async {
     SharedPreferences.setMockInitialValues(prefs);
     final p = await SharedPreferences.getInstance();
@@ -40,7 +56,9 @@ void main() {
         overrides: [
           sharedPreferencesProvider.overrideWithValue(p),
           notesStreamProvider.overrideWith((ref) => Stream.value(notes)),
-          notesRepositoryProvider.overrideWithValue(null),
+          notesRepositoryProvider.overrideWithValue(repo),
+          // Testte yapay zekâ yok: hızlı ekle "hangi not?" diye sorar.
+          aiAvailabilityProvider.overrideWithValue(AiAvailability.needsKey),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -435,6 +453,121 @@ void main() {
       await tester.pumpAndSettle();
       expect(chip('c').selected, isTrue);
       expect(find.text('Ekle · bir fikir'), findsOneWidget);
+    });
+
+    // Kullanıcı bulgusu 2026-11-16: konuşma bitince hedefi söylemeden yanlış
+    // nota ekleniyordu. Artık geri sayım (Bekle ile durur); "… ekle" dendi
+    // ama ad bulunamadıysa ya da başa baş kaldıysa sorulur.
+    Future<_DropRepo> openSheet(WidgetTester tester, List<Note> notes) async {
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: notes,
+        repo: repo,
+        prefs: {'quick_drop_mic': false},
+        onTap: (context, ref) => showQuickDropSheet(context),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      return repo;
+    }
+
+    Future<void> say(WidgetTester tester, String text) async {
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        text,
+      );
+      await tester.pump();
+      tester.widget<QuickEntryBar>(find.byType(QuickEntryBar)).onSpeechEnd!();
+      await tester.pump();
+    }
+
+    testWidgets('konuşma sonu: geri sayım, sonra eklenir; Bekle durdurur', (
+      tester,
+    ) async {
+      final repo = await openSheet(tester, [shopping, todo, text]);
+      await say(tester, 'kargoyu sor');
+      expect(find.byKey(const ValueKey('quick-drop-counting')), findsOneWidget);
+      expect(find.text('“Yapılacaklar” notuna ekleniyor…'), findsOneWidget);
+      expect(repo.writes, isEmpty, reason: 'hemen eklenmez');
+      await tester.tap(find.byKey(const ValueKey('quick-drop-wait')));
+      await tester.pump(const Duration(seconds: 3));
+      expect(repo.writes, isEmpty, reason: 'Bekle durdurdu');
+
+      await say(tester, 'kargoyu sor bir de faturayı yatır');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      final items = repo.writes['b']!['items'] as List;
+      expect(
+        [for (final i in items) (i as Map)['text']],
+        ['Faturayı öde', 'Kargoyu sor', 'Faturayı yatır'],
+      );
+    });
+
+    testWidgets('"… ekle" dendi, ad bulunamadı: sorulur, eklenmez', (
+      tester,
+    ) async {
+      final repo = await openSheet(tester, [shopping, todo, text]);
+      await say(tester, 'yeni fikir hatalar notuna ekle');
+      expect(find.byKey(const ValueKey('quick-drop-ask')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      expect(repo.writes, isEmpty);
+      // Çipe dokunup Ekle: kullanıcının seçtiği nota.
+      await tester.tap(find.byKey(const ValueKey('quick-drop-target-c')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      expect(repo.writes.keys, ['c']);
+    });
+
+    testWidgets('başa baş kalan iki not: Ekle "hangi not?" bekler', (
+      tester,
+    ) async {
+      final a = Note(
+        id: 'pa',
+        type: NoteType.checklist,
+        title: 'Proje A',
+        updatedAt: DateTime(2026, 11, 13),
+      );
+      final b = Note(
+        id: 'pb',
+        type: NoteType.checklist,
+        title: 'Proje B',
+        updatedAt: DateTime(2026, 11, 12),
+      );
+      final repo = await openSheet(tester, [a, b, todo]);
+      await say(tester, 'logo hazırla projeye ekle');
+      final add = find.byKey(const ValueKey('quick-drop-add'));
+      expect(tester.widget<FilledButton>(add).onPressed, isNull);
+      expect(find.text('Hangi nota eklensin?'), findsWidgets);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-target-pb')));
+      await tester.pump();
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+      expect(repo.writes.keys, ['pb']);
+    });
+
+    testWidgets('sonda söylenen ad kökten bulunur', (tester) async {
+      final files = Note(
+        id: 'f',
+        type: NoteType.checklist,
+        title: 'Dosyalarımdaki hatalar',
+        updatedAt: DateTime(2026, 11, 2),
+      );
+      final repo = await openSheet(tester, [todo, files]);
+      await say(tester, 'dosyalar geliştirme yapılması lazım dosyalara ekle');
+      expect(
+        find.text('“Dosyalarımdaki hatalar” notuna ekleniyor…'),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      final items = repo.writes['f']!['items'] as List;
+      expect(
+        (items.single as Map)['text'],
+        'Dosyalar geliştirme yapılması lazım',
+      );
     });
   });
 }

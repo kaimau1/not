@@ -4006,7 +4006,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Hazır düzenle başla; her şey sonradan değiştirilebilir.';
 
   @override
-  String get fromTemplate => 'Şablondan';
+  String get fromTemplate => 'Hazır şablonlar';
 
   @override
   String get tplShoppingName => 'Alışveriş listesi';
@@ -8763,4 +8763,56 @@ class AppLocalizationsTr extends AppLocalizations {
   String noteExpiryLeftMinutes(int n) {
     return '$n dk';
   }
+
+  @override
+  String get smartList => 'Akıllı liste';
+
+  @override
+  String get smartListInfo =>
+      'Yaz ya da söyle; alışveriş mi bavul mu kendisi anlar, maddeleri reyon reyon dizer';
+
+  @override
+  String get smartListGeneric => 'Liste';
+
+  @override
+  String get smartListPacking => 'Bavul listesi';
+
+  @override
+  String get scanAny => 'Tara';
+
+  @override
+  String get scanAnyInfo => 'Belge ya da QR kod — QR kendiliğinden tanınır';
+
+  @override
+  String get scanAnyHint =>
+      'QR kod kendiliğinden tanınır. Belge için “Belge tara”ya dokun.';
+
+  @override
+  String get scanQrFound => 'QR kod bulundu';
+
+  @override
+  String get scanUseQr => 'QR\'ı kullan';
+
+  @override
+  String get listToNumbered => 'Numaralıya çevir';
+
+  @override
+  String get listToChecklist => 'Onay kutulu listeye çevir';
+
+  @override
+  String get quickDropWhich => 'Hangi nota eklensin?';
+
+  @override
+  String get quickDropAsking => 'Hangi not olduğunu soruyorum…';
+
+  @override
+  String quickDropAddingTo(String title) {
+    return '“$title” notuna ekleniyor…';
+  }
+
+  @override
+  String get quickDropWait => 'Bekle';
+
+  @override
+  String get quickDropAiToggle => 'Emin olunamazsa yapay zekâya sor';
 }
