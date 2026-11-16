@@ -18,6 +18,7 @@ Future<String?> showAttachSheet(
   bool pageNote = false,
   bool canEmbed = false,
   String? copiedAttachmentName,
+  bool urgent = false,
 }) => showAppSheet<String>(
   context: context,
   isScrollControlled: true,
@@ -34,6 +35,7 @@ Future<String?> showAttachSheet(
     pageNote: pageNote,
     canEmbed: canEmbed,
     copiedAttachmentName: copiedAttachmentName,
+    urgent: urgent,
   ),
 );
 
@@ -42,6 +44,7 @@ class _AttachSheet extends StatelessWidget {
     required this.pageNote,
     required this.canEmbed,
     this.copiedAttachmentName,
+    this.urgent = false,
   });
 
   /// Belge (PDF/sunum) notu mu? Öyleyse "Yaz" grubu HİÇ gösterilmez: o ekranda
@@ -53,6 +56,9 @@ class _AttachSheet extends StatelessWidget {
   final bool canEmbed;
 
   final String? copiedAttachmentName;
+
+  /// Not zaten acil mi? Öyleyse "Acil" karosu kaldırmayı söyler.
+  final bool urgent;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +86,15 @@ class _AttachSheet extends StatelessWidget {
             (e.id != 'embed-attachment' || canEmbed) &&
             (Personalize.editing ||
                 Personalize.current.shows(UiItem.attach(e.id))))
-          e,
+          e.id == 'urgent' && urgent
+              ? (
+                  id: e.id,
+                  group: e.group,
+                  icon: e.icon,
+                  label: l10n.urgentUnmark,
+                  info: e.info,
+                )
+              : e,
       if (copied != null)
         (
           id: 'paste-attachment',

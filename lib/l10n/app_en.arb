@@ -610,6 +610,10 @@
     }
   },
   "sectionPinnedShort": "Pinned",
+  "sectionUrgent": "Urgent",
+  "urgentMark": "Mark urgent",
+  "urgentUnmark": "Remove urgent mark",
+  "urgentInfo": "Shown first on home, with !",
   "sectionToday": "Today",
   "sectionThisWeek": "This week",
   "sectionEarlier": "Earlier",

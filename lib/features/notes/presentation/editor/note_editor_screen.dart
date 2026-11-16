@@ -343,6 +343,7 @@ bool sameRenderedNote(Note a, Note b) {
       a.customFrameColor != b.customFrameColor ||
       a.pinned != b.pinned ||
       a.starred != b.starred ||
+      a.urgent != b.urgent ||
       a.locked != b.locked ||
       a.folderId != b.folderId ||
       a.fontFamily != b.fontFamily ||
@@ -1495,6 +1496,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             aiSummary: incoming.aiSummary,
             pinned: incoming.pinned,
             starred: incoming.starred,
+            urgent: incoming.urgent,
             locked: incoming.locked,
             tags: incoming.tags,
             color: incoming.color,
@@ -5300,6 +5302,25 @@ child: NoteFindBar(
                                 )
                               : const SizedBox.shrink(),
                         ),
+                      ),
+                      // ACİL göstergesi (2026-11-16): yıldızla aynı kalıp —
+                      // dar dinleme, dokununca işaret kalkar.
+                      NoteSlice<bool>(
+                        source: _noteN,
+                        select: (n) => n.urgent,
+                        builder: (context, on) => on
+                            ? IconButton(
+                                key: const ValueKey('editor-urgent'),
+                                tooltip: l10n.urgentUnmark,
+                                visualDensity: VisualDensity.compact,
+                                icon: Icon(
+                                  Icons.priority_high_rounded,
+                                  size: AppIconSize.xs,
+                                  color: _themeOf(context).colorScheme.error,
+                                ),
+                                onPressed: () => _setUrgent(false),
+                              )
+                            : const SizedBox.shrink(),
                       ),
                     ],
                   ),

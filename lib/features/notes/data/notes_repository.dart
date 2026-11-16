@@ -689,6 +689,7 @@ class NotesRepository {
       customFrameColor: note.customFrameColor,
       pinned: note.pinned,
       starred: note.starred,
+      urgent: note.urgent,
       fontFamily: note.fontFamily,
       fontScale: note.fontScale,
       textOpacity: note.textOpacity,
@@ -1170,6 +1171,10 @@ class NotesRepository {
   /// Yıldız sabitlemeden AYRI bir bayrak (2026-10-20'de geri geldi).
   void setStarred(String noteId, bool starred) =>
       updateFields(noteId, {'starred': starred});
+
+  /// Acil bayrağı (bkz. `Note.urgent`).
+  void setUrgent(String noteId, bool urgent) =>
+      updateFields(noteId, {'urgent': urgent});
 
   /// Kartta bu notun görsel önizlemesi gizli mi (bkz. `Note.cardMediaHidden`).
   void setCardMediaHidden(String noteId, bool hidden) =>

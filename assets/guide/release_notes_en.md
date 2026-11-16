@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 16 November 2026 {#2026-11-16}
+- **Urgent notes:** choose "Mark urgent" from the **+** menu inside a note and it stays at the very top of the home screen, above pinned notes, in its own **Urgent** section, with a red exclamation mark (!) on its card. To remove it, tap the ! at the top of the note or pick "Remove urgent mark" from the + menu.
 - **120 Hz:** the app now requests the display's high refresh rate in two independent ways, which keeps some phones (such as Xiaomi) from dropping it to 60 Hz. On a 144 Hz display 120 is chosen (battery and heat), and with battery saver on the choice is left to the phone. The active rate is shown in the version row at the bottom of Settings ("· 120 Hz").
 - **Bottom panel no longer jumps with the keyboard:** the panel hides the moment the keyboard starts moving (even as you tap into or out of a text field) and reappears in place as soon as the keyboard stops; the zigzag while closing is gone.
 - **Smoother to-do lists:** in a long list, ticking a box, adding an item with Enter and deleting an empty item no longer redraw the whole note screen; only the changed row is updated.

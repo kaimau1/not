@@ -85,6 +85,15 @@ List<AddEntry> addCatalog(
     quick: 'quickdrop',
     info: l10n.quickDropInfo,
   );
+  // ACİL (kullanıcı isteği 2026-11-16): notu "Acil" işaretler — ana ekranda
+  // sabitlerin de üstünde, kartta ünlem. Belge notunda (Yaz grubu yok) ⋮'te.
+  row(
+    AddGroup.write,
+    Icons.priority_high_rounded,
+    l10n.urgentMark,
+    attach: 'urgent',
+    info: l10n.urgentInfo,
+  );
   row(
     AddGroup.write,
     Icons.link,

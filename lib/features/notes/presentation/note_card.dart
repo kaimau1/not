@@ -378,6 +378,9 @@ ThemeData _cardThemeOf(BuildContext context) =>
 
 /// Izgara hücresinin genişliği (ana ekran verir); kart dar sütunda
 /// sıkışır (bkz. [noteCardSqueeze]). Yoksa kart normal çizilir.
+/// Kart durum simgelerinin boyu (kardeş simgelerin 13'üyle aynı).
+const _statusIconSize = 13.0;
+
 class NoteCardWidth extends InheritedWidget {
   const NoteCardWidth({super.key, required this.width, required super.child});
 
@@ -526,6 +529,15 @@ class NoteCard extends ConsumerWidget {
           ),
         ),
         PopupMenuItem(
+          value: 'urgent',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.priority_high_rounded),
+            title: Text(note.urgent ? l10n.urgentUnmark : l10n.urgentMark),
+          ),
+        ),
+        PopupMenuItem(
           value: 'delete',
           child: ListTile(
             dense: true,
@@ -544,6 +556,9 @@ class NoteCard extends ConsumerWidget {
       case 'star':
         unawaited(AppHaptics.tick());
         ref.read(notesRepositoryProvider)?.setStarred(note.id, !note.starred);
+      case 'urgent':
+        unawaited(AppHaptics.tick());
+        ref.read(notesRepositoryProvider)?.setUrgent(note.id, !note.urgent);
       case 'delete':
         _delete(context, ref);
     }
@@ -695,6 +710,15 @@ class NoteCard extends ConsumerWidget {
     // akıyorlardı ve başlığı sola sıkıştırıyorlardı: üç rozetli bir notta
     // başlık iki kelimede kesiliyordu. Altta, tarihle aynı bantta duruyorlar.
     final statusIcons = <Widget>[
+      // ACİL: ilk sırada, hata renginde ünlem (2026-11-16). Durum simgeleri
+      // kapalıyken de görünür — işaretin tek işi gözden kaçmamak.
+      if (note.urgent)
+        Icon(
+          Icons.priority_high_rounded,
+          key: const ValueKey('card-urgent'),
+          size: _statusIconSize,
+          color: scheme.error,
+        ),
       if (display.statusIcons) ...[
         // Sabitli ve yıldızlı: temanın SICAK vurgusu (TEMA_PLANI F31.4).
         if (note.pinned)
@@ -1095,6 +1119,7 @@ class NoteCard extends ConsumerWidget {
             note.items.where((i) => i.text.trim().isNotEmpty).length,
           ),
       ],
+      if (note.urgent) context.l10n.sectionUrgent,
       if (note.pinned) context.l10n.pin,
       if (note.starred) context.l10n.filterStarred,
       if (note.reminderAt != null) context.l10n.remindersTitle,
@@ -2170,6 +2195,12 @@ class NoteListRow extends ConsumerWidget {
                         accent: accent,
                         maxWidth: 72,
                       ),
+                    ),
+                  if (note.urgent)
+                    Icon(
+                      Icons.priority_high_rounded,
+                      size: _statusIconSize,
+                      color: scheme.error,
                     ),
                   if (display.statusIcons) ...[
                     if (note.pinned)

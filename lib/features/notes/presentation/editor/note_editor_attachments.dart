@@ -1261,6 +1261,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       // Gömme seçicisi yeni ek de ekleyebildiği için eki olmayan notta da
       // anlamlı (gömme yeniden tasarımı, 2026-10-11).
       canEmbed: !(_note?.type.isPageNoteType ?? false),
+      urgent: _note?.urgent ?? false,
       // Birden çok ek kopyalandıysa ad yerine sayı yazılır.
       copiedAttachmentName: copied.isEmpty
           ? null
@@ -1277,6 +1278,8 @@ extension _EditorAttachments on _NoteEditorScreenState {
         await _embedAttachmentFlow();
       case 'new-page':
         _addPage();
+      case 'urgent':
+        _setUrgent(!(_note?.urgent ?? false));
       case 'list-item':
         _addChecklistItem();
       case 'text-block':

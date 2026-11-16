@@ -1775,6 +1775,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sectionPinnedShort => 'Sabit';
 
   @override
+  String get sectionUrgent => 'Acil';
+
+  @override
+  String get urgentMark => 'Acil işaretle';
+
+  @override
+  String get urgentUnmark => 'Acil işaretini kaldır';
+
+  @override
+  String get urgentInfo => 'Ana ekranda en üstte, ünlemle';
+
+  @override
   String get sectionToday => 'Bugün';
 
   @override
