@@ -16,6 +16,7 @@ import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
+import 'package:notlar/features/notes/presentation/dashboard_scroll_memory.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
 import 'package:notlar/features/notes/presentation/notes_providers.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
@@ -194,7 +195,11 @@ Future<void> _end(WidgetTester tester) async {
 }
 
 void main() {
-  tearDown(() => NotesRepository.lastCreatedId = null);
+  tearDown(() {
+    NotesRepository.lastCreatedId = null;
+    // Önceki testin kaydırması sonraki panoya taşınmasın.
+    DashboardScrollMemory.clear();
+  });
 
   testWidgets('yeni not: dönüşte kart görünür, yanıp söner, sonra söner', (
     tester,
@@ -217,6 +222,41 @@ void main() {
     expect(container.read(focusedNoteProvider), isNull);
     expect(_haloAlpha(tester), 0);
     expect(NotesRepository.lastCreatedId, isNull);
+    await _end(tester);
+  });
+
+  // Hızlı liste / liste şablonu "Bitti": not EDİTÖRSÜZ doğar
+  // (`createFromTemplate`, open: false) — editör kapanış tetiği yok, odak
+  // `focusCreated` ile ana ekrana dönüşte gelir (kullanıcı hatası 2026-11-16).
+  testWidgets('editörsüz doğan not (hızlı liste → Bitti): kart odaklanır, tek '
+      'tetik', (tester) async {
+    final (container, _) = await _pump(tester);
+    expect(_onScreen(tester), isFalse);
+    NotesRepository.lastCreatedId = 'yeni';
+    final focus = container.read(focusedNoteProvider.notifier);
+    expect(focus.focusCreated('yeni'), isTrue);
+    // İkinci tetik (ör. editör yolu da çalışsa) hiçbir şey yapmaz.
+    expect(focus.focusCreated('yeni'), isFalse);
+    expect(NotesRepository.lastCreatedId, isNull);
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    expect(container.read(focusedNoteProvider), 'yeni');
+    expect(_onScreen(tester), isTrue);
+    expect(_haloAlpha(tester), isNotNull);
+    await _end(tester);
+  });
+
+  // Şablon önizleme → Oluştur (open: true) editörü açar: editör yolu tüketir,
+  // ardından gelen ikinci tetik vurguyu yinelemez.
+  testWidgets('editör yolu tükettikten sonra ikinci tetik yok', (tester) async {
+    final (container, router) = await _pump(tester);
+    await _createOpenReturn(tester, router, container);
+    expect(container.read(focusedNoteProvider), 'yeni');
+    expect(
+      container.read(focusedNoteProvider.notifier).focusCreated('yeni'),
+      isFalse,
+    );
     await _end(tester);
   });
 
