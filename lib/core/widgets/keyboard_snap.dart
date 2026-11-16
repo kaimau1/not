@@ -433,7 +433,7 @@ class KeyboardSlide extends StatefulWidget {
   /// `c`: klavye bu süre kıpırdamazsa panel belirir (kararlı boşluğun
   /// 140 ms'sini beklemeden). Kısa olursa takılan klavye karesinde panel
   /// erken görünüp yeniden gizlenebilir (cihazda ayar düğmesi).
-  static Duration quiet = const Duration(milliseconds: 60);
+  static Duration quiet = AppMotion.exitOf(AppMotion.instant); // ≈ 67 ms
 
   @override
   State<KeyboardSlide> createState() => _KeyboardSlideState();
@@ -471,7 +471,7 @@ class _KeyboardSlideState extends State<KeyboardSlide>
   /// Klavye [_expectTimeout] içinde kıpırdamazsa (donanım klavyesi vb.)
   /// geri gelir. Geri tuşuyla kapanışta odak değişmez: o yol (1)'e kalır.
   bool _expect = false;
-  static const _expectTimeout = Duration(milliseconds: 300);
+  static const _expectTimeout = AppMotion.medium;
 
   /// `c`: klavye [KeyboardSlide.quiet] boyunca kıpırdamadı → panel, gövdenin
   /// kararlı boşluğu (140 ms) oturmadan belirir. Konum ötelemeyle zaten

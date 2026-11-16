@@ -1,7 +1,7 @@
 # DEVIR — oto/alt-panel-kalici
 
 Yapılanlar:
-- Kip c kalıcı (`lib/core/widgets/keyboard_snap.dart` `_KeyboardSlideState`): anında gizleme, odak sinyali (EditableText'e giriş/çıkış geçişi), `KeyboardSlide.quiet` 60 ms sessizlikte belirme; CurvedAnimation/Tween kalktı (`animateTo`).
+- Kip c kalıcı (`lib/core/widgets/keyboard_snap.dart` `_KeyboardSlideState`): anında gizleme, odak sinyali (EditableText'e giriş/çıkış geçişi), `KeyboardSlide.quiet` 67 ms sessizlikte belirme; CurvedAnimation/Tween kalktı (`animateTo`).
 - Test: `test/perf_budget_test.dart` "S47 kip c: odak…" (eski kodda kırmızı: odak kazanımında alpha 1). `test/support/keyboard_track.dart` `panelAlpha` açıldı.
 - Bütçe S47 c_*: takılma 6→0, sarsıntı 46→0, maks sapma 46→0, ort 16→0 (gizli kare 162→210, görünür 84→36).
 - Belge: akicilik.md notu, sürüm notu 16 Kasım (tr/en), KONTROL_LISTEM "Telefonda bak".
