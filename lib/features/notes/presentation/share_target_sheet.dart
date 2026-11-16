@@ -104,26 +104,32 @@ Future<ShareDestination?> showShareTargetSheet(
   bool askMode = false,
   String? newNoteLabel,
   Widget Function(Note note)? cardBuilder,
-}) => showAppSheet<ShareDestination>(
-  context: context,
-  isScrollControlled: true,
-  showDragHandle: true,
-  constraints: const BoxConstraints(maxWidth: 640),
-  builder: (sheetContext) => Padding(
-    // Klavye (başlık / arama) açılınca levha yukarı kalkar.
-    padding: EdgeInsets.only(
-      bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+}) {
+  // TEK ÖRNEK (S52, şablon kasmasının kalıbı): builder klavye payına bağlı,
+  // klavyenin her karesinde yeniden çağrılır; içerik dışarıda bir kez kurulur
+  // ki kare başına yalnız dolgu kurulsun.
+  final sheet = ShareTargetSheet(
+    incoming: incoming,
+    notes: notes,
+    folderNames: folderNames,
+    askMode: askMode,
+    newNoteLabel: newNoteLabel,
+    cardBuilder: cardBuilder,
+  );
+  return showAppSheet<ShareDestination>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    constraints: const BoxConstraints(maxWidth: 640),
+    builder: (sheetContext) => Padding(
+      // Klavye (başlık / arama) açılınca levha yukarı kalkar.
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+      ),
+      child: sheet,
     ),
-    child: ShareTargetSheet(
-      incoming: incoming,
-      notes: notes,
-      folderNames: folderNames,
-      askMode: askMode,
-      newNoteLabel: newNoteLabel,
-      cardBuilder: cardBuilder,
-    ),
-  ),
-);
+  );
+}
 
 /// Levhanın kendisi (testte doğrudan kurulabilsin diye açık).
 class ShareTargetSheet extends StatefulWidget {

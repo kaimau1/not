@@ -1,6 +1,5 @@
 import '../../../core/haptics.dart';
 import '../../../core/app_icons.dart';
-import '../../calendar/data/task_note_sync.dart';
 import '../../../core/widgets/tag_pill.dart';
 import 'dart:async';
 import 'dart:io';
@@ -686,9 +685,6 @@ class NoteCard extends ConsumerWidget {
     // Dilim, örtme, parola taraması not sürümü başına bir kez (F21.1/F21.2).
     final preview = CardPreview.of(note, hideSensitive: hideSensitive);
     final credential = hideSensitive && !note.locked && preview.credential;
-    // KARTTAN İŞARETLEME (D6): kendi notumda, seçim kipi dışında maddenin
-    // kutucuğuna dokunmak editörü açmadan işaretler (Keep'teki gibi).
-    final canToggle = !selectionActive && ownerId == null && !readOnly;
 
     void toggleSelection() =>
         ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
@@ -863,9 +859,6 @@ class NoteCard extends ConsumerWidget {
               showProgress: display.progress,
               showMoreCount: display.moreCount,
               collapseChecked: !display.checked,
-              onToggle: canToggle
-                  ? (item) => toggleCardItem(ref, note, item)
-                  : null,
             ),
             // Ekler: belge kartı, küçük karolar, dosya/ses satırları (kapak
             // ayrıca kartın tepesinde). Zemin görseli ek sayılmaz.
@@ -1374,24 +1367,6 @@ class _FolderBadge extends StatelessWidget {
   }
 }
 
-/// Kartta maddenin kutucuğuna dokunuş (D6): notun maddesini editörü açmadan
-/// işaretler / işareti kaldırır. Metni boş madde işaretlenmez (editördeki
-/// kuralla aynı, bkz. `ItemsEditor._toggleItem`). Editör açıksa (geniş
-/// ekranda sağ bölme) değişiklik ona dış yazım olarak gelir ve üç yönlü
-/// birleştirilir (F4.1).
-void toggleCardItem(WidgetRef ref, Note note, NoteItem target) {
-  final repo = ref.read(notesRepositoryProvider);
-  if (repo == null || target.text.trim().isEmpty || target.checked) return;
-  repo.updateFields(note.id, {
-    'items': [
-      for (final i in note.items)
-        (i.id == target.id ? i.copyWith(checked: !i.checked) : i).toMap(),
-    ],
-  });
-  // Maddeden üretilmiş görev de tamamlanır (TAKVIM F50.3).
-  syncItemToTasks(ref, note.id, target.id, !target.checked);
-}
-
 /// Parola notunun kartında içerik yerine duran satır (B1). [onLock] null
 /// değilse yanında "Kilitle" önerisi.
 class _SensitiveHidden extends StatelessWidget {
@@ -1451,7 +1426,6 @@ class _CardItemRow extends StatelessWidget {
     required this.rich,
     this.checkbox = false,
     this.number,
-    this.onToggle,
   });
 
   final NoteItem item;
@@ -1464,9 +1438,6 @@ class _CardItemRow extends StatelessWidget {
   final bool rich;
   final bool checkbox;
   final int? number;
-
-  /// Kutucuğa dokunuş (D6); null = kutucuk yalnız gösterim.
-  final ValueChanged<NoteItem>? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -1487,28 +1458,13 @@ class _CardItemRow extends StatelessWidget {
             ? NoteCheckColors.checked(scheme, accent)
             : NoteCheckColors.unchecked(scheme, accent),
       );
-      // F60.S14: işaretli madde kartta tek dokunuşla geri alınmaz (yanlışlıkla
-      // dokunuş sessizce işareti siliyordu); dokunuş notu açar. İşareti
-      // kaldırmak editörde.
-      leading = onToggle == null || item.checked
-          ? Padding(
-              padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
-              child: icon,
-            )
-          // Dokunma alanı simgeden geniş (14 dp parmakla vurulmuyor); kartın
-          // InkWell'i iç tanıyıcıya yenilir, not açılmaz.
-          : GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => onToggle!(item),
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  end: 6,
-                  top: 1,
-                  bottom: 2,
-                ),
-                child: icon,
-              ),
-            );
+      // SALT GÖRÜNÜM (kullanıcı bulgusu 2026-11-16: "dashboard'da iken madde
+      // tiklenebiliyor, bu olmamalı"; eski D6 karttan işaretleme kalktı):
+      // kutucuğa dokunuş kartın dokunuşudur, notu açar. İşaret editörde.
+      leading = Padding(
+        padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
+        child: icon,
+      );
     } else if (number != null) {
       leading = Padding(
         padding: const EdgeInsetsDirectional.only(end: 6),
@@ -1757,7 +1713,6 @@ class _NotePreview extends StatelessWidget {
     required this.preview,
     required this.rich,
     this.highlightQuery = FixedQuery.empty,
-    this.onToggle,
     this.showProgress = false,
     this.showMoreCount = true,
     this.collapseChecked = false,
@@ -1777,9 +1732,6 @@ class _NotePreview extends StatelessWidget {
   /// İşaretliler tek satır özete insin mi (F74.4; `card_show_checked` kapalı).
   final bool collapseChecked;
   final ValueListenable<String> highlightQuery;
-
-  /// Madde kutucuğuna dokunuş (D6); null = salt gösterim.
-  final ValueChanged<NoteItem>? onToggle;
 
   /// Satır içi biçim çizilsin mi (Ayarlar → Görünüm).
   final bool rich;
@@ -1914,7 +1866,6 @@ class _NotePreview extends StatelessWidget {
                   query: highlightQuery,
                   rich: rich,
                   checkbox: true,
-                  onToggle: onToggle,
                 ),
               if (showMoreCount && slice.more > 0)
                 Padding(
@@ -1973,7 +1924,6 @@ class _NotePreview extends StatelessWidget {
                 number: note.type == NoteType.ordered
                     ? itemOrderNumber(shown, i)
                     : null,
-                onToggle: onToggle,
               ),
             if (showMoreCount && remaining > 0)
               Padding(

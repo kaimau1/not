@@ -9,7 +9,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notlar/core/app_icons.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
-import 'package:notlar/features/calendar/data/calendar_repository.dart';
 import 'package:notlar/features/folders/data/folder_activity.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/folders/domain/note_folder.dart';
@@ -18,10 +17,8 @@ import 'package:notlar/features/inbox/data/inbox_repository.dart';
 import 'package:notlar/features/notes/data/note_shares_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
-import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
-import 'package:notlar/features/notes/presentation/note_card.dart';
 import 'package:notlar/features/notes/presentation/notes_providers.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -197,65 +194,6 @@ void main() {
     expect(find.text('Üçüncü not'), findsNothing);
     expect(repo.pending, 4);
     await tester.pump(const Duration(seconds: 6));
-  });
-
-  testWidgets('kartta madde işaretle: kutu sunucu onayı gelmeden dolar', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({'card_show_checked': true});
-    final prefs = await SharedPreferences.getInstance();
-    final repo = _SlowRepo(const [
-      Note(
-        id: 'n',
-        type: NoteType.checklist,
-        title: 'Liste',
-        items: [NoteItem(id: 'a', text: 'bekliyor')],
-      ),
-    ]);
-    addTearDown(repo.out.close);
-    final router = GoRouter(
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, _) => Scaffold(
-            body: StreamBuilder<List<Note>>(
-              stream: repo.watch(),
-              builder: (_, snap) => snap.data == null
-                  ? const SizedBox()
-                  : SizedBox(
-                      width: 300,
-                      child: NoteCard(note: snap.data!.single),
-                    ),
-            ),
-          ),
-        ),
-      ],
-    );
-    addTearDown(router.dispose);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-          currentUidProvider.overrideWithValue('ben'),
-          notesRepositoryProvider.overrideWithValue(repo),
-          calendarRepositoryProvider.overrideWithValue(null),
-        ],
-        child: MaterialApp.router(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('tr'),
-          routerConfig: router,
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.check_box_outline_blank));
-    await tester.pump();
-    await tester.pump();
-    expect(find.byIcon(Icons.check_box), findsOneWidget);
-    expect(repo.pending, 1);
-    await tester.pump(const Duration(seconds: 2));
   });
 
   // Klasöre taşıma ve öbür toplu işler aynı yoldan (`batchUpdate`,
