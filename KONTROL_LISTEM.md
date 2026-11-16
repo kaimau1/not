@@ -12,6 +12,10 @@ oraya bakman gerekmez. Son güncelleme: 15 Kasım 2026.)
 - [ ] **Acil notlar (oto/acil-sabit, cihazda bakılmadı — 2026-11-16)**
   Nerede: bir not → alt çubuk **+** → Yaz grubunda "Acil işaretle"; sonra ana ekran.
   Nasıl: ana ekranda en üstte "Acil" başlığı, altında not; kartta kırmızı ünlem; sabit notların ÜSTÜNDE. Notta tarih yanında ünlem; dokununca kalkar ve not "Acil"den çıkar. Başka cihazda da aynı görünmeli.
+- [ ] **Yeni not odağı (oto/yeni-not-odak, cihazda bakılmadı — 2026-11-16)**
+  Nerede: ana ekran, uzun liste (ekranı aşan).
+  Nasıl: aşağıya kaydır, "+" ile ve bir şablondan yeni not oluştur, yaz, geri dön; bir kez de boş not açıp hiç yazmadan dön.
+  Beklenen: dönüşte liste yeni nota kayar (görünüyorsa kaymaz), çerçeve ~1,2 sn iki kez yanıp söner; boş notta hiçbir şey. Erişilebilirlik → animasyonları kaldır açıkken tek sabit vurgu.
 
 - [ ] **120 Hz (oto/120hz, cihazda bakılmadı — 2026-11-16)**
   Nerede: Ayarlar → en alt, sürüm satırı.

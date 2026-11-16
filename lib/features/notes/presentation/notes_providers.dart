@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show compute, visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/utils/search_fold.dart';
 import '../../../core/utils/stable_value.dart';
 import '../../../core/utils/rich_text.dart';
@@ -636,10 +637,29 @@ class FocusedNoteNotifier extends Notifier<String?> {
     return null;
   }
 
-  void focus(String noteId) {
+  /// Halenin bir yarım nabzı (söner→yanar). Asistan: sakin, nefes gibi.
+  static const _calmPulse = Duration(milliseconds: 700);
+
+  /// Yeni not vurgusu: iki kısa nabız (2 × 2 × 300 ms = [briefHold]).
+  static const briefHold = Duration(milliseconds: 1200);
+
+  /// Şu anki vurgunun yarım nabız süresi (`_FocusHalo` okur).
+  Duration pulse = _calmPulse;
+
+  void focus(String noteId) => _focus(noteId, _duration, _calmPulse);
+
+  /// YENİ NOT (kullanıcı isteği 2026-11-16): ana ekrana dönünce kart
+  /// görünür alana gelir ve ~1,2 sn iki kez yanıp söner.
+  void focusBrief(String noteId) =>
+      _focus(noteId, briefHold, AppMotion.medium);
+
+  void _focus(String noteId, Duration hold, Duration halfPulse) {
+    // Editör kapanışından ertelenmiş çağrı: kapsayıcı o arada gitmiş olabilir.
+    if (!ref.mounted) return;
     _timer?.cancel();
+    pulse = halfPulse;
     state = noteId;
-    _timer = Timer(_duration, () => state = null);
+    _timer = Timer(hold, () => state = null);
   }
 
   void clear() {

@@ -1272,6 +1272,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Listede açık not vurgusu (geniş ekran). Ağaç kurulurken sağlayıcı
     // yazılamaz → mikro görev; dispose'da `ref` yok → notifier saklanır.
     final openNotes = _openNotes = ref.read(openNoteIdsProvider.notifier);
+    _focusNote = ref.read(focusedNoteProvider.notifier);
     final openId = widget.noteId;
     unawaited(Future.microtask(() => openNotes.open(openId)));
     // F26.3: açıkken listede yerinde dursun (kapanış başlayınca bırakılır).
@@ -1774,6 +1775,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // İçi boş kalan not çıkarken sessizce silinir.
       _notesRepo?.hardDelete(note.id);
     } else if (!_deleted && note != null) {
+      // YENİ NOT hangi yoldan doğmuş olursa olsun (bkz.
+      // [NotesRepository.lastCreatedId]): ana ekrana dönünce kartı görünür
+      // alana gelip kısa süre yanıp söner. Boş atılan notta (üst dal) yok.
+      if (NotesRepository.lastCreatedId == note.id) {
+        NotesRepository.lastCreatedId = null;
+        final focus = _focusNote;
+        final id = note.id;
+        // Ana ekranın donmuş görüntüsü yetişsin (FreezeWhenHidden, ≤380 ms):
+        // nabız kart ekrana gelmeden bitmesin. dispose'da ağaç kilitli,
+        // sağlayıcı zaten ertelenmiş yazılmalı.
+        Timer(AppMotion.long, () => focus.focusBrief(id));
+      }
       // İçerik denetimi isEmpty'den AYRI: yalnız hatırlatıcısı olan metinsiz
       // not artık "boş" sayılmıyor (silinmesin diye) ama AI'ya gönderilecek
       // içeriği de yok — boş içerikle model çağırmak puan yakar ve
@@ -2389,6 +2402,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   NoteFullscreenNotifier? _fullscreenNotifier;
 
   late final OpenNoteIdsNotifier _openNotes;
+
+  /// Yeni not kapanınca ana ekran kartını odaklamak için (dispose'da `ref` yok).
+  late final FocusedNoteNotifier _focusNote;
 
   /// Metin/liste notunun sayfa üstü el yazısı (bkz. [PageInkStack]).
   InkController? _pageInkCtl;

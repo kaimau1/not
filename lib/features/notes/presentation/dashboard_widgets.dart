@@ -646,10 +646,8 @@ class _FocusHaloState extends State<_FocusHalo>
   /// TEMBEL: yalnız ODAKLI kartta kurulur (bkz. [_syncPulse] kök nedeni).
   AnimationController? _pulse;
 
-  AnimationController _ensurePulse() => _pulse ??= AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 700),
-  );
+  AnimationController _ensurePulse() =>
+      _pulse ??= AnimationController(vsync: this);
 
   @override
   void didUpdateWidget(covariant _FocusHalo oldWidget) {
@@ -659,9 +657,11 @@ class _FocusHaloState extends State<_FocusHalo>
     _syncPulse();
   }
 
+  /// İlk senkron burada (initState değil): hareketi azalt ayarı
+  /// `MediaQuery`den okunur.
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _maybeScroll();
     _syncPulse();
   }
@@ -679,7 +679,21 @@ class _FocusHaloState extends State<_FocusHalo>
       return;
     }
     final pulse = _ensurePulse();
-    if (!pulse.isAnimating) pulse.repeat(reverse: true);
+    // Hareketi azalt: yanıp sönme yok, odak süresince tek, sabit vurgu.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      pulse
+        ..stop()
+        ..value = 1;
+      return;
+    }
+    if (pulse.isAnimating) return;
+    // Nabız hızı odağı kuran yolun: asistan sakin, yeni not iki kısa nabız
+    // (bkz. [FocusedNoteNotifier.focusBrief]).
+    pulse.duration = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(focusedNoteProvider.notifier).pulse;
+    pulse.repeat(reverse: true);
   }
 
   @override
@@ -688,6 +702,7 @@ class _FocusHaloState extends State<_FocusHalo>
     super.dispose();
   }
 
+  /// Kart TAMAMEN görünüyorsa kaydırma yok; değilse ortalanır.
   void _maybeScroll() {
     if (!widget.focused || _scrolled) return;
     _scrolled = true;
@@ -695,10 +710,17 @@ class _FocusHaloState extends State<_FocusHalo>
       if (!mounted) return;
       final box = context.findRenderObject();
       if (box is! RenderBox || !box.attached) return;
+      final scrollable = Scrollable.maybeOf(context);
+      final viewport = RenderAbstractViewport.maybeOf(box);
+      if (scrollable == null || viewport == null) return;
+      final pixels = scrollable.position.pixels;
+      final atTop = viewport.getOffsetToReveal(box, 0).offset;
+      final atBottom = viewport.getOffsetToReveal(box, 1).offset;
+      if (pixels >= atBottom - 1 && pixels <= atTop + 1) return;
       Scrollable.ensureVisible(
         context,
-        alignment: 0.3,
-        duration: const Duration(milliseconds: 400),
+        alignment: 0.5,
+        duration: AppMotion.long,
         curve: Curves.easeOutCubic,
       );
     });
