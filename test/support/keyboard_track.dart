@@ -82,7 +82,7 @@ List<double> _ease(double from, double to, int frames) => [
 ];
 
 /// Panelin görünürlüğü: atalardaki saydamlıkların çarpımı.
-double _alpha(RenderObject ro) {
+double panelAlpha(RenderObject ro) {
   var a = 1.0;
   for (RenderObject? p = ro; p != null; p = p.parent) {
     if (p is RenderOpacity) a *= p.opacity;
@@ -106,7 +106,7 @@ Future<PanelTrack> trackPanel(
   final out = PanelTrack();
   final bar = find.byType(BottomAppBar);
   double edge() => tester.getRect(bar).bottom;
-  double alpha() => _alpha(tester.renderObject(bar));
+  double alpha() => panelAlpha(tester.renderObject(bar));
   final legs = [
     (real: _ease(0, keyboard, openFrames), holdMs: 400),
     (real: _ease(keyboard, 0, openFrames - 2), holdMs: 400),
