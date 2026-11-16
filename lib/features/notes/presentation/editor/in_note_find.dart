@@ -9,8 +9,11 @@ import '../../../../core/widgets/app_sheet.dart';
 /// yarım pencerede göstersin").
 ///
 /// Eskiden arama AYRI bir levhada açılıyordu: sonuçlar bir listede
-/// okunuyor, nottaki yeri hiç gösterilmiyordu. Artık çubuk editörün alt
-/// çubuğunun YERİNE geçer (klavyeyle birlikte yükselir), yazdıkça eşleşmeler
+/// okunuyor, nottaki yeri hiç gösterilmiyordu. Çubuk ÜST ÇUBUĞUN ALTINDA,
+/// gövdenin tepesinde ayrı bir satırdır (kullanıcı isteği 2026-11-16: "arama
+/// menüsü üst menünün altında yeni bir satırda oluşsun; klavye üzerinde alt
+/// panelimin yerini alıyor, bu olmaz" — eskiden alt çubuğun YERİNE
+/// geçiyordu); alt çubuk yerinde kalır. Yazdıkça eşleşmeler
 /// sayfada boyanır, oklar sayfayı eşleşmeye kaydırır; liste düğmesi aynı
 /// eşleşmeleri yarım pencerede sıralar ([showFindHitsSheet]).
 class NoteFindBar extends StatelessWidget {

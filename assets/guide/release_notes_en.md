@@ -3,6 +3,9 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 16 November 2026 {#2026-11-16}
+- **Find in note shows up right away:** the magnifier at the top right no longer pops in half a second after the note opens.
+- **Find in note sits at the top, on its own row:** the search bar opens just below the top bar; the bottom panel (Format, Add, voice…) stays above the keyboard. Opening it no longer stutters.
+- **Smoother "+" and ⋮ menus with the keyboard up:** the menu opens first and the keyboard goes down right after, instead of both at once.
 - **Tidier note menu (⋮):** the top row holds the most used actions in order of importance: Background colour, Frame, Share, Move to folder, Star. Version history moved to "Protection and storage", Listen to "Tools". Groups are now drawers: only "Organize" starts open, tap a heading to open the others (an opened group stays open while the app is running).
 - **Find in note is in the top bar:** a magnifier at the top right of the note, next to ⋮; it's no longer in the menu.
 - **Back with the format panel open:** the format panel closes first and the keyboard stays (it may dip and come back for a moment — the keyboard takes the back key first); a second back closes the keyboard.

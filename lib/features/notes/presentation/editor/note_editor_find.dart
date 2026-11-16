@@ -4,19 +4,21 @@ part of 'note_editor_screen.dart';
 ///
 /// F9.3: editör konu başına bölündü; durum (alanlar) [_NoteEditorScreenState]da kalır.
 extension _EditorFind on _NoteEditorScreenState {
-  /// Alt çubuktaki büyüteç ve ⋮ → "Notta ara": CANLI arama çubuğunu açar
-  /// (kullanıcı isteği 2026-09-26: "sayfada canlı aranmalı, ayrı bir alanda
-  /// değil; altta çıksın").
+  /// Üst çubuktaki büyüteç (ve alt çubuktaki, açıksa): CANLI arama
+  /// çubuğunu açar (kullanıcı isteği 2026-09-26: "sayfada canlı aranmalı,
+  /// ayrı bir alanda değil"). Çubuk 2026-11-16'dan beri üst çubuğun altında.
   Future<void> _openNoteSearch() async {
     if (_note == null) return;
     // Bekleyen biçim metne insin: aranan kelime az önce yazıldıysa tampon
     // son hâlini taşısın.
     _flushPending(_bodyController);
     if (!mounted) return;
-    _update(() {
-      _findOpen = true;
-      _formatBarOpen = false;
-    });
+    // Kök KURULMAZ (bildirici; bkz. [_findOpenN]): yalnız üstteki arama
+    // satırı ve biçim paneli dinler. Pencereli gövde aramada tek alana döner
+    // (eskiden bunu kök kurulumu yapıyordu).
+    if (_bodyWindow.active) _bodyWindow.exit();
+    _findOpen = true;
+    _formatBarOpen = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_findOpen) return;
       _find.focus.requestFocus();
@@ -30,10 +32,9 @@ extension _EditorFind on _NoteEditorScreenState {
   void _openFindWith(String query) {
     if (_note == null || query.isEmpty) return;
     _find.query.text = query;
-    _update(() {
-      _findOpen = true;
-      _formatBarOpen = false;
-    });
+    if (_bodyWindow.active) _bodyWindow.exit();
+    _findOpen = true;
+    _formatBarOpen = false;
     // İki kare: maddeler ve gövde ilk karede kurulur, boyları ikincide.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -46,7 +47,7 @@ extension _EditorFind on _NoteEditorScreenState {
 
   void _closeFind() {
     _find.reset();
-    _update(() => _findOpen = false);
+    _findOpen = false;
   }
 
   void _queueFindRefresh() {

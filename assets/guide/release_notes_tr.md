@@ -3,6 +3,9 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 16 Kasım 2026 {#2026-11-16}
+- **Notta ara hemen görünüyor:** not açılınca sağ üstteki büyüteç artık yarım saniye sonra "pat" diye gelmiyor, ilk anda yerinde.
+- **Not içi arama üstte, kendi satırında:** arama çubuğu üst çubuğun hemen altında açılıyor; alttaki panel (Biçim, Ekle, ses…) klavyenin üstünde yerinde kalıyor. Arama açılırken takılma da giderildi.
+- **Klavye açıkken "+" ve ⋮ menüleri daha akıcı:** menü önce açılıyor, klavye hemen ardından iniyor — ikisi aynı anda yüklenip takılmıyor.
 - **Not menüsü (⋮) sadeleşti:** üst sırada en çok kullanılanlar, önem sırasıyla: Zemin rengi, Çerçeve, Paylaş, Klasöre taşı, Yıldızla. Sürüm geçmişi "Koruma ve depolama"ya, Sesli dinle "Araçlar"a indi. Gruplar artık açılır çekmece: yalnız "Düzenle" açık gelir, başlığa dokununca öbürleri açılır (açtığın grup uygulama açıkken açık kalır).
 - **Notta ara üst çubukta:** notun sağ üstünde, ⋮'nin yanında büyüteç; menüde artık aranmıyor.
 - **Biçim paneli açıkken geri:** önce biçim paneli kapanır, klavye yerinde kalır (klavye bir an inip geri gelebilir — geri tuşunu önce klavye alıyor); ikinci geri klavyeyi kapatır.

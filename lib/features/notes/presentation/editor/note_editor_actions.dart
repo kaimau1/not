@@ -419,8 +419,9 @@ extension _EditorActions on _NoteEditorScreenState {
     if (note == null) return;
     // Levha metin alanı taşımıyor; klavye açık kalırsa levhanın yarısını
     // örter (alt bardaki diğer levhalarla aynı kural).
-    _dismissKeyboard();
+    final sheetFocus = _dismissKeyboardAfterSheet();
     final action = await showActionMenuSheet(
+      requestFocus: sheetFocus,
       context,
       noteMenuModel(
         context.l10n,

@@ -19,8 +19,10 @@ Future<String?> showAttachSheet(
   bool canEmbed = false,
   String? copiedAttachmentName,
   bool urgent = false,
+  bool? requestFocus,
 }) => showAppSheet<String>(
   context: context,
+  requestFocus: requestFocus,
   isScrollControlled: true,
   showDragHandle: true,
   shape: const RoundedRectangleBorder(

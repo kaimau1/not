@@ -89,9 +89,16 @@ class MenuSection {
 /// tutup aşağı çekemiyorum, sadece ✕ kapatıyor" — K-D7'nin "✕ varsa tutamak
 /// yok" kuralı kalktı). Levha durum çubuğunun altında durur ([showAppSheet]
 /// `useSafeArea`): ⚙ ve ✕ telefonun üst çubuğuyla çakışmaz.
-Future<String?> showActionMenuSheet(BuildContext context, ActionMenu menu) =>
-    showAppSheet<String>(
+///
+/// [requestFocus] false: levha odağı almaz (klavye açıkken çağıran klavyeyi
+/// levhanın İLK karesinden sonra indirir — bkz. not editörü `_openNoteMenu`).
+Future<String?> showActionMenuSheet(
+  BuildContext context,
+  ActionMenu menu, {
+  bool? requestFocus,
+}) => showAppSheet<String>(
       context: context,
+      requestFocus: requestFocus,
       showDragHandle: true,
       // Büyük yazı ölçeğinde levha varsayılan tavanı aşabilir; kaydırma ağı.
       isScrollControlled: true,
