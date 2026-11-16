@@ -2819,4 +2819,89 @@ void main() {
     _expectBudget('S47', measured);
     await endEditor(tester);
   });
+
+  testWidgets('S47 kip c: odak kaybı/kazancı karesinde panel gizli; klavye '
+      'değeri gecikse de ayrık görünür kare 0; belirmede sıçrama 0', (
+    tester,
+  ) async {
+    const size = Size(412, 915);
+    const nav = 48.0;
+    final keep = KeyboardSlide.mode;
+    addTearDown(() => KeyboardSlide.mode = keep);
+    KeyboardSlide.mode = 'c';
+    await pumpEditor(
+      tester,
+      Note(
+        id: 'n',
+        type: NoteType.text,
+        title: 'Not',
+        body: List.generate(30, (i) => 'Satır $i').join('\n'),
+      ),
+    );
+    await _settleGrowth(tester);
+    final bar = find.byType(BottomAppBar);
+    double alpha() => panelAlpha(tester.renderObject(bar));
+    double edge() => tester.getRect(bar).bottom;
+    Future<void> inset(double v) async {
+      tester.view.viewInsets = FakeViewPadding(bottom: v);
+      tester.view.padding = FakeViewPadding(
+        top: 30,
+        bottom: (nav - v).clamp(0.0, nav),
+      );
+      await tester.pump(const Duration(milliseconds: 16));
+      tester.takeException();
+    }
+
+    // Yürüt: gerçek klavye [real]; Flutter'a [lag] kare geç gelir. Panel
+    // görünürken alt kenarı gerçek klavyeden > 1 px ayrıksa sayılır.
+    var apart = 0;
+    var jumps = 0;
+    Future<void> run(List<double> real, {int lag = 2}) async {
+      double? shownAt;
+      for (var j = 0; j < real.length + lag; j++) {
+        await inset(real[max(0, min(j - lag, real.length - 1))]);
+        final r = real[min(j, real.length - 1)];
+        if (alpha() > 0.05) {
+          if ((edge() - (size.height - max(nav, r))).abs() > 1) apart++;
+          shownAt ??= edge();
+        }
+      }
+      // Oturma: belirdiği yerden kıpırdamamalı (kararlı boşluk dahil).
+      for (var t = 0; t < 400; t += 16) {
+        await tester.pump(const Duration(milliseconds: 16));
+        if (alpha() > 0.05) {
+          shownAt ??= edge();
+          if ((edge() - shownAt).abs() > 1) jumps++;
+        }
+      }
+      expect(alpha(), 1, reason: 'oturunca görünür');
+    }
+
+    List<double> ease(double a, double b) => [
+      for (var i = 1; i <= 16; i++)
+        a + (b - a) * Curves.fastOutSlowIn.transform(i / 16),
+    ];
+
+    // Açılış: odak kazanımı karesinde (klavye henüz 0) panel gizlenir.
+    await tester.tap(find.textContaining('Satır 3').last);
+    await tester.pump();
+    expect(alpha(), 0, reason: 'odak kazanımı: gizlemeye inset beklenmez');
+    await run(ease(0, 300));
+    expect(edge(), closeTo(size.height - 300, 1));
+
+    // Kapanış: odak kaybı karesinde klavye değeri hâlâ 300.
+    // Odak değişimi mikro görevde uygulanır (cihazda dokunuş olayının
+    // hemen ardından, sonraki kareden ÖNCE); tek kare.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future<void>.microtask(() {});
+    await tester.pump();
+    expect(alpha(), 0, reason: 'odak kaybı: gizlemeye inset beklenmez');
+    await run(ease(300, 0));
+    expect(edge(), closeTo(size.height - nav, 1));
+    // ignore: avoid_print
+    print('S47 kip c odak: ayrık=$apart sıçrama=$jumps');
+    expect(apart, 0, reason: 'panel klavyeden ayrık görünmez');
+    expect(jumps, 0, reason: 'belirme yerinde, sıçramasız');
+    await endEditor(tester);
+  });
 }

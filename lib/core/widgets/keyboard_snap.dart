@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/services.dart';
@@ -429,6 +430,11 @@ class KeyboardSlide extends StatefulWidget {
   /// `b` kipinde kare başına kalan yolun kapatılan oranı.
   static double smoothing = 0.6;
 
+  /// `c`: klavye bu süre kıpırdamazsa panel belirir (kararlı boşluğun
+  /// 140 ms'sini beklemeden). Kısa olursa takılan klavye karesinde panel
+  /// erken görünüp yeniden gizlenebilir (cihazda ayar düğmesi).
+  static Duration quiet = AppMotion.exitOf(AppMotion.instant); // ≈ 67 ms
+
   @override
   State<KeyboardSlide> createState() => _KeyboardSlideState();
 }
@@ -442,26 +448,95 @@ class _KeyboardSlideState extends State<KeyboardSlide>
     if (mounted) setState(() {});
   });
 
-  /// `c`: panelin görünürlüğü. `FadeTransition` bir RENDER nesnesi
-  /// sarmalayıcısı: animasyon kareleri yalnız boyar, hiçbir öğe yeniden
-  /// kurulmaz (AnimatedOpacity klavye karesi başına +1 kurulum ekliyordu,
-  /// S17/S45 mandalı).
-  late final AnimationController _fade = AnimationController(vsync: this);
-  // Tek eğri, bir kez kurulur ve atılır (her geçişte yenisi sızıyordu:
-  // editor_leak_test CurvedAnimation birikimi).
-  late final CurvedAnimation _fadeCurve =
-      CurvedAnimation(parent: _fade, curve: AppMotion.standard);
-  // AnimatedOpacity ile aynı eğri: eğri İLERLEMEYE uygulanır (başlangıç →
-  // hedef), değere değil — solmada panel aynı karede gizlenir.
-  Animation<double> _opacity = const AlwaysStoppedAnimation(1);
-  double _fadeTarget = 1;
+  /// `c`: panelin görünürlüğü (1 = görünür). `FadeTransition` bir RENDER
+  /// nesnesi sarmalayıcısı: animasyon kareleri yalnız boyar, hiçbir öğe
+  /// yeniden kurulmaz (AnimatedOpacity klavye karesi başına +1 kurulum
+  /// ekliyordu, S17/S45 mandalı). Eğri `animateTo`'da: ayrı CurvedAnimation
+  /// / Tween nesnesi yok (her geçişte yenisi sızıyordu: editor_leak_test).
+  late final AnimationController _fade = AnimationController(
+    vsync: this,
+    value: 1,
+  );
+  bool _hidden = false;
+
+  /// `c` — **KLAVYE HAREKETİNİ ERKEN YAKALAMA** (kullanıcı videosu
+  /// 2026-11-15, `docs/perf/kullanici_video_2026-11-15.md`: kapanışta boşluk
+  /// 2 → 58 → 2 → 74 → 130 px zikzak). Eskiden panel klavye değeri
+  /// DEĞİŞTİĞİ karede 67 ms'lik solmaya başlıyordu: değer klavyeden bir-iki
+  /// kare geç geldiği ve solmanın ilk kareleri hâlâ opak olduğu için panel
+  /// kapanışın başında klavyeden AYRIK görünüyordu (zikzağın ilk kareleri).
+  /// Şimdi (1) gizleme ANINDA (aynı kare opaklık 0), (2) odak sinyali: klavye
+  /// açıkken odak metin alanından çıkınca (kapanacak) ya da kapalıyken metin
+  /// alanına girince (açılacak) panel inset değişimini beklemeden gizlenir.
+  /// Klavye [_expectTimeout] içinde kıpırdamazsa (donanım klavyesi vb.)
+  /// geri gelir. Geri tuşuyla kapanışta odak değişmez: o yol (1)'e kalır.
+  bool _expect = false;
+  static const _expectTimeout = AppMotion.medium;
+
+  /// `c`: klavye [KeyboardSlide.quiet] boyunca kıpırdamadı → panel, gövdenin
+  /// kararlı boşluğu (140 ms) oturmadan belirir. Konum ötelemeyle zaten
+  /// doğru; boşluk oturunca öteleme sıfırlanır, görünen yer aynı kalır.
+  bool _quiet = false;
+  double _lastLive = 0;
+  Timer? _timer;
+
+  static bool get _softKeyboard =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  @override
+  void initState() {
+    super.initState();
+    if (KeyboardSlide.mode == 'c' && _softKeyboard) {
+      FocusManager.instance.addListener(_onFocus);
+    }
+  }
+
+  /// Odak metin düzenleyicisinde mi (yazılım klavyesi açık olacak mı).
+  static bool _textFocused() =>
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorStateOfType<EditableTextState>() !=
+      null;
+
+  bool _wasText = _textFocused();
+
+  void _onFocus() {
+    final text = _textFocused();
+    final changed = text != _wasText;
+    _wasText = text;
+    // Klavye açıkken metinden ÇIKIŞ = kapanacak; kapalıyken metne GİRİŞ =
+    // açılacak. Alanlar arası geçiş (madde Enter'ı vb.) sinyal değil.
+    if (!mounted || _expect || !changed || (_lastLive > 0) == text) return;
+    _timer?.cancel();
+    _timer = Timer(_expectTimeout, () {
+      if (mounted && _expect) setState(() => _expect = false);
+    });
+    setState(() => _expect = true);
+  }
 
   @override
   void dispose() {
+    FocusManager.instance.removeListener(_onFocus);
+    _timer?.cancel();
     _ticker.dispose();
-    _fadeCurve.dispose();
     _fade.dispose();
     super.dispose();
+  }
+
+  /// `c`: canlı değer değişti — beklenen hareket başladı (artık inset
+  /// kuralı yönetir), sessizlik sayacı baştan.
+  void _trackMotion(double live, bool moving) {
+    if (live == _lastLive) return;
+    _lastLive = live;
+    _expect = false;
+    _quiet = false;
+    _timer?.cancel();
+    _timer = moving
+        ? Timer(KeyboardSlide.quiet, () {
+            if (mounted) setState(() => _quiet = true);
+          })
+        : null;
   }
 
   /// `b`: hedefe kare başına [KeyboardSlide.smoothing] oranında yaklaş;
@@ -516,7 +591,10 @@ class _KeyboardSlideState extends State<KeyboardSlide>
     final floor = _smooth(math.max(nav, live));
     // `c`: klavye hareket ederken (canlı > 0 ama kararlı boşluk henüz
     // oturmadı) panel görünmez. Ağaç şekli kipten bağımsız (Opacity hep var).
-    final hide = KeyboardSlide.mode == 'c' && live > 0 && inset == 0;
+    final moving = live > 0 && inset == 0;
+    if (KeyboardSlide.mode == 'c') _trackMotion(live, moving);
+    final hide =
+        KeyboardSlide.mode == 'c' && (_expect || (moving && !_quiet));
     // Pozitif = AŞAĞI. Yerleşimdeki yer (boşluk + pay) ile olması gereken
     // yer arasındaki fark; boşluk oturunca kendiliğinden sıfırlanır — oturma
     // anı ekranda görünmez.
@@ -532,20 +610,21 @@ class _KeyboardSlideState extends State<KeyboardSlide>
     // şekli çalışırken değişmez): a/b'de klavye karesi başına +1 kurulum
     // olurdu (S17 mandalı).
     if (KeyboardSlide.mode == 'c') {
-      final target = hide ? 0.0 : 1.0;
-      if (target != _fadeTarget) {
-        _fadeTarget = target;
-        _opacity = Tween(
-          begin: _opacity.value,
-          end: target,
-        ).animate(_fadeCurve);
-        // Solma hızlı (klavyenin ilk karelerinde), beliriş yumuşak.
-        _fade.duration = hide
-            ? AppMotion.exitOf(AppMotion.instant)
-            : AppMotion.quick;
-        _fade.forward(from: 0);
+      if (hide != _hidden) {
+        _hidden = hide;
+        if (hide) {
+          // ANINDA: hareketin ilk karesinde panel klavyeden ayrık görünmez.
+          _fade.value = 0;
+        } else {
+          // Beliriş yumuşak; panel bu karede zaten doğru yerde (öteleme).
+          _fade.animateTo(
+            1,
+            duration: AppMotion.quick,
+            curve: AppMotion.standard,
+          );
+        }
       }
-      panel = FadeTransition(opacity: _opacity, child: panel);
+      panel = FadeTransition(opacity: _fade, child: panel);
     }
     return RepaintBoundary(
       child: Transform.translate(
