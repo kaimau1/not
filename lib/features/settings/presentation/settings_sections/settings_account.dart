@@ -774,8 +774,14 @@ class _AppVersionRowState extends State<_AppVersionRow> {
   Future<void> _load() async {
     try {
       final info = await PackageInfo.fromPlatform();
+      // Ekranın o anki yenileme hızı (yalnız Android): 120 Hz'in gerçekten
+      // etkin olduğu telefonda buradan doğrulanır.
+      final hz = await DisplayRate.activeHz();
       if (mounted) {
-        setState(() => _version = '${info.version} (${info.buildNumber})');
+        setState(
+          () => _version = '${info.version} (${info.buildNumber})'
+              '${hz == null ? '' : ' · ${hz.round()} Hz'}',
+        );
       }
     } catch (_) {
       // Sürüm okunamadı (beklenmedik platform): satır hiç çizilmez, ayarların
