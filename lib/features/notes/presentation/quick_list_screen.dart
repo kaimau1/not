@@ -542,6 +542,9 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                 focusNode: _focus,
                 onItems: _add,
                 onTrailingQty: _attachQty,
+                // "Bitti" / "bu kadar" söylenince dinleme biter ve liste
+                // nota çevrilir (Bitti düğmesiyle aynı yol).
+                onDoneWord: () => unawaited(_finish()),
               ),
       ),
     );

@@ -5,6 +5,7 @@ import '../l10n_ext.dart';
 import '../menu_layout.dart';
 import 'app_sheet.dart';
 import 'customize_board.dart';
+import 'expand_reveal.dart';
 import 'sheet_header.dart';
 import 'sheet_tile.dart';
 
@@ -125,7 +126,21 @@ class ActionMenu extends StatelessWidget {
     this.danger,
     this.footer = const [],
     this.menuId,
+    this.collapsible = false,
   });
+
+  /// **KATLANIR GRUPLAR** (kullanıcı isteği 2026-11-16: "çok fazla buton var;
+  /// kayan çekmeceler gibi gruplandırılsın"): her grubun başlığı dokununca
+  /// açılıp kapanan bir çekmece. Varsayılan yalnız İLK grup açık; kullanıcının
+  /// açtığı/kapattığı oturum boyunca hatırlanır ([menuId] başına).
+  final bool collapsible;
+
+  /// Oturum boyunca açık/kapalı gruplar: menü kimliği → (grup adı → açık mı).
+  static final Map<String, Map<String, bool>> _folds = {};
+
+  /// Testler için: hatırlanan açık/kapalı durumlarını siler.
+  @visibleForTesting
+  static void resetFolds() => _folds.clear();
 
   /// Kullanıcının düzenleyebildiği menünün kimliği ([MenuLayouts]); verilince
   /// başlıkta "Düzenle" düğmesi çıkar (gizle/göster, sırala, hızlı satır).
@@ -254,6 +269,17 @@ class ActionMenu extends StatelessWidget {
                   ),
               ],
             ),
+          if (collapsible)
+            for (final (i, section) in visibleSections.indexed)
+              _FoldSection(
+                key: ValueKey('menu-fold-${section.title}'),
+                folds: _folds.putIfAbsent(menuId ?? '', () => {}),
+                title: section.title,
+                initiallyOpen: i == 0,
+                trailing: i == 0 ? inlineEdit : null,
+                child: _TileGrid(actions: section.actions, scheme: scheme),
+              )
+          else
           for (final (i, section) in visibleSections.indexed) ...[
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
@@ -438,6 +464,90 @@ class _QuickButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Katlanır grup ([ActionMenu.collapsible]): başlık satırı (ad · ok)
+/// dokununca ızgarayı aşağı kayarak açar/kapatır.
+class _FoldSection extends StatefulWidget {
+  const _FoldSection({
+    super.key,
+    required this.folds,
+    required this.title,
+    required this.initiallyOpen,
+    required this.child,
+    this.trailing,
+  });
+
+  final Map<String, bool> folds;
+  final String title;
+  final bool initiallyOpen;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  State<_FoldSection> createState() => _FoldSectionState();
+}
+
+class _FoldSectionState extends State<_FoldSection> {
+  late bool _open = widget.folds[widget.title] ?? widget.initiallyOpen;
+
+  void _toggle() {
+    setState(() => _open = !_open);
+    widget.folds[widget.title] = _open;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpace.xs),
+          child: Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  expanded: _open,
+                  child: InkWell(
+                    key: ValueKey('menu-fold-head-${widget.title}'),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    onTap: _toggle,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.xs,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(child: SectionLabel(widget.title)),
+                            AnimatedRotation(
+                              turns: _open ? 0.5 : 0,
+                              duration: AppMotion.of(context, AppMotion.short),
+                              child: Icon(
+                                Icons.expand_more_rounded,
+                                size: AppIconSize.l,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              ?widget.trailing,
+            ],
+          ),
+        ),
+        ExpandReveal(open: _open, child: widget.child),
+      ],
     );
   }
 }

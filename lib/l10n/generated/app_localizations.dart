@@ -3008,6 +3008,12 @@ abstract class AppLocalizations {
   /// **'Seçilenleri işaretle'**
   String get checkSelectedItems;
 
+  /// No description provided for @itemUncheck.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşareti kaldır'**
+  String get itemUncheck;
+
   /// No description provided for @uncheckSelectedItems.
   ///
   /// In tr, this message translates to:

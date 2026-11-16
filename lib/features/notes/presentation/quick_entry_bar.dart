@@ -11,6 +11,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../settings/settings_providers.dart';
 import '../data/device_speech.dart';
 import '../data/voice_listen_session.dart';
+import '../domain/done_word.dart';
 import '../domain/quick_entry.dart';
 
 /// **HIZLI GİRİŞ SATIRI** (kullanıcı isteği 2026-11-15): tek satıra yan yana
@@ -38,6 +39,7 @@ class QuickEntryBar extends ConsumerStatefulWidget {
     this.onRawChanged,
     this.onRawSubmitted,
     this.onSpeechEnd,
+    this.onDoneWord,
   });
 
   final QuickParser parser;
@@ -69,6 +71,11 @@ class QuickEntryBar extends ConsumerStatefulWidget {
 
   /// Dinleme kendiliğinden bitti (sessizlik) — ham kipte "söyle, eklensin".
   final VoidCallback? onSpeechEnd;
+
+  /// Konuşmanın sonunda "bitti" / "bu kadar" söylendi ([stripDoneWord]):
+  /// dinleme durdu, söz metinden atıldı, kalan maddeler döküldü. Çağıran
+  /// işi bitirir (notu oluşturur). Verilmezse söz sıradan metin sayılır.
+  final VoidCallback? onDoneWord;
 
   @override
   ConsumerState<QuickEntryBar> createState() => QuickEntryBarState();
@@ -238,6 +245,13 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   /// çıkar. Son kelime bir sonraki gelene kadar bekler — tanıyıcının sonradan
   /// düzelttiği kelime listeye yanlış girmesin.
   void _onSpeech(String full) {
+    if (widget.onDoneWord != null) {
+      final rest = stripDoneWord(full);
+      if (rest != null) {
+        _onDoneWord(rest);
+        return;
+      }
+    }
     _spoken = full;
     if (widget.raw) {
       final text = _rawPrefix.isEmpty ? full : '$_rawPrefix $full';
@@ -253,6 +267,28 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
       _spokenCount = r.items.length;
     }
     _heard.value = r.rest.trim();
+  }
+
+  /// "Bitti" duyuldu: söz atılmış metinle son kez işlenir, oturum İPTAL
+  /// edilir (durdurulsa son sonuç "bitti"yi yeniden getirirdi), çağırana
+  /// haber verilir.
+  void _onDoneWord(String rest) {
+    final session = _session;
+    _session = null;
+    unawaited(session?.cancel());
+    if (widget.raw) {
+      final text = [_rawPrefix, rest].where((t) => t.isNotEmpty).join(' ');
+      _c.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+      _spoken = '';
+    } else {
+      _spoken = rest;
+      _finishSpeech();
+    }
+    _listening.value = false;
+    widget.onDoneWord?.call();
   }
 
   void _finishSpeech() {

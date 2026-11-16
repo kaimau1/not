@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Not menüsü, notta ara, biçim paneli geri, numaralı işaretliler, "bitti", bildirimler (ccr-829c4834, cihazda bakılmadı, ÖLÇÜLMEDİ — 2026-11-16)**
+  Nerede: bir not → ⋮; notun sağ üstü; biçim paneli (Aa) açıkken klavye; işaretli maddeli bir listeyi alt çubuktan numaralıya çevir; "+" → Şablon → Akıllı liste ve ⚡ Hızlı ekle; bir notu silip çıkan "Geri al" bildirimi.
+  Nasıl: ⋮ üst sıra Zemin rengi · Çerçeve · Paylaş · Klasöre taşı · Yıldızla mı; yalnız "Düzenle" açık, başlıklara dokununca çekmeceler kayarak açılıyor mu. Sağ üstteki büyüteç not içi aramayı açmalı. Biçim paneli + klavye açıkken geri → panel kapanmalı, klavye (bir an inip) geri gelmeli; ikinci geri klavyeyi kapatmalı. Numaralı listede işaretliler ✓ ve üstü çizili, numaralar 1-2-3 boşluksuz; ✓'ye dokun → işaret kalkar. Akıllı listede "süt ekmek yumurta bitti" de → dinleme durmalı, liste not olmalı ("bitti" madde olmamalı); Hızlı ekle'de "… dosyalara ekle bitti" → geri sayımsız eklenmeli. Bildirime dokun / yana-aşağı it → kapanmalı; "Geri al" yine çalışmalı; bildirim açıkken yazarken takılma olmamalı.
+  Yanlışsa: hangi adımda ne olduğunu yaz. Not: biçim paneli geri davranışı klavye kapanışını izleyerek yapılıyor (Android'de geri tuşunu önce klavye alıyor) — cihazda hiç denenmedi. "süt bitti" gibi sonu "bitti" olan madde de listeyi bitirir.
+
 - [ ] **Hızlı ekle hedefi + ⚡ düğmesi + Akıllı liste + sade "+" menüsü (ccr-f6c2108b, cihazda bakılmadı, ÖLÇÜLMEDİ — 2026-11-16)**
   Nerede: ana ekran sağ alt ⚡ (mikrofonun solunda); "+" menüsü; "+" → Şablon → Akıllı liste; "+" → Tara; bir liste notunun alt çubuğu.
   Nasıl: ⚡ → "deneme maddesi dosyalara ekle" söyle (ya da adı ekli bir notunu söyle) → doğru not seçilmeli, "… ekleniyor" geri sayımı, Bekle durdurmalı; hiç ad söylemeden konuş → son kullanılan nota geri sayım; "projeye ekle" gibi iki nota uyan ad → "Hangi nota eklensin?". Akıllı liste: "tişört şort pasaport" → başlık Bavul listesi, belgeler önce; "et domates ekmek" → Alışveriş listesi, manav-fırın-kasap sırası; yazarken/klavye açılıp kapanırken alttaki öneri şeridi takılmamalı. Tara: üzerinde QR olan bir belgeyi göster → QR kartı çıkmalı ama ekran kapanmamalı; "Belge tara" belge tarayıcısını açmalı. Liste notunda alt çubuk "Numaralıya çevir" → numaralı olur, geri döner.

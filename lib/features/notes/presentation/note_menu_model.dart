@@ -4,6 +4,7 @@ import '../../../app/theme/note_colors.dart';
 import '../../../app/theme/note_themes.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/menu_layout.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -46,39 +47,49 @@ ActionMenu noteMenuModel(
   final isList =
       note.type == NoteType.checklist || note.type == NoteType.ordered;
   bool shows(String id) => !visibleElsewhere.contains(id);
+  // HIZLI SATIR ÖNEM SIRASIYLA (kullanıcı isteği 2026-11-16: "üstte olacak
+  // şeyler çerçeve, zemin rengi, sonra paylaş, klasöre taşı, yıldızla";
+  // sürüm geçmişi ve sesli dinle aşağıya). Sığmayan (en çok
+  // [MenuLayout.maxQuick]) "Düzenle" grubunun başına iner.
+  final front = <MenuAction>[
+    if (shows('pin'))
+      MenuAction(
+        'pin',
+        note.pinned ? l10n.unpin : l10n.pin,
+        note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+        selected: note.pinned,
+      ),
+    if (!readOnly) ...[
+      if (shows('color'))
+        MenuAction('color', l10n.backgroundColor, AppIcons.color),
+      // Çerçeve yalnız ana ekran kartında çizilir; seçimi iki yerden.
+      MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
+    ],
+    if (shows('share')) MenuAction('share', l10n.share, Icons.share_outlined),
+    MenuAction('folder', l10n.moveToFolder, AppIcons.moveToFolder),
+    MenuAction(
+      'star',
+      note.starred ? l10n.unstar : l10n.star,
+      note.starred ? Icons.star : Icons.star_outline,
+      selected: note.starred,
+    ),
+  ];
+  final quickCount = front.length < MenuLayout.maxQuick
+      ? front.length
+      : MenuLayout.maxQuick;
   return ActionMenu(
     menuId: editor ? 'note.editor' : 'note.card',
     title: note.displayTitle,
-    quick: [
-      if (shows('pin'))
-        MenuAction(
-          'pin',
-          note.pinned ? l10n.unpin : l10n.pin,
-          note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-          selected: note.pinned,
-        ),
-      MenuAction(
-        'star',
-        note.starred ? l10n.unstar : l10n.star,
-        note.starred ? Icons.star : Icons.star_outline,
-        selected: note.starred,
-      ),
-      MenuAction('folder', l10n.moveToFolder, AppIcons.moveToFolder),
-      if (editor) MenuAction('history', l10n.versionHistory, Icons.history),
-      MenuAction('listen', l10n.listenToNote, AppIcons.listen),
-      if (shows('share')) MenuAction('share', l10n.share, Icons.share_outlined),
-    ],
+    collapsible: true,
+    quick: front.sublist(0, quickCount),
     sections: [
       MenuSection(l10n.menuSectionOrganize, [
         if (!editor && canOpenSide)
           MenuAction('side', l10n.noteOpenSide, Icons.vertical_split_outlined),
         if (!editor)
           MenuAction('select', l10n.select, Icons.check_circle_outline),
+        ...front.skip(quickCount),
         if (!readOnly) ...[
-          if (shows('color'))
-            MenuAction('color', l10n.backgroundColor, AppIcons.color),
-          // Çerçeve yalnız ana ekran kartında çizilir; seçimi iki yerden.
-          MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
           if (note.attachments.isNotEmpty || note.cardMediaHidden)
             MenuAction(
               'cardMedia',
@@ -153,6 +164,7 @@ ActionMenu noteMenuModel(
           MenuAction('toArchive', l10n.archiveCopyHere, Icons.book_outlined),
       ]),
       MenuSection(l10n.menuSectionTools, [
+        MenuAction('listen', l10n.listenToNote, AppIcons.listen),
         if (canPinHome)
           MenuAction(
             'pinHome',
@@ -171,6 +183,7 @@ ActionMenu noteMenuModel(
         ],
       ]),
       MenuSection(l10n.menuSectionProtect, [
+        if (editor) MenuAction('history', l10n.versionHistory, Icons.history),
         MenuAction(
           'archive',
           archived ? l10n.unarchive : l10n.archive,

@@ -97,7 +97,9 @@ extension _ItemsRow on ItemsEditorState {
             color: _accent?.accent ?? plainStyle.color,
           )
         : plainStyle;
-    final checked = widget.showCheckboxes && item.checked && !item.header;
+    // Numaralı listede de işaretli madde soluk + üstü çizili (numara yerine
+    // ✓ — bkz. [itemOrderNumber]).
+    final checked = item.checked && !item.header;
     final textAlign = !item.header
         ? TextAlign.start
         : switch (item.align) {
@@ -249,6 +251,27 @@ extension _ItemsRow on ItemsEditorState {
                   : (value) => _toggleItem(item, value),
             ),
           )
+        else if (checked)
+          // NUMARALI LİSTEDE İŞARETLİ (kullanıcı bulgusu 2026-11-16): numara
+          // yerine ✓; dokununca işaret kalkar ve madde yeniden numaralanır.
+          Semantics(
+            button: true,
+            label: context.l10n.itemUncheck,
+            child: InkResponse(
+              key: ValueKey('item-done-${item.id}'),
+              radius: 20,
+              onTap: () => _toggleItem(item, false),
+              child: SizedBox(
+                width: 40,
+                height: 24,
+                child: Icon(
+                  Icons.check_rounded,
+                  size: AppIconSize.m,
+                  color: NoteCheckColors.checked(scheme, _accent?.accent),
+                ),
+              ),
+            ),
+          )
         else
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -297,7 +320,7 @@ extension _ItemsRow on ItemsEditorState {
         ? 18.0
         : (widget.showCheckboxes
               ? (widget.paperLines ? 24.0 : 40.0)
-              : lineHeight);
+              : (checked ? 24.0 : lineHeight));
     final leadingTop = math.max(0.0, firstLineCenter - leadingHeight / 2);
     // **TUTAMAÇ HİZASI** (kullanıcı bulgusu 2026-09-01, ekran görüntüsüyle:
     // "6 nokta ile seçim işareti hâlâ hizasız").

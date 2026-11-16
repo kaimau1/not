@@ -1484,6 +1484,7 @@ class _CardItemRow extends StatelessWidget {
     required this.rich,
     this.checkbox = false,
     this.number,
+    this.numbered = false,
   });
 
   final NoteItem item;
@@ -1497,10 +1498,15 @@ class _CardItemRow extends StatelessWidget {
   final bool checkbox;
   final int? number;
 
+  /// Numaralı liste satırı mı (işaretliye numara yerine ✓).
+  final bool numbered;
+
   @override
   Widget build(BuildContext context) {
     final scheme = _cardThemeOf(context).colorScheme;
-    final struck = checkbox && item.checked && !item.header;
+    // Numaralı listede de işaretli madde üstü çizili, numara yerine ✓
+    // (bkz. [itemOrderNumber]).
+    final struck = (checkbox || numbered) && item.checked && !item.header;
     Widget? leading;
     if (item.header) {
       // Ara başlık: kutucuk/numara yok, kalın (bkz. [NoteItem.header]).
@@ -1522,6 +1528,18 @@ class _CardItemRow extends StatelessWidget {
       leading = Padding(
         padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
         child: icon,
+      );
+    } else if (numbered && item.checked) {
+      leading = Padding(
+        padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
+        child: Icon(
+          Icons.check_rounded,
+          size: 14,
+          color: NoteCheckColors.checked(
+            scheme,
+            NoteAccent.maybeOf(context)?.accent,
+          ),
+        ),
       );
     } else if (number != null) {
       leading = Padding(
@@ -1979,6 +1997,7 @@ class _NotePreview extends StatelessWidget {
                 query: highlightQuery,
                 rich: rich,
                 checkbox: note.type == NoteType.checklist,
+                numbered: note.type == NoteType.ordered,
                 number: note.type == NoteType.ordered
                     ? itemOrderNumber(shown, i)
                     : null,

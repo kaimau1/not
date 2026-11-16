@@ -1617,6 +1617,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkSelectedItems => 'Check selected';
 
   @override
+  String get itemUncheck => 'Uncheck';
+
+  @override
   String get uncheckSelectedItems => 'Uncheck selected';
 
   @override

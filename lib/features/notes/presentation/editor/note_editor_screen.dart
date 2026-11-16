@@ -1,4 +1,5 @@
 import '../note_link_ui.dart';
+import 'ime_hide_detector.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
 import '../study_cards_screen.dart' show generateCardsForNote;
@@ -1058,10 +1059,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_typingN.value) _typingN.value = false;
   }
 
-  /// Alt çubukta son karede "Notta ara" / "Paylaş" görünüyor muydu (F12.1):
-  /// ⋮ menüsü çubukta duranı tekrar etmez, düşeni Araçlar'da gösterir.
-  /// Kurulum sırasında yazılır (setState yok — yalnız menü açılınca okunur).
-  bool _barHasSearch = false;
 
   /// Alt çubuğun renkli nottaki tonu (F75.3, K-D6): notun koyu tonu ve sayfa
   /// rengi; renksiz/temalı notta [_barInk] null → çubuk temanın renklerinde.
@@ -1598,6 +1595,58 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Geçiş sonuna ertelenmiş bir yeniden çizim bekliyor mu.
   bool _redrawAfterOpening = false;
+
+  /// Üst çubuğun "Notta ara" düğmesi (kullanıcı isteği 2026-11-16) — AYNI
+  /// örnek: çubuk her kurulduğunda düğme yeniden kurulmaz (kasma listesi
+  /// m. 3). Hız bütçesi (S18/S19/S45/S50): açılış geçişi BİTİNCE kurulur
+  /// (ilk kare; rotaya bağımlılık kurmadan — kapanış karesi de temiz), InkWell/ipucu yok — donanım tuşu odak vurgu kipini değiştirince
+  /// her InkWell yeniden kuruluyor; ekran okuyucu adı Semantics'te.
+  late final Widget _topSearchButton = _RevealAfterOpen(
+    placeholder: const SizedBox(width: kMinInteractiveDimension),
+    child: Builder(
+      builder: (context) => Semantics(
+        button: true,
+        label: context.l10n.noteSearchTitle,
+        onTap: _openNoteSearch,
+        child: GestureDetector(
+          key: const ValueKey('editor-top-search'),
+          behavior: HitTestBehavior.opaque,
+          excludeFromSemantics: true,
+          onTap: _openNoteSearch,
+          child: const SizedBox.square(
+            dimension: kMinInteractiveDimension,
+            child: Icon(AppIcons.search),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  /// Biçim paneli açıkken klavye geriyle kapandı mı (bkz. [ImeHideDetector]).
+  final _imeHide = ImeHideDetector();
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    // Panel kapalıyken hiçbir iş yok (klavye karelerinde ucuz kalsın).
+    if (!_formatBarOpen) {
+      _imeHide.reset();
+      return;
+    }
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final inset = view.viewInsets.bottom / view.devicePixelRatio;
+    if (!_imeHide.onInset(inset)) return;
+    // Odak yazı alanında KALDI → geri tuşu (ya da klavyenin kendi gizle
+    // düğmesi). Önce panel kapanır, klavye geri gelir; ikinci geri klavyeyi
+    // kapatır. Alan dışına dokunulduysa odak çoktan gitmiştir: dokunma.
+    final focus = FocusManager.instance.primaryFocus?.context;
+    if (focus == null ||
+        focus.findAncestorStateOfType<EditableTextState>() == null) {
+      return;
+    }
+    _formatBarOpen = false;
+    unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.show'));
+  }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -4715,7 +4764,6 @@ child: NoteFindBar(
                         if (showPen) UiItem.barPen,
                         if (showSearch) UiItem.barSearch,
                       };
-                      _barHasSearch = showSearch && !editingUi;
                       // Biçim · Ekle · Kalem · Ara · Ekler · (☑ | Seç).
                       // Gerekçeler:
                       // "Metin/Liste ekle" Ekle levhasında (attach_sheet);
@@ -5630,6 +5678,10 @@ child: NoteFindBar(
                 ],
                 _ => const <Widget>[],
               },
+              // NOTTA ARA üst çubukta, ⋮'nin solunda (kullanıcı isteği
+              // 2026-11-16: "notta ara üst panelde sağda olsun, menüde
+              // değil"). Koşulsuz: çubuğun şekli arama açılınca değişmez.
+              _topSearchButton,
               // ⋮ yazarken de görünür: hızlı satırın en sağında (kullanıcı
               // isteği 2026-11-08 — "3 nokta geri gelsin").
               IconButton(
@@ -5820,4 +5872,41 @@ child: NoteFindBar(
       ),
     );
   }
+}
+
+/// Çocuğunu not açılış geçişi bittikten SONRA kurar ([placeholder] aynı
+/// yeri tutar). `AfterRouteTransition`dan farkı: hiçbir InheritedWidget'a
+/// bağımlılık kurmaz — rota kapanırken yeniden kurulmaz (S19 bütçesi).
+class _RevealAfterOpen extends StatefulWidget {
+  const _RevealAfterOpen({required this.placeholder, required this.child});
+
+  final Widget placeholder;
+  final Widget child;
+
+  @override
+  State<_RevealAfterOpen> createState() => _RevealAfterOpenState();
+}
+
+class _RevealAfterOpenState extends State<_RevealAfterOpen> {
+  bool _ready = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Not açılış geçişi (~300 ms) + pay.
+    _timer = Timer(AppMotion.long, () {
+      if (mounted) setState(() => _ready = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      _ready ? widget.child : widget.placeholder;
 }

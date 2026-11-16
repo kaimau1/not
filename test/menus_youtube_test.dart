@@ -184,23 +184,23 @@ void main() {
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
 
-      // Hızlı satır (F12.1): Yıldızla · Klasöre taşı · Sürüm geçmişi ·
-      // Sesli dinle — aynı yükseklikte, bu sırayla.
+      // Hızlı satır ÖNEM SIRASIYLA (kullanıcı isteği 2026-11-16): Çerçeve ·
+      // Paylaş · Klasöre taşı · Yıldızla (zemin rengi ve sabitle burada
+      // başka yerde) — aynı yükseklikte, bu sırayla.
       final quick = [
-        for (final id in ['star', 'folder', 'history', 'listen'])
+        for (final id in ['frame', 'share', 'folder', 'star'])
           tester.getRect(find.byKey(ValueKey('menu-quick-$id'))),
       ];
       for (var i = 1; i < quick.length; i++) {
         expect(quick[i].top, closeTo(quick[0].top, 1));
         expect(quick[i - 1].center.dx, lessThan(quick[i].center.dx));
       }
-      // Çubuktan düşen (burada çubuk bilgisi verilmedi) Paylaş hızlı satırda,
-      // Notta ara Araçlar'da: kart ⋮ ile aynı yer (F38.1).
-      expect(find.byKey(const ValueKey('menu-quick-share')), findsOneWidget);
-      expect(find.byKey(const ValueKey('menu-tile-search')), findsOneWidget);
-      expect(find.byKey(const ValueKey('menu-tile-calculator')), findsOneWidget);
+      // Sürüm geçmişi ve Sesli dinle hızlı satırda DEĞİL.
+      for (final id in ['history', 'listen']) {
+        expect(find.byKey(ValueKey('menu-quick-$id')), findsNothing);
+      }
 
-      // Grup başlıkları — kart ⋮ ile aynı adlar (F12.2).
+      // Grup başlıkları — kart ⋮ ile aynı adlar (F12.2); katlanır çekmece.
       for (final title in [
         'Düzenle',
         'Kopyala',
@@ -209,11 +209,20 @@ void main() {
       ]) {
         expect(find.text(title), findsOneWidget, reason: title);
       }
+      // Yalnız ilk grup (Düzenle) açık.
       expect(find.text('İçeriği temizle'), findsOneWidget);
+      expect(find.text('Notu çoğalt'), findsNothing);
+      expect(find.byKey(const ValueKey('menu-tile-calculator')), findsNothing);
       // Üst çubukta açıkça duran "Sabitle" burada tekrar etmez.
       expect(find.text('Sabitle'), findsNothing);
-      // Editörde eksik olan işler eklendi.
+      await tester.tap(find.byKey(const ValueKey('menu-fold-head-Kopyala')));
+      await tester.pumpAndSettle();
       expect(find.text('Notu çoğalt'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('menu-fold-head-Araçlar')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('menu-tile-listen')), findsOneWidget);
+      expect(find.byKey(const ValueKey('menu-tile-search')), findsOneWidget);
+      expect(find.byKey(const ValueKey('menu-tile-calculator')), findsOneWidget);
       // Ekran/ayar Sil'in altında değil, başlıktaki ⚙'nin açılır
       // menüsünde (DENEYIM K-D10).
       expect(find.byKey(const ValueKey('menu-tile-delete')), findsOneWidget);
@@ -221,6 +230,9 @@ void main() {
         expect(find.byKey(ValueKey('menu-footer-$id')), findsNothing);
       }
 
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('menu-tile-calculator')),
+      );
       await tester.tap(find.byKey(const ValueKey('menu-tile-calculator')));
       await tester.pumpAndSettle();
       expect(picked, 'calculator');

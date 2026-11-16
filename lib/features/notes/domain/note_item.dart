@@ -168,12 +168,17 @@ class NoteItem {
 /// Sıralı listede [index]teki maddenin numarası: ara başlıklar sayılmaz ve
 /// her başlıktan sonra numara 1'den başlar (bölüm bölüm liste). Başlığın
 /// kendisi için null.
+///
+/// İŞARETLİ MADDE NUMARA ALMAZ (kullanıcı bulgusu 2026-11-16: "maddeli not
+/// numaralıya çevrildiğinde işaretliler de numaralandırılıyor"): işaretli
+/// madde için null (yerinde ✓ çizilir) ve sonrakilerin sayımına girmez.
 int? itemOrderNumber(List<NoteItem> items, int index) {
-  if (items[index].header) return null;
+  final item = items[index];
+  if (item.header || item.checked) return null;
   var n = 1;
   for (var i = index - 1; i >= 0; i--) {
     if (items[i].header) break;
-    n++;
+    if (!items[i].checked) n++;
   }
   return n;
 }
