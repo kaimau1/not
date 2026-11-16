@@ -1574,6 +1574,9 @@ class _FolderSwipeState extends State<FolderSwipe>
 /// İlk kareden SONRA kurulan çocuk. Ana ekranın ilk karesi bütçeli (S24:
 /// soğuk açılışta ilk kare); ikincil düğmeler (⚡ Hızlı ekle) bir kare sonra
 /// gelir — 16 ms, gözle görülmez, kartlarla aynı karede.
+/// Ana ekranın nötr kare düğmelerinin (mikrofon, ⚡) köşesi — tek yerde.
+const _kDashButtonRadius = BorderRadius.all(Radius.circular(14));
+
 /// Ana ekranın ⚡ Hızlı ekle düğmesi (mikrofonun solunda, aynı nötr kare).
 class _QuickDropFab extends StatelessWidget {
   const _QuickDropFab();
@@ -1605,11 +1608,15 @@ class _QuickDropFab extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: _kDashButtonRadius,
                 ),
                 child: SizedBox.square(
                   dimension: 48,
-                  child: Icon(Icons.bolt, size: 24, color: scheme.onSurface),
+                  child: Icon(
+                    Icons.bolt,
+                    size: AppIconSize.l,
+                    color: scheme.onSurface,
+                  ),
                 ),
               ),
             ),
@@ -1671,12 +1678,12 @@ class _DashVoiceButton extends StatelessWidget {
         // mikrofon onunla yarışmasın. Yer, boy ve davranış aynı.
         child: Material(
           color: scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: _kDashButtonRadius,
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: _kDashButtonRadius,
             onTap: onTap,
             onLongPress: onLongPress,
-            child: Icon(icon, size: 24, color: scheme.onSurface),
+            child: Icon(icon, size: AppIconSize.l, color: scheme.onSurface),
           ),
         ),
       ),

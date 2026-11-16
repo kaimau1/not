@@ -226,7 +226,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   /// Konuşma sonrası geri sayım (bitince eklenir).
   late final AnimationController _count = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1600),
+    // Bekleme süresi (hareket değil): tepki için iki saniye.
+    duration: const Duration(seconds: 2),
   )..addStatusListener(_onCountStatus);
 
   @override
