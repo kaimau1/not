@@ -1,4 +1,5 @@
 import '../note_link_ui.dart';
+import 'glyph_button.dart';
 import 'ime_hide_detector.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
@@ -956,7 +957,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   late final Listenable _formatPanelL = Listenable.merge([
     _formatOpenN,
     _formatTargetN,
+    _findOpenN,
   ]);
+
+  /// Geri tuşu kuralı (PopScope) biçim kipini ve aramayı dinler.
+  late final Listenable _popL = Listenable.merge([_formatOpenN, _findOpenN]);
 
   /// Yazma sürüyor mu (alt çubuk gizleme, bkz. [TypingBarHide]). Yalnız bu
   /// bildirici değişir: ekran setState ile yeniden kurulmaz.
@@ -1598,27 +1603,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Üst çubuğun "Notta ara" düğmesi (kullanıcı isteği 2026-11-16) — AYNI
   /// örnek: çubuk her kurulduğunda düğme yeniden kurulmaz (kasma listesi
-  /// m. 3). Hız bütçesi (S18/S19/S45/S50): açılış geçişi BİTİNCE kurulur
-  /// (ilk kare; rotaya bağımlılık kurmadan — kapanış karesi de temiz), InkWell/ipucu yok — donanım tuşu odak vurgu kipini değiştirince
-  /// her InkWell yeniden kuruluyor; ekran okuyucu adı Semantics'te.
-  late final Widget _topSearchButton = _RevealAfterOpen(
-    placeholder: const SizedBox(width: kMinInteractiveDimension),
-    child: Builder(
-      builder: (context) => Semantics(
-        button: true,
-        label: context.l10n.noteSearchTitle,
-        onTap: _openNoteSearch,
-        child: GestureDetector(
-          key: const ValueKey('editor-top-search'),
-          behavior: HitTestBehavior.opaque,
-          excludeFromSemantics: true,
-          onTap: _openNoteSearch,
-          child: const SizedBox.square(
-            dimension: kMinInteractiveDimension,
-            child: Icon(AppIcons.search),
-          ),
-        ),
-      ),
+  /// m. 3). İLK KAREDE görünür (kullanıcı bulgusu: "yarım saniye sonra bir
+  /// anda geliyor" — eskiden açılış geçişi bitince kuruluyordu); hız bütçesi
+  /// (S18/S19) için simge + dokunma + ekran okuyucu adı tek render nesnesinde
+  /// ([GlyphButton]), Builder yalnız dil için.
+  late final Widget _topSearchButton = Builder(
+    builder: (context) => GlyphButton(
+      key: const ValueKey('editor-top-search'),
+      icon: AppIcons.search,
+      label: context.l10n.noteSearchTitle,
+      onTap: _openNoteSearch,
     ),
   );
 
@@ -1856,6 +1850,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _titleController.dispose();
     _formatTargetN.dispose();
     _formatOpenN.dispose();
+    _findOpenN.dispose();
     _titleFocus.dispose();
     _bodyWindow.dispose();
     _bodyController.dispose();
@@ -2141,8 +2136,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   // ---- Not içi CANLI arama (bkz. NoteFindBar) ------------------------------
 
-  /// Arama çubuğu alt çubuğun yerinde açık mı.
-  bool _findOpen = false;
+  /// Arama çubuğu açık mı — üst çubuğun ALTINDA ayrı bir satır (kullanıcı
+  /// isteği 2026-11-16: "arama üst menünün altında yeni bir satırda
+  /// oluşsun; klavye üzerinde alt panelin yerini alması olmaz"). Bildirici:
+  /// aç/kapa kökü kurmaz (kullanıcı bulgusu "arama açılırken kasma" —
+  /// eskiden kök setState + alt çubuk söküp yerine çubuk kuruluyordu).
+  final _findOpenN = ValueNotifier<bool>(false);
+  bool get _findOpen => _findOpenN.value;
+  set _findOpen(bool v) => _findOpenN.value = v;
 
   /// Eşleşmeler ve odak (F9.3): çubuk bunu dar builder'la dinler.
   final _find = NoteFindController();
@@ -2286,6 +2287,27 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusManager.instance.primaryFocus?.unfocus();
     });
+  }
+
+  /// Klavye açıkken LEVHA açılışı (kullanıcı bulgusu 2026-11-16: "klavye
+  /// açıkken + ve ⋮ menüsü kasarak açılıyor"). Levhanın ilk karesi (tüm
+  /// karolar: ~500 dizilme) klavyenin iniş animasyonunun ilk karesiyle aynı
+  /// kareye düşüyordu: odak kaybı + klavye kareleri + levha kurulumu üst üste.
+  /// Şimdi levha odağı ALMADAN açılır (`requestFocus: false`), klavye levhanın
+  /// ilk karesi çizildikten SONRA iner — ağır kare durgun ekranda, iniş
+  /// kareleri hafif. Klavye kapalıysa eski yol. Döndürülen değer levhaya
+  /// verilecek `requestFocus`tur.
+  bool? _dismissKeyboardAfterSheet() {
+    final keyboardUp =
+        WidgetsBinding.instance.platformDispatcher.views.first.viewInsets
+            .bottom >
+        0;
+    if (!keyboardUp) {
+      _dismissKeyboard();
+      return null;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _dismissKeyboard());
+    return false;
   }
 
   /// Klavyenin en son ÖLÇÜLEN yüksekliği. Klavye kapalıyken de saklanır:
@@ -4248,6 +4270,38 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         WindowClass.of(context).height == WindowHeight.short
         ? 40.0
         : _kEditorToolbarHeight;
+    // NOT İÇİ ARAMA SATIRI (kullanıcı isteği 2026-11-16): üst çubuğun hemen
+    // altında, gövdenin tepesinde. AYNI örnek (KeyboardSnap kurulumlarında
+    // atlanır); yalnız [_findOpenN] ve eşleşmeler dinlenir — kök kurulmaz.
+    final Widget findSlot = ValueListenableBuilder<bool>(
+      valueListenable: _findOpenN,
+      builder: (context, open, _) => !open
+          ? const SizedBox.shrink()
+          : RepaintBoundary(
+              child: ListenableBuilder(
+                listenable: _find,
+                builder: (context, _) => Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: readingColumn ? kReadingWidth : double.infinity,
+                    ),
+                    child: NoteFindBar(
+                      controller: _find.query,
+                      focusNode: _find.focus,
+                      count: _find.hits.length,
+                      index: _find.index,
+                      background: background,
+                      onChanged: (_) => _runFind(),
+                      onNext: () => _stepFind(1),
+                      onPrevious: () => _stepFind(-1),
+                      onList: () => unawaited(_openFindList()),
+                      onClose: _closeFind,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+    );
     final Widget? bottomBar = _immersiveBubble || _pagePen
         ? null
         : RepaintBoundary(
@@ -4557,34 +4611,12 @@ child: FormatBar(
                 // ancak basınca anlaşılıyordu. Şimdi üç etiketli segment tek
                 // kapsülde; hesap makinesi üst bara, ek/renk seçenekleri
                 // "Ekle" açılırına taşındı.
-                if (_findOpen)
-                  ListenableBuilder(
-                    listenable: _find,
-                    builder: (context, _) => Center(
-child: ConstrainedBox(
-constraints: BoxConstraints(
-maxWidth: readingColumn ? kReadingWidth : double.infinity,
-),
-child: NoteFindBar(
-                      controller: _find.query,
-                      focusNode: _find.focus,
-                      count: _find.hits.length,
-                      index: _find.index,
-                      background: background,
-                      onChanged: (_) => _runFind(),
-                      onNext: () => _stepFind(1),
-                      onPrevious: () => _stepFind(-1),
-                      onList: () => unawaited(_openFindList()),
-                      onClose: _closeFind,
-                    ),
-),
-),
-                  )
+                // NOT İÇİ ARAMA artık gövdenin TEPESİNDE (bkz. [_findOpenN]);
+                // alt çubuk arama açıkken de yerinde kalır.
                 // BİÇİM PANELİ AÇIKKEN alt çubuk GİZLİ (kullanıcı isteği
                 // 2026-10-20: "biçim paneli açılınca alttaki ses, ek vb.
                 // kısımlar gizlensin, yazmaya yer kalmıyor"). Panel kendi
                 // kapat (⌄) düğmesiyle kapanır.
-                else
                 // Yazarken gizleme DIŞTA (2026-11-10): içte olunca
                 // AnimatedSize onun tek adımlık boy değişimini de 260 ms'lik
                 // kare kare yerleşime çeviriyordu.
@@ -5217,9 +5249,9 @@ child: NoteFindBar(
         },
         // Geri tuşu önce CANLI ARAMAYI kapatır, notu değil.
         // Biçim kipi dar dinlenir (P20 M5): alt ağaç `child` olarak yerinde.
-        child: ValueListenableBuilder<bool>(
-          valueListenable: _formatOpenN,
-          builder: (context, formatOpen, child) => PopScope(
+        child: ListenableBuilder(
+          listenable: _popL,
+          builder: (context, child) => PopScope(
           // Geri tuşu sırayla: tam ekran → kayıt → biçim paneli → canlı
           // arama → not.
           // Yandaki bölme geri tuşunu hiç ENGELLEMEZ (K32 karar 5): kabuk
@@ -5227,7 +5259,7 @@ child: NoteFindBar(
           canPop:
               _secondary ||
               (!_findOpen &&
-                  !formatOpen &&
+                  !_formatBarOpen &&
                   _voiceRecorder == null &&
                   !fullscreenNow),
           onPopInvokedWithResult: (didPop, _) {
@@ -5734,6 +5766,7 @@ child: NoteFindBar(
               padding: EdgeInsets.only(bottom: keyboardInset),
               child: Column(
                 children: [
+                  findSlot,
                   Expanded(
                     // Sütun yokken de Row: kaleme geçişte sayfa yeniden kurulmaz.
                     child: Row(
@@ -5872,41 +5905,4 @@ child: NoteFindBar(
       ),
     );
   }
-}
-
-/// Çocuğunu not açılış geçişi bittikten SONRA kurar ([placeholder] aynı
-/// yeri tutar). `AfterRouteTransition`dan farkı: hiçbir InheritedWidget'a
-/// bağımlılık kurmaz — rota kapanırken yeniden kurulmaz (S19 bütçesi).
-class _RevealAfterOpen extends StatefulWidget {
-  const _RevealAfterOpen({required this.placeholder, required this.child});
-
-  final Widget placeholder;
-  final Widget child;
-
-  @override
-  State<_RevealAfterOpen> createState() => _RevealAfterOpenState();
-}
-
-class _RevealAfterOpenState extends State<_RevealAfterOpen> {
-  bool _ready = false;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    // Not açılış geçişi (~300 ms) + pay.
-    _timer = Timer(AppMotion.long, () {
-      if (mounted) setState(() => _ready = true);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) =>
-      _ready ? widget.child : widget.placeholder;
 }

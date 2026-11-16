@@ -1253,9 +1253,10 @@ extension _EditorAttachments on _NoteEditorScreenState {
     // odak düşünce seçim daralabiliyor ("Yazıya ek göm" seçili yazıyı
     // kullanır — bkz. [_embedAttachmentFlow]).
     _selectionSnapshot = _bodyController.selection;
-    _dismissKeyboard();
+    final sheetFocus = _dismissKeyboardAfterSheet();
     final copied = ref.read(attachmentClipboardProvider);
     final action = await showAttachSheet(
+      requestFocus: sheetFocus,
       context,
       pageNote: _note?.type.isPageNoteType ?? false,
       // Gömme seçicisi yeni ek de ekleyebildiği için eki olmayan notta da

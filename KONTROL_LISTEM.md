@@ -9,6 +9,11 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Notta ara anında, arama üstte, klavye açıkken +/⋮ (ccr-66e231d6, cihazda bakılmadı, ÖLÇÜLMEDİ — 2026-11-16)**
+  Nerede: bir not aç; yazarken (klavye açık) alt çubuktaki "+" ve üstteki ⋮; sağ üstteki büyüteç.
+  Nasıl: not açılırken büyüteç ilk anda orada mı (sonradan belirmemeli). Büyütece dokun → arama satırı üst çubuğun hemen altında açılmalı, alt panel klavyenin üstünde kalmalı, açılışta takılma olmamalı; ✕ ile kapanmalı, geri tuşu da kapatmalı. Klavye açıkken "+" ve ⋮ → menü akıcı kayarak açılmalı, klavye hemen ardından inmeli.
+  Yanlışsa: hangisinde takıldığını yaz. Not: menü kasmasının kesin kök nedeni testte görünmedi (son iki sürüm testte aynı yükte); yapılan iyileştirme ağır ilk kareyi klavye inişinden ayırmak. Hâlâ kasıyorsa cihazda profil ölçümü gerekir.
+
 - [ ] **Not menüsü, notta ara, biçim paneli geri, numaralı işaretliler, "bitti", bildirimler (ccr-829c4834, cihazda bakılmadı, ÖLÇÜLMEDİ — 2026-11-16)**
   Nerede: bir not → ⋮; notun sağ üstü; biçim paneli (Aa) açıkken klavye; işaretli maddeli bir listeyi alt çubuktan numaralıya çevir; "+" → Şablon → Akıllı liste ve ⚡ Hızlı ekle; bir notu silip çıkan "Geri al" bildirimi.
   Nasıl: ⋮ üst sıra Zemin rengi · Çerçeve · Paylaş · Klasöre taşı · Yıldızla mı; yalnız "Düzenle" açık, başlıklara dokununca çekmeceler kayarak açılıyor mu. Sağ üstteki büyüteç not içi aramayı açmalı. Biçim paneli + klavye açıkken geri → panel kapanmalı, klavye (bir an inip) geri gelmeli; ikinci geri klavyeyi kapatmalı. Numaralı listede işaretliler ✓ ve üstü çizili, numaralar 1-2-3 boşluksuz; ✓'ye dokun → işaret kalkar. Akıllı listede "süt ekmek yumurta bitti" de → dinleme durmalı, liste not olmalı ("bitti" madde olmamalı); Hızlı ekle'de "… dosyalara ekle bitti" → geri sayımsız eklenmeli. Bildirime dokun / yana-aşağı it → kapanmalı; "Geri al" yine çalışmalı; bildirim açıkken yazarken takılma olmamalı.
