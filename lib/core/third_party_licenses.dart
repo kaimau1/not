@@ -37,8 +37,7 @@ const Map<String, String> bundledFontLicenses = {
 };
 
 /// Aile önekinin lisans dosyası (asset yolu).
-String fontLicenseAsset(String family) =>
-    'assets/google_fonts/$family-OFL.txt';
+String fontLicenseAsset(String family) => 'assets/google_fonts/$family-OFL.txt';
 
 /// CMU Telaffuz Sözlüğü (BSD 2-Clause). Antalia'nın yabancı kelime
 /// sözlükleri ondan türetilmiş; bildirim Antalia kapalı derlemede (Play) de
@@ -82,7 +81,8 @@ const String cmuDictLicense =
 /// bildirimini ekler. Metinler sayfa AÇILINCA okunur (açılışa yük yok).
 void registerThirdPartyLicenses() {
   LicenseRegistry.addLicense(() async* {
-    for (final MapEntry(key: family, value: name) in bundledFontLicenses.entries) {
+    for (final MapEntry(key: family, value: name)
+        in bundledFontLicenses.entries) {
       final String text;
       try {
         text = await rootBundle.loadString(fontLicenseAsset(family));
@@ -91,9 +91,8 @@ void registerThirdPartyLicenses() {
       }
       yield LicenseEntryWithLineBreaks(['$name (font)'], text);
     }
-    yield const LicenseEntryWithLineBreaks(
-      ['CMU Pronouncing Dictionary'],
-      cmuDictLicense,
-    );
+    yield const LicenseEntryWithLineBreaks([
+      'CMU Pronouncing Dictionary',
+    ], cmuDictLicense);
   });
 }

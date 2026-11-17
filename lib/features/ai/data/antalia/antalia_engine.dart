@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,7 +35,32 @@ class AntaliaModelFiles {
   AntaliaModelFiles._();
 
   static const repo = 'fr0stb1rd/antalia-mini-web-onnx';
-  static const baseUrl = 'https://huggingface.co/$repo/resolve/main';
+
+  /// **SABİT SÜRÜM + ÖZET** (PLAN §1.5 PL7, 16K rapor §4.5 "tedarik riski"):
+  /// dosyalar üçüncü kişinin deposundan iniyor. `main` yerine o deponun
+  /// bilinen bir commit'i istenir (depo sonradan değişse de aynı dosya
+  /// iner) ve her dosyanın SHA-256'sı doğrulanır (depo silinip başkası aynı
+  /// adı alsa ya da arada dosya değişse bozuk/yabancı model kurulmaz).
+  /// Değerler 2026-11-17'de bu commit'ten indirilip hesaplandı; ONNX'lerinki
+  /// HuggingFace LFS kimliğiyle aynı. Model güncellenecekse üçü birlikte.
+  static const revision = '269e27090292b527a15478428d0aef4ff06906fc';
+  static const baseUrl = 'https://huggingface.co/$repo/resolve/$revision';
+  static const sha256s = {
+    'text_stage.onnx':
+        '9a0c682598460e4dae9f64122530bd4d042fee6904568a61ae292b124d3c906c',
+    'sound_stage.onnx':
+        'a4fa1d398165753cdcf82d43d1b340a2c79c57d027c756284823aa34748b07a4',
+    'decoder.onnx':
+        '81d4aff3ff56e9cf29874ddcc46870570c96162e8f7228c711ea4622d28e4f9a',
+    'foreign_dict.json':
+        '34c5a094869d82196786985bbb557507d4e0508d28ed9877e935cb6a9402f70a',
+    'foreign_parts.json':
+        '8feb7d6d50b23756418821068c904dd18af0b7d7ca2737f873a1952b75a5daa0',
+    'known_words.json':
+        'c4054396e041e74d1357609b8deb14692ca6a92f89d1adfeffe2fe28ad824a4b',
+    'english_i.json':
+        '67a953897d06ae618dee8e763040bc7eda6c1362ba345627e527a8abdfe6dc3e',
+  };
   static const models = ['text_stage.onnx', 'sound_stage.onnx', 'decoder.onnx'];
   static const dicts = [
     'foreign_dict.json',
@@ -107,21 +133,29 @@ class AntaliaModelFiles {
         }
         final part = File('${d.path}/$f.part');
         final sink = part.openWrite();
+        final digest = _DigestSink();
+        final hasher = sha256.startChunkedConversion(digest);
         var got = 0;
         try {
           await for (final chunk in response.stream) {
             if (cancelled?.call() ?? false) throw const AntaliaCancelled();
             sink.add(chunk);
+            hasher.add(chunk);
             got += chunk.length;
             onProgress(received + got, total);
           }
         } finally {
           await sink.close();
         }
+        hasher.close();
         final expected = response.contentLength;
         if (got == 0 || (expected != null && expected != got)) {
           part.deleteSync();
           throw HttpException('$f: eksik indirildi ($got/$expected)');
+        }
+        if (digest.value.toString() != sha256s[f]) {
+          part.deleteSync();
+          throw HttpException('$f: özet (SHA-256) tutmuyor');
         }
         await part.rename('${d.path}/$f');
         received += got;
@@ -158,6 +192,18 @@ void registerAntaliaLicense() {
       'person; audio made with it must not be used to impersonate anyone.',
     );
   });
+}
+
+/// `sha256.startChunkedConversion` çıktısını tutar (50 MB'ı belleğe almadan
+/// akarken özet).
+class _DigestSink implements Sink<Digest> {
+  late Digest value;
+
+  @override
+  void add(Digest data) => value = data;
+
+  @override
+  void close() {}
 }
 
 class AntaliaCancelled implements Exception {

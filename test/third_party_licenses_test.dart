@@ -40,21 +40,24 @@ void main() {
     expect(bundledFontLicenses.keys.toSet(), families);
   });
 
-  test('Lisanslar sayfası yazı tiplerini ve CMU bildirimini listeler', () async {
-    registerThirdPartyLicenses();
-    final packages = <String>{};
-    final texts = <String, String>{};
-    await for (final entry in LicenseRegistry.licenses) {
-      for (final p in entry.packages) {
-        packages.add(p);
-        texts[p] = entry.paragraphs.map((e) => e.text).join('\n');
+  test(
+    'Lisanslar sayfası yazı tiplerini ve CMU bildirimini listeler',
+    () async {
+      registerThirdPartyLicenses();
+      final packages = <String>{};
+      final texts = <String, String>{};
+      await for (final entry in LicenseRegistry.licenses) {
+        for (final p in entry.packages) {
+          packages.add(p);
+          texts[p] = entry.paragraphs.map((e) => e.text).join('\n');
+        }
       }
-    }
-    for (final name in bundledFontLicenses.values) {
-      expect(packages, contains('$name (font)'));
-      expect(texts['$name (font)'], contains('SIL OPEN FONT LICENSE'));
-    }
-    expect(packages, contains('CMU Pronouncing Dictionary'));
-    expect(texts['CMU Pronouncing Dictionary'], contains('Carnegie Mellon'));
-  });
+      for (final name in bundledFontLicenses.values) {
+        expect(packages, contains('$name (font)'));
+        expect(texts['$name (font)'], contains('SIL OPEN FONT LICENSE'));
+      }
+      expect(packages, contains('CMU Pronouncing Dictionary'));
+      expect(texts['CMU Pronouncing Dictionary'], contains('Carnegie Mellon'));
+    },
+  );
 }
