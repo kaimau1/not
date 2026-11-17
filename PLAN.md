@@ -141,9 +141,11 @@ maliyeti için; AI ömür boyu satılmaz.
 Pro = ömür boyunun hepsi + dahili AI + bulut ekleri. Temel tema/yazı tipi setinin hangi parçaları ücretsizde
 kalacağı PL6'da belirlenir (bugünkü varsayılan görünüm ücretsizde kalır; kimsenin elinden özellik alınmaz).
 
-**Ek kararlar (kullanıcı, 2026-11-17 gece):** Play sürümü **yeni paket adıyla** (ad seçilince); kişisel APK
-`dev.kaimau.notlar` olarak sürer, ikisi aynı Firebase projesini ve hesabı kullanır (yeni Android uygulaması
-kaydı + OAuth istemcisi + SHA). **Pro biterse** buluttaki ekler silinmez, okunur kalır; yeni ekler kendi
+**Ek kararlar (kullanıcı, 2026-11-17 gece):** Play sürümü **yeni paket adıyla** (ad seçilince) ve **tamamen ayrı altyapıyla**
+(kullanıcı, 2026-11-17 gece): **yeni Google hesabı, yeni Firebase/Google Cloud projesi, yeni web sitesi**
+(alan adı + barındırma), yeni OAuth onay ekranı ve doğrulaması, yeni Gemini/AI Logic faturalaması, yeni
+App Check. Kişisel APK `dev.kaimau.notlar` eski proje `notlar-kaimau` + eski web'de AYNEN sürer; iki
+dünya arasında veri paylaşımı YOK (kişisel notlarını Play'e taşımak istersen dışa aktar → içe aktar). **Pro biterse** buluttaki ekler silinmez, okunur kalır; yeni ekler kendi
 Drive'ına; tek dokunuşla eskileri Drive'a taşıma; silme yok. **Satın alma yalnız Android'de** (Play Billing),
 hak hesaba bağlı (sunucuda doğrulanır, `entitlements/{uid}`), web'de "telefondan al" yazısı. **Pro'da 7 gün
 ücretsiz deneme.** Kişisel hesabın (geliştirici) hakkı sunucudan Pro.
@@ -167,12 +169,12 @@ Pro'ya geçen kişiye ömür boyu hakları kalır; Pro günlük AI kotası kotan
 | PL9 | Kapalı test (12+ kişi, 14 gün) → açık beta → TR yayın, kademeli dağıtım, Vitals takibi | 16K §8 evre 4–5 | — |
 | PL10 | Yazı tipleri: 4–5 çekirdek aile pakette, kalanı seçilince insin (T3 ile birlikte) | 16K §2.6 | hayır |
 | PL11 | RAM tabanı: beş durumda `dumpsys meminfo` (ana ekran, editör, PDF, kalem, YouTube) → `docs/perf/` | 16K §2.5 | evet (tablet) |
-| PL13 | Play paket adı: yeni Android uygulaması Firebase'de, `google-services.json` çifti, derleme çeşidi (flavor) `kisisel`/`play`, OAuth istemcisi + SHA | ek kararlar | hayır |
+| PL13 | Ayrı Play altyapısı (kod tarafı): tek kod tabanı, derleme çeşidi `kisisel`/`play`; çeşide göre Firebase yapılandırması (`google-services.json`, `firebase_options` çifti), web sitesi adresi, gizlilik/silme sayfası adresi, `env` ayrı; CI'da iki imza + iki kural yayını (`firebase deploy --project`); `rules-test` iki proje için aynı kurallar; sırlar GitHub Secrets'ta ayrı adlarla | ek kararlar | hayır |
 | PL14 | Hak (entitlement) altyapısı: `entitlements/{uid}` sunucuda doğrulanmış satın almadan, kurallar + `rules-test`, web/Android aynı kapı, 7 gün deneme, Pro bitince ekler okunur + "Drive'a taşı" | ek kararlar | hayır |
 | PL15 | Çökme takibi (Crashlytics, KONTROL 28) + destek e-postası + uygulama içi "Geri bildirim gönder" | 16K §8 | hayır |
 | PL12 | Uygulama içi hız günlüğü (profil/beta derlemesinde `FrameTiming`, Ayarlar → Hakkında) | 16K §2.7 | hayır |
 
-**Senin işlerin (Play):** hesabı aç (kişisel, 25 $), mali müşavir (GVK 20/B istisnası), Syncfusion
+**Senin işlerin (Play):** yeni Google hesabı → yeni Firebase projesi (Blaze + bütçe tavanı) → Play geliştirici hesabı (kişisel, 25 $) → alan adı + yeni web sitesi; ayrıca mali müşavir (GVK 20/B istisnası), Syncfusion
 Community lisansını al, uygulama simgesinin haklarını teyit et, alan adı, 12 test kullanıcısı bul.
 
 **Faz içinde açılacak fikirler (1.4 fazlarına bağlandı):** hızlı ekle ulaşılabilirlik — başlatıcı
