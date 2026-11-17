@@ -5,6 +5,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/notes/data/notes_delta_sync.dart';
+import '../features/settings/settings_providers.dart';
+
 /// **OTOMATİK KAYDIN BULUT SIKLIĞI** (senkron maliyeti planı S2 + korkuluk
 /// 5, 2026-11-17).
 ///
@@ -51,15 +54,21 @@ abstract final class SaveCadence {
 }
 
 /// `config/app`'i dinleyip [SaveCadence]'ı güncel tutar (AppServices).
+/// Aynı dinleyici S1 bayrağını (`syncDeltaListen`) yerele yazar; ana liste
+/// onu SONRAKİ açılışta okur (bkz. [SyncDeltaFlag]).
 final saveCadenceSyncProvider = Provider<void>((ref) {
   // Firebase kurulmamışsa (testler, kurulum hatası) varsayılan kalır.
   if (Firebase.apps.isEmpty) return;
+  final prefs = ref.read(sharedPreferencesProvider);
   final sub = FirebaseFirestore.instance
       .collection('config')
       .doc('app')
       .snapshots()
       .listen(
-        (d) => SaveCadence.apply(d.data()),
+        (d) {
+          SaveCadence.apply(d.data());
+          unawaited(SyncDeltaFlag.remember(d.data(), prefs));
+        },
         onError: (Object e) => debugPrint('Kayıt sıklığı okunamadı: $e'),
       );
   ref.onDispose(() => unawaited(sub.cancel()));
