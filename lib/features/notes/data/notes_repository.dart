@@ -31,6 +31,7 @@ import 'attachment_repository.dart';
 import 'drive_store.dart' show driveFileDeleter;
 import 'local_notes_store.dart';
 import 'note_format_memory.dart';
+import 'notes_delta_sync.dart';
 
 /// Şu an bir editörde AÇIK olan notların id'leri; `cleanupEmptyNotes` bunlara
 /// dokunmaz. Editör açılırken ekler, kapanırken çıkarır. Provider değil düz
@@ -83,7 +84,9 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   // kapatılırsa dispose'daki silme çalışmaz, kalıntı burada gider).
   // Her emisyonda değil, en fazla 30 saniyede bir çalışır.
   var lastCleanup = DateTime.fromMillisecondsSinceEpoch(0);
-  return repo.watchNotes().map((notes) {
+  // S1 "yalnız değişeni dinle": uzak bayrak + yerel geri alma; kapalıysa
+  // bugünkü yol AYNEN (bkz. NotesDeltaFeed).
+  return repo.watchNotes(delta: SyncDeltaFlag.enabled(prefs)).map((notes) {
     final now = DateTime.now();
     // ZAMANLI NOT: her yayında ucuz tarama (O(n), yazım yalnız süresi
     // dolmuş not varsa). Öne gelişte dashboard da çağırır.
@@ -215,6 +218,9 @@ class NotesRepository {
   /// `focusedNoteProvider`). Tek yer: her oluşturma yoluna ayrı yama yok.
   static String? lastCreatedId;
 
+  /// Son kurulan S1 akışı (tanı/test; bayrak kapalıyken null).
+  static NotesDeltaFeed? lastFeed;
+
   NotesRepository(
     this._firestore,
     this.uid, {
@@ -293,11 +299,13 @@ class NotesRepository {
   /// damgaları) yeniden ayrıştırılıyordu — maliyet nota değil koleksiyona
   /// orantılıydı. Önbellek akış (dolayısıyla oturum/uid) başına birdir;
   /// ilk snapshot'ta tüm dokümanlar "added" olarak gelir ve haritayı doldurur.
-  Stream<List<Note>> watchNotes() {
+  ///
+  /// [delta] (S1, `config/app.syncDeltaListen`; VARSAYILAN KAPALI): liste
+  /// önbellekten, sunucudan yalnız değişenler — bkz. [NotesDeltaFeed].
+  /// Kapalıyken aşağıdaki sorgu bugünkü gibi sunucudan dinlenir.
+  Stream<List<Note>> watchNotes({bool delta = false, NotesDeltaFeed? feed}) {
     final cache = <String, Note>{};
-    final cloud = _notes.where('deletedAt', isNull: true).snapshots().map((
-      snapshot,
-    ) {
+    void apply(QuerySnapshot<Map<String, dynamic>> snapshot) {
       for (final change in snapshot.docChanges) {
         if (change.type == DocumentChangeType.removed) {
           cache.remove(change.doc.id);
@@ -305,8 +313,24 @@ class NotesRepository {
           cache[change.doc.id] = Note.fromDoc(change.doc);
         }
       }
-      return cache.values.toList();
-    });
+    }
+
+    final Stream<List<Note>> cloud;
+    if (delta || feed != null) {
+      lastFeed = feed ??= NotesDeltaFeed(_notes);
+      cloud = feed.events().map((e) {
+        if (e.reset) cache.clear();
+        apply(e.snapshot);
+        return cache.values.toList();
+      });
+    } else {
+      cloud = _notes.where('deletedAt', isNull: true).snapshots().map((
+        snapshot,
+      ) {
+        apply(snapshot);
+        return cache.values.toList();
+      });
+    }
     return _withLocal(cloud, (List<Note> cloudNotes) {
       final store = local;
       if (store == null || store.isEmpty) {
@@ -641,6 +665,7 @@ class NotesRepository {
       doc.set({
         ...note.toMap(),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
         'createdBy': editorUid,
       }),
     );
@@ -740,6 +765,7 @@ class NotesRepository {
       doc.set({
         ...copy.toMap(),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
         'createdBy': editorUid,
       }),
     );
@@ -778,6 +804,7 @@ class NotesRepository {
     final fields = {
       ...note.toMap(),
       'updatedBy': editorUid,
+      kSyncAtField: FieldValue.serverTimestamp(),
       if (clientTime) 'updatedAt': Timestamp.now(),
     };
     // AĞIR ALANLAR (F3.13): bölünmüş ya da ağır kısmı eşiği aşan not iki
@@ -1088,6 +1115,7 @@ class NotesRepository {
       ...fields,
       'updatedAt': FieldValue.serverTimestamp(),
       'updatedBy': editorUid,
+      kSyncAtField: FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     // Red yutulmasın (F1.6): kullanıcıya ve hata günlüğüne. Çağıranın kendi
     // beklemesi/yakalaması etkilenmez — bu ayrı bir dinleyici.
@@ -1120,6 +1148,7 @@ class NotesRepository {
         ...e.value,
         'updatedAt': FieldValue.serverTimestamp(),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       if (++ops == 450) {
         commits.add(batch.commit());
@@ -1200,6 +1229,7 @@ class NotesRepository {
         batch.set(_notes.doc(ordered[i].id), {
           'orderIndex': want,
           'updatedBy': editorUid,
+          kSyncAtField: FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         // Firestore batch tavanı 500 işlem; taşarsa parça parça gönder.
         if (++ops == 450) {
@@ -1528,6 +1558,7 @@ class NotesRepository {
         tx.update(ref, {
           'attachments': note.attachmentsField(attachments),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
         });
       });
   }
@@ -1555,6 +1586,7 @@ class NotesRepository {
       tx.update(ref, {
         'attachments': merged(Note.fromDoc(snapshot)),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
       });
     });
   }
@@ -1635,6 +1667,7 @@ class NotesRepository {
       store.put(note.id, {
         ...note.copyWith(attachments: kept).toMap(),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
       });
       await store.flush();
       final deleteDrive = driveFileDeleter;
@@ -1659,7 +1692,13 @@ class NotesRepository {
     if (!store.contains(note.id)) return;
     final current = store.note(note.id) ?? note;
     final doc = _notes.doc(note.id);
-    unawaited(doc.set({...current.toMap(), 'updatedBy': editorUid}));
+    unawaited(
+      doc.set({
+        ...current.toMap(),
+        'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
+      }),
+    );
     try {
       await doc
           .snapshots()

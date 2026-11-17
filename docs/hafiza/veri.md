@@ -163,4 +163,32 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Ortak düzenleme nabzı arka planda durur (`AppLifecycleListener` onHide/onShow).
 - Bekçi: `test/idle_write_guard_test.dart` — editör 2 dk boşta → updateNote/updateFields 0.
 - Yapılmadı (bilerek): kuralda yazma hız sınırı — reddedilen yazım çevrimdışı kuyrukta yerel
-  değişikliği geri alır (veri kaybı). S1 (yalnız değişeni dinle) kullanıcı kararı bekliyor.
+  değişikliği geri alır (veri kaybı). S1 → aşağıdaki bölüm (P67).
+
+## 2026-11-17 — S1 "yalnız değişeni dinle" (P67, bayrak KAPALI)
+- **Damga:** her not belgesi yazımı `syncAt: serverTimestamp` (`kSyncAtField`, `note.dart`).
+  `updatedAt` YETMEZ: istemci saatiyle yazılabiliyor (F22.3), sıralama/ek sonucu dokunmuyor.
+  Yazanlar: `Note.toMap`, depodaki her `updatedBy` yazımı, klasör silme, video transkript
+  işçisi, Kotlin `YerelNot.belge` + `HaritaNotlari`. Bekçi `test/notes_sync_stamp_test.dart`
+  (kaynak sayımı dahil). YENİ yazım yolu damgasızsa bayrak açık cihazda değişiklik GÖRÜNMEZ.
+- **Akış** `notes_delta_sync.dart` (`NotesDeltaFeed`): liste `deletedAt==null` sorgusunu
+  `ListenSource.cache` ile dinler; imleç = önbellekteki en büyük `syncAt` (sunucu saati;
+  bekleyen yazımın damgası null → sayılmaz); besleyici `syncAt > imleç−10 dk` (tek alan dizini,
+  `firestore.indexes.json` değişmedi, kural değişmedi); `count()` güvenlik ağı.
+  Eski yola dönüş (bugünkü sunucu dinleyicisi, `reset` ile liste sıfırdan): önbellek boş ·
+  damga yok · imleç >30 gün (cihaz saatiyle; ileri saat = güvenli taraf) · sayım alınamadı
+  (çevrimdışı) / tutmadı · besleyici ya da önbellek dinleyicisi hatası.
+- **Bayrak:** `config/app.syncDeltaListen` (yalnız `true` açar) → `saveCadenceSyncProvider`
+  yerele `sync_delta_listen` yazar → SONRAKİ açılışta geçerli. Yerel geri alma prefs
+  `sync_delta_off=true`. Kapalıyken `watchNotes()` kodu eskisinin aynısı.
+- **Okuma hesabı** (sahte Firestore, önbellek ayrı sahte DB; `notes_delta_sync_test`):
+  300 not soğuk açılış: önce 300 okuma → sonra 0 değişiklik 2, 5 değişiklik 6, 50 değişiklik
+  51 (değişenler + örtüşmedeki son not + 1 sayım). Günde 3 soğuk açılışta ~900 → ~10–20.
+- **Bilinen sınır:** oturum sürerken başka cihazda doğrudan KALICI silinen (senkronu kapat)
+  not bu oturum boyu listede kalır; sonraki açılışta sayım tutmaz → eski yol. O hayalet not
+  düzenlenirse buluta yeniden yazılır (diriliş; kayıp değil).
+- **Açmadan önce (cihaz bekliyor):** (1) bütün istemciler damgalı sürümde → `minClient`
+  yükseltilmeden AÇMA (eski istemci damgasız yazar, değişikliği görünmez); (2) iki cihaz
+  (tablet + web) testi: düzenleme, çöpe at/geri al, çevrimdışı düzenleme sonra bağlan, saat
+  farkı, uzun kapalı cihaz, senkronu kapat, hesap değiştir; (3) `ListenSource.cache` dinleyicisinin
+  besleyiciden dolan önbelleği gösterdiği cihazda doğrulanmadı (sahte Firestore ayırmıyor).

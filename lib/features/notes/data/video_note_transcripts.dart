@@ -152,7 +152,10 @@ class _Worker {
     );
     final videoId = video == null ? null : youTubeVideoId(video.webUrl);
     if (video == null || videoId == null) {
-      await ref.update({'ytTodo': FieldValue.delete()});
+      await ref.update({
+        'ytTodo': FieldValue.delete(),
+        kSyncAtField: FieldValue.serverTimestamp(),
+      });
       return;
     }
     final saved = Transcripts.of(note.attachments, video);
@@ -162,6 +165,7 @@ class _Worker {
       await ref.update({
         'ytTodo': FieldValue.delete(),
         'ytTranscript': FieldValue.delete(),
+        kSyncAtField: FieldValue.serverTimestamp(),
       });
       return;
     }
@@ -233,6 +237,7 @@ class _Worker {
           'ytTries': tries,
         'updatedAt': FieldValue.serverTimestamp(),
         'updatedBy': uid,
+        kSyncAtField: FieldValue.serverTimestamp(),
       });
     });
   }

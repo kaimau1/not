@@ -45,6 +45,19 @@ enum NoteColor {
 /// Belgede el yazısının durduğu sahte ek kaydının kimliği (bkz. [Note.pageInk]).
 const kPageInkId = '_page_ink';
 
+/// **EŞİTLEME DAMGASI** (P67 / S1 "yalnız değişeni dinle", 2026-11-17).
+///
+/// Bir not belgesine yapılan HER bulut yazımı bu alana SUNUCU saatini koyar
+/// (`FieldValue.serverTimestamp()`); `updatedAt`tan ayrıdır çünkü `updatedAt`
+/// bazı yollarda istemci saatiyle yazılır (F22.3) ya da hiç dokunulmaz
+/// (sıralama, ek yükleme sonucu). Bayrak açıkken (`config/app.syncDeltaListen`)
+/// ana liste yalnız `syncAt > son görülen` belgeleri sunucudan çeker
+/// (bkz. `notes_delta_sync.dart`); damgasız yazım o cihazlarda GÖRÜNMEZ.
+/// Yeni bir not yazma yolu eklenirse bu alanı da yazmalı
+/// (`test/notes_sync_stamp_test.dart` bekçisi). Kotlin köprüsü de yazar
+/// (`YerelNot.belge`, `HaritaNotlari`).
+const kSyncAtField = 'syncAt';
+
 class NoteTagLink {
   const NoteTagLink({required this.label, required this.attachmentId});
 
@@ -245,6 +258,9 @@ class Note {
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
     'archivedAt', 'expiresAt', 'reminderAt', 'reminderRepeat', 'reminderLevel', 'cards', 'aiSummary',
     'schema',
+    // Eşitleme damgası (S1): her yazımda yeniden konur, extras'la eski
+    // değeri geri yazılmasın.
+    kSyncAtField,
     // Depo katmanının her yazımda kendisi koyduğu alan — notla taşınmaz.
     // (`createdBy` BİLEREK burada değil: [extras] olarak AYNEN geri yazılır;
     // kurallar paylaşılan yolda değişmemesini istiyor — F1.4.)
@@ -1187,6 +1203,7 @@ class Note {
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),
     'updatedAt': FieldValue.serverTimestamp(),
+    kSyncAtField: FieldValue.serverTimestamp(),
     'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
     'archivedAt': archivedAt != null ? Timestamp.fromDate(archivedAt!) : null,
     // YALNIZ DOLUYKEN (S16 bayt bütçesi): kaldırma merge'de "değişmedi"

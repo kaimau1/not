@@ -55,6 +55,8 @@ object YerelNot {
             "orderIndex" to -atMs.toDouble(),
             "createdAt" to FieldValue.serverTimestamp(),
             "updatedAt" to FieldValue.serverTimestamp(),
+            // Eşitleme damgası (S1, Dart kSyncAtField): damgasız not "yalnız değişeni dinle" açıkken görünmez
+            "syncAt" to FieldValue.serverTimestamp(),
             "deletedAt" to null,
             "archivedAt" to null,
             "reminderAt" to null,
