@@ -164,12 +164,17 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
   final _title = TextEditingController();
   final _search = TextEditingController();
   bool _existing = false;
-  String _query = '';
+
+  /// Arama sorgusu: yalnız arama alanı ve liste dinler (T7/K-57,
+  /// 2026-11-17 — eskiden her tuş `setState` ile bütün levhayı kuruyordu).
+  final _query = ValueNotifier<String>('');
 
   @override
   void dispose() {
     _title.dispose();
     _search.dispose();
+    _query.dispose();
+    _searchFilled.dispose();
     super.dispose();
   }
 
@@ -285,13 +290,6 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
 
   Widget _existingPane(BuildContext context, double screenHeight) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final candidates = shareCandidates(
-      widget.notes,
-      hasFiles: widget.incoming.hasFiles,
-      query: _query,
-    );
     final cardBuilder = widget.cardBuilder;
     final listHeight = cardBuilder == null
         ? (screenHeight * 0.45).clamp(200.0, 460.0)
@@ -300,71 +298,100 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
       key: const ValueKey('share-existing'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
-          controller: _search,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            isDense: true,
-            prefixIcon: const Icon(Icons.search),
-            hintText: l10n.shareTargetSearch,
-            border: const OutlineInputBorder(),
-            suffixIcon: _query.isEmpty
-                ? null
-                : IconButton(
-                    tooltip: l10n.clearSearch,
-                    icon: const Icon(Icons.close),
-                    onPressed: () {
-                      _search.clear();
-                      setState(() => _query = '');
-                    },
-                  ),
+        ValueListenableBuilder<bool>(
+          // Silme düğmesi yalnız boş ↔ dolu geçişinde değişir.
+          valueListenable: _searchFilled,
+          builder: (context, filled, _) => TextField(
+            controller: _search,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              isDense: true,
+              prefixIcon: const Icon(Icons.search),
+              hintText: l10n.shareTargetSearch,
+              border: const OutlineInputBorder(),
+              suffixIcon: !filled
+                  ? null
+                  : IconButton(
+                      tooltip: l10n.clearSearch,
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        _search.clear();
+                        _setQuery('');
+                      },
+                    ),
+            ),
+            onChanged: _setQuery,
           ),
-          onChanged: (v) => setState(() => _query = v),
         ),
         const SizedBox(height: 8),
         SizedBox(
           height: listHeight,
-          child: candidates.isEmpty
-              ? Center(
-                  child: Text(
-                    _query.isEmpty
-                        ? l10n.shareTargetNoNotes
-                        : l10n.shareTargetNoMatch,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              : cardBuilder != null
-              ? NoteBalancedGrid(
-                  notes: candidates,
-                  columns: WindowClass.of(context).atLeast(WindowWidth.medium)
-                      ? 3
-                      : 2,
-                  padding: const EdgeInsets.only(bottom: 16),
-                  itemBuilder: (context, i) => _PickableCard(
-                    onTap: () => Navigator.pop(
-                      context,
-                      ShareDestination.existing(candidates[i].id),
-                    ),
-                    child: cardBuilder(candidates[i]),
-                  ),
-                )
-              : ListView.separated(
-                  itemCount: candidates.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 4),
-                  itemBuilder: (context, i) => _NoteRow(
-                    note: candidates[i],
-                    folderName: widget.folderNames[candidates[i].folderId],
-                    onTap: () => Navigator.pop(
-                      context,
-                      ShareDestination.existing(candidates[i].id),
-                    ),
-                  ),
-                ),
+          child: ValueListenableBuilder<String>(
+            valueListenable: _query,
+            builder: (context, query, _) =>
+                _candidateList(context, query, cardBuilder),
+          ),
         ),
       ],
     );
+  }
+
+  late final _searchFilled = ValueNotifier<bool>(false);
+
+  void _setQuery(String v) {
+    _query.value = v;
+    _searchFilled.value = v.isNotEmpty;
+  }
+
+  Widget _candidateList(
+    BuildContext context,
+    String query,
+    Widget Function(Note note)? cardBuilder,
+  ) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final candidates = shareCandidates(
+      widget.notes,
+      hasFiles: widget.incoming.hasFiles,
+      query: query,
+    );
+    return candidates.isEmpty
+        ? Center(
+            child: Text(
+              query.isEmpty ? l10n.shareTargetNoNotes : l10n.shareTargetNoMatch,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          )
+        : cardBuilder != null
+        ? NoteBalancedGrid(
+            notes: candidates,
+            columns: WindowClass.of(context).atLeast(WindowWidth.medium)
+                ? 3
+                : 2,
+            padding: const EdgeInsets.only(bottom: 16),
+            itemBuilder: (context, i) => _PickableCard(
+              onTap: () => Navigator.pop(
+                context,
+                ShareDestination.existing(candidates[i].id),
+              ),
+              child: cardBuilder(candidates[i]),
+            ),
+          )
+        : ListView.separated(
+            itemCount: candidates.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 4),
+            itemBuilder: (context, i) => _NoteRow(
+              note: candidates[i],
+              folderName: widget.folderNames[candidates[i].folderId],
+              onTap: () => Navigator.pop(
+                context,
+                ShareDestination.existing(candidates[i].id),
+              ),
+            ),
+          );
   }
 }
 
@@ -457,29 +484,29 @@ class _PickableCard extends StatelessWidget {
     // Basma tepkisi (F78.4): ana ekran kartıyla aynı çökme.
     return PressScale(
       child: GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Stack(
-        children: [
-          IgnorePointer(child: child),
-          Positioned(
-            // Sağ üst: kartın (burada çalışmayan) ⋮'ünü örter; altta tarihi
-            // kesiyordu (cihaz turu 2026-11-05).
-            right: 6,
-            top: 6,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: scheme.primary,
-                shape: BoxShape.circle,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: Icon(Icons.add, size: 18, color: scheme.onPrimary),
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Stack(
+          children: [
+            IgnorePointer(child: child),
+            Positioned(
+              // Sağ üst: kartın (burada çalışmayan) ⋮'ünü örter; altta tarihi
+              // kesiyordu (cihaz turu 2026-11-05).
+              right: 6,
+              top: 6,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(Icons.add, size: 18, color: scheme.onPrimary),
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -540,7 +567,9 @@ class _NoteRow extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: scheme.primaryContainer.withValues(alpha: AppAlpha.muted),
+                  color: scheme.primaryContainer.withValues(
+                    alpha: AppAlpha.muted,
+                  ),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(_icon, size: 20, color: scheme.onPrimaryContainer),

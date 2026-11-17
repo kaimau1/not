@@ -10,6 +10,8 @@ import 'package:notlar/features/notes/presentation/capture_mode_sheet.dart';
 import 'package:notlar/features/notes/presentation/share_target_sheet.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
+import 'support/editor_harness.dart' show BuildCounter;
+
 /// "Birlikte aç" / paylaş ile gelen içeriğin hedefi (kullanıcı isteği
 /// 2026-09-29: "PDF açmak istediğimde Notlar ana sayfası açılıp ister eski
 /// bir notuma ekleme istersem yeni not oluşturma seçenekleri gelsin").
@@ -249,6 +251,36 @@ void main() {
       expect(result?.isExisting, isFalse);
       expect(result?.choice?.mode, CaptureMode.bubbles);
       expect(result?.choice?.noteTitle, 'Kasko');
+    });
+
+    // T7 / K-57: aramada her tuş `setState` ile bütün levhayı (gelen içerik
+    // özeti, kip düğmesi, arama alanı) kuruyordu; artık yalnız liste dinler.
+    testWidgets('aramada tuş başına levhanın üstü kurulmaz', (tester) async {
+      late Map<String, int> counts;
+      final result = await open(
+        tester,
+        notes: [note('a', title: 'Araba'), note('b', title: 'Bahçe')],
+        act: () async {
+          await tester.tap(find.text('Var olan nota'));
+          await tester.pumpAndSettle();
+          // İlk dokunuş alana odak verir (levha klavye payıyla bir kez
+          // kurulur); ölçülen, ondan sonraki tuşlar.
+          await tester.enterText(find.byType(TextField).first, 'a');
+          await tester.pump();
+          final counter = BuildCounter()..start();
+          for (final q in ['ar', 'ara', 'arab', 'ara']) {
+            await tester.enterText(find.byType(TextField).first, q);
+            await tester.pump();
+          }
+          counter.stop();
+          counts = counter.counts;
+          expect(find.text('Bahçe'), findsNothing);
+          await tester.tap(find.text('Araba'));
+        },
+      );
+      expect(result?.noteId, 'a');
+      expect(counts['SegmentedButton<bool>'] ?? 0, 0, reason: '$counts');
+      expect(counts['_IncomingSummary'] ?? 0, 0, reason: '$counts');
     });
   });
 }
