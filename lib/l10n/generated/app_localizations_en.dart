@@ -4110,6 +4110,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGroupLock => 'Lock';
 
   @override
+  String get settingsSecurityTitle => 'Security';
+
+  @override
+  String get settingsSecuritySummary => 'Note lock, app lock';
+
+  @override
   String get settingsGroupAbout => 'About';
 
   @override

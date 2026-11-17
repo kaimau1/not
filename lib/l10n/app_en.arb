@@ -1563,6 +1563,8 @@
   "settingsGroupBackup": "Backup",
   "settingsGroupSession": "Session",
   "settingsGroupLock": "Lock",
+  "settingsSecurityTitle": "Security",
+  "settingsSecuritySummary": "Note lock, app lock",
   "settingsGroupAbout": "About",
   "settingsGroupVersion": "Version",
   "settingsCardsHeader": "Cards and lists",

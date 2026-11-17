@@ -1875,6 +1875,8 @@
   "settingsGroupBackup": "Yedek",
   "settingsGroupSession": "Oturum",
   "settingsGroupLock": "Kilit",
+  "settingsSecurityTitle": "Güvenlik",
+  "settingsSecuritySummary": "Not kilidi, uygulama kilidi",
   "settingsGroupAbout": "Hakkında",
   "settingsGroupVersion": "Sürüm",
   "settingsCardsHeader": "Kartlar ve listeler",

@@ -7394,6 +7394,18 @@ abstract class AppLocalizations {
   /// **'Kilit'**
   String get settingsGroupLock;
 
+  /// No description provided for @settingsSecurityTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenlik'**
+  String get settingsSecurityTitle;
+
+  /// No description provided for @settingsSecuritySummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not kilidi, uygulama kilidi'**
+  String get settingsSecuritySummary;
+
   /// No description provided for @settingsGroupAbout.
   ///
   /// In tr, this message translates to:

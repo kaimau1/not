@@ -4103,6 +4103,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGroupLock => 'Kilit';
 
   @override
+  String get settingsSecurityTitle => 'Güvenlik';
+
+  @override
+  String get settingsSecuritySummary => 'Not kilidi, uygulama kilidi';
+
+  @override
   String get settingsGroupAbout => 'Hakkında';
 
   @override
