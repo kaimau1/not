@@ -11,8 +11,10 @@ Bulut işçisi, push YOK (yürütücü birleştirip tek push yapar). Cihaz yok.
 
 - T5 (commit "T5 ..."): AL-1 — sık eklenenler `smart:market`/`smart:bavul`, kalanlar türe göre, boş ipucu `smartListHint` (.arb), S49 açılış ilk karesi 634 / akıllı 688 (önce=sonra). Eski kodda yeni 3 test kırmızıydı.
 
+- T7 kısmen (commit T7a/b/c): sürüm geçmişi tek okuma (4→1), hesap makinesi (84→≤8), paylaşım araması (üst levha 1→0/tuş). Kalan liste `docs/hafiza/akicilik.md` 2026-11-17 T7.
+
 ## Şu anki adım
-- T7
+- Paket bitti; yürütücü birleştirir (assets + pubspec + .arb değişti → CI tam takım).
 
 ## Kanıt / ölçüm ham sayıları
 - S41: {cip_fazla_kart 0, harf_fazla_kart 0, acilis_text 37}; S48: {klavye 294, dizilme 156, galeri 330, duzenleyici 191}

@@ -406,6 +406,8 @@ kurulum say; `app_frame.dart:352` altındaki `LayoutBuilder` her karede çalış
 `event_editor.dart:513` · `task_editor.dart:350, 357, 400` · `share_target_sheet.dart:223, 322`.
 Düzeltme: T3 (alan kendi `ValueNotifier`'ını günceller; yalnız sonuca bağlı parça dinler).
 
+**K-47/48/57/58 durum (2026-11-17, T7 kısmen):** `note_history_sheet` (K-58), `calculator_sheet` ve `share_target_sheet` arama (K-57) KAPANDI; `note_link_ui` zaten K-08'de düzeltilmişti. Kalanlar `docs/hafiza/akicilik.md` 2026-11-17 T7 satırında.
+
 **K-58 — Kurulumda yeniden oluşturulan Future/Stream (`KOD`, P3).**
 `note_history_sheet.dart:28`: `repo.listVersions(noteId)` levha `builder`'ında çağrılıyor →
 levha her yeniden kurulduğunda (ekran dönmesi vb.) Firestore'dan 30 sürüm yeniden okunur (kasma +
