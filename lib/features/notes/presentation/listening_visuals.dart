@@ -270,18 +270,72 @@ class _ListeningClockState extends State<ListeningClock> {
     super.dispose();
   }
 
+  // SANİYE BAŞINA DİZİLME YOK (2026-11-17, S46 CI kök nedeni): eskiden her
+  // saniye `Text` değişiyor, kartın satırı yeniden diziliyordu (dikte
+  // boyunca saniyede ~22 RenderObject; CI'da gerçek saniye geçince S46
+  // `kart_acik_fazla_dizilme` 0 → 22). Artık kutu boyu yalnız hane sayısıyla
+  // (tablo rakamları: her rakam aynı genişlikte) değişir; saniye değişince
+  // yalnız yeniden BOYANIR.
   @override
   Widget build(BuildContext context) {
     final d = DateTime.now().difference(widget.start);
     final m = d.inMinutes;
     final s = d.inSeconds % 60;
-    return Text(
-      '$m:${s.toString().padLeft(2, '0')}',
-      style: (widget.style ?? AppText.of(Theme.of(context)).label).copyWith(
-        fontFeatures: const [FontFeature.tabularFigures()],
+    final text = '$m:${s.toString().padLeft(2, '0')}';
+    final style = (widget.style ?? AppText.of(Theme.of(context)).label)
+        .copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+    final dir = Directionality.of(context);
+    final scaler = MediaQuery.textScalerOf(context);
+    // Kalıp: aynı hane sayısında sıfırlar → boy saniyeyle değişmez.
+    final template = text.replaceAll(RegExp(r'\d'), '0');
+    final measure = TextPainter(
+      text: TextSpan(text: template, style: style),
+      textDirection: dir,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout();
+    final size = measure.size;
+    measure.dispose();
+    return Semantics(
+      label: text,
+      excludeSemantics: true,
+      child: CustomPaint(
+        size: size,
+        painter: _ClockPainter(text, style, dir, scaler),
       ),
     );
   }
+}
+
+class _ClockPainter extends CustomPainter {
+  _ClockPainter(this.text, this.style, this.dir, this.scaler);
+
+  final String text;
+  final TextStyle style;
+  final TextDirection dir;
+  final TextScaler scaler;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final tp = TextPainter(
+      text: TextSpan(text: text, style: style),
+      textDirection: dir,
+      textScaler: scaler,
+      maxLines: 1,
+    )..layout(maxWidth: size.width + 1);
+    tp.paint(
+      canvas,
+      Offset(dir == TextDirection.rtl ? size.width - tp.width : 0, 0),
+    );
+    tp.dispose();
+  }
+
+  @override
+  bool shouldRepaint(_ClockPainter old) =>
+      old.text != text ||
+      old.style != style ||
+      old.dir != dir ||
+      old.scaler != scaler;
 }
 
 /// Kartın en geniş hâli: tablette/webde ortalı durur, telefonda etkisiz.

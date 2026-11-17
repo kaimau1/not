@@ -180,3 +180,13 @@ Tam plan: `docs/arsiv/planlar/HIZ_PLANI.md`. Bütçe senaryoları (S1…) tablos
 - Ayar eşitlemesi: yerel tercihler + bulut belgesi aynıysa tur döner (`_lastLocal/_lastRemote`).
 - Bütçe testlerinde kayıt beklemeleri 2–3 sn sabit: `kEditorSaveDelay`'i büyütmek 12 bütçe testini
   zincirleme kırar (bekleyen zamanlayıcı) — sessizliği değiştireceksen testleri sabite bağla.
+
+## 2026-11-17 — Dikte süre sayacı saniyede bir diziliyordu (S46 CI kök nedeni)
+- `ListeningClock` her saniye `setState` + `Text('$m:ss')`: metin değişince kart satırı yeniden
+  diziliyordu (dikte boyunca saniyede ~22 RenderObject). Süre GERÇEK saatten (`DateTime.now()`),
+  test zamanı sahte → hızlı makinede saniye geçmez (0), CI tam takım yükünde geçer (22): S46
+  `kart_acik_fazla_dizilme` CI'da iki koşuda da 22, yerelde 0.
+- Düzeltme: sabit boylu `CustomPaint` (boy, aynı hane sayısındaki sıfır kalıbından; tablo rakamları)
+  → saniye değişimi yalnız boyama; `Semantics(label)` süreyi okur. Bekçi `test/listening_clock_test.dart`
+  (saniye değişimi 0 dizilme). DERS: bütçe testinde ölçülen pencereye gerçek saate bağlı metin
+  girerse sonuç makine hızına bağlı olur — zamanlayıcıyla değişen metni dizilme sınırı arkasına al.
