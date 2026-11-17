@@ -40,7 +40,7 @@ Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/pla
   kendi Drive'ına (S4); T11 depolama tavanı bu modele göre (Lite'ta Storage kapalı). (1.1/1, /3)
 - **Play'e ÇIKILIYOR — hazırlık başlasın** (eski "çıkmıyoruz" kalktı). 1.4/5 Lite/Pro + Play yolu
   açılır; Play'e özgü kalan kararlar (ad, hesap türü, niş, AI katmanı, fiyat, Lite cihaz sınırı)
-  o fazın BAŞINDA sorulur. Park'taki Billing/OAuth yayını/gizlilik/konum beyanı/mağaza işleri bu
+  o fazın BAŞINDA sorulur (cihaz sınırı kapandı: yok). Park'taki Billing/OAuth yayını/gizlilik/konum beyanı/mağaza işleri bu
   faza girer. Kişisel APK (`NOTLAR_KISISEL=1`) yolu Play sürümü çıkana dek sürer.
 - **Yazım denetimi v3 varsayılanı "Yalnız göster"** (altı çizili, dokununca öneri; kendiliğinden
   düzeltme yok); Y-0 ölçüm seti faz başında. (1.1/6)
@@ -55,7 +55,7 @@ hazırlığı (1.5 PL1–PL12) + Pro AI sadeleştirme (1.6 AI-S) + Lite/Pro → 
 
 ### 1.1 Senden karar bekleyenler (karar gelmeden başlamaz)
 1. ~~Model~~ → KARAR 1.0: tek uygulama + katman.
-2. Lite senkronu açık + aralıklı (KARAR 1.0); **cihaz sınırı 2 mi sınırsız mı?** — Play fazı başında (17K §2.2)
+2. ~~Lite cihaz sınırı~~ → KARAR 1.5: sınırsız; içerik sınırı yok.
 3. ~~Lite ekleri~~ → KARAR 1.0: kullanıcının Drive'ı.
 4. ~~S1 ayrı faz mı~~ → KARAR 1.0: doğrudan yapılır.
 5. Yıllık fiyat aralığı (maliyet hesabı netleşsin). (17K §2.3)
@@ -123,7 +123,25 @@ Takvim/Görevler **kalır** → OAuth "hassas" doğrulamasına başvurulur. AI k
 tarama, dikte, sistem sesi, akıllı liste sözlüğü AI sayılmaz, kalır) · **Pro abonelik = dahili AI**
 (§1.6'daki 8 ana yetenek; günlük kota yalnız burada, sunucuda sayılır) · **Ömür boyu (tek sefer) = dahili AI
 yok, kendi Gemini anahtarını girebilir** (sınırsız, maliyet bize sıfır). Abonelik yalnız AI'ın aylık
-maliyeti için; AI ömür boyu satılmaz. **Niş/vaat ve uygulama adı kullanıcı yazacak (bekliyor).** Kişisel APK'da her şey kalır.
+maliyeti için; AI ömür boyu satılmaz. 
+**Katman farkları (kullanıcı, 2026-11-17 gece):**
+
+| | Ücretsiz | Ömür boyu (tek sefer) | Pro (aylık/yıllık) |
+|---|---|---|---|
+| Bütün not/liste/kalem/PDF/hatırlatıcı/takvim, cihazda OCR·dikte·sesle okuma | ✓ | ✓ | ✓ |
+| Not/klasör/ek sayısı | sınırsız | sınırsız | sınırsız |
+| Cihaz sayısı | sınırsız | sınırsız | sınırsız |
+| Eşitleme | aralıklı | anında | anında |
+| Ekler | kendi Drive'ı | kendi Drive'ı (yürütücü: tek sefer ödemeye süren depo maliyeti bağlanmaz) | bizim bulut (Storage) |
+| Sürüm geçmişi + parolalı tam yedek | ✗ | ✓ | ✓ |
+| Ek temalar / yazı tipleri / kart görünümleri | ✗ (temel set) | ✓ | ✓ |
+| Dahili AI (§1.6) | ✗ | ✗ | ✓ |
+| Kendi Gemini anahtarı | ✗ | ✓ | ✓ |
+
+Pro = ömür boyunun hepsi + dahili AI + bulut ekleri. Temel tema/yazı tipi setinin hangi parçaları ücretsizde
+kalacağı PL6'da belirlenir (bugünkü varsayılan görünüm ücretsizde kalır; kimsenin elinden özellik alınmaz).
+
+**Niş/vaat ve uygulama adı kullanıcı yazacak (bekliyor).** Kişisel APK'da her şey kalır.
 
 | No | İş | Kaynak | Cihaz |
 |---|---|---|---|
