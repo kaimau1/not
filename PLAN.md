@@ -51,7 +51,7 @@ Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/pla
 
 **Sıra (önerim, yürütücü bunu izler):** (1) telefonsuz T3, T5, T7, T10, T12, T14, T15 + KONTROL 36/39
 → (2) tablet bağlanınca T13 → T16 + T1 (tablet tabanı) → T2/T4/T8/T9 → (3) S1 → S4 → (4) Play
-hazırlığı (1.5 PL1–PL12) + Lite/Pro → (5) yazım v3, hızlı ekle, akıllı liste, güven/büyüme.
+hazırlığı (1.5 PL1–PL12) + Pro AI sadeleştirme (1.6 AI-S) + Lite/Pro → (5) yazım v3, hızlı ekle, akıllı liste, güven/büyüme.
 
 ### 1.1 Senden karar bekleyenler (karar gelmeden başlamaz)
 1. ~~Model~~ → KARAR 1.0: tek uygulama + katman.
@@ -121,7 +121,7 @@ kesintisiz 14 gün kapalı test). Play derlemesinde **kapalı**: Gmail, konum ha
 Takvim/Görevler **kalır** → OAuth "hassas" doğrulamasına başvurulur. AI katmanı (kullanıcı, 2026-11-17 gece — üç katman önerisinin yerine):
 **Ücretsiz = yapay zekâ YOK** (bulut AI yok, kendi anahtar alanı da yok; cihazda çalışan OCR, belge
 tarama, dikte, sistem sesi, akıllı liste sözlüğü AI sayılmaz, kalır) · **Pro abonelik = dahili AI**
-(hafif + ağır işler; günlük kota yalnız burada, sunucuda sayılır) · **Ömür boyu (tek sefer) = dahili AI
+(§1.6'daki 8 ana yetenek; günlük kota yalnız burada, sunucuda sayılır) · **Ömür boyu (tek sefer) = dahili AI
 yok, kendi Gemini anahtarını girebilir** (sınırsız, maliyet bize sıfır). Abonelik yalnız AI'ın aylık
 maliyeti için; AI ömür boyu satılmaz. **Niş/vaat ve uygulama adı kullanıcı yazacak (bekliyor).** Kişisel APK'da her şey kalır.
 
@@ -150,6 +150,34 @@ bitir", miktar) ve kademe 3 (düzeltmeden öğren, AI ile sınıflandır, yeni t
 aracı) (16K §3.3) → 1.4/4; cihaz içi Gemini Nano katmanı, özet önbelleği, haftalık geri bakış
 bildirimi, akıllı gelen kutusu, hatırlatıcı önerisi (16K §5.4) → 1.4/6; "Konuş, gerisini o yapsın"
 tek giriş = HE-4.
+
+### 1.6 Pro AI sadeleştirme + iyileştirme (faz AI-S) — KARAR (kullanıcı, 2026-11-17 gece)
+"Yalnız işe yarayanlar kalsın, onlar da iyileşsin." Bugün ~30 AI yeteneği var (`gemini_service.dart`).
+**Kalan 8 ana yetenek** (her biri tek yerden açılır; ✨ levhası 3 bölüm: Yaz · Sor · Dönüştür):
+
+| # | Yetenek | Birleşenler (bugünkü işlevler) | İyileştirme |
+|---|---|---|---|
+| A1 | **Notlarına sor** (kaynaklı sohbet: tüm notlar / bu not / bu belge) | `assistantChat`, `chatAboutNote`, `askAboutNoteText` (notta ara), `outlineNote` + `brainstormAboutNote` → sohbet öneri çipi | Dahili kipte de anlamca getirme (bugün kelime örtüşmesi), her yanıtta kaynak çipi, "Bildir" |
+| A2 | **Kayıttan not** (ses/toplantı/ders → özet + yapılacaklar + hatırlatıcı önerisi) | `transcribeAudio`, `transcribeMedia` + özet | Tek akış: döküm → özet → maddeler → "hatırlatayım mı?"; uzun kayıt parçalı |
+| A3 | **Konuş, gerisini o yapsın** (tek cümle → doğru türde not/madde/hatırlatıcı/takvim) | `assistantVoiceNote`, hızlı ekle AI yedeği `pickDropTarget` | HE-4 tek giriş ile aynı iş; önce cihazda ayrıştır, AI yalnız gerekince |
+| A4 | **Belgeye sor** (PDF/slayt/belge) | `summarizePdf`, `summarizeDocumentText`, `chatWithPdf` | Özet = ilk önerilen soru; sayfa numaralı kaynak |
+| A5 | **Fotoğraftan yapılı not** (tahta, fiş, kartvizit, el yazısı) | `extractTextFromImage`, `askAboutImage` | Önce cihazda OCR (ücretsiz), AI yalnız yapılandırmaya (başlık + maddeler) |
+| A6 | **Yazıyı iyileştir** (düzelt · yeniden yaz · kısalt/uzat · resmî/samimi · çevir) | `rewriteText`, düzeltme seviyeleri, `translateText` | Tek menü, önce/sonra önizleme + geri al; yazım v3 ile çakışmasın |
+| A7 | **Özet** (kısa/ayrıntılı tek düğme, uzunluk anahtarı) | `summarizeNote` | Not değişmediyse önbellekten (içerik özetiyle anahtar) |
+| A8 | **Sessiz düzen** (başlık, etiket, kopya not önerisi; tek istekte toplu) | `generateTitle`, `suggestTags`, hub "etiketle / başlık öner / kopyalar" | Toplu tek istek; kopya bulma cihazda (AI'sız) |
+| + | **Çalışma kartları** | `generateStudyCards` | kalır (kullanıcı) |
+| + | **Günün/haftanın özeti** | `composeBriefing` + haftalık özet | tek ekran, tek bildirim (pazar akşamı haftalık) |
+
+**Play'den kalkanlar (kişisel APK'da kalabilir):** podcast + Gemini seslendirme (`podcastScript`, `speech`;
+sistem sesiyle okuma ücretsiz kalır), video → not (`noteFromVideo`, `videoNoteExcerpt`), e-postadan not
+(`fromEmail`, Gmail zaten kapalı). **Tümden kalkanlar:** "Notu analiz et" (`analyzeNote`, belirsiz → A1'e
+devreder), çöp kutusu AI derin analizi (`analyzeTrash`; cihazdaki kurallar kalır), arşiv içgörüsü
+(`summarizeArchive`), ayar aramada AI (`matchSettings` → yerel arama), ölü kod `tidyCapture`.
+
+**Sıra:** AI-S0 Türkçe altın örnek seti (her yetenek için 10–20 girdi + beklenen çıktı ölçütü, kalite
+puanı; değişiklikten önce/sonra) → AI-S1 kaldır/birleştir (Play bayrağıyla, kişisel APK'yı bozmadan) →
+AI-S2 ✨ levhası 3 bölüm (kasma-kontrol + bütçe senaryosu) → AI-S3…S10 yetenek başına iyileştirme, her
+biri altın setle ölçülerek. PL2 korumaları ve PL3 rıza/"Bildir" ile birlikte Play fazında.
 
 ## 2. Önceki açık işler (P22 listesi, aynen)
 
