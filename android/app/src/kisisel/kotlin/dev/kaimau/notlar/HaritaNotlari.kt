@@ -120,7 +120,7 @@ class HaritaNotAlici : BroadcastReceiver() {
             val snap = runCatching { Tasks.await(doc.get(Source.CACHE), 3, TimeUnit.SECONDS) }.getOrNull()
                 ?: runCatching { Tasks.await(doc.get(), 4, TimeUnit.SECONDS) }.getOrNull()
             if (snap == null || !snap.exists() || snap.get("deletedAt") != null) return null
-            val update = hashMapOf<String, Any>("updatedAt" to FieldValue.serverTimestamp(), "updatedBy" to uid)
+            val update = hashMapOf<String, Any>("updatedAt" to FieldValue.serverTimestamp(), "syncAt" to FieldValue.serverTimestamp(), "updatedBy" to uid)
             n.image?.let { update["attachments"] = FieldValue.arrayUnion(resimEki(ctx, doc.id, File(it))) }
             if (n.text.isNotEmpty()) {
                 val old = snap.getString("body").orEmpty().trimEnd()
@@ -202,6 +202,7 @@ class HaritaNotAlici : BroadcastReceiver() {
                 val update = hashMapOf<String, Any>(
                     "body" to if (old.isEmpty()) entry else "$old\n\n$entry",
                     "updatedAt" to FieldValue.serverTimestamp(),
+                    "syncAt" to FieldValue.serverTimestamp(),
                     "updatedBy" to uid,
                     "ytTodo" to true,
                     "ytPending" to todo,

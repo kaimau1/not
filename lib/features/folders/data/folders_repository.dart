@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/local_notes_store.dart';
+import '../../notes/domain/note.dart' show kSyncAtField;
 import '../domain/note_folder.dart';
 
 final foldersRepositoryProvider = Provider<FoldersRepository?>((ref) {
@@ -367,7 +368,10 @@ class FoldersRepository {
     var batch = _firestore.batch();
     var ops = 0;
     for (final doc in notes.docs) {
-      batch.set(doc.reference, {'folderId': null}, SetOptions(merge: true));
+      batch.set(doc.reference, {
+        'folderId': null,
+        kSyncAtField: FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       // Firestore batch tavanı 500 işlem; taşarsa parça parça gönder.
       if (++ops == 450) {
         unawaited(batch.commit());

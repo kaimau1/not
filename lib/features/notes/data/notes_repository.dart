@@ -641,6 +641,7 @@ class NotesRepository {
       doc.set({
         ...note.toMap(),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
         'createdBy': editorUid,
       }),
     );
@@ -740,6 +741,7 @@ class NotesRepository {
       doc.set({
         ...copy.toMap(),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
         'createdBy': editorUid,
       }),
     );
@@ -778,6 +780,7 @@ class NotesRepository {
     final fields = {
       ...note.toMap(),
       'updatedBy': editorUid,
+      kSyncAtField: FieldValue.serverTimestamp(),
       if (clientTime) 'updatedAt': Timestamp.now(),
     };
     // AĞIR ALANLAR (F3.13): bölünmüş ya da ağır kısmı eşiği aşan not iki
@@ -1088,6 +1091,7 @@ class NotesRepository {
       ...fields,
       'updatedAt': FieldValue.serverTimestamp(),
       'updatedBy': editorUid,
+      kSyncAtField: FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
     // Red yutulmasın (F1.6): kullanıcıya ve hata günlüğüne. Çağıranın kendi
     // beklemesi/yakalaması etkilenmez — bu ayrı bir dinleyici.
@@ -1120,6 +1124,7 @@ class NotesRepository {
         ...e.value,
         'updatedAt': FieldValue.serverTimestamp(),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       if (++ops == 450) {
         commits.add(batch.commit());
@@ -1200,6 +1205,7 @@ class NotesRepository {
         batch.set(_notes.doc(ordered[i].id), {
           'orderIndex': want,
           'updatedBy': editorUid,
+          kSyncAtField: FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         // Firestore batch tavanı 500 işlem; taşarsa parça parça gönder.
         if (++ops == 450) {
@@ -1528,6 +1534,7 @@ class NotesRepository {
         tx.update(ref, {
           'attachments': note.attachmentsField(attachments),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
         });
       });
   }
@@ -1555,6 +1562,7 @@ class NotesRepository {
       tx.update(ref, {
         'attachments': merged(Note.fromDoc(snapshot)),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
       });
     });
   }
@@ -1635,6 +1643,7 @@ class NotesRepository {
       store.put(note.id, {
         ...note.copyWith(attachments: kept).toMap(),
         'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
       });
       await store.flush();
       final deleteDrive = driveFileDeleter;
@@ -1659,7 +1668,13 @@ class NotesRepository {
     if (!store.contains(note.id)) return;
     final current = store.note(note.id) ?? note;
     final doc = _notes.doc(note.id);
-    unawaited(doc.set({...current.toMap(), 'updatedBy': editorUid}));
+    unawaited(
+      doc.set({
+        ...current.toMap(),
+        'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
+      }),
+    );
     try {
       await doc
           .snapshots()
