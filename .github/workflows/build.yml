@@ -37,6 +37,7 @@ jobs:
   marker:
     name: Derleme işareti
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
       checks: read
@@ -44,8 +45,11 @@ jobs:
     outputs:
       apk: ${{ steps.marker.outputs.apk }}
       perf: ${{ steps.marker.outputs.perf }}
-      test_mod: ${{ steps.secim.outputs.mod }}
+      test_mod: ${{ steps.tur.outputs.mod }}
       test_liste: ${{ steps.secim.outputs.liste }}
+      parcalar: ${{ steps.tur.outputs.parcalar }}
+      belge: ${{ steps.tur.outputs.belge }}
+      kural: ${{ steps.tur.outputs.kural }}
       surum: ${{ steps.surum.outputs.name }}
     steps:
       - uses: actions/checkout@v4
@@ -82,6 +86,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: bash tool/ci_test_secimi.sh 'Analiz + Test'
 
+      # ACTIONS KOTASI (2026-11-17, depo özel): yalnız belge değiştiyse analiz,
+      # web derlemesi ve yayın atlanır; kural işi yalnız kural/Functions
+      # değişince koşar; az test seçildiyse tek parça (tool/ci_degisiklik.sh).
+      - name: Değişiklik türü
+        id: tur
+        env:
+          MOD: ${{ steps.secim.outputs.mod }}
+          LISTE: ${{ steps.secim.outputs.liste }}
+          BEFORE: ${{ github.event.before }}
+        run: bash tool/ci_degisiklik.sh
+
       # SÜRÜM ADI (2026-11-05, kullanıcı kararı): ANA.ARA pubspec'ten, son hane
       # main'de yayınlanan [apk] derlemesi sayısı (tool/surum_hesapla.sh) —
       # CI/belge birleştirmesi sürümü ilerletmez. Başlıkta [minor] → ARA +1.
@@ -104,13 +119,15 @@ jobs:
   # hiçbir adım koşmaz, iş saniyede YEŞİL biter (release/deploy beklemesin).
   # Kırmızı parça: Actions'ta "Re-run failed jobs" yalnız onu yeniden koşar.
   test:
-    name: Analiz + Test (${{ matrix.shard }}/3)
+    name: Analiz + Test (${{ matrix.shard }}/${{ needs.marker.outputs.parcalar == '[0]' && 1 || 3 }})
     runs-on: ubuntu-latest
+    # Kota (2026-11-17): askıda kalan iş 6 saat (360 dk) yemesin.
+    timeout-minutes: 30
     needs: marker
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2]
+        shard: ${{ fromJSON(needs.marker.outputs.parcalar) }}
     env:
       MOD: ${{ needs.marker.outputs.test_mod }}
     steps:
@@ -133,7 +150,7 @@ jobs:
         run: flutter pub get
 
       - name: Analiz
-        if: env.MOD != 'atla' && matrix.shard == 0
+        if: env.MOD != 'atla' && matrix.shard == 0 && needs.marker.outputs.belge != 'true'
         run: flutter analyze
 
       # -j 4: package:test varsayılanı çekirdeklerin YARISI (4 vCPU'da 2).
@@ -147,7 +164,8 @@ jobs:
           else
             find test -name '*_test.dart' | sort > /tmp/tum.txt
           fi
-          mapfile -t files < <(awk -v n=3 -v i=${{ matrix.shard }} '(NR-1) % n == i' /tmp/tum.txt)
+          n=${{ needs.marker.outputs.parcalar == '[0]' && 1 || 3 }}
+          mapfile -t files < <(awk -v n="$n" -v i=${{ matrix.shard }} '(NR-1) % n == i' /tmp/tum.txt)
           echo "Seçim: $MOD — toplam $(wc -l < /tmp/tum.txt), bu parçada ${#files[@]} test dosyası."
           if [ ${#files[@]} -eq 0 ]; then echo "Bu parçaya test düşmedi."; exit 0; fi
           flutter test -j 4 "${files[@]}"
@@ -158,6 +176,9 @@ jobs:
   rules:
     name: Kural + Functions testleri
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: marker
+    if: needs.marker.outputs.kural == 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -191,6 +212,8 @@ jobs:
     name: Güvenlik taraması
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Kota (2026-11-17): yalnız main'de; dal bulguları main'e girerken görülür.
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -237,6 +260,7 @@ jobs:
   android:
     name: Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: marker
     if: >
       (github.event_name == 'workflow_dispatch' && !inputs.perf) ||
@@ -571,8 +595,9 @@ jobs:
   web:
     name: Web derle
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: marker
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.marker.outputs.belge != 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -611,8 +636,14 @@ jobs:
   deploy:
     name: Firebase + Cloudflare Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: [test, rules, web]
-    if: github.ref == 'refs/heads/main'
+    # rules yalnız kural değişince koşar: atlandıysa yayın yine sürer.
+    # Yalnız belge değiştiyse web derlenmez → yayın da yok.
+    if: >
+      always() && github.ref == 'refs/heads/main' &&
+      needs.test.result == 'success' && needs.web.result == 'success' &&
+      (needs.rules.result == 'success' || needs.rules.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
 

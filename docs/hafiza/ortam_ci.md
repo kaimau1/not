@@ -62,6 +62,14 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   (`continue-on-error`, Blaze). Web derlemesi `RECAPTCHA_SITE_KEY` secret'ını
   geçer (F18.1). `rules` işi emülatörde (Java 21); yerel `cd rules-test &&
   npm ci && npm test`.
+- **Actions kotası (2026-11-17, depo özel oldu):** ücretsiz plan ~2000 dk/ay +
+  0,5 GB depolama; her iş dakikası yukarı yuvarlanır, belge push'u eskiden
+  ~10 faturalı dk yiyordu (marker + 3 test parçası + rules + güvenlik), main'de
+  bir de web derle + yayın. `tool/ci_degisiklik.sh` (marker'da, test seçiminden
+  sonra): `belge` (yalnız *.md/docs/graphify-out/.claude) → analiz, web, yayın
+  yok; `kural` → `rules` işi yalnız o zaman (deploy `skipped`ı kabul eder);
+  `parcalar` → ≤ 20 seçili testte tek parça; güvenlik taraması yalnız main.
+  Taban: dalda merge-base, main'de `github.event.before`; bulunamazsa her şey koşar.
 
 ## Android
 - `USE_EXACT_ALARM` yok; izin yoksa inexact. QR/OCR Play Hizmetleri'nden.
