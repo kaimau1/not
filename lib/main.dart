@@ -15,6 +15,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'app/app.dart';
 import 'core/utils/channel_counter.dart';
+import 'core/utils/frame_timing_log.dart';
 import 'core/utils/diagnostics.dart';
 import 'core/app_check_policy.dart';
 import 'core/constants.dart';
@@ -178,6 +179,8 @@ Future<void> main() async {
       child: const NotlarApp(),
     ),
   );
+  // PL12: profil/beta derlemesinde kare süresi günlüğü (release'te boş).
+  FrameTimingLog.start();
 
   // İlk kareyi GEÇİKTİRMEYEN kurulumlar runApp'ten sonra yapılır:
   // - App Check: Play Integrity turu 300-1500 ms sürebiliyor ve zorlama

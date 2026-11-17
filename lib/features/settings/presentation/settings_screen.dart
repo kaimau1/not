@@ -49,6 +49,7 @@ import 'personalize_screen.dart' show PersonalizeModuleSwitches;
 import 'theme_picker.dart';
 import 'typing_bar_settings.dart';
 import '../../../core/utils/channel_counter.dart';
+import '../../../core/utils/frame_timing_log.dart';
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/display_rate.dart';
 import '../../../core/utils/doc_picker.dart';

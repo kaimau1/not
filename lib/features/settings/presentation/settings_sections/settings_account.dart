@@ -816,9 +816,9 @@ class _AppVersionRowState extends State<_AppVersionRow> {
         );
       },
     );
-    if (!Diagnostics.enabled) return row;
+    if (!Diagnostics.enabled && !FrameTimingLog.enabled) return row;
     // Teşhis sayaçları (F9.2): yalnız hata ayıklama/profil derlemesinde;
-    // dokununca tazelenir.
+    // hız günlüğü (PL12) profil/beta derlemesinde. Dokununca tazelenir.
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -827,8 +827,11 @@ class _AppVersionRowState extends State<_AppVersionRow> {
           onTap: () => setState(() {}),
           child: Text(
             [
-              Diagnostics.summary(thumbBytes: CardThumbs.memoryBytes),
-              channelSummary(),
+              if (Diagnostics.enabled) ...[
+                Diagnostics.summary(thumbBytes: CardThumbs.memoryBytes),
+                channelSummary(),
+              ],
+              if (FrameTimingLog.enabled) FrameTimingLog.summary(),
             ].where((s) => s.isNotEmpty).join('\n'),
             key: const ValueKey('diagnostics-row'),
             textAlign: TextAlign.center,
