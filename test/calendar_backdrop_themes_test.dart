@@ -184,5 +184,48 @@ void main() {
         );
       }
     });
+
+    // KT-3 (keşif turu 2026-11-14): 320 dp pencerede hücre 24 dp'nin altına
+    // iniyor, gün adı TEK HARFE düşüyordu ("C P P S Ç P C P" — Cmt/Paz/Pzt
+    // aynı harf, ayırt edilemez). Dar hücrede gün adı yazılmaz (yalnız
+    // sayı); tam ad ekran okuyucuda (Semantics) kalır.
+    testWidgets('dar hücrede tek harf gün adı yok (KT-3)', (tester) async {
+      tester.view.physicalSize = const Size(320, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 260,
+                child: HomeCalendarStripView(
+                  today: DateTime(2026, 11, 6),
+                  onDayTap: (_) {},
+                  data: const CalendarData(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      for (var i = 0; i < kHomeStripDays; i++) {
+        final d = DateTime(2026, 11, 6 + i);
+        final name = DateFormat.E().format(d);
+        expect(find.text(name.characters.first), findsNothing, reason: name);
+        expect(find.text('${d.day}'), findsOneWidget);
+      }
+      // Tam ad ekran okuyucuda kalır.
+      expect(
+        find.bySemanticsLabel(
+          RegExp(DateFormat.MMMMEEEEd().format(DateTime(2026, 11, 7))),
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }

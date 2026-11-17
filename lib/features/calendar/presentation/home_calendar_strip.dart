@@ -280,12 +280,15 @@ class _DayCell extends StatelessWidget {
                   SizedBox(
                     height: 13,
                     child: count == 0
-                        ? (wide
+                        // KT-3 (keşif turu 2026-11-14): 24 dp altında tek
+                        // harfe düşen ad ("C P P S Ç") Cmt/Paz/Pzt'yi ayırt
+                        // ettirmiyordu: yazılmaz, tam ad Semantics'te.
+                        ? (wide || c.maxWidth < 24
                               ? const SizedBox.shrink()
                               // Gün adı ÜÇ HARF (K-D4, F74.2): tek harf
                               // "P" Pazartesi mi Perşembe mi Pazar mı
                               // söylemiyordu. 360 dp'de hücre içi ~26 dp,
-                              // "Cmt" 11 pt sığar; daha darda tek harf.
+                              // "Cmt" 11 pt sığar; daha darda ad yok (KT-3).
                               // Büyük yazıda (1,3×) "Cmt" hücreye sığmayıp
                               // "Cm" diye kesiliyordu (F80.2): sığmazsa
                               // küçülür, kesilmez.
@@ -293,9 +296,7 @@ class _DayCell extends StatelessWidget {
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      c.maxWidth >= 24
-                                          ? weekday
-                                          : weekday.characters.first,
+                                      weekday,
                                       maxLines: 1,
                                       style: AppText.of(Theme.of(context)).badge
                                           .copyWith(

@@ -585,5 +585,44 @@ void main() {
       await tester.tap(find.text('Not ekle'));
       expect(added, 2);
     });
+
+    // KT-3 (keşif turu 2026-11-14): kısa/dar pencerede "İlk notunu yaz"
+    // düğmesinin yarısı sağ alttaki mikrofon + "+" satırının (56 + alt pay
+    // 16 = 72 dp) altında kalıyordu. Boş hâl o satırın ÜSTÜNDE ortalanır.
+    testWidgets('boş hâl düğmesi FAB satırının altında kalmaz (KT-3)', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 380);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: c,
+          child: MaterialApp(
+            locale: const Locale('tr'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: CustomScrollView(
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: HomeEmptyNotes(
+                      searchActive: false,
+                      onClearSearch: () {},
+                      onNewNote: () {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      final button = tester.getRect(find.text('İlk notunu yaz'));
+      expect(button.bottom, lessThanOrEqualTo(380 - 72));
+    });
   });
 }

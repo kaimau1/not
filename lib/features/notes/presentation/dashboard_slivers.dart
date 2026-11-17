@@ -87,7 +87,15 @@ class HomeEmptyNotes extends ConsumerWidget {
   final VoidCallback onNewNote;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) => Padding(
+    // KT-3 (keşif turu 2026-11-14): kısa/dar pencerede eylem düğmesi sağ
+    // alttaki mikrofon + "+" satırının altında kalıyordu; boş hâl o
+    // satırın ÜSTÜNDEKİ alanda ortalanır (ızgaranın alt payıyla aynı).
+    padding: const EdgeInsets.only(bottom: _kFabClearance),
+    child: _content(context, ref),
+  );
+
+  Widget _content(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     if (searchActive) {
       return EmptyState(
