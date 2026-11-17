@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/play_build.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/notes_repository.dart';
@@ -596,7 +597,9 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                             ],
                           ),
                         ),
-                        if (!_isPodcast) ...[
+                        // Play derlemesinde podcast yok (AI-S1); cihaz
+                        // sesiyle okuma kalır.
+                        if (!_isPodcast && PlayBuild.aiPodcast) ...[
                           const SizedBox(height: 10),
                           Text(
                             l10n.listenConvertWithAi,

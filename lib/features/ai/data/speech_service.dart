@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/play_build.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../settings/settings_providers.dart';
 import 'ai_speech.dart';
@@ -40,7 +41,9 @@ class SpeechService extends Notifier<SpeechOutputState> {
   }
 
   /// Yapay zekâ sesi bu kurulumda kullanılabilir mi (kendi Gemini anahtarı).
-  bool get aiAvailable => ref.read(aiSpeechProvider.notifier).isAvailable;
+  /// Play derlemesinde hiç yok (PlayBuild.aiVoice, AI-S1).
+  bool get aiAvailable =>
+      PlayBuild.aiVoice && ref.read(aiSpeechProvider.notifier).isAvailable;
 
   /// Antalia Türkçe sesi bu cihazda kurulu mu (model indirilmiş, Android).
   bool get localAvailable =>

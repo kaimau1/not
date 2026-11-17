@@ -28,4 +28,20 @@ abstract final class PlayBuild {
   /// §4.5: YouTube oynatıcısından çıkınca kendiliğinden küçük pencere (PiP).
   /// Elle PiP düğmesi kalır.
   static const bool youtubeAutoPip = !enabled;
+
+  // ── PLAN §1.6 AI-S1 "Play'den kalkanlar" (KARAR kullanıcı 2026-11-17):
+  // kişisel APK'da AYNEN kalır, Play derlemesinde gizlenir. E-postadan not
+  // (`GeminiService.fromEmail`) Gmail ekranında olduğundan [gmail] kapısıyla
+  // zaten gizli.
+
+  /// Podcast (`podcastScript`): belgeyi AI ile anlatıya çevirme + ses dosyası
+  /// olarak dışa aktarma. Belgeyi cihaz sesiyle okuma ücretsiz, kalır.
+  static const bool aiPodcast = !enabled;
+
+  /// Gemini seslendirme (`TtsEngine.gemini`, `speech`). Cihaz sesi kalır.
+  static const bool aiVoice = !enabled;
+
+  /// Video → not (`noteFromVideo`) ve video not satırını AI ile toparlama
+  /// (`videoNoteExcerpt`; AI'sız altyazı/transkript kesiti kalır).
+  static const bool videoNote = !enabled;
 }
