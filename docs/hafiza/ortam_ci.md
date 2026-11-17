@@ -144,3 +144,8 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   birleştirme commit'i (`HEAD^2`) ya da PR başında tanıyordu; `git push <yeşil sha>:main` ikisini de
   vermez → tam takım (1380, 1384). Artık aynı SHA'nın başka dalda `push` ile yeşil biten koşusu varsa
   `atla` (`actions/runs?head_sha=…&status=success`).
+- **Play derlemesi bayrağı (P66, 2026-11-17):** Dart `--dart-define=NOTLAR_PLAY=true` → `lib/core/play_build.dart`
+  (`PlayBuild.*` tek yer: güncelleyici, Gmail, konum hatırlatıcı, Antalia, YouTube oto PiP); Gradle `NOTLAR_PLAY=1`
+  → `useLegacyPackaging=false`, `NOTLAR_KISISEL` ile birlikte derleme DURUR. Play derlemesi KİŞİSEL OLMADAN
+  (kurulum/overlay izinleri yalnız `src/kisisel`). Yerel izin/ONNX/Gmail kapsamı çıkarma henüz yok →
+  `docs/play_hazirlik.md`. targetSdk 36 = Flutter 3.47.9 varsayılanı (sürüm düşerse bak).

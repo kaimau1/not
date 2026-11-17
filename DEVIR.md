@@ -11,5 +11,8 @@
   KISISEL ile birlikte → derleme durur. Android SDK yok → Gradle derlemesi denenmedi.
 - Yerel Play derleme: `NOTLAR_PLAY=1 flutter build appbundle --release --dart-define=NOTLAR_PLAY=true
   --dart-define-from-file=env.json --obfuscate --split-debug-info=build/app/outputs/symbols --build-number=<N>`
-- Şu an: PL12 (hız günlüğü).
+- PL12: `lib/core/utils/frame_timing_log.dart` + `main.dart` start + Ayarlar teşhis satırı
+  (`settings_account.dart` `_AppVersionRow`). Bekçi `test/frame_timing_log_test.dart`; perf_budget yeşil (52).
+- Kalan (cihaz bekliyor): profil derlemesinde satırın görünmesi; Play AAB derlemesi + 16 KB doğrulaması.
+- Sıradaki: yerel izin/ONNX/Gmail çıkarma (docs/play_hazirlik.md "yapılacak"), PL13.
 - Test: `flutter test test/play_build_test.dart --reporter failures-only` (+ `--dart-define=NOTLAR_PLAY=true`).

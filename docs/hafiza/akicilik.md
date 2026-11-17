@@ -190,3 +190,7 @@ Tam plan: `docs/arsiv/planlar/HIZ_PLANI.md`. Bütçe senaryoları (S1…) tablos
   → saniye değişimi yalnız boyama; `Semantics(label)` süreyi okur. Bekçi `test/listening_clock_test.dart`
   (saniye değişimi 0 dizilme). DERS: bütçe testinde ölçülen pencereye gerçek saate bağlı metin
   girerse sonuç makine hızına bağlı olur — zamanlayıcıyla değişen metni dizilme sınırı arkasına al.
+- **Uygulama içi hız günlüğü (PL12, 2026-11-17):** `lib/core/utils/frame_timing_log.dart` — `FrameTiming` halka
+  tamponu (600 kare), özet ortanca/p90 build+raster + takılan kare (bütçe = ekran Hz'i). Yalnız `kProfileMode` ya da
+  `--dart-define=NOTLAR_HIZ_GUNLUGU=true`; görünür yer Ayarlar → Uygulama sürümü altı (teşhis satırı, dokun =
+  tazele). Release'te `enabled` const false → `addTimingsCallback` hiç çağrılmaz (bekçi `test/frame_timing_log_test.dart`).
