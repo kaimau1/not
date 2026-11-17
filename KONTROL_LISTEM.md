@@ -311,11 +311,11 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Karar vermen gerekenler
 
-- [ ] **33. Yeni el yazısı kayıt biçimi** — hızlı ve küçük kayıt için hazır ama YAZMA kapalı; açmak için önce telefonda ölçüm, sonra bütün cihazlar güncel olunca konsolda bayrak (30. madde). Şu an: kapalı (en güvenli). Açmak istersen "el yazısı v2'yi aç" de.
+- [x] **33. (KARAR 2026-11-17: tablette ölçülüp karar verilecek (şimdilik kapalı)) Yeni el yazısı kayıt biçimi** — hızlı ve küçük kayıt için hazır ama YAZMA kapalı; açmak için önce telefonda ölçüm, sonra bütün cihazlar güncel olunca konsolda bayrak (30. madde). Şu an: kapalı (en güvenli). Açmak istersen "el yazısı v2'yi aç" de.
 - [ ] **34. Kalem ucu tahmini ve parmağa ayrı araç** — Kalem ucu tahmini: 14 Kasım'da "yalnız parmak aracı olsun" dedin, tahmin YAZILMADI. Parmak aracı: YAZILDI (kalem ayarlarında ve Ayarlar → Kalem'de "Parmak: Kaydırır · Çizer · Siler"), tablette denenmedi → 41. madde. Siler'deyken tek parmak kaydırmaz (iki parmakla kaydır/yakınlaştır); istemezsen söyle.
-- [ ] **35. Birden çok sabit ek** — seçenekler: sekme / yan yana / tek. Şu an: tek sabit ek. Değiştirmek istersen hangisini istediğini söyle.
-- [ ] **36. Hatırlatıcı ipucu** — alarm izni kapalıyken Ayarlar'da uyarı var; ilk hatırlatıcıyı kurarken ayrıca ipucu çıksın mı? Şu an: çıkmıyor.
-- [ ] **37. Ana ekranda tek elle arama** — yeni not düğmesi zaten sağ altta; arama kutusu üstte. Alta bir arama kısayolu ister misin? Şu an: yok.
-- [ ] **38. Bulutta hız ölçümü** — her sürüm öncesi otomatik emülatör ölçümü kurulsun mu (yaklaşık 1 saat ve CI kotası)? Şu an: yok, ölçüm telefonda yapılıyor.
-- [ ] **39. Sabit ek çubuğu yazı en büyükken** — en büyük yazı boyunda sabit PDF çubuğu taşarsa küçültelim mi, kaydıralım mı? Şu an: taşma görülürse sen söyleyince.
+- [x] **35. (KARAR 2026-11-17: tek sabit ek kalıyor) Birden çok sabit ek** — seçenekler: sekme / yan yana / tek. Şu an: tek sabit ek. Değiştirmek istersen hangisini istediğini söyle.
+- [x] **36. (KARAR 2026-11-17: ipucu eklenecek (PLAN 1.0)) Hatırlatıcı ipucu** — alarm izni kapalıyken Ayarlar'da uyarı var; ilk hatırlatıcıyı kurarken ayrıca ipucu çıksın mı? Şu an: çıkmıyor.
+- [x] **37. (KARAR 2026-11-17: yok) Ana ekranda tek elle arama** — yeni not düğmesi zaten sağ altta; arama kutusu üstte. Alta bir arama kısayolu ister misin? Şu an: yok.
+- [x] **38. (KARAR 2026-11-17: yok) Bulutta hız ölçümü** — her sürüm öncesi otomatik emülatör ölçümü kurulsun mu (yaklaşık 1 saat ve CI kotası)? Şu an: yok, ölçüm telefonda yapılıyor.
+- [x] **39. (KARAR 2026-11-17: taşarsa etiketler kısalacak (PLAN 1.0)) Sabit ek çubuğu yazı en büyükken** — en büyük yazı boyunda sabit PDF çubuğu taşarsa küçültelim mi, kaydıralım mı? Şu an: taşma görülürse sen söyleyince.
 - [x] **40. Hız ölçümünün karşılaştırma tabanı yenilendi** (14 Kasım, P60) — sebep doğrulandı: ölçüm telefonundaki deneme notları yeniden kurulunca ilk kart PDF'li not olmuştu, ölçüm yanlış notu açıyordu (not açma/klavye/yazma/kapatma ~3 kat yavaş görünüyordu). Telefondaki ölçüm verisi sıfırdan kuruldu, ölçüm aracı artık deneme notlarını atlıyor; aynı sürüm iki kez ölçülüp taban buna göre yeniden alındı. Senin yapacağın bir şey yok. Not: içe aktarma ilk denemede 240 notun 67'sini sessizce atladı, ikinci içe aktarma tamamladı — ayrı iş olarak açıldı.

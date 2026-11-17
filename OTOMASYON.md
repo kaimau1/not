@@ -39,6 +39,8 @@ dokunma, misafir hesap, tablette telefon düzeni — `.claude/skills/ab-olcum/SK
 
 ## Kuyruk
 
+**GÜNCEL SIRA (kullanıcı 2026-11-17 akşam): `PLAN.md` §1.0 "Sıra" geçerlidir; aşağıdaki eski SIRA/ÖNCELİK satırları tarihçedir. P61 kalanı = PLAN T12 + T16 (tablette); cihaz = tablet.**
+
 Durum: `bekliyor` · `sürüyor` · `bitti` · `takıldı: <neden>` · `cihaz bekliyor`.
 
 Biten paketler: P01–P20, P23–P59 (P21/P53 → P22'ye katıldı; P44 → P43). Ayrıntı git geçmişinde (`git log -S '| P43 |' -- OTOMASYON.md`) ve `docs/arsiv/planlar/KUYRUK_AYRINTI.md`. Son satırların "sabah bakılacak"ları `KONTROL_LISTEM.md` 8/40 ve `PLAN.md` (C)'ye taşındı (P53, 2026-11-14).

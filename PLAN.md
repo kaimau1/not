@@ -1,8 +1,10 @@
-# PLAN — TEK PLAN (2026-11-17; P22/P53 birleşimi + 16/17 Kasım raporları + kasma envanteri)
+# PLAN — TEK PLAN (2026-11-17 akşam; P22/P53 + 15/16/17 Kasım raporları + kasma envanteri + P61 keşif turu + OTOMASYON kuyruğu + KONTROL kararları)
 
 **Bu dosya tek plandır.** Ayrıntı kaynakları (yalnız okuma, iş buradan seçilir):
 `docs/rapor_2026-11-16_beyin_firtinasi.md` (16K), `docs/rapor_2026-11-17_senkron_lite_pro_yazim.md`
-(17K), `docs/perf/kasma_envanteri.md` (K-xx). Bitmiş (`[x]`) maddeler burada tutulmaz (git'te).
+(17K), `docs/perf/kasma_envanteri.md` (K-xx), `docs/rapor_2026-11-15.md` (15K), keşif turu
+`docs/kesif_turu_2026-11-14.md` (KT-xx; dal `oto/P61-kesif-turu`, bu planla main'e alındı).
+OTOMASYON.md Kuyruğu'ndaki açık satırlar (P61, K32, K34) buraya taşındı; Kuyruk yalnız yürütme durumu tutar. Bitmiş (`[x]`) maddeler burada tutulmaz (git'te).
 Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/planlar/`.
 
 ## 0. 17 Kasım oturumunda BİTENLER (main'e `[apk]` ile girdi; cihazda doğrulanmadı)
@@ -21,18 +23,54 @@ Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/pla
 
 ## 1. SIRADAKİ İŞLER (öncelik sırasıyla)
 
+### 1.0 KARAR (kullanıcı, 2026-11-17 akşam) — sormadan uygula
+- **Cihaz:** test telefonu yerine **tablet** bağlanacak. Cihazlı işler (T1, T2, T4, T8, T9, T13,
+  T16) tablette koşar; tablet + web + kalem kontrolleri (KONTROL "Tablette bak", "Bilgisayarda bak",
+  K32 yan yana, K34 parmak aracı, dolma kalem, 1 GB PDF) aynı turda biter. Ölçüm tabanı tablette
+  yeniden alınır (telefon tabanıyla karşılaştırılmaz).
+- **S1 "yalnız değişeni dinle": doğrudan yapılır** (1.4/1 ilk büyük faz). Şartlar kalkmadı: önce
+  yerel tam yedek, geri alınabilir uzaktan bayrak (varsayılan kapalı → iki cihaz testinden sonra açık),
+  `rules-test` yeşil, iki cihaz (tablet + web) eşitleme testleri.
+- **Dondurma (K-O1) KALKTI.** 1.4'teki büyük fazlar sırayla açılır; oturum = bir faz, `[apk]` başına
+  en çok 5 görünür değişiklik ve hız kapıları sürer. HE-4 ve AL-2 bu fazların içinde (1.1/7 kapandı).
+- **Keşif turu zevk kararları yürütücüde:** KT-2 masaüstünde levha ortada en çok 560 dp; KT-10 Not
+  kilidi ayrı "Güvenlik" bölümü; KT-8 masaüstü geri alma duraklamada adım (yazım grubu ~1 sn
+  sessizlik); KT-1 toast'lar kuyrukta tek tek, arama çubuğunu örtmeyecek yerde. (1.1/12 kapandı)
+- **Model: tek uygulama + Lite/Pro katmanı.** Lite senkronu açık + aralıklı; Lite ekleri kullanıcının
+  kendi Drive'ına (S4); T11 depolama tavanı bu modele göre (Lite'ta Storage kapalı). (1.1/1, /3)
+- **Play'e ÇIKILIYOR — hazırlık başlasın** (eski "çıkmıyoruz" kalktı). 1.4/5 Lite/Pro + Play yolu
+  açılır; Play'e özgü kalan kararlar (ad, hesap türü, niş, AI katmanı, fiyat, Lite cihaz sınırı)
+  o fazın BAŞINDA sorulur. Park'taki Billing/OAuth yayını/gizlilik/konum beyanı/mağaza işleri bu
+  faza girer. Kişisel APK (`NOTLAR_KISISEL=1`) yolu Play sürümü çıkana dek sürer.
+- **Yazım denetimi v3 varsayılanı "Yalnız göster"** (altı çizili, dokununca öneri; kendiliğinden
+  düzeltme yok); Y-0 ölçüm seti faz başında. (1.1/6)
+- **KONTROL küçük kararları yürütücüde:** 33 yeni el yazısı kayıt biçimi tablette ölçülür, sonra
+  karar (şimdilik kapalı); 35 tek sabit ek kalır; 36 ilk hatırlatıcıda alarm izni kapalıysa ipucu
+  EKLENİR; 37 alt arama kısayolu yok; 38 bulutta emülatör ölçümü yok; 39 en büyük yazıda sabit ek
+  çubuğu taşarsa etiketler kısalır. (1.1/13 kapandı)
+
+**Sıra (önerim, yürütücü bunu izler):** (1) telefonsuz T3, T5, T7, T10, T12, T14, T15 + KONTROL 36/39
+→ (2) tablet bağlanınca T13 → T16 + T1 (tablet tabanı) → T2/T4/T8/T9 → (3) S1 → S4 → (4) Play
+hazırlığı + Lite/Pro → (5) yazım v3, hızlı ekle, akıllı liste, güven/büyüme.
+
 ### 1.1 Senden karar bekleyenler (karar gelmeden başlamaz)
-1. Model: tek uygulama + Lite/Pro katmanı (önerim) mi, iki uygulama mı? (17K §2.1)
-2. Lite senkronu açık + aralıklı (önerim); cihaz sınırı 2 mi sınırsız mı? (17K §2.2)
-3. Lite ekleri kullanıcının kendi Drive'ına (önerim)? (17K §1.3 S4)
-4. **S1 "yalnız değişeni dinle"** ayrı faz olarak başlasın mı? (okumayı ~30 kat düşürür; en büyük
-   maliyet kazancı; risk yüksek — yedek, iki cihaz testleri, geri alınabilir bayrak şartı) (17K §1.3)
+1. ~~Model~~ → KARAR 1.0: tek uygulama + katman.
+2. Lite senkronu açık + aralıklı (KARAR 1.0); **cihaz sınırı 2 mi sınırsız mı?** — Play fazı başında (17K §2.2)
+3. ~~Lite ekleri~~ → KARAR 1.0: kullanıcının Drive'ı.
+4. ~~S1 ayrı faz mı~~ → KARAR 1.0: doğrudan yapılır.
 5. Yıllık fiyat aralığı (maliyet hesabı netleşsin). (17K §2.3)
-6. Yazım: Y-0 ölçüm seti başlasın mı; Y-4 varsayılan "Yalnız göster" mi? (17K §3)
-7. Hızlı ekle HE-4 "tek giriş" ve akıllı liste AL-2 `listKind` alanı dondurmadan çıksın mı? (17K §4–5)
-8. Play'e çıkış kararı ("çıkmıyoruz" sürüyor mu?), ad, hesap türü, niş, AI katmanı, fiyat (16K §9)
-9. İkinci test telefonu (60/120 Hz ayrımı için) (16K §2.2, K-21)
-10. Dondurma (K-O1) kalkıyor mu? (CLAUDE.md "sabah bakılacak")
+6. ~~Yazım~~ → KARAR 1.0: Yalnız göster.
+7. ~~HE-4 / AL-2 dondurmadan çıksın mı~~ → KARAR 1.0: dondurma kalktı.
+8. Play'e ÇIKILIYOR (KARAR 1.0); **ad, hesap türü, niş, AI katmanı, fiyat** — Play fazı başında (16K §9)
+9. İkinci test cihazı (60/120 Hz ayrımı için) — şimdilik tablet (16K §2.2, K-21)
+10. ~~Dondurma~~ → KARAR 1.0: kalktı.
+11. ~~Test telefonu~~ → KARAR 1.0: tablet.
+12. ~~Keşif turu zevk kararları~~ → KARAR 1.0 (yürütücü): masaüstü levha genişliği/yeri (KT-2), Not kilidi ayrı "Güvenlik"
+    bölümü (KT-10), masaüstü Ctrl+Z adımı kelime mi duraklama mı (KT-8), ipucu toast'ı masaüstünde
+    yeri/sıklığı (KT-1).
+13. ~~KONTROL kararları~~ → KARAR 1.0 (yürütücü): 33 yeni el yazısı kayıt biçimi (YAZMA kapalı), 35 birden çok sabit ek
+    (sekme/yan yana/tek), 36 ilk hatırlatıcıda alarm izni ipucu, 37 ana ekranda alt arama kısayolu,
+    38 bulutta emülatör hız ölçümü (CI kotası), 39 sabit ek çubuğu en büyük yazıda.
 
 ### 1.2 Senin konsolda yapacakların (5–15 dk, kod yok)
 - **Google Cloud bütçe uyarısı 5 / 20 / 50 $** (e-posta + telefon) — maliyet korkuluğu 1, en acil.
@@ -55,6 +93,12 @@ Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/pla
 | T9 | Kısa geçişlerdeki `TweenAnimationBuilder`'lar ve beliriş animasyonları (`PopIn`, `RevealUp`…): önce ölç, kurulum > 5 ise düzelt (bu oturumda bilerek dokunulmadı: `child` zaten yeniden kurulmuyor) | K-37, K-38 kalanı | A/B |
 | T10 | Görsel açıklama levhası: kapanış animasyonunda atılmış denetleyici kullanılıyor (debug uyarısı; S53 yazılırken görüldü) | `attachment_actions.dart` `showCaptionSheet` | hayır |
 | T11 | Senkron korkuluk 6: depolama tavanı sunucuda (ya da Lite'ta Storage kapalı) — 1.1/3 kararına bağlı | 17K §1.4 | hayır |
+
+| T12 | Keşif turu "kendimiz yaparız" 8 maddesi: KT-7 hesap levhası 2 satır, KT-5 "Sabitten çıkar", KT-3 dar ekranda gün adı + FAB boşluğu, KT-4 hızlı ekle levhası yazı 1.3, KT-9 ortak boş durum, KT-12 arama ipucu kısalt, KT-6 çevrimdışı AI şeridi, KT-1 toast kuyruğu | KT, P61 (3) | hayır (KT-1/KT-4 A/B) |
+| T13 | Ölçüm aracı onarımı: `sablon` evresi atlanıyor, `bicim/kalem/duzen` hiç koşmadı, `acilis` 2 kare; altın taban yeni veriyle (`--altin-yaz`) — T1'in ön koşulu | 15K §4 | evet |
+| T14 | Çöp kutusunda anlamca arama ↔ önbellek temizliği döngüsü | 15K §4 | hayır |
+| T15 | Şablon önizlemesinin ölü liste dalını (TemplateComposer liste dalı + `showNoteTemplateSheet`) testleriyle birlikte sil | (C) son madde | hayır |
+| T16 | P61 canlı tur — TABLETTE (adb/uiautomator, KT-13…) + web + kalem kontrolleri; bulguların düzeltilmesi; KT-1/2/8/10 KARAR 1.0'a göre | P61 (2)(3) | evet (tablet) |
 
 **Bilerek yapılmayanlar:** kuralda yazma hız sınırı (17K §1.4-4) — reddedilen yazım
 çevrimdışı kuyrukta YEREL değişikliği geri alır, veri kaybı riski; S1 kararıyla birlikte
@@ -93,7 +137,7 @@ ucuz, ölçülmeden dokunulmadı.
 - Açılış süresi kalanı (motor + Activity) — kod işi yok — F68.5
 - Vulkan'lı cihazda ölçüm — cihaz yok — AKICILIK F27.3, F19.F4
 - Kart dizini + gövde ayrı belge (senkron yükü) — KARAR B, veri göçü güvenlik şartlı — AKICILIK F22.4, YORUM F54.3
-- Play'e çıkış (Billing, OAuth yayına, gizlilik, konum beyanı, mağaza) — karar "çıkmıyoruz" — F18.27, F18.28, F19.D1–D7, YOL_HARITASI F4.10
+- ~~Play'e çıkış~~ → 1.4/5'e taşındı (KARAR 1.0: çıkılıyor) — F18.27, F18.28, F19.D1–D7, YOL_HARITASI F4.10
 - Taşınan düğme ipucu, uygulama içi sürüm notu — tek kullanıcı, ertelendi — YORUM F57.1, F57.2
 - Önce/sonra görsel karşılaştırma dosyası — DENEYIM F80.5
 - Kare ölçümü CI işi (emülatör, sonuçsuz kaldı) — F19.B6, KULLANICI_DENEYIMI F17.1, HIZ F83.3
