@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/widgets/empty_state.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folder_activity.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
@@ -92,4 +93,53 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  // KT-9 (keşif turu 2026-11-14): hiç klasör yokken tek satır sol üstte
+  // yazıyordu; öbür boş ekranlar (ana, arşiv, çöp) ortak [EmptyState]
+  // (simge + başlık + açıklama, ortalı). Klasörler de aynı bileşen.
+  testWidgets('hiç klasör yokken ortak boş hâl (KT-9)', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final container = ProviderContainer(
+      retry: (_, _) => null,
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        currentUidProvider.overrideWithValue('ben'),
+        notesRepositoryProvider.overrideWithValue(null),
+        foldersRepositoryProvider.overrideWithValue(null),
+        notesStreamProvider.overrideWith((ref) => Stream.value(const [])),
+        foldersStreamProvider.overrideWith((ref) => Stream.value(const [])),
+        sharedFolderRefsProvider.overrideWith(
+          (ref) => Stream.value(const <SharedFolderRef>[]),
+        ),
+        folderUnreadProvider.overrideWith((ref, key) => 0),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          locale: Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: FoldersScreen(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    final empty = find.byType(EmptyState);
+    expect(empty, findsOneWidget);
+    expect(
+      find.descendant(of: empty, matching: find.text('Burada henüz klasör yok')),
+      findsOneWidget,
+    );
+    // Ortada: boş hâlin yatay merkezi ekranın merkezinde.
+    expect(tester.getCenter(find.text('Burada henüz klasör yok')).dx, 206);
+    expect(tester.takeException(), isNull);
+  });
 }

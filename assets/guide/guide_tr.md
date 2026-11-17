@@ -226,7 +226,8 @@ En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğm
 - **Sesli dinle ve dikte:** cihaz sesi, Türkçe ses ya da yapay zekâ sesi; okuma hızı ve tonu; dikte mikrofonunun kullanım şekli.
 - **İzinler:** mikrofon, kamera, bildirim, konum — durumu ve ayar ekranları.
 - **Senkron:** Google Drive bağlantısı ve Drive kullanımı, otomatik yükleme sınırı, bu cihazdaki önbellek, yedekleme.
-- **Hesap:** çıkış, hesabı silme, not kilidi, **uygulama kilidi** (açılışta ve arka plandan dönüşte sorar; isteğe bağlı "son uygulamalarda gizle"); **Tam yedek al** (bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosya), **Yedekten geri yükle** (iki kez yüklense de not çoğalmaz) ve **Başka uygulamadan içe aktar** (Google Keep Takeout, Markdown/txt, Evernote); gizlilik politikası ve lisanslar.
+- **Güvenlik:** not kilidi ve **uygulama kilidi** (açılışta ve arka plandan dönüşte sorar; isteğe bağlı "son uygulamalarda gizle").
+- **Hesap:** çıkış, hesabı silme; **Tam yedek al** (bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosya), **Yedekten geri yükle** (iki kez yüklense de not çoğalmaz) ve **Başka uygulamadan içe aktar** (Google Keep Takeout, Markdown/txt, Evernote); gizlilik politikası ve lisanslar.
 
 ## İpuçları {#tips}
 - Geri tuşu önce açık önizlemeyi, seçimi ya da levhayı kapatır; not ancak sonra kapanır.

@@ -12,6 +12,8 @@ import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/friends/data/friends_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
+import 'package:notlar/features/notes/presentation/lock/note_lock_ui.dart';
+import 'package:notlar/features/settings/presentation/app_lock.dart';
 import 'package:notlar/features/settings/presentation/settings_screen.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -143,6 +145,34 @@ void main() {
       final y = tester.getTopLeft(find.byWidget(e.widget)).dy;
       expect(y, lessThanOrEqualTo(delete.dy));
     }
+    expect(tester.takeException(), isNull);
+  });
+
+  // KT-10 (keşif turu 2026-11-14; KARAR 1.0): "Not kilidi" ve "Uygulama
+  // kilidi" Hesap başlığı altındaydı; ayrı "Güvenlik" bölümünde durur.
+  testWidgets('kilitler ayrı Güvenlik bölümünde, Hesap\'ta değil (KT-10)', (
+    tester,
+  ) async {
+    await _pumpSettings(tester, guest: false, area: 'account');
+    final account = find.byKey(const ValueKey('settings-area-account'));
+    expect(
+      find.descendant(of: account, matching: find.byType(NoteLockSettingsTile)),
+      findsNothing,
+    );
+    await tester.pumpWidget(const SizedBox()); // alan seçimi state'te
+    await _pumpSettings(tester, guest: false, area: 'security');
+    final security = find.byKey(const ValueKey('settings-area-security'));
+    expect(
+      find.descendant(
+        of: security,
+        matching: find.byType(NoteLockSettingsTile),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: security, matching: find.byType(AppLockSettingsTile)),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

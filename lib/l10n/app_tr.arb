@@ -11,7 +11,7 @@
       }
     }
   },
-  "searchHint": "Notlarda ara...",
+  "searchHint": "Ara...",
   "filterAll": "Tümü",
   "filterText": "Metin",
   "filterChecklist": "Liste",
@@ -115,7 +115,7 @@
   },
   "removeAttachment": "Eki kaldır",
   "pin": "Sabitle",
-  "unpin": "Sabitlemeyi kaldır",
+  "unpin": "Sabitten çıkar",
   "delete": "Sil",
   "color": "Renk",
   "aiTitle": "Yapay zekâ",
@@ -454,6 +454,8 @@
   "permAutoStartInfo": "Telefon yeniden başlayınca hatırlatıcılar uygulamayı açmadan da kurulsun: Notlar için “Otomatik başlatma”yı aç",
   "autoStartHint": "Xiaomi: telefon yeniden başlayınca da çalması için Notlar’a “Otomatik başlatma” izni ver",
   "autoStartHintAction": "Aç",
+  "exactAlarmHint": "Alarm izni kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir",
+  "exactAlarmHintAction": "İzni aç",
   "videoTooBigForAi": "Video yapay zekâya göndermek için çok büyük ({mb} MB). Daha kısa çek.",
   "@videoTooBigForAi": {
     "placeholders": {
@@ -1760,6 +1762,8 @@
   "loginFeatureInkBody": "El yazısıyla not al, PDF ve slaytların üstüne yaz.",
   "foldersTitle": "Klasörler",
   "foldersEmpty": "Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.",
+  "foldersEmptyTitle": "Burada henüz klasör yok",
+  "foldersEmptyHint": "Bir klasör oluşturup notlarını düzenle.",
   "folderColor": "Renk",
   "folderColorAuto": "Otomatik",
   "foldersMine": "Klasörlerim",
@@ -1873,6 +1877,8 @@
   "settingsGroupBackup": "Yedek",
   "settingsGroupSession": "Oturum",
   "settingsGroupLock": "Kilit",
+  "settingsSecurityTitle": "Güvenlik",
+  "settingsSecuritySummary": "Not kilidi, uygulama kilidi",
   "settingsGroupAbout": "Hakkında",
   "settingsGroupVersion": "Sürüm",
   "settingsCardsHeader": "Kartlar ve listeler",

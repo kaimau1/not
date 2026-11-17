@@ -92,6 +92,43 @@ void main() {
     }
   }
 
+  // KONTROL 39 (KARAR 2026-11-17: taşarsa etiketler kısalır): en büyük yazı
+  // kademesi (1,35) ve "sistem yazısını izle"nin tavanı (2,0) — sabit PDF
+  // çubuğu ve ⋮ levhası her genişlikte taşmaz; yazılı "Not al" sığmazsa
+  // simgeye döner.
+  const pdf = Attachment(
+    id: 'p',
+    kind: AttachmentKind.pdf,
+    fileName: 'belge.pdf',
+    mimeType: 'application/pdf',
+    pinHeight: 260,
+  );
+  for (final scale in [1.35, 2.0]) {
+    for (final width in [320.0, 393.0, 600.0, 800.0]) {
+      testWidgets('pdf çubuğu $width dp × $scale yazıda taşmaz', (
+        tester,
+      ) async {
+        await pump(tester, pdf, width: width, textScale: scale);
+        expect(tester.takeException(), isNull);
+        final noteAt = find.byKey(const ValueKey('pinned-note-at'));
+        if (noteAt.evaluate().isNotEmpty) {
+          final bar = tester.getRect(
+            find.byKey(const ValueKey('pinned-media-bar')),
+          );
+          final r = tester.getRect(noteAt);
+          expect(r.right, lessThanOrEqualTo(bar.right + 0.5));
+          expect(r.height, lessThanOrEqualTo(bar.height + 0.5));
+        }
+        final menu = find.byKey(const ValueKey('pinned-media-menu'));
+        if (menu.evaluate().isNotEmpty) {
+          await tester.tap(menu);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+        }
+      });
+    }
+  }
+
   testWidgets('✏ editörün kalem kipi açıkken de görünür, kapatınca haber '
       'verir', (tester) async {
     var off = 0;

@@ -228,7 +228,8 @@ At the top are two cards: **User guide** and **Personalise** (which buttons and 
 
 - **Permissions:** microphone, camera, notifications, location — status and system settings.
 - **Sync:** Google Drive connection and Drive usage, the automatic upload limit, the cache on this device, backups.
-- **Account:** sign out, delete account, note lock, **app lock** (asks on launch and when returning from the background; optional "hide in recent apps"); **Full backup** (all notes with attachments, drawings, bubbles and folders in one file), **Restore from backup** (restoring twice doesn't duplicate) and **Import from other apps** (Google Keep Takeout, Markdown/txt, Evernote); privacy policy and licences.
+- **Security:** note lock and **app lock** (asks on launch and when returning from the background; optional "hide in recent apps").
+- **Account:** sign out, delete account; **Full backup** (all notes with attachments, drawings, bubbles and folders in one file), **Restore from backup** (restoring twice doesn't duplicate) and **Import from other apps** (Google Keep Takeout, Markdown/txt, Evernote); privacy policy and licences.
 
 ## Tips {#tips}
 - The back button first closes an open preview, selection or sheet; only then the note.

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' show Locale;
 
+import 'package:flutter/widgets.dart' show StringCharacters;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/widgets/action_menu_sheet.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
@@ -162,5 +163,23 @@ void main() {
       canOpenSide: true,
     );
     expect(flat(editor).map((e) => e.$2), isNot(contains('side')));
+  });
+
+  // KT-5 (keşif turu 2026-11-14): hızlı satır düğmesinin adı 12 sp, düğme
+  // ~60 dp (360 dp telefonda 5 düğme). "Sabitlemeyi kaldır" kelime ortasından
+  // bölünüyordu ("Sabitlemey / i kaldır"). Bekçi: hızlı satırdaki hiçbir
+  // kelime 9 harften uzun değil (sabitli + yıldızlı not = en uzun adlar).
+  test('KT-5: hızlı satır adlarında kelime 9 harfi geçmez', () {
+    final pinned = note.copyWith(pinned: true, starred: true);
+    final quick = noteMenuModel(
+      l10n,
+      pinned,
+      surface: NoteMenuSurface.card,
+    ).quick;
+    for (final a in quick) {
+      for (final w in a.label.split(' ')) {
+        expect(w.characters.length, lessThanOrEqualTo(9), reason: a.label);
+      }
+    }
   });
 }

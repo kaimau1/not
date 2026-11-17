@@ -24,7 +24,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get searchHint => 'Notlarda ara...';
+  String get searchHint => 'Ara...';
 
   @override
   String get filterAll => 'Tümü';
@@ -199,7 +199,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pin => 'Sabitle';
 
   @override
-  String get unpin => 'Sabitlemeyi kaldır';
+  String get unpin => 'Sabitten çıkar';
 
   @override
   String get delete => 'Sil';
@@ -1034,6 +1034,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get autoStartHintAction => 'Aç';
+
+  @override
+  String get exactAlarmHint =>
+      'Alarm izni kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir';
+
+  @override
+  String get exactAlarmHintAction => 'İzni aç';
 
   @override
   String videoTooBigForAi(int mb) {
@@ -3801,6 +3808,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.';
 
   @override
+  String get foldersEmptyTitle => 'Burada henüz klasör yok';
+
+  @override
+  String get foldersEmptyHint => 'Bir klasör oluşturup notlarını düzenle.';
+
+  @override
   String get folderColor => 'Renk';
 
   @override
@@ -4095,6 +4108,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsGroupLock => 'Kilit';
+
+  @override
+  String get settingsSecurityTitle => 'Güvenlik';
+
+  @override
+  String get settingsSecuritySummary => 'Not kilidi, uygulama kilidi';
 
   @override
   String get settingsGroupAbout => 'Hakkında';

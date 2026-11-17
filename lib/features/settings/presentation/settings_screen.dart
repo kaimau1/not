@@ -223,7 +223,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: l10n.account,
         summary: _accountSummary(l10n),
         keywords: 'cikis hesap sil e-posta',
-        // P62 PA2 (plan §4): kimlik + şerit (kart dışı) · Oturum · Kilit ·
+        // P62 PA2 (plan §4): kimlik + şerit (kart dışı) · Oturum · (Kilit
+        // KT-10 ile ayrı "Güvenlik" bölümüne taşındı) ·
         // Hakkında · en altta geri dönüşsüz "Hesabı sil" (sabah bakılacak:
         // eskiden ikinci sıradaydı).
         rows: [
@@ -238,17 +239,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             group: l10n.settingsGroupSession,
             title: l10n.signOut,
             keywords: 'cikis oturum',
-          ),
-          _SettingRow(
-            const NoteLockSettingsTile(),
-            title: l10n.lockMethodTitle,
-            keywords: 'kilit sifre desen parmak izi gizlilik',
-            group: l10n.settingsGroupLock,
-          ),
-          _SettingRow(
-            const AppLockSettingsTile(),
-            title: l10n.appLockTitle,
-            keywords: 'uygulama kilidi acilis kilit gizle son uygulamalar',
           ),
           _SettingRow(
             const _LegalRow(licenses: false),
@@ -282,6 +272,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             group: '',
             title: l10n.deleteAccount,
             keywords: 'hesap sil veri sil',
+          ),
+        ],
+      ),
+      // GÜVENLİK AYRI BÖLÜM (KARAR 1.0, keşif turu KT-10, 2026-11-17): not
+      // kilidi ve uygulama kilidi "Hesap" başlığı altında, gizlilik/sürüm
+      // satırlarının arasında duruyordu; kilit bir güvenlik ayarı.
+      _Area(
+        id: 'security',
+        icon: Icons.lock_outline,
+        title: l10n.settingsSecurityTitle,
+        summary: l10n.settingsSecuritySummary,
+        keywords: 'guvenlik kilit sifre desen parmak izi gizlilik',
+        rows: [
+          _SettingRow(
+            const NoteLockSettingsTile(),
+            title: l10n.lockMethodTitle,
+            keywords: 'kilit sifre desen parmak izi gizlilik',
+          ),
+          _SettingRow(
+            const AppLockSettingsTile(),
+            title: l10n.appLockTitle,
+            keywords: 'uygulama kilidi acilis kilit gizle son uygulamalar',
           ),
         ],
       ),
@@ -1123,7 +1135,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (byId[id] != null) byId[id]!,
     ];
     final groups = [
-      (title: l10n.settingsGroupAccount, areas: pick(['account', 'friends'])),
+      (
+        title: l10n.settingsGroupAccount,
+        areas: pick(['account', 'security', 'friends']),
+      ),
       (
         title: l10n.settingsGroupApp,
         areas: pick([

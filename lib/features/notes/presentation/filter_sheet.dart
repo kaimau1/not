@@ -40,8 +40,11 @@ Future<void> showFilterSheet(BuildContext context) =>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
+      // Geniş ekranda ortada, en çok 560 dp (KT-2): yalnız maxHeight
+      // verilince M3'ün genişlik sınırı kalkıyor, levha 1240 px'e yayılıyordu.
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.76,
+        maxWidth: kSheetMaxWidth,
       ),
       builder: (_) => const _FilterSheet(),
     );

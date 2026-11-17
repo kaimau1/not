@@ -24,7 +24,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchHint => 'Search notes...';
+  String get searchHint => 'Search...';
 
   @override
   String get filterAll => 'All';
@@ -1037,6 +1037,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoStartHintAction => 'Open';
+
+  @override
+  String get exactAlarmHint =>
+      'Alarm permission is off: reminders may fire a few minutes late';
+
+  @override
+  String get exactAlarmHintAction => 'Allow';
 
   @override
   String videoTooBigForAi(int mb) {
@@ -3806,6 +3813,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'No folders yet. Create one to organize your notes.';
 
   @override
+  String get foldersEmptyTitle => 'No folders here yet';
+
+  @override
+  String get foldersEmptyHint => 'Create one to organize your notes.';
+
+  @override
   String get folderColor => 'Color';
 
   @override
@@ -4102,6 +4115,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsGroupLock => 'Lock';
+
+  @override
+  String get settingsSecurityTitle => 'Security';
+
+  @override
+  String get settingsSecuritySummary => 'Note lock, app lock';
 
   @override
   String get settingsGroupAbout => 'About';

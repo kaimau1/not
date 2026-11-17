@@ -125,7 +125,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In tr, this message translates to:
-  /// **'Notlarda ara...'**
+  /// **'Ara...'**
   String get searchHint;
 
   /// No description provided for @filterAll.
@@ -437,7 +437,7 @@ abstract class AppLocalizations {
   /// No description provided for @unpin.
   ///
   /// In tr, this message translates to:
-  /// **'Sabitlemeyi kaldır'**
+  /// **'Sabitten çıkar'**
   String get unpin;
 
   /// No description provided for @delete.
@@ -1951,6 +1951,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Aç'**
   String get autoStartHintAction;
+
+  /// No description provided for @exactAlarmHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alarm izni kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir'**
+  String get exactAlarmHint;
+
+  /// No description provided for @exactAlarmHintAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzni aç'**
+  String get exactAlarmHintAction;
 
   /// No description provided for @videoTooBigForAi.
   ///
@@ -6830,6 +6842,18 @@ abstract class AppLocalizations {
   /// **'Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.'**
   String get foldersEmpty;
 
+  /// No description provided for @foldersEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Burada henüz klasör yok'**
+  String get foldersEmptyTitle;
+
+  /// No description provided for @foldersEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir klasör oluşturup notlarını düzenle.'**
+  String get foldersEmptyHint;
+
   /// No description provided for @folderColor.
   ///
   /// In tr, this message translates to:
@@ -7381,6 +7405,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kilit'**
   String get settingsGroupLock;
+
+  /// No description provided for @settingsSecurityTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güvenlik'**
+  String get settingsSecurityTitle;
+
+  /// No description provided for @settingsSecuritySummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not kilidi, uygulama kilidi'**
+  String get settingsSecuritySummary;
 
   /// No description provided for @settingsGroupAbout.
   ///

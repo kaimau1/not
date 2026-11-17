@@ -279,38 +279,64 @@ Future<AttachmentAction?> showAttachmentContextMenu(
 }
 
 /// Görsel açıklamasını yazma levhası. Boş dönerse açıklama kalkar; null = vazgeçti.
-Future<String?> showCaptionSheet(BuildContext context, String initial) {
-  final controller = TextEditingController(text: initial);
-  return showAppSheet<String>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (sheet) => SheetInsetPadding(
-      extra: 16,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: TextField(
-          key: const ValueKey('caption-sheet-field'),
-          controller: controller,
-          autofocus: true,
-          maxLength: Attachment.maxCaptionChars,
-          maxLines: 3,
-          minLines: 1,
-          textInputAction: TextInputAction.done,
-          decoration: InputDecoration(
-            hintText: sheet.l10n.imageCaptionHint,
-            suffixIcon: IconButton(
-              key: const ValueKey('caption-sheet-done'),
-              tooltip: MaterialLocalizations.of(sheet).okButtonLabel,
-              icon: const Icon(Icons.check),
-              onPressed: () => Navigator.pop(sheet, controller.text.trim()),
-            ),
+///
+/// T10 KÖK NEDEN: denetleyici burada kurulup gelecek bitince
+/// (`whenComplete`) atılıyordu; gelecek `pop` anında biter ama levha kapanış
+/// animasyonu boyunca alanı yeniden çizer — atılmış denetleyici kullanılıyordu
+/// ("used after being disposed"). Denetleyici artık levhanın KENDİ durumunda:
+/// rota ağaçtan kalkınca atılır.
+Future<String?> showCaptionSheet(BuildContext context, String initial) =>
+    showAppSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _CaptionSheet(initial: initial),
+    );
+
+class _CaptionSheet extends StatefulWidget {
+  const _CaptionSheet({required this.initial});
+
+  final String initial;
+
+  @override
+  State<_CaptionSheet> createState() => _CaptionSheetState();
+}
+
+class _CaptionSheetState extends State<_CaptionSheet> {
+  late final _controller = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SheetInsetPadding(
+    extra: 16,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: TextField(
+        key: const ValueKey('caption-sheet-field'),
+        controller: _controller,
+        autofocus: true,
+        maxLength: Attachment.maxCaptionChars,
+        maxLines: 3,
+        minLines: 1,
+        textInputAction: TextInputAction.done,
+        decoration: InputDecoration(
+          hintText: context.l10n.imageCaptionHint,
+          suffixIcon: IconButton(
+            key: const ValueKey('caption-sheet-done'),
+            tooltip: MaterialLocalizations.of(context).okButtonLabel,
+            icon: const Icon(Icons.check),
+            onPressed: () => Navigator.pop(context, _controller.text.trim()),
           ),
-          onSubmitted: (v) => Navigator.pop(sheet, v.trim()),
         ),
+        onSubmitted: (v) => Navigator.pop(context, v.trim()),
       ),
     ),
-  ).whenComplete(controller.dispose);
+  );
 }
 
 /// Görselin altındaki açıklama, her görünümde aynı stil (F40.7).
