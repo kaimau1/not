@@ -1,4 +1,5 @@
 import '../../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -43,34 +44,61 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
     return evaluateExpression(expr);
   }
 
-  void _append(String text) {
-    setState(() => _controller.text = _expression + text);
-  }
+  // TUŞ BAŞINA KURULUM YOK (T7/K-57, 2026-11-17): tuşlar yalnız
+  // denetleyiciyi günceller; ifade satırı ve sonuca bağlı düğmeler onu
+  // dinler, tuş takımı ([_pad]) aynı örnekle kalır. Eskiden her tuş
+  // `setState` ile 20 tuşu ve levhanın tamamını yeniden kuruyordu.
+  void _append(String text) => _controller.text = _expression + text;
 
   void _tapKey(String key) {
     switch (key) {
       case 'C':
-        setState(_controller.clear);
+        _controller.clear();
       case '⌫':
         if (_expression.isNotEmpty) {
-          setState(
-            () => _controller.text = _expression.substring(
-              0,
-              _expression.length - 1,
-            ),
-          );
+          _controller.text = _expression.substring(0, _expression.length - 1);
         }
       case '( )':
         _appendParen();
       case '=':
         final value = _value;
-        if (value != null) {
-          setState(() => _controller.text = formatCalcResult(value));
-        }
+        if (value != null) _controller.text = formatCalcResult(value);
       default:
         _append(key);
     }
   }
+
+  /// Tuş takımı: tema/dil değişince yeniden, tuşta değil.
+  Widget? _pad;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _pad = null;
+  }
+
+  Widget _keypad() => _pad ??= Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      for (final row in const [
+        ['C', '( )', '%', '÷'],
+        ['7', '8', '9', '×'],
+        ['4', '5', '6', '−'],
+        ['1', '2', '3', '+'],
+        ['⌫', '0', ',', '='],
+      ]) ...[
+        Row(
+          children: [
+            for (final key in row) ...[
+              Expanded(child: _buildKey(key)),
+              if (key != row.last) const SizedBox(width: 6),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+      ],
+    ],
+  );
 
   /// Açık parantez sayısına ve son karaktere göre ( ya da ) ekler.
   void _appendParen() {
@@ -93,101 +121,96 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final value = _value;
-    final hasExpression = _expression.trim().isNotEmpty;
-
     return SafeArea(
       child: SheetInsetPadding(
         extra: 16,
         child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _controller,
-              // Sistem klavyesi tuş takımını örtmesin: giriş yalnız tuşlardan.
-              readOnly: true,
-              showCursor: true,
-              onChanged: (_) => setState(() {}),
-              style: Theme.of(context).textTheme.titleLarge,
-              decoration: InputDecoration(
-                hintText: l10n.calcExpressionHint,
-                suffixIcon: hasExpression
-                    ? Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 12),
-                        child: Text(
-                          value == null
-                              ? l10n.calcInvalid
-                              : '= ${formatCalcResult(value)}',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: value == null
-                                    ? scheme.error
-                                    : scheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      )
-                    : null,
-                suffixIconConstraints: const BoxConstraints(
-                  
-                ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListenableBuilder(
+                listenable: _controller,
+                builder: (context, _) => _display(context),
               ),
-            ),
-            const SizedBox(height: 10),
-            for (final row in const [
-              ['C', '( )', '%', '÷'],
-              ['7', '8', '9', '×'],
-              ['4', '5', '6', '−'],
-              ['1', '2', '3', '+'],
-              ['⌫', '0', ',', '='],
-            ]) ...[
-              Row(
-                children: [
-                  for (final key in row) ...[
-                    Expanded(child: _buildKey(key)),
-                    if (key != row.last) const SizedBox(width: 6),
-                  ],
-                ],
+              const SizedBox(height: 10),
+              _keypad(),
+              const SizedBox(height: 4),
+              ListenableBuilder(
+                listenable: _controller,
+                builder: (context, _) => _actions(context),
               ),
-              const SizedBox(height: 6),
             ],
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                TextButton.icon(
-                  icon: const Icon(AppIcons.copy, size: 18),
-                  label: Text(l10n.copy),
-                  onPressed: value == null
-                      ? null
-                      : () async {
-                          await Clipboard.setData(
-                            ClipboardData(text: formatCalcResult(value)),
-                          );
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context)
-                              ..hideCurrentSnackBar()
-                              ..showMessage(l10n.copied);
-                          }
-                        },
-                ),
-                const Spacer(),
-                FilledButton.icon(
-                  icon: const Icon(Icons.playlist_add, size: 18),
-                  label: Text(l10n.addToNote),
-                  onPressed: value == null
-                      ? null
-                      : () => Navigator.pop(context, _insertText),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
+    );
+  }
+
+  /// İfade satırı ve canlı sonuç.
+  Widget _display(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final value = _value;
+    final hasExpression = _expression.trim().isNotEmpty;
+    return TextField(
+      controller: _controller,
+      // Sistem klavyesi tuş takımını örtmesin: giriş yalnız tuşlardan.
+      readOnly: true,
+      showCursor: true,
+      style: Theme.of(context).textTheme.titleLarge,
+      decoration: InputDecoration(
+        hintText: l10n.calcExpressionHint,
+        suffixIcon: hasExpression
+            ? Padding(
+                padding: const EdgeInsetsDirectional.only(end: 12),
+                child: Text(
+                  value == null
+                      ? l10n.calcInvalid
+                      : '= ${formatCalcResult(value)}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: value == null ? scheme.error : scheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            : null,
+        suffixIconConstraints: const BoxConstraints(),
       ),
+    );
+  }
+
+  /// Kopyala / Nota ekle: geçerli sonuç varken etkin.
+  Widget _actions(BuildContext context) {
+    final l10n = context.l10n;
+    final value = _value;
+    return Row(
+      children: [
+        TextButton.icon(
+          icon: const Icon(AppIcons.copy, size: 18),
+          label: Text(l10n.copy),
+          onPressed: value == null
+              ? null
+              : () async {
+                  await Clipboard.setData(
+                    ClipboardData(text: formatCalcResult(value)),
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showMessage(l10n.copied);
+                  }
+                },
+        ),
+        const Spacer(),
+        FilledButton.icon(
+          icon: const Icon(Icons.playlist_add, size: 18),
+          label: Text(l10n.addToNote),
+          onPressed: value == null
+              ? null
+              : () => Navigator.pop(context, _insertText),
+        ),
+      ],
     );
   }
 
@@ -198,9 +221,8 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
 
     final Widget child = Text(
       key,
-      style: Theme.of(
-        context,
-      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(context).textTheme.titleMedium
+          ?.copyWith(fontWeight: FontWeight.w600),
     );
     final style = ButtonStyle(
       minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),
