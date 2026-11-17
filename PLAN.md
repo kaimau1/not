@@ -118,19 +118,21 @@ ucuz, ölçülmeden dokunulmadı.
 ### 1.5 Beyin fırtınasından (16K) açık kalanlar — Play yolu ayrıntısı
 **KARAR (kullanıcı, 2026-11-17 akşam):** Play hesabı **kişisel** (25 $; yayından önce 12 test kullanıcısı,
 kesintisiz 14 gün kapalı test). Play derlemesinde **kapalı**: Gmail, konum hatırlatıcı, Antalia sesi (ONNX);
-Takvim/Görevler **kalır** → OAuth "hassas" doğrulamasına başvurulur. AI **üç katman**: ücretsiz (hafif
-model, günde ~10 puan) · Pro abonelik (video/ses dökümü, PDF sohbet, tüm notlarla sohbet, podcast, AI
-seslendirme, anlamca arama, tariften liste) · kendi anahtarın (sınırsız); AI'sız özellikler için ömür boyu
-seçeneği. **Niş/vaat ve uygulama adı kullanıcı yazacak (bekliyor).** Kişisel APK'da her şey kalır.
+Takvim/Görevler **kalır** → OAuth "hassas" doğrulamasına başvurulur. AI katmanı (kullanıcı, 2026-11-17 gece — üç katman önerisinin yerine):
+**Ücretsiz = yapay zekâ YOK** (bulut AI yok, kendi anahtar alanı da yok; cihazda çalışan OCR, belge
+tarama, dikte, sistem sesi, akıllı liste sözlüğü AI sayılmaz, kalır) · **Pro abonelik = dahili AI**
+(hafif + ağır işler; günlük kota yalnız burada, sunucuda sayılır) · **Ömür boyu (tek sefer) = dahili AI
+yok, kendi Gemini anahtarını girebilir** (sınırsız, maliyet bize sıfır). Abonelik yalnız AI'ın aylık
+maliyeti için; AI ömür boyu satılmaz. **Niş/vaat ve uygulama adı kullanıcı yazacak (bekliyor).** Kişisel APK'da her şey kalır.
 
 | No | İş | Kaynak | Cihaz |
 |---|---|---|---|
 | PL1 | Play derleme bayrağı (`NOTLAR_PLAY`): GitHub güncelleyicisi kapalı (E1), Gmail/konum/ONNX derlemeden çıkar (E2, E3, §2.6), YouTube otomatik PiP kapalı (§4.5) | 16K §4.2 | hayır |
-| PL2 | AI korumaları: App Check zorlaması, kullanıcı başı hız sınırı, günlük puan sunucuda (F18.28), `config/app` acil kapatma bayrağı, bütçe tavanı (E4) | 16K §5.3 | hayır |
+| PL2 | AI korumaları (yalnız Pro dahili AI'ı): App Check zorlaması, kullanıcı başı hız sınırı, Pro günlük kotası sunucuda (F18.28), `config/app` acil kapatma bayrağı, bütçe tavanı (E4); ücretsiz katmanda AI girişleri gizli, kendi anahtar alanı yalnız ömür boyu + Pro'da | 16K §5.3 | hayır |
 | PL3 | AI kullanıcı yüzü: ilk kullanımda rıza ekranı, yanıtta "Bildir" + "AI yanılabilir", Ayarlar'da "AI'ı tümden kapat" (E11, KVKK) | 16K §5.3, §4.5 | hayır |
 | PL4 | Gizlilik metni tek kaynak + herkese açık adres; web'den hesap silme sayfası (E5, E6); KVKK aydınlatma metni | 16K §4.2, §4.5 | hayır |
 | PL5 | Hedef API 36 kontrolü (E8), 16 KB sayfa uyumu (E9), AAB + sıkıştırılmamış yerel kütüphane + `--obfuscate` (§2.6) | 16K §4.2, §2.6 | hayır |
-| PL6 | Satın alma: Play Billing (RevenueCat ya da `in_app_purchase` + doğrulama Function'ı), Lite/Pro katman kapısı (E10, F18.27) | 16K §4.2 | hayır |
+| PL6 | Satın alma: Play Billing (RevenueCat ya da `in_app_purchase` + doğrulama Function'ı) — Pro aylık/yıllık abonelik + ömür boyu tek sefer; katman kapısı: ücretsiz / Pro (dahili AI) / ömür boyu (kendi anahtar) (E10, F18.27) | 16K §4.2 | hayır |
 | PL7 | Lisans açıkları: yazı tipi OFL metinleri `LicenseRegistry`'ye, CMU BSD bildirimi, Antalia dosyaları kendi sunucumuza + özet doğrulama (kişisel APK için) | 16K §4.5 | hayır |
 | PL8 | Ürünleştirme: ilk 60 saniye akışı, rızalı kullanım ölçümü (ilk not/sesli not/liste, 1./7./30. gün), mağaza görselleri — niş/ad gelince | 16K §7.3 | hayır |
 | PL9 | Kapalı test (12+ kişi, 14 gün) → açık beta → TR yayın, kademeli dağıtım, Vitals takibi | 16K §8 evre 4–5 | — |
