@@ -443,15 +443,13 @@
     "neden": "kullanıcı 2026-11-16: alt panoyu Keep'teki gibi yap, daha iyisi"
   },
   "S48": {
-    "senaryo": "Şablon oluşturma (telefon): alışveriş önizlemesi (5 madde + 74 öneri çipi) madde ekle alanına odak + klavye 6 inset karesi; öneri çipi; kutucuk; Oluştur. Galeri (16 hazır) arama + klavye 6 kare. Kendi şablon düzenleyicisi (20 madde) maddeye 5 tuş.",
-    "klavye_kurulum": 396,
-    "klavye_dizilme": 258,
-    "cip_kurulum": 354,
-    "kutu_kurulum": 328,
+    "senaryo": "Şablon oluşturma (telefon): yazı şablonu (toplantı) önizlemesi başlık alanına odak + klavye 6 inset karesi; Oluştur. Galeri (16 hazır) arama + klavye 6 kare. Kendi şablon düzenleyicisi (20 madde) maddeye 5 tuş.",
+    "klavye_kurulum": 294,
+    "klavye_dizilme": 156,
     "galeri_klavye_kurulum": 330,
     "duzenleyici_tus_kurulum": 191,
-    "bugun": "396 / 258 / 354 / 328 / 330 / 191 (2026-11-15; önce 14124 / 5784 / 2302 / 2266 / 7590 / 1840 — levha builder klavye karesinde yeni levha örneği kuruyordu, dokunuş bütün çipleri kuruyordu, düzenleyicide ilk tuş bütün ekranı kuruyordu)",
-    "hedef": "klavye karesi levha içeriğini kurmaz; dokunuş yalnız değişen satırı/çipi kurar",
+    "bugun": "294 / 156 / 330 / 191 (2026-11-17 T15: önizlemenin liste dalı silindi, klavye ölçümü artık yazı şablonunda; kutu/çip ölçümleri liste dalıyla gitti — liste şablonu S49). 2026-11-15 liste önizlemesi 396 / 258 / 354 / 328 / 330 / 191; önce 14124 / 5784 / 2302 / 2266 / 7590 / 1840 — levha builder klavye karesinde yeni levha örneği kuruyordu, dokunuş bütün çipleri kuruyordu, düzenleyicide ilk tuş bütün ekranı kuruyordu)",
+    "hedef": "klavye karesi levha içeriğini kurmaz; dokunuş yalnız değişen satırı kurar",
     "neden": "kullanıcı bulgusu 2026-11-15: şablon oluştururken aşırı kasıyor"
   },
   "S49": {

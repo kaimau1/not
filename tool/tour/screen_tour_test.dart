@@ -681,8 +681,10 @@ Future<void> _end(WidgetTester tester) async {
 /// Şablon levhasını açık sayfanın üstünde açar (uygulamadaki "+" → Şablonlar
 /// yolunun levhası; sonucu beklenmez).
 Future<void> _openTemplates(WidgetTester tester) async {
-  final context = tester.element(find.byType(DashboardScreen).first);
-  unawaited(showNoteTemplateSheet(context));
+  // Panonun öğesi ConsumerStatefulElement = WidgetRef (uygulamadaki çağrı
+  // `pickTemplate(context, ref)` ile aynı).
+  final element = tester.element(find.byType(DashboardScreen).first);
+  unawaited(pickTemplate(element, element as WidgetRef));
   await _settle(tester);
 }
 
@@ -712,7 +714,9 @@ Future<void> _openDividerTray(WidgetTester tester) async {
 /// Bir sahnenin adımı bulunamazsa sahne "adım yok" diye geçilir.
 final _stepScenes = <(String, String, Future<void> Function(WidgetTester))>[
   ('sablon-galeri', '/', _openTemplates),
-  ('sablon-onizleme-liste', '/', (t) async {
+  // Liste şablonu artık hızlı liste sayfasına açılır (T15: levha önizlemesinin
+  // liste dalı silindi).
+  ('sablon-hizli-liste', '/', (t) async {
     await _openTemplates(t);
     await t.tap(find.byKey(const ValueKey('tpl-card-b:shopping')).first);
     await _settle(t);

@@ -29,37 +29,6 @@ const double _enterShift = 0.03;
 /// Boş hâl simgesi (bugünkü 40; minyatür kartın değil, boş galerinin).
 const double _emptyIcon = 40;
 
-/// **ŞABLON GALERİSİ + ÖNİZLEME/DÜZENLEME** (bkz. [NoteTemplate]).
-///
-/// 2026-09-29 YENİDEN DÜZEN (kullanıcı: "listeler şablonlar olmamış, daha
-/// düzgün, gelişmiş özellikler olmalı"). Eski levha dokuz kartlık düz bir
-/// ızgaraydı ve karta dokunmak notu HEMEN oluşturuyordu: ne geleceği
-/// görülmüyor, alışveriş listesinin beş sabit maddesi herkese aynı
-/// geliyordu. Artık iki adım:
-///
-/// 1. **Galeri** — arama, bölüm çipleri (Listeler / Planlama / Yazı /
-///    Şablonlarım), son kullanılanlar; her kartta içeriğin ilk satırları.
-/// 2. **Önizleme** — başlık düzenlenir; liste şablonunda maddeler tek tek
-///    seçilir/çıkarılır, yenisi yazılır, reyon reyon ÖNERİLER çip olarak
-///    eklenir, liste türü (onay kutulu / numaralı) seçilir. Yazı
-///    şablonunda sayfanın başlıkları önizlenir. "Oluştur" notu bu hâliyle
-///    TEK yazımda doğurur.
-///
-/// [initial] verilirse galeri atlanır, doğrudan o şablonun önizlemesi açılır
-/// ("+" menüsündeki "Alışveriş listesi" kısayolu). Vazgeçilirse null.
-Future<NoteTemplateContent?> showNoteTemplateSheet(
-  BuildContext context, {
-  NoteTemplate? initial,
-  UserTemplate? initialUser,
-}) {
-  // TEK ÖRNEK (kullanıcı bulgusu 2026-11-15 "şablon oluştururken aşırı
-  // kasıyor"): builder klavye payına bağlı, klavyenin her karesinde yeniden
-  // çağrılır. Levha her seferinde YENİ örnek olsaydı bütün galeri/önizleme
-  // (alışverişte 74 öneri çipi) kare başına baştan kurulurdu (S47).
-  final sheet = NoteTemplateSheet(initial: initial, initialUser: initialUser);
-  return _showTemplateSheet<NoteTemplateContent>(context, sheet);
-}
-
 Future<T?> _showTemplateSheet<T>(BuildContext context, Widget sheet) =>
     showAppSheet<T>(
       context: context,
@@ -142,11 +111,10 @@ Future<TemplateOutcome?> pickTemplate(
 }) async {
   var args = quickListArgsFor(context, builtin: initial, user: initialUser);
   if (args == null) {
-    final sheet = NoteTemplateSheet(
-      initial: initial,
-      initialUser: initialUser,
-      quickLists: true,
-    );
+    // TEK ÖRNEK (kullanıcı bulgusu 2026-11-15 "şablon oluştururken aşırı
+    // kasıyor"): builder klavye payına bağlı, klavyenin her karesinde yeniden
+    // çağrılır; levha builder DIŞINDA bir kez kurulur (S48).
+    final sheet = NoteTemplateSheet(initial: initial, initialUser: initialUser);
     final picked = await _showTemplateSheet<Object>(context, sheet);
     if (picked is NoteTemplateContent) {
       return (content: picked, open: true, quick: false);
@@ -173,23 +141,23 @@ class _Pick {
   String get key => builtin != null ? 'b:${builtin!.key}' : 'u:${user!.id}';
 }
 
-/// Levhanın kendisi (testte doğrudan kurulabilsin diye açık).
+/// **ŞABLON GALERİSİ + YAZI ŞABLONU ÖNİZLEMESİ** (bkz. [NoteTemplate]).
+///
+/// 1. **Galeri** — arama, bölüm çipleri (Listeler / Planlama / Yazı /
+///    Şablonlarım), son kullanılanlar; her kartta içeriğin ilk satırları.
+/// 2. LİSTE şablonu seçilince levha o şablonun [QuickListArgs]'ıyla kapanır
+///    (hızlı liste sayfası, bkz. [pickTemplate]); YAZI şablonu
+///    [TemplateComposer]'da önizlenir, "Oluştur" notu tek yazımda doğurur.
+///
+/// [initial]/[initialUser] verilirse galeri atlanır (yalnız yazı şablonu
+/// gelir: liste şablonu [pickTemplate]'te levhasız açılır).
 class NoteTemplateSheet extends ConsumerStatefulWidget {
-  const NoteTemplateSheet({
-    super.key,
-    this.initial,
-    this.initialUser,
-    this.quickLists = false,
-  });
+  const NoteTemplateSheet({super.key, this.initial, this.initialUser});
 
   final NoteTemplate? initial;
 
   /// "+" menüsündeki favori KENDİ şablonum: galeri atlanır.
   final UserTemplate? initialUser;
-
-  /// true: LİSTE şablonu seçilince önizleme açılmaz, levha o şablonun
-  /// [QuickListArgs]'ıyla kapanır (bkz. [pickTemplate]).
-  final bool quickLists;
 
   @override
   ConsumerState<NoteTemplateSheet> createState() => _NoteTemplateSheetState();
@@ -215,16 +183,14 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
 
   /// Seçim: liste şablonu hızlı liste sayfasına gider, gerisi önizlemeye.
   void _pick(_Pick pick) {
-    if (widget.quickLists) {
-      final args = quickListArgsFor(
-        context,
-        builtin: pick.builtin,
-        user: pick.user,
-      );
-      if (args != null) {
-        Navigator.pop<Object>(context, args);
-        return;
-      }
+    final args = quickListArgsFor(
+      context,
+      builtin: pick.builtin,
+      user: pick.user,
+    );
+    if (args != null) {
+      Navigator.pop<Object>(context, args);
+      return;
     }
     setState(() => _picked = pick);
   }
@@ -322,9 +288,6 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       label: builtin?.label(l10n) ?? user!.name,
       icon: builtin?.icon ?? _userIcon(user!.type),
       accent: builtin?.accent ?? scheme.primary,
-      suggestions: builtin == null
-          ? const []
-          : templateSuggestions(builtin, l10n),
       // Kısayolla doğrudan açıldıysa "geri" levhayı kapatmaz, galeriye döner.
       onBack: () => setState(() => _picked = null),
       onCreate: _create,
@@ -907,25 +870,10 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-/// Önizlemedeki tek madde: metni ve listeye girip girmeyeceği.
-class _Item {
-  _Item(this.text);
-
-  final String text;
-  bool selected = true;
-}
-
-/// **ŞABLON ÖNİZLEMESİ** — not oluşmadan önce içerik burada biçilir.
-///
-/// Liste şablonunda (madde / sıralı):
-/// * her madde bir satır; onay kutusu listeye girip girmeyeceğini söyler
-///   (varsayılanlar işaretli gelir, istenmeyen tek dokunuşla çıkar);
-/// * "Madde ekle" alanı — Enter her maddeyi ekler, alan açık kalır;
-/// * ÖNERİLER — reyon/konu başlıklı çipler; dokunulan öneri listeye girer,
-///   bir daha dokununca çıkar;
-/// * liste türü: onay kutulu ↔ numaralı.
-///
-/// Yazı şablonunda sayfanın başlıkları olduğu gibi önizlenir.
+/// **YAZI ŞABLONU ÖNİZLEMESİ** — not oluşmadan önce başlık biçilir, sayfanın
+/// başlıkları olduğu gibi önizlenir. Liste şablonları hızlı liste sayfasında
+/// kurulur ([QuickListScreen]; önizlemenin liste dalı 2026-11-17 T15'te
+/// silindi).
 class TemplateComposer extends StatefulWidget {
   const TemplateComposer({
     super.key,
@@ -934,7 +882,6 @@ class TemplateComposer extends StatefulWidget {
     required this.icon,
     required this.accent,
     required this.onCreate,
-    this.suggestions = const [],
     this.onBack,
     this.onSaveAsTemplate,
     this.saveAsEdits = false,
@@ -944,7 +891,6 @@ class TemplateComposer extends StatefulWidget {
   final String label;
   final IconData icon;
   final Color accent;
-  final List<TemplateSuggestionGroup> suggestions;
   final VoidCallback? onBack;
   final ValueChanged<NoteTemplateContent> onCreate;
 
@@ -962,106 +908,15 @@ class TemplateComposer extends StatefulWidget {
 
 class _TemplateComposerState extends State<TemplateComposer> {
   late final _title = TextEditingController(text: widget.base.title);
-  final _add = TextEditingController();
-  final _addFocus = FocusNode();
-  late final List<_Item> _items = [for (final t in widget.base.items) _Item(t)];
-  late NoteType _type = widget.base.type;
-
-  /// İKİ SÜTUN (kullanıcı isteği 2026-11-05: "çift satırlı açma seçeneği"):
-  /// liste not iki sütunlu doğar (`Note.listColumns`).
-  late bool _twoColumns = widget.base.columns == 2;
-
-  bool get _isList =>
-      widget.base.type == NoteType.checklist ||
-      widget.base.type == NoteType.ordered;
 
   @override
   void dispose() {
     _title.dispose();
-    _add.dispose();
-    _addFocus.dispose();
     super.dispose();
   }
 
-  /// Satır/çip ÖRNEK ÖNBELLEĞİ (S47): bir dokunuş (kutucuk, öneri, madde
-  /// ekle) bütün önizlemeyi `setState` ile kurar; alışverişte 74 öneri çipi
-  /// + satırlar = dokunuş başına ~2300 widget. Değişmeyen satır/çip AYNI
-  /// örnekle döner → Flutter alt ağacı atlar, yalnız değişen kurulur.
-  /// Anahtar metin(+sıra), değer (seçili mi, widget). Tema/dil değişince
-  /// boşaltılır (satır stili dışarıdan verilir).
-  final Map<String, (bool, Widget)> _rowCache = {};
-  final Map<String, (bool, Widget)> _chipCache = {};
-
-  Widget _memo(
-    Map<String, (bool, Widget)> cache,
-    String key,
-    bool selected,
-    Widget Function() build,
-  ) {
-    final hit = cache[key];
-    if (hit != null && hit.$1 == selected) return hit.$2;
-    final w = build();
-    cache[key] = (selected, w);
-    return w;
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _rowCache.clear();
-    _chipCache.clear();
-  }
-
-  int get _selectedCount => _items.where((i) => i.selected).length;
-
-  bool _hasItem(String text) => _items.any(
-    (i) => i.selected && i.text.toLowerCase() == text.toLowerCase(),
-  );
-
-  void _toggleSuggestion(String text) {
-    setState(() {
-      final existing = _items.indexWhere(
-        (i) => i.text.toLowerCase() == text.toLowerCase(),
-      );
-      if (existing < 0) {
-        _items.add(_Item(text));
-      } else {
-        _items[existing].selected = !_items[existing].selected;
-      }
-    });
-  }
-
-  void _addTyped() {
-    final text = _add.text.trim();
-    if (text.isEmpty) return;
-    setState(() {
-      final existing = _items.indexWhere(
-        (i) => i.text.toLowerCase() == text.toLowerCase(),
-      );
-      if (existing < 0) {
-        _items.add(_Item(text));
-      } else {
-        _items[existing].selected = true;
-      }
-      _add.clear();
-    });
-    _addFocus.requestFocus();
-  }
-
-  NoteTemplateContent _composed() {
-    // Yazılıp eklenmeden bırakılan madde de listeye girer.
-    if (_add.text.trim().isNotEmpty) _addTyped();
-    return composeTemplateContent(
-      widget.base,
-      title: _title.text,
-      type: _type,
-      columns: _twoColumns ? 2 : 1,
-      items: [
-        for (final i in _items)
-          if (i.selected) i.text,
-      ],
-    );
-  }
+  NoteTemplateContent _composed() =>
+      composeTemplateContent(widget.base, title: _title.text);
 
   void _submit() => widget.onCreate(_composed());
 
@@ -1069,7 +924,6 @@ class _TemplateComposerState extends State<TemplateComposer> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final tokens = AppTokens.fromTheme(theme);
     // Gövde kayar, "Oluştur" SABİT ALT BANTTA (P63 PB4: uzun listede düğme
     // kaydırmanın altında kalıyordu). Levha zaten klavye payıyla dolgulu.
@@ -1160,16 +1014,12 @@ class _TemplateComposerState extends State<TemplateComposer> {
                             ),
                           ),
                           const SizedBox(height: AppSpace.s),
-                          if (_isList)
-                            ..._listRows(context, scheme)
-                          else
-                            ..._textPreview(context),
+                          ..._textPreview(context),
                         ],
                       ),
                     ),
                   ),
                 ),
-                if (_isList) ..._listOptions(context),
               ],
             ),
           ),
@@ -1194,9 +1044,7 @@ class _TemplateComposerState extends State<TemplateComposer> {
               ),
               icon: const Icon(Icons.check),
               label: Text(
-                _isList && _selectedCount > 0
-                    ? l10n.templateCreateWithCount(_selectedCount)
-                    : l10n.templateCreate,
+                l10n.templateCreate,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1205,146 +1053,6 @@ class _TemplateComposerState extends State<TemplateComposer> {
         ),
       ],
     );
-  }
-
-  /// Kâğıdın içindeki maddeler + son satırda "Madde ekle".
-  List<Widget> _listRows(BuildContext context, ColorScheme scheme) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    return [
-      for (var i = 0; i < _items.length; i++)
-        _memo(
-          _rowCache,
-          '$i-${_items[i].text}',
-          _items[i].selected,
-          () => CheckboxListTile(
-            key: ValueKey('tpl-item-$i-${_items[i].text}'),
-            dense: true,
-            visualDensity: VisualDensity.compact,
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            value: _items[i].selected,
-            title: Text(
-              _items[i].text,
-              style: _items[i].selected
-                  ? AppText.of(theme).body
-                  : AppText.of(theme).body.copyWith(
-                      color: scheme.onSurface.withValues(
-                        alpha: AppAlpha.disabled,
-                      ),
-                      decoration: TextDecoration.lineThrough,
-                    ),
-            ),
-            onChanged: (v) => setState(() => _items[i].selected = v ?? false),
-          ),
-        ),
-      // Son satır "Madde ekle": simge kutucuk sütununda, yazı madde hizasında.
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
-        child: Row(
-          children: [
-            const SizedBox(width: AppSpace.m),
-            Icon(Icons.add, color: scheme.onSurfaceVariant),
-            const SizedBox(width: AppSpace.xxl),
-            Expanded(
-              child: TextField(
-                controller: _add,
-                focusNode: _addFocus,
-                textCapitalization: TextCapitalization.sentences,
-                textInputAction: TextInputAction.next,
-                style: AppText.of(theme).body,
-                decoration: InputDecoration.collapsed(
-                  hintText: l10n.templateAddItem,
-                ),
-                onSubmitted: (_) => _addTyped(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ];
-  }
-
-  /// Kâğıdın ALTINDA: tür (☑ / 1.) ve iki sütun çipleri, sonra öneriler.
-  List<Widget> _listOptions(BuildContext context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    return [
-      Padding(
-        padding: const EdgeInsets.only(left: AppSpace.xs, top: AppSpace.m),
-        child: Wrap(
-          spacing: AppSpace.s,
-          runSpacing: AppSpace.xs,
-          children: [
-            for (final (type, icon, label) in [
-              (NoteType.checklist, Icons.checklist, l10n.templateListChecks),
-              (
-                NoteType.ordered,
-                Icons.format_list_numbered,
-                l10n.templateListNumbers,
-              ),
-            ])
-              radioChip(
-                ChoiceChip(
-                  avatar: Icon(icon, size: AppIconSize.s),
-                  label: Text(label),
-                  selected: _type == type,
-                  showCheckmark: false,
-                  onSelected: (_) => setState(() => _type = type),
-                ),
-              ),
-            FilterChip(
-              key: const ValueKey('tpl-two-columns'),
-              avatar: const Icon(
-                Icons.view_column_outlined,
-                size: AppIconSize.s,
-              ),
-              label: Text(l10n.templateTwoColumns),
-              selected: _twoColumns,
-              showCheckmark: false,
-              onSelected: (v) => setState(() => _twoColumns = v),
-            ),
-          ],
-        ),
-      ),
-      for (final group in widget.suggestions) ...[
-        _SectionLabel(group.label),
-        Padding(
-          padding: const EdgeInsets.only(left: AppSpace.xs),
-          child: Wrap(
-            spacing: AppSpace.s,
-            runSpacing: AppSpace.xxs,
-            children: [
-              for (final s in group.items)
-                _memo(
-                  _chipCache,
-                  s,
-                  _hasItem(s),
-                  () => FilterChip(
-                    label: Text(s),
-                    selected: _hasItem(s),
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (_) => _toggleSuggestion(s),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
-      if (widget.suggestions.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpace.xs,
-            AppSpace.s,
-            AppSpace.xs,
-            0,
-          ),
-          child: Text(
-            l10n.templateSuggestionsInfo,
-            style: AppText.of(theme).meta,
-          ),
-        ),
-    ];
   }
 
   /// Yazı şablonu: sayfanın başlıkları not sayfasındaki gibi.
@@ -1375,28 +1083,17 @@ class _TemplateComposerState extends State<TemplateComposer> {
 }
 
 /// Önizlemede biçilen içerik (saf, testli): başlık kırpılır, BOŞSA şablonun
-/// kendi başlığı kalır; liste şablonunda tür ve seçili maddeler, yazı
-/// şablonunda gövde aynen.
+/// kendi başlığı kalır; tür, gövde, maddeler ve sütun aynen.
 NoteTemplateContent composeTemplateContent(
   NoteTemplateContent base, {
   required String title,
-  required NoteType type,
-  required List<String> items,
-  int columns = 1,
 }) {
-  final isList =
-      base.type == NoteType.checklist || base.type == NoteType.ordered;
   final cleanTitle = title.trim();
   return (
-    type: isList ? type : base.type,
+    type: base.type,
     title: cleanTitle.isEmpty ? base.title : cleanTitle,
     body: base.body,
-    items: isList
-        ? [
-            for (final i in items)
-              if (i.trim().isNotEmpty) i.trim(),
-          ]
-        : base.items,
-    columns: isList ? columns : 1,
+    items: base.items,
+    columns: base.columns,
   );
 }
