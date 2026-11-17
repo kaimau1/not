@@ -71,7 +71,10 @@ void main() {
     final snap = await db
         .collection('users/u1/notes/$id/$kVersionsCollection')
         .get();
-    expect(snap.docs.length, kMaxVersions);
+    // Budama oturumda 1., 6., 11.… sürümde koşar (S3, 2026-11-17: budama
+    // sorgusu 40 belge okur) → arada sınır en çok 4 aşılır; liste 30 döner.
+    expect(snap.docs.length, inInclusiveRange(kMaxVersions, kMaxVersions + 4));
+    expect(await repo.listVersions(id), hasLength(kMaxVersions));
   });
 
   test('kalıcı silme mürekkep v2 bant belgelerini de siler (F61.4)', () async {
