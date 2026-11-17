@@ -29,6 +29,18 @@ elif [ "${GITHUB_REF_NAME:-}" = main ]; then
     head=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
       --jq '.[0].head.sha // empty' 2>/dev/null || true)
   fi
+  # HIZLI İLERİ (2026-11-17, kota): birleştirme commit'i ve PR yok — main'e
+  # gelen commit'in KENDİSİ başka bir dalda baştan sona yeşil koştuysa aynı
+  # içerik yeniden test edilmez (eskiden burada tam takım koşuyordu).
+  if [ -z "$head" ]; then
+    yesil=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&status=success&per_page=20" \
+      --jq '[.workflow_runs[] | select(.head_branch != "main" and .event == "push")] | length' \
+      2>/dev/null || echo 0)
+    if [ "${yesil:-0}" -gt 0 ]; then
+      mod=atla
+      why="main: hızlı ileri — aynı commit ($GITHUB_SHA) dalda yeşil"
+    fi
+  fi
   if [ -n "$head" ]; then
     t_main=$(git rev-parse 'HEAD^{tree}')
     t_head=$(gh api "repos/$GITHUB_REPOSITORY/commits/$head" --jq .commit.tree.sha 2>/dev/null || true)

@@ -140,3 +140,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 - **Git Bash + adb (2026-11-15):** `adb shell ... /sdcard/x` Git Bash'te yolu `C:/Program Files/Git/sdcard` yapar (kayıt sessizce oluşmaz) → komutlardan önce `export MSYS_NO_PATHCONV=1`.
 - **Flutter SDK her makinede yok (2026-11-17):** `C:\Users\fatih\OneDrive\Desktop\Projeler\not` kopyasının bulunduğu bilgisayarda `C:\src\flutter` YOK, PATH'te `flutter`/`dart` yok, `.dart_tool` yok — test/analyze koşulamaz. O makinede yapılan iş "koddan okundu, çalıştırılmadı" diye etiketlenir; kanıt gereken iş SDK'lı makinede ya da CI'da koşulur. (CLAUDE.md'deki yol öbür geliştirme makinesine ait.)
+- **Hızlı ileri main'de tam takım koşuyordu (2026-11-17):** `ci_test_secimi.sh` atlamayı yalnız
+  birleştirme commit'i (`HEAD^2`) ya da PR başında tanıyordu; `git push <yeşil sha>:main` ikisini de
+  vermez → tam takım (1380, 1384). Artık aynı SHA'nın başka dalda `push` ile yeşil biten koşusu varsa
+  `atla` (`actions/runs?head_sha=…&status=success`).
