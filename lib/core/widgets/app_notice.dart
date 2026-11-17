@@ -584,11 +584,23 @@ class SteppedCountdown extends StatefulWidget {
     required this.duration,
     required this.color,
     this.height = AppSpace.xxs,
+    this.onEnd,
+    this.trackColor,
+    this.radius = 0,
   });
 
   final Duration duration;
   final Color color;
   final double height;
+
+  /// Süre bitince bir kez çağrılır (bildirimi/paneli kapatmak için).
+  final VoidCallback? onEnd;
+
+  /// Verilirse çubuğun boş kısmı bu renkte çizilir (ilerleme izi).
+  final Color? trackColor;
+
+  /// Köşe yarıçapı (iz ve dolgu).
+  final double radius;
 
   /// Saniyedeki adım sayısı.
   static const int steps = 8;
@@ -607,13 +619,19 @@ class _SteppedCountdownState extends State<SteppedCountdown> {
     final total = widget.duration.inMicroseconds;
     if (total <= 0) {
       _left.value = 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onEnd?.call();
+      });
       return;
     }
     const step = 1000000 ~/ SteppedCountdown.steps;
     _timer = Timer.periodic(const Duration(microseconds: step), (t) {
       final left = 1 - t.tick * step / total;
       _left.value = left <= 0 ? 0 : left;
-      if (left <= 0) t.cancel();
+      if (left <= 0) {
+        t.cancel();
+        widget.onEnd?.call();
+      }
     });
   }
 
@@ -632,31 +650,54 @@ class _SteppedCountdownState extends State<SteppedCountdown> {
         _left,
         widget.color,
         Directionality.of(context),
+        track: widget.trackColor,
+        radius: widget.radius,
       ),
     ),
   );
 }
 
 class _CountdownPainter extends CustomPainter {
-  _CountdownPainter(this.left, this.color, this.direction)
-    : super(repaint: left);
+  _CountdownPainter(
+    this.left,
+    this.color,
+    this.direction, {
+    this.track,
+    this.radius = 0,
+  }) : super(repaint: left);
 
   final ValueListenable<double> left;
   final Color color;
   final TextDirection direction;
+  final Color? track;
+  final double radius;
+
+  void _bar(Canvas canvas, Rect r, Color c) {
+    final paint = Paint()..color = c;
+    if (radius <= 0) {
+      canvas.drawRect(r, paint);
+    } else {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(r, Radius.circular(radius)),
+        paint,
+      );
+    }
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (track != null) _bar(canvas, Offset.zero & size, track!);
     final w = size.width * left.value;
     if (w <= 0) return;
     final x = direction == TextDirection.rtl ? size.width - w : 0.0;
-    canvas.drawRect(
-      Rect.fromLTWH(x, 0, w, size.height),
-      Paint()..color = color,
-    );
+    _bar(canvas, Rect.fromLTWH(x, 0, w, size.height), color);
   }
 
   @override
   bool shouldRepaint(_CountdownPainter old) =>
-      old.color != color || old.direction != direction || old.left != left;
+      old.color != color ||
+      old.direction != direction ||
+      old.left != left ||
+      old.track != track ||
+      old.radius != radius;
 }

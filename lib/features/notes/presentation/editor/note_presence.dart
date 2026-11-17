@@ -37,6 +37,7 @@ class NotePresenceIndicator extends ConsumerStatefulWidget {
 
 class _NotePresenceIndicatorState extends ConsumerState<NotePresenceIndicator> {
   Timer? _timer;
+  AppLifecycleListener? _life;
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _sub;
   List<String> _others = const [];
   String? _announced;
@@ -68,11 +69,27 @@ class _NotePresenceIndicatorState extends ConsumerState<NotePresenceIndicator> {
         .doc(me)
         .set({'name': name, 'at': FieldValue.serverTimestamp()})
         .catchError((Object _) {});
-    beat();
-    _timer = Timer.periodic(_beat, (_) {
+    void run() {
+      _timer?.cancel();
       beat();
-      if (mounted) setState(() {});
-    });
+      // Kurulum yok: nabız yalnız yazar (eskiden her vuruşta boş setState).
+      _timer = Timer.periodic(_beat, (_) => beat());
+    }
+
+    run();
+    // Maliyet korkuluğu (2026-11-17): uygulama arka plandayken Dart
+    // zamanlayıcısı süreç yaşadıkça işler — paylaşılan not açık bırakılıp
+    // uygulamadan çıkılınca 25 sn'de bir bulut yazımı sürüyordu. Arkada
+    // durur, dönünce sürer; gösterge 70 sn'de kendiliğinden söner.
+    _life = AppLifecycleListener(
+      onHide: () {
+        _timer?.cancel();
+        _timer = null;
+      },
+      onShow: () {
+        if (mounted && _active && _timer == null) run();
+      },
+    );
     _sub = collection.snapshots().listen((snap) {
       final now = DateTime.now();
       final others = <String>[
@@ -100,6 +117,7 @@ class _NotePresenceIndicatorState extends ConsumerState<NotePresenceIndicator> {
   @override
   void dispose() {
     _timer?.cancel();
+    _life?.dispose();
     _sub?.cancel();
     // Firebase'e yalnız nabız başladıysa dokunulur (testlerde uygulama yok).
     if (_active) {

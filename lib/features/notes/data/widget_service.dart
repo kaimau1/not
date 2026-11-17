@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import '../../calendar/data/calendar_repository.dart';
 import '../../calendar/domain/agenda.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show ThemeMode;
+import 'package:flutter/material.dart'
+    show AppLifecycleListener, AppLifecycleState, ThemeMode, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
@@ -44,20 +46,48 @@ class WidgetService {
   String? _lastPayload;
   List<Note>? _lastNotes;
 
+  /// K-24 (kasma envanteri 2026-11-17): uygulama ÖNDEYKEN araç güncellenmez.
+  /// Otomatik kayıt da 2 sn'de bir yayın yapıyor; güncelleme 5 platform
+  /// kanalı çağrısı (Flutter 3.47 Android'de kareyi bekletir) ve kullanıcı
+  /// yazmayı bıraktığı ya da menüye uzandığı ana denk geliyordu. Kullanıcı
+  /// aracı ancak uygulamadan çıkınca görür: değişiklik işaretlenir, arka
+  /// plana geçerken TEK kez yazılır. Tema değişimi eskisi gibi anında.
+  AppLifecycleListener? _life;
+  bool _dirty = false;
+
+  bool get _foreground =>
+      WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+
+  void _schedule() {
+    final notes = _lastNotes;
+    if (notes == null) return;
+    if (_foreground) {
+      _dirty = true;
+      return;
+    }
+    _debouncer(() => _update(notes));
+  }
+
+  void _flush() {
+    _debouncer.cancel();
+    final notes = _lastNotes;
+    if (!_dirty || notes == null) return;
+    _dirty = false;
+    unawaited(_update(notes));
+  }
+
   void start() {
     if (kIsWeb || !Platform.isAndroid) return;
+    _life = AppLifecycleListener(onHide: _flush, onPause: _flush);
     _sub = _ref.listen(notesStreamProvider, (previous, next) {
       final notes = next.value;
       if (notes != null) {
         _lastNotes = notes;
-        _debouncer(() => _update(notes));
+        _schedule();
       }
     }, fireImmediately: true);
     // Takvim kayıtları da "Bugün" widget'ında (Faz 53.4).
-    void calendarChanged(Object? _, Object? _) {
-      final notes = _lastNotes;
-      if (notes != null) _debouncer(() => _update(notes));
-    }
+    void calendarChanged(Object? _, Object? _) => _schedule();
 
     _themeSubs
       ..add(_ref.listen(eventsStreamProvider, calendarChanged))
@@ -192,6 +222,7 @@ class WidgetService {
   }
 
   void dispose() {
+    _life?.dispose();
     _debouncer.dispose();
     _sub?.close();
     for (final sub in _themeSubs) {
