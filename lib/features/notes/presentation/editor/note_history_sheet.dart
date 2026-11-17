@@ -16,19 +16,25 @@ Future<NoteVersion?> showNoteHistorySheet(
   BuildContext context,
   NotesRepository repo,
   String noteId,
-) => showAppSheet<NoteVersion>(
-  context: context,
-  showDragHandle: true,
-  isScrollControlled: true,
-  builder: (sheetContext) => SafeArea(
-    child: ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
+) {
+  // OKUMA BİR KEZ (T7/K-58, 2026-11-17): builder ekran boyuna bağlı, her
+  // boy değişiminde yeniden çağrılır; okuma içindeyken her seferinde 30
+  // sürüm Firestore'dan baştan okunuyor, liste bekleme çarkına dönüyordu.
+  final list = _HistoryList(future: repo.listVersions(noteId));
+  return showAppSheet<NoteVersion>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (sheetContext) => SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.75,
+        ),
+        child: list,
       ),
-      child: _HistoryList(future: repo.listVersions(noteId)),
     ),
-  ),
-);
+  );
+}
 
 String _reasonLabel(BuildContext context, String reason) {
   final l10n = context.l10n;
