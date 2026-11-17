@@ -18,6 +18,13 @@ const kAppSheetAnimation = AnimationStyle(
   reverseCurve: AppMotion.exit,
 );
 
+/// Geniş ekranda (masaüstü/tablet yatay) levhanın en büyük genişliği —
+/// ortada durur (KARAR 1.0, keşif turu KT-2, 2026-11-17). Levhaya yalnız
+/// maxHeight veren bir constraints, M3'ün varsayılan 640 dp sınırını ezer
+/// (maxWidth sonsuz olur, levha 1240 px'e yayılır): öyle levhalar bunu da
+/// vermeli.
+const double kSheetMaxWidth = 560;
+
 /// Hareketi azalt (F34.7): levha kısa ve doğrusal.
 const kAppSheetAnimationReduced = AnimationStyle(
   duration: AppMotion.reduced,
