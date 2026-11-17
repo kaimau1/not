@@ -22,6 +22,15 @@ plugins {
 /** Kişisel derleme mi (aşağıda `sourceSets`). */
 val kisisel = System.getenv("NOTLAR_KISISEL") == "1" || findProperty("kisisel")?.toString() == "true"
 
+/** Play derlemesi mi (PLAN §1.5 PL1/PL5; Dart tarafı `--dart-define=NOTLAR_PLAY=true`,
+ *  ayrıntı docs/play_hazirlik.md). Verilmezse derleme BUGÜNKÜ GİBİ. */
+val play = System.getenv("NOTLAR_PLAY") == "1" || findProperty("play")?.toString() == "true"
+if (play && kisisel) {
+    // Kişisel köprü (REQUEST_INSTALL_PACKAGES, SYSTEM_ALERT_WINDOW, Harita/Asistan
+    // alıcısı) Play paketine ASLA girmesin.
+    throw GradleException("NOTLAR_PLAY ile NOTLAR_KISISEL birlikte verilemez.")
+}
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -112,7 +121,10 @@ android {
             // da ~%50 küçülür (indirilen APK ~73 → ~45 MB). Bedeli: kurulumda
             // .so'lar diske açılır (kurulu boyut biraz artar) — indirme ve
             // paylaşım boyutu öncelikli.
-            useLegacyPackaging = true
+            // PLAY (PL5, 16K §2.6): AAB'de Play indirmeyi zaten sıkıştırır;
+            // sıkıştırılmamış .so kurulu boyutu küçültür ve 16 KB hizalı
+            // yüklenir (Google'ın önerisi). Kişisel APK'da değişiklik yok.
+            useLegacyPackaging = !play
             if (!allAbis) {
                 excludes += setOf(
                     "**/x86_64/**",
