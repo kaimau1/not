@@ -1,6 +1,6 @@
 # Notlar — Gizlilik Politikası
 
-Son güncelleme: 19 Ekim 2026
+Son güncelleme: 17 Kasım 2026
 
 Bu politika, "Notlar" uygulamasının (Android ve web) hangi
 verileri işlediğini, neden işlediğini ve haklarınızı açıklar. Uygulamayı
@@ -87,6 +87,31 @@ kullanarak bu politikayı kabul etmiş olursunuz.
    YouTube'un gömülü oynatıcısıyla açılır; bu sırada YouTube'un kendi
    politikası geçerlidir.
 
+## Google hesabından istenen izinler
+
+Her izin yalnız ilgili özelliği ilk kullandığınızda istenir; istemediğiniz
+izni vermeden uygulamanın geri kalanını kullanabilirsiniz.
+
+- Giriş (openid, e-posta, profil): hesabınızı tanımak ve notlarınızı
+  eşitlemek için.
+- Google Drive (drive.appdata, drive.file): yalnız uygulamanın kendi
+  oluşturduğu dosyalar ve gizli uygulama klasörü; Drive'ınızdaki diğer
+  dosyalara erişilmez.
+- Google Takvim (calendar.readonly, calendar.events) ve Google Görevler
+  (tasks): etkinliklerinizi ve görevlerinizi uygulamada göstermek, notlarla
+  eşleştirmek ve yalnız sizin istediğiniz etkinlik/görevleri oluşturmak ya
+  da güncellemek için.
+- Gmail (gmail.readonly, yalnız okuma; bu özellik her sürümde bulunmaz):
+  e-postalarınızı uygulamada göstermek ve sizin seçtiğiniz e-postayı nota
+  çevirmek için. E-postalar sunucularımıza kopyalanmaz; yalnız nota
+  çevirdiğiniz içerik notunuz olarak saklanır.
+
+Google API'lerinden alınan veriler Google API Hizmetleri Kullanıcı Verisi
+Politikası'na (Sınırlı Kullanım şartları dahil) uygun kullanılır: yalnız
+uygulamanın size sunduğu özellikler için, reklam için değil; üçüncü
+kişilere satılmaz ya da aktarılmaz. İzinleri istediğiniz an
+https://myaccount.google.com/permissions adresinden geri alabilirsiniz.
+
 ## Toplanmayan veriler
 
 - Reklam kimliği, kişi listesi (rehber), konum geçmişi veya tarama
@@ -102,8 +127,12 @@ kullanarak bu politikayı kabul etmiş olursunuz.
   klasörünü Google Drive → Ayarlar → Uygulamaları yönet'ten de
   silebilirsiniz.
 - Tek bir notu çöp kutusuna taşıyıp kalıcı silebilirsiniz.
-- Ayarlar → "Hesabımı ve verilerimi sil" ile hesabınızı ve TÜM
-  verilerinizi uygulama içinden kalıcı olarak silebilirsiniz: notlar,
+- Ayarlar → Hesap → "Hesabımı ve verilerimi sil" ile hesabınızı ve TÜM
+  verilerinizi uygulama içinden kalıcı olarak silebilirsiniz. Uygulama
+  cihazınızda kurulu değilse aynı işlemi web sitemizdeki "Hesap ve veri
+  silme" sayfasından (hesap-silme.html) giriş yaparak yapabilirsiniz;
+  hesabınıza giremiyorsanız İletişim bölümündeki adrese yazın, talebiniz
+  30 gün içinde sonuçlandırılır. Silinenler: notlar,
   klasörler, ekler (Storage ve bağlıysa Drive), kişiler ve istekler,
   gelen notlar, paylaştığınız klasörler (sohbet mesajları ve görselleri
   dahil), ortak not kayıtları, kullanıcı dizini ve arama kaydınız, hesap
