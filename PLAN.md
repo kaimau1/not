@@ -51,7 +51,7 @@ Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/pla
 
 **Sıra (önerim, yürütücü bunu izler):** (1) telefonsuz T3, T5, T7, T10, T12, T14, T15 + KONTROL 36/39
 → (2) tablet bağlanınca T13 → T16 + T1 (tablet tabanı) → T2/T4/T8/T9 → (3) S1 → S4 → (4) Play
-hazırlığı + Lite/Pro → (5) yazım v3, hızlı ekle, akıllı liste, güven/büyüme.
+hazırlığı (1.5 PL1–PL12) + Lite/Pro → (5) yazım v3, hızlı ekle, akıllı liste, güven/büyüme.
 
 ### 1.1 Senden karar bekleyenler (karar gelmeden başlamaz)
 1. ~~Model~~ → KARAR 1.0: tek uygulama + katman.
@@ -114,6 +114,40 @@ ucuz, ölçülmeden dokunulmadı.
 5. **Lite/Pro + Play yolu** (karar 1.1/1, 1.1/8 sonrası): engeller E1–E12, evreler 2–6 (16K §4, §8).
 6. Güven/büyüme: parolalı yedek + uçtan uca şifreli kilitli not, ilk 60 saniye, rızalı kullanım
    ölçümü, kolay dışa aktarma, uygulama içi hız günlüğü (17K §6).
+
+### 1.5 Beyin fırtınasından (16K) açık kalanlar — Play yolu ayrıntısı
+**KARAR (kullanıcı, 2026-11-17 akşam):** Play hesabı **kişisel** (25 $; yayından önce 12 test kullanıcısı,
+kesintisiz 14 gün kapalı test). Play derlemesinde **kapalı**: Gmail, konum hatırlatıcı, Antalia sesi (ONNX);
+Takvim/Görevler **kalır** → OAuth "hassas" doğrulamasına başvurulur. AI **üç katman**: ücretsiz (hafif
+model, günde ~10 puan) · Pro abonelik (video/ses dökümü, PDF sohbet, tüm notlarla sohbet, podcast, AI
+seslendirme, anlamca arama, tariften liste) · kendi anahtarın (sınırsız); AI'sız özellikler için ömür boyu
+seçeneği. **Niş/vaat ve uygulama adı kullanıcı yazacak (bekliyor).** Kişisel APK'da her şey kalır.
+
+| No | İş | Kaynak | Cihaz |
+|---|---|---|---|
+| PL1 | Play derleme bayrağı (`NOTLAR_PLAY`): GitHub güncelleyicisi kapalı (E1), Gmail/konum/ONNX derlemeden çıkar (E2, E3, §2.6), YouTube otomatik PiP kapalı (§4.5) | 16K §4.2 | hayır |
+| PL2 | AI korumaları: App Check zorlaması, kullanıcı başı hız sınırı, günlük puan sunucuda (F18.28), `config/app` acil kapatma bayrağı, bütçe tavanı (E4) | 16K §5.3 | hayır |
+| PL3 | AI kullanıcı yüzü: ilk kullanımda rıza ekranı, yanıtta "Bildir" + "AI yanılabilir", Ayarlar'da "AI'ı tümden kapat" (E11, KVKK) | 16K §5.3, §4.5 | hayır |
+| PL4 | Gizlilik metni tek kaynak + herkese açık adres; web'den hesap silme sayfası (E5, E6); KVKK aydınlatma metni | 16K §4.2, §4.5 | hayır |
+| PL5 | Hedef API 36 kontrolü (E8), 16 KB sayfa uyumu (E9), AAB + sıkıştırılmamış yerel kütüphane + `--obfuscate` (§2.6) | 16K §4.2, §2.6 | hayır |
+| PL6 | Satın alma: Play Billing (RevenueCat ya da `in_app_purchase` + doğrulama Function'ı), Lite/Pro katman kapısı (E10, F18.27) | 16K §4.2 | hayır |
+| PL7 | Lisans açıkları: yazı tipi OFL metinleri `LicenseRegistry`'ye, CMU BSD bildirimi, Antalia dosyaları kendi sunucumuza + özet doğrulama (kişisel APK için) | 16K §4.5 | hayır |
+| PL8 | Ürünleştirme: ilk 60 saniye akışı, rızalı kullanım ölçümü (ilk not/sesli not/liste, 1./7./30. gün), mağaza görselleri — niş/ad gelince | 16K §7.3 | hayır |
+| PL9 | Kapalı test (12+ kişi, 14 gün) → açık beta → TR yayın, kademeli dağıtım, Vitals takibi | 16K §8 evre 4–5 | — |
+| PL10 | Yazı tipleri: 4–5 çekirdek aile pakette, kalanı seçilince insin (T3 ile birlikte) | 16K §2.6 | hayır |
+| PL11 | RAM tabanı: beş durumda `dumpsys meminfo` (ana ekran, editör, PDF, kalem, YouTube) → `docs/perf/` | 16K §2.5 | evet (tablet) |
+| PL12 | Uygulama içi hız günlüğü (profil/beta derlemesinde `FrameTiming`, Ayarlar → Hakkında) | 16K §2.7 | hayır |
+
+**Senin işlerin (Play):** hesabı aç (kişisel, 25 $), mali müşavir (GVK 20/B istisnası), Syncfusion
+Community lisansını al, uygulama simgesinin haklarını teyit et, alan adı, 12 test kullanıcısı bul.
+
+**Faz içinde açılacak fikirler (1.4 fazlarına bağlandı):** hızlı ekle ulaşılabilirlik — başlatıcı
+kısayolu, 1×1/4×1 ana ekran aracı, hızlı ayar karosu, paylaşımda "Nota ekle", metin seçim menüsü,
+`notlar://ekle` (16K §1.4 A) → 1.4/3; akıllı liste kademe 2 (`listKind`, reyon görünümü, "Alışverişi
+bitir", miktar) ve kademe 3 (düzeltmeden öğren, AI ile sınıflandır, yeni türler, mağaza kipi, liste
+aracı) (16K §3.3) → 1.4/4; cihaz içi Gemini Nano katmanı, özet önbelleği, haftalık geri bakış
+bildirimi, akıllı gelen kutusu, hatırlatıcı önerisi (16K §5.4) → 1.4/6; "Konuş, gerisini o yapsın"
+tek giriş = HE-4.
 
 ## 2. Önceki açık işler (P22 listesi, aynen)
 
