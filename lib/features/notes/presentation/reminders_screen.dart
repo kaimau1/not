@@ -29,12 +29,36 @@ import '../../../app/theme/app_tokens.dart';
 /// bu yüzden ilk hatırlatıcıda bir kez söylenir; Ayarlar → İzinler'de kalıcı).
 /// Hatırlatıcı KAYDEDİLDİKTEN sonra çağrılır: levhalar açıkken gösterilen
 /// bildirim onların arkasında kalıp görülmüyordu (2026-11-06 cihazda).
+///
+/// ALARM İZNİ (KONTROL 36, KARAR 2026-11-17): tam zamanlı alarm izni
+/// kapalıysa hatırlatıcı birkaç dakika kayabilir; uyarı yalnız Ayarlar →
+/// İzinler'deydi. İlk hatırlatıcıda BİR KEZ ipucu ("İzni aç"). O kez MIUI
+/// ipucu sonraki hatırlatıcıya kalır: iki bildirim üst üste binmesin (KT-1).
 Future<void> maybeShowAutoStartHint(BuildContext context) async {
   const key = 'miui_autostart_hint_v3'; // v1/v2: levha arkasında kaldı
+  const exactKey = 'exact_alarm_hint_v1';
   final container = ProviderScope.containerOf(context, listen: false);
   final prefs = container.read(sharedPreferencesProvider);
-  if (prefs.getBool(key) ?? false) return;
   final service = container.read(permissionsServiceProvider);
+  if (!(prefs.getBool(exactKey) ?? false)) {
+    final granted = await service.exactAlarmsGranted();
+    if (!context.mounted) return;
+    if (!granted) {
+      await prefs.setBool(exactKey, true);
+      if (!context.mounted) return;
+      final l10n = context.l10n;
+      ScaffoldMessenger.of(context).showMessage(
+        l10n.exactAlarmHint,
+        duration: const Duration(seconds: 8),
+        action: SnackBarAction(
+          label: l10n.exactAlarmHintAction,
+          onPressed: () => unawaited(service.requestExactAlarms()),
+        ),
+      );
+      return;
+    }
+  }
+  if (prefs.getBool(key) ?? false) return;
   if (!await service.isXiaomi() || !context.mounted) return;
   await prefs.setBool(key, true);
   if (!context.mounted) return;

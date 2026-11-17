@@ -1036,6 +1036,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get autoStartHintAction => 'Aç';
 
   @override
+  String get exactAlarmHint =>
+      'Alarm izni kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir';
+
+  @override
+  String get exactAlarmHintAction => 'İzni aç';
+
+  @override
   String videoTooBigForAi(int mb) {
     return 'Video yapay zekâya göndermek için çok büyük ($mb MB). Daha kısa çek.';
   }

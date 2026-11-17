@@ -1952,6 +1952,18 @@ abstract class AppLocalizations {
   /// **'Aç'**
   String get autoStartHintAction;
 
+  /// No description provided for @exactAlarmHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alarm izni kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir'**
+  String get exactAlarmHint;
+
+  /// No description provided for @exactAlarmHintAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzni aç'**
+  String get exactAlarmHintAction;
+
   /// No description provided for @videoTooBigForAi.
   ///
   /// In tr, this message translates to:

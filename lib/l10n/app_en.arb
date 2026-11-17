@@ -330,6 +330,8 @@
   "permAutoStartInfo": "So reminders are set again after a reboot without opening the app: turn on “Autostart” for Notlar",
   "autoStartHint": "Xiaomi: allow “Autostart” for Notlar so reminders still fire after a reboot",
   "autoStartHintAction": "Open",
+  "exactAlarmHint": "Alarm permission is off: reminders may fire a few minutes late",
+  "exactAlarmHintAction": "Allow",
   "videoTooBigForAi": "The video is too large to send to AI ({mb} MB). Record a shorter one.",
   "permCamera": "Camera",
   "permCameraInfo": "Needed for video notes and taking photos",

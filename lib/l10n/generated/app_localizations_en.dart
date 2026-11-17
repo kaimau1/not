@@ -1039,6 +1039,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoStartHintAction => 'Open';
 
   @override
+  String get exactAlarmHint =>
+      'Alarm permission is off: reminders may fire a few minutes late';
+
+  @override
+  String get exactAlarmHintAction => 'Allow';
+
+  @override
   String videoTooBigForAi(int mb) {
     return 'The video is too large to send to AI ($mb MB). Record a shorter one.';
   }
