@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/play_build.dart';
 import '../domain/note.dart';
 import 'notes_repository.dart';
 
@@ -70,7 +71,8 @@ enum PlacePermission { none, foreground, background }
 class PlaceReminderService {
   static const _channel = MethodChannel('dev.kaimau.notlar/system');
 
-  static bool get supported => !kIsWeb && Platform.isAndroid;
+  static bool get supported =>
+      PlayBuild.placeReminders && !kIsWeb && Platform.isAndroid;
 
   static PlacePermission _parse(Object? value) => switch (value) {
     'background' => PlacePermission.background,

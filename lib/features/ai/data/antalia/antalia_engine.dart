@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/play_build.dart';
 import 'antalia_audio.dart';
 import 'antalia_text.dart';
 
@@ -48,7 +49,9 @@ class AntaliaModelFiles {
   static const _marker = '.complete';
 
   static bool get supported =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+      PlayBuild.antaliaVoice &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android;
 
   static Future<Directory> dir() async {
     final base = await getApplicationSupportDirectory();

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/theme/app_palette.dart';
 import '../../core/constants.dart';
+import '../../core/play_build.dart';
 import '../../core/crash_reporting.dart';
 import '../../core/utils/language_names.dart';
 import '../../core/utils/note_fonts.dart';
@@ -495,8 +496,14 @@ class TtsEngineNotifier extends Notifier<TtsEngine> {
   static const _key = 'tts_engine';
 
   @override
-  TtsEngine build() =>
-      TtsEngine.fromId(watchPrefs(ref).getString(_key));
+  TtsEngine build() {
+    final e = TtsEngine.fromId(watchPrefs(ref).getString(_key));
+    // Play derlemesinde Antalia yok: yedekten gelen seçim cihaz sesine düşer.
+    if (e == TtsEngine.antalia && !PlayBuild.antaliaVoice) {
+      return TtsEngine.device;
+    }
+    return e;
+  }
 
   void set(TtsEngine value) {
     state = value;
