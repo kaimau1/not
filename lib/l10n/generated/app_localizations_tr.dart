@@ -214,9 +214,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiSummarize => 'Notu özetle';
 
   @override
-  String get aiAnalyze => 'Analiz et';
-
-  @override
   String get aiSectionNote => 'Bu not';
 
   @override
@@ -1341,9 +1338,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiSummarizeInfo => 'Kısa bir özet çıkarır';
 
   @override
-  String get aiAnalyzeInfo => 'Ana noktaları ve yapılacakları listeler';
-
-  @override
   String get aiImproveInfo => 'Üslubu değiştirir: resmî, kısa ya da liste';
 
   @override
@@ -2241,12 +2235,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get archiveStale => 'Bir yıldır dokunulmamış';
-
-  @override
-  String get archiveInsightsAi => 'AI ile özetle';
-
-  @override
-  String get archiveAiStale => 'AI: eskimiş görünenler';
 
   @override
   String get lineSpacing => 'Satır aralığı';
@@ -5700,20 +5688,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get trashAnalyze => 'Akıllı analiz';
 
   @override
-  String get trashAiRun => 'AI ile derin analiz';
-
-  @override
-  String get trashAiRunning => 'Analiz ediliyor…';
-
-  @override
-  String get trashAiInfo =>
-      'Cihazdaki kurallar hazır. Yapay zekâ analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.';
-
-  @override
-  String get trashAiNothing =>
-      'Analize gönderilecek not yok (kilitli notlar gönderilmez)';
-
-  @override
   String get trashSuggestRestore => 'Geri yüklemeyi düşün';
 
   @override
@@ -5810,9 +5784,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get trashReasonSubstantial => 'Uzun, emek verilmiş metin';
 
   @override
-  String get trashReasonAi => 'AI önerisi';
-
-  @override
   String get cardElementsHeader => 'Kartta görünenler';
 
   @override
@@ -5891,22 +5862,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cardShowPaper => 'Defter kâğıdı deseni';
-
-  @override
-  String get settingsAiSearch => 'Yapay zekâyla ara';
-
-  @override
-  String get settingsAiSearchHint => 'Ne istediğini yaz — “yazılar çok küçük”';
-
-  @override
-  String get settingsAiSearchGo => 'Bul';
-
-  @override
-  String get settingsAiSearchEmpty =>
-      'Uygun bir ayar bulunamadı. Başka sözcüklerle dene.';
-
-  @override
-  String get settingsAiSearchFound => 'Yapay zekânın bulduğu ayarlar';
 
   @override
   String get formatFontPanel => 'Yazı tipi ve boyut';

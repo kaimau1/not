@@ -85,18 +85,6 @@ void main() {
     },
   );
 
-  test('AI dökümü kilitli notu içermez, kimlikleri sıra numarasıyla eşler', () {
-    final (:digest, :ids) = trashDigest([
-      trashed('x', body: 'merhaba'),
-      trashed('k', body: 'gizli', locked: true),
-      trashed('y'),
-    ]);
-    expect(ids, {'n1': 'x', 'n2': 'y'});
-    expect(digest, contains('[n1] merhaba'));
-    expect(digest, contains('[n2] (boş)'));
-    expect(digest, isNot(contains('gizli')));
-  });
-
   test('çöp hatırlatması: önerili not silinmeden bir gün önce (D3)', () {
     const retention = Duration(days: 30);
     final plan = trashReminderPlan(

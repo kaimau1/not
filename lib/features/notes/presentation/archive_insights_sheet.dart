@@ -5,22 +5,18 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../ai/data/gemini_service.dart';
 import '../../folders/data/folders_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
-import '../../../core/friendly_error.dart';
-import '../../auth/presentation/account_required.dart';
-import '../domain/trash_analysis.dart' show trashDigest;
 import 'note_card.dart' show formatNoteDate, openNoteRoute;
 
 /// **ARŞİV ÖZETİ** (geliştirme raporu D5, 2026-10-20: "Arşivimde neler
 /// var?" — çöp analizinin arşiv karşılığı).
 ///
 /// Cihazda anında: sayılar, klasörlere dağılım ve bir yıldır dokunulmamış
-/// notlar. İsteğe bağlı "AI ile özetle": konu başlıkları + eskimiş görünen
-/// notlar (kilitli notlar gönderilmez). Her satır açılır ya da (geri
-/// alınabilir) çöpe atılır; hiçbir şey sormadan yapılmaz.
+/// notlar. Her satır açılır ya da (geri alınabilir) çöpe atılır; hiçbir şey
+/// sormadan yapılmaz. AI özeti (`summarizeArchive`) PLAN §1.6 AI-S1 kararıyla
+/// kaldırıldı (2026-11-17): yalnız cihazdaki özet kalır.
 Future<void> showArchiveInsightsSheet(
   BuildContext context,
   List<Note> archived,
@@ -79,60 +75,9 @@ class _ArchiveInsightsSheet extends ConsumerStatefulWidget {
 
 class _ArchiveInsightsSheetState extends ConsumerState<_ArchiveInsightsSheet> {
   late final ArchiveStats _stats = archiveStats(widget.notes);
-  late final Map<String, Note> _byId = {for (final n in widget.notes) n.id: n};
 
   /// Bu levhada çöpe atılanlar (listelerden düşer).
   final _done = <String>{};
-
-  bool _aiLoading = false;
-  String? _aiError;
-  String _aiSummary = '';
-  List<({String name, int count})> _aiCategories = const [];
-  List<({String id, String reason})> _aiStale = const [];
-
-  Future<void> _runAi() async {
-    if (!ensureAiReady(context, ref)) return;
-    final l10n = context.l10n;
-    final (:digest, :ids) = trashDigest(widget.notes, limit: 80);
-    if (ids.isEmpty) {
-      setState(() => _aiError = l10n.trashAiNothing);
-      return;
-    }
-    setState(() {
-      _aiLoading = true;
-      _aiError = null;
-    });
-    try {
-      final r = await ref.read(geminiServiceProvider).summarizeArchive(digest);
-      if (!mounted) return;
-      setState(() {
-        _aiSummary = (r['ozet'] as String? ?? '').trim();
-        _aiCategories = [
-          for (final c in (r['kategori'] as List?) ?? const [])
-            if (c is Map && c['ad'] is String)
-              (
-                name: (c['ad'] as String).trim(),
-                count: (c['sayi'] as num?)?.toInt() ?? 0,
-              ),
-        ];
-        _aiStale = [
-          for (final e in (r['eski'] as List?) ?? const [])
-            if (e is Map && ids[e['id']] != null)
-              (id: ids[e['id']]!, reason: (e['neden'] as String? ?? '').trim()),
-        ];
-      });
-    } on GeminiException catch (e) {
-      if (mounted) {
-        setState(
-          () => _aiError = aiErrorText(l10n, e),
-        );
-      }
-    } catch (e) {
-      if (mounted) setState(() => _aiError = aiErrorText(l10n, e));
-    } finally {
-      if (mounted) setState(() => _aiLoading = false);
-    }
-  }
 
   void _trash(Note note) {
     final repo = ref.read(notesRepositoryProvider);
@@ -185,10 +130,6 @@ class _ArchiveInsightsSheetState extends ConsumerState<_ArchiveInsightsSheet> {
       for (final n in _stats.stale)
         if (!_done.contains(n.id)) n,
     ];
-    final aiStale = [
-      for (final s in _aiStale)
-        if (!_done.contains(s.id) && _byId[s.id] != null) s,
-    ];
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.7,
@@ -239,51 +180,6 @@ class _ArchiveInsightsSheetState extends ConsumerState<_ArchiveInsightsSheet> {
                 n,
                 n.updatedAt == null ? '' : formatNoteDate(n.updatedAt!),
               ),
-          ],
-          const SizedBox(height: 16),
-          if (_aiSummary.isEmpty && aiStale.isEmpty)
-            FilledButton.tonalIcon(
-              key: const ValueKey('archive-insights-ai'),
-              onPressed: _aiLoading ? null : _runAi,
-              icon: _aiLoading
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const AiIcon(),
-              label: Text(l10n.archiveInsightsAi),
-            ),
-          if (_aiError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(_aiError!, style: TextStyle(color: scheme.error)),
-            ),
-          if (_aiSummary.isNotEmpty) ...[
-            Row(
-              children: [
-                Icon(Icons.auto_awesome, size: 16, color: scheme.primary),
-                const SizedBox(width: 6),
-                Expanded(child: Text(_aiSummary)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final c in _aiCategories)
-                  Chip(
-                    visualDensity: VisualDensity.compact,
-                    label: Text('${c.name} · ${c.count}'),
-                  ),
-              ],
-            ),
-          ],
-          if (aiStale.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(l10n.archiveAiStale, style: theme.textTheme.labelLarge),
-            for (final s in aiStale) _noteRow(_byId[s.id]!, s.reason),
           ],
         ],
       ),

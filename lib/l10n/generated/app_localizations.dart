@@ -464,12 +464,6 @@ abstract class AppLocalizations {
   /// **'Notu özetle'**
   String get aiSummarize;
 
-  /// No description provided for @aiAnalyze.
-  ///
-  /// In tr, this message translates to:
-  /// **'Analiz et'**
-  String get aiAnalyze;
-
   /// No description provided for @aiSectionNote.
   ///
   /// In tr, this message translates to:
@@ -2504,12 +2498,6 @@ abstract class AppLocalizations {
   /// **'Kısa bir özet çıkarır'**
   String get aiSummarizeInfo;
 
-  /// No description provided for @aiAnalyzeInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ana noktaları ve yapılacakları listeler'**
-  String get aiAnalyzeInfo;
-
   /// No description provided for @aiImproveInfo.
   ///
   /// In tr, this message translates to:
@@ -4165,18 +4153,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bir yıldır dokunulmamış'**
   String get archiveStale;
-
-  /// No description provided for @archiveInsightsAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI ile özetle'**
-  String get archiveInsightsAi;
-
-  /// No description provided for @archiveAiStale.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI: eskimiş görünenler'**
-  String get archiveAiStale;
 
   /// No description provided for @lineSpacing.
   ///
@@ -10232,30 +10208,6 @@ abstract class AppLocalizations {
   /// **'Akıllı analiz'**
   String get trashAnalyze;
 
-  /// No description provided for @trashAiRun.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI ile derin analiz'**
-  String get trashAiRun;
-
-  /// No description provided for @trashAiRunning.
-  ///
-  /// In tr, this message translates to:
-  /// **'Analiz ediliyor…'**
-  String get trashAiRunning;
-
-  /// No description provided for @trashAiInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Cihazdaki kurallar hazır. Yapay zekâ analizi notların kısa dökümünü modele gönderir; kilitli notlar gönderilmez.'**
-  String get trashAiInfo;
-
-  /// No description provided for @trashAiNothing.
-  ///
-  /// In tr, this message translates to:
-  /// **'Analize gönderilecek not yok (kilitli notlar gönderilmez)'**
-  String get trashAiNothing;
-
   /// No description provided for @trashSuggestRestore.
   ///
   /// In tr, this message translates to:
@@ -10363,12 +10315,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Uzun, emek verilmiş metin'**
   String get trashReasonSubstantial;
-
-  /// No description provided for @trashReasonAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI önerisi'**
-  String get trashReasonAi;
 
   /// No description provided for @cardElementsHeader.
   ///
@@ -10507,36 +10453,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Defter kâğıdı deseni'**
   String get cardShowPaper;
-
-  /// No description provided for @settingsAiSearch.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâyla ara'**
-  String get settingsAiSearch;
-
-  /// No description provided for @settingsAiSearchHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ne istediğini yaz — “yazılar çok küçük”'**
-  String get settingsAiSearchHint;
-
-  /// No description provided for @settingsAiSearchGo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bul'**
-  String get settingsAiSearchGo;
-
-  /// No description provided for @settingsAiSearchEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Uygun bir ayar bulunamadı. Başka sözcüklerle dene.'**
-  String get settingsAiSearchEmpty;
-
-  /// No description provided for @settingsAiSearchFound.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekânın bulduğu ayarlar'**
-  String get settingsAiSearchFound;
 
   /// No description provided for @formatFontPanel.
   ///

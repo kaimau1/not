@@ -571,73 +571,6 @@ class GeminiService {
     },
   ]);
 
-  /// Notu analiz eder: ana temalar, eksikler, yapılacaklar.
-  Future<String> analyzeNote(Note note) => _generate([
-    {
-      'text':
-          'Aşağıdaki notu Türkçe analiz et: ana temaları çıkar, varsa '
-          'eksik veya belirsiz noktaları belirt ve nottan doğan yapılacak '
-          'işleri listele. Kısa ve eyleme dönük yaz.\n\n---\n'
-          '${_reviewText(note)}',
-    },
-  ]);
-
-  /// **ÇÖP KUTUSU ANALİZİ** (kullanıcı isteği 2026-10-20): çöpteki notların
-  /// kısa dökümüne ([digest], satır başı `[nK] metin | ek | açık madde`)
-  /// bakıp neyin geri yüklenmesi, neyin güvenle silinmesi gerektiğini söyler.
-  /// Dönen JSON: `{"ozet": "...", "geri": [{"id": "n3", "neden": "..."}],
-  /// "sil": [{"id": "n1", "neden": "..."}]}`. Kararı kullanıcı verir.
-  Future<Map<String, dynamic>> analyzeTrash(String digest) async {
-    final raw = await _generate([
-      {
-        'text':
-            'Aşağıda bir not uygulamasının ÇÖP KUTUSUNDAKİ notlar var (her '
-            'satır bir not; köşeli parantezde kimliği). Kullanıcıya yardım '
-            'et: (1) "ozet": çöpte ne tür şeyler olduğunu 1-2 kısa Türkçe '
-            'cümleyle anlat; (2) "geri": yanlışlıkla silinmiş olabilecek ya '
-            'da içinde hâlâ gerekli bilgi/iş bulunan notlar (şifre, adres, '
-            'tarih, yapılmamış iş, emek verilmiş metin…); (3) "sil": '
-            'güvenle kalıcı silinebilecek notlar (boş, deneme, anlamsız, '
-            'eskimiş, başka notun tekrarı). Emin olmadığın notu hiçbir '
-            'listeye koyma. "neden" en fazla 8 kelime. Yanıtı YALNIZCA şu '
-            'JSON ile ver: {"ozet": "...", "geri": [{"id": "n1", "neden": '
-            '"..."}], "sil": [{"id": "n2", "neden": "..."}]}'
-            '\n\n---\n$digest',
-      },
-    ], jsonOutput: true);
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map<String, dynamic>) {
-      throw const GeminiException.of(GeminiErrorKind.unexpectedResponse);
-    }
-    return decoded;
-  }
-
-  /// ARŞİV ÖZETİ (geliştirme raporu D5, 2026-10-20): "Arşivimde neler var?"
-  /// — çöp analizinin arşiv karşılığı. [digest]: [trashDigest] biçiminde
-  /// (aynı satır düzeni, kilitli notlar yok).
-  Future<Map<String, dynamic>> summarizeArchive(String digest) async {
-    final raw = await _generate([
-      {
-        'text':
-            'Aşağıda bir not uygulamasının ARŞİVİNDEKİ notlar var (her satır '
-            'bir not; köşeli parantezde kimliği). (1) "ozet": arşivde ne tür '
-            'şeyler olduğunu 1-2 kısa Türkçe cümleyle anlat; (2) "kategori": '
-            'en fazla 6 konu başlığı ve kaç not içerdiği; (3) "eski": artık '
-            'gereksiz/eskimiş görünen ve silinebilecek notlar (geçmiş tarihli '
-            'iş, tamamlanmış liste, deneme). Emin olmadığın notu "eski"ye '
-            'koyma. "neden" en fazla 8 kelime. Yanıtı YALNIZCA şu JSON ile '
-            'ver: {"ozet": "...", "kategori": [{"ad": "...", "sayi": 3}], '
-            '"eski": [{"id": "n1", "neden": "..."}]}'
-            '\n\n---\n$digest',
-      },
-    ], jsonOutput: true);
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map<String, dynamic>) {
-      throw const GeminiException.of(GeminiErrorKind.unexpectedResponse);
-    }
-    return decoded;
-  }
-
   /// Kısa özet istemi: birkaç cümlelik genel bakış + önemli maddeler.
   static const _shortSummaryPrompt =
       'Türkçe olarak KISA ve öz biçimde özetle: önce 2-3 cümlelik genel '
@@ -1262,62 +1195,6 @@ class GeminiService {
     ]).then(stripMarkdown);
   }
 
-  /// **Hızlı yakalama**: OCR'dan çıkan ham metni düzeltir, kısa bir başlık
-  /// ve TÜR (kategori) önerir.
-  ///
-  /// Kullanıcı isteği 2026-08-16: "SS'le kaydedilen not defteri OCR ile
-  /// çıkarır ai ile olur ve kaydeder — hadis defteri, film arşivi vs."
-  /// Ekran görüntüsünden çıkan metin satır sonları kırık, tireli ve arayüz
-  /// kırıntılarıyla karışık geliyor; okunur hâle getirmek ve "bu bir hadis
-  /// mi, film önerisi mi, alıntı mı" ayrımını yapmak modelin işi.
-  ///
-  /// Kategori SERBEST metin, sabit bir liste değil: kullanıcının defterleri
-  /// önceden bilinmiyor ve sabit liste "Hadisler"i "Alıntılar"a sıkıştırırdı.
-  /// [known] verilirse model ÖNCE onların arasından seçmeye çalışır — aynı
-  /// içerik her seferinde yeni bir sayfa açmasın.
-  ///
-  /// Dönen kayıt: (kategori, başlık, düzeltilmiş metin). Model beklenmedik
-  /// bir şey döndürürse ham metin olduğu gibi geri verilir — yakalama
-  /// hiçbir durumda kaybolmaz.
-  Future<({String category, String title, String text})> tidyCapture(
-    String raw, {
-    Iterable<String> known = const [],
-  }) async {
-    final pages = known.where((k) => k.trim().isNotEmpty).toList();
-    try {
-      final response = await _generate([
-        {
-          'text':
-              'Aşağıdaki metin bir ekran görüntüsünden OCR ile çıkarıldı. '
-              'Yap: (1) satır sonu kırıklarını ve tirelemeyi düzelt, arayüz '
-              'kırıntılarını (saat, pil, düğme yazıları) at, anlamı DEĞİŞTİRME '
-              've hiçbir şey ekleme; (2) en fazla 6 kelimelik Türkçe bir '
-              'başlık üret; (3) içeriğin TÜRÜNÜ tek bir kısa Türkçe adla '
-              'söyle (ör. "Hadisler", "Filmler", "Alıntılar", "Tarifler", '
-              '"Kitaplar").'
-              '${pages.isEmpty ? '' : ' Tür için ÖNCE şunlardan uygun olan '
-                  'varsa onu seç: ${pages.join(", ")}.'}'
-              '\nYanıtı YALNIZCA şu JSON ile ver: '
-              '{"tur": "...", "baslik": "...", "metin": "..."}'
-              '\n\n---\n$raw',
-        },
-      ], jsonOutput: true);
-      final decoded = jsonDecode(response);
-      if (decoded is! Map) throw const GeminiException.of(GeminiErrorKind.unexpectedResponse);
-      final text = (decoded['metin'] as String? ?? '').trim();
-      return (
-        category: (decoded['tur'] as String? ?? '').trim(),
-        title: (decoded['baslik'] as String? ?? '').trim(),
-        text: text.isEmpty ? raw : text,
-      );
-    } on GeminiException {
-      rethrow;
-    } catch (_) {
-      // Bozuk JSON ya da beklenmedik biçim: yakalama kaybolmasın.
-      return (category: '', title: '', text: raw);
-    }
-  }
-
   /// Kullanılabilir SESLENDİRME modelleri.
   ///
   /// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "gemini TTS'den okuma
@@ -1475,29 +1352,6 @@ class GeminiService {
     ];
   }
 
-  /// **AYAR ARAMA — AI KİPİ** (kullanıcı isteği 2026-10-20: "ayar arada ai
-  /// modu olabilir"). Kullanıcının serbest cümlesine ("yazılar çok küçük")
-  /// uyan ayar satırlarının [catalog] içindeki sıralarını döner (en uygunu
-  /// başta, en çok 6). Katalog yalnız ayar adları ve anahtar kelimeleri —
-  /// not içeriği gitmez.
-  Future<List<int>> matchSettings(String query, List<String> catalog) async {
-    final lines = [
-      for (var i = 0; i < catalog.length; i++) '$i: ${catalog[i]}',
-    ].join('\n');
-    final raw = await _generate(task: AiTask.short, [
-      {
-        'text':
-            'Bir not uygulamasının ayar listesi aşağıda (sıra: ad — '
-            'anahtar kelimeler). Kullanıcının isteğini karşılayan ayarları '
-            'seç; en uygunu başta, en çok 6 tane. Uygun ayar yoksa yalnız '
-            '"yok" yaz. Yanıtı YALNIZCA virgülle ayrılmış sıra numaraları '
-            'olarak ver, açıklama ekleme: 3, 12'
-            '\n\nKullanıcının isteği: "$query"\n\n---\n$lines',
-      },
-    ]);
-    return parseIndexList(raw, catalog.length);
-  }
-
   /// **HIZLI EKLE HEDEFİ** (kullanıcı isteği 2026-11-16: "sonunda 'dosyalara
   /// ekle' diyebilir; bulamazsak AI'ya gönderelim, en hızlı basit model
   /// tarasın, doğru nota eklesin"). Yerel eşleşme ([parseDropTarget]) hedefi
@@ -1527,18 +1381,6 @@ class GeminiService {
       },
     ]);
     return parseAiDropAnswer(raw, titles.length);
-  }
-
-  /// "3, 12" ya da "[3, 12]" → sıralar (Gemma JSON kipini desteklemez; düz
-  /// metin istenir). Aralık dışı ve tekrar atılır, en çok 6.
-  static List<int> parseIndexList(String raw, int length) {
-    final out = <int>[];
-    for (final m in RegExp(r'\d+').allMatches(raw)) {
-      final v = int.parse(m.group(0)!);
-      if (v < length && !out.contains(v)) out.add(v);
-      if (out.length == 6) break;
-    }
-    return out;
   }
 
   /// E-postadan not içeriği (F28.1): [tasks] true ise yalnız yapılacaklar
