@@ -212,6 +212,12 @@ class _PrefsSync with WidgetsBindingObserver {
   Map<String, Object?>? _remote;
   bool _running = false;
 
+  /// K-25: son başarılı turdaki yerel tercihler ve bulut belgesi. İkisi de
+  /// aynıysa tur hiçbir şey yapmadan döner (anlık görüntü `jsonDecode` +
+  /// plan çıkarma 20 sn'de bir boşuna koşuyordu).
+  Map<String, Object?>? _lastLocal;
+  Map<String, Object?>? _lastRemote;
+
   /// Ayar değişikliği bir dokunuştur; kısa aralıkla yoklamak yeter (prefs
   /// yazımları kodun her yerinde, tek kancası yok). Yalnız ÖN PLANDA (F6.4):
   /// Dart zamanlayıcıları süreç yaşadıkça işler — arkadayken de 20 sn'de bir
@@ -242,6 +248,13 @@ class _PrefsSync with WidgetsBindingObserver {
     final remote = _remote;
     // Bulut belgesi henüz okunmadı: ilk eşitleme bulutu beklemeli.
     if (remote == null || _running) return;
+    final local = readLocalPrefs(_prefs);
+    final lastLocal = _lastLocal;
+    if (identical(remote, _lastRemote) &&
+        lastLocal != null &&
+        sameFirestoreValue(lastLocal, local)) {
+      return;
+    }
     _running = true;
     try {
       final raw = _prefs.getString(_snapshotKey);
@@ -249,7 +262,7 @@ class _PrefsSync with WidgetsBindingObserver {
           ? null
           : Map<String, Object?>.from(jsonDecode(raw) as Map);
       final plan = planPrefsSync(
-        local: readLocalPrefs(_prefs),
+        local: local,
         snapshot: snapshot,
         remote: remote,
       );
@@ -271,6 +284,8 @@ class _PrefsSync with WidgetsBindingObserver {
         await _prefs.setString(_snapshotKey, jsonEncode(plan.snapshot));
       }
       if (plan.apply.isNotEmpty) onApplied();
+      _lastLocal = readLocalPrefs(_prefs);
+      _lastRemote = remote;
     } catch (e) {
       debugPrint('Ayar senkronu başarısız: $e');
     } finally {

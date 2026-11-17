@@ -1,6 +1,8 @@
 import '../../app/theme/app_tokens.dart';
 import 'package:flutter/material.dart';
 
+import 'app_notice.dart';
+
 /// Belirtilen süre boyunca dolu→boş küçülen ince bir çubuk. Otomatik kapanan
 /// bildirim/paneller için "ne kadar süre kalacağı" görsel olarak belli olur.
 /// [onEnd] verilirse süre bitince çağrılır (paneli kendisi kapatmak için).
@@ -18,20 +20,16 @@ class CountdownBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 1, end: 0),
+    final c = color ?? Theme.of(context).colorScheme.primary;
+    // K-38: TweenAnimationBuilder her karede ClipRRect +
+    // LinearProgressIndicator kuruyordu; adımlı boyama aynı görünümü verir.
+    return SteppedCountdown(
       duration: duration,
       onEnd: onEnd,
-      builder: (context, value, _) => ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.hair),
-        child: LinearProgressIndicator(
-          value: value,
-          minHeight: 3,
-          backgroundColor: (color ?? Theme.of(context).colorScheme.primary)
-              .withValues(alpha: 0.18),
-          color: color ?? Theme.of(context).colorScheme.primary,
-        ),
-      ),
+      height: 3,
+      color: c,
+      trackColor: c.withValues(alpha: 0.18),
+      radius: AppRadius.hair,
     );
   }
 }

@@ -118,6 +118,7 @@ import '../../auth/presentation/account_required.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../core/a11y/min_tap_target.dart';
 import '../../../core/a11y/motion.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 
 import '../../notes/presentation/viewers/ink_tools.dart' show InkToolMemory;
 import '../../notes/presentation/viewers/ink_layer.dart' show InkFingerToolPicker;

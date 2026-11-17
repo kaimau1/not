@@ -42,6 +42,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_update.dart';
+import '../../../../core/save_cadence.dart';
 import 'note_slice.dart';
 import '../../../../core/widgets/toggle_pop.dart';
 import '../../../../app/router.dart';
@@ -256,9 +257,11 @@ ThemeData _themeOf(BuildContext context) =>
     _editorInk[context] ?? Theme.of(context);
 
 /// Otomatik kaydın sessizlik süresi ve aralıksız yazımdaki üst sınırı
-/// (F22.2, KARAR 2026-11-03).
-const kEditorSaveDelay = Duration(seconds: 2);
-const kEditorSaveMaxWait = Duration(seconds: 10);
+/// (F22.2, KARAR 2026-11-03; 2026-11-17 senkron maliyeti S2: üst sınır
+/// 10 → 20 sn). Çalışma anında `config/app` ile uzaktan değişebilir:
+/// [SaveCadence].
+const kEditorSaveDelay = SaveCadence.defaultDelay;
+const kEditorSaveMaxWait = SaveCadence.defaultMaxWait;
 
 /// İki madde listesi EKRANDA aynı mı? Yalnız madde METNİ değiştiyse aynı
 /// sayılır: o metni satırın kendi denetleyicisi zaten çiziyor.
@@ -1184,14 +1187,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   /// F22.2 (KARAR 2026-11-03): ~2 sn boşluk, aralıksız yazımda en geç
-  /// 10 sn. Her kayıt FlutterFire'da TÜM koleksiyonu ana iş parçacığında
+  /// 10 sn (2026-11-17: 2 sn / 20 sn, [SaveCadence]). Her kayıt FlutterFire'da TÜM koleksiyonu ana iş parçacığında
   /// yeniden kodlatıyor (K3) — 0,5 sn / 3 sn'de yazarken saniyede bir blok
   /// demekti. Çıkış kapılarında (kapanış, arka plan, `inactive`) bekleyen
   /// kayıt hemen yazılır ([_saveNow]); bedel: uygulama öldürülürse en çok
   /// ~10 sn'lik yazı.
   final _debouncer = Debouncer(
-    delay: kEditorSaveDelay,
-    maxWait: kEditorSaveMaxWait,
+    delay: SaveCadence.delay,
+    maxWait: SaveCadence.maxWait,
   );
 
   /// Otomatik kayıt istemci saatiyle yazıldı mı (F22.3): kapanışta bir kez

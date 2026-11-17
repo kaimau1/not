@@ -2,6 +2,13 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 17 November 2026 {#2026-11-17}
+- **Sheets stay smooth with the keyboard up:** find in note, the note link picker, AI result, calculator, voice capture, language picker, add friend, folder chat and image caption sheets no longer redraw on every keyboard frame; find in note only recomputes results when your query changes.
+- **"Undo" bar and countdowns don't stutter:** the remaining-time line of the bottom "Undo" notice and the voice assistant advances in steps; typing while a notice is up no longer lags.
+- **Smart list splits by spaces too:** typing or saying "milk eggs bread" now gives three items (it used to stay one); grocery spelling fixes work as well.
+- **Quick add fixes:** an entry ending in a verb like "write report" no longer loses the verb. Items are added to the note as it is right now, and "Undo" removes only what you added — changes from another device in between are kept.
+- **Less battery and data:** home screen widgets and settings sync no longer interrupt typing (widgets update when you leave the app); during long continuous typing the note is sent to the cloud less often (it is saved right away when you close it or leave the app); a shared note left open stops sending its "editing" signal when you leave the app.
+
 ## 16 November 2026 {#2026-11-16}
 - **Find in note shows up right away:** the magnifier at the top right no longer pops in half a second after the note opens.
 - **Find in note sits at the top, on its own row:** the search bar opens just below the top bar; the bottom panel (Format, Add, voice…) stays above the keyboard. Opening it no longer stutters.

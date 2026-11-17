@@ -20,6 +20,7 @@ import '../features/notes/presentation/lock/note_lock_ui.dart';
 import '../features/notes/presentation/notes_providers.dart';
 import '../features/settings/data/prefs_sync.dart';
 import 'router.dart';
+import '../core/save_cadence.dart';
 
 /// Oturum açıkken ayakta durması gereken arka plan servisleri (F2.4).
 ///
@@ -65,6 +66,8 @@ class _AppServicesState extends ConsumerState<AppServices> {
     (ref) => ref.listen(uploadQueueProvider, _ignore),
     // Kişiye ait tercihler kullanıcı belgesine (F4.5).
     (ref) => ref.listen<void>(prefsSyncProvider, _ignore),
+    // Otomatik kaydın bulut sıklığı + uzaktan fren (config/app).
+    (ref) => ref.listen<void>(saveCadenceSyncProvider, _ignore),
     (ref) => ref.listen(reminderServiceProvider, _ignore),
     // Silinen/arşivlenen notların konum hatırlatıcılarını kaldırır.
     (ref) => ref.listen<void>(placeReminderCleanupProvider, _ignore),

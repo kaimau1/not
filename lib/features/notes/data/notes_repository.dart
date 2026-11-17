@@ -912,6 +912,9 @@ class NotesRepository {
   /// Not kimliği → bu oturumda son sürümün alındığı an.
   final Map<String, DateTime> _versionAt = {};
 
+  /// Not kimliği → bu oturumda eklenen sürüm sayısı (budama seyreltme).
+  final Map<String, int> _versionAdds = {};
+
   /// Editör notu açınca çağırır: notun AÇILDIĞI hâli, ilk değişiklikte
   /// sürüm olarak saklanır ("dünkü hâline dön").
   void rememberVersionBase(Note note) =>
@@ -952,6 +955,11 @@ class NotesRepository {
         'at': FieldValue.serverTimestamp(),
       });
       if (editorUid != uid) return;
+      // Budama sorgusu en çok 40 belge OKUR; her sürümde koşmak boşa okuma
+      // (senkron maliyeti S3, 2026-11-17). Oturumda notun ilk sürümünde ve
+      // sonra her 5. sürümde budanır; arada sınır en çok 4 aşılır.
+      final n = _versionAdds[noteId] = (_versionAdds[noteId] ?? 0) + 1;
+      if (n % 5 != 1) return;
       final old = await _versions(
         noteId,
       ).orderBy('at', descending: true).limit(kMaxVersions + 10).get();

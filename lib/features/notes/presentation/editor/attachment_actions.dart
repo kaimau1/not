@@ -4,6 +4,7 @@ import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../domain/attachment.dart';
+import '../../../../core/widgets/sheet_keyboard.dart';
 import 'note_images.dart' show captionTextStyle;
 
 /// **TEK EK MENÜSÜ (TUTARLILIK F40.1).** Aynı ekin menüsü görünüme göre başka
@@ -284,31 +285,29 @@ Future<String?> showCaptionSheet(BuildContext context, String initial) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (sheet) => Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        0,
-        20,
-        16 + MediaQuery.viewInsetsOf(sheet).bottom,
-      ),
-      child: TextField(
-        key: const ValueKey('caption-sheet-field'),
-        controller: controller,
-        autofocus: true,
-        maxLength: Attachment.maxCaptionChars,
-        maxLines: 3,
-        minLines: 1,
-        textInputAction: TextInputAction.done,
-        decoration: InputDecoration(
-          hintText: sheet.l10n.imageCaptionHint,
-          suffixIcon: IconButton(
-            key: const ValueKey('caption-sheet-done'),
-            tooltip: MaterialLocalizations.of(sheet).okButtonLabel,
-            icon: const Icon(Icons.check),
-            onPressed: () => Navigator.pop(sheet, controller.text.trim()),
+    builder: (sheet) => SheetInsetPadding(
+      extra: 16,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: TextField(
+          key: const ValueKey('caption-sheet-field'),
+          controller: controller,
+          autofocus: true,
+          maxLength: Attachment.maxCaptionChars,
+          maxLines: 3,
+          minLines: 1,
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            hintText: sheet.l10n.imageCaptionHint,
+            suffixIcon: IconButton(
+              key: const ValueKey('caption-sheet-done'),
+              tooltip: MaterialLocalizations.of(sheet).okButtonLabel,
+              icon: const Icon(Icons.check),
+              onPressed: () => Navigator.pop(sheet, controller.text.trim()),
+            ),
           ),
+          onSubmitted: (v) => Navigator.pop(sheet, v.trim()),
         ),
-        onSubmitted: (v) => Navigator.pop(sheet, v.trim()),
       ),
     ),
   ).whenComplete(controller.dispose);

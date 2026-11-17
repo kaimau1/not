@@ -22,6 +22,7 @@ import '../../../core/a11y/chip_roles.dart';
 import '../../../core/app_icons.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/haptics.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 
 /// Sesli yakalama levhası — ana ekran ve not editörünün ORTAK bileşeni.
 ///
@@ -791,21 +792,23 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     // showModalBottomSheet'in useSafeArea'sı üst/yanları korur, ALTI bilerek
     // korumaz (klavye için). Alt boşluğu levha kendi ekler; klavye açıkken
     // onun yüksekliği zaten daha büyüktür.
-    final bottomGap = math.max(
-      MediaQuery.viewInsetsOf(context).bottom,
-      MediaQuery.viewPaddingOf(context).bottom,
-    );
 
     // Bütün evreler AYNI yüzen kartın içinde (editörün dikte şeridiyle aynı
     // kenar boşluğu ve köşe — bkz. [ListeningCard]).
-    Widget framed(Widget child) => Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpace.s,
-        AppSpace.xs,
-        AppSpace.s,
-        AppSpace.s + bottomGap,
+    // Alt pay (klavye ya da gezinme çubuğu, hangisi büyükse) yalnız ince
+    // sarmalayıcıda okunur: klavye karesinde levha baştan kurulmaz (K-04).
+    Widget framed(Widget child) => SheetInsetPadding(
+      extra: AppSpace.s,
+      floorViewPadding: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.s,
+          AppSpace.xs,
+          AppSpace.s,
+          0,
+        ),
+        child: child,
       ),
-      child: child,
     );
     // Bütün evreler dinleme kartıyla AYNI kabukta (P63 PB5: üç ayrı elle
     // yazılmış kabuk tek bileşen oldu).

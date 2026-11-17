@@ -194,18 +194,14 @@ SnackBar timedSnackBar({
                 ],
               ),
             ),
-            TweenAnimationBuilder<double>(
+            // K-38: süre boyunca her karede çubuğu yeniden dizen
+            // TweenAnimationBuilder yerine saniyede 8 adım, yalnız boyama.
+            SteppedCountdown(
               key: const ValueKey('snack-countdown'),
-              tween: Tween<double>(begin: 1, end: 0),
               duration: duration,
+              height: 3,
+              color: scheme.inversePrimary,
               onEnd: messenger.hideCurrentSnackBar,
-              builder: (context, value, _) => Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: FractionallySizedBox(
-                  widthFactor: value,
-                  child: Container(height: 3, color: scheme.inversePrimary),
-                ),
-              ),
             ),
           ],
         );

@@ -2,6 +2,13 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 17 Kasım 2026 {#2026-11-17}
+- **Klavye açıkken levhalar akıcı:** not içi arama, not bağlama seçicisi, yapay zekâ sonucu, hesap makinesi, sesli kayıt, dil seçimi, arkadaş ekleme, klasör sohbeti ve görsel açıklaması levhaları klavye açılıp kapanırken artık her karede baştan çizilmiyor; not içi aramada sonuçlar yalnız aradığın şey değişince yeniden hesaplanıyor.
+- **"Geri al" çubuğu ve geri sayımlar kasmıyor:** alttaki "Geri al" bildiriminin ve sesli asistanın kalan süre çizgisi kademeli ilerliyor; bildirim açıkken yazmak takılmıyor.
+- **Akıllı liste boşlukla da ayırıyor:** "süt yumurta ekmek" yazınca ya da söyleyince artık üç ayrı madde oluyor (önce tek madde kalıyordu); market sözlüğündeki yazım düzeltmeleri de çalışıyor.
+- **Hızlı ekle düzeltmeleri:** "rapor yaz" gibi fiille biten bir şey yazınca fiil artık silinmiyor. Ekleme notun o anki hâline yapılıyor; "Geri al" yalnız senin eklediğini çıkarıyor, arada başka cihazdan gelen değişiklik silinmiyor.
+- **Daha az pil ve veri:** yazarken ana ekran aracı ve ayar eşitlemesi araya girmiyor (araç uygulamadan çıkınca güncellenir); uzun süre aralıksız yazarken not buluta daha seyrek gönderiliyor (kapatınca ya da uygulamadan çıkınca hemen kaydedilir); paylaşılan not açık bırakılıp uygulamadan çıkılınca "düzenliyor" sinyali durur.
+
 ## 16 Kasım 2026 {#2026-11-16}
 - **Notta ara hemen görünüyor:** not açılınca sağ üstteki büyüteç artık yarım saniye sonra "pat" diye gelmiyor, ilk anda yerinde.
 - **Not içi arama üstte, kendi satırında:** arama çubuğu üst çubuğun hemen altında açılıyor; alttaki panel (Biçim, Ekle, ses…) klavyenin üstünde yerinde kalıyor. Arama açılırken takılma da giderildi.

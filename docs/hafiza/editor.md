@@ -214,3 +214,10 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Notta ara düğmesi `GlyphButton`** (`editor/glyph_button.dart`): simge + dokunma (`TapGestureRecognizer`) + Semantics tek `RenderBox`ta; RenderObjectElement build etmez → S18/S19 bütçesine girmeden İLK karede. Eski `_RevealAfterOpen` (300 ms zamanlayıcı) "yarım saniye sonra pat diye geliyor" bulgusunun kök nedeniydi — kaldırıldı.
 - **Arama satırı gövde Column'unun TEPESİNDE** (`findSlot`, KeyboardSnap dışında kurulan aynı örnek; kapalıyken `SizedBox.shrink`). Alt çubuk aramada yerinde kalır. `_findOpen` artık `_findOpenN` bildiricisi: aç/kapa kök setState yapmaz (arama_ac haritası NoteEditorScreen=0); PopScope `_popL`, biçim paneli `_formatPanelL` dinler. Pencereli gövde açılışta elle `exit()` edilir (eskiden kök kurulumu yapıyordu).
 - **Klavye açıkken ⋮ / "+"**: `_dismissKeyboardAfterSheet` — levha `requestFocus: false` ile açılır, klavye levhanın ilk karesinden sonra (post-frame) iner. Not: `ModalRoute.didPush` route.requestFocus değil navigator.requestFocus'a bakar ama o anda kapsam kurulmamış olduğundan etkisiz; odağı alan levha değil editörün kendi `unfocus`u. Test ortamında iki sürüm (9738fc1c / fea856fe) aynı yükte — kullanıcının "son güncellemeden sonra" kasma bulgusunun kök nedeni testte görünmedi; cihazda ölçülmedi.
+
+## 2026-11-17 — Hızlı ekle / akıllı liste hataları
+- H9: `koy/yaz/kaydet/not et/not al` hedef bulunamazsa içerikten SİLİNMEZ, `command:false`; yalnız
+  `ekle` ailesi tek başına komut kanıtı (`_addCommand`, `quick_drop.dart`).
+- H10: hızlı ekle notun GÜNCEL hâlini akıştan okur (`_noteOf`); geri al `quickDropUndoFields`:
+  yalnız eklenen maddeleri çıkarır, değiştirdiği madde hâlâ yazdığı hâldeyse eskisine döner.
+- Akıllı liste ayrıştırıcısına market sözlüğü katılır (`grocery || smart`, `quick_list_screen.dart`).

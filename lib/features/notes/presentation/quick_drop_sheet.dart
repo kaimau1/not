@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/firestore_size.dart' show sameFirestoreValue;
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -145,6 +146,60 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
     },
     added: added,
   );
+}
+
+/// Hızlı eklemenin GERİ ALINMASI (H10, 2026-11-17): eski kopyayı körlemesine
+/// geri yazmak, ekleme ile geri al arasında nota yapılan değişikliği (başka
+/// cihaz, ortak kişi, editör) siliyordu. Yalnız bu eklemenin dokunduğu şey
+/// geri alınır: eklenen maddeler çıkar; değiştirdiği madde HÂLÂ yazdığı
+/// hâldeyse eskisine döner. Yazı notunda eklenen son satırlar, gövde hâlâ
+/// yazılanla başlıyorsa çıkarılır. Geri alınacak bir şey kalmadıysa boş.
+Map<String, dynamic> quickDropUndoFields({
+  required Note before,
+  required Note current,
+  required Map<String, dynamic> written,
+}) {
+  if (before.type == NoteType.text) {
+    final w = written['body'];
+    if (w is! String) return const {};
+    final now = current.body;
+    if (!now.startsWith(w)) return const {};
+    return {'body': before.body + now.substring(w.length)};
+  }
+  final raw = written['items'];
+  if (raw is! List) return const {};
+  final wrote = {
+    for (final m in raw)
+      if (m is Map) (m['id'] as String?) ?? '': Map<String, dynamic>.from(m),
+  };
+  final old = {for (final i in before.items) i.id: i};
+  var changed = false;
+  final items = <NoteItem>[];
+  for (final i in current.items) {
+    final w = wrote[i.id];
+    if (!old.containsKey(i.id)) {
+      // Bu eklemenin maddesi (kimliği eskide yok) → çıkar.
+      if (w != null) {
+        changed = true;
+        continue;
+      }
+      items.add(i);
+      continue;
+    }
+    final o = old[i.id]!;
+    if (w != null &&
+        !sameFirestoreValue(o.toMap(), w) &&
+        sameFirestoreValue(i.toMap(), w)) {
+      changed = true;
+      items.add(o);
+    } else {
+      items.add(i);
+    }
+  }
+  if (!changed) return const {};
+  return {
+    'items': [for (final i in items) i.toMap()],
+  };
 }
 
 /// **HIZLI EKLE** levhasını açar.
@@ -395,7 +450,14 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     }
   }
 
+  /// Notun GÜNCEL hâli (H10): aday listesi levha AÇILIRKEN alınmış kopyadır;
+  /// levha açıkken not değiştiyse (başka cihaz, ortak kişi) eklemeyi o
+  /// kopyaya yapıp alanın tamamını yazmak değişikliği siliyordu.
   Note? _noteOf(String? id) {
+    if (id == null) return null;
+    for (final n in ref.read(notesStreamProvider).value ?? const <Note>[]) {
+      if (n.id == id) return n;
+    }
     for (final n in _candidates) {
       if (n.id == id) return n;
     }
@@ -426,17 +488,27 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       repo.updateFields(note.id, result.fields);
       ref.read(quickDropRecentProvider.notifier).remember(note.id);
     }
+    final container = ProviderScope.containerOf(context, listen: false);
     Navigator.of(context).pop();
     if (result.fields.isEmpty) {
       messenger.showMessage(l10n.quickDropNothingNew(title));
       return;
     }
-    // Geri al: yalnız dokunulan alan eski hâline yazılır.
-    final undo = note.type == NoteType.text
-        ? <String, dynamic>{'body': note.body}
-        : <String, dynamic>{
-            'items': [for (final i in note.items) i.toMap()],
-          };
+    // Geri al: yalnız bu eklemenin dokunduğu şey (H10); not GÜNCEL hâlinden.
+    void undo() {
+      Note? current;
+      for (final n
+          in container.read(notesStreamProvider).value ?? const <Note>[]) {
+        if (n.id == note.id) current = n;
+      }
+      final fields = quickDropUndoFields(
+        before: note,
+        current: current ?? note,
+        written: result.fields,
+      );
+      if (fields.isNotEmpty) repo.updateFields(note.id, fields);
+    }
+
     messenger
       ..hideCurrentSnackBar()
       ..showMessage(
@@ -445,7 +517,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
             : l10n.quickDropAdded(result.added, title),
         action: SnackBarAction(
           label: l10n.undo,
-          onPressed: () => repo.updateFields(note.id, undo),
+          onPressed: undo,
         ),
       );
   }

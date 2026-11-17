@@ -22,6 +22,7 @@ import '../domain/friend_list.dart';
 import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/delayed_spinner.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 
 /// **KİŞİLER** — BAŞTAN yazıldı (kullanıcı isteği 2026-11-06: "kişiler
 /// ekranının yeniden yazılması").
@@ -607,9 +608,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
     final friendUids = {
       for (final f in ref.watch(friendsStreamProvider).value ?? const []) f.uid,
     };
-    final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.only(bottom: bottom),
+    return SheetInsetPadding(
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.7,
         child: Column(

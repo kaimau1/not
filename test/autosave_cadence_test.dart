@@ -9,18 +9,18 @@ import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dar
 /// F22.2 / F22.3 (AKICILIK_PLANI): otomatik kayıt seyrek ve istemci saatli.
 void main() {
   testWidgets('F22.2: editör kaydı ~2 sn boşlukta, aralıksız yazımda en geç '
-      '10 sn', (tester) async {
+      '20 sn (2026-11-17, senkron maliyeti S2)', (tester) async {
     expect(kEditorSaveDelay, const Duration(seconds: 2));
-    expect(kEditorSaveMaxWait, const Duration(seconds: 10));
+    expect(kEditorSaveMaxWait, const Duration(seconds: 20));
     {
       final d = Debouncer(delay: kEditorSaveDelay, maxWait: kEditorSaveMaxWait);
       var saves = 0;
-      // Saniyede 2 tuş, 12 sn aralıksız: sessizlik hiç 2 sn'yi bulmuyor.
-      for (var i = 0; i < 24; i++) {
+      // Saniyede 2 tuş, 22 sn aralıksız: sessizlik hiç 2 sn'yi bulmuyor.
+      for (var i = 0; i < 44; i++) {
         d(() => saves++);
         await tester.pump(const Duration(milliseconds: 500));
       }
-      expect(saves, 1, reason: '10. saniyede tek kayıt (üst sınır)');
+      expect(saves, 1, reason: '20. saniyede tek kayıt (üst sınır)');
       await tester.pump(const Duration(seconds: 2));
       expect(saves, 2, reason: 'yazım bitince 2 sn sonra son kayıt');
       d(() => saves++);

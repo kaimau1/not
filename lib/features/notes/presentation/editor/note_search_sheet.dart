@@ -16,6 +16,7 @@ import '../viewers/text_recognize_screen.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/friendly_error.dart';
 import '../../../auth/presentation/account_required.dart';
+import '../../../../core/widgets/sheet_keyboard.dart';
 
 /// **Not içinde arama** — gövde, maddeler, sayfa notları VE eklerin içi.
 ///
@@ -234,15 +235,30 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     }
   }
 
+  // Bulgular yalnız sorgu ya da taranan ek sayısı değişince yeniden
+  // hesaplanır (K-02: her kurulumda bütün not + ek metni taranıyordu).
+  String? _hitsQuery;
+  int _hitsScanned = -1;
+  List<_Hit> _hits = const [];
+
+  List<_Hit> _hitsFor(String query) {
+    if (query == _hitsQuery && _attachmentText.length == _hitsScanned) {
+      return _hits;
+    }
+    _hitsQuery = query;
+    _hitsScanned = _attachmentText.length;
+    return _hits = query.isEmpty
+        ? const <_Hit>[]
+        : [..._textHits(query), ..._attachmentHits(query)];
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final query = _query;
-    final hits = query.isEmpty
-        ? const <_Hit>[]
-        : [..._textHits(query), ..._attachmentHits(query)];
+    final hits = _hitsFor(query);
     final searchableAttachments = widget.note.attachments
         .where(
           (a) =>
@@ -251,11 +267,8 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
         )
         .length;
 
-    return Padding(
-      // Klavye levhayı örtmesin.
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+    // Klavye levhayı örtmesin (payı yalnız ince sarmalayıcı okur).
+    return SheetInsetPadding(
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.75,
         child: Column(

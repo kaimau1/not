@@ -524,8 +524,7 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
       child: SectionLabel(text),
     );
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    return SheetInsetPadding(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
