@@ -61,15 +61,22 @@ final semanticSearchProvider = FutureProvider.autoDispose
             n,
       ];
       if (active.isEmpty || query.trim().isEmpty) return const [];
+      // ÇÖP DE CANLI (T14, 2026-11-17): çöpteki notun vektörü ana aramada
+      // silinirse çöpte anlamca arama onu yeniden gömüyordu; iki arama da
+      // açıkken `revision` üzerinden birbirini tetikleyen döngü. Çöp listesi
+      // henüz yoksa kalıcı silinenle çöptekini ayıramayız → bu tur budama yok.
+      final trash = ref.watch(trashStreamProvider).value;
       final index = ref.read(semanticIndexProvider);
       _refreshOnIndexGrowth(ref, index);
       try {
         // Kilitli notun vektörü de bırakılır (diskte içerikten türev kalmasın).
-        return await (index..pruneTo({
-              for (final n in notes)
-                if (!n.locked) n.id,
-            }))
-            .search(query.trim(), active);
+        if (trash != null) {
+          index.pruneTo({
+            for (final n in [...notes, ...trash])
+              if (!n.locked) n.id,
+          });
+        }
+        return await index.search(query.trim(), active);
       } on GeminiException {
         // Embedding dahili (anahtarsız) modda desteklenmiyor; arama hata ekranına
         // düşmesin, düz metin aramasıyla devam edilsin.

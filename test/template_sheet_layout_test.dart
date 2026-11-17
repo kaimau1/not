@@ -25,12 +25,12 @@ void main() {
           locale: const Locale('tr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => Scaffold(
+          home: Consumer(
+            builder: (context, ref, _) => Scaffold(
               body: Center(
                 child: ElevatedButton(
                   onPressed: () =>
-                      showNoteTemplateSheet(context, initialUser: initialUser),
+                      pickTemplate(context, ref, initialUser: initialUser),
                   child: const Text('aç'),
                 ),
               ),
@@ -43,7 +43,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('30 maddeli şablonda "Oluştur" kaydırmadan görünür', (
+  testWidgets('60 satırlı yazı şablonunda "Oluştur" kaydırmadan görünür', (
     tester,
   ) async {
     await open(
@@ -51,8 +51,8 @@ void main() {
       initialUser: UserTemplate(
         id: 'u1',
         name: 'Uzun',
-        type: NoteType.checklist,
-        items: [for (var i = 0; i < 30; i++) 'madde $i'],
+        type: NoteType.text,
+        body: [for (var i = 0; i < 60; i++) 'satır $i'].join('\n'),
       ),
     );
     final create = find.byIcon(Icons.check);

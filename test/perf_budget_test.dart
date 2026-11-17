@@ -1986,11 +1986,11 @@ void main() {
           locale: const Locale('tr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => Scaffold(
+          home: Consumer(
+            builder: (context, ref, _) => Scaffold(
               body: Center(
                 child: ElevatedButton(
-                  onPressed: () => showNoteTemplateSheet(context),
+                  onPressed: () => pickTemplate(context, ref),
                   child: const Text('aç'),
                 ),
               ),
@@ -2046,12 +2046,12 @@ void main() {
   });
 
   // S48 (kullanıcı bulgusu 2026-11-15 "şablon oluştururken aşırı kasıyor"):
-  // alışveriş şablonunun önizlemesi (5 madde + 74 öneri çipi) — klavye
-  // açılışı (6 inset karesi), öneri çipi ve kutucuk dokunuşu, "Oluştur";
-  // galeride arama klavyesi; kendi şablon düzenleyicisinde (20 madde) ilk
-  // tuşlar. Kök neden: levha builder'ı klavyenin her karesinde YENİ levha
-  // örneği kuruyordu; her dokunuş bütün çipleri yeniden kuruyordu.
-  testWidgets('S48: şablon önizlemesi + düzenleyici (alışveriş, 74 çip)', (
+  // yazı şablonu önizlemesi (toplantı) başlık alanına odak + klavye (6 inset
+  // karesi), "Oluştur"; galeride arama klavyesi; kendi şablon düzenleyicisinde
+  // (20 madde) ilk tuşlar. Kök neden: levha builder'ı klavyenin her karesinde
+  // YENİ levha örneği kuruyordu. Önizlemenin liste dalı (5 madde + 74 öneri
+  // çipi; kutu/çip ölçümleri) 2026-11-17 T15'te silindi — liste şablonu S49.
+  testWidgets('S48: şablon önizlemesi + düzenleyici (toplantı, galeri)', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(412, 915);
@@ -2067,20 +2067,20 @@ void main() {
           locale: const Locale('tr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => Scaffold(
+          home: Consumer(
+            builder: (context, ref, _) => Scaffold(
               body: Column(
                 children: [
                   ElevatedButton(
-                    onPressed: () async => created =
-                        await showNoteTemplateSheet(
-                          context,
-                          initial: NoteTemplate.shopping,
-                        ),
-                    child: const Text('alışveriş'),
+                    onPressed: () async => created = await pickTemplate(
+                      context,
+                      ref,
+                      initial: NoteTemplate.meeting,
+                    ),
+                    child: const Text('toplantı'),
                   ),
                   ElevatedButton(
-                    onPressed: () => showNoteTemplateSheet(context),
+                    onPressed: () => pickTemplate(context, ref),
                     child: const Text('galeri'),
                   ),
                   ElevatedButton(
@@ -2124,20 +2124,16 @@ void main() {
       }
     }
 
-    // 1) Önizleme: klavye, çip, kutucuk, Oluştur.
-    await tester.tap(find.text('alışveriş'));
+    // 1) Önizleme: başlık alanı + klavye, Oluştur.
+    await tester.tap(find.text('toplantı'));
     await _settle(tester);
-    expect(find.byType(FilterChip), findsAtLeastNWidgets(70));
-    final box = await _count(() async {
-      await tester.tap(find.byType(CheckboxListTile).first);
-      await tester.pump();
-    });
-    final chip = await _count(() async {
-      await tester.tap(find.byType(FilterChip).at(3));
-      await tester.pump();
-    });
-    await _settle(tester);
-    await tester.tap(find.byType(TextField).last);
+    expect(find.byType(TemplateComposer), findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(TemplateComposer),
+        matching: find.byType(TextField),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 100));
     final (kbBuilds, kbLayouts) = await keyboard();
     tester.view.viewInsets = FakeViewPadding.zero;
@@ -2170,8 +2166,6 @@ void main() {
     _expectBudget('S48', {
       'klavye_kurulum': kbBuilds,
       'klavye_dizilme': kbLayouts,
-      'cip_kurulum': _sum(chip),
-      'kutu_kurulum': _sum(box),
       'galeri_klavye_kurulum': galleryBuilds,
       'duzenleyici_tus_kurulum': _sum(typing),
     });
@@ -2200,19 +2194,43 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () => showQuickList(
-                  context,
-                  quickListArgsFor(context, builtin: NoteTemplate.shopping)!,
-                ),
-                child: const Text('aç'),
+              body: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () => showQuickList(
+                      context,
+                      quickListArgsFor(
+                        context,
+                        builtin: NoteTemplate.shopping,
+                      )!,
+                    ),
+                    child: const Text('aç'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () =>
+                        showQuickList(context, smartListArgs(context)),
+                    child: const Text('akıllı'),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
-    await tester.tap(find.text('aç'));
+    // AÇILIŞIN İLK KARESİ (K-41, T5 2026-11-17): video k1'de şablon/akıllı
+    // liste dokunuşundan sonra 247 ms donma. Dokunuş + ilk kare kurulumu.
+    final smartOpen = await _count(() async {
+      await tester.tap(find.text('akıllı'));
+      await tester.pump();
+    });
+    await _settle(tester);
+    await tester.binding.handlePopRoute();
+    await _settle(tester);
+    final open = await _count(() async {
+      await tester.tap(find.text('aç'));
+      await tester.pump();
+    });
     await _settle(tester);
     final field = find.byKey(const ValueKey('quick-entry-field'));
     await tester.enterText(
@@ -2270,6 +2288,8 @@ void main() {
     await _settle(tester);
     tester.view.viewInsets = FakeViewPadding.zero;
     _expectBudget('S49', {
+      'acilis_kurulum': _sum(open),
+      'akilli_acilis_kurulum': _sum(smartOpen),
       'klavye_kurulum': _sum(keyboard),
       'klavye_dizilme': kbLayouts,
       'yazma_kurulum': _sum(typing),

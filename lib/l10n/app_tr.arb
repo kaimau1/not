@@ -3975,6 +3975,10 @@
   "quickEntryMic": "Sesle ekle",
   "quickEntryMicStop": "Dinlemeyi durdur",
   "quickListEmpty": "Yukarıya yaz, söyle ya da aşağıdan dokun; liste burada oluşur.",
+  "smartListHint": "Süt, ekmek… yaz ya da söyle; bavul için “bavul listesi” de.",
+  "@smartListHint": {
+    "description": "Akıllı liste boşken tek cümlelik ipucu (AL-1): tür maddelerden bulunur, istenirse söylenir."
+  },
   "quickListDone": "Bitti",
   "quickListAisleSort": "Reyon sırasına diz",
   "quickListOpenInNote": "Notta aç",

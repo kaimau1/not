@@ -8677,6 +8677,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Type above, speak, or tap below; your list builds here.';
 
   @override
+  String get smartListHint =>
+      'Type or say milk, bread…; for packing, say “packing list”.';
+
+  @override
   String get quickListDone => 'Done';
 
   @override

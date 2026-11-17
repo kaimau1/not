@@ -109,45 +109,20 @@ void main() {
 
   group('önizlemede biçilen içerik', () {
     NoteTemplateContent base() =>
-        buildNoteTemplate(NoteTemplate.shopping, l10n, now: monday);
+        buildNoteTemplate(NoteTemplate.meeting, l10n, now: monday);
 
-    test('seçilen maddeler ve liste türü nota geçer', () {
-      final c = composeTemplateContent(
-        base(),
-        title: '  Market  ',
-        type: NoteType.ordered,
-        items: ['Süt', '  ', 'Domates '],
-      );
-      expect(c.title, 'Market');
-      expect(c.type, NoteType.ordered);
-      expect(c.items, ['Süt', 'Domates']);
+    test('başlık kırpılır; tür ve gövde değişmez', () {
+      final c = composeTemplateContent(base(), title: '  Pazartesi  ');
+      expect(c.title, 'Pazartesi');
+      expect(c.type, NoteType.text);
+      expect(c.body, base().body);
+      expect(c.items, isEmpty);
+      expect(c.columns, 1);
     });
 
     test('başlık silinirse şablonun başlığı kalır', () {
-      final c = composeTemplateContent(
-        base(),
-        title: '',
-        type: NoteType.checklist,
-        items: const [],
-      );
-      expect(c.title, 'Alışveriş listesi');
-    });
-
-    test('yazı şablonunun türü ve gövdesi değişmez', () {
-      final meeting = buildNoteTemplate(
-        NoteTemplate.meeting,
-        l10n,
-        now: monday,
-      );
-      final c = composeTemplateContent(
-        meeting,
-        title: 'Pazartesi toplantısı',
-        type: NoteType.checklist,
-        items: const ['x'],
-      );
-      expect(c.type, NoteType.text);
-      expect(c.body, meeting.body);
-      expect(c.items, isEmpty);
+      final c = composeTemplateContent(base(), title: '');
+      expect(c.title, base().title);
     });
   });
 
@@ -384,14 +359,15 @@ void main() {
     });
   });
 
-  testWidgets('galeri → önizleme: öneri eklenir, not maddeleriyle doğar', (
-    tester,
-  ) async {
+  Future<SharedPreferences> openGallery(
+    WidgetTester tester, {
+    NoteTemplate? initial,
+    void Function(TemplateOutcome?)? onResult,
+  }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     await tester.binding.setSurfaceSize(const Size(420, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    NoteTemplateContent? result;
     await tester.pumpWidget(
       ProviderScope(
         overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
@@ -399,12 +375,18 @@ void main() {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: const Locale('tr'),
-          home: Builder(
-            builder: (context) => Scaffold(
+          home: Consumer(
+            builder: (context, ref, _) => Scaffold(
               body: Center(
                 child: ElevatedButton(
-                  onPressed: () async =>
-                      result = await showNoteTemplateSheet(context),
+                  onPressed: () async {
+                    final r = await pickTemplate(
+                      context,
+                      ref,
+                      initial: initial,
+                    );
+                    onResult?.call(r);
+                  },
                   child: const Text('aç'),
                 ),
               ),
@@ -415,66 +397,44 @@ void main() {
     );
     await tester.tap(find.text('aç'));
     await tester.pumpAndSettle();
+    return prefs;
+  }
+
+  testWidgets('galeri → yazı şablonu önizlemesi: başlık biçilir, not doğar', (
+    tester,
+  ) async {
+    TemplateOutcome? result;
+    final prefs = await openGallery(tester, onResult: (r) => result = r);
     expect(find.text('Listeler'), findsWidgets);
 
-    await tester.tap(find.text('Alışveriş listesi').last);
+    await tester.tap(find.text('Toplantı').last);
     await tester.pumpAndSettle();
-    // Varsayılan madde işaretli gelir; öneri çipi listeye ekler.
-    expect(find.widgetWithText(CheckboxListTile, 'Süt'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilterChip, 'Domates'));
-    await tester.pumpAndSettle();
-    // "Ekmek" listeden çıkarılır.
-    await tester.tap(find.widgetWithText(CheckboxListTile, 'Ekmek'));
-    await tester.pumpAndSettle();
-
-    // Öneriler çoğaldı (2026-11-05): düğme kaydırılarak görünür.
-    await tester.ensureVisible(find.byIcon(Icons.check));
-    await tester.pumpAndSettle();
+    expect(find.byType(TemplateComposer), findsOneWidget);
+    // Liste dalı yok (T15): kutucuk/öneri çipi kurulmaz.
+    expect(find.byType(CheckboxListTile), findsNothing);
+    expect(find.byType(FilterChip), findsNothing);
+    await tester.enterText(
+      find.descendant(
+        of: find.byType(TemplateComposer),
+        matching: find.byType(TextField),
+      ),
+      '  Pazartesi  ',
+    );
     await tester.tap(find.byIcon(Icons.check));
     await tester.pumpAndSettle();
     expect(result, isNotNull);
-    expect(result!.type, NoteType.checklist);
-    expect(result!.items, contains('Domates'));
-    expect(result!.items, isNot(contains('Ekmek')));
-    expect(result!.items, contains('Süt'));
+    expect(result!.quick, isFalse);
+    expect(result!.open, isTrue);
+    expect(result!.content.type, NoteType.text);
+    expect(result!.content.title, 'Pazartesi');
     // Son kullanılanlara girdi.
-    expect(prefs.getStringList('recent_templates'), ['b:shopping']);
+    expect(prefs.getStringList('recent_templates'), ['b:meeting']);
   });
 
   testWidgets('hazır şablon önizlemeden Şablonlarım\'a kaydedilir', (
     tester,
   ) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    await tester.binding.setSurfaceSize(const Size(420, 2400));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('tr'),
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: ElevatedButton(
-                  onPressed: () => showNoteTemplateSheet(
-                    context,
-                    initial: NoteTemplate.shopping,
-                  ),
-                  child: const Text('aç'),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(find.text('aç'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilterChip, 'Domates'));
-    await tester.pumpAndSettle();
+    final prefs = await openGallery(tester, initial: NoteTemplate.meeting);
     await tester.tap(find.byKey(const ValueKey('tpl-save-as')));
     await tester.pumpAndSettle();
     // Düzenleyici biçilmiş içerikle açıldı.
@@ -483,8 +443,8 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('tpl-editor-save')));
     await tester.pumpAndSettle();
     final saved = decodeUserTemplates(prefs.getString('user_templates_v1'));
-    expect(saved.single.name, 'Alışveriş listesi');
-    expect(saved.single.items, contains('Domates'));
+    expect(saved.single.name, 'Toplantı');
+    expect(saved.single.type, NoteType.text);
     // Önizleme artık kendi şablonumda: düğme "düzenle" oldu.
     expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
   });
@@ -507,54 +467,10 @@ void main() {
     }
   });
 
-  test('iki sütun yalnız liste şablonunda nota geçer', () {
-    final list = composeTemplateContent(
-      buildNoteTemplate(NoteTemplate.shopping, l10n),
-      title: '',
-      type: NoteType.checklist,
-      items: const ['Süt'],
-      columns: 2,
-    );
-    expect(list.columns, 2);
-    final text = composeTemplateContent(
-      buildNoteTemplate(NoteTemplate.journal, l10n),
-      title: '',
-      type: NoteType.text,
-      items: const [],
-      columns: 2,
-    );
-    expect(text.columns, 1);
-  });
-
   testWidgets('favori: yıldız en çok 4, "+" menüsü favorileri gösterir', (
     tester,
   ) async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    await tester.binding.setSurfaceSize(const Size(420, 2400));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('tr'),
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: ElevatedButton(
-                  onPressed: () => showNoteTemplateSheet(context),
-                  child: const Text('aç'),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.tap(find.text('aç'));
-    await tester.pumpAndSettle();
+    final prefs = await openGallery(tester);
     // Varsayılan favori alışveriş listesi; Favoriler bölümü var.
     expect(find.text('Favoriler'), findsOneWidget);
     for (final name in ['travel', 'todo', 'habits', 'cleaning']) {

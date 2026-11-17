@@ -8663,6 +8663,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yukarıya yaz, söyle ya da aşağıdan dokun; liste burada oluşur.';
 
   @override
+  String get smartListHint =>
+      'Süt, ekmek… yaz ya da söyle; bavul için “bavul listesi” de.';
+
+  @override
   String get quickListDone => 'Bitti';
 
   @override
