@@ -742,7 +742,8 @@ class _VersionFooterState extends State<_VersionFooter>
   /// ([installAppUpdate]); değilse "en son sürüm". Web hep son sürümdür.
   Future<void> _check() async {
     final l10n = context.l10n;
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+    // Web ve Play derlemesi (güncellemeyi mağaza yapar, E1) hep son sürüm.
+    if (!AppUpdate.supported) {
       setState(() => _status = l10n.updateUpToDate);
       return;
     }
@@ -827,7 +828,7 @@ class _VersionFooterState extends State<_VersionFooter>
         ],
         // OTO GÜNCELLEME (2026-11-10): açıkken yeni sürüm arka planda iner,
         // bir sonraki açılışta kurulur. Kapalıyken yalnız ana ekran şeridi.
-        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ...[
+        if (AppUpdate.supported) ...[
           divider,
           Consumer(
             builder: (context, ref, _) => SwitchListTile(

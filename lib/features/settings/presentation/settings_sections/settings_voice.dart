@@ -231,16 +231,18 @@ class _VoiceSection extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            ButtonSegment(
-              value: TtsEngine.antalia,
-              icon: const Icon(Icons.record_voice_over, size: AppIconSize.s),
-              label: Text(
-                l10n.ttsEngineLocal,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
+            // Play derlemesinde Antalia (ONNX) yok (16K §2.6).
+            if (PlayBuild.antaliaVoice)
+              ButtonSegment(
+                value: TtsEngine.antalia,
+                icon: const Icon(Icons.record_voice_over, size: AppIconSize.s),
+                label: Text(
+                  l10n.ttsEngineLocal,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
           ],
           selected: {engine},
           // Motor değişince süren deneme/okuma susar: eski motorun örneği

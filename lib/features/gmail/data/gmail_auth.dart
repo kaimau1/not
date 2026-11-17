@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/play_build.dart';
 import '../../auth/data/google_scope_auth.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/drive_store.dart' show isGoogleUser;
@@ -14,6 +15,7 @@ typedef GmailAuth = GoogleScopeAuth;
 
 /// Gmail yalnız Google hesabında (misafirde yok) ve Android/web'de.
 final gmailAvailableProvider = Provider<bool>((ref) {
+  if (!PlayBuild.gmail) return false;
   if (!isGoogleUser(ref.watch(authStateProvider).value)) return false;
   return kIsWeb || Platform.isAndroid;
 });

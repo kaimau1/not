@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/play_build.dart';
 import '../features/gmail/presentation/gmail_screen.dart';
 import '../features/notes/presentation/study_cards_screen.dart';
 import '../features/ai/presentation/ai_hub_screen.dart';
@@ -242,11 +243,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               releaseNotes: state.uri.queryParameters['doc'] == 'notes',
             ),
           ),
-          // Gmail — yalnız okuma (F28.1).
-          GoRoute(
-            path: '/gmail',
-            builder: (context, state) => const GmailScreen(),
-          ),
+          // Gmail — yalnız okuma (F28.1). Play derlemesinde yok (E2): sabit
+          // bayrak → ekran Dart ağacından düşer.
+          if (PlayBuild.gmail)
+            GoRoute(
+              path: '/gmail',
+              builder: (context, state) => const GmailScreen(),
+            ),
           GoRoute(
             path: '/premium',
             builder: (context, state) => const PremiumScreen(),

@@ -17,6 +17,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 
 import 'l10n_ext.dart';
+import 'play_build.dart';
 import 'widgets/undo_snackbar.dart' show AppMessages, rootScaffoldMessengerKey;
 import '../app/theme/app_design.dart' show AppTone;
 import '../app/theme/app_tokens.dart';
@@ -147,7 +148,9 @@ abstract final class AppUpdate {
   static final progress = ValueNotifier<int?>(null);
 
   static bool get supported =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+      PlayBuild.selfUpdate &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.android;
 
   /// Bu kurulumun sürüm adı (`1.2.N`). Yerel derleme (`1.2.0`) da denetlenir:
   /// CI sürümü her zaman ondan yenidir.

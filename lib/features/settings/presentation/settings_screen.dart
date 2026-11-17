@@ -14,9 +14,7 @@ import 'package:flutter/foundation.dart'
         kIsWeb,
         listEquals,
         ValueListenable,
-        visibleForTesting,
-        defaultTargetPlatform,
-        TargetPlatform;
+        visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'
     show
@@ -45,11 +43,13 @@ import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
+import '../../../core/play_build.dart';
 import '../../../core/tips.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
 import 'theme_picker.dart';
 import 'typing_bar_settings.dart';
 import '../../../core/utils/channel_counter.dart';
+import '../../../core/utils/frame_timing_log.dart';
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/display_rate.dart';
 import '../../../core/utils/doc_picker.dart';

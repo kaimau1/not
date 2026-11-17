@@ -10,6 +10,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/immersive.dart';
+import '../../../../core/play_build.dart';
 import '../../../../core/utils/pip.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
@@ -355,7 +356,8 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
         if (mounted) _setImmersive(true);
       });
     }
-    PictureInPicture.setAuto(true);
+    // Play derlemesinde otomatik PiP yok (16K §4.5); elle düğme kalır.
+    if (PlayBuild.youtubeAutoPip) PictureInPicture.setAuto(true);
     PictureInPicture.supported().then((value) {
       if (mounted) setState(() => _pipSupported = value);
     });
