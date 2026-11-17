@@ -45,7 +45,7 @@ void main() {
     });
     expect(n, 0, reason: 'iğne tuvali kurmamalı');
     expect(find.byIcon(Icons.push_pin), findsOneWidget);
-    expect(find.byTooltip('Sabitlemeyi kaldır'), findsOneWidget);
+    expect(find.byTooltip('Sabitten çıkar'), findsOneWidget);
     expect(repo.lastSaved!.pinned, isTrue);
     await endEditor(tester);
   });

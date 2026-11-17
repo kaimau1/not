@@ -437,7 +437,7 @@ abstract class AppLocalizations {
   /// No description provided for @unpin.
   ///
   /// In tr, this message translates to:
-  /// **'Sabitlemeyi kaldır'**
+  /// **'Sabitten çıkar'**
   String get unpin;
 
   /// No description provided for @delete.

@@ -199,7 +199,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pin => 'Sabitle';
 
   @override
-  String get unpin => 'Sabitlemeyi kaldır';
+  String get unpin => 'Sabitten çıkar';
 
   @override
   String get delete => 'Sil';
