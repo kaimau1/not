@@ -441,6 +441,17 @@ Bunlar kod işi değil; yapılmadan yukarıdaki `ADAY` kayıtlarının çoğu ka
 
 ---
 
+## Kapanışlar (2026-11-17, dal ccr-e44d1883-4uhqkg; cihaz: ölçülmedi)
+- K-01…K-11 — KAPANDI: `SheetInsetPadding`; S53 arama 1152/210 → 294/84, seçici 4758/270 → 630/150,
+  AI sonuç 1512/249 → 294/153 (`levha_klavye_2_test`); diğer levhalar mekanik aynı düzeltme, ayrıca
+  ölçülmedi. K-12 — KAPANDI: `jank_patterns_guard_test` K-12 grubu.
+- K-38 — KISMEN: `undo_snackbar`, `countdown_bar` → `SteppedCountdown`; kısa geçişler açık (PLAN T9).
+- K-37 — AÇIK: bilerek dokunulmadı (`child` yeniden kurulmuyor; ölçmeden kazanç belirsiz).
+- K-24 — KISMEN: araç güncellemesi ön planda yok. Hatırlatıcı: not başına imza zaten var, kanal
+  çağrısı yok → dokunulmadı.
+- K-25 — KAPANDI (zamanlayıcı kaldı, değişmeyen tur hemen döner). K-53 — TEMİZ (nabız yalnız
+  paylaşılan notta) + arka planda durma eklendi. K-26 — AÇIK (ucuz, ölçülmedi).
+
 ## Ek A — Kuyruk'a hazır paket satırları (kopyala; ben eklemedim)
 
 ```

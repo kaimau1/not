@@ -153,3 +153,14 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   ile açıkça yazılır (editörde `_setUrgent`). ⋮ menüsüne konmadı: levha boyu bütçesi
   (`note_menu_sheet_height_test`, S37) aşıldı; yalnız + levhası, editör göstergesi ve kart sağ tık.
   PDF balonunun `PageBubble.urgent`'iyle ilgisi yok.
+
+## 2026-11-17 — Senkron maliyeti S2/S3 + korkuluklar
+- Otomatik kayıt sıklığı `lib/core/save_cadence.dart` (`SaveCadence`): sessizlik 2 sn, aralıksız
+  yazımda üst sınır 20 sn (10 idi). `config/app` isteğe bağlı `saveDelaySec` (2–120) /
+  `saveMaxWaitSec` (sessizlik–300) = UZAKTAN FREN; yeni açılan editörde geçerli. İstemci yazamaz.
+  Bu iki alan kullanıcıya ait karar; `minClient`/`inkV2Write` kuralı (HAFIZA 17) aynen geçerli.
+- Sürüm budama sorgusu (40 belge okur) oturumda notun 1., 6., 11.… sürümünde (`_versionAdds`).
+- Ortak düzenleme nabzı arka planda durur (`AppLifecycleListener` onHide/onShow).
+- Bekçi: `test/idle_write_guard_test.dart` — editör 2 dk boşta → updateNote/updateFields 0.
+- Yapılmadı (bilerek): kuralda yazma hız sınırı — reddedilen yazım çevrimdışı kuyrukta yerel
+  değişikliği geri alır (veri kaybı). S1 (yalnız değişeni dinle) kullanıcı kararı bekliyor.

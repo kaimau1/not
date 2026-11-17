@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Klavye açıkken levhalar, geri al çubuğu, akıllı liste, hızlı ekle (17 Kasım [apk], cihazda bakılmadı, ÖLÇÜLMEDİ)**
+  Nerede/Nasıl: (1) bir notta not içi arama ("eklerde ve yapay zekâ ile ara"), not bağlama seçicisi, AI sonucu, hesap makinesi, sesli kayıt levhasını aç; klavye açılıp kapanırken takılma olmamalı, levhanın altı klavyenin/gezinme çubuğunun altında kalmamalı. (2) Bir not sil → "Geri al" çubuğunun çizgisi kademeli kısalmalı, süre bitince kapanmalı. (3) Akıllı liste: "süt yumurta ekmek" yaz/söyle → 3 madde. (4) ⚡ Hızlı ekle: "rapor yaz" → hedef sorulursa içerik "rapor yaz" kalmalı; bir listeye ekle → Geri al → yalnız eklenen çıkmalı. (5) Ana ekran aracı: uygulamada not değiştir, ana ekrana çık → araç güncellenmiş olmalı.
+  Yanlışsa: hangi adımda olduğunu yaz.
+
 - [ ] **Notta ara anında, arama üstte, klavye açıkken +/⋮ (ccr-66e231d6, cihazda bakılmadı, ÖLÇÜLMEDİ — 2026-11-16)**
   Nerede: bir not aç; yazarken (klavye açık) alt çubuktaki "+" ve üstteki ⋮; sağ üstteki büyüteç.
   Nasıl: not açılırken büyüteç ilk anda orada mı (sonradan belirmemeli). Büyütece dokun → arama satırı üst çubuğun hemen altında açılmalı, alt panel klavyenin üstünde kalmalı, açılışta takılma olmamalı; ✕ ile kapanmalı, geri tuşu da kapatmalı. Klavye açıkken "+" ve ⋮ → menü akıcı kayarak açılmalı, klavye hemen ardından inmeli.
