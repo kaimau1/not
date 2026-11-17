@@ -96,6 +96,9 @@ Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
   }
   registerAntaliaLicense();
+  // Yazı tipleri yalnız paketten (T3/K-54): ağdan inen kesim bütün metni
+  // yeniden dizdirir, çevrimdışı sistem yazı tipine düşer.
+  disableFontRuntimeFetching();
   // Web'de tarayıcının kendi sağ tık menüsü kapatılır: not kartlarına sağ
   // tıklayınca uygulamanın bağlam menüsü açılsın (masaüstündeki gibi),
   // tarayıcınınki üstüne binmesin. Metin alanları Flutter'ın kendi
@@ -115,8 +118,8 @@ Future<void> main() async {
   }
 
   // Genel yazı tipi Firebase kurulumuyla PARALEL yüklenir; ilk kareden önce
-  // en çok 400 ms beklenir (bkz. preloadNoteFonts). Web'de indirme olurdu:
-  // kullanılınca yüklenir.
+  // en çok 400 ms beklenir (bkz. preloadNoteFonts). Web'de varlık da ağdan
+  // gelir: kullanılınca yüklenir.
   final prefsReady = SharedPreferences.getInstance();
   final fonts = kIsWeb
       ? Future<void>.value()

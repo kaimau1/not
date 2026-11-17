@@ -372,6 +372,7 @@ vuruşta `setState` :74 ve Firestore yazımı) · `tasks_screen.dart:45`, `calen
 Başlatıyorsa tek kişilik notta 25 sn'de bir boşa yazma + kurulum → hem kasma hem maliyet.
 
 **K-54 — Kalın yazı tipi çalışma anında internetten iniyor olabilir (`KOD` + çıkarım, P1, KP9).**
+**KAPANDI (2026-11-17, T3, dal oto/P65-telefonsuz-kod):** kalın ÇÜRÜTÜLDÜ (GoogleFonts'a w600+ soran çağrı yok; satır içi kalın kesime özgü aileden motorla kalınlaşır), ama indirme kapalı denemede **Merriweather-Medium** eksik çıktı (paket 8.x'te 500 kesimi var; not başlığı w500 → ağdan iniyordu). Dosya eklendi, `disableFontRuntimeFetching()` `main`de, `applyNoteFont` 500 üstünü 500'le yükler; bekçi `test/font_runtime_fetch_test.dart`.
 Pakette 34 Google yazı tipi dosyası var: aile başına yalnız Regular + Medium
 (`assets/google_fonts/`, kalın/yarı kalın 0 dosya). `GoogleFonts.config.allowRuntimeFetching` kodda
 hiç ayarlanmıyor (varsayılan açık). Kodda 47 dosyada 80 yerde `FontWeight.w600–w900` kullanılıyor.

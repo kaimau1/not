@@ -144,10 +144,33 @@ TextStyle applyNoteFont(TextStyle base, String? family) {
   final cached = _fontCache[key];
   if (cached != null) return cached;
   final builder = _googleBuilders[family];
-  final applied = builder == null ? base : builder(base);
+  final weight = base.fontWeight;
+  // Pakette aile başına yalnız 400/500 var (T3/K-54): GoogleFonts'a daha
+  // kalını sorulursa o kesimi ARAR (indirme kapalı → hata, sistem yazı tipi).
+  // 500'le yüklenir, kalınlık stilde kalır — motor kalınlaştırır (bugünkü
+  // satır içi kalın metnin yolu).
+  final applied = builder == null
+      ? base
+      : weight != null && weight.value > 500
+      ? builder(
+          base.copyWith(fontWeight: FontWeight.w500),
+        ).copyWith(fontWeight: weight)
+      : builder(base);
   if (_fontCache.length >= _fontCacheLimit) _fontCache.clear();
   _fontCache[key] = applied;
   return applied;
+}
+
+/// **ÇALIŞMA ANI İNDİRMESİ KAPALI** (T3 / K-54, 2026-11-17). `google_fonts`
+/// pakette bulamadığı kesimi fonts.gstatic.com'dan indirir; gelince motor
+/// "yazı tipleri değişti" der ve ekrandaki BÜTÜN metin yeniden dizilir,
+/// çevrimdışıyken sessizce sistem yazı tipi çizilir. Kanıt: paket 8.x'te
+/// Merriweather'ın 500 kesimi var ama dosyası pakette yoktu → her Merriweather
+/// başlığı (w500) ağdan iniyordu. Uygulama GoogleFonts'a yalnız 400/500 sorar
+/// ([applyNoteFont] kalını 500'e indirir; metin temaları ≤ 500), hepsi
+/// `assets/google_fonts/`ta. Bekçi: `test/font_runtime_fetch_test.dart`.
+void disableFontRuntimeFetching() {
+  GoogleFonts.config.allowRuntimeFetching = false;
 }
 
 /// Uygulamanın genel yazı tipini (temanın kullandığı kalınlıklarla) ÖNDEN

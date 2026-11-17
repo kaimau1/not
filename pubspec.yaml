@@ -190,9 +190,13 @@ flutter:
     # temasındaki ağırlıkları yükler, Material 3 tipografisi de yalnız bu
     # ikisini kullanır. Arayüzdeki w600/w700 metinler bu iki yüzden
     # KALINLAŞTIRILARAK çiziliyor. Bir ailede 500 yoksa (Lato, PT Serif,
-    # Merriweather, Patrick Hand) paket 400'e düşer — o yüzden tek dosyaları
-    # var. Ağırlık eklemek gerekirse dosyayı EKLEMEK yetmez, `GoogleFonts`
-    # çağrısında da karşılığı olmalı.
+    # Patrick Hand) paket 400'e düşer — o yüzden tek dosyaları var.
+    # Merriweather-Medium 2026-11-17 eklendi (T3/K-54: paket 8.x'te 500 kesimi
+    # var, dosyası yoktu → ağdan iniyordu). ÇALIŞMA ANI İNDİRMESİ KAPALI
+    # (`disableFontRuntimeFetching`); eksik kesim artık sessizce inmez,
+    # `test/font_runtime_fetch_test.dart` kırmızı olur. Ağırlık eklemek
+    # gerekirse dosyayı EKLEMEK yetmez, `GoogleFonts` çağrısında da karşılığı
+    # olmalı (`applyNoteFont` 500'ün üstünü 500'le yükler).
     #
     # Klasör bütün olarak bildirilir: yeni yazı tipi eklemek dosyayı buraya
     # koyup katalog haritalarına satır eklemekten ibaret olsun.

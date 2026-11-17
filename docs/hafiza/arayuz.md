@@ -320,3 +320,4 @@ Beş ilke:
   ölçmeden "akıcı" yazmak.
 
 ---
+- **Yazı tipi indirmesi kapalı (T3/K-54, 2026-11-17):** `disableFontRuntimeFetching()` `main`in başında; eksik kesim artık ağdan inmez (bütün metni yeniden dizdiren "yazı tipleri değişti" + çevrimdışı sistem yazı tipi). Kanıt: indirme kapalı bekçide yalnız `Merriweather-Medium` eksikti (google_fonts 8.x'te 500 kesimi var) → eklendi (586 KB, sha256 paketin beklediği). Kalın dosya EKLENMEDİ: GoogleFonts'a w600+ sorulmuyor; `applyNoteFont` 500 üstünü 500'le yükleyip kalınlığı stilde bırakır. Bundled Merriweather-Regular paketin bugünkü 400'ünden eski sürüm — değiştirilmedi (gövde görünüşü kaymasın). Paket güncellenince bekçi (`test/font_runtime_fetch_test.dart`) yeni eksik kesimi yakalar.
