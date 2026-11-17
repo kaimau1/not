@@ -6830,6 +6830,18 @@ abstract class AppLocalizations {
   /// **'Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.'**
   String get foldersEmpty;
 
+  /// No description provided for @foldersEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Burada henüz klasör yok'**
+  String get foldersEmptyTitle;
+
+  /// No description provided for @foldersEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir klasör oluşturup notlarını düzenle.'**
+  String get foldersEmptyHint;
+
   /// No description provided for @folderColor.
   ///
   /// In tr, this message translates to:

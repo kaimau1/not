@@ -1,5 +1,6 @@
 import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/sheet_header.dart';
 
 import 'package:flutter/material.dart';
@@ -146,8 +147,22 @@ class FoldersScreen extends ConsumerWidget {
               ),
             ),
           ),
-          _SectionHeader(title: l10n.foldersMine, count: folders.length),
-          if (folders.isEmpty)
+          // KT-9 (keşif turu 2026-11-14): HİÇ klasör yokken (paylaşılan da
+          // yok) öbür boş ekranlarla aynı ortak boş hâl — eskiden tek satır
+          // sol üstte duruyordu. Eylem düğmesi yok: aynı iş üst çubuktaki
+          // "Yeni klasör"de (F79.3: iki birincil eylem yan yana olmasın).
+          if (folders.isEmpty && shared.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyState(
+                icon: Icons.folder_outlined,
+                title: l10n.foldersEmptyTitle,
+                subtitle: l10n.foldersEmptyHint,
+              ),
+            )
+          else
+            _SectionHeader(title: l10n.foldersMine, count: folders.length),
+          if (folders.isEmpty && shared.isNotEmpty)
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               sliver: SliverToBoxAdapter(

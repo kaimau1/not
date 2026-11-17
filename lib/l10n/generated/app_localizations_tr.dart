@@ -3801,6 +3801,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.';
 
   @override
+  String get foldersEmptyTitle => 'Burada henüz klasör yok';
+
+  @override
+  String get foldersEmptyHint => 'Bir klasör oluşturup notlarını düzenle.';
+
+  @override
   String get folderColor => 'Renk';
 
   @override

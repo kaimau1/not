@@ -1760,6 +1760,8 @@
   "loginFeatureInkBody": "El yazısıyla not al, PDF ve slaytların üstüne yaz.",
   "foldersTitle": "Klasörler",
   "foldersEmpty": "Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.",
+  "foldersEmptyTitle": "Burada henüz klasör yok",
+  "foldersEmptyHint": "Bir klasör oluşturup notlarını düzenle.",
   "folderColor": "Renk",
   "folderColorAuto": "Otomatik",
   "foldersMine": "Klasörlerim",

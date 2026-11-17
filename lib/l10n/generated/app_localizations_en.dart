@@ -3806,6 +3806,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'No folders yet. Create one to organize your notes.';
 
   @override
+  String get foldersEmptyTitle => 'No folders here yet';
+
+  @override
+  String get foldersEmptyHint => 'Create one to organize your notes.';
+
+  @override
   String get folderColor => 'Color';
 
   @override
