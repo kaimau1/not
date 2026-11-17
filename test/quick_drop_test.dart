@@ -138,4 +138,30 @@ void main() {
     expect(plan.uncheck, [0]);
     expect(plan.requantify, {2: 'Domates (3 kg)'});
   });
+
+  group('H9 (2026-11-17)', () {
+    const titles = ['Yapılacaklar', 'Market listesi', 'Proje notları'];
+    test('hedef yokken sondaki gündelik fiil içerikte kalır', () {
+      for (final s in ['rapor yaz', 'çöpü kapıya koy', 'dosyayı kaydet']) {
+        final r = parseDropTarget(s, titles);
+        expect(r.index, isNull, reason: s);
+        expect(r.content, s, reason: s);
+        expect(r.command, isFalse, reason: s);
+      }
+    });
+    test('"ekle" ailesi hedefle çalışmayı sürdürür', () {
+      final ok = parseDropTarget('süt ekmek markete ekle', titles);
+      expect(ok.index, 1);
+      expect(ok.content, 'süt ekmek');
+      final none = parseDropTarget('süt ekmek ekle', titles);
+      expect(none.index, isNull);
+      expect(none.content, 'süt ekmek');
+      expect(none.command, isTrue);
+    });
+    test('bekçi: saat iki noktası ad ayırıcı değildir', () {
+      final r = parseDropTarget('proje 14:30 toplantı', titles);
+      expect(r.index, isNull);
+      expect(r.content, contains('14:30'));
+    });
+  });
 }

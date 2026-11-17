@@ -260,7 +260,10 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     final memory = ref.read(quickEntryMemoryProvider);
     final lex = buildQuickLexicon(
       locale: context.l10n.localeName,
-      grocery: widget.args.grocery,
+      // Akıllı liste market sözlüğünü de ayrıştırıcıya katar (hata
+      // 2026-11-17: `smartListArgs` grocery vermiyordu; "süt yumurta ekmek"
+      // üç yerine TEK madde oluyordu, yakın eşleşme düzeltmesi çalışmıyordu).
+      grocery: widget.args.grocery || widget.args.smart,
       groups: widget.args.groups,
       learned: memory.all(widget.args.kind),
       extra: [...widget.args.seedItems, ...widget.args.initialItems],

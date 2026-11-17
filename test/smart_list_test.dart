@@ -139,6 +139,20 @@ void main() {
       expect(rows(tester), ['Domates', 'Ekmek', 'Et']);
     });
 
+    testWidgets('boşlukla yazılan market maddeleri ayrılır (sözlük hatası)', (
+      tester,
+    ) async {
+      // 2026-11-17: akıllı listenin ayrıştırıcısında 1100 maddelik market
+      // sözlüğü yoktu; çiplerde olmayan "süt yumurta ekmek" TEK madde
+      // oluyordu.
+      await open(tester);
+      await tester.enterText(field(), 'süt yumurta ekmek ');
+      await tester.pumpAndSettle();
+      final r = rows(tester);
+      expect(r, containsAll(<String>['Süt', 'Yumurta', 'Ekmek']));
+      expect(r.where((t) => t.contains(' ')), isEmpty, reason: '$r');
+    });
+
     testWidgets('elle değişen başlığa dokunulmaz', (tester) async {
       await open(tester);
       await tester.enterText(

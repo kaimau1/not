@@ -35,6 +35,13 @@ final _trailingCommand = RegExp(
   r'\s*\b(ekle|ekler misin|ekleyin|ekleyelim|ekleyiver|koy|yaz|not et|not al|kaydet)\s*[.!]?\s*$',
   caseSensitive: false,
 );
+/// Yalnız "ekle" ailesi tek başına "kullanıcı bir hedef adlandırdı" kanıtıdır.
+/// `koy/yaz/kaydet/not al` gündelik içerikte de geçer ("rapor yaz", "çöpü
+/// kapıya koy"): hedef bulunamadıysa içerikten SİLİNMEZ (H9, 2026-11-17).
+final _addCommand = RegExp(
+  r'\s*\b(ekle|ekler misin|ekleyin|ekleyelim|ekleyiver)\s*[.!]?\s*$',
+  caseSensitive: false,
+);
 final _englishAdd = RegExp(
   r'^\s*(?:please\s+)?add\s+(.+?)\s+to\s+(?:my\s+|the\s+)?(.+?)\s*[.!]?\s*$',
   caseSensitive: false,
@@ -274,6 +281,9 @@ QuickDropTarget parseDropTarget(String text, List<String> titles) {
     }
   }
   if (best.isEmpty) {
+    if (command && !_addCommand.hasMatch(raw)) {
+      return (index: null, content: raw, ties: const [], command: false);
+    }
     return (index: null, content: body, ties: const [], command: command);
   }
   final top = best.values.map((e) => e.$1).reduce((a, b) => a > b ? a : b);
