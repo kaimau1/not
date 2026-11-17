@@ -144,3 +144,6 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   birleştirme commit'i (`HEAD^2`) ya da PR başında tanıyordu; `git push <yeşil sha>:main` ikisini de
   vermez → tam takım (1380, 1384). Artık aynı SHA'nın başka dalda `push` ile yeşil biten koşusu varsa
   `atla` (`actions/runs?head_sha=…&status=success`).
+  İLK DENEMEDE ÇALIŞMADI (1386): marker işinde `actions: read` yetkisi yoktu, sorgu sessizce 0
+  döndü → tam takım. Yetki eklendi (`[skip ci]` commit'iyle; sonraki iş push'unda doğrulanacak —
+  main'de marker kaydında "Test seçimi: atla — main: hızlı ileri" görülmeli).

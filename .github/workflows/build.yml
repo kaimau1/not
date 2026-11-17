@@ -42,6 +42,10 @@ jobs:
       contents: read
       checks: read
       pull-requests: read
+      # Hızlı ileri main'de aynı SHA'nın yeşil dal koşusunu arar
+      # (tool/ci_test_secimi.sh → actions/runs); bu yetki olmadan sorgu boş
+      # döner ve tam takım koşar (1386).
+      actions: read
     outputs:
       apk: ${{ steps.marker.outputs.apk }}
       perf: ${{ steps.marker.outputs.perf }}
