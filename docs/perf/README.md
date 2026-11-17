@@ -8,3 +8,4 @@
   kaymayı kesin sayma, ikinci koşuyla doğrula. Açılışta UI ms anlamsız (2 kare); karar `ilk_kare_ms`.
 - Haftalık tur: `python tool/perf/gecmis.py`; `KAYMA` varsa OTOMASYON Kuyruk'a `hız: <evre>` satırı ekler.
 - Her `[apk]` birleştirmesinden ÖNCE `ab_hepsi.py <A> <B> --altin` (OTOMASYON 8. adım). Telefon yoksa `[apk]` ertelenir.
+- `kasma_envanteri.md` (2026-11-17): açık ve şüpheli bütün kasma kaynaklarının tek listesi (K-01…K-69), düzeltme kalıpları, paketler (KP1–KP9), ham tarama listeleri. Yeni kasma işi buradan seçilir.
