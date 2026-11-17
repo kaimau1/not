@@ -9,6 +9,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../domain/note.dart';
 import '../domain/note_links.dart';
 import '../../../core/widgets/delayed_spinner.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 import 'note_card.dart' show openNoteRoute;
 
 /// Bağlantı etiketinin yazısı: hedefin başlığı (kilitliyse de başlık —
@@ -57,16 +58,28 @@ class _NotePicker extends StatefulWidget {
 class _NotePickerState extends State<_NotePicker> {
   String _query = '';
 
+  // K-08: etiketler bir kez katlanır; süzme yalnız sorgu değişince.
+  late final List<String> _folded = [
+    for (final n in widget.notes) foldForSearch(noteLinkLabel(n, '')),
+  ];
+  String? _listQuery;
+  List<Note> _list = const [];
+
+  List<Note> _filtered() {
+    final q = foldForSearch(_query.trim());
+    if (q == _listQuery) return _list;
+    _listQuery = q;
+    return _list = [
+      for (var i = 0; i < widget.notes.length; i++)
+        if (q.isEmpty || _folded[i].contains(q)) widget.notes[i],
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final q = foldForSearch(_query.trim());
-    final list = [
-      for (final n in widget.notes)
-        if (q.isEmpty || foldForSearch(noteLinkLabel(n, '')).contains(q)) n,
-    ];
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    final list = _filtered();
+    return SheetInsetPadding(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,

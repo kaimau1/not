@@ -114,9 +114,8 @@ class _LanguageSheetState extends State<_LanguageSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final matches = widget.languages.entries.where(_matches).toList();
-    return Padding(
-      // Klavye açılınca liste kısalsın, arama kutusu klavyenin altında kalmasın.
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    // Klavye açılınca liste kısalsın, arama kutusu klavyenin altında kalmasın.
+    return SheetInsetPadding(
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.75,
         child: Column(

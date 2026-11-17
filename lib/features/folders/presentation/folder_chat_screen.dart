@@ -22,6 +22,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/delayed_spinner.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 
 /// **PAYLAŞILAN KLASÖRÜN SOHBETİ** (kullanıcı isteği 2026-08-18: "birde
 /// birbirine mesaj gönderme alanı olabilir").
@@ -319,13 +320,10 @@ class _Composer extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        12,
-        4,
-        12,
-        8 + MediaQuery.viewInsetsOf(context).bottom,
-      ),
+    return SheetInsetPadding(
+      extra: 8,
+      child: Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -387,6 +385,7 @@ class _Composer extends StatelessWidget {
             icon: const Icon(Icons.send, size: 20),
           ),
         ],
+      ),
       ),
     );
   }

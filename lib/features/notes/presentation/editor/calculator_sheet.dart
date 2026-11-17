@@ -6,6 +6,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/calc.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../../../core/widgets/sheet_keyboard.dart';
 
 /// Not yazarken hızlı hesap için dahili hesap makinesi alt sayfası.
 /// "Nota ekle" ile kapatılırsa eklenecek metni ("12,5×3 = 37,5" ya da
@@ -98,13 +99,10 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
     final hasExpression = _expression.trim().isNotEmpty;
 
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          0,
-          16,
-          16 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
+      child: SheetInsetPadding(
+        extra: 16,
+        child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -188,6 +186,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

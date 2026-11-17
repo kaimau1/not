@@ -32,6 +32,7 @@ import 'ai_chat_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 
 /// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
 /// [asType] verilirse notun çalışma modu da o tipe geçer (madde/sıralı liste).
@@ -570,10 +571,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     ];
 
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
-        ),
+      child: SheetInsetPadding(
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.sizeOf(context).height * 0.75,

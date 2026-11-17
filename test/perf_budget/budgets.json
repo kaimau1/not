@@ -509,5 +509,17 @@
     "bugun": "kip 354/156 · dosya 342/210 · konum 354/198 · paylaş 354/222 (2026-11-16, oto/pano-tik-levha; önce 780/228 · 870/282 · 690/270 · 1296/426)",
     "hedef": "klavye karesinde yalnız dolgu + odaktaki alan kurulsun; levha içeriği 0",
     "neden": "S48 şablon kasmasının kalıbı (builder viewInsets okuyup her karede yeni levha örneği) başka levhalarda da vardı"
+  },
+  "S53": {
+    "senaryo": "Üç levha (not içi arama, not seçici, AI sonuç) açık, metin alanı odakta: 6 klavye inset karesi — TÜM widget kurulumu + dizilme; levhanın kendi widget'ı 0",
+    "arama_kurulum": 294,
+    "arama_dizilme": 84,
+    "secici_kurulum": 630,
+    "secici_dizilme": 150,
+    "ai_sonuc_kurulum": 294,
+    "ai_sonuc_dizilme": 153,
+    "bugun": "arama 294/84 · seçici 630/150 · AI sonuç 294/153 (2026-11-17, kasma envanteri KP1; önce 1152/210 · 4758/270 · 1512/249, levha kökü 6/6/6 → 0/0/0)",
+    "hedef": "klavye karesinde yalnız dolgu + odaktaki alan kurulsun; levha içeriği 0",
+    "neden": "K-01…K-11: levha State'i build'inde viewInsetsOf okuyordu (S52 kalıbının kalan levhaları)"
   }
 }

@@ -38,6 +38,25 @@ const _mediaQueryLatch = {
   '@_DashboardScreenState': 0,
 };
 
+/// K-12 (kasma envanteri 2026-11-17) — `MediaQuery.viewInsetsOf(` okuyan
+/// dosyalar. Burada kalanlar: ince sarmalayıcılar (`sheet_keyboard`,
+/// `keyboard_snap`), görünen karta daraltılmış bildirim (`app_notice`),
+/// dokunuşta bir kez okuyan kabuk (`app.dart`), yalnız AppBar'ı kuran pano
+/// araması (`dashboard_screen`, K-56) ve S52'de içeriği builder dışında bir
+/// kez kurup yalnız dolguyu yenileyen beş levha (`sheetContext`).
+const _viewInsetsAllow = {
+  'lib/app/app.dart',
+  'lib/core/widgets/app_notice.dart',
+  'lib/core/widgets/keyboard_snap.dart',
+  'lib/core/widgets/sheet_keyboard.dart',
+  'lib/features/notes/presentation/capture_mode_sheet.dart',
+  'lib/features/notes/presentation/dashboard_screen.dart',
+  'lib/features/notes/presentation/file_use_sheet.dart',
+  'lib/features/notes/presentation/note_template_sheet.dart',
+  'lib/features/notes/presentation/place_reminder_sheet.dart',
+  'lib/features/notes/presentation/share_target_sheet.dart',
+};
+
 /// md. 6 — editör kökünde `AnimatedSize` / `AnimatedContainer` (gövdeyle aynı
 /// Column'da boy animasyonu gövdeyi her karede dizer). Bugünkü 2: ses kaydı
 /// hapı (cihazsız kanıt üretilemedi — testte kayıt eklentisi yok; dokunulmadı),
@@ -101,6 +120,9 @@ int countRootSetState(String segments) =>
 
 int countMediaQueryOf(String src) =>
     RegExp(r'\bMediaQuery\.(?:of|maybeOf)\(').allMatches(src).length;
+
+int countViewInsetsOf(String src) =>
+    RegExp(r'\bviewInsetsOf\(').allMatches(src).length;
 
 int countSizeAnimations(String src) =>
     RegExp(r'\b(?:AnimatedSize|AnimatedContainer)\(').allMatches(src).length;
@@ -269,6 +291,33 @@ extension _E on _NoteEditorScreenState {
       expect(countAnimatedSize('AnimatedSize(child: x)'), 1);
       expect(countAnimatedSize('AnimatedContainer(height: h)'), 0);
       expect(countAnimatedSize(_stripComments('// AnimatedSize(')), 0);
+    });
+  });
+
+  group('K-12 — viewInsetsOf yalnız izinli dosyalarda', () {
+    test('lib/ taraması', () {
+      final found = <String>[
+        for (final f in Directory('lib').listSync(recursive: true))
+          if (f is File &&
+              f.path.endsWith('.dart') &&
+              !f.path.contains('l10n/generated') &&
+              countViewInsetsOf(_read(f.path)) > 0)
+            f.path.replaceAll('\\', '/'),
+      ]..sort();
+      final extra = found.where((p) => !_viewInsetsAllow.contains(p)).toList();
+      expect(
+        extra,
+        isEmpty,
+        reason:
+            'Levha/sayfa State\'i viewInsetsOf okursa klavyenin her karesinde '
+            'baştan kurulur: SheetInsetPadding (sheet_keyboard.dart) ya da '
+            'KeyboardInset kullan; bilerek ise _viewInsetsAllow\'a ekle.',
+      );
+    });
+    test('bozma denemesi', () {
+      expect(countViewInsetsOf('MediaQuery.viewInsetsOf(context).bottom'), 1);
+      expect(countViewInsetsOf(_stripComments('// viewInsetsOf(c)')), 0);
+      expect(countViewInsetsOf('MediaQuery.sizeOf(context)'), 0);
     });
   });
 }

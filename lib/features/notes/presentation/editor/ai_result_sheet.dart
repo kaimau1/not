@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/note_type.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../../core/widgets/sheet_keyboard.dart';
 
 /// AI çıktısını NOTA YAZMADAN ÖNCE gösteren geniş inceleme/düzenleme sayfası.
 ///
@@ -96,8 +97,7 @@ class _AiResultSheetState extends State<_AiResultSheet> {
     final theme = Theme.of(context);
     // Klavye açıkken alan daralmasın: sayfa görünür yüksekliğin %85'ine kadar.
     final maxHeight = MediaQuery.sizeOf(context).height * 0.85;
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    return SheetInsetPadding(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: SafeArea(
