@@ -27,6 +27,7 @@ import 'core/utils/hard_keyboard.dart';
 import 'core/utils/image_cache_budget.dart';
 import 'core/utils/local_file.dart';
 import 'core/utils/note_fonts.dart';
+import 'core/third_party_licenses.dart';
 import 'core/utils/prefs_footprint.dart';
 import 'core/widgets/keyboard_snap.dart';
 import 'core/widgets/setup_required_screen.dart';
@@ -97,6 +98,7 @@ Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
   }
   registerAntaliaLicense();
+  registerThirdPartyLicenses(); // PL7: yazı tipi OFL + CMU BSD
   // Yazı tipleri yalnız paketten (T3/K-54): ağdan inen kesim bütün metni
   // yeniden dizdirir, çevrimdışı sistem yazı tipine düşer.
   disableFontRuntimeFetching();
