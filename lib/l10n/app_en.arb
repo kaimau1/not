@@ -3135,6 +3135,7 @@
   "quickEntryMic": "Add by voice",
   "quickEntryMicStop": "Stop listening",
   "quickListEmpty": "Type above, speak, or tap below; your list builds here.",
+  "smartListHint": "Type or say milk, bread…; for packing, say “packing list”.",
   "quickListDone": "Done",
   "quickListAisleSort": "Sort by aisle",
   "quickListOpenInNote": "Open as note",

@@ -95,11 +95,47 @@ List<String> quickLeftovers(Iterable<Note> notes, String title) {
   // liste de eşleşsin.
   final want = quickAscii(title.split(' · ').first);
   if (want.isEmpty) return const [];
+  return quickLeftoversWhere(
+    notes,
+    (n) => quickAscii(n.displayTitle).startsWith(want),
+  );
+}
+
+/// Akıllı listenin hafıza anahtarı TÜRE göre (AL-1, 2026-11-17): market ve
+/// bavul "Sık eklediklerin"i tek anahtarda karışıyordu. Düz liste [base]
+/// anahtarında kalır (eski kayıtlar da orada).
+String smartMemoryKind(String base, SmartListKind kind) => switch (kind) {
+  SmartListKind.shopping => '$base:market',
+  SmartListKind.packing => '$base:bavul',
+  SmartListKind.generic => base,
+};
+
+/// Listelerin sırayla karışımı (her listeden birer), yinelenen atlanır.
+List<String> quickInterleave(List<List<String>> lists, {int count = 16}) {
+  final out = <String>[];
+  final seen = <String>{};
+  for (var i = 0; out.length < count; i++) {
+    var any = false;
+    for (final l in lists) {
+      if (i >= l.length) continue;
+      any = true;
+      if (seen.add(quickItemKey(l[i])) && out.length < count) out.add(l[i]);
+    }
+    if (!any) break;
+  }
+  return out;
+}
+
+/// [match]e uyan en yeni listenin işaretlenmemiş maddeleri.
+List<String> quickLeftoversWhere(
+  Iterable<Note> notes,
+  bool Function(Note) match,
+) {
   Note? latest;
   for (final n in notes) {
     if (n.deletedAt != null || n.archivedAt != null) continue;
     if (n.type != NoteType.checklist && n.type != NoteType.ordered) continue;
-    if (!quickAscii(n.displayTitle).startsWith(want)) continue;
+    if (!match(n)) continue;
     final at = n.updatedAt ?? n.createdAt;
     final best = latest?.updatedAt ?? latest?.createdAt;
     if (latest == null || (at != null && (best == null || at.isAfter(best)))) {
@@ -178,9 +214,83 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
 
   QuickLexicon? _lexicon;
   QuickParser? _parser;
-  late List<String> _frequent;
-  late List<String> _leftovers;
   bool _done = false;
+
+  /// "Sık eklediklerin" ve "Geçen seferden kalanlar" TÜR başına bir kez
+  /// (akıllı listede tür değişince şerit o türünkini gösterir; AL-1).
+  final _frequentBy = <SmartListKind, List<String>>{};
+  final _leftoversBy = <SmartListKind, List<String>>{};
+
+  /// Düz listede tür hep [SmartListKind.generic]: tek anahtar.
+  SmartListKind get _memoKind =>
+      widget.args.smart ? _kind.value : SmartListKind.generic;
+
+  List<String> _frequentFor(SmartListKind kind) =>
+      _frequentBy[kind] ??= _computeFrequent(kind);
+
+  List<String> _computeFrequent(SmartListKind kind) {
+    final memory = ref.read(quickEntryMemoryProvider);
+    final base = widget.args.kind;
+    if (!widget.args.smart) {
+      final top = memory.top(base, count: 16);
+      // Önce kullanıcının sık eklediği, boş kalan yer şablonun tohumu.
+      final have = {for (final t in top) quickItemKey(t)};
+      return [
+        ...top,
+        for (final s in widget.args.seedItems)
+          if (have.add(quickItemKey(s))) s,
+      ].take(16).toList();
+    }
+    // Türe bölünmeden önceki ortak kayıt ([base]) türüne süzülerek katılır.
+    List<String> legacy(int Function(QuickItem) groupOf) => [
+      for (final t in memory.top(base, count: 32))
+        if (groupOf(QuickItem(name: t)) >= 0) t,
+    ];
+    final market = memory.top(smartMemoryKind(base, SmartListKind.shopping));
+    final bavul = memory.top(smartMemoryKind(base, SmartListKind.packing));
+    return switch (kind) {
+      SmartListKind.shopping => quickInterleave([
+        market,
+        legacy(_groceryGroupOf),
+      ]),
+      SmartListKind.packing => quickInterleave([
+        bavul,
+        legacy(_packingGroupOf),
+      ]),
+      SmartListKind.generic => quickInterleave([
+        market,
+        bavul,
+        memory.top(base, count: 16),
+      ]),
+    };
+  }
+
+  List<String> _leftoversFor(SmartListKind kind) =>
+      _leftoversBy[kind] ??= _computeLeftovers(kind);
+
+  /// Düz listede aynı başlıklı en yeni liste; akıllı listede başlığa değil
+  /// TÜRE göre (AL-1): maddeleri aynı türe çıkan en yeni liste — başlığı
+  /// elle "Antalya" yapılmış bavul listesi de bulunur.
+  List<String> _computeLeftovers(SmartListKind kind) {
+    final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+    if (!widget.args.smart) return quickLeftovers(notes, widget.args.title);
+    if (kind == SmartListKind.generic) return const [];
+    bool known(QuickLexicon? lex, String text) =>
+        (lex?.groupOf(quickBaseName(text)) ?? -1) >= 0;
+    return quickLeftoversWhere(
+      notes,
+      (n) =>
+          smartKindOf([
+            for (final i in n.items)
+              if (!i.header && i.text.trim().isNotEmpty)
+                (
+                  grocery: known(_grocery, i.text),
+                  packing: known(_packing, i.text),
+                ),
+          ]) ==
+          kind,
+    );
+  }
 
   /// Kapanış: giriş satırı ve öneri şeridi solar, liste (not) kalır.
   late final AnimationController _closing = AnimationController(vsync: this);
@@ -234,18 +344,6 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     super.initState();
     _twoColumns = ValueNotifier(ref.read(quickListTwoColumnsProvider));
     _aisle = ValueNotifier(ref.read(quickListAisleSortProvider));
-    final memory = ref.read(quickEntryMemoryProvider);
-    final top = memory.top(widget.args.kind, count: 16);
-    final have = {for (final t in top) quickItemKey(t)};
-    _frequent = [
-      ...top,
-      for (final s in widget.args.seedItems)
-        if (have.add(quickItemKey(s))) s,
-    ].take(16).toList();
-    _leftovers = quickLeftovers(
-      ref.read(notesStreamProvider).value ?? const <Note>[],
-      widget.args.title,
-    );
     for (final t in widget.args.initialItems) {
       if (t.trim().isEmpty) continue;
       _rows.add(_Row(_seq++, QuickItem(name: t.trim(), how: QuickHow.exact)));
@@ -265,7 +363,12 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       // üç yerine TEK madde oluyordu, yakın eşleşme düzeltmesi çalışmıyordu).
       grocery: widget.args.grocery || widget.args.smart,
       groups: widget.args.groups,
-      learned: memory.all(widget.args.kind),
+      learned: [
+        ...memory.all(widget.args.kind),
+        if (widget.args.smart)
+          for (final k in [SmartListKind.shopping, SmartListKind.packing])
+            ...memory.all(smartMemoryKind(widget.args.kind, k)),
+      ],
       extra: [...widget.args.seedItems, ...widget.args.initialItems],
     );
     if (widget.args.smart) {
@@ -443,9 +546,10 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     final title = _title.text.trim().isEmpty
         ? widget.args.title
         : _title.text.trim();
-    ref.read(quickEntryMemoryProvider.notifier).record(widget.args.kind, [
-      for (final i in items) i.name,
-    ]);
+    ref.read(quickEntryMemoryProvider.notifier).record(
+      smartMemoryKind(widget.args.kind, _memoKind),
+      [for (final i in items) i.name],
+    );
     teachSpellFromQuickItems(items);
     final result = QuickListResult(
       (
@@ -486,24 +590,29 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     return w;
   }
 
-  List<_Tab> _tabs(AppLocalizations l10n, [SmartListKind? kind]) => [
-    if (_frequent.isNotEmpty)
-      (
-        label: l10n.quickListFrequent,
-        icon: Icons.star_outline,
-        items: _frequent,
-        all: false,
-      ),
-    if (_leftovers.isNotEmpty)
-      (
-        label: l10n.quickListLeftovers,
-        icon: Icons.history,
-        items: _leftovers,
-        all: true,
-      ),
-    for (final g in _groupsFor(kind))
-      (label: g.label, icon: null, items: g.items, all: false),
-  ];
+  List<_Tab> _tabs(AppLocalizations l10n, [SmartListKind? kind]) {
+    final k = widget.args.smart ? (kind ?? _kind.value) : SmartListKind.generic;
+    final frequent = _frequentFor(k);
+    final leftovers = _leftoversFor(k);
+    return [
+      if (frequent.isNotEmpty)
+        (
+          label: l10n.quickListFrequent,
+          icon: Icons.star_outline,
+          items: frequent,
+          all: false,
+        ),
+      if (leftovers.isNotEmpty)
+        (
+          label: l10n.quickListLeftovers,
+          icon: Icons.history,
+          items: leftovers,
+          all: true,
+        ),
+      for (final g in _groupsFor(kind))
+        (label: g.label, icon: null, items: g.items, all: false),
+    ];
+  }
 
   /// Öneri grupları: akıllı listede türe göre (düz listede ikisi de).
   List<TemplateSuggestionGroup> _groupsFor(SmartListKind? kind) {
@@ -560,7 +669,8 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
             child: Padding(
               padding: const EdgeInsets.all(AppSpace.xxl),
               child: Text(
-                l10n.quickListEmpty,
+                // Akıllı listede türün söylenebildiği de anlatılır (AL-1).
+                widget.args.smart ? l10n.smartListHint : l10n.quickListEmpty,
                 textAlign: TextAlign.center,
                 style: text.body.copyWith(color: scheme.onSurfaceVariant),
               ),

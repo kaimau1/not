@@ -9,8 +9,10 @@ Bulut işçisi, push YOK (yürütücü birleştirip tek push yapar). Cihaz yok.
 
 - T3 (commit "T3 ..."): indirme kapalı bekçide yalnız Merriweather-Medium eksikti (kalın istenmiyor) → dosya + `disableFontRuntimeFetching()` + `applyNoteFont` >500 → 500 ile yükler. assets+pubspec değişti → CI tam takım (gerekçe: eksik font dosyası).
 
+- T5 (commit "T5 ..."): AL-1 — sık eklenenler `smart:market`/`smart:bavul`, kalanlar türe göre, boş ipucu `smartListHint` (.arb), S49 açılış ilk karesi 634 / akıllı 688 (önce=sonra). Eski kodda yeni 3 test kırmızıydı.
+
 ## Şu anki adım
-- T5
+- T7
 
 ## Kanıt / ölçüm ham sayıları
 - S41: {cip_fazla_kart 0, harf_fazla_kart 0, acilis_text 37}; S48: {klavye 294, dizilme 156, galeri 330, duzenleyici 191}

@@ -15356,6 +15356,12 @@ abstract class AppLocalizations {
   /// **'Yukarıya yaz, söyle ya da aşağıdan dokun; liste burada oluşur.'**
   String get quickListEmpty;
 
+  /// Akıllı liste boşken tek cümlelik ipucu (AL-1): tür maddelerden bulunur, istenirse söylenir.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süt, ekmek… yaz ya da söyle; bavul için “bavul listesi” de.'**
+  String get smartListHint;
+
   /// No description provided for @quickListDone.
   ///
   /// In tr, this message translates to:

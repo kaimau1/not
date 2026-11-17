@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:notlar/core/utils/spell_learn.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
+import 'package:notlar/features/notes/data/quick_entry_memory.dart';
 import 'package:notlar/features/notes/domain/note.dart';
+import 'package:notlar/features/notes/domain/note_item.dart';
+import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/domain/smart_list.dart';
 import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
@@ -63,8 +66,12 @@ void main() {
   });
 
   group('ekran', () {
-    Future<void> open(WidgetTester tester) async {
-      SharedPreferences.setMockInitialValues({});
+    Future<SharedPreferences> open(
+      WidgetTester tester, {
+      Map<String, Object> values = const {},
+      List<Note> notes = const [],
+    }) async {
+      SharedPreferences.setMockInitialValues(values);
       final prefs = await SharedPreferences.getInstance();
       await tester.binding.setSurfaceSize(const Size(412, 915));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -72,29 +79,33 @@ void main() {
         ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
-            notesStreamProvider.overrideWith(
-              (ref) => Stream.value(const <Note>[]),
-            ),
+            notesStreamProvider.overrideWith((ref) => Stream.value(notes)),
             notesRepositoryProvider.overrideWithValue(null),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             locale: const Locale('tr'),
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: ElevatedButton(
-                  onPressed: () =>
-                      showQuickList(context, smartListArgs(context)),
-                  child: const Text('aç'),
-                ),
-              ),
+            home: Consumer(
+              builder: (context, ref, _) {
+                ref.watch(notesStreamProvider);
+                return Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () =>
+                        showQuickList(context, smartListArgs(context)),
+                    child: const Text('aç'),
+                  ),
+                );
+              },
             ),
           ),
         ),
       );
+      // Ana ekran akışı uygulamada hep dinlenir: değer hazır olsun.
+      await tester.pump();
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
+      return prefs;
     }
 
     Finder field() => find.byKey(const ValueKey('quick-entry-field'));
@@ -151,6 +162,82 @@ void main() {
       final r = rows(tester);
       expect(r, containsAll(<String>['Süt', 'Yumurta', 'Ekmek']));
       expect(r.where((t) => t.contains(' ')), isEmpty, reason: '$r');
+    });
+
+    // AL-1 (17 Kasım raporu §5.2): sık kullanılanlar TÜRE bölünür, geçen
+    // seferden kalanlar başlığa değil türe göre, boş ekranda ipucu.
+    testWidgets('boş akıllı listede tür ipucu', (tester) async {
+      await open(tester);
+      expect(find.textContaining('bavul listesi'), findsOneWidget);
+    });
+
+    testWidgets('sık eklenenler türe göre kaydedilir ve gösterilir', (
+      tester,
+    ) async {
+      final memory = QuickEntryMemory(
+        kinds: {
+          'smart:market': {'zeytin': ('Zeytin', 3)},
+          'smart:bavul': {'mayo': ('Mayo', 2)},
+        },
+      );
+      final prefs = await open(
+        tester,
+        values: {'quick_entry_memory_v1': memory.encode()},
+      );
+      // Tür belli değilken ikisi birden.
+      expect(find.byKey(const ValueKey('quick-chip-Zeytin')), findsOneWidget);
+      expect(find.byKey(const ValueKey('quick-chip-Mayo')), findsOneWidget);
+      await tester.enterText(field(), 'tişört, şort,');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-tab-0')));
+      await tester.pumpAndSettle();
+      // Bavul: market sık eklenenleri karışmaz.
+      expect(find.byKey(const ValueKey('quick-chip-Mayo')), findsOneWidget);
+      expect(find.byKey(const ValueKey('quick-chip-Zeytin')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('quick-list-done')));
+      await tester.pumpAndSettle();
+      final saved = QuickEntryMemory.decode(
+        prefs.getString('quick_entry_memory_v1'),
+      );
+      expect(saved.top('smart:bavul'), containsAll(<String>['Tişört', 'Şort']));
+      expect(saved.top('smart:market'), ['Zeytin']);
+      expect(saved.top('smart'), isEmpty);
+      await tester.pump(const Duration(seconds: 8));
+    });
+
+    testWidgets('geçen seferden kalanlar başlığa değil türe göre', (
+      tester,
+    ) async {
+      final notes = [
+        Note(
+          id: 'antalya',
+          type: NoteType.checklist,
+          title: 'Antalya',
+          updatedAt: DateTime(2026, 11, 10),
+          items: const [
+            NoteItem(id: '1', text: 'Pasaport', checked: true),
+            NoteItem(id: '2', text: 'Mayo'),
+            NoteItem(id: '3', text: 'Güneş kremi'),
+          ],
+        ),
+        Note(
+          id: 'market',
+          type: NoteType.checklist,
+          title: 'Liste',
+          updatedAt: DateTime(2026, 11, 12),
+          items: const [NoteItem(id: '1', text: 'Domates')],
+        ),
+      ];
+      await open(tester, notes: notes);
+      // Düz "Liste" başlığıyla eşleşen market listesi bavulda görünmez.
+      await tester.enterText(field(), 'tişört, şort,');
+      await tester.pumpAndSettle();
+      expect(find.text('Geçen seferden'), findsOneWidget);
+      await tester.tap(find.text('Geçen seferden'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('quick-chip-Mayo')), findsOneWidget);
+      expect(find.byKey(const ValueKey('quick-chip-Pasaport')), findsNothing);
+      expect(find.byKey(const ValueKey('quick-chip-Domates')), findsNothing);
     });
 
     testWidgets('elle değişen başlığa dokunulmaz', (tester) async {

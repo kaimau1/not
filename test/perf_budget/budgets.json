@@ -453,7 +453,9 @@
     "neden": "kullanıcı bulgusu 2026-11-15: şablon oluştururken aşırı kasıyor"
   },
   "S49": {
-    "senaryo": "Hızlı liste (telefon, alışveriş şablonu, 20 madde hazır, iki sütun): klavye 6 inset karesi; madde çıkarmayan 5 tuş; bir madde çıkaran yazı; öneri çipi dokunuşu",
+    "senaryo": "Hızlı liste (telefon, alışveriş şablonu, 20 madde hazır, iki sütun): açılış dokunuşu + ilk kare (alışveriş ve akıllı liste); klavye 6 inset karesi; madde çıkarmayan 5 tuş; bir madde çıkaran yazı; öneri çipi dokunuşu",
+    "acilis_kurulum": 634,
+    "akilli_acilis_kurulum": 688,
     "klavye_kurulum": 341,
     "klavye_dizilme": 99,
     "yazma_kurulum": 195,
@@ -462,7 +464,7 @@
     "madde_satir": 2,
     "cip_kurulum": 146,
     "cip_satir": 1,
-    "bugun": "341 / 99 / 195 / 0 / 242 / 2 / 146 / 1 (2026-11-16: klavye ölçümü artık oturma karesini de sayar; KeyboardInsetScope+Snap+Slide ile ekranın kendi kurulumu klavye karelerinde ~0 — kalan test ana sayfasının iskeleti; eski kod aynı ölçümde 438 / 168). 2026-11-15 ilk ölçüm 420 / 168 (oturmasız)",
+    "bugun": "açılış 634 / akıllı açılış 688 (2026-11-17 T5 ilk ölçüm, K-41; AL-1 öncesi ve sonrası aynı). 341 / 99 / 195 / 0 / 242 / 2 / 146 / 1 (2026-11-16: klavye ölçümü artık oturma karesini de sayar; KeyboardInsetScope+Snap+Slide ile ekranın kendi kurulumu klavye karelerinde ~0 — kalan test ana sayfasının iskeleti; eski kod aynı ölçümde 438 / 168). 2026-11-15 ilk ölçüm 420 / 168 (oturmasız)",
     "hedef": "yazarken liste kurulmaz; madde/çip yalnız değişen satırı kurar",
     "neden": "kullanıcı isteği 2026-11-15: liste şablonu not sayfası gibi açılsın, yazarken canlı dolsun"
   },

@@ -221,3 +221,9 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - H10: hızlı ekle notun GÜNCEL hâlini akıştan okur (`_noteOf`); geri al `quickDropUndoFields`:
   yalnız eklenen maddeleri çıkarır, değiştirdiği madde hâlâ yazdığı hâldeyse eskisine döner.
 - Akıllı liste ayrıştırıcısına market sözlüğü katılır (`grocery || smart`, `quick_list_screen.dart`).
+
+## 2026-11-17 — Akıllı liste AL-1 (T5, dal oto/P65-telefonsuz-kod)
+- **§5.1 sözlük hatası** daha önce düzeltilmişti (`grocery: args.grocery || args.smart`, `smart_list_test` "boşlukla yazılan market maddeleri").
+- **Sık eklenenler türe bölündü:** kayıt `smartMemoryKind(kind, tür)` → `smart:market` / `smart:bavul` (düz/şablon liste kendi anahtarında). Şerit tür başına bir kez hesaplanır (`_frequentBy`); tür belli değilken market + bavul + eski ortak `smart` karışık (sırayla), türde ilgili anahtar + eski ortak kaydın o türe süzülmüşü. Sözlüğe (`learned`) üç anahtar da girer.
+- **Geçen seferden kalanlar akıllı listede TÜRE göre** (`quickLeftoversWhere` + maddelerden `smartKindOf`): başlığı "Antalya" yapılmış bavul listesi bulunur; düz tür (henüz belli değil) kalan göstermez. Düz/şablon liste eskisi gibi başlıkla.
+- **Boş akıllı listede ipucu** `smartListHint` ("bavul listesi" de). **Bütçe** S49 `acilis_kurulum` 634, `akilli_acilis_kurulum` 688 (K-41; AL-1 öncesi/sonrası aynı). Cihazda ölçülmedi.

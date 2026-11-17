@@ -2194,19 +2194,43 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () => showQuickList(
-                  context,
-                  quickListArgsFor(context, builtin: NoteTemplate.shopping)!,
-                ),
-                child: const Text('aç'),
+              body: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () => showQuickList(
+                      context,
+                      quickListArgsFor(
+                        context,
+                        builtin: NoteTemplate.shopping,
+                      )!,
+                    ),
+                    child: const Text('aç'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () =>
+                        showQuickList(context, smartListArgs(context)),
+                    child: const Text('akıllı'),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
-    await tester.tap(find.text('aç'));
+    // AÇILIŞIN İLK KARESİ (K-41, T5 2026-11-17): video k1'de şablon/akıllı
+    // liste dokunuşundan sonra 247 ms donma. Dokunuş + ilk kare kurulumu.
+    final smartOpen = await _count(() async {
+      await tester.tap(find.text('akıllı'));
+      await tester.pump();
+    });
+    await _settle(tester);
+    await tester.binding.handlePopRoute();
+    await _settle(tester);
+    final open = await _count(() async {
+      await tester.tap(find.text('aç'));
+      await tester.pump();
+    });
     await _settle(tester);
     final field = find.byKey(const ValueKey('quick-entry-field'));
     await tester.enterText(
@@ -2264,6 +2288,8 @@ void main() {
     await _settle(tester);
     tester.view.viewInsets = FakeViewPadding.zero;
     _expectBudget('S49', {
+      'acilis_kurulum': _sum(open),
+      'akilli_acilis_kurulum': _sum(smartOpen),
       'klavye_kurulum': _sum(keyboard),
       'klavye_dizilme': kbLayouts,
       'yazma_kurulum': _sum(typing),
