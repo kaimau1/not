@@ -267,6 +267,14 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Tara = belge + QR** (`openScanAny`, `QrScanScreen(document: true)`): QR ekranı kapatmaz, kart önerir; "Belge tara" → `createScanNote`. Kamera izni yoksa yalnız belge. Not içi Ekle levhası iki satırı korur.
 - **Adlar:** yeni tek tip sistem "Akıllı liste" (`smartlist`), eski şablonlar "Hazır şablonlar" (`fromTemplate`). Foto/video birleşmedi (kullanıcı: "olmuyorsa zorlamayalım" — sistem kamerası içinde foto↔video geçişi yönetilemiyor).
 
+## 2026-11-17 — P64 keşif turu küçükleri (oto/P64-kesif-kucukler)
+- **Levha genişliği KÖK NEDEN (KT-2):** `showAppSheet(constraints: BoxConstraints(maxHeight: …))` M3'ün varsayılan 640 dp genişlik sınırını EZER (maxWidth sonsuz → masaüstünde 1240 px levha). Yalnız yükseklik veren levha `maxWidth: kSheetMaxWidth` (560, `app_sheet.dart`, KARAR 1.0) da vermeli. Süz levhası düzeldi; aynı kalıpta ~30 levha daha var (geniş ekranda tek tek bakılacak).
+- **Güvenlik bölümü (KT-10, KARAR 1.0):** not kilidi + uygulama kilidi Ayarlar'da `security` alanı, "Hesap" grubunda Hesap'ın altında. Veri grubuna konunca S36 (sound) toplamı 583→612 oldu (liste uzayınca kaydırma farkı), Hesap grubunda değişmedi (ai 203→191).
+- **Tek harf gün adı yok (KT-3):** şerit hücresi < 24 dp'de ad yazılmaz (Semantics'te tam ad). Ana ekran boş hâli `_kFabClearance` alt payıyla FAB satırının üstünde ortalanır.
+- **Klasörler boş hâli** ortak `EmptyState` (eylem düğmesi YOK — F79.3: üst çubukta "Yeni klasör" var). `terminology_test` boş hâl başlığını "Burada … yok" kalıbına zorlar.
+- **Açıklama levhası (T10):** levha içindeki denetleyici levhanın KENDİ State'inde; `whenComplete(dispose)` kapanış animasyonundan ÖNCE atar (yanlış yol).
+- **Alarm izni ipucu (KONTROL 36):** `maybeShowAutoStartHint` önce `exact_alarm_hint_v1` (bir kez, "İzni aç"); o kez MIUI ipucu sonraki hatırlatıcıya kalır.
+
 ## Tasarım ilkeleri ve yapılmayacaklar (kalıcı; DENEYIM_PLANI §2/§4, P53 2026-11-14 buraya taşındı)
 
 Tam plan: `docs/arsiv/planlar/DENEYIM_PLANI.md` (belirteç tabloları §2.1–2.3). Görünüş/yer değiştirmeden önce `python tool/design/istek_tara.py <dosya>`.
