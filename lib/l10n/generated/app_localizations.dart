@@ -125,7 +125,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In tr, this message translates to:
-  /// **'Notlarda ara...'**
+  /// **'Ara...'**
   String get searchHint;
 
   /// No description provided for @filterAll.

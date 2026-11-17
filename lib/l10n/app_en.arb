@@ -4,7 +4,7 @@
   "loginTagline": "Your notes, on every device",
   "signInWithGoogle": "Sign in with Google",
   "loginError": "Sign-in failed: {error}",
-  "searchHint": "Search notes...",
+  "searchHint": "Search...",
   "filterAll": "All",
   "filterText": "Text",
   "filterChecklist": "List",

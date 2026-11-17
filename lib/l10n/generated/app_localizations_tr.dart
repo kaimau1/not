@@ -24,7 +24,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get searchHint => 'Notlarda ara...';
+  String get searchHint => 'Ara...';
 
   @override
   String get filterAll => 'Tümü';

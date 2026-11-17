@@ -24,7 +24,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchHint => 'Search notes...';
+  String get searchHint => 'Search...';
 
   @override
   String get filterAll => 'All';
