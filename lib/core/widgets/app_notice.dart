@@ -571,13 +571,16 @@ class _RenderDragPaint extends RenderProxyBox {
   }
 }
 
-/// **KADEMELİ GERİ SAYIM ÇİZGİSİ** (kullanıcı bulgusu 2026-11-16: "bildirim
-/// varken kasma var"). KÖK NEDEN: eski çizgi `TweenAnimationBuilder` ile HER
-/// KAREDE (120 Hz) yeniden çiziliyordu; bildirim açık kaldığı 4-6 sn boyunca
-/// uygulama hiç boşta kalmıyor, her kare tüm sahne yeniden birleştirilip
-/// rasterleniyordu — yazarken klavye/editör kareleriyle yarışıyordu. Şimdi
-/// çizgi saniyede [steps] kez ilerler (kare üretimi ~15 kat azalır); kurulum
-/// yok, yalnız kendi katmanında boyama ([CustomPaint.painter] dinler).
+/// **GERİ SAYIM ÇİZGİSİ** — tek [AnimationController], doğrusal, kesintisiz.
+///
+/// Geçmiş: (1) `TweenAnimationBuilder` her karede alt ağacı YENİDEN KURUYORDU
+/// (kullanıcı bulgusu 2026-11-16: "bildirim varken kasma var"); (2) çare
+/// olarak çizgi saniyede 8 adıma indirildi — ama `Timer.periodic` vsync'e
+/// bağlı değil, adımlar düzensiz düştü ve çizgi gözle "takılarak" ilerledi
+/// (kullanıcı bulgusu U5, 2026-11-18). Şimdi: denetleyici her karede yalnız
+/// ressamı boyatır ([CustomPainter] `repaint:`), HİÇBİR widget yeniden
+/// kurulmaz; çizgi kendi [RepaintBoundary] katmanında, sahnenin geri kalanı
+/// önbellekten birleşir. Uygulama arka plandayken [TickerMode] durdurur.
 class SteppedCountdown extends StatefulWidget {
   const SteppedCountdown({
     super.key,
@@ -602,43 +605,34 @@ class SteppedCountdown extends StatefulWidget {
   /// Köşe yarıçapı (iz ve dolgu).
   final double radius;
 
-  /// Saniyedeki adım sayısı.
-  static const int steps = 8;
-
   @override
   State<SteppedCountdown> createState() => _SteppedCountdownState();
 }
 
-class _SteppedCountdownState extends State<SteppedCountdown> {
-  final _left = ValueNotifier<double>(1);
-  Timer? _timer;
+class _SteppedCountdownState extends State<SteppedCountdown>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _run;
 
   @override
   void initState() {
     super.initState();
-    final total = widget.duration.inMicroseconds;
-    if (total <= 0) {
-      _left.value = 0;
+    _run = AnimationController(vsync: this, duration: widget.duration)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) widget.onEnd?.call();
+      });
+    if (widget.duration <= Duration.zero) {
+      _run.value = 1;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) widget.onEnd?.call();
       });
-      return;
+    } else {
+      _run.forward();
     }
-    const step = 1000000 ~/ SteppedCountdown.steps;
-    _timer = Timer.periodic(const Duration(microseconds: step), (t) {
-      final left = 1 - t.tick * step / total;
-      _left.value = left <= 0 ? 0 : left;
-      if (left <= 0) {
-        t.cancel();
-        widget.onEnd?.call();
-      }
-    });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _left.dispose();
+    _run.dispose();
     super.dispose();
   }
 
@@ -646,8 +640,8 @@ class _SteppedCountdownState extends State<SteppedCountdown> {
   Widget build(BuildContext context) => RepaintBoundary(
     child: CustomPaint(
       size: Size(double.infinity, widget.height),
-      painter: _CountdownPainter(
-        _left,
+      painter: CountdownPainter(
+        _run,
         widget.color,
         Directionality.of(context),
         track: widget.trackColor,
@@ -657,16 +651,21 @@ class _SteppedCountdownState extends State<SteppedCountdown> {
   );
 }
 
-class _CountdownPainter extends CustomPainter {
-  _CountdownPainter(
-    this.left,
+class CountdownPainter extends CustomPainter {
+  CountdownPainter(
+    this.elapsed,
     this.color,
     this.direction, {
     this.track,
     this.radius = 0,
-  }) : super(repaint: left);
+  }) : super(repaint: elapsed);
 
-  final ValueListenable<double> left;
+  /// Geçen süre oranı (0 → 1).
+  final Animation<double> elapsed;
+
+  /// Kalan oran (1 → 0); çizginin dolu kısmı.
+  @visibleForTesting
+  double get remaining => 1 - elapsed.value;
   final Color color;
   final TextDirection direction;
   final Color? track;
@@ -687,17 +686,17 @@ class _CountdownPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (track != null) _bar(canvas, Offset.zero & size, track!);
-    final w = size.width * left.value;
+    final w = size.width * remaining;
     if (w <= 0) return;
     final x = direction == TextDirection.rtl ? size.width - w : 0.0;
     _bar(canvas, Rect.fromLTWH(x, 0, w, size.height), color);
   }
 
   @override
-  bool shouldRepaint(_CountdownPainter old) =>
+  bool shouldRepaint(CountdownPainter old) =>
       old.color != color ||
       old.direction != direction ||
-      old.left != left ||
+      old.elapsed != elapsed ||
       old.track != track ||
       old.radius != radius;
 }

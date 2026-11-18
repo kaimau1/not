@@ -38,7 +38,10 @@ void main() {
         onAction: () => undone++,
       ),
     );
-    await tester.pumpAndSettle();
+    // Geri sayım her karede ilerler (U5): pumpAndSettle süre bitene dek
+    // pompalar ve bildirimi kapatırdı; giriş için kısa pompa yeter.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.timedDrag(
       find.text('silindi'),
       const Offset(20, 0),
@@ -63,17 +66,20 @@ void main() {
     expect(c.current, isNull);
   });
 
-  testWidgets('geri sayım her karede değil, kademeli ilerler', (tester) async {
+  testWidgets('geri sayım her karede kesintisiz ilerler (U5)', (tester) async {
     final c = AppNoticeController();
     addTearDown(c.dispose);
     await _pump(tester, c);
     c.show(
       AppNoticeData(text: 'silindi', actionLabel: 'Geri al', onAction: () {}),
     );
-    await tester.pumpAndSettle();
-    // Karede bir zamanlayıcı gibi değil: 16 ms'lik pompada kare istenmez.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    // Kullanıcı bulgusu 2026-11-18 (U5): saniyede 8 adım "takılarak"
+    // ilerliyordu; şimdi her kare ister (yalnız boyama, bkz.
+    // countdown_smooth_test).
     await tester.pump(const Duration(milliseconds: 16));
-    expect(tester.binding.hasScheduledFrame, isFalse);
+    expect(tester.binding.hasScheduledFrame, isTrue);
     expect(find.byType(SteppedCountdown), findsOneWidget);
   });
 }

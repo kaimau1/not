@@ -195,7 +195,7 @@ SnackBar timedSnackBar({
               ),
             ),
             // K-38: süre boyunca her karede çubuğu yeniden dizen
-            // TweenAnimationBuilder yerine saniyede 8 adım, yalnız boyama.
+            // TweenAnimationBuilder yerine yalnız boyama (U5: kesintisiz).
             SteppedCountdown(
               key: const ValueKey('snack-countdown'),
               duration: duration,

@@ -22,7 +22,7 @@ class CountdownBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = color ?? Theme.of(context).colorScheme.primary;
     // K-38: TweenAnimationBuilder her karede ClipRRect +
-    // LinearProgressIndicator kuruyordu; adımlı boyama aynı görünümü verir.
+    // LinearProgressIndicator kuruyordu; şimdi yalnız boyama (U5: kesintisiz).
     return SteppedCountdown(
       duration: duration,
       onEnd: onEnd,
