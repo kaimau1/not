@@ -24,8 +24,8 @@ import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
 import '../data/ai_gate.dart';
 import '../data/ai_history.dart';
-import '../data/ai_report.dart';
 import 'ai_hub_screen.dart' show AiPointsBar;
+import 'ai_result_note.dart';
 import 'listen_screen.dart';
 import '../data/gemini_service.dart';
 import 'ai_chat_screen.dart';
@@ -604,13 +604,6 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         ).showMessage(l10n.copied);
                       }
                     },
-                    onReport: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      await ref
-                          .read(aiReportServiceProvider)
-                          .report(content: _result!, source: 'ai_sheet');
-                      messenger.showMessage(l10n.aiReportThanks);
-                    },
                     // Önce alt sayfayı kapat, SONRA uygula: değerler önceden
                     // yakalanır. Eskiden callback önce, pop sonra çağrılıyordu;
                     // callback (editörde setState) bir istisna fırlatırsa pop'a
@@ -1135,7 +1128,6 @@ class _ResultView extends StatelessWidget {
   const _ResultView({
     required this.text,
     required this.onCopy,
-    this.onReport,
     this.onAppend,
     this.onReplace,
     this.onCreateNote,
@@ -1143,9 +1135,6 @@ class _ResultView extends StatelessWidget {
 
   final String text;
   final VoidCallback onCopy;
-
-  /// Sorunlu AI çıktısını bildirme (Play üretken AI politikası).
-  final VoidCallback? onReport;
   final VoidCallback? onAppend;
   final VoidCallback? onReplace;
 
@@ -1170,7 +1159,8 @@ class _ResultView extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
-          const SizedBox(height: 8),
+          // PL3 (b): "AI yanılabilir" + "Bildir" (kişisel veri gitmez).
+          AiResultNote(content: text, source: 'ai_sheet'),
           // Wrap: dar ekranda butonlar taşmaz, gerekirse alt satıra sarılır
           // ("Nota ekle" ekranın dışında kalıp dokunulamıyordu).
           Wrap(
@@ -1179,12 +1169,6 @@ class _ResultView extends StatelessWidget {
             runSpacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              if (onReport != null)
-                IconButton(
-                  tooltip: context.l10n.aiReport,
-                  onPressed: onReport,
-                  icon: const Icon(Icons.flag_outlined, size: 18),
-                ),
               TextButton.icon(
                 onPressed: onCopy,
                 icon: const Icon(AppIcons.copy, size: 16),

@@ -15643,6 +15643,96 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Emin olunamazsa yapay zekâya sor'**
   String get quickDropAiToggle;
+
+  /// No description provided for @aiOffSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâyı tümden kapat'**
+  String get aiOffSetting;
+
+  /// No description provided for @aiOffSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açıkken hiçbir not, metin ya da ek yapay zekâya gönderilmez; düğmeleri gizlenir.'**
+  String get aiOffSettingInfo;
+
+  /// No description provided for @aiOffTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ kapalı'**
+  String get aiOffTitle;
+
+  /// No description provided for @aiOffBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâyı Ayarlar\'da tümden kapattın; hiçbir şey gönderilmiyor. Açınca düğmeleri geri gelir.'**
+  String get aiOffBody;
+
+  /// No description provided for @aiOffTurnOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâyı aç'**
+  String get aiOffTurnOn;
+
+  /// No description provided for @aiConsentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ kullanımı'**
+  String get aiConsentTitle;
+
+  /// No description provided for @aiConsentWhat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne gönderilir: yalnız o iş için seçtiğin metin, not ya da ek (görsel, ses, PDF).'**
+  String get aiConsentWhat;
+
+  /// No description provided for @aiConsentWhere.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nereye: Google\'ın Gemini hizmetine (Firebase üzerinden); kendi anahtarını girdiysen seçtiğin sağlayıcıya.'**
+  String get aiConsentWhere;
+
+  /// No description provided for @aiConsentMistakes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ yanılabilir; önemli bilgileri kendin doğrula.'**
+  String get aiConsentMistakes;
+
+  /// No description provided for @aiConsentTurnOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'İstediğin an Ayarlar → Yapay zekâ\'dan tümden kapatabilirsin.'**
+  String get aiConsentTurnOff;
+
+  /// No description provided for @aiConsentAccept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kabul ediyorum'**
+  String get aiConsentAccept;
+
+  /// No description provided for @aiConsentDecline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vazgeç'**
+  String get aiConsentDecline;
+
+  /// No description provided for @aiMayBeWrong.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI yanılabilir; önemli bilgiyi doğrula.'**
+  String get aiMayBeWrong;
+
+  /// No description provided for @aiPausedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ geçici olarak kapalı'**
+  String get aiPausedTitle;
+
+  /// No description provided for @aiPausedBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.'**
+  String get aiPausedBody;
 }
 
 class _AppLocalizationsDelegate

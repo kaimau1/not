@@ -3182,5 +3182,20 @@
   "quickDropAsking": "Working out which note…",
   "quickDropAddingTo": "Adding to “{title}”…",
   "quickDropWait": "Wait",
-  "quickDropAiToggle": "Ask AI when unsure"
+  "quickDropAiToggle": "Ask AI when unsure",
+  "aiOffSetting": "Turn off AI completely",
+  "aiOffSettingInfo": "While on, no note, text or attachment is sent to AI and AI buttons are hidden.",
+  "aiOffTitle": "AI is turned off",
+  "aiOffBody": "You turned AI off in Settings; nothing is sent. Turn it back on to bring the AI buttons back.",
+  "aiOffTurnOn": "Turn AI on",
+  "aiConsentTitle": "Using AI",
+  "aiConsentWhat": "What is sent: only the text, note or attachment (image, audio, PDF) you choose for that task.",
+  "aiConsentWhere": "Where: to Google's Gemini service (via Firebase); if you entered your own key, to the provider you chose.",
+  "aiConsentMistakes": "AI can make mistakes; check important information yourself.",
+  "aiConsentTurnOff": "You can turn AI off completely at any time in Settings → AI.",
+  "aiConsentAccept": "I agree",
+  "aiConsentDecline": "Not now",
+  "aiMayBeWrong": "AI can make mistakes; check important info.",
+  "aiPausedTitle": "AI is temporarily unavailable",
+  "aiPausedBody": "AI features are switched off for a short while. Your notes aren't affected; try again later."
 }

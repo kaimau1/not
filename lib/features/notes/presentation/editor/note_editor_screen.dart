@@ -5064,10 +5064,11 @@ child: FormatBar(
                                       ),
                                       icon: Icons.auto_awesome,
                                       badge:
-                                          ref.watch(aiAvailabilityProvider) ==
-                                              AiAvailability.ready
-                                          ? null
-                                          : Icons.lock_outline,
+                                          ref
+                                              .watch(aiAvailabilityProvider)
+                                              .looksLocked
+                                          ? Icons.lock_outline
+                                          : null,
                                       onTap: () => showAiSheet(
                                         context,
                                         note,

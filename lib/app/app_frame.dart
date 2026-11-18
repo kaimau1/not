@@ -604,7 +604,7 @@ class _AppRail extends ConsumerWidget {
     // "yeni bir şey geldiğinde anlaşılmıyor"). Ortak notlar artık Gelen ve
     // paylaşılanlar bölümünde sayılıyor.
     final sharedUnread = ref.watch(sharedUnreadTotalProvider);
-    final aiLocked = ref.watch(aiAvailabilityProvider) != AiAvailability.ready;
+    final aiLocked = ref.watch(aiAvailabilityProvider).looksLocked;
 
     return ColoredBox(
       color: scheme.surfaceContainerLow,

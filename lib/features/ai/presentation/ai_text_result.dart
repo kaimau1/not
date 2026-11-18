@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/friendly_error.dart';
+import 'ai_result_note.dart';
 
 /// Düz metin döndüren AI çıktılarının (brifing, öneriler, haftalık özet)
 /// ortak gövdesi: yükleniyor / hata + "Tekrar dene" / boş durum / başlık +
@@ -18,6 +19,7 @@ class AiTextResult extends StatelessWidget {
     required this.emptyTitle,
     required this.header,
     required this.onRetry,
+    this.reportSource = 'ai_text',
   });
 
   final AsyncValue<String> value;
@@ -30,6 +32,9 @@ class AiTextResult extends StatelessWidget {
   /// Metin kartının üstündeki küçük gri satır (tarih ya da açıklama).
   final String header;
   final VoidCallback onRetry;
+
+  /// "Bildir" günlüğünde nereden geldiği (PL3 b).
+  final String reportSource;
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +94,8 @@ class AiTextResult extends StatelessWidget {
               ),
               child: SelectableText(text, style: theme.textTheme.bodyMedium),
             ),
+            const SizedBox(height: AppSpace.s),
+            AiResultNote(content: text, source: reportSource),
           ],
         );
       },

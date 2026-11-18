@@ -158,6 +158,7 @@ class BriefingScreen extends ConsumerWidget {
         emptyTitle: l10n.briefingEmpty,
         header: DateFormat('d MMMM EEEE').format(DateTime.now()),
         onRetry: onRefresh,
+        reportSource: 'briefing',
       ),
     );
   }

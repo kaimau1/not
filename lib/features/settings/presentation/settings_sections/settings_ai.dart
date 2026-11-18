@@ -745,6 +745,7 @@ class _BriefingEditor extends ConsumerWidget {
 /// vurgulu, açıklama küçük ve soluk, anahtar sağda hizalı.
 class _AiSwitchTile extends StatelessWidget {
   const _AiSwitchTile({
+    super.key,
     required this.title,
     required this.info,
     required this.value,
@@ -783,6 +784,23 @@ class _AiSwitchTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// "Yapay zekâyı tümden kapat" (PLAN §1.5 PL3 c, E11).
+class _AiOffSwitch extends ConsumerWidget {
+  const _AiOffSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return _AiSwitchTile(
+      key: const ValueKey('settings-ai-off'),
+      title: l10n.aiOffSetting,
+      info: l10n.aiOffSettingInfo,
+      value: ref.watch(aiTurnedOffProvider),
+      onChanged: (value) => ref.read(aiTurnedOffProvider.notifier).set(value),
     );
   }
 }

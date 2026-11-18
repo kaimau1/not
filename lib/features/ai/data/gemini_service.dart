@@ -15,6 +15,7 @@ import '../../../core/utils/markdown.dart';
 import '../../notes/domain/note.dart';
 import '../../settings/settings_providers.dart';
 import 'ai_gate.dart';
+import 'ai_policy.dart';
 import 'ai_provider.dart';
 import 'api_key_store.dart';
 import '../../notes/domain/quick_drop.dart' show parseAiDropAnswer;
@@ -39,6 +40,8 @@ final geminiServiceProvider = Provider<GeminiService>(
           ref.read(aiGateProvider).consume(AiCost.forContents(contents)),
       onBuiltInOff: (off) => ref.read(aiBuiltInOffProvider.notifier).set(off),
     ),
+    // TEK KAPI (PL2/PL3): kapalı / rıza yok → ağa çıkmadan red.
+    admit: ref.read(aiAdmissionProvider).check,
   ),
 );
 
@@ -93,6 +96,15 @@ enum GeminiErrorKind {
   speechFailed,
   noSpeechText,
   noContent,
+
+  /// Kullanıcı Ayarlar'da yapay zekâyı tümden kapattı (PL3).
+  aiTurnedOff,
+
+  /// Play derlemesinde rıza henüz verilmedi (PL3).
+  aiConsentNeeded,
+
+  /// `config/app.aiKillSwitch` (PL2): AI geçici olarak kapalı.
+  aiPaused,
 
   /// Metni çağıran vermiş (arayüzden gelen, zaten yerelleşmiş ileti).
   other,
@@ -161,6 +173,9 @@ class GeminiException implements UserFacingException {
     GeminiErrorKind.speechFailed => l10n.aiErrSpeech,
     GeminiErrorKind.noSpeechText => l10n.aiErrNoSpeechText,
     GeminiErrorKind.noContent => l10n.aiErrNoContent,
+    GeminiErrorKind.aiTurnedOff => l10n.aiOffBody,
+    GeminiErrorKind.aiConsentNeeded => l10n.aiConsentTitle,
+    GeminiErrorKind.aiPaused => l10n.aiPausedTitle,
     GeminiErrorKind.other => message ?? l10n.errorUnknown,
   };
 
@@ -229,11 +244,22 @@ class GeminiService {
     AiProvider provider = AiProvider.gemini,
     String? Function(AiTask)? taskModel,
     this._builtIn,
+    this._admit,
   }) : _provider = provider,
        _taskModel = taskModel ?? _noModel,
        _http = http ?? JsonHttp(baseUrl: provider.baseUrl);
 
   static String? _noModel(AiTask task) => null;
+
+  /// AI kullanım ilkesi ([AiAdmission.check]): her ağ çağrısının ilk satırı.
+  /// null (testler) = serbest.
+  final void Function({bool metered})? _admit;
+
+  /// Çağrı izni + saklı anahtar (yoksa null → dahili yol).
+  Future<String?> _admittedKey({bool metered = true}) {
+    _admit?.call(metered: metered);
+    return _keyStore.read(_provider);
+  }
 
   final ApiKeyStore _keyStore;
   final AiProvider _provider;
@@ -303,8 +329,8 @@ class GeminiService {
     }
   }
 
-  Future<String> _apiKey() async {
-    final key = await _keyStore.read(_provider);
+  Future<String> _apiKey({bool metered = true}) async {
+    final key = await _admittedKey(metered: metered);
     if (key == null || key.isEmpty) {
       throw const GeminiException.of(GeminiErrorKind.noKey);
     }
@@ -499,7 +525,7 @@ class GeminiService {
   }) async {
     final prefer = preferModel ?? _taskModel(task);
     // Anahtar yoksa dahili yol: istek Firebase AI Logic üzerinden gider.
-    final stored = await _keyStore.read(_provider);
+    final stored = await _admittedKey();
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
@@ -768,7 +794,7 @@ class GeminiService {
     bool video = false,
     bool sentenceStamps = false,
   }) async {
-    final stored = await _keyStore.read(_provider);
+    final stored = await _admittedKey();
     final hasKey = stored != null && stored.isNotEmpty;
     // Başka sağlayıcıların tel biçiminde ses/video/bağlantı karşılığı yok:
     // OpenAI çevirisi tanımadığı parçayı BOŞ metne indirgerdi ve model
@@ -1627,7 +1653,8 @@ class GeminiService {
     // bozar) yalnız Gemini desteklenir. Çağıran (semantic_search) hata
     // gelince düz aramaya düşer — kullanıcı arama yapamaz duruma gelmez.
     _requireGemini(GeminiErrorKind.semanticNeedsGemini);
-    final key = await _apiKey();
+    // Gömmeler yerel hız sınırına sayılmaz (kendi temposu: `_Pacer`).
+    final key = await _apiKey(metered: false);
     final embedModel = 'models/$model';
     // Embedding 2 görev türünü önekten okur (belgedeki biçim aynen).
     String input(String text) => model != embedModelV2
@@ -1815,7 +1842,7 @@ class GeminiService {
     // standart flash tercih edilir: lite, araç çağrılı not oluşturmada
     // tipi/içeriği tutarsız verip boş not üretebiliyordu (madde 15).
     // Anahtarlı yolda sıra ModelChain.voice'tan gelir (standart Flash önce).
-    final stored = await _keyStore.read(_provider);
+    final stored = await _admittedKey();
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
@@ -1857,7 +1884,7 @@ class GeminiService {
           ],
         },
     ];
-    final stored = await _keyStore.read(_provider);
+    final stored = await _admittedKey();
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {

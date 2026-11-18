@@ -130,12 +130,21 @@ class UiPrefs {
 
   /// [UiItem.optIn] öğeleri varsayılan GİZLİ: açılınca kümede `+kimlik`
   /// tutulur (kayıt biçimi aynı kalsın diye tek küme).
-  bool shows(String id) => UiItem.isOptIn(id)
+  ///
+  /// "Yapay zekâyı tümden kapat" (PL3, [Personalize.aiOff]) açıkken Yapay
+  /// zekâ eklentisinin öğeleri kayıttan bağımsız GİZLİ; kayıt değişmez,
+  /// anahtar kapanınca kullanıcının kendi seçimi geri gelir.
+  bool shows(String id) =>
+      !(Personalize.aiOff.value && UiModule.ai.items.contains(id)) &&
+      storedShows(id);
+
+  /// Kayıttaki seçim ([Personalize.aiOff] hesaba katılmadan).
+  bool storedShows(String id) => UiItem.isOptIn(id)
       ? hidden.contains('+$id')
       : !hidden.contains(id);
 
   UiPrefs withVisible(String id, bool visible) {
-    if (shows(id) == visible) return this;
+    if (storedShows(id) == visible) return this;
     final next = {...hidden};
     if (UiItem.isOptIn(id)) {
       visible ? next.add('+$id') : next.remove('+$id');
@@ -162,10 +171,10 @@ class UiPrefs {
   bool? moduleState(UiModule module) {
     final counted = [
       for (final id in module.items)
-        if (!UiItem.isOptIn(id) || shows(id)) id,
+        if (!UiItem.isOptIn(id) || storedShows(id)) id,
     ];
     if (counted.isEmpty) return false;
-    final shown = counted.where(shows).length;
+    final shown = counted.where(storedShows).length;
     if (shown == counted.length) return true;
     if (shown == 0) return false;
     return null;
@@ -512,8 +521,15 @@ abstract final class Personalize {
   /// Mod açıldığı andaki kayıt — "Geri al" buna döner.
   static UiPrefs _before = const UiPrefs();
 
-  /// İkisinden biri değişince haber veren birleşik dinlenebilir.
-  static final Listenable listenable = Listenable.merge([prefs, draft]);
+  /// "Yapay zekâyı tümden kapat" (PL3): açıkken Yapay zekâ eklentisinin
+  /// girişleri ([UiModule.ai]) her yerde gizli. Kayıt [aiOffKey]; yazan
+  /// `aiTurnedOffProvider` (features/ai/data/ai_policy.dart).
+  static final aiOff = ValueNotifier<bool>(false);
+
+  static const aiOffKey = 'ai_user_off';
+
+  /// Biri değişince haber veren birleşik dinlenebilir.
+  static final Listenable listenable = Listenable.merge([prefs, draft, aiOff]);
 
   static SharedPreferences? _store;
 
@@ -528,6 +544,7 @@ abstract final class Personalize {
   /// Uygulama açılışında (main) bir kez.
   static void attach(SharedPreferences store) {
     _store = store;
+    aiOff.value = store.getBool(aiOffKey) ?? false;
     final raw = store.getString(_key);
     if (raw == null) return;
     try {
@@ -565,7 +582,7 @@ abstract final class Personalize {
   /// Düzenleme modunda bir öğeye dokunuldu: gizle/göster, HEMEN kaydedilir.
   static void toggle(String id) {
     if (draft.value == null) return;
-    update((p) => p.withVisible(id, !p.shows(id)));
+    update((p) => p.withVisible(id, !p.storedShows(id)));
   }
 
   /// "Bitti": mod kapanır (değişiklikler zaten kayıtlı).
@@ -588,6 +605,7 @@ abstract final class Personalize {
   @visibleForTesting
   static void debugReset() {
     _store = null;
+    aiOff.value = false;
     prefs.value = const UiPrefs();
     draft.value = null;
   }
