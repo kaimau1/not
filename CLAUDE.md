@@ -8,7 +8,8 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + web he
 > ⚠️ **`flutter` PATH'te DEĞİL**: tam yol `C:\src\flutter\bin\flutter.bat`; Bash'ten `"C:/src/flutter/bin/flutter.bat" test`. "command not found" = SDK yok DEMEK DEĞİL; testleri koşmadan commit'leme.
 - Kurulum: `flutter pub get` · Çalıştır: `flutter run` · Test: `flutter test -j 4`
 - **Bulutta Flutter**: önce `/opt/flutter/bin/flutter` (PATH'e ekle). Yoksa 3.47.9: `https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.47.9-stable.tar.xz` → scratchpad'e aç → PATH. `pub get` `pubspec.lock`'u (bağımlılık eklemediysen) değiştirirse commit'e katma.
-- **DOĞRULAMA = CI (kullanıcı kararı 2026-11-05):** tam takımı oturumda/yerelde KOŞMA (paylaşılan çekirdek değişse bile); push öncesi tam takım yok.
+- **GÜNCEL (kullanıcı kararı 2026-11-18): GitHub Actions kotası az → doğrulama YERELDE** (`analyze` tam + ilgili testler + iş sonunda tam takım `flutter test -j 4`); commit'ler yerelde, dallar push EDİLMEZ (her push CI başlatır); iş toplanınca tek push → CI + APK. Aşağıdaki 2026-11-05 maddesi bu kararla geride kaldı.
+- **DOĞRULAMA = CI (kullanıcı kararı 2026-11-05, ESKİ):** tam takımı oturumda/yerelde KOŞMA (paylaşılan çekirdek değişse bile); push öncesi tam takım yok.
   1. Oturumda: `flutter test test/<ilgili>_test.dart --reporter failures-only` + `dart analyze <değişen dosyalar>` (hızlı geri bildirim; zorunlu değil). İlgili test yoksa yaz.
   2. Push et, CI'ı GitHub MCP ile kontrol et (`actions_list`). Kırmızıysa YALNIZ başarısız parçanın kaydını oku (`get_job_logs`, kuyruğu), düzelt, push.
   3. **CI yeşil olmadan "bitti" DENMEZ; CI kırmızıyken main'e birleştirilmez.**
