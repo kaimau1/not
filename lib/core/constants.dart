@@ -10,6 +10,9 @@ abstract final class AppConstants {
   /// koleksiyonda. Gerekçe firestore.rules'da: kullanıcı dokümanı istemciden
   /// silinebildiği için sayaç orada sıfırlanabiliyordu.
   static const String aiQuotaCollection = 'aiQuota';
+
+  /// Hak belgesi (PLAN §1.5 PL14) — ayrı kök, istemci yalnız okur.
+  static const String entitlementsCollection = 'entitlements';
   static const String foldersCollection = 'folders';
 
   /// Kişiler (arkadaşlar) — `users/{uid}/friends/{friendUid}`.

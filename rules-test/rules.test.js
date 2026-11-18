@@ -91,6 +91,32 @@ test("premiumUntil istemciden yazılamaz", async () => {
   await assertSucceeds(setDoc(doc(as("a"), "users/a"), { name: "A" }));
 });
 
+test("PL14 hak belgesi: yalnız sahibi okur, kimse yazamaz, liste yok", async () => {
+  await seed(async (db) => {
+    await setDoc(doc(db, "entitlements/a"), { tier: "pro", proUntil: Timestamp.now() });
+    await setDoc(doc(db, "entitlements/b"), { tier: "free" });
+  });
+  await assertSucceeds(getDoc(doc(as("a"), "entitlements/a")));
+  // Henüz yaratılmamış kendi belgesi de okunur (deneme yazılmadan önce).
+  await assertSucceeds(getDoc(doc(as("c"), "entitlements/c")));
+  await assertFails(getDoc(doc(as("a"), "entitlements/b")));
+  await assertFails(getDoc(doc(anon(), "entitlements/a")));
+  await assertFails(getDocs(collection(as("a"), "entitlements")));
+  await assertFails(
+    getDocs(query(collection(as("a"), "entitlements"), where("tier", "==", "pro"))),
+  );
+  // Yazma: kendi belgesine de (yaratma/güncelleme/silme) yok.
+  await assertFails(setDoc(doc(as("c"), "entitlements/c"), { tier: "pro" }));
+  await assertFails(updateDoc(doc(as("a"), "entitlements/a"), { tier: "lifetime" }));
+  await assertFails(
+    updateDoc(doc(as("b"), "entitlements/b"), { trialEndsAt: Timestamp.now() }),
+  );
+  await assertFails(deleteDoc(doc(as("a"), "entitlements/a")));
+  await assertFails(setDoc(doc(as("a"), "entitlements/b"), { tier: "free" }));
+  // Genel `users/{uid}/...` kuralı hak yolunu kapsamaz (ayrı kök).
+  await assertFails(setDoc(doc(as("a"), "users/a"), { premiumUntil: 1 }));
+});
+
 test("ayar senkronu ve itme jetonu yalnız sahibinde (F4.5, F4.6)", async () => {
   await assertSucceeds(
     setDoc(doc(as("a"), "users/a/meta/prefs"), { values: { font_scale: 1.15 } }),
