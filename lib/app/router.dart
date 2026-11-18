@@ -27,6 +27,7 @@ import '../features/calendar/presentation/calendar_screen.dart';
 import '../features/calendar/presentation/routines_screen.dart';
 import '../features/calendar/presentation/tasks_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
+import '../features/settings/presentation/delete_account_screen.dart';
 import '../features/settings/presentation/premium_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/guide_screen.dart';
@@ -138,6 +139,32 @@ extension NoteContextPush on BuildContext {
   }
 }
 
+/// Oturuma göre yönlendirme: oturum yoksa giriş ekranı, giriş ekranındayken
+/// oturum açıldıysa ana sayfa.
+///
+/// Web'den hesap silme (PL4, 16K E6): `/delete-account` oturumsuz açılırsa
+/// giriş sonrası oraya dönülür. YALNIZ bu adres taşınır (açık yönlendirme
+/// olmasın, öteki derin bağlantıların davranışı değişmesin).
+@visibleForTesting
+String? authRedirect({
+  required bool loggedIn,
+  required String matchedLocation,
+  required Uri uri,
+}) {
+  final loggingIn = matchedLocation == '/login';
+  if (!loggedIn && !loggingIn) {
+    return matchedLocation == kDeleteAccountPath
+        ? '/login?next=$kDeleteAccountPath'
+        : '/login';
+  }
+  if (loggedIn && loggingIn) {
+    return uri.queryParameters['next'] == kDeleteAccountPath
+        ? kDeleteAccountPath
+        : '/';
+  }
+  return null;
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
   final refresh = _RefreshNotifier(repo.authStateChanges());
@@ -168,11 +195,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // burada her zaman tazedir; yarış ortadan kalkar.
       // İlk emisyon (oturum geri yükleme) beklenir.
       if (!refresh.ready) return null;
-      final loggedIn = repo.currentUser != null;
-      final loggingIn = state.matchedLocation == '/login';
-      if (!loggedIn && !loggingIn) return '/login';
-      if (loggedIn && loggingIn) return '/';
-      return null;
+      return authRedirect(
+        loggedIn: repo.currentUser != null,
+        matchedLocation: state.matchedLocation,
+        uri: state.uri,
+      );
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
@@ -234,6 +261,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/privacy',
             builder: (context, state) => const PrivacyScreen(),
+          ),
+          GoRoute(
+            path: kDeleteAccountPath,
+            builder: (context, state) => const DeleteAccountScreen(),
           ),
           // Kullanım kılavuzu; `?section=pages` ile doğrudan bir bölüm.
           GoRoute(

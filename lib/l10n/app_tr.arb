@@ -249,6 +249,7 @@
   "deleteAccount": "Hesabımı ve verilerimi sil",
   "deleteAccountWarning": "Bu işlem geri alınamaz: tüm notların, eklerin ve hesabın kalıcı olarak silinir. Devam etmek istediğine emin misin?",
   "deleteAccountConfirm": "Kalıcı olarak sil",
+  "deleteAccountPageInfo": "Hesabın ve bütün verilerin kalıcı olarak silinir: notlar, klasörler, ekler (bulut ve bağlıysa Drive), kişiler, gelen notlar, paylaştığın klasörler ve hesap kaydı. Başkasına gönderdiğin notların kopyaları onlarda kalır. Bu işlem geri alınamaz; istersen önce Ayarlar'dan yedek al.",
   "licensesTitle": "Açık kaynak lisansları",
   "generating": "Üretiliyor...",
   "retry": "Tekrar dene",
@@ -2573,6 +2574,10 @@
   "@errorLogInfo": {
     "description": "Faz 1 (2026-10-19)"
   },
+  "feedbackSend": "Geri bildirim gönder",
+  "feedbackInfo": "Öneri ya da sorun: e-posta uygulaman açılır; sürüm ve cihaz türü eklenir, notların eklenmez.",
+  "feedbackNoMailApp": "E-posta uygulaması açılamadı; adres panoya kopyalandı.",
+  "feedbackBodyPrompt": "Mesajın:",
   "errorLogEmpty": "Kayıtlı hata yok.",
   "@errorLogEmpty": {
     "description": "Faz 1 (2026-10-19)"

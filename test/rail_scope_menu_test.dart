@@ -159,6 +159,7 @@ void main() {
       '/settings': 'settings/presentation/settings_screen.dart',
       '/personalize': 'settings/presentation/personalize_screen.dart',
       '/privacy': 'settings/presentation/privacy_screen.dart',
+      '/delete-account': 'settings/presentation/delete_account_screen.dart',
       '/guide': 'settings/presentation/guide_screen.dart',
       '/gmail': 'gmail/presentation/gmail_screen.dart',
       '/premium': 'settings/presentation/premium_screen.dart',

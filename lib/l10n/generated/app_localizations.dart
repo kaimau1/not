@@ -974,6 +974,12 @@ abstract class AppLocalizations {
   /// **'Kalıcı olarak sil'**
   String get deleteAccountConfirm;
 
+  /// No description provided for @deleteAccountPageInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabın ve bütün verilerin kalıcı olarak silinir: notlar, klasörler, ekler (bulut ve bağlıysa Drive), kişiler, gelen notlar, paylaştığın klasörler ve hesap kaydı. Başkasına gönderdiğin notların kopyaları onlarda kalır. Bu işlem geri alınamaz; istersen önce Ayarlar\'dan yedek al.'**
+  String get deleteAccountPageInfo;
+
   /// No description provided for @licensesTitle.
   ///
   /// In tr, this message translates to:
@@ -9625,6 +9631,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Son hatalar yalnız bu cihazda tutulur; sen paylaşmadıkça hiçbir yere gitmez.'**
   String get errorLogInfo;
+
+  /// No description provided for @feedbackSend.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri bildirim gönder'**
+  String get feedbackSend;
+
+  /// No description provided for @feedbackInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneri ya da sorun: e-posta uygulaman açılır; sürüm ve cihaz türü eklenir, notların eklenmez.'**
+  String get feedbackInfo;
+
+  /// No description provided for @feedbackNoMailApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta uygulaması açılamadı; adres panoya kopyalandı.'**
+  String get feedbackNoMailApp;
+
+  /// No description provided for @feedbackBodyPrompt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mesajın:'**
+  String get feedbackBodyPrompt;
 
   /// Faz 1 (2026-10-19)
   ///

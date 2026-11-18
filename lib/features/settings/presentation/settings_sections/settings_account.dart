@@ -660,6 +660,11 @@ class _LegalRow extends StatelessWidget {
   }
 }
 
+/// Hesap silme akışı (onay → ilerleme → silme), ayarların dışından da
+/// çağrılır: web'den hesap silme sayfası (`/delete-account`, PL4).
+Future<void> confirmAndDeleteAccount(BuildContext context, WidgetRef ref) =>
+    _AccountSection._deleteAccount(context, ref);
+
 /// Geri dönüşsüz eylem (plan §2.2): sayfanın SON grubunda tek satır, başlık
 /// ve simge `error`, ok yok; onay diyaloğu aynen.
 class _DeleteAccountRow extends ConsumerWidget {
