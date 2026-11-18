@@ -373,7 +373,16 @@ class _RailFrameState extends State<_RailFrame>
                           context: context,
                           removeLeft: docked && !rtl,
                           removeRight: docked && rtl,
-                          child: AppRailScope(docked: docked, child: widget.child),
+                          // KW-1 KÖK NEDENİ: Navigator'ın sayfa rotası
+                          // `BlockSemantics` taşır; sınır olmadan raydan
+                          // (önce çizilen kardeş) ağaca hiçbir şey çıkmıyordu.
+                          child: AppRailScope(
+                            docked: docked,
+                            child: Semantics(
+                              container: true,
+                              child: widget.child,
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -678,11 +687,31 @@ class _AppRail extends ConsumerWidget {
                                       ),
                                       // Yapay zekâ kapalıysa kilit (F44.6): web'de
                                       // dahili AI kapalıyken de görünür olsun.
-                                      child: Icon(
-                                        s == AppSection.ai && aiLocked
-                                            ? Icons.lock_outline
-                                            : s.icon,
-                                      ),
+                                      // KW-13: simge kimliği (✨) KALIR, kilit
+                                      // köşede rozet — etiketsiz rayda tek
+                                      // kilit "gizli notlar" gibi okunuyordu.
+                                      child: s == AppSection.ai && aiLocked
+                                          ? Stack(
+                                              key: const ValueKey(
+                                                'rail-ai-locked',
+                                              ),
+                                              clipBehavior: Clip.none,
+                                              children: [
+                                                Icon(s.icon),
+                                                PositionedDirectional(
+                                                  end: -6,
+                                                  top: -4,
+                                                  child: Icon(
+                                                    Icons.lock_outline,
+                                                    size: 14,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                                ),
+                                              ],
+                                            )
+                                          : Icon(s.icon),
                                     ),
                                   ),
                                   selectedIcon: Icon(s.selectedIcon),
