@@ -292,6 +292,7 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
   Doğruysa: görsel görünüyor; PDF ekleniyor. Olmazsa ekranda çıkan hata metnini bana yaz.
 
 ## Konsol / hesap işleri
+- [ ] **Depo herkese açık oldu (2026-11-18) — güvenlik ayarları:** (1) Google Cloud Console → API ve Hizmetler → Kimlik bilgileri: depoda görünen iki Firebase API anahtarını kısıtla (Android anahtarı: paket `dev.kaimau.notlar` + imza SHA-1; web anahtarı: yalnız web sitenin adresi; ikisinde de yalnız kullanılan API'ler). (2) GitHub → Settings → Actions → General → "Fork pull request workflows": "Require approval for all outside collaborators". (3) Settings → Code security: Secret scanning + Push protection AÇ. (4) Firebase App Check zorlamasını aç (PL2). Lisans (LICENSE, tüm hakları saklı) ve APK kod karıştırma (`--obfuscate`) eklendi; açık depoda kod okunabilir, koruma hukuki — çalınmasın istiyorsan depo yeniden özel yapılabilir.
 
 - [ ] **24. Yapay zekâ faturasına tavan koy**
   Nerede: Google Cloud konsolu → proje → Faturalandırma → Bütçe ve uyarılar; API'ler → Kotalar.
