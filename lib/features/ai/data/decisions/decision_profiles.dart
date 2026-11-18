@@ -189,3 +189,79 @@ Future<TriageSuggestion?> decideNoteTriage(
       ? null
       : NoteTriageProfile.interpret(r, tags: tags, folders: folders);
 }
+
+// ── DA-13 Başlık doğrulama ─────────────────────────────────────────────────
+
+abstract final class TitleOkProfile {
+  static const okHi = 0.75;
+  static const okLo = 0.40;
+  static const genericHi = 0.70;
+  static const inputChars = 600;
+
+  static String input(String title, String text) =>
+      'Başlık: $title\nNot içeriği:\n${_cut(text, inputChars)}';
+
+  static const questions = <String, DecisionQuestion>{
+    'baslik_uygun': NoulQuestion(
+      'Yukarıdaki başlık, notun içeriğini kısa ve doğru anlatıyor mu?',
+      ifTrue:
+          'Başlık notun asıl konusunu söylüyor; yanıltıcı ya da alakasız '
+          'değil',
+      ifFalse:
+          'Başlık ilgisiz, yanıltıcı, dosya adı gibi anlamsız ya da '
+          'içeriğin yalnız küçük bir parçası',
+    ),
+    'baslik_cok_genel': NoulQuestion(
+      'Başlık çok genel mi (Not, Liste, Yeni not, Taslak, Belge gibi)?',
+    ),
+  };
+
+  /// `no` = yeniden üret; `yes` = kabul; `unsure` = dokunma.
+  static DecisionOutcome? interpret(Map<String, DecisionAnswer> answers) {
+    final ok = answers['baslik_uygun']?.noul;
+    final generic = answers['baslik_cok_genel']?.noul;
+    if (ok == null) return null;
+    if (ok <= okLo || (generic ?? 0) >= genericHi) return DecisionOutcome.no;
+    if (ok >= okHi && (generic ?? 0) < 0.5) return DecisionOutcome.yes;
+    return DecisionOutcome.unsure;
+  }
+}
+
+Future<DecisionOutcome?> decideTitleOk(
+  DecisionService service,
+  String title,
+  String text,
+) async {
+  if (title.trim().isEmpty || text.trim().isEmpty) return null;
+  final r = await service.decide(
+    DecisionFeature.titleOk,
+    input: TitleOkProfile.input(title, text),
+    questions: TitleOkProfile.questions,
+  );
+  return r == null ? null : TitleOkProfile.interpret(r);
+}
+
+/// AI başlığını üretir, DA-13 ile doğrular; Decisions "yanlış/genel" derse
+/// [generate] BİR kez daha (reddedilen başlık [avoid] ile) çağrılır.
+/// Gölge kipte karar yalnız günlüğe gider, ilk başlık döner. Elle yazılan
+/// başlık buraya GELMEZ (K5): çağıranlar yalnız AI başlığı üretirken çağırır.
+Future<String> checkedTitle(
+  DecisionService service,
+  String text,
+  Future<String> Function({String? avoid}) generate,
+) async {
+  final first = await generate();
+  final mode = service.modeOf(DecisionFeature.titleOk);
+  if (first.isEmpty || mode == DecisionMode.off) return first;
+  final verdict = await decideTitleOk(service, first, text);
+  if (mode == DecisionMode.shadow) {
+    DecisionService.logShadow(
+      DecisionFeature.titleOk,
+      'verdict=${verdict?.name ?? 'none'}',
+    );
+    return first;
+  }
+  if (verdict != DecisionOutcome.no) return first;
+  final again = await generate(avoid: first);
+  return again.isEmpty ? first : again;
+}

@@ -1288,14 +1288,17 @@ class GeminiService {
 
   /// Nota kısa bir Türkçe başlık üretir. Kısa iş: Gemma önce
   /// ([ModelChain.short]).
-  Future<String> generateTitle(Note note) async {
+  /// [avoid]: DA-13 doğrulamasının reddettiği başlık (yeniden üretimde).
+  Future<String> generateTitle(Note note, {String? avoid}) async {
     final text = note.toPlainText();
     final raw = await _generate(task: AiTask.short, [
       {
         'text':
             'Aşağıdaki not için en fazla 5 kelimelik, kısa ve açıklayıcı '
             'bir Türkçe başlık üret. Yalnızca başlığı yaz; tırnak, nokta '
-            'veya açıklama ekleme.\n\n---\n'
+            'veya açıklama ekleme.'
+            '${avoid == null ? '' : ' "$avoid" başlığı uygun bulunmadı; onu ya da çok genel bir başlığı (Not, Liste, Taslak) yazma.'}'
+            '\n\n---\n'
             '${text.length > 600 ? text.substring(0, 600) : text}',
       },
     ]);

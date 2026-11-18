@@ -746,6 +746,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   NotesRepository? _notesRepo;
   AttachmentRepository? _attachmentRepo;
   GeminiService? _gemini;
+  DecisionService? _decisions;
   bool _autoTagEnabled = true;
   bool _autoTitleEnabled = true;
 

@@ -61,11 +61,17 @@ extension _EditorAi on _NoteEditorScreenState {
   void _autoTitleInBackground(Note note) {
     if (note.isEmpty || !_autoTitleEnabled) return;
     final service = _gemini;
+    final decisions = _decisions;
     final repo = _notesRepo;
-    if (repo == null || service == null) return;
+    if (repo == null || service == null || decisions == null) return;
     Future(() async {
       try {
-        final title = await service.generateTitle(note);
+        // DA-13: AI başlığı doğrulanır, "yanlış/genel"se bir kez yeniden.
+        final title = await checkedTitle(
+          decisions,
+          note.toPlainText(),
+          ({avoid}) => service.generateTitle(note, avoid: avoid),
+        );
         if (title.isNotEmpty) repo.updateFields(note.id, {'title': title});
       } catch (_) {
         // Kota/anahtar hatasında sessizce geç — başlıksız kalması sorun değil.
@@ -84,7 +90,12 @@ extension _EditorAi on _NoteEditorScreenState {
     final messenger = ScaffoldMessenger.of(context);
     _titleGeneratingN.value = true;
     try {
-      final title = await ref.read(geminiServiceProvider).generateTitle(note);
+      final ai = ref.read(geminiServiceProvider);
+      final title = await checkedTitle(
+        ref.read(decisionServiceProvider),
+        note.toPlainText(),
+        ({avoid}) => ai.generateTitle(note, avoid: avoid),
+      );
       if (!mounted || title.isEmpty) return;
       _titleController.text = title;
       _mutate((n) => n.copyWith(title: title), immediate: true);
