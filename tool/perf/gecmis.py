@@ -1,6 +1,6 @@
 """gecmis.csv + altin_taban.json -> evre basina son N kosunun egilimi (HIZ_PLANI F83.2).
 
-Kullanim: python tool/perf/gecmis.py [--son 10] [--esik 10]
+Kullanim: python tool/perf/gecmis.py [--son 10] [--esik 10] [--tablet]
 Kosu = ayni etiket. Her evre icin ui_ms, altin tabana gore %; kayma > esik ise "KAYMA" ve
 cikis kodu 1 (haftalik tur bunu Kuyruk'a "hiz: <evre>" satiri yapar).
 Cihaz gerekmez: `python tool/perf/gecmis.py --self-check`.
@@ -57,13 +57,15 @@ if __name__ == "__main__":
     p.add_argument("--son", type=int, default=10)
     p.add_argument("--esik", type=float, default=10.0)
     p.add_argument("--self-check", action="store_true")
+    p.add_argument("--tablet", action="store_true", help="gecmis_tablet.csv + altin_taban_tablet.json")
     o = p.parse_args()
     if o.self_check:
         self_check()
         sys.exit(0)
-    with open(os.path.join(D, "gecmis.csv"), encoding="utf-8") as f:
+    sfx = "_tablet" if o.tablet else ""
+    with open(os.path.join(D, f"gecmis{sfx}.csv"), encoding="utf-8") as f:
         k, s = load(f.read())
-    with open(os.path.join(D, "altin_taban.json"), encoding="utf-8") as f:
+    with open(os.path.join(D, f"altin_taban{sfx}.json"), encoding="utf-8") as f:
         altin = json.load(f)["evreler"]
     out, kayan = rapor(k, s, altin, o.son, o.esik)
     print("\n".join(out))

@@ -1,7 +1,7 @@
 """TAM HIZ ÖLÇÜMÜ + OTOMATİK KARAR (HIZ_PLANI F81.1–F81.4).
 
   python -u ab_hepsi.py <A.apk> <B.apk> [--kosu 3] [--teyit 2] [--altin] [--altin-yaz]
-                        [--etiket-a X] [--etiket-b Y] [--commit SHA]
+                        [--etiket-a X] [--etiket-b Y] [--commit SHA] [--yon yatay|dikey|mevcut]
 
 İki PROFİL APK'sı (kimlik `dev.kaimau.notlar.olcum`, "Notlar Ölçüm") sırayla
 A,B,A,B,A,B kurulur (`adb install -r`: veri kalır; ısınma dengesi). Her
@@ -47,6 +47,12 @@ en az 5 koşu) — dosya yoksa tümü, varsa yalnız İYİLEŞEN evreler (mandal
 
 Kayıt (F81.3): her koşunun evre ortancaları `docs/perf/gecmis.csv`'ye
 (tarih, commit, etiket, evre, UI ms, LAYOUT ms, kare, sıcaklık).
+
+TABLET (T13/T1, 2026-11-18; PLAN §1.0: tablet tabanı telefonla karşılaştırılmaz): cihazın kısa kenarı
+>= 1400 px ise tablet sayılır → kayıt `gecmis_tablet.csv`, altın taban `altin_taban_tablet.json`.
+Tablet kendi düzeninde ölçülür (YATAY: sol ray + liste + sağ bölme; seçiciler iki düzende de çalışır).
+`--yon` ekranı ölçüm süresince döndürür (`wm user-rotation lock`, bitince `free`); varsayılan tablette
+`yatay`, telefonda `mevcut`. Ekran boyutu DÖNDÜRÜLMÜŞ ekrandan okunur (`perf.screen_size`).
 
 HAZIRLIK (bir kez): veri seti (`make_dataset.py`, README) + sabit PDF'li not:
 `python make_dataset.py --ink 40` → `olcum_kalem.notyedek`'i
@@ -105,6 +111,12 @@ def temperature():
     return int(m.group(1)) / 10 if m else 0.0
 
 
+def is_tablet():
+    """Fiziksel kısa kenar >= 1400 px (MatePad 11 1600; Mi Note 10 Lite 1080)."""
+    w, h = (int(v) for v in re.search(r"(\d+)x(\d+)", sh("wm size").splitlines()[-1]).groups())
+    return min(w, h) >= 1400
+
+
 def cool_enough(limit=34.0, wait_s=1800):
     t0 = time.time()
     while temperature() >= limit:
@@ -115,9 +127,36 @@ def cool_enough(limit=34.0, wait_s=1800):
     return True
 
 
+def _confirm_installer(stop):
+    """HUAWEI/Honor (HarmonyOS) `adb install` iki onay penceresi çıkarır ("DEVAM ET" uyarısı,
+    sonra "YÜKLE"; T13, MatePad 11, 2026-11-18). Onay YALNIZ ölçüm uygulamasının kendi kurulumu
+    için ("Notlar Ölçüm" yazan pencere) ve yalnız paket yükleyici önde iken verilir; başka bir
+    pencereye dokunulmaz. Telefonda (Xiaomi, USB yükleme izni açık) pencere hiç çıkmaz."""
+    last = 0.0
+    while not stop.is_set():
+        time.sleep(1.2)
+        if "packageinstaller" not in focus():
+            continue
+        xml = ui_dump()
+        if "Ölçüm" not in xml and not nodes(xml, "^DEVAM ET$"):
+            continue
+        for pat in ("^DEVAM ET$", "^YÜKLE$"):
+            hit = nodes(xml, pat)
+            if hit and time.time() - last > 1.5:
+                tap(hit[0][1], hit[0][2]); last = time.time()
+                break
+
+
 def install(apk):
-    r = subprocess.run([ADB, "install", "-r", apk], capture_output=True,
-                       text=True, timeout=300)
+    import threading
+    stop = threading.Event()
+    th = threading.Thread(target=_confirm_installer, args=(stop,), daemon=True)
+    th.start()
+    try:
+        r = subprocess.run([ADB, "install", "-r", apk], capture_output=True,
+                           text=True, timeout=300)
+    finally:
+        stop.set(); th.join(timeout=5)
     out = (r.stdout + r.stderr).strip()
     if "Success" not in out:
         raise RuntimeError("kurulamadı: " + out[-300:])
@@ -687,13 +726,23 @@ def main():
     ap.add_argument("--altin-yaz", action="store_true")
     ap.add_argument("--etiket-a", default=None); ap.add_argument("--etiket-b", default=None)
     ap.add_argument("--commit", default="?")
+    ap.add_argument("--yon", choices=["yatay", "dikey", "mevcut"], default=None)
     o = ap.parse_args()
     la = o.etiket_a or os.path.splitext(os.path.basename(o.a))[0]
     lb = o.etiket_b or os.path.splitext(os.path.basename(o.b))[0]
     os.makedirs(DOCS, exist_ok=True)
     runs = {"A": [], "B": []}
     temps = []
-    golden_path = os.path.join(DOCS, "altin_taban.json")
+    tablet = is_tablet()
+    sfx = "_tablet" if tablet else ""
+    yon = o.yon or ("yatay" if tablet else "mevcut")
+    if yon != "mevcut":
+        sh("wm user-rotation lock " + {"yatay": "1", "dikey": "0"}[yon])
+        time.sleep(1.5)
+    la += f"_{yon}" if tablet else ""
+    lb += f"_{yon}" if tablet else ""
+    hist_path = os.path.join(DOCS, f"gecmis{sfx}.csv")
+    golden_path = os.path.join(DOCS, f"altin_taban{sfx}.json")
     golden = json.load(open(golden_path, encoding="utf-8"))["evreler"] if os.path.exists(golden_path) else None
 
     def pairs(first, count):
@@ -730,6 +779,8 @@ def main():
             pairs(o.kosu, o.teyit)
             rows, failed = decide(runs["A"], runs["B"], golden if o.altin else None)
     finally:
+        if yon != "mevcut":
+            sh("wm user-rotation free")
         sh("input keyevent KEYCODE_SLEEP")
     if not runs["A"] or not runs["B"]:
         print("KARAR: KALDI (ölçülemedi)")
@@ -742,8 +793,8 @@ def main():
     am = median_of(runs["A"])
     print(f"\nilk kare (ms, ortanca): A {am['acilis'].get('ilk_kare_ms')} / B {median_of(runs['B'])['acilis'].get('ilk_kare_ms')}")
     t = round(statistics.median(temps), 1) if temps else ""
-    record(os.path.join(DOCS, "gecmis.csv"), o.commit, la, am, t)
-    record(os.path.join(DOCS, "gecmis.csv"), o.commit, lb, median_of(runs["B"]), t)
+    record(hist_path, o.commit, la, am, t)
+    record(hist_path, o.commit, lb, median_of(runs["B"]), t)
     src = runs["A"] + (runs["B"] if o.a == o.b else [])
     if o.altin_yaz and len(src) < 5:
         print(f"altın taban YAZILMADI: {len(src)} koşu < 5")
