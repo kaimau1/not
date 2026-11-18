@@ -261,6 +261,16 @@ class GeminiService {
     return _keyStore.read(_provider);
   }
 
+  /// Decisions API (DA-E1) için izinli anahtar: `AiAdmission` kapıları (AI'ı
+  /// kapat, kill switch, rıza) burada; hız sınırı Decisions'ın KENDİ
+  /// sayacında (`DecisionService.limiter`). Yalnız Gemini; anahtar yoksa
+  /// null (dahili kip vekili yok → Decisions kullanılamaz).
+  Future<String?> admittedDecisionKey() async {
+    if (_provider != AiProvider.gemini) return null;
+    final key = await _admittedKey(metered: false);
+    return (key == null || key.isEmpty) ? null : key;
+  }
+
   final ApiKeyStore _keyStore;
   final AiProvider _provider;
   final JsonHttp _http;

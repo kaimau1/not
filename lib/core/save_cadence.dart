@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/ai/data/decisions/decision_flag.dart';
 import '../features/notes/data/notes_delta_sync.dart';
 import '../features/settings/settings_providers.dart';
 import 'ai_kill_switch.dart';
@@ -70,6 +71,8 @@ final saveCadenceSyncProvider = Provider<void>((ref) {
           SaveCadence.apply(d.data());
           // PL2: AI acil kapatma aynı belgede — ayrı okuma yok.
           AiKillSwitch.apply(d.data());
+          // DA-E1: Decisions bayrakları (varsayılan kapalı) aynı belgede.
+          AiDecisionsFlag.apply(d.data());
           unawaited(SyncDeltaFlag.remember(d.data(), prefs));
         },
         onError: (Object e) => debugPrint('Kayıt sıklığı okunamadı: $e'),
