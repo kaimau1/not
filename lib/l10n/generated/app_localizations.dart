@@ -13346,18 +13346,6 @@ abstract class AppLocalizations {
   /// **'Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.'**
   String get calendarSwipeInfo;
 
-  /// No description provided for @swipeLeftCalendar.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sağa kaydırınca takvim'**
-  String get swipeLeftCalendar;
-
-  /// No description provided for @swipeLeftCalendarInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tümü görünümünde ekranı sağa kaydırınca takvim açılır'**
-  String get swipeLeftCalendarInfo;
-
   /// No description provided for @calendarMoved.
   ///
   /// In tr, this message translates to:
@@ -15733,6 +15721,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.'**
   String get aiPausedBody;
+
+  /// No description provided for @homePullGestureTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi tepeden aşağı çekince'**
+  String get homePullGestureTitle;
+
+  /// No description provided for @homeSwipeRightGestureTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü\'de sağa kaydırınca'**
+  String get homeSwipeRightGestureTitle;
+
+  /// No description provided for @homeGestureInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir not ya da klasör seçersen jest doğrudan onu açar'**
+  String get homeGestureInfo;
+
+  /// No description provided for @homeGestureFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler'**
+  String get homeGestureFolders;
+
+  /// No description provided for @homeGestureNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir not'**
+  String get homeGestureNote;
+
+  /// No description provided for @homeGestureFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir klasör'**
+  String get homeGestureFolder;
+
+  /// No description provided for @homeGestureNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hiçbiri'**
+  String get homeGestureNone;
+
+  /// No description provided for @homeGestureMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Jestin hedefi bulunamadı; Ayarlar → Notlar\'dan yeniden seç'**
+  String get homeGestureMissing;
 }
 
 class _AppLocalizationsDelegate

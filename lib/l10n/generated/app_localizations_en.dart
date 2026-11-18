@@ -7487,13 +7487,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'When off, horizontal swiping changes nothing; the arrow buttons keep working.';
 
   @override
-  String get swipeLeftCalendar => 'Swipe right for calendar';
-
-  @override
-  String get swipeLeftCalendarInfo =>
-      'In the All view, swiping right opens the calendar';
-
-  @override
   String calendarMoved(String day) {
     return 'Moved to $day';
   }
@@ -8879,4 +8872,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiPausedBody =>
       'AI features are switched off for a short while. Your notes aren\'t affected; try again later.';
+
+  @override
+  String get homePullGestureTitle => 'Pulling down at the top of the list';
+
+  @override
+  String get homeSwipeRightGestureTitle => 'Swiping right in All';
+
+  @override
+  String get homeGestureInfo =>
+      'Pick a note or folder and the gesture opens it directly';
+
+  @override
+  String get homeGestureFolders => 'Folders';
+
+  @override
+  String get homeGestureNote => 'A note';
+
+  @override
+  String get homeGestureFolder => 'A folder';
+
+  @override
+  String get homeGestureNone => 'Nothing';
+
+  @override
+  String get homeGestureMissing =>
+      'The gesture\'s target wasn\'t found; choose it again in Settings → Notes';
 }

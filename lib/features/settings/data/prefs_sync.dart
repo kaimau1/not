@@ -64,6 +64,9 @@ const kSyncedPrefKeys = <String>[
   'briefing_enabled',
   'briefing_minutes',
   'assistant_voice',
+  // Ana ekran jest hedefleri (U1): not/klasör kimliği hesaba ait.
+  kHomePullGestureKey,
+  kHomeSwipeRightGestureKey,
   // Sunucu da okur: kapalıysa itme bildirimi gönderilmez (F4.6).
   'shared_notifications',
   captureModeDefaultKey,
