@@ -3,6 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 18 November 2026 {#2026-11-18}
+- **Text selection menu:** Copy, Cut, Paste and **Select all** now come first; Format and Embed come after them.
+- **Simpler bottom bar on phones:** three buttons plus ⋯; the rest open in a small menu from ⋯. On tablets everything stays in place.
+- **Page turning in notebooks is more precise:** scrolling a table or strip sideways, dragging a selection, or your hand touching the screen while writing with a pen no longer turns the page by accident.
+- **The notice countdown line now moves smoothly** (it used to advance in jerks).
+- **Ctrl+Z / Ctrl+Y while drawing** (physical keyboard) and the ↶ at the top undo the last stroke; each stroke is undone separately. The quick row's "more" button is now ⋯ so it is not confused with the note's ⋮ menu.
 - **You can turn AI off completely:** first row of Settings → AI. While on, none of your notes are sent to AI and the ✨ buttons are hidden. AI answers show an "AI can make mistakes" note, and "Report answer" no longer sends the answer's text anywhere.
 - **Simpler AI menu:** "Analyse note" is gone (ask the same in Chat with "this note"); the AI buttons in Trash and Archive insights and the ✨ mode in settings search were removed. On-device suggestions and keyword search work as before.
 - **"Security" section in Settings:** note lock and app lock now have their own section. About has "Send feedback" (your email app opens with only the app version and device type, never your notes); the Licenses page lists the bundled fonts' licenses.

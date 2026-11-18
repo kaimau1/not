@@ -215,6 +215,11 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Tablette bak
 
+- [ ] **P75 editör istekleri (2026-11-18, dal oto/P75-editor-istekler — A/B ölçümü yapılmadı)**
+  Nerede: telefon ve tablet, metin/liste notu.
+  Nasıl: (a) yazı seç → menü Kopyala·Kes·Yapıştır·Tümünü seç ile başlıyor mu; (b) telefonda alt çubukta 3 düğme + ⋯, ⋯ kalanları açıyor mu (tablette hepsi); (c) defter (sayfalı) notta yatay şeritte/tabloda kaydır, seçim tutamacını sürükle, kalemle yazarken avuç kaysın → sayfa ÇEVRİLMEMELİ; boş yerde hızlı yana çekiş çevirmeli; (d) not sil → alttaki bildirimin çizgisi takılmadan akıyor mu, bildirim açıkken yazarken kasma var mı (`ab_hepsi.py`); (e) tablette fiziksel klavyeyle kalem kipinde 3 çizgi → Ctrl+Z birer birer siliyor, Ctrl+Y geri getiriyor; üstteki ↶ da çizgiyi siliyor.
+  Yanlışsa: harfini yaz.
+
 - [ ] **S1 "yalnız değişeni dinle" iki cihaz turu (P67; bayrak KAPALI — bu tur bitmeden `config/app.syncDeltaListen` AÇILMAZ)**
   Önce: bütün cihazlarda bu sürüm + `minClient` damgalı sürüme. Tablette `sync_delta_listen` açık, web'de kapalı ve açık: (a) tablette düzenle → web'de görünsün; (b) çöpe at → listeden düşsün, geri al → gelsin; (c) uçak kipinde düzenle → bağlanınca karşıda; (d) cihaz saatini ±1 gün kaydır → değişiklikler görünsün; (e) 30 dk+ kapalıyken öbür cihazda değiştir → açılışta görünsün; (f) bir notta senkronu kapat → öbür cihazda sonraki açılışta düşsün; (g) hesap değiştir → notlar karışmasın. Ayrıntı `docs/hafiza/veri.md` S1.
   Yanlışsa: harfini yaz.

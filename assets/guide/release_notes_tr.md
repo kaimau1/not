@@ -3,6 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 18 Kasım 2026 {#2026-11-18}
+- **Yazı seçim menüsü:** Kopyala, Kes, Yapıştır ve **Tümünü seç** artık en başta; Biçim ve Ek göm onlardan sonra.
+- **Telefonda alt çubuk sadeleşti:** üç düğme ve yanında ⋯; kalanlar ⋯ ile açılan küçük menüde. Tablette hepsi yerinde.
+- **Defterde sayfa çevirme daha isabetli:** tabloyu ya da şeridi yana kaydırırken, seçimi sürüklerken veya kalemle yazarken eline değen parmak sayfayı artık kazara çevirmiyor.
+- **Bildirimin süre çizgisi takılmadan akıyor** (eskiden kesik kesik ilerliyordu).
+- **Kalemle çizerken Ctrl+Z / Ctrl+Y** (fiziksel klavye) ve üstteki ↶ son çizgiyi geri alıyor; her çizgi ayrı geri alınır. Hızlı satırın "daha fazla" düğmesi ⋯ oldu, notun ⋮ menüsüyle karışmıyor.
 - **Yapay zekâyı tümden kapatabilirsin:** Ayarlar → Yapay zekâ'nın ilk satırı. Açıkken hiçbir notun yapay zekâya gönderilmez, ✨ düğmeleri gizlenir. Yanıtların altında "AI yanılabilir" notu var; "Yanıtı bildir" artık yanıtın metnini hiçbir yere göndermiyor.
 - **Yapay zekâ menüsü sadeleşti:** "Notu analiz et" kalktı (aynı soruyu Sohbet'te "bu not" ile sorabilirsin); çöp kutusu ve arşiv özetindeki yapay zekâ düğmeleri ile ayar aramasındaki ✨ kipi kaldırıldı. Cihazdaki öneriler ve kelimeyle arama aynen çalışıyor.
 - **Ayarlar'da "Güvenlik" bölümü:** not kilidi ve uygulama kilidi artık kendi bölümünde. Hakkında'ya "Geri bildirim gönder" eklendi (e-postana yalnız sürüm ve cihaz türü eklenir, notların eklenmez); Lisanslar sayfasında yazı tiplerinin lisansları var.
