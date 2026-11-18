@@ -147,8 +147,14 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Play derlemesi bayrağı (P66, 2026-11-17):** Dart `--dart-define=NOTLAR_PLAY=true` → `lib/core/play_build.dart`
   (`PlayBuild.*` tek yer: güncelleyici, Gmail, konum hatırlatıcı, Antalia, YouTube oto PiP); Gradle `NOTLAR_PLAY=1`
   → `useLegacyPackaging=false`, `NOTLAR_KISISEL` ile birlikte derleme DURUR. Play derlemesi KİŞİSEL OLMADAN
-  (kurulum/overlay izinleri yalnız `src/kisisel`). Yerel izin/ONNX/Gmail kapsamı çıkarma henüz yok →
-  `docs/play_hazirlik.md`. targetSdk 36 = Flutter 3.47.9 varsayılanı (sürüm düşerse bak).
+  (kurulum/overlay izinleri yalnız `src/kisisel`). targetSdk 36 = Flutter 3.47.9 varsayılanı (sürüm düşerse bak).
+- **Play çeşidi (P73 PL1+PL13, 2026-11-18):** flavor DEĞİL bayrak (flavor kişisel `app-release.apk` yolunu
+  değiştirirdi). `NOTLAR_PLAY=1` → `NOTLAR_PLAY_APP_ID` şart (yoksa DURUR), Firebase
+  `android/app/src/release/google-services.json` (gitignore; Play'de yoksa / Play dışında VARSA DURUR),
+  `src/play/AndroidManifest.xml` konum izin/alıcılarını siler, Dart `DefaultFirebaseOptions.play` ←
+  `env_play.json`. CI `play_hazir`/`play` yalnız elle + PLAY_* Secrets varsa; deploy'da Play kural
+  yayını Secrets yoksa atlanır. **ONNX `.so` dışlanamaz**: eklenti `onAttachedToEngine`'de
+  `OrtEnvironment.getEnvironment()` → açılışta çöker (yanlış yol, yapma). Ayrıntı `docs/play_hazirlik.md`.
 - **Geri bildirim (P69 PL15, 2026-11-18):** Ayarlar → Hesap → Hakkında "Geri bildirim gönder" = `mailto:`
   (`lib/core/feedback_mail.dart`; boşluk `%20` elle, `Uri(queryParameters:)` `+` yapar). Gövde YALNIZ sürüm/derleme/
   platform/OS (+ Play işareti); kişisel veri eklenmez (`test/feedback_mail_test.dart`). Destek adresi tek sabit
