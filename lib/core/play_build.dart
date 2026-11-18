@@ -5,9 +5,10 @@
 /// kapıları YALNIZ burada; özellik dosyaları bu sabitleri okur. Değerler
 /// `const` olduğundan Play derlemesinde kapalı dallar Dart ağacından düşer.
 ///
-/// Yerel (Gradle) tarafı — `ACCESS_BACKGROUND_LOCATION` izninin, ONNX yerel
-/// kütüphanesinin ve `gmail.readonly` kapsamının pakette/onay ekranında hiç
-/// görünmemesi — bu bayrakla OLMAZ; yapılacaklar `docs/play_hazirlik.md`'de.
+/// Yerel (Gradle) tarafı Gradle `NOTLAR_PLAY=1` ile: konum izinleri
+/// `android/app/src/play/AndroidManifest.xml`'de silinir, paket adı/Firebase
+/// projesi ayrı (PL13). ONNX yerel kütüphanesi hâlâ pakette (neden:
+/// `docs/play_hazirlik.md`).
 abstract final class PlayBuild {
   /// Play derlemesi mi.
   static const bool enabled = bool.fromEnvironment('NOTLAR_PLAY');

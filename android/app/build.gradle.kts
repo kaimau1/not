@@ -31,6 +31,27 @@ if (play && kisisel) {
     throw GradleException("NOTLAR_PLAY ile NOTLAR_KISISEL birlikte verilemez.")
 }
 
+/** PLAY ÇEŞİDİ (PLAN §1.5 PL13): ayrı paket adı + ayrı Firebase projesi. Çeşit Gradle
+ *  `productFlavors` DEĞİL bayrak: flavor kişisel APK'nın çıktı yolunu
+ *  (`app-release.apk` → `app-<çeşit>-release.apk`) ve CI/güncelleyici yollarını
+ *  değiştirirdi. Kişisel/genel derlemede kimlik `dev.kaimau.notlar` (DEĞİŞMEZ). */
+val playAppId: String? = if (!play) null else
+    (System.getenv("NOTLAR_PLAY_APP_ID") ?: findProperty("playAppId")?.toString())
+        ?.takeIf { it.isNotBlank() }
+        ?: throw GradleException(
+            "Play derlemesi paket adı ister: NOTLAR_PLAY_APP_ID=<ad> (Play Console'a ilk " +
+                "yüklemede kalıcı olur; kişisel kimlikle Play paketi ÇIKMAZ). docs/play_hazirlik.md",
+        )
+/** Play projesinin `google-services.json`ı: eklenti release'te önce `src/release/`e bakar. */
+val playGoogleServices = file("src/release/google-services.json")
+if (play && !playGoogleServices.exists()) {
+    throw GradleException("Play derlemesi için android/app/src/release/google-services.json (Play Firebase projesi) yok.")
+}
+if (!play && playGoogleServices.exists()) {
+    // Kişisel APK yanlışlıkla Play projesine bağlanmasın.
+    throw GradleException("android/app/src/release/google-services.json yalnız Play derlemesinde bulunur; kaldır.")
+}
+
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -58,7 +79,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "dev.kaimau.notlar"
+        applicationId = playAppId ?: "dev.kaimau.notlar"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // firebase_auth minSdk 23 gerektirir.
