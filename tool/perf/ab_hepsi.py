@@ -260,8 +260,10 @@ def home_locate(W, H):
         plus = nodes(xml, "^Yeni not . tip seç") or nodes(xml, "^Yeni not")
         m, title = pick_card(xml, menus)
         b = boxes[0]
+        tumu = [n for n in nodes(xml, r"(^|\| )T[üu]m[üu]$") if n[2] < 900]
         return {"search": ((b[0] + b[2]) // 2, (b[1] + b[3]) // 2), "clear": None, "plus": plus,
-                "card_menu": m, "title": title, "geo": False, "hit": None}
+                "card_menu": m, "title": title, "geo": False, "hit": None,
+                "tumu": (tumu[0][1], tumu[0][2]) if tumu else None}
     if not is_tablet():
         raise RuntimeError("ana ekran semantiği boş (telefon)")
     k = W / 1600
@@ -279,7 +281,7 @@ def home_locate(W, H):
                            "(yedek bandı büyük mü? 'Sonra'ya dokun; ilk kart sabit not mu?)")
     return {"search": pt("search"), "clear": pt("clear"), "plus": [("+", pl[0], pl[1], (*pl, *pl))],
             "card_menu": ("geo", mn[0], mn[1], (*mn, *mn)), "title": "tablet ilk kart", "geo": True,
-            "hit": pt("hit")}
+            "hit": pt("hit"), "tumu": None}
 
 
 def find_note(q, pat, W, H, h):
@@ -417,8 +419,12 @@ def run_once(label):
     key("KEYCODE_BACK"); time.sleep(1.2)       # aramayı temizle
     ready()
 
+    # Geri dönüş: "Tümü" çipi VARSA ona dokun (tablet: sağa kaydırma Gelen'de kalabiliyor → not_ac boş listeye
+    # basıyordu, 2026-11-19); yoksa eski gibi sağa kaydır.
+    back_step = (lambda: tap(*h["tumu"])) if h.get("tumu") else (
+        lambda: swipe(int(W * .15), int(H * .6), int(W * .85), int(H * .6), 160))
     s.window([("klasor", lambda: swipe(int(W * .85), int(H * .6), int(W * .15), int(H * .6), 160), 1.6),
-              ("klasor", lambda: swipe(int(W * .15), int(H * .6), int(W * .85), int(H * .6), 160), 1.6)])
+              ("klasor", back_step, 1.6)])
     time.sleep(0.6)
     # Geri çekiş takvimi açtıysa (Tümü'de sağa çekiş, 2026-11-06) dön.
     if "Takvim" in "".join(n[0] for n in nodes(dump(allow_empty=True))[:6]):

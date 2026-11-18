@@ -100,6 +100,7 @@ def main():
     if o.youtube:
         steps.append(("YouTube", lambda: state_youtube(o.youtube)))
     t = temperature()
+    sh("wm user-rotation lock 0"); time.sleep(1.5)   # dikey (ölçüm yönü)
     try:
         for name, fn in steps:
             try:
@@ -113,6 +114,7 @@ def main():
             rows.append(("YouTube", "denenmedi (veri setinde YouTube'lu not yok)"))
     finally:
         sh(f"am force-stop {OPKG}")
+        sh("wm user-rotation free")
         sh("input keyevent KEYCODE_SLEEP")
     print(f"| durum | PSS MB | RSS MB | Java | Native | Graphics | Code |  ({o.etiket}, başlangıç {t} °C)")
     print("|---|---|---|---|---|---|---|")

@@ -1,0 +1,127 @@
+{
+ "_kural": "Altın taban (HIZ_PLANI F81.4): yalnız İYİLEŞEN evre güncellenir. B bir evrede %15'ten fazla kötüyse KALDI.",
+ "etiket": "tablet_A_dd55fb09_dikey",
+ "tarih": "2026-11-19",
+ "evreler": {
+  "acilis": {
+   "kare": 19.5,
+   "ui_ms": 154.9,
+   "layout_ms": 130.3,
+   "max_ms": 78.8,
+   "j16": 2.0,
+   "ilk_kare_ms": 40.0
+  },
+  "liste": {
+   "kare": 1236.0,
+   "ui_ms": 2469.9,
+   "layout_ms": 1294.4,
+   "max_ms": 28.1,
+   "j16": 4.0
+  },
+  "menu": {
+   "kare": 99.5,
+   "ui_ms": 109.3,
+   "layout_ms": 19.2,
+   "max_ms": 13.1,
+   "j16": 0.0
+  },
+  "arama": {
+   "kare": 18.0,
+   "ui_ms": 161.9,
+   "layout_ms": 88.5,
+   "max_ms": 38.5,
+   "j16": 2.5
+  },
+  "klasor": {
+   "kare": 126.0,
+   "ui_ms": 267.2,
+   "layout_ms": 87.8,
+   "max_ms": 31.2,
+   "j16": 4.0
+  },
+  "yeni_not": {
+   "kare": 196.5,
+   "ui_ms": 290.8,
+   "layout_ms": 51.3,
+   "max_ms": 19.9,
+   "j16": 1.0
+  },
+  "not_ac": {
+   "kare": 70.0,
+   "ui_ms": 111.4,
+   "layout_ms": 51.6,
+   "max_ms": 38.3,
+   "j16": 1.0
+  },
+  "kb": {
+   "kare": 174.0,
+   "ui_ms": 306.4,
+   "layout_ms": 124.6,
+   "max_ms": 9.4,
+   "j16": 0.0
+  },
+  "yaz": {
+   "kare": 384.0,
+   "ui_ms": 682.9,
+   "layout_ms": 101.5,
+   "max_ms": 8.8,
+   "j16": 0.0
+  },
+  "not_kapa": {
+   "kare": 88.5,
+   "ui_ms": 238.6,
+   "layout_ms": 72.7,
+   "max_ms": 25.5,
+   "j16": 2.0
+  },
+  "sabit_ac": {
+   "kare": 332.0,
+   "ui_ms": 498.7,
+   "layout_ms": 133.0,
+   "max_ms": 28.1,
+   "j16": 1.0
+  },
+  "sabit_kay": {
+   "kare": 451.0,
+   "ui_ms": 495.1,
+   "layout_ms": 104.7,
+   "max_ms": 3.9,
+   "j16": 0.0
+  },
+  "sabit_kb": {
+   "kare": 787.5,
+   "ui_ms": 1233.2,
+   "layout_ms": 285.6,
+   "max_ms": 9.9,
+   "j16": 0.0
+  },
+  "sablon": {
+   "kare": 209.5,
+   "ui_ms": 257.0,
+   "layout_ms": 57.0,
+   "max_ms": 29.8,
+   "j16": 1.0
+  },
+  "bicim": {
+   "kare": 847.0,
+   "ui_ms": 1679.4,
+   "layout_ms": 90.3,
+   "max_ms": 6.8,
+   "j16": 0.0
+  },
+  "kalem": {
+   "kare": 1002.0,
+   "ui_ms": 1247.5,
+   "layout_ms": 236.1,
+   "max_ms": 13.6,
+   "j16": 0.0
+  },
+  "duzen": {
+   "kare": 194.0,
+   "ui_ms": 308.2,
+   "layout_ms": 64.2,
+   "max_ms": 20.8,
+   "j16": 2.0
+  }
+ }
+}
