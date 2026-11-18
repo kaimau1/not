@@ -4051,5 +4051,7 @@
   "homeGestureNote": "Bir not",
   "homeGestureFolder": "Bir klasör",
   "homeGestureNone": "Hiçbiri",
-  "homeGestureMissing": "Jestin hedefi bulunamadı; Ayarlar → Notlar'dan yeniden seç"
+  "homeGestureMissing": "Jestin hedefi bulunamadı; Ayarlar → Notlar'dan yeniden seç",
+  "calendarExpiryTag": "Arşivlenir",
+  "calendarExpiryRemoved": "Arşivleme süresi kaldırıldı"
 }

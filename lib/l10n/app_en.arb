@@ -3203,5 +3203,7 @@
   "homeGestureNote": "A note",
   "homeGestureFolder": "A folder",
   "homeGestureNone": "Nothing",
-  "homeGestureMissing": "The gesture's target wasn't found; choose it again in Settings → Notes"
+  "homeGestureMissing": "The gesture's target wasn't found; choose it again in Settings → Notes",
+  "calendarExpiryTag": "Archives",
+  "calendarExpiryRemoved": "Archive time removed"
 }

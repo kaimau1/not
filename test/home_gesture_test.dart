@@ -28,10 +28,10 @@ void main() {
     expect(parseHomeGesture('note', folders), folders);
     expect(parseHomeGesture('folder:', folders), folders);
     // Kimlik gerekmeyen türde fazlalık atılır.
-    expect(
-      parseHomeGesture('calendar:x', folders),
-      (kind: HomeGestureKind.calendar, id: null),
-    );
+    expect(parseHomeGesture('calendar:x', folders), (
+      kind: HomeGestureKind.calendar,
+      id: null,
+    ));
   });
 
   Future<ProviderContainer> container(Map<String, Object> values) async {
@@ -44,11 +44,17 @@ void main() {
     return c;
   }
 
-  test('varsayılanlar bugünkü davranış: çekiş klasörler, sağa takvim', () async {
-    final c = await container({});
-    expect(c.read(homePullGestureProvider).kind, HomeGestureKind.folders);
-    expect(c.read(homeSwipeRightGestureProvider).kind, HomeGestureKind.calendar);
-  });
+  test(
+    'varsayılanlar bugünkü davranış: çekiş klasörler, sağa takvim',
+    () async {
+      final c = await container({});
+      expect(c.read(homePullGestureProvider).kind, HomeGestureKind.folders);
+      expect(
+        c.read(homeSwipeRightGestureProvider).kind,
+        HomeGestureKind.calendar,
+      );
+    },
+  );
 
   test('eski "sağa kaydırınca takvim" kapalıysa hiçbiri', () async {
     final c = await container({kSwipeLeftCalendarKey: false});
@@ -57,9 +63,10 @@ void main() {
 
   test('seçim kaydedilir ve eşitlenen ayarlarda', () async {
     final c = await container({});
-    c
-        .read(homePullGestureProvider.notifier)
-        .set((kind: HomeGestureKind.note, id: 'abc'));
+    c.read(homePullGestureProvider.notifier).set((
+      kind: HomeGestureKind.note,
+      id: 'abc',
+    ));
     final prefs = c.read(sharedPreferencesProvider);
     expect(prefs.getString(kHomePullGestureKey), 'note:abc');
     expect(kSyncedPrefKeys, contains(kHomePullGestureKey));

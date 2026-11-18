@@ -8885,4 +8885,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get homeGestureMissing =>
       'Jestin hedefi bulunamadı; Ayarlar → Notlar\'dan yeniden seç';
+
+  @override
+  String get calendarExpiryTag => 'Arşivlenir';
+
+  @override
+  String get calendarExpiryRemoved => 'Arşivleme süresi kaldırıldı';
 }

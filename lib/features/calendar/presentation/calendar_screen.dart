@@ -53,6 +53,20 @@ final calendarReminderNotesProvider = Provider<List<Note>>((ref) {
   ];
 });
 
+/// Zamanlı notlar (U4, `expiresAt`): arşivlenmemiş, gizli klasörde değil.
+final calendarTimedNotesProvider = Provider<List<Note>>((ref) {
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final suppressed = ref.watch(suppressedFolderIdsProvider);
+  return [
+    for (final n in notes)
+      if (n.expiresAt != null &&
+          n.archivedAt == null &&
+          n.deletedAt == null &&
+          (n.folderId == null || !suppressed.contains(n.folderId)))
+        n,
+  ];
+});
+
 /// Takvim görünümlerinin ortak verisi (ay/hafta ekranı ve gün sayfası aynı
 /// kaynaktan okur).
 final calendarDataProvider = Provider<CalendarData>((ref) {
@@ -62,6 +76,7 @@ final calendarDataProvider = Provider<CalendarData>((ref) {
     events: [...?events.value, ...google],
     tasks: ref.watch(tasksStreamProvider).value ?? const <TaskItem>[],
     reminders: ref.watch(calendarReminderNotesProvider),
+    timedNotes: ref.watch(calendarTimedNotesProvider),
     routines: ref.watch(routinesStreamProvider).value ?? const [],
     routineLogs: ref.watch(routineLogsStreamProvider).value ?? const {},
     holidays: ref.watch(holidayCalendarProvider),
@@ -401,9 +416,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         undo = () => calendar.saveTask(before);
       case Note():
         if (notes == null) return;
-        final before = (entry as ReminderEntry).note;
-        notes.setReminder(moved.id, moved.reminderAt);
-        undo = () => notes.setReminder(before.id, before.reminderAt);
+        final r = entry as ReminderEntry;
+        final before = r.note;
+        if (r.expiry) {
+          notes.setExpiry(moved.id, moved.expiresAt);
+          undo = () => notes.setExpiry(before.id, before.expiresAt);
+        } else {
+          notes.setReminder(moved.id, moved.reminderAt);
+          undo = () => notes.setReminder(before.id, before.reminderAt);
+        }
       default:
         return;
     }
@@ -853,7 +874,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       onMonthChanged: (month) => setState(() => _month = month),
     );
     final isEmpty =
-        data.events.isEmpty && data.tasks.isEmpty && data.reminders.isEmpty;
+        data.events.isEmpty &&
+        data.tasks.isEmpty &&
+        data.reminders.isEmpty &&
+        data.timedNotes.isEmpty;
     final list = isEmpty
         ? EmptyState(
             icon: Icons.calendar_month_outlined,
@@ -871,6 +895,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             events: data.events,
             tasks: data.tasks,
             reminders: data.reminders,
+            timedNotes: data.timedNotes,
             onMore: () => setState(() => _windowDays += _kAgendaWindowDays),
           );
     if (wide) {
@@ -1385,6 +1410,7 @@ class _AgendaList extends ConsumerWidget {
     required this.events,
     required this.tasks,
     required this.reminders,
+    this.timedNotes = const [],
     required this.onMore,
   });
 
@@ -1394,6 +1420,7 @@ class _AgendaList extends ConsumerWidget {
   final List<CalendarEvent> events;
   final List<TaskItem> tasks;
   final List<Note> reminders;
+  final List<Note> timedNotes;
   final VoidCallback onMore;
 
   @override
@@ -1406,6 +1433,7 @@ class _AgendaList extends ConsumerWidget {
       events: events,
       tasks: tasks,
       reminderNotes: reminders,
+      timedNotes: timedNotes,
     );
     final holidays = ref.watch(holidayCalendarProvider);
     // Kaydı olmayan tatil günleri de ajandada başlık olarak görünür.
@@ -1749,7 +1777,11 @@ class _ReminderTile extends StatelessWidget {
       onTap: () => unawaited(context.pushNote(noteRoutePath(note.id))),
       child: Row(
         children: [
-          Icon(Icons.alarm, size: 18, color: scheme.secondary),
+          Icon(
+            entry.expiry ? Icons.archive_outlined : Icons.alarm,
+            size: 18,
+            color: scheme.secondary,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -1764,7 +1796,8 @@ class _ReminderTile extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpace.xxs),
                 Text(
-                  '${DateFormat.Hm().format(entry.at)} · ${l10n.calendarReminderTag}',
+                  '${DateFormat.Hm().format(entry.at)} · '
+                  '${entry.expiry ? l10n.calendarExpiryTag : l10n.calendarReminderTag}',
                   style: text.meta,
                 ),
               ],

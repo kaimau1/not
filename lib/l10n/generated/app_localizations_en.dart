@@ -8898,4 +8898,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get homeGestureMissing =>
       'The gesture\'s target wasn\'t found; choose it again in Settings → Notes';
+
+  @override
+  String get calendarExpiryTag => 'Archives';
+
+  @override
+  String get calendarExpiryRemoved => 'Archive time removed';
 }

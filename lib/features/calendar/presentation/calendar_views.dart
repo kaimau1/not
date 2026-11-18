@@ -25,6 +25,7 @@ class CalendarData {
     this.events = const [],
     this.tasks = const [],
     this.reminders = const [],
+    this.timedNotes = const [],
     this.routines = const [],
     this.routineLogs = const {},
     this.holidays = const HolidayCalendar.off(),
@@ -37,6 +38,9 @@ class CalendarData {
   final List<TaskItem> tasks;
   final List<Note> reminders;
 
+  /// Zamanlı notlar (`expiresAt`, U4): arşivlenecekleri gün görünür.
+  final List<Note> timedNotes;
+
   /// Rutinler ve günlük kayıtları (Faz 53).
   final List<Routine> routines;
   final Map<String, Map<String, RoutineLog>> routineLogs;
@@ -48,6 +52,7 @@ class CalendarData {
         events: events,
         tasks: tasks,
         reminderNotes: reminders,
+        timedNotes: timedNotes,
         routines: routines,
         routineLogs: routineLogs,
       );

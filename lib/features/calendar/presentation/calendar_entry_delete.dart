@@ -104,6 +104,17 @@ Future<void> quickDeleteEntry(
           }
         },
       );
+    case ReminderEntry(:final note, expiry: true):
+      final notes = ref.read(notesRepositoryProvider);
+      if (notes == null) return;
+      final before = note.expiresAt;
+      notes.setExpiry(note.id, null);
+      showUndoSnackBar(
+        context,
+        message: l10n.calendarExpiryRemoved,
+        undoLabel: l10n.undo,
+        onUndo: () => notes.setExpiry(note.id, before),
+      );
     case ReminderEntry(:final note):
       final notes = ref.read(notesRepositoryProvider);
       if (notes == null) return;

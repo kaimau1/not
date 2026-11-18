@@ -15769,6 +15769,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Jestin hedefi bulunamadı; Ayarlar → Notlar\'dan yeniden seç'**
   String get homeGestureMissing;
+
+  /// No description provided for @calendarExpiryTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivlenir'**
+  String get calendarExpiryTag;
+
+  /// No description provided for @calendarExpiryRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivleme süresi kaldırıldı'**
+  String get calendarExpiryRemoved;
 }
 
 class _AppLocalizationsDelegate
