@@ -25,6 +25,12 @@ hak) ile uyumlu.
    Ücretsiz katman verisi Google ürün geliştirmesinde kullanılır → Play dahili AI'ı YALNIZ ödemeli anahtarla.
 5. **İlk 5 öneri:** DA-1 Hızlı ekle hedefi (pilot) · DA-2 Sessiz düzen tek çağrı · DA-3 Tek cümle
    yönlendirici · DA-4 Medya tür sınıflayıcı · DA-5 Paylaşım yönlendirme.
+6. **Kullanıcı isteği (2026-11-18): "her türlü kullanalım, çok ucuz, çıktı ücretsiz".** §3B'de dört fikri (başlık
+   doğrulama, hızlı ekle yazım doğrulama, hızlı ekle + şablon karar soruları, genel evet/hayır karar noktası) DA-13…DA-16
+   olarak, ayrıca 18 yeni fikri (DA-17…DA-34) somut soru şemalarıyla ekledim. Dondurma (K-O1) PLAN §1.0'da KALKTI:
+   "yeni özellik = kullanıcı onayı / `ISTEK_KUTUSU`" kuralı bu belgeden çıkarıldı; yerine oturum disiplini (bir faz,
+   `[apk]` başına ≤5 görünür değişiklik, kasma/ölçüm kapıları) geçerli. "Ucuz" doğru, "ücretsiz" yarı doğru: çıktı
+   jetonu 0 ama girdi + her sorunun jetonu faturalanır, ücretsiz katman 200 RPM / 10K RPD ve veri kullanımı şartlı (§3B.0).
 
 ---
 
@@ -191,8 +197,10 @@ Kullanım kuralları (belgelerden çıkan, tasarımı belirleyen):
 ## 3. Yeni özellik önerileri (DA-1 …), etki / maliyet / risk sıralı
 
 Sınıf: **[M]** = mevcut işlevin taşınması/iyileştirmesi (PLAN §1.6'da zaten var: A3 "önce cihazda ayrıştır, AI
-yalnız gerekince", A8 "toplu tek istek"); zincir kendiliğinden yapabilir. **[Y]** = yeni kullanıcıya görünür
-özellik; CLAUDE.md "Dondurma" (K-O1) gereği `ISTEK_KUTUSU.md`'ye girer, kullanıcı onayı olmadan açılmaz.
+yalnız gerekince", A8 "toplu tek istek"). **[Y]** = yeni kullanıcıya görünür özellik. GÜNCELLEME 2026-11-18:
+Dondurma (K-O1) PLAN §1.0'da kalktığı için [Y] özellikler de gözetimsiz zincirin işi olabilir; `ISTEK_KUTUSU.md`'ye
+yazmak gerekmez. Sınır: oturum = bir faz, `[apk]` başına ≤5 kullanıcıya görünür değişiklik, görünür yeni alan için
+`kasma-kontrol`, editör/ana liste için ölçüm kapısı, "cihazda doğrulanmadı" maddeleri 40'ı geçerse yeni iş durur.
 Maliyet tahminleri: ~3 karakter/jeton (uygulamanın kendi `_Pacer` varsayımı) × $0,10/1M; ölçülmedi.
 Hata/çevrimdışı geri düşüşü her özellikte aynı sıra: yerel sonuç → (Decisions) → bugünkü üretken yol → kullanıcıya sor.
 Hiçbir özellik güvene dayanarak SİLMEZ, TAŞIMAZ, ARŞİVLEMEZ; yalnız öneri ya da geri alınabilir ekleme.
@@ -204,6 +212,8 @@ Hiçbir özellik güvene dayanarak SİLMEZ, TAŞIMAZ, ARŞİVLEMEZ; yalnız öne
   `parseDropTarget`'ın komut/ad ayıklamasıyla çıkarılır, `_trustedContent` korur, önizleme + "Geri al" zaten var.
   (Bilinen açık: AI hedefi bulup yerel ayrıştırıcı bulamadıysa içerik "ad kelimesini" taşıyabilir → seçilen
   başlığın kelimelerini cümleden ayıklayan küçük yerel yardımcı; H9 raporundaki tuzağa dikkat, `quick_drop.dart`.)
+- Hızlı ekle girişindeki diğer kararlar (tür adı, madde mi, komut var mı, acil) AYNI çağrıya biner → DA-15 (`QuickCaptureProfile`;
+  eylem başına en çok 1 çağrı).
 - Soru şeması: §1.4 örneği; `criteria` = `a_yok` + `n00…n39` (başlık, ilk 60 karakter). Karar: `choice != a_yok`
   ve `confidence >= τ_hedef` (başlangıç 0,80; DA-E0'da ayarlanır); değilse bugünkü "Hangi nota eklensin?".
   Başa baş kalan notlar (`st.ties`) varsa yalnız onlar seçenek.
@@ -355,13 +365,464 @@ Hiçbir özellik güvene dayanarak SİLMEZ, TAŞIMAZ, ARŞİVLEMEZ; yalnız öne
 
 ### 3.1 Bilerek YAPILMAYACAKLAR
 
-- Kopya not hakemi (PLAN A8 kararı: cihazda, AI'sız; trigram yeterli). Çöp/arşiv AI analizi geri getirilmez (AI-S1).
+- (2026-11-18 revizyon) Kopya not hakemi ve çöp "silinsin mi" önerisi artık YAPILMAYACAKLAR listesinde DEĞİL:
+  kullanıcı Decisions'ı "her türlü" kullanmak istedi → DA-20 / DA-25 (yalnız gri bölge/öneri; yerel kural birincil kalır,
+  PLAN A8 "kopya bulma cihazda" ve AI-S1 "analyzeTrash kalktı" kararlarıyla çelişme notu orada).
 - Hassas bilgi (IBAN, şifre) tespiti için Decisions: gizlilik paradoksu (tespit için içeriği buluta göndermek);
   yerel kural `TrashReason.sensitiveInfo` kalır.
 - Güvene dayalı otomatik silme / taşıma / arşivleme / kilitleme.
 - Üretken işlerin yerine (özet, başlık metni, çeviri, yeniden yazma): Decisions metin ÜRETEMEZ.
 - Yazarken her tuşta çağrı (200 RPM ücretsiz tavan, gereksiz).
 - Video/YouTube girdisi: YouTube URL'si ve `gs://` desteklenmiyor; video not zaten Play'den kalktı.
+
+---
+
+## 3B. Beyin fırtınası (kullanıcı 2026-11-18)
+
+Kullanıcı: Decisions API'yi "her türlü" kullanalım (çok ucuz, çıktı ücretsiz). Dört fikri DA-13…DA-16 olarak somutlaştırdım;
+18 yeni fikir DA-17…DA-34. Hepsi §4'teki tek `DecisionService` + `DecisionPoint` kaydı (DA-16) üstünde, bayrakla (varsayılan
+kapalı), altın setle ölçülerek açılır. Şema örneklerindeki alan adları §1.3'te doğrulananlarla aynıdır; eşikler (τ) BAŞLANGIÇ
+değeridir, DA-E0'da Türkçe altın setle ayarlanır.
+
+### 3B.0 "Her yerde kullan" için çerçeve: ucuz ≠ sınırsız
+
+| Konu | Durum |
+|---|---|
+| "Çıktı ücretsiz" | DOĞRU (çıktı jetonu hep 0). Ama girdi jetonu + her sorunun `instructions`+`criteria` jetonu faturalanır; ortak girdi istek başına BİR kez |
+| Birim maliyet | Tipik çağrı 0,5–2,5K jeton ≈ $0,00005–0,00025 (tahmin; `usage` ile DA-E0'da ölçülür). Aynı iş Flash-Lite ile (1,5K girdi + 30 çıktı) ≈ $0,0005 → Decisions ≈ 3,5× ucuz |
+| Kullanıcı başı aylık | 30 çağrı/gün ≈ $0,14 · 100/gün ≈ $0,45 · 300/gün ≈ $1,35 (1,5K jeton/çağrı varsayımı) → "her yer" bütçesi sınırlı kalmalı |
+| Hız sınırı | Ücretsiz 200 RPM / 50K TPM / 10K RPD; Tier 1 1.500 RPM / 50K RPD PROJE başına: 100 çağrı/gün × 500 kullanıcı = Tier 1 tavanı → büyürse Tier 2 ya da kullanıcı başı tavan |
+| Gecikme | 0,4–1 s (bağımsız ölçüm) → HİÇBİR karar noktası UI'yi bu süre bekletmez |
+| Gizlilik | Her yeni karar noktası = yeni veri gönderimi; ücretsiz katman anahtarında veri Google'da ürün geliştirmede kullanılır |
+
+Ortak kurallar (her DA için geçerli; ayrı ayrı yazılmadı):
+- **K1 Yerel önce.** Yerel kural net karar veriyorsa Decisions çağrılmaz; yalnız BELİRSİZLİKTE ya da üretilmiş/çözülmüş sonucu
+  DOĞRULAMADA çağrılır (çağrı sayısı ve veri azalır).
+- **K2 İyimser göster, arkadan doğrula.** Yerel sonuç anında görünür; Decisions yanıtı geç gelirse yalnız yeni bir ŞEY
+  önerir/geri alır, görünür öğeyi zıplatmaz. Yanıt zaten beklenen bir yerde (2 sn geri sayım, "düşünüyor", arka plan) beklenir.
+- **K3 Eylem başına en çok 1 çağrı.** İlgili sorular tek girdiye bağlanır (`QuickCaptureProfile`, `NoteTriageProfile`...).
+- **K4 İki eşik.** `noul`/`choice` için `τ_hi` (uygula) ve `τ_lo` (reddet); arası = "emin değil" → bugünkü davranış ya da kullanıcıya sor.
+- **K5 Kullanıcının kendi sözü kutsal.** Elle yazılan başlık, "başlık X olsun" komutu, öğretilmiş düzeltme (`SpellMemory.learned`),
+  reddedilen çift Decisions ile ASLA geçersiz kılınmaz. Decisions kalıcı hafızaya (öğrenilmiş/reddedilmiş çift) YAZMAZ; onu yalnız
+  kullanıcı eylemi yazar (zehirlenme önlemi). İstisna: DA-18 yalnız kullanıcının kullandığı maddeyi grup olarak öğrenir.
+- **K6 Yıkıcı eylem yok.** Silme/taşıma/arşivleme/kilitleme güvene dayanarak yapılmaz; yalnız öneri çipi (geri alınabilir).
+- **K7 Veri en azı + kapılar.** Kilitli not, ORTAK klasör adı, hassas (IBAN/parola) not hiçbir girdide yok; `AiAdmission.check`
+  ilk satır; AI kapalı/kill switch/rıza yoksa ağ yok; Play'de yalnız Pro/anahtar.
+- **K8 Çağrı bütçesi.** Kullanıcı başı günlük tavan (öneri 300; Function'da sunucuda), `AiRateLimiter`'dan AYRI "decision" sayacı
+  (arka plan doğrulamaları el ile yapılan AI isteklerinin dakikalık hakkını yemesin), patlama anında `_Pacer` kalıbıyla sıraya al.
+- **K9 Kötü örnek seti şart.** Doğrulama kapıları (DA-13, 14, 17, 19, 24, 32) için altın sete BİLEREK yanlış örnekler konur
+  (kötü başlık, yanlış düzeltme, hatalı tarih, uydurma kart); ölçüt "doğru ret" ≥ %80 VE "yanlış ret" (iyiyi bozma) ≤ %2.
+
+### 3B.1 Kullanıcının dört fikri
+
+#### DA-13 — Başlık doğrulama: "bu başlık doğru mu?" (fikir a) [M]
+- Fayda: kendi algoritmamızın ya da AI'nın başlığı yanlış/genel/alakasızsa yakalanır, yalnız o zaman (yeniden) üretilir.
+  Yerel başlık kaynakları: Gmail konusu (`fromEmail`), paylaşılan dosya adı ("IMG_2034") `share_intake.dart`, akıllı liste tür
+  başlığı (`quick_list_screen.dart` `_updateKind`; SABİT metin, doğrulanmaz), ilk satır türetmesi. Üretken: `generateTitle`
+  (`note_editor_ai.dart:68,87`; kapanışta otomatik + çip). Kullanıcının elle yazdığı / "başlık X olsun" dediği başlık DOĞRULANMAZ (K5).
+- Akış: [aday başlık] → `noul` doğrula → ≥ τ_hi kabul; ≤ τ_lo ise üretken `generateTitle` (en çok 1 yeniden üretim; reddedilen başlık
+  istemde "bunu üretme" ile); arası dokunma. Üretken çıktıyı da doğrulamak ek 1 çağrı (arka planda): yalnız "kapanışta otomatik başlık"
+  ayarı açıkken ve not ≥ 20 karakterken. Yerel adayı önce doğrulamak üretken çağrı SAYISINI azaltır; üretken adayı doğrulamak çağrı ekler
+  ama $0,0002'lik ve arka planda.
+- Şema:
+```json
+{"input": [{"type": "text", "text": "Başlık: IMG_2034\nNot içeriği:\n- süt\n- yumurta\n- zeytinyağı\n- deterjan\n"}],
+ "questions": {
+  "baslik_uygun": {"type": "noul", "instructions": "Yukarıdaki başlık, notun içeriğini kısa ve doğru anlatıyor mu?",
+    "criteria": {"true_description": "Başlık notun asıl konusunu söylüyor; yanıltıcı ya da alakasız değil",
+                 "false_description": "Başlık ilgisiz, yanıltıcı, dosya adı gibi anlamsız ya da içeriğin yalnız küçük bir parçası"}},
+  "baslik_cok_genel": {"type": "noul", "instructions": "Başlık çok genel mi (Not, Liste, Yeni not, Taslak, Belge gibi)?"},
+  "baslik_kalitesi": {"type": "score", "instructions": "Başlığın kalitesini değerlendir.",
+    "criteria": ["Yanlış ya da alakasız", "Genel ama yanlış değil", "İyi ve açıklayıcı", "Kısa, özgün ve konuyu tam söylüyor"]}
+}}
+```
+  Karar: `baslik_uygun >= 0,75` ve `baslik_cok_genel < 0,5` kabul; `baslik_uygun <= 0,40` ya da `baslik_cok_genel >= 0,70` yeniden üret.
+- Maliyet: not ilk 600 karakter (`generateTitle` ile aynı kesit) + 3 soru ≈ 0,5K jeton ≈ $0,00005; gecikme arka plan.
+- Gizlilik: bugünkü başlık üretimiyle aynı veri (notun ilk 600 karakteri + başlık); kilitli yok.
+- Geri düşüş: Decisions yok → bugünkü davranış (yerel başlık olduğu gibi / üretken başlık olduğu gibi).
+- Kapı: editör kapanış yolu → ölçüm kapısı. DA-2'deki `baslik_gerekli` ile aynı çağrıya binebilir (başlık yoksa o, varsa bu).
+
+#### DA-14 — Hızlı ekle yazım düzeltmesi doğrulama (fikir b) [M]
+- Fayda: `QuickParser` bulanık düzeltmesi ("yunurta" → "Yumurta", `quick_entry.dart`) yanlış kelimeyi başka geçerli kelimeye
+  çevirebilir (marka, özel ad, ağız). Düzeltme uygulanmadan önce "bu gerçekten yazım hatası mı, doğru düzeltme mi?" süzülür.
+- Kapsam: YALNIZ riskli düzeltmeler (bulanık/edit-distance, komşu tuş). Sözlükte tam eşleşme, `quickAscii` harf düzleştirme
+  ("sut" → "Süt"), kullanıcının öğrettiği düzeltme (`isUserWord`, `learned`) Decisions'a GİTMEZ. Kullanıcının reddettiği çift
+  (`isRejected`) hiç uygulanmaz.
+- Tetik: canlı yazarken HER tuşta DEĞİL; satır/kayıt anı ya da konuşma sonu (2 sn geri sayım). Yerel düzeltilmiş madde anında
+  görünür (K2); Decisions ≤ τ_lo derse o maddede düzeltme geri alınır (yazılan kelime kalır) ve sessizce işaretlenir.
+- Şema (bir giriş = tek çağrı, N düzeltme):
+```json
+{"input": [{"type": "text", "text": "Liste bağlamı: Süt, Peynir, Zeytinyağı\nDüzeltmeler (yazılan -> düzeltilen):\nd00: yunurta -> Yumurta\nd01: nutella -> Nutela\nd02: ekmk -> Ekmek\n"}],
+ "questions": {
+  "d00": {"type": "noul", "instructions": "d00 satırında yazılan kelime, alışveriş/yapılacak listesinde düzeltilen kelimeyi mi kastediyor? Yalnız bir yazım hatasıysa evet.",
+    "criteria": {"true_description": "Yazılan, düzeltilen kelimenin hatalı yazımı",
+                 "false_description": "Yazılan başka geçerli bir kelime, marka ya da özel ad; düzeltme anlamı değiştirir"}},
+  "d01": {"type": "noul", "instructions": "d01 satırında yazılan kelime, alışveriş/yapılacak listesinde düzeltilen kelimeyi mi kastediyor? Yalnız bir yazım hatasıysa evet.",
+    "criteria": {"true_description": "Yazılan, düzeltilen kelimenin hatalı yazımı",
+                 "false_description": "Yazılan başka geçerli bir kelime, marka ya da özel ad; düzeltme anlamı değiştirir"}}
+}}
+```
+  Karar: `noul >= 0,85` uygula; `<= 0,50` geri al; arası uygula + mevcut "geri al" ipucu. Soru metni tekrarı kasıtlı (model yalnız
+  `instructions`'ı görür, anahtarı görmez); ortak ifade kısa tutulur ya da `criteria` atlanıp tek cümle yazılır (jeton).
+- Maliyet: ~0,3K + N×50 jeton ≈ $0,00004; gecikme geri sayım içinde.
+- Gizlilik: yalnız yazılan/düzeltilen kelime çiftleri + ≤10 madde adı (liste bağlamı).
+- Geri düşüş: yerel düzeltme olduğu gibi (bugünkü).
+- Yazım v3 ile bağ: DA-17 aynı "noul ile süz" fikrinin editör (altı çizili) karşılığı; Y-0 ölçüm setinin "yanlış düzeltme oranı" mandalı
+  Decisions açıkken de korunur (oran artarsa bayrak kapanır).
+
+#### DA-15 — Hızlı ekle + şablonlarda uygulama içi karar soruları (fikir c) [M]
+**15a Hızlı ekle karar paketi (`QuickCaptureProfile`; DA-1 ile AYNI çağrı).** Bugün bu kararlar yerel `if`'lerle verilir ve
+belirsizken yanlış çıkar (H9 "rapor yaz" olayı: genel fiil komut sayıldı). Tek çağrıda:
+```json
+{"input": [{"type": "text", "text": "Giriş: \"bavul listesi tişört şort pasaport dosyalara ekle\"\n"}],
+ "questions": {
+  "tur_adi_var": {"type": "noul", "instructions": "Girişin başında listenin türünü ya da adını söyleyen bir öbek (bavul listesi, alışveriş listesi, tatil için) var mı?"},
+  "liste_turu": {"type": "choice", "instructions": "Maddeler hangi tür listeye ait?",
+    "criteria": {"a_diger": "Belirli bir tür yok", "b_alisveris": "Market/alışveriş", "c_bavul": "Bavul/seyahat hazırlığı", "d_yapilacak": "Yapılacak işler"}},
+  "madde_mi": {"type": "choice", "instructions": "Giriş nasıl kaydedilmeli?",
+    "criteria": {"a_metin": "Tek cümle ya da paragraf not metni", "b_maddeler": "Kısa maddelerin listesi", "c_soru": "Bir soru, nota eklenmemeli"}},
+  "komut_var": {"type": "noul", "instructions": "Girişin başında ya da sonunda bir notu hedef gösteren ekle/koy/kaydet komutu var mı? (Komutun kendisi içeriğe girmez.)"},
+  "acil": {"type": "noul", "instructions": "Girişte aciliyet ifadesi (acil, hemen, bugün mutlaka) var mı?"},
+  "hedef": {"type": "choice", "instructions": "Kullanıcı hangi var olan nottan söz ediyor?", "criteria": {"a_yok": "Hiçbir not adlandırılmadı", "n00": "Dosyalarımdaki hatalar"}}
+}}
+```
+  Eşleme: `tur_adi_var` + `liste_turu` → `smartKindFromPhrase`/`smartKindOf` BELİRSİZ ya da `generic` kalınca (yerel sözlük net
+  bulduysa çağrı yok); `madde_mi` → `QuickParser` bölme mi düz metin mi; `komut_var` → H9 korkuluğu (yerel komut ayıklamasının
+  kararını doğrular: `komut_var` düşükse "ekle/yaz" kelimesi içerikte kalır); `acil` → "Acil işaretle" çipi (mevcut acil not
+  özelliği); `hedef` → DA-1. Karar `QuickDropSheet` geri sayımında; hedef `τ_hi`'dan düşükse mevcut "Hangi nota?" sorusu.
+- Maliyet: ~0,5–0,8K jeton ≈ $0,00007; tek çağrı (K3). Gizlilik: bugünkü AI yedeğiyle aynı sınıf (giriş cümlesi + not başlıkları).
+- Geri düşüş: mevcut yerel yol + (varsa) bugünkü `pickDropTarget`.
+
+**15b Şablon sheet'inde karar soruları (`note_template_sheet.dart`, `note_templates.dart`).**
+- Öneri grubu seçimi: liste şablonlarının `templateSuggestions` grupları (alışverişte manav/kahvaltılık/temizlik…) kullanıcının
+  başlığına göre SIRALANIR/öne çıkarılır: her grup bir `noul`:
+```json
+{"input": [{"type": "text", "text": "Liste başlığı: Hafta sonu kahvaltı için alışveriş\n"}],
+ "questions": {
+  "grup_manav": {"type": "noul", "instructions": "Bu liste için 'Manav' öneri grubu (domates, salatalık, meyve…) uygun mu?"},
+  "grup_kahvalti": {"type": "noul", "instructions": "Bu liste için 'Kahvaltılık' öneri grubu (peynir, zeytin, reçel…) uygun mu?"},
+  "grup_temizlik": {"type": "noul", "instructions": "Bu liste için 'Temizlik' öneri grubu (deterjan, sünger…) uygun mu?"},
+  "kendi_sablonum": {"type": "noul", "instructions": "Bu not (başlığı ve yapısı) tekrar tekrar kullanılacak bir kalıp mı (haftalık plan, kontrol listesi), tek seferlik mi?"}
+}}
+```
+  Sonuç yalnız SIRALAMA/vurgu (grup silinmez) ve "Kendi şablonum olarak sakla" önerisi (`user_templates.dart`).
+- Hangi şablon: DA-21.
+- Maliyet ≈ 0,3K jeton; gizlilik: yalnız başlık; geri düşüş: bugünkü sabit grup sırası.
+
+#### DA-16 — Genel "evet/hayır ile akış seç" altyapısı: `DecisionPoint` kaydı (fikir d) [M, altyapı]
+- Fayda: "belirsizse sor/yerel kuralı çalıştır" kalıbını her yerde TEK biçimde kullanmak; yeni karar noktası eklemek = tek kayıt +
+  altın örnekler. Dağınık `if`'ler (§2.3) buraya bağlanır.
+- Arayüz (taslak; kod değil):
+```dart
+enum DecisionOutcome { yes, no, unsure, unavailable } // unavailable: bayrak kapalı / ağ yok / kapı reddi → çağıran BUGÜNKÜ davranış
+final r = await ref.read(decisionServiceProvider).gate(DecisionPoint.titleOk, input: ...);
+```
+  `DecisionPoint` kaydı (`lib/features/ai/data/decisions/decision_points.dart`, saf Dart): `id`, bayrak kimliği
+  (`aiDecisionsFeatures` içindeki ad), soru şeması (profil), `τ_hi`, `τ_lo`, `maxBlockingMs` (varsayılan 0: bloklamaz), yerel yedek,
+  altın örnek dosyası, gizlilik sınıfı (`titlesOnly` / `textSnippet` / `media`), `onUnsure` (`ask` | `keepLocal`).
+- Genel `noul` şablonu (yeni karar noktası eklerken kopyala):
+```json
+{"questions": {"koşul": {"type": "noul", "instructions": "<tek cümlelik evet/hayır sorusu>",
+  "criteria": {"true_description": "<evet ne demek>", "false_description": "<hayır ne demek>"}}}}
+```
+  İki eşikle eşleme: `noul >= τ_hi` → `yes`; `noul <= τ_lo` → `no`; arası `unsure`. `choice`: `choice != a_yok && confidence >= τ` → seçim,
+  aksi `unsure`. `unsure` ve `unavailable` DAİMA bugünkü yola düşer.
+- Mevcut karar noktaları (kayıt listesi, ilk sürüm): `dropTarget` (DA-1), `quickCapture` (DA-15a), `titleOk` (DA-13),
+  `spellFixOk` (DA-14), `noteTriage` (DA-2), `captureRoute` (DA-3), `mediaKind` (DA-4), `shareRoute` (DA-5), `templateGroups` (DA-15b),
+  `spellFlagReal` (DA-17), `reminderTimeOk` (DA-19), `searchRoute` (DA-23), `outputFaithful` (DA-24), `trashSuggest` (DA-25) …
+- Bayrak: `aiDecisionsFeatures` kimliği = `DecisionPoint.id` (§4.4). Gölge kipte aynı kimlik `aiDecisionsShadow`'da.
+- Test: `decision_points_test.dart` — her kaydın altın dosyası var, τ'lar `0 < τ_lo < τ_hi < 1`, bayrak kimliği tekil, `unavailable`'da
+  çağıran davranışı değişmiyor (sahte servisle).
+
+### 3B.2 Yeni fikirler (DA-17 … DA-34)
+
+#### DA-17 — Yazım v3 "Yalnız göster": altı çizili kelime gerçekten hata mı? [M] (yazım Y-4/Y-5)
+- Fayda: Y-4 "Yalnız göster" kipinde yerel yazım motoru çok şey çizer (özel ad, kısaltma, yabancı kelime, ağız yazımı, ek zinciri
+  bilinmeyen kelime). Yanlış-pozitif altı çizgiler güveni yıkar. `noul` süzgeci yalnız GÖSTERİMİ süzer (hiçbir şey değiştirmez → risksiz,
+  Y-4'ün "Yalnız göster varsayılan açık olabilir" kararıyla uyumlu).
+- Tetik: kelime sonunda DEĞİL; duraklamada (≥1 sn) değişen paragrafın bulguları + "Notu denetle" (Y-5) toplu. En çok 20 bulgu/çağrı.
+- Şema (bir paragraf = bir çağrı):
+```json
+{"input": [{"type": "text", "text": "Cümle: Dün Ankara'dan Kemal'le toplantıya gitdik, sonra Starbucks'ta oturduk.\nİşaretli kelimeler:\nk00: gitdik\nk01: Starbucks'ta\nk02: Kemal'le\n"}],
+ "questions": {
+  "k00": {"type": "noul", "instructions": "k00 işaretli kelimesi bu cümlede gerçekten bir Türkçe yazım hatası mı? Özel ad, marka, kısaltma, yabancı sözcük ve bilinçli ağız yazımı hata sayılmaz.",
+    "criteria": {"true_description": "Yazım hatası", "false_description": "Doğru yazılmış ya da hata sayılmaz"}},
+  "k01": {"type": "noul", "instructions": "k01 işaretli kelimesi bu cümlede gerçekten bir Türkçe yazım hatası mı? Özel ad, marka, kısaltma, yabancı sözcük ve bilinçli ağız yazımı hata sayılmaz.",
+    "criteria": {"true_description": "Yazım hatası", "false_description": "Doğru yazılmış ya da hata sayılmaz"}}
+}}
+```
+  Karar: `noul <= 0,25` → çizgiyi kaldır (süz); `>= 0,60` → çizgi kalır; arası kalır (yerel karar). Önbellek: paragraf özeti (Y-4 zaten
+  paragraf özetiyle önbellekliyor); kullanıcı "Bu notta dokunma/Sözlüğe ekle" derse kayıt yerelde.
+- Maliyet: ~100 jeton cümle + 20×60 = ~1,3K ≈ $0,00013/paragraf; yalnız paragraf değişince.
+- Gizlilik: paragraf METNİ buluta gider → Y-4'te AYRI açık ayar ("Yapay zekâ ile süz", varsayılan KAPALI, Pro/anahtar); kilitli not hiç;
+  Play: Pro. Yerel denetim Decisions'sız ÇALIŞMAYA devam eder (hiçbir bağımlılık yok).
+- Geri düşüş: çizgiler yerel karara göre aynen. Editör kasma kuralı: sonuç boyama katmanına ValueNotifier ile gider; `buildTextSpan`'a girmez,
+  kökte `setState` yok; ölçüm kapısı + `kasma-kontrol` + bütçe senaryosu ("denetim + süzgeç açıkken 5 tuş: kök kurulum 0").
+- Bağımlılık: Y-0…Y-3 bitmeden açılmaz (taban ölçüm olmadan süzgeç değeri ölçülemez).
+
+#### DA-18 — Bilinmeyen madde → reyon/bavul grubu (öğren, yerele yaz) [Y]
+- Fayda: market/bavul sözlüğünde olmayan madde (`quick_lexicon_data.dart`) grup -1 → listenin sonunda sıralanır ("reyonda rahat
+  alışveriş" amacı bozulur). Decisions maddeyi reyona koyar; sonuç kullanıcının sözlüğüne yazılır (`quick_entry_memory.dart`) → ikinci
+  kez ÇAĞRI YOK (öğren-sonra-yerel). Çağrı yalnız bilinmeyen maddede.
+- Şema (liste kaydında, yalnız bilinmeyen maddeler, tek çağrı):
+```json
+{"input": [{"type": "text", "text": "Liste türü: alışveriş\nMaddeler:\nm00: labne\nm01: hindistan cevizi sütü\nm02: pet mama\n"}],
+ "questions": {
+  "m00": {"type": "choice", "instructions": "m00 maddesi markette hangi reyonda bulunur?",
+    "criteria": {"a_diger": "Belirsiz", "b_manav": "Manav", "c_kasap": "Kasap/şarküteri", "d_sut": "Süt ürünleri/kahvaltılık", "e_firin": "Fırın", "f_bakliyat": "Bakliyat/kuru gıda", "g_icecek": "İçecek", "h_temizlik": "Temizlik", "i_kisisel": "Kişisel bakım", "j_evcil": "Evcil hayvan/diğer"}}
+}}
+```
+  (m01, m02 için aynı `choice`; seçenek açıklamaları tek `criteria` nesnesi olarak yeniden kullanılır.)
+- Karar: `confidence >= 0,80` ve `a_diger` değil → sözlüğe KULLANICI sözlüğü olarak yaz (kaynak etiketi `decision`, kullanıcı silebilir);
+  değilse sıralama değişmez. Bavul listesi için aynı şema, seçenekler `PackingGroup` (belgeler, kıyafet, bakım, sağlık, teknoloji).
+- Maliyet: ~0,4K jeton; liste başına en çok bir kez; öğrendikçe çağrı sıfıra yaklaşır. Gizlilik: yalnız madde adları + tür; kilitli yok.
+- Geri düşüş: grup -1 (bugünkü). Kapı: akıllı liste UI → `kasma-kontrol` (yeni görünür alan yok, yalnız sıra).
+
+#### DA-19 — Hatırlatıcı zamanı makul mü / ifade belirsiz mi? [M]
+- Fayda: `parseSpokenDateTimeNow` ("akşam 8", "pazartesi", "ayın 5'i", "haftaya") sessizce yanlış gün/saat kurabilir. Çözülen zamanı
+  cümleyle birlikte verip "uyuyor mu" diye sormak yanlış hatırlatıcıyı onay çipine çevirir.
+- Şema:
+```json
+{"input": [{"type": "text", "text": "Şu an: 2026-11-18 Çarşamba 14:05\nCümle: \"pazartesi akşam sekizde Ayşe'yi ara\"\nÇözülen zaman: 2026-11-23 20:00 (Pazartesi)\n"}],
+ "questions": {
+  "zaman_uyuyor": {"type": "noul", "instructions": "Çözülen zaman, cümledeki gün ve saat ifadesine uyuyor mu (yönelme, am/pm, sonraki/bu hafta dahil)?"},
+  "ifade_belirsiz": {"type": "noul", "instructions": "Cümledeki zaman ifadesi birden çok şekilde anlaşılabilir mi (sabah/akşam, bu hafta/gelecek hafta, ay günü geçmişte kalıyor mu)?"},
+  "gece_saati": {"type": "noul", "instructions": "Çözülen saat gece yarısı ile sabah 06:00 arasında mı?"}
+}}
+```
+  Karar: `zaman_uyuyor >= 0,80` ve `ifade_belirsiz < 0,5` → sessiz kur (bugünkü); `zaman_uyuyor <= 0,50` ya da `ifade_belirsiz >= 0,70` ya da
+  (`gece_saati` ≥ 0,7 ve cümlede "gece" yok) → "Pazartesi 20:00 doğru mu?" onay çipi. Tarih HESABI yerelde kalır (Decisions tarih
+  üretmez, yalnız yargılar).
+- Maliyet ~0,3K jeton. Gizlilik: sesli not cümlesi (zaten asistana gidiyor) + çözülen zaman. Geri düşüş: bugünkü sessiz kurma.
+- Kapı: sesli akış `voice_assistant.dart` arka planı; kasma yok.
+
+#### DA-20 — Kopya not hakemi (gri bölge) [Y]
+- Fayda: `note_similarity.dart` eşiği 0,8; 0,6–0,8 arası çiftler ("aynı konunun iki sürümü" ↔ "iki ayrı liste") bugün ya yakalanmıyor ya
+  yanlış yakalanıyor. Decisions yalnız bu gri bölgedeki çiftleri etiketler.
+- Şema (≤10 çift tek girdide):
+```json
+{"input": [{"type": "text", "text": "Çift 1\nA: Market: süt, yumurta, ekmek\nB: Market listesi: süt, yumurta, ekmek, peynir\n\nÇift 2\nA: ...\nB: ...\n"}],
+ "questions": {
+  "c1_ayni": {"type": "noul", "instructions": "Çift 1'deki iki not aynı bilgiyi mi taşıyor (biri diğerinin sürümü ya da kopyası)?"},
+  "c1_iliski": {"type": "choice", "instructions": "Çift 1'de iki not arasındaki ilişki nedir?",
+    "criteria": {"a_farkli": "Farklı notlar", "b_ayni": "Aynı içerik", "c_a_yeni": "A, B'nin güncel/tam hâli", "d_b_yeni": "B, A'nın güncel/tam hâli"}}
+}}
+```
+- Karar: yalnız "Benzer notlar" kutusunda ROZET/sıralama ("muhtemelen aynı"); otomatik silme/birleştirme YOK (K6); mevcut `duplicates_sheet.dart`
+  akışı kullanıcıya bırakır. Yerel trigram BİRİNCİL kalır.
+- **KARAR ÇELİŞKİSİ:** PLAN §1.6 A8 "kopya bulma cihazda (AI'sız)". Bu yalnız gri bölge hakemidir, cihazdaki bulma kalır; yine de "AI'sız"
+  vaadi bozulur → varsayılan KAPALI, kullanıcı açar; sabah bakılacak.
+- Maliyet: çift ≈ 0,6K jeton (iki not ≤1000 karakter); 10 çift ≈ 6K ≈ $0,0006. Gizlilik: İKİ notun içeriği buluta → açıkça opt-in,
+  kilitli/hassas/ortak yok. Geri düşüş: bugünkü yalnız-yerel kutu.
+
+#### DA-21 — Şablon önerisi [Y]
+- Fayda: "+ → Şablon" ve şablon galerisi aramasında kullanıcının yazdığı/söylediği isteğe en uygun şablon ön seçili çip ("hafta sonu
+  menü planı" → haftalık/tarif). 16 hazır şablon + kullanıcının kendi şablonları (`user_templates.dart`).
+- Şema:
+```json
+{"input": [{"type": "text", "text": "İstek: \"üç aylık hedeflerimi takip edeceğim\"\n"}],
+ "questions": {"sablon": {"type": "choice", "instructions": "Bu isteğe en uygun not şablonu hangisi?",
+   "criteria": {"a_yok": "Uygun şablon yok", "b_shopping": "Alışveriş listesi", "c_todo": "Yapılacaklar", "d_travel": "Seyahat/bavul", "e_habits": "Alışkanlık takibi",
+                "f_cleaning": "Temizlik planı", "g_moving": "Taşınma", "h_gifts": "Hediye listesi", "i_watchlist": "İzleme listesi", "j_workout": "Spor planı",
+                "k_weekly": "Haftalık plan", "l_goals": "Hedefler", "m_expense": "Harcama takibi", "n_meeting": "Toplantı notu", "o_journal": "Günlük",
+                "p_recipe": "Tarif", "q_reading": "Okuma listesi"}}}}
+```
+  (seçenek kimlikleri `NoteTemplate` enum adlarıyla eşlenir; alfabetik önek yalnız `a_yok`un İLK sıralanması içindir.)
+- Maliyet ≈ 0,5K jeton; arama kutusu ≥3 kelime ve duraklama sonrası (her tuşta değil). Gizlilik: kısa istek metni + sabit şablon adları.
+- Geri düşüş: bugünkü galeri arama. Kapı: şablon sheet'ine görünür çip → `kasma-kontrol`.
+
+#### DA-22 — Sesli komut niyeti: komut mu, metin mi? [Y, orta risk]
+- Fayda: dikte sırasında "sil", "değiştir", "başlık", "virgül" `voice_commands.dart` gramerince komut sayılır; "kapıyı silmeyi unutma"
+  gibi cümlede metindir. Belirsiz eşleşmede Decisions "komut mu" der; metinse komut geri alınır.
+- Şema:
+```json
+{"input": [{"type": "text", "text": "Dikte bağlamı (son cümle): \"yarın kapıyı silmeyi unutma\"\nKomut sanılan ifade: \"silmeyi\" → son kelimeyi sil\n"}],
+ "questions": {
+  "komut_mu": {"type": "noul", "instructions": "İşaretli ifade dikteyi yönetmek için söylenmiş bir komut mu (sil, değiştir, virgül koy), yoksa nota yazılacak cümlenin parçası mı?",
+    "criteria": {"true_description": "Dikteyi yöneten komut", "false_description": "Notun metninin parçası"}},
+  "komut_turu": {"type": "choice", "instructions": "Komutsa hangisi?",
+    "criteria": {"a_yok": "Komut değil", "b_kelime_sil": "Son kelimeyi/kelimeleri sil", "c_cumle_sil": "Son cümleyi sil", "d_hepsini_sil": "Hepsini sil",
+                 "e_degistir": "Bir kelimeyi değiştir", "f_satir": "Yeni satır", "g_geri_al": "Geri al", "h_bitir": "Dinlemeyi bitir", "i_noktalama": "Noktalama koy", "j_baslik": "Başlık belirle"}}
+}}
+```
+- Karar: gramer komutu bulduysa VE `komut_mu <= 0,30` ise komut uygulanmaz (metin kalır); gramer zaten net ("son kelimeyi sil" sonu açık) ise
+  çağrı yok (K1). `applyVoiceCommands` her olayda baştan hesapladığından (bkz. dosya başı) Decisions sonucu "bu ifadeyi yok say" listesi
+  olarak girdiye eklenir → tutarlılık korunur.
+- Risk: canlı dikte, gecikme 0,4–1 s; tanıyıcı olayları her an gelir → yalnız duraklama/komut-tamamlanma anında, sonuç gelmeden komut UYGULANMAZ
+  (kısa bekleme) ya da uygulanıp geri alınır — hangisi dikte hissini bozmuyor altın değil cihazda denenir. Bu yüzden öncelik düşük.
+- Maliyet ~0,2K jeton. Gizlilik: son cümle metni (zaten tanıyıcıdan geçti). Geri düşüş: bugünkü gramer.
+
+#### DA-23 — Arama sorgusu yönlendirme + tarih aralığı [Y]
+- Fayda: ana ekran aramasına yazılan şey bazen soru ("geçen ay doktor randevum ne zamandı?"), bazen etiket/kelime, bazen zaman süzgeci
+  ("geçen hafta yazdığım"). Doğru kipe yönlendir: kelime araması / anlamca arama / "Sohbete sor" çipi + tarih aralığı süzgeci.
+- Ön koşul (K1): yalnız sorgu ≥3 kelime ya da soru işareti/soru kelimesi içeriyorsa çağrı; tek kelimelik aramada hiç.
+- Şema:
+```json
+{"input": [{"type": "text", "text": "Arama: \"geçen ay doktor randevum ne zamandı\"\n"}],
+ "questions": {
+  "niyet": {"type": "choice", "instructions": "Kullanıcı ne arıyor?",
+    "criteria": {"a_kelime": "Notlarda geçen kelimeleri arıyor", "b_anlam": "Konuya göre anlamca arıyor", "c_soru": "Bir soruya cevap istiyor", "d_etiket": "Etiket ya da klasör adı arıyor"}},
+  "aralik": {"type": "choice", "instructions": "Aramada bir zaman aralığı ifadesi var mı?",
+    "criteria": {"a_yok": "Yok", "b_bugun": "Bugün", "c_bu_hafta": "Bu hafta", "d_gecen_hafta": "Geçen hafta", "e_bu_ay": "Bu ay", "f_gecen_ay": "Geçen ay", "g_bu_yil": "Bu yıl"}}
+}}
+```
+  Eşleme: `c_soru` → arama sonuçlarının üstünde "Sohbete sor" çipi (A1), `b_anlam` → anlamca arama açık (BYOK embedding ya da DA-6), `aralik` → tarih
+  süzgeci (yerelde `updatedAt` aralığına çevrilir; Decisions tarih üretmez).
+- Maliyet ≈ 0,3K jeton; gecikme: sonuçlar yerel aramadan ANINDA gelir, çip sonra belirir (K2; yer ayır). Gizlilik: arama sorgusu (kısa);
+  yalnız AI arama açıksa. Geri düşüş: bugünkü arama.
+
+#### DA-24 — Üretken çıktı doğrulama: anlam korundu mu, bilgi eklendi mi? [Y] (A6/A7; DA-7'nin genişlemesi)
+- Fayda: `summarizeNote`, `rewriteText`, `translateText`, `fromEmail` çıktısı nottaki olmayan bilgi içerebilir / anlamı kaydırabilir.
+  Çıktı kabul edilmeden önce yumuşak uyarı ("Yeniden yazma anlamı değiştirmiş olabilir — farkı gör"). A6 "önce/sonra önizleme + geri al"
+  ile doğal bağ.
+- Şema:
+```json
+{"input": [{"type": "text", "text": "ORİJİNAL:\n<not metni>\n\nÜRETİLEN:\n<özet / yeniden yazım / çeviri>\n"}],
+ "questions": {
+  "bilgi_eklenmis": {"type": "noul", "instructions": "ÜRETİLEN metin, ORİJİNAL'de olmayan bir bilgi (kişi, tarih, sayı, iddia) içeriyor mu?"},
+  "anlam_korundu": {"type": "noul", "instructions": "ÜRETİLEN metin, ORİJİNAL'in anlamını doğru koruyor mu?"},
+  "kapsam": {"type": "score", "instructions": "ÜRETİLEN metin ORİJİNAL'in önemli noktalarını ne kadar kapsıyor?",
+    "criteria": ["Neredeyse hiç", "Kısmen", "Büyük ölçüde", "Tamamen"]}
+}}
+```
+  Karar: `bilgi_eklenmis >= 0,70` ya da `anlam_korundu <= 0,40` → uyarı rozeti (yumuşak; engel değil, "doğrulandı" rozeti YOK). Çeviri için
+  `bilgi_eklenmis` yerine "çeviri anlamı koruyor mu" aynı şema.
+- Maliyet: orijinal + çıktı ≈ 2× not ≈ 1–3K jeton ≈ $0,0002; sonuç gösterildikten SONRA arka planda. Gizlilik: not metni + üretilen (aynı
+  sağlayıcıya zaten gitti). Geri düşüş: rozet yok. Risk: güven ≠ doğruluk; yalnız olumsuz yönde göster.
+
+#### DA-25 — Çöp kutusu "silinsin mi" önerisi [Y]
+- Fayda: çöpteki notları kullanıcı toplu temizlerken yerel kurallar (`trash_analysis.dart`: boş, kopya, açık görev, ek, hassas) belirsiz bıraktığı
+  notlar için "bunu silmek güvenli mi, geri yüklemeyi düşün mü" rozeti. Üretken `analyzeTrash` AI-S1'de kalktı; bu onun UCUZ, kapalı uçlu karşılığı.
+- Şema (≤30 not tek çağrı; yalnız yerel kuralın karar veremediği notlar):
+```json
+{"input": [{"type": "text", "text": "Not 01: <başlık + ilk 300 karakter>\nNot 02: <...>\n"}],
+ "questions": {
+  "n01_gecici": {"type": "noul", "instructions": "Not 01 geçici/tek kullanımlık bir içerik mi (tamamlanmış alışveriş listesi, boş şablon, deneme, kopyalanmış parça)?"},
+  "n01_onemli": {"type": "noul", "instructions": "Not 01'de kaybedilmesi pahalı bir bilgi ya da yapılmamış bir iş var mı (randevu, kişi, tarif, plan)?"}
+}}
+```
+  Karar: `gecici >= 0,80` ve `onemli <= 0,30` → "Silinebilir" rozeti; `onemli >= 0,60` → "Geri yüklemeyi düşün". Silme/geri yükleme DAİMA kullanıcı eylemi (K6);
+  kalıcı silme onay penceresi aynı.
+- **KARAR ÇELİŞKİSİ:** AI-S1 (2026-11-17 gece) "çöp AI derin analizi tümden kalkar" dedi; bu kullanıcı isteği (2026-11-18) daha yeni → varsayım: geri
+  açılır AMA düğmeyle ("AI ile de bak"), bayrakla, varsayılan kapalı; sabah bakılacak.
+- Maliyet: 30 not × 350 jeton ≈ 10K + 60 soru×40 ≈ 12K ≈ $0,0012/toplu çalışma. Gizlilik: ÇÖPTEKİ not içeriği buluta → yalnız kullanıcı düğmeye basınca;
+  kilitli/hassas (`isCredentialNote`)/ortak yok. Geri düşüş: bugünkü yalnız-yerel kurallar.
+
+#### DA-26 — Şablon notunun eksik bölüm kontrolü (toplantı, harcama, hedef) [Y]
+- Fayda: toplantı notu bitince "karar yazılmış mı, aksiyon sahibi var mı, tarih belirtilmiş mi" gibi şablona özgü eksikleri hatırlatır; harcama/hedef
+  şablonlarında aynı desen (tutar var mı, ölçüt var mı).
+- Şema (`meeting` örneği):
+```json
+{"input": [{"type": "text", "text": "Şablon: toplantı notu\nNot:\n<notun metni>\n"}],
+ "questions": {
+  "karar_var": {"type": "noul", "instructions": "Notta alınmış en az bir net karar yazılı mı?"},
+  "aksiyon_sahibi": {"type": "noul", "instructions": "Notta bir yapılacak iş var ve bu işi kimin yapacağı belli mi?"},
+  "tarih_var": {"type": "noul", "instructions": "Notta bir sonraki adım için tarih ya da süre belirtilmiş mi?"}
+}}
+```
+  Karar: `<= 0,30` olanlar tek satırlık "Eksik olabilir: aksiyon sahibi" ipucu (kapatılabilir; nota yazmaz). Not kapanırken ya da "Kontrol et" ile.
+- Maliyet ≈ 1,2K jeton. Gizlilik: not metni (şablon notu, kullanıcı tetikler). Geri düşüş: ipucu yok. Kapı: editör → `kasma-kontrol` + ölçüm kapısı.
+
+#### DA-27 — "Listeye çevir" önerisi (metin mi liste mi?) [Y]
+- Fayda: düz metin notta satırlar kısa maddeler gibiyse "Listeye çevir" çipi. Dönüşümün KENDİSİ mekanik ve AI'sız kalır
+  (`list_convert.dart`: modelin yorumu metni bozmasın kararı); Decisions yalnız ÖNERİNİN gösterilip gösterilmeyeceğine karar verir.
+- Şema: girdi = notun ilk 1500 karakteri; `liste_gibi` `noul` ("Bu not kısa maddelerden oluşan bir liste mi, yoksa akıcı metin mi?");
+  `liste_turu` `choice` {a_duz, b_isaretli (yapılacaklar/alışveriş), c_numarali (adımlar/sıra)} → çip metni ("İşaretli listeye çevir" / "Numaralıya çevir").
+- Yerel ön koşul: ≥3 kısa satır (K1). Maliyet ≈ 0,6K. Gizlilik: not başı. Geri düşüş: çip yok (bugünkü elle dönüşüm menüsü).
+
+#### DA-28 — Hatırlatıcı seviyesi ve tekrar önerisi [Y]
+- Fayda: hatırlatıcı kurarken notun içeriğinden öncelik (`ReminderLevel`: düşük/normal/yüksek/acil) ve tekrar ("ilaç", "fatura") önerisi.
+  Açık ifade (`parseSpokenRepeat`: "her pazartesi") yerelde kalır; örtük olanlar öneri çipi.
+- Şema: girdi = not başlığı + ilk 400 karakter + (varsa) çözülen zaman; `seviye` `choice` {a_normal, b_dusuk, c_yuksek, d_acil} ("doktor randevusu" yüksek,
+  "bir ara çiçekleri sula" düşük); `tekrar` `choice` {a_yok, b_gunluk, c_haftalik, d_aylik, e_yillik}; `tekrar_gerekli` `noul` ("Bu iş doğası gereği tekrar eden mi: ilaç,
+  fatura, doğum günü?").
+- Karar: yalnız öneri çipi ("Yüksek öncelik yapayım mı?"); sessiz uygulanmaz (yanlış tekrar = rahatsız eden bildirim). Maliyet ≈ 0,5K. Gizlilik: başlık+kısa metin.
+  Geri düşüş: bugünkü varsayılan seviye ve tekrarsız.
+
+#### DA-29 — Not → takvim etkinliği bağlama önerisi [Y]
+- Fayda: toplantı sırasında/sonrasında oluşturulan not, o saatteki takvim etkinliğiyle ilişkilendirilsin (`eventLinks`; "Güne/etkinliğe bağla" var, elle).
+- Şema: girdi = not başlığı + ilk 300 karakter + ±3 saatteki en çok 6 etkinliğin başlığı; `etkinlik` `choice` {a_yok, e0…e5 (etkinlik başlığı)}.
+- Karar: `confidence >= 0,85` → "Şu etkinliğe bağla: Haftalık toplantı" çipi (otomatik bağlama yok). Çağrı yalnız notun oluşturma saatinde ±3 saatte etkinlik varsa (K1).
+- Maliyet ≈ 0,4K. Gizlilik: etkinlik BAŞLIKLARI + not başı (takvim verisi; yalnız kullanıcı Takvim'i bağlamışsa). Geri düşüş: çip yok.
+
+#### DA-30 — Yakalama (fotoğraf / tarama / kayıt) hedef önerisi [Y]
+- Fayda: kameradan/tarayıcıdan/mikrofonla yakalama sonrası `capture_mode_sheet.dart` "yeni not / hangisine ekle" sorar; Decisions son notlardan
+  ilgilisini ön seçer ("bu fotoğraf az önce açtığın 'Daire kiralama' notuna ait").
+- Şema: girdi = (görsel `resolution:"low"` ya da kısa döküm) + son ≤10 not başlığı; `son_nota_ait` `noul` ("Bu görsel/kayıt son açık notun konusuna ait mi?");
+  `hedef` `choice` {a_yok, n00…n09}. DA-4 ile aynı görsel çağrısına binebilir (tür + hedef tek istek).
+- Maliyet: görsel ≈ 0,5K + 0,3K ≈ $0,0001. Gizlilik: görsel/kayıt buluta gider → yalnız kullanıcı AI düğmesine bastıysa ya da "yakalamada akıllı hedef" ayarı
+  açıksa. Geri düşüş: bugünkü sor/son nota.
+
+#### DA-31 — Not dili: yazım denetimi / TTS / çeviri kapısı [Y]
+- Fayda: yazım motoru Türkçe; İngilizce/Almanca not yazılırken yanlış altı çizgi/düzeltme çıkabilir (bugün yalnız "Çince ya da bilinen kelime → yok").
+  Not dilini bir kez bulup önbellekle: yanlış dilde yazım denetimi kapanır, TTS dili doğru seçilir, "çevir"de kaynak=hedef atlanır.
+- Şema: girdi = notun ilk 600 karakteri; `dil` `choice` {a_tr, b_en, c_de, d_diger, e_karisik}; `ceviri_gerekli` `noul` ("Metin zaten hedef dilde mi?" için hedef dil girdide).
+- Yerel ön koşul: harf istatistiği/sözcük sözlüğü belirsizse (K1). Not md5 + profil sürümüyle önbellek (bir not için en çok birkaç kez). Maliyet ≈ 0,3K.
+  Gizlilik: not başı (≤600 karakter); kilitli yok. Geri düşüş: bugünkü TR denetim.
+- Not: dil bilgisi nota yazılmaz (not belgesine alan eklenmez, HAFIZA kuralı); yalnız cihazda önbellek.
+
+#### DA-32 — Çalışma kartı doğrulama [Y]
+- Fayda: `generateStudyCards` bazen yanlış/uydurma kart üretir; ezberlenen yanlış bilgi zararlıdır. Her kartı nottaki bilgiyle denetle, tutmayanı ele.
+- Şema: girdi = not metni + kartlar ("k0: Soru → Cevap"); her kart için `k0_dogru` `noul` ("k0 kartındaki cevap NOT'ta yazan bilgiyle uyuşuyor mu?") +
+  `k0_tek_bilgi` `noul` ("Kart tek bir bilgiyi soruyor mu?"). ≤10 kart → 20 soru.
+- Karar: `k_dogru <= 0,40` kart elenir (kullanıcıya "2 kart nottaki bilgiyle uyuşmadığı için çıkarıldı"); arası kalır.
+- Maliyet: not ≈ 1,3K + 10 kart×60 + 20 soru×40 ≈ 2,7K ≈ $0,00027. Gizlilik: aynı not (üretim zaten gönderdi). Geri düşüş: tüm kartlar (bugünkü).
+
+#### DA-33 — Etiket birleştirme önerisi (yalnız etiket ADLARI) [Y, gizlilik dostu]
+- Fayda: kullanıcıda "is / iş / work", "alisveris / market" gibi yinelenen etiketler çoğalır (otomatik etiket yaygınlaşınca artar). "Etiketleri birleştir" önerisi.
+- Şema: girdi = yalnız etiket adları ve kullanım sayıları (NOT İÇERİĞİ YOK); aday çiftler yerelde (ön ek/ASCII katlama/edit mesafesi) ≤200 çift ile sınırlanır;
+  her çift `noul` ("e03: 'iş' ile 'is' aynı konuyu mu anlatıyor?").
+- Karar: `>= 0,85` → "Birleştir" önerisi listesi; birleştirme kullanıcı onaylı ve geri alınabilir. Maliyet ≈ 200×40 = 8K jeton ≈ $0,0008 (nadir, elle ya da haftada bir).
+  Gizlilik: yalnız etiket adları. Geri düşüş: öneri yok.
+
+#### DA-34 — Süresi dolmuş not → arşiv önerisi [Y]
+- Fayda: geçmiş tarihli randevu/etkinlik/alışveriş notları ana ekranı kalabalıklaştırır; "Zamanlı not (şu zamanda arşivle)" var ama elle. Decisions
+  "içeriğin süresi dolmuş mu" der → "Arşivle" önerisi.
+- Ön koşul (K1, gizlilik): yerelde notta geçmiş tarih kalıbı bulunan ve ≥30 gündür dokunulmamış notlar; yalnız o not kesitleri (≤300 karakter) gönderilir.
+- Şema: girdi = `Bugün: 2026-11-18` + "Not 01: …"; `n01_suresi_dolmus` `noul` ("Not 01, içerdiği tarih/olay geçtiği için artık güncel değil mi?"),
+  `n01_kalici_bilgi` `noul` ("Not 01'de tarihten bağımsız kalıcı bir bilgi var mı?").
+- Karar: `suresi_dolmus >= 0,80` ve `kalici_bilgi <= 0,30` → "Arşivle" önerisi (toplu çip: "5 not süresi dolmuş görünüyor"); arşivleme kullanıcı eylemi.
+- Maliyet: haftada bir ≈ 10 not × 150 jeton ≈ 2K. Gizlilik: seçilmiş not kesitleri; kilitli/hassas/ortak yok; opt-in. Geri düşüş: öneri yok.
+
+### 3B.3 Özet tablo (DA-13 … DA-34)
+
+| ID | Fikir | Soru türü | Tetik | Sınıf | Bağlandığı kod | Öncelik |
+|---|---|---|---|---|---|---|
+| DA-13 | Başlık doğrulama | `noul` + `score` | not kapanışı / başlık atanınca, arka plan | M | `note_editor_ai.dart:68,87`, `share_intake.dart`, `quick_list_screen.dart` | Yüksek |
+| DA-14 | Hızlı ekle yazım düzeltme doğrulama | N×`noul` | kayıt anı / geri sayım | M | `quick_entry.dart`, `quick_entry_bar.dart`, `quick_drop_sheet.dart` | Yüksek |
+| DA-15 | Hızlı ekle + şablon karar paketi | `noul`+`choice` | kayıt anı / şablon sheet açılışı | M | `quick_drop_sheet.dart`, `quick_list_screen.dart`, `smart_list.dart`, `note_template_sheet.dart` | Yüksek |
+| DA-16 | `DecisionPoint` kaydı / genel kapı | altyapı | — | M | `decision_points.dart`, `decision_service.dart` | En yüksek (önkoşul) |
+| DA-17 | Yazım "Yalnız göster" süzgeci | N×`noul` | duraklama / "Notu denetle" | M | `auto_spell.dart`, `spell_engine.dart` (Y-4) | Yüksek (Y-3 sonrası) |
+| DA-18 | Bilinmeyen madde → reyon/bavul grubu | `choice` | liste kaydı, yalnız bilinmeyen | Y | `quick_lexicon_data.dart`, `quick_entry_memory.dart` | Orta |
+| DA-19 | Hatırlatıcı zamanı doğrulama | `noul` | zaman çözülünce | M | `spoken_datetime.dart`, `voice_assistant.dart` | Yüksek |
+| DA-20 | Kopya not hakemi (gri bölge) | `noul`+`choice` | "Kopyaları temizle" açılınca | Y | `note_similarity.dart`, `duplicates_sheet.dart` | Düşük (karar çelişkisi) |
+| DA-21 | Şablon önerisi | `choice` | şablon arama / boş not | Y | `note_template_sheet.dart`, `user_templates.dart` | Orta |
+| DA-22 | Sesli komut niyeti | `noul`+`choice` | duraklama / komut eşleşince | Y | `voice_commands.dart` | Düşük (orta risk) |
+| DA-23 | Arama sorgusu yönlendirme | `choice` | arama gönderilince (≥3 kelime/soru) | Y | `screen_search.dart`, `semantic_search.dart` | Orta |
+| DA-24 | Üretken çıktı doğrulama | `noul`+`score` | sonuç gösterilince, arka plan | Y | `ai_sheet.dart`, `gemini_service.dart` | Orta-yüksek |
+| DA-25 | Çöp "silinsin mi" | `noul` | düğmeyle | Y | `trash_analysis.dart`, `trash_analysis_sheet.dart` | Düşük (karar çelişkisi) |
+| DA-26 | Şablon eksik bölüm kontrolü | `noul` | kapanış / "Kontrol et" | Y | `note_templates.dart`, editör | Düşük-orta |
+| DA-27 | "Listeye çevir" önerisi | `noul`+`choice` | metin notu açılışı | Y | `list_convert.dart` | Düşük |
+| DA-28 | Hatırlatıcı seviyesi/tekrar önerisi | `choice`+`noul` | hatırlatıcı kurarken | Y | `reminder_level.dart`, `reminder_repeat.dart` | Orta |
+| DA-29 | Not → etkinlik bağlama | `choice` | not oluşturulunca | Y | `calendar_repository.dart` (`eventLinks`) | Düşük-orta |
+| DA-30 | Yakalama hedef önerisi | `noul`+`choice` | fotoğraf/tarama/kayıt sonrası | Y | `capture_mode_sheet.dart` | Orta |
+| DA-31 | Not dili kapısı | `choice` | not açılışı (önbellekli) | Y | `spell_engine.dart`, `speech_service.dart`, çeviri | Orta |
+| DA-32 | Çalışma kartı doğrulama | N×`noul` | kart üretilince | Y | `study_cards_screen.dart`, `gemini_service.dart` | Orta-yüksek |
+| DA-33 | Etiket birleştirme | N×`noul` | düğmeyle / haftalık | Y | etiket yönetimi | Düşük (gizlilik dostu) |
+| DA-34 | Süresi dolmuş not → arşiv | `noul` | haftalık, opt-in | Y | `due_items.dart`, arşiv | Düşük |
+
+### 3B.4 Önerilen sıra (etki / maliyet / risk) ve altın set
+
+1. **DA-16** (kayıt + iki eşik) → DA-1 + **DA-15a** (aynı çağrı) → **DA-14** → **DA-13** → **DA-19** → **DA-24** → **DA-32**: hepsi doğrulama kapısı ya da mevcut
+   kararın ucuzlaması; görünür arayüz değişikliği az, geri düşüş kolay, kötü örnek seti ile ölçülebilir.
+2. **DA-17** yazım Y-0…Y-3 bitince (taban ölçüm olmadan açılmaz); **DA-2/DA-3/DA-4/DA-5** §4.8'deki sırayla.
+3. Öneri çipleri (DA-18, 21, 23, 26–31, 33): bir `[apk]`'a en çok 5 görünür değişiklik; her biri `kasma-kontrol`.
+4. DA-20, DA-22, DA-25, DA-34: karar çelişkisi (A8, AI-S1) ya da yüksek risk/düşük etki → sona; sabah bakılacak.
+
+Altın set eklemeleri (`tool/ai_altin/decisions/`): K9'daki kötü örnek setleri — `baslik_kotu` (30 bilerek yanlış/genel/alakasız başlık + 30 iyi), `duzeltme_yanlis`
+(30 doğru düzeltme + 30 yanlış: marka/özel ad/farklı geçerli kelime), `zaman_hatali` (30 doğru + 30 yanlış çözülmüş tarih), `kart_uydurma` (30 doğru + 30 yanlış kart),
+`cikti_kaymis` (30 sadık + 30 bilgi eklenmiş özet/yeniden yazım), `yazim_ozel_ad` (Türkçe özel ad/marka/kısaltma/ağız yazımı içeren 60 cümle). Ölçüt: doğru-ret ≥ %80,
+yanlış-ret ≤ %2, kapsam@%95 (§4.7); biri tutmazsa o `DecisionPoint` kapalı kalır. Yeni ölçüt: **yanlış-ret oranı** (iyi sonucu bozma) bu setlerde ana mandal.
 
 ---
 
@@ -409,8 +870,9 @@ Yeni klasör `lib/features/ai/data/decisions/` (`gemini_service.dart` 2271 satı
 - `decision_service.dart` — kapı + bayrak + önbellek + hata eşleme + sayaç. `GeminiService` EK bir genel metotla
   (`Future<String?> admittedKey()`) anahtarı ve `AiAdmission.check`'i verir; böylece `_admittedKey` "tek kapı"
   bekçisi bozulmaz (yeni dosyada doğrudan `_keyStore.read` YOK).
-- `decision_profiles.dart` — profil sınıfları: `DropTargetProfile`, `NoteTriageProfile`, `CaptureRouterProfile`,
-  `MediaKindProfile`, `ShareRouteProfile`, `RerankProfile`, `AnswerCheckProfile`. Her profil: `version` (önbellek
+- `decision_profiles.dart` — profil sınıfları: `QuickCaptureProfile` (DA-1 + DA-15a), `NoteTriageProfile`, `CaptureRouterProfile`,
+  `MediaKindProfile`, `ShareRouteProfile`, `RerankProfile`, `AnswerCheckProfile`; §3B profilleri (başlık/düzeltme/zaman/kart doğrulama
+  vb.) aynı kalıpta. `decision_points.dart` (YENİ, DA-16): `DecisionPoint` kaydı + `gate()` + iki eşik. Her profil: `version` (önbellek
   anahtarı), `build(girdi) → DecisionRequest`, `interpret(sonuç) → tipli çıktı | null`, `thresholds`. Saf Dart →
   ağsız test (DA-E0'dan çıkan GERÇEK ham yanıtlar `test/fixtures/decisions/*.json`).
 - `decision_flag.dart` — uzaktan bayrak (bkz. 4.4).
@@ -441,8 +903,9 @@ sınır aşımı olabilir → AYRI eşleme: `error.code ∈ {safety, prohibited_
 ### 4.4 Uzaktan bayrak (varsayılan KAPALI)
 
 `config/app` (istemci yazamaz; kural değişmez; `inkV2Write`/`minClient`/`syncDeltaListen`'e DOKUNULMAZ — yalnız yeni alanlar):
-- `aiDecisionsFeatures`: dizi, özellik kimlikleri (`dropTarget`, `noteTriage`, `captureRouter`, `mediaKind`, `shareRoute`,
-  `rerank`, `answerCheck`). Alan yok / boş = HİÇBİRİ (bugünkü davranış). Kimlik listedeyse özellik Decisions'ı BİRİNCİL yapar.
+- `aiDecisionsFeatures`: dizi, özellik kimlikleri = `DecisionPoint.id` (`dropTarget`, `quickCapture`, `noteTriage`, `captureRoute`,
+  `mediaKind`, `shareRoute`, `rerank`, `answerCheck`, `titleOk`, `spellFixOk`, `spellFlagReal`, `reminderTimeOk`, `outputFaithful`, …; tam liste
+  §3B.1 DA-16). Alan yok / boş = HİÇBİRİ (bugünkü davranış). Kimlik listedeyse özellik Decisions'ı BİRİNCİL yapar.
 - `aiDecisionsShadow`: dizi; listedeki özellik bugünkü yolu AYNEN kullanır, Decisions'ı yanında koşar, yalnız uyuşmayı
   günlüğe yazar. **Yalnız kişisel derleme (`!PlayBuild.enabled`)**; çift çağrı ve çift veri gönderimi olduğundan Play'de yok.
 - `aiDecisionsModel`: dize, varsayılan `gemini-decision-1` (model adı değişir/GA olursa sürüm çıkarmadan geçiş).
@@ -493,10 +956,14 @@ Mevcut set üretken çıktıyı puanlar (`altin_puan.dart`); karar için AYRI, a
 | **DA-E3** Function vekili `decide` | Anahtarsız dahili kip için Decisions | YENİ `functions/decisions.js`, `functions/decisions_util.js`, `functions/decisions_util.test.js`; DEĞİŞEN `functions/index.js` (export), `.github/workflows/build.yml` (gizli anahtar/rol notu), `docs/play_hazirlik.md` ("AI korumaları" güncelle), `CallableDecisionClient`; `rules-test` gerekmez (kural dosyası değişmiyor) | `cd functions && npm test`; Secret Manager + Blaze + App Check zorlaması elle (kullanıcı işi); Function gecikmesi ölçümü | Kodu yazar; dağıtım/anahtar kullanıcı |
 | **DA-E4** DA-2 Sessiz düzen toplu | Etiket + klasör + başlık kapısı + hatırlatıcı çipi tek çağrı | DEĞİŞEN `note_editor_ai.dart` (`_autoTagInBackground`, `_suggestTags`, başlık kapısı), `ai_hub_screen.dart` ("etiketle"), `decision_profiles.dart`, `AiCache` limit parametresi; test `test/decision_profiles_test.dart` | Altın kapı; editör kapanış yolu → ÖLÇÜM KAPISI (`ab-olcum`, UI/LAYOUT ms > %20 = birleştirme yok); AI sheet'e görünür alan eklenmiyorsa `kasma-kontrol` gerekmez | Evet (A8) |
 | **DA-E5** DA-3 Yönlendirici | Sesli/asistan ön kapısı; üretken döngüyü atlama | DEĞİŞEN `voice_assistant.dart`, `assistant_service.dart`, `gemini_service.dart` (`assistantVoiceNote` bayrak dalı), `quick_drop_sheet.dart` (HE-4 ile), `decision_profiles.dart`; test: sesli akış + `test/quick_drop_test.dart` | Altın kapı (A3 örnekleri + yeni); anlaşmazlık günlüğü; sesli akış yıkıcıyı zaten engelliyor | Evet (A3) |
-| **DA-E6** DA-4 Medya sınıflayıcı | Önerilen akış çipi | DEĞİŞEN `ai_sheet.dart`, `attachment_actions.dart`, `media_transcriber.dart`, `_uploadGeminiFile`/`_encodeBase64` paylaşımı; `kasma-kontrol` + `perf_budget_test` senaryosu | Kullanıcı onayı (ISTEK_KUTUSU) | HAYIR (Y sınıfı) |
-| **DA-E7** DA-5 Paylaşım yönlendirme | Önerilen hedef çipi | `share_intake.dart`, `share_target_sheet.dart`; `kasma-kontrol` | Kullanıcı onayı | HAYIR |
-| **DA-E8** DA-6/DA-7 A1 | Dahili kipte getirme + yanıt doğrulama | `semantic_search.dart`, `ai_chat_screen.dart`, `chat_controller.dart`, `assistant_service.dart` | Altın kapı + embedding karşılaştırması | HAYIR (A1 iyileştirme olarak plan kapsamında olabilir; kullanıcıya sor) |
-| **DA-E9** Kalan öneriler (DA-8…DA-12) | İstek olursa | — | — | HAYIR |
+| **DA-E6** DA-4 Medya sınıflayıcı | Önerilen akış çipi | DEĞİŞEN `ai_sheet.dart`, `attachment_actions.dart`, `media_transcriber.dart`, `_uploadGeminiFile`/`_encodeBase64` paylaşımı; `kasma-kontrol` + `perf_budget_test` senaryosu | Altın kapı + kasma/ölçüm kapısı | Evet (dondurma kalktı, PLAN §1.0) |
+| **DA-E7** DA-5 Paylaşım yönlendirme | Önerilen hedef çipi | `share_intake.dart`, `share_target_sheet.dart`; `kasma-kontrol` | Altın kapı + `kasma-kontrol` | Evet |
+| **DA-E8** DA-6/DA-7/DA-24 A1/A6/A7 | Dahili kipte getirme + yanıt ve üretken çıktı doğrulama | `semantic_search.dart`, `ai_chat_screen.dart`, `chat_controller.dart`, `assistant_service.dart`, `ai_sheet.dart` | Altın kapı + embedding karşılaştırması | Evet |
+| **DA-E9** Kalan öneriler (DA-8…DA-12) | Sırayla | — | Altın kapı | Evet |
+| **DA-E11** Yazım süzgeci DA-17 (Y-4 ile) | Altı çizili kelimeyi `noul` ile süz | `auto_spell.dart`, `spell_engine.dart`, `editor_quick_row.dart`, `spell_settings_sheet.dart` (Y-4 işi), `decision_profiles.dart` | Yazım Y-0 ölçüm seti taban; bütçe senaryosu ("5 tuş: kök kurulum 0"); `kasma-kontrol` + cihaz A/B (`yaz` evresi) | Evet — YALNIZ Y-0…Y-3 bitince |
+| **DA-E12** Karar noktası kaydı + hızlı ekle/şablon paketi (DA-14, 15, 16, 18, 21) | `DecisionPoint` kaydı, `QuickCaptureProfile`, doğrulama kapısı | `decision_profiles.dart`, YENİ `decision_points.dart`, `quick_entry.dart` (düzeltme meta verisi), `quick_entry_bar.dart`, `quick_drop_sheet.dart`, `quick_list_screen.dart`, `smart_list.dart`, `note_template_sheet.dart`, `quick_entry_memory.dart` | Altın kapı; hızlı ekle/akıllı liste UI → `kasma-kontrol` + S49/S43 bütçeleri | Evet |
+| **DA-E13** Doğrulama kapıları (DA-13, 19, 24, 32) | Üretilmiş/çözülmüş sonucu kabulden önce süz | `note_editor_ai.dart`, `quick_list_screen.dart`, `voice_assistant.dart`, `spoken_datetime.dart` çağrı yerleri, `study_cards_screen.dart` | Altın kapı (kötü örnek seti: bilerek yanlış başlık/tarih/kart) | Evet |
+| **DA-E14** Öneri çipleri (DA-20, 22, 23, 25–31, 33, 34) | Tek tek, yalnız öneri | ilgili ekranlar (§3B tablosu) | Her biri altın kapı + `kasma-kontrol`; en çok 5 görünür değişiklik/`[apk]` | Evet |
 | **DA-E10** Kapanış | Belge ve karar kaydı | `PLAN.md` (§1.6'ya DA durumu), `docs/hafiza/ai_ses.md`, `PRIVACY_POLICY.md`, `docs/kvkk_aydinlatma_taslak.md`, rıza metni | `test/hafiza_size_test.dart` | Evet |
 
 Her evre: dal → yerelde ilgili test + `dart analyze` → CI yeşil → birleştir (CLAUDE.md). Karar özelliği açıldığında
@@ -526,7 +993,8 @@ karıştırma; ölçülmeyen hız iddiası yazılmaz.
 1. **Puanlama:** metin kararı 0 puan, medya mevcut puan (§4.3). Alternatif: karar başına sabit 1 puan. Varsayım: 0.
 2. **Gölge kip:** yalnız kişisel derlemede ve yalnız kullanıcı açarsa (çift veri). Varsayım: DA-E2'de kişisel APK'da AÇIK ölçüm
    için, Play'de yok.
-3. **Y sınıfı özellikler (DA-4…DA-12):** `ISTEK_KUTUSU.md`'ye yazılmalı (bu plan yazılmadı); kullanıcı onayı olmadan yapılmaz.
+3. **Y sınıfı özellikler (DA-4…DA-34):** dondurma kalktı (PLAN §1.0) → `ISTEK_KUTUSU`'na yazmak gerekmez, kullanıcı onayı beklenmez;
+   sıra altın kapı + oturum disiplini belirler. Çöp (DA-25) ve kopya (DA-20) AI-S1/A8 kararlarını geri açtığı için sabah doğrulanır.
 4. **Rıza/KVKK/PRIVACY_POLICY** "karar modeli" cümlesi — hukuki onay kullanıcıda.
 
 ### 5.2 Altyapı soruları (cevabı sonucu değiştirir)
