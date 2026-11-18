@@ -34,8 +34,10 @@ class DecisionService {
     JsonHttp? http,
     this.timeout = const Duration(milliseconds: 1500),
     DateTime Function()? now,
+    AiRateLimiter? limiter,
   }) : _http = http ?? JsonHttp(baseUrl: AiProvider.gemini.baseUrl),
-       _now = now ?? DateTime.now;
+       _now = now ?? DateTime.now,
+       limiter = limiter ?? AiRateLimiter();
 
   /// İzinli anahtar ([GeminiService.admittedDecisionKey]).
   final Future<String?> Function() key;
@@ -43,7 +45,7 @@ class DecisionService {
   final DateTime Function() _now;
   final Duration timeout;
 
-  final limiter = AiRateLimiter();
+  final AiRateLimiter limiter;
 
   static const cacheTtl = Duration(minutes: 5);
   static const cacheSize = 32;

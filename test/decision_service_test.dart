@@ -213,6 +213,32 @@ void main() {
   });
 
   group('savunmacı ayrıştırma', () {
+    test(
+      'GERÇEK ham yanıt (DA-E0 koşusu 2026-11-18): noul + choice + score',
+      () {
+        final body = jsonDecode(
+          File('test/fixtures/decisions/probe_noul_choice_score.json')
+              .readAsStringSync(),
+        );
+        final r = parseDecisionResponse(body, const {
+          'n': NoulQuestion('?'),
+          'c': ChoiceQuestion('?', {
+            'a_yok': '',
+            'b_alisveris': '',
+            'c_is': '',
+          }),
+          's': ScoreQuestion('?', ['a', 'b', 'c']),
+        });
+        expect(r['n']!.noul, closeTo(0.961, 1e-3));
+        expect(r['c']!.choice, 'b_alisveris');
+        expect(r['c']!.probabilities['a_yok'], closeTo(0.0034, 1e-4));
+        // score: olasılık ve legend NESNE, anahtar düzey sırası ('0','1','2').
+        expect(r['s']!.score, closeTo(1.053, 1e-3));
+        expect(r['s']!.probabilities.keys.toSet(), {'0', '1', '2'});
+        expect(r['s']!.confidence, closeTo(0.459, 1e-3));
+      },
+    );
+
     test('bozuk gövde boş harita; bilinmeyen alan yok sayılır', () {
       expect(parseDecisionResponse('x', _qs), isEmpty);
       expect(parseDecisionResponse({'answers': 3}, _qs), isEmpty);
