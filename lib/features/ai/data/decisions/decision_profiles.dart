@@ -265,3 +265,52 @@ Future<String> checkedTitle(
   final again = await generate(avoid: first);
   return again.isEmpty ? first : again;
 }
+
+// ── DA-14 Hızlı ekle yazım düzeltmesi doğrulama ───────────────────────────
+
+abstract final class SpellFixProfile {
+  /// Bunun altı = düzeltme geri alınır (yazılan kelime kalır).
+  static const lo = 0.50;
+  static const maxFixes = 20;
+
+  static String input(
+    List<({String typed, String fixed})> fixes,
+    List<String> context,
+  ) => [
+    if (context.isNotEmpty)
+      'Liste bağlamı: ${context.take(10).map((c) => _cut(c, 40)).join(', ')}',
+    'Düzeltmeler (yazılan -> düzeltilen):',
+    for (var i = 0; i < fixes.length && i < maxFixes; i++)
+      'd${_key(i)}: ${fixes[i].typed} -> ${fixes[i].fixed}',
+  ].join('\n');
+
+  static Map<String, DecisionQuestion> questions(int count) => {
+    for (var i = 0; i < count && i < maxFixes; i++)
+      'd${_key(i)}': NoulQuestion(
+        'd${_key(i)} satırında yazılan kelime, alışveriş/yapılacak '
+        'listesinde düzeltilen kelimeyi mi kastediyor? Yalnız bir yazım '
+        'hatasıysa evet; başka geçerli bir kelime, marka ya da özel adsa '
+        'hayır.',
+      ),
+  };
+
+  /// Geri alınacak düzeltmelerin sırası.
+  static Set<int> interpret(Map<String, DecisionAnswer> answers, int count) => {
+    for (var i = 0; i < count && i < maxFixes; i++)
+      if ((answers['d${_key(i)}']?.noul ?? 1) <= lo) i,
+  };
+}
+
+Future<Set<int>?> decideSpellFixes(
+  DecisionService service,
+  List<({String typed, String fixed})> fixes,
+  List<String> context,
+) async {
+  if (fixes.isEmpty) return null;
+  final r = await service.decide(
+    DecisionFeature.spellFixOk,
+    input: SpellFixProfile.input(fixes, context),
+    questions: SpellFixProfile.questions(fixes.length),
+  );
+  return r == null ? null : SpellFixProfile.interpret(r, fixes.length);
+}

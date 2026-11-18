@@ -110,23 +110,7 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
       added: joined.split('\n').length,
     );
   }
-  final grocery = looksLikeGrocery(note.displayTitle, [
-    for (final i in note.items) i.text,
-  ], locale);
-  final lex = buildQuickLexicon(
-    locale: locale,
-    grocery: grocery,
-    learned: memory.all('drop'),
-    extra: [
-      for (final i in note.items)
-        if (i.text.trim().isNotEmpty) quickBaseName(i.text),
-    ],
-  );
-  final parsed = buildQuickParser(
-    lex,
-    memory: memory,
-    phrasesOnly: !grocery,
-  ).parse(text, flush: true);
+  final parsed = _parseIntoList(note, text, locale, memory);
   final plan = planDropIntoList([
     for (final i in note.items) (text: i.text, checked: i.checked),
   ], parsed.items);
@@ -151,6 +135,64 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
     added: added,
   );
 }
+
+QuickParse _parseIntoList(
+  Note note,
+  String text,
+  String locale,
+  QuickEntryMemory memory,
+) {
+  final grocery = looksLikeGrocery(note.displayTitle, [
+    for (final i in note.items) i.text,
+  ], locale);
+  final lex = buildQuickLexicon(
+    locale: locale,
+    grocery: grocery,
+    learned: memory.all('drop'),
+    extra: [
+      for (final i in note.items)
+        if (i.text.trim().isNotEmpty) quickBaseName(i.text),
+    ],
+  );
+  return buildQuickParser(
+    lex,
+    memory: memory,
+    phrasesOnly: !grocery,
+  ).parse(text, flush: true);
+}
+
+/// DA-14: [content] liste notuna eklenince yapılacak BULANIK yazım
+/// düzeltmeleri (yazılan → düzeltilen). Tam eşleşme, harf düzleştirme ve
+/// öğretilmiş düzeltme dahil değil (yalnız [QuickHow.fuzzy]).
+List<({String typed, String fixed})> quickDropFixes(
+  Note note,
+  String content, {
+  required String locale,
+  QuickEntryMemory memory = const QuickEntryMemory(),
+}) {
+  if (note.type == NoteType.text) return const [];
+  final text = quickDropSeparate(content.trim());
+  if (text.isEmpty) return const [];
+  return [
+    for (final i in _parseIntoList(note, text, locale, memory).items)
+      if (i.corrected && i.typed.isNotEmpty) (typed: i.typed, fixed: i.name),
+  ];
+}
+
+/// [memory] + Decisions'ın geri çevirdiği düzeltmeler (yalnız bu ekleme;
+/// kalıcı hafızaya YAZILMAZ — K5).
+QuickEntryMemory quickDropVetoed(
+  QuickEntryMemory memory,
+  Iterable<({String typed, String fixed})> vetoed,
+) => vetoed.isEmpty
+    ? memory
+    : QuickEntryMemory(
+        kinds: memory.kinds,
+        rejected: {
+          ...memory.rejected,
+          for (final v in vetoed) '${quickAscii(v.typed)}>${quickAscii(v.fixed)}',
+        },
+      );
 
 /// Hızlı eklemenin GERİ ALINMASI (H10, 2026-11-17): eski kopyayı körlemesine
 /// geri yazmak, ekleme ile geri al arasında nota yapılan değişikliği (başka
@@ -477,6 +519,47 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   void _startCountdown() {
     _phase.value = _Phase.counting;
     unawaited(_count.forward(from: 0));
+    _checkFixes();
+  }
+
+  /// DA-14: geri sayımın geri çevirdiği düzeltmeler (hedef|içerik için).
+  ({String key, List<({String typed, String fixed})> fixes})? _vetoed;
+
+  /// DA-14 (bayrak `spellFixOk`): bulanık yazım düzeltmeleri geri sayım
+  /// İÇİNDE tek çağrıda doğrulanır; "yazım hatası değil" denenler bu
+  /// eklemede uygulanmaz (yazılan kelime kalır). Yanıt geri sayımdan sonra
+  /// gelirse yok sayılır (K2: görünen eklemeyi zıplatmaz).
+  // ponytail: Enter/"bitti" ile anında eklemede doğrulama yok; geri sayım yeter.
+  void _checkFixes() {
+    _vetoed = null;
+    final decisions = ref.read(decisionServiceProvider);
+    final mode = decisions.modeOf(DecisionFeature.spellFixOk);
+    final st = _state.value;
+    final note = _noteOf(st.id);
+    if (mode == DecisionMode.off || note == null || note.locked) return;
+    final fixes = quickDropFixes(
+      note,
+      st.content,
+      locale: context.l10n.localeName,
+      memory: ref.read(quickEntryMemoryProvider),
+    );
+    if (fixes.isEmpty) return;
+    final key = '${st.id}|${st.content}';
+    unawaited(
+      decideSpellFixes(decisions, fixes, [
+        for (final i in note.items) i.text,
+      ]).then((bad) {
+        if (mode == DecisionMode.shadow) {
+          DecisionService.logShadow(
+            DecisionFeature.spellFixOk,
+            'fixes=${fixes.length} veto=${bad?.length ?? '-'}',
+          );
+          return;
+        }
+        if (bad == null || bad.isEmpty || !mounted) return;
+        _vetoed = (key: key, fixes: [for (final i in bad) fixes[i]]);
+      }),
+    );
   }
 
   void _stopCountdown() {
@@ -520,7 +603,11 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     if (note == null || repo == null || st.content.trim().isEmpty) return;
     final content = st.content;
     final l10n = context.l10n;
-    final memory = ref.read(quickEntryMemoryProvider);
+    final veto = _vetoed;
+    final memory = quickDropVetoed(
+      ref.read(quickEntryMemoryProvider),
+      veto != null && veto.key == '${st.id}|$content' ? veto.fixes : const [],
+    );
     final result = quickDropFields(
       note,
       content,
