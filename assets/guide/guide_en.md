@@ -155,7 +155,7 @@ Four jobs, four names:
 
 ## AI {#ai}
 The **✦** button on the note screen:
-- **Summarise note** (short / detailed), **Analyse** (main points and to-dos), **Fix up the note** (simple / balanced / detailed), **Improve the note** (formal, shorter, bullet or numbered list), **Translate**.
+- **Summarise note** (short / detailed), **Fix up the note** (simple / balanced / detailed), **Improve the note** (formal, shorter, bullet or numbered list), **Translate**.
 - **Chat:** one screen; the chips on top choose what you talk to — **All notes**, **This note** (its text and attachments) or **This document** — and, for a note, **Q&A** or **Brainstorm** (the AI drafts an outline, add an idea to the note with one tap).
 - For attachments: summarise/ask a PDF, text from an image, transcribe audio.
 The **AI** screen (⋮, or the rail on the left on wide screens):

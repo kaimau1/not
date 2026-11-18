@@ -221,16 +221,18 @@ class _VoiceSection extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            ButtonSegment(
-              value: TtsEngine.gemini,
-              icon: const Icon(Icons.auto_awesome, size: AppIconSize.s),
-              label: Text(
-                l10n.ttsEngineAi,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
+            // Play derlemesinde Gemini seslendirme yok (AI-S1).
+            if (PlayBuild.aiVoice)
+              ButtonSegment(
+                value: TtsEngine.gemini,
+                icon: const Icon(Icons.auto_awesome, size: AppIconSize.s),
+                label: Text(
+                  l10n.ttsEngineAi,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
             // Play derlemesinde Antalia (ONNX) yok (16K §2.6).
             if (PlayBuild.antaliaVoice)
               ButtonSegment(

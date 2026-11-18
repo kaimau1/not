@@ -155,7 +155,7 @@ Dört ayrı iş, dört ayrı ad:
 
 ## Yapay zekâ {#ai}
 Not ekranındaki **✦** düğmesi:
-- **Notu özetle** (kısa / detaylı), **Analiz et** (ana noktalar ve yapılacaklar), **Notu düzelt** (basit / dengeli / detaylı), **Notu geliştir** (resmî, kısa, madde ya da numaralı liste), **Çevir**.
+- **Notu özetle** (kısa / detaylı), **Notu düzelt** (basit / dengeli / detaylı), **Notu geliştir** (resmî, kısa, madde ya da numaralı liste), **Çevir**.
 - **Sohbet:** tek ekran; üstteki çiplerle neyle konuşacağını seç — **Tüm notlar**, **Bu not** (yazısı ve ekleri) ya da **Bu belge** — ve not kapsamında **Soru-cevap** ya da **Beyin fırtınası** (yapay zekâ ana hat çıkarır, beğendiğin fikri tek dokunuşla nota eklersin).
 - Ek bölümünde: PDF özetle/soru sor, görselden metin, sesi yazıya dök.
 Ana ekrandaki **Yapay zekâ** ekranı (⋮ ya da geniş ekranda soldaki ray):

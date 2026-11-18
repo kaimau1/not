@@ -1,0 +1,180 @@
+{
+  "yetenek": "A6",
+  "ad": "Yazıyı iyileştir",
+  "aciklama": "Düzelt · yeniden yaz · kısalt/uzat · resmî/samimi · çevir. Sayı/IBAN gibi bilgiler korunmalı.",
+  "ornekler": [
+    {
+      "id": "A6-01",
+      "islev": "rewriteText",
+      "girdi": {
+        "metin": "merhaba hocam yarınki toplantıya gelemiyecem cünkü hastayım raporumu yarın getiricem kusura bakmayın",
+        "talimat": "yazım ve noktalama hatalarını düzelt, başka bir şey değiştirme"
+      },
+      "beklenen": "gelemeyeceğim, çünkü, getireceğim",
+      "olcut": {
+        "icermeli": [
+          "gelemeyeceğim",
+          "çünkü",
+          "getireceğim"
+        ],
+        "en_cok_oran": 1.4
+      }
+    },
+    {
+      "id": "A6-02",
+      "islev": "rewriteText",
+      "girdi": {
+        "metin": "merhaba hocam yarınki toplantıya gelemiyecem cünkü hastayım raporumu yarın getiricem kusura bakmayın",
+        "talimat": "resmî bir dille yeniden yaz"
+      },
+      "beklenen": "resmî, saygılı",
+      "olcut": {
+        "birini_icermeli": [
+          "saygılarımla",
+          "bilgilerinize",
+          "arz",
+          "rica"
+        ],
+        "icermemeli": [
+          "hocam yarınki"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A6-03",
+      "islev": "rewriteText",
+      "girdi": {
+        "metin": "Sayın Müdürüm, ekte sunulan raporun incelenerek tarafıma geri bildirimde bulunulmasını arz ederim.",
+        "talimat": "samimi, günlük bir dille yeniden yaz"
+      },
+      "beklenen": "samimi",
+      "olcut": {
+        "icermemeli": [
+          "arz ederim"
+        ],
+        "icermeli": [
+          "rapor"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A6-04",
+      "islev": "rewriteText",
+      "girdi": {
+        "metin": "Toplantıda uzun uzun konuşuldu ve sonuç olarak sürümün 2 Aralık tarihine ertelenmesine, test planının Burak tarafından cuma gününe kadar hazırlanmasına, tasarımın ise Selin tarafından pazartesi gününe kadar tamamlanmasına karar verildi; ayrıca bütçe onayı için Ece müdürle görüşecek.",
+        "talimat": "kısalt"
+      },
+      "beklenen": "kısa, bilgiler korunmuş",
+      "olcut": {
+        "icermeli": [
+          "2 Aralık",
+          "Burak",
+          "Selin"
+        ],
+        "en_cok_oran": 0.8
+      }
+    },
+    {
+      "id": "A6-05",
+      "islev": "rewriteText",
+      "girdi": {
+        "metin": "Süt al. Faturayı öde. Annemi ara.",
+        "talimat": "madde işaretli listeye çevir"
+      },
+      "beklenen": "3 madde",
+      "olcut": {
+        "en_az_madde": 3,
+        "icermeli": [
+          "süt",
+          "fatura",
+          "anne"
+        ]
+      }
+    },
+    {
+      "id": "A6-06",
+      "islev": "rewriteText",
+      "girdi": {
+        "metin": "Kapadokya güzeldi.",
+        "talimat": "biraz uzat, ayrıntı ekle ama uydurma yer adı ekleme"
+      },
+      "beklenen": "daha uzun",
+      "olcut": {
+        "icermeli": [
+          "Kapadokya"
+        ],
+        "en_az_karakter": 40,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A6-07",
+      "islev": "translateText",
+      "girdi": {
+        "metin": "Yarın saat 10'da toplantı var, lütfen raporu getir.",
+        "hedefDil": "İngilizce"
+      },
+      "beklenen": "İngilizce çeviri",
+      "olcut": {
+        "birini_icermeli": [
+          "meeting"
+        ],
+        "icermeli": [
+          "10",
+          "report"
+        ],
+        "dil": "en"
+      }
+    },
+    {
+      "id": "A6-08",
+      "islev": "translateText",
+      "girdi": {
+        "metin": "- milk\n- eggs\n- olive oil",
+        "hedefDil": "Türkçe"
+      },
+      "beklenen": "madde biçimi korunur",
+      "olcut": {
+        "icermeli": [
+          "süt",
+          "yumurta",
+          "zeytinyağı"
+        ],
+        "en_az_madde": 3
+      }
+    },
+    {
+      "id": "A6-09",
+      "islev": "translateText",
+      "girdi": {
+        "metin": "Bu kitabı çok sevdim, herkese tavsiye ederim.",
+        "hedefDil": "Almanca"
+      },
+      "beklenen": "Almanca",
+      "olcut": {
+        "birini_icermeli": [
+          "Buch"
+        ],
+        "icermemeli": [
+          "kitap"
+        ]
+      }
+    },
+    {
+      "id": "A6-10",
+      "islev": "rewriteText",
+      "girdi": {
+        "metin": "IBAN: TR12 0006 4000 0011 2345 6789 01 — kira için",
+        "talimat": "yazım hatalarını düzelt"
+      },
+      "beklenen": "IBAN aynen korunur",
+      "olcut": {
+        "icermeli": [
+          "TR12 0006 4000 0011 2345 6789 01"
+        ]
+      }
+    }
+  ]
+}

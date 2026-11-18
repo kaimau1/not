@@ -334,12 +334,14 @@ void main() {
       expect(sent.length, lessThan(GeminiService.shortTaskInputChars + 1500));
     });
 
-    test('24K karakteri aşan girdi Gemma\'yı atlar (ayar arama)', () async {
-      final net = _Net(reply: '[1, 0]');
-      final hits = await _service(net)
-          .matchSettings('yazı büyüt', List.filled(400, 'x' * 80));
+    // Eskiden ayar aramasıyla (matchSettings) sınanıyordu; AI-S1 (PLAN §1.6)
+    // onu kaldırdı — aynı kısa iş yolu hızlı ekle hedefiyle sınanır.
+    test('24K karakteri aşan girdi Gemma\'yı atlar (hızlı ekle hedefi)', () async {
+      final net = _Net(reply: '1 | süt');
+      final hit = await _service(net)
+          .pickDropTarget('süt ekle', List.filled(400, 'x' * 80));
       expect(net.tried, ['gemini-3.5-flash-lite']);
-      expect(hits, [1, 0]);
+      expect(hit?.index, 1);
     });
 
     test('etiket ayrıştırma: JSON, madde, kod çiti, tekrar', () {
@@ -353,11 +355,6 @@ void main() {
       ]);
       expect(GeminiService.parseTagList('alis veris'), ['alis-veris']);
       expect(GeminiService.parseTagList(''), isEmpty);
-    });
-
-    test('sıra ayrıştırma: aralık dışı ve tekrar atılır', () {
-      expect(GeminiService.parseIndexList('3, 12, 3, 99', 20), [3, 12]);
-      expect(GeminiService.parseIndexList('yok', 20), isEmpty);
     });
   });
 

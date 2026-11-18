@@ -1,0 +1,160 @@
+{
+  "yetenek": "OZET",
+  "ad": "Günün/haftanın özeti",
+  "aciklama": "Ham ajanda verisi → kısa, samimi brifing. Saat sırası, gecikmiş görev, uydurmama; son örnek haftalık özet.",
+  "islev": "composeBriefing",
+  "ornekler": [
+    {
+      "id": "OZET-01",
+      "girdi": {
+        "veri": "Tarih: 18 Kasım 2026 Çarşamba\nEtkinlikler: 10:00 Ekip toplantısı; 19:00 Ayşe ile yemek\nGörevler: Test planını gönder (bugün); Faturayı öde (gecikmiş, 15 Kasım)\nYarın: 09:15 Diş hekimi"
+      },
+      "beklenen": "saat sırası, gecikmiş görev nazikçe, yarın tek cümle",
+      "olcut": {
+        "icermeli": [
+          "10:00",
+          "19:00",
+          "fatura",
+          "diş"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-02",
+      "girdi": {
+        "veri": "Tarih: 19 Kasım 2026 Perşembe\nEtkinlikler: yok\nGörevler: yok\nYarın: yok"
+      },
+      "beklenen": "boş gün: kısa, uydurma etkinlik yok",
+      "olcut": {
+        "en_cok_karakter": 600,
+        "icermemeli": [
+          "toplantı",
+          "10:00"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-03",
+      "girdi": {
+        "veri": "Tarih: 20 Kasım 2026 Cuma\nEtkinlikler: 07:15 Uçuş TK2412 İstanbul-Trabzon\nHatırlatıcılar: Pasaport/kimlik yanında olsun\nYarın: Otel çıkışı 12:00"
+      },
+      "beklenen": "seyahat günü",
+      "olcut": {
+        "icermeli": [
+          "07:15",
+          "TK2412",
+          "kimlik"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-04",
+      "girdi": {
+        "veri": "Tarih: 21 Kasım 2026 Cumartesi\nEtkinlikler: 14:00 Kitap kulübü (Kadıköy)\nYapılacaklar: Tutunamayanlar için bir soru hazırla; Market: süt, ekmek"
+      },
+      "beklenen": "hafta sonu",
+      "olcut": {
+        "icermeli": [
+          "14:00",
+          "Kitap kulübü",
+          "süt"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-05",
+      "girdi": {
+        "veri": "Tarih: 24 Kasım 2026 Salı\nEtkinlikler: 09:00 Sunum; 11:00 Müşteri; 13:00 Öğle; 15:00 Sprint planlama; 17:30 Spor\nGörevler: Teklifi gönder (yarın son gün)"
+      },
+      "beklenen": "yoğun gün, sıralı",
+      "olcut": {
+        "icermeli": [
+          "09:00",
+          "15:00",
+          "17:30",
+          "teklif"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-06",
+      "girdi": {
+        "veri": "Tarih: 25 Kasım 2026 Çarşamba\nGecikmiş görevler: Raporu gönder (3 gün gecikti); Annemi ara (1 gün)\nEtkinlikler: yok"
+      },
+      "beklenen": "gecikmişler nazik hatırlatma",
+      "olcut": {
+        "icermeli": [
+          "rapor",
+          "anne"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-07",
+      "girdi": {
+        "veri": "Tarih: 26 Kasım 2026 Perşembe\nEtkinlikler: 10:30 Dr. Aylin Kaya (aç karnına)\nGörevler: D vitamini al"
+      },
+      "beklenen": "sağlık uyarısı korunur",
+      "olcut": {
+        "icermeli": [
+          "10:30",
+          "aç karnına"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-08",
+      "girdi": {
+        "veri": "Tarih: 27 Kasım 2026 Cuma\nEtkinlikler: 20:00 Doğum günü (Sarah)\nGörevler: Hediye al (bugün son)\nNotlar: 3 yeni not"
+      },
+      "beklenen": "doğum günü + hediye",
+      "olcut": {
+        "icermeli": [
+          "Sarah",
+          "hediye",
+          "20:00"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-09",
+      "girdi": {
+        "veri": "Tarih: 28 Kasım 2026 Cumartesi\nEtkinlikler: Demo (Sprint 14) 11:00\nGörevler: Ekstre son ödeme bugün"
+      },
+      "beklenen": "ödeme günü vurgusu",
+      "olcut": {
+        "icermeli": [
+          "11:00",
+          "ekstre"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "OZET-10",
+      "girdi": {
+        "veri": "Hafta: 23–29 Kasım 2026\nTamamlanan görev: 12\nGecikmiş: 2 (Rapor, Fatura)\nEtkinlik: 7\nEn çok not: İş (5), Okul (3)\nGelecek hafta: 2 Aralık sürüm"
+      },
+      "beklenen": "haftalık özet (pazar akşamı)",
+      "olcut": {
+        "icermeli": [
+          "12",
+          "2 Aralık"
+        ],
+        "birini_icermeli": [
+          "hafta",
+          "haftalık"
+        ],
+        "dil": "tr"
+      }
+    }
+  ]
+}

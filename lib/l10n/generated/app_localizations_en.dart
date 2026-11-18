@@ -214,9 +214,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiSummarize => 'Summarise note';
 
   @override
-  String get aiAnalyze => 'Analyse';
-
-  @override
   String get aiSectionNote => 'This note';
 
   @override
@@ -1351,9 +1348,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiSummarizeInfo => 'Produces a short summary';
 
   @override
-  String get aiAnalyzeInfo => 'Lists the key points and to-dos';
-
-  @override
   String get aiImproveInfo => 'Changes the tone: formal, shorter or a list';
 
   @override
@@ -2253,12 +2247,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get archiveStale => 'Untouched for a year';
-
-  @override
-  String get archiveInsightsAi => 'Summarize with AI';
-
-  @override
-  String get archiveAiStale => 'AI: looks outdated';
 
   @override
   String get lineSpacing => 'Line spacing';
@@ -5740,20 +5728,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trashAnalyze => 'Smart analysis';
 
   @override
-  String get trashAiRun => 'Deep analysis with AI';
-
-  @override
-  String get trashAiRunning => 'Analyzing…';
-
-  @override
-  String get trashAiInfo =>
-      'On-device rules are ready. AI analysis sends a short digest of the notes to the model; locked notes are never sent.';
-
-  @override
-  String get trashAiNothing =>
-      'Nothing to analyze (locked notes are never sent)';
-
-  @override
   String get trashSuggestRestore => 'Consider restoring';
 
   @override
@@ -5851,9 +5825,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trashReasonSubstantial => 'Long, substantial text';
 
   @override
-  String get trashReasonAi => 'AI suggestion';
-
-  @override
   String get cardElementsHeader => 'Shown on cards';
 
   @override
@@ -5931,23 +5902,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardShowPaper => 'Notebook paper pattern';
-
-  @override
-  String get settingsAiSearch => 'Search with AI';
-
-  @override
-  String get settingsAiSearchHint =>
-      'Describe what you want — “text is too small”';
-
-  @override
-  String get settingsAiSearchGo => 'Find';
-
-  @override
-  String get settingsAiSearchEmpty =>
-      'No matching setting found. Try other words.';
-
-  @override
-  String get settingsAiSearchFound => 'Settings found by AI';
 
   @override
   String get formatFontPanel => 'Font and size';

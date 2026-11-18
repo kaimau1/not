@@ -1,0 +1,185 @@
+{
+  "yetenek": "A2",
+  "ad": "Kayıttan not",
+  "aciklama": "Ses/toplantı/ders dökümü → özet + yapılacaklar. Ses dosyası yok: girdi döküm metni (bugün özet adımı summarizeNote; AI-S3 tek akış).",
+  "islev": "transcriptSummary",
+  "ornekler": [
+    {
+      "id": "A2-01",
+      "girdi": {
+        "dokum": "Evet arkadaşlar toplantıya başlayalım. Şimdi ilk konu sürüm tarihi. Sürümü 2 Aralık salıya çekiyoruz. Burak sen test planını cuma gününe kadar atar mısın. Tamam atarım. Selin tasarım tarafı ne durumda. Ekranların yüzde sekseni bitti, pazartesi bitiririm. Bütçe onayını da Ece müdürden alacak."
+      },
+      "beklenen": "özet + yapılacaklar: Burak test planı cuma, Selin tasarım pazartesi, Ece bütçe onayı",
+      "olcut": {
+        "icermeli": [
+          "2 Aralık",
+          "Burak",
+          "Selin",
+          "Ece"
+        ],
+        "en_az_madde": 2,
+        "en_cok_oran": 1.0,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A2-02",
+      "girdi": {
+        "dokum": "Bugünkü derste hücre zarını işledik. Hücre zarı seçici geçirgendir, fosfolipit çift katmandan oluşur. Pasif taşımada enerji harcanmaz, difüzyon ve osmoz örnektir. Aktif taşımada ATP harcanır, sodyum potasyum pompası en bilinen örnektir. Sınavda osmoz kesin çıkar dedi hoca."
+      },
+      "beklenen": "ders özeti: seçici geçirgen, pasif/aktif taşıma, osmoz sınavda",
+      "olcut": {
+        "icermeli": [
+          "osmoz",
+          "ATP",
+          "pasif",
+          "aktif"
+        ],
+        "en_cok_oran": 1.0,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A2-03",
+      "girdi": {
+        "dokum": "Annecim merhaba ben. Yarın akşam yemeğe geliyoruz, saat yedi gibi. Sen tatlı yapma ben getiririm. Bir de babamın ilacını eczaneden almayı unutma, reçete sende."
+      },
+      "beklenen": "yarın 19:00 yemek; tatlıyı o getirir; babanın ilacı eczaneden",
+      "olcut": {
+        "icermeli": [
+          "ilaç"
+        ],
+        "birini_icermeli": [
+          "yedi",
+          "19",
+          "7"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A2-04",
+      "girdi": {
+        "dokum": "Kendime not. Faturalar: elektrik 640 lira, son ödeme 21 Kasım. Doğalgaz 1.120, son ödeme 25 Kasım. İnternet otomatik ödemede. Kredi kartı ekstresi 28 Kasım."
+      },
+      "beklenen": "üç ödeme tarihi ve tutarı",
+      "olcut": {
+        "icermeli": [
+          "21 Kasım",
+          "25 Kasım",
+          "28 Kasım",
+          "640"
+        ],
+        "en_az_madde": 2,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A2-05",
+      "girdi": {
+        "dokum": "Müşteriyle görüşme. Müşteri mobil uygulamada karanlık tema istiyor. Ayrıca faturaları PDF olarak indirebilmek istiyor. Teslim tarihi ocak sonu. Fiyat teklifini perşembeye kadar göndermemiz lazım."
+      },
+      "beklenen": "istekler: karanlık tema, PDF fatura; teklif perşembe; teslim ocak sonu",
+      "olcut": {
+        "icermeli": [
+          "karanlık",
+          "PDF",
+          "perşembe"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A2-06",
+      "girdi": {
+        "dokum": "Şey, aklıma gelmişken, hani şu, şey, kitap kulübü için bu ay Tutunamayanlar okunacak, toplantı ayın son cumartesi, yer Kadıköy'deki kafe, ee, herkes bir soru hazırlayacak."
+      },
+      "beklenen": "dolgu sözcükleri atılmış özet",
+      "olcut": {
+        "icermeli": [
+          "Tutunamayanlar",
+          "cumartesi",
+          "Kadıköy"
+        ],
+        "icermemeli": [
+          "şey, ",
+          "ee,"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A2-07",
+      "girdi": {
+        "dokum": "Spor hocasıyla konuştuk. Haftada üç gün, pazartesi çarşamba cuma. Her seferde on dakika ısınma, kırk dakika ağırlık, on dakika esneme. Proteini kilo başına bir buçuk gram almam lazım."
+      },
+      "beklenen": "program ve beslenme",
+      "olcut": {
+        "icermeli": [
+          "pazartesi",
+          "çarşamba",
+          "cuma"
+        ],
+        "birini_icermeli": [
+          "1,5",
+          "1.5",
+          "bir buçuk"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A2-08",
+      "girdi": {
+        "dokum": "Ev arkadaşlarıyla toplantı. Temizlik sırası: bu hafta Can, sonra Deniz, sonra ben. Ortak giderler için ayda bin lira kasaya. Misafir gece kalacaksa önceden grup sohbetine yazılacak."
+      },
+      "beklenen": "kurallar ve sıra",
+      "olcut": {
+        "icermeli": [
+          "Can",
+          "Deniz",
+          "bin"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A2-09",
+      "girdi": {
+        "dokum": "Okey so this is a short English voice memo. Remind me to call the bank on Monday about the card limit, and buy a birthday gift for Sarah before Friday."
+      },
+      "beklenen": "İngilizce kayıt: dili korunmuş ya da Türkçe özet; iki iş",
+      "olcut": {
+        "icermeli": [
+          "Sarah"
+        ],
+        "birini_icermeli": [
+          "bank",
+          "banka"
+        ],
+        "en_az_karakter": 30
+      }
+    },
+    {
+      "id": "A2-10",
+      "girdi": {
+        "dokum": "Tamam kayıt başladı mı. Evet. Şimdi ben bu dairenin ölçülerini söylüyorum. Salon dört seksen e beş yirmi. Yatak odası üç elli e dört. Mutfak iki doksan e üç. Banyo iki e iki kırk."
+      },
+      "beklenen": "ölçüler korunmuş liste",
+      "olcut": {
+        "birini_icermeli": [
+          "4,80",
+          "4.80",
+          "480",
+          "dört seksen"
+        ],
+        "icermeli": [
+          "Salon",
+          "Mutfak",
+          "Banyo"
+        ],
+        "dil": "tr"
+      }
+    }
+  ]
+}

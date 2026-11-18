@@ -763,8 +763,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             l10n.aiFixNoteInfo,
                             widget.note.isEmpty ? null : _pickFixLevel,
                           ),
-                        // Alt yazılar iki benzer işlemin farkını söyler: özet
-                        // kısa metin, analiz yapılacak/ana nokta dökümü.
+                        // "Analiz et" (analyzeNote) PLAN §1.6 AI-S1 kararıyla
+                        // kalktı (2026-11-17): ana nokta/yapılacak soruları
+                        // yukarıdaki Sohbet satırında (A1, bu not kapsamı).
                         (
                           Icons.summarize_outlined,
                           l10n.aiSummarize,
@@ -776,20 +777,6 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                                   cacheAsSummary: true,
                                   cacheKey: AiCache.keyFor(
                                     'note_summary',
-                                    widget.note.toPlainText(),
-                                  ),
-                                ),
-                        ),
-                        (
-                          Icons.insights_outlined,
-                          l10n.aiAnalyze,
-                          l10n.aiAnalyzeInfo,
-                          widget.note.isEmpty
-                              ? null
-                              : () => _run(
-                                  (s) => s.analyzeNote(widget.note),
-                                  cacheKey: AiCache.keyFor(
-                                    'note_analyze',
                                     widget.note.toPlainText(),
                                   ),
                                 ),

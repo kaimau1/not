@@ -1,0 +1,166 @@
+{
+  "yetenek": "A5",
+  "ad": "Fotoğraftan yapılı not",
+  "aciklama": "Cihaz OCR çıktısı (kırık satır, arayüz kırıntısı) → başlık + maddeler. Bilgi uydurma/değiştirme denetimi. Görsel yok: bugün yeniden yazma vekili.",
+  "islev": "structureOcr",
+  "ornekler": [
+    {
+      "id": "A5-01",
+      "girdi": {
+        "ocr": "MİGROS\nKADIKÖY ŞB\n17.11.2026 18:42\nSÜT 1L      34,50\nEKMEK       12,00\nYUMURTA 30  ı29,90\nTOPLAM     ı76,40\nKREDİ KARTI"
+      },
+      "beklenen": "fiş: tarih, kalemler, toplam",
+      "olcut": {
+        "icermeli": [
+          "17.11.2026",
+          "süt",
+          "ekmek"
+        ],
+        "birini_icermeli": [
+          "176,40",
+          "176.40"
+        ],
+        "en_az_madde": 2
+      }
+    },
+    {
+      "id": "A5-02",
+      "girdi": {
+        "ocr": "Ahmet Yılmaz\nKıdemli Yazılım Mühendisi\nAcme Teknoloji A.Ş.\n+90 532 111 22 33\nahmet.yilmaz@acme.com.tr\nwww.acme.com.tr"
+      },
+      "beklenen": "kartvizit: ad, unvan, şirket, telefon, e-posta",
+      "olcut": {
+        "icermeli": [
+          "Ahmet Yılmaz",
+          "Acme",
+          "532",
+          "ahmet.yilmaz@acme.com.tr"
+        ]
+      }
+    },
+    {
+      "id": "A5-03",
+      "girdi": {
+        "ocr": "Tahta:\nSPRINT 14\n- giriş ekranı → Ece\n- bildirim hatası → Burak\n- perf ölçümü → Selin\nDemo: 28/11"
+      },
+      "beklenen": "tahta: başlık + görev/kişi maddeleri",
+      "olcut": {
+        "icermeli": [
+          "Ece",
+          "Burak",
+          "Selin",
+          "28"
+        ],
+        "en_az_madde": 3
+      }
+    },
+    {
+      "id": "A5-04",
+      "girdi": {
+        "ocr": "Toplantı no-\ntları: bütçe on-\nayı bekleniyor, sü-\nrüm 2 Aralık"
+      },
+      "beklenen": "tirelemeyi düzeltir",
+      "olcut": {
+        "icermeli": [
+          "notları",
+          "onayı",
+          "sürüm"
+        ],
+        "icermemeli": [
+          "on-\nayı"
+        ]
+      }
+    },
+    {
+      "id": "A5-05",
+      "girdi": {
+        "ocr": "12:41  ▼▲ 87%\nWhatsApp\nZeynep: Yarın 15.00 de kahve?\nBen: Olur, Moda'da\nYaz bir mesaj"
+      },
+      "beklenen": "arayüz kırıntıları atılır (saat, pil, düğme)",
+      "olcut": {
+        "icermeli": [
+          "Zeynep",
+          "15"
+        ],
+        "icermemeli": [
+          "87%",
+          "Yaz bir mesaj"
+        ]
+      }
+    },
+    {
+      "id": "A5-06",
+      "girdi": {
+        "ocr": "MERCİMEK ÇORBASI\n1 sb kırmızı mercimek\n1 soğan 1 havuç\n1 yk salça\n6 sb su\n25 dk pişir, blenderdan geçir"
+      },
+      "beklenen": "tarif: malzeme listesi + yapılış",
+      "olcut": {
+        "icermeli": [
+          "mercimek",
+          "soğan",
+          "havuç",
+          "salça"
+        ],
+        "en_az_madde": 3
+      }
+    },
+    {
+      "id": "A5-07",
+      "girdi": {
+        "ocr": "Ödev - Fizik\n1) Newton'un 2. yasası\n2) Sürtünme kuvveti ornekleri\n3) Serbest düşme problemi s.47\nTeslim: Pazartesi"
+      },
+      "beklenen": "ödev listesi",
+      "olcut": {
+        "icermeli": [
+          "Newton",
+          "Sürtünme",
+          "47",
+          "Pazartesi"
+        ],
+        "en_az_madde": 3
+      }
+    },
+    {
+      "id": "A5-08",
+      "girdi": {
+        "ocr": "Wi-Fi\nAğ: EvAgi_5G\nŞifre: Kedi2026!\nModem: 192.168.1.1"
+      },
+      "beklenen": "bilgiler aynen korunur (şifre dahil, değiştirilmez)",
+      "olcut": {
+        "icermeli": [
+          "EvAgi_5G",
+          "Kedi2026!",
+          "192.168.1.1"
+        ]
+      }
+    },
+    {
+      "id": "A5-09",
+      "girdi": {
+        "ocr": "Randevu Kartı\nDiş Hekimi Dt. Can Öz\nTarih: 03.12.2026  Saat: 09:15\nLütfen 10 dk önce gelin"
+      },
+      "beklenen": "randevu bilgisi",
+      "olcut": {
+        "icermeli": [
+          "Can Öz",
+          "03.12.2026",
+          "09:15"
+        ]
+      }
+    },
+    {
+      "id": "A5-10",
+      "girdi": {
+        "ocr": "ELEKTRİK FATURASI\nAbone No: 4455 1122\nDönem: Ekim 2026\nTüketim: 212 kWh\nTutar: 640,25 TL\nSon Ödeme: 21.11.2026"
+      },
+      "beklenen": "fatura: tutar + son ödeme",
+      "olcut": {
+        "icermeli": [
+          "640,25",
+          "21.11.2026",
+          "4455 1122"
+        ]
+      }
+    }
+  ]
+}

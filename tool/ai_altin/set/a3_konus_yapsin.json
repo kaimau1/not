@@ -1,0 +1,172 @@
+{
+  "yetenek": "A3",
+  "ad": "Konuş, gerisini o yapsın",
+  "aciklama": "Tek cümle → doğru türde not/madde/hatırlatıcı/takvim. Ölçüt: doğru araç çağrısı + içerik araç argümanlarında. Araçlar yazmaz, kaydedilir.",
+  "islev": "assistantVoiceNote",
+  "ornekler": [
+    {
+      "id": "A3-01",
+      "girdi": {
+        "cumle": "Yarın saat 10'da dişçiye gitmeyi hatırlat"
+      },
+      "beklenen": "görev/hatırlatıcı yarın 10:00",
+      "olcut": {
+        "birini_icermeli": [
+          "diş"
+        ],
+        "arac": "create_task"
+      }
+    },
+    {
+      "id": "A3-02",
+      "girdi": {
+        "cumle": "Markete süt ve ekmek ekle",
+        "notlar": [
+          {
+            "id": "m1",
+            "baslik": "Market",
+            "metin": "- yumurta\n- peynir"
+          }
+        ]
+      },
+      "beklenen": "Market notuna madde (update_note)",
+      "olcut": {
+        "arac": "update_note",
+        "icermeli": [
+          "süt",
+          "ekmek"
+        ]
+      }
+    },
+    {
+      "id": "A3-03",
+      "girdi": {
+        "cumle": "Cuma akşamı yedide Ayşe ile yemek"
+      },
+      "beklenen": "takvim etkinliği cuma 19:00",
+      "olcut": {
+        "arac": "create_event",
+        "icermeli": [
+          "Ayşe"
+        ]
+      }
+    },
+    {
+      "id": "A3-04",
+      "girdi": {
+        "cumle": "Yeni bir not aç: kitap önerileri, Saatleri Ayarlama Enstitüsü"
+      },
+      "beklenen": "yeni not",
+      "olcut": {
+        "arac": "create_note",
+        "icermeli": [
+          "Saatleri Ayarlama"
+        ]
+      }
+    },
+    {
+      "id": "A3-05",
+      "girdi": {
+        "cumle": "Her pazartesi sabah dokuzda haftalık rapor gönder"
+      },
+      "beklenen": "tekrarlı görev",
+      "olcut": {
+        "arac": "create_task",
+        "icermeli": [
+          "rapor"
+        ]
+      }
+    },
+    {
+      "id": "A3-06",
+      "girdi": {
+        "cumle": "Bugün ne işlerim var?"
+      },
+      "beklenen": "ajanda sorgusu (list_agenda), not yazılmaz",
+      "olcut": {
+        "arac": "list_agenda"
+      }
+    },
+    {
+      "id": "A3-07",
+      "girdi": {
+        "cumle": "Faturalar notuna doğalgaz 1120 lira yaz",
+        "notlar": [
+          {
+            "id": "f1",
+            "baslik": "Faturalar",
+            "metin": "elektrik 640"
+          }
+        ]
+      },
+      "beklenen": "mevcut nota ekle",
+      "olcut": {
+        "arac": "update_note",
+        "icermeli": [
+          "1120"
+        ]
+      }
+    },
+    {
+      "id": "A3-08",
+      "girdi": {
+        "cumle": "Annemi ara"
+      },
+      "beklenen": "görev",
+      "olcut": {
+        "birini_icermeli": [
+          "anne"
+        ],
+        "arac": "create_task"
+      }
+    },
+    {
+      "id": "A3-09",
+      "girdi": {
+        "cumle": "15 Aralık'ta saat 14:30 toplantı, konu bütçe"
+      },
+      "beklenen": "etkinlik",
+      "olcut": {
+        "arac": "create_event",
+        "icermeli": [
+          "bütçe"
+        ]
+      }
+    },
+    {
+      "id": "A3-10",
+      "girdi": {
+        "cumle": "Alışveriş listeme domates, biber ve patlıcan ekle",
+        "notlar": [
+          {
+            "id": "a1",
+            "baslik": "Alışveriş listesi",
+            "metin": "- ekmek"
+          }
+        ]
+      },
+      "beklenen": "listeye üç madde",
+      "olcut": {
+        "arac": "update_note",
+        "icermeli": [
+          "domates",
+          "biber",
+          "patlıcan"
+        ]
+      }
+    },
+    {
+      "id": "A3-11",
+      "girdi": {
+        "cumle": "Bir fikir: uygulamaya karanlık tema eklenebilir"
+      },
+      "beklenen": "yeni not (fikir)",
+      "olcut": {
+        "arac": "create_note",
+        "icermeli": [
+          "karanlık"
+        ]
+      }
+    }
+  ]
+}

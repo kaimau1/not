@@ -1,0 +1,183 @@
+{
+  "yetenek": "KART",
+  "ad": "Çalışma kartları",
+  "aciklama": "Nottan soru-cevap kartları: sayı, notta geçen kavramlar, kısa notta uydurmama.",
+  "islev": "generateStudyCards",
+  "ornekler": [
+    {
+      "id": "KART-01",
+      "girdi": {
+        "not": {
+          "baslik": "Hücre zarı",
+          "metin": "Hücre zarı seçici geçirgendir ve fosfolipit çift katmandan oluşur. Pasif taşımada enerji harcanmaz: difüzyon ve osmoz. Aktif taşımada ATP harcanır; sodyum-potasyum pompası örnektir."
+        }
+      },
+      "beklenen": "kavram kartları",
+      "olcut": {
+        "dizi_en_az": 3,
+        "dizi_en_cok": 10,
+        "icermeli": [
+          "ATP",
+          "osmoz"
+        ]
+      }
+    },
+    {
+      "id": "KART-02",
+      "girdi": {
+        "not": {
+          "baslik": "Osmanlı kuruluş",
+          "metin": "Osmanlı Devleti 1299'da Osman Bey tarafından kuruldu. Bursa 1326'da Orhan Bey döneminde alındı. 1453'te II. Mehmed İstanbul'u fethetti."
+        }
+      },
+      "beklenen": "tarih kartları",
+      "olcut": {
+        "dizi_en_az": 3,
+        "icermeli": [
+          "1299",
+          "1453"
+        ]
+      }
+    },
+    {
+      "id": "KART-03",
+      "girdi": {
+        "not": {
+          "baslik": "İngilizce kelimeler",
+          "metin": "reluctant: isteksiz\nthorough: kapsamlı\nrevenue: gelir\nadjacent: bitişik\ninevitable: kaçınılmaz"
+        }
+      },
+      "beklenen": "kelime kartları",
+      "olcut": {
+        "dizi_en_az": 5,
+        "icermeli": [
+          "reluctant",
+          "isteksiz",
+          "revenue"
+        ]
+      }
+    },
+    {
+      "id": "KART-04",
+      "girdi": {
+        "not": {
+          "baslik": "Newton yasaları",
+          "metin": "1. yasa: eylemsizlik. 2. yasa: F = m·a. 3. yasa: etki-tepki."
+        }
+      },
+      "beklenen": "fizik",
+      "olcut": {
+        "dizi_en_az": 3,
+        "birini_icermeli": [
+          "F = m",
+          "F=m",
+          "m·a",
+          "m*a",
+          "kütle"
+        ]
+      }
+    },
+    {
+      "id": "KART-05",
+      "girdi": {
+        "not": {
+          "baslik": "Başkentler",
+          "metin": "Fransa: Paris. Almanya: Berlin. İtalya: Roma. İspanya: Madrid. Portekiz: Lizbon. Polonya: Varşova."
+        }
+      },
+      "beklenen": "coğrafya",
+      "olcut": {
+        "dizi_en_az": 5,
+        "icermeli": [
+          "Lizbon",
+          "Varşova"
+        ]
+      }
+    },
+    {
+      "id": "KART-06",
+      "girdi": {
+        "not": {
+          "baslik": "Kimya",
+          "metin": "Su H2O, tuz NaCl, karbondioksit CO2. pH 7 nötr, 7 altı asit, 7 üstü baz."
+        }
+      },
+      "beklenen": "kimya",
+      "olcut": {
+        "dizi_en_az": 3,
+        "icermeli": [
+          "NaCl",
+          "pH"
+        ]
+      }
+    },
+    {
+      "id": "KART-07",
+      "girdi": {
+        "not": {
+          "baslik": "Dahiliye notu",
+          "metin": "Hipertansiyon: kan basıncının 140/90 üstünde olması. Tedavide tuz kısıtlaması ve ilaç. Hipoglisemi: kan şekerinin 70 mg/dL altına düşmesi."
+        }
+      },
+      "beklenen": "tıp",
+      "olcut": {
+        "dizi_en_az": 2,
+        "icermeli": [
+          "140/90",
+          "70"
+        ]
+      }
+    },
+    {
+      "id": "KART-08",
+      "girdi": {
+        "not": {
+          "baslik": "Kısa",
+          "metin": "Fotosentez ışık enerjisini kimyasal enerjiye çevirir."
+        }
+      },
+      "beklenen": "kısa notta az kart, uydurma yok",
+      "olcut": {
+        "dizi_en_az": 1,
+        "dizi_en_cok": 4,
+        "icermeli": [
+          "fotosentez"
+        ]
+      }
+    },
+    {
+      "id": "KART-09",
+      "girdi": {
+        "not": {
+          "baslik": "Hukuk",
+          "metin": "Ehliyet: hak ehliyeti doğumla başlar. Fiil ehliyeti için ergin olmak, ayırt etme gücüne sahip olmak ve kısıtlı olmamak gerekir. Erginlik 18 yaşla başlar."
+        }
+      },
+      "beklenen": "hukuk",
+      "olcut": {
+        "dizi_en_az": 2,
+        "icermeli": [
+          "18",
+          "ehliyet"
+        ]
+      }
+    },
+    {
+      "id": "KART-10",
+      "girdi": {
+        "not": {
+          "baslik": "Programlama",
+          "metin": "Big-O: ikili arama O(log n), doğrusal arama O(n), kabarcık sıralama O(n²), birleştirme sıralaması O(n log n)."
+        }
+      },
+      "beklenen": "algoritma",
+      "olcut": {
+        "dizi_en_az": 3,
+        "icermeli": [
+          "O(log n)",
+          "O(n log n)"
+        ]
+      }
+    }
+  ]
+}

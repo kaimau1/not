@@ -116,7 +116,6 @@ import '../../../core/widgets/app_banner.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
 import '../../../core/a11y/chip_roles.dart';
-import '../../../core/a11y/min_tap_target.dart';
 import '../../../core/a11y/motion.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 
@@ -176,17 +175,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _query = '';
   final _searchController = TextEditingController();
 
-  /// **AI KİPİ** (kullanıcı isteği 2026-10-20): arama kutusundaki ✨ açıkken
-  /// yazılan cümle anahtar kelimeyle değil yapay zekâyla eşlenir ("yazılar
-  /// çok küçük" → Yazı boyutu). Sonuç `alan:satır` anahtarları; null =
-  /// henüz sorulmadı.
-  bool _aiMode = false;
-  bool _aiBusy = false;
-  Set<String>? _aiKeys;
-
-  /// Son build'deki ayar kataloğu (AI'a giden satır adları ve anahtarları).
-  List<String> _catalog = const [];
-  List<String> _catalogKeys = const [];
+  // AI kipi (`matchSettings`, ✨ düğmesi) PLAN §1.6 AI-S1 kararıyla kaldırıldı
+  // (2026-11-17): ayar araması yalnız yerel anahtar kelimeyle.
 
   @override
   void initState() {
@@ -797,38 +787,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     ];
 
-    // AI'a gidecek katalog: başlıklı her satır "Alan › Satır — anahtarlar".
-    _catalog = [];
-    _catalogKeys = [];
-    for (final a in areas) {
-      for (var i = 0; i < a.rows.length; i++) {
-        final r = a.rows[i];
-        if (r.title.isEmpty) continue;
-        final words = r.keywords.length > 140
-            ? r.keywords.substring(0, 140)
-            : r.keywords;
-        _catalog.add('${a.title} › ${r.title} — $words');
-        _catalogKeys.add('${a.id}:$i');
-      }
-    }
-
-    final aiKeys = _aiMode ? _aiKeys : null;
-    // AI kipinde metin süzgeci yok: kutudaki cümle anahtar kelime değil.
-    final query = _aiMode ? '' : foldForSearch(_query.trim());
+    final query = foldForSearch(_query.trim());
     final visible = <({_Area area, List<Widget> rows})>[
       for (final a in areas)
-        if (aiKeys != null)
-          (
-            area: a,
-            rows: [
-              for (var i = 0; i < a.rows.length; i++)
-                if (aiKeys.contains('${a.id}:$i')) a.rows[i].child,
-            ],
-          )
-        else if (a.visible(query))
-          (area: a, rows: a.visibleRows(query)),
+        if (a.visible(query)) (area: a, rows: a.visibleRows(query)),
     ]..removeWhere((e) => e.rows.isEmpty);
-    final searching = query.isNotEmpty || aiKeys != null;
+    final searching = query.isNotEmpty;
     final byId = {for (final a in areas) a.id: a};
     final wide = MediaQuery.sizeOf(context).width >= _kSettingsWide;
     // Geniş ekranda sağ bölme hiç boş kalmasın: ilk alan seçili gelir.
@@ -865,7 +829,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
       children: [
         if (searching)
-          ..._searchResults(context, visible, aiKeys != null, openAreaId)
+          ..._searchResults(context, visible, openAreaId)
         else ...[
           const _ProfileCard(),
           const SizedBox(height: AppSpace.m),
@@ -1037,7 +1001,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             bottom: inArea || wide
                 ? null
                 : PreferredSize(
-                    preferredSize: Size.fromHeight(_aiBusy ? 58 : 54),
+                    preferredSize: const Size.fromHeight(54),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
                         AppSpace.m,
@@ -1065,7 +1029,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   List<Widget> _searchResults(
     BuildContext context,
     List<({_Area area, List<Widget> rows})> visible,
-    bool ai,
     ValueChanged<String> onOpen,
   ) {
     final l10n = context.l10n;
@@ -1080,9 +1043,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Icon(Icons.search_off, size: 42, color: scheme.onSurfaceVariant),
               const SizedBox(height: 12),
               Text(
-                ai
-                    ? l10n.settingsAiSearchEmpty
-                    : l10n.settingsSearchEmpty(_query.trim()),
+                l10n.settingsSearchEmpty(_query.trim()),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -1091,31 +1052,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ];
     }
     return [
-      if (ai)
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-          child: Row(
-            children: [
-              Icon(Icons.auto_awesome, size: 16, color: scheme.primary),
-              const SizedBox(width: 6),
-              Text(
-                l10n.settingsAiSearchFound,
-                style: Theme.of(context).textTheme.labelLarge
-                    ?.copyWith(color: scheme.primary),
-              ),
-            ],
-          ),
-        ),
       for (final e in visible) ...[
         _CategoryTile(
           area: e.area,
           compact: true,
           onTap: () {
             _searchController.clear();
-            setState(() {
-              _query = '';
-              _aiKeys = null;
-            });
+            setState(() => _query = '');
             onOpen(e.area.id);
           },
         ),
@@ -1165,145 +1108,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ];
   }
 
-  /// Tepedeki sabit arama kutusu: metin araması ya da (✨ açıkken) AI kipi.
+  /// Tepedeki sabit arama kutusu (yerel anahtar kelime araması).
   Widget _searchBar(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final hasText = _query.trim().isNotEmpty;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedContainer(
-          duration: AppMotion.of(context, AppMotion.quick),
-          height: 44,
-          decoration: BoxDecoration(
-            color: _aiMode
-                ? scheme.primaryContainer.withValues(alpha: AppAlpha.muted)
-                : scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(AppRadius.m),
-            border: Border.all(
-              color: _aiMode
-                  ? scheme.primary.withValues(alpha: AppAlpha.muted)
-                  : Colors.transparent,
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpace.m,
+        end: AppSpace.xs,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search,
+            size: AppIconSize.s,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpace.s),
+          Expanded(
+            child: TextField(
+              key: const ValueKey('settings-search'),
+              controller: _searchController,
+              textInputAction: TextInputAction.done,
+              onChanged: (v) => setState(() => _query = v),
+              style: AppText.of(Theme.of(context)).body,
+              decoration: InputDecoration(
+                hintText: l10n.settingsSearchHint,
+                hintStyle: AppText.of(Theme.of(context)).meta,
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
             ),
           ),
-          padding: const EdgeInsetsDirectional.only(
-            start: AppSpace.m,
-            end: AppSpace.xs,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                _aiMode ? Icons.auto_awesome : Icons.search,
-                size: AppIconSize.s,
-                color: _aiMode ? scheme.primary : scheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: AppSpace.s),
-              Expanded(
-                child: TextField(
-                  key: const ValueKey('settings-search'),
-                  controller: _searchController,
-                  textInputAction: _aiMode
-                      ? TextInputAction.search
-                      : TextInputAction.done,
-                  onChanged: (v) => setState(() {
-                    _query = v;
-                    // Cümle değişince eski AI sonucu geçersiz.
-                    if (_aiMode) _aiKeys = null;
-                  }),
-                  onSubmitted: (_) {
-                    if (_aiMode) unawaited(_runAiSearch());
-                  },
-                  style: AppText.of(Theme.of(context)).body,
-                  decoration: InputDecoration(
-                    hintText: _aiMode
-                        ? l10n.settingsAiSearchHint
-                        : l10n.settingsSearchHint,
-                    hintStyle: AppText.of(Theme.of(context)).meta,
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
-              if (hasText)
-                IconButton(
-                  // Etiketsiz simge düğmesi ekran okuyucuda "düğme"
-                  // diye okunuyordu; ipucu hem imleç üstünde hem
-                  // TalkBack'te ne yaptığını söyler.
-                  tooltip: l10n.clearSearch,
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      _query = '';
-                      _aiKeys = null;
-                    });
-                  },
-                ),
-              if (_aiMode && hasText)
-                TextButton(
-                  key: const ValueKey('settings-ai-search-go'),
-                  onPressed: _aiBusy ? null : _runAiSearch,
-                  child: Text(l10n.settingsAiSearchGo),
-                ),
-              // compact = 40 dp görünüm; dokunma alanı 48 dp (F15.4).
-              MinTapTarget(
-                child: IconButton(
-                  key: const ValueKey('settings-ai-search'),
-                  tooltip: l10n.settingsAiSearch,
-                  isSelected: _aiMode,
-                  visualDensity: VisualDensity.compact,
-                  style: IconButton.styleFrom(
-                    backgroundColor: _aiMode ? scheme.primary : null,
-                    foregroundColor: _aiMode
-                        ? scheme.onPrimary
-                        : scheme.onSurfaceVariant,
-                  ),
-                  icon: const Icon(Icons.auto_awesome, size: 18),
-                  onPressed: () => setState(() {
-                    _aiMode = !_aiMode;
-                    _aiKeys = null;
-                  }),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (_aiBusy)
-          const Padding(
-            padding: EdgeInsets.only(top: 2),
-            child: LinearProgressIndicator(minHeight: 2),
-          ),
-      ],
+          if (hasText)
+            IconButton(
+              // Etiketsiz simge düğmesi ekran okuyucuda "düğme" diye
+              // okunuyordu; ipucu hem imleç üstünde hem TalkBack'te ne
+              // yaptığını söyler.
+              tooltip: l10n.clearSearch,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.close, size: 18),
+              onPressed: () {
+                _searchController.clear();
+                setState(() => _query = '');
+              },
+            ),
+        ],
+      ),
     );
-  }
-
-  /// AI kipinde cümleyi ayar kataloğuyla eşler.
-  Future<void> _runAiSearch() async {
-    if (!ensureAiReady(context, ref)) return;
-    final text = _query.trim();
-    if (text.isEmpty || _aiBusy) return;
-    FocusScope.of(context).unfocus();
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    final catalog = _catalog;
-    final keys = _catalogKeys;
-    setState(() => _aiBusy = true);
-    try {
-      final hits = await ref
-          .read(geminiServiceProvider)
-          .matchSettings(text, catalog);
-      if (!mounted) return;
-      setState(() => _aiKeys = {for (final i in hits) keys[i]});
-    } on GeminiException catch (e) {
-      messenger.showMessage(aiErrorText(l10n, e));
-    } catch (e) {
-      messenger.showMessage(aiErrorText(l10n, e));
-    } finally {
-      if (mounted) setState(() => _aiBusy = false);
-    }
   }
 
   /// Hesap özeti: e-posta ya da "Yerel hesap".

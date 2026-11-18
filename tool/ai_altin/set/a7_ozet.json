@@ -1,0 +1,186 @@
+{
+  "yetenek": "A7",
+  "ad": "Özet",
+  "aciklama": "Not özeti: bilgi kaybı yok, uydurma yok, girdiden kısa. Önbellek (AI-S9) puanı değiştirmez.",
+  "islev": "summarizeNote",
+  "ornekler": [
+    {
+      "id": "A7-01",
+      "girdi": {
+        "not": {
+          "baslik": "Günlük",
+          "metin": "Bugün sabah erken kalktım, kahvaltıdan sonra ofise gittim. Saat onda ekip toplantısı vardı; sürümün 2 Aralık'a ertelenmesine karar verdik. Burak test planını cuma gönderecek, Selin tasarımı pazartesi bitirecek. Öğleden sonra müşteri aradı; karanlık tema ve PDF fatura istiyor, teklifi perşembeye kadar göndermemiz lazım. Akşam spora gittim, sonra annemle telefonda konuştum; babamın ilacını almayı unutmamam gerekiyor."
+        }
+      },
+      "beklenen": "iş kararları + teklif + ilaç",
+      "olcut": {
+        "icermeli": [
+          "2 Aralık",
+          "teklif",
+          "ilaç"
+        ],
+        "en_cok_oran": 0.7,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A7-02",
+      "girdi": {
+        "not": {
+          "baslik": "Hücre zarı",
+          "metin": "Hücre zarı seçici geçirgendir ve fosfolipit çift katmandan oluşur. Pasif taşımada enerji harcanmaz: difüzyon, kolaylaştırılmış difüzyon ve osmoz. Aktif taşımada ATP harcanır; sodyum-potasyum pompası örnektir. Endositoz ve ekzositoz büyük moleküller içindir."
+        }
+      },
+      "beklenen": "ders özeti",
+      "olcut": {
+        "icermeli": [
+          "pasif",
+          "aktif",
+          "ATP"
+        ],
+        "en_cok_oran": 0.9,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A7-03",
+      "girdi": {
+        "not": {
+          "baslik": "Kira sözleşmesi notları",
+          "metin": "Kira 18.500 TL, ayın 5'i. Depozito iki kira. Artış TÜFE. Evcil hayvan yasak. Süre 1 yıl, 1 Eylül 2026 başlangıç."
+        }
+      },
+      "beklenen": "kısa not: kısa özet, bilgi kaybı yok",
+      "olcut": {
+        "icermeli": [
+          "18.500",
+          "TÜFE"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A7-04",
+      "girdi": {
+        "not": {
+          "baslik": "Proje",
+          "metin": "Katılanlar: Ece, Burak, Selin. Karar: sürüm 2 Aralık. Burak test planı cuma. Selin tasarım. Bütçe onayı bekleniyor."
+        }
+      },
+      "beklenen": "kim/ne",
+      "olcut": {
+        "icermeli": [
+          "Burak",
+          "Selin",
+          "bütçe"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A7-05",
+      "girdi": {
+        "not": {
+          "baslik": "Seyahat",
+          "metin": "Uçuş TK2412, 20 Aralık 07:15 İstanbul-Trabzon. Otel: Zorlu Grand, 2 gece, rezervasyon no 77812. Araç kiralama havalimanında, 3 gün."
+        }
+      },
+      "beklenen": "seyahat bilgisi korunur",
+      "olcut": {
+        "icermeli": [
+          "TK2412",
+          "20 Aralık",
+          "77812"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A7-06",
+      "girdi": {
+        "not": {
+          "baslik": "Kitap: Kürk Mantolu Madonna",
+          "metin": "Raif Efendi'nin sessiz hayatı, defterinde anlattığı Berlin yılları ve Maria Puder'e duyduğu aşk. Roman yalnızlık, iletişimsizlik ve kaçırılan fırsatlar üzerine. En sevdiğim bölüm sergideki portre sahnesi."
+        }
+      },
+      "beklenen": "kitap özeti",
+      "olcut": {
+        "icermeli": [
+          "Raif",
+          "Maria"
+        ],
+        "en_cok_oran": 0.9,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A7-07",
+      "girdi": {
+        "not": {
+          "baslik": "Alışveriş",
+          "metin": "- süt\n- yumurta\n- zeytinyağı\n- deterjan\n- ekmek"
+        }
+      },
+      "beklenen": "liste özeti kısa; uydurma ürün yok",
+      "olcut": {
+        "icermemeli": [
+          "peynir",
+          "domates"
+        ],
+        "en_cok_karakter": 400,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A7-08",
+      "girdi": {
+        "not": {
+          "baslik": "Sağlık",
+          "metin": "Dr. Aylin Kaya, dahiliye, salı 10:30. Kan tahlili aç karnına. D vitamini düşük çıktı, günde 1000 IU, 3 ay. Kontrol mart başı."
+        }
+      },
+      "beklenen": "tıbbi bilgiler doğru",
+      "olcut": {
+        "icermeli": [
+          "1000",
+          "aç karnına"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A7-09",
+      "girdi": {
+        "not": {
+          "baslik": "Meeting notes",
+          "metin": "We agreed to move the release to December 2nd. Burak will send the test plan by Friday. Selin finishes the design on Monday. Budget approval pending."
+        }
+      },
+      "beklenen": "İngilizce not: özet (istem Türkçe istiyor)",
+      "olcut": {
+        "icermeli": [
+          "Burak",
+          "Selin"
+        ],
+        "birini_icermeli": [
+          "2 Aralık",
+          "December 2"
+        ],
+        "en_cok_oran": 1.0
+      }
+    },
+    {
+      "id": "A7-10",
+      "girdi": {
+        "not": {
+          "baslik": "Boş gibi",
+          "metin": "tamam"
+        }
+      },
+      "beklenen": "çok kısa notta uydurma yok",
+      "olcut": {
+        "en_cok_karakter": 200
+      }
+    }
+  ]
+}

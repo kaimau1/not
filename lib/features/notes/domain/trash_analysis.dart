@@ -4,9 +4,9 @@ import 'note.dart';
 /// **ÇÖP KUTUSU ANALİZİ** (kullanıcı isteği 2026-10-20: "çöp kutusuna AI
 /// analiz ekle, akıllı bir analiz yapsın").
 ///
-/// İki katman: önce CİHAZDA, anında ve ücretsiz kurallar (bu dosya — saf,
-/// test edilebilir); kullanıcı isterse üstüne AI'nın içeriğe bakan derin
-/// analizi (bkz. `GeminiService.analyzeTrash`). Kurallar iki yöne öneri
+/// CİHAZDA, anında ve ücretsiz kurallar (bu dosya — saf, test edilebilir).
+/// AI derin analizi (`GeminiService.analyzeTrash`) PLAN §1.6 AI-S1 kararıyla
+/// kaldırıldı (2026-11-17); kurallar kalır. Kurallar iki yöne öneri
 /// üretir: "geri yüklemeyi düşün" (içinde iş/bilgi kalmış notlar) ve "güvenle
 /// silinebilir" (boş, kopya, içeriksiz). Kesin karar kullanıcının — hiçbir
 /// şey kendiliğinden silinmez ya da geri yüklenmez.
@@ -37,9 +37,6 @@ enum TrashReason {
 
   /// Uzun, emek verilmiş metin.
   substantial,
-
-  /// AI'nın kendi gerekçesi ([TrashSuggestion.note] metninde).
-  ai,
 }
 
 class TrashSuggestion {
@@ -54,7 +51,7 @@ class TrashSuggestion {
   final TrashVerdict verdict;
   final TrashReason reason;
 
-  /// AI gerekçesi ya da ek ayrıntı (ör. kopyanın başlığı).
+  /// Ek ayrıntı (ör. kopyanın başlığı).
   final String note;
 }
 
@@ -204,34 +201,6 @@ TrashAnalysis analyzeTrash(
     ),
     suggestions: suggestions,
   );
-}
-
-/// AI'ya giden özet: not başına kısa satır (kimlik yerine sıra numarası —
-/// belirteç tasarrufu). Kilitli notlar GİRMEZ. [limit] not, metin 220 harfe
-/// kırpılır. Dönen harita: sıra numarası → not kimliği.
-({String digest, Map<String, String> ids}) trashDigest(
-  List<Note> trash, {
-  int limit = 60,
-}) {
-  final buffer = StringBuffer();
-  final ids = <String, String>{};
-  var index = 0;
-  for (final n in trash) {
-    if (n.locked) continue;
-    if (index >= limit) break;
-    index++;
-    final key = 'n$index';
-    ids[key] = n.id;
-    var text = n.toPlainText().replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (text.length > 220) text = '${text.substring(0, 220)}…';
-    final open = n.items.where((i) => !i.checked && i.text.trim().isNotEmpty);
-    buffer.writeln(
-      '[$key] ${text.isEmpty ? '(boş)' : text}'
-      '${n.attachments.isEmpty ? '' : ' | ek: ${n.attachments.map((a) => a.kind.id).join(',')}'}'
-      '${open.isEmpty ? '' : ' | açık madde: ${open.length}'}',
-    );
-  }
-  return (digest: buffer.toString(), ids: ids);
 }
 
 /// **ÇÖP HATIRLATMASI** (geliştirme raporu D3, 2026-10-20): "geri yüklemeyi

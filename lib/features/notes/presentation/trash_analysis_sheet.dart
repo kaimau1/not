@@ -6,12 +6,9 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../ai/data/gemini_service.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/trash_analysis.dart';
-import '../../../core/friendly_error.dart';
-import '../../auth/presentation/account_required.dart';
 import 'trash_screen.dart' show trashDaysLeft;
 
 /// Çöp kutusunun AKILLI ANALİZ levhası (kullanıcı isteği 2026-10-20: "çöp
@@ -19,9 +16,8 @@ import 'trash_screen.dart' show trashDaysLeft;
 ///
 /// Açılınca cihazdaki kurallar ANINDA çalışır (bkz. [analyzeTrash]): boş ve
 /// kopya notlar "güvenle silinebilir", içinde iş/bilgi kalmışlar "geri
-/// yüklemeyi düşün" altına düşer. "AI ile derin analiz" içerik dökümünü
-/// modele yollar; dönen öneriler aynı iki listeye eklenir (kilitli notlar
-/// gönderilmez). Her satır tek dokunuşla geri yüklenir/silinir; listelerin
+/// yüklemeyi düşün" altına düşer. "AI ile derin analiz" PLAN §1.6 AI-S1
+/// kararıyla kaldırıldı (2026-11-17). Her satır tek dokunuşla geri yüklenir/silinir; listelerin
 /// tamamı için toplu düğme var. Hiçbir şey sormadan yapılmaz.
 Future<void> showTrashAnalysisSheet(BuildContext context, List<Note> trash) =>
     showAppSheet<void>(
@@ -51,10 +47,6 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
   final _done = <String>{};
 
   late TrashAnalysis _local;
-  List<TrashSuggestion> _ai = const [];
-  String _aiSummary = '';
-  bool _aiLoading = false;
-  String? _aiError;
 
   @override
   void initState() {
@@ -70,58 +62,11 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
     );
   }
 
-  Future<void> _runAi() async {
-    if (!ensureAiReady(context, ref)) return;
-    final l10n = context.l10n;
-    final (:digest, :ids) = trashDigest(widget.initial);
-    if (ids.isEmpty) {
-      setState(() => _aiError = l10n.trashAiNothing);
-      return;
-    }
-    setState(() {
-      _aiLoading = true;
-      _aiError = null;
-    });
-    try {
-      final result = await ref.read(geminiServiceProvider).analyzeTrash(digest);
-      List<TrashSuggestion> read(String key, TrashVerdict verdict) => [
-        for (final entry in (result[key] as List?) ?? const [])
-          if (entry is Map && ids[entry['id']] != null)
-            TrashSuggestion(
-              noteId: ids[entry['id']]!,
-              verdict: verdict,
-              reason: TrashReason.ai,
-              note: (entry['neden'] as String? ?? '').trim(),
-            ),
-      ];
-      if (!mounted) return;
-      setState(() {
-        _aiSummary = (result['ozet'] as String? ?? '').trim();
-        _ai = [
-          ...read('geri', TrashVerdict.restore),
-          ...read('sil', TrashVerdict.delete),
-        ];
-      });
-    } on GeminiException catch (e) {
-      if (mounted) {
-        setState(
-          () => _aiError = aiErrorText(l10n, e),
-        );
-      }
-    } catch (e) {
-      if (mounted) setState(() => _aiError = aiErrorText(l10n, e));
-    } finally {
-      if (mounted) setState(() => _aiLoading = false);
-    }
-  }
-
-  /// İki kaynağın birleşimi: not başına tek satır. Cihaz kuralı somut bir
-  /// olguya dayanıyor (boş, kopya, hatırlatıcı) — çakışmada o kazanır; AI
-  /// yalnız kuralın görmediği notları ekler.
+  /// Önerilen notlar: not başına tek satır (ilk kural kazanır).
   List<TrashSuggestion> _merged(TrashVerdict verdict) {
     final seen = <String>{};
     final out = <TrashSuggestion>[];
-    for (final s in [..._local.suggestions, ..._ai]) {
+    for (final s in _local.suggestions) {
       if (_done.contains(s.noteId) || !_notes.containsKey(s.noteId)) continue;
       if (!seen.add(s.noteId)) continue;
       if (s.verdict == verdict) out.add(s);
@@ -147,7 +92,6 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
         int.tryParse(s.note) ?? 1,
       ),
       TrashReason.substantial => l10n.trashReasonSubstantial,
-      TrashReason.ai => s.note.isEmpty ? l10n.trashReasonAi : s.note,
     };
   }
 
@@ -262,49 +206,6 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
             ],
           ),
           const SizedBox(height: 12),
-          // AI DERİN ANALİZ: içerik modele gider — kullanıcı açıkça ister.
-          if (_aiSummary.isNotEmpty)
-            Card(
-              color: scheme.primaryContainer.withValues(alpha: 0.5),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.auto_awesome, size: 18, color: scheme.primary),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(_aiSummary)),
-                  ],
-                ),
-              ),
-            )
-          else
-            FilledButton.tonalIcon(
-              onPressed: _aiLoading ? null : _runAi,
-              icon: _aiLoading
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const AiIcon(),
-              label: Text(_aiLoading ? l10n.trashAiRunning : l10n.trashAiRun),
-            ),
-          if (_aiError != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(_aiError!, style: TextStyle(color: scheme.error)),
-            ),
-          if (_aiSummary.isEmpty && !_aiLoading)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                l10n.trashAiInfo,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
           _Section(
             title: l10n.trashSuggestRestore,
             icon: Icons.restore,
@@ -319,7 +220,6 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
                 _SuggestionTile(
                   note: _notes[s.noteId]!,
                   reason: _reasonText(s),
-                  fromAi: s.reason == TrashReason.ai,
                   actionIcon: AppIcons.restore,
                   actionTooltip: l10n.restore,
                   onAction: () => _restore([s.noteId]),
@@ -342,7 +242,6 @@ class _TrashAnalysisSheetState extends ConsumerState<_TrashAnalysisSheet> {
                 _SuggestionTile(
                   note: _notes[s.noteId]!,
                   reason: _reasonText(s),
-                  fromAi: s.reason == TrashReason.ai,
                   actionIcon: Icons.delete_forever_outlined,
                   actionTooltip: l10n.deleteForever,
                   onAction: () => _delete([s.noteId]),
@@ -454,7 +353,6 @@ class _SuggestionTile extends StatelessWidget {
   const _SuggestionTile({
     required this.note,
     required this.reason,
-    required this.fromAi,
     required this.actionIcon,
     required this.actionTooltip,
     required this.onAction,
@@ -462,7 +360,6 @@ class _SuggestionTile extends StatelessWidget {
 
   final Note note;
   final String reason;
-  final bool fromAi;
   final IconData actionIcon;
   final String actionTooltip;
   final VoidCallback onAction;
@@ -479,11 +376,7 @@ class _SuggestionTile extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       dense: true,
-      leading: Icon(
-        fromAi ? Icons.auto_awesome : Icons.rule,
-        size: 18,
-        color: fromAi ? scheme.primary : scheme.onSurfaceVariant,
-      ),
+      leading: Icon(Icons.rule, size: 18, color: scheme.onSurfaceVariant),
       title: Text(
         title.isEmpty ? l10n.untitledNote : title,
         maxLines: 1,

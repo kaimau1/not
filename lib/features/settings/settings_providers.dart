@@ -502,6 +502,8 @@ class TtsEngineNotifier extends Notifier<TtsEngine> {
     if (e == TtsEngine.antalia && !PlayBuild.antaliaVoice) {
       return TtsEngine.device;
     }
+    // Play derlemesinde Gemini seslendirme yok (AI-S1): cihaz sesine düşer.
+    if (e == TtsEngine.gemini && !PlayBuild.aiVoice) return TtsEngine.device;
     return e;
   }
 

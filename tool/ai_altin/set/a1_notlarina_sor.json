@@ -1,0 +1,362 @@
+{
+  "yetenek": "A1",
+  "ad": "Notlarına sor",
+  "aciklama": "Kaynaklı sohbet: tüm notlar (assistantChat), bu not (chatAboutNote), notta ara (askAboutNoteText). Uydurmama ve \"bulamadım\" denetimi dahil.",
+  "ornekler": [
+    {
+      "id": "A1-01",
+      "islev": "assistantChat",
+      "girdi": {
+        "notlar": [
+          {
+            "baslik": "Market",
+            "metin": "- süt\n- yumurta (30lu)\n- zeytinyağı\n- deterjan"
+          },
+          {
+            "baslik": "Araba",
+            "metin": "Muayene 14 Aralık. Kasko poliçe no 88-4421, bitiş 3 Mart. Lastik değişimi 2.400 TL, Oto Yıldız."
+          },
+          {
+            "baslik": "Ev kirası",
+            "metin": "Kira 18.500 TL, her ayın 5'inde. IBAN ev sahibinde: Mehmet Bey. Depozito 2 kira."
+          },
+          {
+            "baslik": "Kitap listesi",
+            "metin": "Okunacak: Tutunamayanlar, Saatleri Ayarlama Enstitüsü, Kürk Mantolu Madonna (bitti)."
+          },
+          {
+            "baslik": "Doktor",
+            "metin": "Dr. Aylin Kaya, dahiliye, salı 10:30. Kan tahlili aç karnına."
+          }
+        ],
+        "soru": "Araba muayenesi ne zaman?"
+      },
+      "beklenen": "14 Aralık; kaynak Araba notu",
+      "olcut": {
+        "icermeli": [
+          "14 Aralık"
+        ],
+        "dil": "tr",
+        "arac_yok": true
+      }
+    },
+    {
+      "id": "A1-02",
+      "islev": "assistantChat",
+      "girdi": {
+        "notlar": [
+          {
+            "baslik": "Market",
+            "metin": "- süt\n- yumurta (30lu)\n- zeytinyağı\n- deterjan"
+          },
+          {
+            "baslik": "Araba",
+            "metin": "Muayene 14 Aralık. Kasko poliçe no 88-4421, bitiş 3 Mart. Lastik değişimi 2.400 TL, Oto Yıldız."
+          },
+          {
+            "baslik": "Ev kirası",
+            "metin": "Kira 18.500 TL, her ayın 5'inde. IBAN ev sahibinde: Mehmet Bey. Depozito 2 kira."
+          },
+          {
+            "baslik": "Kitap listesi",
+            "metin": "Okunacak: Tutunamayanlar, Saatleri Ayarlama Enstitüsü, Kürk Mantolu Madonna (bitti)."
+          },
+          {
+            "baslik": "Doktor",
+            "metin": "Dr. Aylin Kaya, dahiliye, salı 10:30. Kan tahlili aç karnına."
+          }
+        ],
+        "soru": "Kira ne kadar ve ne zaman ödeniyor?"
+      },
+      "beklenen": "18.500 TL, ayın 5'i",
+      "olcut": {
+        "icermeli": [
+          "18.500",
+          "5"
+        ],
+        "dil": "tr",
+        "arac_yok": true
+      }
+    },
+    {
+      "id": "A1-03",
+      "islev": "assistantChat",
+      "girdi": {
+        "notlar": [
+          {
+            "baslik": "Market",
+            "metin": "- süt\n- yumurta (30lu)\n- zeytinyağı\n- deterjan"
+          },
+          {
+            "baslik": "Araba",
+            "metin": "Muayene 14 Aralık. Kasko poliçe no 88-4421, bitiş 3 Mart. Lastik değişimi 2.400 TL, Oto Yıldız."
+          },
+          {
+            "baslik": "Ev kirası",
+            "metin": "Kira 18.500 TL, her ayın 5'inde. IBAN ev sahibinde: Mehmet Bey. Depozito 2 kira."
+          },
+          {
+            "baslik": "Kitap listesi",
+            "metin": "Okunacak: Tutunamayanlar, Saatleri Ayarlama Enstitüsü, Kürk Mantolu Madonna (bitti)."
+          },
+          {
+            "baslik": "Doktor",
+            "metin": "Dr. Aylin Kaya, dahiliye, salı 10:30. Kan tahlili aç karnına."
+          }
+        ],
+        "soru": "Hangi kitapları henüz okumadım?"
+      },
+      "beklenen": "Tutunamayanlar ve Saatleri Ayarlama Enstitüsü; Kürk Mantolu Madonna bitti",
+      "olcut": {
+        "icermeli": [
+          "Tutunamayanlar",
+          "Saatleri Ayarlama"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-04",
+      "islev": "assistantChat",
+      "girdi": {
+        "notlar": [
+          {
+            "baslik": "Market",
+            "metin": "- süt\n- yumurta (30lu)\n- zeytinyağı\n- deterjan"
+          },
+          {
+            "baslik": "Araba",
+            "metin": "Muayene 14 Aralık. Kasko poliçe no 88-4421, bitiş 3 Mart. Lastik değişimi 2.400 TL, Oto Yıldız."
+          },
+          {
+            "baslik": "Ev kirası",
+            "metin": "Kira 18.500 TL, her ayın 5'inde. IBAN ev sahibinde: Mehmet Bey. Depozito 2 kira."
+          },
+          {
+            "baslik": "Kitap listesi",
+            "metin": "Okunacak: Tutunamayanlar, Saatleri Ayarlama Enstitüsü, Kürk Mantolu Madonna (bitti)."
+          },
+          {
+            "baslik": "Doktor",
+            "metin": "Dr. Aylin Kaya, dahiliye, salı 10:30. Kan tahlili aç karnına."
+          }
+        ],
+        "soru": "Doktor randevusu için neye dikkat etmeliyim?"
+      },
+      "beklenen": "aç karnına gitmek (kan tahlili)",
+      "olcut": {
+        "birini_icermeli": [
+          "aç karnına",
+          "aç karnına"
+        ],
+        "icermeli": [
+          "salı"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-05",
+      "islev": "assistantChat",
+      "girdi": {
+        "notlar": [
+          {
+            "baslik": "Market",
+            "metin": "- süt\n- yumurta (30lu)\n- zeytinyağı\n- deterjan"
+          },
+          {
+            "baslik": "Araba",
+            "metin": "Muayene 14 Aralık. Kasko poliçe no 88-4421, bitiş 3 Mart. Lastik değişimi 2.400 TL, Oto Yıldız."
+          },
+          {
+            "baslik": "Ev kirası",
+            "metin": "Kira 18.500 TL, her ayın 5'inde. IBAN ev sahibinde: Mehmet Bey. Depozito 2 kira."
+          },
+          {
+            "baslik": "Kitap listesi",
+            "metin": "Okunacak: Tutunamayanlar, Saatleri Ayarlama Enstitüsü, Kürk Mantolu Madonna (bitti)."
+          },
+          {
+            "baslik": "Doktor",
+            "metin": "Dr. Aylin Kaya, dahiliye, salı 10:30. Kan tahlili aç karnına."
+          }
+        ],
+        "soru": "Pasaportumun bitiş tarihi ne?"
+      },
+      "beklenen": "notlarda yok demeli, uydurmamalı",
+      "olcut": {
+        "birini_icermeli": [
+          "bulamadım",
+          "yok",
+          "geçmiyor",
+          "bulunmuyor",
+          "rastlamadım"
+        ],
+        "icermemeli": [
+          "2027",
+          "2028",
+          "2029",
+          "2030"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-06",
+      "islev": "assistantChat",
+      "girdi": {
+        "notlar": [
+          {
+            "baslik": "Market",
+            "metin": "- süt\n- yumurta (30lu)\n- zeytinyağı\n- deterjan"
+          },
+          {
+            "baslik": "Araba",
+            "metin": "Muayene 14 Aralık. Kasko poliçe no 88-4421, bitiş 3 Mart. Lastik değişimi 2.400 TL, Oto Yıldız."
+          },
+          {
+            "baslik": "Ev kirası",
+            "metin": "Kira 18.500 TL, her ayın 5'inde. IBAN ev sahibinde: Mehmet Bey. Depozito 2 kira."
+          },
+          {
+            "baslik": "Kitap listesi",
+            "metin": "Okunacak: Tutunamayanlar, Saatleri Ayarlama Enstitüsü, Kürk Mantolu Madonna (bitti)."
+          },
+          {
+            "baslik": "Doktor",
+            "metin": "Dr. Aylin Kaya, dahiliye, salı 10:30. Kan tahlili aç karnına."
+          }
+        ],
+        "soru": "Kasko ne zaman bitiyor, poliçe numarası ne?"
+      },
+      "beklenen": "3 Mart, 88-4421",
+      "olcut": {
+        "icermeli": [
+          "3 Mart",
+          "88-4421"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-07",
+      "islev": "chatAboutNote",
+      "girdi": {
+        "not": {
+          "baslik": "Proje toplantısı",
+          "metin": "Katılanlar: Ece, Burak, Selin. Karar: sürüm 2 Aralık'ta. Burak test planını cuma gönderecek. Selin tasarımı bitirecek. Bütçe onayı bekleniyor."
+        },
+        "soru": "Kim neyi yapacak?"
+      },
+      "beklenen": "Burak test planı (cuma), Selin tasarım",
+      "olcut": {
+        "icermeli": [
+          "Burak",
+          "test",
+          "Selin",
+          "tasarım"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-08",
+      "islev": "chatAboutNote",
+      "girdi": {
+        "not": {
+          "baslik": "Proje toplantısı",
+          "metin": "Katılanlar: Ece, Burak, Selin. Karar: sürüm 2 Aralık'ta. Burak test planını cuma gönderecek. Selin tasarımı bitirecek. Bütçe onayı bekleniyor."
+        },
+        "soru": "Bu notta eksik ya da belirsiz kalan ne var?"
+      },
+      "beklenen": "bütçe onayı bekleniyor; Ece'nin görevi yok (eski \"Analiz et\" işi A1'de)",
+      "olcut": {
+        "icermeli": [
+          "bütçe"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-09",
+      "islev": "askAboutNoteText",
+      "girdi": {
+        "not": {
+          "baslik": "Tarif: Mercimek çorbası",
+          "metin": "1 su bardağı kırmızı mercimek, 1 soğan, 1 havuç, 1 yemek kaşığı salça, 6 su bardağı su. 25 dk pişir, blenderdan geçir. Üstüne pul biber yağı."
+        },
+        "soru": "Kaç bardak su gerekiyor?"
+      },
+      "beklenen": "6 su bardağı",
+      "olcut": {
+        "icermeli": [
+          "6"
+        ],
+        "en_cok_karakter": 400,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-10",
+      "islev": "askAboutNoteText",
+      "girdi": {
+        "not": {
+          "baslik": "Tarif: Mercimek çorbası",
+          "metin": "1 su bardağı kırmızı mercimek, 1 soğan, 1 havuç, 1 yemek kaşığı salça, 6 su bardağı su. 25 dk pişir, blenderdan geçir. Üstüne pul biber yağı."
+        },
+        "soru": "Tarifte patates var mı?"
+      },
+      "beklenen": "hayır, yok",
+      "olcut": {
+        "birini_icermeli": [
+          "yok",
+          "hayır",
+          "geçmiyor"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-11",
+      "islev": "chatAboutNote",
+      "girdi": {
+        "not": {
+          "baslik": "Tatil fikirleri",
+          "metin": "Kapadokya (balon pahalı), Kaş (dalış), Safranbolu (hafta sonu yeter). Bütçe 15 bin, 4 gün."
+        },
+        "soru": "Bu nottan bir ana hat çıkar."
+      },
+      "beklenen": "madde madde ana hat (eski outlineNote işi sohbet çipi olacak)",
+      "olcut": {
+        "en_az_madde": 3,
+        "icermeli": [
+          "Kaş"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A1-12",
+      "islev": "chatAboutNote",
+      "girdi": {
+        "not": {
+          "baslik": "Tatil fikirleri",
+          "metin": "Kapadokya (balon pahalı), Kaş (dalış), Safranbolu (hafta sonu yeter). Bütçe 15 bin, 4 gün."
+        },
+        "soru": "Bütçeye göre hangisi uygun? Kısaca fikir ver."
+      },
+      "beklenen": "bütçe/gün sayısını hesaba katan kısa öneri (eski brainstormAboutNote)",
+      "olcut": {
+        "birini_icermeli": [
+          "Safranbolu",
+          "Kaş",
+          "Kapadokya"
+        ],
+        "icermeli": [
+          "15"
+        ],
+        "dil": "tr"
+      }
+    }
+  ]
+}

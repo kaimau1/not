@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/error_log.dart';
+import '../../../core/play_build.dart';
 import '../../../core/utils/youtube.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -291,6 +292,8 @@ class _Worker {
         ? TimedTranscript.excerpt(segments!, center, radius: radius)
         : p.caption;
     if (window.isEmpty && p.caption.isEmpty) return fallback;
+    // Play derlemesinde AI toparlama yok (AI-S1): yerel kesit.
+    if (!PlayBuild.videoNote) return fallback;
     try {
       final timed = window.isEmpty
           ? null
