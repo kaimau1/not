@@ -3476,7 +3476,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         contextMenuBuilder: (menuContext, state) =>
             AdaptiveTextSelectionToolbar.buttonItems(
               anchors: state.contextMenuAnchors,
-              buttonItems: cleanClipboardMenuItems(state),
+              buttonItems: arrangeSelectionMenu(
+                platform: cleanClipboardMenuItems(state),
+              ),
             ),
         decoration: InputDecoration(
           hintText: l10n.titleHint,

@@ -16,8 +16,8 @@ void main() {
   String name(ContextMenuButtonItem item) =>
       item.label ?? item.type.name;
 
-  test('birincil iş → kes/kopyala/yapıştır → bizimkiler → tümünü seç → '
-      'platformun ekleri → sondakiler', () {
+  test('birincil iş → kopyala/kes/yapıştır/tümünü seç → bizimkiler → '
+      'platformun ekleri → sondakiler (U7)', () {
     final menu = arrangeSelectionMenu(
       platform: [
         platform(ContextMenuButtonType.cut),
@@ -33,12 +33,12 @@ void main() {
     );
     expect([for (final i in menu) name(i)], [
       'Önizle',
-      'cut',
       'copy',
+      'cut',
       'paste',
+      'selectAll',
       'Biçim',
       'Ek göm',
-      'selectAll',
       'share',
       'searchWeb',
       'Tüm notu kopyala',
