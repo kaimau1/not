@@ -78,6 +78,7 @@ import 'filter_sheet.dart';
 import 'home_snapshot.dart';
 import 'folder_hold_button.dart';
 import 'note_card.dart';
+import 'note_link_ui.dart' show noteLinkLabel;
 import 'note_grid.dart';
 import 'shared_notes_screen.dart';
 import '../../inbox/presentation/shared_hub_screen.dart' show sharedHubPlaceholder, sharedHubSlivers, showSharedHubOnHome;
@@ -543,14 +544,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final m = n.metrics;
     var pull = _folderPull.value;
     if (n is OverscrollNotification) {
-      if (n.dragDetails != null && n.overscroll < 0 && _folderPullAllowed()) {
+      if (n.dragDetails != null && n.overscroll < 0 && _pullGestureAllowed()) {
         pull -= n.overscroll;
       }
     } else if (n is ScrollUpdateNotification) {
       if (n.dragDetails == null) {
         pull = 0;
       } else if (m.pixels < m.minScrollExtent) {
-        pull = _folderPullAllowed() ? m.minScrollExtent - m.pixels : 0;
+        pull = _pullGestureAllowed() ? m.minScrollExtent - m.pixels : 0;
       } else if (pull > 0) {
         // Çekip geri itti: mesafe azalır.
         pull = (pull - (n.scrollDelta ?? 0)).clamp(0, double.infinity);
@@ -558,7 +559,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     } else if (n is ScrollEndNotification) {
       final open = pull >= _kFolderPullDistance;
       _setFolderPull(0);
-      if (open) _openFolderMenu();
+      if (open) _runHomeGesture(ref.read(homePullGestureProvider));
       return;
     }
     _setFolderPull(pull);
@@ -579,6 +580,68 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       _dragNoteId == null &&
       ref.read(selectedSharedFolderProvider) == null &&
       ref.read(searchQueryProvider).trim().isEmpty;
+
+  /// Aşağı çekiş göstergesi yalnız jestin bir hedefi varken (U1).
+  bool _pullGestureAllowed() =>
+      _folderPullAllowed() &&
+      ref.read(homePullGestureProvider).kind != HomeGestureKind.none;
+
+  /// **JEST HEDEFİ** (U1, kullanıcı isteği 2026-11-18): üstten çekiş ve
+  /// Tümü'de sağa çekiş Ayarlar → Notlar'da seçilen yere gider. Hedef not ya
+  /// da klasör silinmişse kısa bir uyarı (sessiz kalmaz).
+  void _runHomeGesture(HomeGestureTarget target) {
+    if (!mounted) return;
+    switch (target.kind) {
+      case HomeGestureKind.none:
+        return;
+      case HomeGestureKind.folders:
+        _openFolderMenu();
+      case HomeGestureKind.calendar:
+        AppHaptics.tick();
+        unawaited(context.push('/calendar'));
+      case HomeGestureKind.note:
+        final note = _gestureNote(target.id);
+        if (note == null) {
+          showQuickAddSnack(context.l10n.homeGestureMissing);
+          return;
+        }
+        AppHaptics.tick();
+        unawaited(openNoteRoute(context, note));
+      case HomeGestureKind.folder:
+        final name = _gestureFolderName(target.id);
+        if (name == null) {
+          showQuickAddSnack(context.l10n.homeGestureMissing);
+          return;
+        }
+        _selectFolderFromHold(target.id);
+    }
+  }
+
+  Note? _gestureNote(String? id) =>
+      (ref.read(notesStreamProvider).value ?? const <Note>[])
+          .where((n) => n.id == id && n.deletedAt == null)
+          .firstOrNull;
+
+  String? _gestureFolderName(String? id) => ref
+      .read(visibleOrderedFoldersProvider)
+      .where((f) => f.id == id)
+      .firstOrNull
+      ?.name;
+
+  /// Çekiş kenarında görünen hedef adı (F39.3 etiketiyle aynı yer).
+  String? _gestureLabel(HomeGestureTarget target) {
+    final l10n = context.l10n;
+    return switch (target.kind) {
+      HomeGestureKind.none => null,
+      HomeGestureKind.folders => l10n.homeGestureFolders,
+      HomeGestureKind.calendar => l10n.calendarTitle,
+      HomeGestureKind.note => switch (_gestureNote(target.id)) {
+        final n? => noteLinkLabel(n, l10n.remindersUntitled),
+        null => null,
+      },
+      HomeGestureKind.folder => _gestureFolderName(target.id),
+    };
+  }
 
   /// Klasör düğmesindeki ve aşağı çekişteki duraklar (ilki "Tümü").
   List<FolderStop> _folderStops(WidgetRef ref) {
@@ -845,7 +908,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// `visibleOrderedFoldersProvider`).
   /// Tümü görünümünde sağa çekiş (geri yön) takvimi açar (2026-11-06).
   bool _swipeOpensCalendar(int direction) => swipeOpensCalendar(
-    enabled: ref.read(swipeLeftCalendarProvider),
+    enabled:
+        ref.read(homeSwipeRightGestureProvider).kind != HomeGestureKind.none,
     direction: direction,
     atAllNotes:
         ref.read(selectedFolderProvider) == null &&
@@ -857,8 +921,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   void _cycleFilterFolder(int direction) {
     if (_swipeOpensCalendar(direction)) {
-      AppHaptics.tick();
-      unawaited(context.push('/calendar'));
+      _runHomeGesture(ref.read(homeSwipeRightGestureProvider));
       return;
     }
     final stop = _swipeStop(direction);
@@ -910,7 +973,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Çekişin kenarında görünen sonraki durağın adı (F39.3); durak yoksa null.
   String? _swipeStopLabel(int direction) {
-    if (_swipeOpensCalendar(direction)) return context.l10n.calendarTitle;
+    if (_swipeOpensCalendar(direction)) {
+      return _gestureLabel(ref.read(homeSwipeRightGestureProvider));
+    }
     final stop = _swipeStop(direction);
     if (stop == null) return null;
     final l10n = context.l10n;
@@ -1947,6 +2012,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           // çekiş ve dikey kaydırma olduğu gibi çalışır.
                           child: FolderPullIndicator(
                           progress: _folderPull,
+                          icon: switch (ref
+                              .watch(homePullGestureProvider)
+                              .kind) {
+                            HomeGestureKind.calendar => Icons.calendar_month_outlined,
+                            HomeGestureKind.note => Icons.description_outlined,
+                            _ => Icons.folder_outlined,
+                          },
                           distance: _kFolderPullDistance,
                           child: PinchColumns(
                             columns: columns,
@@ -1975,7 +2047,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     _dragNoteId == null &&
                                     (ref.watch(swipeModeProvider) !=
                                             SwipeMode.off ||
-                                        ref.watch(swipeLeftCalendarProvider)),
+                                        ref
+                                                .watch(
+                                                  homeSwipeRightGestureProvider,
+                                                )
+                                                .kind !=
+                                            HomeGestureKind.none),
                                 nextLabel: _swipeStopLabel,
                                 onCommit: _cycleFilterFolder,
                                 continuesInPlace: _continueSwipe,

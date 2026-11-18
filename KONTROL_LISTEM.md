@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **✨ levhası 3 bölüm + kılavuz araması (P72, 18 Kasım, yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) notta ✨ → başlıklar sırayla Yaz (sesli not, Düzelt, Geliştir, Çevir) · Sor (Sohbet, PDF varsa "Sor") · Dönüştür (Özet, ekler); açılış/kapanış takılmıyor; (2) Ayarlar → Kılavuz'da arama kutusuna hızlı yaz — takılma yok.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **18 Kasım gece turu [apk] (P64–P71, bulutta yazıldı, cihazda bakılmadı, ÖLÇÜLMEDİ — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) ⋮ menüde "Sabitten çıkar" tek satır; (2) Ayarlar'da ayrı "Güvenlik" bölümü (not kilidi + uygulama kilidi); (3) alarm izni kapalıyken ilk hatırlatıcıyı kur → bir kez "İzni aç" ipucu; (4) görsel açıklama levhasını açıp kapat (takılma/hata yok); (5) uçak kipinde Merriweather başlıklı not doğru yazı tipiyle; (6) akıllı listede market/bavul "Sık eklediklerin" ayrı, boş listede ipucu; (7) hesap makinesi ve paylaşım levhası araması akıcı; (8) ✨ menüde "Analiz et" yok, çöp/arşiv levhaları ve ayar araması açılıyor; (9) Ayarlar → Hesap → Hakkında "Geri bildirim gönder" e-posta taslağı açıyor; Lisanslar'da yazı tipi lisansları; (10) Ayarlar'da "Yapay zekâyı tümden kapat" açınca AI girişleri kayboluyor, kapatınca geri geliyor; AI yanıtında "Bildir".
   Yanlışsa: madde numarasını yaz.
@@ -211,6 +215,16 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Tablette bak
 
+- [ ] **P74 jest hedefleri (U1) + ana ekran A/B** — yazıldı, cihazda doğrulanmadı
+  Nerede: Ayarlar → Notlar → "Listeyi tepeden aşağı çekince" / "Tümü'de sağa kaydırınca".
+  Nasıl: önce varsayılanla (klasör menüsü / takvim) dene; sonra "Bir not" seç → çek → o not açılır; "Bir klasör" → o klasöre geçer; "Hiçbiri" → çekiş göstergesi çıkmaz. Ana ekran A/B: `tool/perf/ab_hepsi.py <önceki [apk]> <P74> --altin`.
+  Doğruysa: hedefler doğru, kasma yok (UI/LAYOUT %20 altında).
+
+- [ ] **P74 web ekran okuyucu + Tab (KW-1/KW-2)** — yazıldı, cihazda doğrulanmadı
+  Nerede: web, ana ekran, geniş pencere.
+  Nasıl: NVDA (ya da Chrome "Enable accessibility") ile sol ray ve not kartları okunuyor mu; boş yere tıklayıp Tab → odak halkası raya/arama kutusuna/kartlara gidiyor mu (tarayıcıya kaçmıyor).
+  Doğruysa: ray düğmeleri ve kartlar adlarıyla okunur, Tab uygulama içinde ilerler.
+
 - [ ] **S1 "yalnız değişeni dinle" iki cihaz turu (P67; bayrak KAPALI — bu tur bitmeden `config/app.syncDeltaListen` AÇILMAZ)**
   Önce: bütün cihazlarda bu sürüm + `minClient` damgalı sürüme. Tablette `sync_delta_listen` açık, web'de kapalı ve açık: (a) tablette düzenle → web'de görünsün; (b) çöpe at → listeden düşsün, geri al → gelsin; (c) uçak kipinde düzenle → bağlanınca karşıda; (d) cihaz saatini ±1 gün kaydır → değişiklikler görünsün; (e) 30 dk+ kapalıyken öbür cihazda değiştir → açılışta görünsün; (f) bir notta senkronu kapat → öbür cihazda sonraki açılışta düşsün; (g) hesap değiştir → notlar karışmasın. Ayrıntı `docs/hafiza/veri.md` S1.
   Yanlışsa: harfini yaz.
@@ -278,6 +292,7 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
   Doğruysa: görsel görünüyor; PDF ekleniyor. Olmazsa ekranda çıkan hata metnini bana yaz.
 
 ## Konsol / hesap işleri
+- [ ] **Depo herkese açık oldu (2026-11-18) — güvenlik ayarları:** (1) Google Cloud Console → API ve Hizmetler → Kimlik bilgileri: depoda görünen iki Firebase API anahtarını kısıtla (Android anahtarı: paket `dev.kaimau.notlar` + imza SHA-1; web anahtarı: yalnız web sitenin adresi; ikisinde de yalnız kullanılan API'ler). (2) GitHub → Settings → Actions → General → "Fork pull request workflows": "Require approval for all outside collaborators". (3) Settings → Code security: Secret scanning + Push protection AÇ. (4) Firebase App Check zorlamasını aç (PL2). Lisans (LICENSE, tüm hakları saklı) ve APK kod karıştırma (`--obfuscate`) eklendi; açık depoda kod okunabilir, koruma hukuki — çalınmasın istiyorsan depo yeniden özel yapılabilir.
 
 - [ ] **24. Yapay zekâ faturasına tavan koy**
   Nerede: Google Cloud konsolu → proje → Faturalandırma → Bütçe ve uyarılar; API'ler → Kotalar.

@@ -147,11 +147,25 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Play derlemesi bayrağı (P66, 2026-11-17):** Dart `--dart-define=NOTLAR_PLAY=true` → `lib/core/play_build.dart`
   (`PlayBuild.*` tek yer: güncelleyici, Gmail, konum hatırlatıcı, Antalia, YouTube oto PiP); Gradle `NOTLAR_PLAY=1`
   → `useLegacyPackaging=false`, `NOTLAR_KISISEL` ile birlikte derleme DURUR. Play derlemesi KİŞİSEL OLMADAN
-  (kurulum/overlay izinleri yalnız `src/kisisel`). Yerel izin/ONNX/Gmail kapsamı çıkarma henüz yok →
-  `docs/play_hazirlik.md`. targetSdk 36 = Flutter 3.47.9 varsayılanı (sürüm düşerse bak).
+  (kurulum/overlay izinleri yalnız `src/kisisel`). targetSdk 36 = Flutter 3.47.9 varsayılanı (sürüm düşerse bak).
+- **Play çeşidi (P73 PL1+PL13, 2026-11-18):** flavor DEĞİL bayrak (flavor kişisel `app-release.apk` yolunu
+  değiştirirdi). `NOTLAR_PLAY=1` → `NOTLAR_PLAY_APP_ID` şart (yoksa DURUR), Firebase
+  `android/app/src/release/google-services.json` (gitignore; Play'de yoksa / Play dışında VARSA DURUR),
+  `src/play/AndroidManifest.xml` konum izin/alıcılarını siler, Dart `DefaultFirebaseOptions.play` ←
+  `env_play.json`. CI `play_hazir`/`play` yalnız elle + PLAY_* Secrets varsa; deploy'da Play kural
+  yayını Secrets yoksa atlanır. **ONNX `.so` dışlanamaz**: eklenti `onAttachedToEngine`'de
+  `OrtEnvironment.getEnvironment()` → açılışta çöker (yanlış yol, yapma). Ayrıntı `docs/play_hazirlik.md`.
 - **Geri bildirim (P69 PL15, 2026-11-18):** Ayarlar → Hesap → Hakkında "Geri bildirim gönder" = `mailto:`
   (`lib/core/feedback_mail.dart`; boşluk `%20` elle, `Uri(queryParameters:)` `+` yapar). Gövde YALNIZ sürüm/derleme/
   platform/OS (+ Play işareti); kişisel veri eklenmez (`test/feedback_mail_test.dart`). Destek adresi tek sabit
   `kSupportEmail` = gizlilik metnindeki iletişim adresi (sabah bakılacak: Play için ayrı adres). Crashlytics EKLENMEDİ
   (anahtar zaten `crash_reporting.dart`'ta). OS sürümü `Platform.operatingSystemVersion` (Android'de çekirdek dizgesi;
   `device_info_plus` bağımlılığı eklenmedi).
+
+- **2026-11-18 (P72) Yerel tam takım Windows CRLF:** `core.autocrlf=true` ağacında dosyalar CRLF; kaynak metnini okuyan bekçi testi `readAsStringSync().replaceAll('\r\n', '\n')` ile normalleştirmeli (6 test böyle kırmızıydı: editor_core_guard, folder_strip_fixed, frame_timing_log, gizlilik_tek_kaynak x2, security_guard). Yeni bekçi yazarken aynı kalıp.
+
+## Depo herkese açık (2026-11-18)
+- Kullanıcı depoyu public yaptı. `LICENSE` = tüm hakları saklı (TR+EN; kopyalama/dağıtım/AI eğitimi yasak), README'de Lisans bölümü. Açık kaynak lisansı EKLENMEZ.
+- Kişisel APK da `--obfuscate` ile derlenir (Play AAB zaten öyleydi); semboller `notlar-v<sürüm>-symbols.zip` olarak TASLAK Release'te (herkese açık değil). Yığın izi: `flutter symbolize -i <iz> -d <symbols/app.android-arm64.symbols>`.
+- Depoda sır yok (2026-11-18 taraması: jks/key.properties/env.json/özel anahtar yok); görünen Firebase API anahtarları istemci anahtarı — korunma = anahtar kısıtlama + App Check + kurallar (KONTROL "Konsol").
+- Public depoda GitHub barındırmalı standart koşucular ücretsiz/sınırsız dakika; yine de kullanıcı kararı (yerel doğrulama, tek push) geçerli.

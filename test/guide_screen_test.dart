@@ -158,6 +158,30 @@ Paragraf **kalın** yazı.
     expect(find.textContaining('zzzyok'), findsWidgets);
   });
 
+  // T7 (PLAN §1.3, 2026-11-18): aramada sonuç kümesi değişmeyen tuşta
+  // eşleşen bölüm kartları yeniden kurulmaz (önce: her tuşta hepsi).
+  testWidgets('aramada sonuç aynıysa bölüm kartı yeniden kurulmaz', (
+    tester,
+  ) async {
+    await pump(tester);
+    final search = find.byKey(const ValueKey('guide-search'));
+    await tester.enterText(search, 'youtub');
+    await tester.pumpAndSettle();
+    final counts = <String, int>{};
+    debugOnRebuildDirtyWidget = (e, _) {
+      final n = e.widget.runtimeType.toString();
+      counts[n] = (counts[n] ?? 0) + 1;
+    };
+    try {
+      await tester.enterText(search, 'youtube');
+      await tester.pumpAndSettle();
+    } finally {
+      debugOnRebuildDirtyWidget = null;
+    }
+    expect(find.byKey(const ValueKey('guide-section-video')), findsOneWidget);
+    expect(counts['_SectionCard'] ?? 0, 0, reason: '$counts');
+  });
+
   testWidgets('bölüm parametresiyle o bölüm açık gelir', (tester) async {
     await pump(tester, section: 'embed');
     expect(

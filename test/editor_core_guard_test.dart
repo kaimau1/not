@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// alan/`_update` eklenmez. Sayılar yalnız DÜŞER.
 void main() {
   const dir = 'lib/features/notes/presentation/editor';
-  final screen = File('$dir/note_editor_screen.dart').readAsStringSync();
+  final screen = File('$dir/note_editor_screen.dart').readAsStringSync().replaceAll('\r\n', '\n');
 
   test('note_editor_*.dart içindeki _update( satırı artmaz', () {
     var lines = 0;

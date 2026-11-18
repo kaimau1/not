@@ -8,11 +8,11 @@ import '../tool/gizlilik_sayfalari.dart';
 /// `PRIVACY_POLICY.md`; web'deki iki sayfa ondan üretilir. Metin değişip
 /// sayfalar üretilmezse kırmızı: `dart run tool/gizlilik_sayfalari.dart`.
 void main() {
-  final md = File('PRIVACY_POLICY.md').readAsStringSync();
+  final md = File('PRIVACY_POLICY.md').readAsStringSync().replaceAll('\r\n', '\n');
 
   test('web/gizlilik.html PRIVACY_POLICY.md ile aynı', () {
     expect(
-      File('web/gizlilik.html').readAsStringSync(),
+      File('web/gizlilik.html').readAsStringSync().replaceAll('\r\n', '\n'),
       privacyHtml(md),
       reason: 'dart run tool/gizlilik_sayfalari.dart',
     );
@@ -20,7 +20,7 @@ void main() {
 
   test('web/hesap-silme.html PRIVACY_POLICY.md ile aynı', () {
     expect(
-      File('web/hesap-silme.html').readAsStringSync(),
+      File('web/hesap-silme.html').readAsStringSync().replaceAll('\r\n', '\n'),
       deletionHtml(md),
       reason: 'dart run tool/gizlilik_sayfalari.dart',
     );

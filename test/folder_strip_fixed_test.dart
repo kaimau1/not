@@ -10,9 +10,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// seçili çip ortalanmaz, en kısa yoldan görünür kılınır.
 void main() {
   final screen = File('lib/features/notes/presentation/dashboard_screen.dart')
-      .readAsStringSync();
+      .readAsStringSync()
+      .replaceAll('\r\n', '\n');
   final widgets = File('lib/features/notes/presentation/dashboard_widgets.dart')
-      .readAsStringSync();
+      .readAsStringSync()
+      .replaceAll('\r\n', '\n');
 
   test('şerit sabit başlıkta, ızgara sınırından ÖNCE', () {
     final strip = screen.indexOf('if (shelfAsStrip)');

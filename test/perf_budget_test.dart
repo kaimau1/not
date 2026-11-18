@@ -1377,6 +1377,26 @@ void main() {
     await endEditor(tester);
   });
 
+  // S54 (PLAN §1.6 AI-S2): ✨ levhası 3 bölüm — aç/kapa editör gövdesini
+  // kurmaz, levha kökü bir açılışta en çok bütçe kadar kurulur.
+  testWidgets('S54: ✨ AI levhasını aç → kapat', (tester) async {
+    await pumpEditor(tester, _list30);
+    await _settleGrowth(tester);
+    final c = await _count(() async {
+      await tester.tap(find.byIcon(Icons.auto_awesome).first);
+      await _settle(tester);
+      expect(find.byKey(const ValueKey('ai-sheet-chat')), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+    });
+    expect(find.byKey(const ValueKey('ai-sheet-chat')), findsNothing);
+    _expectBudget('S54', {
+      'govde_kurulum': _bodyTypes.fold(0, (n, t) => n + (c[t] ?? 0)),
+      'levha_kurulum': c['AiSheet'] ?? 0,
+    });
+    await endEditor(tester);
+  });
+
   // S21: arama kutusuna 5 harf — harf başına kurulan kart ≤ görünür kart.
   testWidgets('S21: arama kutusuna 5 harf (telefon, 60 not)', (tester) async {
     final all = [

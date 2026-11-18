@@ -625,7 +625,20 @@ class _SplitShellState extends ConsumerState<SplitShell>
               Expanded(
                 child: Stack(
                   children: [
-                    widget.child,
+                    // KW-1 KÖK NEDENİ: iç Navigator'ın sayfa rotası
+                    // `ModalBarrier` → `BlockSemantics` taşır; sınır yoksa
+                    // engel, ondan ÖNCE çizilen kardeşleri (soldaki liste =
+                    // ana ekran) erişilebilirlik ağacından siler.
+                    //
+                    // KW-2 KÖK NEDENİ: not yokken iç Navigator'da BOŞ '/'
+                    // rotası durur ve odağı o alır; içinde odaklanacak bir
+                    // şey olmadığından Tab yerinde sayar (web'de tarayıcıya
+                    // kaçar). Not açık değilken bu taraf odak almaz — Tab
+                    // listeden (ana ekrandan) başlar.
+                    ExcludeFocus(
+                      excluding: !noteOpen,
+                      child: Semantics(container: true, child: widget.child),
+                    ),
                     if (_overPull > 0)
                       PositionedDirectional(
                         start: right ? null : 12,

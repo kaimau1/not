@@ -1045,10 +1045,79 @@ final assistantVoiceProvider = boolPref('assistant_voice', defaultValue: true);
 /// (kullanıcı isteği 2026-11-06; ilk sürümde sola idi, aynı gün sağa
 /// çevrildi — anahtar adı eski kaldı). Açıkken Tümü'den sağa çekiş takvime
 /// gider; klasörler sola çekişle gezilmeye devam eder.
-final swipeLeftCalendarProvider = boolPref(
-  'swipe_left_calendar',
-  defaultValue: true,
-);
+///
+/// U1'den (2026-11-18) beri yalnız ESKİ KAYIT: kapalıysa
+/// [homeSwipeRightGestureProvider]ın başlangıcı "hiçbiri" olur.
+const kSwipeLeftCalendarKey = 'swipe_left_calendar';
+
+/// **ANA EKRAN JESTLERİNİN HEDEFİ** (U1, kullanıcı isteği 2026-11-18):
+/// üstten çekme (bugün klasör menüsü) ve Tümü'de sağa çekme (bugün takvim)
+/// Ayarlar → Notlar'dan seçilir. [note]/[folder] bir kimlik taşır.
+enum HomeGestureKind { folders, calendar, note, folder, none }
+
+typedef HomeGestureTarget = ({HomeGestureKind kind, String? id});
+
+/// Kayıt biçimi: `folders` · `calendar` · `none` · `note:<id>` · `folder:<id>`.
+/// Bozuk/kimliksiz kayıt [fallback]e düşer.
+HomeGestureTarget parseHomeGesture(String? raw, HomeGestureTarget fallback) {
+  if (raw == null || raw.isEmpty) return fallback;
+  final i = raw.indexOf(':');
+  final name = i < 0 ? raw : raw.substring(0, i);
+  final id = i < 0 ? null : raw.substring(i + 1);
+  final kind = HomeGestureKind.values.where((k) => k.name == name).firstOrNull;
+  if (kind == null) return fallback;
+  final needsId = kind == HomeGestureKind.note || kind == HomeGestureKind.folder;
+  if (needsId && (id == null || id.isEmpty)) return fallback;
+  return (kind: kind, id: needsId ? id : null);
+}
+
+String encodeHomeGesture(HomeGestureTarget t) =>
+    t.id == null ? t.kind.name : '${t.kind.name}:${t.id}';
+
+class HomeGestureNotifier extends Notifier<HomeGestureTarget> {
+  HomeGestureNotifier(this.key, this.fallback);
+
+  final String key;
+  final HomeGestureTarget Function(SharedPreferences prefs) fallback;
+
+  @override
+  HomeGestureTarget build() {
+    final prefs = watchPrefs(ref);
+    return parseHomeGesture(prefs.getString(key), fallback(prefs));
+  }
+
+  void set(HomeGestureTarget value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setString(key, encodeHomeGesture(value));
+  }
+}
+
+const kHomePullGestureKey = 'home_pull_gesture';
+const kHomeSwipeRightGestureKey = 'home_swipe_right_gesture';
+
+/// Liste tepedeyken aşağı çekiş. Varsayılan: klasör menüsü (2026-11-06).
+final homePullGestureProvider =
+    NotifierProvider<HomeGestureNotifier, HomeGestureTarget>(
+      () => HomeGestureNotifier(
+        kHomePullGestureKey,
+        (_) => (kind: HomeGestureKind.folders, id: null),
+      ),
+    );
+
+/// Tümü görünümünde sağa çekiş. Varsayılan: takvim; eski "sağa kaydırınca
+/// takvim" anahtarı kapalıysa hiçbiri (kullanıcının seçimi korunur).
+final homeSwipeRightGestureProvider =
+    NotifierProvider<HomeGestureNotifier, HomeGestureTarget>(
+      () => HomeGestureNotifier(
+        kHomeSwipeRightGestureKey,
+        (prefs) => (
+          kind: prefs.getBool(kSwipeLeftCalendarKey) == false
+              ? HomeGestureKind.none
+              : HomeGestureKind.calendar,
+          id: null,
+        ),
+      ),
+    );
 
 /// Takvimde yatay kaydırmayla hafta/gün/ay değiştirme (F60.S13, kullanıcı
 /// isteği 2026-11-12). Kapalıyken yatay jest kurulmaz; düğmeler çalışır.

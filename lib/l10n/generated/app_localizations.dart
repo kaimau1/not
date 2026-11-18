@@ -464,17 +464,23 @@ abstract class AppLocalizations {
   /// **'Notu özetle'**
   String get aiSummarize;
 
-  /// No description provided for @aiSectionNote.
+  /// No description provided for @aiSectionWrite.
   ///
   /// In tr, this message translates to:
-  /// **'Bu not'**
-  String get aiSectionNote;
+  /// **'Yaz'**
+  String get aiSectionWrite;
 
-  /// No description provided for @aiSectionAttachments.
+  /// No description provided for @aiSectionAsk.
   ///
   /// In tr, this message translates to:
-  /// **'Ekler'**
-  String get aiSectionAttachments;
+  /// **'Sor'**
+  String get aiSectionAsk;
+
+  /// No description provided for @aiSectionTransform.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönüştür'**
+  String get aiSectionTransform;
 
   /// No description provided for @summarize.
   ///
@@ -13346,18 +13352,6 @@ abstract class AppLocalizations {
   /// **'Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.'**
   String get calendarSwipeInfo;
 
-  /// No description provided for @swipeLeftCalendar.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sağa kaydırınca takvim'**
-  String get swipeLeftCalendar;
-
-  /// No description provided for @swipeLeftCalendarInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tümü görünümünde ekranı sağa kaydırınca takvim açılır'**
-  String get swipeLeftCalendarInfo;
-
   /// No description provided for @calendarMoved.
   ///
   /// In tr, this message translates to:
@@ -15733,6 +15727,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.'**
   String get aiPausedBody;
+
+  /// No description provided for @homePullGestureTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi tepeden aşağı çekince'**
+  String get homePullGestureTitle;
+
+  /// No description provided for @homeSwipeRightGestureTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü\'de sağa kaydırınca'**
+  String get homeSwipeRightGestureTitle;
+
+  /// No description provided for @homeGestureInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir not ya da klasör seçersen jest doğrudan onu açar'**
+  String get homeGestureInfo;
+
+  /// No description provided for @homeGestureFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler'**
+  String get homeGestureFolders;
+
+  /// No description provided for @homeGestureNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir not'**
+  String get homeGestureNote;
+
+  /// No description provided for @homeGestureFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir klasör'**
+  String get homeGestureFolder;
+
+  /// No description provided for @homeGestureNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hiçbiri'**
+  String get homeGestureNone;
+
+  /// No description provided for @homeGestureMissing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Jestin hedefi bulunamadı; Ayarlar → Notlar\'dan yeniden seç'**
+  String get homeGestureMissing;
+
+  /// No description provided for @calendarExpiryTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivlenir'**
+  String get calendarExpiryTag;
+
+  /// No description provided for @calendarExpiryRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivleme süresi kaldırıldı'**
+  String get calendarExpiryRemoved;
 }
 
 class _AppLocalizationsDelegate

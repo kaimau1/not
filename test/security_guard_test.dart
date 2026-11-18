@@ -15,7 +15,7 @@ import 'package:notlar/features/notes/presentation/notes_providers.dart';
 /// yetkisi, kilitli notu sızdıran yol) burada KIRMIZI olur — bilerek
 /// yapıldıysa liste/test aynı commit'te güncellenir ve denetim dosyasına
 /// gerekçesi yazılır.
-String _oku(String yol) => File(yol).readAsStringSync();
+String _oku(String yol) => File(yol).readAsStringSync().replaceAll('\r\n', '\n');
 
 /// Manifestteki `android:exported="true"` bileşen adları.
 Set<String> _disaAcik(String yol) {

@@ -43,10 +43,14 @@ class TaskEntry extends AgendaEntry {
 }
 
 /// Hatırlatıcılı not (bugünkü `reminderAt`/`reminderRepeat`, DEĞİŞMEDİ).
+///
+/// [expiry] ise ZAMANLI NOT'un arşivlenme anı (`expiresAt`, U4 2026-11-18):
+/// aynı satır biçimi, taşıma/silme `expiresAt`'e dokunur.
 class ReminderEntry extends AgendaEntry {
-  const ReminderEntry(this.note, this.at);
+  const ReminderEntry(this.note, this.at, {this.expiry = false});
 
   final Note note;
+  final bool expiry;
   @override
   final DateTime at;
   @override
@@ -96,6 +100,7 @@ Map<String, List<AgendaEntry>> buildAgenda({
   Iterable<CalendarEvent> events = const [],
   Iterable<TaskItem> tasks = const [],
   Iterable<Note> reminderNotes = const [],
+  Iterable<Note> timedNotes = const [],
   Iterable<Routine> routines = const [],
   Map<String, Map<String, RoutineLog>> routineLogs = const {},
   bool includeCompleted = true,
@@ -149,6 +154,16 @@ Map<String, List<AgendaEntry>> buildAgenda({
     }
   }
 
+  // ZAMANLI NOT (U4): arşivlenme anı o günde (tek sefer).
+  for (final note in timedNotes) {
+    final at = note.expiresAt;
+    if (at == null || note.deletedAt != null || note.archivedAt != null) {
+      continue;
+    }
+    if (at.isBefore(from) || !at.isBefore(to)) continue;
+    add(at, ReminderEntry(note, at, expiry: true));
+  }
+
   for (final r in routines) {
     if (r.deletedAt != null) continue;
     for (final d in r.daysBetween(first, to)) {
@@ -168,7 +183,8 @@ Map<String, List<AgendaEntry>> buildAgenda({
 bool canMoveEntry(AgendaEntry entry) => switch (entry) {
   EventOccurrence(:final event) => !event.repeats && !event.fromGoogle,
   TaskEntry(:final task) => !task.completed,
-  ReminderEntry(:final note) => note.reminderAt != null,
+  ReminderEntry(:final note, :final expiry) =>
+    (expiry ? note.expiresAt : note.reminderAt) != null,
   RoutineEntry() => false,
 };
 
@@ -194,20 +210,21 @@ Object? movedToDay(AgendaEntry entry, DateTime target) {
     case TaskEntry(:final task):
       if (task.completed || task.dueDay == day) return null;
       return task.copyWith(due: dayKey(day));
-    case ReminderEntry(:final note, :final at):
-      final from = note.reminderAt;
+    case ReminderEntry(:final note, :final at, :final expiry):
+      final from = expiry ? note.expiresAt : note.reminderAt;
       if (from == null) return null;
       final delta = daysBetween(startOfDay(at), day);
       if (delta == 0) return null;
-      return note.copyWith(
-        reminderAt: DateTime(
-          from.year,
-          from.month,
-          from.day + delta,
-          from.hour,
-          from.minute,
-        ),
+      final moved = DateTime(
+        from.year,
+        from.month,
+        from.day + delta,
+        from.hour,
+        from.minute,
       );
+      return expiry
+          ? note.copyWith(expiresAt: moved)
+          : note.copyWith(reminderAt: moved);
     case RoutineEntry():
       return null;
   }

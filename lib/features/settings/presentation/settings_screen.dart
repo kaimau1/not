@@ -578,9 +578,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'yana cek',
           ),
           _SettingRow(
-            const SwipeCalendarSetting(),
-            title: l10n.swipeLeftCalendar,
-            keywords: 'takvim sola kaydir yana cek',
+            HomeGestureSetting(
+              provider: homePullGestureProvider,
+              title: l10n.homePullGestureTitle,
+            ),
+            title: l10n.homePullGestureTitle,
+            keywords: 'jest asagi cek ustten klasor takvim not',
+          ),
+          _SettingRow(
+            HomeGestureSetting(
+              provider: homeSwipeRightGestureProvider,
+              title: l10n.homeSwipeRightGestureTitle,
+            ),
+            title: l10n.homeSwipeRightGestureTitle,
+            keywords: 'jest takvim saga kaydir yana cek klasor not',
           ),
           _SettingRow(
             const CalendarSwipeSetting(),

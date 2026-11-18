@@ -710,6 +710,11 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                  // ÜÇ BÖLÜM (PLAN §1.6 AI-S2, 2026-11-18): Yaz · Sor ·
+                  // Dönüştür. Bölüm fiile göre — kullanıcı "ne yapmak
+                  // istiyorum"dan bakar, eki/notu değil. Sesli not Yaz'ın
+                  // en üstünde kalır (kullanıcı isteği 2026-10-20).
+                  _sectionLabel(context, l10n.aiSectionWrite),
                   if (widget.onVoiceNote != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -725,11 +730,45 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         },
                       ),
                     ),
+                  // Yaz (A6 yazıyı iyileştir): düzelt · geliştir · çevir.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _AiTileGrid(
+                      tiles: [
+                        // Hızlı erişim: tek dokunuşla yazım/düzen düzeltmesi.
+                        if (widget.onReplaceText != null)
+                          (
+                            Icons.auto_fix_high,
+                            l10n.aiFixNote,
+                            l10n.aiFixNoteInfo,
+                            widget.note.isEmpty ? null : _pickFixLevel,
+                          ),
+                        if (widget.onReplaceText != null)
+                          (
+                            Icons.auto_awesome_outlined,
+                            l10n.aiImprove,
+                            l10n.aiImproveInfo,
+                            widget.note.isEmpty ? null : _pickImprovement,
+                          ),
+                        (
+                          Icons.translate,
+                          l10n.aiTranslate,
+                          l10n.aiTranslateInfo,
+                          widget.note.isEmpty ? null : _pickLanguageAndTranslate,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Sor (A1 notlarına sor, A4 belgeye sor).
+                  _sectionLabel(context, l10n.aiSectionAsk),
                   // TEK SOHBET (F3.3): not, belgesi ya da tüm notlar;
                   // soru-cevap ya da beyin fırtınası — kapsam/kip ekranda.
+                  // "Analiz et" (analyzeNote) AI-S1 kararıyla kalktı
+                  // (2026-11-17): ana nokta/yapılacak soruları burada.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _AiRow(
+                      key: const ValueKey('ai-sheet-chat'),
                       icon: Icons.forum_outlined,
                       title: l10n.aiChatRowTitle,
                       subtitle: l10n.aiChatRowInfo,
@@ -743,22 +782,33 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       },
                     ),
                   ),
-                  _sectionLabel(context, l10n.aiSectionNote),
+                  for (final pdf in pdfs)
+                    ListTile(
+                      leading: const Icon(Icons.question_answer_outlined),
+                      title: Text(
+                        pdf.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(l10n.ask),
+                      onTap: () {
+                        Navigator.pop(context);
+                        AiChatScreen.open(
+                          context,
+                          note: widget.note,
+                          document: pdf,
+                          scope: ChatScope.document,
+                        );
+                      },
+                    ),
+                  // Dönüştür (A7 özet, A2 kayıttan not, A5 fotoğraftan not,
+                  // belge özeti/dinleme). Ekler: dosya adı satır başlığında
+                  // BİR kez geçer, işlemler altında açılır.
+                  _sectionLabel(context, l10n.aiSectionTransform),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _AiTileGrid(
                       tiles: [
-                        // Hızlı erişim: tek dokunuşla yazım/düzen düzeltmesi.
-                        if (widget.onReplaceText != null)
-                          (
-                            Icons.auto_fix_high,
-                            l10n.aiFixNote,
-                            l10n.aiFixNoteInfo,
-                            widget.note.isEmpty ? null : _pickFixLevel,
-                          ),
-                        // "Analiz et" (analyzeNote) PLAN §1.6 AI-S1 kararıyla
-                        // kalktı (2026-11-17): ana nokta/yapılacak soruları
-                        // yukarıdaki Sohbet satırında (A1, bu not kapsamı).
                         (
                           Icons.summarize_outlined,
                           l10n.aiSummarize,
@@ -774,31 +824,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                                   ),
                                 ),
                         ),
-                        (
-                          Icons.translate,
-                          l10n.aiTranslate,
-                          l10n.aiTranslateInfo,
-                          widget.note.isEmpty ? null : _pickLanguageAndTranslate,
-                        ),
-                        if (widget.onReplaceText != null)
-                          (
-                            Icons.auto_awesome_outlined,
-                            l10n.aiImprove,
-                            l10n.aiImproveInfo,
-                            widget.note.isEmpty ? null : _pickImprovement,
-                          ),
                       ],
                     ),
                   ),
-                  // Ekler: dosya adı satır başlığında BİR kez geçer, işlemler
-                  // altında açılır. Eskiden her ek için adı tekrarlayan ayrı
-                  // satırlar vardı (bir PDF = üç uzun satır).
-                  if (pdfs.isNotEmpty ||
-                      slides.isNotEmpty ||
-                      images.isNotEmpty ||
-                      audios.isNotEmpty ||
-                      videos.isNotEmpty)
-                    _sectionLabel(context, l10n.aiSectionAttachments),
                   for (final pdf in pdfs)
                     ExpansionTile(
                       leading: const Icon(Icons.picture_as_pdf_outlined),
@@ -840,19 +868,6 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                                   ),
                                 ),
                               ),
-                            );
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.question_answer_outlined),
-                          title: Text(l10n.ask),
-                          onTap: () {
-                            Navigator.pop(context);
-                            AiChatScreen.open(
-                              context,
-                              note: widget.note,
-                              document: pdf,
-                              scope: ChatScope.document,
                             );
                           },
                         ),
