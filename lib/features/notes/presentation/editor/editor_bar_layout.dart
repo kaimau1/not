@@ -33,6 +33,9 @@ typedef EditorBarPlan = ({double button, double gap, bool search, bool pen});
 const double kEditorBarSegment = 40;
 const double kEditorBarSegmentGap = 3;
 
+/// Telefonda soldaki kapsülün en çok yuva sayısı (⋮ dahil; U6, 2026-11-18).
+const int kEditorBarPhoneSlots = 4;
+
 /// Kapsülün iç dolgusu (3 + 3) ve çerçevesi (1 + 1).
 const double _pillChrome = 8;
 

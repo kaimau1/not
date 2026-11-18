@@ -13,6 +13,10 @@ import 'support/editor_harness.dart';
 /// Kullanıcı isteği 2026-11-13: "alt paneldeki tüm butonlar
 /// değiştirilebilsin, kişi istediğini koyabilsin, istediğini çıkarabilsin;
 /// ayarlarda seçenekler geniş olsun".
+/// Bu gruplar sırayı/görünürlüğü sınar; telefonda 4. yuvadan sonrası ⋮'de
+/// (U6, bkz. editor_bar_overflow_test) — tablet genişliğinde hepsi çubukta.
+const _wide = Size(1200, 800);
+
 void main() {
   final l10n = lookupAppLocalizations(const Locale('tr'));
   tearDown(Personalize.debugReset);
@@ -101,7 +105,7 @@ void main() {
     testWidgets('kullanıcı sırası çubuğa yansır (Ara, Biçim\'den önce)', (
       tester,
     ) async {
-      await pumpEditor(tester, note);
+      await pumpEditor(tester, note, size: _wide);
       expect(
         xOf(tester, l10n.formatTitle),
         lessThan(xOf(tester, l10n.noteSearchTitle)),
@@ -120,7 +124,7 @@ void main() {
     testWidgets('eklenen düğme çubukta görünür, çıkarılan kaybolur', (
       tester,
     ) async {
-      await pumpEditor(tester, note);
+      await pumpEditor(tester, note, size: _wide);
       expect(find.byTooltip(l10n.quickRowReminder), findsNothing);
       Personalize.update(
         (p) => p
@@ -136,7 +140,7 @@ void main() {
     testWidgets('düğme öbür kapsüle taşınır (Ara sağa, yapay zekâ sola)', (
       tester,
     ) async {
-      await pumpEditor(tester, note);
+      await pumpEditor(tester, note, size: _wide);
       Finder inCapsule(String capsule, String tooltip) => find.descendant(
         of: find.byKey(ValueKey(capsule)),
         matching: find.byTooltip(tooltip),
@@ -188,7 +192,7 @@ void main() {
     tearDown(InkToolMemory.reset);
 
     testWidgets('mürekkep yokken yok', (tester) async {
-      await pumpEditor(tester, plain);
+      await pumpEditor(tester, plain, size: _wide);
       expect(eraser, findsNothing);
       await endEditor(tester);
     });
@@ -196,7 +200,7 @@ void main() {
     testWidgets('mürekkep varken görünür; dokununca kalem kipi silgiyle', (
       tester,
     ) async {
-      await pumpEditor(tester, inked);
+      await pumpEditor(tester, inked, size: _wide);
       expect(eraser, findsOneWidget);
       expect(InkToolMemory.eraser, isFalse);
       await tester.tap(eraser);
@@ -208,7 +212,7 @@ void main() {
     });
 
     testWidgets('düzen modunda gizlenebilir', (tester) async {
-      await pumpEditor(tester, plain);
+      await pumpEditor(tester, plain, size: _wide);
       Personalize.startEditing();
       await tester.pump();
       // Düzen modunda mürekkepsiz de çizilir ki gizlenebilsin.
@@ -225,7 +229,7 @@ void main() {
 
     testWidgets('gizliyse mürekkep varken de yok', (tester) async {
       Personalize.update((p) => p.withVisible(UiItem.barEraser, false));
-      await pumpEditor(tester, inked);
+      await pumpEditor(tester, inked, size: _wide);
       expect(eraser, findsNothing);
       await endEditor(tester);
     });

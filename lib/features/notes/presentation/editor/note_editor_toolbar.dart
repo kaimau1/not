@@ -12,6 +12,49 @@ extension _EditorToolbar on _NoteEditorScreenState {
   /// RENKLİ NOTTA (F75.3, K-D6) çubuk notun tonunda: [_barInk] doluysa simge
   /// ve etkin zemin ondan, yoksa temanın renkleri. Saydamlıklar belirteçten
   /// (plandaki %14 / %18 → `AppAlpha.pressed`, DENEYIM §2.1 göç eşlemesi).
+  /// Telefonda sığmayan alt çubuk düğmeleri: ⋯ segmenti küçük açılır
+  /// menüde (simge + ad) gösterir; seçilen düğmenin işi aynen çalışır (U6).
+  /// Üst çubuğun ⋮'sinden ayrılsın diye yatay üç nokta. Ek kurucu (Builder)
+  /// yok: konum düğmenin kendi anahtarından (bütçe S17).
+  Widget _barOverflow(
+    AppLocalizations l10n,
+    List<(IconData, String, VoidCallback, bool)> items,
+  ) => _toolSegment(
+    key: _barMoreKey,
+    icon: Icons.more_horiz,
+    label: l10n.moreActions,
+    active: items.any((i) => i.$4),
+    onTap: () async {
+      final anchor = _barMoreKey.currentContext;
+      if (anchor == null) return;
+      final box = anchor.findRenderObject()! as RenderBox;
+      final overlay =
+          Overlay.of(anchor).context.findRenderObject()! as RenderBox;
+      final picked = await showMenu<int>(
+        context: anchor,
+        position: RelativeRect.fromRect(
+          box.localToGlobal(Offset.zero, ancestor: overlay) & box.size,
+          Offset.zero & overlay.size,
+        ),
+        items: [
+          for (var i = 0; i < items.length; i++)
+            PopupMenuItem<int>(
+              key: ValueKey('editor-bar-more-$i'),
+              value: i,
+              child: Row(
+                children: [
+                  Icon(items[i].$1, size: AppIconSize.m),
+                  const SizedBox(width: AppSpace.m),
+                  Text(items[i].$2),
+                ],
+              ),
+            ),
+        ],
+      );
+      if (picked != null) items[picked].$3();
+    },
+  );
+
   Widget _toolSegment({
     Key? key,
     required IconData icon,

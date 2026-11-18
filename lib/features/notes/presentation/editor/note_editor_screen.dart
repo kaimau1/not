@@ -2892,6 +2892,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Bu editörün rota kapsamı (her kurulumda tazelenir).
   FocusScopeNode? _routeScope;
 
+  /// Alt çubuğun ⋯ (taşma) düğmesi (U6); bölmedeki ikinci editörle
+  /// çakışmasın diye örneğe ait.
+  final _barMoreKey = GlobalKey(debugLabel: 'editor-bar-more');
+
   /// Bu not girişinde hızlı satır vurgusu gösterildi mi (bkz. [EditorQuickRow]).
   bool _quickRowHinted = false;
 
@@ -5159,9 +5163,30 @@ child: FormatBar(
                         );
                       }
 
-                      final segments = <Widget>[
+                      // TELEFONDA EN ÇOK 4 YUVA (kullanıcı isteği U6,
+                      // 2026-11-18: "alttaki 5 düğme 4 olsun, en sağdaki ⋮
+                      // kalanları küçük pencerede göstersin"): ilk üç düğme
+                      // yerinde, gerisi ⋮'de. Tablette/geniş ekranda hepsi;
+                      // düzenleme kipinde hepsi (gizle/göster yapılabilsin).
+                      final leftIds = [
                         for (final id in sides.left)
-                          if (shown.contains(id)) ...leftOf(id),
+                          if (shown.contains(id)) id,
+                      ];
+                      final overflow =
+                          !editingUi &&
+                              !PenTray.useRail(context) &&
+                              leftIds.length > kEditorBarPhoneSlots
+                          ? leftIds.sublist(kEditorBarPhoneSlots - 1)
+                          : const <String>[];
+                      final segments = <Widget>[
+                        for (final id in leftIds.take(
+                          leftIds.length - overflow.length,
+                        ))
+                          ...leftOf(id),
+                        if (overflow.isNotEmpty)
+                          _barOverflow(l10n, [
+                            for (final id in overflow) spec(id),
+                          ]),
                       ];
                       return Row(
                         children: [

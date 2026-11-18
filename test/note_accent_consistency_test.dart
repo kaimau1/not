@@ -202,7 +202,8 @@ void main() {
 
   // 2026-11-16: liste notunda türe özgü yuva "Numaralıya çevir"; 412 dp
   // telefonda yer kalmadığından plan Ara'yı düşürür (⋮ menüsünde duruyor).
-  testWidgets('alt çubuk sırası: Biçim · Ekle · Kalem · Numaralı · Seç', (
+  // U6 (2026-11-18): telefonda 4 yuva — Numaralı ve Seç ⋯ menüsünde.
+  testWidgets('alt çubuk sırası: Biçim · Ekle · Kalem · ⋯ (Numaralı, Seç)', (
     tester,
   ) async {
     await _pumpEditor(tester, _note());
@@ -218,8 +219,7 @@ void main() {
       Icons.text_format,
       Icons.add_rounded,
       Icons.draw_outlined,
-      Icons.format_list_numbered_rounded,
-      Icons.select_all,
+      Icons.more_horiz,
     ]);
     await _end(tester);
   });
