@@ -683,6 +683,54 @@ class _DeleteAccountRow extends ConsumerWidget {
   }
 }
 
+/// **GERİ BİLDİRİM GÖNDER** (PL15): e-posta uygulaması `mailto:` ile açılır;
+/// gövdede yalnız sürüm/derleme/platform/OS ([feedbackTechInfo]). E-posta
+/// uygulaması yoksa adres panoya kopyalanır.
+class _FeedbackRow extends StatelessWidget {
+  const _FeedbackRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      key: const ValueKey('settings-feedback'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.mail_outline),
+      title: Text(l10n.feedbackSend),
+      subtitle: Text(l10n.feedbackInfo),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        var version = '?', build = '?';
+        try {
+          final info = await PackageInfo.fromPlatform();
+          version = info.version;
+          build = info.buildNumber;
+        } catch (_) {
+          // Sürüm okunamazsa "?" yazılır.
+        }
+        final uri = feedbackMailUri(
+          subject: '${l10n.appName} · ${l10n.feedbackSend}',
+          prompt: l10n.feedbackBodyPrompt,
+          techInfo: feedbackTechInfo(
+            version: version,
+            buildNumber: build,
+            platform: kIsWeb ? 'web' : Platform.operatingSystem,
+            osVersion: kIsWeb ? '' : Platform.operatingSystemVersion,
+          ),
+        );
+        var opened = false;
+        try {
+          opened = await launchUrl(uri);
+        } catch (_) {}
+        if (opened) return;
+        await Clipboard.setData(const ClipboardData(text: kSupportEmail));
+        messenger.showMessage(l10n.feedbackNoMailApp);
+      },
+    );
+  }
+}
+
 /// **HATA GÜNLÜĞÜNÜ PAYLAŞ** (F1.9): cihazdaki son hatalar düz metin dosyası
 /// olarak paylaşım penceresine verilir (e-posta, mesaj…). Başına sürüm ve
 /// platform yazılır — hata bildiriminin ilk sorusu.
