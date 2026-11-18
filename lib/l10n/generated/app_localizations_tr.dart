@@ -8841,4 +8841,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get aiMayBeWrong => 'AI yanılabilir; önemli bilgiyi doğrula.';
+
+  @override
+  String get aiPausedTitle => 'Yapay zekâ geçici olarak kapalı';
+
+  @override
+  String get aiPausedBody =>
+      'Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.';
 }

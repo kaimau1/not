@@ -15691,6 +15691,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'AI yanılabilir; önemli bilgiyi doğrula.'**
   String get aiMayBeWrong;
+
+  /// No description provided for @aiPausedTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ geçici olarak kapalı'**
+  String get aiPausedTitle;
+
+  /// No description provided for @aiPausedBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.'**
+  String get aiPausedBody;
 }
 
 class _AppLocalizationsDelegate

@@ -60,6 +60,9 @@ enum AiAvailability {
 
   /// Play derlemesinde ilk kullanım rızası bekleniyor (PL3; [aiConsentProvider]).
   consentNeeded,
+
+  /// `config/app.aiKillSwitch` (PL2; [aiKillSwitchProvider]): geçici kapalı.
+  paused,
 }
 
 extension AiAvailabilityLook on AiAvailability {
@@ -75,6 +78,7 @@ extension AiAvailabilityLook on AiAvailability {
 final aiAvailabilityProvider = Provider<AiAvailability>((ref) {
   // Kullanıcının kararı her şeyin önünde (kendi anahtarı olsa da).
   if (ref.watch(aiTurnedOffProvider)) return AiAvailability.turnedOff;
+  if (ref.watch(aiKillSwitchProvider)) return AiAvailability.paused;
   if (!ref.watch(aiConsentProvider)) return AiAvailability.consentNeeded;
   if ((ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty) {
     return AiAvailability.ready;

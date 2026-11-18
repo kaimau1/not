@@ -8854,4 +8854,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiMayBeWrong => 'AI can make mistakes; check important info.';
+
+  @override
+  String get aiPausedTitle => 'AI is temporarily unavailable';
+
+  @override
+  String get aiPausedBody =>
+      'AI features are switched off for a short while. Your notes aren\'t affected; try again later.';
 }

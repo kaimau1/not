@@ -68,3 +68,26 @@ Derleme denenemediği için bilerek yapılmadı:
    yeni ad, `google-services.json` + `firebase_options` çifti.
 5. **Güncelleyici (E1)**: Play'in uygulama içi güncelleme API'si istenirse ayrı iş (bağımlılık
    gerekir); şimdilik mağaza güncellemesine bırakıldı.
+
+## AI korumaları (PL2) — durum 2026-11-18 (P70)
+**İstemcide var (P70):**
+- **Acil kapatma** `config/app.aiKillSwitch` (bool, alan yok = false). `true` yazılınca istemci bütün AI
+  çağrılarını ağa çıkmadan reddeder, düğmeler kilitli, kart "Yapay zekâ geçici olarak kapalı". Ayrı okuma
+  yok: `config/app`'i zaten dinleyen `saveCadenceSyncProvider` uygular (`lib/core/ai_kill_switch.dart`).
+  İstemci bu belgeye yazmaz (kural: herkes okur, istemci yazamaz). Bayrağı konsoldan elle yaz; geri almak için sil.
+- **Yerel hız sınırı** `AiRateLimiter` (dakikada 30, saatte 300 çağrı; anlamsal arama gömmeleri hariç) —
+  takılı döngü ve art arda dokunuş freni; aşılırsa "Çok fazla istek gitti". Atlatılabilir, sunucu
+  sınırının yerini TUTMAZ.
+- **Tek kapı** `AiAdmission.check` (`lib/features/ai/data/ai_policy.dart`): kullanıcı kapattıysa → acil
+  kapatma → rıza (Play) → hız sınırı; `GeminiService` ağa çıkan her yolda önce bunu çağırır.
+- Günlük puan sayacı `aiQuota/{uid}` (Firestore; kural: pencere damgası sunucudan, puan yalnız artar,
+  tavan 1000) — kotanın istemci tarafı; değiştirilmiş istemci saymadan çağırabilir.
+
+**Sunucuda YOK (Play'den önce şart; F18.28, E4):**
+- Dahili AI (Firebase AI Logic) istemciden doğrudan çağrılıyor; App Check Android'de etkin ama konsolda
+  **zorlama (enforce) açık mı doğrulanmadı** → Firebase konsolu → App Check → AI Logic: Enforce.
+- Kullanıcı başı hız sınırı ve Pro günlük kotası **sunucuda sayılmıyor**: istemci kapısı atlatılabilir.
+  Çözüm: AI çağrısını Cloud Function (callable, App Check zorunlu) arkasına al; sayaç Function'da
+  (`entitlements/{uid}` Pro ise), `aiKillSwitch`'i de Function okusun.
+- Bütçe tavanı: yeni Play projesinde (PL13) Blaze bütçe uyarısı + aşımda AI API'sini kapatan
+  bütçe bildirimi → Function. Kişisel proje `notlar-kaimau`'da yok.

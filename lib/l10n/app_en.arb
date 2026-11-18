@@ -3190,5 +3190,7 @@
   "aiConsentTurnOff": "You can turn AI off completely at any time in Settings → AI.",
   "aiConsentAccept": "I agree",
   "aiConsentDecline": "Not now",
-  "aiMayBeWrong": "AI can make mistakes; check important info."
+  "aiMayBeWrong": "AI can make mistakes; check important info.",
+  "aiPausedTitle": "AI is temporarily unavailable",
+  "aiPausedBody": "AI features are switched off for a short while. Your notes aren't affected; try again later."
 }

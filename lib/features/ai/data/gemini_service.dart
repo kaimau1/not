@@ -103,6 +103,9 @@ enum GeminiErrorKind {
   /// Play derlemesinde rıza henüz verilmedi (PL3).
   aiConsentNeeded,
 
+  /// `config/app.aiKillSwitch` (PL2): AI geçici olarak kapalı.
+  aiPaused,
+
   /// Metni çağıran vermiş (arayüzden gelen, zaten yerelleşmiş ileti).
   other,
 }
@@ -172,6 +175,7 @@ class GeminiException implements UserFacingException {
     GeminiErrorKind.noContent => l10n.aiErrNoContent,
     GeminiErrorKind.aiTurnedOff => l10n.aiOffBody,
     GeminiErrorKind.aiConsentNeeded => l10n.aiConsentTitle,
+    GeminiErrorKind.aiPaused => l10n.aiPausedTitle,
     GeminiErrorKind.other => message ?? l10n.errorUnknown,
   };
 

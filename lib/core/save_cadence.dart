@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/notes/data/notes_delta_sync.dart';
 import '../features/settings/settings_providers.dart';
+import 'ai_kill_switch.dart';
 
 /// **OTOMATİK KAYDIN BULUT SIKLIĞI** (senkron maliyeti planı S2 + korkuluk
 /// 5, 2026-11-17).
@@ -67,6 +68,8 @@ final saveCadenceSyncProvider = Provider<void>((ref) {
       .listen(
         (d) {
           SaveCadence.apply(d.data());
+          // PL2: AI acil kapatma aynı belgede — ayrı okuma yok.
+          AiKillSwitch.apply(d.data());
           unawaited(SyncDeltaFlag.remember(d.data(), prefs));
         },
         onError: (Object e) => debugPrint('Kayıt sıklığı okunamadı: $e'),

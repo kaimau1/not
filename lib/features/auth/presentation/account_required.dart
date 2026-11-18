@@ -119,6 +119,7 @@ class AiStatusCard extends ConsumerWidget {
               ),
       ),
       AiAvailability.turnedOff => l10n.aiOffBody,
+      AiAvailability.paused => l10n.aiPausedBody,
       // Rıza (PL3 a): ne gönderilir, nereye, "yanılabilir", nasıl kapatılır.
       AiAvailability.consentNeeded => [
         l10n.aiConsentWhat,
@@ -202,7 +203,9 @@ class AiStatusCard extends ConsumerWidget {
                     child: Text(l10n.aiConsentDecline),
                   ),
                 ],
-                if (!consent && status != AiAvailability.turnedOff)
+                if (!consent &&
+                    status != AiAvailability.turnedOff &&
+                    status != AiAvailability.paused)
                   OutlinedButton.icon(
                     icon: const Icon(Icons.key_outlined),
                     label: Text(l10n.guestAiAddKey),
@@ -226,6 +229,7 @@ String aiStatusTitle(AppLocalizations l10n, AiAvailability status) =>
       AiAvailability.webBuiltInOff => l10n.aiStatusWebOffTitle,
       AiAvailability.quotaOut => l10n.aiStatusQuotaTitle,
       AiAvailability.turnedOff => l10n.aiOffTitle,
+      AiAvailability.paused => l10n.aiPausedTitle,
       AiAvailability.consentNeeded => l10n.aiConsentTitle,
     };
 

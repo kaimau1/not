@@ -4038,5 +4038,7 @@
   "aiConsentTurnOff": "İstediğin an Ayarlar → Yapay zekâ'dan tümden kapatabilirsin.",
   "aiConsentAccept": "Kabul ediyorum",
   "aiConsentDecline": "Vazgeç",
-  "aiMayBeWrong": "AI yanılabilir; önemli bilgiyi doğrula."
+  "aiMayBeWrong": "AI yanılabilir; önemli bilgiyi doğrula.",
+  "aiPausedTitle": "Yapay zekâ geçici olarak kapalı",
+  "aiPausedBody": "Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene."
 }

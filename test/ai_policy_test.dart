@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/ai_kill_switch.dart';
 import 'package:notlar/core/error_log.dart';
 import 'package:notlar/core/personalize.dart';
 import 'package:notlar/features/ai/data/ai_gate.dart';
@@ -36,10 +37,12 @@ void main() {
   final l10n = lookupAppLocalizations(const Locale('tr'));
 
   setUp(() {
+    AiKillSwitch.debugReset();
     Personalize.debugReset();
     AiConsentNotifier.debugRequired = null;
   });
   tearDown(() {
+    AiKillSwitch.debugReset();
     Personalize.debugReset();
     AiConsentNotifier.debugRequired = null;
   });
@@ -247,7 +250,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(l10n.aiConsentTitle), findsOneWidget);
     expect(find.textContaining(l10n.aiConsentMistakes), findsOneWidget);
-    await tester.ensureVisible(find.byKey(const ValueKey('ai-consent-decline')));
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('ai-consent-decline')),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('ai-consent-decline')));
     await tester.pumpAndSettle();
@@ -312,6 +317,74 @@ void main() {
           reason: path,
         );
       }
+    });
+  });
+
+  group('acil kapatma + yerel hız sınırı (PL2)', () {
+    test(
+      'config/app.aiKillSwitch: yalnız tam true kapatır; canlı izlenir',
+      () async {
+        final c = await container(key: 'k');
+        expect(c.read(aiAvailabilityProvider), AiAvailability.ready);
+        AiKillSwitch.apply({'aiKillSwitch': 'true'});
+        expect(c.read(aiKillSwitchProvider), isFalse);
+        AiKillSwitch.apply({'aiKillSwitch': true, 'minClient': 3});
+        expect(c.read(aiAvailabilityProvider), AiAvailability.paused);
+        expect(c.read(aiAvailabilityProvider).looksLocked, isTrue);
+        expect(
+          () => c.read(aiAdmissionProvider).check(),
+          rejectedWith(GeminiErrorKind.aiPaused),
+        );
+        expect(
+          const GeminiException.of(GeminiErrorKind.aiPaused).localized(l10n),
+          l10n.aiPausedTitle,
+        );
+        // Alan kalkınca / belge okunamayınca bugünkü davranış.
+        AiKillSwitch.apply(null);
+        expect(c.read(aiAvailabilityProvider), AiAvailability.ready);
+        c.read(aiAdmissionProvider).check();
+      },
+    );
+
+    test('değer config/app dinleyicisinden gelir, istemci yazmaz', () {
+      final src = File('lib/core/save_cadence.dart').readAsStringSync();
+      expect(src, contains('AiKillSwitch.apply(d.data())'));
+      for (final f in Directory('lib').listSync(recursive: true)) {
+        if (f is! File || !f.path.endsWith('.dart')) continue;
+        final text = f.readAsStringSync();
+        expect(
+          RegExp(r"aiKillSwitch'\s*:").hasMatch(text),
+          isFalse,
+          reason: '${f.path} config/app bayrağını yazmamalı',
+        );
+      }
+    });
+
+    test('hız sınırı: dakikada 30, saatte 300; pencere kayar', () {
+      final limiter = AiRateLimiter();
+      final t0 = DateTime(2026, 11, 18, 10);
+      for (var i = 0; i < 30; i++) {
+        expect(limiter.tryAcquire(t0), isTrue);
+      }
+      expect(limiter.tryAcquire(t0.add(const Duration(seconds: 59))), isFalse);
+      expect(limiter.tryAcquire(t0.add(const Duration(minutes: 1))), isTrue);
+
+      final hourly = AiRateLimiter(perMinute: 1000);
+      for (var i = 0; i < 300; i++) {
+        expect(hourly.tryAcquire(t0.add(Duration(seconds: i))), isTrue);
+      }
+      expect(hourly.tryAcquire(t0.add(const Duration(minutes: 30))), isFalse);
+      expect(hourly.tryAcquire(t0.add(const Duration(hours: 1))), isTrue);
+    });
+
+    test('kapı: sınır aşılınca ağa çıkmadan red; gömmeler sayılmaz', () async {
+      final c = await container(key: 'k');
+      final admission = c.read(aiAdmissionProvider);
+      for (var i = 0; i < admission.limiter.perMinute; i++) {
+        admission.check();
+      }
+      expect(admission.check, rejectedWith(GeminiErrorKind.rateLimited));
+      admission.check(metered: false);
     });
   });
 }
