@@ -1179,11 +1179,15 @@ class FolderPullIndicator extends StatelessWidget {
     required this.progress,
     required this.distance,
     required this.child,
+    this.icon = Icons.folder_outlined,
   });
 
   final ValueNotifier<double> progress;
   final double distance;
   final Widget child;
+
+  /// Jestin hedefinin simgesi (U1: takvim, not, klasör…).
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -1238,7 +1242,7 @@ class FolderPullIndicator extends StatelessWidget {
                               ),
                             ),
                             Icon(
-                              Icons.folder_outlined,
+                              icon,
                               size: 18,
                               color: ready ? scheme.onPrimary : scheme.primary,
                             ),

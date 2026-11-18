@@ -7472,13 +7472,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.';
 
   @override
-  String get swipeLeftCalendar => 'Sağa kaydırınca takvim';
-
-  @override
-  String get swipeLeftCalendarInfo =>
-      'Tümü görünümünde ekranı sağa kaydırınca takvim açılır';
-
-  @override
   String calendarMoved(String day) {
     return '$day gününe taşındı';
   }
@@ -8869,4 +8862,36 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get aiPausedBody =>
       'Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.';
+
+  @override
+  String get homePullGestureTitle => 'Listeyi tepeden aşağı çekince';
+
+  @override
+  String get homeSwipeRightGestureTitle => 'Tümü\'de sağa kaydırınca';
+
+  @override
+  String get homeGestureInfo =>
+      'Bir not ya da klasör seçersen jest doğrudan onu açar';
+
+  @override
+  String get homeGestureFolders => 'Klasörler';
+
+  @override
+  String get homeGestureNote => 'Bir not';
+
+  @override
+  String get homeGestureFolder => 'Bir klasör';
+
+  @override
+  String get homeGestureNone => 'Hiçbiri';
+
+  @override
+  String get homeGestureMissing =>
+      'Jestin hedefi bulunamadı; Ayarlar → Notlar\'dan yeniden seç';
+
+  @override
+  String get calendarExpiryTag => 'Arşivlenir';
+
+  @override
+  String get calendarExpiryRemoved => 'Arşivleme süresi kaldırıldı';
 }

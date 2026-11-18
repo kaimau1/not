@@ -602,7 +602,10 @@ void main() {
       await end(tester);
     });
 
-    testWidgets('yapay zekâ kapalıysa rayda kilit, açıksa ✨', (tester) async {
+    // KW-13 (web keşfi 2026-11-18): kapalıyken de ✨ kalır, kilit köşe rozeti.
+    testWidgets('yapay zekâ kapalıysa rayda ✨ + kilit rozeti, açıksa ✨', (
+      tester,
+    ) async {
       await pump(
         tester,
         const Size(1400, 900),
@@ -627,14 +630,19 @@ void main() {
           ),
         ],
       );
+      final badge = find.byKey(const ValueKey('rail-ai-locked'));
+      expect(badge, findsOneWidget);
       expect(
         find.descendant(
-          of: find.byType(NavigationRail),
+          of: badge,
           matching: find.byIcon(Icons.auto_awesome_outlined),
         ),
-        findsNothing,
+        findsOneWidget,
       );
-      expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+      expect(
+        find.descendant(of: badge, matching: find.byIcon(Icons.lock_outline)),
+        findsOneWidget,
+      );
       await end(tester);
     });
   });

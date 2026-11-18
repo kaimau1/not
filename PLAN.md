@@ -219,10 +219,10 @@ biri altın setle ölçülerek. PL2 korumaları ve PL3 rıza/"Bildir" ile birlik
 ### 1.7 Kullanıcı istekleri (2026-11-18, sohbette açıkça istendi — zincire hazır)
 | No | İstek | Not | Cihaz |
 |---|---|---|---|
-| U1 | Kaydırma jestleri ayarlanabilir: üstten çekme (bugün klasörler) ve soldan sağa çekme (bugün takvim) Ayarlar'dan seçilsin — klasörler / takvim / belirli bir not / belirli bir klasör / hiçbiri | varsayılan bugünkü davranış | A/B (ana ekran) |
+| U1 | [~] Kaydırma jestleri ayarlanabilir: üstten çekme (bugün klasörler) ve soldan sağa çekme (bugün takvim) Ayarlar'dan seçilsin — klasörler / takvim / belirli bir not / belirli bir klasör / hiçbiri | varsayılan bugünkü davranış. **Durum 2026-11-18 (P74, dal oto/P74-jest-takvim-web):** yazıldı — Ayarlar → Notlar iki satır (`home_pull_gesture`, `home_swipe_right_gesture`, eşitlenen ayar); eski "sağa kaydırınca takvim" kapalıysa "hiçbiri"; "hiçbiri" = sağa çekiş klasör gezisine döner (sabah bakılacak: tümden kapatma isteniyorsa); cihazda A/B yok | A/B (ana ekran) |
 | U2 | Editör üst paneli düzenlenmeli (geri · yazım · B · renk · ⋮ · geri al/yinele · ara · ⋮ kalabalık; telefonda sadeleştir, sık kullanılan öne) | `istek_tara.py` önce | A/B (editör) |
 | U3 | **Bug:** defter kipinde sayfa geçişi jestleriyle (kaydırma/seçim) karışıyor | kök neden + test | A/B |
-| U4 | Zamana/güne bağlı notlar, hatırlatıcılar vb. ana ekran takvim şeridinde ve tam takvimde görünsün | | hayır |
+| U4 | [x] Zamana/güne bağlı notlar, hatırlatıcılar vb. ana ekran takvim şeridinde ve tam takvimde görünsün | **2026-11-18 (P74):** hatırlatıcılar ve tarihli maddeler (görev) zaten vardı; eksik olan ZAMANLI NOT (`expiresAt`) eklendi — arşivlenme gününde "Arşivlenir" satırı, sürükleme/silme `expiresAt`'e dokunur (yeni Firestore alanı yok) | hayır |
 | U5 | **Bug:** alttaki bildirimin geri sayım çubuğu takılarak ilerliyor; kesintisiz akmalı (tek AnimationController/doğrusal, kare kaçırmadan) | P72 KT-1 toast kuyruğundan sonra | A/B |
 | U6 | Telefonda alt paneldeki 5 düğme → 4; en sağdaki "⋮" (ya da benzeri) küçük açılır pencerede kalanları gösterir | tablette 5 kalabilir | A/B (alt çubuk) |
 | U7 | Metin seçim menüsü (Kes/Kopyala/Yapıştır/Biçim…/Ek göm/⋮) düzenlensin: **Tümünü seç** yok → eklensin; en çok kullanılanlar önde (seçim sırasında) | | hayır |

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,6 +13,9 @@ import '../../notes/presentation/capture_mode_sheet.dart';
 import '../../notes/presentation/filter_sheet.dart' show sortLabel;
 import '../settings_providers.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../../notes/presentation/note_link_ui.dart';
+import '../../notes/data/notes_repository.dart' show notesStreamProvider;
+import '../../notes/domain/note.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../app/theme/app_tokens.dart';
 
@@ -99,21 +104,81 @@ class SwipeModeSetting extends ConsumerWidget {
   }
 }
 
-/// Tümü görünümünde sola kaydırınca takvim (bkz. [swipeLeftCalendarProvider]).
-class SwipeCalendarSetting extends ConsumerWidget {
-  const SwipeCalendarSetting({super.key});
+/// Ana ekran jestinin hedefi (U1, bkz. [HomeGestureTarget]): üstten çekiş
+/// ya da Tümü'de sağa çekiş.
+class HomeGestureSetting extends ConsumerWidget {
+  const HomeGestureSetting({
+    super.key,
+    required this.provider,
+    required this.title,
+  });
+
+  final NotifierProvider<HomeGestureNotifier, HomeGestureTarget> provider;
+  final String title;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return SwitchListTile(
-      key: const ValueKey('swipe-left-calendar'),
-      contentPadding: EdgeInsets.zero,
-      title: Text(l10n.swipeLeftCalendar),
-      subtitle: Text(l10n.swipeLeftCalendarInfo),
-      value: ref.watch(swipeLeftCalendarProvider),
-      onChanged: ref.read(swipeLeftCalendarProvider.notifier).set,
+    final target = ref.watch(provider);
+    String label(HomeGestureKind k) {
+      final picked = k == target.kind ? _pickedName(ref, target) : null;
+      final base = switch (k) {
+        HomeGestureKind.folders => l10n.homeGestureFolders,
+        HomeGestureKind.calendar => l10n.calendarTitle,
+        HomeGestureKind.note => l10n.homeGestureNote,
+        HomeGestureKind.folder => l10n.homeGestureFolder,
+        HomeGestureKind.none => l10n.homeGestureNone,
+      };
+      return picked == null || picked.isEmpty ? base : '$base: $picked';
+    }
+
+    return _ChoiceRow<HomeGestureKind>(
+      title: title,
+      subtitle: l10n.homeGestureInfo,
+      values: HomeGestureKind.values,
+      selected: target.kind,
+      label: label,
+      onSelected: (k) => unawaited(_choose(context, ref, k)),
     );
+  }
+
+  String? _pickedName(WidgetRef ref, HomeGestureTarget t) => switch (t.kind) {
+    HomeGestureKind.note =>
+      (ref.read(notesStreamProvider).value ?? const <Note>[])
+          .where((n) => n.id == t.id)
+          .map((n) => noteLinkLabel(n, ''))
+          .firstOrNull,
+    HomeGestureKind.folder => ref
+        .read(orderedFoldersProvider)
+        .where((f) => f.id == t.id)
+        .map((f) => f.name)
+        .firstOrNull,
+    _ => null,
+  };
+
+  Future<void> _choose(
+    BuildContext context,
+    WidgetRef ref,
+    HomeGestureKind kind,
+  ) async {
+    final set = ref.read(provider.notifier).set;
+    switch (kind) {
+      case HomeGestureKind.note:
+        final note = await showNotePicker(
+          context,
+          notes: [
+            for (final n
+                in ref.read(notesStreamProvider).value ?? const <Note>[])
+              if (n.archivedAt == null) n,
+          ],
+        );
+        if (note != null) set((kind: kind, id: note.id));
+      case HomeGestureKind.folder:
+        final id = await showFolderPickSheet(context, ref);
+        if (id != null && id.isNotEmpty) set((kind: kind, id: id));
+      default:
+        set((kind: kind, id: null));
+    }
   }
 }
 

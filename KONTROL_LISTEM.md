@@ -215,6 +215,16 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Tablette bak
 
+- [ ] **P74 jest hedefleri (U1) + ana ekran A/B** — yazıldı, cihazda doğrulanmadı
+  Nerede: Ayarlar → Notlar → "Listeyi tepeden aşağı çekince" / "Tümü'de sağa kaydırınca".
+  Nasıl: önce varsayılanla (klasör menüsü / takvim) dene; sonra "Bir not" seç → çek → o not açılır; "Bir klasör" → o klasöre geçer; "Hiçbiri" → çekiş göstergesi çıkmaz. Ana ekran A/B: `tool/perf/ab_hepsi.py <önceki [apk]> <P74> --altin`.
+  Doğruysa: hedefler doğru, kasma yok (UI/LAYOUT %20 altında).
+
+- [ ] **P74 web ekran okuyucu + Tab (KW-1/KW-2)** — yazıldı, cihazda doğrulanmadı
+  Nerede: web, ana ekran, geniş pencere.
+  Nasıl: NVDA (ya da Chrome "Enable accessibility") ile sol ray ve not kartları okunuyor mu; boş yere tıklayıp Tab → odak halkası raya/arama kutusuna/kartlara gidiyor mu (tarayıcıya kaçmıyor).
+  Doğruysa: ray düğmeleri ve kartlar adlarıyla okunur, Tab uygulama içinde ilerler.
+
 - [ ] **S1 "yalnız değişeni dinle" iki cihaz turu (P67; bayrak KAPALI — bu tur bitmeden `config/app.syncDeltaListen` AÇILMAZ)**
   Önce: bütün cihazlarda bu sürüm + `minClient` damgalı sürüme. Tablette `sync_delta_listen` açık, web'de kapalı ve açık: (a) tablette düzenle → web'de görünsün; (b) çöpe at → listeden düşsün, geri al → gelsin; (c) uçak kipinde düzenle → bağlanınca karşıda; (d) cihaz saatini ±1 gün kaydır → değişiklikler görünsün; (e) 30 dk+ kapalıyken öbür cihazda değiştir → açılışta görünsün; (f) bir notta senkronu kapat → öbür cihazda sonraki açılışta düşsün; (g) hesap değiştir → notlar karışmasın. Ayrıntı `docs/hafiza/veri.md` S1.
   Yanlışsa: harfini yaz.
