@@ -41,25 +41,57 @@ class _PageSwipeDetectorState extends State<PageSwipeDetector> {
   int? _pointer;
   Offset _start = Offset.zero;
   Duration _startTime = Duration.zero;
-  bool _multi = false;
 
+  /// Bu dokunuş sayfa çevirmez: başka bir iş onu kullandı (U3).
+  bool _void = false;
+
+  /// Şu an basılı kalem/fare imleçleri.
+  final _others = <int>{};
+
+  /// Dokunuş başında odaklı alanın seçimi (değiştiyse kullanıcı seçiyordu).
+  TextSelection? _selection;
+
+  /// Odaklı metin alanının seçimi (yoksa null).
+  static TextSelection? _focusedSelection() => FocusManager
+      .instance
+      .primaryFocus
+      ?.context
+      ?.findAncestorStateOfType<EditableTextState>()
+      ?.textEditingValue
+      .selection;
+
+  /// **JEST KARIŞMASI** (kullanıcı bulgusu U3, 2026-11-18: "defter kipinde
+  /// sayfa geçişi jestlerle karışıyor"). KÖK NEDEN: ham [Listener] jest
+  /// yarışına girmediği için hareketi BAŞKA BİR İŞİN de kullandığını
+  /// bilmiyordu — yatay bir kaydırılabilir (tablo, şerit) kayarken, seçim
+  /// sürüklenirken ya da kalemle yazarken avuç/parmak yana kayınca sayfa da
+  /// çevriliyordu. Şimdi bu üçü dokunuşu "kullanılmış" sayar: (1) dokunuş
+  /// sırasında herhangi bir kaydırma bildirimi, (2) odaklı alanın seçiminin
+  /// değişmesi, (3) basılı bir kalem/fare imleci.
   void _down(PointerDownEvent e) {
-    if (e.kind != PointerDeviceKind.touch) return;
+    if (e.kind != PointerDeviceKind.touch) {
+      _others.add(e.pointer);
+      _void = true;
+      return;
+    }
     if (_pointer != null) {
       // İkinci parmak: yakınlaştırma/iki parmak kaydırma — çekiş sayılmaz.
-      _multi = true;
+      _void = true;
       return;
     }
     _pointer = e.pointer;
     _start = e.position;
     _startTime = e.timeStamp;
-    _multi = false;
+    _void = _others.isNotEmpty;
+    _selection = _focusedSelection();
   }
 
   void _up(PointerUpEvent e) {
+    _others.remove(e.pointer);
     if (e.pointer != _pointer) return;
     _pointer = null;
-    if (_multi || !widget.enabled) return;
+    if (_void || !widget.enabled) return;
+    if (_focusedSelection() != _selection) return;
     final delta = e.position - _start;
     final elapsed = e.timeStamp - _startTime;
     if (elapsed > PageSwipeDetector.maxDuration) return;
@@ -71,7 +103,13 @@ class _PageSwipeDetectorState extends State<PageSwipeDetector> {
   }
 
   void _cancel(PointerCancelEvent e) {
+    _others.remove(e.pointer);
     if (e.pointer == _pointer) _pointer = null;
+  }
+
+  bool _scrolled(ScrollUpdateNotification n) {
+    if (_pointer != null && (n.scrollDelta ?? 0) != 0) _void = true;
+    return false;
   }
 
   @override
@@ -79,7 +117,10 @@ class _PageSwipeDetectorState extends State<PageSwipeDetector> {
     onPointerDown: _down,
     onPointerUp: _up,
     onPointerCancel: _cancel,
-    child: widget.child,
+    child: NotificationListener<ScrollUpdateNotification>(
+      onNotification: _scrolled,
+      child: widget.child,
+    ),
   );
 }
 
