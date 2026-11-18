@@ -90,6 +90,10 @@ class AccountService {
     'rateLimits',
     // Uygulama yapılandırması — kullanıcı verisi değil (bkz. app_update.dart).
     'config',
+    // Hak belgesi (PL14): istemci YAZAMAZ/SİLEMEZ (kendine Pro vermesin,
+    // denemeyi sıfırlamasın). Hesap silinince sunucu siler (auth silme
+    // tetikleyicisi, `functions/entitlements.js` taslağı).
+    AppConstants.entitlementsCollection,
   ];
 
   Future<void> deleteAccountAndData() async {
