@@ -505,6 +505,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get deleteAccountConfirm => 'Kalıcı olarak sil';
 
   @override
+  String get deleteAccountPageInfo =>
+      'Hesabın ve bütün verilerin kalıcı olarak silinir: notlar, klasörler, ekler (bulut ve bağlıysa Drive), kişiler, gelen notlar, paylaştığın klasörler ve hesap kaydı. Başkasına gönderdiğin notların kopyaları onlarda kalır. Bu işlem geri alınamaz; istersen önce Ayarlar\'dan yedek al.';
+
+  @override
   String get licensesTitle => 'Açık kaynak lisansları';
 
   @override
@@ -5349,6 +5353,20 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get errorLogInfo =>
       'Son hatalar yalnız bu cihazda tutulur; sen paylaşmadıkça hiçbir yere gitmez.';
+
+  @override
+  String get feedbackSend => 'Geri bildirim gönder';
+
+  @override
+  String get feedbackInfo =>
+      'Öneri ya da sorun: e-posta uygulaman açılır; sürüm ve cihaz türü eklenir, notların eklenmez.';
+
+  @override
+  String get feedbackNoMailApp =>
+      'E-posta uygulaması açılamadı; adres panoya kopyalandı.';
+
+  @override
+  String get feedbackBodyPrompt => 'Mesajın:';
 
   @override
   String get errorLogEmpty => 'Kayıtlı hata yok.';

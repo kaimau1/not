@@ -660,6 +660,11 @@ class _LegalRow extends StatelessWidget {
   }
 }
 
+/// Hesap silme akışı (onay → ilerleme → silme), ayarların dışından da
+/// çağrılır: web'den hesap silme sayfası (`/delete-account`, PL4).
+Future<void> confirmAndDeleteAccount(BuildContext context, WidgetRef ref) =>
+    _AccountSection._deleteAccount(context, ref);
+
 /// Geri dönüşsüz eylem (plan §2.2): sayfanın SON grubunda tek satır, başlık
 /// ve simge `error`, ok yok; onay diyaloğu aynen.
 class _DeleteAccountRow extends ConsumerWidget {
@@ -674,6 +679,54 @@ class _DeleteAccountRow extends ConsumerWidget {
       leading: Icon(Icons.delete_forever_outlined, color: error),
       title: Text(context.l10n.deleteAccount, style: TextStyle(color: error)),
       onTap: () => _AccountSection._deleteAccount(context, ref),
+    );
+  }
+}
+
+/// **GERİ BİLDİRİM GÖNDER** (PL15): e-posta uygulaması `mailto:` ile açılır;
+/// gövdede yalnız sürüm/derleme/platform/OS ([feedbackTechInfo]). E-posta
+/// uygulaması yoksa adres panoya kopyalanır.
+class _FeedbackRow extends StatelessWidget {
+  const _FeedbackRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return ListTile(
+      key: const ValueKey('settings-feedback'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.mail_outline),
+      title: Text(l10n.feedbackSend),
+      subtitle: Text(l10n.feedbackInfo),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        var version = '?', build = '?';
+        try {
+          final info = await PackageInfo.fromPlatform();
+          version = info.version;
+          build = info.buildNumber;
+        } catch (_) {
+          // Sürüm okunamazsa "?" yazılır.
+        }
+        final uri = feedbackMailUri(
+          subject: '${l10n.appName} · ${l10n.feedbackSend}',
+          prompt: l10n.feedbackBodyPrompt,
+          techInfo: feedbackTechInfo(
+            version: version,
+            buildNumber: build,
+            platform: kIsWeb ? 'web' : Platform.operatingSystem,
+            osVersion: kIsWeb ? '' : Platform.operatingSystemVersion,
+          ),
+        );
+        var opened = false;
+        try {
+          opened = await launchUrl(uri);
+        } catch (_) {}
+        if (opened) return;
+        await Clipboard.setData(const ClipboardData(text: kSupportEmail));
+        messenger.showMessage(l10n.feedbackNoMailApp);
+      },
     );
   }
 }

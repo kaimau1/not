@@ -148,6 +148,7 @@ const kHomeInBarLocations = [
   '/settings',
   '/personalize',
   '/privacy',
+  '/delete-account',
   '/guide',
   '/gmail',
   '/premium',

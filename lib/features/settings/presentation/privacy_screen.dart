@@ -6,8 +6,10 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/delayed_spinner.dart';
 
 /// Gizlilik Politikası — depo kökündeki PRIVACY_POLICY.md dosyasını gösterir
-/// (tek kaynak: aynı metin hem uygulamada hem depoda durur). Play'in Veri
-/// Güvenliği formu ve KVKK bilgilendirmesi bu metne dayanır.
+/// (tek kaynak: aynı metin hem uygulamada hem depoda durur; web'deki
+/// `gizlilik.html` ve `hesap-silme.html` ondan üretilir —
+/// `tool/gizlilik_sayfalari.dart`, PL4). Play'in Veri Güvenliği formu ve
+/// KVKK bilgilendirmesi bu metne dayanır.
 class PrivacyScreen extends StatelessWidget {
   const PrivacyScreen({super.key});
 

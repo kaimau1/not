@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- ÜRETİLDİ: PRIVACY_POLICY.md → dart run tool/gizlilik_sayfalari.dart. ELLE DÜZENLEME. -->
 <html lang="tr">
 <head>
 <meta charset="utf-8">
@@ -7,59 +8,84 @@
 <style>
   body { font: 16px/1.6 system-ui, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px 16px; color: #222; background: #fff; }
   h1 { font-size: 1.6em; } h2 { font-size: 1.15em; margin-top: 1.6em; }
-  @media (prefers-color-scheme: dark) { body { color: #e6e6e6; background: #161616; } a { color: #9ab8ff; } }
+  a { color: #1a56c4; overflow-wrap: anywhere; }
+  .btn { display: inline-block; padding: 10px 18px; border-radius: 8px; background: #b3261e; color: #fff; text-decoration: none; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { body { color: #e6e6e6; background: #161616; } a { color: #9ab8ff; } .btn { background: #f2b8b5; color: #601410; } }
 </style>
 </head>
 <body>
 <h1>Notlar — Gizlilik Politikası</h1>
-<p>Son güncelleme: 9 Kasım 2026</p>
-
-<p>Notlar, kişisel not tutma uygulamasıdır (Android ve web). Bu sayfa hangi
-verilerin nerede tutulduğunu ve Google hesabınızdan istenen izinlerin ne için
-kullanıldığını açıklar.</p>
-
-<h2>Tutulan veriler</h2>
+<p>Son güncelleme: 17 Kasım 2026</p>
+<p>Bu politika, &quot;Notlar&quot; uygulamasının (Android ve web) hangi verileri işlediğini, neden işlediğini ve haklarınızı açıklar. Uygulamayı kullanarak bu politikayı kabul etmiş olursunuz.</p>
+<h2>Toplanan veriler</h2>
+<ol>
+<li>Hesap bilgileri — Google ile giriş yaptığınızda adınız, e-posta adresiniz ve profil fotoğrafınız kimlik doğrulama için kullanılır (Firebase Authentication). Google'sız &quot;misafir&quot; hesap seçerseniz anonim bir hesap açılır; bu hesap yalnız o cihaza bağlıdır, uygulama silinirse ya da oturum kapatılırsa notlarınıza bir daha erişilemez.</li>
+</ol>
+<ol start="2">
+<li>Not içerikleri — Notlarınız, listeleriniz, etiketleriniz, hatırlatıcılarınız ve ekleriniz (fotoğraf, PDF, ses kaydı, çizim, belge) cihazlar arası eşitleme için Google Firebase (Firestore ve Cloud Storage) üzerinde, hesabınıza bağlı olarak saklanır. Google hesabıyla giriş yapıp &quot;Ekleri Google Drive'ında sakla&quot; seçeneğini bağladığınızda ekleriniz bunun yerine KENDİ Google Drive'ınızda, uygulamaya özel gizli klasörde (drive.appdata izni — uygulama Drive'ınızdaki başka hiçbir dosyayı göremez) saklanır. &quot;Yalnız bu cihazda&quot; seçtiğiniz notlar ve videolar buluta yüklenmez. Misafir hesapta ekler buluta yüklenmez. Not içerikleri reklam amacıyla kullanılmaz.</li>
+</ol>
+<ol start="3">
+<li>Kişiler ve paylaşım — Uygulama bir kişiler (arkadaşlar) özelliği içerir:
 <ul>
-  <li><b>Notlar ve ayarlar</b>: Google hesabınıza bağlı olarak Firebase
-  (Cloud Firestore, Cloud Storage) üzerinde saklanır; yalnız sizin hesabınız
-  okuyup yazabilir.</li>
-  <li><b>Ekler</b> (görsel, PDF, ses): Firebase Storage'da ya da Google
-  Drive'ınızın uygulamaya ayrılmış gizli klasöründe (appDataFolder) durur.</li>
-  <li><b>Cihazdaki veriler</b>: önbellek, yazım düzeltme sözlüğü ve tercihler
-  yalnız cihazınızda tutulur.</li>
+<li>Google hesabıyla giriş yaptığınızda adınız ve e-posta adresiniz bir kullanıcı dizinine yazılır; böylece başka kullanıcılar sizi adınızın ilk harfleriyle (en az 3 harf) ya da TAM e-posta adresinizle bulup arkadaşlık isteği gönderebilir. Dizin doğrudan okunamaz; arama sunucuda yapılır, misafir hesaplara kapalıdır, kişi başı dakikada 10 arama ve arama başına en fazla 15 sonuçla sınırlıdır. Ayarlar → Kişiler → &quot;Adımla bulunabilirim&quot; anahtarını kapatırsanız arama kaydınız silinir; yalnız e-posta adresinizi bilen biri size istek gönderebilir.</li>
+<li>Arkadaşlık isteğini kabul ettiğiniz kişilerle, siz seçtiğinizde not gönderebilir, ortak not ya da paylaşılan klasör açabilir ve klasör sohbetinde yazı/görsel paylaşabilirsiniz. Paylaştığınız içeriği o kişiler görür (ve rolüne göre düzenleyebilir); gönderdiğiniz bir notun kopyası alıcıda kalır.</li>
 </ul>
-
-<h2>Google izinleri</h2>
+<p>Bunların dışında verileriniz başka kullanıcılarla paylaşılmaz.</p></li>
+</ol>
+<ol start="4">
+<li>Yapay zeka işlemleri — Özetleme, sesli not düzenleme, OCR, çeviri, sohbet, PDF sohbeti, semantik arama, günlük brifing gibi AI özelliklerini kullandığınızda ilgili not metni, ses kaydı, görsel veya belge işlenmek üzere bir yapay zeka sağlayıcısına gönderilir:
 <ul>
-  <li><b>Giriş (openid, e-posta, profil)</b>: hesabınızı tanımak ve notlarınızı
-  eşitlemek için.</li>
-  <li><b>Google Drive (drive.appdata, drive.file)</b>: yalnız uygulamanın kendi
-  oluşturduğu dosyalar ve gizli uygulama klasörü; Drive'ınızdaki diğer
-  dosyalara erişilmez.</li>
-  <li><b>Gmail (yalnız okuma)</b>: e-postaları uygulamada göstermek ve nota
-  çevirmek için. E-postalar sunucularımıza kopyalanmaz; yalnız sizin nota
-  çevirdiğiniz içerik notunuz olarak saklanır.</li>
-  <li><b>Google Takvim ve Görevler</b>: notlarınızı etkinlik/görevlerle
-  eşleştirmek ve sizin istediğiniz kayıtları oluşturmak için.</li>
+<li>Varsayılan olarak Google Gemini (Firebase AI Logic üzerinden).</li>
+<li>Kendi API anahtarınızı girerseniz, seçtiğiniz sağlayıcıya: Google Gemini, OpenAI, Anthropic ya da OpenRouter (OpenRouter isteği seçtiğiniz modelin sağlayıcısına iletir). Bu durumda o sağlayıcının gizlilik politikası geçerlidir.</li>
 </ul>
-<p>Google API'lerinden alınan veriler Google API Hizmetleri Kullanıcı Verisi
-Politikası'na (Sınırlı Kullanım şartları dahil) uygun kullanılır: yalnız
-uygulamanın size sunduğu özellikler için, reklam için değil; üçüncü kişilere
-satılmaz ya da aktarılmaz.</p>
-
-<h2>Yapay zekâ özellikleri</h2>
-<p>Asistan, özet, çeviri, metin tanıma gibi özellikleri siz kullandığınızda
-ilgili metin veya görsel işlenmek üzere Google Gemini API'ye gönderilir.
-Kullanmadığınız sürece hiçbir içerik gönderilmez.</p>
-
-<h2>Hata raporları</h2>
-<p>Uygulama çökerse teknik hata kaydı (cihaz modeli, hata izi) Firebase
-Crashlytics'e gider; not içeriği bu kayda eklenmez.</p>
-
-<h2>Silme</h2>
-<p>Uygulamada Ayarlar → Hesap bölümünden hesabınızı ve bütün verilerinizi
-silebilirsiniz. Google izinlerini istediğiniz an
-<a href="https://myaccount.google.com/permissions">Google hesabı izinleri</a>
-sayfasından geri alabilirsiniz.</p>
+<p>İçerik yalnızca isteğinizi yerine getirmek için gönderilir; uygulama bu içerikleri ayrıca bir sunucuya kaydetmez (sonucu notunuza siz eklerseniz notla birlikte saklanır). API anahtarınız yalnızca cihazınızdaki güvenli depoda tutulur ve hiçbir sunucuya yazılmaz. Dahili AI kullanımında günlük kota için hesabınıza bağlı bir sayaç (yalnız sayı ve zaman) tutulur.</p></li>
+</ol>
+<ol start="5">
+<li>Ses tanıma — Sesli notta konuşmanız cihazınızın ses tanıma hizmetiyle (Android'de genellikle Google) yazıya dökülür. &quot;İnternetsiz tanıma&quot; açıksa ve dil paketi yüklüyse ses cihazdan çıkmaz.</li>
+</ol>
+<ol start="6">
+<li>Konum (yalnız konum hatırlatıcısı kullanırsanız) — Bir nota &quot;şu yere varınca/ayrılınca hatırlat&quot; eklediğinizde seçtiğiniz yerin koordinatı notla birlikte saklanır. Konumunuzu uygulama değil, Android'in geofence hizmeti cihazda izler; uygulama kapalıyken de tetiklenmesi için &quot;her zaman&quot; konum izni istenir. Konum geçmişiniz toplanmaz, sunucuya gönderilmez. Konum hatırlatıcısı kullanmıyorsanız konum izni gerekmez.</li>
+</ol>
+<ol start="7">
+<li>Bildirimler — Hatırlatıcı ve günlük brifing bildirimleri cihazınızda yerel olarak planlanır; bildirim içerikleri sunucuya gönderilmez.</li>
+</ol>
+<ol start="8">
+<li>Çökme raporları ve hata günlüğü — Android'de uygulama çöktüğünde ya da beklenmeyen bir hata oluştuğunda teknik bir rapor (hata mesajı, kod satırları, cihaz modeli, Android ve uygulama sürümü) Firebase Crashlytics'e gönderilir. Rapor not içeriğinizi, adınızı ya da e-postanızı İÇERMEZ; hesabınızla eşleştirilmez. Ayarlar → Hakkında → &quot;Çökme raporlarını gönder&quot; ile kapatabilirsiniz. Ayrıca son hatalar cihazınızda küçük bir günlükte tutulur; bu günlük yalnız siz &quot;Hata günlüğünü paylaş&quot; dediğinizde ve seçtiğiniz yere gönderilir.</li>
+</ol>
+<ol start="9">
+<li>Gömülü içerik — Bir nota YouTube bağlantısı eklediğinizde video YouTube'un gömülü oynatıcısıyla açılır; bu sırada YouTube'un kendi politikası geçerlidir.</li>
+</ol>
+<h2>Google hesabından istenen izinler</h2>
+<p>Her izin yalnız ilgili özelliği ilk kullandığınızda istenir; istemediğiniz izni vermeden uygulamanın geri kalanını kullanabilirsiniz.</p>
+<ul>
+<li>Giriş (openid, e-posta, profil): hesabınızı tanımak ve notlarınızı eşitlemek için.</li>
+<li>Google Drive (drive.appdata, drive.file): yalnız uygulamanın kendi oluşturduğu dosyalar ve gizli uygulama klasörü; Drive'ınızdaki diğer dosyalara erişilmez.</li>
+<li>Google Takvim (calendar.readonly, calendar.events) ve Google Görevler (tasks): etkinliklerinizi ve görevlerinizi uygulamada göstermek, notlarla eşleştirmek ve yalnız sizin istediğiniz etkinlik/görevleri oluşturmak ya da güncellemek için.</li>
+<li>Gmail (gmail.readonly, yalnız okuma; bu özellik her sürümde bulunmaz): e-postalarınızı uygulamada göstermek ve sizin seçtiğiniz e-postayı nota çevirmek için. E-postalar sunucularımıza kopyalanmaz; yalnız nota çevirdiğiniz içerik notunuz olarak saklanır.</li>
+</ul>
+<p>Google API'lerinden alınan veriler Google API Hizmetleri Kullanıcı Verisi Politikası'na (Sınırlı Kullanım şartları dahil) uygun kullanılır: yalnız uygulamanın size sunduğu özellikler için, reklam için değil; üçüncü kişilere satılmaz ya da aktarılmaz. İzinleri istediğiniz an <a href="https://myaccount.google.com/permissions">https://myaccount.google.com/permissions</a> adresinden geri alabilirsiniz.</p>
+<h2>Toplanmayan veriler</h2>
+<ul>
+<li>Reklam kimliği, kişi listesi (rehber), konum geçmişi veya tarama geçmişi toplanmaz.</li>
+<li>Reklam ya da pazarlama analitiği SDK'sı kullanılmaz (yalnız yukarıdaki çökme raporu).</li>
+<li>Verileriniz üçüncü taraflara satılmaz veya pazarlama için paylaşılmaz.</li>
+</ul>
+<h2>Veri saklama ve silme</h2>
+<ul>
+<li>Verileriniz siz silene kadar Firebase'de (ekleriniz Drive'ı bağladıysanız Google Drive'ınızda) saklanır. Drive'daki uygulama klasörünü Google Drive → Ayarlar → Uygulamaları yönet'ten de silebilirsiniz.</li>
+<li>Tek bir notu çöp kutusuna taşıyıp kalıcı silebilirsiniz.</li>
+<li>Ayarlar → Hesap → &quot;Hesabımı ve verilerimi sil&quot; ile hesabınızı ve TÜM verilerinizi uygulama içinden kalıcı olarak silebilirsiniz. Uygulama cihazınızda kurulu değilse aynı işlemi web sitemizdeki &quot;Hesap ve veri silme&quot; sayfasından (hesap-silme.html) giriş yaparak yapabilirsiniz; hesabınıza giremiyorsanız İletişim bölümündeki adrese yazın, talebiniz 30 gün içinde sonuçlandırılır. Silinenler: notlar, klasörler, ekler (Storage ve bağlıysa Drive), kişiler ve istekler, gelen notlar, paylaştığınız klasörler (sohbet mesajları ve görselleri dahil), ortak not kayıtları, kullanıcı dizini ve arama kaydınız, hesap kaydı. Bu işlem geri alınamaz. Yalnız AI kota ve arama hız sınırı sayaçları (kişisel içerik taşımayan, sayı + zaman) kötüye kullanımı önlemek için silinmez.</li>
+<li>Başkasına gönderdiğiniz notların kopyaları ve başkalarının ortak klasörüne yazdığınız notlar o kişilerin verisi olduğundan sizin hesabınızla silinmez.</li>
+<li>Çökme raporları Firebase Crashlytics'te 90 gün tutulur.</li>
+</ul>
+<h2>Veri güvenliği</h2>
+<p>Veriler aktarımda TLS ile şifrelenir. Firebase erişim kuralları her kullanıcının yalnızca kendi verisine ve kendisiyle paylaşılan içeriğe erişmesine izin verir. Notlar sunucuda Google'ın standart disk şifrelemesiyle saklanır; uygulamaya özel uçtan uca şifreleme YOKTUR — &quot;not kilidi&quot; yalnız cihazda açılışı parmak izi/yüz/ekran kilidiyle korur, içeriği şifrelemez. API anahtarınız (girdiyseniz) Android Keystore ile korunan güvenli depoda (web'de tarayıcının yerel deposunda) saklanır.</p>
+<h2>Üçüncü taraf hizmetler</h2>
+<p>Uygulama şu hizmetleri kullanır: Firebase Authentication, Cloud Firestore, Cloud Storage, Cloud Functions (kişi araması), Firebase App Check, Firebase AI Logic, Firebase Crashlytics, Google Drive API (bağlarsanız), Gemini API ve — kendi anahtarınızla seçerseniz — OpenAI, Anthropic, OpenRouter. Google hizmetleri için Google'ın gizlilik politikası geçerlidir: <a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a></p>
+<h2>Çocukların gizliliği</h2>
+<p>Uygulama 13 yaş altı çocuklara yönelik değildir.</p>
+<h2>İletişim</h2>
+<p>Sorularınız için: <a href="mailto:hekimasistanitr@gmail.com">hekimasistanitr@gmail.com</a></p>
+<p>Bu politika değiştiğinde güncel sürüm uygulama içinde ve bu dosyada yayınlanır.</p>
 </body>
 </html>

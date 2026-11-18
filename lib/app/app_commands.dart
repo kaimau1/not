@@ -92,6 +92,7 @@ enum AppSection {
     }
     if (location.startsWith('/settings') ||
         location.startsWith('/privacy') ||
+        location.startsWith('/delete-account') ||
         location.startsWith('/premium')) {
       return AppSection.settings;
     }

@@ -507,6 +507,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountConfirm => 'Delete permanently';
 
   @override
+  String get deleteAccountPageInfo =>
+      'Your account and all your data are permanently deleted: notes, folders, attachments (cloud and, if linked, Drive), contacts, received notes, folders you shared and your account record. Copies of notes you sent to others stay with them. This can\'t be undone; back up from Settings first if you like.';
+
+  @override
   String get licensesTitle => 'Open-source licences';
 
   @override
@@ -5369,6 +5373,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorLogInfo =>
       'Recent errors are kept only on this device; they go nowhere unless you share them.';
+
+  @override
+  String get feedbackSend => 'Send feedback';
+
+  @override
+  String get feedbackInfo =>
+      'Suggestion or problem: your email app opens; app version and device type are added, your notes are not.';
+
+  @override
+  String get feedbackNoMailApp =>
+      'Couldn\'t open an email app; the address was copied to the clipboard.';
+
+  @override
+  String get feedbackBodyPrompt => 'Your message:';
 
   @override
   String get errorLogEmpty => 'No errors recorded.';

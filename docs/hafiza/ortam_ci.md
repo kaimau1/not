@@ -149,3 +149,9 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   → `useLegacyPackaging=false`, `NOTLAR_KISISEL` ile birlikte derleme DURUR. Play derlemesi KİŞİSEL OLMADAN
   (kurulum/overlay izinleri yalnız `src/kisisel`). Yerel izin/ONNX/Gmail kapsamı çıkarma henüz yok →
   `docs/play_hazirlik.md`. targetSdk 36 = Flutter 3.47.9 varsayılanı (sürüm düşerse bak).
+- **Geri bildirim (P69 PL15, 2026-11-18):** Ayarlar → Hesap → Hakkında "Geri bildirim gönder" = `mailto:`
+  (`lib/core/feedback_mail.dart`; boşluk `%20` elle, `Uri(queryParameters:)` `+` yapar). Gövde YALNIZ sürüm/derleme/
+  platform/OS (+ Play işareti); kişisel veri eklenmez (`test/feedback_mail_test.dart`). Destek adresi tek sabit
+  `kSupportEmail` = gizlilik metnindeki iletişim adresi (sabah bakılacak: Play için ayrı adres). Crashlytics EKLENMEDİ
+  (anahtar zaten `crash_reporting.dart`'ta). OS sürümü `Platform.operatingSystemVersion` (Android'de çekirdek dizgesi;
+  `device_info_plus` bağımlılığı eklenmedi).

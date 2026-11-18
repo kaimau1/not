@@ -38,6 +38,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../../../core/crash_reporting.dart';
 import '../../../core/error_log.dart';
+import '../../../core/feedback_mail.dart';
 import '../../../core/constants.dart';
 import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
@@ -240,6 +241,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _LegalRow(licenses: true),
             title: l10n.licensesTitle,
             keywords: 'lisans acik kaynak',
+          ),
+          _SettingRow(
+            const _FeedbackRow(),
+            title: l10n.feedbackSend,
+            keywords: 'geri bildirim oneri sorun destek e-posta',
           ),
           _SettingRow(
             const _ErrorLogButton(),
