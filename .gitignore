@@ -47,6 +47,9 @@ app.*.map.json
 
 # Yerel gizli değerler
 env.json
+env_play.json
+# Play çeşidinin Firebase dosyası (PL13): yalnız Play derlemesinde konur.
+/android/app/src/release/google-services.json
 key.properties
 *.jks
 

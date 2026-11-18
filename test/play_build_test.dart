@@ -7,11 +7,13 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/app_links.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/core/play_build.dart';
 import 'package:notlar/features/ai/data/antalia/antalia_engine.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/presentation/editor/attachment_actions.dart';
+import 'package:notlar/firebase_options.dart';
 
 void main() {
   const on = !PlayBuild.enabled;
@@ -97,5 +99,43 @@ void main() {
     for (final e in wiring.entries) {
       expect(File(e.key).readAsStringSync(), contains(e.value), reason: e.key);
     }
+  });
+
+  // PL1 yerel yarısı + PL13 çeşit: Play paketi kişisel kimliğe/projeye
+  // bağlanamaz, konum izni pakette yok; kişisel kimlik değişmez.
+  test('Gradle Play çeşidi: ayrı kimlik, ayrı Firebase, konum izni yok', () {
+    final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+    expect(gradle, contains('applicationId = playAppId ?: "dev.kaimau.notlar"'));
+    expect(gradle, contains('NOTLAR_PLAY_APP_ID'));
+    expect(gradle, contains('src/release/google-services.json'));
+    expect(gradle, contains('if (play) manifest.srcFile("src/play/AndroidManifest.xml")'));
+    final playManifest =
+        File('android/app/src/play/AndroidManifest.xml').readAsStringSync();
+    for (final p in [
+      'ACCESS_FINE_LOCATION',
+      'ACCESS_COARSE_LOCATION',
+      'ACCESS_BACKGROUND_LOCATION',
+      '.PlaceReminderReceiver',
+      '.PlaceBootReceiver',
+    ]) {
+      expect(
+        RegExp('"[^"]*${RegExp.escape(p)}" tools:node="remove"')
+            .hasMatch(playManifest),
+        isTrue,
+        reason: p,
+      );
+    }
+  });
+
+  test('Play derlemesi kişisel Firebase projesine bağlanmaz (PL13)', () {
+    if (PlayBuild.enabled) {
+      expect(DefaultFirebaseOptions.play.projectId, isNot('notlar-kaimau'));
+    } else {
+      expect(DefaultFirebaseOptions.android.projectId, 'notlar-kaimau');
+      // Bayraksız koşuda Play değerleri tanımsız → kurulum ekranı.
+      expect(DefaultFirebaseOptions.play.apiKey, isEmpty);
+    }
+    expect(AppLinks.privacy, endsWith('/gizlilik.html'));
+    expect(AppLinks.deleteAccount, endsWith('/hesap-silme.html'));
   });
 }

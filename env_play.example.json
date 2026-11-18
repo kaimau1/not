@@ -1,0 +1,9 @@
+{
+  "_comment": "PLAY CESIDI (PLAN 1.5 PL13). 'env_play.json' olarak kopyalayin (gitignore'da), degerleri AYRI Play Firebase projesinden doldurun (Proje ayarlari -> Android uygulamasi). Bos deger birakmayin: PLAY_FIREBASE_API_KEY bossa uygulama kurulum ekranini acar. Istege bagli SITE_URL (verilmezse https://notlar-web.pages.dev; BOS yazmayin, bos yazilirsa adres bos olur). Derleme komutu ve google-services.json yeri: docs/play_hazirlik.md. CI: dosyanin tamami PLAY_ENV_JSON secret'inda.",
+  "GOOGLE_SERVER_CLIENT_ID": "000000000000-xxxxxxxx.apps.googleusercontent.com",
+  "PLAY_FIREBASE_API_KEY": "PLACEHOLDER",
+  "PLAY_FIREBASE_APP_ID": "PLACEHOLDER",
+  "PLAY_FIREBASE_SENDER_ID": "PLACEHOLDER",
+  "PLAY_FIREBASE_PROJECT_ID": "PLACEHOLDER",
+  "PLAY_FIREBASE_STORAGE_BUCKET": "PLACEHOLDER"
+}

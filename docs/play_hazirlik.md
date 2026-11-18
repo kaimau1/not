@@ -16,13 +16,40 @@ Bayrak yokken (kişisel APK, web) hiçbir şey değişmez — bekçi `test/play_
 `SYSTEM_ALERT_WINDOW` (güncelleyicinin kurulum/yeniden açılma izinleri) yalnız
 `android/app/src/kisisel/AndroidManifest.xml`'de; genel derlemeye zaten girmiyor.
 
-## Yerel Play derleme komutu (henüz CI'da yok)
+## Play çeşidi (PL13, P73 2026-11-18)
+
+Çeşit Gradle `productFlavors` DEĞİL, bayrak (`NOTLAR_PLAY=1`): flavor kişisel APK'nın çıktı adını
+(`app-release.apk` → `app-<çeşit>-release.apk`) ve CI/Release/güncelleyici yollarını değiştirirdi.
+Kişisel/genel derlemede kimlik `dev.kaimau.notlar`, imza, sürüm hesabı AYNEN.
+
+| Ne | Kişisel (bugünkü) | Play |
+|---|---|---|
+| Paket adı | `dev.kaimau.notlar` | `NOTLAR_PLAY_APP_ID` (env) / `-PplayAppId`; YOKSA derleme DURUR |
+| Firebase (yerel) | `android/app/google-services.json` | `android/app/src/release/google-services.json` (gitignore; yoksa derleme DURUR; Play dışı derlemede varsa DURUR) |
+| Firebase (Dart) | `DefaultFirebaseOptions.android` | `DefaultFirebaseOptions.play` ← `env_play.json` `PLAY_FIREBASE_*`; boşsa kurulum ekranı |
+| env | `env.json` | `env_play.json` (örnek `env_play.example.json`) |
+| Site / gizlilik / silme | `AppLinks` varsayılanı `https://notlar-web.pages.dev` + `/gizlilik.html`, `/hesap-silme.html` | `SITE_URL` define'ı |
+| İmza | `ANDROID_KEYSTORE_*` | `PLAY_KEYSTORE_BASE64`, `PLAY_KEYSTORE_PASSWORD`, `PLAY_KEY_ALIAS` (yoksa `upload`) |
+| Kural yayını | `FIREBASE_SERVICE_ACCOUNT` | `PLAY_FIREBASE_SERVICE_ACCOUNT` + `PLAY_FIREBASE_PROJECT_ID` (yoksa adım atlanır) |
+
+CI (`build.yml`): `play_hazir` + `play` işleri YALNIZ elle ("play" kutusu); `PLAY_APP_ID`,
+`PLAY_ENV_JSON` (env_play.json'ın tamamı), `PLAY_GOOGLE_SERVICES_JSON`, `PLAY_KEYSTORE_BASE64`,
+`PLAY_KEYSTORE_PASSWORD`'ın biri eksikse uyarı + `play` atlanır (kırmızı değil). AAB denetimi: köprü,
+`REQUEST_INSTALL_PACKAGES`, `*_LOCATION` yok; paket adı var. `rules-test` tek kural kümesini sınar →
+iki proje için aynı. Eski F18.29 "Genel AAB" adımları (kişisel projeye bağlı) kaldırıldı.
+
+**Sabah bakılacak (kullanıcı):** Play paket adı, ikinci Firebase projesi (+ Android/Web uygulama kaydı,
+SHA-1, OAuth istemcisi; Gmail kapsamı EKLENMEZ), yükleme anahtarı, yukarıdaki Secrets; `SITE_URL`
+ayrı mı. Uygulama kısayolları (`res/xml/app_shortcuts.xml`) `targetPackage="dev.kaimau.notlar"` sabit
+→ Play paketinde kısayollar açılmaz; kişisel dosyaya dokunmamak için bırakıldı (çözüm: `resValue` +
+`@string` ya da `src/play/res/xml` eşi).
+
+## Yerel Play derleme komutu
 
 ```
-NOTLAR_PLAY=1 flutter build appbundle --release \
-  --dart-define=NOTLAR_PLAY=true --dart-define-from-file=env.json \
-  --obfuscate --split-debug-info=build/app/outputs/symbols \
-  --build-name=<A.B.C> --build-number=<N>
+# android/app/src/release/google-services.json = Play projesinin dosyası; env_play.json dolu
+NOTLAR_PLAY=1 NOTLAR_PLAY_APP_ID=<paket.adi> flutter build appbundle --release   --dart-define=NOTLAR_PLAY=true --dart-define-from-file=env_play.json   --obfuscate --split-debug-info=build/app/outputs/symbols   --build-name=<A.B.C> --build-number=<N>
+# bitince src/release/google-services.json'ı KALDIR (yoksa kişisel derleme durur)
 ```
 
 ## Kontrol listesi
@@ -41,31 +68,30 @@ NOTLAR_PLAY=1 flutter build appbundle --release \
     `unzip` + `llvm-objdump -p lib/arm64-v8a/*.so | grep LOAD` (hizalama `2**14` olmalı)
     ya da Android Studio APK Analyzer; AAB yüklenince Play Console ön denetimi.
 - [x] **Sıkıştırılmamış yerel kütüphane** (Play): Gradle `play` bayrağıyla (yukarıda).
-- [ ] **AAB**: `flutter build appbundle` (komut yukarıda); CI işi PL13 ile (iki imza).
-- [ ] **`--obfuscate`**: yalnız Play komutunda. Crashlytics'te okunur Dart yığın izi için
+- [x] **AAB**: CI `play` işi (P73, Secrets tanımlanınca); yerel komut yukarıda.
+- [x] **`--obfuscate`**: yalnız Play komutunda (CI `play` işi de). Crashlytics'te okunur Dart yığın izi için
   sembol yüklemesi gerekir (`flutterfire upload-crashlytics-symbols`, PL15). Kişisel APK'ya
   eklenmedi (yığın izleri bugünkü gibi okunur kalsın).
-- [ ] **CI boyut raporu AAB için** (16K §2.6, `build.yml:432-441` adımı): PL13'te.
+- [x] **CI boyut raporu AAB için**: `play` işi denetim adımı `base/lib/` en büyük 20 girdiyi yazar (P73).
 
-## PL1'in yerel (derleme dışı bırakma) yarısı — yapılmadı, yapılacak
+## PL1'in yerel (derleme dışı bırakma) yarısı — P73 (2026-11-18)
 
-Dart kapıları özelliği kapatır; ama aşağıdakiler Play paketinde/onay ekranında hâlâ GÖRÜNÜR.
-Derleme denenemediği için bilerek yapılmadı:
-
-1. **Konum izinleri (E3)**: `src/main/AndroidManifest.xml:22-24` `ACCESS_*_LOCATION`. Play'de
-   `src/play/AndroidManifest.xml` (ör. `<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" tools:node="remove"/>`,
-   FINE/COARSE ve geofence alıcısı da) ve `sourceSets.release` içinde `if (play) manifest.srcFile(...)`.
-   `play-services-location` bağımlılığı `if (!play)` olacaksa `src/main/.../PlaceReminders.kt`
-   (geofence kodu `main`'de) Play için boş eşine taşınmalı (kisisel/genel kalıbı).
-2. **ONNX (§2.6, ~11 MB)**: `flutter_onnxruntime` pub bağımlılığı derlemeye hep girer.
-   Seçenekler: (a) `packaging.jniLibs.excludes += "**/libonnxruntime*.so"` yalnız `play`
-   (Dart kapısı motoru hiç açmadığı için yüklenmez; eklentinin Java kaydı .so'yu açılışta
-   yüklemiyorsa güvenli — cihazda doğrula); (b) Antalia'yı ayrı pakete alıp koşullu içe
-   aktarma. Önerilen (a) + cihazda açılış/seslendirme denemesi.
-3. **Gmail kapsamı (E2)**: kod yalnız Gmail ekranı açılınca `gmail.readonly` ister (Play'de
-   ekran yok). Yeni Firebase/Cloud projesinin OAuth onay ekranına Gmail kapsamı EKLENMEZ.
-4. **Paket adı / Firebase yapılandırması**: ad seçilince (PL13): `applicationId` Play'de
-   yeni ad, `google-services.json` + `firebase_options` çifti.
+1. **[x] Konum izinleri (E3)**: `src/play/AndroidManifest.xml` FINE/COARSE/BACKGROUND_LOCATION
+   ve `PlaceReminderReceiver`/`PlaceBootReceiver`'ı `tools:node="remove"` ile siler; Gradle
+   `play` iken release manifestine ekler. `play-services-location` + `PlaceReminders.kt` kalır
+   (izinsiz çalışamaz; Dart kanalı Play'de çağrılmaz). Bekçi `test/play_build_test.dart`;
+   CI `play` işi AAB'de `_LOCATION` arar.
+2. **[ ] ONNX (§2.6, ~11 MB) — YAPILMADI, kanıtlı:** önerilen (a) `.so` dışlaması GÜVENSİZ.
+   `flutter_onnxruntime` 1.9.0 `FlutterOnnxruntimePlugin.onAttachedToEngine` (satır 178)
+   `OrtEnvironment.getEnvironment()` çağırır → yerel kütüphane AÇILIŞTA yüklenir; `.so`
+   yoksa `UnsatisfiedLinkError` (Error; GeneratedPluginRegistrant yalnız Exception yakalar)
+   → Play uygulaması açılışta çöker. Yol (b): Antalia'yı ayrı Dart paketine/eklentiye alıp
+   Play'de bağımlılıktan çıkarmak (pubspec çeşide göre değişmez → ayrı paket + koşullu
+   içe aktarma ya da eklentiyi çatallayıp tembel yükleme). Sabah bakılacak.
+3. **[x] Gmail kapsamı (E2)**: pakette/manifestte Gmail izni yok; kapsam yalnız Gmail ekranında
+   istenir, Play'de ekran yok (`PlayBuild.gmail`). Play Firebase/Cloud projesinin OAuth onay
+   ekranına Gmail kapsamı EKLENMEZ (kullanıcı, konsolda).
+4. **[x] Paket adı / Firebase yapılandırması**: PL13 (yukarıda "Play çeşidi").
 5. **Güncelleyici (E1)**: Play'in uygulama içi güncelleme API'si istenirse ayrı iş (bağımlılık
    gerekir); şimdilik mağaza güncellemesine bırakıldı.
 
