@@ -68,3 +68,36 @@ Derleme denenemediği için bilerek yapılmadı:
    yeni ad, `google-services.json` + `firebase_options` çifti.
 5. **Güncelleyici (E1)**: Play'in uygulama içi güncelleme API'si istenirse ayrı iş (bağımlılık
    gerekir); şimdilik mağaza güncellemesine bırakıldı.
+
+## Hak (entitlement) sözleşmesi — PL14 (2026-11-18) / PL6 doğrulama Function'ı için
+
+Belge: `entitlements/{uid}` (kök koleksiyon). **Yazan yalnız sunucu (Admin SDK)**; istemci
+yalnız KENDİ belgesini `get` eder, liste/yazma/silme kurallarda kapalı (`rules-test` PL14).
+İstemci: `lib/features/entitlement/` (`entitlementProvider`, `proFeatureProvider`); kapı yalnız
+`NOTLAR_PLAY` derlemesinde. Belge yok/okunamıyor = ücretsiz.
+
+| Alan | Tür | Yazan | Anlam |
+|---|---|---|---|
+| `tier` | string `free` \| `pro` \| `lifetime` | doğrulama Function'ı (PL6); deneme tetikleyicisi `free` | Satın alınmış katman; tanınmayan değer = ücretsiz |
+| `proUntil` | Timestamp | doğrulama Function'ı (Play `expiryTime`) | Pro bu ana dek açık; yoksa `tier: pro` Pro SAYILMAZ (geliştirici hesabı = uzak tarih) |
+| `trialEndsAt` | Timestamp | `startTrial` (ilk giriş, +7 gün; misafire yok) | Bu ana dek Pro; bitince ücretsiz/ömür boyu |
+| `lifetimeOwned` | bool | doğrulama Function'ı (tek sefer ürünü) | Ömür boyu alındı; Pro'ya geçse/Pro bitse de kalır (`tier: lifetime` da aynı anlam) |
+| `createdAt` | Timestamp | `startTrial` | Belge ilk yaratılış |
+| öneri: `source`, `purchaseToken`, `orderId`, `updatedAt` | string / Timestamp | doğrulama Function'ı | Denetim izi; istemci okumaz. `purchaseToken` başka uid'de kullanılmışsa reddet (hesap paylaşımı) |
+
+**Doğrulama Function'ı arayüzü (PL6, YAZILMADI):** `verifyPurchase` (onCall, App Check zorunlu)
+girdi `{productId, purchaseToken}` → Google Play Developer API (`purchases.subscriptionsv2.get` /
+`purchases.products.get`) ile doğrula → onaylanmamışsa `acknowledge` → belgeye `set(merge)`
+→ dönüş `{tier, proUntil}`. Yenileme/iptal: Play RTDN (Pub/Sub) tetikleyicisi aynı belgeyi
+günceller. Web satın almaz ("telefondan al"); aynı belgeyi okur.
+
+**Tetikleyici taslağı:** `functions/entitlements.js` (`startTrial` = auth onCreate, `create()` —
+belge varsa dokunmaz; `dropEntitlement` = auth onDelete). `index.js`'e BAĞLI DEĞİL, deploy
+edilmez; Play projesi (PL13) kurulunca bağlanır.
+
+**Açık (sabah bakılacak):** (1) hangi özellik hangi katman — `ProFeature` listesi yer tutucu;
+(2) misafir → Google bağlanınca deneme (onCreate tetiklenmez; callable ya da `beforeUserSignedIn`);
+(3) deneme hesap tabanlı mı, Play aboneliğinin kendi ücretsiz deneme süresi mi (ikisi birden
+çifte deneme verir); (4) Storage kuralı: Pro değilken buluta YENİ ek yüklemeyi sunucuda da
+kapatmak (`firestore.get(entitlements)`; okuma her zaman açık kalır); (5) eski
+`users/{uid}.premiumUntil` (`ai_gate.dart`) bu belgeye taşınır (PL2).
