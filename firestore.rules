@@ -561,6 +561,22 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // **HAK (entitlement)** — PLAN §1.5 PL14. `entitlements/{uid}`: katman
+    // (`tier`: free / pro / lifetime), `proUntil`, `trialEndsAt` — sunucuda
+    // DOĞRULANMIŞ satın almadan (PL6 doğrulama Function'ı) ve ilk girişteki
+    // deneme tetikleyicisinden (`functions/entitlements.js`, taslak) gelir.
+    // Yazma YALNIZ Admin SDK (kurallar Admin SDK'yı bağlamaz): istemci kendi
+    // belgesine bile yazamaz, yoksa kendine Pro verirdi (`premiumUntil`
+    // korumasıyla aynı gerekçe). `users/{uid}` içinde DEĞİL, ayrı kökte
+    // (aiQuota ile aynı neden): o belge hesap silme için istemciden
+    // silinebiliyor; hak belgesi silinip yeniden yaratılarak deneme süresi
+    // sıfırlanamasın. Liste yok: kimse başkasının hakkını tarayamaz.
+    match /entitlements/{uid} {
+      allow get: if signedInAs(uid);
+      allow list: if false;
+      allow write: if false;
+    }
+
     // Dahili AI kota sayacı. AYRI KÖK KOLEKSİYONDA, bilerek:
     //
     // KÖK NEDEN (iki ayrı açık, ikisi de faturayı projeye çıkarıyordu):
