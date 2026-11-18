@@ -226,7 +226,7 @@ biri altın setle ölçülerek. PL2 korumaları ve PL3 rıza/"Bildir" ile birlik
 | U5 | **Bug:** alttaki bildirimin geri sayım çubuğu takılarak ilerliyor; kesintisiz akmalı (tek AnimationController/doğrusal, kare kaçırmadan) | P72 KT-1 toast kuyruğundan sonra | A/B |
 | U6 | Telefonda alt paneldeki 5 düğme → 4; en sağdaki "⋮" (ya da benzeri) küçük açılır pencerede kalanları gösterir | tablette 5 kalabilir | A/B (alt çubuk) |
 | U7 | Metin seçim menüsü (Kes/Kopyala/Yapıştır/Biçim…/Ek göm/⋮) düzenlensin: **Tümünü seç** yok → eklensin; en çok kullanılanlar önde (seçim sırasında) | | hayır |
-| U8 | Gemini Decisions API'yi geniş kullan (çıktı ücretsiz, çok hızlı): başlık önerisini doğrulat (kendi algoritmamız ya da AI başlığı "doğru mu?" → hayırsa yeni başlık), hızlı eklede yazım düzeltmesini doğrulat, şablon/hızlı ekle içi kararlar, uygulama içi evet/hayır soruları; beyin fırtınası + ek öneriler | `docs/plan_decisions_api.md` | hayır |
+| U8 | [~] Gemini Decisions API'yi geniş kullan (çıktı ücretsiz, çok hızlı): başlık önerisini doğrulat (kendi algoritmamız ya da AI başlığı "doğru mu?" → hayırsa yeni başlık), hızlı eklede yazım düzeltmesini doğrulat, şablon/hızlı ekle içi kararlar, uygulama içi evet/hayır soruları; beyin fırtınası + ek öneriler | `docs/plan_decisions_api.md` · **2026-11-18 (P76, dal oto/P76-decisions):** DA-E1 servis + bayrak, DA-1 hızlı ekle hedefi, DA-2 etiket öner çipinde sessiz düzen, DA-13 başlık doğrulama, DA-14 hızlı ekle yazım doğrulama, DA-E0 altın set + canlı ölçüm; bayraklar (`aiDecisionsFeatures`/`aiDecisionsShadow`) VARSAYILAN KAPALI → kullanıcıya görünür değişiklik yok; açma kararı gölge ölçümünden sonra (sabah bakılacak) | hayır |
 
 ## 2. Önceki açık işler (P22 listesi, aynen)
 

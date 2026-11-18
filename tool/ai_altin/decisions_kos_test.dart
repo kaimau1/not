@@ -277,7 +277,7 @@ void main() {
         ..writeAsStringSync(const JsonEncoder.withIndent('  ').convert(rapor));
       // ignore: avoid_print
       print('Sonuç: ${out.path}  ham: ${ham.path}');
-      AiDecisionsFlag.debugReset();
+      AiDecisionsFlag.apply(null);
     },
     skip: key == null || key.isEmpty
         ? 'GEMINI_API_KEY yok — Decisions canlı ölçümü atlandı'

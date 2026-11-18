@@ -2,6 +2,20 @@
 
 Tarih: 2026-11-18. Durum: PLAN, kod yok. Yazan: araştırma oturumu (gözetimsiz; derleme/test koşulmadı,
 canlı API çağrısı YAPILMADI — `GEMINI_API_KEY` yok, bkz. DA-E0).
+
+> **Evre durumu (P76, 2026-11-18, dal `oto/P76-decisions`, main'e birleşmedi):**
+> - **DA-E1 [x]** `lib/features/ai/data/decisions/` (`decision_models/flag/service/profiles.dart`); `GeminiService.admittedDecisionKey()`
+>   (AiAdmission kapısı, `metered:false`; hız sınırı servisin kendi `AiRateLimiter`'ında); bayrak `config/app` → `AiDecisionsFlag.apply`
+>   (`saveCadenceSyncProvider`). Sapmalar (ponytail): `CallableDecisionClient`/vekil YOK (anahtarsız → null, eski yol); `GeminiErrorKind.decisionBlocked`
+>   ve arb metni YOK (servis hiç istisna atmaz, 400/429/5xx/zaman aşımı → null + `ErrorLog` `decision-fallback`); önbellek bellek içi 32 kayıt / 5 dk
+>   (`AiCache` değil); 429/5xx sonrası 1 dk susma (`ModelCooldown` değil); `ai_decisions_off` yerel anahtarı ve `DecisionPoint` kaydı (DA-16) YOK.
+> - **DA-E2 [x] (DA-1)**, **DA-E4 [~] (DA-2: yalnız "Etiket öner" çipi; kapanışta otomatik etiket/başlık kapısı bugünkü yol)**, **DA-13 [x]**
+>   (yalnız AI başlığı: kapanış + çip; paylaşım/dosya adı gibi algoritma başlığı bağlanmadı — sabah bakılacak), **DA-14 [x]** (yalnız Hızlı ekle
+>   geri sayımı; hızlı liste ekranı ve Enter/"bitti" ile anında ekleme doğrulanmaz).
+> - **DA-E0 [~]** canlı koşu YAPILDI (ortamda anahtar vardı, 2026-11-18 23:54): ham biçim doğrulandı — `score.probabilities` ve `legend` NESNE
+>   (anahtar düzey sırası "0","1"…), `usage` = `total_tokens/total_input_tokens/total_output_tokens/input_tokens_by_modality`, 429 gövdesi
+>   `{"error":{"code":"too_many_requests"}}` (ücretsiz katmanda ~84 hızlı çağrıdan sonra). Sonuçlar §4.7 altında "P76 ölçümü". ÜRETKEN TABAN
+>   koşulmadı → açma kuralı (a)/(c) karşılaştırması eksik; bayraklar KAPALI kalır.
 Kapsam: yeni "Gemini Decisions API" (`gemini-decision-1`) bu uygulamaya nasıl, hangi sırayla ve hangi
 kapılarla girer. PLAN §1.6 AI-S (A1–A8), PL2/PL3 (AI kapısı, rıza, kill switch), PL13/PL14 (Play altyapısı,
 hak) ile uyumlu.
@@ -945,6 +959,19 @@ Mevcut set üretken çıktıyı puanlar (`altin_puan.dart`); karar için AYRI, a
   Function); (d) Türkçe örneklerde ECE ≤ 0,10 (Google 0,025'i Türkçe için DOĞRULAMAZ); (e) yıkıcı/geri alınamaz
   kullanımda yanlış-pozitif oranı 0 olan eşik. Tutmazsa bayrak kapalı kalır, sonuç `docs/hafiza/ai_ses.md`'ye yazılır.
 - Eşikler tek yerde: `decision_profiles.dart` `thresholds` tablosu (altın set sonrası doldurulur; kanıt satırı yorumda).
+
+**P76 ölçümü (2026-11-18, bilgisayardan doğrudan, ücretsiz katman, set 4×30 kurgusal, KENDİ yazdığımız set → iyimser):**
+
+| Profil | Doğruluk | Kapsam@%95 (τ) | ECE | K9 doğru-ret / yanlış-ret | P50 / P95 ms |
+|---|---|---|---|---|---|
+| dropTarget | 30/30 | %100 (0,63) | 0,066 | — | 306 / 507 |
+| noteTriage (300 alt soru) | %98 | %100 (0,51) | 0,043 | — | 404 / 672 |
+| titleOk | 30/30 | %100 (0,82) | 0,058 | %100 / %0 | 269 / 504 |
+| spellFixOk | 29/30 (nutella→Nutela kabul) | %100 (0,58) | **0,152** | %93 / %0 | 311 / 986 |
+
+Yorum: (d) ECE ≤ 0,10 spellFixOk'ta TUTMADI → `spellFixOk` kapalı kalır. Diğerleri (b)(d)(e) geçti ama (a)/(c) üretken taban yok ve set
+küçük/kurgusal → bayrak açmadan önce gölge kipte (`aiDecisionsShadow`) gerçek kullanım uyuşması toplanmalı (sabah bakılacak).
+Koşu: `GEMINI_API_KEY=... flutter test tool/ai_altin/decisions_kos_test.dart` (~1 dk).
 
 ### 4.8 Evreler
 
