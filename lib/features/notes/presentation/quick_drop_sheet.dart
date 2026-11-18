@@ -12,6 +12,10 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
+import '../../ai/data/decisions/decision_flag.dart';
+import '../../ai/data/decisions/decision_models.dart';
+import '../../ai/data/decisions/decision_profiles.dart';
+import '../../ai/data/decisions/decision_service.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/notes_repository.dart';
@@ -388,6 +392,35 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
           ]
         : _candidates.take(40).toList();
     _phase.value = _Phase.thinking;
+    // DA-1 (plan_decisions_api): Decisions `choice` önce (bayrak açıksa);
+    // emin → uygula, orta → seçili gelir ama sorulur, değilse eski yol.
+    // Gölge kipte eski yol AYNEN, karar yalnız günlüğe.
+    final decisions = ref.read(decisionServiceProvider);
+    final mode = decisions.modeOf(DecisionFeature.dropTarget);
+    final titles = [for (final n in pool) n.displayTitle];
+    final decided = mode == DecisionMode.off
+        ? null
+        : decideDropTarget(decisions, text, titles);
+    if (mode == DecisionMode.live) {
+      final d = await decided;
+      if (!mounted || _phase.value != _Phase.thinking) return;
+      final i = d?.index;
+      if (d != null && i != null && d.outcome != DecisionOutcome.no) {
+        final yes = d.outcome == DecisionOutcome.yes;
+        _phase.value = _Phase.idle;
+        _state.value = _Drop(
+          id: pool[i].id,
+          // Başa başta ad zaten ayıklandı; yalnız "ad çözülmedi"de sondaki
+          // adı çıkar.
+          content: st.ties.isEmpty
+              ? stripDropTargetWords(st.content, titles[i])
+              : st.content,
+          ask: !yes,
+        );
+        if (yes) _startCountdown();
+        return;
+      }
+    }
     ({int index, String content})? hit;
     try {
       hit = await ref
@@ -396,6 +429,18 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
           .timeout(const Duration(seconds: 5));
     } catch (_) {
       hit = null;
+    }
+    if (mode == DecisionMode.shadow) {
+      final old = hit?.index;
+      unawaited(
+        decided!.then(
+          (d) => DecisionService.logShadow(
+            DecisionFeature.dropTarget,
+            'old=${old ?? '-'} new=${d?.index ?? '-'} '
+            '${d?.outcome.name ?? 'none'} agree=${d?.index == old}',
+          ),
+        ),
+      );
     }
     // Kullanıcı bu arada çipe dokunduysa ya da yazdıysa karar onun.
     if (!mounted || _phase.value != _Phase.thinking) return;

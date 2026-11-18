@@ -164,4 +164,38 @@ void main() {
       expect(r.content, contains('14:30'));
     });
   });
+
+  // DA-1: hedefi Decisions seçince sondaki ad içerikten yerelde çıkar.
+  group('stripDropTargetWords', () {
+    test('sondaki ad öbeği çıkar', () {
+      expect(
+        stripDropTargetWords('yeni logo taslağı fikir defterine', 'Fikirler'),
+        'yeni logo taslağı',
+      );
+      expect(
+        stripDropTargetWords('rapor taslağı dosyalara', 'Dosyalarımdaki hatalar'),
+        'rapor taslağı',
+      );
+      expect(
+        stripDropTargetWords('süt ekmek market listesine', 'Market'),
+        'süt ekmek',
+      );
+    });
+
+    test('H9: baştaki/ortadaki kelime içeriktir; emin değilse dokunma', () {
+      // Ad başta: içerik.
+      expect(
+        stripDropTargetWords('dosyalar geliştirme yapılması lazım', 'Dosyalar'),
+        'dosyalar geliştirme yapılması lazım',
+      );
+      // Son kelime ekli ama son üçte başlık kelimesi yok.
+      expect(
+        stripDropTargetWords('annemi ara akşama', 'Market'),
+        'annemi ara akşama',
+      );
+      // Hepsi ad olsa bile ilk kelime kalır.
+      expect(stripDropTargetWords('markete', 'Market'), 'markete');
+      expect(stripDropTargetWords('süt markete', 'Market'), 'süt');
+    });
+  });
 }

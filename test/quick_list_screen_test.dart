@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:notlar/core/net/json_http.dart';
 import 'package:notlar/features/ai/data/ai_gate.dart';
+import 'package:notlar/features/ai/data/ai_provider.dart';
+import 'package:notlar/features/ai/data/decisions/decision_flag.dart';
+import 'package:notlar/features/ai/data/decisions/decision_service.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/data/quick_entry_memory.dart';
 import 'package:notlar/features/notes/domain/note.dart';
@@ -46,6 +55,8 @@ void main() {
     Map<String, Object> prefs = const {},
     Size size = const Size(412, 915),
     NotesRepository? repo,
+    AiAvailability ai = AiAvailability.needsKey,
+    List<Override> extra = const [],
   }) async {
     SharedPreferences.setMockInitialValues(prefs);
     final p = await SharedPreferences.getInstance();
@@ -58,7 +69,8 @@ void main() {
           notesStreamProvider.overrideWith((ref) => Stream.value(notes)),
           notesRepositoryProvider.overrideWithValue(repo),
           // Testte yapay zekâ yok: hızlı ekle "hangi not?" diye sorar.
-          aiAvailabilityProvider.overrideWithValue(AiAvailability.needsKey),
+          aiAvailabilityProvider.overrideWithValue(ai),
+          ...extra,
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -519,6 +531,86 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
       await tester.pumpAndSettle();
       expect(repo.writes.keys, ['c']);
+    });
+
+    // DA-1 (plan_decisions_api): bayrak açıkken hedefi Decisions seçer.
+    DecisionService fakeDecisions(String choice, double confidence) =>
+        DecisionService(
+          key: () async => 'k',
+          http: JsonHttp(
+            baseUrl: AiProvider.gemini.baseUrl,
+            client: MockClient(
+              (_) async => http.Response(
+                jsonEncode({
+                  'answers': {
+                    'hedef': {
+                      'type': 'choice',
+                      'choice': choice,
+                      'confidence': confidence,
+                    },
+                  },
+                }),
+                200,
+                headers: {'content-type': 'application/json; charset=utf-8'},
+              ),
+            ),
+          ),
+        );
+
+    Future<_DropRepo> openWithDecisions(
+      WidgetTester tester,
+      String choice,
+      double confidence,
+    ) async {
+      AiDecisionsFlag.apply({
+        'aiDecisionsFeatures': [DecisionFeature.dropTarget],
+      });
+      addTearDown(AiDecisionsFlag.debugReset);
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        repo: repo,
+        prefs: {'quick_drop_mic': false},
+        ai: AiAvailability.ready,
+        extra: [
+          decisionServiceProvider.overrideWithValue(
+            fakeDecisions(choice, confidence),
+          ),
+        ],
+        onTap: (context, ref) => showQuickDropSheet(context),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      return repo;
+    }
+
+    testWidgets('DA-1: Decisions emin → geri sayımla o nota, ad içerikte yok', (
+      tester,
+    ) async {
+      // Aday sırası: Yapılacaklar (n00), Fikirler (n01), Alışveriş (n02).
+      final repo = await openWithDecisions(tester, 'n01', 0.93);
+      await say(tester, 'yeni logo taslağı fikir defterine ekle');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const ValueKey('quick-drop-counting')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(repo.writes.keys, ['c']);
+      expect(repo.writes['c']!['body'], 'ilk satır\nyeni logo taslağı');
+    });
+
+    testWidgets('DA-1: Decisions orta güven → seçili gelir ama sorulur', (
+      tester,
+    ) async {
+      final repo = await openWithDecisions(tester, 'n01', 0.6);
+      await say(tester, 'yeni logo taslağı fikir defterine ekle');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const ValueKey('quick-drop-ask')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      expect(repo.writes, isEmpty);
     });
 
     testWidgets('başa baş kalan iki not: Ekle "hangi not?" bekler', (
