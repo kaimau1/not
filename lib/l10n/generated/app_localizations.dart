@@ -464,17 +464,23 @@ abstract class AppLocalizations {
   /// **'Notu özetle'**
   String get aiSummarize;
 
-  /// No description provided for @aiSectionNote.
+  /// No description provided for @aiSectionWrite.
   ///
   /// In tr, this message translates to:
-  /// **'Bu not'**
-  String get aiSectionNote;
+  /// **'Yaz'**
+  String get aiSectionWrite;
 
-  /// No description provided for @aiSectionAttachments.
+  /// No description provided for @aiSectionAsk.
   ///
   /// In tr, this message translates to:
-  /// **'Ekler'**
-  String get aiSectionAttachments;
+  /// **'Sor'**
+  String get aiSectionAsk;
+
+  /// No description provided for @aiSectionTransform.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dönüştür'**
+  String get aiSectionTransform;
 
   /// No description provided for @summarize.
   ///

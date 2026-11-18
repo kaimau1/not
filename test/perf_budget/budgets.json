@@ -521,5 +521,13 @@
     "bugun": "arama 294/84 · seçici 630/150 · AI sonuç 294/153 (2026-11-17, kasma envanteri KP1; önce 1152/210 · 4758/270 · 1512/249, levha kökü 6/6/6 → 0/0/0)",
     "hedef": "klavye karesinde yalnız dolgu + odaktaki alan kurulsun; levha içeriği 0",
     "neden": "K-01…K-11: levha State'i build'inde viewInsetsOf okuyordu (S52 kalıbının kalan levhaları)"
+  },
+  "S54": {
+    "senaryo": "30 maddeli not: ✨ AI levhasını (Yaz · Sor · Dönüştür) aç → sistem geri ile kapat; editör gövdesi kurulumu + AiSheet kök kurulumu",
+    "govde_kurulum": 0,
+    "levha_kurulum": 1,
+    "bugun": "gövde 0 · levha 1 (2026-11-18, P72 AI-S2 ilk ölçüm = hedef)",
+    "hedef": "gövde 0; levha kökü açılış başına 1-2",
+    "neden": "PLAN §1.6 AI-S2: levha 3 bölüme ayrıldı, HIZ SÖZLEŞMESİ bütçe senaryosu"
   }
 }
