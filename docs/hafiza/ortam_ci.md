@@ -158,4 +158,4 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 - **2026-11-18 (P72) Yerel tam takım Windows CRLF:** `core.autocrlf=true` ağacında dosyalar CRLF; kaynak metnini okuyan bekçi testi `readAsStringSync().replaceAll('
 ', '
-')` ile normalleştirmeli (6 test böyle kırmızıydı: editor_core_guard, folder_strip_fixed, frame_timing_log, gizlilik_tek_kaynak ×2, security_guard). Yeni bekçi yazarken aynı kalıp.
+')` ile normalleştirmeli (6 test böyle kırmızıydı: editor_core_guard, folder_strip_fixed, frame_timing_log, gizlilik_tek_kaynak x2, security_guard). Yeni bekçi yazarken aynı kalıp.
