@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/app_frame.dart';
+import '../../../core/app_icons.dart';
 import '../../../core/widgets/back_closes.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/app_tokens.dart';
@@ -1778,7 +1779,7 @@ class _ReminderTile extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            entry.expiry ? Icons.archive_outlined : Icons.alarm,
+            entry.expiry ? AppIcons.archive : Icons.alarm,
             size: 18,
             color: scheme.secondary,
           ),

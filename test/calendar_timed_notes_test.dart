@@ -32,12 +32,12 @@ void main() {
       timedNotes: [
         timed,
         // Arşivlenmiş/silinmiş olan görünmez.
-        timed.copyWith(archivedAt: DateTime(2026, 11, 1)),
+        timed.copyWith(archivedAt: DateTime(2026, 11, 2)),
         Note(
           id: 'd',
           type: NoteType.text,
           expiresAt: DateTime(2026, 11, 21),
-          deletedAt: DateTime(2026, 11, 1),
+          deletedAt: DateTime(2026, 11, 2),
         ),
       ],
     );

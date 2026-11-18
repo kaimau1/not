@@ -703,7 +703,7 @@ class _AppRail extends ConsumerWidget {
                                                   top: -4,
                                                   child: Icon(
                                                     Icons.lock_outline,
-                                                    size: 14,
+                                                    size: AppIconSize.xs,
                                                     color: Theme.of(context)
                                                         .colorScheme
                                                         .onSurfaceVariant,
