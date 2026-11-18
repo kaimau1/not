@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- YALNIZ PLAY DERLEMESİ (NOTLAR_PLAY=1; PLAN §1.5 PL1, 16K rapor E3).
+     Konum hatırlatıcısı Play'de kapalı (Dart kapısı `PlayBuild.placeReminders`);
+     izinler ve alıcılar pakette/onay ekranında da görünmesin diye birleştirilmiş
+     manifestten SİLİNİR. Arka plan konumu Play'de beyan + video ister.
+     `play-services-location` bağımlılığı ve PlaceReminders.kt kalır (izinsiz
+     çalışamaz; Dart kanalı Play'de hiç çağrılmaz). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" tools:node="remove"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" tools:node="remove"/>
+    <application>
+        <receiver android:name=".PlaceReminderReceiver" tools:node="remove"/>
+        <receiver android:name=".PlaceBootReceiver" tools:node="remove"/>
+    </application>
+</manifest>

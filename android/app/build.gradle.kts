@@ -188,6 +188,8 @@ android {
                 res.srcDir("src/kisisel/res")
             } else {
                 java.srcDir("src/genel/kotlin")
+                // PL1 (E3): Play paketinde konum izinleri/alıcıları yok (src/play).
+                if (play) manifest.srcFile("src/play/AndroidManifest.xml")
             }
         }
         getByName("debug") { java.srcDir("src/genel/kotlin") }
