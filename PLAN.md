@@ -84,20 +84,20 @@ hazırlığı (1.5 PL1–PL12) + Pro AI sadeleştirme (1.6 AI-S) + Lite/Pro → 
 |---|---|---|---|
 | T1 | Cihaz ölçüm turu: panel kip k/c, 60 Hz ayrımı, RAM tabanı, ısınma, ab_hepsi kör evreleri, 1000/3000 not; 17 Kasım `[apk]`'sının A/B'si (ÖLÇÜM KAPISI bu kez yapılamadı) | K-20, K-21, K-59…K-63 | evet |
 | T2 | Not akışı yankısı: sağlayıcı sayacı senaryosu + en pahalı 3 türetilmişi dilime çevir (veri göçü yok) | K-22a, K-23 | A/B |
-| T3 | Yazı tipi çalışma anı indirmesi: doğrula, `allowRuntimeFetching=false` + kalın dosyaları pakete, bekçi | K-54 | hayır |
+| T3 | **[x] 2026-11-17 (P65)** Merriweather-Medium pakete, çalışma anı indirme kapalı, bekçi `font_runtime_fetch_test`; uçak kipinde görünüş cihazda bakılmadı. Yazı tipi çalışma anı indirmesi: doğrula, `allowRuntimeFetching=false` + kalın dosyaları pakete, bekçi | K-54 | hayır |
 | T4 | Hızlı ekle kalanı: H1 ("süt bitti" sessizlik süresiyle), H3 (süre tutarsızlığı), H11 ("Yeni not olarak kaydet" çipi), hızlı ekle bütçe senaryosu | 17K §4.1, K-64…K-69 | A/B |
-| T5 | Akıllı liste AL-1: sık kullanılanları türe böl, ipucu satırı, açılış ilk karesi bütçesi | 17K §5.2, K-41 | hayır |
+| T5 | **[x] 2026-11-17 (P65)** sık eklenenler türe bölündü (`smart:market`/`smart:bavul`), "Geçen seferden" türe göre, boş liste ipucu, S49 açılış bütçesi. Akıllı liste AL-1: sık kullanılanları türe böl, ipucu satırı, açılış ilk karesi bütçesi | 17K §5.2, K-41 | hayır |
 | T6 | Klavye açıkken sayfa iskeleti: 17 ekranı ölç, kötülere T2 kalıbı | K-13…K-19 | gerekirse |
-| T7 | Tembel liste + build'de hesap + onChanged setState (ekran başına) | K-47, K-48, K-57, K-58 | hayır |
+| T7 | **[~] 2026-11-17 (P65)** sürüm geçmişi, hesap makinesi, paylaşım levhası araması; kalan liste `docs/hafiza/akicilik.md` 2026-11-17 T7. Tembel liste + build'de hesap + onChanged setState (ekran başına) | K-47, K-48, K-57, K-58 | hayır |
 | T8 | Editörde kalanlar (ölçüm kapılı) | K-27…K-36 | A/B |
 | T9 | Kısa geçişlerdeki `TweenAnimationBuilder`'lar ve beliriş animasyonları (`PopIn`, `RevealUp`…): önce ölç, kurulum > 5 ise düzelt (bu oturumda bilerek dokunulmadı: `child` zaten yeniden kurulmuyor) | K-37, K-38 kalanı | A/B |
-| T10 | Görsel açıklama levhası: kapanış animasyonunda atılmış denetleyici kullanılıyor (debug uyarısı; S53 yazılırken görüldü) | `attachment_actions.dart` `showCaptionSheet` | hayır |
+| T10 | **[x] 2026-11-17 (P64)** denetleyici levhanın State'inde, bekçi `caption_sheet_dispose_test`. Görsel açıklama levhası: kapanış animasyonunda atılmış denetleyici kullanılıyor (debug uyarısı; S53 yazılırken görüldü) | `attachment_actions.dart` `showCaptionSheet` | hayır |
 | T11 | Senkron korkuluk 6: depolama tavanı sunucuda (ya da Lite'ta Storage kapalı) — 1.1/3 kararına bağlı | 17K §1.4 | hayır |
 
-| T12 | Keşif turu "kendimiz yaparız" 8 maddesi: KT-7 hesap levhası 2 satır, KT-5 "Sabitten çıkar", KT-3 dar ekranda gün adı + FAB boşluğu, KT-4 hızlı ekle levhası yazı 1.3, KT-9 ortak boş durum, KT-12 arama ipucu kısalt, KT-6 çevrimdışı AI şeridi, KT-1 toast kuyruğu | KT, P61 (3) | hayır (KT-1/KT-4 A/B) |
+| T12 | **[~] 2026-11-17 (P64)** KT-2/3/5/9/10/12 yapıldı, KT-6/7 zaten vardı; kalan KT-1, KT-4 (A/B), KT-8 (ölçüm kapısı), klasör adı 2 satır (sabah bakılacak: kart boyu sabit). Keşif turu "kendimiz yaparız" 8 maddesi: KT-7 hesap levhası 2 satır, KT-5 "Sabitten çıkar", KT-3 dar ekranda gün adı + FAB boşluğu, KT-4 hızlı ekle levhası yazı 1.3, KT-9 ortak boş durum, KT-12 arama ipucu kısalt, KT-6 çevrimdışı AI şeridi, KT-1 toast kuyruğu | KT, P61 (3) | hayır (KT-1/KT-4 A/B) |
 | T13 | Ölçüm aracı onarımı: `sablon` evresi atlanıyor, `bicim/kalem/duzen` hiç koşmadı, `acilis` 2 kare; altın taban yeni veriyle (`--altin-yaz`) — T1'in ön koşulu | 15K §4 | evet |
-| T14 | Çöp kutusunda anlamca arama ↔ önbellek temizliği döngüsü | 15K §4 | hayır |
-| T15 | Şablon önizlemesinin ölü liste dalını (TemplateComposer liste dalı + `showNoteTemplateSheet`) testleriyle birlikte sil | (C) son madde | hayır |
+| T14 | **[x] 2026-11-17 (P65)** budamada canlı küme = aktif + çöp; bekçi `semantic_trash_cache_test`. Çöp kutusunda anlamca arama ↔ önbellek temizliği döngüsü | 15K §4 | hayır |
+| T15 | **[x] 2026-11-17 (P65)** `showNoteTemplateSheet` + TemplateComposer liste dalı silindi. Şablon önizlemesinin ölü liste dalını (TemplateComposer liste dalı + `showNoteTemplateSheet`) testleriyle birlikte sil | (C) son madde | hayır |
 | T16 | P61 canlı tur — TABLETTE (adb/uiautomator, KT-13…) + web + kalem kontrolleri; bulguların düzeltilmesi; KT-1/2/8/10 KARAR 1.0'a göre | P61 (2)(3) | evet (tablet) |
 
 **Bilerek yapılmayanlar:** kuralda yazma hız sınırı (17K §1.4-4) — reddedilen yazım
@@ -107,7 +107,7 @@ not başına imza zaten var, kanal çağrısı yok; risk > kazanç. Geri bağlan
 ucuz, ölçülmeden dokunulmadı.
 
 ### 1.4 Büyük fazlar (karara bağlı, sırasıyla önerim)
-1. **S1 yalnız değişeni dinle** (17K §1.3) → sonra S4 Lite ekleri Drive'a.
+1. **[~] 2026-11-17 (P67) kod + bayrak (`config/app.syncDeltaListen`, KAPALI); açmadan önce: minClient damgalı sürüme + iki cihaz testi (`docs/hafiza/veri.md` S1, KONTROL "Tablette bak").** **S1 yalnız değişeni dinle** (17K §1.3) → sonra S4 Lite ekleri Drive'a.
 2. **Yazım denetimi v3** Y-0 → Y-1 → Y-2 → Y-3 → Y-4 → Y-5 → Y-6 (17K §3.3).
 3. **Hızlı ekle** HE-2 önizleme satırı → HE-3 uygulamayı açmadan ekle → HE-4 tek giriş → HE-5 (17K §4.2).
 4. **Akıllı liste** AL-2 → AL-6 (17K §5.2).
@@ -158,21 +158,21 @@ Pro'ya geçen kişiye ömür boyu hakları kalır; Pro günlük AI kotası kotan
 
 | No | İş | Kaynak | Cihaz |
 |---|---|---|---|
-| PL1 | Play derleme bayrağı (`NOTLAR_PLAY`): GitHub güncelleyicisi kapalı (E1), Gmail/konum/ONNX derlemeden çıkar (E2, E3, §2.6), YouTube otomatik PiP kapalı (§4.5) | 16K §4.2 | hayır |
-| PL2 | AI korumaları (yalnız Pro dahili AI'ı): App Check zorlaması, kullanıcı başı hız sınırı, Pro günlük kotası sunucuda (F18.28), `config/app` acil kapatma bayrağı, bütçe tavanı (E4); ücretsiz katmanda AI girişleri gizli, kendi anahtar alanı yalnız ömür boyu + Pro'da | 16K §5.3 | hayır |
-| PL3 | AI kullanıcı yüzü: ilk kullanımda rıza ekranı, yanıtta "Bildir" + "AI yanılabilir", Ayarlar'da "AI'ı tümden kapat" (E11, KVKK) | 16K §5.3, §4.5 | hayır |
-| PL4 | Gizlilik metni tek kaynak + herkese açık adres; web'den hesap silme sayfası (E5, E6); KVKK aydınlatma metni | 16K §4.2, §4.5 | hayır |
-| PL5 | Hedef API 36 kontrolü (E8), 16 KB sayfa uyumu (E9), AAB + sıkıştırılmamış yerel kütüphane + `--obfuscate` (§2.6) | 16K §4.2, §2.6 | hayır |
+| PL1 | **[~] 2026-11-17 (P66)** Dart kapıları tamam (`lib/core/play_build.dart`); izin/ONNX/Gmail paketten çıkarma kaldı (`docs/play_hazirlik.md`). Play derleme bayrağı (`NOTLAR_PLAY`): GitHub güncelleyicisi kapalı (E1), Gmail/konum/ONNX derlemeden çıkar (E2, E3, §2.6), YouTube otomatik PiP kapalı (§4.5) | 16K §4.2 | hayır |
+| PL2 | **[~] 2026-11-18 (P70)** istemci: `aiKillSwitch` + yerel hız sınırı; sunucu tarafı `docs/play_hazirlik.md`. AI korumaları (yalnız Pro dahili AI'ı): App Check zorlaması, kullanıcı başı hız sınırı, Pro günlük kotası sunucuda (F18.28), `config/app` acil kapatma bayrağı, bütçe tavanı (E4); ücretsiz katmanda AI girişleri gizli, kendi anahtar alanı yalnız ömür boyu + Pro'da | 16K §5.3 | hayır |
+| PL3 | **[~] 2026-11-18 (P70)** rıza (Play'de), "AI yanılabilir" + Bildir, AI'ı tümden kapat. AI kullanıcı yüzü: ilk kullanımda rıza ekranı, yanıtta "Bildir" + "AI yanılabilir", Ayarlar'da "AI'ı tümden kapat" (E11, KVKK) | 16K §5.3, §4.5 | hayır |
+| PL4 | **[x] 2026-11-18 (P69)** gizlilik tek kaynak (`PRIVACY_POLICY.md` → web), `/delete-account`, KVKK TASLAĞI (hukuki onay sabah bakılacak). Gizlilik metni tek kaynak + herkese açık adres; web'den hesap silme sayfası (E5, E6); KVKK aydınlatma metni | 16K §4.2, §4.5 | hayır |
+| PL5 | **[x] 2026-11-17 (P66)** API 36 tamam, 16 KB uyumlu görünüyor (ilk AAB'de doğrula), Play'de sıkıştırılmamış .so; komut `docs/play_hazirlik.md`. Hedef API 36 kontrolü (E8), 16 KB sayfa uyumu (E9), AAB + sıkıştırılmamış yerel kütüphane + `--obfuscate` (§2.6) | 16K §4.2, §2.6 | hayır |
 | PL6 | Satın alma: Play Billing (RevenueCat ya da `in_app_purchase` + doğrulama Function'ı) — Pro aylık/yıllık abonelik + ömür boyu tek sefer; katman kapısı: ücretsiz / Pro (dahili AI) / ömür boyu (kendi anahtar) (E10, F18.27) | 16K §4.2 | hayır |
-| PL7 | Lisans açıkları: yazı tipi OFL metinleri `LicenseRegistry`'ye, CMU BSD bildirimi, Antalia dosyaları kendi sunucumuza + özet doğrulama (kişisel APK için) | 16K §4.5 | hayır |
+| PL7 | **[x] 2026-11-18 (P69)** 20 yazı tipi OFL + CMU BSD LicenseRegistry'de; Antalia SHA-256 doğrulaması (kendi sunucu kalanı). Lisans açıkları: yazı tipi OFL metinleri `LicenseRegistry`'ye, CMU BSD bildirimi, Antalia dosyaları kendi sunucumuza + özet doğrulama (kişisel APK için) | 16K §4.5 | hayır |
 | PL8 | Ürünleştirme: ilk 60 saniye akışı, rızalı kullanım ölçümü (ilk not/sesli not/liste, 1./7./30. gün), mağaza görselleri — niş/ad gelince | 16K §7.3 | hayır |
 | PL9 | Kapalı test (12+ kişi, 14 gün) → açık beta → TR yayın, kademeli dağıtım, Vitals takibi | 16K §8 evre 4–5 | — |
 | PL10 | Yazı tipleri: 4–5 çekirdek aile pakette, kalanı seçilince insin (T3 ile birlikte) | 16K §2.6 | hayır |
 | PL11 | RAM tabanı: beş durumda `dumpsys meminfo` (ana ekran, editör, PDF, kalem, YouTube) → `docs/perf/` | 16K §2.5 | evet (tablet) |
 | PL13 | Ayrı Play altyapısı (kod tarafı): tek kod tabanı, derleme çeşidi `kisisel`/`play`; çeşide göre Firebase yapılandırması (`google-services.json`, `firebase_options` çifti), web sitesi adresi, gizlilik/silme sayfası adresi, `env` ayrı; CI'da iki imza + iki kural yayını (`firebase deploy --project`); `rules-test` iki proje için aynı kurallar; sırlar GitHub Secrets'ta ayrı adlarla | ek kararlar | hayır |
-| PL14 | Hak (entitlement) altyapısı: `entitlements/{uid}` sunucuda doğrulanmış satın almadan, kurallar + `rules-test`, web/Android aynı kapı, 7 gün deneme, Pro bitince ekler okunur + "Drive'a taşı" | ek kararlar | hayır |
-| PL15 | Çökme takibi (Crashlytics, KONTROL 28) + destek e-postası + uygulama içi "Geri bildirim gönder" | 16K §8 | hayır |
-| PL12 | Uygulama içi hız günlüğü (profil/beta derlemesinde `FrameTiming`, Ayarlar → Hakkında) | 16K §2.7 | hayır |
+| PL14 | **[x] 2026-11-18 (P71)** altyapı: `entitlements/{uid}` kuralı + rules-test, `EntitlementService` (yalnız Play'de etkin), deneme tetikleyicisi TASLAĞI, PL6 sözleşmesi; Pro özellik listesi sabah bakılacak. Hak (entitlement) altyapısı: `entitlements/{uid}` sunucuda doğrulanmış satın almadan, kurallar + `rules-test`, web/Android aynı kapı, 7 gün deneme, Pro bitince ekler okunur + "Drive'a taşı" | ek kararlar | hayır |
+| PL15 | **[~] 2026-11-18 (P69)** "Geri bildirim gönder" (mailto); Crashlytics yeni Firebase projesine bağlı. Çökme takibi (Crashlytics, KONTROL 28) + destek e-postası + uygulama içi "Geri bildirim gönder" | 16K §8 | hayır |
+| PL12 | **[x] 2026-11-17 (P66)** `frame_timing_log.dart`, profil/`NOTLAR_HIZ_GUNLUGU` derlemesinde Ayarlar'da; cihazda bakılmadı. Uygulama içi hız günlüğü (profil/beta derlemesinde `FrameTiming`, Ayarlar → Hakkında) | 16K §2.7 | hayır |
 
 **Senin işlerin (Play):** yeni Google hesabı → yeni Firebase projesi (Blaze + bütçe tavanı) → Play geliştirici hesabı (kişisel, 25 $) → alan adı + yeni web sitesi; ayrıca mali müşavir (GVK 20/B istisnası), Syncfusion
 Community lisansını al, uygulama simgesinin haklarını teyit et, alan adı, 12 test kullanıcısı bul.
@@ -207,6 +207,8 @@ sistem sesiyle okuma ücretsiz kalır), video → not (`noteFromVideo`, `videoNo
 (`fromEmail`, Gmail zaten kapalı). **Tümden kalkanlar:** "Notu analiz et" (`analyzeNote`, belirsiz → A1'e
 devreder), çöp kutusu AI derin analizi (`analyzeTrash`; cihazdaki kurallar kalır), arşiv içgörüsü
 (`summarizeArchive`), ayar aramada AI (`matchSettings` → yerel arama), ölü kod `tidyCapture`.
+
+**Durum 2026-11-18 (P68):** AI-S0 [x] (set `tool/ai_altin/`, taban koşusu GEMINI_API_KEY bekliyor), AI-S1 [x] (5 yetenek kalktı, Play'den kalkanlar `PlayBuild` kapısında). AI-S2'ye ek: Sohbet öneri çipleri (Ana hat / Fikir ver / Eksikleri bul), Play'de tek seçenekli ses seçicisini gizle.
 
 **Sıra:** AI-S0 Türkçe altın örnek seti (her yetenek için 10–20 girdi + beklenen çıktı ölçütü, kalite
 puanı; değişiklikten önce/sonra) → AI-S1 kaldır/birleştir (Play bayrağıyla, kişisel APK'yı bozmadan) →

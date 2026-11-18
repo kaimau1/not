@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **18 Kasım gece turu [apk] (P64–P71, bulutta yazıldı, cihazda bakılmadı, ÖLÇÜLMEDİ — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) ⋮ menüde "Sabitten çıkar" tek satır; (2) Ayarlar'da ayrı "Güvenlik" bölümü (not kilidi + uygulama kilidi); (3) alarm izni kapalıyken ilk hatırlatıcıyı kur → bir kez "İzni aç" ipucu; (4) görsel açıklama levhasını açıp kapat (takılma/hata yok); (5) uçak kipinde Merriweather başlıklı not doğru yazı tipiyle; (6) akıllı listede market/bavul "Sık eklediklerin" ayrı, boş listede ipucu; (7) hesap makinesi ve paylaşım levhası araması akıcı; (8) ✨ menüde "Analiz et" yok, çöp/arşiv levhaları ve ayar araması açılıyor; (9) Ayarlar → Hesap → Hakkında "Geri bildirim gönder" e-posta taslağı açıyor; Lisanslar'da yazı tipi lisansları; (10) Ayarlar'da "Yapay zekâyı tümden kapat" açınca AI girişleri kayboluyor, kapatınca geri geliyor; AI yanıtında "Bildir".
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Klavye açıkken levhalar, geri al çubuğu, akıllı liste, hızlı ekle (17 Kasım [apk], cihazda bakılmadı, ÖLÇÜLMEDİ)**
   Nerede/Nasıl: (1) bir notta not içi arama ("eklerde ve yapay zekâ ile ara"), not bağlama seçicisi, AI sonucu, hesap makinesi, sesli kayıt levhasını aç; klavye açılıp kapanırken takılma olmamalı, levhanın altı klavyenin/gezinme çubuğunun altında kalmamalı. (2) Bir not sil → "Geri al" çubuğunun çizgisi kademeli kısalmalı, süre bitince kapanmalı. (3) Akıllı liste: "süt yumurta ekmek" yaz/söyle → 3 madde. (4) ⚡ Hızlı ekle: "rapor yaz" → hedef sorulursa içerik "rapor yaz" kalmalı; bir listeye ekle → Geri al → yalnız eklenen çıkmalı. (5) Ana ekran aracı: uygulamada not değiştir, ana ekrana çık → araç güncellenmiş olmalı.
   Yanlışsa: hangi adımda olduğunu yaz.
@@ -207,6 +211,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Tablette bak
 
+- [ ] **S1 "yalnız değişeni dinle" iki cihaz turu (P67; bayrak KAPALI — bu tur bitmeden `config/app.syncDeltaListen` AÇILMAZ)**
+  Önce: bütün cihazlarda bu sürüm + `minClient` damgalı sürüme. Tablette `sync_delta_listen` açık, web'de kapalı ve açık: (a) tablette düzenle → web'de görünsün; (b) çöpe at → listeden düşsün, geri al → gelsin; (c) uçak kipinde düzenle → bağlanınca karşıda; (d) cihaz saatini ±1 gün kaydır → değişiklikler görünsün; (e) 30 dk+ kapalıyken öbür cihazda değiştir → açılışta görünsün; (f) bir notta senkronu kapat → öbür cihazda sonraki açılışta düşsün; (g) hesap değiştir → notlar karışmasın. Ayrıntı `docs/hafiza/veri.md` S1.
+  Yanlışsa: harfini yaz.
+
 - [ ] **15. Kalemle yazma**
   Nerede: herhangi bir not, kalem kipi.
   Nasıl: avucunu ekrana dayayarak yaz; yan düğmeyle sil; kalemle kutucuğa/metne tek dokun.
@@ -251,6 +259,8 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
   Yanlışsa: hangi adımda ne olduğunu yaz.
 
 ## Bilgisayarda (web) bak
+
+- [ ] **Masaüstünde "Görünüm ve süz" levhası ortada, en çok 560 dp (KT-2); dar pencerede takvim şeridinde tek harf gün adı yok (KT-3); `/delete-account` sayfası (oturumsuz açınca giriş sonrası oraya döner) (P64/P69)**
 
 - [ ] **21. Web temel tur**
   Nerede: tarayıcıda uygulama.
