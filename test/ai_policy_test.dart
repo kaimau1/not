@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/ai_kill_switch.dart';
 import 'package:notlar/core/error_log.dart';
 import 'package:notlar/core/personalize.dart';
+import 'package:notlar/core/play_build.dart';
 import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/ai/data/ai_policy.dart';
 import 'package:notlar/features/ai/data/ai_provider.dart';
@@ -39,7 +40,9 @@ void main() {
   setUp(() {
     AiKillSwitch.debugReset();
     Personalize.debugReset();
-    AiConsentNotifier.debugRequired = null;
+    // Bayraklı (NOTLAR_PLAY) koşuda da diğer testler rızasız kalsın; rıza
+    // davranışı kendi testlerinde.
+    AiConsentNotifier.debugRequired = false;
   });
   tearDown(() {
     AiKillSwitch.debugReset();
@@ -159,12 +162,18 @@ void main() {
   });
 
   group('rıza (PL3 a)', () {
-    test('kişisel APK\'da sorulmaz (kabul sayılır)', () async {
-      final c = await container();
-      expect(AiConsentNotifier.required, isFalse);
-      expect(c.read(aiConsentProvider), isTrue);
-      expect(c.read(aiAvailabilityProvider), AiAvailability.ready);
-    });
+    test(
+      'rıza yalnız Play derlemesinde istenir (kişisel APK\'da kabul sayılır)',
+      () async {
+        AiConsentNotifier.debugRequired = null;
+        expect(AiConsentNotifier.required, PlayBuild.aiConsent);
+        final c = await container();
+        expect(c.read(aiConsentProvider), !PlayBuild.enabled);
+        if (!PlayBuild.enabled) {
+          expect(c.read(aiAvailabilityProvider), AiAvailability.ready);
+        }
+      },
+    );
 
     test('Play\'de ilk kullanımda sorulur; kabul kalıcı', () async {
       AiConsentNotifier.debugRequired = true;
