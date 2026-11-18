@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
@@ -22,7 +23,9 @@ void main() {
       ],
     );
     final repo = CountingNotesRepository();
-    await pumpEditor(tester, note, repo: repo);
+    // Tablet: türe özgü yuva kapsülde (telefonda ⋯ menüsünde, U6 —
+    // bkz. editor_bar_overflow_test).
+    await pumpEditor(tester, note, repo: repo, size: const Size(1200, 800));
 
     final toNumbered = find.byTooltip('Numaralıya çevir');
     expect(toNumbered, findsOneWidget);

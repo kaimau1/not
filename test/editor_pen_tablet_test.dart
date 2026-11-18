@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
@@ -324,6 +325,40 @@ void main() {
     final ink = tester.widget<InkPageLayer>(find.byType(InkPageLayer));
     expect(ink.controller.ink, hasLength(1));
     expect(ink.uniform, isTrue);
+    await _end(tester);
+  });
+
+  // KW-11 (web keşfi 2026-11-18): kalem kipinde Ctrl+Z çizgiyi geri
+  // almıyordu; üst çubuğun ↶'si "Geri alındı" deyip çizgileri bırakıyordu.
+  testWidgets('kalem kipinde Ctrl+Z / Ctrl+Y ve üst ↶ çizgi yığınında', (
+    tester,
+  ) async {
+    await _pump(tester, size: const Size(1440, 900), startDrawing: true);
+    await tester.pump(const Duration(milliseconds: 300));
+    final page = tester.getCenter(find.byType(PageInkStack));
+    for (var i = 0; i < 3; i++) {
+      await _write(tester, page + Offset(-150, -120 + 60.0 * i));
+      await tester.pump(const Duration(seconds: 2));
+    }
+    InkController ink() =>
+        tester.widget<InkPageLayer>(find.byType(InkPageLayer)).controller;
+    expect(ink().ink, hasLength(3));
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pump();
+    await tester.pump();
+    expect(ink().ink, hasLength(2), reason: 'Ctrl+Z son çizgiyi alır');
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyY);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+    await tester.pump();
+    await tester.pump();
+    expect(ink().ink, hasLength(3), reason: 'Ctrl+Y geri getirir');
+    await tester.tap(find.byTooltip('Geri al').first);
+    await tester.pump();
+    await tester.pump();
+    expect(ink().ink, hasLength(2), reason: 'üst ↶ aynı yığın');
     await _end(tester);
   });
 }

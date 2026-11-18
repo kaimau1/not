@@ -51,6 +51,9 @@ class NoteUndoStack {
       '${n.customFrameColor}',
       n.tags.join(','),
       n.folderId ?? '',
+      // Her çizgi ayrı geri alma adımı (KW-11): çizgiler yazı gibi
+      // birleşseydi tek Ctrl+Z hızlı çizilen birkaç çizgiyi birden alırdı.
+      'ink:${n.pageInk.length}',
       ...items,
       ...attachments,
     ].join('|');

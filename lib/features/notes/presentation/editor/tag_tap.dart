@@ -398,32 +398,32 @@ PdfPageRef? tappedPdfRef({
 /// dar çubuğunda Kopyala/Yapıştır taşma menüsüne (⋮) itiliyordu; Biçim ise
 /// platformun "Paylaş"ından sonra, hep ⋮'nin içinde kalıyordu.
 ///
-/// Sıra: bağlama özgü TEK birincil iş (bağlantıyı aç / buraya bağla /
-/// önizle) → Kes · Kopyala · Yapıştır (platformun kendi sırası) → bizim
-/// işlerimiz (Biçim, Ek göm…) → Tümünü seç → platformun ek işleri (Paylaş,
-/// Web'de ara…) → en sonda [trailing] (Tüm notu kopyala).
+/// Sıra (kullanıcı isteği U7, 2026-11-18: "Tümünü seç yok; en çok
+/// kullanılanlar önde"): bağlama özgü TEK birincil iş (bağlantıyı aç /
+/// buraya bağla / önizle) → Kopyala · Kes · Yapıştır · Tümünü seç (en sık
+/// dört iş; Android'in dar çubuğunda Tümünü seç önceden Biçim/Ek göm'ün
+/// arkasında ⋮'ye düşüyordu) → bizim işlerimiz (Biçim, Ek göm…) →
+/// platformun ek işleri (Paylaş, Web'de ara…) → en sonda [trailing].
 List<ContextMenuButtonItem> arrangeSelectionMenu({
   required List<ContextMenuButtonItem> platform,
   List<ContextMenuButtonItem> leading = const [],
   List<ContextMenuButtonItem> afterClipboard = const [],
   List<ContextMenuButtonItem> trailing = const [],
 }) {
-  const clipboard = {
-    ContextMenuButtonType.cut,
+  const front = [
     ContextMenuButtonType.copy,
+    ContextMenuButtonType.cut,
     ContextMenuButtonType.paste,
-  };
+    ContextMenuButtonType.selectAll,
+  ];
   return [
     ...leading,
-    for (final item in platform)
-      if (clipboard.contains(item.type)) item,
+    for (final type in front)
+      for (final item in platform)
+        if (item.type == type) item,
     ...afterClipboard,
     for (final item in platform)
-      if (item.type == ContextMenuButtonType.selectAll) item,
-    for (final item in platform)
-      if (!clipboard.contains(item.type) &&
-          item.type != ContextMenuButtonType.selectAll)
-        item,
+      if (!front.contains(item.type)) item,
     ...trailing,
   ];
 }

@@ -69,8 +69,10 @@ class EditorQuickRow extends StatefulWidget {
   /// eğik, altı çizili, vurgu, renk, başlık).
   final ValueListenable<FormatTarget?>? target;
 
-  /// true = sığan düğmeler satırda, kalanı ⋮ menüsünde (geniş web);
-  /// false = hepsi yatay kayar, ⋮ yalnız Düzenle (telefon/tablet).
+  /// true = sığan düğmeler satırda, kalanı ⋯ menüsünde (geniş web);
+  /// false = hepsi yatay kayar, ⋯ yalnız Düzenle (telefon/tablet). Telefonda
+  /// `fit` denendi (U2, 2026-11-18): [LayoutBuilder] klavye hareketinde satırı
+  /// yeniden kuruyor, S17/S45/S50 bütçeleri +%30–90 aştı — geri alındı.
   final bool fit;
 
   /// "Ekle" levhası (görsel, dosya, kamera… tek yerde).
@@ -474,8 +476,9 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
     Widget more(List<_QuickEntry> overflow) => PopupMenuButton<VoidCallback>(
       key: const ValueKey('quick-row-more'),
       tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+      // ⋯ (U2): notun ⋮ menüsü hemen yanında — iki aynı simge karışıyordu.
       icon: Icon(
-        Icons.more_vert_rounded,
+        Icons.more_horiz_rounded,
         size: 20,
         color: scheme.onSurfaceVariant,
       ),

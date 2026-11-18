@@ -1263,6 +1263,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     AutoSpell.beginNote();
     unawaited(AutoSpell.load().then((_) => _seedSpell()));
     FocusManager.instance.addListener(_onAnyFocusChange);
+    HardwareKeyboard.instance.addHandler(_onHardKey);
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
     _topOrder = Personalize.current.topOrder;
     Personalize.listenable.addListener(_onTopOrder);
@@ -1769,6 +1770,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _recentKey?.cancel();
     _typingN.dispose();
     FocusManager.instance.removeListener(_onAnyFocusChange);
+    HardwareKeyboard.instance.removeHandler(_onHardKey);
     InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
     Personalize.listenable.removeListener(_onTopOrder);
     _fieldFocusedN.dispose();
@@ -1908,6 +1910,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.text = previous.body;
     _mutate((_) => previous, immediate: true);
     _restoring = false;
+    _syncPageInk(previous);
     _syncUndoN();
     _showSnack(context.l10n.undone);
   }
@@ -1924,7 +1927,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.text = next.body;
     _mutate((_) => next, immediate: true);
     _restoring = false;
+    _syncPageInk(next);
     _syncUndoN();
+  }
+
+  /// Geri alınan/yinelenen sayfa çizgileri canlı denetleyiciye (KW-11).
+  /// KÖK NEDEN: çizgi değişimi "saf yazım" sayılır ([_sameVisual] çizgiye
+  /// bakmaz — her çizgide ekran kurulmasın), ekran yeniden kurulmadığı için
+  /// [_pageInkOf]'un eşitlemesi de çalışmıyor; "Geri alındı" denip çizgiler
+  /// ekranda kalıyordu.
+  void _syncPageInk(Note restored) {
+    final ink = _pageInkCtl;
+    if (ink != null && !identical(ink.ink, restored.pageInk)) {
+      ink.replaceAll(restored.pageInk);
+    }
   }
 
   /// Daire jestinin yapay zekâsı bu OTURUMDA kullanılamıyor mu (TUTARLILIK
@@ -2845,6 +2861,41 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_fieldFocusedN.value != on) _fieldFocusedN.value = on;
   }
 
+  /// **ODAKSIZ KISAYOL** (KW-11, web keşfi 2026-11-18: "kalem kipinde
+  /// Ctrl+Z çizgiyi geri almıyor"). KÖK NEDEN: metin alanı bırakılınca
+  /// (kalem kipi, çizim, açılış) odak ROTANIN kapsamında kalıyor; editörün
+  /// [CallbackShortcuts]'ı onun ALTINDA olduğundan Ctrl+Z/Y hiç ulaşmıyordu.
+  /// Odaklı kimse yokken (birincil odak bu rotanın kapsamı) tuş burada
+  /// yakalanır. Ağaca yeni odak düğümü EKLENMEDİ: kapanan editörün odaklı
+  /// düğümü yeni editörün kurulumunda atılmış bağlama bakılmasına yol
+  /// açıyordu (S12b). Yan bölme ana editörle yarışmasın diye yalnız ana.
+  bool _onHardKey(KeyEvent event) {
+    if (event is! KeyDownEvent || !mounted || _secondary) return false;
+    final scope = _routeScope;
+    if (scope == null || !identical(FocusManager.instance.primaryFocus, scope)) {
+      return false;
+    }
+    final keys = HardwareKeyboard.instance;
+    if (!keys.isControlPressed && !keys.isMetaPressed) return false;
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.keyZ) {
+      keys.isShiftPressed ? _redo() : _undo();
+      return true;
+    }
+    if (key == LogicalKeyboardKey.keyY) {
+      _redo();
+      return true;
+    }
+    return false;
+  }
+
+  /// Bu editörün rota kapsamı (her kurulumda tazelenir).
+  FocusScopeNode? _routeScope;
+
+  /// Alt çubuğun ⋯ (taşma) düğmesi (U6); bölmedeki ikinci editörle
+  /// çakışmasın diye örneğe ait.
+  final _barMoreKey = GlobalKey(debugLabel: 'editor-bar-more');
+
   /// Bu not girişinde hızlı satır vurgusu gösterildi mi (bkz. [EditorQuickRow]).
   bool _quickRowHinted = false;
 
@@ -3476,7 +3527,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         contextMenuBuilder: (menuContext, state) =>
             AdaptiveTextSelectionToolbar.buttonItems(
               anchors: state.contextMenuAnchors,
-              buttonItems: cleanClipboardMenuItems(state),
+              buttonItems: arrangeSelectionMenu(
+                platform: cleanClipboardMenuItems(state),
+              ),
             ),
         decoration: InputDecoration(
           hintText: l10n.titleHint,
@@ -5110,9 +5163,30 @@ child: FormatBar(
                         );
                       }
 
-                      final segments = <Widget>[
+                      // TELEFONDA EN ÇOK 4 YUVA (kullanıcı isteği U6,
+                      // 2026-11-18: "alttaki 5 düğme 4 olsun, en sağdaki ⋮
+                      // kalanları küçük pencerede göstersin"): ilk üç düğme
+                      // yerinde, gerisi ⋮'de. Tablette/geniş ekranda hepsi;
+                      // düzenleme kipinde hepsi (gizle/göster yapılabilsin).
+                      final leftIds = [
                         for (final id in sides.left)
-                          if (shown.contains(id)) ...leftOf(id),
+                          if (shown.contains(id)) id,
+                      ];
+                      final overflow =
+                          !editingUi &&
+                              !PenTray.useRail(context) &&
+                              leftIds.length > kEditorBarPhoneSlots
+                          ? leftIds.sublist(kEditorBarPhoneSlots - 1)
+                          : const <String>[];
+                      final segments = <Widget>[
+                        for (final id in leftIds.take(
+                          leftIds.length - overflow.length,
+                        ))
+                          ...leftOf(id),
+                        if (overflow.isNotEmpty)
+                          _barOverflow(l10n, [
+                            for (final id in overflow) spec(id),
+                          ]),
                       ];
                       return Row(
                         children: [
@@ -5216,6 +5290,12 @@ child: FormatBar(
           );
 
     final fullscreenNow = ref.watch(noteFullscreenProvider);
+    // Bağımlılık YOK: odak her değiştiğinde ekran yeniden kurulmasın.
+    _routeScope = Focus.maybeOf(
+      context,
+      scopeOk: true,
+      createDependency: false,
+    )?.nearestScope;
     return Actions(
       actions: {
         // Klavyeden Kopyala/Kes (Ctrl+C / Ctrl+X): EditableText bu eylemleri

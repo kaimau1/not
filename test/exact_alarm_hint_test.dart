@@ -66,7 +66,10 @@ void main() {
     final l10n = lookupAppLocalizations(const Locale('tr'));
 
     await maybeShowAutoStartHint(ctx);
-    await tester.pumpAndSettle();
+    // Geri sayım çizgisi her karede ilerler (U5): pumpAndSettle süre
+    // bitene dek pompalayıp bildirimi kapatırdı.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text(l10n.exactAlarmHint), findsOneWidget);
     await tester.tap(find.text(l10n.exactAlarmHintAction));
     await tester.pump();
