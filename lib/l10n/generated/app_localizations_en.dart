@@ -214,10 +214,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiSummarize => 'Summarise note';
 
   @override
-  String get aiSectionNote => 'This note';
+  String get aiSectionWrite => 'Write';
 
   @override
-  String get aiSectionAttachments => 'Attachments';
+  String get aiSectionAsk => 'Ask';
+
+  @override
+  String get aiSectionTransform => 'Transform';
 
   @override
   String get summarize => 'Summarise';

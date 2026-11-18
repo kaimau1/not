@@ -16,7 +16,7 @@ void main() {
   });
 
   test('açılış kapısı derleme sabiti (release ağacından düşsün)', () {
-    final src = File('lib/core/utils/frame_timing_log.dart').readAsStringSync();
+    final src = File('lib/core/utils/frame_timing_log.dart').readAsStringSync().replaceAll('\r\n', '\n');
     expect(
       src,
       contains(

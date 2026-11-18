@@ -214,10 +214,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiSummarize => 'Notu özetle';
 
   @override
-  String get aiSectionNote => 'Bu not';
+  String get aiSectionWrite => 'Yaz';
 
   @override
-  String get aiSectionAttachments => 'Ekler';
+  String get aiSectionAsk => 'Sor';
+
+  @override
+  String get aiSectionTransform => 'Dönüştür';
 
   @override
   String get summarize => 'Özetle';

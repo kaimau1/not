@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **✨ levhası 3 bölüm + kılavuz araması (P72, 18 Kasım, yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) notta ✨ → başlıklar sırayla Yaz (sesli not, Düzelt, Geliştir, Çevir) · Sor (Sohbet, PDF varsa "Sor") · Dönüştür (Özet, ekler); açılış/kapanış takılmıyor; (2) Ayarlar → Kılavuz'da arama kutusuna hızlı yaz — takılma yok.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **18 Kasım gece turu [apk] (P64–P71, bulutta yazıldı, cihazda bakılmadı, ÖLÇÜLMEDİ — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) ⋮ menüde "Sabitten çıkar" tek satır; (2) Ayarlar'da ayrı "Güvenlik" bölümü (not kilidi + uygulama kilidi); (3) alarm izni kapalıyken ilk hatırlatıcıyı kur → bir kez "İzni aç" ipucu; (4) görsel açıklama levhasını açıp kapat (takılma/hata yok); (5) uçak kipinde Merriweather başlıklı not doğru yazı tipiyle; (6) akıllı listede market/bavul "Sık eklediklerin" ayrı, boş listede ipucu; (7) hesap makinesi ve paylaşım levhası araması akıcı; (8) ✨ menüde "Analiz et" yok, çöp/arşiv levhaları ve ayar araması açılıyor; (9) Ayarlar → Hesap → Hakkında "Geri bildirim gönder" e-posta taslağı açıyor; Lisanslar'da yazı tipi lisansları; (10) Ayarlar'da "Yapay zekâyı tümden kapat" açınca AI girişleri kayboluyor, kapatınca geri geliyor; AI yanıtında "Bildir".
   Yanlışsa: madde numarasını yaz.
