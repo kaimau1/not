@@ -192,3 +192,17 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   (tablet + web) testi: düzenleme, çöpe at/geri al, çevrimdışı düzenleme sonra bağlan, saat
   farkı, uzun kapalı cihaz, senkronu kapat, hesap değiştir; (3) `ListenSource.cache` dinleyicisinin
   besleyiciden dolan önbelleği gösterdiği cihazda doğrulanmadı (sahte Firestore ayırmıyor).
+
+## Hak (entitlement) — PL14 (2026-11-18, P71)
+- **Belge:** kök `entitlements/{uid}` = `tier` (free|pro|lifetime), `proUntil`, `trialEndsAt`,
+  `lifetimeOwned`. Kural: sahibi `get`, `list`/yazma YOK (Admin SDK yazar). `users/{uid}`
+  içinde DEĞİL: o belge istemciden silinebiliyor, deneme sıfırlanırdı (aiQuota ile aynı kök neden).
+  Hesap silmede `keptCollections`'ta; silmeyi sunucu yapar (`functions/entitlements.js` taslağı).
+- **İstemci:** `lib/features/entitlement/` — `EntitlementGate.active = PlayBuild.enabled`;
+  bayraksızda `entitlementProvider` Firestore'a HİÇ gitmez, `proFeatureProvider` hep `true`.
+  Okunamayan/eksik belge = ücretsiz (Pro vermemek güvenli). Deneme/Pro bitiş anında sağlayıcı
+  kendini yeniler (Timer, en çok 20 gün).
+- **Yanlış yol (test):** Riverpod 3 dinleyicisiz `StreamProvider`'ı duraklatır; `read(.future)`
+  takılır → testte önce `container.listen`.
+- **Eski `users/{uid}.premiumUntil`** (`ai_gate.dart` premiumProvider) dokunulmadı; PL2/PL6'da
+  `entitlementProvider`'a taşınacak (paralel AI işi).
