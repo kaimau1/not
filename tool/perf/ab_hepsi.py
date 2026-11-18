@@ -127,7 +127,7 @@ def cool_enough(limit=34.0, wait_s=1800):
     return True
 
 
-def _confirm_installer(stop):
+def _confirm_installer(stop, marker="Ölçüm"):
     """HUAWEI/Honor (HarmonyOS) `adb install` iki onay penceresi çıkarır ("DEVAM ET" uyarısı,
     sonra "YÜKLE"; T13, MatePad 11, 2026-11-18). Onay YALNIZ ölçüm uygulamasının kendi kurulumu
     için ("Notlar Ölçüm" yazan pencere) ve yalnız paket yükleyici önde iken verilir; başka bir
@@ -139,7 +139,7 @@ def _confirm_installer(stop):
             continue
         wake()
         xml = ui_dump()
-        if "Ölçüm" not in xml and not nodes(xml, "^DEVAM ET$"):
+        if marker not in xml and not nodes(xml, "^DEVAM ET$"):
             continue
         for pat in ("^DEVAM ET$", "^YÜKLE$"):
             hit = nodes(xml, pat)
@@ -148,17 +148,25 @@ def _confirm_installer(stop):
                 break
 
 
-def install(apk):
+def install(apk, marker="Ölçüm"):
     import threading
     wake()   # ekran kapalıyken kurulum pencereleri görünmez → adb install 300 sn asılıyordu (2026-11-18)
     stop = threading.Event()
-    th = threading.Thread(target=_confirm_installer, args=(stop,), daemon=True)
+    th = threading.Thread(target=_confirm_installer, args=(stop, marker), daemon=True)
     th.start()
     try:
         r = subprocess.run([ADB, "install", "-r", apk], capture_output=True,
                            text=True, timeout=300)
     finally:
         stop.set(); th.join(timeout=5)
+    for _ in range(6):   # "Yükleme başarılı" ekranı (BİTTİ/AÇ) uygulamanın önünde kalır → kapat
+        if "packageinstaller" not in focus():
+            break
+        hit = nodes(ui_dump(), "^BİTTİ$")
+        if hit:
+            tap(hit[0][1], hit[0][2]); time.sleep(0.8)
+            break
+        time.sleep(1.0)
     out = (r.stdout + r.stderr).strip()
     if "Success" not in out:
         raise RuntimeError("kurulamadı: " + out[-300:])
