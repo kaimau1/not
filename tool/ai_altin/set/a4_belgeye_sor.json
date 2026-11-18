@@ -1,0 +1,182 @@
+{
+  "yetenek": "A4",
+  "ad": "Belgeye sor",
+  "aciklama": "Belge özeti + belge üstünde soru-cevap (metin yolu; PDF baytı yok). Sayfa numaralı kaynak AI-S6 ile ölçüte eklenecek.",
+  "ornekler": [
+    {
+      "id": "A4-01",
+      "islev": "summarizeDocumentText",
+      "girdi": {
+        "belge": "KİRA SÖZLEŞMESİ\nMadde 1: Kiralanan: Moda Mah. Bahariye Cad. No:12 D:4, Kadıköy.\nMadde 2: Aylık kira bedeli 18.500 TL olup her ayın 5'inde peşin ödenir.\nMadde 3: Depozito iki aylık kira tutarıdır ve tahliyede iade edilir.\nMadde 4: Kira artışı yılda bir, TÜFE oranında yapılır.\nMadde 5: Kiracı evcil hayvan besleyemez.\nMadde 6: Sözleşme süresi 1 yıldır, başlangıç 1 Eylül 2026.",
+        "dosyaAdi": "kira_sozlesmesi.pdf"
+      },
+      "beklenen": "kira, depozito, artış, evcil hayvan yasağı, süre",
+      "olcut": {
+        "icermeli": [
+          "18.500",
+          "depozito",
+          "evcil"
+        ],
+        "en_cok_oran": 1.0,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-02",
+      "islev": "summarizeDocumentText",
+      "girdi": {
+        "belge": "Çalışan El Kitabı\nBölüm 3 İzinler: Yıllık izin ilk yıl 14 gündür. Hastalık izni için rapor gerekir. Uzaktan çalışma haftada en çok 2 gündür ve yöneticinin onayıyla yapılır.\nBölüm 4 Masraflar: Yol masrafı fişle, aynı ay içinde bildirilir. Yemek kartı aylık 3.000 TL yüklenir.\nBölüm 5 Güvenlik: Şifreler 90 günde bir değişir. Şirket bilgisayarına kişisel yazılım kurulamaz.",
+        "dosyaAdi": "el_kitabi.docx"
+      },
+      "beklenen": "izin, uzaktan çalışma, masraf, güvenlik",
+      "olcut": {
+        "icermeli": [
+          "14",
+          "uzaktan",
+          "şifre"
+        ],
+        "en_cok_oran": 1.0,
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-03",
+      "islev": "askDocument",
+      "girdi": {
+        "belge": "KİRA SÖZLEŞMESİ\nMadde 1: Kiralanan: Moda Mah. Bahariye Cad. No:12 D:4, Kadıköy.\nMadde 2: Aylık kira bedeli 18.500 TL olup her ayın 5'inde peşin ödenir.\nMadde 3: Depozito iki aylık kira tutarıdır ve tahliyede iade edilir.\nMadde 4: Kira artışı yılda bir, TÜFE oranında yapılır.\nMadde 5: Kiracı evcil hayvan besleyemez.\nMadde 6: Sözleşme süresi 1 yıldır, başlangıç 1 Eylül 2026.",
+        "soru": "Kira artışı nasıl yapılıyor?"
+      },
+      "beklenen": "yılda bir, TÜFE",
+      "olcut": {
+        "icermeli": [
+          "TÜFE"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-04",
+      "islev": "askDocument",
+      "girdi": {
+        "belge": "KİRA SÖZLEŞMESİ\nMadde 1: Kiralanan: Moda Mah. Bahariye Cad. No:12 D:4, Kadıköy.\nMadde 2: Aylık kira bedeli 18.500 TL olup her ayın 5'inde peşin ödenir.\nMadde 3: Depozito iki aylık kira tutarıdır ve tahliyede iade edilir.\nMadde 4: Kira artışı yılda bir, TÜFE oranında yapılır.\nMadde 5: Kiracı evcil hayvan besleyemez.\nMadde 6: Sözleşme süresi 1 yıldır, başlangıç 1 Eylül 2026.",
+        "soru": "Kedi besleyebilir miyim?"
+      },
+      "beklenen": "hayır, Madde 5",
+      "olcut": {
+        "birini_icermeli": [
+          "hayır",
+          "besleyemez",
+          "yasak",
+          "izin verilmiyor"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-05",
+      "islev": "askDocument",
+      "girdi": {
+        "belge": "KİRA SÖZLEŞMESİ\nMadde 1: Kiralanan: Moda Mah. Bahariye Cad. No:12 D:4, Kadıköy.\nMadde 2: Aylık kira bedeli 18.500 TL olup her ayın 5'inde peşin ödenir.\nMadde 3: Depozito iki aylık kira tutarıdır ve tahliyede iade edilir.\nMadde 4: Kira artışı yılda bir, TÜFE oranında yapılır.\nMadde 5: Kiracı evcil hayvan besleyemez.\nMadde 6: Sözleşme süresi 1 yıldır, başlangıç 1 Eylül 2026.",
+        "soru": "Sözleşme ne zaman bitiyor?"
+      },
+      "beklenen": "1 Eylül 2027 (1 yıl)",
+      "olcut": {
+        "birini_icermeli": [
+          "2027",
+          "1 yıl",
+          "bir yıl"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-06",
+      "islev": "askDocument",
+      "girdi": {
+        "belge": "KİRA SÖZLEŞMESİ\nMadde 1: Kiralanan: Moda Mah. Bahariye Cad. No:12 D:4, Kadıköy.\nMadde 2: Aylık kira bedeli 18.500 TL olup her ayın 5'inde peşin ödenir.\nMadde 3: Depozito iki aylık kira tutarıdır ve tahliyede iade edilir.\nMadde 4: Kira artışı yılda bir, TÜFE oranında yapılır.\nMadde 5: Kiracı evcil hayvan besleyemez.\nMadde 6: Sözleşme süresi 1 yıldır, başlangıç 1 Eylül 2026.",
+        "soru": "Aidatı kim ödüyor?"
+      },
+      "beklenen": "belgede yok demeli",
+      "olcut": {
+        "birini_icermeli": [
+          "belirtilmemiş",
+          "yok",
+          "geçmiyor",
+          "bulunmuyor",
+          "bilgi"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-07",
+      "islev": "askDocument",
+      "girdi": {
+        "belge": "Çalışan El Kitabı\nBölüm 3 İzinler: Yıllık izin ilk yıl 14 gündür. Hastalık izni için rapor gerekir. Uzaktan çalışma haftada en çok 2 gündür ve yöneticinin onayıyla yapılır.\nBölüm 4 Masraflar: Yol masrafı fişle, aynı ay içinde bildirilir. Yemek kartı aylık 3.000 TL yüklenir.\nBölüm 5 Güvenlik: Şifreler 90 günde bir değişir. Şirket bilgisayarına kişisel yazılım kurulamaz.",
+        "soru": "Haftada kaç gün evden çalışabilirim?"
+      },
+      "beklenen": "en çok 2, yönetici onayı",
+      "olcut": {
+        "icermeli": [
+          "2",
+          "onay"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-08",
+      "islev": "askDocument",
+      "girdi": {
+        "belge": "Çalışan El Kitabı\nBölüm 3 İzinler: Yıllık izin ilk yıl 14 gündür. Hastalık izni için rapor gerekir. Uzaktan çalışma haftada en çok 2 gündür ve yöneticinin onayıyla yapılır.\nBölüm 4 Masraflar: Yol masrafı fişle, aynı ay içinde bildirilir. Yemek kartı aylık 3.000 TL yüklenir.\nBölüm 5 Güvenlik: Şifreler 90 günde bir değişir. Şirket bilgisayarına kişisel yazılım kurulamaz.",
+        "soru": "Yemek kartına ne kadar yükleniyor?"
+      },
+      "beklenen": "3.000 TL",
+      "olcut": {
+        "birini_icermeli": [
+          "3.000",
+          "3000"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-09",
+      "islev": "askDocument",
+      "girdi": {
+        "belge": "Çalışan El Kitabı\nBölüm 3 İzinler: Yıllık izin ilk yıl 14 gündür. Hastalık izni için rapor gerekir. Uzaktan çalışma haftada en çok 2 gündür ve yöneticinin onayıyla yapılır.\nBölüm 4 Masraflar: Yol masrafı fişle, aynı ay içinde bildirilir. Yemek kartı aylık 3.000 TL yüklenir.\nBölüm 5 Güvenlik: Şifreler 90 günde bir değişir. Şirket bilgisayarına kişisel yazılım kurulamaz.",
+        "soru": "Şifreyi ne sıklıkla değiştirmeliyim?"
+      },
+      "beklenen": "90 günde bir",
+      "olcut": {
+        "icermeli": [
+          "90"
+        ],
+        "dil": "tr"
+      }
+    },
+    {
+      "id": "A4-10",
+      "islev": "askDocument",
+      "girdi": {
+        "belge": "Çalışan El Kitabı\nBölüm 3 İzinler: Yıllık izin ilk yıl 14 gündür. Hastalık izni için rapor gerekir. Uzaktan çalışma haftada en çok 2 gündür ve yöneticinin onayıyla yapılır.\nBölüm 4 Masraflar: Yol masrafı fişle, aynı ay içinde bildirilir. Yemek kartı aylık 3.000 TL yüklenir.\nBölüm 5 Güvenlik: Şifreler 90 günde bir değişir. Şirket bilgisayarına kişisel yazılım kurulamaz.",
+        "soru": "Doğum izni kaç gün?"
+      },
+      "beklenen": "belgede yok, uydurmamalı",
+      "olcut": {
+        "birini_icermeli": [
+          "belirtilmemiş",
+          "yok",
+          "geçmiyor",
+          "bulunmuyor",
+          "bilgi"
+        ],
+        "icermemeli": [
+          "16 hafta",
+          "112"
+        ],
+        "dil": "tr"
+      }
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "yetenek": "A8",
+  "ad": "Sessiz düzen",
+  "aciklama": "Başlık ve etiket önerisi. Kopya bulma cihazda (AI'sız) — sette yok.",
+  "ornekler": [
+    {
+      "id": "A8-01",
+      "islev": "generateTitle",
+      "girdi": {
+        "not": {
+          "baslik": "Market",
+          "metin": "- süt\n- yumurta\n- zeytinyağı\n- deterjan"
+        }
+      },
+      "beklenen": "kısa, konuyu söyleyen başlık",
+      "olcut": {
+        "birini_icermeli": [
+          "market",
+          "alışveriş"
+        ],
+        "en_cok_karakter": 60,
+        "en_az_karakter": 3
+      }
+    },
+    {
+      "id": "A8-02",
+      "islev": "suggestTags",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Kira 18.500 TL, her ayın 5'inde. Depozito iki kira. Artış TÜFE."
+        }
+      },
+      "beklenen": "1–5 küçük harfli etiket",
+      "olcut": {
+        "birini_icermeli": [
+          "kira",
+          "ev",
+          "finans"
+        ],
+        "dizi_en_az": 1,
+        "dizi_en_cok": 5
+      }
+    },
+    {
+      "id": "A8-03",
+      "islev": "generateTitle",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Dr. Aylin Kaya, dahiliye, salı 10:30. Kan tahlili aç karnına."
+        }
+      },
+      "beklenen": "kısa, konuyu söyleyen başlık",
+      "olcut": {
+        "birini_icermeli": [
+          "doktor",
+          "randevu",
+          "tahlil"
+        ],
+        "en_cok_karakter": 60,
+        "en_az_karakter": 3
+      }
+    },
+    {
+      "id": "A8-04",
+      "islev": "suggestTags",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Hücre zarı seçici geçirgendir. Pasif taşımada enerji harcanmaz; aktif taşımada ATP harcanır."
+        }
+      },
+      "beklenen": "1–5 küçük harfli etiket",
+      "olcut": {
+        "birini_icermeli": [
+          "biyoloji",
+          "ders",
+          "okul"
+        ],
+        "dizi_en_az": 1,
+        "dizi_en_cok": 5
+      }
+    },
+    {
+      "id": "A8-05",
+      "islev": "generateTitle",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Uçuş TK2412, 20 Aralık İstanbul-Trabzon. Otel Zorlu Grand 2 gece."
+        }
+      },
+      "beklenen": "kısa, konuyu söyleyen başlık",
+      "olcut": {
+        "birini_icermeli": [
+          "trabzon",
+          "seyahat",
+          "uçuş"
+        ],
+        "en_cok_karakter": 60,
+        "en_az_karakter": 3
+      }
+    },
+    {
+      "id": "A8-06",
+      "islev": "suggestTags",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Sprint 14: giriş ekranı Ece, bildirim hatası Burak, perf ölçümü Selin. Demo 28/11."
+        }
+      },
+      "beklenen": "1–5 küçük harfli etiket",
+      "olcut": {
+        "birini_icermeli": [
+          "iş",
+          "proje",
+          "sprint"
+        ],
+        "dizi_en_az": 1,
+        "dizi_en_cok": 5
+      }
+    },
+    {
+      "id": "A8-07",
+      "islev": "generateTitle",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "1 su bardağı kırmızı mercimek, 1 soğan, 1 havuç, salça, 6 bardak su. 25 dk pişir."
+        }
+      },
+      "beklenen": "kısa, konuyu söyleyen başlık",
+      "olcut": {
+        "birini_icermeli": [
+          "mercimek",
+          "çorba",
+          "tarif"
+        ],
+        "en_cok_karakter": 60,
+        "en_az_karakter": 3
+      }
+    },
+    {
+      "id": "A8-08",
+      "islev": "suggestTags",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Okunacak: Tutunamayanlar, Saatleri Ayarlama Enstitüsü."
+        }
+      },
+      "beklenen": "1–5 küçük harfli etiket",
+      "olcut": {
+        "birini_icermeli": [
+          "kitap",
+          "okuma"
+        ],
+        "dizi_en_az": 1,
+        "dizi_en_cok": 5
+      }
+    },
+    {
+      "id": "A8-09",
+      "islev": "generateTitle",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Elektrik 640 TL son ödeme 21 Kasım, doğalgaz 1.120 TL 25 Kasım."
+        }
+      },
+      "beklenen": "kısa, konuyu söyleyen başlık",
+      "olcut": {
+        "birini_icermeli": [
+          "fatura",
+          "ödeme"
+        ],
+        "en_cok_karakter": 60,
+        "en_az_karakter": 3
+      }
+    },
+    {
+      "id": "A8-10",
+      "islev": "suggestTags",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Uygulamaya karanlık tema ve PDF fatura indirme eklenebilir."
+        }
+      },
+      "beklenen": "1–5 küçük harfli etiket",
+      "olcut": {
+        "birini_icermeli": [
+          "fikir",
+          "uygulama",
+          "proje"
+        ],
+        "dizi_en_az": 1,
+        "dizi_en_cok": 5
+      }
+    },
+    {
+      "id": "A8-11",
+      "islev": "generateTitle",
+      "girdi": {
+        "not": {
+          "baslik": "",
+          "metin": "Okunacak: Tutunamayanlar, Saatleri Ayarlama Enstitüsü."
+        }
+      },
+      "beklenen": "kitap başlığı",
+      "olcut": {
+        "birini_icermeli": [
+          "kitap",
+          "okuma",
+          "okunacak"
+        ],
+        "en_cok_karakter": 60
+      }
+    },
+    {
+      "id": "A8-12",
+      "islev": "suggestTags",
+      "girdi": {
+        "not": {
+          "baslik": "Market",
+          "metin": "- süt\n- yumurta"
+        }
+      },
+      "beklenen": "alışveriş etiketi",
+      "olcut": {
+        "birini_icermeli": [
+          "alışveriş",
+          "market",
+          "alisveris"
+        ],
+        "dizi_en_az": 1,
+        "dizi_en_cok": 5
+      }
+    }
+  ]
+}
