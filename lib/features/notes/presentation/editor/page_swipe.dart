@@ -107,21 +107,51 @@ class _PageSwipeDetectorState extends State<PageSwipeDetector> {
     if (e.pointer == _pointer) _pointer = null;
   }
 
-  bool _scrolled(ScrollUpdateNotification n) {
-    if (_pointer != null && (n.scrollDelta ?? 0) != 0) _void = true;
-    return false;
+  void _scrolled(Notification n) {
+    if (_pointer != null &&
+        n is ScrollUpdateNotification &&
+        (n.scrollDelta ?? 0) != 0) {
+      _void = true;
+    }
   }
 
   @override
-  Widget build(BuildContext context) => Listener(
+  Widget build(BuildContext context) => _SwipeListener(
     onPointerDown: _down,
     onPointerUp: _up,
     onPointerCancel: _cancel,
-    child: NotificationListener<ScrollUpdateNotification>(
-      onNotification: _scrolled,
-      child: widget.child,
-    ),
+    onNotification: _scrolled,
+    child: widget.child,
   );
+}
+
+/// Kaydırma bildirimlerini de dinleyen [Listener]: ayrı bir
+/// `NotificationListener` editörün her kurulumunda bir öğe daha kuruyordu
+/// (bütçe S17); bildirim ağacına bu öğenin kendisi katılır.
+class _SwipeListener extends Listener {
+  const _SwipeListener({
+    super.onPointerDown,
+    super.onPointerUp,
+    super.onPointerCancel,
+    required this.onNotification,
+    super.child,
+  });
+
+  final ValueChanged<Notification> onNotification;
+
+  @override
+  SingleChildRenderObjectElement createElement() => _SwipeListenerElement(this);
+}
+
+class _SwipeListenerElement extends SingleChildRenderObjectElement
+    with NotifiableElementMixin {
+  _SwipeListenerElement(_SwipeListener super.widget);
+
+  @override
+  bool onNotification(Notification notification) {
+    (widget as _SwipeListener).onNotification(notification);
+    return false;
+  }
 }
 
 /// **SAYFA ÇEVİRME GÖRÜNÜMÜ** (TEMA_PLANI F33.6): [index] değişince gelen sayfa
