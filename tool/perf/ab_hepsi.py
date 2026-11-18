@@ -50,9 +50,9 @@ Kayıt (F81.3): her koşunun evre ortancaları `docs/perf/gecmis.csv`'ye
 
 TABLET (T13/T1, 2026-11-18; PLAN §1.0: tablet tabanı telefonla karşılaştırılmaz): cihazın kısa kenarı
 >= 1400 px ise tablet sayılır → kayıt `gecmis_tablet.csv`, altın taban `altin_taban_tablet.json`.
-Tablet kendi düzeninde ölçülür (YATAY: sol ray + liste + sağ bölme; seçiciler iki düzende de çalışır).
-`--yon` ekranı ölçüm süresince döndürür (`wm user-rotation lock`, bitince `free`); varsayılan tablette
-`yatay`, telefonda `mevcut`. Ekran boyutu DÖNDÜRÜLMÜŞ ekrandan okunur (`perf.screen_size`).
+Tablet kendi düzeninde ölçülür: profil APK'sı manifestte DİKEY kilitli → 640x1024 dp, sol ray + 2 sütun
+liste (yatay/bölünmüş görünüm için manifest anahtarı gerekir). `--yon` ekranı ölçüm süresince döndürür
+(`wm user-rotation lock`, bitince `free`); varsayılan tablette `dikey`, telefonda `mevcut`. Ekran boyutu DÖNDÜRÜLMÜŞ ekrandan okunur (`perf.screen_size`).
 
 HAZIRLIK (bir kez): veri seti (`make_dataset.py`, README) + sabit PDF'li not:
 `python make_dataset.py --ink 40` → `olcum_kalem.notyedek`'i
@@ -137,6 +137,7 @@ def _confirm_installer(stop):
         time.sleep(1.2)
         if "packageinstaller" not in focus():
             continue
+        wake()
         xml = ui_dump()
         if "Ölçüm" not in xml and not nodes(xml, "^DEVAM ET$"):
             continue
@@ -149,6 +150,7 @@ def _confirm_installer(stop):
 
 def install(apk):
     import threading
+    wake()   # ekran kapalıyken kurulum pencereleri görünmez → adb install 300 sn asılıyordu (2026-11-18)
     stop = threading.Event()
     th = threading.Thread(target=_confirm_installer, args=(stop,), daemon=True)
     th.start()
@@ -167,16 +169,136 @@ def edit_boxes(xml):
         r'class="android\.widget\.EditText"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml)]
 
 
-def dump():
+def labels_in(x):
+    return len(re.findall(r'(?:text|content-desc)="[^"]+"', x))
+
+
+def dump(allow_empty=False):
     """Koordinat bulmak için (ÖLÇÜM PENCERESİ DIŞINDA). Semantik ağacı ilk
-    dökümde boş gelebiliyor: dolana dek tekrar."""
+    dökümde boş gelebiliyor: dolana dek tekrar. 2026-11-18 (tablet): boş ağaç da 3,4 KB tuttuğundan
+    boyut değil ETİKETLİ düğüm sayısına bakılır; tablet ana ekranı doğası gereği boş
+    ([allow_empty]: beklemeden döner)."""
     for _ in range(4):
         ready()
         x = ui_dump()
-        if len(x) > 3000:
+        if labels_in(x) >= 3 or (allow_empty and len(x) > 3000):
             return x
         time.sleep(1.0)
     return x
+
+
+def ime_shown():
+    return "mInputShown=true" in sh("dumpsys input_method | grep mInputShown")
+
+
+def kb_button(xml):
+    """Fiziksel klavye algılanan cihazda (tablet) sanal klavyeyi açan ⌨ düğmesi (editör üst çubuğu);
+    telefonda yok → None (alana dokunmak yeter)."""
+    n = nodes(xml, "^Sanal klavyeyi aç")
+    return (n[0][1], n[0][2]) if n else None
+
+
+def ensure_ime(kb_xy, field=None):
+    """Klavyeyi AÇIK getir (ölçüm penceresi dışında). ⌨ düğmesi AÇ/KAPA anahtarı (uygulama içi durum
+    önceki not/koşudan kalmış olabilir; açıkken dokunmak KAPATIR) ve bir kez açıldıktan sonra alana
+    dokunmak da klavyeyi açar → ⌨ (koordinat her denemede dökümden TAZE) ile alana dokunmayı
+    dönüşümlü dener (en çok 6). Telefonda (kb_xy yok) çağrı etkisiz."""
+    if not kb_xy:
+        return
+    for attempt in range(6):
+        if ime_shown():
+            return
+        if attempt % 2 == 0:
+            cur = kb_button(dump()) or kb_xy
+            tap(*cur)
+        elif field:
+            tap(*field)
+        for _ in range(8):   # klavye 4 sn'ye dek geç gelebilir
+            time.sleep(0.5)
+            if ime_shown():
+                time.sleep(0.8)
+                return
+    if not ime_shown():
+        shot("ime_acilmadi", 0.3)
+        raise RuntimeError("sanal klavye açılmadı (⌨ + alan dokunuşu ×6; ekran: PERF_OUT/ime_acilmadi.png)")
+
+
+def back_note():
+    """Notu kapat. Klavye açıksa ilk BACK onu kapatır; tablet fiziksel klavye algılayıp sanal
+    klavyeyi açmadığından 2. BACK koşulsuz basılırsa uygulamadan çıkar (T13)."""
+    if ime_shown():
+        key("KEYCODE_BACK"); time.sleep(0.8)
+    key("KEYCODE_BACK"); time.sleep(0.8)
+
+
+# TABLET ANA EKRANI (T13, 2026-11-18). UiAutomation geçici bağlanır (~1 sn); Flutter, boşta bir uygulamada
+# ana ekranın semantik ağacını o pencerede göndermiyor: tablet ana ekranı (ray + liste) dökümde BOŞ
+# (3,4 KB, yalnız kök View'ler); levhalar, editör, ayarlar DOLU. Telefon düzeninde (wm size 1080x2400) ağaç
+# dolu. Bu yüzden tablet ANA EKRAN tıklamaları 1600 px genişlikteki (MatePad 11 dikey, 400 dpi) piksel
+# tablosundan gelir; arayüz değişince yeniden ölçülür. Her tablo noktası ARDINDAN dolu semantiğe sahip bir
+# ekranla (levha/editör) doğrulanır; tutmazsa evre/koşu açık hata verir. Varsayım: "Notların
+# yedeklenmiyor" bandı küçültülmüş ("Sonra", kalıcı) ve ilk kart sabit not.
+GEO_1600 = {"search": (360, 132), "clear": (1063, 132), "plus": (84, 628), "menu": (793, 748),
+            "hit": (533, 750)}
+
+
+def home_locate(W, H):
+    """Ana ekran koordinatları: semantik (telefon) ya da tablet tablosu. Dönüş sözlüğü:
+    search (x,y), clear (x,y)|None, plus [node], card_menu node, title, geo bool, hit (x,y)|None."""
+    xml = dump(allow_empty=True)
+    boxes = edit_boxes(xml)
+    if boxes:
+        menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > 600]
+        plus = nodes(xml, "^Yeni not . tip seç") or nodes(xml, "^Yeni not")
+        m, title = pick_card(xml, menus)
+        b = boxes[0]
+        return {"search": ((b[0] + b[2]) // 2, (b[1] + b[3]) // 2), "clear": None, "plus": plus,
+                "card_menu": m, "title": title, "geo": False, "hit": None}
+    if not is_tablet():
+        raise RuntimeError("ana ekran semantiği boş (telefon)")
+    k = W / 1600
+
+    def pt(key_):
+        return (int(GEO_1600[key_][0] * k), int(GEO_1600[key_][1] * k))
+
+    pl, mn = pt("plus"), pt("menu")
+    # doğrulama: ⋮ levhası dolu semantikle açılmalı
+    tap(*mn); time.sleep(1.5)
+    n = [x for x in nodes(dump()) if x[0]]
+    key("KEYCODE_BACK"); time.sleep(1.0)
+    if len(n) < 4:
+        raise RuntimeError("tablet geometrisi tutmadı: kart ⋮ levhası açılmadı "
+                           "(yedek bandı büyük mü? 'Sonra'ya dokun; ilk kart sabit not mu?)")
+    return {"search": pt("search"), "clear": pt("clear"), "plus": [("+", pl[0], pl[1], (*pl, *pl))],
+            "card_menu": ("geo", mn[0], mn[1], (*mn, *mn)), "title": "tablet ilk kart", "geo": True,
+            "hit": pt("hit")}
+
+
+def find_note(q, pat, W, H, h):
+    """Kartı bul → dokunma noktası. Telefon: listede kaydırarak semantik ara. Tablet (ana ekran
+    semantiği boş): arama kutusuna yaz, tek sonuç sol üst yuvada; arama kalır → [clear_search]."""
+    if not h["geo"]:
+        hit = find_in_list(pat, W, H)
+        return (hit[0][1], hit[0][2]) if hit else None
+    tap(*h["search"]); time.sleep(1.0)
+    text(q); time.sleep(1.6)
+    return h["hit"]
+
+
+def close_note_search(H):
+    """Ana ekran aramasından açılan notta başlık eşleşirse not-içi arama çubuğu da açılır ("1/1", ✕ "Kapat")
+    ve alt araç çubuğunu ("Biçim"…) gizler; çubuk varsa kapatılır."""
+    cl = [n for n in nodes(dump()) if n[0] == "Kapat" and n[2] < H * .2]
+    if cl:
+        tap(cl[0][1], cl[0][2]); time.sleep(1.0)
+
+
+def clear_search(h):
+    if h["geo"]:
+        tap(*h["clear"]); time.sleep(0.8)      # ✕: arama metni silinir
+        if ime_shown():
+            key("KEYCODE_BACK"); time.sleep(0.6)
+        # (fazladan BACK YOK: ana ekranda boşken BACK klasör geçiş menüsünü açıp sonraki dokunuşu yutuyordu)
 
 
 class Session:
@@ -224,6 +346,7 @@ class Session:
 
     def window(self, steps, widgets=False):
         """Tek VM zaman çizelgesi penceresi; adım = (evre, eylem, bekleme)."""
+        print("  evre:", ",".join(dict.fromkeys(n for n, _, _ in steps)), flush=True)
         self.vm.start(widgets=widgets)
         self.marks.append(("başla", self.vm.now()))
         for name, act, wait in steps:
@@ -255,14 +378,12 @@ def run_once(label):
     x = W // 2
 
     # Ana ekran koordinatları (pencere DIŞINDA).
-    xml = dump()
-    search = edit_boxes(xml)[0]
-    menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > 600]
-    plus = nodes(xml, "^Yeni not")
+    h = home_locate(W, H)
+    plus = h["plus"]
     # P60 (2026-11-14): veri yeniden kurulunca ilk kart sabitlenmiş "OLCUM kalem pdf"
     # oldu → not_ac/kb/yaz/not_kapa PDF'li notu ölçtü (~3 kat sıçrama). OLCUM
     # stres notları atlanır; açılan not her koşuda yazılır (veri doğrulaması).
-    card_menu, card_title = pick_card(xml, menus)
+    card_menu, card_title = h["card_menu"], h["title"]
     card = (card_menu[1] - 170, card_menu[2] + 150)  # ⋮ kartın sağ üstünde; gövdesi sol altta
 
     ready()
@@ -275,18 +396,18 @@ def run_once(label):
               ("menu", lambda: key("KEYCODE_BACK"), 1.0)])
 
     ready()
-    sx, sy = (search[0] + search[2]) // 2, (search[1] + search[3]) // 2
-    tap(sx, sy); time.sleep(1.2)
+    tap(*h["search"]); time.sleep(1.2)
     s.window([("arama", lambda c=c: text(c), 0.5) for c in "olcum"])
-    key("KEYCODE_BACK"); time.sleep(0.6)   # klavye
-    key("KEYCODE_BACK"); time.sleep(1.2)   # aramayı temizle
+    if ime_shown():
+        key("KEYCODE_BACK"); time.sleep(0.6)   # klavye (tablet: sanal klavye açılmıyor)
+    key("KEYCODE_BACK"); time.sleep(1.2)       # aramayı temizle
     ready()
 
     s.window([("klasor", lambda: swipe(int(W * .85), int(H * .6), int(W * .15), int(H * .6), 160), 1.6),
               ("klasor", lambda: swipe(int(W * .15), int(H * .6), int(W * .85), int(H * .6), 160), 1.6)])
     time.sleep(0.6)
     # Geri çekiş takvimi açtıysa (Tümü'de sağa çekiş, 2026-11-06) dön.
-    if "Takvim" in "".join(n[0] for n in nodes(dump())[:6]):
+    if "Takvim" in "".join(n[0] for n in nodes(dump(allow_empty=True))[:6]):
         key("KEYCODE_BACK"); time.sleep(1.2)
     ready()
 
@@ -297,8 +418,7 @@ def run_once(label):
     ready()
     s.window([("yeni_not", lambda: tap(plus[0][1], plus[0][2]), 1.0),
               ("yeni_not", lambda: tap(metin[0][1], metin[0][2]), 2.2)])
-    for _ in range(2):
-        key("KEYCODE_BACK"); time.sleep(0.8)
+    back_note()
     time.sleep(1.0)
     ready()
 
@@ -309,10 +429,13 @@ def run_once(label):
         raise RuntimeError("gövde alanı bulunamadı")
     body = boxes[1]
     fx, fy = (body[0] + body[2]) // 2, min(body[1] + 60, (body[1] + body[3]) // 2)
+    kb_xy = kb_button(dump())
+    open_kb = lambda: tap(fx, fy)   # ⌨ bir kez açıldıktan sonra alana dokunmak yeter (⌨ AÇ/KAPA anahtarı)
     ready()
     tap(fx, fy); time.sleep(2.0)
     trim_typed(fx, fy)
-    s.window([("kb", (lambda: key("KEYCODE_BACK")) if i % 2 == 0 else (lambda: tap(fx, fy)),
+    ensure_ime(kb_xy, (fx, fy))
+    s.window([("kb", (lambda: key("KEYCODE_BACK")) if i % 2 == 0 else open_kb,
                1.4 if i % 2 == 0 else 1.6) for i in range(6)])
     key("KEYCODE_MOVE_END")
     s.window([("yaz", lambda: text(" deneme yazisi"), 1.4) for _ in range(4)])
@@ -322,20 +445,17 @@ def run_once(label):
     ready()
 
     # Sabit PDF'li not: listede kaydırarak bul (pencere dışında).
-    hit = None
-    for _ in range(10):
-        hit = nodes(dump(), "^OLCUM kalem pdf")
-        if hit and 500 < hit[0][2] < H - 400:
-            break
-        swipe(x, int(H * .75), x, int(H * .35), 300); time.sleep(1.0)
+    hit = find_note("OLCUM kalem pdf", "^OLCUM kalem pdf", W, H, h)
     if not hit:
         raise RuntimeError("'OLCUM kalem pdf' bulunamadı (HAZIRLIK)")
     ready()
-    s.window([("sabit_ac", lambda: tap(hit[0][1], hit[0][2]), 2.8)])
+    s.window([("sabit_ac", lambda: tap(*hit), 2.8)])
+    close_note_search(H)
     xml = dump()
     # Bölme: başlık alanının altından ek çubuğunun ("Tam ekran") üstüne
     # ("Sayfa 1 / 1" etiketi her zaman gelmiyor).
-    bar = nodes(xml, "^Tam ekran$")
+    # Tablet editörünün üst çubuğunda da "Tam ekran" var: ek çubuğu = EN ALTTAKİ.
+    bar = sorted(nodes(xml, "^Tam ekran$"), key=lambda n: -n[2])
     boxes = edit_boxes(xml)
     body = boxes[1] if len(boxes) > 1 else None
     if not bar or not body:
@@ -345,17 +465,20 @@ def run_once(label):
     s.window([("sabit_kay", lambda: swipe(px, int(bot - (bot - top) * .2), px, int(top + (bot - top) * .2), 200), 0.9)
               for _ in range(3)])
     bx, by = (body[0] + body[2]) // 2, min(body[1] + 60, (body[1] + body[3]) // 2)
+    kb2 = kb_button(xml)
+    open_kb2 = lambda: tap(bx, by)
     tap(bx, by); time.sleep(2.0)
-    s.window([("sabit_kb", (lambda: key("KEYCODE_BACK")) if i % 2 == 0 else (lambda: tap(bx, by)),
+    ensure_ime(kb2, (bx, by))
+    s.window([("sabit_kb", (lambda: key("KEYCODE_BACK")) if i % 2 == 0 else open_kb2,
                1.4 if i % 2 == 0 else 1.6) for i in range(4)])
-    key("KEYCODE_BACK"); time.sleep(0.8)
-    key("KEYCODE_BACK"); time.sleep(1.5)
+    back_note(); time.sleep(1.0)
     ready()
+    clear_search(h)
     list_top(W, H)  # sonraki koşu aynı yerden başlasın
 
     for phase in (phase_sablon, phase_bicim, phase_kalem, phase_duzen):
         try:
-            phase(s, W, H, plus)
+            phase(s, W, H, plus, h)
         except (RuntimeError, IndexError) as e:
             if isinstance(e, NotReady):
                 raise
@@ -364,7 +487,8 @@ def run_once(label):
             # çıkarıp koşuyu düşürüyordu. Hazır değilse kalan evreler atlanır.
             try:
                 ready()
-            except NotReady:
+            except NotReady as ne:
+                print(f"kalan evreler atlandı (uygulama önde değil): {ne}", flush=True)
                 break
             # run_g3 (2026-11-15): bicim "OLCUM cizgi"yi ararken listeyi 12 kez
             # aşağı kaydırıp düştü; kalem dipteki OLCUM stres kartlarını görüp
@@ -437,12 +561,15 @@ def list_top(W, H):
     """Ana ekran listesini başa al."""
     for _ in range(6):
         swipe(W // 2, int(H * .3), W // 2, int(H * .85), 120); time.sleep(0.3)
+    time.sleep(1.2)  # fırlatma durmadan dokunmak dokunuşu yutar (tablet: '+' ilk dokunuşta açılmıyordu)
 
 
-TPL = "^(Şablondan|From template)"  # l10n fromTemplate (add_catalog.dart)
+# l10n fromTemplate: eskiden "Şablondan", 2026-11 itibarıyla "Hazır şablonlar" (add_catalog.dart:204) —
+# T13 `sablon` evresinin atlanma KÖK NEDENİ buydu (regex yalnız "Şablondan" arıyordu).
+TPL = "^(Hazır şablonlar|Şablondan|From template|Ready templates)"
 
 
-def phase_sablon(s, W, H, plus):
+def phase_sablon(s, W, H, plus, h):
     """P63: "+" → Şablonlar → levha → Planlama çipi → kapat (koordinatlar
     pencere dışında bulunur)."""
     # Kök neden (run_g2/g3/g4 "'+' menüsünde Şablondan yok"): panel
@@ -452,8 +579,13 @@ def phase_sablon(s, W, H, plus):
     # doğru ~90 px çekiyordu (yetmez). Başa çıkmak için parmak panelin üst
     # kısmından AŞAĞI uzun çekilir (taşan panel ekranı doldurur → H*0,2 içinde);
     # tavanda durur, iki kez çekmek zararsız. Ölçüm penceresi aynı yolu izler.
-    tap(plus[0][1], plus[0][2]); time.sleep(1.2)
-    xml = dump()
+    # Önceki evreden kalan fırlatma/menü İLK dokunuşu yutabilir (tablet, 2026-11-18: "+" iki koşudan
+    # birinde açılmıyordu) → panel açılana ("Metin notu"/şablon düğmesi dökümde) dek en çok 3 dokunuş.
+    for _ in range(3):
+        tap(plus[0][1], plus[0][2]); time.sleep(1.3)
+        xml = dump()
+        if nodes(xml, TPL) or nodes(xml, "^Metin notu"):
+            break
     tpl = nodes(xml, TPL)
     roll = None
     if not tpl:
@@ -465,8 +597,9 @@ def phase_sablon(s, W, H, plus):
                 swipe(*roll); time.sleep(0.8)
             tpl = nodes(dump(), TPL)
     if not tpl:
-        key("KEYCODE_BACK"); time.sleep(1.0)
-        raise RuntimeError("'+' menüsünde Şablondan yok (kaydırınca da)")
+        if nodes(xml, "^(Kapat|Menüyü düzenle)$"):   # panel açıksa kapat (kapalıyken BACK uygulamadan çıkar)
+            key("KEYCODE_BACK"); time.sleep(1.0)
+        raise RuntimeError("'+' menüsünde 'Hazır şablonlar' yok (kaydırınca da)")
     tap(tpl[0][1], tpl[0][2]); time.sleep(1.8)
     chip = nodes(dump(), "^Planlama")
     key("KEYCODE_BACK"); time.sleep(1.0)
@@ -483,13 +616,14 @@ def phase_sablon(s, W, H, plus):
     ready()
 
 
-def phase_bicim(s, W, H, plus):
+def phase_bicim(s, W, H, plus, h):
     """P63: çizgili listede madde → Biçim → çizgi tepsisi aç/kapa ×3 → tür
     seç ×3. Tepsi düğmelerinin erişilebilirlik adları çeviriden gelir."""
-    hit = find_in_list("^OLCUM cizgi", W, H)
+    hit = find_note("OLCUM cizgi", "^OLCUM cizgi", W, H, h)
     if not hit:
         raise RuntimeError("'OLCUM cizgi' bulunamadı (hazırlık başarısız? koşu başındaki 'hazırlık:' satırı)")
-    tap(hit[0][1], hit[0][2]); time.sleep(2.5)
+    tap(*hit); time.sleep(2.5)
+    close_note_search(H)
     boxes = edit_boxes(dump())
     if len(boxes) < 3:
         raise RuntimeError("çizgili listede madde alanı yok")
@@ -499,8 +633,11 @@ def phase_bicim(s, W, H, plus):
     if not fmt:
         raise RuntimeError("Biçim düğmesi yok")
     tap(fmt[0][1], fmt[0][2]); time.sleep(1.2)
-    menu = nodes(dump(), "^Alt çizgi$")
+    xm = dump()
+    menu = nodes(xm, "^Alt çizgi$")
     if not menu:
+        print("  bicim tanı (alt yarı):", [(n[0][:22], n[1], n[2]) for n in nodes(xm) if n[0] and n[2] > H * .5][:16], flush=True)
+        shot("bicim_tani", 0.3)
         raise RuntimeError("çizgi tepsisi düğmesi yok")
     mx, my = menu[-1][1], menu[-1][2]
     tap(mx, my); time.sleep(1.0)
@@ -517,20 +654,23 @@ def phase_bicim(s, W, H, plus):
                 ("bicim", lambda: tap(dashed[0][1], dashed[0][2]), 1.0),
                 ("bicim", lambda: tap(dashed[0][1], dashed[0][2]), 1.0),
                 ("bicim", lambda: tap(mx, my), 1.0)])
-    for _ in range(3):
-        key("KEYCODE_BACK"); time.sleep(0.8)
+    # klavye/biçim çubuğu/tepsi açıkken geri tuşu önce onları kapatır: editör araç çubuğu
+    # ("Notta ara") kaybolana dek (en çok 5) geri; ana ekranda DURUR (fazlası uygulamadan çıkar).
+    for _ in range(5):
+        if not nodes(dump(), "^Notta ara$"):
+            break
+        key("KEYCODE_BACK"); time.sleep(0.9)
     time.sleep(1.0)
     ready()
+    clear_search(h)
     list_top(W, H)
 
 
-def phase_kalem(s, W, H, plus):
+def phase_kalem(s, W, H, plus, h):
     """P63 G4: kalem kipi aç → 10 çizgi → kapsül aç/kapa ×3 (geri tuşu kapsülü
     hapa indirir). Çizgiler sonra geri alınır (not büyümesin); "Kalemle yaz"
     alt çubukta, hap düğmesi ("Kalem tepsisini aç") çizimden sonra bulunur."""
-    xml = dump()
-    menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > 600]
-    m, _ = pick_card(xml, menus)
+    m = h["card_menu"]
     tap(m[1] - 170, m[2] + 150); time.sleep(2.5)
     pen = nodes(dump(), "^Kalemle yaz")
     if not pen:
@@ -615,23 +755,23 @@ def ensure_cizgi(apk):
         sh(f"am force-stop {OPKG}")
 
 
-def phase_duzen(s, W, H, plus):
+def phase_duzen(s, W, H, plus, h):
     """P63 G5: not ⋮ ("Not menüsü", üstte) → "Ekranı düzenle" → alt çubuktaki
     ilk 3 çerçeveye (anlam adı "Gizle") ikişer kez dokun → "Bitti". Kayıt
     değişmez (gizle + göster)."""
-    xml = dump()
-    menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > 600]
-    m, _ = pick_card(xml, menus)
+    m = h["card_menu"]
     tap(m[1] - 170, m[2] + 150); time.sleep(2.5)
     more = [n for n in nodes(dump(), "^Not menüsü$") if n[2] < H * .2]
     if not more:
         key("KEYCODE_BACK"); time.sleep(1.0)
         raise RuntimeError("not ⋮ yok")
     tap(more[0][1], more[0][2]); time.sleep(1.2)
+    # "Ekranı düzenle" artık menü levhasının BAŞLIĞINDAKİ ⚙ ("Ayarlar") açılır menüsünde
+    # ("Menüyü düzenle · Ekranı düzenle · Ayarlar"); eskiden alt satırdaydı → T13 `duzen` hiç koşmuyordu.
+    gear = nodes(dump(), "^Ayarlar$")
+    if gear:
+        tap(gear[0][1], gear[0][2]); time.sleep(1.2)
     item = nodes(dump(), "^Ekranı düzenle")
-    if not item:
-        swipe(W // 2, int(H * .85), W // 2, int(H * .45), 300); time.sleep(0.8)
-        item = nodes(dump(), "^Ekranı düzenle")
     if not item:
         key("KEYCODE_BACK"); time.sleep(0.8)
         key("KEYCODE_BACK"); time.sleep(1.0)
@@ -641,6 +781,11 @@ def phase_duzen(s, W, H, plus):
     frames = sorted([n for n in nodes(xml, "^Gizle") if n[2] > H * .8],
                     key=lambda n: n[1])[:3]
     done = nodes(xml, "^Bitti$")
+    if not done and is_tablet():
+        # Tablette "Düzenleme modu" üst bandı (Geri al · ↕ · Bitti) semantik ağaçta YOK (KT-bulgusu:
+        # TalkBack "Bitti"ye ulaşamaz); görüntüde sağ üstte → 1600 px genişlikte (1507, 120).
+        k = W / 1600
+        done = [("Bitti", int(1507 * k), int(120 * k), (0, 0, 0, 0))]
     if len(frames) < 3 or not done:
         if done:
             tap(done[0][1], done[0][2]); time.sleep(1.0)
@@ -726,6 +871,7 @@ def main():
     ap.add_argument("--altin-yaz", action="store_true")
     ap.add_argument("--etiket-a", default=None); ap.add_argument("--etiket-b", default=None)
     ap.add_argument("--commit", default="?")
+    ap.add_argument("--hazirlik", action="store_true", help="tablette de ensure_cizgi (yedek yükleme) çalışsın")
     ap.add_argument("--yon", choices=["yatay", "dikey", "mevcut"], default=None)
     o = ap.parse_args()
     la = o.etiket_a or os.path.splitext(os.path.basename(o.a))[0]
@@ -735,7 +881,7 @@ def main():
     temps = []
     tablet = is_tablet()
     sfx = "_tablet" if tablet else ""
-    yon = o.yon or ("yatay" if tablet else "mevcut")
+    yon = o.yon or ("dikey" if tablet else "mevcut")
     if yon != "mevcut":
         sh("wm user-rotation lock " + {"yatay": "1", "dikey": "0"}[yon])
         time.sleep(1.5)
@@ -765,7 +911,11 @@ def main():
                 json.dump(runs, open(os.path.join(OUT, "ab_hepsi_ham.json"), "w"), ensure_ascii=False)
 
     try:
-        if cool_enough():
+        if tablet and not o.hazirlik:
+            # Tablet ana ekranı semantiksiz (home_locate notu): "OLCUM cizgi" varlığı listede aranamaz;
+            # yedek bir kez elle yüklenir (docs/perf/README tablet bölümü). Zorlamak: --hazirlik.
+            install(o.a)
+        elif cool_enough():
             ensure_cizgi(o.a)
         pairs(0, o.kosu)
         rows, failed = (decide(runs["A"], runs["B"], golden if o.altin else None)
