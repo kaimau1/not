@@ -60,6 +60,7 @@ const _exempt = <String, String>{
   'not ekranı/Notta ara': 'alt çubuk P36',
   'not ekranı/Paylaş': 'alt çubuk P36 (K-D6 kaleme dönecek)',
   'not ekranı/Seç': 'alt çubuk P36',
+  'not ekranı/Diğer işlemler': 'alt çubuk P36 (telefonda ⋯, U6 2026-11-18)',
   'not ekranı/Numaralıya çevir': 'alt çubuk P36 (liste ↔ numaralı, 2026-11-16)',
   'not ekranı/Onay kutulu listeye çevir':
       'alt çubuk P36 (liste ↔ numaralı, 2026-11-16)',
