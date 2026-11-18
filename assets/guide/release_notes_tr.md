@@ -2,6 +2,13 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 18 Kasım 2026 {#2026-11-18}
+- **Yapay zekâyı tümden kapatabilirsin:** Ayarlar → Yapay zekâ'nın ilk satırı. Açıkken hiçbir notun yapay zekâya gönderilmez, ✨ düğmeleri gizlenir. Yanıtların altında "AI yanılabilir" notu var; "Yanıtı bildir" artık yanıtın metnini hiçbir yere göndermiyor.
+- **Yapay zekâ menüsü sadeleşti:** "Notu analiz et" kalktı (aynı soruyu Sohbet'te "bu not" ile sorabilirsin); çöp kutusu ve arşiv özetindeki yapay zekâ düğmeleri ile ayar aramasındaki ✨ kipi kaldırıldı. Cihazdaki öneriler ve kelimeyle arama aynen çalışıyor.
+- **Ayarlar'da "Güvenlik" bölümü:** not kilidi ve uygulama kilidi artık kendi bölümünde. Hakkında'ya "Geri bildirim gönder" eklendi (e-postana yalnız sürüm ve cihaz türü eklenir, notların eklenmez); Lisanslar sayfasında yazı tiplerinin lisansları var.
+- **Akıllı liste:** market ve bavul için "Sık eklediklerin" ayrı tutulur, "Geçen seferden" aynı türdeki son listeyi getirir, boş listede kısa bir ipucu var. Alarm izni kapalıysa ilk hatırlatıcıyı kurarken bir kez "İzni aç" ipucu çıkar.
+- **Küçük düzeltmeler:** menüde "Sabitlemeyi kaldır" → "Sabitten çıkar"; başlıklardaki Merriweather yazı tipi internetsiz de doğru görünür (yazı tipleri artık hiç internetten inmez); dar ekranda takvim şeridinde karışık tek harfli gün adları yok; boş ekrandaki düğme "+"nın altında kalmıyor; klasör yokken düzenli boş sayfa; masaüstünde "Görünüm ve süz" levhası ortada; hesap makinesi ve paylaşım araması daha akıcı; görsel açıklama levhası kapanırken hata vermiyor; çöpte anlamca arama aynı notları tekrar işlemiyor.
+
 ## 17 Kasım 2026 {#2026-11-17}
 - **Klavye açıkken levhalar akıcı:** not içi arama, not bağlama seçicisi, yapay zekâ sonucu, hesap makinesi, sesli kayıt, dil seçimi, arkadaş ekleme, klasör sohbeti ve görsel açıklaması levhaları klavye açılıp kapanırken artık her karede baştan çizilmiyor; not içi aramada sonuçlar yalnız aradığın şey değişince yeniden hesaplanıyor.
 - **"Geri al" çubuğu ve geri sayımlar kasmıyor:** alttaki "Geri al" bildiriminin ve sesli asistanın kalan süre çizgisi kademeli ilerliyor; bildirim açıkken yazmak takılmıyor.

@@ -2,6 +2,13 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 18 November 2026 {#2026-11-18}
+- **You can turn AI off completely:** first row of Settings → AI. While on, none of your notes are sent to AI and the ✨ buttons are hidden. AI answers show an "AI can make mistakes" note, and "Report answer" no longer sends the answer's text anywhere.
+- **Simpler AI menu:** "Analyse note" is gone (ask the same in Chat with "this note"); the AI buttons in Trash and Archive insights and the ✨ mode in settings search were removed. On-device suggestions and keyword search work as before.
+- **"Security" section in Settings:** note lock and app lock now have their own section. About has "Send feedback" (your email app opens with only the app version and device type, never your notes); the Licenses page lists the bundled fonts' licenses.
+- **Smart list:** separate "Frequent" items for shopping and packing, "Last time" brings back the latest list of the same kind, and an empty list shows a short hint. If the alarm permission is off, setting your first reminder shows a one-time "Allow" tip.
+- **Small fixes:** clearer "Unpin" label; Merriweather headings show correctly offline (fonts are never downloaded at runtime); no ambiguous one-letter day names on narrow calendar strips; the empty-screen button no longer hides under "+"; a tidy empty Folders page; the "View and filter" sheet is centred on desktop; smoother calculator and share-sheet search; the image caption sheet closes without errors; semantic search in Trash no longer re-processes the same notes.
+
 ## 17 November 2026 {#2026-11-17}
 - **Sheets stay smooth with the keyboard up:** find in note, the note link picker, AI result, calculator, voice capture, language picker, add friend, folder chat and image caption sheets no longer redraw on every keyboard frame; find in note only recomputes results when your query changes.
 - **"Undo" bar and countdowns don't stutter:** the remaining-time line of the bottom "Undo" notice and the voice assistant advances in steps; typing while a notice is up no longer lags.
