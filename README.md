@@ -132,3 +132,7 @@ Google girişinin derlemeye gömülü gelmesi için depoda şu *secret*'ları ta
 Secret'lar tanımlı olmasa da derleme başarıyla tamamlanır (APK debug anahtarıyla imzalanır).
 
 > Not: `lib/firebase_options.dart` yer tutucu değerlerle derlenirse uygulama açılışta kurulum ekranı gösterir. Gerçek yapılandırmayı (`flutterfire configure` çıktısını) commit'lersen CI'daki APK doğrudan kullanılabilir olur.
+
+## Lisans
+
+© 2025-2026 kaimau. **Tüm hakları saklıdır.** Bu depo yalnızca inceleme amacıyla herkese açıktır; açık kaynak lisansı DEĞİLDİR. Yazılı izin olmadan kopyalama, değiştirme, dağıtma, mağazada yayınlama ya da yapay zekâ eğitiminde kullanma yasaktır. Ayrıntı: [LICENSE](LICENSE).

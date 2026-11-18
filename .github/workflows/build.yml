@@ -403,6 +403,9 @@ jobs:
       # tüm güncel telefonlar arm64 olduğundan tek mimariye indirmek AOT
       # derleme süresini ~1/3'e indirir.
       #
+      # KORUMA (depo herkese açık, 2026-11-18): `--obfuscate` Dart sınıf/işlev adlarını
+      # karıştırır (APK'dan kod okumayı zorlaştırır); lib/ runtimeType adına bakmıyor.
+      # Yığın izini çözmek için build/app/outputs/symbols gerekir (`flutter symbolize`).
       # BOYUT: `--split-debug-info` Dart hata ayıklama bilgisini libapp.so'dan
       # ayırır (sembolik yığın izi uygulamada hiçbir yere gönderilmiyor).
       # pdfrx 2.x web motorunu (`pdfium.wasm`) yalnız web'e paketler
@@ -425,7 +428,7 @@ jobs:
         run: >
           flutter build apk --release
           --target-platform android-arm64
-          --split-debug-info=build/app/outputs/symbols
+          --obfuscate --split-debug-info=build/app/outputs/symbols
           --build-name=${{ steps.version.outputs.name }}
           --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
@@ -485,7 +488,10 @@ jobs:
       # indirilebilir olan da o. Artifact artık yalnızca bir kolaylık.
       - name: APK'yı sürüm numarasıyla adlandır
         if: github.ref == 'refs/heads/main'
-        run: mv build/app/outputs/flutter-apk/app-release.apk notlar-v${{ steps.version.outputs.name }}.apk
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk notlar-v${{ steps.version.outputs.name }}.apk
+          # --obfuscate sonrası yığın izini çözmek için semboller (taslak Release'te, herkese açık değil)
+          (cd build/app/outputs && zip -qr "$GITHUB_WORKSPACE/notlar-v${{ steps.version.outputs.name }}-symbols.zip" symbols)
 
       - name: Release taslağı oluştur
         if: github.ref == 'refs/heads/main'
@@ -500,7 +506,9 @@ jobs:
             tıkla, indir ve mevcut uygulamanın üzerine kur. Verilerin Firebase'de
             olduğu için hiçbir şey kaybolmaz. Bilgisayarda web sürümünü kullan
             (Cloudflare Pages, `notlar-web`).
-          files: notlar-v${{ steps.version.outputs.name }}.apk
+          files: |
+            notlar-v${{ steps.version.outputs.name }}.apk
+            notlar-v${{ steps.version.outputs.name }}-symbols.zip
 
       # Artifact YALNIZ elle tetiklenen (main dışı) koşuda: main'de teslimat
       # Release'tir. Depo artifact kotası dolu olabilir (2026-08-16'dan beri

@@ -163,3 +163,9 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   `device_info_plus` bağımlılığı eklenmedi).
 
 - **2026-11-18 (P72) Yerel tam takım Windows CRLF:** `core.autocrlf=true` ağacında dosyalar CRLF; kaynak metnini okuyan bekçi testi `readAsStringSync().replaceAll('\r\n', '\n')` ile normalleştirmeli (6 test böyle kırmızıydı: editor_core_guard, folder_strip_fixed, frame_timing_log, gizlilik_tek_kaynak x2, security_guard). Yeni bekçi yazarken aynı kalıp.
+
+## Depo herkese açık (2026-11-18)
+- Kullanıcı depoyu public yaptı. `LICENSE` = tüm hakları saklı (TR+EN; kopyalama/dağıtım/AI eğitimi yasak), README'de Lisans bölümü. Açık kaynak lisansı EKLENMEZ.
+- Kişisel APK da `--obfuscate` ile derlenir (Play AAB zaten öyleydi); semboller `notlar-v<sürüm>-symbols.zip` olarak TASLAK Release'te (herkese açık değil). Yığın izi: `flutter symbolize -i <iz> -d <symbols/app.android-arm64.symbols>`.
+- Depoda sır yok (2026-11-18 taraması: jks/key.properties/env.json/özel anahtar yok); görünen Firebase API anahtarları istemci anahtarı — korunma = anahtar kısıtlama + App Check + kurallar (KONTROL "Konsol").
+- Public depoda GitHub barındırmalı standart koşucular ücretsiz/sınırsız dakika; yine de kullanıcı kararı (yerel doğrulama, tek push) geçerli.

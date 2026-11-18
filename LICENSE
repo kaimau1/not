@@ -1,0 +1,59 @@
+Copyright (c) 2025-2026 kaimau. Tüm hakları saklıdır. / All rights reserved.
+
+TÜRKÇE
+
+Bu depodaki kaynak kodu, belgeler, tasarımlar, görseller ve diğer içerik
+(birlikte "Yazılım") kaimau'nun mülkiyetindedir ve 5846 sayılı Fikir ve Sanat
+Eserleri Kanunu ile uluslararası telif hakkı mevzuatı kapsamında korunur.
+
+Depo yalnızca İNCELEME amacıyla herkese açıktır. Bu açıklık hiçbir lisans,
+izin ya da hak devri anlamına gelmez. Telif sahibinin önceden verilmiş YAZILI
+izni olmadan şunlar YASAKTIR:
+  - Yazılımın tamamını ya da bir bölümünü kopyalamak, çoğaltmak, değiştirmek,
+    uyarlamak, çevirmek ya da ondan türev eser oluşturmak;
+  - Yazılımı ya da türevlerini dağıtmak, yayımlamak, satmak, kiralamak,
+    alt lisanslamak ya da herhangi bir uygulama mağazasında yayınlamak;
+  - Yazılımı ticari ya da ticari olmayan herhangi bir üründe ya da hizmette
+    kullanmak;
+  - Yazılımı yapay zekâ / makine öğrenmesi modellerinin eğitimi, ince ayarı
+    ya da veri seti oluşturulması için kullanmak;
+  - Bu telif ve lisans bildirimlerini kaldırmak ya da değiştirmek.
+
+GitHub Hizmet Şartları gereği platform içinde görüntüleme ve "fork" oluşturma
+yalnızca GitHub'ın sağladığı ölçüde mümkündür; fork, yukarıdaki haklardan
+hiçbirini vermez.
+
+Üçüncü taraf bileşenler (ör. assets/google_fonts altındaki yazı tipleri ve
+pubspec.yaml'daki paketler) kendi lisanslarına tabidir; bu bildirim onların
+lisanslarını değiştirmez.
+
+Yazılım "OLDUĞU GİBİ" sunulur; hiçbir garanti verilmez. İzin talepleri için
+depo sahibiyle GitHub üzerinden iletişime geçin.
+
+ENGLISH
+
+The source code, documentation, designs, images and other content in this
+repository (together, the "Software") are proprietary to kaimau and protected
+by copyright law.
+
+This repository is publicly visible for VIEWING purposes only. Visibility does
+not grant any license, permission or transfer of rights. Without the copyright
+holder's prior WRITTEN permission you may NOT:
+  - copy, reproduce, modify, adapt, translate or create derivative works of
+    the Software, in whole or in part;
+  - distribute, publish, sell, rent, sublicense or release the Software or any
+    derivative in any app store;
+  - use the Software in any commercial or non-commercial product or service;
+  - use the Software to train, fine-tune or build datasets for AI / machine
+    learning models;
+  - remove or alter this copyright and license notice.
+
+Under the GitHub Terms of Service, viewing and forking within GitHub are
+possible only to the extent GitHub provides; a fork grants none of the rights
+above.
+
+Third-party components (e.g. fonts under assets/google_fonts and packages in
+pubspec.yaml) remain under their own licenses; this notice does not change
+them.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.

@@ -38,3 +38,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 ## 2026-11-12 — P48 "telefonda eklediğim etkinlik tablette yok"
 - KÖK NEDEN: Google Takvim bağlantısı CİHAZA özgü (`gcal_cache_<uid>` SharedPreferences, Firestore'da iz yok). Bağlı cihazda yeni etkinlik varsayılan Google'a gidiyordu (K2) → Google'ı bağlamamış cihaz görmez. "Bu cihaz" etiketi yanlıştı (Firestore etkinliği bütün cihazlarda). Varsayılan artık Firestore, etiket "Tüm cihazlar" (K2 sapması — KULLANICI ONAYLADI 2026-11-13: "etkinlik her yerde görünecek"). Google'a kaydedilmiş eski etkinlikler yalnız Google'ı bağlayan cihazda görünür.
+
+## 2026-11-18 — P74 U4 / PW-E
+- ZAMANLI NOT takvimde: `buildAgenda(timedNotes:)` → `ReminderEntry(expiry: true)` (yeni sealed tür değil — switch'ler değişmesin). Taşıma `setExpiry`, silme `setExpiry(null)` (geri alınır). Hatırlatıcı ve tarihli madde (görev) zaten takvimdeydi.
+- KW-4: ay dışı şerit `Opacity(0.5)` kaldırıldı → `monthChipDimTone` (surfaceContainerHigh / onSurfaceVariant, her temada ≥3:1, bekçi `calendar_month_scale_test`). KW-9: hücre ≥ 140 dp → gün 13, şerit 11 pt (`kMonthWideCell`); dar hücre kuralı aynen.
