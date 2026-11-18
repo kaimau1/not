@@ -261,6 +261,16 @@ class GeminiService {
     return _keyStore.read(_provider);
   }
 
+  /// Decisions API (DA-E1) için izinli anahtar: `AiAdmission` kapıları (AI'ı
+  /// kapat, kill switch, rıza) burada; hız sınırı Decisions'ın KENDİ
+  /// sayacında (`DecisionService.limiter`). Yalnız Gemini; anahtar yoksa
+  /// null (dahili kip vekili yok → Decisions kullanılamaz).
+  Future<String?> admittedDecisionKey() async {
+    if (_provider != AiProvider.gemini) return null;
+    final key = await _admittedKey(metered: false);
+    return (key == null || key.isEmpty) ? null : key;
+  }
+
   final ApiKeyStore _keyStore;
   final AiProvider _provider;
   final JsonHttp _http;
@@ -1278,14 +1288,17 @@ class GeminiService {
 
   /// Nota kısa bir Türkçe başlık üretir. Kısa iş: Gemma önce
   /// ([ModelChain.short]).
-  Future<String> generateTitle(Note note) async {
+  /// [avoid]: DA-13 doğrulamasının reddettiği başlık (yeniden üretimde).
+  Future<String> generateTitle(Note note, {String? avoid}) async {
     final text = note.toPlainText();
     final raw = await _generate(task: AiTask.short, [
       {
         'text':
             'Aşağıdaki not için en fazla 5 kelimelik, kısa ve açıklayıcı '
             'bir Türkçe başlık üret. Yalnızca başlığı yaz; tırnak, nokta '
-            'veya açıklama ekleme.\n\n---\n'
+            'veya açıklama ekleme.'
+            '${avoid == null ? '' : ' "$avoid" başlığı uygun bulunmadı; onu ya da çok genel bir başlığı (Not, Liste, Taslak) yazma.'}'
+            '\n\n---\n'
             '${text.length > 600 ? text.substring(0, 600) : text}',
       },
     ]);

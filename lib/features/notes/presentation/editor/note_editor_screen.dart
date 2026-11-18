@@ -87,6 +87,9 @@ import '../../data/import_service.dart' show markdownAttachment;
 import '../../data/note_shortcut.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../auth/presentation/account_required.dart';
+import '../../../ai/data/decisions/decision_flag.dart';
+import '../../../ai/data/decisions/decision_profiles.dart';
+import '../../../ai/data/decisions/decision_service.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
 import '../../../ai/presentation/listen_screen.dart';
@@ -743,6 +746,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   NotesRepository? _notesRepo;
   AttachmentRepository? _attachmentRepo;
   GeminiService? _gemini;
+  DecisionService? _decisions;
   bool _autoTagEnabled = true;
   bool _autoTitleEnabled = true;
 

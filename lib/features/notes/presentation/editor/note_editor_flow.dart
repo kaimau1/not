@@ -113,6 +113,7 @@ extension _EditorFlowX on _NoteEditorScreenState {
         ? attachments
         : attachments?.forOwner(owner);
     _gemini = ref.read(geminiServiceProvider);
+    _decisions = ref.read(decisionServiceProvider);
     _autoTagEnabled = ref.read(autoTagProvider);
     _autoTitleEnabled = ref.read(autoTitleProvider);
   }

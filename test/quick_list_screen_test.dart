@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:notlar/core/net/json_http.dart';
 import 'package:notlar/features/ai/data/ai_gate.dart';
+import 'package:notlar/features/ai/data/ai_provider.dart';
+import 'package:notlar/features/ai/data/decisions/decision_flag.dart';
+import 'package:notlar/features/ai/data/decisions/decision_service.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/data/quick_entry_memory.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_templates.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
+import 'package:notlar/features/notes/domain/quick_entry.dart' show quickAscii;
 import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
 import 'package:notlar/features/notes/presentation/quick_drop_sheet.dart';
@@ -46,6 +56,8 @@ void main() {
     Map<String, Object> prefs = const {},
     Size size = const Size(412, 915),
     NotesRepository? repo,
+    AiAvailability ai = AiAvailability.needsKey,
+    List<Override> extra = const [],
   }) async {
     SharedPreferences.setMockInitialValues(prefs);
     final p = await SharedPreferences.getInstance();
@@ -58,7 +70,8 @@ void main() {
           notesStreamProvider.overrideWith((ref) => Stream.value(notes)),
           notesRepositoryProvider.overrideWithValue(repo),
           // Testte yapay zekâ yok: hızlı ekle "hangi not?" diye sorar.
-          aiAvailabilityProvider.overrideWithValue(AiAvailability.needsKey),
+          aiAvailabilityProvider.overrideWithValue(ai),
+          ...extra,
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -520,6 +533,119 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.writes.keys, ['c']);
     });
+
+    // DA-1 (plan_decisions_api): bayrak açıkken hedefi Decisions seçer.
+    DecisionService fakeDecisions(Map<String, Object> answers) =>
+        DecisionService(
+          key: () async => 'k',
+          http: JsonHttp(
+            baseUrl: AiProvider.gemini.baseUrl,
+            client: MockClient(
+              (_) async => http.Response(
+                jsonEncode({'answers': answers}),
+                200,
+                headers: {'content-type': 'application/json; charset=utf-8'},
+              ),
+            ),
+          ),
+        );
+
+    Map<String, Object> target(String choice, double confidence) => {
+      'hedef': {'type': 'choice', 'choice': choice, 'confidence': confidence},
+    };
+
+    Future<_DropRepo> openWithDecisions(
+      WidgetTester tester,
+      Map<String, Object> answers, {
+      String feature = DecisionFeature.dropTarget,
+    }) async {
+      AiDecisionsFlag.apply({
+        'aiDecisionsFeatures': [feature],
+      });
+      addTearDown(AiDecisionsFlag.debugReset);
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        repo: repo,
+        prefs: {'quick_drop_mic': false},
+        ai: AiAvailability.ready,
+        extra: [
+          decisionServiceProvider.overrideWithValue(
+            fakeDecisions(answers),
+          ),
+        ],
+        onTap: (context, ref) => showQuickDropSheet(context),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      return repo;
+    }
+
+    testWidgets('DA-1: Decisions emin → geri sayımla o nota, ad içerikte yok', (
+      tester,
+    ) async {
+      // Aday sırası: Yapılacaklar (n00), Fikirler (n01), Alışveriş (n02).
+      final repo = await openWithDecisions(tester, target('n01', 0.93));
+      await say(tester, 'yeni logo taslağı fikir defterine ekle');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const ValueKey('quick-drop-counting')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(repo.writes.keys, ['c']);
+      expect(repo.writes['c']!['body'], 'ilk satır\nyeni logo taslağı');
+    });
+
+    testWidgets('DA-1: Decisions orta güven → seçili gelir ama sorulur', (
+      tester,
+    ) async {
+      final repo = await openWithDecisions(tester, target('n01', 0.6));
+      await say(tester, 'yeni logo taslağı fikir defterine ekle');
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const ValueKey('quick-drop-ask')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      expect(repo.writes, isEmpty);
+    });
+
+    // DA-14: bulanık düzeltme geri sayım içinde doğrulanır.
+    test('quickDropFixes yalnız bulanık düzeltmeyi verir; veto bu eklemede', () {
+      final fixes = quickDropFixes(shopping, 'yunurta süt', locale: 'tr');
+      expect(fixes, [(typed: 'yunurta', fixed: 'Yumurta')]);
+      expect(quickDropFixes(text, 'yunurta', locale: 'tr'), isEmpty);
+      final r = quickDropFields(
+        shopping,
+        'yunurta',
+        locale: 'tr',
+        memory: quickDropVetoed(const QuickEntryMemory(), fixes),
+        newId: () => 'y',
+      );
+      final items = (r.fields['items'] as List).cast<Map<String, dynamic>>();
+      expect(items.last['text'], isNot('Yumurta'));
+      expect(quickAscii(items.last['text'] as String), 'yunurta');
+    });
+
+    for (final (p, kept) in [(0.1, false), (0.95, true)]) {
+      testWidgets('DA-14: Decisions noul=$p → düzeltme ${kept ? 'kalır' : 'geri alınır'}', (
+        tester,
+      ) async {
+        final repo = await openWithDecisions(tester, {
+          'd00': {'type': 'noul', 'noul': p},
+        }, feature: DecisionFeature.spellFixOk);
+        await say(tester, 'alışveriş listesine yunurta ekle');
+        expect(
+          find.byKey(const ValueKey('quick-drop-counting')),
+          findsOneWidget,
+        );
+        await tester.pump(const Duration(seconds: 2));
+        await tester.pumpAndSettle();
+        final items = repo.writes['a']!['items'] as List;
+        final last = (items.last as Map)['text'] as String;
+        expect(last == 'Yumurta', kept);
+      });
+    }
 
     testWidgets('başa baş kalan iki not: Ekle "hangi not?" bekler', (
       tester,

@@ -310,6 +310,36 @@ QuickDropTarget parseDropTarget(String text, List<String> titles) {
   );
 }
 
+/// Hedef dışarıdan (Decisions, DA-1) seçildiğinde [content]'in SONUNDA
+/// kalan not adını ("… fikir defterine", "… dosyalara") ayıklar —
+/// Decisions metin üretmez, içerik yerelde çıkar (plan DA-1). H9 tuzağı:
+/// yalnız SONDAKİ öbek, ancak son kelime yönelme ekli/işaret/ad ise ve son
+/// üç kelimeden biri seçilen başlığa uyuyorsa; baştaki kelime içeriktir.
+/// Emin olunamazsa içerik olduğu gibi kalır (önizleme + geri al var).
+String stripDropTargetWords(String content, String title) {
+  final tw = _titleWords(title);
+  final spans = _tokenSpans(content);
+  final n = spans.length;
+  if (tw.isEmpty || n < 2) return content;
+  bool named(String tok) => tw.any(
+    (w) =>
+        _sameWord(tok, w) ||
+        (w.length >= 4 && tok.startsWith(w) && tok.length <= w.length + 3),
+  );
+  final last = spans[n - 1].word;
+  if (!_markers.contains(last) && !_endsDative(last) && !named(last)) {
+    return content;
+  }
+  // Son üç kelimeden başlığa uyan İLKİNDEN sona kadar ad öbeği.
+  for (var s = n < 4 ? 1 : n - 3; s < n; s++) {
+    if (!named(spans[s].word)) continue;
+    return content
+        .substring(0, spans[s].start)
+        .replaceFirst(RegExp(r'[\s,;:]+$'), '');
+  }
+  return content;
+}
+
 /// Sesle/yazıyla art arda söylenen maddeleri ayırır (kullanıcı isteği
 /// 2026-11-16: "birkaç madde de söyleyebilir"): "bir de", "ayrıca", "ve
 /// sonra" gibi bağlaçlar virgüle döner — ses tanıma virgül koymuyor. Düz

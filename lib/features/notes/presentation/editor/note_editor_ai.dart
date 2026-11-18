@@ -61,11 +61,17 @@ extension _EditorAi on _NoteEditorScreenState {
   void _autoTitleInBackground(Note note) {
     if (note.isEmpty || !_autoTitleEnabled) return;
     final service = _gemini;
+    final decisions = _decisions;
     final repo = _notesRepo;
-    if (repo == null || service == null) return;
+    if (repo == null || service == null || decisions == null) return;
     Future(() async {
       try {
-        final title = await service.generateTitle(note);
+        // DA-13: AI başlığı doğrulanır, "yanlış/genel"se bir kez yeniden.
+        final title = await checkedTitle(
+          decisions,
+          note.toPlainText(),
+          ({avoid}) => service.generateTitle(note, avoid: avoid),
+        );
         if (title.isNotEmpty) repo.updateFields(note.id, {'title': title});
       } catch (_) {
         // Kota/anahtar hatasında sessizce geç — başlıksız kalması sorun değil.
@@ -84,7 +90,12 @@ extension _EditorAi on _NoteEditorScreenState {
     final messenger = ScaffoldMessenger.of(context);
     _titleGeneratingN.value = true;
     try {
-      final title = await ref.read(geminiServiceProvider).generateTitle(note);
+      final ai = ref.read(geminiServiceProvider);
+      final title = await checkedTitle(
+        ref.read(decisionServiceProvider),
+        note.toPlainText(),
+        ({avoid}) => ai.generateTitle(note, avoid: avoid),
+      );
       if (!mounted || title.isEmpty) return;
       _titleController.text = title;
       _mutate((n) => n.copyWith(title: title), immediate: true);
@@ -97,17 +108,61 @@ extension _EditorAi on _NoteEditorScreenState {
     }
   }
 
+  /// DA-2 için klasör seçenekleri: ORTAK ve gizli klasör adı dışarı gitmez.
+  Map<String, String> _triageFolders(Note note) {
+    final hidden = ref.read(hiddenFolderIdsProvider);
+    return {
+      for (final f in ref.read(foldersStreamProvider).value ?? const [])
+        if (!f.isShared && !hidden.contains(f.id) && f.id != note.folderId)
+          f.id: f.name,
+    };
+  }
+
   /// AI'dan etiket önerisi al ve seçtir.
+  ///
+  /// DA-2 (plan_decisions_api, bayrak `noteTriage`): tek Decisions
+  /// çağrısında kullanıcının KENDİ etiketleri (çoklu evet/hayır) + klasör +
+  /// "başlık gerekli mi" + "hatırlatıcı gerekli mi". Hepsi yalnız ÖNERİ
+  /// çipi; dokunulmadan hiçbir şey uygulanmaz. Etiket eşiği geçen yoksa
+  /// bugünkü üretken öneri; bayrak kapalı/yanıtsızsa bugünkü yol AYNEN.
   Future<void> _suggestTags() async {
     final note = _note;
     if (note == null || note.isEmpty) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    final decisions = ref.read(decisionServiceProvider);
+    // Kilitli not hiçbir karar girdisine girmez (K7).
+    final mode = note.locked
+        ? DecisionMode.off
+        : decisions.modeOf(DecisionFeature.noteTriage);
+    final folders = mode == DecisionMode.off
+        ? const <String, String>{}
+        : _triageFolders(note);
+    // ponytail: alfabetik ilk 30; kullanım sıklığı ölçüm gösterirse.
+    final ownTags = [
+      for (final t in ref.read(allTagsProvider))
+        if (!note.tags.contains(t)) t,
+    ];
     // Etiket önerisi de görünür olsun: eskiden istek boyunca hiçbir belirti
     // yoktu, kullanıcı düğmeye ikinci kez basıyordu.
     List<String> suggestions = const [];
+    TriageSuggestion? triage;
     var failed = false;
     await _runAi(l10n.aiThinking, () async {
+      final pending = mode == DecisionMode.off
+          ? null
+          : decideNoteTriage(
+              decisions,
+              title: note.title,
+              text: note.toPlainText(),
+              tags: ownTags,
+              folders: folders,
+            );
+      if (mode == DecisionMode.live) triage = await pending;
+      if (triage?.tags.isNotEmpty ?? false) {
+        suggestions = triage!.tags;
+        return;
+      }
       try {
         suggestions = await ref.read(geminiServiceProvider).suggestTags(note);
       } on GeminiException catch (e) {
@@ -116,14 +171,39 @@ extension _EditorAi on _NoteEditorScreenState {
           aiErrorText(l10n, e),
         );
       }
+      if (mode == DecisionMode.shadow) {
+        final old = suggestions;
+        unawaited(
+          pending!.then(
+            (t) => DecisionService.logShadow(
+              DecisionFeature.noteTriage,
+              t == null
+                  ? 'none'
+                  : 'tags=${t.tags.length} overlap='
+                        '${t.tags.where(old.contains).length}/${old.length} '
+                        'folder=${t.folderId != null} title=${t.needsTitle} '
+                        'reminder=${t.needsReminder}',
+            ),
+          ),
+        );
+      }
     });
-    if (failed || !mounted) return;
+    if (!mounted || (failed && (triage?.isEmpty ?? true))) return;
     suggestions = [
       for (final tag in suggestions)
         if (!note.tags.contains(tag)) tag,
     ];
-    if (suggestions.isEmpty || !mounted) return;
-    final selected = await showAppSheet<String>(
+    final t = triage;
+    final folderId = t?.folderId;
+    final askTitle = (t?.needsTitle ?? false) && note.title.trim().isEmpty;
+    final askReminder = (t?.needsReminder ?? false) && note.reminderAt == null;
+    if (suggestions.isEmpty &&
+        folderId == null &&
+        !askTitle &&
+        !askReminder) {
+      return;
+    }
+    final selected = await showAppSheet<Object>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
@@ -137,16 +217,45 @@ extension _EditorAi on _NoteEditorScreenState {
                   label: Text('#$tag'),
                   onPressed: () => Navigator.pop(sheetContext, tag),
                 )),
+              if (folderId != null)
+                actionChip(ActionChip(
+                  key: const ValueKey('triage-folder'),
+                  label: Text('${l10n.moveToFolder}: ${folders[folderId]}'),
+                  onPressed: () =>
+                      Navigator.pop(sheetContext, _TriagePick.folder),
+                )),
+              if (askTitle)
+                actionChip(ActionChip(
+                  key: const ValueKey('triage-title'),
+                  label: Text(l10n.suggestTitle),
+                  onPressed: () =>
+                      Navigator.pop(sheetContext, _TriagePick.title),
+                )),
+              if (askReminder)
+                actionChip(ActionChip(
+                  key: const ValueKey('triage-reminder'),
+                  label: Text(l10n.quickRowReminder),
+                  onPressed: () =>
+                      Navigator.pop(sheetContext, _TriagePick.reminder),
+                )),
             ],
           ),
         ),
       ),
     );
-    if (selected != null) {
-      _mutate(
-        (n) => n.copyWith(tags: {...n.tags, selected}.toList()),
-        immediate: true,
-      );
+    if (!mounted) return;
+    switch (selected) {
+      case String tag:
+        _mutate(
+          (n) => n.copyWith(tags: {...n.tags, tag}.toList()),
+          immediate: true,
+        );
+      case _TriagePick.folder:
+        _mutate((n) => n.copyWith(folderId: folderId), immediate: true);
+      case _TriagePick.title:
+        await _suggestTitle();
+      case _TriagePick.reminder:
+        await _pickReminder();
     }
   }
 
@@ -161,3 +270,6 @@ extension _EditorAi on _NoteEditorScreenState {
     );
   }
 }
+
+/// DA-2 öneri çipleri (etiket dışındakiler).
+enum _TriagePick { folder, title, reminder }
