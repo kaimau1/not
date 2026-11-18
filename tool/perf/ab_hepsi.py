@@ -212,7 +212,7 @@ class Session:
 def run_once(label):
     s = Session()
     s.cold_start()
-    W, H = (int(v) for v in re.search(r"(\d+)x(\d+)", sh("wm size").splitlines()[-1]).groups())
+    W, H = screen_size()
     x = W // 2
 
     # Ana ekran koordinatları (pencere DIŞINDA).
@@ -547,7 +547,7 @@ def ensure_cizgi(apk):
     sh(f"am force-stop {OPKG}"); time.sleep(1.0)
     wake()
     sh(f"am start -n {ACT}"); time.sleep(5.0)
-    W, H = (int(v) for v in re.search(r"(\d+)x(\d+)", sh("wm size").splitlines()[-1]).groups())
+    W, H = screen_size()
     try:
         ready()
         if find_in_list("^OLCUM cizgi", W, H):
