@@ -241,6 +241,26 @@ class _GuideScreenState extends State<GuideScreen> {
 
   GlobalKey _keyFor(String id) => _keys.putIfAbsent(id, GlobalKey.new);
 
+  /// T7 (2026-11-18): aramada her tuş [build]'i çalıştırır; girdisi
+  /// değişmeyen kart AYNI örnekle döner, Flutter onu yeniden kurmaz (önce
+  /// eşleşen her kart her tuşta kuruluyordu — `guide_screen_test`).
+  final _cards = <String, _SectionCard>{};
+
+  _SectionCard _cardFor(GuideSection s, {required bool expanded}) {
+    final old = _cards[s.id];
+    if (old != null && identical(old.section, s) && old.expanded == expanded) {
+      return old;
+    }
+    return _cards[s.id] = _SectionCard(
+      key: _keyFor(s.id),
+      section: s,
+      expanded: expanded,
+      onToggle: () => setState(() {
+        if (!_expanded.remove(s.id)) _expanded.add(s.id);
+      }),
+    );
+  }
+
   void _scrollTo(String id) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _keys[id]?.currentContext;
@@ -339,13 +359,9 @@ class _GuideScreenState extends State<GuideScreen> {
                         ),
                       ),
                     for (final s in visible)
-                      _SectionCard(
-                        key: _keyFor(s.id),
-                        section: s,
+                      _cardFor(
+                        s,
                         expanded: query.isNotEmpty || _expanded.contains(s.id),
-                        onToggle: () => setState(() {
-                          if (!_expanded.remove(s.id)) _expanded.add(s.id);
-                        }),
                       ),
                   ],
                 ),
