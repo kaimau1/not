@@ -293,6 +293,12 @@ def find_note(q, pat, W, H, h):
     return h["hit"]
 
 
+def close_add_panel():
+    """"+" paneli hâlâ açıksa kapat (kapalıyken BACK uygulamadan çıkar → durum dökümden okunur)."""
+    if nodes(dump(allow_empty=True), "^Metin notu"):
+        key("KEYCODE_BACK"); time.sleep(1.0)
+
+
 def close_note_search(H):
     """Ana ekran aramasından açılan notta başlık eşleşirse not-içi arama çubuğu da açılır ("1/1", ✕ "Kapat")
     ve alt araç çubuğunu ("Biçim"…) gizler; çubuk varsa kapatılır."""
@@ -610,8 +616,8 @@ def phase_sablon(s, W, H, plus, h):
         raise RuntimeError("'+' menüsünde 'Hazır şablonlar' yok (kaydırınca da)")
     tap(tpl[0][1], tpl[0][2]); time.sleep(1.8)
     chip = nodes(dump(), "^Planlama")
-    key("KEYCODE_BACK"); time.sleep(1.0)
-    key("KEYCODE_BACK"); time.sleep(1.0)
+    key("KEYCODE_BACK"); time.sleep(1.0)          # şablon levhası
+    close_add_panel()                              # "+" paneli (yeni derlemede levhayla birlikte kapanabiliyor)
     if not chip:
         raise RuntimeError("şablon levhasında 'Planlama' çipi yok")
     ready()
@@ -621,6 +627,7 @@ def phase_sablon(s, W, H, plus, h):
               ("sablon", lambda: tap(chip[0][1], chip[0][2]), 1.2),
               ("sablon", lambda: key("KEYCODE_BACK"), 1.2)])
     time.sleep(0.6)
+    close_add_panel()
     ready()
 
 
@@ -680,8 +687,11 @@ def phase_kalem(s, W, H, plus, h):
     alt çubukta, hap düğmesi ("Kalem tepsisini aç") çizimden sonra bulunur."""
     m = h["card_menu"]
     tap(m[1] - 170, m[2] + 150); time.sleep(2.5)
-    pen = nodes(dump(), "^Kalemle yaz")
+    xk = dump()
+    pen = nodes(xk, "^Kalemle yaz")
     if not pen:
+        print("  kalem tanı:", labels_in(xk), [(n[0][:22], n[1], n[2]) for n in nodes(xk) if n[0]][:10], flush=True)
+        shot("kalem_tani", 0.25)
         key("KEYCODE_BACK"); time.sleep(1.0)
         raise RuntimeError("'Kalemle yaz' düğmesi yok")
     x0, x1 = int(W * .2), int(W * .8)
@@ -715,9 +725,15 @@ def find_in_list(pat, W, H, tries=12):
     """Ana ekran listesinde kaydırarak kart ara (listeyi baştan tarar)."""
     for _ in range(tries):
         hit = nodes(dump(), pat)
-        if hit and 500 < hit[0][2] < H - 400:
+        # kart etiketi TÜM kartı kapsar (merkez); tablet 2 sütun: kart ilk ekranın altına taşabiliyor →
+        # pencere geniş (300 … H-150); eski pencere (500 … H-400) kartı hiç yakalamayıp 12 kaydırmayla geçiyordu
+        if hit and 300 < hit[0][2] < H - 150:
             return hit
+        if hit:
+            print(f"  find_in_list: '{pat}' y={hit[0][2]} pencere dışı; kaydırılıyor", flush=True)
         swipe(W // 2, int(H * .75), W // 2, int(H * .35), 300); time.sleep(1.0)
+    print(f"  find_in_list: '{pat}' bulunamadı; etiket sayısı {labels_in(ui_dump())}", flush=True)
+    shot("find_in_list_yok", 0.25)
     return None
 
 
