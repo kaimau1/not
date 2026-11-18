@@ -32,7 +32,7 @@ class DecisionService {
   DecisionService({
     required this.key,
     JsonHttp? http,
-    this.timeout = const Duration(milliseconds: 1500),
+    this.timeout = defaultTimeout,
     DateTime Function()? now,
     AiRateLimiter? limiter,
   }) : _http = http ?? JsonHttp(baseUrl: AiProvider.gemini.baseUrl),
@@ -47,6 +47,8 @@ class DecisionService {
 
   final AiRateLimiter limiter;
 
+  /// ≤ 1,5 sn: kararı bekleyen akış (hızlı ekle geri sayımı) gecikmesin.
+  static const defaultTimeout = Duration(seconds: 1, milliseconds: 500);
   static const cacheTtl = Duration(minutes: 5);
   static const cacheSize = 32;
   static const maxQuestions = 60;
