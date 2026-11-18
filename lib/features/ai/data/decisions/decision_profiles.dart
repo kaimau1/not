@@ -74,3 +74,118 @@ Future<({int? index, DecisionOutcome outcome})?> decideDropTarget(
   );
   return r == null ? null : DropTargetProfile.interpret(r, count);
 }
+
+// ── DA-2 Sessiz düzen: tek çağrı, yalnız ÖNERİ ─────────────────────────────
+
+class TriageSuggestion {
+  const TriageSuggestion({
+    this.tags = const [],
+    this.folderId,
+    this.needsTitle = false,
+    this.needsReminder = false,
+  });
+
+  final List<String> tags;
+  final String? folderId;
+  final bool needsTitle;
+  final bool needsReminder;
+
+  bool get isEmpty =>
+      tags.isEmpty && folderId == null && !needsTitle && !needsReminder;
+}
+
+abstract final class NoteTriageProfile {
+  /// Etiket çipi önerisi (plan DA-2: `noul >= 0,70`).
+  static const tagHi = 0.70;
+  static const otherHi = 0.75;
+  static const maxTags = 30;
+  static const maxFolders = 30;
+  static const inputChars = 4000;
+
+  static String input(String title, String text) =>
+      'Not başlığı: ${title.trim().isEmpty ? '(yok)' : _cut(title, 80)}\n'
+      'Not içeriği:\n${_cut(text, inputChars)}';
+
+  /// [tags]: kullanıcının KENDİ etiketleri (yeni etiket üretilmez);
+  /// [folders]: kimlik → ad (ORTAK/gizli klasör çağıran tarafından çıkarılır).
+  static Map<String, DecisionQuestion> questions({
+    required List<String> tags,
+    required Map<String, String> folders,
+    required bool hasTitle,
+  }) {
+    final fl = folders.entries.take(maxFolders).toList();
+    return {
+      for (var i = 0; i < tags.length && i < maxTags; i++)
+        't${_key(i)}': NoulQuestion(
+          'Bu not "#${tags[i]}" etiketiyle etiketlenmeye uygun mu? Etiket '
+          'notun asıl konusunu anlatıyorsa evet.',
+        ),
+      if (fl.isNotEmpty)
+        'klasor': ChoiceQuestion(
+          'Bu not hangi klasöre en uygun? Uygun klasör yoksa a_yok seç.',
+          {
+            ChoiceQuestion.none: 'Uygun klasör yok',
+            for (var i = 0; i < fl.length; i++)
+              'f${_key(i)}': _cut(fl[i].value, 60),
+          },
+        ),
+      if (!hasTitle)
+        'baslik_gerekli': const NoulQuestion(
+          'Notun ilk satırı kısa bir başlık işi görmüyor mu; nota ayrıca '
+          'başlık yazmak gerekir mi?',
+        ),
+      'hatirlatici': const NoulQuestion(
+        'Notta belirli bir tarih ya da saate bağlı, hatırlatılması gereken '
+        'bir iş var mı?',
+      ),
+    };
+  }
+
+  static TriageSuggestion interpret(
+    Map<String, DecisionAnswer> answers, {
+    required List<String> tags,
+    required Map<String, String> folders,
+  }) {
+    final scored = <(String, double)>[
+      for (var i = 0; i < tags.length && i < maxTags; i++)
+        if ((answers['t${_key(i)}']?.noul ?? 0) >= tagHi)
+          (tags[i], answers['t${_key(i)}']!.noul!),
+    ]..sort((a, b) => b.$2.compareTo(a.$2));
+    final f = answers['klasor'];
+    final ids = folders.keys.take(maxFolders).toList();
+    final fc = f?.choice;
+    final fi = fc != null && RegExp(r'^f\d\d$').hasMatch(fc)
+        ? int.parse(fc.substring(1))
+        : null;
+    return TriageSuggestion(
+      tags: [for (final s in scored.take(3)) s.$1],
+      folderId: fi != null && fi < ids.length && f!.confidence >= otherHi
+          ? ids[fi]
+          : null,
+      needsTitle: (answers['baslik_gerekli']?.noul ?? 0) >= otherHi,
+      needsReminder: (answers['hatirlatici']?.noul ?? 0) >= otherHi,
+    );
+  }
+}
+
+Future<TriageSuggestion?> decideNoteTriage(
+  DecisionService service, {
+  required String title,
+  required String text,
+  required List<String> tags,
+  required Map<String, String> folders,
+}) async {
+  if (text.trim().length < 20) return null;
+  final r = await service.decide(
+    DecisionFeature.noteTriage,
+    input: NoteTriageProfile.input(title, text),
+    questions: NoteTriageProfile.questions(
+      tags: tags,
+      folders: folders,
+      hasTitle: title.trim().isNotEmpty,
+    ),
+  );
+  return r == null
+      ? null
+      : NoteTriageProfile.interpret(r, tags: tags, folders: folders);
+}
