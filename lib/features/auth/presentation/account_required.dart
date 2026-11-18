@@ -10,6 +10,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../ai/data/ai_gate.dart';
+import '../../ai/data/ai_policy.dart';
 
 /// **MİSAFİRDE HESAP GEREKTİREN İŞLER** (F10.5, 2026-10-31).
 ///
@@ -117,8 +118,17 @@ class AiStatusCard extends ConsumerWidget {
                 ),
               ),
       ),
+      AiAvailability.turnedOff => l10n.aiOffBody,
+      // Rıza (PL3 a): ne gönderilir, nereye, "yanılabilir", nasıl kapatılır.
+      AiAvailability.consentNeeded => [
+        l10n.aiConsentWhat,
+        l10n.aiConsentWhere,
+        l10n.aiConsentMistakes,
+        l10n.aiConsentTurnOff,
+      ].join('\n\n'),
     };
     if (status == AiAvailability.ready) return const SizedBox.shrink();
+    final consent = status == AiAvailability.consentNeeded;
     // P62 PA4: ham Card yerine grup yüzeyi; renk dikkat rolü (aynen).
     return DecoratedBox(
       key: const ValueKey('ai-status-card'),
@@ -132,7 +142,10 @@ class AiStatusCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.lock_outline, color: scheme.onSecondaryContainer),
+                Icon(
+                  consent ? Icons.auto_awesome : Icons.lock_outline,
+                  color: scheme.onSecondaryContainer,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -165,11 +178,36 @@ class AiStatusCard extends ConsumerWidget {
                     },
                     child: Text(l10n.retry),
                   ),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.key_outlined),
-                  label: Text(l10n.guestAiAddKey),
-                  onPressed: () => context.push('/settings?area=ai'),
-                ),
+                if (status == AiAvailability.turnedOff)
+                  FilledButton.tonal(
+                    key: const ValueKey('ai-turn-on'),
+                    onPressed: () {
+                      ref.read(aiTurnedOffProvider.notifier).set(false);
+                      onResolved?.call();
+                    },
+                    child: Text(l10n.aiOffTurnOn),
+                  ),
+                if (consent) ...[
+                  FilledButton(
+                    key: const ValueKey('ai-consent-accept'),
+                    onPressed: () {
+                      ref.read(aiConsentProvider.notifier).accept();
+                      onResolved?.call();
+                    },
+                    child: Text(l10n.aiConsentAccept),
+                  ),
+                  TextButton(
+                    key: const ValueKey('ai-consent-decline'),
+                    onPressed: onResolved,
+                    child: Text(l10n.aiConsentDecline),
+                  ),
+                ],
+                if (!consent && status != AiAvailability.turnedOff)
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.key_outlined),
+                    label: Text(l10n.guestAiAddKey),
+                    onPressed: () => context.push('/settings?area=ai'),
+                  ),
               ],
             ),
           ],
@@ -187,6 +225,8 @@ String aiStatusTitle(AppLocalizations l10n, AiAvailability status) =>
       AiAvailability.needsKey => l10n.aiStatusBuiltInOffTitle,
       AiAvailability.webBuiltInOff => l10n.aiStatusWebOffTitle,
       AiAvailability.quotaOut => l10n.aiStatusQuotaTitle,
+      AiAvailability.turnedOff => l10n.aiOffTitle,
+      AiAvailability.consentNeeded => l10n.aiConsentTitle,
     };
 
 /// Tek açıklama levhası (F42.2).
@@ -194,7 +234,9 @@ Future<void> showAiStatusSheet(BuildContext context) =>
     showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
-      builder: (sheetContext) => Padding(
+      // Kaydırılabilir: rıza kartı (PL3) dört paragraf; kısa ekranda
+      // düğmeler levhanın dışında kalmasın.
+      builder: (sheetContext) => SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -222,7 +264,7 @@ class AiIcon extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ready = ref.watch(aiAvailabilityProvider) == AiAvailability.ready;
+    final ready = !ref.watch(aiAvailabilityProvider).looksLocked;
     // AI kimliği = tertiary (DENEYIM §2.2 K-D1). Dolu düğmenin içinde
     // (onPrimary) ya da devre dışıyken (saydam) miras renk kalır — okunurluk.
     final scheme = Theme.of(context).colorScheme;

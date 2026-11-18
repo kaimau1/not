@@ -4025,5 +4025,18 @@
   "quickDropAddingTo": "“{title}” notuna ekleniyor…",
   "@quickDropAddingTo": {"placeholders": {"title": {"type": "String"}}},
   "quickDropWait": "Bekle",
-  "quickDropAiToggle": "Emin olunamazsa yapay zekâya sor"
+  "quickDropAiToggle": "Emin olunamazsa yapay zekâya sor",
+  "aiOffSetting": "Yapay zekâyı tümden kapat",
+  "aiOffSettingInfo": "Açıkken hiçbir not, metin ya da ek yapay zekâya gönderilmez; düğmeleri gizlenir.",
+  "aiOffTitle": "Yapay zekâ kapalı",
+  "aiOffBody": "Yapay zekâyı Ayarlar'da tümden kapattın; hiçbir şey gönderilmiyor. Açınca düğmeleri geri gelir.",
+  "aiOffTurnOn": "Yapay zekâyı aç",
+  "aiConsentTitle": "Yapay zekâ kullanımı",
+  "aiConsentWhat": "Ne gönderilir: yalnız o iş için seçtiğin metin, not ya da ek (görsel, ses, PDF).",
+  "aiConsentWhere": "Nereye: Google'ın Gemini hizmetine (Firebase üzerinden); kendi anahtarını girdiysen seçtiğin sağlayıcıya.",
+  "aiConsentMistakes": "Yapay zekâ yanılabilir; önemli bilgileri kendin doğrula.",
+  "aiConsentTurnOff": "İstediğin an Ayarlar → Yapay zekâ'dan tümden kapatabilirsin.",
+  "aiConsentAccept": "Kabul ediyorum",
+  "aiConsentDecline": "Vazgeç",
+  "aiMayBeWrong": "AI yanılabilir; önemli bilgiyi doğrula."
 }

@@ -17,6 +17,7 @@ import '../../notes/domain/note.dart';
 import '../../notes/data/notes_repository.dart' show notesStreamProvider;
 import '../../notes/presentation/editor/audio_recorder_sheet.dart';
 import '../data/ai_report.dart';
+import 'ai_result_note.dart';
 import '../data/gemini_service.dart';
 import 'assistant_confirm.dart';
 import 'chat_controller.dart';
@@ -343,14 +344,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     });
   }
 
-  /// Sorunlu yanıtı bildir (Play üretken AI politikası).
-  Future<void> _report(ChatTurn turn) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final thanks = context.l10n.aiReportThanks;
-    await ref
+  /// Sorunlu yanıtı bildir (Play üretken AI politikası; PL3 b): yalnız
+  /// yerel günlük, metin gönderilmez ([AiReportService]).
+  void _report(ChatTurn turn) {
+    ref
         .read(aiReportServiceProvider)
         .report(content: turn.text, source: 'chat:${_scope.name}');
-    messenger.showMessage(thanks);
+    ScaffoldMessenger.of(context).showMessage(context.l10n.aiReportThanks);
   }
 
   void _addIdea(String text) {
@@ -484,7 +484,17 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // PL3 (b): yanıt geldiyse "AI yanılabilir" (bildir düğmesi
+                  // her yanıtın yanında).
+                  if (turns.any((t) => !t.isUser))
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: AppSpace.xs),
+                      child: AiResultNote(),
+                    ),
+                  Row(
                 children: [
                   if (_scope == ChatScope.all) ...[
                     IconButton.filledTonal(
@@ -510,6 +520,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     tooltip: l10n.folderChatSend,
                     onPressed: busy ? null : _send,
                     icon: const Icon(Icons.arrow_upward),
+                  ),
+                ],
                   ),
                 ],
               ),

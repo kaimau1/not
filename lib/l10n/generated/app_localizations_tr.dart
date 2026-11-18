@@ -8796,4 +8796,49 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickDropAiToggle => 'Emin olunamazsa yapay zekâya sor';
+
+  @override
+  String get aiOffSetting => 'Yapay zekâyı tümden kapat';
+
+  @override
+  String get aiOffSettingInfo =>
+      'Açıkken hiçbir not, metin ya da ek yapay zekâya gönderilmez; düğmeleri gizlenir.';
+
+  @override
+  String get aiOffTitle => 'Yapay zekâ kapalı';
+
+  @override
+  String get aiOffBody =>
+      'Yapay zekâyı Ayarlar\'da tümden kapattın; hiçbir şey gönderilmiyor. Açınca düğmeleri geri gelir.';
+
+  @override
+  String get aiOffTurnOn => 'Yapay zekâyı aç';
+
+  @override
+  String get aiConsentTitle => 'Yapay zekâ kullanımı';
+
+  @override
+  String get aiConsentWhat =>
+      'Ne gönderilir: yalnız o iş için seçtiğin metin, not ya da ek (görsel, ses, PDF).';
+
+  @override
+  String get aiConsentWhere =>
+      'Nereye: Google\'ın Gemini hizmetine (Firebase üzerinden); kendi anahtarını girdiysen seçtiğin sağlayıcıya.';
+
+  @override
+  String get aiConsentMistakes =>
+      'Yapay zekâ yanılabilir; önemli bilgileri kendin doğrula.';
+
+  @override
+  String get aiConsentTurnOff =>
+      'İstediğin an Ayarlar → Yapay zekâ\'dan tümden kapatabilirsin.';
+
+  @override
+  String get aiConsentAccept => 'Kabul ediyorum';
+
+  @override
+  String get aiConsentDecline => 'Vazgeç';
+
+  @override
+  String get aiMayBeWrong => 'AI yanılabilir; önemli bilgiyi doğrula.';
 }

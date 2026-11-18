@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
+import 'ai_policy.dart';
 import 'api_key_store.dart';
 import 'gemini_service.dart' show GeminiErrorKind, GeminiException;
 
@@ -53,12 +54,28 @@ enum AiAvailability {
 
   /// Puan bitti; yenilenme saati [aiQuotaRenewsAtProvider].
   quotaOut,
+
+  /// Kullanıcı Ayarlar'da tümden kapattı (PL3; [aiTurnedOffProvider]).
+  turnedOff,
+
+  /// Play derlemesinde ilk kullanım rızası bekleniyor (PL3; [aiConsentProvider]).
+  consentNeeded,
+}
+
+extension AiAvailabilityLook on AiAvailability {
+  /// Düğmede kilit rozeti mi? İlk kullanım rızası kilit değil: dokununca
+  /// rıza kartı açılır, kabulden sonra iş çalışır.
+  bool get looksLocked =>
+      this != AiAvailability.ready && this != AiAvailability.consentNeeded;
 }
 
 /// TEK KAYNAK: düğmeler bunu izler ([AiStatusCard], [AiIcon]), dokununca
 /// [ensureAiReady] tek açıklama levhasını açar. Eskiden düğmeler hep etkindi,
 /// hata sonradan geliyordu (F5, I2).
 final aiAvailabilityProvider = Provider<AiAvailability>((ref) {
+  // Kullanıcının kararı her şeyin önünde (kendi anahtarı olsa da).
+  if (ref.watch(aiTurnedOffProvider)) return AiAvailability.turnedOff;
+  if (!ref.watch(aiConsentProvider)) return AiAvailability.consentNeeded;
   if ((ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty) {
     return AiAvailability.ready;
   }

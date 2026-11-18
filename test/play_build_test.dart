@@ -26,6 +26,8 @@ void main() {
     expect(PlayBuild.aiPodcast, on);
     expect(PlayBuild.aiVoice, on);
     expect(PlayBuild.videoNote, on);
+    // PL3: rıza ekranı yalnız Play'de (kişisel APK'da sorulmaz).
+    expect(PlayBuild.aiConsent, !on);
   });
 
   test('video → not ek menüsünde yalnız kişisel APK\'da (AI-S1)', () {

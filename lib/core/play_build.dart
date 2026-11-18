@@ -44,4 +44,11 @@ abstract final class PlayBuild {
   /// Video → not (`noteFromVideo`) ve video not satırını AI ile toparlama
   /// (`videoNoteExcerpt`; AI'sız altyazı/transkript kesiti kalır).
   static const bool videoNote = !enabled;
+
+  // ── PLAN §1.5 PL3 AI kullanıcı yüzü.
+
+  /// İlk AI kullanımında rıza ekranı (ne gönderilir, nereye, "AI yanılabilir").
+  /// KARAR (en güvenli, sabah bakılacak): Play'de zorunlu; kişisel APK'da ve
+  /// web'de sorulmaz (kabul sayılır, bugünkü davranış).
+  static const bool aiConsent = enabled;
 }

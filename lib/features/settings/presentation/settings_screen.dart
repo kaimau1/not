@@ -60,6 +60,7 @@ import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
+import '../../ai/data/ai_policy.dart';
 import '../../ai/data/ai_speech.dart';
 import '../../ai/data/antalia/antalia_engine.dart';
 import '../../ai/data/antalia/antalia_speech.dart';
@@ -331,6 +332,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         summary: _aiSummary(l10n),
         keywords: 'brifing etiket baslik asistan model api anahtar',
         rows: [
+          // PL3 (c): tek anahtar — açıkken bütün AI girişleri gizli/kilitli,
+          // çağrılar ağa çıkmadan reddedilir (ai_policy.dart).
+          _SettingRow(
+            const _AiOffSwitch(),
+            title: l10n.aiOffSetting,
+            keywords: '${l10n.aiOffSettingInfo} kapat gizlilik kvkk',
+          ),
           _SettingRow(
             const _BuiltInAiStatus(),
             title: l10n.settingsAi,

@@ -8809,4 +8809,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickDropAiToggle => 'Ask AI when unsure';
+
+  @override
+  String get aiOffSetting => 'Turn off AI completely';
+
+  @override
+  String get aiOffSettingInfo =>
+      'While on, no note, text or attachment is sent to AI and AI buttons are hidden.';
+
+  @override
+  String get aiOffTitle => 'AI is turned off';
+
+  @override
+  String get aiOffBody =>
+      'You turned AI off in Settings; nothing is sent. Turn it back on to bring the AI buttons back.';
+
+  @override
+  String get aiOffTurnOn => 'Turn AI on';
+
+  @override
+  String get aiConsentTitle => 'Using AI';
+
+  @override
+  String get aiConsentWhat =>
+      'What is sent: only the text, note or attachment (image, audio, PDF) you choose for that task.';
+
+  @override
+  String get aiConsentWhere =>
+      'Where: to Google\'s Gemini service (via Firebase); if you entered your own key, to the provider you chose.';
+
+  @override
+  String get aiConsentMistakes =>
+      'AI can make mistakes; check important information yourself.';
+
+  @override
+  String get aiConsentTurnOff =>
+      'You can turn AI off completely at any time in Settings → AI.';
+
+  @override
+  String get aiConsentAccept => 'I agree';
+
+  @override
+  String get aiConsentDecline => 'Not now';
+
+  @override
+  String get aiMayBeWrong => 'AI can make mistakes; check important info.';
 }
