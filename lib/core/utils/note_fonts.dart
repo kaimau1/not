@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../app/theme/app_tokens.dart';
 
 /// Yazı tipi katalogu: hem UYGULAMANIN genel yazı tipi (Ayarlar → Görünüm)
 /// hem de NOTUN kendi yazı tipi (biçim şeridi) buradan beslenir.
@@ -153,7 +154,7 @@ TextStyle applyNoteFont(TextStyle base, String? family) {
       ? base
       : weight != null && weight.value > 500
       ? builder(
-          base.copyWith(fontWeight: FontWeight.w500),
+          base.copyWith(fontWeight: AppWeight.medium),
         ).copyWith(fontWeight: weight)
       : builder(base);
   if (_fontCache.length >= _fontCacheLimit) _fontCache.clear();
