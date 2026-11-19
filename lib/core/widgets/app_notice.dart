@@ -137,7 +137,9 @@ final noticeTopInset = ValueNotifier<double>(kToolbarHeight);
 ///  * ipucu ÜSTTE, üst kromun ([noticeTopInset]) altında (kullanıcı bulgusu
 ///    2026-11-08: alttaki ipucu düğmeleri kapatıyordu);
 ///  * ileti / duyuru DİPTE, klavyenin ve dibe yapışık panelin
-///    ([snackBarBottomObstacle]) üstünde, alt-BAŞ köşede.
+///    ([snackBarBottomObstacle]) üstünde, alt-BAŞ köşede; GENİŞ pencerede
+///    ([wideBreakpoint]) alt-SON köşede (KW-5: başta sol raydaki düğmeleri
+///    ve bölünmüş görünümde liste bölmesini örtüyordu; son köşe hep içerik).
 /// En çok [maxWidth] genişlikte.
 ///
 /// **YÜZEN DÜĞME BÖLGESİ**: ekranın alt-SON köşesindeki [fabReserve] ×
@@ -156,6 +158,10 @@ class AppNoticeHost extends StatefulWidget {
   final AppNoticeController? controller;
 
   static const double maxWidth = 480;
+
+  /// Bu genişlikten itibaren dip şeridi alt-SON köşede (= `kRailBreakpoint`:
+  /// ray ve liste bölmesi baş tarafta).
+  static const double wideBreakpoint = 600;
 
   /// Yüzen düğme bölgesinin eni (ekranın son kenarından) ve boyu (dipten,
   /// güvenli alan hariç): 56 dp düğme + 16 dp kenar.
@@ -202,8 +208,7 @@ class _NoticeLane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final align = top ? Alignment.topCenter : AlignmentDirectional.bottomStart;
-    // Şerit BOŞKEN MediaQuery okunmaz (R5, S31 klavye_karesi_kurulum): güvenli
+    // Şerit BOŞKEN pencere ENİ dışında MediaQuery okunmaz (R5, S31 klavye_karesi_kurulum): güvenli
     // alan / klavye payını görünen KART kendisi okur. Tam ekran Align dokunuş
     // yakalamaz (çocuğu yokken isabet yok).
     return Positioned.fill(
@@ -216,6 +221,14 @@ class _NoticeLane extends StatelessWidget {
           final data = shown != null && (shown.kind == AppNoticeKind.tip) == top
               ? shown
               : null;
+          // Yalnız GENİŞLİK okunur (`sizeOf`; klavye/güvenli alan değişince
+          // şerit kurulmaz). Çıkan kart da aynı köşede kalsın diye boşken de.
+          final AlignmentGeometry align = top
+              ? Alignment.topCenter
+              : MediaQuery.sizeOf(context).width >=
+                        AppNoticeHost.wideBreakpoint
+              ? AlignmentDirectional.bottomEnd
+              : AlignmentDirectional.bottomStart;
           final enter = AppMotion.of(context, AppMotion.short);
           return Align(
             alignment: align,
