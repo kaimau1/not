@@ -3,6 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 19 Kasım 2026 {#2026-11-19}
+- **Sesle yazarken liste maddeleri çoğalmıyor:** kontrol listesinde dikte ederken "yeni madde" deyince söylenenler artık onlarca kopya madde olmuyor; tek yeni madde açılır ve yazmaya orada devam edilir.
+- **Kalem ayarında "Otomatik" parmak:** bu cihazda kalem kullanıldıysa parmak sayfayı kaydırır, hiç kullanılmadıysa çizer; kalem ilk kez değince kendiliğinden kaydırmaya geçer. Elle seçtiğin Kaydırır/Çizer/Siler aynen kalır.
+- **Hızlı menüdeki Onay kutusu liste notunda da çalışır:** yazarken üstteki ☑ odaktaki maddeyi işaretler (numaralı listede onay kutulu listeye çevirir). Hızlı menüyü düzenlerken o notta görünmeyen düğmeler ayrıca yazılır.
+- **Alt çubukta sol ↔ sağ:** ⋯ → Düzenle'de her düğmenin yanındaki oklarla düğmeyi soldaki gruptan sağdaki renkli gruba (yapay zekâ, ses kaydı, dikte) ya da geri taşıyabilirsin.
+- **Menü düzeni yalnız bir nota:** hızlı menüyü ya da alt çubuğu düzenlerken **Tümüne uygula** / **Yalnız bu nota** seç; o notun kendi düzeni olur, **Bu notun özelleştirmesini sıfırla** ile genel düzene döner.
 - **Notla sohbette hazır öneriler:** sohbet boşken **Ana hat**, **Fikir ver** ve **Eksikleri bul** düğmeleri; dokununca soru hemen sorulur.
 - **Hızlı ekle ilk açılışta mikrofon izni istemez:** izin, mikrofon düğmesine bastığında istenir; izin verdiysen eskisi gibi kendiliğinden dinler.
 - **Listeyi başa alırken klasör menüsü açılmaz:** aşağıdan yukarı kaydırıp tepeye çarpınca menü artık kendiliğinden açılıp sonraki dokunuşu yutmuyor; liste zaten tepedeyken aşağı çekmek yine açar.

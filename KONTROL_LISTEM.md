@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Dikte "yeni madde", parmak Otomatik, hızlı menü ☑, alt çubuk sol↔sağ, not başına menü (19 Kasım gece, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) kontrol listesi notunda bir maddeye dokun → alttaki mikrofon (dikte) → bir cümle söyle, "yeni madde" de, devam et → TEK yeni madde açılır, eski madde tek cümle kalır; Geri al birkaç basışta toparlar; (2) Ayarlar → Kalem → Parmak: Otomatik seçili; kalemli tablette parmak kaydırır, kalemsiz telefonda çizer; (3) liste notunda yazarken üstteki hızlı menüye ☑ ekle (⋯ → Düzenle) → görünür, dokununca odaktaki madde işaretlenir; düzenleme levhasında "Bu notta görünmez: …" satırı; (4) alt ⋯ → Düzenle → bir düğmenin » okuyla sağ (renkli) gruba, « ile geri; (5) aynı levhalarda "Yalnız bu nota" → değişiklik yalnız o notta, başka notta genel düzen; "Bu notun özelleştirmesini sıfırla"; not açılış/klavye takılması yok.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Sohbet önerileri, hızlı ekle izni, başa dönüş, şablon araması (19 Kasım akşam, bulutta yazıldı, cihazda doğrulanmadı)**
   Nerede/Nasıl: (1) bir notta ✨ → Sohbet → boş sohbette Ana hat / Fikir ver / Eksikleri bul → dokununca soru sorulur, yanıt gelir (Fikir ver "Beyin fırtınası"na geçer); (2) uygulama verilerini silmeden önce mikrofon iznini Ayarlar'dan kaldır → ⚡ Hızlı ekle → sistem izin penceresi ÇIKMAMALI; mikrofona bas → izin sorulur, verince dinler; sonraki açılışta kendiliğinden dinler; (3) ana ekranda listeyi epey aşağı kaydır, sonra tek uzun hamleyle yukarı kaydırıp tepeye çarp → klasör menüsü AÇILMAMALI; liste tepedeyken yeniden aşağı çek → açılır; (4) + → Şablondan → arama kutusuna hızlı yaz → takılma yok; (5) ana ekran aracı (Bugün/Notlar) not değişince güncelleniyor.
   Yanlışsa: madde numarasını yaz.
