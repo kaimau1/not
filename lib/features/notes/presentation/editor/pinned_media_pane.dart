@@ -1709,10 +1709,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     // Gizle/göster balon varken yanındaki göz düğmesinde (görüntüleyici
     // balon çubuğuyla aynı).
     final toggle = _bubbleToggle();
-    final add = _BarButton(
+    // Doğrudan IconButton (ara `_BarButton` yok): klavye açılış karesinin
+    // kurulum bütçesi (S17 sabit görsel/PDF) eski menü düğmesiyle aynı kalsın.
+    final add = IconButton(
       key: const ValueKey('pinned-add-bubble'),
       tooltip: l10n.bubbleAdd,
-      icon: Icons.add_comment_outlined,
+      visualDensity: VisualDensity.compact,
+      iconSize: AppIconSize.m,
+      icon: const Icon(Icons.add_comment_outlined),
       onPressed: () => _startAdding(plain: _lastPlain),
     );
     if (toggle == null) return add;
