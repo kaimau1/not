@@ -351,6 +351,9 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     super.dispose();
   }
 
+  /// Uygun not yok: yazılan yeni metin notu olur (H11).
+  bool get _toNewNote => _candidates.isEmpty;
+
   String? get _fallbackId =>
       _chosenId ?? (_candidates.isEmpty ? null : _candidates.first.id);
 
@@ -398,6 +401,10 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     final st = _state.value;
     final parsed = _parsed;
     if (st.content.trim().isEmpty || parsed == null) return;
+    if (_toNewNote) {
+      now ? _apply(resolve: false) : _startCountdown();
+      return;
+    }
     // "… ekle" dendi ama ad çözülmedi ya da başa baş: kullanıcı bir not
     // adlandırdı, tahminle başka nota eklenmez.
     final named = st.ask || (parsed.command && parsed.index == null);
@@ -600,6 +607,21 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     final st = _state.value;
     final note = _noteOf(st.id);
     final repo = ref.read(notesRepositoryProvider);
+    if (_toNewNote && repo != null && st.content.trim().isNotEmpty) {
+      final body = st.content.trim();
+      final messenger = ScaffoldMessenger.of(context);
+      final l10n = context.l10n;
+      unawaited(
+        repo.createNote(NoteType.text, body: body).then((id) {
+          ref.read(quickDropRecentProvider.notifier).remember(id);
+        }),
+      );
+      Navigator.of(context).pop();
+      messenger
+        ..hideCurrentSnackBar()
+        ..showMessage(l10n.quickDropSavedNew);
+      return;
+    }
     if (note == null || repo == null || st.content.trim().isEmpty) return;
     final content = st.content;
     final l10n = context.l10n;
@@ -703,15 +725,19 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               ),
             ],
           ),
+          // H11 (17K §4.1): uygun not yokken levha ÇIKMAZ SOKAKTI — yalnız
+          // "önce not oluştur" yazıyor, yazma alanı hiç gelmiyordu. Artık
+          // alan durur; yazılan YENİ NOT olarak kaydedilir.
           if (_candidates.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpace.l),
+              padding: const EdgeInsets.only(bottom: AppSpace.s),
               child: Text(
-                l10n.quickDropNoNotes,
-                style: text.body.copyWith(color: scheme.onSurfaceVariant),
+                l10n.quickDropNoNotesNew,
+                key: const ValueKey('quick-drop-no-notes'),
+                style: text.meta.copyWith(color: scheme.onSurfaceVariant),
               ),
-            )
-          else ...[
+            ),
+          ...[
             QuickEntryBar(
               key: _bar,
               parser: _idle,
@@ -750,6 +776,9 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                       );
                     case _Phase.counting:
                       final title = _noteOf(st.id)?.displayTitle.trim() ?? '';
+                      final label = _toNewNote
+                          ? l10n.quickDropSavingNew
+                          : l10n.quickDropAddingTo(title);
                       return Row(
                         key: const ValueKey('quick-drop-counting'),
                         children: [
@@ -759,7 +788,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  l10n.quickDropAddingTo(title),
+                                  label,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: text.meta.copyWith(
@@ -797,7 +826,10 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                                   fontWeight: AppWeight.strong,
                                 ),
                               )
-                            : Text(l10n.quickDropTarget, style: text.meta),
+                            : Text(
+                                _toNewNote ? '' : l10n.quickDropTarget,
+                                style: text.meta,
+                              ),
                       );
                   }
                 },
@@ -860,7 +892,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               valueListenable: _state,
               builder: (context, st, _) => FilledButton.icon(
                 key: const ValueKey('quick-drop-add'),
-                onPressed: st.id == null || st.content.trim().isEmpty
+                onPressed:
+                    (st.id == null && !_toNewNote) || st.content.trim().isEmpty
                     ? null
                     : _apply,
                 icon: const Icon(Icons.add),

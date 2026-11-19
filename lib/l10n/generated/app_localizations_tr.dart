@@ -8727,8 +8727,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickDropTarget => 'Nereye eklensin?';
 
   @override
-  String get quickDropNoNotes =>
-      'Eklenecek not yok. Önce bir liste ya da metin notu oluştur.';
+  String get quickDropNoNotesNew =>
+      'Eklenecek liste ya da metin notu yok: yazdığın yeni not olarak kaydedilir.';
+
+  @override
+  String get quickDropSavingNew => 'Yeni not olarak kaydediliyor…';
+
+  @override
+  String get quickDropSavedNew => 'Yeni not olarak kaydedildi';
 
   @override
   String get quickDropAdd => 'Ekle';

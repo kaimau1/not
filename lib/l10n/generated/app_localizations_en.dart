@@ -8738,8 +8738,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickDropTarget => 'Add to which note?';
 
   @override
-  String get quickDropNoNotes =>
-      'No note to add to. Create a list or text note first.';
+  String get quickDropNoNotesNew =>
+      'No list or text note to add to yet: what you write is saved as a new note.';
+
+  @override
+  String get quickDropSavingNew => 'Saving as a new note…';
+
+  @override
+  String get quickDropSavedNew => 'Saved as a new note';
 
   @override
   String get quickDropAdd => 'Add';

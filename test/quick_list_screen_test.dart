@@ -35,6 +35,24 @@ import 'support/editor_harness.dart' show CountingNotesRepository;
 class _DropRepo extends CountingNotesRepository {
   final writes = <String, Map<String, dynamic>>{};
 
+  /// Yeni not olarak kaydedilenler (H11): (tür, gövde).
+  final created = <(NoteType, String)>[];
+
+  @override
+  Future<String> createNote(
+    NoteType type, {
+    double? orderIndex,
+    String title = '',
+    String body = '',
+    List<String>? items,
+    String? folderId,
+    DateTime? reminderAt,
+    int listColumns = 1,
+  }) {
+    created.add((type, body));
+    return Future.value('yeni${created.length}');
+  }
+
   @override
   Future<void> updateFields(String noteId, Map<String, dynamic> fields) {
     writes[noteId] = fields;
@@ -495,6 +513,32 @@ void main() {
       tester.widget<QuickEntryBar>(find.byType(QuickEntryBar)).onSpeechEnd!();
       await tester.pump();
     }
+
+    // H11 (17K §4.1): uygun not yokken levha çıkmaz sokaktı (yazma alanı
+    // yoktu, yalnız "önce not oluştur"). Artık yazılan yeni not olur.
+    testWidgets('not yokken yazılan yeni not olarak kaydedilir (yazarak ve '
+        'konuşarak)', (tester) async {
+      final repo = await openSheet(tester, const []);
+      expect(find.byKey(const ValueKey('quick-drop-no-notes')), findsOneWidget);
+      expect(find.byKey(const ValueKey('quick-entry-field')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'kargoyu sor',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      expect(repo.created, [(NoteType.text, 'kargoyu sor')]);
+      expect(find.text('Yeni not olarak kaydedildi'), findsOneWidget);
+
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await say(tester, 'faturayı yatır');
+      expect(find.text('Yeni not olarak kaydediliyor…'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(repo.created.last, (NoteType.text, 'faturayı yatır'));
+    });
 
     testWidgets('konuşma sonu: geri sayım, sonra eklenir; Bekle durdurur', (
       tester,
