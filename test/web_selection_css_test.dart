@@ -20,4 +20,17 @@ void main() {
     expect(html, contains('background: transparent !important'));
     expect(html, contains('color: transparent !important'));
   });
+
+  // 2026-11-19: eşit özgüllükte SONRA gelen bir eklenti kuralı (ör.
+  // `html body *::selection {…!important}`) birinci katı eziyordu
+  // (Playwright'ta yeniden üretildi). Fareli cihazda gizli alan opacity 0.
+  test('fareli cihazda gizli metin alanı tümden görünmez (2. kat)', () {
+    final html = File('web/index.html').readAsStringSync();
+    final media = html.indexOf('@media (hover: hover) and (pointer: fine)');
+    expect(media, greaterThan(0));
+    final block = html.substring(media, html.indexOf('</style>', media));
+    expect(block, contains('flt-text-editing-host .flt-text-editing'));
+    expect(block, contains('flt-semantics textarea'));
+    expect(block, contains('opacity: 0 !important'));
+  });
 }

@@ -55,3 +55,8 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - KW-17 KÖK NEDEN: `appBarTheme.titleTextStyle` punto taşımıyor (tema kurulurken textTheme ölçüsüz) → üst çubuk başlıkları her yerde 14 px. Karar bekliyor (keşif belgesi "P77 durumu").
 - Gizlilik ekranı `privacyBlocks()` ile çizilir (başlık/madde/paragraf, satır sonları birleşir); web sayfaları yine `tool/gizlilik_sayfalari.dart`.
 - Ekran turunda misafir afişi yok (sahte oturum misafir değil) — afiş değişikliği turda görünmez.
+
+## 2026-11-19 — Web seçimi 2. kat (kullanıcı: "benim bilgisayarımda hâlâ farklı yazı tipi")
+- P59 kuralı (`flt-text-editing-host textarea::selection {… !important}`, özgüllük 0,0,3) EŞİT özgüllükte SONRA eklenen bir kuralla (`html body *::selection {…!important}`) eziliyor; kullanıcı kökenli eklenti stili ise yazar `!important`'ı her durumda yener. Playwright'ta (Chromium, `--no-web-resources-cdn` ile derlenmiş tek `TextField`lı giriş, kural `addStyleTag` ile) yeniden üretildi: mavi kutu, beyaz, tarayıcı yazı tipi.
+- Çözüm `web/index.html`: `@media (hover: hover) and (pointer: fine)` içinde gizli alanın KENDİSİ `opacity: 0 !important` (`.flt-text-editing`, host input/textarea, `flt-semantics` input/textarea). Doğrulandı: tıklama/yazma/çift tıklama/Ctrl+A çalışır, seçim Flutter'ın rengi ve yazı tipiyle. Telefon tarayıcısı (ince işaretçi yok) bilerek dışarıda. Bekçi `web_selection_css_test` "2. kat".
+- Yerelde web üretme: CanvasKit gstatic'ten iner (bulutta engelli) → `flutter build web --no-web-resources-cdn`; açılış katmanı `notlar-ready` beklediği için düzenekte `#splash` elle kaldırılır.

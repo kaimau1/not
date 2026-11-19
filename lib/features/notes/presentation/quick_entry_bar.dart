@@ -34,6 +34,7 @@ class QuickEntryBar extends ConsumerStatefulWidget {
     this.focusNode,
     this.hint,
     this.autoListen = false,
+    this.autoListenDelay = Duration.zero,
     this.onListeningChanged,
     this.raw = false,
     this.onRawChanged,
@@ -58,6 +59,13 @@ class QuickEntryBar extends ConsumerStatefulWidget {
 
   /// Kurulur kurulmaz dinlemeye başlar (izin varsa).
   final bool autoListen;
+
+  /// Kendiliğinden dinleme bu kadar SONRA başlar: levha açılışı ve klavye
+  /// animasyonu bitsin (kullanıcı bulgusu 2026-11-19: "hızlı ekle açıkken
+  /// klavye kasıyor" — tanıyıcı oturumu levha + klavye animasyonuyla aynı
+  /// karelerde açılıyordu). Bu arada kullanıcı yazmaya başlarsa dinleme hiç
+  /// başlamaz.
+  final Duration autoListenDelay;
 
   /// Kullanıcı mikrofonu ELLE açıp kapattı (tercihi hatırlamak için).
   final ValueChanged<bool>? onListeningChanged;
@@ -92,6 +100,13 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   VoiceListenSession? _session;
   String _spoken = '';
   int _spokenCount = 0;
+  Timer? _autoTimer;
+
+  /// Kullanıcı ELLE yazdı (konuşma tanımadan gelen metin değil).
+  bool _typed = false;
+
+  /// Alana tanıyıcı yazıyor: [_onChanged] bunu elle yazım saymaz.
+  bool _fromSpeech = false;
 
   /// Ham kipte dinleme başlarken alanda duran yazı (konuşma sonuna eklenir).
   String _rawPrefix = '';
@@ -115,7 +130,15 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
             widget.autoListen &&
             await DeviceSpeech.micPermissionGranted() &&
             mounted) {
-          unawaited(_startListening(manual: false));
+          void go() {
+            if (mounted && !_typed) unawaited(_startListening(manual: false));
+          }
+
+          if (widget.autoListenDelay == Duration.zero) {
+            go();
+          } else {
+            _autoTimer = Timer(widget.autoListenDelay, go);
+          }
         }
       }),
     );
@@ -124,6 +147,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   @override
   void dispose() {
     _idle?.cancel();
+    _autoTimer?.cancel();
     unawaited(_session?.cancel());
     _c.dispose();
     _listening.dispose();
@@ -165,6 +189,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   void _onChanged() {
     if (_applying) return;
     final text = _c.text;
+    if (!_fromSpeech) _onTyped();
     if (widget.raw) {
       widget.onRawChanged?.call(text);
       return;
@@ -182,6 +207,25 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
       final settled = widget.parser.parse(now, idle: true);
       if (settled.items.isNotEmpty) _consume(settled, now);
     });
+  }
+
+  /// ELLE YAZIM DİNLEMEYİ KESER (kullanıcı bulgusu 2026-11-19): ham kipte
+  /// tanıyıcının her sonucu alanı baştan yazdığından, dinleme sürerken
+  /// klavyeyle yazılan harfler bir sonraki sonuçta siliniyordu; tanıyıcı da
+  /// klavyeyle aynı anda çalışıyordu. Kendiliğinden başlamış dinleme
+  /// sessizce iptal edilir (yazılan kalır); bekleyen kendiliğinden başlatma
+  /// da iptal. Elle açılan mikrofonda yalnız ham kipte kesilir.
+  void _onTyped() {
+    if (_typed && _session == null) return;
+    _typed = true;
+    _autoTimer?.cancel();
+    final session = _session;
+    if (session == null || !widget.raw) return;
+    _session = null;
+    unawaited(session.cancel());
+    _spoken = '';
+    _rawPrefix = '';
+    _listening.value = false;
   }
 
   void _onSubmitted() {
@@ -263,10 +307,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     _spoken = full;
     if (widget.raw) {
       final text = _rawPrefix.isEmpty ? full : '$_rawPrefix $full';
-      _c.value = TextEditingValue(
-        text: text,
-        selection: TextSelection.collapsed(offset: text.length),
-      );
+      _setFromSpeech(text);
       return;
     }
     final r = widget.parser.parse(full);
@@ -286,10 +327,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     unawaited(session?.cancel());
     if (widget.raw) {
       final text = [_rawPrefix, rest].where((t) => t.isNotEmpty).join(' ');
-      _c.value = TextEditingValue(
-        text: text,
-        selection: TextSelection.collapsed(offset: text.length),
-      );
+      _setFromSpeech(text);
       _spoken = '';
     } else {
       _spoken = rest;
@@ -297,6 +335,18 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     }
     _listening.value = false;
     widget.onDoneWord?.call();
+  }
+
+  void _setFromSpeech(String text) {
+    _fromSpeech = true;
+    try {
+      _c.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    } finally {
+      _fromSpeech = false;
+    }
   }
 
   void _finishSpeech() {

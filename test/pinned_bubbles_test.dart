@@ -78,21 +78,38 @@ void main() {
   });
 
   Future<void> startAdding(WidgetTester tester, {required bool plain}) async {
-    // P49 (K-O6): dar çubukta balon seçenekleri TEK ⋮ levhasında; geniş
-    // çubukta balon menü düğmesi çubukta.
+    // 2026-11-19: düğme menü açmaz, doğrudan bırakma kipine geçer; tür araç
+    // kartının Balon | Metin bölmesinde (dar çubukta ⋮ levhasındaki tek
+    // "Balon" kutucuğu).
     final button = find.byKey(const ValueKey('pinned-add-bubble'));
-    await tester.tap(
-      button.evaluate().isNotEmpty
-          ? button
-          : find.byKey(const ValueKey('pinned-media-menu')),
-    );
+    if (button.evaluate().isNotEmpty) {
+      await tester.tap(button);
+    } else {
+      await tester.tap(find.byKey(const ValueKey('pinned-media-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('pinned-add-bubble-note')));
+    }
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(
-        ValueKey(plain ? 'pinned-add-bubble-plain' : 'pinned-add-bubble-note'),
-      ),
-    );
-    await tester.pumpAndSettle();
+    // İkinci soru yok: araç kartı doğrudan açık.
+    expect(find.byKey(const ValueKey('pinned-add-bubble-plain')), findsNothing);
+    expect(find.byKey(const ValueKey('bubble-toolbar-done')), findsOneWidget);
+    if (plain) {
+      await tester.tap(
+        find.descendant(
+          of: find.byType(SegmentedButton<bool>),
+          matching: find.byIcon(Icons.text_fields),
+        ),
+      );
+      // Sabit görselin çift dokunuş yakınlaştırması tek dokunuşu bekletir.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<SegmentedButton<bool>>(find.byType(SegmentedButton<bool>))
+            .selected,
+        {true},
+      );
+    }
   }
 
   testWidgets('Balon ekle → Balon: dokunulan yere balon, yazma kartı açılır', (

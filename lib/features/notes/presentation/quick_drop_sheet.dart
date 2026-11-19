@@ -308,6 +308,9 @@ class _Drop {
 
 enum _Phase { idle, counting, thinking }
 
+/// "Yeni not" çipinin hedef kimliği (gerçek not kimliğiyle çakışmaz).
+const _kNewId = '\u0000new';
+
 class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     with SingleTickerProviderStateMixin {
   final _focus = FocusNode();
@@ -324,6 +327,16 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   final _state = ValueNotifier<_Drop>(const _Drop());
   final _phase = ValueNotifier<_Phase>(_Phase.idle);
 
+  /// Çip şeridinin girdisi: yalnız hedef + başa baş kalanlar (içerik YOK).
+  /// Her tuş içeriği değiştirir; şerit (12 `ChoiceChip`) yalnız hedef
+  /// değişince kurulur (S56 yazma bütçesi; kullanıcı bulgusu 2026-11-19
+  /// "hızlı ekle açıkken klavye kasıyor").
+  final _targets = ValueNotifier<_Drop>(const _Drop());
+  final _strip = ScrollController();
+
+  /// Ekle düğmesinin girdisi: etkin mi, "hangi not?" mu, içerik.
+  final _addLabel = ValueNotifier<(bool, bool, String)>((false, false, ''));
+
   /// Konuşma sonrası geri sayım (bitince eklenir).
   late final AnimationController _count = AnimationController(
     vsync: this,
@@ -338,8 +351,28 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       ref.read(notesStreamProvider).value ?? const <Note>[],
       ref.read(quickDropRecentProvider),
     );
+    _state.addListener(_onState);
     _state.value = _Drop(id: _candidates.isEmpty ? null : _candidates.first.id);
     if (ref.read(quickDropKeyboardProvider)) focusAfterRouteOpens(this, _focus);
+  }
+
+  void _onState() {
+    final st = _state.value;
+    final targets = _Drop(id: st.id, ties: st.ties);
+    if (targets != _targets.value) {
+      _targets.value = targets;
+      // Seçilen hedef şeridin BAŞINA geçer: kaydırılmış şerit başa döner
+      // ki seçilen çip gözden kaybolmasın.
+      if (_strip.hasClients && _strip.offset > 0) {
+        unawaited(
+          _strip.animateTo(0, duration: AppMotion.short, curve: AppMotion.enter),
+        );
+      }
+    }
+    final content = st.content.trim();
+    final enabled = (st.id != null || _toNewNote) && content.isNotEmpty;
+    final next = (enabled, st.id == null && st.ask, content);
+    if (next != _addLabel.value) _addLabel.value = next;
   }
 
   @override
@@ -347,12 +380,16 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     _count.dispose();
     _focus.dispose();
     _state.dispose();
+    _targets.dispose();
+    _strip.dispose();
+    _addLabel.dispose();
     _phase.dispose();
     super.dispose();
   }
 
-  /// Uygun not yok: yazılan yeni metin notu olur (H11).
-  bool get _toNewNote => _candidates.isEmpty;
+  /// Yazılan yeni metin notu olur (H11): uygun not yok ya da "Yeni not"
+  /// çipi seçili.
+  bool get _toNewNote => _candidates.isEmpty || _state.value.id == _kNewId;
 
   String? get _fallbackId =>
       _chosenId ?? (_candidates.isEmpty ? null : _candidates.first.id);
@@ -386,11 +423,13 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     if (next != _state.value) _state.value = next;
   }
 
-  void _choose(Note note) {
+  void _choose(Note note) => _chooseId(note.id);
+
+  void _chooseId(String id) {
     _stopCountdown();
     if (_phase.value == _Phase.thinking) _phase.value = _Phase.idle;
-    _chosenId = note.id;
-    _state.value = _Drop(id: note.id, content: _state.value.content);
+    _chosenId = id;
+    _state.value = _Drop(id: id, content: _state.value.content);
   }
 
   // ── Konuşma bitti: geri sayım / yapay zekâ / sor ──────────────────────
@@ -745,6 +784,11 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               focusNode: _focus,
               hint: l10n.quickDropHint,
               autoListen: autoMic,
+              // Levha açılışı (+ klavye) bitince: tanıyıcı animasyonlarla
+              // aynı karelerde açılmasın (S56, 2026-11-19).
+              autoListenDelay: keyboard
+                  ? AppMotion.medium + AppMotion.long
+                  : AppMotion.medium,
               onRawChanged: _onText,
               onRawSubmitted: (_) => _apply(),
               // "Söyle, eklensin": konuşma bitince kısa geri sayımla eklenir.
@@ -838,7 +882,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
             SizedBox(
               height: AppSpace.xxxl + AppSpace.m,
               child: ValueListenableBuilder<_Drop>(
-                valueListenable: _state,
+                valueListenable: _targets,
                 builder: (context, st, _) {
                   // Seçili hedef hep başta, sonra başa baş kalanlar.
                   final first = [
@@ -851,14 +895,34 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                     for (final n in _candidates.take(12))
                       if (!first.contains(n)) n,
                   ];
+                  // H11 2. yarı (2026-11-19): "Yeni not" HEP en başta —
+                  // yazılan hiçbir nota uymuyorsa tek dokunuşla yeni not.
+                  // Uygun not yoksa zaten yeni not olur, çip gereksiz.
+                  final extra = _candidates.isEmpty ? 0 : 1;
                   return ListView.separated(
                     key: const ValueKey('quick-drop-targets'),
+                    controller: _strip,
                     scrollDirection: Axis.horizontal,
-                    itemCount: shown.length,
+                    itemCount: shown.length + extra,
                     separatorBuilder: (_, _) =>
                         const SizedBox(width: AppSpace.s),
                     itemBuilder: (context, i) {
-                      final n = shown[i];
+                      if (i < extra) {
+                        return Center(
+                          child: ChoiceChip(
+                            key: const ValueKey('quick-drop-target-new'),
+                            avatar: const Icon(
+                              Icons.add,
+                              size: AppIconSize.xs,
+                            ),
+                            label: Text(l10n.newNoteShort),
+                            showCheckmark: false,
+                            selected: st.id == _kNewId,
+                            onSelected: (_) => _chooseId(_kNewId),
+                          ),
+                        );
+                      }
+                      final n = shown[i - extra];
                       final tie = st.ties.contains(n.id);
                       return Center(
                         child: ChoiceChip(
@@ -888,21 +952,18 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               ),
             ),
             const SizedBox(height: AppSpace.s),
-            ValueListenableBuilder<_Drop>(
-              valueListenable: _state,
-              builder: (context, st, _) => FilledButton.icon(
+            ValueListenableBuilder<(bool, bool, String)>(
+              valueListenable: _addLabel,
+              builder: (context, add, _) => FilledButton.icon(
                 key: const ValueKey('quick-drop-add'),
-                onPressed:
-                    (st.id == null && !_toNewNote) || st.content.trim().isEmpty
-                    ? null
-                    : _apply,
+                onPressed: add.$1 ? _apply : null,
                 icon: const Icon(Icons.add),
                 label: Text(
-                  st.id == null && st.ask
+                  add.$2
                       ? l10n.quickDropWhich
-                      : st.content.trim().isEmpty
+                      : add.$3.isEmpty
                       ? l10n.quickDropAdd
-                      : '${l10n.quickDropAdd} · ${st.content.trim()}',
+                      : '${l10n.quickDropAdd} · ${add.$3}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

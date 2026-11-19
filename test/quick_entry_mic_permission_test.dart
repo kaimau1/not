@@ -35,7 +35,10 @@ void main() {
         .setMockStreamHandler(events, null);
   });
 
-  Future<void> pump(WidgetTester tester) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    Duration delay = Duration.zero,
+  }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(
@@ -50,6 +53,7 @@ void main() {
               parser: QuickParser(QuickLexicon()),
               raw: true,
               autoListen: true,
+              autoListenDelay: delay,
               onItems: (_) {},
             ),
           ),
@@ -80,6 +84,46 @@ void main() {
     DeviceSpeech.debugMicGranted = true;
     await pump(tester);
     expect(listens, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  // Kullanıcı bulgusu 2026-11-19 ("hızlı ekle açıkken klavye kasıyor"):
+  // tanıyıcı levha + klavye animasyonuyla aynı karelerde açılıyordu; ham
+  // kipte dinleme sürerken klavyeyle yazılan bir sonraki sonuçta siliniyordu.
+  testWidgets('kendiliğinden dinleme gecikmeyle başlar; önce yazılırsa hiç '
+      'başlamaz', (tester) async {
+    DeviceSpeech.debugMicGranted = true;
+    await pump(tester, delay: const Duration(milliseconds: 700));
+    expect(listens, 0, reason: 'animasyonlar sürerken tanıyıcı açılmaz');
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(listens, 1);
+    await tester.pumpWidget(const SizedBox());
+
+    listens = 0;
+    await pump(tester, delay: const Duration(milliseconds: 700));
+    await tester.enterText(
+      find.byKey(const ValueKey('quick-entry-field')),
+      'süt',
+    );
+    await tester.pump(const Duration(milliseconds: 800));
+    expect(listens, 0, reason: 'kullanıcı yazmayı seçti');
+    expect(find.text('süt'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('ham kipte dinlerken klavyeyle yazmak dinlemeyi keser, yazılan '
+      'kalır', (tester) async {
+    DeviceSpeech.debugMicGranted = true;
+    await pump(tester);
+    expect(listens, 1);
+    expect(find.byKey(const ValueKey('quick-entry-heard')), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('quick-entry-field')),
+      'ekmek',
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('quick-entry-heard')), findsNothing);
+    expect(find.text('ekmek'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 }

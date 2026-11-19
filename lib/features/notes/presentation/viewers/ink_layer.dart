@@ -43,12 +43,18 @@ class InkQuickSwap {
     required this.box,
     required this.size,
     required this.serial,
+    this.at,
     this.shown = true,
   });
 
   final int page;
   final Rect box;
   final Size size;
+
+  /// Düğmenin katman pikselindeki sol üst köşesi ([inkQuickSwapPlace]);
+  /// ardışık çizgilerde YAPIŞKAN — yalnız yazı uzaklaşınca ya da düğmenin
+  /// üstüne gelince yer değiştirir.
+  final Offset? at;
 
   /// Her yeni çizgide artar: düğmenin solma saati baştan başlar.
   final int serial;
@@ -59,6 +65,7 @@ class InkQuickSwap {
     box: box,
     size: size,
     serial: serial,
+    at: at,
     shown: false,
   );
 }
@@ -203,11 +210,19 @@ class InkController extends ChangeNotifier {
   }
 
   void _showQuickSwap(int page, Rect box, Size size) {
+    final prev = quickSwap.value;
+    // Aynı sayfa ve boyda önceki yer aday olarak verilir: yazı yakınında
+    // kaldıkça düğme kıpırdamaz (kullanıcı bulgusu 2026-11-19: "bir sağda,
+    // bir aşağıda, bir yukarıda; çok unstable").
+    final keep = prev != null && prev.page == page && prev.size == size
+        ? prev.at
+        : null;
     quickSwap.value = InkQuickSwap(
       page: page,
       box: box,
       size: size,
       serial: ++_swapSerial,
+      at: inkQuickSwapPlace(box, size, previous: keep),
     );
   }
 
@@ -2199,7 +2214,9 @@ class InkPageLayer extends StatelessWidget {
                           ? constraints.maxHeight
                           : size.height,
                     );
-                    final at = inkQuickSwapPlace(q.box, area);
+                    final at = q.at != null && q.size == area
+                        ? q.at!
+                        : inkQuickSwapPlace(q.box, area);
                     return Positioned(
                       left: at.dx,
                       top: at.dy,
@@ -2389,39 +2406,52 @@ class _EraserOfferButton extends StatelessWidget {
 
 /// Hızlı düğmenin çapı ve çizgi kutusuna uzaklığı (dp).
 const double kInkQuickSwapSize = 40;
-const double kInkQuickSwapGap = 36;
+const double kInkQuickSwapGap = 20;
+
+/// Önceki yer, yeni çizgi düğmeden en çok bu kadar uzaktaysa korunur (dp).
+const double kInkQuickSwapReach = 180;
 
 /// Boştaki saydamlık (yaklaşınca / basınca tam).
 const double kInkQuickSwapIdleOpacity = 0.4;
 
-/// Hızlı düğmenin yeri: çizgi kutusunun SOL ÜSTÜ (sağ elle yazarken el ve
-/// yazı sağ altta kalır), sığmazsa sağ üst, sol alt, sağ alt; hiçbiri
-/// sığmazsa sol üst aday alana kıstırılır.
+/// Hızlı düğmenin yeri — TEK, BEKLENDİK KURAL (kullanıcı bulgusu
+/// 2026-11-19: dört aday arasında sıçrayan düğme "rastgele dolaşıyor",
+/// bazen çok uzakta kalıyordu):
+/// 1. [previous] varsa ve yeni çizgi düğmeyi örtmüyor, düğmeye
+///    [kInkQuickSwapReach] içindeyse düğme YERİNDE kalır (satır boyunca
+///    yazarken kıpırdamaz).
+/// 2. Yoksa çizgi kutusunun SOL ÜSTÜ (sağ elle yazarken el ve yazı sağ
+///    altta kalır); sol kenara sığmazsa yatayda kenara kıstırılır (sağa
+///    SIÇRAMAZ); tepeye sığmazsa aynı x'te kutunun altı.
 Offset inkQuickSwapPlace(
   Rect stroke,
   Size area, {
+  Offset? previous,
   double box = kInkQuickSwapSize,
   double gap = kInkQuickSwapGap,
 }) {
-  final candidates = [
-    Offset(stroke.left - gap - box, stroke.top - gap - box),
-    Offset(stroke.right + gap, stroke.top - gap - box),
-    Offset(stroke.left - gap - box, stroke.bottom + gap),
-    Offset(stroke.right + gap, stroke.bottom + gap),
-  ];
-  for (final c in candidates) {
-    if (c.dx >= 0 &&
-        c.dy >= 0 &&
-        c.dx + box <= area.width &&
-        c.dy + box <= area.height) {
-      return c;
+  final maxX = math.max(0.0, area.width - box);
+  final maxY = math.max(0.0, area.height - box);
+  if (previous != null &&
+      previous.dx <= maxX &&
+      previous.dy <= maxY) {
+    final button = previous & Size.square(box);
+    if (!button.inflate(gap / 2).overlaps(stroke) &&
+        _rectGap(button, stroke) <= kInkQuickSwapReach) {
+      return previous;
     }
   }
-  final c = candidates.first;
-  return Offset(
-    c.dx.clamp(0.0, math.max(0.0, area.width - box)),
-    c.dy.clamp(0.0, math.max(0.0, area.height - box)),
-  );
+  final x = (stroke.left - gap - box).clamp(0.0, maxX);
+  var y = stroke.top - gap - box;
+  if (y < 0) y = stroke.bottom + gap;
+  return Offset(x, y.clamp(0.0, maxY));
+}
+
+/// İki dikdörtgen arası en kısa uzaklık (örtüşüyorsa 0).
+double _rectGap(Rect a, Rect b) {
+  final dx = math.max(0.0, math.max(a.left - b.right, b.left - a.right));
+  final dy = math.max(0.0, math.max(a.top - b.bottom, b.top - a.bottom));
+  return math.sqrt(dx * dx + dy * dy);
 }
 
 /// Kalem ↔ silgi hızlı düğmesi (bkz. [InkController.quickSwap]). Boşta
