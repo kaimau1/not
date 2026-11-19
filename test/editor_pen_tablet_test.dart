@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/utils/hard_keyboard.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
@@ -13,6 +14,7 @@ import 'package:notlar/features/notes/data/attachment_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
+import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
@@ -359,6 +361,77 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(ink().ink, hasLength(2), reason: 'üst ↶ aynı yığın');
+    await _end(tester);
+  });
+
+  // P78 KT-16 (tablet turu 2026-11-18): "Kalem kipi · Yalnız kalemle yaz"
+  // bildirimi kalem tepsisini örtüyordu. KÖK NEDEN: ipucu, kipi açan AYNI
+  // karede gösteriliyordu; tepsi henüz dizilmediği için engel yüksekliği
+  // (snackBarBottomObstacle) 0 okunuyor, bildirim ekranın dibine iniyordu.
+  testWidgets('KT-16: kalem kipi bildirimi kalem tepsisinin üstünde', (
+    tester,
+  ) async {
+    InkToolMemory.reset();
+    addTearDown(InkToolMemory.reset);
+    await _pump(tester, size: const Size(640, 1024));
+    await tester.tap(find.byKey(const ValueKey('editor-bar-pen')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 600));
+    final notice = find.textContaining('Kalem kipi');
+    expect(notice, findsOneWidget);
+    final tray = tester.getRect(find.byKey(const ValueKey('page-pen-dock')));
+    expect(tester.getRect(notice).bottom, lessThanOrEqualTo(tray.top));
+    await _end(tester);
+  });
+
+  // P78 KT-15 (tablet turu 2026-11-18): yatay bölünmüşte sağ kenardaki
+  // yüzen kalem düğmesi liste notunun "Ara başlık" ve "Sil" eylemlerini
+  // örtüyordu. Düğme sağ kenardayken satır sonu eylemleri onun payını
+  // bırakır.
+  testWidgets('KT-15: yüzen kalem düğmesi satır sonu eylemlerini örtmez', (
+    tester,
+  ) async {
+    InkToolMemory.reset();
+    addTearDown(InkToolMemory.reset);
+    InkToolMemory.stylusEver = true;
+    const list = Note(
+      id: 'n',
+      type: NoteType.checklist,
+      title: 'Liste',
+      items: [
+        NoteItem(id: 'a', text: 'bir'),
+        NoteItem(id: 'b', text: 'iki', checked: true),
+      ],
+    );
+    await _pump(tester, note: list, size: const Size(700, 640));
+    final toggle = tester.getRect(find.byKey(const ValueKey('stylus-toggle')));
+    for (final key in ['items-add-header', 'items-delete-checked']) {
+      final r = tester.getRect(find.byKey(ValueKey(key)));
+      expect(r.right, lessThanOrEqualTo(toggle.left), reason: key);
+    }
+    await _end(tester);
+  });
+
+  // P78 KT-18: odakta alan yokken ⌨ önce gövdeye odaklanır (yoksa klavye
+  // gelmiyor, yalnız simge değişiyordu).
+  testWidgets('KT-18: odak yokken ⌨ gövdeye odaklanır', (tester) async {
+    HardKeyboard.report(true);
+    addTearDown(() {
+      HardKeyboard.report(false);
+      HardKeyboard.resetForTest();
+    });
+    await _pump(tester);
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('editor-soft-keyboard')));
+    await tester.pump();
+    expect(HardKeyboard.softWanted.value, isTrue);
+    expect(
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorStateOfType<EditableTextState>(),
+      isNotNull,
+    );
     await _end(tester);
   });
 }

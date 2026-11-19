@@ -223,6 +223,11 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 > - **19 Tablette sesle yazma:** ⚡/Hızlı ekle ilk dokunuşta mikrofon izni istedi (REDDET verildi, KT-24); konuşma denenmedi.
 > - **S1 iki cihaz turu:** denenmedi (ikinci cihaz/web yok).
 
+- [ ] **P78 tablet bulguları (2026-11-19, dal oto/P78-tablet-bulgular — A/B ölçümü yapılmadı)** — yazıldı; tablette dikeyde (a)(b)(d) görüldü, (c) ve yatay doğrulanmadı
+  Nerede: tablet, liste notu (yatay bölünmüş) + Takvim ay (dikey) + fiziksel klavye.
+  Nasıl: (a) yatayda liste notu aç → sağdaki yuvarlak kalem düğmesi "Ara başlık" ve "İşaretliler · Sil"in üstünde değil; (b) dikeyde not → alt çubuk Kalem → "Kalem kipi · …" bildirimi kalem tepsisinin ÜSTÜNDE; (c) fiziksel klavye takılı, alana dokunmadan ⌨ → klavye açılır; GERİ ile kapat → ⌨ simgesi "aç"a döner, bir dokunuş yine açar; (d) dikey Takvim ay → şerit yazısı okunur (11 pt), gün 13 pt. KT-13: yatayda ilk kartın ortası = Huawei Navigasyon yuvasının (yüzen gezinme düğmesi) yeri; yuva açıkken ona dokunmak GERİ'dir, uygulama hatası değil (yuvayı taşı ya da kapat).
+  Doğruysa: dört madde de böyle.
+
 - [ ] **P74 jest hedefleri (U1) + ana ekran A/B** — yazıldı, cihazda doğrulanmadı
   Nerede: Ayarlar → Notlar → "Listeyi tepeden aşağı çekince" / "Tümü'de sağa kaydırınca".
   Nasıl: önce varsayılanla (klasör menüsü / takvim) dene; sonra "Bir not" seç → çek → o not açılır; "Bir klasör" → o klasöre geçer; "Hiçbiri" → çekiş göstergesi çıkmaz. Ana ekran A/B: `tool/perf/ab_hepsi.py <önceki [apk]> <P74> --altin`.

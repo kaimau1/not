@@ -146,12 +146,14 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Olası kök: yatay bölünmüş kabukta not açılırken rota "geri alacak şey yok" diyor ve Flutter `SystemNavigator.pop()` çağırıyor (`lib/app/app.dart:120-165` `alwaysHandleBack` yorumu); not açma yolu `lib/app/router.dart:88-140` (`NoteRoutePush`) + `lib/app/split_shell.dart` (`_closing`/`_lastNoteId`). Doğrulanmadı.
 - Öneri: 1024x640 dp widget testi (kart merkez/kenar/⋮ dokunuşları; `router` konumu + `SystemNavigator.pop` sayacı) ve karta özgü bir yol (ör. kartın içindeki onay kutusu/satır dokunuşu) araması; K32 "Yanda aç" turu bu düzeltmeye bağlı.
 - Görüntü: `kt-yatay-01-ana.png` (kart yeri).
+- **Durum (P78, 2026-11-19): uygulama hatası DEĞİL.** Kök neden: Huawei **Navigasyon yuvası** (`com.huawei.android.FloatTasks`, yüzen gezinme düğmesi) yatayda tam bu noktada duruyor (`dumpsys window`: `FloatView (321,843) 210x210`, dokunma alanı `AbstractView (366,888) 120x120` → x 366–486, y 888–1008); ekran görüntüsüne (screencap) çıkmıyor. Ona dokunmak sistem GERİ'si: logcat'te dokunuştan 8 ms sonra `interceptKeyTi keyCode=4 … isInjected=true` + FloatTasks `querySoundEffectsEnabled`, ardından kök ekranda geri → Android 12+ `moveTaskToBack`. Eşleşme: x=477 (y 900/941/980) 4/4 arka plan, x=300 ve x=600 ile ⋮ yakını (514,965) 0 — hepsi yuva kutusu içi/dışı. İkinci kart ortası (1070,950) notu açıyor. Uygulama tarafı bekçi: `test/web_semantics_home_test.dart` "KT-13" (1024x640 dp kart ortası → `/note/a`, `SystemNavigator.pop` yok). Ölçüm/tur araçları yatay tablette yuva kutusuna dokunmamalı (ya da yuva kullanıcıca kapatılır; sistem ayarına ajan dokunmaz). K32 "Yanda aç" turu artık engelli değil.
 
 ### KT-14 — Tablet ana ekran ve ray erişilebilirlik ağacında yoktu (d822538f); birleşik derlemede ilk dökümde dolu, durağanken yine boşalabiliyor
 - Yüzey: tablet dikey+yatay. Önem: **orta** (TalkBack ile doğrulanmadı).
 - Gerçek: uiautomator dökümünde ana ekran + ray 3,4 KB boş `View` zinciri (`ray`, arama, kartlar yok); levha/editör/ayarlar dolu; telefon düzeninde (`wm size 1080x2400`) dolu. main'de PW-A KW-1 (b2d9a878, Navigator `BlockSemantics` sınırı) bunu düzeltmiş: birleşik derlemede soğuk açılışta ana ekran 49 etiket ("Notlar | Sekme 1 / 7"), ama notlardan dönüşten/boşta bir süre sonra döküm yine boş çıkabiliyor (UiAutomation yalnız ~1 sn bağlanıyor; boşta Flutter tam ağacı göndermiyor olabilir → TalkBack sürekli bağlı olduğundan farklı). "Düzenleme modu" üst bandı da (Geri al · Bitti) dökümde yoktu (görüntüde var).
 - Öneri: gerçek TalkBack ile tablet ana ekranı + düzenleme modu bandı; `web_semantics_home_test` benzeri 640x1024 ve 1024x640 dp semantik testi. Ölçüm aracı bu yüzden tablet ana ekranında piksel tablosuna (`GEO_1600`) ve ilk döküme dayanıyor (tool/perf/README).
 - Görüntü: yok (döküm).
+- **Durum (P78, 2026-11-19): bekçi eklendi.** `test/web_semantics_home_test.dart` "KT-14": 640x1024 ve 1024x640 dp'de ray + ana ekran kartı semantik ağaçta (yeşil; KW-1 sınırı tablette de tutuyor). Boşta döküm boşalması UiAutomation kısa bağlanma davranışı olabilir; gerçek TalkBack ile tablet turu `KONTROL_LISTEM.md`'de açık.
 
 ### KT-15 — Yatay bölünmüşte yüzen kalem düğmesi "Ara başlık" eylemini örtüyor
 - Yüzey: tablet yatay, editör sağ bölmesi. Ekran: liste notu → "Yeni madde / T Ara başlık" satırı. Önem: **orta** (eylem yarı örtülü: "Ara ba…").
@@ -159,6 +161,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Dosya: `lib/features/notes/presentation/editor/note_editor_screen.dart` (yüzen kalem düğmesi konumu; `quickRowPen`), "Yeni madde/Ara başlık" satırı.
 - Öneri: düğmenin sağ boşluğunu (satır `padding.end`) düğme genişliği + 8 dp yap ya da düğmeyi satır yüksekliklerinin dışına al.
 - Görüntü: `kt-yatay-03-bolunmus-editor.png`.
+- **Durum (P78, 2026-11-19): düzeltildi.** Düğme `StylusToggleOverlay` (yüzen "kalem yazar/dokunur", varsayılan sağ kenar %55). Sağ kenardayken `StylusGutter` 52 dp pay verir; liste notunun "Yeni madde / Ara başlık" ve "İşaretliler · Sil" satırları bu kadar içeri çekilir (`items_editor.dart`). Bekçi `test/editor_pen_tablet_test.dart` "KT-15" (düzeltmesiz kırmızı: 692 > 656). Düğme sola taşınırsa pay yok (bilerek). **Tablette doğrulandı (dikey, profil P78):** "Ara başlık" sağ ucu kenardan 60 dp (yatayda düzeltmeden önce 8 dp); yatay doğrulama yapılamadı (profil manifesti `portrait`, TP-F). Ayrıca: bu düğme uiautomator dökümünde görünmedi (Semantics etiketli olmasına karşın) — KT-14 ile birlikte TalkBack'te bakılacak.
 
 ### KT-16 — "Kalem kipi · Yalnız kalemle yaz: açık [Ayarla]" bildirimi kalem tepsisini örtüyor
 - Yüzey: tablet dikey (+ yatayda liste bölmesinin altı). Ekran: not → "Kalemle yaz". Önem: **orta** (tepsi ~4 sn tıklanamaz).
@@ -166,6 +169,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Dosya: `note_editor_screen.dart:2520` (`penModePenOnlyOn`), toast yeri; ilgili KT-1/P72 toast kuyruğu.
 - Öneri: toast'ı kalem tepsisinin ÜSTÜNE (tepsi yüksekliği kadar `bottom` boşluğu) koy; kalem kipinde bu bilgi yerine tepsideki simge/ipucu.
 - Görüntü: `kt-dikey-11-kalem-kipi-toast.png`, `kt-yatay-06-kalem-tepsisi.png`.
+- **Durum (P78, 2026-11-19): düzeltildi.** Kök neden: tepsi zaten `SnackBarObstacle` ile sarılıydı (P49 (d)) ama ipucu kipi açan AYNI karede gösteriliyordu; bildirim engel yüksekliğini kurulurken okur, tepsi henüz dizilmediği için 0 okunuyordu. İpucu (ve iki parmak ipucu) kare sonuna alındı (`_penModeOpened`). Bekçi "KT-16" (640x1024: düzeltmesiz bildirim altı 998 > tepsi üstü 964; düzeltmeyle 938). **Tablette doğrulandı (dikey):** bildirim tepsinin üstünde.
 
 ### KT-17 — Liste bölmesinde "+" ve "↑" düğmeleri kart içeriğini örtüyor
 - Yüzey: tablet yatay, bölünmüş (not açık). Önem: düşük. Gerçek: sol bölmenin sağ altındaki yüzen "+" ve (kaydırınca) "↑" kartın tarih/etiket satırını örtüyor ("18 Kas" görünmüyor); dar liste bölmesinde (~330 dp) orantısız büyük.
@@ -177,6 +181,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Dosya: `note_editor_screen.dart:5480-5500` (`HardKeyboard.softWanted`/`toggleSoft`).
 - Öneri: BACK klavyeyi kapatınca `softWanted=false`; odak yokken ⌨ önce odaklasın.
 - Görüntü: yok.
+- **Durum (P78, 2026-11-19): düzeltildi.** `HardKeyboard` klavye payını izler (`didChangeMetrics`): istenmiş sanal klavye açıkken pay sıfıra inerse (GERİ ile kapandı) `softWanted=false`; ⌨ odak yokken önce gövdeye (liste notunda başlığa) odaklanır. Bekçiler `test/hard_keyboard_sleep_test.dart` "KT-18", `editor_pen_tablet_test.dart` "KT-18" (düzeltmesiz odak null). Cihazda (fiziksel klavyeyle) doğrulanmadı.
 
 ### KT-19 — Ana ekranın tepesinde iki bant + şerit + çipler ilk notu ~%25 aşağı itiyor
 - Yüzey: tablet dikey. Önem: düşük. Gerçek: "Yeni sürüm var" bandı (eski sürümde) + "Notların yedeklenmiyor" bandı + takvim şeridi + klasör çipleri; ilk kart y≈650 px'te (2560'ta). Misafir + eski sürümde her açılışta bu yığın var.
@@ -200,6 +205,11 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 ### KT-23 — Takvim ay hücrelerinde olay yazısı çok küçük (dikey tablet, olası)
 - Yüzey: tablet dikey, Takvim ay. Önem: düşük (olası; yalnız "Arife", "29 Ekim Bayramı" etiketleri incelendi). Gerçek: hücre ~60x120 dp ama olay çubuğu yazısı ~9–10 sp; hücrenin %90'ı boş. PW-E KW-9 (geniş ay hücresinde gün 13 / şerit 11 pt) bunu ele almış olabilir — birleşik derlemede dikey tabletle yeniden bak.
 - Görüntü: `kt-dikey-06-takvim-ay.png`.
+- **Durum (P78, 2026-11-19): düzeltildi.** KW-9 geniş hücre kuralı yalnız genişliğe bakıyordu (≥ 140 dp); dikey tablet hücresi ~81x149 dp. `monthCellRoomy`: ≥ 140 dp ya da ≥ 72x100 dp → gün 13, şerit 11 pt (telefon ~51 dp ve yatay telefonun kısa hücresi aynen). Bekçi `test/calendar_month_scale_test.dart` "KT-23". **Tablette doğrulandı (dikey):** "29 Ekim Bayramı" iki satır, büyük yazı.
+
+### KT-25 — Yüzen kalem düğmesinin erişilebilirlik kutusu tüm ekran (P78'de görüldü)
+- Yüzey: tablet, editör. Önem: düşük (TalkBack ile doğrulanmadı). Gerçek: uiautomator dökümünde "Kalem yazar" düğümü `[0,0][1600,2520]` (tüm ekran); yataydaki dökümde hiç yoktu. `StylusToggleOverlay` `Positioned.fill` + `LayoutBuilder` + iç `Stack` içinde; Semantics kutusu düğmeye değil örtüye oturuyor olabilir.
+- Öneri: düğmenin `Semantics`'ini `AnimatedPositioned` çocuğuna sınırla (ör. `Semantics(container: true)`), 640x1024 semantik testinde düğüm boyu 44 dp.
 
 ### KT-24 — ⚡ "Hızlı ekle" ilk dokunuşta mikrofon izni istiyor (açıklamasız)
 - Yüzey: tablet, ray ⚡. Önem: düşük. Gerçek: "Hızlı ekle" düğmesine ilk dokunuşta sistem "mikrofona erişme izni verilsin mi?" penceresi (REDDET verildi); izin istemeden önce neden istendiği söylenmiyor; mikrofon yalnız kullanıcı mikrofona basınca istenmeli (görülen: tek dokunuş → hemen izin penceresi).

@@ -363,17 +363,18 @@ class _MonthCell extends StatelessWidget {
         ? scheme.error
         : scheme.onSurface;
     final h = holiday;
-    final chips = <Widget Function(int lines, double height, double width)>[
+    final chips =
+        <Widget Function(int lines, double height, double width, double font)>[
       if (h != null)
-        (lines, height, width) => HolidayChip(
+        (lines, height, width, font) => HolidayChip(
           holiday: h,
           height: height,
           lines: lines,
           dim: !inMonth,
-          fontSize: monthChipFontSize(width),
+          fontSize: font,
         ),
       for (final e in entries)
-        (lines, height, width) => _draggableChip(
+        (lines, height, width, font) => _draggableChip(
           context,
           e,
           _MonthChip(
@@ -381,7 +382,7 @@ class _MonthCell extends StatelessWidget {
             height: height,
             lines: lines,
             dim: !inMonth,
-            fontSize: monthChipFontSize(width),
+            fontSize: font,
           ),
           width,
         ),
@@ -409,8 +410,9 @@ class _MonthCell extends StatelessWidget {
                 // şeritler İKİ satır, yoksa tek satır; sığmayan "+n".
                 //
                 // KW-9 (web keşfi 2026-11-18): GENİŞ hücrede (≥ 140 dp,
-                // masaüstü) yazı büyür; dar hücre kuralı aynen.
-                final wide = c.maxWidth >= kMonthWideCell;
+                // masaüstü) yazı büyür; dar hücre kuralı aynen. P78 KT-23:
+                // dikey tabletin UZUN hücresi (≥ 72 x 100 dp) de geniş sayılır.
+                final wide = monthCellRoomy(c.maxWidth, c.maxHeight);
                 final avail = c.maxHeight - (wide ? 28 : 26);
                 final oneLine = wide
                     ? kMonthChipOneLineWide
@@ -454,7 +456,12 @@ class _MonthCell extends StatelessWidget {
                       ),
                     ),
                     for (final chip in chips.take(shown))
-                      chip(twoLines ? 2 : 1, chipH, c.maxWidth),
+                      chip(
+                        twoLines ? 2 : 1,
+                        chipH,
+                        c.maxWidth,
+                        wide ? 11 : 9.5,
+                      ),
                     if (!fits && chips.length > shown)
                       SizedBox(
                         height: oneLine,
@@ -488,9 +495,20 @@ const kMonthWideCell = 140.0;
 const kMonthChipOneLineWide = 16.0;
 const kMonthChipTwoLineWide = 29.0;
 
-/// Hücre genişliğine göre şerit yazısı (KW-9).
-double monthChipFontSize(double cellWidth) =>
-    cellWidth >= kMonthWideCell ? 11 : 9.5;
+/// Uzun hücre (P78 KT-23, dikey tablet ~80 x 120 dp): bu ölçülerden
+/// itibaren de geniş hücre yazısı. Telefon (≈ 51 dp genişlik) ve yatay
+/// telefon (kısa hücre) etkilenmez.
+const kMonthTallCellWidth = 72.0;
+const kMonthTallCellHeight = 100.0;
+
+/// Hücre "geniş" yazıyı taşır mı (KW-9 + KT-23).
+bool monthCellRoomy(double width, double height) =>
+    width >= kMonthWideCell ||
+    (width >= kMonthTallCellWidth && height >= kMonthTallCellHeight);
+
+/// Hücre ölçüsüne göre şerit yazısı (KW-9, KT-23).
+double monthChipFontSize(double cellWidth, [double cellHeight = 0]) =>
+    monthCellRoomy(cellWidth, cellHeight) ? 11 : 9.5;
 
 /// Ay dışı günün şerit tonu (KW-4): saydamlık (%50 → 2,3:1) yerine
 /// sönük zemin + `onSurfaceVariant` yazı (M3'te ≥ 4,5:1).

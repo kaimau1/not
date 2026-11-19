@@ -36,4 +36,22 @@ void main() {
     HardKeyboard.report(false);
     expect(HardKeyboard.present.value, isFalse);
   });
+
+  // P78 KT-18 (tablet turu 2026-11-18): GERİ sanal klavyeyi kapatınca ⌨
+  // "açık" kalıyordu; sonraki ⌨ onu kapatıyordu ("iki kez bastım").
+  testWidgets('KT-18: sanal klavye kapanınca ⌨ isteği düşer', (tester) async {
+    addTearDown(tester.view.resetViewInsets);
+    HardKeyboard.report(true);
+    HardKeyboard.toggleSoft();
+    expect(HardKeyboard.softWanted.value, isTrue);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 600);
+    await tester.pump();
+    expect(HardKeyboard.softWanted.value, isTrue);
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await tester.pump();
+    expect(HardKeyboard.softWanted.value, isFalse);
+    // İstek yokken pay değişimi bir şey yapmaz; yeni ⌨ yine AÇAR.
+    HardKeyboard.toggleSoft();
+    expect(HardKeyboard.softWanted.value, isTrue);
+  });
 }

@@ -33,4 +33,10 @@ void main() {
     expect(monthChipFontSize(kMonthWideCell), 11);
     expect(monthChipFontSize(245), 11);
   });
+
+  test('KT-23: dikey tabletin uzun hücresi geniş yazı alır', () {
+    expect(monthChipFontSize(80, 120), 11); // dikey tablet
+    expect(monthChipFontSize(51, 120), 9.5); // telefon dikey
+    expect(monthChipFontSize(100, 50), 9.5); // telefon yatay
+  });
 }

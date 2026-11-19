@@ -2505,6 +2505,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Hızlı satırdaki kalem: AÇ / KAPA (kullanıcı isteği 2026-11-08: "kalem
   /// butonuna tekrar basınca kalem modu kapansın").
+  /// ⌨ (fiziksel klavye takılıyken): odakta alan yoksa önce gövdeye (liste
+  /// notunda başlığa) odaklanır — yoksa klavye gelmiyor, yalnız simge
+  /// değişiyordu (P78 KT-18).
+  void _toggleSoftKeyboard() {
+    HardKeyboard.toggleSoft();
+    if (!HardKeyboard.softWanted.value) return;
+    final focused = FocusManager.instance.primaryFocus?.context
+        ?.findAncestorStateOfType<EditableTextState>();
+    if (focused != null) return;
+    (_bodyFocus.context != null ? _bodyFocus : _titleFocus).requestFocus();
+  }
+
   void _togglePen() {
     _update(() => _penMode = !_penMode);
     if (_penMode) _penModeOpened();
@@ -2534,29 +2546,37 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // yine söylenir (2026-11-09 isteği: kip açılınca durum söylensin).
     if (InkToolMemory.lastPenOnlyHint == penOnly) return;
     InkToolMemory.lastPenOnlyHint = penOnly;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showMessage(
-        penOnly ? l10n.penModePenOnlyOn : l10n.penModePenOnlyOff,
-        duration: const Duration(seconds: 3),
-        action: ink == null
-            ? null
-            : SnackBarAction(
-                label: l10n.penModeSettings,
-                onPressed: () => showInkSettings(context, ink),
-              ),
-      );
-    // TELEFONDA ELLE YAZMA (F63.5, KALEM K5): parmak çiziyorsa sayfayı
-    // kaydırmanın yolu iki parmak — cihazda bir kez söylenir.
-    if (page && !penOnly) {
-      TipOnce.show(
-        context,
-        ref.read(sharedPreferencesProvider),
-        TipOnce.penTwoFinger,
-        l10n.inkTwoFingerHint,
-        sessionLimit: false,
-      );
-    }
+    // KARE SONRA (P78 KT-16, tablet turu 2026-11-18: bildirim kalem
+    // tepsisini örtüyordu): bildirim engel yüksekliğini KURULURKEN okur
+    // (bkz. snackBarBottomObstacle); kipi açan karede tepsi henüz
+    // dizilmemişti, engel 0 okunuyordu.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showMessage(
+          penOnly ? l10n.penModePenOnlyOn : l10n.penModePenOnlyOff,
+          duration: const Duration(seconds: 3),
+          action: ink == null
+              ? null
+              : SnackBarAction(
+                  label: l10n.penModeSettings,
+                  onPressed: () => showInkSettings(context, ink),
+                ),
+        );
+      // TELEFONDA ELLE YAZMA (F63.5, KALEM K5): parmak çiziyorsa sayfayı
+      // kaydırmanın yolu iki parmak — cihazda bir kez söylenir (bildirimden
+      // SONRA, onu silmesin).
+      if (page && !penOnly) {
+        TipOnce.show(
+          context,
+          ref.read(sharedPreferencesProvider),
+          TipOnce.penTwoFinger,
+          l10n.inkTwoFingerHint,
+          sessionLimit: false,
+        );
+      }
+    });
   }
 
   /// Bu oturumda sayfaya çizilen çizgi sayısı (kalem ipuçlarının sırası).
@@ -5584,7 +5604,7 @@ child: FormatBar(
                           isSelected: soft,
                           icon: const Icon(Icons.keyboard_outlined),
                           selectedIcon: const Icon(Icons.keyboard_hide_outlined),
-                          onPressed: HardKeyboard.toggleSoft,
+                          onPressed: _toggleSoftKeyboard,
                         ),
                       ),
               ),
