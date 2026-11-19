@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 19 Kasım 2026 {#2026-11-19}
+- **Yeni not panelinde Metin notu · Liste · Sıralı liste artık en üstte.**
+- **Alt çubuğun ⋯ menüsünde bütün düğmeler:** çubuğa sığmayanların yanında gizli olanlar da (geri al, hatırlatıcı, fotoğraf, renk, paylaş…) burada. Menünün sonundaki **Düzenle** ile hangisinin çubukta, hangisinin menüde duracağını 📌 ile seçer, basılı tutup sürükleyerek sıralarsın.
+- **Not ⋮ menüsü yerinde düzenlenir:** ayrı "Menüyü düzenle" ekranı kalktı. Bir işleme basılı tut (ya da ⚙ → Menüyü düzenle): karoları sürükleyerek sırala, ⊖ ile gizle, ⊕ ile geri getir, ☆ ile hızlı satıra al.
+- **Yazarken üst çubuk ferahladı:** Notta ara düğmesi klavye açıkken gizlenir (alttaki ⋯'de var); ileri al (yinele) yalnız geri alınmış bir şey varken görünür.
 - **✨ yapay zekâ menüsü üç bölüm:** Yaz (sesli not, düzelt, geliştir, çevir), Sor (notlarına ya da PDF'ine soru sor), Dönüştür (özet, eklerden metin, döküm ve dinleme).
 - **Kaydırma jestlerini sen seç:** ana ekranda listeyi tepeden aşağı çekince ve Tümü'de sağa kaydırınca ne açılacağını Ayarlar → Notlar'dan seçebilirsin: klasörler, takvim, belirli bir not, belirli bir klasör ya da hiçbiri.
 - **Süreli notlar takvimde:** belli bir süre sonra arşive gidecek notlar, arşivlenecekleri günde takvimde ve ana ekrandaki takvim şeridinde görünür.

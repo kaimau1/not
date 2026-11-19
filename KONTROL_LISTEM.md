@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Menü düzenleme + alt çubuk ⋯ + yeni not paneli (19 Kasım öğle, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) ana ekran + → Metin notu/Liste/Sıralı liste panelin EN ÜSTÜNDE; (2) notta alttaki ⋯ → gizli düğmeler de listede (Paylaş, Renk…); en alttaki Düzenle → 📌 ile çubuğa al/menüye al, basılı tutup sürükle → çubuk anında değişir, Bitti; (3) not ⋮ → bir karoya basılı tut → düzenleme kipi (⊖/⊕/☆, sürükle-bırak), Bitti; (4) yazarken üst çubukta Ara yok, ileri al yalnız geri aldıktan sonra; klavye açılıp kapanırken takılma yok.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **✨ levhası 3 bölüm + kılavuz araması (P72, 18 Kasım, yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) notta ✨ → başlıklar sırayla Yaz (sesli not, Düzelt, Geliştir, Çevir) · Sor (Sohbet, PDF varsa "Sor") · Dönüştür (Özet, ekler); açılış/kapanış takılmıyor; (2) Ayarlar → Kılavuz'da arama kutusuna hızlı yaz — takılma yok.
   Yanlışsa: madde numarasını yaz.

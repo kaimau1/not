@@ -8897,4 +8897,25 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarExpiryRemoved => 'Arşivleme süresi kaldırıldı';
+
+  @override
+  String get barMoreEdit => 'Düzenle';
+
+  @override
+  String get barMoreEditHint =>
+      '📌 olanlar çubukta durur (telefonda ilk 3\'ü sığar), diğerleri bu menüde. Basılı tutup sürükleyerek sırala.';
+
+  @override
+  String get barMoreToBar => 'Çubuğa al';
+
+  @override
+  String get barMoreToMenu => 'Menüye al';
+
+  @override
+  String menuEditInlineHint(int count) {
+    return 'Basılı tutup sürükle: sırala · ⊖ gizle · ☆ hızlı satır (en çok $count)';
+  }
+
+  @override
+  String get menuHiddenGroup => 'Gizlenenler';
 }

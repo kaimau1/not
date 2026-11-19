@@ -4,7 +4,6 @@ import '../../app/theme/app_tokens.dart';
 import '../l10n_ext.dart';
 import '../menu_layout.dart';
 import 'app_sheet.dart';
-import 'customize_board.dart';
 import 'expand_reveal.dart';
 import 'sheet_header.dart';
 import 'sheet_tile.dart';
@@ -215,43 +214,31 @@ class ActionMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final id = menuId;
-    if (id == null) return _body(context, quick, sections);
-    return ValueListenableBuilder<Map<String, MenuLayout>>(
-      valueListenable: MenuLayouts.layouts,
-      builder: (context, _, _) {
-        final (q, secs) = _arranged(
-          MenuLayouts.of(id),
-          context.l10n.menuSectionOther,
-        );
-        return _body(context, q, secs);
-      },
-    );
+    if (menuId == null) return _body(context, quick, sections);
+    return _EditableMenu(menu: this);
   }
-
-  Future<void> _edit(BuildContext context) => showAppSheet<void>(
-    context: context,
-    // Düzenleyicide SheetHeader (✕) var → tutamak yok (K-D7).
-    showDragHandle: false,
-    isScrollControlled: true,
-    builder: (_) => _MenuLayoutEditor(menu: this),
-  );
 
   Widget _body(
     BuildContext context,
     List<MenuAction> quick,
-    List<MenuSection> sections,
-  ) {
+    List<MenuSection> sections, {
+    VoidCallback? onEdit,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     final heading = title?.trim() ?? '';
-    final editButton = _settingsButton(context, scheme, compact: false);
+    final editButton = _settingsButton(
+      context,
+      scheme,
+      compact: false,
+      onEdit: onEdit,
+    );
     final visibleSections = [
       for (final section in sections)
         if (section.actions.isNotEmpty) section,
     ];
     final inlineEdit = heading.isNotEmpty
         ? null
-        : _settingsButton(context, scheme, compact: true);
+        : _settingsButton(context, scheme, compact: true, onEdit: onEdit);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, AppSpace.s),
       child: Column(
@@ -272,7 +259,11 @@ class ActionMenu extends StatelessWidget {
               children: [
                 for (final a in quick)
                   Expanded(
-                    child: _QuickButton(action: a, scheme: scheme),
+                    child: _QuickButton(
+                      action: a,
+                      scheme: scheme,
+                      onLongPress: onEdit,
+                    ),
                   ),
               ],
             ),
@@ -284,7 +275,11 @@ class ActionMenu extends StatelessWidget {
                 title: section.title,
                 initiallyOpen: i == 0,
                 trailing: i == 0 ? inlineEdit : null,
-                child: _TileGrid(actions: section.actions, scheme: scheme),
+                child: _TileGrid(
+                  actions: section.actions,
+                  tile: (a) =>
+                      _GridTile(action: a, scheme: scheme, onLongPress: onEdit),
+                ),
               )
           else
           for (final (i, section) in visibleSections.indexed) ...[
@@ -305,7 +300,11 @@ class ActionMenu extends StatelessWidget {
                     )
                   : SectionLabel(section.title),
             ),
-            _TileGrid(actions: section.actions, scheme: scheme),
+            _TileGrid(
+              actions: section.actions,
+              tile: (a) =>
+                  _GridTile(action: a, scheme: scheme, onLongPress: onEdit),
+            ),
           ],
           // Bölüm yoksa ⚙ en altta, küçük.
           if (visibleSections.isEmpty && inlineEdit != null)
@@ -334,6 +333,7 @@ class ActionMenu extends StatelessWidget {
     BuildContext context,
     ColorScheme scheme, {
     required bool compact,
+    VoidCallback? onEdit,
   }) {
     if (menuId == null && footer.isEmpty) return null;
     final l10n = context.l10n;
@@ -349,7 +349,7 @@ class ActionMenu extends StatelessWidget {
         visualDensity: compact ? VisualDensity.compact : null,
         padding: compact ? EdgeInsets.zero : null,
         icon: icon,
-        onPressed: () => _edit(context),
+        onPressed: onEdit,
       );
     }
     const editId = 'menu.editLayout';
@@ -360,13 +360,13 @@ class ActionMenu extends StatelessWidget {
       padding: compact ? EdgeInsets.zero : const EdgeInsets.all(8),
       onSelected: (id) {
         if (id == editId) {
-          _edit(context);
+          onEdit?.call();
         } else {
           Navigator.pop(context, id);
         }
       },
       itemBuilder: (_) => [
-        if (menuId != null)
+        if (menuId != null && onEdit != null)
           PopupMenuItem(
             key: const ValueKey('menu-edit-layout'),
             value: editId,
@@ -406,10 +406,17 @@ class _PopupRow extends StatelessWidget {
 
 /// Hızlı satırın düğmesi: yuvarlak simge, altında en çok iki satır ad.
 class _QuickButton extends StatelessWidget {
-  const _QuickButton({required this.action, required this.scheme});
+  const _QuickButton({
+    required this.action,
+    required this.scheme,
+    this.onLongPress,
+  });
 
   final MenuAction action;
   final ColorScheme scheme;
+
+  /// Basılı tutmak menüyü yerinde düzenleme kipine alır (2026-11-19).
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -418,6 +425,7 @@ class _QuickButton extends StatelessWidget {
       key: ValueKey('menu-quick-${action.id}'),
       borderRadius: BorderRadius.circular(14),
       onTap: () => Navigator.pop(context, action.id),
+      onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
         child: Column(
@@ -566,10 +574,10 @@ class _FoldSectionState extends State<_FoldSection> {
 /// simge olsun, 3 sütun olsun, daha düzgün sığsın"). Eskiden iki sütunlu,
 /// yazısı yanda alçak satırlardı; levha yine ekranı dolduruyordu.
 class _TileGrid extends StatelessWidget {
-  const _TileGrid({required this.actions, required this.scheme});
+  const _TileGrid({required this.actions, required this.tile});
 
   final List<MenuAction> actions;
-  final ColorScheme scheme;
+  final Widget Function(MenuAction) tile;
 
   @override
   Widget build(BuildContext context) {
@@ -584,10 +592,7 @@ class _TileGrid extends StatelessWidget {
           runSpacing: spacing,
           children: [
             for (final a in actions)
-              SizedBox(
-                width: cell,
-                child: _GridTile(action: a, scheme: scheme),
-              ),
+              SizedBox(width: cell, child: tile(a)),
           ],
         );
       },
@@ -598,10 +603,21 @@ class _TileGrid extends StatelessWidget {
 /// Grup ızgarasının hücresi: hızlı satırın düğmesinden küçük ve NÖTR renkli
 /// (sık kullanılan dört işlem renkleriyle öne çıksın).
 class _GridTile extends StatelessWidget {
-  const _GridTile({required this.action, required this.scheme});
+  const _GridTile({
+    required this.action,
+    required this.scheme,
+    this.onLongPress,
+    this.onTap,
+  });
 
   final MenuAction action;
   final ColorScheme scheme;
+
+  /// Basılı tutmak menüyü yerinde düzenleme kipine alır (2026-11-19).
+  final VoidCallback? onLongPress;
+
+  /// Verilmezse dokunmak menüyü işlemin kimliğiyle kapatır.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -609,7 +625,8 @@ class _GridTile extends StatelessWidget {
     return InkWell(
       key: ValueKey('menu-tile-${action.id}'),
       borderRadius: BorderRadius.circular(14),
-      onTap: () => Navigator.pop(context, action.id),
+      onTap: onTap ?? () => Navigator.pop(context, action.id),
+      onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(2, 6, 2, 4),
         child: Column(
@@ -663,170 +680,367 @@ class _GridTile extends StatelessWidget {
   }
 }
 
-/// **MENÜYÜ DÜZENLE** (P63 PB2: düzen panosu kılığı): üstteki pano menüde
-/// görünenler (dokun = gizle/göster, şeritte sürükle = sırala), alttaki
-/// hızlı satır (en çok [MenuLayout.maxQuick]).
-/// Değişiklik ANINDA kaydedilir (P50); "Bitti" yalnız kapatır, "Varsayılan"
-/// kaydı siler.
-class _MenuLayoutEditor extends StatefulWidget {
-  const _MenuLayoutEditor({required this.menu});
+/// **MENÜYÜ YERİNDE DÜZENLE** (kullanıcı isteği 2026-11-19: "menüyü düzenle
+/// alanları anlaşılır değil; direkt menü üzerinde düzenlenmeli — basılı
+/// tutarak yer değiştirme, gizleme, gösterme direkt menü üzerinde").
+///
+/// Eski ayrı "Menüyü düzenle" levhası (iki çip panosu) kalktı: ⚙ → "Menüyü
+/// düzenle" ya da herhangi bir işleme BASILI TUTMAK aynı menüyü düzenleme
+/// kipine alır. Kipte: karoyu basılı tutup başka karonun üstüne bırak =
+/// sırala (hızlı satıra bırakmak satıra alır, en çok [MenuLayout.maxQuick]);
+/// ⊖ gizler (alttaki "Gizlenenler"e iner), ⊕ geri getirir; ☆ hızlı satıra
+/// alır/çıkarır. Değişiklik ANINDA kaydedilir (P50); "Bitti" kipten çıkar,
+/// "Varsayılan" kaydı siler.
+class _EditableMenu extends StatefulWidget {
+  const _EditableMenu({required this.menu});
 
   final ActionMenu menu;
 
   @override
-  State<_MenuLayoutEditor> createState() => _MenuLayoutEditorState();
+  State<_EditableMenu> createState() => _EditableMenuState();
 }
 
-class _MenuLayoutEditorState extends State<_MenuLayoutEditor> {
-  late final MenuLayout _start = MenuLayouts.of(widget.menu.menuId!);
-  late final Map<String, MenuAction> _all = {
-    for (final a in widget.menu.quick) a.id: a,
-    for (final s in widget.menu.sections)
+class _EditableMenuState extends State<_EditableMenu> {
+  bool _editing = false;
+
+  ActionMenu get _menu => widget.menu;
+  String get _id => _menu.menuId!;
+
+  void _startEdit() {
+    if (_editing) return;
+    setState(() => _editing = true);
+  }
+
+  Map<String, MenuAction> get _all => {
+    for (final a in _menu.quick) a.id: a,
+    for (final s in _menu.sections)
       for (final a in s.actions) a.id: a,
   };
-  late final Set<String> _hidden = {..._start.hidden};
-  late final List<String> _quick = [
-    ...?_start.quick?.where(_all.containsKey),
-    if (_start.quick == null) for (final a in widget.menu.quick) a.id,
-  ];
-  late final List<String> _order = _start.sorted(
-    [
-      for (final s in widget.menu.sections)
-        for (final a in s.actions) a.id,
-      for (final a in widget.menu.quick)
-        if (!widget.menu.sections.any((s) => s.actions.any((x) => x.id == a.id)))
-          a.id,
-    ],
-    (id) => id,
-  );
 
-  /// Her dokunuşta: yerel durum + kayıt (kaydet adımı yok).
-  void _change(VoidCallback edit) {
-    setState(edit);
-    MenuLayouts.set(
-      widget.menu.menuId!,
-      MenuLayout(hidden: _hidden, quick: _quick, order: _order),
+  /// Varsayılan sıradaki bütün kimlikler (gruplar, sonra yalnız hızlı
+  /// satırda olanlar) — eski düzenleyiciyle aynı kayıt biçimi.
+  List<String> get _defaultOrder => [
+    for (final s in _menu.sections)
+      for (final a in s.actions) a.id,
+    for (final a in _menu.quick)
+      if (!_menu.sections.any((s) => s.actions.any((x) => x.id == a.id))) a.id,
+  ];
+
+  /// Düzenin çözülmüş hâli: (gizliler, hızlı satır, sıra).
+  (Set<String>, List<String>, List<String>) _state() {
+    final layout = MenuLayouts.of(_id);
+    final all = _all;
+    final hidden = {...layout.hidden};
+    final quick = [
+      for (final id in layout.quick ?? [for (final a in _menu.quick) a.id])
+        if (all.containsKey(id) && !hidden.contains(id)) id,
+    ].take(MenuLayout.maxQuick).toList();
+    final order = layout.sorted(_defaultOrder, (id) => id);
+    return (hidden, quick, order);
+  }
+
+  void _save(Set<String> hidden, List<String> quick, List<String> order) =>
+      MenuLayouts.set(
+        _id,
+        MenuLayout(hidden: hidden, quick: quick, order: order),
+      );
+
+  void _toggleHidden(String id) {
+    final (hidden, quick, order) = _state();
+    if (!hidden.remove(id)) {
+      hidden.add(id);
+      quick.remove(id);
+    }
+    _save(hidden, quick, order);
+  }
+
+  void _toggleQuick(String id) {
+    final (hidden, quick, order) = _state();
+    if (!quick.remove(id)) {
+      if (quick.length >= MenuLayout.maxQuick) return;
+      quick.add(id);
+      hidden.remove(id);
+    }
+    _save(hidden, quick, order);
+  }
+
+  /// [dragged] karosu [target] karosunun üstüne bırakıldı.
+  void _move(String dragged, String target) {
+    if (dragged == target) return;
+    final (hidden, quick, order) = _state();
+    final tq = quick.indexOf(target);
+    if (tq >= 0) {
+      // Hızlı satıra bırakıldı: satırda hedefin yerine girer.
+      final dq = quick.indexOf(dragged);
+      if (dq >= 0) quick.removeAt(dq);
+      var at = quick.indexOf(target);
+      if (dq >= 0 && dq < tq) at += 1;
+      quick.insert(at, dragged);
+      hidden.remove(dragged);
+      while (quick.length > MenuLayout.maxQuick) {
+        quick.removeLast();
+      }
+    } else {
+      quick.remove(dragged);
+      // Gizlenenlerin üstüne bırakmak gizler, görünenin üstüne göstermek.
+      if (hidden.contains(target)) {
+        hidden.add(dragged);
+      } else {
+        hidden.remove(dragged);
+      }
+      final from = order.indexOf(dragged);
+      final to = order.indexOf(target);
+      if (from >= 0 && to >= 0) {
+        order.removeAt(from);
+        final at = order.indexOf(target);
+        order.insert(from < to ? at + 1 : at, dragged);
+      }
+    }
+    _save(hidden, quick, order);
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      ValueListenableBuilder<Map<String, MenuLayout>>(
+        valueListenable: MenuLayouts.layouts,
+        builder: (context, _, _) {
+          final (q, secs) = _menu._arranged(
+            MenuLayouts.of(_id),
+            context.l10n.menuSectionOther,
+          );
+          if (!_editing) {
+            return _menu._body(context, q, secs, onEdit: _startEdit);
+          }
+          return _editBody(context, q, secs);
+        },
+      );
+
+  Widget _editBody(
+    BuildContext context,
+    List<MenuAction> quick,
+    List<MenuSection> sections,
+  ) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final heading = _menu.title?.trim() ?? '';
+    final (hiddenIds, quickIds, order) = _state();
+    final all = _all;
+    final hidden = [
+      for (final id in order)
+        if (hiddenIds.contains(id) && all[id] != null) all[id]!,
+    ];
+    final quickFull = quickIds.length >= MenuLayout.maxQuick;
+    Widget tile(MenuAction a, {required bool inQuick}) => _EditTile(
+      action: a,
+      scheme: scheme,
+      hidden: hiddenIds.contains(a.id),
+      inQuick: inQuick,
+      quickFull: quickFull,
+      onToggleHidden: () => _toggleHidden(a.id),
+      onToggleQuick: () => _toggleQuick(a.id),
+      onDrop: (dragged) => _move(dragged, a.id),
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, AppSpace.s),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (heading.isNotEmpty)
+            SheetHeader(title: heading, padding: EdgeInsets.zero),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, AppSpace.s),
+            child: Text(
+              l10n.menuEditInlineHint(MenuLayout.maxQuick),
+              key: const ValueKey('menu-edit-hint'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          if (quick.isNotEmpty)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer.withValues(
+                  alpha: AppAlpha.hairline,
+                ),
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final a in quick)
+                    Expanded(child: tile(a, inQuick: true)),
+                ],
+              ),
+            ),
+          for (final section in sections)
+            if (section.actions.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+                child: SectionLabel(section.title),
+              ),
+              _TileGrid(
+                actions: section.actions,
+                tile: (a) => tile(a, inQuick: false),
+              ),
+            ],
+          if (hidden.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+              child: SectionLabel(l10n.menuHiddenGroup),
+            ),
+            _TileGrid(
+              actions: hidden,
+              tile: (a) => tile(a, inQuick: false),
+            ),
+          ],
+          const SizedBox(height: AppSpace.s),
+          Row(
+            children: [
+              TextButton(
+                key: const ValueKey('menu-edit-reset'),
+                onPressed: () => MenuLayouts.set(_id, const MenuLayout()),
+                child: Text(l10n.menuReset),
+              ),
+              const Spacer(),
+              FilledButton(
+                key: const ValueKey('menu-edit-save'),
+                onPressed: () => setState(() => _editing = false),
+                child: Text(l10n.customizeDone),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
+}
+
+/// Düzenleme kipindeki karo: basılı tutup sürüklenir, başka karo onu kabul
+/// eder; köşelerde ⊖/⊕ (gizle/göster) ve ☆ (hızlı satır).
+class _EditTile extends StatelessWidget {
+  const _EditTile({
+    required this.action,
+    required this.scheme,
+    required this.hidden,
+    required this.inQuick,
+    required this.quickFull,
+    required this.onToggleHidden,
+    required this.onToggleQuick,
+    required this.onDrop,
+  });
+
+  final MenuAction action;
+  final ColorScheme scheme;
+  final bool hidden;
+  final bool inQuick;
+  final bool quickFull;
+  final VoidCallback onToggleHidden;
+  final VoidCallback onToggleQuick;
+  final ValueChanged<String> onDrop;
+
+  Widget _badge({
+    required Key key,
+    required IconData icon,
+    required Color color,
+    required String tooltip,
+    required VoidCallback? onTap,
+  }) => Tooltip(
+    message: tooltip,
+    child: InkResponse(
+      key: key,
+      onTap: onTap,
+      radius: 18,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 20, color: color),
+        ),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final entries = [
-      for (final id in _order)
-        if (_all[id] case final a?) (id: a.id, icon: a.icon, label: a.label),
-    ];
-    final visible = [
-      for (final e in entries)
-        if (!_hidden.contains(e.id)) e.id,
-    ];
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.8,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SheetHeader(title: l10n.menuEdit),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.menuEditHint(MenuLayout.maxQuick),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpace.m),
-                    CustomizeBoard(
-                      entries: entries,
-                      shown: visible,
-                      onToggle: (id, on) => _change(() {
-                        if (on) {
-                          _hidden.remove(id);
-                        } else {
-                          _hidden.add(id);
-                          _quick.remove(id);
-                        }
-                      }),
-                      onReorder: (from, to) => _change(() {
-                        final moved = List.of(visible);
-                        moved.insert(to, moved.removeAt(from));
-                        final it = moved.iterator;
-                        final next = [
-                          for (final id in _order)
-                            if (_hidden.contains(id) || !_all.containsKey(id))
-                              id
-                            else
-                              (it..moveNext()).current,
-                        ];
-                        _order
-                          ..clear()
-                          ..addAll(next);
-                      }),
-                      shownLabel: l10n.customizeShown,
-                      availableLabel: l10n.quickRowEditAvailable,
-                      keyPrefix: 'menu-visible-',
-                    ),
-                    const SizedBox(height: AppSpace.l),
-                    CustomizeBoard(
-                      entries: entries,
-                      shown: _quick,
-                      onToggle: (id, on) => _change(() {
-                        if (!on) {
-                          _quick.remove(id);
-                        } else if (_quick.length < MenuLayout.maxQuick) {
-                          _quick.add(id);
-                          _hidden.remove(id);
-                        }
-                      }),
-                      onReorder: (from, to) =>
-                          _change(() => _quick.insert(to, _quick.removeAt(from))),
-                      shownLabel: l10n.menuQuickRow,
-                      availableLabel: l10n.quickRowEditAvailable,
-                      keyPrefix: 'menu-edit-quick-',
-                    ),
+    final face = Opacity(
+      opacity: hidden ? 0.45 : 1,
+      child: IgnorePointer(
+        child: _GridTile(action: action, scheme: scheme, onTap: () {}),
+      ),
+    );
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (d) => d.data != action.id,
+      onAcceptWithDetails: (d) => onDrop(d.data),
+      builder: (context, candidates, _) => Stack(
+        clipBehavior: Clip.none,
+        children: [
+          LongPressDraggable<String>(
+            key: ValueKey('menu-drag-${action.id}'),
+            data: action.id,
+            feedback: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(blurRadius: 8, color: Colors.black26),
                   ],
                 ),
+                child: Icon(action.icon, color: scheme.onPrimaryContainer),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpace.l,
-                AppSpace.s,
-                AppSpace.l,
-                AppSpace.m,
+            childWhenDragging: Opacity(opacity: 0.3, child: face),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: candidates.isNotEmpty
+                      ? scheme.primary
+                      : Colors.transparent,
+                  width: 2,
+                ),
               ),
-              child: Row(
-                children: [
-                  TextButton(
-                    key: const ValueKey('menu-edit-reset'),
-                    onPressed: () {
-                      MenuLayouts.set(
-                        widget.menu.menuId!,
-                        const MenuLayout(),
-                      );
-                      Navigator.pop(context);
-                    },
-                    child: Text(l10n.menuReset),
-                  ),
-                  const Spacer(),
-                  FilledButton(
-                    key: const ValueKey('menu-edit-save'),
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(l10n.customizeDone),
-                  ),
-                ],
+              child: face,
+            ),
+          ),
+          PositionedDirectional(
+            start: 0,
+            top: 0,
+            child: _badge(
+              key: ValueKey('menu-visible-${action.id}'),
+              icon: hidden
+                  ? Icons.add_circle_rounded
+                  : Icons.remove_circle_rounded,
+              color: hidden ? scheme.primary : scheme.error,
+              tooltip: hidden ? l10n.customizeShown : l10n.menuHiddenGroup,
+              onTap: onToggleHidden,
+            ),
+          ),
+          if (!hidden)
+            PositionedDirectional(
+              end: 0,
+              top: 0,
+              child: _badge(
+                key: ValueKey('menu-edit-quick-${action.id}'),
+                icon: inQuick ? Icons.star_rounded : Icons.star_border_rounded,
+                color: inQuick || !quickFull
+                    ? scheme.primary
+                    : scheme.onSurfaceVariant.withValues(alpha: 0.4),
+                tooltip: l10n.menuQuickRow,
+                onTap: inQuick || !quickFull ? onToggleQuick : null,
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

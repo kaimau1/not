@@ -3207,5 +3207,12 @@
   "homeGestureNone": "Nothing",
   "homeGestureMissing": "The gesture's target wasn't found; choose it again in Settings → Notes",
   "calendarExpiryTag": "Archives",
-  "calendarExpiryRemoved": "Archive time removed"
+  "calendarExpiryRemoved": "Archive time removed",
+  "barMoreEdit": "Edit",
+  "barMoreEditHint": "Pinned (📌) buttons stay on the bar (the first 3 fit on a phone); the rest live in this menu. Long-press and drag to reorder.",
+  "barMoreToBar": "Move to bar",
+  "barMoreToMenu": "Move to menu",
+  "menuEditInlineHint": "Long-press and drag to reorder · ⊖ hide · ☆ quick row (up to {count})",
+  "@menuEditInlineHint": {"placeholders": {"count": {"type": "int"}}},
+  "menuHiddenGroup": "Hidden"
 }

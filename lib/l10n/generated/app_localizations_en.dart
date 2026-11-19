@@ -8910,4 +8910,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarExpiryRemoved => 'Archive time removed';
+
+  @override
+  String get barMoreEdit => 'Edit';
+
+  @override
+  String get barMoreEditHint =>
+      'Pinned (📌) buttons stay on the bar (the first 3 fit on a phone); the rest live in this menu. Long-press and drag to reorder.';
+
+  @override
+  String get barMoreToBar => 'Move to bar';
+
+  @override
+  String get barMoreToMenu => 'Move to menu';
+
+  @override
+  String menuEditInlineHint(int count) {
+    return 'Long-press and drag to reorder · ⊖ hide · ☆ quick row (up to $count)';
+  }
+
+  @override
+  String get menuHiddenGroup => 'Hidden';
 }

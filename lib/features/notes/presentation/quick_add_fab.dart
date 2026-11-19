@@ -505,8 +505,8 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
       child: ConstrainedBox(
         // Büyük yazı ölçeğinde/kısa ekranda panel ekranı aşmasın: kayar.
         constraints: BoxConstraints(maxHeight: widget.fit.maxHeight),
+        // Kayınca da ilk görünen ÜST: birincil satır orada (2026-11-19).
         child: SingleChildScrollView(
-          reverse: true,
           padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -530,24 +530,8 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                         onPressed: widget.onEdit,
                       ),
               ),
-              for (final section in sections) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
-                  // Tek bölüm başlığı (F39.6): renk yalnız simgelerde.
-                  child: SectionLabel(
-                    addGroupTitle(l10n, section.group),
-                    key: ValueKey('quick-section-${section.group.name}'),
-                  ),
-                ),
-                AddTileGrid(
-                  count: section.options.length,
-                  tile: (i, wide) => cell(section.options[i], wide: wide),
-                ),
-                const SizedBox(height: 6),
-              ],
-              if (sections.isNotEmpty && primary.isNotEmpty)
-                const SizedBox(height: 4),
-              // BİRİNCİL: büyük, dolgulu, FAB'ın hemen üstünde.
+              // BİRİNCİL: büyük, dolgulu — PANELİN EN ÜSTÜNDE (kullanıcı
+              // isteği 2026-11-19: "alttaki metin liste maddeyi üste taşı").
               Row(
                 children: [
                   for (var i = 0; i < primary.length; i++) ...[
@@ -566,6 +550,23 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                   ],
                 ],
               ),
+              if (sections.isNotEmpty && primary.isNotEmpty)
+                const SizedBox(height: 4),
+              for (final section in sections) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
+                  // Tek bölüm başlığı (F39.6): renk yalnız simgelerde.
+                  child: SectionLabel(
+                    addGroupTitle(l10n, section.group),
+                    key: ValueKey('quick-section-${section.group.name}'),
+                  ),
+                ),
+                AddTileGrid(
+                  count: section.options.length,
+                  tile: (i, wide) => cell(section.options[i], wide: wide),
+                ),
+                const SizedBox(height: 6),
+              ],
             ],
           ),
         ),

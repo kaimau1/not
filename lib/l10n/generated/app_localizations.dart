@@ -15793,6 +15793,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Arşivleme süresi kaldırıldı'**
   String get calendarExpiryRemoved;
+
+  /// No description provided for @barMoreEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get barMoreEdit;
+
+  /// No description provided for @barMoreEditHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'📌 olanlar çubukta durur (telefonda ilk 3\'ü sığar), diğerleri bu menüde. Basılı tutup sürükleyerek sırala.'**
+  String get barMoreEditHint;
+
+  /// No description provided for @barMoreToBar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çubuğa al'**
+  String get barMoreToBar;
+
+  /// No description provided for @barMoreToMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Menüye al'**
+  String get barMoreToMenu;
+
+  /// No description provided for @menuEditInlineHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basılı tutup sürükle: sırala · ⊖ gizle · ☆ hızlı satır (en çok {count})'**
+  String menuEditInlineHint(int count);
+
+  /// No description provided for @menuHiddenGroup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlenenler'**
+  String get menuHiddenGroup;
 }
 
 class _AppLocalizationsDelegate
