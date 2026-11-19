@@ -3082,6 +3082,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// gitmesin, satırı bölünmesin.
   String _dictationShown = '';
 
+  /// Liste maddesine dikte: "yeni madde" komutuyla KAPANAN satır sayısı.
+  /// Komut metne `\n` olarak girer; her satır sonu bir kez yeni madde açar,
+  /// kapanan satırlar önceki maddelerde donar (bkz. `_writeDictationAtCaret`).
+  int _dictationLine = 0;
+
   /// Diktenin başladığı an (şeritteki süre sayacı).
   DateTime _dictationStart = DateTime.now();
 

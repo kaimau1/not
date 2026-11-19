@@ -87,6 +87,7 @@ extension _EditorVoice on _NoteEditorScreenState {
         : controller.logicalText.length;
     _dictationLength = 0;
     _dictationShown = '';
+    _dictationLine = 0;
 
     // Dinlemenin yaşam döngüsü (sessizlikte bitiş, yerli kapanış, üst
     // sınır) levhayla ORTAK oturumda (bkz. VoiceListenSession).
@@ -138,6 +139,7 @@ extension _EditorVoice on _NoteEditorScreenState {
     _dictationTarget = null;
     _dictationLength = 0;
     _dictationShown = '';
+    _dictationLine = 0;
     await sub.cancel();
     await DeviceSpeech.stop();
     // Son sözler beklemede kalmasın: yazım sırasında kayıt gecikmeliydi
@@ -252,6 +254,34 @@ extension _EditorVoice on _NoteEditorScreenState {
         );
       }
     }
+    // LİSTE MADDESİ tek satırdır: "yeni madde" komutunun `\n`'i alana
+    // YAZILMAZ (madde bölünürdü, her ara sonuçta bir daha — 2026-11-19
+    // bulgusu). Her yeni satır sonu bir kez yeni madde açar; dikte orada
+    // sürer, kapanan satır önceki maddede kalır.
+    if (_dictationIntoItem(target, controller)) {
+      final lines = written.split('\n');
+      if (lines.length <= _dictationLine) return;
+      var t = target;
+      var c = controller;
+      while (lines.length - 1 > _dictationLine) {
+        _replaceDictationRange(t, c, lines[_dictationLine]);
+        final next = _itemsEditorKey.currentState?.openItemAfterController(c);
+        if (next == null) break;
+        t = FormatTarget(
+          controller: next.controller,
+          focusNode: next.focus,
+          commit: next.commit,
+        );
+        c = next.controller;
+        _dictationTarget = t;
+        _dictationAt = 0;
+        _dictationLength = 0;
+        _dictationLine++;
+      }
+      _replaceDictationRange(t, c, lines[_dictationLine]);
+      _revealCaretSoon();
+      return;
+    }
     // Yazma kuralının kendisi saf bir işlevde (sınanabilsin diye). Komutlar
     // her şeyi sildiyse ("hepsini sil") aralık boşaltılır — dictationReplace
     // boş parçada metne dokunmaz.
@@ -282,6 +312,38 @@ extension _EditorVoice on _NoteEditorScreenState {
     // Konuşurken imleç hep görünür kalsın: dikte paneli ve klavye altı örter,
     // uzayan metin ekranın dışına taşıyordu (cihaz bulgusu 2026-11-08).
     _revealCaretSoon();
+  }
+
+  /// Dikte bir LİSTE MADDESİNE mi yazıyor (gövde/başlık değil).
+  bool _dictationIntoItem(FormatTarget? target, WrapTextController c) =>
+      target != null &&
+      !identical(c, _bodyController) &&
+      !identical(c, _titleController) &&
+      _itemsEditorKey.currentState?.itemIdForController(c) != null;
+
+  /// Dikte aralığını [piece] ile değiştirir (tek satır; madde yolu).
+  void _replaceDictationRange(
+    FormatTarget? target,
+    WrapTextController controller,
+    String piece,
+  ) {
+    final logical = controller.logicalText;
+    final start = _dictationAt.clamp(0, logical.length);
+    final result = piece.trim().isEmpty
+        ? (
+            text: logical.replaceRange(
+              start,
+              (start + _dictationLength).clamp(start, logical.length),
+              '',
+            ),
+            caret: start,
+            length: 0,
+          )
+        : dictationReplace(logical, _dictationAt, _dictationLength, piece);
+    _dictationLength = result.length;
+    if (result.text == logical) return;
+    controller.setLogical(result.text, result.caret);
+    _commitDictation(target, controller, result.text);
   }
 
   /// Sesle yakalama: ortak levhayı açar, dönen metni seçilen eyleme göre işler.
