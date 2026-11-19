@@ -29,7 +29,7 @@ class _NoAuth implements AuthRepository {
   dynamic noSuchMethod(Invocation invocation) => null;
 }
 
-Future<void> _pumpHome(
+Future<GoRouter> _pumpHome(
   WidgetTester tester,
   Size size, {
   Widget? home,
@@ -56,6 +56,10 @@ Future<void> _pumpHome(
                     (SplitScope.activeOf(c)
                         ? const SizedBox.shrink()
                         : const DashboardScreen()),
+              ),
+              GoRoute(
+                path: '/note/:id',
+                builder: (c, s) => Text('not:${s.pathParameters['id']}'),
               ),
             ],
           ),
@@ -95,6 +99,7 @@ Future<void> _pumpHome(
   );
   await tester.pump(const Duration(seconds: 1));
   await tester.pump(const Duration(seconds: 1));
+  return router;
 }
 
 /// PW-A (web keşfi 2026-11-18): KW-1 ana ekran + ray erişilebilirlik
@@ -115,6 +120,38 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('Ara')), findsWidgets);
     expect(find.bySemanticsLabel(RegExp('Alışveriş')), findsOneWidget);
     handle.dispose();
+  });
+
+  // P78 KT-14: tablet dikey (640x1024 dp) ve yatay (1024x640 dp) aynı söz.
+  for (final size in const [Size(640, 1024), Size(1024, 640)]) {
+    testWidgets('KT-14: tablet $size ray ve ana ekran ağaçta', (tester) async {
+      final handle = tester.ensureSemantics();
+      await _pumpHome(tester, size);
+      expect(find.bySemanticsLabel(RegExp('^Notlar')), findsWidgets);
+      expect(find.bySemanticsLabel(RegExp('Alışveriş')), findsOneWidget);
+      handle.dispose();
+    });
+  }
+
+  // P78 KT-13: yatay tablette kartın ORTASINA dokunmak notu açar, uygulama
+  // kendi geri/çıkış yolunu (SystemNavigator.pop) çağırmaz. Cihazdaki
+  // "arka plana gitme" kök nedeni uygulama dışıydı: Huawei Navigasyon
+  // yuvası (FloatTasks) kartın üstünde duruyor, ona dokunmak sistem GERİ.
+  testWidgets('KT-13: yatay tablette kart ortası notu açar', (tester) async {
+    final calls = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        calls.add(call.method);
+        return null;
+      },
+    );
+    final router = await _pumpHome(tester, const Size(1024, 640));
+    await tester.tap(find.text('Alışveriş'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(seconds: 1));
+    expect(router.state.uri.path, '/note/a');
+    expect(calls, isNot(contains('SystemNavigator.pop')));
   });
 
   testWidgets('KW-1: bölünmüş kabuk olmadan da ray ağaçta', (tester) async {
