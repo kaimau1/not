@@ -78,7 +78,7 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
 
     final texts = [for (final i in repo.lastSaved!.items) i.text];
-    expect(texts, [first, 'birleştirme yani tek menüde']);
+    expect(texts, [first, 'Birleştirme yani tek menüde']);
     await endEditor(tester);
   });
 }

@@ -198,6 +198,7 @@ class InkToolMemory {
   static const _kRecent = 'ink_recent_colors';
   static const _kShapeSnap = 'ink_shape_snap';
   static const _kPartialEraser = 'ink_partial_eraser';
+  static const _kQuickSwap = 'ink_quick_swap';
   static const _kAutoStylus = 'ink_auto_stylus';
   static const _kStylusEver = 'ink_stylus_ever';
   static const _kPenToggleAt = 'ink_pen_toggle_at';
@@ -223,6 +224,10 @@ class InkToolMemory {
 
   /// Silgi çizginin YALNIZ değdiği kısmını siler (kapalıyken bütün çizgi).
   static bool partialEraser = false;
+
+  /// **KALEM ↔ SİLGİ HIZLI DÜĞMESİ** (kullanıcı isteği 2026-11-19): çizgi
+  /// bitince yanında saydam küçük düğme (bkz. `InkController.quickSwap`).
+  static bool quickSwap = true;
 
   /// **KALEMİ OTOMATİK ALGILA**: kalem (S Pen vb.) nota değince yazma kipi
   /// kendiliğinden açılır — PDF/slaytta kalem kipi, metin notunda el yazısı.
@@ -328,6 +333,7 @@ class InkToolMemory {
     opacity = (prefs.getDouble(_kOpacity) ?? 1).clamp(0.1, 1.0).toDouble();
     shapeSnap = prefs.getBool(_kShapeSnap) ?? true;
     partialEraser = prefs.getBool(_kPartialEraser) ?? false;
+    quickSwap = prefs.getBool(_kQuickSwap) ?? true;
     autoStylus = prefs.getBool(_kAutoStylus) ?? true;
     autoStylusListenable.value = autoStylus;
     stylusEver = prefs.getBool(_kStylusEver) ?? false;
@@ -382,6 +388,12 @@ class InkToolMemory {
   static void savePartialEraser(bool value) {
     partialEraser = value;
     _prefs?.setBool(_kPartialEraser, value);
+  }
+
+  static void saveQuickSwap(bool value) {
+    quickSwap = value;
+    _prefs?.setBool(_kQuickSwap, value);
+    toolChanged();
   }
 
   static void saveShapeSuggest(bool value) {
@@ -484,6 +496,7 @@ class InkToolMemory {
     recentColors = [];
     shapeSnap = true;
     partialEraser = false;
+    quickSwap = true;
     autoStylus = true;
     autoStylusListenable.value = true;
     stylusEver = false;

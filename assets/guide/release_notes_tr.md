@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 19 Kasım 2026 {#2026-11-19}
+- **Kalem ↔ silgi hızlı düğmesi:** çizgi bitince yanında, elinin altında kalmayacak yerde saydam küçük bir düğme belirir; dokununca silgiye, silgideyken kaleme geçersin. Kalem yaklaşınca belirginleşir, yeni çizgiye başlayınca ve birkaç saniye kullanılmayınca kaybolur. Kalem ayarlarından kapatılabilir.
+- **Alt çubuğu düzenlerken çubuk görünür kalır:** ⋯ → Düzenle listesi artık çubuğun üstünde, kısa ve kaydırılabilir; sol↔sağ taşıdığın ya da 📌'lediğin düğmeyi altta anında görürsün.
+- **Hızlı ekle hiç uygun not yokken de çalışır:** listen ya da başlıklı metin notun yoksa yazdığın (ya da söylediğin) yeni not olarak kaydedilir.
+- **Sesle yazarken "yeni madde" ile açılan madde büyük harfle başlar.**
 - **Sesle yazarken liste maddeleri çoğalmıyor:** kontrol listesinde dikte ederken "yeni madde" deyince söylenenler artık onlarca kopya madde olmuyor; tek yeni madde açılır ve yazmaya orada devam edilir.
 - **Kalem ayarında "Otomatik" parmak:** bu cihazda kalem kullanıldıysa parmak sayfayı kaydırır, hiç kullanılmadıysa çizer; kalem ilk kez değince kendiliğinden kaydırmaya geçer. Elle seçtiğin Kaydırır/Çizer/Siler aynen kalır.
 - **Hızlı menüdeki Onay kutusu liste notunda da çalışır:** yazarken üstteki ☑ odaktaki maddeyi işaretler (numaralı listede onay kutulu listeye çevirir). Hızlı menüyü düzenlerken o notta görünmeyen düğmeler ayrıca yazılır.

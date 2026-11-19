@@ -529,5 +529,18 @@
     "bugun": "gövde 0 · levha 1 (2026-11-18, P72 AI-S2 ilk ölçüm = hedef)",
     "hedef": "gövde 0; levha kökü açılış başına 1-2",
     "neden": "PLAN §1.6 AI-S2: levha 3 bölüme ayrıldı, HIZ SÖZLEŞMESİ bütçe senaryosu"
+  },
+  "S55": {
+    "senaryo": "Kalem ↔ silgi hızlı düğmesi (telefon, metin notu): kalem kipinde 10 hareketli çizgi → kalkış → düğmeye dokunuş",
+    "cizim_dugme": 0,
+    "cizim_kok": 0,
+    "cizim_tuval": 0,
+    "bitis_dugme": 1,
+    "bitis_kok": 0,
+    "dokunus_kok": 0,
+    "dokunus_tuval": 0,
+    "bugun": "0 / 0 / 0 / kalkış: düğme 1, kök 0 / dokunuş: kök 0, tuval 0 (2026-11-19)",
+    "hedef": "çizim karesinde düğme/kök/tuval 0; kalkışta yalnız düğme yaprağı",
+    "neden": "2026-11-19 hızlı düğme ilk ölçüm"
   }
 }

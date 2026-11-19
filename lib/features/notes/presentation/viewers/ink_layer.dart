@@ -27,6 +27,42 @@ import '../../../../core/haptics.dart';
 /// Basılı tutma jestlerinin (şekle oturt, silgi önerisi) bekleme süresi.
 const kInkHoldDuration = Duration(milliseconds: 550);
 
+/// Hızlı kalem ↔ silgi düğmesi kullanılmazsa bu kadar sonra solar.
+const kInkQuickSwapIdle = Duration(seconds: 3);
+
+/// Bundan kısa çizgide (dp, kutunun uzun kenarı) hızlı düğme çıkmaz — tık
+/// ya da nokta.
+const double kInkQuickSwapMinStroke = 8;
+
+/// Hızlı düğmenin konum bilgisi: [box] bitmiş çizginin katman pikselindeki
+/// kutusu, [size] o anki katman boyu. [shown] false = solarak gizli.
+@immutable
+class InkQuickSwap {
+  const InkQuickSwap({
+    required this.page,
+    required this.box,
+    required this.size,
+    required this.serial,
+    this.shown = true,
+  });
+
+  final int page;
+  final Rect box;
+  final Size size;
+
+  /// Her yeni çizgide artar: düğmenin solma saati baştan başlar.
+  final int serial;
+  final bool shown;
+
+  InkQuickSwap hidden() => InkQuickSwap(
+    page: page,
+    box: box,
+    size: size,
+    serial: serial,
+    shown: false,
+  );
+}
+
 /// Bekleyen basılı tutma jesti (bkz. [InkController.holdProgress]).
 @immutable
 class InkHoldProgress {
@@ -148,8 +184,50 @@ class InkController extends ChangeNotifier {
   /// geri gelir. Basılı tutuşun sildiği çizgiler geri konur.
   final penOffer = ValueNotifier<({int page, Offset at})?>(null);
 
+  /// **KALEM ↔ SİLGİ HIZLI DÜĞMESİ** (kullanıcı isteği 2026-11-19: "çizim
+  /// yaparken yazılan noktaya yakın, rahatsız etmeyen saydam küçük silgi
+  /// düğmesi; silgideyken kaleme döndürsün"). Çizgi BİTİNCE çizginin kutusu
+  /// (katman pikseli) yayınlanır; yeni çizgi başlayınca ([pointerDown]) ve
+  /// [kInkQuickSwapIdle] hareketsizlikte `shown: false` olur (düğme solar,
+  /// dokunuş geçirir). Hareket karesinde bildirim YOK: kutu dört sayı
+  /// olarak birikir, yalnız inişte ve kalkışta yazılır.
+  final quickSwap = ValueNotifier<InkQuickSwap?>(null);
+  int _swapSerial = 0;
+  int? _swapPage;
+  double _sx0 = 0, _sy0 = 0, _sx1 = 0, _sy1 = 0;
+  Size _swapSize = Size.zero;
+
+  void _hideQuickSwap() {
+    final q = quickSwap.value;
+    if (q != null && q.shown) quickSwap.value = q.hidden();
+  }
+
+  void _showQuickSwap(int page, Rect box, Size size) {
+    quickSwap.value = InkQuickSwap(
+      page: page,
+      box: box,
+      size: size,
+      serial: ++_swapSerial,
+    );
+  }
+
+  /// Hızlı düğmeye dokunuldu: kalem ↔ silgi; düğme yerinde kalır (solma
+  /// saati düğmenin kendisinde — denetleyicide zamanlayıcı yok).
+  void toggleQuickSwap() {
+    if (eraser) {
+      setPen(pen);
+    } else {
+      setEraser(true);
+    }
+    AppHaptics.tick();
+  }
+
   /// Silgi + kalem önerisi birlikte (katmanda tek dinleyici).
-  late final Listenable offers = Listenable.merge([eraserOffer, penOffer]);
+  late final Listenable offers = Listenable.merge([
+    eraserOffer,
+    penOffer,
+    quickSwap,
+  ]);
 
   void acceptPenOffer() {
     penOffer.value = null;
@@ -1143,6 +1221,7 @@ class InkController extends ChangeNotifier {
       // İkinci parmak = yakınlaştırma/kaydırma niyeti: yeni başlamış çizgiyi
       // geri al ki ekranda kırıntı kalmasın.
       _undoFingerErase();
+      _swapPage = null;
       if (_active != null) _ink = [..._ink]..remove(_active);
       _active = null;
       _holdTimer?.cancel();
@@ -1156,6 +1235,11 @@ class InkController extends ChangeNotifier {
     if (suggestion.value != null) dismissSuggestion();
     if (eraserOffer.value != null) eraserOffer.value = null;
     if (penOffer.value != null) penOffer.value = null;
+    _hideQuickSwap();
+    _swapPage = page;
+    _swapSize = size;
+    _sx0 = _sx1 = local.dx;
+    _sy0 = _sy1 = local.dy;
     _gestureBase = _ink;
     _tempEraser = stylusEraser;
     // Seçim tutamağı / düzeltilmiş şeklin kutusu: taşı ya da boyutlandır.
@@ -1360,6 +1444,7 @@ class InkController extends ChangeNotifier {
     suggestion.dispose();
     eraserOffer.dispose();
     penOffer.dispose();
+    quickSwap.dispose();
     committedRev.dispose();
     super.dispose();
   }
@@ -1373,6 +1458,13 @@ class InkController extends ChangeNotifier {
   }) {
     if (pointer != null && !_accepted.containsKey(pointer)) return;
     if (_nav || _pointers != 1) return;
+    if (_swapPage != null) {
+      final x = local.dx, y = local.dy;
+      if (x < _sx0) _sx0 = x;
+      if (x > _sx1) _sx1 = x;
+      if (y < _sy0) _sy0 = y;
+      if (y > _sy1) _sy1 = y;
+    }
     final tap = _tapStart;
     if (tap != null && (local - tap).distance > stylusTapSlop) {
       _tapStart = null;
@@ -1612,6 +1704,9 @@ class InkController extends ChangeNotifier {
     }
     final wasErasing = _erasing;
     final wasSnapped = _snapped;
+    final wasTemp = _tempEraser;
+    final swapPage = _swapPage;
+    _swapPage = null;
     _snapLineFrom = null;
     _tempEraser = false;
     _fingerErase = false;
@@ -1728,6 +1823,17 @@ class InkController extends ChangeNotifier {
         !lasso &&
         _ink.any((s) => identical(s, done))) {
       _suggestFor(done, _activeSize);
+    }
+    // Çizgi (ya da silgi geçişi) bitti: hızlı düğme yanında belirir. Tık,
+    // kement, geçici silgi (yan düğme / parmak Siler) ve taşıma hariç.
+    final box = Rect.fromLTRB(_sx0, _sy0, _sx1, _sy1);
+    if (InkToolMemory.quickSwap &&
+        swapPage != null &&
+        !lasso &&
+        !wasTemp &&
+        (wasErasing || (done != null && !wasSnapped)) &&
+        box.longestSide >= kInkQuickSwapMinStroke) {
+      _showQuickSwap(swapPage, box, _swapSize);
     }
     notifyListeners();
   }
@@ -2078,7 +2184,32 @@ class InkPageLayer extends StatelessWidget {
                   final pen = controller.penOffer.value;
                   final o = pen ?? controller.eraserOffer.value;
                   if (o == null || o.page != page) {
-                    return const SizedBox.shrink();
+                    // KALEM ↔ SİLGİ HIZLI DÜĞMESİ aynı dinleyicide (S18:
+                    // sayfa başına ek öğe yok); basılı tutma önerisi varken
+                    // çıkmaz (iniş onu zaten gizler).
+                    final q = controller.quickSwap.value;
+                    if (q == null || q.page != page) {
+                      return const SizedBox.shrink();
+                    }
+                    final area = Size(
+                      constraints.maxWidth.isFinite
+                          ? constraints.maxWidth
+                          : size.width,
+                      constraints.maxHeight.isFinite
+                          ? constraints.maxHeight
+                          : size.height,
+                    );
+                    final at = inkQuickSwapPlace(q.box, area);
+                    return Positioned(
+                      left: at.dx,
+                      top: at.dy,
+                      child: InkQuickSwapButton(
+                        shown: q.shown,
+                        serial: q.serial,
+                        onClaim: controller.claimPointer,
+                        onTap: controller.toggleQuickSwap,
+                      ),
+                    );
                   }
                   const box = 44.0;
                   var left = o.at.dx * size.width - box / 2;
@@ -2249,6 +2380,171 @@ class _EraserOfferButton extends StatelessWidget {
                 color: scheme.onTertiaryContainer,
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Hızlı düğmenin çapı ve çizgi kutusuna uzaklığı (dp).
+const double kInkQuickSwapSize = 40;
+const double kInkQuickSwapGap = 36;
+
+/// Boştaki saydamlık (yaklaşınca / basınca tam).
+const double kInkQuickSwapIdleOpacity = 0.4;
+
+/// Hızlı düğmenin yeri: çizgi kutusunun SOL ÜSTÜ (sağ elle yazarken el ve
+/// yazı sağ altta kalır), sığmazsa sağ üst, sol alt, sağ alt; hiçbiri
+/// sığmazsa sol üst aday alana kıstırılır.
+Offset inkQuickSwapPlace(
+  Rect stroke,
+  Size area, {
+  double box = kInkQuickSwapSize,
+  double gap = kInkQuickSwapGap,
+}) {
+  final candidates = [
+    Offset(stroke.left - gap - box, stroke.top - gap - box),
+    Offset(stroke.right + gap, stroke.top - gap - box),
+    Offset(stroke.left - gap - box, stroke.bottom + gap),
+    Offset(stroke.right + gap, stroke.bottom + gap),
+  ];
+  for (final c in candidates) {
+    if (c.dx >= 0 &&
+        c.dy >= 0 &&
+        c.dx + box <= area.width &&
+        c.dy + box <= area.height) {
+      return c;
+    }
+  }
+  final c = candidates.first;
+  return Offset(
+    c.dx.clamp(0.0, math.max(0.0, area.width - box)),
+    c.dy.clamp(0.0, math.max(0.0, area.height - box)),
+  );
+}
+
+/// Kalem ↔ silgi hızlı düğmesi (bkz. [InkController.quickSwap]). Boşta
+/// %40 saydam, kalem havada yaklaşınca ya da basılınca tam; [shown] false
+/// olunca solar ve dokunuşu geçirir. Kendi [RepaintBoundary]'sinde: solma
+/// ve basılma çizim katmanını boyatmaz. Simge yalnız araç değişince
+/// ([InkToolMemory.toolRev]) yenilenir.
+class InkQuickSwapButton extends StatefulWidget {
+  const InkQuickSwapButton({
+    super.key,
+    required this.shown,
+    required this.serial,
+    required this.onClaim,
+    required this.onTap,
+  });
+
+  final bool shown;
+  final int serial;
+  final ValueChanged<int> onClaim;
+  final VoidCallback onTap;
+
+  @override
+  State<InkQuickSwapButton> createState() => _InkQuickSwapButtonState();
+}
+
+class _InkQuickSwapButtonState extends State<InkQuickSwapButton> {
+  bool _near = false;
+
+  /// [kInkQuickSwapIdle] boyunca dokunulmadı: solar (zamanlayıcı bu öğede —
+  /// öğe sökülünce iptal olur).
+  bool _idle = false;
+  Timer? _idleTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _wake();
+  }
+
+  @override
+  void didUpdateWidget(InkQuickSwapButton old) {
+    super.didUpdateWidget(old);
+    if (old.serial != widget.serial || (!old.shown && widget.shown)) {
+      _idle = false;
+      _wake();
+    }
+  }
+
+  void _wake() {
+    _idleTimer?.cancel();
+    if (!widget.shown) return;
+    _idleTimer = Timer(kInkQuickSwapIdle, () {
+      if (mounted) setState(() => _idle = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final visible = widget.shown && !_idle;
+    final opacity = !visible
+        ? 0.0
+        : (_near ? 1.0 : kInkQuickSwapIdleOpacity);
+    return RepaintBoundary(
+      child: IgnorePointer(
+        ignoring: !visible,
+        child: AnimatedOpacity(
+          key: const ValueKey('ink-quick-swap'),
+          opacity: opacity,
+          duration: AppMotion.of(context, AppMotion.short),
+          child: ValueListenableBuilder<int>(
+            valueListenable: InkToolMemory.toolRev,
+            builder: (context, _, _) {
+              final erasing = InkToolMemory.eraser;
+              final label = erasing
+                  ? l10n.inkQuickSwapToPen
+                  : l10n.inkQuickSwapToEraser;
+              return Semantics(
+                button: true,
+                label: label,
+                onTap: widget.onTap,
+                child: MouseRegion(
+                  onEnter: (_) => setState(() => _near = true),
+                  onExit: (_) => setState(() => _near = false),
+                  child: Listener(
+                    behavior: HitTestBehavior.opaque,
+                    onPointerDown: (e) {
+                      widget.onClaim(e.pointer);
+                      setState(() => _near = true);
+                      widget.onTap();
+                      _wake();
+                    },
+                    onPointerUp: (_) => setState(() => _near = false),
+                    onPointerCancel: (_) => setState(() => _near = false),
+                    child: Material(
+                      color: scheme.surfaceContainerHighest,
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      child: SizedBox.square(
+                        dimension: kInkQuickSwapSize,
+                        child: Icon(
+                          erasing
+                              ? Icons.edit_outlined
+                              : Icons.auto_fix_normal_outlined,
+                          key: ValueKey(
+                            erasing ? 'ink-quick-swap-pen' : 'ink-quick-swap-eraser',
+                          ),
+                          size: AppIconSize.m,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -2706,6 +3002,17 @@ class InkSettingsSheet extends StatelessWidget {
                 subtitle: Text(l10n.inkMarkFixInfo),
                 value: InkToolMemory.markFix ?? false,
                 onChanged: (v) => setLocal(() => InkToolMemory.saveMarkFix(v)),
+              ),
+            ),
+            StatefulBuilder(
+              builder: (context, setLocal) => SwitchListTile(
+                key: const ValueKey('ink-quick-swap-setting'),
+                contentPadding: EdgeInsets.zero,
+                secondary: const Icon(Icons.swap_horiz_rounded),
+                title: Text(l10n.inkQuickSwapTitle),
+                subtitle: Text(l10n.inkQuickSwapInfo),
+                value: InkToolMemory.quickSwap,
+                onChanged: (v) => setLocal(() => InkToolMemory.saveQuickSwap(v)),
               ),
             ),
             SwitchListTile(

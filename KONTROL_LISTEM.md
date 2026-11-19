@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Kalem ↔ silgi hızlı düğmesi, ⋯ Düzenle çubuğun üstünde, hızlı ekle yeni not (19 Kasım akşam 2. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı)**
+  Nerede/Nasıl: (1) kalem kipinde parmakla ve kalemle birkaç çizgi çiz → her çizgi bitince sol üstünde saydam silgi düğmesi; dokun → silgi, düğme kalem simgesine döner, dokun → kalem; yeni çizgiye başlayınca kaybolur, ~3 sn dokunmazsan solar; elin/yazının altında kalıyor mu, yazarken yanlışlıkla basılıyor mu, çizim akıcı mı (kalem gecikmesi); Kalem ayarları → "Kalem ↔ silgi hızlı düğmesi" kapatınca çıkmaz; (2) notta alttaki ⋯ → Düzenle → liste çubuğun ÜSTÜNDE, alt çubuk görünür; » ile taşıyınca çubukta anında değişir; 360 dp küçük ekranda taşma yok; (3) hiç listesi/başlıklı notu olmayan misafir hesapta ⚡ Hızlı ekle → yaz → Ekle → "Yeni not olarak kaydedildi", not ana ekranda; (4) dikte + "yeni madde" → yeni madde büyük harfle başlıyor.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Dikte "yeni madde", parmak Otomatik, hızlı menü ☑, alt çubuk sol↔sağ, not başına menü (19 Kasım gece, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) kontrol listesi notunda bir maddeye dokun → alttaki mikrofon (dikte) → bir cümle söyle, "yeni madde" de, devam et → TEK yeni madde açılır, eski madde tek cümle kalır; Geri al birkaç basışta toparlar; (2) Ayarlar → Kalem → Parmak: Otomatik seçili; kalemli tablette parmak kaydırır, kalemsiz telefonda çizer; (3) liste notunda yazarken üstteki hızlı menüye ☑ ekle (⋯ → Düzenle) → görünür, dokununca odaktaki madde işaretlenir; düzenleme levhasında "Bu notta görünmez: …" satırı; (4) alt ⋯ → Düzenle → bir düğmenin » okuyla sağ (renkli) gruba, « ile geri; (5) aynı levhalarda "Yalnız bu nota" → değişiklik yalnız o notta, başka notta genel düzen; "Bu notun özelleştirmesini sıfırla"; not açılış/klavye takılması yok.
   Yanlışsa: madde numarasını yaz.

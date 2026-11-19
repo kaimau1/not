@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_tokens.dart';
@@ -14,8 +16,8 @@ typedef BarMoreSpec = (IconData, String, VoidCallback, bool);
 /// değil, direkt menü üzerinde").
 ///
 /// Normal kipte: çubuğa sığmayan VE çubuktan kaldırılmış (gizli) bütün
-/// düğmeler, en altta "Düzenle". Düzenle kipinde AYNI menü yerinde liste
-/// olur: 📌 = çubukta / menüde, basılı tutup sürükle = sırala. Değişiklik
+/// düğmeler, en altta "Düzenle". Düzenle kipinde menü çubuğun ÜSTÜNDE liste
+/// olarak yeniden açılır: 📌 = çubukta / menüde, basılı tutup sürükle = sırala. Değişiklik
 /// anında kaydedilir ([Personalize.update]); çubuk arkada canlı yenilenir.
 ///
 /// Konum düğmenin kendi bağlamından ([anchor]); seçilen düğmenin işi
@@ -28,27 +30,66 @@ Future<void> showEditorBarMore({
 }) async {
   final box = anchor.findRenderObject()! as RenderBox;
   final overlay = Overlay.of(anchor).context.findRenderObject()! as RenderBox;
+  final at = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
   final picked = await showMenu<String>(
     context: anchor,
-    position: RelativeRect.fromRect(
-      box.localToGlobal(Offset.zero, ancestor: overlay) & box.size,
-      Offset.zero & overlay.size,
-    ),
+    position: RelativeRect.fromRect(at, Offset.zero & overlay.size),
     items: [_BarMoreEntry(menuIds: menuIds, available: available, spec: spec)],
   );
+  if (picked == _kEditPick) {
+    // DÜZENLE ÇUBUĞUN ÜSTÜNDE (kullanıcı bulgusu 2026-11-19, v1.2.94:
+    // "düzenleme menüsü alt paneli kapatıyor, değişikliği göremiyorum"):
+    // düzen listesi boyu sınırlı, içi kayar ve ALT KENARI çubuğun üstünde
+    // biter — sol + sağ grup altta görünür, değişiklik canlı yansır.
+    if (!anchor.mounted) return;
+    final topEdge = MediaQuery.paddingOf(anchor).top + AppSpace.s;
+    final bottomEdge = at.top - AppSpace.s;
+    final room = bottomEdge - topEdge - 2 * _kMenuPad;
+    final height = room <= 160
+        ? math.max(room, 80.0)
+        : math.min(room, overlay.size.height * 0.55);
+    await showMenu<String>(
+      context: anchor,
+      position: RelativeRect.fromLTRB(
+        at.left,
+        bottomEdge - height - 2 * _kMenuPad,
+        overlay.size.width - at.right,
+        overlay.size.height - bottomEdge,
+      ),
+      items: [
+        _BarMoreEntry(
+          menuIds: menuIds,
+          available: available,
+          spec: spec,
+          editHeight: height,
+        ),
+      ],
+    );
+    return;
+  }
   if (picked != null) spec(picked).$3();
 }
+
+/// "Düzenle" seçildi: menü kapanır, düzen kipi çubuğun üstünde yeniden açılır.
+const _kEditPick = '\u0000edit';
+
+/// Açılır menünün üst/alt iç payı (Material `PopupMenu`, 8 dp).
+const double _kMenuPad = 8;
 
 class _BarMoreEntry extends PopupMenuEntry<String> {
   const _BarMoreEntry({
     required this.menuIds,
     required this.available,
     required this.spec,
+    this.editHeight,
   });
 
   final List<String> menuIds;
   final List<String> available;
   final BarMoreSpec Function(String id) spec;
+
+  /// Verilirse düzen kipi, bu boyda (içi kayar); yoksa normal liste.
+  final double? editHeight;
 
   @override
   double get height => kMinInteractiveDimension;
@@ -61,11 +102,10 @@ class _BarMoreEntry extends PopupMenuEntry<String> {
 }
 
 class _BarMoreEntryState extends State<_BarMoreEntry> {
-  bool _editing = false;
-
   @override
-  Widget build(BuildContext context) =>
-      _editing ? _editor(context) : _list(context);
+  Widget build(BuildContext context) => widget.editHeight != null
+      ? _editor(context, widget.editHeight!)
+      : _list(context);
 
   Widget _row(
     BuildContext context, {
@@ -122,7 +162,7 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
           key: const ValueKey('editor-bar-more-edit'),
           icon: Icons.tune,
           label: l10n.barMoreEdit,
-          onTap: () => setState(() => _editing = true),
+          onTap: () => Navigator.pop(context, _kEditPick),
         ),
       ],
     );
@@ -151,7 +191,7 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
     ];
   }
 
-  Widget _editor(BuildContext context) {
+  Widget _editor(BuildContext context, double height) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     return ListenableBuilder(
@@ -199,60 +239,73 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
         // Sabit genişlik: açılır menü içeriğinin içsel genişliğini sorar,
         // kayan liste bunu veremez (menünün tavanı 280 dp).
         return SizedBox(
+          key: const ValueKey('editor-bar-more-editor'),
           width: 280,
+          height: height,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpace.l,
-                  AppSpace.xs,
-                  AppSpace.l,
-                  AppSpace.s,
-                ),
-                child: Text(
-                  l10n.barMoreEditHint,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-                child: const NoteLayoutScopeBar(compact: true),
-              ),
-              header(l10n.barMoreLeftGroup),
-              group(
-                'left',
-                left,
-                (from, to) => Personalize.updateLayout(
-                  (p) => p.copyWith(
-                    barOrder: _apply(p.barSides.left, left, from, to),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpace.l,
+                          AppSpace.xs,
+                          AppSpace.l,
+                          AppSpace.s,
+                        ),
+                        child: Text(
+                          l10n.barMoreEditHint,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.l,
+                        ),
+                        child: const NoteLayoutScopeBar(compact: true),
+                      ),
+                      header(l10n.barMoreLeftGroup),
+                      group(
+                        'left',
+                        left,
+                        (from, to) => Personalize.updateLayout(
+                          (p) => p.copyWith(
+                            barOrder: _apply(p.barSides.left, left, from, to),
+                          ),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      // SAĞ (renkli) GRUP her zaman görünür (kullanıcı isteği
+                      // 2026-11-19: "sağ alana tuş taşıyabileyim") — boşken de
+                      // başlığı durur, ⇄ ile düğme gelir.
+                      header(l10n.barMoreRightGroup),
+                      group(
+                        'right',
+                        right,
+                        (from, to) => Personalize.updateLayout(
+                          (p) => p.copyWith(
+                            aiOrder: _apply(p.barSides.right, right, from, to),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               const Divider(height: 1),
-              // SAĞ (renkli) GRUP her zaman görünür (kullanıcı isteği
-              // 2026-11-19: "sağ alana tuş taşıyabileyim") — boşken de
-              // başlığı durur, ⇄ ile düğme gelir.
-              header(l10n.barMoreRightGroup),
-              group(
-                'right',
-                right,
-                (from, to) => Personalize.updateLayout(
-                  (p) => p.copyWith(
-                    aiOrder: _apply(p.barSides.right, right, from, to),
-                  ),
-                ),
-              ),
               Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
                   child: TextButton(
                     key: const ValueKey('editor-bar-more-done'),
-                    onPressed: () => setState(() => _editing = false),
+                    onPressed: () => Navigator.pop(context),
                     child: Text(l10n.customizeDone),
                   ),
                 ),
@@ -312,9 +365,8 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
                 isSelected: pinned,
                 icon: const Icon(Icons.push_pin_outlined),
                 selectedIcon: Icon(Icons.push_pin, color: scheme.primary),
-                onPressed: () => Personalize.updateLayout(
-                  (p) => p.withVisible(id, !pinned),
-                ),
+                onPressed: () =>
+                    Personalize.updateLayout((p) => p.withVisible(id, !pinned)),
               ),
             ],
           ),

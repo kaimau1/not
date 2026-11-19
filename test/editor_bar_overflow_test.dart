@@ -82,6 +82,8 @@ void main() {
       const ValueKey('editor-bar-more-pin-editor.bar.share'),
     );
     expect(pin, findsOneWidget);
+    await tester.ensureVisible(pin);
+    await tester.pumpAndSettle();
     await tester.tap(pin);
     await tester.pumpAndSettle();
     expect(Personalize.prefs.value.storedShows(UiItem.barShare), isTrue);
@@ -99,8 +101,64 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(done);
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('editor-bar-more-edit')), findsOneWidget);
+    // Bitti menüyü kapatır (düzen kipi çubuğun üstünde ayrı açılır).
+    expect(find.byKey(const ValueKey('editor-bar-more-editor')), findsNothing);
     Personalize.prefs.value = const UiPrefs();
     await endEditor(tester);
   });
+
+  for (final size in const [Size(412, 915), Size(360, 640)]) {
+    testWidgets('⋯ Düzenle çubuğu örtmez, değişiklik çubukta canlı '
+        '(${size.width.toInt()} dp)', (tester) async {
+      Personalize.prefs.value = const UiPrefs();
+      await pumpEditor(tester, _note, size: size);
+      final capsule = find.byKey(const ValueKey('editor-tool-capsule'));
+      await tester.tap(
+        find.descendant(of: capsule, matching: find.byIcon(Icons.more_horiz)),
+      );
+      await tester.pumpAndSettle();
+      final edit = find.byKey(const ValueKey('editor-bar-more-edit'));
+      await tester.ensureVisible(edit);
+      await tester.pumpAndSettle();
+      await tester.tap(edit);
+      await tester.pumpAndSettle();
+      final editor = find.byKey(const ValueKey('editor-bar-more-editor'));
+      expect(editor, findsOneWidget);
+      expect(tester.takeException(), isNull);
+      final bar = tester.getRect(capsule);
+      expect(
+        tester.getRect(editor).bottom,
+        lessThanOrEqualTo(bar.top),
+        reason: 'düzen listesi alt çubuğu örtmemeli',
+      );
+      // Çubuğun üstünde menü yok: ortasına isabet eden nokta menünün hiçbir
+      // parçasına değmez (saydam engel menüyü kapatır, çubuk görünür).
+      final hit = tester.hitTestOnBinding(bar.center);
+      final editorBox = tester.renderObject(editor);
+      expect(
+        hit.path.any((e) => identical(e.target, editorBox)),
+        isFalse,
+        reason: 'menü çubuğu örtüyor',
+      );
+      // Biçim'i sağ gruba taşı → soldaki kapsülden anında çıkar.
+      expect(
+        find.descendant(of: capsule, matching: find.byIcon(Icons.text_format)),
+        findsOneWidget,
+      );
+      final side = find.byKey(
+        const ValueKey('editor-bar-more-side-editor.bar.format'),
+      );
+      await tester.ensureVisible(side);
+      await tester.pumpAndSettle();
+      await tester.tap(side);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: capsule, matching: find.byIcon(Icons.text_format)),
+        findsNothing,
+      );
+      expect(find.byIcon(Icons.text_format), findsWidgets);
+      Personalize.prefs.value = const UiPrefs();
+      await endEditor(tester);
+    });
+  }
 }

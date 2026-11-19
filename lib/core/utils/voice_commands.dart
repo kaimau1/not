@@ -478,6 +478,8 @@ String _capitalizeAfterSentence(String out, String piece) {
 }
 
 /// İlk harfi Türkçe kurala göre büyütür (i → İ, ı → I).
+String capitalizeTurkishFirst(String s) => _capitalizeFirst(s);
+
 String _capitalizeFirst(String s) {
   final i = s.indexOf(RegExp(r'\S'));
   if (i < 0) return s;

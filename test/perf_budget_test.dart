@@ -2483,6 +2483,61 @@ void main() {
     });
     await endEditor(tester);
   });
+  // S55 (2026-11-19): kalem ↔ silgi hızlı düğmesi. Çizgi SÜRERKEN düğme,
+  // editör kökü ve sayfa tuvali kurulmaz (hareket karesinde bildirim yok);
+  // çizgi bitince yalnız düğme yaprağı; dokunuş yalnız düğmeyi ve tepsiyi.
+  testWidgets('S55: hızlı kalem ↔ silgi düğmesi (telefon)', (tester) async {
+    _stylusDevice();
+    await pumpEditor(tester, _text);
+    final page = tester.getRect(find.byType(PageInkStack));
+    final first = await tester.startGesture(
+      page.topLeft + const Offset(160, 220),
+      kind: PointerDeviceKind.stylus,
+    );
+    await tester.pump();
+    await first.moveBy(const Offset(60, 6));
+    await tester.pump();
+    await first.up();
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump(const Duration(seconds: 1));
+    final pen = await tester.startGesture(
+      page.topLeft + const Offset(200, 320),
+      kind: PointerDeviceKind.stylus,
+    );
+    await tester.pump();
+    final draw = await _count(() async {
+      for (var i = 0; i < 10; i++) {
+        await pen.moveBy(const Offset(8, 2));
+        await tester.pump();
+      }
+    });
+    final end = await _count(() async {
+      await pen.up();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    });
+    final button = find.byKey(const ValueKey('ink-quick-swap'));
+    expect(button, findsOneWidget);
+    final tap = await _count(() async {
+      await tester.tapAt(
+        tester.getCenter(button),
+        kind: PointerDeviceKind.stylus,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    });
+    expect(InkToolMemory.eraser, isTrue);
+    _expectBudget('S55', {
+      'cizim_dugme': draw['InkQuickSwapButton'] ?? 0,
+      'cizim_kok': draw['NoteEditorScreen'] ?? 0,
+      'cizim_tuval': draw['NotePageCanvas'] ?? 0,
+      'bitis_dugme': end['InkQuickSwapButton'] ?? 0,
+      'bitis_kok': end['NoteEditorScreen'] ?? 0,
+      'dokunus_kok': tap['NoteEditorScreen'] ?? 0,
+      'dokunus_tuval': tap['NotePageCanvas'] ?? 0,
+    });
+    await endEditor(tester);
+  });
   // S43 (P63 G4, PB5): canlı dikte kartı. Düzey ve sessizlik olayları
   // editörde hiçbir şey kurmaz (yalnız dalga boyanır); metin olayı yalnız
   // yazılan satırı kurar. Konuşma kanalı taklidi (voice_unavailable_test).

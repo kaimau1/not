@@ -60,6 +60,18 @@ void main() {
       expect(Personalize.noteHasOwnLayout, isFalse);
     });
 
+    test('kalıcı silinen notun yerel düzeni de gider', () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = await SharedPreferences.getInstance();
+      Personalize.attach(store);
+      Personalize.enterNote('sil', Object());
+      Personalize.setNoteOwnLayout(true);
+      expect(store.getString('note_ui_layout_v1'), contains('sil'));
+      Personalize.forgetNote('sil');
+      expect(Personalize.noteHasOwnLayout, isFalse);
+      expect(store.getString('note_ui_layout_v1'), isNot(contains('sil')));
+    });
+
     test('eski editörün geç kapanışı yeni açılan aynı notu silmez', () {
       final a = Object(), b = Object();
       Personalize.enterNote('n', a);
