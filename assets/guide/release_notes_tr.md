@@ -3,6 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 19 Kasım 2026 {#2026-11-19}
+- **✨ yapay zekâ menüsü üç bölüm:** Yaz (sesli not, düzelt, geliştir, çevir), Sor (notlarına ya da PDF'ine soru sor), Dönüştür (özet, eklerden metin, döküm ve dinleme).
+- **Kaydırma jestlerini sen seç:** ana ekranda listeyi tepeden aşağı çekince ve Tümü'de sağa kaydırınca ne açılacağını Ayarlar → Notlar'dan seçebilirsin: klasörler, takvim, belirli bir not, belirli bir klasör ya da hiçbiri.
+- **Süreli notlar takvimde:** belli bir süre sonra arşive gidecek notlar, arşivlenecekleri günde takvimde ve ana ekrandaki takvim şeridinde görünür.
+- **Bilgisayarda (web) daha düzenli:** bildirimler sağ altta çıkar, menüyü ve listeyi örtmez; Premium ve Ayarlar geniş ekranda ortada; gizlilik politikası başlıklı ve okunur; koyu modlu bilgisayarda açılırken beyaz parlama yok; ekran okuyucu ana ekranı okur, Tab ile gezilir; takvimde komşu ay günleri daha okunur.
+- **Küçük düzeltmeler:** misafir hesap kartı daha sakin renkte; fareyle çizerken gereksiz ipucu çıkmıyor; kılavuzda arama yazarken daha akıcı.
 - **Tablette yüzen kalem düğmesi artık liste notundaki "Ara başlık" ve "Sil" düğmelerini örtmüyor.**
 - **"Kalem kipi" bildirimi kalem tepsisinin üstünde çıkıyor** (eskiden tepsinin renk/kalem seçicisini birkaç saniye kapatıyordu).
 - **Fiziksel klavyeyle ⌨ düğmesi daha anlaşılır:** bir yere dokunmadan basınca da klavye açılır; Geri ile kapatınca düğme kendiliğinden "aç"a döner, tek dokunuş yeniden açar.

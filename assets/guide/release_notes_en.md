@@ -3,6 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 19 November 2026 {#2026-11-19}
+- **✨ AI menu in three sections:** Write (voice note, fix, improve, translate), Ask (ask your notes or a PDF), Transform (summary, text from attachments, transcripts and listening).
+- **Choose your swipe gestures:** in Settings → Notes pick what pulling down at the top of the list and swiping right in All open: folders, calendar, a specific note, a specific folder, or nothing.
+- **Timed notes in the calendar:** notes set to archive after a while show up in the calendar and the home calendar strip on the day they'll be archived.
+- **Tidier on the web:** notices appear bottom-right and no longer cover the menu or list; Premium and Settings are centred on wide screens; the privacy policy has headings and reads cleanly; no white flash on dark-mode computers; screen readers can read the home screen and Tab moves through it; adjacent-month days in the calendar are easier to read.
+- **Small fixes:** calmer guest account card; no needless hint when drawing with a mouse; smoother guide search while typing.
 - **On tablets the floating pen button no longer covers the "Subheading" and "Delete" buttons in list notes.**
 - **The "Pen mode" notice now appears above the pen tray** (it used to cover the tray's colour/pen picker for a few seconds).
 - **The ⌨ button is clearer with a physical keyboard:** it opens the on-screen keyboard even if no field was tapped; closing the keyboard with Back resets the button, so one tap opens it again.
