@@ -103,7 +103,10 @@ geri sıçrama / takılma / gizli / ort-maks sapma. Ham kareler `PERF_OUT/panel_
 `ab_hepsi.py` tableti kendi düzeninde ölçer (kısa kenar >= 1400 px → tablet; kayıt `docs/perf/gecmis_tablet.csv`,
 taban `altin_taban_tablet.json`; telefonla KARŞILAŞTIRILMAZ). Ölçüm APK'sı (profil) manifestte DİKEY kilitli
 (`android/app/src/profile/AndroidManifest.xml`) → ölçüm 1600x2560 (640x1024 dp): ray + 2 sütun liste; yatay/bölünmüş
-görünüm bu APK'yla ölçülemez (yatay için manifest anahtarı gerekir: öneri T16 raporunda).
+görünüm için APK'yı yatay derle (TP-F, 2026-11-19): `NOTLAR_OLCUM_YON=landscape "$F" build apk --profile ...`
+(değerler: portrait (varsayılan) | landscape | sensor | unspecified | fullSensor; `-PolcumYon=` da olur). `--yon yatay`
+dikey kilitli APK'yı açılışta görür ve DURUR (eskiden sessizce dikeyde ölçerdi). Yatay evre seçicileri (ray + liste +
+sağ editör) ve yatay altın taban henüz YOK — ilk yatay koşu cihazda yapılacak.
 
 - **Semantik tuzak:** UiAutomation ~1 sn bağlanır; boşta uygulamada Flutter ana ekranın semantik ağacını o pencerede
   göndermiyor → tablet ana ekranı dökümde BOŞ (3,4 KB). Levha/editör/ayarlar DOLU. Bu yüzden `home_locate` tablet ana

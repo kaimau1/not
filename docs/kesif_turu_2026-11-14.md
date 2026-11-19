@@ -239,4 +239,5 @@ Koyu tema (Koyu) ana/editör/ayarlar okunur, kontrast iyi (`kt-koyu-01/02`); yat
 - **TP-D (platform/olcum kimliği/izin):** KT-21, KT-24 → `lib/features/**/widget*` (home_widget çağrıları), `lib/features/notes/presentation/quick_drop_sheet.dart`, `voice_*`.
 - **TP-E (takvim):** KT-23 → `lib/features/calendar/presentation/month_grid.dart`, `calendar_views.dart`.
 - **TP-F (araç):** tablet yatay ölçüm anahtarı → `android/app/src/profile/AndroidManifest.xml`, `tool/perf/ab_hepsi.py`.
+  - **Durum (2026-11-19, ccr-1122edca):** anahtar yazıldı — `NOTLAR_OLCUM_YON` / `-PolcumYon` (varsayılan portrait) → profil manifesti `${olcumYon}`; `ab_hepsi.py --yon yatay` dikey kilitli APK'yı görünce durur. Gradle bulutta koşturulamadı (Android SDK yok) — ilk profil derlemesinde doğrulanacak; yatay evre seçicileri ve yatay altın taban cihazda.
 Paketler birbirinden dosya olarak ayrıdır (TP-A/B/C/D/E/F kesişmez; TP-B ve TP-C `editor/` ile `notes/presentation/` kökünü paylaşmaz).

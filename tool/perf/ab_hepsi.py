@@ -51,7 +51,8 @@ Kayıt (F81.3): her koşunun evre ortancaları `docs/perf/gecmis.csv`'ye
 TABLET (T13/T1, 2026-11-18; PLAN §1.0: tablet tabanı telefonla karşılaştırılmaz): cihazın kısa kenarı
 >= 1400 px ise tablet sayılır → kayıt `gecmis_tablet.csv`, altın taban `altin_taban_tablet.json`.
 Tablet kendi düzeninde ölçülür: profil APK'sı manifestte DİKEY kilitli → 640x1024 dp, sol ray + 2 sütun
-liste (yatay/bölünmüş görünüm için manifest anahtarı gerekir). `--yon` ekranı ölçüm süresince döndürür
+liste; yatay/bölünmüş için APK'yı `NOTLAR_OLCUM_YON=landscape` ile derle (TP-F; `--yon yatay`
+dikey kilitli APK'yı görünce durur). `--yon` ekranı ölçüm süresince döndürür
 (`wm user-rotation lock`, bitince `free`); varsayılan tablette `dikey`, telefonda `mevcut`. Ekran boyutu DÖNDÜRÜLMÜŞ ekrandan okunur (`perf.screen_size`).
 
 HAZIRLIK (bir kez): veri seti (`make_dataset.py`, README) + sabit PDF'li not:
@@ -940,7 +941,22 @@ def main():
                     {k: v["ui_ms"] for k, v in st.items()}, ensure_ascii=False), flush=True)
                 json.dump(runs, open(os.path.join(OUT, "ab_hepsi_ham.json"), "w"), ensure_ascii=False)
 
+    def check_landscape(apk):
+        """TP-F (2026-11-19): profil APK'sı varsayılan DİKEY kilitli (manifest
+        `olcumYon`); `--yon yatay` kilidi uygulamayı döndürmez, ölçüm sessizce dikeyde
+        koşardı. Uygulama açıkken ekran hâlâ dikeyse dur."""
+        install(apk)
+        sh(f"am start -n {ACT}"); time.sleep(3.0)
+        w, h = screen_size()
+        sh(f"am force-stop {OPKG}")
+        if w < h:
+            raise SystemExit(f"{os.path.basename(apk)}: uygulama dikey kilitli ({w}x{h}) — "
+                             "yatay ölçüm için NOTLAR_OLCUM_YON=landscape ile derle (TP-F)")
+
     try:
+        if yon == "yatay":
+            check_landscape(o.a)
+            check_landscape(o.b)
         if tablet and not o.hazirlik:
             # Tablet ana ekranı semantiksiz (home_locate notu): "OLCUM cizgi" varlığı listede aranamaz;
             # yedek bir kez elle yüklenir (docs/perf/README tablet bölümü). Zorlamak: --hazirlik.
