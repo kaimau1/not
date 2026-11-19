@@ -13,6 +13,7 @@ import 'package:notlar/features/notes/data/attachment_repository.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
+import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/page_ink_layer.dart';
@@ -380,6 +381,34 @@ void main() {
     expect(notice, findsOneWidget);
     final tray = tester.getRect(find.byKey(const ValueKey('page-pen-dock')));
     expect(tester.getRect(notice).bottom, lessThanOrEqualTo(tray.top));
+    await _end(tester);
+  });
+
+  // P78 KT-15 (tablet turu 2026-11-18): yatay bölünmüşte sağ kenardaki
+  // yüzen kalem düğmesi liste notunun "Ara başlık" ve "Sil" eylemlerini
+  // örtüyordu. Düğme sağ kenardayken satır sonu eylemleri onun payını
+  // bırakır.
+  testWidgets('KT-15: yüzen kalem düğmesi satır sonu eylemlerini örtmez', (
+    tester,
+  ) async {
+    InkToolMemory.reset();
+    addTearDown(InkToolMemory.reset);
+    InkToolMemory.stylusEver = true;
+    const list = Note(
+      id: 'n',
+      type: NoteType.checklist,
+      title: 'Liste',
+      items: [
+        NoteItem(id: 'a', text: 'bir'),
+        NoteItem(id: 'b', text: 'iki', checked: true),
+      ],
+    );
+    await _pump(tester, note: list, size: const Size(700, 640));
+    final toggle = tester.getRect(find.byKey(const ValueKey('stylus-toggle')));
+    for (final key in ['items-add-header', 'items-delete-checked']) {
+      final r = tester.getRect(find.byKey(ValueKey(key)));
+      expect(r.right, lessThanOrEqualTo(toggle.left), reason: key);
+    }
     await _end(tester);
   });
 }

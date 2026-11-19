@@ -41,10 +41,20 @@ class _StylusToggleOverlayState extends State<StylusToggleOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.visible) return widget.child;
+    // SAĞ KENARDAKİ DÜĞMENİN PAYI (P78 KT-15, tablet turu 2026-11-18:
+    // yatay bölünmüşte düğme "Ara başlık"ı örtüyordu): satır sonu eylemleri
+    // bunu [StylusGutter.endOf] ile okuyup düğmenin altından çekilir.
+    // ponytail: yalnız sağ kenar; sola taşınırsa pay yok.
+    final child = StylusGutter(
+      end: widget.visible && (InkToolMemory.penToggleAt?.dx ?? 1) > 0.9
+          ? _size + AppSpace.s
+          : 0,
+      child: widget.child,
+    );
+    if (!widget.visible) return child;
     return Stack(
       children: [
-        widget.child,
+        child,
         Positioned.fill(
           child: LayoutBuilder(
             builder: (context, box) {
@@ -109,6 +119,21 @@ class _StylusToggleOverlayState extends State<StylusToggleOverlay> {
       ],
     );
   }
+}
+
+/// Yüzen kalem düğmesi sağ kenardayken satır sonundaki eylemlerin
+/// bırakacağı pay (dp); düğme yoksa 0. Değer yalnız düğme kenara/ortaya
+/// taşınınca değişir — okuyanlar her karede kurulmaz.
+class StylusGutter extends InheritedWidget {
+  const StylusGutter({super.key, required this.end, required super.child});
+
+  final double end;
+
+  static double endOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<StylusGutter>()?.end ?? 0;
+
+  @override
+  bool updateShouldNotify(StylusGutter oldWidget) => end != oldWidget.end;
 }
 
 class _StylusToggleButton extends StatelessWidget {

@@ -30,6 +30,7 @@ import 'note_package.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
+import 'stylus_toggle.dart' show StylusGutter;
 import 'windowed_body.dart' show kWindowedCaretMargin, selectWordAt, windowedFieldStyle;
 
 part 'items_editor_lazy.dart';
@@ -2144,6 +2145,7 @@ class ItemsEditorState extends State<ItemsEditor>
     // (ek şeridi + alt çubuk) örttüğü için geri kondu — kullanıcı isteği
     // 2026-08-09: "seç burada olsun, yeni öğe eski yerinde". "Seç" ise alt
     // çubuğun segmenti oldu (bkz. [startSelection]); footer'da tekrarlanmaz.
+    final stylusGutter = StylusGutter.endOf(context);
     final addButton = _floatRow(
       reserved: _kButtonRowWidth,
       // DÜĞME SATIRI YANA GEÇMEZ, ALTA İNER (kullanıcı bulgusu 2026-08-10:
@@ -2154,7 +2156,8 @@ class ItemsEditorState extends State<ItemsEditor>
       // görselin altında kalamaz, ölçüm bir piksel şaşsa bile.
       pushOnly: true,
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        // Yüzen kalem düğmesinin altında kalmasın (P78 KT-15).
+        padding: EdgeInsetsDirectional.only(start: 8, end: 8 + stylusGutter),
         child: LayoutBuilder(
           builder: (context, addRow) => Row(
           children: [
@@ -2226,7 +2229,12 @@ class ItemsEditorState extends State<ItemsEditor>
             reserved: _kButtonRowWidth,
             pushOnly: true,
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
+              padding: EdgeInsetsDirectional.fromSTEB(
+                16,
+                4,
+                8 + stylusGutter,
+                0,
+              ),
               child: Row(
                 children: [
                   Expanded(
