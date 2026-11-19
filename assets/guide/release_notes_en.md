@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 19 November 2026 {#2026-11-19}
+- **Ready-made prompts in note chat:** while the chat is empty, **Outline**, **Give ideas** and **Find gaps** buttons ask right away.
+- **Quick add no longer asks for the microphone on first open:** permission is requested when you tap the mic; once granted it listens automatically as before.
+- **No folder menu while scrolling back to the top:** scrolling up until the list hits the top no longer pops the menu open and swallows your next tap; pulling down when already at the top still opens it.
+- **Tidier on tablets:** bottom menus are centred and at most 560 dp wide in portrait too; in the narrowed list next to an open note, "Back to top" sits beside "+" and no longer covers the last card's date.
 - **The new-note panel now has Text note · List · Numbered list at the top.**
 - **Every button in the bottom bar's ⋯ menu:** besides those that don't fit, hidden ones (undo, reminder, photo, colour, share…) are here too. Tap **Edit** at the end of the menu to pin (📌) which stay on the bar and which live in the menu; long-press and drag to reorder.
 - **Edit the note ⋮ menu in place:** the separate "Edit menu" screen is gone. Long-press any action (or ⚙ → Edit menu): drag tiles to reorder, ⊖ to hide, ⊕ to bring back, ☆ for the quick row.

@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 19 Kasım 2026 {#2026-11-19}
+- **Notla sohbette hazır öneriler:** sohbet boşken **Ana hat**, **Fikir ver** ve **Eksikleri bul** düğmeleri; dokununca soru hemen sorulur.
+- **Hızlı ekle ilk açılışta mikrofon izni istemez:** izin, mikrofon düğmesine bastığında istenir; izin verdiysen eskisi gibi kendiliğinden dinler.
+- **Listeyi başa alırken klasör menüsü açılmaz:** aşağıdan yukarı kaydırıp tepeye çarpınca menü artık kendiliğinden açılıp sonraki dokunuşu yutmuyor; liste zaten tepedeyken aşağı çekmek yine açar.
+- **Tablette daha derli toplu:** alt menüler dikey tablette de ortada ve en çok 560 dp genişlikte; yanda açık notla daralan listede "Başa dön" düğmesi "+"nın yanına geçti, son kartın tarihini örtmüyor.
 - **Yeni not panelinde Metin notu · Liste · Sıralı liste artık en üstte.**
 - **Alt çubuğun ⋯ menüsünde bütün düğmeler:** çubuğa sığmayanların yanında gizli olanlar da (geri al, hatırlatıcı, fotoğraf, renk, paylaş…) burada. Menünün sonundaki **Düzenle** ile hangisinin çubukta, hangisinin menüde duracağını 📌 ile seçer, basılı tutup sürükleyerek sıralarsın.
 - **Not ⋮ menüsü yerinde düzenlenir:** ayrı "Menüyü düzenle" ekranı kalktı. Bir işleme basılı tut (ya da ⚙ → Menüyü düzenle): karoları sürükleyerek sırala, ⊖ ile gizle, ⊕ ile geri getir, ☆ ile hızlı satıra al.
