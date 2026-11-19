@@ -174,11 +174,21 @@ void main() {
     expect(InkToolMemory.fingerTool, FingerTool.erase);
   });
 
-  test('eski kayıt (yalnız ink_pen_only) Kaydırır/Çizer okunur', () async {
+  test('eski kayıt (yalnız ink_pen_only, seçim yok) Otomatik okunur, '
+      'davranış aynı', () async {
     SharedPreferences.setMockInitialValues({'ink_pen_only': true});
     InkToolMemory.attach(await SharedPreferences.getInstance());
-    expect(InkToolMemory.fingerTool, FingerTool.scroll);
+    expect(InkToolMemory.fingerTool, FingerTool.auto);
+    expect(InkToolMemory.effectiveFingerTool, FingerTool.scroll);
     SharedPreferences.setMockInitialValues({'ink_pen_only': false});
+    InkToolMemory.attach(await SharedPreferences.getInstance());
+    expect(InkToolMemory.fingerTool, FingerTool.auto);
+    expect(InkToolMemory.effectiveFingerTool, FingerTool.draw);
+    // Açık seçim (chosen) korunur.
+    SharedPreferences.setMockInitialValues({
+      'ink_pen_only': false,
+      'ink_pen_only_chosen': true,
+    });
     InkToolMemory.attach(await SharedPreferences.getInstance());
     expect(InkToolMemory.fingerTool, FingerTool.draw);
     InkToolMemory.saveFingerTool(FingerTool.erase);
@@ -214,5 +224,70 @@ void main() {
     expect(InkToolMemory.fingerTool, FingerTool.erase);
     final h = tester.getSize(find.byType(SegmentedButton<FingerTool>)).height;
     expect(h, greaterThanOrEqualTo(48));
+  });
+
+  group('Otomatik (2026-11-19)', () {
+    test('kalem hiç görülmediyse parmak çizer; ilk kalemde kaydırır', () async {
+      SharedPreferences.setMockInitialValues({});
+      InkToolMemory.attach(await SharedPreferences.getInstance());
+      expect(InkToolMemory.fingerTool, FingerTool.auto);
+      expect(InkToolMemory.penOnly, isFalse);
+      InkToolMemory.noteStylusEver();
+      expect(InkToolMemory.fingerTool, FingerTool.auto);
+      expect(InkToolMemory.penOnly, isTrue);
+      expect(InkToolMemory.effectiveFingerTool, FingerTool.scroll);
+    });
+
+    test('daha önce kalem görüldüyse açılışta kaydırır', () async {
+      SharedPreferences.setMockInitialValues({'ink_stylus_ever': true});
+      InkToolMemory.attach(await SharedPreferences.getInstance());
+      expect(InkToolMemory.fingerTool, FingerTool.auto);
+      expect(InkToolMemory.penOnly, isTrue);
+    });
+
+    test('açık seçimden Otomatik\'e dönülebilir; seçim ezilmez', () async {
+      SharedPreferences.setMockInitialValues({});
+      InkToolMemory.attach(await SharedPreferences.getInstance());
+      InkToolMemory.saveFingerTool(FingerTool.draw);
+      InkToolMemory.noteStylusEver();
+      expect(InkToolMemory.fingerTool, FingerTool.draw, reason: 'açık seçim');
+      expect(InkToolMemory.penOnly, isFalse);
+      InkToolMemory.saveFingerTool(FingerTool.auto);
+      expect(InkToolMemory.fingerTool, FingerTool.auto);
+      expect(InkToolMemory.penOnly, isTrue, reason: 'kalem görüldü');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('ink_pen_only_chosen'), isFalse);
+    });
+
+    testWidgets(
+      'dört seçenek 360 dp telefonda taşmadan sığar, Otomatik seçili',
+      (tester) async {
+        tester.view.physicalSize = const Size(360, 640);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('tr'),
+            home: Scaffold(
+              body: Padding(
+                padding: const EdgeInsets.all(16),
+                child: InkFingerToolPicker(
+                  onChanged: InkToolMemory.saveFingerTool,
+                ),
+              ),
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        final button = tester.widget<SegmentedButton<FingerTool>>(
+          find.byType(SegmentedButton<FingerTool>),
+        );
+        expect(button.selected, {FingerTool.auto});
+        expect(find.text('Otomatik'), findsOneWidget);
+        expect(find.textContaining('kalem görülmedi'), findsOneWidget);
+      },
+    );
   });
 }

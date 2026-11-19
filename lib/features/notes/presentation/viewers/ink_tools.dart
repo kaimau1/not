@@ -161,8 +161,10 @@ bool inkPointInPolygon(double x, double y, List<double> polygon) {
 }
 
 /// Parmak dokunuşunun işi (K34): kaydırır (= "yalnız kalem"), kalemin
-/// aracıyla çizer ya da siler.
-enum FingerTool { scroll, draw, erase }
+/// aracıyla çizer ya da siler. [auto] (kullanıcı isteği 2026-11-19,
+/// VARSAYILAN): bu cihazda kalem görüldüyse kaydırır, hiç görülmediyse
+/// çizer; kalem ilk kez değince kendiliğinden kaydırmaya geçer.
+enum FingerTool { auto, scroll, draw, erase }
 
 /// **KALEM TERCİHLERİNİN HAFIZASI** (kullanıcı isteği 2026-10-23: "pratiklik
 /// şart"): son seçilen kalem türü, renk, kalınlık, şeffaflık, "yalnız kalemle
@@ -248,10 +250,20 @@ class InkToolMemory {
   /// kaydı aynen okunur (yeni anahtar yoksa Kaydırır/Çizer).
   static bool fingerErases = false;
 
-  /// Parmağın işi: [penOnly] + [fingerErases]'ten TÜRETİLİR (ayrı kayıt yok).
-  static FingerTool get fingerTool => penOnly
-      ? FingerTool.scroll
-      : (fingerErases ? FingerTool.erase : FingerTool.draw);
+  /// Parmağın işi: [penOnly] + [penOnlyChosen] + [fingerErases]'ten
+  /// TÜRETİLİR (ayrı kayıt yok). Kullanıcı hiç seçmediyse (eski kayıtlar
+  /// dahil) [FingerTool.auto] — davranış zaten oydu: "yalnız kalem" ilk
+  /// kalem dokunuşunda kendiliğinden açılıyordu. Açık seçim korunur.
+  static FingerTool get fingerTool {
+    if (!penOnlyChosen && !fingerErases) return FingerTool.auto;
+    if (penOnly) return FingerTool.scroll;
+    return fingerErases ? FingerTool.erase : FingerTool.draw;
+  }
+
+  /// Otomatikte parmağın o anki işi (ayar açıklaması için).
+  static FingerTool get effectiveFingerTool => fingerTool == FingerTool.auto
+      ? (penOnly ? FingerTool.scroll : FingerTool.draw)
+      : fingerTool;
 
   /// Basınç algısı (kalem) açık mı.
   static bool pressure = true;
@@ -319,6 +331,9 @@ class InkToolMemory {
     autoStylus = prefs.getBool(_kAutoStylus) ?? true;
     autoStylusListenable.value = autoStylus;
     stylusEver = prefs.getBool(_kStylusEver) ?? false;
+    // OTOMATİK: kalem daha önce görüldüyse parmak kaydırır (kayıt yazılmaz;
+    // "yalnız kalem" kalem dokunuşunda zaten kendiliğinden açılırdı).
+    if (!penOnlyChosen && !fingerErases && stylusEver) penOnly = true;
     final at = prefs.getStringList(_kPenToggleAt);
     penToggleAt = at != null && at.length == 2
         ? Offset(double.tryParse(at[0]) ?? 1, double.tryParse(at[1]) ?? 0.5)
@@ -347,6 +362,15 @@ class InkToolMemory {
   static void saveFingerTool(FingerTool tool) {
     fingerErases = tool == FingerTool.erase;
     _prefs?.setBool(_kFingerEraser, fingerErases);
+    if (tool == FingerTool.auto) {
+      // Seçim geri alınır: kalem görüldüyse kaydırır, görülmediyse çizer.
+      penOnlyChosen = false;
+      penOnly = stylusEver;
+      _prefs
+        ?..setBool(_kPenOnlyChosen, false)
+        ..setBool(_kPenOnly, penOnly);
+      return;
+    }
     savePenOnly(tool == FingerTool.scroll, chosen: true);
   }
 
@@ -390,6 +414,11 @@ class InkToolMemory {
     if (stylusEver) return;
     stylusEver = true;
     _prefs?.setBool(_kStylusEver, true);
+    // OTOMATİK parmak: kalem ilk kez değdi → parmak artık kaydırır.
+    if (fingerTool == FingerTool.auto && !penOnly) {
+      savePenOnly(true, chosen: false);
+      toolChanged();
+    }
   }
 
   static void savePressure(bool value) {

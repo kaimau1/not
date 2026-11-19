@@ -5981,7 +5981,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkFingerToolInfo =>
-      'Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.';
+      'Otomatik: kalem görüldüyse parmak kaydırır, görülmediyse çizer. Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.';
 
   @override
   String get inkFingerScroll => 'Kaydırır';
@@ -8917,6 +8917,50 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarExpiryRemoved => 'Arşivleme süresi kaldırıldı';
+
+  @override
+  String get inkFingerAuto => 'Otomatik';
+
+  @override
+  String get inkFingerAutoNowScroll =>
+      'Otomatik: bu cihazda kalem görüldü, parmak kaydırıyor.';
+
+  @override
+  String get inkFingerAutoNowDraw =>
+      'Otomatik: kalem görülmedi, parmak çiziyor; kalem ilk değince kaydırmaya geçer.';
+
+  @override
+  String get barMoreLeftGroup => 'Sol grup';
+
+  @override
+  String get barMoreRightGroup => 'Sağ grup (renkli)';
+
+  @override
+  String get barMoreToRight => 'Sağ gruba taşı';
+
+  @override
+  String get barMoreToLeft => 'Sol gruba taşı';
+
+  @override
+  String get layoutScopeAll => 'Tümüne uygula';
+
+  @override
+  String get layoutScopeNote => 'Yalnız bu nota';
+
+  @override
+  String get layoutScopeInfoAll => 'Değişiklik bütün notlarda geçerli.';
+
+  @override
+  String get layoutScopeInfoNote =>
+      'Bu notun kendi düzeni var; değişiklik yalnız bu notta geçerli.';
+
+  @override
+  String get layoutScopeReset => 'Bu notun özelleştirmesini sıfırla';
+
+  @override
+  String quickRowEditNotHere(String names) {
+    return 'Bu notta görünmez: $names';
+  }
 
   @override
   String get barMoreEdit => 'Düzenle';
