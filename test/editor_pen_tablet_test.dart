@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/utils/hard_keyboard.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
@@ -409,6 +410,28 @@ void main() {
       final r = tester.getRect(find.byKey(ValueKey(key)));
       expect(r.right, lessThanOrEqualTo(toggle.left), reason: key);
     }
+    await _end(tester);
+  });
+
+  // P78 KT-18: odakta alan yokken ⌨ önce gövdeye odaklanır (yoksa klavye
+  // gelmiyor, yalnız simge değişiyordu).
+  testWidgets('KT-18: odak yokken ⌨ gövdeye odaklanır', (tester) async {
+    HardKeyboard.report(true);
+    addTearDown(() {
+      HardKeyboard.report(false);
+      HardKeyboard.resetForTest();
+    });
+    await _pump(tester);
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('editor-soft-keyboard')));
+    await tester.pump();
+    expect(HardKeyboard.softWanted.value, isTrue);
+    expect(
+      FocusManager.instance.primaryFocus?.context
+          ?.findAncestorStateOfType<EditableTextState>(),
+      isNotNull,
+    );
     await _end(tester);
   });
 }

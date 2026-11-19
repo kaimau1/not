@@ -67,6 +67,7 @@ abstract final class HardKeyboard {
     if (!_hooked) {
       _hooked = true;
       HardwareKeyboard.instance.addHandler(_onKey);
+      WidgetsBinding.instance.addObserver(_SoftClosedWatch());
     }
     _recheck?.cancel();
     final last = _lastKey;
@@ -87,10 +88,26 @@ abstract final class HardKeyboard {
     _set(value);
   }
 
+  /// Son görülen klavye payı (fiziksel piksel), bkz. [_SoftClosedWatch].
+  static double _lastInset = 0;
+
+  /// **⌨ DURUMU SANAL KLAVYEYİ İZLER** (P78 KT-18, tablet turu 2026-11-18:
+  /// "iki kez bastım, açılmadı"): sistem GERİ'si sanal klavyeyi kapatınca
+  /// [softWanted] açık kalıyor, sonraki ⌨ onu KAPATIYORDU. İstenmiş klavye
+  /// açıkken pay sıfıra inerse istek düşer.
+  static void _onInset(double inset) {
+    if (present.value && softWanted.value && _lastInset > 0 && inset == 0) {
+      softWanted.value = false;
+      _apply();
+    }
+    _lastInset = inset;
+  }
+
   @visibleForTesting
   static void resetForTest() {
     _recheck?.cancel();
     _lastKey = null;
+    _lastInset = 0;
     present.value = false;
     softWanted.value = false;
     clock = DateTime.now;
@@ -126,6 +143,16 @@ abstract final class HardKeyboard {
     WidgetsBinding.instance
       ..addPostFrameCallback((_) => focus.requestFocus())
       ..scheduleFrame();
+  }
+}
+
+/// Klavye payını izler (yalnız sayı karşılaştırır; kurulum yok).
+class _SoftClosedWatch with WidgetsBindingObserver {
+  @override
+  void didChangeMetrics() {
+    final dispatcher = WidgetsBinding.instance.platformDispatcher;
+    final view = dispatcher.implicitView ?? dispatcher.views.firstOrNull;
+    if (view != null) HardKeyboard._onInset(view.viewInsets.bottom);
   }
 }
 

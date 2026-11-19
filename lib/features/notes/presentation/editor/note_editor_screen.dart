@@ -2505,6 +2505,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Hızlı satırdaki kalem: AÇ / KAPA (kullanıcı isteği 2026-11-08: "kalem
   /// butonuna tekrar basınca kalem modu kapansın").
+  /// ⌨ (fiziksel klavye takılıyken): odakta alan yoksa önce gövdeye (liste
+  /// notunda başlığa) odaklanır — yoksa klavye gelmiyor, yalnız simge
+  /// değişiyordu (P78 KT-18).
+  void _toggleSoftKeyboard() {
+    HardKeyboard.toggleSoft();
+    if (!HardKeyboard.softWanted.value) return;
+    final focused = FocusManager.instance.primaryFocus?.context
+        ?.findAncestorStateOfType<EditableTextState>();
+    if (focused != null) return;
+    (_bodyFocus.context != null ? _bodyFocus : _titleFocus).requestFocus();
+  }
+
   void _togglePen() {
     _update(() => _penMode = !_penMode);
     if (_penMode) _penModeOpened();
@@ -5589,7 +5601,7 @@ child: FormatBar(
                           isSelected: soft,
                           icon: const Icon(Icons.keyboard_outlined),
                           selectedIcon: const Icon(Icons.keyboard_hide_outlined),
-                          onPressed: HardKeyboard.toggleSoft,
+                          onPressed: _toggleSoftKeyboard,
                         ),
                       ),
               ),
