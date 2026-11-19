@@ -131,6 +131,26 @@
       -webkit-text-fill-color: transparent !important;
       text-shadow: none !important;
     }
+    /* 2. KAT (kullanıcı 2026-11-19: "benim bilgisayarımda hâlâ seçince yazı
+       tipi değişiyor, başka bilgisayarda düzelmişti"). Yukarıdaki kural
+       ancak eklentinin kuralından GÜÇLÜYSE kazanır; `html body *::selection`
+       gibi eşit özgüllükte ama SONRA eklenen bir kural (ya da kullanıcı
+       kökenli eklenti stili) onu eziyor — Playwright'ta böyle bir kural
+       enjekte edilerek yeniden üretildi. Gizli alanın KENDİSİ görünmez:
+       opacity 0 odağı, klavye girişini, fare tıklamasını ve IME'yi bozmaz
+       (Flutter metni ve seçimi zaten kendisi çizer); seçim boyası hangi
+       renkle gelirse gelsin ekrana çıkmaz. Yalnız fareli/ince işaretçili
+       cihazlarda (telefon tarayıcısında klavye davranışına dokunmamak için).
+       Bekçi: test/web_selection_css_test.dart. */
+    @media (hover: hover) and (pointer: fine) {
+      flt-text-editing-host .flt-text-editing,
+      flt-text-editing-host input,
+      flt-text-editing-host textarea,
+      flt-semantics input,
+      flt-semantics textarea {
+        opacity: 0 !important;
+      }
+    }
   </style>
 </head>
 <body>
