@@ -203,6 +203,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Yüzey: tablet dikey, U1 varsayılanı (Klasörler). Önem: düşük. Gerçek: listeyi başa almak için art arda aşağı kaydırınca (en üstte aşırı kaydırma) klasör hızlı menüsü ("Tümü/Klasörler/Gelen", "Yeni klasör", "Sırala - sil") açılıyor; menü açıkken ilk dokunuş menüyü kapatıp eylemi yutuyor (ölçüm turu 3 koşuyu bozdu; ölçüm uygulamasında jest "Hiçbiri" yapıldı).
 - Öneri: jest eşiği (çekme ≥ ~96 dp ve hız < eşik) ya da menü açılmadan önce kısa titreşim/geri bildirim; Ayarlar'daki seçenek zaten var.
 - Görüntü: yok (ölçüm sırasında görüldü).
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden: parmak listeyi tepeye getirdikten sonraki aşırı kaydırma da çekiş sayılıyordu (aşağıdan başlayan uzun kaydırma = 80 dp "çekiş"). Çekiş artık yalnız liste zaten tepedeyken başlayan sürüklemede kurulur. Hız eşiği eklenmedi (cihazsız ölçülemez; tepede bilinçli hızlı çekiş yine menü açar). Bekçi `test/home_pull_scroll_back_test.dart` (düzeltmesiz menü açılıyor). Cihazda doğrulanmadı.
 
 ### KT-23 — Takvim ay hücrelerinde olay yazısı çok küçük (dikey tablet, olası)
 - Yüzey: tablet dikey, Takvim ay. Önem: düşük (olası; yalnız "Arife", "29 Ekim Bayramı" etiketleri incelendi). Gerçek: hücre ~60x120 dp ama olay çubuğu yazısı ~9–10 sp; hücrenin %90'ı boş. PW-E KW-9 (geniş ay hücresinde gün 13 / şerit 11 pt) bunu ele almış olabilir — birleşik derlemede dikey tabletle yeniden bak.

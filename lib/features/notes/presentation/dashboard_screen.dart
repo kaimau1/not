@@ -511,6 +511,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// `ValueNotifier`: göstergeyi çizer, ekranı yeniden kurmaz.
   final _folderPull = ValueNotifier<double>(0);
 
+  /// Son sürükleme liste tepedeyken mi başladı (KT-22): yalnız öyleyse
+  /// aşağı çekiş sayılır.
+  bool _pullArmed = false;
+
   /// Kaydırma bildirimini ayırıcıya bağlar; `false` dönerek bildirimi
   /// yukarıya (iç içe kaydırıcılara) geçirmeye devam eder.
   bool _onGridScroll(ScrollNotification notification) {
@@ -540,18 +544,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Aşağı çekişi izler: Android'de (sıkıştırma fiziği) tepede çekiş
   /// `OverscrollNotification`, iOS'ta (yaylı) eksi konum olarak gelir.
   /// Yalnız PARMAKLA çekiş sayılır (fırlatmanın tepeye çarpması değil).
+  ///
+  /// YALNIZ TEPEDE BAŞLAYAN SÜRÜKLEME (KT-22, tablet turu 2026-11-18):
+  /// aşağıdan başlayıp tepeye çarpan uzun bir kaydırmanın kalan aşırı
+  /// kaydırması da çekiş sayılıyor, listeyi başa alan kullanıcıya klasör
+  /// menüsü açılıp sonraki dokunuşu yutuyordu. Yenile-çek gibi: parmak
+  /// liste ZATEN tepedeyken değdiyse çekiş kurulur ([_pullArmed]).
   void _trackFolderPull(ScrollNotification n) {
     final m = n.metrics;
+    if (n is ScrollStartNotification) {
+      _pullArmed = m.pixels <= m.minScrollExtent + 1;
+    }
     var pull = _folderPull.value;
     if (n is OverscrollNotification) {
-      if (n.dragDetails != null && n.overscroll < 0 && _pullGestureAllowed()) {
+      if (n.dragDetails != null &&
+          n.overscroll < 0 &&
+          _pullArmed &&
+          _pullGestureAllowed()) {
         pull -= n.overscroll;
       }
     } else if (n is ScrollUpdateNotification) {
       if (n.dragDetails == null) {
         pull = 0;
       } else if (m.pixels < m.minScrollExtent) {
-        pull = _pullGestureAllowed() ? m.minScrollExtent - m.pixels : 0;
+        pull = _pullArmed && _pullGestureAllowed()
+            ? m.minScrollExtent - m.pixels
+            : 0;
       } else if (pull > 0) {
         // Çekip geri itti: mesafe azalır.
         pull = (pull - (n.scrollDelta ?? 0)).clamp(0, double.infinity);
