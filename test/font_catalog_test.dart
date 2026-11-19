@@ -88,5 +88,16 @@ void main() {
     expect(initialFontScale(1.3), FontScaleStep.xlarge.scale);
     expect(initialFontScale(2.0), FontScaleStep.xlarge.scale);
     expect(initialFontScale(0.8), FontScaleStep.small.scale);
+    // KW-10: web masaüstü penceresinde başlangıç en az "Büyük".
+    expect(
+      initialFontScale(1.0, web: true, windowWidth: 1440),
+      FontScaleStep.large.scale,
+    );
+    expect(
+      initialFontScale(1.3, web: true, windowWidth: 1440),
+      FontScaleStep.xlarge.scale,
+    );
+    expect(initialFontScale(1.0, web: true, windowWidth: 800), 1.0);
+    expect(initialFontScale(1.0, windowWidth: 1440), 1.0, reason: 'uygulama');
   });
 }
