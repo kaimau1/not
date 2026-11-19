@@ -46,3 +46,40 @@ A = B (aynı APK) karşılaştırması: 17 evrenin hepsi `aynı/iyi` (en büyük
 - Yatay (sol ray genişletilmiş + bölünmüş görünüm, K32) ölçülmedi: profil APK'sının yön kilidi + yatay ölçüm betik desteği (yalnız yön zorlama var) → öneri T16 raporu.
 - 120 Hz paneli ve 1000/3000 not veri setleri (T1) yapılmadı.
 - Güncelleme sonrası `[apk]` A/B'sinde taban `--altin` ile bu dosyaya karşı karşılaştırılır (`ab_hepsi.py` tablette otomatik `altin_taban_tablet.json` seçer).
+
+## A/B 2026-11-19 (ÖLÇÜM KAPISI, `[apk]` öncesi: A = `a77b1cc4` v1.2.91, B = main `75493691` P72–P78)
+Aynı tablet/koşul (MatePad 11, dikey, 26–27 °C, `--altin`); iki profil APK'sı `--build-name=1.2.999 --build-number=9001` ile derlendi (yoksa ana ekranda "Yeni sürüm var: v1.2.91" bandı çıkıp tablet piksel tablosunu kaydırıyordu, `home_locate` ⋮ levhasını bulamadı). Tur 1: `--kosu 3 --teyit 2` (5A+5B); tur 2 (teyit): `--kosu 2 --teyit 0` (2A+2B). İlk deneme "gövde alanı bulunamadı" ile düştü, aynı komut yeniden koşunca sorunsuz (anlık semantik boşluğu).
+
+**KARAR: KALDI (araç; iki turda da).** Gerekçe tek madde, ölçüm yolu farkı: `menu` evresi altına karşı B LAYOUT 31,3 / 25,1 ms (altın 19,2; +%63 / +%31; mutlak +6…12 ms) — B önceki `[apk]` A'dan çok daha iyi (UI 123 vs 291–299 ms, LAYOUT 25–31 vs 122–130). Tur 2'deki `not_ac KÖTÜLEŞTİ` yalnız 2 A koşusunun ortalaması: koşu 2A `not_ac` = 8,5 ms (dokunuş boşa gitti, 38 kare) → ölçüm artefaktı; tur 1'de 5+5 koşuyla aynı evre A 101,1 → B 104,9 (+%4).
+**Neden `menu` kıyas dışı:** A koşuları "tablet ilk kart" (boş semantik → `GEO_1600` piksel tablosu, ⋮ geometri), B koşuları "Kitap bilet. 12 madde. Sabitle" (dolu semantik → ⋮ semantik düğümü) yolundan geçti; yani B ana ekranı boşta uygulamada semantik ağacı gönderiyor, A göndermiyor (A↔A de altın tabanla [T16: aynı geometri yolu] 109/19 vs şimdi 291–299/122–130 farklı → evre yolu/sıra duyarlı). Altın tabanı değiştirmedim.
+
+| evre | A UI ms | B UI ms | A LAYOUT | B LAYOUT | karar (tur 1, 5A+5B) |
+|---|---|---|---|---|---|
+| acilis | 134,7 | 126,0 | 120,7 | 111,2 | aynı/iyi |
+| liste | 2448,9 | 2496,8 | 1319,6 | 1352,5 | aynı/iyi (+%2) |
+| menu | 291,5 | 122,7 | 122,3 | 31,3 | aynı/iyi; altın +%63 (LAYOUT) — yukarı |
+| arama | 159,5 | 157,0 | 95,6 | 95,1 | aynı/iyi |
+| klasor | 246,8 | 227,4 | 98,5 | 81,0 | aynı/iyi |
+| yeni_not | 296,3 | 285,4 | 44,2 | 45,8 | aynı/iyi |
+| not_ac | 101,1 | 104,9 | 45,3 | 48,2 | aynı/iyi |
+| kb | 300,1 | 303,6 | 121,9 | 122,2 | aynı/iyi |
+| yaz | 1128,2 | 696,2 | 190,8 | 98,4 | aynı/iyi (A tek koşu 1183 ms sıçraması; tur 2: 658,9 → 683,8, +%3,8) |
+| not_kapa | 230,4 | 224,1 | 68,8 | 72,0 | aynı/iyi |
+| sabit_ac | 449,0 | 468,7 | 130,3 | 129,7 | aynı/iyi |
+| sabit_kay | 490,2 | 487,2 | 106,1 | 104,7 | aynı/iyi |
+| sabit_kb | 1166,7 | 1184,6 | 260,9 | 276,0 | aynı/iyi |
+| sablon | 262,4 | 261,4 | 54,7 | 55,0 | aynı/iyi |
+| bicim | 1651,5 | 1582,2 | 86,9 | 84,3 | aynı/iyi |
+| kalem, duzen | — | 1325,4 / 297,8 (tur 1 son koşu) | — | 232,6 / 58,7 | A'da ölçülemedi: A koşularının hepsinde "'Kalemle yaz' düğmesi yok" + uygulama launcher'a düştü (araç, A'nın ana ekran yolu); yalnız B var → tablet altınına göre kalem UI 1247,5 → ~1325 (+%6), LAYOUT 236,1 → 232,6; duzen 308,2 → 297,8 (−%3): altın içinde |
+
+İlk kare: A 27 / B 26 ms (tur 2: 39,5 / 23,5). Evre UI/LAYOUT'ta önceki `[apk]`'ya göre > %20 kötüleşen yok (B ≤ +%5 hepsinde; yalnız `menu` ölçüm-yolu farklı ve B lehine); tablet altınına göre > %15: yalnız `menu` LAYOUT (+6…12 ms mutlak). Şüpheli değişiklik: ⋮ kart levhası (P72 ✨ levha satırı / P74 jest hedefleri) LAYOUT'u ~+6…12 ms büyütmüş olabilir; yol farkı yüzünden KANITLANMADI. Düzeltme önerisi: `home_locate` B'nin dolu semantiğini kullansın ya da altın tabanı bu yol için yeniden yazılsın (`--altin-yaz`, kullanıcı kararı).
+
+### U5 (P75 süre çizgisi) bildirimli yazma — elle, tablet dikey
+Senaryo: açık not (Kitap bilet), ⋮ → "Notu çoğalt" (bildirim "Not çoğaltıldı · Geri al", 4 sn), alana dokun, 6 × `input text " deneme yazisi"` 0,55 sn aralıkla (≈3,3 sn, bildirim açıkken); kontrol: aynı yazma bildirimsiz. 2 tekrar toplamı, VM zaman çizelgesi (Flutter'da `gfxinfo` kare saymaz; kare = `Animator::BeginFrame`, janky = UI > 16 ms):
+
+| | bildirimsiz yazma (kare / UI ms / LAYOUT ms / janky) | bildirimli yazma (kare / UI ms / LAYOUT ms / en uzun kare / janky) |
+|---|---|---|
+| A (v1.2.91, Timer 8 adım/sn) | 258 / 1091,9 / 395,2 / 0 | 339 / 823,9 / 278,6 / 17,7 ms / 1 (%0,3) |
+| B (P75 AnimationController) | 264 / 1112,5 / 402,7 / 0 | 811 / 1112,6 / 263,5 / 8,8 ms / 0 (%0) |
+
+Okuma: B bildirim açıkken ≈2,4× kare çiziyor (her vsync; ödünleşim beklendiği gibi) ama kare başı maliyet küçük (ortalama 1,4 ms); bildirimli yazmada janky % A'dan kötü DEĞİL (0 vs 1), en uzun kare 17,7 → 8,8 ms. UI ms toplamı +%35 (kare sayısı yüzünden) — pil/ısı etkisi için kullanıcı turu ("bildirim varken kasma" 11-16 kapandı sayılır; ısınma ölçülmedi). Önceki iki deneme (alana yeniden dokunmadan) yazı girmediği için geçersiz sayıldı. Ölçüm uygulamasında "Notu çoğalt" kopyaları (11) geri alınmadığından birikti; temizlendi (10+1 not çöp kutusunda; liste 209 / Sabit 3 eski hâlinde).
