@@ -278,7 +278,14 @@ extension _EditorVoice on _NoteEditorScreenState {
         _dictationLength = 0;
         _dictationLine++;
       }
-      _replaceDictationRange(t, c, lines[_dictationLine]);
+      // Dikteyle açılan YENİ maddenin ilk harfi büyük (sabah bakılacak,
+      // 2026-11-19): madde başı cümle başıdır.
+      final line = lines[_dictationLine];
+      _replaceDictationRange(
+        t,
+        c,
+        _dictationLine > 0 ? capitalizeTurkishFirst(line) : line,
+      );
       _revealCaretSoon();
       return;
     }

@@ -632,6 +632,12 @@ abstract final class Personalize {
     _writeNote(id, own ? _layoutOf(draft.value ?? prefs.value) : null);
   }
 
+  /// Not kalıcı silindi: yerel düzen kaydı da gider (sabah bakılacak,
+  /// 2026-11-19: silinen notun kaydı sonsuza dek kalıyordu).
+  static void forgetNote(String noteId) {
+    if (_noteLayouts.containsKey(noteId)) _writeNote(noteId, null);
+  }
+
   /// Menü DÜZENİ değişikliği (hızlı satır, alt çubuk): açık notun kendi
   /// düzeni varsa ona, yoksa genel düzene ([update]) yazılır.
   static void updateLayout(UiPrefs Function(UiPrefs) change) {

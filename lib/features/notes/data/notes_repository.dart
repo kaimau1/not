@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/constants.dart';
 import '../../../core/crash_reporting.dart';
 import '../../../core/error_log.dart';
+import '../../../core/personalize.dart';
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/firestore_size.dart';
 import '../../../core/utils/local_file.dart';
@@ -1438,6 +1439,8 @@ class NotesRepository {
         // silme bir sonraki kalıcı silmede yeniden denenir, veri riski yok.
       }
     }
+    // Not başına menü düzeni (yerel tercih) de silinir.
+    Personalize.forgetNote(note.id);
     hardDelete(note.id);
   }
 
