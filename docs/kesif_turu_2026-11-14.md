@@ -218,6 +218,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 ### KT-24 — ⚡ "Hızlı ekle" ilk dokunuşta mikrofon izni istiyor (açıklamasız)
 - Yüzey: tablet, ray ⚡. Önem: düşük. Gerçek: "Hızlı ekle" düğmesine ilk dokunuşta sistem "mikrofona erişme izni verilsin mi?" penceresi (REDDET verildi); izin istemeden önce neden istendiği söylenmiyor; mikrofon yalnız kullanıcı mikrofona basınca istenmeli (görülen: tek dokunuş → hemen izin penceresi).
 - Öneri: izni mikrofon düğmesine basılınca iste; ya da ilk kullanımda kısa açıklama levhası.
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden: levhanın kendiliğinden dinlemesi (`autoListen`, kullanıcı isteği 2026-11-16) izni İSTEYEN yolu çağırıyordu. Artık yalnız izin zaten verilmişse kendiliğinden dinler; izin mikrofona basınca istenir (ilk açılışta yazma alanı hazır, mikrofon bekler). Bekçi `test/quick_entry_mic_permission_test.dart`. Cihazda doğrulanmadı.
 
 ## Temiz çıkanlar (tablet turu)
 Koyu tema (Koyu) ana/editör/ayarlar okunur, kontrast iyi (`kt-koyu-01/02`); yatay ayarlar ana-detay (sol liste + sağ detay) düzgün (`kt-yatay-05`); yatay "Uygulama"/kart levhası ortada ≤ 560 dp (KT-2 çalışıyor, `kt-yatay-02`); Güvenlik ayrı bölüm (KT-10 çalışıyor); Klasörler boş durumu ortak bileşen (KT-9); Şablonlar levhası düzgün (`kt-dikey-10`); Kalem ayarlarında "Parmak: Kaydır · Çiz · Sil" var (K34 ayarı görüldü); dikey↔yatay döndürmede (kilitle/serbest) çökme/taşma yok; logcat'te FATAL/ANR yok.

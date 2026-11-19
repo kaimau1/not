@@ -105,10 +105,18 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     super.initState();
     _c.addListener(_onChanged);
     unawaited(
-      DeviceSpeech.isAvailable().then((ok) {
+      DeviceSpeech.isAvailable().then((ok) async {
         if (!mounted) return;
         _micAvailable.value = ok;
-        if (ok && widget.autoListen) unawaited(_startListening(manual: false));
+        // Kendiliğinden dinleme İZİN İSTEMEZ (KT-24): açıklamasız sistem
+        // kutusu ilk dokunuşta çıkıyordu. İzin yoksa mikrofona basınca
+        // istenir ([toggleListening] → [_startListening]).
+        if (ok &&
+            widget.autoListen &&
+            await DeviceSpeech.micPermissionGranted() &&
+            mounted) {
+          unawaited(_startListening(manual: false));
+        }
       }),
     );
   }
