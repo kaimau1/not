@@ -258,10 +258,9 @@ class _DayCell extends StatelessWidget {
                             if (wide)
                               TextSpan(
                                 text: '$weekday ',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w400,
-                                ),
+                                // KW-8: geniş hücrede 10 → `badge` (11).
+                                style: AppText.of(Theme.of(context)).badge
+                                    .copyWith(fontWeight: FontWeight.w400),
                               ),
                             TextSpan(text: '${day.day}'),
                           ],
@@ -312,10 +311,11 @@ class _DayCell extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: red ? scheme.error : scheme.onSurface,
-                            ),
+                            style: AppText.of(Theme.of(context)).badge
+                                .copyWith(
+                                  height: 1.15,
+                                  color: red ? scheme.error : scheme.onSurface,
+                                ),
                           )
                         : _Dots(
                             colors: [
