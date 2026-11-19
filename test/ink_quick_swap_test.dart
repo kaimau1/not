@@ -14,30 +14,65 @@ void main() {
 
   group('yer', () {
     const area = Size(400, 600);
-    test('boşlukta çizgi kutusunun sol üstünde, kutudan uzakta', () {
+    test('boşlukta çizgi kutusunun sol üstünde, kutuya yakın', () {
       const stroke = Rect.fromLTRB(200, 300, 320, 330);
       final at = inkQuickSwapPlace(stroke, area);
-      expect(at.dx + kInkQuickSwapSize, lessThanOrEqualTo(stroke.left - 30));
-      expect(at.dy + kInkQuickSwapSize, lessThanOrEqualTo(stroke.top - 30));
+      expect(at.dx + kInkQuickSwapSize, lessThanOrEqualTo(stroke.left - 16));
+      expect(at.dy + kInkQuickSwapSize, lessThanOrEqualTo(stroke.top - 16));
+      // "bazen çok uzakta" olmasın.
+      expect(stroke.left - (at.dx + kInkQuickSwapSize), lessThan(30));
     });
 
-    test('sol kenarda sağ üst, tepede alt; köşede alana kıstırılır', () {
-      final right = inkQuickSwapPlace(
+    test('sol kenarda sağa sıçramaz: kenara kıstırılır; tepede altta', () {
+      final left = inkQuickSwapPlace(
         const Rect.fromLTRB(10, 300, 100, 320),
         area,
       );
-      expect(right.dx, greaterThan(100));
-      expect(right.dy, lessThan(300));
+      expect(left.dx, 0);
+      expect(left.dy + kInkQuickSwapSize, lessThanOrEqualTo(300));
       final below = inkQuickSwapPlace(
         const Rect.fromLTRB(200, 10, 300, 30),
         area,
       );
       expect(below.dy, greaterThan(30));
+      expect(below.dx, lessThan(200));
       final clamped = inkQuickSwapPlace(
         const Rect.fromLTRB(0, 0, 400, 600),
         area,
       );
-      expect(clamped, Offset.zero);
+      expect(clamped.dx, 0);
+    });
+
+    test('yapışkan: satır boyunca yazarken düğme yerinde kalır', () {
+      final first = inkQuickSwapPlace(
+        const Rect.fromLTRB(100, 300, 130, 330),
+        area,
+      );
+      // Aynı satırda sağa doğru birkaç harf daha.
+      var at = first;
+      for (final x in [140.0, 180.0, 220.0]) {
+        at = inkQuickSwapPlace(
+          Rect.fromLTRB(x, 296, x + 30, 334),
+          area,
+          previous: at,
+        );
+        expect(at, first);
+      }
+      // Yeni çizgi düğmenin üstüne gelirse yer değişir.
+      final over = inkQuickSwapPlace(
+        Rect.fromLTRB(first.dx, first.dy, first.dx + 30, first.dy + 30),
+        area,
+        previous: first,
+      );
+      expect(over, isNot(first));
+      // Çok uzağa yazılınca da yeni yazının yanına gelir.
+      final far = inkQuickSwapPlace(
+        const Rect.fromLTRB(200, 540, 260, 570),
+        area,
+        previous: first,
+      );
+      expect(far, isNot(first));
+      expect(far.dy, greaterThan(400));
     });
   });
 

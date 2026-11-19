@@ -409,10 +409,8 @@ void main() {
     expect(add, findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('pinned-media-menu')));
     await tester.pumpAndSettle();
-    expect(
-      find.byKey(const ValueKey('pinned-add-bubble-plain')),
-      findsOneWidget,
-    );
+    // Tür seçimi levhada sorulmaz (2026-11-19): tek "Balon" kutucuğu.
+    expect(find.byKey(const ValueKey('pinned-add-bubble-plain')), findsNothing);
     await tester.tap(find.byKey(const ValueKey('pinned-add-bubble-note')));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.check), findsOneWidget);
@@ -423,7 +421,7 @@ void main() {
     expect(find.byIcon(Icons.check), findsNothing);
   });
 
-  testWidgets('GENİŞ çubukta Balon ekle düğmesi çubukta, tür menüsü açar', (
+  testWidgets('GENİŞ çubukta Balon ekle düğmesi doğrudan bırakma kipini açar', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(900, 800);
@@ -445,8 +443,7 @@ void main() {
     expect(add, findsOneWidget);
     await tester.tap(add);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('pinned-add-bubble-note')));
-    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('pinned-add-bubble-note')), findsNothing);
     expect(find.byIcon(Icons.check), findsOneWidget);
     await tester.tap(add);
     await tester.pump();

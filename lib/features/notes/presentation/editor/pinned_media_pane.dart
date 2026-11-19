@@ -1687,10 +1687,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// **BALON EKLE MENÜSÜ** (kullanıcı bulgusu 2026-11-05: "açık metin
   /// yazma kısmını bulamadım"): tür seçimi eskiden yalnız bırakma kipinin
   /// araç kartındaydı ve kip basılı tutmakla atlanınca kart hiç
-  /// görünmüyordu. Düğme YAZILI seçenekler açar — **Balon** (tutamaçlı
-  /// not) · **Açık metin** (sayfanın üstüne doğrudan yazı) · balon varsa
-  /// **gizle/göster** —, seçilen türle bırakma kipi açılır; kip açıkken
-  /// düğme ✓ olur ve kipi kapatır. Dar çubukta aynı üç seçenek ⋮
+  /// görünmüyordu. 2026-11-19'dan beri düğme menü AÇMAZ: tek dokunuşla
+  /// bırakma kipi açılır, tür (Balon | Metin) kipin araç kartında seçilir;
+  /// kip açıkken düğme ✓ olur ve kipi kapatır. Dar çubukta aynısı ⋮
   /// levhasının "Balonlar" bölümünde.
   Widget _addBubbleButton(BuildContext context, {required bool active}) {
     final l10n = context.l10n;
@@ -1703,54 +1702,41 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         onPressed: _stopAdding,
       );
     }
+    // TEK DOKUNUŞ = BIRAKMA KİPİ (kullanıcı bulgusu 2026-11-19: "balona
+    // tıklıyorum, önce Balon mu metin mi diye soruyor; içeride yine
+    // soruyor — baştaki soru gereksiz"). Tür seçimi yalnız bırakma kipinin
+    // araç kartında (Balon | Metin bölmesi); kip son seçilen türle açılır.
+    // Gizle/göster balon varken yanındaki göz düğmesinde (görüntüleyici
+    // balon çubuğuyla aynı).
     final toggle = _bubbleToggle();
-    return PopupMenuButton<String>(
+    final add = _BarButton(
       key: const ValueKey('pinned-add-bubble'),
       tooltip: l10n.bubbleAdd,
-      icon: const Icon(Icons.add_comment_outlined, size: AppIconSize.m),
-      onSelected: (v) =>
-          v == 'toggle' ? toggle?.flip() : _startAdding(plain: v == 'plain'),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          key: const ValueKey('pinned-add-bubble-note'),
-          value: 'note',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.chat_bubble_outline),
-            title: Text(l10n.bubbleModeBubble),
-            subtitle: Text(l10n.bubbleAddNoteHint),
-          ),
+      icon: Icons.add_comment_outlined,
+      onPressed: () => _startAdding(plain: _lastPlain),
+    );
+    if (toggle == null) return add;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        add,
+        _BarButton(
+          key: const ValueKey('pinned-bubbles-toggle'),
+          tooltip: toggle.hidden ? l10n.bubblesShow : l10n.bubblesHide,
+          icon: toggle.hidden
+              ? Icons.visibility_off_outlined
+              : Icons.visibility_outlined,
+          selected: toggle.hidden,
+          onPressed: toggle.flip,
         ),
-        PopupMenuItem(
-          key: const ValueKey('pinned-add-bubble-plain'),
-          value: 'plain',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.text_fields),
-            title: Text(l10n.bubbleAddPlainTitle),
-            subtitle: Text(l10n.bubbleAddPlainHint),
-          ),
-        ),
-        if (toggle != null)
-          PopupMenuItem(
-            key: const ValueKey('pinned-bubbles-toggle'),
-            value: 'toggle',
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                toggle.hidden
-                    ? Icons.speaker_notes_off_outlined
-                    : Icons.chat_bubble_outline,
-              ),
-              title: Text(toggle.hidden ? l10n.bubblesShow : l10n.bubblesHide),
-            ),
-          ),
       ],
     );
   }
+
+  /// Bırakma kipinin son türü (araç kartında değişebilir).
+  bool get _lastPlain => _canEditBubbles
+      ? _ownController().plainMode
+      : _pdfPlain.value;
 
   /// Ek işleri verilmiş mi (salt okunurda kaldır/paylaş yok).
   bool get hasMenu =>
@@ -1947,17 +1933,13 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             section(l10n.bubblesOverviewTitle),
             SheetTileGrid(
               children: [
+                // Tür (Balon | Metin) bırakma kipinin araç kartında —
+                // burada ikinci kez sorulmaz (kullanıcı bulgusu 2026-11-19).
                 tile(
                   'pinned-add-bubble-note',
-                  Icons.chat_bubble_outline,
-                  l10n.bubbleModeBubble,
-                  () => _startAdding(plain: false),
-                ),
-                tile(
-                  'pinned-add-bubble-plain',
-                  Icons.text_fields,
-                  l10n.bubbleAddPlainTitle,
-                  () => _startAdding(plain: true),
+                  Icons.add_comment_outlined,
+                  l10n.bubbleAdd,
+                  () => _startAdding(plain: _lastPlain),
                 ),
                 if (toggle != null)
                   tile(
