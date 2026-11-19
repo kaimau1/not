@@ -960,7 +960,7 @@ class _EditTile extends StatelessWidget {
             color: scheme.surface,
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: 20, color: color),
+          child: Icon(icon, size: AppIconSize.m, color: color),
         ),
       ),
     ),
@@ -1002,7 +1002,7 @@ class _EditTile extends StatelessWidget {
             childWhenDragging: Opacity(opacity: 0.3, child: face),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.m),
                 border: Border.all(
                   color: candidates.isNotEmpty
                       ? scheme.primary
@@ -1035,7 +1035,7 @@ class _EditTile extends StatelessWidget {
                 icon: inQuick ? Icons.star_rounded : Icons.star_border_rounded,
                 color: inQuick || !quickFull
                     ? scheme.primary
-                    : scheme.onSurfaceVariant.withValues(alpha: 0.4),
+                    : scheme.onSurfaceVariant.withValues(alpha: AppAlpha.disabled),
                 tooltip: l10n.menuQuickRow,
                 onTap: inQuick || !quickFull ? onToggleQuick : null,
               ),
