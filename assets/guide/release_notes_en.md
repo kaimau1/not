@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 19 November 2026 {#2026-11-19}
+- **Quick pen ↔ eraser button:** when a stroke ends, a small translucent button appears next to it, away from your hand; tap to switch to the eraser, or back to the pen. It becomes clearer as the pen approaches and fades when you start a new stroke or leave it for a few seconds. It can be turned off in pen settings.
+- **The bar stays visible while you edit it:** the ⋯ → Edit list now sits above the bottom bar, shorter and scrollable, so moving or pinning a button shows up below right away.
+- **Quick add works even with no suitable note:** if you have no list or titled text note yet, what you type (or say) is saved as a new note.
+- **An item opened by saying "new item" while dictating starts with a capital letter.**
 - **Dictating into a checklist no longer multiplies items:** saying "new item" while dictating no longer turns what you said into dozens of copies; one new item opens and dictation continues there.
 - **"Auto" finger setting for the pen:** if a pen has been used on this device a finger scrolls, otherwise it draws; it switches to scrolling the first time a pen touches. Your own Scrolls/Draws/Erases choice is kept.
 - **The quick menu's checkbox works in list notes too:** the ☑ above the keyboard checks the focused item (in a numbered list it turns it into a checklist). When editing the quick menu, buttons that don't appear in that note are listed.
