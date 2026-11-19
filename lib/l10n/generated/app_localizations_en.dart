@@ -5461,6 +5461,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatModeBrainstorm => 'Brainstorm';
 
   @override
+  String get chatSuggestOutline => 'Outline';
+
+  @override
+  String get chatSuggestIdeas => 'Give ideas';
+
+  @override
+  String get chatSuggestGaps => 'Find gaps';
+
+  @override
+  String get chatPromptOutline => 'Outline this note in short bullet points.';
+
+  @override
+  String get chatPromptIdeas => 'Suggest new ideas and angles for this note.';
+
+  @override
+  String get chatPromptGaps =>
+      'What is missing, unclear or contradictory in this note?';
+
+  @override
   String get aiChatRowTitle => 'Chat';
 
   @override

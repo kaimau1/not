@@ -5441,6 +5441,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatModeBrainstorm => 'Beyin fırtınası';
 
   @override
+  String get chatSuggestOutline => 'Ana hat';
+
+  @override
+  String get chatSuggestIdeas => 'Fikir ver';
+
+  @override
+  String get chatSuggestGaps => 'Eksikleri bul';
+
+  @override
+  String get chatPromptOutline =>
+      'Bu notun ana hatlarını kısa maddelerle çıkar.';
+
+  @override
+  String get chatPromptIdeas => 'Bu not için yeni fikirler ve açılar öner.';
+
+  @override
+  String get chatPromptGaps =>
+      'Bu notta eksik kalan, belirsiz ya da çelişen yerler neler?';
+
+  @override
   String get aiChatRowTitle => 'Sohbet';
 
   @override

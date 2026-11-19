@@ -243,6 +243,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     await _ask(text);
   }
 
+  /// Öneri çipi: kipi gerekiyorsa değiştirip hazır soruyu sorar.
+  Future<void> _suggest(ChatMode mode, String prompt) async {
+    if (!ensureAiReady(context, ref)) return;
+    if (_isBusy) return;
+    if (_mode != mode) setState(() => _mode = mode);
+    await _ask(prompt);
+  }
+
   Future<void> _pickHeading(String heading) async {
     setState(() => _focusHeading = heading);
     await _ask(heading);
@@ -446,12 +454,23 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text(
-                        _hint(l10n),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _hint(l10n),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                          // ÖNERİ ÇİPLERİ (AI-S2 eki, PLAN §1.6 A1): "ana hat"
+                          // ve "beyin fırtınası" ayrı yetenekler yerine bu
+                          // notla sohbetin ilk adımı. Yalnız sohbet boşken.
+                          if (_scope == ChatScope.note && !busy) ...[
+                            const SizedBox(height: AppSpace.l),
+                            _NoteSuggestions(onPick: _suggest),
+                          ],
+                        ],
                       ),
                     ),
                   )
@@ -727,6 +746,58 @@ class _OutlineBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Notla sohbetin öneri çipleri (AI-S2 eki): Ana hat · Fikir ver · Eksikleri
+/// bul. "Fikir ver" beyin fırtınası kipinde sorulur (yeni fikir üretir); öteki
+/// ikisi notun kendisinden yanıtlanır.
+class _NoteSuggestions extends StatelessWidget {
+  const _NoteSuggestions({required this.onPick});
+
+  final void Function(ChatMode mode, String prompt) onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: AppSpace.s,
+      runSpacing: AppSpace.s,
+      children: [
+        for (final (key, icon, label, mode, prompt) in [
+          (
+            'outline',
+            Icons.format_list_bulleted,
+            l10n.chatSuggestOutline,
+            ChatMode.qa,
+            l10n.chatPromptOutline,
+          ),
+          (
+            'ideas',
+            Icons.lightbulb_outline,
+            l10n.chatSuggestIdeas,
+            ChatMode.brainstorm,
+            l10n.chatPromptIdeas,
+          ),
+          (
+            'gaps',
+            Icons.rule,
+            l10n.chatSuggestGaps,
+            ChatMode.qa,
+            l10n.chatPromptGaps,
+          ),
+        ])
+          // Düğme rolü (F14.3): öneri bir eylemdir, seçim değil.
+          OutlinedButton.icon(
+            key: ValueKey('chat-suggest-$key'),
+            icon: Icon(icon, size: AppIconSize.xs, color: scheme.primary),
+            label: Text(label),
+            onPressed: () => onPick(mode, prompt),
+          ),
+      ],
     );
   }
 }

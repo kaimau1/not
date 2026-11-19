@@ -9770,6 +9770,42 @@ abstract class AppLocalizations {
   /// **'Beyin fırtınası'**
   String get chatModeBrainstorm;
 
+  /// No description provided for @chatSuggestOutline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana hat'**
+  String get chatSuggestOutline;
+
+  /// No description provided for @chatSuggestIdeas.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fikir ver'**
+  String get chatSuggestIdeas;
+
+  /// No description provided for @chatSuggestGaps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eksikleri bul'**
+  String get chatSuggestGaps;
+
+  /// No description provided for @chatPromptOutline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notun ana hatlarını kısa maddelerle çıkar.'**
+  String get chatPromptOutline;
+
+  /// No description provided for @chatPromptIdeas.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu not için yeni fikirler ve açılar öner.'**
+  String get chatPromptIdeas;
+
+  /// No description provided for @chatPromptGaps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta eksik kalan, belirsiz ya da çelişen yerler neler?'**
+  String get chatPromptGaps;
+
   /// No description provided for @aiChatRowTitle.
   ///
   /// In tr, this message translates to:
