@@ -161,7 +161,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Dosya: `lib/features/notes/presentation/editor/note_editor_screen.dart` (yüzen kalem düğmesi konumu; `quickRowPen`), "Yeni madde/Ara başlık" satırı.
 - Öneri: düğmenin sağ boşluğunu (satır `padding.end`) düğme genişliği + 8 dp yap ya da düğmeyi satır yüksekliklerinin dışına al.
 - Görüntü: `kt-yatay-03-bolunmus-editor.png`.
-- **Durum (P78, 2026-11-19): düzeltildi.** Düğme `StylusToggleOverlay` (yüzen "kalem yazar/dokunur", varsayılan sağ kenar %55). Sağ kenardayken `StylusGutter` 52 dp pay verir; liste notunun "Yeni madde / Ara başlık" ve "İşaretliler · Sil" satırları bu kadar içeri çekilir (`items_editor.dart`). Bekçi `test/editor_pen_tablet_test.dart` "KT-15" (düzeltmesiz kırmızı: 692 > 656). Düğme sola taşınırsa pay yok (bilerek). Ayrıca: bu düğme uiautomator dökümünde görünmedi (Semantics etiketli olmasına karşın) — KT-14 ile birlikte TalkBack'te bakılacak.
+- **Durum (P78, 2026-11-19): düzeltildi.** Düğme `StylusToggleOverlay` (yüzen "kalem yazar/dokunur", varsayılan sağ kenar %55). Sağ kenardayken `StylusGutter` 52 dp pay verir; liste notunun "Yeni madde / Ara başlık" ve "İşaretliler · Sil" satırları bu kadar içeri çekilir (`items_editor.dart`). Bekçi `test/editor_pen_tablet_test.dart` "KT-15" (düzeltmesiz kırmızı: 692 > 656). Düğme sola taşınırsa pay yok (bilerek). **Tablette doğrulandı (dikey, profil P78):** "Ara başlık" sağ ucu kenardan 60 dp (yatayda düzeltmeden önce 8 dp); yatay doğrulama yapılamadı (profil manifesti `portrait`, TP-F). Ayrıca: bu düğme uiautomator dökümünde görünmedi (Semantics etiketli olmasına karşın) — KT-14 ile birlikte TalkBack'te bakılacak.
 
 ### KT-16 — "Kalem kipi · Yalnız kalemle yaz: açık [Ayarla]" bildirimi kalem tepsisini örtüyor
 - Yüzey: tablet dikey (+ yatayda liste bölmesinin altı). Ekran: not → "Kalemle yaz". Önem: **orta** (tepsi ~4 sn tıklanamaz).
@@ -169,7 +169,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Dosya: `note_editor_screen.dart:2520` (`penModePenOnlyOn`), toast yeri; ilgili KT-1/P72 toast kuyruğu.
 - Öneri: toast'ı kalem tepsisinin ÜSTÜNE (tepsi yüksekliği kadar `bottom` boşluğu) koy; kalem kipinde bu bilgi yerine tepsideki simge/ipucu.
 - Görüntü: `kt-dikey-11-kalem-kipi-toast.png`, `kt-yatay-06-kalem-tepsisi.png`.
-- **Durum (P78, 2026-11-19): düzeltildi.** Kök neden: tepsi zaten `SnackBarObstacle` ile sarılıydı (P49 (d)) ama ipucu kipi açan AYNI karede gösteriliyordu; bildirim engel yüksekliğini kurulurken okur, tepsi henüz dizilmediği için 0 okunuyordu. İpucu (ve iki parmak ipucu) kare sonuna alındı (`_penModeOpened`). Bekçi "KT-16" (640x1024: düzeltmesiz bildirim altı 998 > tepsi üstü 964; düzeltmeyle 938).
+- **Durum (P78, 2026-11-19): düzeltildi.** Kök neden: tepsi zaten `SnackBarObstacle` ile sarılıydı (P49 (d)) ama ipucu kipi açan AYNI karede gösteriliyordu; bildirim engel yüksekliğini kurulurken okur, tepsi henüz dizilmediği için 0 okunuyordu. İpucu (ve iki parmak ipucu) kare sonuna alındı (`_penModeOpened`). Bekçi "KT-16" (640x1024: düzeltmesiz bildirim altı 998 > tepsi üstü 964; düzeltmeyle 938). **Tablette doğrulandı (dikey):** bildirim tepsinin üstünde.
 
 ### KT-17 — Liste bölmesinde "+" ve "↑" düğmeleri kart içeriğini örtüyor
 - Yüzey: tablet yatay, bölünmüş (not açık). Önem: düşük. Gerçek: sol bölmenin sağ altındaki yüzen "+" ve (kaydırınca) "↑" kartın tarih/etiket satırını örtüyor ("18 Kas" görünmüyor); dar liste bölmesinde (~330 dp) orantısız büyük.
@@ -205,7 +205,11 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 ### KT-23 — Takvim ay hücrelerinde olay yazısı çok küçük (dikey tablet, olası)
 - Yüzey: tablet dikey, Takvim ay. Önem: düşük (olası; yalnız "Arife", "29 Ekim Bayramı" etiketleri incelendi). Gerçek: hücre ~60x120 dp ama olay çubuğu yazısı ~9–10 sp; hücrenin %90'ı boş. PW-E KW-9 (geniş ay hücresinde gün 13 / şerit 11 pt) bunu ele almış olabilir — birleşik derlemede dikey tabletle yeniden bak.
 - Görüntü: `kt-dikey-06-takvim-ay.png`.
-- **Durum (P78, 2026-11-19): düzeltildi.** KW-9 geniş hücre kuralı yalnız genişliğe bakıyordu (≥ 140 dp); dikey tablet hücresi ~81x149 dp. `monthCellRoomy`: ≥ 140 dp ya da ≥ 72x100 dp → gün 13, şerit 11 pt (telefon ~51 dp ve yatay telefonun kısa hücresi aynen). Bekçi `test/calendar_month_scale_test.dart` "KT-23".
+- **Durum (P78, 2026-11-19): düzeltildi.** KW-9 geniş hücre kuralı yalnız genişliğe bakıyordu (≥ 140 dp); dikey tablet hücresi ~81x149 dp. `monthCellRoomy`: ≥ 140 dp ya da ≥ 72x100 dp → gün 13, şerit 11 pt (telefon ~51 dp ve yatay telefonun kısa hücresi aynen). Bekçi `test/calendar_month_scale_test.dart` "KT-23". **Tablette doğrulandı (dikey):** "29 Ekim Bayramı" iki satır, büyük yazı.
+
+### KT-25 — Yüzen kalem düğmesinin erişilebilirlik kutusu tüm ekran (P78'de görüldü)
+- Yüzey: tablet, editör. Önem: düşük (TalkBack ile doğrulanmadı). Gerçek: uiautomator dökümünde "Kalem yazar" düğümü `[0,0][1600,2520]` (tüm ekran); yataydaki dökümde hiç yoktu. `StylusToggleOverlay` `Positioned.fill` + `LayoutBuilder` + iç `Stack` içinde; Semantics kutusu düğmeye değil örtüye oturuyor olabilir.
+- Öneri: düğmenin `Semantics`'ini `AnimatedPositioned` çocuğuna sınırla (ör. `Semantics(container: true)`), 640x1024 semantik testinde düğüm boyu 44 dp.
 
 ### KT-24 — ⚡ "Hızlı ekle" ilk dokunuşta mikrofon izni istiyor (açıklamasız)
 - Yüzey: tablet, ray ⚡. Önem: düşük. Gerçek: "Hızlı ekle" düğmesine ilk dokunuşta sistem "mikrofona erişme izni verilsin mi?" penceresi (REDDET verildi); izin istemeden önce neden istendiği söylenmiyor; mikrofon yalnız kullanıcı mikrofona basınca istenmeli (görülen: tek dokunuş → hemen izin penceresi).
