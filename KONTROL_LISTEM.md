@@ -9,6 +9,14 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Sohbet önerileri, hızlı ekle izni, başa dönüş, şablon araması (19 Kasım akşam, bulutta yazıldı, cihazda doğrulanmadı)**
+  Nerede/Nasıl: (1) bir notta ✨ → Sohbet → boş sohbette Ana hat / Fikir ver / Eksikleri bul → dokununca soru sorulur, yanıt gelir (Fikir ver "Beyin fırtınası"na geçer); (2) uygulama verilerini silmeden önce mikrofon iznini Ayarlar'dan kaldır → ⚡ Hızlı ekle → sistem izin penceresi ÇIKMAMALI; mikrofona bas → izin sorulur, verince dinler; sonraki açılışta kendiliğinden dinler; (3) ana ekranda listeyi epey aşağı kaydır, sonra tek uzun hamleyle yukarı kaydırıp tepeye çarp → klasör menüsü AÇILMAMALI; liste tepedeyken yeniden aşağı çek → açılır; (4) + → Şablondan → arama kutusuna hızlı yaz → takılma yok; (5) ana ekran aracı (Bugün/Notlar) not değişince güncelleniyor.
+  Yanlışsa: madde numarasını yaz.
+
+- [ ] **Menü düzenleme + alt çubuk ⋯ + yeni not paneli (19 Kasım öğle, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) ana ekran + → Metin notu/Liste/Sıralı liste panelin EN ÜSTÜNDE; (2) notta alttaki ⋯ → gizli düğmeler de listede (Paylaş, Renk…); en alttaki Düzenle → 📌 ile çubuğa al/menüye al, basılı tutup sürükle → çubuk anında değişir, Bitti; (3) not ⋮ → bir karoya basılı tut → düzenleme kipi (⊖/⊕/☆, sürükle-bırak), Bitti; (4) yazarken üst çubukta Ara yok, ileri al yalnız geri aldıktan sonra; klavye açılıp kapanırken takılma yok.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **✨ levhası 3 bölüm + kılavuz araması (P72, 18 Kasım, yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) notta ✨ → başlıklar sırayla Yaz (sesli not, Düzelt, Geliştir, Çevir) · Sor (Sohbet, PDF varsa "Sor") · Dönüştür (Özet, ekler); açılış/kapanış takılmıyor; (2) Ayarlar → Kılavuz'da arama kutusuna hızlı yaz — takılma yok.
   Yanlışsa: madde numarasını yaz.
@@ -222,6 +230,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 > - **15 Kalemle yazma / 16 Şekiller ve silgi / 17 Sabit PDF'e yazma / 20 Çok büyük PDF:** M-Pencil (`input stylus` kalem türü üretmez) ve 1 GB PDF olmadan YAPILAMADI; kalem kipi açılıp tepsi görüldü (KT-16: toast tepsiyi örtüyor), sabit PDF'te kayıtlı çizgiler görüldü.
 > - **19 Tablette sesle yazma:** ⚡/Hızlı ekle ilk dokunuşta mikrofon izni istedi (REDDET verildi, KT-24); konuşma denenmedi.
 > - **S1 iki cihaz turu:** denenmedi (ikinci cihaz/web yok).
+
+- [ ] **KT-17/20 tablet düzeni (19 Kasım akşam, bulutta yazıldı, cihazda doğrulanmadı)**
+  Nerede/Nasıl: (a) dikey tablette ana ekran ⋮ ("Uygulama" levhası), bir kartın ⋮'si ve "Görünüm ve süz" → levha ortada, kenarlarda boşluk (en çok 560 dp), tam genişlik değil; (b) yatayda bir not aç (liste solda daralır) → listeyi aşağı kaydır → "Başa dön" ↑ düğmesi "+"nın SOLUNDA, aynı satırda; listenin sonunda son kartın tarihi görünür; (c) ölçüm için yatay APK: `NOTLAR_OLCUM_YON=landscape` ile profil derle, `ab_hepsi.py --yon yatay` (dikey kilitli APK'da durmalı).
+  Doğruysa: üçü de böyle.
 
 - [ ] **P78 tablet bulguları (2026-11-19, dal oto/P78-tablet-bulgular — A/B ölçümü yapılmadı)** — yazıldı; tablette dikeyde (a)(b)(d) görüldü, (c) ve yatay doğrulanmadı
   Nerede: tablet, liste notu (yatay bölünmüş) + Takvim ay (dikey) + fiziksel klavye.

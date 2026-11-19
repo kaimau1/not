@@ -595,18 +595,48 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
         spacing: AppSpace.s,
         runSpacing: AppSpace.s,
         children: [
+          // Anahtarlı: aramada sonuç daralınca kalan kart öğesiyle birlikte
+          // yerinde kalır (konuma göre eşlenip yeniden kurulmaz, T7).
           for (final pick in picks)
-            SizedBox(width: math.max(0, width), child: _card(context, pick)),
+            SizedBox(
+              key: ValueKey(pick.key),
+              width: math.max(0, width),
+              child: _card(context, pick),
+            ),
         ],
       );
     },
   );
 
+  /// Kart önbelleği (T7, K-47/48): arama her tuşta kök `setState` ile
+  /// galeriyi kurar; girdisi (şablon nesnesi, yıldız, vurgu rengi, dil)
+  /// değişmeyen kart AYNI örnekle döner → yeniden kurulmaz (eskiden tuş
+  /// başına ~24 kart). Tema değişimini kart kendi `Theme.of` bağımlılığıyla
+  /// zaten alır; `ThemeData` kimliği her kurulumda yeni olabildiğinden anahtara
+  /// yalnız kartın parametre olarak aldığı vurgu girer.
+  final _cards = <String, (UserTemplate?, bool, Color, Locale, Widget)>{};
+
   Widget _card(BuildContext context, _Pick pick) {
+    final accent = Theme.of(context).colorScheme.primary;
+    final locale = Localizations.localeOf(context);
+    final favorite = ref.watch(favoriteTemplatesProvider).contains(pick.key);
+    final old = _cards[pick.key];
+    if (old != null &&
+        identical(old.$1, pick.user) &&
+        old.$2 == favorite &&
+        old.$3 == accent &&
+        old.$4 == locale) {
+      return old.$5;
+    }
+    final card = _buildCard(context, pick, favorite);
+    _cards[pick.key] = (pick.user, favorite, accent, locale, card);
+    return card;
+  }
+
+  Widget _buildCard(BuildContext context, _Pick pick, bool favorite) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final builtin = pick.builtin;
-    final favorite = ref.watch(favoriteTemplatesProvider).contains(pick.key);
     void toggleFavorite() {
       final ok = ref.read(favoriteTemplatesProvider.notifier).toggle(pick.key);
       if (!ok) _announce(l10n.templateFavoritesFull);

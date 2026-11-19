@@ -175,6 +175,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Yüzey: tablet yatay, bölünmüş (not açık). Önem: düşük. Gerçek: sol bölmenin sağ altındaki yüzen "+" ve (kaydırınca) "↑" kartın tarih/etiket satırını örtüyor ("18 Kas" görünmüyor); dar liste bölmesinde (~330 dp) orantısız büyük.
 - Öneri: bölünmüşte düğmeleri küçült (mini FAB) ya da listeye alt boşluk (`bottom: 88`).
 - Görüntü: `kt-yatay-04-bolunmus-pdf.png`.
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden: ↑ "+"nın üstündeyken düğme yığını 122 dp, listenin alt boşluğu 96 dp — listenin sonunda bile son kart örtülüyordu. Dar bölmede (< 420 dp; mikrofon ve ⚡ zaten gizli) ↑ "+"nın solunda, aynı satırda (yığın 56 dp). Telefon düzeni aynen. Bekçi `test/narrow_pane_fab_test.dart` (düzeltmesiz ↑ üstü 670 < 704). Düğmeler küçültülmedi (görünüş kararı yok). Cihazda doğrulanmadı.
 
 ### KT-18 — Editörde ⌨ düğmesi odak yokken tek başına klavye açmıyor, durumu belirsiz
 - Yüzey: tablet + fiziksel klavye. Önem: düşük. Gerçek: fiziksel klavye takılıyken alana dokunmak sanal klavyeyi açmaz (bilerek, `HardKeyboard`); ⌨ AÇ/KAPA anahtarı: alan odakta değilken basınca simge "gizle"ye döner ama klavye gelmez; ⌨ açıkken sonraki alan dokunuşları klavyeyi açar, BACK klavyeyi kapatır ama anahtar "açık" kalır (sonraki ⌨ dokunuşu KAPATIR → "iki kez bastım, açılmadı").
@@ -192,15 +193,18 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Yüzey: tablet dikey (640 dp). Önem: düşük. Gerçek: "Uygulama" levhası, kart ⋮ levhası, "Görünüm ve süz" 640 dp'ye yayılıyor (Izgara/Liste segmenti, 5 yuvarlak düğme arası ~100 dp); KT-2 kuralı (en çok 560 dp, ortada) yatayda çalışıyor (`kt-yatay-02`), dikey tabletlerde yalnız ≥ 600 dp penceresinde görsel olarak "dolu" değil.
 - Öneri: levha `maxWidth` 560'ı ≥ 600 dp'de dikey tablete de uygula (yatayla aynı kural).
 - Görüntü: `kt-dikey-03-suz-levhasi.png`, `kt-dikey-04-uygulama-menusu.png`.
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden: 560 dp kuralı yalnız kendi `constraints`'ini veren levhalardaydı, gerisi M3'ün 640 dp varsayılanını alıyordu (dikey tablet = 640 dp). Kural `showAppSheet`'e taşındı (`sheetWidthConstraints`). Bekçi `test/app_sheet_width_test.dart` (düzeltmesiz 640 / 1280). Cihazda doğrulanmadı.
 
 ### KT-21 — Ölçüm kimliğinde her açılışta widget ve FCM istisnaları (yutuluyor)
 - Yüzey: profil/ölçüm kimliği, GMS'siz tablet. Önem: düşük (kullanıcıya görünmez). Gerçek: logcat `flutter: Widget güncellenemedi: PlatformException(-3, No Widget found with Name TodayWidgetProvider… Didn't find class "dev.kaimau.notlar.olcum.TodayWidgetProvider"` ve `NotlarWidgetProvider` (home_widget sınıf adını applicationId'den kuruyor; `.olcum` ekinde sınıf yok); `FCM başlatılamadı: MISSING_INSTANCEID_SERVICE` (GMS yok). İkisi try/catch'te.
 - Öneri: home_widget çağrılarında tam nitelikli sınıf adı (`qualifiedAndroidName: 'dev.kaimau.notlar.TodayWidgetProvider'`); iki günlük satırını `debugPrint` altına al (release günlüğünü kirletmesin).
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden daha geniş: kimliği farklı HER derlemede (Play `NOTLAR_PLAY_APP_ID` dahil) araçlar hiç güncellenmiyordu. Tek yol `updateHomeWidget` (`qualifiedAndroidName: dev.kaimau.notlar.<ad>`); iki günlük satırı `kDebugMode` altında. Bekçi `test/home_widget_class_test.dart`. Cihazda doğrulanmadı.
 
 ### KT-22 — "Tepeden aşağı çekince" jesti hızlı başa dönmede klasör menüsünü açıp sonraki dokunuşu yutuyor
 - Yüzey: tablet dikey, U1 varsayılanı (Klasörler). Önem: düşük. Gerçek: listeyi başa almak için art arda aşağı kaydırınca (en üstte aşırı kaydırma) klasör hızlı menüsü ("Tümü/Klasörler/Gelen", "Yeni klasör", "Sırala - sil") açılıyor; menü açıkken ilk dokunuş menüyü kapatıp eylemi yutuyor (ölçüm turu 3 koşuyu bozdu; ölçüm uygulamasında jest "Hiçbiri" yapıldı).
 - Öneri: jest eşiği (çekme ≥ ~96 dp ve hız < eşik) ya da menü açılmadan önce kısa titreşim/geri bildirim; Ayarlar'daki seçenek zaten var.
 - Görüntü: yok (ölçüm sırasında görüldü).
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden: parmak listeyi tepeye getirdikten sonraki aşırı kaydırma da çekiş sayılıyordu (aşağıdan başlayan uzun kaydırma = 80 dp "çekiş"). Çekiş artık yalnız liste zaten tepedeyken başlayan sürüklemede kurulur. Hız eşiği eklenmedi (cihazsız ölçülemez; tepede bilinçli hızlı çekiş yine menü açar). Bekçi `test/home_pull_scroll_back_test.dart` (düzeltmesiz menü açılıyor). Cihazda doğrulanmadı.
 
 ### KT-23 — Takvim ay hücrelerinde olay yazısı çok küçük (dikey tablet, olası)
 - Yüzey: tablet dikey, Takvim ay. Önem: düşük (olası; yalnız "Arife", "29 Ekim Bayramı" etiketleri incelendi). Gerçek: hücre ~60x120 dp ama olay çubuğu yazısı ~9–10 sp; hücrenin %90'ı boş. PW-E KW-9 (geniş ay hücresinde gün 13 / şerit 11 pt) bunu ele almış olabilir — birleşik derlemede dikey tabletle yeniden bak.
@@ -214,6 +218,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 ### KT-24 — ⚡ "Hızlı ekle" ilk dokunuşta mikrofon izni istiyor (açıklamasız)
 - Yüzey: tablet, ray ⚡. Önem: düşük. Gerçek: "Hızlı ekle" düğmesine ilk dokunuşta sistem "mikrofona erişme izni verilsin mi?" penceresi (REDDET verildi); izin istemeden önce neden istendiği söylenmiyor; mikrofon yalnız kullanıcı mikrofona basınca istenmeli (görülen: tek dokunuş → hemen izin penceresi).
 - Öneri: izni mikrofon düğmesine basılınca iste; ya da ilk kullanımda kısa açıklama levhası.
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden: levhanın kendiliğinden dinlemesi (`autoListen`, kullanıcı isteği 2026-11-16) izni İSTEYEN yolu çağırıyordu. Artık yalnız izin zaten verilmişse kendiliğinden dinler; izin mikrofona basınca istenir (ilk açılışta yazma alanı hazır, mikrofon bekler). Bekçi `test/quick_entry_mic_permission_test.dart`. Cihazda doğrulanmadı.
 
 ## Temiz çıkanlar (tablet turu)
 Koyu tema (Koyu) ana/editör/ayarlar okunur, kontrast iyi (`kt-koyu-01/02`); yatay ayarlar ana-detay (sol liste + sağ detay) düzgün (`kt-yatay-05`); yatay "Uygulama"/kart levhası ortada ≤ 560 dp (KT-2 çalışıyor, `kt-yatay-02`); Güvenlik ayrı bölüm (KT-10 çalışıyor); Klasörler boş durumu ortak bileşen (KT-9); Şablonlar levhası düzgün (`kt-dikey-10`); Kalem ayarlarında "Parmak: Kaydır · Çiz · Sil" var (K34 ayarı görüldü); dikey↔yatay döndürmede (kilitle/serbest) çökme/taşma yok; logcat'te FATAL/ANR yok.
@@ -234,4 +239,5 @@ Koyu tema (Koyu) ana/editör/ayarlar okunur, kontrast iyi (`kt-koyu-01/02`); yat
 - **TP-D (platform/olcum kimliği/izin):** KT-21, KT-24 → `lib/features/**/widget*` (home_widget çağrıları), `lib/features/notes/presentation/quick_drop_sheet.dart`, `voice_*`.
 - **TP-E (takvim):** KT-23 → `lib/features/calendar/presentation/month_grid.dart`, `calendar_views.dart`.
 - **TP-F (araç):** tablet yatay ölçüm anahtarı → `android/app/src/profile/AndroidManifest.xml`, `tool/perf/ab_hepsi.py`.
+  - **Durum (2026-11-19, ccr-1122edca):** anahtar yazıldı — `NOTLAR_OLCUM_YON` / `-PolcumYon` (varsayılan portrait) → profil manifesti `${olcumYon}`; `ab_hepsi.py --yon yatay` dikey kilitli APK'yı görünce durur. Gradle bulutta koşturulamadı (Android SDK yok) — ilk profil derlemesinde doğrulanacak; yatay evre seçicileri ve yatay altın taban cihazda.
 Paketler birbirinden dosya olarak ayrıdır (TP-A/B/C/D/E/F kesişmez; TP-B ve TP-C `editor/` ile `notes/presentation/` kökünü paylaşmaz).

@@ -79,6 +79,10 @@ const _exempt = <String, String>{
   'not ekranı/Kalemle yaz · basılı tut: kalem ayarları': 'hızlı satır',
   'not ekranı/Yazım düzelt: kapalı': 'hızlı satır',
   'not ekranı/Pakete al': 'hızlı satır',
+  // Yazarken üstte Ara/yinele gizlenince (2026-11-19) satıra iki düğme daha
+  // sığar; kayan satırın kesik ucu aynı 40 dp kalıbı.
+  'not ekranı/Kalın': 'hızlı satır',
+  'not ekranı/Yazı rengi (basılı tut: favori rengi seç)': 'hızlı satır',
   // Takvim ‹ › sıkı (kullanıcı isteği 2026-11-07, §4 Y13 + "ay başlığı
   // görünmüyordu", `calendar_screen.dart:504`).
   'takvim/Önceki': 'ay başlığı sığsın (Y13)',

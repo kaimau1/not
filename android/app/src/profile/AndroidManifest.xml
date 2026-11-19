@@ -6,10 +6,12 @@
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application>
-        <!-- Ölçüm derlemesi hep dikey: masadaki telefonun sensörü yan dönünce
-             (2026-11-04) senaryoların koordinatları ve sütun sayısı değişiyordu. -->
+        <!-- Ölçüm derlemesi varsayılan dikey: masadaki telefonun sensörü yan
+             dönünce (2026-11-04) senaryoların koordinatları ve sütun sayısı
+             değişiyordu. Tablette yatay ölçüm: NOTLAR_OLCUM_YON=landscape
+             (TP-F; build.gradle.kts `olcumYon`). -->
         <activity android:name=".MainActivity"
-            android:screenOrientation="portrait"
+            android:screenOrientation="${olcumYon}"
             tools:node="merge"/>
     </application>
 </manifest>

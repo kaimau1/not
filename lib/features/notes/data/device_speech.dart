@@ -37,6 +37,23 @@ class DeviceSpeech {
     }
   }
 
+  /// Mikrofon izni ZATEN verilmiş mi — sistem kutusu AÇMADAN okur (KT-24:
+  /// kendiliğinden dinleme izni istemez; izni kullanıcı mikrofona basınca
+  /// [ensureMicPermission] ister).
+  static Future<bool> micPermissionGranted() async {
+    if (debugMicGranted case final v?) return v;
+    if (kIsWeb || !Platform.isAndroid) return true;
+    try {
+      return await _method.invokeMethod<bool>('micPermissionGranted') ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  /// Testler için: [micPermissionGranted] yanıtı.
+  @visibleForTesting
+  static bool? debugMicGranted;
+
   /// Mikrofon iznini denetler, yoksa sistem iletişim kutusuyla İSTER.
   /// SpeechRecognizer izin eksikken kendi kutusunu AÇMAZ, sessizce
   /// ERROR_INSUFFICIENT_PERMISSIONS ile düşer — kullanıcı bunu "sesle yazma

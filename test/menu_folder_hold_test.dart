@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/menu_layout.dart';
@@ -63,6 +64,44 @@ void main() {
     await tester.pumpAndSettle();
     expect(MenuLayouts.of('test.menu').hidden, {'c'});
     expect(find.text('Üç'), findsNothing);
+  });
+
+  testWidgets('menü yerinde düzenlenir: basılı tut, sürükle, ☆, ⊕', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(const SingleChildScrollView(child: menu)));
+    // Basılı tutmak düzenleme kipini açar (ayrı levha yok — 2026-11-19).
+    await tester.longPress(find.text('Üç'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('menu-edit-hint')), findsOneWidget);
+    expect(find.byType(BottomSheet), findsNothing);
+    // Dört'ü Üç'ün üstüne sürükle: sıra Dört, Üç.
+    final drag = await tester.startGesture(
+      tester.getCenter(find.byKey(const ValueKey('menu-drag-d'))),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    await drag.moveTo(
+      tester.getCenter(find.byKey(const ValueKey('menu-drag-c'))),
+    );
+    await tester.pump();
+    await drag.up();
+    await tester.pumpAndSettle();
+    final order = MenuLayouts.of('test.menu').order;
+    expect(order.indexOf('d'), lessThan(order.indexOf('c')));
+    // ☆ Üç'ü hızlı satıra alır; ⊖ İki'yi gizler, ⊕ geri getirir.
+    await tester.tap(find.byKey(const ValueKey('menu-edit-quick-c')));
+    await tester.pump();
+    expect(MenuLayouts.of('test.menu').quick, contains('c'));
+    await tester.tap(find.byKey(const ValueKey('menu-visible-b')));
+    await tester.pump();
+    expect(MenuLayouts.of('test.menu').hidden, {'b'});
+    expect(find.text('Gizlenenler'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('menu-visible-b')));
+    await tester.pump();
+    expect(MenuLayouts.of('test.menu').hidden, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('menu-edit-save')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('menu-edit-hint')), findsNothing);
   });
 
   test('yuvarlak menü: halkalar ve yönle seçim', () {

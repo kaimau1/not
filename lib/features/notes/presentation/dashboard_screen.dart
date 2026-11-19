@@ -511,6 +511,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// `ValueNotifier`: göstergeyi çizer, ekranı yeniden kurmaz.
   final _folderPull = ValueNotifier<double>(0);
 
+  /// Son sürükleme liste tepedeyken mi başladı (KT-22): yalnız öyleyse
+  /// aşağı çekiş sayılır.
+  bool _pullArmed = false;
+
   /// Kaydırma bildirimini ayırıcıya bağlar; `false` dönerek bildirimi
   /// yukarıya (iç içe kaydırıcılara) geçirmeye devam eder.
   bool _onGridScroll(ScrollNotification notification) {
@@ -540,18 +544,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Aşağı çekişi izler: Android'de (sıkıştırma fiziği) tepede çekiş
   /// `OverscrollNotification`, iOS'ta (yaylı) eksi konum olarak gelir.
   /// Yalnız PARMAKLA çekiş sayılır (fırlatmanın tepeye çarpması değil).
+  ///
+  /// YALNIZ TEPEDE BAŞLAYAN SÜRÜKLEME (KT-22, tablet turu 2026-11-18):
+  /// aşağıdan başlayıp tepeye çarpan uzun bir kaydırmanın kalan aşırı
+  /// kaydırması da çekiş sayılıyor, listeyi başa alan kullanıcıya klasör
+  /// menüsü açılıp sonraki dokunuşu yutuyordu. Yenile-çek gibi: parmak
+  /// liste ZATEN tepedeyken değdiyse çekiş kurulur ([_pullArmed]).
   void _trackFolderPull(ScrollNotification n) {
     final m = n.metrics;
+    if (n is ScrollStartNotification) {
+      _pullArmed = m.pixels <= m.minScrollExtent + 1;
+    }
     var pull = _folderPull.value;
     if (n is OverscrollNotification) {
-      if (n.dragDetails != null && n.overscroll < 0 && _pullGestureAllowed()) {
+      if (n.dragDetails != null &&
+          n.overscroll < 0 &&
+          _pullArmed &&
+          _pullGestureAllowed()) {
         pull -= n.overscroll;
       }
     } else if (n is ScrollUpdateNotification) {
       if (n.dragDetails == null) {
         pull = 0;
       } else if (m.pixels < m.minScrollExtent) {
-        pull = _pullGestureAllowed() ? m.minScrollExtent - m.pixels : 0;
+        pull = _pullArmed && _pullGestureAllowed()
+            ? m.minScrollExtent - m.pixels
+            : 0;
       } else if (pull > 0) {
         // Çekip geri itti: mesafe azalır.
         pull = (pull - (n.scrollDelta ?? 0)).clamp(0, double.infinity);
@@ -2393,11 +2411,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 PositionedDirectional(
                   end: 16,
                   bottom: 16,
-                  child: Column(
+                  // DAR LİSTE BÖLMESİNDE ↑ "+"nın SOLUNDA (KT-17, tablet turu
+                  // 2026-11-18): üstte dururken yığın 16 + 56 + 10 + 40 =
+                  // 122 dp, listenin alt boşluğu ([_kFabClearance]) 96 dp —
+                  // listenin sonunda bile son kartın tarih satırı ↑'nın
+                  // arkasında kalıyordu. Dar bölmede mikrofon ve ⚡ gizli,
+                  // satırda yer var. Aynı `Flex`, yalnız yön değişir: alt
+                  // ağaç (FAB'lar, "+" menüsü) yeniden kurulmaz.
+                  // Ray durumunu da bu kurucu okur (eskiden ayrı `Builder`):
+                  // kurulum sayısı aynı kalır (bütçe S23/S24).
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _narrowPaneN,
+                    builder: (context, narrow, _) => Flex(
+                    direction: narrow ? Axis.horizontal : Axis.vertical,
                     mainAxisSize: MainAxisSize.min,
                     // "Başa dön" "+"nın tam üstünde: sağa dayalı, küçük
                     // düğme (40) "+"nın (56) ortasına 8 dp payla oturur.
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    // Dar bölmede satırda, ortalı.
+                    crossAxisAlignment: narrow
+                        ? CrossAxisAlignment.center
+                        : CrossAxisAlignment.end,
+                    spacing: narrow ? 8 : 10,
                     children: [
                       // **BAŞA DÖN** — yüz notluk bir kitaplıkta en alta
                       // inen kullanıcının tepeye (ve arama kutusuna)
@@ -2415,9 +2449,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           child: IgnorePointer(
                             ignoring: !_showBackToTop || selectionActive,
                             child: Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                bottom: 10,
-                                end: 8,
+                              padding: EdgeInsetsDirectional.only(
+                                end: narrow ? 0 : 8,
                               ),
                               child: FloatingActionButton.small(
                                 heroTag: 'backToTop',
@@ -2433,10 +2466,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       // eskiden iki düğme boyu yükseliyor ve sağ sütunun
                       // son kartını örtüyordu; tek satır 56 dp.
                       //
-                      // Ray görünürken kapılar rayda (K3, F44.1): Builder yalnız
-                      // bu dalı ray durumuna bağlar.
-                      Builder(
-                        builder: (context) => AppRailScope.visible(context)
+                      // Ray görünürken kapılar rayda (K3, F44.1).
+                      AppRailScope.visible(context)
                             ? const SizedBox.shrink()
                             : sharedFolder != null
                             ? SharedFolderFab(folder: sharedFolder)
@@ -2486,8 +2517,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           ),
                         ],
                       ),
-                      ),
                     ],
+                  ),
                   ),
                 ),
               ],

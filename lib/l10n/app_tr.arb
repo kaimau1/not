@@ -2618,6 +2618,12 @@
   "chatScopeDoc": "Bu belge",
   "chatModeQa": "Soru-cevap",
   "chatModeBrainstorm": "Beyin fırtınası",
+  "chatSuggestOutline": "Ana hat",
+  "chatSuggestIdeas": "Fikir ver",
+  "chatSuggestGaps": "Eksikleri bul",
+  "chatPromptOutline": "Bu notun ana hatlarını kısa maddelerle çıkar.",
+  "chatPromptIdeas": "Bu not için yeni fikirler ve açılar öner.",
+  "chatPromptGaps": "Bu notta eksik kalan, belirsiz ya da çelişen yerler neler?",
   "aiChatRowTitle": "Sohbet",
   "aiChatRowInfo": "Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası",
   "shareFolderTogether": "Klasörü birlikte düzenle",
@@ -4055,5 +4061,12 @@
   "homeGestureNone": "Hiçbiri",
   "homeGestureMissing": "Jestin hedefi bulunamadı; Ayarlar → Notlar'dan yeniden seç",
   "calendarExpiryTag": "Arşivlenir",
-  "calendarExpiryRemoved": "Arşivleme süresi kaldırıldı"
+  "calendarExpiryRemoved": "Arşivleme süresi kaldırıldı",
+  "barMoreEdit": "Düzenle",
+  "barMoreEditHint": "📌 olanlar çubukta durur (telefonda ilk 3'ü sığar), diğerleri bu menüde. Basılı tutup sürükleyerek sırala.",
+  "barMoreToBar": "Çubuğa al",
+  "barMoreToMenu": "Menüye al",
+  "menuEditInlineHint": "Basılı tutup sürükle: sırala · ⊖ gizle · ☆ hızlı satır (en çok {count})",
+  "@menuEditInlineHint": {"placeholders": {"count": {"type": "int"}}},
+  "menuHiddenGroup": "Gizlenenler"
 }

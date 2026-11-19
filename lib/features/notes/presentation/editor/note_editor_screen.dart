@@ -168,6 +168,7 @@ import '../viewers/ink_layer.dart';
 import 'pen_tray.dart';
 import 'drawing_screen.dart';
 import 'editor_bar_layout.dart';
+import 'editor_bar_more_menu.dart';
 import 'editor_bar_tags.dart';
 import 'format_bar.dart';
 import 'format_menu.dart';
@@ -5195,25 +5196,75 @@ child: FormatBar(
                       // kalanları küçük pencerede göstersin"): ilk üç düğme
                       // yerinde, gerisi ⋮'de. Tablette/geniş ekranda hepsi;
                       // düzenleme kipinde hepsi (gizle/göster yapılabilsin).
+                      // ⋮ MENÜSÜ HEPSİNİ TAŞIR (kullanıcı isteği 2026-11-19:
+                      // "3 noktada diğer butonlar eksik"): çubuktan kaldırılmış
+                      // ama bu notta çalışan her düğme de menüde; menünün
+                      // "Düzenle"si hangisinin çubukta duracağını seçer.
                       final leftIds = [
                         for (final id in sides.left)
                           if (shown.contains(id)) id,
                       ];
-                      final overflow =
-                          !editingUi &&
-                              !PenTray.useRail(context) &&
-                              leftIds.length > kEditorBarPhoneSlots
-                          ? leftIds.sublist(kEditorBarPhoneSlots - 1)
-                          : const <String>[];
+                      bool usable(String id) =>
+                          !(Personalize.aiOff.value &&
+                              UiModule.ai.items.contains(id)) &&
+                          switch (id) {
+                            UiItem.barSelect =>
+                              !note.type.isPageNoteType &&
+                                  note.items.isNotEmpty,
+                            UiItem.barAttachments => fileAttachments.isNotEmpty,
+                            UiItem.barPen => isDocumentNote || !_readOnly,
+                            UiItem.barCheckbox =>
+                              note.type == NoteType.text ||
+                                  (listKind && !_readOnly),
+                            UiItem.barUndo ||
+                            UiItem.barRedo ||
+                            UiItem.barPhoto => !_readOnly,
+                            UiItem.barCamera ||
+                            UiItem.barScan ||
+                            UiItem.barVoiceRecord => !_readOnly && !kIsWeb,
+                            UiItem.barFormat ||
+                            UiItem.barAdd ||
+                            UiItem.barSearch ||
+                            UiItem.barReminder ||
+                            UiItem.barColor ||
+                            UiItem.barShare ||
+                            UiItem.barAi ||
+                            UiItem.barDictation => true,
+                            // Silgi yalnız mürekkep varken anlamlı (çubukta
+                            // kendi kapısı var); menüye girmez.
+                            _ => false,
+                          };
+                      final available = [
+                        for (final id in [...sides.left, ...sides.right])
+                          if (usable(id) || shown.contains(id)) id,
+                      ];
+                      final menuIds = editingUi
+                          ? const <String>[]
+                          : [
+                              for (final id in available)
+                                if (!shown.contains(id)) id,
+                            ];
+                      final phone = !editingUi && !PenTray.useRail(context);
+                      final cap =
+                          !phone
+                          ? leftIds.length
+                          : (leftIds.length > kEditorBarPhoneSlots ||
+                                    menuIds.isNotEmpty
+                                ? kEditorBarPhoneSlots - 1
+                                : kEditorBarPhoneSlots);
+                      final overflow = [
+                        ...leftIds.skip(cap),
+                        ...menuIds,
+                      ];
                       final segments = <Widget>[
-                        for (final id in leftIds.take(
-                          leftIds.length - overflow.length,
-                        ))
-                          ...leftOf(id),
+                        for (final id in leftIds.take(cap)) ...leftOf(id),
                         if (overflow.isNotEmpty)
-                          _barOverflow(l10n, [
-                            for (final id in overflow) spec(id),
-                          ]),
+                          _barOverflow(
+                            l10n,
+                            overflow,
+                            available: available,
+                            spec: spec,
+                          ),
                       ];
                       return Row(
                         children: [
@@ -5730,9 +5781,10 @@ child: FormatBar(
                       ),
                       onPressed: canUndo ? _undo : null,
                     ),
-                    // Başlık üst çubuktayken yer dar: yinele yalnız
-                    // kullanılabilirken.
-                    if (_barTitle == null || canRedo)
+                    // YİNELE YALNIZ KULLANILABİLİRKEN (kullanıcı isteği
+                    // 2026-11-19: "ileri al, geri alınmadıysa görülmesine
+                    // gerek yok"): soluk düğme hızlı satırı daraltıyordu.
+                    if (canRedo)
                       IconButton(
                         key: const ValueKey('editor-redo'),
                         tooltip: l10n.redo,
@@ -5768,6 +5820,9 @@ child: FormatBar(
               if (_barTitle == null)
               _hideWhileTyping(
                 note,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
               Customizable(
                 id: UiItem.topPin,
                 // Dar dinleme (P20 M4): sabitle kökü kurmaz.
@@ -5796,6 +5851,13 @@ child: FormatBar(
                   ),
                 ),
               ),
+                  // NOTTA ARA sabitlenin yanında, AYNI yazarken-gizle
+                  // anahtarında (kullanıcı isteği 2026-11-19: "hızlı panel
+                  // açıkken arama butonu görülmesin"). Ayrı anahtar klavye
+                  // kapanışında +3 dizilme yapıyordu (S45 mandalı).
+                  _topSearchButton,
+                ],
+              ),
               ),
                 ],
                 UiItem.topFullscreen => [
@@ -5823,8 +5885,12 @@ child: FormatBar(
               },
               // NOTTA ARA üst çubukta, ⋮'nin solunda (kullanıcı isteği
               // 2026-11-16: "notta ara üst panelde sağda olsun, menüde
-              // değil"). Koşulsuz: çubuğun şekli arama açılınca değişmez.
-              _topSearchButton,
+              // değil"). Arama açılınca çubuğun şekli değişmez. YAZARKEN
+              // GİZLİ (kullanıcı isteği 2026-11-19: "hızlı panel açıkken çok
+              // daralmış, arama butonu görülmesin") — alt çubuğun ⋯'sinde
+              // var. Başlık üst çubukta değilken sabitlenin yuvasında (tek
+              // klavye anahtarı, bkz. UiItem.topPin).
+              if (_barTitle != null) _hideWhileTyping(note, _topSearchButton),
               // ⋮ yazarken de görünür: hızlı satırın en sağında (kullanıcı
               // isteği 2026-11-08 — "3 nokta geri gelsin").
               IconButton(

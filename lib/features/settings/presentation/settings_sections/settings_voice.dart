@@ -194,6 +194,17 @@ class _SpeechPitchSliderState extends ConsumerState<_SpeechPitchSlider> {
 /// kullanıcı hangi kutunun hangi motorun sesini seçtiğini ayırt edemiyordu.
 /// Artık seçilen motora göre TEK bir ses seçimi görünür; cihaz sesleri de tek
 /// menüde (dil seç → ses seç) toplanır.
+///
+/// Derlemede bulunan motorlar (Play'de yalnız cihaz sesi: AI-S1, 16K §2.6).
+List<TtsEngine> availableTtsEngines({
+  bool ai = PlayBuild.aiVoice,
+  bool local = PlayBuild.antaliaVoice,
+}) => [TtsEngine.device, if (ai) TtsEngine.gemini, if (local) TtsEngine.antalia];
+
+/// Motor seçici yalnız birden çok motor varken (AI-S2 eki, 2026-11-19): Play
+/// derlemesinde tek bölmeli, seçilemeyen bir düğme kalıyordu.
+bool showTtsEnginePicker(List<TtsEngine> engines) => engines.length > 1;
+
 class _VoiceSection extends ConsumerWidget {
   const _VoiceSection();
 
@@ -203,12 +214,14 @@ class _VoiceSection extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final engine = ref.watch(ttsEngineProvider);
     final models = ref.watch(availableTtsModelsProvider).value ?? const [];
+    final engines = availableTtsEngines();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Başlık artık grup etiketi ("Seslendirme", P62 PA1) — içeride
         // ikinci kez yazılmaz.
         const SizedBox(height: AppSpace.s),
+        if (showTtsEnginePicker(engines)) ...[
         SegmentedButton<TtsEngine>(
           segments: [
             ButtonSegment(
@@ -222,7 +235,7 @@ class _VoiceSection extends ConsumerWidget {
               ),
             ),
             // Play derlemesinde Gemini seslendirme yok (AI-S1).
-            if (PlayBuild.aiVoice)
+            if (engines.contains(TtsEngine.gemini))
               ButtonSegment(
                 value: TtsEngine.gemini,
                 icon: const Icon(Icons.auto_awesome, size: AppIconSize.s),
@@ -234,7 +247,7 @@ class _VoiceSection extends ConsumerWidget {
                 ),
               ),
             // Play derlemesinde Antalia (ONNX) yok (16K §2.6).
-            if (PlayBuild.antaliaVoice)
+            if (engines.contains(TtsEngine.antalia))
               ButtonSegment(
                 value: TtsEngine.antalia,
                 icon: const Icon(Icons.record_voice_over, size: AppIconSize.s),
@@ -255,6 +268,7 @@ class _VoiceSection extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 6),
+        ],
         Text(
           switch (engine) {
             TtsEngine.gemini => l10n.ttsEngineAiInfo,

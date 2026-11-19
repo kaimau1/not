@@ -1993,6 +1993,12 @@
   "chatScopeDoc": "This document",
   "chatModeQa": "Q&A",
   "chatModeBrainstorm": "Brainstorm",
+  "chatSuggestOutline": "Outline",
+  "chatSuggestIdeas": "Give ideas",
+  "chatSuggestGaps": "Find gaps",
+  "chatPromptOutline": "Outline this note in short bullet points.",
+  "chatPromptIdeas": "Suggest new ideas and angles for this note.",
+  "chatPromptGaps": "What is missing, unclear or contradictory in this note?",
   "aiChatRowTitle": "Chat",
   "aiChatRowInfo": "With this note, its document or all notes; Q&A or brainstorm",
   "shareFolderTogether": "Edit folder together",
@@ -3207,5 +3213,12 @@
   "homeGestureNone": "Nothing",
   "homeGestureMissing": "The gesture's target wasn't found; choose it again in Settings → Notes",
   "calendarExpiryTag": "Archives",
-  "calendarExpiryRemoved": "Archive time removed"
+  "calendarExpiryRemoved": "Archive time removed",
+  "barMoreEdit": "Edit",
+  "barMoreEditHint": "Pinned (📌) buttons stay on the bar (the first 3 fit on a phone); the rest live in this menu. Long-press and drag to reorder.",
+  "barMoreToBar": "Move to bar",
+  "barMoreToMenu": "Move to menu",
+  "menuEditInlineHint": "Long-press and drag to reorder · ⊖ hide · ☆ quick row (up to {count})",
+  "@menuEditInlineHint": {"placeholders": {"count": {"type": "int"}}},
+  "menuHiddenGroup": "Hidden"
 }

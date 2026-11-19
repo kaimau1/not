@@ -5461,6 +5461,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatModeBrainstorm => 'Brainstorm';
 
   @override
+  String get chatSuggestOutline => 'Outline';
+
+  @override
+  String get chatSuggestIdeas => 'Give ideas';
+
+  @override
+  String get chatSuggestGaps => 'Find gaps';
+
+  @override
+  String get chatPromptOutline => 'Outline this note in short bullet points.';
+
+  @override
+  String get chatPromptIdeas => 'Suggest new ideas and angles for this note.';
+
+  @override
+  String get chatPromptGaps =>
+      'What is missing, unclear or contradictory in this note?';
+
+  @override
   String get aiChatRowTitle => 'Chat';
 
   @override
@@ -8910,4 +8929,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarExpiryRemoved => 'Archive time removed';
+
+  @override
+  String get barMoreEdit => 'Edit';
+
+  @override
+  String get barMoreEditHint =>
+      'Pinned (📌) buttons stay on the bar (the first 3 fit on a phone); the rest live in this menu. Long-press and drag to reorder.';
+
+  @override
+  String get barMoreToBar => 'Move to bar';
+
+  @override
+  String get barMoreToMenu => 'Move to menu';
+
+  @override
+  String menuEditInlineHint(int count) {
+    return 'Long-press and drag to reorder · ⊖ hide · ☆ quick row (up to $count)';
+  }
+
+  @override
+  String get menuHiddenGroup => 'Hidden';
 }

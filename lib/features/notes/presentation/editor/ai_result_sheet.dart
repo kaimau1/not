@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
+
 import '../../../../core/l10n_ext.dart';
 import '../../domain/note_type.dart';
 import '../../../../core/widgets/app_sheet.dart';
@@ -160,13 +162,23 @@ class _AiResultSheetState extends State<_AiResultSheet> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Row(
+                // SIĞMAYINCA ALT ALTA (2026-11-19): üç düğme ~557 dp istiyor;
+                // telefonda (412) Row 177 dp taşıyordu, düğmeler kırpılıyordu.
+                OverflowBar(
+                  alignment: MainAxisAlignment.spaceBetween,
+                  overflowAlignment: OverflowBarAlignment.end,
+                  overflowSpacing: AppSpace.xs,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: Text(l10n.cancel),
                     ),
-                    const Spacer(),
+                    OverflowBar(
+                      spacing: AppSpace.xs,
+                      alignment: MainAxisAlignment.end,
+                      overflowAlignment: OverflowBarAlignment.end,
+                      overflowSpacing: AppSpace.xs,
+                      children: [
                     // Önce sayfayı kapat, SONRA uygula: geri çağırma editörde
                     // setState yapıyor, istisna atarsa sayfa açık kalmasın.
                     TextButton.icon(
@@ -181,7 +193,6 @@ class _AiResultSheetState extends State<_AiResultSheet> {
                       icon: const Icon(Icons.note_add_outlined, size: 18),
                       label: Text(l10n.openAsNewNote),
                     ),
-                    const SizedBox(width: 4),
                     FilledButton.icon(
                       onPressed: () {
                         final text = _controller.text.trim();
@@ -190,6 +201,8 @@ class _AiResultSheetState extends State<_AiResultSheet> {
                       },
                       icon: const Icon(Icons.playlist_add, size: 18),
                       label: Text(l10n.addToNote),
+                    ),
+                      ],
                     ),
                   ],
                 ),

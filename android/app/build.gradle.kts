@@ -42,6 +42,17 @@ val playAppId: String? = if (!play) null else
             "Play derlemesi paket adı ister: NOTLAR_PLAY_APP_ID=<ad> (Play Console'a ilk " +
                 "yüklemede kalıcı olur; kişisel kimlikle Play paketi ÇIKMAZ). docs/play_hazirlik.md",
         )
+/** ÖLÇÜM DERLEMESİNİN YÖNÜ (TP-F, tablet turu 2026-11-18): profil APK'sı
+ *  varsayılan DİKEY kilitli (masadaki telefon yan dönünce senaryolar kayıyordu);
+ *  tablette yatay/bölünmüş ölçüm için `NOTLAR_OLCUM_YON=landscape` (ya da
+ *  `sensor`, `unspecified`) — `tool/perf/ab_hepsi.py --yon yatay` bunu ister.
+ *  Yalnız profil manifesti okur; release/kişisel derleme etkilenmez. */
+val olcumYon: String =
+    (System.getenv("NOTLAR_OLCUM_YON") ?: findProperty("olcumYon")?.toString())
+        ?.takeIf { it.isNotBlank() } ?: "portrait"
+if (olcumYon !in setOf("portrait", "landscape", "sensor", "unspecified", "fullSensor")) {
+    throw GradleException("NOTLAR_OLCUM_YON: portrait | landscape | sensor | unspecified | fullSensor")
+}
 /** Play projesinin `google-services.json`ı: eklenti release'te önce `src/release/`e bakar. */
 val playGoogleServices = file("src/release/google-services.json")
 if (play && !playGoogleServices.exists()) {
@@ -167,6 +178,7 @@ android {
         maybeCreate("profile").apply {
             applicationIdSuffix = ".olcum"
             manifestPlaceholders["appLabel"] = "Notlar Ölçüm"
+            manifestPlaceholders["olcumYon"] = olcumYon
         }
         release {
             signingConfig = if (keystorePropertiesFile.exists()) {

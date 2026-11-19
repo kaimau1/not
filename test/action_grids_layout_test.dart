@@ -89,10 +89,11 @@ void main() {
       final fab = tester.getRect(find.byType(FloatingActionButton).last);
       final text = tester.getRect(find.text('Metin notu'));
       final list = tester.getRect(find.text('Liste'));
-      // Birincil ikili yan yana ve PANELİN EN ALTINDA (FAB'a en yakın).
+      // Birincil üçlü yan yana ve PANELİN EN ÜSTÜNDE (kullanıcı isteği
+      // 2026-11-19: "alttaki metin liste maddeyi üste taşı").
       expect(text.center.dy, closeTo(list.center.dy, 1));
       expect(text.center.dx, lessThan(list.center.dx));
-      expect(fab.top - text.bottom, lessThan(60));
+      expect(text.bottom, lessThan(fab.top));
       // Ana ekranda sesli not menüde yok (tek mikrofon, F3.1).
       expect(find.text('AI sesli not'), findsNothing);
       // Gruplar başlıklı; başparmaktan yukarı: Kamera, Şablon. Kalem ve Dosya
@@ -106,7 +107,7 @@ void main() {
       final template = tester.getRect(
         find.byKey(const ValueKey('quick-section-template')),
       );
-      expect(camera.center.dy, lessThan(text.center.dy));
+      expect(text.center.dy, lessThan(template.center.dy));
       expect(template.center.dy, lessThan(camera.center.dy));
       expect(
         tester.getRect(find.text('Sıralı liste')).center.dy,

@@ -5441,6 +5441,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatModeBrainstorm => 'Beyin fırtınası';
 
   @override
+  String get chatSuggestOutline => 'Ana hat';
+
+  @override
+  String get chatSuggestIdeas => 'Fikir ver';
+
+  @override
+  String get chatSuggestGaps => 'Eksikleri bul';
+
+  @override
+  String get chatPromptOutline =>
+      'Bu notun ana hatlarını kısa maddelerle çıkar.';
+
+  @override
+  String get chatPromptIdeas => 'Bu not için yeni fikirler ve açılar öner.';
+
+  @override
+  String get chatPromptGaps =>
+      'Bu notta eksik kalan, belirsiz ya da çelişen yerler neler?';
+
+  @override
   String get aiChatRowTitle => 'Sohbet';
 
   @override
@@ -8897,4 +8917,25 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarExpiryRemoved => 'Arşivleme süresi kaldırıldı';
+
+  @override
+  String get barMoreEdit => 'Düzenle';
+
+  @override
+  String get barMoreEditHint =>
+      '📌 olanlar çubukta durur (telefonda ilk 3\'ü sığar), diğerleri bu menüde. Basılı tutup sürükleyerek sırala.';
+
+  @override
+  String get barMoreToBar => 'Çubuğa al';
+
+  @override
+  String get barMoreToMenu => 'Menüye al';
+
+  @override
+  String menuEditInlineHint(int count) {
+    return 'Basılı tutup sürükle: sırala · ⊖ gizle · ☆ hızlı satır (en çok $count)';
+  }
+
+  @override
+  String get menuHiddenGroup => 'Gizlenenler';
 }

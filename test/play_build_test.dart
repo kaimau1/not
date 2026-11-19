@@ -13,6 +13,9 @@ import 'package:notlar/core/play_build.dart';
 import 'package:notlar/features/ai/data/antalia/antalia_engine.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/presentation/editor/attachment_actions.dart';
+import 'package:notlar/features/settings/presentation/settings_screen.dart';
+import 'package:notlar/features/settings/settings_providers.dart'
+    show TtsEngine;
 import 'package:notlar/firebase_options.dart';
 
 void main() {
@@ -51,7 +54,10 @@ void main() {
   // E-postadan not (`fromEmail`) Gmail ekranında — [PlayBuild.gmail] kapısı.
   test('AI-S1 kapıları giriş noktalarına bağlı', () {
     const wiring = [
-      ('lib/features/ai/presentation/listen_screen.dart', 'PlayBuild.aiPodcast'),
+      (
+        'lib/features/ai/presentation/listen_screen.dart',
+        'PlayBuild.aiPodcast',
+      ),
       ('lib/features/ai/data/speech_service.dart', 'PlayBuild.aiVoice'),
       ('lib/features/settings/settings_providers.dart', 'PlayBuild.aiVoice'),
       (
@@ -105,12 +111,18 @@ void main() {
   // bağlanamaz, konum izni pakette yok; kişisel kimlik değişmez.
   test('Gradle Play çeşidi: ayrı kimlik, ayrı Firebase, konum izni yok', () {
     final gradle = File('android/app/build.gradle.kts').readAsStringSync();
-    expect(gradle, contains('applicationId = playAppId ?: "dev.kaimau.notlar"'));
+    expect(
+      gradle,
+      contains('applicationId = playAppId ?: "dev.kaimau.notlar"'),
+    );
     expect(gradle, contains('NOTLAR_PLAY_APP_ID'));
     expect(gradle, contains('src/release/google-services.json'));
-    expect(gradle, contains('if (play) manifest.srcFile("src/play/AndroidManifest.xml")'));
-    final playManifest =
-        File('android/app/src/play/AndroidManifest.xml').readAsStringSync();
+    expect(
+      gradle,
+      contains('if (play) manifest.srcFile("src/play/AndroidManifest.xml")'),
+    );
+    final playManifest = File('android/app/src/play/AndroidManifest.xml')
+        .readAsStringSync();
     for (final p in [
       'ACCESS_FINE_LOCATION',
       'ACCESS_COARSE_LOCATION',
@@ -137,5 +149,18 @@ void main() {
     }
     expect(AppLinks.privacy, endsWith('/gizlilik.html'));
     expect(AppLinks.deleteAccount, endsWith('/hesap-silme.html'));
+  });
+
+  // AI-S2 eki (2026-11-19): Play'de tek motor (cihaz sesi) kalınca seçici
+  // tek bölmeli, seçilemeyen düğmeydi → gizlenir.
+  test('ses motoru seçici yalnız birden çok motor varken', () {
+    final play = availableTtsEngines(ai: false, local: false);
+    expect(play, [TtsEngine.device]);
+    expect(showTtsEnginePicker(play), isFalse);
+    expect(
+      showTtsEnginePicker(const [TtsEngine.device, TtsEngine.gemini]),
+      isTrue,
+    );
+    expect(showTtsEnginePicker(availableTtsEngines()), on);
   });
 }

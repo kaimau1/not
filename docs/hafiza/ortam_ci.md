@@ -169,3 +169,6 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - Kişisel APK da `--obfuscate` ile derlenir (Play AAB zaten öyleydi); semboller `notlar-v<sürüm>-symbols.zip` olarak TASLAK Release'te (herkese açık değil). Yığın izi: `flutter symbolize -i <iz> -d <symbols/app.android-arm64.symbols>`.
 - Depoda sır yok (2026-11-18 taraması: jks/key.properties/env.json/özel anahtar yok); görünen Firebase API anahtarları istemci anahtarı — korunma = anahtar kısıtlama + App Check + kurallar (KONTROL "Konsol").
 - Public depoda GitHub barındırmalı standart koşucular ücretsiz/sınırsız dakika; yine de kullanıcı kararı (yerel doğrulama, tek push) geçerli.
+
+## Ana ekran aracı sınıf adı (KT-21, 2026-11-19)
+- `home_widget` `androidName`'i UYGULAMA KİMLİĞİYLE birleştirir (`<applicationId>.<ad>`); sınıflar hep `dev.kaimau.notlar` paketinde. Kimliği farklı derlemede (ölçüm `.olcum`, Play `NOTLAR_PLAY_APP_ID`) araçlar hiç güncellenmiyordu. Tek yol `updateHomeWidget(ad)` (`qualifiedAndroidName`); bekçi `test/home_widget_class_test.dart` (lib'de `updateWidget(androidName` yasak). "Widget güncellenemedi" / "FCM başlatılamadı" yalnız `kDebugMode`'da yazılır. Play derlemesinde araçlar cihazda doğrulanmadı.
