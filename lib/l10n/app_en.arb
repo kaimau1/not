@@ -2213,7 +2213,7 @@
   "inkPenOnlyTitle": "Draw with pen only",
   "inkPenOnlyInfo": "Fingers don't draw; one finger scrolls, two fingers zoom. Your palm leaves no marks. Turns on automatically the first time a pen touches the screen.",
   "inkFingerToolTitle": "Finger",
-  "inkFingerToolInfo": "Scrolls: only the pen writes, a finger scrolls. Draws: a finger writes with the pen tool too. Erases: a finger erases, two fingers zoom.",
+  "inkFingerToolInfo": "Auto: a finger scrolls once a pen has been seen, otherwise it draws. Scrolls: only the pen writes, a finger scrolls. Draws: a finger writes with the pen tool too. Erases: a finger erases, two fingers zoom.",
   "inkFingerScroll": "Scrolls",
   "inkFingerDraw": "Draws",
   "inkFingerErase": "Erases",
@@ -3214,6 +3214,26 @@
   "homeGestureMissing": "The gesture's target wasn't found; choose it again in Settings → Notes",
   "calendarExpiryTag": "Archives",
   "calendarExpiryRemoved": "Archive time removed",
+  "inkFingerAuto": "Auto",
+  "inkFingerAutoNowScroll": "Auto: a pen was seen on this device, so a finger scrolls.",
+  "inkFingerAutoNowDraw": "Auto: no pen seen yet, so a finger draws; it switches to scrolling the first time a pen touches.",
+  "barMoreLeftGroup": "Left group",
+  "barMoreRightGroup": "Right group (colored)",
+  "barMoreToRight": "Move to right group",
+  "barMoreToLeft": "Move to left group",
+  "layoutScopeAll": "Apply to all",
+  "layoutScopeNote": "This note only",
+  "layoutScopeInfoAll": "Changes apply to every note.",
+  "layoutScopeInfoNote": "This note has its own layout; changes apply only here.",
+  "layoutScopeReset": "Reset this note's layout",
+  "quickRowEditNotHere": "Not shown in this note: {names}",
+  "@quickRowEditNotHere": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "barMoreEdit": "Edit",
   "barMoreEditHint": "Pinned (📌) buttons stay on the bar (the first 3 fit on a phone); the rest live in this menu. Long-press and drag to reorder.",
   "barMoreToBar": "Move to bar",

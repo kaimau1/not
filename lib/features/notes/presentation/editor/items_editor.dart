@@ -1312,9 +1312,34 @@ class ItemsEditorState extends State<ItemsEditor>
     });
   }
 
-  void _insertAfter(NoteItem after) {
+  /// **DİKTEDE "YENİ MADDE"** (kullanıcı bulgusu 2026-11-19): [controller]'ın
+  /// maddesinin altına TEK boş madde açar (Enter ile aynı kural) ve onun
+  /// alanını döndürür — dikte orada sürer. Madde bu editörde değilse null.
+  ///
+  /// KÖK NEDEN: dikte "yeni madde" komutunun ürettiği `\n`'i eski maddenin
+  /// alanına yazıp alanın `commit`ini çağırıyordu; [_updateText] satır
+  /// sonunu yapıştırma sayıp maddeyi BÖLÜYORDU. Dikte hâlâ eski alana
+  /// yazdığından tanıyıcının HER ara sonucu yeniden bölünüp yeni madde
+  /// açıyordu (bir cümle → 20+ madde).
+  ({WrapTextController controller, FocusNode focus, VoidCallback commit})?
+  openItemAfterController(TextEditingController controller) {
+    final id = itemIdForController(controller);
+    if (id == null) return null;
+    final after = _items.where((i) => i.id == id).firstOrNull;
+    if (after == null) return null;
+    final item = _insertAfter(after);
+    if (item == null) return null;
+    final c = _controllerFor(item);
+    return (
+      controller: c,
+      focus: _focusFor(item),
+      commit: () => _updateText(item, c.logicalText),
+    );
+  }
+
+  NoteItem? _insertAfter(NoteItem after) {
     final index = _items.indexWhere((i) => i.id == after.id);
-    if (index < 0) return;
+    if (index < 0) return null;
     // NOT PAKETİ AÇIKKEN Enter / yeni madde paketin içinde kalır (kullanıcı
     // bulgusu 2026-11-08: "yeni madde ekleyince paket iptal oluyor" — yeni
     // satır paketsiz açılıp paketi ikiye bölüyor, odak dışarı kaçıyordu).
@@ -1335,6 +1360,7 @@ class ItemsEditorState extends State<ItemsEditor>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusFor(item).requestFocus();
     });
+    return item;
   }
 
   /// [text] ile başlayan bir madde açar ve imleci sonuna koyar (videonun

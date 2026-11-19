@@ -2493,29 +2493,52 @@ class _InkFingerToolPickerState extends State<InkFingerToolPicker> {
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.back_hand_outlined),
           title: Text(l10n.inkFingerToolTitle),
-          subtitle: Text(l10n.inkFingerToolInfo),
+          subtitle: Text(
+            InkToolMemory.fingerTool == FingerTool.auto
+                ? '${l10n.inkFingerToolInfo}\n${InkToolMemory.effectiveFingerTool == FingerTool.scroll ? l10n.inkFingerAutoNowScroll : l10n.inkFingerAutoNowDraw}'
+                : l10n.inkFingerToolInfo,
+          ),
         ),
-        SegmentedButton<FingerTool>(
-          showSelectedIcon: false,
-          segments: [
-            ButtonSegment(
-              value: FingerTool.scroll,
-              icon: const Icon(Icons.swipe_vertical_outlined),
-              label: Text(l10n.inkFingerScroll),
-            ),
-            ButtonSegment(
-              value: FingerTool.draw,
-              icon: const Icon(Icons.gesture_rounded),
-              label: Text(l10n.inkFingerDraw),
-            ),
-            ButtonSegment(
-              value: FingerTool.erase,
-              icon: const Icon(Icons.auto_fix_normal_outlined),
-              label: Text(l10n.inkFingerErase),
-            ),
-          ],
-          selected: {InkToolMemory.fingerTool},
-          onSelectionChanged: (s) => setState(() => widget.onChanged(s.first)),
+        // Dört seçenek dar telefonda simgeli sığmaz: 440 dp altında yalnız
+        // yazı (ayar sayfası; editörde değil — LayoutBuilder burada ucuz).
+        LayoutBuilder(
+          builder: (context, box) {
+            final icons = box.maxWidth >= 440;
+            ButtonSegment<FingerTool> seg(
+              FingerTool value,
+              IconData icon,
+              String label,
+            ) => ButtonSegment(
+              value: value,
+              icon: icons ? Icon(icon) : null,
+              label: Text(label, maxLines: 1, softWrap: false),
+            );
+            return SegmentedButton<FingerTool>(
+              key: const ValueKey('ink-finger-tool'),
+              showSelectedIcon: false,
+              segments: [
+                seg(
+                  FingerTool.auto,
+                  Icons.auto_awesome_outlined,
+                  l10n.inkFingerAuto,
+                ),
+                seg(
+                  FingerTool.scroll,
+                  Icons.swipe_vertical_outlined,
+                  l10n.inkFingerScroll,
+                ),
+                seg(FingerTool.draw, Icons.gesture_rounded, l10n.inkFingerDraw),
+                seg(
+                  FingerTool.erase,
+                  Icons.auto_fix_normal_outlined,
+                  l10n.inkFingerErase,
+                ),
+              ],
+              selected: {InkToolMemory.fingerTool},
+              onSelectionChanged: (s) =>
+                  setState(() => widget.onChanged(s.first)),
+            );
+          },
         ),
       ],
     );

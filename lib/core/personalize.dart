@@ -528,13 +528,136 @@ abstract final class Personalize {
 
   static const aiOffKey = 'ai_user_off';
 
+  /// **NOT BAŞINA DÜZEN** (kullanıcı isteği 2026-11-19: "menü düzenlerken
+  /// tümüne uygula / yalnız bu nota uygula"). Açık notun KENDİ alt çubuk +
+  /// hızlı satır düzeni; yoksa null (genel düzen geçerli). Yalnız düzen
+  /// alanları ([isLayoutId] gizlemeleri, `barOrder`, `aiOrder`,
+  /// `quickOrder`) taşınır. Cihaz tercihi (SharedPreferences, not kimliği
+  /// anahtarlı) — Firestore'a/nota yazılmaz, göç yok; silinince genel düzene
+  /// dönülür. Değer yalnız GERÇEKTEN değişince bildirir: nottan nota geçiş
+  /// (ikisinde de özel düzen yoksa) dinleyicileri uyandırmaz.
+  static final noteOverride = ValueNotifier<UiPrefs?>(null);
+
+  static const _noteKey = 'note_ui_layout_v1';
+  static Map<String, UiPrefs> _noteLayouts = const {};
+  static String? _activeNote;
+
+  /// Düzeni düzenlenebilen açık not (editör kurulunca), yoksa null.
+  static String? get activeNote => _activeNote;
+
+  /// Açık notun kendi düzeni var mı.
+  static bool get noteHasOwnLayout =>
+      _activeNote != null && _noteLayouts.containsKey(_activeNote);
+
+  /// Not başına taşınan kimlik mi (alt çubuk ve hızlı satır düğmeleri).
+  static bool isLayoutId(String id) {
+    final bare = id.startsWith('+') ? id.substring(1) : id;
+    return bare.startsWith('editor.bar.') || bare.startsWith('editor.quick.');
+  }
+
   /// Biri değişince haber veren birleşik dinlenebilir.
-  static final Listenable listenable = Listenable.merge([prefs, draft, aiOff]);
+  static final Listenable listenable = Listenable.merge([
+    prefs,
+    draft,
+    aiOff,
+    noteOverride,
+  ]);
 
   static SharedPreferences? _store;
 
-  /// Ekranda geçerli olan: düzenlenirken taslak, değilse kayıt.
-  static UiPrefs get current => draft.value ?? prefs.value;
+  static UiPrefs? _effBase;
+  static UiPrefs? _effOver;
+  static UiPrefs? _eff;
+
+  /// Ekranda geçerli olan: düzenlenirken taslak, değilse kayıt; açık notun
+  /// kendi düzeni varsa düzen alanları ondan. Sonuç önbellekte (kurulumda
+  /// sık okunur, her okuyuşta yeni küme kurulmasın).
+  static UiPrefs get current {
+    final base = draft.value ?? prefs.value;
+    final over = noteOverride.value;
+    if (over == null) return base;
+    if (identical(base, _effBase) && identical(over, _effOver)) return _eff!;
+    _effBase = base;
+    _effOver = over;
+    return _eff = _overlay(base, over);
+  }
+
+  static UiPrefs _overlay(UiPrefs base, UiPrefs over) => base.copyWith(
+    hidden: {
+      for (final h in base.hidden)
+        if (!isLayoutId(h)) h,
+      ...over.hidden,
+    },
+    barOrder: over.barOrder,
+    aiOrder: over.aiOrder,
+    quickOrder: over.quickOrder,
+  );
+
+  /// [p]'nin yalnız düzen alanları (not başına kayıt biçimi).
+  static UiPrefs _layoutOf(UiPrefs p) => UiPrefs(
+    hidden: {
+      for (final h in p.hidden)
+        if (isLayoutId(h)) h,
+    },
+    barOrder: p.barOrder,
+    aiOrder: p.aiOrder,
+    quickOrder: p.quickOrder,
+  );
+
+  /// Editör açıldı: [noteId]'nin düzeni (varsa) geçerli olur.
+  /// [owner] editörün kendisi: aynı not yeniden açılırken eskisinin geç
+  /// gelen kapanışı yenisini silmesin.
+  static void enterNote(String noteId, Object owner) {
+    _activeNote = noteId;
+    _activeOwner = owner;
+    noteOverride.value = _noteLayouts[noteId];
+  }
+
+  static Object? _activeOwner;
+
+  /// Editör kapandı (yalnız hâlâ geçerli editör oysa).
+  static void leaveNote(Object owner) {
+    if (!identical(_activeOwner, owner)) return;
+    _activeOwner = null;
+    _activeNote = null;
+    noteOverride.value = null;
+  }
+
+  /// "Yalnız bu nota" ([own] true): açık not genel düzenin bugünkü
+  /// kopyasıyla kendi düzenini alır; false = notun düzeni silinir, genel
+  /// düzene döner ("Bu notun özelleştirmesini sıfırla").
+  static void setNoteOwnLayout(bool own) {
+    final id = _activeNote;
+    if (id == null || own == _noteLayouts.containsKey(id)) return;
+    _writeNote(id, own ? _layoutOf(draft.value ?? prefs.value) : null);
+  }
+
+  /// Menü DÜZENİ değişikliği (hızlı satır, alt çubuk): açık notun kendi
+  /// düzeni varsa ona, yoksa genel düzene ([update]) yazılır.
+  static void updateLayout(UiPrefs Function(UiPrefs) change) {
+    final id = _activeNote;
+    final own = id == null ? null : _noteLayouts[id];
+    if (id == null || own == null) {
+      update(change);
+      return;
+    }
+    _writeNote(id, _layoutOf(change(current)));
+  }
+
+  static void _writeNote(String id, UiPrefs? layout) {
+    final next = {..._noteLayouts};
+    layout == null ? next.remove(id) : next[id] = layout;
+    _noteLayouts = next;
+    if (_activeNote == id) noteOverride.value = layout;
+    try {
+      _store?.setString(
+        _noteKey,
+        jsonEncode({for (final e in next.entries) e.key: e.value.toJson()}),
+      );
+    } catch (e) {
+      ErrorLog.record('personalize-note-write', e);
+    }
+  }
 
   static bool get editing => draft.value != null;
 
@@ -545,6 +668,17 @@ abstract final class Personalize {
   static void attach(SharedPreferences store) {
     _store = store;
     aiOff.value = store.getBool(aiOffKey) ?? false;
+    final notes = store.getString(_noteKey);
+    if (notes != null) {
+      try {
+        final j = jsonDecode(notes) as Map<String, dynamic>;
+        _noteLayouts = {
+          for (final e in j.entries) e.key: UiPrefs.fromJson(e.value),
+        };
+      } catch (_) {
+        // Bozuk kayıt: not başına düzen yok, genel düzen geçerli.
+      }
+    }
     final raw = store.getString(_key);
     if (raw == null) return;
     try {
@@ -582,6 +716,11 @@ abstract final class Personalize {
   /// Düzenleme modunda bir öğeye dokunuldu: gizle/göster, HEMEN kaydedilir.
   static void toggle(String id) {
     if (draft.value == null) return;
+    // Alt çubuk / hızlı satır düğmesi: açık notun kendi düzeni varsa ona.
+    if (isLayoutId(id) && noteHasOwnLayout) {
+      updateLayout((p) => p.withVisible(id, !p.storedShows(id)));
+      return;
+    }
     update((p) => p.withVisible(id, !p.storedShows(id)));
   }
 
@@ -605,6 +744,10 @@ abstract final class Personalize {
   @visibleForTesting
   static void debugReset() {
     _store = null;
+    _noteLayouts = const {};
+    _activeNote = null;
+    _activeOwner = null;
+    noteOverride.value = null;
     aiOff.value = false;
     prefs.value = const UiPrefs();
     draft.value = null;

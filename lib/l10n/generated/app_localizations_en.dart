@@ -6001,7 +6001,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkFingerToolInfo =>
-      'Scrolls: only the pen writes, a finger scrolls. Draws: a finger writes with the pen tool too. Erases: a finger erases, two fingers zoom.';
+      'Auto: a finger scrolls once a pen has been seen, otherwise it draws. Scrolls: only the pen writes, a finger scrolls. Draws: a finger writes with the pen tool too. Erases: a finger erases, two fingers zoom.';
 
   @override
   String get inkFingerScroll => 'Scrolls';
@@ -8929,6 +8929,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarExpiryRemoved => 'Archive time removed';
+
+  @override
+  String get inkFingerAuto => 'Auto';
+
+  @override
+  String get inkFingerAutoNowScroll =>
+      'Auto: a pen was seen on this device, so a finger scrolls.';
+
+  @override
+  String get inkFingerAutoNowDraw =>
+      'Auto: no pen seen yet, so a finger draws; it switches to scrolling the first time a pen touches.';
+
+  @override
+  String get barMoreLeftGroup => 'Left group';
+
+  @override
+  String get barMoreRightGroup => 'Right group (colored)';
+
+  @override
+  String get barMoreToRight => 'Move to right group';
+
+  @override
+  String get barMoreToLeft => 'Move to left group';
+
+  @override
+  String get layoutScopeAll => 'Apply to all';
+
+  @override
+  String get layoutScopeNote => 'This note only';
+
+  @override
+  String get layoutScopeInfoAll => 'Changes apply to every note.';
+
+  @override
+  String get layoutScopeInfoNote =>
+      'This note has its own layout; changes apply only here.';
+
+  @override
+  String get layoutScopeReset => 'Reset this note\'s layout';
+
+  @override
+  String quickRowEditNotHere(String names) {
+    return 'Not shown in this note: $names';
+  }
 
   @override
   String get barMoreEdit => 'Edit';

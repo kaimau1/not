@@ -10673,7 +10673,7 @@ abstract class AppLocalizations {
   /// No description provided for @inkFingerToolInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.'**
+  /// **'Otomatik: kalem görüldüyse parmak kaydırır, görülmediyse çizer. Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.'**
   String get inkFingerToolInfo;
 
   /// No description provided for @inkFingerScroll.
@@ -15829,6 +15829,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Arşivleme süresi kaldırıldı'**
   String get calendarExpiryRemoved;
+
+  /// No description provided for @inkFingerAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get inkFingerAuto;
+
+  /// No description provided for @inkFingerAutoNowScroll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik: bu cihazda kalem görüldü, parmak kaydırıyor.'**
+  String get inkFingerAutoNowScroll;
+
+  /// No description provided for @inkFingerAutoNowDraw.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik: kalem görülmedi, parmak çiziyor; kalem ilk değince kaydırmaya geçer.'**
+  String get inkFingerAutoNowDraw;
+
+  /// No description provided for @barMoreLeftGroup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sol grup'**
+  String get barMoreLeftGroup;
+
+  /// No description provided for @barMoreRightGroup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağ grup (renkli)'**
+  String get barMoreRightGroup;
+
+  /// No description provided for @barMoreToRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağ gruba taşı'**
+  String get barMoreToRight;
+
+  /// No description provided for @barMoreToLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sol gruba taşı'**
+  String get barMoreToLeft;
+
+  /// No description provided for @layoutScopeAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümüne uygula'**
+  String get layoutScopeAll;
+
+  /// No description provided for @layoutScopeNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bu nota'**
+  String get layoutScopeNote;
+
+  /// No description provided for @layoutScopeInfoAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değişiklik bütün notlarda geçerli.'**
+  String get layoutScopeInfoAll;
+
+  /// No description provided for @layoutScopeInfoNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notun kendi düzeni var; değişiklik yalnız bu notta geçerli.'**
+  String get layoutScopeInfoNote;
+
+  /// No description provided for @layoutScopeReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notun özelleştirmesini sıfırla'**
+  String get layoutScopeReset;
+
+  /// No description provided for @quickRowEditNotHere.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta görünmez: {names}'**
+  String quickRowEditNotHere(String names);
 
   /// No description provided for @barMoreEdit.
   ///

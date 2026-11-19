@@ -3,6 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 19 November 2026 {#2026-11-19}
+- **Dictating into a checklist no longer multiplies items:** saying "new item" while dictating no longer turns what you said into dozens of copies; one new item opens and dictation continues there.
+- **"Auto" finger setting for the pen:** if a pen has been used on this device a finger scrolls, otherwise it draws; it switches to scrolling the first time a pen touches. Your own Scrolls/Draws/Erases choice is kept.
+- **The quick menu's checkbox works in list notes too:** the ☑ above the keyboard checks the focused item (in a numbered list it turns it into a checklist). When editing the quick menu, buttons that don't appear in that note are listed.
+- **Left ↔ right in the bottom bar:** in ⋯ → Edit, the arrows next to each button move it between the left group and the coloured right group (AI, voice recording, dictation).
+- **Menu layout for a single note:** when editing the quick menu or the bottom bar choose **Apply to all** / **This note only**; that note keeps its own layout, and **Reset this note's layout** returns it to the general one.
 - **Ready-made prompts in note chat:** while the chat is empty, **Outline**, **Give ideas** and **Find gaps** buttons ask right away.
 - **Quick add no longer asks for the microphone on first open:** permission is requested when you tap the mic; once granted it listens automatically as before.
 - **No folder menu while scrolling back to the top:** scrolling up until the list hits the top no longer pops the menu open and swallows your next tap; pulling down when already at the top still opens it.

@@ -2887,7 +2887,7 @@
   "inkPenOnlyTitle": "Yalnız kalemle yaz",
   "inkPenOnlyInfo": "Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.",
   "inkFingerToolTitle": "Parmak",
-  "inkFingerToolInfo": "Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.",
+  "inkFingerToolInfo": "Otomatik: kalem görüldüyse parmak kaydırır, görülmediyse çizer. Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.",
   "inkFingerScroll": "Kaydırır",
   "inkFingerDraw": "Çizer",
   "inkFingerErase": "Siler",
@@ -4062,6 +4062,26 @@
   "homeGestureMissing": "Jestin hedefi bulunamadı; Ayarlar → Notlar'dan yeniden seç",
   "calendarExpiryTag": "Arşivlenir",
   "calendarExpiryRemoved": "Arşivleme süresi kaldırıldı",
+  "inkFingerAuto": "Otomatik",
+  "inkFingerAutoNowScroll": "Otomatik: bu cihazda kalem görüldü, parmak kaydırıyor.",
+  "inkFingerAutoNowDraw": "Otomatik: kalem görülmedi, parmak çiziyor; kalem ilk değince kaydırmaya geçer.",
+  "barMoreLeftGroup": "Sol grup",
+  "barMoreRightGroup": "Sağ grup (renkli)",
+  "barMoreToRight": "Sağ gruba taşı",
+  "barMoreToLeft": "Sol gruba taşı",
+  "layoutScopeAll": "Tümüne uygula",
+  "layoutScopeNote": "Yalnız bu nota",
+  "layoutScopeInfoAll": "Değişiklik bütün notlarda geçerli.",
+  "layoutScopeInfoNote": "Bu notun kendi düzeni var; değişiklik yalnız bu notta geçerli.",
+  "layoutScopeReset": "Bu notun özelleştirmesini sıfırla",
+  "quickRowEditNotHere": "Bu notta görünmez: {names}",
+  "@quickRowEditNotHere": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
   "barMoreEdit": "Düzenle",
   "barMoreEditHint": "📌 olanlar çubukta durur (telefonda ilk 3'ü sığar), diğerleri bu menüde. Basılı tutup sürükleyerek sırala.",
   "barMoreToBar": "Çubuğa al",
