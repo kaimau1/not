@@ -23,11 +23,23 @@ def adb(*args, timeout=180):
 
 
 # ---------------------------------------------------------------- giriş
+def screen_size():
+    """ŞU ANKİ ekran boyutu (W, H) piksel. `wm size` fiziksel (dikey) boyutu verir;
+    döndürülmüş ekranda (tablet yatay = ROTATION_90/270) ters çevrilir. 2026-11-18
+    (T13, MatePad 11): yatayda W,H ters kalınca tüm koordinatlar ekran dışına düşüyordu."""
+    w, h = (int(v) for v in re.search(r"(\d+)x(\d+)", sh("wm size").splitlines()[-1]).groups())
+    r = re.search(r"mCurrentRotation=ROTATION_(\d+)", sh("dumpsys window displays | grep mCurrentRotation"))
+    if r and int(r.group(1)) in (90, 270):
+        w, h = h, w
+    return w, h
+
+
 def wake():
     sh("input keyevent KEYCODE_WAKEUP")
     time.sleep(0.4)
     if "isKeyguardShowing=true" in sh("dumpsys window | grep isKeyguardShowing"):
-        sh("input swipe 540 2000 540 700 200")
+        w, h = screen_size()
+        sh(f"input swipe {w // 2} {int(h * .85)} {w // 2} {int(h * .3)} 200")
         time.sleep(0.8)
 
 
@@ -270,6 +282,7 @@ def open_import(zip_name, button='Başka uygulamadan'):
     """Ayarlar → Senkronizasyon → [button] → dosyayı seç. Tam yedek için
     button='^Yedekten geri yükle$' (aynı bölümde; birleştirir, var olanı atlar)."""
     wake()
+    W, H = screen_size()
     focus = sh('dumpsys window | grep mCurrentFocus')
     if 'dev.kaimau.notlar' not in focus:
         raise RuntimeError('uygulama önde değil: ' + focus.strip())
@@ -283,11 +296,11 @@ def open_import(zip_name, button='Başka uygulamadan'):
         if hits:
             tap(hits[0][1], hits[0][2]); time.sleep(1.5)
             continue
-        swipe(540, 1800, 540, 900, 300); time.sleep(0.8)
+        swipe(W // 2, int(H * .75), W // 2, int(H * .4), 300); time.sleep(0.8)
     for i in range(4):
         if find(button):
             break
-        swipe(540, 1800, 540, 900, 300); time.sleep(0.8)
+        swipe(W // 2, int(H * .75), W // 2, int(H * .4), 300); time.sleep(0.8)
     tap_label(button, wait=3)
     if 'dosyaokuyucu' in sh('dumpsys window | grep mCurrentFocus'):
         tap_label('^Diğer$', wait=2)

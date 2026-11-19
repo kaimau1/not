@@ -12,7 +12,7 @@ from vmsvc import *
 label = sys.argv[1]
 vm = VM(open(os.path.join(OUT, 'vm.url')).read())
 wake()
-w, h = (int(v) for v in re.search(r'(\d+)x(\d+)', sh('wm size').splitlines()[-1]).groups())
+w, h = screen_size()
 x = w // 2
 vm.start(widgets=False)
 for d in (1, 1, 1, 1, -1, -1, -1, -1):

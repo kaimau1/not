@@ -97,3 +97,26 @@ Her kip için: `adb install -r "$TMP/panel_<k>.apk"` → uygulamada bir metin no
 bir kez oku → `python -u tool/perf/panel_kayit.py <k> <alan_x> <alan_y> --panel-y <px>`
 (10× aç/kapa; `--tekrar`, `--video` ile yeniden çözümleme). Son satır `TOPLAM <k>:`
 geri sıçrama / takılma / gizli / ort-maks sapma. Ham kareler `PERF_OUT/panel_<k>.csv`.
+
+## Tablet (MatePad 11, T13/T1, 2026-11-18)
+
+`ab_hepsi.py` tableti kendi düzeninde ölçer (kısa kenar >= 1400 px → tablet; kayıt `docs/perf/gecmis_tablet.csv`,
+taban `altin_taban_tablet.json`; telefonla KARŞILAŞTIRILMAZ). Ölçüm APK'sı (profil) manifestte DİKEY kilitli
+(`android/app/src/profile/AndroidManifest.xml`) → ölçüm 1600x2560 (640x1024 dp): ray + 2 sütun liste; yatay/bölünmüş
+görünüm bu APK'yla ölçülemez (yatay için manifest anahtarı gerekir: öneri T16 raporunda).
+
+- **Semantik tuzak:** UiAutomation ~1 sn bağlanır; boşta uygulamada Flutter ana ekranın semantik ağacını o pencerede
+  göndermiyor → tablet ana ekranı dökümde BOŞ (3,4 KB). Levha/editör/ayarlar DOLU. Bu yüzden `home_locate` tablet ana
+  ekranı için 1600 px'lik piksel tablosu (`GEO_1600`) kullanır ve `⋮` levhasıyla doğrular. `dump()` artık boyuta değil
+  etiketli düğüm sayısına bakar (boş ağaç da 3,4 KB tutuyordu).
+- **Varsayımlar:** "Notların yedeklenmiyor" bandı küçültülmüş ("Sonra" bir kez), ilk kart sabit not, "OLCUM kalem pdf"
+  ve "OLCUM cizgi" notları var (yedek bir kez elle yüklenir: `make_dataset.py --ink 40` → Download → Ayarlar →
+  Senkronizasyon → Yedekten geri yükle → Diğer → Kök dizinleri göster → İndirilenler; `--hazirlik` bunu betiğe yaptırır).
+- **Fiziksel klavye:** tablet "klavye takılı" sanıyor → alana dokunmak sanal klavyeyi AÇMAZ; editör üst çubuğundaki ⌨
+  ("Sanal klavyeyi aç") AÇ/KAPA anahtarıdır (açıkken dokunmak kapatır); bir kez açıldıktan sonra alana dokunmak da açar.
+  `ensure_ime` bunu halleder; IME kapalıyken BACK notu kapatır → `back_note()`.
+- **Huawei kurulum onayı:** `adb install` iki pencere çıkarır ("DEVAM ET", "YÜKLE"); `install()` yalnız ölçüm uygulaması
+  için bunları kendisi geçer.
+- **Arama → not:** ana ekran aramasından açılan notta başlık eşleşirse not-içi arama çubuğu açılır ve alt araç
+  çubuğunu gizler (`close_note_search`).
+- **Yön:** `--yon dikey|yatay|mevcut` (`wm user-rotation lock`, bitince `free`); sensörlü döndürme ölçümü bozar.
