@@ -11126,6 +11126,30 @@ abstract class AppLocalizations {
   /// **'Çizginin sonunda kalemi kısa süre kıpırdatmadan tut: düz çizgi, daire ya da dikdörtgen olur.'**
   String get inkShapeSnapInfo;
 
+  /// No description provided for @inkQuickSwapTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem ↔ silgi hızlı düğmesi'**
+  String get inkQuickSwapTitle;
+
+  /// No description provided for @inkQuickSwapInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizgi bitince yanında saydam küçük düğme belirir: dokununca silgiye, silgideyken kaleme geçer. Kullanılmazsa birkaç saniyede kaybolur.'**
+  String get inkQuickSwapInfo;
+
+  /// No description provided for @inkQuickSwapToEraser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgiye geç'**
+  String get inkQuickSwapToEraser;
+
+  /// No description provided for @inkQuickSwapToPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaleme dön'**
+  String get inkQuickSwapToPen;
+
   /// No description provided for @inkPartialEraserTitle.
   ///
   /// In tr, this message translates to:

@@ -80,6 +80,17 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
   ),
   _SettingRow(
     _InkSwitch(
+      icon: Icons.swap_horiz_rounded,
+      title: l10n.inkQuickSwapTitle,
+      subtitle: l10n.inkQuickSwapInfo,
+      read: () => InkToolMemory.quickSwap,
+      write: InkToolMemory.saveQuickSwap,
+    ),
+    title: l10n.inkQuickSwapTitle,
+    keywords: '${l10n.inkQuickSwapInfo} silgi kalem gecis hizli dugme',
+  ),
+  _SettingRow(
+    _InkSwitch(
       icon: Icons.cleaning_services_outlined,
       title: l10n.inkPartialEraserTitle,
       subtitle: l10n.inkPartialEraserInfo,

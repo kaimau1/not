@@ -6239,6 +6239,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Hold the pen still at the end of a stroke: it becomes a straight line, circle or rectangle.';
 
   @override
+  String get inkQuickSwapTitle => 'Quick pen ↔ eraser button';
+
+  @override
+  String get inkQuickSwapInfo =>
+      'When a stroke ends a small translucent button appears next to it: tap to switch to the eraser, or back to the pen. It fades after a few idle seconds.';
+
+  @override
+  String get inkQuickSwapToEraser => 'Switch to eraser';
+
+  @override
+  String get inkQuickSwapToPen => 'Back to pen';
+
+  @override
   String get inkPartialEraserTitle => 'Partial eraser';
 
   @override

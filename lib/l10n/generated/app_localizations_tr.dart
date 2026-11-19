@@ -6218,6 +6218,19 @@ class AppLocalizationsTr extends AppLocalizations {
       'Çizginin sonunda kalemi kısa süre kıpırdatmadan tut: düz çizgi, daire ya da dikdörtgen olur.';
 
   @override
+  String get inkQuickSwapTitle => 'Kalem ↔ silgi hızlı düğmesi';
+
+  @override
+  String get inkQuickSwapInfo =>
+      'Çizgi bitince yanında saydam küçük düğme belirir: dokununca silgiye, silgideyken kaleme geçer. Kullanılmazsa birkaç saniyede kaybolur.';
+
+  @override
+  String get inkQuickSwapToEraser => 'Silgiye geç';
+
+  @override
+  String get inkQuickSwapToPen => 'Kaleme dön';
+
+  @override
   String get inkPartialEraserTitle => 'Kısmi silgi';
 
   @override
