@@ -333,3 +333,6 @@ Beş ilke:
 ## 2026-11-19 — Tablet: Huawei Navigasyon yuvası (KT-13) ve takvim ay hücresi (KT-23)
 - **"Yatayda karta dokununca uygulama arka plana gidiyor" uygulama hatası DEĞİL** (P78): Huawei Navigasyon yuvası (`com.huawei.android.FloatTasks`, yüzen gezinme düğmesi) ekran görüntüsüne (screencap) ÇIKMAZ ama dokunuşu alır; ona dokunmak sistem GERİ (`interceptKeyTi keyCode=4 isInjected=true`), kök ekranda → `moveTaskToBack`. Teşhis: `adb shell dumpsys window windows | grep -A3 FloatTasks` (kutu `AbstractView (x,y)(w x h)`). Ölçüm/tur betikleri tablette bu kutuya dokunmasın. Benzer "gizemli geri" bulgusunda önce buna bak.
 - **Takvim ay hücresi "geniş" kuralı** `monthCellRoomy` (≥ 140 dp YA DA ≥ 72x100 dp): dikey tablet (~81x149 dp) de gün 13 / şerit 11 pt alır; telefon (~51 dp) ve yatay telefon (kısa hücre) aynı.
+
+## 2026-11-19 — Tablet küçükleri (KT-17/19/20/22/24, cihazsız)
+- **Levha genişliği tek yerde** (KT-20): `showAppSheet` her levhaya `sheetWidthConstraints` uygular (en çok `kSheetMaxWidth` = 560 dp, daha dar sınır korunur). Yanlış yol: KT-2'de kural yalnız levhanın kendi `constraints`'ine yazıldı; sınır vermeyen levhalar M3'ün 640 dp varsayılanını aldı — dikey tablet tam 640 dp olduğu için "kural yatayda çalışıyor, dikeyde çalışmıyor" gibi göründü. Bekçi `test/app_sheet_width_test.dart`.

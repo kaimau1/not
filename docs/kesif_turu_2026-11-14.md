@@ -192,6 +192,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Yüzey: tablet dikey (640 dp). Önem: düşük. Gerçek: "Uygulama" levhası, kart ⋮ levhası, "Görünüm ve süz" 640 dp'ye yayılıyor (Izgara/Liste segmenti, 5 yuvarlak düğme arası ~100 dp); KT-2 kuralı (en çok 560 dp, ortada) yatayda çalışıyor (`kt-yatay-02`), dikey tabletlerde yalnız ≥ 600 dp penceresinde görsel olarak "dolu" değil.
 - Öneri: levha `maxWidth` 560'ı ≥ 600 dp'de dikey tablete de uygula (yatayla aynı kural).
 - Görüntü: `kt-dikey-03-suz-levhasi.png`, `kt-dikey-04-uygulama-menusu.png`.
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden: 560 dp kuralı yalnız kendi `constraints`'ini veren levhalardaydı, gerisi M3'ün 640 dp varsayılanını alıyordu (dikey tablet = 640 dp). Kural `showAppSheet`'e taşındı (`sheetWidthConstraints`). Bekçi `test/app_sheet_width_test.dart` (düzeltmesiz 640 / 1280). Cihazda doğrulanmadı.
 
 ### KT-21 — Ölçüm kimliğinde her açılışta widget ve FCM istisnaları (yutuluyor)
 - Yüzey: profil/ölçüm kimliği, GMS'siz tablet. Önem: düşük (kullanıcıya görünmez). Gerçek: logcat `flutter: Widget güncellenemedi: PlatformException(-3, No Widget found with Name TodayWidgetProvider… Didn't find class "dev.kaimau.notlar.olcum.TodayWidgetProvider"` ve `NotlarWidgetProvider` (home_widget sınıf adını applicationId'den kuruyor; `.olcum` ekinde sınıf yok); `FCM başlatılamadı: MISSING_INSTANCEID_SERVICE` (GMS yok). İkisi try/catch'te.

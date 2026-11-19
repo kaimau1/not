@@ -25,6 +25,20 @@ const kAppSheetAnimation = AnimationStyle(
 /// vermeli.
 const double kSheetMaxWidth = 560;
 
+/// Her levhanın genişlik tavanı [kSheetMaxWidth] (KT-20, tablet turu
+/// 2026-11-18). KÖK NEDEN: 560 dp kuralı yalnız kendi `constraints`'ini
+/// veren levhalardaydı; geri kalanı M3'ün 640 dp varsayılanını alıyordu ve
+/// dikey tabletin (640 dp) tam genişliğine yayılıyordu. Daha dar sınır veren
+/// levha kendi sınırını korur; yükseklik sınırı aynen geçer.
+BoxConstraints sheetWidthConstraints(BoxConstraints? given) {
+  if (given == null) return const BoxConstraints(maxWidth: kSheetMaxWidth);
+  if (given.maxWidth <= kSheetMaxWidth) return given;
+  return given.copyWith(
+    minWidth: given.minWidth > kSheetMaxWidth ? kSheetMaxWidth : null,
+    maxWidth: kSheetMaxWidth,
+  );
+}
+
 /// Hareketi azalt (F34.7): levha kısa ve doğrusal.
 const kAppSheetAnimationReduced = AnimationStyle(
   duration: AppMotion.reduced,
@@ -79,7 +93,7 @@ Future<T?> showAppSheet<T>({
   elevation: elevation,
   shape: shape,
   clipBehavior: clipBehavior,
-  constraints: constraints,
+  constraints: sheetWidthConstraints(constraints),
   barrierColor: barrierColor,
   isScrollControlled: isScrollControlled,
   scrollControlDisabledMaxHeightRatio: scrollControlDisabledMaxHeightRatio,
