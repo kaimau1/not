@@ -914,7 +914,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     final Widget body;
     if (wide) {
-      body = Row(
+      // KW-21: liste + ayrıntı ÇİFTİ ortada (en çok 380 + 1 + 720); ayrıntı
+      // yine listeye yaslı (KT-10), 1920'de sağda ~700 px boşluk kalmaz.
+      body = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380 + 1 + 720),
+          child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Arama kutusu sol sütunun içinde, sütunla aynı hizada (A10).
@@ -964,6 +969,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
           ),
         ],
+      ),
+        ),
       );
     } else {
       // Kök ↔ alan: solma + %6 kayma; giriş `medium`, çıkış onun 2/3'ü
