@@ -502,7 +502,14 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           key: const ValueKey('quick-row-customize'),
           // Eski "aç-düzenle-kaydet" kipi yerine anında uygulanan levha
           // (kullanıcı isteği 2026-11-13, bkz. [showQuickRowEditor]).
-          value: () => unawaited(showQuickRowEditor(context)),
+          value: () => unawaited(
+            showQuickRowEditor(
+              context,
+              unavailable: {
+                for (final e in quickRowCatalog(context.l10n)) e.key,
+              }.difference({for (final e in all) ?e?.key}),
+            ),
+          ),
           child: ListTile(
             dense: true,
             contentPadding: EdgeInsets.zero,

@@ -344,6 +344,26 @@ extension _EditorFlowX on _NoteEditorScreenState {
   /// için son satır yerinden kımıldamaz); imleç bir MADDEDEYSE kutusu kalkar
   /// ve metni gövdenin sonuna döner (ilk maddede bu tam tersi işlemdir).
   /// Hiçbir yer odakta değilse boş bir kutulu madde açılır.
+  /// Hızlı satırın ☑ düğmesi, not türüne göre (bkz. `_typingTitle`).
+  void _quickRowCheckbox() {
+    final note = _note;
+    if (note == null) return;
+    switch (note.type) {
+      case NoteType.text:
+        _toggleChecklistLine();
+      case NoteType.checklist:
+        final items = _itemsEditorKey.currentState;
+        final id = items?.focusedItemId;
+        if (items == null || id == null) return;
+        unawaited(AppHaptics.tick());
+        items.toggleCheckedOf(id);
+      case NoteType.ordered:
+        _toggleListKind();
+      default:
+        break;
+    }
+  }
+
   void _toggleChecklistLine() {
     final note = _note;
     if (note == null || note.type != NoteType.text) return;

@@ -1270,6 +1270,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     FocusManager.instance.addListener(_onAnyFocusChange);
     HardwareKeyboard.instance.addHandler(_onHardKey);
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
+    // Not başına menü düzeni (2026-11-19): bu notun kendi düzeni geçerli.
+    Personalize.enterNote(widget.noteId, this);
     _topOrder = Personalize.current.topOrder;
     Personalize.listenable.addListener(_onTopOrder);
     // Kök gezgin: kapanış önerisi (F52.3) editör atıldıktan sonra açılır.
@@ -1783,6 +1785,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     noteRouteClosing.removeListener(_holdSaveWhileClosing);
     openEditorNoteIds.remove(widget.noteId);
     _live.remove(this);
+    Personalize.leaveNote(this);
     final openNotes = _openNotes;
     final openId = widget.noteId;
     unawaited(Future.microtask(() => openNotes.close(openId)));
@@ -2731,7 +2734,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           target: _formatTargetN,
           onBold: () => _applyFormat(RichFormat.bold),
           onBullet: () => _runOnTarget(applyLineBullet),
-          onCheckbox: note.type == NoteType.text ? _toggleChecklistLine : null,
+          // HIZLI SATIRDA ☑ HER NOT TÜRÜNDE (kullanıcı bulgusu 2026-11-19:
+          // liste notunda menüye eklenen "Onay kutusu" sessizce yoktu):
+          // metin notunda satır ↔ madde, liste notunda odaktaki maddeyi
+          // işaretler, numaralı listede onay kutulu listeye çevirir.
+          onCheckbox: note.type.isPageNoteType ? null : _quickRowCheckbox,
           onHeading: () => _runOnTarget((c) {
             final next = switch (activeRichHeading(c)) {
               RichHeading.normal => RichHeading.h1,

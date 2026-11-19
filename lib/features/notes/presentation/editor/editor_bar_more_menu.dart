@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
+import '../../../../core/widgets/note_layout_scope.dart';
 
 /// Alt çubuk düğmesinin menüdeki karşılığı: (simge, ad, iş, etkin).
 typedef BarMoreSpec = (IconData, String, VoidCallback, bool);
@@ -154,11 +155,26 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     return ListenableBuilder(
-      listenable: Personalize.prefs,
+      listenable: Personalize.listenable,
       builder: (context, _) {
-        final prefs = Personalize.prefs.value;
+        // Açık notun düzeni (kendi düzeni varsa o; bkz. NoteLayoutScopeBar).
+        final prefs = Personalize.current;
         final sides = prefs.barSides;
         final left = _ordered(sides.left), right = _ordered(sides.right);
+        Widget header(String text) => Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.l,
+            AppSpace.s,
+            AppSpace.l,
+            AppSpace.xs,
+          ),
+          child: Text(
+            text,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        );
         Widget group(
           String key,
           List<String> ids,
@@ -171,7 +187,13 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
           onReorderItem: onReorder,
           children: [
             for (final (i, id) in ids.indexed)
-              _editRow(context, id, i, prefs.storedShows(id)),
+              _editRow(
+                context,
+                id,
+                i,
+                prefs.storedShows(id),
+                right: key == 'right',
+              ),
           ],
         );
         // Sabit genişlik: açılır menü içeriğinin içsel genişliğini sorar,
@@ -196,27 +218,34 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                child: const NoteLayoutScopeBar(compact: true),
+              ),
+              header(l10n.barMoreLeftGroup),
               group(
                 'left',
                 left,
-                (from, to) => Personalize.update(
+                (from, to) => Personalize.updateLayout(
                   (p) => p.copyWith(
                     barOrder: _apply(p.barSides.left, left, from, to),
                   ),
                 ),
               ),
-              if (right.isNotEmpty) ...[
-                const Divider(height: 1),
-                group(
-                  'right',
-                  right,
-                  (from, to) => Personalize.update(
-                    (p) => p.copyWith(
-                      aiOrder: _apply(p.barSides.right, right, from, to),
-                    ),
+              const Divider(height: 1),
+              // SAĞ (renkli) GRUP her zaman görünür (kullanıcı isteği
+              // 2026-11-19: "sağ alana tuş taşıyabileyim") — boşken de
+              // başlığı durur, ⇄ ile düğme gelir.
+              header(l10n.barMoreRightGroup),
+              group(
+                'right',
+                right,
+                (from, to) => Personalize.updateLayout(
+                  (p) => p.copyWith(
+                    aiOrder: _apply(p.barSides.right, right, from, to),
                   ),
                 ),
-              ],
+              ),
               Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: Padding(
@@ -235,7 +264,13 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
     );
   }
 
-  Widget _editRow(BuildContext context, String id, int index, bool pinned) {
+  Widget _editRow(
+    BuildContext context,
+    String id,
+    int index,
+    bool pinned, {
+    required bool right,
+  }) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final (icon, label, _, _) = widget.spec(id);
@@ -257,14 +292,29 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
               Icon(icon, size: AppIconSize.m),
               const SizedBox(width: AppSpace.m),
               Expanded(child: Text(label)),
+              // SOL ↔ SAĞ: düğme öbür grubun sonuna geçer.
+              IconButton(
+                key: ValueKey('editor-bar-more-side-$id'),
+                tooltip: right ? l10n.barMoreToLeft : l10n.barMoreToRight,
+                icon: Icon(
+                  right
+                      ? Icons.keyboard_double_arrow_left_rounded
+                      : Icons.keyboard_double_arrow_right_rounded,
+                  size: AppIconSize.m,
+                ),
+                onPressed: () => Personalize.updateLayout(
+                  (p) => p.withBarSide(id, right: !right),
+                ),
+              ),
               IconButton(
                 key: ValueKey('editor-bar-more-pin-$id'),
                 tooltip: pinned ? l10n.barMoreToMenu : l10n.barMoreToBar,
                 isSelected: pinned,
                 icon: const Icon(Icons.push_pin_outlined),
                 selectedIcon: Icon(Icons.push_pin, color: scheme.primary),
-                onPressed: () =>
-                    Personalize.update((p) => p.withVisible(id, !pinned)),
+                onPressed: () => Personalize.updateLayout(
+                  (p) => p.withVisible(id, !pinned),
+                ),
               ),
             ],
           ),

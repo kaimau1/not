@@ -5,6 +5,7 @@ import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customize_board.dart';
+import '../../../../core/widgets/note_layout_scope.dart';
 
 /// Hızlı satırın (yazarken üstte) bütün düğmeleri: kimlik, simge, kısa ad.
 /// Sıra satırdakiyle aynı.
@@ -94,7 +95,14 @@ List<({String key, IconData icon, String label})> quickRowCatalog(
 /// yoktu. Yeni yol: iki grup ("Menüde" / "Eklenebilir") karo; dokun = taşı,
 /// değişiklik ANINDA kaydedilir, üstte canlı önizleme. Hem ⋮'den hem
 /// Ayarlar → Kişiselleştir'den açılır.
-Future<void> showQuickRowEditor(BuildContext context) =>
+///
+/// [unavailable]: bu notta hiç çizilmeyen düğmelerin anahtarları (ör. belge
+/// notunda ☑, liste notunda Ara başlık) — levha bunları "bu notta görünmez"
+/// diye açıkça yazar (2026-11-19: menüye eklenen düğme sessizce yoktu).
+Future<void> showQuickRowEditor(
+  BuildContext context, {
+  Set<String> unavailable = const {},
+}) =>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -105,14 +113,25 @@ Future<void> showQuickRowEditor(BuildContext context) =>
         initialChildSize: 0.7,
         minChildSize: 0.4,
         maxChildSize: 0.95,
-        builder: (context, scroll) => QuickRowEditor(scrollController: scroll),
+        builder: (context, scroll) => QuickRowEditor(
+          scrollController: scroll,
+          unavailable: unavailable,
+        ),
       ),
     );
 
 class QuickRowEditor extends StatelessWidget {
-  const QuickRowEditor({super.key, this.scrollController, this.inline = false});
+  const QuickRowEditor({
+    super.key,
+    this.scrollController,
+    this.inline = false,
+    this.unavailable = const {},
+  });
 
   final ScrollController? scrollController;
+
+  /// Bu notta çizilmeyen düğmeler (bkz. [showQuickRowEditor]).
+  final Set<String> unavailable;
 
   /// Kişiselleştir ekranında kart içinde (başlıksız, kaydırmasız).
   final bool inline;
@@ -125,7 +144,12 @@ class QuickRowEditor extends StatelessWidget {
     return ListenableBuilder(
       listenable: Personalize.listenable,
       builder: (context, _) {
-        final prefs = Personalize.prefs.value;
+        // Editörden açıldıysa açık notun düzeni (kendi düzeni varsa o);
+        // Ayarlar'da (inline) genel düzen.
+        final prefs = inline ? Personalize.prefs.value : Personalize.current;
+        void write(UiPrefs Function(UiPrefs) change) => inline
+            ? Personalize.update(change)
+            : Personalize.updateLayout(change);
         final catalog = quickRowCatalog(l10n);
         final byKey = {for (final e in catalog) e.key: e};
         // Kullanıcı sırası (P63 PB2): [UiPrefs.quickOrder].
@@ -148,6 +172,25 @@ class QuickRowEditor extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpace.m),
+          if (!inline) ...[
+            const NoteLayoutScopeBar(),
+            const SizedBox(height: AppSpace.m),
+          ],
+          if (!inline && order.any(unavailable.contains)) ...[
+            Text(
+              l10n.quickRowEditNotHere(
+                [
+                  for (final k in order)
+                    if (unavailable.contains(k)) byKey[k]!.label,
+                ].join(', '),
+              ),
+              key: const ValueKey('quick-row-editor-not-here'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpace.m),
+          ],
           // CANLI ÖNİZLEME panonun şeridi: satır yazarken nasıl görünecek;
           // sürükle = sırala.
           KeyedSubtree(
@@ -158,7 +201,7 @@ class QuickRowEditor extends StatelessWidget {
                   (id: k, icon: byKey[k]!.icon, label: byKey[k]!.label),
               ],
               shown: shown,
-              onToggle: (k, on) => Personalize.update(
+              onToggle: (k, on) => write(
                 (p) => p.withVisible(UiItem.quickRow(k), on),
               ),
               onReorder: (from, to) {
@@ -168,11 +211,9 @@ class QuickRowEditor extends StatelessWidget {
                   for (final k in order)
                     if (!shown.contains(k)) k,
                 ];
-                Personalize.update(
-                  (p) => p.copyWith(quickOrder: [...moved, ...rest]),
-                );
+                write((p) => p.copyWith(quickOrder: [...moved, ...rest]));
               },
-              onReset: () => Personalize.update((p) {
+              onReset: () => write((p) {
                 var next = p.copyWith(quickOrder: const []);
                 for (final e in catalog) {
                   final id = UiItem.quickRow(e.key);
