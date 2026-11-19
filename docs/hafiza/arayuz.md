@@ -329,3 +329,7 @@ Beş ilke:
 
 ---
 - **Yazı tipi indirmesi kapalı (T3/K-54, 2026-11-17):** `disableFontRuntimeFetching()` `main`in başında; eksik kesim artık ağdan inmez (bütün metni yeniden dizdiren "yazı tipleri değişti" + çevrimdışı sistem yazı tipi). Kanıt: indirme kapalı bekçide yalnız `Merriweather-Medium` eksikti (google_fonts 8.x'te 500 kesimi var) → eklendi (586 KB, sha256 paketin beklediği). Kalın dosya EKLENMEDİ: GoogleFonts'a w600+ sorulmuyor; `applyNoteFont` 500 üstünü 500'le yükleyip kalınlığı stilde bırakır. Bundled Merriweather-Regular paketin bugünkü 400'ünden eski sürüm — değiştirilmedi (gövde görünüşü kaymasın). Paket güncellenince bekçi (`test/font_runtime_fetch_test.dart`) yeni eksik kesimi yakalar.
+
+## 2026-11-19 — Tablet: Huawei Navigasyon yuvası (KT-13) ve takvim ay hücresi (KT-23)
+- **"Yatayda karta dokununca uygulama arka plana gidiyor" uygulama hatası DEĞİL** (P78): Huawei Navigasyon yuvası (`com.huawei.android.FloatTasks`, yüzen gezinme düğmesi) ekran görüntüsüne (screencap) ÇIKMAZ ama dokunuşu alır; ona dokunmak sistem GERİ (`interceptKeyTi keyCode=4 isInjected=true`), kök ekranda → `moveTaskToBack`. Teşhis: `adb shell dumpsys window windows | grep -A3 FloatTasks` (kutu `AbstractView (x,y)(w x h)`). Ölçüm/tur betikleri tablette bu kutuya dokunmasın. Benzer "gizemli geri" bulgusunda önce buna bak.
+- **Takvim ay hücresi "geniş" kuralı** `monthCellRoomy` (≥ 140 dp YA DA ≥ 72x100 dp): dikey tablet (~81x149 dp) de gün 13 / şerit 11 pt alır; telefon (~51 dp) ve yatay telefon (kısa hücre) aynı.

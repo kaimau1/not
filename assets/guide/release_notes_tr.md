@@ -2,6 +2,12 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 19 Kasım 2026 {#2026-11-19}
+- **Tablette yüzen kalem düğmesi artık liste notundaki "Ara başlık" ve "Sil" düğmelerini örtmüyor.**
+- **"Kalem kipi" bildirimi kalem tepsisinin üstünde çıkıyor** (eskiden tepsinin renk/kalem seçicisini birkaç saniye kapatıyordu).
+- **Fiziksel klavyeyle ⌨ düğmesi daha anlaşılır:** bir yere dokunmadan basınca da klavye açılır; Geri ile kapatınca düğme kendiliğinden "aç"a döner, tek dokunuş yeniden açar.
+- **Dikey tablette takvimin ay görünümünde yazılar daha büyük ve okunur.**
+
 ## 18 Kasım 2026 {#2026-11-18}
 - **Yazı seçim menüsü:** Kopyala, Kes, Yapıştır ve **Tümünü seç** artık en başta; Biçim ve Ek göm onlardan sonra.
 - **Telefonda alt çubuk sadeleşti:** üç düğme ve yanında ⋯; kalanlar ⋯ ile açılan küçük menüde. Tablette hepsi yerinde.

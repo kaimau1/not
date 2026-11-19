@@ -2,6 +2,12 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 19 November 2026 {#2026-11-19}
+- **On tablets the floating pen button no longer covers the "Subheading" and "Delete" buttons in list notes.**
+- **The "Pen mode" notice now appears above the pen tray** (it used to cover the tray's colour/pen picker for a few seconds).
+- **The ⌨ button is clearer with a physical keyboard:** it opens the on-screen keyboard even if no field was tapped; closing the keyboard with Back resets the button, so one tap opens it again.
+- **In portrait on tablets, the calendar month view uses larger, easier-to-read text.**
+
 ## 18 November 2026 {#2026-11-18}
 - **Text selection menu:** Copy, Cut, Paste and **Select all** now come first; Format and Embed come after them.
 - **Simpler bottom bar on phones:** three buttons plus ⋯; the rest open in a small menu from ⋯. On tablets everything stays in place.
