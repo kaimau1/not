@@ -23,8 +23,8 @@ def step(name, fn):
     try:
         fn()
     except NotReady as e:
-        print(f"DURDU {name}: {e}", flush=True)
-        raise
+        print(f"DURDU {name}: {e} → yeniden açılıyor", flush=True)
+        cold()
     except Exception as e:  # noqa
         print(f"YOK {name}: {e}", flush=True)
         try:
@@ -47,6 +47,10 @@ def tap_label(pat, idx=0, wait=1.8, region=None):
 def back(n=1, wait=1.0):
     for _ in range(n):
         key("KEYCODE_BACK"); time.sleep(wait)
+        if f"{OPKG}/" not in focus():     # ana ekranda fazla BACK uygulamadan çıkar → yeniden aç
+            print("  (uygulamadan çıkıldı, yeniden açılıyor)", flush=True)
+            cold()
+            break
 
 
 def cold():
@@ -79,7 +83,7 @@ def main():
         step("anlam", lambda: (tap_label(r"^Anlam$"), snap(f"{p}05_anlam"), back()))
         step("hesap", lambda: (tap_label(r"^(Yerel hesap|Hesap)$"), snap(f"{p}06_hesap"), back()))
         step("kart_menu", lambda: (tap_label(r"^Not menüsü$", region=lambda n: n[2] > 500), snap(f"{p}07_kart_menu"), back()))
-        step("hizli_ekle", lambda: (tap_label(r"^Hızlı ekle$"), snap(f"{p}08_hizli_ekle"), back()))
+        # (mikrofon izni isteyen "Hızlı ekle"/"Dikte" adımları kaldırıldı: izin pencereleri kullanıcı işi)
         step("takvim_serit", lambda: (tap_label(r"^Takvim şeridini (daralt|genişlet)"), snap(f"{p}09_serit"), tap_label(r"^Takvim şeridini (daralt|genişlet)"), time.sleep(0.8)))
         for lab, nm in [("Klasörler", "10_klasorler"), ("Yapay zekâ", "11_yz"), ("Takvim", "12_takvim"),
                         ("Arşiv", "13_arsiv"), ("Çöp kutusu", "14_cop"), ("Ayarlar", "15_ayarlar")]:
@@ -132,12 +136,6 @@ def main():
             snap(f"{p}35_kalem_kipi")
             back(3)
         step("kalem", kalem)
-        def yeni_not_menu():
-            cold()
-            tap_label(r"^Dikte", wait=2.0)
-            snap(f"{p}36_dikte")
-            back(2)
-        step("dikte", yeni_not_menu)
     finally:
         sh("wm user-rotation free")
         sh("input keyevent KEYCODE_SLEEP")
