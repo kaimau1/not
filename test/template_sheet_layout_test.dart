@@ -82,4 +82,34 @@ void main() {
     );
     expect(meeting.lines, contains(TemplateLineKind.heading));
   });
+
+  // T7 (K-47/48): aramada her tuş BÜTÜN şablon kartlarını yeniden kuruyordu
+  // (kök setState). Girdisi (şablon, yıldız) değişmeyen kart aynı örnekle
+  // döner; daralan sonuçta da kalan kartlar anahtarıyla yerinde kalır.
+  testWidgets('T7: aramada sonucu değişmeyen kart yeniden kurulmaz', (
+    tester,
+  ) async {
+    await open(tester);
+    final search = find.byType(TextField).first;
+    await tester.enterText(search, 'a');
+    await tester.pumpAndSettle();
+    final before = find.byType(TemplatePreviewCard).evaluate().length;
+    expect(before, greaterThan(3));
+    final counts = <String, int>{};
+    debugOnRebuildDirtyWidget = (e, _) {
+      final n = e.widget.runtimeType.toString();
+      counts[n] = (counts[n] ?? 0) + 1;
+    };
+    try {
+      // Aynı sonuç (büyük/küçük harf katlanır) ve sonra daralan sonuç.
+      await tester.enterText(search, 'A');
+      await tester.pumpAndSettle();
+      await tester.enterText(search, 'al');
+      await tester.pumpAndSettle();
+    } finally {
+      debugOnRebuildDirtyWidget = null;
+    }
+    expect(find.byType(TemplatePreviewCard), findsWidgets);
+    expect(counts['TemplatePreviewCard'] ?? 0, 0, reason: '$counts');
+  });
 }
