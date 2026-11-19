@@ -40,6 +40,19 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // Düğme satırı (İptal · Yeni not olarak · Nota ekle) ~557 dp istiyordu:
+  // levha genişliği 560 dp'ye inince (KT-20) görüldü — telefonda (412) zaten
+  // taşıyordu. Sığmayınca düğmeler alt alta.
+  testWidgets('telefon genişliğinde düğme satırı taşmaz', (tester) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await openSheet(tester, onInsert: (_) {});
+    expect(tester.takeException(), isNull);
+    expect(find.text('Nota ekle'), findsOneWidget);
+    expect(find.text('İptal'), findsOneWidget);
+  });
+
   testWidgets('sonuc once sayfada gorunur, nota yazilmaz', (tester) async {
     var inserted = '';
     await openSheet(tester, onInsert: (t) => inserted = t);
