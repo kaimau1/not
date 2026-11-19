@@ -215,6 +215,14 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Tablette bak
 
+> **T16 tablet turu denetimi (2026-11-19, ölçüm uygulaması, adb; ayrıntı `docs/kesif_turu_2026-11-14.md` KT-13…24):** maddeler bende KAPANMADI (kullanıcı işi); cihazda denetlenebilenler:
+> - **18 Tablet düzeni:** dikey (640 dp) ve yatay (1024 dp) açıldı, döndürme (kilitle/serbest) sorunsuz, yatayda ayarlar sol liste + sağ detay, levha ortada ≤ 560 dp. Denenmedi: ayraç sürükleme, Esc, nottan geri dönüş animasyonu. **Bozuk:** yatayda ilk kartın gövdesine dokununca uygulama arka plana gidiyor (KT-13).
+> - **32 İki not yan yana:** denenemedi (KT-13 yüzünden yatayda not açılamadı).
+> - **41 Parmak siler:** ayar görüldü (Ayarlar → Kalem, yazım ve ekran → Parmak: Kaydır · Çiz · Sil); parmakla silme/avuç denemesi YAPILMADI (kalem tepsisi + el yazısı nota çizim gerekir, adb ile avuç/kalem ayrımı üretilemez).
+> - **15 Kalemle yazma / 16 Şekiller ve silgi / 17 Sabit PDF'e yazma / 20 Çok büyük PDF:** M-Pencil (`input stylus` kalem türü üretmez) ve 1 GB PDF olmadan YAPILAMADI; kalem kipi açılıp tepsi görüldü (KT-16: toast tepsiyi örtüyor), sabit PDF'te kayıtlı çizgiler görüldü.
+> - **19 Tablette sesle yazma:** ⚡/Hızlı ekle ilk dokunuşta mikrofon izni istedi (REDDET verildi, KT-24); konuşma denenmedi.
+> - **S1 iki cihaz turu:** denenmedi (ikinci cihaz/web yok).
+
 - [ ] **P74 jest hedefleri (U1) + ana ekran A/B** — yazıldı, cihazda doğrulanmadı
   Nerede: Ayarlar → Notlar → "Listeyi tepeden aşağı çekince" / "Tümü'de sağa kaydırınca".
   Nasıl: önce varsayılanla (klasör menüsü / takvim) dene; sonra "Bir not" seç → çek → o not açılır; "Bir klasör" → o klasöre geçer; "Hiçbiri" → çekiş göstergesi çıkmaz. Ana ekran A/B: `tool/perf/ab_hepsi.py <önceki [apk]> <P74> --altin`.
