@@ -74,7 +74,9 @@ class _PushService {
       final initial = await messaging.getInitialMessage();
       if (initial != null) _open(initial);
     } catch (e) {
-      debugPrint('FCM başlatılamadı: $e');
+      // GMS'siz cihazda (Huawei) her açılışta MISSING_INSTANCEID_SERVICE;
+      // yalnız geliştirmede yazılır (KT-21).
+      if (kDebugMode) debugPrint('FCM başlatılamadı: $e');
     }
   }
 

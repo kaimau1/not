@@ -15,6 +15,24 @@ import '../domain/note.dart';
 import '../presentation/notes_providers.dart';
 import 'notes_repository.dart';
 
+/// Ana ekran aracı sağlayıcıları (Android sınıfları `dev.kaimau.notlar`).
+const kHomeWidgetProviders = [
+  'NotlarWidgetProvider',
+  'QuickActionsWidgetProvider',
+  'QuickNoteWidgetProvider',
+  'VoiceWidgetProvider',
+  'TodayWidgetProvider',
+];
+
+/// Aracı TAM NİTELİKLİ sınıf adıyla yeniler (KT-21, tablet turu 2026-11-18).
+/// KÖK NEDEN: `androidName` uygulama KİMLİĞİYLE birleştirilip aranıyor
+/// (`<applicationId>.<ad>`); sınıflar ise hep `dev.kaimau.notlar` paketinde.
+/// Kimliği farklı derlemede (ölçüm `.olcum`, Play `NOTLAR_PLAY_APP_ID`)
+/// araçlar hiç güncellenmiyor, her açılışta istisna yutuluyordu.
+Future<bool?> updateHomeWidget(String provider) => HomeWidget.updateWidget(
+  qualifiedAndroidName: 'dev.kaimau.notlar.$provider',
+);
+
 /// Android ana ekran widget'ını son notlarla besler.
 final widgetServiceProvider = Provider<WidgetService>((ref) {
   final service = WidgetService(ref);
@@ -134,14 +152,8 @@ class WidgetService {
   /// Dört widget sağlayıcısının hepsi yenilenir: tema hepsini ilgilendiriyor
   /// (not listesi yalnız NotlarWidgetProvider'ı).
   Future<void> _updateAllWidgets() async {
-    for (final name in const [
-      'NotlarWidgetProvider',
-      'QuickActionsWidgetProvider',
-      'QuickNoteWidgetProvider',
-      'VoiceWidgetProvider',
-      'TodayWidgetProvider',
-    ]) {
-      await HomeWidget.updateWidget(androidName: name);
+    for (final name in kHomeWidgetProviders) {
+      await updateHomeWidget(name);
     }
   }
 
@@ -186,12 +198,13 @@ class WidgetService {
       if (payload == _lastPayload) return;
       _lastPayload = payload;
       await HomeWidget.saveWidgetData<String>('widget_today', today);
-      await HomeWidget.updateWidget(androidName: 'TodayWidgetProvider');
+      await updateHomeWidget('TodayWidgetProvider');
       await HomeWidget.saveWidgetData<String>('widget_notes', text);
       await HomeWidget.saveWidgetData<String>('widget_count', count);
-      await HomeWidget.updateWidget(androidName: 'NotlarWidgetProvider');
+      await updateHomeWidget('NotlarWidgetProvider');
     } catch (e) {
-      debugPrint('Widget güncellenemedi: $e');
+      // Yalnız geliştirmede: sürüm günlüğünü kirletmesin (KT-21).
+      if (kDebugMode) debugPrint('Widget güncellenemedi: $e');
     }
   }
 
