@@ -2534,29 +2534,37 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // yine söylenir (2026-11-09 isteği: kip açılınca durum söylensin).
     if (InkToolMemory.lastPenOnlyHint == penOnly) return;
     InkToolMemory.lastPenOnlyHint = penOnly;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showMessage(
-        penOnly ? l10n.penModePenOnlyOn : l10n.penModePenOnlyOff,
-        duration: const Duration(seconds: 3),
-        action: ink == null
-            ? null
-            : SnackBarAction(
-                label: l10n.penModeSettings,
-                onPressed: () => showInkSettings(context, ink),
-              ),
-      );
-    // TELEFONDA ELLE YAZMA (F63.5, KALEM K5): parmak çiziyorsa sayfayı
-    // kaydırmanın yolu iki parmak — cihazda bir kez söylenir.
-    if (page && !penOnly) {
-      TipOnce.show(
-        context,
-        ref.read(sharedPreferencesProvider),
-        TipOnce.penTwoFinger,
-        l10n.inkTwoFingerHint,
-        sessionLimit: false,
-      );
-    }
+    // KARE SONRA (P78 KT-16, tablet turu 2026-11-18: bildirim kalem
+    // tepsisini örtüyordu): bildirim engel yüksekliğini KURULURKEN okur
+    // (bkz. snackBarBottomObstacle); kipi açan karede tepsi henüz
+    // dizilmemişti, engel 0 okunuyordu.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showMessage(
+          penOnly ? l10n.penModePenOnlyOn : l10n.penModePenOnlyOff,
+          duration: const Duration(seconds: 3),
+          action: ink == null
+              ? null
+              : SnackBarAction(
+                  label: l10n.penModeSettings,
+                  onPressed: () => showInkSettings(context, ink),
+                ),
+        );
+      // TELEFONDA ELLE YAZMA (F63.5, KALEM K5): parmak çiziyorsa sayfayı
+      // kaydırmanın yolu iki parmak — cihazda bir kez söylenir (bildirimden
+      // SONRA, onu silmesin).
+      if (page && !penOnly) {
+        TipOnce.show(
+          context,
+          ref.read(sharedPreferencesProvider),
+          TipOnce.penTwoFinger,
+          l10n.inkTwoFingerHint,
+          sessionLimit: false,
+        );
+      }
+    });
   }
 
   /// Bu oturumda sayfaya çizilen çizgi sayısı (kalem ipuçlarının sırası).

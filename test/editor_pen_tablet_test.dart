@@ -361,4 +361,25 @@ void main() {
     expect(ink().ink, hasLength(2), reason: 'üst ↶ aynı yığın');
     await _end(tester);
   });
+
+  // P78 KT-16 (tablet turu 2026-11-18): "Kalem kipi · Yalnız kalemle yaz"
+  // bildirimi kalem tepsisini örtüyordu. KÖK NEDEN: ipucu, kipi açan AYNI
+  // karede gösteriliyordu; tepsi henüz dizilmediği için engel yüksekliği
+  // (snackBarBottomObstacle) 0 okunuyor, bildirim ekranın dibine iniyordu.
+  testWidgets('KT-16: kalem kipi bildirimi kalem tepsisinin üstünde', (
+    tester,
+  ) async {
+    InkToolMemory.reset();
+    addTearDown(InkToolMemory.reset);
+    await _pump(tester, size: const Size(640, 1024));
+    await tester.tap(find.byKey(const ValueKey('editor-bar-pen')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 600));
+    final notice = find.textContaining('Kalem kipi');
+    expect(notice, findsOneWidget);
+    final tray = tester.getRect(find.byKey(const ValueKey('page-pen-dock')));
+    expect(tester.getRect(notice).bottom, lessThanOrEqualTo(tray.top));
+    await _end(tester);
+  });
 }
