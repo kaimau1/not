@@ -542,5 +542,18 @@
     "bugun": "0 / 0 / 0 / kalkış: düğme 1, kök 0 / dokunuş: kök 0, tuval 0 (2026-11-19)",
     "hedef": "çizim karesinde düğme/kök/tuval 0; kalkışta yalnız düğme yaprağı",
     "neden": "2026-11-19 hızlı düğme ilk ölçüm"
+  },
+  "S56": {
+    "senaryo": "⚡ Hızlı ekle levhası (telefon, ana ekran 30 not): 6 klavye inset karesi + 5 tuş yazma",
+    "klavye_kurulum": 402,
+    "klavye_dizilme": 102,
+    "klavye_levha": 0,
+    "klavye_giris": 0,
+    "klavye_pano": 0,
+    "yazma_kurulum": 415,
+    "yazma_cip": 0,
+    "bugun": "klavye 402 kurulum / 102 dizilme, levha/giriş/pano 0; yazma 5 tuşta 415 kurulum, çip 0 (2026-11-19)",
+    "hedef": "klavye karesinde levha, giriş satırı ve ana ekran kurulmaz; tuşta hedef çipleri kurulmaz",
+    "neden": "2026-11-19 ilk ölçüm; çip şeridi yalnız hedef değişince kurulur (öncesi 5 tuşta 1445 kurulum, 25 çip)"
   }
 }

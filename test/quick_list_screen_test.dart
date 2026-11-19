@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -62,6 +63,23 @@ class _DropRepo extends CountingNotesRepository {
 
 /// Hızlı liste ekranı ve "Hızlı ekle" (kullanıcı isteği 2026-11-15).
 void main() {
+  // Hedef şeridi yatay ve tembel: "Yeni not" çipi başta olduğundan dar
+  // test ekranında sondaki çipler kaydırılınca kurulur.
+  Future<void> tapTarget(WidgetTester tester, String id) async {
+    final chip = find.byKey(ValueKey('quick-drop-target-$id'));
+    await tester.scrollUntilVisible(
+      chip,
+      80,
+      scrollable: find.descendant(
+        of: find.byKey(const ValueKey('quick-drop-targets')),
+        matching: find.byType(Scrollable),
+      ),
+    );
+    await tester.ensureVisible(chip);
+    await tester.pumpAndSettle();
+    await tester.tap(chip);
+  }
+
   setUpAll(() async {
     await initializeDateFormatting('tr');
   });
@@ -480,7 +498,7 @@ void main() {
         'bir fikir',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('quick-drop-target-c')));
+      await tapTarget(tester, 'c');
       await tester.pumpAndSettle();
       expect(chip('c').selected, isTrue);
       expect(find.text('Ekle · bir fikir'), findsOneWidget);
@@ -540,6 +558,29 @@ void main() {
       expect(repo.created.last, (NoteType.text, 'faturayı yatır'));
     });
 
+    // H11 2. yarı (2026-11-19): not varken de "Yeni not" çipi HEP en başta.
+    testWidgets('"Yeni not" çipi en başta; seçilince yazılan yeni not olur', (
+      tester,
+    ) async {
+      final repo = await openSheet(tester, [shopping, todo, text]);
+      final strip = find.byKey(const ValueKey('quick-drop-targets'));
+      final chips = tester
+          .widgetList<ChoiceChip>(
+            find.descendant(of: strip, matching: find.byType(ChoiceChip)),
+          )
+          .toList();
+      expect(chips.first.key, const ValueKey('quick-drop-target-new'));
+      expect(chips.first.selected, isFalse);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-target-new')));
+      await tester.pumpAndSettle();
+      await say(tester, 'kargoyu sor');
+      expect(find.text('Yeni not olarak kaydediliyor…'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
+      expect(repo.created, [(NoteType.text, 'kargoyu sor')]);
+      expect(repo.writes, isEmpty, reason: 'var olan nota eklenmez');
+    });
+
     testWidgets('konuşma sonu: geri sayım, sonra eklenir; Bekle durdurur', (
       tester,
     ) async {
@@ -571,7 +612,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
       expect(repo.writes, isEmpty);
       // Çipe dokunup Ekle: kullanıcının seçtiği nota.
-      await tester.tap(find.byKey(const ValueKey('quick-drop-target-c')));
+      await tapTarget(tester, 'c');
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
       await tester.pumpAndSettle();
@@ -615,9 +656,7 @@ void main() {
         prefs: {'quick_drop_mic': false},
         ai: AiAvailability.ready,
         extra: [
-          decisionServiceProvider.overrideWithValue(
-            fakeDecisions(answers),
-          ),
+          decisionServiceProvider.overrideWithValue(fakeDecisions(answers)),
         ],
         onTap: (context, ref) => showQuickDropSheet(context),
       );
@@ -655,40 +694,44 @@ void main() {
     });
 
     // DA-14: bulanık düzeltme geri sayım içinde doğrulanır.
-    test('quickDropFixes yalnız bulanık düzeltmeyi verir; veto bu eklemede', () {
-      final fixes = quickDropFixes(shopping, 'yunurta süt', locale: 'tr');
-      expect(fixes, [(typed: 'yunurta', fixed: 'Yumurta')]);
-      expect(quickDropFixes(text, 'yunurta', locale: 'tr'), isEmpty);
-      final r = quickDropFields(
-        shopping,
-        'yunurta',
-        locale: 'tr',
-        memory: quickDropVetoed(const QuickEntryMemory(), fixes),
-        newId: () => 'y',
-      );
-      final items = (r.fields['items'] as List).cast<Map<String, dynamic>>();
-      expect(items.last['text'], isNot('Yumurta'));
-      expect(quickAscii(items.last['text'] as String), 'yunurta');
-    });
+    test(
+      'quickDropFixes yalnız bulanık düzeltmeyi verir; veto bu eklemede',
+      () {
+        final fixes = quickDropFixes(shopping, 'yunurta süt', locale: 'tr');
+        expect(fixes, [(typed: 'yunurta', fixed: 'Yumurta')]);
+        expect(quickDropFixes(text, 'yunurta', locale: 'tr'), isEmpty);
+        final r = quickDropFields(
+          shopping,
+          'yunurta',
+          locale: 'tr',
+          memory: quickDropVetoed(const QuickEntryMemory(), fixes),
+          newId: () => 'y',
+        );
+        final items = (r.fields['items'] as List).cast<Map<String, dynamic>>();
+        expect(items.last['text'], isNot('Yumurta'));
+        expect(quickAscii(items.last['text'] as String), 'yunurta');
+      },
+    );
 
     for (final (p, kept) in [(0.1, false), (0.95, true)]) {
-      testWidgets('DA-14: Decisions noul=$p → düzeltme ${kept ? 'kalır' : 'geri alınır'}', (
-        tester,
-      ) async {
-        final repo = await openWithDecisions(tester, {
-          'd00': {'type': 'noul', 'noul': p},
-        }, feature: DecisionFeature.spellFixOk);
-        await say(tester, 'alışveriş listesine yunurta ekle');
-        expect(
-          find.byKey(const ValueKey('quick-drop-counting')),
-          findsOneWidget,
-        );
-        await tester.pump(const Duration(seconds: 2));
-        await tester.pumpAndSettle();
-        final items = repo.writes['a']!['items'] as List;
-        final last = (items.last as Map)['text'] as String;
-        expect(last == 'Yumurta', kept);
-      });
+      testWidgets(
+        'DA-14: Decisions noul=$p → düzeltme ${kept ? 'kalır' : 'geri alınır'}',
+        (tester) async {
+          final repo = await openWithDecisions(tester, {
+            'd00': {'type': 'noul', 'noul': p},
+          }, feature: DecisionFeature.spellFixOk);
+          await say(tester, 'alışveriş listesine yunurta ekle');
+          expect(
+            find.byKey(const ValueKey('quick-drop-counting')),
+            findsOneWidget,
+          );
+          await tester.pump(const Duration(seconds: 2));
+          await tester.pumpAndSettle();
+          final items = repo.writes['a']!['items'] as List;
+          final last = (items.last as Map)['text'] as String;
+          expect(last == 'Yumurta', kept);
+        },
+      );
     }
 
     testWidgets('başa baş kalan iki not: Ekle "hangi not?" bekler', (
@@ -711,7 +754,7 @@ void main() {
       final add = find.byKey(const ValueKey('quick-drop-add'));
       expect(tester.widget<FilledButton>(add).onPressed, isNull);
       expect(find.text('Hangi nota eklensin?'), findsWidgets);
-      await tester.tap(find.byKey(const ValueKey('quick-drop-target-pb')));
+      await tapTarget(tester, 'pb');
       await tester.pump();
       await tester.tap(add);
       await tester.pumpAndSettle();

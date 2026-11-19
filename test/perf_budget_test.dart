@@ -3098,4 +3098,75 @@ void main() {
     });
     await endEditor(tester);
   });
+
+  // S56: ⚡ Hızlı ekle levhası açıkken klavye açılışı (kullanıcı bulgusu
+  // 2026-11-19: "hızlı ekle alanı açıkken klavye kasıyor — klasik
+  // sorunumuz"). 6 inset karesi: arkadaki ana ekran (kartlar, pano) ve
+  // levhanın kendisi kurulmamalı.
+  testWidgets('S56: hızlı ekle levhası × klavye (telefon)', (tester) async {
+    await _pumpHome(
+      tester,
+      size: const Size(412, 915),
+      notes: Stream.value([
+        for (var i = 0; i < 30; i++)
+          Note(
+            id: 'q$i',
+            type: i.isEven ? NoteType.text : NoteType.checklist,
+            title: 'Not $i',
+            body: 'gövde',
+          ),
+      ]),
+    );
+    await tester.tap(find.byKey(const ValueKey('home-quick-drop')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byType(TextField).last);
+    await tester.pump(const Duration(milliseconds: 100));
+    var layouts = 0;
+    final oldPrint = debugPrint;
+    final counts = await _count(() async {
+      debugPrint = (String? m, {int? wrapWidth}) {
+        if (m != null && m.startsWith('Laying out')) layouts++;
+      };
+      debugPrintLayouts = true;
+      try {
+        for (final b in <double>[50, 100, 150, 200, 250, 300]) {
+          tester.view.viewInsets = FakeViewPadding(bottom: b);
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+      } finally {
+        debugPrintLayouts = false;
+        debugPrint = oldPrint;
+      }
+    });
+    // Yazarken: 5 tuş (her tuş hedefi yeniden çözer).
+    final field = find.byKey(const ValueKey('quick-entry-field'));
+    final typing = await _count(() async {
+      var text = '';
+      for (final ch in 'sütal'.split('')) {
+        text += ch;
+        await tester.enterText(field, text);
+        await tester.pump();
+      }
+    });
+    final topTyping = typing.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    // ignore: avoid_print
+    print('S56 yazarken en çok: ${topTyping.take(15).toList()}');
+    tester.view.viewInsets = FakeViewPadding.zero;
+    final top = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    // ignore: avoid_print
+    print('S56 en çok: ${top.take(25).toList()}');
+    _expectBudget('S56', {
+      'klavye_kurulum': _sum(counts),
+      'klavye_dizilme': layouts,
+      'klavye_levha': counts['QuickDropSheet'] ?? 0,
+      'klavye_giris': counts['QuickEntryBar'] ?? 0,
+      'klavye_pano': counts['DashboardScreen'] ?? 0,
+      'yazma_kurulum': _sum(typing),
+      'yazma_cip': typing['ChoiceChip'] ?? 0,
+    });
+  });
 }
