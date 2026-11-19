@@ -1,4 +1,5 @@
 import '../../../app/app_frame.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -40,132 +41,141 @@ class PremiumScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: HomeInBar(appBar: AppBar(title: Text(l10n.premiumTitle))),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-          AppSpace.l,
-          AppSpace.s,
-          AppSpace.l,
-          AppSpace.xxl + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: [
-          // Durum kartı.
-          // P62 PA4: ham Card yerine ayarlarla aynı grup yüzeyi.
-          GroupCard(
-            color: premium ? scheme.primaryContainer : null,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(AppSpace.l),
-                child: Row(
-                  children: [
-                    Icon(
-                      premium
-                          ? Icons.workspace_premium
-                          : Icons.workspace_premium_outlined,
-                      size: AppIconSize.l,
-                      color: premium
-                          ? scheme.onPrimaryContainer
-                          : scheme.primary,
-                    ),
-                    const SizedBox(width: AppSpace.m),
-                    Expanded(
-                      child: Text(
-                        premium && until != null
-                            ? l10n.premiumStatusActive(
-                                DateFormat('d MMMM y').format(until),
-                              )
-                            : premium
-                            ? l10n.premiumTitle
-                            : l10n.premiumStatusFree,
-                        style: AppText.of(Theme.of(context)).rowTitle,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          _Section(l10n.premiumPerksTitle),
-          // Ayrıcalıklar TEK grup kartında, ayraçlı (plan §2.2).
-          GroupCard(
-            children: [
-              _PerkRow(
-                icon: Icons.auto_awesome,
-                title: l10n.premiumPerkAi,
-                free: '${AppConstants.freeDailyAiPoints}',
-                paid: '${AppConstants.premiumDailyAiPoints}',
-              ),
-              _PerkRow(
-                icon: Icons.attach_file,
-                title: l10n.premiumPerkAttach,
-                free: formatBytes(AppConstants.maxFreeAttachmentBytes),
-                paid: formatBytes(AppConstants.maxPremiumAttachmentBytes),
-              ),
-              _PerkRow(
-                icon: Icons.cloud_outlined,
-                title: l10n.premiumPerkStorage,
-                free: formatBytes(AppConstants.maxFreeStorageBytes),
-                paid: formatBytes(AppConstants.maxPremiumStorageBytes),
-              ),
-              ListTile(
-                leading: const Icon(Icons.wb_sunny_outlined),
-                title: Text(l10n.premiumPerkAuto),
-                subtitle: Text(l10n.premiumPerkAutoBody),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpace.m),
-          // BYOK her zaman görünür: premium'un alternatifi olduğu saklanmaz —
-          // dürüst olmayan bir satış sayfası güveni de satar.
-          AppBanner(
-            icon: Icons.key_outlined,
-            title: hasKey ? l10n.aiBuiltInByok : l10n.premiumByokHint,
-          ),
-          if (!premium) ...[
-            _Section(l10n.premiumHowTitle),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
-              child: Text(
-                l10n.premiumHowBody,
-                style: AppText.of(Theme.of(context)).body,
-              ),
+      // KW-3: geniş ekranda etiket ile değer 1300+ px ayrı düşüyordu —
+      // kılavuz/gizlilik gibi ortalı 640 dp sütun.
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(
+              AppSpace.l,
+              AppSpace.s,
+              AppSpace.l,
+              AppSpace.xxl + MediaQuery.paddingOf(context).bottom,
             ),
-          ],
-          _Section(l10n.premiumDiscoverTitle),
-          GroupCard(
             children: [
-              _DiscoverTile(
-                icon: Icons.document_scanner_outlined,
-                title: l10n.scanDocument,
-                body: l10n.discoverScanBody,
+              // Durum kartı.
+              // P62 PA4: ham Card yerine ayarlarla aynı grup yüzeyi.
+              GroupCard(
+                color: premium ? scheme.primaryContainer : null,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpace.l),
+                    child: Row(
+                      children: [
+                        Icon(
+                          premium
+                              ? Icons.workspace_premium
+                              : Icons.workspace_premium_outlined,
+                          size: AppIconSize.l,
+                          color: premium
+                              ? scheme.onPrimaryContainer
+                              : scheme.primary,
+                        ),
+                        const SizedBox(width: AppSpace.m),
+                        Expanded(
+                          child: Text(
+                            premium && until != null
+                                ? l10n.premiumStatusActive(
+                                    DateFormat('d MMMM y').format(until),
+                                  )
+                                : premium
+                                ? l10n.premiumTitle
+                                : l10n.premiumStatusFree,
+                            style: AppText.of(Theme.of(context)).rowTitle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              _DiscoverTile(
-                icon: Icons.auto_awesome_outlined,
-                title: l10n.semanticSearchToggle,
-                body: l10n.discoverSemanticBody,
+              _Section(l10n.premiumPerksTitle),
+              // Ayrıcalıklar TEK grup kartında, ayraçlı (plan §2.2).
+              GroupCard(
+                children: [
+                  _PerkRow(
+                    icon: Icons.auto_awesome,
+                    title: l10n.premiumPerkAi,
+                    free: '${AppConstants.freeDailyAiPoints}',
+                    paid: '${AppConstants.premiumDailyAiPoints}',
+                  ),
+                  _PerkRow(
+                    icon: Icons.attach_file,
+                    title: l10n.premiumPerkAttach,
+                    free: formatBytes(AppConstants.maxFreeAttachmentBytes),
+                    paid: formatBytes(AppConstants.maxPremiumAttachmentBytes),
+                  ),
+                  _PerkRow(
+                    icon: Icons.cloud_outlined,
+                    title: l10n.premiumPerkStorage,
+                    free: formatBytes(AppConstants.maxFreeStorageBytes),
+                    paid: formatBytes(AppConstants.maxPremiumStorageBytes),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.wb_sunny_outlined),
+                    title: Text(l10n.premiumPerkAuto),
+                    subtitle: Text(l10n.premiumPerkAutoBody),
+                  ),
+                ],
               ),
-              _DiscoverTile(
-                icon: AppIcons.aiVoiceNote,
-                title: l10n.newVoiceCapture,
-                body: l10n.discoverAssistantBody,
+              const SizedBox(height: AppSpace.m),
+              // BYOK her zaman görünür: premium'un alternatifi olduğu saklanmaz —
+              // dürüst olmayan bir satış sayfası güveni de satar.
+              AppBanner(
+                icon: Icons.key_outlined,
+                title: hasKey ? l10n.aiBuiltInByok : l10n.premiumByokHint,
+                // KW-22: tek uzun satır 360'ta "bağım…" diye kesiliyordu.
+                subtitle: hasKey ? null : l10n.premiumByokWhere,
               ),
-              _DiscoverTile(
-                icon: Icons.lock_outline,
-                title: l10n.lockNote,
-                body: l10n.discoverLockBody,
-              ),
-              _DiscoverTile(
-                icon: Icons.visibility_off_outlined,
-                title: l10n.hiddenFolder,
-                body: l10n.discoverHiddenBody,
-              ),
-              _DiscoverTile(
-                icon: Icons.picture_as_pdf_outlined,
-                title: l10n.exportPdf,
-                body: l10n.discoverExportBody,
+              if (!premium) ...[
+                _Section(l10n.premiumHowTitle),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+                  child: Text(
+                    l10n.premiumHowBody,
+                    style: AppText.of(Theme.of(context)).body,
+                  ),
+                ),
+              ],
+              _Section(l10n.premiumDiscoverTitle),
+              GroupCard(
+                children: [
+                  _DiscoverTile(
+                    icon: Icons.document_scanner_outlined,
+                    title: l10n.scanDocument,
+                    body: l10n.discoverScanBody,
+                  ),
+                  _DiscoverTile(
+                    icon: Icons.auto_awesome_outlined,
+                    title: l10n.semanticSearchToggle,
+                    body: l10n.discoverSemanticBody,
+                  ),
+                  _DiscoverTile(
+                    icon: AppIcons.aiVoiceNote,
+                    title: l10n.newVoiceCapture,
+                    body: l10n.discoverAssistantBody,
+                  ),
+                  _DiscoverTile(
+                    icon: Icons.lock_outline,
+                    title: l10n.lockNote,
+                    body: l10n.discoverLockBody,
+                  ),
+                  _DiscoverTile(
+                    icon: Icons.visibility_off_outlined,
+                    title: l10n.hiddenFolder,
+                    body: l10n.discoverHiddenBody,
+                  ),
+                  _DiscoverTile(
+                    icon: Icons.picture_as_pdf_outlined,
+                    title: l10n.exportPdf,
+                    body: l10n.discoverExportBody,
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

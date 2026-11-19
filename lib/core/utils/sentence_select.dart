@@ -250,6 +250,14 @@ void trackSelectionPointerKind() {
   }
 }
 
+/// Son basılan işaretçi fare / dokunmatik yüzey mi? (Fareyle "bekletme"
+/// gibi ipuçları anlamsız — KW-12.)
+bool lastPointerIsMouse() {
+  trackSelectionPointerKind();
+  return _lastPointerKind == PointerDeviceKind.mouse ||
+      _lastPointerKind == PointerDeviceKind.trackpad;
+}
+
 /// Seçim FARE ya da KLAVYE ile mi yapılıyor — genişletme yalnız dokunmatik
 /// uzun basış / çift dokunuş içindir.
 ///
@@ -266,8 +274,7 @@ bool _mouseOrKeyboardSelection() {
       return true;
     }
   } catch (_) {}
-  return _lastPointerKind == PointerDeviceKind.mouse ||
-      _lastPointerKind == PointerDeviceKind.trackpad;
+  return lastPointerIsMouse();
 }
 
 class _SentenceExpander {

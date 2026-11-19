@@ -172,6 +172,38 @@ void main() {
     expect(news.width, 412 - 2 * AppSpace.m, reason: 'duyuru tam genişlik');
   });
 
+  testWidgets('KW-5: geniş pencerede dip bildirimi alt-SON köşede (rayı '
+      'örtmez), yüzen düğme bölgesinin yanında', (tester) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final c = AppNoticeController();
+    addTearDown(c.dispose);
+    await _pump(tester, c);
+    Rect card(String text) => tester.getRect(
+      find
+          .ancestor(of: find.text(text), matching: find.byType(DecoratedBox))
+          .first,
+    );
+    c.show(const AppNoticeData(text: 'silindi'));
+    await tester.pumpAndSettle();
+    expect(card('silindi').right, 1440 - AppNoticeHost.fabReserve);
+    // Ray (64 dp) ve liste bölmesi (~340 dp) baş tarafta: hiç değmez.
+    expect(card('silindi').left, greaterThan(400));
+    c.show(
+      const AppNoticeData(
+        text: 'yenilikler',
+        kind: AppNoticeKind.announce,
+        details: ['bir'],
+      ),
+    );
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(card('yenilikler').right, 1440 - AppSpace.m);
+    expect(card('yenilikler').left, greaterThan(400));
+    await tester.pump(const Duration(seconds: 5));
+  });
+
   testWidgets('şerit sökülünce bekleyen bildirim ve zamanlayıcı kalmaz', (
     tester,
   ) async {

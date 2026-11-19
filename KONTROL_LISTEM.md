@@ -287,6 +287,11 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Bilgisayarda (web) bak
 
+- [ ] **P77 web bulguları** — yazıldı, tarayıcıda doğrulanmadı
+  Nerede: web, geniş pencere (1440+) ve 360 dar pencere.
+  Nasıl: "Yenilikler" / "Silindi" bildirimi sağ altta mı (sol rayı örtmüyor); misafir hesapta afiş mor değil, geniş ekranda düğmeler metnin yanında, not açıkken ince şerit; Premium ve Ayarlar ortada; Gizlilik başlıklı ve dar ekranda düzgün; işletim sistemi koyuyken açılış açık (uygulama Koyu seçili değilse); yeni tarayıcı profilinde yazı boyu "Büyük".
+  Doğruysa: hiçbir bildirim rayı örtmüyor, satırlar yarım kalmıyor, açılışta beyaz/koyu sıçrama yok.
+
 - [ ] **Masaüstünde "Görünüm ve süz" levhası ortada, en çok 560 dp (KT-2); dar pencerede takvim şeridinde tek harf gün adı yok (KT-3); `/delete-account` sayfası (oturumsuz açınca giriş sonrası oraya döner) (P64/P69)**
 
 - [ ] **21. Web temel tur**
@@ -348,6 +353,8 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
   Doğruysa: "doğrulanmış istek" oranı yüksek.
 
 ## Karar vermen gerekenler
+
+- [ ] **P77 sayfa başlıkları (KW-17)** — üst çubuk başlıkları (Klasörler, Ayarlar, Arşiv…) her yerde 14 pt çiziliyor (tema hatası, bulundu). Düzeltmek telefonda da başlıkları büyütür. Seçenekler: (a) her yerde 20, (b) her yerde 16–18, (c) olduğu gibi. Şu an: olduğu gibi.
 
 - [x] **33. (KARAR 2026-11-17: tablette ölçülüp karar verilecek (şimdilik kapalı)) Yeni el yazısı kayıt biçimi** — hızlı ve küçük kayıt için hazır ama YAZMA kapalı; açmak için önce telefonda ölçüm, sonra bütün cihazlar güncel olunca konsolda bayrak (30. madde). Şu an: kapalı (en güvenli). Açmak istersen "el yazısı v2'yi aç" de.
 - [ ] **34. Kalem ucu tahmini ve parmağa ayrı araç** — Kalem ucu tahmini: 14 Kasım'da "yalnız parmak aracı olsun" dedin, tahmin YAZILMADI. Parmak aracı: YAZILDI (kalem ayarlarında ve Ayarlar → Kalem'de "Parmak: Kaydırır · Çizer · Siler"), tablette denenmedi → 41. madde. Siler'deyken tek parmak kaydırmaz (iki parmakla kaydır/yakınlaştır); istemezsen söyle.

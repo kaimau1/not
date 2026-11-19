@@ -712,7 +712,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceCommand => 'Sesli komut';
 
   @override
-  String get semanticSearchToggle => 'AI ile anlamsal arama';
+  String get semanticSearchToggle => 'Yapay zekâ ile anlamsal arama';
 
   @override
   String get semanticSearchHint => 'Anlamıyla ara: \"araba masrafları\"...';
@@ -2143,7 +2143,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get premiumByokHint =>
-      'Kendi Gemini API anahtarını girersen yapay zekâ özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay zekâ).';
+      'Kendi Gemini API anahtarınla yapay zekâ kotasız çalışır';
+
+  @override
+  String get premiumByokWhere => 'Premium\'dan bağımsız · Ayarlar → Yapay zekâ';
 
   @override
   String get premiumDiscoverTitle => 'Gözden kaçan özellikler';

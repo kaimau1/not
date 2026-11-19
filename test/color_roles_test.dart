@@ -18,7 +18,6 @@ const _free = [
 
 /// dosya → (izinli sayı, gerekçe). 2026-11-12 sayımı.
 const _allowed = <String, (int, String)>{
-  'lib/features/auth/presentation/guest_backup_card.dart': (2, 'misafir yedek uyarısı kartı'),
   'lib/features/auth/presentation/login_screen.dart': (1, 'giriş ekranı misafir kartı'),
   'lib/features/calendar/presentation/calendar_screen.dart': (1, 'görev türü rengi (takvim lejantı)'),
   'lib/features/calendar/presentation/calendar_views.dart': (1, 'görev türü rengi (takvim)'),

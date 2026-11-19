@@ -241,7 +241,27 @@ FontScaleStep nearestFontScaleStep(double value) {
 }
 
 /// Sistem yazı ölçeğine en yakın kademe (ilk açılışın başlangıç değeri).
-double initialFontScale(double system) => nearestFontScaleStep(system).scale;
+///
+/// KW-10 (web keşfi 2026-11-18): tarayıcı sistem yazı ölçeği iletmez (hep
+/// 1,0); masaüstü penceresinde ([wideWebWidth] ve üstü) ekran gözden uzak,
+/// telefon ölçüsü küçük kalıyordu — başlangıç en az "Büyük". Yalnız İLK
+/// açılış; sonra kullanıcı ayarı tek söz sahibi.
+double initialFontScale(
+  double system, {
+  bool web = kIsWeb,
+  double windowWidth = 0,
+}) {
+  final step = nearestFontScaleStep(system);
+  if (web &&
+      windowWidth >= wideWebWidth &&
+      step.scale < FontScaleStep.large.scale) {
+    return FontScaleStep.large.scale;
+  }
+  return step.scale;
+}
+
+/// Web'de başlangıç yazı kademesinin "Büyük" olduğu pencere eni (dp).
+const double wideWebWidth = 1200;
 
 /// **SİSTEM YAZI BOYUTUNU İZLE** (F15.1, 2026-10-31 — öneri uygulandı,
 /// varsayılan mevcut davranış). 2026-08-07 kararı ("yazı boyutu tüm
@@ -330,8 +350,13 @@ class FontScaleNotifier extends Notifier<double> {
     if (stored != null) return stored;
     // İLK AÇILIŞ (F4.7): sistemin yazı ölçeğinden başlanır (en yakın
     // kademe) ve kaydedilir; bundan sonra uygulama ayarı tek söz sahibi.
+    final dispatcher = WidgetsBinding.instance.platformDispatcher;
+    final view = dispatcher.implicitView;
     final initial = initialFontScale(
-      WidgetsBinding.instance.platformDispatcher.textScaleFactor,
+      dispatcher.textScaleFactor,
+      windowWidth: view == null
+          ? 0
+          : view.physicalSize.width / view.devicePixelRatio,
     );
     prefs.setDouble(_key, initial);
     return initial;

@@ -88,6 +88,37 @@ void main() {
     await tester.pump(const Duration(seconds: 6));
   });
 
+  testWidgets('KW-18: ertelenen ipucu sayfası arkada kalınca çıkmaz', (
+    tester,
+  ) async {
+    late BuildContext ctx;
+    final nav = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: nav,
+        builder: (context, child) => AppNoticeHost(child: child!),
+        home: Builder(
+          builder: (context) {
+            ctx = context;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    appNotice.show(const AppNoticeData(text: 'Kaydedildi'));
+    await tester.pump();
+    expect(TipOnce.show(ctx, prefs, TipOnce.gridSwipe, 'İpucu D'), isFalse);
+    // Kullanıcı başka sayfaya geçti (ör. /privacy).
+    nav.currentState!.push(
+      MaterialPageRoute<void>(builder: (_) => const Scaffold()),
+    );
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump();
+    expect(find.text('İpucu D'), findsNothing);
+    expect(TipOnce.due(prefs, TipOnce.gridSwipe), isTrue, reason: 'sayılmaz');
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('show: şerit yokken (yalın test) false, sayılmaz', (
     tester,
   ) async {

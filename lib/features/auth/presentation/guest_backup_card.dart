@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/notes_repository.dart';
+import '../../../app/split_shell.dart' show DashboardPaneScope;
 import '../../settings/presentation/settings_screen.dart';
 import '../../settings/settings_providers.dart';
 import 'auth_providers.dart';
@@ -70,66 +71,106 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
       laterAtCount: laterAt,
     );
     if (mode == GuestReminderMode.none) return const SizedBox.shrink();
-    if (mode == GuestReminderMode.strip) return _strip(context);
+    // KW-15: bölünmüş görünümün dar liste bölmesinde tam kart listenin
+    // dörtte birini kaplıyordu — orada tek satırlık şerit (giriş yine bir
+    // dokunuş, istek 2026-10-28 korunur).
+    if (mode == GuestReminderMode.strip ||
+        DashboardPaneScope.singleColumnOf(context)) {
+      return _strip(context);
+    }
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    // KW-20: zemin `secondaryContainer` (dikkat/sıcak) — `tertiary` yalnız
+    // yapay zekâ kimliği (renk rolleri, color_roles_test).
+    final ink = scheme.onSecondaryContainer;
+    final title = Row(
+      children: [
+        Icon(Icons.cloud_off_outlined, color: ink),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            l10n.guestReminderTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(color: ink),
+          ),
+        ),
+      ],
+    );
+    final body = Text(l10n.guestReminderBody, style: TextStyle(color: ink));
+    final actions = Wrap(
+      spacing: 4,
+      children: [
+        TextButton(
+          onPressed: () {
+            unawaited(prefs.setInt(_laterCountKey, noteCount));
+            setState(() {});
+          },
+          child: Text(l10n.guestReminderLater),
+        ),
+        FilledButton.icon(
+          onPressed: () => linkGuestAccount(context, ref),
+          icon: const Icon(Icons.login_rounded, size: AppIconSize.s),
+          label: Text(l10n.signInWithGoogle),
+        ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
       child: Card(
-        color: scheme.tertiaryContainer,
+        color: scheme.secondaryContainer,
         margin: EdgeInsets.zero,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.cloud_off_outlined,
-                    color: scheme.onTertiaryContainer,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      l10n.guestReminderTitle,
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(color: scheme.onTertiaryContainer),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            // KW-8: geniş ekranda gövde tek satırda ~1240 px oluyordu, düğmeler
+            // sağ altta uzaktı. Geniş kartta metin okuma sütununda (≤ 640),
+            // düğmeler aynı satırın sonunda; kart yine tam genişlik.
+            if (box.maxWidth >= _wideCard) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 640),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [title, const SizedBox(height: 6), body],
+                          ),
+                        ),
+                      ),
                     ),
+                    const SizedBox(width: 16),
+                    actions,
+                  ],
+                ),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  title,
+                  const SizedBox(height: 6),
+                  body,
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: actions,
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.guestReminderBody,
-                style: TextStyle(color: scheme.onTertiaryContainer),
-              ),
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: Wrap(
-                  spacing: 4,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        unawaited(prefs.setInt(_laterCountKey, noteCount));
-                        setState(() {});
-                      },
-                      child: Text(l10n.guestReminderLater),
-                    ),
-                    FilledButton.icon(
-                      onPressed: () => linkGuestAccount(context, ref),
-                      icon: const Icon(Icons.login_rounded, size: AppIconSize.s),
-                      label: Text(l10n.signInWithGoogle),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
+
+  /// Bu genişlikten itibaren kart tek satır düzeni (metin + düğmeler yan yana).
+  static const double _wideCard = 840;
 
   /// "Sonra"dan sonraki tek satırlık şerit: dokununca Google bağlanır.
   Widget _strip(BuildContext context) {
@@ -138,7 +179,7 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
       child: Material(
-        color: scheme.tertiaryContainer.withValues(alpha: AppAlpha.muted),
+        color: scheme.secondaryContainer.withValues(alpha: AppAlpha.muted),
         borderRadius: BorderRadius.circular(AppRadius.m),
         child: InkWell(
           key: const ValueKey('guest-reminder-strip'),
@@ -153,7 +194,7 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                   Icon(
                     Icons.cloud_off_outlined,
                     size: AppIconSize.s,
-                    color: scheme.onTertiaryContainer,
+                    color: scheme.onSecondaryContainer,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -161,7 +202,7 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                       l10n.guestReminderTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: scheme.onTertiaryContainer),
+                      style: TextStyle(color: scheme.onSecondaryContainer),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -169,7 +210,7 @@ class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
                     l10n.guestReminderConnect,
                     style: TextStyle(
                       fontWeight: AppWeight.strong,
-                      color: scheme.onTertiaryContainer,
+                      color: scheme.onSecondaryContainer,
                     ),
                   ),
                 ],

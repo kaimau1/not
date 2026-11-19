@@ -97,7 +97,12 @@ abstract final class TipOnce {
   }) {
     if (!due(prefs, id, sessionLimit: sessionLimit)) return false;
     if (!appNotice.hosted) return false;
+    // KW-18: ipucu yalnız KENDİ sayfası öndeyken çıkar. Ertelenen arama
+    // ipucu, şerit boşaldığında üstüne açılmış `/privacy`'de çıkıyordu.
+    bool front() =>
+        context.mounted && (ModalRoute.isCurrentOf(context) ?? true);
     bool tryShow() {
+      if (!front()) return false;
       final shown = appNotice.show(
         AppNoticeData(text: text, kind: AppNoticeKind.tip, duration: duration),
       );

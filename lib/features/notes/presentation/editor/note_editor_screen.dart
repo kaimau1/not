@@ -2572,6 +2572,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _ => null,
     };
     if (tip == null || !mounted) return;
+    // KW-12: fareyle "bir an beklet" uygulanamaz; ipucu kalem/parmak
+    // çizgisine kalır (gösterilmiş SAYILMAZ).
+    if (tip.$1 == TipOnce.penShapeHold && lastPointerIsMouse()) return;
     TipOnce.show(
       context,
       ref.read(sharedPreferencesProvider),

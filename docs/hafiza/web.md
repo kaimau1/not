@@ -46,3 +46,12 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 ## 2026-11-18 — P74 PW-A (KW-1/KW-2) KÖK NEDENLER
 - KW-1 (ana ekran + ray anlamsal ağaçta yok): sayfa rotası `ModalRoute` her zaman `ModalBarrier` → `BlockSemantics` taşır; engel, aynı anlamsal sınır içinde ONDAN ÖNCE çizilen kardeşleri siler. Uygulamada Navigator kök değil: `AppFrame`'de ray (Row'da önce), `SplitShell`'de soldaki liste iç Navigator'dan önce çiziliyor → ikisi de ağaçtan düşüyordu. Çözüm: iki yerde Navigator çocuğu `Semantics(container: true)` (`app_frame.dart`, `split_shell.dart`). Bekçi `test/web_semantics_home_test.dart` (`ensureSemantics` + `find.bySemanticsLabel`). Navigator'ın yanına yeni kardeş koyarken sınırı unutma.
 - KW-2 (Tab ana ekranda ilerlemiyor): geniş ekranda iç Navigator'daki '/' rotası `SizedBox.shrink`; rota odağı alıyor, kapsamında odaklanacak öğe yok → Tab yerinde sayıyor (web'de `leaveFlutterView` gibi tarayıcıya). Çözüm: not açık değilken iç Navigator `ExcludeFocus`. Ağaç şekli sabit (bayrak değişir).
+
+## 2026-11-19 — P77 web bulguları (PW-B/C/D/F)
+- Bildirim şeridi (`app_notice.dart`): pencere ≥ 600 (`AppNoticeHost.wideBreakpoint` = `kRailBreakpoint`) iken dip bildirimi alt-SON köşede — ray ve bölünmüş görünümün listesi baş tarafta, son köşe hep içerik. Şerit boşken de yalnız `MediaQuery.sizeOf` okur (çıkan kart köşe değiştirmesin).
+- `TipOnce.show`: ipucu yalnız çağıran sayfa `ModalRoute.isCurrentOf` iken; ertelenen ipucu başka sayfa öndeyse düşer (sayılmaz). `lastPointerIsMouse()` (`sentence_select.dart`) fareyle anlamsız ipuçları için.
+- Web açılış katmanı (`web/index.html`) işletim sistemi koyu kipini DEĞİL uygulamanın kaydını izler: localStorage `flutter.theme_mode` (shared_preferences web, JSON dize). Tema anahtarı/adları değişirse betik + `web_splash_theme_test` birlikte.
+- KW-10: `initialFontScale(web, windowWidth)` — yalnız İLK açılışta, web ≥ 1200 → en az Büyük (1,15).
+- KW-17 KÖK NEDEN: `appBarTheme.titleTextStyle` punto taşımıyor (tema kurulurken textTheme ölçüsüz) → üst çubuk başlıkları her yerde 14 px. Karar bekliyor (keşif belgesi "P77 durumu").
+- Gizlilik ekranı `privacyBlocks()` ile çizilir (başlık/madde/paragraf, satır sonları birleşir); web sayfaları yine `tool/gizlilik_sayfalari.dart`.
+- Ekran turunda misafir afişi yok (sahte oturum misafir değil) — afiş değişikliği turda görünmez.

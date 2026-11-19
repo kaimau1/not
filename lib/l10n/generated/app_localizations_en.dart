@@ -2148,7 +2148,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumByokHint =>
-      'If you enter your own Gemini API key, AI features run without quota — independent of Premium (Settings → AI).';
+      'With your own Gemini API key, AI runs without quota';
+
+  @override
+  String get premiumByokWhere => 'Independent of Premium · Settings → AI';
 
   @override
   String get premiumDiscoverTitle => 'Features you may have missed';

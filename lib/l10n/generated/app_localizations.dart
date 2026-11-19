@@ -1349,7 +1349,7 @@ abstract class AppLocalizations {
   /// No description provided for @semanticSearchToggle.
   ///
   /// In tr, this message translates to:
-  /// **'AI ile anlamsal arama'**
+  /// **'Yapay zekâ ile anlamsal arama'**
   String get semanticSearchToggle;
 
   /// No description provided for @semanticSearchHint.
@@ -3995,8 +3995,14 @@ abstract class AppLocalizations {
   /// No description provided for @premiumByokHint.
   ///
   /// In tr, this message translates to:
-  /// **'Kendi Gemini API anahtarını girersen yapay zekâ özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay zekâ).'**
+  /// **'Kendi Gemini API anahtarınla yapay zekâ kotasız çalışır'**
   String get premiumByokHint;
+
+  /// No description provided for @premiumByokWhere.
+  ///
+  /// In tr, this message translates to:
+  /// **'Premium\'dan bağımsız · Ayarlar → Yapay zekâ'**
+  String get premiumByokWhere;
 
   /// No description provided for @premiumDiscoverTitle.
   ///
