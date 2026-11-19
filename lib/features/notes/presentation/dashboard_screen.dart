@@ -2393,11 +2393,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 PositionedDirectional(
                   end: 16,
                   bottom: 16,
-                  child: Column(
+                  // DAR LİSTE BÖLMESİNDE ↑ "+"nın SOLUNDA (KT-17, tablet turu
+                  // 2026-11-18): üstte dururken yığın 16 + 56 + 10 + 40 =
+                  // 122 dp, listenin alt boşluğu ([_kFabClearance]) 96 dp —
+                  // listenin sonunda bile son kartın tarih satırı ↑'nın
+                  // arkasında kalıyordu. Dar bölmede mikrofon ve ⚡ gizli,
+                  // satırda yer var. Aynı `Flex`, yalnız yön değişir: alt
+                  // ağaç (FAB'lar, "+" menüsü) yeniden kurulmaz.
+                  // Ray durumunu da bu kurucu okur (eskiden ayrı `Builder`):
+                  // kurulum sayısı aynı kalır (bütçe S23/S24).
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _narrowPaneN,
+                    builder: (context, narrow, _) => Flex(
+                    direction: narrow ? Axis.horizontal : Axis.vertical,
                     mainAxisSize: MainAxisSize.min,
                     // "Başa dön" "+"nın tam üstünde: sağa dayalı, küçük
                     // düğme (40) "+"nın (56) ortasına 8 dp payla oturur.
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    // Dar bölmede satırda, ortalı.
+                    crossAxisAlignment: narrow
+                        ? CrossAxisAlignment.center
+                        : CrossAxisAlignment.end,
+                    spacing: narrow ? 8 : 10,
                     children: [
                       // **BAŞA DÖN** — yüz notluk bir kitaplıkta en alta
                       // inen kullanıcının tepeye (ve arama kutusuna)
@@ -2415,9 +2431,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           child: IgnorePointer(
                             ignoring: !_showBackToTop || selectionActive,
                             child: Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                bottom: 10,
-                                end: 8,
+                              padding: EdgeInsetsDirectional.only(
+                                end: narrow ? 0 : 8,
                               ),
                               child: FloatingActionButton.small(
                                 heroTag: 'backToTop',
@@ -2433,10 +2448,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       // eskiden iki düğme boyu yükseliyor ve sağ sütunun
                       // son kartını örtüyordu; tek satır 56 dp.
                       //
-                      // Ray görünürken kapılar rayda (K3, F44.1): Builder yalnız
-                      // bu dalı ray durumuna bağlar.
-                      Builder(
-                        builder: (context) => AppRailScope.visible(context)
+                      // Ray görünürken kapılar rayda (K3, F44.1).
+                      AppRailScope.visible(context)
                             ? const SizedBox.shrink()
                             : sharedFolder != null
                             ? SharedFolderFab(folder: sharedFolder)
@@ -2486,8 +2499,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           ),
                         ],
                       ),
-                      ),
                     ],
+                  ),
                   ),
                 ),
               ],

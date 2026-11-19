@@ -175,6 +175,7 @@ Yöntem: `tool/perf/tur_gez.py` (uiautomator etiketleriyle gezinti + 0,3 ölçek
 - Yüzey: tablet yatay, bölünmüş (not açık). Önem: düşük. Gerçek: sol bölmenin sağ altındaki yüzen "+" ve (kaydırınca) "↑" kartın tarih/etiket satırını örtüyor ("18 Kas" görünmüyor); dar liste bölmesinde (~330 dp) orantısız büyük.
 - Öneri: bölünmüşte düğmeleri küçült (mini FAB) ya da listeye alt boşluk (`bottom: 88`).
 - Görüntü: `kt-yatay-04-bolunmus-pdf.png`.
+- **Durum (2026-11-19, ccr-1122edca): düzeltildi.** Kök neden: ↑ "+"nın üstündeyken düğme yığını 122 dp, listenin alt boşluğu 96 dp — listenin sonunda bile son kart örtülüyordu. Dar bölmede (< 420 dp; mikrofon ve ⚡ zaten gizli) ↑ "+"nın solunda, aynı satırda (yığın 56 dp). Telefon düzeni aynen. Bekçi `test/narrow_pane_fab_test.dart` (düzeltmesiz ↑ üstü 670 < 704). Düğmeler küçültülmedi (görünüş kararı yok). Cihazda doğrulanmadı.
 
 ### KT-18 — Editörde ⌨ düğmesi odak yokken tek başına klavye açmıyor, durumu belirsiz
 - Yüzey: tablet + fiziksel klavye. Önem: düşük. Gerçek: fiziksel klavye takılıyken alana dokunmak sanal klavyeyi açmaz (bilerek, `HardKeyboard`); ⌨ AÇ/KAPA anahtarı: alan odakta değilken basınca simge "gizle"ye döner ama klavye gelmez; ⌨ açıkken sonraki alan dokunuşları klavyeyi açar, BACK klavyeyi kapatır ama anahtar "açık" kalır (sonraki ⌨ dokunuşu KAPATIR → "iki kez bastım, açılmadı").
