@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 19 Kasım 2026 {#2026-11-19}
+- **Kalem ↔ silgi düğmesi artık yerinde durur:** her çizgide sağa, aşağıya, yukarıya sıçramıyor; yazının sol üstünde, yakınında belirir ve sen aynı yerde yazmaya devam ettikçe kıpırdamaz. Yalnız uzağa yazınca ya da düğmenin üstüne yazınca yeni yazının yanına geçer.
+- **Hızlı ekle daha akıcı:** levha açılırken mikrofon, levha ve klavye yerleştikten sonra açılır; klavyeyle yazmaya başlarsan dinleme kendiliğinden durur ve yazdığın silinmez; yazarken hedef notlar şeridi her harfte yeniden çizilmiyor. Şeridin başında her zaman **Yeni not** var: yazdığını hiçbir nota eklemeden yeni not yap.
+- **Balon düğmesi tek dokunuşta:** sabit görsel/PDF'te balon düğmesine basınca artık önce "Balon mu, metin mi?" sorulmuyor; bırakma kipi doğrudan açılır, tür kartın üstündeki **Balon | Metin** seçimiyle değişir. Balon varken gizle/göster yanındaki göz düğmesinde.
+- **Bilgisayarda (web) seçim yazıyla birebir:** tümünü seçince ya da sürükleyerek seçince seçili kısım bazı bilgisayarlarda mavi kutuda, başka yazı tipiyle görünüyordu (tarayıcı eklentisi ya da sistem seçim rengi yüzünden); artık her bilgisayarda notun kendi yazı tipi ve seçim rengiyle görünür.
 - **Kalem ↔ silgi hızlı düğmesi:** çizgi bitince yanında, elinin altında kalmayacak yerde saydam küçük bir düğme belirir; dokununca silgiye, silgideyken kaleme geçersin. Kalem yaklaşınca belirginleşir, yeni çizgiye başlayınca ve birkaç saniye kullanılmayınca kaybolur. Kalem ayarlarından kapatılabilir.
 - **Alt çubuğu düzenlerken çubuk görünür kalır:** ⋯ → Düzenle listesi artık çubuğun üstünde, kısa ve kaydırılabilir; sol↔sağ taşıdığın ya da 📌'lediğin düğmeyi altta anında görürsün.
 - **Hızlı ekle hiç uygun not yokken de çalışır:** listen ya da başlıklı metin notun yoksa yazdığın (ya da söylediğin) yeni not olarak kaydedilir.

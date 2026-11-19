@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 19 November 2026 {#2026-11-19}
+- **The pen ↔ eraser button stays put:** it no longer jumps right, down or up with every stroke; it appears near the top left of your writing and stays there while you keep writing nearby. It only moves when you write far away or on top of it.
+- **Smoother quick add:** the microphone now starts after the sheet and keyboard have settled; typing stops listening without erasing what you typed; the target-note strip is no longer redrawn on every keystroke. The strip always starts with **New note**, to save what you wrote as a new note instead of adding it to one.
+- **One tap for bubbles:** on a pinned image/PDF the bubble button no longer asks "Bubble or text?" first; placing mode opens right away and the type is switched with **Bubble | Text** on its card. When there are bubbles, show/hide is the eye button next to it.
+- **Selection on the web matches the text:** on some computers selecting text (select all or dragging) showed the selection in a blue box with a different font (because of a browser extension or system selection colour); it now uses the note's own font and selection colour everywhere.
 - **Quick pen ↔ eraser button:** when a stroke ends, a small translucent button appears next to it, away from your hand; tap to switch to the eraser, or back to the pen. It becomes clearer as the pen approaches and fades when you start a new stroke or leave it for a few seconds. It can be turned off in pen settings.
 - **The bar stays visible while you edit it:** the ⋯ → Edit list now sits above the bottom bar, shorter and scrollable, so moving or pinning a button shows up below right away.
 - **Quick add works even with no suitable note:** if you have no list or titled text note yet, what you type (or say) is saved as a new note.
