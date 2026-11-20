@@ -882,6 +882,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   if (result == 'edit' && context.mounted) context.pop();
                 },
               ),
+              // PL6: Pro (katmanlar, satın alma, geri yükleme) YALNIZ Play
+              // derlemesinde; kişisel APK / web'de bu kart hiç yok (bekçi
+              // `test/billing_test.dart`).
+              if (PlayBuild.enabled)
+                _ShortcutTile(
+                  key: const ValueKey('settings-pro'),
+                  icon: Icons.workspace_premium_outlined,
+                  title: l10n.proTitle,
+                  subtitle: l10n.proSettingsSubtitle,
+                  onTap: () => context.push('/premium'),
+                ),
             ],
           ),
           for (final g in groups) ...[
