@@ -21,7 +21,7 @@ library;
 
 import 'dart:math' as math;
 
-import 'spell_fix.dart' show fixTurkishWord, trUpper;
+import 'spell_fix.dart' show contextualFix, fixTurkishWord, trUpper;
 import 'spell_learn.dart';
 
 /// Türkçe Q klavyesinin harf sıraları (İngilizce QWERTY bunun alt kümesi).
@@ -286,11 +286,24 @@ class SpellEngine {
   /// Sözlükteki TEK yakın kelime (eşik [limitFor]); ikinci aday
   /// [confidenceMargin] içindeyse null.
   static String? nearest(String w, SpellMemory m) {
+    final c = _near(w, m);
+    if (c.isEmpty) return null;
+    if (c.length > 1 && c[1].$2 - c[0].$2 < confidenceMargin) return null;
+    return changesTooMuch(w, c[0].$1) ? null : c[0].$1;
+  }
+
+  /// Altı çizili denetimin önerileri: eşik içindeki en yakın [k] aday
+  /// (güven payı aranmaz — kullanıcı seçer).
+  static List<String> nearestList(String w, SpellMemory m, {int k = 3}) => [
+    for (final c in _near(w, m).take(k))
+      if (!changesTooMuch(w, c.$1)) c.$1,
+  ];
+
+  /// Eşik içindeki adaylar, yakından uzağa.
+  static List<(String, double)> _near(String w, SpellMemory m) {
     final limit = limitFor(w.length);
-    if (limit <= 0) return null;
-    String? best;
-    var bestCost = double.infinity;
-    var second = double.infinity;
+    if (limit <= 0) return const [];
+    final out = <(String, double)>[];
     final first = w[0];
     for (var len = w.length - 2; len <= w.length + 2; len++) {
       for (final cand in m.bucket(len)) {
@@ -302,17 +315,46 @@ class SpellEngine {
         if (m.frequency(cand) < 3) continue;
         final cost = distance(w, cand, limit: limit);
         if (cost > limit) continue;
-        if (cost < bestCost) {
-          second = bestCost;
-          bestCost = cost;
-          best = cand;
-        } else if (cost < second) {
-          second = cost;
-        }
+        out.add((cand, cost));
       }
     }
-    if (best == null || second - bestCost < confidenceMargin) return null;
-    return changesTooMuch(w, best) ? null : best;
+    return out..sort((a, b) => a.$2.compareTo(b.$2));
+  }
+
+  /// **Y-4 ALTI ÇİZİLİ DENETİM** önerileri ([w] küçük harf). null = sorun
+  /// yok. [hint]: bağlama bağlı ("bende" → "ben de") — yanlış olmayabilir,
+  /// yumuşak çizilir. Otomatik düzeltmeden farkı: güven payı aranmaz,
+  /// birden çok aday listelenir; hiçbiri UYGULANMAZ.
+  static ({List<String> list, bool hint})? suggestions(
+    String w,
+    SpellMemory m, {
+    Set<String> noteKeep = const {},
+  }) {
+    if (w.length < 2 || isCjk(w) || noteKeep.contains(w) || m.keep.contains(w)) {
+      return null;
+    }
+    final out = <String>[];
+    void add(String? s) {
+      if (s == null || s == w || out.contains(s) || m.isRejected(w, s)) return;
+      out.add(s);
+    }
+
+    add(m.learned(w));
+    final rule = fixTurkishWord(w);
+    if (rule != w) add(rule);
+    if (out.isNotEmpty) return (list: out, hint: false);
+    final ctx = contextualFix(w);
+    if (ctx != null && !m.isRejected(w, ctx)) return (list: [ctx], hint: true);
+    if (m.known(w)) return null;
+    asciiRestore(w, m).forEach(add);
+    add(patternFix(w, m));
+    final n = w.length;
+    if (n >= 4 && w[n - 1] == w[n - 2] && m.known(w.substring(0, n - 1))) {
+      add(w.substring(0, n - 1));
+    }
+    add(splitMissedSpace(w, m));
+    nearestList(w, m).forEach(add);
+    return out.isEmpty ? null : (list: out.take(4).toList(), hint: false);
   }
 
   /// Cihaz önerisi otomatik uygulanacak kadar yakın mı (klavye mesafesi).
