@@ -14678,6 +14678,54 @@ abstract class AppLocalizations {
   /// **'Öğrenilenler silindi'**
   String get spellForgotten;
 
+  /// No description provided for @spellModeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım denetimi'**
+  String get spellModeTitle;
+
+  /// No description provided for @spellModeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız göster: olası yanlışların altı çizilir, dokununca öneriler çıkar; hiçbir şey kendiliğinden değişmez. Otomatik düzelt: ayrıca emin olunca düzeltir.'**
+  String get spellModeInfo;
+
+  /// No description provided for @spellModeOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get spellModeOff;
+
+  /// No description provided for @spellModeShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız göster'**
+  String get spellModeShow;
+
+  /// No description provided for @spellModeAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik düzelt'**
+  String get spellModeAuto;
+
+  /// No description provided for @spellAddToDictionary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sözlüğe ekle'**
+  String get spellAddToDictionary;
+
+  /// No description provided for @spellAlwaysFix.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hep böyle düzelt: {word}'**
+  String spellAlwaysFix(String word);
+
+  /// No description provided for @spellKeepInNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta dokunma'**
+  String get spellKeepInNote;
+
   /// No description provided for @lineTaskRetime.
   ///
   /// In tr, this message translates to:

@@ -24,6 +24,8 @@ extension _ItemsRow on ItemsEditorState {
     EditableTextState editableState,
     NoteItem item,
   ) {
+    final spell = spellContextMenu(context, editableState);
+    if (spell != null) return spell;
     final l10n = context.l10n;
     final controller = _controllerFor(item);
     void commit() => _updateText(item, controller.logicalText);
@@ -519,8 +521,13 @@ extension _ItemsRow on ItemsEditorState {
                                   // (dokunuş imleci taşımak için EditableText'e
                                   // gider), bu yüzden dokunuştan SONRA imlecin
                                   // nereye düştüğüne bakılır.
-                                  onTap: () =>
-                                      _tapAttachmentTag(controller, context),
+                                  onTap: () {
+                                    _tapAttachmentTag(controller, context);
+                                    // Altı çizili kelime: öneri menüsü (Y-4).
+                                    showSpellMenuAfterTap(
+                                      editableTextBelow(context),
+                                    );
+                                  },
                                   // Tam göster modunda satır sarılıp büyür; "dokununca
                                   // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
                                   maxLines: widget.expandItems || focused

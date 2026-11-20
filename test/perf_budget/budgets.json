@@ -555,5 +555,13 @@
     "bugun": "klavye 402 kurulum / 102 dizilme, levha/giriş/pano 0; yazma 5 tuşta 335 kurulum, çip 0 (2026-11-20, P84 HE-2: Ekle düğmesi içeriği yazmıyor, önizleme satırı tek Text; önce 415)",
     "hedef": "klavye karesinde levha, giriş satırı ve ana ekran kurulmaz; tuşta hedef çipleri kurulmaz",
     "neden": "2026-11-19 ilk ölçüm; çip şeridi yalnız hedef değişince kurulur (öncesi 5 tuşta 1445 kurulum, 25 çip)"
+  },
+  "S57": {
+    "senaryo": "Yazım v3 Y-4: altı çizili denetim açıkken (Yalnız göster) 30 maddeli listede altı çizili kelimeli maddeye 5 tuş",
+    "kok_kurulum": 0,
+    "satir": 0,
+    "bugun": "0 / 0 (2026-11-20, P83 Y-4: çizgi AttachmentTagChips boyama katmanında, denetim 300 ms duraklamada)",
+    "hedef": "0 / 0",
+    "neden": "İlk ölçüm = hedef: denetim metne/span'e dokunmaz, yalnız boyar"
   }
 }

@@ -104,6 +104,7 @@ import '../../../calendar/presentation/task_editor.dart';
 import '../../../calendar/presentation/line_task_chip.dart';
 import 'auto_spell.dart';
 import 'spell_settings_sheet.dart';
+import 'spell_underline.dart';
 import 'note_package.dart';
 import 'editor_quick_row.dart';
 import '../../../calendar/presentation/event_editor.dart';
@@ -2865,10 +2866,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _applyFormat(RichFormat.color, colorIndex: index);
   }
 
-  /// Öğrenen yazım düzeltmenin kişisel sözlüğü: notların metni (arka
-  /// planda, oturumda bir kez; yazım düzelt kapalıyken hiç).
+  /// Öğrenen yazım düzeltmenin ve altı çizili denetimin kişisel sözlüğü:
+  /// notların metni (arka planda, oturumda bir kez; yazım kapalıyken hiç).
   Future<void> _seedSpell() async {
-    if (!mounted || !AutoSpell.enabled.value) return;
+    if (!mounted || AutoSpell.mode.value == SpellMode.off) return;
     final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
     await AutoSpell.seedFrom(
       () => [
@@ -4002,7 +4003,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 ? null
                 : _embedLinkedVideo,
           );
+          return;
         }
+        // Altı çizili kelimeye dokunuş: öneri menüsü (Y-4).
+        showSpellMenuAfterTap(editable);
         }
 
         Widget fieldOf(bool top, bool bottom) => AttachmentTagChips(

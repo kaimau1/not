@@ -101,20 +101,10 @@ List<_SettingRow> _writingRows(AppLocalizations l10n) => [
     keywords: '${l10n.inkPartialEraserInfo} silgi',
   ),
   _SettingRow(
-    ValueListenableBuilder<bool>(
-      valueListenable: AutoSpell.enabled,
-      builder: (_, on, _) => SwitchListTile(
-        key: const ValueKey('settings-spell-auto'),
-        contentPadding: EdgeInsets.zero,
-        secondary: const Icon(Icons.spellcheck_rounded, size: AppIconSize.m),
-        title: Text(l10n.spellAutoTitle),
-        subtitle: Text(l10n.spellAutoSubtitle),
-        value: on,
-        onChanged: (_) => AutoSpell.toggle(),
-      ),
-    ),
-    title: l10n.spellAutoTitle,
-    keywords: '${l10n.spellAutoSubtitle} yazim duzelt otomatik',
+    const SpellModePicker(key: ValueKey('settings-spell-mode')),
+    title: l10n.spellModeTitle,
+    keywords:
+        '${l10n.spellModeInfo} ${l10n.spellAutoTitle} yazim denetimi duzelt otomatik alti cizili',
     group: l10n.settingsSpellSection,
   ),
   _SettingRow(

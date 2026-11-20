@@ -48,6 +48,7 @@ import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note_heavy.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/presentation/dashboard_screen.dart';
+import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
 import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
@@ -66,6 +67,7 @@ import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/pdf_page_box.dart';
+import 'package:notlar/features/notes/presentation/editor/spell_underline.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 
@@ -600,6 +602,42 @@ void main() {
     expect(repo.lastSaved!.items[7].text, 'madde 7${'a' * 20}');
     _expectBudget('S2', {
       'items_editor': c['ItemsEditor'] ?? 0,
+      'satir': c[_row] ?? 0,
+    });
+    await endEditor(tester);
+  });
+
+  // S57 (yazım v3 Y-4): altı çizili denetim AÇIKKEN maddeye 5 tuş. Çizgi
+  // `AttachmentTagChips`in boyama katmanında, denetim duraklamada: kök ve
+  // satır kurulmaz; altı çizili kelime yazım boyunca işaretli kalır.
+  testWidgets('S57: denetim açıkken 5 tuş (30 maddeli liste)', (tester) async {
+    final repo = CountingNotesRepository();
+    final note = Note(
+      id: 'n',
+      type: NoteType.checklist,
+      title: 'Liste',
+      items: [
+        for (var i = 0; i < 30; i++)
+          NoteItem(id: 'i$i', text: i == 7 ? 'kalwm 7' : 'madde $i'),
+      ],
+    );
+    await pumpEditor(tester, note, repo: repo);
+    AutoSpell.mode.value = SpellMode.show;
+    await _settleGrowth(tester);
+    final field = tester
+        .widget<TextField>(find.widgetWithText(TextField, 'kalwm 7'))
+        .controller!;
+    await tester.tap(find.text('kalwm 7'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(SpellMarks.of(field)!.marks.map((k) => k.word), ['kalwm']);
+    final c = await _count(() async {
+      await _type(tester, 'kalwm 7', n: 5);
+      await tester.pump(const Duration(seconds: 3));
+    });
+    expect(repo.lastSaved!.items[7].text, 'kalwm 7${'a' * 5}');
+    expect(SpellMarks.of(field)!.marks.map((k) => k.word), ['kalwm']);
+    _expectBudget('S57', {
+      'kok_kurulum': c['NoteEditorScreen'] ?? 0,
       'satir': c[_row] ?? 0,
     });
     await endEditor(tester);

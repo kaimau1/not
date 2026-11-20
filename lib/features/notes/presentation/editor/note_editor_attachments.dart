@@ -486,6 +486,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
 
   /// Gövdenin seçim menüsü (bkz. [_selectionMenu]).
   Widget _bodyContextMenu(BuildContext menuContext, EditableTextState state) =>
+      spellContextMenu(menuContext, state) ??
       _selectionMenu(
         state,
         _bodyController,

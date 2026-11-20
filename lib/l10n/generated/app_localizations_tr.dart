@@ -8217,6 +8217,33 @@ class AppLocalizationsTr extends AppLocalizations {
   String get spellForgotten => 'Öğrenilenler silindi';
 
   @override
+  String get spellModeTitle => 'Yazım denetimi';
+
+  @override
+  String get spellModeInfo =>
+      'Yalnız göster: olası yanlışların altı çizilir, dokununca öneriler çıkar; hiçbir şey kendiliğinden değişmez. Otomatik düzelt: ayrıca emin olunca düzeltir.';
+
+  @override
+  String get spellModeOff => 'Kapalı';
+
+  @override
+  String get spellModeShow => 'Yalnız göster';
+
+  @override
+  String get spellModeAuto => 'Otomatik düzelt';
+
+  @override
+  String get spellAddToDictionary => 'Sözlüğe ekle';
+
+  @override
+  String spellAlwaysFix(String word) {
+    return 'Hep böyle düzelt: $word';
+  }
+
+  @override
+  String get spellKeepInNote => 'Bu notta dokunma';
+
+  @override
   String get lineTaskRetime => 'Zamanı değiştir';
 
   @override

@@ -8234,6 +8234,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get spellForgotten => 'Learned corrections removed';
 
   @override
+  String get spellModeTitle => 'Spell check';
+
+  @override
+  String get spellModeInfo =>
+      'Show only: likely mistakes are underlined, tap for suggestions; nothing changes by itself. Auto-correct: also fixes sure mistakes.';
+
+  @override
+  String get spellModeOff => 'Off';
+
+  @override
+  String get spellModeShow => 'Show only';
+
+  @override
+  String get spellModeAuto => 'Auto-correct';
+
+  @override
+  String get spellAddToDictionary => 'Add to dictionary';
+
+  @override
+  String spellAlwaysFix(String word) {
+    return 'Always fix: $word';
+  }
+
+  @override
+  String get spellKeepInNote => 'Ignore in this note';
+
+  @override
   String get lineTaskRetime => 'Change time';
 
   @override

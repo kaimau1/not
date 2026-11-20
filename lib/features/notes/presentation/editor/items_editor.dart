@@ -27,6 +27,7 @@ import '../../domain/note_share_text.dart';
 import '../item_divider_style.dart';
 import 'format_menu.dart';
 import 'note_package.dart';
+import 'spell_underline.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';

@@ -131,6 +131,10 @@ Map<String, Object> _globals() => {
   // ignore: invalid_use_of_protected_member
   'AutoSpell.enabled': AutoSpell.enabled.hasListeners,
   // ignore: invalid_use_of_protected_member
+  'AutoSpell.mode': AutoSpell.mode.hasListeners,
+  // ignore: invalid_use_of_protected_member
+  'AutoSpell.revision': AutoSpell.revision.hasListeners,
+  // ignore: invalid_use_of_protected_member
   'autoStylus': InkToolMemory.autoStylusListenable.hasListeners,
   'globalRoutes': GestureBinding.instance.pointerRouter.debugGlobalRouteCount,
 };

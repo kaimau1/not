@@ -30,10 +30,26 @@ import 'text_wrap.dart';
 ///   kez görülünce uygulanır).
 ///
 /// Editör kasma kuralları: kök `setState` yok; yalnız denetleyiciye yazar.
+///
+/// **Y-4 üç kip** ([mode]): Kapalı / Yalnız göster (altı çizili denetim,
+/// `spell_underline.dart`; hiçbir şeyi değiştirmez) / Otomatik düzelt
+/// (göster + düzelt). KARAR (kullanıcı, 2026-11-17): varsayılan "Yalnız
+/// göster"; eski otomatik düzelt anahtarı açık olan "Otomatik"te kalır.
+enum SpellMode { off, show, auto }
+
 class AutoSpell {
   AutoSpell._();
 
+  /// Otomatik düzelt açık mı (= [mode] otomatik). Eski dinleyiciler için.
   static final enabled = ValueNotifier<bool>(false);
+
+  /// Yükleme bitene dek kapalı: boş hafızayla çizgi çekilmesin.
+  static final mode = ValueNotifier<SpellMode>(SpellMode.off);
+
+  /// Hafıza ya da "bu notta dokunma" değişti: altı çizili denetimin
+  /// önbellekleri boşalır, alanlar yeniden denetlenir.
+  static final revision = ValueNotifier<int>(0);
+  static void _bump() => revision.value++;
 
   /// Öğrenme açık mı (ayrı anahtar; varsayılan açık).
   static final learning = ValueNotifier<bool>(true);
@@ -42,6 +58,7 @@ class AutoSpell {
   /// yok.
   static final rulesOnly = ValueNotifier<bool>(false);
   static const _key = 'auto_spell_on';
+  static const _modeKey = 'spell_mode';
   static const _learnKey = 'auto_spell_learn';
   static const _rulesKey = 'auto_spell_rules_only';
   static const _memoryPrefV1 = 'spell_memory_v1';
@@ -58,13 +75,27 @@ class AutoSpell {
     _loaded = true;
     try {
       final p = await SharedPreferences.getInstance();
-      enabled.value = p.getBool(_key) ?? false;
+      final m = savedMode(p.getInt(_modeKey), p.getBool(_key));
+      enabled.value = m == SpellMode.auto;
       learning.value = p.getBool(_learnKey) ?? true;
       rulesOnly.value = p.getBool(_rulesKey) ?? false;
-      memory = SpellMemory.decode(await _readMemory(p));
-      if (memory.fromV1) await _migrate();
+      try {
+        memory = SpellMemory.decode(await _readMemory(p));
+        if (memory.fromV1) await _migrate();
+      } catch (_) {}
+      mode.value = m;
     } catch (_) {}
   }
+
+  /// Kayıtlı kip; yoksa (Y-4 öncesi kurulum) eski otomatik düzelt anahtarı
+  /// açıksa otomatik, değilse "Yalnız göster" (KARAR 2026-11-17).
+  @visibleForTesting
+  static SpellMode savedMode(int? mode, bool? oldAuto) =>
+      mode != null && mode >= 0 && mode < SpellMode.values.length
+      ? SpellMode.values[mode]
+      : oldAuto ?? false
+      ? SpellMode.auto
+      : SpellMode.show;
 
   static Future<String?> _readMemory(SharedPreferences p) async {
     final base = appSupportPath;
@@ -117,13 +148,26 @@ class AutoSpell {
         .catchError((_) => false),
   );
 
-  static void toggle() {
-    enabled.value = !enabled.value;
-    // Kapalıyken değişiklik izlenmedi: izleme baştan.
-    _words.clear();
-    _undo = null;
-    _prev = _c?.logicalText ?? '';
-    _setPref(_key, enabled.value);
+  /// Hızlı satırdaki düğme: otomatik düzelt ↔ yalnız göster.
+  static void toggle() =>
+      setMode(enabled.value ? SpellMode.show : SpellMode.auto);
+
+  static void setMode(SpellMode m) {
+    mode.value = m;
+    final auto = m == SpellMode.auto;
+    if (auto != enabled.value) {
+      enabled.value = auto;
+      // Kapalıyken değişiklik izlenmedi: izleme baştan.
+      _words.clear();
+      _undo = null;
+      _prev = _c?.logicalText ?? '';
+    }
+    _setPref(_key, auto);
+    unawaited(
+      SharedPreferences.getInstance()
+          .then((p) => p.setInt(_modeKey, m.index))
+          .catchError((_) => false),
+    );
   }
 
   static void setLearning(bool on) {
@@ -137,23 +181,54 @@ class AutoSpell {
   }
 
   /// Ayarlar ekranındaki elle değişiklikten sonra kaydet.
-  static void changed() => _scheduleSave();
+  static void changed() {
+    _scheduleSave();
+    _bump();
+  }
 
   /// Öğrenilenleri siler.
   static void forget() {
     memory = SpellMemory()..seed(memory.seeded);
     unawaited(_save());
+    _bump();
   }
+
+  // ---- Y-4 altı çizili denetimin menüsü ----------------------------------
+
+  /// "Sözlüğe ekle": kelime hiç düzeltilmez, altı çizilmez.
+  static void addToDictionary(String word) {
+    memory.keep.add(trLower(word));
+    changed();
+  }
+
+  /// "Hep böyle düzelt": öğretilen düzeltme (onaylı, ilk görüşte uygulanır).
+  static void alwaysFix(String word, String to) {
+    memory.learnFix(word, to, confirmed: true);
+    changed();
+  }
+
+  /// "Bu notta dokunma": geri alınan otomatik düzeltmeyle aynı yol.
+  static void keepInNote(String word, String? to) {
+    if (to != null) return _reject(word, to);
+    _noteKeep.add(trLower(word));
+    _bump();
+  }
+
+  /// Bu notta dokunulmayacak kelimeler (küçük harf).
+  static Set<String> get noteKeep => _noteKeep;
 
   static bool _seeding = false;
 
   /// Notların metninden kişisel sözlük kurar (arka planda, oturumda bir kez).
   static Future<void> seedFrom(List<String> Function() texts) async {
-    if (_seeding || memory.seeded.isNotEmpty || !enabled.value) return;
+    if (_seeding || memory.seeded.isNotEmpty || mode.value == SpellMode.off) {
+      return;
+    }
     _seeding = true;
     try {
       final counts = await compute(seedCounts, texts());
       memory.seed(counts);
+      _bump();
     } catch (_) {
       _seeding = false;
     }
@@ -163,7 +238,11 @@ class AutoSpell {
   /// [beginNote] boşaltır.
   static final Set<String> _noteKeep = {};
 
-  static void beginNote() => _noteKeep.clear();
+  static void beginNote() {
+    if (_noteKeep.isEmpty) return;
+    _noteKeep.clear();
+    _bump();
+  }
 
   static WrapTextController? _c;
   static VoidCallback? _commit;
@@ -395,6 +474,7 @@ class AutoSpell {
   /// notta bir daha düzeltilmez.
   static void _reject(String from, String to) {
     _noteKeep.add(trLower(from));
+    _bump();
     if (!learning.value) return;
     memory.rejectPair(from, to);
     _scheduleSave();

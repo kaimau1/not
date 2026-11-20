@@ -125,7 +125,7 @@ import '../../notes/presentation/viewers/ink_tools.dart' show InkToolMemory;
 import '../../notes/presentation/viewers/ink_layer.dart' show InkFingerToolPicker;
 import '../../notes/presentation/editor/auto_spell.dart' show AutoSpell;
 import '../../notes/presentation/editor/spell_settings_sheet.dart'
-    show showSpellSettings;
+    show SpellModePicker, showSpellSettings;
 import '../../calendar/data/holiday_source.dart' show showHolidaysProvider;
 import '../../../app/split_shell.dart' show listPaneCollapsedProvider;
 
