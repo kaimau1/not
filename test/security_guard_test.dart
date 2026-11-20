@@ -51,8 +51,15 @@ void main() {
         '.QuickActionsWidgetProvider',
         '.TodayWidgetProvider',
         '.QuickNoteWidgetProvider',
+        '.QuickAddWidgetProvider',
+        '.QuickAddBarWidgetProvider',
         // AppFunctions: BIND_APP_FUNCTION_SERVICE (yalnız sistem bağlanır).
         '.AjanServisi',
+        // HE-3 (P84): paylaşım/metin seçimi "Nota ekle" — metni yalnız hızlı
+        // ekle alanına YAZAR, kendiliğinden kaydetmez (kullanıcı Ekle'ye basar).
+        '.NotaEkle',
+        // Hızlı ayar karosu: BIND_QUICK_SETTINGS_TILE (yalnız sistem bağlanır).
+        '.HizliEkleKarosu',
       });
       // Kişisel köprü: imza|knownSigner izniyle korunur.
       expect(_disaAcik('android/app/src/kisisel/AndroidManifest.xml'), {
@@ -63,6 +70,10 @@ void main() {
     test('açık servis ve köprü alıcısı izinle korunur; yedekleme kapalı', () {
       final main = _oku('android/app/src/main/AndroidManifest.xml');
       expect(main, contains('android.permission.BIND_APP_FUNCTION_SERVICE'));
+      expect(
+        main,
+        contains('android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"'),
+      );
       expect(main, contains('android:allowBackup="false"'));
       final kisisel = _oku('android/app/src/kisisel/AndroidManifest.xml');
       expect(

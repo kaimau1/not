@@ -235,9 +235,48 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="application/zip"/>
             </intent-filter>
+            <!-- Başlatıcı kısayolları. Kaynak `src/main/kisayol/app_shortcuts.xml`
+                 ŞABLONUNDAN çeşidin kimliğiyle üretilir (build.gradle.kts
+                 `KisayolUret`): sabit paket adı ölçüm/Play derlemesinde yanlış
+                 uygulamayı açıyordu. -->
             <meta-data android:name="android.app.shortcuts"
                 android:resource="@xml/app_shortcuts" />
         </activity>
+        <!-- HIZLI EKLE'YE DIŞARIDAN GİRİŞ (HE-3, PLAN §1.4/3; HizliEkle.kt):
+             paylaşım levhasında ve metin seçim menüsünde "Nota ekle". Arayüzsüz
+             aktarıcı: metni notlar://ekle?metin=… ile MainActivity'ye verir,
+             levha metinle açılır, kendiliğinden EKLENMEZ. Ana "Notlar" paylaşım
+             hedefi (yeni not) yukarıda olduğu gibi. -->
+        <activity
+            android:name=".NotaEkle"
+            android:exported="true"
+            android:label="@string/nota_ekle"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="text/plain"/>
+            </intent-filter>
+        </activity>
+        <!-- Hızlı ayar karosu "Hızlı ekle" (HE-3): dokununca levha açılır. -->
+        <service
+            android:name=".HizliEkleKarosu"
+            android:exported="true"
+            android:icon="@drawable/ic_hizli_ekle"
+            android:label="@string/hizli_ekle"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE"/>
+            </intent-filter>
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -326,6 +365,26 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/today_widget_info" />
+        </receiver>
+
+        <!-- Hızlı ekle widget'ları (HE-3): 1×1 "+" ve 4×1 çubuk, notlar://ekle -->
+        <receiver android:name=".QuickAddWidgetProvider"
+            android:exported="true"
+            android:label="@string/hizli_ekle">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/quick_add_widget_info" />
+        </receiver>
+        <receiver android:name=".QuickAddBarWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_quickadd_bar_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/quick_add_bar_widget_info" />
         </receiver>
 
         <!-- Hızlı Not widget'ı: tek dokunuşla yeni metin notu -->

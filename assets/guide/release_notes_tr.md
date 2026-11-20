@@ -2,6 +2,12 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 20 Kasım 2026 {#2026-11-20}
+- **Hızlı ekle neyin nereye gideceğini önceden gösterir:** yazarken alttaki satırda "→ Alışveriş listesi · süt, ekmek (2 madde)" gibi hangi nota neyin gireceğini Ekle'ye basmadan görürsün; listede zaten olanlar sayılmaz. Yapay zekâ, açılınca klavye ve açılınca dinle seçenekleri sağ üstteki ⚙ menüsünde. Yapay zekâ hangi not olduğunu düşünürken **Ben seçeyim** ile beklemeden kendin seçersin.
+- **Hızlı ekle'de not ara:** hedef notlar şeridinin başındaki **Not bul** ile bütün listelerin ve notların arasından arayıp seçebilirsin; şerit artık yalnız ilk 12 notu göstermiyor.
+- **Uygulamayı açmadan hızlı ekle:** uygulama simgesine basılı tutunca **Hızlı ekle** kısayolu; bildirim panelinin hızlı ayarlarına eklenebilen **Hızlı ekle** karosu; başka bir uygulamada metni seçince ya da paylaşınca **Nota ekle**. Hepsi hızlı ekle levhasını açar; seçtiğin ya da paylaştığın metin yazılı gelir, sen Ekle'ye basınca eklenir.
+- **Hızlı ekle ana ekran aracı:** ana ekrana 1×1 "+" düğmesi ya da 4×1 "Hızlı ekle" çubuğu koyabilirsin; dokununca hızlı ekle açılır.
+
 ## 19 Kasım 2026 {#2026-11-19}
 - **Kalem ↔ silgi düğmesi artık yerinde durur:** her çizgide sağa, aşağıya, yukarıya sıçramıyor; yazının sol üstünde, yakınında belirir ve sen aynı yerde yazmaya devam ettikçe kıpırdamaz. Yalnız uzağa yazınca ya da düğmenin üstüne yazınca yeni yazının yanına geçer.
 - **Hızlı ekle daha akıcı:** levha açılırken mikrofon, levha ve klavye yerleştikten sonra açılır; klavyeyle yazmaya başlarsan dinleme kendiliğinden durur ve yazdığın silinmez; yazarken hedef notlar şeridi her harfte yeniden çizilmiyor. Şeridin başında her zaman **Yeni not** var: yazdığını hiçbir nota eklemeden yeni not yap.

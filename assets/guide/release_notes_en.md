@@ -2,6 +2,12 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 20 November 2026 {#2026-11-20}
+- **Quick add shows where things will go before you add:** while you type, the line below shows which note gets what, e.g. "→ Shopping list · milk, bread (2 new)", before you tap Add; items already on the list are not counted. The AI, keyboard-on-open and listen-on-open options are in the ⚙ menu at the top right. While the AI is working out which note, tap **I'll pick** to choose yourself without waiting.
+- **Find a note in quick add:** **Find note** at the start of the target strip searches all your lists and notes; the strip no longer stops at the first 12 notes.
+- **Quick add without opening the app:** long-press the app icon for the **Quick add** shortcut; add the **Quick add** tile to your quick settings; select or share text in another app and choose **Nota ekle**. All of them open quick add with the selected or shared text filled in; it is added only when you tap Add.
+- **Quick add home screen widgets:** put a 1×1 "+" button or a 4×1 "Quick add" bar on your home screen; tapping it opens quick add.
+
 ## 19 November 2026 {#2026-11-19}
 - **The pen ↔ eraser button stays put:** it no longer jumps right, down or up with every stroke; it appears near the top left of your writing and stays there while you keep writing nearby. It only moves when you write far away or on top of it.
 - **Smoother quick add:** the microphone now starts after the sheet and keyboard have settled; typing stops listening without erasing what you typed; the target-note strip is no longer redrawn on every keystroke. The strip always starts with **New note**, to save what you wrote as a new note instead of adding it to one.

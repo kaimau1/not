@@ -1,5 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- ŞABLON (P84): bu dosya kaynak DEĞİL. `targetPackage` kaynak başvurusu
+         almaz (sistem kısayol intent'ini kendi kaynaklarıyla çözer), sabit ad ise
+         ölçüm (`.olcum`) ve Play derlemesinde yanlış uygulamayı açıyordu.
+         build.gradle.kts `KisayolUret` her çeşit için `${applicationId}`yi gerçek
+         kimlikle değiştirip res/xml/app_shortcuts.xml olarak üretir. -->
+    <!-- HE-3 (PLAN §1.4/3): HIZLI EKLE levhası, uygulamayı açmadan ekle.
+         router.dart › notlar://ekle. En başta: başlatıcı ilk 4'ü gösterir. -->
+    <shortcut
+        android:shortcutId="quick_add"
+        android:enabled="true"
+        android:icon="@android:drawable/ic_input_add"
+        android:shortcutShortLabel="@string/hizli_ekle"
+        android:shortcutLongLabel="@string/hizli_ekle_uzun">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="notlar://ekle"
+            android:targetPackage="${applicationId}"
+            android:targetClass="dev.kaimau.notlar.MainActivity" />
+    </shortcut>
     <shortcut
         android:shortcutId="voice_note"
         android:enabled="true"
@@ -9,7 +28,7 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="notlar://voice"
-            android:targetPackage="dev.kaimau.notlar"
+            android:targetPackage="${applicationId}"
             android:targetClass="dev.kaimau.notlar.MainActivity" />
     </shortcut>
     <!-- router.dart › notlar://new?type=… (Hızlı Eylemler widget'ıyla aynı yol) -->
@@ -21,7 +40,7 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="notlar://new?type=text"
-            android:targetPackage="dev.kaimau.notlar"
+            android:targetPackage="${applicationId}"
             android:targetClass="dev.kaimau.notlar.MainActivity" />
     </shortcut>
     <!-- router.dart › notlar://new?type=… (Hızlı Eylemler widget'ıyla aynı yol) -->
@@ -33,7 +52,7 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="notlar://new?type=checklist"
-            android:targetPackage="dev.kaimau.notlar"
+            android:targetPackage="${applicationId}"
             android:targetClass="dev.kaimau.notlar.MainActivity" />
     </shortcut>
     <!-- router.dart › notlar://new?type=draw: boş not "Sayfaya yaz (kalem)" kipinde -->
@@ -45,7 +64,7 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="notlar://new?type=draw"
-            android:targetPackage="dev.kaimau.notlar"
+            android:targetPackage="${applicationId}"
             android:targetClass="dev.kaimau.notlar.MainActivity" />
     </shortcut>
 </shortcuts>

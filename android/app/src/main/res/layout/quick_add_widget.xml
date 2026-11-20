@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hızlı ekle widget'ı 1×1 (HE-3): yalnız "+" düğmesi. Dokununca hızlı ekle
+     levhası açılır (notlar://ekle). Sesli Not widget'ının kalıbı, not zemini. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/quick_add_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_note_background">
+
+    <ImageView
+        android:id="@+id/quick_add_icon"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:padding="14dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_hizli_ekle"
+        android:tint="@color/widget_on_note"
+        android:contentDescription="@string/hizli_ekle" />
+</FrameLayout>

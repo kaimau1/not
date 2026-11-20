@@ -351,6 +351,16 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
   final appLinks = AppLinks();
 
   void handle(Uri uri) {
+    // notlar://ekle?metin=… — HIZLI EKLE levhası (HE-3): kısayol, karo,
+    // ana ekran aracı, paylaşım/metin seçimi "Nota ekle". Dashboard
+    // quickDropRequestProvider'ı dinleyip levhayı açar.
+    if (uri.host == 'ekle') {
+      router.go('/');
+      ref
+          .read(quickDropRequestProvider.notifier)
+          .request(uri.queryParameters['metin']?.trim() ?? '');
+      return;
+    }
     if (uri.host == 'voice' || uri.path.contains('voice')) {
       // Ana sayfadaki ORTAK sesli not levhası açılır — mikrofon düğmesi,
       // hızlı ekle ve widget aynı yolu kullanır. Dashboard
