@@ -74,10 +74,26 @@ test("Pro alınca katman pro; ömür boyu varsa kalır, Pro bitince döner", () 
   assert.ok(lapsed.proUntil.getTime() <= now.getTime());
 });
 
-test("iade edilen ömür boyu kalkar", () => {
-  const e = u.mergeEntitlement({ tier: "lifetime" }, { lifetime: false }, now);
-  assert.strictEqual(e.tier, "free");
-  assert.strictEqual(e.lifetimeOwned, false);
+test("iade edilen ömür boyu kalkar; başka belirtecin iptali dokunmaz", () => {
+  const owned = u.mergeEntitlement(
+    null,
+    { lifetime: { tokenKey: "L1", owned: true } },
+    now,
+  );
+  assert.strictEqual(owned.tier, "lifetime");
+  const other = u.mergeEntitlement(
+    owned,
+    { lifetime: { tokenKey: "L2", owned: false } },
+    now,
+  );
+  assert.strictEqual(other.lifetimeOwned, true);
+  const refunded = u.mergeEntitlement(
+    owned,
+    { lifetime: { tokenKey: "L1", owned: false } },
+    now,
+  );
+  assert.strictEqual(refunded.tier, "free");
+  assert.strictEqual(refunded.lifetimeOwned, false);
 });
 
 test("plan değişimi: eski belirtecin bitişi yeni aboneliği ezmez", () => {

@@ -137,7 +137,9 @@ async function syncPurchase(uid, productId, token, bind = false) {
   // Bekleyen ödeme hakkı ne verir ne alır (onaylanınca RTDN gelir).
   const result = p.pending
     ? await applyChange(uid, {})
-    : await applyChange(uid, { lifetime: p.owned });
+    : await applyChange(uid, {
+        lifetime: { tokenKey: u.tokenKey(token), owned: p.owned },
+      });
   if (p.needsAck) {
     await play(
       `products/${u.LIFETIME_PRODUCT}/tokens/${enc(token)}:acknowledge`,
@@ -214,7 +216,7 @@ exports.playRtdn = onMessagePublished(
           uid,
           msg.subscription
             ? { sub: { tokenKey: u.tokenKey(msg.token), paidUntil: new Date() } }
-            : { lifetime: false },
+            : { lifetime: { tokenKey: u.tokenKey(msg.token), owned: false } },
         );
         return;
       }

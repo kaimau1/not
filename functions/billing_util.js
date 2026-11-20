@@ -98,7 +98,7 @@ const later = (a, b) => {
  *
  * @param {object|null} existing  Firestore verisi (zamanlar Date'e çevrilmiş)
  * @param {{sub?: {tokenKey: string, paidUntil: Date|null},
- *          lifetime?: boolean}} change
+ *          lifetime?: {tokenKey: string, owned: boolean}}} change
  * @param {Date} now
  *
  * Kurallar (PLAN §1.5):
@@ -108,6 +108,8 @@ const later = (a, b) => {
  *   belirtecin "bitti" bildirimi yenisinin süresini EZMEZ.
  * - `grantUntil` (elle: geliştirici hesabı) satın almayla kısalmaz:
  *   `proUntil` = en geç(ödenmiş süre, elle verilen süre).
+ * - Ömür boyunu yalnız ONU VEREN belirtecin iptali/iadesi kaldırır (başka
+ *   Play hesabıyla alınmış ikinci belirtecin iptali dokunmaz).
  * - `trialEndsAt` (hesap denemesi taslağı) dokunulmaz.
  */
 function mergeEntitlement(existing, change, now) {
@@ -123,10 +125,17 @@ function mergeEntitlement(existing, change, now) {
       paidUntil = change.sub.paidUntil || null;
     }
   }
-  const lifetimeOwned =
-    typeof change.lifetime === "boolean"
-      ? change.lifetime
-      : prev.lifetimeOwned === true || prev.tier === "lifetime";
+  let lifetimeOwned = prev.lifetimeOwned === true || prev.tier === "lifetime";
+  let lifetimeTokenKey = prev.lifetimeTokenKey || null;
+  if (change.lifetime) {
+    const { tokenKey, owned } = change.lifetime;
+    if (owned) {
+      lifetimeOwned = true;
+      lifetimeTokenKey = tokenKey;
+    } else if (!lifetimeTokenKey || lifetimeTokenKey === tokenKey) {
+      lifetimeOwned = false;
+    }
+  }
   const grantUntil = prev.grantUntil instanceof Date ? prev.grantUntil : null;
   const proUntil = later(paidUntil, grantUntil);
   return {
@@ -136,6 +145,7 @@ function mergeEntitlement(existing, change, now) {
     paidUntil,
     subTokenKey,
     lifetimeOwned,
+    lifetimeTokenKey,
     source: "play",
   };
 }
