@@ -9001,4 +9001,23 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get menuHiddenGroup => 'Gizlenenler';
+
+  @override
+  String get quickDropSettings => 'Hızlı ekle ayarları';
+
+  @override
+  String quickDropPreviewText(String title, String text) {
+    return '→ $title · $text';
+  }
+
+  @override
+  String quickDropPreviewItems(String title, String items, int count) {
+    return '→ $title · $items ($count madde)';
+  }
+
+  @override
+  String get quickDropPickMyself => 'Ben seçeyim';
+
+  @override
+  String get quickDropFindNote => 'Not bul';
 }

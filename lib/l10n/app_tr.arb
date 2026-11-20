@@ -4094,5 +4094,12 @@
   "barMoreToMenu": "Menüye al",
   "menuEditInlineHint": "Basılı tutup sürükle: sırala · ⊖ gizle · ☆ hızlı satır (en çok {count})",
   "@menuEditInlineHint": {"placeholders": {"count": {"type": "int"}}},
-  "menuHiddenGroup": "Gizlenenler"
+  "menuHiddenGroup": "Gizlenenler",
+  "quickDropSettings": "Hızlı ekle ayarları",
+  "quickDropPreviewText": "→ {title} · {text}",
+  "@quickDropPreviewText": {"placeholders": {"title": {"type": "String"}, "text": {"type": "String"}}},
+  "quickDropPreviewItems": "→ {title} · {items} ({count} madde)",
+  "@quickDropPreviewItems": {"placeholders": {"title": {"type": "String"}, "items": {"type": "String"}, "count": {"type": "int"}}},
+  "quickDropPickMyself": "Ben seçeyim",
+  "quickDropFindNote": "Not bul"
 }
