@@ -2,6 +2,13 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 20 Kasım 2026 {#2026-11-20}
+- **Listeler "süt al", "süt lazım", "deterjan kalmadı"yı anlar:** akıllı listede ve alışveriş listesinde "al", "lazım", "bitti", "kalmadı" gibi sözler artık ayrı madde olmuyor; "süt x2" ya da "2x süt" iki adet süt olur.
+- **Sesle "bitti" daha akıllı:** akıllı listede "süt bitti, ekmek…" diye devam edersen liste kapanmaz, "bitti" madde de olmaz. Liste, kısa bir duraklamadan sonra "bitti" dediğinde ya da "bitti" deyip sustuğunda biter; "bu kadar" ve "liste bitti" her zaman hemen bitirir.
+- **Hızlı ekle neyin nereye gideceğini gösterir:** yazarken alanın altında "→ “Market listesi”: Domates, Süt" gibi bir satır çıkar; Ekle'ye basmadan maddeleri ve hedef notu görürsün.
+- **Hızlı ekle bavul ve market listelerini daha iyi tanır:** bavul listesine "şort mayo şarj aleti" üç ayrı madde olarak girer; reyon sırasındaki listede yeni madde sona değil kendi reyonuna yerleşir (elma meyvelerin yanına). "Pazartesi işleri" gibi listeler artık yanlışlıkla alışveriş listesi sayılmıyor.
+- **Hızlı ekle'de yeni not açık klasöre kaydedilir ve geri alınabilir;** yapay zekâ hangi not olduğunu düşünürken yazmaya devam edersen yazdığın artık kaybolmuyor.
+
 ## 19 Kasım 2026 {#2026-11-19}
 - **Kalem ↔ silgi düğmesi artık yerinde durur:** her çizgide sağa, aşağıya, yukarıya sıçramıyor; yazının sol üstünde, yakınında belirir ve sen aynı yerde yazmaya devam ettikçe kıpırdamaz. Yalnız uzağa yazınca ya da düğmenin üstüne yazınca yeni yazının yanına geçer.
 - **Hızlı ekle daha akıcı:** levha açılırken mikrofon, levha ve klavye yerleştikten sonra açılır; klavyeyle yazmaya başlarsan dinleme kendiliğinden durur ve yazdığın silinmez; yazarken hedef notlar şeridi her harfte yeniden çizilmiyor. Şeridin başında her zaman **Yeni not** var: yazdığını hiçbir nota eklemeden yeni not yap.

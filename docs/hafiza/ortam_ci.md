@@ -92,6 +92,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   (`setSecure` dahil).
 
 ## Test tuzakları
+- **Sahte tanıyıcı akışı (`setMockStreamHandler` + `dev.kaimau.notlar/speech`) test GÖVDESİNDE kurulmalı** (2026-11-20): `setUp`'ta kurulunca dinleme açılıyor (`onListen` çağrılıyor) ama `sink.success` olayları oturuma ULAŞMIYOR. Olay bir sonraki karede işlenir: `success` sonrası iki `pump()`. Örnek `quick_entry_done_word_test`, `dictation_list_item_test`.
 - Test dosyasına TARİH adı verilmez — özellik adı. Veri katmanı
   `fake_cloud_firestore`; fake, dizideki `serverTimestamp`'i çözmez.
 - `Picture.toImage`/PNG/`rootBundle` sahte zamanda ilerlemez →

@@ -2,6 +2,13 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 20 November 2026 {#2026-11-20}
+- **Lists understand "buy milk" and "need milk":** in smart and shopping lists words like "buy", "need" or "finished" (and Turkish "al", "lazım", "bitti", "kalmadı") no longer become separate items; "milk x2" or "2x milk" means two milks.
+- **Smarter "done" by voice:** in a smart list, saying "milk finished, bread…" and carrying on no longer closes the list or adds "finished" as an item. The list ends when you say "done" after a short pause or stop talking after it; "that's all" always ends it right away.
+- **Quick add shows where things will go:** while you type, a line such as "→ “Shopping list”: Tomatoes, Milk" appears under the field, so you see the items and the target note before tapping Add.
+- **Quick add understands packing and shopping lists better:** "shorts swimsuit charger" goes into a packing list as three items; in a list kept in aisle order a new item goes to its own aisle instead of the end. Lists like "Monday tasks" are no longer mistaken for shopping lists.
+- **A new note from quick add is saved in the open folder and can be undone;** if you keep typing while the AI is working out the target note, what you typed is no longer lost.
+
 ## 19 November 2026 {#2026-11-19}
 - **The pen ↔ eraser button stays put:** it no longer jumps right, down or up with every stroke; it appears near the top left of your writing and stays there while you keep writing nearby. It only moves when you write far away or on top of it.
 - **Smoother quick add:** the microphone now starts after the sheet and keyboard have settled; typing stops listening without erasing what you typed; the target-note strip is no longer redrawn on every keystroke. The strip always starts with **New note**, to save what you wrote as a new note instead of adding it to one.

@@ -3,7 +3,8 @@
 **Bu dosya tek plandır.** Ayrıntı kaynakları (yalnız okuma, iş buradan seçilir):
 `docs/rapor_2026-11-16_beyin_firtinasi.md` (16K), `docs/rapor_2026-11-17_senkron_lite_pro_yazim.md`
 (17K), `docs/perf/kasma_envanteri.md` (K-xx), `docs/rapor_2026-11-15.md` (15K), keşif turu
-`docs/kesif_turu_2026-11-14.md` (KT-xx; dal `oto/P61-kesif-turu`, bu planla main'e alındı).
+`docs/kesif_turu_2026-11-14.md` (KT-xx; dal `oto/P61-kesif-turu`, bu planla main'e alındı),
+hızlı ekle + akıllı liste fikir havuzu `docs/rapor_2026-11-20_hizli_ekle_akilli_liste.md` (20K).
 OTOMASYON.md Kuyruğu'ndaki açık satırlar (P61, K32, K34) buraya taşındı; Kuyruk yalnız yürütme durumu tutar. Bitmiş (`[x]`) maddeler burada tutulmaz (git'te).
 Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/planlar/`.
 
@@ -85,7 +86,7 @@ hazırlığı (1.5 PL1–PL12) + Pro AI sadeleştirme (1.6 AI-S) + Lite/Pro → 
 | T1 | **[~] 2026-11-19 tablet tabanı yazıldı** (`docs/perf/tablet_taban.md`, `altin_taban_tablet.json`, A=B 17 evre aynı/iyi, RAM 4/5 durum; panel 60 Hz etkin, 120 Hz kipi + 1000/3000 not + panel kip k/c + 17 Kasım `[apk]` A/B KALAN). Cihaz ölçüm turu: panel kip k/c, 60 Hz ayrımı, RAM tabanı, ısınma, ab_hepsi kör evreleri, 1000/3000 not; 17 Kasım `[apk]`'sının A/B'si (ÖLÇÜM KAPISI bu kez yapılamadı) | K-20, K-21, K-59…K-63 | evet |
 | T2 | Not akışı yankısı: sağlayıcı sayacı senaryosu + en pahalı 3 türetilmişi dilime çevir (veri göçü yok) | K-22a, K-23 | A/B |
 | T3 | **[x] 2026-11-17 (P65)** Merriweather-Medium pakete, çalışma anı indirme kapalı, bekçi `font_runtime_fetch_test`; uçak kipinde görünüş cihazda bakılmadı. Yazı tipi çalışma anı indirmesi: doğrula, `allowRuntimeFetching=false` + kalın dosyaları pakete, bekçi | K-54 | hayır |
-| T4 | Hızlı ekle kalanı: H1 ("süt bitti" sessizlik süresiyle), ~~H3~~ [x] 2026-11-19 (belge), ~~H11~~ [x] 2026-11-19 (not yokken yeni not + her zaman en başta "Yeni not" çipi), ~~hızlı ekle bütçe senaryosu~~ [x] S56 2026-11-19 | 17K §4.1, K-64…K-69 | A/B |
+| T4 | Hızlı ekle kalanı: ~~H1~~ [x] 2026-11-20 (yalın "bitti" duraklama/ardından sessizlikle; yazıldı, cihazda eşikler doğrulanmadı — `docs/rapor_2026-11-20_hizli_ekle_akilli_liste.md`), ~~H3~~ [x] 2026-11-19 (belge), ~~H11~~ [x] 2026-11-19 (not yokken yeni not + her zaman en başta "Yeni not" çipi), ~~hızlı ekle bütçe senaryosu~~ [x] S56 2026-11-19 | 17K §4.1, K-64…K-69 | A/B |
 | T5 | **[x] 2026-11-17 (P65)** sık eklenenler türe bölündü (`smart:market`/`smart:bavul`), "Geçen seferden" türe göre, boş liste ipucu, S49 açılış bütçesi. Akıllı liste AL-1: sık kullanılanları türe böl, ipucu satırı, açılış ilk karesi bütçesi | 17K §5.2, K-41 | hayır |
 | T6 | Klavye açıkken sayfa iskeleti: 17 ekranı ölç, kötülere T2 kalıbı | K-13…K-19 | gerekirse |
 | T7 | **[~] 2026-11-17 (P65)** sürüm geçmişi, hesap makinesi, paylaşım levhası araması; **2026-11-18 (P72): kılavuz araması — sonucu değişmeyen tuşta kart kurulumu 9 → 0**; **2026-11-19 (ccr-1122edca): şablon levhası araması — tuş başına 24 kart kurulumu → 0 (kart önbelleği + anahtarlı Wrap)**; kalan liste `docs/hafiza/akicilik.md` 2026-11-17 T7 (yeni ölçülebilir aday bulunamadı). Tembel liste + build'de hesap + onChanged setState (ekran başına) | K-47, K-48, K-57, K-58 | hayır |
@@ -109,8 +110,8 @@ ucuz, ölçülmeden dokunulmadı.
 ### 1.4 Büyük fazlar (karara bağlı, sırasıyla önerim)
 1. **[~] 2026-11-17 (P67) kod + bayrak (`config/app.syncDeltaListen`, KAPALI); açmadan önce: minClient damgalı sürüme + iki cihaz testi (`docs/hafiza/veri.md` S1, KONTROL "Tablette bak").** **S1 yalnız değişeni dinle** (17K §1.3) → sonra S4 Lite ekleri Drive'a.
 2. **Yazım denetimi v3** Y-0 → Y-1 → Y-2 → Y-3 → Y-4 → Y-5 → Y-6 (17K §3.3).
-3. **Hızlı ekle** HE-2 önizleme satırı → HE-3 uygulamayı açmadan ekle → HE-4 tek giriş → HE-5 (17K §4.2).
-4. **Akıllı liste** AL-2 → AL-6 (17K §5.2).
+3. **Hızlı ekle** HE-2 önizleme satırı ([~] 2026-11-20 önizleme satırı yapıldı; kalan: ⚙ anahtarlar, "Ben seçeyim", çip araması) → HE-3 uygulamayı açmadan ekle → HE-4 tek giriş → HE-5 (17K §4.2).
+4. **Akıllı liste** AL-2 → AL-6 (17K §5.2). AL-2 [~] 2026-11-20: hızlı eklenen madde reyon sıralı listede reyonuna girer (alansız); kalan "Alışverişi bitir", reyon görünümü, miktar toplama (karar), `listKind` (karar). Fikir havuzu + öneri sırası: `docs/rapor_2026-11-20_hizli_ekle_akilli_liste.md` §3–§6.
 5. **Lite/Pro + Play yolu** (karar 1.1/1, 1.1/8 sonrası): engeller E1–E12, evreler 2–6 (16K §4, §8).
 6. Güven/büyüme: parolalı yedek + uçtan uca şifreli kilitli not, ilk 60 saniye, rızalı kullanım
    ölçümü, kolay dışa aktarma, uygulama içi hız günlüğü (17K §6).
@@ -243,6 +244,7 @@ biri altın setle ölçülerek. PL2 korumaları ve PL3 rıza/"Bildir" ile birlik
 | U22 | [x] **2026-11-19 gece 2** Hızlı ekle açıkken klavye kasması + iyileştirme: tuşta çip şeridi kurulmaz (S56), mikrofon animasyonlardan sonra, yazınca dinleme kesilir (yazılan silinmiyordu bug'ı), "Yeni not" çipi | `editor.md` | A/B (klavye) |
 | U23 | [x] **2026-11-19 gece 2** Balon düğmesi önce "Balon mu metin mi" soruyordu (kart da soruyor) → tek dokunuş | `PinnedMediaPane._addBubbleButton` | hayır |
 | U24 | [x] **2026-11-19 gece 2** Web: kullanıcının bilgisayarında seçim hâlâ tarayıcı yazı tipinde → gizli alan fareli cihazda opacity 0 (Playwright'ta üretildi/doğrulandı) | `web.md` | hayır |
+| U25 | [x] **2026-11-20** "Hızlı ekle ve akıllı liste hakkında beyin fırtınası yap, geliştir, bugları düzelt": B1–B7 + H1 düzeltildi (alışveriş sözleri madde olmuyor, x2 adet, bavul listesine bölme, başlıktan tür kökten, AI beklerken yazı ezilmesi, yeni not klasör + geri al), HE-2 önizleme satırı, AL-2 reyon yerleşimi; fikir havuzu raporda | `docs/rapor_2026-11-20_hizli_ekle_akilli_liste.md`, `editor.md` | A/B (hızlı ekle klavye, S56 aynı) |
 | KW-11 | [x] Kalem kipinde Ctrl+Z çizgiyi geri almıyor (`docs/kesif_web_2026-11-18.md`) | **Durum (P75):** üç kök neden — odak rota kapsamındayken kısayol ulaşmıyordu (odaksız `HardwareKeyboard` işleyicisi), geri alınan çizgi canlı denetleyiciye eşitlenmiyordu, çizgiler 900 ms'de birleşiyordu (her çizgi ayrı adım). `editor_pen_tablet_test` | hayır |
 
 ## 2. Önceki açık işler (P22 listesi, aynen)
