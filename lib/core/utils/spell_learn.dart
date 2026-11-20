@@ -19,6 +19,9 @@ library;
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'tr_morph.dart';
+import 'tr_roots.dart';
+
 /// Kelime Han yazısı mı (Çince: bulanık düzeltme yok).
 bool isCjk(String w) => RegExp(r'\p{Script=Han}', unicode: true).hasMatch(w);
 
@@ -70,20 +73,60 @@ class SpellMemory {
   int frequency(String w) {
     final l = trLower(w);
     var n = (words[l] ?? 0) + (seeded[l] ?? 0);
-    if (kCommonTurkish.contains(l) || kCommonEnglish.contains(l)) n += 3;
+    if (kCommonTurkish.contains(l) ||
+        kCommonEnglish.contains(l) ||
+        kTrNounRoots.contains(l) ||
+        kTrClosed.contains(l)) {
+      n += 3;
+    }
     return n;
   }
 
   /// Bilinen kelime: dokunulmaz. Yalnız yazılmış kelime üç kez görülünce
-  /// bilinir — iki kez aynı yazım hatası sözlüğe girmesin.
-  bool known(String w) => frequency(w) >= 3 || keep.contains(trLower(w));
+  /// bilinir — iki kez aynı yazım hatası sözlüğe girmesin. Y-1: kökü
+  /// bilinen, eki kurallı kelime de bilinir ("kalemlerimizden").
+  bool known(String w) {
+    final l = trLower(w);
+    return frequency(l) >= 3 || keep.contains(l) || morphKnown(l);
+  }
+
+  /// Editördeki yazım birimi (harf + kesme): özel ad + kesmede kesmeden
+  /// sonrası kurallı bir ek zinciriyse bilinir ("İstanbul'dan").
+  bool knownToken(String token) {
+    final i = token.indexOf(RegExp("['’]"));
+    if (i < 0) return known(token);
+    final tail = trLower(token.substring(i + 1));
+    return tail.isEmpty || trSuffixesOk(trLower(token.substring(0, i)), tail);
+  }
+
+  late final _morph = TrMorph(
+    // Yerleşik sık kelimeler (`kCommonTurkish`) kök SAYILMAZ: çoğu çekimli
+    // ("geldi" kök olsa "geldimi" de bilinirdi).
+    isNoun: (r) =>
+        kTrNounRoots.contains(r) || (words[r] ?? 0) + (seeded[r] ?? 0) >= 3,
+    isVerb: kTrVerbRoots.contains,
+  );
+  final Map<String, bool> _morphCache = {};
+
+  /// Ek çözücüyle bilinir mi (önbellekli; kök sözlüğü değişince boşalır).
+  bool morphKnown(String w) {
+    final l = trLower(w);
+    if (l.length < 3 || isCjk(l)) return false;
+    final hit = _morphCache[l];
+    if (hit != null) return hit;
+    if (_morphCache.length > 4000) _morphCache.clear();
+    return _morphCache[l] = _morph.parses(l);
+  }
 
   void addWord(String w, [int by = 1]) {
     final l = trLower(w);
     if (l.length < 2 || l.length > 30) return;
     final had = words.containsKey(l);
-    words[l] = (words[l] ?? 0) + by;
+    final before = words[l] ?? 0;
+    words[l] = before + by;
     if (!had) _byLength = null;
+    // Yeni kök bilindi: ek çözücünün eski "bilinmez" yanıtları bayat.
+    if (before < 3 && before + by >= 3) _morphCache.clear();
     if (words.length > maxWords) _pruneWords();
   }
 
@@ -102,6 +145,7 @@ class SpellMemory {
       ..clear()
       ..addAll(counts);
     _byLength = null;
+    _morphCache.clear();
   }
 
   /// Uzunluğu [len] olan bütün sözlük kelimeleri (bulanık arama kovası).
@@ -113,6 +157,7 @@ class SpellMemory {
         ...seeded.keys,
         ...kCommonTurkish,
         ...kCommonEnglish,
+        ...kTrNounRoots,
       };
       for (final w in all) {
         m.putIfAbsent(w.length, () => []).add(w);

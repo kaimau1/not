@@ -11,8 +11,8 @@ import 'package:notlar/core/utils/spell_learn.dart';
 ///   çevrildi; mandal yalnız ARTAR.
 /// Bellek boş (yalnız yerleşik sözlük): kişisel sözlük ölçümü kaydırmasın.
 /// Mandalı gevşetmek yasak; iyileşince yeni sayıyı buraya yaz.
-const _mandalYanlis = 17;
-const _mandalYakalama = 124;
+const _mandalYanlis = 0;
+const _mandalYakalama = 152;
 
 List<String> _lines(String path) => [
   for (final l in File(path).readAsLinesSync())
@@ -42,6 +42,15 @@ void main() {
     expect(pairs.every((p) => p.length == 3), isTrue);
   });
 
+  test('Y-1 kabul: 500 doğrunun hepsi bilinir (ek çözücü)', () {
+    final m = SpellMemory();
+    final unknown = [
+      for (final w in correct)
+        if (!m.knownToken(w)) w,
+    ];
+    expect(unknown, isEmpty);
+  });
+
   test('yanlış düzeltme oranı (mandal yalnız düşer)', () {
     final touched = <String>[];
     for (final w in correct) {
@@ -59,6 +68,41 @@ void main() {
       lessThanOrEqualTo(_mandalYanlis),
       reason: touched.join(', '),
     );
+    expect(rate, lessThan(0.5), reason: 'hedef %0,5 altı');
+  });
+
+  test('Y-1 ek çözücü aşırı kabul bekçisi', () {
+    final m = SpellMemory();
+    // Kurallı ama yazım hatası: bitişik ek, yanlış yumuşama, daralmayan -yor.
+    for (final w in [
+      'yinede',
+      'hemde',
+      'iyiki',
+      'geldimi',
+      'bittimi',
+      'arayor',
+      'icin',
+      'ekmegi',
+      'temizligi',
+      'tamma',
+      'yapıcam',
+      'kalin',
+    ]) {
+      expect(m.known(w), isFalse, reason: w);
+    }
+    for (final w in [
+      'kalemlerimizden',
+      'gidiyorduk',
+      'söyleyemedim',
+      'kitabımdaki',
+      'ağzını',
+      'rengini',
+      'hakkımızda',
+      'diyecekler',
+      'kaydedilemedi',
+    ]) {
+      expect(m.known(w), isTrue, reason: w);
+    }
   });
 
   test('yakalama oranı (mandal yalnız artar)', () {
