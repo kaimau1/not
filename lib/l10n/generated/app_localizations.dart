@@ -16009,6 +16009,330 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Not bul'**
   String get quickDropFindNote;
+
+  /// No description provided for @aiNeedsProTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ Pro\'da'**
+  String get aiNeedsProTitle;
+
+  /// No description provided for @aiNeedsProBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahili yapay zekâ Pro aboneliğinde. Ömür boyu sürümde kendi Gemini anahtarını girip sınırsız kullanabilirsin.'**
+  String get aiNeedsProBody;
+
+  /// No description provided for @aiNeedsProSee.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pro\'ya bak'**
+  String get aiNeedsProSee;
+
+  /// No description provided for @proTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pro'**
+  String get proTitle;
+
+  /// No description provided for @proSettingsSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Katmanlar, satın alma, geri yükleme'**
+  String get proSettingsSubtitle;
+
+  /// No description provided for @proStatusFree.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu an: Ücretsiz'**
+  String get proStatusFree;
+
+  /// No description provided for @proStatusLifetime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu an: Ömür boyu'**
+  String get proStatusLifetime;
+
+  /// No description provided for @proStatusPro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu an: Pro · {date} tarihine dek'**
+  String proStatusPro(String date);
+
+  /// No description provided for @proTiersTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Katmanlar'**
+  String get proTiersTitle;
+
+  /// No description provided for @proTierFree.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücretsiz'**
+  String get proTierFree;
+
+  /// No description provided for @proTierLifetime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ömür boyu'**
+  String get proTierLifetime;
+
+  /// No description provided for @proTierPro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pro'**
+  String get proTierPro;
+
+  /// No description provided for @proRowBasics.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not, liste, kalem, PDF, hatırlatıcı, takvim; cihazda OCR, dikte, sesle okuma'**
+  String get proRowBasics;
+
+  /// No description provided for @proRowUnlimited.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sınırsız not, klasör, ek ve cihaz'**
+  String get proRowUnlimited;
+
+  /// No description provided for @proRowSync.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşitleme'**
+  String get proRowSync;
+
+  /// No description provided for @proSyncPeriodic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aralıklı'**
+  String get proSyncPeriodic;
+
+  /// No description provided for @proSyncInstant.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anında'**
+  String get proSyncInstant;
+
+  /// No description provided for @proRowAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklerin yeri'**
+  String get proRowAttachments;
+
+  /// No description provided for @proAttachDrive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive\'ın'**
+  String get proAttachDrive;
+
+  /// No description provided for @proAttachCloud.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulut'**
+  String get proAttachCloud;
+
+  /// No description provided for @proRowHistory.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürüm geçmişi, parolalı tam yedek'**
+  String get proRowHistory;
+
+  /// No description provided for @proRowLooks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek temalar, yazı tipleri, kart görünümleri'**
+  String get proRowLooks;
+
+  /// No description provided for @proRowAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahili yapay zekâ'**
+  String get proRowAi;
+
+  /// No description provided for @proRowOwnKey.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi Gemini anahtarın'**
+  String get proRowOwnKey;
+
+  /// No description provided for @proBuyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın al'**
+  String get proBuyTitle;
+
+  /// No description provided for @proPlanMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pro · aylık'**
+  String get proPlanMonthly;
+
+  /// No description provided for @proPlanYearly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pro · yıllık'**
+  String get proPlanYearly;
+
+  /// No description provided for @proPlanLifetime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ömür boyu · tek sefer'**
+  String get proPlanLifetime;
+
+  /// No description provided for @proPriceMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'{price} / ay'**
+  String proPriceMonthly(String price);
+
+  /// No description provided for @proPriceYearly.
+  ///
+  /// In tr, this message translates to:
+  /// **'{price} / yıl'**
+  String proPriceYearly(String price);
+
+  /// No description provided for @proTrialMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'7 gün ücretsiz, sonra {price} / ay'**
+  String proTrialMonthly(String price);
+
+  /// No description provided for @proTrialYearly.
+  ///
+  /// In tr, this message translates to:
+  /// **'7 gün ücretsiz, sonra {price} / yıl'**
+  String proTrialYearly(String price);
+
+  /// No description provided for @proPriceOnce.
+  ///
+  /// In tr, this message translates to:
+  /// **'{price} · bir kez öde'**
+  String proPriceOnce(String price);
+
+  /// No description provided for @proBuy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın al'**
+  String get proBuy;
+
+  /// No description provided for @proTry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücretsiz dene'**
+  String get proTry;
+
+  /// No description provided for @proOwned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sende var'**
+  String get proOwned;
+
+  /// No description provided for @proManage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aboneliği yönet'**
+  String get proManage;
+
+  /// No description provided for @proManageBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Plan değiştir ya da iptal et (Google Play)'**
+  String get proManageBody;
+
+  /// No description provided for @proRestore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın alımları geri yükle'**
+  String get proRestore;
+
+  /// No description provided for @proTerms.
+  ///
+  /// In tr, this message translates to:
+  /// **'Abonelik Google Play\'den her dönem kendiliğinden yenilenir; istediğin an Play\'den iptal edebilirsin, ödediğin süre sonuna dek Pro sürer. Pro biterse buluttaki eklerin silinmez, okunur kalır. Ömür boyunu aldıysan Pro bitince ömür boyu hakların sürer.'**
+  String get proTerms;
+
+  /// No description provided for @proLoading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Play\'den fiyatlar alınıyor…'**
+  String get proLoading;
+
+  /// No description provided for @proUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Play\'e ulaşılamadı.'**
+  String get proUnavailable;
+
+  /// No description provided for @proElsewhere.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın alma telefondan: Android uygulamasında Ayarlar → Pro. Aldığın hak bu hesapla burada da açılır.'**
+  String get proElsewhere;
+
+  /// No description provided for @proGuest.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın almak için Google hesabıyla giriş yap: misafir hesap yalnız bu cihazda, cihaz değişince satın alman da kaybolurdu.'**
+  String get proGuest;
+
+  /// No description provided for @proNoticePending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ödeme bekleniyor; onaylanınca hakkın kendiliğinden açılır.'**
+  String get proNoticePending;
+
+  /// No description provided for @proNoticeCanceled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın alma iptal edildi.'**
+  String get proNoticeCanceled;
+
+  /// No description provided for @proNoticeFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın alma tamamlanamadı. Biraz sonra yeniden dene.'**
+  String get proNoticeFailed;
+
+  /// No description provided for @proNoticeVerifyFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın alma doğrulanamadı; uygulama bir sonraki açılışta kendiliğinden yeniden dener. Doğrulanmayan ödemeyi Google Play iade eder.'**
+  String get proNoticeVerifyFailed;
+
+  /// No description provided for @proNoticeOtherAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu satın alma başka bir hesaba bağlı. O hesapla giriş yapınca hakkın açılır.'**
+  String get proNoticeOtherAccount;
+
+  /// No description provided for @proNoticeDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teşekkürler! Hakkın açıldı.'**
+  String get proNoticeDone;
+
+  /// No description provided for @proNoticeRestored.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satın alımların geri yüklendi.'**
+  String get proNoticeRestored;
+
+  /// No description provided for @proNoticeNothing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu Google Play hesabında geri yüklenecek satın alma yok.'**
+  String get proNoticeNothing;
+
+  /// No description provided for @proIncluded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Var'**
+  String get proIncluded;
+
+  /// No description provided for @proNotIncluded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yok'**
+  String get proNotIncluded;
 }
 
 class _AppLocalizationsDelegate

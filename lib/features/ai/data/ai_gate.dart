@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../entitlement/data/entitlement_service.dart';
+import '../../entitlement/domain/entitlement.dart';
 import '../../settings/settings_providers.dart';
 import 'ai_policy.dart';
 import 'api_key_store.dart';
@@ -15,7 +17,16 @@ import 'gemini_service.dart' show GeminiErrorKind, GeminiException;
 /// gelecekte bir tarihse kullanıcı premium'dur. Şimdilik alan konsoldan
 /// (test için) yazılır; Play Billing entegre olunca satın alma doğrulaması
 /// bu alanı sunucu tarafında güncelleyecek.
+///
+/// PLAY DERLEMESİ (PL6): tek kaynak `entitlements/{uid}` — Pro (ödenmiş ya
+/// da deneme) premium günlük puanını alır; `users/{uid}.premiumUntil` Play
+/// projesinde OKUNMAZ (istemcinin yazamadığı hak belgesi yerine geçer).
 final premiumProvider = StreamProvider<bool>((ref) {
+  if (EntitlementGate.active) {
+    return Stream.value(
+      ref.watch(effectiveTierProvider) == EntitlementTier.pro,
+    );
+  }
   final uid = ref.watch(currentUidProvider);
   if (uid == null) return Stream.value(false);
   return FirebaseFirestore.instance
@@ -63,6 +74,10 @@ enum AiAvailability {
 
   /// `config/app.aiKillSwitch` (PL2; [aiKillSwitchProvider]): geçici kapalı.
   paused,
+
+  /// Play derlemesi katman kapısı (PL6): dahili AI Pro'da, kendi anahtarı
+  /// ömür boyu + Pro'da; ücretsizde AI yok.
+  needsPro,
 }
 
 extension AiAvailabilityLook on AiAvailability {
@@ -80,9 +95,15 @@ final aiAvailabilityProvider = Provider<AiAvailability>((ref) {
   if (ref.watch(aiTurnedOffProvider)) return AiAvailability.turnedOff;
   if (ref.watch(aiKillSwitchProvider)) return AiAvailability.paused;
   if (!ref.watch(aiConsentProvider)) return AiAvailability.consentNeeded;
-  if ((ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty) {
-    return AiAvailability.ready;
+  final hasKey = (ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty;
+  // Sabit dal: kişisel APK / web derlemesinde ağaçtan düşer.
+  if (EntitlementGate.active &&
+      !ref.watch(
+        proFeatureProvider(EntitlementGate.aiFeature(hasOwnKey: hasKey)),
+      )) {
+    return AiAvailability.needsPro;
   }
+  if (hasKey) return AiAvailability.ready;
   if (ref.watch(isAnonymousProvider)) return AiAvailability.guest;
   if (ref.watch(aiBuiltInOffProvider)) {
     return kIsWeb ? AiAvailability.webBuiltInOff : AiAvailability.needsKey;
