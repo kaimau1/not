@@ -25,7 +25,9 @@ Yapılanlar:
 4. HE-3 ana ekran aracı (commit 4): `QuickAddWidgetProvider` (1×1 "+") + `QuickAddBarWidgetProvider`
    (4×1 çubuk), ikisi `notlar://ekle`; `kHomeWidgetProviders`a eklendi (tema yenilemesi).
 
-Sıradaki: `gh workflow run build.yml --ref oto/P84-hizli-ekle`
-(APK derlemesi Kotlin/manifest/gradle'ı doğrular) → belgeler (Kuyruk, PLAN, regresyon, hafıza,
-sürüm notu, KONTROL "Telefonda bak").
+5. Dispatch koşusu 44740751793 YEŞİL: 3 test parçası + Android APK (36,9 MB; üretilen
+   `xml/app_shortcuts` çözüldü). Belgeler (commit 8c62c664): sürüm notu 20 Kasım, PLAN 1.4/3 [~],
+   KONTROL "Telefonda bak", regresyon, `docs/hafiza/editor.md`, Kuyruk P84 bitti.
+
+Durum: BİTTİ, birleştirmeye hazır (yürütücü DEVIR'i siler). Cihazda hiçbiri denenmedi.
 Test: `flutter test test/quick_list_screen_test.dart test/perf_budget_test.dart --plain-name S56`.
