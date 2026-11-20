@@ -4,6 +4,8 @@ import 'dart:js_interop';
 import 'package:file_selector/file_selector.dart';
 import 'package:web/web.dart' as web;
 
+import '../../app/theme/app_tokens.dart';
+
 /// Belgeye bırakılan ya da yapıştırılan dosyaları [onDrop]'a verir; dönen işlev
 /// dinlemeyi bırakır. `dragover` engellenmezse tarayıcı dosyayı sekmede açar.
 void Function() listenFileDrops(
@@ -30,7 +32,8 @@ void Function() listenFileDrops(
     if (!hasFiles(e)) return;
     if (idle == null) onHover?.call(true);
     idle?.cancel();
-    idle = Timer(const Duration(milliseconds: 250), () => hover(false));
+    // Bekleme (hareket değil): dragover ~50 ms'de bir gelir.
+    idle = Timer(AppMotion.medium, () => hover(false));
   }).toJS;
 
   void deliver(web.FileList list) {

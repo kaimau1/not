@@ -138,7 +138,7 @@ class HomeFirstHistory {
     // süre sonra yeniden konur ki sonraki geri de çalışsın.
     _leaving = true;
     driver.back();
-    Timer(const Duration(milliseconds: 600), () {
+    Timer(const Duration(seconds: 1), () {
       if (!_leaving) return;
       _leaving = false;
       if (!_guard) _pushGuard();
