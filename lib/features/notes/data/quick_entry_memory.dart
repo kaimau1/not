@@ -8,7 +8,8 @@ import '../../settings/settings_providers.dart';
 import '../domain/note_templates.dart';
 import '../domain/quick_entry.dart';
 import '../domain/quick_lexicon_data.dart';
-import '../domain/smart_list.dart' show titleSaysShopping;
+import '../domain/note.dart';
+import '../domain/smart_list.dart';
 import '../presentation/editor/auto_spell.dart';
 
 /// **HIZLI GİRİŞ HAFIZASI** (kullanıcı isteği 2026-11-15: "kişinin en çok
@@ -144,6 +145,9 @@ class QuickEntryMemoryNotifier extends Notifier<QuickEntryMemory> {
   /// Oluşturulan listenin maddeleri sayılır.
   void record(String kind, Iterable<String> items) =>
       _save(state.recorded(kind, items));
+
+  /// Önceki hâline döner (bir kaydın Geri al'ı — "Alışverişi bitir").
+  void restore(QuickEntryMemory previous) => _save(previous);
 
   /// Kullanıcı düzeltmeyi geri aldı: bir daha uygulanmaz; yazım hafızası da
   /// öğrenir (editörde de düzeltilmesin).
@@ -296,4 +300,44 @@ bool looksLikeGrocery(String title, Iterable<String> items, String locale) {
     if (lex.exact(quickBaseName(i)) != null) hits++;
   }
   return hits >= 2 && hits * 2 >= total;
+}
+
+/// LİSTE notunun türü (hızlı eklemede ayrıştırma ve reyon yerleşimi, editörde
+/// "Alışverişi bitir"):
+/// başlık türü söylüyorsa o ([smartKindOfTitle]: "Bavul listesi", "Antalya
+/// tatili", "Market listesi"); yoksa maddeler — yalnız bavul sözlüğünde olan
+/// en az iki madde ve maddelerin yarısı tanınıyorsa bavul,
+/// [looksLikeGrocery] ise alışveriş, değilse düz liste (yapılacaklar gibi
+/// cümleli: kelimeler bölünmez).
+///
+/// 2026-11-20: akıllı listenin kurduğu "Bavul listesi"ne hızlı ekleme
+/// cümleli kipe düşüyordu — "şort mayo şarj aleti" TEK madde oluyordu.
+SmartListKind noteListKind(Note note, String locale) {
+  final byTitle = smartKindOfTitle(note.displayTitle);
+  if (byTitle != null) return byTitle;
+  final texts = [
+    for (final i in note.items)
+      if (!i.header && i.text.trim().isNotEmpty) i.text,
+  ];
+  final grocery = groceryLexicon(locale);
+  final packing = packingLexicon(locale);
+  var onlyPacking = 0;
+  var onlyGrocery = 0;
+  var known = 0;
+  for (final t in texts) {
+    final g = grocery.groupOf(t) >= 0;
+    final p = packing.groupOf(t) >= 0;
+    if (g || p) known++;
+    if (p && !g) onlyPacking++;
+    if (g && !p) onlyGrocery++;
+  }
+  if (onlyPacking >= 2 &&
+      onlyPacking > onlyGrocery &&
+      known * 2 >= texts.length) {
+    return SmartListKind.packing;
+  }
+  if (looksLikeGrocery(note.displayTitle, texts, locale)) {
+    return SmartListKind.shopping;
+  }
+  return SmartListKind.generic;
 }

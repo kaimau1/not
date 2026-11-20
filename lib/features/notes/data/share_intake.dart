@@ -20,6 +20,7 @@ import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../presentation/capture_mode_sheet.dart';
 import '../presentation/note_card.dart';
+import '../presentation/quick_drop_sheet.dart' show showQuickDropSheet;
 import '../presentation/notes_providers.dart';
 import '../presentation/share_target_sheet.dart';
 import '../domain/attachment.dart';
@@ -275,6 +276,16 @@ final shareIntakeProvider = Provider<void>((ref) {
         unawaited(ReceiveSharingIntent.instance.reset());
         return;
       }
+    }
+
+    // ⚡ Hızlı ekle (yalnız metin): levha önceden yazılı açılır, eklemeyi
+    // kullanıcı onaylar (KARAR PLAN 1.0b P3).
+    if (destination?.quickAdd ?? false) {
+      unawaited(ReceiveSharingIntent.instance.reset());
+      if (sheetContext != null && sheetContext.mounted) {
+        unawaited(showQuickDropSheet(sheetContext, initialText: body));
+      }
+      return;
     }
 
     final targetId = destination?.noteId;

@@ -9,6 +9,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/firestore_size.dart' show sameFirestoreValue;
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
@@ -82,45 +83,6 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
     return c != 0 ? c : at(b).compareTo(at(a));
   });
   return ok;
-}
-
-/// Hızlı eklenen LİSTE notunun türü (ayrıştırma ve reyon yerleşimi için):
-/// başlık türü söylüyorsa o ([smartKindOfTitle]: "Bavul listesi", "Antalya
-/// tatili", "Market listesi"); yoksa maddeler — yalnız bavul sözlüğünde olan
-/// en az iki madde ve maddelerin yarısı tanınıyorsa bavul,
-/// [looksLikeGrocery] ise alışveriş, değilse düz liste (yapılacaklar gibi
-/// cümleli: kelimeler bölünmez).
-///
-/// 2026-11-20: akıllı listenin kurduğu "Bavul listesi"ne hızlı ekleme
-/// cümleli kipe düşüyordu — "şort mayo şarj aleti" TEK madde oluyordu.
-SmartListKind quickDropListKind(Note note, String locale) {
-  final byTitle = smartKindOfTitle(note.displayTitle);
-  if (byTitle != null) return byTitle;
-  final texts = [
-    for (final i in note.items)
-      if (!i.header && i.text.trim().isNotEmpty) i.text,
-  ];
-  final grocery = groceryLexicon(locale);
-  final packing = packingLexicon(locale);
-  var onlyPacking = 0;
-  var onlyGrocery = 0;
-  var known = 0;
-  for (final t in texts) {
-    final g = grocery.groupOf(t) >= 0;
-    final p = packing.groupOf(t) >= 0;
-    if (g || p) known++;
-    if (p && !g) onlyPacking++;
-    if (g && !p) onlyGrocery++;
-  }
-  if (onlyPacking >= 2 &&
-      onlyPacking > onlyGrocery &&
-      known * 2 >= texts.length) {
-    return SmartListKind.packing;
-  }
-  if (looksLikeGrocery(note.displayTitle, texts, locale)) {
-    return SmartListKind.shopping;
-  }
-  return SmartListKind.generic;
 }
 
 /// Maddenin reyon/bavul sırası ([smartRank]); bilinmiyorsa -1.
@@ -198,7 +160,7 @@ QuickDropListPlan? quickDropPlan(
           checked: plan.uncheck.contains(i) ? false : null,
         ),
   ];
-  final kind = quickDropListKind(note, locale);
+  final kind = noteListKind(note, locale);
   final ranks = [
     for (final i in items) i.header ? -1 : _rankOf(kind, i.text, locale),
   ];
@@ -256,7 +218,7 @@ QuickParse _parseIntoList(
   String locale,
   QuickEntryMemory memory,
 ) {
-  final kind = quickDropListKind(note, locale);
+  final kind = noteListKind(note, locale);
   final key = [
     note.id,
     locale,
@@ -382,14 +344,26 @@ Map<String, dynamic> quickDropUndoFields({
   };
 }
 
-/// **HIZLI EKLE** levhasını açar.
-Future<void> showQuickDropSheet(BuildContext context) => showAppSheet<void>(
-  context: context,
-  showDragHandle: true,
-  isScrollControlled: true,
-  constraints: const BoxConstraints(maxWidth: 640),
-  builder: (_) => const SheetInsetPadding(child: QuickDropSheet()),
-);
+/// **HIZLI EKLE** levhasını açar. [initialText]: alana önceden yazılı gelen
+/// metin (paylaşım, `notlar://ekle?metin=`) — hedef ondan çözülür, eklemeyi
+/// kullanıcı onaylar; doluyken dinleme kendiliğinden başlamaz.
+Future<void> showQuickDropSheet(
+  BuildContext context, {
+  String initialText = '',
+}) {
+  // TEK ÖRNEK (S56): builder klavyenin her karesinde çağrılır; levha
+  // dışarıda bir kez kurulur.
+  final sheet = SheetInsetPadding(
+    child: QuickDropSheet(initialText: initialText),
+  );
+  return showAppSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    constraints: const BoxConstraints(maxWidth: 640),
+    builder: (_) => sheet,
+  );
+}
 
 /// **HIZLI EKLE** (kullanıcı isteği 2026-11-15: "ekranda bir buton olur;
 /// basınca hem yazma hem dinleme açılır, kişinin isteğine göre biri
@@ -406,7 +380,10 @@ Future<void> showQuickDropSheet(BuildContext context) => showAppSheet<void>(
 /// bulunamazsa önce yapay zekâya (yalnız başlıklar gider, kapatılabilir),
 /// olmazsa kullanıcıya "Hangi nota eklensin?" diye sorulur.
 class QuickDropSheet extends ConsumerStatefulWidget {
-  const QuickDropSheet({super.key});
+  const QuickDropSheet({super.key, this.initialText = ''});
+
+  /// Alana önceden yazılı metin (bkz. [showQuickDropSheet]).
+  final String initialText;
 
   @override
   ConsumerState<QuickDropSheet> createState() => _QuickDropSheetState();
@@ -516,6 +493,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     );
     _state.addListener(_onState);
     _state.value = _Drop(id: _candidates.isEmpty ? null : _candidates.first.id);
+    if (widget.initialText.trim().isNotEmpty) _resolve(widget.initialText);
     if (ref.read(quickDropKeyboardProvider)) focusAfterRouteOpens(this, _focus);
   }
 
@@ -600,7 +578,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       _chosenId ?? (_candidates.isEmpty ? null : _candidates.first.id);
 
   void _onText(String text) {
-    _stopCountdown();
+    // Konuşma ya da yazı sürüyor: dinleme açık kalır (P5).
+    _stopCountdown(keepListening: true);
     // Yapay zekâ beklenirken yazıldı: karar kullanıcının (2026-11-20 hata:
     // gelen yanıt levha açılırkenki ESKİ içerikle durumu ezip geri sayımı
     // başlatıyor, yazılan son kelimeler eklenmiyordu).
@@ -644,7 +623,23 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   // ── Konuşma bitti: geri sayım / yapay zekâ / sor ──────────────────────
 
   /// [now]: kullanıcı "bitti" dedi — hedef belliyse geri sayım yok.
+  ///
+  /// SESLE DUR (KARAR PLAN 1.0b P5, 2026-11-20): giriş satırı konuşma
+  /// sonunda dinlemeyi KAPATMAZ ([QuickEntryBar.listenThroughEnd]); geri
+  /// sayım sürerken "dur / bekle" geri sayımı durdurur, devam eden konuşma
+  /// içeriğe eklenir. Geri sayım başlamadıysa (soruluyor, yapay zekâ) mikrofon
+  /// burada kapanır.
   void _onSpeechEnd({bool now = false}) {
+    _decideAfterSpeech(now: now);
+    if (mounted && _phase.value != _Phase.counting) {
+      _bar.currentState?.stopListening();
+    }
+  }
+
+  /// "dur / bekle" duyuldu: geri sayım durur (giriş satırı dinlemeyi kapattı).
+  void _onVoiceStop() => _stopCountdown();
+
+  void _decideAfterSpeech({required bool now}) {
     _resolve(_bar.currentState?.text ?? '');
     final st = _state.value;
     final parsed = _parsed;
@@ -673,6 +668,20 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     } else {
       _startCountdown();
     }
+  }
+
+  /// "Ben seçeyim": yapay zekâ beklenmez, yanıtı gelince yok sayılır;
+  /// hedef sorulur (seçili kalan çip aynen, başa başta seçim yok).
+  void _pickMyself() {
+    if (_phase.value != _Phase.thinking) return;
+    _phase.value = _Phase.idle;
+    final st = _state.value;
+    _state.value = _Drop(
+      id: st.ties.isEmpty ? st.id : null,
+      content: st.content,
+      ties: st.ties,
+      ask: true,
+    );
   }
 
   bool get _aiUsable =>
@@ -817,11 +826,14 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     );
   }
 
-  void _stopCountdown() {
+  /// [keepListening]: geri sayım konuşma/yazı sürdüğü için durdu — mikrofon
+  /// açık kalır; öbür durdurmalarda (Bekle, çip, "dur") kapanır.
+  void _stopCountdown({bool keepListening = false}) {
     if (_phase.value != _Phase.counting) return;
     _count.stop();
     _count.value = 0;
     _phase.value = _Phase.idle;
+    if (!keepListening) _bar.currentState?.stopListening();
   }
 
   void _onCountStatus(AnimationStatus status) {
@@ -940,7 +952,6 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     final text = AppText.of(theme);
     final autoMic = ref.watch(quickDropMicProvider);
     final keyboard = ref.watch(quickDropKeyboardProvider);
-    final ai = ref.watch(quickDropAiProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpace.l, 0, AppSpace.l, AppSpace.l),
       child: Column(
@@ -952,32 +963,47 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               Expanded(
                 child: Text(l10n.quickDropTitle, style: text.sheetTitle),
               ),
-              IconButton(
-                key: const ValueKey('quick-drop-ai'),
-                tooltip: l10n.quickDropAiToggle,
-                isSelected: ai,
-                icon: const Icon(Icons.auto_awesome_outlined),
-                selectedIcon: Icon(Icons.auto_awesome, color: scheme.primary),
-                onPressed: () =>
-                    ref.read(quickDropAiProvider.notifier).set(!ai),
-              ),
-              IconButton(
-                key: const ValueKey('quick-drop-keyboard'),
-                tooltip: l10n.quickDropKeyboard,
-                isSelected: keyboard,
-                icon: const Icon(Icons.keyboard_outlined),
-                selectedIcon: Icon(Icons.keyboard, color: scheme.primary),
-                onPressed: () =>
-                    ref.read(quickDropKeyboardProvider.notifier).set(!keyboard),
-              ),
-              IconButton(
-                key: const ValueKey('quick-drop-auto-mic'),
-                tooltip: l10n.quickDropMicAuto,
-                isSelected: autoMic,
-                icon: const Icon(Icons.hearing_disabled_outlined),
-                selectedIcon: Icon(Icons.hearing, color: scheme.primary),
-                onPressed: () =>
-                    ref.read(quickDropMicProvider.notifier).set(!autoMic),
+              // SADE BAŞLIK (KARAR PLAN 1.0b P4, 2026-11-20): üç anahtar
+              // (yapay zekâ / açılınca klavye / açılınca dinle) tek ⚙
+              // menüsünde; seçim kalıcı, levha yeniden açılınca geçerli.
+              PopupMenuButton<String>(
+                key: const ValueKey('quick-drop-settings'),
+                tooltip: l10n.quickDropSettings,
+                icon: const Icon(Icons.tune),
+                onSelected: (v) {
+                  switch (v) {
+                    case 'ai':
+                      ref
+                          .read(quickDropAiProvider.notifier)
+                          .set(!ref.read(quickDropAiProvider));
+                    case 'keyboard':
+                      ref
+                          .read(quickDropKeyboardProvider.notifier)
+                          .set(!keyboard);
+                    case 'mic':
+                      ref.read(quickDropMicProvider.notifier).set(!autoMic);
+                  }
+                },
+                itemBuilder: (context) => [
+                  CheckedPopupMenuItem(
+                    key: const ValueKey('quick-drop-ai'),
+                    value: 'ai',
+                    checked: ref.read(quickDropAiProvider),
+                    child: Text(l10n.quickDropAiToggle),
+                  ),
+                  CheckedPopupMenuItem(
+                    key: const ValueKey('quick-drop-keyboard'),
+                    value: 'keyboard',
+                    checked: keyboard,
+                    child: Text(l10n.quickDropKeyboard),
+                  ),
+                  CheckedPopupMenuItem(
+                    key: const ValueKey('quick-drop-auto-mic'),
+                    value: 'mic',
+                    checked: autoMic,
+                    child: Text(l10n.quickDropMicAuto),
+                  ),
+                ],
               ),
             ],
           ),
@@ -998,6 +1024,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               key: _bar,
               parser: _idle,
               raw: true,
+              initialText: widget.initialText,
               focusNode: _focus,
               hint: l10n.quickDropHint,
               autoListen: autoMic,
@@ -1008,8 +1035,11 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                   : AppMotion.medium,
               onRawChanged: _onText,
               onRawSubmitted: (_) => _apply(),
-              // "Söyle, eklensin": konuşma bitince kısa geri sayımla eklenir.
+              // "Söyle, eklensin": konuşma bitince kısa geri sayımla eklenir;
+              // geri sayımda "dur / bekle" denebilir (P5).
               onSpeechEnd: _onSpeechEnd,
+              listenThroughEnd: true,
+              onVoiceStop: _onVoiceStop,
               // "… bitti" dendi: geri sayım beklemeden hemen eklenir.
               onDoneWord: () => _onSpeechEnd(now: true),
               onItems: (_) {},
@@ -1033,12 +1063,21 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                           ),
                           const SizedBox(width: AppSpace.s),
                           // Dar ekranda / büyük yazıda taşıyordu (2026-11-20).
-                          Flexible(
+                          Expanded(
                             child: Text(
                               l10n.quickDropAsking,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: text.meta,
+                            ),
+                          ),
+                          // "Ben seçeyim" (KARAR PLAN 1.0b P4): yanıt 300 ms'de
+                          // gelmezse beklemeden kullanıcı seçer.
+                          DelayedSpinner(
+                            child: TextButton(
+                              key: const ValueKey('quick-drop-pick'),
+                              onPressed: _pickMyself,
+                              child: Text(l10n.quickDropPickMyself),
                             ),
                           ),
                         ],

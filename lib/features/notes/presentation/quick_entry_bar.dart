@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,7 +42,22 @@ class QuickEntryBar extends ConsumerStatefulWidget {
     this.onRawSubmitted,
     this.onSpeechEnd,
     this.onDoneWord,
+    this.initialText = '',
+    this.listenThroughEnd = false,
+    this.onVoiceStop,
   });
+
+  /// HAM KİPTE konuşma sonunda dinleme KAPANMAZ (KARAR PLAN 1.0b P5,
+  /// 2026-11-20): [onSpeechEnd] çağrılır, tanıyıcı açık kalır. Ardından
+  /// "dur / bekle / iptal" → [onVoiceStop] ve dinleme biter; başka konuşma →
+  /// içeriğe eklenir ve bir sonraki sessizlik yeniden [onSpeechEnd] verir.
+  /// Çağıran işi bitince [QuickEntryBarState.stopListening] çağırır.
+  final bool listenThroughEnd;
+  final VoidCallback? onVoiceStop;
+
+  /// Alana önceden yazılı metin. Doluysa kendiliğinden dinleme başlamaz
+  /// (kullanıcı yazılı geleni gözden geçirir; elle yazılmış sayılır).
+  final String initialText;
 
   final QuickParser parser;
 
@@ -128,6 +144,44 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   /// olabilirdi) maddeye döner.
   static final idleDelay = AppMotion.long + AppMotion.medium;
 
+  /// Sessizlik bitişi bildirildi, dinleme sürüyor ([QuickEntryBar.listenThroughEnd]).
+  bool _afterEnd = false;
+
+  /// Bitiş anındaki konuşma (ardından gelen ek kelimeler buna göre ayrılır).
+  String _endSpoken = '';
+
+  /// Geri sayımı durduran sözler (sondaki ek kelimelerin tamamı).
+  static const _stopPhrases = {
+    'dur',
+    'dur dur',
+    'bekle',
+    'bir dakika',
+    'iptal',
+    'hayir',
+    'vazgec',
+    'stop',
+    'wait',
+    'cancel',
+  };
+
+  static List<String> _words(String s) => [
+    for (final w in quickAscii(s).split(RegExp(r'[^a-z0-9]+')))
+      if (w.isNotEmpty) w,
+  ];
+
+  /// Dinlemeyi son sonucu beklemeden kapatır; [QuickEntryBar.onSpeechEnd]
+  /// çağrılmaz, alandaki yazı değişmez.
+  void stopListening() {
+    final session = _session;
+    if (session == null) return;
+    _session = null;
+    _afterEnd = false;
+    _clearDoneTimers();
+    unawaited(session.cancel());
+    _spoken = '';
+    _listening.value = false;
+  }
+
   /// Bitiş sözünün önünde bitiş sayılan duraklama: yazarken "kullanıcı
   /// durdu" saydığımız eşikle aynı (~0,7 sn).
   static final donePause = idleDelay;
@@ -140,6 +194,13 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialText.isNotEmpty) {
+      _c.value = TextEditingValue(
+        text: widget.initialText,
+        selection: TextSelection.collapsed(offset: widget.initialText.length),
+      );
+      _typed = true;
+    }
     _c.addListener(_onChanged);
     unawaited(
       DeviceSpeech.isAvailable().then((ok) async {
@@ -254,6 +315,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   }
 
   void _clearDoneTimers() {
+    _afterEnd = false;
     _pauseTimer?.cancel();
     _pauseTimer = null;
     _doneTimer?.cancel();
@@ -316,6 +378,12 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
           _onDoneWord(pending);
           return;
         }
+        if (widget.listenThroughEnd && widget.raw) {
+          _afterEnd = true;
+          _endSpoken = _spoken;
+          widget.onSpeechEnd?.call();
+          return;
+        }
         unawaited(
           _stopListening().then((_) {
             if (mounted) widget.onSpeechEnd?.call();
@@ -365,6 +433,25 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
           }
         });
       }
+    }
+    if (_afterEnd) {
+      final now = _words(full);
+      final before = _words(_endSpoken);
+      // Yalnız noktalama/büyük harf düzeltmesi: geri sayım bozulmaz.
+      if (listEquals(now, before)) return;
+      final tail =
+          now.length > before.length &&
+              listEquals(now.sublist(0, before.length), before)
+          ? now.sublist(before.length).join(' ')
+          : null;
+      if (tail != null && _stopPhrases.contains(tail)) {
+        stopListening();
+        widget.onVoiceStop?.call();
+        return;
+      }
+      // Konuşma sürdü: içerik; bir sonraki sessizlik yeniden bitiş.
+      _afterEnd = false;
+      _session?.rearm();
     }
     _spoken = full;
     if (widget.raw) {

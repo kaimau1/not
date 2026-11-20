@@ -53,11 +53,11 @@ void main() {
 
     test('maddelerden bavul: başlık bir şey söylemese de', () {
       expect(
-        quickDropListKind(list('Antalya', ['Pasaport', 'Tişört']), 'tr'),
+        noteListKind(list('Antalya', ['Pasaport', 'Tişört']), 'tr'),
         SmartListKind.packing,
       );
       expect(
-        quickDropListKind(list('Yapılacaklar', ['Faturayı öde']), 'tr'),
+        noteListKind(list('Yapılacaklar', ['Faturayı öde']), 'tr'),
         SmartListKind.generic,
       );
     });

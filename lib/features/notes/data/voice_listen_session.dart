@@ -152,6 +152,15 @@ class VoiceListenSession {
     _timer = Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
   }
 
+  /// Sessizlik bitişi bildirildikten SONRA dinleme sürdürülüyorsa (hızlı
+  /// ekle geri sayımı, 2026-11-20) ve konuşma devam ettiyse: bir sonraki
+  /// sessizlik yeniden [onEnd] versin.
+  void rearm() {
+    if (!_active) return;
+    _ended = false;
+    _gate.onSpeech(DateTime.now());
+  }
+
   /// Kayıt yolunda (yerleşik tanıma yok) kesin konuşma kanıtı.
   void reportSpeech() => _gate.onSpeech(DateTime.now());
 

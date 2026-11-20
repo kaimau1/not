@@ -144,6 +144,9 @@ void main() {
       required List<Note> notes,
       bool askMode = false,
       Future<void> Function()? act,
+      ShareIncoming incoming = const ShareIncoming(
+        files: [(name: 'kasko.pdf', kind: AttachmentKind.pdf)],
+      ),
     }) async {
       ShareDestination? result;
       await tester.pumpWidget(
@@ -158,9 +161,7 @@ void main() {
                   onPressed: () async {
                     result = await showShareTargetSheet(
                       context,
-                      incoming: const ShareIncoming(
-                        files: [(name: 'kasko.pdf', kind: AttachmentKind.pdf)],
-                      ),
+                      incoming: incoming,
                       notes: notes,
                       askMode: askMode,
                     );
@@ -184,6 +185,34 @@ void main() {
       expect(find.text('kasko.pdf'), findsOneWidget);
       expect(find.text('Yeni not'), findsOneWidget);
       expect(find.text('Var olan nota'), findsOneWidget);
+    });
+
+    // KARAR PLAN 1.0b P3 (2026-11-20): yalnız yazı gelince hızlı ekle.
+    testWidgets('yalnız metin paylaşımında "Hızlı ekle" seçilir; dosyada yok', (
+      tester,
+    ) async {
+      final result = await open(
+        tester,
+        notes: [note('hedef', title: 'Araba')],
+        incoming: const ShareIncoming(text: 'süt, ekmek, yumurta'),
+        act: () async {
+          await tester.tap(find.text('Var olan nota'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(const ValueKey('share-quick-add')));
+        },
+      );
+      expect(result?.quickAdd, isTrue);
+      expect(result?.isExisting, isFalse);
+
+      await open(
+        tester,
+        notes: [note('hedef', title: 'Araba')],
+        act: () async {
+          await tester.tap(find.text('Var olan nota'));
+          await tester.pumpAndSettle();
+        },
+      );
+      expect(find.byKey(const ValueKey('share-quick-add')), findsNothing);
     });
 
     testWidgets('var olan not seçilince o notun kimliği döner', (tester) async {
@@ -259,7 +288,10 @@ void main() {
       late Map<String, int> counts;
       final result = await open(
         tester,
-        notes: [note('a', title: 'Araba'), note('b', title: 'Bahçe')],
+        notes: [
+          note('a', title: 'Araba'),
+          note('b', title: 'Bahçe'),
+        ],
         act: () async {
           await tester.tap(find.text('Var olan nota'));
           await tester.pumpAndSettle();

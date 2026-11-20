@@ -8873,6 +8873,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickDropPreviewNew => '→ New note';
 
   @override
+  String get finishShopping => 'Finish shopping';
+
+  @override
+  String get finishShoppingTip =>
+      'Remove what you bought and remember what you often buy';
+
+  @override
+  String finishShoppingDone(int count) {
+    return 'Shopping done: $count items removed from the list';
+  }
+
+  @override
+  String get quickDropSettings => 'Quick add settings';
+
+  @override
+  String get quickDropPickMyself => 'I\'ll choose';
+
+  @override
+  String get shareQuickAdd => 'Quick add';
+
+  @override
+  String get shareQuickAddInfo => 'Add it to a list or note, item by item';
+
+  @override
   String get quickDropWait => 'Wait';
 
   @override

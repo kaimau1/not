@@ -489,6 +489,30 @@ class VoiceAutostartNotifier extends Notifier<bool> {
   }
 }
 
+/// ⚡ HIZLI EKLE İSTEĞİ (2026-11-20, KARAR PLAN 1.0b P2/P3): uygulama
+/// kısayolu / `notlar://ekle?metin=…` ana ekranın hızlı ekle levhasını açar
+/// (sesli not isteğiyle aynı kalıp: bayrak, ana ekran `take` ile tüketir).
+/// Değer levhaya önceden yazılacak metin ('' = boş); null = istek yok.
+final quickDropRequestProvider =
+    NotifierProvider<QuickDropRequestNotifier, String?>(
+      QuickDropRequestNotifier.new,
+    );
+
+class QuickDropRequestNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void request([String text = '']) => state = text;
+
+  /// İstek varsa metni döner ve bayrağı düşürür (tek seferlik).
+  String? take() {
+    final text = state;
+    if (text == null) return null;
+    state = null;
+    return text;
+  }
+}
+
 final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
   SearchQueryNotifier.new,
 );

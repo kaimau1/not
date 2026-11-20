@@ -344,6 +344,19 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
+/// `notlar://ekle[?metin=…]` (ya da `notlar://add?text=…`) ise levhaya
+/// yazılacak metin ('' = boş levha); başka adreste null. Metin en çok 2000
+/// karakter (adresle gelen uzun yazı levhayı doldurmasın).
+String? quickAddLinkText(Uri uri) {
+  if (uri.scheme != 'notlar' || (uri.host != 'ekle' && uri.host != 'add')) {
+    return null;
+  }
+  final text =
+      (uri.queryParameters['metin'] ?? uri.queryParameters['text'] ?? '')
+          .trim();
+  return text.length > 2000 ? text.substring(0, 2000) : text;
+}
+
 /// notlar:// derin bağlantılarını dinler (widget'taki mikrofon, uygulama
 /// kısayolu, "Hey Google" ile açılış). Dashboard bunu ayakta tutar.
 final deepLinkHandlerProvider = Provider<void>((ref) {
@@ -357,6 +370,15 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
       // voiceAutostartProvider'ı dinleyip levhayı açar.
       router.go('/');
       ref.read(voiceAutostartProvider.notifier).request();
+      return;
+    }
+    // notlar://ekle[?metin=…] — uygulama kısayolu "Hızlı ekle" (KARAR PLAN
+    // 1.0b P2): ana ekranın hızlı ekle levhası açılır; metin varsa önceden
+    // yazılı gelir (eklemeyi yine kullanıcı onaylar).
+    final quickAdd = quickAddLinkText(uri);
+    if (quickAdd != null) {
+      router.go('/');
+      ref.read(quickDropRequestProvider.notifier).request(quickAdd);
       return;
     }
     // notlar://note/<id> — konum hatırlatıcısı bildirimi notu açar (saat

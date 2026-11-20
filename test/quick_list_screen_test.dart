@@ -595,6 +595,44 @@ void main() {
       expect(repo.writes, isEmpty, reason: 'var olan nota eklenmez');
     });
 
+    // KARAR PLAN 1.0b P2/P3 (2026-11-20): kısayol / paylaşım levhayı
+    // önceden yazılı açar; hedef metinden çözülür, ekleme yine onayla.
+    testWidgets('önceden yazılı açılış: hedef çözülür, onaysız eklenmez', (
+      tester,
+    ) async {
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        repo: repo,
+        // Kendiliğinden dinleme açık olsa da yazılı gelen metinde başlamaz.
+        prefs: {'quick_drop_mic': true},
+        onTap: (context, ref) => showQuickDropSheet(
+          context,
+          initialText: 'domates biber alışveriş listesine',
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      expect(find.text('domates biber alışveriş listesine'), findsOneWidget);
+      ChoiceChip chip(String id) =>
+          tester.widget(find.byKey(ValueKey('quick-drop-target-$id')));
+      expect(chip('a').selected, isTrue);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const ValueKey('quick-drop-preview')))
+            .data,
+        '→ “Alışveriş listesi”: Domates, Biber',
+      );
+      await tester.pump(const Duration(seconds: 3));
+      expect(repo.writes, isEmpty, reason: 'kendiliğinden eklenmez');
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pump();
+      expect(repo.writes.keys, ['a']);
+      await tester.pumpAndSettle();
+    });
+
     // HE-2 (17K §4.2, 2026-11-20): Ekle'den önce neyin nereye gideceği.
     testWidgets('önizleme satırı: hedef + eklenecek maddeler', (tester) async {
       await openSheet(tester, [shopping, todo, text]);
@@ -768,6 +806,78 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
       expect(find.byKey(const ValueKey('quick-drop-counting')), findsNothing);
       expect(repo.writes, isEmpty, reason: 'eski içerik eklenmemeli');
+    });
+
+    // KARAR PLAN 1.0b P4 (2026-11-20): yapay zekâ yanıtı gecikirse kullanıcı
+    // beklemeden seçer; gelen yanıt yok sayılır.
+    testWidgets('"Ben seçeyim": yanıt beklenmez, hedef sorulur', (
+      tester,
+    ) async {
+      AiDecisionsFlag.apply({
+        'aiDecisionsFeatures': [DecisionFeature.dropTarget],
+      });
+      addTearDown(AiDecisionsFlag.debugReset);
+      final answer = Completer<void>();
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        repo: repo,
+        prefs: {'quick_drop_mic': false},
+        ai: AiAvailability.ready,
+        extra: [
+          decisionServiceProvider.overrideWithValue(
+            DecisionService(
+              key: () async => 'k',
+              http: JsonHttp(
+                baseUrl: AiProvider.gemini.baseUrl,
+                client: MockClient((_) async {
+                  await answer.future;
+                  return http.Response(
+                    jsonEncode({'answers': target('n01', 0.95)}),
+                    200,
+                    headers: {
+                      'content-type': 'application/json; charset=utf-8',
+                    },
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+        onTap: (context, ref) => showQuickDropSheet(context),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await say(tester, 'yeni logo taslağı fikir defterine ekle');
+      expect(find.byKey(const ValueKey('quick-drop-thinking')), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.byKey(const ValueKey('quick-drop-pick')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('quick-drop-thinking')), findsNothing);
+      expect(find.byKey(const ValueKey('quick-drop-ask')), findsOneWidget);
+      answer.complete();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.byKey(const ValueKey('quick-drop-counting')), findsNothing);
+      expect(repo.writes, isEmpty);
+    });
+
+    testWidgets('⚙ menüsü: üç anahtar tek yerde, seçim kalıcı', (tester) async {
+      await openSheet(tester, [shopping, todo, text]);
+      expect(find.byKey(const ValueKey('quick-drop-ai')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-settings')));
+      await tester.pumpAndSettle();
+      CheckedPopupMenuItem<String> item(String key) =>
+          tester.widget(find.byKey(ValueKey(key)));
+      expect(item('quick-drop-ai').checked, isTrue);
+      expect(item('quick-drop-keyboard').checked, isTrue);
+      expect(item('quick-drop-auto-mic').checked, isFalse);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-auto-mic')));
+      await tester.pumpAndSettle();
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('quick_drop_mic'), isTrue);
     });
 
     testWidgets('DA-1: Decisions emin → geri sayımla o nota, ad içerikte yok', (

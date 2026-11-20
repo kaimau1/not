@@ -8861,6 +8861,30 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickDropPreviewNew => '→ Yeni not';
 
   @override
+  String get finishShopping => 'Alışverişi bitir';
+
+  @override
+  String get finishShoppingTip =>
+      'Alınanları listeden kaldır, sık aldıklarını hatırla';
+
+  @override
+  String finishShoppingDone(int count) {
+    return 'Alışveriş bitti: $count madde listeden kaldırıldı';
+  }
+
+  @override
+  String get quickDropSettings => 'Hızlı ekle ayarları';
+
+  @override
+  String get quickDropPickMyself => 'Ben seçeyim';
+
+  @override
+  String get shareQuickAdd => 'Hızlı ekle';
+
+  @override
+  String get shareQuickAddInfo => 'Bir listeye ya da nota madde madde ekle';
+
+  @override
   String get quickDropWait => 'Bekle';
 
   @override

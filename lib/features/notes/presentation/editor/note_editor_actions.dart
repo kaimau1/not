@@ -4,6 +4,64 @@ part of 'note_editor_screen.dart';
 ///
 /// F9.3: editör konu başına bölündü; durum (alanlar) [_NoteEditorScreenState]da kalır.
 extension _EditorActions on _NoteEditorScreenState {
+  // ---- Alışverişi bitir (2026-11-20, 17K AL-2) -------------------------
+
+  /// Yalnız ALIŞVERİŞ listesinde ([noteListKind]: başlık ya da maddeler)
+  /// işaretliler başlığındaki "Sil" "Alışverişi bitir" olur.
+  ValueChanged<List<NoteItem>>? _finishShoppingFor(Note note) {
+    if (note.type != NoteType.checklist || _readOnly) return null;
+    final key = (note.title, note.items.length);
+    var memo = _shoppingMemo;
+    if (memo == null || memo.$1 != key) {
+      memo = (
+        key,
+        noteListKind(note, context.l10n.localeName) == SmartListKind.shopping,
+      );
+      _shoppingMemo = memo;
+    }
+    return memo.$2 ? _onFinishShopping : null;
+  }
+
+  /// Alınanlar (işaretliler) listeden kalktı: sık aldıkların hafızası
+  /// güncellenir (akıllı listenin ve alışveriş şablonunun "Sık
+  /// eklediklerin"i), bildirimde Geri al — maddeler ve hafıza eski hâline.
+  void _finishShopping(List<NoteItem> bought) {
+    final memory = ref.read(quickEntryMemoryProvider.notifier);
+    final before = ref.read(quickEntryMemoryProvider);
+    final names = [
+      for (final i in bought)
+        if (!i.header && i.text.trim().isNotEmpty) i.text,
+    ];
+    memory
+      ..record(smartMemoryKind('smart', SmartListKind.shopping), names)
+      ..record('b:${NoteTemplate.shopping.key}', names);
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(
+        l10n.finishShoppingDone(bought.length),
+        action: SnackBarAction(
+          label: l10n.undo,
+          onPressed: () {
+            if (!mounted) return;
+            memory.restore(before);
+            // `itemsShown` DEĞİL: maddeler dışarıdan geri geliyor, kök
+            // kurulmalı ki ItemsEditor yeni listeyi benimsesin.
+            _mutate((n) {
+              final have = {for (final i in n.items) i.id};
+              return n.copyWith(
+                items: [
+                  ...n.items,
+                  for (final b in bought)
+                    if (!have.contains(b.id)) b,
+                ],
+              );
+            }, immediate: true);
+          },
+        ),
+      );
+  }
+
   // ---- Diğer eylemler -------------------------------------------------
 
   /// "+" düğmesinin yanındaki PAYLAŞIM durumu: yalnız paylaşılmış notta kişi

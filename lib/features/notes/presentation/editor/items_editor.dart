@@ -174,6 +174,7 @@ class ItemsEditor extends StatefulWidget {
     this.onLineReminder,
     this.lineTrailing,
     this.onItemChecked,
+    this.onFinishShopping,
   });
 
   /// DEFTER (çizgili kâğıt) görünümü: satırlar defter çizgilerine oturacak
@@ -196,6 +197,12 @@ class ItemsEditor extends StatefulWidget {
 
   /// Kullanıcı maddeyi işaretledi/kaldırdı (bağlı görev eşlemesi).
   final void Function(NoteItem item, bool checked)? onItemChecked;
+
+  /// ALIŞVERİŞİ BİTİR (2026-11-20, 17K AL-2): verilirse işaretliler
+  /// başlığındaki "Sil" düğmesi "Alışverişi bitir" olur — aynı toplu silme,
+  /// ardından kaldırılan (alınan) maddeler buraya verilir (sıklık hafızası,
+  /// geri al). Yalnız alışveriş listesinde verilir; yeni satır/alan yok.
+  final ValueChanged<List<NoteItem>>? onFinishShopping;
 
   /// "+ Yeni öğe" satırının SAĞ ucundaki ek düğme (editörde: notta hem metin
   /// hem liste varken "bölümler" menüsü — listeyi ya da metni kaldır).
@@ -2269,18 +2276,35 @@ class ItemsEditorState extends State<ItemsEditor>
                       color: NoteAccent.maybeOf(context)?.accent,
                     ),
                   ),
-                  Tooltip(
-                    message: l10n.deleteChecked(checkedCount),
-                    child: TextButton.icon(
-                      key: const ValueKey('items-delete-checked'),
-                      onPressed: _deleteChecked,
-                      icon: const Icon(Icons.delete_sweep_outlined, size: 20),
-                      label: Text(l10n.delete),
-                      style: TextButton.styleFrom(
-                        foregroundColor: scheme.error,
+                  if (widget.onFinishShopping case final finish?)
+                    Tooltip(
+                      message: l10n.finishShoppingTip,
+                      child: TextButton.icon(
+                        key: const ValueKey('items-finish-shopping'),
+                        onPressed: () {
+                          final bought = _deleteChecked();
+                          if (bought.isNotEmpty) finish(bought);
+                        },
+                        icon: const Icon(
+                          Icons.shopping_cart_checkout,
+                          size: AppIconSize.m,
+                        ),
+                        label: Text(l10n.finishShopping),
+                      ),
+                    )
+                  else
+                    Tooltip(
+                      message: l10n.deleteChecked(checkedCount),
+                      child: TextButton.icon(
+                        key: const ValueKey('items-delete-checked'),
+                        onPressed: _deleteChecked,
+                        icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+                        label: Text(l10n.delete),
+                        style: TextButton.styleFrom(
+                          foregroundColor: scheme.error,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

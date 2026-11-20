@@ -417,6 +417,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _restoreScroll();
       _maybeAutostartVoice();
+      _maybeOpenQuickDrop();
       // İLK AÇILIŞ İZİN LEVHASI KALKTI (F11.9, kullanıcı kararı 2026-10-31):
       // her izin ilk kullanıldığı yerde, kısa açıklamayla istenir; toplu
       // görünüm Ayarlar → İzinler'de.
@@ -488,6 +489,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (ref.read(voiceAutostartProvider.notifier).take()) {
       unawaited(_captureVoiceNote());
     }
+  }
+
+  /// Kısayolun / `notlar://ekle`nin hızlı ekle isteği varsa levhayı açar
+  /// (tek seferlik; bkz. [quickDropRequestProvider]).
+  void _maybeOpenQuickDrop() {
+    if (!mounted) return;
+    final text = ref.read(quickDropRequestProvider.notifier).take();
+    if (text != null) unawaited(showQuickDropSheet(context, initialText: text));
   }
 
   /// Not ızgarası kaydırıldı mı — başlık bloğunun (arama çubuğu + süzgeç
@@ -1491,6 +1500,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       if (next) {
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => _maybeAutostartVoice(),
+        );
+      }
+    });
+    ref.listen(quickDropRequestProvider, (previous, next) {
+      if (next != null) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _maybeOpenQuickDrop(),
         );
       }
     });

@@ -143,6 +143,10 @@ import '../note_theme_sheet.dart';
 import '../note_stats_sheet.dart';
 import '../note_template_sheet.dart';
 import '../notes_providers.dart';
+import '../../data/quick_entry_memory.dart';
+import '../../domain/note_templates.dart';
+import '../../domain/smart_list.dart' show SmartListKind;
+import '../quick_list_screen.dart' show smartMemoryKind;
 import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
 import '../scan_review_screen.dart';
@@ -634,6 +638,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// eski kalmış (F1.5 — `config/app.minClient`): eski istemci notu
   /// kaydedip yeni sürümün verisini bozmasın.
   bool get _readOnly => widget.readOnly || ref.read(updateRequiredProvider);
+
+  /// "Alışverişi bitir" kararı (başlık + madde sayısı → alışveriş mi);
+  /// her kurulumda sözlük taranmasın diye yalnız anahtar değişince.
+  ((String, int), bool)? _shoppingMemo;
+
+  /// Sabit örnek (kasma listesi 2): ItemsEditor'a her kurulumda yeni
+  /// kapanış gitmesin.
+  late final ValueChanged<List<NoteItem>> _onFinishShopping = _finishShopping;
 
   /// Açık not (P20 F64.2): dar dinleyiciler ([NoteSlice]) bunu dinler.
   final _noteN = LateSafeValue<Note?>(null);
@@ -4212,6 +4224,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         key: _itemsEditorKey,
         items: note.items,
         showCheckboxes: note.type == NoteType.checklist,
+        onFinishShopping: _finishShoppingFor(note),
         // İki sütun YALNIZ gerçek liste notunda (kullanıcı isteği
         // 2026-08-16). Metin notuna iliştirilmiş maddeler gövdenin altında
         // birkaç satır tutuyor; onları ikiye bölmek yalnız karıştırırdı.

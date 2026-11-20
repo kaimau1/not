@@ -32,13 +32,23 @@ class ShareIncoming {
 class ShareDestination {
   /// Yeni not. [choice] belge paylaşımında kipi (balonlu/klasik) ve başlığı,
   /// diğerlerinde yalnız başlığı taşır.
-  const ShareDestination.newNote(CaptureChoice this.choice) : noteId = null;
+  const ShareDestination.newNote(CaptureChoice this.choice)
+    : noteId = null,
+      quickAdd = false;
 
   /// İçerik bu nota eklenir.
-  const ShareDestination.existing(String this.noteId) : choice = null;
+  const ShareDestination.existing(String this.noteId)
+    : choice = null,
+      quickAdd = false;
+
+  /// YALNIZ METİN paylaşımı ⚡ Hızlı ekle levhasına gider (KARAR PLAN 1.0b
+  /// P3, 2026-11-20): maddelere ayrılır, hedef yazıdan/son kullanılandan
+  /// çözülür, önizleme + Geri al — uygulama içindeki hızlı ekleyle aynı yol.
+  const ShareDestination.quick() : noteId = null, choice = null, quickAdd = true;
 
   final String? noteId;
   final CaptureChoice? choice;
+  final bool quickAdd;
 
   bool get isExisting => noteId != null;
 }
@@ -294,10 +304,27 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
     final listHeight = cardBuilder == null
         ? (screenHeight * 0.45).clamp(200.0, 460.0)
         : (screenHeight * 0.62).clamp(260.0, 720.0);
+    // Yalnız yazı geldiyse (dosya/video yok) hızlı ekle de seçilebilir.
+    final quick =
+        !widget.incoming.hasFiles && widget.incoming.text.trim().isNotEmpty;
     return Column(
       key: const ValueKey('share-existing'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (quick) ...[
+          OutlinedButton.icon(
+            key: const ValueKey('share-quick-add'),
+            onPressed: () =>
+                Navigator.pop(context, const ShareDestination.quick()),
+            icon: const Icon(Icons.bolt_outlined),
+            label: Text(
+              '${l10n.shareQuickAdd} · ${l10n.shareQuickAddInfo}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         ValueListenableBuilder<bool>(
           // Silme düğmesi yalnız boş ↔ dolu geçişinde değişir.
           valueListenable: _searchFilled,

@@ -203,13 +203,13 @@ extension _ItemsActions on ItemsEditorState {
   }
 
   /// İşaretli tüm öğeleri tek seferde siler (madde 18 — Keep'teki gibi
-  /// tek tek silmeye gerek kalmaz).
-  void _deleteChecked() {
+  /// tek tek silmeye gerek kalmaz). Silinenleri döner ("Alışverişi bitir").
+  List<NoteItem> _deleteChecked() {
     final removed = [
       for (final i in _items)
         if (i.checked) i,
     ];
-    if (removed.isEmpty) return;
+    if (removed.isEmpty) return removed;
     _update(
       () => _items = [
         for (final i in _items)
@@ -221,6 +221,7 @@ extension _ItemsActions on ItemsEditorState {
       _checkedFrom.remove(item.id);
     }
     _commit();
+    return removed;
   }
 
   /// Maddeye uzun basıp BASILI TUTMAYA devam edildi (F60.S6, bkz.

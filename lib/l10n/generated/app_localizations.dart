@@ -15722,6 +15722,48 @@ abstract class AppLocalizations {
   /// **'→ Yeni not'**
   String get quickDropPreviewNew;
 
+  /// No description provided for @finishShopping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışverişi bitir'**
+  String get finishShopping;
+
+  /// No description provided for @finishShoppingTip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınanları listeden kaldır, sık aldıklarını hatırla'**
+  String get finishShoppingTip;
+
+  /// No description provided for @finishShoppingDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş bitti: {count} madde listeden kaldırıldı'**
+  String finishShoppingDone(int count);
+
+  /// No description provided for @quickDropSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı ekle ayarları'**
+  String get quickDropSettings;
+
+  /// No description provided for @quickDropPickMyself.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ben seçeyim'**
+  String get quickDropPickMyself;
+
+  /// No description provided for @shareQuickAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı ekle'**
+  String get shareQuickAdd;
+
+  /// No description provided for @shareQuickAddInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir listeye ya da nota madde madde ekle'**
+  String get shareQuickAddInfo;
+
   /// No description provided for @quickDropWait.
   ///
   /// In tr, this message translates to:

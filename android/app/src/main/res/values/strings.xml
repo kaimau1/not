@@ -3,6 +3,8 @@
     <string name="share_unreadable">Paylaşılan dosya okunamadı: gönderen uygulama izin vermedi.</string>
     <string name="shortcut_voice_short">Sesli not</string>
     <string name="shortcut_voice_long">Sesli not al</string>
+    <string name="shortcut_quick_add_short">Hızlı ekle</string>
+    <string name="shortcut_quick_add_long">Hızlı ekle: yaz ya da söyle, nota eklensin</string>
     <string name="widget_voice_label">Sesli Not</string>
     <string name="widget_voice_desc">Tek dokunuşla sesli not: konuş, yapay zeka notunu oluştursun</string>
     <string name="widget_quick_label">Hızlı Eylemler</string>

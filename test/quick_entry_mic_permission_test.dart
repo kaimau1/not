@@ -38,6 +38,7 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     Duration delay = Duration.zero,
+    String initialText = '',
   }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
@@ -54,6 +55,7 @@ void main() {
               raw: true,
               autoListen: true,
               autoListenDelay: delay,
+              initialText: initialText,
               onItems: (_) {},
             ),
           ),
@@ -75,6 +77,16 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(listens, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  // KARAR PLAN 1.0b P2/P3 (2026-11-20): paylaşım / kısayol metni yazılı
+  // gelince kullanıcı onu gözden geçirir; mikrofon kendiliğinden açılmaz.
+  testWidgets('önceden yazılı metinde kendiliğinden dinlemez', (tester) async {
+    DeviceSpeech.debugMicGranted = true;
+    await pump(tester, initialText: 'süt ekmek');
+    expect(listens, 0);
+    expect(find.text('süt ekmek'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 
