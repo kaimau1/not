@@ -12,6 +12,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/group_card.dart';
 import '../../../core/widgets/sheet_header.dart' show SectionLabel;
+import '../../../core/widgets/undo_snackbar.dart' show showAppMessage;
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/presentation/settings_screen.dart' show linkGuestAccount;
 import '../data/billing_products.dart';
@@ -61,9 +62,8 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     ref.listen(billingProvider.select((s) => s.noticeId), (_, _) {
       final n = ref.read(billingProvider).notice;
       if (n == null) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(billingNoticeText(l10n, n))));
+      // Bildirim hunisi (`notice_paths_guard_test`): ham SnackBar yok.
+      showAppMessage(context, billingNoticeText(l10n, n));
     });
     final billing = ref.watch(billingProvider);
     final tier = ref.watch(effectiveTierProvider);
