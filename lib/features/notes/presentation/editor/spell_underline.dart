@@ -98,9 +98,10 @@ class SpellMarks extends ChangeNotifier {
     return null;
   }
 
-  /// Önbellekteki öneriler (küçük harf).
+  /// Öneriler (küçük harf; önbellek o arada boşaldıysa yeniden).
   static List<String> suggestionsFor(String word) =>
-      _words[word]?.list ?? const [];
+      (_words[word] ?? SpellEngine.suggestions(word, AutoSpell.memory))?.list ??
+      const [];
 
   void _schedule(Duration d) {
     _timer?.cancel();

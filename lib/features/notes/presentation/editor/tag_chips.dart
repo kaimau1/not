@@ -161,6 +161,8 @@ class _SpellPainter extends CustomPainter {
     final field = state._field;
     final self = state.context.findRenderObject();
     if (field == null || self is! RenderBox || !self.attached) return;
+    // Okuma kipinde çizgi yok (menü de açılmaz).
+    if (field.widget.readOnly) return;
     final render = field.renderEditable;
     if (!render.attached || !render.hasSize) return;
     final value = controller.value;
