@@ -41,9 +41,15 @@ class QuickEntryBar extends ConsumerStatefulWidget {
     this.onRawSubmitted,
     this.onSpeechEnd,
     this.onDoneWord,
+    this.initialText = '',
   });
 
   final QuickParser parser;
+
+  /// Alana yazılı gelen metin (HE-3, uygulama dışından hızlı ekle). ELLE
+  /// YAZILMIŞ sayılır: kendiliğinden dinleme başlamaz (ham kipte tanıyıcı
+  /// alanı baştan yazar). Değişim bildirilmez — çağıran kendisi çözer.
+  final String initialText;
 
   /// Yeni çıkan maddeler (sırayla).
   final ValueChanged<List<QuickItem>> onItems;
@@ -118,6 +124,14 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   @override
   void initState() {
     super.initState();
+    final initial = widget.initialText;
+    if (initial.isNotEmpty) {
+      _c.value = TextEditingValue(
+        text: initial,
+        selection: TextSelection.collapsed(offset: initial.length),
+      );
+      _typed = true;
+    }
     _c.addListener(_onChanged);
     unawaited(
       DeviceSpeech.isAvailable().then((ok) async {

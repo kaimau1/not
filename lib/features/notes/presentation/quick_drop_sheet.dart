@@ -289,14 +289,21 @@ Map<String, dynamic> quickDropUndoFields({
   };
 }
 
-/// **HIZLI EKLE** levhasını açar.
-Future<void> showQuickDropSheet(BuildContext context) => showAppSheet<void>(
-  context: context,
-  showDragHandle: true,
-  isScrollControlled: true,
-  constraints: const BoxConstraints(maxWidth: 640),
-  builder: (_) => const SheetInsetPadding(child: QuickDropSheet()),
-);
+/// **HIZLI EKLE** levhasını açar. [text]: uygulama dışından gelen metin
+/// (HE-3, `notlar://ekle?metin=…`) alana yazılı gelir; eklenmez.
+Future<void> showQuickDropSheet(BuildContext context, {String text = ''}) {
+  // Levha aynı örnek kalır (klavye karesinde kurulmaz, S56); boşken const.
+  final sheet = text.isEmpty
+      ? const SheetInsetPadding(child: QuickDropSheet())
+      : SheetInsetPadding(child: QuickDropSheet(initialText: text));
+  return showAppSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    constraints: const BoxConstraints(maxWidth: 640),
+    builder: (_) => sheet,
+  );
+}
 
 /// **HIZLI EKLE** (kullanıcı isteği 2026-11-15: "ekranda bir buton olur;
 /// basınca hem yazma hem dinleme açılır, kişinin isteğine göre biri
@@ -313,7 +320,12 @@ Future<void> showQuickDropSheet(BuildContext context) => showAppSheet<void>(
 /// bulunamazsa önce yapay zekâya (yalnız başlıklar gider, kapatılabilir),
 /// olmazsa kullanıcıya "Hangi nota eklensin?" diye sorulur.
 class QuickDropSheet extends ConsumerStatefulWidget {
-  const QuickDropSheet({super.key});
+  const QuickDropSheet({super.key, this.initialText = ''});
+
+  /// Alana yazılı gelen metin (HE-3: paylaşım, seçim menüsü, derin bağlantı).
+  /// Elle yazılmış sayılır: kendiliğinden dinleme başlamaz (tanıyıcı ham
+  /// kipte alanı baştan yazar, metin silinirdi).
+  final String initialText;
 
   @override
   ConsumerState<QuickDropSheet> createState() => _QuickDropSheetState();
@@ -400,6 +412,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     );
     _state.addListener(_onState);
     _state.value = _Drop(id: _candidates.isEmpty ? null : _candidates.first.id);
+    if (widget.initialText.isNotEmpty) _resolve(widget.initialText);
     if (ref.read(quickDropKeyboardProvider)) focusAfterRouteOpens(this, _focus);
   }
 
@@ -882,6 +895,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               key: _bar,
               parser: _idle,
               raw: true,
+              initialText: widget.initialText,
               focusNode: _focus,
               hint: l10n.quickDropHint,
               autoListen: autoMic,

@@ -23,6 +23,8 @@ import 'package:notlar/features/notes/domain/quick_entry.dart'
     show QuickParser, quickAscii;
 import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
+import 'package:notlar/features/notes/presentation/notes_providers.dart'
+    show quickDropRequestProvider;
 import 'package:notlar/features/notes/presentation/quick_drop_sheet.dart';
 import 'package:notlar/features/notes/presentation/quick_entry_bar.dart';
 import 'package:notlar/features/notes/presentation/quick_list_screen.dart';
@@ -666,6 +668,45 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
       await tester.pumpAndSettle();
       expect(repo.writes.keys, ['eski']);
+    });
+
+    // HE-3 (PLAN §1.4/3): kısayol, karo, paylaşım/seçim "Nota ekle" →
+    // notlar://ekle?metin=… Metin alana yazılı gelir, hedef çözülür ama
+    // KENDİLİĞİNDEN eklenmez (başka uygulama da tetikleyebilir).
+    testWidgets('HE-3: dışarıdan gelen metin yazılı gelir, kendiliğinden '
+        'eklenmez', (tester) async {
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        repo: repo,
+        prefs: {'quick_drop_mic': false},
+        onTap: (context, ref) =>
+            showQuickDropSheet(context, text: 'alışveriş listesine süt ekle'),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      expect(find.text('alışveriş listesine süt ekle'), findsOneWidget);
+      expect(find.text('→ Alışveriş listesi · Süt (1 madde)'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      expect(repo.writes, isEmpty);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      expect(repo.writes.keys, ['a']);
+    });
+
+    test('HE-3: dışarıdan istek tek seferlik, metin 2000 karakterle sınırlı', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final n = c.read(quickDropRequestProvider.notifier);
+      expect(n.take(), isNull);
+      n.request('a' * 2500);
+      expect(c.read(quickDropRequestProvider)!.length, 2000);
+      expect(n.take()!.length, 2000);
+      expect(n.take(), isNull);
+      n.request('');
+      expect(n.take(), '', reason: 'boş istek de levhayı açar');
     });
 
     testWidgets('konuşma sonu: geri sayım, sonra eklenir; Bekle durdurur', (

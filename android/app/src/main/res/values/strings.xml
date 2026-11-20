@@ -24,4 +24,8 @@
     <string name="update_channel_name">Uygulama güncellemesi</string>
     <string name="update_done_title">Notlar güncellendi</string>
     <string name="update_done_body">Yeni sürüm kuruldu — açmak için dokun</string>
+    <!-- HE-3 (P84): hızlı ekle levhasına uygulama dışından giriş -->
+    <string name="hizli_ekle">Hızlı ekle</string>
+    <string name="hizli_ekle_uzun">Hızlı ekle: yaz ya da söyle</string>
+    <string name="nota_ekle">Nota ekle</string>
 </resources>

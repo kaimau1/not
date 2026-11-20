@@ -14,9 +14,15 @@ Yapılanlar:
 2. HE-2 çip araması (commit 2): şeridin başında `quick-drop-search` → `showNotePicker(title:)`
    (yeni isteğe bağlı başlık), 12 çip sınırı kalktı (şerit tembel). Test "çiplerde arama".
 
-Sıradaki: (3) HE-3
-`notlar://ekle` + kısayol + karo + PROCESS_TEXT + paylaş "Nota ekle" (Kotlin aktarma etkinliği
-`NotaEkle`) → (4) 1×1/4×1 ana ekran aracı → belgeler, S56 bütçesini CI kaydından düşür.
+   CI 44739366997 YEŞİL (tam takım 3 parça). S56 yazma 415 → 335 (bütçe düşürüldü, commit 928d0e26).
+3. HE-3 uygulama dışından (commit 3): `notlar://ekle?metin=` → router → `quickDropRequestProvider`
+   → dashboard `_maybeOpenQuickDrop` → `showQuickDropSheet(text:)`; `QuickEntryBar.initialText`
+   (elle yazılmış sayılır → kendiliğinden dinleme yok). Android `HizliEkle.kt`: `NotaEkle`
+   (SEND text/plain + PROCESS_TEXT aktarıcı), `HizliEkleKarosu` (TileService); kısayol şablonu
+   `src/main/kisayol/app_shortcuts.xml` + gradle `KisayolUret` (targetPackage = çeşit kimliği).
+   `security_guard_test` listesi + `docs/guvenlik_denetimi.md` G-27.
 
-Kanıt/ölçüm: S56 `yazma_kurulum` 415 (önce); sonrası CI kaydından ("S56: {...}").
+Sıradaki: (4) 1×1/4×1 ana ekran aracı → `gh workflow run build.yml --ref oto/P84-hizli-ekle`
+(APK derlemesi Kotlin/manifest/gradle'ı doğrular) → belgeler (Kuyruk, PLAN, regresyon, hafıza,
+sürüm notu, KONTROL "Telefonda bak").
 Test: `flutter test test/quick_list_screen_test.dart test/perf_budget_test.dart --plain-name S56`.

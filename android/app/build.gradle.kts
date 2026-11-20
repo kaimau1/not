@@ -173,8 +173,8 @@ android {
         // çıktısı ayrı kimlikle (`dev.kaimau.notlar.olcum`, "Notlar Ölçüm")
         // kurulur → telefondaki release'e (imza uyuşmazlığı → kaldır-kur →
         // VERİ SİLİNİR) hiç dokunmaz. Firebase istemcisi
-        // `src/profile/google-services.json`da. Bilinen sınır: uygulama
-        // kısayolları (`app_shortcuts.xml`) sabit paket adıyla release'i açar.
+        // `src/profile/google-services.json`da. Uygulama kısayolları
+        // çeşidin kimliğiyle üretilir (aşağıda `KisayolUret`, P84).
         maybeCreate("profile").apply {
             applicationIdSuffix = ".olcum"
             manifestPlaceholders["appLabel"] = "Notlar Ölçüm"
@@ -227,6 +227,41 @@ android {
         }
         getByName("debug") { java.srcDir("src/genel/kotlin") }
         maybeCreate("profile").java.srcDir("src/genel/kotlin")
+    }
+}
+
+/** UYGULAMA KISAYOLLARI (P84, HE-3): `res/xml/app_shortcuts.xml`deki intent'in
+ *  `targetPackage`'ı kaynak başvurusu ALMAZ (sistem kısayolu kendi kaynaklarıyla
+ *  çözer); sabit `dev.kaimau.notlar` ölçüm (`.olcum`) ve Play derlemesinde yanlış
+ *  uygulamayı açıyordu. Şablon `src/main/kisayol/app_shortcuts.xml`; her çeşit için
+ *  `${applicationId}` gerçek kimlikle değiştirilip üretilmiş kaynak olarak eklenir. */
+abstract class KisayolUret : DefaultTask() {
+    @get:InputFile
+    abstract val sablon: RegularFileProperty
+
+    @get:Input
+    abstract val kimlik: Property<String>
+
+    @get:OutputDirectory
+    abstract val cikti: DirectoryProperty
+
+    @TaskAction
+    fun uret() {
+        val xml = cikti.get().dir("xml").asFile
+        xml.mkdirs()
+        val metin = sablon.get().asFile.readText().replace("\${applicationId}", kimlik.get())
+        xml.resolve("app_shortcuts.xml").writeText(metin)
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        val gorev = tasks.register<KisayolUret>("${variant.name}KisayolUret") {
+            sablon.set(layout.projectDirectory.file("src/main/kisayol/app_shortcuts.xml"))
+            kimlik.set(variant.applicationId)
+            cikti.set(layout.buildDirectory.dir("generated/kisayol/${variant.name}"))
+        }
+        variant.sources.res?.addGeneratedSourceDirectory(gorev, KisayolUret::cikti)
     }
 }
 
