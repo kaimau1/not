@@ -1,0 +1,303 @@
+# Y-0 ölçüm seti (b): yanlış<TAB>doğru<TAB>tür. Yakalama = motor yanlışı tam
+# olarak doğruya çevirir (küçük harf). Türler: harfsiz, komsu, eksik, fazla,
+# yer, bitisik, kural, agiz.
+calisma	çalışma	harfsiz
+guzel	güzel	harfsiz
+degil	değil	harfsiz
+cok	çok	harfsiz
+gunluk	günlük	harfsiz
+icin	için	harfsiz
+simdi	şimdi	harfsiz
+bugun	bugün	harfsiz
+yarin	yarın	harfsiz
+aksam	akşam	harfsiz
+ogretmen	öğretmen	harfsiz
+ogrenci	öğrenci	harfsiz
+cocuk	çocuk	harfsiz
+isler	işler	harfsiz
+ekmegi	ekmeği	harfsiz
+sutu	sütü	harfsiz
+yumurtalari	yumurtaları	harfsiz
+kahvalti	kahvaltı	harfsiz
+toplanti	toplantı	harfsiz
+alisveris	alışveriş	harfsiz
+gorusuruz	görüşürüz	harfsiz
+dusunuyorum	düşünüyorum	harfsiz
+calisiyorum	çalışıyorum	harfsiz
+yapacagiz	yapacağız	harfsiz
+gidecegim	gideceğim	harfsiz
+soyledi	söyledi	harfsiz
+ogrendim	öğrendim	harfsiz
+baslayacak	başlayacak	harfsiz
+basladi	başladı	harfsiz
+degisti	değişti	harfsiz
+onemli	önemli	harfsiz
+saglikli	sağlıklı	harfsiz
+temizligi	temizliği	harfsiz
+kucuk	küçük	harfsiz
+buyuk	büyük	harfsiz
+hizli	hızlı	harfsiz
+yavas	yavaş	harfsiz
+mutfagi	mutfağı	harfsiz
+ilac	ilaç	harfsiz
+cay	çay	harfsiz
+sut	süt	harfsiz
+seker	şeker	harfsiz
+yagi	yağı	harfsiz
+balik	balık	harfsiz
+tavugu	tavuğu	harfsiz
+sogan	soğan	harfsiz
+gozluk	gözlük	harfsiz
+gunes	güneş	harfsiz
+ulke	ülke	harfsiz
+sehir	şehir	harfsiz
+oglen	öğlen	harfsiz
+carsamba	çarşamba	harfsiz
+persembe	perşembe	harfsiz
+sali	salı	harfsiz
+kisi	kişi	harfsiz
+gorev	görev	harfsiz
+ozur	özür	harfsiz
+tesekkurler	teşekkürler	harfsiz
+hersey	her şey	harfsiz
+birsey	bir şey	harfsiz
+deger	değer	harfsiz
+dogru	doğru	harfsiz
+dogum	doğum	harfsiz
+agac	ağaç	harfsiz
+cicek	çiçek	harfsiz
+evrt	evet	komsu
+tamsm	tamam	komsu
+güzrl	güzel	komsu
+buhün	bugün	komsu
+yaeın	yarın	komsu
+akşan	akşam	komsu
+sabaj	sabah	komsu
+hafra	hafta	komsu
+markrt	market	komsu
+ekmrk	ekmek	komsu
+lisre	liste	komsu
+kiyap	kitap	komsu
+kakem	kalem	komsu
+dosua	dosya	komsu
+fatira	fatura	komsu
+ödene	ödeme	komsu
+hesao	hesap	komsu
+randebu	randevu	komsu
+toplantu	toplantı	komsu
+telefom	telefon	komsu
+önrmli	önemli	komsu
+yenek	yemek	komsu
+çorna	çorba	komsu
+salaya	salata	komsu
+domares	domates	komsu
+parates	patates	komsu
+arana	araba	komsu
+kapo	kapı	komsu
+pencwre	pencere	komsu
+bilgisayae	bilgisayar	komsu
+uygulana	uygulama	komsu
+kullanıxı	kullanıcı	komsu
+otonatik	otomatik	komsu
+kontrok	kontrol	komsu
+çalışna	çalışma	komsu
+arladaş	arkadaş	komsu
+teşekkürker	teşekkürler	komsu
+merhava	merhaba	komsu
+lürfen	lütfen	komsu
+doğrı	doğru	komsu
+yalnoz	yalnız	komsu
+aonra	sonra	komsu
+önxe	önce	komsu
+kafar	kadar	komsu
+kalen	kalem	komsu
+toplanı	toplantı	eksik
+telfon	telefon	eksik
+bilgisyar	bilgisayar	eksik
+uygulma	uygulama	eksik
+kullanıc	kullanıcı	eksik
+otomatk	otomatik	eksik
+kontol	kontrol	eksik
+hatrlatma	hatırlatma	eksik
+alışveiş	alışveriş	eksik
+sipaiş	sipariş	eksik
+randvu	randevu	eksik
+arkdaş	arkadaş	eksik
+teşekürler	teşekkürler	eksik
+merhba	merhaba	eksik
+lütfn	lütfen	eksik
+önmli	önemli	eksik
+gerekiyr	gerekiyor	eksik
+yapılıor	yapılıyor	eksik
+geliyr	geliyor	eksik
+çalışıyr	çalışıyor	eksik
+fatra	fatura	eksik
+hesp	hesap	eksik
+dosa	dosya	eksik
+belg	belge	eksik
+proj	proje	eksik
+salta	salata	eksik
+domats	domates	eksik
+patats	patates	eksik
+yumrta	yumurta	eksik
+anahtr	anahtar	eksik
+pencre	pencere	eksik
+tamm	tamam	eksik
+bugn	bugün	eksik
+yarn	yarın	eksik
+kitp	kitap	eksik
+telefoon	telefon	fazla
+toplantıı	toplantı	fazla
+bilgisayarr	bilgisayar	fazla
+uygulamaa	uygulama	fazla
+kontroll	kontrol	fazla
+otomattik	otomatik	fazla
+randevuu	randevu	fazla
+arkadaşş	arkadaş	fazla
+merhabaa	merhaba	fazla
+lütfeen	lütfen	fazla
+önemlii	önemli	fazla
+gerekiyorr	gerekiyor	fazla
+yapılıyorr	yapılıyor	fazla
+geliyorr	geliyor	fazla
+faturaa	fatura	fazla
+hesapp	hesap	fazla
+dosyaa	dosya	fazla
+belgee	belge	fazla
+projee	proje	fazla
+mesajj	mesaj	fazla
+yemekk	yemek	fazla
+salataa	salata	fazla
+domatess	domates	fazla
+patatess	patates	fazla
+anahtarr	anahtar	fazla
+penceree	pencere	fazla
+akşamm	akşam	fazla
+sabahh	sabah	fazla
+güzell	güzel	fazla
+tamamm	tamam	fazla
+bugünn	bugün	fazla
+yarınn	yarın	fazla
+çocukk	çocuk	fazla
+kitapp	kitap	fazla
+haftaa	hafta	fazla
+telefno	telefon	yer
+toplanıt	toplantı	yer
+bilgisayra	bilgisayar	yer
+uygualma	uygulama	yer
+kontorl	kontrol	yer
+otomaitk	otomatik	yer
+randveu	randevu	yer
+arkadşa	arkadaş	yer
+mehraba	merhaba	yer
+lütefn	lütfen	yer
+önemil	önemli	yer
+gerkeiyor	gerekiyor	yer
+yapılyıor	yapılıyor	yer
+gelyior	geliyor	yer
+fatrua	fatura	yer
+hseap	hesap	yer
+dsoya	dosya	yer
+blege	belge	yer
+porje	proje	yer
+mseaj	mesaj	yer
+yemke	yemek	yer
+salaat	salata	yer
+domaets	domates	yer
+pataets	patates	yer
+anahtra	anahtar	yer
+pencree	pencere	yer
+akşma	akşam	yer
+sabha	sabah	yer
+güzle	güzel	yer
+tamma	tamam	yer
+gelirmisin	gelir misin	bitisik
+yaparmısın	yapar mısın	bitisik
+bilirmisiniz	bilir misiniz	bitisik
+olurmu	olur mu	bitisik
+varmı	var mı	bitisik
+yokmu	yok mu	bitisik
+değilmi	değil mi	bitisik
+tamammı	tamam mı	bitisik
+öylemi	öyle mi	bitisik
+geldimi	geldi mi	bitisik
+bittimi	bitti mi	bitisik
+oldumu	oldu mu	bitisik
+doğrumu	doğru mu	bitisik
+iyimi	iyi mi	bitisik
+hazırmı	hazır mı	bitisik
+biliyormusun	biliyor musun	bitisik
+gelecekmisin	gelecek misin	bitisik
+yinede	yine de	bitisik
+hemde	hem de	bitisik
+genede	gene de	bitisik
+yada	ya da	bitisik
+demekki	demek ki	bitisik
+iyiki	iyi ki	bitisik
+tabiki	tabii ki	bitisik
+öyleki	öyle ki	bitisik
+yeterki	yeter ki	bitisik
+dediki	dedi ki	bitisik
+herşey	her şey	bitisik
+birşey	bir şey	bitisik
+hiçbirşey	hiçbir şey	bitisik
+herzaman	her zaman	bitisik
+hergün	her gün	bitisik
+birgün	bir gün	bitisik
+nekadar	ne kadar	bitisik
+okadar	o kadar	bitisik
+yanlız	yalnız	kural
+yalnış	yanlış	kural
+malesef	maalesef	kural
+orjinal	orijinal	kural
+herkez	herkes	kural
+şuan	şu an	kural
+deyil	değil	kural
+klavuz	kılavuz	kural
+süpriz	sürpriz	kural
+antreman	antrenman	kural
+yanlızca	yalnızca	kural
+makina	makine	kural
+laboratuar	laboratuvar	kural
+döküman	doküman	kural
+eksoz	egzoz	kural
+şöför	şoför	kural
+pantalon	pantolon	kural
+hastahane	hastane	kural
+acaip	acayip	kural
+ayrıyeten	ayrıca	kural
+kordinasyon	koordinasyon	kural
+yourt	yoğurt	kural
+fasülye	fasulye	kural
+mönü	menü	kural
+sandaviç	sandviç	kural
+şarz	şarj	kural
+tiren	tren	kural
+televüzyon	televizyon	kural
+kütüpane	kütüphane	kural
+hoşgeldin	hoş geldin	kural
+geliyo	geliyor	agiz
+yapıyo	yapıyor	agiz
+biliyo	biliyor	agiz
+gidiyo	gidiyor	agiz
+istiyo	istiyor	agiz
+yapıcam	yapacağım	agiz
+gelicem	geleceğim	agiz
+gidicem	gideceğim	agiz
+bakıcam	bakacağım	agiz
+alıcam	alacağım	agiz
+napıyorsun	ne yapıyorsun	agiz
+geliyosun	geliyorsun	agiz
+yapıyosun	yapıyorsun	agiz
+biliyom	biliyorum	agiz
+geliyom	geliyorum	agiz
+istiyom	istiyorum	agiz
+bilmiyom	bilmiyorum	agiz
+yapıyoz	yapıyoruz	agiz
+gidiyoz	gidiyoruz	agiz
+olucak	olacak	agiz
+yapıcak	yapacak	agiz
+gelicek	gelecek	agiz
+yapcam	yapacağım	agiz
+gelcem	geleceğim	agiz
+bişey	bir şey	agiz
