@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/widgets/file_drop_overlay.dart';
 import '../core/widgets/focus_ring.dart';
 import '../core/app_update.dart';
 import 'release_notes_toast.dart';
@@ -160,7 +161,7 @@ AppLifecycleListener? _handlesBackReset;
 @visibleForTesting
 void resetAlwaysHandleBackCache() => _handlesBackSent = false;
 
-/// Web'de tarayıcı geçmişini "önce ana sayfa, sonra çıkış" kuralıyla yazan
+/// Web'de tarayıcının geri tuşunu uygulamanın geri yoluna bağlayan
 /// konum sağlayıcısı (bkz. [HomeFirstRouteInformationProvider]). Yönlendirici
 /// başına TEK örnek: her build'de yenisi kurulsa geçmiş durumu sıfırlanırdı.
 final _webRouteInfoProvider = Provider<RouteInformationProvider?>((ref) {
@@ -170,6 +171,12 @@ final _webRouteInfoProvider = Provider<RouteInformationProvider?>((ref) {
     router.routeInformationProvider,
     // EN ÜSTTEKİ eşleşme — push'lanmış not dahil (bkz. currentLocation).
     location: () => router.state.uri,
+    // Tarayıcının geri tuşu Android geri tuşunun yolundan geçer (önce
+    // BackButtonListener'lar, menü/kutu/panel, sonra ekran; bkz.
+    // HomeFirstHistory, EscBackAction).
+    onBack: () =>
+        router.backButtonDispatcher.invokeCallback(Future<bool>.value(false)),
+    goHome: () => router.go('/'),
   );
 });
 
@@ -289,6 +296,8 @@ class NotlarApp extends ConsumerWidget {
                 // duyuru tek yerde, Navigator'ın ve levhaların ÜSTÜNDE;
                 // kapı şeridinin altında, kilidin içinde.
                 child: AppNoticeHost(
+                // Dosya sürüklenirken "bırakın" çerçevesi (web + Android).
+                child: FileDropOverlay(
                 // Not yazım sorunları (F1.6: 1 MiB sınırı / sunucu reddi).
                 child: NoteWriteIssueListener(
                   // Oturum servisleri (F2.4) — ana ekranın build'inden çıktı.
@@ -299,6 +308,7 @@ class NotlarApp extends ConsumerWidget {
                       ),
                     ),
                   ),
+                ),
                 ),
                 ),
               ),

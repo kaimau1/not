@@ -1049,6 +1049,9 @@ extension _EditorMediaView on _NoteEditorScreenState {
             sheetViewSwitch: (sheet) => _sheetViewSwitch(pinned, sheet),
             // Paneldeki kalem kapatıldı: editörün kalem kipi de kapanır.
             onPenOff: () => _update(() => _penMode = false),
+            // Paneldeki kalem açıldı: editörün normal kalem kipi (alttaki
+            // kalem tepsisi) açılır — bölme ayrı hızlı kalem çubuğu açmaz.
+            onPenOn: _readOnly || note.type.isPageNoteType ? null : _openPen,
             onCaption: _readOnly || pinned.kind != AttachmentKind.image
                 ? null
                 : () => unawaited(_editCaption(pinned)),

@@ -86,6 +86,31 @@ void main() {
       expect(merged.single.displayWidth, 0.5);
     });
 
+    test('kaydi bekleyen ek cizgileri yankiyla silinmez (2026-11-20)', () {
+      const stroke = InkStroke(
+        page: 1,
+        color: 0xFF000000,
+        width: 2,
+        points: [0.1, 0.1, 0.2, 0.2],
+      );
+      final local = [_image('a').copyWith(ink: const [stroke, stroke])];
+      final incoming = [_image('a').copyWith(ink: const [stroke])];
+
+      expect(
+        mergeAttachmentLayout(
+          local: local,
+          incoming: incoming,
+          localInk: true,
+        ).single.ink,
+        hasLength(2),
+      );
+      // Bekleyen kayıt yoksa sunucudaki (ör. başka cihaz) benimsenir.
+      expect(
+        mergeAttachmentLayout(local: local, incoming: incoming).single.ink,
+        hasLength(1),
+      );
+    });
+
     test('sayfa/serit tercihi yerelden korunur', () {
       final local = [_image('a', asFile: true)];
       final incoming = [_image('a')];

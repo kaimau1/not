@@ -660,16 +660,28 @@ List<InkStroke> rotateInk(List<InkStroke> strokes, int quarterTurns) {
 /// ayrılmazsa yazma ile anlık görüntü arasındaki yarışta kullanıcının az önce
 /// verdiği konum/boyut bir kare için geri döner ve o kare içinde tetiklenen bir
 /// kayıtla kalıcılaşır ("boyutu kaydedilmemiş oluyor").
+///
+/// [localInk]: yerelde KAYDEDİLMEMİŞ değişiklik var (editörün kaydı
+/// bekliyor) — eklerin çizgileri de yereldir. KÖK NEDEN (kullanıcı bulgusu
+/// 2026-11-20: "ek üstüne kalemle yazılan yazı bir görünüp kayboluyor,
+/// yazdıktan sonra kaybolup geri geliyor"): gelen yankı (bir önceki kaydın
+/// anlık görüntüsü) ekin `ink`ini sunucudakiyle değiştiriyordu; o arada
+/// çizilen çizgiler bölmenin denetleyicisine eski listeyle geri yazılıyor,
+/// bir sonraki kayıtla geri geliyordu (sayfa mürekkebinin `pageInk`
+/// kuralıyla aynı: bekleyen yerel çizgi kazanır).
 List<Attachment> mergeAttachmentLayout({
   required List<Attachment> local,
   required List<Attachment> incoming,
+  bool localInk = false,
 }) {
   if (local.isEmpty) return incoming;
   final byId = {for (final a in local) a.id: a};
   return [
     for (final remote in incoming)
       if (byId[remote.id] case final mine?)
-        remote.withLayoutOf(mine)
+        localInk && !identical(mine.ink, remote.ink)
+            ? remote.withLayoutOf(mine).copyWith(ink: mine.ink)
+            : remote.withLayoutOf(mine)
       else
         remote,
   ];

@@ -3,6 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 20 Kasım 2026 {#2026-11-20}
+- **Web'de geri tuşu artık uygulamanın geri tuşu gibi:** açık menü, pencere ya da panel varken tarayıcının geri tuşu önce onu kapatır; sonra notu kapatıp ana sayfaya döner, siteden ancak ana sayfadayken çıkar.
+- **Web'de sesle yazma:** Chrome, Edge ve Safari'de mikrofon düğmesi konuştuğunu canlı olarak nota yazar (tarayıcı ilk seferde mikrofon izni sorar).
+- **Dosya sürüklerken "Eklemek için bırakın" çerçevesi:** web'de ve tablette fareyle başka bir uygulamadan dosya sürükleyince pencerede çerçeve çıkar; bırakınca dosya açık nota (ya da yeni nota) eklenir. Tablette başka uygulamadan sürükle-bırak da artık çalışır.
+- **Sabit ekte kalem düzeldi:** görselin/PDF'in üstüne yazılan yazı artık bir görünüp kaybolmuyor, kalemi kapatınca ya da silgiye basınca silinmiyor. Paneldeki kalem düğmesi diğer yerlerdeki gibi alttaki normal kalem tepsisini açar; panelin ⋮ menüsündeki **Düğmeleri düzenle** ile panel düğmelerini gizleyip gösterebilirsin.
+- **Web'de maddeye tıklayınca kaymıyor:** liste maddesine tıklayınca yazı birkaç piksel yukarı zıplıyordu; artık yerinde kalır.
 - **Hızlı ekle neyin nereye gideceğini önceden gösterir:** yazarken alttaki satırda "→ Alışveriş listesi · süt, ekmek (2 madde)" gibi hangi nota neyin gireceğini Ekle'ye basmadan görürsün; listede zaten olanlar sayılmaz. Yapay zekâ, açılınca klavye ve açılınca dinle seçenekleri sağ üstteki ⚙ menüsünde. Yapay zekâ hangi not olduğunu düşünürken **Ben seçeyim** ile beklemeden kendin seçersin.
 - **Hızlı ekle'de not ara:** hedef notlar şeridinin başındaki **Not bul** ile bütün listelerin ve notların arasından arayıp seçebilirsin; şerit artık yalnız ilk 12 notu göstermiyor.
 - **Uygulamayı açmadan hızlı ekle:** uygulama simgesine basılı tutunca **Hızlı ekle** kısayolu; bildirim panelinin hızlı ayarlarına eklenebilen **Hızlı ekle** karosu; başka bir uygulamada metni seçince ya da paylaşınca **Nota ekle**. Hepsi hızlı ekle levhasını açar; seçtiğin ya da paylaştığın metin yazılı gelir, sen Ekle'ye basınca eklenir.

@@ -768,6 +768,8 @@
   "addImageOnPageSubtitle": "Sayfaya yerleşir, yazı etrafından akar",
   "addImageAsFile": "Görseli ek olarak yükle",
   "addImageAsFileSubtitle": "Sayfaya girmez, alttaki ek şeridinde durur",
+  "pinnedCustomize": "Düğmeleri düzenle",
+  "fileDropHint": "Eklemek için bırakın",
   "attachmentCopied": "Ek kopyalandı",
   "pasteAttachment": "Kopyalanan eki yapıştır",
   "fullscreen": "Tam ekran",

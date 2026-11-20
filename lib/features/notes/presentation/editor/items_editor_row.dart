@@ -552,6 +552,14 @@ extension _ItemsRow on ItemsEditorState {
                                     filled: false,
                                     border: InputBorder.none,
                                     isDense: true,
+                                    // WEB'DE TIKLAYINCA ZIPLAMA (kullanıcı
+                                    // bulgusu 2026-11-20): masaüstü/web'in
+                                    // uyarlanır yoğunluğu (sıkı) alanın
+                                    // dolgusunu 4 px küçültüyor, düz çizim
+                                    // ([_LazyItemField]) küçülmüyordu —
+                                    // dokununca yazı yukarı kayıyordu.
+                                    // Yoğunluk her platformda aynı.
+                                    visualDensity: VisualDensity.standard,
                                     contentPadding: EdgeInsets.symmetric(
                                       vertical: fieldPad,
                                     ),

@@ -553,6 +553,8 @@
   "addImageOnPageSubtitle": "Sits on the page, text flows around it",
   "addImageAsFile": "Add image as a file",
   "addImageAsFileSubtitle": "Stays out of the page, in the attachment strip",
+  "pinnedCustomize": "Edit buttons",
+  "fileDropHint": "Drop to attach",
   "attachmentCopied": "Attachment copied",
   "pasteAttachment": "Paste copied attachment",
   "fullscreen": "Full screen",

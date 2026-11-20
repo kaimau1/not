@@ -1667,6 +1667,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sayfaya girmez, alttaki ek şeridinde durur';
 
   @override
+  String get pinnedCustomize => 'Düğmeleri düzenle';
+
+  @override
+  String get fileDropHint => 'Eklemek için bırakın';
+
+  @override
   String get attachmentCopied => 'Ek kopyalandı';
 
   @override

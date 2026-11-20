@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:file_selector/file_selector.dart';
@@ -5,8 +6,33 @@ import 'package:web/web.dart' as web;
 
 /// Belgeye bırakılan ya da yapıştırılan dosyaları [onDrop]'a verir; dönen işlev
 /// dinlemeyi bırakır. `dragover` engellenmezse tarayıcı dosyayı sekmede açar.
-void Function() listenFileDrops(void Function(List<XFile> files) onDrop) {
-  final over = ((web.DragEvent e) => e.preventDefault()).toJS;
+void Function() listenFileDrops(
+  void Function(List<XFile> files) onDrop, {
+  void Function(bool hovering)? onHover,
+}) {
+  // "Bırak" çerçevesi: `dragover` sürükleme pencerenin üstündeyken sürekli
+  // gelir; kesilince (pencereden çıktı, Esc) kısa süre sonra çerçeve iner.
+  // `dragenter`/`dragleave` her alt öğede gelip gittiği için sayılmaz.
+  Timer? idle;
+  void hover(bool v) {
+    idle?.cancel();
+    idle = null;
+    onHover?.call(v);
+  }
+
+  bool hasFiles(web.DragEvent e) {
+    final types = e.dataTransfer?.types.toDart;
+    return types != null && types.any((t) => t.toDart == 'Files');
+  }
+
+  final over = ((web.DragEvent e) {
+    e.preventDefault();
+    if (!hasFiles(e)) return;
+    if (idle == null) onHover?.call(true);
+    idle?.cancel();
+    idle = Timer(const Duration(milliseconds: 250), () => hover(false));
+  }).toJS;
+
   void deliver(web.FileList list) {
     final files = [for (var i = 0; i < list.length; i++) list.item(i)!];
     Future.wait([
@@ -24,6 +50,7 @@ void Function() listenFileDrops(void Function(List<XFile> files) onDrop) {
 
   final drop = ((web.DragEvent e) {
     e.preventDefault();
+    hover(false);
     final list = e.dataTransfer?.files;
     if (list == null || list.length == 0) return;
     deliver(list);
@@ -43,6 +70,7 @@ void Function() listenFileDrops(void Function(List<XFile> files) onDrop) {
     ..addEventListener('drop', drop)
     ..addEventListener('paste', paste);
   return () {
+    hover(false);
     web.document
       ..removeEventListener('dragover', over)
       ..removeEventListener('drop', drop)

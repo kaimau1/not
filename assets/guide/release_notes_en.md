@@ -3,6 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 20 November 2026 {#2026-11-20}
+- **The browser back button now works like the app's back button:** with a menu, dialog or panel open, back closes it first; then it closes the note and returns home, and leaves the site only from the home screen.
+- **Voice typing on the web:** in Chrome, Edge and Safari the microphone button writes what you say into the note live (the browser asks for microphone permission the first time).
+- **"Drop to attach" frame while dragging files:** on the web, and on a tablet with a mouse, dragging a file from another app shows a frame over the window; dropping adds it to the open note (or a new note). Dragging and dropping from other apps on tablets now works too.
+- **Pen on pinned attachments fixed:** writing on a pinned image/PDF no longer flashes and disappears, and no longer vanishes when you turn the pen off or tap the eraser. The panel's pen button opens the normal pen tray at the bottom like everywhere else; **Edit buttons** in the panel's ⋮ menu lets you hide or show the panel's buttons.
+- **List items no longer jump on the web:** clicking a checklist item moved its text up a few pixels; it now stays in place.
 - **Quick add shows where things will go before you add:** while you type, the line below shows which note gets what, e.g. "→ Shopping list · milk, bread (2 new)", before you tap Add; items already on the list are not counted. The AI, keyboard-on-open and listen-on-open options are in the ⚙ menu at the top right. While the AI is working out which note, tap **I'll pick** to choose yourself without waiting.
 - **Find a note in quick add:** **Find note** at the start of the target strip searches all your lists and notes; the strip no longer stops at the first 12 notes.
 - **Quick add without opening the app:** long-press the app icon for the **Quick add** shortcut; add the **Quick add** tile to your quick settings; select or share text in another app and choose **Nota ekle**. All of them open quick add with the selected or shared text filled in; it is added only when you tap Add.

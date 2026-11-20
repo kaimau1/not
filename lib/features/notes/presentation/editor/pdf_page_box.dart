@@ -140,11 +140,17 @@ class PdfPageBox extends StatefulWidget {
     this.onNoteFromSelection,
     this.fitWidth = false,
     this.ink,
+    this.shownInk,
   });
 
   /// Verilirse sayfanın üstüne KALEMLE YAZILIR (sabit bölme, 2026-11-08):
   /// çizim katmanı etkileşimli; yoksa var olan çizim yalnız gösterilir.
   final InkController? ink;
+
+  /// Kalem kapalıyken boyanacak çizgiler (verilmezse ekin kendi listesi).
+  /// Sabit bölme verir: editör eke çizgide kökü kurmadığı için ek bayat
+  /// kalabilir (bkz. `PinnedMediaPane._shownInk`).
+  final List<InkStroke>? shownInk;
 
   /// **OKUMA NOTU** (kullanıcı isteği 2026-11-03): verilirse sayfadaki yazı
   /// BASILI TUTARAK seçilir (Chrome'daki gibi kelime kelime büyür) ve
@@ -1022,10 +1028,12 @@ class _PdfPageBoxState extends State<PdfPageBox> {
         // El yazısı katmanı: PDF'in üzerine yapılan çizim kutuda da görünür
         // (tam ekranda çizip nota dönünce sayfa boş görünmesin). Genişliğe
         // oturan kipte sayfanın kendi katmanında (sayfayla birlikte kayar).
-        if (a.ink.isNotEmpty && !widget.fitWidth)
+        if ((widget.shownInk ?? a.ink).isNotEmpty && !widget.fitWidth)
           Positioned.fill(
             child: IgnorePointer(
-              child: CustomPaint(painter: InkPainter(a.ink, _page)),
+              child: CustomPaint(
+                painter: InkPainter(widget.shownInk ?? a.ink, _page),
+              ),
             ),
           ),
         if (widget.controls && !widget.fitWidth)
@@ -1117,7 +1125,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final a = widget.attachment;
     final pen = widget.ink;
     // Gömülü (kapak) kutuda da kalem verilince yazılır (2026-11-09).
-    final inkHere = pen != null || (widget.fitWidth && a.ink.isNotEmpty);
+    final shown = widget.shownInk ?? a.ink;
+    final inkHere = pen != null || (widget.fitWidth && shown.isNotEmpty);
     if (bubbles == null && !inkHere && !_selectable) return null;
     // KÖK NEDEN (kullanıcı bulgusu 2026-11-08: "sabit moddayken PDF üzerine
     // kalemle yazamıyorum, yalnız tam ekranda yazılıyor"): kalem katmanı
@@ -1131,7 +1140,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
         children: [
           if (inkHere && !penOn)
             IgnorePointer(
-              child: CustomPaint(painter: InkPainter(a.ink, pageNumber)),
+              child: CustomPaint(painter: InkPainter(shown, pageNumber)),
             ),
           if (_selectable && !penOn)
             ValueListenableBuilder<int>(

@@ -1672,6 +1672,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Stays out of the page, in the attachment strip';
 
   @override
+  String get pinnedCustomize => 'Edit buttons';
+
+  @override
+  String get fileDropHint => 'Drop to attach';
+
+  @override
   String get attachmentCopied => 'Attachment copied';
 
   @override

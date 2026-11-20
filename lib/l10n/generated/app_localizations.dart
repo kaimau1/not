@@ -3104,6 +3104,18 @@ abstract class AppLocalizations {
   /// **'Sayfaya girmez, alttaki ek şeridinde durur'**
   String get addImageAsFileSubtitle;
 
+  /// No description provided for @pinnedCustomize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düğmeleri düzenle'**
+  String get pinnedCustomize;
+
+  /// No description provided for @fileDropHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklemek için bırakın'**
+  String get fileDropHint;
+
   /// No description provided for @attachmentCopied.
   ///
   /// In tr, this message translates to:

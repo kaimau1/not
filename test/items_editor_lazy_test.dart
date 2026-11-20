@@ -101,6 +101,30 @@ void main() {
     }
   });
 
+  // Kullanıcı bulgusu 2026-11-20: "webte maddelere tıkladığımda azıcık
+  // yukarı yerleşiyor". Masaüstü/web'de uyarlanır yoğunluk SIKI: gerçek
+  // alanın dolgusu küçülüyor, düz çizim küçülmüyordu → yazı ~4 px zıplıyordu.
+  testWidgets(
+    'dokununca yazı yerinden oynamaz (her platform yoğunluğunda)',
+    (tester) async {
+      await pump(tester, [
+        const NoteItem(id: 'a', text: 'Birinci madde'),
+        const NoteItem(id: 'b', text: 'İkinci madde'),
+      ]);
+      final target = find.text('İkinci madde', findRichText: true);
+      final before = tester.getRect(target);
+      final height = tester.getSize(find.byType(ItemsEditor)).height;
+      await tester.tapAt(before.centerLeft + const Offset(2, 0));
+      await tester.pump();
+      await tester.pump();
+      expect(fields(), 1);
+      final after = tester.getRect(find.byType(EditableText));
+      expect(after.top, closeTo(before.top, 0.5));
+      expect(tester.getSize(find.byType(ItemsEditor)).height, height);
+    },
+    variant: TargetPlatformVariant.all(),
+  );
+
   testWidgets('dokununca o madde alana döner, odak ve imleç dokunulan yerde', (
     tester,
   ) async {

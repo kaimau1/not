@@ -1509,6 +1509,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 : mergeAttachmentLayout(
                     local: _note!.attachments,
                     incoming: incoming.attachments,
+                    // Kaydı bekleyen çizgiler (sabit/gömülü eke) yankıyla
+                    // silinmesin (bkz. mergeAttachmentLayout).
+                    localInk: _debouncer.hasPending,
                   ),
             aiSummary: incoming.aiSummary,
             pinned: incoming.pinned,
@@ -4073,6 +4076,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               top: top ? _kBodyTextTop : 0,
               bottom: bottom ? _kBodyTextTop : 0,
             ),
+            // Masaüstü/web'in sıkı uyarlanır yoğunluğu dolguyu 4 px
+            // küçültüp yazıyı ölçümden (ve uzun gövdenin düz çiziminden)
+            // ayırıyordu — maddelerdeki "tıklayınca zıplama"nın eşi
+            // (2026-11-20).
+            visualDensity: VisualDensity.standard,
           ),
         ),
         // Damgaya/etikete dokunmak klavyeyi AÇMAZ (bkz. TapPointTracker.wrap).

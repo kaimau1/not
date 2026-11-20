@@ -32,6 +32,8 @@ import 'page_ink_layer.dart' show InkClaim;
 import 'attachment_actions.dart';
 import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
+import '../../../settings/presentation/customize_hub.dart'
+    show CustomizeSurface, showCustomizeHub;
 import 'pen_tray.dart' show showInkSettings;
 import 'slide_page_box.dart';
 import 'text_page_box.dart';
@@ -126,6 +128,7 @@ class PinnedMediaPane extends StatefulWidget {
     this.viewSwitch,
     this.sheetViewSwitch,
     this.onPenOff,
+    this.onPenOn,
     this.onCaption,
     this.onNoteAt,
     this.bubbleDoc,
@@ -234,6 +237,13 @@ class PinnedMediaPane extends StatefulWidget {
   /// ([penActive]): editör kendi kipini de kapatır (tam senkron, P49).
   final VoidCallback? onPenOff;
 
+  /// Bölmenin kalem düğmesi kalemi AÇTI: editörün NORMAL kalem kipi açılır
+  /// (alttaki kalem tepsisi — kullanıcı isteği 2026-11-20: "kalem
+  /// açıldığında panelde değil, diğer kalem işlevlerinde olduğu gibi altta
+  /// açılan normal kalem özelliklerimiz açılmalı"). null ise bölme kendi
+  /// kalemini açar (eski hızlı kalem çubuğu; editörsüz kullanım).
+  final VoidCallback? onPenOn;
+
   /// Görsel açıklamasını yazar (⋮, bant).
   final VoidCallback? onCaption;
 
@@ -334,9 +344,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             rect: rect,
             child: pen == null
                 ? IgnorePointer(
-                    child: CustomPaint(
-                      painter: InkPainter(widget.media.ink, 1),
-                    ),
+                    child: CustomPaint(painter: InkPainter(_shownInk, 1)),
                   )
                 : InkClaim(
                     ink: pen,
@@ -372,6 +380,28 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// Denetleyiciye en son verilen/denetleyiciden en son gelen çizgi listesi
   /// (kimlik): yalnız DIŞARIDAN gelen değişiklik işlenir.
   List<InkStroke>? _inkSeen;
+
+  /// Bu bölmenin denetleyicisinden editöre en son giden çizgi listesi.
+  List<InkStroke>? _emittedInk;
+
+  /// **ÇİZİLENİ GÖSTEREN LİSTE** (kullanıcı bulgusu 2026-11-20: "kalem
+  /// basınca görünüyor, kalemi kapatınca kayboluyor"). KÖK: editör eke
+  /// çizgide kökü kurmaz (F60.1) — [widget.media] ESKİ çizgileri tutar;
+  /// kalem kapalıyken görsel/PDF çizimi oradan boyanıyordu, bu oturumda
+  /// çizilenler kök kurulana dek görünmüyordu. Bölmenin elindeki liste hâlâ
+  /// denetleyicinin gördüğü eski listeyse çizim denetleyicinin son
+  /// listesinden boyanır; dışarıdan yeni liste geldiyse (tam ekran, geri al)
+  /// o esastır.
+  List<InkStroke> get _shownInk {
+    final emitted = _emittedInk;
+    final media = widget.media.ink;
+    if (emitted == null ||
+        identical(media, emitted) ||
+        !identical(media, _inkSeen)) {
+      return media;
+    }
+    return emitted;
+  }
   bool _inkPenOnly = false;
 
   /// Çizim denetleyicisi ekle bağlı; ek değişince yenilenir.
@@ -391,6 +421,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         // [_inkSeen] burada GÜNCELLENMEZ — bkz. aşağıdaki "SİLGİYE BASINCA
         // YAZILAR KAYBOLUYORDU".
         onChanged: (strokes) {
+          _emittedInk = strokes;
           (widget.onInkChanged ?? widget.onChanged)?.call(
             widget.media.copyWith(ink: strokes),
           );
@@ -588,6 +619,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       _ink?.dispose();
       _ink = null;
       _inkSeen = null;
+      _emittedInk = null;
       _ownPen = false;
     }
     final doc = widget.bubbleDoc;
@@ -1077,7 +1109,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                                     },
                             ),
                             child: PdfPageBox(
-                            ink: _penOn ? _inkFor(shown) : null,
+                            ink: _penOn ? _inkFor(widget.media) : null,
+                            shownInk: _shownInk,
                             key: ValueKey('pinned-pdf-${widget.media.id}'),
                             attachment: shown,
                             onChanged: widget.onChanged ?? (_) {},
@@ -1219,7 +1252,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                                       _imageBubbleLayer(bubbles),
                                   if (isImage &&
                                       !_pulling &&
-                                      (_penOn || widget.media.ink.isNotEmpty))
+                                      (_penOn || _shownInk.isNotEmpty))
                                     _imageInkLayer(),
                                 ],
                               ),
@@ -1381,6 +1414,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// editörün kalem kipini kapatır ([PinnedMediaPane.onPenOff]).
   void _togglePen() {
     final on = _policy.layerActive;
+    if (!on && widget.onPenOn != null) {
+      if (!InkToolMemory.autoStylus) InkToolMemory.saveAutoStylus(true);
+      widget.onPenOn!();
+      return;
+    }
     setState(() => _ownPen = !on);
     if (on) {
       if (widget.penActive) widget.onPenOff?.call();
@@ -1906,6 +1944,18 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               );
             },
           ),
+      // DÜĞMELERİ DÜZENLE (kullanıcı isteği 2026-11-20: "sabit ek paneline
+      // düzenlenebilir buton eklenip çıkarılabilir olmalı"): çubuğun
+      // düğmeleri Kişiselleştir'in "Sabit ek" panosunda gizlenir/gösterilir;
+      // oraya buradan tek dokunuşla gidilir.
+      tile(
+        'pinned-customize',
+        Icons.tune,
+        l10n.pinnedCustomize,
+        () => unawaited(
+          showCustomizeHub(context, initial: CustomizeSurface.pinned),
+        ),
+      ),
     ];
     final grouped = viewSwitch != null || bubbles || document.isNotEmpty;
     return SingleChildScrollView(

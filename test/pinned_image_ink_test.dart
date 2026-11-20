@@ -229,4 +229,70 @@ void main() {
       reason: 'yeniden çizimde eski liste geri yazıldı, ilk çizgi silindi',
     );
   });
+
+  /// Editör gibi bayat ek tutan bölme (mürekkep kaydı ebeveyni KURMAZ).
+  Future<List<Attachment>> pumpStale(
+    WidgetTester tester, {
+    VoidCallback? onPenOn,
+  }) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final saved = <Attachment>[];
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('tr'),
+        home: Scaffold(
+          body: PinnedMediaPane(
+            media: image,
+            onHeightChanged: (_) {},
+            onUnpin: () {},
+            onOpen: () {},
+            onChanged: saved.add,
+            onInkChanged: saved.add,
+            onPenOn: onPenOn,
+            child: const Text('not gövdesi'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    return saved;
+  }
+
+  testWidgets('kalem kapatılınca çizilen yazı kaybolmaz (bayat ek) — '
+      '"kalemi kapatınca kayboluyor" (2026-11-20)', (tester) async {
+    InkToolMemory.stylusEver = false;
+    final saved = await pumpStale(tester);
+    await tester.tap(find.byKey(const ValueKey('pinned-pen')));
+    await tester.pump(const Duration(milliseconds: 300));
+    final origin = tester.getTopLeft(find.byType(PinnedMediaPane));
+    await draw(tester, origin + rect.center, kind: PointerDeviceKind.touch);
+    expect(saved.last.ink, hasLength(1));
+    // Kalemi kapat: çizim artık bölmenin (bayat) ekinden değil, son
+    // çizilenden boyanmalı.
+    await tester.tap(find.byKey(const ValueKey('pinned-pen')));
+    await tester.pump(const Duration(milliseconds: 300));
+    final painter = tester
+        .widgetList<CustomPaint>(find.byType(CustomPaint))
+        .map((w) => w.painter)
+        .whereType<InkPainter>()
+        .single;
+    expect(painter.strokes, hasLength(1));
+  });
+
+  testWidgets('bölmenin kalemi editörün normal kalem kipini açar (alttaki '
+      'tepsi); bölmede hızlı kalem çubuğu açılmaz (2026-11-20)', (
+    tester,
+  ) async {
+    InkToolMemory.stylusEver = false;
+    var opened = 0;
+    await pumpStale(tester, onPenOn: () => opened++);
+    await tester.tap(find.byKey(const ValueKey('pinned-pen')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(opened, 1);
+    expect(find.byKey(const ValueKey('pinned-pen-eraser')), findsNothing);
+  });
 }

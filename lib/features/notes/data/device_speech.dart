@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:record/record.dart';
 
 import '../../../core/utils/speech_text.dart';
+import 'device_speech_web_stub.dart'
+    if (dart.library.js_interop) 'device_speech_web.dart'
+    as browser;
 
 /// Cihazın YERLEŞİK konuşma tanıması (Android SpeechRecognizer) için ince
 /// köprü. Dikte ve Sesli Not Asistanı bunu kullanır: ücretsiz, anlık ve
@@ -25,11 +28,12 @@ class DeviceSpeech {
   @visibleForTesting
   static bool? debugAvailable;
 
-  /// Cihazda konuşma tanıma kullanılabilir mi. Android dışında (web)
-  /// yerleşik tanıma yoktur; çağıranlar eski ses yoluna düşer.
+  /// Cihazda konuşma tanıma kullanılabilir mi. Web'de tarayıcının Web
+  /// Speech API'si (Chrome/Edge/Safari; Firefox'ta yok → eski ses yolu).
   static Future<bool> isAvailable() async {
     if (debugAvailable case final v?) return v;
-    if (kIsWeb || !Platform.isAndroid) return false;
+    if (kIsWeb) return browser.webSpeechAvailable();
+    if (!Platform.isAndroid) return false;
     try {
       return await _method.invokeMethod<bool>('speechAvailable') ?? false;
     } on PlatformException {
@@ -42,7 +46,8 @@ class DeviceSpeech {
   /// [ensureMicPermission] ister).
   static Future<bool> micPermissionGranted() async {
     if (debugMicGranted case final v?) return v;
-    if (kIsWeb || !Platform.isAndroid) return true;
+    if (kIsWeb) return browser.webMicPermissionGranted();
+    if (!Platform.isAndroid) return true;
     try {
       return await _method.invokeMethod<bool>('micPermissionGranted') ?? false;
     } on PlatformException {
@@ -101,7 +106,9 @@ class DeviceSpeech {
   static Stream<({String? text, double? level})> listen({
     String locale = 'tr-TR',
     bool preferOffline = false,
-  }) => _events
+  }) => kIsWeb
+      ? browser.webSpeechListen(locale)
+      : _events
       .receiveBroadcastStream(preferOffline ? '$locale|offline' : locale)
       .map((event) {
         final map = event as Map<Object?, Object?>;
@@ -119,6 +126,7 @@ class DeviceSpeech {
 
   /// Dinlemeyi bitirir; son (tamamlanmış) metin akıştan gelir.
   static Future<void> stop() async {
+    if (kIsWeb) return browser.webSpeechStop();
     try {
       await _method.invokeMethod('stopSpeech');
     } on PlatformException {

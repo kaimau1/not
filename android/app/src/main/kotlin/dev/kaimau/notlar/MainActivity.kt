@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.hardware.input.InputManager
+import android.view.DragEvent
 import android.view.InputDevice
 import android.media.AudioManager
 import android.location.Geocoder
@@ -387,6 +388,7 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
         restoreBeepsFromPrefs()
         configureSpeechChannel(flutterEngine)
         configureKeyboardChannel(flutterEngine)
+        configureDropChannel(flutterEngine)
         imeChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dev.kaimau.notlar/ime")
         val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
         systemChannel = channel
@@ -1188,6 +1190,77 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                 }
             }
             mainHandler.post { pending.success(out) }
+        }
+    }
+
+    // BAŞKA UYGULAMADAN SÜRÜKLE-BIRAK (kullanıcı isteği 2026-11-20: tablette
+    // fareyle ek sürüklenince "bırak" çerçevesi çıkmalı). Flutter motoru
+    // Android'de sürükleme olaylarını Dart'a taşımıyor; pencereye dinleyici
+    // kurulur: üstte gezinme "hover", bırakılan dosyaların önbellek kopyaları
+    // "files" ile gider (seçicideki kopyalama kuralıyla aynı).
+    private var dropChannel: MethodChannel? = null
+
+    private fun dragHasFiles(event: DragEvent): Boolean {
+        val d = event.clipDescription ?: return false
+        for (i in 0 until d.mimeTypeCount) {
+            val m = d.getMimeType(i)
+            if (m != android.content.ClipDescription.MIMETYPE_TEXT_PLAIN &&
+                m != android.content.ClipDescription.MIMETYPE_TEXT_HTML &&
+                m != android.content.ClipDescription.MIMETYPE_TEXT_INTENT
+            ) return true
+        }
+        return false
+    }
+
+    private fun configureDropChannel(flutterEngine: FlutterEngine) {
+        val ch = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "dev.kaimau.notlar/drop")
+        dropChannel = ch
+        window.decorView.setOnDragListener { _, event ->
+            when (event.action) {
+                DragEvent.ACTION_DRAG_STARTED -> dragHasFiles(event)
+                DragEvent.ACTION_DRAG_ENTERED -> { ch.invokeMethod("hover", true); true }
+                DragEvent.ACTION_DRAG_EXITED, DragEvent.ACTION_DRAG_ENDED -> {
+                    ch.invokeMethod("hover", false); true
+                }
+                DragEvent.ACTION_DROP -> { receiveDrop(event); true }
+                else -> true
+            }
+        }
+    }
+
+    private fun receiveDrop(event: DragEvent) {
+        val ch = dropChannel ?: return
+        val clip = event.clipData ?: return
+        val perms = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try { requestDragAndDropPermissions(event) } catch (e: Exception) { null }
+        } else null
+        val uris = (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri }
+        if (uris.isEmpty()) { perms?.release(); return }
+        pickExecutor.execute {
+            val out = mutableListOf<Map<String, String>>()
+            for (uri in uris) {
+                val name = displayName(uri)
+                try {
+                    val dir = java.io.File(cacheDir, "birak_${System.nanoTime()}")
+                    dir.mkdirs()
+                    val file = java.io.File(dir, name)
+                    contentResolver.openInputStream(uri)?.use { inp ->
+                        file.outputStream().use { o -> inp.copyTo(o, 256 * 1024) }
+                    }
+                    if (file.length() > 0) {
+                        val mime = contentResolver.getType(uri) ?: ""
+                        out.add(mapOf("path" to file.absolutePath, "name" to name, "mime" to mime))
+                    } else {
+                        file.delete()
+                    }
+                } catch (e: Exception) {
+                    Log.d(logTag, "birakilan kopyalanamadi: $e")
+                }
+            }
+            mainHandler.post {
+                perms?.release()
+                if (out.isNotEmpty()) ch.invokeMethod("files", out)
+            }
         }
     }
 
