@@ -1,24 +1,14 @@
 # DEVIR — P83 yazım denetimi v3 (dal oto/P83-yazim-v3)
 
-**Yapılanlar:**
-- Y-0 ölçüm seti: `test/spell_corpus/dogru.txt` (500), `yanlis.tsv` (300, tür sütunlu), `test/spell_corpus_test.dart` (mandal).
+**Bitti (CI yeşil):** Y-0 ölçüm seti (6a1a3407) · Y-1 ek çözücü + kök sözlüğü (42067e11) · Y-2 harfsiz yazım (faa0c61b) · Y-3 kural tablosu 356 + `kContextFixes` 31 (9437a243). Taban → şimdi: yanlış düzeltme 17 → 0/500, yakalama 124 → 273/300.
+- YANLIŞ YOL (Y-1): `kCommonTurkish`'i kök saymak, bağlaçları kök saymak, her yumuşamayı kabul. `quickStem` değişmedi (sabah bakılacak); açık lisanslı büyük kök listesi eklenmedi (sabah bakılacak).
 
-**Taban (Y-0, davranış değişmedi, boş bellek):**
-- Yanlış düzeltme 17/500 (%3,40): listemde→liste de, yazdım→yazım, çalışmıyor→çalışıyor, gelmiyor→geliyor, yapmıyor→yapıyor, almaz→al az, yapmaz→yap az, alıp→alış, gelerek→gelecek, bekliyor→geliyor, koşu→kolu, gerekecek→gelecek, bunda→bu da, buraya→burada, nereye→nerede, başkası→başladı, yanı→yani.
-- Yakalama 124/300 (%41,3): harfsiz 18/65, komsu 37/45, eksik 15/35, fazla 2/35, yer 14/30, bitisik 14/35, kural 11/30, agiz 13/25.
+**Y-4 motor (bu commit):** WIP 9d749522 incelendi, işe yarar → sürdü. `SpellEngine.suggestions` (öneri listesi, güven payı yok, bağlama bağlı = `hint`), `SpellEngine.tokens` (paragraf → denetim birimi; bağlantı/sayı/#etiket/kısaltma/cümle ortası özel ad/kesmeli yazım atlanır, sarma çapası kelimeyi bölmez).
+- KANIT (düzyazı, `test/spell_corpus/duzyazi.txt` = kılavuz + sürüm notları kopyası, 9252 doğru kelime): boş bellekte 82 yanlış çizgi (bulanık 53: gerçek→gerek, şablon→salon, elektronik→elektrik; harfsiz 21: kısım→kışım, koyu→köyü, acil→açıl; bölme 5: aynen→ay en). Aynı kelimeleri otomatik düzelt kipi de DEĞİŞTİRİYORDU (Y-1'in 500'lük setinde yoktu).
+- DÜZELTME: harfsiz yazım yalnız Türkçe harfi OLMAYAN kelimede (`_trLetter`); 31 eksik kök (`tr_roots.dart`). Sonuç 82 → 3/9252 (imleri, dolanı; yunurta bilerek). 500 doğru: sert çizgi 0, ipucu 8 (bende/oda/hala…). 300 yanlış: 279 çizili, 277'sinde doğru öneride. Yakalama 273, yanlış düzeltme 0 korunur.
 
-- Y-1 (42067e11) ek çözücü `lib/core/utils/tr_morph.dart` (sağdan sola kök+ek, ünlü uyumu, D/C benzeşmesi, k→ğ, kökte yumuşama/ünlü düşmesi/ikizleşme, -yor daralması) + elle kök sözlüğü `tr_roots.dart`; `SpellMemory.known` = sıklık ≥3 ∨ keep ∨ ek çözücü (önbellekli), `knownToken` (özel ad + kesme). Yanlış düzeltme 17→0/500, yakalama 124→152/300, 500 doğrunun hepsi bilinir; ~33 µs/kelime.
-- YANLIŞ YOL: `kCommonTurkish`'i kök saymak ("geldi" → "geldimi" bilinir), bağlaçları kök saymak ("yinede"), her yumuşamayı kabul ("icin" ← iç) → kapatıldı (tek heceli yumuşama listesi, g yalnız n'den sonra, ikizleşme listesi, -ki yalnız hâl ekinden sonra, istek "-(y)A" atıldı).
-- `quickStem` DEĞİŞTİRİLMEDİ (ASCII katlı metinde çalışır, ı/i ayrımı yok; P84 paralelde) — tek kök bulucu sabah bakılacak. Açık lisanslı kök listesi eklenmedi (lisans/APK boyu sabah bakılacak).
+**Sıradaki (Y-4 arayüz):** `AutoSpell.mode` (Kapalı/Yalnız göster/Otomatik; `spell_mode` int; yoksa `auto_spell_on` true → otomatik, değilse göster) + `revision`; `spell_underline.dart` `SpellMarks` (denetleyici başına, 350 ms duraklama, kelime + paragraf önbelleği, 4 ms dilimli tarama, yazımda işaretler kaydırılır); `tag_chips.dart` CustomPaint `painter:` (ağaç şekli aynı) dalgalı çizgi; dokununca `showToolbar` + menü (öneriler · Sözlüğe ekle · Hep böyle düzelt · Bu notta dokunma); ayar `SpellModePicker` (sheet + Ayarlar). Sonra perf S57 "denetim açıkken 5 tuş", kasma-kontrol, belgeler.
+- Karar: `runHeavy` yerine dilimli ana iş parçacığı taraması (web'de izole yok + `SpellMemory` kopyası) — sabah bakılacak.
 
-- Y-2 `SpellEngine.asciiRestore` (c/g/i/o/s/u → Türkçe harf, 2^n ≤ 8 konum; tek bilinen karşılık → `SpellReason.ascii`, çoksa dokunma, cihaz önerisi seçerse o; kural tablosu biçimi de sayılır "hersey" → "her şey") + sonda yinelenen harf ("kitapp" → "kitap", bulanığın kök/uzantı körlüğü). Kısa İngilizce kelimeler `kCommonEnglish`'e ("one" → "öne" olmasın). Yakalama 152→216/300 (harfsiz 31→64/65, fazla 2→33/35), yanlış düzeltme 0/500. Sıcak `nearest` ~0,2 ms/kelime (test makinesi; ön dizin Y-6'da).
-
-- Y-3 `spell_fix.dart` `_common` 45→356 satır (bitişik öbek, kalıp söz, de/ki/mi, sık yanlış) + `kContextFixes` 31 satır (bağlama bağlı: "bende", "oda", "hala", "tabi" — OTOMATİK UYGULANMAZ, Y-4 önerisi) + `SpellEngine.patternFix` (sonuç bilinen kelimeyse: -yom/-yosun/-yoz, -(I)cam gelecek ağzı, -mIyAcAk, bitişik soru eki); kapalı sınıf bulanık adaylara. Yakalama 216→273/300 (%91), yanlış düzeltme 0/500.
-
-**Şu anki adım:** Y-4 altı çizili denetim.
-
-**Sıradaki:** Y-1 → Y-2 → Y-3 → Y-4 (her biri ayrı commit + push).
-
-**Ölçüm komutu:** `flutter test test/spell_corpus_test.dart` (çıktıda YANLIŞ DÜZELTME / YAKALAMA satırları).
-
-**Not:** Flutter bu makinede `C:/src` altında YOK; 3.47.9 scratchpad'e indirildi (CLAUDE.md bulut yolu).
+**Ölçüm:** `flutter test test/spell_corpus_test.dart` (YANLIŞ DÜZELTME / YAKALAMA / ALTI ÇİZİLİ / DÜZYAZI satırları).
+**Not:** Flutter `C:/src` altında YOK; 3.47.9 scratchpad'de. main (1d750105) dala birleştirildi (0fb13fe2).

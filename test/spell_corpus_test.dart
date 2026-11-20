@@ -14,6 +14,20 @@ import 'package:notlar/core/utils/spell_learn.dart';
 const _mandalYanlis = 0;
 const _mandalYakalama = 273;
 
+/// Y-4 altı çizili denetim: doğru kelimeden kaçının altı çizilir (ipucu —
+/// bağlama bağlı "bende" gibi — ayrı sayılır) ve yanlıştan kaçında doğru
+/// yazım ÖNERİLER arasında. İlki yalnız düşer, ikincisi yalnız artar.
+const _mandalCizgi = 0;
+const _mandalIpucu = 8;
+const _mandalOneri = 277;
+
+/// Düzyazı (test/spell_corpus/duzyazi.txt: kılavuz + sürüm notlarının
+/// 2026-11-20 kopyası, doğru yazılmış ~9 bin kelime): altı çizilen kelime
+/// sayısı. Taban 82 (eksik kökler: "gerçek" → "gerek", "şablon" → "salon",
+/// "kısım" → "kışım"); kök eklenip harfsiz yazım Türkçe harfli kelimede
+/// kapatılınca 3 ("yunurta" bilerek yazılmış örnek). Yalnız düşer.
+const _mandalDuzyazi = 3;
+
 List<String> _lines(String path) => [
   for (final l in File(path).readAsLinesSync())
     if (l.trim().isNotEmpty && !l.startsWith('#')) l.trim(),
@@ -130,5 +144,53 @@ void main() {
     // ignore: avoid_print
     print('KAÇAN: $missed');
     expect(caught, greaterThanOrEqualTo(_mandalYakalama));
+  });
+
+  test('Y-4 altı çizili denetim: yanlış işaret ve öneri isabeti', () {
+    final m = SpellMemory();
+    final flagged = <String>[];
+    final hinted = <String>[];
+    for (final w in correct) {
+      final t = SpellEngine.tokens(w);
+      for (final k in t) {
+        final s = SpellEngine.suggestions(k.word, m);
+        if (s == null) continue;
+        (s.hint ? hinted : flagged).add('$w → ${s.list.first}');
+      }
+    }
+    var inList = 0;
+    var underlined = 0;
+    for (final p in pairs) {
+      final s = SpellEngine.suggestions(trLower(p[0]), m);
+      if (s == null) continue;
+      underlined++;
+      if (s.list.map(trLower).contains(p[1])) inList++;
+    }
+    // ignore: avoid_print
+    print(
+      'ALTI ÇİZİLİ: doğruda ${flagged.length}/${correct.length} '
+      '(+${hinted.length} ipucu) $flagged $hinted · yanlışta çizilen '
+      '$underlined/${pairs.length}, doğru öneride $inList/${pairs.length}',
+    );
+    expect(flagged.length, lessThanOrEqualTo(_mandalCizgi));
+    expect(hinted.length, lessThanOrEqualTo(_mandalIpucu));
+    expect(inList, greaterThanOrEqualTo(_mandalOneri));
+  });
+
+  test('Y-4 düzyazıda yanlış çizgi (mandal yalnız düşer)', () {
+    final m = SpellMemory();
+    final text = File('test/spell_corpus/duzyazi.txt').readAsStringSync();
+    var words = 0;
+    final flagged = <String>[];
+    for (final para in text.split('\n')) {
+      for (final t in SpellEngine.tokens(para)) {
+        words++;
+        final s = SpellEngine.suggestions(t.word, m);
+        if (s != null && !s.hint) flagged.add('${t.word}→${s.list.first}');
+      }
+    }
+    // ignore: avoid_print
+    print('DÜZYAZI: ${flagged.length}/$words çizili $flagged');
+    expect(flagged.length, lessThanOrEqualTo(_mandalDuzyazi));
   });
 }

@@ -166,6 +166,8 @@ class SpellEngine {
     return pick(nearest(w, m), SpellReason.fuzzy);
   }
 
+  static final _trLetter = RegExp('[çğıöşü]');
+
   static const _turkish = {
     'c': 'ç', 'g': 'ğ', 'i': 'ı', 'o': 'ö', 's': 'ş', 'u': 'ü', //
   };
@@ -174,8 +176,12 @@ class SpellEngine {
   /// Türkçe harfli bilinen karşılıkları ("çalışma"); kural tablosundaki
   /// biçim de sayılır ("hersey" → "her şey"). En çok [max] + 1 döner (fazlası
   /// belirsizlik demek). Üç harften kısa ve İngilizce görünen kelime yok.
+  /// Türkçe harfi OLAN kelime harfsiz yazılmamıştır (Y-4 düzyazı ölçümü:
+  /// "kısım" → "kışım", "sütun" → "sütün" yanlış çiziliyordu).
   static List<String> asciiRestore(String w, SpellMemory m, {int max = 3}) {
-    if (w.length < 3 || looksEnglish(w)) return const [];
+    if (w.length < 3 || looksEnglish(w) || _trLetter.hasMatch(w)) {
+      return const [];
+    }
     final pos = [
       for (var k = 0; k < w.length; k++)
         if (_turkish.containsKey(w[k])) k,
@@ -330,7 +336,10 @@ class SpellEngine {
     SpellMemory m, {
     Set<String> noteKeep = const {},
   }) {
-    if (w.length < 2 || isCjk(w) || noteKeep.contains(w) || m.keep.contains(w)) {
+    if (w.length < 2 ||
+        isCjk(w) ||
+        noteKeep.contains(w) ||
+        m.keep.contains(w)) {
       return null;
     }
     final out = <String>[];
@@ -355,6 +364,67 @@ class SpellEngine {
     add(splitMissedSpace(w, m));
     nearestList(w, m).forEach(add);
     return out.isEmpty ? null : (list: out.take(4).toList(), hint: false);
+  }
+
+  static final _chunk = RegExp(r'\S+');
+
+  /// Harf ve sarma çapası/yapıştırıcısı (editör metni; bkz. text_wrap.dart
+  /// `kWrapAnchorChar`, `kWrapGlueChar`) dışında karakter yok.
+  static final _plainWord = RegExp('^[\\p{L}￼⁠]+\$', unicode: true);
+  static final _anchors = RegExp('[￼⁠]');
+
+  /// **Y-4 DENETİM BİRİMLERİ**: [para] (tek paragraf, ekrandaki metin —
+  /// sarma çapası ve biçim işareti içerebilir) içinde denetlenecek
+  /// kelimeler; [word] küçük harf, çapasız, aralık [para] içinde.
+  ///
+  /// Atlanan: bağlantı, e-posta, sayılı/tireli/kesmeli yazım, #etiket,
+  /// kısaltma (TAMAMI BÜYÜK) ve cümle ortasında büyük harfle başlayan
+  /// kelime (özel ad: "dün Ahmet geldi").
+  static List<({int start, int end, String word})> tokens(String para) {
+    final out = <({int start, int end, String word})>[];
+    for (final m in _chunk.allMatches(para)) {
+      final s = m[0]!;
+      var a = 0;
+      var b = s.length;
+      while (a < b && !_isLetter(s[a])) {
+        a++;
+      }
+      while (b > a && !_isLetter(s[b - 1])) {
+        b--;
+      }
+      if (b - a < 2) continue;
+      final core = s.substring(a, b);
+      if (!_plainWord.hasMatch(core)) continue;
+      if (a > 0 && _glued(s[a - 1], '#@/\\.-')) continue;
+      if (b < s.length && _glued(s[b], '@/\\')) continue;
+      final word = core.replaceAll(_anchors, '');
+      final lower = trLower(word);
+      if (lower.length < 2) continue;
+      if (word != lower &&
+          (trUpper(word) == word || _midSentence(para, m.start + a))) {
+        continue;
+      }
+      out.add((start: m.start + a, end: m.start + b, word: lower));
+    }
+    return out;
+  }
+
+  static bool _glued(String ch, String set) => set.contains(ch) || _isDigit(ch);
+
+  static bool _isDigit(String ch) {
+    final c = ch.codeUnitAt(0);
+    return c >= 0x30 && c <= 0x39;
+  }
+
+  /// [i]'den önceki son harf/rakam/cümle sonu işareti cümle sonu DEĞİLSE
+  /// (biçim işaretleri, tırnak ve boşluk atlanır).
+  static bool _midSentence(String para, int i) {
+    for (var j = i - 1; j >= 0; j--) {
+      final ch = para[j];
+      if ('.!?…'.contains(ch)) return false;
+      if (_isLetter(ch) || _isDigit(ch)) return true;
+    }
+    return false;
   }
 
   /// Cihaz önerisi otomatik uygulanacak kadar yakın mı (klavye mesafesi).

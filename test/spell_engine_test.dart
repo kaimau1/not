@@ -244,6 +244,50 @@ void main() {
     });
   });
 
+  group('Y-4 altı çizili denetim (motor)', () {
+    List<String> words(String p) => [
+      for (final t in SpellEngine.tokens(p)) p.substring(t.start, t.end),
+    ];
+
+    test(
+      'denetim birimleri: bağlantı, sayı, etiket, kısaltma, özel ad yok',
+      () {
+        expect(
+          words('**kitp** ve https://ornek.com/yol ali@x.com 3kg #etiket'),
+          ['kitp', 've'],
+        );
+        expect(words('NASA dün Ahmet geldi. Kitp'), ['dün', 'geldi', 'Kitp']);
+        expect(words("İstanbul'dan e-posta"), isEmpty);
+        // Sarma çapası kelimeyi bölmez; aralık ekrandaki metinde.
+        final p = 'ki￼tp var';
+        final t = SpellEngine.tokens(p).first;
+        expect(t.word, 'kitp');
+        expect((t.start, t.end), (0, 5));
+      },
+    );
+
+    test('öneriler: kural, harfsiz (çoklu), bağlama bağlı ipucu', () {
+      final m = SpellMemory();
+      expect(SpellEngine.suggestions('hersey', m)!.list, ['her şey']);
+      expect(SpellEngine.suggestions('kisi', m)!.list, containsAll(['kişi']));
+      final hint = SpellEngine.suggestions('bende', m)!;
+      expect(hint.list, ['ben de']);
+      expect(hint.hint, isTrue);
+      expect(SpellEngine.suggestions('kalem', m), isNull);
+      expect(SpellEngine.suggestions('kalwm', m)!.list, contains('kalem'));
+      m.keep.add('kalwm');
+      expect(SpellEngine.suggestions('kalwm', m), isNull);
+    });
+
+    test('Türkçe harfli kelime harfsiz sayılmaz (düzyazı ölçümü)', () {
+      final m = SpellMemory();
+      for (final w in ['kısım', 'sütun', 'kısaldı', 'koyu', 'acil', 'ucu']) {
+        expect(SpellEngine.suggestions(w, m), isNull, reason: w);
+        expect(_d(w).isNone, isTrue, reason: w);
+      }
+    });
+  });
+
   group('motor: ilkeler', () {
     test('bilinen kelimeye dokunma', () {
       expect(_d('kalem').isNone, isTrue);

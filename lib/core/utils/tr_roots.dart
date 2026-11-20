@@ -85,6 +85,8 @@ bugünkü yarınki dünkü önceki sonraki şimdiki akşamki sabahki geceki geç
 öbürkü özür teşekkür değer fark sıra kural ölçü örnek parça taraf
 tabi dem merkez bilgi haber yardım kayıt dert güç isim ad hak hepsi soyad
 ihtimal hal hayal kabul rol alkol seyahat
+ek uç kip veri sabit odak palet desen hiza koyu acil gerçek şablon sütun kısım
+aynen elektronik kullanım
 ''');
 
 /// Ek almayan kapalı sınıf (bağlaç, edat, ünlem, soru eki): YALNIZ yazıldığı
@@ -95,6 +97,7 @@ ait dair artık daha en pek gayet oldukça epey bile sadece hemen yine gene
 henüz hâlâ zaten sanki keşke acaba hani işte yani mesela örneğin aslında
 galiba herhalde maalesef lütfen hem de da mi mı mu mü diye evet hayır peki
 belki ise hatta yoksa tabii merhaba selam günaydın teşekkürler hoşça
+neyin
 ''');
 
 /// Tek heceli olduğu hâlde ünlüyle başlayan ek alınca yumuşayan ad kökleri
@@ -126,6 +129,7 @@ ilet ulaş eriş katıl buluş görüş oyna seyret ör tak soy ütüle katla as
 düzelt onar yenile güncelle kaldır kopyala yapıştır işaretle başlat durdur
 kapan anımsa san inan güven beğen bulun yetiş koru yönet ilerle yerleş taşın
 sonlan geliş gülümse anlaş hazırlan iyileş
+sön yayıl dolan çakış tara aş kısal taş hizala
 ''');
 
 /// Arapça/Fransızca kökenli, son ünlüsü kalın olduğu hâlde İNCE ek alan kökler
