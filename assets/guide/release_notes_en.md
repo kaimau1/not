@@ -7,6 +7,8 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Find a note in quick add:** **Find note** at the start of the target strip searches all your lists and notes; the strip no longer stops at the first 12 notes.
 - **Quick add without opening the app:** long-press the app icon for the **Quick add** shortcut; add the **Quick add** tile to your quick settings; select or share text in another app and choose **Nota ekle**. All of them open quick add with the selected or shared text filled in; it is added only when you tap Add.
 - **Quick add home screen widgets:** put a 1×1 "+" button or a 4×1 "Quick add" bar on your home screen; tapping it opens quick add.
+- **Spell check now shows instead of changing your text:** likely mistakes get a red wavy underline (once you finish a word and pause); tap the word for suggestions, **Add to dictionary**, **Always fix** and **Ignore in this note**. Context-dependent ones (Turkish "bende → ben de") get a faint dotted line.
+- **Spell check setting has three options:** Settings → Pen, writing and screen (or long-press the spell button in the quick row): **Off / Show only / Auto-correct**. The new default is "Show only"; if you had auto-correct on, it stays on. Auto-correct also makes fewer mistakes: it no longer touches correct Turkish words such as "gerçek", "kısım", "koyu".
 
 ## 19 November 2026 {#2026-11-19}
 - **The pen ↔ eraser button stays put:** it no longer jumps right, down or up with every stroke; it appears near the top left of your writing and stays there while you keep writing nearby. It only moves when you write far away or on top of it.

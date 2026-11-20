@@ -7,6 +7,8 @@ Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarla
 - **Hızlı ekle'de not ara:** hedef notlar şeridinin başındaki **Not bul** ile bütün listelerin ve notların arasından arayıp seçebilirsin; şerit artık yalnız ilk 12 notu göstermiyor.
 - **Uygulamayı açmadan hızlı ekle:** uygulama simgesine basılı tutunca **Hızlı ekle** kısayolu; bildirim panelinin hızlı ayarlarına eklenebilen **Hızlı ekle** karosu; başka bir uygulamada metni seçince ya da paylaşınca **Nota ekle**. Hepsi hızlı ekle levhasını açar; seçtiğin ya da paylaştığın metin yazılı gelir, sen Ekle'ye basınca eklenir.
 - **Hızlı ekle ana ekran aracı:** ana ekrana 1×1 "+" düğmesi ya da 4×1 "Hızlı ekle" çubuğu koyabilirsin; dokununca hızlı ekle açılır.
+- **Yazım denetimi artık yazdığını değiştirmeden gösterir:** olası yanlışların altı kırmızı dalgalı çizgiyle çizilir (yazdığın kelime bitince, sen durunca); kelimeye dokununca öneriler, **Sözlüğe ekle**, **Hep böyle düzelt** ve **Bu notta dokunma** çıkar. "bende → ben de" gibi bağlama göre değişenler soluk noktalı çizilir.
+- **Yazım ayarı üç seçenek:** Ayarlar → Kalem, yazım ve ekran'da (ya da hızlı satırdaki yazım düğmesine basılı tutunca) **Kapalı / Yalnız göster / Otomatik düzelt**. Yeni varsayılan "Yalnız göster"; otomatik düzeltmeyi açık kullanıyorsan o kalır. Otomatik düzelt de daha az yanılıyor: "gerçek", "kısım", "koyu" gibi doğru kelimelere artık dokunmuyor.
 
 ## 19 Kasım 2026 {#2026-11-19}
 - **Kalem ↔ silgi düğmesi artık yerinde durur:** her çizgide sağa, aşağıya, yukarıya sıçramıyor; yazının sol üstünde, yakınında belirir ve sen aynı yerde yazmaya devam ettikçe kıpırdamaz. Yalnız uzağa yazınca ya da düğmenin üstüne yazınca yeni yazının yanına geçer.

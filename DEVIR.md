@@ -10,6 +10,6 @@
 - Karar: `runHeavy` yerine dilimli ana iş parçacığı taraması (web'de izole yok + `SpellMemory` kopyası) — sabah bakılacak. Düz çizilen (dokunulmamış) madde satırında çizgi yok, başlıkta denetim yok.
 - Ölçüm: S57 "denetim açıkken 5 tuş" kök 0 / satır 0; S1–S56 yeşil (yerelde tam `perf_budget_test`). kasma-kontrol 8 madde: yeni alan yok, satır önbelleği girdisi yok, kök setState yok, sarmalayıcı yok, boy animasyonu yok. Cihaz A/B YAPILAMADI (cihaz yok).
 
-**Sıradaki:** belgeler (OTOMASYON P83 bitti, PLAN 1.4/2, regresyon, hafıza editor.md, KONTROL "Telefonda bak", sürüm notu 20 Kasım TR/EN) → push → CI.
+**Bitti:** Y-4 arayüz d7b028cb (CI 44757292479 yeşil, tam takım) + d7e68017 (okuma kipinde çizgi yok, öneri yeniden hesap) + belgeler (OTOMASYON P83 bitti, PLAN 1.4/2 [~], regresyon, hafıza editor.md, KONTROL "Telefonda bak", sürüm notu 20 Kasım TR/EN). Kalan: cihaz A/B (yaz evresi) sonraki [apk]'da; Y-5/Y-6 bu paketin dışında.
 **Ölçüm:** `flutter test test/spell_corpus_test.dart test/spell_underline_test.dart` · `flutter test test/perf_budget_test.dart --plain-name S57`.
 **Not:** Flutter `C:/src` altında YOK; 3.47.9 scratchpad'de (`flutter analyze` SDK klasörünü tarayıp düşüyor → `dart analyze --fatal-infos lib test tool`). main (1d750105) dala birleştirildi (0fb13fe2).
