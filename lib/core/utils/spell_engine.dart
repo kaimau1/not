@@ -11,6 +11,7 @@
 ///    (bilinen = sözlük + ek çözücü, bkz. [SpellMemory.known]).
 /// 4b. Y-2 harfsiz yazım ("calisma" → "çalışma"): Türkçe harfli TEK bilinen
 ///    karşılık varsa o; birden çoksa ("aci": acı/açı) dokunma.
+/// 4c. Y-3 genel kalıplar ([patternFix]): sonuç bilinen kelimeyse.
 /// 5. Boşluk yerine boşluk komşusu harf: iki parça da bilinen kelime.
 /// 6. Tek adaylı + yüksek güvenli bulanık eşleşme (ikinci aday
 ///    [confidenceMargin] içindeyse dokunma) ya da tek yakın cihaz önerisi.
@@ -142,6 +143,8 @@ class SpellEngine {
           ? pick(hit.single, SpellReason.ascii)
           : SpellDecision.none;
     }
+    final pattern = patternFix(w, m);
+    if (pattern != null) return pick(pattern, SpellReason.rule);
     // Sonda yinelenen harf ("kitapp"): bulanık eşleşme kök/uzantı ilişkisini
     // atladığı için burada; yazılan bilinmiyor, bir harf eksiği biliniyor.
     final n = w.length;
@@ -196,6 +199,59 @@ class SpellEngine {
       if (out.length > max) break;
     }
     return out;
+  }
+
+  static final _yo = RegExp(r'^(.+[ıiuü])yo(m|sun|z|sunuz|lar)$');
+  static const _yoTail = {
+    'm': 'rum', 'sun': 'rsun', 'z': 'ruz', 'sunuz': 'rsunuz', 'lar': 'rlar', //
+  };
+  static final _future = RegExp(r'^(.+?)[ıiuü]?c(am|em|az|ez|ak|ek|an|en)$');
+  static final _negFuture = RegExp(r'm[ıiuü]y([ae])');
+  static final _question = RegExp(r'^(.{2,})m([ıiuü])$');
+
+  /// **Y-3 GENEL KALIPLAR** — yalnız SONUÇ bilinen kelimeyse (yazılan zaten
+  /// bilinmiyor): ağız "-yom/-yosun/-yoz" ("geliyom" → "geliyorum"),
+  /// gelecek zaman ağzı ("yapıcam" → "yapacağım"), "-mIyAcAk" ("gelmiyecek"
+  /// → "gelmeyecek"), bitişik soru eki ("geldinmi" → "geldin mi").
+  static String? patternFix(String w, SpellMemory m) {
+    String? ok(String c) => c != w && c.split(' ').every(m.known) ? c : null;
+    final yo = _yo.firstMatch(w);
+    if (yo != null) {
+      final r = ok('${yo[1]}yo${_yoTail[yo[2]]}');
+      if (r != null) return r;
+    }
+    final f = _future.firstMatch(w);
+    if (f != null) {
+      final stem = f[1]!;
+      final back = RegExp('[aıou][^aeıioöuü]*\$').hasMatch(stem);
+      final r = ok(
+        stem +
+            switch (f[2]) {
+              'am' || 'em' => back ? 'acağım' : 'eceğim',
+              'az' || 'ez' => back ? 'acağız' : 'eceğiz',
+              'an' || 'en' => back ? 'acaksın' : 'eceksin',
+              _ => back ? 'acak' : 'ecek',
+            },
+      );
+      if (r != null) return r;
+    }
+    if (_negFuture.hasMatch(w)) {
+      final r = ok(w.replaceFirstMapped(_negFuture, (x) => 'm${x[1]}y${x[1]}'));
+      if (r != null) return r;
+    }
+    final q = _question.firstMatch(w);
+    if (q != null) {
+      final head = q[1]!;
+      final lv = RegExp('[aeıioöuü]').allMatches(head).lastOrNull?[0];
+      final want = switch (lv) {
+        'a' || 'ı' => 'ı',
+        'o' || 'u' => 'u',
+        'ö' || 'ü' => 'ü',
+        _ => 'i',
+      };
+      if (lv != null && q[2] == want) return ok('$head m$want');
+    }
+    return null;
   }
 
   /// Önerinin büyük/küçük harfi yazılan kelimeye uyar.

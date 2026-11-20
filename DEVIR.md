@@ -13,7 +13,9 @@
 
 - Y-2 `SpellEngine.asciiRestore` (c/g/i/o/s/u → Türkçe harf, 2^n ≤ 8 konum; tek bilinen karşılık → `SpellReason.ascii`, çoksa dokunma, cihaz önerisi seçerse o; kural tablosu biçimi de sayılır "hersey" → "her şey") + sonda yinelenen harf ("kitapp" → "kitap", bulanığın kök/uzantı körlüğü). Kısa İngilizce kelimeler `kCommonEnglish`'e ("one" → "öne" olmasın). Yakalama 152→216/300 (harfsiz 31→64/65, fazla 2→33/35), yanlış düzeltme 0/500. Sıcak `nearest` ~0,2 ms/kelime (test makinesi; ön dizin Y-6'da).
 
-**Şu anki adım:** Y-3 kural tablosu.
+- Y-3 `spell_fix.dart` `_common` 45→356 satır (bitişik öbek, kalıp söz, de/ki/mi, sık yanlış) + `kContextFixes` 31 satır (bağlama bağlı: "bende", "oda", "hala", "tabi" — OTOMATİK UYGULANMAZ, Y-4 önerisi) + `SpellEngine.patternFix` (sonuç bilinen kelimeyse: -yom/-yosun/-yoz, -(I)cam gelecek ağzı, -mIyAcAk, bitişik soru eki); kapalı sınıf bulanık adaylara. Yakalama 216→273/300 (%91), yanlış düzeltme 0/500.
+
+**Şu anki adım:** Y-4 altı çizili denetim.
 
 **Sıradaki:** Y-1 → Y-2 → Y-3 → Y-4 (her biri ayrı commit + push).
 

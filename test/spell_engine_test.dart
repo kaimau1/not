@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:notlar/core/utils/spell_engine.dart';
+import 'package:notlar/core/utils/spell_fix.dart' show contextualFix;
 import 'package:notlar/core/utils/spell_learn.dart';
 import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
 import 'package:notlar/features/notes/presentation/editor/spell_learned_screen.dart';
@@ -213,6 +214,33 @@ void main() {
       expect(_d('is').isNone, isTrue);
       expect(_d('tabii').isNone, isTrue);
       expect(_d('kitapp').to, 'kitap');
+    });
+  });
+
+  group('Y-3 kural tablosu ve genel kalıplar', () {
+    test('tablo: bitişik öbek, soru eki, sık yanlış', () {
+      expect(_d('heryerde').to, 'her yerde');
+      expect(_d('geldinmi').to, 'geldin mi');
+      expect(_d('laboratuar').to, 'laboratuvar');
+      expect(_d('tamamiyle').to, 'tamamıyla');
+    });
+
+    test('bağlama bağlı olan otomatik uygulanmaz', () {
+      for (final w in ['bende', 'oda', 'hala', 'tabi', 'birde', 'nerde']) {
+        expect(_d(w).isNone, isTrue, reason: w);
+        expect(contextualFix(w), isNotNull, reason: w);
+      }
+    });
+
+    test('genel kalıp yalnız sonuç bilinen kelimeyse', () {
+      expect(_d('geliyom').to, 'geliyorum');
+      expect(_d('yapıyosun').to, 'yapıyorsun');
+      expect(_d('yapıcam').to, 'yapacağım');
+      expect(_d('gidicez').to, 'gideceğiz');
+      expect(_d('gelmiyecek').to, 'gelmeyecek');
+      expect(_d('kitapmı').to, 'kitap mı');
+      expect(SpellEngine.patternFix('hocam', SpellMemory()), isNull);
+      expect(SpellEngine.patternFix('arıycam', SpellMemory()), isNull);
     });
   });
 

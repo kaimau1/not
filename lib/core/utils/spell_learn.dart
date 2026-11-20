@@ -158,6 +158,7 @@ class SpellMemory {
         ...kCommonTurkish,
         ...kCommonEnglish,
         ...kTrNounRoots,
+        ...kTrClosed,
       };
       for (final w in all) {
         m.putIfAbsent(w.length, () => []).add(w);

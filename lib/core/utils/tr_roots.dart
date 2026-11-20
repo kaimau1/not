@@ -94,7 +94,7 @@ ve veya ya ile ama fakat ancak çünkü ki gibi için kadar göre rağmen beri d
 ait dair artık daha en pek gayet oldukça epey bile sadece hemen yine gene
 henüz hâlâ zaten sanki keşke acaba hani işte yani mesela örneğin aslında
 galiba herhalde maalesef lütfen hem de da mi mı mu mü diye evet hayır peki
-belki ise hatta yoksa tabii
+belki ise hatta yoksa tabii merhaba selam günaydın teşekkürler hoşça
 ''');
 
 /// Tek heceli olduğu hâlde ünlüyle başlayan ek alınca yumuşayan ad kökleri
