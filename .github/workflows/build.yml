@@ -200,7 +200,7 @@ jobs:
         run: npm ci --no-audit --no-fund && npm test
       - name: Functions saf testleri
         working-directory: functions
-        run: node --test push.test.js search_match.test.js
+        run: node --test push.test.js search_match.test.js entitlement_util.test.js billing_util.test.js
 
   # GÜVENLİK TARAMASI (F71.8): depo geçmişinde sır (gitleaks) ve bilinen
   # açıklı bağımlılık (osv-scanner). KIRMIZI = UYARI, ENGEL DEĞİL: bulgu işi
