@@ -52,7 +52,7 @@ kullanıcının listesi `KONTROL_LISTEM.md`, eski planlar `docs/arsiv/planlar/` 
 | Dokunacağın şey | Dosya (`docs/hafiza/`) |
 |---|---|
 | Ortam, CI, deploy, Android tuzakları, test tuzakları, açık sorular | `ortam_ci.md` |
-| Firestore modeli, kurallar, yedek/içe aktarma, ek senkronu | `veri.md` |
+| Firestore modeli, kurallar, yedek/içe aktarma, ek senkronu, hak + Play satın alma (PL6) | `veri.md` |
 | Riverpod, kart önbelleği, kasma, açılış/geçiş performansı; hız sözleşmesi (sonda) | `akicilik.md` |
 | Not editörü, klavye, hızlı satır, metin birleştirme, yazım | `editor.md` |
 | Kalem, şekil tanıma, avuç reddi, sabit kalemler, ek üstü çizgi | `kalem.md` |

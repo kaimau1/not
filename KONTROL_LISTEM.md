@@ -383,7 +383,11 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
   Nasıl: web uygulamasını kaydet, birkaç gün izle. ZORLAMA: uygulamayı Play'den kurmadığın sürece telefonun da kilitlenir.
   Doğruysa: "doğrulanmış istek" oranı yüksek.
 
+- [ ] **Play satın alma kurulumu (P85, Play hesabı + Play Firebase projesi açılınca)** — kod hazır, gerçek satın alma denenmedi. Adımlar `docs/play_hazirlik.md` "Kullanıcının yapacakları": (1) Play Console'da ürünler: abonelik `pro` (temel planlar `monthly`, `yearly`, her birine 7 gün ücretsiz deneme teklifi), tek seferlik `lifetime`; fiyatları sen koy. (2) Functions çalışma hizmet hesabını Play Console → Kullanıcılar ve izinler'e ekle ("Finansal verileri görüntüle", "Siparişleri ve abonelikleri yönet"); Google Play Android Developer API'yi aç. (3) Pub/Sub konusu `play-rtdn` + Play'in bildirim hesabına yayıncı izni; Play Console'da konu adını gir, deneme bildirimi gönder. (4) `functions/.env.<play-proje>` içine `PLAY_PACKAGE_NAME=<paket adı>`, sonra `firebase deploy --only functions --project <play-proje>`. (5) App Check (Play Integrity). (6) Kendi hesabına elle Pro: `entitlements/<uid>` → `tier: pro`, `proUntil` ve `grantUntil` 2100. (7) Lisans testçisiyle dene: aylık "Ücretsiz dene" → Pro; iptal → süre sonunda Ücretsiz; ömür boyu al + iade → hak kalkar; ikinci hesapla "Geri yükle" → "başka hesaba bağlı".
+
 ## Karar vermen gerekenler
+
+- [ ] **P85 deneme ve katmanlar (sabah bakılacak)** — 7 gün deneme Play aboneliğinin kendi deneme teklifiyle (ödeme yöntemi ister, yeni hesapla yenilenemez); ilk girişte hesaba otomatik deneme verilmiyor (ikisi birden çifte deneme olurdu). Play derlemesinde şimdilik yalnız yapay zekâ katmana bağlı (ücretsizde yok, ömür boyunda kendi anahtarınla, Pro'da dahili); sürüm geçmişi, yedek, ek görünüm ve eşitleme herkeste açık (kimsenin elinden özellik alınmasın diye). Değiştirmek istersen söyle.
 
 - [ ] **P77 sayfa başlıkları (KW-17)** — üst çubuk başlıkları (Klasörler, Ayarlar, Arşiv…) her yerde 14 pt çiziliyor (tema hatası, bulundu). Düzeltmek telefonda da başlıkları büyütür. Seçenekler: (a) her yerde 20, (b) her yerde 16–18, (c) olduğu gibi. Şu an: olduğu gibi.
 
