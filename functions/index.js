@@ -147,3 +147,13 @@ exports.pushFolderMessage = push.pushFolderMessage;
 exports.pushFolderInvite = push.pushFolderInvite;
 exports.pushNoteShared = push.pushNoteShared;
 exports.pushInboxNote = push.pushInboxNote;
+
+// Play Billing (PL6) — YALNIZ Play projesinde: `functions/.env.<play-proje>`
+// içinde `PLAY_PACKAGE_NAME` varsa bağlanır. Kişisel proje deploy'unda
+// (CI, `notlar-kaimau`) bu değişken yok → bu fonksiyonlar orada YOK.
+if (process.env.PLAY_PACKAGE_NAME) {
+  const billing = require("./billing");
+  exports.verifyPurchase = billing.verifyPurchase;
+  exports.playRtdn = billing.playRtdn;
+  exports.dropEntitlement = require("./entitlements").dropEntitlement;
+}

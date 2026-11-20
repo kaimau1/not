@@ -120,6 +120,7 @@ class AiStatusCard extends ConsumerWidget {
       ),
       AiAvailability.turnedOff => l10n.aiOffBody,
       AiAvailability.paused => l10n.aiPausedBody,
+      AiAvailability.needsPro => l10n.aiNeedsProBody,
       // Rıza (PL3 a): ne gönderilir, nereye, "yanılabilir", nasıl kapatılır.
       AiAvailability.consentNeeded => [
         l10n.aiConsentWhat,
@@ -179,6 +180,18 @@ class AiStatusCard extends ConsumerWidget {
                     },
                     child: Text(l10n.retry),
                   ),
+                // PL6 katman kapısı (yalnız Play): Pro ekranına.
+                if (status == AiAvailability.needsPro)
+                  FilledButton(
+                    key: const ValueKey('ai-needs-pro'),
+                    onPressed: () {
+                      // Levha kapanınca bu bağlam ağaçtan düşer: önce al.
+                      final router = GoRouter.of(context);
+                      onResolved?.call();
+                      unawaited(router.push('/premium'));
+                    },
+                    child: Text(l10n.aiNeedsProSee),
+                  ),
                 if (status == AiAvailability.turnedOff)
                   FilledButton.tonal(
                     key: const ValueKey('ai-turn-on'),
@@ -205,7 +218,8 @@ class AiStatusCard extends ConsumerWidget {
                 ],
                 if (!consent &&
                     status != AiAvailability.turnedOff &&
-                    status != AiAvailability.paused)
+                    status != AiAvailability.paused &&
+                    status != AiAvailability.needsPro)
                   OutlinedButton.icon(
                     icon: const Icon(Icons.key_outlined),
                     label: Text(l10n.guestAiAddKey),
@@ -231,6 +245,7 @@ String aiStatusTitle(AppLocalizations l10n, AiAvailability status) =>
       AiAvailability.turnedOff => l10n.aiOffTitle,
       AiAvailability.paused => l10n.aiPausedTitle,
       AiAvailability.consentNeeded => l10n.aiConsentTitle,
+      AiAvailability.needsPro => l10n.aiNeedsProTitle,
     };
 
 /// Tek açıklama levhası (F42.2).

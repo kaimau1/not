@@ -11,6 +11,7 @@ const _files = [
   'lib/features/settings/presentation/backup_ui.dart',
   'lib/features/friends/presentation/friends_screen.dart',
   'lib/features/auth/presentation/account_required.dart',
+  'lib/features/entitlement/presentation/pro_screen.dart',
 ];
 
 void main() {

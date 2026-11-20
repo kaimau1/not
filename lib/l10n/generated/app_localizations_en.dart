@@ -9059,4 +9059,189 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickDropFindNote => 'Find note';
+
+  @override
+  String get aiNeedsProTitle => 'AI is part of Pro';
+
+  @override
+  String get aiNeedsProBody =>
+      'Built-in AI comes with a Pro subscription. With Lifetime you can add your own Gemini key and use it without limits.';
+
+  @override
+  String get aiNeedsProSee => 'See Pro';
+
+  @override
+  String get proTitle => 'Pro';
+
+  @override
+  String get proSettingsSubtitle => 'Plans, purchases, restore';
+
+  @override
+  String get proStatusFree => 'Your plan: Free';
+
+  @override
+  String get proStatusLifetime => 'Your plan: Lifetime';
+
+  @override
+  String proStatusPro(String date) {
+    return 'Your plan: Pro · until $date';
+  }
+
+  @override
+  String get proTiersTitle => 'Plans';
+
+  @override
+  String get proTierFree => 'Free';
+
+  @override
+  String get proTierLifetime => 'Lifetime';
+
+  @override
+  String get proTierPro => 'Pro';
+
+  @override
+  String get proRowBasics =>
+      'Notes, lists, pen, PDF, reminders, calendar; on-device OCR, dictation, read aloud';
+
+  @override
+  String get proRowUnlimited =>
+      'Unlimited notes, folders, attachments and devices';
+
+  @override
+  String get proRowSync => 'Sync';
+
+  @override
+  String get proSyncPeriodic => 'Periodic';
+
+  @override
+  String get proSyncInstant => 'Instant';
+
+  @override
+  String get proRowAttachments => 'Attachments stored in';
+
+  @override
+  String get proAttachDrive => 'Your Drive';
+
+  @override
+  String get proAttachCloud => 'Our cloud';
+
+  @override
+  String get proRowHistory => 'Version history, password-protected backup';
+
+  @override
+  String get proRowLooks => 'Extra themes, fonts, card styles';
+
+  @override
+  String get proRowAi => 'Built-in AI';
+
+  @override
+  String get proRowOwnKey => 'Your own Gemini key';
+
+  @override
+  String get proBuyTitle => 'Buy';
+
+  @override
+  String get proPlanMonthly => 'Pro · monthly';
+
+  @override
+  String get proPlanYearly => 'Pro · yearly';
+
+  @override
+  String get proPlanLifetime => 'Lifetime · one-time';
+
+  @override
+  String proPriceMonthly(String price) {
+    return '$price / month';
+  }
+
+  @override
+  String proPriceYearly(String price) {
+    return '$price / year';
+  }
+
+  @override
+  String proTrialMonthly(String price) {
+    return '7 days free, then $price / month';
+  }
+
+  @override
+  String proTrialYearly(String price) {
+    return '7 days free, then $price / year';
+  }
+
+  @override
+  String proPriceOnce(String price) {
+    return '$price · pay once';
+  }
+
+  @override
+  String get proBuy => 'Buy';
+
+  @override
+  String get proTry => 'Try free';
+
+  @override
+  String get proOwned => 'Owned';
+
+  @override
+  String get proManage => 'Manage subscription';
+
+  @override
+  String get proManageBody => 'Change plan or cancel (Google Play)';
+
+  @override
+  String get proRestore => 'Restore purchases';
+
+  @override
+  String get proTerms =>
+      'The subscription renews automatically each period through Google Play; you can cancel any time in Play and Pro lasts until the end of the period you paid for. If Pro ends, your cloud attachments aren\'t deleted and stay readable. If you own Lifetime, its features stay after Pro ends.';
+
+  @override
+  String get proLoading => 'Getting prices from Google Play…';
+
+  @override
+  String get proUnavailable => 'Couldn\'t reach Google Play.';
+
+  @override
+  String get proElsewhere =>
+      'Purchases are made on your phone: in the Android app, Settings → Pro. What you buy unlocks here too on this account.';
+
+  @override
+  String get proGuest =>
+      'Sign in with Google to buy: a guest account lives only on this device, so a purchase could be lost with it.';
+
+  @override
+  String get proNoticePending =>
+      'Payment pending; your plan unlocks automatically once it\'s confirmed.';
+
+  @override
+  String get proNoticeCanceled => 'Purchase cancelled.';
+
+  @override
+  String get proNoticeFailed =>
+      'Purchase couldn\'t be completed. Try again in a moment.';
+
+  @override
+  String get proNoticeVerifyFailed =>
+      'Couldn\'t verify the purchase; the app retries next time it opens. Google Play refunds payments that aren\'t verified.';
+
+  @override
+  String get proNoticeOtherAccount =>
+      'This purchase belongs to another account. Sign in with that account to use it.';
+
+  @override
+  String get proNoticeDone => 'Thank you! Your plan is unlocked.';
+
+  @override
+  String get proNoticeRestored => 'Your purchases are restored.';
+
+  @override
+  String get proNoticeNothing =>
+      'No purchases to restore on this Google Play account.';
+
+  @override
+  String get proIncluded => 'Included';
+
+  @override
+  String get proNotIncluded => 'Not included';
 }

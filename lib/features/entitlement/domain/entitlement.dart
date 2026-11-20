@@ -21,11 +21,13 @@ enum EntitlementTier {
 
 /// Pro (ya da ömür boyu) isteyen özellikler — TEK LİSTE.
 ///
-/// YER TUTUCU (sabah bakılacak): hangi özelliğin hangi katmanda olduğu PL6'da
-/// kesinleşir. Şimdilik PLAN §1.5 katman tablosundan: ömür boyu = sürüm
-/// geçmişi, parolalı yedek, ek görünüm, kendi Gemini anahtarı, anında
-/// eşitleme; Pro = bunların hepsi + dahili AI + bulut ekleri. Henüz HİÇBİR
-/// ekran bu listeyi okumuyor (kapılar PL2/PL6'da bağlanır).
+/// PLAN §1.5 katman tablosundan: ömür boyu = sürüm geçmişi, parolalı yedek,
+/// ek görünüm, kendi Gemini anahtarı, anında eşitleme; Pro = bunların hepsi
+/// + dahili AI + bulut ekleri. BAĞLI kapılar (PL6, 2026-11-20): [builtInAi] ve
+/// [ownApiKey] (`aiAvailabilityProvider`, `AiAdmission`). Kalanlar henüz hiçbir
+/// ekranda okunmuyor — kimsenin elinden özellik alınmasın diye (en güvenli,
+/// sabah bakılacak: temel tema/yazı tipi setinin sınırı, eşitleme aralığı S1,
+/// bulut ekleri S4).
 enum ProFeature {
   builtInAi(EntitlementTier.pro),
   cloudAttachments(EntitlementTier.pro),
@@ -125,6 +127,11 @@ abstract final class EntitlementGate {
     if (!active) return true;
     return e.effectiveTier(now).index >= feature.minTier.index;
   }
+
+  /// AI çağrısının istediği hak (PL6 katman kapısı): kendi anahtarıyla
+  /// ömür boyu yeter, dahili AI Pro ister. Ücretsizde ikisi de kapalı.
+  static ProFeature aiFeature({required bool hasOwnKey}) =>
+      hasOwnKey ? ProFeature.ownApiKey : ProFeature.builtInAi;
 
   /// Bulutta (Storage) kalmış ekler HER katmanda okunur — Pro bitince de.
   static const bool canReadCloudAttachments = true;

@@ -9047,4 +9047,188 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickDropFindNote => 'Not bul';
+
+  @override
+  String get aiNeedsProTitle => 'Yapay zekâ Pro\'da';
+
+  @override
+  String get aiNeedsProBody =>
+      'Dahili yapay zekâ Pro aboneliğinde. Ömür boyu sürümde kendi Gemini anahtarını girip sınırsız kullanabilirsin.';
+
+  @override
+  String get aiNeedsProSee => 'Pro\'ya bak';
+
+  @override
+  String get proTitle => 'Pro';
+
+  @override
+  String get proSettingsSubtitle => 'Katmanlar, satın alma, geri yükleme';
+
+  @override
+  String get proStatusFree => 'Şu an: Ücretsiz';
+
+  @override
+  String get proStatusLifetime => 'Şu an: Ömür boyu';
+
+  @override
+  String proStatusPro(String date) {
+    return 'Şu an: Pro · $date tarihine dek';
+  }
+
+  @override
+  String get proTiersTitle => 'Katmanlar';
+
+  @override
+  String get proTierFree => 'Ücretsiz';
+
+  @override
+  String get proTierLifetime => 'Ömür boyu';
+
+  @override
+  String get proTierPro => 'Pro';
+
+  @override
+  String get proRowBasics =>
+      'Not, liste, kalem, PDF, hatırlatıcı, takvim; cihazda OCR, dikte, sesle okuma';
+
+  @override
+  String get proRowUnlimited => 'Sınırsız not, klasör, ek ve cihaz';
+
+  @override
+  String get proRowSync => 'Eşitleme';
+
+  @override
+  String get proSyncPeriodic => 'Aralıklı';
+
+  @override
+  String get proSyncInstant => 'Anında';
+
+  @override
+  String get proRowAttachments => 'Eklerin yeri';
+
+  @override
+  String get proAttachDrive => 'Drive\'ın';
+
+  @override
+  String get proAttachCloud => 'Bulut';
+
+  @override
+  String get proRowHistory => 'Sürüm geçmişi, parolalı tam yedek';
+
+  @override
+  String get proRowLooks => 'Ek temalar, yazı tipleri, kart görünümleri';
+
+  @override
+  String get proRowAi => 'Dahili yapay zekâ';
+
+  @override
+  String get proRowOwnKey => 'Kendi Gemini anahtarın';
+
+  @override
+  String get proBuyTitle => 'Satın al';
+
+  @override
+  String get proPlanMonthly => 'Pro · aylık';
+
+  @override
+  String get proPlanYearly => 'Pro · yıllık';
+
+  @override
+  String get proPlanLifetime => 'Ömür boyu · tek sefer';
+
+  @override
+  String proPriceMonthly(String price) {
+    return '$price / ay';
+  }
+
+  @override
+  String proPriceYearly(String price) {
+    return '$price / yıl';
+  }
+
+  @override
+  String proTrialMonthly(String price) {
+    return '7 gün ücretsiz, sonra $price / ay';
+  }
+
+  @override
+  String proTrialYearly(String price) {
+    return '7 gün ücretsiz, sonra $price / yıl';
+  }
+
+  @override
+  String proPriceOnce(String price) {
+    return '$price · bir kez öde';
+  }
+
+  @override
+  String get proBuy => 'Satın al';
+
+  @override
+  String get proTry => 'Ücretsiz dene';
+
+  @override
+  String get proOwned => 'Sende var';
+
+  @override
+  String get proManage => 'Aboneliği yönet';
+
+  @override
+  String get proManageBody => 'Plan değiştir ya da iptal et (Google Play)';
+
+  @override
+  String get proRestore => 'Satın alımları geri yükle';
+
+  @override
+  String get proTerms =>
+      'Abonelik Google Play\'den her dönem kendiliğinden yenilenir; istediğin an Play\'den iptal edebilirsin, ödediğin süre sonuna dek Pro sürer. Pro biterse buluttaki eklerin silinmez, okunur kalır. Ömür boyunu aldıysan Pro bitince ömür boyu hakların sürer.';
+
+  @override
+  String get proLoading => 'Google Play\'den fiyatlar alınıyor…';
+
+  @override
+  String get proUnavailable => 'Google Play\'e ulaşılamadı.';
+
+  @override
+  String get proElsewhere =>
+      'Satın alma telefondan: Android uygulamasında Ayarlar → Pro. Aldığın hak bu hesapla burada da açılır.';
+
+  @override
+  String get proGuest =>
+      'Satın almak için Google hesabıyla giriş yap: misafir hesap yalnız bu cihazda, cihaz değişince satın alman da kaybolurdu.';
+
+  @override
+  String get proNoticePending =>
+      'Ödeme bekleniyor; onaylanınca hakkın kendiliğinden açılır.';
+
+  @override
+  String get proNoticeCanceled => 'Satın alma iptal edildi.';
+
+  @override
+  String get proNoticeFailed =>
+      'Satın alma tamamlanamadı. Biraz sonra yeniden dene.';
+
+  @override
+  String get proNoticeVerifyFailed =>
+      'Satın alma doğrulanamadı; uygulama bir sonraki açılışta kendiliğinden yeniden dener. Doğrulanmayan ödemeyi Google Play iade eder.';
+
+  @override
+  String get proNoticeOtherAccount =>
+      'Bu satın alma başka bir hesaba bağlı. O hesapla giriş yapınca hakkın açılır.';
+
+  @override
+  String get proNoticeDone => 'Teşekkürler! Hakkın açıldı.';
+
+  @override
+  String get proNoticeRestored => 'Satın alımların geri yüklendi.';
+
+  @override
+  String get proNoticeNothing =>
+      'Bu Google Play hesabında geri yüklenecek satın alma yok.';
+
+  @override
+  String get proIncluded => 'Var';
+
+  @override
+  String get proNotIncluded => 'Yok';
 }

@@ -1,4 +1,4 @@
-# Play derlemesi hazırlığı (PLAN §1.5 PL1 + PL5)
+# Play derlemesi hazırlığı (PLAN §1.5 PL1 + PL5 + PL6)
 
 Kaynak: `docs/rapor_2026-11-16_beyin_firtinasi.md` E1–E3, E8, E9, §2.6, §4.5. Denetim 2026-11-17
 (bulut, Android SDK yok → derleme denenmedi; aşağıdaki "doğrula" adımları ilk Play derlemesinde).
@@ -95,7 +95,7 @@ NOTLAR_PLAY=1 NOTLAR_PLAY_APP_ID=<paket.adi> flutter build appbundle --release  
 5. **Güncelleyici (E1)**: Play'in uygulama içi güncelleme API'si istenirse ayrı iş (bağımlılık
    gerekir); şimdilik mağaza güncellemesine bırakıldı.
 
-## Hak (entitlement) sözleşmesi — PL14 (2026-11-18) / PL6 doğrulama Function'ı için
+## Hak (entitlement) sözleşmesi — PL14 (2026-11-18) + PL6 (2026-11-20)
 
 Belge: `entitlements/{uid}` (kök koleksiyon). **Yazan yalnız sunucu (Admin SDK)**; istemci
 yalnız KENDİ belgesini `get` eder, liste/yazma/silme kurallarda kapalı (`rules-test` PL14).
@@ -104,29 +104,98 @@ yalnız KENDİ belgesini `get` eder, liste/yazma/silme kurallarda kapalı (`rule
 
 | Alan | Tür | Yazan | Anlam |
 |---|---|---|---|
-| `tier` | string `free` \| `pro` \| `lifetime` | doğrulama Function'ı (PL6); deneme tetikleyicisi `free` | Satın alınmış katman; tanınmayan değer = ücretsiz |
-| `proUntil` | Timestamp | doğrulama Function'ı (Play `expiryTime`) | Pro bu ana dek açık; yoksa `tier: pro` Pro SAYILMAZ (geliştirici hesabı = uzak tarih) |
-| `trialEndsAt` | Timestamp | `startTrial` (ilk giriş, +7 gün; misafire yok) | Bu ana dek Pro; bitince ücretsiz/ömür boyu |
-| `lifetimeOwned` | bool | doğrulama Function'ı (tek sefer ürünü) | Ömür boyu alındı; Pro'ya geçse/Pro bitse de kalır (`tier: lifetime` da aynı anlam) |
-| `createdAt` | Timestamp | `startTrial` | Belge ilk yaratılış |
-| öneri: `source`, `purchaseToken`, `orderId`, `updatedAt` | string / Timestamp | doğrulama Function'ı | Denetim izi; istemci okumaz. `purchaseToken` başka uid'de kullanılmışsa reddet (hesap paylaşımı) |
+| `tier` | string `free` \| `pro` \| `lifetime` | `verifyPurchase` / `playRtdn` (PL6) | Satın alınmış katman; tanınmayan değer = ücretsiz. `pro` + geçmiş `proUntil` = Pro bitti |
+| `proUntil` | Timestamp | PL6 = en geç(`paidUntil`, `grantUntil`) | Pro bu ana dek açık; yoksa `tier: pro` Pro SAYILMAZ |
+| `paidUntil` | Timestamp | PL6 (Play `lineItems[].expiryTime`) | Ödenmiş abonelik süresi; askı/süre dolumu/iade = en geç işlem anı |
+| `grantUntil` | Timestamp | YALNIZ ELLE (konsol) | Geliştirici hesabı Pro'su (`2100-01-01`); satın alma bunu kısaltmaz |
+| `subTokenKey` | string | PL6 | Geçerli aboneliğin belirteç özeti; plan değişiminde ESKİ belirtecin "bitti"si yenisini ezmez |
+| `lifetimeTokenKey` | string | PL6 | Ömür boyunu veren belirtecin özeti; yalnız ONUN iptali/iadesi ömür boyunu kaldırır |
+| `trialEndsAt` | Timestamp | `startTrial` — BAĞLI DEĞİL (aşağıda KARAR) | Bu ana dek Pro; bitince ücretsiz/ömür boyu |
+| `lifetimeOwned` | bool | PL6 (tek sefer ürünü; iade = false) | Ömür boyu alındı; Pro'ya geçse/Pro bitse de kalır (`tier: lifetime` da aynı anlam) |
+| `source`, `updatedAt` | string / Timestamp | PL6 | Denetim izi (`play`); istemci okumaz |
 
-**Doğrulama Function'ı arayüzü (PL6, YAZILMADI):** `verifyPurchase` (onCall, App Check zorunlu)
-girdi `{productId, purchaseToken}` → Google Play Developer API (`purchases.subscriptionsv2.get` /
-`purchases.products.get`) ile doğrula → onaylanmamışsa `acknowledge` → belgeye `set(merge)`
-→ dönüş `{tier, proUntil}`. Yenileme/iptal: Play RTDN (Pub/Sub) tetikleyicisi aynı belgeyi
-günceller. Web satın almaz ("telefondan al"); aynı belgeyi okur.
+`purchaseTokens/{sha256(purchaseToken)}` = `{uid, productId, createdAt}` (kural eşleşmesi YOK →
+istemciye tamamen kapalı, Admin SDK yazar): belirteç hangi hesaba bağlı. Başka hesaba bağlı
+belirteç `permission-denied: other-account` (hesap paylaşımı / çalınmış belirteç). Belirteç YALNIZ
+Play doğruladıktan sonra yazılır. Hesap silinince (`dropEntitlement`) bağlar da silinir → aynı Play
+hesabıyla yeni hesap "Geri yükle" ile ödediğini alır.
 
-**Tetikleyici taslağı:** `functions/entitlements.js` (`startTrial` = auth onCreate, `create()` —
-belge varsa dokunmaz; `dropEntitlement` = auth onDelete). `index.js`'e BAĞLI DEĞİL, deploy
-edilmez; Play projesi (PL13) kurulunca bağlanır.
+## Satın alma — PL6 (P85, 2026-11-20; Play hesabı yok → gerçek satın alma DENENMEDİ)
 
-**Açık (sabah bakılacak):** (1) hangi özellik hangi katman — `ProFeature` listesi yer tutucu;
-(2) misafir → Google bağlanınca deneme (onCreate tetiklenmez; callable ya da `beforeUserSignedIn`);
-(3) deneme hesap tabanlı mı, Play aboneliğinin kendi ücretsiz deneme süresi mi (ikisi birden
-çifte deneme verir); (4) Storage kuralı: Pro değilken buluta YENİ ek yüklemeyi sunucuda da
-kapatmak (`firestore.get(entitlements)`; okuma her zaman açık kalır); (5) eski
-`users/{uid}.premiumUntil` (`ai_gate.dart`) bu belgeye taşınır (PL2).
+**Ürünler (kimlikler TEK yer `lib/features/entitlement/data/billing_products.dart`, sunucu eşi
+`functions/billing_util.js`; bekçi `test/billing_test.dart`; Play'de verilen kimlik bir daha
+kullanılamaz):**
+
+| Play Console | Kimlik | Not |
+|---|---|---|
+| Abonelik | `pro` | temel planlar `monthly` (P1M) ve `yearly` (P1Y), ikisi de otomatik yenilenir |
+| Teklif (her temel planda) | `trial-7d` (ad serbest) | ücretsiz deneme 7 gün, uygunluk "Yeni müşteri edinme" (Play denemeyi yalnız uygun olana listeler; uygulama hangi teklif dönerse onu gösterir) |
+| Tek seferlik ürün | `lifetime` | tüketilmez |
+
+Fiyat KODDA YOK (kararı açık): uygulama mağazanın biçimlediği fiyatı gösterir.
+
+**Akış:** satın al (`GooglePlayPurchaseParam`, `obfuscatedAccountId` = sha256(uid)) →
+`purchaseStream` → `verifyPurchase` → onay (`completePurchase`; sunucu da onaylar). Doğrulanamayan
+satın alma ONAYLANMAZ (Play 3 günde iade eder; kullanıcı boşa ödemez). Bekleyen ödemede belirteç
+şimdiden hesaba bağlanır, ödeme onaylanınca RTDN hakkı açar. Açılışta (20 sn sonra) ve Pro ekranı
+açılınca sessiz onarım: onaylanmamış ya da hak belgesinde görünmeyen satın almayı yeniden doğrular.
+Misafir (anonim) hesaba satılmaz (istemci + sunucu). Web: "satın alma telefondan" yazısı, aynı belgeyi
+okur. Kişisel APK / web derlemesinde `InAppPurchase`'a hiç dokunulmaz (bekçi test).
+
+**Sunucu (`functions/billing.js`):** `verifyPurchase` (onCall, `enforceAppCheck: true`) — Google Play
+Developer API `purchases.subscriptionsv2.get` / `purchases.products.get` → `entitlements/{uid}`
+(işlem içinde, `billing_util.mergeEntitlement`) → onaylanmamışsa `:acknowledge`. `playRtdn`
+(Pub/Sub, `retry: true`): abonelik bildiriminde durum API'den yeniden okunur (yenileme, iptal, askı,
+süre dolumu, geri alma); plan değişiminde yeni belirtecin hesabı `linkedPurchaseToken`'dan; tek sefer
+bildiriminde ömür boyu; `voidedPurchaseNotification` (iade/ters ibraz) = hak hemen kalkar. Geçersiz /
+bağlanmamış belirteç yutulur, geçici hata yeniden denenir. **Gizli anahtar YOK:** API'ye Functions'ın
+çalışma hizmet hesabıyla (ADC) gidilir.
+
+**Bağlama:** `index.js` billing işlevlerini (+ `dropEntitlement`) YALNIZ `PLAY_PACKAGE_NAME` ortam
+değişkeni varken dışa aktarır → kişisel proje (`notlar-kaimau`, CI deploy) DEĞİŞMEZ.
+
+**KARAR (en güvenli, sabah bakılacak):** 7 gün deneme = Play aboneliğinin deneme TEKLİFİ (ödeme yöntemi
+ister, yeni hesap açarak yenilenemez); hesap tabanlı `startTrial` BAĞLANMADI (ikisi birden çifte
+deneme verirdi; misafir → Google yolu da böylece kalktı). Katman kapısı: yalnız AI bağlı (dahili AI
+Pro, kendi anahtarı ömür boyu + Pro, ücretsizde AI yok — `AiAvailability.needsPro`,
+`AiAdmission.checkTier`); Play'de `premiumProvider` = hak belgesindeki Pro (`users/{uid}.premiumUntil`
+okunmaz). Sürüm geçmişi / yedek / görünüm / anında eşitleme / bulut eki kapıları BAĞLANMADI (kimsenin
+elinden özellik alınmasın; temel tema seti, S1 eşitleme aralığı, S4 Drive ekleri kararıyla).
+
+### Kullanıcının yapacakları (Play hesabı + Play Firebase projesi açılınca)
+
+1. **Play Console → Para kazanma → Ürünler:** yukarıdaki tabloyu birebir kur (kimlikleri DEĞİŞTİRME;
+   değişirse iki dosyada birlikte değişmeli). Fiyatları sen belirle. Abonelik ayarlarında "Ödemesiz
+   dönem" (grace) açık kalabilir.
+2. **Hizmet hesabı izni (anahtar dosyası YOK):** Google Cloud (Play projesi) → IAM'de Functions'ın
+   çalışma hesabı (2. nesil: `<proje-numarası>-compute@developer.gserviceaccount.com`). Play Console →
+   Kullanıcılar ve izinler → bu e-postayı davet et → uygulama izinleri: "Finansal verileri görüntüle",
+   "Siparişleri ve abonelikleri yönet". Google Cloud → API'ler: **Google Play Android Developer API**
+   etkin. (İzin Play'e yayılması 24 saate dek sürebilir; o arada `verifyPurchase` 401/403 → istemci
+   "doğrulanamadı" der, onaylamaz.)
+3. **RTDN:** Google Cloud (Play projesi) → Pub/Sub → konu `play-rtdn` oluştur → izinler:
+   `google-play-developer-notifications@system.gserviceaccount.com` = "Pub/Sub Yayıncısı". Play
+   Console → Para kazanma kurulumu → Gerçek zamanlı geliştirici bildirimleri → konu adı
+   `projects/<play-proje>/topics/play-rtdn` → "Deneme bildirimi gönder" (Functions günlüğünde
+   "RTDN deneme bildirimi geldi").
+4. **Functions ortamı:** `functions/.env.<play-proje-kimliği>` (gitignore'da, sır değil) içine
+   `PLAY_PACKAGE_NAME=<paket.adi>` (konu adı farklıysa `PLAY_RTDN_TOPIC=<ad>`). Sonra
+   `firebase deploy --only functions --project <play-proje>` (CI Play projesine Functions yayınlamaz).
+5. **App Check:** Play projesinde Android (Play Integrity) kaydı; `verifyPurchase` App Check'i
+   ZORUNLU tutar (kayıtsız istemci reddedilir).
+6. **Geliştirici hesabı Pro'su:** Firestore → `entitlements/<senin uid>` → `tier: "pro"`,
+   `proUntil` ve `grantUntil` = 2100-01-01 (Timestamp), `source: "manual"`. Satın alma bunu kısaltmaz.
+7. **Deneme:** Play Console → Lisans testi'ne kendi + test hesaplarını ekle (gerçek ücret alınmaz,
+   abonelik dakikalar içinde yenilenir). Kapalı test kanalından kur → Ayarlar → Pro → aylık "Ücretsiz
+   dene" → durum kartı "Pro · … tarihine dek"; Play'den iptal et → süre sonunda Ücretsiz; ömür boyu al →
+   iade et (Play Console → Siparişler) → hak kalkar; ikinci hesapla "Geri yükle" → "başka hesaba bağlı".
+
+**Açık (sabah bakılacak):** (1) fiyatlar; (2) Storage kuralı: Pro değilken buluta YENİ ek yüklemeyi
+sunucuda da kapatmak (`firestore.get(entitlements)`; okuma her zaman açık kalır) — S4 ile; (3) AI
+kotasının sunucuda sayımı (PL2, Function arkasına alma); (4) ücretsiz katmanda AI girişlerini gizleme
+(PL2; şimdilik girişler kilitli görünür, dokununca "Yapay zekâ Pro'da" levhası); (5) Play'in uygulama
+içi abonelik değiştirme (aylık → yıllık) — şimdilik Play abonelik sayfasından ("Aboneliği yönet").
+
 ## AI korumaları (PL2) — durum 2026-11-18 (P70)
 **İstemcide var (P70):**
 - **Acil kapatma** `config/app.aiKillSwitch` (bool, alan yok = false). `true` yazılınca istemci bütün AI

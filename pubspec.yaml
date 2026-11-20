@@ -126,6 +126,13 @@ dependencies:
   # Android Firebase BoM'unu) öbür Firebase eklentilerinden ayırırdı.
   firebase_crashlytics: ^6.0.1
   firebase_messaging: ^17.0.1
+  # Play Billing (PLAN §1.5 PL6): YALNIZ `NOTLAR_PLAY` derlemesinde çağrılır
+  # (`lib/features/entitlement/data/billing_service.dart`); kişisel APK'da
+  # eklenti kayıtlı ama hiç bağlanmaz. RevenueCat bilerek yok (üçüncü taraf
+  # + ücret); doğrulama kendi Function'ımızda (`functions/billing.js`).
+  # `_android`: teklif (deneme) / temel plan alanları için doğrudan.
+  in_app_purchase: ^3.3.1
+  in_app_purchase_android: ^0.5.5
 
 dev_dependencies:
   flutter_test:

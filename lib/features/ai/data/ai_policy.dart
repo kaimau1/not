@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/ai_kill_switch.dart';
 import '../../../core/personalize.dart';
 import '../../../core/play_build.dart';
+import '../../entitlement/data/entitlement_service.dart';
+import '../../entitlement/domain/entitlement.dart';
 import '../../settings/settings_providers.dart';
 import 'gemini_service.dart' show GeminiErrorKind, GeminiException;
 
@@ -17,7 +19,9 @@ import 'gemini_service.dart' show GeminiErrorKind, GeminiException;
 ///  1. Kullanıcı "Yapay zekâyı tümden kapat"ı açtıysa ([aiTurnedOffProvider]),
 ///  2. `config/app.aiKillSwitch` true ise ([aiKillSwitchProvider]),
 ///  3. rıza gerekli ve verilmemişse ([aiConsentProvider]; yalnız Play),
-///  4. yerel hız sınırı aşıldıysa ([AiRateLimiter]; yalnız ölçülen çağrı)
+///  4. yerel hız sınırı aşıldıysa ([AiRateLimiter]; yalnız ölçülen çağrı),
+///  5. Play katmanı yetmiyorsa ([AiAdmission.checkTier]; PL6: dahili AI Pro,
+///     kendi anahtarı ömür boyu + Pro, ücretsizde AI yok)
 ///  çağrı ağa ÇIKMADAN [GeminiException] ile reddedilir.
 /// Düğmelerin durumu aynı kaynaklardan [aiAvailabilityProvider]da (ai_gate).
 
@@ -137,6 +141,16 @@ class AiAdmission {
         GeminiErrorKind.rateLimited,
         detail: 'local',
       );
+    }
+  }
+
+  /// Katman kapısı (PL6). Hak `entitlements/{uid}`'den (sunucu doğrular);
+  /// kişisel APK / web derlemesinde [EntitlementGate.active] sabit false.
+  void checkTier({required bool hasOwnKey}) {
+    if (!EntitlementGate.active) return;
+    final feature = EntitlementGate.aiFeature(hasOwnKey: hasOwnKey);
+    if (!_ref.read(proFeatureProvider(feature))) {
+      throw const GeminiException.of(GeminiErrorKind.needsPro);
     }
   }
 }

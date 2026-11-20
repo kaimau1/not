@@ -18,6 +18,7 @@ import 'package:notlar/features/ai/data/gemini_service.dart';
 import 'package:notlar/features/ai/presentation/ai_result_note.dart';
 import 'package:notlar/features/auth/presentation/account_required.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
+import 'package:notlar/features/entitlement/data/entitlement_service.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
@@ -62,6 +63,9 @@ void main() {
         currentUidProvider.overrideWithValue(null),
         activeApiKeyProvider.overrideWith((ref) async => key),
         sharedPreferencesProvider.overrideWithValue(store),
+        // Katman kapısı (PL6) kendi testinde (`billing_test.dart`); burada
+        // Play koşusunda da açık say.
+        proFeatureProvider.overrideWith((ref, _) => true),
       ],
     );
     addTearDown(c.dispose);
@@ -207,6 +211,7 @@ void main() {
           currentUidProvider.overrideWithValue(null),
           activeApiKeyProvider.overrideWith((ref) async => 'k'),
           sharedPreferencesProvider.overrideWithValue(store),
+          proFeatureProvider.overrideWith((ref, _) => true),
         ],
         child: MaterialApp(
           locale: const Locale('tr'),

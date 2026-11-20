@@ -42,6 +42,8 @@ final geminiServiceProvider = Provider<GeminiService>(
     ),
     // TEK KAPI (PL2/PL3): kapalı / rıza yok → ağa çıkmadan red.
     admit: ref.read(aiAdmissionProvider).check,
+    // Play katman kapısı (PL6): anahtar okunduktan sonra (hangi yol belli).
+    admitTier: ref.read(aiAdmissionProvider).checkTier,
   ),
 );
 
@@ -105,6 +107,9 @@ enum GeminiErrorKind {
 
   /// `config/app.aiKillSwitch` (PL2): AI geçici olarak kapalı.
   aiPaused,
+
+  /// Play katman kapısı (PL6): dahili AI Pro'da, kendi anahtarı ömür boyunda.
+  needsPro,
 
   /// Metni çağıran vermiş (arayüzden gelen, zaten yerelleşmiş ileti).
   other,
@@ -176,6 +181,7 @@ class GeminiException implements UserFacingException {
     GeminiErrorKind.aiTurnedOff => l10n.aiOffBody,
     GeminiErrorKind.aiConsentNeeded => l10n.aiConsentTitle,
     GeminiErrorKind.aiPaused => l10n.aiPausedTitle,
+    GeminiErrorKind.needsPro => l10n.aiNeedsProBody,
     GeminiErrorKind.other => message ?? l10n.errorUnknown,
   };
 
@@ -245,6 +251,7 @@ class GeminiService {
     String? Function(AiTask)? taskModel,
     this._builtIn,
     this._admit,
+    this._admitTier,
   }) : _provider = provider,
        _taskModel = taskModel ?? _noModel,
        _http = http ?? JsonHttp(baseUrl: provider.baseUrl);
@@ -255,10 +262,16 @@ class GeminiService {
   /// null (testler) = serbest.
   final void Function({bool metered})? _admit;
 
+  /// Katman kapısı ([AiAdmission.checkTier]): kendi anahtarı mı dahili mi
+  /// belli olunca. null (testler, kişisel APK'da etkisiz) = serbest.
+  final void Function({required bool hasOwnKey})? _admitTier;
+
   /// Çağrı izni + saklı anahtar (yoksa null → dahili yol).
-  Future<String?> _admittedKey({bool metered = true}) {
+  Future<String?> _admittedKey({bool metered = true}) async {
     _admit?.call(metered: metered);
-    return _keyStore.read(_provider);
+    final key = await _keyStore.read(_provider);
+    _admitTier?.call(hasOwnKey: key != null && key.isNotEmpty);
+    return key;
   }
 
   /// Decisions API (DA-E1) için izinli anahtar: `AiAdmission` kapıları (AI'ı

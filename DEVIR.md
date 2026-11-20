@@ -13,3 +13,20 @@
 **Bitti:** Y-4 arayüz d7b028cb (CI 44757292479 yeşil, tam takım) + d7e68017 (okuma kipinde çizgi yok, öneri yeniden hesap) + belgeler (OTOMASYON P83 bitti, PLAN 1.4/2 [~], regresyon, hafıza editor.md, KONTROL "Telefonda bak", sürüm notu 20 Kasım TR/EN). Kalan: cihaz A/B (yaz evresi) sonraki [apk]'da; Y-5/Y-6 bu paketin dışında.
 **Ölçüm:** `flutter test test/spell_corpus_test.dart test/spell_underline_test.dart` · `flutter test test/perf_budget_test.dart --plain-name S57`.
 **Not:** Flutter `C:/src` altında YOK; 3.47.9 scratchpad'de (`flutter analyze` SDK klasörünü tarayıp düşüyor → `dart analyze --fatal-infos lib test tool`). main (1d750105) dala birleştirildi (0fb13fe2).
+
+# DEVIR — P85 PL6 Play Billing (dal oto/P85-play-billing)
+
+- Yapılan (commit sırası): Kuyruk P85 · sunucu `functions/billing.js` + `billing_util.js` (+test;
+  ömür boyu `lifetimeTokenKey`, abonelik `subTokenKey` korumaları) — `verifyPurchase`, `playRtdn`;
+  `index.js` yalnız `PLAY_PACKAGE_NAME` varken bağlar · istemci `in_app_purchase` + `billing_service`
+  · AI katman kapısı · Pro ekranı (`/premium` Play'de) + Ayarlar kısayolu yalnız Play · bildirim
+  hunisi düzeltmesi · belgeler (Kuyruk bitti, PLAN PL6 [~], regresyon, play_hazirlik kurulum, KONTROL,
+  veri.md).
+- CI 44756241480: tek kırmızı `notice_paths_guard_test` (pro_screen ham `showSnackBar`) → `showAppMessage`,
+  yerelde yeşil. Yerel `flutter build web --release --wasm` yeşil (in_app_purchase web'de derleniyor).
+- Kural değişmedi; `purchaseTokens` eşleşmesiz (RET).
+- KARAR (en güvenli, sabah bakılacak): deneme = Play aboneliğinin 7 gün teklifi; `startTrial` bağlanmadı;
+  yalnız AI kapısı bağlı.
+- Doğrulanamayan: gerçek satın alma, RTDN, Play API izni (Play hesabı yok); cihaz yok.
+- Test: `flutter test test/billing_test.dart` (+ `--dart-define=NOTLAR_PLAY=true`),
+  `cd functions && node --test billing_util.test.js`.

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/ai/data/ai_gate.dart';
 import '../features/auth/presentation/auth_providers.dart';
+import '../features/entitlement/data/billing_service.dart';
 import '../features/folders/data/shared_activity_service.dart';
 import '../features/notes/data/data_migrations.dart';
 import '../features/notes/data/local_notes_store.dart';
@@ -20,6 +21,7 @@ import '../features/notes/presentation/lock/note_lock_ui.dart';
 import '../features/notes/presentation/notes_providers.dart';
 import '../features/settings/data/prefs_sync.dart';
 import 'router.dart';
+import '../core/play_build.dart';
 import '../core/save_cadence.dart';
 
 /// Oturum açıkken ayakta durması gereken arka plan servisleri (F2.4).
@@ -78,6 +80,10 @@ class _AppServicesState extends ConsumerState<AppServices> {
     (ref) => ref.listen(widgetServiceProvider, _ignore),
     // Kanallarım/Harita video notlarının transkripti (arka planda).
     (ref) => ref.listen<void>(videoNoteTranscriptsProvider, _ignore),
+    // PL6: yarıda kalmış satın alma doğrulamasını açılışta sessizce onarır
+    // (20 sn gecikmeli). Yalnız Play; kişisel APK'da kademe yok.
+    if (PlayBuild.enabled)
+      (ref) => ref.listen<void>(billingRecoveryProvider, _ignore),
   ];
 
   /// Testler kademeleri buradan değiştirir.

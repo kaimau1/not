@@ -204,5 +204,19 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   kendini yeniler (Timer, en çok 20 gün).
 - **Yanlış yol (test):** Riverpod 3 dinleyicisiz `StreamProvider`'ı duraklatır; `read(.future)`
   takılır → testte önce `container.listen`.
-- **Eski `users/{uid}.premiumUntil`** (`ai_gate.dart` premiumProvider) dokunulmadı; PL2/PL6'da
-  `entitlementProvider`'a taşınacak (paralel AI işi).
+- **Eski `users/{uid}.premiumUntil`**: kişisel APK'da aynen; Play'de `premiumProvider` = hak belgesindeki Pro
+  (P85, 2026-11-20).
+## Satın alma — PL6 (2026-11-20, P85; Play'de denenmedi)
+- **Yazan yalnız Function:** `functions/billing.js` `verifyPurchase` (onCall, App Check) + `playRtdn` (Pub/Sub);
+  `index.js` YALNIZ `PLAY_PACKAGE_NAME` varken bağlar — kişisel proje deploy'una girmez. Gizli anahtar yok (ADC +
+  Play Console izni). Saf birleştirme `billing_util.mergeEntitlement` (`node --test`).
+- **Kalıcı kurallar:** doğrulanamayan satın alma ONAYLANMAZ (Play 3 günde iade eder); belirteç `purchaseTokens/{sha256}`
+  ile tek hesaba bağlı, Play doğrulamadan YAZILMAZ; plan değişiminde eski belirtecin bitişi yenisini ezmez
+  (`subTokenKey`), ömür boyunu yalnız onu veren belirtecin iadesi kaldırır (`lifetimeTokenKey`); elle Pro `grantUntil` (satın alma kısaltmaz); misafire satılmaz. Durum hep API'den okunur, RTDN
+  türüne güvenilmez.
+- **İstemci:** `billing_service.dart` — `BillingNotifier.debugStore/debugVerify` test kancası; bayraksızda
+  `InAppPurchase.instance` HİÇ çağrılmaz (çağrılsa Billing bağlantısı açılırdı: `BillingClientManager` kurucuda
+  bağlanır). Açılışta 20 sn sonra sessiz onarım (yalnız Play kademesi).
+- **Yanlış yol (test):** iki kapsayıcı aynı sahte mağazanın yayın akışını dinlerse birinin geri yüklemesi öbürüne
+  de düşer → her kapsayıcıya ayrı sahte mağaza. Play koşusu `--dart-define=NOTLAR_PLAY=true`; CI bayraksız koşar.
+- **KARAR (sabah bakılacak):** deneme = Play'in 7 gün teklifi, `startTrial` bağlı değil; yalnız AI kapısı bağlı.

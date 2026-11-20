@@ -1,8 +1,10 @@
 /**
- * HAK TETİKLEYİCİLERİ — TASLAK (PLAN §1.5 PL14). **DEPLOY EDİLMEZ**:
- * `index.js` bunu dışa aktarmıyor; Play'in ayrı Firebase projesi (PL13)
- * kurulunca orada `exports.startTrial` / `exports.dropEntitlement` ile
- * bağlanır. Kişisel proje bu belgeyi hiç okumaz (istemci kapısı yalnız
+ * HAK TETİKLEYİCİLERİ (PLAN §1.5 PL14). `dropEntitlement` Play projesinde
+ * `index.js`'te bağlı (`PLAY_PACKAGE_NAME` varsa, PL6). `startTrial` TASLAK,
+ * HİÇBİR projede bağlı değil: deneme Play aboneliğinin 7 günlük ücretsiz
+ * deneme teklifiyle veriliyor (P85 KARAR, en güvenli: ödeme yöntemi ister,
+ * yeni hesap açarak yenilenemez; ikisi birden çifte deneme olurdu — sabah
+ * bakılacak). Kişisel proje bu belgeyi hiç okumaz (istemci kapısı yalnız
  * `NOTLAR_PLAY` derlemesinde).
  *
  * `entitlements/{uid}` yalnız Admin SDK ile yazılır (kurallar istemciye
@@ -31,7 +33,19 @@ exports.startTrial = functionsV1.auth.user().onCreate(async (user) => {
   }
 });
 
-/** Hesap silinince hak belgesi de silinir (istemci silemez — kural). */
+/**
+ * Hesap silinince hak belgesi ve satın alma bağları da silinir (istemci
+ * silemez — kural). Bağ kalkınca aynı Play hesabıyla açılan YENİ hesap
+ * "Satın alımları geri yükle" ile ödediğini geri alır (PL6).
+ */
 exports.dropEntitlement = functionsV1.auth.user().onDelete(async (user) => {
-  await getFirestore().doc(`entitlements/${user.uid}`).delete();
+  const db = getFirestore();
+  const tokens = await db
+    .collection("purchaseTokens")
+    .where("uid", "==", user.uid)
+    .get();
+  const batch = db.batch();
+  for (const doc of tokens.docs) batch.delete(doc.ref);
+  batch.delete(db.doc(`entitlements/${user.uid}`));
+  await batch.commit();
 });

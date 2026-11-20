@@ -28,6 +28,7 @@ import '../features/calendar/presentation/routines_screen.dart';
 import '../features/calendar/presentation/tasks_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/delete_account_screen.dart';
+import '../features/entitlement/presentation/pro_screen.dart';
 import '../features/settings/presentation/premium_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/guide_screen.dart';
@@ -281,9 +282,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               path: '/gmail',
               builder: (context, state) => const GmailScreen(),
             ),
+          // PL6: Play derlemesinde Pro ekranı (satın alma); kişisel APK'da
+          // eski bilgilendirme ekranı AYNEN (sabit dal, ağaçtan düşer).
           GoRoute(
             path: '/premium',
-            builder: (context, state) => const PremiumScreen(),
+            builder: (context, state) =>
+                PlayBuild.enabled ? const ProScreen() : const PremiumScreen(),
           ),
           GoRoute(
             path: '/ai',

@@ -1,6 +1,6 @@
 {
   "name": "not-functions",
-  "description": "Not uygulaması Cloud Functions — kullanıcı arama (searchUsers) ve paylaşım itme bildirimleri (push.js)",
+  "description": "Not uygulaması Cloud Functions — kullanıcı arama (searchUsers), paylaşım itme bildirimleri (push.js), Play satın alma doğrulaması (billing.js, yalnız Play projesi)",
   "engines": {
     "node": "20"
   },
@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",
-    "firebase-functions": "^6.1.0"
+    "firebase-functions": "^6.1.0",
+    "google-auth-library": "^10.6.1"
   },
   "private": true
 }
