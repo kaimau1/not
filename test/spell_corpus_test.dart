@@ -12,7 +12,7 @@ import 'package:notlar/core/utils/spell_learn.dart';
 /// Bellek boş (yalnız yerleşik sözlük): kişisel sözlük ölçümü kaydırmasın.
 /// Mandalı gevşetmek yasak; iyileşince yeni sayıyı buraya yaz.
 const _mandalYanlis = 0;
-const _mandalYakalama = 152;
+const _mandalYakalama = 216;
 
 List<String> _lines(String path) => [
   for (final l in File(path).readAsLinesSync())

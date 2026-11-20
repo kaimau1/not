@@ -194,6 +194,28 @@ void main() {
     });
   });
 
+  group('Y-2 harfsiz yazım', () {
+    test('tek Türkçe karşılık düzeltilir, ekli kelime de', () {
+      expect(_d('calisma').to, 'çalışma');
+      expect(_d('calisma').reason, SpellReason.ascii);
+      expect(_d('gorusuruz').to, 'görüşürüz');
+      expect(_d('Bugun').to, 'Bugün');
+      expect(_d('hersey').to, 'her şey');
+    });
+
+    test('birden çok karşılık: dokunma; cihaz önerisi seçerse o', () {
+      expect(_d('kisi').isNone, isTrue); // kişi / kışı
+      expect(_d('kisi', device: ['kişi']).to, 'kişi');
+    });
+
+    test('İngilizce ve kısa kelime çevrilmez; sonda yinelenen harf', () {
+      expect(_d('one').isNone, isTrue);
+      expect(_d('is').isNone, isTrue);
+      expect(_d('tabii').isNone, isTrue);
+      expect(_d('kitapp').to, 'kitap');
+    });
+  });
+
   group('motor: ilkeler', () {
     test('bilinen kelimeye dokunma', () {
       expect(_d('kalem').isNone, isTrue);

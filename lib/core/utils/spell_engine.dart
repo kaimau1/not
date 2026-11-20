@@ -7,7 +7,10 @@
 /// 1. Bu notta dokunulmaz ya da kullanıcının "dokunma" dediği kelime → yok.
 /// 2. Kullanıcının öğrettiği/onayladığı düzeltme ([SpellMemory.learned]).
 /// 3. Açık kural tablosu ([fixTurkishWord]: "herşey" → "her şey").
-/// 4. Yalnız kurallar kipi, başlık, Çince ya da BİLİNEN kelime → yok.
+/// 4. Yalnız kurallar kipi, başlık, Çince ya da BİLİNEN kelime → yok
+///    (bilinen = sözlük + ek çözücü, bkz. [SpellMemory.known]).
+/// 4b. Y-2 harfsiz yazım ("calisma" → "çalışma"): Türkçe harfli TEK bilinen
+///    karşılık varsa o; birden çoksa ("aci": acı/açı) dokunma.
 /// 5. Boşluk yerine boşluk komşusu harf: iki parça da bilinen kelime.
 /// 6. Tek adaylı + yüksek güvenli bulanık eşleşme (ikinci aday
 ///    [confidenceMargin] içindeyse dokunma) ya da tek yakın cihaz önerisi.
@@ -59,7 +62,7 @@ double keyCost(String a, String b) {
   return 1;
 }
 
-enum SpellReason { rule, learned, split, fuzzy, device }
+enum SpellReason { rule, learned, ascii, split, fuzzy, device }
 
 /// Karar: [to] null ise dokunma.
 class SpellDecision {
@@ -129,6 +132,22 @@ class SpellEngine {
     if (i.rulesOnly || i.title || isCjk(w) || m.known(w)) {
       return SpellDecision.none;
     }
+    final ascii = asciiRestore(w, m);
+    if (ascii.length == 1) return pick(ascii.single, SpellReason.ascii);
+    if (ascii.length > 1) {
+      // Belirsiz: yalnız cihaz önerisi birini seçerse.
+      final dev = {for (final s in i.device ?? const <String>[]) trLower(s)};
+      final hit = ascii.where(dev.contains).toList();
+      return hit.length == 1
+          ? pick(hit.single, SpellReason.ascii)
+          : SpellDecision.none;
+    }
+    // Sonda yinelenen harf ("kitapp"): bulanık eşleşme kök/uzantı ilişkisini
+    // atladığı için burada; yazılan bilinmiyor, bir harf eksiği biliniyor.
+    final n = w.length;
+    if (n >= 4 && w[n - 1] == w[n - 2] && m.known(w.substring(0, n - 1))) {
+      return pick(w.substring(0, n - 1), SpellReason.fuzzy);
+    }
     final split = splitMissedSpace(w, m);
     if (split != null) return pick(split, SpellReason.split);
     final device = i.device;
@@ -142,6 +161,41 @@ class SpellEngine {
           : SpellDecision.none;
     }
     return pick(nearest(w, m), SpellReason.fuzzy);
+  }
+
+  static const _turkish = {
+    'c': 'ç', 'g': 'ğ', 'i': 'ı', 'o': 'ö', 's': 'ş', 'u': 'ü', //
+  };
+
+  /// **Y-2 TÜRKÇE HARF GERİ KAZANIMI**: harfsiz yazılan [w]'nin ("calisma")
+  /// Türkçe harfli bilinen karşılıkları ("çalışma"); kural tablosundaki
+  /// biçim de sayılır ("hersey" → "her şey"). En çok [max] + 1 döner (fazlası
+  /// belirsizlik demek). Üç harften kısa ve İngilizce görünen kelime yok.
+  static List<String> asciiRestore(String w, SpellMemory m, {int max = 3}) {
+    if (w.length < 3 || looksEnglish(w)) return const [];
+    final pos = [
+      for (var k = 0; k < w.length; k++)
+        if (_turkish.containsKey(w[k])) k,
+    ];
+    // ponytail: 2^n deneme; 8 harften fazlası tavan (kelime sonu < 1 ms).
+    if (pos.isEmpty || pos.length > 8) return const [];
+    final out = <String>[];
+    final chars = w.split('');
+    for (var mask = 1; mask < (1 << pos.length); mask++) {
+      final v = [...chars];
+      for (var b = 0; b < pos.length; b++) {
+        if ((mask & (1 << b)) != 0) v[pos[b]] = _turkish[v[pos[b]]]!;
+      }
+      final cand = v.join();
+      final rule = fixTurkishWord(cand);
+      if (rule != cand) {
+        if (rule.split(' ').every(m.known)) out.add(rule);
+      } else if (m.known(cand)) {
+        out.add(cand);
+      }
+      if (out.length > max) break;
+    }
+    return out;
   }
 
   /// Önerinin büyük/küçük harfi yazılan kelimeye uyar.

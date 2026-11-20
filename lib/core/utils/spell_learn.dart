@@ -588,8 +588,27 @@ const kCommonTurkish = <String>{
   'zor',
 };
 
-/// Yerleşik sık İngilizce kelimeler.
+/// Yerleşik sık İngilizce kelimeler. Y-2: harfsiz Türkçe sanılıp
+/// çevrilmesinler diye kısa olanlar da ("one" → "öne", "is" → "iş").
 const kCommonEnglish = <String>{
+  'ago',
+  'age',
+  'bus',
+  'cup',
+  'cut',
+  'gun',
+  'ice',
+  'is',
+  'it',
+  'its',
+  'oil',
+  'one',
+  'own',
+  'sit',
+  'six',
+  'son',
+  'sun',
+  'us',
   'about',
   'after',
   'again',
