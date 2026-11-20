@@ -15,15 +15,30 @@ const doneWords = <String>[
   'done',
 ];
 
+/// YALIN bitiş sözleri: içerikte de geçer ("süt bitti" = süt kalmadı, "rapor
+/// bitti"). Konuşmada tek başına kesin bitiş sayılmaz (H1, bkz.
+/// [matchDoneWord]); öbürleri ("bu kadar", "liste bitti") hep bitiştir.
+const _bareDoneWords = {'bitti', 'finished', 'done'};
+
 /// [text] bir bitiş sözüyle bitiyorsa o söz (ve sondaki noktalama)
 /// atılmış metni döner; bitmiyorsa null.
-String? stripDoneWord(String text) {
+String? stripDoneWord(String text) => matchDoneWord(text)?.rest;
+
+/// [stripDoneWord] + sözün türü. [bare]: yalın söz ("bitti") ve önünde
+/// içerik var — konuşma sürerse içeriğin parçasıdır ("süt bitti, ekmek…").
+/// Ses tanıma noktalama vermediği için "süt ekmek bitti" ile "süt bitti"
+/// metinden ayrılamaz; karar konuşmanın ZAMANINDAN verilir (QuickEntryBar:
+/// önünde duraklama varsa ya da ardından konuşma gelmezse bitiş).
+({String rest, bool bare})? matchDoneWord(String text) {
   final trimmed = text.trimRight().replaceFirst(RegExp(r'[\s.,!?;:…]+$'), '');
   final lower = _lower(trimmed);
   for (final w in doneWords) {
-    if (lower == w) return '';
+    if (lower == w) return (rest: '', bare: false);
     if (lower.endsWith(' $w')) {
-      return trimmed.substring(0, trimmed.length - w.length).trimRight();
+      return (
+        rest: trimmed.substring(0, trimmed.length - w.length).trimRight(),
+        bare: _bareDoneWords.contains(w),
+      );
     }
   }
   return null;

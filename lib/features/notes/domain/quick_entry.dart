@@ -327,7 +327,42 @@ const _stopWords = {
   'also',
   'please',
   'some',
+  // ALIŞVERİŞ SÖZLERİ (2026-11-20): "süt al ekmek al", "süt lazım",
+  // "deterjan kalmadı", "süt bitti" (= kalmadı) en doğal söyleyiş; madde
+  // olarak listeye giriyorlardı ("Al", "Lazım", "Bitti"). Yalnız tek
+  // başına, sözlükte olmayan kelime düşer; cümleli listede
+  // ([QuickParser.phrasesOnly], yapılacaklar) ayrıştırma hiç buraya gelmez.
+  'al',
+  'alın',
+  'alin',
+  'alınacak',
+  'alinacak',
+  'alalım',
+  'alalim',
+  'alınsın',
+  'alinsin',
+  'lazım',
+  'lazim',
+  'gerek',
+  'gerekiyor',
+  'bitti',
+  'bitmiş',
+  'bitmis',
+  'kalmadı',
+  'kalmadi',
+  'kalmamış',
+  'kalmamis',
+  'azaldı',
+  'azaldi',
+  'buy',
+  'need',
+  'get',
+  'finished',
+  'done',
 };
+
+/// "x2", "2x", "×3": çarpı biçimli adet ("süt x2" → Süt (2)).
+final _timesRe = RegExp(r'^(?:[x×](\d+)|(\d+)[x×])$');
 
 const _numberWords = {
   'bir': '1',
@@ -701,8 +736,11 @@ class QuickParser {
         String? unit;
         var used = 1;
         final glued = _numberUnitRe.firstMatch(fold);
+        final times = _timesRe.firstMatch(fold);
         if (_numberRe.hasMatch(fold)) {
           number = fold;
+        } else if (times != null) {
+          number = times.group(1) ?? times.group(2);
         } else if (glued != null && _units.containsKey(glued.group(2))) {
           number = glued.group(1);
           unit = _units[glued.group(2)];

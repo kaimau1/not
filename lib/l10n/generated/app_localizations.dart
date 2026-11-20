@@ -15704,6 +15704,24 @@ abstract class AppLocalizations {
   /// **'“{title}” notuna ekleniyor…'**
   String quickDropAddingTo(String title);
 
+  /// No description provided for @quickDropPreviewList.
+  ///
+  /// In tr, this message translates to:
+  /// **'→ “{title}”: {items}'**
+  String quickDropPreviewList(String title, String items);
+
+  /// No description provided for @quickDropPreviewText.
+  ///
+  /// In tr, this message translates to:
+  /// **'→ “{title}” notunun sonuna'**
+  String quickDropPreviewText(String title);
+
+  /// No description provided for @quickDropPreviewNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'→ Yeni not'**
+  String get quickDropPreviewNew;
+
   /// No description provided for @quickDropWait.
   ///
   /// In tr, this message translates to:

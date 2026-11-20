@@ -80,9 +80,11 @@ class QuickEntryBar extends ConsumerStatefulWidget {
   /// Dinleme kendiliğinden bitti (sessizlik) — ham kipte "söyle, eklensin".
   final VoidCallback? onSpeechEnd;
 
-  /// Konuşmanın sonunda "bitti" / "bu kadar" söylendi ([stripDoneWord]):
+  /// Konuşmanın sonunda "bitti" / "bu kadar" söylendi ([matchDoneWord]):
   /// dinleme durdu, söz metinden atıldı, kalan maddeler döküldü. Çağıran
   /// işi bitirir (notu oluşturur). Verilmezse söz sıradan metin sayılır.
+  /// Yalın "bitti" (H1) yalnız önünde duraklama varsa hemen, yoksa ardından
+  /// [QuickEntryBarState.doneGrace] boyunca konuşma gelmezse bitiştir.
   final VoidCallback? onDoneWord;
 
   @override
@@ -110,6 +112,24 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
 
   /// Ham kipte dinleme başlarken alanda duran yazı (konuşma sonuna eklenir).
   String _rawPrefix = '';
+
+  /// H1 (17K §4.1, 2026-11-20): son tanıma sonucundan bu yana en az
+  /// [donePause] geçti mi — yalın "bitti"nin ÖNÜNDE duraklama.
+  bool _paused = false;
+  Timer? _pauseTimer;
+
+  /// Yalın "bitti" duraklamasız duyuldu ("süt bitti" = süt kalmadı da
+  /// olabilir): ardından [doneGrace] içinde konuşma gelmezse bitiş; gelirse
+  /// içerik sayılır (alışveriş listesinde "bitti" madde olmaz).
+  Timer? _doneTimer;
+  String? _pendingDone;
+
+  /// Bitiş sözünün önünde bitiş sayılan duraklama.
+  static const donePause = Duration(milliseconds: 700);
+
+  /// Duraklamasız yalın "bitti"den sonra beklenen sessizlik (en kısa
+  /// sessizlik ayarı 2,5 sn'den kısa: dinleme önce bu yoldan biter).
+  static const doneGrace = Duration(milliseconds: 1200);
 
   /// Yazmayı bırakınca devamı beklenen öbek başı ("süt" → "süt tozu"
   /// olabilirdi) maddeye döner.
@@ -148,6 +168,8 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   void dispose() {
     _idle?.cancel();
     _autoTimer?.cancel();
+    _pauseTimer?.cancel();
+    _doneTimer?.cancel();
     unawaited(_session?.cancel());
     _c.dispose();
     _listening.dispose();
@@ -222,10 +244,20 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     final session = _session;
     if (session == null || !widget.raw) return;
     _session = null;
+    _clearDoneTimers();
     unawaited(session.cancel());
     _spoken = '';
     _rawPrefix = '';
     _listening.value = false;
+  }
+
+  void _clearDoneTimers() {
+    _pauseTimer?.cancel();
+    _pauseTimer = null;
+    _doneTimer?.cancel();
+    _doneTimer = null;
+    _pendingDone = null;
+    _paused = false;
   }
 
   void _onSubmitted() {
@@ -264,6 +296,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     _spoken = '';
     _spokenCount = 0;
     _rawPrefix = _c.text.trim();
+    _clearDoneTimers();
     late final VoiceListenSession session;
     session = VoiceListenSession(
       locale: l10n.localeName.startsWith('tr') ? 'tr-TR' : 'en-US',
@@ -275,6 +308,12 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
       },
       onEnd: (_) {
         if (!identical(_session, session)) return;
+        // Bekleyen yalın "bitti" varken sessizlik geldi: o bir bitişti.
+        final pending = _pendingDone;
+        if (pending != null) {
+          _onDoneWord(pending);
+          return;
+        }
         unawaited(
           _stopListening().then((_) {
             if (mounted) widget.onSpeechEnd?.call();
@@ -298,10 +337,31 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   /// düzelttiği kelime listeye yanlış girmesin.
   void _onSpeech(String full) {
     if (widget.onDoneWord != null) {
-      final rest = stripDoneWord(full);
-      if (rest != null) {
-        _onDoneWord(rest);
-        return;
+      final paused = _paused;
+      _paused = false;
+      _pauseTimer?.cancel();
+      _pauseTimer = Timer(donePause, () => _paused = true);
+      // Yeni konuşma geldi: bekleyen "bitti" içerikmiş.
+      _doneTimer?.cancel();
+      _doneTimer = null;
+      _pendingDone = null;
+      final m = matchDoneWord(full);
+      if (m != null) {
+        // "bu kadar"/"liste bitti" ya da önünde duraklama olan "bitti":
+        // hemen bitir. Duraklamasız yalın "bitti": konuşma sürerse içerik.
+        if (!m.bare || paused) {
+          _onDoneWord(m.rest);
+          return;
+        }
+        final session = _session;
+        _pendingDone = m.rest;
+        _doneTimer = Timer(doneGrace, () {
+          final rest = _pendingDone;
+          _pendingDone = null;
+          if (rest != null && mounted && identical(_session, session)) {
+            _onDoneWord(rest);
+          }
+        });
       }
     }
     _spoken = full;
@@ -322,6 +382,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   /// edilir (durdurulsa son sonuç "bitti"yi yeniden getirirdi), çağırana
   /// haber verilir.
   void _onDoneWord(String rest) {
+    _clearDoneTimers();
     final session = _session;
     _session = null;
     unawaited(session?.cancel());
@@ -367,9 +428,15 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   Future<void> _stopListening() async {
     final session = _session;
     if (session == null) return;
+    // Elle durduruldu: bekleyen yalın "bitti" bitiş sayılmaz (listede
+    // alışveriş sözü olarak düşer, ham kipte metinde kalır).
+    _clearDoneTimers();
     // Önce bitiş metni gelsin (stop son sonucu getirir), sonra kalan dökülür.
     await session.stop();
-    if (identical(_session, session)) _session = null;
+    if (identical(_session, session)) {
+      _session = null;
+      _clearDoneTimers();
+    }
     if (!mounted) return;
     _finishSpeech();
     _listening.value = false;

@@ -8860,6 +8860,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String quickDropPreviewList(String title, String items) {
+    return '→ “$title”: $items';
+  }
+
+  @override
+  String quickDropPreviewText(String title) {
+    return '→ end of “$title”';
+  }
+
+  @override
+  String get quickDropPreviewNew => '→ New note';
+
+  @override
   String get quickDropWait => 'Wait';
 
   @override

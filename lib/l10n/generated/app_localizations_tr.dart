@@ -8848,6 +8848,19 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String quickDropPreviewList(String title, String items) {
+    return '→ “$title”: $items';
+  }
+
+  @override
+  String quickDropPreviewText(String title) {
+    return '→ “$title” notunun sonuna';
+  }
+
+  @override
+  String get quickDropPreviewNew => '→ Yeni not';
+
+  @override
   String get quickDropWait => 'Bekle';
 
   @override

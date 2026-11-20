@@ -8,6 +8,7 @@ import '../../settings/settings_providers.dart';
 import '../domain/note_templates.dart';
 import '../domain/quick_entry.dart';
 import '../domain/quick_lexicon_data.dart';
+import '../domain/smart_list.dart' show titleSaysShopping;
 import '../presentation/editor/auto_spell.dart';
 
 /// **HIZLI GİRİŞ HAFIZASI** (kullanıcı isteği 2026-11-15: "kişinin en çok
@@ -280,19 +281,12 @@ QuickLexicon groceryLexicon(String locale) =>
 /// Liste bir ALIŞVERİŞ listesine benziyor mu: başlığı öyle diyor ya da
 /// maddelerinin en az yarısı (ve en az ikisi) market sözlüğünde. Benzemeyen
 /// listede (yapılacaklar gibi cümleli) kelimeler ayrı maddeye BÖLÜNMEZ.
+///
+/// Başlık KÖKTEN eşlenir (2026-11-20): içerir-araması "Pazartesi işleri",
+/// "Marketing planı" gibi başlıkları da alışveriş sayıyordu — o listede
+/// kelimeler bölünüyor, "kitap al"daki "al" (alışveriş sözü) atılıyordu.
 bool looksLikeGrocery(String title, Iterable<String> items, String locale) {
-  final t = quickAscii(title);
-  for (final hint in const [
-    'alisveris',
-    'market',
-    'pazar',
-    'bakkal',
-    'manav',
-    'shopping',
-    'grocer',
-  ]) {
-    if (t.contains(hint)) return true;
-  }
+  if (titleSaysShopping(title)) return true;
   final lex = groceryLexicon(locale);
   var total = 0;
   var hits = 0;

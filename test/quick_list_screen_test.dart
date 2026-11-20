@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -59,6 +60,12 @@ class _DropRepo extends CountingNotesRepository {
     writes[noteId] = fields;
     return Future.value();
   }
+
+  /// "Geri al" ile silinen (çöpe giden) notlar.
+  final deleted = <String>[];
+
+  @override
+  void softDelete(String noteId) => deleted.add(noteId);
 }
 
 /// Hızlı liste ekranı ve "Hızlı ekle" (kullanıcı isteği 2026-11-15).
@@ -545,9 +552,16 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
-      await tester.pumpAndSettle();
+      // Bildirimde "Geri al" geri sayımı döner: pumpAndSettle onu bitirirdi.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
       expect(repo.created, [(NoteType.text, 'kargoyu sor')]);
       expect(find.text('Yeni not olarak kaydedildi'), findsOneWidget);
+      // 2026-11-20: yeni not da geri alınabilir.
+      await tester.tap(find.text('Geri al'));
+      await tester.pump();
+      expect(repo.deleted, ['yeni1']);
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
@@ -579,6 +593,33 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.created, [(NoteType.text, 'kargoyu sor')]);
       expect(repo.writes, isEmpty, reason: 'var olan nota eklenmez');
+    });
+
+    // HE-2 (17K §4.2, 2026-11-20): Ekle'den önce neyin nereye gideceği.
+    testWidgets('önizleme satırı: hedef + eklenecek maddeler', (tester) async {
+      await openSheet(tester, [shopping, todo, text]);
+      final field = find.byKey(const ValueKey('quick-entry-field'));
+      final preview = find.byKey(const ValueKey('quick-drop-preview'));
+      expect(preview, findsNothing, reason: 'boşken "Nereye eklensin?"');
+      await tester.enterText(field, 'alışveriş listesine domates süt al ekle');
+      await tester.pump();
+      // Süt işaretliydi: yeniden açılır; "al" alışveriş sözü, madde değil.
+      expect(
+        tester.widget<Text>(preview).data,
+        '→ “Alışveriş listesi”: Domates, Süt',
+      );
+      await tester.enterText(field, 'alışveriş listesine ekmek ekle');
+      await tester.pump();
+      expect(
+        tester.widget<Text>(preview).data,
+        'Hepsi zaten “Alışveriş listesi” notunda',
+      );
+      await tester.enterText(field, 'yeni logo fikirlere');
+      await tester.pump();
+      expect(tester.widget<Text>(preview).data, '→ “Fikirler” notunun sonuna');
+      await tester.tap(find.byKey(const ValueKey('quick-drop-target-new')));
+      await tester.pump();
+      expect(tester.widget<Text>(preview).data, '→ Yeni not');
     });
 
     testWidgets('konuşma sonu: geri sayım, sonra eklenir; Bekle durdurur', (
@@ -665,6 +706,69 @@ void main() {
       await tester.pumpAndSettle();
       return repo;
     }
+
+    // 2026-11-20 hata: yapay zekâ beklenirken yazılan, gelen yanıtla
+    // eziliyordu — yanıt levha açılırkenki ESKİ içerikle geri sayımı
+    // başlatıp onu ekliyordu.
+    testWidgets('yapay zekâ beklerken yazılırsa yanıt yok sayılır', (
+      tester,
+    ) async {
+      AiDecisionsFlag.apply({
+        'aiDecisionsFeatures': [DecisionFeature.dropTarget],
+      });
+      addTearDown(AiDecisionsFlag.debugReset);
+      final answer = Completer<void>();
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        repo: repo,
+        prefs: {'quick_drop_mic': false},
+        ai: AiAvailability.ready,
+        extra: [
+          decisionServiceProvider.overrideWithValue(
+            DecisionService(
+              key: () async => 'k',
+              http: JsonHttp(
+                baseUrl: AiProvider.gemini.baseUrl,
+                client: MockClient((_) async {
+                  await answer.future;
+                  return http.Response(
+                    jsonEncode({'answers': target('n01', 0.95)}),
+                    200,
+                    headers: {
+                      'content-type': 'application/json; charset=utf-8',
+                    },
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+        onTap: (context, ref) => showQuickDropSheet(context),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await say(tester, 'yeni logo taslağı fikir defterine ekle');
+      expect(find.byKey(const ValueKey('quick-drop-thinking')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'yeni logo taslağı ve renkler',
+      );
+      await tester.pump();
+      expect(
+        find.byKey(const ValueKey('quick-drop-thinking')),
+        findsNothing,
+        reason: 'yazınca karar kullanıcının',
+      );
+      answer.complete();
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.byKey(const ValueKey('quick-drop-counting')), findsNothing);
+      expect(repo.writes, isEmpty, reason: 'eski içerik eklenmemeli');
+    });
 
     testWidgets('DA-1: Decisions emin → geri sayımla o nota, ad içerikte yok', (
       tester,

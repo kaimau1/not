@@ -25,6 +25,8 @@ import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import '../domain/quick_drop.dart';
 import '../domain/quick_entry.dart';
+import '../domain/smart_list.dart';
+import 'notes_providers.dart' show selectedFolderProvider;
 import 'quick_entry_bar.dart';
 
 /// Son eklenen hedef notlar (en yenisi başta) — levha açılınca seçili gelir.
@@ -82,10 +84,82 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
   return ok;
 }
 
+/// Hızlı eklenen LİSTE notunun türü (ayrıştırma ve reyon yerleşimi için):
+/// başlık türü söylüyorsa o ([smartKindOfTitle]: "Bavul listesi", "Antalya
+/// tatili", "Market listesi"); yoksa maddeler — yalnız bavul sözlüğünde olan
+/// en az iki madde ve maddelerin yarısı tanınıyorsa bavul,
+/// [looksLikeGrocery] ise alışveriş, değilse düz liste (yapılacaklar gibi
+/// cümleli: kelimeler bölünmez).
+///
+/// 2026-11-20: akıllı listenin kurduğu "Bavul listesi"ne hızlı ekleme
+/// cümleli kipe düşüyordu — "şort mayo şarj aleti" TEK madde oluyordu.
+SmartListKind quickDropListKind(Note note, String locale) {
+  final byTitle = smartKindOfTitle(note.displayTitle);
+  if (byTitle != null) return byTitle;
+  final texts = [
+    for (final i in note.items)
+      if (!i.header && i.text.trim().isNotEmpty) i.text,
+  ];
+  final grocery = groceryLexicon(locale);
+  final packing = packingLexicon(locale);
+  var onlyPacking = 0;
+  var onlyGrocery = 0;
+  var known = 0;
+  for (final t in texts) {
+    final g = grocery.groupOf(t) >= 0;
+    final p = packing.groupOf(t) >= 0;
+    if (g || p) known++;
+    if (p && !g) onlyPacking++;
+    if (g && !p) onlyGrocery++;
+  }
+  if (onlyPacking >= 2 &&
+      onlyPacking > onlyGrocery &&
+      known * 2 >= texts.length) {
+    return SmartListKind.packing;
+  }
+  if (looksLikeGrocery(note.displayTitle, texts, locale)) {
+    return SmartListKind.shopping;
+  }
+  return SmartListKind.generic;
+}
+
+/// Maddenin reyon/bavul sırası ([smartRank]); bilinmiyorsa -1.
+int _rankOf(SmartListKind kind, String text, String locale) => smartRank(
+  kind,
+  grocery: groceryLexicon(locale).groupOf(text),
+  packing: packingLexicon(locale).groupOf(text),
+);
+
+/// [note]a [content] eklenince olacaklar (yazmadan): yeni madde metinleri,
+/// işareti kalkacak ve miktarı değişecek maddeler. Yazı notunda null.
+/// Önizleme satırı (HE-2) ile [quickDropFields] aynı hesabı kullanır.
+QuickDropListPlan? quickDropPlan(
+  Note note,
+  String content, {
+  required String locale,
+  QuickEntryMemory memory = const QuickEntryMemory(),
+}) {
+  if (note.type == NoteType.text) return null;
+  final text = quickDropSeparate(content.trim());
+  if (text.isEmpty) {
+    return (texts: const [], uncheck: const [], requantify: const {});
+  }
+  final parsed = _parseIntoList(note, text, locale, memory);
+  return planDropIntoList([
+    for (final i in note.items) (text: i.text, checked: i.checked),
+  ], parsed.items);
+}
+
 /// [note]a [content] eklenince yazılacak alanlar ve bildirim sayısı.
-/// Liste notunda içerik maddelere ayrılır (alışveriş listesinde kelime
-/// kelime, cümleli listede yalnız virgülle); yazı notunda sona satır eklenir.
-/// Eklenecek bir şey yoksa `fields` boştur.
+/// Liste notunda içerik maddelere ayrılır (alışveriş ve bavul listesinde
+/// kelime kelime, cümleli listede yalnız virgülle); yazı notunda sona satır
+/// eklenir. Eklenecek bir şey yoksa `fields` boştur.
+///
+/// REYON YERLEŞİMİ (2026-11-20; akıllı liste AL-2'nin alansız ilk adımı):
+/// alışveriş/bavul listesi zaten reyon sırasındaysa (başlıksız, en az iki
+/// tanınan madde, sıraları azalmıyor) yeni madde sona değil kendi reyonuna
+/// girer — "deterjan" temizlik maddelerinin yanına. Sırasız listede ve
+/// tanınmayan maddede eskisi gibi sona.
 ({Map<String, dynamic> fields, int added}) quickDropFields(
   Note note,
   String content, {
@@ -110,10 +184,7 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
       added: joined.split('\n').length,
     );
   }
-  final parsed = _parseIntoList(note, text, locale, memory);
-  final plan = planDropIntoList([
-    for (final i in note.items) (text: i.text, checked: i.checked),
-  ], parsed.items);
+  final plan = quickDropPlan(note, content, locale: locale, memory: memory)!;
   final added =
       plan.texts.length + plan.uncheck.length + plan.requantify.length;
   if (added == 0) return (fields: const {}, added: 0);
@@ -126,8 +197,46 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
           text: plan.requantify[i],
           checked: plan.uncheck.contains(i) ? false : null,
         ),
-    for (final t in plan.texts) NoteItem(id: id(), text: t),
   ];
+  final kind = quickDropListKind(note, locale);
+  final ranks = [
+    for (final i in items) i.header ? -1 : _rankOf(kind, i.text, locale),
+  ];
+  final known = [
+    for (final r in ranks)
+      if (r >= 0) r,
+  ];
+  var sorted =
+      kind != SmartListKind.generic &&
+      known.length >= 2 &&
+      !items.any((i) => i.header);
+  for (var k = 1; sorted && k < known.length; k++) {
+    if (known[k] < known[k - 1]) sorted = false;
+  }
+  for (final t in plan.texts) {
+    final item = NoteItem(id: id(), text: t);
+    final r = sorted ? _rankOf(kind, t, locale) : -1;
+    if (r < 0) {
+      items.add(item);
+      ranks.add(-1);
+      continue;
+    }
+    // Sırası daha büyük ilk maddenin önüne; yoksa son tanınan maddenin
+    // arkasına (tanınmayanlar sonda kalır, [quickSortByGroup] gibi).
+    var at = -1;
+    var lastKnown = -1;
+    for (var j = 0; j < ranks.length; j++) {
+      if (ranks[j] < 0) continue;
+      if (ranks[j] > r) {
+        at = j;
+        break;
+      }
+      lastKnown = j;
+    }
+    if (at < 0) at = lastKnown + 1;
+    items.insert(at, item);
+    ranks.insert(at, r);
+  }
   return (
     fields: {
       'items': [for (final i in items) i.toMap()],
@@ -136,29 +245,53 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
   );
 }
 
+/// Son kurulan ayrıştırıcı (not + maddeler + dil + hafıza aynıysa yeniden
+/// kullanılır): önizleme satırı her tuşta çözer, sözlük (~2000 madde) her
+/// tuşta kurulmasın.
+({String key, QuickParser parser})? _parserCache;
+
 QuickParse _parseIntoList(
   Note note,
   String text,
   String locale,
   QuickEntryMemory memory,
 ) {
-  final grocery = looksLikeGrocery(note.displayTitle, [
+  final kind = quickDropListKind(note, locale);
+  final key = [
+    note.id,
+    locale,
+    kind.name,
+    identityHashCode(memory),
     for (final i in note.items) i.text,
-  ], locale);
-  final lex = buildQuickLexicon(
-    locale: locale,
-    grocery: grocery,
-    learned: memory.all('drop'),
-    extra: [
-      for (final i in note.items)
-        if (i.text.trim().isNotEmpty) quickBaseName(i.text),
-    ],
-  );
-  return buildQuickParser(
-    lex,
-    memory: memory,
-    phrasesOnly: !grocery,
-  ).parse(text, flush: true);
+  ].join('\u0000');
+  var cached = _parserCache;
+  if (cached == null || cached.key != key) {
+    final lex = buildQuickLexicon(
+      locale: locale,
+      grocery: kind != SmartListKind.generic,
+      learned: memory.all('drop'),
+      extra: [
+        for (final i in note.items)
+          if (i.text.trim().isNotEmpty) quickBaseName(i.text),
+      ],
+    );
+    if (kind == SmartListKind.packing) {
+      // Akıllı listedeki gibi: market önce, bavul sözlüğü ardından.
+      for (final (t, group) in packingEntries(locale)) {
+        lex.add(t, group: group);
+      }
+    }
+    cached = (
+      key: key,
+      parser: buildQuickParser(
+        lex,
+        memory: memory,
+        phrasesOnly: kind == SmartListKind.generic,
+      ),
+    );
+    _parserCache = cached;
+  }
+  return cached.parser.parse(text, flush: true);
 }
 
 /// DA-14: [content] liste notuna eklenince yapılacak BULANIK yazım
@@ -190,7 +323,8 @@ QuickEntryMemory quickDropVetoed(
         kinds: memory.kinds,
         rejected: {
           ...memory.rejected,
-          for (final v in vetoed) '${quickAscii(v.typed)}>${quickAscii(v.fixed)}',
+          for (final v in vetoed)
+            '${quickAscii(v.typed)}>${quickAscii(v.fixed)}',
         },
       );
 
@@ -306,6 +440,30 @@ class _Drop {
   int get hashCode => Object.hash(id, content, ask, Object.hashAll(ties));
 }
 
+/// Önizleme satırının verisi: hedef başlığı + eklenecekler ([items] null:
+/// yazı notunun sonuna; boş: hepsi zaten listede). [isNew]: yeni not.
+@immutable
+class _Preview {
+  const _Preview(this.title, [this.items]) : isNew = false;
+  const _Preview.newNote() : title = '', items = null, isNew = true;
+
+  final String title;
+  final List<String>? items;
+  final bool isNew;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _Preview &&
+      other.title == title &&
+      other.isNew == isNew &&
+      (other.items == null) == (items == null) &&
+      listEquals(other.items, items);
+
+  @override
+  int get hashCode =>
+      Object.hash(title, isNew, items == null ? null : Object.hashAll(items!));
+}
+
 enum _Phase { idle, counting, thinking }
 
 /// "Yeni not" çipinin hedef kimliği (gerçek not kimliğiyle çakışmaz).
@@ -337,6 +495,11 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   /// Ekle düğmesinin girdisi: etkin mi, "hangi not?" mu, içerik.
   final _addLabel = ValueNotifier<(bool, bool, String)>((false, false, ''));
 
+  /// HE-2 ÖNİZLEME (17K §4.2, 2026-11-20): Ekle'den önce neyin nereye
+  /// gideceği ("→ “Market”: Süt, Ekmek (2)"). Yerelleştirilmeden tutulur
+  /// (initState'te bağlam okunmaz); durum satırı biçimler.
+  final _preview = ValueNotifier<_Preview?>(null);
+
   /// Konuşma sonrası geri sayım (bitince eklenir).
   late final AnimationController _count = AnimationController(
     vsync: this,
@@ -365,7 +528,11 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       // ki seçilen çip gözden kaybolmasın.
       if (_strip.hasClients && _strip.offset > 0) {
         unawaited(
-          _strip.animateTo(0, duration: AppMotion.short, curve: AppMotion.enter),
+          _strip.animateTo(
+            0,
+            duration: AppMotion.short,
+            curve: AppMotion.enter,
+          ),
         );
       }
     }
@@ -373,6 +540,43 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     final enabled = (st.id != null || _toNewNote) && content.isNotEmpty;
     final next = (enabled, st.id == null && st.ask, content);
     if (next != _addLabel.value) _addLabel.value = next;
+    final preview = _previewOf(st);
+    if (preview != _preview.value) _preview.value = preview;
+  }
+
+  /// Önizleme: liste notunda eklenecek/işareti kalkacak/miktarı değişecek
+  /// maddeler ([quickDropPlan], önbellekli ayrıştırıcı — her tuşta sözlük
+  /// kurulmaz), yazı notunda "sonuna", yeni notta "Yeni not".
+  _Preview? _previewOf(_Drop st) {
+    final content = st.content.trim();
+    if (content.isEmpty || st.ask) return null;
+    if (_toNewNote) return const _Preview.newNote();
+    final note = _noteOf(st.id);
+    if (note == null) return null;
+    final title = note.displayTitle.trim();
+    final plan = quickDropPlan(
+      note,
+      content,
+      locale: _locale,
+      memory: ref.read(quickEntryMemoryProvider),
+    );
+    if (plan == null) return _Preview(title);
+    return _Preview(title, [
+      ...plan.texts,
+      for (final i in plan.uncheck)
+        if (!plan.requantify.containsKey(i)) note.items[i].text,
+      ...plan.requantify.values,
+    ]);
+  }
+
+  /// Uygulama dili ([didChangeDependencies]'te okunur; önizleme initState'te
+  /// içerik boşken hesaplanır, dile ihtiyaç duymaz).
+  String _locale = 'tr';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _locale = context.l10n.localeName;
   }
 
   @override
@@ -383,6 +587,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     _targets.dispose();
     _strip.dispose();
     _addLabel.dispose();
+    _preview.dispose();
     _phase.dispose();
     super.dispose();
   }
@@ -396,6 +601,10 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
 
   void _onText(String text) {
     _stopCountdown();
+    // Yapay zekâ beklenirken yazıldı: karar kullanıcının (2026-11-20 hata:
+    // gelen yanıt levha açılırkenki ESKİ içerikle durumu ezip geri sayımı
+    // başlatıyor, yazılan son kelimeler eklenmiyordu).
+    if (_phase.value == _Phase.thinking) _phase.value = _Phase.idle;
     _resolve(text);
   }
 
@@ -650,15 +859,26 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       final body = st.content.trim();
       final messenger = ScaffoldMessenger.of(context);
       final l10n = context.l10n;
-      unawaited(
-        repo.createNote(NoteType.text, body: body).then((id) {
-          ref.read(quickDropRecentProvider.notifier).remember(id);
-        }),
+      final recent = ref.read(quickDropRecentProvider.notifier);
+      // "+" menüsündeki yeni not gibi O ANKİ KLASÖRE doğar (2026-11-20:
+      // klasör açıkken yazılan not klasörsüz düşüp gözden kayboluyordu) ve
+      // geri alınabilir (öbür hızlı eklemeler gibi).
+      final created = repo.createNote(
+        NoteType.text,
+        body: body,
+        folderId: ref.read(selectedFolderProvider),
       );
+      unawaited(created.then(recent.remember));
       Navigator.of(context).pop();
       messenger
         ..hideCurrentSnackBar()
-        ..showMessage(l10n.quickDropSavedNew);
+        ..showMessage(
+          l10n.quickDropSavedNew,
+          action: SnackBarAction(
+            label: l10n.undo,
+            onPressed: () => unawaited(created.then(repo.softDelete)),
+          ),
+        );
       return;
     }
     if (note == null || repo == null || st.content.trim().isEmpty) return;
@@ -708,10 +928,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         note.type == NoteType.text && result.added <= 1
             ? l10n.quickDropAddedText(title)
             : l10n.quickDropAdded(result.added, title),
-        action: SnackBarAction(
-          label: l10n.undo,
-          onPressed: undo,
-        ),
+        action: SnackBarAction(label: l10n.undo, onPressed: undo),
       );
   }
 
@@ -802,7 +1019,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
             SizedBox(
               height: AppSpace.xxl,
               child: ListenableBuilder(
-                listenable: Listenable.merge([_state, _phase]),
+                listenable: Listenable.merge([_state, _phase, _preview]),
                 builder: (context, _) {
                   final st = _state.value;
                   switch (_phase.value) {
@@ -815,7 +1032,15 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                           const SizedBox(width: AppSpace.s),
-                          Text(l10n.quickDropAsking, style: text.meta),
+                          // Dar ekranda / büyük yazıda taşıyordu (2026-11-20).
+                          Flexible(
+                            child: Text(
+                              l10n.quickDropAsking,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.meta,
+                            ),
+                          ),
                         ],
                       );
                     case _Phase.counting:
@@ -859,6 +1084,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                         ],
                       );
                     case _Phase.idle:
+                      final preview = _preview.value;
                       return Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: st.ask
@@ -868,6 +1094,27 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                                 style: text.meta.copyWith(
                                   color: scheme.primary,
                                   fontWeight: AppWeight.strong,
+                                ),
+                              )
+                            : preview != null
+                            ? Text(
+                                switch (preview) {
+                                  _Preview(isNew: true) =>
+                                    l10n.quickDropPreviewNew,
+                                  _Preview(:final items?) when items.isEmpty =>
+                                    l10n.quickDropNothingNew(preview.title),
+                                  _Preview(:final items?) =>
+                                    l10n.quickDropPreviewList(
+                                      preview.title,
+                                      items.join(', '),
+                                    ),
+                                  _ => l10n.quickDropPreviewText(preview.title),
+                                },
+                                key: const ValueKey('quick-drop-preview'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: text.meta.copyWith(
+                                  color: scheme.onSurfaceVariant,
                                 ),
                               )
                             : Text(
@@ -911,10 +1158,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                         return Center(
                           child: ChoiceChip(
                             key: const ValueKey('quick-drop-target-new'),
-                            avatar: const Icon(
-                              Icons.add,
-                              size: AppIconSize.xs,
-                            ),
+                            avatar: const Icon(Icons.add, size: AppIconSize.xs),
                             label: Text(l10n.newNoteShort),
                             showCheckmark: false,
                             selected: st.id == _kNewId,

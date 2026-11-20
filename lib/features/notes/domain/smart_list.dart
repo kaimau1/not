@@ -99,14 +99,18 @@ Iterable<(String, int)> packingEntries(String locale) sync* {
   }
 }
 
-/// Yalnız bavul maddelerini tanıyan sözlük (sıralama ve tür için).
-QuickLexicon packingLexicon(String locale) {
-  final lex = QuickLexicon();
-  for (final (text, group) in packingEntries(locale)) {
-    lex.add(text, group: group);
-  }
-  return lex;
-}
+final Map<String, QuickLexicon> _packingCache = {};
+
+/// Yalnız bavul maddelerini tanıyan sözlük (sıralama ve tür için; dil başına
+/// bir kez kurulur — yalnız okunur, değiştirilmez).
+QuickLexicon packingLexicon(String locale) =>
+    _packingCache[locale.startsWith('tr') ? 'tr' : 'en'] ??= () {
+      final lex = QuickLexicon();
+      for (final (text, group) in packingEntries(locale)) {
+        lex.add(text, group: group);
+      }
+      return lex;
+    }();
 
 const _packingWords = {
   'bavul',
@@ -169,6 +173,45 @@ SmartListKind? smartKindFromPhrase(String text) {
   if (_packingWords.contains(w)) return SmartListKind.packing;
   if (_shoppingWords.contains(w)) return SmartListKind.shopping;
   return null;
+}
+
+/// Not BAŞLIĞI türü söylüyor mu ("Bavul listesi", "Antalya tatili", "Market
+/// listesi", "Kamp malzemeleri"): başlık kelimelerinden biri tür sözcüğü ya
+/// da onun ekli hâliyse o tür; yoksa null (maddelere bakılır). Bavul önce:
+/// "tatil alışverişi" bavul listesidir.
+SmartListKind? smartKindOfTitle(String title) {
+  if (_titleHas(title, _packingWords)) return SmartListKind.packing;
+  if (_titleHas(title, _shoppingWords)) return SmartListKind.shopping;
+  return null;
+}
+
+/// Başlık bir alışveriş listesini adlandırıyor mu ("Market listesi",
+/// "Haftalık alışveriş", "Marketten"); bavul sözcüğüne bakılmaz.
+bool titleSaysShopping(String title) => _titleHas(title, _shoppingWords);
+
+/// Tür sözcüğünün ardından gelebilen ekler (ASCII). Kaba kök bulucu
+/// (`quickStem`) burada fazla açgözlü: "pazartesi" → "pazar".
+const _titleSuffixes = {
+  'i', 'u', 'si', 'su', 'a', 'e', 'ya', 'ye', 'na', 'ne', //
+  'im', 'um', 'in', 'un', 'imiz', 'umuz', //
+  'de', 'da', 'te', 'ta', 'den', 'dan', 'ten', 'tan', //
+  'deki', 'daki', 'teki', 'taki', 'nda', 'nde', //
+  'ler', 'lar', 'leri', 'lari', 'lerim', 'larim', 'lik', 'ligi', 'ci',
+};
+
+// Tür sözcüğü ya da EKLİ hâli (ön ek değil): "tatili", "bavulum",
+// "marketten" tutar; "pazartesi", "kampanya", "marketing" tutmaz.
+bool _titleHas(String title, Set<String> kinds) {
+  for (final w in quickAscii(title).split(RegExp(r'[^a-z0-9]+'))) {
+    if (w.length < 3) continue;
+    for (final k in kinds) {
+      if (w == k ||
+          (w.startsWith(k) && _titleSuffixes.contains(w.substring(k.length)))) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /// Maddelerden tür: yalnız TEK türe ait maddeler sayılır (şampuan hem

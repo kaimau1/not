@@ -65,6 +65,33 @@ void main() {
     expect(all('süt ve yumurta bir de ekmek'), ['Süt', 'Yumurta', 'Ekmek']);
   });
 
+  // 2026-11-20 (hızlı ekle/akıllı liste turu): alışverişin en doğal
+  // söyleyişi "süt al", "süt lazım", "deterjan kalmadı", "süt bitti";
+  // fiiller ayrı madde oluyordu ("Al", "Lazım", "Bitti").
+  test('alışveriş fiilleri ve durum sözleri madde olmaz', () {
+    expect(all('süt al ekmek al'), ['Süt', 'Ekmek']);
+    expect(all('süt lazım'), ['Süt']);
+    expect(all('deterjan kalmadı'), ['Deterjan']);
+    expect(all('süt bitti yumurta bitmiş'), ['Süt', 'Yumurta']);
+    expect(all('peynir de alınacak'), ['Peynir']);
+    expect(all('need milk, buy eggs'), ['Milk', 'Eggs']);
+    expect(all('milk finished eggs'), ['Milk', 'Eggs']);
+    // Sözlükte olmayan öbeğin içinde de bölmeden düşer.
+    expect(all('ajvar sosu al'), ['Ajvar sosu']);
+    // Cümleli listede (yapılacaklar) fiil içerikte kalır.
+    final phrases = QuickParser(QuickLexicon(), phrasesOnly: true);
+    expect(
+      [for (final i in phrases.parse('kitap al', flush: true).items) i.text],
+      ['Kitap al'],
+    );
+  });
+
+  test('çarpı biçimli adet: x2, 2x, ×3', () {
+    expect(all('süt x2'), ['Süt (2)']);
+    expect(all('2x süt, ekmek ×3'), ['Süt (2)', 'Ekmek (3)']);
+    expect(all('yumurta X10'), ['Yumurta (10)']);
+  });
+
   test('niteleyici sonraki maddeye yapışır', () {
     expect(all('yağsız süt organik yumurta'), [
       'Yağsız süt',
