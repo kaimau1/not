@@ -51,6 +51,8 @@ void main() {
         '.QuickActionsWidgetProvider',
         '.TodayWidgetProvider',
         '.QuickNoteWidgetProvider',
+        '.QuickAddWidgetProvider',
+        '.QuickAddBarWidgetProvider',
         // AppFunctions: BIND_APP_FUNCTION_SERVICE (yalnız sistem bağlanır).
         '.AjanServisi',
         // HE-3 (P84): paylaşım/metin seçimi "Nota ekle" — metni yalnız hızlı

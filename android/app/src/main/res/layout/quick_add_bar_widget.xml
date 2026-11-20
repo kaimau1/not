@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hızlı ekle çubuğu 4×1 (HE-3): "+" ve "Hızlı ekle: yaz ya da söyle".
+     Tüm çubuk tek dokunma hedefi (notlar://ekle). Renkler belirteçten;
+     Android 12+ duvar kâğıdı paleti values-v31/'dan. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/quick_add_bar_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:background="@drawable/widget_background">
+
+    <ImageView
+        android:id="@+id/quick_add_bar_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_hizli_ekle"
+        android:tint="@color/widget_icon_accent"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/quick_add_bar_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:text="@string/hizli_ekle_uzun"
+        android:textColor="@color/widget_on_surface_muted"
+        android:textSize="15sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+</LinearLayout>

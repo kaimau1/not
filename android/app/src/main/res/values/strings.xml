@@ -28,4 +28,6 @@
     <string name="hizli_ekle">Hızlı ekle</string>
     <string name="hizli_ekle_uzun">Hızlı ekle: yaz ya da söyle</string>
     <string name="nota_ekle">Nota ekle</string>
+    <string name="widget_quickadd_bar_label">Hızlı ekle çubuğu</string>
+    <string name="widget_quickadd_desc">Uygulamayı açmadan ekle: yaz ya da söyle, seçtiğin nota eklensin</string>
 </resources>

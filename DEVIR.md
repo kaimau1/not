@@ -22,7 +22,10 @@ Yapılanlar:
    `src/main/kisayol/app_shortcuts.xml` + gradle `KisayolUret` (targetPackage = çeşit kimliği).
    `security_guard_test` listesi + `docs/guvenlik_denetimi.md` G-27.
 
-Sıradaki: (4) 1×1/4×1 ana ekran aracı → `gh workflow run build.yml --ref oto/P84-hizli-ekle`
+4. HE-3 ana ekran aracı (commit 4): `QuickAddWidgetProvider` (1×1 "+") + `QuickAddBarWidgetProvider`
+   (4×1 çubuk), ikisi `notlar://ekle`; `kHomeWidgetProviders`a eklendi (tema yenilemesi).
+
+Sıradaki: `gh workflow run build.yml --ref oto/P84-hizli-ekle`
 (APK derlemesi Kotlin/manifest/gradle'ı doğrular) → belgeler (Kuyruk, PLAN, regresyon, hafıza,
 sürüm notu, KONTROL "Telefonda bak").
 Test: `flutter test test/quick_list_screen_test.dart test/perf_budget_test.dart --plain-name S56`.

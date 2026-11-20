@@ -367,6 +367,26 @@
                 android:resource="@xml/today_widget_info" />
         </receiver>
 
+        <!-- Hızlı ekle widget'ları (HE-3): 1×1 "+" ve 4×1 çubuk, notlar://ekle -->
+        <receiver android:name=".QuickAddWidgetProvider"
+            android:exported="true"
+            android:label="@string/hizli_ekle">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/quick_add_widget_info" />
+        </receiver>
+        <receiver android:name=".QuickAddBarWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_quickadd_bar_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/quick_add_bar_widget_info" />
+        </receiver>
+
         <!-- Hızlı Not widget'ı: tek dokunuşla yeni metin notu -->
         <receiver android:name=".QuickNoteWidgetProvider"
             android:exported="true"
