@@ -3,6 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 20 November 2026 {#2026-11-20}
+- **Finish shopping:** in a shopping list the button next to your ticked items is now **Finish shopping**: what you bought leaves the list and what you often buy is remembered (it moves up in the smart list's "Frequent"); **Undo** in the notice brings it all back.
+- **Quick add from the app icon:** long-press the Notes icon on your home screen → **Quick add**; type or speak as soon as the app opens. (It is first in the shortcut list; "Write with pen" may no longer show on some phones.)
+- **Quick add from sharing:** share text from another app → Notes → **Existing note** → **Quick add**: the text is ready in the quick add sheet, split into items and added to the list you pick.
+- **Simpler quick add sheet:** the AI, keyboard-on-open and listen-on-open switches are in one ⚙ menu. While the AI is working out the target note, **I'll choose** lets you pick without waiting.
+- **Say "stop":** when quick add finishes listening and the "Adding…" countdown starts, say "stop" or "wait" and nothing is added. If you keep talking, that is added too and the countdown starts again.
 - **Lists understand "buy milk" and "need milk":** in smart and shopping lists words like "buy", "need" or "finished" (and Turkish "al", "lazım", "bitti", "kalmadı") no longer become separate items; "milk x2" or "2x milk" means two milks.
 - **Smarter "done" by voice:** in a smart list, saying "milk finished, bread…" and carrying on no longer closes the list or adds "finished" as an item. The list ends when you say "done" after a short pause or stop talking after it; "that's all" always ends it right away.
 - **Quick add shows where things will go:** while you type, a line such as "→ “Shopping list”: Tomatoes, Milk" appears under the field, so you see the items and the target note before tapping Add.

@@ -3,6 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 20 Kasım 2026 {#2026-11-20}
+- **Alışverişi bitir:** alışveriş listesinde işaretlediklerinin yanındaki düğme artık **Alışverişi bitir**: aldıkların listeden kalkar, sık aldıkların hatırlanır (akıllı listede "Sık eklediklerin"de öne çıkar); bildirimdeki **Geri al** hepsini geri getirir.
+- **Uygulama simgesinden Hızlı ekle:** ana ekranda Notlar simgesine uzun bas → **Hızlı ekle**; uygulama açılır açılmaz yazıp söyleyebilirsin. (Kısayollar listesinde ilk sırada; "Kalemle yaz" bazı telefonlarda görünmeyebilir.)
+- **Paylaşımdan Hızlı ekle:** başka bir uygulamadan yazı paylaşınca → Notlar → **Var olan nota** → **Hızlı ekle**: yazı hızlı ekle levhasında hazır gelir, maddelere ayrılıp seçtiğin listeye eklenir.
+- **Hızlı ekle levhası sade:** yapay zekâ, açılınca klavye ve açılınca dinle anahtarları tek ⚙ menüsünde. Yapay zekâ hangi not olduğunu düşünürken **Ben seçeyim** ile beklemeden kendin seçebilirsin.
+- **Sesle "dur":** hızlı eklede konuşma bitip "… ekleniyor" geri sayımı başlayınca "dur" ya da "bekle" de → eklenmez. Konuşmaya devam edersen söylediklerin de eklenir, geri sayım yeniden başlar.
 - **Listeler "süt al", "süt lazım", "deterjan kalmadı"yı anlar:** akıllı listede ve alışveriş listesinde "al", "lazım", "bitti", "kalmadı" gibi sözler artık ayrı madde olmuyor; "süt x2" ya da "2x süt" iki adet süt olur.
 - **Sesle "bitti" daha akıllı:** akıllı listede "süt bitti, ekmek…" diye devam edersen liste kapanmaz, "bitti" madde de olmaz. Liste, kısa bir duraklamadan sonra "bitti" dediğinde ya da "bitti" deyip sustuğunda biter; "bu kadar" ve "liste bitti" her zaman hemen bitirir.
 - **Hızlı ekle neyin nereye gideceğini gösterir:** yazarken alanın altında "→ “Market listesi”: Domates, Süt" gibi bir satır çıkar; Ekle'ye basmadan maddeleri ve hedef notu görürsün.

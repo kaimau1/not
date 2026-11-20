@@ -71,7 +71,10 @@ Değer (D) / emek (E) / risk (R): ●●● yüksek, ● düşük.
 4. HE-4 tarihli madde → tek giriş.
 5. Tahmin çipi + yeni türler (AL-3/AL-4c).
 
-## 6. Sabah bakılacak (karar gerektirenler — yapılmadı)
+**Durum (2026-11-20 akşam):** kararlar `PLAN.md` 1.0b'ye yazıldı; 2. adımdaki 5'li paket aynı gün
+yazıldı (cihazda doğrulanmadı, `docs/hafiza/editor.md` "2026-11-20 (2)").
+
+## 6. Sabah bakılacak (karar gerektirenler — 2026-11-20 akşam KARAR, bkz. PLAN 1.0b)
 
 1. Miktar toplama: "2 süt" varken "1 süt" eklenince 3 mü olsun, 1 mi (bugün 1)?
 2. `listKind` alanı: reyon yerleşimi alansız çalışıyor; reyon görünümü ve sonradan editörde

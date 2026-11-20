@@ -54,6 +54,26 @@ Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/pla
 → (2) tablet bağlanınca T13 → T16 + T1 (tablet tabanı) → T2/T4/T8/T9 → (3) S1 → S4 → (4) Play
 hazırlığı (1.5 PL1–PL12) + Pro AI sadeleştirme (1.6 AI-S) + Lite/Pro → (5) yazım v3, hızlı ekle, akıllı liste, güven/büyüme.
 
+### 1.0b KARAR (kullanıcı, 2026-11-20) — hızlı ekle + akıllı liste — sormadan uygula
+Kaynak: `docs/rapor_2026-11-20_hizli_ekle_akilli_liste.md` §6 (öneriler sohbette onaylandı).
+- **Miktar:** var olan maddeye yeni miktar gelince TOPLANMAZ, yeni miktar eskisinin yerine geçer
+  (önizleme satırı Ekle'den önce gösterir). Toplama yalnız açıkça istenince: "bir süt daha", "+1 süt".
+- **`listKind` alanı ŞİMDİ YOK:** tür başlık + maddelerden çıkarılır. Yalnız cihaz turunda tahmin sık
+  yanılırsa ya da reyon görünümü yapılırsa eklenir; o zaman da yalnız akıllı liste ve kullanıcının açık
+  seçimi yazar (HAFIZA kural 5).
+- **Gelen kutusu notu:** ayrı iş değil, HE-4 (tek giriş) içinde — "hiçbir şeye uymayan → Gelen kutusu".
+- **Sıra:** (1) bu turun cihaz kontrolü (sesli "bitti" eşikleri ~0,7 / ~1,4 sn ayarı) → (2) 5'li paket
+  (aşağıda) → (3) HE-4 tarihli madde ("yarın 9'da dişçi") + AL-4c tahmin çipi ("9 gündür süt yok") →
+  (4) HE-3'ün kalanı (ana ekran aracı, hızlı ayar karosu, metin seçim menüsü).
+- **5'li paket (bir `[apk]`):** **[x] 2026-11-20 yazıldı, cihazda doğrulanmadı** (dal ccr-a12eaf51-kcx0g6, `editor.md` "2026-11-20 (2)"; KONTROL 20 Kasım 2. paket). P1 "Alışverişi bitir" · P2 uygulama simgesine uzun basınca ⚡ Hızlı ekle
+  (başlatıcı kısayolu, `notlar://ekle`) · P3 paylaşımda "Nota ekle" (paylaşılan yazı hızlı ekle
+  levhasına) · P4 levha sadeleşir: üç anahtar ⚙ arkasında, yapay zekâ beklerken "Ben seçeyim" · P5 geri
+  sayımda sesle "dur / bekle".
+- **Yapılmayacak / ertelenen:** saate göre hedef sıralama (çipler kendiliğinden yer değiştirir),
+  panodan ekle (Android 13 pano bildirimi), tek cümlede çok hedef (nadir, hataya açık), sözlük dışı
+  maddeyi yapay zekâya sorma (düşük değer), reyon görünümü (editöre yeni kip; liste zaten reyon
+  sırasında), ortak liste bildirimi (Pro katmanı netleşince).
+
 ### 1.1 Senden karar bekleyenler (karar gelmeden başlamaz)
 1. ~~Model~~ → KARAR 1.0: tek uygulama + katman.
 2. ~~Lite cihaz sınırı~~ → KARAR 1.5: sınırsız; içerik sınırı yok.
@@ -110,7 +130,7 @@ ucuz, ölçülmeden dokunulmadı.
 ### 1.4 Büyük fazlar (karara bağlı, sırasıyla önerim)
 1. **[~] 2026-11-17 (P67) kod + bayrak (`config/app.syncDeltaListen`, KAPALI); açmadan önce: minClient damgalı sürüme + iki cihaz testi (`docs/hafiza/veri.md` S1, KONTROL "Tablette bak").** **S1 yalnız değişeni dinle** (17K §1.3) → sonra S4 Lite ekleri Drive'a.
 2. **Yazım denetimi v3** Y-0 → Y-1 → Y-2 → Y-3 → Y-4 → Y-5 → Y-6 (17K §3.3).
-3. **Hızlı ekle** HE-2 önizleme satırı ([~] 2026-11-20 önizleme satırı yapıldı; kalan: ⚙ anahtarlar, "Ben seçeyim", çip araması) → HE-3 uygulamayı açmadan ekle → HE-4 tek giriş → HE-5 (17K §4.2).
+3. **Hızlı ekle** HE-2 önizleme satırı ([~] 2026-11-20 önizleme satırı, ⚙ anahtarlar, "Ben seçeyim" yapıldı; kalan: çip araması) → HE-3 ([~] 2026-11-20 başlatıcı kısayolu + paylaşımda Hızlı ekle + `notlar://ekle`; kalan: ana ekran aracı, hızlı ayar karosu, metin seçim menüsü) uygulamayı açmadan ekle → HE-4 tek giriş → HE-5 (17K §4.2).
 4. **Akıllı liste** AL-2 → AL-6 (17K §5.2). AL-2 [~] 2026-11-20: hızlı eklenen madde reyon sıralı listede reyonuna girer (alansız); kalan "Alışverişi bitir", reyon görünümü, miktar toplama (karar), `listKind` (karar). Fikir havuzu + öneri sırası: `docs/rapor_2026-11-20_hizli_ekle_akilli_liste.md` §3–§6.
 5. **Lite/Pro + Play yolu** (karar 1.1/1, 1.1/8 sonrası): engeller E1–E12, evreler 2–6 (16K §4, §8).
 6. Güven/büyüme: parolalı yedek + uçtan uca şifreli kilitli not, ilk 60 saniye, rızalı kullanım
@@ -244,6 +264,7 @@ biri altın setle ölçülerek. PL2 korumaları ve PL3 rıza/"Bildir" ile birlik
 | U22 | [x] **2026-11-19 gece 2** Hızlı ekle açıkken klavye kasması + iyileştirme: tuşta çip şeridi kurulmaz (S56), mikrofon animasyonlardan sonra, yazınca dinleme kesilir (yazılan silinmiyordu bug'ı), "Yeni not" çipi | `editor.md` | A/B (klavye) |
 | U23 | [x] **2026-11-19 gece 2** Balon düğmesi önce "Balon mu metin mi" soruyordu (kart da soruyor) → tek dokunuş | `PinnedMediaPane._addBubbleButton` | hayır |
 | U24 | [x] **2026-11-19 gece 2** Web: kullanıcının bilgisayarında seçim hâlâ tarayıcı yazı tipinde → gizli alan fareli cihazda opacity 0 (Playwright'ta üretildi/doğrulandı) | `web.md` | hayır |
+| U26 | [x] **2026-11-20 (2)** 1.0b 5'li paket: Alışverişi bitir, başlatıcı kısayolu `notlar://ekle`, paylaşımda Hızlı ekle, ⚙ anahtarlar + "Ben seçeyim", sesle "dur/bekle" | `editor.md`; **`[apk]` İKİ ADIMDA:** önce `339a42c8` (U25, 5 görünür), sonra dal başı (U26, 5 görünür) | A/B (hızlı ekle klavye, S56 aynı) |
 | U25 | [x] **2026-11-20** "Hızlı ekle ve akıllı liste hakkında beyin fırtınası yap, geliştir, bugları düzelt": B1–B7 + H1 düzeltildi (alışveriş sözleri madde olmuyor, x2 adet, bavul listesine bölme, başlıktan tür kökten, AI beklerken yazı ezilmesi, yeni not klasör + geri al), HE-2 önizleme satırı, AL-2 reyon yerleşimi; fikir havuzu raporda | `docs/rapor_2026-11-20_hizli_ekle_akilli_liste.md`, `editor.md` | A/B (hızlı ekle klavye, S56 aynı) |
 | KW-11 | [x] Kalem kipinde Ctrl+Z çizgiyi geri almıyor (`docs/kesif_web_2026-11-18.md`) | **Durum (P75):** üç kök neden — odak rota kapsamındayken kısayol ulaşmıyordu (odaksız `HardwareKeyboard` işleyicisi), geri alınan çizgi canlı denetleyiciye eşitlenmiyordu, çizgiler 900 ms'de birleşiyordu (her çizgi ayrı adım). `editor_pen_tablet_test` | hayır |
 
