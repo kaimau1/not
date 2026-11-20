@@ -109,7 +109,7 @@ ucuz, ölçülmeden dokunulmadı.
 ### 1.4 Büyük fazlar (karara bağlı, sırasıyla önerim)
 1. **[~] 2026-11-17 (P67) kod + bayrak (`config/app.syncDeltaListen`, KAPALI); açmadan önce: minClient damgalı sürüme + iki cihaz testi (`docs/hafiza/veri.md` S1, KONTROL "Tablette bak").** **S1 yalnız değişeni dinle** (17K §1.3) → sonra S4 Lite ekleri Drive'a.
 2. **Yazım denetimi v3** Y-0 → Y-1 → Y-2 → Y-3 → Y-4 → Y-5 → Y-6 (17K §3.3).
-3. **Hızlı ekle** HE-2 önizleme satırı → HE-3 uygulamayı açmadan ekle → HE-4 tek giriş → HE-5 (17K §4.2).
+3. **[~] 2026-11-20 (P84) HE-2 + HE-3 yazıldı, cihazda doğrulanmadı** (önizleme satırı, ⚙, "Ben seçeyim", çip araması; kısayol, karo, paylaşım/seçim "Nota ekle", `notlar://ekle`, 1×1/4×1 araç; KONTROL "Telefonda bak" 20 Kasım). **Hızlı ekle** HE-2 önizleme satırı → HE-3 uygulamayı açmadan ekle → HE-4 tek giriş → HE-5 (17K §4.2).
 4. **Akıllı liste** AL-2 → AL-6 (17K §5.2).
 5. **Lite/Pro + Play yolu** (karar 1.1/1, 1.1/8 sonrası): engeller E1–E12, evreler 2–6 (16K §4, §8).
 6. Güven/büyüme: parolalı yedek + uçtan uca şifreli kilitli not, ilk 60 saniye, rızalı kullanım
