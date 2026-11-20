@@ -26,6 +26,7 @@ import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import '../domain/quick_drop.dart';
 import '../domain/quick_entry.dart';
+import 'note_link_ui.dart' show showNotePicker;
 import 'quick_entry_bar.dart';
 
 /// Son eklenen hedef notlar (en yenisi başta) — levha açılınca seçili gelir.
@@ -513,6 +514,16 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   }
 
   void _choose(Note note) => _chooseId(note.id);
+
+  /// Şeridin başındaki arama (HE-2): uygun notların hepsi, aramalı liste.
+  Future<void> _findTarget() async {
+    final note = await showNotePicker(
+      context,
+      notes: _candidates,
+      title: context.l10n.quickDropWhich,
+    );
+    if (note != null && mounted) _choose(note);
+  }
 
   void _chooseId(String id) {
     _stopCountdown();
@@ -1003,15 +1014,18 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                     for (final id in st.ties)
                       if (id != st.id) ?_noteOf(id),
                   ];
+                  // HE-2: 12 sınırı kalktı — şerit tembel (yalnız görünen
+                  // çipler kurulur), uzak not için baştaki arama.
                   final shown = [
                     ...first,
-                    for (final n in _candidates.take(12))
+                    for (final n in _candidates)
                       if (!first.contains(n)) n,
                   ];
                   // H11 2. yarı (2026-11-19): "Yeni not" HEP en başta —
                   // yazılan hiçbir nota uymuyorsa tek dokunuşla yeni not.
-                  // Uygun not yoksa zaten yeni not olur, çip gereksiz.
-                  final extra = _candidates.isEmpty ? 0 : 1;
+                  // Uygun not yoksa zaten yeni not olur, çip gereksiz; arama
+                  // da (aranacak not yok).
+                  final extra = _candidates.isEmpty ? 0 : 2;
                   return ListView.separated(
                     key: const ValueKey('quick-drop-targets'),
                     controller: _strip,
@@ -1020,6 +1034,19 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                     separatorBuilder: (_, _) =>
                         const SizedBox(width: AppSpace.s),
                     itemBuilder: (context, i) {
+                      if (i == 0 && extra > 0) {
+                        return Center(
+                          child: ActionChip(
+                            key: const ValueKey('quick-drop-search'),
+                            avatar: const Icon(
+                              Icons.search,
+                              size: AppIconSize.xs,
+                            ),
+                            label: Text(l10n.quickDropFindNote),
+                            onPressed: _findTarget,
+                          ),
+                        );
+                      }
                       if (i < extra) {
                         return Center(
                           child: ChoiceChip(

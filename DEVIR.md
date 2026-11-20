@@ -11,7 +11,10 @@ Yapılanlar:
    `DelayedSpinner` (300 ms) + "Ben seçeyim" (`quick-drop-pick-myself`). l10n 5 yeni anahtar
    (.arb + generated elle, gen-l10n biçimi). Testler `quick_list_screen_test` (HE-2 ×3, 2 beklenti).
 
-Sıradaki: (2) çip araması (`showNotePicker` yeniden kullanılır, 12 sınırı kalkar) → (3) HE-3
+2. HE-2 çip araması (commit 2): şeridin başında `quick-drop-search` → `showNotePicker(title:)`
+   (yeni isteğe bağlı başlık), 12 çip sınırı kalktı (şerit tembel). Test "çiplerde arama".
+
+Sıradaki: (3) HE-3
 `notlar://ekle` + kısayol + karo + PROCESS_TEXT + paylaş "Nota ekle" (Kotlin aktarma etkinliği
 `NotaEkle`) → (4) 1×1/4×1 ana ekran aracı → belgeler, S56 bütçesini CI kaydından düşür.
 

@@ -625,6 +625,49 @@ void main() {
       expect(repo.writes, isEmpty, reason: 'var olan nota eklenmez');
     });
 
+    // HE-2 (17K §4.2): şeridin başında arama; 12 çip sınırı yok — 16.
+    // sıradaki eski not da aranıp seçilir.
+    testWidgets('HE-2: çiplerde arama, uzak not seçilir ve ona eklenir', (
+      tester,
+    ) async {
+      final old = Note(
+        id: 'eski',
+        type: NoteType.text,
+        title: 'Fikir defteri',
+        updatedAt: DateTime(2026),
+      );
+      final repo = await openSheet(tester, [
+        for (var i = 0; i < 15; i++)
+          Note(
+            id: 'm$i',
+            type: NoteType.checklist,
+            title: 'Liste $i',
+            updatedAt: DateTime(2026, 11, 1, i),
+          ),
+        old,
+      ]);
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'logo taslağı',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-search')));
+      await tester.pumpAndSettle();
+      expect(find.text('Hangi nota eklensin?'), findsWidgets);
+      await tester.enterText(find.byType(TextField).last, 'defter');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Fikir defteri'));
+      await tester.pumpAndSettle();
+      final chip = tester.widget<ChoiceChip>(
+        find.byKey(const ValueKey('quick-drop-target-eski')),
+      );
+      expect(chip.selected, isTrue);
+      expect(find.text('→ Fikir defteri · logo taslağı'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      expect(repo.writes.keys, ['eski']);
+    });
+
     testWidgets('konuşma sonu: geri sayım, sonra eklenir; Bekle durdurur', (
       tester,
     ) async {

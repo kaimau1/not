@@ -27,11 +27,13 @@ String noteLinkLabel(Note note, String fallback) {
 }
 
 /// Bağlanacak notu seçtirir (aramalı liste). Çöptekiler ve [excludeId]
-/// listelenmez.
+/// listelenmez. [title] verilmezse "Hangi nota bağlansın?" (hızlı ekle
+/// hedef araması kendi sorusunu verir).
 Future<Note?> showNotePicker(
   BuildContext context, {
   required List<Note> notes,
   String? excludeId,
+  String? title,
 }) => showAppSheet<Note>(
   context: context,
   showDragHandle: true,
@@ -40,6 +42,7 @@ Future<Note?> showNotePicker(
     maxHeight: MediaQuery.sizeOf(context).height * 0.8,
   ),
   builder: (ctx) => _NotePicker(
+    title: title,
     notes: [
       for (final n in notes)
         if (n.id != excludeId && n.deletedAt == null) n,
@@ -48,8 +51,9 @@ Future<Note?> showNotePicker(
 );
 
 class _NotePicker extends StatefulWidget {
-  const _NotePicker({required this.notes});
+  const _NotePicker({required this.notes, this.title});
   final List<Note> notes;
+  final String? title;
 
   @override
   State<_NotePicker> createState() => _NotePickerState();
@@ -87,7 +91,7 @@ class _NotePickerState extends State<_NotePicker> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
-              l10n.noteLinkPickTitle,
+              widget.title ?? l10n.noteLinkPickTitle,
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
