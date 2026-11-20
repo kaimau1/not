@@ -124,16 +124,18 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   Timer? _doneTimer;
   String? _pendingDone;
 
-  /// Bitiş sözünün önünde bitiş sayılan duraklama.
-  static const donePause = Duration(milliseconds: 700);
-
-  /// Duraklamasız yalın "bitti"den sonra beklenen sessizlik (en kısa
-  /// sessizlik ayarı 2,5 sn'den kısa: dinleme önce bu yoldan biter).
-  static const doneGrace = Duration(milliseconds: 1200);
-
   /// Yazmayı bırakınca devamı beklenen öbek başı ("süt" → "süt tozu"
   /// olabilirdi) maddeye döner.
   static final idleDelay = AppMotion.long + AppMotion.medium;
+
+  /// Bitiş sözünün önünde bitiş sayılan duraklama: yazarken "kullanıcı
+  /// durdu" saydığımız eşikle aynı (~0,7 sn).
+  static final donePause = idleDelay;
+
+  /// Duraklamasız yalın "bitti"den sonra beklenen sessizlik (~1,4 sn; maddeyi
+  /// düşünürken verilen ara bitiş sayılmasın). En kısa sessizlik ayarından
+  /// (2,5 sn) kısa: dinleme önce bu yoldan biter. Eşikler cihazda ayarlanacak.
+  static final doneGrace = donePause * 2;
 
   @override
   void initState() {

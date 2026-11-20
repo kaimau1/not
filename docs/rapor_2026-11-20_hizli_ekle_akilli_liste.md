@@ -15,7 +15,7 @@ oturum: aşağıdaki "yapıldı"ların hepsi **yazıldı, cihazda doğrulanmadı
 | B5 | Hızlı ekle: yapay zekâ "soruyorum…" derken yazılanlar, gelen yanıtla eziliyordu — yanıt ESKİ içerikle geri sayımı başlatıp onu ekliyordu | Yazınca karar kullanıcının; yanıt yok sayılır | `quick_list_screen_test` (eski kodda kırmızı) |
 | B6 | "Hangi not olduğunu soruyorum…" satırı dar ekranda/büyük yazıda taşıyordu | Tek satır, üç nokta | aynı test |
 | B7 | Hızlı ekle "Yeni not": klasör açıkken not klasörsüz düşüyordu; geri alınamıyordu | O anki klasöre doğar, bildirimde **Geri al** | `quick_list_screen_test` |
-| H1 | Sesle "süt bitti" (= süt kalmadı) deyip devam eden kullanıcının listesi kapanıyordu | Yalın "bitti": önünde duraklama varsa hemen; yoksa 1,2 sn konuşma gelmezse bitiş, gelirse içerik. "bu kadar / liste bitti" hep hemen | `quick_entry_done_word_test` (eski kodda kırmızı) |
+| H1 | Sesle "süt bitti" (= süt kalmadı) deyip devam eden kullanıcının listesi kapanıyordu | Yalın "bitti": önünde duraklama varsa hemen; yoksa ~1,4 sn konuşma gelmezse bitiş, gelirse içerik. "bu kadar / liste bitti" hep hemen | `quick_entry_done_word_test` (eski kodda kırmızı) |
 
 ## 2. Geliştirilenler
 
@@ -64,7 +64,7 @@ Değer (D) / emek (E) / risk (R): ●●● yüksek, ● düşük.
 
 ## 5. Önerilen sıra (bir faz = bir oturum, `[apk]` başına ≤ 5 görünür değişiklik)
 
-1. **Bu oturumun cihaz turu** (KONTROL): özellikle H1 eşikleri (700 ms / 1,2 sn) tanıyıcının
+1. **Bu oturumun cihaz turu** (KONTROL): özellikle H1 eşikleri (~0,7 sn / ~1,4 sn) tanıyıcının
    gerçek ara sonuç sıklığıyla doğrulanmalı; gerekirse sayılar oynatılır.
 2. HE-2 kalanı + "Art arda ekle" + "Alışverişi bitir" (küçük, telefonsuz yazılır).
 3. HE-3 (uygulamayı açmadan ekle) — en büyük değer.
