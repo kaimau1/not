@@ -550,9 +550,9 @@
     "klavye_levha": 0,
     "klavye_giris": 0,
     "klavye_pano": 0,
-    "yazma_kurulum": 415,
+    "yazma_kurulum": 335,
     "yazma_cip": 0,
-    "bugun": "klavye 402 kurulum / 102 dizilme, levha/giriş/pano 0; yazma 5 tuşta 415 kurulum, çip 0 (2026-11-19)",
+    "bugun": "klavye 402 kurulum / 102 dizilme, levha/giriş/pano 0; yazma 5 tuşta 335 kurulum, çip 0 (2026-11-20, P84 HE-2: Ekle düğmesi içeriği yazmıyor, önizleme satırı tek Text; önce 415)",
     "hedef": "klavye karesinde levha, giriş satırı ve ana ekran kurulmaz; tuşta hedef çipleri kurulmaz",
     "neden": "2026-11-19 ilk ölçüm; çip şeridi yalnız hedef değişince kurulur (öncesi 5 tuşta 1445 kurulum, 25 çip)"
   }

@@ -9013,4 +9013,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuHiddenGroup => 'Hidden';
+
+  @override
+  String get quickDropSettings => 'Quick add settings';
+
+  @override
+  String quickDropPreviewText(String title, String text) {
+    return '→ $title · $text';
+  }
+
+  @override
+  String quickDropPreviewItems(String title, String items, int count) {
+    return '→ $title · $items ($count new)';
+  }
+
+  @override
+  String get quickDropPickMyself => 'I\'ll pick';
+
+  @override
+  String get quickDropFindNote => 'Find note';
 }

@@ -19,9 +19,12 @@ import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_templates.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
-import 'package:notlar/features/notes/domain/quick_entry.dart' show quickAscii;
+import 'package:notlar/features/notes/domain/quick_entry.dart'
+    show QuickParser, quickAscii;
 import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
+import 'package:notlar/features/notes/presentation/notes_providers.dart'
+    show quickDropRequestProvider;
 import 'package:notlar/features/notes/presentation/quick_drop_sheet.dart';
 import 'package:notlar/features/notes/presentation/quick_entry_bar.dart';
 import 'package:notlar/features/notes/presentation/quick_list_screen.dart';
@@ -466,6 +469,26 @@ void main() {
       expect(quickDropFields(shopping, 'ekmek', locale: 'tr').fields, isEmpty);
     });
 
+    // HE-2 (17K §4.2): önizleme satırı Ekle'ye basmadan nota GİRECEKLERİ
+    // gösterir — quickDropFields ile aynı ayrıştırma, yazım yok.
+    test('HE-2 önizleme: yeni + yeniden açılan maddeler; yazı notunda '
+        'satırlar; hepsi notta → boş', () {
+      QuickParser parser() => quickDropListParser(shopping, locale: 'tr');
+      expect(quickDropPreview(shopping, 'sut ekmek 2 muz', parser: parser), [
+        'Muz (2)',
+        'Süt',
+      ]);
+      expect(quickDropPreview(shopping, 'ekmek', parser: parser), isEmpty);
+      expect(
+        quickDropPreview(
+          text,
+          'kargoyu sor bir de faturayı yatır',
+          parser: () => throw StateError('yazı notu ayrıştırıcı kurmaz'),
+        ),
+        ['kargoyu sor', 'faturayı yatır'],
+      );
+    });
+
     testWidgets('levha: hedef metinden çözülür, çiple değiştirilir', (
       tester,
     ) async {
@@ -491,7 +514,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(chip('a').selected, isTrue);
-      expect(find.text('Ekle · süt'), findsOneWidget);
+      // HE-2: içerik düğmede değil önizleme satırında (işaretli Süt açılır).
+      expect(find.text('→ Alışveriş listesi · Süt (1 madde)'), findsOneWidget);
+      expect(find.text('Ekle'), findsOneWidget);
 
       await tester.enterText(
         find.byKey(const ValueKey('quick-entry-field')),
@@ -501,7 +526,28 @@ void main() {
       await tapTarget(tester, 'c');
       await tester.pumpAndSettle();
       expect(chip('c').selected, isTrue);
-      expect(find.text('Ekle · bir fikir'), findsOneWidget);
+      expect(find.text('→ Fikirler · bir fikir'), findsOneWidget);
+    });
+
+    // HE-2: üç anahtar başlıkta değil ⚙ menüsünde.
+    testWidgets('HE-2: anahtarlar ⚙ arkasında, menüden değişir', (
+      tester,
+    ) async {
+      final prefs = await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        prefs: {'quick_drop_mic': false},
+        onTap: (context, ref) => showQuickDropSheet(context),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('quick-drop-keyboard')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-settings')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-keyboard')));
+      await tester.pumpAndSettle();
+      expect(prefs.getBool('quick_drop_keyboard'), isFalse);
     });
 
     // Kullanıcı bulgusu 2026-11-16: konuşma bitince hedefi söylemeden yanlış
@@ -579,6 +625,88 @@ void main() {
       await tester.pumpAndSettle();
       expect(repo.created, [(NoteType.text, 'kargoyu sor')]);
       expect(repo.writes, isEmpty, reason: 'var olan nota eklenmez');
+    });
+
+    // HE-2 (17K §4.2): şeridin başında arama; 12 çip sınırı yok — 16.
+    // sıradaki eski not da aranıp seçilir.
+    testWidgets('HE-2: çiplerde arama, uzak not seçilir ve ona eklenir', (
+      tester,
+    ) async {
+      final old = Note(
+        id: 'eski',
+        type: NoteType.text,
+        title: 'Fikir defteri',
+        updatedAt: DateTime(2026),
+      );
+      final repo = await openSheet(tester, [
+        for (var i = 0; i < 15; i++)
+          Note(
+            id: 'm$i',
+            type: NoteType.checklist,
+            title: 'Liste $i',
+            updatedAt: DateTime(2026, 11, 1, i),
+          ),
+        old,
+      ]);
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'logo taslağı',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-search')));
+      await tester.pumpAndSettle();
+      expect(find.text('Hangi nota eklensin?'), findsWidgets);
+      await tester.enterText(find.byType(TextField).last, 'defter');
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, 'Fikir defteri'));
+      await tester.pumpAndSettle();
+      final chip = tester.widget<ChoiceChip>(
+        find.byKey(const ValueKey('quick-drop-target-eski')),
+      );
+      expect(chip.selected, isTrue);
+      expect(find.text('→ Fikir defteri · logo taslağı'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      expect(repo.writes.keys, ['eski']);
+    });
+
+    // HE-3 (PLAN §1.4/3): kısayol, karo, paylaşım/seçim "Nota ekle" →
+    // notlar://ekle?metin=… Metin alana yazılı gelir, hedef çözülür ama
+    // KENDİLİĞİNDEN eklenmez (başka uygulama da tetikleyebilir).
+    testWidgets('HE-3: dışarıdan gelen metin yazılı gelir, kendiliğinden '
+        'eklenmez', (tester) async {
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        repo: repo,
+        prefs: {'quick_drop_mic': false},
+        onTap: (context, ref) =>
+            showQuickDropSheet(context, text: 'alışveriş listesine süt ekle'),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      expect(find.text('alışveriş listesine süt ekle'), findsOneWidget);
+      expect(find.text('→ Alışveriş listesi · Süt (1 madde)'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      expect(repo.writes, isEmpty);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      expect(repo.writes.keys, ['a']);
+    });
+
+    test('HE-3: dışarıdan istek tek seferlik, metin 2000 karakterle sınırlı', () {
+      final c = ProviderContainer();
+      addTearDown(c.dispose);
+      final n = c.read(quickDropRequestProvider.notifier);
+      expect(n.take(), isNull);
+      n.request('a' * 2500);
+      expect(c.read(quickDropRequestProvider)!.length, 2000);
+      expect(n.take()!.length, 2000);
+      expect(n.take(), isNull);
+      n.request('');
+      expect(n.take(), '', reason: 'boş istek de levhayı açar');
     });
 
     testWidgets('konuşma sonu: geri sayım, sonra eklenir; Bekle durdurur', (
@@ -691,6 +819,68 @@ void main() {
       expect(find.byKey(const ValueKey('quick-drop-ask')), findsOneWidget);
       await tester.pump(const Duration(seconds: 3));
       expect(repo.writes, isEmpty);
+    });
+
+    // HE-2 (17K §4.2): yapay zekâ beklerken ilk 300 ms hiçbir şey yanıp
+    // sönmez; sonra ince ilerleme + "Ben seçeyim" — dokununca beklemeden
+    // kullanıcı seçer, geç gelen yanıt eklemez.
+    testWidgets('HE-2: yapay zekâ beklerken 300 ms sonra "Ben seçeyim"', (
+      tester,
+    ) async {
+      AiDecisionsFlag.apply({
+        'aiDecisionsFeatures': [DecisionFeature.dropTarget],
+      });
+      addTearDown(AiDecisionsFlag.debugReset);
+      final repo = _DropRepo();
+      await pumpHost(
+        tester,
+        notes: [shopping, todo, text],
+        repo: repo,
+        prefs: {'quick_drop_mic': false},
+        ai: AiAvailability.ready,
+        extra: [
+          decisionServiceProvider.overrideWithValue(
+            DecisionService(
+              key: () async => 'k',
+              http: JsonHttp(
+                baseUrl: AiProvider.gemini.baseUrl,
+                client: MockClient((_) async {
+                  await Future<void>.delayed(const Duration(seconds: 1));
+                  return http.Response(
+                    jsonEncode({'answers': target('n01', 0.93)}),
+                    200,
+                    headers: {
+                      'content-type': 'application/json; charset=utf-8',
+                    },
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+        onTap: (context, ref) => showQuickDropSheet(context),
+      );
+      await tester.pump();
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await say(tester, 'yeni logo taslağı fikir defterine ekle');
+      final waiting = find.byKey(const ValueKey('quick-drop-thinking'));
+      double opacity() => tester
+          .widget<AnimatedOpacity>(
+            find
+                .ancestor(of: waiting, matching: find.byType(AnimatedOpacity))
+                .first,
+          )
+          .opacity;
+      expect(opacity(), 0, reason: 'ilk 300 ms görünmez');
+      await tester.pump(const Duration(milliseconds: 350));
+      expect(opacity(), 1);
+      await tester.tap(find.byKey(const ValueKey('quick-drop-pick-myself')));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('quick-drop-ask')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pumpAndSettle();
+      expect(repo.writes, isEmpty, reason: 'geç gelen yanıt eklemez');
     });
 
     // DA-14: bulanık düzeltme geri sayım içinde doğrulanır.

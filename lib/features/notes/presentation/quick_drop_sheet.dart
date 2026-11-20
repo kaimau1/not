@@ -9,6 +9,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/firestore_size.dart' show sameFirestoreValue;
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/delayed_spinner.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
@@ -25,6 +26,7 @@ import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import '../domain/quick_drop.dart';
 import '../domain/quick_entry.dart';
+import 'note_link_ui.dart' show showNotePicker;
 import 'quick_entry_bar.dart';
 
 /// Son eklenen hedef notlar (en yenisi başta) — levha açılınca seçili gelir.
@@ -141,7 +143,20 @@ QuickParse _parseIntoList(
   String text,
   String locale,
   QuickEntryMemory memory,
-) {
+) => quickDropListParser(
+  note,
+  locale: locale,
+  memory: memory,
+).parse(text, flush: true);
+
+/// Liste notuna eklemenin ayrıştırıcısı (alışverişe benziyorsa market
+/// sözlüğü + notun kendi maddeleri + hızlı ekle hafızası). Kurulumu pahalı
+/// (~2200 kelimelik sözlük): önizleme satırı hedef başına BİR kez kurar.
+QuickParser quickDropListParser(
+  Note note, {
+  required String locale,
+  QuickEntryMemory memory = const QuickEntryMemory(),
+}) {
   final grocery = looksLikeGrocery(note.displayTitle, [
     for (final i in note.items) i.text,
   ], locale);
@@ -154,11 +169,37 @@ QuickParse _parseIntoList(
         if (i.text.trim().isNotEmpty) quickBaseName(i.text),
     ],
   );
-  return buildQuickParser(
-    lex,
-    memory: memory,
-    phrasesOnly: !grocery,
-  ).parse(text, flush: true);
+  return buildQuickParser(lex, memory: memory, phrasesOnly: !grocery);
+}
+
+/// HE-2 önizleme satırı (17K §4.2, "→ Market listesi · süt, ekmek (2
+/// madde)"): [content] [note]a eklenince NOTA GİRECEKLER — liste notunda
+/// yeni, yeniden açılan ve miktarı değişen maddeler; yazı notunda eklenecek
+/// satırlar. Hiçbir şey yazmaz; [quickDropFields] ile aynı ayrıştırma.
+/// Boş = eklenecek yeni bir şey yok (hepsi zaten notta).
+List<String> quickDropPreview(
+  Note note,
+  String content, {
+  required QuickParser Function() parser,
+}) {
+  final text = quickDropSeparate(content.trim());
+  if (text.isEmpty) return const [];
+  if (note.type == NoteType.text) {
+    final lines = [
+      for (final l in text.split(', '))
+        if (l.trim().isNotEmpty) l.trim(),
+    ];
+    return lines.length > 1 ? lines : [content.trim()];
+  }
+  final plan = planDropIntoList([
+    for (final i in note.items) (text: i.text, checked: i.checked),
+  ], parser().parse(text, flush: true).items);
+  return [
+    ...plan.texts,
+    for (final i in plan.uncheck) plan.requantify[i] ?? note.items[i].text,
+    for (final e in plan.requantify.entries)
+      if (!plan.uncheck.contains(e.key)) e.value,
+  ];
 }
 
 /// DA-14: [content] liste notuna eklenince yapılacak BULANIK yazım
@@ -248,14 +289,21 @@ Map<String, dynamic> quickDropUndoFields({
   };
 }
 
-/// **HIZLI EKLE** levhasını açar.
-Future<void> showQuickDropSheet(BuildContext context) => showAppSheet<void>(
-  context: context,
-  showDragHandle: true,
-  isScrollControlled: true,
-  constraints: const BoxConstraints(maxWidth: 640),
-  builder: (_) => const SheetInsetPadding(child: QuickDropSheet()),
-);
+/// **HIZLI EKLE** levhasını açar. [text]: uygulama dışından gelen metin
+/// (HE-3, `notlar://ekle?metin=…`) alana yazılı gelir; eklenmez.
+Future<void> showQuickDropSheet(BuildContext context, {String text = ''}) {
+  // Levha aynı örnek kalır (klavye karesinde kurulmaz, S56); boşken const.
+  final sheet = text.isEmpty
+      ? const SheetInsetPadding(child: QuickDropSheet())
+      : SheetInsetPadding(child: QuickDropSheet(initialText: text));
+  return showAppSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    constraints: const BoxConstraints(maxWidth: 640),
+    builder: (_) => sheet,
+  );
+}
 
 /// **HIZLI EKLE** (kullanıcı isteği 2026-11-15: "ekranda bir buton olur;
 /// basınca hem yazma hem dinleme açılır, kişinin isteğine göre biri
@@ -272,7 +320,12 @@ Future<void> showQuickDropSheet(BuildContext context) => showAppSheet<void>(
 /// bulunamazsa önce yapay zekâya (yalnız başlıklar gider, kapatılabilir),
 /// olmazsa kullanıcıya "Hangi nota eklensin?" diye sorulur.
 class QuickDropSheet extends ConsumerStatefulWidget {
-  const QuickDropSheet({super.key});
+  const QuickDropSheet({super.key, this.initialText = ''});
+
+  /// Alana yazılı gelen metin (HE-3: paylaşım, seçim menüsü, derin bağlantı).
+  /// Elle yazılmış sayılır: kendiliğinden dinleme başlamaz (tanıyıcı ham
+  /// kipte alanı baştan yazar, metin silinirdi).
+  final String initialText;
 
   @override
   ConsumerState<QuickDropSheet> createState() => _QuickDropSheetState();
@@ -334,8 +387,14 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   final _targets = ValueNotifier<_Drop>(const _Drop());
   final _strip = ScrollController();
 
-  /// Ekle düğmesinin girdisi: etkin mi, "hangi not?" mu, içerik.
-  final _addLabel = ValueNotifier<(bool, bool, String)>((false, false, ''));
+  /// Ekle düğmesinin girdisi: etkin mi, "hangi not?" mu. İçerik düğmede
+  /// YOK (HE-2: önizleme satırı gösterir) — düğme tuşta kurulmaz (S56).
+  final _addLabel = ValueNotifier<(bool, bool)>((false, false));
+
+  /// Önizleme satırının ayrıştırıcısı ve kurulduğu not (not akıştan yeni
+  /// kopya gelince yeniden kurulur).
+  QuickParser? _previewParser;
+  Note? _previewNote;
 
   /// Konuşma sonrası geri sayım (bitince eklenir).
   late final AnimationController _count = AnimationController(
@@ -353,6 +412,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     );
     _state.addListener(_onState);
     _state.value = _Drop(id: _candidates.isEmpty ? null : _candidates.first.id);
+    if (widget.initialText.isNotEmpty) _resolve(widget.initialText);
     if (ref.read(quickDropKeyboardProvider)) focusAfterRouteOpens(this, _focus);
   }
 
@@ -371,8 +431,51 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     }
     final content = st.content.trim();
     final enabled = (st.id != null || _toNewNote) && content.isNotEmpty;
-    final next = (enabled, st.id == null && st.ask, content);
+    final next = (enabled, st.id == null && st.ask);
     if (next != _addLabel.value) _addLabel.value = next;
+  }
+
+  /// HE-2 önizleme satırı: Ekle'ye basmadan neyin nereye gideceği.
+  String _previewLine(AppLocalizations l10n, _Drop st) {
+    final content = st.content.trim();
+    if (content.isEmpty) return _toNewNote ? '' : l10n.quickDropTarget;
+    if (_toNewNote) return l10n.quickDropPreviewText(l10n.newNoteShort, content);
+    final note = _noteOf(st.id);
+    if (note == null) return l10n.quickDropTarget;
+    final title = note.displayTitle.trim();
+    final items = quickDropPreview(
+      note,
+      content,
+      parser: () {
+        if (!identical(_previewNote, note)) {
+          _previewNote = note;
+          _previewParser = quickDropListParser(
+            note,
+            locale: l10n.localeName,
+            memory: ref.read(quickEntryMemoryProvider),
+          );
+        }
+        return _previewParser!;
+      },
+    );
+    if (items.isEmpty) return l10n.quickDropNothingNew(title);
+    if (note.type == NoteType.text) {
+      return l10n.quickDropPreviewText(title, items.join(', '));
+    }
+    return l10n.quickDropPreviewItems(title, items.join(', '), items.length);
+  }
+
+  /// "Ben seçeyim" (HE-2): yapay zekâyı beklemeden kullanıcı çipten seçer.
+  void _pickMyself() {
+    if (_phase.value != _Phase.thinking) return;
+    _phase.value = _Phase.idle;
+    final st = _state.value;
+    _state.value = _Drop(
+      id: st.ties.isEmpty ? st.id : null,
+      content: st.content,
+      ties: st.ties,
+      ask: true,
+    );
   }
 
   @override
@@ -424,6 +527,16 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   }
 
   void _choose(Note note) => _chooseId(note.id);
+
+  /// Şeridin başındaki arama (HE-2): uygun notların hepsi, aramalı liste.
+  Future<void> _findTarget() async {
+    final note = await showNotePicker(
+      context,
+      notes: _candidates,
+      title: context.l10n.quickDropWhich,
+    );
+    if (note != null && mounted) _choose(note);
+  }
 
   void _chooseId(String id) {
     _stopCountdown();
@@ -735,32 +848,33 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               Expanded(
                 child: Text(l10n.quickDropTitle, style: text.sheetTitle),
               ),
-              IconButton(
-                key: const ValueKey('quick-drop-ai'),
-                tooltip: l10n.quickDropAiToggle,
-                isSelected: ai,
-                icon: const Icon(Icons.auto_awesome_outlined),
-                selectedIcon: Icon(Icons.auto_awesome, color: scheme.primary),
-                onPressed: () =>
-                    ref.read(quickDropAiProvider.notifier).set(!ai),
-              ),
-              IconButton(
-                key: const ValueKey('quick-drop-keyboard'),
-                tooltip: l10n.quickDropKeyboard,
-                isSelected: keyboard,
-                icon: const Icon(Icons.keyboard_outlined),
-                selectedIcon: Icon(Icons.keyboard, color: scheme.primary),
-                onPressed: () =>
-                    ref.read(quickDropKeyboardProvider.notifier).set(!keyboard),
-              ),
-              IconButton(
-                key: const ValueKey('quick-drop-auto-mic'),
-                tooltip: l10n.quickDropMicAuto,
-                isSelected: autoMic,
-                icon: const Icon(Icons.hearing_disabled_outlined),
-                selectedIcon: Icon(Icons.hearing, color: scheme.primary),
-                onPressed: () =>
-                    ref.read(quickDropMicProvider.notifier).set(!autoMic),
+              // HE-2 (17K §4.2): üç anahtar (yapay zekâ / klavye / dinle)
+              // başlıkta yer kaplamasın — ⚙ arkasında, işaretli menü.
+              PopupMenuButton<NotifierProvider<BoolPrefNotifier, bool>>(
+                key: const ValueKey('quick-drop-settings'),
+                tooltip: l10n.quickDropSettings,
+                icon: const Icon(Icons.settings_outlined),
+                onSelected: (p) => ref.read(p.notifier).toggle(),
+                itemBuilder: (_) => [
+                  CheckedPopupMenuItem(
+                    key: const ValueKey('quick-drop-ai'),
+                    value: quickDropAiProvider,
+                    checked: ai,
+                    child: Text(l10n.quickDropAiToggle),
+                  ),
+                  CheckedPopupMenuItem(
+                    key: const ValueKey('quick-drop-keyboard'),
+                    value: quickDropKeyboardProvider,
+                    checked: keyboard,
+                    child: Text(l10n.quickDropKeyboard),
+                  ),
+                  CheckedPopupMenuItem(
+                    key: const ValueKey('quick-drop-auto-mic'),
+                    value: quickDropMicProvider,
+                    checked: autoMic,
+                    child: Text(l10n.quickDropMicAuto),
+                  ),
+                ],
               ),
             ],
           ),
@@ -781,6 +895,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               key: _bar,
               parser: _idle,
               raw: true,
+              initialText: widget.initialText,
               focusNode: _focus,
               hint: l10n.quickDropHint,
               autoListen: autoMic,
@@ -807,16 +922,35 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                   final st = _state.value;
                   switch (_phase.value) {
                     case _Phase.thinking:
-                      return Row(
-                        key: const ValueKey('quick-drop-thinking'),
-                        children: [
-                          const SizedBox.square(
-                            dimension: AppIconSize.xs,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          const SizedBox(width: AppSpace.s),
-                          Text(l10n.quickDropAsking, style: text.meta),
-                        ],
+                      // HE-2: hızlı yanıtta hiçbir şey yanıp sönmez; 300 ms
+                      // sonra ince ilerleme + "Ben seçeyim" belirir.
+                      return DelayedSpinner(
+                        child: Row(
+                          key: const ValueKey('quick-drop-thinking'),
+                          children: [
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.quickDropAsking,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: text.meta,
+                                  ),
+                                  const SizedBox(height: AppSpace.xs),
+                                  const LinearProgressIndicator(minHeight: 2),
+                                ],
+                              ),
+                            ),
+                            TextButton(
+                              key: const ValueKey('quick-drop-pick-myself'),
+                              onPressed: _pickMyself,
+                              child: Text(l10n.quickDropPickMyself),
+                            ),
+                          ],
+                        ),
                       );
                     case _Phase.counting:
                       final title = _noteOf(st.id)?.displayTitle.trim() ?? '';
@@ -870,8 +1004,12 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                                   fontWeight: AppWeight.strong,
                                 ),
                               )
+                            // HE-2 önizleme: tuşta yalnız bu Text kurulur.
                             : Text(
-                                _toNewNote ? '' : l10n.quickDropTarget,
+                                _previewLine(l10n, st),
+                                key: const ValueKey('quick-drop-preview'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: text.meta,
                               ),
                       );
@@ -890,15 +1028,18 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                     for (final id in st.ties)
                       if (id != st.id) ?_noteOf(id),
                   ];
+                  // HE-2: 12 sınırı kalktı — şerit tembel (yalnız görünen
+                  // çipler kurulur), uzak not için baştaki arama.
                   final shown = [
                     ...first,
-                    for (final n in _candidates.take(12))
+                    for (final n in _candidates)
                       if (!first.contains(n)) n,
                   ];
                   // H11 2. yarı (2026-11-19): "Yeni not" HEP en başta —
                   // yazılan hiçbir nota uymuyorsa tek dokunuşla yeni not.
-                  // Uygun not yoksa zaten yeni not olur, çip gereksiz.
-                  final extra = _candidates.isEmpty ? 0 : 1;
+                  // Uygun not yoksa zaten yeni not olur, çip gereksiz; arama
+                  // da (aranacak not yok).
+                  final extra = _candidates.isEmpty ? 0 : 2;
                   return ListView.separated(
                     key: const ValueKey('quick-drop-targets'),
                     controller: _strip,
@@ -907,6 +1048,19 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                     separatorBuilder: (_, _) =>
                         const SizedBox(width: AppSpace.s),
                     itemBuilder: (context, i) {
+                      if (i == 0 && extra > 0) {
+                        return Center(
+                          child: ActionChip(
+                            key: const ValueKey('quick-drop-search'),
+                            avatar: const Icon(
+                              Icons.search,
+                              size: AppIconSize.xs,
+                            ),
+                            label: Text(l10n.quickDropFindNote),
+                            onPressed: _findTarget,
+                          ),
+                        );
+                      }
                       if (i < extra) {
                         return Center(
                           child: ChoiceChip(
@@ -952,18 +1106,14 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               ),
             ),
             const SizedBox(height: AppSpace.s),
-            ValueListenableBuilder<(bool, bool, String)>(
+            ValueListenableBuilder<(bool, bool)>(
               valueListenable: _addLabel,
               builder: (context, add, _) => FilledButton.icon(
                 key: const ValueKey('quick-drop-add'),
                 onPressed: add.$1 ? _apply : null,
                 icon: const Icon(Icons.add),
                 label: Text(
-                  add.$2
-                      ? l10n.quickDropWhich
-                      : add.$3.isEmpty
-                      ? l10n.quickDropAdd
-                      : '${l10n.quickDropAdd} · ${add.$3}',
+                  add.$2 ? l10n.quickDropWhich : l10n.quickDropAdd,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

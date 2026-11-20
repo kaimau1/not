@@ -22,6 +22,9 @@ const kHomeWidgetProviders = [
   'QuickNoteWidgetProvider',
   'VoiceWidgetProvider',
   'TodayWidgetProvider',
+  // HE-3 (P84): hızlı ekle 1×1 ve 4×1 (tema değişince yenilensin).
+  'QuickAddWidgetProvider',
+  'QuickAddBarWidgetProvider',
 ];
 
 /// Aracı TAM NİTELİKLİ sınıf adıyla yeniler (KT-21, tablet turu 2026-11-18).

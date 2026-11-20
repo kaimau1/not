@@ -489,6 +489,36 @@ class VoiceAutostartNotifier extends Notifier<bool> {
   }
 }
 
+/// HE-3 (PLAN §1.4/3): `notlar://ekle?metin=…` — başlatıcı kısayolu, hızlı
+/// ayar karosu, ana ekran aracı, paylaşımdaki ve metin seçim menüsündeki
+/// "Nota ekle" HIZLI EKLE levhasını açar (metin varsa alana yazılı gelir;
+/// kendiliğinden eklenmez, kullanıcı Ekle'ye basar). null = istek yok.
+/// [voiceAutostartProvider] gibi tüketilir: ana ekran kurulmadan gelen
+/// istek kaybolmaz.
+final quickDropRequestProvider =
+    NotifierProvider<QuickDropRequestNotifier, String?>(
+      QuickDropRequestNotifier.new,
+    );
+
+class QuickDropRequestNotifier extends Notifier<String?> {
+  /// Dışarıdan gelen metnin üst sınırı (uzun paylaşım levhayı boğmasın).
+  static const maxLength = 2000;
+
+  @override
+  String? build() => null;
+
+  void request(String text) => state = text.length > maxLength
+      ? text.substring(0, maxLength)
+      : text;
+
+  /// İstek varsa metnini döner ve düşürür (tek seferlik).
+  String? take() {
+    final text = state;
+    state = null;
+    return text;
+  }
+}
+
 final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
   SearchQueryNotifier.new,
 );

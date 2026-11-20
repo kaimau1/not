@@ -38,6 +38,7 @@ ortalar KARAR ya da konsol işi (aşağıda "Kullanıcı işi").
 | G-23 | Düşük | Dizin kaydı yazımı hatayı yakalamıyor (kural reddederse yakalanmamış hata günlüğe düşer) | `dashboard_screen.dart:343` | `.catchError` | Açık (ana ekran dosyası — ölçüm kapısı) |
 | G-24 | Bilgi | Kilitli notun başlığı kartta ve aramada görünür | `notes_providers.dart:1353` | — | Tasarım |
 | G-25 | Bilgi | Güncelleme: adres GitHub API yanıtından, ayrıca host denetimi yok; bütünlüğü Android zorlar (aynı paket + aynı imza) | `app_update.dart:159-176`, `ApkGuncelleme.kt` | — | Kabul |
+| G-27 | Düşük | HE-3 (P84, 2026-11-20): yeni dışa açık `.NotaEkle` (paylaşım `text/plain` + PROCESS_TEXT) ve `notlar://ekle?metin=…` her uygulamadan tetiklenir. Metin yalnız hızlı ekle ALANINA yazılır (≤ 2000 karakter), kendiliğinden kaydedilmez, dinleme başlamaz; kullanıcı hedefi önizlemede görüp Ekle'ye basar. Karo `.HizliEkleKarosu` `BIND_QUICK_SETTINGS_TILE` ile korunur. BROWSABLE yok (web sayfası açamaz) | `HizliEkle.kt`, `router.dart` `ekle`, `QuickDropRequestNotifier.maxLength` | — | Kabul; bekçi `security_guard_test` |
 
 ## F71.2 — Kim okur / kim yazar
 

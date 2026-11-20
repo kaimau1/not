@@ -15979,6 +15979,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gizlenenler'**
   String get menuHiddenGroup;
+
+  /// No description provided for @quickDropSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı ekle ayarları'**
+  String get quickDropSettings;
+
+  /// No description provided for @quickDropPreviewText.
+  ///
+  /// In tr, this message translates to:
+  /// **'→ {title} · {text}'**
+  String quickDropPreviewText(String title, String text);
+
+  /// No description provided for @quickDropPreviewItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'→ {title} · {items} ({count} madde)'**
+  String quickDropPreviewItems(String title, String items, int count);
+
+  /// No description provided for @quickDropPickMyself.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ben seçeyim'**
+  String get quickDropPickMyself;
+
+  /// No description provided for @quickDropFindNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not bul'**
+  String get quickDropFindNote;
 }
 
 class _AppLocalizationsDelegate
