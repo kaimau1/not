@@ -10,8 +10,10 @@ import '../a11y/motion.dart';
 ///
 /// Animasyon parçanın İLK kurulumunda bir kez koşar; aynı anahtarla yeniden
 /// kurulunca tekrar oynamaz (yeniden oynatmak için anahtarı değiştir).
-/// Yalnız saydamlık + dönüşüm — yerleşim etkilenmez.
-class PopIn extends StatelessWidget {
+/// Yalnız saydamlık (`FadeTransition` = `RenderAnimatedOpacity`, her karede
+/// `Opacity` widget'ı kurmaz ve tam görünürde katman açmaz) + tek dönüşüm —
+/// yerleşim etkilenmez.
+class PopIn extends StatefulWidget {
   const PopIn({
     super.key,
     required this.child,
@@ -39,25 +41,64 @@ class PopIn extends StatelessWidget {
   final Alignment alignment;
 
   @override
-  Widget build(BuildContext context) {
-    if (!animate || !motionOf(context)) {
-      return child;
+  State<PopIn> createState() => _PopInState();
+}
+
+class _PopInState extends State<PopIn> with SingleTickerProviderStateMixin {
+  AnimationController? _controller;
+  CurvedAnimation? _curve;
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_started) {
+      _started = true;
+      if (widget.animate && motionOf(context)) {
+        final c = AnimationController(vsync: this, duration: widget.duration);
+        _controller = c;
+        _curve = CurvedAnimation(parent: c, curve: Curves.easeOutCubic);
+        c.forward();
+      }
     }
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: duration,
-      curve: Curves.easeOutCubic,
-      child: child,
-      builder: (context, t, child) => Opacity(
-        opacity: t,
-        child: Transform.translate(
-          offset: Offset(0, (1 - t) * rise),
-          child: Transform.scale(
-            scale: from + (1 - from) * t,
-            alignment: alignment,
+  }
+
+  @override
+  void didUpdateWidget(PopIn oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.duration != widget.duration) {
+      _controller?.duration = widget.duration;
+    }
+  }
+
+  @override
+  void dispose() {
+    _curve?.dispose();
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final curve = _curve;
+    if (curve == null || !motionOf(context)) {
+      return widget.child;
+    }
+    return FadeTransition(
+      opacity: curve,
+      child: AnimatedBuilder(
+        animation: curve,
+        child: widget.child,
+        builder: (context, child) {
+          final t = curve.value;
+          final scale = widget.from + (1 - widget.from) * t;
+          return Transform(
+            alignment: widget.alignment,
+            transform: Matrix4.diagonal3Values(scale, scale, 1)
+              ..setTranslationRaw(0, (1 - t) * widget.rise, 0),
             child: child,
-          ),
-        ),
+          );
+        },
       ),
     );
   }

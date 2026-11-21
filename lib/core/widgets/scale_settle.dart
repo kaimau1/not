@@ -79,8 +79,10 @@ class _ScaleSettleState extends State<ScaleSettle>
 }
 
 /// Açılan panelin içeriği yerinde süzülerek belirir (hafif yukarı kayma +
-/// solma). Her yeni kurulumda bir kez oynar.
-class RevealUp extends StatelessWidget {
+/// solma). Her yeni kurulumda bir kez oynar; `FadeTransition`
+/// (`RenderAnimatedOpacity`) kullandığı için kare başına `Opacity` widget'ı
+/// yeniden kurulmaz ve animasyon bitince saveLayer açılmaz.
+class RevealUp extends StatefulWidget {
   const RevealUp({
     super.key,
     required this.child,
@@ -93,21 +95,59 @@ class RevealUp extends StatelessWidget {
   final double offset;
 
   @override
+  State<RevealUp> createState() => _RevealUpState();
+}
+
+class _RevealUpState extends State<RevealUp>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _controller;
+  CurvedAnimation? _curve;
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_started) {
+      _started = true;
+      if (motionOf(context)) {
+        final c = AnimationController(vsync: this, duration: widget.duration);
+        _controller = c;
+        _curve = CurvedAnimation(parent: c, curve: Curves.easeOutCubic);
+        c.forward();
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(RevealUp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.duration != widget.duration) {
+      _controller?.duration = widget.duration;
+    }
+  }
+
+  @override
+  void dispose() {
+    _curve?.dispose();
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Hareketi azalt (F15.5): içerik anında yerinde.
-    if (!motionOf(context)) return child;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: duration,
-      curve: Curves.easeOutCubic,
-      builder: (context, t, child) => Opacity(
-        opacity: t,
-        child: Transform.translate(
-          offset: Offset(0, offset * (1 - t)),
+    final curve = _curve;
+    if (curve == null || !motionOf(context)) return widget.child;
+    return FadeTransition(
+      opacity: curve,
+      child: AnimatedBuilder(
+        animation: curve,
+        child: widget.child,
+        builder: (context, child) => Transform.translate(
+          offset: Offset(0, widget.offset * (1 - curve.value)),
           child: child,
         ),
       ),
-      child: child,
     );
   }
 }
