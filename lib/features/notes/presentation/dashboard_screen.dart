@@ -424,6 +424,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       if (!mounted) return;
       final notes = ref.read(notesStreamProvider).value;
       if (notes != null) migrateDefaultNoteSort(ref, notes);
+      unawaited(maybeShowDriveOnboarding(context, ref));
     });
     // Kendi e-posta → uid kaydını tazele (kişiler/klasör paylaşımı bunu
     // arar — bkz. FriendsRepository). Ucuz (tek doküman, merge), e-postası

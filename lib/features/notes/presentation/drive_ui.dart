@@ -14,6 +14,9 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../../app/theme/app_design.dart' show AppTone;
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_sheet.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../settings/settings_providers.dart';
 import '../data/attachment_repository.dart';
 import '../data/drive_store.dart';
 import '../domain/attachment.dart';
@@ -59,6 +62,73 @@ Future<bool> connectDrive(BuildContext context, WidgetRef ref) async {
     say(l10n.driveConnectFailed(friendlyError(l10n, e)));
     return false;
   }
+}
+
+/// İLK GİRİŞTE DRIVE YÖNLENDİRMESİ (kullanıcı isteği 2026-11-21: "kişi ilk
+/// defa girdiğinde Drive bağlaması için yönlendirme olmalı"): Android'de
+/// Google hesabıyla giren, Drive'ı henüz bağlı OLMAYAN kullanıcıya hesap
+/// başına BİR KEZ kısa levha. Sessiz bağlanma denemesine ([DriveConnectedNotifier])
+/// süre tanınır; izin zaten verilmişse levha çıkmaz. "Sonra" da kaydedilir
+/// (her açılışta sormaz); bağlantı Ayarlar → Ekler'de kalır.
+Future<void> maybeShowDriveOnboarding(BuildContext context, WidgetRef ref) async {
+  if (ref.read(attachmentSyncModeProvider) != AttachmentSyncMode.drive) return;
+  final uid = ref.read(currentUidProvider);
+  if (uid == null) return;
+  final prefs = ref.read(sharedPreferencesProvider);
+  final key = 'drive_onboard_shown_$uid';
+  if (prefs.getBool(key) ?? false) return;
+  await Future<void>.delayed(const Duration(seconds: 2));
+  if (!context.mounted || ref.read(driveConnectedProvider)) return;
+  if (prefs.getBool(key) ?? false) return;
+  await prefs.setBool(key, true);
+  if (!context.mounted) return;
+  final connect = await showAppSheet<bool>(
+    context: context,
+    showDragHandle: true,
+    builder: (ctx) {
+      final l10n = ctx.l10n;
+      final scheme = Theme.of(ctx).colorScheme;
+      return SafeArea(
+        child: Padding(
+          key: const ValueKey('drive-onboarding'),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_to_drive_outlined, size: 48, color: scheme.primary),
+              const SizedBox(height: 12),
+              Text(
+                l10n.driveOnboardTitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(ctx).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.driveOnboardBody,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  key: const ValueKey('drive-onboarding-connect'),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  icon: const Icon(Icons.link),
+                  label: Text(l10n.driveOnboardConnect),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(l10n.driveOnboardLater),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+  if (connect == true && context.mounted) await connectDrive(context, ref);
 }
 
 Future<void> disconnectDrive(BuildContext context, WidgetRef ref) async {

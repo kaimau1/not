@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -18,6 +19,7 @@ import 'text_recognize_screen.dart';
 import 'viewer_pen.dart';
 import 'zoom_math.dart';
 import '../editor/attachment_clipboard.dart';
+import '../editor/bubbles_overview.dart';
 import '../editor/pen_tray.dart';
 import '../../../../core/widgets/delayed_spinner.dart';
 import '../../../../app/theme/app_tokens.dart';
@@ -504,6 +506,13 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
     return CachedNetworkImageProvider(a.downloadUrl);
   }
 
+  /// Toplu balon listesi; seçilen balon tek başına açılır.
+  Future<void> _openBubbles() async {
+    final target = await showBubblesOverview(context, _bubbles);
+    if (target == null || !mounted) return;
+    _bubbles.openOnly(target.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -588,14 +597,19 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
             // KIRP / DÖNDÜR ⋮'te (F13.5): ortak çubuk Paylaş · Eki kopyala;
             // türe özgü düzenleme menüde. Çizim MODUNDA gizli — o an araç
             // çubuğu kalem/silgi için, iki kip aynı anda anlamlı değil.
-            if ((widget.onCrop != null || widget.onRotate != null) &&
-                !_editing)
+            // ⋮: alan seç + balon listesi (PDF görüntüleyiciyle aynı) +
+            // kırp/döndür.
+            if (!_editing)
               PopupMenuButton<String>(
                 key: const ValueKey('image-viewer-more'),
                 tooltip: l10n.more,
                 enabled: !_busy,
                 onSelected: (value) {
                   switch (value) {
+                    case 'area':
+                      _toggleAreaMode();
+                    case 'bubbles':
+                      unawaited(_openBubbles());
                     case 'crop':
                       _crop(aspect);
                     case 'left':
@@ -605,6 +619,24 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                   }
                 },
                 itemBuilder: (context) => [
+                  // ALAN SEÇİMİ: görselin bir parçasını (formül, tablo, yazı)
+                  // panoya al ya da yapay zekâya sor — PDF'tekiyle aynı.
+                  CheckedPopupMenuItem(
+                    value: 'area',
+                    checked: _areaMode,
+                    child: Text(l10n.areaSelect),
+                  ),
+                  if (_bubbles.bubbles.isNotEmpty)
+                    PopupMenuItem(
+                      key: const ValueKey('image-bubbles-overview'),
+                      value: 'bubbles',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.forum_outlined),
+                        title: Text(l10n.bubblesOverviewTitle),
+                      ),
+                    ),
                   if (widget.onCrop != null)
                     PopupMenuItem(
                       value: 'crop',
@@ -638,29 +670,60 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                   ],
                 ],
               ),
+            // GÖRSEL ÇUBUĞU = PDF ÇUBUĞU (kullanıcı isteği 2026-11-21:
+            // "görselde balon eklemek zor, alt panelimde yok; görsel ve PDF'in
+            // paneli aynı olmalı"): balon listesi · Balon ekle · Açık metin
+            // (T) · Çiz — PDF görüntüleyiciyle aynı sıra ve davranış.
+            if (widget.onChanged != null)
+              AnimatedBuilder(
+                animation: _bubbles,
+                builder: (context, _) {
+                  final on = _bubbles.adding && !_bubbles.plainMode;
+                  return IconButton(
+                    key: const ValueKey('image-add-bubble'),
+                    tooltip: on ? l10n.bubbleAddDone : l10n.bubbleAdd,
+                    isSelected: on,
+                    icon: Icon(
+                      on ? Icons.chat_bubble : Icons.add_comment_outlined,
+                    ),
+                    onPressed: () {
+                      if (on) {
+                        _bubbles.setAdding(false);
+                        return;
+                      }
+                      if (_editing) _toggleEditing();
+                      _bubbles
+                        ..setPlainMode(false)
+                        ..setAdding(true);
+                    },
+                  );
+                },
+              ),
             // METİN ARACI (Paint'teki gibi): görselin üstüne yazı bırakır.
             // Çizim kipiyle karşılıklı dışlamalı — ikisi de tek parmağı
             // kullanıyor.
             if (widget.onChanged != null)
               AnimatedBuilder(
                 animation: _bubbles,
-                builder: (context, _) => IconButton(
-                  tooltip: _bubbles.adding
-                      ? l10n.bubbleAddDone
-                      : l10n.bubblePlainMode,
-                  isSelected: _bubbles.adding,
-                  icon: Icon(_bubbles.adding ? Icons.check : Icons.title),
-                  onPressed: () {
-                    if (!_bubbles.adding) {
+                builder: (context, _) {
+                  final on = _bubbles.adding && _bubbles.plainMode;
+                  return IconButton(
+                    key: const ValueKey('image-quick-text'),
+                    tooltip: on ? l10n.bubbleAddDone : l10n.bubblePlainMode,
+                    isSelected: on,
+                    icon: Icon(on ? Icons.check : Icons.title),
+                    onPressed: () {
+                      if (on) {
+                        _bubbles.setAdding(false);
+                        return;
+                      }
                       if (_editing) _toggleEditing();
-                      // Görselde varsayılan AÇIK METİN: kullanıcı buraya
-                      // "Paint gibi yazı koymak" için geliyor, balon
-                      // tutamacı için değil.
-                      _bubbles.setPlainMode(true);
-                    }
-                    _bubbles.setAdding(!_bubbles.adding);
-                  },
-                ),
+                      _bubbles
+                        ..setPlainMode(true)
+                        ..setAdding(true);
+                    },
+                  );
+                },
               ),
             if (widget.onChanged != null)
               IconButton(
@@ -669,14 +732,6 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                 icon: Icon(_editing ? Icons.check : Icons.edit_outlined),
                 onPressed: _toggleEditing,
               ),
-            // ALAN SEÇİMİ: görselin bir parçasını (formül, tablo, yazı)
-            // panoya al ya da yapay zekâya sor — PDF/sunumdakiyle aynı kip.
-            IconButton(
-              tooltip: _areaMode ? l10n.areaSelectOff : l10n.areaSelect,
-              isSelected: _areaMode,
-              icon: const Icon(Icons.crop_free),
-              onPressed: _busy ? null : _toggleAreaMode,
-            ),
           ],
         ),
         body: penScope(
