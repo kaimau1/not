@@ -98,6 +98,12 @@ ActionMenu noteMenuModel(
           if (isList) ...[
             MenuAction('toText', l10n.convertToText, Icons.notes_outlined),
             MenuAction('sortItems', l10n.sortItems, Icons.sort),
+            if (!readOnly && note.type == NoteType.checklist)
+              MenuAction(
+                'storeMode',
+                l10n.storeMode,
+                Icons.storefront_outlined,
+              ),
             if (!readOnly && note.items.any((i) => !i.header && i.checked))
               MenuAction(
                 'finishShopping',

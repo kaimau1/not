@@ -4216,5 +4216,17 @@
   "@aiQuietOrganizeApply": {"placeholders": {"count": {"type": "int"}}},
   "aiQuietOrganizeApplied": "{count} not güncellendi",
   "@aiQuietOrganizeApplied": {"placeholders": {"count": {"type": "int"}}},
-  "aiQuietOrganizeBoth": "Başlık + etiket birlikte"
+  "aiQuietOrganizeBoth": "Başlık + etiket birlikte",
+  "exportMarkdownZip": "Markdown (.zip) dışa aktar",
+  "exportMarkdownZipInfo": "Notlarını klasör düzeninde açık .md dosyaları olarak dışa aktarır",
+  "exportMarkdownZipEmpty": "Dışa aktarılacak not yok",
+  "exportMarkdownZipDone": "{count} not Markdown (.zip) olarak dışa aktarıldı",
+  "@exportMarkdownZipDone": {"placeholders": {"count": {"type": "int"}}},
+  "storeMode": "Mağaza kipi",
+  "storeModeHideChecked": "Alınanları gizle",
+  "storeModeShowChecked": "Alınanları göster",
+  "storeModeRemaining": "{remaining} / {total} kaldı",
+  "@storeModeRemaining": {"placeholders": {"remaining": {"type": "int"}, "total": {"type": "int"}}},
+  "storeModeAllDone": "Hepsi tamam!",
+  "storeModeAddHint": "Aklına geleni hızlı ekle…"
 }

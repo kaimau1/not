@@ -9374,4 +9374,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiQuietOrganizeBoth => 'Titles + tags together';
+
+  @override
+  String get exportMarkdownZip => 'Export Markdown (.zip)';
+
+  @override
+  String get exportMarkdownZipInfo =>
+      'Exports notes as portable .md files organized by folder';
+
+  @override
+  String get exportMarkdownZipEmpty => 'No notes to export';
+
+  @override
+  String exportMarkdownZipDone(int count) {
+    return 'Exported $count notes as Markdown (.zip)';
+  }
+
+  @override
+  String get storeMode => 'Store mode';
+
+  @override
+  String get storeModeHideChecked => 'Hide checked';
+
+  @override
+  String get storeModeShowChecked => 'Show checked';
+
+  @override
+  String storeModeRemaining(int remaining, int total) {
+    return '$remaining of $total left';
+  }
+
+  @override
+  String get storeModeAllDone => 'All done!';
+
+  @override
+  String get storeModeAddHint => 'Quickly add an item…';
 }

@@ -1,6 +1,7 @@
 import '../note_link_ui.dart';
 import 'glyph_button.dart';
 import 'ime_hide_detector.dart';
+import 'store_mode_screen.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
 import '../study_cards_screen.dart' show generateCardsForNote;

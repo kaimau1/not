@@ -309,6 +309,24 @@ class _BackupButton extends ConsumerWidget {
   }
 }
 
+/// Kolay dışa aktarma (PLAN §1.4/6): klasör yapısında taşınabilir Markdown `.zip`.
+class _MarkdownExportButton extends ConsumerWidget {
+  const _MarkdownExportButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListTile(
+      key: const ValueKey('settings-export-markdown'),
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.description_outlined),
+      title: Text(context.l10n.exportMarkdownZip),
+      subtitle: Text(context.l10n.exportMarkdownZipInfo),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => exportMarkdownZip(context, ref),
+    );
+  }
+}
+
 /// "YEDEĞİM GERÇEKTEN VAR MI?" (F54.2): bulut durumu (Google hesabı mı,
 /// misafir mi) ve bu cihazdaki son tam yedeğin tarihi + not sayısı. Misafir
 /// ve hiç yedeği olmayan kullanıcı uyarı renginde görür.

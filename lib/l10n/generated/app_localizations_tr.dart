@@ -9363,4 +9363,39 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get aiQuietOrganizeBoth => 'Başlık + etiket birlikte';
+
+  @override
+  String get exportMarkdownZip => 'Markdown (.zip) dışa aktar';
+
+  @override
+  String get exportMarkdownZipInfo =>
+      'Notlarını klasör düzeninde açık .md dosyaları olarak dışa aktarır';
+
+  @override
+  String get exportMarkdownZipEmpty => 'Dışa aktarılacak not yok';
+
+  @override
+  String exportMarkdownZipDone(int count) {
+    return '$count not Markdown (.zip) olarak dışa aktarıldı';
+  }
+
+  @override
+  String get storeMode => 'Mağaza kipi';
+
+  @override
+  String get storeModeHideChecked => 'Alınanları gizle';
+
+  @override
+  String get storeModeShowChecked => 'Alınanları göster';
+
+  @override
+  String storeModeRemaining(int remaining, int total) {
+    return '$remaining / $total kaldı';
+  }
+
+  @override
+  String get storeModeAllDone => 'Hepsi tamam!';
+
+  @override
+  String get storeModeAddHint => 'Aklına geleni hızlı ekle…';
 }

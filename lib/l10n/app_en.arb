@@ -3360,5 +3360,17 @@
   "@aiQuietOrganizeApply": {"placeholders": {"count": {"type": "int"}}},
   "aiQuietOrganizeApplied": "{count} notes updated",
   "@aiQuietOrganizeApplied": {"placeholders": {"count": {"type": "int"}}},
-  "aiQuietOrganizeBoth": "Titles + tags together"
+  "aiQuietOrganizeBoth": "Titles + tags together",
+  "exportMarkdownZip": "Export Markdown (.zip)",
+  "exportMarkdownZipInfo": "Exports notes as portable .md files organized by folder",
+  "exportMarkdownZipEmpty": "No notes to export",
+  "exportMarkdownZipDone": "Exported {count} notes as Markdown (.zip)",
+  "@exportMarkdownZipDone": {"placeholders": {"count": {"type": "int"}}},
+  "storeMode": "Store mode",
+  "storeModeHideChecked": "Hide checked",
+  "storeModeShowChecked": "Show checked",
+  "storeModeRemaining": "{remaining} of {total} left",
+  "@storeModeRemaining": {"placeholders": {"remaining": {"type": "int"}, "total": {"type": "int"}}},
+  "storeModeAllDone": "All done!",
+  "storeModeAddHint": "Quickly add an item…"
 }
