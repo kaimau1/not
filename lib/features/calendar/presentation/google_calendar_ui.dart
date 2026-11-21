@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/note_colors.dart';
+import '../../../core/app_icons.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
@@ -409,7 +410,7 @@ IconData _noteTypeIcon(NoteType type) => switch (type) {
   NoteType.ordered => Icons.format_list_numbered_rounded,
   NoteType.pdf => Icons.picture_as_pdf_outlined,
   NoteType.slides => Icons.slideshow_outlined,
-  NoteType.archive => Icons.inventory_2_outlined,
+  NoteType.archive => AppIcons.archive,
   NoteType.text => Icons.sticky_note_2_outlined,
 };
 
@@ -669,7 +670,7 @@ class _LinkedNotePreviewCard extends StatelessWidget {
                               ),
                             if (audios > 0)
                               _PreviewMetaChip(
-                                icon: Icons.mic_none_rounded,
+                                icon: AppIcons.voiceRecord,
                                 label: '$audios',
                               ),
                             if (hasInk)
@@ -1044,7 +1045,7 @@ Future<void> showCalendarNotePreviewSheet(
                             ),
                           if (audios > 0)
                             _PreviewMetaChip(
-                              icon: Icons.mic_none_rounded,
+                              icon: AppIcons.voiceRecord,
                               label: '$audios',
                             ),
                           if (hasInk)
