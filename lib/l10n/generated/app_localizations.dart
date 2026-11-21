@@ -16663,6 +16663,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Aklına geleni hızlı ekle…'**
   String get storeModeAddHint;
+
+  /// No description provided for @backupPasswordTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek parolası (isteğe bağlı)'**
+  String get backupPasswordTitle;
+
+  /// No description provided for @backupPasswordInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parola belirlersen yedek AES-256 ile şifrelenir. Parolayı unutursan yedek açılamaz.'**
+  String get backupPasswordInfo;
+
+  /// No description provided for @backupPasswordHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parola'**
+  String get backupPasswordHint;
+
+  /// No description provided for @backupPasswordConfirmHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parolayı doğrula'**
+  String get backupPasswordConfirmHint;
+
+  /// No description provided for @backupPasswordMismatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parolalar eşleşmiyor'**
+  String get backupPasswordMismatch;
+
+  /// No description provided for @backupWithoutPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parolasız yedekle'**
+  String get backupWithoutPassword;
+
+  /// No description provided for @backupWithPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifreli yedekle'**
+  String get backupWithPassword;
+
+  /// No description provided for @backupEnterPasswordTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şifreli yedek'**
+  String get backupEnterPasswordTitle;
+
+  /// No description provided for @backupEnterPasswordBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu yedek parola ile korunuyor. Geri yüklemek için parolayı gir.'**
+  String get backupEnterPasswordBody;
+
+  /// No description provided for @backupWrongPassword.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parola yanlış veya yedek çözülemedi'**
+  String get backupWrongPassword;
 }
 
 class _AppLocalizationsDelegate

@@ -5,12 +5,15 @@ import 'backup_service.dart';
 /// Yedeği doğrudan DOSYAYA akıtan hedef (cihaz; web'de kullanılmaz). Her ek
 /// geldiği anda ZIP'e yazılır — yüzlerce MB'lık yedek bellekte birikmez.
 class FileBackupSink implements BackupSink {
-  FileBackupSink(this.path) {
+  FileBackupSink(this.path, {String? password})
+    : _zip = ZipFileEncoder(
+        password: password != null && password.isNotEmpty ? password : null,
+      ) {
     _zip.create(path);
   }
 
   final String path;
-  final _zip = ZipFileEncoder();
+  final ZipFileEncoder _zip;
 
   @override
   void add(String name, List<int> bytes) =>
@@ -21,5 +24,8 @@ class FileBackupSink implements BackupSink {
 }
 
 /// Dosyadaki yedeği TEMBEL açar: girdiler ancak okunduğunda açılır.
-Archive openBackupFile(String path) =>
-    ZipDecoder().decodeStream(InputFileStream(path));
+Archive openBackupFile(String path, {String? password}) => ZipDecoder()
+    .decodeStream(
+      InputFileStream(path),
+      password: password != null && password.isNotEmpty ? password : null,
+    );

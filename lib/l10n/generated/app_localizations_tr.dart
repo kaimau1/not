@@ -9398,4 +9398,36 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get storeModeAddHint => 'Aklına geleni hızlı ekle…';
+
+  @override
+  String get backupPasswordTitle => 'Yedek parolası (isteğe bağlı)';
+
+  @override
+  String get backupPasswordInfo =>
+      'Parola belirlersen yedek AES-256 ile şifrelenir. Parolayı unutursan yedek açılamaz.';
+
+  @override
+  String get backupPasswordHint => 'Parola';
+
+  @override
+  String get backupPasswordConfirmHint => 'Parolayı doğrula';
+
+  @override
+  String get backupPasswordMismatch => 'Parolalar eşleşmiyor';
+
+  @override
+  String get backupWithoutPassword => 'Parolasız yedekle';
+
+  @override
+  String get backupWithPassword => 'Şifreli yedekle';
+
+  @override
+  String get backupEnterPasswordTitle => 'Şifreli yedek';
+
+  @override
+  String get backupEnterPasswordBody =>
+      'Bu yedek parola ile korunuyor. Geri yüklemek için parolayı gir.';
+
+  @override
+  String get backupWrongPassword => 'Parola yanlış veya yedek çözülemedi';
 }
