@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Akıllı liste Mağaza kipi (AL-5) + Markdown (.zip) kolay dışa aktarma (21 Kasım, P90, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) herhangi bir onay kutulu liste notunda ⋮ → **Mağaza kipi** → büyük satırlara tek elle dokununca klavye açılmadan işaretleniyor mu, üstte kalan sayı + ilerleme çubuğu güncelleniyor mu, **Alınanları gizle** / **Reyona göre sırala** / alttan hızlı ekle / **Alınanları tamamla** düzgün çalışıyor mu; (2) Ayarlar → Yedekle → **Markdown (.zip) dışa aktar** → kilitli not varsa kimlik sorup klasör yapısında `.md` dosyaları içeren `.zip` kaydediyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Pro AI sadeleştirme: sohbet, kısa/ayrıntılı özet ve toplu Sessiz düzen (21 Kasım, P89, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) bir notta ✨ → **Sohbet** → üstteki eski Soru-cevap / Beyin fırtınası kip çipleri ve üst ana hat çubuğu kalkmış mı; öneri çipleri (Ana hat · Fikir ver · Eksikleri bul) temiz çalışıyor mu; (2) bir notta ✨ → **Özet** → sonuç levhasında **Kısa / Ayrıntılı** anahtarı görünüyor mu, kısa → ayrıntılı → kısa dönünce ikinci kısa anında önbellekten geliyor mu; (3) AI merkezinde **Sessiz düzen** → başlıksız veya etiketsiz notlar için tek istekte başlık+etiket önerileri listelenip seçilerek uygulanıyor mu, **Geri al** hepsini geri alıyor mu.
   Yanlışsa: madde numarasını yaz.

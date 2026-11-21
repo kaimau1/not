@@ -23,6 +23,7 @@ import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/backup_files.dart';
 import '../../notes/data/backup_service.dart';
 import '../../notes/data/import_service.dart';
+import '../../notes/data/markdown_export.dart';
 import '../../notes/data/notes_repository.dart';
 import '../settings_providers.dart' show sharedPreferencesProvider;
 
@@ -166,6 +167,73 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
     }
   } on BackupCancelled {
     messenger.showMessage(l10n.backupCancelled);
+  } catch (e) {
+    messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
+  }
+}
+
+/// Kolay dışa aktarma (PLAN §1.4/6): tüm etkin notları klasör düzeninde
+/// standart Markdown (`.md`) dosyaları olarak tek `.zip` arşivinde dışa aktarır.
+Future<void> exportMarkdownZip(BuildContext context, WidgetRef ref) async {
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  final notes = ref.read(notesStreamProvider).value;
+  if (notes == null) return;
+  final active = [
+    for (final n in notes)
+      if (n.deletedAt == null) n,
+  ];
+  if (active.isEmpty) {
+    messenger.showMessage(l10n.exportMarkdownZipEmpty);
+    return;
+  }
+  if (active.any((n) => n.locked) &&
+      !await authenticateForNote(l10n.unlockAuthReason)) {
+    return;
+  }
+  if (!context.mounted) return;
+  final folders = ref.read(foldersStreamProvider).value ?? const [];
+  final name = markdownExportFileName();
+  try {
+    final isEn = l10n.localeName.startsWith('en');
+    final result = buildMarkdownZip(
+      active,
+      folders: folders,
+      archiveFolderName: l10n.archive,
+      untitled: l10n.untitledNote,
+      pagePrefix: isEn ? 'Page' : 'Sayfa',
+      attachmentsHeading: isEn ? 'Attachments' : 'Ekler',
+    );
+    final XFile file;
+    if (kIsWeb) {
+      file = XFile.fromData(
+        result.bytes,
+        name: name,
+        mimeType: 'application/zip',
+      );
+    } else {
+      final dir = await getTemporaryDirectory();
+      final path = '${dir.path}/$name';
+      await File(path).writeAsBytes(result.bytes, flush: true);
+      file = XFile(path, mimeType: 'application/zip', name: name);
+    }
+    if (!kIsWeb && Platform.isAndroid) {
+      final saved = await _systemChannel.invokeMethod<bool>('saveDocument', {
+        'path': file.path,
+        'name': name,
+        'mimeType': 'application/zip',
+      });
+      if (saved ?? false) {
+        messenger.showMessage(l10n.exportMarkdownZipDone(result.exportedCount));
+      }
+      return;
+    }
+    final shared = await SharePlus.instance.share(
+      ShareParams(files: [file], subject: l10n.exportMarkdownZip),
+    );
+    if (shared.status != ShareResultStatus.dismissed) {
+      messenger.showMessage(l10n.exportMarkdownZipDone(result.exportedCount));
+    }
   } catch (e) {
     messenger.showMessage(l10n.genericError(friendlyError(l10n, e)));
   }

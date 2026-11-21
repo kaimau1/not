@@ -16603,6 +16603,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Başlık + etiket birlikte'**
   String get aiQuietOrganizeBoth;
+
+  /// No description provided for @exportMarkdownZip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Markdown (.zip) dışa aktar'**
+  String get exportMarkdownZip;
+
+  /// No description provided for @exportMarkdownZipInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarını klasör düzeninde açık .md dosyaları olarak dışa aktarır'**
+  String get exportMarkdownZipInfo;
+
+  /// No description provided for @exportMarkdownZipEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dışa aktarılacak not yok'**
+  String get exportMarkdownZipEmpty;
+
+  /// No description provided for @exportMarkdownZipDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not Markdown (.zip) olarak dışa aktarıldı'**
+  String exportMarkdownZipDone(int count);
+
+  /// No description provided for @storeMode.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mağaza kipi'**
+  String get storeMode;
+
+  /// No description provided for @storeModeHideChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınanları gizle'**
+  String get storeModeHideChecked;
+
+  /// No description provided for @storeModeShowChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınanları göster'**
+  String get storeModeShowChecked;
+
+  /// No description provided for @storeModeRemaining.
+  ///
+  /// In tr, this message translates to:
+  /// **'{remaining} / {total} kaldı'**
+  String storeModeRemaining(int remaining, int total);
+
+  /// No description provided for @storeModeAllDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hepsi tamam!'**
+  String get storeModeAllDone;
+
+  /// No description provided for @storeModeAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aklına geleni hızlı ekle…'**
+  String get storeModeAddHint;
 }
 
 class _AppLocalizationsDelegate

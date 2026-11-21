@@ -518,6 +518,8 @@ extension _EditorActions on _NoteEditorScreenState {
         _convertToList();
       case 'sortItems':
         await _sortItems();
+      case 'storeMode':
+        await _openStoreMode();
       case 'finishShopping':
         _finishShoppingList();
       case 'imagesToFiles':
@@ -973,6 +975,72 @@ extension _EditorActions on _NoteEditorScreenState {
       immediate: true,
     );
     _showUndoSnack(l10n.finishShoppingDone(checked.length));
+  }
+
+  /// AL-5 Mağaza kipi: tek elle rahat işaretleme, reyon sırası, hızlı ekle.
+  Future<void> _openStoreMode() async {
+    final note = _note;
+    if (note == null || _readOnly || note.type != NoteType.checklist) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    final l10n = context.l10n;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => StoreModeScreen(
+          title: note.displayTitle,
+          initialItems: note.items,
+          onToggleItem: (id) {
+            List<NoteItem> updated = _note?.items ?? const [];
+            _mutate((n) {
+              updated = [
+                for (final i in n.items)
+                  if (i.id == id) i.copyWith(checked: !i.checked) else i,
+              ];
+              return n.copyWith(items: updated);
+            }, immediate: true);
+            return updated;
+          },
+          onAddItem: (raw) {
+            final cur = _note;
+            if (cur == null) return const [];
+            final kind = detectNoteListKind(cur, locale: l10n.localeName);
+            final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+            List<NoteItem> updated = cur.items;
+            _mutate((n) {
+              updated = insertItemsBySmartGroup(
+                n.items,
+                [NoteItem(id: const Uuid().v4(), text: raw)],
+                kind: kind,
+                locale: l10n.localeName,
+                learnedGroups: learned,
+              );
+              return n.copyWith(items: updated);
+            }, immediate: true);
+            return updated;
+          },
+          onSortByGroup: () {
+            final cur = _note;
+            if (cur == null) return const [];
+            final kind = detectNoteListKind(cur, locale: l10n.localeName);
+            final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+            List<NoteItem> updated = cur.items;
+            _mutate((n) {
+              updated = sortItemsBySmartGroup(
+                n.items,
+                kind: kind,
+                locale: l10n.localeName,
+                learnedGroups: learned,
+              );
+              return n.copyWith(items: updated);
+            }, immediate: true);
+            return updated;
+          },
+          onFinishChecked: () {
+            _finishShoppingList();
+            return _note?.items ?? const [];
+          },
+        ),
+      ),
+    );
   }
 
   /// **Dışa aktarma** — eski "PDF olarak dışa aktar" maddesinin yerini alır.

@@ -799,6 +799,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: 'yedek disa aktar',
           ),
           _SettingRow(
+            const _MarkdownExportButton(),
+            title: l10n.exportMarkdownZip,
+            keywords: 'markdown md zip disa aktar obsidian notion',
+          ),
+          _SettingRow(
             const _RestoreButton(),
             title: l10n.importBackup,
             keywords: 'geri yukle ice aktar',
