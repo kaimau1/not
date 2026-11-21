@@ -9468,4 +9468,30 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get aiPhotoToStructuredNoteInfo =>
       'Önce cihazda okur, başlık ve maddelere ayırır';
+
+  @override
+  String get docSuggestSummary => 'Özetle';
+
+  @override
+  String get docPromptSummary =>
+      'Bu belgeyi kısa ve anlaşılır biçimde özetle; önemli bilgilerin sayfa numaralarını [s. N] olarak belirt.';
+
+  @override
+  String get docSuggestKeyPoints => 'Ana noktalar';
+
+  @override
+  String get docPromptKeyPoints =>
+      'Bu belgedeki en önemli 5 noktayı sayfa numaralarıyla [s. N] listele.';
+
+  @override
+  String get docSuggestActions => 'Tarih ve görevler';
+
+  @override
+  String get docPromptActions =>
+      'Bu belgede geçen önemli tarihleri, kararları ve yapılacakları sayfa numaralarıyla [s. N] çıkar.';
+
+  @override
+  String docPageCitation(int page) {
+    return 's. $page';
+  }
 }

@@ -1653,7 +1653,9 @@ class GeminiService {
             'text':
                 '"$fileName" adlı bu PDF hakkında sorulara Türkçe, kısa '
                 've net yanıt ver. Yanıtları yalnızca belgeye dayandır; '
-                'belgede olmayanı uydurma, bulamazsan söyle.',
+                'belgede olmayanı uydurma, bulamazsan söyle. Her önemli '
+                'bilgi veya alıntının yanına belgedeki sayfa numarasını '
+                '[s. N] biçiminde ekle (ör. [s. 3] veya [s. 4-5]).',
           },
         ],
       },
@@ -2566,4 +2568,38 @@ StructuredOcrNote parseStructuredOcrNote(
     lines: lines,
     suggestedType: NoteType.text,
   );
+}
+
+/// PDF sohbet yanıtındaki sayfa atıflarını çıkarır (PLAN §1.6 A4):
+/// `[s. 3]`, `[s. 4-5]`, `[s. 2, 7]`, `(Sayfa 6)`, `page 8`, `p. 12` gibi
+/// kalıplardan benzersiz, artan sıralı geçerli sayfa numaralarını döner.
+List<int> extractPdfPageCitations(String text) {
+  final found = <int>{};
+  final re = RegExp(
+    r'(?:(?:\[|\(|\b)(?:s\.|sayfa|sf\.|p\.|pp\.|page|pages)\s*)(\d{1,4}(?:\s*[-–,]\s*\d{1,4})*)',
+    caseSensitive: false,
+  );
+  for (final m in re.allMatches(text)) {
+    final group = m.group(1);
+    if (group == null) continue;
+    for (final part in group.split(',')) {
+      final range = part.split(RegExp(r'[-–]'));
+      if (range.length == 2) {
+        final a = int.tryParse(range[0].trim());
+        final b = int.tryParse(range[1].trim());
+        if (a != null && b != null && a > 0 && b >= a && b - a <= 20) {
+          for (var p = a; p <= b; p++) {
+            found.add(p);
+          }
+        } else {
+          if (a != null && a > 0) found.add(a);
+          if (b != null && b > 0) found.add(b);
+        }
+      } else {
+        final p = int.tryParse(part.trim());
+        if (p != null && p > 0) found.add(p);
+      }
+    }
+  }
+  return found.toList()..sort();
 }

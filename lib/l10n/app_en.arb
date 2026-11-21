@@ -3394,5 +3394,13 @@
   "aiPreviewAfter": "After",
   "aiPreviewCompare": "Before / after",
   "aiPhotoToStructuredNote": "Turn into structured note",
-  "aiPhotoToStructuredNoteInfo": "Reads on device first, then organizes title and items"
+  "aiPhotoToStructuredNoteInfo": "Reads on device first, then organizes title and items",
+  "docSuggestSummary": "Summarize",
+  "docPromptSummary": "Summarize this document clearly and concisely, citing page numbers as [p. N].",
+  "docSuggestKeyPoints": "Key points",
+  "docPromptKeyPoints": "List the 5 most important points in this document with page citations [p. N].",
+  "docSuggestActions": "Dates & tasks",
+  "docPromptActions": "Extract important dates, decisions, and action items from this document with page citations [p. N].",
+  "docPageCitation": "p. {page}",
+  "@docPageCitation": {"placeholders": {"page": {"type": "int"}}}
 }

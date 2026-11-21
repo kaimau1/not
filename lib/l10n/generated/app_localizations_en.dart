@@ -9480,4 +9480,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiPhotoToStructuredNoteInfo =>
       'Reads on device first, then organizes title and items';
+
+  @override
+  String get docSuggestSummary => 'Summarize';
+
+  @override
+  String get docPromptSummary =>
+      'Summarize this document clearly and concisely, citing page numbers as [p. N].';
+
+  @override
+  String get docSuggestKeyPoints => 'Key points';
+
+  @override
+  String get docPromptKeyPoints =>
+      'List the 5 most important points in this document with page citations [p. N].';
+
+  @override
+  String get docSuggestActions => 'Dates & tasks';
+
+  @override
+  String get docPromptActions =>
+      'Extract important dates, decisions, and action items from this document with page citations [p. N].';
+
+  @override
+  String docPageCitation(int page) {
+    return 'p. $page';
+  }
 }

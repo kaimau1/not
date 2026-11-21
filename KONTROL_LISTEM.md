@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Pro AI A4: Belgeye sor'da Özetle ilk önerisi ve sayfa numaralı kaynaklar (21 Kasım, P94, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: PDF ekli bir notta ✨ → PDF → **Sor** → boş sohbette ilk öneri düğmesi **Özetle** (yanında Ana noktalar · Tarih ve görevler) görünüyor mu; dokununca gelen yanıtta `[s. N]` sayfa atıfları ve balonun altında `s. N` sayfa kaynak rozetleri çıkıyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Pro AI A5 + A6: Tek "Yazıyı iyileştir" menüsü + Önce/sonra önizleme ve Fotoğraftan yapılı not (21 Kasım, P93, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) herhangi bir notta ✨ → **Yazıyı iyileştir** → tek menüde Düzelt · Kısalt · Uzat · Resmî · Samimi · Liste/Sıralı ve altta Çevir çipleri görünüyor mu; birini seçince sonuç ekranında **Önce / sonra** çipiyle eski ve yeni metin karşılaştırılıp **Notu değiştir** + Geri Al temiz çalışıyor mu; (2) görselli bir notta ✨ → görselin altından **Yapılı nota dönüştür** → önce cihazda okuyup başlık + madde/liste olarak önizliyor, **Yeni not olarak aç** önerilen liste türünde açıyor mu.
   Yanlışsa: madde numarasını yaz.

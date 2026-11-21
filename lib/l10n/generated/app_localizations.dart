@@ -16795,6 +16795,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Önce cihazda okur, başlık ve maddelere ayırır'**
   String get aiPhotoToStructuredNoteInfo;
+
+  /// No description provided for @docSuggestSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özetle'**
+  String get docSuggestSummary;
+
+  /// No description provided for @docPromptSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu belgeyi kısa ve anlaşılır biçimde özetle; önemli bilgilerin sayfa numaralarını [s. N] olarak belirt.'**
+  String get docPromptSummary;
+
+  /// No description provided for @docSuggestKeyPoints.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana noktalar'**
+  String get docSuggestKeyPoints;
+
+  /// No description provided for @docPromptKeyPoints.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu belgedeki en önemli 5 noktayı sayfa numaralarıyla [s. N] listele.'**
+  String get docPromptKeyPoints;
+
+  /// No description provided for @docSuggestActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih ve görevler'**
+  String get docSuggestActions;
+
+  /// No description provided for @docPromptActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu belgede geçen önemli tarihleri, kararları ve yapılacakları sayfa numaralarıyla [s. N] çıkar.'**
+  String get docPromptActions;
+
+  /// No description provided for @docPageCitation.
+  ///
+  /// In tr, this message translates to:
+  /// **'s. {page}'**
+  String docPageCitation(int page);
 }
 
 class _AppLocalizationsDelegate
