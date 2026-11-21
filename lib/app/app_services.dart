@@ -20,6 +20,7 @@ import '../features/notes/data/widget_service.dart';
 import '../features/notes/presentation/lock/note_lock_ui.dart';
 import '../features/notes/presentation/notes_providers.dart';
 import '../features/settings/data/prefs_sync.dart';
+import '../features/settings/data/spell_sync.dart';
 import 'router.dart';
 import '../core/play_build.dart';
 import '../core/save_cadence.dart';
@@ -68,6 +69,8 @@ class _AppServicesState extends ConsumerState<AppServices> {
     (ref) => ref.listen(uploadQueueProvider, _ignore),
     // Kişiye ait tercihler kullanıcı belgesine (F4.5).
     (ref) => ref.listen<void>(prefsSyncProvider, _ignore),
+    // Kişisel yazım sözlüğü (Y-6): açılışta tek okuma, alta atılınca yazma.
+    (ref) => ref.listen<void>(spellSyncProvider, _ignore),
     // Otomatik kaydın bulut sıklığı + uzaktan fren (config/app).
     (ref) => ref.listen<void>(saveCadenceSyncProvider, _ignore),
     (ref) => ref.listen(reminderServiceProvider, _ignore),

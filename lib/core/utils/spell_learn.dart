@@ -63,6 +63,12 @@ class SpellMemory {
   bool fromV1 = false;
 
   Map<int, List<String>>? _byLength;
+  Map<(int, String), List<String>>? _byLenFirst;
+
+  void _invalidateBuckets() {
+    _byLength = null;
+    _byLenFirst = null;
+  }
 
   bool get isEmpty =>
       words.isEmpty && fixes.isEmpty && rejected.isEmpty && keep.isEmpty;
@@ -124,7 +130,7 @@ class SpellMemory {
     final had = words.containsKey(l);
     final before = words[l] ?? 0;
     words[l] = before + by;
-    if (!had) _byLength = null;
+    if (!had || (before < 3 && before + by >= 3)) _invalidateBuckets();
     // Yeni kök bilindi: ek çözücünün eski "bilinmez" yanıtları bayat.
     if (before < 3 && before + by >= 3) _morphCache.clear();
     if (words.length > maxWords) _pruneWords();
@@ -136,7 +142,7 @@ class SpellMemory {
     for (final e in sorted.take(words.length - maxWords * 3 ~/ 4)) {
       words.remove(e.key);
     }
-    _byLength = null;
+    _invalidateBuckets();
   }
 
   /// Notların metninden sözlük ([seedCounts] arka planda sayar).
@@ -144,7 +150,7 @@ class SpellMemory {
     seeded
       ..clear()
       ..addAll(counts);
-    _byLength = null;
+    _invalidateBuckets();
     _morphCache.clear();
   }
 
@@ -166,6 +172,31 @@ class SpellMemory {
       return m;
     }();
     return byLen[len] ?? const [];
+  }
+
+  /// **Y-6 ÖN DİZİN**: uzunluğu [len], ilk harfi [first] ve sıklığı ≥ 3 olan
+  /// bilinen kelimeler. Bulanık arama 29 harfin tamamı yerine yalnız komşu
+  /// ilk harflere bakar (~6–8× daha az aday; kelime sonu < 1 ms).
+  List<String> bucketByFirst(int len, String first) {
+    final index = _byLenFirst ??= () {
+      final m = <(int, String), List<String>>{};
+      final all = <String>{
+        ...kCommonTurkish,
+        ...kCommonEnglish,
+        ...kTrNounRoots,
+        ...kTrClosed,
+        for (final e in words.entries)
+          if (e.value + (seeded[e.key] ?? 0) >= 3) e.key,
+        for (final e in seeded.entries)
+          if (e.value + (words[e.key] ?? 0) >= 3) e.key,
+      };
+      for (final w in all) {
+        if (w.isEmpty) continue;
+        m.putIfAbsent((w.length, w[0]), () => []).add(w);
+      }
+      return m;
+    }();
+    return index[(len, first)] ?? const [];
   }
 
   /// Uygulanacak öğretilmiş düzeltme (iki kez görülen ya da onaylanan).
@@ -244,6 +275,175 @@ class SpellMemory {
     'r': rejected.toList(),
     'k': keep.toList(),
   };
+
+  /// **Y-6 SÖZLÜK EŞİTLEME** belgesi: yalnız kişisel kararlar (`keep`,
+  /// `rejected`, `fixes`). 5000 kelimelik ham sıklık tablosu buluta GİTMEZ.
+  Map<String, Object?> toSyncMap() => {
+    'v': 1,
+    'k': (keep.toList()..sort()),
+    'r': (rejected.toList()..sort()),
+    'f': {
+      for (final k in fixes.keys.toList()..sort())
+        k: [fixes[k]!.$1, fixes[k]!.$2],
+    },
+  };
+
+  /// Eşitlemeden gelen birleşik belgeyi bu hafızaya uygular; değişiklik olduysa
+  /// true döner.
+  bool applySyncMap(Map<String, Object?> sync) {
+    final nextKeep = <String>{
+      for (final e in (sync['k'] as List?) ?? const []) '$e',
+    };
+    final nextRejected = <String>{
+      for (final e in (sync['r'] as List?) ?? const []) '$e',
+    };
+    final nextFixes = <String, (String, int)>{};
+    final rawF = sync['f'];
+    if (rawF is Map) {
+      rawF.forEach((k, v) {
+        if (v is List && v.length >= 2 && v[1] is num) {
+          nextFixes['$k'] = ('${v[0]}', (v[1] as num).toInt());
+        }
+      });
+    }
+    var changed =
+        nextKeep.length != keep.length ||
+        !keep.containsAll(nextKeep) ||
+        nextRejected.length != rejected.length ||
+        !rejected.containsAll(nextRejected) ||
+        nextFixes.length != fixes.length;
+    if (!changed) {
+      for (final e in nextFixes.entries) {
+        if (fixes[e.key] != e.value) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (!changed) return false;
+    keep
+      ..clear()
+      ..addAll(nextKeep);
+    rejected
+      ..clear()
+      ..addAll(nextRejected);
+    fixes
+      ..clear()
+      ..addAll(nextFixes);
+    _invalidateBuckets();
+    _morphCache.clear();
+    return true;
+  }
+
+  /// Üç yönlü eşitleme birleştirmesi ([local], [remote], son ortak [snapshot]):
+  /// silmeler de (bir tarafta kaldırılan kelime/düzeltme) öbür cihaza yayılır.
+  static ({
+    Map<String, Object?> merged,
+    bool localChanged,
+    bool remoteChanged,
+  })
+  mergeSync({
+    required Map<String, Object?> local,
+    required Map<String, Object?> remote,
+    required Map<String, Object?> snapshot,
+  }) {
+    Set<String> setOf(Map<String, Object?> m, String key) => {
+      for (final e in (m[key] as List?) ?? const []) '$e',
+    };
+    Set<String> mergeSet(String key) {
+      final l = setOf(local, key);
+      final r = setOf(remote, key);
+      final s = setOf(snapshot, key);
+      final out = <String>{};
+      for (final item in {...l, ...r}) {
+        final inL = l.contains(item);
+        final inR = r.contains(item);
+        final inS = s.contains(item);
+        if (inL && inR) {
+          out.add(item);
+        } else if (inL && !inS) {
+          out.add(item);
+        } else if (inR && !inS) {
+          out.add(item);
+        }
+      }
+      return out;
+    }
+
+    Map<String, (String, int)> mapOf(Map<String, Object?> m) {
+      final out = <String, (String, int)>{};
+      final raw = m['f'];
+      if (raw is Map) {
+        raw.forEach((k, v) {
+          if (v is List && v.length >= 2 && v[1] is num) {
+            out['$k'] = ('${v[0]}', (v[1] as num).toInt());
+          }
+        });
+      }
+      return out;
+    }
+
+    final lf = mapOf(local);
+    final rf = mapOf(remote);
+    final sf = mapOf(snapshot);
+    final mergedFixes = <String, (String, int)>{};
+    for (final k in {...lf.keys, ...rf.keys}) {
+      final lv = lf[k];
+      final rv = rf[k];
+      final sv = sf[k];
+      if (lv != null && rv != null) {
+        if (lv == rv) {
+          mergedFixes[k] = lv;
+        } else if (lv != sv && rv == sv) {
+          mergedFixes[k] = lv;
+        } else if (rv != sv && lv == sv) {
+          mergedFixes[k] = rv;
+        } else {
+          mergedFixes[k] = lv.$2 >= rv.$2 ? lv : rv;
+        }
+      } else if (lv != null && sv == null) {
+        mergedFixes[k] = lv;
+      } else if (rv != null && sv == null) {
+        mergedFixes[k] = rv;
+      }
+    }
+
+    final mk = mergeSet('k');
+    final mr = mergeSet('r');
+    final merged = <String, Object?>{
+      'v': 1,
+      'k': (mk.toList()..sort()),
+      'r': (mr.toList()..sort()),
+      'f': {
+        for (final k in mergedFixes.keys.toList()..sort())
+          k: [mergedFixes[k]!.$1, mergedFixes[k]!.$2],
+      },
+    };
+
+    bool sameSet(Set<String> a, Set<String> b) =>
+        a.length == b.length && a.containsAll(b);
+    bool sameMap(Map<String, (String, int)> a, Map<String, (String, int)> b) {
+      if (a.length != b.length) return false;
+      for (final e in a.entries) {
+        if (b[e.key] != e.value) return false;
+      }
+      return true;
+    }
+
+    final localChanged =
+        !sameSet(mk, setOf(local, 'k')) ||
+        !sameSet(mr, setOf(local, 'r')) ||
+        !sameMap(mergedFixes, lf);
+    final remoteChanged =
+        !sameSet(mk, setOf(remote, 'k')) ||
+        !sameSet(mr, setOf(remote, 'r')) ||
+        !sameMap(mergedFixes, rf);
+    return (
+      merged: merged,
+      localChanged: localChanged,
+      remoteChanged: remoteChanged,
+    );
+  }
 
   String encode() => jsonEncode(toJson());
 

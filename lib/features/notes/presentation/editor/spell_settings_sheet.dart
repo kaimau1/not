@@ -12,15 +12,16 @@ import 'spell_learned_screen.dart';
 /// (Y-4: Kapalı / Yalnız göster / Otomatik düzelt), ÖĞRENEN düzeltme
 /// anahtarı, öğrenilenleri silme (2026-11-08).
 Future<void> showSpellSettings(
-  BuildContext context,
-) => showModalBottomSheet<void>(
+  BuildContext context, {
+  VoidCallback? onReviewNote,
+}) => showModalBottomSheet<void>(
   context: context,
   showDragHandle: true,
   builder: (sheet) {
     final l10n = sheet.l10n;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: AppSpace.m),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -28,6 +29,16 @@ Future<void> showSpellSettings(
               key: ValueKey('spell-mode'),
               inset: AppSpace.l,
             ),
+            if (onReviewNote != null)
+              ListTile(
+                key: const ValueKey('spell-review-note'),
+                leading: const Icon(Icons.fact_check_outlined),
+                title: Text(l10n.spellReviewNoteOption),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  onReviewNote();
+                },
+              ),
             ValueListenableBuilder<bool>(
               valueListenable: AutoSpell.learning,
               builder: (_, on, _) => SwitchListTile(

@@ -8203,7 +8203,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get spellLearnSubtitle =>
-      'Kendi düzelttiğin ve klavye önerisinden seçtiğin kelimeleri öğrenir (Türkçe, İngilizce, Çince). Yalnız bu cihazda tutulur.';
+      'Kendi düzelttiğin ve klavye önerisinden seçtiğin kelimeleri öğrenir (Türkçe, İngilizce, Çince). Kişisel sözlüğün hesabınla eşitlenir.';
 
   @override
   String spellLearnedCount(int count) {
@@ -8242,6 +8242,40 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get spellKeepInNote => 'Bu notta dokunma';
+
+  @override
+  String get spellReviewAction => 'Yazımı denetle';
+
+  @override
+  String get spellReviewNoteOption => 'Bu notu toplu denetle';
+
+  @override
+  String get spellReviewClean => 'Yazım hatası bulunamadı';
+
+  @override
+  String get spellReviewCleanHint =>
+      'Bu nottaki kelimeler sözlükle uyumlu görünüyor.';
+
+  @override
+  String spellReviewFixAll(int count) {
+    return 'Tümünü düzelt ($count)';
+  }
+
+  @override
+  String spellReviewApply(int count) {
+    return 'Uygula ($count)';
+  }
+
+  @override
+  String get spellReviewSkip => 'Atla';
+
+  @override
+  String get spellReviewHintBadge => 'Bağlam ipucu';
+
+  @override
+  String spellReviewFixed(int count) {
+    return '$count yazım düzeltildi';
+  }
 
   @override
   String get lineTaskRetime => 'Zamanı değiştir';

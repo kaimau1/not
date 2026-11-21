@@ -519,4 +519,39 @@ void main() {
     expect(find.text('kalen → kalem'), findsNothing);
     await tester.pump(const Duration(seconds: 5)); // Erteli kayıt.
   });
+
+  group('Y-6 ön dizin (boy + ilk harf)', () {
+    test('bucketByFirst yalnız sık kelimeleri önbellekler ve geçersizleştirir', () {
+      final m = SpellMemory();
+      m.addWord('togg');
+      m.addWord('togg');
+      expect(m.bucketByFirst(4, 't'), isNot(contains('togg')));
+      m.addWord('togg');
+      expect(m.bucketByFirst(4, 't'), contains('togg'));
+      m.seed(seedCounts(['tost tost tost']));
+      expect(m.bucketByFirst(4, 't'), containsAll(['togg', 'tost']));
+    });
+
+    test('bulanık öneri 2000 kelimelik sözlükte kelime başına < 1 ms', () {
+      final m = SpellMemory();
+      final seed = <String, int>{};
+      for (var i = 0; i < 2000; i++) {
+        seed['kelime$i'] = 5;
+      }
+      m.seed(seed);
+      // Isınma: ön dizin ilk çağrıda kurulur.
+      SpellEngine.suggestions('merahba', m);
+      final samples = ['merahba', 'tesekkur', 'toplantıa', 'fatra', 'arkadsa'];
+      final sw = Stopwatch()..start();
+      const rounds = 20;
+      for (var r = 0; r < rounds; r++) {
+        for (final w in samples) {
+          SpellEngine.suggestions(w, m);
+        }
+      }
+      sw.stop();
+      final perWordUs = sw.elapsedMicroseconds / (rounds * samples.length);
+      expect(perWordUs, lessThan(1000), reason: 'ortalama $perWordUs µs');
+    });
+  });
 }

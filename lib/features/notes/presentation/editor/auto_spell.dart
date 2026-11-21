@@ -193,6 +193,14 @@ class AutoSpell {
     _bump();
   }
 
+  /// Y-6: bulutla birleştirilmiş kişisel yazım hafızasını uygular ve
+  /// hemen kaydeder (altı çizili önbellekler de boşalır).
+  static Future<void> applyRemoteSync(Map<String, Object?> merged) async {
+    memory.applySyncMap(merged);
+    await _save();
+    _bump();
+  }
+
   // ---- Y-4 altı çizili denetimin menüsü ----------------------------------
 
   /// "Sözlüğe ekle": kelime hiç düzeltilmez, altı çizilmez.
