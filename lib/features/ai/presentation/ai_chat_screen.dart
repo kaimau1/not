@@ -421,6 +421,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                             const SizedBox(height: AppSpace.l),
                             _NoteSuggestions(onPick: _suggest),
                           ],
+                          // BELGEYE SOR (PLAN §1.6 A4): Özet = ilk önerilen
+                          // soru; ardından ana noktalar ve tarih/görevler.
+                          if (_scope == ChatScope.document &&
+                              !busy &&
+                              _loadError == null) ...[
+                            const SizedBox(height: AppSpace.l),
+                            _DocumentSuggestions(onPick: _send),
+                          ],
                         ],
                       ),
                     ),
@@ -446,6 +454,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                             ? _addIdea
                             : null,
                         added: _added.contains(turns[index].text),
+                        showPageCitations: _scope == ChatScope.document,
                       );
                     },
                   ),
@@ -509,6 +518,7 @@ class _Bubble extends StatelessWidget {
     required this.onReport,
     required this.onAdd,
     required this.added,
+    this.showPageCitations = false,
   });
 
   final ChatTurn turn;
@@ -517,12 +527,16 @@ class _Bubble extends StatelessWidget {
   /// Beyin fırtınasında fikri nota ekler; null ise düğme yok.
   final ValueChanged<String>? onAdd;
   final bool added;
+  final bool showPageCitations;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final add = onAdd;
+    final pages = !turn.isUser && showPageCitations
+        ? extractPdfPageCitations(turn.text)
+        : const <int>[];
     final bubble = Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -543,6 +557,8 @@ class _Bubble extends StatelessWidget {
           // KAYNAK NOTLAR (F18.18): yanıtın dayandığı notlar, dokununca açılır.
           if (!turn.isUser && turn.sources.isNotEmpty)
             _SourceChips(ids: turn.sources),
+          // BELGE SAYFA KAYNAKLARI (PLAN §1.6 A4): yanıtta geçen sayfa atıfları.
+          if (pages.isNotEmpty) _PageCitationChips(pages: pages),
           if (!turn.isUser && add != null)
             Align(
               alignment: AlignmentDirectional.centerEnd,
@@ -681,6 +697,107 @@ class _NoteSuggestions extends StatelessWidget {
             onPressed: () => onPick(mode, prompt),
           ),
       ],
+    );
+  }
+}
+
+/// Belgeye sor öneri düğmeleri (PLAN §1.6 A4): Özet = ilk önerilen soru.
+class _DocumentSuggestions extends StatelessWidget {
+  const _DocumentSuggestions({required this.onPick});
+
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: AppSpace.s,
+      runSpacing: AppSpace.s,
+      children: [
+        for (final (key, icon, label, prompt) in [
+          (
+            'summary',
+            Icons.summarize_outlined,
+            l10n.docSuggestSummary,
+            l10n.docPromptSummary,
+          ),
+          (
+            'keypoints',
+            Icons.format_list_bulleted,
+            l10n.docSuggestKeyPoints,
+            l10n.docPromptKeyPoints,
+          ),
+          (
+            'actions',
+            Icons.event_note_outlined,
+            l10n.docSuggestActions,
+            l10n.docPromptActions,
+          ),
+        ])
+          OutlinedButton.icon(
+            key: ValueKey('chat-doc-suggest-$key'),
+            icon: Icon(icon, size: AppIconSize.xs, color: scheme.primary),
+            label: Text(label),
+            onPressed: () => onPick(prompt),
+          ),
+      ],
+    );
+  }
+}
+
+/// PDF yanıtındaki sayfa numaralarını kompakt kaynak rozeti olarak gösterir (A4).
+class _PageCitationChips extends StatelessWidget {
+  const _PageCitationChips({required this.pages});
+
+  final List<int> pages;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpace.s),
+      child: Wrap(
+        spacing: AppSpace.xs,
+        runSpacing: AppSpace.xs,
+        children: [
+          for (final page in pages.take(8))
+            Container(
+              key: ValueKey('chat-page-citation-$page'),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.s,
+                vertical: AppSpace.xxs,
+              ),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                border: Border.all(
+                  color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: AppSpace.xxs,
+                children: [
+                  Icon(
+                    Icons.description_outlined,
+                    size: AppIconSize.xs,
+                    color: scheme.primary,
+                  ),
+                  Text(
+                    l10n.docPageCitation(page),
+                    style: AppText.of(theme).badge.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -16723,6 +16723,156 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Parola yanlış veya yedek çözülemedi'**
   String get backupWrongPassword;
+
+  /// No description provided for @aiWriteImprove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıyı iyileştir'**
+  String get aiWriteImprove;
+
+  /// No description provided for @aiWriteImproveInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzelt, kısalt, uzat, tonu değiştir veya çevir'**
+  String get aiWriteImproveInfo;
+
+  /// No description provided for @improveExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzat ve ayrıntılandır'**
+  String get improveExpand;
+
+  /// No description provided for @improveCasual.
+  ///
+  /// In tr, this message translates to:
+  /// **'Samimi ve doğal'**
+  String get improveCasual;
+
+  /// No description provided for @aiWriteGroupFix.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzelt ve yeniden yaz'**
+  String get aiWriteGroupFix;
+
+  /// No description provided for @aiWriteGroupTone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ton ve uzunluk'**
+  String get aiWriteGroupTone;
+
+  /// No description provided for @aiWriteGroupFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biçime dönüştür'**
+  String get aiWriteGroupFormat;
+
+  /// No description provided for @aiPreviewBefore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce'**
+  String get aiPreviewBefore;
+
+  /// No description provided for @aiPreviewAfter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonra'**
+  String get aiPreviewAfter;
+
+  /// No description provided for @aiPreviewCompare.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce / sonra'**
+  String get aiPreviewCompare;
+
+  /// No description provided for @aiPhotoToStructuredNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılı nota dönüştür'**
+  String get aiPhotoToStructuredNote;
+
+  /// No description provided for @aiPhotoToStructuredNoteInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce cihazda okur, başlık ve maddelere ayırır'**
+  String get aiPhotoToStructuredNoteInfo;
+
+  /// No description provided for @docSuggestSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özetle'**
+  String get docSuggestSummary;
+
+  /// No description provided for @docPromptSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu belgeyi kısa ve anlaşılır biçimde özetle; önemli bilgilerin sayfa numaralarını [s. N] olarak belirt.'**
+  String get docPromptSummary;
+
+  /// No description provided for @docSuggestKeyPoints.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana noktalar'**
+  String get docSuggestKeyPoints;
+
+  /// No description provided for @docPromptKeyPoints.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu belgedeki en önemli 5 noktayı sayfa numaralarıyla [s. N] listele.'**
+  String get docPromptKeyPoints;
+
+  /// No description provided for @docSuggestActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih ve görevler'**
+  String get docSuggestActions;
+
+  /// No description provided for @docPromptActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu belgede geçen önemli tarihleri, kararları ve yapılacakları sayfa numaralarıyla [s. N] çıkar.'**
+  String get docPromptActions;
+
+  /// No description provided for @docPageCitation.
+  ///
+  /// In tr, this message translates to:
+  /// **'s. {page}'**
+  String docPageCitation(int page);
+
+  /// No description provided for @transcriptTakeaways.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özet ve görevler'**
+  String get transcriptTakeaways;
+
+  /// No description provided for @transcriptTakeawaysSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özet'**
+  String get transcriptTakeawaysSummary;
+
+  /// No description provided for @transcriptTakeawaysActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılacaklar'**
+  String get transcriptTakeawaysActions;
+
+  /// No description provided for @transcriptTakeawaysRemind.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatayım mı?'**
+  String get transcriptTakeawaysRemind;
+
+  /// No description provided for @transcriptTakeawaysAddTask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev ekle'**
+  String get transcriptTakeawaysAddTask;
+
+  /// No description provided for @transcriptTakeawaysInsert.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özeti nota ekle'**
+  String get transcriptTakeawaysInsert;
 }
 
 class _AppLocalizationsDelegate

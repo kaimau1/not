@@ -13,6 +13,7 @@ import '../../../core/constants.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/utils/markdown.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/domain/note_type.dart';
 import '../../settings/settings_providers.dart';
 import 'ai_gate.dart';
 import 'ai_policy.dart';
@@ -698,6 +699,38 @@ class GeminiService {
         },
       ]);
 
+  /// **FOTOĞRAFTAN YAPILI NOT** (PLAN §1.6 A5): önce cihaz içi ücretsiz OCR
+  /// metni okur; AI'ya yalnız o metin gider (görsel baytı gönderilmez).
+  /// Tahta, fiş, kartvizit veya el yazısı metnini başlık + düzenli maddelere
+  /// (veya temiz paragraflara) ayırır.
+  Future<StructuredOcrNote> structureOcrText(String rawOcrText) async {
+    final cleaned = rawOcrText.trim();
+    if (cleaned.isEmpty) {
+      return const StructuredOcrNote(
+        title: '',
+        lines: [],
+        suggestedType: NoteType.text,
+      );
+    }
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıdaki metin bir fotoğraftan (tahta, fiş, kartvizit, belge '
+            'veya el yazısı) cihaz içi OCR ile çıkarılmıştır. OCR gürültüsünü '
+            'temizle, metnin dilini ve tüm gerçek bilgileri (tarih, tutar, '
+            'telefon, e-posta, ürün adı) eksiksiz koru; hiçbir şey uydurma.\n'
+            'Yalnızca şu JSON nesnesiyle yanıt ver (başka metin/markdown yok):\n'
+            '{"title":"kısa başlık (en çok 6 sözcük)","kind":"text|checklist|ordered","lines":["satır 1","satır 2"]}\n'
+            '- Alışveriş/fiş/yapılacak listesi ise kind="checklist"\n'
+            '- Adım adım sıralı tarif/akış ise kind="ordered"\n'
+            '- Kartvizit, tahta özeti veya düz metin ise kind="text"\n'
+            '- lines içinde madde işareti veya numara ön eki koyma.\n\n'
+            '---\n$cleaned',
+      },
+    ]);
+    return parseStructuredOcrNote(raw, fallbackText: cleaned);
+  }
+
   /// Belgeden **SEÇİLEN BİR ALANI** (formül, tablo, şekil, el yazısı) modele
   /// sorar — bkz. `AreaSelectLayer`.
   ///
@@ -794,6 +827,45 @@ class GeminiService {
               'sayıyorsa madde işaretli liste olarak yaz.',
         },
       ], chain: ModelChain.transcribe);
+
+  /// **KAYITTAN NOT** (PLAN §1.6 A2): ses/toplantı/ders dökümünden tek akışta
+  /// özet + yapılacak maddeler + "hatırlatayım mı?" tarih/görev önerisi çıkarır.
+  /// Uzun kayıtlar satır sınırlarından parçalanıp ara özetlerle birleştirilir.
+  Future<RecordingTakeaways> summarizeTranscript(String transcript) async {
+    final chunks = chunkTranscriptText(transcript);
+    if (chunks.isEmpty) return const RecordingTakeaways(summary: '');
+    var merged = chunks.first;
+    if (chunks.length > 1) {
+      final parts = <String>[];
+      for (var i = 0; i < chunks.length; i++) {
+        final partial = await _generate([
+          {
+            'text':
+                'Bu uzun kaydın ${i + 1}/${chunks.length}. bölümünü kısaca '
+                'özetle; geçen tüm kararları, yapılacakları ve tarih/saat '
+                'ifadelerini aynen koru. Dili koru, uydurma.\n\n'
+                '---\n${chunks[i]}',
+          },
+        ]);
+        parts.add(partial.trim());
+      }
+      merged = parts.join('\n\n');
+    }
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıdaki ses/toplantı/ders dökümünden kısa bir özet, yapılacak '
+            'maddeler ve (varsa) tarih/zaman içeren hatırlatıcı önerileri çıkar. '
+            'Dökümün dilini koru; metinde olmayan hiçbir şey uydurma.\n'
+            'Yalnızca şu JSON nesnesiyle yanıt ver (başka metin/markdown yok):\n'
+            '{"summary":"2-4 cümlelik net özet","actions":["yapılacak 1","yapılacak 2"],"reminders":[{"title":"ne hatırlatılsın","when":"dökümde geçen tarih/zaman ifadesi (yoksa boş)"}]}\n'
+            '- Yapılacak ya da hatırlatıcı yoksa diziyi boş [] bırak.\n'
+            '- actions içine madde işareti veya numara ön eki koyma.\n\n'
+            '---\n$merged',
+      },
+    ]);
+    return parseRecordingTakeaways(raw, fallbackText: merged);
+  }
 
   /// Satır içi (base64) gönderilebilecek en büyük ses/video. Gemini isteği
   /// ~20 MB'ta keser, base64 %33 büyütür: ham 15 MB güvenli sınır.
@@ -1620,7 +1692,9 @@ class GeminiService {
             'text':
                 '"$fileName" adlı bu PDF hakkında sorulara Türkçe, kısa '
                 've net yanıt ver. Yanıtları yalnızca belgeye dayandır; '
-                'belgede olmayanı uydurma, bulamazsan söyle.',
+                'belgede olmayanı uydurma, bulamazsan söyle. Her önemli '
+                'bilgi veya alıntının yanına belgedeki sayfa numarasını '
+                '[s. N] biçiminde ekle (ör. [s. 3] veya [s. 4-5]).',
           },
         ],
       },
@@ -2444,4 +2518,262 @@ class QuietOrganizeSuggestion {
   final String noteId;
   final String? title;
   final List<String> tags;
+}
+
+/// Fotoğraftan yapılı not çıktısı (PLAN §1.6 A5): başlık, satırlar/maddeler ve
+/// önerilen not türü.
+class StructuredOcrNote {
+  const StructuredOcrNote({
+    required this.title,
+    required this.lines,
+    required this.suggestedType,
+  });
+
+  final String title;
+  final List<String> lines;
+  final NoteType suggestedType;
+
+  /// Önizleme ve ekleme/yeni not için düzenli düz metin.
+  String toFormattedText() {
+    final cleanTitle = title.trim();
+    final cleanLines = [
+      for (final l in lines)
+        if (l.trim().isNotEmpty) l.trim(),
+    ];
+    if (cleanLines.isEmpty) return cleanTitle;
+    if (suggestedType == NoteType.checklist ||
+        suggestedType == NoteType.ordered) {
+      return cleanLines.join('\n');
+    }
+    if (cleanTitle.isEmpty) return cleanLines.join('\n');
+    return '$cleanTitle\n\n${cleanLines.join('\n')}';
+  }
+}
+
+/// [GeminiService.structureOcrText] JSON yanıtını güvenli biçimde ayrıştırır;
+/// model beklenmedik biçimde dönerse satırlara bölerek veri kaybetmez.
+StructuredOcrNote parseStructuredOcrNote(
+  String raw, {
+  String fallbackText = '',
+}) {
+  final stripped = raw
+      .trim()
+      .replaceFirst(RegExp(r'^```(?:json)?\s*', multiLine: true), '')
+      .replaceFirst(RegExp(r'\s*```\s*$'), '')
+      .trim();
+  final start = stripped.indexOf('{');
+  final end = stripped.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try {
+      final decoded = jsonDecode(stripped.substring(start, end + 1));
+      if (decoded is Map) {
+        final title = (decoded['title'] as String? ?? '').trim();
+        final kindStr = (decoded['kind'] as String? ?? '').trim().toLowerCase();
+        final suggestedType = switch (kindStr) {
+          'checklist' || 'list' || 'shopping' => NoteType.checklist,
+          'ordered' || 'numbered' => NoteType.ordered,
+          _ => NoteType.text,
+        };
+        final rawLines = decoded['lines'];
+        final lines = <String>[];
+        if (rawLines is List) {
+          for (final item in rawLines) {
+            final line = item
+                .toString()
+                .trim()
+                .replaceFirst(RegExp(r'^(?:[-*•]\s+|\[\s?[xX]?\s?\]\s+|\d+[.)]\s+)'), '');
+            if (line.isNotEmpty) lines.add(line);
+          }
+        }
+        if (title.isNotEmpty || lines.isNotEmpty) {
+          return StructuredOcrNote(
+            title: title,
+            lines: lines,
+            suggestedType: suggestedType,
+          );
+        }
+      }
+    } catch (_) {
+      // Malformed JSON: fall through to plain-text fallback below.
+    }
+  }
+  final source = stripped.isNotEmpty ? stripped : fallbackText.trim();
+  final lines = [
+    for (final l in source.split('\n'))
+      if (l.trim().isNotEmpty) l.trim(),
+  ];
+  return StructuredOcrNote(
+    title: '',
+    lines: lines,
+    suggestedType: NoteType.text,
+  );
+}
+
+/// PDF sohbet yanıtındaki sayfa atıflarını çıkarır (PLAN §1.6 A4):
+/// `[s. 3]`, `[s. 4-5]`, `[s. 2, 7]`, `(Sayfa 6)`, `page 8`, `p. 12` gibi
+/// kalıplardan benzersiz, artan sıralı geçerli sayfa numaralarını döner.
+List<int> extractPdfPageCitations(String text) {
+  final found = <int>{};
+  final re = RegExp(
+    r'(?:(?:\[|\(|\b)(?:s\.|sayfa|sf\.|p\.|pp\.|page|pages)\s*)(\d{1,4}(?:\s*[-–,]\s*\d{1,4})*)',
+    caseSensitive: false,
+  );
+  for (final m in re.allMatches(text)) {
+    final group = m.group(1);
+    if (group == null) continue;
+    for (final part in group.split(',')) {
+      final range = part.split(RegExp(r'[-–]'));
+      if (range.length == 2) {
+        final a = int.tryParse(range[0].trim());
+        final b = int.tryParse(range[1].trim());
+        if (a != null && b != null && a > 0 && b >= a && b - a <= 20) {
+          for (var p = a; p <= b; p++) {
+            found.add(p);
+          }
+        } else {
+          if (a != null && a > 0) found.add(a);
+          if (b != null && b > 0) found.add(b);
+        }
+      } else {
+        final p = int.tryParse(part.trim());
+        if (p != null && p > 0) found.add(p);
+      }
+    }
+  }
+  return found.toList()..sort();
+}
+
+/// **KAYITTAN NOT** (PLAN §1.6 A2): ses/toplantı/ders dökümünden çıkarılan
+/// tek hatırlatıcı/tarih önerisi.
+class RecordingReminderHint {
+  const RecordingReminderHint({required this.title, this.whenText = ''});
+
+  final String title;
+  final String whenText;
+}
+
+/// **KAYITTAN NOT** (PLAN §1.6 A2) çıktısı: özet + yapılacak maddeler +
+/// "hatırlatayım mı?" önerileri.
+class RecordingTakeaways {
+  const RecordingTakeaways({
+    required this.summary,
+    this.actionItems = const [],
+    this.reminders = const [],
+  });
+
+  final String summary;
+  final List<String> actionItems;
+  final List<RecordingReminderHint> reminders;
+
+  bool get isEmpty =>
+      summary.trim().isEmpty && actionItems.isEmpty && reminders.isEmpty;
+
+  /// Nota eklemek veya yeni not açmak için okunur düz metin.
+  String toNoteText({
+    required String summaryHeading,
+    required String actionsHeading,
+  }) {
+    final buf = StringBuffer();
+    if (summary.trim().isNotEmpty) {
+      buf.writeln(summaryHeading);
+      buf.writeln(summary.trim());
+    }
+    if (actionItems.isNotEmpty) {
+      if (buf.isNotEmpty) buf.writeln();
+      buf.writeln(actionsHeading);
+      for (final item in actionItems) {
+        buf.writeln('- $item');
+      }
+    }
+    return buf.toString().trim();
+  }
+}
+
+/// Uzun dökümü satır sınırlarında en çok [maxChars] uzunluğunda parçalara böler
+/// (A2: uzun kayıt parçalı özet).
+List<String> chunkTranscriptText(String text, {int maxChars = 10000}) {
+  final clean = text.trim();
+  if (clean.isEmpty) return const [];
+  if (clean.length <= maxChars) return [clean];
+  final chunks = <String>[];
+  final lines = clean.split('\n');
+  final buf = StringBuffer();
+  for (final line in lines) {
+    if (buf.isNotEmpty && buf.length + line.length + 1 > maxChars) {
+      chunks.add(buf.toString().trim());
+      buf.clear();
+    }
+    if (line.length > maxChars) {
+      for (var i = 0; i < line.length; i += maxChars) {
+        final end = i + maxChars > line.length ? line.length : i + maxChars;
+        chunks.add(line.substring(i, end).trim());
+      }
+    } else {
+      if (buf.isNotEmpty) buf.writeln();
+      buf.write(line);
+    }
+  }
+  if (buf.isNotEmpty) chunks.add(buf.toString().trim());
+  return chunks;
+}
+
+/// [GeminiService.summarizeTranscript] JSON yanıtını güvenli biçimde ayrıştırır.
+RecordingTakeaways parseRecordingTakeaways(
+  String raw, {
+  String fallbackText = '',
+}) {
+  final stripped = raw
+      .trim()
+      .replaceFirst(RegExp(r'^```(?:json)?\s*', multiLine: true), '')
+      .replaceFirst(RegExp(r'\s*```\s*$'), '')
+      .trim();
+  final start = stripped.indexOf('{');
+  final end = stripped.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try {
+      final decoded = jsonDecode(stripped.substring(start, end + 1));
+      if (decoded is Map) {
+        final summary = (decoded['summary'] as String? ?? '').trim();
+        final actions = <String>[];
+        if (decoded['actions'] is List) {
+          for (final a in decoded['actions'] as List) {
+            final clean = a
+                .toString()
+                .trim()
+                .replaceFirst(
+                  RegExp(r'^(?:[-*•]\s+|\[\s?[xX]?\s?\]\s+|\d+[.)]\s+)'),
+                  '',
+                );
+            if (clean.isNotEmpty) actions.add(clean);
+          }
+        }
+        final reminders = <RecordingReminderHint>[];
+        if (decoded['reminders'] is List) {
+          for (final r in decoded['reminders'] as List) {
+            if (r is Map) {
+              final title = (r['title'] as String? ?? '').trim();
+              final when = (r['when'] as String? ?? '').trim();
+              if (title.isNotEmpty) {
+                reminders.add(
+                  RecordingReminderHint(title: title, whenText: when),
+                );
+              }
+            }
+          }
+        }
+        if (summary.isNotEmpty || actions.isNotEmpty || reminders.isNotEmpty) {
+          return RecordingTakeaways(
+            summary: summary,
+            actionItems: actions,
+            reminders: reminders,
+          );
+        }
+      }
+    } catch (_) {
+      // Malformed JSON: fall through to plain summary.
+    }
+  }
+  return RecordingTakeaways(
+    summary: stripped.isNotEmpty ? stripped : fallbackText.trim(),
+  );
 }

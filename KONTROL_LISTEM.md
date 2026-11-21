@@ -9,6 +9,18 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Pro AI A2: Kayıttan not — dökümden tek akışta Özet, Yapılacaklar ve Hatırlatayım mı? (21 Kasım, P95, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: ses veya video kaydının döküm (transkript) ekranında üstteki **Özet ve görevler** çipine dokun → tek levhada **Özet**, **Yapılacaklar** ve tarihli ifadeler için **Hatırlatayım mı?** kartı geliyor mu; **Görev ekle** görev düzenleyiciyi başlık ve tarihle açıyor, **Özeti nota ekle** metni nota ekliyor mu.
+  Yanlışsa: madde numarasını yaz.
+
+- [ ] **Pro AI A4: Belgeye sor'da Özetle ilk önerisi ve sayfa numaralı kaynaklar (21 Kasım, P94, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: PDF ekli bir notta ✨ → PDF → **Sor** → boş sohbette ilk öneri düğmesi **Özetle** (yanında Ana noktalar · Tarih ve görevler) görünüyor mu; dokununca gelen yanıtta `[s. N]` sayfa atıfları ve balonun altında `s. N` sayfa kaynak rozetleri çıkıyor mu.
+  Yanlışsa: madde numarasını yaz.
+
+- [ ] **Pro AI A5 + A6: Tek "Yazıyı iyileştir" menüsü + Önce/sonra önizleme ve Fotoğraftan yapılı not (21 Kasım, P93, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) herhangi bir notta ✨ → **Yazıyı iyileştir** → tek menüde Düzelt · Kısalt · Uzat · Resmî · Samimi · Liste/Sıralı ve altta Çevir çipleri görünüyor mu; birini seçince sonuç ekranında **Önce / sonra** çipiyle eski ve yeni metin karşılaştırılıp **Notu değiştir** + Geri Al temiz çalışıyor mu; (2) görselli bir notta ✨ → görselin altından **Yapılı nota dönüştür** → önce cihazda okuyup başlık + madde/liste olarak önizliyor, **Yeni not olarak aç** önerilen liste türünde açıyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Takvim hafta/gün ızgarasında gün+saat sürükle-bırak ve görevlerde elle sıralama (21 Kasım, P92, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Takvim → **Hafta** (veya bir güne çift dokunup **Gün** sayfası) → saatli bir etkinliğe/göreve/bağlı nota uzun basıp başka gün ve çeyrek saate sürükle → hedef saat önizleme kutusu görünüyor mu, bırakınca yeni saatine taşınıp **Geri al** çalışıyor mu; tüm gün kaydını saat ızgarasına indirince 1 saatlik kayda dönüşüyor mu; (2) **Görevler** ekranında 2+ açık görev varken sağdaki ☰ tutamaktan (ya da satıra uzun basıp) sürükle → yeni sıra kaydedilip ekranı kapatıp açınca da korunuyor mu.
   Yanlışsa: madde numarasını yaz.

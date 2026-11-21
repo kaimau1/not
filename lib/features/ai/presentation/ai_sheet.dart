@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/connectivity.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/local_file.dart';
 import '../../../core/utils/markdown.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import 'speak_button.dart';
@@ -114,6 +115,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   /// A7 özet uzunluk anahtarı: null = not özeti değil, false = kısa, true = ayrıntılı.
   bool? _summaryDetailed;
 
+  /// A6 önce/sonra karşılaştırma için orijinal metin.
+  String? _beforeText;
+
+  /// A5 fotoğraftan yapılı notun önerilen başlığı (varsa önizleme üstünde).
+  String? _resultHeader;
+
   /// [cacheKey] verilirse çıktı cihazda saklanır ve aynı girdi ikinci kez
   /// model çağırmaz. Anahtar içerikten türetildiği için not/PDF değişince
   /// kendiliğinden tazelenir — saat karşılaştırmasına gerek yok.
@@ -139,6 +146,8 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     NoteType? replaceAsType,
     bool keepChecked = false,
     bool? summaryDetailed,
+    String? beforeText,
+    String? resultHeader,
   }) async {
     // KİLİTLİ notun içeriğinden türeyen çıktı diske yazılmaz: ai_cache düz
     // metin dosyalarıdır, kilidin sakladığı içerik oradan okunabilirdi.
@@ -152,6 +161,8 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       replaceAsType: replaceAsType,
       keepChecked: keepChecked,
       summaryDetailed: summaryDetailed,
+      beforeText: beforeText,
+      resultHeader: resultHeader,
     );
     // Geçmiş etiketi HER asenkron adımdan önce okunur: sonrasında levha
     // kapanmış (context ağaçtan kalkmış) olabilir.
@@ -164,6 +175,8 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       _replaceAsType = replaceAsType;
       _keepChecked = keepChecked;
       _summaryDetailed = summaryDetailed;
+      _beforeText = beforeText;
+      _resultHeader = resultHeader;
     });
     if (cacheKey != null) {
       final cached = await AiCache.read(cacheKey);
@@ -339,165 +352,217 @@ class _AiSheetState extends ConsumerState<AiSheet> {
             'ver, satırları BİRLEŞTİRME, tek paragrafa DÖNÜŞTÜRME, madde '
             'ekleme veya çıkarma. Her satırı tek tek düzelt.';
 
-  Future<void> _pickFixLevel() async {
+  /// **YAZIYI İYİLEŞTİR** (PLAN §1.6 A6): düzeltme, yeniden yazma,
+  /// kısalt/uzat, resmî/samimi ton, liste dönüştürme ve çeviri tek menüde;
+  /// yazım v3 anlık altı çizgiyle çakışmadan not düzeyinde çalışır ve sonuçta
+  /// önce/sonra karşılaştırmalı önizleme sunar.
+  Future<void> _pickWriteImprove() async {
     final l10n = context.l10n;
-    // (etiket, açıklama, istem)
-    final options = <(String, String, String)>[
-      (
-        l10n.fixSimple,
-        l10n.fixSimpleInfo,
-        'Yalnızca yazım, imla, noktalama ve büyük/küçük harf hatalarını '
-            'düzelt. Cümle yapısına, kelime seçimine veya sıralamaya DOKUNMA. '
-            'Her satırı olduğu gibi ayrı tut; satır/madde sayısını KORU, '
-            'satırları birleştirme veya bölme. Anlamı ve içeriği KORU; yeni '
-            'bilgi ekleme, madde silme. $_fixCommon',
-      ),
-      (
-        l10n.fixBalanced,
-        l10n.fixBalancedInfo,
-        'Yazım, imla ve noktalama hatalarını düzelt; ayrıca bozuk veya '
-            'devrik cümleleri düzgün ve akıcı hale getir, gereksiz '
-            'tekrarları sadeleştir. Anlamı ve tüm bilgileri KORU; yeni bilgi '
-            'ekleme. Genel yapıyı ve satır düzenini olabildiğince koru. '
-            '$_fixCommon',
-      ),
-      (
-        l10n.fixDetailed,
-        l10n.fixDetailedInfo,
-        'Metni baştan aşağı yeniden düzenle: yazım ve dilbilgisini düzelt, '
-            'cümleleri akıcı ve profesyonel bir dille yeniden yaz, düşünceleri '
-            'mantıklı bir akışa sok, gerekirse paragraflara ayır. Hiçbir '
-            'bilgiyi ATLAMA veya uydurma; yalnızca var olan içeriği daha iyi '
-            'ifade et. $_fixCommon',
-      ),
-    ];
-    final chosen = await showDialog<String>(
+    final canReplace = widget.onReplaceText != null;
+    final chosen = await showDialog<_WriteChoice>(
       context: context,
       builder: (dialogContext) => SimpleDialog(
-        title: Text(l10n.fixLevelTitle),
+        title: Text(l10n.aiWriteImprove),
         children: [
-          for (final (label, info, prompt) in options)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(dialogContext, prompt),
-              child: ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                title: Text(label),
-                subtitle: Text(info),
+          if (canReplace) ...[
+            _dialogGroupTitle(dialogContext, l10n.aiWriteGroupFix),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-fix-simple'),
+              icon: Icons.spellcheck,
+              label: l10n.fixSimple,
+              info: l10n.fixSimpleInfo,
+              choice: _WriteChoice.rewrite(
+                'Yalnızca yazım, imla, noktalama ve büyük/küçük harf hatalarını '
+                'düzelt. Cümle yapısına, kelime seçimine veya sıralamaya DOKUNMA. '
+                'Her satırı olduğu gibi ayrı tut; satır/madde sayısını KORU, '
+                'satırları birleştirme veya bölme. Anlamı ve içeriği KORU; yeni '
+                'bilgi ekleme, madde silme. $_fixCommon',
               ),
             ),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-fix-balanced'),
+              icon: Icons.auto_fix_high,
+              label: l10n.fixBalanced,
+              info: l10n.fixBalancedInfo,
+              choice: _WriteChoice.rewrite(
+                'Yazım, imla ve noktalama hatalarını düzelt; ayrıca bozuk veya '
+                'devrik cümleleri düzgün ve akıcı hale getir, gereksiz '
+                'tekrarları sadeleştir. Anlamı ve tüm bilgileri KORU; yeni bilgi '
+                'ekleme. Genel yapıyı ve satır düzenini olabildiğince koru. '
+                '$_fixCommon',
+              ),
+            ),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-fix-detailed'),
+              icon: Icons.edit_note,
+              label: l10n.fixDetailed,
+              info: l10n.fixDetailedInfo,
+              choice: _WriteChoice.rewrite(
+                'Metni baştan aşağı yeniden düzenle: yazım ve dilbilgisini düzelt, '
+                'cümleleri akıcı ve profesyonel bir dille yeniden yaz, düşünceleri '
+                'mantıklı bir akışa sok, gerekirse paragraflara ayır. Hiçbir '
+                'bilgiyi ATLAMA veya uydurma; yalnızca var olan içeriği daha iyi '
+                'ifade et. $_fixCommon',
+              ),
+            ),
+            _dialogGroupTitle(dialogContext, l10n.aiWriteGroupTone),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-shorten'),
+              icon: Icons.compress,
+              label: l10n.improveShorten,
+              choice: _WriteChoice.rewrite(
+                'Anlamı koruyarak yarı uzunluğa kısalt. $_fixCommon',
+              ),
+            ),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-expand'),
+              icon: Icons.expand,
+              label: l10n.improveExpand,
+              choice: _WriteChoice.rewrite(
+                'Mevcut fikirleri ve olguları koruyarak daha açıklayıcı, '
+                'ayrıntılı ve akıcı biçimde genişlet; uydurma bilgi ekleme. '
+                '$_fixCommon',
+              ),
+            ),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-formal'),
+              icon: Icons.business_center_outlined,
+              label: l10n.improveFormal,
+              choice: _WriteChoice.rewrite(
+                'Daha resmî ve profesyonel bir dille yeniden yaz. $_fixCommon',
+              ),
+            ),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-casual'),
+              icon: Icons.sentiment_satisfied_outlined,
+              label: l10n.improveCasual,
+              choice: _WriteChoice.rewrite(
+                'Daha samimi, doğal ve günlük bir dille yeniden yaz. '
+                '$_fixCommon',
+              ),
+            ),
+            _dialogGroupTitle(dialogContext, l10n.aiWriteGroupFormat),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-bullets'),
+              icon: Icons.checklist,
+              label: l10n.improveBullets,
+              choice: const _WriteChoice.rewrite(
+                'Düzenli bir maddeler listesine dönüştür: her satır tek bir madde '
+                'olsun, başına işaret/numara koyma',
+                asType: NoteType.checklist,
+              ),
+            ),
+            _writeOption(
+              dialogContext,
+              key: const ValueKey('ai-write-numbered'),
+              icon: Icons.format_list_numbered,
+              label: l10n.improveNumbered,
+              choice: const _WriteChoice.rewrite(
+                'Sıralı bir listeye dönüştür: içeriği mantıklı bir sıraya koy, '
+                'her satır tek bir adım olsun, başına numara koyma',
+                asType: NoteType.ordered,
+              ),
+            ),
+          ],
+          _dialogGroupTitle(dialogContext, l10n.aiTranslate),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.xl,
+              AppSpace.xs,
+              AppSpace.xl,
+              AppSpace.s,
+            ),
+            child: Wrap(
+              spacing: AppSpace.s,
+              runSpacing: AppSpace.xs,
+              children: [
+                for (final target in _translateTargets)
+                  ActionChip(
+                    key: ValueKey('ai-translate-$target'),
+                    label: Text(target),
+                    onPressed: () => Navigator.pop(
+                      dialogContext,
+                      _WriteChoice.translate(target),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
     if (chosen == null) return;
-    final skip = _skipCheckedForNote;
-    // Liste yapısını koru: sıralı/checklist notunda maddeler tek satıra
-    // çökmesin (kullanıcı: "5 madde tek numaraya dönüşüyor").
-    final prompt = chosen + _listStructureConstraint;
-    // "Notu düzelt" tipi korur: karışık notta yalnız gövde düzeltilir, maddeler
-    // korunur (bkz. _contentForTextOp).
+    if (chosen.language != null) {
+      final skip = _skipCheckedForNote;
+      final before = _contentForTextOp(skipChecked: skip, converting: false);
+      await _run(
+        (s) => s.translateText(before, chosen.language!),
+        improvement: true,
+        keepChecked: skip,
+        beforeText: before,
+      );
+      return;
+    }
+    final converting = chosen.asType != null;
+    final skip = !converting && _skipCheckedForNote;
+    final before = _contentForTextOp(skipChecked: skip, converting: converting);
+    final prompt = converting
+        ? chosen.instruction!
+        : chosen.instruction! + _listStructureConstraint;
     await _run(
-      (s) => s.rewriteText(
-        _contentForTextOp(skipChecked: skip, converting: false),
-        prompt,
-      ),
+      (s) => s.rewriteText(before, prompt),
       improvement: true,
+      replaceAsType: chosen.asType,
       keepChecked: skip,
+      beforeText: before,
     );
   }
 
-  Future<void> _pickImprovement() async {
-    final l10n = context.l10n;
-    // (etiket, istem, "notu değiştir" uygulanınca geçilecek tip)
-    // Yazım düzeltmesi burada YOK: sayfanın üstündeki "Notu düzelt" düğmesi
-    // aynı işi yapıyordu, ikisi bir arada kafa karıştırıyordu.
-    final options = <(String, String, NoteType?)>[
-      (
-        l10n.improveFormal,
-        'Daha resmî ve profesyonel bir dille yeniden yaz',
-        null,
+  Widget _dialogGroupTitle(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.xl,
+        AppSpace.m,
+        AppSpace.xl,
+        AppSpace.xs,
       ),
-      (l10n.improveShorten, 'Anlamı koruyarak yarı uzunluğa kısalt', null),
-      (
-        l10n.improveBullets,
-        'Düzenli bir maddeler listesine dönüştür: her satır tek bir madde '
-            'olsun, başına işaret/numara koyma',
-        NoteType.checklist,
+      child: Text(
+        text,
+        style: AppText.of(theme).meta.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: AppWeight.strong,
+        ),
       ),
-      (
-        l10n.improveNumbered,
-        'Sıralı bir listeye dönüştür: içeriği mantıklı bir sıraya koy, '
-            'her satır tek bir adım olsun, başına numara koyma',
-        NoteType.ordered,
-      ),
-    ];
-    final chosen = await showDialog<(String, NoteType?)>(
-      context: context,
-      builder: (dialogContext) => SimpleDialog(
-        title: Text(l10n.aiImprove),
-        children: [
-          for (final (label, prompt, type) in options)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(dialogContext, (prompt, type)),
-              child: Text(label),
-            ),
-        ],
-      ),
-    );
-    if (chosen == null) return;
-    // İşaretlileri dışlama yalnız tip DEĞİŞMEDEN düzenlemede anlamlı; liste
-    // tipine dönüştürmede (bullets/numbered) tüm içerik yeniden şekillenir.
-    final skip = chosen.$2 == null && _skipCheckedForNote;
-    // Tip korunuyorsa (Formal/Kısalt) liste yapısını da koru; tip
-    // dönüştürmede (bullets/numbered) içerik zaten yeniden şekillenir.
-    final prompt = chosen.$2 == null
-        ? chosen.$1 + _listStructureConstraint
-        : chosen.$1;
-    final converting = chosen.$2 != null;
-    await _run(
-      // İçerik metni (başlık/işaret yok): geliştirme sonucu nota geri
-      // uygulanırken başlık öğeye, `[ ]`/numara işaretleri metne sızmasın.
-      // Tipi koruyan geliştirmede (Resmî/Kısalt) karışık notun maddeleri
-      // korunur; liste tipine dönüştürmede tüm içerik birleştirilir.
-      (s) => s.rewriteText(
-        _contentForTextOp(skipChecked: skip, converting: converting),
-        prompt,
-      ),
-      improvement: true,
-      replaceAsType: chosen.$2,
-      keepChecked: skip,
     );
   }
 
-  Future<void> _pickLanguageAndTranslate() async {
-    final language = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => SimpleDialog(
-        title: Text(context.l10n.aiTranslate),
-        children: [
-          for (final target in _translateTargets)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(dialogContext, target),
-              child: Text(target),
-            ),
-        ],
-      ),
-    );
-    if (language == null) return;
-    // İçerik metni (başlık ve `- [x]`/numara işaretleri OLMADAN): model
-    // işaretleri de "çevirmeye" çalışıp yapıya sızdırıyordu. improvement:
-    // çeviri sonucu nota geri uygulanabilir ("Notu değiştir" görünür).
-    final skip = _skipCheckedForNote;
-    // Çeviri tipi korur: karışık notta yalnız gövde çevrilir, maddeler korunur.
-    await _run(
-      (s) => s.translateText(
-        _contentForTextOp(skipChecked: skip, converting: false),
-        language,
-      ),
-      improvement: true,
-      keepChecked: skip,
-    );
-  }
+  SimpleDialogOption _writeOption(
+    BuildContext context, {
+    required Key key,
+    required IconData icon,
+    required String label,
+    String? info,
+    required _WriteChoice choice,
+  }) => SimpleDialogOption(
+    key: key,
+    onPressed: () => Navigator.pop(context, choice),
+    child: ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, size: AppIconSize.m),
+      title: Text(label),
+      subtitle: info == null ? null : Text(info),
+    ),
+  );
 
   /// Ortak tanıma ekranını açar; "Nota ekle" denirse metin notun gövdesine
   /// eklenir. Levha önce kapanır — ekran tam sayfa açılıyor.
@@ -543,6 +608,57 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       throw GeminiException(notSyncedMessage);
     }
     return service.extractTextFromImage(bytes, image.mimeType);
+  }
+
+  /// **FOTOĞRAFTAN YAPILI NOT** (PLAN §1.6 A5): önce cihaz içi ücretsiz OCR
+  /// (`ScanOcr.recognizeImageText`) metni çıkarır; metin yeterliyse görsel
+  /// baytı yüklenmeden yalnız metin AI'ya gidip başlık + maddelere ayrılır.
+  /// Cihaz içi OCR desteklenmiyorsa ya da boş dönerse görsel yedeği çalışır.
+  Future<void> _runStructuredImage(Attachment image) async {
+    final notSyncedMessage = context.l10n.attachmentNotSynced;
+    final repo = ref.read(attachmentRepositoryProvider);
+    String ocrText = '';
+    if (ScanOcr.supported) {
+      final path =
+          image.localPath.isNotEmpty && localFileExists(image.localPath)
+          ? image.localPath
+          : await recognizableImagePath(image, repo);
+      if (path != null) {
+        try {
+          ocrText = (await ScanOcr.recognizeImageText(path)).trim();
+        } catch (_) {
+          ocrText = '';
+        }
+      }
+    }
+    StructuredOcrNote? structured;
+    await _run((service) async {
+      var source = ocrText;
+      if (source.length < 8) {
+        final bytes = repo == null ? null : await repo.readBytes(image);
+        if (bytes == null) {
+          if (source.isEmpty) throw GeminiException(notSyncedMessage);
+        } else {
+          source = (await service.extractTextFromImage(
+            bytes,
+            image.mimeType,
+          )).trim();
+        }
+      }
+      final parsed = await service.structureOcrText(source);
+      structured = parsed;
+      return parsed.toFormattedText();
+    });
+    if (mounted && structured != null && _result != null) {
+      setState(() {
+        _replaceAsType = structured!.suggestedType == NoteType.text
+            ? null
+            : structured!.suggestedType;
+        _resultHeader = structured!.title.trim().isEmpty
+            ? null
+            : structured!.title.trim();
+      });
+    }
   }
 
   Future<String> _transcribeAudio(
@@ -612,6 +728,8 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                 else if (_result != null)
                   _ResultView(
                     text: _result!,
+                    beforeText: _beforeText,
+                    resultTitle: _resultHeader,
                     summaryDetailed: _summaryDetailed,
                     onSummaryDetailChanged: _summaryDetailed == null
                         ? null
@@ -650,17 +768,14 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             replace(text, asType: type, keepChecked: keep);
                           },
                     // "Yeni not olarak aç": orijinal not değişmez, sonuç ayrı
-                    // bir notta açılır. Her sonuç türünde (düzeltme/çeviri/
-                    // özet/OCR) sunulur. Liste dönüşümü tipini yalnız düzeltme
-                    // sonucunda taşı; diğerlerinde notun tipi editörde belirlenir.
+                    // bir notta açılır. A6 liste dönüşümü ve A5 fotoğraftan
+                    // yapılı notta önerilen tip (checklist/ordered) taşınır.
                     onCreateNote: widget.onCreateNote == null
                         ? null
                         : () {
                             final create = widget.onCreateNote!;
                             final text = _result!;
-                            final type = _lastWasImprovement
-                                ? _replaceAsType
-                                : null;
+                            final type = _replaceAsType;
                             final keep = _keepChecked;
                             Navigator.pop(context);
                             create(text, asType: type, keepChecked: keep);
@@ -750,33 +865,16 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         },
                       ),
                     ),
-                  // Yaz (A6 yazıyı iyileştir): düzelt · geliştir · çevir.
+                  // Yaz (PLAN §1.6 A6): düzelt · yeniden yaz · kısalt/uzat ·
+                  // resmî/samimi · biçim · çevir — tek menü.
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _AiTileGrid(
-                      tiles: [
-                        // Hızlı erişim: tek dokunuşla yazım/düzen düzeltmesi.
-                        if (widget.onReplaceText != null)
-                          (
-                            Icons.auto_fix_high,
-                            l10n.aiFixNote,
-                            l10n.aiFixNoteInfo,
-                            widget.note.isEmpty ? null : _pickFixLevel,
-                          ),
-                        if (widget.onReplaceText != null)
-                          (
-                            Icons.auto_awesome_outlined,
-                            l10n.aiImprove,
-                            l10n.aiImproveInfo,
-                            widget.note.isEmpty ? null : _pickImprovement,
-                          ),
-                        (
-                          Icons.translate,
-                          l10n.aiTranslate,
-                          l10n.aiTranslateInfo,
-                          widget.note.isEmpty ? null : _pickLanguageAndTranslate,
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                    child: _AiRow(
+                      key: const ValueKey('ai-sheet-write-improve'),
+                      icon: Icons.auto_fix_high,
+                      title: l10n.aiWriteImprove,
+                      subtitle: l10n.aiWriteImproveInfo,
+                      onTap: widget.note.isEmpty ? null : _pickWriteImprove,
                     ),
                   ),
                   // Sor (A1 notlarına sor, A4 belgeye sor).
@@ -934,25 +1032,34 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         ),
                       ],
                     ),
-                  // Görsel ve seste tek işlem var: açılır satır gereksiz,
-                  // işlem alt yazıda duruyor.
-                  // GÖRSELDE METİN: cihaz içi tanıma varsa ortak "Metni Tanı"
-                  // ekranı açılır (bkz. text_recognize_screen.dart) —
-                  // uygulamada metin tanımanın TEK bir görünümü olsun
-                  // (kullanıcı isteği 2026-08-09). ML Kit yoksa (masaüstü)
-                  // eski model yolu sürer.
+                  // GÖRSELDE METİN + YAPILI NOT (PLAN §1.6 A5): ücretsiz cihaz
+                  // içi "Metni tanı" ve önce cihaz içi OCR + ardından yalnız
+                  // yapılandırma için AI kullanan "Yapılı nota dönüştür".
                   for (final image in images)
-                    ListTile(
+                    ExpansionTile(
+                      key: ValueKey('ai-image-tile-${image.id}'),
                       leading: const Icon(Icons.document_scanner_outlined),
                       title: Text(
                         image.fileName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text(l10n.extractText),
-                      onTap: () => ScanOcr.supported
-                          ? _recognizeImageText(image)
-                          : _run((s) => _extractImageText(s, image)),
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.text_fields),
+                          title: Text(l10n.extractText),
+                          onTap: () => ScanOcr.supported
+                              ? _recognizeImageText(image)
+                              : _run((s) => _extractImageText(s, image)),
+                        ),
+                        ListTile(
+                          key: ValueKey('ai-photo-structured-${image.id}'),
+                          leading: const Icon(Icons.auto_awesome_outlined),
+                          title: Text(l10n.aiPhotoToStructuredNote),
+                          subtitle: Text(l10n.aiPhotoToStructuredNoteInfo),
+                          onTap: () => _runStructuredImage(image),
+                        ),
+                      ],
                     ),
                   for (final audio in audios)
                     ListTile(
@@ -1152,10 +1259,25 @@ Widget _sectionLabel(BuildContext context, String text) => Padding(
   child: SectionLabel(text),
 );
 
-class _ResultView extends StatelessWidget {
+class _WriteChoice {
+  const _WriteChoice.rewrite(this.instruction, {this.asType})
+    : language = null;
+
+  const _WriteChoice.translate(this.language)
+    : instruction = null,
+      asType = null;
+
+  final String? instruction;
+  final NoteType? asType;
+  final String? language;
+}
+
+class _ResultView extends StatefulWidget {
   const _ResultView({
     required this.text,
     required this.onCopy,
+    this.beforeText,
+    this.resultTitle,
     this.summaryDetailed,
     this.onSummaryDetailChanged,
     this.onAppend,
@@ -1164,6 +1286,8 @@ class _ResultView extends StatelessWidget {
   });
 
   final String text;
+  final String? beforeText;
+  final String? resultTitle;
   final VoidCallback onCopy;
   final bool? summaryDetailed;
   final ValueChanged<bool>? onSummaryDetailChanged;
@@ -1174,14 +1298,29 @@ class _ResultView extends StatelessWidget {
   final VoidCallback? onCreateNote;
 
   @override
+  State<_ResultView> createState() => _ResultViewState();
+}
+
+class _ResultViewState extends State<_ResultView> {
+  bool _compare = false;
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final before = widget.beforeText?.trim();
+    final canCompare =
+        before != null && before.isNotEmpty && before != widget.text.trim();
+    final header = widget.resultTitle?.trim();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (summaryDetailed != null && onSummaryDetailChanged != null)
+          if (widget.summaryDetailed != null &&
+              widget.onSummaryDetailChanged != null)
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpace.m),
               child: Wrap(
@@ -1191,69 +1330,161 @@ class _ResultView extends StatelessWidget {
                   ChoiceChip(
                     key: const ValueKey('ai-summary-short'),
                     label: Text(l10n.summaryShort),
-                    selected: !summaryDetailed!,
+                    selected: !widget.summaryDetailed!,
                     onSelected: (selected) {
-                      if (selected && summaryDetailed!) {
-                        onSummaryDetailChanged!(false);
+                      if (selected && widget.summaryDetailed!) {
+                        widget.onSummaryDetailChanged!(false);
                       }
                     },
                   ),
                   ChoiceChip(
                     key: const ValueKey('ai-summary-detailed'),
                     label: Text(l10n.summaryDetailed),
-                    selected: summaryDetailed!,
+                    selected: widget.summaryDetailed!,
                     onSelected: (selected) {
-                      if (selected && !summaryDetailed!) {
-                        onSummaryDetailChanged!(true);
+                      if (selected && !widget.summaryDetailed!) {
+                        widget.onSummaryDetailChanged!(true);
                       }
                     },
                   ),
                 ],
               ),
             ),
+          if (canCompare)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.m),
+              child: Wrap(
+                spacing: AppSpace.s,
+                runSpacing: AppSpace.xs,
+                children: [
+                  ChoiceChip(
+                    key: const ValueKey('ai-preview-after-only'),
+                    label: Text(l10n.aiPreviewAfter),
+                    selected: !_compare,
+                    onSelected: (s) {
+                      if (s && _compare) setState(() => _compare = false);
+                    },
+                  ),
+                  ChoiceChip(
+                    key: const ValueKey('ai-preview-compare'),
+                    label: Text(l10n.aiPreviewCompare),
+                    selected: _compare,
+                    onSelected: (s) {
+                      if (s && !_compare) setState(() => _compare = true);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          if (header != null && header.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.s),
+              child: Text(
+                header,
+                key: const ValueKey('ai-structured-title'),
+                style: AppText.of(theme).rowTitle,
+              ),
+            ),
+          if (_compare && canCompare) ...[
+            Container(
+              key: const ValueKey('ai-preview-before-box'),
+              padding: const EdgeInsets.all(AppSpace.m),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(AppRadius.m),
+                border: Border.all(
+                  color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.aiPreviewBefore,
+                    style: AppText.of(theme).badge.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.xs),
+                  Text(
+                    before,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpace.s),
+          ],
           Container(
             padding: const EdgeInsets.all(AppSpace.l),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHigh,
+              color: scheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(AppRadius.m),
+              border: _compare && canCompare
+                  ? Border.all(
+                      color: scheme.primary.withValues(alpha: AppAlpha.muted),
+                    )
+                  : null,
             ),
-            child: SelectableText(
-              text,
-              style: Theme.of(context).textTheme.bodyMedium,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_compare && canCompare) ...[
+                  Text(
+                    l10n.aiPreviewAfter,
+                    style: AppText.of(theme).badge.copyWith(
+                      color: scheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.xs),
+                ],
+                SelectableText(
+                  widget.text,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
             ),
           ),
           // PL3 (b): "AI yanılabilir" + "Bildir" (kişisel veri gitmez).
-          AiResultNote(content: text, source: 'ai_sheet'),
+          AiResultNote(content: widget.text, source: 'ai_sheet'),
           // Wrap: dar ekranda butonlar taşmaz, gerekirse alt satıra sarılır
           // ("Nota ekle" ekranın dışında kalıp dokunulamıyordu).
           Wrap(
             alignment: WrapAlignment.end,
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpace.s,
+            runSpacing: AppSpace.s,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               TextButton.icon(
-                onPressed: onCopy,
-                icon: const Icon(AppIcons.copy, size: 16),
-                label: Text(context.l10n.copy),
+                onPressed: widget.onCopy,
+                icon: const Icon(AppIcons.copy, size: AppIconSize.xs),
+                label: Text(l10n.copy),
               ),
-              if (onCreateNote != null)
+              if (widget.onCreateNote != null)
                 FilledButton.tonalIcon(
-                  onPressed: onCreateNote,
-                  icon: const Icon(Icons.note_add_outlined, size: 18),
-                  label: Text(context.l10n.openAsNewNote),
+                  onPressed: widget.onCreateNote,
+                  icon: const Icon(
+                    Icons.note_add_outlined,
+                    size: AppIconSize.s,
+                  ),
+                  label: Text(l10n.openAsNewNote),
                 ),
-              if (onReplace != null)
+              if (widget.onReplace != null)
                 FilledButton.icon(
-                  onPressed: onReplace,
-                  icon: const Icon(Icons.published_with_changes, size: 18),
-                  label: Text(context.l10n.replaceNote),
+                  onPressed: widget.onReplace,
+                  icon: const Icon(
+                    Icons.published_with_changes,
+                    size: AppIconSize.s,
+                  ),
+                  label: Text(l10n.replaceNote),
                 ),
-              if (onAppend != null)
+              if (widget.onAppend != null)
                 FilledButton.tonalIcon(
-                  onPressed: onAppend,
-                  icon: const Icon(Icons.playlist_add, size: 18),
-                  label: Text(context.l10n.addToNote),
+                  onPressed: widget.onAppend,
+                  icon: const Icon(Icons.playlist_add, size: AppIconSize.s),
+                  label: Text(l10n.addToNote),
                 ),
             ],
           ),
