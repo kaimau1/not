@@ -198,4 +198,40 @@ void main() {
       expect(stripDropTargetWords('süt markete', 'Market'), 'süt');
     });
   });
+
+  group('HE-5 parseMultiDropTargets', () {
+    const titles = ['Market listesi', 'Yapılacaklar', 'Kitap notları'];
+
+    test('virgül ve "bir de" ile iki ayrı hedef çözülür', () {
+      expect(
+        parseMultiDropTargets('süt markete, fatura yapılacaklara', titles),
+        [(index: 0, content: 'süt'), (index: 1, content: 'fatura')],
+      );
+      expect(
+        parseMultiDropTargets(
+          'ekmek markete ekle bir de faturayı öde yapılacaklara ekle',
+          titles,
+        ),
+        [(index: 0, content: 'ekmek'), (index: 1, content: 'faturayı öde')],
+      );
+    });
+
+    test('iki noktalı çoklu hedef çözülür', () {
+      expect(
+        parseMultiDropTargets('market: süt; kitap: sayfa 42', titles),
+        [(index: 0, content: 'süt'), (index: 2, content: 'sayfa 42')],
+      );
+    });
+
+    test('tek hedefli çok maddeli liste bölünmez', () {
+      expect(
+        parseMultiDropTargets('süt, ekmek markete ekle', titles),
+        isEmpty,
+      );
+      expect(
+        parseMultiDropTargets('süt markete, ekmek markete', titles),
+        isEmpty,
+      );
+    });
+  });
 }

@@ -71,6 +71,8 @@ const kSyncedPrefKeys = <String>[
   'shared_notifications',
   captureModeDefaultKey,
   'user_templates_v1',
+  // Hızlı ekle hedef hafızası (HE-5): son kullanılan hedef notlar.
+  'quick_drop_recent',
   // Not kilidi yöntemi + şifre/desen ÖZETİ (F4.8; düz sır değil).
   NoteLockConfig.prefsKey,
 ];

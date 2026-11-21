@@ -9094,6 +9094,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickDropFindNote => 'Find note';
 
   @override
+  String quickDropPreviewReminder(String when, String text) {
+    return '⏰ $when · $text';
+  }
+
+  @override
+  String get quickDropSavedReminder => 'Saved as note with reminder';
+
+  @override
+  String quickDropPreviewMulti(String summary, int count) {
+    return '→ $summary ($count notes)';
+  }
+
+  @override
+  String quickDropAddedMulti(int count) {
+    return 'Added to $count notes';
+  }
+
+  @override
   String get aiNeedsProTitle => 'AI is part of Pro';
 
   @override

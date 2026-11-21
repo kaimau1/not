@@ -9083,6 +9083,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickDropFindNote => 'Not bul';
 
   @override
+  String quickDropPreviewReminder(String when, String text) {
+    return '⏰ $when · $text';
+  }
+
+  @override
+  String get quickDropSavedReminder => 'Hatırlatıcılı not kaydedildi';
+
+  @override
+  String quickDropPreviewMulti(String summary, int count) {
+    return '→ $summary ($count not)';
+  }
+
+  @override
+  String quickDropAddedMulti(int count) {
+    return '$count nota eklendi';
+  }
+
+  @override
   String get aiNeedsProTitle => 'Yapay zekâ Pro\'da';
 
   @override

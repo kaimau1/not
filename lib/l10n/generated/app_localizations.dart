@@ -16112,6 +16112,30 @@ abstract class AppLocalizations {
   /// **'Not bul'**
   String get quickDropFindNote;
 
+  /// No description provided for @quickDropPreviewReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'⏰ {when} · {text}'**
+  String quickDropPreviewReminder(String when, String text);
+
+  /// No description provided for @quickDropSavedReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcılı not kaydedildi'**
+  String get quickDropSavedReminder;
+
+  /// No description provided for @quickDropPreviewMulti.
+  ///
+  /// In tr, this message translates to:
+  /// **'→ {summary} ({count} not)'**
+  String quickDropPreviewMulti(String summary, int count);
+
+  /// No description provided for @quickDropAddedMulti.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} nota eklendi'**
+  String quickDropAddedMulti(int count);
+
   /// No description provided for @aiNeedsProTitle.
   ///
   /// In tr, this message translates to:

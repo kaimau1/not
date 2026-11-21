@@ -122,6 +122,14 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   /// Ham kipte dinleme başlarken alanda duran yazı (konuşma sonuna eklenir).
   String _rawPrefix = '';
 
+  /// H1: son konuşma sonucunun zamanı — yalın "bitti" yalnız [bareDonePause]
+  /// sessizlikten sonra geldiyse bitiş sayılır ("süt bitti" listeyi kapatmaz).
+  DateTime? _lastSpeechAt;
+  static final bareDonePause = AppMotion.long + AppMotion.medium;
+
+  @visibleForTesting
+  static DateTime Function() debugClock = DateTime.now;
+
   /// Yazmayı bırakınca devamı beklenen öbek başı ("süt" → "süt tozu"
   /// olabilirdi) maddeye döner.
   static final idleDelay = AppMotion.long + AppMotion.medium;
@@ -327,6 +335,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     if (!mounted) return false;
     _spoken = '';
     _spokenCount = 0;
+    _lastSpeechAt = null;
     _rawPrefix = _c.text.trim();
     late final VoiceListenSession session;
     session = VoiceListenSession(
@@ -361,10 +370,17 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   /// çıkar. Son kelime bir sonraki gelene kadar bekler — tanıyıcının sonradan
   /// düzelttiği kelime listeye yanlış girmesin.
   void _onSpeech(String full) {
+    final now = debugClock();
+    final gap = _lastSpeechAt == null
+        ? Duration.zero
+        : now.difference(_lastSpeechAt!);
+    _lastSpeechAt = now;
     if (widget.onDoneWord != null) {
-      final rest = stripDoneWord(full);
-      if (rest != null) {
-        _onDoneWord(rest);
+      final done = parseDoneWord(full);
+      // H1 (17K §4.1): yalın "bitti"/"done" yalnız ≥ 0,7 sn sessizlikten sonra
+      // bitiş sayılır; "süt bitti" gibi bitişik cümle dinlemeyi kapatmaz.
+      if (done != null && (!done.bare || gap >= bareDonePause)) {
+        _onDoneWord(done.rest);
         return;
       }
     }
@@ -388,6 +404,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   void _onDoneWord(String rest) {
     final session = _session;
     _session = null;
+    _lastSpeechAt = null;
     unawaited(session?.cancel());
     if (widget.raw) {
       final text = [_rawPrefix, rest].where((t) => t.isNotEmpty).join(' ');
