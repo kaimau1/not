@@ -16573,6 +16573,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sonra'**
   String get driveOnboardLater;
+
+  /// No description provided for @aiQuietOrganizeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sessiz düzen'**
+  String get aiQuietOrganizeTitle;
+
+  /// No description provided for @aiQuietOrganizeEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneri üretilecek eksik başlık veya etiket bulunamadı.'**
+  String get aiQuietOrganizeEmpty;
+
+  /// No description provided for @aiQuietOrganizeApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} öneriyi uygula'**
+  String aiQuietOrganizeApply(int count);
+
+  /// No description provided for @aiQuietOrganizeApplied.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not güncellendi'**
+  String aiQuietOrganizeApplied(int count);
+
+  /// No description provided for @aiQuietOrganizeBoth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık + etiket birlikte'**
+  String get aiQuietOrganizeBoth;
 }
 
 class _AppLocalizationsDelegate

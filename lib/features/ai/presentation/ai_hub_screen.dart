@@ -17,6 +17,7 @@ import '../data/ai_gate.dart';
 import '../data/ai_history.dart';
 import 'assistant_confirm.dart';
 import 'chat_controller.dart';
+import 'quiet_organize_sheet.dart';
 import 'read_document.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
@@ -175,7 +176,12 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         subtitle: untagged == 0
             ? l10n.aiTaskIdle
             : l10n.aiTaskTagUntaggedInfo(untagged),
-        onTap: untagged == 0 ? null : () => _send(l10n.aiTaskTagUntagged),
+        onTap: untagged == 0
+            ? null
+            : () => showQuietOrganizeSheet(
+                context,
+                scope: QuietOrganizeScope.tags,
+              ),
       ),
       _ToolCard(
         icon: Icons.title,
@@ -184,7 +190,12 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         subtitle: untitled == 0
             ? l10n.aiTaskIdle
             : l10n.aiTaskSuggestTitlesInfo(untitled),
-        onTap: untitled == 0 ? null : () => _send(l10n.aiTaskSuggestTitles),
+        onTap: untitled == 0
+            ? null
+            : () => showQuietOrganizeSheet(
+                context,
+                scope: QuietOrganizeScope.titles,
+              ),
       ),
       // Bu kutu yapay zekâya HİÇ gitmez: benzerlik yerelde ölçülür, puan
       // harcamaz. Yine de burada duruyor çünkü kullanıcı açısından aynı iş —

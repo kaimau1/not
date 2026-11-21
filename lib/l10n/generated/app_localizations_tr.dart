@@ -9343,4 +9343,24 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get driveOnboardLater => 'Sonra';
+
+  @override
+  String get aiQuietOrganizeTitle => 'Sessiz düzen';
+
+  @override
+  String get aiQuietOrganizeEmpty =>
+      'Öneri üretilecek eksik başlık veya etiket bulunamadı.';
+
+  @override
+  String aiQuietOrganizeApply(int count) {
+    return '$count öneriyi uygula';
+  }
+
+  @override
+  String aiQuietOrganizeApplied(int count) {
+    return '$count not güncellendi';
+  }
+
+  @override
+  String get aiQuietOrganizeBoth => 'Başlık + etiket birlikte';
 }

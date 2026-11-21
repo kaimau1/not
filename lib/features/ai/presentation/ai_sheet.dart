@@ -111,12 +111,25 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   String? _result;
   String? _error;
 
+  /// A7 özet uzunluk anahtarı: null = not özeti değil, false = kısa, true = ayrıntılı.
+  bool? _summaryDetailed;
+
   /// [cacheKey] verilirse çıktı cihazda saklanır ve aynı girdi ikinci kez
   /// model çağırmaz. Anahtar içerikten türetildiği için not/PDF değişince
   /// kendiliğinden tazelenir — saat karşılaştırmasına gerek yok.
   /// Son başarısız işlemi tekrar deneyebilmek için saklanır (hata görünümünde
   /// "Tekrar dene").
   VoidCallback? _retryAction;
+
+  Future<void> _runNoteSummary({required bool detailed}) => _run(
+    (s) => s.summarizeNote(widget.note, detailed: detailed),
+    cacheAsSummary: !detailed,
+    cacheKey: AiCache.keyFor(
+      detailed ? 'note_summary_detailed' : 'note_summary',
+      widget.note.toPlainText(),
+    ),
+    summaryDetailed: detailed,
+  );
 
   Future<void> _run(
     Future<String> Function(GeminiService) action, {
@@ -125,6 +138,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     bool improvement = false,
     NoteType? replaceAsType,
     bool keepChecked = false,
+    bool? summaryDetailed,
   }) async {
     // KİLİTLİ notun içeriğinden türeyen çıktı diske yazılmaz: ai_cache düz
     // metin dosyalarıdır, kilidin sakladığı içerik oradan okunabilirdi.
@@ -137,6 +151,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       improvement: improvement,
       replaceAsType: replaceAsType,
       keepChecked: keepChecked,
+      summaryDetailed: summaryDetailed,
     );
     // Geçmiş etiketi HER asenkron adımdan önce okunur: sonrasında levha
     // kapanmış (context ağaçtan kalkmış) olabilir.
@@ -148,6 +163,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       _lastWasImprovement = improvement;
       _replaceAsType = replaceAsType;
       _keepChecked = keepChecked;
+      _summaryDetailed = summaryDetailed;
     });
     if (cacheKey != null) {
       final cached = await AiCache.read(cacheKey);
@@ -596,6 +612,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                 else if (_result != null)
                   _ResultView(
                     text: _result!,
+                    summaryDetailed: _summaryDetailed,
+                    onSummaryDetailChanged: _summaryDetailed == null
+                        ? null
+                        : (detailed) => _runNoteSummary(detailed: detailed),
                     onCopy: () async {
                       await Clipboard.setData(ClipboardData(text: _result!));
                       if (context.mounted) {
@@ -815,14 +835,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                           l10n.aiSummarizeInfo,
                           widget.note.isEmpty
                               ? null
-                              : () => _run(
-                                  (s) => s.summarizeNote(widget.note),
-                                  cacheAsSummary: true,
-                                  cacheKey: AiCache.keyFor(
-                                    'note_summary',
-                                    widget.note.toPlainText(),
-                                  ),
-                                ),
+                              : () => _runNoteSummary(detailed: false),
                         ),
                       ],
                     ),
@@ -1143,6 +1156,8 @@ class _ResultView extends StatelessWidget {
   const _ResultView({
     required this.text,
     required this.onCopy,
+    this.summaryDetailed,
+    this.onSummaryDetailChanged,
     this.onAppend,
     this.onReplace,
     this.onCreateNote,
@@ -1150,6 +1165,8 @@ class _ResultView extends StatelessWidget {
 
   final String text;
   final VoidCallback onCopy;
+  final bool? summaryDetailed;
+  final ValueChanged<bool>? onSummaryDetailChanged;
   final VoidCallback? onAppend;
   final VoidCallback? onReplace;
 
@@ -1158,13 +1175,44 @@ class _ResultView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (summaryDetailed != null && onSummaryDetailChanged != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.m),
+              child: Wrap(
+                spacing: AppSpace.s,
+                runSpacing: AppSpace.xs,
+                children: [
+                  ChoiceChip(
+                    key: const ValueKey('ai-summary-short'),
+                    label: Text(l10n.summaryShort),
+                    selected: !summaryDetailed!,
+                    onSelected: (selected) {
+                      if (selected && summaryDetailed!) {
+                        onSummaryDetailChanged!(false);
+                      }
+                    },
+                  ),
+                  ChoiceChip(
+                    key: const ValueKey('ai-summary-detailed'),
+                    label: Text(l10n.summaryDetailed),
+                    selected: summaryDetailed!,
+                    onSelected: (selected) {
+                      if (selected && !summaryDetailed!) {
+                        onSummaryDetailChanged!(true);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpace.l),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(AppRadius.m),

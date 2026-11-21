@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/domain/attachment.dart';
@@ -112,10 +111,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   Uint8List? _docBytes;
   String? _loadError;
 
-  /// Beyin fırtınası ana hattı.
-  List<String>? _outline;
-  bool _outlineLoading = false;
-  String? _focusHeading;
   final _added = <String>{};
 
   Attachment? get _document =>
@@ -167,12 +162,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _prepare();
   }
 
-  void _setMode(ChatMode mode) {
-    setState(() => _mode = mode);
-    _prepare();
-  }
-
-  /// Kapsamın gerektirdiği veriyi (ek baytları, ana hat) TEMBEL yükler.
+  /// Kapsamın gerektirdiği veriyi (ek baytları) TEMBEL yükler.
   Future<void> _prepare() async {
     final repo = ref.read(attachmentRepositoryProvider);
     final note = widget.note;
@@ -212,15 +202,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           if (bytes == null) _loadError = context.l10n.attachmentNotSynced;
         });
       }
-      if (_scope == ChatScope.note &&
-          _mode == ChatMode.brainstorm &&
-          _outline == null &&
-          !_outlineLoading &&
-          note != null) {
-        setState(() => _outlineLoading = true);
-        final outline = await ref.read(geminiServiceProvider).outlineNote(note);
-        if (mounted) setState(() => _outline = outline);
-      }
     } on GeminiException catch (e) {
       if (mounted) {
         setState(
@@ -229,8 +210,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       }
     } catch (e) {
       if (mounted) setState(() => _loadError = aiErrorText(context.l10n, e));
-    } finally {
-      if (mounted && _outlineLoading) setState(() => _outlineLoading = false);
     }
   }
 
@@ -249,11 +228,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     if (_isBusy) return;
     if (_mode != mode) setState(() => _mode = mode);
     await _ask(prompt);
-  }
-
-  Future<void> _pickHeading(String heading) async {
-    setState(() => _focusHeading = heading);
-    await _ask(heading);
   }
 
   Future<void> _ask(String text) async {
@@ -294,7 +268,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         reply = await service.brainstormAboutNote(
           note: widget.note!,
           history: turns,
-          focusHeading: _focusHeading,
         );
       } else {
         reply = await service.chatAboutNote(
@@ -395,17 +368,19 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       appBar: HomeInBar(appBar: AppBar(title: Text(l10n.chatTitle))),
       body: Column(
         children: [
-          // KAPSAM + KİP çipleri: neyle, nasıl konuşulduğu tek bakışta.
-          if (_scopes.length > 1 || widget.note != null)
+          // KAPSAM çipleri (AI-S3): neyle konuşulduğu tek bakışta.
+          // Eski Soru-cevap/Beyin fırtınası çipleri ve _OutlineBar kalktı;
+          // notla sohbette doğrudan _NoteSuggestions öneri düğmeleri kullanılır.
+          if (_scopes.length > 1)
             SizedBox(
-              height: 48,
+              height: kMinInteractiveDimension,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
                 children: [
                   for (final s in _scopes)
                     Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 6),
+                      padding: const EdgeInsetsDirectional.only(end: AppSpace.xs),
                       child: radioChip(ChoiceChip(
                         key: ValueKey('chat-scope-${s.name}'),
                         label: Text(switch (s) {
@@ -417,32 +392,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         onSelected: (_) => _setScope(s),
                       )),
                     ),
-                  if (_scope == ChatScope.note) ...[
-                    const VerticalDivider(width: 16, indent: 12, endIndent: 12),
-                    for (final m in ChatMode.values)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 6),
-                        child: radioChip(ChoiceChip(
-                          key: ValueKey('chat-mode-${m.name}'),
-                          label: Text(switch (m) {
-                            ChatMode.qa => l10n.chatModeQa,
-                            ChatMode.brainstorm => l10n.chatModeBrainstorm,
-                          }),
-                          selected: _mode == m,
-                          onSelected: (_) => _setMode(m),
-                        )),
-                      ),
-                  ],
                 ],
               ),
-            ),
-          if (brainstorm &&
-              (_outlineLoading || (_outline?.isNotEmpty ?? false)))
-            _OutlineBar(
-              loading: _outlineLoading,
-              headings: _outline ?? const [],
-              focused: _focusHeading,
-              onPick: _pickHeading,
             ),
           if (_loadError != null)
             Padding(
@@ -682,75 +633,7 @@ class _SourceChips extends ConsumerWidget {
   }
 }
 
-/// Beyin fırtınasının ana hattı: yatay kaydırılan başlık çipleri.
-class _OutlineBar extends StatelessWidget {
-  const _OutlineBar({
-    required this.loading,
-    required this.headings,
-    required this.focused,
-    required this.onPick,
-  });
-
-  final bool loading;
-  final List<String> headings;
-  final String? focused;
-  final ValueChanged<String> onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      color: scheme.surfaceContainerLow,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              context.l10n.brainstormOutlineTitle,
-              style: sectionLabelStyle(context),
-            ),
-          ),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 36,
-            child: loading
-                ? const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  )
-                : ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    children: [
-                      for (final heading in headings)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(end: 8),
-                          child: radioChip(ChoiceChip(
-                            label: Text(heading),
-                            selected: focused == heading,
-                            onSelected: (_) => onPick(heading),
-                          )),
-                        ),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Notla sohbetin öneri çipleri (AI-S2 eki): Ana hat · Fikir ver · Eksikleri
+/// Notla sohbetin öneri çipleri (AI-S2/S3): Ana hat · Fikir ver · Eksikleri
 /// bul. "Fikir ver" beyin fırtınası kipinde sorulur (yeni fikir üretir); öteki
 /// ikisi notun kendisinden yanıtlanır.
 class _NoteSuggestions extends StatelessWidget {

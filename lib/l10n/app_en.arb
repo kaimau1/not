@@ -3353,5 +3353,12 @@
   "driveOnboardTitle": "Keep attachments on every device",
   "driveOnboardBody": "Your photo, PDF and audio attachments are backed up to the \"Notlar\" folder in your Google Drive, so you see the same attachments on phone, tablet and web.",
   "driveOnboardConnect": "Connect Drive",
-  "driveOnboardLater": "Later"
+  "driveOnboardLater": "Later",
+  "aiQuietOrganizeTitle": "Quiet organize",
+  "aiQuietOrganizeEmpty": "No missing titles or tags to suggest.",
+  "aiQuietOrganizeApply": "Apply {count} suggestions",
+  "@aiQuietOrganizeApply": {"placeholders": {"count": {"type": "int"}}},
+  "aiQuietOrganizeApplied": "{count} notes updated",
+  "@aiQuietOrganizeApplied": {"placeholders": {"count": {"type": "int"}}},
+  "aiQuietOrganizeBoth": "Titles + tags together"
 }

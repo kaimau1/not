@@ -9355,4 +9355,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveOnboardLater => 'Later';
+
+  @override
+  String get aiQuietOrganizeTitle => 'Quiet organize';
+
+  @override
+  String get aiQuietOrganizeEmpty => 'No missing titles or tags to suggest.';
+
+  @override
+  String aiQuietOrganizeApply(int count) {
+    return 'Apply $count suggestions';
+  }
+
+  @override
+  String aiQuietOrganizeApplied(int count) {
+    return '$count notes updated';
+  }
+
+  @override
+  String get aiQuietOrganizeBoth => 'Titles + tags together';
 }
