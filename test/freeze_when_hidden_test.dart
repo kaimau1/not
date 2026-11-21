@@ -127,6 +127,23 @@ void main() {
       before,
       reason: 'levha klavyesi arkadaki ekranı kare kare kurmamalı',
     );
+
+    // Levha klavye açıkken kapanınca klavyenin iniş kareleri de arkadaki
+    // ekrana inmemeli.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+    await tester.pump(const Duration(milliseconds: 16));
+    Navigator.of(root).pop();
+    await tester.pump();
+    final afterPop = insets.length;
+    for (final b in <double>[220, 160, 100, 40, 0]) {
+      tester.view.viewInsets = FakeViewPadding(bottom: b);
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(
+      insets.length,
+      afterPop,
+      reason: 'levha kapanırken inen klavye arkadaki ekranı kurmamalı',
+    );
   });
 
   // Kullanıcı bulgusu 2026-11-03: "klavye açılırken kasma, not kapanırken

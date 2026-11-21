@@ -1079,14 +1079,16 @@ void main() {
         final yOpen = tester.getRect(add).bottom;
         expect(yClosed - yOpen, closeTo(300, 1));
 
-        // Klavye kapanır — levha eski yerine iner.
+        // Klavye kapanır — levha 100 ms pürüzsüz eğriyle eski yerine iner.
         tester.view.viewInsets = FakeViewPadding.zero;
         await tester.pump(const Duration(milliseconds: 16));
+        await tester.pump(const Duration(milliseconds: 150));
         expect(tester.getRect(add).bottom, closeTo(yClosed, 1));
 
         // Tekrar açılıp yükselmiş konumda Ekle'ye basmak çalışmalı.
         tester.view.viewInsets = FakeViewPadding(bottom: 260 * dpr);
         await tester.pump(const Duration(milliseconds: 16));
+        await tester.pump(const Duration(milliseconds: 150));
         await tester.tap(add);
         await tester.pumpAndSettle();
         expect(repo.writes.keys, ['b']);

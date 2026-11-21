@@ -162,6 +162,7 @@ class _LiftingSheetRoute<T> extends PopupRoute<T> {
   ) => _LiftingSheetView(
     constraints: constraints,
     showDragHandle: showDragHandle,
+    routeAnimation: animation,
     child: child,
   );
 
@@ -183,11 +184,13 @@ class _LiftingSheetView extends StatefulWidget {
   const _LiftingSheetView({
     required this.constraints,
     required this.showDragHandle,
+    required this.routeAnimation,
     required this.child,
   });
 
   final BoxConstraints constraints;
   final bool showDragHandle;
+  final Animation<double> routeAnimation;
   final Widget child;
 
   @override
@@ -210,6 +213,7 @@ class _LiftingSheetViewState extends State<_LiftingSheetView>
   double _lastStep = double.infinity;
   bool _useForecast = false;
   bool _closingForecast = false;
+  double? _frozenLift;
   double _drag = 0;
   Timer? _settle;
   final _sheetKey = GlobalKey();
@@ -219,18 +223,33 @@ class _LiftingSheetViewState extends State<_LiftingSheetView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     KeyboardForecast.next.addListener(_onForecast);
+    widget.routeAnimation.addStatusListener(_onRouteStatus);
     didChangeMetrics();
   }
 
   @override
   void dispose() {
     _settle?.cancel();
+    widget.routeAnimation.removeStatusListener(_onRouteStatus);
     KeyboardForecast.next.removeListener(_onForecast);
     WidgetsBinding.instance.removeObserver(this);
     _forecastAnim.dispose();
     _dragAnim.dispose();
     _repaint.dispose();
     super.dispose();
+  }
+
+  /// Levha kapanmaya başlayınca (pop) klavye de aynı anda iner; iki dikey
+  /// hareket çakışmasın diye yükseltme dondurulur — çıkış yalnız rotanın
+  /// [SlideTransition]'ı ile tek eğride akar.
+  void _onRouteStatus(AnimationStatus status) {
+    if (status == AnimationStatus.reverse) {
+      _frozenLift ??= _currentLift();
+      _forecastAnim.stop();
+      _settle?.cancel();
+    } else if (status == AnimationStatus.forward) {
+      _frozenLift = null;
+    }
   }
 
   void _onDragTick() {
@@ -252,8 +271,25 @@ class _LiftingSheetViewState extends State<_LiftingSheetView>
     _lastStep = step;
   }
 
+  void _animateLiftTo(double target) {
+    if (!mounted) return;
+    if (!motionOf(context)) {
+      _forecastAnim.value = target;
+      _repaint.bump();
+      return;
+    }
+    unawaited(
+      _forecastAnim.animateTo(
+        target,
+        duration: AppMotion.instant,
+        curve: AppMotion.standard,
+      ),
+    );
+  }
+
   @override
   void didChangeMetrics() {
+    if (_frozenLift != null) return;
     final views = WidgetsBinding.instance.platformDispatcher.views;
     if (views.isEmpty) return;
     final view = views.first;
@@ -262,52 +298,57 @@ class _LiftingSheetViewState extends State<_LiftingSheetView>
     final nav = view.viewPadding.bottom / dpr;
     _nav = nav;
     if (raw == _liveKb) return;
+    final prev = _liveKb;
+    final beforeLift = _currentLift();
     _trackEngine(raw, nav);
     _liveKb = raw;
+    // Kapanış (köprüden öngörü gelmeden ya da gecikince de): Android'in
+    // düzensiz onProgress adımlarını kovalamak yerine kip `k` gibi tek
+    // monoton eğriyle 0'a in (kullanıcı bulgusu 2026-11-21: kapanırken kasma).
+    if (raw < prev &&
+        !_closingForecast &&
+        !_forecastAnim.isAnimating &&
+        beforeLift > 0) {
+      _useForecast = true;
+      _closingForecast = true;
+      _forecastAnim.value = beforeLift;
+      _animateLiftTo(0);
+    } else if (raw > prev && _closingForecast) {
+      // Kapanırken yeniden açılmaya döndü.
+      _closingForecast = false;
+      final target = math.max(0.0, raw - nav);
+      if (target > _forecastAnim.value) _animateLiftTo(target);
+    }
     _settle?.cancel();
     _settle = Timer(AppMotion.quick, () {
-      if (!mounted) return;
+      if (!mounted || _frozenLift != null) return;
       _animating = false;
       final settled = math.max(0.0, _liveKb - _nav);
-      if (_useForecast && (_forecastAnim.value - settled).abs() > 0.5) {
-        if (!motionOf(context)) {
-          _forecastAnim.value = settled;
-        } else {
-          unawaited(
-            _forecastAnim.animateTo(
-              settled,
-              duration: AppMotion.instant,
-              curve: AppMotion.standard,
-            ),
-          );
-        }
+      if (_useForecast &&
+          !_forecastAnim.isAnimating &&
+          (_forecastAnim.value - settled).abs() > 0.5) {
+        _animateLiftTo(settled);
       }
       _repaint.bump();
     });
-    _repaint.bump();
+    if (_currentLift() != beforeLift) _repaint.bump();
   }
 
   void _onForecast() {
+    if (_frozenLift != null) return;
     final f = KeyboardForecast.next.value;
     if (f == null || !mounted) return;
+    final cur = _currentLift();
     _useForecast = true;
     _closingForecast = !f.open;
+    if (!_forecastAnim.isAnimating) _forecastAnim.value = cur;
     final target = f.open ? math.max(0.0, f.target - _nav) : 0.0;
-    if (!motionOf(context)) {
-      _forecastAnim.value = target;
-    } else {
-      unawaited(
-        _forecastAnim.animateTo(
-          target,
-          duration: f.open ? AppMotion.instant : AppMotion.short,
-          curve: f.open ? AppMotion.enter : AppMotion.exit,
-        ),
-      );
-    }
+    _animateLiftTo(target);
     _repaint.bump();
   }
 
   double _currentLift() {
+    if (_frozenLift case final f?) return f;
     final effectiveKb =
         _animating && KeyboardInset.navExcludedWhileAnimating && _liveKb > 0
         ? _liveKb + _nav
