@@ -18,6 +18,7 @@ import '../../../../core/a11y/motion.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
+import '../../../../core/widgets/note_route_closing.dart';
 import '../../../../core/utils/link_text.dart' show findLinks;
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
@@ -559,26 +560,46 @@ class ItemsEditorState extends State<ItemsEditor>
   static const _kMaxRowsPerFrame = 8;
   static const _kGrowAfter = Duration(milliseconds: 500);
   static const _kGrowRetry = Duration(milliseconds: 120);
+  static const _kFocusGrowHold = Duration(milliseconds: 300);
 
   /// Kurulacak en çok madde (işaretsizler önce, sonra işaretliler); null = hepsi.
   int? _rowBudget;
   Timer? _budgetTimer;
+  int _growEpoch = 0;
 
-  void _growBudget() {
+  /// Kullanıcı erken bir maddeye dokunduğunda odak kurulumu ve klavye açılış
+  /// başlangıcı (ilk IME inset karesi gelene kadarki ~150 ms boşluk) ile
+  /// [_growBudget] çakışmasın (T8 / K-29).
+  void _deferGrowForFocus() {
+    if (_rowBudget == null) return;
+    final epoch = ++_growEpoch;
+    _budgetTimer?.cancel();
+    _budgetTimer = Timer(_kFocusGrowHold, () => _growBudget(epoch));
+  }
+
+  void _growBudget([int? epoch]) {
+    if (epoch != null && epoch != _growEpoch) return;
     _budgetTimer = null;
     final budget = _rowBudget;
-    if (!mounted || budget == null) return;
-    if (KeyboardInset.moving.value) {
-      // Klavye açılıp kapanırken kare bütçesi klavyenin: sonra devam.
-      _budgetTimer = Timer(_kGrowRetry, _growBudget);
+    if (!mounted || budget == null || noteRouteClosing.value) return;
+    final routeAnimating =
+        ModalRoute.of(context)?.animation?.isAnimating ?? false;
+    if (KeyboardInset.moving.value || routeAnimating) {
+      // Klavye ya da rota geçişi sürerken kare bütçesi animasyonun: sonra devam.
+      final currentEpoch = _growEpoch;
+      _budgetTimer = Timer(_kGrowRetry, () => _growBudget(currentEpoch));
       return;
     }
     setState(() {
-      final next = budget + (budget ~/ 2).clamp(_kRowsPerFrame, _kMaxRowsPerFrame);
+      final next =
+          budget + (budget ~/ 2).clamp(_kRowsPerFrame, _kMaxRowsPerFrame);
       _rowBudget = next >= _items.length ? null : next;
     });
     if (_rowBudget != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _growBudget());
+      final currentEpoch = _growEpoch;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _growBudget(currentEpoch),
+      );
     }
   }
 
@@ -808,6 +829,7 @@ class ItemsEditorState extends State<ItemsEditor>
       final controller = _controllerFor(item);
       if (node.hasFocus) {
         _lastFocusedItemId = item.id;
+        _deferGrowForFocus();
         widget.onFieldFocused?.call(
           controller,
           node,

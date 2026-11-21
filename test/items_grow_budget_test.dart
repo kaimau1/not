@@ -68,4 +68,37 @@ void main() {
     expect(find.text('madde 119'), findsOneWidget);
     await endEditor(tester);
   });
+
+  testWidgets(
+    'T8 (K-29): erken dokunuş (odak) ve klavye açılış başlangıcında kademeli kurulum bekler',
+    (tester) async {
+      await pumpEditor(tester, _list120);
+      // pumpEditor sonunda bütçe 24 satırdadır ve sıradaki kare için
+      // addPostFrameCallback kuyruktadır. Kullanıcı bir maddeye dokunduğunda
+      // odak kurulumu ve ilk IME inset karesi gelene kadarki ~150 ms boşlukta
+      // _growBudget zinciri durmalı (ÖNCE: 9 IME başlangıç karesinde 9 adım =
+      // ~5900 widget kurulumu; SONRA: 0 ItemsEditor kurulumu).
+      await tester.tap(find.text('madde 3'));
+      await tester.pump();
+
+      final counter = BuildCounter()..start();
+      for (var i = 0; i < 9; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      KeyboardInset.moving.value = true;
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      counter.stop();
+
+      expect(counter.of('ItemsEditor'), 0);
+      expect(find.text('madde 32'), findsNothing);
+
+      KeyboardInset.moving.value = false;
+      await tester.pump(const Duration(milliseconds: 300));
+      await _growFrames(tester);
+      expect(find.text('madde 119'), findsOneWidget);
+      await endEditor(tester);
+    },
+  );
 }
