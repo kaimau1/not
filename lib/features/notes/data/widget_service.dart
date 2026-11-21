@@ -12,6 +12,7 @@ import 'package:home_widget/home_widget.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
+import '../domain/note_type.dart';
 import '../presentation/notes_providers.dart';
 import 'notes_repository.dart';
 
@@ -25,6 +26,8 @@ const kHomeWidgetProviders = [
   // HE-3 (P84): hızlı ekle 1×1 ve 4×1 (tema değişince yenilensin).
   'QuickAddWidgetProvider',
   'QuickAddBarWidgetProvider',
+  // AL-6 (P97): akıllı liste ana ekran aracı.
+  'SmartListWidgetProvider',
 ];
 
 /// Aracı TAM NİTELİKLİ sınıf adıyla yeniler (KT-21, tablet turu 2026-11-18).
@@ -197,7 +200,12 @@ class WidgetService {
         hiddenFolders: hidden,
         calendar: _calendarItems(now),
       );
-      final payload = '$count\n$text\n\u0000$today';
+      final smartList = smartListWidgetData(notes, hiddenFolders: hidden);
+      final smartListItemsText = smartList.items.join('\n');
+      final payload =
+          '$count\n$text\n\u0000$today\n\u0000'
+          '${smartList.noteId}\t${smartList.title}\t'
+          '${smartList.remaining}\t${smartList.total}\t$smartListItemsText';
       if (payload == _lastPayload) return;
       _lastPayload = payload;
       await HomeWidget.saveWidgetData<String>('widget_today', today);
@@ -205,6 +213,27 @@ class WidgetService {
       await HomeWidget.saveWidgetData<String>('widget_notes', text);
       await HomeWidget.saveWidgetData<String>('widget_count', count);
       await updateHomeWidget('NotlarWidgetProvider');
+      await HomeWidget.saveWidgetData<String>(
+        'widget_list_id',
+        smartList.noteId,
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'widget_list_title',
+        smartList.title,
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'widget_list_remaining',
+        '${smartList.remaining}',
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'widget_list_total',
+        '${smartList.total}',
+      );
+      await HomeWidget.saveWidgetData<String>(
+        'widget_list_items',
+        smartListItemsText,
+      );
+      await updateHomeWidget('SmartListWidgetProvider');
     } catch (e) {
       // Yalnız geliştirmede: sürüm günlüğünü kirletmesin (KT-21).
       if (kDebugMode) debugPrint('Widget güncellenemedi: $e');
@@ -296,3 +325,104 @@ String todayWidgetPayload(
     for (final i in items) '${i.at.millisecondsSinceEpoch}\t${i.title}',
   ].join('\n');
 }
+
+/// Akıllı liste ana ekran aracı (AL-6 / P97) için seçilen özet veri.
+typedef SmartListWidgetSnapshot = ({
+  String noteId,
+  String title,
+  int remaining,
+  int total,
+  List<String> items,
+});
+
+/// Akıllı liste widget'ına gidecek etkin liste özetini seçer (AL-6 / P97).
+///
+/// Kilitli, arşivli, silinmiş ve gizli klasördeki listeler ASLA sızmaz.
+/// Öncelik sırası:
+/// 1. İşaretlenmemiş maddesi olan listeler (tamamlanmış/boş olanlardan önce),
+/// 2. Akıllı liste türü (`listKind`) atanmış notlar,
+/// 3. Sabitlenmiş listeler,
+/// 4. En son güncellenen liste.
+@visibleForTesting
+SmartListWidgetSnapshot smartListWidgetData(
+  List<Note> notes, {
+  Set<String> hiddenFolders = const {},
+  int maxItems = 5,
+}) {
+  final candidates = <({
+    Note note,
+    List<String> unchecked,
+    int total,
+    bool hasKind,
+    DateTime stamp,
+  })>[];
+
+  for (final n in notes) {
+    if (n.type != NoteType.checklist) continue;
+    if (n.archivedAt != null || n.deletedAt != null) continue;
+    if (n.locked || hiddenFolders.contains(n.folderId)) continue;
+
+    final unchecked = <String>[];
+    var total = 0;
+    for (final item in n.items) {
+      if (item.header) continue;
+      final clean = item.text.replaceAll(RegExp(r'[\t\n\r]+'), ' ').trim();
+      if (clean.isEmpty) continue;
+      total++;
+      if (!item.checked) {
+        unchecked.add(
+          clean.length > 48 ? '${clean.substring(0, 48)}…' : clean,
+        );
+      }
+    }
+
+    final hasKind = (n.listKind ?? '').trim().isNotEmpty;
+    final stamp =
+        n.updatedAt ?? n.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    candidates.add((
+      note: n,
+      unchecked: unchecked,
+      total: total,
+      hasKind: hasKind,
+      stamp: stamp,
+    ));
+  }
+
+  if (candidates.isEmpty) {
+    return (
+      noteId: '',
+      title: '',
+      remaining: 0,
+      total: 0,
+      items: const <String>[],
+    );
+  }
+
+  candidates.sort((a, b) {
+    final aOpen = a.unchecked.isNotEmpty ? 1 : 0;
+    final bOpen = b.unchecked.isNotEmpty ? 1 : 0;
+    if (aOpen != bOpen) return bOpen.compareTo(aOpen);
+    final aKind = a.hasKind ? 1 : 0;
+    final bKind = b.hasKind ? 1 : 0;
+    if (aKind != bKind) return bKind.compareTo(aKind);
+    final aPin = a.note.pinned ? 1 : 0;
+    final bPin = b.note.pinned ? 1 : 0;
+    if (aPin != bPin) return bPin.compareTo(aPin);
+    return b.stamp.compareTo(a.stamp);
+  });
+
+  final best = candidates.first;
+  var title = best.note.displayTitle
+      .replaceAll(RegExp(r'[\t\n\r]+'), ' ')
+      .trim();
+  if (title.length > 40) title = '${title.substring(0, 40)}…';
+
+  return (
+    noteId: best.note.id,
+    title: title,
+    remaining: best.unchecked.length,
+    total: best.total,
+    items: best.unchecked.take(maxItems).toList(),
+  );
+}
+

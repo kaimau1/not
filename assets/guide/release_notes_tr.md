@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 21 Kasım 2026 {#2026-11-21}
+- **Akıllı liste ana ekran aracı:** Android ana ekranına yeni **Akıllı liste** widget'ını ekleyebilirsin; en güncel açık alışveriş veya kontrol listendeki kalan madde sayısını ve ilk 5 maddeyi gösterir (kilitli ve gizli klasördeki listeler sızmaz). Karta dokununca liste doğrudan açılır, sağ üstteki **+** düğmesi tek dokunuşla **Hızlı ekle**yi açar.
 - **Günün ve haftanın özeti tek ekranda:** AI merkezindeki **Günlük brifing** ekranına **Günlük | Haftalık** geçişi eklendi; haftalık görünüm son 7 günün notları ve tamamlanan görevleri ile önümüzdeki 7 günün planını tek özet hâlinde (kilitli notları dışarıda tutarak) sunar.
 - **Pro AI — Kayıttan not (döküm → özet + yapılacaklar + "Hatırlatayım mı?"):** ses veya video döküm ekranındaki yeni **Özet ve görevler** çipi uzun kayıtları parçalayarak özetler, yapılacak maddeleri çıkarır ve kayıtta geçen tarihli işler için tek dokunuşla **Görev ekle** önerir; özeti ve maddeleri tek dokunuşla notuna ekleyebilir veya yeni not açabilirsin.
 - **Pro AI — Belgeye sor'da tek dokunuşla Özetle ve sayfa kaynakları:** PDF sohbeti açıldığında ilk önerilen soru artık **Özetle** (yanında **Ana noktalar** ve **Tarih ve görevler**); gelen yanıtlar ilgili sayfa numaralarını `[s. N]` biçiminde belirtir ve balonun altında kompakt sayfa kaynak rozetleri gösterir.

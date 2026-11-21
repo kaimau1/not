@@ -397,6 +397,17 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/quick_note_widget_info" />
         </receiver>
+
+        <!-- Akıllı Liste widget'ı (AL-6 / P97): etkin liste maddeleri + hızlı ekle -->
+        <receiver android:name=".SmartListWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_smart_list_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/smart_list_widget_info" />
+        </receiver>
         <!-- "Eki kopyala" (pasteboard eklentisi): görseli cache'e yazıp
              ${packageName}.provider yetkili FileProvider URI'siyle panoya
              koyuyor. Bu provider OLMADAN getUriForFile her seferinde

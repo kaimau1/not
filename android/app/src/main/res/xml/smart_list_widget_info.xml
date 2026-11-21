@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Akıllı Liste ana ekran aracı (AL-6 / P97): updatePeriodMillis=0 — veriler
+     uygulama tarafından anında itilir. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="180dp"
+    android:minHeight="180dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:targetCellWidth="3"
+    android:targetCellHeight="3"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/smart_list_widget"
+    android:previewLayout="@layout/smart_list_widget"
+    android:description="@string/widget_smart_list_desc"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />

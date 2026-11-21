@@ -30,4 +30,12 @@
     <string name="nota_ekle">Nota ekle</string>
     <string name="widget_quickadd_bar_label">Hızlı ekle çubuğu</string>
     <string name="widget_quickadd_desc">Uygulamayı açmadan ekle: yaz ya da söyle, seçtiğin nota eklensin</string>
+    <!-- AL-6 (P97): akıllı liste ana ekran aracı -->
+    <string name="widget_smart_list_label">Akıllı liste</string>
+    <string name="widget_smart_list_desc">Etkin alışveriş veya kontrol listendeki kalan maddeler; tek dokunuşla aç veya ekle</string>
+    <string name="widget_smart_list_empty">Henüz açık liste yok</string>
+    <string name="widget_smart_list_all_done">Listedeki tüm maddeler tamamlandı</string>
+    <string name="widget_smart_list_remaining">%1$d kaldı</string>
+    <string name="widget_smart_list_done">Tamamlandı</string>
+    <string name="widget_smart_list_more">+%1$d madde daha</string>
 </resources>

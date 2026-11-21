@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 21 November 2026 {#2026-11-21}
+- **Smart list Android home screen widget:** add the new **Smart list** widget to your home screen to view your active shopping or checklist title, remaining item count, and first 5 unchecked items (locked notes and hidden folders stay private). Tap the card to open the list directly, or tap **+** to launch **Quick add**.
 - **Daily and weekly briefing in one screen:** the **Daily briefing** screen now includes a **Daily | Weekly** toggle; weekly view summarizes the past 7 days of notes and completed tasks alongside your upcoming week while keeping locked notes private.
 - **Pro AI — Recording to note (transcript → summary, action items & reminder suggestions):** the new **Summary & actions** chip in the transcript viewer summarizes recordings (automatically chunking long transcripts), extracts action items, and suggests one-tap **Add task** reminders for dated items, ready to insert into your note or open as a new note.
 - **Pro AI — One-tap Summarize and page citations in document chat:** PDF chat now opens with **Summarize** as the first suggested prompt (alongside **Key points** and **Dates & tasks**), cites exact page numbers in answers, and displays compact page-number source pills beneath each reply.

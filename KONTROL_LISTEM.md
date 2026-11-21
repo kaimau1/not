@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Akıllı Liste ana ekran aracı (AL-6) (21 Kasım, P97, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: Android ana ekranda widget ekle → Notlar → **Akıllı liste** (3×3) ekle → etkin alışveriş/kontrol listesinin başlığı, kalan sayısı ve ilk 5 işaretlenmemiş maddesi görünüyor mu; kilitli/gizli klasördeki liste sızmıyor mu; karta dokununca liste notu doğrudan açılıyor, sağ üst `+` düğmesi **Hızlı ekle** levhasını açıyor mu; tema (Açık/Koyu) değişince widget da uyum sağlıyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Günün ve haftanın özeti tek ekranda (Günlük | Haftalık brifing) (21 Kasım, P96, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: AI merkezi → **Günlük brifing** → üstteki **Günlük | Haftalık** çipleriyle geçiş yap → **Haftalık** seçilince son 7 günün notları, tamamlanan/açık görevleri ve gelecek 7 günün takvimi özetlenip ayrı önbelleğe alınıyor mu.
   Yanlışsa: madde numarasını yaz.
