@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
@@ -993,7 +993,8 @@ const _kHourLabelWidth = 44.0;
 
 /// **HAFTA GÖRÜNÜMÜ**: üstte günler ve tüm gün şeridi, altında 24 saatlik
 /// kaydırılır ızgara; çakışan etkinlikler yan yana, bugün kırmızı "şimdi"
-/// çizgisi. Boş saate dokunmak o saate yeni etkinlik açar.
+/// çizgisi. Boş saate dokunmak o saate yeni etkinlik açar; kayıtlar uzun
+/// basıp sürüklenerek başka gün ve çeyrek saate taşınabilir (P92).
 class WeekPage extends StatefulWidget {
   const WeekPage({
     super.key,
@@ -1004,6 +1005,7 @@ class WeekPage extends StatefulWidget {
     required this.onSlotTap,
     required this.onEntryTap,
     required this.onDayTap,
+    this.onEntryMoveToTime,
     this.hourHeight = 52,
     this.dayCount = 7,
   });
@@ -1018,6 +1020,9 @@ class WeekPage extends StatefulWidget {
   final ValueChanged<DateTime> onSlotTap;
   final ValueChanged<AgendaEntry> onEntryTap;
   final ValueChanged<DateTime> onDayTap;
+
+  /// Hafta / gün ızgarasında sürükle-bırak saat değişimi (P92).
+  final void Function(AgendaEntry entry, DateTime target)? onEntryMoveToTime;
   final double hourHeight;
 
   @override
@@ -1025,6 +1030,9 @@ class WeekPage extends StatefulWidget {
 }
 
 class _WeekPageState extends State<WeekPage> {
+  final _gridKey = GlobalKey();
+  final _hover = ValueNotifier<({int dayIndex, int hour, int minute})?>(null);
+
   late final ScrollController _scroll = ScrollController(
     // −10: en üstteki saat etiketi yarıdan kesilmesin ("02:00" yarım).
     initialScrollOffset: math.max(
@@ -1055,15 +1063,31 @@ class _WeekPageState extends State<WeekPage> {
     widget.weekStart.day + widget.dayCount,
   );
 
+  ({int dayIndex, int hour, int minute})? _slotAt(
+    Offset global,
+    List<DateTime> days,
+    double h,
+  ) {
+    final box = _gridKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || box.size.width <= 0) return null;
+    final local = box.globalToLocal(global);
+    final colW = box.size.width / days.length;
+    final dayIndex = (local.dx / colW).floor().clamp(0, days.length - 1);
+    final snapped = snapToQuarterHour(local.dy, h);
+    return (dayIndex: dayIndex, hour: snapped.hour, minute: snapped.minute);
+  }
+
   @override
   void dispose() {
+    _hover.dispose();
     _scroll.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final l10n = context.l10n;
     final h = widget.hourHeight;
     final days = [
@@ -1086,9 +1110,13 @@ class _WeekPageState extends State<WeekPage> {
     ];
     final allDayRows = allDay.fold<int>(0, (m, l) => math.max(m, l.length));
     final hasHoliday = holidays.any((x) => x != null);
+    final hasMovable =
+        widget.onEntryMoveToTime != null &&
+        agenda.values.any((list) => list.any(canMoveEntry));
     final line = scheme.outlineVariant.withValues(alpha: 0.7);
-    final labelStyle = Theme.of(context).textTheme.labelSmall
-        ?.copyWith(color: scheme.onSurfaceVariant);
+    final labelStyle = theme.textTheme.labelSmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+    );
     // GÖRSEL (kullanıcı bulgusu 2026-11-07: hafta "düz, boş"): başlık kâğıt
     // şerit; hafta sonu ve bugün sütunları hafif tonlu; tatil günü kırmızı.
     Color? columnTint(int i) {
@@ -1104,6 +1132,120 @@ class _WeekPageState extends State<WeekPage> {
       }
       return null;
     }
+
+    final baseGrid = CustomPaint(
+      painter: _HourLinesPainter(h, line),
+      child: Row(
+        key: hasMovable ? _gridKey : null,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < days.length; i++)
+            Expanded(
+              child: _WeekDayColumn(
+                day: days[i],
+                tint: columnTint(i),
+                blocks: timedBlocksFor(
+                  days[i],
+                  agenda[dayKey(days[i])] ?? const [],
+                ),
+                hourHeight: h,
+                now: days[i] == widget.today ? widget.now : null,
+                line: line,
+                onSlotTap: widget.onSlotTap,
+                onEntryTap: widget.onEntryTap,
+                enableDrag: hasMovable,
+              ),
+            ),
+        ],
+      ),
+    );
+
+    // S22 bütçesi: taşınabilir kayıt yoksa tek bir DragTarget bile kurulmaz.
+    final Widget timedGrid = hasMovable
+        ? DragTarget<AgendaEntry>(
+            key: const ValueKey('week-timed-drop-target'),
+            onWillAcceptWithDetails: (d) => canMoveEntry(d.data),
+            onMove: (d) {
+              final slot = _slotAt(d.offset, days, h);
+              if (_hover.value != slot) _hover.value = slot;
+            },
+            onLeave: (_) => _hover.value = null,
+            onAcceptWithDetails: (d) {
+              final slot = _slotAt(d.offset, days, h);
+              _hover.value = null;
+              if (slot == null) return;
+              final day = days[slot.dayIndex];
+              widget.onEntryMoveToTime?.call(
+                d.data,
+                DateTime(day.year, day.month, day.day, slot.hour, slot.minute),
+              );
+            },
+            builder: (context, candidate, _) {
+              if (candidate.isEmpty) return baseGrid;
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(child: baseGrid),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ValueListenableBuilder<
+                        ({int dayIndex, int hour, int minute})?
+                      >(
+                        valueListenable: _hover,
+                        builder: (context, slot, _) {
+                          if (slot == null) return const SizedBox.shrink();
+                          return LayoutBuilder(
+                            builder: (context, c) {
+                              final colW = c.maxWidth / days.length;
+                              final top = (slot.hour + slot.minute / 60) * h;
+                              return Stack(
+                                children: [
+                                  Positioned(
+                                    left: slot.dayIndex * colW + 2,
+                                    width: math.max(0, colW - 4),
+                                    top: top,
+                                    height: math.max(22, h * 0.5),
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: scheme.primaryContainer
+                                            .withValues(alpha: AppAlpha.strong),
+                                        borderRadius: BorderRadius.circular(
+                                          AppRadius.xs,
+                                        ),
+                                        border: Border.all(
+                                          color: scheme.primary,
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpace.xs,
+                                          vertical: AppSpace.xxs,
+                                        ),
+                                        child: Text(
+                                          formatHm(slot.hour, slot.minute),
+                                          style: AppText.of(theme).badge
+                                              .copyWith(
+                                                color:
+                                                    scheme.onPrimaryContainer,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          )
+        : baseGrid;
 
     return Column(
       children: [
@@ -1160,14 +1302,11 @@ class _WeekPageState extends State<WeekPage> {
                                   lines: single ? 1 : 2,
                                 ),
                               for (final e in allDay[i].take(3))
-                                GestureDetector(
-                                  onTap: () => widget.onEntryTap(e),
-                                  child: _MonthChip(
-                                    entry: e,
-                                    height: single ? 20 : kMonthChipTwoLine,
-                                    lines: single ? 1 : 2,
-                                    dim: false,
-                                  ),
+                                _weekAllDayChip(
+                                  context,
+                                  e,
+                                  single: single,
+                                  draggable: hasMovable && canMoveEntry(e),
                                 ),
                               if (allDay[i].length > 3)
                                 Text(
@@ -1191,50 +1330,15 @@ class _WeekPageState extends State<WeekPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    width: _kHourLabelWidth,
-                    child: Stack(
-                      children: [
-                        for (var hour = 1; hour < 24; hour++)
-                          Positioned(
-                            top: hour * h - 7,
-                            right: 6,
-                            child: Text(
-                              formatHm(hour, 0),
-                              style: labelStyle?.copyWith(fontSize: 10),
-                            ),
-                          ),
-                      ],
+                  CustomPaint(
+                    size: Size(_kHourLabelWidth, 24 * h),
+                    painter: _HourLabelsPainter(
+                      h,
+                      labelStyle?.copyWith(fontSize: 10),
+                      Directionality.of(context),
                     ),
                   ),
-                  Expanded(
-                    child: CustomPaint(
-                      painter: _HourLinesPainter(h, line),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (var i = 0; i < days.length; i++)
-                            Expanded(
-                              child: _WeekDayColumn(
-                                day: days[i],
-                                tint: columnTint(i),
-                                blocks: timedBlocksFor(
-                                  days[i],
-                                  agenda[dayKey(days[i])] ?? const [],
-                                ),
-                                hourHeight: h,
-                                now: days[i] == widget.today
-                                    ? widget.now
-                                    : null,
-                                line: line,
-                                onSlotTap: widget.onSlotTap,
-                                onEntryTap: widget.onEntryTap,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  Expanded(child: timedGrid),
                 ],
               ),
             ),
@@ -1243,6 +1347,61 @@ class _WeekPageState extends State<WeekPage> {
       ],
     );
   }
+
+  Widget _weekAllDayChip(
+    BuildContext context,
+    AgendaEntry entry, {
+    required bool single,
+    required bool draggable,
+  }) {
+    final chip = GestureDetector(
+      onTap: () => widget.onEntryTap(entry),
+      child: _MonthChip(
+        entry: entry,
+        height: single ? 20 : kMonthChipTwoLine,
+        lines: single ? 1 : 2,
+        dim: false,
+      ),
+    );
+    if (!draggable) return chip;
+    return LongPressDraggable<AgendaEntry>(
+      data: entry,
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      feedback: _weekDragFeedback(context, entry),
+      childWhenDragging: Opacity(opacity: 0.35, child: chip),
+      child: chip,
+    );
+  }
+}
+
+Widget _weekDragFeedback(BuildContext context, AgendaEntry entry) {
+  final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final l10n = context.l10n;
+  final color = entryColor(entry, scheme);
+  return Transform.translate(
+    offset: const Offset(-24, -14),
+    child: Material(
+      elevation: 4,
+      color: color,
+      borderRadius: BorderRadius.circular(AppRadius.xs),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 160),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.s,
+            vertical: AppSpace.xs,
+          ),
+          child: Text(
+            entryTitle(entry, l10n),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppText.of(theme).badge.copyWith(color: scheme.onPrimary),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// Hafta başlığında bir gün: kısa ad + numara (bugün dolu daire, tatil
@@ -1280,6 +1439,7 @@ class _WeekDayHeader extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Column(
+            spacing: 2,
             children: [
               Text(
                 DateFormat.E().format(day),
@@ -1288,7 +1448,6 @@ class _WeekDayHeader extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 2),
               Container(
                 width: 30,
                 height: 30,
@@ -1339,6 +1498,33 @@ class _HourLinesPainter extends CustomPainter {
       old.hourHeight != hourHeight || old.color != color;
 }
 
+class _HourLabelsPainter extends CustomPainter {
+  _HourLabelsPainter(this.hourHeight, this.style, this.textDirection);
+
+  final double hourHeight;
+  final TextStyle? style;
+  final TextDirection textDirection;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final tp = TextPainter(textDirection: textDirection);
+    for (var hour = 1; hour < 24; hour++) {
+      tp.text = TextSpan(text: formatHm(hour, 0), style: style);
+      tp.layout();
+      tp.paint(
+        canvas,
+        Offset(size.width - tp.width - 6, hour * hourHeight - 7),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_HourLabelsPainter old) =>
+      old.hourHeight != hourHeight ||
+      old.style != style ||
+      old.textDirection != textDirection;
+}
+
 class _WeekDayColumn extends StatelessWidget {
   const _WeekDayColumn({
     required this.day,
@@ -1349,6 +1535,7 @@ class _WeekDayColumn extends StatelessWidget {
     required this.line,
     required this.onSlotTap,
     required this.onEntryTap,
+    this.enableDrag = false,
   });
 
   final DateTime day;
@@ -1359,6 +1546,7 @@ class _WeekDayColumn extends StatelessWidget {
   final Color line;
   final ValueChanged<DateTime> onSlotTap;
   final ValueChanged<AgendaEntry> onEntryTap;
+  final bool enableDrag;
 
   double _y(DateTime t) =>
       (t.hour * 60 + t.minute) / 60 * hourHeight +
@@ -1394,32 +1582,12 @@ class _WeekDayColumn extends StatelessWidget {
                     height: math.max(18, _y(b.end) - _y(b.start) - 1),
                     left: b.column * w / b.columns + 1,
                     width: w / b.columns - 2,
-                    child: GestureDetector(
-                      onTap: () => onEntryTap(b.entry),
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(3, 2, 2, 1),
-                        decoration: BoxDecoration(
-                          color: entryColor(b.entry, scheme).withValues(
-                            alpha: b.entry is EventOccurrence ? 0.85 : 0.22,
-                          ),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          entryTitle(b.entry, l10n),
-                          // Dar blokta sözcük harf harf kırılmasın: tek
-                          // satır, sağa doğru solar.
-                          maxLines: w / b.columns >= 56 ? 3 : 1,
-                          softWrap: w / b.columns >= 56,
-                          overflow: TextOverflow.fade,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            height: 1.15,
-                            color: b.entry is EventOccurrence
-                                ? scheme.onPrimary
-                                : scheme.onSurface,
-                          ),
-                        ),
-                      ),
+                    child: _blockTile(
+                      context,
+                      b,
+                      w: w,
+                      scheme: scheme,
+                      l10n: l10n,
                     ),
                   ),
                 if (now != null)
@@ -1450,6 +1618,50 @@ class _WeekDayColumn extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+
+  Widget _blockTile(
+    BuildContext context,
+    TimedBlock b, {
+    required double w,
+    required ColorScheme scheme,
+    required AppLocalizations l10n,
+  }) {
+    final tile = GestureDetector(
+      onTap: () => onEntryTap(b.entry),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(3, 2, 2, 1),
+        decoration: BoxDecoration(
+          color: entryColor(
+            b.entry,
+            scheme,
+          ).withValues(alpha: b.entry is EventOccurrence ? 0.85 : 0.22),
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Text(
+          entryTitle(b.entry, l10n),
+          // Dar blokta sözcük harf harf kırılmasın: tek satır, sağa solar.
+          maxLines: w / b.columns >= 56 ? 3 : 1,
+          softWrap: w / b.columns >= 56,
+          overflow: TextOverflow.fade,
+          style: TextStyle(
+            fontSize: 10.5,
+            height: 1.15,
+            color: b.entry is EventOccurrence
+                ? scheme.onPrimary
+                : scheme.onSurface,
+          ),
+        ),
+      ),
+    );
+    if (!enableDrag || !canMoveEntry(b.entry)) return tile;
+    return LongPressDraggable<AgendaEntry>(
+      data: b.entry,
+      dragAnchorStrategy: pointerDragAnchorStrategy,
+      feedback: _weekDragFeedback(context, b.entry),
+      childWhenDragging: Opacity(opacity: 0.35, child: tile),
+      child: tile,
     );
   }
 }

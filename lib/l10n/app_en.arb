@@ -3374,7 +3374,7 @@
   "storeModeAllDone": "All done!",
   "storeModeAddHint": "Quickly add an item…",
   "backupPasswordTitle": "Backup password (optional)",
-  "backupPasswordInfo": "Setting a password encrypts the backup with AES-256. A forgotten password cannot be recovered.",
+  "backupPasswordInfo": "Setting a password protects the backup with strong encryption. A forgotten password cannot be recovered.",
   "backupPasswordHint": "Password",
   "backupPasswordConfirmHint": "Confirm password",
   "backupPasswordMismatch": "Passwords do not match",

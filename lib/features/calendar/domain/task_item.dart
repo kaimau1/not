@@ -377,3 +377,33 @@ int compareTasks(TaskItem a, TaskItem b) {
   if (ac != null && bc != null) return ac.compareTo(bc);
   return a.id.compareTo(b.id);
 }
+
+/// Görevleri elle sıralarken (P92) yeni sırayı sıfır dolgulu dizelere çevirir
+/// (`'000001'`, `'000002'`, ...) ve yalnız `position` alanı değişenleri döner.
+/// [newIndex], Flutter `onReorderItem` sözleşmesine göre öğe çıkarıldıktan
+/// sonraki hedef dizindir (`0 <= newIndex < current.length`).
+List<TaskItem> reorderedTaskPositions(
+  List<TaskItem> current,
+  int oldIndex,
+  int newIndex,
+) {
+  if (current.length < 2 ||
+      oldIndex < 0 ||
+      oldIndex >= current.length ||
+      newIndex < 0 ||
+      newIndex >= current.length ||
+      oldIndex == newIndex) {
+    return const [];
+  }
+  final next = List<TaskItem>.of(current);
+  final moved = next.removeAt(oldIndex);
+  next.insert(newIndex, moved);
+  final changed = <TaskItem>[];
+  for (var i = 0; i < next.length; i++) {
+    final pos = (i + 1).toString().padLeft(6, '0');
+    if (next[i].position != pos) {
+      changed.add(next[i].copyWith(position: pos));
+    }
+  }
+  return changed;
+}

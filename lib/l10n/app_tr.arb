@@ -4230,7 +4230,7 @@
   "storeModeAllDone": "Hepsi tamam!",
   "storeModeAddHint": "Aklına geleni hızlı ekle…",
   "backupPasswordTitle": "Yedek parolası (isteğe bağlı)",
-  "backupPasswordInfo": "Parola belirlersen yedek AES-256 ile şifrelenir. Parolayı unutursan yedek açılamaz.",
+  "backupPasswordInfo": "Parola belirlersen yedek güçlü şifrelemeyle korunur. Parolayı unutursan yedek açılamaz.",
   "backupPasswordHint": "Parola",
   "backupPasswordConfirmHint": "Parolayı doğrula",
   "backupPasswordMismatch": "Parolalar eşleşmiyor",
