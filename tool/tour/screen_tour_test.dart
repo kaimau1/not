@@ -494,7 +494,11 @@ Future<void> _pumpApp(
     'grid_columns': ?int.tryParse(Platform.environment['TOUR_COLUMNS'] ?? ''),
     // Takvim sahneleri ajanda görünümünde, sıkıştırma ipucu gösterilmiş.
     if (scene.startsWith('takvim')) ...{
-      'calendar_view': 'agenda',
+      'calendar_view': switch (scene) {
+        'takvim-hafta' => 'week',
+        'takvim-ay' => 'month',
+        _ => 'agenda',
+      },
       'calendar_pinch_hint_v1': true,
     },
   });
@@ -1051,6 +1055,9 @@ void main() {
       '/calendar',
       () => find.byKey(const ValueKey('calendar-month-toggle')),
     ),
+    // 2026-11-21: hafta panosu ve görünüm düğmeleri; ay + gün paneli.
+    ('takvim-hafta', '/calendar', null),
+    ('takvim-ay', '/calendar', null),
     ('klasorler', '/folders', null),
     ('yapay-zeka', '/ai', null),
     ('arsiv', '/archive', null),

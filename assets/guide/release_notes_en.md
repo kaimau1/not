@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 21 November 2026 {#2026-11-21}
+- **Week board in the calendar:** **double-tap** a day in month view to open its week; the week is no longer a time grid but one large tile per day, showing events with times and linked notes plus notes you wrote that day with a title + first-line preview. Tap a tile for the day's details, tap the day name for its time grid.
+- **Year · Month · Week · Agenda buttons always visible:** the view picker is no longer hidden in a menu; it sits under the title as one-tap buttons.
+- **Calendar no longer shrinks needlessly:** with the day panel open the calendar doesn't squeeze further up; the panel stays at half the screen, pull down for the tall month view.
+- **Zoom out on pinned pictures:** pinch out on a tall picture that fits the width and the whole picture fits the pane; pinch in or double-tap to fit the width again.
 - **Attached PDFs share as the full document:** sharing a note as **PDF** or **Image** now sends the attached PDF with all its pages, your pen writing and its bubbles opened (previously only a blank page with the title and date came out). If the note has its own text, it goes along as a separate file.
 - **Pen and shrink option on pinned attachments:** the pen button under a pinned PDF/picture now opens the note's normal pen tools without changing the pane. Narrowing the pane no longer shrinks pictures — like PDFs, they fit the width and scroll; switch back per note with ⋮ → **Shrink when narrowed**. A pinned picture first opens up to half the screen.
 - **Delete notes from the calendar and back-button order:** a **trash** button on linked note cards in the day panel and in the note preview deletes the note (with Undo). Back now steps through: an open day panel closes together with the selection, week view returns to month, and only then you leave the calendar.

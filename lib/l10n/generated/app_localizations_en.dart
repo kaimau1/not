@@ -7610,6 +7610,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String calendarMoreCount(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get calendarWeekSummaryTitle => 'This week';
+
+  @override
+  String calendarWeekSummaryPlans(int count) {
+    return '$count plans';
+  }
+
+  @override
+  String calendarWeekSummaryNotes(int count) {
+    return '$count notes';
+  }
+
+  @override
   String get itemMenuTask => 'Make task';
 
   @override

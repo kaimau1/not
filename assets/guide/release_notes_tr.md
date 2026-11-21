@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 21 Kasım 2026 {#2026-11-21}
+- **Takvimde hafta panosu:** ay görünümünde bir güne **çift dokununca** o günün haftası açılır; hafta artık saat çizelgesi değil, her gün için büyük bir kare: içinde etkinlikler saatleriyle, bağlı notlar ve o gün yazdığın notlar başlık + ilk satır önizlemesiyle. Karoya dokununca günün ayrıntısı, gün adına dokununca saat çizelgesi açılır.
+- **Yıl · Ay · Hafta · Ajanda düğmeleri hep açık:** görünüm seçimi menüde gizli değil, başlığın altında tek dokunuşla seçilen düğmelerde.
+- **Takvim gereksiz yere daralmıyor:** gün paneli açıkken takvim ayrıca yukarı sıkışmıyor; panel hep ekranın yarısında, aşağı çekince uzun ay görünümü.
+- **Sabit görselde uzaklaştırma:** genişliğe oturan uzun görselde iki parmakla uzaklaşınca bütün görsel bölmeye sığar; yakınlaşınca ya da çift dokununca yeniden genişliğe oturur.
 - **Ekli PDF tam belge olarak paylaşılıyor:** notu **PDF** ya da **Görsel** olarak paylaşınca ekteki PDF artık bütün sayfalarıyla, üstüne kalemle yazdıkların ve balonlar açık hâlde gider (eskiden yalnız başlık ve tarihli boş bir sayfa çıkıyordu). Notun kendi yazısı varsa o da ayrı bir dosya olarak eklenir.
 - **Sabit ekte kalem ve küçülme seçeneği:** PDF/görsel bölmesinin altındaki kalem düğmesi artık bölmeyi değiştirmeden notun normal kalem araçlarını açar. Bölmeyi yukarı daraltınca görsel de PDF gibi küçülmeden genişliğe oturur ve kayar; isteyen ⋮ → **Daraltınca küçülsün** ile not başına eski davranışa geçebilir. Görsel ilk sabitlenişte ekranın yarısına kadar açılır.
 - **Takvimde not silme ve geri tuşu sırası:** gün panelindeki bağlı not kartında ve not önizlemesinde **çöp** düğmesiyle notu silebilirsin (Geri al ile döner). Geri tuşu artık sırayla gider: açık gün paneli seçimle birlikte kapanır, hafta görünümü aya döner, ancak ondan sonra ana ekrana çıkılır.

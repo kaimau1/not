@@ -279,4 +279,43 @@ void main() {
       reason: 'yeniden çizimde eski liste geri yazıldı, ilk çizgi silindi',
     );
   });
+
+  // Kullanıcı isteği 2026-11-21: "görselde zoom out da yapılabilmeli, şu an
+  // çift tık ile sadece yakınlaşıyor". Genişliğe oturan uzun görselde iki
+  // parmakla uzaklaşınca BÜTÜN görsel bölmeye sığar; çift dokunuş geri alır.
+  testWidgets('iki parmakla uzaklaşınca bütün görsel sığar, çift dokunuş '
+      'genişliğe döner', (tester) async {
+    await pump(tester, image, shrinkToFit: false);
+    final origin = tester.getTopLeft(find.byType(PinnedMediaPane));
+    final viewer = find.byType(InteractiveViewer);
+    // 2:1 görsel 400 genişlikte 200 boy; bölme 120 → kayar.
+    expect(tester.getSize(viewer).height, 200);
+
+    final center = origin + const Offset(200, 60);
+    final a = await tester.startGesture(center - const Offset(120, 0));
+    final b = await tester.startGesture(center + const Offset(120, 0));
+    await tester.pump();
+    for (var i = 0; i < 10; i++) {
+      await a.moveBy(const Offset(10, 0));
+      await b.moveBy(const Offset(-10, 0));
+      await tester.pump();
+    }
+    await a.up();
+    await b.up();
+    await tester.pumpAndSettle();
+    expect(tester.getSize(viewer).height, 120, reason: 'bütün görsel kipi');
+    final zoom = tester
+        .widget<InteractiveViewer>(viewer)
+        .transformationController!
+        .value
+        .getMaxScaleOnAxis();
+    expect(zoom, 1);
+
+    await tester.tapAt(center);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tapAt(center);
+    await tester.pumpAndSettle();
+    expect(tester.getSize(viewer).height, 200, reason: 'genişliğe oturdu');
+    await tester.pump(const Duration(seconds: 1));
+  });
 }

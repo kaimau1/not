@@ -9,7 +9,7 @@ import 'package:notlar/features/calendar/data/calendar_repository.dart';
 import 'package:notlar/features/calendar/domain/calendar_event.dart';
 import 'package:notlar/features/calendar/domain/task_item.dart';
 import 'package:notlar/features/calendar/presentation/calendar_screen.dart';
-import 'package:notlar/features/calendar/presentation/calendar_views.dart';
+import 'package:notlar/features/calendar/presentation/week_board.dart';
 import 'package:notlar/features/calendar/presentation/month_grid.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1480,18 +1480,23 @@ void main() {
   testWidgets('S22: takvim hafta kaydırma (telefon)', (tester) async {
     await _pumpCalendar(tester, 'week');
     await tester.pumpAndSettle();
-    final before = tester.widget<WeekPage>(find.byType(WeekPage)).weekStart;
+    final before = tester.widget<WeekBoardPage>(find.byType(WeekBoardPage)).weekStart;
     final swipe = await _frames(tester, () async {
-      await tester.fling(find.byType(WeekPage), const Offset(-300, 0), 1500);
+      await tester.fling(
+        find.byType(WeekBoardPage),
+        const Offset(-300, 0),
+        1500,
+        warnIfMissed: false,
+      );
     }, frames: 40);
     await tester.pumpAndSettle();
     expect(
-      tester.widget<WeekPage>(find.byType(WeekPage)).weekStart,
+      tester.widget<WeekBoardPage>(find.byType(WeekBoardPage)).weekStart,
       before.add(const Duration(days: 7)),
       reason: 'bir hafta ileri',
     );
     _expectBudget('S22', {
-      'hafta_sayfasi': swipe.counts['WeekPage'] ?? 0,
+      'hafta_sayfasi': swipe.counts['WeekBoardPage'] ?? 0,
       'toplam_kurulum': swipe.total,
       'kare_kurulum': swipe.worst,
     });

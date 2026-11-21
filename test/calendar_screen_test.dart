@@ -12,6 +12,7 @@ import 'package:notlar/features/calendar/domain/calendar_event.dart';
 import 'package:notlar/features/calendar/domain/task_item.dart';
 import 'package:notlar/features/calendar/presentation/calendar_screen.dart';
 import 'package:notlar/features/calendar/presentation/calendar_views.dart';
+import 'package:notlar/features/calendar/presentation/week_board.dart';
 import 'package:notlar/features/calendar/presentation/event_editor.dart';
 import 'package:notlar/features/calendar/presentation/month_grid.dart';
 import 'package:notlar/features/notes/domain/note.dart';
@@ -431,12 +432,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('calendar-day-panel')), findsOneWidget);
       final half = tester.getSize(find.byType(MonthPage)).height;
-      await tester.tap(find.byKey(const ValueKey('day-panel-compact')));
-      await tester.pumpAndSettle();
-      expect(
-        tester.getSize(find.byType(MonthPage)).height,
-        lessThan(half),
+      // Kullanıcı isteği 2026-11-21: takvim panelin üstünde ayrıca daralmaz.
+      expect(find.byKey(const ValueKey('day-panel-compact')), findsNothing);
+      await tester.fling(
+        find.byKey(const ValueKey('calendar-month-drag-zone')),
+        const Offset(0, -140),
+        900,
       );
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byType(MonthPage)).height, closeTo(half, 1));
       expect(tester.takeException(), isNull);
       await tester.tap(find.byKey(const ValueKey('day-panel-close')));
       await tester.pumpAndSettle();
@@ -462,9 +466,10 @@ void main() {
       expect(tester.getSize(find.byType(MonthPage)).height, closeTo(full, 1));
     });
 
-    // Kullanıcı isteği 2026-11-07: telefonda da ileri/geri; güne çift
-    // dokununca yalnız o günün sayfası.
-    testWidgets('telefonda ileri/geri ay; çift dokunuş gün sayfası', (
+    // Kullanıcı isteği 2026-11-07: telefonda da ileri/geri. 2026-11-21: güne
+    // çift dokununca o günün HAFTASI (büyük karolu pano); karo başlığı gün
+    // sayfasını açar.
+    testWidgets('telefonda ileri/geri ay; çift dokunuş hafta panosu', (
       tester,
     ) async {
       await usePrefs({});
@@ -485,6 +490,15 @@ void main() {
       await tester.tap(cell);
       await tester.pump(const Duration(milliseconds: 50));
       await tester.tap(cell);
+      await tester.pumpAndSettle();
+      final board = tester.widget<WeekBoardPage>(find.byType(WeekBoardPage));
+      expect(board.weekStart, DateTime(2026, 11, 9));
+      expect(board.selected, DateTime(2026, 11, 12));
+      expect(find.byKey(const ValueKey('week-board-summary')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(
+        find.byKey(const ValueKey('week-board-open-2026-11-12')),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(CalendarDayScreen), findsOneWidget);
       final dayTitle = DateFormat.yMMMMEEEEd();
@@ -514,19 +528,13 @@ void main() {
       expect(find.text('29 Ekim Bayramı'), findsOneWidget);
       expect(find.text('Arife'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('calendar-view-menu')));
+      // Görünüm düğmeleri hep açık (kullanıcı isteği 2026-11-21).
+      await tester.tap(find.byKey(const ValueKey('calendar-view-week')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Hafta').last);
-      await tester.pumpAndSettle();
-      expect(find.byType(WeekPage), findsOneWidget);
+      expect(find.byType(WeekBoardPage), findsOneWidget);
       expect(find.textContaining('–'), findsWidgets);
       await tester.tap(
-        find
-            .descendant(
-              of: find.byType(WeekPage),
-              matching: find.byType(InkWell),
-            )
-            .first,
+        find.byKey(const ValueKey('week-board-open-2026-09-28')),
       );
       await tester.pumpAndSettle();
       expect(find.byType(CalendarDayScreen), findsOneWidget);
@@ -601,7 +609,7 @@ void main() {
       // 18 Kasım'ın satırında yakınlaştır → 16–22 Kasım haftası.
       await pinch(tester, tester.getCenter(find.text('18')), zoomIn: true);
       expect(find.byType(MonthPage), findsNothing);
-      final week = tester.widget<WeekPage>(find.byType(WeekPage));
+      final week = tester.widget<WeekBoardPage>(find.byType(WeekBoardPage));
       expect(week.weekStart, DateTime(2026, 11, 16));
       expect(prefs.getString('calendar_view'), 'week');
 
@@ -633,10 +641,10 @@ void main() {
       phone(tester);
       await tester.pumpWidget(app(events: [meeting]));
       await tester.pumpAndSettle();
-      expect(find.byType(WeekPage), findsOneWidget);
+      expect(find.byType(WeekBoardPage), findsOneWidget);
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.byType(WeekPage), findsNothing);
+      expect(find.byType(WeekBoardPage), findsNothing);
       expect(find.byType(MonthPage), findsOneWidget);
       expect(prefs.getString('calendar_view'), 'month');
 
@@ -658,7 +666,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('hafta: etkinlik bloğu, boş saate dokununca yeni etkinlik', (
+    testWidgets('hafta panosu: etkinlik karoda, dokununca düzenleyici', (
       tester,
     ) async {
       await usePrefs({'calendar_view': 'week'});
@@ -666,7 +674,7 @@ void main() {
       await tester.pumpWidget(app(events: [meeting]));
       await tester.pumpAndSettle();
       expect(
-        tester.widget<WeekPage>(find.byType(WeekPage)).weekStart,
+        tester.widget<WeekBoardPage>(find.byType(WeekBoardPage)).weekStart,
         DateTime(2026, 11, 2),
       );
       expect(find.text('Toplantı'), findsOneWidget);
@@ -687,9 +695,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Haziran 2026'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('calendar-view-menu')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Ajanda').last);
+      await tester.tap(find.byKey(const ValueKey('calendar-view-agenda')));
       await tester.pumpAndSettle();
       expect(find.byType(MonthPage), findsNothing);
       expect(find.text('Burada henüz etkinlik yok'), findsOneWidget);

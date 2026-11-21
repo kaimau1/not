@@ -13568,6 +13568,30 @@ abstract class AppLocalizations {
   /// **'O gün yazılan notlar ({count})'**
   String calendarDayWrittenNotes(int count);
 
+  /// No description provided for @calendarMoreCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count} daha'**
+  String calendarMoreCount(int count);
+
+  /// No description provided for @calendarWeekSummaryTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hafta'**
+  String get calendarWeekSummaryTitle;
+
+  /// No description provided for @calendarWeekSummaryPlans.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} plan'**
+  String calendarWeekSummaryPlans(int count);
+
+  /// No description provided for @calendarWeekSummaryNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not'**
+  String calendarWeekSummaryNotes(int count);
+
   /// No description provided for @itemMenuTask.
   ///
   /// In tr, this message translates to:

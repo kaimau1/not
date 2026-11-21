@@ -40,6 +40,7 @@ import 'note_calendar_links.dart';
 import 'month_grid.dart';
 import 'pinch_zoom.dart';
 import 'task_editor.dart';
+import 'week_board.dart';
 import '../../../core/haptics.dart';
 
 /// Hatırlatıcılı notlar (gizli klasör bastırması Hatırlatıcılar ekranıyla
@@ -114,6 +115,38 @@ final calendarDayNotesProvider = Provider<Map<String, List<DayNote>>>((ref) {
   }
   return out;
 });
+
+/// Hafta panosu için o hafta yazılan/düzenlenen notlar (gün anahtarı →
+/// notlar). Güne bağlı notlar zaten ajandada (tekrar edilmez); gizli
+/// klasördekiler görünmez. Yalnız o haftanın notları dinlenir.
+final calendarWeekWrittenNotesProvider =
+    Provider.family<Map<String, List<Note>>, DateTime>((ref, weekStart) {
+      final end = DateTime(weekStart.year, weekStart.month, weekStart.day + 7);
+      final suppressed = ref.watch(suppressedFolderIdsProvider);
+      final links = ref.watch(dayLinksStreamProvider).value ?? const {};
+      final linked = <String>{for (final l in links.values) ...l};
+      final slice = ref.watch(
+        notesStreamProvider.select((async) {
+          final notes = async.value ?? const <Note>[];
+          return _NoteListSlice([
+            for (final n in notes)
+              if (n.deletedAt == null &&
+                  n.archivedAt == null &&
+                  n.updatedAt != null &&
+                  !n.updatedAt!.isBefore(weekStart) &&
+                  n.updatedAt!.isBefore(end) &&
+                  !linked.contains(n.id) &&
+                  (n.folderId == null || !suppressed.contains(n.folderId)))
+                n,
+          ]);
+        }),
+      );
+      final out = <String, List<Note>>{};
+      for (final n in slice.notes) {
+        (out[dayKey(startOfDay(n.updatedAt!))] ??= []).add(n);
+      }
+      return out;
+    });
 
 /// Takvim görünümlerini ilgilendiren alanlara göre değer eşitliği sunan dilim.
 class _NoteListSlice {
@@ -222,9 +255,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   /// olarak seçili günün paneli altta açıktır; takvimi ya da tutamağı aşağı
   /// çekince panel kapanıp uzun ay görünümüne geçer. null = uzun ay görünümü.
   late DateTime? _panelDay = _selected;
-
-  /// Panel açıkken takvim daha da daraltıldı (tutamak yukarı çekildi).
-  bool _panelCompact = false;
 
   /// Takvim üstündeki dikey sürükleme birikimi (aşağı çekince uzun takvim).
   double _gridDragDy = 0;
@@ -372,7 +402,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       onDayTap: (d) => unawaited(_showDay(d, data)),
       onNoteTap: _openNotePreview,
       onEntryMove: _moveEntry,
-      onDayDoubleTap: _openDayPage,
+      onDayDoubleTap: _openWeekOf,
       onDayLongPress: (d) {
         setState(() => _selected = d);
         unawaited(showEventEditor(context, day: d));
@@ -397,10 +427,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     child: Center(
                       child: _OpenDayPanelPill(
                         selected: _selected,
-                        onOpen: () => setState(() {
-                          _panelDay = _selected;
-                          _panelCompact = false;
-                        }),
+                        onOpen: () => setState(() => _panelDay = _selected),
                       ),
                     ),
                   ),
@@ -421,32 +448,42 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return page;
   }
 
-  Widget _weekPage(int i, CalendarData data, DateTime now) {
-    final minute = DateTime(now.year, now.month, now.day, now.hour, now.minute);
+  Widget _weekPage(int i, CalendarData data) {
     final firstDow = _firstDow;
     final hit = _weekPages[i];
     if (hit != null &&
         identical(hit.$1, data) &&
         hit.$2 == _today &&
         hit.$3 == firstDow &&
-        hit.$4 == minute) {
+        hit.$4 == _selected) {
       return hit.$5;
     }
-    final page = WeekPage(
-      weekStart: weekAtIndex(i, firstDow),
-      data: data,
-      today: _today,
-      now: now,
-      onSlotTap: (t) => unawaited(showEventEditor(context, start: t)),
-      onEntryTap: _openEntry,
-      // Üstteki güne dokununca o günün sayfası (kullanıcı isteği
-      // 2026-11-07; önceden alttan levha açılıyordu).
-      onDayTap: _openDayPage,
-      onEntryMoveToTime: _moveEntryToTime,
+    final weekStart = weekAtIndex(i, firstDow);
+    // HAFTA PANOSU (kullanıcı isteği 2026-11-21): saat çizelgesi yerine
+    // büyük karolar + not önizlemeleri; saat çizelgesi gün sayfasında.
+    final Widget page = Consumer(
+      builder: (context, ref, _) => WeekBoardPage(
+        weekStart: weekStart,
+        data: data,
+        today: _today,
+        selected: _selected,
+        targets: _targets,
+        written: ref.watch(calendarWeekWrittenNotesProvider(weekStart)),
+        onDayTap: (d) => unawaited(_showDay(d, data)),
+        // Karo başlığı: o günün saat çizelgesi (eskiden haftada üstteki
+        // güne dokunuş, kullanıcı isteği 2026-11-07).
+        onDayOpen: _openDayPage,
+        onDayLongPress: (d) {
+          setState(() => _selected = d);
+          unawaited(showEventEditor(context, day: d));
+        },
+        onEntryTap: _openEntry,
+        onNoteTap: _openNotePreview,
+      ),
     );
     // Yalnız canlı sayfalar (görünen + komşu) tutulur.
     if (_weekPages.length > 6) _weekPages.clear();
-    _weekPages[i] = (data, _today, firstDow, minute, page);
+    _weekPages[i] = (data, _today, firstDow, _selected, page);
     return page;
   }
 
@@ -490,7 +527,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     if (view == _view && focus == null) return;
     unawaited(AppHaptics.tick());
     setState(() {
-      _panelCompact = false;
       _panelDay = view == CalendarView.month && openPanel ? _selected : null;
       _lastZoom = direction;
       _origin = _alignmentAt(from);
@@ -728,8 +764,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  /// Güne çift dokunuş (kullanıcı isteği 2026-11-07): yalnız o günün
-  /// sayfası — tek günlük saat çizelgesi, ileri/geri gün.
+  /// Ay hücresine çift dokunuş (kullanıcı isteği 2026-11-21; önceden gün
+  /// sayfası): o günün HAFTASI büyük karolu hafta panosunda açılır.
+  void _openWeekOf(DateTime day) {
+    _selected = startOfDay(day);
+    _setView(CalendarView.week, focus: weekStartOf(_selected, _firstDow));
+  }
+
+  /// Gün sayfası — tek günlük saat çizelgesi, ileri/geri gün (hafta
+  /// panosunda karo başlığına dokununca).
   void _openDayPage(DateTime day) {
     setState(() => _selected = startOfDay(day));
     unawaited(
@@ -778,12 +821,71 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ),
       );
 
-  IconData _viewIcon(CalendarView v) => switch (v) {
-    CalendarView.year => Icons.calendar_view_month_outlined,
-    CalendarView.month => Icons.calendar_month_outlined,
-    CalendarView.week => Icons.view_week_outlined,
-    CalendarView.agenda => Icons.view_agenda_outlined,
-  };
+  /// GÖRÜNÜM DÜĞMELERİ (kullanıcı isteği 2026-11-21: "ay hafta yıl seçimi
+  /// direkt açık olsun, basılarak seçilsin butonlarla"): menü yerine başlığın
+  /// altında hep görünen bölmeli düğme. AYNI örnek döner (görünüm/dil
+  /// değişmedikçe): ajandada mini ay kaydırılırken ekran her karede kuruluyor,
+  /// bölmeli düğme her seferinde ~90 widget ekliyordu (perf S34).
+  (CalendarView, AppLocalizations, PreferredSizeWidget)? _viewBarCache;
+
+  PreferredSizeWidget _viewBar(AppLocalizations l10n) {
+    final hit = _viewBarCache;
+    if (hit != null && hit.$1 == _view && identical(hit.$2, l10n)) {
+      return hit.$3;
+    }
+    final bar = PreferredSize(
+      preferredSize: const Size.fromHeight(56),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(AppSpace.l, 0, AppSpace.l, AppSpace.s),
+        child: SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<CalendarView>(
+            key: const ValueKey('calendar-view-menu'),
+            showSelectedIcon: false,
+            segments: [
+              for (final v in CalendarView.values)
+                ButtonSegment(
+                  value: v,
+                  tooltip: _viewLabel(l10n, v),
+                  label: Text(
+                    _viewLabel(l10n, v),
+                    key: ValueKey('calendar-view-${v.name}'),
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                  ),
+                ),
+            ],
+            selected: {_view},
+            onSelectionChanged: (s) => _pickView(s.first),
+          ),
+        ),
+      ),
+    );
+    _viewBarCache = (_view, l10n, bar);
+    return bar;
+  }
+
+  /// Görünüm düğmesinden seçim: yön, sıraya göre yakınlaşma/uzaklaşma.
+  void _pickView(CalendarView v) {
+    if (v == _view) return;
+    final dir = v.index < _view.index
+        ? ZoomDirection.zoomOut
+        : ZoomDirection.zoomIn;
+    _setView(
+      v,
+      focus: switch (v) {
+        CalendarView.week => weekStartOf(
+          _selected.month == _focus.month || _view == CalendarView.agenda
+              ? _selected
+              : _focus,
+          _firstDow,
+        ),
+        _ => _view == CalendarView.agenda ? _selected : _focus,
+      },
+      direction: dir,
+    );
+  }
 
   String _viewLabel(AppLocalizations l10n, CalendarView v) => switch (v) {
     CalendarView.year => l10n.calendarViewYear,
@@ -867,50 +969,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
               ],
             ),
+      bottom: _viewBar(l10n),
       actions: [
         IconButton(
           tooltip: l10n.calendarToday,
           icon: const Icon(Icons.today_outlined),
           onPressed: _goToday,
-        ),
-        PopupMenuButton<CalendarView>(
-          key: const ValueKey('calendar-view-menu'),
-          tooltip: l10n.calendarView,
-          icon: Icon(_viewIcon(_view)),
-          initialValue: _view,
-          onSelected: (v) {
-            if (v == _view) return;
-            final dir = v.index < _view.index
-                ? ZoomDirection.zoomOut
-                : ZoomDirection.zoomIn;
-            _setView(
-              v,
-              focus: switch (v) {
-                CalendarView.week => weekStartOf(
-                  _selected.month == _focus.month ||
-                          _view == CalendarView.agenda
-                      ? _selected
-                      : _focus,
-                  _firstDow,
-                ),
-                _ => _view == CalendarView.agenda ? _selected : _focus,
-              },
-              direction: dir,
-            );
-          },
-          itemBuilder: (_) => [
-            for (final v in CalendarView.values)
-              PopupMenuItem(
-                value: v,
-                child: Row(
-                  children: [
-                    Icon(_viewIcon(v), size: 20),
-                    const SizedBox(width: 12),
-                    Text(_viewLabel(l10n, v)),
-                  ],
-                ),
-              ),
-          ],
         ),
         // AY BAŞLIĞI GÖRÜNMÜYORDU (kullanıcı bulgusu 2026-11-06: "takvimde
         // hangi ay olduğu görülmüyor"): telefonda yedi simge başlığı sıfıra
@@ -992,7 +1056,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ],
     );
 
-    final now = widget.now ?? DateTime.now();
     // Yerel kopya: geçişte sönen eski görünüm de kendi türünde sayfa kursun
     // (kapanış `_view`i okusaydı yeni görünümün sayfalarını kurardı).
     final view = _view;
@@ -1025,7 +1088,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             onMonthTap: (m, at) =>
                 _setView(CalendarView.month, focus: m, from: at),
           ),
-          CalendarView.week => _weekPage(i, data, now),
+          CalendarView.week => _weekPage(i, data),
           _ => _monthPage(i, data, _panelDay != null && !wide, !wide),
         },
       ),
@@ -1146,32 +1209,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final v = d.primaryVelocity ?? 0;
     final dy = _gridDragDy;
     _gridDragDy = 0;
+    // DARALMA YOK (kullanıcı isteği 2026-11-21: "takvim ekstradan yukarı
+    // daralmasına gerek yok"): panel açıkken aşağı çekiş uzun takvime geçer,
+    // yukarı çekiş bir şey yapmaz; uzun takvimde yukarı çekiş paneli açar.
     if (_panelDay != null) {
-      // Aşağı çekince: önce yarı panelden tam uzun takvime (veya hızlı
-      // çekişte doğrudan tam uzun takvime).
       if (v > 180 || dy > 36) {
         unawaited(AppHaptics.tick());
-        setState(() {
-          if (_panelCompact && v <= 600 && dy <= 96) {
-            _panelCompact = false;
-          } else {
-            _panelDay = null;
-            _panelCompact = false;
-          }
-        });
-      } else if (v < -180 || dy < -36) {
-        if (!_panelCompact) {
-          unawaited(AppHaptics.tick());
-          setState(() => _panelCompact = true);
-        }
+        setState(() => _panelDay = null);
       }
     } else if (v < -180 || dy < -36) {
-      // Uzun takvimde yukarı çekince: gün panelini geri aç.
       unawaited(AppHaptics.tick());
-      setState(() {
-        _panelDay = _selected;
-        _panelCompact = false;
-      });
+      setState(() => _panelDay = _selected);
     }
   }
 
@@ -1189,7 +1237,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         // zemini alta kadar uzanır, kendi içeriği payı alır.
         final inset = open ? 0.0 : MediaQuery.paddingOf(context).bottom;
         final gridH = open
-            ? c.maxHeight * (_panelCompact ? 0.34 : 0.5)
+            ? c.maxHeight * 0.5
             : math.max(0.0, c.maxHeight - inset);
         return Column(
           children: [
@@ -1201,14 +1249,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   day: day,
                   today: _today,
                   data: data,
-                  compact: _panelCompact,
-                  onCompact: (v) => setState(() => _panelCompact = v),
                   // Panel kapanınca gün seçimi de bırakılır (kullanıcı
                   // isteği 2026-11-21: geri önce seçimi bırakmalı, sonra
                   // ana menü — kapalı panelin "^ 29 Eki" hapı kalmasın).
                   onClose: () => setState(() {
                     _panelDay = null;
-                    _panelCompact = false;
                     _selected = _today;
                   }),
                   onNewEvent: () => unawaited(showEventEditor(context, day: day)),
@@ -1623,8 +1668,6 @@ class _DayPanel extends StatefulWidget {
     required this.day,
     required this.today,
     required this.data,
-    required this.compact,
-    required this.onCompact,
     required this.onClose,
     required this.onNewEvent,
     required this.onNewTask,
@@ -1633,8 +1676,6 @@ class _DayPanel extends StatefulWidget {
   final DateTime day;
   final DateTime today;
   final CalendarData data;
-  final bool compact;
-  final ValueChanged<bool> onCompact;
   final VoidCallback onClose;
   final VoidCallback onNewEvent;
   final VoidCallback onNewTask;
@@ -1667,16 +1708,7 @@ class _DayPanelState extends State<_DayPanel>
   }
 
   void _drag(DragEndDetails d) {
-    final v = d.primaryVelocity ?? 0;
-    if (v < -150) {
-      widget.onCompact(true);
-    } else if (v > 150) {
-      if (widget.compact) {
-        widget.onCompact(false);
-      } else {
-        widget.onClose();
-      }
-    }
+    if ((d.primaryVelocity ?? 0) > 150) widget.onClose();
   }
 
   @override
@@ -1721,7 +1753,6 @@ class _DayPanelState extends State<_DayPanel>
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onVerticalDragEnd: _drag,
-                  onTap: () => widget.onCompact(!widget.compact),
                   child: Column(
                     children: [
                       const SizedBox(height: AppSpace.s),
@@ -1786,24 +1817,6 @@ class _DayPanelState extends State<_DayPanel>
                                   ],
                                 ],
                               ),
-                            ),
-                            IconButton.filledTonal(
-                              key: const ValueKey('day-panel-compact'),
-                              style: IconButton.styleFrom(
-                                backgroundColor: scheme.surfaceContainerHigh,
-                                foregroundColor: scheme.onSurfaceVariant,
-                              ),
-                              tooltip: widget.compact
-                                  ? l10n.calendarExpandMonth
-                                  : l10n.calendarCollapseMonth,
-                              icon: Icon(
-                                widget.compact
-                                    ? Icons.expand_more_rounded
-                                    : Icons.expand_less_rounded,
-                                size: AppIconSize.m,
-                              ),
-                              onPressed: () =>
-                                  widget.onCompact(!widget.compact),
                             ),
                             IconButton.filledTonal(
                               key: const ValueKey('day-panel-close'),

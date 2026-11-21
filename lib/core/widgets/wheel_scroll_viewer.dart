@@ -18,11 +18,17 @@ class WheelScrollViewer extends StatefulWidget {
     required this.panEnabled,
     required this.child,
     this.maxScale = 4,
+    this.onInteractionStart,
+    this.onInteractionUpdate,
+    this.onInteractionEnd,
   });
 
   final TransformationController controller;
   final bool panEnabled;
   final double maxScale;
+  final GestureScaleStartCallback? onInteractionStart;
+  final GestureScaleUpdateCallback? onInteractionUpdate;
+  final GestureScaleEndCallback? onInteractionEnd;
   final Widget child;
 
   @override
@@ -46,6 +52,9 @@ class _WheelScrollViewerState extends State<WheelScrollViewer> {
     child: InteractiveViewer(
       transformationController: widget.controller,
       maxScale: widget.maxScale,
+      onInteractionStart: widget.onInteractionStart,
+      onInteractionUpdate: widget.onInteractionUpdate,
+      onInteractionEnd: widget.onInteractionEnd,
       panEnabled: widget.panEnabled,
       child: Listener(
         onPointerSignal: (e) => _before = widget.controller.value.clone(),

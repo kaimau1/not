@@ -7593,6 +7593,24 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String calendarMoreCount(int count) {
+    return '+$count daha';
+  }
+
+  @override
+  String get calendarWeekSummaryTitle => 'Bu hafta';
+
+  @override
+  String calendarWeekSummaryPlans(int count) {
+    return '$count plan';
+  }
+
+  @override
+  String calendarWeekSummaryNotes(int count) {
+    return '$count not';
+  }
+
+  @override
   String get itemMenuTask => 'Görev yap';
 
   @override

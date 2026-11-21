@@ -577,6 +577,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// büyür, yakınken geri sığar (PDF kutusuyla aynı).
   Offset? _doubleTapAt;
   void _toggleImageZoom() {
+    // Bütün görsel kipindeyken çift dokunuş genişliğe oturmaya döner.
+    if (_wholeImage) {
+      setState(() => _wholeImage = false);
+      _imageZoom.value = Matrix4.identity();
+      return;
+    }
     if (_imageZoomed) {
       _imageZoom.value = Matrix4.identity();
       return;
@@ -601,6 +607,44 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// büyür (katman dönüşümün içinde).
   final _imageZoom = TransformationController();
   bool _imageZoomed = false;
+
+  /// **UZAKLAŞTIRMA** (kullanıcı isteği 2026-11-21: "görselde zoom out da
+  /// yapılabilmeli, şu an yalnız yakınlaşıyor"): genişliğe oturan uzun
+  /// görselde iki parmakla uzaklaşınca BÜTÜN görsel bölmeye sığar (kaydırma
+  /// yok); orada yakınlaşınca ya da çift dokununca genişliğe oturmaya döner.
+  /// Basamaklar: bütün görsel ↔ genişliğe otur ↔ yakın.
+  bool _wholeImage = false;
+
+  /// Kıstırmanın parmak oranı (InteractiveViewer, sınır payı sıfırken
+  /// ölçeği 1'in altına indirmez; uzaklaşma isteği buradan okunur) ve
+  /// başladığı andaki ölçek.
+  double _pinch = 1;
+  double _pinchFrom = 1;
+
+  void _onImageZoomStart(ScaleStartDetails _) {
+    _pinch = 1;
+    _pinchFrom = _imageZoom.value.getMaxScaleOnAxis();
+  }
+
+  void _onImageZoomUpdate(ScaleUpdateDetails d) {
+    if (d.pointerCount >= 2) _pinch = d.scale;
+  }
+
+  /// Kıstırma bitince basamağı seç.
+  void _onImageZoomEnd(ScaleEndDetails _) {
+    final atFit = _pinchFrom <= 1.01;
+    if (_wholeImage) {
+      if (_pinch > 1.15) {
+        setState(() => _wholeImage = false);
+        _imageZoom.value = Matrix4.identity();
+      }
+    } else if (atFit && _pinch < 0.85 && _fitsWidth) {
+      _imageScroll.offset = 0;
+      setState(() => _wholeImage = true);
+      _imageZoom.value = Matrix4.identity();
+    }
+    _pinch = 1;
+  }
 
   void _onImageZoom() {
     final zoomed = _imageZoom.value.getMaxScaleOnAxis() > 1.01;
@@ -632,6 +676,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       _inkSeen = null;
       _ownPen = false;
       _imageScroll.offset = 0;
+      _wholeImage = false;
     }
     final doc = widget.bubbleDoc;
     if (doc != null) {
@@ -722,7 +767,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// Genişliğe oturan görsel parmakla/fareyle kayar mı: yakınken pan,
   /// kalem parmakla çizerken çizim kazanır.
   bool get _imageScrolls =>
-      _fitsWidth && !_imageZoomed && (!_penOn || _policy.fingerScrolls);
+      _fitsWidth &&
+      !_wholeImage &&
+      !_imageZoomed &&
+      (!_penOn || _policy.fingerScrolls);
 
   bool get _fitsWidth =>
       widget.media.kind == AttachmentKind.image &&
@@ -744,6 +792,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     return _FitWidthBox(
       key: ValueKey('pinned-image-scroll-${widget.media.id}'),
       ratio: _fitRatio(widget.media)!,
+      whole: _wholeImage,
       scroll: _imageScroll,
       child: child,
     );
@@ -778,6 +827,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     return WheelScrollViewer(
       controller: _imageZoom,
       panEnabled: _imageZoomed,
+      onInteractionStart: _onImageZoomStart,
+      onInteractionUpdate: _onImageZoomUpdate,
+      onInteractionEnd: _onImageZoomEnd,
       child: child,
     );
   }
@@ -2402,19 +2454,24 @@ class _FitWidthBox extends SingleChildRenderObjectWidget {
     required this.ratio,
     required this.scroll,
     required super.child,
+    this.whole = false,
   });
 
   final double ratio;
   final _FitScroll scroll;
 
+  /// Bütün görsel kipi: çocuk bölmenin boyunda (görsel `contain` sığar).
+  final bool whole;
+
   @override
   _RenderFitWidthBox createRenderObject(BuildContext context) =>
-      _RenderFitWidthBox(ratio, scroll);
+      _RenderFitWidthBox(ratio, scroll)..whole = whole;
 
   @override
   void updateRenderObject(BuildContext context, _RenderFitWidthBox r) {
     r
       ..ratio = ratio
+      ..whole = whole
       ..scroll = scroll;
   }
 }
@@ -2426,6 +2483,13 @@ class _RenderFitWidthBox extends RenderProxyBox {
   set ratio(double v) {
     if (v == _ratio) return;
     _ratio = v;
+    markNeedsLayout();
+  }
+
+  bool _whole = false;
+  set whole(bool v) {
+    if (v == _whole) return;
+    _whole = v;
     markNeedsLayout();
   }
 
@@ -2465,7 +2529,9 @@ class _RenderFitWidthBox extends RenderProxyBox {
     final child = this.child;
     if (child == null) return;
     final width = size.width;
-    final height = math.max(width * _ratio, size.height);
+    final height = _whole
+        ? size.height
+        : math.max(width * _ratio, size.height);
     child.layout(BoxConstraints.tight(Size(width, height)));
     _scroll.max = math.max(0, height - size.height);
     if (_scroll.offset > _scroll.max) _scroll.offset = _scroll.max;
