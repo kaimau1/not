@@ -4209,5 +4209,12 @@
   "driveOnboardTitle": "Eklerin her cihazda olsun",
   "driveOnboardBody": "Fotoğraf, PDF ve ses eklerin Google Drive'ındaki \"Notlar\" klasörüne yedeklenir; telefon, tablet ve web'de aynı ekleri görürsün.",
   "driveOnboardConnect": "Drive'ı bağla",
-  "driveOnboardLater": "Sonra"
+  "driveOnboardLater": "Sonra",
+  "aiQuietOrganizeTitle": "Sessiz düzen",
+  "aiQuietOrganizeEmpty": "Öneri üretilecek eksik başlık veya etiket bulunamadı.",
+  "aiQuietOrganizeApply": "{count} öneriyi uygula",
+  "@aiQuietOrganizeApply": {"placeholders": {"count": {"type": "int"}}},
+  "aiQuietOrganizeApplied": "{count} not güncellendi",
+  "@aiQuietOrganizeApplied": {"placeholders": {"count": {"type": "int"}}},
+  "aiQuietOrganizeBoth": "Başlık + etiket birlikte"
 }

@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Pro AI sadeleştirme: sohbet, kısa/ayrıntılı özet ve toplu Sessiz düzen (21 Kasım, P89, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) bir notta ✨ → **Sohbet** → üstteki eski Soru-cevap / Beyin fırtınası kip çipleri ve üst ana hat çubuğu kalkmış mı; öneri çipleri (Ana hat · Fikir ver · Eksikleri bul) temiz çalışıyor mu; (2) bir notta ✨ → **Özet** → sonuç levhasında **Kısa / Ayrıntılı** anahtarı görünüyor mu, kısa → ayrıntılı → kısa dönünce ikinci kısa anında önbellekten geliyor mu; (3) AI merkezinde **Sessiz düzen** → başlıksız veya etiketsiz notlar için tek istekte başlık+etiket önerileri listelenip seçilerek uygulanıyor mu, **Geri al** hepsini geri alıyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Takvim yeni varsayılan düzen (sağ üst gün sayıları + kutuda not/etiket + önizleme levhası + çoklu not + kasma düzeltmesi) (21 Kasım 6. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Takvim'i aç → doğrudan üstte ay ızgarası + altta gün paneliyle mi açılıyor; takvimi ya da tutamağı aşağı çekince uzun ay görünümüne geçip altta küçük yukarı çekme hapı görünüyor mu; (2) her gün kutusunda sayı sağ üstte mi, alt boşlukta not başlıkları, etkinlikler ve `#etiket`ler okunur biçimde yazıyor mu; (3) hücredeki bir not şeridine veya alt paneldeki bir not önizleme kartına dokun → başlık, etiket, içerik/liste ve **Notu aç** düğmeli hızlı önizleme levhası açılıyor mu; (4) bağlı notu olan günde "Bu gün için plan yok" yazmıyor mu, **Bu güne not** ile aynı güne 2–3 farklı not eklenebiliyor mu, `+` düğmesi alt panelin üstüne binmiyor mu; (5) ana ekran kaydırma (özellikle çizimli görsel kartlarında) ve takvimde gün değiştirme/kaydırma akıcı mı.
   Yanlışsa: ekran görüntüsü ile madde numarasını yaz.
