@@ -298,6 +298,75 @@ Object? movedToDay(AgendaEntry entry, DateTime target) {
   }
 }
 
+/// Hafta ızgarasındaki dikey konumu 15 dakikalık adımlara yuvarlar (00:00–23:45).
+({int hour, int minute}) snapToQuarterHour(double dy, double hourHeight) {
+  final rawMinutes = (dy / hourHeight * 60).round();
+  final snapped = ((rawMinutes / 15).round() * 15).clamp(0, 23 * 60 + 45);
+  return (hour: snapped ~/ 60, minute: snapped % 60);
+}
+
+/// **HAFTA IZGARASINDA SÜRÜKLE** (P92): kaydı belirli bir gün + saate taşır.
+/// Etkinliğin süresi korunur; görev `due` + `dueTime` günceller; güne bağlı
+/// not yeni gün + saat dakikasına taşınır. Değişiklik yoksa veya taşınamazsa null.
+Object? movedToDateTime(AgendaEntry entry, DateTime target) {
+  final day = startOfDay(target);
+  final hm = formatHm(target.hour, target.minute);
+  final minutes = target.hour * 60 + target.minute;
+  switch (entry) {
+    case EventOccurrence(:final event):
+      if (event.repeats || event.fromGoogle) return null;
+      final duration = event.end.difference(event.start);
+      final safeDuration =
+          event.allDay || duration.isNegative || duration == Duration.zero
+          ? const Duration(hours: 1)
+          : duration;
+      final nextStart = DateTime(
+        day.year,
+        day.month,
+        day.day,
+        target.hour,
+        target.minute,
+      );
+      if (nextStart == event.start && !event.allDay) return null;
+      return event.copyWith(
+        allDay: false,
+        start: nextStart,
+        end: nextStart.add(safeDuration),
+      );
+    case TaskEntry(:final task):
+      if (task.completed) return null;
+      final nextDue = dayKey(day);
+      if (task.due == nextDue && task.dueTime == hm) return null;
+      return task.copyWith(due: nextDue, dueTime: hm);
+    case ReminderEntry(:final note, :final linkDay?, :final linkTimed, :final at):
+      final to = dayKey(day);
+      final prevMinutes = linkTimed ? at.hour * 60 + at.minute : null;
+      if (to == linkDay && prevMinutes == minutes) return null;
+      return DayLinkMove(
+        noteId: note.id,
+        from: linkDay,
+        to: to,
+        minutes: minutes,
+      );
+    case ReminderEntry(:final note, :final expiry):
+      final from = expiry ? note.expiresAt : note.reminderAt;
+      if (from == null) return null;
+      final moved = DateTime(
+        day.year,
+        day.month,
+        day.day,
+        target.hour,
+        target.minute,
+      );
+      if (moved == from) return null;
+      return expiry
+          ? note.copyWith(expiresAt: moved)
+          : note.copyWith(reminderAt: moved);
+    case RoutineEntry():
+      return null;
+  }
+}
+
 /// **BRİFİNG SATIRLARI** (TAKVIM_PLANI F52.1): bugün ve yarının etkinlik +
 /// görevleri, ayrıca gecikmiş açık görevler — AI istemine giden düz metin.
 /// Hatırlatıcılar brifingin kendi bölümünde (burada tekrar edilmez).

@@ -228,6 +228,18 @@ class CalendarRepository {
     return saved;
   }
 
+  /// Elle yeniden sıralanan görevlerin konumlarını tek toplu yazımla kaydeder (P92).
+  void reorderTasks(List<TaskItem> changed, {DateTime? now}) {
+    if (changed.isEmpty) return;
+    final at = now ?? DateTime.now();
+    final batch = _firestore.batch();
+    for (final task in changed) {
+      final saved = task.copyWith(updatedAt: at);
+      batch.set(_tasks.doc(saved.id), saved.toMap());
+    }
+    unawaited(batch.commit());
+  }
+
   /// Tamamlar; tekrarlıysa sonraki oluşa ilerletir ve geçmiş kopyası yazar
   /// ([completeTask]). Tek toplu yazım: ikisi birlikte olur ya da hiç.
   TaskItem completeTaskNow(TaskItem task, {DateTime? now}) {

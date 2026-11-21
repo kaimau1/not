@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/app_frame.dart';
+import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -203,6 +204,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         if (!t.completed && (t.parentId.isEmpty || !ids.contains(t.parentId)))
           t,
     ];
+    if (parents.any((t) => t.position.isNotEmpty)) {
+      parents.sort((a, b) {
+        if (a.position != b.position) {
+          if (a.position.isEmpty) return 1;
+          if (b.position.isEmpty) return -1;
+          return a.position.compareTo(b.position);
+        }
+        return compareTasks(a, b);
+      });
+    }
     final children = <String, List<TaskItem>>{};
     for (final t in inList) {
       if (t.parentId.isNotEmpty && ids.contains(t.parentId) && !t.completed) {
@@ -219,13 +230,15 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
         );
     final now = widget.now ?? DateTime.now();
+    final canReorder = parents.length > 1;
+    void onReorder(int oldIndex, int newIndex) {
+      final changed = reorderedTaskPositions(parents, oldIndex, newIndex);
+      if (changed.isEmpty) return;
+      unawaited(AppHaptics.tick());
+      ref.read(calendarRepositoryProvider)?.reorderTasks(changed);
+    }
 
-    final rows = <Widget>[
-      for (final p in parents) ...[
-        _TaskRow(task: p, now: now, listId: _listId),
-        for (final c in children[p.id] ?? const <TaskItem>[])
-          _TaskRow(task: c, now: now, listId: _listId, indent: true),
-      ],
+    final completedRows = <Widget>[
       if (completed.isNotEmpty)
         ListTile(
           key: const ValueKey('tasks-completed-toggle'),
@@ -326,12 +339,54 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     title: l10n.tasksEmpty,
                     subtitle: l10n.tasksEmptyHint,
                   )
-                : ListView(
+                : CustomScrollView(
                     key: const ValueKey('tasks-list'),
-                    padding: EdgeInsets.only(
-                      bottom: 96 + MediaQuery.paddingOf(context).bottom,
-                    ),
-                    children: rows,
+                    slivers: [
+                      if (parents.isNotEmpty)
+                        SliverReorderableList(
+                          itemCount: parents.length,
+                          onReorderItem: onReorder,
+                          itemBuilder: (context, index) {
+                            final p = parents[index];
+                            final subs = children[p.id] ?? const <TaskItem>[];
+                            final group = Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _TaskRow(
+                                  task: p,
+                                  now: now,
+                                  listId: _listId,
+                                  reorderIndex: canReorder ? index : null,
+                                ),
+                                for (final c in subs)
+                                  _TaskRow(
+                                    task: c,
+                                    now: now,
+                                    listId: _listId,
+                                    indent: true,
+                                  ),
+                              ],
+                            );
+                            return Material(
+                              key: ValueKey('task-group-${p.id}'),
+                              type: MaterialType.transparency,
+                              child: canReorder
+                                  ? ReorderableDelayedDragStartListener(
+                                      index: index,
+                                      child: group,
+                                    )
+                                  : group,
+                            );
+                          },
+                        ),
+                      if (completedRows.isNotEmpty)
+                        SliverList.list(children: completedRows),
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: 96 + MediaQuery.paddingOf(context).bottom,
+                        ),
+                      ),
+                    ],
                   ),
           ),
         ],
@@ -346,12 +401,14 @@ class _TaskRow extends ConsumerWidget {
     required this.now,
     required this.listId,
     this.indent = false,
+    this.reorderIndex,
   });
 
   final TaskItem task;
   final DateTime now;
   final String listId;
   final bool indent;
+  final int? reorderIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -432,6 +489,20 @@ class _TaskRow extends ConsumerWidget {
                 context,
                 parentId: task.id,
                 listId: task.listId,
+              ),
+            ),
+          if (reorderIndex != null)
+            ReorderableDragStartListener(
+              index: reorderIndex!,
+              child: SizedBox(
+                key: ValueKey('task-drag-${task.id}'),
+                width: 36,
+                height: 48,
+                child: Icon(
+                  Icons.drag_handle,
+                  size: AppIconSize.s,
+                  color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
+                ),
               ),
             ),
         ],

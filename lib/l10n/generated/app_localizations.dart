@@ -16673,7 +16673,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupPasswordInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Parola belirlersen yedek AES-256 ile şifrelenir. Parolayı unutursan yedek açılamaz.'**
+  /// **'Parola belirlersen yedek güçlü şifrelemeyle korunur. Parolayı unutursan yedek açılamaz.'**
   String get backupPasswordInfo;
 
   /// No description provided for @backupPasswordHint.

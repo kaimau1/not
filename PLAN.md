@@ -286,7 +286,7 @@ biri altın setle ölçülerek. PL2 korumaları ve PL3 rıza/"Bildir" ile birlik
 - **Kasma kökten artığı** — P55 [apk] ile bitti (2026-11-14); yalnız plan arşivindeki `[ ]` işaretleri bayat, cihazda his kontrolü KONTROL 3 — HIZ F84.1, F84.2, F68.3
 - **Kaydırma kabulü** — P43/P46 ölçtü (%2,3–3,3); resmî kabul yazılmadı — F68.4, AKICILIK Faz 21
 - **Pano gövdesini böl (ölçüm kapılı)** — boşa kurulum düzeltildi (kısmen), kalanı ölçüm kapılı — F68.2
-- **Takvim haftalık ızgarada sürükle, görev elle sırala** — ay görünümünde sürükleme VAR (`_MonthCell` DragTarget), `WeekPage`'de yok — TAKVIM (ayrı faz)
+- [x] **Takvim haftalık ızgarada sürükle, görev elle sırala** — YAZILDI 2026-11-21 (P92): `WeekPage` + gün sayfasında tek `DragTarget` + çeyrek saat tutunma (`snapToQuarterHour`/`movedToDateTime`, Geri Al; boş haftada kurulmaz, S22 korundu); `TasksScreen`'de `SliverReorderableList` + tutamak + toplu konum yazımı (`reorderedTaskPositions`/`reorderTasks`, `p92_week_drag_and_task_reorder_test.dart`); cihazda doğrulanmadı → KONTROL_LISTEM — TAKVIM
 - **Uçtan uca akış testleri** — widget düzeyinde YAPILDI (F18.8: `user_flows_test`, `media_bubbles_share_test`, `backup_service_test`); açık kalan: `integration_test/` emülatör akışları + web ağır işler (F17.3) — F17.2, F17.3
 - **PPTX düzenleme portu** — depo izni sonrası — F18.20
 - **Şablon önizlemesinin liste dalını kaldır** — liste şablonları `QuickListScreen`e taşındı (2026-11-15); `TemplateComposer` liste dalı + `showNoteTemplateSheet` üretimde çağrılmıyor, `note_templates_test` / `template_sheet_layout_test` / bütçe S48 / ekran turu ona bağlı → birlikte taşınıp silinecek; ayrıca hızlı liste + hızlı ekle cihazda A/B ölçülmedi (KONTROL "Telefonda bak") — `docs/hafiza/editor.md` sonu

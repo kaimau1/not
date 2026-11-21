@@ -9404,7 +9404,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupPasswordInfo =>
-      'Parola belirlersen yedek AES-256 ile şifrelenir. Parolayı unutursan yedek açılamaz.';
+      'Parola belirlersen yedek güçlü şifrelemeyle korunur. Parolayı unutursan yedek açılamaz.';
 
   @override
   String get backupPasswordHint => 'Parola';

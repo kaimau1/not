@@ -440,6 +440,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       // Üstteki güne dokununca o günün sayfası (kullanıcı isteği
       // 2026-11-07; önceden alttan levha açılıyordu).
       onDayTap: _openDayPage,
+      onEntryMoveToTime: _moveEntryToTime,
     );
     // Yalnız canlı sayfalar (görünen + komşu) tutulur.
     if (_weekPages.length > 6) _weekPages.clear();
@@ -628,6 +629,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   void _moveEntry(AgendaEntry entry, DateTime day) {
     final moved = movedToDay(entry, day);
     if (moved == null) return;
+    _applyMovedEntry(
+      entry,
+      moved,
+      label: DateFormat.MMMEd().format(day),
+    );
+  }
+
+  /// Hafta / gün ızgarasında sürükle-bırak ile gün + saate taşıma (P92).
+  void _moveEntryToTime(AgendaEntry entry, DateTime target) {
+    final moved = movedToDateTime(entry, target);
+    if (moved == null) return;
+    _applyMovedEntry(
+      entry,
+      moved,
+      label: '${DateFormat.MMMEd().format(target)} ${DateFormat.Hm().format(target)}',
+    );
+  }
+
+  void _applyMovedEntry(
+    AgendaEntry entry,
+    Object moved, {
+    required String label,
+  }) {
     final calendar = ref.read(calendarRepositoryProvider);
     final notes = ref.read(notesRepositoryProvider);
     final VoidCallback undo;
@@ -655,16 +679,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         }
       case DayLinkMove(:final noteId, :final from, :final to, :final minutes):
         if (calendar == null) return;
+        final r = entry as ReminderEntry;
+        final beforeMinutes = r.linkTimed ? r.at.hour * 60 + r.at.minute : null;
         calendar.moveDayLink(from, to, noteId, minutes);
-        undo = () => calendar.moveDayLink(to, from, noteId, minutes);
+        undo = () => calendar.moveDayLink(to, from, noteId, beforeMinutes);
       default:
         return;
     }
-    AppHaptics.tick();
+    unawaited(AppHaptics.tick());
     final l10n = context.l10n;
     showUndoSnackBar(
       context,
-      message: l10n.calendarMoved(DateFormat.MMMEd().format(day)),
+      message: l10n.calendarMoved(label),
       undoLabel: l10n.undo,
       onUndo: undo,
     );
@@ -712,6 +738,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             today: _today,
             now: widget.now,
             onEntryTap: _openEntry,
+            onEntryMoveToTime: _moveEntryToTime,
           ),
         ),
       ),
@@ -2630,12 +2657,14 @@ class CalendarDayScreen extends ConsumerStatefulWidget {
     required this.day,
     required this.today,
     required this.onEntryTap,
+    this.onEntryMoveToTime,
     this.now,
   });
 
   final DateTime day;
   final DateTime today;
   final ValueChanged<AgendaEntry> onEntryTap;
+  final void Function(AgendaEntry entry, DateTime target)? onEntryMoveToTime;
 
   /// Test için "şimdi".
   final DateTime? now;
@@ -2737,6 +2766,7 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
                 onSlotTap: (t) => unawaited(showEventEditor(context, start: t)),
                 onEntryTap: widget.onEntryTap,
                 onDayTap: (_) {},
+                onEntryMoveToTime: widget.onEntryMoveToTime,
               ),
             ),
           ),

@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Takvim hafta/gün ızgarasında gün+saat sürükle-bırak ve görevlerde elle sıralama (21 Kasım, P92, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) Takvim → **Hafta** (veya bir güne çift dokunup **Gün** sayfası) → saatli bir etkinliğe/göreve/bağlı nota uzun basıp başka gün ve çeyrek saate sürükle → hedef saat önizleme kutusu görünüyor mu, bırakınca yeni saatine taşınıp **Geri al** çalışıyor mu; tüm gün kaydını saat ızgarasına indirince 1 saatlik kayda dönüşüyor mu; (2) **Görevler** ekranında 2+ açık görev varken sağdaki ☰ tutamaktan (ya da satıra uzun basıp) sürükle → yeni sıra kaydedilip ekranı kapatıp açınca da korunuyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Parolalı tam yedek (AES-256 `.notyedek`) dışa aktarma ve geri yükleme (21 Kasım, P91, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Ayarlar → Yedekle → **Tam yedek** → açılan pencerede **Parolasız yedekle** eski gibi tek dokunuşla çalışıyor mu; (2) parola + doğrulama girip **Şifreli yedekle** → `.notyedek` kaydediliyor mu; (3) **Yedekten geri yükle** ile şifreli dosyayı seç → kendiliğinden parola soruyor mu, yanlış parolada "Parola yanlış" deyip doğru parolayla notları geri yüklüyor mu.
   Yanlışsa: madde numarasını yaz.

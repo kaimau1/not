@@ -9415,7 +9415,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupPasswordInfo =>
-      'Setting a password encrypts the backup with AES-256. A forgotten password cannot be recovered.';
+      'Setting a password protects the backup with strong encryption. A forgotten password cannot be recovered.';
 
   @override
   String get backupPasswordHint => 'Password';
