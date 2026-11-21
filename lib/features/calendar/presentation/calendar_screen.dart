@@ -1713,7 +1713,6 @@ class _DayPanelState extends State<_DayPanel>
                               style: IconButton.styleFrom(
                                 backgroundColor: scheme.surfaceContainerHigh,
                                 foregroundColor: scheme.onSurfaceVariant,
-                                visualDensity: VisualDensity.compact,
                               ),
                               tooltip: widget.compact
                                   ? l10n.calendarExpandMonth
@@ -1727,13 +1726,11 @@ class _DayPanelState extends State<_DayPanel>
                               onPressed: () =>
                                   widget.onCompact(!widget.compact),
                             ),
-                            const SizedBox(width: AppSpace.xs),
                             IconButton.filledTonal(
                               key: const ValueKey('day-panel-close'),
                               style: IconButton.styleFrom(
                                 backgroundColor: scheme.surfaceContainerHigh,
                                 foregroundColor: scheme.onSurfaceVariant,
-                                visualDensity: VisualDensity.compact,
                               ),
                               tooltip: l10n.calendarDayPanelClose,
                               icon: const Icon(
