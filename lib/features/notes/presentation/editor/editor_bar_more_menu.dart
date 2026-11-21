@@ -31,10 +31,22 @@ Future<void> showEditorBarMore({
   final box = anchor.findRenderObject()! as RenderBox;
   final overlay = Overlay.of(anchor).context.findRenderObject()! as RenderBox;
   final at = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
+  final menuWidth = math.min(312.0, overlay.size.width - 2 * AppSpace.m);
   final picked = await showMenu<String>(
     context: anchor,
-    position: RelativeRect.fromRect(at, Offset.zero & overlay.size),
-    items: [_BarMoreEntry(menuIds: menuIds, available: available, spec: spec)],
+    constraints: BoxConstraints(minWidth: menuWidth, maxWidth: menuWidth),
+    position: RelativeRect.fromRect(
+      Rect.fromLTWH(at.left, at.top - AppSpace.s, at.width, 0),
+      Offset.zero & overlay.size,
+    ),
+    items: [
+      _BarMoreEntry(
+        menuIds: menuIds,
+        available: available,
+        spec: spec,
+        menuWidth: menuWidth,
+      ),
+    ],
   );
   if (picked == _kEditPick) {
     // DÜZENLE ÇUBUĞUN ÜSTÜNDE (kullanıcı bulgusu 2026-11-19, v1.2.94:
@@ -50,6 +62,7 @@ Future<void> showEditorBarMore({
         : math.min(room, overlay.size.height * 0.55);
     await showMenu<String>(
       context: anchor,
+      constraints: BoxConstraints(minWidth: menuWidth, maxWidth: menuWidth),
       position: RelativeRect.fromLTRB(
         at.left,
         bottomEdge - height - 2 * _kMenuPad,
@@ -61,6 +74,7 @@ Future<void> showEditorBarMore({
           menuIds: menuIds,
           available: available,
           spec: spec,
+          menuWidth: menuWidth,
           editHeight: height,
         ),
       ],
@@ -81,14 +95,16 @@ class _BarMoreEntry extends PopupMenuEntry<String> {
     required this.menuIds,
     required this.available,
     required this.spec,
+    required this.menuWidth,
     this.editHeight,
   });
 
   final List<String> menuIds;
   final List<String> available;
   final BarMoreSpec Function(String id) spec;
+  final double menuWidth;
 
-  /// Verilirse düzen kipi, bu boyda (içi kayar); yoksa normal liste.
+  /// Verilirse düzen kipi, bu boyda (içi kayar); yoksa 2 sütunlu bento ızgara.
   final double? editHeight;
 
   @override
@@ -107,64 +123,159 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
       ? _editor(context, widget.editHeight!)
       : _list(context);
 
-  Widget _row(
+  Widget _tile(
     BuildContext context, {
-    Key? key,
+    required Key key,
     required IconData icon,
     required String label,
     required VoidCallback onTap,
     bool active = false,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
+    final bg = active
+        ? scheme.primaryContainer
+        : theme.brightness == Brightness.dark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer;
+    final fg = active ? scheme.onPrimaryContainer : scheme.onSurface;
     return InkWell(
       key: key,
+      borderRadius: BorderRadius.circular(AppRadius.m),
       onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: AppIconSize.m,
-                color: active ? scheme.primary : null,
-              ),
-              const SizedBox(width: AppSpace.m),
-              Flexible(child: Text(label)),
-            ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.s,
+              vertical: AppSpace.xs,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: AppIconSize.m,
+                  color: active ? scheme.onPrimaryContainer : scheme.primary,
+                ),
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.meta.copyWith(
+                      color: fg,
+                      fontWeight: AppWeight.medium,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  /// İki sütunlu dengeli bento ızgara (tek kalan son öğe tam genişlikte):
+  /// uzun 12 satırlık dikey liste yerine kompakt, taraması kolay palet
+  /// (kullanıcı isteği 2026-11-21).
   Widget _list(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final (i, id) in widget.menuIds.indexed)
-          if (widget.spec(id) case (final icon, final label, _, final on))
-            _row(
-              context,
-              key: ValueKey('editor-bar-more-$i'),
-              icon: icon,
-              label: label,
-              active: on,
-              onTap: () => Navigator.pop(context, id),
-            ),
-        if (widget.menuIds.isNotEmpty) const Divider(height: 1),
-        _row(
-          context,
-          key: const ValueKey('editor-bar-more-edit'),
-          icon: Icons.tune,
-          label: l10n.barMoreEdit,
-          onTap: () => Navigator.pop(context, _kEditPick),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
+    final entries = <(int, String, BarMoreSpec)>[
+      for (final (i, id) in widget.menuIds.indexed) (i, id, widget.spec(id)),
+    ];
+    final rows = <List<(int, String, BarMoreSpec)>>[];
+    for (var i = 0; i < entries.length; i += 2) {
+      final end = i + 2;
+      rows.add(entries.sublist(i, end > entries.length ? entries.length : end));
+    }
+    return SizedBox(
+      width: widget.menuWidth,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xs,
         ),
-      ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (r, row) in rows.indexed) ...[
+              if (r > 0) const SizedBox(height: AppSpace.xs),
+              Row(
+                children: [
+                  for (final (c, entry) in row.indexed) ...[
+                    if (c > 0) const SizedBox(width: AppSpace.xs),
+                    Expanded(
+                      child: _tile(
+                        context,
+                        key: ValueKey('editor-bar-more-${entry.$1}'),
+                        icon: entry.$3.$1,
+                        label: entry.$3.$2,
+                        active: entry.$3.$4,
+                        onTap: () => Navigator.pop(context, entry.$2),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+            if (entries.isNotEmpty) ...[
+              const SizedBox(height: AppSpace.s),
+              ColoredBox(color: tokens.hairline, child: const SizedBox(height: 1)),
+              const SizedBox(height: AppSpace.xs),
+            ],
+            InkWell(
+              key: const ValueKey('editor-bar-more-edit'),
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              onTap: () => Navigator.pop(context, _kEditPick),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  minHeight: kMinInteractiveDimension,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.tune,
+                        size: AppIconSize.s,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: AppSpace.s),
+                      Expanded(
+                        child: Text(
+                          l10n.barMoreEdit,
+                          style: text.meta.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: AppWeight.medium,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: AppIconSize.s,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -240,7 +351,7 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
         // kayan liste bunu veremez (menünün tavanı 280 dp).
         return SizedBox(
           key: const ValueKey('editor-bar-more-editor'),
-          width: 280,
+          width: widget.menuWidth,
           height: height,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -342,7 +453,7 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
                 color: scheme.onSurfaceVariant,
               ),
               const SizedBox(width: AppSpace.s),
-              Icon(icon, size: AppIconSize.m),
+              Icon(icon, size: AppIconSize.m, color: scheme.primary),
               const SizedBox(width: AppSpace.m),
               Expanded(child: Text(label)),
               // SOL ↔ SAĞ: düğme öbür grubun sonuna geçer.

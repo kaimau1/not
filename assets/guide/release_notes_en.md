@@ -3,7 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 21 November 2026 {#2026-11-21}
-- **Redesigned note action menu:** quick actions and collapsible sections now sit inside crisp hairline-bordered cards with uniform tonal tiles, collapsed action counts, and circular chevron indicators.
+- **Redesigned note and toolbar menus:** collapsed drawers in the note ⋮ menu are gone — all sections (Organize · Tools · Copy · Protect & storage) now open directly inside a single card, ordered by frequency with zero-gap balanced tiles. The editor bottom-bar ⋯ popup is now a compact 2-column tool palette with Undo and Redo paired side by side, and popup menus app-wide share the hairline-bordered card style.
 - **Smoother keyboard closing in quick add:** closing the keyboard now uses the same crisp curve as opening, dismissing the sheet freezes lift so the slide transition doesn't fight the keyboard, and the home screen stays shielded until the keyboard finishes closing.
 - **Quick add listens on open again:** when both "Keyboard on open" and "Listen on open" were enabled, focusing the field cancelled auto-listening; voice input now starts reliably once the sheet opens.
 - **Smoother keyboard open and close in quick add:** the sheet lifts and lowers without re-laying out on every keyboard frame, and the home screen behind it no longer rebuilds while the keyboard moves.

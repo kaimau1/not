@@ -5272,6 +5272,15 @@ child: FormatBar(
                         ...leftIds.skip(cap),
                         ...menuIds,
                       ];
+                      // Geri al / Geri getir çubuk taşmasıyla ayrışmasın:
+                      // ikisi de menüdeyse yan yana dursun.
+                      final undoAt = overflow.indexOf(UiItem.barUndo);
+                      final redoAt = overflow.indexOf(UiItem.barRedo);
+                      if (undoAt >= 0 && redoAt > undoAt + 1) {
+                        overflow
+                          ..removeAt(redoAt)
+                          ..insert(undoAt + 1, UiItem.barRedo);
+                      }
                       final segments = <Widget>[
                         for (final id in leftIds.take(cap)) ...leftOf(id),
                         if (overflow.isNotEmpty)

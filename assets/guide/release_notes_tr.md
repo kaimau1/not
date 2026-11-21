@@ -3,7 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 21 Kasım 2026 {#2026-11-21}
-- **Not menüsü baştan tasarlandı:** hızlı işlemler ve açılır gruplar ince çizgili kartlarda toplandı; karolar tonlu, eşit boylu yuvarlak köşeli kartlara geçti; kapalı gruplarda işlem sayısı ve daire içinde ok görünür.
+- **Not ve alt çubuk menüleri yenilendi:** not ⋮ menüsündeki kapalı çekmeceler kaldırıldı; bütün gruplar (Düzenle · Araçlar · Kopyala · Koruma ve depolama) kullanım sırasına göre tek kartta, boş hücre bırakmayan dengeli karolarla doğrudan açık görünür. Editör alt çubuğundaki ⋯ menüsü uzun tek sütun liste yerine 2 sütunlu kompakt araç paletine geçti, Geri al ve Geri getir yan yana durur; tüm açılır menüler ince çizgili kart görünümüne kavuştu.
 - **Hızlı ekle'de klavye kapanışındaki kasma da giderildi:** klavye inerken levha açılışla aynı akıcı eğriyle iner, levha kapatılırken yükseltme dondurulur ve arkadaki ana ekran klavye tamamen inene dek yeniden kurulmaz.
 - **Hızlı ekle açılırken konuşma yeniden kendiliğinden başlıyor:** "Açılınca klavye" ve "Açılınca dinle" birlikte açıkken klavye odağı dinlemeyi iptal ediyordu; artık levha açılınca konuşma tanıma sorunsuz başlar.
 - **Hızlı ekle'de klavye açılıp kapanması akıcılaştırıldı:** levha klavyeyle birlikte yeniden dizilmeden yükselip iner, arkadaki ana ekran da klavye karelerinde yeniden kurulmaz.
