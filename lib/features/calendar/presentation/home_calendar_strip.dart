@@ -153,32 +153,43 @@ class HomeCalendarStripView extends StatelessWidget {
           Expanded(
             child: SizedBox(
               height: _stripHeight,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final cellWidth = constraints.maxWidth / kHomeStripDays;
-                  return ListView.builder(
-                    key: const ValueKey('home-calendar-scroll'),
-                    scrollDirection: Axis.horizontal,
-                    // İlk karede yalnız görünen 7 gün kurulur (S24 bütçesi).
-                    scrollCacheExtent: const ScrollCacheExtent.pixels(0),
-                    itemExtent: cellWidth,
-                    itemCount: kHomeStripTotalDays,
-                    itemBuilder: (context, i) {
-                      final d = DateTime(today.year, today.month, today.day + i);
-                      return _DayCell(
-                        day: d,
-                        today: today,
-                        width: cellWidth,
-                        entries: byDay[dayKey(d)] ?? const [],
-                        holiday: data.holidays.on(d),
-                        onTap: () => onDayTap(d),
-                        onLongPress: onDayLongPress == null
-                            ? null
-                            : () => onDayLongPress!(d),
-                      );
-                    },
-                  );
-                },
+              // KÖK NEDEN (S37 dizilme): dış LayoutBuilder + ListView ikilisi
+              // levha açılış/kapanışında Scrollable bağımlılığı yüzünden 2 ek
+              // markNeedsLayout tetikliyordu. SliverFillViewport 1/7 genişliği
+              // yerleşimde doğrudan verir; LayoutBuilder yalnız InkWell
+              // içindeki saf içerikte kalır.
+              child: CustomScrollView(
+                key: const ValueKey('home-calendar-scroll'),
+                scrollDirection: Axis.horizontal,
+                primary: false,
+                // İlk karede yalnız görünen 7 gün kurulur (S24 bütçesi).
+                scrollCacheExtent: const ScrollCacheExtent.pixels(0),
+                slivers: [
+                  SliverFillViewport(
+                    viewportFraction: 1 / kHomeStripDays,
+                    padEnds: false,
+                    delegate: SliverChildBuilderDelegate(
+                      (context, i) {
+                        final d = DateTime(
+                          today.year,
+                          today.month,
+                          today.day + i,
+                        );
+                        return _DayCell(
+                          day: d,
+                          today: today,
+                          entries: byDay[dayKey(d)] ?? const [],
+                          holiday: data.holidays.on(d),
+                          onTap: () => onDayTap(d),
+                          onLongPress: onDayLongPress == null
+                              ? null
+                              : () => onDayLongPress!(d),
+                        );
+                      },
+                      childCount: kHomeStripTotalDays,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -213,7 +224,6 @@ class _DayCell extends StatelessWidget {
   const _DayCell({
     required this.day,
     required this.today,
-    required this.width,
     required this.entries,
     required this.holiday,
     required this.onTap,
@@ -222,7 +232,6 @@ class _DayCell extends StatelessWidget {
 
   final DateTime day;
   final DateTime today;
-  final double width;
   final List<AgendaEntry> entries;
   final Holiday? holiday;
   final VoidCallback onTap;
@@ -252,8 +261,6 @@ class _DayCell extends StatelessWidget {
         holiday?.name ??
         (entries.isEmpty ? null : entryTitle(entries.first, l10n));
     final count = entries.length + (holiday != null ? 1 : 0);
-    final innerWidth = width - 6;
-    final wide = innerWidth >= 60;
     return Semantics(
       button: true,
       label: [
@@ -280,90 +287,97 @@ class _DayCell extends StatelessWidget {
                 : null,
             borderRadius: BorderRadius.circular(AppRadius.s),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 1. satır: gün (bugün dolgulu hap, ay başında kısa ay adı).
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
-                  decoration: isToday
-                      ? BoxDecoration(
-                          color: scheme.primary,
-                          borderRadius: BorderRadius.circular(AppRadius.s),
-                        )
-                      : null,
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        if (wide)
-                          TextSpan(
-                            text: '$weekday ',
-                            style: text.badge.copyWith(
-                              fontWeight: AppWeight.regular,
-                            ),
-                          ),
-                        TextSpan(text: '${day.day}'),
-                        if (monthShort != null)
-                          TextSpan(
-                            text: ' $monthShort',
-                            style: text.badge.copyWith(
-                              fontWeight: AppWeight.medium,
-                            ),
-                          ),
-                      ],
-                    ),
-                    maxLines: 1,
-                    style: text.label.copyWith(
-                      fontWeight: AppWeight.strong,
-                      color: numberColor,
-                      height: 1.2,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ),
-              ),
-              // 2. satır: kayıtlar ya da üç harfli gün adı.
-              SizedBox(
-                height: 13,
-                child: count == 0
-                    // KT-3: 24 dp altında tek harfe düşen ad yazılmaz.
-                    ? (wide || innerWidth < 24
-                          ? const SizedBox.shrink()
-                          : Center(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  weekday,
-                                  maxLines: 1,
-                                  style: text.badge.copyWith(
-                                    height: 1.15,
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final wide = c.maxWidth >= 60;
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 1. satır: gün (bugün dolgulu hap, ay başında kısa ay adı).
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.xs,
+                      ),
+                      decoration: isToday
+                          ? BoxDecoration(
+                              color: scheme.primary,
+                              borderRadius: BorderRadius.circular(AppRadius.s),
+                            )
+                          : null,
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            if (wide)
+                              TextSpan(
+                                text: '$weekday ',
+                                style: text.badge.copyWith(
+                                  fontWeight: AppWeight.regular,
                                 ),
                               ),
-                            ))
-                    : wide && title != null
-                    ? Text(
-                        count > 1 ? '$title +${count - 1}' : title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: text.badge.copyWith(
-                          height: 1.15,
-                          fontWeight: AppWeight.regular,
-                          color: red ? scheme.error : scheme.onSurface,
+                            TextSpan(text: '${day.day}'),
+                            if (monthShort != null)
+                              TextSpan(
+                                text: ' $monthShort',
+                                style: text.badge.copyWith(
+                                  fontWeight: AppWeight.medium,
+                                ),
+                              ),
+                          ],
                         ),
-                      )
-                    : _Dots(
-                        colors: [
-                          if (red) scheme.error,
-                          for (final e in entries) entryColor(e, scheme),
-                        ],
+                        maxLines: 1,
+                        style: text.label.copyWith(
+                          fontWeight: AppWeight.strong,
+                          color: numberColor,
+                          height: 1.2,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                       ),
-              ),
-            ],
+                    ),
+                  ),
+                  // 2. satır: kayıtlar ya da üç harfli gün adı.
+                  SizedBox(
+                    height: 13,
+                    child: count == 0
+                        // KT-3: 24 dp altında tek harfe düşen ad yazılmaz.
+                        ? (wide || c.maxWidth < 24
+                              ? const SizedBox.shrink()
+                              : Center(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      weekday,
+                                      maxLines: 1,
+                                      style: text.badge.copyWith(
+                                        height: 1.15,
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                ))
+                        : wide && title != null
+                        ? Text(
+                            count > 1 ? '$title +${count - 1}' : title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: text.badge.copyWith(
+                              height: 1.15,
+                              fontWeight: AppWeight.regular,
+                              color: red ? scheme.error : scheme.onSurface,
+                            ),
+                          )
+                        : _Dots(
+                            colors: [
+                              if (red) scheme.error,
+                              for (final e in entries) entryColor(e, scheme),
+                            ],
+                          ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
