@@ -58,15 +58,21 @@ class GuestBackupCard extends ConsumerStatefulWidget {
 class _GuestBackupCardState extends ConsumerState<GuestBackupCard> {
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authStateProvider).value;
-    final notes = ref.watch(notesStreamProvider).value ?? const [];
+    final anonymous = ref.watch(
+      authStateProvider.select((a) => a.value?.isAnonymous ?? false),
+    );
+    if (!anonymous) return const SizedBox.shrink();
     final prefs = ref.watch(sharedPreferencesProvider);
-    final noteCount = notes.where((n) => !n.isEmpty).length;
+    final noteCount = ref.watch(
+      notesStreamProvider.select(
+        (a) => (a.value ?? const []).where((n) => !n.isEmpty).length,
+      ),
+    );
     final laterAt =
         prefs.getInt(_laterCountKey) ??
         (prefs.containsKey(_legacySnoozeKey) ? 0 : null);
     final mode = guestReminderMode(
-      anonymous: user?.isAnonymous ?? false,
+      anonymous: anonymous,
       noteCount: noteCount,
       laterAtCount: laterAt,
     );

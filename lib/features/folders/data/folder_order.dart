@@ -126,17 +126,16 @@ List<NoteFolder> emptyFoldersLast(
 
 /// Klasör kimliği → içindeki (arşivlenmemiş, boş olmayan) not sayısı.
 final folderNoteCountsProvider = Provider<Map<String, int>>((ref) {
-  final notes = ref.watch(notesStreamProvider).value;
-  if (notes == null) return const {};
-  final counts = <String, int>{};
-  for (final n in notes) {
-    final id = n.folderId;
-    if (id == null || n.archivedAt != null || n.isEmpty) continue;
-    counts[id] = (counts[id] ?? 0) + 1;
-  }
-  // Sayılar değişmedikçe AYNI harita (F2.1): yoksa her not yazımında klasör
-  // rafı ve sayıya göre sıralı klasör listesi yeniden kuruluyordu.
-  return ref.watch(_folderNoteCountsBox).keep(counts, sameMap);
+  final box = ref.watch(_folderNoteCountsBox);
+  return ref.watch(
+    notesStreamProvider.select((async) {
+      final notes = async.value;
+      if (notes == null) return const <String, int>{};
+      // Sayılar değişmedikçe AYNI harita (F2.1): yoksa her not yazımında klasör
+      // rafı ve sayıya göre sıralı klasör listesi yeniden kuruluyordu.
+      return box.keep(NoteListSlices.of(notes).folderCounts, sameMap);
+    }),
+  );
 });
 
 final _folderNoteCountsBox = Provider<StableBox<Map<String, int>>>(

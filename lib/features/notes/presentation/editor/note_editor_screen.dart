@@ -3711,14 +3711,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // dinler; liste akışının her yayını (her kayıt yankısı, yandaki notta
       // yazmak) bütün editörü yeniden kuruyordu. Sayı/başlıklar çipte.
       if (ref.watch(
-        notesStreamProvider.select(
-          (v) => backlinksTo(note.id, v.value ?? const <Note>[]).isNotEmpty,
-        ),
+        noteBacklinksProvider(note.id).select((l) => l.isNotEmpty),
       ))
         Consumer(
           builder: (context, ref, _) => BacklinksChip(
             noteId: note.id,
-            notes: ref.watch(notesStreamProvider).value ?? const <Note>[],
+            notes: ref.watch(noteBacklinksProvider(note.id)),
             labelStyle: chipLabelStyle,
           ),
         ),

@@ -40,32 +40,85 @@ import 'month_grid.dart';
 import 'pinch_zoom.dart';
 import 'task_editor.dart';
 import '../../../core/haptics.dart';
+import '../../../core/utils/stable_value.dart';
+
+bool _sameCalendarReminderNote(Note a, Note b) =>
+    identical(a, b) ||
+    (a.id == b.id &&
+        a.reminderAt == b.reminderAt &&
+        a.reminderRepeat == b.reminderRepeat &&
+        a.deletedAt == b.deletedAt &&
+        a.archivedAt == b.archivedAt &&
+        a.folderId == b.folderId &&
+        a.locked == b.locked &&
+        a.color == b.color &&
+        (a.locked || a.displayTitle.trim() == b.displayTitle.trim()));
+
+bool _sameCalendarReminderNotes(List<Note> a, List<Note> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!_sameCalendarReminderNote(a[i], b[i])) return false;
+  }
+  return true;
+}
+
+bool _sameCalendarTimedNote(Note a, Note b) =>
+    identical(a, b) ||
+    (a.id == b.id &&
+        a.expiresAt == b.expiresAt &&
+        a.deletedAt == b.deletedAt &&
+        a.archivedAt == b.archivedAt &&
+        a.folderId == b.folderId &&
+        a.locked == b.locked &&
+        a.color == b.color &&
+        (a.locked || a.displayTitle.trim() == b.displayTitle.trim()));
+
+bool _sameCalendarTimedNotes(List<Note> a, List<Note> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!_sameCalendarTimedNote(a[i], b[i])) return false;
+  }
+  return true;
+}
+
+final _calendarReminderNotesBox = Provider<StableBox<List<Note>>>(
+  (ref) => StableBox(),
+);
+
+final _calendarTimedNotesBox = Provider<StableBox<List<Note>>>(
+  (ref) => StableBox(),
+);
 
 /// Hatırlatıcılı notlar (gizli klasör bastırması Hatırlatıcılar ekranıyla
 /// aynı kural).
 final calendarReminderNotesProvider = Provider<List<Note>>((ref) {
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
   final suppressed = ref.watch(suppressedFolderIdsProvider);
-  return [
-    for (final n in notes)
-      if (n.reminderAt != null &&
-          (n.folderId == null || !suppressed.contains(n.folderId)))
-        n,
-  ];
+  final box = ref.watch(_calendarReminderNotesBox);
+  return ref.watch(
+    notesStreamProvider.select(
+      (async) => box.keep([
+        for (final n
+            in NoteListSlices.of(async.value ?? const <Note>[]).reminded)
+          if (n.folderId == null || !suppressed.contains(n.folderId)) n,
+      ], _sameCalendarReminderNotes),
+    ),
+  );
 });
 
 /// Zamanlı notlar (U4, `expiresAt`): arşivlenmemiş, gizli klasörde değil.
 final calendarTimedNotesProvider = Provider<List<Note>>((ref) {
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
   final suppressed = ref.watch(suppressedFolderIdsProvider);
-  return [
-    for (final n in notes)
-      if (n.expiresAt != null &&
-          n.archivedAt == null &&
-          n.deletedAt == null &&
-          (n.folderId == null || !suppressed.contains(n.folderId)))
-        n,
-  ];
+  final box = ref.watch(_calendarTimedNotesBox);
+  return ref.watch(
+    notesStreamProvider.select(
+      (async) => box.keep([
+        for (final n in NoteListSlices.of(async.value ?? const <Note>[]).timed)
+          if (n.folderId == null || !suppressed.contains(n.folderId)) n,
+      ], _sameCalendarTimedNotes),
+    ),
+  );
 });
 
 /// Takvim görünümlerinin ortak verisi (ay/hafta ekranı ve gün sayfası aynı

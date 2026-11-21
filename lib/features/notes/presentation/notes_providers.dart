@@ -16,6 +16,7 @@ import '../../ai/data/attachment_text_index.dart';
 import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
+import '../domain/note_links.dart';
 import '../domain/note_similarity.dart';
 import '../domain/note_type.dart';
 
@@ -287,21 +288,158 @@ final allNotesGroupByFolderProvider = boolPref(
   defaultValue: true,
 );
 
+/// Not listesinin tek geçişlik türetilmiş dilimleri (T2, K-22a/K-23/K-26).
+///
+/// `notesStreamProvider` her otomatik kayıtta yeni bir [List<Note>] yayınlar;
+/// klasör sayaçları, hatırlatıcılar, takvim şeridi, yükleme kuyruğu ve geri
+/// bağlantılar aynı listeyi ayrı ayrı taramak yerine liste örneği başına
+/// ([Expando]) tek geçişte dilimlenen bu özeti paylaşır.
+class NoteListSlices {
+  const NoteListSlices({
+    required this.reminded,
+    required this.activeReminded,
+    required this.timed,
+    required this.withAttachments,
+    required this.withTagLinks,
+    required this.folderCounts,
+    required this.unfolderedCount,
+  });
+
+  static const empty = NoteListSlices(
+    reminded: [],
+    activeReminded: [],
+    timed: [],
+    withAttachments: [],
+    withTagLinks: [],
+    folderCounts: {},
+    unfolderedCount: 0,
+  );
+
+  static final Expando<NoteListSlices> _cache = Expando('NoteListSlices');
+
+  static NoteListSlices of(List<Note> notes) {
+    if (notes.isEmpty) return empty;
+    try {
+      return _cache[notes] ??= NoteListSlices._from(notes);
+    } on ArgumentError {
+      return NoteListSlices._from(notes);
+    }
+  }
+
+  factory NoteListSlices._from(List<Note> notes) {
+    final reminded = <Note>[];
+    final activeReminded = <Note>[];
+    final timed = <Note>[];
+    final withAttachments = <Note>[];
+    final withTagLinks = <Note>[];
+    final folderCounts = <String, int>{};
+    var unfolderedCount = 0;
+
+    for (final n in notes) {
+      final active = n.archivedAt == null && n.deletedAt == null;
+      if (n.reminderAt != null) {
+        reminded.add(n);
+        if (active) activeReminded.add(n);
+      }
+      if (active && n.expiresAt != null) {
+        timed.add(n);
+      }
+      if (n.attachments.isNotEmpty) {
+        withAttachments.add(n);
+      }
+      if (n.deletedAt == null && n.tagLinks.isNotEmpty) {
+        withTagLinks.add(n);
+      }
+      if (n.archivedAt == null && !n.isEmpty) {
+        final folderId = n.folderId;
+        if (folderId == null) {
+          unfolderedCount++;
+        } else {
+          folderCounts[folderId] = (folderCounts[folderId] ?? 0) + 1;
+        }
+      }
+    }
+    return NoteListSlices(
+      reminded: reminded,
+      activeReminded: activeReminded,
+      timed: timed,
+      withAttachments: withAttachments,
+      withTagLinks: withTagLinks,
+      folderCounts: folderCounts,
+      unfolderedCount: unfolderedCount,
+    );
+  }
+
+  final List<Note> reminded;
+  final List<Note> activeReminded;
+  final List<Note> timed;
+  final List<Note> withAttachments;
+  final List<Note> withTagLinks;
+  final Map<String, int> folderCounts;
+  final int unfolderedCount;
+
+  int activeCount(Set<String> suppressed) {
+    var total = unfolderedCount;
+    for (final e in folderCounts.entries) {
+      if (!suppressed.contains(e.key)) total += e.value;
+    }
+    return total;
+  }
+}
+
 /// "Tümü" çipindeki sayı: arşiv dışı, boş olmayan, gizli klasörde olmayan
 /// notlar.
 final allNotesCountProvider = Provider<int>((ref) {
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
   final suppressed = ref.watch(suppressedFolderIdsProvider);
-  var count = 0;
-  for (final n in notes) {
-    if (n.archivedAt == null &&
-        !n.isEmpty &&
-        !suppressed.contains(n.folderId)) {
-      count++;
-    }
-  }
-  return count;
+  return ref.watch(
+    notesStreamProvider.select(
+      (async) => NoteListSlices.of(
+        async.value ?? const <Note>[],
+      ).activeCount(suppressed),
+    ),
+  );
 });
+
+bool _sameBacklinkNote(Note a, Note b) =>
+    identical(a, b) ||
+    (a.id == b.id &&
+        a.locked == b.locked &&
+        a.displayTitle.trim() == b.displayTitle.trim() &&
+        (a.displayTitle.trim().isNotEmpty ||
+            a.locked ||
+            a.toPlainText().trim().split('\n').first.trim() ==
+                b.toPlainText().trim().split('\n').first.trim()));
+
+bool _sameBacklinkList(List<Note> a, List<Note> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!_sameBacklinkNote(a[i], b[i])) return false;
+  }
+  return true;
+}
+
+/// K-26: [noteId] notuna bağlanan notlar (geri bağlantılar). Yalnız bağlayan
+/// küme ya da görünen etiketleri değişince güncellenir; açık notun kendi
+/// otomatik kayıt yankısında yeniden hesaplanmaz ve çipi yeniden kurmaz.
+final noteBacklinksProvider = Provider.autoDispose
+    .family<List<Note>, String>((ref, noteId) {
+      final box = ref.watch(_noteBacklinksBox(noteId));
+      return ref.watch(
+        notesStreamProvider.select(
+          (v) => box.keep(
+            backlinksTo(
+              noteId,
+              NoteListSlices.of(v.value ?? const <Note>[]).withTagLinks,
+            ),
+            _sameBacklinkList,
+          ),
+        ),
+      );
+    });
+
+final _noteBacklinksBox = Provider.autoDispose
+    .family<StableBox<List<Note>>, String>((ref, _) => StableBox());
 
 /// Ana ekran ızgara mı liste mi (kullanıcı tercihi, kalıcı).
 ///
@@ -1236,9 +1374,28 @@ final sharedFolderNotesProvider =
           );
     });
 
+List<Note> _applyPreviewHold(
+  List<Note> list,
+  Map<String, Note> previewHeld,
+) {
+  if (previewHeld.isEmpty) return list;
+  return [for (final n in list) previewHeld[n.id] ?? n];
+}
+
+bool _sameHeldNoteSet(List<Note> a, List<Note> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  if (sameInstances(a, b)) return true;
+  final byId = <String, Note>{for (final n in a) n.id: n};
+  if (byId.length != b.length) return false;
+  for (final n in b) {
+    if (!identical(byId[n.id], n)) return false;
+  }
+  return true;
+}
+
 /// Arama + filtre + etiket + klasör uygulanmış, arşiv dışı not listesi.
 final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
-  final notes = ref.watch(notesStreamProvider);
   // Geciktirilmiş sorgu: her tuş vuruşunda tüm notları taramamak için
   // (bkz. debouncedSearchQueryProvider).
   final query = foldForSearch(ref.watch(debouncedSearchQueryProvider).trim());
@@ -1255,16 +1412,26 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
       ? ref.watch(noteActivityProvider)
       : const <String, int>{};
   final box = ref.watch(_filteredNotesBox);
+  final inputBox = ref.watch(_filteredInputBox);
   final held = ref.watch(sortHeldNoteIdsProvider);
   final anchors = ref.watch(_sortAnchorsBox);
   final previewHeld = ref.watch(heldNotePreviewProvider);
+  // F68.1 + T2 (K-22a/K-23): az önce değişen açık not listede eski örneğiyle
+  // dururken gelen otomatik kayıt yankısı girdi kümesini değiştirmez → süzme
+  // ve sıralama yeniden çalışmaz.
+  final notes = ref.watch(
+    notesStreamProvider.select(
+      (async) => async.whenData(
+        (list) => inputBox.keep(
+          _applyPreviewHold(list, previewHeld),
+          previewHeld.isEmpty ? sameInstances : _sameHeldNoteSet,
+        ),
+      ),
+    ),
+  );
 
   return notes.whenData((list) {
     _pruneSearchBodyCache(list);
-    // F68.1: az önce değişen açık not listede eski örneğiyle durur.
-    if (previewHeld.isNotEmpty) {
-      list = [for (final n in list) previewHeld[n.id] ?? n];
-    }
     anchors.removeWhere((id, _) => !held.contains(id));
     if (held.length > anchors.length) {
       for (final n in list) {
@@ -1339,6 +1506,10 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
 });
 
 final _filteredNotesBox = Provider<StableBox<List<Note>>>(
+  (ref) => StableBox(),
+);
+
+final _filteredInputBox = Provider<StableBox<List<Note>>>(
   (ref) => StableBox(),
 );
 

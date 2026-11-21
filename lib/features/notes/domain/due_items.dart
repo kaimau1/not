@@ -25,6 +25,20 @@ class DueItem {
   /// Not içi görev satırı (madde kimliği).
   final String itemId;
   final String taskId;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DueItem &&
+          other.key == key &&
+          other.title == title &&
+          other.at == at &&
+          other.noteId == noteId &&
+          other.itemId == itemId &&
+          other.taskId == taskId);
+
+  @override
+  int get hashCode => Object.hash(key, title, at, noteId, itemId, taskId);
 }
 
 /// Şeritte görünecekler, en eskisi önce: zamanı geçmiş (ve "Tamam"

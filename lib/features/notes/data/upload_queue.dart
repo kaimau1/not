@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error_log.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/stable_value.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -199,9 +200,54 @@ class UploadProgressNotifier extends Notifier<Map<String, double>> {
 /// `needsDrive`: Google hesabı ama Drive henüz BAĞLANMADI — bekleyenler
 /// bağlantı bekliyor; gösterge "Bağla" der (misafir hesapta ekler zaten
 /// buluta gitmez, sayılmaz).
+bool _sameUploadAttachment(Attachment a, Attachment b) =>
+    identical(a, b) ||
+    (a.id == b.id &&
+        a.kind == b.kind &&
+        a.sizeBytes == b.sizeBytes &&
+        a.localPath == b.localPath &&
+        a.storagePath == b.storagePath &&
+        a.downloadUrl == b.downloadUrl &&
+        a.driveId == b.driveId);
+
+bool _sameUploadNote(Note a, Note b) {
+  if (identical(a, b)) return true;
+  if (a.id != b.id ||
+      a.localOnly != b.localOnly ||
+      a.folderId != b.folderId ||
+      a.attachments.length != b.attachments.length) {
+    return false;
+  }
+  for (var i = 0; i < a.attachments.length; i++) {
+    if (!_sameUploadAttachment(a.attachments[i], b.attachments[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool _sameUploadNotes(List<Note> a, List<Note> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!_sameUploadNote(a[i], b[i])) return false;
+  }
+  return true;
+}
+
+final _uploadNotesBox = Provider<StableBox<List<Note>>>((ref) => StableBox());
+
 final pendingUploadsProvider =
     Provider<({int pending, int failed, bool needsDrive})>((ref) {
-      final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+      final uploadBox = ref.watch(_uploadNotesBox);
+      final notes = ref.watch(
+        notesStreamProvider.select(
+          (async) => uploadBox.keep(
+            NoteListSlices.of(async.value ?? const <Note>[]).withAttachments,
+            _sameUploadNotes,
+          ),
+        ),
+      );
       final failures = ref.watch(uploadFailuresProvider);
       final limitMb = ref.watch(syncLimitMbProvider);
       final limitBytes = limitMb <= 0 ? null : limitMb * 1024 * 1024;

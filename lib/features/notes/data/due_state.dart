@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/stable_value.dart';
 import '../../calendar/data/calendar_repository.dart';
 import '../../calendar/domain/task_item.dart';
 import '../../settings/settings_providers.dart' show sharedPreferencesProvider;
 import '../domain/due_items.dart';
 import '../domain/note.dart';
+import '../presentation/notes_providers.dart' show NoteListSlices;
 import 'notes_repository.dart';
 
 /// Şeridin "şimdi"si: yalnız gerektiğinde ilerler — bir sonraki hatırlatıcı
@@ -65,26 +67,61 @@ class DueDismissed extends Notifier<Set<String>> {
   }
 }
 
-List<Note> _notes(Ref ref) => ref.watch(notesStreamProvider).value ?? const [];
+bool _sameDueNote(Note a, Note b) =>
+    identical(a, b) ||
+    (a.id == b.id &&
+        a.reminderAt == b.reminderAt &&
+        a.locked == b.locked &&
+        (a.locked || a.displayTitle.trim() == b.displayTitle.trim()));
+
+bool _sameDueNotes(List<Note> a, List<Note> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (!_sameDueNote(a[i], b[i])) return false;
+  }
+  return true;
+}
+
+final _dueItemsNotesBox = Provider<StableBox<List<Note>>>((ref) => StableBox());
+final _dueNextNotesBox = Provider<StableBox<List<Note>>>((ref) => StableBox());
+final _dueItemsBox = Provider<StableBox<List<DueItem>>>((ref) => StableBox());
+
+List<Note> _notes(Ref ref, Provider<StableBox<List<Note>>> boxProvider) {
+  final box = ref.watch(boxProvider);
+  return ref.watch(
+    notesStreamProvider.select(
+      (async) => box.keep(
+        NoteListSlices.of(async.value ?? const <Note>[]).activeReminded,
+        _sameDueNotes,
+      ),
+    ),
+  );
+}
+
 List<TaskItem> _tasks(Ref ref) =>
     ref.watch(tasksStreamProvider).value ?? const [];
 
 /// Zamanı gelmiş, kapatılmamış hatırlatıcı ve görevler (eskisi önce).
 final dueItemsProvider = Provider<List<DueItem>>((ref) {
   final now = ref.watch(dueClockProvider);
-  return dueItems(
-    notes: _notes(ref),
-    tasks: _tasks(ref),
-    now: now,
-    dismissed: ref.watch(dueDismissedProvider),
-    lockedTitle: '🔒',
+  final box = ref.watch(_dueItemsBox);
+  return box.keep(
+    dueItems(
+      notes: _notes(ref, _dueItemsNotesBox),
+      tasks: _tasks(ref),
+      now: now,
+      dismissed: ref.watch(dueDismissedProvider),
+      lockedTitle: '🔒',
+    ),
+    sameValues,
   );
 });
 
 /// Şeridin/rozetin değişeceği bir sonraki an.
 final dueNextProvider = Provider<DateTime?>(
   (ref) => nextDueAfter(
-    notes: _notes(ref),
+    notes: _notes(ref, _dueNextNotesBox),
     tasks: _tasks(ref),
     now: ref.watch(dueClockProvider),
   ),

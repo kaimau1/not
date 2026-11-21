@@ -1,32 +1,11 @@
-# DEVIR — P83 yazım denetimi v3 (dal oto/P83-yazim-v3)
+# DEVIR — P86 kasma T2 · T9 · T8 (dal oto/P86-kasma-t2-t9)
 
-**Bitti (CI yeşil):** Y-0 ölçüm seti (6a1a3407) · Y-1 ek çözücü + kök sözlüğü (42067e11) · Y-2 harfsiz yazım (faa0c61b) · Y-3 kural tablosu 356 + `kContextFixes` 31 (9437a243). Taban → şimdi: yanlış düzeltme 17 → 0/500, yakalama 124 → 273/300.
-- YANLIŞ YOL (Y-1): `kCommonTurkish`'i kök saymak, bağlaçları kök saymak, her yumuşamayı kabul. `quickStem` değişmedi; açık lisanslı büyük kök listesi eklenmedi (ikisi sabah bakılacak).
-
-**Y-4 motor (563f66c8, CI 44754622006 yeşil):** WIP 9d749522 işe yarar → sürdü. `SpellEngine.suggestions` + `tokens`. KANIT düzyazı (`test/spell_corpus/duzyazi.txt`, 9252 doğru kelime): 82 yanlış çizgi (gerçek→gerek, şablon→salon, kısım→kışım, koyu→köyü; otomatik kip de bunları DEĞİŞTİRİYORDU) → harfsiz yazım yalnız Türkçe harfsiz kelimede + 31 kök → 3. 500 doğru: sert çizgi 0, ipucu 8; 300 yanlış: 277'sinde doğru öneride.
-
-**Y-4 arayüz (bu commit):** `AutoSpell.mode` (Kapalı/Yalnız göster/Otomatik; `spell_mode`; yoksa `auto_spell_on` → otomatik, değilse göster; yüklenene dek kapalı) + `revision` (hafıza/notta-dokunma değişince önbellek boşalır). `spell_underline.dart` `SpellMarks` (denetleyici başına, `AppMotion.medium` duraklama, kelime + paragraf önbelleği, 4 ms dilim — kendi Timer'ı, alan kapanınca iptal; yazımda işaret kayar, değen/bitişen düşer; ek etiketi adı süzülür). `tag_chips.dart` CustomPaint `painter:` dalgalı/noktalı çizgi (ağaç şekli aynı; IME oluşturma aralığı ve son yazılan kelime çizilmez). Dokunuş → `showSpellMenuAfterTap` → `spellContextMenu` (öneriler · Sözlüğe ekle · Hep böyle düzelt: x · Bu notta dokunma). `SpellModePicker` levhada ve Ayarlar'da (eski "Otomatik düzelt" anahtarının yerine). Hızlı satır düğmesi otomatik ↔ göster.
-- YANLIŞ YOL: dilim arası `Future.delayed(Duration.zero)` — sahipsiz zamanlayıcı, alan kapanınca iptal edilemez → testte "Timer still pending" (her editör testi riskte); çözüm: dilim kendi `_timer`'ını kurar, baştan başlar (biten kelime önbellekte).
-- Karar: `runHeavy` yerine dilimli ana iş parçacığı taraması (web'de izole yok + `SpellMemory` kopyası) — sabah bakılacak. Düz çizilen (dokunulmamış) madde satırında çizgi yok, başlıkta denetim yok.
-- Ölçüm: S57 "denetim açıkken 5 tuş" kök 0 / satır 0; S1–S56 yeşil (yerelde tam `perf_budget_test`). kasma-kontrol 8 madde: yeni alan yok, satır önbelleği girdisi yok, kök setState yok, sarmalayıcı yok, boy animasyonu yok. Cihaz A/B YAPILAMADI (cihaz yok).
-
-**Bitti:** Y-4 arayüz d7b028cb (CI 44757292479 yeşil, tam takım) + d7e68017 (okuma kipinde çizgi yok, öneri yeniden hesap) + belgeler (OTOMASYON P83 bitti, PLAN 1.4/2 [~], regresyon, hafıza editor.md, KONTROL "Telefonda bak", sürüm notu 20 Kasım TR/EN). Kalan: cihaz A/B (yaz evresi) sonraki [apk]'da; Y-5/Y-6 bu paketin dışında.
-**Ölçüm:** `flutter test test/spell_corpus_test.dart test/spell_underline_test.dart` · `flutter test test/perf_budget_test.dart --plain-name S57`.
-**Not:** Flutter `C:/src` altında YOK; 3.47.9 scratchpad'de (`flutter analyze` SDK klasörünü tarayıp düşüyor → `dart analyze --fatal-infos lib test tool`). main (1d750105) dala birleştirildi (0fb13fe2).
-
-# DEVIR — P85 PL6 Play Billing (dal oto/P85-play-billing)
-
-- Yapılan (commit sırası): Kuyruk P85 · sunucu `functions/billing.js` + `billing_util.js` (+test;
-  ömür boyu `lifetimeTokenKey`, abonelik `subTokenKey` korumaları) — `verifyPurchase`, `playRtdn`;
-  `index.js` yalnız `PLAY_PACKAGE_NAME` varken bağlar · istemci `in_app_purchase` + `billing_service`
-  · AI katman kapısı · Pro ekranı (`/premium` Play'de) + Ayarlar kısayolu yalnız Play · bildirim
-  hunisi düzeltmesi · belgeler (Kuyruk bitti, PLAN PL6 [~], regresyon, play_hazirlik kurulum, KONTROL,
-  veri.md).
-- CI 44756241480: tek kırmızı `notice_paths_guard_test` (pro_screen ham `showSnackBar`) → `showAppMessage`,
-  yerelde yeşil. Yerel `flutter build web --release --wasm` yeşil (in_app_purchase web'de derleniyor).
-- Kural değişmedi; `purchaseTokens` eşleşmesiz (RET).
-- KARAR (en güvenli, sabah bakılacak): deneme = Play aboneliğinin 7 gün teklifi; `startTrial` bağlanmadı;
-  yalnız AI kapısı bağlı.
-- Doğrulanamayan: gerçek satın alma, RTDN, Play API izni (Play hesabı yok); cihaz yok.
-- Test: `flutter test test/billing_test.dart` (+ `--dart-define=NOTLAR_PLAY=true`),
-  `cd functions && node --test billing_util.test.js`.
+- **T2 (K-22a / K-23 / K-26 — Not akışı yankısı ve türetilmiş sağlayıcılar):**
+  - `test/note_stream_echo_test.dart` ile editör açıkken (1280×800 bölünmüş görünüm, 30 not) tek otomatik kayıt yankısında yeniden hesaplanan/bildirim yayan sağlayıcılar, liste taramaları ve widget kurulumları ölçüldü.
+  - `NoteListSlices` (`Expando` önbellekli tek geçişlik liste dilimleyici) + `noteBacklinksProvider` (`Provider.autoDispose.family`, `StableBox`) + `.select` / `StableBox` (`filteredNotesProvider`, `allNotesCountProvider`, `folderNoteCountsProvider`, `dueItemsProvider`/`dueNextProvider`, `calendarReminderNotesProvider`/`calendarTimedNotesProvider`, `pendingUploadsProvider`, `GuestBackupCard`) uygulandı.
+  - **Önce → Sonra (`test/note_stream_echo_test.dart`):**
+    - Yeniden hesaplanan türetilmiş sağlayıcı (`didDisposeProvider`): **20 (10 sağlayıcı) → 0**
+    - Bildirim yayan türetilmiş sağlayıcı (`didUpdateProvider`, ham akışlar hariç): **4 → 0**
+    - Yankılanan 30 notluk liste taraması: **11 geçiş (330 okuma) → 2 geçiş (60 okuma)**
+    - Yankı penceresi widget kurulumu: **242 → 22** (`HomeCalendarStrip` 1→0, `_DayCell` 10→0, `BacklinksChip` 1→0, `GuestBackupCard` 1→0).
+- **Sıradaki:** T9 (K-37 `PopIn` / `RevealUp`) ve T8 (K-28 / K-29).
