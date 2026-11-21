@@ -224,7 +224,9 @@ class ActionMenu extends StatelessWidget {
     List<MenuSection> sections, {
     VoidCallback? onEdit,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final heading = title?.trim() ?? '';
     final editButton = _settingsButton(
       context,
@@ -239,73 +241,150 @@ class ActionMenu extends StatelessWidget {
     final inlineEdit = heading.isNotEmpty
         ? null
         : _settingsButton(context, scheme, compact: true, onEdit: onEdit);
+    final cardDecoration = BoxDecoration(
+      color: tokens.card,
+      borderRadius: BorderRadius.circular(AppRadius.l),
+      border: Border.all(color: tokens.hairline),
+    );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, AppSpace.s),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        0,
+        AppSpace.l,
+        AppSpace.m,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Menü levhasında başlık = notun adı, ✕ sağda (F16.2).
-          // Tutamak yok (K-D7): başlık levhanın tepesinden 56 dp'lik satır.
           if (heading.isNotEmpty)
             SheetHeader(
               title: heading,
               actions: [?editButton],
               padding: EdgeInsets.zero,
             ),
-          if (quick.isNotEmpty)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final a in quick)
-                  Expanded(
-                    child: _QuickButton(
-                      action: a,
-                      scheme: scheme,
-                      onLongPress: onEdit,
-                    ),
-                  ),
-              ],
-            ),
-          if (collapsible)
-            for (final (i, section) in visibleSections.indexed)
-              _FoldSection(
-                key: ValueKey('menu-fold-${section.title}'),
-                folds: _folds.putIfAbsent(menuId ?? '', () => {}),
-                title: section.title,
-                initiallyOpen: i == 0,
-                trailing: i == 0 ? inlineEdit : null,
-                child: _TileGrid(
-                  actions: section.actions,
-                  tile: (a) =>
-                      _GridTile(action: a, scheme: scheme, onLongPress: onEdit),
+          if (quick.isNotEmpty) ...[
+            DecoratedBox(
+              decoration: cardDecoration,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.xs,
+                  vertical: AppSpace.s,
                 ),
-              )
-          else
-          for (final (i, section) in visibleSections.indexed) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
-              // Başlıksız menüde ⚙ kendi satırını kaplamasın (kullanıcı
-              // bulgusu 2026-11-06: "düzenleme simgesi üstte boşa bir satır
-              // kaplıyor"): ilk bölüm başlığının sağında durur.
-              child: i == 0 && inlineEdit != null
-                  ? SizedBox(
-                      height: 32,
-                      child: Row(
-                        children: [
-                          Expanded(child: SectionLabel(section.title)),
-                          inlineEdit,
-                        ],
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final a in quick)
+                      Expanded(
+                        child: _QuickButton(
+                          action: a,
+                          scheme: scheme,
+                          onLongPress: onEdit,
+                        ),
                       ),
-                    )
-                  : SectionLabel(section.title),
+                  ],
+                ),
+              ),
             ),
-            _TileGrid(
-              actions: section.actions,
-              tile: (a) =>
-                  _GridTile(action: a, scheme: scheme, onLongPress: onEdit),
-            ),
+            if (visibleSections.isNotEmpty) const SizedBox(height: AppSpace.s),
           ],
+          if (collapsible && visibleSections.isNotEmpty)
+            DecoratedBox(
+              decoration: cardDecoration,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final (i, section) in visibleSections.indexed) ...[
+                    if (i > 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.m,
+                        ),
+                        child: ColoredBox(
+                          color: tokens.hairline,
+                          child: const SizedBox(height: 1),
+                        ),
+                      ),
+                    _FoldSection(
+                      key: ValueKey('menu-fold-${section.title}'),
+                      folds: _folds.putIfAbsent(menuId ?? '', () => {}),
+                      title: section.title,
+                      count: section.actions.length,
+                      initiallyOpen: i == 0,
+                      trailing: i == 0 ? inlineEdit : null,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpace.s,
+                          0,
+                          AppSpace.s,
+                          AppSpace.m,
+                        ),
+                        child: _TileGrid(
+                          actions: section.actions,
+                          tile: (a) => _GridTile(
+                            action: a,
+                            scheme: scheme,
+                            onLongPress: onEdit,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            )
+          else if (!collapsible)
+            for (final (i, section) in visibleSections.indexed) ...[
+              if (i > 0) const SizedBox(height: AppSpace.s),
+              DecoratedBox(
+                decoration: cardDecoration,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.s,
+                    AppSpace.s,
+                    AppSpace.s,
+                    AppSpace.s,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpace.xs,
+                          AppSpace.xxs,
+                          AppSpace.xs,
+                          AppSpace.s,
+                        ),
+                        // Başlıksız menüde ⚙ kendi satırını kaplamasın
+                        // (kullanıcı bulgusu 2026-11-06): ilk bölüm başlığının
+                        // sağında durur.
+                        child: i == 0 && inlineEdit != null
+                            ? SizedBox(
+                                height: AppSpace.xxxl,
+                                child: Row(
+                                  children: [
+                                    Expanded(child: SectionLabel(section.title)),
+                                    inlineEdit,
+                                  ],
+                                ),
+                              )
+                            : SectionLabel(section.title),
+                      ),
+                      _TileGrid(
+                        actions: section.actions,
+                        tile: (a) => _GridTile(
+                          action: a,
+                          scheme: scheme,
+                          onLongPress: onEdit,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           // Bölüm yoksa ⚙ en altta, küçük.
           if (visibleSections.isEmpty && inlineEdit != null)
             Align(
@@ -357,7 +436,7 @@ class ActionMenu extends StatelessWidget {
       key: const ValueKey('menu-edit'),
       tooltip: l10n.settings,
       icon: icon,
-      padding: compact ? EdgeInsets.zero : const EdgeInsets.all(8),
+      padding: compact ? EdgeInsets.zero : const EdgeInsets.all(AppSpace.s),
       onSelected: (id) {
         if (id == editId) {
           onEdit?.call();
@@ -404,7 +483,7 @@ class _PopupRow extends StatelessWidget {
   );
 }
 
-/// Hızlı satırın düğmesi: yuvarlak simge, altında en çok iki satır ad.
+/// Hızlı satırın düğmesi: yuvarlak köşeli simge kutusu + altında kısa ad.
 class _QuickButton extends StatelessWidget {
   const _QuickButton({
     required this.action,
@@ -421,60 +500,71 @@ class _QuickButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final on = action.selected;
+    final text = AppText.of(Theme.of(context));
+    final badgeBox = Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: on
+            ? scheme.primary
+            : action.neutral
+            ? scheme.surfaceContainerHighest
+            : scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      child: Icon(
+        action.icon,
+        size: AppIconSize.m,
+        color: on
+            ? scheme.onPrimary
+            : action.neutral
+            ? scheme.onSurfaceVariant
+            : scheme.onPrimaryContainer,
+      ),
+    );
+    final iconWidget = action.count > 0 || action.badge != null
+        ? Stack(
+            clipBehavior: Clip.none,
+            children: [
+              badgeBox,
+              if (action.count > 0)
+                Positioned(
+                  right: -8,
+                  top: -4,
+                  child: _CountPill(
+                    count: action.count,
+                    highlight: action.highlight,
+                  ),
+                ),
+              if (action.badge != null)
+                Positioned(right: -4, top: -4, child: action.badge!),
+            ],
+          )
+        : badgeBox;
     return InkWell(
       key: ValueKey('menu-quick-${action.id}'),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       onTap: () => Navigator.pop(context, action.id),
       onLongPress: onLongPress,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.xxs,
+          vertical: AppSpace.xs,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: on
-                        ? scheme.primary
-                        : action.neutral
-                        ? scheme.surfaceContainerHighest
-                        : scheme.primaryContainer,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    action.icon,
-                    size: 22,
-                    color: on
-                        ? scheme.onPrimary
-                        : action.neutral
-                        ? scheme.onSurfaceVariant
-                        : scheme.onPrimaryContainer,
-                  ),
-                ),
-                if (action.count > 0)
-                  Positioned(
-                    right: -8,
-                    top: -4,
-                    child: _CountPill(
-                      count: action.count,
-                      highlight: action.highlight,
-                    ),
-                  ),
-                if (action.badge != null)
-                  Positioned(right: -4, top: -4, child: action.badge!),
-              ],
-            ),
-            const SizedBox(height: 6),
+            iconWidget,
+            const SizedBox(height: AppSpace.xs),
             Text(
               action.label,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, height: 1.2),
+              style: text.meta.copyWith(
+                color: scheme.onSurface,
+                fontWeight: AppWeight.medium,
+              ),
             ),
           ],
         ),
@@ -483,13 +573,14 @@ class _QuickButton extends StatelessWidget {
   }
 }
 
-/// Katlanır grup ([ActionMenu.collapsible]): başlık satırı (ad · ok)
+/// Katlanır grup ([ActionMenu.collapsible]): başlık satırı (ad · sayı · ok)
 /// dokununca ızgarayı aşağı kayarak açar/kapatır.
 class _FoldSection extends StatefulWidget {
   const _FoldSection({
     super.key,
     required this.folds,
     required this.title,
+    required this.count,
     required this.initiallyOpen,
     required this.child,
     this.trailing,
@@ -497,6 +588,7 @@ class _FoldSection extends StatefulWidget {
 
   final Map<String, bool> folds;
   final String title;
+  final int count;
   final bool initiallyOpen;
   final Widget child;
   final Widget? trailing;
@@ -515,53 +607,72 @@ class _FoldSectionState extends State<_FoldSection> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: AppSpace.xs),
-          child: Row(
-            children: [
-              Expanded(
-                child: Semantics(
-                  button: true,
-                  expanded: _open,
-                  child: InkWell(
-                    key: ValueKey('menu-fold-head-${widget.title}'),
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                    onTap: _toggle,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minHeight: kMinInteractiveDimension,
+        Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                button: true,
+                expanded: _open,
+                child: InkWell(
+                  key: ValueKey('menu-fold-head-${widget.title}'),
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                  onTap: _toggle,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minHeight: kMinInteractiveDimension,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.m,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpace.xs,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(child: SectionLabel(widget.title)),
-                            AnimatedRotation(
-                              turns: _open ? 0.5 : 0,
-                              duration: AppMotion.of(context, AppMotion.short),
-                              child: Icon(
-                                Icons.expand_more_rounded,
-                                size: AppIconSize.l,
-                                color: scheme.onSurfaceVariant,
+                      child: Row(
+                        children: [
+                          Expanded(child: SectionLabel(widget.title)),
+                          if (!_open && widget.count > 0) ...[
+                            Text('${widget.count}', style: text.meta),
+                            const SizedBox(width: AppSpace.s),
+                          ],
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: _open
+                                  ? scheme.primaryContainer
+                                  : scheme.surfaceContainerHighest,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpace.xxs),
+                              child: AnimatedRotation(
+                                turns: _open ? 0.5 : 0,
+                                duration: AppMotion.of(
+                                  context,
+                                  AppMotion.short,
+                                ),
+                                child: Icon(
+                                  Icons.expand_more_rounded,
+                                  size: AppIconSize.s,
+                                  color: _open
+                                      ? scheme.onPrimaryContainer
+                                      : scheme.onSurfaceVariant,
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-              ?widget.trailing,
-            ],
-          ),
+            ),
+            ?widget.trailing,
+          ],
         ),
         ExpandReveal(open: _open, child: widget.child),
       ],
@@ -569,10 +680,8 @@ class _FoldSectionState extends State<_FoldSection> {
   }
 }
 
-/// Grup ızgarası: ÜÇ SÜTUN, hızlı satırdaki gibi yuvarlak simge + altında
-/// kısa ad (kullanıcı isteği 2026-10-20: "not menüsü üstteki 4'lü gibi
-/// simge olsun, 3 sütun olsun, daha düzgün sığsın"). Eskiden iki sütunlu,
-/// yazısı yanda alçak satırlardı; levha yine ekranı dolduruyordu.
+/// Grup ızgarası: ÜÇ SÜTUN, yuvarlak köşeli yüzeyli simge karoları
+/// (kullanıcı isteği 2026-10-20: 3 sütun; 2026-11-21: baştan tasarım).
 class _TileGrid extends StatelessWidget {
   const _TileGrid({required this.actions, required this.tile});
 
@@ -583,16 +692,15 @@ class _TileGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const spacing = 4.0;
+        const spacing = AppSpace.s;
         // Telefonda 3, geniş ekranda (tablet, web) 4–6 sütun.
-        final columns = (constraints.maxWidth / 120).floor().clamp(3, 6);
+        final columns = (constraints.maxWidth / 108).floor().clamp(3, 6);
         final cell = (constraints.maxWidth - spacing * (columns - 1)) / columns;
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
           children: [
-            for (final a in actions)
-              SizedBox(width: cell, child: tile(a)),
+            for (final a in actions) SizedBox(width: cell, child: tile(a)),
           ],
         );
       },
@@ -600,8 +708,7 @@ class _TileGrid extends StatelessWidget {
   }
 }
 
-/// Grup ızgarasının hücresi: hızlı satırın düğmesinden küçük ve NÖTR renkli
-/// (sık kullanılan dört işlem renkleriyle öne çıksın).
+/// Grup ızgarasının hücresi: tonlu yuvarlak köşeli kart, üstte simge, altta ad.
 class _GridTile extends StatelessWidget {
   const _GridTile({
     required this.action,
@@ -621,59 +728,71 @@ class _GridTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final on = action.selected;
+    final text = AppText.of(theme);
+    final tileColor = on
+        ? scheme.primary
+        : theme.brightness == Brightness.dark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer;
+    final icon = Icon(
+      action.icon,
+      size: AppIconSize.m,
+      color: on ? scheme.onPrimary : scheme.primary,
+    );
+    final top = action.count > 0
+        ? Stack(
+            clipBehavior: Clip.none,
+            children: [
+              icon,
+              Positioned(
+                right: -14,
+                top: -6,
+                child: _CountPill(
+                  count: action.count,
+                  highlight: action.highlight,
+                ),
+              ),
+            ],
+          )
+        : icon;
     return InkWell(
       key: ValueKey('menu-tile-${action.id}'),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.m),
       onTap: onTap ?? () => Navigator.pop(context, action.id),
       onLongPress: onLongPress,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(2, 6, 2, 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: tileColor,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 74),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.xs,
+              vertical: AppSpace.s,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: on
-                        ? scheme.primary
-                        : scheme.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    action.icon,
-                    size: 20,
+                top,
+                const SizedBox(height: AppSpace.xs),
+                Text(
+                  action.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: text.meta.copyWith(
                     color: on ? scheme.onPrimary : scheme.onSurface,
+                    fontWeight: AppWeight.medium,
                   ),
                 ),
-                if (action.count > 0)
-                  Positioned(
-                    right: -10,
-                    top: -4,
-                    child: _CountPill(
-                      count: action.count,
-                      highlight: action.highlight,
-                    ),
-                  ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              action.label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                height: 1.2,
-                color: scheme.onSurface,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

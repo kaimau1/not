@@ -75,6 +75,11 @@ class _FreezeWhenHiddenState extends State<FreezeWhenHidden> {
   /// Görünür olunca yetişme, üstteki not kapanışının BİTMESİNİ bekliyor.
   bool _waitingForClose = false;
 
+  /// Üstteki yarı saydam levha kapanırken klavye hâlâ iniyor olabilir:
+  /// `isCurrent` ilk karede true döner ama `viewInsets` 0'a inene dek
+  /// arkadaki Scaffold'u klavye karelerinden korumaya devam et.
+  bool _shieldModalKb = false;
+
   @override
   void initState() {
     super.initState();
@@ -137,6 +142,7 @@ class _FreezeWhenHiddenState extends State<FreezeWhenHidden> {
     if (!visible) {
       _visible = false;
       _waitingForClose = false;
+      _shieldModalKb = false;
       _catchUp?.cancel();
       _frozenMedia ??= live;
       return _wrap(shown, live);
@@ -157,11 +163,15 @@ class _FreezeWhenHiddenState extends State<FreezeWhenHidden> {
       return _wrap(shown, live);
     }
     _frozenMedia = null;
-    // Yarı saydam levha (Hızlı ekle, menü, arama vb.) üstteyken arkadaki
-    // ekran canlı kalır (veri güncellenir), ama üstteki levhanın klavye
-    // animasyonu (viewInsets + küçülen padding.bottom) arkadaki Scaffold'u
-    // her karede yeniden kurup dizmez (S56, kullanıcı bulgusu 2026-11-20).
-    final media = current
+    if (!current) {
+      _shieldModalKb = true;
+    } else if (live.viewInsets.bottom <= 0) {
+      _shieldModalKb = false;
+    }
+    // Yarı saydam levha (Hızlı ekle, menü, arama vb.) üstteyken — ve levha
+    // kapanıp klavye inerken (viewInsets → 0) — arkadaki ekran canlı kalır
+    // (veri güncellenir) ama klavye kareleri Scaffold'u yeniden kurup dizmez.
+    final media = !_shieldModalKb
         ? live
         : live.copyWith(
             viewInsets: EdgeInsets.zero,

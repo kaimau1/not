@@ -315,12 +315,12 @@
     "senaryo": "Kart menü levhası: telefon ana ekran, 30 not; ilk kartın note-card-menu düğmesine dokun → 30 kare → sistem geri → 30 kare (cihazdaki menu evresi)",
     "kart_kurulum": 0,
     "dashboard_kurulum": 0,
-    "kare_kurulum": 487,
-    "toplam_kurulum": 1337,
+    "kare_kurulum": 455,
+    "toplam_kurulum": 1289,
     "dizilme": 56,
-    "bugun": "kart 0 / pano 0 / en ağır kare 499 / toplam 1363 / dizilme 57 (2026-11-15, P62 G1); main 32176d7e ile G1 632057a1 BİREBİR aynı; PA5 (2026-11-15) 487 / 1337 / 56 — ızgara ipucu artık şeritte (düzenek şeritsiz, kök Overlay e _TipBanner girmiyor)",
+    "bugun": "kart 0 / pano 0 / en ağır kare 455 / toplam 1289 / dizilme 56 (2026-11-21, ActionMenu baştan tasarım)",
     "hedef": "kart 0, pano 0; kurulum ve dizilme tabanı aşmaz",
-    "neden": "P62 G1 cihaz A/B menu LAYOUT 44 → 63 ms (altın +%19) kanıt araması: levhanın yolu G1 dosyalarına değmiyor, sayılar main ile aynı → cihaz farkı gürültü (menu LAYOUT aynı main APK larında 38–76 ms, gecmis.csv)"
+    "neden": "P62 G1 cihaz A/B menu LAYOUT 44 → 63 ms (altın +%19) kanıt araması: levhanın yolu G1 dosyalarına değmiyor, sayılar main ile aynı → cihaz farkı gürültü (menu LAYOUT aynı main APK larında 38–76 ms, gecmis.csv). 2026-11-21: ActionMenu baştan tasarımında kart + tonlu karo düzeni (rozetsiz karoda Stack kaldırıldı) ile 487/1337 → 455/1289."
   },
   "S41": {
     "senaryo": "P63 şablon galerisi: telefon, 16 hazır + 6 kendi şablon; levhayı aç → Planlama çipi → aramaya h/ha/haf → karta dokun",

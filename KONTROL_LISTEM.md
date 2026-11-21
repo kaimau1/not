@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Not menüsü yeni tasarım + Hızlı ekle klavye kapanışı (21 Kasım 2. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) ana ekranda bir not kartının ⋮ menüsünü hem açık hem koyu temada aç → üstteki hızlı satır yuvarlak köşeli kartta, `Düzenle` / `Kopyala` / `Araçlar` / `Koruma ve depolama` tek kartta ince ayırıcılarla ve kapalı gruplarda sayı + daire ok ile görünüyor mu, karolar eşit boyda ve düzgün hizalı mı; bir karoya basılı tutup düzenleme kipini de dene; (2) ⚡ Hızlı ekle'de klavyeyi hem Geri/klavye indirme tuşuyla hem de levhayı dışarı dokunarak / aşağı çekerek kapat → klavye kapanırken kasma veya sıçrama kaldı mı.
+  Yanlışsa: ekran görüntüsü veya kısa kayıt ile madde numarasını yaz.
+
 - [ ] **Hızlı ekle: açılışta konuşma, akıcı klavye aç/kapa, canlı dalga ve temizle (21 Kasım, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) ana ekranda ⚡ Hızlı ekle'ye dokun (⚙'de hem "Açılınca klavye" hem "Açılınca dinle" açık, mikrofon izni verilmiş olsun) → levha ve klavye yerleştikten hemen sonra konuşma kendiliğinden başlayıp "Dinliyor…" + canlı ses dalgası ve çerçeve vurgusu görünüyor mu; (2) klavyeyi birkaç kez kapatıp yeniden aç (Geri + alana dokun) → levha kasmadan, zıplamadan yükselip iniyor mu; (3) bir şey yaz/söyle → sağdaki ✕ temizle düğmesi tek dokunuşta siliyor mu; (4) konuşma bitince 2 sn geri sayım sürerken mikrofona dokun → geri sayım durup dinlemeye devam ediyor mu; (5) ⚙ → "Açılınca klavye" / "Açılınca dinle" kapat-aç → levhayı kapatmadan anında etki ediyor mu.
   Yanlışsa: madde numarasını yaz.
