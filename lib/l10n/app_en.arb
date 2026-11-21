@@ -3382,5 +3382,17 @@
   "backupWithPassword": "Encrypt & back up",
   "backupEnterPasswordTitle": "Encrypted backup",
   "backupEnterPasswordBody": "This backup is password-protected. Enter the password to restore.",
-  "backupWrongPassword": "Wrong password or unable to decrypt backup"
+  "backupWrongPassword": "Wrong password or unable to decrypt backup",
+  "aiWriteImprove": "Improve writing",
+  "aiWriteImproveInfo": "Fix, shorten, expand, change tone, or translate",
+  "improveExpand": "Expand with more detail",
+  "improveCasual": "Casual and natural",
+  "aiWriteGroupFix": "Fix and rewrite",
+  "aiWriteGroupTone": "Tone and length",
+  "aiWriteGroupFormat": "Convert format",
+  "aiPreviewBefore": "Before",
+  "aiPreviewAfter": "After",
+  "aiPreviewCompare": "Before / after",
+  "aiPhotoToStructuredNote": "Turn into structured note",
+  "aiPhotoToStructuredNoteInfo": "Reads on device first, then organizes title and items"
 }

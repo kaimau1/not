@@ -13,6 +13,7 @@ import '../../../core/constants.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/utils/markdown.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/domain/note_type.dart';
 import '../../settings/settings_providers.dart';
 import 'ai_gate.dart';
 import 'ai_policy.dart';
@@ -697,6 +698,38 @@ class GeminiService {
               'Türkçe betimle.',
         },
       ]);
+
+  /// **FOTOĞRAFTAN YAPILI NOT** (PLAN §1.6 A5): önce cihaz içi ücretsiz OCR
+  /// metni okur; AI'ya yalnız o metin gider (görsel baytı gönderilmez).
+  /// Tahta, fiş, kartvizit veya el yazısı metnini başlık + düzenli maddelere
+  /// (veya temiz paragraflara) ayırır.
+  Future<StructuredOcrNote> structureOcrText(String rawOcrText) async {
+    final cleaned = rawOcrText.trim();
+    if (cleaned.isEmpty) {
+      return const StructuredOcrNote(
+        title: '',
+        lines: [],
+        suggestedType: NoteType.text,
+      );
+    }
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıdaki metin bir fotoğraftan (tahta, fiş, kartvizit, belge '
+            'veya el yazısı) cihaz içi OCR ile çıkarılmıştır. OCR gürültüsünü '
+            'temizle, metnin dilini ve tüm gerçek bilgileri (tarih, tutar, '
+            'telefon, e-posta, ürün adı) eksiksiz koru; hiçbir şey uydurma.\n'
+            'Yalnızca şu JSON nesnesiyle yanıt ver (başka metin/markdown yok):\n'
+            '{"title":"kısa başlık (en çok 6 sözcük)","kind":"text|checklist|ordered","lines":["satır 1","satır 2"]}\n'
+            '- Alışveriş/fiş/yapılacak listesi ise kind="checklist"\n'
+            '- Adım adım sıralı tarif/akış ise kind="ordered"\n'
+            '- Kartvizit, tahta özeti veya düz metin ise kind="text"\n'
+            '- lines içinde madde işareti veya numara ön eki koyma.\n\n'
+            '---\n$cleaned',
+      },
+    ]);
+    return parseStructuredOcrNote(raw, fallbackText: cleaned);
+  }
 
   /// Belgeden **SEÇİLEN BİR ALANI** (formül, tablo, şekil, el yazısı) modele
   /// sorar — bkz. `AreaSelectLayer`.
@@ -2444,4 +2477,93 @@ class QuietOrganizeSuggestion {
   final String noteId;
   final String? title;
   final List<String> tags;
+}
+
+/// Fotoğraftan yapılı not çıktısı (PLAN §1.6 A5): başlık, satırlar/maddeler ve
+/// önerilen not türü.
+class StructuredOcrNote {
+  const StructuredOcrNote({
+    required this.title,
+    required this.lines,
+    required this.suggestedType,
+  });
+
+  final String title;
+  final List<String> lines;
+  final NoteType suggestedType;
+
+  /// Önizleme ve ekleme/yeni not için düzenli düz metin.
+  String toFormattedText() {
+    final cleanTitle = title.trim();
+    final cleanLines = [
+      for (final l in lines)
+        if (l.trim().isNotEmpty) l.trim(),
+    ];
+    if (cleanLines.isEmpty) return cleanTitle;
+    if (suggestedType == NoteType.checklist ||
+        suggestedType == NoteType.ordered) {
+      return cleanLines.join('\n');
+    }
+    if (cleanTitle.isEmpty) return cleanLines.join('\n');
+    return '$cleanTitle\n\n${cleanLines.join('\n')}';
+  }
+}
+
+/// [GeminiService.structureOcrText] JSON yanıtını güvenli biçimde ayrıştırır;
+/// model beklenmedik biçimde dönerse satırlara bölerek veri kaybetmez.
+StructuredOcrNote parseStructuredOcrNote(
+  String raw, {
+  String fallbackText = '',
+}) {
+  final stripped = raw
+      .trim()
+      .replaceFirst(RegExp(r'^```(?:json)?\s*', multiLine: true), '')
+      .replaceFirst(RegExp(r'\s*```\s*$'), '')
+      .trim();
+  final start = stripped.indexOf('{');
+  final end = stripped.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try {
+      final decoded = jsonDecode(stripped.substring(start, end + 1));
+      if (decoded is Map) {
+        final title = (decoded['title'] as String? ?? '').trim();
+        final kindStr = (decoded['kind'] as String? ?? '').trim().toLowerCase();
+        final suggestedType = switch (kindStr) {
+          'checklist' || 'list' || 'shopping' => NoteType.checklist,
+          'ordered' || 'numbered' => NoteType.ordered,
+          _ => NoteType.text,
+        };
+        final rawLines = decoded['lines'];
+        final lines = <String>[];
+        if (rawLines is List) {
+          for (final item in rawLines) {
+            final line = item
+                .toString()
+                .trim()
+                .replaceFirst(RegExp(r'^(?:[-*•]\s+|\[\s?[xX]?\s?\]\s+|\d+[.)]\s+)'), '');
+            if (line.isNotEmpty) lines.add(line);
+          }
+        }
+        if (title.isNotEmpty || lines.isNotEmpty) {
+          return StructuredOcrNote(
+            title: title,
+            lines: lines,
+            suggestedType: suggestedType,
+          );
+        }
+      }
+    } catch (_) {
+      // Malformed JSON: fall through to plain-text fallback below.
+    }
+  }
+  final source = stripped.isNotEmpty ? stripped : fallbackText.trim();
+  final lines = [
+    for (final l in source.split('\n'))
+      if (l.trim().isNotEmpty) l.trim(),
+  ];
+  return StructuredOcrNote(
+    title: '',
+    lines: lines,
+    suggestedType: NoteType.text,
+  );
 }

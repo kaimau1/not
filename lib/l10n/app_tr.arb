@@ -4238,5 +4238,17 @@
   "backupWithPassword": "Şifreli yedekle",
   "backupEnterPasswordTitle": "Şifreli yedek",
   "backupEnterPasswordBody": "Bu yedek parola ile korunuyor. Geri yüklemek için parolayı gir.",
-  "backupWrongPassword": "Parola yanlış veya yedek çözülemedi"
+  "backupWrongPassword": "Parola yanlış veya yedek çözülemedi",
+  "aiWriteImprove": "Yazıyı iyileştir",
+  "aiWriteImproveInfo": "Düzelt, kısalt, uzat, tonu değiştir veya çevir",
+  "improveExpand": "Uzat ve ayrıntılandır",
+  "improveCasual": "Samimi ve doğal",
+  "aiWriteGroupFix": "Düzelt ve yeniden yaz",
+  "aiWriteGroupTone": "Ton ve uzunluk",
+  "aiWriteGroupFormat": "Biçime dönüştür",
+  "aiPreviewBefore": "Önce",
+  "aiPreviewAfter": "Sonra",
+  "aiPreviewCompare": "Önce / sonra",
+  "aiPhotoToStructuredNote": "Yapılı nota dönüştür",
+  "aiPhotoToStructuredNoteInfo": "Önce cihazda okur, başlık ve maddelere ayırır"
 }

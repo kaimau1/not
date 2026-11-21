@@ -16723,6 +16723,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Parola yanlış veya yedek çözülemedi'**
   String get backupWrongPassword;
+
+  /// No description provided for @aiWriteImprove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıyı iyileştir'**
+  String get aiWriteImprove;
+
+  /// No description provided for @aiWriteImproveInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzelt, kısalt, uzat, tonu değiştir veya çevir'**
+  String get aiWriteImproveInfo;
+
+  /// No description provided for @improveExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzat ve ayrıntılandır'**
+  String get improveExpand;
+
+  /// No description provided for @improveCasual.
+  ///
+  /// In tr, this message translates to:
+  /// **'Samimi ve doğal'**
+  String get improveCasual;
+
+  /// No description provided for @aiWriteGroupFix.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzelt ve yeniden yaz'**
+  String get aiWriteGroupFix;
+
+  /// No description provided for @aiWriteGroupTone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ton ve uzunluk'**
+  String get aiWriteGroupTone;
+
+  /// No description provided for @aiWriteGroupFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biçime dönüştür'**
+  String get aiWriteGroupFormat;
+
+  /// No description provided for @aiPreviewBefore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce'**
+  String get aiPreviewBefore;
+
+  /// No description provided for @aiPreviewAfter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonra'**
+  String get aiPreviewAfter;
+
+  /// No description provided for @aiPreviewCompare.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce / sonra'**
+  String get aiPreviewCompare;
+
+  /// No description provided for @aiPhotoToStructuredNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılı nota dönüştür'**
+  String get aiPhotoToStructuredNote;
+
+  /// No description provided for @aiPhotoToStructuredNoteInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce cihazda okur, başlık ve maddelere ayırır'**
+  String get aiPhotoToStructuredNoteInfo;
 }
 
 class _AppLocalizationsDelegate

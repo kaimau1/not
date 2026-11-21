@@ -9442,4 +9442,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupWrongPassword =>
       'Wrong password or unable to decrypt backup';
+
+  @override
+  String get aiWriteImprove => 'Improve writing';
+
+  @override
+  String get aiWriteImproveInfo =>
+      'Fix, shorten, expand, change tone, or translate';
+
+  @override
+  String get improveExpand => 'Expand with more detail';
+
+  @override
+  String get improveCasual => 'Casual and natural';
+
+  @override
+  String get aiWriteGroupFix => 'Fix and rewrite';
+
+  @override
+  String get aiWriteGroupTone => 'Tone and length';
+
+  @override
+  String get aiWriteGroupFormat => 'Convert format';
+
+  @override
+  String get aiPreviewBefore => 'Before';
+
+  @override
+  String get aiPreviewAfter => 'After';
+
+  @override
+  String get aiPreviewCompare => 'Before / after';
+
+  @override
+  String get aiPhotoToStructuredNote => 'Turn into structured note';
+
+  @override
+  String get aiPhotoToStructuredNoteInfo =>
+      'Reads on device first, then organizes title and items';
 }

@@ -9430,4 +9430,42 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupWrongPassword => 'Parola yanlış veya yedek çözülemedi';
+
+  @override
+  String get aiWriteImprove => 'Yazıyı iyileştir';
+
+  @override
+  String get aiWriteImproveInfo =>
+      'Düzelt, kısalt, uzat, tonu değiştir veya çevir';
+
+  @override
+  String get improveExpand => 'Uzat ve ayrıntılandır';
+
+  @override
+  String get improveCasual => 'Samimi ve doğal';
+
+  @override
+  String get aiWriteGroupFix => 'Düzelt ve yeniden yaz';
+
+  @override
+  String get aiWriteGroupTone => 'Ton ve uzunluk';
+
+  @override
+  String get aiWriteGroupFormat => 'Biçime dönüştür';
+
+  @override
+  String get aiPreviewBefore => 'Önce';
+
+  @override
+  String get aiPreviewAfter => 'Sonra';
+
+  @override
+  String get aiPreviewCompare => 'Önce / sonra';
+
+  @override
+  String get aiPhotoToStructuredNote => 'Yapılı nota dönüştür';
+
+  @override
+  String get aiPhotoToStructuredNoteInfo =>
+      'Önce cihazda okur, başlık ve maddelere ayırır';
 }

@@ -18,10 +18,17 @@ export '../pdf/ocr_page_text.dart' show OcrWordBox;
 class ScanOcr {
   const ScanOcr._();
 
+  /// Test kancaları (P93 A5 cihaz içi OCR akışı).
+  @visibleForTesting
+  static bool? supportedOverride;
+
+  @visibleForTesting
+  static Future<String> Function(String path)? recognizeImageTextOverride;
+
   /// ML Kit yalnız Android/iOS'ta var; masaüstünde aranabilir katman ve
   /// akıllı ad sessizce atlanır (tarama yine PDF olur, katmansız).
   static bool get supported =>
-      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+      supportedOverride ?? (!kIsWeb && (Platform.isAndroid || Platform.isIOS));
 
   /// Bir görselden metni SATIR SATIR, resim piksel koordinatındaki kutusuyla
   /// birlikte tanır. Aranabilir PDF üretiminde her satırı kendi yerine
@@ -82,6 +89,8 @@ class ScanOcr {
   /// satırlar alt alta, bloklar arasında boş satır (paragraf). Transkript
   /// (bkz. `MediaTranscriber`) bunu kullanır — kutular gerekmiyor.
   static Future<String> recognizeImageText(String path) async {
+    final override = recognizeImageTextOverride;
+    if (override != null) return override(path);
     if (!supported) return '';
     final recognizer = TextRecognizer();
     try {
