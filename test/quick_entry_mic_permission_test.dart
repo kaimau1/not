@@ -126,4 +126,51 @@ void main() {
     expect(find.text('ekmek'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
+
+  // Kullanıcı bulgusu 2026-11-20: "notlarda hızlı ekle ana ekranda açılırken
+  // konuşmak ayarı açık olmasına rağmen konuşma başlamıyor".
+  // KÖK NEDEN: klavye odağı açılınca TextEditingController selection'ı (-1→0)
+  // değişir; _onChanged metnin gerçekten değişip değişmediğine bakmadan
+  // _onTyped() çağırıp bekleyen autoListen zamanlayıcısını iptal ediyordu.
+  testWidgets('odaklanmak (metin değişmeden) kendiliğinden dinlemeyi iptal '
+      'etmez', (tester) async {
+    DeviceSpeech.debugMicGranted = true;
+    final focus = FocusNode();
+    addTearDown(focus.dispose);
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: QuickEntryBar(
+              parser: QuickParser(QuickLexicon()),
+              raw: true,
+              focusNode: focus,
+              autoListen: true,
+              autoListenDelay: const Duration(milliseconds: 720),
+              onItems: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    // Levha açılışı bitti (300 ms): focusAfterRouteOpens alanı odaklar.
+    await tester.pump(const Duration(milliseconds: 300));
+    focus.requestFocus();
+    await tester.pump();
+    // Gecikme dolunca konuşma tanıma başlamalı.
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(listens, 1, reason: 'odak değişimi elle yazım değildir');
+    // Dinlerken odak kalksa/gelse de metin değişmediyse dinleme kesilmez.
+    focus.unfocus();
+    await tester.pump();
+    expect(find.byKey(const ValueKey('quick-entry-heard')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
 }

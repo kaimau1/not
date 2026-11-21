@@ -423,7 +423,7 @@ okuma maliyeti). `audio_card_box.dart:372, 438`: `createPositionStream()` her ku
 | K-64 | Hızlı ekle için bütçe senaryosu yok; cihazda hiç ölçülmedi | — | `quick_drop_sheet.dart` | `perf_budget_test`'e senaryo: ⚡ → levha açık → 6 klavye karesi → 3 harf → Ekle (kurulum/dizilme). `ab_hepsi.py`'ye `hizli_ekle` evresi |
 | K-65 | Açılışta klavye ve mikrofon aynı anda açılıyor olabilir (ikisi de kanal çağrısı) | ADAY | varsayılanlar `quick_entry_memory.dart:159–163`; `quick_drop_sheet.dart:241` | Sıra: levha animasyonu bitsin → ya klavye ya mikrofon. Önce aynı karede mi, ölç |
 | K-66 | Aday notlar `initState`'te süzülüp sıralanıyor (not sayısıyla büyür) | KOD | `quick_drop_sheet.dart:236`, `quickDropCandidates` :53–78 | İlk karede son 6 hedef; kalan bir kare sonra |
-| K-67 | `SheetInsetPadding` alt payı her klavye karesinde yeniliyor (içerik kurulmuyor, dizilim yenileniyor) | ADAY | `quick_drop_sheet.dart:156` | T2'deki tek adımda oturma kalıbı; önce S-senaryosuyla dizilme say |
+| K-67 | **KAPANDI (2026-11-21):** `showLiftingSheet` (`sheet_keyboard.dart`) boyama katmanı ötelemesi + `FreezeWhenHidden` kalkanı + çip şeridi `padding: EdgeInsets.zero` (S56: 402/102 → 114/0) | TEST | `quick_drop_sheet.dart` | Cihazda A/B doğrulanacak |
 | K-68 | Hızlı listede çip başına `has()` tüm satırları tarıyor; `build`'de `RegExp` | ADAY | `quick_list_screen.dart:519` çevresi | Küme (Set) + sabit RegExp |
 | K-69 | AI yedeğinde 5 sn'ye kadar sessiz bekleme ("dondu" hissi; kasma değil) | KOD | `quick_drop_sheet.dart:341` | 300 ms sonra ince ilerleme + "Ben seçeyim" |
 

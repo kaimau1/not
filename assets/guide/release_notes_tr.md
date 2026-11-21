@@ -2,6 +2,11 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 21 Kasım 2026 {#2026-11-21}
+- **Hızlı ekle açılırken konuşma yeniden kendiliğinden başlıyor:** "Açılınca klavye" ve "Açılınca dinle" birlikte açıkken klavye odağı dinlemeyi iptal ediyordu; artık levha açılınca konuşma tanıma sorunsuz başlar.
+- **Hızlı ekle'de klavye açılıp kapanması akıcılaştırıldı:** levha klavyeyle birlikte yeniden dizilmeden yükselip iner, arkadaki ana ekran da klavye karelerinde yeniden kurulmaz.
+- **Hızlı ekle iyileştirmeleri:** dinlerken canlı ses dalgası ve çerçeve vurgusu görünür; alan doluyken tek dokunuşla temizleme (✕) düğmesi çıkar; konuşma geri sayımı sürerken mikrofona basmak geri sayımı durdurur; ⚙ menüsündeki klavye ve dinle seçenekleri levhayı kapatıp açmadan anında uygulanır.
+
 ## 20 Kasım 2026 {#2026-11-20}
 - **Hızlı ekle neyin nereye gideceğini önceden gösterir:** yazarken alttaki satırda "→ Alışveriş listesi · süt, ekmek (2 madde)" gibi hangi nota neyin gireceğini Ekle'ye basmadan görürsün; listede zaten olanlar sayılmaz. Yapay zekâ, açılınca klavye ve açılınca dinle seçenekleri sağ üstteki ⚙ menüsünde. Yapay zekâ hangi not olduğunu düşünürken **Ben seçeyim** ile beklemeden kendin seçersin.
 - **Hızlı ekle'de not ara:** hedef notlar şeridinin başındaki **Not bul** ile bütün listelerin ve notların arasından arayıp seçebilirsin; şerit artık yalnız ilk 12 notu göstermiyor.

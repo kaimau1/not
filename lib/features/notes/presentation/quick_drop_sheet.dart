@@ -8,7 +8,6 @@ import 'package:uuid/uuid.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/firestore_size.dart' show sameFirestoreValue;
-import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/delayed_spinner.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -292,16 +291,15 @@ Map<String, dynamic> quickDropUndoFields({
 /// **HIZLI EKLE** levhasını açar. [text]: uygulama dışından gelen metin
 /// (HE-3, `notlar://ekle?metin=…`) alana yazılı gelir; eklenmez.
 Future<void> showQuickDropSheet(BuildContext context, {String text = ''}) {
-  // Levha aynı örnek kalır (klavye karesinde kurulmaz, S56); boşken const.
+  // Levha yerleşimsiz (yalnız boyama katmanında) yükselir: klavye açılıp
+  // kapanırken 0 kurulum, 0 yerleşim (K-67, S56).
   final sheet = text.isEmpty
-      ? const SheetInsetPadding(child: QuickDropSheet())
-      : SheetInsetPadding(child: QuickDropSheet(initialText: text));
-  return showAppSheet<void>(
+      ? const QuickDropSheet()
+      : QuickDropSheet(initialText: text);
+  return showLiftingSheet<void>(
     context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
     constraints: const BoxConstraints(maxWidth: 640),
-    builder: (_) => sheet,
+    child: sheet,
   );
 }
 
@@ -368,7 +366,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     with SingleTickerProviderStateMixin {
   final _focus = FocusNode();
   final _bar = GlobalKey<QuickEntryBarState>();
-  late final List<Note> _candidates;
+  List<Note> _candidates = const [];
+  ProviderSubscription<AsyncValue<List<Note>>>? _notesSub;
   late final QuickParser _idle = QuickParser(QuickLexicon());
 
   /// Elle seçilen hedef (çipe dokunuldu); null = metinden/sondan.
@@ -412,6 +411,40 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     );
     _state.addListener(_onState);
     _state.value = _Drop(id: _candidates.isEmpty ? null : _candidates.first.id);
+    // Soğuk açılışta (kısayol/karo/widget) not akışı levhadan birkaç ms sonra
+    // gelebilir (H4): aday listesi değiştiyse şeridi ve hedefi tazele.
+    _notesSub = ref.listenManual(notesStreamProvider, (_, next) {
+      final list = next.value;
+      if (list == null || !mounted) return;
+      final fresh = quickDropCandidates(
+        list,
+        ref.read(quickDropRecentProvider),
+      );
+      final same =
+          fresh.length == _candidates.length &&
+          [
+            for (var i = 0; i < fresh.length; i++)
+              fresh[i].id == _candidates[i].id &&
+                  fresh[i].displayTitle == _candidates[i].displayTitle,
+          ].every((ok) => ok);
+      if (same) return;
+      final wasEmpty = _candidates.isEmpty;
+      _candidates = fresh;
+      if (wasEmpty != fresh.isEmpty) {
+        setState(() {});
+      }
+      final current = _bar.currentState?.text ?? widget.initialText;
+      if (current.isNotEmpty) {
+        _resolve(current);
+      } else {
+        final nextId = _fallbackId;
+        if (_state.value.id != nextId) {
+          _state.value = _Drop(id: nextId);
+        } else {
+          _targets.value = _Drop(id: _state.value.id, ties: _state.value.ties);
+        }
+      }
+    });
     if (widget.initialText.isNotEmpty) _resolve(widget.initialText);
     if (ref.read(quickDropKeyboardProvider)) focusAfterRouteOpens(this, _focus);
   }
@@ -435,13 +468,21 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     if (next != _addLabel.value) _addLabel.value = next;
   }
 
-  /// HE-2 önizleme satırı: Ekle'ye basmadan neyin nereye gideceği.
-  String _previewLine(AppLocalizations l10n, _Drop st) {
+  /// HE-2 önizleme satırı: Ekle'ye basmadan neyin nereye gideceği ve
+  /// eklenmeye hazır mı (vurgulu gösterim için).
+  ({String text, bool ready}) _previewInfo(AppLocalizations l10n, _Drop st) {
     final content = st.content.trim();
-    if (content.isEmpty) return _toNewNote ? '' : l10n.quickDropTarget;
-    if (_toNewNote) return l10n.quickDropPreviewText(l10n.newNoteShort, content);
+    if (content.isEmpty) {
+      return (text: _toNewNote ? '' : l10n.quickDropTarget, ready: false);
+    }
+    if (_toNewNote) {
+      return (
+        text: l10n.quickDropPreviewText(l10n.newNoteShort, content),
+        ready: true,
+      );
+    }
     final note = _noteOf(st.id);
-    if (note == null) return l10n.quickDropTarget;
+    if (note == null) return (text: l10n.quickDropTarget, ready: false);
     final title = note.displayTitle.trim();
     final items = quickDropPreview(
       note,
@@ -458,11 +499,19 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         return _previewParser!;
       },
     );
-    if (items.isEmpty) return l10n.quickDropNothingNew(title);
-    if (note.type == NoteType.text) {
-      return l10n.quickDropPreviewText(title, items.join(', '));
+    if (items.isEmpty) {
+      return (text: l10n.quickDropNothingNew(title), ready: false);
     }
-    return l10n.quickDropPreviewItems(title, items.join(', '), items.length);
+    if (note.type == NoteType.text) {
+      return (
+        text: l10n.quickDropPreviewText(title, items.join(', ')),
+        ready: true,
+      );
+    }
+    return (
+      text: l10n.quickDropPreviewItems(title, items.join(', '), items.length),
+      ready: true,
+    );
   }
 
   /// "Ben seçeyim" (HE-2): yapay zekâyı beklemeden kullanıcı çipten seçer.
@@ -480,6 +529,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
 
   @override
   void dispose() {
+    _notesSub?.close();
     _count.dispose();
     _focus.dispose();
     _state.dispose();
@@ -854,7 +904,24 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                 key: const ValueKey('quick-drop-settings'),
                 tooltip: l10n.quickDropSettings,
                 icon: const Icon(Icons.settings_outlined),
-                onSelected: (p) => ref.read(p.notifier).toggle(),
+                onSelected: (p) {
+                  final next = !ref.read(p);
+                  ref.read(p.notifier).toggle();
+                  if (p == quickDropKeyboardProvider) {
+                    if (next) {
+                      _focus.requestFocus();
+                    } else {
+                      _focus.unfocus();
+                    }
+                  } else if (p == quickDropMicProvider) {
+                    if (next) {
+                      _stopCountdown();
+                      unawaited(_bar.currentState?.startListening());
+                    } else {
+                      unawaited(_bar.currentState?.stopListening());
+                    }
+                  }
+                },
                 itemBuilder: (_) => [
                   CheckedPopupMenuItem(
                     key: const ValueKey('quick-drop-ai'),
@@ -904,6 +971,9 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               autoListenDelay: keyboard
                   ? AppMotion.medium + AppMotion.long
                   : AppMotion.medium,
+              onListeningChanged: (on) {
+                if (on) _stopCountdown();
+              },
               onRawChanged: _onText,
               onRawSubmitted: (_) => _apply(),
               // "Söyle, eklensin": konuşma bitince kısa geri sayımla eklenir.
@@ -916,17 +986,51 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
             // not? / soruyorum / ekleniyor + Bekle.
             SizedBox(
               height: AppSpace.xxl,
-              child: ListenableBuilder(
-                listenable: Listenable.merge([_state, _phase]),
-                builder: (context, _) {
-                  final st = _state.value;
-                  switch (_phase.value) {
-                    case _Phase.thinking:
-                      // HE-2: hızlı yanıtta hiçbir şey yanıp sönmez; 300 ms
-                      // sonra ince ilerleme + "Ben seçeyim" belirir.
-                      return DelayedSpinner(
-                        child: Row(
-                          key: const ValueKey('quick-drop-thinking'),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([_state, _phase]),
+                  builder: (context, _) {
+                    final st = _state.value;
+                    switch (_phase.value) {
+                      case _Phase.thinking:
+                        // HE-2: hızlı yanıtta hiçbir şey yanıp sönmez; 300 ms
+                        // sonra ince ilerleme + "Ben seçeyim" belirir.
+                        return DelayedSpinner(
+                          child: Row(
+                            key: const ValueKey('quick-drop-thinking'),
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.quickDropAsking,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: text.meta,
+                                    ),
+                                    const SizedBox(height: AppSpace.xs),
+                                    const LinearProgressIndicator(minHeight: 2),
+                                  ],
+                                ),
+                              ),
+                              TextButton(
+                                key: const ValueKey('quick-drop-pick-myself'),
+                                onPressed: _pickMyself,
+                                child: Text(l10n.quickDropPickMyself),
+                              ),
+                            ],
+                          ),
+                        );
+                      case _Phase.counting:
+                        final title = _noteOf(st.id)?.displayTitle.trim() ?? '';
+                        final label = _toNewNote
+                            ? l10n.quickDropSavingNew
+                            : l10n.quickDropAddingTo(title);
+                        return Row(
+                          key: const ValueKey('quick-drop-counting'),
                           children: [
                             Expanded(
                               child: Column(
@@ -934,87 +1038,60 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    l10n.quickDropAsking,
+                                    label,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: text.meta,
+                                    style: text.meta.copyWith(
+                                      color: scheme.primary,
+                                    ),
                                   ),
                                   const SizedBox(height: AppSpace.xs),
-                                  const LinearProgressIndicator(minHeight: 2),
+                                  AnimatedBuilder(
+                                    animation: _count,
+                                    builder: (context, _) =>
+                                        LinearProgressIndicator(
+                                          value: _count.value,
+                                          minHeight: 2,
+                                        ),
+                                  ),
                                 ],
                               ),
                             ),
                             TextButton(
-                              key: const ValueKey('quick-drop-pick-myself'),
-                              onPressed: _pickMyself,
-                              child: Text(l10n.quickDropPickMyself),
+                              key: const ValueKey('quick-drop-wait'),
+                              onPressed: _stopCountdown,
+                              child: Text(l10n.quickDropWait),
                             ),
                           ],
-                        ),
-                      );
-                    case _Phase.counting:
-                      final title = _noteOf(st.id)?.displayTitle.trim() ?? '';
-                      final label = _toNewNote
-                          ? l10n.quickDropSavingNew
-                          : l10n.quickDropAddingTo(title);
-                      return Row(
-                        key: const ValueKey('quick-drop-counting'),
-                        children: [
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  label,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: text.meta.copyWith(
-                                    color: scheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpace.xs),
-                                AnimatedBuilder(
-                                  animation: _count,
-                                  builder: (context, _) =>
-                                      LinearProgressIndicator(
-                                        value: _count.value,
-                                        minHeight: 2,
-                                      ),
-                                ),
-                              ],
+                        );
+                      case _Phase.idle:
+                        if (st.ask) {
+                          return Text(
+                            l10n.quickDropWhich,
+                            key: const ValueKey('quick-drop-ask'),
+                            style: text.meta.copyWith(
+                              color: scheme.primary,
+                              fontWeight: AppWeight.strong,
                             ),
-                          ),
-                          TextButton(
-                            key: const ValueKey('quick-drop-wait'),
-                            onPressed: _stopCountdown,
-                            child: Text(l10n.quickDropWait),
-                          ),
-                        ],
-                      );
-                    case _Phase.idle:
-                      return Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: st.ask
-                            ? Text(
-                                l10n.quickDropWhich,
-                                key: const ValueKey('quick-drop-ask'),
-                                style: text.meta.copyWith(
+                          );
+                        }
+                        final preview = _previewInfo(l10n, st);
+                        // HE-2 önizleme: tuşta yalnız bu Text kurulur.
+                        return Text(
+                          preview.text,
+                          key: const ValueKey('quick-drop-preview'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: preview.ready
+                              ? text.meta.copyWith(
                                   color: scheme.primary,
-                                  fontWeight: AppWeight.strong,
-                                ),
-                              )
-                            // HE-2 önizleme: tuşta yalnız bu Text kurulur.
-                            : Text(
-                                _previewLine(l10n, st),
-                                key: const ValueKey('quick-drop-preview'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: text.meta,
-                              ),
-                      );
-                  }
-                },
+                                  fontWeight: AppWeight.medium,
+                                )
+                              : text.meta,
+                        );
+                    }
+                  },
+                ),
               ),
             ),
             SizedBox(
@@ -1044,6 +1121,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                     key: const ValueKey('quick-drop-targets'),
                     controller: _strip,
                     scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.zero,
                     itemCount: shown.length + extra,
                     separatorBuilder: (_, _) =>
                         const SizedBox(width: AppSpace.s),

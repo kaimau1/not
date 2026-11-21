@@ -2,6 +2,11 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 21 November 2026 {#2026-11-21}
+- **Quick add listens on open again:** when both "Keyboard on open" and "Listen on open" were enabled, focusing the field cancelled auto-listening; voice input now starts reliably once the sheet opens.
+- **Smoother keyboard open and close in quick add:** the sheet lifts and lowers without re-laying out on every keyboard frame, and the home screen behind it no longer rebuilds while the keyboard moves.
+- **Quick add polish:** shows a live voice level wave and highlight while listening; adds a one-tap clear (✕) button when text is entered; tapping the mic during the add countdown pauses the countdown; toggling keyboard or listening in the ⚙ menu takes effect immediately.
+
 ## 20 November 2026 {#2026-11-20}
 - **Quick add shows where things will go before you add:** while you type, the line below shows which note gets what, e.g. "→ Shopping list · milk, bread (2 new)", before you tap Add; items already on the list are not counted. The AI, keyboard-on-open and listen-on-open options are in the ⚙ menu at the top right. While the AI is working out which note, tap **I'll pick** to choose yourself without waiting.
 - **Find a note in quick add:** **Find note** at the start of the target strip searches all your lists and notes; the strip no longer stops at the first 12 notes.

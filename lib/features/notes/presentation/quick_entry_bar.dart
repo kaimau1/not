@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_tokens.dart';
@@ -13,6 +15,7 @@ import '../data/device_speech.dart';
 import '../data/voice_listen_session.dart';
 import '../domain/done_word.dart';
 import '../domain/quick_entry.dart';
+import 'voice_level_wave.dart';
 
 /// **HIZLI GİRİŞ SATIRI** (kullanıcı isteği 2026-11-15): tek satıra yan yana
 /// yazılır ya da söylenir; tamamlanan kelimeler [onItems] ile CANLI maddeye
@@ -99,10 +102,12 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   final _c = TextEditingController();
   bool _applying = false;
   Timer? _idle;
+  late String _lastText;
 
   final _listening = ValueNotifier<bool>(false);
   final _heard = ValueNotifier<String>('');
   final _micAvailable = ValueNotifier<bool>(false);
+  final _hasText = ValueNotifier<bool>(false);
   VoiceListenSession? _session;
   String _spoken = '';
   int _spokenCount = 0;
@@ -125,6 +130,8 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   void initState() {
     super.initState();
     final initial = widget.initialText;
+    _lastText = initial;
+    _hasText.value = initial.isNotEmpty;
     if (initial.isNotEmpty) {
       _c.value = TextEditingValue(
         text: initial,
@@ -167,6 +174,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     _listening.dispose();
     _heard.dispose();
     _micAvailable.dispose();
+    _hasText.dispose();
     super.dispose();
   }
 
@@ -184,6 +192,36 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
 
   bool get isListening => _listening.value;
 
+  /// Dinlemeyi dışarıdan başlatır (ör. ⚙ menüsünden "Açılınca dinle" açılınca).
+  Future<bool> startListening({bool manual = true}) =>
+      _startListening(manual: manual);
+
+  /// Bekleyen ya da süren dinlemeyi durdurur.
+  Future<void> stopListening() {
+    _autoTimer?.cancel();
+    return _stopListening();
+  }
+
+  /// Alanı temizler ve (ham kipte) süren konuşma oturumunu bırakır.
+  void clear() {
+    _autoTimer?.cancel();
+    final session = _session;
+    if (session != null && widget.raw) {
+      _session = null;
+      unawaited(session.cancel());
+      _spoken = '';
+      _rawPrefix = '';
+      _listening.value = false;
+    }
+    if (_c.text.isEmpty) return;
+    _applying = true;
+    _lastText = '';
+    _hasText.value = false;
+    _c.clear();
+    _applying = false;
+    if (widget.raw) widget.onRawChanged?.call('');
+  }
+
   void _emit(QuickParse r) {
     if (r.items.isNotEmpty) widget.onItems(r.items);
     if (r.trailingQty.isNotEmpty) widget.onTrailingQty?.call(r.trailingQty);
@@ -193,6 +231,8 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     _emit(r);
     if (r.rest == text) return;
     _applying = true;
+    _lastText = r.rest;
+    _hasText.value = r.rest.isNotEmpty;
     _c.value = TextEditingValue(
       text: r.rest,
       selection: TextSelection.collapsed(offset: r.rest.length),
@@ -203,6 +243,12 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   void _onChanged() {
     if (_applying) return;
     final text = _c.text;
+    // Odak / imleç / composing değişimi (metin aynıyken) elle yazım DEĞİLDİR:
+    // levha açılışında focusAfterRouteOpens selection'ı (-1→0) değiştirince
+    // bekleyen kendiliğinden dinleme zamanlayıcısı iptal oluyordu (2026-11-20).
+    if (text == _lastText) return;
+    _lastText = text;
+    _hasText.value = text.isNotEmpty;
     if (!_fromSpeech) _onTyped();
     if (widget.raw) {
       widget.onRawChanged?.call(text);
@@ -267,10 +313,14 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   }
 
   Future<bool> _startListening({required bool manual}) async {
+    _autoTimer?.cancel();
     if (_session != null) return true;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.maybeOf(context);
-    if (!await DeviceSpeech.ensureMicPermission()) {
+    final permitted = manual
+        ? await DeviceSpeech.ensureMicPermission()
+        : await DeviceSpeech.micPermissionGranted();
+    if (!permitted) {
       if (manual) messenger?.showMessage(l10n.micPermissionDenied);
       return false;
     }
@@ -395,71 +445,106 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final text = AppText.of(theme);
+    final row = Row(
+      children: [
+        const SizedBox(width: AppSpace.m),
+        Icon(Icons.bolt_outlined, size: AppIconSize.m, color: scheme.primary),
+        const SizedBox(width: AppSpace.s),
+        Expanded(
+          child: TextField(
+            key: const ValueKey('quick-entry-field'),
+            controller: _c,
+            focusNode: widget.focusNode,
+            textInputAction: TextInputAction.done,
+            autocorrect: false,
+            // Enter klavyeyi kapatmaz: art arda madde yazılır.
+            onEditingComplete: _onSubmitted,
+            style: text.rowTitle,
+            decoration: InputDecoration(
+              hintText: widget.hint ?? l10n.quickEntryHint,
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: AppSpace.m),
+            ),
+          ),
+        ),
+        if (widget.raw)
+          // Temizle düğmesi: RenderOffstage doğrudan _hasText dinler — ilk
+          // harfte 0 widget kurulumu (S56 yazma bütçesi).
+          _OffstageWhen(
+            show: _hasText,
+            child: Semantics(
+              button: true,
+              label: l10n.clear,
+              child: GestureDetector(
+                key: const ValueKey('quick-entry-clear'),
+                behavior: HitTestBehavior.opaque,
+                onTap: clear,
+                child: SizedBox(
+                  width: AppSpace.xxxl + AppSpace.s,
+                  height: AppSpace.xxl + AppSpace.xxl,
+                  child: Icon(
+                    Icons.close,
+                    size: AppIconSize.s,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ValueListenableBuilder<bool>(
+          valueListenable: _micAvailable,
+          builder: (context, available, _) => !available
+              ? const SizedBox(width: AppSpace.m)
+              : ValueListenableBuilder<bool>(
+                  valueListenable: _listening,
+                  builder: (context, on, _) => IconButton(
+                    key: const ValueKey('quick-entry-mic'),
+                    tooltip: on ? l10n.quickEntryMicStop : l10n.quickEntryMic,
+                    isSelected: on,
+                    style: on
+                        ? IconButton.styleFrom(
+                            backgroundColor: scheme.primary,
+                            foregroundColor: scheme.onPrimary,
+                          )
+                        : null,
+                    icon: const Icon(AppIcons.dictation),
+                    onPressed: toggleListening,
+                  ),
+                ),
+        ),
+        const SizedBox(width: AppSpace.xs),
+      ],
+    );
+    final box = widget.raw
+        ? ValueListenableBuilder<bool>(
+            valueListenable: _listening,
+            builder: (context, on, child) => DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(AppRadius.l),
+                border: on
+                    ? Border.all(
+                        color: scheme.primary.withValues(alpha: AppAlpha.muted),
+                      )
+                    : null,
+              ),
+              child: child,
+            ),
+            child: row,
+          )
+        : DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(AppRadius.l),
+            ),
+            child: row,
+          );
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(AppRadius.l),
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: AppSpace.m),
-              Icon(
-                Icons.bolt_outlined,
-                size: AppIconSize.m,
-                color: scheme.primary,
-              ),
-              const SizedBox(width: AppSpace.s),
-              Expanded(
-                child: TextField(
-                  key: const ValueKey('quick-entry-field'),
-                  controller: _c,
-                  focusNode: widget.focusNode,
-                  textInputAction: TextInputAction.done,
-                  autocorrect: false,
-                  // Enter klavyeyi kapatmaz: art arda madde yazılır.
-                  onEditingComplete: _onSubmitted,
-                  style: text.rowTitle,
-                  decoration: InputDecoration(
-                    hintText: widget.hint ?? l10n.quickEntryHint,
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: AppSpace.m,
-                    ),
-                  ),
-                ),
-              ),
-              ValueListenableBuilder<bool>(
-                valueListenable: _micAvailable,
-                builder: (context, available, _) => !available
-                    ? const SizedBox(width: AppSpace.m)
-                    : ValueListenableBuilder<bool>(
-                        valueListenable: _listening,
-                        builder: (context, on, _) => IconButton(
-                          key: const ValueKey('quick-entry-mic'),
-                          tooltip: on
-                              ? l10n.quickEntryMicStop
-                              : l10n.quickEntryMic,
-                          isSelected: on,
-                          style: on
-                              ? IconButton.styleFrom(
-                                  backgroundColor: scheme.primary,
-                                  foregroundColor: scheme.onPrimary,
-                                )
-                              : null,
-                          icon: const Icon(AppIcons.dictation),
-                          onPressed: toggleListening,
-                        ),
-                      ),
-              ),
-              const SizedBox(width: AppSpace.xs),
-            ],
-          ),
-        ),
+        box,
         // Dinleme satırı: yeri HEP ayrılmış (boy sabit; açılıp kapanırken
         // altındaki liste oynamaz).
         SizedBox(
@@ -471,24 +556,87 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
                 : Padding(
                     padding: const EdgeInsets.only(
                       left: AppSpace.m,
+                      right: AppSpace.m,
                       top: AppSpace.xxs,
                     ),
-                    child: ValueListenableBuilder<String>(
-                      valueListenable: _heard,
-                      builder: (context, heard, _) => Text(
-                        heard.isEmpty
-                            ? l10n.quickEntryListening
-                            : '${l10n.quickEntryListening} $heard',
-                        key: const ValueKey('quick-entry-heard'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.meta.copyWith(color: scheme.primary),
-                      ),
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: ValueListenableBuilder<String>(
+                            valueListenable: _heard,
+                            builder: (context, heard, _) => Text(
+                              heard.isEmpty
+                                  ? l10n.quickEntryListening
+                                  : '${l10n.quickEntryListening} $heard',
+                              key: const ValueKey('quick-entry-heard'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.meta.copyWith(color: scheme.primary),
+                            ),
+                          ),
+                        ),
+                        if (_session != null) ...[
+                          const SizedBox(width: AppSpace.s),
+                          SizedBox(
+                            width: AppSpace.xxxl + AppSpace.xxxl,
+                            child: VoiceLevelWave(
+                              key: const ValueKey('quick-entry-wave'),
+                              active: true,
+                              level: _session!.level,
+                              color: scheme.primary,
+                              height: 14,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
           ),
         ),
       ],
     );
+  }
+}
+
+class _OffstageWhen extends SingleChildRenderObjectWidget {
+  const _OffstageWhen({required this.show, super.child});
+
+  final ValueListenable<bool> show;
+
+  @override
+  _RenderOffstageWhen createRenderObject(BuildContext context) =>
+      _RenderOffstageWhen(show);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderOffstageWhen r) =>
+      r.show = show;
+}
+
+class _RenderOffstageWhen extends RenderOffstage {
+  _RenderOffstageWhen(this._show) : super(offstage: !_show.value);
+
+  ValueListenable<bool> _show;
+
+  set show(ValueListenable<bool> v) {
+    if (identical(_show, v)) return;
+    if (attached) _show.removeListener(_sync);
+    _show = v;
+    if (attached) _show.addListener(_sync);
+    _sync();
+  }
+
+  void _sync() => offstage = !_show.value;
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _show.addListener(_sync);
+    _sync();
+  }
+
+  @override
+  void detach() {
+    _show.removeListener(_sync);
+    super.detach();
   }
 }
