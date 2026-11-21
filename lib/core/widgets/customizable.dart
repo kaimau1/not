@@ -87,18 +87,21 @@ class _CustomizableState extends State<Customizable> {
   }
 }
 
-/// Rozetin çapı ve simgesi (belirteç ölçeğinin altında — adlandırılmış).
-const double _badgeSize = 20;
-const double _badgeIcon = 12;
+/// Rozetin çapı ve simgesi (belirteç ölçeğinin altında — düğme içine sığar,
+/// komşu düğmelere taşmaz ve kenarda kırpılmaz).
+const double _badgeSize = 14;
+const double _badgeIcon = 9;
+
+/// Çerçeve dış kenarından ince nefes payı (yan yana düğmeler yapışmasın).
+const double _frameGap = 1.5;
 
 /// Gizli öğenin kesikli çerçevesinde çizgi (= boşluk) boyu.
 const double _dash = 4;
 
-/// Düzenleme modundaki çerçeve: görünür öğe ince birincil yıkama + çizgi,
-/// gizli öğe soluk içerik + KESİKLİ çizgi; köşede göz rozeti (SB4).
-/// İçeriğin dokunuşları KAPALI (dokunuş gizle/göster yapar). Mod açılınca
-/// çerçeve ve rozet solarak belirir; dokunuşta rozet küçükten büyür.
-/// Titreme/sallanma yok (plan_tasarim_B §1.2).
+/// Düzenleme modundaki çerçeve: görünür öğe ince birincil bento yıkama +
+/// çerçeve + iç köşede ✓ rozeti; gizli öğe soluk içerik + kesikli çerçeve +
+/// iç köşede − rozeti. Rozetler öğenin İÇ sınırında kalır — yan yana duran
+/// üst/alt çubuk düğmeleriyle çakışmaz ve kenarda kesilmez.
 class CustomizeFrame extends StatefulWidget {
   const CustomizeFrame({
     super.key,
@@ -155,7 +158,7 @@ class _CustomizeFrameState extends State<CustomizeFrame>
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final visible = widget.visible;
-    final inset = widget.inset;
+    final pad = widget.inset + AppSpace.xxs;
     return Semantics(
       button: true,
       toggled: visible,
@@ -164,7 +167,6 @@ class _CustomizeFrameState extends State<CustomizeFrame>
         behavior: HitTestBehavior.opaque,
         onTap: widget.onTap,
         child: Stack(
-          clipBehavior: Clip.none,
           children: [
             IgnorePointer(
               child: AnimatedOpacity(
@@ -174,30 +176,37 @@ class _CustomizeFrameState extends State<CustomizeFrame>
               ),
             ),
             Positioned.fill(
-              child: IgnorePointer(
-                child: FadeTransition(
-                  opacity: _appear,
-                  child: visible
-                      ? DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: scheme.primary.withValues(
-                              alpha: AppAlpha.hairline,
-                            ),
-                            borderRadius: BorderRadius.circular(AppRadius.m),
-                            border: Border.all(
-                              color: scheme.primary.withValues(
-                                alpha: AppAlpha.muted,
+              child: Padding(
+                padding: const EdgeInsets.all(_frameGap),
+                child: IgnorePointer(
+                  child: FadeTransition(
+                    opacity: _appear,
+                    child: visible
+                        ? DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: scheme.primaryContainer.withValues(
+                                alpha: AppAlpha.soft,
+                              ),
+                              borderRadius: BorderRadius.circular(AppRadius.s),
+                              border: Border.all(
+                                color: scheme.primary.withValues(
+                                  alpha: AppAlpha.muted,
+                                ),
                               ),
                             ),
+                          )
+                        : CustomPaint(
+                            painter: _DashedFrame(
+                              scheme.outline.withValues(alpha: AppAlpha.muted),
+                            ),
                           ),
-                        )
-                      : CustomPaint(painter: _DashedFrame(scheme.outline)),
+                  ),
                 ),
               ),
             ),
             PositionedDirectional(
-              top: inset - AppSpace.xs,
-              end: inset - AppSpace.xs,
+              top: pad,
+              end: pad,
               child: IgnorePointer(
                 child: FadeTransition(
                   opacity: _appear,
@@ -207,16 +216,24 @@ class _CustomizeFrameState extends State<CustomizeFrame>
                       width: _badgeSize,
                       height: _badgeSize,
                       decoration: BoxDecoration(
-                        color: visible ? scheme.primary : scheme.surface,
+                        color: visible
+                            ? scheme.primary
+                            : scheme.surfaceContainerHighest,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: visible ? scheme.primary : scheme.outline,
+                          color: visible
+                              ? scheme.surface
+                              : scheme.outline.withValues(
+                                  alpha: AppAlpha.muted,
+                                ),
                         ),
                       ),
                       child: Icon(
-                        visible ? Icons.visibility : Icons.visibility_off,
+                        visible ? Icons.check_rounded : Icons.remove_rounded,
                         size: _badgeIcon,
-                        color: visible ? scheme.onPrimary : scheme.outline,
+                        color: visible
+                            ? scheme.onPrimary
+                            : scheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -241,7 +258,7 @@ class _DashedFrame extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rrect = RRect.fromRectAndRadius(
       Offset.zero & size,
-      const Radius.circular(AppRadius.m),
+      const Radius.circular(AppRadius.s),
     ).deflate(0.5);
     final points = <Offset>[];
     for (final metric in (Path()..addRRect(rrect)).computeMetrics()) {
@@ -429,10 +446,11 @@ class _CustomizeStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final l10n = context.l10n;
     final top = MediaQuery.paddingOf(context).top;
-    final fg = scheme.onInverseSurface;
-    final line = fg.withValues(alpha: AppAlpha.pressed);
+    final fg = scheme.onSurface;
+    final line = scheme.primary.withValues(alpha: AppAlpha.soft);
     final curve = CurvedAnimation(
       parent: motion,
       curve: AppMotion.curveOf(context, AppMotion.enter),
@@ -441,7 +459,7 @@ class _CustomizeStrip extends StatelessWidget {
     final hidden = hiddenCount;
     return Material(
       key: const ValueKey('customize-strip'),
-      color: scheme.inverseSurface,
+      color: scheme.surfaceContainerHigh,
       shape: Border(bottom: BorderSide(color: line)),
       child: SizedBox(
         height: top + _stripHeight,
@@ -450,7 +468,7 @@ class _CustomizeStrip extends StatelessWidget {
             padding: EdgeInsetsDirectional.only(
               top: top,
               start: AppSpace.m,
-              end: AppSpace.xs,
+              end: AppSpace.s,
             ),
             child: FadeTransition(
               opacity: curve,
@@ -467,12 +485,23 @@ class _CustomizeStrip extends StatelessWidget {
                   ignoring: !live,
                   child: Row(
                     children: [
-                      Icon(Icons.tune_rounded, size: AppIconSize.s, color: fg),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: scheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(AppRadius.s),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpace.xs),
+                          child: Icon(
+                            Icons.tune_rounded,
+                            size: AppIconSize.xs,
+                            color: scheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: AppSpace.s),
-                      // Başlık + hap boş alanın TAMAMINI alır (eskiden
-                      // Flexible + Spacer yarı yarıya bölüşüyordu, küçük
-                      // telefonda "Düzenlem…" kesiliyordu). Yine sığmazsa
-                      // kısa etiket; tam ad hep semantikte.
+                      // Başlık + hap boş alanın TAMAMINI alır; sığmazsa
+                      // kısa etiket, tam ad hep semantikte.
                       Expanded(
                         child: Row(
                           children: [
@@ -483,11 +512,10 @@ class _CustomizeStrip extends StatelessWidget {
                                 excludeSemantics: true,
                                 child: LayoutBuilder(
                                   builder: (context, box) {
-                                    final style = theme.textTheme.labelLarge
-                                        ?.copyWith(
-                                          color: fg,
-                                          fontWeight: AppWeight.strong,
-                                        );
+                                    final style = text.label.copyWith(
+                                      color: fg,
+                                      fontWeight: AppWeight.strong,
+                                    );
                                     final full = l10n.customizeModeTitle;
                                     final tp = TextPainter(
                                       text: TextSpan(text: full, style: style),
@@ -512,7 +540,7 @@ class _CustomizeStrip extends StatelessWidget {
                               ),
                             ),
                             if (hidden > 0) ...[
-                              const SizedBox(width: AppSpace.s),
+                              const SizedBox(width: AppSpace.xs),
                               // Şerit Navigator'ın ÜSTÜNDE: Overlay yok, ipucu
                               // balonu (Tooltip) kurulamaz — ad Semantics'te.
                               Semantics(
@@ -521,7 +549,7 @@ class _CustomizeStrip extends StatelessWidget {
                                 excludeSemantics: true,
                                 child: DecoratedBox(
                                   decoration: ShapeDecoration(
-                                    color: line,
+                                    color: scheme.secondaryContainer,
                                     shape: const StadiumBorder(),
                                   ),
                                   child: Padding(
@@ -531,8 +559,9 @@ class _CustomizeStrip extends StatelessWidget {
                                     ),
                                     child: Text(
                                       '$hidden',
-                                      style: theme.textTheme.labelMedium
-                                          ?.copyWith(color: fg),
+                                      style: text.badge.copyWith(
+                                        color: scheme.onSecondaryContainer,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -544,24 +573,26 @@ class _CustomizeStrip extends StatelessWidget {
                       TextButton(
                         key: const ValueKey('customize-undo'),
                         style: TextButton.styleFrom(
-                          foregroundColor: fg,
-                          disabledForegroundColor: fg.withValues(
-                            alpha: AppAlpha.disabled,
-                          ),
+                          foregroundColor: scheme.onSurface,
+                          disabledForegroundColor: scheme.onSurfaceVariant
+                              .withValues(alpha: AppAlpha.disabled),
                           visualDensity: VisualDensity.compact,
                         ),
                         onPressed: dirty ? Personalize.revert : null,
                         child: Text(l10n.undo),
                       ),
                       if (onReorder != null)
-                        IconButton(
+                        IconButton.filledTonal(
                           key: const ValueKey('customize-reorder'),
-                          color: fg,
-                          visualDensity: VisualDensity.compact,
+                          style: IconButton.styleFrom(
+                            backgroundColor: scheme.surfaceContainerLowest,
+                            foregroundColor: scheme.primary,
+                            visualDensity: VisualDensity.compact,
+                          ),
                           onPressed: onReorder,
                           icon: Icon(
                             Icons.swap_vert_rounded,
-                            size: AppIconSize.m,
+                            size: AppIconSize.s,
                             semanticLabel: l10n.reorderHandle,
                           ),
                         ),
@@ -569,8 +600,6 @@ class _CustomizeStrip extends StatelessWidget {
                       FilledButton(
                         key: const ValueKey('customize-done'),
                         style: FilledButton.styleFrom(
-                          backgroundColor: scheme.inversePrimary,
-                          foregroundColor: scheme.onPrimaryContainer,
                           visualDensity: VisualDensity.compact,
                         ),
                         onPressed: Personalize.done,

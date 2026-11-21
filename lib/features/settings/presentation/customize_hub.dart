@@ -179,6 +179,9 @@ class _CustomizeHubState extends State<CustomizeHub> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     return ListView(
       controller: widget.scrollController,
       padding: EdgeInsets.fromLTRB(
@@ -188,29 +191,64 @@ class _CustomizeHubState extends State<CustomizeHub> {
         AppSpace.l + MediaQuery.paddingOf(context).bottom,
       ),
       children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpace.m),
           child: Row(
+            spacing: AppSpace.s,
             children: [
-              for (final s in CustomizeSurface.values)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: AppSpace.s),
-                  child: Builder(
-                    builder: (context) {
-                      final (label, icon) = surfaceLabel(l10n, s);
-                      return radioChip(
-                        ChoiceChip(
-                          key: ValueKey('customize-surface-${s.name}'),
-                          avatar: Icon(icon, size: AppIconSize.s),
-                          label: Text(label),
-                          selected: s == _surface,
-                          onSelected: (_) => setState(() => _surface = s),
-                        ),
-                      );
-                    },
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.xs),
+                  child: Icon(
+                    Icons.tune_rounded,
+                    size: AppIconSize.s,
+                    color: scheme.onPrimaryContainer,
                   ),
                 ),
+              ),
+              Expanded(
+                child: Text(l10n.personalizeTitle, style: text.sheetTitle),
+              ),
             ],
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+            ),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.all(AppSpace.xs),
+            child: Row(
+              children: [
+                for (final s in CustomizeSurface.values)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: AppSpace.xs),
+                    child: Builder(
+                      builder: (context) {
+                        final (label, icon) = surfaceLabel(l10n, s);
+                        return radioChip(
+                          ChoiceChip(
+                            key: ValueKey('customize-surface-${s.name}'),
+                            avatar: Icon(icon, size: AppIconSize.s),
+                            label: Text(label),
+                            selected: s == _surface,
+                            onSelected: (_) => setState(() => _surface = s),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: AppSpace.m),

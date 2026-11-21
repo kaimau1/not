@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Menü düzenleme + Kişiselleştir / Düzenleme modu yeni bento tasarımı (21 Kasım 5. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) not ⋮ → ⚙ → **Menüyü düzenle** (açık ve koyu temada) → üstte çerçeveli hızlı satır (`X / 5`), altta boşluksuz 2 sütunlu dengeli kartlar, ⊖/⊕ ve ☆/★ simgelerin üstüne binmeden kartın içinde mi, basılı tutup sürükle çalışıyor mu; (2) Ayarlar → **Kişiselleştir** → **Düzenleme modunu başlat** → üst şerit temayla uyumlu mu, not üst ve alt çubuğundaki yan yana düğmelerin `✓`/`−` rozetleri birbirine veya kenarlara taşmadan duruyor mu; (3) üst şeritteki **Sırala** (⇅) ve Ayarlar → Kişiselleştir panoları 2 sütunlu dengeli bento kartlarıyla temiz görünüyor mu.
+  Yanlışsa: ekran görüntüsü ile madde numarasını yaz.
+
 - [ ] **Takvim: bağlı notlar ay/şeritte, saatli bağ, daralan takvim + gün paneli; not paylaşımı, kenar jesti, gömülü ek, Drive levhası (21 Kasım 4. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) takvimde bir güne not bağla → ay hücresinde ve ana ekran şeridinde notun adı görünüyor mu; gün panelinde notun yanındaki **Saat** ile 09:00 seç → hafta/gün çizelgesinde 09:00'da duruyor mu; (2) ay görünümünde güne dokun → takvim üstte daralıp gün altta açılıyor mu, tutamağı yukarı/aşağı çekince daralıp kapanıyor mu, kasma var mı; (3) PDF'e kalemle yaz → paylaş → **PDF** ve **Ekler** yazılı PDF gönderiyor mu; balonlu kipe alınmış görseli **Ekler** ile paylaş → yazılı resim mi gidiyor; (4) not içinde sol kenardan sağa çek → not kapanmıyor mu; (5) gömülü eke dokun → **Tam ekran**da kalemle yaz → kapat-aç → yazı duruyor mu; ek gömerken daireyle kelimenin ilk harfini kaçır → kelime bölünmeden mi gömülüyor, tek kelimeye dokununca seçiliyor mu; (6) görseli tam ekran aç → çubukta Balon ekle + T + Çiz var mı; (7) yeni Google hesabıyla ilk giriş → "Drive'ı bağla" levhası bir kez çıkıyor mu.
   Yanlışsa: madde numarasını yaz.

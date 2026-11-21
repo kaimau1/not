@@ -985,6 +985,7 @@ class _EditableMenuState extends State<_EditableMenu> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final heading = _menu.title?.trim() ?? '';
     final (hiddenIds, quickIds, order) = _state();
     final all = _all;
@@ -993,84 +994,196 @@ class _EditableMenuState extends State<_EditableMenu> {
         if (hiddenIds.contains(id) && all[id] != null) all[id]!,
     ];
     final quickFull = quickIds.length >= MenuLayout.maxQuick;
-    Widget tile(MenuAction a, {required bool inQuick}) => _EditTile(
+
+    Widget quickTile(MenuAction a) => _EditQuickTile(
       action: a,
       scheme: scheme,
+      text: text,
+      onToggleHidden: () => _toggleHidden(a.id),
+      onToggleQuick: () => _toggleQuick(a.id),
+      onDrop: (dragged) => _move(dragged, a.id),
+    );
+
+    Widget sectionTile(MenuAction a) => _EditSectionTile(
+      action: a,
+      theme: theme,
+      scheme: scheme,
+      text: text,
       hidden: hiddenIds.contains(a.id),
-      inQuick: inQuick,
+      inQuick: quickIds.contains(a.id),
       quickFull: quickFull,
       onToggleHidden: () => _toggleHidden(a.id),
       onToggleQuick: () => _toggleQuick(a.id),
       onDrop: (dragged) => _move(dragged, a.id),
     );
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, AppSpace.s),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        0,
+        AppSpace.l,
+        AppSpace.s,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
           if (heading.isNotEmpty)
             SheetHeader(title: heading, padding: EdgeInsets.zero),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, AppSpace.s),
-            child: Text(
-              l10n.menuEditInlineHint(MenuLayout.maxQuick),
-              key: const ValueKey('menu-edit-hint'),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(AppRadius.m),
             ),
-          ),
-          if (quick.isNotEmpty)
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer.withValues(
-                  alpha: AppAlpha.hairline,
-                ),
-                borderRadius: BorderRadius.circular(AppRadius.m),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.m,
+                vertical: AppSpace.s,
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AppSpace.s,
                 children: [
-                  for (final a in quick)
-                    Expanded(child: tile(a, inQuick: true)),
+                  Icon(
+                    Icons.drag_indicator_rounded,
+                    size: AppIconSize.s,
+                    color: scheme.primary,
+                  ),
+                  Expanded(
+                    child: Text(
+                      l10n.menuEditInlineHint(MenuLayout.maxQuick),
+                      key: const ValueKey('menu-edit-hint'),
+                      style: text.meta,
+                    ),
+                  ),
                 ],
               ),
             ),
+          ),
+          if (quick.isNotEmpty) ...[
+            const SizedBox(height: AppSpace.m),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(AppRadius.l),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: AppAlpha.soft),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.s),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.xs,
+                        AppSpace.xxs,
+                        AppSpace.xs,
+                        AppSpace.s,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.star_rounded,
+                            size: AppIconSize.xs,
+                            color: scheme.primary,
+                          ),
+                          const SizedBox(width: AppSpace.xs),
+                          Expanded(
+                            child: Text(
+                              l10n.menuQuickRow,
+                              style: text.badge.copyWith(color: scheme.primary),
+                            ),
+                          ),
+                          DecoratedBox(
+                            decoration: ShapeDecoration(
+                              color: scheme.primaryContainer,
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpace.s,
+                                vertical: AppSpace.xxs,
+                              ),
+                              child: Text(
+                                '${quick.length} / ${MenuLayout.maxQuick}',
+                                style: text.badge.copyWith(
+                                  color: scheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: AppSpace.xs,
+                      children: [
+                        for (final a in quick) Expanded(child: quickTile(a)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           for (final section in sections)
             if (section.actions.isNotEmpty) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.xs,
+                  AppSpace.m,
+                  AppSpace.xs,
+                  AppSpace.xs,
+                ),
                 child: SectionLabel(section.title),
               ),
-              _buildTileGrid(
-                section.actions,
-                (a, {required horizontal}) => tile(a, inQuick: false),
-              ),
+              _buildEditGrid(section.actions, sectionTile),
             ],
           if (hidden.isNotEmpty) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.xs,
+                AppSpace.m,
+                AppSpace.xs,
+                AppSpace.xs,
+              ),
               child: SectionLabel(l10n.menuHiddenGroup),
             ),
-            _buildTileGrid(
-              hidden,
-              (a, {required horizontal}) => tile(a, inQuick: false),
-            ),
+            _buildEditGrid(hidden, sectionTile),
           ],
+          const SizedBox(height: AppSpace.m),
+          Divider(
+            height: 1,
+            color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+          ),
           const SizedBox(height: AppSpace.s),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton(
-                key: const ValueKey('menu-edit-reset'),
-                onPressed: () => MenuLayouts.set(_id, const MenuLayout()),
-                child: Text(l10n.menuReset),
+              Flexible(
+                child: TextButton.icon(
+                  key: const ValueKey('menu-edit-reset'),
+                  onPressed: () => MenuLayouts.set(_id, const MenuLayout()),
+                  icon: const Icon(
+                    Icons.restart_alt_rounded,
+                    size: AppIconSize.s,
+                  ),
+                  label: Text(
+                    l10n.menuReset,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-              const Spacer(),
-              FilledButton(
+              const SizedBox(width: AppSpace.s),
+              FilledButton.icon(
                 key: const ValueKey('menu-edit-save'),
                 onPressed: () => setState(() => _editing = false),
-                child: Text(l10n.customizeDone),
+                icon: const Icon(Icons.check_rounded, size: AppIconSize.s),
+                label: Text(l10n.customizeDone),
               ),
             ],
           ),
@@ -1080,12 +1193,164 @@ class _EditableMenuState extends State<_EditableMenu> {
   }
 }
 
-/// Düzenleme kipindeki karo: basılı tutup sürüklenir, başka karo onu kabul
-/// eder; köşelerde ⊖/⊕ (gizle/göster) ve ☆ (hızlı satır).
-class _EditTile extends StatelessWidget {
-  const _EditTile({
+/// Düzenleme kipinde dengeli 2 sütunlu (geniş ekranda 3 sütunlu) bento
+/// ızgarası: her hücre tam sütun genişliğinde, tek kalan son satır tam en.
+Widget _buildEditGrid(
+  List<MenuAction> actions,
+  Widget Function(MenuAction) tile,
+) {
+  Widget row(List<MenuAction> items) => Row(
+    spacing: AppSpace.s,
+    children: [for (final a in items) Expanded(child: tile(a))],
+  );
+  if (actions.length <= 2) return row(actions);
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 560 ? 3 : 2;
+      final rows = <List<MenuAction>>[];
+      for (var i = 0; i < actions.length; i += columns) {
+        final end = i + columns;
+        rows.add(
+          actions.sublist(i, end > actions.length ? actions.length : end),
+        );
+      }
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: AppSpace.s,
+        children: [for (final r in rows) row(r)],
+      );
+    },
+  );
+}
+
+/// Hızlı satırdaki düzenleme karosu: üstte çakışmayan minik gizle/yıldız
+/// şeridi, ortada tonlu simge kutusu, altta kısa ad.
+class _EditQuickTile extends StatelessWidget {
+  const _EditQuickTile({
     required this.action,
     required this.scheme,
+    required this.text,
+    required this.onToggleHidden,
+    required this.onToggleQuick,
+    required this.onDrop,
+  });
+
+  final MenuAction action;
+  final ColorScheme scheme;
+  final AppText text;
+  final VoidCallback onToggleHidden;
+  final VoidCallback onToggleQuick;
+  final ValueChanged<String> onDrop;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final card = DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.xxs,
+          AppSpace.xs,
+          AppSpace.xxs,
+          AppSpace.s,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _EditMiniAction(
+                  key: ValueKey('menu-visible-${action.id}'),
+                  icon: Icons.remove_rounded,
+                  fg: scheme.error,
+                  bg: scheme.errorContainer.withValues(alpha: AppAlpha.muted),
+                  tooltip: l10n.menuHiddenGroup,
+                  compact: true,
+                  onTap: onToggleHidden,
+                ),
+                _EditMiniAction(
+                  key: ValueKey('menu-edit-quick-${action.id}'),
+                  icon: Icons.star_rounded,
+                  fg: scheme.primary,
+                  bg: scheme.primaryContainer,
+                  tooltip: l10n.menuQuickRow,
+                  compact: true,
+                  onTap: onToggleQuick,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpace.xs),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer.withValues(
+                  alpha: AppAlpha.soft,
+                ),
+                borderRadius: BorderRadius.circular(AppRadius.s),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.xs),
+                child: Icon(
+                  action.icon,
+                  size: AppIconSize.s,
+                  color: scheme.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpace.xs),
+            Text(
+              action.label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: text.badge.copyWith(
+                fontWeight: AppWeight.medium,
+                color: scheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (d) => d.data != action.id,
+      onAcceptWithDetails: (d) => onDrop(d.data),
+      builder: (context, candidates, _) => LongPressDraggable<String>(
+        key: ValueKey('menu-drag-${action.id}'),
+        data: action.id,
+        feedback: _dragFeedback(scheme, action),
+        childWhenDragging: Opacity(opacity: AppAlpha.disabled, child: card),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            border: Border.all(
+              color: candidates.isNotEmpty
+                  ? scheme.primary
+                  : Colors.transparent,
+              width: AppSpace.xxs,
+            ),
+          ),
+          child: card,
+        ),
+      ),
+    );
+  }
+}
+
+/// Bölüm ızgarasındaki yatay bento düzenleme karosu: solda tutamak + tonlu
+/// simge + ad, sağda çakışmayan yıldız ve gizle/göster hapları.
+class _EditSectionTile extends StatelessWidget {
+  const _EditSectionTile({
+    required this.action,
+    required this.theme,
+    required this.scheme,
+    required this.text,
     required this.hidden,
     required this.inQuick,
     required this.quickFull,
@@ -1095,7 +1360,9 @@ class _EditTile extends StatelessWidget {
   });
 
   final MenuAction action;
+  final ThemeData theme;
   final ColorScheme scheme;
+  final AppText text;
   final bool hidden;
   final bool inQuick;
   final bool quickFull;
@@ -1103,115 +1370,188 @@ class _EditTile extends StatelessWidget {
   final VoidCallback onToggleQuick;
   final ValueChanged<String> onDrop;
 
-  Widget _badge({
-    required Key key,
-    required IconData icon,
-    required Color color,
-    required String tooltip,
-    required VoidCallback? onTap,
-  }) => Tooltip(
-    message: tooltip,
-    child: InkResponse(
-      key: key,
-      onTap: onTap,
-      radius: 18,
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: scheme.surface,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: AppIconSize.m, color: color),
-        ),
-      ),
-    ),
-  );
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final face = Opacity(
-      opacity: hidden ? 0.45 : 1,
-      child: IgnorePointer(
-        child: _buildGridTile(
-          context,
-          action,
-          theme: theme,
-          scheme: scheme,
-          text: AppText.of(theme),
-          onTap: () {},
+    final tileColor = hidden
+        ? scheme.surfaceContainerLowest
+        : theme.brightness == Brightness.dark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer;
+    final canQuick = inQuick || !quickFull;
+    final card = DecoratedBox(
+      decoration: BoxDecoration(
+        color: tileColor,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(
+          color: hidden
+              ? scheme.outlineVariant.withValues(alpha: AppAlpha.muted)
+              : Colors.transparent,
+        ),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.s,
+            vertical: AppSpace.xs,
+          ),
+          child: Row(
+            spacing: AppSpace.xs,
+            children: [
+              Icon(
+                Icons.drag_indicator_rounded,
+                size: AppIconSize.xs,
+                color: scheme.outline.withValues(alpha: AppAlpha.muted),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: hidden
+                      ? scheme.surfaceContainerHighest
+                      : scheme.primaryContainer.withValues(
+                          alpha: AppAlpha.soft,
+                        ),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.xs),
+                  child: Icon(
+                    action.icon,
+                    size: AppIconSize.s,
+                    color: hidden
+                        ? scheme.onSurfaceVariant.withValues(
+                            alpha: AppAlpha.muted,
+                          )
+                        : scheme.primary,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  action.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.meta.copyWith(
+                    color: hidden
+                        ? scheme.onSurfaceVariant.withValues(
+                            alpha: AppAlpha.muted,
+                          )
+                        : scheme.onSurface,
+                    fontWeight: AppWeight.medium,
+                  ),
+                ),
+              ),
+              if (!hidden)
+                _EditMiniAction(
+                  key: ValueKey('menu-edit-quick-${action.id}'),
+                  icon: inQuick
+                      ? Icons.star_rounded
+                      : Icons.star_border_rounded,
+                  fg: inQuick
+                      ? scheme.primary
+                      : canQuick
+                      ? scheme.onSurfaceVariant
+                      : scheme.onSurfaceVariant.withValues(
+                          alpha: AppAlpha.disabled,
+                        ),
+                  bg: inQuick
+                      ? scheme.primaryContainer
+                      : scheme.surfaceContainerHighest,
+                  tooltip: l10n.menuQuickRow,
+                  onTap: canQuick ? onToggleQuick : null,
+                ),
+              _EditMiniAction(
+                key: ValueKey('menu-visible-${action.id}'),
+                icon: hidden ? Icons.add_rounded : Icons.remove_rounded,
+                fg: hidden ? scheme.onPrimaryContainer : scheme.error,
+                bg: hidden
+                    ? scheme.primaryContainer
+                    : scheme.errorContainer.withValues(alpha: AppAlpha.muted),
+                tooltip: hidden ? l10n.customizeShown : l10n.menuHiddenGroup,
+                onTap: onToggleHidden,
+              ),
+            ],
+          ),
         ),
       ),
     );
     return DragTarget<String>(
       onWillAcceptWithDetails: (d) => d.data != action.id,
       onAcceptWithDetails: (d) => onDrop(d.data),
-      builder: (context, candidates, _) => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          LongPressDraggable<String>(
-            key: ValueKey('menu-drag-${action.id}'),
-            data: action.id,
-            feedback: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  shape: BoxShape.circle,
-                  boxShadow: const [
-                    BoxShadow(blurRadius: 8, color: Colors.black26),
-                  ],
-                ),
-                child: Icon(action.icon, color: scheme.onPrimaryContainer),
-              ),
-            ),
-            childWhenDragging: Opacity(opacity: 0.3, child: face),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.m),
-                border: Border.all(
-                  color: candidates.isNotEmpty
-                      ? scheme.primary
-                      : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-              child: face,
+      builder: (context, candidates, _) => LongPressDraggable<String>(
+        key: ValueKey('menu-drag-${action.id}'),
+        data: action.id,
+        feedback: _dragFeedback(scheme, action),
+        childWhenDragging: Opacity(opacity: AppAlpha.disabled, child: card),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            border: Border.all(
+              color: candidates.isNotEmpty
+                  ? scheme.primary
+                  : Colors.transparent,
+              width: AppSpace.xxs,
             ),
           ),
-          PositionedDirectional(
-            start: 0,
-            top: 0,
-            child: _badge(
-              key: ValueKey('menu-visible-${action.id}'),
-              icon: hidden
-                  ? Icons.add_circle_rounded
-                  : Icons.remove_circle_rounded,
-              color: hidden ? scheme.primary : scheme.error,
-              tooltip: hidden ? l10n.customizeShown : l10n.menuHiddenGroup,
-              onTap: onToggleHidden,
-            ),
-          ),
-          if (!hidden)
-            PositionedDirectional(
-              end: 0,
-              top: 0,
-              child: _badge(
-                key: ValueKey('menu-edit-quick-${action.id}'),
-                icon: inQuick ? Icons.star_rounded : Icons.star_border_rounded,
-                color: inQuick || !quickFull
-                    ? scheme.primary
-                    : scheme.onSurfaceVariant.withValues(alpha: AppAlpha.disabled),
-                tooltip: l10n.menuQuickRow,
-                onTap: inQuick || !quickFull ? onToggleQuick : null,
-              ),
-            ),
-        ],
+          child: card,
+        ),
       ),
     );
   }
 }
+
+/// Düzenleme karosunun içindeki çakışmasız minik işlem düğmesi (yıldız / gizle).
+class _EditMiniAction extends StatelessWidget {
+  const _EditMiniAction({
+    super.key,
+    required this.icon,
+    required this.fg,
+    required this.bg,
+    required this.tooltip,
+    required this.onTap,
+    this.compact = false,
+  });
+
+  final IconData icon;
+  final Color fg;
+  final Color bg;
+  final String tooltip;
+  final VoidCallback? onTap;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: tooltip,
+    child: Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(AppRadius.s),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.all(compact ? AppSpace.xxs : AppSpace.xs),
+          child: Icon(
+            icon,
+            size: compact ? AppIconSize.xs - AppSpace.xxs : AppIconSize.xs,
+            color: fg,
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _dragFeedback(ColorScheme scheme, MenuAction action) => Material(
+  color: Colors.transparent,
+  child: Container(
+    width: kMinInteractiveDimension,
+    height: kMinInteractiveDimension,
+    decoration: BoxDecoration(
+      color: scheme.primaryContainer,
+      borderRadius: BorderRadius.circular(AppRadius.l),
+      border: Border.all(color: scheme.primary),
+    ),
+    child: Icon(action.icon, color: scheme.onPrimaryContainer),
+  ),
+);
+

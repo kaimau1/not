@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_tokens.dart';
 
 /// Önizleme şeridinin ve karonun boyu.
-const double _stripHeight = 48;
-const double _tileHeight = 40;
+const double _stripHeight = 52;
+const double _tileHeight = 46;
 
 /// Panonun bir öğesi: kalıcı kimlik + simge + ad.
 typedef CustomizeEntry = ({String id, IconData icon, String label});
 
 /// **DÜZENLEME PANOSU**: bir yüzeyin (alt çubuk, hızlı satır, "+" paneli…)
 /// düğmelerini göster/gizle ve sırala. Üstte yüzeyin önizleme şeridi
-/// (sürükle = sırala), altında iki karo öbeği: görünenler (dokun = çıkar) ve
-/// eklenebilirler (dokun = ekle).
+/// (sürükle = sırala), altında iki dengeli bento öbeği: görünenler
+/// (dokun = çıkar) ve eklenebilirler (dokun = ekle).
 ///
 /// Pano DURUM TUTMAZ ve sıra hesaplamaz: [shown] ne ise onu çizer, her
 /// dokunuşu hemen bildirir (kaydet adımı yok — değişiklik anında uygulanır).
@@ -69,6 +69,7 @@ class CustomizeBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final byId = {for (final e in entries) e.id: e};
     final visible = [for (final id in shown) ?byId[id]];
     final shownIds = shown.toSet();
@@ -81,38 +82,57 @@ class CustomizeBoard extends StatelessWidget {
       padding: const EdgeInsets.only(top: AppSpace.m, bottom: AppSpace.s),
       child: Text(
         '$title · $count',
-        style: theme.textTheme.labelLarge?.copyWith(
-          color: scheme.onSurfaceVariant,
+        style: text.label.copyWith(
+          color: scheme.primary,
+          fontWeight: AppWeight.strong,
         ),
       ),
     );
-    Widget tiles(List<CustomizeEntry> list, {required bool inShown}) => Wrap(
-      spacing: AppSpace.s,
-      runSpacing: AppSpace.s,
-      children: [
-        for (final e in list)
-          _Tile(
-            key: ValueKey('$keyPrefix${e.id}'),
-            entry: e,
-            shown: inShown,
-            onTap: () => onToggle(e.id, !inShown),
-            trailing: trailingOf?.call(e.id),
-          ),
-      ],
-    );
+
+    Widget tiles(List<CustomizeEntry> list, {required bool inShown}) {
+      if (list.isEmpty) return const SizedBox.shrink();
+      Widget cell(CustomizeEntry e) => _Tile(
+        key: ValueKey('$keyPrefix${e.id}'),
+        entry: e,
+        shown: inShown,
+        onTap: () => onToggle(e.id, !inShown),
+        trailing: trailingOf?.call(e.id),
+      );
+      Widget row(List<CustomizeEntry> items) => Row(
+        spacing: AppSpace.s,
+        children: [for (final e in items) Expanded(child: cell(e))],
+      );
+      if (list.length <= 2) return row(list);
+      final rows = <List<CustomizeEntry>>[];
+      for (var i = 0; i < list.length; i += 2) {
+        final end = i + 2;
+        rows.add(list.sublist(i, end > list.length ? list.length : end));
+      }
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: AppSpace.s,
+        children: [for (final r in rows) row(r)],
+      );
+    }
 
     final reset = onReset;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           key: ValueKey('${keyPrefix}preview'),
           height: _stripHeight,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.s,
+            vertical: AppSpace.xs,
+          ),
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(AppRadius.l),
+            border: Border.all(
+              color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+            ),
           ),
           child: _strip(theme, visible),
         ),
@@ -151,21 +171,35 @@ class CustomizeBoard extends StatelessWidget {
         ),
       );
     }
-    Widget icon(CustomizeEntry e) => Padding(
+    Widget iconPill(CustomizeEntry e) => Padding(
       key: ValueKey('${keyPrefix}preview-${e.id}'),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
-      child: Icon(
-        e.icon,
-        size: AppIconSize.m,
-        color: scheme.onSurfaceVariant,
-        semanticLabel: e.label,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
+      child: Center(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            border: Border.all(
+              color: scheme.primary.withValues(alpha: AppAlpha.soft),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpace.s),
+            child: Icon(
+              e.icon,
+              size: AppIconSize.s,
+              color: scheme.primary,
+              semanticLabel: e.label,
+            ),
+          ),
+        ),
       ),
     );
     final reorder = onReorder;
     if (reorder == null) {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Row(children: [for (final e in visible) icon(e)]),
+        child: Row(children: [for (final e in visible) iconPill(e)]),
       );
     }
     return ReorderableListView(
@@ -177,17 +211,15 @@ class CustomizeBoard extends StatelessWidget {
           ReorderableDelayedDragStartListener(
             key: ValueKey('${keyPrefix}drag-${e.id}'),
             index: i,
-            child: icon(e),
+            child: iconPill(e),
           ),
       ],
     );
   }
 }
 
-/// Bir düğme karosu: görünense dolu zemin + "−", değilse çerçeve + "+".
-///
-/// Karo öbek değiştirince (görünen ↔ eklenebilir) yeni yerinde yalnız
-/// SOLARAK belirir; `Wrap` içinde boy animasyonu yok.
+/// Dengeli bento düğme karosu: görünense tonlu kart + "−" hapı, değilse
+/// çerçeveli sade kart + "+" hapı. Öbek değiştirince yalnız solarak belirir.
 class _Tile extends StatelessWidget {
   const _Tile({
     super.key,
@@ -206,7 +238,7 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final fg = shown ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
+    final text = AppText.of(theme);
     final trailing = this.trailing;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -214,12 +246,14 @@ class _Tile extends StatelessWidget {
       curve: AppMotion.curveOf(context, AppMotion.standard),
       builder: (context, t, child) => Opacity(opacity: t, child: child),
       child: Material(
-        color: shown ? scheme.secondaryContainer : scheme.surface,
+        color: shown ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
-          side: shown
-              ? BorderSide.none
-              : BorderSide(color: scheme.outlineVariant),
+          side: BorderSide(
+            color: shown
+                ? scheme.primary.withValues(alpha: AppAlpha.soft)
+                : scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -228,33 +262,66 @@ class _Tile extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: _tileHeight),
             child: Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(
-                AppSpace.m,
                 AppSpace.s,
-                AppSpace.s,
-                AppSpace.s,
+                AppSpace.xs,
+                AppSpace.xs,
+                AppSpace.xs,
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                spacing: AppSpace.s,
                 children: [
-                  Icon(entry.icon, size: AppIconSize.s, color: fg),
-                  const SizedBox(width: AppSpace.s),
-                  Flexible(
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: shown
+                          ? scheme.primaryContainer
+                          : scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(AppRadius.s),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpace.xs),
+                      child: Icon(
+                        entry.icon,
+                        size: AppIconSize.s,
+                        color: shown
+                            ? scheme.onPrimaryContainer
+                            : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  Expanded(
                     child: Text(
                       entry.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(color: fg),
+                      style: text.meta.copyWith(
+                        color: shown
+                            ? scheme.onSurface
+                            : scheme.onSurfaceVariant,
+                        fontWeight: AppWeight.medium,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: AppSpace.xs),
-                  Icon(
-                    shown
-                        ? Icons.remove_circle_outline_rounded
-                        : Icons.add_circle_outline_rounded,
-                    size: AppIconSize.xs,
-                    color: shown ? fg : scheme.primary,
-                  ),
                   ?trailing,
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: shown
+                          ? scheme.errorContainer.withValues(
+                              alpha: AppAlpha.muted,
+                            )
+                          : scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppRadius.s),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpace.xs),
+                      child: Icon(
+                        shown ? Icons.remove_rounded : Icons.add_rounded,
+                        size: AppIconSize.xs,
+                        color: shown
+                            ? scheme.error
+                            : scheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
