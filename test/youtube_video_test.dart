@@ -188,11 +188,14 @@ void main() {
       expect(audio.isPinnedTop, isTrue);
     });
 
-    test('ilk yükseklik medyanın oranından, ekranın %45inde tavan', () {
+    test('ilk yükseklik medyanın oranından; görselde ekranın yarısında, '
+        'videoda %45inde tavan', () {
       const screen = Size(400, 800);
       expect(defaultPinnedHeight(image, screen), 200);
+      // Görsel 2026-11-21'den beri ekranın yarısına kadar (kullanıcı:
+      // "fazla daraltmasın").
       final tall = image.copyWith(width: 500, height: 1000);
-      expect(defaultPinnedHeight(tall, screen), 360);
+      expect(defaultPinnedHeight(tall, screen), 400);
       final video = webVideoAttachment('https://youtu.be/dQw4w9WgXcQ')!;
       expect(defaultPinnedHeight(video, screen), closeTo(225, 0.01));
     });

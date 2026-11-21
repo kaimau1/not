@@ -37,10 +37,18 @@ extension _EditorGestures on _NoteEditorScreenState {
     // DOKUNUŞ / çok kısa çizgi: dokunulan KELİME (kullanıcı isteği
     // 2026-11-21: "tek kelimeye tıklanarak da seçilebilmeli").
     final tap = box.longestSide < 16;
+    // Yalnız BAĞLANABİLEN alanlar aday (gövde + maddeler): başlık gibi
+    // alanlar büyük halkanın payına girip seçimi çalıyordu (2026-11-21).
     final state = editableTextAt(
       root,
       box.center,
-      slop: tap ? 6 : box.height / 2,
+      slop: tap ? 6 : math.max(12.0, box.height / 2),
+      accept: (s) {
+        final c = s.widget.controller;
+        if (c is! WrapTextController) return false;
+        return identical(c, _bodyController) ||
+            _itemsEditorKey.currentState?.itemIdForController(c) != null;
+      },
     );
     final selection = state == null
         ? null
@@ -256,46 +264,5 @@ extension _EditorGestures on _NoteEditorScreenState {
     // Kalemin sürüklemesi alanda imleç açmış olabilir: jestten sonra bırak.
     if (!touch) FocusManager.instance.primaryFocus?.unfocus();
     _applyItemGesture(points, gesture);
-  }
-}
-
-/// "Daire çizerek bağla" kipindeyken alt şerit: ne çizileceğini söyler.
-class _GestureModeBanner extends StatelessWidget {
-  const _GestureModeBanner({required this.onClose});
-
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = _themeOf(context).colorScheme;
-    return Material(
-      color: scheme.secondaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
-        child: Row(
-          children: [
-            Icon(Icons.gesture, size: 18, color: scheme.onSecondaryContainer),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                l10n.embedLassoHint,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: _themeOf(context).textTheme.bodySmall
-                    ?.copyWith(color: scheme.onSecondaryContainer),
-              ),
-            ),
-            IconButton(
-              key: const ValueKey('gesture-mode-close'),
-              tooltip: l10n.close,
-              icon: const Icon(Icons.close, size: 18),
-              color: scheme.onSecondaryContainer,
-              onPressed: onClose,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

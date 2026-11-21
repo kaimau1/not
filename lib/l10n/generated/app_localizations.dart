@@ -5405,7 +5405,7 @@ abstract class AppLocalizations {
   /// No description provided for @attachmentTagEmbed.
   ///
   /// In tr, this message translates to:
-  /// **'Ek göm'**
+  /// **'Yazıya göm'**
   String get attachmentTagEmbed;
 
   /// No description provided for @bubbleModeBubble.
@@ -11429,8 +11429,14 @@ abstract class AppLocalizations {
   /// No description provided for @embedLassoHint.
   ///
   /// In tr, this message translates to:
-  /// **'Bağlanacak yazıyı parmağınla daire içine al · iki parmakla kaydır'**
-  String get embedLassoHint;
+  /// **'{name} bağlanacak — yazıyı daire içine al ya da kelimeye dokun · iki parmakla kaydır'**
+  String embedLassoHint(String name);
+
+  /// No description provided for @embedSelectMode.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçerek bağla'**
+  String get embedSelectMode;
 
   /// No description provided for @embedLassoMissed.
   ///
@@ -14617,6 +14623,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Üzerine kalemle yaz'**
   String get pinnedPenWrite;
+
+  /// No description provided for @pinnedShrinkToFit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daraltınca küçülsün'**
+  String get pinnedShrinkToFit;
 
   /// No description provided for @quickRowCamera.
   ///

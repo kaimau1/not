@@ -1010,6 +1010,18 @@ extension _EditorMediaView on _NoteEditorScreenState {
     );
   }
 
+
+  String? get _pinnedShrinkKey {
+    final id = _note?.id;
+    return id == null || id.isEmpty ? null : 'pinned_shrink_$id';
+  }
+
+  bool get _pinnedShrink {
+    final key = _pinnedShrinkKey;
+    if (key == null) return false;
+    return ref.read(sharedPreferencesProvider).getBool(key) ?? false;
+  }
+
   Widget _pinnedPane(
     Note note,
     Attachment pinned,
@@ -1024,6 +1036,17 @@ extension _EditorMediaView on _NoteEditorScreenState {
             side: side,
             onCycleSide: onCycleSide,
             penActive: _pagePen,
+            // NOT BAŞINA "daraltınca küçülsün" (2026-11-21; cihazda saklanır,
+            // varsayılan kapalı = PDF'teki gibi genişliğe oturur).
+            shrinkToFit: _pinnedShrink,
+            onShrinkToFitChanged: _note == null
+                ? null
+                : (v) {
+                    final key = _pinnedShrinkKey;
+                    if (key == null) return;
+                    unawaited(ref.read(sharedPreferencesProvider).setBool(key, v));
+                    _update(() {});
+                  },
             onHeightChanged: (h) =>
                 _updateAttachment(pinned.copyWith(pinHeight: h)),
             // Bölmeden çıkış (ayracı tepeye çekmek, ⋮ → Sayfaya göm) eki
@@ -1049,6 +1072,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
             sheetViewSwitch: (sheet) => _sheetViewSwitch(pinned, sheet),
             // Paneldeki kalem kapatıldı: editörün kalem kipi de kapanır.
             onPenOff: () => _update(() => _penMode = false),
+            onPenOn: _openPen,
             onCaption: _readOnly || pinned.kind != AttachmentKind.image
                 ? null
                 : () => unawaited(_editCaption(pinned)),

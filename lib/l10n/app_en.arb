@@ -1077,7 +1077,7 @@
   "archivePaperLegal": "Legal pad",
   "archivePaperEngineering": "Engineering",
   "archivePaperIsometric": "Isometric",
-  "attachmentTagEmbed": "Embed",
+  "attachmentTagEmbed": "Embed in text",
   "bubbleModeBubble": "Bubble",
   "attachmentTagEmbedInfo": "Links to your selected text, or at the cursor if nothing is selected",
   "attachmentTagPickText": "Now select the text to link, then tap \"Link here\".",
@@ -2383,7 +2383,15 @@
   },
   "customColor": "Custom colour…",
   "embedLasso": "Select by circling",
-  "embedLassoHint": "Circle the text to link with your finger · scroll with two fingers",
+  "embedLassoHint": "{name} will be linked — circle the text or tap a word · scroll with two fingers",
+  "@embedLassoHint": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "embedSelectMode": "Link by selecting",
   "embedLassoMissed": "No text inside the circle — draw around the text",
   "gestureItemDeleted": "Item deleted",
   "gestureFixing": "Fixing spelling…",
@@ -2960,6 +2968,7 @@
   "@notePackageCount": {"placeholders": {"count": {"type": "int"}}},
   "notePackageUnpack": "Unpack (put back into the note)",
   "pinnedPenWrite": "Write on it with the pen",
+  "pinnedShrinkToFit": "Shrink when narrowed",
   "quickRowCamera": "Take photo",
   "quickRowScan": "Scan document",
   "quickRowDate": "Insert date and time",

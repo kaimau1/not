@@ -108,17 +108,27 @@ class _YouTubeLinkDialogState extends State<_YouTubeLinkDialog> {
   }
 }
 
+/// **TEK BAĞLAMA ŞERİDİ** (kullanıcı bulgusu 2026-11-21: "iki farklı ek göm
+/// yazısı var, birlik yok"): eskiden bağlama kipinde iki ayrı şerit vardı —
+/// daire kipinde "Bağlanacak yazıyı daire içine al…", ✕ ile çıkınca "{ad}
+/// bağlanacak — yazıyı seç / Buraya bağla". Artık tek şerit: ad hep görünür,
+/// kip düğmesi daire ↔ seçerek bağlama arasında geçer, "Buraya bağla"
+/// yalnız seçerek bağlamada, ✕ bağlamayı tümden iptal eder.
 class _PendingEmbedBanner extends StatelessWidget {
   const _PendingEmbedBanner({
     required this.fileName,
+    required this.lasso,
     required this.onPointerDown,
     required this.onLink,
-    required this.onLasso,
+    required this.onToggleLasso,
     required this.onCancel,
   });
 
   final String fileName;
-  final VoidCallback onLasso;
+
+  /// Daire çizerek bağlama kipi açık mı.
+  final bool lasso;
+  final VoidCallback onToggleLasso;
 
   /// Şeride PARMAK DEĞER DEĞMEZ (dokunuşun işlenmesinden, dolayısıyla olası
   /// odak/seçim kaybından ÖNCE) çağrılır — bkz. `_lastSelection`.
@@ -146,12 +156,18 @@ class _PendingEmbedBanner extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
               child: Row(
                 children: [
-                  Icon(Icons.link, size: 18, color: scheme.onTertiaryContainer),
+                  Icon(
+                    lasso ? Icons.gesture : Icons.link,
+                    size: 18,
+                    color: scheme.onTertiaryContainer,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      l10n.attachmentTagPendingBanner(fileName),
-                      maxLines: 2,
+                      lasso
+                          ? l10n.embedLassoHint(fileName)
+                          : l10n.attachmentTagPendingBanner(fileName),
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: _themeOf(context).textTheme.bodySmall
                           ?.copyWith(color: scheme.onTertiaryContainer),
@@ -159,16 +175,21 @@ class _PendingEmbedBanner extends StatelessWidget {
                   ),
                   IconButton(
                     key: const ValueKey('embed-lasso'),
-                    tooltip: l10n.embedLasso,
-                    icon: const Icon(Icons.gesture, size: 20),
+                    tooltip: lasso ? l10n.embedSelectMode : l10n.embedLasso,
+                    icon: Icon(
+                      lasso ? Icons.text_fields : Icons.gesture,
+                      size: 20,
+                    ),
                     color: scheme.onTertiaryContainer,
-                    onPressed: onLasso,
+                    onPressed: onToggleLasso,
                   ),
-                  TextButton(
-                    onPressed: onLink,
-                    child: Text(l10n.attachmentTagLinkHere),
-                  ),
+                  if (!lasso)
+                    TextButton(
+                      onPressed: onLink,
+                      child: Text(l10n.attachmentTagLinkHere),
+                    ),
                   IconButton(
+                    key: const ValueKey('embed-cancel'),
                     tooltip: l10n.cancel,
                     icon: const Icon(Icons.close, size: 18),
                     color: scheme.onTertiaryContainer,

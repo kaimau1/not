@@ -12,6 +12,7 @@ import '../../../core/app_icons.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
@@ -246,6 +247,7 @@ class LinkedNotesList extends ConsumerWidget {
     super.key,
     required this.noteIds,
     this.onUnlink,
+    this.onDelete,
     this.times = const {},
     this.onSetTime,
     this.preloadedNotes,
@@ -254,6 +256,10 @@ class LinkedNotesList extends ConsumerWidget {
 
   final List<String> noteIds;
   final ValueChanged<String>? onUnlink;
+
+  /// Notu SİLER (çöpe, geri alınabilir — kullanıcı isteği 2026-11-21:
+  /// "takvimde notu sil seçeneği olmalı, çöp işareti"). Kilitli notta yok.
+  final ValueChanged<Note>? onDelete;
 
   /// Güne SAATLE bağlı notlar (not → gün başından dakika).
   final Map<String, int> times;
@@ -398,6 +404,9 @@ class LinkedNotesList extends ConsumerWidget {
                 ? null
                 : () => unawaited(_pickTime(context, resolved[i].id)),
             onUnlink: onUnlink == null ? null : () => onUnlink!(resolved[i].id),
+            onDelete: onDelete == null || resolved[i].locked
+                ? null
+                : () => onDelete!(resolved[i]),
           ),
         ],
       ],
@@ -422,6 +431,7 @@ class _LinkedNotePreviewCard extends StatelessWidget {
     required this.onTap,
     required this.onPickTime,
     required this.onUnlink,
+    this.onDelete,
   });
 
   final Note note;
@@ -429,6 +439,7 @@ class _LinkedNotePreviewCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onPickTime;
   final VoidCallback? onUnlink;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -579,6 +590,23 @@ class _LinkedNotePreviewCard extends StatelessWidget {
                                 color: scheme.onSurfaceVariant,
                               ),
                               onPressed: onUnlink,
+                            ),
+                          if (onDelete != null)
+                            IconButton(
+                              key: ValueKey('linked-note-delete-${note.id}'),
+                              tooltip: l10n.delete,
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 32,
+                                minHeight: 32,
+                              ),
+                              icon: Icon(
+                                Icons.delete_outline,
+                                size: AppIconSize.s,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                              onPressed: onDelete,
                             ),
                         ],
                       ),
@@ -772,6 +800,7 @@ Future<void> showCalendarNotePreviewSheet(
   VoidCallback? onOpenFull,
   VoidCallback? onPickTime,
   VoidCallback? onUnlink,
+  VoidCallback? onDelete,
 }) => showAppSheet<void>(
   context: context,
   builder: (sheetCtx) {
@@ -909,6 +938,20 @@ Future<void> showCalendarNotePreviewSheet(
                       onPressed: () {
                         Navigator.pop(sheetCtx);
                         onUnlink();
+                      },
+                    ),
+                  if (onDelete != null && !note.locked)
+                    IconButton(
+                      key: const ValueKey('calendar-note-preview-delete'),
+                      tooltip: l10n.delete,
+                      icon: Icon(
+                        Icons.delete_outline,
+                        size: AppIconSize.m,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(sheetCtx);
+                        onDelete();
                       },
                     ),
                   IconButton(
@@ -1217,4 +1260,24 @@ class _GoogleEventSheet extends ConsumerWidget {
     return '$day · ${DateFormat.Hm().format(start)}–'
         '${DateFormat.Hm().format(end)}';
   }
+}
+
+/// Takvimden notu SİLER: çöpe taşır, bildirimde "Geri al" (ana ekrandaki
+/// silmeyle aynı yol — [NotesRepository.softDelete]). Kilitli not
+/// silinmez (kimlik doğrulaması ana ekranda).
+void deleteNoteFromCalendar(BuildContext context, Note note) {
+  if (note.locked) return;
+  final repo = ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(notesRepositoryProvider);
+  if (repo == null) return;
+  final l10n = context.l10n;
+  repo.softDelete(note.id);
+  showUndoSnackBar(
+    context,
+    message: l10n.noteDeleted,
+    undoLabel: l10n.undo,
+    onUndo: () => repo.restore(note.id),
+  );
 }

@@ -53,6 +53,8 @@ void main() {
         '.QuickNoteWidgetProvider',
         '.QuickAddWidgetProvider',
         '.QuickAddBarWidgetProvider',
+        // AL-6 (P97): Akıllı liste ana ekran aracı.
+        '.SmartListWidgetProvider',
         // AppFunctions: BIND_APP_FUNCTION_SERVICE (yalnız sistem bağlanır).
         '.AjanServisi',
         // HE-3 (P84): paylaşım/metin seçimi "Nota ekle" — metni yalnız hızlı

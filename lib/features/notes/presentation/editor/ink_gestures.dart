@@ -142,26 +142,52 @@ InkGesture classifyInkGesture(List<Offset> points) {
 
 /// [global] noktanın üstündeki (ya da en yakın, [slop] içinde) düzenlenebilir
 /// metin alanı. [root] altındaki öğe ağacı bir kez dolaşılır — yalnız çizgi
-/// bitince çağrılır.
+/// bitince çağrılır. [accept] verilirse yalnız onu geçen alanlar aday olur.
+///
+/// **EN YAKIN ALAN** (kullanıcı bulgusu 2026-11-21: "dairenin içinde yazı
+/// bulunamadı"): eskiden ağaçta İLK rastlanan alan dönüyordu. Büyük halkada
+/// pay (halka boyunun yarısı) büyüdüğü için yukarıdaki BAŞLIK alanı önce
+/// tutuyor, onun denetleyicisi bağlanamadığından "bulunamadı" çıkıyordu.
+/// Artık noktayı İÇEREN alanlar önce (en küçüğü — iç içe alanda en
+/// özeli), yoksa kenarı noktaya en yakın olan seçilir.
 EditableTextState? editableTextAt(
   BuildContext root,
   Offset global, {
   double slop = 10,
+  bool Function(EditableTextState state)? accept,
 }) {
-  EditableTextState? found;
+  EditableTextState? best;
+  var bestScore = double.infinity;
   void visit(Element element) {
-    if (found != null) return;
     if (element is StatefulElement && element.state is EditableTextState) {
       final state = element.state as EditableTextState;
       final RenderEditable box = state.renderEditable;
-      if (box.attached && box.hasSize) {
+      if (box.attached && box.hasSize && (accept == null || accept(state))) {
         final rect = MatrixUtils.transformRect(
           box.getTransformTo(null),
           Offset.zero & box.size,
         );
         if (rect.inflate(slop).contains(global)) {
-          found = state;
-          return;
+          // İçeren alan: puan = −1/alan (küçük alan önde); dışarıdaki:
+          // kenara uzaklık (her zaman içerenlerden sonra).
+          final double score;
+          if (rect.contains(global)) {
+            score = -1 / math.max(1.0, rect.width * rect.height);
+          } else {
+            final dx = math.max(
+              0.0,
+              math.max(rect.left - global.dx, global.dx - rect.right),
+            );
+            final dy = math.max(
+              0.0,
+              math.max(rect.top - global.dy, global.dy - rect.bottom),
+            );
+            score = math.sqrt(dx * dx + dy * dy);
+          }
+          if (score < bestScore) {
+            bestScore = score;
+            best = state;
+          }
         }
       }
     }
@@ -169,7 +195,7 @@ EditableTextState? editableTextAt(
   }
 
   root.visitChildElements(visit);
-  return found;
+  return best;
 }
 
 /// Daire içine alınan bölgenin metin seçimi ([editable]'ın GÖRÜNTÜ metni

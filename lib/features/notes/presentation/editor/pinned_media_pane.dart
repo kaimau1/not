@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show BoxHitTestResult, PipelineOwner, RenderProxyBox;
 import 'package:flutter/scheduler.dart';
 
 import '../../../../app/theme/app_tokens.dart';
@@ -95,7 +96,11 @@ double defaultPinnedHeight(Attachment media, Size screen) {
   final natural = screen.width * ratio;
   // Belge okunacak kadar uzun açılır (A4 sayfa ekranın yarısında bile
   // okunur); görsel/video ekranın %45'ini geçmez.
-  final max = screen.height * (pdf ? 0.5 : 0.45);
+  // 2026-11-21: görsel de ekranın yarısına kadar (kullanıcı: "fazla
+  // daraltmasın").
+  final max = screen.height * (pdf || media.kind == AttachmentKind.image
+      ? 0.5
+      : 0.45);
   return natural.clamp(
     kPinnedMinHeight,
     max < kPinnedMinHeight ? kPinnedMinHeight : max,
@@ -126,6 +131,9 @@ class PinnedMediaPane extends StatefulWidget {
     this.viewSwitch,
     this.sheetViewSwitch,
     this.onPenOff,
+    this.onPenOn,
+    this.shrinkToFit = false,
+    this.onShrinkToFitChanged,
     this.onCaption,
     this.onNoteAt,
     this.bubbleDoc,
@@ -146,6 +154,22 @@ class PinnedMediaPane extends StatefulWidget {
   /// düğmesi aynı katmanı yalnız bu bölme için açar. Düğme iki durumda da
   /// görünür ve açık durumu gösterir (bkz. `_togglePen`).
   final bool penActive;
+
+  /// Çubuğun kalem düğmesi AÇARKEN editörün NORMAL kalem kipini açar
+  /// (kullanıcı isteği 2026-11-21: "PDF'de kalem basınca panel değişmesin,
+  /// bizim normal kalem özellikleri açılsın"). null ise bölme eski usul
+  /// kendi hızlı kalemini açar ([_penTools]).
+  final VoidCallback? onPenOn;
+
+  /// **DARALTINCA KÜÇÜLSÜN MÜ** (kullanıcı isteği 2026-11-21: "görselde
+  /// yukarı sürükleyince görsel küçülüyor, PDF'te küçülmüyor — tutarsız;
+  /// PDF'teki güzel ama iki seçenek de olsun, not başına, varsayılan
+  /// PDF'teki gibi"). false (varsayılan): medya bölmenin GENİŞLİĞİNE oturur,
+  /// boyu taşarsa dikeyde kayar. true: medya bölmeye sığacak kadar küçülür.
+  final bool shrinkToFit;
+
+  /// ⋮ menüsündeki anahtar; null ise anahtar yok.
+  final ValueChanged<bool>? onShrinkToFitChanged;
 
   /// YAN YERLEŞİM (2026-11-09): medya bölmenin TAMAMINI kaplar (not öbür
   /// sütunda, [child] boş); çubuktan boy sürüklenmez.
@@ -607,6 +631,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       _ink = null;
       _inkSeen = null;
       _ownPen = false;
+      _imageScroll.offset = 0;
     }
     final doc = widget.bubbleDoc;
     if (doc != null) {
@@ -651,6 +676,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       WidgetsBinding.instance.addPostFrameCallback((_) => immersive(false));
     }
     _imageZoom.dispose();
+    _imageScroll.dispose();
     super.dispose();
   }
 
@@ -689,6 +715,62 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       );
     },
   );
+
+  /// Görsel genişliğe oturma kipinde dikey kaydırma (bkz. [_fitWidthImage]).
+  final _imageScroll = _FitScroll();
+
+  /// Genişliğe oturan görsel parmakla/fareyle kayar mı: yakınken pan,
+  /// kalem parmakla çizerken çizim kazanır.
+  bool get _imageScrolls =>
+      _fitsWidth && !_imageZoomed && (!_penOn || _policy.fingerScrolls);
+
+  bool get _fitsWidth =>
+      widget.media.kind == AttachmentKind.image &&
+      !widget.shrinkToFit &&
+      !widget.fill &&
+      _fitRatio(widget.media) != null;
+
+  /// **GÖRSEL GENİŞLİĞE OTURUR** ([PinnedMediaPane.shrinkToFit] kapalı):
+  /// görsel bölmenin genişliğinde doğal boyuyla dizilir, bölme daha kısaysa
+  /// dikeyde kayar (PDF'teki gibi). Balon/çizim katmanları aynı kutuda —
+  /// `contain` dikdörtgeni kutunun kendisi olur, koordinatlar bozulmaz.
+  ///
+  /// TEK widget (keyboard_jank_guard S17: klavye geçiş karesinde medya
+  /// alt ağacı yeniden kuruluyor, bütçede pay yok): kaydırıcı widget yerine
+  /// kaydırmayı boyamada uygulayan bir kutu ([_FitWidthBox]); sürükleme
+  /// medyanın VAR OLAN jest algılayıcısında.
+  Widget _fitWidthImage(bool isImage, Widget child) {
+    if (!_fitsWidth) return child;
+    return _FitWidthBox(
+      key: ValueKey('pinned-image-scroll-${widget.media.id}'),
+      ratio: _fitRatio(widget.media)!,
+      scroll: _imageScroll,
+      child: child,
+    );
+  }
+
+  /// **PDF KÜÇÜLEREK SIĞAR** ([PinnedMediaPane.shrinkToFit] açık): sayfa bir
+  /// sayfa boyunda dizilir, bölme kısaysa bütün sayfa görünecek kadar
+  /// küçültülerek boyanır (isabet testi dönüşümden geçer: kalem ve balon
+  /// doğru yere düşer). Kapalıyken (varsayılan) dokunulmaz.
+  Widget _shrinkPdf(Widget child) {
+    final ratio = _fitRatio(widget.media);
+    if (!widget.shrinkToFit || ratio == null) return child;
+    return LayoutBuilder(
+      builder: (context, box) {
+        if (!box.maxHeight.isFinite || box.maxWidth <= 0) return child;
+        final natural = box.maxWidth * ratio;
+        return FittedBox(
+          alignment: Alignment.topCenter,
+          child: SizedBox(
+            width: box.maxWidth,
+            height: math.max(natural, box.maxHeight),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   /// Görsel + balonlar iki parmakla yakınlaşır; yakınken tek parmak gezdirir.
   Widget _zoomable({required bool enabled, required Widget child}) {
@@ -1079,7 +1161,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                     // tutularak seçilir → "Not al".
                     ? ColoredBox(
                         color: PdfReadStyle.of(context).background,
-                        child: WebDriveGate(
+                        child: _shrinkPdf(WebDriveGate(
                           attachment: widget.media,
                           // KALEMLE YAZARKEN kalem sayfayı kaydırmaz (çizer);
                           // parmak kaydırır ("yalnız kalem" açıksa).
@@ -1111,7 +1193,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                             onNoteFromSelection: widget.onPdfNote,
                           ),
                           ),
-                        ),
+                        )),
                       )
                     : GestureDetector(
                         onTap: isVideo
@@ -1140,6 +1222,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                             ? (d) => _doubleTapAt = d.localPosition
                             : null,
                         onDoubleTap: isImage ? _toggleImageZoom : null,
+                        // Genişliğe oturan görselde dikey kaydırma (bkz.
+                        // [_fitWidthImage]).
+                        onVerticalDragUpdate: _imageScrolls
+                            ? (d) => _imageScroll.by(-d.delta.dy)
+                            : null,
                         // BASILI TUT = METİN SEÇİMİ (kullanıcı kararı
                         // 2026-11-05: "basılı tutmak metin seçimini açsın,
                         // balon sadece butonla eklensin"): yazılabilir
@@ -1198,7 +1285,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                           child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            _zoomable(
+                            _fitWidthImage(isImage, _zoomable(
                               enabled: isImage,
                               child: Stack(
                                 fit: StackFit.expand,
@@ -1241,7 +1328,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                                     _imageInkLayer(),
                                 ],
                               ),
-                            ),
+                            )),
                             // Parmak çizerken (kalem kipi, "yalnız kalem"
                             // kapalı) iki parmak yakınlaştırır/kaydırır:
                             // dokunuşları çizim üstlendiği için dönüşümü bu
@@ -1399,6 +1486,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// editörün kalem kipini kapatır ([PinnedMediaPane.onPenOff]).
   void _togglePen() {
     final on = _policy.layerActive;
+    if (!on && widget.onPenOn != null && !widget.penActive) {
+      if (!InkToolMemory.autoStylus) InkToolMemory.saveAutoStylus(true);
+      widget.onPenOn!();
+      return;
+    }
     setState(() => _ownPen = !on);
     if (on) {
       if (widget.penActive) widget.onPenOff?.call();
@@ -1911,6 +2003,16 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               : l10n.videoNoteAtTime,
           widget.onNoteAt!,
         ),
+      if (widget.onShrinkToFitChanged != null &&
+          !widget.fill &&
+          (media.kind == AttachmentKind.image ||
+              media.kind == AttachmentKind.pdf))
+        tile(
+          'pinned-action-shrink',
+          widget.shrinkToFit ? Icons.toggle_on : Icons.toggle_off_outlined,
+          l10n.pinnedShrinkToFit,
+          () => widget.onShrinkToFitChanged!(!widget.shrinkToFit),
+        ),
       for (final action in actions)
         if (action != AttachmentAction.remove)
           Builder(
@@ -2276,4 +2378,128 @@ class _WindowClip extends CustomClipper<Rect> {
   @override
   bool shouldReclip(_WindowClip oldClipper) =>
       oldClipper.laid != laid || oldClipper.dy != dy;
+}
+
+/// [_FitWidthBox]'ın kaydırma durumu: konum ve (son yerleşimden) tavan.
+class _FitScroll extends ChangeNotifier {
+  double offset = 0;
+  double max = 0;
+
+  void by(double dy) {
+    final next = (offset + dy).clamp(0.0, max);
+    if (next == offset) return;
+    offset = next;
+    notifyListeners();
+  }
+}
+
+/// Çocuğu bölmenin genişliğinde, [ratio] × genişlik boyunda dizer; bölmeyi
+/// doldurur ve çocuğu [scroll] kadar yukarı kaydırıp kırparak boyar.
+/// Kaydırma yalnız boyama + isabet testi (yeniden kurulum/yerleşim yok).
+class _FitWidthBox extends SingleChildRenderObjectWidget {
+  const _FitWidthBox({
+    super.key,
+    required this.ratio,
+    required this.scroll,
+    required super.child,
+  });
+
+  final double ratio;
+  final _FitScroll scroll;
+
+  @override
+  _RenderFitWidthBox createRenderObject(BuildContext context) =>
+      _RenderFitWidthBox(ratio, scroll);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderFitWidthBox r) {
+    r
+      ..ratio = ratio
+      ..scroll = scroll;
+  }
+}
+
+class _RenderFitWidthBox extends RenderProxyBox {
+  _RenderFitWidthBox(this._ratio, this._scroll);
+
+  double _ratio;
+  set ratio(double v) {
+    if (v == _ratio) return;
+    _ratio = v;
+    markNeedsLayout();
+  }
+
+  _FitScroll _scroll;
+  set scroll(_FitScroll v) {
+    if (identical(v, _scroll)) return;
+    if (attached) {
+      _scroll.removeListener(_changed);
+      v.addListener(_changed);
+    }
+    _scroll = v;
+    markNeedsPaint();
+  }
+
+  void _changed() {
+    markNeedsPaint();
+    markNeedsSemanticsUpdate();
+  }
+
+  double get _dy => _scroll.offset.clamp(0.0, _scroll.max);
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _scroll.addListener(_changed);
+  }
+
+  @override
+  void detach() {
+    _scroll.removeListener(_changed);
+    super.detach();
+  }
+
+  @override
+  void performLayout() {
+    size = constraints.biggest;
+    final child = this.child;
+    if (child == null) return;
+    final width = size.width;
+    final height = math.max(width * _ratio, size.height);
+    child.layout(BoxConstraints.tight(Size(width, height)));
+    _scroll.max = math.max(0, height - size.height);
+    if (_scroll.offset > _scroll.max) _scroll.offset = _scroll.max;
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+    context.pushClipRect(
+      needsCompositing,
+      offset,
+      Offset.zero & size,
+      (context, offset) =>
+          context.paintChild(child, offset + Offset(0, -_dy)),
+    );
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final child = this.child;
+    if (child == null || !(Offset.zero & size).contains(position)) {
+      return false;
+    }
+    return result.addWithPaintOffset(
+      offset: Offset(0, -_dy),
+      position: position,
+      hitTest: (result, transformed) =>
+          child.hitTest(result, position: transformed),
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.translateByDouble(0, -_dy, 0, 1);
+  }
 }

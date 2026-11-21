@@ -2928,7 +2928,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archivePaperIsometric => 'Isometric';
 
   @override
-  String get attachmentTagEmbed => 'Embed';
+  String get attachmentTagEmbed => 'Embed in text';
 
   @override
   String get bubbleModeBubble => 'Bubble';
@@ -6403,8 +6403,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get embedLasso => 'Select by circling';
 
   @override
-  String get embedLassoHint =>
-      'Circle the text to link with your finger · scroll with two fingers';
+  String embedLassoHint(String name) {
+    return '$name will be linked — circle the text or tap a word · scroll with two fingers';
+  }
+
+  @override
+  String get embedSelectMode => 'Link by selecting';
 
   @override
   String get embedLassoMissed =>
@@ -8198,6 +8202,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinnedPenWrite => 'Write on it with the pen';
+
+  @override
+  String get pinnedShrinkToFit => 'Shrink when narrowed';
 
   @override
   String get quickRowCamera => 'Take photo';

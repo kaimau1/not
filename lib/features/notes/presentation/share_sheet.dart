@@ -705,14 +705,35 @@ Future<void> runNoteShare(
         // kalemle yazınca görsel olarak paylaşmıyor, değişik dosya türü"):
         // eskiden yalnız notun metni dizilip belge hiç gitmiyordu. Belge
         // notunda (balonlu) yalnız basılı belge; metin notunda not + belge.
-        final stamped = await NoteQuickExport.annotatedPdfs(
+        // TAM BELGE (kullanıcı bulgusu 2026-11-21, ikinci tur: "PDF'yi
+        // paylaştım, yalnız başlık çıktı"): nottaki PDF ekleri — çizimli/
+        // balonlu olan damgalı, balonlar açık — HER not türünde gider.
+        // Notun kendi yazısı/görseli varsa onun sayfası da ayrı dosya olarak
+        // eklenir; yalnız belge taşıyan notta "başlık + tarih" sayfası yok.
+        final docs = await NoteQuickExport.documentPdfs(
           note,
           attachments: ref.read(attachmentRepositoryProvider),
           baseName: NotePdf.safeFileName(subject),
         );
-        if (stamped.isNotEmpty && note.type.isPageNoteType) {
+        if (docs.isNotEmpty) {
           final files = <XFile>[];
-          for (final (name, bytes) in stamped) {
+          final own =
+              !note.type.isPageNoteType &&
+                  NoteQuickExport.hasOwnContent(note, options)
+              ? await NoteQuickExport.pdf(
+                  note,
+                  options: options,
+                  attachments: ref.read(attachmentRepositoryProvider),
+                  palette: NoteColors.richPalette,
+                  style: PdfNoteStyle.forNote(theme, note),
+                )
+              : null;
+          final all = [
+            if (own != null)
+              (NotePdf.safeFileName('${subject}_not'), own),
+            ...docs,
+          ];
+          for (final (name, bytes) in all) {
             if (choice == 'png') {
               files.addAll(await NoteQuickExport.pngPages(bytes, name: name));
             } else if (kIsWeb) {

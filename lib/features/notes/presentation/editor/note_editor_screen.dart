@@ -4500,21 +4500,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // Kip görünmez olsaydı kullanıcı ne beklendiğini
                 // bilemezdi (ek seçildi ama ekranda hiçbir şey
                 // değişmiyor).
-                if (_gestureMode != _GestureMode.off)
-                  _GestureModeBanner(
-                    onClose: () => _setGestureMode(_GestureMode.off),
-                  )
-                else if (_pendingEmbed != null)
+                if (_pendingEmbed != null)
                   _PendingEmbedBanner(
                     fileName: _pendingEmbed!.fileName,
+                    lasso: _gestureMode == _GestureMode.embedLasso,
                     // Parmak şeride DEĞDİĞİ an seçim yedeklenir: sonraki
                     // karede odak düşse bile bağlanacak yazı elde kalır.
                     onPointerDown: _rememberTargetSelection,
                     onLink: _finishPendingEmbed,
-                    // DAİRE İÇİNE AL (kullanıcı isteği 2026-10-30): yazıyı
-                    // elle seçmek yerine parmakla halka çizilir.
-                    onLasso: () => _setGestureMode(_GestureMode.embedLasso),
-                    onCancel: () => setState(() => _pendingEmbed = null),
+                    // DAİRE İÇİNE AL (kullanıcı isteği 2026-10-30) ↔ yazıyı
+                    // seçerek bağla: tek şeritte kip düğmesi.
+                    onToggleLasso: () => _setGestureMode(
+                      _gestureMode == _GestureMode.embedLasso
+                          ? _GestureMode.off
+                          : _GestureMode.embedLasso,
+                    ),
+                    onCancel: () {
+                      _setGestureMode(_GestureMode.off);
+                      setState(() => _pendingEmbed = null);
+                    },
                   ),
                 // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
                 // ikon yeterince belirgin değildi, mikrofon farkına varılmadan

@@ -34,6 +34,9 @@ void main() {
     Attachment media, {
     bool penActive = false,
     VoidCallback? onOpen,
+    // Bu dosyadaki ölçüler "küçülerek sığ" (contain) kipinin; varsayılan
+    // genişliğe oturma ayrı testte (2026-11-21).
+    bool shrinkToFit = true,
   }) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1;
@@ -50,6 +53,7 @@ void main() {
             builder: (context, setState) => PinnedMediaPane(
               media: current,
               penActive: penActive,
+              shrinkToFit: shrinkToFit,
               onHeightChanged: (_) {},
               onUnpin: () {},
               onOpen: onOpen ?? () {},
@@ -146,6 +150,52 @@ void main() {
       matching: find.byType(Positioned),
     );
     expect(tester.getRect(layer.first), rect.shift(origin));
+  });
+
+  testWidgets('VARSAYILAN genişliğe oturur: görsel küçülmez, bölmede kayar; '
+      'çizim tam genişlikte (kullanıcı isteği 2026-11-21)', (tester) async {
+    await pump(
+      tester,
+      image.copyWith(
+        ink: const [
+          InkStroke(
+            page: 1,
+            color: 0xFF000000,
+            width: 0.01,
+            points: [0.1, 0.1, 0.9, 0.9],
+          ),
+        ],
+      ),
+      shrinkToFit: false,
+    );
+    final painters = find.byWidgetPredicate(
+      (w) =>
+          w is CustomPaint &&
+          (w.painter is InkPainter || w.painter is CommittedInkPainter),
+    );
+    final origin = tester.getTopLeft(find.byType(PinnedMediaPane));
+    final layer = find.ancestor(
+      of: painters,
+      matching: find.byType(Positioned),
+    );
+    // 2:1 görsel 400 genişlikte 200 boy; bölme 120 → kayar.
+    expect(
+      tester.getRect(layer.first),
+      const Rect.fromLTWH(0, 0, 400, 200).shift(origin),
+    );
+    final scroll = find.byKey(const ValueKey('pinned-image-scroll-g'));
+    expect(scroll, findsOneWidget);
+    // Yukarı sürükleyince görsel kayar (en çok 200 − 120 = 80 dp).
+    await tester.dragFrom(
+      origin + const Offset(200, 100),
+      const Offset(0, -300),
+    );
+    await tester.pump();
+    expect(
+      tester.getRect(layer.first),
+      const Rect.fromLTWH(0, -80, 400, 200).shift(origin),
+    );    // Çift dokunuş/uzun basış zamanlayıcıları dolsun.
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('kalem kipinde (kalemsiz cihaz) parmak çizer, görüntüleyici '

@@ -599,8 +599,10 @@ class _MonthCell extends StatelessWidget {
                 final twoLine = wide
                     ? kMonthChipTwoLineWide
                     : kMonthChipTwoLine;
+                // DAR GÖRÜNÜMDE DE iki satır (kullanıcı bulgusu 2026-11-21:
+                // "29 Ekim Bayramı gibi şeyler sığmamış" — panel açıkken
+                // hücre tek satıra kırpıyordu "29 Ekim Ba"): yer varsa.
                 final twoLines =
-                    !compact &&
                     primaryChips.isNotEmpty &&
                     noteTags.isEmpty &&
                     primaryChips.length * (twoLine + 1) <= avail;

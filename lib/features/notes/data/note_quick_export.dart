@@ -272,30 +272,42 @@ class NoteQuickExport {
     );
   }
 
-  /// Nottaki çizimli/balonlu PDF eklerinin basılmış kopyaları (ad, bayt).
-  /// Hızlı "PDF" ve "Görsel" paylaşımı belge notunda bunları gönderir:
-  /// eskiden yalnız notun METNİ dizilip belge ve üstündeki yazı hiç
-  /// gitmiyordu (kullanıcı bulgusu 2026-11-21).
-  static Future<List<(String, Uint8List)>> annotatedPdfs(
+  /// Nottaki TÜM PDF eklerinin paylaşılacak kopyaları (ad, bayt): çizimli/
+  /// balonlu olan damgalı (balonlar AÇIK basılır), olmayan olduğu gibi.
+  /// Metin notunun "PDF" paylaşımı eskiden yalnız notun yazısını diziyordu;
+  /// ekteki belge ve üstündeki kalem hiç gitmiyor, boş notta tek sayfalık
+  /// "başlık + tarih" çıkıyordu (kullanıcı bulgusu 2026-11-21).
+  static Future<List<(String, Uint8List)>> documentPdfs(
     Note note, {
     required AttachmentRepository? attachments,
     required String baseName,
   }) async {
     if (attachments == null) return const [];
     final out = <(String, Uint8List)>[];
-    for (final a in note.attachments) {
-      if (a.kind != AttachmentKind.pdf || !hasPdfAnnotations(a)) continue;
+    for (final a in shareableAttachments(note)) {
+      if (a.kind != AttachmentKind.pdf) continue;
       try {
-        final burned = await burnedPdf(a, attachments);
-        if (burned == null) continue;
+        final raw = await attachments.readBytes(a);
+        if (raw == null) continue;
+        final burned = hasPdfAnnotations(a)
+            ? await burnedPdf(a, attachments, raw: raw)
+            : null;
         final n = out.length + 1;
-        out.add((n > 1 ? '$baseName-$n' : baseName, burned));
+        out.add((n > 1 ? '$baseName-$n' : baseName, burned ?? raw));
       } catch (_) {
         // Okunamayan belge paylaşımı düşürmez.
       }
     }
     return out;
   }
+
+  /// Notun KENDİ PDF sayfası gerekli mi: başlık dışında yazı ya da görsel
+  /// varsa. Yalnız belge taşıyan notta "başlık + tarih" sayfası gönderilmez.
+  static bool hasOwnContent(Note note, ShareTextOptions options) =>
+      contentOf(note, options).trim().isNotEmpty ||
+      note.attachments.any(
+        (a) => a.kind == AttachmentKind.image && a.id != note.backgroundImageId,
+      );
 }
 
 /// PDF ekinin üstünde çizim ya da balon var mı (paylaşımda basılır).

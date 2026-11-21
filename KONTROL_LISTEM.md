@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **PDF/takvim/ek göm düzeltmeleri (21 Kasım, ekran görüntüsü turu, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) PDF'li notu ⋮ → Paylaş → **PDF**: belge tüm sayfalarıyla, kalem yazısı ve açık balonlarla gidiyor mu. (2) Sabit PDF'in altındaki kalem düğmesi normal kalem araçlarını açıyor, bölme çubuğu değişmiyor mu. (3) Sabit görselde bölmeyi yukarı çek: görsel küçülmeden kayıyor mu; ⋮ → **Daraltınca küçülsün** açınca küçülüyor mu. (4) Takvim: gün paneli kartında ve önizlemede çöp düğmesi siliyor (Geri al) mu; geri tuşu panel+seçim → (hafta ise ay) → ana ekran sırasıyla mı; uzun ay görünümü alt tuşların üstünde bitiyor mu; panel açıkken "29 Ekim Bayramı" iki satır mı. (5) Ek bağlarken büyük daireyle yazı seçiliyor, tek şerit görünüyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Akıllı Liste ana ekran aracı (AL-6) (21 Kasım, P97, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: Android ana ekranda widget ekle → Notlar → **Akıllı liste** (3×3) ekle → etkin alışveriş/kontrol listesinin başlığı, kalan sayısı ve ilk 5 işaretlenmemiş maddesi görünüyor mu; kilitli/gizli klasördeki liste sızmıyor mu; karta dokununca liste notu doğrudan açılıyor, sağ üst `+` düğmesi **Hızlı ekle** levhasını açıyor mu; tema (Açık/Koyu) değişince widget da uyum sağlıyor mu.
   Yanlışsa: madde numarasını yaz.

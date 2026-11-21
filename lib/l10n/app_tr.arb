@@ -1361,7 +1361,7 @@
   "archivePaperLegal": "Bloknot",
   "archivePaperEngineering": "Milimetrik",
   "archivePaperIsometric": "İzometrik",
-  "attachmentTagEmbed": "Ek göm",
+  "attachmentTagEmbed": "Yazıya göm",
   "bubbleModeBubble": "Balon",
   "attachmentTagEmbedInfo": "Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır",
   "attachmentTagPickText": "Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.",
@@ -3057,7 +3057,15 @@
   },
   "customColor": "Özel renk…",
   "embedLasso": "Daire çizerek seç",
-  "embedLassoHint": "Bağlanacak yazıyı parmağınla daire içine al · iki parmakla kaydır",
+  "embedLassoHint": "{name} bağlanacak — yazıyı daire içine al ya da kelimeye dokun · iki parmakla kaydır",
+  "@embedLassoHint": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "embedSelectMode": "Seçerek bağla",
   "embedLassoMissed": "Dairenin içinde yazı bulunamadı — yazının çevresine çiz",
   "gestureItemDeleted": "Madde silindi",
   "gestureFixing": "Yazım düzeltiliyor…",
@@ -3784,6 +3792,7 @@
   "@notePackageCount": {"placeholders": {"count": {"type": "int"}}},
   "notePackageUnpack": "Paketi çöz (nota geri koy)",
   "pinnedPenWrite": "Üzerine kalemle yaz",
+  "pinnedShrinkToFit": "Daraltınca küçülsün",
   "quickRowCamera": "Fotoğraf çek",
   "quickRowScan": "Belge tara",
   "quickRowDate": "Tarih ve saat ekle",

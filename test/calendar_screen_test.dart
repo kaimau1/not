@@ -624,6 +624,40 @@ void main() {
       expect(find.text('Mart 2026'), findsOneWidget);
     });
 
+    // Kullanıcı isteği 2026-11-21: geri sırayla — hafta → ay; açık panel
+    // seçimle birlikte kapanır; seçim yoksa ekran kapanır.
+    testWidgets('geri: hafta aya döner; panel seçimi bırakarak kapanır', (
+      tester,
+    ) async {
+      await usePrefs({'calendar_view': 'week'});
+      phone(tester);
+      await tester.pumpWidget(app(events: [meeting]));
+      await tester.pumpAndSettle();
+      expect(find.byType(WeekPage), findsOneWidget);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byType(WeekPage), findsNothing);
+      expect(find.byType(MonthPage), findsOneWidget);
+      expect(prefs.getString('calendar_view'), 'month');
+
+      // Başka güne dokun → panel o günle açık.
+      await tester.tap(
+        find.descendant(of: find.byType(MonthPage), matching: find.text('18')),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('calendar-day-panel')), findsOneWidget);
+      // Geri: panel kapanır VE seçim bugüne döner (hap "6 Kas").
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('calendar-day-panel')), findsNothing);
+      expect(
+        tester.widget<MonthPage>(find.byType(MonthPage)).selected,
+        DateTime(2026, 11, 6),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('hafta: etkinlik bloğu, boş saate dokununca yeni etkinlik', (
       tester,
     ) async {

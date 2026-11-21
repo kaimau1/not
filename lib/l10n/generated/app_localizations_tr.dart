@@ -2921,7 +2921,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get archivePaperIsometric => 'İzometrik';
 
   @override
-  String get attachmentTagEmbed => 'Ek göm';
+  String get attachmentTagEmbed => 'Yazıya göm';
 
   @override
   String get bubbleModeBubble => 'Balon';
@@ -6382,8 +6382,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get embedLasso => 'Daire çizerek seç';
 
   @override
-  String get embedLassoHint =>
-      'Bağlanacak yazıyı parmağınla daire içine al · iki parmakla kaydır';
+  String embedLassoHint(String name) {
+    return '$name bağlanacak — yazıyı daire içine al ya da kelimeye dokun · iki parmakla kaydır';
+  }
+
+  @override
+  String get embedSelectMode => 'Seçerek bağla';
 
   @override
   String get embedLassoMissed =>
@@ -8181,6 +8185,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinnedPenWrite => 'Üzerine kalemle yaz';
+
+  @override
+  String get pinnedShrinkToFit => 'Daraltınca küçülsün';
 
   @override
   String get quickRowCamera => 'Fotoğraf çek';

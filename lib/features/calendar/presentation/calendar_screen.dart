@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -338,6 +339,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         onUnlink: isLinked && calendar != null
             ? () => calendar.unlinkNoteFromDay(key, note.id)
             : null,
+        onDelete: () => deleteNoteFromCalendar(context, note),
       ),
     );
   }
@@ -1095,8 +1097,49 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               onPressed: _newEvent,
               child: const Icon(Icons.add),
             ),
-      body: _withDayPanel(body, data, wide),
+      // GERİ SIRAYLA (kullanıcı isteği 2026-11-21): açık gün paneli kendi
+      // [BackCloses]'uyla kapanır (seçimi de bırakır); panel kapalıyken
+      // seçili gün bırakılır; hafta/yıl görünümü aya döner; ancak bunların
+      // hiçbiri yokken ekran kapanır.
+      // Ajandada geri adımı yok: sarmalayıcı hiç kurulmaz (perf S34 —
+      // mini ay kaydırılırken ekran her karede yeniden kuruluyor).
+      body: _view == CalendarView.agenda
+          ? _withDayPanel(body, data, wide)
+          : BackCloses(
+              open: _backStep(wide) != null,
+              onClose: () => _backStep(wide)?.call(),
+              child: _withDayPanel(body, data, wide),
+            ),
     );
+  }
+
+  /// Geri tuşunun bu ekrandaki sıradaki adımı; null = ekran kapanır.
+  VoidCallback? _backStep(bool wide) {
+    switch (_view) {
+      case CalendarView.week:
+        return () {
+          final mid = DateTime(_focus.year, _focus.month, _focus.day + 3);
+          _setView(
+            CalendarView.month,
+            focus: monthOf(mid),
+            direction: ZoomDirection.zoomOut,
+            openPanel: false,
+          );
+        };
+      case CalendarView.year:
+        return () => _setView(
+          CalendarView.month,
+          focus: _focus.year == _today.year
+              ? monthOf(_today)
+              : DateTime(_focus.year),
+          openPanel: false,
+        );
+      case CalendarView.month:
+        if (wide || _panelDay != null || _selected == _today) return null;
+        return () => setState(() => _selected = _today);
+      case CalendarView.agenda:
+        return null;
+    }
   }
 
   void _handleGridVerticalEnd(DragEndDetails d) {
@@ -1140,9 +1183,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final open = day != null && !wide && _view == CalendarView.month;
     return LayoutBuilder(
       builder: (context, c) {
+        // SİSTEM ÇUBUĞU (kullanıcı bulgusu 2026-11-21: "ekrana sığmıyor,
+        // alt telefon tuşlarıyla çakışıyor"): kenardan kenara ekranda panel
+        // kapalıyken takvim gezinme çubuğunun ÜSTÜNDE biter. Açık panel
+        // zemini alta kadar uzanır, kendi içeriği payı alır.
+        final inset = open ? 0.0 : MediaQuery.paddingOf(context).bottom;
         final gridH = open
             ? c.maxHeight * (_panelCompact ? 0.34 : 0.5)
-            : c.maxHeight;
+            : math.max(0.0, c.maxHeight - inset);
         return Column(
           children: [
             SizedBox(height: gridH, child: body),
@@ -1155,9 +1203,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   data: data,
                   compact: _panelCompact,
                   onCompact: (v) => setState(() => _panelCompact = v),
+                  // Panel kapanınca gün seçimi de bırakılır (kullanıcı
+                  // isteği 2026-11-21: geri önce seçimi bırakmalı, sonra
+                  // ana menü — kapalı panelin "^ 29 Eki" hapı kalmasın).
                   onClose: () => setState(() {
                     _panelDay = null;
                     _panelCompact = false;
+                    _selected = _today;
                   }),
                   onNewEvent: () => unawaited(showEventEditor(context, day: day)),
                   onNewTask: () => unawaited(showTaskEditor(context, due: day)),
@@ -1948,12 +2000,14 @@ class _DaySheet extends ConsumerWidget {
                 onUnlink: calendar == null
                     ? null
                     : () => calendar.unlinkNoteFromDay(key, note.id),
+                onDelete: () => deleteNoteFromCalendar(context, note),
               ),
             ),
             onSetTime: calendar == null
                 ? null
                 : (id, minutes) => calendar.setDayLinkTime(key, id, minutes),
             onUnlink: (id) => calendar?.unlinkNoteFromDay(key, id),
+            onDelete: (note) => deleteNoteFromCalendar(context, note),
           ),
         ),
       if (written.isNotEmpty)
@@ -1977,6 +2031,7 @@ class _DaySheet extends ConsumerWidget {
                     context,
                     note: n,
                     day: day,
+                    onDelete: () => deleteNoteFromCalendar(context, n),
                   ),
                 ),
               ),
