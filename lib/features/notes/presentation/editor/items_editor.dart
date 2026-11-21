@@ -560,7 +560,7 @@ class ItemsEditorState extends State<ItemsEditor>
   static const _kMaxRowsPerFrame = 8;
   static const _kGrowAfter = Duration(milliseconds: 500);
   static const _kGrowRetry = Duration(milliseconds: 120);
-  static const _kFocusGrowHold = Duration(milliseconds: 300);
+  static const _kFocusGrowHold = AppMotion.medium;
 
   /// Kurulacak en çok madde (işaretsizler önce, sonra işaretliler); null = hepsi.
   int? _rowBudget;
