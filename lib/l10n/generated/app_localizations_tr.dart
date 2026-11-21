@@ -9494,4 +9494,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String docPageCitation(int page) {
     return 's. $page';
   }
+
+  @override
+  String get transcriptTakeaways => 'Özet ve görevler';
+
+  @override
+  String get transcriptTakeawaysSummary => 'Özet';
+
+  @override
+  String get transcriptTakeawaysActions => 'Yapılacaklar';
+
+  @override
+  String get transcriptTakeawaysRemind => 'Hatırlatayım mı?';
+
+  @override
+  String get transcriptTakeawaysAddTask => 'Görev ekle';
+
+  @override
+  String get transcriptTakeawaysInsert => 'Özeti nota ekle';
 }

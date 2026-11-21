@@ -3402,5 +3402,11 @@
   "docSuggestActions": "Dates & tasks",
   "docPromptActions": "Extract important dates, decisions, and action items from this document with page citations [p. N].",
   "docPageCitation": "p. {page}",
-  "@docPageCitation": {"placeholders": {"page": {"type": "int"}}}
+  "@docPageCitation": {"placeholders": {"page": {"type": "int"}}},
+  "transcriptTakeaways": "Summary & actions",
+  "transcriptTakeawaysSummary": "Summary",
+  "transcriptTakeawaysActions": "Action items",
+  "transcriptTakeawaysRemind": "Want a reminder?",
+  "transcriptTakeawaysAddTask": "Add task",
+  "transcriptTakeawaysInsert": "Add summary to note"
 }

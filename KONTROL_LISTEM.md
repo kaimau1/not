@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Pro AI A2: Kayıttan not — dökümden tek akışta Özet, Yapılacaklar ve Hatırlatayım mı? (21 Kasım, P95, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: ses veya video kaydının döküm (transkript) ekranında üstteki **Özet ve görevler** çipine dokun → tek levhada **Özet**, **Yapılacaklar** ve tarihli ifadeler için **Hatırlatayım mı?** kartı geliyor mu; **Görev ekle** görev düzenleyiciyi başlık ve tarihle açıyor, **Özeti nota ekle** metni nota ekliyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Pro AI A4: Belgeye sor'da Özetle ilk önerisi ve sayfa numaralı kaynaklar (21 Kasım, P94, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: PDF ekli bir notta ✨ → PDF → **Sor** → boş sohbette ilk öneri düğmesi **Özetle** (yanında Ana noktalar · Tarih ve görevler) görünüyor mu; dokununca gelen yanıtta `[s. N]` sayfa atıfları ve balonun altında `s. N` sayfa kaynak rozetleri çıkıyor mu.
   Yanlışsa: madde numarasını yaz.

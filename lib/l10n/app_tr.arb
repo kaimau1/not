@@ -4258,5 +4258,11 @@
   "docSuggestActions": "Tarih ve görevler",
   "docPromptActions": "Bu belgede geçen önemli tarihleri, kararları ve yapılacakları sayfa numaralarıyla [s. N] çıkar.",
   "docPageCitation": "s. {page}",
-  "@docPageCitation": {"placeholders": {"page": {"type": "int"}}}
+  "@docPageCitation": {"placeholders": {"page": {"type": "int"}}},
+  "transcriptTakeaways": "Özet ve görevler",
+  "transcriptTakeawaysSummary": "Özet",
+  "transcriptTakeawaysActions": "Yapılacaklar",
+  "transcriptTakeawaysRemind": "Hatırlatayım mı?",
+  "transcriptTakeawaysAddTask": "Görev ekle",
+  "transcriptTakeawaysInsert": "Özeti nota ekle"
 }

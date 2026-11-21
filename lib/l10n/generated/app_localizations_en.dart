@@ -9506,4 +9506,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String docPageCitation(int page) {
     return 'p. $page';
   }
+
+  @override
+  String get transcriptTakeaways => 'Summary & actions';
+
+  @override
+  String get transcriptTakeawaysSummary => 'Summary';
+
+  @override
+  String get transcriptTakeawaysActions => 'Action items';
+
+  @override
+  String get transcriptTakeawaysRemind => 'Want a reminder?';
+
+  @override
+  String get transcriptTakeawaysAddTask => 'Add task';
+
+  @override
+  String get transcriptTakeawaysInsert => 'Add summary to note';
 }

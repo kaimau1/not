@@ -16837,6 +16837,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'s. {page}'**
   String docPageCitation(int page);
+
+  /// No description provided for @transcriptTakeaways.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özet ve görevler'**
+  String get transcriptTakeaways;
+
+  /// No description provided for @transcriptTakeawaysSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özet'**
+  String get transcriptTakeawaysSummary;
+
+  /// No description provided for @transcriptTakeawaysActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılacaklar'**
+  String get transcriptTakeawaysActions;
+
+  /// No description provided for @transcriptTakeawaysRemind.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatayım mı?'**
+  String get transcriptTakeawaysRemind;
+
+  /// No description provided for @transcriptTakeawaysAddTask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev ekle'**
+  String get transcriptTakeawaysAddTask;
+
+  /// No description provided for @transcriptTakeawaysInsert.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özeti nota ekle'**
+  String get transcriptTakeawaysInsert;
 }
 
 class _AppLocalizationsDelegate

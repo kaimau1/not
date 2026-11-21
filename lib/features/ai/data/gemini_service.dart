@@ -828,6 +828,45 @@ class GeminiService {
         },
       ], chain: ModelChain.transcribe);
 
+  /// **KAYITTAN NOT** (PLAN §1.6 A2): ses/toplantı/ders dökümünden tek akışta
+  /// özet + yapılacak maddeler + "hatırlatayım mı?" tarih/görev önerisi çıkarır.
+  /// Uzun kayıtlar satır sınırlarından parçalanıp ara özetlerle birleştirilir.
+  Future<RecordingTakeaways> summarizeTranscript(String transcript) async {
+    final chunks = chunkTranscriptText(transcript);
+    if (chunks.isEmpty) return const RecordingTakeaways(summary: '');
+    var merged = chunks.first;
+    if (chunks.length > 1) {
+      final parts = <String>[];
+      for (var i = 0; i < chunks.length; i++) {
+        final partial = await _generate([
+          {
+            'text':
+                'Bu uzun kaydın ${i + 1}/${chunks.length}. bölümünü kısaca '
+                'özetle; geçen tüm kararları, yapılacakları ve tarih/saat '
+                'ifadelerini aynen koru. Dili koru, uydurma.\n\n'
+                '---\n${chunks[i]}',
+          },
+        ]);
+        parts.add(partial.trim());
+      }
+      merged = parts.join('\n\n');
+    }
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıdaki ses/toplantı/ders dökümünden kısa bir özet, yapılacak '
+            'maddeler ve (varsa) tarih/zaman içeren hatırlatıcı önerileri çıkar. '
+            'Dökümün dilini koru; metinde olmayan hiçbir şey uydurma.\n'
+            'Yalnızca şu JSON nesnesiyle yanıt ver (başka metin/markdown yok):\n'
+            '{"summary":"2-4 cümlelik net özet","actions":["yapılacak 1","yapılacak 2"],"reminders":[{"title":"ne hatırlatılsın","when":"dökümde geçen tarih/zaman ifadesi (yoksa boş)"}]}\n'
+            '- Yapılacak ya da hatırlatıcı yoksa diziyi boş [] bırak.\n'
+            '- actions içine madde işareti veya numara ön eki koyma.\n\n'
+            '---\n$merged',
+      },
+    ]);
+    return parseRecordingTakeaways(raw, fallbackText: merged);
+  }
+
   /// Satır içi (base64) gönderilebilecek en büyük ses/video. Gemini isteği
   /// ~20 MB'ta keser, base64 %33 büyütür: ham 15 MB güvenli sınır.
   static const maxInlineMediaBytes = 15 * 1024 * 1024;
@@ -2602,4 +2641,139 @@ List<int> extractPdfPageCitations(String text) {
     }
   }
   return found.toList()..sort();
+}
+
+/// **KAYITTAN NOT** (PLAN §1.6 A2): ses/toplantı/ders dökümünden çıkarılan
+/// tek hatırlatıcı/tarih önerisi.
+class RecordingReminderHint {
+  const RecordingReminderHint({required this.title, this.whenText = ''});
+
+  final String title;
+  final String whenText;
+}
+
+/// **KAYITTAN NOT** (PLAN §1.6 A2) çıktısı: özet + yapılacak maddeler +
+/// "hatırlatayım mı?" önerileri.
+class RecordingTakeaways {
+  const RecordingTakeaways({
+    required this.summary,
+    this.actionItems = const [],
+    this.reminders = const [],
+  });
+
+  final String summary;
+  final List<String> actionItems;
+  final List<RecordingReminderHint> reminders;
+
+  bool get isEmpty =>
+      summary.trim().isEmpty && actionItems.isEmpty && reminders.isEmpty;
+
+  /// Nota eklemek veya yeni not açmak için okunur düz metin.
+  String toNoteText({
+    required String summaryHeading,
+    required String actionsHeading,
+  }) {
+    final buf = StringBuffer();
+    if (summary.trim().isNotEmpty) {
+      buf.writeln(summaryHeading);
+      buf.writeln(summary.trim());
+    }
+    if (actionItems.isNotEmpty) {
+      if (buf.isNotEmpty) buf.writeln();
+      buf.writeln(actionsHeading);
+      for (final item in actionItems) {
+        buf.writeln('- $item');
+      }
+    }
+    return buf.toString().trim();
+  }
+}
+
+/// Uzun dökümü satır sınırlarında en çok [maxChars] uzunluğunda parçalara böler
+/// (A2: uzun kayıt parçalı özet).
+List<String> chunkTranscriptText(String text, {int maxChars = 10000}) {
+  final clean = text.trim();
+  if (clean.isEmpty) return const [];
+  if (clean.length <= maxChars) return [clean];
+  final chunks = <String>[];
+  final lines = clean.split('\n');
+  final buf = StringBuffer();
+  for (final line in lines) {
+    if (buf.isNotEmpty && buf.length + line.length + 1 > maxChars) {
+      chunks.add(buf.toString().trim());
+      buf.clear();
+    }
+    if (line.length > maxChars) {
+      for (var i = 0; i < line.length; i += maxChars) {
+        final end = i + maxChars > line.length ? line.length : i + maxChars;
+        chunks.add(line.substring(i, end).trim());
+      }
+    } else {
+      if (buf.isNotEmpty) buf.writeln();
+      buf.write(line);
+    }
+  }
+  if (buf.isNotEmpty) chunks.add(buf.toString().trim());
+  return chunks;
+}
+
+/// [GeminiService.summarizeTranscript] JSON yanıtını güvenli biçimde ayrıştırır.
+RecordingTakeaways parseRecordingTakeaways(
+  String raw, {
+  String fallbackText = '',
+}) {
+  final stripped = raw
+      .trim()
+      .replaceFirst(RegExp(r'^```(?:json)?\s*', multiLine: true), '')
+      .replaceFirst(RegExp(r'\s*```\s*$'), '')
+      .trim();
+  final start = stripped.indexOf('{');
+  final end = stripped.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try {
+      final decoded = jsonDecode(stripped.substring(start, end + 1));
+      if (decoded is Map) {
+        final summary = (decoded['summary'] as String? ?? '').trim();
+        final actions = <String>[];
+        if (decoded['actions'] is List) {
+          for (final a in decoded['actions'] as List) {
+            final clean = a
+                .toString()
+                .trim()
+                .replaceFirst(
+                  RegExp(r'^(?:[-*•]\s+|\[\s?[xX]?\s?\]\s+|\d+[.)]\s+)'),
+                  '',
+                );
+            if (clean.isNotEmpty) actions.add(clean);
+          }
+        }
+        final reminders = <RecordingReminderHint>[];
+        if (decoded['reminders'] is List) {
+          for (final r in decoded['reminders'] as List) {
+            if (r is Map) {
+              final title = (r['title'] as String? ?? '').trim();
+              final when = (r['when'] as String? ?? '').trim();
+              if (title.isNotEmpty) {
+                reminders.add(
+                  RecordingReminderHint(title: title, whenText: when),
+                );
+              }
+            }
+          }
+        }
+        if (summary.isNotEmpty || actions.isNotEmpty || reminders.isNotEmpty) {
+          return RecordingTakeaways(
+            summary: summary,
+            actionItems: actions,
+            reminders: reminders,
+          );
+        }
+      }
+    } catch (_) {
+      // Malformed JSON: fall through to plain summary.
+    }
+  }
+  return RecordingTakeaways(
+    summary: stripped.isNotEmpty ? stripped : fallbackText.trim(),
+  );
 }
