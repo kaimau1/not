@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Takvim yeni varsayılan düzen (sağ üst gün sayıları + kutuda not/etiket + önizleme levhası + çoklu not + kasma düzeltmesi) (21 Kasım 6. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) Takvim'i aç → doğrudan üstte ay ızgarası + altta gün paneliyle mi açılıyor; takvimi ya da tutamağı aşağı çekince uzun ay görünümüne geçip altta küçük yukarı çekme hapı görünüyor mu; (2) her gün kutusunda sayı sağ üstte mi, alt boşlukta not başlıkları, etkinlikler ve `#etiket`ler okunur biçimde yazıyor mu; (3) hücredeki bir not şeridine veya alt paneldeki bir not önizleme kartına dokun → başlık, etiket, içerik/liste ve **Notu aç** düğmeli hızlı önizleme levhası açılıyor mu; (4) bağlı notu olan günde "Bu gün için plan yok" yazmıyor mu, **Bu güne not** ile aynı güne 2–3 farklı not eklenebiliyor mu, `+` düğmesi alt panelin üstüne binmiyor mu; (5) ana ekran kaydırma (özellikle çizimli görsel kartlarında) ve takvimde gün değiştirme/kaydırma akıcı mı.
+  Yanlışsa: ekran görüntüsü ile madde numarasını yaz.
+
 - [ ] **Menü düzenleme + Kişiselleştir / Düzenleme modu yeni bento tasarımı (21 Kasım 5. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) not ⋮ → ⚙ → **Menüyü düzenle** (açık ve koyu temada) → üstte çerçeveli hızlı satır (`X / 5`), altta boşluksuz 2 sütunlu dengeli kartlar, ⊖/⊕ ve ☆/★ simgelerin üstüne binmeden kartın içinde mi, basılı tutup sürükle çalışıyor mu; (2) Ayarlar → **Kişiselleştir** → **Düzenleme modunu başlat** → üst şerit temayla uyumlu mu, not üst ve alt çubuğundaki yan yana düğmelerin `✓`/`−` rozetleri birbirine veya kenarlara taşmadan duruyor mu; (3) üst şeritteki **Sırala** (⇅) ve Ayarlar → Kişiselleştir panoları 2 sütunlu dengeli bento kartlarıyla temiz görünüyor mu.
   Yanlışsa: ekran görüntüsü ile madde numarasını yaz.

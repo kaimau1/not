@@ -42,45 +42,67 @@ import 'task_editor.dart';
 import '../../../core/haptics.dart';
 
 /// Hatırlatıcılı notlar (gizli klasör bastırması Hatırlatıcılar ekranıyla
-/// aynı kural).
+/// aynı kural). İlgisiz bir not düzenlendiğinde takvim/ana ekran şeridi
+/// yeniden kurulmaz (`_NoteListSlice` eşitliğiyle süzülür).
 final calendarReminderNotesProvider = Provider<List<Note>>((ref) {
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
   final suppressed = ref.watch(suppressedFolderIdsProvider);
-  return [
-    for (final n in notes)
-      if (n.reminderAt != null &&
-          (n.folderId == null || !suppressed.contains(n.folderId)))
-        n,
-  ];
+  final slice = ref.watch(
+    notesStreamProvider.select((async) {
+      final notes = async.value ?? const <Note>[];
+      return _NoteListSlice([
+        for (final n in notes)
+          if (n.reminderAt != null &&
+              (n.folderId == null || !suppressed.contains(n.folderId)))
+            n,
+      ]);
+    }),
+  );
+  return slice.notes;
 });
 
 /// Zamanlı notlar (U4, `expiresAt`): arşivlenmemiş, gizli klasörde değil.
 final calendarTimedNotesProvider = Provider<List<Note>>((ref) {
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
   final suppressed = ref.watch(suppressedFolderIdsProvider);
-  return [
-    for (final n in notes)
-      if (n.expiresAt != null &&
-          n.archivedAt == null &&
-          n.deletedAt == null &&
-          (n.folderId == null || !suppressed.contains(n.folderId)))
-        n,
-  ];
+  final slice = ref.watch(
+    notesStreamProvider.select((async) {
+      final notes = async.value ?? const <Note>[];
+      return _NoteListSlice([
+        for (final n in notes)
+          if (n.expiresAt != null &&
+              n.archivedAt == null &&
+              n.deletedAt == null &&
+              (n.folderId == null || !suppressed.contains(n.folderId)))
+            n,
+      ]);
+    }),
+  );
+  return slice.notes;
 });
 
 /// Güne bağlı notlar (silinmemiş, gizli klasörde olmayan), saatleriyle.
+/// Yalnızca gerçekten bağlı notların özeti dinlenir; bağlı olmayan notlarda
+/// yapılan her yazım/otomatik kayıt ana ekran şeridini ve takvimi tetiklemez.
 final calendarDayNotesProvider = Provider<Map<String, List<DayNote>>>((ref) {
   final links = ref.watch(dayLinksStreamProvider).value ?? const {};
   if (links.isEmpty) return const {};
   final times = ref.watch(dayLinkTimesStreamProvider).value ?? const {};
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
   final suppressed = ref.watch(suppressedFolderIdsProvider);
-  final byId = {
-    for (final n in notes)
-      if (n.deletedAt == null &&
-          (n.folderId == null || !suppressed.contains(n.folderId)))
-        n.id: n,
+  final linkedIds = <String>{
+    for (final list in links.values) ...list,
   };
+  final slice = ref.watch(
+    notesStreamProvider.select((async) {
+      final notes = async.value ?? const <Note>[];
+      return _NoteListSlice([
+        for (final n in notes)
+          if (linkedIds.contains(n.id) &&
+              n.deletedAt == null &&
+              (n.folderId == null || !suppressed.contains(n.folderId)))
+            n,
+      ]);
+    }),
+  );
+  final byId = {for (final n in slice.notes) n.id: n};
   final out = <String, List<DayNote>>{};
   for (final e in links.entries) {
     final list = <DayNote>[
@@ -91,6 +113,56 @@ final calendarDayNotesProvider = Provider<Map<String, List<DayNote>>>((ref) {
   }
   return out;
 });
+
+/// Takvim görünümlerini ilgilendiren alanlara göre değer eşitliği sunan dilim.
+class _NoteListSlice {
+  const _NoteListSlice(this.notes);
+
+  final List<Note> notes;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! _NoteListSlice || other.notes.length != notes.length) {
+      return false;
+    }
+    for (var i = 0; i < notes.length; i++) {
+      final a = notes[i], b = other.notes[i];
+      if (a.id != b.id ||
+          a.title != b.title ||
+          a.body != b.body ||
+          a.items.length != b.items.length ||
+          a.attachments.length != b.attachments.length ||
+          a.hasPageInk != b.hasPageInk ||
+          a.color != b.color ||
+          a.customColor != b.customColor ||
+          a.locked != b.locked ||
+          a.reminderAt != b.reminderAt ||
+          a.reminderRepeat != b.reminderRepeat ||
+          a.expiresAt != b.expiresAt ||
+          a.archivedAt != b.archivedAt ||
+          a.deletedAt != b.deletedAt ||
+          a.folderId != b.folderId) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    for (final n in notes)
+      Object.hash(
+        n.id,
+        n.title,
+        n.body.length,
+        n.items.length,
+        n.reminderAt,
+        n.expiresAt,
+        n.deletedAt,
+      ),
+  ]);
+}
 
 /// Takvim görünümlerinin ortak verisi (ay/hafta ekranı ve gün sayfası aynı
 /// kaynaktan okur).
@@ -145,13 +217,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _focus = _selected;
   late CalendarView _view = _storedView();
 
-  /// **GÜN PANELİ** (kullanıcı isteği 2026-11-21, örnek: telefon takvimi):
-  /// ay görünümünde güne dokununca takvim YUKARI daralır, günün kayıtları ve
-  /// notları altta açılır (alttan levha yerine). null = kapalı.
-  DateTime? _panelDay;
+  /// **GÜN PANELİ** (kullanıcı isteği 2026-11-21): ay görünümünde varsayılan
+  /// olarak seçili günün paneli altta açıktır; takvimi ya da tutamağı aşağı
+  /// çekince panel kapanıp uzun ay görünümüne geçer. null = uzun ay görünümü.
+  late DateTime? _panelDay = _selected;
 
   /// Panel açıkken takvim daha da daraltıldı (tutamak yukarı çekildi).
   bool _panelCompact = false;
+
+  /// Takvim üstündeki dikey sürükleme birikimi (aşağı çekince uzun takvim).
+  double _gridDragDy = 0;
 
   // Ajanda görünümü.
   late DateTime _month = monthOf(_selected);
@@ -235,6 +310,115 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   /// dakikada bir tazelenir (anahtar: dakika).
   final _weekPages = <int, (CalendarData, DateTime, int, DateTime, Widget)>{};
 
+  /// Ay sayfası önbelleği: panelde başka güne geçerken veya sayfa çevirirken
+  /// girdisi değişmeyen ay sayfaları baştan kurulmaz (42 hücre × LayoutBuilder).
+  final _monthPages =
+      <int, (CalendarData, DateTime, DateTime?, int, bool, bool, Widget)>{};
+
+  void _openNotePreview(Note note, DateTime day) {
+    final normalized = startOfDay(day);
+    setState(() {
+      _selected = normalized;
+      if (_panelDay != null) _panelDay = normalized;
+    });
+    final key = dayKey(normalized);
+    final times =
+        ref.read(dayLinkTimesStreamProvider).value?[key] ??
+        const <String, int>{};
+    final linkedIds =
+        ref.read(dayLinksStreamProvider).value?[key] ?? const <String>[];
+    final calendar = ref.read(calendarRepositoryProvider);
+    final isLinked = linkedIds.contains(note.id);
+    unawaited(
+      showCalendarNotePreviewSheet(
+        context,
+        note: note,
+        day: normalized,
+        minutes: times[note.id],
+        onUnlink: isLinked && calendar != null
+            ? () => calendar.unlinkNoteFromDay(key, note.id)
+            : null,
+      ),
+    );
+  }
+
+  Widget _monthPage(int i, CalendarData data, bool compact, bool mobile) {
+    final month = monthAtIndex(i);
+    final firstDow = _firstDow;
+    final selectedInMonth =
+        _selected.year == month.year && _selected.month == month.month
+        ? _selected
+        : null;
+    final hit = _monthPages[i];
+    if (hit != null &&
+        identical(hit.$1, data) &&
+        hit.$2 == _today &&
+        hit.$3 == selectedInMonth &&
+        hit.$4 == firstDow &&
+        hit.$5 == compact &&
+        hit.$6 == mobile) {
+      return hit.$7;
+    }
+    Widget page = MonthPage(
+      month: month,
+      compact: compact,
+      data: data,
+      today: _today,
+      selected: _selected,
+      firstDow: firstDow,
+      targets: _targets,
+      onDayTap: (d) => unawaited(_showDay(d, data)),
+      onNoteTap: _openNotePreview,
+      onEntryMove: _moveEntry,
+      onDayDoubleTap: _openDayPage,
+      onDayLongPress: (d) {
+        setState(() => _selected = d);
+        unawaited(showEventEditor(context, day: d));
+      },
+    );
+    if (mobile) {
+      page = GestureDetector(
+        key: const ValueKey('calendar-month-drag-zone'),
+        behavior: HitTestBehavior.translucent,
+        onVerticalDragStart: (_) => _gridDragDy = 0,
+        onVerticalDragUpdate: (d) => _gridDragDy += d.delta.dy,
+        onVerticalDragEnd: _handleGridVerticalEnd,
+        child: compact
+            ? page
+            : Stack(
+                children: [
+                  page,
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: AppSpace.s,
+                    child: Center(
+                      child: _OpenDayPanelPill(
+                        selected: _selected,
+                        onOpen: () => setState(() {
+                          _panelDay = _selected;
+                          _panelCompact = false;
+                        }),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      );
+    }
+    if (_monthPages.length > 6) _monthPages.clear();
+    _monthPages[i] = (
+      data,
+      _today,
+      selectedInMonth,
+      firstDow,
+      compact,
+      mobile,
+      page,
+    );
+    return page;
+  }
+
   Widget _weekPage(int i, CalendarData data, DateTime now) {
     final minute = DateTime(now.year, now.month, now.day, now.hour, now.minute);
     final firstDow = _firstDow;
@@ -298,11 +482,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     DateTime? focus,
     Offset? from,
     ZoomDirection direction = ZoomDirection.zoomIn,
+    bool openPanel = true,
   }) {
     if (view == _view && focus == null) return;
     unawaited(AppHaptics.tick());
     setState(() {
-      _panelDay = null;
+      _panelCompact = false;
+      _panelDay = view == CalendarView.month && openPanel ? _selected : null;
       _lastZoom = direction;
       _origin = _alignmentAt(from);
       _view = view;
@@ -333,7 +519,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             (_focus.year == _today.year
                 ? monthOf(_today)
                 : DateTime(_focus.year));
-        _setView(CalendarView.month, focus: month, from: global);
+        _setView(
+          CalendarView.month,
+          focus: month,
+          from: global,
+          openPanel: false,
+        );
       case CalendarView.month:
         if (zoomIn) {
           final week =
@@ -370,6 +561,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           focus: monthOf(mid),
           from: global,
           direction: ZoomDirection.zoomOut,
+          openPanel: false,
         );
       case CalendarView.agenda:
         if (zoomIn) return;
@@ -378,6 +570,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           focus: monthOf(_selected),
           from: global,
           direction: ZoomDirection.zoomOut,
+          openPanel: false,
         );
     }
   }
@@ -804,22 +997,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 _setView(CalendarView.month, focus: m, from: at),
           ),
           CalendarView.week => _weekPage(i, data, now),
-          _ => MonthPage(
-            month: monthAtIndex(i),
-            compact: _panelDay != null && !wide,
-            data: data,
-            today: _today,
-            selected: _selected,
-            firstDow: _firstDow,
-            targets: _targets,
-            onDayTap: (d) => unawaited(_showDay(d, data)),
-            onEntryMove: _moveEntry,
-            onDayDoubleTap: _openDayPage,
-            onDayLongPress: (d) {
-              setState(() => _selected = d);
-              unawaited(showEventEditor(context, day: d));
-            },
-          ),
+          _ => _monthPage(i, data, _panelDay != null && !wide, !wide),
         },
       ),
     };
@@ -872,25 +1050,64 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
     );
 
+    final dayPanelOpen =
+        _panelDay != null && !wide && _view == CalendarView.month;
     return Scaffold(
       // Takvimde yazı alanı yok; klavye yalnız üstteki levhalarda açılır.
       // Boyut değişseydi ay ızgarası/sayfalar klavyenin HER KARESİNDE yeniden
       // yerleşirdi (yeni etkinlik kasması, 2026-11-06).
       resizeToAvoidBottomInset: false,
       appBar: HomeInBar(appBar: bar),
-      floatingActionButton: FloatingActionButton(
-        key: const ValueKey('calendar-new-event'),
-        tooltip: l10n.calendarNewEvent,
-        onPressed: _newEvent,
-        child: const Icon(Icons.add),
-      ),
+      // Alt gün paneli açıkken kendi 2×2 hızlı eylem kartları vardır;
+      // FAB onların üstüne binmesin diye gizlenir.
+      floatingActionButton: dayPanelOpen
+          ? null
+          : FloatingActionButton(
+              key: const ValueKey('calendar-new-event'),
+              tooltip: l10n.calendarNewEvent,
+              onPressed: _newEvent,
+              child: const Icon(Icons.add),
+            ),
       body: _withDayPanel(body, data, wide),
     );
   }
 
+  void _handleGridVerticalEnd(DragEndDetails d) {
+    final v = d.primaryVelocity ?? 0;
+    final dy = _gridDragDy;
+    _gridDragDy = 0;
+    if (_panelDay != null) {
+      // Aşağı çekince: önce yarı panelden tam uzun takvime (veya hızlı
+      // çekişte doğrudan tam uzun takvime).
+      if (v > 180 || dy > 36) {
+        unawaited(AppHaptics.tick());
+        setState(() {
+          if (_panelCompact && v <= 600 && dy <= 96) {
+            _panelCompact = false;
+          } else {
+            _panelDay = null;
+            _panelCompact = false;
+          }
+        });
+      } else if (v < -180 || dy < -36) {
+        if (!_panelCompact) {
+          unawaited(AppHaptics.tick());
+          setState(() => _panelCompact = true);
+        }
+      }
+    } else if (v < -180 || dy < -36) {
+      // Uzun takvimde yukarı çekince: gün panelini geri aç.
+      unawaited(AppHaptics.tick());
+      setState(() {
+        _panelDay = _selected;
+        _panelCompact = false;
+      });
+    }
+  }
+
   /// Ay görünümünde gün paneli açıkken takvim üstte daralır, panel altta.
   /// Takvimin kabı (ilk çocuk `SizedBox`) iki durumda AYNI: sayfalayıcı
-  /// durumunu ve kaydırma konumunu korur.
+  /// durumunu ve kaydırma konumunu korur; hafta/ajandada sıfır ek widget.
   Widget _withDayPanel(Widget body, CalendarData data, bool wide) {
     final day = _panelDay;
     final open = day != null && !wide && _view == CalendarView.month;
@@ -1225,8 +1442,10 @@ class _PagedViewState extends State<_PagedView> {
   );
 }
 
-/// "Bu güne not" (F49.1): güne bağlı, başlığı günün adı olan not varsa
-/// açar; yoksa oluşturur ve güne bağlar.
+/// "Bu güne not" (F49.1): [createNew] true ise aynı güne birden fazla not
+/// eklenebilmesi için her seferinde yeni bir not oluşturur ve güne bağlar
+/// (ilk not günün adını, sonrakiler `"<gün> · N"` başlığını alır).
+/// [createNew] false ise güne bağlı gün notu varsa onu açar, yoksa kurar.
 ///
 /// SİYAH EKRAN (kullanıcı bulgusu 2026-11-07): not ham `/note/:id` yoluyla
 /// push ediliyordu; takvim SplitShell kabuğunun DIŞINDA olduğundan ikinci
@@ -1236,22 +1455,27 @@ Future<void> openDayNote(
   WidgetRef ref,
   DateTime day, {
   bool popFirst = false,
+  bool createNew = false,
 }) async {
   final notes = ref.read(notesRepositoryProvider);
   final calendar = ref.read(calendarRepositoryProvider);
   if (notes == null || calendar == null) return;
   final key = dayKey(day);
-  final title = dayNoteTitle(day);
+  final baseTitle = dayNoteTitle(day);
   final linked = ref.read(dayLinksStreamProvider).value?[key] ?? const [];
   final all = ref.read(notesStreamProvider).value ?? const <Note>[];
-  final existing = all
-      .where(
-        (n) =>
-            linked.contains(n.id) &&
-            n.deletedAt == null &&
-            n.title.trim() == title,
-      )
-      .firstOrNull;
+  final activeLinked = [
+    for (final n in all)
+      if (linked.contains(n.id) && n.deletedAt == null) n,
+  ];
+  final existing = createNew
+      ? null
+      : activeLinked.where((n) => n.title.trim() == baseTitle).firstOrNull;
+  final title = existing != null
+      ? baseTitle
+      : activeLinked.isEmpty
+      ? baseTitle
+      : '$baseTitle · ${activeLinked.length + 1}';
   // Sayfasız rota (gün sayfası) bilgisi pop'tan ÖNCE alınır.
   final router = GoRouter.of(context);
   final route = ModalRoute.of(context);
@@ -1310,10 +1534,10 @@ Widget _withQuickDelete(AgendaEntry e, Widget tile) => !canQuickDelete(e)
       );
 
 /// Takvimin altındaki gün paneli: tutamak (yukarı çek = takvimi daha da
-/// daralt, aşağı çek = önce genişlet sonra kapat), gün başlığı, ✕ ve günün
-/// kayıtları + bağlı notları. Geri tuşu önce paneli kapatır ([BackCloses]).
-/// Açılış yalnız boyamada kayar (`SlideTransition`): takvim tek adımda
-/// daralır, kare kare yeniden dizilmez.
+/// daralt, aşağı çek = önce genişlet sonra kapat), gün başlığı + özet rozeti,
+/// ✕ ve günün kayıtları + zengin önizlemeli bağlı notları. Geri tuşu önce
+/// paneli kapatır ([BackCloses]). `RepaintBoundary` + `SlideTransition` ile
+/// açılış GPU katmanında akar, takvim ızgarasını yeniden boyamaz.
 class _DayPanel extends StatefulWidget {
   const _DayPanel({
     super.key,
@@ -1347,7 +1571,7 @@ class _DayPanelState extends State<_DayPanel>
     duration: AppMotion.short,
   );
   late final Animation<Offset> _slide = Tween(
-    begin: const Offset(0, 0.25),
+    begin: const Offset(0, 0.2),
     end: Offset.zero,
   ).animate(CurvedAnimation(parent: _enter, curve: AppMotion.enter));
 
@@ -1378,82 +1602,168 @@ class _DayPanelState extends State<_DayPanel>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final l10n = context.l10n;
+    final key = dayKey(widget.day);
+    final dayEntries =
+        widget.data.range(
+          widget.day,
+          DateTime(widget.day.year, widget.day.month, widget.day.day + 1),
+        )[key] ??
+        const <AgendaEntry>[];
+    final linkedCount = widget.data.dayNotes[key]?.length ?? 0;
+    final planCount = dayEntries
+        .where((e) => !(e is ReminderEntry && e.isDayLink))
+        .length;
+    final totalCount = planCount + linkedCount;
+
     return BackCloses(
       open: true,
       onClose: widget.onClose,
-      child: SlideTransition(
-        position: _slide,
-        child: Material(
-          color: scheme.surfaceContainerLow,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(AppRadius.l),
+      child: RepaintBoundary(
+        child: SlideTransition(
+          position: _slide,
+          child: Material(
+            color: scheme.surfaceContainerLow,
+            shape: RoundedRectangleBorder(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadius.xl),
+              ),
+              side: BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+              ),
             ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onVerticalDragEnd: _drag,
-                onTap: () => widget.onCompact(!widget.compact),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 6),
-                    Container(
-                      width: 36,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.disabled),
-                        borderRadius: BorderRadius.circular(AppRadius.hair),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onVerticalDragEnd: _drag,
+                  onTap: () => widget.onCompact(!widget.compact),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: AppSpace.s),
+                      Container(
+                        width: 36,
+                        height: AppSpace.xs,
+                        decoration: BoxDecoration(
+                          color: scheme.onSurfaceVariant.withValues(
+                            alpha: AppAlpha.disabled,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _DayHeader(
-                            day: widget.day,
-                            today: widget.today,
-                          ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpace.l,
+                          AppSpace.s,
+                          AppSpace.s,
+                          AppSpace.xs,
                         ),
-                        IconButton(
-                          key: const ValueKey('day-panel-compact'),
-                          tooltip: widget.compact
-                              ? l10n.calendarExpandMonth
-                              : l10n.calendarCollapseMonth,
-                          icon: Icon(
-                            widget.compact
-                                ? Icons.expand_more
-                                : Icons.expand_less,
-                          ),
-                          onPressed: () => widget.onCompact(!widget.compact),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      widget.day == widget.today
+                                          ? '${l10n.calendarToday} · ${DateFormat.MMMMEEEEd().format(widget.day)}'
+                                          : DateFormat.MMMMEEEEd()
+                                                .format(widget.day),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: text.sheetTitle.copyWith(
+                                        color: widget.day == widget.today
+                                            ? scheme.primary
+                                            : scheme.onSurface,
+                                      ),
+                                    ),
+                                  ),
+                                  if (totalCount > 0) ...[
+                                    const SizedBox(width: AppSpace.s),
+                                    DecoratedBox(
+                                      key: const ValueKey('day-panel-count'),
+                                      decoration: ShapeDecoration(
+                                        color: scheme.primaryContainer,
+                                        shape: const StadiumBorder(),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppSpace.s,
+                                          vertical: AppSpace.xxs,
+                                        ),
+                                        child: Text(
+                                          '$totalCount',
+                                          style: text.badge.copyWith(
+                                            color: scheme.onPrimaryContainer,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            IconButton.filledTonal(
+                              key: const ValueKey('day-panel-compact'),
+                              style: IconButton.styleFrom(
+                                backgroundColor: scheme.surfaceContainerHigh,
+                                foregroundColor: scheme.onSurfaceVariant,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              tooltip: widget.compact
+                                  ? l10n.calendarExpandMonth
+                                  : l10n.calendarCollapseMonth,
+                              icon: Icon(
+                                widget.compact
+                                    ? Icons.expand_more_rounded
+                                    : Icons.expand_less_rounded,
+                                size: AppIconSize.m,
+                              ),
+                              onPressed: () =>
+                                  widget.onCompact(!widget.compact),
+                            ),
+                            const SizedBox(width: AppSpace.xs),
+                            IconButton.filledTonal(
+                              key: const ValueKey('day-panel-close'),
+                              style: IconButton.styleFrom(
+                                backgroundColor: scheme.surfaceContainerHigh,
+                                foregroundColor: scheme.onSurfaceVariant,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              tooltip: l10n.calendarDayPanelClose,
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                size: AppIconSize.s,
+                              ),
+                              onPressed: widget.onClose,
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          key: const ValueKey('day-panel-close'),
-                          tooltip: l10n.calendarDayPanelClose,
-                          icon: const Icon(Icons.close),
-                          onPressed: widget.onClose,
-                        ),
-                        const SizedBox(width: 4),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(
-                child: _DaySheet(
-                  day: widget.day,
-                  today: widget.today,
-                  data: widget.data,
-                  embedded: true,
-                  onNewEvent: widget.onNewEvent,
-                  onNewTask: widget.onNewTask,
+                Divider(
+                  height: 1,
+                  color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: _DaySheet(
+                    day: widget.day,
+                    today: widget.today,
+                    data: widget.data,
+                    embedded: true,
+                    onNewEvent: widget.onNewEvent,
+                    onNewTask: widget.onNewTask,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1484,39 +1794,83 @@ class _DaySheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final key = dayKey(day);
     final linked = ref.watch(dayLinksStreamProvider).value?[key] ?? const [];
     final times =
-        ref.watch(dayLinkTimesStreamProvider).value?[key] ?? const <String, int>{};
-    // O gün yazılan/düzenlenen notlar (F49.3) — açılır bölüm.
-    final written = [
-      for (final n in ref.watch(notesStreamProvider).value ?? const <Note>[])
-        if (n.deletedAt == null &&
-            n.archivedAt == null &&
-            !linked.contains(n.id) &&
-            n.updatedAt != null &&
-            startOfDay(n.updatedAt!) == day)
-          n,
-    ];
+        ref.watch(dayLinkTimesStreamProvider).value?[key] ??
+        const <String, int>{};
     // CANLI veri (açılıştaki anlık görüntü değil): levhadan silinen ya da
     // düzenlenen kayıt hemen kaybolsun/güncellensin. Güne bağlı notlar
-    // aşağıda "Bağlı notlar"da (saat + bağı kaldır) — burada tekrar yok.
+    // aşağıda zengin önizleme kartlarında ("Bağlı notlar") — burada tekrar yok.
     final source = ref.watch(calendarDataProvider);
+    final dayNoteEntries = source.dayNotes[key] ?? const <DayNote>[];
+    final linkedNotes = [for (final dn in dayNoteEntries) dn.note];
+    final linkedIds = {for (final n in linkedNotes) n.id};
+    // O gün yazılan/düzenlenen notlar (F49.3) — yalnız o gün değişenleri seçer.
+    final written = ref
+        .watch(
+          notesStreamProvider.select((async) {
+            final all = async.value ?? const <Note>[];
+            return _NoteListSlice([
+              for (final n in all)
+                if (n.deletedAt == null &&
+                    n.archivedAt == null &&
+                    !linkedIds.contains(n.id) &&
+                    n.updatedAt != null &&
+                    startOfDay(n.updatedAt!) == day)
+                  n,
+            ]);
+          }),
+        )
+        .notes;
     final entries = [
       for (final e
           in source.range(
                 day,
                 DateTime(day.year, day.month, day.day + 1),
-              )[dayKey(day)] ??
+              )[key] ??
               const <AgendaEntry>[])
         if (!(e is ReminderEntry && e.isDayLink)) e,
     ];
     final calendar = ref.read(calendarRepositoryProvider);
-    final empty = Padding(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
-      child: Text(
-        l10n.calendarNothingThisDay,
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+    final hasAnyContent = entries.isNotEmpty || linkedNotes.isNotEmpty;
+    final emptyCard = Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        AppSpace.m,
+        AppSpace.l,
+        AppSpace.s,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.m,
+            vertical: AppSpace.m,
+          ),
+          child: Row(
+            spacing: AppSpace.s,
+            children: [
+              Icon(
+                Icons.event_available_outlined,
+                size: AppIconSize.m,
+                color: scheme.onSurfaceVariant,
+              ),
+              Expanded(
+                child: Text(
+                  l10n.calendarNothingThisDay,
+                  style: text.body.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
     final tiles = [
@@ -1532,7 +1886,12 @@ class _DaySheet extends ConsumerWidget {
     final holidayChip = holiday == null
         ? null
         : Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              AppSpace.s,
+              AppSpace.l,
+              AppSpace.xs,
+            ),
             child: Align(
               alignment: Alignment.centerLeft,
               child: HolidayChip(
@@ -1544,21 +1903,39 @@ class _DaySheet extends ConsumerWidget {
             ),
           );
     final below = <Widget>[
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: LinkedNotesList(
-          noteIds: linked,
-          times: times,
-          onSetTime: calendar == null
-              ? null
-              : (id, minutes) => calendar.setDayLinkTime(key, id, minutes),
-          onUnlink: (id) => calendar?.unlinkNoteFromDay(key, id),
+      if (linkedNotes.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.l,
+            AppSpace.s,
+            AppSpace.l,
+            AppSpace.xs,
+          ),
+          child: LinkedNotesList(
+            noteIds: linked,
+            preloadedNotes: linkedNotes,
+            times: times,
+            onNoteTap: (note, minutes) => unawaited(
+              showCalendarNotePreviewSheet(
+                context,
+                note: note,
+                day: day,
+                minutes: minutes,
+                onUnlink: calendar == null
+                    ? null
+                    : () => calendar.unlinkNoteFromDay(key, note.id),
+              ),
+            ),
+            onSetTime: calendar == null
+                ? null
+                : (id, minutes) => calendar.setDayLinkTime(key, id, minutes),
+            onUnlink: (id) => calendar?.unlinkNoteFromDay(key, id),
+          ),
         ),
-      ),
       if (written.isNotEmpty)
         ExpansionTile(
           key: const ValueKey('day-written-notes'),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          tilePadding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
           title: Text(l10n.calendarDayWrittenNotes(written.length)),
           children: [
             for (final n in written.take(30))
@@ -1571,55 +1948,89 @@ class _DaySheet extends ConsumerWidget {
                       : n.displayTitle,
                   overflow: TextOverflow.ellipsis,
                 ),
-                onTap: () => unawaited(context.pushNote(noteRoutePath(n.id))),
-              ),
-          ],
-        ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: FilledButton.tonalIcon(
-                onPressed: onNewEvent,
-                icon: const Icon(Icons.event_outlined),
-                label: Text(l10n.calendarNewEvent),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: FilledButton.tonalIcon(
-                onPressed: onNewTask,
-                icon: const Icon(Icons.add_task),
-                label: Text(l10n.tasksNewTask),
-              ),
-            ),
-          ],
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                key: const ValueKey('day-note'),
-                onPressed: () => unawaited(
-                  openDayNote(context, ref, day, popFirst: !embedded),
+                onTap: () => unawaited(
+                  showCalendarNotePreviewSheet(
+                    context,
+                    note: n,
+                    day: day,
+                  ),
                 ),
-                icon: const Icon(Icons.edit_note),
-                label: Text(l10n.calendarDayNote),
               ),
+          ],
+        ),
+      // 2×2 dengeli bento hızlı eylem kartları (yeni etkinlik · yeni görev /
+      // bu güne yeni not · mevcut notu bağla). "Bu güne not" her dokunuşta
+      // güne YENİ bir not ekler (birden fazla not desteklenir).
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          AppSpace.m,
+          AppSpace.l,
+          AppSpace.m,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: AppSpace.s,
+          children: [
+            Row(
+              spacing: AppSpace.s,
+              children: [
+                Expanded(
+                  child: _DayActionTile(
+                    icon: Icons.event_outlined,
+                    label: l10n.calendarNewEvent,
+                    bg: scheme.primaryContainer,
+                    fg: scheme.onPrimaryContainer,
+                    onTap: onNewEvent,
+                  ),
+                ),
+                Expanded(
+                  child: _DayActionTile(
+                    icon: Icons.add_task_rounded,
+                    label: l10n.tasksNewTask,
+                    bg: scheme.secondaryContainer,
+                    fg: scheme.onSecondaryContainer,
+                    onTap: onNewTask,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton.icon(
-                key: const ValueKey('day-link-note'),
-                onPressed: () =>
-                    unawaited(linkExistingNote(context, ref, dayKey: key)),
-                icon: const Icon(Icons.link),
-                label: Text(l10n.calendarLinkExistingNote),
-              ),
+            Row(
+              spacing: AppSpace.s,
+              children: [
+                Expanded(
+                  child: _DayActionTile(
+                    key: const ValueKey('day-note'),
+                    icon: Icons.note_add_outlined,
+                    label: l10n.calendarDayNote,
+                    bg: scheme.surfaceContainerHigh,
+                    fg: scheme.onSurface,
+                    iconColor: scheme.primary,
+                    onTap: () => unawaited(
+                      openDayNote(
+                        context,
+                        ref,
+                        day,
+                        popFirst: !embedded,
+                        createNew: true,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _DayActionTile(
+                    key: const ValueKey('day-link-note'),
+                    icon: Icons.link_rounded,
+                    label: l10n.calendarLinkExistingNote,
+                    bg: scheme.surfaceContainerHigh,
+                    fg: scheme.onSurface,
+                    iconColor: scheme.primary,
+                    onTap: () => unawaited(
+                      linkExistingNote(context, ref, dayKey: key),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1629,15 +2040,20 @@ class _DaySheet extends ConsumerWidget {
       return ListView(
         key: ValueKey('day-panel-$key'),
         padding: EdgeInsets.only(
-          bottom: 88 + MediaQuery.paddingOf(context).bottom,
+          bottom: AppSpace.l + MediaQuery.paddingOf(context).bottom,
         ),
         children: [
           ?holidayChip,
-          if (tiles.isEmpty)
-            empty
-          else
+          if (!hasAnyContent)
+            emptyCard
+          else if (tiles.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                AppSpace.s,
+                AppSpace.l,
+                0,
+              ),
               child: Column(children: tiles),
             ),
           ...below,
@@ -1655,17 +2071,77 @@ class _DaySheet extends ConsumerWidget {
           children: [
             _DayHeader(day: day, today: today),
             ?holidayChip,
-            Flexible(
-              child: tiles.isEmpty
-                  ? empty
-                  : ListView(
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      children: tiles,
-                    ),
-            ),
+            if (!hasAnyContent)
+              emptyCard
+            else if (tiles.isNotEmpty)
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                  children: tiles,
+                ),
+              ),
             ...below,
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Gün panelinin altındaki dengeli bento işlem karosu (48 dp dokunma alanı).
+class _DayActionTile extends StatelessWidget {
+  const _DayActionTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.bg,
+    required this.fg,
+    this.iconColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color bg;
+  final Color fg;
+  final Color? iconColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppText.of(Theme.of(context));
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(AppRadius.m),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.m,
+              vertical: AppSpace.s,
+            ),
+            child: Row(
+              spacing: AppSpace.s,
+              children: [
+                Icon(icon, size: AppIconSize.s, color: iconColor ?? fg),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.label.copyWith(
+                      color: fg,
+                      fontWeight: AppWeight.strong,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -2288,8 +2764,9 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       key: const ValueKey('day-page-note'),
-                      onPressed: () =>
-                          unawaited(openDayNote(context, ref, _day)),
+                      onPressed: () => unawaited(
+                        openDayNote(context, ref, _day, createNew: true),
+                      ),
                       icon: const Icon(Icons.edit_note),
                       label: Text(
                         l10n.calendarDayNote,
@@ -2302,6 +2779,59 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Uzun takvim görünümünde alt kenarda hafif tutamak: dokununca veya yukarı
+/// çekince seçili günün alt panelini yeniden açar.
+class _OpenDayPanelPill extends StatelessWidget {
+  const _OpenDayPanelPill({required this.selected, required this.onOpen});
+
+  final DateTime selected;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return GestureDetector(
+      key: const ValueKey('calendar-open-day-panel'),
+      onTap: onOpen,
+      onVerticalDragEnd: (d) {
+        if ((d.primaryVelocity ?? 0) < -120) onOpen();
+      },
+      child: Material(
+        color: scheme.surfaceContainerHigh.withValues(alpha: AppAlpha.strong),
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.m,
+            vertical: AppSpace.xs,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: AppSpace.xs,
+            children: [
+              Icon(
+                Icons.keyboard_arrow_up_rounded,
+                size: AppIconSize.s,
+                color: scheme.onSurfaceVariant,
+              ),
+              Text(
+                DateFormat.MMMd().format(selected),
+                style: AppText.of(theme).badge.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
