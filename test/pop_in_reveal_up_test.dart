@@ -27,10 +27,7 @@ void main() {
           textDirection: TextDirection.ltr,
           child: MediaQuery(
             data: const MediaQueryData(),
-            child: PopIn(
-              duration: const Duration(milliseconds: 240),
-              child: _CountingChild(onBuild: () => childBuilds++),
-            ),
+            child: PopIn(child: _CountingChild(onBuild: () => childBuilds++)),
           ),
         ),
       );
@@ -80,7 +77,6 @@ void main() {
           child: MediaQuery(
             data: const MediaQueryData(),
             child: RevealUp(
-              duration: const Duration(milliseconds: 260),
               child: _CountingChild(onBuild: () => childBuilds++),
             ),
           ),

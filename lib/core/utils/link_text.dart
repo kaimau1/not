@@ -5,7 +5,6 @@
 library;
 
 import '../../app/theme/fixed_colors.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 

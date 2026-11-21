@@ -204,6 +204,7 @@ hesaplanan sağlayıcılar" sayan bir bütçe senaryosu (S51'in düzeneği `otur
 
 Düzeltme: T7. Öncelik sırası ölçüme göre; tahminim en pahalılar `upload_queue.dart:204` (her not ×
 her ek) ve `notes_providers.dart` altılısı.
+— KAPANDI 2026-11-21 oto/P86-kasma-t2-t9 5a1d4001: önce yeniden hesaplanan türetilmiş 20 (10 sağlayıcı), bildirim yayan türetilmiş 4, liste taraması 11 geçiş (330 okuma), yankı widget kurulumu 242 → sonra yeniden hesaplanan 0, bildirim yayan türetilmiş 0, liste taraması 2 geçiş (60 okuma), yankı widget kurulumu 22 (`test/note_stream_echo_test.dart`); cihaz: ölçülmedi.
 
 **K-24 — Oturum boyu dinleyiciler yazma duraklamasında kanal çağrısı yapıyor (`KOD`, P1).**
 Flutter 3.47 Android'de Dart arayüz işi ana iş parçacığında koşar; her platform kanalı çağrısı
@@ -242,6 +243,7 @@ altında tam liste ayrıca izleniyor. Kendi otomatik kaydın da yayın olduğu i
 çalışır. Düzeltme: geri bağlantı dizini ayrı sağlayıcı (not kimliği → bağlayanlar), yalnız
 `tagLinks`'i değişen not girer/çıkar; editör yalnız kendi kimliğinin dilimini izler.
 **Kanıt:** K-23'teki sayaç senaryosu.
+— KAPANDI 2026-11-21 oto/P86-kasma-t2-t9 5a1d4001: önce otomatik kayıt yankısında `BacklinksChip` kurulumu 1 (`backlinksTo` tam liste taraması ×2) → sonra 0 (`noteBacklinksProvider` family + `NoteListSlices.withTagLinks`, `test/note_stream_echo_test.dart`); cihaz: ölçülmedi.
 
 ---
 
@@ -250,8 +252,8 @@ altında tam liste ayrıca izleniyor. Kendi otomatik kaydın da yayın olduğu i
 | Kayıt | Sorun | Kanıt | Yer / kaynak | Öneri |
 |---|---|---|---|---|
 | K-27 | Tuş başına ~106 kurulum / ~76 dizilme; ilk odakta ~210 `Focus` kurulumu; Gboard geri sil ~25 `InkResponse` kurduruyor | TEST (S50) | `akicilik.md:155` "Kalan (çerçeve)"; `items_editor.dart:1964` (`shrinkWrap` kök nedeni) | Satırlardaki `InkResponse`'ları `GestureDetector` + `Semantics` yap (kalıp `editor.md:207`); `shrinkWrap`'i kaldırmak ayrı, büyük iş |
-| K-28 | Tek uzun paragrafta `findLinks` + `_scanPlainness` her dizilimde tüm paragrafı tarıyor (not açmada LAYOUT'un %24'ü) | CİHAZ (P55) | `akicilik.md:126`; `text_wrap_controller.dart:747–770` | Önbelleği paragraf içi dilime böl ya da metin değişmediyse sonucu sakla |
-| K-29 | Uzun listede açılıştan 500 ms sonra kare başına ≈ 480 kurulum (`_growBudget`); erken dokunuş klavye açılışına denk gelir | TEST | `akicilik.md:101` | Büyümeyi klavye/odak hareketi bitene kadar beklet (`_keyboardMoving` kalıbı) |
+| K-28 | Tek uzun paragrafta `findLinks` + `_scanPlainness` her dizilimde tüm paragrafı tarıyor (not açmada LAYOUT'un %24'ü) | CİHAZ (P55) | `akicilik.md:126`; `text_wrap_controller.dart:747–770` | Önbelleği paragraf içi dilime böl ya da metin değişmediyse sonucu sakla — KAPANDI 2026-11-21 oto/P86-kasma-t2-t9 fbaa2655: önce 200 cümlelik (~11.600 kr) tek paragraf açılış + 5 tuşta `_linkPattern` 6 çağrı (69.615 kr, düz) / 12 çağrı (139.830 kr, bağlantılı+biçimli) → sonra 0 çağrı (0 kr, düz) / 6 çağrı (156 kr, bağlantılı+biçimli) (`test/text_wrap_link_scan_test.dart`); cihaz: ölçülmedi |
+| K-29 | Uzun listede açılıştan 500 ms sonra kare başına ≈ 480 kurulum (`_growBudget`); erken dokunuş klavye açılışına denk gelir | TEST | `akicilik.md:101` | Büyümeyi klavye/odak hareketi bitene kadar beklet (`_keyboardMoving` kalıbı) — KAPANDI 2026-11-21 oto/P86-kasma-t2-t9 ca84af2f: önce erken dokunuş + 9 IME başlangıç karesi + 12 klavye karesinde `ItemsEditor` kurulumu 9 (~5.900 widget) → sonra 0 (`test/items_grow_budget_test.dart`); cihaz: ölçülmedi |
 | K-30 | Üst çubuğun `LayoutBuilder`'ı altındaki her `setState` çubuğu dizime işaretliyor | TEST | `akicilik.md:101` | Çubuğu sabit örnek yap; altındaki durumları T3'e taşı |
 | K-31 | Seç kipinde ve tutamaçlı kipte (tablet/web) madde işaretlemek 23 satırı kuruyor | TEST (S3/S4) | `akicilik.md:129, 137` | `SliverReorderableList` çatallaması gerekir → kullanıcı kararı |
 | K-32 | Sabit ekli notta klavye geçiş karesi ~200 kurulum: `PinnedMediaPane` yeni örnekle kuruluyor | TEST (S17) | `akicilik.md:118` | Medya alt ağacını önbelleğe al (T6) |
@@ -281,6 +283,7 @@ Düzeltme: T5 — tek `AnimationController`, `FadeTransition` + `ScaleTransition
 State'te bir kez. Animasyonları kaldır erişilebilirlik ayarı (`AppMotion.of`) korunur.
 **Kanıt:** widget testi: animasyon boyunca çocuğun `build` sayısı 1 (bugün kare sayısı kadar değil,
 ama `Opacity` render nesnesi her karede boyanır; `debugNeedsPaint` ile katman sayımı).
+— KAPANDI 2026-11-21 oto/P86-kasma-t2-t9 ca0b24fd: `PopIn` ve `RevealUp` `SingleTickerProviderStateMixin` + `AnimationController` + `FadeTransition` (`RenderAnimatedOpacity`) + `Transform`a geçirildi; önce `RenderOpacity` 1, ara kare kurulumu `PopIn` 60 (4/kare) / `RevealUp` 51 (3/kare) → sonra `RenderOpacity` 0 (`RenderAnimatedOpacity` 1), çocuk kurulumu 1, ara kare kurulumu `PopIn` 30 (2/kare) / `RevealUp` 34 (2/kare) (`test/pop_in_reveal_up_test.dart`); cihaz: ölçülmedi.
 
 **K-38 — Saniyelerce süren `TweenAnimationBuilder` geri sayımları (`KOD`, P1).** "Bildirim varken
 yazarken kasma" bulgusunun kökü buydu ve `app_notice.dart`'ta `SteppedCountdown` ile düzeltildi

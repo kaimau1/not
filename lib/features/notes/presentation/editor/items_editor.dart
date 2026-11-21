@@ -582,10 +582,8 @@ class ItemsEditorState extends State<ItemsEditor>
     _budgetTimer = null;
     final budget = _rowBudget;
     if (!mounted || budget == null || noteRouteClosing.value) return;
-    final routeAnimating =
-        ModalRoute.of(context)?.animation?.isAnimating ?? false;
-    if (KeyboardInset.moving.value || routeAnimating) {
-      // Klavye ya da rota geçişi sürerken kare bütçesi animasyonun: sonra devam.
+    if (KeyboardInset.moving.value) {
+      // Klavye açılıp kapanırken kare bütçesi klavyenin: sonra devam.
       final currentEpoch = _growEpoch;
       _budgetTimer = Timer(_kGrowRetry, () => _growBudget(currentEpoch));
       return;
