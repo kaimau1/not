@@ -41,11 +41,12 @@ List<({int start, int end, String fileName})> findAttachmentTags(
   String text,
   Iterable<String> fileNames,
 ) {
+  if (text.isEmpty || !text.contains(kAttachmentTagPrefix)) return const [];
   final names = [
     for (final name in fileNames)
       if (name.trim().isNotEmpty) name.trim(),
   ]..sort((a, b) => b.length - a.length);
-  if (names.isEmpty || text.isEmpty) return const [];
+  if (names.isEmpty) return const [];
 
   final found = <({int start, int end, String fileName})>[];
   var cursor = 0;

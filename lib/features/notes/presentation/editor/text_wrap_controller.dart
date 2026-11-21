@@ -726,6 +726,12 @@ class WrapTextController extends TextEditingController {
 
   /// Pencere denetleyicisi notun görünüş girdilerini alır.
   void copyLooksFrom(WrapTextController other) {
+    if (_rich == other._rich &&
+        identical(_attachmentNames, other._attachmentNames) &&
+        identical(_tagChipColors, other._tagChipColors) &&
+        _videoTimestamps == other._videoTimestamps) {
+      return;
+    }
     _rich = other._rich;
     _attachmentNames = other._attachmentNames;
     _tagChipColors = other._tagChipColors;
@@ -857,16 +863,19 @@ class WrapTextController extends TextEditingController {
         anchorIndex += anchors;
         final key = own.isEmpty ? p : '$p\u0000${own.join(',')}';
         children.add(
-          _paraSpans[key] ??= buildWrapSpan(
-            p,
-            own,
-            style,
-            linkColor: linkColor,
-            rich: _rich,
-            attachmentNames: _attachmentNames,
-            tagChipColors: _tagChipColors.isEmpty ? null : _tagChipColors,
-            videoTimestamps: _videoTimestamps,
-          ),
+          _paraSpans[key] ??=
+              (own.isEmpty && _paraFlags[p] == 0 && !p.contains('📖'))
+              ? TextSpan(text: p, style: style)
+              : buildWrapSpan(
+                  p,
+                  own,
+                  style,
+                  linkColor: linkColor,
+                  rich: _rich,
+                  attachmentNames: _attachmentNames,
+                  tagChipColors: _tagChipColors.isEmpty ? null : _tagChipColors,
+                  videoTimestamps: _videoTimestamps,
+                ),
         );
       }
       if (i < paragraphs.length - 1) children.add(const TextSpan(text: '\n'));

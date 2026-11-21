@@ -5,6 +5,7 @@
 library;
 
 import '../../app/theme/fixed_colors.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -88,31 +89,116 @@ final RegExp _linkPattern = RegExp(
 /// nokta adrese ait değildir.
 const String _trailingPunctuation = '.,;:!?"\'';
 
-/// Metindeki bağlantıların konumları (başlangıç, bitiş, adres, tür).
-List<({int start, int end, String url, LinkKind kind})> findLinks(String text) {
-  final found = <({int start, int end, String url, LinkKind kind})>[];
-  for (final match in _linkPattern.allMatches(text)) {
+String? _linksCacheKey;
+List<({int start, int end, String url, LinkKind kind})> _linksCacheValue =
+    const [];
+
+/// Testlerde [_linkPattern] düzenli ifadesinin kaç kez ve kaç karakter
+/// üzerinde çalıştığını ölçmek için sayaçlar (T8 / K-28).
+@visibleForTesting
+int debugLinkRegexCalls = 0;
+
+@visibleForTesting
+int debugLinkRegexChars = 0;
+
+bool _isAsciiLetter(int c) {
+  final lower = c | 0x20;
+  return lower >= 0x61 && lower <= 0x7a;
+}
+
+bool _isAsciiWhitespace(int c) =>
+    c == 0x20 || c == 0x0a || c == 0x0d || c == 0x09;
+
+bool _isCandidateDot(String text, int dot) {
+  final len = text.length;
+  if (dot + 1 >= len) return false;
+  final next = text.codeUnitAt(dot + 1);
+  if (_isAsciiLetter(next)) return true;
+  if (_isAsciiWhitespace(next)) return false;
+  return dot >= 3 &&
+      (text.codeUnitAt(dot - 1) | 0x20) == 0x77 &&
+      (text.codeUnitAt(dot - 2) | 0x20) == 0x77 &&
+      (text.codeUnitAt(dot - 3) | 0x20) == 0x77;
+}
+
+void _scanLinkToken(
+  String text,
+  int s,
+  int e,
+  List<({int start, int end, String url, LinkKind kind})> found,
+) {
+  final token = s == 0 && e == text.length ? text : text.substring(s, e);
+  debugLinkRegexCalls++;
+  debugLinkRegexChars += token.length;
+  for (final match in _linkPattern.allMatches(token)) {
     var end = match.end;
     // Kapanmayan parantez de adrese dahil edilmez: "(bkz. a.com)".
     while (end > match.start) {
-      final last = text[end - 1];
+      final last = token[end - 1];
       final unbalanced =
-          last == ')' && !text.substring(match.start, end).contains('(');
+          last == ')' && !token.substring(match.start, end).contains('(');
       if (!_trailingPunctuation.contains(last) && !unbalanced) break;
       end--;
     }
     if (end <= match.start) continue;
-    final url = text.substring(match.start, end);
+    final url = token.substring(match.start, end);
     found.add((
-      start: match.start,
-      end: end,
+      start: s + match.start,
+      end: s + end,
       url: url,
       kind: url.contains('@') && !url.contains('://')
           ? LinkKind.email
           : LinkKind.web,
     ));
   }
-  return found;
+}
+
+/// Metindeki bağlantıların konumları (başlangıç, bitiş, adres, tür).
+List<({int start, int end, String url, LinkKind kind})> findLinks(String text) {
+  if (text.isEmpty) return const [];
+  if (text == _linksCacheKey) return _linksCacheValue;
+
+  final len = text.length;
+  var nextDot = text.indexOf('.');
+  var nextScheme = text.indexOf('://');
+  if (nextDot < 0 && nextScheme < 0) {
+    _linksCacheKey = text;
+    _linksCacheValue = const [];
+    return const [];
+  }
+
+  final found = <({int start, int end, String url, LinkKind kind})>[];
+  while (nextDot >= 0 || nextScheme >= 0) {
+    final useDot = nextDot >= 0 && (nextScheme < 0 || nextDot <= nextScheme);
+    final at = useDot ? nextDot : nextScheme;
+    if (useDot && !_isCandidateDot(text, at)) {
+      nextDot = text.indexOf('.', at + 1);
+      continue;
+    }
+    var s = at;
+    while (s > 0 && !_isAsciiWhitespace(text.codeUnitAt(s - 1))) {
+      s--;
+    }
+    var e = at + 1;
+    while (e < len && !_isAsciiWhitespace(text.codeUnitAt(e))) {
+      e++;
+    }
+    _scanLinkToken(text, s, e, found);
+    if (nextDot >= 0 && nextDot < e) {
+      nextDot = text.indexOf('.', e);
+    }
+    if (nextScheme >= 0 && nextScheme < e) {
+      nextScheme = text.indexOf('://', e);
+    }
+  }
+  final result = found.isEmpty
+      ? const <({int start, int end, String url, LinkKind kind})>[]
+      : List<({int start, int end, String url, LinkKind kind})>.unmodifiable(
+          found,
+        );
+  _linksCacheKey = text;
+  _linksCacheValue = result;
+  return result;
 }
 
 /// Metnin tamamı tek bir bağlantıysa o adresi, değilse null döndürür.
