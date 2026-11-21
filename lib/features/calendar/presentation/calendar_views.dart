@@ -359,9 +359,8 @@ class _MonthCell extends StatelessWidget {
               : null,
           child: Text(
             '${day.day}',
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: isToday || off ? FontWeight.w700 : FontWeight.w500,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontWeight: isToday || off ? AppWeight.strong : AppWeight.medium,
               color: dayColor,
             ),
           ),
@@ -372,7 +371,7 @@ class _MonthCell extends StatelessWidget {
             margin: const EdgeInsets.fromLTRB(4, 2, 4, 0),
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(1.5),
+              borderRadius: BorderRadius.circular(AppRadius.hair),
             ),
           ),
       ],

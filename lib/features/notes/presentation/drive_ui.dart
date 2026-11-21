@@ -95,7 +95,11 @@ Future<void> maybeShowDriveOnboarding(BuildContext context, WidgetRef ref) async
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.add_to_drive_outlined, size: 48, color: scheme.primary),
+              Icon(
+                Icons.add_to_drive_outlined,
+                size: AppIconSize.l * 2,
+                color: scheme.primary,
+              ),
               const SizedBox(height: 12),
               Text(
                 l10n.driveOnboardTitle,

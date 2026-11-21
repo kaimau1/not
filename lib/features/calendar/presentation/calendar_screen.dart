@@ -1344,12 +1344,12 @@ class _DayPanelState extends State<_DayPanel>
     with SingleTickerProviderStateMixin {
   late final AnimationController _enter = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 220),
+    duration: AppMotion.short,
   );
   late final Animation<Offset> _slide = Tween(
     begin: const Offset(0, 0.25),
     end: Offset.zero,
-  ).animate(CurvedAnimation(parent: _enter, curve: Curves.easeOutCubic));
+  ).animate(CurvedAnimation(parent: _enter, curve: AppMotion.enter));
 
   @override
   void initState() {
@@ -1407,8 +1407,8 @@ class _DayPanelState extends State<_DayPanel>
                       width: 36,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(2),
+                        color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.disabled),
+                        borderRadius: BorderRadius.circular(AppRadius.hair),
                       ),
                     ),
                     Row(

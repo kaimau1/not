@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/router.dart';
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../notes/data/notes_repository.dart';
@@ -329,7 +330,7 @@ class LinkedNotesList extends ConsumerWidget {
                           TextButton.icon(
                             key: ValueKey('linked-note-time-$id'),
                             onPressed: () => unawaited(_pickTime(context, id)),
-                            icon: const Icon(Icons.schedule, size: 18),
+                            icon: const Icon(Icons.schedule, size: AppIconSize.s),
                             label: Text(
                               times[id] == null
                                   ? l10n.calendarLinkTime
