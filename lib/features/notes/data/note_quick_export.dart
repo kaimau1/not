@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/painting.dart' show Color;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdfrx/pdfrx.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -15,6 +16,7 @@ import '../domain/note_type.dart';
 import 'attachment_repository.dart';
 import 'image_annotations.dart';
 import 'note_pdf.dart';
+import 'pdf_edit.dart';
 import 'pdf/pdf_page_render.dart';
 
 /// Paylaşım levhasının TEK DOKUNUŞLUK dosya çıktıları (kullanıcı isteği
@@ -151,47 +153,150 @@ class NoteQuickExport {
   static Future<List<XFile>> attachmentFiles(
     Note note, {
     required AttachmentRepository? attachments,
-  }) => filesOf(shareableAttachments(note), attachments: attachments);
+  }) => filesOf(
+    shareableAttachments(note),
+    attachments: attachments,
+    siblings: note.attachments,
+  );
 
   /// [list]teki eklerin dosyaları ([attachmentFiles] kuralıyla). Tam ekran
   /// görüntüleyicinin "Paylaş" düğmesi tek ekle çağırır (F13.5).
   static Future<List<XFile>> filesOf(
     List<Attachment> list, {
     required AttachmentRepository? attachments,
+    List<Attachment> siblings = const [],
   }) async {
     final out = <XFile>[];
     Directory? temp;
+    Future<void> add(Uint8List bytes, String name, String mime) async {
+      if (kIsWeb) {
+        out.add(XFile.fromData(bytes, name: name, mimeType: mime));
+        return;
+      }
+      temp ??= await Directory.systemTemp.createTemp('note_files_');
+      final file = File('${temp!.path}/${safeShareName(name)}');
+      await file.writeAsBytes(bytes);
+      out.add(XFile(file.path, mimeType: mime, name: name));
+    }
+
     for (final a in list) {
+      // GÖRSEL BALONLU KİPE ALINDIYSA çizim görselin TÜRETİLMİŞ belgesinde
+      // durur (`sourceId`); görsel çizimsiz gidiyordu (kullanıcı bulgusu
+      // 2026-11-21). Belge basılıp sayfası GÖRSEL olarak gönderilir.
+      final derived = a.kind == AttachmentKind.image && !hasImageAnnotations(a)
+          ? siblings
+                .where(
+                  (x) =>
+                      x.kind == AttachmentKind.pdf &&
+                      x.sourceId == a.id &&
+                      hasPdfAnnotations(x),
+                )
+                .firstOrNull
+          : null;
+      final annotated = hasImageAnnotations(a) || hasPdfAnnotations(a);
       if (!kIsWeb &&
+          derived == null &&
+          !annotated &&
           a.localPath.isNotEmpty &&
-          !hasImageAnnotations(a) &&
           File(a.localPath).existsSync()) {
         out.add(XFile(a.localPath, mimeType: a.mimeType, name: a.fileName));
         continue;
       }
       if (attachments == null || a.kind == AttachmentKind.video) continue;
       try {
+        if (derived != null) {
+          final burned = await burnedPdf(derived, attachments);
+          if (burned != null) {
+            final pages = await pngPages(burned, name: _baseName(a.fileName));
+            out.addAll(pages);
+            continue;
+          }
+        }
         final raw = await attachments.readBytes(a);
         if (raw == null) continue;
+        if (a.kind == AttachmentKind.pdf && hasPdfAnnotations(a)) {
+          // PDF'e kalemle yazılan/balon eklenen belge DAMGALI gider
+          // (kullanıcı bulgusu 2026-11-21: "PDF üstüne yazılı paylaşılmalı").
+          final burned = await burnedPdf(a, attachments, raw: raw);
+          await add(burned ?? raw, a.fileName, 'application/pdf');
+          continue;
+        }
         // Katmanlı görsel basılmış PNG olarak gider (F18.13).
         final burned = await burnImageAnnotations(raw, a);
         final bytes = burned ?? raw;
         final name = burned == null ? a.fileName : _pngName(a.fileName);
         final mime = burned == null ? a.mimeType : 'image/png';
-        if (kIsWeb) {
-          out.add(XFile.fromData(bytes, name: name, mimeType: mime));
-          continue;
-        }
-        temp ??= await Directory.systemTemp.createTemp('note_files_');
-        final file = File('${temp.path}/${NotePdf.safeFileName(name)}');
-        await file.writeAsBytes(bytes);
-        out.add(XFile(file.path, mimeType: mime, name: name));
+        await add(bytes, name, mime);
       } catch (_) {
         // Erişilemeyen ek atlanır.
       }
     }
     return out;
   }
+
+  /// PDF ekinin çizim + balonları basılmış kopyası; damga yoksa ya da
+  /// dosya okunamazsa null. Font ana izolede okunur (izolede `rootBundle`
+  /// yok).
+  static Future<Uint8List?> burnedPdf(
+    Attachment a,
+    AttachmentRepository attachments, {
+    Uint8List? raw,
+  }) async {
+    if (!hasPdfAnnotations(a)) return null;
+    final bytes = raw ?? await attachments.readBytes(a);
+    if (bytes == null) return null;
+    final font = await rootBundle.load(NotePdf.fontAsset);
+    return PdfEdit.burnForSharingInBackground(
+      bytes,
+      bubbles: a.bubbles,
+      ink: a.ink,
+      fontBytes: font.buffer.asUint8List(font.offsetInBytes, font.lengthInBytes),
+    );
+  }
+
+  /// Nottaki çizimli/balonlu PDF eklerinin basılmış kopyaları (ad, bayt).
+  /// Hızlı "PDF" ve "Görsel" paylaşımı belge notunda bunları gönderir:
+  /// eskiden yalnız notun METNİ dizilip belge ve üstündeki yazı hiç
+  /// gitmiyordu (kullanıcı bulgusu 2026-11-21).
+  static Future<List<(String, Uint8List)>> annotatedPdfs(
+    Note note, {
+    required AttachmentRepository? attachments,
+    required String baseName,
+  }) async {
+    if (attachments == null) return const [];
+    final out = <(String, Uint8List)>[];
+    for (final a in note.attachments) {
+      if (a.kind != AttachmentKind.pdf || !hasPdfAnnotations(a)) continue;
+      try {
+        final burned = await burnedPdf(a, attachments);
+        if (burned == null) continue;
+        final n = out.length + 1;
+        out.add((n > 1 ? '$baseName-$n' : baseName, burned));
+      } catch (_) {
+        // Okunamayan belge paylaşımı düşürmez.
+      }
+    }
+    return out;
+  }
+}
+
+/// PDF ekinin üstünde çizim ya da balon var mı (paylaşımda basılır).
+bool hasPdfAnnotations(Attachment a) =>
+    a.kind == AttachmentKind.pdf && (a.ink.isNotEmpty || a.bubbles.isNotEmpty);
+
+/// Geçici dosya adı: uzantı KORUNUR (60 karakter kırpması uzantıyı
+/// yiyordu — alıcı uygulama dosya türünü tanımıyordu).
+String safeShareName(String name) {
+  final dot = name.lastIndexOf('.');
+  if (dot <= 0 || name.length - dot > 6) return NotePdf.safeFileName(name);
+  final base = NotePdf.safeFileName(name.substring(0, dot));
+  return '$base${name.substring(dot)}';
+}
+
+String _baseName(String fileName) {
+  final dot = fileName.lastIndexOf('.');
+  final base = dot > 0 ? fileName.substring(0, dot) : fileName;
+  return NotePdf.safeFileName(base.isEmpty ? 'gorsel' : base);
 }
 
 /// Dosya olarak paylaşılabilecek ekler: YouTube (dosyasız) ve notun arka

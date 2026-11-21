@@ -227,7 +227,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ? const SizedBox.shrink()
                     : withoutHeroWalk(const DashboardScreen()),
               ),
-              GoRoute(path: '/notebook/:id', builder: _notebookBuilder),
+              GoRoute(path: '/notebook/:id', pageBuilder: _notebookPage),
               GoRoute(
                 path: '/note/:id',
                 // ValueKey(noteId): editör State'i tüm kurulumunu initState'te
@@ -243,7 +243,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           // kurulmasın diye ayrı yol (bkz. notePushPath).
           GoRoute(
             path: '$kOutsideShellNotePrefix/notebook/:id',
-            builder: _notebookBuilder,
+            pageBuilder: _notebookPage,
           ),
           GoRoute(
             path: '$kOutsideShellNotePrefix/note/:id',
@@ -444,6 +444,20 @@ Widget _notebookBuilder(BuildContext context, GoRouterState state) =>
         key: ValueKey('note-${state.pathParameters['id']}'),
         noteId: state.pathParameters['id']!,
       ),
+    );
+
+/// Defter sayfası: not rotasıyla aynı (kenardan çekince kapanmaz).
+Page<void> _notebookPage(BuildContext context, GoRouterState state) =>
+    NoteOpenPage<void>(
+      key: state.pageKey,
+      name: state.name ?? state.path,
+      arguments: <String, String>{
+        ...state.pathParameters,
+        ...state.uri.queryParameters,
+      },
+      restorationId: state.pageKey.value,
+      noteId: state.pathParameters['id']!,
+      child: _notebookBuilder(context, state),
     );
 
 /// `/note/:id` sayfası: karttan açılışta genişleyen geçiş (bkz.

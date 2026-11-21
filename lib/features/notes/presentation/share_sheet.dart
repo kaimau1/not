@@ -701,6 +701,46 @@ Future<void> runNoteShare(
     case 'png':
       snack(l10n.shareQuickPreparing);
       try {
+        // ÇİZİMLİ/BALONLU BELGE (kullanıcı bulgusu 2026-11-21: "PDF'ye
+        // kalemle yazınca görsel olarak paylaşmıyor, değişik dosya türü"):
+        // eskiden yalnız notun metni dizilip belge hiç gitmiyordu. Belge
+        // notunda (balonlu) yalnız basılı belge; metin notunda not + belge.
+        final stamped = await NoteQuickExport.annotatedPdfs(
+          note,
+          attachments: ref.read(attachmentRepositoryProvider),
+          baseName: NotePdf.safeFileName(subject),
+        );
+        if (stamped.isNotEmpty && note.type.isPageNoteType) {
+          final files = <XFile>[];
+          for (final (name, bytes) in stamped) {
+            if (choice == 'png') {
+              files.addAll(await NoteQuickExport.pngPages(bytes, name: name));
+            } else if (kIsWeb) {
+              files.add(
+                XFile.fromData(
+                  bytes,
+                  name: '$name.pdf',
+                  mimeType: 'application/pdf',
+                ),
+              );
+            } else {
+              files.add(
+                XFile(
+                  await NotePdf.writeTemp(bytes, name),
+                  mimeType: 'application/pdf',
+                ),
+              );
+            }
+          }
+          if (files.isEmpty) {
+            snack(l10n.shareAsTextEmpty);
+            return;
+          }
+          await SharePlus.instance.share(
+            ShareParams(files: files, subject: subject),
+          );
+          return;
+        }
         final bytes = await NoteQuickExport.pdf(
           note,
           options: options,
@@ -745,6 +785,7 @@ Future<void> runNoteShare(
         ref,
         shareableAttachments(note),
         subject: subject,
+        siblings: note.attachments,
       );
     case 'pdf':
       if (countStampablePdfs(note) == 0) {

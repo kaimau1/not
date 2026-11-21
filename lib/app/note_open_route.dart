@@ -141,6 +141,14 @@ class _NoteOpenRoute<T> extends PageRoute<T>
   @override
   bool get fullscreenDialog => false;
 
+  /// **KENARDAN ÇEKİNCE NOT KAPANMASIN** (kullanıcı bulgusu 2026-11-21:
+  /// "not içinde soldan sağa çekince en kenardan kapatıyor"): temanın
+  /// Cupertino geçişi sol kenarda geri çekme jesti kuruyordu; notta kalemle
+  /// ya da parmakla kenardan başlayan her çizgi/kaydırma notu kapatıyordu.
+  /// Not geri tuşu / ← düğmesiyle kapanır.
+  @override
+  bool get popGestureEnabled => false;
+
   @override
   String get debugLabel => '${super.debugLabel}(${_page.name})';
 

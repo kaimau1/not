@@ -34,10 +34,21 @@ extension _EditorGestures on _NoteEditorScreenState {
     final root = _pageKey.currentContext;
     if (root == null || _pendingEmbed == null) return;
     final box = inkBounds(points);
-    final state = editableTextAt(root, box.center, slop: box.height / 2);
+    // DOKUNUŞ / çok kısa çizgi: dokunulan KELİME (kullanıcı isteği
+    // 2026-11-21: "tek kelimeye tıklanarak da seçilebilmeli").
+    final tap = box.longestSide < 16;
+    final state = editableTextAt(
+      root,
+      box.center,
+      slop: tap ? 6 : box.height / 2,
+    );
     final selection = state == null
         ? null
-        : selectionInside(state.renderEditable, box);
+        : tap
+        ? wordSelectionAt(state.renderEditable, box.center)
+        : selectionInside(state.renderEditable, box) ??
+              // Dar halka (tek harf boyu) seçim üretmiyordu: ortadaki kelime.
+              wordSelectionAt(state.renderEditable, box.center);
     final controller = state?.widget.controller;
     if (selection == null || controller is! WrapTextController) {
       _showSnack(l10n.embedLassoMissed);

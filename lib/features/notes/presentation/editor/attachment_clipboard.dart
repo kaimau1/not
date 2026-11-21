@@ -153,15 +153,22 @@ class ViewerCommonActions extends StatelessWidget {
 Future<void> shareAttachment(
   BuildContext context,
   WidgetRef ref,
-  Attachment a,
-) async {
+  Attachment a, {
+  List<Attachment> siblings = const [],
+}) async {
   if (a.isWebVideo) {
     await SharePlus.instance.share(
       ShareParams(text: a.webUrl, subject: a.fileName),
     );
     return;
   }
-  await shareAttachmentFiles(context, ref, [a], subject: a.fileName);
+  await shareAttachmentFiles(
+    context,
+    ref,
+    [a],
+    subject: a.fileName,
+    siblings: siblings,
+  );
 }
 
 /// Eklerin dosyalarını gönderir: not levhasındaki "Ekler" ile ek menüsündeki
@@ -171,6 +178,7 @@ Future<void> shareAttachmentFiles(
   WidgetRef ref,
   List<Attachment> list, {
   required String subject,
+  List<Attachment> siblings = const [],
 }) async {
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
@@ -181,6 +189,7 @@ Future<void> shareAttachmentFiles(
     final files = await NoteQuickExport.filesOf(
       list,
       attachments: ref.read(attachmentRepositoryProvider),
+      siblings: siblings,
     );
     messenger.hideMessage();
     if (files.isEmpty) {

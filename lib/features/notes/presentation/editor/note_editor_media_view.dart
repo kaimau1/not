@@ -1088,7 +1088,12 @@ extension _EditorMediaView on _NoteEditorScreenState {
             onSaveAs: pinned.isWebVideo
                 ? null
                 : () => unawaited(AttachmentSaveAs.run(context, ref, pinned)),
-            onShare: () => unawaited(shareAttachment(context, ref, pinned)),
+            onShare: () => unawaited(shareAttachment(
+                context,
+                ref,
+                pinned,
+                siblings: _note?.attachments ?? const [],
+              )),
             // Görsel balonlu görünümden sabite alındıysa balonları onun
             // türetilmiş belgesinde (bkz. Attachment.sourceId).
             bubbleDoc: pinned.kind == AttachmentKind.image

@@ -79,11 +79,17 @@ extension _EditorEmbed on _NoteEditorScreenState {
       _showSnack(context.l10n.attachmentNotSynced);
       return;
     }
+    // GÖMÜLÜ EKE YAZILAN KAYBOLUYORDU (kullanıcı bulgusu 2026-11-21: "kalemle
+    // yazdıklarımı kaydetmiyor, her seferinde sıfırlanıyor"): önizlemenin
+    // "Tam ekran"ı görüntüleyiciyi boş geri çağrıyla açıyordu — kalem orada
+    // da çiziyor ama değişiklik nota hiç yazılmıyordu. Yazma izni varsa
+    // değişiklik HER İKİ yolda da kaydedilir; ayrım yalnız araçlar.
+    final save = _readOnly ? null : _updateAttachment;
     if (attachment.kind == AttachmentKind.image) {
       openImageViewer(
         context,
-        attachment,
-        editing ? _updateAttachment : (_) {},
+        _currentAttachment(attachment),
+        save ?? (_) {},
         onCrop: editing ? _cropImage : null,
         onRotate: editing ? _rotateImage : null,
         // Nottaki BÜTÜN görseller (sayfadakiler + şerittekiler) galeri olur:
@@ -103,9 +109,9 @@ extension _EditorEmbed on _NoteEditorScreenState {
           // kutu sayfayı `pdfPage`e yazıyor ama görüntüleyiciye verilmiyordu.
           // Dönüşte tam ekranda gelinen sayfa sabite/kutuya yansır.
           AttachmentKind.pdf => PdfViewerScreen(
-            attachment: attachment,
+            attachment: _currentAttachment(attachment),
             initialPage: _currentAttachment(attachment).pdfPage,
-            onPageChanged: editing
+            onPageChanged: save != null
                 ? (page) {
                     final now = _currentAttachment(attachment);
                     if (now.pdfPage != page) {
@@ -113,7 +119,7 @@ extension _EditorEmbed on _NoteEditorScreenState {
                     }
                   }
                 : null,
-            onChanged: editing ? _updateAttachment : null,
+            onChanged: save,
           ),
           AttachmentKind.slide => SlideViewerScreen(
             attachment: attachment,
@@ -225,7 +231,8 @@ extension _EditorEmbed on _NoteEditorScreenState {
   /// Gövdedeki [start]–[end] aralığına (mantıksal metin) gömer: önce seçici.
   Future<void> _embedRange(int start, int end) async {
     final logical = _bodyController.logicalText;
-    final range = trimmedRange(logical, start, end);
+    final snapped = snapToWords(logical, start, end);
+    final range = trimmedRange(logical, snapped.start, snapped.end);
     if (range == null) return;
     final label = logical.substring(range.start, range.end);
     final chosen = await _pickEmbedTarget(label: label);
@@ -262,7 +269,12 @@ extension _EditorEmbed on _NoteEditorScreenState {
           : null,
       onChanged: _updateAttachment,
       onCopy: () => unawaited(_copyAttachment(attachment)),
-      onShare: () => unawaited(shareAttachment(context, ref, attachment)),
+      onShare: () => unawaited(shareAttachment(
+          context,
+          ref,
+          attachment,
+          siblings: _note?.attachments ?? const [],
+        )),
       onReplace: () => unawaited(_replaceEmbed(label)),
       onUnlink: () => _unlinkEmbed(label),
       viewSwitch: _embedViewSwitch(attachment),
@@ -572,6 +584,10 @@ extension _EditorEmbed on _NoteEditorScreenState {
         controller.text,
         selection.end,
       ).clamp(start, logical.length);
+      // Kelime ortasından bölünmesin (daire ilk harfi kaçırınca "E|spanso").
+      final w = snapToWords(logical, start, end);
+      start = w.start;
+      end = w.end;
       label = logical.substring(start, end).trim();
     }
     _update(() => _pendingEmbed = null);
@@ -642,7 +658,8 @@ extension _EditorEmbed on _NoteEditorScreenState {
       await _embedRange(start, end);
       return;
     }
-    final range = trimmedRange(logical, start, end);
+    final snapped = snapToWords(logical, start, end);
+    final range = trimmedRange(logical, snapped.start, snapped.end);
     if (range == null) return;
     final label = logical.substring(range.start, range.end);
     final chosen = await _pickEmbedTarget(label: label);

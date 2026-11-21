@@ -195,6 +195,54 @@ TextSelection? selectionInside(RenderEditable editable, Rect lasso) {
   );
 }
 
+/// Kelime karakteri mi (harf, rakam, Türkçe harfler, alt çizgi, kesme
+/// işareti kelimenin içinde).
+bool _isWordChar(int code) {
+  final c = String.fromCharCode(code);
+  return RegExp(r"[\p{L}\p{N}_'’]", unicode: true).hasMatch(c);
+}
+
+/// [start]–[end] aralığını KELİME SINIRLARINA genişletir (kullanıcı bulgusu
+/// 2026-11-21: daire kelimenin ilk harfini kaçırınca "E|spanso" diye
+/// bölünüyordu). Sonra baştaki/sondaki boşluklar kırpılır.
+({int start, int end}) snapToWords(String text, int start, int end) {
+  var s = start.clamp(0, text.length);
+  var e = end.clamp(s, text.length);
+  while (s > 0 && _isWordChar(text.codeUnitAt(s - 1))) {
+    s--;
+  }
+  while (e < text.length && _isWordChar(text.codeUnitAt(e))) {
+    e++;
+  }
+  while (s < e && text[s].trim().isEmpty) {
+    s++;
+  }
+  while (e > s && text[e - 1].trim().isEmpty) {
+    e--;
+  }
+  return (start: s, end: e);
+}
+
+/// [global] noktasındaki KELİMENİN seçimi (görüntü metni konumlarında);
+/// kelime yoksa null.
+TextSelection? wordSelectionAt(RenderEditable editable, Offset global) {
+  final local = editable.globalToLocal(global);
+  final pos = editable.getPositionForPoint(global);
+  final text = editable.text?.toPlainText() ?? '';
+  if (text.isEmpty) return null;
+  var at = pos.offset.clamp(0, text.length);
+  // İmleç kelimenin hemen SONUNA düştüyse bir geri.
+  if ((at >= text.length || !_isWordChar(text.codeUnitAt(at))) &&
+      at > 0 &&
+      _isWordChar(text.codeUnitAt(at - 1))) {
+    at--;
+  }
+  if (local.dx < -20 || at >= text.length) return null;
+  final w = snapToWords(text, at, at);
+  if (w.start == w.end) return null;
+  return TextSelection(baseOffset: w.start, extentOffset: w.end);
+}
+
 /// Jest kipinin örtüsü: tek parmak çizgisi [onStroke]'a (KÜRESEL noktalar),
 /// iki parmak [scrollPosition]'ı kaydırır.
 class InkGestureLayer extends StatefulWidget {
@@ -271,7 +319,9 @@ class _InkGestureLayerState extends State<InkGestureLayer> {
     final points = _global;
     _global = [];
     _points.value = const [];
-    if (!cancelled && points.length > 1) widget.onStroke(points);
+    // Tek dokunuş da gider (tek nokta): bağlama kipinde dokunulan KELİME
+    // seçilir (kullanıcı isteği 2026-11-21).
+    if (!cancelled && points.isNotEmpty) widget.onStroke(points);
   }
 
   @override

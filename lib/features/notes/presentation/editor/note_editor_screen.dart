@@ -2446,7 +2446,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onVideoToNote: _videoToNote,
       onTranscribe: _openTranscript,
       onSaveAs: (a) => unawaited(AttachmentSaveAs.run(context, ref, a)),
-      onShare: (a) => unawaited(shareAttachment(context, ref, a)),
+      onShare: (a) => unawaited(shareAttachment(
+          context,
+          ref,
+          a,
+          siblings: _note?.attachments ?? const [],
+        )),
       onPinTop: _pinMediaTop,
       onPinHover: _setPinHover,
       onPinDrag: _setPinDrag,
