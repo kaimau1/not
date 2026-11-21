@@ -9409,4 +9409,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get storeModeAddHint => 'Quickly add an item…';
+
+  @override
+  String get backupPasswordTitle => 'Backup password (optional)';
+
+  @override
+  String get backupPasswordInfo =>
+      'Setting a password encrypts the backup with AES-256. A forgotten password cannot be recovered.';
+
+  @override
+  String get backupPasswordHint => 'Password';
+
+  @override
+  String get backupPasswordConfirmHint => 'Confirm password';
+
+  @override
+  String get backupPasswordMismatch => 'Passwords do not match';
+
+  @override
+  String get backupWithoutPassword => 'Back up without password';
+
+  @override
+  String get backupWithPassword => 'Encrypt & back up';
+
+  @override
+  String get backupEnterPasswordTitle => 'Encrypted backup';
+
+  @override
+  String get backupEnterPasswordBody =>
+      'This backup is password-protected. Enter the password to restore.';
+
+  @override
+  String get backupWrongPassword =>
+      'Wrong password or unable to decrypt backup';
 }

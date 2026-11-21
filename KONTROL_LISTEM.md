@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Parolalı tam yedek (AES-256 `.notyedek`) dışa aktarma ve geri yükleme (21 Kasım, P91, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) Ayarlar → Yedekle → **Tam yedek** → açılan pencerede **Parolasız yedekle** eski gibi tek dokunuşla çalışıyor mu; (2) parola + doğrulama girip **Şifreli yedekle** → `.notyedek` kaydediliyor mu; (3) **Yedekten geri yükle** ile şifreli dosyayı seç → kendiliğinden parola soruyor mu, yanlış parolada "Parola yanlış" deyip doğru parolayla notları geri yüklüyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Akıllı liste Mağaza kipi (AL-5) + Markdown (.zip) kolay dışa aktarma (21 Kasım, P90, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) herhangi bir onay kutulu liste notunda ⋮ → **Mağaza kipi** → büyük satırlara tek elle dokununca klavye açılmadan işaretleniyor mu, üstte kalan sayı + ilerleme çubuğu güncelleniyor mu, **Alınanları gizle** / **Reyona göre sırala** / alttan hızlı ekle / **Alınanları tamamla** düzgün çalışıyor mu; (2) Ayarlar → Yedekle → **Markdown (.zip) dışa aktar** → kilitli not varsa kimlik sorup klasör yapısında `.md` dosyaları içeren `.zip` kaydediyor mu.
   Yanlışsa: madde numarasını yaz.

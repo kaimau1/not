@@ -450,7 +450,20 @@ abstract class BackupSink {
 }
 
 /// Bellekte ZIP kurar ([bytes] `close`tan sonra dolar).
+/// ZIP yerel başlığındaki şifreleme bayrağı (bit 0) — ilk 8 bayttan okunur.
+bool isEncryptedZipHead(List<int> head) =>
+    head.length >= 8 &&
+    head[0] == 0x50 &&
+    head[1] == 0x4B &&
+    head[2] == 0x03 &&
+    head[3] == 0x04 &&
+    (head[6] & 0x01) != 0;
+
 class MemoryBackupSink implements BackupSink {
+  MemoryBackupSink({String? password})
+    : _password = password != null && password.isNotEmpty ? password : null;
+
+  final String? _password;
   final _archive = Archive();
   Uint8List? bytes;
 
@@ -460,7 +473,9 @@ class MemoryBackupSink implements BackupSink {
 
   @override
   Future<void> close() async {
-    bytes = Uint8List.fromList(ZipEncoder().encode(_archive));
+    bytes = Uint8List.fromList(
+      ZipEncoder(password: _password).encode(_archive),
+    );
   }
 }
 

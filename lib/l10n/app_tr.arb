@@ -4228,5 +4228,15 @@
   "storeModeRemaining": "{remaining} / {total} kaldı",
   "@storeModeRemaining": {"placeholders": {"remaining": {"type": "int"}, "total": {"type": "int"}}},
   "storeModeAllDone": "Hepsi tamam!",
-  "storeModeAddHint": "Aklına geleni hızlı ekle…"
+  "storeModeAddHint": "Aklına geleni hızlı ekle…",
+  "backupPasswordTitle": "Yedek parolası (isteğe bağlı)",
+  "backupPasswordInfo": "Parola belirlersen yedek AES-256 ile şifrelenir. Parolayı unutursan yedek açılamaz.",
+  "backupPasswordHint": "Parola",
+  "backupPasswordConfirmHint": "Parolayı doğrula",
+  "backupPasswordMismatch": "Parolalar eşleşmiyor",
+  "backupWithoutPassword": "Parolasız yedekle",
+  "backupWithPassword": "Şifreli yedekle",
+  "backupEnterPasswordTitle": "Şifreli yedek",
+  "backupEnterPasswordBody": "Bu yedek parola ile korunuyor. Geri yüklemek için parolayı gir.",
+  "backupWrongPassword": "Parola yanlış veya yedek çözülemedi"
 }

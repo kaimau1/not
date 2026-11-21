@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
@@ -102,6 +103,9 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
     return;
   }
   if (!context.mounted) return;
+  final choice = await showBackupExportPasswordDialog(context);
+  if (choice == null || !context.mounted) return;
+  final password = choice.password;
   final folders = ref.read(foldersStreamProvider).value ?? const [];
   final name = backupFileName();
   try {
@@ -110,7 +114,7 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
     final dialog = showBackupProgress(context, l10n.backupInProgress, progress);
     try {
       if (kIsWeb) {
-        final sink = MemoryBackupSink();
+        final sink = MemoryBackupSink(password: password);
         await service.export(
           sink,
           allNotes: notes,
@@ -128,7 +132,7 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
         final dir = await getTemporaryDirectory();
         final path = '${dir.path}/$name';
         await service.export(
-          FileBackupSink(path),
+          FileBackupSink(path, password: password),
           allNotes: notes,
           folderList: folders,
           calendarData: calendarSnapshotOf(ref),
@@ -262,14 +266,24 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
   Future<void>? dialog;
   try {
     final head = await _head(file);
+    final encrypted = isEncryptedZipHead(head);
     final RestoreResult result;
     switch (sniffBackup(head)) {
       case BackupFormat.full:
+        String? password;
+        if (encrypted) {
+          if (!context.mounted) return;
+          password = await showBackupRestorePasswordDialog(context);
+          if (password == null || password.isEmpty || !context.mounted) return;
+        }
         if (!context.mounted) return;
         dialog = showBackupProgress(context, l10n.restoreInProgress, progress);
         final Archive archive = kIsWeb || file.path.isEmpty
-            ? ZipDecoder().decodeBytes(await file.readAsBytes())
-            : openBackupFile(file.path);
+            ? ZipDecoder().decodeBytes(
+                await file.readAsBytes(),
+                password: password,
+              )
+            : openBackupFile(file.path, password: password);
         result = await service.restore(
           archive,
           existing: existing,
@@ -294,6 +308,8 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
     );
   } on BackupCancelled {
     messenger.showMessage(l10n.backupCancelled);
+  } on ArchiveException {
+    messenger.showMessage(l10n.backupWrongPassword);
   } on FormatException {
     messenger.showMessage(l10n.importBackupInvalid);
   } catch (e) {
@@ -301,6 +317,183 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
   } finally {
     progress.finish();
     await dialog;
+  }
+}
+
+/// Parolalı tam yedek dışa aktarma penceresi (P91, PLAN §1.4/6).
+/// `null` = iptal, `(password: null)` = parolasız, `(password: '...')` = AES-256.
+Future<({String? password})?> showBackupExportPasswordDialog(
+  BuildContext context,
+) => showDialog<({String? password})>(
+  context: context,
+  builder: (_) => const _ExportPasswordDialog(),
+);
+
+/// Şifreli yedek geri yüklerken parola soran pencere (P91).
+Future<String?> showBackupRestorePasswordDialog(BuildContext context) =>
+    showDialog<String>(
+      context: context,
+      builder: (_) => const _RestorePasswordDialog(),
+    );
+
+class _ExportPasswordDialog extends StatefulWidget {
+  const _ExportPasswordDialog();
+
+  @override
+  State<_ExportPasswordDialog> createState() => _ExportPasswordDialogState();
+}
+
+class _ExportPasswordDialogState extends State<_ExportPasswordDialog> {
+  final _pass = TextEditingController();
+  final _confirm = TextEditingController();
+  bool _obscure = true;
+  String? _error;
+
+  @override
+  void dispose() {
+    _pass.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  void _submitEncrypted() {
+    final p = _pass.text;
+    if (p.isEmpty) {
+      Navigator.pop(context, (password: null));
+      return;
+    }
+    if (p != _confirm.text) {
+      setState(() => _error = context.l10n.backupPasswordMismatch);
+      return;
+    }
+    Navigator.pop(context, (password: p));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: Text(l10n.backupPasswordTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.s,
+        children: [
+          Text(l10n.backupPasswordInfo, style: AppText.of(theme).meta),
+          TextField(
+            key: const ValueKey('backup-export-pass'),
+            controller: _pass,
+            obscureText: _obscure,
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+            decoration: InputDecoration(
+              labelText: l10n.backupPasswordHint,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                ),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
+            ),
+          ),
+          TextField(
+            key: const ValueKey('backup-export-pass-confirm'),
+            controller: _confirm,
+            obscureText: _obscure,
+            onChanged: (_) {
+              if (_error != null) setState(() => _error = null);
+            },
+            onSubmitted: (_) => _submitEncrypted(),
+            decoration: InputDecoration(
+              labelText: l10n.backupPasswordConfirmHint,
+              errorText: _error,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          key: const ValueKey('backup-export-no-pass'),
+          onPressed: () => Navigator.pop(context, (password: null)),
+          child: Text(l10n.backupWithoutPassword),
+        ),
+        FilledButton(
+          key: const ValueKey('backup-export-with-pass'),
+          onPressed: _submitEncrypted,
+          child: Text(l10n.backupWithPassword),
+        ),
+      ],
+    );
+  }
+}
+
+class _RestorePasswordDialog extends StatefulWidget {
+  const _RestorePasswordDialog();
+
+  @override
+  State<_RestorePasswordDialog> createState() => _RestorePasswordDialogState();
+}
+
+class _RestorePasswordDialogState extends State<_RestorePasswordDialog> {
+  final _pass = TextEditingController();
+  bool _obscure = true;
+
+  @override
+  void dispose() {
+    _pass.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final p = _pass.text;
+    if (p.isEmpty) return;
+    Navigator.pop(context, p);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: Text(l10n.backupEnterPasswordTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.s,
+        children: [
+          Text(l10n.backupEnterPasswordBody, style: AppText.of(theme).meta),
+          TextField(
+            key: const ValueKey('backup-restore-pass'),
+            controller: _pass,
+            obscureText: _obscure,
+            autofocus: true,
+            onSubmitted: (_) => _submit(),
+            decoration: InputDecoration(
+              labelText: l10n.backupPasswordHint,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                ),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const ValueKey('backup-restore-pass-submit'),
+          onPressed: _submit,
+          child: Text(l10n.ok),
+        ),
+      ],
+    );
   }
 }
 
