@@ -98,6 +98,12 @@ ActionMenu noteMenuModel(
           if (isList) ...[
             MenuAction('toText', l10n.convertToText, Icons.notes_outlined),
             MenuAction('sortItems', l10n.sortItems, Icons.sort),
+            if (!readOnly && note.items.any((i) => !i.header && i.checked))
+              MenuAction(
+                'finishShopping',
+                l10n.finishShopping,
+                Icons.shopping_bag_outlined,
+              ),
             MenuAction(
               'columns',
               note.listColumns == 2 ? l10n.listOneColumn : l10n.listTwoColumns,

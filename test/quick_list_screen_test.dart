@@ -55,6 +55,7 @@ class _DropRepo extends CountingNotesRepository {
     String? folderId,
     DateTime? reminderAt,
     int listColumns = 1,
+    String? listKind,
   }) {
     created.add((type, body));
     return Future.value('yeni${created.length}');

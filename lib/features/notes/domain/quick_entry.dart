@@ -78,6 +78,37 @@ String quickItemKey(String text) => quickAscii(quickBaseName(text));
 String quickCompose(String name, String qty) =>
     qty.isEmpty ? name : '$name ($qty)';
 
+/// "Domates (3 kg)" → "3 kg"; miktar yoksa "".
+String quickQtyOf(String text) {
+  final m = RegExp(r'^(.*?)\s*\(([^()]*)\)\s*$').firstMatch(text.trim());
+  return m == null ? '' : m.group(2)!.trim();
+}
+
+/// AL-2 miktar toplama: "2" + "1" → "3", "1 kg" + "2 kg" → "3 kg",
+/// "500 g" + "250 g" → "750 g". Birimler uyuşmazsa yeni [addedQty] döner.
+String combineQuickQuantities(String existingQty, String addedQty) {
+  final a = _parseQtyParts(existingQty);
+  final b = _parseQtyParts(addedQty);
+  if (a == null || b == null) return addedQty;
+  if (a.unit != b.unit) return addedQty;
+  final sum = a.value + b.value;
+  final numStr = sum == sum.roundToDouble()
+      ? '${sum.round()}'
+      : sum.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+  return a.unit.isEmpty ? numStr : '$numStr ${a.rawUnit}';
+}
+
+({double value, String unit, String rawUnit})? _parseQtyParts(String raw) {
+  final t = raw.trim();
+  if (t.isEmpty) return null;
+  final m = RegExp(r'^(\d+(?:[.,]\d+)?)\s*(.*)$').firstMatch(t);
+  if (m == null) return null;
+  final v = double.tryParse(m.group(1)!.replaceAll(',', '.'));
+  if (v == null) return null;
+  final rawUnit = m.group(2)!.trim();
+  return (value: v, unit: quickAscii(rawUnit), rawUnit: rawUnit);
+}
+
 class QuickLexEntry {
   const QuickLexEntry(this.text, this.group, this.weight);
 

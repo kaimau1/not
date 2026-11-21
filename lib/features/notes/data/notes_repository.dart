@@ -636,6 +636,7 @@ class NotesRepository {
     String? folderId,
     DateTime? reminderAt,
     int listColumns = 1,
+    String? listKind,
   }) async {
     final doc = _notes.doc();
     lastCreatedId = doc.id;
@@ -650,6 +651,7 @@ class NotesRepository {
       folderId: folderId,
       reminderAt: reminderAt,
       listColumns: listColumns == 2 ? 2 : 1,
+      listKind: listKind,
       // Son kullanılan gövde yazı boyutu/tipi (F56.3, [NoteFormatMemory]).
       fontScale: NoteFormatMemory.fontScale,
       fontFamily: NoteFormatMemory.fontFamily,
@@ -736,6 +738,7 @@ class NotesRepository {
       titleFontScale: note.titleFontScale,
       titleTextOpacity: note.titleTextOpacity,
       listColumns: note.listColumns,
+      listKind: note.listKind,
       // Sayfalar da kopyalanır (F18.8 akış testi yakaladı: iki sayfalı notun
       // kopyası yalnız ilk sayfayla doğuyordu). Madde kimlikleri yine yeni.
       textPages: [

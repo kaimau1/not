@@ -33,6 +33,7 @@ class _FakeRepo implements NotesRepository {
     String? folderId,
     DateTime? reminderAt,
     int listColumns = 1,
+    String? listKind,
   }) async {
     created.add((type: type, body: body, reminderAt: reminderAt));
     return 'new-${created.length}';

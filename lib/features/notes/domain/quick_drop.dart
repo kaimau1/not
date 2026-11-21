@@ -454,11 +454,13 @@ typedef QuickDropListPlan = ({
 
 /// [items] maddelerini [existing] listesine nasıl ekleyeceğini hesaplar:
 /// zaten duran madde yeniden eklenmez (işaretliyse işareti kalkar — "yine
-/// lazım"; yeni miktar geldiyse miktarı güncellenir).
+/// lazım"; yeni miktar geldiyse güncellenir, [addQuantities] açıkken ve
+/// madde işaretsizse miktarlar toplanır: "2 süt" + "1 süt" → "3 süt").
 QuickDropListPlan planDropIntoList(
   List<({String text, bool checked})> existing,
-  List<QuickItem> items,
-) {
+  List<QuickItem> items, {
+  bool addQuantities = false,
+}) {
   final byKey = <String, int>{};
   for (var i = 0; i < existing.length; i++) {
     final k = quickItemKey(existing[i].text);
@@ -474,11 +476,19 @@ QuickDropListPlan planDropIntoList(
     final at = byKey[key];
     if (at != null) {
       if (existing[at].checked && !uncheck.contains(at)) uncheck.add(at);
-      if (item.qty.isNotEmpty && existing[at].text.trim() != item.text) {
-        requantify[at] = quickCompose(
-          quickBaseName(existing[at].text),
-          item.qty,
-        );
+      if (item.qty.isNotEmpty) {
+        final curText = requantify[at] ?? existing[at].text;
+        final curQty = quickQtyOf(curText);
+        final nextQty =
+            addQuantities && !existing[at].checked && curQty.isNotEmpty
+            ? combineQuickQuantities(curQty, item.qty)
+            : addQuantities && !existing[at].checked && curQty.isEmpty
+            ? combineQuickQuantities('1', item.qty)
+            : item.qty;
+        final composed = quickCompose(quickBaseName(curText), nextQty);
+        if (composed != existing[at].text.trim()) {
+          requantify[at] = composed;
+        }
       }
       continue;
     }

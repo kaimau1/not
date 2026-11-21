@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Akıllı liste: editörde reyona göre sırala, Alınanları tamamla, miktar toplama ve 6 yeni tür (21 Kasım, P88, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) bir market listesinde birkaç maddeyi işaretle → ⋮ → **Alınanları tamamla** → işaretliler kalkıp kalanlar duruyor mu, **Geri al** geri getiriyor mu; (2) karışık bir listede ⋮ → **Sırala** → **Reyona / gruba göre** → alt başlık eklemeden manav/fırın/kasap sırasına diziliyor mu; (3) listede `Süt (2)` varken ⚡ Hızlı ekle ile `1 süt` ekle → `Süt (3)` oluyor mu, yeni meyve eklenince mevcut meyvelerin yanına düşüyor mu; (4) Akıllı listede "kamp listesi", "eczane listesi" veya "spor çantası" yaz/söyle → başlık, simge ve öneriler o türe dönüyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Hızlı ekle: tek giriş (hatırlatıcı + market yönlendirme), çoklu hedef ve "süt bitti" (21 Kasım, P87, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) ⚡ Hızlı ekle'de duraksamadan "süt bitti" söyle → dinleme kapanmıyor mu; 1 sn durup "bitti" ya da hemen "bu kadar" deyince kapanıp ekliyor mu; (2) "yarın 9'da dişçi" yaz/söyle → altta `⏰` önizlemesi çıkıp hatırlatıcılı yeni not oluşturuyor mu (herhangi bir not çipine dokununca o nota dönüyor mu); (3) son kullanılan not metin notuyken "süt yumurta" yaz → otomatik market listesine yönleniyor mu; (4) "süt markete, fatura yapılacaklara" yaz → önizlemede `(2 not)` görünüp iki nota birden ekliyor mu, **Geri al** ikisini birden geri alıyor mu.
   Yanlışsa: madde numarasını yaz.

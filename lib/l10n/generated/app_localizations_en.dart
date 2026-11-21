@@ -8886,6 +8886,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get smartListPacking => 'Packing list';
 
   @override
+  String get smartListPharmacy => 'Pharmacy list';
+
+  @override
+  String get smartListStationery => 'Stationery list';
+
+  @override
+  String get smartListHardware => 'Hardware list';
+
+  @override
+  String get smartListCamping => 'Camping list';
+
+  @override
+  String get smartListBaby => 'Baby bag';
+
+  @override
+  String get smartListSport => 'Gym bag';
+
+  @override
+  String get sortByGroup => 'By aisle / group';
+
+  @override
+  String get finishShopping => 'Finish shopping';
+
+  @override
+  String finishShoppingDone(int count) {
+    return '$count checked items cleared';
+  }
+
+  @override
   String get scanAny => 'Scan';
 
   @override

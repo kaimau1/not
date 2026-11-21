@@ -105,10 +105,14 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (result == null || !mounted) return;
     await _createFromOutcome(
       (content: result.content, open: result.open, quick: true),
+      listKind: result.listKind,
     );
   }
 
-  Future<void> _createFromOutcome(TemplateOutcome outcome) async {
+  Future<void> _createFromOutcome(
+    TemplateOutcome outcome, {
+    String? listKind,
+  }) async {
     final content = outcome.content;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
@@ -119,6 +123,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       items: content.items,
       folderId: quickAddFolderId,
       listColumns: content.columns,
+      listKind: listKind,
     );
     if (outcome.open) {
       await openNewNote(id, type: content.type);

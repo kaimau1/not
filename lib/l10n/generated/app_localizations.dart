@@ -15746,6 +15746,60 @@ abstract class AppLocalizations {
   /// **'Bavul listesi'**
   String get smartListPacking;
 
+  /// No description provided for @smartListPharmacy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eczane listesi'**
+  String get smartListPharmacy;
+
+  /// No description provided for @smartListStationery.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kırtasiye listesi'**
+  String get smartListStationery;
+
+  /// No description provided for @smartListHardware.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamirat listesi'**
+  String get smartListHardware;
+
+  /// No description provided for @smartListCamping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamp listesi'**
+  String get smartListCamping;
+
+  /// No description provided for @smartListBaby.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bebek çantası'**
+  String get smartListBaby;
+
+  /// No description provided for @smartListSport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Spor çantası'**
+  String get smartListSport;
+
+  /// No description provided for @sortByGroup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Reyona / gruba göre'**
+  String get sortByGroup;
+
+  /// No description provided for @finishShopping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınanları tamamla'**
+  String get finishShopping;
+
+  /// No description provided for @finishShoppingDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} alınan madde temizlendi'**
+  String finishShoppingDone(int count);
+
   /// No description provided for @scanAny.
   ///
   /// In tr, this message translates to:
