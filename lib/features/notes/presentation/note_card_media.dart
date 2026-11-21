@@ -862,7 +862,29 @@ class CardMediaTile extends StatelessWidget {
     );
   }
 
+  /// KARTTA GÖRSELİN ÇİZİMİ (kullanıcı bulgusu 2026-11-21: "görsele kalemle
+  /// yazdım, ana ekranda görünmüyor"): çizgiler görselin `cover` kesitine
+  /// oranlı boyanır (notla aynı çizim). Çizim yoksa ağaçta hiçbir şey yok;
+  /// varsa tek `CustomPaint` (RepaintBoundary, dokunuşsuz).
   Widget _image(Attachment a) {
+    final picture = _imageOnly(a);
+    final w = (a.width ?? 0).toDouble();
+    final h = (a.height ?? 0).toDouble();
+    if (a.ink.isEmpty || w <= 0 || h <= 0) return picture;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        picture,
+        IgnorePointer(
+          child: RepaintBoundary(
+            child: CustomPaint(painter: _CoverInkPainter(a.ink, Size(w, h))),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _imageOnly(Attachment a) {
     // Kart küçük resmi için 2048 px'lik eki tam boy çözdürmek boşuna bellek
     // ve CPU (liste kaydırma takılması); 480 px, 3x ekranda bile yeterli.
     //
@@ -918,6 +940,30 @@ class CardMediaTile extends StatelessWidget {
     }
     return const _MissingTile(icon: Icons.image_outlined);
   }
+}
+
+/// Görselin çizgileri, `BoxFit.cover` ile yerleşen görselin dikdörtgeninde.
+class _CoverInkPainter extends CustomPainter {
+  _CoverInkPainter(this.ink, this.imageSize);
+
+  final List<InkStroke> ink;
+  final Size imageSize;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fitted = applyBoxFit(BoxFit.cover, imageSize, size).destination;
+    final rect = Alignment.center.inscribe(fitted, Offset.zero & size);
+    canvas
+      ..save()
+      ..clipRect(Offset.zero & size)
+      ..translate(rect.left, rect.top);
+    InkPainter(ink, 1).paint(canvas, rect.size);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_CoverInkPainter old) =>
+      !identical(old.ink, ink) || old.imageSize != imageSize;
 }
 
 /// Kartta sayfa üstü el yazısının başı (bkz. `Note.pageInk`). Bölünmüş notta

@@ -199,7 +199,20 @@ class NoteQuickExport {
           !annotated &&
           a.localPath.isNotEmpty &&
           File(a.localPath).existsSync()) {
-        out.add(XFile(a.localPath, mimeType: a.mimeType, name: a.fileName));
+        // UZANTISIZ DOSYA (kullanıcı bulgusu 2026-11-21: "scaled_1273…490"
+        // diye tanınmayan dosya gidiyordu): görsel seçicinin verdiği ad
+        // uzantısız olabiliyor; alıcı türü tanımasın diye kopya MIME'den
+        // uzantı alır.
+        final ext = extensionForMime(a.mimeType);
+        if (_hasExtension(a.localPath) || ext == null) {
+          out.add(XFile(a.localPath, mimeType: a.mimeType, name: a.fileName));
+        } else {
+          await add(
+            await File(a.localPath).readAsBytes(),
+            '${_baseName(a.fileName)}$ext',
+            a.mimeType,
+          );
+        }
         continue;
       }
       if (attachments == null || a.kind == AttachmentKind.video) continue;
@@ -224,7 +237,12 @@ class NoteQuickExport {
         // Katmanlı görsel basılmış PNG olarak gider (F18.13).
         final burned = await burnImageAnnotations(raw, a);
         final bytes = burned ?? raw;
-        final name = burned == null ? a.fileName : _pngName(a.fileName);
+        final ext = extensionForMime(a.mimeType);
+        final name = burned != null
+            ? _pngName(a.fileName)
+            : !_hasExtension(a.fileName) && ext != null
+            ? '${_baseName(a.fileName)}$ext'
+            : a.fileName;
         final mime = burned == null ? a.mimeType : 'image/png';
         await add(bytes, name, mime);
       } catch (_) {
@@ -293,8 +311,28 @@ String safeShareName(String name) {
   return '$base${name.substring(dot)}';
 }
 
+bool _hasExtension(String path) {
+  final name = path.split(RegExp(r'[\\/]')).last;
+  final dot = name.lastIndexOf('.');
+  return dot > 0 && name.length - dot <= 6;
+}
+
+/// Bilinen MIME türünün dosya uzantısı (yoksa null).
+String? extensionForMime(String mime) => switch (mime.toLowerCase()) {
+  'image/jpeg' || 'image/jpg' => '.jpg',
+  'image/png' => '.png',
+  'image/webp' => '.webp',
+  'image/gif' => '.gif',
+  'image/heic' => '.heic',
+  'application/pdf' => '.pdf',
+  'audio/mp4' || 'audio/m4a' || 'audio/aac' => '.m4a',
+  'audio/mpeg' => '.mp3',
+  'video/mp4' => '.mp4',
+  _ => mime.startsWith('image/') ? '.jpg' : null,
+};
+
 String _baseName(String fileName) {
-  final dot = fileName.lastIndexOf('.');
+  final dot = _hasExtension(fileName) ? fileName.lastIndexOf('.') : -1;
   final base = dot > 0 ? fileName.substring(0, dot) : fileName;
   return NotePdf.safeFileName(base.isEmpty ? 'gorsel' : base);
 }
@@ -311,7 +349,7 @@ List<Attachment> shareableAttachments(Note note) => [
 ];
 
 String _pngName(String fileName) {
-  final dot = fileName.lastIndexOf('.');
+  final dot = _hasExtension(fileName) ? fileName.lastIndexOf('.') : -1;
   final base = dot > 0 ? fileName.substring(0, dot) : fileName;
   return '${base.isEmpty ? 'gorsel' : base}.png';
 }

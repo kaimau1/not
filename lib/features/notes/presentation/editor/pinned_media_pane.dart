@@ -335,7 +335,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             child: pen == null
                 ? IgnorePointer(
                     child: CustomPaint(
-                      painter: InkPainter(widget.media.ink, 1),
+                      painter: InkPainter(
+                        _shownInk,
+                        1,
+                        revision: _ink?.revision ?? 0,
+                      ),
                     ),
                   )
                 : InkClaim(
@@ -347,6 +351,20 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       );
     },
   );
+
+  /// **YAZILAR KAYBOLUP GERİ GELİYORDU** (kullanıcı bulgusu 2026-11-21):
+  /// kalem kapalıyken katman [widget.media]'nın çizgilerini boyuyordu; editör
+  /// eke yazılan çizgide kökü kurmadığı (F60.1) için o liste BAYAT — son
+  /// çizilenler kök yeniden kurulana dek görünmüyordu. Denetleyici varsa ve
+  /// ekin listesi dışarıdan değişmediyse (tam ekran, geri al, başka cihaz)
+  /// denetleyicinin güncel çizgileri boyanır.
+  List<InkStroke> get _shownInk {
+    final c = _ink;
+    if (c == null || !identical(widget.media.ink, _inkSeen)) {
+      return widget.media.ink;
+    }
+    return c.ink;
+  }
 
   /// Kalem kuralı tek yerde ([PenPolicy], F63.1).
   PenPolicy get _policy => PenPolicy.resolve(
