@@ -315,12 +315,12 @@
     "senaryo": "Kart menü levhası: telefon ana ekran, 30 not; ilk kartın note-card-menu düğmesine dokun → 30 kare → sistem geri → 30 kare (cihazdaki menu evresi)",
     "kart_kurulum": 0,
     "dashboard_kurulum": 0,
-    "kare_kurulum": 455,
-    "toplam_kurulum": 1289,
+    "kare_kurulum": 471,
+    "toplam_kurulum": 1323,
     "dizilme": 56,
-    "bugun": "kart 0 / pano 0 / en ağır kare 455 / toplam 1289 / dizilme 56 (2026-11-21, ActionMenu baştan tasarım)",
+    "bugun": "kart 0 / pano 0 / en ağır kare 471 / toplam 1323 / dizilme 56 (2026-11-21, ActionMenu tüm gruplar açık dengeli bento)",
     "hedef": "kart 0, pano 0; kurulum ve dizilme tabanı aşmaz",
-    "neden": "P62 G1 cihaz A/B menu LAYOUT 44 → 63 ms (altın +%19) kanıt araması: levhanın yolu G1 dosyalarına değmiyor, sayılar main ile aynı → cihaz farkı gürültü (menu LAYOUT aynı main APK larında 38–76 ms, gecmis.csv). 2026-11-21: ActionMenu baştan tasarımında kart + tonlu karo düzeni (rozetsiz karoda Stack kaldırıldı) ile 487/1337 → 455/1289."
+    "neden": "P62 G1 cihaz A/B menu LAYOUT 44 → 63 ms (altın +%19) kanıt araması: levhanın yolu G1 dosyalarına değmiyor, sayılar main ile aynı → cihaz farkı gürültü (menu LAYOUT aynı main APK larında 38–76 ms, gecmis.csv). [butce] 2026-11-21 2. tur: kapalı çekmece (collapsible) kaldırılıp 4 grubun tamamı ilk karede açık gösterildi (+6 görünür karo) ve yardımcı fonksiyon/tek satır kısayoluyla 494 → 471 / 1323 (önceki taban 487/1337'nin hâlâ altında)."
   },
   "S41": {
     "senaryo": "P63 şablon galerisi: telefon, 16 hazır + 6 kendi şablon; levhayı aç → Planlama çipi → aramaya h/ha/haf → karta dokun",

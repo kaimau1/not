@@ -241,15 +241,21 @@ abstract final class AppTheme {
       popupMenuTheme: PopupMenuThemeData(
         color: t.card,
         surfaceTintColor: Colors.transparent,
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(color: tokens.hairline),
+        ),
       ),
       menuTheme: MenuThemeData(
         style: MenuStyle(
           backgroundColor: WidgetStatePropertyAll(t.card),
           surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
           shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.l),
+              side: BorderSide(color: tokens.hairline),
+            ),
           ),
         ),
       ),

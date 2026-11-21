@@ -80,28 +80,33 @@ ActionMenu noteMenuModel(
   return ActionMenu(
     menuId: editor ? 'note.editor' : 'note.card',
     title: note.displayTitle,
-    collapsible: true,
     quick: front.sublist(0, quickCount),
     sections: [
+      // Sık kullanılan düzenleme ve yapı işleri üstte; seyrek temizleme
+      // işlemleri en sonda (kullanıcı isteği 2026-11-21: mantık ve kullanım
+      // sırası, kapalı çekmece yok).
       MenuSection(l10n.menuSectionOrganize, [
         if (!editor && canOpenSide)
           MenuAction('side', l10n.noteOpenSide, Icons.vertical_split_outlined),
+        ...front.skip(quickCount),
         if (!editor)
           MenuAction('select', l10n.select, Icons.check_circle_outline),
-        ...front.skip(quickCount),
-        if (!readOnly) ...[
-          if (note.attachments.isNotEmpty || note.cardMediaHidden)
-            MenuAction(
-              'cardMedia',
-              note.cardMediaHidden ? l10n.cardMediaShow : l10n.cardMediaHide,
-              note.cardMediaHidden
-                  ? Icons.image_outlined
-                  : Icons.hide_image_outlined,
-            ),
+        if (!readOnly)
           // Not ↔ takvim (TAKVIM F49.1): güne / etkinliğe bağla.
           MenuAction('calendar', l10n.calendarLinkNote, Icons.event_outlined),
-        ],
         if (editor) ...[
+          if (isList) ...[
+            MenuAction('toText', l10n.convertToText, Icons.notes_outlined),
+            MenuAction('sortItems', l10n.sortItems, Icons.sort),
+            MenuAction(
+              'columns',
+              note.listColumns == 2 ? l10n.listOneColumn : l10n.listTwoColumns,
+              note.listColumns == 2
+                  ? Icons.view_agenda_outlined
+                  : Icons.view_column_outlined,
+            ),
+          ] else
+            MenuAction('toList', l10n.convertToList, Icons.checklist),
           // Belge notunun sayfa tuvali yok: defter yalnız zaten açıksa görünür.
           if (!note.type.isPageNoteType || note.paged)
             MenuAction(
@@ -119,18 +124,22 @@ ActionMenu noteMenuModel(
                   ? Icons.view_agenda_outlined
                   : Icons.chat_bubble_outline,
             ),
-          if (isList) ...[
-            MenuAction('toText', l10n.convertToText, Icons.notes_outlined),
-            MenuAction('sortItems', l10n.sortItems, Icons.sort),
+        ],
+        if (!readOnly && (note.attachments.isNotEmpty || note.cardMediaHidden))
+          MenuAction(
+            'cardMedia',
+            note.cardMediaHidden ? l10n.cardMediaShow : l10n.cardMediaHide,
+            note.cardMediaHidden
+                ? Icons.image_outlined
+                : Icons.hide_image_outlined,
+          ),
+        if (editor) ...[
+          if (note.attachments.any((a) => a.floatsOnPage))
             MenuAction(
-              'columns',
-              note.listColumns == 2 ? l10n.listOneColumn : l10n.listTwoColumns,
-              note.listColumns == 2
-                  ? Icons.view_agenda_outlined
-                  : Icons.view_column_outlined,
+              'imagesToFiles',
+              l10n.imagesToAttachments,
+              Icons.attach_file,
             ),
-          ] else
-            MenuAction('toList', l10n.convertToList, Icons.checklist),
           if (canRemoveParts) ...[
             MenuAction(
               'removeList',
@@ -143,14 +152,26 @@ ActionMenu noteMenuModel(
               Icons.format_clear_rounded,
             ),
           ],
-          if (note.attachments.any((a) => a.floatsOnPage))
-            MenuAction(
-              'imagesToFiles',
-              l10n.imagesToAttachments,
-              Icons.attach_file,
-            ),
           MenuAction('clear', l10n.clearNote, Icons.backspace_outlined),
         ],
+      ]),
+      MenuSection(l10n.menuSectionTools, [
+        if (editor && shows('search'))
+          MenuAction('search', l10n.noteSearchTitle, AppIcons.search),
+        MenuAction('listen', l10n.listenToNote, AppIcons.listen),
+        if (editor)
+          MenuAction(
+            'calculator',
+            l10n.calculatorTitle,
+            Icons.calculate_outlined,
+          ),
+        if (canPinHome)
+          MenuAction(
+            'pinHome',
+            l10n.pinToHomeScreen,
+            Icons.add_to_home_screen_rounded,
+          ),
+        MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
       ]),
       MenuSection(l10n.menuSectionCopy, [
         MenuAction('duplicate', l10n.duplicateNote, AppIcons.duplicate),
@@ -163,27 +184,7 @@ ActionMenu noteMenuModel(
         if (editor && note.attachments.isNotEmpty)
           MenuAction('toArchive', l10n.archiveCopyHere, Icons.book_outlined),
       ]),
-      MenuSection(l10n.menuSectionTools, [
-        MenuAction('listen', l10n.listenToNote, AppIcons.listen),
-        if (canPinHome)
-          MenuAction(
-            'pinHome',
-            l10n.pinToHomeScreen,
-            Icons.add_to_home_screen_rounded,
-          ),
-        MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
-        if (editor) ...[
-          if (shows('search'))
-            MenuAction('search', l10n.noteSearchTitle, AppIcons.search),
-          MenuAction(
-            'calculator',
-            l10n.calculatorTitle,
-            Icons.calculate_outlined,
-          ),
-        ],
-      ]),
       MenuSection(l10n.menuSectionProtect, [
-        if (editor) MenuAction('history', l10n.versionHistory, Icons.history),
         MenuAction(
           'archive',
           archived ? l10n.unarchive : l10n.archive,
@@ -194,6 +195,7 @@ ActionMenu noteMenuModel(
           note.locked ? l10n.unlockNote : l10n.lockNote,
           note.locked ? Icons.lock_open_outlined : Icons.lock_outline,
         ),
+        if (editor) MenuAction('history', l10n.versionHistory, Icons.history),
         if (localOnlyAvailable)
           MenuAction(
             'localOnly',

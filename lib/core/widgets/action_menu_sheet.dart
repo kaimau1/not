@@ -227,6 +227,7 @@ class ActionMenu extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final heading = title?.trim() ?? '';
     final editButton = _settingsButton(
       context,
@@ -276,9 +277,11 @@ class ActionMenu extends StatelessWidget {
                   children: [
                     for (final a in quick)
                       Expanded(
-                        child: _QuickButton(
-                          action: a,
+                        child: _buildQuickButton(
+                          context,
+                          a,
                           scheme: scheme,
+                          text: text,
                           onLongPress: onEdit,
                         ),
                       ),
@@ -320,11 +323,15 @@ class ActionMenu extends StatelessWidget {
                           AppSpace.s,
                           AppSpace.m,
                         ),
-                        child: _TileGrid(
-                          actions: section.actions,
-                          tile: (a) => _GridTile(
-                            action: a,
+                        child: _buildTileGrid(
+                          section.actions,
+                          (a, {required horizontal}) => _buildGridTile(
+                            context,
+                            a,
+                            theme: theme,
                             scheme: scheme,
+                            text: text,
+                            horizontal: horizontal,
                             onLongPress: onEdit,
                           ),
                         ),
@@ -334,57 +341,71 @@ class ActionMenu extends StatelessWidget {
                 ],
               ),
             )
-          else if (!collapsible)
-            for (final (i, section) in visibleSections.indexed) ...[
-              if (i > 0) const SizedBox(height: AppSpace.s),
-              DecoratedBox(
-                decoration: cardDecoration,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpace.s,
-                    AppSpace.s,
-                    AppSpace.s,
-                    AppSpace.s,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+          else if (!collapsible && visibleSections.isNotEmpty)
+            DecoratedBox(
+              decoration: cardDecoration,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.s),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final (i, section) in visibleSections.indexed) ...[
+                      if (i > 0)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.xs,
+                            vertical: AppSpace.xs,
+                          ),
+                          child: SizedBox(
+                            height: 1,
+                            child: ColoredBox(color: tokens.hairline),
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
                           AppSpace.xs,
                           AppSpace.xxs,
                           AppSpace.xs,
-                          AppSpace.s,
+                          AppSpace.xs,
                         ),
                         // Başlıksız menüde ⚙ kendi satırını kaplamasın
-                        // (kullanıcı bulgusu 2026-11-06): ilk bölüm başlığının
-                        // sağında durur.
+                        // (kullanıcı bulgusu 2026-11-06): ilk bölüm
+                        // başlığının sağında durur.
                         child: i == 0 && inlineEdit != null
                             ? SizedBox(
                                 height: AppSpace.xxxl,
                                 child: Row(
                                   children: [
-                                    Expanded(child: SectionLabel(section.title)),
+                                    Expanded(
+                                      child: Text(
+                                        section.title,
+                                        style: text.section,
+                                      ),
+                                    ),
                                     inlineEdit,
                                   ],
                                 ),
                               )
-                            : SectionLabel(section.title),
+                            : Text(section.title, style: text.section),
                       ),
-                      _TileGrid(
-                        actions: section.actions,
-                        tile: (a) => _GridTile(
-                          action: a,
+                      _buildTileGrid(
+                        section.actions,
+                        (a, {required horizontal}) => _buildGridTile(
+                          context,
+                          a,
+                          theme: theme,
                           scheme: scheme,
+                          text: text,
+                          horizontal: horizontal,
                           onLongPress: onEdit,
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
               ),
-            ],
+            ),
           // Bölüm yoksa ⚙ en altta, küçük.
           if (visibleSections.isEmpty && inlineEdit != null)
             Align(
@@ -484,93 +505,83 @@ class _PopupRow extends StatelessWidget {
 }
 
 /// Hızlı satırın düğmesi: yuvarlak köşeli simge kutusu + altında kısa ad.
-class _QuickButton extends StatelessWidget {
-  const _QuickButton({
-    required this.action,
-    required this.scheme,
-    this.onLongPress,
-  });
-
-  final MenuAction action;
-  final ColorScheme scheme;
-
-  /// Basılı tutmak menüyü yerinde düzenleme kipine alır (2026-11-19).
-  final VoidCallback? onLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final on = action.selected;
-    final text = AppText.of(Theme.of(context));
-    final badgeBox = Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: on
-            ? scheme.primary
-            : action.neutral
-            ? scheme.surfaceContainerHighest
-            : scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(AppRadius.m),
-      ),
-      child: Icon(
-        action.icon,
-        size: AppIconSize.m,
-        color: on
-            ? scheme.onPrimary
-            : action.neutral
-            ? scheme.onSurfaceVariant
-            : scheme.onPrimaryContainer,
-      ),
-    );
-    final iconWidget = action.count > 0 || action.badge != null
-        ? Stack(
-            clipBehavior: Clip.none,
-            children: [
-              badgeBox,
-              if (action.count > 0)
-                Positioned(
-                  right: -8,
-                  top: -4,
-                  child: _CountPill(
-                    count: action.count,
-                    highlight: action.highlight,
-                  ),
-                ),
-              if (action.badge != null)
-                Positioned(right: -4, top: -4, child: action.badge!),
-            ],
-          )
-        : badgeBox;
-    return InkWell(
-      key: ValueKey('menu-quick-${action.id}'),
+Widget _buildQuickButton(
+  BuildContext context,
+  MenuAction action, {
+  required ColorScheme scheme,
+  required AppText text,
+  VoidCallback? onLongPress,
+}) {
+  final on = action.selected;
+  final badgeBox = Container(
+    width: 44,
+    height: 44,
+    decoration: BoxDecoration(
+      color: on
+          ? scheme.primary
+          : action.neutral
+          ? scheme.surfaceContainerHighest
+          : scheme.primaryContainer,
       borderRadius: BorderRadius.circular(AppRadius.m),
-      onTap: () => Navigator.pop(context, action.id),
-      onLongPress: onLongPress,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpace.xxs,
-          vertical: AppSpace.xs,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    ),
+    child: Icon(
+      action.icon,
+      size: AppIconSize.m,
+      color: on
+          ? scheme.onPrimary
+          : action.neutral
+          ? scheme.onSurfaceVariant
+          : scheme.onPrimaryContainer,
+    ),
+  );
+  final iconWidget = action.count > 0 || action.badge != null
+      ? Stack(
+          clipBehavior: Clip.none,
           children: [
-            iconWidget,
-            const SizedBox(height: AppSpace.xs),
-            Text(
-              action.label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: text.meta.copyWith(
-                color: scheme.onSurface,
-                fontWeight: AppWeight.medium,
+            badgeBox,
+            if (action.count > 0)
+              Positioned(
+                right: -8,
+                top: -4,
+                child: _CountPill(
+                  count: action.count,
+                  highlight: action.highlight,
+                ),
               ),
-            ),
+            if (action.badge != null)
+              Positioned(right: -4, top: -4, child: action.badge!),
           ],
-        ),
+        )
+      : badgeBox;
+  return InkWell(
+    key: ValueKey('menu-quick-${action.id}'),
+    borderRadius: BorderRadius.circular(AppRadius.m),
+    onTap: () => Navigator.pop(context, action.id),
+    onLongPress: onLongPress,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.xxs,
+        vertical: AppSpace.xs,
       ),
-    );
-  }
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: AppSpace.xs,
+        children: [
+          iconWidget,
+          Text(
+            action.label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: text.meta.copyWith(
+              color: scheme.onSurface,
+              fontWeight: AppWeight.medium,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Katlanır grup ([ActionMenu.collapsible]): başlık satırı (ad · sayı · ok)
@@ -680,67 +691,101 @@ class _FoldSectionState extends State<_FoldSection> {
   }
 }
 
-/// Grup ızgarası: ÜÇ SÜTUN, yuvarlak köşeli yüzeyli simge karoları
-/// (kullanıcı isteği 2026-10-20: 3 sütun; 2026-11-21: baştan tasarım).
-class _TileGrid extends StatelessWidget {
-  const _TileGrid({required this.actions, required this.tile});
-
-  final List<MenuAction> actions;
-  final Widget Function(MenuAction) tile;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const spacing = AppSpace.s;
-        // Telefonda 3, geniş ekranda (tablet, web) 4–6 sütun.
-        final columns = (constraints.maxWidth / 108).floor().clamp(3, 6);
-        final cell = (constraints.maxWidth - spacing * (columns - 1)) / columns;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final a in actions) SizedBox(width: cell, child: tile(a)),
-          ],
+/// Grup ızgarası: boş hücre bırakmayan dengeli bento satırları
+/// (kullanıcı isteği 2026-10-20: 3 sütun; 2026-11-21: boşluksuz tam genişlik
+/// satırlar — 1–2 öğeli satırlar yatay hap karo, 3+ öğeli satırlar kompakt
+/// dikey karo).
+Widget _buildTileGrid(
+  List<MenuAction> actions,
+  Widget Function(MenuAction action, {required bool horizontal}) tile,
+) {
+  Widget row(List<MenuAction> items) => Row(
+    spacing: AppSpace.s,
+    children: [
+      for (final a in items)
+        Expanded(child: tile(a, horizontal: items.length <= 2)),
+    ],
+  );
+  // 3 ve altı öğe her genişlikte (en az 3 sütun) tek satır: LayoutBuilder
+  // ve Column kurulmaz (S37 bütçesi).
+  if (actions.length <= 3) return row(actions);
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      // Telefonda 3, geniş ekranda (tablet, web) 4–6 sütun.
+      final columns = (constraints.maxWidth / 108).floor().clamp(3, 6);
+      final rows = <List<MenuAction>>[];
+      for (var i = 0; i < actions.length; i += columns) {
+        final end = i + columns;
+        rows.add(
+          actions.sublist(i, end > actions.length ? actions.length : end),
         );
-      },
-    );
-  }
+      }
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: AppSpace.s,
+        children: [for (final r in rows) row(r)],
+      );
+    },
+  );
 }
 
-/// Grup ızgarasının hücresi: tonlu yuvarlak köşeli kart, üstte simge, altta ad.
-class _GridTile extends StatelessWidget {
-  const _GridTile({
-    required this.action,
-    required this.scheme,
-    this.onLongPress,
-    this.onTap,
-  });
-
-  final MenuAction action;
-  final ColorScheme scheme;
-
-  /// Basılı tutmak menüyü yerinde düzenleme kipine alır (2026-11-19).
-  final VoidCallback? onLongPress;
-
-  /// Verilmezse dokunmak menüyü işlemin kimliğiyle kapatır.
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final on = action.selected;
-    final text = AppText.of(theme);
-    final tileColor = on
-        ? scheme.primary
-        : theme.brightness == Brightness.dark
-        ? scheme.surfaceContainerHigh
-        : scheme.surfaceContainer;
-    final icon = Icon(
-      action.icon,
-      size: AppIconSize.m,
-      color: on ? scheme.onPrimary : scheme.primary,
+/// Grup ızgarasının hücresi: tonlu yuvarlak köşeli kart.
+/// [horizontal] doğruysa (1–2 öğeli satır) simge solda, ad yanında — boş
+/// hücre bırakmaz ve kompakt kalır.
+Widget _buildGridTile(
+  BuildContext context,
+  MenuAction action, {
+  required ThemeData theme,
+  required ColorScheme scheme,
+  required AppText text,
+  bool horizontal = false,
+  VoidCallback? onLongPress,
+  VoidCallback? onTap,
+}) {
+  final on = action.selected;
+  final tileColor = on
+      ? scheme.primary
+      : theme.brightness == Brightness.dark
+      ? scheme.surfaceContainerHigh
+      : scheme.surfaceContainer;
+  final fg = on ? scheme.onPrimary : scheme.onSurface;
+  final icon = Icon(
+    action.icon,
+    size: AppIconSize.m,
+    color: on ? scheme.onPrimary : scheme.primary,
+  );
+  final labelStyle = text.meta.copyWith(
+    color: fg,
+    fontWeight: AppWeight.medium,
+  );
+  final Widget body;
+  if (horizontal) {
+    body = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.m,
+          vertical: AppSpace.xs,
+        ),
+        child: Row(
+          spacing: AppSpace.s,
+          children: [
+            icon,
+            Expanded(
+              child: Text(
+                action.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: labelStyle,
+              ),
+            ),
+            if (action.count > 0)
+              _CountPill(count: action.count, highlight: action.highlight),
+          ],
+        ),
+      ),
     );
+  } else {
     final top = action.count > 0
         ? Stack(
             clipBehavior: Clip.none,
@@ -757,46 +802,44 @@ class _GridTile extends StatelessWidget {
             ],
           )
         : icon;
-    return InkWell(
-      key: ValueKey('menu-tile-${action.id}'),
-      borderRadius: BorderRadius.circular(AppRadius.m),
-      onTap: onTap ?? () => Navigator.pop(context, action.id),
-      onLongPress: onLongPress,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: tileColor,
-          borderRadius: BorderRadius.circular(AppRadius.m),
+    body = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 58),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.xs,
+          vertical: AppSpace.xs,
         ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 74),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpace.xs,
-              vertical: AppSpace.s,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          spacing: AppSpace.xs,
+          children: [
+            top,
+            Text(
+              action.label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: labelStyle,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                top,
-                const SizedBox(height: AppSpace.xs),
-                Text(
-                  action.label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: text.meta.copyWith(
-                    color: on ? scheme.onPrimary : scheme.onSurface,
-                    fontWeight: AppWeight.medium,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
   }
+  return InkWell(
+    key: ValueKey('menu-tile-${action.id}'),
+    borderRadius: BorderRadius.circular(AppRadius.m),
+    onTap: onTap ?? () => Navigator.pop(context, action.id),
+    onLongPress: onLongPress,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: tileColor,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      child: body,
+    ),
+  );
 }
 
 /// **MENÜYÜ YERİNDE DÜZENLE** (kullanıcı isteği 2026-11-19: "menüyü düzenle
@@ -1000,9 +1043,9 @@ class _EditableMenuState extends State<_EditableMenu> {
                 padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
                 child: SectionLabel(section.title),
               ),
-              _TileGrid(
-                actions: section.actions,
-                tile: (a) => tile(a, inQuick: false),
+              _buildTileGrid(
+                section.actions,
+                (a, {required horizontal}) => tile(a, inQuick: false),
               ),
             ],
           if (hidden.isNotEmpty) ...[
@@ -1010,9 +1053,9 @@ class _EditableMenuState extends State<_EditableMenu> {
               padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
               child: SectionLabel(l10n.menuHiddenGroup),
             ),
-            _TileGrid(
-              actions: hidden,
-              tile: (a) => tile(a, inQuick: false),
+            _buildTileGrid(
+              hidden,
+              (a, {required horizontal}) => tile(a, inQuick: false),
             ),
           ],
           const SizedBox(height: AppSpace.s),
@@ -1088,10 +1131,18 @@ class _EditTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
     final face = Opacity(
       opacity: hidden ? 0.45 : 1,
       child: IgnorePointer(
-        child: _GridTile(action: action, scheme: scheme, onTap: () {}),
+        child: _buildGridTile(
+          context,
+          action,
+          theme: theme,
+          scheme: scheme,
+          text: AppText.of(theme),
+          onTap: () {},
+        ),
       ),
     );
     return DragTarget<String>(

@@ -9,8 +9,8 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
-- [ ] **Not menüsü yeni tasarım + Hızlı ekle klavye kapanışı (21 Kasım 2. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
-  Nerede/Nasıl: (1) ana ekranda bir not kartının ⋮ menüsünü hem açık hem koyu temada aç → üstteki hızlı satır yuvarlak köşeli kartta, `Düzenle` / `Kopyala` / `Araçlar` / `Koruma ve depolama` tek kartta ince ayırıcılarla ve kapalı gruplarda sayı + daire ok ile görünüyor mu, karolar eşit boyda ve düzgün hizalı mı; bir karoya basılı tutup düzenleme kipini de dene; (2) ⚡ Hızlı ekle'de klavyeyi hem Geri/klavye indirme tuşuyla hem de levhayı dışarı dokunarak / aşağı çekerek kapat → klavye kapanırken kasma veya sıçrama kaldı mı.
+- [ ] **Açık/boşluksuz not menüsü + 2 sütunlu alt çubuk ⋯ menüsü + Hızlı ekle klavye kapanışı (21 Kasım 3. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) kart ⋮ ve not ⋮ menülerini açık + koyu temada aç → kapalı çekmece yok, 4 grup (Düzenle · Araçlar · Kopyala · Koruma ve depolama) kullanım sırasıyla tek kartta, 1–2 öğeli satırlar yatay tam genişlikte ve boş hücre yok; (2) bir notta alttaki ⋯ düğmesine dokun → uzun dikey liste yerine çubuğun hemen üstünde 2 sütunlu kompakt araç paleti açılıyor mu, Geri al / Geri getir yan yana mı, Düzenle çalışıyor mu; (3) üst hızlı satır ⋯ ve sıralama ⋮ açılır menüleri ince çerçeveli kart görünümünde mi; (4) ⚡ Hızlı ekle'de klavye kapanırken kasma veya sıçrama kaldı mı.
   Yanlışsa: ekran görüntüsü veya kısa kayıt ile madde numarasını yaz.
 
 - [ ] **Hızlı ekle: açılışta konuşma, akıcı klavye aç/kapa, canlı dalga ve temizle (21 Kasım, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**

@@ -51,41 +51,61 @@ class NoteSortMenu extends StatelessWidget {
         if (value is NoteSort) onPick(value);
         if (value is NoteMenuExtra) value.onTap();
       },
-      itemBuilder: (context) => [
-        for (final extra in extras)
-          PopupMenuItem<Object>(
-            value: extra,
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(extra.icon),
-              title: Text(extra.label),
-            ),
-          ),
-        if (asMore) ...[
-          const PopupMenuDivider(),
-          PopupMenuItem<Object>(
-            enabled: false,
-            height: 32,
-            child: Text(l10n.sortBy, style: AppText.of(Theme.of(context)).meta),
-          ),
-        ],
-        for (final sort in NoteSort.values)
-          if (sort != NoteSort.manual)
+      itemBuilder: (context) {
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        return [
+          for (final extra in extras)
             PopupMenuItem<Object>(
-              value: sort,
+              value: extra,
               child: Row(
                 children: [
-                  SizedBox(
-                    width: 24,
-                    child: sort == current
-                        ? const Icon(Icons.check, size: AppIconSize.s)
-                        : null,
-                  ),
-                  Expanded(child: Text(sortLabel(l10n, sort))),
+                  Icon(extra.icon, size: AppIconSize.m, color: scheme.primary),
+                  const SizedBox(width: AppSpace.m),
+                  Expanded(child: Text(extra.label)),
                 ],
               ),
             ),
-      ],
+          if (asMore) ...[
+            const PopupMenuDivider(height: 1),
+            PopupMenuItem<Object>(
+              enabled: false,
+              height: 32,
+              child: Text(l10n.sortBy, style: AppText.of(theme).meta),
+            ),
+          ],
+          for (final sort in NoteSort.values)
+            if (sort != NoteSort.manual)
+              PopupMenuItem<Object>(
+                value: sort,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      child: sort == current
+                          ? Icon(
+                              Icons.check,
+                              size: AppIconSize.s,
+                              color: scheme.primary,
+                            )
+                          : null,
+                    ),
+                    Expanded(
+                      child: Text(
+                        sortLabel(l10n, sort),
+                        style: sort == current
+                            ? TextStyle(
+                                color: scheme.primary,
+                                fontWeight: AppWeight.strong,
+                              )
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+        ];
+      },
     );
   }
 }

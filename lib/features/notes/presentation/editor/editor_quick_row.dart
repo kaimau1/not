@@ -488,14 +488,27 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           PopupMenuItem<VoidCallback>(
             value: e.onTap,
             enabled: e.onTap != null,
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(e.icon, size: 20),
-              title: Text(e.tip),
+            child: Row(
+              children: [
+                Icon(
+                  e.icon,
+                  size: AppIconSize.m,
+                  color: e.onTap != null
+                      ? scheme.primary
+                      : scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpace.m),
+                Expanded(
+                  child: Text(
+                    e.tip,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
-        if (overflow.isNotEmpty) const PopupMenuDivider(),
+        if (overflow.isNotEmpty) const PopupMenuDivider(height: 1),
         // SATIRI DÜZENLE (2026-11-09: ⋮ içinde): düzenleme modunu açar —
         // gizli/eklenebilir düğmeler çerçeveli görünür.
         PopupMenuItem<VoidCallback>(
@@ -510,11 +523,22 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
               }.difference({for (final e in all) ?e?.key}),
             ),
           ),
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.tune_rounded, size: 20),
-            title: Text(l10n.quickRowCustomize),
+          child: Row(
+            children: [
+              Icon(
+                Icons.tune_rounded,
+                size: AppIconSize.m,
+                color: scheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppSpace.m),
+              Expanded(
+                child: Text(
+                  l10n.quickRowCustomize,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ],

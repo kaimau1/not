@@ -56,11 +56,10 @@ void main() {
     for (final label in ['Sabitle', 'Paylaş', 'Yıldızla', 'Seç', 'Sil']) {
       expect(find.text(label), findsOneWidget, reason: '$label görünmeli');
     }
-    // Gruplar katlanır çekmece (2026-11-16): Kopyala kapalı, dokununca açılır.
-    expect(find.text('Notu çoğalt'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('menu-fold-head-Kopyala')));
-    await tester.pumpAndSettle();
+    // Gruplar kapalı çekmece olmadan tek kartta açık ve boşluksuz görünür
+    // (kullanıcı isteği 2026-11-21).
     expect(find.text('Notu çoğalt'), findsOneWidget);
+    expect(find.byKey(const ValueKey('menu-fold-head-Kopyala')), findsNothing);
 
     // Hızlı satır ÖNEM SIRASIYLA (kullanıcı isteği 2026-11-16): Sabitle ·
     // Zemin rengi · Çerçeve · Paylaş · Klasöre taşı, AYNI satırda.

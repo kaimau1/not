@@ -200,26 +200,20 @@ void main() {
         expect(find.byKey(ValueKey('menu-quick-$id')), findsNothing);
       }
 
-      // Grup başlıkları — kart ⋮ ile aynı adlar (F12.2); katlanır çekmece.
+      // Grup başlıkları — kart ⋮ ile aynı adlar (F12.2); hepsi doğrudan açık
+      // (kullanıcı isteği 2026-11-21: kapalı/sekmeli çekmece yok).
       for (final title in [
         'Düzenle',
-        'Kopyala',
         'Araçlar',
+        'Kopyala',
         'Koruma ve depolama',
       ]) {
         expect(find.text(title), findsOneWidget, reason: title);
       }
-      // Yalnız ilk grup (Düzenle) açık.
       expect(find.text('İçeriği temizle'), findsOneWidget);
-      expect(find.text('Notu çoğalt'), findsNothing);
-      expect(find.byKey(const ValueKey('menu-tile-calculator')), findsNothing);
+      expect(find.text('Notu çoğalt'), findsOneWidget);
       // Üst çubukta açıkça duran "Sabitle" burada tekrar etmez.
       expect(find.text('Sabitle'), findsNothing);
-      await tester.tap(find.byKey(const ValueKey('menu-fold-head-Kopyala')));
-      await tester.pumpAndSettle();
-      expect(find.text('Notu çoğalt'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('menu-fold-head-Araçlar')));
-      await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('menu-tile-listen')), findsOneWidget);
       expect(find.byKey(const ValueKey('menu-tile-search')), findsOneWidget);
       expect(find.byKey(const ValueKey('menu-tile-calculator')), findsOneWidget);
