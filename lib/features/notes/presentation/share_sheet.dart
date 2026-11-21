@@ -741,6 +741,39 @@ Future<void> runNoteShare(
           );
           return;
         }
+        // GÖRSEL = GÖRSELİN KENDİSİ (kullanıcı bulgusu 2026-11-21: "görsel
+        // sayfa çerçevesiyle paylaşılıyor, direkt görsel üstündeki kalem ve
+        // metin notuyla paylaşılmalı"): notta görsel varsa çizim + açık
+        // metin basılmış görseller ÇERÇEVESİZ gider; notun yazısı mesaj
+        // açıklaması olur (kaybolmaz).
+        if (choice == 'png') {
+          final images = [
+            for (final a in shareableAttachments(note))
+              if (a.kind == AttachmentKind.image) a,
+          ];
+          if (images.isNotEmpty) {
+            final files = await NoteQuickExport.filesOf(
+              images,
+              attachments: ref.read(attachmentRepositoryProvider),
+              siblings: note.attachments,
+            );
+            if (files.isNotEmpty) {
+              final caption = noteShareText(
+                note,
+                options: options,
+                pageLabel: l10n.pageLabel,
+              ).trim();
+              await SharePlus.instance.share(
+                ShareParams(
+                  files: files,
+                  subject: subject,
+                  text: caption.isEmpty ? null : caption,
+                ),
+              );
+              return;
+            }
+          }
+        }
         final bytes = await NoteQuickExport.pdf(
           note,
           options: options,
