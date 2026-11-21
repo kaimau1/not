@@ -51,32 +51,30 @@ class _ChoiceRow<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final text = AppText.of(theme);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpace.m),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: theme.textTheme.titleSmall),
+          Text(title, style: text.rowTitle),
           if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            const SizedBox(height: AppSpace.xxs),
+            Text(subtitle!, style: text.meta),
           ],
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.s),
           Wrap(
-            spacing: 8,
-            runSpacing: 4,
+            spacing: AppSpace.s,
+            runSpacing: AppSpace.xs,
             children: [
               for (final v in values)
-                radioChip(ChoiceChip(
-                  label: Text(label(v)),
-                  selected: v == selected,
-                  onSelected: (_) => onSelected(v),
-                )),
+                radioChip(
+                  ChoiceChip(
+                    label: Text(label(v)),
+                    selected: v == selected,
+                    onSelected: (_) => onSelected(v),
+                  ),
+                ),
             ],
           ),
         ],

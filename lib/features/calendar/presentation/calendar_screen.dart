@@ -269,6 +269,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   final _bodyKey = GlobalKey();
   ZoomDirection _lastZoom = ZoomDirection.zoomIn;
   Alignment _origin = Alignment.center;
+  bool _zoomFromPinch = false;
   bool _pinching = false;
 
   /// Kıstırırken canlı ölçek: yalnız `Transform` yeniden çizilir (sayfalar
@@ -529,6 +530,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     setState(() {
       _panelDay = view == CalendarView.month && openPanel ? _selected : null;
       _lastZoom = direction;
+      _zoomFromPinch = from != null;
       _origin = _alignmentAt(from);
       _view = view;
       if (focus != null) _focus = focus;
@@ -1094,7 +1096,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
     };
 
-    final duration = AppMotion.of(context, AppMotion.medium);
+    final duration = AppMotion.of(
+      context,
+      _zoomFromPinch ? AppMotion.medium : AppMotion.short,
+    );
     final zoomIn = _lastZoom == ZoomDirection.zoomIn;
     final body = PinchZoomDetector(
       // Yıl ve ay görünümünde dikey kaydırma yok: düz tekerlek geçiş yapar.
@@ -1108,22 +1113,26 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         key: _bodyKey,
         child: AnimatedSwitcher(
           duration: duration,
-          switchInCurve: AppMotion.curveOf(context, Curves.easeOutCubic),
-          switchOutCurve: AppMotion.curveOf(context, Curves.easeInCubic),
+          switchInCurve: AppMotion.curveOf(context, AppMotion.enter),
+          switchOutCurve: AppMotion.curveOf(context, AppMotion.exit),
           layoutBuilder: (cur, prev) =>
               Stack(fit: StackFit.expand, children: [...prev, ?cur]),
           transitionBuilder: (child, animation) {
             final incoming =
                 child.key == ValueKey('view-${_view.name}-$_epoch');
-            // Yakınlaşırken yeni görünüm noktadan büyür, eskisi büyüyerek
-            // söner; uzaklaşırken tersi.
-            final from = incoming
-                ? (zoomIn ? 0.55 : 1.6)
-                : (zoomIn ? 1.6 : 0.55);
+            // Kıstırmayla / aya dokunarak geçişte odaktan derin yakınlaşma;
+            // üst çubuktaki düğmeyle geçişte sakin, hafif ölçek + solma.
+            final from = _zoomFromPinch
+                ? (incoming
+                      ? (zoomIn ? 0.55 : 1.6)
+                      : (zoomIn ? 1.6 : 0.55))
+                : (incoming
+                      ? (zoomIn ? 0.96 : 1.03)
+                      : (zoomIn ? 1.03 : 0.96));
             return FadeTransition(
               opacity: animation,
               child: ScaleTransition(
-                alignment: _origin,
+                alignment: _zoomFromPinch ? _origin : Alignment.center,
                 scale: Tween<double>(begin: from, end: 1).animate(animation),
                 child: child,
               ),
@@ -1256,6 +1265,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     _panelDay = null;
                     _selected = _today;
                   }),
+                  onOpenTimeline: () => _openDayPage(day),
                   onNewEvent: () => unawaited(showEventEditor(context, day: day)),
                   onNewTask: () => unawaited(showTaskEditor(context, due: day)),
                 ),
@@ -1671,6 +1681,7 @@ class _DayPanel extends StatefulWidget {
     required this.onClose,
     required this.onNewEvent,
     required this.onNewTask,
+    this.onOpenTimeline,
   });
 
   final DateTime day;
@@ -1679,6 +1690,7 @@ class _DayPanel extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onNewEvent;
   final VoidCallback onNewTask;
+  final VoidCallback? onOpenTimeline;
 
   @override
   State<_DayPanel> createState() => _DayPanelState();
@@ -1715,6 +1727,7 @@ class _DayPanelState extends State<_DayPanel>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
     final l10n = context.l10n;
     final key = dayKey(widget.day);
@@ -1737,14 +1750,12 @@ class _DayPanelState extends State<_DayPanel>
         child: SlideTransition(
           position: _slide,
           child: Material(
-            color: scheme.surfaceContainerLow,
+            color: tokens.card,
             shape: RoundedRectangleBorder(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(AppRadius.xl),
               ),
-              side: BorderSide(
-                color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
-              ),
+              side: BorderSide(color: tokens.hairline),
             ),
             clipBehavior: Clip.antiAlias,
             child: Column(
@@ -1757,7 +1768,7 @@ class _DayPanelState extends State<_DayPanel>
                     children: [
                       const SizedBox(height: AppSpace.s),
                       Container(
-                        width: 36,
+                        width: 38,
                         height: AppSpace.xs,
                         decoration: BoxDecoration(
                           color: scheme.onSurfaceVariant.withValues(
@@ -1818,6 +1829,20 @@ class _DayPanelState extends State<_DayPanel>
                                 ],
                               ),
                             ),
+                            if (widget.onOpenTimeline != null)
+                              IconButton.filledTonal(
+                                key: const ValueKey('day-panel-open-timeline'),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: scheme.surfaceContainerHigh,
+                                  foregroundColor: scheme.primary,
+                                ),
+                                tooltip: l10n.calendarViewWeek,
+                                icon: const Icon(
+                                  Icons.view_day_outlined,
+                                  size: AppIconSize.s,
+                                ),
+                                onPressed: widget.onOpenTimeline,
+                              ),
                             IconButton.filledTonal(
                               key: const ValueKey('day-panel-close'),
                               style: IconButton.styleFrom(
@@ -1837,10 +1862,7 @@ class _DayPanelState extends State<_DayPanel>
                     ],
                   ),
                 ),
-                Divider(
-                  height: 1,
-                  color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
-                ),
+                Divider(height: 1, color: tokens.hairline),
                 Expanded(
                   child: _DaySheet(
                     day: widget.day,
@@ -2362,21 +2384,27 @@ class _DayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyle = AppText.of(theme);
     final isToday = day == today;
     final base = isToday
         ? '${context.l10n.calendarToday} · ${DateFormat.MMMMEEEEd().format(day)}'
         : DateFormat.MMMMEEEEd().format(day);
     final text = holiday == null ? base : '$base · ${holiday!.name}';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.m,
+        AppSpace.l,
+        AppSpace.m,
+        AppSpace.xs,
+      ),
       child: Semantics(
         header: true,
         child: Text(
           text,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          style: textStyle.section.copyWith(
             color: isToday ? scheme.primary : scheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -2407,12 +2435,15 @@ class _EntryShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
       child: Material(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.m),
+        color: tokens.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          side: BorderSide(color: tokens.hairline),
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -2779,15 +2810,21 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final tokens = AppTokens.fromTheme(theme);
     final data = ref.watch(calendarDataProvider);
     final now = widget.now ?? DateTime.now();
+    final dayTitle = DateFormat.yMMMMEEEEd().format(_day);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         titleSpacing: 0,
-        title: Text(
-          DateFormat.yMMMMEEEEd().format(_day),
-          overflow: TextOverflow.ellipsis,
+        title: AnimatedSwitcher(
+          duration: AppMotion.of(context, AppMotion.short),
+          child: KeyedSubtree(
+            key: ValueKey(dayTitle),
+            child: Text(dayTitle, overflow: TextOverflow.ellipsis),
+          ),
         ),
         actions: [
           IconButton(
@@ -2838,38 +2875,49 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
               ),
             ),
           ),
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 88, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.tonalIcon(
-                      onPressed: () =>
-                          unawaited(showTaskEditor(context, due: _day)),
-                      icon: const Icon(Icons.add_task),
-                      label: Text(
-                        l10n.tasksNewTask,
-                        overflow: TextOverflow.ellipsis,
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: tokens.card,
+              border: Border(top: BorderSide(color: tokens.hairline)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.m,
+                  AppSpace.s,
+                  88,
+                  AppSpace.m,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () =>
+                            unawaited(showTaskEditor(context, due: _day)),
+                        icon: const Icon(Icons.add_task, size: AppIconSize.s),
+                        label: Text(
+                          l10n.tasksNewTask,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      key: const ValueKey('day-page-note'),
-                      onPressed: () => unawaited(
-                        openDayNote(context, ref, _day, createNew: true),
-                      ),
-                      icon: const Icon(Icons.edit_note),
-                      label: Text(
-                        l10n.calendarDayNote,
-                        overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: AppSpace.s),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        key: const ValueKey('day-page-note'),
+                        onPressed: () => unawaited(
+                          openDayNote(context, ref, _day, createNew: true),
+                        ),
+                        icon: const Icon(Icons.edit_note, size: AppIconSize.s),
+                        label: Text(
+                          l10n.calendarDayNote,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -2891,6 +2939,7 @@ class _OpenDayPanelPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     return GestureDetector(
       key: const ValueKey('calendar-open-day-panel'),
       onTap: onOpen,
@@ -2898,12 +2947,8 @@ class _OpenDayPanelPill extends StatelessWidget {
         if ((d.primaryVelocity ?? 0) < -120) onOpen();
       },
       child: Material(
-        color: scheme.surfaceContainerHigh.withValues(alpha: AppAlpha.strong),
-        shape: StadiumBorder(
-          side: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
-          ),
-        ),
+        color: tokens.card.withValues(alpha: AppAlpha.strong),
+        shape: StadiumBorder(side: BorderSide(color: tokens.hairline)),
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpace.m,
@@ -2916,12 +2961,12 @@ class _OpenDayPanelPill extends StatelessWidget {
               Icon(
                 Icons.keyboard_arrow_up_rounded,
                 size: AppIconSize.s,
-                color: scheme.onSurfaceVariant,
+                color: scheme.primary,
               ),
               Text(
                 DateFormat.MMMd().format(selected),
                 style: AppText.of(theme).badge.copyWith(
-                  color: scheme.onSurfaceVariant,
+                  color: scheme.onSurface,
                 ),
               ),
             ],

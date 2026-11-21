@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:flutter/material.dart' show MaterialPage;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/a11y/motion.dart';
 import '../core/play_build.dart';
+import 'theme/app_tokens.dart';
 import '../features/gmail/presentation/gmail_screen.dart';
 import '../features/notes/presentation/study_cards_screen.dart';
 import '../features/ai/presentation/ai_hub_screen.dart';
@@ -307,9 +310,36 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/calendar',
-            builder: (context, state) => CalendarScreen(
-              initialDay: parseDayKey(state.uri.queryParameters['day']),
-            ),
+            pageBuilder: (context, state) {
+              final child = CalendarScreen(
+                initialDay: parseDayKey(state.uri.queryParameters['day']),
+              );
+              if (state.uri.queryParameters['from'] != 'swipe') {
+                return MaterialPage<void>(key: state.pageKey, child: child);
+              }
+              return CustomTransitionPage<void>(
+                key: state.pageKey,
+                child: child,
+                reverseTransitionDuration: AppMotion.exitOf(AppMotion.medium),
+                transitionsBuilder: (context, animation, _, page) {
+                  if (!motionOf(context)) {
+                    return FadeTransition(opacity: animation, child: page);
+                  }
+                  final rtl = Directionality.of(context) == TextDirection.rtl;
+                  final slide = Tween<Offset>(
+                    begin: Offset(rtl ? 1.0 : -1.0, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: animation,
+                      curve: AppMotion.enter,
+                      reverseCurve: AppMotion.exit,
+                    ),
+                  );
+                  return SlideTransition(position: slide, child: page);
+                },
+              );
+            },
           ),
           GoRoute(
             path: '/routines',

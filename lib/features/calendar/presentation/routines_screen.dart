@@ -106,7 +106,10 @@ class _RoutineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final streak = routineStreak(routine, logs, today);
     final strip = routineStrip(routine, logs, today);
     final color = routine.color == null
@@ -114,88 +117,109 @@ class _RoutineCard extends StatelessWidget {
         : Color(routine.color!);
     final occursToday = routine.occursOn(today);
     final todayLog = logs[dayKey(today)];
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        onTap: () => unawaited(showRoutineEditor(context, existing: routine)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      routine.title.trim().isEmpty
-                          ? l10n.eventUntitled
-                          : routine.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  if (streak > 0)
-                    Text(
-                      l10n.routineStreak(streak),
-                      key: ValueKey('routine-streak-${routine.id}'),
-                      style: TextStyle(
-                        color: color,
-                        fontWeight: AppWeight.strong,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                [
-                  reminderRepeatLabel(l10n, routine.recurrence.base),
-                  if (routine.time.isNotEmpty) routine.time,
-                  if (routine.steps.isNotEmpty)
-                    l10n.routineStepCount(routine.steps.length),
-                ].join(' · '),
-                style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
-              ),
-              const SizedBox(height: 10),
-              // Son 30 gün: oluş yok = boşluk, yapılmadı = soluk, yapıldı = dolu.
-              Row(
-                children: [
-                  for (final s in strip)
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.s),
+      child: Material(
+        color: tokens.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(color: tokens.hairline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => unawaited(showRoutineEditor(context, existing: routine)),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpace.l),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
                     Expanded(
-                      child: Container(
-                        height: 10,
-                        margin: const EdgeInsets.symmetric(horizontal: 1),
-                        decoration: BoxDecoration(
-                          color: s == null
-                              ? Colors.transparent
-                              : s
-                              ? color
-                              : color.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(AppRadius.hair),
+                      child: Text(
+                        routine.title.trim().isEmpty
+                            ? l10n.eventUntitled
+                            : routine.title,
+                        style: text.rowTitle.copyWith(
+                          fontWeight: AppWeight.strong,
                         ),
                       ),
                     ),
-                ],
-              ),
-              if (occursToday) ...[
-                const SizedBox(height: 8),
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: FilledButton.tonalIcon(
-                    onPressed: () =>
-                        unawaited(showRoutineDaySheet(context, routine, today)),
-                    icon: Icon(
-                      todayLog?.completed ?? false
-                          ? Icons.check_circle
-                          : Icons.play_circle_outline,
-                    ),
-                    label: Text(
-                      todayLog?.completed ?? false
-                          ? l10n.routineDoneToday
-                          : l10n.routineStartToday,
+                    if (streak > 0)
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: AppAlpha.pressed),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.s,
+                            vertical: AppSpace.xxs,
+                          ),
+                          child: Text(
+                            l10n.routineStreak(streak),
+                            key: ValueKey('routine-streak-${routine.id}'),
+                            style: text.badge.copyWith(color: color),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpace.xxs),
+                Text(
+                  [
+                    reminderRepeatLabel(l10n, routine.recurrence.base),
+                    if (routine.time.isNotEmpty) routine.time,
+                    if (routine.steps.isNotEmpty)
+                      l10n.routineStepCount(routine.steps.length),
+                  ].join(' · '),
+                  style: text.meta,
+                ),
+                const SizedBox(height: AppSpace.m),
+                // Son 30 gün: oluş yok = boşluk, yapılmadı = soluk, yapıldı = dolu.
+                Row(
+                  children: [
+                    for (final s in strip)
+                      Expanded(
+                        child: Container(
+                          height: 10,
+                          margin: const EdgeInsets.symmetric(horizontal: 1),
+                          decoration: BoxDecoration(
+                            color: s == null
+                                ? Colors.transparent
+                                : s
+                                ? color
+                                : color.withValues(alpha: AppAlpha.soft),
+                            borderRadius: BorderRadius.circular(AppRadius.xs),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                if (occursToday) ...[
+                  const SizedBox(height: AppSpace.m),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: FilledButton.tonalIcon(
+                      onPressed: () => unawaited(
+                        showRoutineDaySheet(context, routine, today),
+                      ),
+                      icon: Icon(
+                        todayLog?.completed ?? false
+                            ? Icons.check_circle
+                            : Icons.play_circle_outline,
+                        size: AppIconSize.s,
+                      ),
+                      label: Text(
+                        todayLog?.completed ?? false
+                            ? l10n.routineDoneToday
+                            : l10n.routineStartToday,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -224,20 +248,28 @@ class _RoutineDaySheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final text = AppText.of(theme);
     final key = dayKey(day);
     final log =
         ref.watch(routineLogsStreamProvider).value?[routine.id]?[key] ??
         RoutineLog(routineId: routine.id, day: key);
     final repo = ref.read(calendarRepositoryProvider);
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        0,
+        AppSpace.l,
+        AppSpace.l,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(routine.title, style: Theme.of(context).textTheme.titleLarge),
-          Text(DateFormat.yMMMMEEEEd().format(day)),
-          const SizedBox(height: 8),
+          Text(routine.title, style: text.sheetTitle),
+          const SizedBox(height: AppSpace.xxs),
+          Text(DateFormat.yMMMMEEEEd().format(day), style: text.meta),
+          const SizedBox(height: AppSpace.m),
           if (routine.steps.isEmpty)
             CheckboxListTile(
               key: const ValueKey('routine-done'),

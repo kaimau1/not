@@ -94,11 +94,17 @@ void main() {
         ),
       );
       expect(find.text('Diş hekimi'), findsOneWidget);
-      // 6–15 Kasım: 10 gün; 16 yok.
-      expect(find.textContaining('15'), findsOneWidget);
-      expect(find.textContaining('16'), findsNothing);
+      // 6–12 Kasım: ilk 7 gün görünür; 13 başlangıçta ekran dışında.
+      expect(find.textContaining('12'), findsOneWidget);
+      expect(find.textContaining('13'), findsNothing);
       await tester.tap(find.text('Diş hekimi'));
       expect(tapped, DateTime(2026, 11, 12));
+      // İleri doğru 30 güne kadar kaydırılabilir (6 Kas + 29 gün = 5 Ara).
+      final scroll = find.byKey(const ValueKey('home-calendar-scroll'));
+      expect(scroll, findsOneWidget);
+      await tester.drag(scroll, const Offset(-3200, 0));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('5'), findsWidgets);
       expect(tester.takeException(), isNull);
     });
 
@@ -134,7 +140,7 @@ void main() {
       );
       expect(find.text('Diş hekimi'), findsNothing);
       // F74.2 (K-D4): dar düzende gün adı üç harf ("Pzt"), tek harf değil.
-      // 6–15 Kasım'da tek Pazartesi 9 Kasım.
+      // 6–12 Kasım'da tek Pazartesi 9 Kasım.
       expect(
         find.text(DateFormat.E().format(DateTime(2026, 11, 9))),
         findsOneWidget,
@@ -172,8 +178,8 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       final name = find.text(DateFormat.E().format(DateTime(2026, 11, 7)));
-      // İki cumartesi (7 ve 14 Kasım); ikisi de küçülebilir kutuda.
-      expect(name, findsNWidgets(2));
+      // 7 günlük pencerede tek cumartesi (7 Kasım); küçülebilir kutuda.
+      expect(name, findsOneWidget);
       for (final e in name.evaluate()) {
         expect(
           find.ancestor(

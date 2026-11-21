@@ -76,6 +76,10 @@ class PdfBoxBar extends ChangeNotifier {
   /// Belge açıldı mı (çubukta denetim var mı)?
   bool get ready => _box?._doc != null;
 
+  /// Geçerli sayfa ve toplam sayfa sayısı (levha başlığı için).
+  int get page => _box?._page ?? 0;
+  int get pageCount => _box?._count ?? 0;
+
   /// Sabit bölme çubuğuna konan denetimler ([width] çubuğun genişliği).
   List<Widget> buildControls(BuildContext context, double width) =>
       _box?._externalControls(context, width) ?? const [];

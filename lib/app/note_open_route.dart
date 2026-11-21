@@ -2,9 +2,17 @@ import 'dart:ui' as ui show Image;
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show PaintingContextCallback;
+import 'package:flutter/rendering.dart'
+    show
+        BoxHitTestResult,
+        LayerHandle,
+        PaintingContextCallback,
+        PipelineOwner,
+        RenderProxyBox,
+        TransformLayer;
 
 import 'split_shell.dart';
+import 'theme/app_tokens.dart';
 import '../core/a11y/motion.dart';
 import '../core/widgets/note_route_closing.dart';
 
@@ -154,17 +162,17 @@ class _NoteOpenRoute<T> extends PageRoute<T>
 
   @override
   Duration get transitionDuration => fadeOnly
-      ? const Duration(milliseconds: 150)
+      ? AppMotion.short
       : origin == null
       ? super.transitionDuration
-      : const Duration(milliseconds: 460);
+      : AppMotion.long;
 
   @override
   Duration get reverseTransitionDuration => fadeOnly
-      ? const Duration(milliseconds: 150)
+      ? AppMotion.short
       : origin == null
-      ? super.reverseTransitionDuration
-      : const Duration(milliseconds: 380);
+      ? AppMotion.exitOf(AppMotion.medium)
+      : AppMotion.medium;
 
   /// Genişleyen açılışta alttaki liste YERİNDE kalır (yana çekilmez): not
   /// onun üstünde büyür.
@@ -183,11 +191,14 @@ class _NoteOpenRoute<T> extends PageRoute<T>
     if (fadeOnly) {
       return FadeTransition(
         opacity: animation,
-        child: super.buildTransitions(
-          context,
-          kAlwaysCompleteAnimation,
-          secondaryAnimation,
-          child,
+        child: _FrozenWhileClosing(
+          animation: animation,
+          child: super.buildTransitions(
+            context,
+            kAlwaysCompleteAnimation,
+            secondaryAnimation,
+            child,
+          ),
         ),
       );
     }
@@ -196,12 +207,11 @@ class _NoteOpenRoute<T> extends PageRoute<T>
         context,
         animation,
         secondaryAnimation,
-        child,
+        _FrozenWhileClosing(animation: animation, child: child),
       );
     }
     // Temanın geçişi yine sarılır: üstüne başka ekran binince editör eskisi
-    // gibi yana çekilir, kenardan geri çekme jesti de çalışır (jest rotanın
-    // denetleyicisini sürer — not parmağı izleyerek karta doğru küçülür).
+    // gibi yana çekilir.
     final themed = super.buildTransitions(
       context,
       kAlwaysCompleteAnimation,
@@ -216,6 +226,18 @@ class _NoteOpenRoute<T> extends PageRoute<T>
   }
 }
 
+/// **BOYAMA-YALNIZ NOT GEÇİŞİ** (2026-11-21 kapanış kasması kökü):
+///
+/// ESKİDEN: `AnimatedBuilder` + `Positioned.fromRect` + `OverflowBox` +
+/// `ClipRRect` her animasyon karesinde yeniden kurulup yerleşim yapıyordu
+/// (kapanışta ~153 `RenderObject` dizilmesi, ~523 kurulum karesi, her karede
+/// `currentRect()` + `localToGlobal`).
+///
+/// ŞİMDİ: geçiş karelerinde **sıfır widget kurulumu, sıfır yerleşim** —
+/// `_TransformShell` ve `_ScaleRRectClipper` doğrudan `_curve` dinleyerek
+/// yalnız boyama katmanında ölçekler/kırpar; kart konumu geçiş başında BİR
+/// KEZ ölçülür. `ClipRRect.clipBehavior` yalnız animasyon başı/sonunda
+/// (`Clip.antiAlias` ↔ `Clip.none`) değişir.
 class _ContainerTransform extends StatefulWidget {
   const _ContainerTransform({
     required this.animation,
@@ -232,180 +254,325 @@ class _ContainerTransform extends StatefulWidget {
 }
 
 class _ContainerTransformState extends State<_ContainerTransform> {
-  // Açılış Material 3'ün "vurgulu" eğrisiyle: hızlı kalkar, yumuşak oturur.
+  // Açılış vurgulu eğriyle, kapanış hızlı ve pürüzsüz.
   late final CurvedAnimation _curve = CurvedAnimation(
     parent: widget.animation,
-    curve: Curves.easeInOutCubicEmphasized,
-    reverseCurve: Curves.easeInOutCubic,
+    curve: AppMotion.emphasized,
+    reverseCurve: AppMotion.enter,
   );
 
-  /// Kartın son bilinen yeri (kart ağaçtan düşerse kapanış buna değil
-  /// solmaya döner — bkz. [_build]).
-  late Rect? _lastCard = widget.origin.currentRect();
+  /// Kartın başlangıç/kapanış dikdörtgeni (geçiş başında BİR KEZ ölçülür —
+  /// kapanış boyunca pano `FreezeWhenHidden` ile donuk olduğundan yer değişmez).
+  Rect? _fromLocal;
+  bool _lostCard = false;
 
-  /// KASMA (kullanıcı bulgusu 2026-10-29: "not açılış kapanış genişleyip
-  /// daralma animasyonu kasıyor"): ölçeklenen editör her karede baştan
-  /// rasterleşiyordu (metin, görseller, kırpma — tam ekran). Geçiş boyunca
-  /// sayfa BİR KEZ görüntüye alınır ve kareler o görüntüyü ölçekler; sayfa
-  /// yeniden çizilirse (not yüklendi) görüntü tazelenir. Platform görünümü
-  /// (oynayan video) varsa `permissive` olağan çizime döner. Geçiş bitince
-  /// kapanır — editör canlı çizilir.
+  /// Geçiş sürüyor mu: yalnız başlangıç/bitişte değişir (`ClipRRect` kırpması).
+  late final _animating = ValueNotifier<bool>(widget.animation.status.isAnimating);
+
+  /// Geçiş boyunca sayfa BİR KEZ görüntüye alınır (F23.4).
   final SnapshotController _snapshot = SnapshotController();
 
-  /// F23.4: içeriğin solması `Opacity` (ekran boyunda ara katman + birleştirme,
-  /// GLES'te kare başına ~tam ekran fazladan doku) yerine görüntünün BOYA
-  /// ALFASIYLA — dondurulmuş görüntü yarı saydam boyayla bir kez çizilir.
+  /// İçeriğin solması `Opacity` ara katmanı yerine boya alfasıyla (F23.4).
   final _FadeSnapshotPainter _fade = _FadeSnapshotPainter();
+
+  bool _refreshed = false;
+  static const double _kRefreshAt = 0.45;
 
   @override
   void initState() {
     super.initState();
     widget.animation.addStatusListener(_onStatus);
+    _curve.addListener(_onTick);
     _onStatus(widget.animation.status);
   }
 
-  void _onStatus(AnimationStatus status) {
-    _snapshot.allowSnapshotting = status.isAnimating;
-    if (!status.isAnimating) _refreshed = false;
-  }
-
-  /// Görüntü geçiş boyunca donar. AÇILIŞTA not içeriği geçiş sürerken
-  /// gelebilir (ilk kare yükleniyor): içerik tam belirdiğinde ([_kRefreshAt])
-  /// görüntü BİR KEZ tazelenir. KAPANIŞTA hiç tazelenmez — sayfa artık
-  /// değişmiyor.
-  ///
-  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "not kapanırken küçülme
-  /// efektinde kasma var", "art arda açıp kapatınca kasmaya başlıyor"):
-  /// görüntü her iki yönde de ilerleyişin her ~%30'unda yeniden alınıyordu.
-  /// Her alım tam ekran editörün yeniden çizilip ekran boyunda bir dokuya
-  /// (≈10 MB) basılması demek; açılış + kapanış başına 5-6 alım, art arda
-  /// açıp kapatmada GPU belleğini çalkalıyor ve kareleri düşürüyordu.
-  bool _refreshed = false;
-
-  static const double _kRefreshAt = 0.45;
-
-  void _refreshSnapshot(double t) {
-    if (_refreshed || widget.animation.status != AnimationStatus.forward) {
+  void _captureOrigin({required bool closing}) {
+    final card = widget.origin.currentRect();
+    _lostCard = closing && card == null;
+    if (card == null) {
+      if (closing) _fromLocal = null;
       return;
     }
-    if (t >= _kRefreshAt) {
+    final overlay = Navigator.maybeOf(context)?.overlay?.context
+        .findRenderObject();
+    if (overlay is RenderBox && overlay.hasSize) {
+      _fromLocal = overlay.globalToLocal(card.topLeft) & card.size;
+    } else {
+      _fromLocal = card;
+    }
+  }
+
+  void _onStatus(AnimationStatus status) {
+    final active = status.isAnimating;
+    _snapshot.allowSnapshotting = active;
+    if (!active) _refreshed = false;
+    if (status == AnimationStatus.reverse && mounted) {
+      _captureOrigin(closing: true);
+    }
+    if (_animating.value != active) _animating.value = active;
+  }
+
+  void _onTick() {
+    final t = _curve.value;
+    _fade.opacity = const Interval(0.08, 0.42).transform(t);
+    if (_snapshot.allowSnapshotting &&
+        !_refreshed &&
+        widget.animation.status == AnimationStatus.forward &&
+        t >= _kRefreshAt) {
       _refreshed = true;
       _snapshot.clear();
     }
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_fromLocal == null && !_lostCard) {
+      _captureOrigin(closing: widget.animation.status == AnimationStatus.reverse);
+    }
+  }
+
+  @override
   void dispose() {
+    _curve.removeListener(_onTick);
     widget.animation.removeStatusListener(_onStatus);
+    _animating.dispose();
     _snapshot.dispose();
     _fade.dispose();
     _curve.dispose();
     super.dispose();
   }
 
+  Rect _resolveFrom(Size size) =>
+      _fromLocal ??
+      Rect.fromCenter(
+        center: (Offset.zero & size).center,
+        width: size.width * 0.86,
+        height: size.height * 0.86,
+      );
+
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
+    final scrim = Theme.of(context).colorScheme.scrim;
+    final page = SnapshotWidget(
+      controller: _snapshot,
+      mode: SnapshotMode.permissive,
+      painter: _fade,
+      child: RepaintBoundary(
+        child: _FrozenWhileClosing(
+          animation: widget.animation,
+          child: widget.child,
+        ),
+      ),
+    );
+    return _TransformShell(
       animation: _curve,
-      builder: _build,
-      // Sayfa kendi katmanında: her karede yalnız dönüşüm/kırpma değişir,
-      // editör yeniden çizilmez.
-      child: SnapshotWidget(
-        controller: _snapshot,
-        mode: SnapshotMode.permissive,
-        painter: _fade,
-        child: RepaintBoundary(
-          child: _FrozenWhileClosing(
-            animation: widget.animation,
-            child: widget.child,
+      resolveFrom: _resolveFrom,
+      lostCard: () => _lostCard,
+      originRadius: widget.origin.radius,
+      originColor: widget.origin.color,
+      scrimColor: scrim,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _animating,
+        child: page,
+        builder: (context, animating, child) => ClipRRect(
+          clipBehavior: animating ? Clip.antiAlias : Clip.none,
+          clipper: _ScaleRRectClipper(
+            animation: _curve,
+            resolveFrom: _resolveFrom,
+            originRadius: widget.origin.radius,
           ),
+          child: child,
         ),
       ),
     );
   }
+}
 
-  Widget _build(BuildContext context, Widget? page) {
-    final size = MediaQuery.sizeOf(context);
+/// Boyama katmanında kırpma dikdörtgeni (çocuğun yerel koordinatlarında).
+class _ScaleRRectClipper extends CustomClipper<RRect> {
+  _ScaleRRectClipper({
+    required this.animation,
+    required this.resolveFrom,
+    required this.originRadius,
+  }) : super(reclip: animation);
+
+  final Animation<double> animation;
+  final Rect Function(Size size) resolveFrom;
+  final double originRadius;
+
+  @override
+  RRect getClip(Size size) {
+    final t = animation.value;
+    if (t >= 1) return RRect.fromRectXY(Offset.zero & size, 0, 0);
+    final from = resolveFrom(size);
     final full = Offset.zero & size;
-    final t = _curve.value;
-    if (_snapshot.allowSnapshotting) _refreshSnapshot(t);
-    final card = widget.origin.currentRect();
-    if (card != null) _lastCard = card;
-    // Kart ağaçtan düştüyse kapanışta yerine ölçeklenerek solar.
-    final lostCard =
-        card == null && widget.animation.status == AnimationStatus.reverse;
-    final overlay = Navigator.maybeOf(context)?.overlay?.context
-        .findRenderObject();
-    Rect? from = lostCard ? null : _lastCard;
-    if (from != null && overlay is RenderBox && overlay.hasSize) {
-      final topLeft = overlay.globalToLocal(from.topLeft);
-      from = topLeft & from.size;
-    }
-    from ??= Rect.fromCenter(
-      center: full.center,
-      width: size.width * 0.86,
-      height: size.height * 0.86,
-    );
     final rect = Rect.lerp(from, full, t)!;
     final scale = (rect.width / size.width).clamp(0.05, 1.0);
-    final radius = lerpDouble(widget.origin.radius, 0, t)!;
-    // İçerik ilk üçte birde belirir; o ana dek kartın rengi büyür (kartın
-    // kendisi genişliyormuş gibi). Kapanışta tersi: içerik sonda söner.
-    final content = const Interval(0.08, 0.42).transform(t);
-    final fill = lostCard ? content : const Interval(0, 0.12).transform(t);
-    final settled = t >= 1;
-    _fade.opacity = content;
-    // Kenar yumuşatmalı kırpma (ara katman) yalnız köşe yuvarlakken; yarıçap
-    // sıfıra inince düz dikdörtgen kırpma yeter (F23.4).
-    final clip = settled
-        ? Clip.none
-        : (radius > 0.5 ? Clip.antiAlias : Clip.hardEdge);
-    // Büyüyen kutunun bulanık gölgesi YOK: tam ekrana varan bir dikdörtgenin
-    // 28 px bulanıklığı her karede GPU'da yeniden hesaplanıyordu (kasmanın
-    // ikinci kaynağı); derinliği alttaki kararma veriyor.
-    return Stack(
-      children: [
-        // Alttaki liste hafifçe kararır: derinlik hissi, açılan not öne çıkar.
-        Positioned.fill(
-          child: IgnorePointer(
-            // Karartma temanın mürekkebinden (TEMA_PLANI F34.2): siyah perde
-            // renkli zemini griye çekiyordu; açık temada `scrim` = mürekkep.
-            child: ColoredBox(
-              color: Theme.of(
-                context,
-              ).colorScheme.scrim.withValues(alpha: 0.10 * t),
-            ),
-          ),
-        ),
-        Positioned.fromRect(
-          rect: rect,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: widget.origin.color.withValues(
-                alpha: widget.origin.color.a * fill,
-              ),
-              borderRadius: BorderRadius.circular(radius),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
-              clipBehavior: clip,
-              child: OverflowBox(
-                alignment: Alignment.topLeft,
-                minWidth: size.width,
-                maxWidth: size.width,
-                minHeight: size.height,
-                maxHeight: size.height,
-                child: Transform.scale(
-                  scale: scale,
-                  alignment: Alignment.topLeft,
-                  child: page,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+    final radius = lerpDouble(originRadius, 0, t)! / scale;
+    return RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, rect.width / scale, rect.height / scale),
+      Radius.circular(radius),
     );
+  }
+
+  @override
+  bool shouldReclip(_ScaleRRectClipper old) =>
+      old.animation != animation || old.originRadius != originRadius;
+}
+
+/// Scrim + kart rengi + ölçek/öteleme: yalnız boyama (yerleşim ve kurulum 0).
+class _TransformShell extends SingleChildRenderObjectWidget {
+  const _TransformShell({
+    required this.animation,
+    required this.resolveFrom,
+    required this.lostCard,
+    required this.originRadius,
+    required this.originColor,
+    required this.scrimColor,
+    required super.child,
+  });
+
+  final Animation<double> animation;
+  final Rect Function(Size size) resolveFrom;
+  final bool Function() lostCard;
+  final double originRadius;
+  final Color originColor;
+  final Color scrimColor;
+
+  @override
+  _RenderTransformShell createRenderObject(BuildContext context) =>
+      _RenderTransformShell(
+        animation,
+        resolveFrom: resolveFrom,
+        lostCard: lostCard,
+        originRadius: originRadius,
+        originColor: originColor,
+        scrimColor: scrimColor,
+      );
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderTransformShell renderObject,
+  ) {
+    renderObject
+      ..animation = animation
+      ..resolveFrom = resolveFrom
+      ..lostCard = lostCard
+      ..originRadius = originRadius
+      ..originColor = originColor
+      ..scrimColor = scrimColor;
+  }
+}
+
+class _RenderTransformShell extends RenderProxyBox {
+  _RenderTransformShell(
+    this._animation, {
+    required this.resolveFrom,
+    required this.lostCard,
+    required this.originRadius,
+    required this.originColor,
+    required this.scrimColor,
+  });
+
+  Animation<double> _animation;
+  set animation(Animation<double> v) {
+    if (identical(v, _animation)) return;
+    if (attached) {
+      _animation.removeListener(markNeedsPaint);
+      v.addListener(markNeedsPaint);
+    }
+    _animation = v;
+    markNeedsPaint();
+  }
+
+  Rect Function(Size size) resolveFrom;
+  bool Function() lostCard;
+  double originRadius;
+  Color originColor;
+  Color scrimColor;
+
+  final _transformLayer = LayerHandle<TransformLayer>();
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _animation.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _animation.removeListener(markNeedsPaint);
+    _transformLayer.layer = null;
+    super.detach();
+  }
+
+  @override
+  void dispose() {
+    _transformLayer.layer = null;
+    super.dispose();
+  }
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (_animation.value < 0.99) return false;
+    return super.hitTest(result, position: position);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+    final t = _animation.value;
+    if (t >= 1) {
+      _transformLayer.layer = null;
+      context.paintChild(child, offset);
+      return;
+    }
+    final canvas = context.canvas;
+    if (t > 0) {
+      canvas.drawRect(
+        offset & size,
+        Paint()..color = scrimColor.withValues(alpha: 0.10 * t),
+      );
+    }
+    final from = resolveFrom(size);
+    final full = Offset.zero & size;
+    final rect = Rect.lerp(from, full, t)!;
+    final scale = (rect.width / size.width).clamp(0.05, 1.0);
+    final radius = lerpDouble(originRadius, 0, t)!;
+    final content = const Interval(0.08, 0.42).transform(t);
+    final fill = lostCard() ? content : const Interval(0, 0.12).transform(t);
+    if (fill > 0) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect.shift(offset), Radius.circular(radius)),
+        Paint()
+          ..color = originColor.withValues(alpha: originColor.a * fill),
+      );
+    }
+    final matrix = Matrix4.identity()
+      ..translateByDouble(rect.left, rect.top, 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
+    _transformLayer.layer = context.pushTransform(
+      needsCompositing,
+      offset,
+      matrix,
+      (context, offset) => context.paintChild(child, offset),
+      oldLayer: _transformLayer.layer,
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    final t = _animation.value;
+    if (t >= 1 || !hasSize) return;
+    final from = resolveFrom(size);
+    final rect = Rect.lerp(from, Offset.zero & size, t)!;
+    final scale = (rect.width / size.width).clamp(0.05, 1.0);
+    transform
+      ..translateByDouble(rect.left, rect.top, 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
   }
 }
 
@@ -466,8 +633,9 @@ class _FadeSnapshotPainter extends SnapshotPainter {
 /// klavyenin her karesinde `viewInsets` değişip bütün editör (Scaffold,
 /// gövde, maddeler, sabit bölme) yeniden yerleşiyordu — üstelik sayfa o
 /// sırada zaten donmuş bir görüntü olarak çiziliyor, yerleşimin hiçbir
-/// görünür etkisi yoktu. Ağacın şekli değişmez (MediaQuery hep burada); geri
-/// çekme jesti vazgeçilip geçiş ileri dönerse canlı değerlere dönülür.
+/// görünür etkisi yoktu. Ağacın şekli değişmez (MediaQuery hep burada);
+/// son canlı değer önbellekte tutulduğu için kapanış başında ek `setState`
+/// yapılmaz.
 class _FrozenWhileClosing extends StatefulWidget {
   const _FrozenWhileClosing({required this.animation, required this.child});
 
@@ -479,6 +647,7 @@ class _FrozenWhileClosing extends StatefulWidget {
 }
 
 class _FrozenWhileClosingState extends State<_FrozenWhileClosing> {
+  MediaQueryData? _lastLive;
   MediaQueryData? _frozen;
 
   @override
@@ -490,19 +659,25 @@ class _FrozenWhileClosingState extends State<_FrozenWhileClosing> {
   void _onStatus(AnimationStatus status) {
     final closing = status == AnimationStatus.reverse;
     noteRouteClosing.value = closing;
-    if (closing == (_frozen != null)) return;
-    setState(() => _frozen = closing ? MediaQuery.of(context) : null);
+    if (closing) {
+      // Son canlı MediaQuery ile aynı: yeniden kurulum tetiklemeden dondur.
+      _frozen ??= _lastLive;
+    } else if (_frozen != null) {
+      setState(() => _frozen = null);
+    }
   }
 
   @override
   void dispose() {
     widget.animation.removeStatusListener(_onStatus);
+    if (noteRouteClosing.value) noteRouteClosing.value = false;
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) => MediaQuery(
-    data: _frozen ?? MediaQuery.of(context),
-    child: widget.child,
-  );
+  Widget build(BuildContext context) {
+    final live = MediaQuery.of(context);
+    _lastLive = live;
+    return MediaQuery(data: _frozen ?? live, child: widget.child);
+  }
 }

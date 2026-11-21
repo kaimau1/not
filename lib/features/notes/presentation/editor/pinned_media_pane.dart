@@ -1231,7 +1231,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                             child: PdfPageBox(
                             ink: _penOn ? _inkFor(shown) : null,
                             key: ValueKey('pinned-pdf-${widget.media.id}'),
-                            attachment: shown,
+                            attachment: _penOn || identical(_shownInk, shown.ink)
+                                ? shown
+                                : shown.copyWith(ink: _shownInk),
                             onChanged: widget.onChanged ?? (_) {},
                             // Balonludan sabite alınan belge balonlarıyla
                             // görünür; çubukta göster/gizle.
@@ -1376,7 +1378,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                                       _imageBubbleLayer(bubbles),
                                   if (isImage &&
                                       !_pulling &&
-                                      (_penOn || widget.media.ink.isNotEmpty))
+                                      (_penOn || _shownInk.isNotEmpty))
                                     _imageInkLayer(),
                                 ],
                               ),
@@ -1478,7 +1480,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: PdfReadStyle.barColor(scheme),
-                  border: Border(bottom: PdfReadStyle.barLine(scheme)),
+                  border: Border(
+                    top: PdfReadStyle.barLine(scheme),
+                    bottom: BorderSide(color: AppTokens.of(context).hairline),
+                  ),
                 ),
                 // Dar ekranda önce süre yazısı, sonra "Not al" yazısı, en
                 // son bağlantı düğmesi düşer — denetimler ve anahtar kalır.
@@ -1530,19 +1535,24 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// **PANELDEKİ KALEM ↔ YÜZEN DÜĞME TAM SENKRON** (P49 (b)).
   ///
   /// KÖK NEDEN: düğme yalnız `!penActive` iken çiziliyordu — yüzen düğme
-  /// editörün kalem kipini açınca paneldeki KAYBOLUYORDU; panelden açılan
-  /// kalem ise yalnız yerel [_ownPen]'di, yüzen düğme "kalem dokunur"da
-  /// kalıyordu. Artık düğme HEP görünür ve tek soruyu gösterir: "bu eke
-  /// şimdi kalem yazar mı" ([PenPolicy.layerActive]). Açmak yüzen düğmeyi de
-  /// "kalem yazar"a alır; kapatmak yüzen düğmeyi "kalem dokunur"a alır ve
-  /// editörün kalem kipini kapatır ([PinnedMediaPane.onPenOff]).
+  /// editörün kalem kipini açınca paneldeki KAYBOLUYORDU; kalemli cihazda ise
+  /// `autoStylus` açık olduğundan `_policy.layerActive` zaten `true` idi ve
+  /// düğmeye basınca normal kalem tepsisi açılmak yerine otomatik kalem
+  /// kapanıyordu. Artık editör `onPenOn` verdiyse kapalıyken HEP editörün
+  /// normal kalem tepsisini açar, açıkken kapatır; tek başına (test/gömülü)
+  /// kullanıldığında bölmenin kendi hızlı kalemini açıp kapatır.
   void _togglePen() {
-    final on = _policy.layerActive;
-    if (!on && widget.onPenOn != null && !widget.penActive) {
-      if (!InkToolMemory.autoStylus) InkToolMemory.saveAutoStylus(true);
-      widget.onPenOn!();
+    if (widget.onPenOn != null) {
+      if (!widget.penActive) {
+        if (!InkToolMemory.autoStylus) InkToolMemory.saveAutoStylus(true);
+        widget.onPenOn!();
+        return;
+      }
+      widget.onPenOff?.call();
+      if (_ownPen) setState(() => _ownPen = false);
       return;
     }
+    final on = _policy.layerActive;
     setState(() => _ownPen = !on);
     if (on) {
       if (widget.penActive) widget.onPenOff?.call();
@@ -1644,7 +1654,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     // PDF'te "Not al" o anki SAYFAYA not açar (zamanlı medyada o ANA).
     final noteAtIcon = isPdf ? Icons.edit_note : Icons.more_time;
     final noteAtTooltip = isPdf ? l10n.pdfNoteAtPage : l10n.videoNoteAtTime;
-    final penOn = _policy.layerActive;
+    final penSelected = widget.onPenOn != null
+        ? _explicitPen
+        : _policy.layerActive;
     return Row(
       children: [
         // ÜST / SOL / SAĞ (geniş ekranda, 2026-11-09).
@@ -1713,15 +1725,15 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                 message: _fitTarget == null ? '' : l10n.pinnedMediaFit,
                 child: Center(
                   child: Container(
-                    width: 36,
-                    height: 5,
+                    width: _live != null ? 48 : 38,
+                    height: 4,
                     decoration: BoxDecoration(
                       color: _live != null
                           ? scheme.primary
                           : scheme.onSurfaceVariant.withValues(
-                              alpha: AppAlpha.muted,
+                              alpha: AppAlpha.disabled,
                             ),
-                      borderRadius: BorderRadius.circular(AppRadius.hair),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                   ),
                 ),
@@ -1736,13 +1748,23 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             id: UiItem.videoNoteAt,
             child: noteAtLabel
                 ? Padding(
-                    padding: const EdgeInsets.only(right: AppSpace.xxs),
+                    padding: const EdgeInsets.only(right: AppSpace.xs),
                     child: TextButton.icon(
                       key: const ValueKey('pinned-note-at'),
                       style: TextButton.styleFrom(
                         visualDensity: VisualDensity.compact,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        minimumSize: Size.zero,
+                        backgroundColor: scheme.primaryContainer.withValues(
+                          alpha: AppAlpha.strong,
+                        ),
+                        foregroundColor: scheme.onPrimaryContainer,
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpace.s,
+                          vertical: AppSpace.xs,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
                       ),
                       onPressed: widget.onNoteAt,
@@ -1814,8 +1836,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             _BarButton(
               key: const ValueKey('pinned-pen'),
               tooltip: l10n.pinnedPenWrite,
-              icon: penOn ? Icons.draw : Icons.draw_outlined,
-              selected: penOn,
+              icon: penSelected ? Icons.draw : Icons.draw_outlined,
+              selected: penSelected,
+              tonal: true,
               onPressed: _togglePen,
             ),
           ),
@@ -1861,6 +1884,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         tooltip: l10n.bubbleAddDone,
         icon: Icons.check,
         selected: true,
+        tonal: true,
         onPressed: _stopAdding,
       );
     }
@@ -2012,6 +2036,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   }
 
   Widget _sheet(BuildContext sheet) {
+    final theme = Theme.of(sheet);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final l10n = sheet.l10n;
     final media = widget.media;
     final wide = _wideBar;
@@ -2023,14 +2051,38 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
           label: label,
           onTap: () => pick(run),
         );
-    Widget section(String text) => Padding(
-      padding: const EdgeInsets.only(top: AppSpace.xl, bottom: AppSpace.s),
-      child: SectionLabel(text),
+    Widget section(String label) => Padding(
+      padding: const EdgeInsets.only(top: AppSpace.l, bottom: AppSpace.s),
+      child: SectionLabel(label),
     );
+
+    final kindIcon = switch (media.kind) {
+      AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
+      AttachmentKind.image => Icons.image_outlined,
+      AttachmentKind.video => Icons.play_circle_outline,
+      AttachmentKind.audio => Icons.audiotrack_outlined,
+      AttachmentKind.slide => Icons.slideshow_outlined,
+      AttachmentKind.text => Icons.description_outlined,
+      AttachmentKind.unknown => Icons.attach_file_outlined,
+    };
+    final subtitle = switch (media.kind) {
+      AttachmentKind.pdf when _pdfBar.ready && _pdfBar.pageCount > 0 =>
+        '${l10n.cardKindPdf} · ${_pdfBar.page} / ${_pdfBar.pageCount}',
+      AttachmentKind.pdf => l10n.cardKindPdf,
+      AttachmentKind.image
+          when (media.width ?? 0) > 0 && (media.height ?? 0) > 0 =>
+        '${media.width} × ${media.height}',
+      _ => null,
+    };
 
     final viewSwitch = wide
         ? null
         : widget.sheetViewSwitch?.call(sheet) ?? widget.viewSwitch;
+    final canShrink =
+        widget.onShrinkToFitChanged != null &&
+        !widget.fill &&
+        (media.kind == AttachmentKind.image ||
+            media.kind == AttachmentKind.pdf);
     final bubbles = !wide && (_canEditBubbles || _canEditPdfBubbles);
     final toggle = _bubbleToggle();
     final document = media.kind == AttachmentKind.pdf
@@ -2055,16 +2107,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               : l10n.videoNoteAtTime,
           widget.onNoteAt!,
         ),
-      if (widget.onShrinkToFitChanged != null &&
-          !widget.fill &&
-          (media.kind == AttachmentKind.image ||
-              media.kind == AttachmentKind.pdf))
-        tile(
-          'pinned-action-shrink',
-          widget.shrinkToFit ? Icons.toggle_on : Icons.toggle_off_outlined,
-          l10n.pinnedShrinkToFit,
-          () => widget.onShrinkToFitChanged!(!widget.shrinkToFit),
-        ),
       for (final action in actions)
         if (action != AttachmentAction.remove)
           Builder(
@@ -2079,7 +2121,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             },
           ),
     ];
-    final grouped = viewSwitch != null || bubbles || document.isNotEmpty;
+    final grouped =
+        viewSwitch != null || canShrink || bubbles || document.isNotEmpty;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         AppSpace.l,
@@ -2091,17 +2134,115 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SheetHeader(
-            title: media.fileName.isEmpty ? l10n.more : media.fileName,
-            padding: EdgeInsets.zero,
+          Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Icon(
+                    kindIcon,
+                    size: AppIconSize.m,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpace.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      media.fileName.isEmpty ? l10n.more : media.fileName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.sheetTitle,
+                    ),
+                    if (subtitle != null)
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.meta,
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
           if (viewSwitch != null) ...[
-            section(l10n.viewModeTitle),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: viewSwitch,
+            const SizedBox(height: AppSpace.l),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: tokens.card,
+                borderRadius: BorderRadius.circular(AppRadius.l),
+                border: Border.all(color: tokens.hairline),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.m),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionLabel(l10n.viewModeTitle),
+                    const SizedBox(height: AppSpace.s),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: viewSwitch,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (canShrink) ...[
+            const SizedBox(height: AppSpace.s),
+            Material(
+              color: tokens.card,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+                side: BorderSide(color: tokens.hairline),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                key: const ValueKey('pinned-action-shrink'),
+                onTap: () => pick(
+                  () => widget.onShrinkToFitChanged!(!widget.shrinkToFit),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.m,
+                    vertical: AppSpace.s,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        widget.shrinkToFit
+                            ? Icons.fit_screen
+                            : Icons.fit_screen_outlined,
+                        size: AppIconSize.m,
+                        color: scheme.primary,
+                      ),
+                      const SizedBox(width: AppSpace.m),
+                      Expanded(
+                        child: Text(
+                          l10n.pinnedShrinkToFit,
+                          style: text.label,
+                        ),
+                      ),
+                      IgnorePointer(
+                        child: Switch(
+                          value: widget.shrinkToFit,
+                          onChanged: (_) {},
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -2142,7 +2283,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             if (grouped)
               section(l10n.more)
             else
-              const SizedBox(height: AppSpace.s),
+              const SizedBox(height: AppSpace.m),
             SheetTileGrid(children: others),
           ],
           if (actions.contains(AttachmentAction.remove)) ...[
@@ -2176,6 +2317,7 @@ class _BarButton extends StatelessWidget {
     required this.onPressed,
     this.selected = false,
     this.filled = false,
+    this.tonal = false,
   });
 
   final String tooltip;
@@ -2191,20 +2333,29 @@ class _BarButton extends StatelessWidget {
   /// edilmiyordu).
   final bool filled;
 
+  /// Açıkken yumuşak `primaryContainer` zemin (kalem, balon bırakma).
+  final bool tonal;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final strong = filled && selected;
+    final soft = !strong && tonal && selected;
     return IconButton(
       tooltip: tooltip,
       visualDensity: VisualDensity.compact,
       iconSize: AppIconSize.m,
       isSelected: selected,
-      color: selected && !strong ? scheme.primary : null,
+      color: selected && !strong && !soft ? scheme.primary : null,
       style: strong
           ? IconButton.styleFrom(
               backgroundColor: scheme.primary,
               foregroundColor: scheme.onPrimary,
+            )
+          : soft
+          ? IconButton.styleFrom(
+              backgroundColor: scheme.primaryContainer,
+              foregroundColor: scheme.onPrimaryContainer,
             )
           : null,
       icon: Icon(icon),
@@ -2333,21 +2484,30 @@ class _UnpinHint extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.bottomCenter,
-    child: Container(
-      margin: const EdgeInsets.all(8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(16),
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        margin: const EdgeInsets.all(AppSpace.s),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.m,
+          vertical: AppSpace.xs,
+        ),
+        decoration: BoxDecoration(
+          color: scheme.inverseSurface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+        child: Text(
+          label,
+          style: AppText.of(theme).meta.copyWith(
+            color: scheme.onInverseSurface,
+          ),
+        ),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.white, fontSize: 12),
-      ),
-    ),
-  );
+    );
+  }
 }
 
 /// Alt parçayı (çubuk + not) [dy] kadar aşağıda boyar — yerleşim yok.

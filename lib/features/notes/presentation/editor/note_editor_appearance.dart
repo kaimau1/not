@@ -169,47 +169,70 @@ extension _EditorAppearance on _NoteEditorScreenState {
               // SATIR ARALIĞI (geliştirme raporu D1): dokunuş anında
               // uygulanır, levha açık kalır.
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.l,
+                  AppSpace.xs,
+                  AppSpace.l,
+                  AppSpace.l,
+                ),
                 child: StatefulBuilder(
                   builder: (context, setSheetState) {
                     final l10n = context.l10n;
+                    final theme = Theme.of(context);
+                    final scheme = theme.colorScheme;
                     final current = _note?.lineSpacing ?? 1;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.lineSpacing,
-                          style: _themeOf(context).textTheme.labelLarge,
+                    return DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(AppRadius.l),
+                        border: Border.all(
+                          color: scheme.outlineVariant.withValues(
+                            alpha: AppAlpha.muted,
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        SegmentedButton<double>(
-                          key: const ValueKey('line-spacing'),
-                          showSelectedIcon: false,
-                          segments: [
-                            ButtonSegment(
-                              value: 1,
-                              label: Text(l10n.lineSpacingNormal),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpace.m),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              l10n.lineSpacing,
+                              style: AppText.of(theme).label.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
                             ),
-                            ButtonSegment(
-                              value: Note.lineSpacingWide,
-                              label: Text(l10n.lineSpacingWide),
-                            ),
-                            ButtonSegment(
-                              value: Note.lineSpacingWider,
-                              label: Text(l10n.lineSpacingWider),
+                            const SizedBox(height: AppSpace.s),
+                            SegmentedButton<double>(
+                              key: const ValueKey('line-spacing'),
+                              showSelectedIcon: false,
+                              segments: [
+                                ButtonSegment(
+                                  value: 1,
+                                  label: Text(l10n.lineSpacingNormal),
+                                ),
+                                ButtonSegment(
+                                  value: Note.lineSpacingWide,
+                                  label: Text(l10n.lineSpacingWide),
+                                ),
+                                ButtonSegment(
+                                  value: Note.lineSpacingWider,
+                                  label: Text(l10n.lineSpacingWider),
+                                ),
+                              ],
+                              selected: {current},
+                              onSelectionChanged: (v) {
+                                if (!mounted) return;
+                                _mutate(
+                                  (n) => n.copyWith(lineSpacing: v.first),
+                                  immediate: true,
+                                );
+                                setSheetState(() {});
+                              },
                             ),
                           ],
-                          selected: {current},
-                          onSelectionChanged: (v) {
-                            if (!mounted) return;
-                            _mutate(
-                              (n) => n.copyWith(lineSpacing: v.first),
-                              immediate: true,
-                            );
-                            setSheetState(() {});
-                          },
                         ),
-                      ],
+                      ),
                     );
                   },
                 ),

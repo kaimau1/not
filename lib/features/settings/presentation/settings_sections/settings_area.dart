@@ -97,15 +97,25 @@ const double _kSettingsWide = 900;
     (bg: s.surfaceContainerHigh, fg: s.onSurfaceVariant);
 
 class _AreaIcon extends StatelessWidget {
-  const _AreaIcon({required this.area, this.size = 40});
+  const _AreaIcon({
+    required this.area,
+    this.size = 40,
+    this.selected = false,
+  });
   final _Area area;
   final double size;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
-    final c = _areaColors(Theme.of(context).colorScheme, area.id);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final c = selected
+        ? (bg: scheme.primary, fg: scheme.onPrimary)
+        : _areaColors(scheme, area.id);
     // F79.2 (D18): nötr kutu, 40 dp, köşe `m` (arama sonucundaki küçük
-    // başlıkta 30 dp, köşe `s`).
+    // başlıkta 30 dp, köşe `s`); geniş ekranda seçiliyken `primary`.
     return Container(
       width: size,
       height: size,
@@ -114,6 +124,7 @@ class _AreaIcon extends StatelessWidget {
         borderRadius: BorderRadius.circular(
           size >= 40 ? AppRadius.m : AppRadius.s,
         ),
+        border: selected ? null : Border.all(color: tokens.hairline),
       ),
       child: Icon(
         area.icon,
@@ -144,10 +155,14 @@ class _CategoryGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final tokens = AppTokens.fromTheme(theme);
     return Material(
-      color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(AppRadius.l),
+      color: tokens.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        side: BorderSide(color: tokens.hairline),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -156,8 +171,9 @@ class _CategoryGroup extends StatelessWidget {
               Divider(
                 height: 1,
                 // Simge kutusunun sağından başlar (dolgu + kutu + ara).
-                indent: AppSpace.m + _kAreaIconBox + AppSpace.m,
-                color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
+                indent: AppSpace.l + _kAreaIconBox + AppSpace.m,
+                endIndent: AppSpace.m,
+                color: tokens.hairline,
               ),
             _CategoryTile(
               area: areas[i],
@@ -262,12 +278,16 @@ class _CategoryTileState extends State<_CategoryTile> {
           onTap: widget.onTap,
           child: Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: compact ? AppSpace.xs : AppSpace.m,
+              horizontal: compact ? AppSpace.xs : AppSpace.l,
               vertical: compact ? AppSpace.s : AppSpace.m,
             ),
             child: Row(
               children: [
-                _AreaIcon(area: area, size: compact ? 30 : _kAreaIconBox),
+                _AreaIcon(
+                  area: area,
+                  size: compact ? 30 : _kAreaIconBox,
+                  selected: selected,
+                ),
                 const SizedBox(width: AppSpace.m),
                 Expanded(
                   child: Column(
@@ -280,6 +300,9 @@ class _CategoryTileState extends State<_CategoryTile> {
                         overflow: TextOverflow.ellipsis,
                         style: (compact ? text.label : text.rowTitle).copyWith(
                           color: fg,
+                          fontWeight: selected
+                              ? AppWeight.strong
+                              : AppWeight.medium,
                         ),
                       ),
                       if (area.summary.isNotEmpty && !compact)
@@ -295,9 +318,13 @@ class _CategoryTileState extends State<_CategoryTile> {
                     ],
                   ),
                 ),
+                const SizedBox(width: AppSpace.xs),
                 Icon(
-                  Icons.chevron_right,
-                  color: fg ?? scheme.onSurfaceVariant,
+                  Icons.chevron_right_rounded,
+                  size: AppIconSize.m,
+                  color:
+                      fg ??
+                      scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
                 ),
               ],
             ),
@@ -467,14 +494,17 @@ class _RenderGroupColumn extends RenderBox
   void paint(PaintingContext context, Offset offset) {
     final canvas = context.canvas;
     final bg = Paint()..color = _color;
+    final border = Paint()
+      ..color = _line
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
     for (final r in _cards) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          r.shift(offset),
-          const Radius.circular(AppRadius.l),
-        ),
-        bg,
+      final rrect = RRect.fromRectAndRadius(
+        r.shift(offset),
+        const Radius.circular(AppRadius.l),
       );
+      canvas.drawRRect(rrect, bg);
+      canvas.drawRRect(rrect.deflate(0.5), border);
     }
     // Ayraç: kartta önünde satır olan, görünür (boyu > 0) satırın üstünde.
     final ink = Paint()
@@ -510,6 +540,7 @@ Widget _rowsTheme(BuildContext context, Widget child) {
   final theme = Theme.of(context);
   final text = AppText.of(theme);
   final scheme = theme.colorScheme;
+  final tokens = AppTokens.fromTheme(theme);
   return ListTileTheme.merge(
     titleTextStyle: text.rowTitle,
     subtitleTextStyle: text.meta,
@@ -525,6 +556,10 @@ Widget _rowsTheme(BuildContext context, Widget child) {
         style: SegmentedButton.styleFrom(
           selectedBackgroundColor: scheme.primaryContainer,
           selectedForegroundColor: scheme.onPrimaryContainer,
+          side: BorderSide(color: tokens.hairline),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
         ),
       ),
       child: child,
@@ -537,12 +572,15 @@ _GroupColumn _groupColumn(
   ThemeData theme,
   List<_GroupSlot> slots,
   List<Widget> children,
-) => _GroupColumn(
-  slots: slots,
-  color: AppSurface.group(theme).color!,
-  line: theme.colorScheme.outlineVariant.withValues(alpha: AppAlpha.muted),
-  children: children,
-);
+) {
+  final tokens = AppTokens.fromTheme(theme);
+  return _GroupColumn(
+    slots: slots,
+    color: tokens.card,
+    line: tokens.hairline,
+    children: children,
+  );
+}
 
 /// Arama sonuçlarında bir alanın eşleşen satırları: düz TEK kart (grup
 /// etiketi gösterilmez, plan §2.3).
@@ -580,6 +618,7 @@ class _AreaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final text = AppText.of(theme);
+    final tokens = AppTokens.fromTheme(theme);
     return ListView(
       key: PageStorageKey('settings-page-${area.id}'),
       padding: EdgeInsets.fromLTRB(
@@ -591,32 +630,34 @@ class _AreaPage extends StatelessWidget {
       children: [
         if (showHeader)
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpace.xs,
-              AppSpace.xs,
-              AppSpace.xs,
-              AppSpace.s,
-            ),
-            child: Row(
-              children: [
-                _AreaIcon(area: area),
-                const SizedBox(width: AppSpace.m),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(area.title, style: text.screenTitle),
-                      if (area.summary.isNotEmpty)
-                        Text(
-                          area.summary,
-                          style: text.body.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                    ],
-                  ),
+            padding: const EdgeInsets.only(bottom: AppSpace.m),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: tokens.card,
+                borderRadius: BorderRadius.circular(AppRadius.l),
+                border: Border.all(color: tokens.hairline),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.l),
+                child: Row(
+                  children: [
+                    _AreaIcon(area: area, size: 44, selected: true),
+                    const SizedBox(width: AppSpace.m),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(area.title, style: text.screenTitle),
+                          if (area.summary.isNotEmpty) ...[
+                            const SizedBox(height: AppSpace.xxs),
+                            Text(area.summary, style: text.meta),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         _rowsTheme(context, _StaggeredRows(rows: area.rows)),
@@ -657,24 +698,32 @@ class _VersionLineState extends State<_VersionLine> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final tokens = AppTokens.fromTheme(theme);
     return Padding(
       padding: const EdgeInsets.only(top: AppSpace.xxl),
       child: Center(
-        child: InkWell(
-          key: const ValueKey('settings-version-line'),
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          onTap: widget.onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpace.l,
-              vertical: AppSpace.s,
-            ),
-            child: Text(
-              _version == null
-                  ? l10n.appName
-                  : '${l10n.appName} · v$_version',
-              key: const ValueKey('settings-version-footer'),
-              style: AppText.of(theme).meta,
+        child: Material(
+          color: tokens.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            side: BorderSide(color: tokens.hairline),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: const ValueKey('settings-version-line'),
+            onTap: widget.onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.l,
+                vertical: AppSpace.s,
+              ),
+              child: Text(
+                _version == null
+                    ? l10n.appName
+                    : '${l10n.appName} · v$_version',
+                key: const ValueKey('settings-version-footer'),
+                style: AppText.of(theme).meta,
+              ),
             ),
           ),
         ),
@@ -1051,8 +1100,8 @@ class _ExpandTileState extends State<_ExpandTile> {
   }
 }
 
-/// Ayarların tepesindeki kısayol kartları: genişte yan yana, dar telefonda
-/// (< 520 dp) alt alta ince satırlar.
+/// Ayarların tepesindeki kısayol kartları: telefonda (≥ 320 dp) 2 sütunlu
+/// bento düzeni (3. kart varsa altta tam genişlik); çok dar ekranda alt alta.
 class _ShortcutTiles extends StatelessWidget {
   const _ShortcutTiles({required this.tiles});
 
@@ -1062,11 +1111,31 @@ class _ShortcutTiles extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 520) {
+        if (constraints.maxWidth < 320 || tiles.length < 2) {
           return Column(
             children: [
               for (var i = 0; i < tiles.length; i++) ...[
                 if (i > 0) const SizedBox(height: AppSpace.s),
+                tiles[i],
+              ],
+            ],
+          );
+        }
+        if (constraints.maxWidth < 560 && tiles.length > 2) {
+          return Column(
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: tiles[0]._asBento()),
+                    const SizedBox(width: AppSpace.s),
+                    Expanded(child: tiles[1]._asBento()),
+                  ],
+                ),
+              ),
+              for (var i = 2; i < tiles.length; i++) ...[
+                const SizedBox(height: AppSpace.s),
                 tiles[i],
               ],
             ],
@@ -1078,7 +1147,11 @@ class _ShortcutTiles extends StatelessWidget {
             children: [
               for (var i = 0; i < tiles.length; i++) ...[
                 if (i > 0) const SizedBox(width: AppSpace.s),
-                Expanded(child: tiles[i]),
+                Expanded(
+                  child: constraints.maxWidth < 560
+                      ? tiles[i]._asBento()
+                      : tiles[i],
+                ),
               ],
             ],
           ),
@@ -1089,8 +1162,8 @@ class _ShortcutTiles extends StatelessWidget {
 }
 
 /// Kısayol kartı (Kullanım kılavuzu, Kişiselleştir). F79.2 (D18): iki kart
-/// da AYNI nötr tonda — kategori kartlarıyla aynı zemin, aynı 40 dp nötr
-/// simge kutusu, başlık `rowTitle`, alt yazı `meta`.
+/// da AYNI nötr tonda — kategori kartlarıyla aynı zemin, nötr simge kutusu,
+/// başlık `rowTitle`, alt yazı `meta`.
 class _ShortcutTile extends StatelessWidget {
   const _ShortcutTile({
     super.key,
@@ -1098,58 +1171,84 @@ class _ShortcutTile extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.bento = false,
   });
 
   final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool bento;
+
+  _ShortcutTile _asBento() => _ShortcutTile(
+    key: key,
+    icon: icon,
+    title: title,
+    subtitle: subtitle,
+    onTap: onTap,
+    bento: true,
+  );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
+    final iconBox = Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: tokens.hairline),
+      ),
+      child: Icon(
+        icon,
+        size: AppIconSize.m,
+        color: scheme.onSurfaceVariant,
+      ),
+    );
+    final chevron = Icon(
+      Icons.chevron_right_rounded,
+      size: AppIconSize.m,
+      color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
+    );
     // Basınca hafifçe çöker (bkz. PressScale).
     return PressScale(
       child: Material(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.l),
+        color: tokens.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(color: tokens.hairline),
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpace.m,
-              vertical: AppSpace.s,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(AppRadius.m),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: AppIconSize.m,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: AppSpace.m),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+            padding: const EdgeInsets.all(AppSpace.m),
+            child: bento
+                ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      Row(
+                        children: [
+                          iconBox,
+                          const Spacer(),
+                          chevron,
+                        ],
+                      ),
+                      const SizedBox(height: AppSpace.m),
                       Text(
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: text.rowTitle,
+                        style: text.rowTitle.copyWith(
+                          fontWeight: AppWeight.strong,
+                        ),
                       ),
+                      const SizedBox(height: AppSpace.xxs),
                       Text(
                         subtitle,
                         maxLines: 2,
@@ -1157,15 +1256,36 @@ class _ShortcutTile extends StatelessWidget {
                         style: text.meta,
                       ),
                     ],
+                  )
+                : Row(
+                    children: [
+                      iconBox,
+                      const SizedBox(width: AppSpace.m),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.rowTitle.copyWith(
+                                fontWeight: AppWeight.strong,
+                              ),
+                            ),
+                            Text(
+                              subtitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.meta,
+                            ),
+                          ],
+                        ),
+                      ),
+                      chevron,
+                    ],
                   ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  size: AppIconSize.m,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ],
-            ),
           ),
         ),
       ),

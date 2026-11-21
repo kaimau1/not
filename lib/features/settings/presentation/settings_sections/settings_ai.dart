@@ -30,27 +30,49 @@ class _BuiltInAiStatus extends ConsumerWidget {
         ? text
         : '$text · ${l10n.aiQuotaRenewsAt(MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(renews), alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context)))}';
 
+    final theme = Theme.of(context);
+    final textStyle = AppText.of(theme);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
       // Satır artık Premium sayfasına götürüyor: kota/puan farkının ne
       // kazandırdığı hiçbir yerde anlatılmıyordu (premium çalışması).
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.s),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         onTap: () => context.push('/premium'),
-        child: Row(
-          children: [
-            Icon(icon, size: AppIconSize.xs, color: scheme.primary),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                line,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+          child: Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.s),
+                  child: Icon(
+                    icon,
+                    size: AppIconSize.s,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
               ),
-            ),
-            Icon(Icons.chevron_right, size: AppIconSize.xs, color: scheme.onSurfaceVariant),
-          ],
+              const SizedBox(width: AppSpace.m),
+              Expanded(
+                child: Text(
+                  line,
+                  style: textStyle.label.copyWith(color: scheme.onSurface),
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: AppIconSize.m,
+                color: scheme.onSurfaceVariant.withValues(
+                  alpha: AppAlpha.muted,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

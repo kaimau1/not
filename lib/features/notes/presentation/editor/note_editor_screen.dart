@@ -1798,7 +1798,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     unawaited(Future.microtask(() => openNotes.close(openId)));
     final sortHold = _sortHold;
     unawaited(Future.microtask(() => sortHold?.release(openId)));
-    _previewHold?.release(openId);
+    final previewHold = _previewHold;
+    unawaited(Future.microtask(() => previewHold?.release(openId)));
     _pageInkCtl?.dispose();
     // Tam ekran nota bağlı; ağaç kilitliyken durum yazılamaz. Başka bir nota
     // GEÇİLDİYSE (yeni editör çoktan açık) tam ekran sürer.

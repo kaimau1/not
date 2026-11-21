@@ -1273,6 +1273,7 @@ class FolderSwipe extends StatefulWidget {
     required this.nextLabel,
     required this.onCommit,
     required this.child,
+    this.nextIcon,
     this.continuesInPlace,
   });
 
@@ -1282,16 +1283,15 @@ class FolderSwipe extends StatefulWidget {
   /// animasyonu güzel his vermiyor"). Geçiş içerik değiştirerek YERİNDE
   /// olacaksa (takvim açmıyorsa) çağrılır, bırakılan konumu genişlik oranı
   /// olarak (fiziksel, işaretli) alır ve true döner: ızgara geri SEKMEZ,
-  /// ayrılan görünümü çağıran bu konumdan devam ettirir. KÖK NEDEN: eskiden
-  /// ızgara parmağın bıraktığı yerden merkeze geri dönerken AYNI anda yeni
-  /// içerik ters yönden geliyordu — gelen liste parmağın tersine kayıyor,
-  /// hızlı fiskede "takılıp geri gelme" hissi veriyordu. null / false = eski
-  /// davranış (yerine dön).
-  final bool Function(int direction, double releaseFraction)?
-  continuesInPlace;
+  /// ayrılan görünümü çağıran bu konumdan devam ettirir.
+  final bool Function(int direction, double releaseFraction)? continuesInPlace;
 
   /// Yön (+1 sonraki, -1 önceki) için durağın adı; yoksa null.
   final String? Function(int direction) nextLabel;
+
+  /// Yön için hedefin simgesi (ör. takvim, klasör, tümü).
+  final IconData? Function(int direction)? nextIcon;
+
   final ValueChanged<int> onCommit;
   final Widget child;
 
@@ -1301,8 +1301,8 @@ class FolderSwipe extends StatefulWidget {
 
 /// Izgaranın parmağı izleyebileceği en uzak yol ve etiket kartının en geniş
 /// hâli (genişlik oranı; düzen oranı, belirteç değil — P62 §6.2).
-const _kFollowLimit = 0.4;
-const _kLabelWidth = 0.36;
+const _kFollowLimit = 0.42;
+const _kLabelWidth = 0.46;
 
 class _FolderSwipeState extends State<FolderSwipe>
     with SingleTickerProviderStateMixin {
@@ -1311,9 +1311,10 @@ class _FolderSwipeState extends State<FolderSwipe>
   );
   int _direction = 0;
   String? _label;
+  IconData? _icon;
   double _raw = 0;
   bool _past = false;
-  double _labelMax = 140;
+  double _labelMax = 160;
 
   /// Geçiş eşiğine ne kadar gelindi (0–1) — etiketteki DOLUM ÇUBUĞU
   /// (kullanıcı isteği 2026-11-09). Ayrı bildirici: her çekiş karesinde
@@ -1370,24 +1371,45 @@ class _FolderSwipeState extends State<FolderSwipe>
 
   void _update(DragUpdateDetails d) => _follow(d.primaryDelta ?? 0);
 
+  /// Eşik sonrası yumuşak lastik direnç: sert duvara çarpmadan akıcı his.
+  double _dampedFollow(double raw, double width) {
+    final abs = raw.abs();
+    final sign = raw.sign;
+    if (_label == null) {
+      final cap = width * 0.14;
+      final d = abs * AppSwipe.rubber;
+      return sign * (d / (1 + d / cap));
+    }
+    final threshold = width * AppSwipe.commitFraction;
+    if (abs <= threshold) return raw;
+    final excess = abs - threshold;
+    final headroom = width * (_kFollowLimit - AppSwipe.commitFraction);
+    final softened = headroom * (1 - 1 / (1 + excess / (headroom * 1.4)));
+    return sign * (threshold + softened);
+  }
+
   void _follow(double delta) {
     _raw += delta;
     if (_raw == 0) return;
+    final width = _width;
     final direction = _directionOf(_raw);
     if (direction != _direction) {
       _direction = direction;
-      _labelMax = _width * _kLabelWidth;
-      setState(() => _label = widget.nextLabel(direction));
+      _labelMax = width * _kLabelWidth;
+      final label = widget.nextLabel(direction);
+      final icon = label == null ? null : widget.nextIcon?.call(direction);
+      setState(() {
+        _label = label;
+        _icon = icon;
+      });
     }
-    final limit = _width * _kFollowLimit;
-    // Durak yoksa lastik: kısa ve dirençli.
-    final follow = _label == null ? _raw * AppSwipe.rubber : _raw;
-    if (motionOf(context)) _dx.value = follow.clamp(-limit, limit);
+    final follow = _dampedFollow(_raw, width);
+    if (motionOf(context)) _dx.value = follow;
     _progress.value = _label == null
         ? 0
-        : (_raw.abs() / (_width * AppSwipe.commitFraction)).clamp(0.0, 1.0);
+        : (_raw.abs() / (width * AppSwipe.commitFraction)).clamp(0.0, 1.0);
     final past =
-        _label != null && _raw.abs() >= _width * AppSwipe.commitFraction;
+        _label != null && _raw.abs() >= width * AppSwipe.commitFraction;
     if (past != _past) {
       setState(() => _past = past);
       if (past) unawaited(AppHaptics.tick());
@@ -1395,29 +1417,38 @@ class _FolderSwipeState extends State<FolderSwipe>
   }
 
   void _finish(double velocity) {
+    final width = _width;
     // Ortak karar kuralı (P62 §6.2): bugünkü `_past || fiske` ile aynı sayı.
     final commit =
         _label != null &&
-        AppSwipe.commits(dragged: _raw, extent: _width, velocity: velocity);
+        AppSwipe.commits(dragged: _raw, extent: width, velocity: velocity);
     // Fiskeyle (eşiği aşmadan) geçiş de aynı hafif titreşimi verir (K3).
     if (commit && !_past) unawaited(AppHaptics.tick());
     final direction = _direction;
     setState(() {
       _label = null;
+      _icon = null;
       _past = false;
       _direction = 0;
     });
     _raw = 0;
     _progress.value = 0;
     if (commit &&
-        (widget.continuesInPlace?.call(direction, _dx.value / _width) ??
+        (widget.continuesInPlace?.call(direction, _dx.value / width) ??
             false)) {
       _dx.stop();
       _dx.value = 0;
       widget.onCommit(direction);
       return;
     }
-    if (commit) widget.onCommit(direction);
+    if (commit) {
+      widget.onCommit(direction);
+      // Yeni rota (takvim) çekiş yönünden kayarken ızgara geri sekmek yerine
+      // yumuşakça sıfırlanır.
+      _dx.stop();
+      _dx.value = 0;
+      return;
+    }
     if (_dx.value != 0) {
       // Kalan yolla orantılı oturma (P62 §6.2, K2): kısa çekiş çabuk, hızlı
       // bırakış kopmadan döner; eğri taşmaz.
@@ -1434,57 +1465,65 @@ class _FolderSwipeState extends State<FolderSwipe>
   @override
   Widget build(BuildContext context) {
     final label = _label;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final tokens = AppTokens.of(context);
     final forwardEdge = _direction > 0;
     final ink = _past ? scheme.onPrimaryContainer : scheme.onSurface;
+    final icon =
+        _icon ??
+        (forwardEdge ? Icons.arrow_forward_rounded : Icons.arrow_back_rounded);
     return Listener(
       onPointerSignal: _onSignal,
       child: GestureDetector(
-      // Yatay çekişle filtreler/klasörler arasında gezin; dikey kaydırma
-      // CustomScrollView'de kalır, eksenler farklı olduğundan yarışmaz.
-      onHorizontalDragStart: widget.enabled ? (_) => _raw = 0 : null,
-      onHorizontalDragUpdate: widget.enabled ? _update : null,
-      onHorizontalDragEnd: widget.enabled
-          ? (d) => _finish(d.primaryVelocity ?? 0)
-          : null,
-      onHorizontalDragCancel: widget.enabled ? () => _finish(0) : null,
-      child: Stack(
-        fit: StackFit.passthrough,
-        children: [
-          AnimatedBuilder(
-            animation: _dx,
-            builder: (context, child) => Transform.translate(
-              offset: Offset(_dx.value, 0),
-              child: child,
+        // Yatay çekişle filtreler/klasörler arasında gezin; dikey kaydırma
+        // CustomScrollView'de kalır, eksenler farklı olduğundan yarışmaz.
+        onHorizontalDragStart: widget.enabled ? (_) => _raw = 0 : null,
+        onHorizontalDragUpdate: widget.enabled ? _update : null,
+        onHorizontalDragEnd: widget.enabled
+            ? (d) => _finish(d.primaryVelocity ?? 0)
+            : null,
+        onHorizontalDragCancel: widget.enabled ? () => _finish(0) : null,
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            AnimatedBuilder(
+              animation: _dx,
+              builder: (context, child) => Transform.translate(
+                offset: Offset(_dx.value, 0),
+                child: child,
+              ),
+              child: widget.child,
             ),
-            child: widget.child,
-          ),
-          if (label != null)
-            PositionedDirectional(
-              top: 0,
-              bottom: 0,
-              start: forwardEdge ? null : AppSpace.m,
-              end: forwardEdge ? AppSpace.m : null,
-              child: IgnorePointer(
-                child: Center(
-                  // ponytail: çekişe bağlı solma ve eşikteki renk geçişi
-                  // (plan §6.2) S23'ü 2282 → 2300 yaptı (etiket geçişten
-                  // sonra da ağaçta, her tikte kuruluyor) — "S23 değişmez"
-                  // kuralı gereği yapılmadı; renk eşikte tek karede değişir.
+            if (label != null)
+              PositionedDirectional(
+                top: 0,
+                bottom: 0,
+                start: forwardEdge ? null : AppSpace.m,
+                end: forwardEdge ? AppSpace.m : null,
+                child: IgnorePointer(
+                  child: Center(
+                    // S23/S33 koruması: çekiş sırasında yalnız
+                    // ValueListenableBuilder(_progress) yenilenir.
                     child: ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: _labelMax),
                       child: DecoratedBox(
                         key: const ValueKey('swipe-next-label'),
                         decoration: BoxDecoration(
-                          color: _past ? scheme.primaryContainer : tokens.card,
-                          borderRadius: BorderRadius.circular(AppRadius.m),
-                          border: Border.all(color: tokens.hairline),
+                          color: _past
+                              ? scheme.primaryContainer
+                              : tokens.card,
+                          borderRadius: BorderRadius.circular(AppRadius.l),
+                          border: Border.all(
+                            color: _past ? scheme.primary : tokens.hairline,
+                          ),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpace.m,
-                            vertical: AppSpace.s,
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpace.m,
+                            AppSpace.s,
+                            AppSpace.m,
+                            AppSpace.s,
                           ),
                           child: IntrinsicWidth(
                             child: Column(
@@ -1494,40 +1533,44 @@ class _FolderSwipeState extends State<FolderSwipe>
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    if (!forwardEdge)
+                                    if (!forwardEdge) ...[
                                       Icon(
-                                        Icons.arrow_back,
-                                        size: AppIconSize.xs,
-                                        color: ink,
+                                        icon,
+                                        size: AppIconSize.s,
+                                        color: _past
+                                            ? scheme.primary
+                                            : scheme.onSurfaceVariant,
                                       ),
+                                      const SizedBox(width: AppSpace.s),
+                                    ],
                                     Flexible(
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpace.xs,
-                                        ),
-                                        child: Text(
-                                          label,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: AppText.of(
-                                            Theme.of(context),
-                                          ).label.copyWith(color: ink),
+                                      child: Text(
+                                        label,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppText.of(theme).label.copyWith(
+                                          color: ink,
+                                          fontWeight: AppWeight.strong,
                                         ),
                                       ),
                                     ),
-                                    if (forwardEdge)
+                                    if (forwardEdge) ...[
+                                      const SizedBox(width: AppSpace.s),
                                       Icon(
-                                        Icons.arrow_forward,
-                                        size: AppIconSize.xs,
-                                        color: ink,
+                                        icon,
+                                        size: AppIconSize.s,
+                                        color: _past
+                                            ? scheme.primary
+                                            : scheme.onSurfaceVariant,
                                       ),
+                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: AppSpace.xs),
                                 // DOLUM ÇUBUĞU: dolunca bırakmak geçişi yapar.
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(
-                                    AppRadius.hair,
+                                    AppRadius.pill,
                                   ),
                                   child: SizedBox(
                                     height: 3,
@@ -1542,8 +1585,7 @@ class _FolderSwipeState extends State<FolderSwipe>
                                               'swipe-progress',
                                             ),
                                             alignment: forwardEdge
-                                                ? AlignmentDirectional
-                                                      .centerEnd
+                                                ? AlignmentDirectional.centerEnd
                                                 : AlignmentDirectional
                                                       .centerStart,
                                             widthFactor: p,
@@ -1562,11 +1604,11 @@ class _FolderSwipeState extends State<FolderSwipe>
                         ),
                       ),
                     ),
+                  ),
                 ),
               ),
-            ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

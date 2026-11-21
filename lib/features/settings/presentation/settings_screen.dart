@@ -1049,12 +1049,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             bottom: inArea || wide
                 ? null
                 : PreferredSize(
-                    preferredSize: const Size.fromHeight(54),
+                    preferredSize: const Size.fromHeight(58),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
-                        AppSpace.m,
+                        AppSpace.l,
                         0,
-                        AppSpace.m,
+                        AppSpace.l,
                         AppSpace.s,
                       ),
                       child: Center(
@@ -1080,19 +1080,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ValueChanged<String> onOpen,
   ) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     if (visible.isEmpty) {
       return [
         Padding(
           key: const ValueKey('settings-search-empty'),
-          padding: const EdgeInsets.symmetric(vertical: 40),
+          padding: const EdgeInsets.symmetric(vertical: AppSpace.xxxl),
           child: Column(
             children: [
-              Icon(Icons.search_off, size: 42, color: scheme.onSurfaceVariant),
-              const SizedBox(height: 12),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  shape: BoxShape.circle,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.l),
+                  child: Icon(
+                    Icons.search_off_rounded,
+                    size: AppIconSize.l,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpace.m),
               Text(
                 l10n.settingsSearchEmpty(_query.trim()),
                 textAlign: TextAlign.center,
+                style: text.body.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -1110,8 +1126,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onOpen(e.area.id);
           },
         ),
+        const SizedBox(height: AppSpace.xs),
         _RowsCard(rows: e.rows),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpace.m),
       ],
     ];
   }
@@ -1159,24 +1176,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Tepedeki sabit arama kutusu (yerel anahtar kelime araması).
   Widget _searchBar(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final hasText = _query.trim().isNotEmpty;
     return Container(
-      height: 44,
+      height: 46,
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.m),
+        color: tokens.card,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: hasText
+              ? scheme.primary.withValues(alpha: AppAlpha.muted)
+              : tokens.hairline,
+        ),
       ),
       padding: const EdgeInsetsDirectional.only(
-        start: AppSpace.m,
+        start: AppSpace.l,
         end: AppSpace.xs,
       ),
       child: Row(
         children: [
           Icon(
-            Icons.search,
+            Icons.search_rounded,
             size: AppIconSize.s,
-            color: scheme.onSurfaceVariant,
+            color: hasText ? scheme.primary : scheme.onSurfaceVariant,
           ),
           const SizedBox(width: AppSpace.s),
           Expanded(
@@ -1185,10 +1210,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               controller: _searchController,
               textInputAction: TextInputAction.done,
               onChanged: (v) => setState(() => _query = v),
-              style: AppText.of(Theme.of(context)).body,
+              style: text.body,
               decoration: InputDecoration(
                 hintText: l10n.settingsSearchHint,
-                hintStyle: AppText.of(Theme.of(context)).meta,
+                hintStyle: text.meta,
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -1202,7 +1227,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               // yaptığını söyler.
               tooltip: l10n.clearSearch,
               visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.close, size: 18),
+              icon: const Icon(Icons.close_rounded, size: AppIconSize.s),
               onPressed: () {
                 _searchController.clear();
                 setState(() => _query = '');

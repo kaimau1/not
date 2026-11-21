@@ -260,13 +260,13 @@ class _WeekDayTile extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: isToday
-              ? scheme.surfaceContainerHigh
-              : scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(AppRadius.m),
+              ? scheme.primaryContainer.withValues(alpha: AppAlpha.soft)
+              : AppTokens.fromTheme(theme).card,
+          borderRadius: BorderRadius.circular(AppRadius.l),
           border: Border.all(
             color: isToday || isSelected
                 ? scheme.primary
-                : scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
+                : AppTokens.fromTheme(theme).hairline,
             width: isToday || isSelected ? 1.5 : 1,
           ),
         ),
@@ -514,15 +514,15 @@ class _WeekSummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
     final l10n = context.l10n;
     return DecoratedBox(
       key: const ValueKey('week-board-summary'),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
-        ),
+        color: tokens.card,
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(color: tokens.hairline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpace.m),
@@ -533,15 +533,15 @@ class _WeekSummaryTile extends StatelessWidget {
           children: [
             Text(
               l10n.calendarWeekSummaryTitle,
-              style: text.label.copyWith(color: scheme.onSurfaceVariant),
+              style: text.section,
             ),
             Text(
               l10n.calendarWeekSummaryPlans(math.max(0, plans)),
-              style: text.body.copyWith(color: scheme.onSurface),
+              style: text.label.copyWith(color: scheme.onSurface),
             ),
             Text(
               l10n.calendarWeekSummaryNotes(math.max(0, notes)),
-              style: text.body.copyWith(color: scheme.onSurface),
+              style: text.label.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
         ),

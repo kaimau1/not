@@ -7,6 +7,7 @@ import 'dart:ui' show PointMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/archive_paper.dart';
@@ -272,14 +273,27 @@ class NotebookPaperPainter extends CustomPainter {
       case ArchivePaper.plain:
         break;
     }
-    // Cilt: sol kenarda içeri doğru sönen gölge — düz kâğıtta da defter
-    // olduğu belli olsun.
+    // Cilt: sol kenarda içeri doğru sönen gölge + ince katlama çizgisi — düz
+    // kâğıtta da defter olduğu belli olsun.
     final strip = Rect.fromLTWH(0, 0, spineWidth, size.height);
     canvas.drawRect(
       strip,
       Paint()
-        ..shader = LinearGradient(colors: [spine, spine.withValues(alpha: 0)])
-            .createShader(strip),
+        ..shader = LinearGradient(
+          colors: [
+            spine,
+            spine.withValues(alpha: spine.a * 0.35),
+            spine.withValues(alpha: 0),
+          ],
+          stops: const [0, 0.45, 1],
+        ).createShader(strip),
+    );
+    canvas.drawLine(
+      const Offset(2.5, 0),
+      Offset(2.5, size.height),
+      Paint()
+        ..color = spine.withValues(alpha: (spine.a * 0.9).clamp(0, 1))
+        ..strokeWidth = 0.8,
     );
   }
 
@@ -642,30 +656,60 @@ class _NotebookPaperPickerState extends State<NotebookPaperPicker> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        0,
+        AppSpace.l,
+        AppSpace.m,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 12, left: 4),
-            child: Text(
-              l10n.archivePaper,
-              style: Theme.of(context).textTheme.titleMedium,
+            padding: const EdgeInsets.only(
+              bottom: AppSpace.m,
+              left: AppSpace.xs,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(l10n.archivePaper, style: text.sheetTitle),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.s,
+                      vertical: AppSpace.xxs,
+                    ),
+                    child: Text(
+                      archivePaperLabel(l10n, _current),
+                      style: text.badge.copyWith(
+                        color: scheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           LayoutBuilder(
             builder: (context, constraints) {
-              // Telefonda 4 (çok darda 3), geniş ekranda daha çok sütun.
               final columns = (constraints.maxWidth / 86).floor().clamp(3, 7);
-              const spacing = 10.0;
+              const spacing = AppSpace.s;
               final width =
                   (constraints.maxWidth - spacing * (columns - 1)) / columns;
               return Wrap(
                 spacing: spacing,
-                runSpacing: spacing,
+                runSpacing: AppSpace.m,
                 children: [
                   for (final paper in ArchivePaper.values)
                     SizedBox(
@@ -675,7 +719,7 @@ class _NotebookPaperPickerState extends State<NotebookPaperPicker> {
                         paper: paper,
                         label: archivePaperLabel(l10n, paper),
                         selected: paper == _current,
-                        scheme: scheme,
+                        theme: theme,
                         onTap: () {
                           if (paper == _current) return;
                           setState(() => _current = paper);
@@ -699,18 +743,21 @@ class _PaperTile extends StatelessWidget {
     required this.paper,
     required this.label,
     required this.selected,
-    required this.scheme,
+    required this.theme,
     required this.onTap,
   });
 
   final ArchivePaper paper;
   final String label;
   final bool selected;
-  final ColorScheme scheme;
+  final ThemeData theme;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
+    final inks = PaperInks.of(theme);
     return Semantics(
       button: true,
       selected: selected,
@@ -718,22 +765,22 @@ class _PaperTile extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: onTap,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutCubic,
+                duration: AppMotion.of(context, AppMotion.selection),
+                curve: AppMotion.enter,
                 height: 92,
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  color: scheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  color: scheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(AppRadius.m),
                   border: Border.all(
                     color: selected ? scheme.primary : scheme.outlineVariant,
-                    width: selected ? 2.2 : 1,
+                    width: selected ? 2 : 1,
                   ),
                 ),
                 child: Stack(
@@ -742,33 +789,40 @@ class _PaperTile extends StatelessWidget {
                     CustomPaint(
                       painter: NotebookPaperPainter(
                         style: paper,
-                        line: scheme.outlineVariant.withValues(alpha: 0.9),
-                        margin: scheme.error.withValues(alpha: 0.45),
-                        spine: scheme.shadow.withValues(alpha: 0.10),
+                        line: inks.line.withValues(
+                          alpha: (inks.line.a * 2.2).clamp(0, 1),
+                        ),
+                        margin: inks.margin,
+                        spine: inks.spine,
                         gap: 13,
                       ),
                     ),
                     if (selected)
                       PositionedDirectional(
-                        top: 6,
-                        end: 6,
-                        child: Icon(
-                          Icons.check_circle,
-                          size: 20,
-                          color: scheme.primary,
+                        top: AppSpace.xs,
+                        end: AppSpace.xs,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: scheme.surface,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.check_circle,
+                            size: AppIconSize.s,
+                            color: scheme.primary,
+                          ),
                         ),
                       ),
                   ],
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpace.xs),
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                style: text.meta.copyWith(
+                  fontWeight: selected ? AppWeight.strong : AppWeight.medium,
                   color: selected ? scheme.primary : scheme.onSurface,
                 ),
               ),

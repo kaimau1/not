@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
@@ -232,12 +233,34 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final lists = ref.watch(taskListsStreamProvider).value ?? const [];
     final allLists = [
       const TaskList(id: TaskList.defaultId),
       for (final l in lists)
         if (!l.isDefault) l,
     ];
+
+    Widget card(List<Widget> children) => Material(
+      color: tokens.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        side: BorderSide(color: tokens.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.m,
+          vertical: AppSpace.xs,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        ),
+      ),
+    );
 
     // Klavye payı ayrı, ince widget'ta (bkz. [SheetInsetPadding]).
     return SheetInsetPadding(
@@ -270,144 +293,198 @@ class _TaskEditorSheetState extends ConsumerState<TaskEditorSheet> {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
-                    key: const ValueKey('task-title'),
-                    controller: _title,
-                    focusNode: _titleFocus,
-                    textCapitalization: TextCapitalization.sentences,
-                    style: Theme.of(context).textTheme.titleLarge,
-                    decoration: InputDecoration(
-                      hintText: l10n.taskTitleHint,
-                      border: InputBorder.none,
+                  card([
+                    TextField(
+                      key: const ValueKey('task-title'),
+                      controller: _title,
+                      focusNode: _titleFocus,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: text.sheetTitle,
+                      decoration: InputDecoration(
+                        hintText: l10n.taskTitleHint,
+                        border: InputBorder.none,
+                      ),
+                      onSubmitted: (_) => _save(),
                     ),
-                    onSubmitted: (_) => _save(),
-                  ),
-                  TextField(
-                    controller: _notes,
-                    minLines: 1,
-                    maxLines: 5,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(
-                      icon: const Icon(Icons.notes_outlined),
-                      hintText: l10n.taskNotesHint,
-                      border: InputBorder.none,
+                    Divider(height: 1, color: tokens.hairline),
+                    TextField(
+                      controller: _notes,
+                      minLines: 1,
+                      maxLines: 5,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        icon: const Icon(
+                          Icons.notes_outlined,
+                          size: AppIconSize.m,
+                        ),
+                        hintText: l10n.taskNotesHint,
+                        border: InputBorder.none,
+                      ),
                     ),
-                  ),
-                  const Divider(),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.event_outlined),
-                    title: Text(l10n.taskDue),
-                    subtitle: Text(
-                      _due == null
-                          ? l10n.taskNoDue
-                          : DateFormat.yMMMEd().format(_due!),
-                    ),
-                    trailing: _due == null
-                        ? null
-                        : IconButton(
-                            tooltip: l10n.taskNoDue,
-                            icon: const Icon(Icons.close),
-                            onPressed: () => setState(() {
-                              _due = null;
-                              _time = '';
-                              _repeat = Recurrence.none;
-                            }),
-                          ),
-                    onTap: _pickDue,
-                  ),
-                  if (_due != null) ...[
+                  ]),
+                  const SizedBox(height: AppSpace.m),
+                  card([
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.schedule_outlined),
-                      title: Text(l10n.taskTime),
-                      subtitle: Text(_time.isEmpty ? l10n.taskNoTime : _time),
-                      trailing: _time.isEmpty
-                          ? null
+                      leading: const Icon(
+                        Icons.event_outlined,
+                        size: AppIconSize.m,
+                      ),
+                      title: Text(l10n.taskDue),
+                      subtitle: Text(
+                        _due == null
+                            ? l10n.taskNoDue
+                            : DateFormat.yMMMEd().format(_due!),
+                      ),
+                      trailing: _due == null
+                          ? const Icon(
+                              Icons.chevron_right_rounded,
+                              size: AppIconSize.m,
+                            )
                           : IconButton(
-                              tooltip: l10n.taskNoTime,
-                              icon: const Icon(Icons.close),
-                              onPressed: () => setState(() => _time = ''),
+                              tooltip: l10n.taskNoDue,
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                size: AppIconSize.s,
+                              ),
+                              onPressed: () => setState(() {
+                                _due = null;
+                                _time = '';
+                                _repeat = Recurrence.none;
+                              }),
                             ),
-                      onTap: _pickTime,
+                      onTap: _pickDue,
                     ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.repeat),
-                      title: Text(l10n.repeatTitle),
-                      subtitle: Text(reminderRepeatLabel(l10n, _repeat.base)),
-                      onTap: _pickRepeat,
+                    if (_due != null) ...[
+                      Divider(height: 1, color: tokens.hairline),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(
+                          Icons.schedule_outlined,
+                          size: AppIconSize.m,
+                        ),
+                        title: Text(l10n.taskTime),
+                        subtitle: Text(
+                          _time.isEmpty ? l10n.taskNoTime : _time,
+                        ),
+                        trailing: _time.isEmpty
+                            ? const Icon(
+                                Icons.chevron_right_rounded,
+                                size: AppIconSize.m,
+                              )
+                            : IconButton(
+                                tooltip: l10n.taskNoTime,
+                                icon: const Icon(
+                                  Icons.close_rounded,
+                                  size: AppIconSize.s,
+                                ),
+                                onPressed: () => setState(() => _time = ''),
+                              ),
+                        onTap: _pickTime,
+                      ),
+                      Divider(height: 1, color: tokens.hairline),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.repeat, size: AppIconSize.m),
+                        title: Text(l10n.repeatTitle),
+                        subtitle: Text(reminderRepeatLabel(l10n, _repeat.base)),
+                        trailing: const Icon(
+                          Icons.chevron_right_rounded,
+                          size: AppIconSize.m,
+                        ),
+                        onTap: _pickRepeat,
+                      ),
+                      Divider(height: 1, color: tokens.hairline),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: const Icon(
+                          Icons.notifications_none_outlined,
+                          size: AppIconSize.m,
+                        ),
+                        title: Text(l10n.taskReminderAtDue),
+                        value: _remind,
+                        onChanged: (v) => setState(() => _remind = v),
+                      ),
+                      if (_remind)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpace.s),
+                          child: ReminderLevelPicker(
+                            value: _level,
+                            onChanged: (v) => setState(() => _level = v),
+                          ),
+                        ),
+                    ],
+                  ]),
+                  const SizedBox(height: AppSpace.m),
+                  card([
+                    // Kişi ve Gmail bağlantısı (not içi görev satırı,
+                    // 2026-11-08): kime / hangi iletiyle ilgili.
+                    TextField(
+                      key: const ValueKey('task-contact'),
+                      controller: _contact,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: InputDecoration(
+                        icon: const Icon(
+                          Icons.person_outline,
+                          size: AppIconSize.m,
+                        ),
+                        hintText: l10n.taskContactHint,
+                        border: InputBorder.none,
+                      ),
                     ),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      secondary: const Icon(Icons.notifications_none_outlined),
-                      title: Text(l10n.taskReminderAtDue),
-                      value: _remind,
-                      onChanged: (v) => setState(() => _remind = v),
+                    Divider(height: 1, color: tokens.hairline),
+                    TextField(
+                      key: const ValueKey('task-gmail'),
+                      controller: _gmail,
+                      keyboardType: TextInputType.url,
+                      decoration: InputDecoration(
+                        icon: const Icon(
+                          Icons.mail_outline,
+                          size: AppIconSize.m,
+                        ),
+                        hintText: l10n.taskGmailHint,
+                        border: InputBorder.none,
+                      ),
                     ),
-                    if (_remind)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: ReminderLevelPicker(
-                          value: _level,
-                          onChanged: (v) => setState(() => _level = v),
+                    if (allLists.length > 1 && widget.parentId.isEmpty) ...[
+                      Divider(height: 1, color: tokens.hairline),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(
+                          Icons.list_alt_outlined,
+                          size: AppIconSize.m,
+                        ),
+                        title: Text(l10n.taskList),
+                        trailing: DropdownButton<String>(
+                          value: allLists.any((l) => l.id == _listId)
+                              ? _listId
+                              : TaskList.defaultId,
+                          underline: const SizedBox.shrink(),
+                          items: [
+                            for (final l in allLists)
+                              DropdownMenuItem(
+                                value: l.id,
+                                child: Text(taskListTitle(l10n, l)),
+                              ),
+                          ],
+                          onChanged: (v) => setState(
+                            () => _listId = v ?? TaskList.defaultId,
+                          ),
                         ),
                       ),
-                  ],
-                  // Kişi ve Gmail bağlantısı (not içi görev satırı,
-                  // 2026-11-08): kime / hangi iletiyle ilgili.
-                  TextField(
-                    key: const ValueKey('task-contact'),
-                    controller: _contact,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      icon: const Icon(Icons.person_outline),
-                      hintText: l10n.taskContactHint,
-                      border: InputBorder.none,
-                    ),
-                  ),
-                  TextField(
-                    key: const ValueKey('task-gmail'),
-                    controller: _gmail,
-                    keyboardType: TextInputType.url,
-                    decoration: InputDecoration(
-                      icon: const Icon(Icons.mail_outline),
-                      hintText: l10n.taskGmailHint,
-                      border: InputBorder.none,
-                    ),
-                  ),
-                  if (allLists.length > 1 && widget.parentId.isEmpty)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.list_alt_outlined),
-                      title: Text(l10n.taskList),
-                      trailing: DropdownButton<String>(
-                        value: allLists.any((l) => l.id == _listId)
-                            ? _listId
-                            : TaskList.defaultId,
-                        underline: const SizedBox.shrink(),
-                        items: [
-                          for (final l in allLists)
-                            DropdownMenuItem(
-                              value: l.id,
-                              child: Text(taskListTitle(l10n, l)),
-                            ),
-                        ],
-                        onChanged: (v) =>
-                            setState(() => _listId = v ?? TaskList.defaultId),
-                      ),
-                    ),
-                  const SizedBox(height: 12),
+                    ],
+                  ]),
+                  const SizedBox(height: AppSpace.l),
                   FilledButton(
                     key: const ValueKey('task-save'),
                     onPressed: _save,
                     child: Text(l10n.eventSave),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpace.l),
                 ],
               ),
             ),

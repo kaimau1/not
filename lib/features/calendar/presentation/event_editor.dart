@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
@@ -430,26 +431,74 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final dateFmt = DateFormat.yMMMEd();
     final timeFmt = DateFormat.Hm();
 
-    Widget dateRow(String label, DateTime value, {required bool start}) => Row(
-      children: [
-        SizedBox(width: 92, child: Text(label)),
-        Expanded(
-          child: TextButton(
-            style: TextButton.styleFrom(alignment: Alignment.centerLeft),
-            onPressed: () => _pickDate(start: start),
-            child: Text(dateFmt.format(value)),
-          ),
+    Widget card(List<Widget> children) => Material(
+      color: tokens.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        side: BorderSide(color: tokens.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.m,
+          vertical: AppSpace.xs,
         ),
-        if (!_allDay)
-          TextButton(
-            onPressed: () => _pickTime(start: start),
-            child: Text(timeFmt.format(value)),
-          ),
-      ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
+        ),
+      ),
     );
+
+    Widget dateRow(String label, DateTime value, {required bool start}) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 84,
+                child: Text(label, style: text.label.copyWith(color: scheme.onSurfaceVariant)),
+              ),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FilledButton.tonal(
+                    style: FilledButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.m,
+                        vertical: AppSpace.xs,
+                      ),
+                    ),
+                    onPressed: () => _pickDate(start: start),
+                    child: Text(dateFmt.format(value)),
+                  ),
+                ),
+              ),
+              if (!_allDay) ...[
+                const SizedBox(width: AppSpace.xs),
+                FilledButton.tonal(
+                  style: FilledButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.m,
+                      vertical: AppSpace.xs,
+                    ),
+                  ),
+                  onPressed: () => _pickTime(start: start),
+                  child: Text(timeFmt.format(value)),
+                ),
+              ],
+            ],
+          ),
+        );
 
     // Klavye payı ayrı, ince widget'ta (bkz. [SheetInsetPadding]).
     return SheetInsetPadding(
@@ -472,40 +521,48 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
               ],
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
-                    key: const ValueKey('event-title'),
-                    controller: _title,
-                    focusNode: _titleFocus,
-                    textCapitalization: TextCapitalization.sentences,
-                    style: Theme.of(context).textTheme.titleLarge,
-                    decoration: InputDecoration(
-                      hintText: l10n.eventTitleHint,
-                      border: InputBorder.none,
+                  card([
+                    TextField(
+                      key: const ValueKey('event-title'),
+                      controller: _title,
+                      focusNode: _titleFocus,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: text.sheetTitle,
+                      decoration: InputDecoration(
+                        hintText: l10n.eventTitleHint,
+                        border: InputBorder.none,
+                      ),
+                      onSubmitted: (_) => unawaited(_save()),
                     ),
-                    onSubmitted: (_) => unawaited(_save()),
-                  ),
+                  ]),
                   // Nereye kaydedilsin (Faz 51): yalnız yeni etkinlikte ve
                   // Google Takvim bağlıyken.
                   if (widget.existing == null &&
                       ref.watch(googleCalendarProvider).connected)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.only(top: AppSpace.m),
                       child: SegmentedButton<bool>(
                         key: const ValueKey('event-target'),
                         showSelectedIcon: false,
                         segments: [
                           ButtonSegment(
                             value: false,
-                            icon: const Icon(Icons.devices_outlined, size: 18),
+                            icon: const Icon(
+                              Icons.devices_outlined,
+                              size: AppIconSize.s,
+                            ),
                             label: Text(l10n.eventSaveLocal),
                           ),
                           ButtonSegment(
                             value: true,
-                            icon: const Icon(Icons.cloud_outlined, size: 18),
+                            icon: const Icon(
+                              Icons.cloud_outlined,
+                              size: AppIconSize.s,
+                            ),
                             label: Text(l10n.gcalTitle),
                           ),
                         ],
@@ -514,56 +571,85 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                             setState(() => _toGoogle = v.first),
                       ),
                     ),
-                  const Divider(),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    secondary: const Icon(Icons.schedule_outlined),
-                    title: Text(l10n.eventAllDay),
-                    value: _allDay,
-                    onChanged: _setAllDay,
-                  ),
-                  dateRow(l10n.eventStarts, _start, start: true),
-                  dateRow(l10n.eventEnds, _shownEnd, start: false),
-                  const Divider(),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.repeat),
-                    title: Text(l10n.repeatTitle),
-                    subtitle: Text(reminderRepeatLabel(l10n, _repeat.base)),
-                    onTap: _pickRepeat,
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.notifications_none_outlined),
-                    title: Text(l10n.eventReminder),
-                    subtitle: Text(
-                      eventReminderLabel(l10n, _reminder, _allDay),
+                  const SizedBox(height: AppSpace.m),
+                  card([
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      secondary: const Icon(
+                        Icons.schedule_outlined,
+                        size: AppIconSize.m,
+                      ),
+                      title: Text(l10n.eventAllDay),
+                      value: _allDay,
+                      onChanged: _setAllDay,
                     ),
-                    onTap: _pickReminder,
-                  ),
-                  const Divider(),
-                  TextField(
-                    controller: _location,
-                    decoration: InputDecoration(
-                      icon: const Icon(Icons.place_outlined),
-                      hintText: l10n.eventLocation,
-                      border: InputBorder.none,
+                    Divider(height: 1, color: tokens.hairline),
+                    dateRow(l10n.eventStarts, _start, start: true),
+                    dateRow(l10n.eventEnds, _shownEnd, start: false),
+                  ]),
+                  const SizedBox(height: AppSpace.m),
+                  card([
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.repeat, size: AppIconSize.m),
+                      title: Text(l10n.repeatTitle),
+                      subtitle: Text(reminderRepeatLabel(l10n, _repeat.base)),
+                      trailing: const Icon(
+                        Icons.chevron_right_rounded,
+                        size: AppIconSize.m,
+                      ),
+                      onTap: _pickRepeat,
                     ),
-                  ),
-                  TextField(
-                    controller: _description,
-                    minLines: 1,
-                    maxLines: 6,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: InputDecoration(
-                      icon: const Icon(Icons.notes_outlined),
-                      hintText: l10n.eventDescription,
-                      border: InputBorder.none,
+                    Divider(height: 1, color: tokens.hairline),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(
+                        Icons.notifications_none_outlined,
+                        size: AppIconSize.m,
+                      ),
+                      title: Text(l10n.eventReminder),
+                      subtitle: Text(
+                        eventReminderLabel(l10n, _reminder, _allDay),
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right_rounded,
+                        size: AppIconSize.m,
+                      ),
+                      onTap: _pickReminder,
                     ),
-                  ),
+                  ]),
+                  const SizedBox(height: AppSpace.m),
+                  card([
+                    TextField(
+                      controller: _location,
+                      decoration: InputDecoration(
+                        icon: const Icon(
+                          Icons.place_outlined,
+                          size: AppIconSize.m,
+                        ),
+                        hintText: l10n.eventLocation,
+                        border: InputBorder.none,
+                      ),
+                    ),
+                    Divider(height: 1, color: tokens.hairline),
+                    TextField(
+                      controller: _description,
+                      minLines: 1,
+                      maxLines: 6,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: InputDecoration(
+                        icon: const Icon(
+                          Icons.notes_outlined,
+                          size: AppIconSize.m,
+                        ),
+                        hintText: l10n.eventDescription,
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ]),
                   // Bağlı notlar + toplantı notu (F49.1): kayıtlı etkinlikte.
                   if (widget.existing case final existing?) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpace.m),
                     LinkedNotesList(
                       noteIds: _linkedNoteIds(existing),
                       onUnlink: (id) {
@@ -574,44 +660,55 @@ class _EventEditorSheetState extends ConsumerState<EventEditorSheet> {
                             : repo?.unlinkNoteFromEvent(existing.id, id);
                       },
                     ),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: TextButton.icon(
-                        key: const ValueKey('event-meeting-note'),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          unawaited(
-                            openMeetingNote(
-                              context,
-                              ref,
-                              existing,
-                              widget.occurrenceStart ?? existing.start,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton.icon(
+                            key: const ValueKey('event-meeting-note'),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              unawaited(
+                                openMeetingNote(
+                                  context,
+                                  ref,
+                                  existing,
+                                  widget.occurrenceStart ?? existing.start,
+                                ),
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.note_add_outlined,
+                              size: AppIconSize.s,
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.note_add_outlined),
-                        label: Text(l10n.calendarMeetingNote),
-                      ),
-                    ),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: TextButton.icon(
-                        key: const ValueKey('event-link-note'),
-                        onPressed: () => unawaited(
-                          linkExistingNote(context, ref, event: existing),
+                            label: Text(
+                              l10n.calendarMeetingNote,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ),
-                        icon: const Icon(Icons.link),
-                        label: Text(l10n.calendarLinkExistingNote),
-                      ),
+                        Expanded(
+                          child: TextButton.icon(
+                            key: const ValueKey('event-link-note'),
+                            onPressed: () => unawaited(
+                              linkExistingNote(context, ref, event: existing),
+                            ),
+                            icon: const Icon(Icons.link, size: AppIconSize.s),
+                            label: Text(
+                              l10n.calendarLinkExistingNote,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpace.l),
                   FilledButton(
                     key: const ValueKey('event-save'),
                     onPressed: () => unawaited(_save()),
                     child: Text(l10n.eventSave),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpace.l),
                 ],
               ),
             ),

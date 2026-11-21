@@ -113,6 +113,9 @@ class _LanguageSheetState extends State<_LanguageSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final matches = widget.languages.entries.where(_matches).toList();
     // Klavye açılınca liste kısalsın, arama kutusu klavyenin altında kalmasın.
     return SheetInsetPadding(
@@ -121,15 +124,32 @@ class _LanguageSheetState extends State<_LanguageSheet> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.s,
+              ),
               child: TextField(
                 controller: _controller,
                 autofocus: true,
                 onChanged: (value) => setState(() => _query = value.trim()),
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    size: AppIconSize.m,
+                  ),
                   hintText: l10n.settingsLanguage,
-                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: tokens.card,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    borderSide: BorderSide(color: tokens.hairline),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    borderSide: BorderSide(color: tokens.hairline),
+                  ),
                 ),
               ),
             ),
@@ -140,7 +160,7 @@ class _LanguageSheetState extends State<_LanguageSheet> {
                     ListTile(
                       title: Text(l10n.languageSystem),
                       trailing: widget.selected == null
-                          ? const Icon(Icons.check)
+                          ? Icon(Icons.check_rounded, color: scheme.primary)
                           : null,
                       onTap: () => Navigator.pop(context, 'system'),
                     ),
@@ -149,7 +169,7 @@ class _LanguageSheetState extends State<_LanguageSheet> {
                       title: Text(entry.value),
                       subtitle: Text(entry.key),
                       trailing: entry.key == widget.selected
-                          ? const Icon(Icons.check)
+                          ? Icon(Icons.check_rounded, color: scheme.primary)
                           : null,
                       onTap: () => Navigator.pop(context, entry.key),
                     ),

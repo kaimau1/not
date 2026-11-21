@@ -617,7 +617,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// **JEST HEDEFİ** (U1, kullanıcı isteği 2026-11-18): üstten çekiş ve
   /// Tümü'de sağa çekiş Ayarlar → Notlar'da seçilen yere gider. Hedef not ya
   /// da klasör silinmişse kısa bir uyarı (sessiz kalmaz).
-  void _runHomeGesture(HomeGestureTarget target) {
+  void _runHomeGesture(HomeGestureTarget target, {bool fromSwipe = false}) {
     if (!mounted) return;
     switch (target.kind) {
       case HomeGestureKind.none:
@@ -626,7 +626,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         _openFolderMenu();
       case HomeGestureKind.calendar:
         AppHaptics.tick();
-        unawaited(context.push('/calendar'));
+        unawaited(
+          context.push(fromSwipe ? '/calendar?from=swipe' : '/calendar'),
+        );
       case HomeGestureKind.note:
         final note = _gestureNote(target.id);
         if (note == null) {
@@ -949,7 +951,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   void _cycleFilterFolder(int direction) {
     if (_swipeOpensCalendar(direction)) {
-      _runHomeGesture(ref.read(homeSwipeRightGestureProvider));
+      _runHomeGesture(
+        ref.read(homeSwipeRightGestureProvider),
+        fromSwipe: true,
+      );
       return;
     }
     final stop = _swipeStop(direction);
@@ -1023,6 +1028,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       if (f.id == id) return f.name;
     }
     return null;
+  }
+
+  /// Çekiş kenarında hedefin simgesi (takvim, klasör, paylaşılan, süzgeç).
+  IconData? _swipeStopIcon(int direction) {
+    if (_swipeOpensCalendar(direction)) {
+      return switch (ref.read(homeSwipeRightGestureProvider).kind) {
+        HomeGestureKind.calendar => Icons.calendar_month_outlined,
+        HomeGestureKind.folders => Icons.folder_outlined,
+        HomeGestureKind.folder => Icons.folder_outlined,
+        HomeGestureKind.note => Icons.sticky_note_2_outlined,
+        HomeGestureKind.none => null,
+      };
+    }
+    final stop = _swipeStop(direction);
+    if (stop == null) return null;
+    if (stop.folderId == kSharedHubFolderId ||
+        _sharedStopOf(stop.folderId) != null) {
+      return AppIcons.shared;
+    }
+    if (ref.read(swipeModeProvider) == SwipeMode.filters) {
+      if (stop.tag != null) return Icons.label_outline;
+      return stop.filter == NoteFilter.all
+          ? Icons.notes_rounded
+          : Icons.filter_list_rounded;
+    }
+    return stop.folderId == null
+        ? Icons.notes_rounded
+        : Icons.folder_outlined;
   }
 
   HomeSwipeStop? _swipeStop(int direction) {
@@ -2089,6 +2122,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                                 .kind !=
                                             HomeGestureKind.none),
                                 nextLabel: _swipeStopLabel,
+                                nextIcon: _swipeStopIcon,
                                 onCommit: _cycleFilterFolder,
                                 continuesInPlace: _continueSwipe,
                                 child: AnimatedSwitcher(
@@ -2106,15 +2140,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   ),
                                   transitionBuilder: (child, animation) {
                                     // Çekiş yönüne göre yumuşak kaydır + soldur.
-                                    //
-                                    // KÖK NEDEN ("kaydırınca liste ters
-                                    // yöne gidiyor"): aynı geçiş ÇIKAN görünüme
-                                    // de uygulanıyor (animasyonu tersten
-                                    // oynayarak). Tek bir `begin` ile giden
-                                    // liste, gelenin GELDİĞİ yöne kayıyordu —
-                                    // sola çekince eski notlar parmağın tersine,
-                                    // sağa gidiyordu. Çıkan görünüm artık öbür
-                                    // yana çıkar.
                                     final incoming =
                                         child.key == ValueKey(segmentKey);
                                     // Hareketi azalt: yalnız solma (F34.7).
@@ -2129,10 +2154,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     // Ekranda hareket yönü (sola = -1).
                                     final move = -dir * (rtl ? -1 : 1);
                                     // Çekişle ayrılan görünüm parmağın
-                                    // bıraktığı yerden AYNI yönde sürer;
-                                    // gelen de o yönde, daha uzaktan girer
-                                    // (sayfa çevirme hissi). Düğme/çip
-                                    // geçişinde eski kısa kayma.
+                                    // bıraktığı yerden ekran dışına doğru
+                                    // akar; gelen diğer kenardan çakışmadan
+                                    // girer.
                                     final from =
                                         !incoming &&
                                             child.key == ValueKey(_leavingKey)
@@ -2141,14 +2165,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     final Offset begin;
                                     final Offset end;
                                     if (from != null) {
-                                      begin = Offset(from + move * 0.35, 0);
+                                      begin = Offset(from + move * 0.55, 0);
                                       end = Offset(from, 0);
                                     } else {
                                       final swiped =
                                           incoming && _leavingKey != null;
                                       begin = Offset(
                                         (incoming ? -move : move) *
-                                            (swiped ? 0.3 : 0.12),
+                                            (swiped ? 0.52 : 0.14),
                                         0,
                                       );
                                       end = Offset.zero;

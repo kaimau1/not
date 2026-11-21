@@ -143,61 +143,291 @@ extension _EditorMediaView on _NoteEditorScreenState {
     _applyPageChange(deleteTextPage(current, current.activePage));
   }
 
-  /// Başlığın altındaki SAYFA ÇUBUĞU: ‹ Sayfa 2 / 3 › · yeni sayfa · ⋮.
-  /// Yalnız sayfalı notta görünür (tek sayfalı notta yer kaplamaz).
+  /// Defterdeki tüm sayfaların önizlemeli listesi: dokununca o sayfaya
+  /// atlanır, altta tek dokunuşla yeni sayfa eklenir.
+  Future<void> _showPagesSheet(Note note) async {
+    final l10n = context.l10n;
+    final pages = resolvedTextPages(note);
+    final picked = await showAppSheet<String>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        final scheme = theme.colorScheme;
+        final text = AppText.of(theme);
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.72,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              0,
+              AppSpace.l,
+              AppSpace.l,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.pageOf(
+                    textPagePosition(note).index + 1,
+                    pages.length,
+                  ),
+                  style: text.sheetTitle,
+                ),
+                const SizedBox(height: AppSpace.m),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: pages.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpace.s),
+                    itemBuilder: (context, i) {
+                      final page = pages[i];
+                      final active = page.id == note.activePage;
+                      final preview = _pagePreview(page);
+                      return Material(
+                        color: active
+                            ? scheme.primaryContainer
+                            : scheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          key: ValueKey('notebook-page-item-$i'),
+                          onTap: () => Navigator.pop(sheetContext, page.id),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.m,
+                              vertical: AppSpace.s,
+                            ),
+                            child: Row(
+                              children: [
+                                DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: active
+                                        ? scheme.primary
+                                        : scheme.surfaceContainerHigh,
+                                    borderRadius: BorderRadius.circular(
+                                      AppRadius.s,
+                                    ),
+                                  ),
+                                  child: SizedBox(
+                                    width: 30,
+                                    height: 30,
+                                    child: Center(
+                                      child: Text(
+                                        '${i + 1}',
+                                        style: text.label.copyWith(
+                                          color: active
+                                              ? scheme.onPrimary
+                                              : scheme.onSurfaceVariant,
+                                          fontWeight: AppWeight.strong,
+                                          fontFeatures: const [
+                                            FontFeature.tabularFigures(),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpace.m),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.pageOf(i + 1, pages.length),
+                                        style: text.rowTitle.copyWith(
+                                          color: active
+                                              ? scheme.onPrimaryContainer
+                                              : scheme.onSurface,
+                                        ),
+                                      ),
+                                      if (preview.isNotEmpty)
+                                        Text(
+                                          preview,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: text.meta.copyWith(
+                                            color: active
+                                                ? scheme.onPrimaryContainer
+                                                : scheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                if (active)
+                                  Icon(
+                                    Icons.check_circle_rounded,
+                                    size: AppIconSize.s,
+                                    color: scheme.primary,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (!_readOnly) ...[
+                  const SizedBox(height: AppSpace.m),
+                  FilledButton.tonalIcon(
+                    key: const ValueKey('notebook-pages-add'),
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      _addPage();
+                    },
+                    icon: const Icon(Icons.note_add_outlined),
+                    label: Text(l10n.archiveNewPage),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (picked != null && mounted) _goToPage(picked);
+  }
+
+  /// Başlığın altındaki DEFTER SAYFA ŞERİDİ (2026-11-21): ‹ Sayfa 2 / 3 ▾ ›
+  /// (hapa dokun = sayfa listesi) · kâğıt deseni · yeni sayfa · sil; çok
+  /// sayfada altta ince konum çizgisi.
   Widget _pageBar(Note note) {
     final l10n = context.l10n;
-    final scheme = _themeOf(context).colorScheme;
+    final theme = _themeOf(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
+    final accent = NoteColors.noteInk(context, note) ?? scheme.primary;
     final pos = textPagePosition(note);
+    final pillBg = accent.withValues(alpha: AppAlpha.pressed);
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: _NoteEditorScreenState._kGutter - 8,
+      padding: const EdgeInsets.fromLTRB(
+        _NoteEditorScreenState._kGutter - 4,
+        AppSpace.xxs,
+        _NoteEditorScreenState._kGutter - 4,
+        AppSpace.xs,
       ),
-      child: Row(
-        children: [
-          IconButton(
-            key: const ValueKey('page-prev'),
-            tooltip: l10n.archivePrevPage,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.chevron_left),
-            onPressed: pos.index > 0 ? () => _stepPage(-1) : null,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerLow.withValues(alpha: AppAlpha.strong),
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          border: Border.all(
+            color: accent.withValues(alpha: AppAlpha.soft),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: scheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  key: const ValueKey('page-prev'),
+                  tooltip: l10n.archivePrevPage,
+                  visualDensity: VisualDensity.compact,
+                  iconSize: AppIconSize.m,
+                  icon: const Icon(Icons.chevron_left_rounded),
+                  onPressed: pos.index > 0 ? () => _stepPage(-1) : null,
+                ),
+                Material(
+                  color: pillBg,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    key: const ValueKey('page-overview-trigger'),
+                    onTap: () => unawaited(_showPagesSheet(note)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.m,
+                        vertical: AppSpace.xs,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.pageOf(pos.index + 1, pos.count),
+                            key: const ValueKey('page-label'),
+                            style: text.label.copyWith(
+                              color: accent,
+                              fontWeight: AppWeight.strong,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpace.xxs),
+                          Icon(
+                            Icons.expand_more_rounded,
+                            size: AppIconSize.xs,
+                            color: accent,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  key: const ValueKey('page-next'),
+                  tooltip: l10n.archiveNextPage,
+                  visualDensity: VisualDensity.compact,
+                  iconSize: AppIconSize.m,
+                  icon: const Icon(Icons.chevron_right_rounded),
+                  onPressed:
+                      pos.index < pos.count - 1 ? () => _stepPage(1) : null,
+                ),
+                const Spacer(),
+                if (note.paged && !_readOnly)
+                  IconButton(
+                    key: const ValueKey('page-paper'),
+                    tooltip: l10n.archivePaper,
+                    visualDensity: VisualDensity.compact,
+                    iconSize: AppIconSize.s,
+                    color: accent,
+                    icon: const Icon(Icons.texture_outlined),
+                    onPressed: () => unawaited(_pickPaper()),
+                  ),
+                if (!_readOnly) ...[
+                  IconButton(
+                    tooltip: l10n.archiveNewPage,
+                    visualDensity: VisualDensity.compact,
+                    iconSize: AppIconSize.s,
+                    icon: const Icon(Icons.note_add_outlined),
+                    onPressed: _addPage,
+                  ),
+                  IconButton(
+                    tooltip: l10n.archiveDeletePage,
+                    visualDensity: VisualDensity.compact,
+                    iconSize: AppIconSize.s,
+                    icon: const Icon(Icons.delete_sweep_outlined),
+                    onPressed: pos.count > 1 ? _deleteActivePage : null,
+                  ),
+                ],
+              ],
             ),
-            child: Text(
-              l10n.pageOf(pos.index + 1, pos.count),
-              key: const ValueKey('page-label'),
-              style: TextStyle(
-                color: scheme.onSecondaryContainer,
-                fontWeight: FontWeight.w600,
+            if (pos.count > 1)
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(AppRadius.m),
+                ),
+                child: SizedBox(
+                  height: 2,
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: FractionallySizedBox(
+                      widthFactor: (pos.index + 1) / pos.count,
+                      child: ColoredBox(color: accent),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-          IconButton(
-            key: const ValueKey('page-next'),
-            tooltip: l10n.archiveNextPage,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.chevron_right),
-            onPressed: pos.index < pos.count - 1 ? () => _stepPage(1) : null,
-          ),
-          const Spacer(),
-          IconButton(
-            tooltip: l10n.archiveNewPage,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.note_add_outlined),
-            onPressed: _addPage,
-          ),
-          IconButton(
-            tooltip: l10n.archiveDeletePage,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.delete_sweep_outlined),
-            onPressed: _deleteActivePage,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

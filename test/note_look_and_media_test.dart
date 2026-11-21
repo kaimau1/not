@@ -260,11 +260,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 120));
     // Yarı yolda: sayfa küçültülmüş (kartın genişliğinden büyüyor).
     final midScale = tester
-        .widgetList<Transform>(
-          find.ancestor(of: find.text('editör'), matching: find.byType(Transform)),
-        )
-        .map((t) => t.transform.storage[0])
-        .reduce((a, b) => a < b ? a : b);
+        .renderObject(find.text('editör'))
+        .getTransformTo(null)
+        .storage[0];
     expect(midScale, lessThan(1));
     await tester.pumpAndSettle();
     expect(find.text('editör'), findsOneWidget);

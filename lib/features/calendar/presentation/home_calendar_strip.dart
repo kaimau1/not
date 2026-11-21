@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -15,19 +16,21 @@ import '../domain/holidays.dart';
 import 'calendar_screen.dart' show calendarDataProvider, showCalendarDaySheet;
 import 'calendar_views.dart';
 
-/// Şeritte görünen gün sayısı (bugün dahil).
-const kHomeStripDays = 10;
+/// Şeritte tek seferde görünen gün sayısı (bugün dahil; 2026-11-21).
+const kHomeStripDays = 7;
 
-/// **ANA EKRAN TAKVİM ŞERİDİ** (kullanıcı isteği 2026-11-08: "takvim zeminini
-/// kaldır, yerine en üstte 2 satır yüksekliğinde takvim satırı getir;
-/// bugünden itibaren 10 gün görünsün, yapılacaklar, tatiller vs görülsün,
-/// isteğe göre açılıp kapansın, tıklanabilsin, düzenleme yapılabilsin").
+/// Şeritte ileri doğru kaydırılabilen toplam gün sayısı (bugün dahil).
+const kHomeStripTotalDays = 30;
+
+/// **ANA EKRAN TAKVİM ŞERİDİ** (kullanıcı isteği 2026-11-08; güncelleme
+/// 2026-11-21: "7 gün göstersin ve ileri doğru 30 gün kaydırılabilir olsun"):
 ///
-/// Açıkken 10 eşit hücre: üst satır gün (tatilde kırmızı, bugün dolgulu),
-/// alt satır o günün kayıtları — hücre genişse ilk kaydın adı, darsa renkli
-/// noktalar. Hücreye dokunmak günün levhasını açar (kayıtlar, düzenle, SİL,
-/// yeni etkinlik/görev); basılı tutmak takvimi o günde açar. Sağdaki ⌃
-/// şeridi tek ince satıra indirir (tercih hatırlanır).
+/// Açıkken 7 eşit hücre görünür, yatay kaydırmayla bugünden ileri 30 güne
+/// kadar gezilir. Üst satır gün (ay başında kısa ay adı, tatilde kırmızı,
+/// bugün dolgulu hap), alt satır o günün kayıtları — hücre genişse ilk kaydın
+/// adı, darsa renkli noktalar ya da üç harfli gün adı. Hücreye dokunmak günün
+/// levhasını açar; basılı tutmak takvimi o günde açar. Sağdaki ⌃ şeridi tek
+/// ince satıra indirir (tercih hatırlanır).
 ///
 /// Takvim aboneliği (etkinlik/görev/hatırlatıcı) yalnız şerit AÇIKKEN kurulur
 /// — kapalı ya da ayarla gizliyken ana ekran Firestore'a ek yük bindirmez.
@@ -71,31 +74,37 @@ class _CollapsedRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return InkWell(
       key: const ValueKey('home-calendar-expand'),
       onTap: onExpand,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 2, 8, 2),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          AppSpace.xxs,
+          AppSpace.s,
+          AppSpace.xxs,
+        ),
         child: Row(
           children: [
             Icon(
               Icons.calendar_view_week_outlined,
-              size: 16,
+              size: AppIconSize.xs,
               color: scheme.onSurfaceVariant,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppSpace.xs),
             Expanded(
               child: Text(
                 DateFormat.MMMMEEEEd().format(today),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+                style: AppText.of(theme).meta,
               ),
             ),
             Icon(
               Icons.expand_more,
-              size: 18,
+              size: AppIconSize.s,
               color: scheme.onSurfaceVariant,
               semanticLabel: context.l10n.homeCalendarStripExpand,
             ),
@@ -123,34 +132,56 @@ class HomeCalendarStripView extends StatelessWidget {
   final ValueChanged<DateTime>? onDayLongPress;
   final VoidCallback? onCollapse;
 
+  static const double _stripHeight = 38;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final end = DateTime(today.year, today.month, today.day + kHomeStripDays);
+    final end = DateTime(
+      today.year,
+      today.month,
+      today.day + kHomeStripTotalDays,
+    );
     final byDay = data.range(today, end);
-    final days = [
-      for (var i = 0; i < kHomeStripDays; i++)
-        DateTime(today.year, today.month, today.day + i),
-    ];
     return Padding(
       // SIKI (kullanıcı 2026-11-09: "takvim satırı fazla yer kaplıyor,
-      // boşluğu kapat"): alt dolgu yok, hücre 36 dp.
-      padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
+      // boşluğu kapat"): alt dolgu yok, 7 gün tam eni doldurur ve yatay
+      // kaydırmayla ileri doğru 30 gün gezilir.
+      padding: const EdgeInsetsDirectional.only(start: AppSpace.s),
       child: Row(
         children: [
-          for (final d in days)
-            Expanded(
-              child: _DayCell(
-                day: d,
-                today: today,
-                entries: byDay[dayKey(d)] ?? const [],
-                holiday: data.holidays.on(d),
-                onTap: () => onDayTap(d),
-                onLongPress: onDayLongPress == null
-                    ? null
-                    : () => onDayLongPress!(d),
+          Expanded(
+            child: SizedBox(
+              height: _stripHeight,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final cellWidth = constraints.maxWidth / kHomeStripDays;
+                  return ListView.builder(
+                    key: const ValueKey('home-calendar-scroll'),
+                    scrollDirection: Axis.horizontal,
+                    // İlk karede yalnız görünen 7 gün kurulur (S24 bütçesi).
+                    scrollCacheExtent: const ScrollCacheExtent.pixels(0),
+                    itemExtent: cellWidth,
+                    itemCount: kHomeStripTotalDays,
+                    itemBuilder: (context, i) {
+                      final d = DateTime(today.year, today.month, today.day + i);
+                      return _DayCell(
+                        day: d,
+                        today: today,
+                        width: cellWidth,
+                        entries: byDay[dayKey(d)] ?? const [],
+                        holiday: data.holidays.on(d),
+                        onTap: () => onDayTap(d),
+                        onLongPress: onDayLongPress == null
+                            ? null
+                            : () => onDayLongPress!(d),
+                      );
+                    },
+                  );
+                },
               ),
             ),
+          ),
           if (onCollapse != null)
             SizedBox(
               width: 28,
@@ -158,13 +189,16 @@ class HomeCalendarStripView extends StatelessWidget {
                 key: const ValueKey('home-calendar-collapse'),
                 tooltip: l10n.homeCalendarStripCollapse,
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 36),
+                constraints: const BoxConstraints(
+                  minWidth: 28,
+                  minHeight: _stripHeight,
+                ),
                 // KÖK NEDEN (boşluk): varsayılan 48 dp dokunma alanı bütün
-                // şeridi 48 dp'ye çekiyordu (hücreler 36).
+                // şeridi 48 dp'ye çekiyordu.
                 style: IconButton.styleFrom(
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                iconSize: 18,
+                iconSize: AppIconSize.s,
                 icon: const Icon(Icons.expand_less),
                 onPressed: onCollapse,
               ),
@@ -179,6 +213,7 @@ class _DayCell extends StatelessWidget {
   const _DayCell({
     required this.day,
     required this.today,
+    required this.width,
     required this.entries,
     required this.holiday,
     required this.onTap,
@@ -187,6 +222,7 @@ class _DayCell extends StatelessWidget {
 
   final DateTime day;
   final DateTime today;
+  final double width;
   final List<AgendaEntry> entries;
   final Holiday? holiday;
   final VoidCallback onTap;
@@ -195,8 +231,11 @@ class _DayCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final isToday = day == today;
+    final isMonthStart = day.day == 1 && !isToday;
     final weekend =
         day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
     final red = holiday != null;
@@ -205,12 +244,16 @@ class _DayCell extends StatelessWidget {
         : red
         ? scheme.error
         : weekend
-        ? scheme.onSurfaceVariant
+        ? scheme.primary
         : scheme.onSurface;
     final weekday = DateFormat.E().format(day);
-    final title = holiday?.name ??
+    final monthShort = isMonthStart ? DateFormat.MMM().format(day) : null;
+    final title =
+        holiday?.name ??
         (entries.isEmpty ? null : entryTitle(entries.first, l10n));
     final count = entries.length + (holiday != null ? 1 : 0);
+    final innerWidth = width - 6;
+    final wide = innerWidth >= 60;
     return Semantics(
       button: true,
       label: [
@@ -224,110 +267,103 @@ class _DayCell extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: Container(
-          height: 36,
+          height: HomeCalendarStripView._stripHeight,
           margin: const EdgeInsets.symmetric(horizontal: 1),
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
           decoration: BoxDecoration(
             color: red
-                ? scheme.errorContainer.withValues(alpha: 0.35)
+                ? scheme.errorContainer.withValues(alpha: AppAlpha.muted)
+                : isMonthStart
+                ? scheme.primaryContainer.withValues(alpha: AppAlpha.muted)
                 : count > 0
                 ? scheme.surfaceContainerHigh
                 : null,
             borderRadius: BorderRadius.circular(AppRadius.s),
           ),
-          child: LayoutBuilder(
-            builder: (context, c) {
-              final wide = c.maxWidth >= 60;
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 1. satır: gün (bugün dolgulu hap).
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: isToday
-                          ? BoxDecoration(
-                              color: scheme.primary,
-                              borderRadius: BorderRadius.circular(AppRadius.s),
-                            )
-                          : null,
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            if (wide)
-                              TextSpan(
-                                text: '$weekday ',
-                                // KW-8: geniş hücrede 10 → `badge` (11).
-                                style: AppText.of(Theme.of(context)).badge
-                                    .copyWith(fontWeight: AppWeight.regular),
-                              ),
-                            TextSpan(text: '${day.day}'),
-                          ],
-                        ),
-                        maxLines: 1,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: numberColor,
-                          height: 1.25,
-                        ),
-                      ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 1. satır: gün (bugün dolgulu hap, ay başında kısa ay adı).
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+                  decoration: isToday
+                      ? BoxDecoration(
+                          color: scheme.primary,
+                          borderRadius: BorderRadius.circular(AppRadius.s),
+                        )
+                      : null,
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        if (wide)
+                          TextSpan(
+                            text: '$weekday ',
+                            style: text.badge.copyWith(
+                              fontWeight: AppWeight.regular,
+                            ),
+                          ),
+                        TextSpan(text: '${day.day}'),
+                        if (monthShort != null)
+                          TextSpan(
+                            text: ' $monthShort',
+                            style: text.badge.copyWith(
+                              fontWeight: AppWeight.medium,
+                            ),
+                          ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    style: text.label.copyWith(
+                      fontWeight: AppWeight.strong,
+                      color: numberColor,
+                      height: 1.2,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
-                  // 2. satır: kayıtlar.
-                  SizedBox(
-                    height: 13,
-                    child: count == 0
-                        // KT-3 (keşif turu 2026-11-14): 24 dp altında tek
-                        // harfe düşen ad ("C P P S Ç") Cmt/Paz/Pzt'yi ayırt
-                        // ettirmiyordu: yazılmaz, tam ad Semantics'te.
-                        ? (wide || c.maxWidth < 24
-                              ? const SizedBox.shrink()
-                              // Gün adı ÜÇ HARF (K-D4, F74.2): tek harf
-                              // "P" Pazartesi mi Perşembe mi Pazar mı
-                              // söylemiyordu. 360 dp'de hücre içi ~26 dp,
-                              // "Cmt" 11 pt sığar; daha darda ad yok (KT-3).
-                              // Büyük yazıda (1,3×) "Cmt" hücreye sığmayıp
-                              // "Cm" diye kesiliyordu (F80.2): sığmazsa
-                              // küçülür, kesilmez.
-                              : Center(
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      weekday,
-                                      maxLines: 1,
-                                      style: AppText.of(Theme.of(context)).badge
-                                          .copyWith(
-                                            height: 1.15,
-                                            color: scheme.onSurfaceVariant,
-                                          ),
-                                    ),
+                ),
+              ),
+              // 2. satır: kayıtlar ya da üç harfli gün adı.
+              SizedBox(
+                height: 13,
+                child: count == 0
+                    // KT-3: 24 dp altında tek harfe düşen ad yazılmaz.
+                    ? (wide || innerWidth < 24
+                          ? const SizedBox.shrink()
+                          : Center(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  weekday,
+                                  maxLines: 1,
+                                  style: text.badge.copyWith(
+                                    height: 1.15,
+                                    color: scheme.onSurfaceVariant,
                                   ),
-                                ))
-                        : wide && title != null
-                        ? Text(
-                            count > 1 ? '$title +${count - 1}' : title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: AppText.of(Theme.of(context)).badge
-                                .copyWith(
-                                  height: 1.15,
-                                  fontWeight: AppWeight.regular,
-                                  color: red ? scheme.error : scheme.onSurface,
                                 ),
-                          )
-                        : _Dots(
-                            colors: [
-                              if (red) scheme.error,
-                              for (final e in entries) entryColor(e, scheme),
-                            ],
-                          ),
-                  ),
-                ],
-              );
-            },
+                              ),
+                            ))
+                    : wide && title != null
+                    ? Text(
+                        count > 1 ? '$title +${count - 1}' : title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: text.badge.copyWith(
+                          height: 1.15,
+                          fontWeight: AppWeight.regular,
+                          color: red ? scheme.error : scheme.onSurface,
+                        ),
+                      )
+                    : _Dots(
+                        colors: [
+                          if (red) scheme.error,
+                          for (final e in entries) entryColor(e, scheme),
+                        ],
+                      ),
+              ),
+            ],
           ),
         ),
       ),

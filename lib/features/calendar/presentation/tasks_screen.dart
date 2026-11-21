@@ -413,7 +413,10 @@ class _TaskRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final repo = ref.read(calendarRepositoryProvider);
     final overdue = task.isOverdue(now);
     final dueText = switch (task.dueDay) {
@@ -427,87 +430,123 @@ class _TaskRow extends ConsumerWidget {
       ].join(' · '),
     };
     final sub = [if (task.notes.isNotEmpty) task.notes.split('\n').first];
-    return ListTile(
-      contentPadding: EdgeInsetsDirectional.only(
-        start: indent ? 48 : 8,
-        end: 4,
+    return Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(
+        indent ? AppSpace.xxxl : AppSpace.m,
+        AppSpace.xxs,
+        AppSpace.m,
+        AppSpace.xxs,
       ),
-      leading: Checkbox(
-        value: task.completed,
-        onChanged: repo == null
-            ? null
-            : (v) => setTaskCompleted(ref, task, v == true),
-      ),
-      title: Text(
-        task.title,
-        style: TextStyle(
-          decoration: task.completed ? TextDecoration.lineThrough : null,
-          color: task.completed ? scheme.onSurfaceVariant : null,
+      child: Material(
+        color: tokens.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          side: BorderSide(color: tokens.hairline),
         ),
-      ),
-      subtitle: dueText == null && sub.isEmpty
-          ? null
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (sub.isNotEmpty)
-                  Text(sub.first, maxLines: 1, overflow: TextOverflow.ellipsis),
-                if (dueText != null)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: const EdgeInsetsDirectional.only(
+            start: AppSpace.xs,
+            end: AppSpace.xs,
+          ),
+          leading: Checkbox(
+            value: task.completed,
+            onChanged: repo == null
+                ? null
+                : (v) => setTaskCompleted(ref, task, v == true),
+          ),
+          title: Text(
+            task.title,
+            style: text.rowTitle.copyWith(
+              decoration: task.completed ? TextDecoration.lineThrough : null,
+              color: task.completed ? scheme.onSurfaceVariant : null,
+            ),
+          ),
+          subtitle: dueText == null && sub.isEmpty
+              ? null
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (sub.isNotEmpty)
                       Text(
-                        dueText,
-                        style: TextStyle(
-                          color: overdue ? scheme.error : scheme.primary,
-                          fontSize: 13,
+                        sub.first,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.meta,
+                      ),
+                    if (dueText != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpace.xxs),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              dueText,
+                              style: text.meta.copyWith(
+                                color: overdue ? scheme.error : scheme.primary,
+                                fontWeight: AppWeight.medium,
+                              ),
+                            ),
+                            if (task.repeats)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: AppSpace.xs,
+                                ),
+                                child: Icon(
+                                  Icons.repeat,
+                                  size: AppIconSize.xs,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                      if (task.repeats)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4),
-                          child: Icon(
-                            Icons.repeat,
-                            size: 14,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                    ],
-                  ),
-              ],
-            ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (task.starred) Icon(Icons.star, size: 18, color: scheme.tertiary),
-          if (!indent && !task.completed)
-            IconButton(
-              tooltip: l10n.taskAddSubtask,
-              icon: const Icon(Icons.subdirectory_arrow_right, size: 20),
-              onPressed: () => showTaskEditor(
-                context,
-                parentId: task.id,
-                listId: task.listId,
-              ),
-            ),
-          if (reorderIndex != null)
-            ReorderableDragStartListener(
-              index: reorderIndex!,
-              child: SizedBox(
-                key: ValueKey('task-drag-${task.id}'),
-                width: 36,
-                height: 48,
-                child: Icon(
-                  Icons.drag_handle,
-                  size: AppIconSize.s,
-                  color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
+                  ],
                 ),
-              ),
-            ),
-        ],
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (task.starred)
+                Icon(
+                  Icons.star,
+                  size: AppIconSize.s,
+                  color: scheme.tertiary,
+                ),
+              if (!indent && !task.completed)
+                IconButton(
+                  tooltip: l10n.taskAddSubtask,
+                  icon: const Icon(
+                    Icons.subdirectory_arrow_right,
+                    size: AppIconSize.m,
+                  ),
+                  onPressed: () => showTaskEditor(
+                    context,
+                    parentId: task.id,
+                    listId: task.listId,
+                  ),
+                ),
+              if (reorderIndex != null)
+                ReorderableDragStartListener(
+                  index: reorderIndex!,
+                  child: SizedBox(
+                    key: ValueKey('task-drag-${task.id}'),
+                    width: 36,
+                    height: 48,
+                    child: Icon(
+                      Icons.drag_handle,
+                      size: AppIconSize.s,
+                      color: scheme.onSurfaceVariant.withValues(
+                        alpha: AppAlpha.muted,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          onTap: () => showTaskEditor(context, existing: task),
+        ),
       ),
-      onTap: () => showTaskEditor(context, existing: task),
     );
   }
 }
