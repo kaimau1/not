@@ -87,6 +87,48 @@ void main() {
     expect(find.text('z'), findsOneWidget);
   });
 
+  testWidgets('yarı saydam levha üstteyken klavye kareleri alt ağaca inmez', (
+    tester,
+  ) async {
+    addTearDown(tester.view.reset);
+    final insets = <double>[];
+    late BuildContext root;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) {
+            root = context;
+            return FreezeWhenHidden(
+              child: Builder(
+                builder: (context) {
+                  insets.add(MediaQuery.viewInsetsOf(context).bottom);
+                  return const SizedBox.shrink();
+                },
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    unawaited(
+      showModalBottomSheet<void>(
+        context: root,
+        builder: (_) => const SizedBox(height: 100),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final before = insets.length;
+    for (final b in <double>[50, 120, 200, 280, 150, 0]) {
+      tester.view.viewInsets = FakeViewPadding(bottom: b);
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(
+      insets.length,
+      before,
+      reason: 'levha klavyesi arkadaki ekranı kare kare kurmamalı',
+    );
+  });
+
   // Kullanıcı bulgusu 2026-11-03: "klavye açılırken kasma, not kapanırken
   // kasma". Örtülü ana ekran klavyenin her karesini MediaQuery'den alıyordu;
   // karttan küçülen kapanışta yetişme animasyonun son karesine biniyordu.

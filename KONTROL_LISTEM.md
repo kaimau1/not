@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Hızlı ekle: açılışta konuşma, akıcı klavye aç/kapa, canlı dalga ve temizle (21 Kasım, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) ana ekranda ⚡ Hızlı ekle'ye dokun (⚙'de hem "Açılınca klavye" hem "Açılınca dinle" açık, mikrofon izni verilmiş olsun) → levha ve klavye yerleştikten hemen sonra konuşma kendiliğinden başlayıp "Dinliyor…" + canlı ses dalgası ve çerçeve vurgusu görünüyor mu; (2) klavyeyi birkaç kez kapatıp yeniden aç (Geri + alana dokun) → levha kasmadan, zıplamadan yükselip iniyor mu; (3) bir şey yaz/söyle → sağdaki ✕ temizle düğmesi tek dokunuşta siliyor mu; (4) konuşma bitince 2 sn geri sayım sürerken mikrofona dokun → geri sayım durup dinlemeye devam ediyor mu; (5) ⚙ → "Açılınca klavye" / "Açılınca dinle" kapat-aç → levhayı kapatmadan anında etki ediyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Yazım denetimi: altı çizili kelimeler + üç kipli ayar (20 Kasım, P83, yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) bir notta "kitapı aldım kalwm" gibi yanlışlı yaz, boşluk bırakıp dur → yanlış kelimenin altında kırmızı dalgalı çizgi; yazarken çizgi kayıyor/titriyor mu, klavye ve yazma kasıyor mu (uzun notta da); (2) çizili kelimeye dokun → öneriler + ⋮ altında Sözlüğe ekle · Hep böyle düzelt · Bu notta dokunma; öneriye dokununca kelime değişiyor mu; (3) "bende geldim" → "bende" soluk noktalı mı (gürültülüyse söyle — sabah bakılacak); (4) hızlı satırdaki yazım düğmesine basılı tut → Kapalı / Yalnız göster / Otomatik düzelt; Kapalı'da çizgiler kalkıyor mu; Ayarlar → Kalem, yazım ve ekran'da aynı seçim; (5) daha önce otomatik düzelt açıksa güncellemeden sonra "Otomatik düzelt" seçili mi; doğru yazdığın kelimelerin altı çiziliyor mu (hangileri?).
   Yanlışsa: madde numarasını ve çizilen doğru kelimeleri yaz.

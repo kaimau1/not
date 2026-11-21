@@ -131,6 +131,7 @@ class _FreezeWhenHiddenState extends State<FreezeWhenHidden> {
   Widget build(BuildContext context) {
     final live = MediaQuery.of(context);
     final visible = TickerMode.valuesOf(context).enabled;
+    final current = ModalRoute.isCurrentOf(context) ?? true;
     final shown = _shown;
     if (shown == null) return _wrap(_shown = widget.child, live);
     if (!visible) {
@@ -156,6 +157,16 @@ class _FreezeWhenHiddenState extends State<FreezeWhenHidden> {
       return _wrap(shown, live);
     }
     _frozenMedia = null;
-    return _wrap(_shown = widget.child, live);
+    // Yarı saydam levha (Hızlı ekle, menü, arama vb.) üstteyken arkadaki
+    // ekran canlı kalır (veri güncellenir), ama üstteki levhanın klavye
+    // animasyonu (viewInsets + küçülen padding.bottom) arkadaki Scaffold'u
+    // her karede yeniden kurup dizmez (S56, kullanıcı bulgusu 2026-11-20).
+    final media = current
+        ? live
+        : live.copyWith(
+            viewInsets: EdgeInsets.zero,
+            padding: live.viewPadding,
+          );
+    return _wrap(_shown = widget.child, media);
   }
 }

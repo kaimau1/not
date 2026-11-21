@@ -545,16 +545,16 @@
   },
   "S56": {
     "senaryo": "⚡ Hızlı ekle levhası (telefon, ana ekran 30 not): 6 klavye inset karesi + 5 tuş yazma",
-    "klavye_kurulum": 402,
-    "klavye_dizilme": 102,
+    "klavye_kurulum": 114,
+    "klavye_dizilme": 0,
     "klavye_levha": 0,
     "klavye_giris": 0,
     "klavye_pano": 0,
     "yazma_kurulum": 335,
     "yazma_cip": 0,
-    "bugun": "klavye 402 kurulum / 102 dizilme, levha/giriş/pano 0; yazma 5 tuşta 335 kurulum, çip 0 (2026-11-20, P84 HE-2: Ekle düğmesi içeriği yazmıyor, önizleme satırı tek Text; önce 415)",
-    "hedef": "klavye karesinde levha, giriş satırı ve ana ekran kurulmaz; tuşta hedef çipleri kurulmaz",
-    "neden": "2026-11-19 ilk ölçüm; çip şeridi yalnız hedef değişince kurulur (öncesi 5 tuşta 1445 kurulum, 25 çip)"
+    "bugun": "klavye 114 kurulum / 0 dizilme, levha/giriş/pano 0; yazma 5 tuşta 335 kurulum, çip 0 (2026-11-21: showLiftingSheet boyama ötelemesi + FreezeWhenHidden yarı saydam levha klavye kalkanı + çip ListView padding:zero; önce 402 / 102)",
+    "hedef": "klavye karesinde levha, giriş satırı ve ana ekran kurulmaz, yerleşim 0; tuşta hedef çipleri kurulmaz",
+    "neden": "2026-11-19 ilk ölçüm; 2026-11-21 K-67 boyama katmanı + klavye kalkanı ile 402/102 → 114/0"
   },
   "S57": {
     "senaryo": "Yazım v3 Y-4: altı çizili denetim açıkken (Yalnız göster) 30 maddeli listede altı çizili kelimeli maddeye 5 tuş",

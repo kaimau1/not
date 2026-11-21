@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -9,10 +10,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:notlar/core/net/json_http.dart';
+import 'package:notlar/core/widgets/keyboard_snap.dart';
 import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/ai/data/ai_provider.dart';
 import 'package:notlar/features/ai/data/decisions/decision_flag.dart';
 import 'package:notlar/features/ai/data/decisions/decision_service.dart';
+import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/data/quick_entry_memory.dart';
 import 'package:notlar/features/notes/domain/note.dart';
@@ -972,5 +975,122 @@ void main() {
         'Dosyalar geliştirme yapılması lazım',
       );
     });
+
+    testWidgets(
+      'açılışta klavye + dinle birlikte açıkken konuşma başlar ve dalga görünür',
+      (tester) async {
+        const events = EventChannel('dev.kaimau.notlar/speech');
+        var listens = 0;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(
+              events,
+              MockStreamHandler.inline(onListen: (_, _) => listens++),
+            );
+        DeviceSpeech.debugAvailable = true;
+        DeviceSpeech.debugMicGranted = true;
+        addTearDown(() {
+          DeviceSpeech.debugAvailable = null;
+          DeviceSpeech.debugMicGranted = null;
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+              .setMockStreamHandler(events, null);
+        });
+        await pumpHost(
+          tester,
+          notes: [shopping, todo, text],
+          prefs: {'quick_drop_mic': true, 'quick_drop_keyboard': true},
+          onTap: (context, ref) => showQuickDropSheet(context),
+        );
+        await tester.pump();
+        await tester.tap(find.text('aç'));
+        // Levha açılış animasyonu (300 ms) + odak + autoListenDelay (720 ms).
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pump(const Duration(milliseconds: 800));
+        expect(listens, 1, reason: 'klavye odağı dinlemeyi iptal etmemeli');
+        expect(find.byKey(const ValueKey('quick-entry-wave')), findsOneWidget);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets('temizle düğmesi metni siler; mikrofona basmak geri sayımı '
+        'durdurur', (tester) async {
+      const events = EventChannel('dev.kaimau.notlar/speech');
+      var listens = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(
+            events,
+            MockStreamHandler.inline(onListen: (_, _) => listens++),
+          );
+      DeviceSpeech.debugAvailable = true;
+      DeviceSpeech.debugMicGranted = true;
+      addTearDown(() {
+        DeviceSpeech.debugAvailable = null;
+        DeviceSpeech.debugMicGranted = null;
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockStreamHandler(events, null);
+      });
+      final repo = await openSheet(tester, [shopping, todo, text]);
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'süt',
+      );
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('quick-entry-clear')));
+      await tester.pump();
+      expect(
+        tester.widget<FilledButton>(
+          find.byKey(const ValueKey('quick-drop-add')),
+        ).onPressed,
+        isNull,
+      );
+
+      // Konuşma sonu geri sayımı sürerken mikrofona basmak geri sayımı durdurur.
+      await say(tester, 'ekmek');
+      expect(find.byKey(const ValueKey('quick-drop-counting')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('quick-entry-mic')));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      expect(listens, 1);
+      expect(repo.writes, isEmpty, reason: 'mikrofon açılınca geri sayım durur');
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets(
+      'klavye açılıp kapanırken levha boyama katmanında yükselir, dokunuş '
+      'yükselmiş konumda çalışır',
+      (tester) async {
+        addTearDown(() {
+          tester.view.reset();
+          KeyboardForecast.reset();
+        });
+        final repo = await openSheet(tester, [shopping, todo, text]);
+        await tester.enterText(
+          find.byKey(const ValueKey('quick-entry-field')),
+          'yoğurt',
+        );
+        await tester.pump();
+        final add = find.byKey(const ValueKey('quick-drop-add'));
+        final yClosed = tester.getRect(add).bottom;
+
+        final dpr = tester.view.devicePixelRatio;
+        // Klavye açılır (300 dp) — levha 300 dp yukarı çıkar.
+        tester.view.viewInsets = FakeViewPadding(bottom: 300 * dpr);
+        await tester.pump(const Duration(milliseconds: 16));
+        final yOpen = tester.getRect(add).bottom;
+        expect(yClosed - yOpen, closeTo(300, 1));
+
+        // Klavye kapanır — levha eski yerine iner.
+        tester.view.viewInsets = FakeViewPadding.zero;
+        await tester.pump(const Duration(milliseconds: 16));
+        expect(tester.getRect(add).bottom, closeTo(yClosed, 1));
+
+        // Tekrar açılıp yükselmiş konumda Ekle'ye basmak çalışmalı.
+        tester.view.viewInsets = FakeViewPadding(bottom: 260 * dpr);
+        await tester.pump(const Duration(milliseconds: 16));
+        await tester.tap(add);
+        await tester.pumpAndSettle();
+        expect(repo.writes.keys, ['b']);
+      },
+    );
   });
 }
