@@ -70,6 +70,7 @@ class QuickListResult {
     this.content, {
     this.open = false,
     this.items = const [],
+    this.listKind,
   });
 
   final NoteTemplateContent content;
@@ -78,6 +79,9 @@ class QuickListResult {
   final bool open;
 
   final List<QuickItem> items;
+
+  /// AL-2: notun akıllı liste türü (`Note.listKind`).
+  final String? listKind;
 }
 
 /// Ekranı açar; vazgeçilirse ya da liste boşsa null döner.
@@ -101,13 +105,13 @@ List<String> quickLeftovers(Iterable<Note> notes, String title) {
   );
 }
 
-/// Akıllı listenin hafıza anahtarı TÜRE göre (AL-1, 2026-11-17): market ve
-/// bavul "Sık eklediklerin"i tek anahtarda karışıyordu. Düz liste [base]
-/// anahtarında kalır (eski kayıtlar da orada).
+/// Akıllı listenin hafıza anahtarı TÜRE göre (AL-1/AL-3): her türün "Sık
+/// eklediklerin"i kendi anahtarında tutulur. Düz liste [base] anahtarında.
 String smartMemoryKind(String base, SmartListKind kind) => switch (kind) {
   SmartListKind.shopping => '$base:market',
   SmartListKind.packing => '$base:bavul',
   SmartListKind.generic => base,
+  _ => '$base:${kind.name}',
 };
 
 /// Listelerin sırayla karışımı (her listeden birer), yinelenen atlanır.
@@ -248,12 +252,17 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     ];
     final market = memory.top(smartMemoryKind(base, SmartListKind.shopping));
     final bavul = memory.top(smartMemoryKind(base, SmartListKind.packing));
+    final due = [
+      for (final d in memory.predictDue(smartMemoryKind(base, kind))) d.name,
+    ];
     return switch (kind) {
       SmartListKind.shopping => quickInterleave([
+        due,
         market,
         legacy(_groceryGroupOf),
       ]),
       SmartListKind.packing => quickInterleave([
+        due,
         bavul,
         legacy(_packingGroupOf),
       ]),
@@ -261,6 +270,10 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         market,
         bavul,
         memory.top(base, count: 16),
+      ]),
+      _ => quickInterleave([
+        due,
+        memory.top(smartMemoryKind(base, kind)),
       ]),
     };
   }
@@ -280,6 +293,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     return quickLeftoversWhere(
       notes,
       (n) =>
+          smartListKindFromId(n.listKind) == kind ||
           smartKindOf([
             for (final i in n.items)
               if (!i.header && i.text.trim().isNotEmpty)
@@ -288,7 +302,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                   packing: known(_packing, i.text),
                 ),
           ]) ==
-          kind,
+              kind,
     );
   }
 
@@ -331,6 +345,12 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     final title = switch (kind) {
       SmartListKind.shopping => l10n.tplShoppingName,
       SmartListKind.packing => l10n.smartListPacking,
+      SmartListKind.pharmacy => l10n.smartListPharmacy,
+      SmartListKind.stationery => l10n.smartListStationery,
+      SmartListKind.hardware => l10n.smartListHardware,
+      SmartListKind.camping => l10n.smartListCamping,
+      SmartListKind.baby => l10n.smartListBaby,
+      SmartListKind.sport => l10n.smartListSport,
       SmartListKind.generic => l10n.smartListGeneric,
     };
     if (_title.text.trim() == _autoTitle.trim()) _title.text = title;
@@ -551,6 +571,9 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       [for (final i in items) i.name],
     );
     teachSpellFromQuickItems(items);
+    final effectiveKind = widget.args.smart
+        ? _kind.value
+        : (widget.args.grocery ? SmartListKind.shopping : SmartListKind.generic);
     final result = QuickListResult(
       (
         type: widget.args.type,
@@ -561,6 +584,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       ),
       open: open,
       items: items,
+      listKind: smartListKindId(effectiveKind),
     );
     // NOTA DÖNÜŞÜM: giriş satırı ve öneriler solar, liste yerinde kalır —
     // sonra sayfa kapanır. Yalnız boyama.
@@ -617,12 +641,30 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
   /// Öneri grupları: akıllı listede türe göre (düz listede ikisi de).
   List<TemplateSuggestionGroup> _groupsFor(SmartListKind? kind) {
     if (!widget.args.smart) return widget.args.groups;
-    return switch (kind ?? _kind.value) {
+    final k = kind ?? _kind.value;
+    return switch (k) {
       SmartListKind.shopping => widget.args.groups,
       SmartListKind.packing => widget.args.packingGroups,
       SmartListKind.generic => [
         ...widget.args.groups,
         ...widget.args.packingGroups,
+      ],
+      _ => [
+        (
+          label: switch (k) {
+            SmartListKind.pharmacy => context.l10n.smartListPharmacy,
+            SmartListKind.stationery => context.l10n.smartListStationery,
+            SmartListKind.hardware => context.l10n.smartListHardware,
+            SmartListKind.camping => context.l10n.smartListCamping,
+            SmartListKind.baby => context.l10n.smartListBaby,
+            SmartListKind.sport => context.l10n.smartListSport,
+            _ => context.l10n.smartListGeneric,
+          },
+          items: [
+            for (final (text, _) in extraListEntries(k, context.l10n.localeName))
+              text,
+          ].take(20).toList(),
+        ),
       ],
     };
   }
@@ -782,6 +824,12 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                       switch (kind) {
                         SmartListKind.shopping => Icons.shopping_cart_outlined,
                         SmartListKind.packing => Icons.luggage_outlined,
+                        SmartListKind.pharmacy => Icons.local_pharmacy_outlined,
+                        SmartListKind.stationery => Icons.edit_note_outlined,
+                        SmartListKind.hardware => Icons.handyman_outlined,
+                        SmartListKind.camping => Icons.cabin_outlined,
+                        SmartListKind.baby => Icons.child_friendly_outlined,
+                        SmartListKind.sport => Icons.fitness_center_outlined,
                         SmartListKind.generic => widget.args.icon,
                       },
                       color: widget.args.accent,

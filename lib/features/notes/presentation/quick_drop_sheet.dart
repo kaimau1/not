@@ -29,6 +29,7 @@ import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import '../domain/quick_drop.dart';
 import '../domain/quick_entry.dart';
+import '../domain/smart_list.dart';
 import 'note_link_ui.dart' show showNotePicker;
 import 'quick_entry_bar.dart';
 
@@ -190,15 +191,18 @@ List<Note> quickDropCandidates(
       added: joined.split('\n').length,
     );
   }
+  final kind = detectNoteListKind(note, locale: locale);
   final parsed = _parseIntoList(note, text, locale, memory);
-  final plan = planDropIntoList([
-    for (final i in note.items) (text: i.text, checked: i.checked),
-  ], parsed.items);
+  final plan = planDropIntoList(
+    [for (final i in note.items) (text: i.text, checked: i.checked)],
+    parsed.items,
+    addQuantities: kind != SmartListKind.generic,
+  );
   final added =
       plan.texts.length + plan.uncheck.length + plan.requantify.length;
   if (added == 0) return (fields: const {}, added: 0);
   final id = newId ?? () => const Uuid().v4();
-  final items = <NoteItem>[
+  final existing = <NoteItem>[
     for (var i = 0; i < note.items.length; i++)
       // Boş yer tutucu satır (yeni listenin tek boş maddesi) atılır.
       if (note.items[i].text.trim().isNotEmpty || note.items.length > 1)
@@ -206,8 +210,15 @@ List<Note> quickDropCandidates(
           text: plan.requantify[i],
           checked: plan.uncheck.contains(i) ? false : null,
         ),
-    for (final t in plan.texts) NoteItem(id: id(), text: t),
   ];
+  final fresh = [for (final t in plan.texts) NoteItem(id: id(), text: t)];
+  final items = insertItemsBySmartGroup(
+    existing,
+    fresh,
+    kind: kind,
+    locale: locale,
+    learnedGroups: memory.itemGroups,
+  );
   return (
     fields: {
       'items': [for (final i in items) i.toMap()],

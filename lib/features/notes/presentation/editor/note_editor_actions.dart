@@ -518,6 +518,8 @@ extension _EditorActions on _NoteEditorScreenState {
         _convertToList();
       case 'sortItems':
         await _sortItems();
+      case 'finishShopping':
+        _finishShoppingList();
       case 'imagesToFiles':
         _allImagesToFiles();
       case 'toArchive':
@@ -886,6 +888,11 @@ extension _EditorActions on _NoteEditorScreenState {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final (sort, label, icon) in <(ItemSort, String, IconData)>[
+              (
+                ItemSort.byGroup,
+                l10n.sortByGroup,
+                Icons.category_outlined,
+              ),
               (ItemSort.starredFirst, l10n.sortStarredFirst, Icons.star),
               (
                 ItemSort.uncheckedFirst,
@@ -913,10 +920,59 @@ extension _EditorActions on _NoteEditorScreenState {
       ),
     );
     if (choice == null || !mounted) return;
+    if (choice == ItemSort.byGroup) {
+      final kind = detectNoteListKind(note, locale: l10n.localeName);
+      final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+      _mutate(
+        (n) => n.copyWith(
+          items: sortItemsBySmartGroup(
+            n.items,
+            kind: kind,
+            locale: l10n.localeName,
+            learnedGroups: learned,
+          ),
+        ),
+        immediate: true,
+      );
+      return;
+    }
     _mutate(
       (n) => n.copyWith(items: sortItems(n.items, choice)),
       immediate: true,
     );
+  }
+
+  /// AL-2 "Alınanları tamamla": işaretli maddeleri sıklık + tarih hafızasına
+  /// (AL-4 tahmin) işleyip listeden kaldırır; kalanlar durur, tek Geri Al.
+  void _finishShoppingList() {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final checked = [
+      for (final i in note.items)
+        if (!i.header && i.checked) i,
+    ];
+    if (checked.isEmpty) return;
+    final l10n = context.l10n;
+    final kind = detectNoteListKind(note, locale: l10n.localeName);
+    final memKind = switch (kind) {
+      SmartListKind.shopping => 'smart:market',
+      SmartListKind.packing => 'smart:bavul',
+      SmartListKind.generic => 'smart',
+      _ => 'smart:${kind.name}',
+    };
+    ref.read(quickEntryMemoryProvider.notifier).record(memKind, [
+      for (final i in checked) i.text,
+    ]);
+    _mutate(
+      (n) => n.copyWith(
+        items: [
+          for (final i in n.items)
+            if (i.header || !i.checked) i,
+        ],
+      ),
+      immediate: true,
+    );
+    _showUndoSnack(l10n.finishShoppingDone(checked.length));
   }
 
   /// **Dışa aktarma** — eski "PDF olarak dışa aktar" maddesinin yerini alır.

@@ -26,7 +26,12 @@ import '../presentation/editor/auto_spell.dart';
 /// Cihaz yerel (SharedPreferences): alışkanlık verisi, senkronu yok.
 @immutable
 class QuickEntryMemory {
-  const QuickEntryMemory({this.kinds = const {}, this.rejected = const {}});
+  const QuickEntryMemory({
+    this.kinds = const {},
+    this.rejected = const {},
+    this.itemGroups = const {},
+    this.purchaseDays = const {},
+  });
 
   /// kind → (madde anahtarı → (yazılışı, sayı)).
   final Map<String, Map<String, (String, int)>> kinds;
@@ -34,8 +39,18 @@ class QuickEntryMemory {
   /// `yazılan>düzeltilen` (anahtar hâlinde).
   final Set<String> rejected;
 
+  /// AL-4: kullanıcının öğrettiği kişisel kategori/reyon eşlemesi
+  /// (madde anahtarı → grup numarası).
+  final Map<String, int> itemGroups;
+
+  /// AL-4: tahmin için madde anahtarı → en son satın alma günleri (epoch günü,
+  /// en çok 6 kayıt). Tamamen cihazda hesaplanır, ağ/AI yok.
+  final Map<String, List<int>> purchaseDays;
+
   static const maxPerKind = 300;
   static const maxKinds = 24;
+  static const _maxDaysPerItem = 6;
+  static const _maxTrackedDays = 200;
 
   /// En çok eklenenler (sayı, sonra alfabe). [min]: en az kaç kez.
   List<String> top(String kind, {int count = 12, int min = 1}) {
@@ -56,14 +71,31 @@ class QuickEntryMemory {
   bool isRejected(String typed, String corrected) =>
       rejected.contains('${quickAscii(typed)}>${quickAscii(corrected)}');
 
-  QuickEntryMemory recorded(String kind, Iterable<String> items) {
+  QuickEntryMemory recorded(
+    String kind,
+    Iterable<String> items, {
+    DateTime? at,
+  }) {
     final next = {...?kinds[kind]};
+    final days = {
+      for (final e in purchaseDays.entries) e.key: [...e.value],
+    };
+    final day = at != null ? _epochDay(at) : null;
     for (final raw in items) {
       final name = quickBaseName(raw);
       final key = quickAscii(name);
       if (key.isEmpty) continue;
       final old = next[key];
       next[key] = (old?.$1 ?? name, (old?.$2 ?? 0) + 1);
+      if (day != null) {
+        final list = days.putIfAbsent(key, () => []);
+        if (list.isEmpty || list.last != day) {
+          list.add(day);
+          if (list.length > _maxDaysPerItem) {
+            list.removeRange(0, list.length - _maxDaysPerItem);
+          }
+        }
+      }
     }
     if (next.length > maxPerKind) {
       final sorted = next.entries.toList()
@@ -72,11 +104,36 @@ class QuickEntryMemory {
         next.remove(e.key);
       }
     }
+    if (days.length > _maxTrackedDays) {
+      final sorted = days.entries.toList()
+        ..sort((a, b) => (a.value.lastOrNull ?? 0).compareTo(b.value.lastOrNull ?? 0));
+      for (final e in sorted.take(days.length - _maxTrackedDays)) {
+        days.remove(e.key);
+      }
+    }
     final all = {...kinds, kind: next};
     while (all.length > maxKinds) {
       all.remove(all.keys.firstWhere((k) => k != kind));
     }
-    return QuickEntryMemory(kinds: all, rejected: rejected);
+    return QuickEntryMemory(
+      kinds: all,
+      rejected: rejected,
+      itemGroups: itemGroups,
+      purchaseDays: days,
+    );
+  }
+
+  /// AL-4: maddenin kişisel reyon/grup numarasını öğrenir.
+  QuickEntryMemory withItemGroup(String itemText, int group) {
+    final key = quickItemKey(itemText);
+    if (key.isEmpty) return this;
+    final next = {...itemGroups, key: group};
+    return QuickEntryMemory(
+      kinds: kinds,
+      rejected: rejected,
+      itemGroups: next,
+      purchaseDays: purchaseDays,
+    );
   }
 
   QuickEntryMemory rejecting(String typed, String corrected) =>
@@ -86,7 +143,57 @@ class QuickEntryMemory {
           ...rejected.skip(rejected.length > 200 ? 50 : 0),
           '${quickAscii(typed)}>${quickAscii(corrected)}',
         },
+        itemGroups: itemGroups,
+        purchaseDays: purchaseDays,
       );
+
+  /// AL-4 tahmin: düzenli alınan ve ortalama aralığı dolmuş maddeleri
+  /// gecikme oranına göre döndürür (ör. "her 7 günde süt, 9 gündür yok").
+  List<({String name, int avgDays, int daysSince})> predictDue(
+    String kind, {
+    DateTime? now,
+    int maxItems = 5,
+  }) {
+    final kindMap = kinds[kind];
+    if (kindMap == null || kindMap.isEmpty || purchaseDays.isEmpty) {
+      return const [];
+    }
+    final today = _epochDay(now ?? DateTime.now());
+    final due = <({String name, int avgDays, int daysSince, double ratio})>[];
+    for (final e in kindMap.entries) {
+      final hist = purchaseDays[e.key];
+      if (hist == null || hist.length < 2) continue;
+      var totalGap = 0;
+      var gaps = 0;
+      for (var i = 1; i < hist.length; i++) {
+        final d = hist[i] - hist[i - 1];
+        if (d > 0) {
+          totalGap += d;
+          gaps++;
+        }
+      }
+      if (gaps == 0) continue;
+      final avg = (totalGap / gaps).round().clamp(2, 365);
+      final since = today - hist.last;
+      if (since >= avg) {
+        due.add((
+          name: e.value.$1,
+          avgDays: avg,
+          daysSince: since,
+          ratio: since / avg,
+        ));
+      }
+    }
+    due.sort((a, b) => b.ratio.compareTo(a.ratio));
+    return [
+      for (final d in due.take(maxItems))
+        (name: d.name, avgDays: d.avgDays, daysSince: d.daysSince),
+    ];
+  }
+
+  static int _epochDay(DateTime d) =>
+      DateTime.utc(d.year, d.month, d.day).millisecondsSinceEpoch ~/
+      Duration.millisecondsPerDay;
 
   String encode() => jsonEncode({
     'k': {
@@ -96,6 +203,8 @@ class QuickEntryMemory {
         },
     },
     'r': rejected.toList(),
+    if (itemGroups.isNotEmpty) 'g': itemGroups,
+    if (purchaseDays.isNotEmpty) 't': purchaseDays,
   });
 
   /// Bozuk kayıt sessizce boş hafıza olur.
@@ -112,9 +221,24 @@ class QuickEntryMemory {
         });
         kinds['$k'] = m;
       });
+      final groups = <String, int>{};
+      (j['g'] as Map?)?.forEach((k, v) {
+        if (v is num) groups['$k'] = v.toInt();
+      });
+      final days = <String, List<int>>{};
+      (j['t'] as Map?)?.forEach((k, v) {
+        if (v is List) {
+          days['$k'] = [
+            for (final n in v)
+              if (n is num) n.toInt(),
+          ];
+        }
+      });
       return QuickEntryMemory(
         kinds: kinds,
         rejected: {for (final r in (j['r'] as List?) ?? const []) '$r'},
+        itemGroups: groups,
+        purchaseDays: days,
       );
     } catch (_) {
       return const QuickEntryMemory();
@@ -140,9 +264,13 @@ class QuickEntryMemoryNotifier extends Notifier<QuickEntryMemory> {
     ref.read(sharedPreferencesProvider).setString(_key, next.encode());
   }
 
-  /// Oluşturulan listenin maddeleri sayılır.
-  void record(String kind, Iterable<String> items) =>
-      _save(state.recorded(kind, items));
+  /// Oluşturulan veya tamamlanan listenin maddeleri sayılır (+ AL-4 tarih).
+  void record(String kind, Iterable<String> items, {DateTime? at}) =>
+      _save(state.recorded(kind, items, at: at ?? DateTime.now()));
+
+  /// AL-4: maddenin kişisel reyon/grup numarasını kaydeder.
+  void learnGroup(String itemText, int group) =>
+      _save(state.withItemGroup(itemText, group));
 
   /// Kullanıcı düzeltmeyi geri aldı: bir daha uygulanmaz; yazım hafızası da
   /// öğrenir (editörde de düzeltilmesin).

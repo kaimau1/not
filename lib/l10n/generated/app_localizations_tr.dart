@@ -8876,6 +8876,35 @@ class AppLocalizationsTr extends AppLocalizations {
   String get smartListPacking => 'Bavul listesi';
 
   @override
+  String get smartListPharmacy => 'Eczane listesi';
+
+  @override
+  String get smartListStationery => 'Kırtasiye listesi';
+
+  @override
+  String get smartListHardware => 'Tamirat listesi';
+
+  @override
+  String get smartListCamping => 'Kamp listesi';
+
+  @override
+  String get smartListBaby => 'Bebek çantası';
+
+  @override
+  String get smartListSport => 'Spor çantası';
+
+  @override
+  String get sortByGroup => 'Reyona / gruba göre';
+
+  @override
+  String get finishShopping => 'Alınanları tamamla';
+
+  @override
+  String finishShoppingDone(int count) {
+    return '$count alınan madde temizlendi';
+  }
+
+  @override
   String get scanAny => 'Tara';
 
   @override

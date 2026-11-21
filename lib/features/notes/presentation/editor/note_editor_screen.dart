@@ -102,6 +102,8 @@ import '../../../calendar/data/task_note_sync.dart';
 import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
 import '../../../calendar/presentation/line_task_chip.dart';
+import '../../data/quick_entry_memory.dart';
+import '../../domain/smart_list.dart';
 import '../../domain/spell_review.dart';
 import 'auto_spell.dart';
 import 'spell_review_sheet.dart';
@@ -369,6 +371,7 @@ bool sameRenderedNote(Note a, Note b) {
       a.backgroundOpacity != b.backgroundOpacity ||
       a.theme != b.theme ||
       // Defter görünümü ve kâğıt deseni (bkz. `_sameVisual` kök neden notu).
+      a.listKind != b.listKind ||
       a.paged != b.paged ||
       a.archivePaper != b.archivePaper ||
       a.orderIndex != b.orderIndex ||
@@ -1994,6 +1997,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // `setState` atlanıyor, yeni düzen ancak başka bir sebeple gelen
       // yeniden çizimde (ör. editörden çıkıp girmek) görünüyordu.
       a.listColumns == b.listColumns &&
+      a.listKind == b.listKind &&
       a.archivePages.length == b.archivePages.length &&
       // KÖK NEDEN (kullanıcı bulgusu 2026-10-20: "defter görünümünde kâğıt
       // tipi seçimi çalışmıyor"): Defter görünümü ve kâğıt deseni burada

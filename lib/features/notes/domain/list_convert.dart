@@ -94,6 +94,9 @@ enum ItemSort {
 
   /// Metne göre Z→A.
   alphabeticalDesc,
+
+  /// AL-2: Akıllı liste reyon/grup sırası (editörde [sortItemsBySmartGroup]).
+  byGroup,
 }
 
 /// Türkçe alfabe sırası. `String.compareTo` kod noktalarına göre sıralıyor ve
@@ -137,6 +140,7 @@ List<NoteItem> sortItems(List<NoteItem> items, ItemSort sort) {
         (a.item.checked ? 1 : 0) - (b.item.checked ? 1 : 0),
       ItemSort.alphabetical => _turkishCompare(a.item.text, b.item.text),
       ItemSort.alphabeticalDesc => _turkishCompare(b.item.text, a.item.text),
+      ItemSort.byGroup => 0,
     };
     return result != 0 ? result : a.index - b.index;
   });

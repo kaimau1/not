@@ -205,6 +205,7 @@ class Note {
     this.backgroundOpacity = 0.35,
     this.theme = '',
     this.listColumns = 1,
+    this.listKind,
     this.classicDocument = false,
     this.archivePages = const [],
     this.archivePaper = ArchivePaper.lined,
@@ -251,7 +252,7 @@ class Note {
     'pinned', 'starred', 'urgent', 'cardMediaHidden', 'locked',
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
-    'backgroundOpacity', 'theme', 'listColumns', 'classicDocument', 'archivePages',
+    'backgroundOpacity', 'theme', 'listColumns', 'listKind', 'classicDocument', 'archivePages',
     'archivePaper', 'lineSpacing', 'archiveGeneralName', 'paged', 'heavyRef',
     'tagLinks',
     'textPages',
@@ -439,6 +440,12 @@ class Note {
   /// tek satırlık maddelerden, başka bir notu paragraf uzunluğunda
   /// maddelerden oluşabiliyor ve ikincisi iki sütunda okunmaz hâle gelir.
   final int listColumns;
+
+  /// Akıllı liste türü (AL-2, 17K §5.2): `'shopping'`, `'packing'`,
+  /// `'pharmacy'`, `'stationery'`, `'hardware'`, `'camping'`, `'baby'`,
+  /// `'sport'` veya null (sıradan not; null iken [toMap] hiç yazmaz — S16
+  /// bayt bütçesi +0).
+  final String? listKind;
 
   /// Belge (PDF/sunum) notu KLASİK görünüme alındı mı?
   ///
@@ -840,6 +847,8 @@ class Note {
     double? backgroundOpacity,
     String? theme,
     int? listColumns,
+    String? listKind,
+    bool clearListKind = false,
     bool? classicDocument,
     List<String>? archivePages,
     ArchivePaper? archivePaper,
@@ -902,6 +911,7 @@ class Note {
     backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
     theme: theme ?? this.theme,
     listColumns: listColumns ?? this.listColumns,
+    listKind: clearListKind ? null : (listKind ?? this.listKind),
     classicDocument: classicDocument ?? this.classicDocument,
     archivePages: archivePages ?? this.archivePages,
     archivePaper: archivePaper ?? this.archivePaper,
@@ -1055,6 +1065,7 @@ class Note {
       // bilmeyen bu sürüm) tek sütuna düşer — çizim yolu ikiden fazlasını
       // yerleştiremez.
       listColumns: (map['listColumns'] as num?)?.toInt() == 2 ? 2 : 1,
+      listKind: map['listKind'] as String?,
       classicDocument: map['classicDocument'] == true,
       archivePages: [
         for (final p in (map['archivePages'] as List<dynamic>? ?? const []))
@@ -1174,6 +1185,8 @@ class Note {
     // iki sütundan tek sütuna dönmek kayda hiç yansımaz ve not her açılışta
     // yine iki sütunlu gelirdi.
     'listColumns': listColumns,
+    // KOŞULLU (AL-2, S16 bayt bütçesi): sıradan notlarda hiç yazılmaz.
+    if (listKind != null && listKind!.isNotEmpty) 'listKind': listKind,
     // HER ZAMAN yazılır (merge tuzağı): balonluya geri dönüş bayrağı
     // indirebilmeli.
     'classicDocument': classicDocument,
