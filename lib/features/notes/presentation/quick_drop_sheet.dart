@@ -1,13 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/firestore_size.dart' show sameFirestoreValue;
+import '../../../core/utils/spoken_datetime.dart' show parseSpokenDateTime;
 import '../../../core/widgets/delayed_spinner.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -29,6 +33,7 @@ import 'note_link_ui.dart' show showNotePicker;
 import 'quick_entry_bar.dart';
 
 /// Son eklenen hedef notlar (en yenisi başta) — levha açılınca seçili gelir.
+/// HE-5: saat dilimi + haftanın günü bazlı bağlam puanı da burada tutulur.
 final quickDropRecentProvider =
     NotifierProvider<QuickDropRecentNotifier, List<String>>(
       QuickDropRecentNotifier.new,
@@ -36,27 +41,97 @@ final quickDropRecentProvider =
 
 class QuickDropRecentNotifier extends Notifier<List<String>> {
   static const _key = 'quick_drop_recent';
+  static const _contextKey = 'quick_drop_context_v1';
   static const maxEntries = 6;
+  static const _maxContextEntries = 40;
 
   @override
   List<String> build() =>
       ref.watch(sharedPreferencesProvider).getStringList(_key) ?? const [];
 
-  void remember(String noteId) {
+  /// Günün 4 zaman dilimi: sabah (5–11), gündüz (12–16), akşam (17–21), gece.
+  static int hourBucket(int hour) => hour >= 5 && hour < 12
+      ? 0
+      : hour >= 12 && hour < 17
+      ? 1
+      : hour >= 17 && hour < 22
+      ? 2
+      : 3;
+
+  void remember(String noteId, {DateTime? at}) {
     final next = [
       noteId,
       for (final id in state)
         if (id != noteId) id,
     ].take(maxEntries).toList();
     state = next;
-    ref.read(sharedPreferencesProvider).setStringList(_key, next);
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setStringList(_key, next);
+    final t = at ?? DateTime.now();
+    final counts = _readContext(prefs.getString(_contextKey));
+    final slot = '$noteId|${t.weekday}|${hourBucket(t.hour)}';
+    counts[slot] = (counts[slot] ?? 0) + 1;
+    if (counts.length > _maxContextEntries) {
+      final weakest = counts.entries.reduce(
+        (a, b) => a.value <= b.value ? a : b,
+      );
+      counts.remove(weakest.key);
+    }
+    prefs.setString(_contextKey, jsonEncode(counts));
   }
+
+  /// [now] saat dilimi ve haftanın gününe göre not başına bağlam puanı (HE-5).
+  Map<String, int> contextScores([DateTime? now]) {
+    final t = now ?? DateTime.now();
+    final counts = _readContext(
+      ref.read(sharedPreferencesProvider).getString(_contextKey),
+    );
+    return quickDropContextScores(counts, t);
+  }
+
+  static Map<String, int> _readContext(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final e in decoded.entries)
+          if (e.value is num) '${e.key}': (e.value as num).toInt(),
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+}
+
+/// Saf bağlam puanı (HE-5): aynı gün+saat dilimi ×2, yalnız aynı saat dilimi ×1.
+Map<String, int> quickDropContextScores(
+  Map<String, int> slotCounts,
+  DateTime now,
+) {
+  final day = '${now.weekday}';
+  final bucket = '${QuickDropRecentNotifier.hourBucket(now.hour)}';
+  final scores = <String, int>{};
+  for (final e in slotCounts.entries) {
+    final parts = e.key.split('|');
+    if (parts.length != 3 || e.value <= 0) continue;
+    final id = parts[0];
+    if (parts[2] != bucket) continue;
+    final weight = parts[1] == day ? 2 : 1;
+    scores[id] = (scores[id] ?? 0) + e.value * weight;
+  }
+  return scores;
 }
 
 /// Eklenebilecek notlar: yazı ve liste notları (çöpte/arşivde/kilitli
 /// olmayan; sayfalı yazı notu hariç — sayfa seçimi ister). Sıra: son
-/// kullanılan hedefler, sonra iğneliler, sonra en son değişenler.
-List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
+/// kullanılan hedefler, sonra iğneliler, sonra günün saatine göre sık
+/// kullanılanlar (HE-5), sonra en son değişenler.
+List<Note> quickDropCandidates(
+  Iterable<Note> notes,
+  List<String> recent, {
+  Map<String, int> contextBoost = const {},
+}) {
   final ok = [
     for (final n in notes)
       if (n.deletedAt == null &&
@@ -78,7 +153,11 @@ List<Note> quickDropCandidates(Iterable<Note> notes, List<String> recent) {
       n.updatedAt ?? n.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
   ok.sort((a, b) {
     final c = rank(a).compareTo(rank(b));
-    return c != 0 ? c : at(b).compareTo(at(a));
+    if (c != 0) return c;
+    final ba = contextBoost[a.id] ?? 0;
+    final bb = contextBoost[b.id] ?? 0;
+    if (ba != bb) return bb.compareTo(ba);
+    return at(b).compareTo(at(a));
   });
   return ok;
 }
@@ -329,8 +408,8 @@ class QuickDropSheet extends ConsumerStatefulWidget {
   ConsumerState<QuickDropSheet> createState() => _QuickDropSheetState();
 }
 
-/// Levhanın durumu: hedef not, eklenecek içerik, başa baş kalanlar ve
-/// "kullanıcıya sor" işareti.
+/// Levhanın durumu: hedef not, eklenecek içerik, başa baş kalanlar,
+/// "kullanıcıya sor" işareti, hatırlatıcı zamanı (HE-4) ve çoklu hedef (HE-5).
 @immutable
 class _Drop {
   const _Drop({
@@ -338,12 +417,16 @@ class _Drop {
     this.content = '',
     this.ties = const [],
     this.ask = false,
+    this.reminderAt,
+    this.multi = const [],
   });
 
   final String? id;
   final String content;
   final List<String> ties;
   final bool ask;
+  final DateTime? reminderAt;
+  final List<({String id, String content})> multi;
 
   @override
   bool operator ==(Object other) =>
@@ -351,10 +434,19 @@ class _Drop {
       other.id == id &&
       other.content == content &&
       other.ask == ask &&
-      listEquals(other.ties, ties);
+      other.reminderAt == reminderAt &&
+      listEquals(other.ties, ties) &&
+      listEquals(other.multi, multi);
 
   @override
-  int get hashCode => Object.hash(id, content, ask, Object.hashAll(ties));
+  int get hashCode => Object.hash(
+    id,
+    content,
+    ask,
+    reminderAt,
+    Object.hashAll(ties),
+    Object.hashAll(multi),
+  );
 }
 
 enum _Phase { idle, counting, thinking }
@@ -369,6 +461,9 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   List<Note> _candidates = const [];
   ProviderSubscription<AsyncValue<List<Note>>>? _notesSub;
   late final QuickParser _idle = QuickParser(QuickLexicon());
+  String _locale = PlatformDispatcher.instance.locale.languageCode;
+  QuickLexicon? _groceryLex;
+  String? _groceryLexLocale;
 
   /// Elle seçilen hedef (çipe dokunuldu); null = metinden/sondan.
   String? _chosenId;
@@ -405,9 +500,11 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   @override
   void initState() {
     super.initState();
+    final boost = ref.read(quickDropRecentProvider.notifier).contextScores();
     _candidates = quickDropCandidates(
       ref.read(notesStreamProvider).value ?? const <Note>[],
       ref.read(quickDropRecentProvider),
+      contextBoost: boost,
     );
     _state.addListener(_onState);
     _state.value = _Drop(id: _candidates.isEmpty ? null : _candidates.first.id);
@@ -419,6 +516,9 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       final fresh = quickDropCandidates(
         list,
         ref.read(quickDropRecentProvider),
+        contextBoost: ref
+            .read(quickDropRecentProvider.notifier)
+            .contextScores(),
       );
       final same =
           fresh.length == _candidates.length &&
@@ -449,6 +549,17 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     if (ref.read(quickDropKeyboardProvider)) focusAfterRouteOpens(this, _focus);
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final next = context.l10n.localeName;
+    if (next != _locale) {
+      _locale = next;
+      final current = _bar.currentState?.text ?? widget.initialText;
+      if (current.isNotEmpty) _resolve(current);
+    }
+  }
+
   void _onState() {
     final st = _state.value;
     final targets = _Drop(id: st.id, ties: st.ties);
@@ -463,17 +574,38 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       }
     }
     final content = st.content.trim();
-    final enabled = (st.id != null || _toNewNote) && content.isNotEmpty;
+    final enabled =
+        (st.id != null || _toNewNote || st.multi.isNotEmpty) &&
+        content.isNotEmpty;
     final next = (enabled, st.id == null && st.ask);
     if (next != _addLabel.value) _addLabel.value = next;
   }
 
-  /// HE-2 önizleme satırı: Ekle'ye basmadan neyin nereye gideceği ve
+  /// HE-2/HE-4/HE-5 önizleme satırı: Ekle'ye basmadan neyin nereye gideceği ve
   /// eklenmeye hazır mı (vurgulu gösterim için).
   ({String text, bool ready}) _previewInfo(AppLocalizations l10n, _Drop st) {
     final content = st.content.trim();
     if (content.isEmpty) {
       return (text: _toNewNote ? '' : l10n.quickDropTarget, ready: false);
+    }
+    if (st.multi.isNotEmpty) {
+      final summary = [
+        for (final m in st.multi)
+          '${_noteOf(m.id)?.displayTitle.trim() ?? ''} · ${m.content}',
+      ].join(' + ');
+      return (
+        text: l10n.quickDropPreviewMulti(summary, st.multi.length),
+        ready: true,
+      );
+    }
+    if (st.reminderAt != null) {
+      final when = DateFormat.MMMd(
+        l10n.localeName,
+      ).add_Hm().format(st.reminderAt!);
+      return (
+        text: l10n.quickDropPreviewReminder(when, content),
+        ready: true,
+      );
     }
     if (_toNewNote) {
       return (
@@ -547,15 +679,75 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   String? get _fallbackId =>
       _chosenId ?? (_candidates.isEmpty ? null : _candidates.first.id);
 
+  /// HE-4: varsayılan hedef market listesi değilse ve metinde ≥ 2 bilinen
+  /// market ürünü varsa en güncel market listesini kendiliğinden önerir.
+  String? _autoGroceryTarget(String content) {
+    final fallback = _noteOf(_fallbackId);
+    if (fallback != null &&
+        fallback.type != NoteType.text &&
+        looksLikeGrocery(fallback.displayTitle, [
+          for (final i in fallback.items) i.text,
+        ], _locale)) {
+      return null;
+    }
+    Note? groceryNote;
+    for (final n in _candidates) {
+      if (n.type != NoteType.text &&
+          looksLikeGrocery(n.displayTitle, [
+            for (final i in n.items) i.text,
+          ], _locale)) {
+        groceryNote = n;
+        break;
+      }
+    }
+    if (groceryNote == null) return null;
+    final words = [
+      for (final w in quickAscii(content).split(RegExp(r'[^a-z0-9]+')))
+        if (w.length >= 2) w,
+    ];
+    if (words.length < 2) return null;
+    if (_groceryLex == null || _groceryLexLocale != _locale) {
+      _groceryLex = buildQuickLexicon(locale: _locale, grocery: true);
+      _groceryLexLocale = _locale;
+    }
+    var hits = 0;
+    final seen = <String>{};
+    for (final w in words) {
+      if (seen.add(w) && _groceryLex!.exact(w) != null) {
+        if (++hits >= 2) return groceryNote.id;
+      }
+    }
+    return null;
+  }
+
   void _onText(String text) {
     _stopCountdown();
     _resolve(text);
   }
 
   void _resolve(String text) {
-    final parsed = parseDropTarget(text, [
-      for (final n in _candidates) n.displayTitle,
-    ]);
+    final titles = [for (final n in _candidates) n.displayTitle];
+    // HE-5: tek cümlede birden çok açık hedef ("süt markete, fatura yapılacaklara").
+    final multiRaw = parseMultiDropTargets(text, titles);
+    if (multiRaw.isNotEmpty) {
+      _parsed = (
+        index: multiRaw.first.index,
+        content: text.trim(),
+        ties: const [],
+        command: true,
+      );
+      final next = _Drop(
+        id: _candidates[multiRaw.first.index].id,
+        content: text.trim(),
+        multi: [
+          for (final m in multiRaw)
+            (id: _candidates[m.index].id, content: m.content),
+        ],
+      );
+      if (next != _state.value) _state.value = next;
+      return;
+    }
+    final parsed = parseDropTarget(text, titles);
     _parsed = parsed;
     final ties = [for (final i in parsed.ties) _candidates[i].id];
     final _Drop next;
@@ -570,6 +762,25 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         ties: ties,
         ask: chosen == null,
       );
+    } else if (_chosenId == null &&
+        !parsed.command &&
+        parsed.content.trim().isNotEmpty) {
+      // HE-4 tek giriş: tarih/saat varsa hatırlatıcılı yeni not; birkaç
+      // market maddesi varsa market listesi; değilse son hedef.
+      final reminder = parseSpokenDateTime(
+        parsed.content,
+        languageCode: _locale,
+      );
+      if (reminder != null) {
+        next = _Drop(
+          id: _kNewId,
+          content: parsed.content,
+          reminderAt: reminder,
+        );
+      } else {
+        final groceryId = _autoGroceryTarget(parsed.content);
+        next = _Drop(id: groceryId ?? _fallbackId, content: parsed.content);
+      }
     } else {
       next = _Drop(id: _fallbackId, content: parsed.content);
     }
@@ -807,24 +1018,79 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     _stopCountdown();
     if (resolve) _resolve(_bar.currentState?.text ?? '');
     final st = _state.value;
-    final note = _noteOf(st.id);
     final repo = ref.read(notesRepositoryProvider);
-    if (_toNewNote && repo != null && st.content.trim().isNotEmpty) {
+    if (repo == null) return;
+    // HE-5 çoklu hedef: her hedef not güncel hâlinden güncellenir, tek Geri Al.
+    if (st.multi.isNotEmpty) {
+      final l10n = context.l10n;
+      final memory = ref.read(quickEntryMemoryProvider);
+      final messenger = ScaffoldMessenger.of(context);
+      final container = ProviderScope.containerOf(context, listen: false);
+      final applied = <({Note before, Map<String, dynamic> written})>[];
+      for (final m in st.multi) {
+        final target = _noteOf(m.id);
+        if (target == null) continue;
+        final res = quickDropFields(
+          target,
+          m.content,
+          locale: l10n.localeName,
+          memory: memory,
+        );
+        if (res.fields.isEmpty) continue;
+        repo.updateFields(target.id, res.fields);
+        ref.read(quickDropRecentProvider.notifier).remember(target.id);
+        applied.add((before: target, written: res.fields));
+      }
+      Navigator.of(context).pop();
+      if (applied.isEmpty) return;
+      void undoAll() {
+        final live = container.read(notesStreamProvider).value ?? const <Note>[];
+        for (final entry in applied) {
+          Note? current;
+          for (final n in live) {
+            if (n.id == entry.before.id) current = n;
+          }
+          final fields = quickDropUndoFields(
+            before: entry.before,
+            current: current ?? entry.before,
+            written: entry.written,
+          );
+          if (fields.isNotEmpty) repo.updateFields(entry.before.id, fields);
+        }
+      }
+
+      messenger
+        ..hideCurrentSnackBar()
+        ..showMessage(
+          l10n.quickDropAddedMulti(applied.length),
+          action: SnackBarAction(label: l10n.undo, onPressed: undoAll),
+        );
+      return;
+    }
+    if (_toNewNote && st.content.trim().isNotEmpty) {
       final body = st.content.trim();
+      final reminderAt = st.reminderAt;
       final messenger = ScaffoldMessenger.of(context);
       final l10n = context.l10n;
       unawaited(
-        repo.createNote(NoteType.text, body: body).then((id) {
-          ref.read(quickDropRecentProvider.notifier).remember(id);
-        }),
+        repo
+            .createNote(NoteType.text, body: body, reminderAt: reminderAt)
+            .then((id) {
+              ref.read(quickDropRecentProvider.notifier).remember(id);
+            }),
       );
       Navigator.of(context).pop();
       messenger
         ..hideCurrentSnackBar()
-        ..showMessage(l10n.quickDropSavedNew);
+        ..showMessage(
+          reminderAt != null
+              ? l10n.quickDropSavedReminder
+              : l10n.quickDropSavedNew,
+        );
       return;
     }
-    if (note == null || repo == null || st.content.trim().isEmpty) return;
+    final note = _noteOf(st.id);
+    if (note == null || st.content.trim().isEmpty) return;
     final content = st.content;
     final l10n = context.l10n;
     final veto = _vetoed;

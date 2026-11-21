@@ -352,6 +352,34 @@ String quickDropSeparate(String text) => text.replaceAll(
   ', ',
 );
 
+/// **HE-5 ÇOKLU HEDEF** (17K §4.2): tek cümlede birden çok hedef not varsa
+/// ("süt markete, fatura yapılacaklara" veya "market: süt; iş: rapor") her
+/// hedefi kendi içeriğiyle ayırır. En az iki FARKLI açık hedef çıkmazsa boş
+/// döner (tek hedef yoluna düşer — "süt, ekmek markete ekle" bölünmez).
+List<({int index, String content})> parseMultiDropTargets(
+  String text,
+  List<String> titles,
+) {
+  final separated = quickDropSeparate(text.trim());
+  if (separated.isEmpty) return const [];
+  final clauses = [
+    for (final c in separated.split(RegExp(r'\s*[,;\n]+\s*')))
+      if (c.trim().isNotEmpty) c.trim(),
+  ];
+  if (clauses.length < 2) return const [];
+  final order = <int>[];
+  final grouped = <int, List<String>>{};
+  for (final clause in clauses) {
+    final hit = parseDropTarget(clause, titles);
+    if (hit.index == null || hit.content.trim().isEmpty) return const [];
+    final idx = hit.index!;
+    if (!grouped.containsKey(idx)) order.add(idx);
+    (grouped[idx] ??= []).add(hit.content.trim());
+  }
+  if (order.length < 2) return const [];
+  return [for (final i in order) (index: i, content: grouped[i]!.join(', '))];
+}
+
 /// Yapay zekânın "sıra | içerik" yanıtı (bkz. `GeminiService.pickDropTarget`).
 /// "yok", aralık dışı ya da bozuk yanıt null.
 ({int index, String content})? parseAiDropAnswer(String raw, int length) {

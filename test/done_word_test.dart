@@ -20,4 +20,15 @@ void main() {
     expect(stripDoneWord('yabitti'), isNull);
     expect(stripDoneWord(''), isNull);
   });
+
+  test('H1 parseDoneWord: yalın "bitti" bare=true, açık komut bare=false', () {
+    expect(parseDoneWord('süt bitti'), (rest: 'süt', bare: true));
+    expect(parseDoneWord('milk done'), (rest: 'milk', bare: true));
+    expect(parseDoneWord('süt ekmek liste bitti'), (
+      rest: 'süt ekmek',
+      bare: false,
+    ));
+    expect(parseDoneWord('süt bu kadar'), (rest: 'süt', bare: false));
+    expect(parseDoneWord('bitti'), (rest: '', bare: false));
+  });
 }

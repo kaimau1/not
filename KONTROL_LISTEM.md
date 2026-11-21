@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Hızlı ekle: tek giriş (hatırlatıcı + market yönlendirme), çoklu hedef ve "süt bitti" (21 Kasım, P87, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) ⚡ Hızlı ekle'de duraksamadan "süt bitti" söyle → dinleme kapanmıyor mu; 1 sn durup "bitti" ya da hemen "bu kadar" deyince kapanıp ekliyor mu; (2) "yarın 9'da dişçi" yaz/söyle → altta `⏰` önizlemesi çıkıp hatırlatıcılı yeni not oluşturuyor mu (herhangi bir not çipine dokununca o nota dönüyor mu); (3) son kullanılan not metin notuyken "süt yumurta" yaz → otomatik market listesine yönleniyor mu; (4) "süt markete, fatura yapılacaklara" yaz → önizlemede `(2 not)` görünüp iki nota birden ekliyor mu, **Geri al** ikisini birden geri alıyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Yazım denetimi toplu denetim + kişisel sözlük eşitleme (21 Kasım, P86, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) birkaç yazım yanlışı + "bende" içeren notta ⋮ → **Yazımı denetle** (veya yazım düğmesine basılı tutup **Bu notu toplu denetle**) → bütün bulgular bağlamıyla listeleniyor mu, "bende"de "Bağlam ipucu" rozeti var mı; (2) **Tümünü düzelt (N)** → yalnız kesin hatalar tek adımda düzelip "bende"ye dokunmuyor mu, alttaki **Geri al** hepsini tek hamlede geri alıyor mu; (3) bir kelimeye **Sözlüğe ekle** → aynı kelimenin nottaki diğer tekrarları da listeden kalkıyor mu; (4) iki cihazda aynı hesapla giriş → birinde sözlüğe eklenen kelime öbüründe uygulamayı açıp kapatınca eşitleniyor mu.
   Yanlışsa: madde numarasını yaz.
