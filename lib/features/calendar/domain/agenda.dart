@@ -46,15 +46,49 @@ class TaskEntry extends AgendaEntry {
 ///
 /// [expiry] ise ZAMANLI NOT'un arşivlenme anı (`expiresAt`, U4 2026-11-18):
 /// aynı satır biçimi, taşıma/silme `expiresAt`'e dokunur.
+///
+/// [linkDay] doluysa GÜNE BAĞLI NOT (`dayLinks`, kullanıcı isteği
+/// 2026-11-21: "takvimde not eklenince ay sayfasında da görünmeli"): satır
+/// o günün anahtarı; [linkTimed] ise güne saatle bağlanmış (gün çizelgesinde
+/// o saatte), değilse tüm gün. Taşıma bağı taşır, silme bağı çözer — not
+/// kendisi değişmez. Yeni sealed tür DEĞİL (switch'ler değişmesin; U4 ile
+/// aynı karar).
 class ReminderEntry extends AgendaEntry {
-  const ReminderEntry(this.note, this.at, {this.expiry = false});
+  const ReminderEntry(
+    this.note,
+    this.at, {
+    this.expiry = false,
+    this.linkDay,
+    this.linkTimed = false,
+  });
 
   final Note note;
   final bool expiry;
+  final String? linkDay;
+  final bool linkTimed;
+  bool get isDayLink => linkDay != null;
   @override
   final DateTime at;
   @override
-  bool get allDay => false;
+  bool get allDay => linkDay != null && !linkTimed;
+}
+
+/// Güne bağlı not (gün → notlar; [minutes] gün içi saat, null = tüm gün).
+typedef DayNote = ({Note note, int? minutes});
+
+/// Bağlı notun bir günden ötekine taşınması ([movedToDay] dönüşü).
+class DayLinkMove {
+  const DayLinkMove({
+    required this.noteId,
+    required this.from,
+    required this.to,
+    this.minutes,
+  });
+
+  final String noteId;
+  final String from;
+  final String to;
+  final int? minutes;
 }
 
 /// Rutinin bir günkü oluşu (Faz 53); [log] o günün kaydı (yoksa boş).
@@ -103,6 +137,7 @@ Map<String, List<AgendaEntry>> buildAgenda({
   Iterable<Note> timedNotes = const [],
   Iterable<Routine> routines = const [],
   Map<String, Map<String, RoutineLog>> routineLogs = const {},
+  Map<String, List<DayNote>> dayNotes = const {},
   bool includeCompleted = true,
 }) {
   final out = <String, List<AgendaEntry>>{};
@@ -164,6 +199,30 @@ Map<String, List<AgendaEntry>> buildAgenda({
     add(at, ReminderEntry(note, at, expiry: true));
   }
 
+  // GÜNE BAĞLI NOTLAR: saatliyse o saatte, değilse tüm gün.
+  final fromKey = dayKey(first);
+  final toKey = dayKey(to);
+  for (final e in dayNotes.entries) {
+    if (e.key.compareTo(fromKey) < 0 || e.key.compareTo(toKey) >= 0) continue;
+    final day = parseDayKey(e.key);
+    if (day == null) continue;
+    for (final n in e.value) {
+      if (n.note.deletedAt != null) continue;
+      final m = n.minutes;
+      add(
+        day,
+        ReminderEntry(
+          n.note,
+          m == null
+              ? day
+              : DateTime(day.year, day.month, day.day, m ~/ 60, m % 60),
+          linkDay: e.key,
+          linkTimed: m != null,
+        ),
+      );
+    }
+  }
+
   for (final r in routines) {
     if (r.deletedAt != null) continue;
     for (final d in r.daysBetween(first, to)) {
@@ -183,8 +242,8 @@ Map<String, List<AgendaEntry>> buildAgenda({
 bool canMoveEntry(AgendaEntry entry) => switch (entry) {
   EventOccurrence(:final event) => !event.repeats && !event.fromGoogle,
   TaskEntry(:final task) => !task.completed,
-  ReminderEntry(:final note, :final expiry) =>
-    (expiry ? note.expiresAt : note.reminderAt) != null,
+  ReminderEntry(:final note, :final expiry, :final linkDay) =>
+    linkDay != null || (expiry ? note.expiresAt : note.reminderAt) != null,
   RoutineEntry() => false,
 };
 
@@ -210,6 +269,15 @@ Object? movedToDay(AgendaEntry entry, DateTime target) {
     case TaskEntry(:final task):
       if (task.completed || task.dueDay == day) return null;
       return task.copyWith(due: dayKey(day));
+    case ReminderEntry(:final note, :final linkDay?, :final linkTimed, :final at):
+      final to = dayKey(day);
+      if (to == linkDay) return null;
+      return DayLinkMove(
+        noteId: note.id,
+        from: linkDay,
+        to: to,
+        minutes: linkTimed ? at.hour * 60 + at.minute : null,
+      );
     case ReminderEntry(:final note, :final at, :final expiry):
       final from = expiry ? note.expiresAt : note.reminderAt;
       if (from == null) return null;

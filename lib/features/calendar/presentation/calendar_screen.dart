@@ -68,6 +68,30 @@ final calendarTimedNotesProvider = Provider<List<Note>>((ref) {
   ];
 });
 
+/// Güne bağlı notlar (silinmemiş, gizli klasörde olmayan), saatleriyle.
+final calendarDayNotesProvider = Provider<Map<String, List<DayNote>>>((ref) {
+  final links = ref.watch(dayLinksStreamProvider).value ?? const {};
+  if (links.isEmpty) return const {};
+  final times = ref.watch(dayLinkTimesStreamProvider).value ?? const {};
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final suppressed = ref.watch(suppressedFolderIdsProvider);
+  final byId = {
+    for (final n in notes)
+      if (n.deletedAt == null &&
+          (n.folderId == null || !suppressed.contains(n.folderId)))
+        n.id: n,
+  };
+  final out = <String, List<DayNote>>{};
+  for (final e in links.entries) {
+    final list = <DayNote>[
+      for (final id in e.value)
+        if (byId[id] case final n?) (note: n, minutes: times[e.key]?[id]),
+    ];
+    if (list.isNotEmpty) out[e.key] = list;
+  }
+  return out;
+});
+
 /// Takvim görünümlerinin ortak verisi (ay/hafta ekranı ve gün sayfası aynı
 /// kaynaktan okur).
 final calendarDataProvider = Provider<CalendarData>((ref) {
@@ -81,6 +105,7 @@ final calendarDataProvider = Provider<CalendarData>((ref) {
     routines: ref.watch(routinesStreamProvider).value ?? const [],
     routineLogs: ref.watch(routineLogsStreamProvider).value ?? const {},
     holidays: ref.watch(holidayCalendarProvider),
+    dayNotes: ref.watch(calendarDayNotesProvider),
   );
 });
 
@@ -119,6 +144,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   /// Görünen dönemin içindeki bir gün (ay/hafta/yıl sayfası bundan).
   late DateTime _focus = _selected;
   late CalendarView _view = _storedView();
+
+  /// **GÜN PANELİ** (kullanıcı isteği 2026-11-21, örnek: telefon takvimi):
+  /// ay görünümünde güne dokununca takvim YUKARI daralır, günün kayıtları ve
+  /// notları altta açılır (alttan levha yerine). null = kapalı.
+  DateTime? _panelDay;
+
+  /// Panel açıkken takvim daha da daraltıldı (tutamak yukarı çekildi).
+  bool _panelCompact = false;
 
   // Ajanda görünümü.
   late DateTime _month = monthOf(_selected);
@@ -269,6 +302,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     if (view == _view && focus == null) return;
     unawaited(AppHaptics.tick());
     setState(() {
+      _panelDay = null;
       _lastZoom = direction;
       _origin = _alignmentAt(from);
       _view = view;
@@ -426,6 +460,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           notes.setReminder(moved.id, moved.reminderAt);
           undo = () => notes.setReminder(before.id, before.reminderAt);
         }
+      case DayLinkMove(:final noteId, :final from, :final to, :final minutes):
+        if (calendar == null) return;
+        calendar.moveDayLink(from, to, noteId, minutes);
+        undo = () => calendar.moveDayLink(to, from, noteId, minutes);
       default:
         return;
     }
@@ -440,6 +478,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Future<void> _showDay(DateTime day, CalendarData data) {
+    final wide = MediaQuery.sizeOf(context).width >= _kWideCalendar;
+    if (!wide && _view == CalendarView.month) {
+      setState(() {
+        _selected = startOfDay(day);
+        _panelDay = _selected;
+      });
+      return Future.value();
+    }
     setState(() => _selected = startOfDay(day));
     return showAppSheet<void>(
       context: context,
@@ -760,6 +806,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           CalendarView.week => _weekPage(i, data, now),
           _ => MonthPage(
             month: monthAtIndex(i),
+            compact: _panelDay != null && !wide,
             data: data,
             today: _today,
             selected: _selected,
@@ -837,7 +884,44 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         onPressed: _newEvent,
         child: const Icon(Icons.add),
       ),
-      body: body,
+      body: _withDayPanel(body, data, wide),
+    );
+  }
+
+  /// Ay görünümünde gün paneli açıkken takvim üstte daralır, panel altta.
+  /// Takvimin kabı (ilk çocuk `SizedBox`) iki durumda AYNI: sayfalayıcı
+  /// durumunu ve kaydırma konumunu korur.
+  Widget _withDayPanel(Widget body, CalendarData data, bool wide) {
+    final day = _panelDay;
+    final open = day != null && !wide && _view == CalendarView.month;
+    return LayoutBuilder(
+      builder: (context, c) {
+        final gridH = open
+            ? c.maxHeight * (_panelCompact ? 0.34 : 0.5)
+            : c.maxHeight;
+        return Column(
+          children: [
+            SizedBox(height: gridH, child: body),
+            if (open)
+              Expanded(
+                child: _DayPanel(
+                  key: const ValueKey('calendar-day-panel'),
+                  day: day,
+                  today: _today,
+                  data: data,
+                  compact: _panelCompact,
+                  onCompact: (v) => setState(() => _panelCompact = v),
+                  onClose: () => setState(() {
+                    _panelDay = null;
+                    _panelCompact = false;
+                  }),
+                  onNewEvent: () => unawaited(showEventEditor(context, day: day)),
+                  onNewTask: () => unawaited(showTaskEditor(context, due: day)),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -878,7 +962,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         data.events.isEmpty &&
         data.tasks.isEmpty &&
         data.reminders.isEmpty &&
-        data.timedNotes.isEmpty;
+        data.timedNotes.isEmpty &&
+        data.dayNotes.isEmpty;
     final list = isEmpty
         ? EmptyState(
             icon: Icons.calendar_month_outlined,
@@ -897,6 +982,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             tasks: data.tasks,
             reminders: data.reminders,
             timedNotes: data.timedNotes,
+            dayNotes: data.dayNotes,
             onMore: () => setState(() => _windowDays += _kAgendaWindowDays),
           );
     if (wide) {
@@ -1223,6 +1309,158 @@ Widget _withQuickDelete(AgendaEntry e, Widget tile) => !canQuickDelete(e)
         ],
       );
 
+/// Takvimin altındaki gün paneli: tutamak (yukarı çek = takvimi daha da
+/// daralt, aşağı çek = önce genişlet sonra kapat), gün başlığı, ✕ ve günün
+/// kayıtları + bağlı notları. Geri tuşu önce paneli kapatır ([BackCloses]).
+/// Açılış yalnız boyamada kayar (`SlideTransition`): takvim tek adımda
+/// daralır, kare kare yeniden dizilmez.
+class _DayPanel extends StatefulWidget {
+  const _DayPanel({
+    super.key,
+    required this.day,
+    required this.today,
+    required this.data,
+    required this.compact,
+    required this.onCompact,
+    required this.onClose,
+    required this.onNewEvent,
+    required this.onNewTask,
+  });
+
+  final DateTime day;
+  final DateTime today;
+  final CalendarData data;
+  final bool compact;
+  final ValueChanged<bool> onCompact;
+  final VoidCallback onClose;
+  final VoidCallback onNewEvent;
+  final VoidCallback onNewTask;
+
+  @override
+  State<_DayPanel> createState() => _DayPanelState();
+}
+
+class _DayPanelState extends State<_DayPanel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _enter = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+  late final Animation<Offset> _slide = Tween(
+    begin: const Offset(0, 0.25),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: _enter, curve: Curves.easeOutCubic));
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_enter.forward());
+  }
+
+  @override
+  void dispose() {
+    _enter.dispose();
+    super.dispose();
+  }
+
+  void _drag(DragEndDetails d) {
+    final v = d.primaryVelocity ?? 0;
+    if (v < -150) {
+      widget.onCompact(true);
+    } else if (v > 150) {
+      if (widget.compact) {
+        widget.onCompact(false);
+      } else {
+        widget.onClose();
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return BackCloses(
+      open: true,
+      onClose: widget.onClose,
+      child: SlideTransition(
+        position: _slide,
+        child: Material(
+          color: scheme.surfaceContainerLow,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(AppRadius.l),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onVerticalDragEnd: _drag,
+                onTap: () => widget.onCompact(!widget.compact),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 6),
+                    Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _DayHeader(
+                            day: widget.day,
+                            today: widget.today,
+                          ),
+                        ),
+                        IconButton(
+                          key: const ValueKey('day-panel-compact'),
+                          tooltip: widget.compact
+                              ? l10n.calendarExpandMonth
+                              : l10n.calendarCollapseMonth,
+                          icon: Icon(
+                            widget.compact
+                                ? Icons.expand_more
+                                : Icons.expand_less,
+                          ),
+                          onPressed: () => widget.onCompact(!widget.compact),
+                        ),
+                        IconButton(
+                          key: const ValueKey('day-panel-close'),
+                          tooltip: l10n.calendarDayPanelClose,
+                          icon: const Icon(Icons.close),
+                          onPressed: widget.onClose,
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _DaySheet(
+                  day: widget.day,
+                  today: widget.today,
+                  data: widget.data,
+                  embedded: true,
+                  onNewEvent: widget.onNewEvent,
+                  onNewTask: widget.onNewTask,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _DaySheet extends ConsumerWidget {
   const _DaySheet({
     required this.day,
@@ -1230,6 +1468,7 @@ class _DaySheet extends ConsumerWidget {
     required this.data,
     required this.onNewEvent,
     required this.onNewTask,
+    this.embedded = false,
   });
 
   final DateTime day;
@@ -1238,11 +1477,17 @@ class _DaySheet extends ConsumerWidget {
   final VoidCallback onNewEvent;
   final VoidCallback onNewTask;
 
+  /// Takvimin ALTINDA gömülü panel (ay görünümü, telefon): levha değil,
+  /// içerik tek kaydırılabilir liste; boy sınırı yok.
+  final bool embedded;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final key = dayKey(day);
     final linked = ref.watch(dayLinksStreamProvider).value?[key] ?? const [];
+    final times =
+        ref.watch(dayLinkTimesStreamProvider).value?[key] ?? const <String, int>{};
     // O gün yazılan/düzenlenen notlar (F49.3) — açılır bölüm.
     final written = [
       for (final n in ref.watch(notesStreamProvider).value ?? const <Note>[])
@@ -1254,13 +1499,151 @@ class _DaySheet extends ConsumerWidget {
           n,
     ];
     // CANLI veri (açılıştaki anlık görüntü değil): levhadan silinen ya da
-    // düzenlenen kayıt hemen kaybolsun/güncellensin.
+    // düzenlenen kayıt hemen kaybolsun/güncellensin. Güne bağlı notlar
+    // aşağıda "Bağlı notlar"da (saat + bağı kaldır) — burada tekrar yok.
     final source = ref.watch(calendarDataProvider);
-    final entries =
-        source.range(day, DateTime(day.year, day.month, day.day + 1))[dayKey(
-          day,
-        )] ??
-        const <AgendaEntry>[];
+    final entries = [
+      for (final e
+          in source.range(
+                day,
+                DateTime(day.year, day.month, day.day + 1),
+              )[dayKey(day)] ??
+              const <AgendaEntry>[])
+        if (!(e is ReminderEntry && e.isDayLink)) e,
+    ];
+    final calendar = ref.read(calendarRepositoryProvider);
+    final empty = Padding(
+      padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+      child: Text(
+        l10n.calendarNothingThisDay,
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+      ),
+    );
+    final tiles = [
+      for (final e in entries)
+        _withQuickDelete(e, switch (e) {
+          EventOccurrence occ => _EventTile(occurrence: occ),
+          TaskEntry t => _TaskTile(task: t.task),
+          ReminderEntry r => _ReminderTile(entry: r),
+          RoutineEntry r => _RoutineTile(entry: r),
+        }),
+    ];
+    final holiday = data.holidays.on(day);
+    final holidayChip = holiday == null
+        ? null
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: HolidayChip(
+                holiday: holiday,
+                full: true,
+                height: 22,
+                estimatedLabel: l10n.calendarHolidayEstimated,
+              ),
+            ),
+          );
+    final below = <Widget>[
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: LinkedNotesList(
+          noteIds: linked,
+          times: times,
+          onSetTime: calendar == null
+              ? null
+              : (id, minutes) => calendar.setDayLinkTime(key, id, minutes),
+          onUnlink: (id) => calendar?.unlinkNoteFromDay(key, id),
+        ),
+      ),
+      if (written.isNotEmpty)
+        ExpansionTile(
+          key: const ValueKey('day-written-notes'),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          title: Text(l10n.calendarDayWrittenNotes(written.length)),
+          children: [
+            for (final n in written.take(30))
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.sticky_note_2_outlined),
+                title: Text(
+                  n.displayTitle.trim().isEmpty
+                      ? l10n.untitledNote
+                      : n.displayTitle,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () => unawaited(context.pushNote(noteRoutePath(n.id))),
+              ),
+          ],
+        ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: FilledButton.tonalIcon(
+                onPressed: onNewEvent,
+                icon: const Icon(Icons.event_outlined),
+                label: Text(l10n.calendarNewEvent),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton.tonalIcon(
+                onPressed: onNewTask,
+                icon: const Icon(Icons.add_task),
+                label: Text(l10n.tasksNewTask),
+              ),
+            ),
+          ],
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                key: const ValueKey('day-note'),
+                onPressed: () => unawaited(
+                  openDayNote(context, ref, day, popFirst: !embedded),
+                ),
+                icon: const Icon(Icons.edit_note),
+                label: Text(l10n.calendarDayNote),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                key: const ValueKey('day-link-note'),
+                onPressed: () =>
+                    unawaited(linkExistingNote(context, ref, dayKey: key)),
+                icon: const Icon(Icons.link),
+                label: Text(l10n.calendarLinkExistingNote),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ];
+    if (embedded) {
+      return ListView(
+        key: ValueKey('day-panel-$key'),
+        padding: EdgeInsets.only(
+          bottom: 88 + MediaQuery.paddingOf(context).bottom,
+        ),
+        children: [
+          ?holidayChip,
+          if (tiles.isEmpty)
+            empty
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(children: tiles),
+            ),
+          ...below,
+        ],
+      );
+    }
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -1271,128 +1654,17 @@ class _DaySheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _DayHeader(day: day, today: today),
-            if (data.holidays.on(day) case final h?)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: HolidayChip(
-                    holiday: h,
-                    full: true,
-                    height: 22,
-                    estimatedLabel: l10n.calendarHolidayEstimated,
-                  ),
-                ),
-              ),
+            ?holidayChip,
             Flexible(
-              child: entries.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
-                      child: Text(
-                        l10n.calendarNothingThisDay,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    )
+              child: tiles.isEmpty
+                  ? empty
                   : ListView(
                       shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      children: [
-                        for (final e in entries)
-                          _withQuickDelete(
-                            e,
-                            switch (e) {
-                              EventOccurrence occ =>
-                                _EventTile(occurrence: occ),
-                              TaskEntry t => _TaskTile(task: t.task),
-                              ReminderEntry r => _ReminderTile(entry: r),
-                              RoutineEntry r => _RoutineTile(entry: r),
-                            },
-                          ),
-                      ],
+                      children: tiles,
                     ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: LinkedNotesList(
-                noteIds: linked,
-                onUnlink: (id) => ref
-                    .read(calendarRepositoryProvider)
-                    ?.unlinkNoteFromDay(key, id),
-              ),
-            ),
-            if (written.isNotEmpty)
-              ExpansionTile(
-                key: const ValueKey('day-written-notes'),
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                title: Text(l10n.calendarDayWrittenNotes(written.length)),
-                children: [
-                  for (final n in written.take(30))
-                    ListTile(
-                      dense: true,
-                      leading: const Icon(Icons.sticky_note_2_outlined),
-                      title: Text(
-                        n.displayTitle.trim().isEmpty
-                            ? l10n.untitledNote
-                            : n.displayTitle,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () =>
-                          unawaited(context.pushNote(noteRoutePath(n.id))),
-                    ),
-                ],
-              ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.tonalIcon(
-                      onPressed: onNewEvent,
-                      icon: const Icon(Icons.event_outlined),
-                      label: Text(l10n.calendarNewEvent),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilledButton.tonalIcon(
-                      onPressed: onNewTask,
-                      icon: const Icon(Icons.add_task),
-                      label: Text(l10n.tasksNewTask),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      key: const ValueKey('day-note'),
-                      onPressed: () => unawaited(
-                        openDayNote(context, ref, day, popFirst: true),
-                      ),
-                      icon: const Icon(Icons.edit_note),
-                      label: Text(l10n.calendarDayNote),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      key: const ValueKey('day-link-note'),
-                      onPressed: () => unawaited(
-                        linkExistingNote(context, ref, dayKey: key),
-                      ),
-                      icon: const Icon(Icons.link),
-                      label: Text(l10n.calendarLinkExistingNote),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ...below,
           ],
         ),
       ),
@@ -1412,8 +1684,11 @@ class _AgendaList extends ConsumerWidget {
     required this.tasks,
     required this.reminders,
     this.timedNotes = const [],
+    this.dayNotes = const {},
     required this.onMore,
   });
+
+  final Map<String, List<DayNote>> dayNotes;
 
   final DateTime from;
   final int days;
@@ -1435,6 +1710,7 @@ class _AgendaList extends ConsumerWidget {
       tasks: tasks,
       reminderNotes: reminders,
       timedNotes: timedNotes,
+      dayNotes: dayNotes,
     );
     final holidays = ref.watch(holidayCalendarProvider);
     // Kaydı olmayan tatil günleri de ajandada başlık olarak görünür.
@@ -1779,7 +2055,11 @@ class _ReminderTile extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            entry.expiry ? AppIcons.archive : Icons.alarm,
+            entry.isDayLink
+                ? Icons.sticky_note_2_outlined
+                : entry.expiry
+                ? AppIcons.archive
+                : Icons.alarm,
             size: 18,
             color: scheme.secondary,
           ),
@@ -1797,8 +2077,13 @@ class _ReminderTile extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpace.xxs),
                 Text(
-                  '${DateFormat.Hm().format(entry.at)} · '
-                  '${entry.expiry ? l10n.calendarExpiryTag : l10n.calendarReminderTag}',
+                  entry.isDayLink
+                      ? (entry.linkTimed
+                            ? '${DateFormat.Hm().format(entry.at)} · '
+                                  '${l10n.calendarLinkedNotes}'
+                            : l10n.calendarLinkedNotes)
+                      : '${DateFormat.Hm().format(entry.at)} · '
+                            '${entry.expiry ? l10n.calendarExpiryTag : l10n.calendarReminderTag}',
                   style: text.meta,
                 ),
               ],

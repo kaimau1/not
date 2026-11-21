@@ -3343,5 +3343,15 @@
   "proNoticeRestored": "Your purchases are restored.",
   "proNoticeNothing": "No purchases to restore on this Google Play account.",
   "proIncluded": "Included",
-  "proNotIncluded": "Not included"
+  "proNotIncluded": "Not included",
+  "calendarDayLinkRemoved": "Note removed from this day",
+  "calendarLinkTime": "Time",
+  "calendarLinkAllDay": "All day",
+  "calendarCollapseMonth": "Collapse calendar",
+  "calendarExpandMonth": "Expand calendar",
+  "calendarDayPanelClose": "Close day panel",
+  "driveOnboardTitle": "Keep attachments on every device",
+  "driveOnboardBody": "Your photo, PDF and audio attachments are backed up to the \"Notlar\" folder in your Google Drive, so you see the same attachments on phone, tablet and web.",
+  "driveOnboardConnect": "Connect Drive",
+  "driveOnboardLater": "Later"
 }

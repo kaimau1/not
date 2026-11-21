@@ -29,7 +29,11 @@ class CalendarData {
     this.routines = const [],
     this.routineLogs = const {},
     this.holidays = const HolidayCalendar.off(),
+    this.dayNotes = const {},
   });
+
+  /// Güne bağlı notlar (gün anahtarı → not + saat).
+  final Map<String, List<DayNote>> dayNotes;
 
   /// Resmî ve dinî tatiller (kayıt değil; hücrede ayrı şerit).
   final HolidayCalendar holidays;
@@ -55,6 +59,7 @@ class CalendarData {
         timedNotes: timedNotes,
         routines: routines,
         routineLogs: routineLogs,
+        dayNotes: dayNotes,
       );
 }
 
@@ -133,7 +138,12 @@ class MonthPage extends StatelessWidget {
     required this.onDayLongPress,
     this.onDayDoubleTap,
     this.onEntryMove,
+    this.compact = false,
   });
+
+  /// Gün paneli açık, takvim daraldı: hücrede şerit yerine renkli çizgiler
+  /// (en çok 3) — gün numarası okunur kalır.
+  final bool compact;
 
   /// Güne çift dokunuş: yalnız o günün sayfası açılır.
   final ValueChanged<DateTime>? onDayDoubleTap;
@@ -226,6 +236,7 @@ class MonthPage extends StatelessWidget {
                                 ),
                               ),
                               line: line,
+                              compact: compact,
                               onTap: onDayTap,
                               onLongPress: onDayLongPress,
                               onDoubleTap: onDayDoubleTap,
@@ -257,8 +268,10 @@ class _MonthCell extends StatelessWidget {
     this.holiday,
     this.onDoubleTap,
     this.onEntryMove,
+    this.compact = false,
   });
 
+  final bool compact;
   final void Function(AgendaEntry entry, DateTime day)? onEntryMove;
   final ValueChanged<DateTime>? onDoubleTap;
   final DateTime day;
@@ -313,6 +326,56 @@ class _MonthCell extends StatelessWidget {
       ),
       childWhenDragging: Opacity(opacity: 0.3, child: chip),
       child: chip,
+    );
+  }
+
+  /// Daralmış takvimin hücresi: gün numarası + kayıt başına ince renkli
+  /// çizgi (tatil kırmızı); sığmayanlar sayılmaz, en çok 3 çizgi.
+  Widget _compactCell(
+    BuildContext context,
+    BoxConstraints c, {
+    required bool isToday,
+    required bool off,
+    required Color dayColor,
+    required ColorScheme scheme,
+  }) {
+    final colors = <Color>[
+      if (holiday != null) scheme.error,
+      for (final e in entries) entryColor(e, scheme),
+    ];
+    final bars = math.max(0, math.min(3, ((c.maxHeight - 24) / 5).floor()));
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 20,
+          height: 20,
+          alignment: Alignment.center,
+          decoration: isToday
+              ? BoxDecoration(
+                  color: off ? scheme.error : scheme.primary,
+                  shape: BoxShape.circle,
+                )
+              : null,
+          child: Text(
+            '${day.day}',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: isToday || off ? FontWeight.w700 : FontWeight.w500,
+              color: dayColor,
+            ),
+          ),
+        ),
+        for (final color in colors.take(bars))
+          Container(
+            height: 3,
+            margin: const EdgeInsets.fromLTRB(4, 2, 4, 0),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+          ),
+      ],
     );
   }
 
@@ -412,6 +475,16 @@ class _MonthCell extends StatelessWidget {
                 // KW-9 (web keşfi 2026-11-18): GENİŞ hücrede (≥ 140 dp,
                 // masaüstü) yazı büyür; dar hücre kuralı aynen. P78 KT-23:
                 // dikey tabletin UZUN hücresi (≥ 72 x 100 dp) de geniş sayılır.
+                if (compact) {
+                  return _compactCell(
+                    context,
+                    c,
+                    isToday: isToday,
+                    off: off,
+                    dayColor: dayColor,
+                    scheme: scheme,
+                  );
+                }
                 final wide = monthCellRoomy(c.maxWidth, c.maxHeight);
                 final avail = c.maxHeight - (wide ? 28 : 26);
                 final oneLine = wide
@@ -577,8 +650,13 @@ class _MonthChip extends StatelessWidget {
     final google =
         entry is EventOccurrence && (entry as EventOccurrence).event.fromGoogle;
     final tone = dim ? monthChipDimTone(scheme) : null;
+    final e = entry;
+    // Güne SAATLE bağlı not şeritte saatiyle ("09:00 Toplantı notu").
+    final title = e is ReminderEntry && e.isDayLink && e.linkTimed
+        ? '${formatHm(e.at.hour, e.at.minute)} ${entryTitle(e, context.l10n)}'
+        : entryTitle(e, context.l10n);
     return _chipBox(
-      text: entryTitle(entry, context.l10n),
+      text: title,
       height: height,
       lines: lines,
       fontSize: fontSize,

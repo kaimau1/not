@@ -15,6 +15,7 @@ import '../data/calendar_repository.dart';
 import '../data/google_calendar_sync.dart';
 import '../../notes/presentation/note_target_picker.dart';
 import '../domain/calendar_event.dart';
+import '../domain/day_key.dart';
 import 'event_editor.dart';
 import 'google_failure.dart';
 
@@ -234,10 +235,64 @@ Future<void> linkExistingNote(
 
 /// Etkinliğe bağlı notların satırları (dokununca not açılır).
 class LinkedNotesList extends ConsumerWidget {
-  const LinkedNotesList({super.key, required this.noteIds, this.onUnlink});
+  const LinkedNotesList({
+    super.key,
+    required this.noteIds,
+    this.onUnlink,
+    this.times = const {},
+    this.onSetTime,
+  });
 
   final List<String> noteIds;
   final ValueChanged<String>? onUnlink;
+
+  /// Güne SAATLE bağlı notlar (not → gün başından dakika).
+  final Map<String, int> times;
+
+  /// Saat seç / tüm güne al (null dakika = tüm gün); null = düğme yok.
+  final void Function(String noteId, int? minutes)? onSetTime;
+
+  Future<void> _pickTime(BuildContext context, String id) async {
+    final set = onSetTime;
+    if (set == null) return;
+    final l10n = context.l10n;
+    final current = times[id];
+    if (current != null) {
+      final choice = await showModalBottomSheet<String>(
+        context: context,
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.schedule),
+                title: Text(l10n.calendarLinkTime),
+                onTap: () => Navigator.pop(ctx, 'time'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.wb_sunny_outlined),
+                title: Text(l10n.calendarLinkAllDay),
+                onTap: () => Navigator.pop(ctx, 'allday'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (choice == null || !context.mounted) return;
+      if (choice == 'allday') {
+        set(id, null);
+        return;
+      }
+    }
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: current == null
+          ? const TimeOfDay(hour: 9, minute: 0)
+          : TimeOfDay(hour: current ~/ 60, minute: current % 60),
+    );
+    if (picked == null) return;
+    set(id, picked.hour * 60 + picked.minute);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -265,12 +320,29 @@ class LinkedNotesList extends ConsumerWidget {
                     : note.displayTitle,
                 overflow: TextOverflow.ellipsis,
               ),
-              trailing: onUnlink == null
+              trailing: onUnlink == null && onSetTime == null
                   ? null
-                  : IconButton(
-                      tooltip: l10n.calendarUnlinkNote,
-                      icon: const Icon(Icons.link_off),
-                      onPressed: () => onUnlink!(id),
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (onSetTime != null)
+                          TextButton.icon(
+                            key: ValueKey('linked-note-time-$id'),
+                            onPressed: () => unawaited(_pickTime(context, id)),
+                            icon: const Icon(Icons.schedule, size: 18),
+                            label: Text(
+                              times[id] == null
+                                  ? l10n.calendarLinkTime
+                                  : formatHm(times[id]! ~/ 60, times[id]! % 60),
+                            ),
+                          ),
+                        if (onUnlink != null)
+                          IconButton(
+                            tooltip: l10n.calendarUnlinkNote,
+                            icon: const Icon(Icons.link_off),
+                            onPressed: () => onUnlink!(id),
+                          ),
+                      ],
                     ),
               onTap: () => unawaited(context.pushNote(noteRoutePath(id))),
             ),

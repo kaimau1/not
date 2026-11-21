@@ -104,6 +104,22 @@ Future<void> quickDeleteEntry(
           }
         },
       );
+    case ReminderEntry(:final note, :final linkDay?, :final linkTimed, :final at):
+      // Güne bağlı not: not silinmez, yalnız bağ çözülür.
+      if (calendar == null) return;
+      final minutes = linkTimed ? at.hour * 60 + at.minute : null;
+      calendar.unlinkNoteFromDay(linkDay, note.id);
+      showUndoSnackBar(
+        context,
+        message: l10n.calendarDayLinkRemoved,
+        undoLabel: l10n.undo,
+        onUndo: () {
+          calendar.linkNoteToDay(linkDay, note.id);
+          if (minutes != null) {
+            calendar.setDayLinkTime(linkDay, note.id, minutes);
+          }
+        },
+      );
     case ReminderEntry(:final note, expiry: true):
       final notes = ref.read(notesRepositoryProvider);
       if (notes == null) return;

@@ -404,6 +404,40 @@ void main() {
       expect(find.text('Görevler'), findsOneWidget);
     });
 
+    // Kullanıcı isteği 2026-11-21 (örnek: telefon takvimi): güne dokununca
+    // takvim yukarı daralır, gün paneli altta; tutamakla daha da daralır,
+    // ✕ ile kapanır.
+    testWidgets('telefonda güne dokununca takvim daralır, gün paneli altta', (
+      tester,
+    ) async {
+      await usePrefs({});
+      phone(tester);
+      await tester.pumpWidget(app(events: [meeting]));
+      await tester.pumpAndSettle();
+      final full = tester.getSize(find.byType(MonthPage)).height;
+      await tester.tap(
+        find.descendant(of: find.byType(MonthPage), matching: find.text('18')),
+      );
+      // Hücrede çift dokunuş da var: tek dokunuş bekleme süresinden sonra.
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('calendar-day-panel')), findsOneWidget);
+      final half = tester.getSize(find.byType(MonthPage)).height;
+      expect(half, lessThan(full * 0.6));
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.byKey(const ValueKey('day-panel-compact')));
+      await tester.pumpAndSettle();
+      expect(
+        tester.getSize(find.byType(MonthPage)).height,
+        lessThan(half),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.byKey(const ValueKey('day-panel-close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('calendar-day-panel')), findsNothing);
+      expect(tester.getSize(find.byType(MonthPage)).height, full);
+    });
+
     // Kullanıcı isteği 2026-11-07: telefonda da ileri/geri; güne çift
     // dokununca yalnız o günün sayfası.
     testWidgets('telefonda ileri/geri ay; çift dokunuş gün sayfası', (

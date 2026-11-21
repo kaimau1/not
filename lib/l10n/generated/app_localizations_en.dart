@@ -9324,4 +9324,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proNotIncluded => 'Not included';
+
+  @override
+  String get calendarDayLinkRemoved => 'Note removed from this day';
+
+  @override
+  String get calendarLinkTime => 'Time';
+
+  @override
+  String get calendarLinkAllDay => 'All day';
+
+  @override
+  String get calendarCollapseMonth => 'Collapse calendar';
+
+  @override
+  String get calendarExpandMonth => 'Expand calendar';
+
+  @override
+  String get calendarDayPanelClose => 'Close day panel';
+
+  @override
+  String get driveOnboardTitle => 'Keep attachments on every device';
+
+  @override
+  String get driveOnboardBody =>
+      'Your photo, PDF and audio attachments are backed up to the \"Notlar\" folder in your Google Drive, so you see the same attachments on phone, tablet and web.';
+
+  @override
+  String get driveOnboardConnect => 'Connect Drive';
+
+  @override
+  String get driveOnboardLater => 'Later';
 }

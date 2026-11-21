@@ -9312,4 +9312,35 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get proNotIncluded => 'Yok';
+
+  @override
+  String get calendarDayLinkRemoved => 'Not bu günden çıkarıldı';
+
+  @override
+  String get calendarLinkTime => 'Saat';
+
+  @override
+  String get calendarLinkAllDay => 'Tüm gün';
+
+  @override
+  String get calendarCollapseMonth => 'Takvimi daralt';
+
+  @override
+  String get calendarExpandMonth => 'Takvimi genişlet';
+
+  @override
+  String get calendarDayPanelClose => 'Gün panelini kapat';
+
+  @override
+  String get driveOnboardTitle => 'Eklerin her cihazda olsun';
+
+  @override
+  String get driveOnboardBody =>
+      'Fotoğraf, PDF ve ses eklerin Google Drive\'ındaki \"Notlar\" klasörüne yedeklenir; telefon, tablet ve web\'de aynı ekleri görürsün.';
+
+  @override
+  String get driveOnboardConnect => 'Drive\'ı bağla';
+
+  @override
+  String get driveOnboardLater => 'Sonra';
 }

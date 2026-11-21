@@ -4199,5 +4199,15 @@
   "proNoticeRestored": "Satın alımların geri yüklendi.",
   "proNoticeNothing": "Bu Google Play hesabında geri yüklenecek satın alma yok.",
   "proIncluded": "Var",
-  "proNotIncluded": "Yok"
+  "proNotIncluded": "Yok",
+  "calendarDayLinkRemoved": "Not bu günden çıkarıldı",
+  "calendarLinkTime": "Saat",
+  "calendarLinkAllDay": "Tüm gün",
+  "calendarCollapseMonth": "Takvimi daralt",
+  "calendarExpandMonth": "Takvimi genişlet",
+  "calendarDayPanelClose": "Gün panelini kapat",
+  "driveOnboardTitle": "Eklerin her cihazda olsun",
+  "driveOnboardBody": "Fotoğraf, PDF ve ses eklerin Google Drive'ındaki \"Notlar\" klasörüne yedeklenir; telefon, tablet ve web'de aynı ekleri görürsün.",
+  "driveOnboardConnect": "Drive'ı bağla",
+  "driveOnboardLater": "Sonra"
 }

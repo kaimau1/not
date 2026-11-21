@@ -16513,6 +16513,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yok'**
   String get proNotIncluded;
+
+  /// No description provided for @calendarDayLinkRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not bu günden çıkarıldı'**
+  String get calendarDayLinkRemoved;
+
+  /// No description provided for @calendarLinkTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Saat'**
+  String get calendarLinkTime;
+
+  /// No description provided for @calendarLinkAllDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm gün'**
+  String get calendarLinkAllDay;
+
+  /// No description provided for @calendarCollapseMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvimi daralt'**
+  String get calendarCollapseMonth;
+
+  /// No description provided for @calendarExpandMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvimi genişlet'**
+  String get calendarExpandMonth;
+
+  /// No description provided for @calendarDayPanelClose.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün panelini kapat'**
+  String get calendarDayPanelClose;
+
+  /// No description provided for @driveOnboardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklerin her cihazda olsun'**
+  String get driveOnboardTitle;
+
+  /// No description provided for @driveOnboardBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraf, PDF ve ses eklerin Google Drive\'ındaki \"Notlar\" klasörüne yedeklenir; telefon, tablet ve web\'de aynı ekleri görürsün.'**
+  String get driveOnboardBody;
+
+  /// No description provided for @driveOnboardConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive\'ı bağla'**
+  String get driveOnboardConnect;
+
+  /// No description provided for @driveOnboardLater.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonra'**
+  String get driveOnboardLater;
 }
 
 class _AppLocalizationsDelegate

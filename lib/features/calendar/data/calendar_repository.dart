@@ -69,6 +69,14 @@ final dayLinksStreamProvider = StreamProvider<Map<String, List<String>>>((ref) {
   return repo.watchDayLinks();
 });
 
+/// Gün → (not → dakika): saatle bağlanmış notlar.
+final dayLinkTimesStreamProvider =
+    StreamProvider<Map<String, Map<String, int>>>((ref) {
+      final repo = ref.watch(calendarRepositoryProvider);
+      if (repo == null) return const Stream.empty();
+      return repo.watchDayLinkTimes();
+    });
+
 /// Takvim + görev CRUD'u. Notlar ve klasörler gibi YANGIN-VE-UNUT yazar:
 /// yerel önbellek anında güncellenir, senkron arka planda (çevrimdışı çalışır).
 class CalendarRepository {
@@ -331,8 +339,47 @@ class CalendarRepository {
   void unlinkNoteFromDay(String day, String noteId) => unawaited(
     _dayLinks.doc(day).set({
       'noteIds': FieldValue.arrayRemove([noteId]),
+      'noteTimes': {noteId: FieldValue.delete()},
     }, SetOptions(merge: true)),
   );
+
+  /// Gün bağının SAATİ (gün başından dakika; null = tüm gün). Kullanıcı
+  /// isteği 2026-11-21: "takvimde gün içinde saate de eklenmeli". Ayrı alan
+  /// (`noteTimes`): `noteIds` dizisi ve eski istemciler değişmez.
+  void setDayLinkTime(String day, String noteId, int? minutes) => unawaited(
+    _dayLinks.doc(day).set({
+      'noteTimes': {noteId: minutes ?? FieldValue.delete()},
+    }, SetOptions(merge: true)),
+  );
+
+  /// Bağı başka güne taşır (saat korunur).
+  void moveDayLink(String from, String to, String noteId, int? minutes) {
+    final batch = _firestore.batch()
+      ..set(_dayLinks.doc(from), {
+        'noteIds': FieldValue.arrayRemove([noteId]),
+        'noteTimes': {noteId: FieldValue.delete()},
+      }, SetOptions(merge: true))
+      ..set(_dayLinks.doc(to), {
+        'noteIds': FieldValue.arrayUnion([noteId]),
+        if (minutes != null) 'noteTimes': {noteId: minutes},
+      }, SetOptions(merge: true));
+    unawaited(batch.commit());
+  }
+
+  /// Gün → (not → dakika) saatli bağlar.
+  Stream<Map<String, Map<String, int>>> watchDayLinkTimes() =>
+      _dayLinks.snapshots().map(
+        (s) => {
+          for (final d in s.docs)
+            if (parseDayKey(d.id) != null &&
+                d.data()['noteTimes'] is Map)
+              d.id: {
+                for (final e in (d.data()['noteTimes'] as Map).entries)
+                  if (e.key is String && e.value is num)
+                    e.key as String: (e.value as num).toInt(),
+              },
+        },
+      );
 
   // ------------------------------------------------- Google etkinlik bağı
 
