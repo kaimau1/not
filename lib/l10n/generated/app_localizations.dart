@@ -16873,6 +16873,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Özeti nota ekle'**
   String get transcriptTakeawaysInsert;
+
+  /// No description provided for @briefingDailyTab.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük'**
+  String get briefingDailyTab;
+
+  /// No description provided for @briefingWeeklyTab.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık'**
+  String get briefingWeeklyTab;
+
+  /// No description provided for @briefingWeeklyLoading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık özet hazırlanıyor…'**
+  String get briefingWeeklyLoading;
+
+  /// No description provided for @briefingWeeklyEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hafta için özetlenecek kayıt yok'**
+  String get briefingWeeklyEmpty;
 }
 
 class _AppLocalizationsDelegate

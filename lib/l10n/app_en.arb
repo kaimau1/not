@@ -3408,5 +3408,9 @@
   "transcriptTakeawaysActions": "Action items",
   "transcriptTakeawaysRemind": "Want a reminder?",
   "transcriptTakeawaysAddTask": "Add task",
-  "transcriptTakeawaysInsert": "Add summary to note"
+  "transcriptTakeawaysInsert": "Add summary to note",
+  "briefingDailyTab": "Daily",
+  "briefingWeeklyTab": "Weekly",
+  "briefingWeeklyLoading": "Preparing weekly summary…",
+  "briefingWeeklyEmpty": "Nothing to summarize this week"
 }

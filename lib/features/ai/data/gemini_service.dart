@@ -1374,6 +1374,23 @@ class GeminiService {
     },
   ]).then(stripMarkdown);
 
+  /// **HAFTALIK ÖZET** (PLAN §1.6): son 7 günün notları ve tamamlanan
+  /// görevleri + gelecek 7 günün planından samimi, kısa haftalık geri bakış.
+  Future<String> composeWeeklyBriefing(String rawData) => _generate([
+    {
+      'text':
+          'Aşağıdaki ham verilerden kısa, samimi bir Türkçe "haftalık özet" '
+          'yaz. Yapı: 1-2 cümlelik genel bakış; "Bu hafta öne çıkanlar" '
+          'başlığı altında son 7 günde eklenen notlar ve tamamlanan görevler; '
+          '"Açık kalanlar" başlığı altında gecikmiş veya bekleyen önemli '
+          'görevler; "Önümüzdeki hafta" başlığı altında gelecek 7 günün '
+          'etkinlik ve hatırlatıcıları; kapanışta yeni hafta için tek '
+          'cümlelik odak önerisi. Veri olmayan bölümü atla, uydurma. '
+          'Markdown kullanma: yıldız, kalın işareti veya # koyma, düz metin '
+          'yaz.\n\n$rawData',
+    },
+  ]).then(stripMarkdown);
+
   /// Kısa işlere (etiket) giden not metninin üst sınırı. Gemma'nın 16K
   /// TPM'sinde dakikada birkaç not sığsın (~1K token); konu notun başından
   /// anlaşılır. Sınırı aşan girdi zaten Gemma'yı atlar (`_shortInputChars`).

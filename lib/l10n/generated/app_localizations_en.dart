@@ -9524,4 +9524,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transcriptTakeawaysInsert => 'Add summary to note';
+
+  @override
+  String get briefingDailyTab => 'Daily';
+
+  @override
+  String get briefingWeeklyTab => 'Weekly';
+
+  @override
+  String get briefingWeeklyLoading => 'Preparing weekly summary…';
+
+  @override
+  String get briefingWeeklyEmpty => 'Nothing to summarize this week';
 }

@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Günün ve haftanın özeti tek ekranda (Günlük | Haftalık brifing) (21 Kasım, P96, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: AI merkezi → **Günlük brifing** → üstteki **Günlük | Haftalık** çipleriyle geçiş yap → **Haftalık** seçilince son 7 günün notları, tamamlanan/açık görevleri ve gelecek 7 günün takvimi özetlenip ayrı önbelleğe alınıyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Pro AI A2: Kayıttan not — dökümden tek akışta Özet, Yapılacaklar ve Hatırlatayım mı? (21 Kasım, P95, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: ses veya video kaydının döküm (transkript) ekranında üstteki **Özet ve görevler** çipine dokun → tek levhada **Özet**, **Yapılacaklar** ve tarihli ifadeler için **Hatırlatayım mı?** kartı geliyor mu; **Görev ekle** görev düzenleyiciyi başlık ve tarihle açıyor, **Özeti nota ekle** metni nota ekliyor mu.
   Yanlışsa: madde numarasını yaz.

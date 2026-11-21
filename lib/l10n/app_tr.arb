@@ -4264,5 +4264,9 @@
   "transcriptTakeawaysActions": "Yapılacaklar",
   "transcriptTakeawaysRemind": "Hatırlatayım mı?",
   "transcriptTakeawaysAddTask": "Görev ekle",
-  "transcriptTakeawaysInsert": "Özeti nota ekle"
+  "transcriptTakeawaysInsert": "Özeti nota ekle",
+  "briefingDailyTab": "Günlük",
+  "briefingWeeklyTab": "Haftalık",
+  "briefingWeeklyLoading": "Haftalık özet hazırlanıyor…",
+  "briefingWeeklyEmpty": "Bu hafta için özetlenecek kayıt yok"
 }

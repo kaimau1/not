@@ -9512,4 +9512,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get transcriptTakeawaysInsert => 'Özeti nota ekle';
+
+  @override
+  String get briefingDailyTab => 'Günlük';
+
+  @override
+  String get briefingWeeklyTab => 'Haftalık';
+
+  @override
+  String get briefingWeeklyLoading => 'Haftalık özet hazırlanıyor…';
+
+  @override
+  String get briefingWeeklyEmpty => 'Bu hafta için özetlenecek kayıt yok';
 }
