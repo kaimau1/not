@@ -504,6 +504,8 @@ extension _EditorActions on _NoteEditorScreenState {
         await _toggleLock();
       case 'archive':
         _toggleArchive();
+      case 'spellCheck':
+        await _reviewSpelling();
       case 'clear':
         await _clearContent();
       case 'removeList':
@@ -539,6 +541,51 @@ extension _EditorActions on _NoteEditorScreenState {
       case 'delete':
         _delete();
     }
+  }
+
+  /// Y-5: bütün notun toplu yazım denetimi — tüm seçilen düzeltmeler tek
+  /// Geri Al adımında uygulanır.
+  Future<void> _reviewSpelling() async {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    _flushPending(_titleController);
+    _flushPending(_bodyController);
+    await AutoSpell.load();
+    if (!mounted) return;
+    final current = _note ?? note;
+    final findings = scanNoteSpellFindings(
+      title: _titleController.logicalText,
+      body: _bodyController.logicalText,
+      items: current.items,
+      memory: AutoSpell.memory,
+      noteKeep: AutoSpell.noteKeep,
+      attachmentNames: _bodyController.attachmentNames,
+    );
+    final chosen = await showSpellReviewSheet(context, findings: findings);
+    if (chosen.isEmpty || !mounted) return;
+    final applied = applySpellReview(
+      title: _titleController.logicalText,
+      body: _bodyController.logicalText,
+      items: current.items,
+      findings: findings,
+      replacements: chosen,
+    );
+    if (applied.count == 0) return;
+    if (applied.title != _titleController.logicalText) {
+      _titleController.setLogical(applied.title, applied.title.length);
+    }
+    if (applied.body != _bodyController.logicalText) {
+      _bodyController.setLogical(applied.body, applied.body.length);
+    }
+    _mutate(
+      (n) => n.copyWith(
+        title: applied.title,
+        body: applied.body,
+        items: applied.items,
+      ),
+      immediate: true,
+    );
+    _showUndoSnack(context.l10n.spellReviewFixed(applied.count));
   }
 
   /// Notu çoğaltır (ana ekrandaki kart menüsüyle aynı iş — editörün ⋮

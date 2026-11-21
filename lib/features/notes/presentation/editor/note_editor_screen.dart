@@ -102,7 +102,9 @@ import '../../../calendar/data/task_note_sync.dart';
 import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
 import '../../../calendar/presentation/line_task_chip.dart';
+import '../../domain/spell_review.dart';
 import 'auto_spell.dart';
+import 'spell_review_sheet.dart';
 import 'spell_settings_sheet.dart';
 import 'spell_underline.dart';
 import 'note_package.dart';
@@ -2774,7 +2776,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             AutoSpell.toggle();
             unawaited(_seedSpell());
           },
-          onSpellSettings: () => showSpellSettings(context),
+          onSpellSettings: () => showSpellSettings(
+            context,
+            onReviewNote: _readOnly || note.type.isPageNoteType
+                ? null
+                : () => unawaited(_reviewSpelling()),
+          ),
           onPackage: () => _packageFromQuickRow(note),
           packageHint:
               note.type == NoteType.text && suggestsPackage(note.body),

@@ -8220,7 +8220,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spellLearnSubtitle =>
-      'Learns the words you correct yourself or pick from keyboard suggestions (Turkish, English, Chinese). Kept only on this device.';
+      'Learns the words you correct yourself or pick from keyboard suggestions (Turkish, English, Chinese). Your personal dictionary syncs with your account.';
 
   @override
   String spellLearnedCount(int count) {
@@ -8259,6 +8259,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spellKeepInNote => 'Ignore in this note';
+
+  @override
+  String get spellReviewAction => 'Check spelling';
+
+  @override
+  String get spellReviewNoteOption => 'Check this note';
+
+  @override
+  String get spellReviewClean => 'No spelling issues found';
+
+  @override
+  String get spellReviewCleanHint => 'All words in this note look good.';
+
+  @override
+  String spellReviewFixAll(int count) {
+    return 'Fix all ($count)';
+  }
+
+  @override
+  String spellReviewApply(int count) {
+    return 'Apply ($count)';
+  }
+
+  @override
+  String get spellReviewSkip => 'Skip';
+
+  @override
+  String get spellReviewHintBadge => 'Context hint';
+
+  @override
+  String spellReviewFixed(int count) {
+    return '$count spelling fixes applied';
+  }
 
   @override
   String get lineTaskRetime => 'Change time';

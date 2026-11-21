@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 21 November 2026 {#2026-11-21}
+- **Batch spell check and dictionary sync:** **Check spelling** in the note ⋮ menu (or **Check this note** when long-pressing the spell button) lists all likely mistakes across the note with context; fix individually, add to dictionary, or tap **Fix all** to correct sure mistakes in a single Undo step. Your personal dictionary and learned fixes now sync across your devices, and spell lookup uses a pre-indexed dictionary for sub-millisecond checks.
 - **Redesigned note and toolbar menus:** collapsed drawers in the note ⋮ menu are gone — all sections (Organize · Tools · Copy · Protect & storage) now open directly inside a single card, ordered by frequency with zero-gap balanced tiles. The editor bottom-bar ⋯ popup is now a compact 2-column tool palette with Undo and Redo paired side by side, and popup menus app-wide share the hairline-bordered card style.
 - **Smoother keyboard closing in quick add:** closing the keyboard now uses the same crisp curve as opening, dismissing the sheet freezes lift so the slide transition doesn't fight the keyboard, and the home screen stays shielded until the keyboard finishes closing.
 - **Quick add listens on open again:** when both "Keyboard on open" and "Listen on open" were enabled, focusing the field cancelled auto-listening; voice input now starts reliably once the sheet opens.

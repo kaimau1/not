@@ -152,6 +152,12 @@ ActionMenu noteMenuModel(
               Icons.format_clear_rounded,
             ),
           ],
+          if (!readOnly && !note.type.isPageNoteType)
+            MenuAction(
+              'spellCheck',
+              l10n.spellReviewAction,
+              Icons.spellcheck_rounded,
+            ),
           MenuAction('clear', l10n.clearNote, Icons.backspace_outlined),
         ],
       ]),

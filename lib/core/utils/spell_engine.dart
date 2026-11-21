@@ -305,23 +305,37 @@ class SpellEngine {
       if (!changesTooMuch(w, c.$1)) c.$1,
   ];
 
-  /// Eşik içindeki adaylar, yakından uzağa.
+  static final Map<String, List<String>> _nearFirst = () {
+    final keys = _keyPos.keys.toList();
+    return {
+      for (final ch in keys)
+        ch: [
+          for (final o in keys)
+            if (o == ch || keyCost(ch, o) <= 0.5) o,
+        ],
+    };
+  }();
+
+  /// Eşik içindeki adaylar, yakından uzağa (Y-6 ön diziniyle: yalnız komşu
+  /// ilk harf + uzunluk kovaları taranır).
   static List<(String, double)> _near(String w, SpellMemory m) {
     final limit = limitFor(w.length);
     if (limit <= 0) return const [];
     final out = <(String, double)>[];
     final first = w[0];
+    final heads = _nearFirst[first] ?? [first];
     for (var len = w.length - 2; len <= w.length + 2; len++) {
-      for (final cand in m.bucket(len)) {
-        if (cand == w) continue;
-        // TÜRKÇE EKLER: aday yazılanın kökü ya da uzantısıysa ("kalemi" ↔
-        // "kalem") ikisi de büyük olasılıkla gerçek kelime.
-        if (cand.startsWith(w) || w.startsWith(cand)) continue;
-        if (cand[0] != first && keyCost(first, cand[0]) > 0.5) continue;
-        if (m.frequency(cand) < 3) continue;
-        final cost = distance(w, cand, limit: limit);
-        if (cost > limit) continue;
-        out.add((cand, cost));
+      if (len < 2) continue;
+      for (final ch in heads) {
+        for (final cand in m.bucketByFirst(len, ch)) {
+          if (cand == w) continue;
+          // TÜRKÇE EKLER: aday yazılanın kökü ya da uzantısıysa ("kalemi" ↔
+          // "kalem") ikisi de büyük olasılıkla gerçek kelime.
+          if (cand.startsWith(w) || w.startsWith(cand)) continue;
+          final cost = distance(w, cand, limit: limit);
+          if (cost > limit) continue;
+          out.add((cand, cost));
+        }
       }
     }
     return out..sort((a, b) => a.$2.compareTo(b.$2));

@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Yazım denetimi toplu denetim + kişisel sözlük eşitleme (21 Kasım, P86, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) birkaç yazım yanlışı + "bende" içeren notta ⋮ → **Yazımı denetle** (veya yazım düğmesine basılı tutup **Bu notu toplu denetle**) → bütün bulgular bağlamıyla listeleniyor mu, "bende"de "Bağlam ipucu" rozeti var mı; (2) **Tümünü düzelt (N)** → yalnız kesin hatalar tek adımda düzelip "bende"ye dokunmuyor mu, alttaki **Geri al** hepsini tek hamlede geri alıyor mu; (3) bir kelimeye **Sözlüğe ekle** → aynı kelimenin nottaki diğer tekrarları da listeden kalkıyor mu; (4) iki cihazda aynı hesapla giriş → birinde sözlüğe eklenen kelime öbüründe uygulamayı açıp kapatınca eşitleniyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Açık/boşluksuz not menüsü + 2 sütunlu alt çubuk ⋯ menüsü + Hızlı ekle klavye kapanışı (21 Kasım 3. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) kart ⋮ ve not ⋮ menülerini açık + koyu temada aç → kapalı çekmece yok, 4 grup (Düzenle · Araçlar · Kopyala · Koruma ve depolama) kullanım sırasıyla tek kartta, 1–2 öğeli satırlar yatay tam genişlikte ve boş hücre yok; (2) bir notta alttaki ⋯ düğmesine dokun → uzun dikey liste yerine çubuğun hemen üstünde 2 sütunlu kompakt araç paleti açılıyor mu, Geri al / Geri getir yan yana mı, Düzenle çalışıyor mu; (3) üst hızlı satır ⋯ ve sıralama ⋮ açılır menüleri ince çerçeveli kart görünümünde mi; (4) ⚡ Hızlı ekle'de klavye kapanırken kasma veya sıçrama kaldı mı.
   Yanlışsa: ekran görüntüsü veya kısa kayıt ile madde numarasını yaz.

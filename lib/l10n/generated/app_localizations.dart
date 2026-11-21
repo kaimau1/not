@@ -14657,7 +14657,7 @@ abstract class AppLocalizations {
   /// No description provided for @spellLearnSubtitle.
   ///
   /// In tr, this message translates to:
-  /// **'Kendi düzelttiğin ve klavye önerisinden seçtiğin kelimeleri öğrenir (Türkçe, İngilizce, Çince). Yalnız bu cihazda tutulur.'**
+  /// **'Kendi düzelttiğin ve klavye önerisinden seçtiğin kelimeleri öğrenir (Türkçe, İngilizce, Çince). Kişisel sözlüğün hesabınla eşitlenir.'**
   String get spellLearnSubtitle;
 
   /// No description provided for @spellLearnedCount.
@@ -14725,6 +14725,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu notta dokunma'**
   String get spellKeepInNote;
+
+  /// No description provided for @spellReviewAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazımı denetle'**
+  String get spellReviewAction;
+
+  /// No description provided for @spellReviewNoteOption.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notu toplu denetle'**
+  String get spellReviewNoteOption;
+
+  /// No description provided for @spellReviewClean.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım hatası bulunamadı'**
+  String get spellReviewClean;
+
+  /// No description provided for @spellReviewCleanHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu nottaki kelimeler sözlükle uyumlu görünüyor.'**
+  String get spellReviewCleanHint;
+
+  /// No description provided for @spellReviewFixAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü düzelt ({count})'**
+  String spellReviewFixAll(int count);
+
+  /// No description provided for @spellReviewApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygula ({count})'**
+  String spellReviewApply(int count);
+
+  /// No description provided for @spellReviewSkip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Atla'**
+  String get spellReviewSkip;
+
+  /// No description provided for @spellReviewHintBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlam ipucu'**
+  String get spellReviewHintBadge;
+
+  /// No description provided for @spellReviewFixed.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} yazım düzeltildi'**
+  String spellReviewFixed(int count);
 
   /// No description provided for @lineTaskRetime.
   ///
