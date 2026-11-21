@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Takvim: bağlı notlar ay/şeritte, saatli bağ, daralan takvim + gün paneli; not paylaşımı, kenar jesti, gömülü ek, Drive levhası (21 Kasım 4. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) takvimde bir güne not bağla → ay hücresinde ve ana ekran şeridinde notun adı görünüyor mu; gün panelinde notun yanındaki **Saat** ile 09:00 seç → hafta/gün çizelgesinde 09:00'da duruyor mu; (2) ay görünümünde güne dokun → takvim üstte daralıp gün altta açılıyor mu, tutamağı yukarı/aşağı çekince daralıp kapanıyor mu, kasma var mı; (3) PDF'e kalemle yaz → paylaş → **PDF** ve **Ekler** yazılı PDF gönderiyor mu; balonlu kipe alınmış görseli **Ekler** ile paylaş → yazılı resim mi gidiyor; (4) not içinde sol kenardan sağa çek → not kapanmıyor mu; (5) gömülü eke dokun → **Tam ekran**da kalemle yaz → kapat-aç → yazı duruyor mu; ek gömerken daireyle kelimenin ilk harfini kaçır → kelime bölünmeden mi gömülüyor, tek kelimeye dokununca seçiliyor mu; (6) görseli tam ekran aç → çubukta Balon ekle + T + Çiz var mı; (7) yeni Google hesabıyla ilk giriş → "Drive'ı bağla" levhası bir kez çıkıyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Akıllı liste: editörde reyona göre sırala, Alınanları tamamla, miktar toplama ve 6 yeni tür (21 Kasım, P88, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) bir market listesinde birkaç maddeyi işaretle → ⋮ → **Alınanları tamamla** → işaretliler kalkıp kalanlar duruyor mu, **Geri al** geri getiriyor mu; (2) karışık bir listede ⋮ → **Sırala** → **Reyona / gruba göre** → alt başlık eklemeden manav/fırın/kasap sırasına diziliyor mu; (3) listede `Süt (2)` varken ⚡ Hızlı ekle ile `1 süt` ekle → `Süt (3)` oluyor mu, yeni meyve eklenince mevcut meyvelerin yanına düşüyor mu; (4) Akıllı listede "kamp listesi", "eczane listesi" veya "spor çantası" yaz/söyle → başlık, simge ve öneriler o türe dönüyor mu.
   Yanlışsa: madde numarasını yaz.
