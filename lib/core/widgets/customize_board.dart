@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import '../../app/theme/app_tokens.dart';
 
 /// Önizleme şeridinin ve karonun boyu.
-const double _stripHeight = 52;
-const double _tileHeight = 46;
+const double _stripHeight = 48;
+const double _tileHeight = 40;
 
 /// Panonun bir öğesi: kalıcı kimlik + simge + ad.
 typedef CustomizeEntry = ({String id, IconData icon, String label});
@@ -103,15 +103,20 @@ class CustomizeBoard extends StatelessWidget {
         children: [for (final e in items) Expanded(child: cell(e))],
       );
       if (list.length <= 2) return row(list);
-      final rows = <List<CustomizeEntry>>[];
-      for (var i = 0; i < list.length; i += 2) {
-        final end = i + 2;
-        rows.add(list.sublist(i, end > list.length ? list.length : end));
-      }
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: AppSpace.s,
-        children: [for (final r in rows) row(r)],
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = (constraints.maxWidth / 170).floor().clamp(2, 4);
+          final rows = <List<CustomizeEntry>>[];
+          for (var i = 0; i < list.length; i += columns) {
+            final end = i + columns;
+            rows.add(list.sublist(i, end > list.length ? list.length : end));
+          }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: AppSpace.s,
+            children: [for (final r in rows) row(r)],
+          );
+        },
       );
     }
 

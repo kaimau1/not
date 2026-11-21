@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../../notes/domain/note.dart';
 import '../domain/agenda.dart';
@@ -138,12 +139,16 @@ class MonthPage extends StatelessWidget {
     required this.onDayLongPress,
     this.onDayDoubleTap,
     this.onEntryMove,
+    this.onNoteTap,
     this.compact = false,
   });
 
-  /// Gün paneli açık, takvim daraldı: hücrede şerit yerine renkli çizgiler
-  /// (en çok 3) — gün numarası okunur kalır.
+  /// Gün paneli açık, takvim daraldı: hücreler daha sıkı (gün numarası sağ
+  /// üstte, altında sığdığı kadar not/etkinlik/etiket şeridi).
   final bool compact;
+
+  /// Hücredeki not şeridine doğrudan dokunuldu (hızlı önizleme açılır).
+  final void Function(Note note, DateTime day)? onNoteTap;
 
   /// Güne çift dokunuş: yalnız o günün sayfası açılır.
   final ValueChanged<DateTime>? onDayDoubleTap;
@@ -241,6 +246,7 @@ class MonthPage extends StatelessWidget {
                               onLongPress: onDayLongPress,
                               onDoubleTap: onDayDoubleTap,
                               onEntryMove: onEntryMove,
+                              onNoteTap: onNoteTap,
                             ),
                           ),
                       ],
@@ -268,11 +274,13 @@ class _MonthCell extends StatelessWidget {
     this.holiday,
     this.onDoubleTap,
     this.onEntryMove,
+    this.onNoteTap,
     this.compact = false,
   });
 
   final bool compact;
   final void Function(AgendaEntry entry, DateTime day)? onEntryMove;
+  final void Function(Note note, DateTime day)? onNoteTap;
   final ValueChanged<DateTime>? onDoubleTap;
   final DateTime day;
   final DateTime month;
@@ -329,46 +337,123 @@ class _MonthCell extends StatelessWidget {
     );
   }
 
-  /// Daralmış takvimin hücresi: gün numarası + kayıt başına ince renkli
-  /// çizgi (tatil kırmızı); sığmayanlar sayılmaz, en çok 3 çizgi.
-  Widget _compactCell(
+  /// Hücre üst başlığı: sağ üstte gün numarası, taşan kayıt varsa sol üstte
+  /// `+N` sayacı (hücre içindeki boşluk tamamen not/etiket şeritlerine kalır).
+  Widget _dayHeader(
+    BuildContext context, {
+    required bool wide,
+    required bool isToday,
+    required bool isSelected,
+    required bool off,
+    required bool inMonth,
+    required Color dayColor,
+    required ColorScheme scheme,
+    required AppLocalizations l10n,
+    required int overflow,
+  }) {
+    final badgeSize = wide
+        ? kMonthBadgeSizeWide
+        : compact
+        ? kMonthBadgeSizeCompact
+        : kMonthBadgeSize;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(3, 2, 3, 1),
+      child: Row(
+        children: [
+          if (overflow > 0)
+            Semantics(
+              label: l10n.calendarMoreDays,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                decoration: BoxDecoration(
+                  color: inMonth
+                      ? scheme.surfaceContainerHigh
+                      : scheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  '+$overflow',
+                  style: TextStyle(
+                    fontSize: wide ? 9.5 : 8.5,
+                    height: 1.0,
+                    fontWeight: AppWeight.strong,
+                    color: scheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ),
+          const Spacer(),
+          Container(
+            width: badgeSize,
+            height: badgeSize,
+            alignment: Alignment.center,
+            decoration: isToday
+                ? BoxDecoration(
+                    color: off ? scheme.error : scheme.primary,
+                    shape: BoxShape.circle,
+                  )
+                : null,
+            child: Text(
+              '${day.day}',
+              style: TextStyle(
+                fontSize: wide
+                    ? 12.5
+                    : compact
+                    ? 10.5
+                    : 11.5,
+                height: 1.0,
+                fontWeight: isToday || isSelected || off
+                    ? AppWeight.strong
+                    : AppWeight.medium,
+                color: dayColor,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Çok dar dikey yükseklikte (yatay/bölünmüş ekran) taşmayı önleyen ince
+  /// renkli çizgi yedeği — gün numarası yine sağ üstte.
+  Widget _microBarsFallback(
     BuildContext context,
     BoxConstraints c, {
     required bool isToday,
+    required bool isSelected,
     required bool off,
+    required bool inMonth,
     required Color dayColor,
     required ColorScheme scheme,
+    required AppLocalizations l10n,
   }) {
     final colors = <Color>[
       if (holiday != null) scheme.error,
       for (final e in entries) entryColor(e, scheme),
     ];
-    final bars = math.max(0, math.min(3, ((c.maxHeight - 24) / 5).floor()));
+    final bars = math.max(0, math.min(3, ((c.maxHeight - 20) / 5).floor()));
+    final overflow = math.max(0, colors.length - bars);
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          width: 20,
-          height: 20,
-          alignment: Alignment.center,
-          decoration: isToday
-              ? BoxDecoration(
-                  color: off ? scheme.error : scheme.primary,
-                  shape: BoxShape.circle,
-                )
-              : null,
-          child: Text(
-            '${day.day}',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: isToday || off ? AppWeight.strong : AppWeight.medium,
-              color: dayColor,
-            ),
-          ),
+        _dayHeader(
+          context,
+          wide: false,
+          isToday: isToday,
+          isSelected: isSelected,
+          off: off,
+          inMonth: inMonth,
+          dayColor: dayColor,
+          scheme: scheme,
+          l10n: l10n,
+          overflow: overflow,
         ),
         for (final color in colors.take(bars))
           Container(
             height: 3,
-            margin: const EdgeInsets.fromLTRB(4, 2, 4, 0),
+            margin: const EdgeInsets.fromLTRB(4, 1, 4, 1),
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(AppRadius.hair),
@@ -425,30 +510,45 @@ class _MonthCell extends StatelessWidget {
         ? scheme.error
         : scheme.onSurface;
     final h = holiday;
-    final chips =
+    // O günkü notların benzersiz etiketleri: asıl not/etkinliklerden sonra
+    // hücrede yer kalırsa `#etiket` hapı olarak görünür.
+    final noteTags = <String>[];
+    final seenTags = <String>{};
+    for (final e in entries) {
+      if (e is ReminderEntry) {
+        for (final t in e.note.tags) {
+          final clean = t.trim();
+          if (clean.isNotEmpty && seenTags.add(clean) && noteTags.length < 3) {
+            noteTags.add(clean);
+          }
+        }
+      }
+    }
+    final primaryChips =
         <Widget Function(int lines, double height, double width, double font)>[
-      if (h != null)
-        (lines, height, width, font) => HolidayChip(
-          holiday: h,
-          height: height,
-          lines: lines,
-          dim: !inMonth,
-          fontSize: font,
-        ),
-      for (final e in entries)
-        (lines, height, width, font) => _draggableChip(
-          context,
-          e,
-          _MonthChip(
-            entry: e,
-            height: height,
-            lines: lines,
-            dim: !inMonth,
-            fontSize: font,
-          ),
-          width,
-        ),
-    ];
+          if (h != null)
+            (lines, height, width, font) => HolidayChip(
+              holiday: h,
+              height: height,
+              lines: lines,
+              dim: !inMonth,
+              fontSize: font,
+            ),
+          for (final e in entries)
+            (lines, height, width, font) {
+              final base = _MonthChip(
+                entry: e,
+                height: height,
+                lines: lines,
+                dim: !inMonth,
+                fontSize: font,
+                onTap: e is ReminderEntry && onNoteTap != null
+                    ? () => onNoteTap!(e.note, day)
+                    : null,
+              );
+              return _draggableChip(context, e, base, width);
+            },
+        ];
     return Semantics(
       button: true,
       label: [
@@ -467,85 +567,79 @@ class _MonthCell extends StatelessWidget {
             onLongPress: () => onLongPress(day),
             child: LayoutBuilder(
               builder: (context, c) {
-                // YAZI SIĞSIN (kullanıcı isteği 2026-11-07: "yazıları biraz
-                // küçült, günlere sığsın, gerekirse 2 satır"): yer varsa
-                // şeritler İKİ satır, yoksa tek satır; sığmayan "+n".
-                //
-                // KW-9 (web keşfi 2026-11-18): GENİŞ hücrede (≥ 140 dp,
-                // masaüstü) yazı büyür; dar hücre kuralı aynen. P78 KT-23:
-                // dikey tabletin UZUN hücresi (≥ 72 x 100 dp) de geniş sayılır.
-                if (compact) {
-                  return _compactCell(
+                // YAZI SIĞSIN (kullanıcı isteği 2026-11-07 + 2026-11-21):
+                // gün numarası sağ üstte; altında sığdığı kadar not, etkinlik
+                // ve `#etiket` şeridi. Varsayılan dar görünümde bile kör çizgi
+                // yerine okunur başlıklar yer alır; taşanlar sol üstte `+N`.
+                final wide = !compact && monthCellRoomy(c.maxWidth, c.maxHeight);
+                final headerH = wide
+                    ? kMonthBadgeSizeWide + 4
+                    : compact
+                    ? kMonthBadgeSizeCompact + 3
+                    : kMonthBadgeSize + 4;
+                final avail = c.maxHeight - headerH;
+                if (avail < kMonthChipCompactLine) {
+                  return _microBarsFallback(
                     context,
                     c,
                     isToday: isToday,
+                    isSelected: isSelected,
                     off: off,
+                    inMonth: inMonth,
                     dayColor: dayColor,
                     scheme: scheme,
+                    l10n: l10n,
                   );
                 }
-                final wide = monthCellRoomy(c.maxWidth, c.maxHeight);
-                final avail = c.maxHeight - (wide ? 28 : 26);
-                final oneLine = wide
+                final oneLine = compact
+                    ? kMonthChipCompactLine
+                    : wide
                     ? kMonthChipOneLineWide
                     : kMonthChipOneLine;
                 final twoLine = wide
                     ? kMonthChipTwoLineWide
                     : kMonthChipTwoLine;
                 final twoLines =
-                    chips.isNotEmpty && chips.length * (twoLine + 1) <= avail;
+                    !compact &&
+                    primaryChips.isNotEmpty &&
+                    noteTags.isEmpty &&
+                    primaryChips.length * (twoLine + 1) <= avail;
                 final chipH = twoLines ? twoLine : oneLine;
                 final room = math.max(0, (avail / (chipH + 1)).floor());
-                final fits = chips.length <= room;
-                final shown = fits ? chips.length : math.max(0, room - 1);
+                final shownPrimary = math.min(primaryChips.length, room);
+                final overflow = primaryChips.length - shownPrimary;
+                final freeAfterPrimary = math.max(0, room - shownPrimary);
+                final shownTags = overflow == 0
+                    ? math.min(noteTags.length, freeAfterPrimary)
+                    : 0;
+                final chipFont = compact
+                    ? 8.5
+                    : wide
+                    ? 11.0
+                    : 9.5;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3, bottom: 2),
-                      child: Center(
-                        child: Container(
-                          width: wide ? 22 : 20,
-                          height: wide ? 22 : 20,
-                          alignment: Alignment.center,
-                          decoration: isToday
-                              ? BoxDecoration(
-                                  color: off ? scheme.error : scheme.primary,
-                                  shape: BoxShape.circle,
-                                )
-                              : null,
-                          child: Text(
-                            '${day.day}',
-                            style: TextStyle(
-                              fontSize: wide ? 13 : 11.5,
-                              fontWeight: isToday || off
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: dayColor,
-                            ),
-                          ),
-                        ),
-                      ),
+                    _dayHeader(
+                      context,
+                      wide: wide,
+                      isToday: isToday,
+                      isSelected: isSelected,
+                      off: off,
+                      inMonth: inMonth,
+                      dayColor: dayColor,
+                      scheme: scheme,
+                      l10n: l10n,
+                      overflow: overflow,
                     ),
-                    for (final chip in chips.take(shown))
-                      chip(
-                        twoLines ? 2 : 1,
-                        chipH,
-                        c.maxWidth,
-                        wide ? 11 : 9.5,
-                      ),
-                    if (!fits && chips.length > shown)
-                      SizedBox(
+                    for (final chip in primaryChips.take(shownPrimary))
+                      chip(twoLines ? 2 : 1, chipH, c.maxWidth, chipFont),
+                    for (final tag in noteTags.take(shownTags))
+                      _TagCellChip(
+                        tag: tag,
                         height: oneLine,
-                        child: Text(
-                          '+${chips.length - shown}',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          semanticsLabel: l10n.calendarMoreDays,
-                        ),
+                        dim: !inMonth,
+                        fontSize: chipFont,
                       ),
                   ],
                 );
@@ -558,7 +652,13 @@ class _MonthCell extends StatelessWidget {
   }
 }
 
-/// Ay şeridinin yüksekliği: tek satır / iki satır (yazı 9,5 pt).
+/// Gün numarası dairesi boyutları (sağ üst köşe).
+const kMonthBadgeSizeCompact = 17.0;
+const kMonthBadgeSize = 20.0;
+const kMonthBadgeSizeWide = 22.0;
+
+/// Ay şeridinin yüksekliği: dar / tek satır / iki satır.
+const kMonthChipCompactLine = 13.0;
 const kMonthChipOneLine = 14.0;
 const kMonthChipTwoLine = 25.0;
 
@@ -589,41 +689,106 @@ double monthChipFontSize(double cellWidth, [double cellHeight = 0]) =>
   foreground: scheme.onSurfaceVariant,
 );
 
-/// Şerit kutusu: kayıt ve tatil şeridi aynı biçimde.
+/// Şerit kutusu: kayıt, not ve tatil şeridi aynı biçimde; sol kenar vurgu
+/// çizgisiyle notlar/etkinlikler hücrede ilk bakışta ayrışır.
 Widget _chipBox({
   required String text,
   required double height,
   required int lines,
   required Color background,
   required Color foreground,
+  Color? accent,
   Border? border,
   bool strike = false,
   double fontSize = 9.5,
-}) => Container(
-  height: height,
-  margin: const EdgeInsets.fromLTRB(2, 0, 2, 1),
-  padding: const EdgeInsets.symmetric(horizontal: 3),
-  alignment: Alignment.centerLeft,
-  decoration: BoxDecoration(
-    color: background,
-    borderRadius: BorderRadius.circular(AppRadius.xs),
-    border: border,
-  ),
-  child: Text(
-    text,
-    maxLines: lines,
-    // Tek satırda harf harf kırpılır (daha çok harf görünür); iki satırda
-    // sözcükten kırılır, taşan "…".
-    overflow: lines > 1 ? TextOverflow.ellipsis : TextOverflow.clip,
-    softWrap: lines > 1,
-    style: TextStyle(
-      fontSize: fontSize,
-      height: 1.1,
-      color: foreground,
-      decoration: strike ? TextDecoration.lineThrough : null,
+  VoidCallback? onTap,
+}) {
+  final box = Container(
+    height: height,
+    margin: const EdgeInsets.fromLTRB(2, 0, 2, 1),
+    padding: EdgeInsets.fromLTRB(accent != null ? 0 : 3, 0, 3, 0),
+    alignment: Alignment.centerLeft,
+    clipBehavior: accent != null ? Clip.antiAlias : Clip.none,
+    decoration: BoxDecoration(
+      color: background,
+      borderRadius: BorderRadius.circular(AppRadius.xs),
+      border: border,
     ),
-  ),
-);
+    child: accent != null
+        ? Row(
+            children: [
+              Container(width: 2, color: accent),
+              const SizedBox(width: 2),
+              Expanded(
+                child: Text(
+                  text,
+                  maxLines: lines,
+                  overflow: lines > 1
+                      ? TextOverflow.ellipsis
+                      : TextOverflow.clip,
+                  softWrap: lines > 1,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    height: 1.08,
+                    color: foreground,
+                    decoration: strike ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ),
+            ],
+          )
+        : Text(
+            text,
+            maxLines: lines,
+            // Tek satırda harf harf kırpılır (daha çok harf görünür); iki satırda
+            // sözcükten kırılır, taşan "…".
+            overflow: lines > 1 ? TextOverflow.ellipsis : TextOverflow.clip,
+            softWrap: lines > 1,
+            style: TextStyle(
+              fontSize: fontSize,
+              height: 1.08,
+              color: foreground,
+              decoration: strike ? TextDecoration.lineThrough : null,
+            ),
+          ),
+  );
+  if (onTap == null) return box;
+  return GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: box,
+  );
+}
+
+class _TagCellChip extends StatelessWidget {
+  const _TagCellChip({
+    required this.tag,
+    required this.height,
+    required this.dim,
+    required this.fontSize,
+  });
+
+  final String tag;
+  final double height;
+  final bool dim;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tone = dim ? monthChipDimTone(scheme) : null;
+    return _chipBox(
+      text: '#$tag',
+      height: height,
+      lines: 1,
+      fontSize: fontSize,
+      background:
+          tone?.background ??
+          scheme.secondaryContainer.withValues(alpha: AppAlpha.strong),
+      foreground: tone?.foreground ?? scheme.onSecondaryContainer,
+    );
+  }
+}
 
 class _MonthChip extends StatelessWidget {
   const _MonthChip({
@@ -632,6 +797,7 @@ class _MonthChip extends StatelessWidget {
     required this.dim,
     this.lines = 1,
     this.fontSize = 9.5,
+    this.onTap,
   });
 
   final AgendaEntry entry;
@@ -639,10 +805,12 @@ class _MonthChip extends StatelessWidget {
   final bool dim;
   final int lines;
   final double fontSize;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final color = entryColor(entry, scheme);
     final solid = entry is EventOccurrence && entry.allDay;
     final done = entry is TaskEntry && (entry as TaskEntry).task.completed;
@@ -650,6 +818,15 @@ class _MonthChip extends StatelessWidget {
         entry is EventOccurrence && (entry as EventOccurrence).event.fromGoogle;
     final tone = dim ? monthChipDimTone(scheme) : null;
     final e = entry;
+    final hasCustomNoteColor =
+        e is ReminderEntry &&
+        (e.note.color != NoteColor.none || e.note.customColor != null);
+    final noteBg = hasCustomNoteColor
+        ? NoteColors.noteSurfaceIn(theme, e.note)
+        : null;
+    final noteInk = hasCustomNoteColor
+        ? NoteColors.noteInkIn(theme, e.note)
+        : null;
     // Güne SAATLE bağlı not şeritte saatiyle ("09:00 Toplantı notu").
     final title = e is ReminderEntry && e.isDayLink && e.linkTimed
         ? '${formatHm(e.at.hour, e.at.minute)} ${entryTitle(e, context.l10n)}'
@@ -660,10 +837,18 @@ class _MonthChip extends StatelessWidget {
       lines: lines,
       fontSize: fontSize,
       strike: done,
+      onTap: onTap,
+      accent: tone != null || solid
+          ? null
+          : (noteInk ?? color).withValues(alpha: AppAlpha.strong),
       background:
-          tone?.background ?? (solid ? color : color.withValues(alpha: 0.16)),
+          tone?.background ??
+          noteBg ??
+          (solid ? color : color.withValues(alpha: 0.16)),
       foreground:
-          tone?.foreground ?? (solid ? scheme.onPrimary : scheme.onSurface),
+          tone?.foreground ??
+          noteInk ??
+          (solid ? scheme.onPrimary : scheme.onSurface),
       // Google Takvim etkinliği farklı kenarlıkla (F48.3).
       border: google
           ? Border.all(color: color.withValues(alpha: 0.8), width: 0.8)

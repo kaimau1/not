@@ -21,6 +21,7 @@ import '../domain/attachment.dart';
 import 'note_card.dart' show noteCardSqueeze;
 import 'drive_ui.dart';
 import 'viewers/ink_layer.dart';
+import 'viewers/ink_stroke_paint.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import '../../../core/app_icons.dart';
@@ -864,8 +865,9 @@ class CardMediaTile extends StatelessWidget {
 
   /// KARTTA GÖRSELİN ÇİZİMİ (kullanıcı bulgusu 2026-11-21: "görsele kalemle
   /// yazdım, ana ekranda görünmüyor"): çizgiler görselin `cover` kesitine
-  /// oranlı boyanır (notla aynı çizim). Çizim yoksa ağaçta hiçbir şey yok;
-  /// varsa tek `CustomPaint` (RepaintBoundary, dokunuşsuz).
+  /// oranlı boyanır. Çizim yoksa ağaçta hiçbir şey yok; varsa önceden
+  /// basitleştirilip önbelleğe alınan yollar boyanır (küçük resim başına ek
+  /// GPU RepaintBoundary katmanı açılmaz).
   Widget _image(Attachment a) {
     final picture = _imageOnly(a);
     final w = (a.width ?? 0).toDouble();
@@ -876,9 +878,7 @@ class CardMediaTile extends StatelessWidget {
       children: [
         picture,
         IgnorePointer(
-          child: RepaintBoundary(
-            child: CustomPaint(painter: _CoverInkPainter(a.ink, Size(w, h))),
-          ),
+          child: CustomPaint(painter: _CoverInkPainter(a.ink, Size(w, h))),
         ),
       ],
     );
@@ -943,21 +943,101 @@ class CardMediaTile extends StatelessWidget {
 }
 
 /// Görselin çizgileri, `BoxFit.cover` ile yerleşen görselin dikdörtgeninde.
+/// Kart küçük resminde her karede `InkPainter` ve yüzlerce nokta yeniden
+/// kurulmasın diye yol listesi `(ink, size)` için tek seferde hazırlanır.
 class _CoverInkPainter extends CustomPainter {
   _CoverInkPainter(this.ink, this.imageSize);
 
   final List<InkStroke> ink;
   final Size imageSize;
 
-  @override
-  void paint(Canvas canvas, Size size) {
+  static final Expando<
+    ({
+      Size size,
+      Rect rect,
+      List<({Path path, Paint paint})> draws,
+      List<InkStroke> arrows,
+    })
+  >
+  _cache = Expando('CoverInkPaths');
+
+  ({
+    Size size,
+    Rect rect,
+    List<({Path path, Paint paint})> draws,
+    List<InkStroke> arrows,
+  })
+  _buildDraws(Size size) {
+    final hit = _cache[ink];
+    if (hit != null && hit.size == size) return hit;
     final fitted = applyBoxFit(BoxFit.cover, imageSize, size).destination;
     final rect = Alignment.center.inscribe(fitted, Offset.zero & size);
+    final sx = rect.width;
+    final sy = rect.height;
+    final dx = rect.left;
+    final dy = rect.top;
+    final draws = <({Path path, Paint paint})>[];
+    final arrows = <InkStroke>[];
+    for (final s in ink) {
+      if (s.page != 1) continue;
+      final pts = s.points;
+      if (pts.length < 2) continue;
+      if (s.arrow) {
+        arrows.add(s);
+        continue;
+      }
+      final path = Path();
+      var lastX = dx + pts[0] * sx;
+      var lastY = dy + pts[1] * sy;
+      path.moveTo(lastX, lastY);
+      if (pts.length < 4) {
+        path.lineTo(lastX + 0.5, lastY + 0.5);
+      } else {
+        for (var i = 2; i + 1 < pts.length; i += 2) {
+          final x = dx + pts[i] * sx;
+          final y = dy + pts[i + 1] * sy;
+          if (i + 2 < pts.length &&
+              (x - lastX).abs() + (y - lastY).abs() < 2.0) {
+            continue;
+          }
+          path.lineTo(x, y);
+          lastX = x;
+          lastY = y;
+        }
+      }
+      final w = (s.width * sx).clamp(1.0, 12.0);
+      final paint = Paint()
+        ..color = Color(s.color)
+        ..strokeWidth = w
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke;
+      draws.add((path: path, paint: paint));
+    }
+    final entry = (size: size, rect: rect, draws: draws, arrows: arrows);
+    _cache[ink] = entry;
+    return entry;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cached = _buildDraws(size);
+    if (cached.draws.isEmpty && cached.arrows.isEmpty) return;
     canvas
       ..save()
-      ..clipRect(Offset.zero & size)
-      ..translate(rect.left, rect.top);
-    InkPainter(ink, 1).paint(canvas, rect.size);
+      ..clipRect(Offset.zero & size);
+    for (final d in cached.draws) {
+      canvas.drawPath(d.path, d.paint);
+    }
+    if (cached.arrows.isNotEmpty) {
+      canvas
+        ..save()
+        ..translate(cached.rect.left, cached.rect.top);
+      for (final a in cached.arrows) {
+        paintInkStroke(canvas, cached.rect.size, a);
+      }
+      canvas.restore();
+    }
     canvas.restore();
   }
 

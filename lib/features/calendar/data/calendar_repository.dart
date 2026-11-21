@@ -62,20 +62,27 @@ final eventLinksStreamProvider = StreamProvider<Map<String, List<String>>>((
   return repo.watchEventLinks();
 });
 
+/// Gün bağları + saatleri TEK Firestore dinleyicisiyle okunur (eski çift
+/// `_dayLinks.snapshots()` dinleyicisi kaldırıldı).
+final _dayLinkSnapshotProvider =
+    StreamProvider<
+      ({Map<String, List<String>> links, Map<String, Map<String, int>> times})
+    >((ref) {
+      final repo = ref.watch(calendarRepositoryProvider);
+      if (repo == null) return const Stream.empty();
+      return repo.watchDayLinkSnapshot();
+    });
+
 /// Gün → bağlı not kimlikleri (`dayLinks`).
-final dayLinksStreamProvider = StreamProvider<Map<String, List<String>>>((ref) {
-  final repo = ref.watch(calendarRepositoryProvider);
-  if (repo == null) return const Stream.empty();
-  return repo.watchDayLinks();
-});
+final dayLinksStreamProvider = Provider<AsyncValue<Map<String, List<String>>>>(
+  (ref) => ref.watch(_dayLinkSnapshotProvider).whenData((s) => s.links),
+);
 
 /// Gün → (not → dakika): saatle bağlanmış notlar.
 final dayLinkTimesStreamProvider =
-    StreamProvider<Map<String, Map<String, int>>>((ref) {
-      final repo = ref.watch(calendarRepositoryProvider);
-      if (repo == null) return const Stream.empty();
-      return repo.watchDayLinkTimes();
-    });
+    Provider<AsyncValue<Map<String, Map<String, int>>>>(
+      (ref) => ref.watch(_dayLinkSnapshotProvider).whenData((s) => s.times),
+    );
 
 /// Takvim + görev CRUD'u. Notlar ve klasörler gibi YANGIN-VE-UNUT yazar:
 /// yerel önbellek anında güncellenir, senkron arka planda (çevrimdışı çalışır).
@@ -366,20 +373,37 @@ class CalendarRepository {
     unawaited(batch.commit());
   }
 
+  /// Gün bağları ve saatlerini TEK `_dayLinks.snapshots()` akışında okur.
+  Stream<
+    ({Map<String, List<String>> links, Map<String, Map<String, int>> times})
+  >
+  watchDayLinkSnapshot() => _dayLinks.snapshots().map((s) {
+    final links = <String, List<String>>{};
+    final times = <String, Map<String, int>>{};
+    for (final d in s.docs) {
+      if (parseDayKey(d.id) == null) continue;
+      final data = d.data();
+      final ids = [
+        for (final n in data['noteIds'] as List? ?? const [])
+          if (n is String && n.isNotEmpty) n,
+      ];
+      if (ids.isNotEmpty) links[d.id] = ids;
+      final rawTimes = data['noteTimes'];
+      if (rawTimes is Map) {
+        final t = <String, int>{
+          for (final e in rawTimes.entries)
+            if (e.key is String && e.value is num)
+              e.key as String: (e.value as num).toInt(),
+        };
+        if (t.isNotEmpty) times[d.id] = t;
+      }
+    }
+    return (links: links, times: times);
+  });
+
   /// Gün → (not → dakika) saatli bağlar.
   Stream<Map<String, Map<String, int>>> watchDayLinkTimes() =>
-      _dayLinks.snapshots().map(
-        (s) => {
-          for (final d in s.docs)
-            if (parseDayKey(d.id) != null &&
-                d.data()['noteTimes'] is Map)
-              d.id: {
-                for (final e in (d.data()['noteTimes'] as Map).entries)
-                  if (e.key is String && e.value is num)
-                    e.key as String: (e.value as num).toInt(),
-              },
-        },
-      );
+      watchDayLinkSnapshot().map((s) => s.times);
 
   // ------------------------------------------------- Google etkinlik bağı
 
