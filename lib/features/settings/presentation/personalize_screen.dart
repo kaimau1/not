@@ -142,11 +142,15 @@ class _EditModeCard extends StatelessWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final editing = Personalize.editing;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
+        color: scheme.primaryContainer.withValues(alpha: AppAlpha.soft),
         borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(
+          color: scheme.primary.withValues(alpha: AppAlpha.soft),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpace.l),
@@ -155,24 +159,37 @@ class _EditModeCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.touch_app_outlined, color: scheme.primary),
-                const SizedBox(width: AppSpace.m),
-                Expanded(
-                  child: Text(
-                    l10n.customizeStartTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: AppWeight.strong,
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpace.s),
+                    child: Icon(
+                      Icons.touch_app_outlined,
+                      size: AppIconSize.m,
+                      color: scheme.onPrimaryContainer,
                     ),
                   ),
                 ),
+                const SizedBox(width: AppSpace.m),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.customizeStartTitle,
+                        style: text.rowTitle.copyWith(
+                          fontWeight: AppWeight.strong,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpace.xxs),
+                      Text(l10n.customizeStartInfo, style: text.meta),
+                    ],
+                  ),
+                ),
               ],
-            ),
-            const SizedBox(height: AppSpace.s),
-            Text(
-              l10n.customizeStartInfo,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
             ),
             const SizedBox(height: AppSpace.m),
             Align(
@@ -185,7 +202,10 @@ class _EditModeCard extends StatelessWidget {
                         Personalize.startEditing();
                         Navigator.of(context).pop('edit');
                       },
-                icon: Icon(editing ? Icons.check : Icons.edit_outlined),
+                icon: Icon(
+                  editing ? Icons.check_rounded : Icons.tune_rounded,
+                  size: AppIconSize.s,
+                ),
                 label: Text(
                   editing ? l10n.customizeActive : l10n.customizeStart,
                 ),
@@ -198,7 +218,7 @@ class _EditModeCard extends StatelessWidget {
   }
 }
 
-/// Bölüm: başlık + içerik kartı (her yüzey aynı kılıkta).
+/// Bölüm: başlık + içerik kartı (her yüzey bento menülerle aynı kılıkta).
 class _Section extends StatelessWidget {
   const _Section({
     required this.title,
@@ -222,6 +242,9 @@ class _Section extends StatelessWidget {
         color: scheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: Padding(
@@ -231,7 +254,22 @@ class _Section extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(icon, size: AppIconSize.s, color: scheme.primary),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer.withValues(
+                        alpha: AppAlpha.soft,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.s),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpace.xs),
+                      child: Icon(
+                        icon,
+                        size: AppIconSize.s,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: AppSpace.s),
                   Expanded(
                     child: Text(title, style: sectionLabelStyle(context)),
