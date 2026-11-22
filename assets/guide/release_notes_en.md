@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 22 November 2026 {#2026-11-22}
+- **Text and bubbles visible on dark pictures:** dropping text or a bubble on a dark part of a photo picks a colour that stands out (white text, a light bubble); a colour you chose stays. Changing bold/alignment/size/colour no longer rebuilds the note on every tap, so the stutter is gone.
 - **Two-finger zoom on pinned pictures works again:** pinching with fingers moving vertically never started; now pinching out shrinks the pane live with your fingers and the whole picture fits, pinching in grows it back. One-finger scrolling still works.
 - **"Note for this day" opens without a title:** the note no longer takes the day's name as its title, so a note opened by mistake and left empty is not saved.
 - **Calendar + adds a note by default:** the calendar's **+** now opens a note for the day; a small sheet first shows the date (today or the selected day), tap it to change. Settings → **What + adds in the calendar** switches it to an event or a task. In the day page, tapping an empty hour offers **Note** or **Event**; the note is linked to that hour.

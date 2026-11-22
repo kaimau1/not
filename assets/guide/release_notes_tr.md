@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 22 Kasım 2026 {#2026-11-22}
+- **Koyu görselde metin ve balon görünür:** fotoğrafın koyu bir yerine metin ya da balon bırakınca renk zemine göre seçilir (koyuda beyaz yazı, açık tonlu balon); kendi seçtiğin renk aynen kalır. Balonda kalın/hiza/boy/renk değiştirmek artık her dokunuşta notu yeniden kurmuyor, kasma gitti.
 - **Sabit görselde iki parmak yeniden çalışıyor:** parmakları dikeyde yaklaştırınca kıstırma başlamıyordu; artık uzaklaştırınca bölme parmağınla birlikte canlı küçülür ve görsel bütün hâliyle sığar, yakınlaştırınca geri büyür. Tek parmakla kaydırma aynen çalışır.
 - **"Bu güne not" başlıksız açılır:** not artık günün adını başlık olarak almaz; yanlışlıkla açıp hiçbir şey yazmadan çıkarsan boş not kaydedilmez.
 - **Takvimde + varsayılan not ekler:** takvimdeki **+** artık o güne not açar; önce açılan küçük pencerede tarih (varsayılan bugün ya da seçili gün) görünür, dokunarak değiştirebilirsin. Ayarlar → **Takvimde + ne eklesin** ile etkinlik ya da göreve çevrilebilir. Gün sayfasında boş bir saate dokununca **Not** ya da **Etkinlik** seçebilirsin; not o saate bağlanır.

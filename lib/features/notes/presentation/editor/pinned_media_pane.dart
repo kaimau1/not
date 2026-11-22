@@ -21,6 +21,7 @@ import '../../../../core/widgets/wheel_scroll_viewer.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../drive_ui.dart';
+import '../viewers/image_luma.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
 import '../viewers/ink_pen.dart';
 import '../viewers/pen_policy.dart';
@@ -511,7 +512,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   bool get _canEditPdfBubbles =>
       widget.media.kind == AttachmentKind.pdf && widget.onChanged != null;
 
-  BubbleController _ownController() => _ownBubbles ??= BubbleController(
+  BubbleController _ownController() => _ownBubbles ??= _withLuma(BubbleController(
     initial: widget.media.bubbles.isNotEmpty
         ? widget.media.bubbles
         : (widget.bubbleDoc == null
@@ -534,7 +535,24 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     ),
   )
     ..addListener(_onOwnBubbles)
-    ..onEditingChanged = _setWriting;
+    ..onEditingChanged = _setWriting);
+
+  /// Koyu görselde yeni metin/balon açık renkle doğsun (bkz. [ImageLuma]).
+  BubbleController _withLuma(BubbleController c) {
+    final provider = widget.media.kind == AttachmentKind.image
+        ? attachmentImageProvider(widget.media)
+        : null;
+    if (provider == null) return c;
+    final id = widget.media.id;
+    unawaited(
+      ImageLuma.load(provider).then((l) {
+        if (l != null && identical(_ownBubbles, c) && widget.media.id == id) {
+          c.lumaAt = l.at;
+        }
+      }),
+    );
+    return c;
+  }
 
   /// Kip/gizlilik/balon sayısı çubuktaki düğmeleri değiştirir.
   bool? _lastAdding;

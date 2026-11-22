@@ -649,7 +649,7 @@ class _BubbleDockState extends State<BubbleDock> {
                 selected: bubble.bold,
                 onPressed: () => widget.controller
                   ..update(bubble.copyWith(bold: !bubble.bold))
-                  ..save(),
+                  ..saveSoon(),
               ),
               _barButton(
                 context,
@@ -658,7 +658,7 @@ class _BubbleDockState extends State<BubbleDock> {
                 selected: bubble.italic,
                 onPressed: () => widget.controller
                   ..update(bubble.copyWith(italic: !bubble.italic))
-                  ..save(),
+                  ..saveSoon(),
               ),
               // Hiza tek düğmeyle DÖNER (sol → orta → sağ).
               _barButton(
@@ -676,7 +676,7 @@ class _BubbleDockState extends State<BubbleDock> {
                 selected: bubble.align != 0,
                 onPressed: () => widget.controller
                   ..update(bubble.copyWith(align: (bubble.align + 1) % 3))
-                  ..save(),
+                  ..saveSoon(),
               ),
               _barButton(
                 context,
@@ -759,7 +759,7 @@ class _BubbleDockState extends State<BubbleDock> {
                   key: ValueKey('bubble-color-$argb'),
                   onTap: () => widget.controller
                     ..update(bubble.copyWith(color: argb))
-                    ..save(),
+                    ..saveSoon(),
                   child: Container(
                     width: 24,
                     height: 24,
@@ -809,7 +809,7 @@ class _BubbleDockState extends State<BubbleDock> {
                   key: ValueKey('bubble-fill-$argb'),
                   onTap: () => widget.controller
                     ..update(bubble.copyWith(fill: argb))
-                    ..save(),
+                    ..saveSoon(),
                   child: Container(
                     width: 24,
                     height: 24,

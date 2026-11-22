@@ -250,6 +250,9 @@ void main() {
       );
       c.stepSize('a', 1);
       expect(c.byId('a')!.size, 1.25);
+      // Biçim kaydı gecikmeli (2026-11-22); save hemen yazar.
+      expect(saved, isEmpty);
+      c.save();
       expect(saved.single.single.size, 1.25);
       c.dispose();
     });
