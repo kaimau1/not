@@ -131,6 +131,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(controller.bubbles.single.color, second);
     expect(bodyHasFocus(tester), isTrue);
+    // Biçim kaydı gecikmeli (2026-11-22): bekleyen kayıt yazılsın.
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('"Bitti" balonu kapatır ve kart kaybolur', (tester) async {

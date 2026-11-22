@@ -14,6 +14,7 @@ import 'bubble_layer.dart';
 import 'area_actions.dart';
 import 'area_select.dart';
 import 'image_crop.dart';
+import 'image_luma.dart';
 import 'ink_layer.dart';
 import 'text_recognize_screen.dart';
 import 'viewer_pen.dart';
@@ -233,6 +234,17 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
     ),
   );
 
+  /// Görselin kaba parlaklığı (bkz. [ImageLuma]): yeni metin/balon koyu
+  /// zeminde açık renkle doğar.
+  void _loadLuma() {
+    unawaited(
+      ImageLuma.load(_provider()).then((l) {
+        if (!mounted || l == null) return;
+        _bubbles.lumaAt = l.at;
+      }),
+    );
+  }
+
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
     onChanged: (strokes) =>
@@ -296,6 +308,7 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
     // ekranı yeniden kurmadan değişebiliyor, o yüzden dinlenir.
     _zoom.addListener(_syncSwipeLock);
     _bubbles.addListener(_syncSwipeLock);
+    if (widget.onChanged != null) _loadLuma();
     if (widget.startText && widget.onChanged != null) {
       _bubbles
         ..setPlainMode(true)

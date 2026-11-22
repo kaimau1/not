@@ -31,6 +31,7 @@ import 'spell_underline.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
+import 'notebook_paper.dart' show RuledAnchor;
 import 'stylus_toggle.dart' show StylusGutter;
 import 'windowed_body.dart' show kWindowedCaretMargin, selectWordAt, windowedFieldStyle;
 

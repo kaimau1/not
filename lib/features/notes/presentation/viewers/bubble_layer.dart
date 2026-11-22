@@ -235,8 +235,23 @@ class BubbleController extends ChangeNotifier {
 
   void setPlainColor(int value) {
     plainColor = value;
+    _plainChosen = true;
     notifyListeners();
   }
+
+  /// **ZEMİNE GÖRE RENK** (kullanıcı bulgusu 2026-11-22: "siyah ekranda
+  /// metin ekle görülmüyor"): görselin üstündeki katman bırakılan noktanın
+  /// parlaklığını (0..1) verir. Kullanıcı rengi kendisi SEÇMEDİKÇE koyu
+  /// zeminde açık metin beyaz, balon açık tonla doğar; açık zeminde eski
+  /// varsayılanlar. null = sayfa (PDF/kâğıt), hep açık zemin sayılır.
+  double Function(double x, double y)? lumaAt;
+  bool _plainChosen = false;
+  bool _colorChosen = false;
+
+  /// Koyu zeminde balonun varsayılanı: koyu sayfada da seçilen bal tonu.
+  static const darkGroundColor = 0xFFE0A84A;
+
+  bool _darkAt(double x, double y) => (lumaAt?.call(x, y) ?? 1) < 0.45;
 
   /// Az önce eklenen balon: katman onu açık ve klavyesi odaklanmış getirir.
   String? justAdded;
@@ -341,6 +356,7 @@ class BubbleController extends ChangeNotifier {
 
   void setColor(int value) {
     color = value;
+    _colorChosen = true;
     notifyListeners();
   }
 
@@ -457,8 +473,11 @@ class BubbleController extends ChangeNotifier {
       page: page,
       x: x.clamp(0.0, 1.0),
       y: y.clamp(0.0, 1.0),
-      // Açık metin alanı kendi paletinden doğar (varsayılan siyah).
-      color: plainMode ? plainColor : color,
+      // Açık metin alanı kendi paletinden doğar (varsayılan siyah); koyu
+      // zeminde, renk seçilmemişse beyaz / açık ton.
+      color: plainMode
+          ? (!_plainChosen && _darkAt(x, y) ? 0xFFFFFFFF : plainColor)
+          : (!_colorChosen && _darkAt(x, y) ? darkGroundColor : color),
       plain: plainMode,
     ),
   );
@@ -575,11 +594,13 @@ class BubbleController extends ChangeNotifier {
     );
     if (next == bubble.size) return;
     update(bubble.copyWith(size: next));
-    save();
+    saveSoon();
   }
 
   @override
   void dispose() {
+    // Bekleyen biçim kaydı kaybolmasın (ekran 700 ms içinde kapandıysa).
+    if (_saveTimer != null) save();
     revision.dispose();
     dockHeight.dispose();
     dragDelta.dispose();
@@ -592,10 +613,28 @@ class BubbleController extends ChangeNotifier {
   /// Metin yazımı gibi sık değişimlerde [update] yalnız belleği tazeler;
   /// kaydetme (Firestore yazımı) balon kapanınca/odak düşünce buradan olur.
   void save() {
+    _saveTimer?.cancel();
+    _saveTimer = null;
     if (!_dirty) return;
     _dirty = false;
     onChanged(_bubbles);
   }
+
+  /// **BİÇİM DOKUNUŞLARI GECİKMELİ KAYDEDİLİR** (kullanıcı bulgusu
+  /// 2026-11-22: "yazı tipi değişince genel bir kasma oluyor"): kalın/hiza/
+  /// boy/renk/dolgu her dokunuşta eki kaydediyordu → editör eki yazıp
+  /// gövdeyi yeniden kuruyordu (art arda boy dokunuşunda her seferinde).
+  /// Ekranda değişiklik ANINDA ([update] bildirir); kayıt son dokunuştan
+  /// kısa süre sonra TEK kez. Kart kapanınca / [save] çağrılınca hemen.
+  void saveSoon() {
+    _saveTimer?.cancel();
+    _saveTimer = Timer(_saveDelay, save);
+  }
+
+  Timer? _saveTimer;
+
+  /// Biçim kaydının gecikmesi (zamanlayıcı — hareket süresi değil).
+  static final _saveDelay = AppMotion.medium * 2;
 
   void remove(String id) {
     _bubbles = [

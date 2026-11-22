@@ -64,6 +64,8 @@ import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/home_invites.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/theme_picker.dart' show showThemePickerSheet;
+import '../../calendar/data/calendar_repository.dart'
+    show noteCalendarDayProvider;
 import '../../calendar/presentation/home_calendar_strip.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
@@ -262,7 +264,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Anahtar sorgunun KENDİSİ değil yalnız "arama var mı" (F21.6): sorgu
   /// harf harf değişirken kartlar aynı örnek kalır, vurgu [_liveQuery]
   /// üzerinden yalnız yeniden BOYANIR (bkz. `SearchHighlight`).
-  final Map<String, (Note, bool, Widget)> _cardCache = {};
+  final Map<String, (Note, bool, DateTime?, Widget)> _cardCache = {};
 
   /// Kartların izlediği canlı arama sorgusu (F21.6).
   final _liveQuery = ValueNotifier<String>('');
@@ -271,13 +273,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// da onunla değişir): anlık sorguyla kurulunca ilk harfte kartlar iki kez
   /// kuruluyordu — önce tuşta, sonra gecikme dolup sarmalayıcı değişince
   /// (P46, bütçe S21: harf başına 114 → 57).
-  Widget _cachedCard(Note note, {required bool searching}) {
+  Widget _cachedCard(
+    Note note, {
+    required bool searching,
+    DateTime? calendarDay,
+  }) {
     final hit = _cardCache[note.id];
-    if (hit != null && identical(hit.$1, note) && hit.$2 == searching) {
-      return hit.$3;
+    if (hit != null &&
+        identical(hit.$1, note) &&
+        hit.$2 == searching &&
+        hit.$3 == calendarDay) {
+      return hit.$4;
     }
     final card = NoteCard(
       note: note,
+      calendarDay: calendarDay,
       liveQuery: searching ? _liveQuery : null,
       frame: (child, {required focused, required open}) => _FocusHalo(
         focused: focused,
@@ -286,7 +296,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         child: child,
       ),
     );
-    _cardCache[note.id] = (note, searching, card);
+    _cardCache[note.id] = (note, searching, calendarDay, card);
     return card;
   }
 

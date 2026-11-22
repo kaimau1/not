@@ -214,7 +214,18 @@ extension _DashSlivers on _DashboardScreenState {
     _pruneCardCache(notes);
     // ACİL notlar (2026-11-16) SABİTLERİN DE ÜSTÜNDE kendi bölümünde; acil
     // ve sabit olan not yalnız "Acil"de görünür (iki kez çizilmez).
-    final (:urgent, :pinned, :others) = homeSections(notes);
+    final (:urgent, :pinned, others: rest) = homeSections(notes);
+    // TAKVİM BÖLÜMÜ (kullanıcı isteği 2026-11-22: "takvimden üretilen notlar
+    // ana ekranda her yere yayılıyor; sabit, yıldızlı gibi bir takvim
+    // alanında toplansın"): güne bağlı notlar (acil/sabit değilse) Sabit'in
+    // altında kendi bölümünde; kartlarında "📅 gün" hapı. Aramada tek akış.
+    final calendarDays = ref.watch(noteCalendarDayProvider);
+    final calendarNotes = <Note>[];
+    final others = <Note>[];
+    for (final n in rest) {
+      (!searchActive && calendarDays.containsKey(n.id) ? calendarNotes : others)
+          .add(n);
+    }
 
     final query = ref.read(searchQueryProvider).trim();
     // Kartların canlı vurgusu (F21.6): kurulum sırasında yazılır — tembel
@@ -365,7 +376,11 @@ extension _DashSlivers on _DashboardScreenState {
         // kartın bağlamını bulmaya yarar. Hale kartın İÇİNDEN çizilir
         // ([NoteCard.frame]): odak/açık not kartın tek aboneliğinde, hücrede
         // ayrı Consumer yok (F21.4) — vurgu değişince yalnız o kart kurulur.
-        final card = _cachedCard(note, searching: searchActive);
+        final card = _cachedCard(
+          note,
+          searching: searchActive,
+          calendarDay: calendarDays[note.id],
+        );
         void select() =>
             ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
         // Olağan hâl: uzun basış toplu seçime girer. SEÇİLİ bir kartta ise
@@ -538,6 +553,7 @@ extension _DashSlivers on _DashboardScreenState {
       final groups = <(String, List<Note>)>[
         (l10n.sectionUrgent, urgent),
         (l10n.sectionPinnedShort, pinned),
+        (l10n.calendarTitle, calendarNotes),
         for (final f in folders)
           if (byFolder[f.id] case final list?) (f.name, list),
         // Klasörsüzler + klasörü listede olmayanlar (silinmiş klasör):
@@ -566,6 +582,7 @@ extension _DashSlivers on _DashboardScreenState {
       final sections = <(String, List<Note>)>[
         (l10n.sectionUrgent, urgent),
         (l10n.sectionPinnedShort, pinned),
+        (l10n.calendarTitle, calendarNotes),
         (l10n.sectionOthers, others),
       ].where((s) => s.$2.isNotEmpty).toList();
       if (sections.length < 2) {
@@ -593,6 +610,7 @@ extension _DashSlivers on _DashboardScreenState {
     final buckets = <(String, List<Note>)>[
       (l10n.sectionUrgent, urgent),
       (l10n.sectionPinnedShort, pinned),
+      (l10n.calendarTitle, calendarNotes),
       for (final (label, list) in dateBuckets(others, DateTime.now()))
         (
           switch (label) {

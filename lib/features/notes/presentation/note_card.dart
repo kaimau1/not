@@ -429,9 +429,14 @@ class NoteCard extends ConsumerWidget {
     this.readOnly = false,
     this.showFolder = true,
     this.frame,
+    this.calendarDay,
   });
 
   final Note note;
+
+  /// Not takvimde bir GÜNE bağlıysa o gün: alt satırda "📅 27 Kas" hapı
+  /// (kullanıcı isteği 2026-11-22: takvimden geldiği belli olsun).
+  final DateTime? calendarDay;
 
   /// Kartın çevresine çizilen hale (ana ekranda odak / açık not vurgusu).
   /// Hücrede ayrı `Consumer` YOK (F21.4): odak ve açık not da kartın TEK
@@ -928,7 +933,10 @@ class NoteCard extends ConsumerWidget {
           // ALT META SATIRI: durum simgeleri · ilk etiket · sağda tarih.
           // Üçü tek bantta olduğu için kartın yüksekliği rozet sayısına göre
           // değişmiyor; eskiden etiketler Wrap ile ikinci satıra taşıyordu.
-          if (statusIcons.isNotEmpty || showTag || showDate) ...[
+          if (statusIcons.isNotEmpty ||
+              showTag ||
+              showDate ||
+              calendarDay != null) ...[
             const SizedBox(height: 8),
             Row(
               children: [
@@ -976,6 +984,14 @@ class NoteCard extends ConsumerWidget {
                                     color: accent ?? scheme.onSurfaceVariant,
                                   ),
                             ),
+                          ),
+                        ),
+                      if (calendarDay case final day?)
+                        Flexible(
+                          flex: 5,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 6),
+                            child: CardCalendarPill(day: day, accent: accent),
                           ),
                         ),
                       // Dar kartta etiket hapı sıfıra sıkışıp boş bir
@@ -2341,3 +2357,50 @@ class _Leaving extends StatelessWidget {
 IconData _cardCheckGlyph(bool checked, {required bool numbered}) => numbered
     ? Icons.check_rounded
     : (checked ? Icons.check_box : Icons.check_box_outline_blank);
+
+/// Kartta takvim hapı: "📅 27 Kas" — notun takvimdeki gününe bağlı olduğunu
+/// gösterir (bkz. [NoteCard.calendarDay]).
+class CardCalendarPill extends StatelessWidget {
+  const CardCalendarPill({super.key, required this.day, this.accent});
+
+  final DateTime day;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = _cardThemeOf(context).colorScheme;
+    final fg = accent ?? scheme.primary;
+    return DecoratedBox(
+      key: const ValueKey('card-calendar-pill'),
+      decoration: ShapeDecoration(
+        color: fg.withValues(alpha: AppAlpha.pressed),
+        shape: const StadiumBorder(),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.event_outlined, size: _kExpiryIcon, color: fg),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                formatCalendarPillDate(day),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppText.of(_cardThemeOf(context)).badge.copyWith(
+                  color: fg,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Takvim hapının tarihi: bu yıl "27 Kas", başka yıl "27 Kas 2025".
+String formatCalendarPillDate(DateTime day) => day.year == DateTime.now().year
+    ? _dateFormat('d MMM').format(day)
+    : _dateFormat('d MMM y').format(day);
