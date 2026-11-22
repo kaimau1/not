@@ -296,31 +296,32 @@ extension _EditorMediaView on _NoteEditorScreenState {
     if (picked != null && mounted) _goToPage(picked);
   }
 
-  /// Başlığın altındaki DEFTER SAYFA ŞERİDİ (2026-11-21): ‹ Sayfa 2 / 3 ▾ ›
-  /// (hapa dokun = sayfa listesi) · kâğıt deseni · yeni sayfa · sil; çok
-  /// sayfada altta ince konum çizgisi.
+  /// Alt panelin üstündeki sabit DEFTER SAYFA ŞERİDİ (2026-11-22):
+  /// ‹ Sayfa 2 / 3 ▾ › (hapa dokun = sayfa listesi) · kâğıt deseni · yeni
+  /// sayfa · sil; çok sayfada altta ince konum çizgisi. Renkler [_chrome]'dan
+  /// gelir: tema, renk, kâğıt tonu ve zemin görseliyle tam uyumludur.
   Widget _pageBar(Note note) {
     final l10n = context.l10n;
     final theme = _themeOf(context);
-    final scheme = theme.colorScheme;
     final text = AppText.of(theme);
-    final accent = NoteColors.noteInk(context, note) ?? scheme.primary;
+    final chrome = _chrome;
+    final accent = chrome.pageBarAccent;
+    final iconColor = chrome.pageBarIcon;
+    final disabledColor = iconColor.withValues(alpha: AppAlpha.disabled);
     final pos = textPagePosition(note);
-    final pillBg = accent.withValues(alpha: AppAlpha.pressed);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         _NoteEditorScreenState._kGutter - 4,
-        AppSpace.xxs,
+        AppSpace.xs,
         _NoteEditorScreenState._kGutter - 4,
         AppSpace.xs,
       ),
       child: DecoratedBox(
+        key: const ValueKey('page-bar-surface'),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerLow.withValues(alpha: AppAlpha.strong),
+          color: chrome.pageBarFill,
           borderRadius: BorderRadius.circular(AppRadius.m),
-          border: Border.all(
-            color: accent.withValues(alpha: AppAlpha.soft),
-          ),
+          border: Border.all(color: chrome.pageBarBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -332,11 +333,13 @@ extension _EditorMediaView on _NoteEditorScreenState {
                   tooltip: l10n.archivePrevPage,
                   visualDensity: VisualDensity.compact,
                   iconSize: AppIconSize.m,
+                  color: iconColor,
+                  disabledColor: disabledColor,
                   icon: const Icon(Icons.chevron_left_rounded),
                   onPressed: pos.index > 0 ? () => _stepPage(-1) : null,
                 ),
                 Material(
-                  color: pillBg,
+                  color: chrome.pageBarPillFill,
                   borderRadius: BorderRadius.circular(AppRadius.pill),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
@@ -377,6 +380,8 @@ extension _EditorMediaView on _NoteEditorScreenState {
                   tooltip: l10n.archiveNextPage,
                   visualDensity: VisualDensity.compact,
                   iconSize: AppIconSize.m,
+                  color: iconColor,
+                  disabledColor: disabledColor,
                   icon: const Icon(Icons.chevron_right_rounded),
                   onPressed:
                       pos.index < pos.count - 1 ? () => _stepPage(1) : null,
@@ -397,6 +402,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
                     tooltip: l10n.archiveNewPage,
                     visualDensity: VisualDensity.compact,
                     iconSize: AppIconSize.s,
+                    color: iconColor,
                     icon: const Icon(Icons.note_add_outlined),
                     onPressed: _addPage,
                   ),
@@ -404,6 +410,8 @@ extension _EditorMediaView on _NoteEditorScreenState {
                     tooltip: l10n.archiveDeletePage,
                     visualDensity: VisualDensity.compact,
                     iconSize: AppIconSize.s,
+                    color: iconColor,
+                    disabledColor: disabledColor,
                     icon: const Icon(Icons.delete_sweep_outlined),
                     onPressed: pos.count > 1 ? _deleteActivePage : null,
                   ),

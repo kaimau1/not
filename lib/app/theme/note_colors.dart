@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/utils/color_contrast.dart';
+import '../../features/notes/domain/archive_paper.dart';
 import '../../features/notes/domain/note.dart';
 import 'app_theme.dart';
 import 'app_tokens.dart';
@@ -8,6 +9,10 @@ import 'note_themes.dart';
 
 /// Not renk belirteçlerini temaya (açık/koyu) uygun gerçek renklere çözer.
 abstract final class NoteColors {
+  /// Sarı bloknot zemini (bkz. [ArchivePaper.legal]). Saydam: notun kendi
+  /// rengi ve koyu tema altta kalır, yalnız sıcak bir ton bindirilir.
+  static const Color legalTint = Color(0x3DF2D774);
+
   /// **İNCELTİLMİŞ KEEP** (TEMA_PLANI K5, 2026-11-04). Tonlar ve sıra Keep'in
   /// paletiyle aynı (kullanıcı isteği: "palet Keep tonlarına dönsün"); yalnız
   /// PARLAKLIKLAR eşitlendi (OKLCH L 0,88–0,94). Keep'in kendi değerlerinde
@@ -103,24 +108,38 @@ abstract final class NoteColors {
     return (dark ? _darkInk : _lightInk)[color];
   }
 
-  /// Notun koyu tonu: hazır renkte paletten, özel renkte rengin kendisinden
-  /// zemine göre okunur hâle getirilerek; renksiz ya da temalı notta null.
+  /// Notun koyu tonu: çizilmiş temada temanın kendi tonu, hazır renkte
+  /// paletten, özel renkte rengin kendisinden zemine göre okunur hâle
+  /// getirilerek, sarı bloknotta sıcak kehribar tonu; sade notta null.
   static Color? noteInk(BuildContext context, Note note) =>
       noteInkIn(Theme.of(context), note);
 
   /// [noteInk]'in bağlamsız hâli (dışa aktarma, F37.4).
   static Color? noteInkIn(ThemeData theme, Note note) {
-    if (NoteThemes.byId(note.theme) != null) return null;
+    final dark = theme.brightness == Brightness.dark;
+    final legal = note.paged && note.archivePaper == ArchivePaper.legal;
+    final noteTheme = NoteThemes.byId(note.theme);
+    if (noteTheme != null) {
+      final ink = noteTheme.palette(dark).ink;
+      return legal ? readableOn(ink, effectiveSurfaceIn(theme, note)) : ink;
+    }
     final custom = note.customColor;
     if (custom != null) {
       return readableOn(
         Color(custom).withAlpha(255),
-        noteSurfaceIn(theme, note),
+        effectiveSurfaceIn(theme, note),
       );
     }
-    if (note.color == NoteColor.none) return null;
-    return (theme.brightness == Brightness.dark ? _darkInk : _lightInk)[note
-        .color];
+    if (note.color != NoteColor.none) {
+      final ink = (dark ? _darkInk : _lightInk)[note.color];
+      if (ink == null) return null;
+      return legal ? readableOn(ink, effectiveSurfaceIn(theme, note)) : ink;
+    }
+    if (legal) {
+      final amberInk = (dark ? _darkInk : _lightInk)[NoteColor.amber]!;
+      return readableOn(amberInk, effectiveSurfaceIn(theme, note));
+    }
+    return null;
   }
 
   /// Mercan koyusu: defter kâğıdının kenar çizgisi (eskiden hata rengi
@@ -145,6 +164,21 @@ abstract final class NoteColors {
     final custom = note.customColor;
     if (custom == null) return surfaceIn(theme, note.color);
     return customSurface(theme, Color(custom));
+  }
+
+  /// Sayfanın ekranda görünen gerçek zemin rengi: sarı bloknot defterinde
+  /// ([ArchivePaper.legal]) [legalTint] bir kez bindirilir; diğerlerinde
+  /// [noteSurfaceIn]. Çift sarı bindirme dikişini önler; üst/alt çubuk ve
+  /// okunurluk hesapları bu tek kaynaktan beslenir.
+  static Color effectiveSurface(BuildContext context, Note note) =>
+      effectiveSurfaceIn(Theme.of(context), note);
+
+  static Color effectiveSurfaceIn(ThemeData theme, Note note) {
+    final base = noteSurfaceIn(theme, note);
+    if (note.paged && note.archivePaper == ArchivePaper.legal) {
+      return Color.alphaBlend(legalTint, base);
+    }
+    return base;
   }
 
   static final Map<(int, Brightness, ThemeFamilyKey), Color> _customCache = {};

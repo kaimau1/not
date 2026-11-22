@@ -9,9 +9,9 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
-- [ ] **Defter sayfa çubuğu sabit + çubuklar sayfayla bütün (22 Kasım gece 2, bulutta yazıldı, cihazda doğrulanmadı)**
-  Nerede/Nasıl: (1) Uzun defter notunda Sayfa 1/2 paneli alt panelin hemen üstünde, kaydırmadan görünüyor mu; yazarken gizlenip geri geliyor mu. (2) Sarı bloknot kâğıdında üst çubuk ve alt panel kâğıt tonunda mı. (3) Çizilmiş temalı notta ve zemin görselli notta alt panel saydam, görsel bütün ekranda mı; düğmeler okunuyor mu (koyu temada da).
-  Yanlışsa: madde numarasını yaz.
+- [ ] **Defter sayfa çubuğu sabit + tüm temalar/renkler/zemin görselinde üst/alt alan ve çizgiler tam uyumlu (22 Kasım gece 3, bulutta yazıldı, cihazda doğrulanmadı)**
+  Nerede/Nasıl: (1) Uzun defter notunda Sayfa 1/2 paneli alt panelin hemen üstünde sabit mi; yazarken gizlenip geri geliyor mu. (2) Sarı bloknot (açık + koyu), çizgili, kesik, kareli, mühendislik ve noktalı kâğıtlarda çizgiler, kırmızı kenar çizgisi ve cilt gölgesi üst çubuk ve alt panelin arkasında kesintisiz sürüyor mu, üst/alt ton dikişi kalktı mı, çizgiler üst simgelerin ortasından geçmiyor mu. (3) Sayfa çubuğu (`Sayfa 1 / 2`) ve alt kapsüller (sol araç + sağ ✨/ses) 8 not temasında, düz/özel renklerde ve sarı bloknotta kâğıdın/temanın tonuna uyuyor mu. (4) Koyu, açık ve karmaşık bir arka plan fotoğrafı koyup saydamlığı değiştir (açık ve koyu temada): üst düğmeler koruyucu kapsüllerde net okunuyor mu, alt kapsüller ve onay kutuları fotoğrafın tonuna uyup kaybolmuyor mu.
+  Yanlışsa: ekran görüntüsü ile madde numarasını yaz.
 
 - [ ] **Balon rengi + defter paneli + takvim + bildirim + gün sayfası + küçült düğmesi (22 Kasım gece, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) PDF/görselde açık metin/balon yazma kartında renkleri hızlı hızlı değiştir → son seçilen kalıyor mu. (2) Defter kipinde Sayfa 1/2 paneli içeriğin en altında mı; sayfa geçişi/ekle/sil çalışıyor mu. (3) Takvim ay başlığı büyük mü; başka güne dokun → Bugün → alttaki panel bugün mü. (4) Not sil → "Not silindi · Geri al" bildirimi açık tonlu, alçak, tasarıma uygun mu (koyu temada da). (5) Gün sayfası: büyük tarih + "Pazar · Bugün · 47. hafta", sayım hapları; + düğmesi yok, Etkinlik/Görev/Not alt satırda. (6) Sabit görselde alt çubuğun solunda küçült düğmesi: dokun → açık (dolu simge); iki parmakla uzaklaş → düğme yanıyor mu; tekrar dokun → genişliğe oturuyor mu.

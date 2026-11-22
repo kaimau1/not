@@ -1068,7 +1068,7 @@ class NoteCard extends ConsumerWidget {
     // dokunuş dalgası) dış temada kalır.
     Widget inner = NoteAccent(
       accent: accent,
-      background: background,
+      background: NoteColors.effectiveSurface(context, note),
       child: content,
     );
     if (inkTheme != null) {

@@ -10,6 +10,7 @@ class NoteThemePalette {
     required this.bottom,
     required this.art,
     required this.accent,
+    required this.ink,
   });
 
   /// Zeminin dikey geçişi (üst → alt).
@@ -21,6 +22,11 @@ class NoteThemePalette {
 
   /// İkincil süsleme rengi (ay, güneş, çiçek göbeği, kabartma gölgesi).
   final Color accent;
+
+  /// Temayla tam uyumlu vurgu/mürekkep tonu: defter çizgileri, kutucuklar,
+  /// sayfa çubuğu ve alt kapsüller bu tondan beslenir; hem [top] hem
+  /// [bottom] üzerinde okunur (WCAG AA ≥ 4,5:1).
+  final Color ink;
 
   /// Notun DÜZ zemini: alt çubuk, kart ve geçiş bu rengi kullanır — sayfanın
   /// alt ucuyla birleşsin diye geçişin alt rengi.
@@ -69,12 +75,14 @@ abstract final class NoteThemes {
         bottom: Color(0xFFFFFBEF),
         art: Color(0x8CE3CC8C),
         accent: Color(0x40D9BF73),
+        ink: Color(0xFF644E0E),
       ),
       NoteThemePalette(
         top: Color(0xFF2B2517),
         bottom: Color(0xFF1E1B13),
         art: Color(0x99453A22),
         accent: Color(0x403E3420),
+        ink: Color(0xFFE8D196),
       ),
       _palm,
     ),
@@ -85,12 +93,14 @@ abstract final class NoteThemes {
         bottom: Color(0xFFC6EBE3),
         art: Color(0xA6BDE8DE),
         accent: Color(0x667FC4B4),
+        ink: Color(0xFF0E4D43),
       ),
       NoteThemePalette(
         top: Color(0xFF0F3B36),
         bottom: Color(0xFF0B2B28),
         art: Color(0x9918544D),
         accent: Color(0x80082320),
+        ink: Color(0xFF9BE6D8),
       ),
       _lagoon,
     ),
@@ -101,12 +111,14 @@ abstract final class NoteThemes {
         bottom: Color(0xFFF2EFFB),
         art: Color(0xB37F8CC9),
         accent: Color(0xFFFFF4D6),
+        ink: Color(0xFF2F3E80),
       ),
       NoteThemePalette(
         top: Color(0xFF0B1633),
         bottom: Color(0xFF1A2A55),
         art: Color(0xE6FFFFFF),
         accent: Color(0xFFF5EBC8),
+        ink: Color(0xFFC2D1FF),
       ),
       _night,
     ),
@@ -117,12 +129,14 @@ abstract final class NoteThemes {
         bottom: Color(0xFFFFF4EA),
         art: Color(0xA6FFFFFF),
         accent: Color(0x99FFA77A),
+        ink: Color(0xFF833319),
       ),
       NoteThemePalette(
         top: Color(0xFF3A1D2C),
         bottom: Color(0xFF21131D),
         art: Color(0x664E2B3E),
         accent: Color(0x80A2475A),
+        ink: Color(0xFFFFC1A6),
       ),
       _sunset,
     ),
@@ -133,12 +147,14 @@ abstract final class NoteThemes {
         bottom: Color(0xFFFFF7F9),
         art: Color(0xB3F4ABC0),
         accent: Color(0x80B88F8F),
+        ink: Color(0xFF822D4C),
       ),
       NoteThemePalette(
         top: Color(0xFF2F1B23),
         bottom: Color(0xFF1F1419),
         art: Color(0x99703A4D),
         accent: Color(0x80503139),
+        ink: Color(0xFFFBBFD3),
       ),
       _sakura,
     ),
@@ -149,12 +165,14 @@ abstract final class NoteThemes {
         bottom: Color(0xFFD3EAF8),
         art: Color(0x99A9D3EF),
         accent: Color(0x80FFFFFF),
+        ink: Color(0xFF174F77),
       ),
       NoteThemePalette(
         top: Color(0xFF0C1D2B),
         bottom: Color(0xFF0B2536),
         art: Color(0x8C1A4F72),
         accent: Color(0x33FFFFFF),
+        ink: Color(0xFFA2D9FA),
       ),
       _waves,
     ),
@@ -165,12 +183,14 @@ abstract final class NoteThemes {
         bottom: Color(0xFFE1F1D0),
         art: Color(0x99A2CC86),
         accent: Color(0xCCFFFFFF),
+        ink: Color(0xFF2B561F),
       ),
       NoteThemePalette(
         top: Color(0xFF162218),
         bottom: Color(0xFF1B2C1D),
         art: Color(0x99345A38),
         accent: Color(0x66C9D9B0),
+        ink: Color(0xFFB7E4A4),
       ),
       _meadow,
     ),
@@ -181,12 +201,14 @@ abstract final class NoteThemes {
         bottom: Color(0xFFF5EEDF),
         art: Color(0x14000000),
         accent: Color(0x0F5A4320),
+        ink: Color(0xFF5A4322),
       ),
       NoteThemePalette(
         top: Color(0xFF27241F),
         bottom: Color(0xFF1F1C18),
         art: Color(0x12FFFFFF),
         accent: Color(0x26000000),
+        ink: Color(0xFFE0D3BC),
       ),
       _paper,
     ),

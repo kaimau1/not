@@ -64,29 +64,45 @@ class NotebookPaper extends StatelessWidget {
     required this.child,
     this.scroll,
     this.topInset = 0,
+    this.topChromeHeight = 0,
     this.contentRuled = false,
     this.accent,
+    this.paperTheme,
   });
 
   /// Sayfanın koyu tonu (bkz. [PaperInks]); null = renksiz sayfa.
   final Color? accent;
+
+  /// Zemin görseli parlaklığı çevirdiğinde çizgi renginin besleneceği tema;
+  /// null ise `Theme.of(context)`.
+  final ThemeData? paperTheme;
 
   final ArchivePaper style;
   final double gap;
   final ScrollController? scroll;
 
   /// Satır çizgilerini içerik mi çiziyor (bkz. [RuledLines])? Öyleyse
-  /// çizgili desenlerde burada yalnız kenar çizgisi, zemin tonu ve cilt
-  /// kalır — iki ayrı ızgara üst üste binmesin.
+  /// çizgili desenlerde gövdede yalnız kenar çizgisi, zemin tonu ve cilt
+  /// kalır — iki ayrı ızgara üst üste binmesin; [topChromeHeight] > 0 iken
+  /// üst çubuk bandında yatay çizgiler yine çizilir.
   final bool contentRuled;
 
   /// Desenin başladığı yer (başlık/sayfa çubuğu payı).
   final double topInset;
+
+  /// Ekranın tamamını saran kipte üst çubuğun yüksekliği (durum çubuğu payı
+  /// içeriden eklenir). 0 ise üst bant çizgisi çizilmez.
+  final double topChromeHeight;
+
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final inks = PaperInks.of(Theme.of(context), accent: accent);
+    final statusTop = topChromeHeight > 0
+        ? MediaQuery.paddingOf(context).top
+        : 0.0;
+    final topBand = topChromeHeight > 0 ? statusTop + topChromeHeight : 0.0;
+    final inks = PaperInks.of(paperTheme ?? Theme.of(context), accent: accent);
     return CustomPaint(
       painter: NotebookPaperPainter(
         style: style,
@@ -95,7 +111,9 @@ class NotebookPaper extends StatelessWidget {
         spine: inks.spine,
         scroll: scroll,
         gap: gap,
-        topInset: topInset,
+        topInset: topBand > 0 ? topBand : topInset,
+        topBand: topBand,
+        topHeaderTop: statusTop,
         contentRuled: contentRuled,
       ),
       child: child,
@@ -112,6 +130,8 @@ class NotebookPaperPainter extends CustomPainter {
     required this.gap,
     this.scroll,
     this.topInset = 0,
+    this.topBand = 0,
+    this.topHeaderTop = 0,
     this.contentRuled = false,
   }) : super(repaint: contentRuled && style.ruled ? null : scroll);
 
@@ -124,6 +144,15 @@ class NotebookPaperPainter extends CustomPainter {
   final Color spine;
   final double gap;
   final double topInset;
+
+  /// Üst alan yüksekliği (durum çubuğu + AppBar): [contentRuled] iken yatay
+  /// çizgiler bu banttaki boşluğu doldurur, gövdeyle çakışmaz.
+  final double topBand;
+
+  /// Durum çubuğu yüksekliği: üst çubuk simgelerinin ortasından çizgi
+  /// geçmemesi için [topHeaderTop]..[topBand] arası başlık bandı olarak kalır.
+  final double topHeaderTop;
+
   final ScrollController? scroll;
 
   /// Sol kenar boşluğu çizgisinin yeri.
@@ -147,9 +176,8 @@ class NotebookPaperPainter extends CustomPainter {
     return 0;
   }
 
-  /// Sarı bloknot zemini (bkz. [ArchivePaper.legal]). Saydam: notun kendi
-  /// rengi ve koyu tema altta kalır, yalnız sıcak bir ton bindirilir.
-  static const Color legalTint = Color(0x3DF2D774);
+  /// Sarı bloknot zemini (bkz. [ArchivePaper.legal]). Tek kaynak [NoteColors.legalTint].
+  static const Color legalTint = NoteColors.legalTint;
 
   /// Noktalı desenlerde nokta çizgiden belirgin (tek nokta ince çizgiden
   /// az mürekkep taşır).
@@ -172,13 +200,35 @@ class NotebookPaperPainter extends CustomPainter {
     final left = margined ? marginAt : 12.0;
     final right = size.width - 12;
     void rows(Paint paint) {
-      if (ruledByContent) return;
-      for (var y = first; y < size.height; y += gap) {
+      final effective = style == ArchivePaper.dashed
+          ? (Paint()
+              ..color = line.withValues(alpha: (line.a * 1.25).clamp(0, 1))
+              ..strokeWidth = 1)
+          : paint;
+      void drawRow(double y) {
         if (style == ArchivePaper.dashed) {
-          drawDashedLine(canvas, Offset(left, y), right, paint);
+          drawDashedLine(canvas, Offset(left, y), right, effective);
         } else {
-          canvas.drawLine(Offset(left, y), Offset(right, y), paint);
+          canvas.drawLine(Offset(left, y), Offset(right, y), effective);
         }
+      }
+
+      if (ruledByContent) {
+        if (topBand > 0) {
+          // Üst alan: AppBar'ın hemen altında doğal kâğıt üst çizgisi; üst
+          // çubuk simge/tarihinin ortasından çizgi geçmez, durum çubuğu
+          // üstünde çizgiler üst kenara kadar sürer.
+          drawRow(topBand - 0.5);
+          if (topHeaderTop > 0) {
+            for (var y = topHeaderTop - 0.5; y > 0; y -= gap) {
+              drawRow(y);
+            }
+          }
+        }
+        return;
+      }
+      for (var y = first; y < size.height; y += gap) {
+        drawRow(y);
       }
     }
 
@@ -305,7 +355,69 @@ class NotebookPaperPainter extends CustomPainter {
       old.spine != spine ||
       old.gap != gap ||
       old.topInset != topInset ||
+      old.topBand != topBand ||
+      old.topHeaderTop != topHeaderTop ||
       old.contentRuled != contentRuled;
+}
+
+/// Çizgili defterlerde ([ArchivePaper.ruled]) alt panelin (sayfa çubuğu +
+/// alt çubuk + sistem gezinme alanı) arkasında yatay satır çizgilerini
+/// kesintisiz sürdürür. Yalnız boyama katmanındadır; yerleşim/boy değiştirmez.
+class NotebookRuledBand extends StatelessWidget {
+  const NotebookRuledBand({
+    super.key,
+    required this.style,
+    required this.gap,
+    required this.line,
+    required this.child,
+  });
+
+  final ArchivePaper style;
+  final double gap;
+  final Color line;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(
+    painter: _NotebookRuledBandPainter(style: style, gap: gap, line: line),
+    child: child,
+  );
+}
+
+class _NotebookRuledBandPainter extends CustomPainter {
+  const _NotebookRuledBandPainter({
+    required this.style,
+    required this.gap,
+    required this.line,
+  });
+
+  final ArchivePaper style;
+  final double gap;
+  final Color line;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (gap <= 0 || size.isEmpty) return;
+    final dashed = style == ArchivePaper.dashed;
+    final paint = Paint()
+      ..color = dashed
+          ? line.withValues(alpha: (line.a * 1.25).clamp(0, 1))
+          : line
+      ..strokeWidth = 1;
+    const left = NotebookPaperPainter.contentMarginX;
+    final right = size.width - 12;
+    for (var y = 0.5; y < size.height; y += gap) {
+      if (dashed) {
+        drawDashedLine(canvas, Offset(left, y), right, paint);
+      } else {
+        canvas.drawLine(Offset(left, y), Offset(right, y), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_NotebookRuledBandPainter old) =>
+      old.style != style || old.gap != gap || old.line != line;
 }
 
 /// Kesikli yatay çizgi ([start]tan [endX]e). Kesik ve boşluk çizgi

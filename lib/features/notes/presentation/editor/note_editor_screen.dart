@@ -1,4 +1,5 @@
 import '../note_link_ui.dart';
+import 'editor_chrome_palette.dart';
 import 'glyph_button.dart';
 import 'ime_hide_detector.dart';
 import 'store_mode_screen.dart';
@@ -1080,11 +1081,54 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
 
-  /// Alt çubuğun renkli nottaki tonu (F75.3, K-D6): notun koyu tonu ve sayfa
-  /// rengi; renksiz/temalı notta [_barInk] null → çubuk temanın renklerinde.
-  /// Build'de [NoteAccent]'e giden değerlerden beslenir (yeni sağlayıcı yok).
+  /// Alt çubuğun renkli/temalı/defter nottaki tonu (F75.3, K-D6): notun koyu
+  /// tonu ve sayfa rengi; sade notta [_barInk] null → çubuk temanın
+  /// renklerinde. Build'de [_chrome]'dan beslenir (yeni sağlayıcı yok).
   Color? _barInk;
   Color _barPage = Colors.transparent;
+  late EditorChromePalette _chrome;
+
+  /// Zemin görselinin 24 px'ten çıkarılmış renk/parlaklık tonu (önbellekli);
+  /// zemin görseli yokken hiçbir iş yapmaz, bütçeye maliyeti sıfırdır.
+  BgImageTone? _bgTone;
+  String? _bgToneKey;
+
+  void _syncBgTone(Attachment? bgImage) {
+    if (bgImage == null) {
+      _bgToneKey = null;
+      _bgTone = null;
+      return;
+    }
+    final key =
+        '${bgImage.id}|${bgImage.localPath}|${bgImage.downloadUrl}|'
+        '${bgImage.sizeBytes}|${bgImage.width}x${bgImage.height}';
+    if (_bgToneKey == key) return;
+    final hit = BgImageTone.cached(key);
+    if (hit != null) {
+      _bgToneKey = key;
+      _bgTone = hit;
+      return;
+    }
+    final provider = _backgroundProvider(bgImage);
+    if (provider == null) {
+      _bgToneKey = null;
+      _bgTone = null;
+      return;
+    }
+    _bgToneKey = key;
+    _bgTone = null;
+    unawaited(
+      BgImageTone.load(key, provider).then((tone) {
+        if (!mounted || _bgToneKey != key) return;
+        if (tone == null) {
+          _bgToneKey = null;
+          return;
+        }
+        if (tone == _bgTone) return;
+        setState(() => _bgTone = tone);
+      }),
+    );
+  }
 
   /// Çubuğun yazacağı alan: en son odaklanan metin alanı (gövde ya da bir
   /// liste maddesi). Çubuğun kendisi odak İSTEMEDİĞİ için bu değer düğmeye
@@ -2824,22 +2868,42 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onHinted: () => _quickRowHinted = true,
       ),
     );
-    if (bar != null) {
+    final Widget styledRow = _chrome.topBarPills
+        ? EditorTopPill(
+            fill: _chrome.topPillFill,
+            border: _chrome.topPillBorder,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+              child: row,
+            ),
+          )
+        : row;
+    final Widget? styledBar = bar != null && _chrome.topBarPills
+        ? EditorTopPill(
+            fill: _chrome.topPillFill,
+            border: _chrome.topPillBorder,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
+              child: bar,
+            ),
+          )
+        : bar;
+    if (styledBar != null) {
       if (wide) {
         return Row(
           children: [
-            Flexible(child: bar),
+            Flexible(child: styledBar),
             const SizedBox(width: 12),
-            Expanded(flex: 2, child: Align(alignment: AlignmentDirectional.centerStart, child: row)),
+            Expanded(flex: 2, child: Align(alignment: AlignmentDirectional.centerStart, child: styledRow)),
           ],
         );
       }
       return KeyboardSwitch(
-        closed: bar,
+        closed: styledBar,
         editing: _fieldFocusedN,
         onlyWhileEditing: true,
         pauseHidden: true,
-        open: row,
+        open: styledRow,
       );
     }
     if (wide) {
@@ -2847,7 +2911,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         children: [
           if (idle != null) Flexible(child: idle),
           const SizedBox(width: 12),
-          Expanded(flex: 2, child: Align(alignment: AlignmentDirectional.centerStart, child: row)),
+          Expanded(flex: 2, child: Align(alignment: AlignmentDirectional.centerStart, child: styledRow)),
         ],
       );
     }
@@ -2855,7 +2919,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       closed: idle,
       editing: _fieldFocusedN,
       pauseHidden: true,
-      open: row,
+      open: styledRow,
     );
   }
 
@@ -3410,32 +3474,36 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     }
 
-    final background = NoteColors.noteSurface(context, note);
-    // Zemin temanın yazısıyla okunmuyorsa notun içi zıt temada (bkz.
-    // [_editorInk]). `Theme.of` BURADA bilerek dış tema: karar dış temaya göre.
-    _editorInk[context] = NoteColors.inkThemeFor(Theme.of(context), background);
+    // Zemin görseli: ekler listesinde durur ama sayfada yüzmez, şeritte de
+    // görünmez — arkada duvar kâğıdı gibi bütün ekranı kaplar.
+    final bgImage = note.backgroundImageId == null
+        ? null
+        : note.attachments
+              .where((a) => a.id == note.backgroundImageId)
+              .firstOrNull;
+    _syncBgTone(bgImage);
+    // ÜST ALAN, SAYFA ÇUBUĞU VE ALT PANEL SAYFAYLA BİR BÜTÜN (kullanıcı
+    // isteği 2026-11-22): her tema, renk, defter kâğıdı ve arka plan
+    // görselinde tek kaynaklı renk uyumu ve WCAG AA okunurluk garantisi.
+    // `Theme.of` BURADA bilerek dış tema: okunurluk kararı dış temaya göre.
+    final chrome = EditorChromePalette.resolve(
+      outerTheme: Theme.of(context),
+      note: note,
+      hasBgImage: bgImage != null,
+      bgTone: bgImage == null ? null : _bgTone,
+    );
+    _chrome = chrome;
+    final background = chrome.pageSurface;
+    _editorInk[context] = chrome.inkTheme;
     // NOTUN VURGUSU — kartla AYNI (bkz. [NoteAccent]): kutucuk, "Yeni madde",
-    // etiket/klasör/hatırlatıcı hapları ve raptiye bu tondan. Dış temadan
-    // hesaplanır (zıt temada zemin yanlış hesaplanırdı).
-    final noteAccent = NoteColors.noteInk(context, note);
-    _barInk = noteAccent;
-    _barPage = background;
+    // etiket/klasör/hatırlatıcı hapları ve raptiye bu tondan.
+    final noteAccent = chrome.noteAccent;
+    _barInk = chrome.barInk;
+    _barPage = chrome.barPage;
     // Çizilmiş tema varsa sayfa ve üst çubuk saydam: süsleme arkadan görünür
-    // (bkz. NoteThemeBackdrop); alt çubuk temanın alt tonunda düz kalır.
+    // (bkz. NoteThemeBackdrop).
     final themed = NoteThemes.byId(note.theme) != null;
-    // ÜST VE ALT ÇUBUK SAYFAYLA BİR BÜTÜN (kullanıcı isteği 2026-11-22:
-    // "defter modunda renklendirmeler, temalarda arka plan eklendiğinde alt ve
-    // üst alanlar da temaya katılsın"): sarı bloknot kâğıdının tonu yalnız
-    // gövdeye biniyordu — üst çubuk ve alt panel beyaz kalıyordu. Çubukların
-    // zemini kâğıt tonuyla aynı; çizilmiş tema ya da zemin görseli varken
-    // alt panel de saydam (görsel bütün ekranın arkasında, bkz. ColorFade).
-    final chrome = note.paged && note.archivePaper == ArchivePaper.legal
-        ? Color.alphaBlend(NotebookPaperPainter.legalTint, background)
-        : background;
-    final hasBgImage =
-        note.backgroundImageId != null &&
-        note.attachments.any((a) => a.id == note.backgroundImageId);
-    final chromeSeeThrough = themed || hasBgImage;
+    final chromeSeeThrough = chrome.chromeSeeThrough;
     // Satır içi biçimlendirmenin çizim ayarları: gövde ve maddeler AYNI
     // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
     final richTheme = RichTextTheme(
@@ -3901,13 +3969,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             !note.hidesDerivedDocument(a))
           a,
     ];
-    // Zemin görseli: ekler listesinde durur ama sayfada yüzmez, şeritte de
-    // görünmez — arkada duvar kâğıdı gibi çizilir.
-    final bgImage = note.backgroundImageId == null
-        ? null
-        : note.attachments
-              .where((a) => a.id == note.backgroundImageId)
-              .firstOrNull;
 
     // Görseller sayfanın üzerinde serbest katmanda yüzer ve metnin ÜSTÜne
     // çizilir. Yazılı metin görselin etrafından akar (bkz. text_wrap.dart),
@@ -4780,9 +4841,23 @@ child: FormatBar(
                     builder: (context, formatOpen, _) => formatOpen
                       ? const SizedBox(width: double.infinity)
                       : _barReturn(
+                      _withBottomRuledLines(
+                      note,
+                      noteBodyStyle,
                       Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
+                // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
+                // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
+                // alan). Çizgili defterde [NotebookRuledBand] ilk çizgiyi
+                // zaten üst kenarda çizer; diğer hâllerde sayfa tonunda ayraç.
+                if (chrome.dividerColor != null)
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: chrome.dividerColor,
+                  ),
                 if (pageBarDock != null)
                   Center(
                     child: ConstrainedBox(
@@ -4794,17 +4869,6 @@ child: FormatBar(
                       child: pageBarDock,
                     ),
                   ),
-                // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
-                // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
-                // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
-                // alan).
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: _themeOf(
-                    context,
-                  ).colorScheme.outlineVariant.withValues(alpha: 0.6),
-                ),
                 // SIKI ÇUBUK (kullanıcı isteği 2026-11-03: "telefon
                 // butonları ile kendi butonlarımız arasında boşluk çok,
                 // satır aralığını daraltırsak yer açılır"): 64 → 56 dp,
@@ -4812,7 +4876,9 @@ child: FormatBar(
                 // %10 daha alçak (kullanıcı isteği 2026-11-08): 56 → 50 dp,
                 // dikey dolgu 4 → 1 — en büyük düğme (48 dp) hâlâ sığar.
                 BottomAppBar(
-                  color: chromeSeeThrough ? Colors.transparent : chrome,
+                  color: chromeSeeThrough ? Colors.transparent : background,
+                  elevation: 0,
+                  surfaceTintColor: Colors.transparent,
                   height: 50,
                   padding: const EdgeInsets.fromLTRB(12, 1, 12, 1),
                   // KİŞİSELLEŞTİRME (kullanıcı isteği 2026-10-16): her
@@ -5362,25 +5428,12 @@ child: FormatBar(
                               // yakalansın. Görünüş aynı: çerçeve 1 + dolgu 3.
                               child: DecoratedBox(
                                 key: const ValueKey('editor-tool-capsule'),
-                                // Renkli notta notun tonu (F75.3, K-D6).
+                                // Renkli/temalı/defter notta sayfa tonu (F75.3, K-D6).
                                 decoration: BoxDecoration(
-                                  color: noteAccent == null
-                                      ? _themeOf(context).colorScheme.surface
-                                      : Color.alphaBlend(
-                                          noteAccent.withValues(
-                                            alpha: AppAlpha.hairline,
-                                          ),
-                                          background,
-                                        ),
+                                  color: chrome.toolCapsuleFill,
                                   borderRadius: BorderRadius.circular(13),
                                   border: Border.all(
-                                    color:
-                                        noteAccent?.withValues(
-                                          alpha: AppAlpha.pressed,
-                                        ) ??
-                                        _themeOf(
-                                          context,
-                                        ).colorScheme.outlineVariant,
+                                    color: chrome.toolCapsuleBorder,
                                   ),
                                 ),
                                 child: Padding(
@@ -5438,6 +5491,7 @@ child: FormatBar(
                 ),
                 ],
                 ),
+                      ),
                     ),
                   ),
                 ),
@@ -5550,7 +5604,7 @@ child: FormatBar(
           // Sayfa rengi Scaffold'un ARKASINDA, 200 ms'de değişir (F34.4):
           // editörün dev ağacı her karede yeniden kurulmaz. Üst çubuk saydam.
           child: ColorFade(
-          color: themed ? Colors.transparent : chrome,
+          color: themed ? Colors.transparent : chrome.baseBackground,
           identity: (note.id, Theme.of(context).brightness),
           // Zemin görseli bütün ekranın (üst çubuk + alt panel dahil)
           // arkasında; eskiden yalnız gövdenin arkasındaydı.
@@ -5562,7 +5616,16 @@ child: FormatBar(
           // MediaQuery; canlı değer yalnız [KeyboardInset.liveOf] okuyan
           // yapraklarda (bkz. [KeyboardInsetScope]).
           child: KeyboardInsetScope(
-          child: Scaffold(
+          // Defter kâğıdı (çizgi, kenar çizgisi, cilt gölgesi, sarı bloknot
+          // tonu) bütün ekranın (üst alan + gövde + alt panel) arkasında tek
+          // kez çizilir — üst/alt şeritlerde dikiş ve eksik çizgi kalmaz.
+          child: _withPaper(
+          note,
+          noteBodyStyle,
+          topChromeHeight: _pagePen && !_secondary && fullscreenNow
+              ? 0
+              : toolbarHeight,
+          Scaffold(
           backgroundColor: Colors.transparent,
           // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
           // Scaffold gövdeyi klavye animasyonunun HER karesinde kısaltıyordu;
@@ -5573,49 +5636,35 @@ child: FormatBar(
           // [KeyboardSlide] ile yalnız boyama katmanında yapılıyor.
           resizeToAvoidBottomInset: false,
           // Kalem + tam ekran: üst de sayfa olur (çıkış sütunda).
-          appBar: _pagePen && !_secondary && ref.watch(noteFullscreenProvider)
+          appBar: _pagePen && !_secondary && fullscreenNow
               ? null
               : HomeInBar(appBar: PreferredSize(
                   preferredSize: Size.fromHeight(toolbarHeight),
                   // Bölmenin genişliği: tarih okuma sütunuyla hizalı (F38.2).
                   // `_`: `_themeOf` ekranın kendi bağlamından okur.
                   child: LayoutBuilder(
-                    builder: (_, box) => AppBar(
-            // SIKI ÜST ÇUBUK (kullanıcı isteği 2026-11-03): 56 → 48 dp —
-            // durum çubuğu ile düğmeler arasındaki boşluk yer harcıyordu;
-            // simge düğmeleri 48 dp dokunma alanını korur.
-            toolbarHeight: toolbarHeight,
-            // Liste gizliyken (tam ekran / odak modu) geri okunun yerinde ☰:
-            // tek dokunuşla liste geri gelir (kullanıcı isteği 2026-11-02:
-            // "tam ekrandan çıkmak çok zor").
-            leading: _listLeading(l10n),
-            backgroundColor: Colors.transparent,
-            // Düğmeler okuma sütununun sağ kenarında biter (F44.3).
-            actionsPadding: EdgeInsetsDirectional.only(
-              end: readingColumn ? readingMargin(box.maxWidth) : 0,
-            ),
-            // Saydam çubukta Flutter simge rengini zeminden çıkaramaz (çizilmiş
-            // temalı notta beyaz simge kalıyordu): sayfanın rengine göre (F30.6).
-            systemOverlayStyle: _statusBarFor(background),
-            scrolledUnderElevation: 0,
-            // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
-            // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
-            // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
-            // menüsüne taşındığı için durum bir yerde görünmeliydi.
-            titleSpacing: editorTitleSpacing(
-              readingColumn ? box.maxWidth : 0,
-              hasLeading:
-                  _listLeading(l10n) != null ||
-                  (Navigator.maybeOf(context)?.canPop() ?? false),
-            ),
-            title: _typingTitle(
-                  note,
-                  bar: _barTitle,
-                  note.updatedAt == null && note.tags.isEmpty
+                    builder: (_, box) {
+            final rawLeading = _listLeading(l10n);
+            final canPop = Navigator.maybeOf(context)?.canPop() ?? false;
+            final leadingWidget =
+                rawLeading ??
+                (chrome.topBarPills && canPop ? const BackButton() : null);
+            final appBarLeading = leadingWidget != null && chrome.topBarPills
+                ? EditorTopPill(
+                    key: const ValueKey('editor-top-leading-pill'),
+                    fill: chrome.topPillFill,
+                    border: chrome.topPillBorder,
+                    circle: true,
+                    child: leadingWidget,
+                  )
+                : leadingWidget;
+            final Widget? idleMeta =
+                note.updatedAt == null && note.tags.isEmpty
                 ? null
                 : Customizable(
                     id: UiItem.editorDate,
                     child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // ETİKETLER TARİHİN SOLUNDA (kullanıcı isteği
                       // 2026-11-05): gövdedeki çip şeridi yalnız etiket
@@ -5627,7 +5676,9 @@ child: FormatBar(
                             padding: const EdgeInsetsDirectional.only(end: 8),
                             child: EditorBarTags(
                               tags: note.tags,
-                              accent: noteAccent,
+                              accent: chrome.topBarPills
+                                  ? chrome.topPillInk
+                                  : noteAccent,
                               removeLabel: l10n.tagRemove,
                               onRemove: _removeTag,
                             ),
@@ -5645,9 +5696,13 @@ child: FormatBar(
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: _themeOf(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                            color: chrome.topBarPills
+                                ? chrome.topPillInk.withValues(
+                                    alpha: AppAlpha.strong,
+                                  )
+                                : _themeOf(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -5698,9 +5753,22 @@ child: FormatBar(
                       ),
                     ],
                   ),
-                  ),
-                ),
-            actions: [
+                  );
+            final Widget? styledIdle = idleMeta != null && chrome.topBarPills
+                ? EditorTopPill(
+                    key: const ValueKey('editor-top-title-pill'),
+                    fill: chrome.topPillFill,
+                    border: chrome.topPillBorder,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.m,
+                        vertical: AppSpace.xs,
+                      ),
+                      child: idleMeta,
+                    ),
+                  )
+                : idleMeta;
+            final actionItems = <Widget>[
               // SIRA kullanıcının (P20 M8, [UiPrefs.topOrder]); sabit olanlar:
               // ⌨ ve ortak düzenleyen Ana sayfa yuvasının ardında, ⋮ en sonda.
               for (final id in UiPrefs.orderOf(UiItem.topDefault, _topOrder))
@@ -5983,8 +6051,61 @@ child: FormatBar(
                 icon: const Icon(Icons.more_vert),
                 onPressed: _openNoteMenu,
               ),
-            ],
-          ),
+            ];
+            return AppBar(
+              // SIKI ÜST ÇUBUK (kullanıcı isteği 2026-11-03): 56 → 48 dp —
+              // durum çubuğu ile düğmeler arasındaki boşluk yer harcıyordu;
+              // simge düğmeleri 48 dp dokunma alanını korur.
+              toolbarHeight: toolbarHeight,
+              // Liste gizliyken (tam ekran / odak modu) geri okunun yerinde ☰:
+              // tek dokunuşla liste geri gelir (kullanıcı isteği 2026-11-02:
+              // "tam ekrandan çıkmak çok zor").
+              leading: appBarLeading,
+              backgroundColor: Colors.transparent,
+              foregroundColor: chrome.topBarIconColor,
+              iconTheme: IconThemeData(color: chrome.topBarIconColor),
+              actionsIconTheme: IconThemeData(color: chrome.topBarIconColor),
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              // Düğmeler okuma sütununun sağ kenarında biter (F44.3).
+              actionsPadding: EdgeInsetsDirectional.only(
+                end: readingColumn
+                    ? readingMargin(box.maxWidth)
+                    : (chrome.topBarPills ? AppSpace.xs : 0),
+              ),
+              // Saydam çubukta Flutter simge rengini zeminden çıkaramaz (çizilmiş
+              // temalı notta beyaz simge kalıyordu): üst bant rengine göre (F30.6).
+              systemOverlayStyle: _statusBarFor(chrome.statusBarGround),
+              scrolledUnderElevation: 0,
+              // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
+              // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
+              // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
+              // menüsüne taşındığı için durum bir yerde görünmeliydi.
+              titleSpacing: editorTitleSpacing(
+                readingColumn ? box.maxWidth : 0,
+                hasLeading: rawLeading != null || canPop,
+              ),
+              title: _typingTitle(note, bar: _barTitle, styledIdle),
+              actions: chrome.topBarPills
+                  ? [
+                      EditorTopPill(
+                        key: const ValueKey('editor-top-actions-pill'),
+                        fill: chrome.topPillFill,
+                        border: chrome.topPillBorder,
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            start: AppSpace.s,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: actionItems,
+                          ),
+                        ),
+                      ),
+                    ]
+                  : actionItems,
+            );
+                    },
                   ),
                 )),
           // Renkli çerçeve: seçiliyse editör içeriğini saran ince renkli kenarlık.
@@ -6051,27 +6172,21 @@ child: FormatBar(
                       // ÇERÇEVE EDİTÖRDE ÇİZİLMEZ (kullanıcı isteği
                       // 2026-10-20: "çerçeve sadece dashboarda görünsün"):
                       // notun içi sade kalır, renk kartta görünür.
-                      child: (
-                        // Zemin görseli artık ekranın tamamının arkasında.
-                        _withPaper(
-                          note,
-                          noteBodyStyle,
-                          // Sayfalı notta yana çekiş sayfa çevirir.
-                          PageSwipeDetector(
-                            enabled:
-                                !note.type.isPageNoteType &&
-                                !_penMode &&
-                                textPagePosition(note).count > 1,
-                            onSwipe: _swipePage,
-                            child: PageTurn(
-                              index: textPagePosition(note).index,
-                              count: note.type.isPageNoteType
-                                  ? 1
-                                  : textPagePosition(note).count,
-                              child: body,
-                            ),
-                          ),
-                        )
+                      // Defter kâğıdı ve zemin görseli artık ekranın tamamının
+                      // (üst alan + gövde + alt panel) arkasında.
+                      child: PageSwipeDetector(
+                        enabled:
+                            !note.type.isPageNoteType &&
+                            !_penMode &&
+                            textPagePosition(note).count > 1,
+                        onSwipe: _swipePage,
+                        child: PageTurn(
+                          index: textPagePosition(note).index,
+                          count: note.type.isPageNoteType
+                              ? 1
+                              : textPagePosition(note).count,
+                          child: body,
+                        ),
                       ),
                     ),
                           if (_gestureMode != _GestureMode.off)
@@ -6156,6 +6271,7 @@ child: FormatBar(
               ),
             );
             },
+          ),
           ),
           ),
         )))),
