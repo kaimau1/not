@@ -224,7 +224,7 @@ class CustomizeBoard extends StatelessWidget {
 }
 
 /// Dengeli bento düğme karosu: görünense tonlu kart + "−" hapı, değilse
-/// çerçeveli sade kart + "+" hapı. Öbek değiştirince yalnız solarak belirir.
+/// çerçeveli sade kart + "+" hapı.
 class _Tile extends StatelessWidget {
   const _Tile({
     super.key,
@@ -243,92 +243,87 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
     final trailing = this.trailing;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: AppMotion.of(context, AppMotion.quick),
-      curve: AppMotion.curveOf(context, AppMotion.standard),
-      builder: (context, t, child) => Opacity(opacity: t, child: child),
-      child: Material(
-        color: shown ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          side: BorderSide(
-            color: shown
-                ? scheme.primary.withValues(alpha: AppAlpha.soft)
-                : scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
-          ),
+    return Material(
+      color: shown ? tokens.card : scheme.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        side: BorderSide(
+          color: shown
+              ? scheme.primary.withValues(alpha: AppAlpha.soft)
+              : tokens.hairline,
         ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: _tileHeight),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                AppSpace.s,
-                AppSpace.xs,
-                AppSpace.xs,
-                AppSpace.xs,
-              ),
-              child: Row(
-                spacing: AppSpace.s,
-                children: [
-                  DecoratedBox(
-                    decoration: BoxDecoration(
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: _tileHeight),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              AppSpace.s,
+              AppSpace.xs,
+              AppSpace.xs,
+              AppSpace.xs,
+            ),
+            child: Row(
+              spacing: AppSpace.s,
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: shown
+                        ? scheme.primaryContainer
+                        : scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(AppRadius.s),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpace.xs),
+                    child: Icon(
+                      entry.icon,
+                      size: AppIconSize.s,
                       color: shown
-                          ? scheme.primaryContainer
-                          : scheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(AppRadius.s),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpace.xs),
-                      child: Icon(
-                        entry.icon,
-                        size: AppIconSize.s,
-                        color: shown
-                            ? scheme.onPrimaryContainer
-                            : scheme.onSurfaceVariant,
-                      ),
+                          ? scheme.onPrimaryContainer
+                          : scheme.onSurfaceVariant,
                     ),
                   ),
-                  Expanded(
-                    child: Text(
-                      entry.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.meta.copyWith(
-                        color: shown
-                            ? scheme.onSurface
-                            : scheme.onSurfaceVariant,
-                        fontWeight: AppWeight.medium,
-                      ),
-                    ),
-                  ),
-                  ?trailing,
-                  DecoratedBox(
-                    decoration: BoxDecoration(
+                ),
+                Expanded(
+                  child: Text(
+                    entry.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.meta.copyWith(
                       color: shown
-                          ? scheme.errorContainer.withValues(
-                              alpha: AppAlpha.muted,
-                            )
-                          : scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(AppRadius.s),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpace.xs),
-                      child: Icon(
-                        shown ? Icons.remove_rounded : Icons.add_rounded,
-                        size: AppIconSize.xs,
-                        color: shown
-                            ? scheme.error
-                            : scheme.onPrimaryContainer,
-                      ),
+                          ? scheme.onSurface
+                          : scheme.onSurfaceVariant,
+                      fontWeight: AppWeight.medium,
                     ),
                   ),
-                ],
-              ),
+                ),
+                ?trailing,
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: shown
+                        ? scheme.errorContainer.withValues(
+                            alpha: AppAlpha.muted,
+                          )
+                        : scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(AppRadius.s),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpace.xs),
+                    child: Icon(
+                      shown ? Icons.remove_rounded : Icons.add_rounded,
+                      size: AppIconSize.xs,
+                      color: shown
+                          ? scheme.error
+                          : scheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

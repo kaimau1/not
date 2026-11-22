@@ -606,226 +606,273 @@ class _FormatBarState extends State<FormatBar> {
   /// (menü rotası yok — odak ve klavye yerinde kalır, bkz. sınıf belgesi).
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final l10n = context.l10n;
     final size = _value(_Slide.size);
-    final divider = Divider(
-      height: 1,
-      color: scheme.outlineVariant.withValues(alpha: 0.4),
-    );
+    final hairline = Divider(height: 1, color: tokens.hairline);
     return BackCloses(
       open: _tray != _Tray.none,
       onClose: () => setState(() => _tray = _Tray.none),
       child: TextFieldTapRegion(
-      child: Focus(
-        canRequestFocus: false,
-        descendantsAreFocusable: false,
-        child: Material(
-          color: scheme.surfaceContainerHigh,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Divider(
-                height: 1,
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              // TEPSİ panelin ÜSTÜNDE: göz yazıdan çok uzaklaşmaz, alttaki
-              // sıralar parmağın altında oynamaz.
-              AnimatedSize(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.bottomCenter,
-                child: _tray == _Tray.none
-                    ? const SizedBox(width: double.infinity)
-                    : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [_trayContent(context), divider],
-                      ),
-              ),
-              // 1. SIRA — STİL ▾ · B · I · U · RENK ▾
-              _PanelRow(
-                children: [
-                  if (widget.onHeading != null) ...[
-                    Expanded(
-                      flex: 5,
-                      child: _MenuChip(
-                        key: const ValueKey('format-style-menu'),
-                        open: false,
-                        cycles: true,
-                        tooltip: l10n.formatStyleMenu,
-                        onTap: _cycleHeading,
-                        child: Text(
-                          _headingLabel(l10n),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: _heading == RichHeading.normal
-                                ? FontWeight.w500
-                                : FontWeight.w800,
-                          ),
+        child: Focus(
+          canRequestFocus: false,
+          descendantsAreFocusable: false,
+          child: Material(
+            color: scheme.surfaceContainerLow,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                hairline,
+                // TEPSİ panelin ÜSTÜNDE: boy TEK ADIMDA değişir (S44: eski
+                // AnimatedSize gövdeyi 14 kare yeniden diziyordu).
+                if (_tray != _Tray.none) ...[_trayContent(context), hairline],
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.s,
+                    vertical: AppSpace.xs,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 1. SIRA — STİL ⇅ · [B I U] · RENK ▾
+                      SizedBox(
+                        height: 44,
+                        child: Row(
+                          children: [
+                            if (widget.onHeading != null) ...[
+                              Expanded(
+                                flex: 5,
+                                child: _MenuChip(
+                                  key: const ValueKey('format-style-menu'),
+                                  open: false,
+                                  cycles: true,
+                                  tooltip: l10n.formatStyleMenu,
+                                  onTap: _cycleHeading,
+                                  child: Text(
+                                    _headingLabel(l10n),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: text.label.copyWith(
+                                      fontWeight: _heading == RichHeading.normal
+                                          ? AppWeight.medium
+                                          : AppWeight.strong,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const _Gap(),
+                            ],
+                            // B · I · U tek yumuşak kapsülde
+                            Expanded(
+                              flex: 9,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: scheme.surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.m,
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpace.xxs),
+                                  child: Row(
+                                    children: [
+                                      _Btn(
+                                        key: const ValueKey('format-bold'),
+                                        icon: Icons.format_bold,
+                                        tooltip: l10n.formatBold,
+                                        active: _active.bold,
+                                        onTap: () => _scoped(
+                                          () =>
+                                              widget.onFormat(RichFormat.bold),
+                                        ),
+                                      ),
+                                      _Btn(
+                                        key: const ValueKey('format-italic'),
+                                        icon: Icons.format_italic,
+                                        tooltip: l10n.formatItalic,
+                                        active: _active.italic,
+                                        onTap: () => _scoped(
+                                          () => widget.onFormat(
+                                            RichFormat.italic,
+                                          ),
+                                        ),
+                                      ),
+                                      _Btn(
+                                        key: const ValueKey('format-underline'),
+                                        icon: Icons.format_underlined,
+                                        tooltip: l10n.formatUnderline,
+                                        active: _active.underline,
+                                        onTap: () => _scoped(
+                                          () => widget.onFormat(
+                                            RichFormat.underline,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const _Gap(),
+                            Expanded(
+                              flex: 5,
+                              child: _MenuChip(
+                                key: const ValueKey('format-color-menu'),
+                                open: _tray == _Tray.color,
+                                tooltip: l10n.formatTextColor,
+                                onTap: () => _toggleTray(_Tray.color),
+                                child: _ColorGlyph(
+                                  text: _resolve(_active.color),
+                                  highlight: _resolve(_active.highlight),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const _Gap(),
-                  ],
-                  _Btn(
-                    key: const ValueKey('format-bold'),
-                    flex: 3,
-                    icon: Icons.format_bold,
-                    tooltip: l10n.formatBold,
-                    active: _active.bold,
-                    onTap: () => _scoped(() => widget.onFormat(RichFormat.bold)),
-                  ),
-                  _Btn(
-                    key: const ValueKey('format-italic'),
-                    flex: 3,
-                    icon: Icons.format_italic,
-                    tooltip: l10n.formatItalic,
-                    active: _active.italic,
-                    onTap: () => _scoped(() => widget.onFormat(RichFormat.italic)),
-                  ),
-                  _Btn(
-                    key: const ValueKey('format-underline'),
-                    flex: 3,
-                    icon: Icons.format_underlined,
-                    tooltip: l10n.formatUnderline,
-                    active: _active.underline,
-                    onTap: () =>
-                        _scoped(() => widget.onFormat(RichFormat.underline)),
-                  ),
-                  const _Gap(),
-                  Expanded(
-                    flex: 4,
-                    child: _MenuChip(
-                      key: const ValueKey('format-color-menu'),
-                      open: _tray == _Tray.color,
-                      tooltip: l10n.formatTextColor,
-                      onTap: () => _toggleTray(_Tray.color),
-                      child: _ColorGlyph(
-                        text: _resolve(_active.color),
-                        highlight: _resolve(_active.highlight),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              divider,
-              // 2. SIRA — KAPSAM ▾ · yazı tipi · boyut − / + · temizle ·
-              // (çizgi) · kapat.
-              _PanelRow(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: _MenuChip(
-                      key: const ValueKey('format-scope-menu'),
-                      open: false,
-                      cycles: true,
-                      tooltip: l10n.formatScopeHint,
-                      onTap: _cycleScope,
-                      child: Text(
-                        _scopeLabel(l10n),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12.5),
-                      ),
-                    ),
-                  ),
-                  _Btn(
-                    key: const ValueKey('format-font'),
-                    icon: Icons.text_fields,
-                    tooltip: l10n.formatFontPanel,
-                    open: _tray == _Tray.font,
-                    onTap: () => _toggleTray(_Tray.font),
-                  ),
-                  _Btn(
-                    key: const ValueKey('format-size-down'),
-                    icon: Icons.text_decrease,
-                    tooltip: l10n.formatSizeDown,
-                    onTap: size <= _kScaleMin + 0.001
-                        ? null
-                        : () => _stepScale(-1),
-                  ),
-                  // "%100" tek başına ne olduğunu söylemiyordu (F12.5):
-                  // üstte küçük "Boyut", ekran okuyucu "Boyut %100" okur.
-                  Semantics(
-                    label: l10n.formatSizeValue((size * 100).round()),
-                    excludeSemantics: true,
-                    child: SizedBox(
-                      width: 44,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            l10n.formatSizeLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.fade,
-                            softWrap: false,
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              height: 1.1,
-                              color: scheme.onSurfaceVariant,
+                      const SizedBox(height: AppSpace.xs),
+                      // 2. SIRA — KAPSAM ⇅ · Aa · [A− %100 A+] · temizle ·
+                      // (çizgi) · kapat
+                      SizedBox(
+                        height: 44,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: _MenuChip(
+                                key: const ValueKey('format-scope-menu'),
+                                open: false,
+                                cycles: true,
+                                tooltip: l10n.formatScopeHint,
+                                onTap: _cycleScope,
+                                child: Text(
+                                  _scopeLabel(l10n),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: text.meta.copyWith(
+                                    color: scheme.onSurface,
+                                    fontWeight: AppWeight.medium,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                          Text(
-                            '%${(size * 100).round()}',
-                            key: const ValueKey('format-size-value'),
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                        ],
+                            const SizedBox(width: AppSpace.xs),
+                            _IconBtn(
+                              key: const ValueKey('format-font'),
+                              icon: Icons.text_fields,
+                              tooltip: l10n.formatFontPanel,
+                              open: _tray == _Tray.font,
+                              onTap: () => _toggleTray(_Tray.font),
+                            ),
+                            const SizedBox(width: AppSpace.xs),
+                            // Birleşik boyut kapsülü: A− · %100 · A+
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: scheme.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.m,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppSpace.xxs),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _IconBtn(
+                                      key: const ValueKey('format-size-down'),
+                                      icon: Icons.text_decrease,
+                                      tooltip: l10n.formatSizeDown,
+                                      compact: true,
+                                      onTap: size <= _kScaleMin + 0.001
+                                          ? null
+                                          : () => _stepScale(-1),
+                                    ),
+                                    Semantics(
+                                      label: l10n.formatSizeValue(
+                                        (size * 100).round(),
+                                      ),
+                                      excludeSemantics: true,
+                                      child: SizedBox(
+                                        width: 38,
+                                        child: Text(
+                                          '%${(size * 100).round()}',
+                                          key: const ValueKey(
+                                            'format-size-value',
+                                          ),
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          style: text.meta.copyWith(
+                                            color: scheme.onSurface,
+                                            fontWeight: AppWeight.strong,
+                                            fontFeatures: const [
+                                              FontFeature.tabularFigures(),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    _IconBtn(
+                                      key: const ValueKey('format-size-up'),
+                                      icon: Icons.text_increase,
+                                      tooltip: l10n.formatSizeUp,
+                                      compact: true,
+                                      onTap: size >= _kScaleMax - 0.001
+                                          ? null
+                                          : () => _stepScale(1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpace.xs),
+                            // Biçimi temizle: biçimsiz metinde soluk ve kapalı.
+                            _IconBtn(
+                              key: const ValueKey('format-clear'),
+                              icon: Icons.format_clear,
+                              tooltip: l10n.formatClear,
+                              onTap:
+                                  _active.isEmpty && _scope == FormatScope.caret
+                                  ? null
+                                  : () => _scoped(widget.onClearFormat),
+                            ),
+                            // Maddenin ALT ÇİZGİSİ (yalnız madde hedefinde).
+                            if (widget.dividerKind != null)
+                              _IconBtn(
+                                key: const ValueKey('format-divider-menu'),
+                                icon: Icons.horizontal_rule,
+                                tooltip: l10n.itemMenuLine,
+                                active: widget.dividerKind!.isNotEmpty,
+                                open: _tray == _Tray.divider,
+                                onTap: () => _toggleTray(_Tray.divider),
+                              ),
+                            SizedBox(
+                              height: AppSpace.xxl,
+                              child: VerticalDivider(
+                                width: AppSpace.s,
+                                thickness: 1,
+                                color: tokens.hairline,
+                              ),
+                            ),
+                            _IconBtn(
+                              key: const ValueKey('format-close'),
+                              icon: Icons.keyboard_arrow_down_rounded,
+                              tooltip: l10n.close,
+                              onTap: widget.onClose,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  _Btn(
-                    key: const ValueKey('format-size-up'),
-                    icon: Icons.text_increase,
-                    tooltip: l10n.formatSizeUp,
-                    onTap: size >= _kScaleMax - 0.001
-                        ? null
-                        : () => _stepScale(1),
-                  ),
-                  // Biçimi temizle: biçimsiz metinde SOLUK ve tıklanamaz —
-                  // düğmenin işe yarayıp yaramadığı görünür.
-                  _Btn(
-                    key: const ValueKey('format-clear'),
-                    icon: Icons.format_clear,
-                    tooltip: l10n.formatClear,
-                    onTap: _active.isEmpty && _scope == FormatScope.caret
-                        ? null
-                        : () => _scoped(widget.onClearFormat),
-                  ),
-                  // Maddenin ALT ÇİZGİSİ (yalnız madde hedefinde).
-                  if (widget.dividerKind != null)
-                    _Btn(
-                      key: const ValueKey('format-divider-menu'),
-                      icon: Icons.horizontal_rule,
-                      tooltip: l10n.itemMenuLine,
-                      active: widget.dividerKind!.isNotEmpty,
-                      open: _tray == _Tray.divider,
-                      onTap: () => _toggleTray(_Tray.divider),
-                    ),
-                  SizedBox(
-                    height: 26,
-                    child: VerticalDivider(
-                      width: 7,
-                      thickness: 1,
-                      color: scheme.outlineVariant,
-                    ),
-                  ),
-                  _Btn(
-                    key: const ValueKey('format-close'),
-                    icon: Icons.keyboard_arrow_down,
-                    tooltip: l10n.close,
-                    onTap: widget.onClose,
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 }
@@ -851,34 +898,38 @@ class _MenuChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final enabled = onTap != null;
     return Tooltip(
       message: tooltip,
       child: Semantics(
         button: true,
         expanded: cycles ? null : open,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Material(
-            color: open ? scheme.primaryContainer : scheme.surfaceContainer,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: open ? scheme.primary : scheme.outlineVariant,
-              ),
+        child: Material(
+          color: open ? scheme.primaryContainer : tokens.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            side: BorderSide(
+              color: open ? scheme.primary : tokens.hairline,
             ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onTap,
-              child: Container(
-                height: 36,
-                padding: const EdgeInsetsDirectional.only(start: 8, end: 2),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: SizedBox(
+              height: 38,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  start: AppSpace.s,
+                  end: AppSpace.xs,
+                ),
                 child: DefaultTextStyle.merge(
                   style: TextStyle(
                     color: enabled
                         ? (open ? scheme.onPrimaryContainer : scheme.onSurface)
-                        : scheme.onSurface.withValues(alpha: 0.5),
+                        : scheme.onSurface.withValues(alpha: AppAlpha.disabled),
                   ),
                   child: Row(
                     children: [
@@ -890,8 +941,10 @@ class _MenuChip extends StatelessWidget {
                               : open
                               ? Icons.arrow_drop_up_rounded
                               : Icons.arrow_drop_down_rounded,
-                          size: cycles ? 16 : 20,
-                          color: scheme.onSurfaceVariant,
+                          size: cycles ? AppIconSize.xs : AppIconSize.m,
+                          color: open
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSurfaceVariant,
                         ),
                     ],
                   ),
@@ -922,7 +975,7 @@ class _ColorGlyph extends StatelessWidget {
       margin: const EdgeInsets.only(top: 1),
       decoration: BoxDecoration(
         color: color ?? scheme.outlineVariant,
-        borderRadius: BorderRadius.circular(2),
+        borderRadius: BorderRadius.circular(AppRadius.hair),
       ),
     );
     return Row(
@@ -931,15 +984,15 @@ class _ColorGlyph extends StatelessWidget {
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.format_color_text, size: 17),
+            const Icon(Icons.format_color_text, size: AppIconSize.xs),
             stripe(text),
           ],
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpace.s),
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.border_color_outlined, size: 16),
+            const Icon(Icons.border_color_outlined, size: AppIconSize.xs),
             stripe(highlight),
           ],
         ),
@@ -973,7 +1026,7 @@ class _DividerRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
         child: Row(
           children: [
-            Text(l10n.itemMenuLine, style: theme.textTheme.labelMedium),
+            Text(l10n.itemMenuLine, style: AppText.of(theme).label),
             const SizedBox(width: AppSpace.s),
             Expanded(
               child: DividerKindPicker(
@@ -999,7 +1052,7 @@ class _DividerRow extends StatelessWidget {
   }
 }
 
-/// Panelin bir sırası: sabit yükseklik, yan pay.
+/// Tepsi satırı: sabit yükseklik, yan pay.
 class _PanelRow extends StatelessWidget {
   const _PanelRow({required this.children});
 
@@ -1009,7 +1062,7 @@ class _PanelRow extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
     height: 46,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
       child: Row(children: children),
     ),
   );
@@ -1019,12 +1072,10 @@ class _Gap extends StatelessWidget {
   const _Gap();
 
   @override
-  Widget build(BuildContext context) => const SizedBox(width: 6);
+  Widget build(BuildContext context) => const SizedBox(width: AppSpace.s);
 }
 
-/// Sıra düğmesi: satıra EŞİT payla yayılır (Expanded), en fazla 52 dp.
-/// [open]: tepsisi açık (kenarlık); [active]: biçim imleçte etkin (dolu
-/// zemin).
+/// B · I · U kapsül içi eşit paylı düğme.
 class _Btn extends StatelessWidget {
   const _Btn({
     super.key,
@@ -1032,20 +1083,12 @@ class _Btn extends StatelessWidget {
     required this.tooltip,
     required this.onTap,
     this.active = false,
-    this.open = false,
-    this.flex = 1,
   });
 
   final IconData icon;
   final String tooltip;
-
-  /// null ise düğme SOLUK ve tıklanamaz (yapacak işi yok).
   final VoidCallback? onTap;
   final bool active;
-  final bool open;
-
-  /// Sıradaki pay (stil hapları ile aynı sırada daha büyük verilir).
-  final int flex;
 
   @override
   Widget build(BuildContext context) {
@@ -1055,46 +1098,23 @@ class _Btn extends StatelessWidget {
         ? scheme.onPrimaryContainer
         : enabled
         ? scheme.onSurface
-        : scheme.onSurface.withValues(alpha: 0.35);
+        : scheme.onSurface.withValues(alpha: AppAlpha.disabled);
     return Expanded(
-      flex: flex,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 52),
-          child: Tooltip(
-            message: tooltip,
-            child: Semantics(
-              button: true,
-              selected: active || open,
-              // Etkin/açık durum YUMUŞAK geçer (2026-10-28, "biçim menüsü
-              // daha yumuşak"): zemin ve simge rengi ~200 ms'de karışır.
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(end: active ? 1 : (open ? 0.5 : 0)),
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                builder: (context, t, _) => InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: onTap,
-                  child: Ink(
-                    width: double.infinity,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: t <= 0
-                          ? null
-                          : open && !active
-                          ? scheme.surfaceContainerHighest.withValues(
-                              alpha: t * 2,
-                            )
-                          : scheme.primaryContainer.withValues(alpha: t),
-                      borderRadius: BorderRadius.circular(12),
-                      border: open
-                          ? Border.all(color: scheme.primary, width: 1.5)
-                          : null,
-                    ),
-                    child: Icon(icon, size: 22, color: fg),
-                  ),
-                ),
+      child: Tooltip(
+        message: tooltip,
+        child: Semantics(
+          button: true,
+          selected: active,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.s),
+            onTap: onTap,
+            child: Ink(
+              height: 36,
+              decoration: BoxDecoration(
+                color: active ? scheme.primaryContainer : null,
+                borderRadius: BorderRadius.circular(AppRadius.s),
               ),
+              child: Icon(icon, size: AppIconSize.m, color: fg),
             ),
           ),
         ),
@@ -1103,7 +1123,59 @@ class _Btn extends StatelessWidget {
   }
 }
 
-/// Seçilebilir hap (paragraf stili, yazı tipi). Odak istemez.
+/// İkinci sıradaki sabit genişlikli simge düğmesi.
+class _IconBtn extends StatelessWidget {
+  const _IconBtn({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.active = false,
+    this.open = false,
+    this.compact = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
+  final bool active;
+  final bool open;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final enabled = onTap != null;
+    final fg = active || open
+        ? scheme.onPrimaryContainer
+        : enabled
+        ? scheme.onSurface
+        : scheme.onSurface.withValues(alpha: AppAlpha.disabled);
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        selected: active || open,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.s),
+          onTap: onTap,
+          child: Ink(
+            width: compact ? 32 : 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: active || open ? scheme.primaryContainer : null,
+              borderRadius: BorderRadius.circular(AppRadius.s),
+              border: open ? Border.all(color: scheme.primary) : null,
+            ),
+            child: Icon(icon, size: AppIconSize.m, color: fg),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Seçilebilir hap (yazı tipi). Odak istemez.
 class _Chip extends StatelessWidget {
   const _Chip({
     super.key,
@@ -1118,47 +1190,34 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // Seçim yumuşak geçer: zemin, kenar ve yazı rengi birlikte karışır.
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(end: selected ? 1 : 0),
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        builder: (context, t, child) => Material(
-          color: Color.lerp(
-            scheme.surfaceContainer,
-            scheme.primaryContainer,
-            t,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
+      child: Material(
+        color: selected ? scheme.primaryContainer : tokens.card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          side: BorderSide(
+            color: selected ? scheme.primary : tokens.hairline,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: Color.lerp(scheme.outlineVariant, scheme.primary, t)!,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              height: 36,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              alignment: Alignment.center,
-              child: DefaultTextStyle.merge(
-                style: TextStyle(
-                  color: Color.lerp(
-                    scheme.onSurface,
-                    scheme.onPrimaryContainer,
-                    t,
-                  ),
-                ),
-                child: child!,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
+            alignment: Alignment.center,
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
               ),
+              child: child,
             ),
           ),
         ),
-        child: child,
       ),
     );
   }
@@ -1181,7 +1240,9 @@ class _ModeSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final l10n = context.l10n;
     Widget segment(
       _ColorMode value,
@@ -1194,32 +1255,32 @@ class _ModeSwitch extends StatelessWidget {
         message: tooltip,
         child: InkWell(
           key: ValueKey('format-mode-${value.name}'),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.s),
           onTap: () => onChanged(value),
           child: Ink(
-            width: 40,
+            width: 38,
             height: 36,
             decoration: BoxDecoration(
               color: selected ? scheme.primaryContainer : null,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.s),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   icon,
-                  size: 19,
+                  size: AppIconSize.s,
                   color: selected
                       ? scheme.onPrimaryContainer
                       : scheme.onSurfaceVariant,
                 ),
                 Container(
-                  margin: const EdgeInsets.only(top: 2),
+                  margin: const EdgeInsets.only(top: AppSpace.xxs),
                   width: 18,
                   height: 3,
                   decoration: BoxDecoration(
                     color: stripe ?? scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppRadius.hair),
                   ),
                 ),
               ],
@@ -1230,10 +1291,11 @@ class _ModeSwitch extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(2),
+      padding: const EdgeInsets.all(AppSpace.xxs),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.outlineVariant),
+        color: tokens.card,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        border: Border.all(color: tokens.hairline),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1264,18 +1326,16 @@ class _TrayBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainer,
-        border: Border(
-          bottom: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.m,
+        AppSpace.s,
+        AppSpace.m,
+        AppSpace.xs,
       ),
+      color: theme.colorScheme.surfaceContainer,
       child: child,
     );
   }

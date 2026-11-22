@@ -95,16 +95,15 @@ class PenToolPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
-    // Kalkmış aracın gölgesi tepsiye düşer.
+    // Kalkmış aracın gölgesi tepsiye düşer (bulanıksız — GLES raster bütçesi).
     if (lifted) {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(cx - 12, 30, 24, size.height),
+          Rect.fromLTWH(cx - 12, 32, 24, size.height),
           const Radius.circular(8),
         ),
         Paint()
-          ..color = Colors.black.withValues(alpha: dark ? 0.35 : 0.12)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+          ..color = Colors.black.withValues(alpha: dark ? 0.22 : 0.08),
       );
     }
     switch (tool) {

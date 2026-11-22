@@ -215,7 +215,9 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     Widget button(
       String key,
       IconData icon,
@@ -230,36 +232,38 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         message: tip,
         child: InkResponse(
           key: ValueKey('quick-row-$key'),
-          radius: 20,
+          radius: AppIconSize.m,
           onTap: onTap,
           onLongPress: onLong,
           child: Container(
-            height: 40,
+            height: 36,
+            margin: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
             decoration: on
                 ? BoxDecoration(
                     color: scheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
                   )
                 : null,
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: label == null ? 10 : 8),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
                     icon,
-                    size: 20,
+                    size: AppIconSize.m,
                     color: on
                         ? scheme.onPrimaryContainer
                         : scheme.onSurfaceVariant,
                   ),
                   if (label != null) ...[
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpace.xs),
                     Text(
                       label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: scheme.onSurfaceVariant,
+                      style: text.label.copyWith(
+                        color: on
+                            ? scheme.onPrimaryContainer
+                            : scheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -607,20 +611,20 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
             message: on ? l10n.quickRowSpellOn : l10n.quickRowSpellOff,
             child: InkResponse(
               key: const ValueKey('quick-row-spell'),
-              radius: 20,
+              radius: AppIconSize.m,
               onTap: widget.onSpell,
               onLongPress: widget.onSpellSettings,
               child: Container(
-                height: 32,
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                height: 36,
+                margin: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
                 decoration: BoxDecoration(
                   color: on ? scheme.secondaryContainer : null,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.m),
                 ),
                 child: Icon(
                   Icons.spellcheck_rounded,
-                  size: 20,
+                  size: AppIconSize.m,
                   color: on
                       ? scheme.onSecondaryContainer
                       : scheme.onSurfaceVariant,
@@ -638,16 +642,17 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           message: l10n.quickRowColor,
           child: InkResponse(
             key: const ValueKey('quick-row-color'),
-            radius: 20,
+            radius: AppIconSize.m,
             onTap: widget.onColor,
             onLongPress: widget.onColorPick,
             child: Container(
-              height: 40,
-              width: 40,
+              height: 36,
+              width: 38,
+              margin: const EdgeInsets.symmetric(horizontal: AppSpace.xxs),
               decoration: _mark.color != null
                   ? BoxDecoration(
                       color: scheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      borderRadius: BorderRadius.circular(AppRadius.m),
                     )
                   : null,
               child: Column(
@@ -655,18 +660,18 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
                 children: [
                   Icon(
                     Icons.format_color_text_rounded,
-                    size: 20,
+                    size: AppIconSize.m,
                     color: _mark.color != null
                         ? scheme.onPrimaryContainer
                         : scheme.onSurfaceVariant,
                   ),
                   Container(
                     width: 18,
-                    height: 4,
+                    height: 3.5,
                     margin: const EdgeInsets.only(top: 1),
                     decoration: BoxDecoration(
                       color: widget.favoriteColor ?? scheme.error,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(AppRadius.hair),
                     ),
                   ),
                 ],

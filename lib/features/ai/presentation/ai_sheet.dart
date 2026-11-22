@@ -819,18 +819,33 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // ancak dokununca geliyordu — önce söyle, araçları soldur.
                   if (offline)
                     const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 4, 16, 14),
+                      padding: EdgeInsets.fromLTRB(
+                        AppSpace.l,
+                        AppSpace.xs,
+                        AppSpace.l,
+                        AppSpace.m,
+                      ),
                       child: AiOfflineCard(),
                     )
                   else if (ref.watch(aiAvailabilityProvider) !=
                       AiAvailability.ready)
                     const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 4, 16, 14),
+                      padding: EdgeInsets.fromLTRB(
+                        AppSpace.l,
+                        AppSpace.xs,
+                        AppSpace.l,
+                        AppSpace.m,
+                      ),
                       child: AiStatusCard(),
                     )
                   else if (!ref.watch(aiUnlimitedProvider))
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.l,
+                        AppSpace.xs,
+                        AppSpace.l,
+                        AppSpace.m,
+                      ),
                       child: AiPointsBar(
                         remaining: ref.watch(freeAiRemainingProvider),
                         limit: ref.watch(aiDailyLimitProvider),
@@ -852,7 +867,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   _sectionLabel(context, l10n.aiSectionWrite),
                   if (widget.onVoiceNote != null)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.l,
+                        0,
+                        AppSpace.l,
+                        AppSpace.s,
+                      ),
                       child: _AiRow(
                         key: const ValueKey('ai-sheet-voice-note'),
                         icon: AppIcons.aiVoiceNote,
@@ -884,7 +904,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // "Analiz et" (analyzeNote) AI-S1 kararıyla kalktı
                   // (2026-11-17): ana nokta/yapılacak soruları burada.
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
                     child: _AiRow(
                       key: const ValueKey('ai-sheet-chat'),
                       icon: Icons.forum_outlined,
@@ -924,18 +944,15 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // BİR kez geçer, işlemler altında açılır.
                   _sectionLabel(context, l10n.aiSectionTransform),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _AiTileGrid(
-                      tiles: [
-                        (
-                          Icons.summarize_outlined,
-                          l10n.aiSummarize,
-                          l10n.aiSummarizeInfo,
-                          widget.note.isEmpty
-                              ? null
-                              : () => _runNoteSummary(detailed: false),
-                        ),
-                      ],
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                    child: _AiRow(
+                      key: const ValueKey('ai-sheet-summarize'),
+                      icon: Icons.summarize_outlined,
+                      title: l10n.aiSummarize,
+                      subtitle: l10n.aiSummarizeInfo,
+                      onTap: widget.note.isEmpty
+                          ? null
+                          : () => _runNoteSummary(detailed: false),
                     ),
                   ),
                   for (final pdf in pdfs)
@@ -1095,9 +1112,14 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       },
                     ),
                   if (widget.note.aiSummary != null) ...[
-                    const Divider(indent: 20, endIndent: 20),
+                    const Divider(indent: AppSpace.xl, endIndent: AppSpace.xl),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 8, 4),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.xl,
+                        AppSpace.xs,
+                        AppSpace.s,
+                        AppSpace.xs,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -1113,7 +1135,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.xl,
+                        0,
+                        AppSpace.xl,
+                        AppSpace.s,
+                      ),
                       child: Text(
                         widget.note.aiSummary!.text,
                         style: Theme.of(context).textTheme.bodySmall,
@@ -1124,7 +1151,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpace.l),
               ],
             ),
           ),
@@ -1156,7 +1183,7 @@ class _AiRow extends StatelessWidget {
   // `SheetTile.rich` — zeminli, çerçevesiz; Paylaş levhasıyla aynı kılık.
   @override
   Widget build(BuildContext context) => Opacity(
-    opacity: onTap == null ? 0.5 : 1,
+    opacity: onTap == null ? AppAlpha.disabled : 1,
     child: SheetTile.rich(
       icon: icon,
       label: title,
@@ -1166,96 +1193,16 @@ class _AiRow extends StatelessWidget {
   );
 }
 
-/// İki sütunlu iş kutuları (özetle / analiz / çevir…). Yapay Zeka sayfasındaki
-/// `_TaskTile` ızgarasının aynısı; işlem null ise kutu soluk ve dokunulamaz.
-class _AiTileGrid extends StatelessWidget {
-  const _AiTileGrid({required this.tiles});
-
-  /// (simge, başlık, açıklama, işlem) — işlem null ise devre dışı.
-  final List<(IconData, String, String, VoidCallback?)> tiles;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // EŞİT YÜKSEKLİK (F12.8): kutular `Wrap` içinde açıklamanın uzunluğu
-    // kadar uzuyordu (96 / 107 px yan yana) ve tek kalan son kutu ("Notu
-    // geliştir") yarım genişlikte sola yığılıyordu. Artık iki sütunlu SATIRLAR:
-    // satırdaki iki kutu aynı boy (IntrinsicHeight + stretch), tek kalan son
-    // kutu tam genişlik.
-    Widget tile((IconData, String, String, VoidCallback?) t) {
-      final (icon, title, info, onTap) = t;
-      return Opacity(
-        opacity: onTap == null ? 0.5 : 1,
-        // Çerçeve yerine `surfaceContainer` zemin, köşe `AppRadius.m`
-        // (DENEYIM F76.2 — `SheetTile` ile aynı yüzey).
-        child: Material(
-          color: scheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 96),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AppIcons.glyph(icon, size: 20, color: scheme.primary),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    info,
-                    style: TextStyle(
-                      fontSize: 12,
-                      height: 1.35,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (var i = 0; i < tiles.length; i += 2)
-            Padding(
-              padding: EdgeInsets.only(top: i == 0 ? 0 : 8),
-              child: i + 1 < tiles.length
-                  ? IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(child: tile(tiles[i])),
-                          const SizedBox(width: 8),
-                          Expanded(child: tile(tiles[i + 1])),
-                        ],
-                      ),
-                    )
-                  : tile(tiles[i]),
-            ),
-        ],
-    );
-  }
-}
-
 /// Sayfa içi bölüm başlığı ("Bu not" / "Ekler"). Düz liste hangi işlemin
 /// nota, hangisinin eke ait olduğunu göstermiyordu.
 // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
 Widget _sectionLabel(BuildContext context, String text) => Padding(
-  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+  padding: const EdgeInsets.fromLTRB(
+    AppSpace.l,
+    AppSpace.m,
+    AppSpace.l,
+    AppSpace.xs,
+  ),
   child: SectionLabel(text),
 );
 

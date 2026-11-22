@@ -414,54 +414,63 @@ class ListeningHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = AppText.of(Theme.of(context));
+    final theme = Theme.of(context);
+    final text = AppText.of(theme);
+    final accent = listeningAccent(theme.colorScheme, mode);
     final meta = text.meta;
-    Widget sub(String s) =>
-        Text(s, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta);
+    Widget sub(String s, {bool alert = false}) => Text(
+      s,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: alert
+          ? meta.copyWith(color: accent, fontWeight: AppWeight.medium)
+          : meta,
+    );
     final hint = silenceHint;
     final quiet = silence;
-    return Row(
+    final hasSub = subtitle.isNotEmpty || (hint != null && quiet != null);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ListeningBadge(mode: mode, active: active),
-        const SizedBox(width: AppSpace.m),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: text.rowTitle.copyWith(fontWeight: AppWeight.strong),
-              ),
-              const SizedBox(height: AppSpace.xxs),
-              // Kip etiketi ALT satırda, açıklamanın başında: başlık
-              // satırında durunca dar telefonda başlık "D..."ye
-              // iniyordu (sağda süre ve düğmeler de var).
-              Row(
+        Row(
+          children: [
+            ListeningBadge(mode: mode, active: active),
+            const SizedBox(width: AppSpace.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(child: ListeningModeTag(mode: mode)),
-                  const SizedBox(width: AppSpace.s),
-                  Expanded(
-                    child: hint == null || quiet == null
-                        ? sub(subtitle)
-                        // Yalnız bu metin kurulur (yoklama 250 ms'de bir).
-                        : ValueListenableBuilder<double>(
-                            valueListenable: quiet,
-                            builder: (_, v, _) => sub(v > 0 ? hint : subtitle),
-                          ),
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.rowTitle.copyWith(fontWeight: AppWeight.strong),
                   ),
+                  const SizedBox(height: AppSpace.xxs),
+                  ListeningModeTag(mode: mode),
                 ],
               ),
+            ),
+            const SizedBox(width: AppSpace.s),
+            clock,
+            if (trailing.isNotEmpty) ...[
+              const SizedBox(width: AppSpace.xxs),
+              ...trailing,
             ],
-          ),
+          ],
         ),
-        const SizedBox(width: AppSpace.s),
-        clock,
-        if (trailing.isNotEmpty) ...[
-          const SizedBox(width: AppSpace.xxs),
-          ...trailing,
+        if (hasSub) ...[
+          const SizedBox(height: AppSpace.xs),
+          hint == null || quiet == null
+              ? sub(subtitle)
+              // Yalnız bu metin kurulur (yoklama 250 ms'de bir).
+              : ValueListenableBuilder<double>(
+                  valueListenable: quiet,
+                  builder: (_, v, _) =>
+                      sub(v > 0 ? hint : subtitle, alert: v > 0),
+                ),
         ],
       ],
     );

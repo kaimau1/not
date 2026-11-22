@@ -439,50 +439,114 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
     required bool right,
   }) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final (icon, label, _, _) = widget.spec(id);
     return ReorderableDelayedDragStartListener(
       key: ValueKey('editor-bar-more-row-$id'),
       index: index,
-      child: Material(
-        type: MaterialType.transparency,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.only(start: AppSpace.l),
-          child: Row(
-            children: [
-              Icon(
-                Icons.drag_indicator_rounded,
-                size: AppIconSize.s,
-                color: scheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: AppSpace.s),
-              Icon(icon, size: AppIconSize.m, color: scheme.primary),
-              const SizedBox(width: AppSpace.m),
-              Expanded(child: Text(label)),
-              // SOL ↔ SAĞ: düğme öbür grubun sonuna geçer.
-              IconButton(
-                key: ValueKey('editor-bar-more-side-$id'),
-                tooltip: right ? l10n.barMoreToLeft : l10n.barMoreToRight,
-                icon: Icon(
-                  right
-                      ? Icons.keyboard_double_arrow_left_rounded
-                      : Icons.keyboard_double_arrow_right_rounded,
-                  size: AppIconSize.m,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xxs,
+        ),
+        child: Material(
+          color: pinned
+              ? scheme.surfaceContainerLow
+              : scheme.surfaceContainerLowest,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            side: BorderSide(
+              color: pinned
+                  ? scheme.primary.withValues(alpha: AppAlpha.soft)
+                  : tokens.hairline,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(
+              start: AppSpace.s,
+              end: AppSpace.xxs,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.drag_indicator_rounded,
+                  size: AppIconSize.s,
+                  color: scheme.onSurfaceVariant.withValues(
+                    alpha: AppAlpha.muted,
+                  ),
                 ),
-                onPressed: () => Personalize.updateLayout(
-                  (p) => p.withBarSide(id, right: !right),
+                const SizedBox(width: AppSpace.xs),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: pinned
+                        ? scheme.primaryContainer
+                        : scheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(AppRadius.s),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpace.xs),
+                    child: Icon(
+                      icon,
+                      size: AppIconSize.s,
+                      color: pinned
+                          ? scheme.onPrimaryContainer
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
-              ),
-              IconButton(
-                key: ValueKey('editor-bar-more-pin-$id'),
-                tooltip: pinned ? l10n.barMoreToMenu : l10n.barMoreToBar,
-                isSelected: pinned,
-                icon: const Icon(Icons.push_pin_outlined),
-                selectedIcon: Icon(Icons.push_pin, color: scheme.primary),
-                onPressed: () =>
-                    Personalize.updateLayout((p) => p.withVisible(id, !pinned)),
-              ),
-            ],
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.meta.copyWith(
+                      color: pinned
+                          ? scheme.onSurface
+                          : scheme.onSurfaceVariant,
+                      fontWeight: pinned ? AppWeight.medium : AppWeight.regular,
+                    ),
+                  ),
+                ),
+                // SOL ↔ SAĞ: düğme öbür grubun sonuna geçer.
+                IconButton(
+                  key: ValueKey('editor-bar-more-side-$id'),
+                  tooltip: right ? l10n.barMoreToLeft : l10n.barMoreToRight,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    right
+                        ? Icons.keyboard_double_arrow_left_rounded
+                        : Icons.keyboard_double_arrow_right_rounded,
+                    size: AppIconSize.s,
+                  ),
+                  onPressed: () => Personalize.updateLayout(
+                    (p) => p.withBarSide(id, right: !right),
+                  ),
+                ),
+                IconButton(
+                  key: ValueKey('editor-bar-more-pin-$id'),
+                  tooltip: pinned ? l10n.barMoreToMenu : l10n.barMoreToBar,
+                  visualDensity: VisualDensity.compact,
+                  isSelected: pinned,
+                  icon: const Icon(
+                    Icons.push_pin_outlined,
+                    size: AppIconSize.s,
+                  ),
+                  selectedIcon: Icon(
+                    Icons.push_pin,
+                    color: scheme.primary,
+                    size: AppIconSize.s,
+                  ),
+                  onPressed: () => Personalize.updateLayout(
+                    (p) => p.withVisible(id, !pinned),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

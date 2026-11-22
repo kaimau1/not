@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/group_card.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -39,7 +40,8 @@ Future<void> showCollaboratorsSheet(
   }
   final result = await showAppSheet<_SheetResult>(
     context: context,
-    showDragHandle: true,
+    // SheetHeader'da ✕ var → tutamak yok (DENEYIM K-D7).
+    showDragHandle: false,
     isScrollControlled: true,
     // Geniş ekranda levha ekranın tamamına yayılmasın; okunur bir sütun.
     constraints: const BoxConstraints(maxWidth: 560),
@@ -62,6 +64,48 @@ Future<void> showCollaboratorsSheet(
 }
 
 enum _SheetResult { openFriends, left }
+
+Widget _ownerTile(
+  BuildContext context, {
+  required String name,
+  required String badge,
+}) {
+  final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final text = AppText.of(theme);
+  return ListTile(
+    leading: CircleAvatar(
+      backgroundColor: scheme.primaryContainer,
+      child: Icon(
+        Icons.person_rounded,
+        color: scheme.onPrimaryContainer,
+        size: AppIconSize.m,
+      ),
+    ),
+    title: Text(
+      name,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: text.body.copyWith(fontWeight: AppWeight.strong),
+    ),
+    trailing: DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xxs,
+        ),
+        child: Text(
+          badge,
+          style: text.badge.copyWith(color: scheme.onPrimaryContainer),
+        ),
+      ),
+    ),
+  );
+}
 
 class _OwnerView extends ConsumerStatefulWidget {
   const _OwnerView({required this.noteId});
@@ -103,6 +147,7 @@ class _OwnerViewState extends ConsumerState<_OwnerView> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final friends = ref.watch(friendsStreamProvider).value ?? const <Friend>[];
     final share = ref.watch(myNoteSharesProvider).value?[widget.noteId];
     final initial = share?.names.isNotEmpty ?? false
@@ -133,77 +178,113 @@ class _OwnerViewState extends ConsumerState<_OwnerView> {
     });
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.collaborators,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: AppWeight.strong,
+            SheetHeader(title: l10n.collaborators),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.m,
+              ),
+              child: Text(l10n.collaboratorsInfo, style: text.meta),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+              child: GroupCard(
+                children: [
+                  _ownerTile(
+                    context,
+                    name: me,
+                    badge: l10n.collaboratorsOwner,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.collaboratorsInfo,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: scheme.primaryContainer,
-                child: Icon(Icons.person, color: scheme.onPrimaryContainer),
-              ),
-              title: Text(me),
-              subtitle: Text(l10n.collaboratorsOwner),
-            ),
-            const Divider(height: 8),
             if (friends.isEmpty && strangers.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.l,
+                  AppSpace.m,
+                  AppSpace.l,
+                  AppSpace.s,
+                ),
+                child: GroupCard(
                   children: [
-                    Text(l10n.friendsEmpty),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: () =>
-                          Navigator.pop(context, _SheetResult.openFriends),
-                      icon: const Icon(Icons.person_add_alt_outlined, size: 18),
-                      label: Text(l10n.friendsAdd),
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpace.l),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.friendsEmpty, style: text.body),
+                          const SizedBox(height: AppSpace.m),
+                          FilledButton.tonalIcon(
+                            onPressed: () => Navigator.pop(
+                              context,
+                              _SheetResult.openFriends,
+                            ),
+                            icon: const Icon(
+                              Icons.person_add_alt_outlined,
+                              size: AppIconSize.s,
+                            ),
+                            label: Text(l10n.friendsAdd),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               )
             else ...[
               Padding(
-                padding: const EdgeInsets.only(top: 8, bottom: 4),
-                child: Text(
-                  l10n.collaboratorsFriendsTitle,
-                  style: sectionLabelStyle(context),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.l,
+                  AppSpace.l,
+                  AppSpace.l,
+                  AppSpace.s,
                 ),
+                child: SectionLabel(l10n.collaboratorsFriendsTitle),
               ),
               Flexible(
                 child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                  child: GroupCard(
                     children: [
                       for (final friend in friends)
                         CheckboxListTile(
                           key: ValueKey('collab-${friend.uid}'),
-                          contentPadding: EdgeInsets.zero,
-                          secondary: const CircleAvatar(
-                            child: Icon(Icons.person_outline),
+                          secondary: CircleAvatar(
+                            backgroundColor: selected.containsKey(friend.uid)
+                                ? scheme.primaryContainer
+                                : scheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.person_outline_rounded,
+                              size: AppIconSize.m,
+                              color: selected.containsKey(friend.uid)
+                                  ? scheme.onPrimaryContainer
+                                  : scheme.onSurfaceVariant,
+                            ),
                           ),
-                          title: Text(_label(friend)),
+                          title: Text(
+                            _label(friend),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           subtitle: friend.name.isEmpty
                               ? null
-                              : Text(friend.email),
+                              : Text(
+                                  friend.email,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: text.meta,
+                                ),
                           value: selected.containsKey(friend.uid),
                           onChanged: _saving
                               ? null
@@ -216,14 +297,20 @@ class _OwnerViewState extends ConsumerState<_OwnerView> {
                       for (final uid in strangers)
                         CheckboxListTile(
                           key: ValueKey('collab-$uid'),
-                          contentPadding: EdgeInsets.zero,
-                          secondary: const CircleAvatar(
-                            child: Icon(Icons.person_off_outlined),
+                          secondary: CircleAvatar(
+                            backgroundColor: scheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.person_off_outlined,
+                              size: AppIconSize.m,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
                           title: Text(
                             (selected[uid] ?? '').isEmpty
                                 ? uid
                                 : selected[uid]!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           value: true,
                           onChanged: _saving
@@ -234,38 +321,46 @@ class _OwnerViewState extends ConsumerState<_OwnerView> {
                   ),
                 ),
               ),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  onPressed: () =>
-                      Navigator.pop(context, _SheetResult.openFriends),
-                  icon: const Icon(Icons.person_add_alt_outlined, size: 18),
-                  label: Text(l10n.friendsAdd),
-                ),
-              ),
             ],
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _saving ? null : () => Navigator.pop(context),
-                  child: Text(l10n.cancel),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _saving || _selected == null
-                      ? null
-                      : () => _save(initial),
-                  child: _saving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(l10n.quickCaptureSave),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                AppSpace.m,
+                AppSpace.l,
+                AppSpace.l,
+              ),
+              child: Row(
+                children: [
+                  if (friends.isNotEmpty || strangers.isNotEmpty)
+                    TextButton.icon(
+                      onPressed: () =>
+                          Navigator.pop(context, _SheetResult.openFriends),
+                      icon: const Icon(
+                        Icons.person_add_alt_outlined,
+                        size: AppIconSize.s,
+                      ),
+                      label: Text(l10n.friendsAdd),
+                    ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _saving ? null : () => Navigator.pop(context),
+                    child: Text(l10n.cancel),
+                  ),
+                  const SizedBox(width: AppSpace.s),
+                  FilledButton(
+                    onPressed: _saving || _selected == null
+                        ? null
+                        : () => _save(initial),
+                    child: _saving
+                        ? const SizedBox(
+                            width: AppIconSize.s,
+                            height: AppIconSize.s,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(l10n.quickCaptureSave),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -285,90 +380,124 @@ class _CollaboratorView extends ConsumerWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final share = ref
         .watch(noteShareProvider((ownerId: ownerId, noteId: noteId)))
         .value;
     final myUid = ref.watch(currentUidProvider);
+    final members = share?.sharedWith ?? const <String>[];
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.collaborators,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: AppWeight.strong,
+            SheetHeader(title: l10n.collaborators),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.m,
               ),
+              child: Text(l10n.collaboratorsOnlyOwner, style: text.meta),
             ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.collaboratorsOnlyOwner,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                backgroundColor: scheme.primaryContainer,
-                child: Icon(Icons.person, color: scheme.onPrimaryContainer),
-              ),
-              title: Text(share?.ownerName ?? ''),
-              subtitle: Text(l10n.collaboratorsOwner),
-            ),
-            for (final uid in share?.sharedWith ?? const <String>[])
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-                title: Text(
-                  (share!.names[uid] ?? '').isEmpty ? uid : share.names[uid]!,
-                ),
-                trailing: uid == myUid
-                    ? Icon(Icons.check_circle, color: scheme.primary, size: 18)
-                    : null,
-              ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(foregroundColor: scheme.error),
-                icon: const Icon(Icons.logout, size: 18),
-                label: Text(l10n.collaboratorsLeave),
-                onPressed: () async {
-                  final ok = await showDialog<bool>(
-                    context: context,
-                    builder: (dialogContext) => AlertDialog(
-                      title: Text(l10n.collaboratorsLeave),
-                      content: Text(l10n.collaboratorsLeaveConfirm),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dialogContext, false),
-                          child: Text(l10n.cancel),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(dialogContext, true),
-                          child: Text(l10n.collaboratorsLeave),
-                        ),
-                      ],
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                child: GroupCard(
+                  children: [
+                    _ownerTile(
+                      context,
+                      name: share?.ownerName ?? '',
+                      badge: l10n.collaboratorsOwner,
                     ),
-                  );
-                  if (ok != true || !context.mounted) return;
-                  final repo = ref.read(noteSharesRepositoryProvider);
-                  if (repo == null) return;
-                  try {
-                    await repo.leave(ownerId, noteId);
-                    if (context.mounted) {
-                      Navigator.pop(context, _SheetResult.left);
+                    for (final uid in members)
+                      ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: uid == myUid
+                              ? scheme.primaryContainer
+                              : scheme.surfaceContainerHighest,
+                          child: Icon(
+                            Icons.person_outline_rounded,
+                            size: AppIconSize.m,
+                            color: uid == myUid
+                                ? scheme.onPrimaryContainer
+                                : scheme.onSurfaceVariant,
+                          ),
+                        ),
+                        title: Text(
+                          (share!.names[uid] ?? '').isEmpty
+                              ? uid
+                              : share.names[uid]!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: uid == myUid
+                            ? Icon(
+                                Icons.check_circle,
+                                color: scheme.primary,
+                                size: AppIconSize.s,
+                              )
+                            : null,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpace.l),
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: scheme.error,
+                    side: BorderSide(
+                      color: scheme.error.withValues(alpha: AppAlpha.muted),
+                    ),
+                  ),
+                  icon: const Icon(Icons.logout, size: AppIconSize.s),
+                  label: Text(l10n.collaboratorsLeave),
+                  onPressed: () async {
+                    final ok = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: Text(l10n.collaboratorsLeave),
+                        content: Text(l10n.collaboratorsLeaveConfirm),
+                        actions: [
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pop(dialogContext, false),
+                            child: Text(l10n.cancel),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(dialogContext, true),
+                            child: Text(l10n.collaboratorsLeave),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (ok != true || !context.mounted) return;
+                    final repo = ref.read(noteSharesRepositoryProvider);
+                    if (repo == null) return;
+                    try {
+                      await repo.leave(ownerId, noteId);
+                      if (context.mounted) {
+                        Navigator.pop(context, _SheetResult.left);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        showAppMessage(
+                          context,
+                          l10n.genericError(friendlyError(l10n, e)),
+                        );
+                      }
                     }
-                  } catch (e) {
-                    if (context.mounted) {
-                      showAppMessage(context, l10n.genericError(friendlyError(l10n, e)));
-                    }
-                  }
-                },
+                  },
+                ),
               ),
             ),
           ],

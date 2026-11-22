@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/notes/presentation/editor/eraser_glyph.dart';
 import 'package:notlar/features/notes/presentation/editor/pen_tray.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_pen.dart';
@@ -219,10 +220,10 @@ void main() {
     }
 
     Color eraserColor(WidgetTester tester) => tester
-        .widget<Icon>(
+        .widget<EraserGlyph>(
           find.descendant(
             of: find.byKey(const ValueKey('pen-tray-eraser')),
-            matching: find.byType(Icon),
+            matching: find.byType(EraserGlyph),
           ),
         )
         .color!;

@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/haptics.dart';
 
@@ -97,8 +98,10 @@ Future<void> openFolderMenu(
     context: context,
     barrierDismissible: true,
     barrierLabel: context.l10n.close,
-    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.42),
-    transitionDuration: const Duration(milliseconds: 150),
+    barrierColor: Theme.of(
+      context,
+    ).colorScheme.scrim.withValues(alpha: AppAlpha.muted),
+    transitionDuration: AppMotion.quick,
     pageBuilder: (_, _, _) => _RadialFolderMenu(
       stops: stops,
       currentId: currentId,
@@ -110,8 +113,8 @@ Future<void> openFolderMenu(
       child: ScaleTransition(
         scale: CurvedAnimation(
           parent: anim,
-          curve: Curves.easeOutCubic,
-        ).drive(Tween(begin: 0.9, end: 1)),
+          curve: AppMotion.emphasized,
+        ).drive(Tween(begin: 0.92, end: 1)),
         child: child,
       ),
     ),
@@ -209,7 +212,7 @@ bool radialLayoutFits(
   double radius, {
   double? radiusY,
   double centerRadius = _kCenterDiameter / 2,
-  double gap = 4,
+  double gap = 14,
 }) {
   final n = chips.length;
   final ry = radiusY ?? radius;
@@ -244,8 +247,8 @@ Size? radialRadiiFor(List<Size> chips, Size screen) {
   if (chips.isEmpty) return null;
   final maxW = chips.map((c) => c.width).reduce(math.max);
   final maxH = chips.map((c) => c.height).reduce(math.max);
-  final limitX = screen.width / 2 - maxW / 2 - 12;
-  final limitY = math.min(screen.height / 2 - maxH / 2 - 12, 260.0);
+  final limitX = screen.width / 2 - maxW / 2 - AppSpace.m;
+  final limitY = math.min(screen.height / 2 - maxH / 2 - AppSpace.m, 260.0);
   final start = _kCenterDiameter / 2 + maxH / 2;
   Size? best;
   for (var rx = start; rx <= limitX; rx += 6) {
@@ -269,7 +272,7 @@ const _kNewFolder = -2;
 const _kEditFolders = -3;
 
 /// Menünün altındaki eylem satırının payı (dp).
-const double _kActionsBar = 72;
+const double _kActionsBar = 80;
 
 class _RadialFolderMenu extends StatelessWidget {
   const _RadialFolderMenu({
@@ -293,8 +296,49 @@ class _RadialFolderMenu extends StatelessWidget {
     Navigator.of(context).pop(i);
   }
 
+  Widget _actionButtons(BuildContext context) {
+    final l10n = context.l10n;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+          child: FilledButton.tonalIcon(
+            key: const ValueKey('folder-menu-new'),
+            onPressed: () => Navigator.of(context).pop(_kNewFolder),
+            icon: const Icon(
+              Icons.create_new_folder_outlined,
+              size: AppIconSize.s,
+            ),
+            label: Text(
+              l10n.newFolder,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+        if (canEdit) ...[
+          const SizedBox(width: AppSpace.s),
+          Flexible(
+            child: FilledButton.tonalIcon(
+              key: const ValueKey('folder-menu-edit'),
+              onPressed: () => Navigator.of(context).pop(_kEditFolders),
+              icon: const Icon(Icons.swap_vert, size: AppIconSize.s),
+              label: Text(
+                l10n.folderMenuEdit,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final size = MediaQuery.sizeOf(context);
     final scaler = MediaQuery.textScalerOf(context);
     // Büyük yazı boyutunda karo da büyür (ad tek satırda kesilir).
@@ -307,9 +351,16 @@ class _RadialFolderMenu extends StatelessWidget {
         ? Size(size.width, size.height - _kActionsBar)
         : size;
     final radii = radialRadiiFor(chips, body);
-    final menu = radii == null
-        ? _grid(context, body, tile)
-        : _ring(context, tile, radii);
+    // Izgara kartında eylemler kartın kendi alt çubuğuna yerleşir: ana
+    // ekrandaki "+" FAB ile çakışmaz, tek bütüncül levha olur.
+    if (radii == null) {
+      return Material(
+        key: const ValueKey('folder-radial-menu'),
+        type: MaterialType.transparency,
+        child: _grid(context, size, tile),
+      );
+    }
+    final menu = _ring(context, tile, radii);
     if (!actions) {
       return Material(
         key: const ValueKey('folder-radial-menu'),
@@ -317,7 +368,6 @@ class _RadialFolderMenu extends StatelessWidget {
         child: menu,
       );
     }
-    final l10n = context.l10n;
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Material(
       key: const ValueKey('folder-radial-menu'),
@@ -333,41 +383,17 @@ class _RadialFolderMenu extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 16,
-            right: 16,
-            bottom: 16 + bottom,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: FilledButton.tonalIcon(
-                    key: const ValueKey('folder-menu-new'),
-                    onPressed: () => Navigator.of(context).pop(_kNewFolder),
-                    icon: const Icon(Icons.create_new_folder_outlined),
-                    label: Text(
-                      l10n.newFolder,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+            left: AppSpace.l,
+            right: AppSpace.l,
+            bottom: AppSpace.l + bottom,
+            child: Center(
+              child: DecoratedBox(
+                decoration: AppSurface.floating(theme, radius: AppRadius.pill),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.xs),
+                  child: _actionButtons(context),
                 ),
-                if (canEdit) ...[
-                  const SizedBox(width: 12),
-                  Flexible(
-                    child: FilledButton.tonalIcon(
-                      key: const ValueKey('folder-menu-edit'),
-                      onPressed: () =>
-                          Navigator.of(context).pop(_kEditFolders),
-                      icon: const Icon(Icons.swap_vert),
-                      label: Text(
-                        l10n.folderMenuEdit,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ],
@@ -380,8 +406,8 @@ class _RadialFolderMenu extends StatelessWidget {
     return Center(
       child: SizedBox(
         key: const ValueKey('folder-ring-menu'),
-        width: radii.width * 2 + tile.width + 8,
-        height: radii.height * 2 + tile.height + 8,
+        width: radii.width * 2 + tile.width + AppSpace.s,
+        height: radii.height * 2 + tile.height + AppSpace.s,
         child: Stack(
           alignment: Alignment.center,
           clipBehavior: Clip.none,
@@ -413,74 +439,109 @@ class _RadialFolderMenu extends StatelessWidget {
   Widget _grid(BuildContext context, Size size, Size tile) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final l10n = context.l10n;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpace.l),
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: 420,
-            maxHeight: size.height * 0.75,
+            maxHeight: size.height * 0.76,
           ),
-          child: Material(
+          child: DecoratedBox(
             key: const ValueKey('folder-grid-menu'),
-            color: scheme.surfaceContainerLow,
-            elevation: 6,
-            shadowColor: Colors.black45,
-            borderRadius: BorderRadius.circular(28),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                InkWell(
-                  key: const ValueKey('folder-radial-all'),
-                  onTap: () => Navigator.of(context).pop(-1),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 14, 12, 10),
-                    child: Row(
-                      children: [
-                        Icon(Icons.folder_copy_outlined, color: scheme.primary),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            l10n.foldersTitle,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: AppWeight.strong,
+            decoration: AppSurface.floating(theme, radius: AppRadius.xl),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+              child: Material(
+                type: MaterialType.transparency,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    InkWell(
+                      key: const ValueKey('folder-radial-all'),
+                      onTap: () => Navigator.of(context).pop(-1),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpace.xl,
+                          AppSpace.m,
+                          AppSpace.m,
+                          AppSpace.m,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.folder_copy_outlined,
+                              color: scheme.primary,
+                              size: AppIconSize.m,
                             ),
-                          ),
+                            const SizedBox(width: AppSpace.m),
+                            Expanded(
+                              child: Text(
+                                l10n.foldersTitle,
+                                style: text.rowTitle.copyWith(
+                                  fontWeight: AppWeight.strong,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: scheme.onSurfaceVariant,
+                              size: AppIconSize.m,
+                            ),
+                          ],
                         ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    ColoredBox(
+                      color: tokens.hairline,
+                      child: const SizedBox(height: 1),
+                    ),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpace.m,
+                          AppSpace.m,
+                          AppSpace.m,
+                          AppSpace.m,
                         ),
-                      ],
+                        child: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: AppSpace.s,
+                          runSpacing: AppSpace.s,
+                          children: [
+                            for (var i = 0; i < stops.length; i++)
+                              _FolderTile(
+                                key: ValueKey('folder-radial-$i'),
+                                stop: stops[i],
+                                current: stops[i].id == currentId,
+                                size: tile,
+                                flat: true,
+                                onTap: () => _pick(context, i),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    if (actions) ...[
+                      ColoredBox(
+                        color: tokens.hairline,
+                        child: const SizedBox(height: 1),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.m,
+                          vertical: AppSpace.s,
+                        ),
+                        child: _actionButtons(context),
+                      ),
+                    ],
+                  ],
                 ),
-                Divider(height: 1, color: scheme.outlineVariant),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 4,
-                      runSpacing: 6,
-                      children: [
-                        for (var i = 0; i < stops.length; i++)
-                          _FolderTile(
-                            key: ValueKey('folder-radial-$i'),
-                            stop: stops[i],
-                            current: stops[i].id == currentId,
-                            size: tile,
-                            flat: true,
-                            onTap: () => _pick(context, i),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -499,37 +560,45 @@ class _CenterDisc extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return InkWell(
-      key: const ValueKey('folder-radial-all'),
-      customBorder: const CircleBorder(),
-      onTap: onTap,
-      child: Ink(
-        width: _kCenterDiameter,
-        height: _kCenterDiameter,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: scheme.surfaceContainerHighest,
-          boxShadow: const [BoxShadow(blurRadius: 10, color: Colors.black26)],
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
+    return Material(
+      color: tokens.card,
+      shape: CircleBorder(
+        side: BorderSide(
+          color: scheme.primary.withValues(alpha: AppAlpha.soft),
+          width: 1.5,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.folder_copy_outlined, color: scheme.primary, size: 22),
-            const SizedBox(height: 2),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                context.l10n.foldersTitle,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: AppWeight.strong,
-                  color: scheme.onSurfaceVariant,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: const ValueKey('folder-radial-all'),
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: _kCenterDiameter,
+          height: _kCenterDiameter,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.folder_copy_outlined,
+                color: scheme.primary,
+                size: AppIconSize.m,
+              ),
+              const SizedBox(height: AppSpace.xxs),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+                child: Text(
+                  context.l10n.foldersTitle,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.badge.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -563,12 +632,15 @@ class _FolderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final accent = stop.color ?? scheme.primary;
     final discBg = current
         ? accent
         : Color.alphaBlend(
-            accent.withValues(alpha: 0.16),
+            accent.withValues(alpha: AppAlpha.pressed),
             scheme.surfaceContainerHigh,
           );
     final count = stop.count ?? 0;
@@ -577,80 +649,106 @@ class _FolderTile extends StatelessWidget {
       selected: current,
       label: stop.name,
       excludeSemantics: true,
-      child: Material(
-        color: flat ? Colors.transparent : scheme.surfaceContainerLow,
-        elevation: flat ? 0 : 3,
-        shadowColor: Colors.black38,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            width: size.width,
-            height: size.height,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
+      child: DecoratedBox(
+        decoration: flat
+            ? BoxDecoration(
+                color: current
+                    ? accent.withValues(alpha: AppAlpha.hairline)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(AppRadius.l),
+                border: current
+                    ? Border.all(color: accent.withValues(alpha: AppAlpha.soft))
+                    : null,
+              )
+            : AppSurface.floating(theme, radius: AppRadius.l).copyWith(
+                border: Border.all(
+                  color: current
+                      ? accent.withValues(alpha: AppAlpha.muted)
+                      : tokens.hairline,
+                  width: current ? 1.5 : 1,
+                ),
+              ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              child: SizedBox(
+                width: size.width,
+                height: size.height,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: discBg,
-                      ),
-                      child: Icon(
-                        stop.icon,
-                        size: 21,
-                        color: current ? _onColor(accent) : accent,
-                      ),
-                    ),
-                    if (count > 0)
-                      PositionedDirectional(
-                        top: -4,
-                        end: -10,
-                        child: Container(
-                          constraints: const BoxConstraints(minWidth: 18),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 1,
-                          ),
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
-                            color: scheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(9),
-                            border: Border.all(color: scheme.outlineVariant),
+                            shape: BoxShape.circle,
+                            color: discBg,
                           ),
-                          child: Text(
-                            count > 999 ? '999+' : '$count',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11,
-                              height: 1.2,
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          child: Icon(
+                            stop.icon,
+                            size: AppIconSize.m,
+                            color: current ? _onColor(accent) : accent,
                           ),
                         ),
+                        if (count > 0)
+                          PositionedDirectional(
+                            top: -2,
+                            end: -6,
+                            child: Container(
+                              constraints: const BoxConstraints(minWidth: 18),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpace.xs,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: current
+                                    ? scheme.primaryContainer
+                                    : tokens.card,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
+                                ),
+                                border: Border.all(color: tokens.hairline),
+                              ),
+                              child: Text(
+                                count > 999 ? '999+' : '$count',
+                                textAlign: TextAlign.center,
+                                style: text.badge.copyWith(
+                                  color: current
+                                      ? scheme.onPrimaryContainer
+                                      : scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpace.xs),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.xs,
                       ),
+                      child: Text(
+                        stop.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: text.meta.copyWith(
+                          fontWeight: current
+                              ? AppWeight.strong
+                              : AppWeight.medium,
+                          color: current ? accent : scheme.onSurface,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 5),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    stop.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: current ? AppWeight.strong : FontWeight.w500,
-                      color: current ? accent : scheme.onSurface,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

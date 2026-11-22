@@ -4,16 +4,21 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_design.dart';
+import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/haptics.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/group_card.dart';
 import '../../../../core/widgets/hold_progress_ring.dart';
+import '../../../../core/widgets/sheet_header.dart';
 import '../../domain/attachment.dart';
 import '../../domain/ink_pack.dart';
+import '../editor/eraser_glyph.dart';
+import '../editor/pen_stroke_preview.dart';
 import 'ink_pen.dart';
 import 'ink_recognize.dart';
 import 'ink_stroke_paint.dart';
 import 'ink_tools.dart';
-import '../../../../app/theme/app_tokens.dart';
-import '../../../../core/haptics.dart';
 
 /// PDF ve slayt görüntüleyicilerinin ortak elle-yazma katmanı. Çizim dosyaya
 /// gömülmez; sayfa/slayt oranlı (0–1) vektör olarak [InkStroke] listesinde
@@ -2411,8 +2416,8 @@ const double kInkQuickSwapGap = 20;
 /// Önceki yer, yeni çizgi düğmeden en çok bu kadar uzaktaysa korunur (dp).
 const double kInkQuickSwapReach = 180;
 
-/// Boştaki saydamlık (yaklaşınca / basınca tam).
-const double kInkQuickSwapIdleOpacity = 0.4;
+/// Boştaki saydamlık (yaklaşınca / basınca tam). Net ama yazıyı örtmeyen ton.
+const double kInkQuickSwapIdleOpacity = 0.82;
 
 /// Hızlı düğmenin yeri — TEK, BEKLENDİK KURAL (kullanıcı bulgusu
 /// 2026-11-19: dört aday arasında sıçrayan düğme "rastgele dolaşıyor",
@@ -2454,11 +2459,11 @@ double _rectGap(Rect a, Rect b) {
   return math.sqrt(dx * dx + dy * dy);
 }
 
-/// Kalem ↔ silgi hızlı düğmesi (bkz. [InkController.quickSwap]). Boşta
-/// %40 saydam, kalem havada yaklaşınca ya da basılınca tam; [shown] false
-/// olunca solar ve dokunuşu geçirir. Kendi [RepaintBoundary]'sinde: solma
-/// ve basılma çizim katmanını boyatmaz. Simge yalnız araç değişince
-/// ([InkToolMemory.toolRev]) yenilenir.
+/// Kalem ↔ silgi hızlı düğmesi (bkz. [InkController.quickSwap]). Net çerçeveli
+/// yüzen rozet: kalemdeyken eğik blok silgi, silgideyken vurgulu kalem +
+/// etkin mürekkep rengi noktası. [shown] false olunca solar ve dokunuşu
+/// geçirir. Kendi [RepaintBoundary]'sinde: solma ve basılma çizim katmanını
+/// boyatmaz. Simge yalnız araç değişince ([InkToolMemory.toolRev]) yenilenir.
 class InkQuickSwapButton extends StatefulWidget {
   const InkQuickSwapButton({
     super.key,
@@ -2516,7 +2521,9 @@ class _InkQuickSwapButtonState extends State<InkQuickSwapButton> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final l10n = context.l10n;
     final visible = widget.shown && !_idle;
     final opacity = !visible
@@ -2533,6 +2540,9 @@ class _InkQuickSwapButtonState extends State<InkQuickSwapButton> {
             valueListenable: InkToolMemory.toolRev,
             builder: (context, _, _) {
               final erasing = InkToolMemory.eraser;
+              final penColor = Color(
+                InkToolMemory.color ?? kInkPalette.first.toARGB32(),
+              );
               final label = erasing
                   ? l10n.inkQuickSwapToPen
                   : l10n.inkQuickSwapToEraser;
@@ -2553,22 +2563,56 @@ class _InkQuickSwapButtonState extends State<InkQuickSwapButton> {
                     },
                     onPointerUp: (_) => setState(() => _near = false),
                     onPointerCancel: (_) => setState(() => _near = false),
-                    child: Material(
-                      color: scheme.surfaceContainerHighest,
-                      shape: const CircleBorder(),
-                      elevation: 2,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: erasing
+                            ? scheme.primaryContainer
+                            : tokens.card,
+                        border: Border.all(
+                          color: erasing
+                              ? scheme.primary
+                              : scheme.outlineVariant,
+                          width: erasing ? 1.5 : 1,
+                        ),
+                        boxShadow: AppSurface.floatingShadow(theme),
+                      ),
                       child: SizedBox.square(
                         dimension: kInkQuickSwapSize,
-                        child: Icon(
-                          erasing
-                              ? Icons.edit_outlined
-                              : Icons.auto_fix_normal_outlined,
-                          key: ValueKey(
-                            erasing ? 'ink-quick-swap-pen' : 'ink-quick-swap-eraser',
-                          ),
-                          size: AppIconSize.m,
-                          color: scheme.onSurface,
-                        ),
+                        child: erasing
+                            ? Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.edit_outlined,
+                                    key: const ValueKey('ink-quick-swap-pen'),
+                                    size: AppIconSize.m,
+                                    color: scheme.onPrimaryContainer,
+                                  ),
+                                  Positioned(
+                                    right: AppSpace.s,
+                                    bottom: AppSpace.s,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: penColor,
+                                        border: Border.all(
+                                          color: scheme.primaryContainer,
+                                        ),
+                                      ),
+                                      child: const SizedBox.square(
+                                        dimension: 8,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Center(
+                                child: EraserGlyph(
+                                  key: const ValueKey('ink-quick-swap-eraser'),
+                                  color: scheme.onSurface,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -2797,8 +2841,9 @@ class ActiveInkPainter extends CustomPainter {
       old.accent != accent;
 }
 
-/// "Parmak: Kaydırır · Çizer · Siler" (K34, F63.6) — eski "yalnız kalem"
-/// anahtarının yerinde; kalem ayarları sayfası ve Ayarlar → Kalem ortak.
+/// "Parmak: Otomatik · Kaydırır · Çizer · Siler" (K34, F63.6) — kalem ayarları
+/// sayfası ve Ayarlar → Kalem ortak. Yalnız seçili kipin kısa açıklamasını
+/// gösterir (uzun duvar metni yerine anında anlaşılır tek satır).
 class InkFingerToolPicker extends StatefulWidget {
   const InkFingerToolPicker({super.key, required this.onChanged});
 
@@ -2809,6 +2854,15 @@ class InkFingerToolPicker extends StatefulWidget {
 }
 
 class _InkFingerToolPickerState extends State<InkFingerToolPicker> {
+  String _description(AppLocalizations l10n) => switch (InkToolMemory.fingerTool) {
+    FingerTool.auto => InkToolMemory.effectiveFingerTool == FingerTool.scroll
+        ? l10n.inkFingerAutoNowScroll
+        : l10n.inkFingerAutoNowDraw,
+    FingerTool.scroll => l10n.inkPenOnlyHint,
+    FingerTool.draw => l10n.inkPenOnlyOff,
+    FingerTool.erase => l10n.inkFingerEraseOn,
+  };
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -2817,54 +2871,57 @@ class _InkFingerToolPickerState extends State<InkFingerToolPicker> {
       children: [
         ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.back_hand_outlined),
+          leading: const Icon(Icons.back_hand_outlined, size: AppIconSize.m),
           title: Text(l10n.inkFingerToolTitle),
-          subtitle: Text(
-            InkToolMemory.fingerTool == FingerTool.auto
-                ? '${l10n.inkFingerToolInfo}\n${InkToolMemory.effectiveFingerTool == FingerTool.scroll ? l10n.inkFingerAutoNowScroll : l10n.inkFingerAutoNowDraw}'
-                : l10n.inkFingerToolInfo,
-          ),
+          subtitle: Text(_description(l10n)),
         ),
         // Dört seçenek dar telefonda simgeli sığmaz: 440 dp altında yalnız
         // yazı (ayar sayfası; editörde değil — LayoutBuilder burada ucuz).
-        LayoutBuilder(
-          builder: (context, box) {
-            final icons = box.maxWidth >= 440;
-            ButtonSegment<FingerTool> seg(
-              FingerTool value,
-              IconData icon,
-              String label,
-            ) => ButtonSegment(
-              value: value,
-              icon: icons ? Icon(icon) : null,
-              label: Text(label, maxLines: 1, softWrap: false),
-            );
-            return SegmentedButton<FingerTool>(
-              key: const ValueKey('ink-finger-tool'),
-              showSelectedIcon: false,
-              segments: [
-                seg(
-                  FingerTool.auto,
-                  Icons.auto_awesome_outlined,
-                  l10n.inkFingerAuto,
-                ),
-                seg(
-                  FingerTool.scroll,
-                  Icons.swipe_vertical_outlined,
-                  l10n.inkFingerScroll,
-                ),
-                seg(FingerTool.draw, Icons.gesture_rounded, l10n.inkFingerDraw),
-                seg(
-                  FingerTool.erase,
-                  Icons.auto_fix_normal_outlined,
-                  l10n.inkFingerErase,
-                ),
-              ],
-              selected: {InkToolMemory.fingerTool},
-              onSelectionChanged: (s) =>
-                  setState(() => widget.onChanged(s.first)),
-            );
-          },
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpace.s),
+          child: LayoutBuilder(
+            builder: (context, box) {
+              final icons = box.maxWidth >= 440;
+              ButtonSegment<FingerTool> seg(
+                FingerTool value,
+                Widget icon,
+                String label,
+              ) => ButtonSegment(
+                value: value,
+                icon: icons ? icon : null,
+                label: Text(label, maxLines: 1, softWrap: false),
+              );
+              return SegmentedButton<FingerTool>(
+                key: const ValueKey('ink-finger-tool'),
+                showSelectedIcon: false,
+                segments: [
+                  seg(
+                    FingerTool.auto,
+                    const Icon(Icons.auto_awesome_outlined, size: AppIconSize.s),
+                    l10n.inkFingerAuto,
+                  ),
+                  seg(
+                    FingerTool.scroll,
+                    const Icon(Icons.swipe_vertical_outlined, size: AppIconSize.s),
+                    l10n.inkFingerScroll,
+                  ),
+                  seg(
+                    FingerTool.draw,
+                    const Icon(Icons.gesture_rounded, size: AppIconSize.s),
+                    l10n.inkFingerDraw,
+                  ),
+                  seg(
+                    FingerTool.erase,
+                    const EraserGlyph(size: AppIconSize.s),
+                    l10n.inkFingerErase,
+                  ),
+                ],
+                selected: {InkToolMemory.fingerTool},
+                onSelectionChanged: (s) =>
+                    setState(() => widget.onChanged(s.first)),
+              );
+            },
+          ),
         ),
       ],
     );
@@ -2888,220 +2945,308 @@ class InkSettingsSheet extends StatelessWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final pen = controller.pen;
     final fixed = pen.fixedOpacity;
+    final opacity = fixed ?? controller.opacity;
+    final opacityText = '%${(opacity * 100).round()}';
+
+    Widget padRow(Widget child) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+      child: child,
+    );
+
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          0,
+          AppSpace.l,
+          AppSpace.xl,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              l10n.inkSettings,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: AppWeight.strong,
-              ),
+            SheetHeader(
+              title: l10n.inkSettings,
+              padding: const EdgeInsets.only(bottom: AppSpace.m),
             ),
-            const SizedBox(height: 12),
-            // ÖNİZLEME: seçili kalem, renk, kalınlık ve şeffaflıkla örnek
-            // bir dalga — ayar değişince anında görünür.
-            Container(
-              height: 64,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: scheme.outlineVariant),
-              ),
-              child: CustomPaint(
-                painter: _PenPreviewPainter(
-                  color: controller.penColor,
-                  width: controller.widthPx,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
+            // 1. ÖNİZLEME VE KALEM AYARI
+            GroupCard(
               children: [
-                SizedBox(width: 96, child: Text(l10n.inkWidth)),
-                Expanded(
-                  child: Slider(
-                    value: pen.clampWidth(controller.widthPx),
-                    min: pen.minWidth,
-                    max: pen.maxWidth,
-                    label: controller.widthPx.toStringAsFixed(0),
-                    onChanged: controller.setWidth,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.l,
+                    AppSpace.m,
+                    AppSpace.l,
+                    AppSpace.s,
                   ),
-                ),
-                SizedBox(
-                  width: 36,
-                  child: Text(controller.widthPx.toStringAsFixed(0)),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                SizedBox(width: 96, child: Text(l10n.inkOpacity)),
-                Expanded(
-                  child: Slider(
-                    // Fosforlu / dolma kalemin saydamlığı sabit (türü
-                    // ondan okunuyor).
-                    value: fixed ?? controller.opacity,
-                    min: 0.1,
-                    divisions: 9,
-                    label: '%${((fixed ?? controller.opacity) * 100).round()}',
-                    onChanged: fixed != null ? null : controller.setOpacity,
-                  ),
-                ),
-                SizedBox(
-                  width: 36,
-                  child: Text(
-                    '%${((fixed ?? controller.opacity) * 100).round()}',
-                  ),
-                ),
-              ],
-            ),
-            if (InkToolMemory.recentColors.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(l10n.inkRecentColors, style: theme.textTheme.labelLarge),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final c in InkToolMemory.recentColors)
-                    InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () => controller.setColor(Color(c)),
-                      child: Container(
-                        width: 30,
-                        height: 30,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // GERÇEK ÇİZGİ ÖNİZLEMESİ (koyu temada da uyumlu kâğıt)
+                      Container(
+                        height: 56,
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.m,
+                        ),
                         decoration: BoxDecoration(
-                          color: Color(c),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: controller.color.toARGB32() == c
-                                ? scheme.primary
-                                : scheme.outlineVariant,
-                            width: controller.color.toARGB32() == c ? 3 : 1,
-                          ),
+                          color: tokens.card,
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                          border: Border.all(color: tokens.hairline),
+                        ),
+                        child: PenStrokePreview(
+                          argb: controller.penColor.toARGB32(),
+                          widthPx: controller.widthPx,
                         ),
                       ),
+                      const SizedBox(height: AppSpace.s),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 84,
+                            child: Text(l10n.inkWidth, style: text.label),
+                          ),
+                          Expanded(
+                            child: Slider(
+                              value: pen.clampWidth(controller.widthPx),
+                              min: pen.minWidth,
+                              max: pen.maxWidth,
+                              label: controller.widthPx.toStringAsFixed(0),
+                              onChanged: controller.setWidth,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 40,
+                            child: Text(
+                              controller.widthPx.toStringAsFixed(0),
+                              textAlign: TextAlign.end,
+                              style: text.meta.copyWith(
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 84,
+                            child: Text(l10n.inkOpacity, style: text.label),
+                          ),
+                          Expanded(
+                            child: Slider(
+                              // Fosforlu / dolma kalemin saydamlığı sabit (türü
+                              // ondan okunuyor).
+                              value: opacity,
+                              min: 0.1,
+                              divisions: 9,
+                              label: opacityText,
+                              onChanged: fixed != null
+                                  ? null
+                                  : controller.setOpacity,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 40,
+                            child: Text(
+                              opacityText,
+                              textAlign: TextAlign.end,
+                              style: text.meta.copyWith(
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (InkToolMemory.recentColors.isNotEmpty) ...[
+                        const SizedBox(height: AppSpace.xs),
+                        Text(l10n.inkRecentColors, style: text.meta),
+                        const SizedBox(height: AppSpace.s),
+                        Wrap(
+                          spacing: AppSpace.s,
+                          runSpacing: AppSpace.s,
+                          children: [
+                            for (final c in InkToolMemory.recentColors)
+                              InkWell(
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.pill,
+                                ),
+                                onTap: () => controller.setColor(Color(c)),
+                                child: Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: Color(c),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: controller.color.toARGB32() == c
+                                          ? scheme.primary
+                                          : scheme.outlineVariant,
+                                      width: controller.color.toARGB32() == c
+                                          ? 3
+                                          : 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpace.m),
+            // 2. PARMAK DAVRANIŞI
+            GroupCard(
+              children: [
+                padRow(
+                  InkFingerToolPicker(
+                    key: const ValueKey('ink-finger-tool'),
+                    onChanged: controller.setFingerTool,
+                  ),
+                ),
+                padRow(_AutoStylusSwitch()),
+              ],
+            ),
+            const SizedBox(height: AppSpace.m),
+            // 3. AKILLI ÇİZİM VE YARDIMCILAR
+            GroupCard(
+              children: [
+                padRow(
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(
+                      Icons.line_weight_rounded,
+                      size: AppIconSize.m,
                     ),
-                ],
+                    title: Text(l10n.inkPressureTitle),
+                    subtitle: Text(l10n.inkPressureInfo),
+                    value: controller.pressure,
+                    onChanged: controller.setPressure,
+                  ),
+                ),
+                padRow(
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(
+                      Icons.category_outlined,
+                      size: AppIconSize.m,
+                    ),
+                    title: Text(l10n.inkShapeSnapTitle),
+                    subtitle: Text(l10n.inkShapeSnapInfo),
+                    value: controller.shapeSnap,
+                    onChanged: controller.setShapeSnap,
+                  ),
+                ),
+                padRow(
+                  SwitchListTile(
+                    key: const ValueKey('ink-shape-suggest'),
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const Icon(
+                      Icons.auto_fix_high_rounded,
+                      size: AppIconSize.m,
+                    ),
+                    title: Text(l10n.inkShapeSuggestTitle),
+                    subtitle: Text(l10n.inkShapeSuggestInfo),
+                    value: controller.shapeSuggest,
+                    onChanged: controller.setShapeSuggest,
+                  ),
+                ),
+                padRow(
+                  StatefulBuilder(
+                    builder: (context, setLocal) => SwitchListTile(
+                      key: const ValueKey('ink-mark-fix'),
+                      contentPadding: EdgeInsets.zero,
+                      secondary: const Icon(
+                        Icons.rule_rounded,
+                        size: AppIconSize.m,
+                      ),
+                      title: Text(l10n.inkMarkFixTitle),
+                      subtitle: Text(l10n.inkMarkFixInfo),
+                      value: InkToolMemory.markFix ?? false,
+                      onChanged: (v) =>
+                          setLocal(() => InkToolMemory.saveMarkFix(v)),
+                    ),
+                  ),
+                ),
+                padRow(
+                  StatefulBuilder(
+                    builder: (context, setLocal) => SwitchListTile(
+                      key: const ValueKey('ink-quick-swap-setting'),
+                      contentPadding: EdgeInsets.zero,
+                      secondary: const Icon(
+                        Icons.swap_horiz_rounded,
+                        size: AppIconSize.m,
+                      ),
+                      title: Text(l10n.inkQuickSwapTitle),
+                      subtitle: Text(l10n.inkQuickSwapInfo),
+                      value: InkToolMemory.quickSwap,
+                      onChanged: (v) =>
+                          setLocal(() => InkToolMemory.saveQuickSwap(v)),
+                    ),
+                  ),
+                ),
+                padRow(
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: const EraserGlyph(),
+                    title: Text(l10n.inkPartialEraserTitle),
+                    subtitle: Text(l10n.inkPartialEraserInfo),
+                    value: controller.partialEraser,
+                    onChanged: controller.setPartialEraser,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpace.m),
+            GroupCard(
+              children: [
+                padRow(
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.edit_note,
+                      size: AppIconSize.m,
+                    ),
+                    title: Text(l10n.inkStylusTipsTitle),
+                    subtitle: Text(l10n.inkStylusTips),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpace.m),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: OutlinedButton.icon(
+                onPressed: controller.ink.isEmpty
+                    ? null
+                    : () {
+                        controller.clear();
+                        Navigator.pop(context);
+                      },
+                icon: const Icon(
+                  Icons.delete_sweep_outlined,
+                  size: AppIconSize.s,
+                ),
+                label: Text(l10n.clearInk),
               ),
-            ],
-            const SizedBox(height: 8),
-            InkFingerToolPicker(
-              key: const ValueKey('ink-finger-tool'),
-              onChanged: controller.setFingerTool,
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.line_weight),
-              title: Text(l10n.inkPressureTitle),
-              subtitle: Text(l10n.inkPressureInfo),
-              value: controller.pressure,
-              onChanged: controller.setPressure,
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.auto_fix_high),
-              title: Text(l10n.inkShapeSnapTitle),
-              subtitle: Text(l10n.inkShapeSnapInfo),
-              value: controller.shapeSnap,
-              onChanged: controller.setShapeSnap,
-            ),
-            SwitchListTile(
-              key: const ValueKey('ink-shape-suggest'),
-              contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.auto_fix_high_rounded),
-              title: Text(l10n.inkShapeSuggestTitle),
-              subtitle: Text(l10n.inkShapeSuggestInfo),
-              value: controller.shapeSuggest,
-              onChanged: controller.setShapeSuggest,
-            ),
-            StatefulBuilder(
-              builder: (context, setLocal) => SwitchListTile(
-                key: const ValueKey('ink-mark-fix'),
-                contentPadding: EdgeInsets.zero,
-                secondary: const Icon(Icons.rule_rounded),
-                title: Text(l10n.inkMarkFixTitle),
-                subtitle: Text(l10n.inkMarkFixInfo),
-                value: InkToolMemory.markFix ?? false,
-                onChanged: (v) => setLocal(() => InkToolMemory.saveMarkFix(v)),
-              ),
-            ),
-            StatefulBuilder(
-              builder: (context, setLocal) => SwitchListTile(
-                key: const ValueKey('ink-quick-swap-setting'),
-                contentPadding: EdgeInsets.zero,
-                secondary: const Icon(Icons.swap_horiz_rounded),
-                title: Text(l10n.inkQuickSwapTitle),
-                subtitle: Text(l10n.inkQuickSwapInfo),
-                value: InkToolMemory.quickSwap,
-                onChanged: (v) => setLocal(() => InkToolMemory.saveQuickSwap(v)),
-              ),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              secondary: const Icon(Icons.cleaning_services_outlined),
-              title: Text(l10n.inkPartialEraserTitle),
-              subtitle: Text(l10n.inkPartialEraserInfo),
-              value: controller.partialEraser,
-              onChanged: controller.setPartialEraser,
-            ),
-            _AutoStylusSwitch(),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.edit_note),
-              title: Text(l10n.inkStylusTipsTitle),
-              subtitle: Text(l10n.inkStylusTips),
-            ),
-            const SizedBox(height: 4),
-            OutlinedButton.icon(
-              onPressed: controller.ink.isEmpty
-                  ? null
-                  : () {
-                      controller.clear();
-                      Navigator.pop(context);
-                    },
-              icon: const Icon(Icons.delete_outline),
-              label: Text(l10n.clearInk),
             ),
           ],
         ),
       ),
     );
   }
-}
-
-/// Kalem ayarı önizlemesi: bir S dalgası.
-class _PenPreviewPainter extends CustomPainter {
-  _PenPreviewPainter({required this.color, required this.width});
-
-  final Color color;
-  final double width;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()..moveTo(16, size.height / 2);
-    final span = size.width - 32;
-    for (var i = 1; i <= 40; i++) {
-      final t = i / 40;
-      path.lineTo(
-        16 + span * t,
-        size.height / 2 + math.sin(t * math.pi * 2) * size.height * 0.22,
-      );
-    }
-    canvas.drawPath(path, inkPaint(color, width));
-  }
-
-  @override
-  bool shouldRepaint(covariant _PenPreviewPainter old) =>
-      old.color != color || old.width != width;
 }
 
 /// Çizim modunda İKİ PARMAK yakınlaştırma + kaydırmayı görüntüleyicinin

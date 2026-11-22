@@ -921,7 +921,12 @@ class _AppVersionRowState extends State<_AppVersionRow> {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.info_outline),
-      title: Text('${l10n.appVersion}: $version'),
+      title: Text(l10n.appVersion),
+      subtitle: Text(
+        version,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: const Icon(Icons.copy_rounded, size: AppIconSize.s),
       // Uzun bas → Crashlytics test çökmesi (yalnız raporlama açıkken,
       // Android release derlemesinde). Kurulum doğrulaması için gizli kapı.
