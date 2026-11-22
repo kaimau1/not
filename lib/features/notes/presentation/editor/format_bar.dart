@@ -796,21 +796,38 @@ class _FormatBarState extends State<FormatBar> {
                                       ),
                                       excludeSemantics: true,
                                       child: SizedBox(
-                                        width: 38,
-                                        child: Text(
-                                          '%${(size * 100).round()}',
-                                          key: const ValueKey(
-                                            'format-size-value',
-                                          ),
-                                          textAlign: TextAlign.center,
-                                          maxLines: 1,
-                                          style: text.meta.copyWith(
-                                            color: scheme.onSurface,
-                                            fontWeight: AppWeight.strong,
-                                            fontFeatures: const [
-                                              FontFeature.tabularFigures(),
-                                            ],
-                                          ),
+                                        width: 42,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              l10n.formatSizeLabel,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: text.badge.copyWith(
+                                                color: scheme.onSurfaceVariant,
+                                                fontWeight: AppWeight.medium,
+                                                height: 1.0,
+                                              ),
+                                            ),
+                                            Text(
+                                              '%${(size * 100).round()}',
+                                              key: const ValueKey(
+                                                'format-size-value',
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              maxLines: 1,
+                                              style: text.badge.copyWith(
+                                                color: scheme.onSurface,
+                                                height: 1.1,
+                                                fontFeatures: const [
+                                                  FontFeature.tabularFigures(),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
