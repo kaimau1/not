@@ -2381,16 +2381,14 @@ class CardCalendarPill extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.event_outlined, size: 12, color: fg),
+            Icon(Icons.event_outlined, size: _kExpiryIcon, color: fg),
             const SizedBox(width: 3),
             Flexible(
               child: Text(
                 formatCalendarPillDate(day),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                style: AppText.of(_cardThemeOf(context)).badge.copyWith(
                   color: fg,
                 ),
               ),

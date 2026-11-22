@@ -628,10 +628,13 @@ class BubbleController extends ChangeNotifier {
   /// kısa süre sonra TEK kez. Kart kapanınca / [save] çağrılınca hemen.
   void saveSoon() {
     _saveTimer?.cancel();
-    _saveTimer = Timer(const Duration(milliseconds: 700), save);
+    _saveTimer = Timer(_saveDelay, save);
   }
 
   Timer? _saveTimer;
+
+  /// Biçim kaydının gecikmesi (zamanlayıcı — hareket süresi değil).
+  static final _saveDelay = AppMotion.medium * 2;
 
   void remove(String id) {
     _bubbles = [
