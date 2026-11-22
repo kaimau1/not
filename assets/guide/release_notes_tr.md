@@ -5,7 +5,7 @@ Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarla
 ## 22 Kasım 2026 {#2026-11-22}
 - **Balonda hızlı renk değişimi tutuyor:** renkleri art arda hızlıca değiştirince bir önceki renge geri dönme sorunu giderildi.
 - **Defterde sayfa paneli altta, sabit:** defter kipindeki Sayfa 1/2 · yeni sayfa · sayfa sil paneli artık başlığın altında maddeleri itmiyor; alt panelin hemen üstünde sabit duruyor, kaydırmaya gerek yok.
-- **Defter ve temalarda üst/alt alan bir bütün:** sarı bloknot kâğıdında üst çubuk ve alt panel de kâğıdın tonunu alıyor; çizilmiş tema ya da zemin görseli varken görsel bütün ekranın arkasında, alt panel de saydam.
+- **Defter, tema, renk ve zemin görselinde üst/alt alan tam uyumlu:** defter kâğıdının çizgileri, kareleri, kenar çizgisi ve cilt gölgesi artık üst çubuğun ve alt panelin arkasında da kesintisiz sürüyor; sayfa çubuğu, alt kapsüller ve onay kutuları seçilen kâğıt, tema, renk ya da arka plan fotoğrafının tonuna bürünüyor. Koyu, açık ya da karmaşık zemin fotoğraflarında üst düğmeler yumuşak koruyucu kapsüllerle her koşulda okunur kalır.
 - **Takvim başlığı daha belirgin; Bugün paneli de günceller:** ay başlığı büyüdü. **Bugün**'e basınca alttaki gün paneli de bugüne geçiyor.
 - **Bildirimler tasarıma uydu:** koyu, yüksek tost kartı yerine açık tonlu, ince çizgili, daha alçak bir bildirim; eylem (Geri al) uygulamanın ana renginde.
 - **Gün sayfası daha ayrıntılı:** üstte büyük tarih, altında haftanın günü · bugün/yarın/kaç gün sonra · yılın haftası; tatil, etkinlik, görev, hatırlatıcı ve not sayıları hap olarak görünür. Ayrı **+** kalktı; alt satırda Etkinlik · Yeni görev · Bu güne not var.

@@ -96,19 +96,27 @@ extension _EditorAppearance on _NoteEditorScreenState {
     );
   }
 
-  /// DEFTER GÖRÜNÜMÜ (F3.5): kâğıt deseni gövdenin arkasında, satır
-  /// aralığı gövde metninin satır yüksekliği.
-  Widget _withPaper(Note note, TextStyle bodyStyle, Widget child) {
+  /// DEFTER GÖRÜNÜMÜ (F3.5): kâğıt deseni ekranın TAMAMININ (üst çubuk +
+  /// gövde + alt panel) arkasında, satır aralığı gövde metninin satır
+  /// yüksekliği.
+  Widget _withPaper(
+    Note note,
+    TextStyle bodyStyle,
+    Widget child, {
+    double topChromeHeight = 0,
+  }) {
     if (!note.paged) return child;
     return NotebookPaper(
       style: note.archivePaper,
       gap: _paperGap(bodyStyle),
       scroll: _pageScroll,
+      topChromeHeight: topChromeHeight,
       // Çizgili desenlerde satırları içerik çizer (bkz. [_withRuledLines]);
       // belge notunun tuvali yok, orada ızgara kalır.
       contentRuled: !note.type.isPageNoteType,
-      // Çizgi sayfanın kendi renginden (TEMA_PLANI F33.1).
-      accent: NoteColors.noteInk(context, note),
+      // Çizgi sayfanın kendi renginden/temasından (TEMA_PLANI F33.1).
+      accent: _chrome.paperAccent,
+      paperTheme: _chrome.paperTheme,
       child: child,
     );
   }
@@ -126,8 +134,8 @@ extension _EditorAppearance on _NoteEditorScreenState {
     if (!note.paged || !note.archivePaper.ruled) return child;
     final dashed = note.archivePaper == ArchivePaper.dashed;
     final line = PaperInks.of(
-      _themeOf(context),
-      accent: NoteColors.noteInk(context, note),
+      _chrome.paperTheme,
+      accent: _chrome.paperAccent,
     ).line;
     return RuledLines(
       gap: _paperGap(bodyStyle),
@@ -137,6 +145,24 @@ extension _EditorAppearance on _NoteEditorScreenState {
       dashed: dashed,
       // Kaydırma alanının alt dolgusu (bkz. [_buildCanvas]).
       extraBottom: 96,
+      child: child,
+    );
+  }
+
+  /// Çizgili defterde ([ArchivePaper.ruled]) sabit alt panelin arkasında
+  /// yatay satır çizgilerini kesintisiz sürdürür.
+  Widget _withBottomRuledLines(Note note, TextStyle bodyStyle, Widget child) {
+    if (!note.paged || !note.archivePaper.ruled || note.type.isPageNoteType) {
+      return child;
+    }
+    final line = PaperInks.of(
+      _chrome.paperTheme,
+      accent: _chrome.paperAccent,
+    ).line;
+    return NotebookRuledBand(
+      style: note.archivePaper,
+      gap: _paperGap(bodyStyle),
+      line: line,
       child: child,
     );
   }

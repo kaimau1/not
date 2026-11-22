@@ -215,14 +215,15 @@ extension _EditorToolbar on _NoteEditorScreenState {
     double gap = 2,
   }) {
     final scheme = _themeOf(context).colorScheme;
-    // Renkli notta notun tonu (F75.3): açıkken dolu ton + sayfa rengi simge.
+    // Renkli/temalı/defter notta sayfa tonu (F75.3): açıkken dolu ton + sayfa
+    // rengi simge.
     final noteInk = _barInk;
     final background = !active
         ? Colors.transparent
         : noteInk ?? scheme.primary;
     final ink = noteInk != null
         ? (active ? _barPage : noteInk)
-        : (active ? scheme.onPrimary : scheme.onPrimaryContainer);
+        : (active ? scheme.onPrimary : _chrome.aiIconColor);
     return MinTapTarget(
       minWidth: size + gap,
       child: Tooltip(
@@ -263,19 +264,15 @@ extension _EditorToolbar on _NoteEditorScreenState {
     required double gap,
     required List<Widget> children,
   }) {
-    final scheme = _themeOf(context).colorScheme;
-    // Renkli notta notun tonu (F75.3), çerçevesiz.
-    final ink = _barInk;
-    final fill = ink == null
-        ? scheme.primaryContainer
-        : Color.alphaBlend(ink.withValues(alpha: AppAlpha.pressed), _barPage);
+    final border = _chrome.aiCapsuleBorder;
     // Dolgu yatayda; dikeyde Row kapsülün tam boyunda (48 dp) — düğmelerin
     // dokunma payı yakalansın (F75.2). Görünüş aynı.
     return DecoratedBox(
       key: const ValueKey('editor-ai-capsule'),
       decoration: BoxDecoration(
-        color: fill,
+        color: _chrome.aiCapsuleFill,
         borderRadius: BorderRadius.circular(13),
+        border: border == null ? null : Border.all(color: border),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
