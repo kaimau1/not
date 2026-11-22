@@ -1637,6 +1637,29 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             );
   }
 
+  /// Küçültme (bütün sığdır) denetimi bu ekte var mı.
+  bool get _canShrink =>
+      widget.onShrinkToFitChanged != null &&
+      !widget.fill &&
+      (widget.media.kind == AttachmentKind.image ||
+          widget.media.kind == AttachmentKind.pdf);
+
+  /// Düğmenin gösterdiği durum: kalıcı ayar ([PinnedMediaPane.shrinkToFit])
+  /// ya da iki parmakla uzaklaştırılmış "bütün görsel" kipi ([_wholeImage]) —
+  /// ikisi görünüşte aynı şey (görsel bölmeye bütün sığar).
+  bool get _shrinkActive => widget.shrinkToFit || _wholeImage;
+
+  /// Düğme: açıkken (ayar ya da kıstırma) genişliğe oturmaya döner; kapalıyken
+  /// ayarı açar.
+  void _toggleShrink() {
+    if (_shrinkActive) {
+      if (_wholeImage) setState(() => _wholeImage = false);
+      if (widget.shrinkToFit) widget.onShrinkToFitChanged?.call(false);
+    } else {
+      widget.onShrinkToFitChanged?.call(true);
+    }
+  }
+
   /// Son çizilen çubuk genişliği: döndür düğmesi çubukta mı menüde mi.
   double _barWidth = 0;
   bool get _rotateInMenu => _barWidth < 430;
@@ -1815,6 +1838,21 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                 tooltip: l10n.fullscreen,
                 icon: Icons.fullscreen,
                 onPressed: widget.onOpen,
+              ),
+            ),
+          // DARALTINCA KÜÇÜLSÜN ÇUBUKTA, SOLDA (kullanıcı isteği 2026-11-22;
+          // eskiden yalnız ⋮ levhasındaydı). Açıkken dolu simge + yumuşak
+          // zemin; iki parmakla uzaklaştırıp görseli bütün sığdırınca da yanar.
+          if (_canShrink && !tiny)
+            _pinnedItem(
+              'shrink',
+              _BarButton(
+                key: const ValueKey('pinned-shrink'),
+                tooltip: l10n.pinnedShrinkToFit,
+                icon: _shrinkActive ? Icons.fit_screen : Icons.fit_screen_outlined,
+                selected: _shrinkActive,
+                tonal: true,
+                onPressed: _toggleShrink,
               ),
             ),
           // VİDEO DENETİMİ (kullanıcı isteği 2026-10-16): ±10 sn ve
@@ -2333,7 +2371,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               ),
             ),
           ],
-          if (canShrink) ...[
+          // Düğme çubukta (solda); levhada yalnız çubuk ona yer vermezse.
+          if (canShrink && _tinyBar) ...[
             const SizedBox(height: AppSpace.s),
             Material(
               color: tokens.card,
@@ -2344,9 +2383,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 key: const ValueKey('pinned-action-shrink'),
-                onTap: () => pick(
-                  () => widget.onShrinkToFitChanged!(!widget.shrinkToFit),
-                ),
+                onTap: () => pick(_toggleShrink),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpace.m,
@@ -2355,7 +2392,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                   child: Row(
                     children: [
                       Icon(
-                        widget.shrinkToFit
+                        _shrinkActive
                             ? Icons.fit_screen
                             : Icons.fit_screen_outlined,
                         size: AppIconSize.m,
@@ -2370,7 +2407,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                       ),
                       IgnorePointer(
                         child: Switch(
-                          value: widget.shrinkToFit,
+                          value: _shrinkActive,
                           onChanged: (_) {},
                         ),
                       ),

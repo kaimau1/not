@@ -9604,4 +9604,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eraserOn => 'Eraser on';
+
+  @override
+  String get calendarRelToday => 'Today';
+
+  @override
+  String get calendarRelTomorrow => 'Tomorrow';
+
+  @override
+  String get calendarRelYesterday => 'Yesterday';
+
+  @override
+  String calendarRelInDays(int count) {
+    return 'in $count days';
+  }
+
+  @override
+  String calendarRelDaysAgo(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String calendarWeekNumber(int count) {
+    return 'week $count';
+  }
+
+  @override
+  String calendarDayEvents(int count) {
+    return '$count events';
+  }
+
+  @override
+  String calendarDayTasks(int count) {
+    return '$count tasks';
+  }
+
+  @override
+  String calendarDayReminders(int count) {
+    return '$count reminders';
+  }
+
+  @override
+  String calendarDayNotesCount(int count) {
+    return '$count notes';
+  }
+
+  @override
+  String get calendarDayFree => 'Free day';
 }

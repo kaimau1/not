@@ -9592,4 +9592,51 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get eraserOn => 'Silgi açık';
+
+  @override
+  String get calendarRelToday => 'Bugün';
+
+  @override
+  String get calendarRelTomorrow => 'Yarın';
+
+  @override
+  String get calendarRelYesterday => 'Dün';
+
+  @override
+  String calendarRelInDays(int count) {
+    return '$count gün sonra';
+  }
+
+  @override
+  String calendarRelDaysAgo(int count) {
+    return '$count gün önce';
+  }
+
+  @override
+  String calendarWeekNumber(int count) {
+    return '$count. hafta';
+  }
+
+  @override
+  String calendarDayEvents(int count) {
+    return '$count etkinlik';
+  }
+
+  @override
+  String calendarDayTasks(int count) {
+    return '$count görev';
+  }
+
+  @override
+  String calendarDayReminders(int count) {
+    return '$count hatırlatıcı';
+  }
+
+  @override
+  String calendarDayNotesCount(int count) {
+    return '$count not';
+  }
+
+  @override
+  String get calendarDayFree => 'Boş gün';
 }

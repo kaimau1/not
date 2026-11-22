@@ -651,6 +651,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       _focus = _today;
       _month = monthOf(_today);
       _windowDays = _kAgendaWindowDays;
+      // Açık gün paneli de bugüne geçer (kullanıcı bulgusu 2026-11-22:
+      // "Bugün'e basınca alttaki alan hâlâ 20 Kasım gösteriyor").
+      if (_panelDay != null) _panelDay = _today;
     });
     _pagerKey.currentState?.animateToPage(_pageOf(_view, _today));
   }
@@ -878,7 +881,19 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final wide = MediaQuery.sizeOf(context).width >= _kWideCalendar;
     final paged = _view != CalendarView.agenda;
 
-    final titleText = Text(_title(l10n), overflow: TextOverflow.ellipsis);
+    // AY BELLİ OLSUN (kullanıcı isteği 2026-11-22: "başlık biraz daha
+    // büyüsün"): üst çubuğun varsayılanı yerine ekran başlığı rolü, bir boy
+    // büyük.
+    final titleStyle = AppText.of(Theme.of(context)).screenTitle;
+    final titleText = Text(
+      _title(l10n),
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
+      style: titleStyle.copyWith(
+        fontSize: (titleStyle.fontSize ?? 20) + 2,
+        height: 1.2,
+      ),
+    );
     final bar = AppBar(
       titleSpacing: wide ? null : 8,
       title: _view == CalendarView.agenda && !wide
@@ -2993,15 +3008,60 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
     final now = widget.now ?? DateTime.now();
     final today = _today;
     final dayTitle = DateFormat.yMMMMEEEEd().format(_day);
+    final text = AppText.of(theme);
+    // AYRINTILI BAŞLIK (kullanıcı isteği 2026-11-22: "gün sayfasındayken üst
+    // daha düzgün, daha detaylı olsun"): büyük gün + ay, altında haftanın
+    // günü · göreli gün · yılın haftası.
+    final rel = _day.difference(today).inDays;
+    final relText = switch (rel) {
+      0 => l10n.calendarRelToday,
+      1 => l10n.calendarRelTomorrow,
+      -1 => l10n.calendarRelYesterday,
+      > 1 => l10n.calendarRelInDays(rel),
+      _ => l10n.calendarRelDaysAgo(-rel),
+    };
+    final subtitle = [
+      DateFormat.EEEE().format(_day),
+      if (_day.year != today.year) '${_day.year}',
+      relText,
+      l10n.calendarWeekNumber(isoWeekNumber(_day)),
+    ].join(' · ');
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         titleSpacing: 0,
+        toolbarHeight: 64,
         title: AnimatedSwitcher(
           duration: AppMotion.of(context, AppMotion.short),
-          child: KeyedSubtree(
+          child: Semantics(
             key: ValueKey(dayTitle),
-            child: Text(dayTitle, overflow: TextOverflow.ellipsis),
+            label: dayTitle,
+            excludeSemantics: true,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  DateFormat.MMMMd().format(_day),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.screenTitle.copyWith(
+                    fontSize: (text.screenTitle.fontSize ?? 20) + 2,
+                    height: 1.2,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.meta.copyWith(
+                    color: rel == 0
+                        ? theme.colorScheme.primary
+                        : text.meta.color,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -3030,14 +3090,11 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        key: const ValueKey('day-page-add'),
-        tooltip: l10n.calendarAddActionTitle,
-        onPressed: () => unawaited(calendarAdd(context, ref, _day)),
-        child: const Icon(Icons.add),
-      ),
+      // "+" YOK (kullanıcı isteği 2026-11-22: "butonlar da var, artıya gerek
+      // yok"): Etkinlik · Görev · Not alt satırda.
       body: Column(
         children: [
+          _DaySummaryRow(day: _day, data: data),
           Expanded(
             child: PageView.builder(
               controller: _controller,
@@ -3074,11 +3131,27 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
                 padding: const EdgeInsets.fromLTRB(
                   AppSpace.m,
                   AppSpace.s,
-                  88,
+                  AppSpace.m,
                   AppSpace.m,
                 ),
                 child: Row(
                   children: [
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        key: const ValueKey('day-page-event'),
+                        onPressed: () =>
+                            unawaited(showEventEditor(context, day: _day)),
+                        icon: const Icon(
+                          Icons.event_outlined,
+                          size: AppIconSize.s,
+                        ),
+                        label: Text(
+                          l10n.calendarAddEvent,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.s),
                     Expanded(
                       child: FilledButton.tonalIcon(
                         onPressed: () =>
@@ -3110,6 +3183,125 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// ISO-8601 yılın haftası (Pazartesi başlar; 1. hafta yılın ilk Perşembesini
+/// içerir). Yaz saati kaymasın diye UTC'de hesaplanır.
+int isoWeekNumber(DateTime d) {
+  final day = DateTime.utc(d.year, d.month, d.day);
+  final thursday = day.add(Duration(days: DateTime.thursday - day.weekday));
+  final jan1 = DateTime.utc(thursday.year);
+  return thursday.difference(jan1).inDays ~/ 7 + 1;
+}
+
+/// Gün sayfasının üstündeki ÖZET satırı: tatil, etkinlik / görev /
+/// hatırlatıcı / bağlı not sayıları (kullanıcı isteği 2026-11-22: "sayfa
+/// içinde daha detaylı bilgiler olabilir"). Hiç kayıt yoksa "Boş gün".
+class _DaySummaryRow extends StatelessWidget {
+  const _DaySummaryRow({required this.day, required this.data});
+
+  final DateTime day;
+  final CalendarData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
+    final next = DateTime(day.year, day.month, day.day + 1);
+    final entries = data.range(day, next)[dayKey(day)] ?? const [];
+    var events = 0, tasks = 0, reminders = 0;
+    for (final e in entries) {
+      switch (e) {
+        case EventOccurrence():
+          events++;
+        case TaskEntry():
+        case RoutineEntry():
+          tasks++;
+        case ReminderEntry():
+          reminders++;
+      }
+    }
+    final notes = (data.dayNotes[dayKey(day)] ?? const []).length;
+    final holiday = data.holidays.on(day);
+    Widget chip(IconData icon, String label, Color fg, Color bg) => Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.s,
+        vertical: AppSpace.xxs,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: AppIconSize.xs, color: fg),
+          const SizedBox(width: AppSpace.xs),
+          Text(label, style: text.label.copyWith(color: fg)),
+        ],
+      ),
+    );
+    final neutralFg = scheme.onSurfaceVariant;
+    final neutralBg = scheme.surfaceContainerHigh;
+    final chips = <Widget>[
+      if (holiday != null)
+        chip(
+          Icons.celebration_outlined,
+          holiday.name,
+          scheme.onErrorContainer,
+          scheme.errorContainer,
+        ),
+      if (events > 0)
+        chip(
+          Icons.event_outlined,
+          l10n.calendarDayEvents(events),
+          scheme.onPrimaryContainer,
+          scheme.primaryContainer,
+        ),
+      if (tasks > 0)
+        chip(
+          Icons.task_alt,
+          l10n.calendarDayTasks(tasks),
+          scheme.onSecondaryContainer,
+          scheme.secondaryContainer,
+        ),
+      if (reminders > 0)
+        chip(
+          Icons.notifications_none,
+          l10n.calendarDayReminders(reminders),
+          neutralFg,
+          neutralBg,
+        ),
+      if (notes > 0)
+        chip(
+          Icons.sticky_note_2_outlined,
+          l10n.calendarDayNotesCount(notes),
+          neutralFg,
+          neutralBg,
+        ),
+      if (holiday == null && entries.isEmpty && notes == 0)
+        chip(Icons.wb_sunny_outlined, l10n.calendarDayFree, neutralFg, neutralBg),
+    ];
+    return Padding(
+      key: const ValueKey('day-page-summary'),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.l,
+        AppSpace.xxs,
+        AppSpace.l,
+        AppSpace.s,
+      ),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Wrap(
+          spacing: AppSpace.xs,
+          runSpacing: AppSpace.xs,
+          children: chips,
+        ),
       ),
     );
   }

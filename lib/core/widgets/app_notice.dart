@@ -354,7 +354,11 @@ class _NoticeCardState extends State<_NoticeCard> {
     final scheme = theme.colorScheme;
     final text = AppText.of(theme);
     final data = widget.data;
-    final ink = scheme.onInverseSurface;
+    // TASARIM BİRLİĞİ (kullanıcı bulgusu 2026-11-22: "tost bildirimler çok
+    // yüksek, renkli, farklı; daha kibar olmalı"): koyu ters renkli kart
+    // yerine kalem kapsülü/levhalarla aynı yüzen yüzey (açık ton, ince
+    // çizgi, bulanıksız gölge), alçak satır, eylem `primary`.
+    final ink = scheme.onSurface;
     final icon = data.icon ?? (_tip ? Icons.lightbulb_outline : null);
     // Navigator'ın ÜSTÜNDE Material atası yok: yazı varsayılanı (sarı alt
     // çizgi) ve düğme mürekkebi için saydam Material.
@@ -364,9 +368,9 @@ class _NoticeCardState extends State<_NoticeCard> {
       child: Material(
         type: MaterialType.transparency,
         child: DecoratedBox(
-          decoration: AppSurface.floating(theme, color: scheme.inverseSurface),
+          decoration: AppSurface.floating(theme, radius: AppRadius.l),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.m),
+            borderRadius: BorderRadius.circular(AppRadius.l),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -374,9 +378,9 @@ class _NoticeCardState extends State<_NoticeCard> {
                 Padding(
                   padding: EdgeInsetsDirectional.only(
                     start: AppSpace.l,
-                    end: data.actionLabel == null ? AppSpace.l : AppSpace.xs,
-                    top: AppSpace.s,
-                    bottom: AppSpace.s,
+                    end: data.actionLabel == null ? AppSpace.l : AppSpace.xxs,
+                    top: AppSpace.xxs,
+                    bottom: AppSpace.xxs,
                   ),
                   child: Row(
                     children: [
@@ -384,7 +388,7 @@ class _NoticeCardState extends State<_NoticeCard> {
                         Icon(
                           icon,
                           size: AppIconSize.s,
-                          color: scheme.inversePrimary,
+                          color: scheme.primary,
                         ),
                         const SizedBox(width: AppSpace.s),
                       ],
@@ -422,7 +426,11 @@ class _NoticeCardState extends State<_NoticeCard> {
                         TextButton(
                           key: const ValueKey('notice-action'),
                           style: TextButton.styleFrom(
-                            foregroundColor: scheme.inversePrimary,
+                            foregroundColor: scheme.primary,
+                            visualDensity: VisualDensity.compact,
+                            textStyle: text.label.copyWith(
+                              fontWeight: AppWeight.strong,
+                            ),
                           ),
                           onPressed: () {
                             widget.controller.dismiss(data);
@@ -439,7 +447,7 @@ class _NoticeCardState extends State<_NoticeCard> {
                   SteppedCountdown(
                     key: const ValueKey('notice-countdown'),
                     duration: data.duration,
-                    color: scheme.inversePrimary,
+                    color: scheme.primary.withValues(alpha: AppAlpha.muted),
                   ),
               ],
             ),

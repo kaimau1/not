@@ -17005,6 +17005,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Silgi açık'**
   String get eraserOn;
+
+  /// No description provided for @calendarRelToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get calendarRelToday;
+
+  /// No description provided for @calendarRelTomorrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarın'**
+  String get calendarRelTomorrow;
+
+  /// No description provided for @calendarRelYesterday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dün'**
+  String get calendarRelYesterday;
+
+  /// No description provided for @calendarRelInDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gün sonra'**
+  String calendarRelInDays(int count);
+
+  /// No description provided for @calendarRelDaysAgo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gün önce'**
+  String calendarRelDaysAgo(int count);
+
+  /// No description provided for @calendarWeekNumber.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count}. hafta'**
+  String calendarWeekNumber(int count);
+
+  /// No description provided for @calendarDayEvents.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} etkinlik'**
+  String calendarDayEvents(int count);
+
+  /// No description provided for @calendarDayTasks.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} görev'**
+  String calendarDayTasks(int count);
+
+  /// No description provided for @calendarDayReminders.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} hatırlatıcı'**
+  String calendarDayReminders(int count);
+
+  /// No description provided for @calendarDayNotesCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not'**
+  String calendarDayNotesCount(int count);
+
+  /// No description provided for @calendarDayFree.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş gün'**
+  String get calendarDayFree;
 }
 
 class _AppLocalizationsDelegate

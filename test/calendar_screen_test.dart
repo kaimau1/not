@@ -556,11 +556,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
       expect(find.byType(CalendarDayScreen), findsOneWidget);
-      final dayTitle = DateFormat.yMMMMEEEEd();
+      // Ayrıntılı başlık (2026-11-22): büyük "12 Kasım", altında haftanın
+      // günü · göreli gün · yılın haftası; özet satırı; "+" yok.
+      final dayTitle = DateFormat.MMMMd();
       expect(
         find.text(dayTitle.format(DateTime(2026, 11, 12))),
         findsOneWidget,
       );
+      expect(find.text('Perşembe · 6 gün sonra · 46. hafta'), findsOneWidget);
+      expect(find.byKey(const ValueKey('day-page-summary')), findsOneWidget);
+      expect(find.byKey(const ValueKey('day-page-event')), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsNothing);
       await tester.tap(find.byKey(const ValueKey('day-page-next')));
       await tester.pumpAndSettle();
       expect(

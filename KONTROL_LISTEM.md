@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Balon rengi + defter paneli + takvim + bildirim + gün sayfası + küçült düğmesi (22 Kasım gece, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) PDF/görselde açık metin/balon yazma kartında renkleri hızlı hızlı değiştir → son seçilen kalıyor mu. (2) Defter kipinde Sayfa 1/2 paneli içeriğin en altında mı; sayfa geçişi/ekle/sil çalışıyor mu. (3) Takvim ay başlığı büyük mü; başka güne dokun → Bugün → alttaki panel bugün mü. (4) Not sil → "Not silindi · Geri al" bildirimi açık tonlu, alçak, tasarıma uygun mu (koyu temada da). (5) Gün sayfası: büyük tarih + "Pazar · Bugün · 47. hafta", sayım hapları; + düğmesi yok, Etkinlik/Görev/Not alt satırda. (6) Sabit görselde alt çubuğun solunda küçült düğmesi: dokun → açık (dolu simge); iki parmakla uzaklaş → düğme yanıyor mu; tekrar dokun → genişliğe oturuyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Yazı tipi + şerit adı + kalem/balon + yarım ekran görsel (22 Kasım akşam, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Bir notta Aa → Daktilo, sonra **Varsayılan** → geri sıçramadan varsayılanda kalıyor mu; notu kapatıp açınca da. (2) Yeni not aç → varsayılan tipte mi (Daktilo taşınmamalı). (3) Ana ekran şeridinde kayıtlı günde (27) nokta yerine ilk kelime görünüyor mu. (4) Sabit PDF'te kalem açık → Balon ekle → Metin/Balon → dokun: çizmeden balon/metin bırakıyor mu; Bitti → kalem yine yazıyor mu. (5) Ölçüsü bilinmeyen 16:9 görseli sabitle → üstte/altta gri boşluk kalmadan bölme görsel boyuna iniyor mu.
   Yanlışsa: madde numarasını yaz.

@@ -3,6 +3,12 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 22 Kasım 2026 {#2026-11-22}
+- **Balonda hızlı renk değişimi tutuyor:** renkleri art arda hızlıca değiştirince bir önceki renge geri dönme sorunu giderildi.
+- **Defterde sayfa paneli en altta:** defter kipindeki Sayfa 1/2 · yeni sayfa · sayfa sil paneli artık başlığın altında maddeleri itmiyor, içeriğin sonunda duruyor.
+- **Takvim başlığı daha belirgin; Bugün paneli de günceller:** ay başlığı büyüdü. **Bugün**'e basınca alttaki gün paneli de bugüne geçiyor.
+- **Bildirimler tasarıma uydu:** koyu, yüksek tost kartı yerine açık tonlu, ince çizgili, daha alçak bir bildirim; eylem (Geri al) uygulamanın ana renginde.
+- **Gün sayfası daha ayrıntılı:** üstte büyük tarih, altında haftanın günü · bugün/yarın/kaç gün sonra · yılın haftası; tatil, etkinlik, görev, hatırlatıcı ve not sayıları hap olarak görünür. Ayrı **+** kalktı; alt satırda Etkinlik · Yeni görev · Bu güne not var.
+- **"Daraltınca küçülsün" sabit bölmenin alt çubuğunda:** sol tarafta düğme olarak duruyor, açıkken dolu simge ve renkli zeminle yanar; iki parmakla uzaklaştırıp görseli bütün sığdırınca da açık görünür, dokununca genişliğe oturmaya döner.
 - **Yazı tipi yalnız o nota ait:** notun içinde seçtiğin yazı tipi artık yeni notlara taşınmıyor; her yeni not varsayılan tiple açılır (varsayılanı Ayarlar → Görünüm'deki uygulama yazı tipinden değiştirebilirsin). **Varsayılan**'a dokununca seçimin anında eski tipe geri sıçraması da giderildi.
 - **Ana ekran takvim şeridinde kaydın adı:** kayıtlı günde yalnız nokta yerine notun/etkinliğin ilk kelimesi görünür.
 - **Kalem açıkken balon ve metin eklenir:** sabit PDF'te **Balon ekle** açıkken kalem artık ekrana çizmiyor; dokunduğun yere balon/metin bırakılır, **Bitti** deyince kalem kaldığı yerden devam eder.

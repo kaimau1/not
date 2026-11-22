@@ -259,14 +259,21 @@ abstract final class AppTheme {
           ),
         ),
       ),
+      // Bildirim şeridiyle (AppNotice) aynı yüzen yüzey: açık ton, ince
+      // çizgi, bulanıksız (kullanıcı bulgusu 2026-11-22: tostlar tasarıma
+      // uymuyordu).
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: scheme.inverseSurface,
+        backgroundColor: scheme.surfaceContainerHigh,
+        elevation: 1,
         contentTextStyle: textTheme.bodyMedium?.copyWith(
-          color: scheme.onInverseSurface,
+          color: scheme.onSurface,
         ),
-        actionTextColor: scheme.inversePrimary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        actionTextColor: scheme.primary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(color: tokens.hairline),
+        ),
       ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(

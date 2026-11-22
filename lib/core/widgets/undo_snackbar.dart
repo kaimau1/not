@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../friendly_error.dart';
 import 'app_notice.dart';
+import '../../app/theme/app_tokens.dart';
 
 /// Uygulama genelinde tek, kök ScaffoldMessenger. MaterialApp'e verilir; bu
 /// sayede bildirimler go_router sayfa geçişlerinden bağımsız, aynı messenger
@@ -170,9 +171,9 @@ SnackBar timedSnackBar({
             Padding(
               padding: EdgeInsetsDirectional.fromSTEB(
                 16,
-                action == null ? 14 : 4,
-                action == null ? 16 : 6,
-                action == null ? 12 : 2,
+                action == null ? 10 : 2,
+                action == null ? 16 : 4,
+                action == null ? 10 : 0,
               ),
               child: Row(
                 children: [
@@ -181,7 +182,8 @@ SnackBar timedSnackBar({
                     TextButton(
                       key: const ValueKey('snack-action'),
                       style: TextButton.styleFrom(
-                        foregroundColor: scheme.inversePrimary,
+                        foregroundColor: scheme.primary,
+                        visualDensity: VisualDensity.compact,
                       ),
                       onPressed: () {
                         messenger.hideCurrentSnackBar(
@@ -199,8 +201,7 @@ SnackBar timedSnackBar({
             SteppedCountdown(
               key: const ValueKey('snack-countdown'),
               duration: duration,
-              height: 3,
-              color: scheme.inversePrimary,
+              color: scheme.primary.withValues(alpha: AppAlpha.muted),
               onEnd: messenger.hideCurrentSnackBar,
             ),
           ],

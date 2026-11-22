@@ -382,11 +382,34 @@ class BubbleController extends ChangeNotifier {
   /// Dışarıdan gelen listeyi benimser (tam ekranda balon eklenip panoya
   /// dönüldüğünde). İÇERİK karşılaştırılır: her anlık görüntü yeni bir liste
   /// nesnesi kurduğu için kimlik karşılaştırması sonsuz tazelemeye yol açar.
+  ///
+  /// **YEREL DEĞİŞİKLİK EZİLMEZ** (kullanıcı bulgusu 2026-11-22: "hızlı hızlı
+  /// renk değiştirince bir öncekine dönüyor"): biçim dokunuşları gecikmeli
+  /// kaydedilir ([saveSoon]); arada ÖNCEKİ kaydın yankısı (ek → not → anlık
+  /// görüntü) gelince kaydedilmemiş yeni renk eskisiyle eziliyordu. Bekleyen
+  /// yerel değişiklik varken ya da gelen liste son kayıtlarımızdan birinin
+  /// (bayat) yankısıysa benimsenmez.
   void replace(List<PageBubble> next) {
     if (_sameContent(_bubbles, next)) return;
+    if (_dirty || _saveTimer != null) return;
+    // Yalnız kayıttan hemen sonra (yankı süresi): geri al ile eski hâle
+    // dönüş bundan sonra yine benimsenir.
+    final now = DateTime.now();
+    _recentSaves.removeWhere(
+      (s) => now.difference(s.$1) > const Duration(seconds: 2),
+    );
+    for (final saved in _recentSaves) {
+      if (!identical(saved.$2, _recentSaves.last.$2) &&
+          _sameContent(saved.$2, next)) {
+        return;
+      }
+    }
     _bubbles = [...next];
     notifyListeners();
   }
+
+  /// Son kaydedilen listeler (en yenisi sonda) — bayat yankıyı tanımak için.
+  final List<(DateTime, List<PageBubble>)> _recentSaves = [];
 
   /// KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "balonlu modda birçok sorun"):
   /// karşılaştırma başlığı, aciliyeti, oku ve açık metnin biçimini (kalın,
@@ -614,6 +637,8 @@ class BubbleController extends ChangeNotifier {
     _saveTimer = null;
     if (!_dirty) return;
     _dirty = false;
+    _recentSaves.add((DateTime.now(), _bubbles));
+    if (_recentSaves.length > 4) _recentSaves.removeAt(0);
     onChanged(_bubbles);
   }
 

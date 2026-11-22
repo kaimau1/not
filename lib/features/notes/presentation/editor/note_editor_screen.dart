@@ -3957,11 +3957,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   : () => unawaited(_editCaption(bubbleCaptionOwner)),
             ),
           ),
-        if ((note.textPages.isNotEmpty || note.paged) &&
-            !note.type.isPageNoteType)
-          _pageBar(note),
       ],
     );
+    // DEFTERİN SAYFA ÇUBUĞU İÇERİĞİN SONUNDA (kullanıcı isteği 2026-11-22:
+    // "defter modunda o defterin kendi paneli en altta olsun"): başlığın
+    // altında maddeleri aşağı itiyordu; sayfa bitince sonraki sayfaya
+    // geçmek de zaten en altta aranıyor.
+    final pageBarFooter =
+        (note.textPages.isNotEmpty || note.paged) && !note.type.isPageNoteType
+        ? Padding(
+            padding: const EdgeInsets.only(top: AppSpace.m),
+            child: _pageBar(note),
+          )
+        : null;
 
     // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
     // aynı controller/focus'u paylaşır. Madde varken kısalır (2 satır tabanı).
@@ -4162,6 +4170,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             padding: const EdgeInsets.symmetric(horizontal: _kGutter),
             child: _wrapped(_bodyController, bodyField),
           ),
+          ?pageBarFooter,
         ],
       );
     } else if (note.type == NoteType.text) {
@@ -4194,6 +4203,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onVideoTimestamp: _seekVideoTo,
         onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
         addRowTrailing: _partsMenu(note),
+        footer: pageBarFooter,
         paperLines: note.paged && note.archivePaper.ruled,
         onMoveToPage: textPagePosition(note).count > 1
             ? _moveItemToPage
@@ -4258,6 +4268,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onVideoTimestamp: _seekVideoTo,
         onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
         addRowTrailing: _partsMenu(note),
+        footer: pageBarFooter,
         paperLines: note.paged && note.archivePaper.ruled,
         onMoveToPage: textPagePosition(note).count > 1
             ? _moveItemToPage

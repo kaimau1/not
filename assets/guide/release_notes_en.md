@@ -3,6 +3,12 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 22 November 2026 {#2026-11-22}
+- **Quick bubble colour changes stick:** tapping colours in quick succession no longer snaps back to the previous colour.
+- **Notebook page panel at the bottom:** the Page 1/2 · new page · delete page panel in notebook mode no longer pushes items down under the title; it sits at the end of the content.
+- **Bolder calendar title; Today updates the panel:** the month title is larger, and tapping **Today** also moves the day panel below to today.
+- **Notifications match the design:** instead of a dark, tall toast card, a light, hairline-bordered, lower notice with the action (Undo) in the app's primary colour.
+- **More detailed day page:** a large date with the weekday · today/tomorrow/in N days · week number beneath; holiday, event, task, reminder and note counts appear as pills. The separate **+** is gone; the bottom row offers Event · New task · Note for this day.
+- **"Shrink to fit" on the pinned pane bar:** now a button on the left of the bar that lights up (filled icon, tinted background) when on; it also shows as on after pinching out to fit the whole image, and tapping it returns to fit-width.
 - **Font belongs to the note only:** the font you pick inside a note no longer carries over to new notes; every new note opens with the default font (change the default under Settings → Appearance → app font). Tapping **Default** no longer snaps straight back to the previous font.
 - **Entry names on the home calendar strip:** days with entries now show the first word of the note/event instead of just a dot.
 - **Add bubbles and text while the pen is on:** in a pinned PDF, **Add bubble** now pauses the pen so your tap places the bubble/text instead of drawing; tap **Done** and the pen picks up where it left off.
