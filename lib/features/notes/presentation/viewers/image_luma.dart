@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/painting.dart';
 
 import '../../../../core/utils/local_file.dart';
@@ -84,4 +85,41 @@ class ImageLuma {
     }
     return n == 0 ? 1 : sum / n;
   }
+}
+
+/// Ölçüsü kayıtlı OLMAYAN görsel ekin oranı (yükseklik / genişlik).
+///
+/// Kullanıcı bulgusu 2026-11-22 ("yarım ekranda 16:9 görsel sığmıyor, üstte
+/// gereksiz boşluk"): sabit bölme görseli genişliğindeki doğal boyuna
+/// sınırlıyor ama yalnız ekte `width/height` varsa; eski / dışarıdan gelen
+/// görsellerde bu alanlar boş ve bölme saklı (büyük) boyunda kalıp görselin
+/// üstünde-altında gri pay bırakıyordu. Görsel 64 px genişliğe küçültülüp
+/// BİR KEZ çözülür (oran korunur); yerel kopya, yoksa yüklenmiş bulut kopyası.
+Future<double?> probeImageRatio(Attachment a) {
+  ImageProvider? base = attachmentImageProvider(a);
+  // Bulut kopyası bölmenin kullandığı disk önbelleğinden okunur (yeniden
+  // indirilmez).
+  if (base == null && a.isUploaded) {
+    base = CachedNetworkImageProvider(a.downloadUrl);
+  }
+  if (base == null) return Future.value();
+  final provider = ResizeImage(base, width: 64);
+  final done = Completer<double?>();
+  final stream = provider.resolve(ImageConfiguration.empty);
+  late final ImageStreamListener listener;
+  listener = ImageStreamListener(
+    (info, _) {
+      final w = info.image.width;
+      final h = info.image.height;
+      info.dispose();
+      stream.removeListener(listener);
+      if (!done.isCompleted) done.complete(w > 0 && h > 0 ? h / w : null);
+    },
+    onError: (_, _) {
+      stream.removeListener(listener);
+      if (!done.isCompleted) done.complete(null);
+    },
+  );
+  stream.addListener(listener);
+  return done.future;
 }

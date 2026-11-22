@@ -329,9 +329,15 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// Kalem katmanı PDF'in üstünde mi. Kalemsiz cihazda (hiç kalem
   /// görülmedi) otomatik algı katmanı kurulmaz: basılı tutup metin seçme
   /// ("Not al") parmakta çalışmaya devam eder; kalem düğmesiyle açılır.
+  ///
+  /// BALON BIRAKMA KİPİNDE KALEM KAPALI (kullanıcı bulgusu 2026-11-22: "kalem
+  /// açıkken balon eklenemiyor, kalem yazıyor"): sabit PDF'te "Balon ekle"
+  /// açılınca kalem katmanı kalkar, dokunuş balonu/metni bırakır; "Bitti"
+  /// ile kalem kaldığı yerden döner.
   bool get _penOn =>
       widget.onChanged != null &&
-      (widget.media.kind == AttachmentKind.pdf || _inkableImage) &&
+      ((widget.media.kind == AttachmentKind.pdf && !_pdfAdding.value) ||
+          _inkableImage) &&
       _policy.layerActive;
 
   /// SABİT GÖRSELE KALEM (F63.3): ölçüsü bilinen görsel (çizgi görselin
@@ -740,6 +746,22 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     _watcher.stage.addListener(_onStage);
     _onStage();
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
+    _pdfAdding.addListener(_onPdfAdding);
+  }
+
+  /// Balon bırakma kipi değişince kalem katmanı kurulur/kalkar ([_penOn]).
+  /// Belge kutusu değeri kendi kurulumu sırasında da yazabilir: o an
+  /// setState kare sonuna ertelenir.
+  void _onPdfAdding() {
+    if (!mounted) return;
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() {});
+      });
+    } else {
+      setState(() {});
+    }
   }
 
   @override
@@ -852,7 +874,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       widget.media.kind == AttachmentKind.image &&
       !widget.shrinkToFit &&
       !widget.fill &&
-      _fitRatio(widget.media) != null;
+      _mediaRatio != null;
 
   /// **GÖRSEL GENİŞLİĞE OTURUR** ([PinnedMediaPane.shrinkToFit] kapalı):
   /// görsel bölmenin genişliğinde doğal boyuyla dizilir, bölme daha kısaysa
@@ -867,7 +889,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     if (!_fitsWidth) return child;
     return _FitWidthBox(
       key: ValueKey('pinned-image-scroll-${widget.media.id}'),
-      ratio: _fitRatio(widget.media)!,
+      ratio: _mediaRatio!,
       whole: _wholeImage,
       scroll: _imageScroll,
       // Kaydırma yalnız ötelemeyi değiştirir: görsel + çizim + balon
@@ -881,7 +903,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// küçültülerek boyanır (isabet testi dönüşümden geçer: kalem ve balon
   /// doğru yere düşer). Kapalıyken (varsayılan) dokunulmaz.
   Widget _shrinkPdf(Widget child) {
-    final ratio = _fitRatio(widget.media);
+    final ratio = _mediaRatio;
     if (!widget.shrinkToFit || ratio == null) return child;
     return LayoutBuilder(
       builder: (context, box) {
@@ -1075,6 +1097,33 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// genişlik). Video ve sunum ölçüsüz de 16:9; görsel ölçüsü biliniyorsa;
   /// PDF ilk sayfanın oranı (döndürme dahil). Metin ve seste null (doğal
   /// boy yok).
+  /// Bölmenin oranı: ekte kayıtlıysa o, ölçüsüz görselde yoklanan oran
+  /// ([probeImageRatio]; gelene dek null = sınırsız, eski davranış).
+  double? get _mediaRatio {
+    final known = _fitRatio(widget.media);
+    if (known != null) return known;
+    if (widget.media.kind != AttachmentKind.image) return null;
+    if (_probedFor != widget.media.id) _probeRatio();
+    return _probedFor == widget.media.id ? _probedRatio : null;
+  }
+
+  String? _probedFor;
+  double? _probedRatio;
+
+  void _probeRatio() {
+    final media = widget.media;
+    _probedFor = media.id;
+    _probedRatio = null;
+    unawaited(
+      probeImageRatio(media).then((r) {
+        if (!mounted || r == null || _probedFor != media.id) return;
+        // Uç oranlar (şerit/panorama hatası) sınır koymasın.
+        if (r < 0.05 || r > 20) return;
+        setState(() => _probedRatio = r);
+      }),
+    );
+  }
+
   static double? _fitRatio(Attachment media) {
     final w = (media.width ?? 0).toDouble();
     final h = (media.height ?? 0).toDouble();
@@ -1155,7 +1204,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         // 2026-11-05: görsel ve sunum da aynı kuralla — yanlarda boş pay
         // kalmaz. PDF bölmede genişliğe oturup dikeyde kaydığından sınır
         // değil, yalnız "Sığdır" hedefi (bir sayfa boyu).
-        final ratio = _fitRatio(widget.media);
+        final ratio = _mediaRatio;
         final capped = ratio != null && !isPdf;
         final natural = capped
             ? constraints.maxWidth * ratio

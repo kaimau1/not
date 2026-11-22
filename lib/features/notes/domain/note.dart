@@ -1159,7 +1159,9 @@ class Note {
     // KOŞULSUZ (merge tuzağı): gizleme geri alınabilmeli.
     'cardMediaHidden': cardMediaHidden,
     'locked': locked,
-    // Varsayılandan farklıysa yazılır: eski notların şeması büyümez.
+    // Varsayılandan farklıysa yazılır (S16 bayt bütçesi). MERGE TUZAĞI
+    // (2026-11-22): "Varsayılan"a dönüşte alan haritadan düşer, kayıttaki eski
+    // tip kalırdı — dönüşü `NotesRepository.clearFontFamily` açıkça null yazar.
     if (fontFamily != null) 'fontFamily': fontFamily,
     // TUZAK — bu ikisi KOŞULSUZ yazılır. Belgeler `set(..., merge: true)` ile
     // güncelleniyor: alan haritada yoksa Firestore'daki ESKİ değer olduğu gibi

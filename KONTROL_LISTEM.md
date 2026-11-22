@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Yazı tipi + şerit adı + kalem/balon + yarım ekran görsel (22 Kasım akşam, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) Bir notta Aa → Daktilo, sonra **Varsayılan** → geri sıçramadan varsayılanda kalıyor mu; notu kapatıp açınca da. (2) Yeni not aç → varsayılan tipte mi (Daktilo taşınmamalı). (3) Ana ekran şeridinde kayıtlı günde (27) nokta yerine ilk kelime görünüyor mu. (4) Sabit PDF'te kalem açık → Balon ekle → Metin/Balon → dokun: çizmeden balon/metin bırakıyor mu; Bitti → kalem yine yazıyor mu. (5) Ölçüsü bilinmeyen 16:9 görseli sabitle → üstte/altta gri boşluk kalmadan bölme görsel boyuna iniyor mu.
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Takvim Bugün hapı + hızlı ekle takvim komutu + metin kasması (22 Kasım öğleden sonra, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Takvimde Aralık'a geç → görünüm satırının sağındaki **Bugün** hapı renkleniyor ve ← ok gösteriyor mu; dokununca Kasım'a dönüyor mu. (2) Yıl/Ay/Hafta/Ajanda seçicisi kayan hapla güzel görünüyor mu. (3) Gün panelinde Etkinlik/Görev/Not/Bağla tek satır mı. (4) Hızlı ekle → "dişçiyi ara yarına ekle" (sesle de) → önizlemede 📅 yarın, Ekle → yeni not yarına bağlı mı; "1 Ocak'a ekle", "bir hafta sonrasına ekle", "cumaya ekle" de. (5) Görsel/PDF üstüne Açık metin ekle → yazarken ve basılı tutup sürüklerken kasma kalktı mı (kalem çizgili görselde de dene).
   Yanlışsa: madde numarasını yaz.

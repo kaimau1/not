@@ -652,9 +652,9 @@ class NotesRepository {
       reminderAt: reminderAt,
       listColumns: listColumns == 2 ? 2 : 1,
       listKind: listKind,
-      // Son kullanılan gövde yazı boyutu/tipi (F56.3, [NoteFormatMemory]).
+      // Son kullanılan gövde yazı boyutu (F56.3, [NoteFormatMemory]); yazı
+      // tipi bilerek taşınmaz — her not varsayılan tiple doğar.
       fontScale: NoteFormatMemory.fontScale,
-      fontFamily: NoteFormatMemory.fontFamily,
       items: items != null && items.isNotEmpty
           ? [for (final t in items) NoteItem(id: _uuid.v4(), text: t)]
           : type == NoteType.text
@@ -1254,6 +1254,13 @@ class NotesRepository {
       updateFields(noteId, {'starred': starred});
 
   /// Acil bayrağı (bkz. `Note.urgent`).
+  /// Gövde yazı tipini VARSAYILANA döndürür: `toMap` alanı yalnız doluyken
+  /// yazar, birleştirme yazımı eksik alanı silmez — açıkça null yazılır
+  /// (kullanıcı bulgusu 2026-11-22: "Varsayılan"a dokununca eski tipe
+  /// geri sıçrıyordu).
+  void clearFontFamily(String noteId) =>
+      updateFields(noteId, {'fontFamily': null});
+
   void setUrgent(String noteId, bool urgent) =>
       updateFields(noteId, {'urgent': urgent});
 

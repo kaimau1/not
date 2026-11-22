@@ -367,9 +367,15 @@ class _DayCell extends StatelessWidget {
                                     ),
                                   ),
                                 ))
-                        : wide && title != null
+                        // Dar hücrede de (7 günlük şerit telefonda ~53 dp)
+                        // kaydın İLK KELİMESİ yazılır; nokta yalnız ad
+                        // sığmayacak kadar darsa (kullanıcı isteği 2026-11-22:
+                        // "en azından nottan bir kelime gözüksün").
+                        : title != null && (wide || c.maxWidth >= 32)
                         ? Text(
-                            count > 1 ? '$title +${count - 1}' : title,
+                            wide
+                                ? (count > 1 ? '$title +${count - 1}' : title)
+                                : _firstWord(title),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             textAlign: TextAlign.center,
@@ -394,6 +400,13 @@ class _DayCell extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Dar hücre için kaydın ilk kelimesi (boşsa adın kendisi).
+String _firstWord(String title) {
+  final t = title.trim();
+  final i = t.indexOf(RegExp(r'\s'));
+  return i <= 0 ? t : t.substring(0, i);
 }
 
 class _Dots extends StatelessWidget {

@@ -4650,10 +4650,8 @@ child: FormatBar(
                                     : n.copyWith(textOpacity: value),
                               ),
                               onFontChanged: (family) {
-                                // Gövdenin tipi yeni notlara da (F56.3).
-                                if (!_titleIsTarget) {
-                                  NoteFormatMemory.rememberFamily(family);
-                                }
+                                // Yalnız BU not: tip yeni notlara taşınmaz
+                                // (kullanıcı kararı 2026-11-22).
                                 _mutate(
                                 (n) => _titleIsTarget
                                     ? (family == null
@@ -4666,6 +4664,9 @@ child: FormatBar(
                                           : n.copyWith(fontFamily: family)),
                                 immediate: true,
                               );
+                              if (family == null && !_titleIsTarget) {
+                                _notesRepo?.clearFontFamily(widget.noteId);
+                              }
                               },
                               // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
                               // Firestore'a yazmak boşuna trafik olurdu.
