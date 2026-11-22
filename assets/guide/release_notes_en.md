@@ -4,7 +4,8 @@ What changed in each update, newest first. The version number is at the bottom o
 
 ## 22 November 2026 {#2026-11-22}
 - **Quick bubble colour changes stick:** tapping colours in quick succession no longer snaps back to the previous colour.
-- **Notebook page panel at the bottom:** the Page 1/2 · new page · delete page panel in notebook mode no longer pushes items down under the title; it sits at the end of the content.
+- **Notebook page panel docked at the bottom:** the Page 1/2 · new page · delete page panel in notebook mode no longer pushes items down under the title; it stays fixed just above the bottom bar, no scrolling needed.
+- **Notebooks and themes look seamless top to bottom:** on yellow legal-pad paper the top bar and bottom bar take the paper's tone; with a drawn theme or a background image the image fills the whole screen and the bottom bar is see-through.
 - **Bolder calendar title; Today updates the panel:** the month title is larger, and tapping **Today** also moves the day panel below to today.
 - **Notifications match the design:** instead of a dark, tall toast card, a light, hairline-bordered, lower notice with the action (Undo) in the app's primary colour.
 - **More detailed day page:** a large date with the weekday · today/tomorrow/in N days · week number beneath; holiday, event, task, reminder and note counts appear as pills. The separate **+** is gone; the bottom row offers Event · New task · Note for this day.

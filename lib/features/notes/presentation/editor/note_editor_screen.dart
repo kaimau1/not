@@ -3423,6 +3423,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Çizilmiş tema varsa sayfa ve üst çubuk saydam: süsleme arkadan görünür
     // (bkz. NoteThemeBackdrop); alt çubuk temanın alt tonunda düz kalır.
     final themed = NoteThemes.byId(note.theme) != null;
+    // ÜST VE ALT ÇUBUK SAYFAYLA BİR BÜTÜN (kullanıcı isteği 2026-11-22:
+    // "defter modunda renklendirmeler, temalarda arka plan eklendiğinde alt ve
+    // üst alanlar da temaya katılsın"): sarı bloknot kâğıdının tonu yalnız
+    // gövdeye biniyordu — üst çubuk ve alt panel beyaz kalıyordu. Çubukların
+    // zemini kâğıt tonuyla aynı; çizilmiş tema ya da zemin görseli varken
+    // alt panel de saydam (görsel bütün ekranın arkasında, bkz. ColorFade).
+    final chrome = note.paged && note.archivePaper == ArchivePaper.legal
+        ? Color.alphaBlend(NotebookPaperPainter.legalTint, background)
+        : background;
+    final hasBgImage =
+        note.backgroundImageId != null &&
+        note.attachments.any((a) => a.id == note.backgroundImageId);
+    final chromeSeeThrough = themed || hasBgImage;
     // Satır içi biçimlendirmenin çizim ayarları: gövde ve maddeler AYNI
     // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
     final richTheme = RichTextTheme(
@@ -3959,14 +3972,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ),
       ],
     );
-    // DEFTERİN SAYFA ÇUBUĞU İÇERİĞİN SONUNDA (kullanıcı isteği 2026-11-22:
-    // "defter modunda o defterin kendi paneli en altta olsun"): başlığın
-    // altında maddeleri aşağı itiyordu; sayfa bitince sonraki sayfaya
-    // geçmek de zaten en altta aranıyor.
-    final pageBarFooter =
+    // DEFTERİN SAYFA ÇUBUĞU ALT PANELİN HEMEN ÜSTÜNDE, SABİT (kullanıcı
+    // isteği 2026-11-22: "en altta derken alt panelin üzerinde sabit olacak,
+    // şu an sayfayı kaydırmak gerekiyor"): başlığın altında maddeleri aşağı
+    // itiyordu, içeriğin sonuna konunca da kaydırmadan görünmüyordu. Alt
+    // çubukla aynı sütunda — yazarken / biçim paneli açıkken onunla gizlenir.
+    final pageBarDock =
         (note.textPages.isNotEmpty || note.paged) && !note.type.isPageNoteType
-        ? Padding(
-            padding: const EdgeInsets.only(top: AppSpace.m),
+        ? KeyedSubtree(
+            key: const ValueKey('page-bar-dock'),
             child: _pageBar(note),
           )
         : null;
@@ -4170,7 +4184,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             padding: const EdgeInsets.symmetric(horizontal: _kGutter),
             child: _wrapped(_bodyController, bodyField),
           ),
-          ?pageBarFooter,
         ],
       );
     } else if (note.type == NoteType.text) {
@@ -4203,7 +4216,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onVideoTimestamp: _seekVideoTo,
         onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
         addRowTrailing: _partsMenu(note),
-        footer: pageBarFooter,
         paperLines: note.paged && note.archivePaper.ruled,
         onMoveToPage: textPagePosition(note).count > 1
             ? _moveItemToPage
@@ -4268,7 +4280,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onVideoTimestamp: _seekVideoTo,
         onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
         addRowTrailing: _partsMenu(note),
-        footer: pageBarFooter,
         paperLines: note.paged && note.archivePaper.ruled,
         onMoveToPage: textPagePosition(note).count > 1
             ? _moveItemToPage
@@ -4772,6 +4783,17 @@ child: FormatBar(
                       Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                if (pageBarDock != null)
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: readingColumn
+                            ? kReadingWidth
+                            : double.infinity,
+                      ),
+                      child: pageBarDock,
+                    ),
+                  ),
                 // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
                 // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
                 // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
@@ -4790,7 +4812,7 @@ child: FormatBar(
                 // %10 daha alçak (kullanıcı isteği 2026-11-08): 56 → 50 dp,
                 // dikey dolgu 4 → 1 — en büyük düğme (48 dp) hâlâ sığar.
                 BottomAppBar(
-                  color: background,
+                  color: chromeSeeThrough ? Colors.transparent : chrome,
                   height: 50,
                   padding: const EdgeInsets.fromLTRB(12, 1, 12, 1),
                   // KİŞİSELLEŞTİRME (kullanıcı isteği 2026-10-16): her
@@ -5528,10 +5550,14 @@ child: FormatBar(
           // Sayfa rengi Scaffold'un ARKASINDA, 200 ms'de değişir (F34.4):
           // editörün dev ağacı her karede yeniden kurulmaz. Üst çubuk saydam.
           child: ColorFade(
-          color: themed ? Colors.transparent : background,
+          color: themed ? Colors.transparent : chrome,
           identity: (note.id, Theme.of(context).brightness),
-          builder: (context, color, child) =>
-              ColoredBox(color: color, child: child),
+          // Zemin görseli bütün ekranın (üst çubuk + alt panel dahil)
+          // arkasında; eskiden yalnız gövdenin arkasındaydı.
+          builder: (context, color, child) => ColoredBox(
+            color: color,
+            child: _withBackground(note, bgImage, child),
+          ),
           // Scaffold ve altı klavyenin karelerini GÖRMEZ (F60.S5): kararlı
           // MediaQuery; canlı değer yalnız [KeyboardInset.liveOf] okuyan
           // yapraklarda (bkz. [KeyboardInsetScope]).
@@ -6025,9 +6051,8 @@ child: FormatBar(
                       // ÇERÇEVE EDİTÖRDE ÇİZİLMEZ (kullanıcı isteği
                       // 2026-10-20: "çerçeve sadece dashboarda görünsün"):
                       // notun içi sade kalır, renk kartta görünür.
-                      child: _withBackground(
-                        note,
-                        bgImage,
+                      child: (
+                        // Zemin görseli artık ekranın tamamının arkasında.
                         _withPaper(
                           note,
                           noteBodyStyle,
@@ -6046,7 +6071,7 @@ child: FormatBar(
                               child: body,
                             ),
                           ),
-                        ),
+                        )
                       ),
                     ),
                           if (_gestureMode != _GestureMode.off)
