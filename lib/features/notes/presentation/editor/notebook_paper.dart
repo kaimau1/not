@@ -456,6 +456,7 @@ class RenderRuledLines extends RenderProxyBox {
   @visibleForTesting
   List<double> lastLines = const [];
 
+
   @override
   void paint(PaintingContext context, Offset offset) {
     if (_gap > 0 && hasSize) {
@@ -483,7 +484,7 @@ class RenderRuledLines extends RenderProxyBox {
   List<double> computeLines() {
     final anchors = <double>[];
     final blocked = <(double, double)>[];
-    void visit(RenderObject node) {
+    void visit(RenderObject node, bool anchorText) {
       if (node is RenderEditable) {
         _collectEditable(node, anchors, blocked);
         return; // İçindeki yer tutucular (çipler) metnin parçası.
@@ -492,13 +493,15 @@ class RenderRuledLines extends RenderProxyBox {
         final box = _boxOf(node);
         if (box == null) return;
         blocked.add(box);
-        if (_anchorParagraphs) _collectParagraph(node, box.$1, anchors);
+        if (anchorText) _collectParagraph(node, box.$1, anchors);
         return;
       }
-      node.visitChildren(visit);
+      // Düz çizilen madde metni (bkz. [RuledAnchor]) metin alanı gibi çapa.
+      final inside = anchorText || node is RenderRuledAnchor;
+      node.visitChildren((c) => visit(c, inside));
     }
 
-    visitChildren(visit);
+    visitChildren((c) => visit(c, _anchorParagraphs));
     return layoutRuledLines(
       anchors: anchors,
       blocked: blocked,
@@ -555,6 +558,23 @@ class RenderRuledLines extends RenderProxyBox {
     blocked.add(box);
   }
 }
+
+/// **ÇİZGİ ÇAPASI OLAN DÜZ YAZI** (kullanıcı bulgusu 2026-11-22: "defter
+/// modunda çizgiler tıklandıkça geliyor, başta görünmeyebiliyor"). KÖK
+/// NEDEN: dokunulmamış maddeler hız için düz `RichText` olarak çiziliyor
+/// (F24.3); [RenderRuledLines] düz yazıları yalnız ENGEL sayıyordu (düğme
+/// etiketleri çizgi almasın diye) → bu maddelerin altına çizgi gelmiyordu,
+/// dokunup gerçek alana dönünce çizgi beliriyordu. Bu sarmalayıcının
+/// içindeki düz yazılar metin alanı gibi çapa olur.
+class RuledAnchor extends SingleChildRenderObjectWidget {
+  const RuledAnchor({super.key, super.child});
+
+  @override
+  RenderRuledAnchor createRenderObject(BuildContext context) =>
+      RenderRuledAnchor();
+}
+
+class RenderRuledAnchor extends RenderProxyBox {}
 
 /// [RenderRuledLines]ın hesap çekirdeği (saf, test edilebilir).
 ///

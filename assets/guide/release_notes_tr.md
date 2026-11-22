@@ -3,6 +3,8 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 22 Kasım 2026 {#2026-11-22}
+- **Takvim notları ana ekranda toplanıyor:** takvimde bir güne bağlı notlar artık ana ekranda **Sabit**'in altında kendi **Takvim** bölümünde durur, kartlarında "📅 27 Kas" hapı görünür; notun içinde de "Takvim · 27 Kasım Cuma" yazar.
+- **Defter çizgileri baştan görünür:** defter görünümünde dokunulmamış maddelerin altındaki çizgiler eksikti, maddeye dokununca beliriyordu; artık hepsi açılışta çizili.
 - **Koyu görselde metin ve balon görünür:** fotoğrafın koyu bir yerine metin ya da balon bırakınca renk zemine göre seçilir (koyuda beyaz yazı, açık tonlu balon); kendi seçtiğin renk aynen kalır. Balonda kalın/hiza/boy/renk değiştirmek artık her dokunuşta notu yeniden kurmuyor, kasma gitti.
 - **Sabit görselde iki parmak yeniden çalışıyor:** parmakları dikeyde yaklaştırınca kıstırma başlamıyordu; artık uzaklaştırınca bölme parmağınla birlikte canlı küçülür ve görsel bütün hâliyle sığar, yakınlaştırınca geri büyür. Tek parmakla kaydırma aynen çalışır.
 - **"Bu güne not" başlıksız açılır:** not artık günün adını başlık olarak almaz; yanlışlıkla açıp hiçbir şey yazmadan çıkarsan boş not kaydedilmez.

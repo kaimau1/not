@@ -213,4 +213,41 @@ void main() {
     expect(ArchivePaper.dots.ruled, isFalse);
     expect(ArchivePaper.fromId('dashed'), ArchivePaper.dashed);
   });
+
+  // Kullanıcı bulgusu 2026-11-22: "defter modunda çizgiler tıklandıkça
+  // geliyor". Dokunulmamış madde düz RichText olarak çiziliyor; çizgi
+  // hesabı düz yazıyı yalnız engel sayıyordu → maddenin altında çizgi yok.
+  testWidgets('RuledAnchor içindeki düz yazı çizgi alır, düğme yazısı almaz', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: RuledLines(
+            gap: 20,
+            color: Colors.black,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 7),
+                RuledAnchor(
+                  child: Text('madde', style: TextStyle(fontSize: 14, height: 1)),
+                ),
+                SizedBox(height: 33),
+                Text('düğme', style: TextStyle(fontSize: 14, height: 1)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    final render = tester.renderObject<RenderRuledLines>(
+      find.byType(RuledLines),
+    );
+    final lines = render.computeLines();
+    // Madde 7..21: altı (21) kesin çizgi.
+    expect(lines, contains(closeTo(21, 0.5)));
+    // Düğme yazısı (54..68) çapa değil: tam altında çizgi yok.
+    expect(lines.where((y) => (y - 68).abs() < 0.5), isEmpty);
+  });
 }

@@ -195,7 +195,9 @@ class _LazyItemFieldState extends State<_LazyItemField> {
                 width: widget.textAlign == TextAlign.start
                     ? null
                     : double.infinity,
-                child: RichText(
+                // Defter çizgisi bu satırın altına da gelsin (bkz.
+                // [RuledAnchor]).
+                child: RuledAnchor(child: RichText(
                 key: _paragraph,
                 textAlign: widget.textAlign,
                 text: widget.controller.buildTextSpan(
@@ -208,7 +210,7 @@ class _LazyItemFieldState extends State<_LazyItemField> {
                 softWrap: !oneLine,
                 overflow: oneLine ? TextOverflow.clip : TextOverflow.visible,
                 textScaler: MediaQuery.textScalerOf(context),
-              ),
+              )),
               ),
             ),
           ),

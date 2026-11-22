@@ -106,9 +106,12 @@ class NoteCalendarPills extends ConsumerWidget {
                 size: 16,
                 color: scheme.primary,
               ),
+              // "Takvim · 27 Kasım Cuma" (kullanıcı isteği 2026-11-22:
+              // takvimden geldiği belli olsun); etkinliğe bağlıysa adı.
               label: Text(
                 [
-                  DateFormat.MMMd().format(l.day),
+                  if (l.event == null) context.l10n.calendarTitle,
+                  DateFormat.MMMMEEEEd().format(l.day),
                   if (l.event case final e? when e.title.trim().isNotEmpty)
                     e.title.trim(),
                 ].join(' · '),

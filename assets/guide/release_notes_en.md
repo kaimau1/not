@@ -3,6 +3,8 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 22 November 2026 {#2026-11-22}
+- **Calendar notes grouped on the home screen:** notes linked to a calendar day now sit in their own **Calendar** section under **Pinned**, with a "📅 27 Nov" pill on the card; inside the note it reads "Calendar · Friday, 27 November".
+- **Notebook lines visible from the start:** in notebook view the lines under untouched items were missing until you tapped the item; now they are all drawn when the note opens.
 - **Text and bubbles visible on dark pictures:** dropping text or a bubble on a dark part of a photo picks a colour that stands out (white text, a light bubble); a colour you chose stays. Changing bold/alignment/size/colour no longer rebuilds the note on every tap, so the stutter is gone.
 - **Two-finger zoom on pinned pictures works again:** pinching with fingers moving vertically never started; now pinching out shrinks the pane live with your fingers and the whole picture fits, pinching in grows it back. One-finger scrolling still works.
 - **"Note for this day" opens without a title:** the note no longer takes the day's name as its title, so a note opened by mistake and left empty is not saved.

@@ -78,6 +78,30 @@ final dayLinksStreamProvider = Provider<AsyncValue<Map<String, List<String>>>>(
   (ref) => ref.watch(_dayLinkSnapshotProvider).whenData((s) => s.links),
 );
 
+/// Not → bağlı olduğu (en erken) gün: ana ekran kartındaki takvim hapı ve
+/// "Takvim" bölümü (kullanıcı isteği 2026-11-22: "takvimden üretilen
+/// notlarda takvim etiketi ve tarihi yazsın; ana ekranda bir takvim
+/// başlığı altında toplansın"). Bağlar değişmedikçe AYNI harita.
+final noteCalendarDayProvider = Provider<Map<String, DateTime>>((ref) {
+  final links = ref.watch(dayLinksStreamProvider).value ?? const {};
+  if (links.isEmpty) return const {};
+  final out = <String, DateTime>{};
+  for (final e in links.entries) {
+    final parts = e.key.split('-');
+    if (parts.length != 3) continue;
+    final y = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    final d = int.tryParse(parts[2]);
+    if (y == null || m == null || d == null) continue;
+    final day = DateTime(y, m, d);
+    for (final id in e.value) {
+      final prev = out[id];
+      if (prev == null || day.isBefore(prev)) out[id] = day;
+    }
+  }
+  return out;
+});
+
 /// Gün → (not → dakika): saatle bağlanmış notlar.
 final dayLinkTimesStreamProvider =
     Provider<AsyncValue<Map<String, Map<String, int>>>>(
