@@ -79,12 +79,35 @@ void main() {
   tearDown(AiDecisionsFlag.debugReset);
 
   group('bayrak', () {
-    test('varsayılan KAPALI: alan yok / bozuk = hiçbiri', () {
-      AiDecisionsFlag.apply(null);
-      expect(AiDecisionsFlag.modeOf('f'), DecisionMode.off);
-      AiDecisionsFlag.apply({'aiDecisionsFeatures': 'f'});
-      expect(AiDecisionsFlag.modeOf('f'), DecisionMode.off);
+    test('varsayılan: alan yok / bozuk = yazım doğrulaması hariç canlı', () {
+      for (final data in <Map<String, dynamic>?>[
+        null,
+        {'aiDecisionsFeatures': 'f'},
+      ]) {
+        AiDecisionsFlag.apply(data);
+        expect(AiDecisionsFlag.modeOf('f'), DecisionMode.off);
+        for (final f in [
+          DecisionFeature.dropTarget,
+          DecisionFeature.titleOk,
+          DecisionFeature.noteTriage,
+        ]) {
+          expect(AiDecisionsFlag.modeOf(f), DecisionMode.live);
+        }
+        // Yazım doğrulaması bilerek kapalı (ECE 0,15).
+        expect(
+          AiDecisionsFlag.modeOf(DecisionFeature.spellFixOk),
+          DecisionMode.off,
+        );
+      }
       expect(AiDecisionsFlag.model, 'gemini-decision-1');
+    });
+
+    test('uzaktan kapatma: boş dizi = hepsi kapalı', () {
+      AiDecisionsFlag.apply({'aiDecisionsFeatures': <String>[]});
+      expect(
+        AiDecisionsFlag.modeOf(DecisionFeature.dropTarget),
+        DecisionMode.off,
+      );
     });
 
     test('canlı / gölge / model', () {

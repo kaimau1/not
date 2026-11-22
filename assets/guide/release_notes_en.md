@@ -3,6 +3,10 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 22 November 2026 {#2026-11-22}
+- **Quick add picks the target note faster:** when you say "add this to my shopping note", Google's fast decision model (Gemini Decisions) now picks the note; if it isn't sure it still asks you, and if it doesn't answer the old method takes over.
+- **AI titles get a check:** if an AI-suggested title doesn't fit the note, it's caught quickly and a new one is suggested.
+- **Suggest tags is more accurate:** the "Suggest tags" chip first picks from your own tags and folders; suggestions still never apply until you tap them.
+- **Less waiting at launch:** the note list now fetches only what changed instead of re-downloading every note (from the next launch on).
 - **Quick bubble colour changes stick:** tapping colours in quick succession no longer snaps back to the previous colour.
 - **Notebook page panel docked at the bottom:** the Page 1/2 · new page · delete page panel in notebook mode no longer pushes items down under the title; it stays fixed just above the bottom bar, no scrolling needed.
 - **Notebooks and themes look seamless top to bottom:** on yellow legal-pad paper the top bar and bottom bar take the paper's tone; with a drawn theme or a background image the image fills the whole screen and the bottom bar is see-through.

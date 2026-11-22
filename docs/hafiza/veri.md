@@ -179,7 +179,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   damga yok · imleç >30 gün (cihaz saatiyle; ileri saat = güvenli taraf) · sayım alınamadı
   (çevrimdışı) / tutmadı · besleyici ya da önbellek dinleyicisi hatası.
 - **Bayrak:** `config/app.syncDeltaListen` (yalnız `true` açar) → `saveCadenceSyncProvider`
-  yerele `sync_delta_listen` yazar → SONRAKİ açılışta geçerli. Yerel geri alma prefs
+  yerele `sync_delta_listen` yazar → SONRAKİ açılışta geçerli. **2026-11-22 (kullanıcı kararı): VARSAYILAN AÇIK** — alan yok = açık, yalnız `syncDeltaListen: false` kapatır. Yerel geri alma prefs
   `sync_delta_off=true`. Kapalıyken `watchNotes()` kodu eskisinin aynısı.
 - **Okuma hesabı** (sahte Firestore, önbellek ayrı sahte DB; `notes_delta_sync_test`):
   300 not soğuk açılış: önce 300 okuma → sonra 0 değişiklik 2, 5 değişiklik 6, 50 değişiklik

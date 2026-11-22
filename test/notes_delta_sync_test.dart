@@ -60,25 +60,25 @@ void main() {
   }
 
   group('bayrak', () {
-    test('varsayılan KAPALI; yalnız uzak true açar; yerel geri alma', () async {
+    test('varsayılan AÇIK; yalnız uzak false kapatır; yerel geri alma', () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
-      expect(SyncDeltaFlag.enabled(prefs), isFalse);
+      expect(SyncDeltaFlag.enabled(prefs), isTrue);
       await SyncDeltaFlag.remember({'minClient': 3}, prefs);
+      expect(SyncDeltaFlag.enabled(prefs), isTrue);
+      await SyncDeltaFlag.remember({'syncDeltaListen': 'false'}, prefs);
+      expect(SyncDeltaFlag.enabled(prefs), isTrue, reason: 'yalnız bool');
+      // Konsoldan kapatma: false bir sonraki açılışta eski yol.
+      await SyncDeltaFlag.remember({'syncDeltaListen': false}, prefs);
       expect(SyncDeltaFlag.enabled(prefs), isFalse);
-      await SyncDeltaFlag.remember({'syncDeltaListen': 'true'}, prefs);
-      expect(SyncDeltaFlag.enabled(prefs), isFalse, reason: 'yalnız bool');
       await SyncDeltaFlag.remember({'syncDeltaListen': true}, prefs);
       expect(SyncDeltaFlag.enabled(prefs), isTrue);
       await prefs.setBool(SyncDeltaFlag.offKey, true);
       expect(SyncDeltaFlag.enabled(prefs), isFalse, reason: 'yerel geri al');
       await prefs.remove(SyncDeltaFlag.offKey);
-      // Konsoldan kapatma (alan silindi) bir sonraki açılışta eski yol.
-      await SyncDeltaFlag.remember({}, prefs);
-      expect(SyncDeltaFlag.enabled(prefs), isFalse);
-      await SyncDeltaFlag.remember({'syncDeltaListen': true}, prefs);
+      await SyncDeltaFlag.remember({'syncDeltaListen': false}, prefs);
       await SyncDeltaFlag.remember(null, prefs);
-      expect(SyncDeltaFlag.enabled(prefs), isFalse);
+      expect(SyncDeltaFlag.enabled(prefs), isTrue);
     });
 
     test('bayrak kapalıyken akış bugünkü yol (S1 akışı kurulmaz)', () async {

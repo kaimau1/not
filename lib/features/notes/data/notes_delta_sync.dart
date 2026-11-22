@@ -40,8 +40,9 @@ enum NotesFeedMode { delta, legacy }
 
 /// Uzaktan bayrak + yerel geri alma.
 abstract final class SyncDeltaFlag {
-  /// `config/app` alanı (istemci yazamaz, herkes okur). Yalnız `true`
-  /// açar; alan yok/başka değer = kapalı.
+  /// `config/app` alanı (istemci yazamaz, herkes okur). VARSAYILAN AÇIK
+  /// (kullanıcı kararı 2026-11-22): yalnız `false` kapatır; alan yok /
+  /// bool olmayan değer = açık.
   static const remoteKey = 'syncDeltaListen';
 
   /// Son görülen uzak değer: akış kurulurken eşzamanlı okunabilsin diye
@@ -52,15 +53,16 @@ abstract final class SyncDeltaFlag {
   static const offKey = 'sync_delta_off';
 
   static bool enabled(SharedPreferences prefs) =>
-      (prefs.getBool(prefKey) ?? false) && !(prefs.getBool(offKey) ?? false);
+      (prefs.getBool(prefKey) ?? true) && !(prefs.getBool(offKey) ?? false);
 
   /// `config/app` verisini yerele yazar (değiştiyse).
   static Future<void> remember(
     Map<String, dynamic>? config,
     SharedPreferences prefs,
   ) async {
-    final on = config?[remoteKey] == true;
-    if ((prefs.getBool(prefKey) ?? false) != on) {
+    final v = config?[remoteKey];
+    final on = v is bool ? v : true;
+    if ((prefs.getBool(prefKey) ?? true) != on) {
       await prefs.setBool(prefKey, on);
     }
   }

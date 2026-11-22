@@ -47,10 +47,13 @@ void main() {
   setUp(() {
     calls = 0;
     asked = [];
+    // Varsayılan artık canlı (2026-11-22); bu dosya kapalıdan başlar.
+    AiDecisionsFlag.apply({AiDecisionsFlag.featuresField: <String>[]});
   });
   tearDown(AiDecisionsFlag.debugReset);
 
   void flag(String field) => AiDecisionsFlag.apply({
+    AiDecisionsFlag.featuresField: <String>[],
     field: [DecisionFeature.titleOk],
   });
 
