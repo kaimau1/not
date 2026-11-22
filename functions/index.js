@@ -156,4 +156,7 @@ if (process.env.PLAY_PACKAGE_NAME) {
   exports.verifyPurchase = billing.verifyPurchase;
   exports.playRtdn = billing.playRtdn;
   exports.dropEntitlement = require("./entitlements").dropEntitlement;
+  // Karar vekili (PLAN U8 KARAR 2026-11-22): gizli anahtar
+  // `GEMINI_DECISIONS_KEY` yalnız Play projesinde tanımlı.
+  exports.decide = require("./decisions").decide;
 }

@@ -47,5 +47,9 @@ exports.dropEntitlement = functionsV1.auth.user().onDelete(async (user) => {
   const batch = db.batch();
   for (const doc of tokens.docs) batch.delete(doc.ref);
   batch.delete(db.doc(`entitlements/${user.uid}`));
+  // Karar sayacı (decisions.js). Takas: silip yeni hesapla "geri yükle"
+  // bir kerelik 1000'i yeniler — maliyeti ~0,03 $, satın alma bağına
+  // bağlamak gerekirse sabah bakılacak.
+  batch.delete(db.doc(`decisionUsage/${user.uid}`));
   await batch.commit();
 });

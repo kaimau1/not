@@ -120,6 +120,18 @@ belirteç `permission-denied: other-account` (hesap paylaşımı / çalınmış 
 Play doğruladıktan sonra yazılır. Hesap silinince (`dropEntitlement`) bağlar da silinir → aynı Play
 hesabıyla yeni hesap "Geri yükle" ile ödediğini alır.
 
+## Karar vekili — Decisions kotası (2026-11-22, Play projesinde DENENMEDİ)
+
+`functions/decisions.js` `decide` (onCall, App Check zorunlu): kendi Gemini anahtarı olmayan ücretli
+kullanıcının karar çağrısını uygulamanın anahtarıyla yapar. Kota `functions/decisions_util.js`:
+Pro (deneme dahil) ayda 500 (TR saatiyle ay başında yenilenir), ömür boyu bir kerelik 1000, paket
+`entitlements/{uid}.decisionCredits` (satın alma akışı YOK). Sayaç `decisionUsage/{uid}` (kuralda
+eşleşme yok = istemciye kapalı). Yalnız `PLAY_PACKAGE_NAME`'li projede bağlanır.
+Kurulum: 1) AI Studio'da (Play projesine bağlı) ayrı bir anahtar aç, yalnız Generative Language
+API'ye kısıtla; 2) `firebase functions:secrets:set GEMINI_DECISIONS_KEY --project <play-proje>`;
+3) Cloud Billing bütçe uyarısı (ör. aylık 5 $) — aşılırsa `config/app.aiDecisionsFeatures: []`
+ya da `aiKillSwitch`. İstemci yolu: `decision_service.dart` `_proxyFor`.
+
 ## Satın alma — PL6 (P85, 2026-11-20; Play hesabı yok → gerçek satın alma DENENMEDİ)
 
 **Ürünler (kimlikler TEK yer `lib/features/entitlement/data/billing_products.dart`, sunucu eşi
