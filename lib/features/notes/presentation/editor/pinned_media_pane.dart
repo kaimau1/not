@@ -269,7 +269,7 @@ class PinnedMediaPane extends StatefulWidget {
 }
 
 class _PinnedMediaPaneState extends State<PinnedMediaPane>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   /// Sabit görselin üstündeki balonların denetleyicisi (bkz.
   /// [PinnedMediaPane.bubbleDoc]); aç/kapa durumu yazılmaz — görselin
   /// uzayındaki kopya belgeye geri yazılamaz, okuma için yeter.
@@ -631,19 +631,54 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   }
 
   /// Kıstırma bitince basamağı seç.
+  ///
+  /// **UZAKLAŞINCA BÖLME KÜÇÜLÜR** (kullanıcı isteği 2026-11-22: "sabit
+  /// görselde çimdikle uzaklaştırıp görseli küçültüp not alanına daha çok
+  /// yer ayırabilmeliyim"): uzaklaşma görseli bütün hâliyle sığdırır VE
+  /// bölmenin boyunu parmak oranında kısaltır (kaydedilir, ayraç sürüklemeyle
+  /// aynı yol); yakınlaşma bölmeyi geri büyütür, tavana varınca genişliğe
+  /// oturmaya döner. Boy değişimi bölmenin kendi canlandırmasıyla akar.
   void _onImageZoomEnd(ScaleEndDetails _) {
     final atFit = _pinchFrom <= 1.01;
+    final pinch = _pinch;
+    _pinch = 1;
     if (_wholeImage) {
-      if (_pinch > 1.15) {
-        setState(() => _wholeImage = false);
-        _imageZoom.value = Matrix4.identity();
+      if (pinch > 1.15) {
+        final target = _dragHeight * pinch;
+        final cap = math.min(_dragMax, _dragNatural);
+        if (target >= cap * 0.98) {
+          setState(() => _wholeImage = false);
+          _imageZoom.value = Matrix4.identity();
+          widget.onHeightChanged(_clamp(cap, _dragMax));
+        } else {
+          widget.onHeightChanged(_clamp(target, _dragMax));
+        }
+      } else if (pinch < 0.85) {
+        widget.onHeightChanged(_clamp(_dragHeight * pinch, _dragMax));
       }
-    } else if (atFit && _pinch < 0.85 && _fitsWidth) {
+    } else if (atFit && pinch < 0.85 && _fitsWidth) {
       _imageScroll.offset = 0;
       setState(() => _wholeImage = true);
       _imageZoom.value = Matrix4.identity();
+      widget.onHeightChanged(_clamp(_dragHeight * pinch, _dragMax));
     }
-    _pinch = 1;
+  }
+
+  /// Genişliğe oturan görselin kaydırma İVMESİ (kullanıcı bulgusu
+  /// 2026-11-22: "görsel kaydırılırken takılıyor, akıcı kaymıyor"): parmak
+  /// kalkınca konum sürtünmeli benzetimle süzülür (liste kaydırması gibi).
+  late final AnimationController _fling = AnimationController.unbounded(
+    vsync: this,
+  )..addListener(() => _imageScroll.to(_fling.value));
+
+  void _onImageFlingEnd(DragEndDetails d) {
+    final v = -(d.primaryVelocity ?? 0);
+    if (v.abs() < 60) return;
+    unawaited(
+      _fling.animateWith(
+        ClampingScrollSimulation(position: _imageScroll.offset, velocity: v),
+      ),
+    );
   }
 
   void _onImageZoom() {
@@ -720,6 +755,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     if (_writing && immersive != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => immersive(false));
     }
+    _fling.dispose();
     _imageZoom.dispose();
     _imageScroll.dispose();
     super.dispose();
@@ -794,7 +830,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       ratio: _fitRatio(widget.media)!,
       whole: _wholeImage,
       scroll: _imageScroll,
-      child: child,
+      // Kaydırma yalnız ötelemeyi değiştirir: görsel + çizim + balon
+      // katmanı kendi katmanında kalır, her karede yeniden boyanmaz.
+      child: RepaintBoundary(child: child),
     );
   }
 
@@ -1278,8 +1316,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                         onDoubleTap: isImage ? _toggleImageZoom : null,
                         // Genişliğe oturan görselde dikey kaydırma (bkz.
                         // [_fitWidthImage]).
+                        onVerticalDragDown: _imageScrolls
+                            ? (_) => _fling.stop()
+                            : null,
                         onVerticalDragUpdate: _imageScrolls
                             ? (d) => _imageScroll.by(-d.delta.dy)
+                            : null,
+                        onVerticalDragEnd: _imageScrolls
+                            ? _onImageFlingEnd
                             : null,
                         // BASILI TUT = METİN SEÇİMİ (kullanıcı kararı
                         // 2026-11-05: "basılı tutmak metin seçimini açsın,
@@ -1829,8 +1873,13 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             ),
           ),
         // ÜZERİNE YAZ (kullanıcı isteği 2026-11-08): sabit belgeye/görsele
-        // doğrudan kalemle yazılır. Düğme HEP burada (bkz. [_togglePen]).
-        if (_canPen)
+        // doğrudan kalemle yazılır (bkz. [_togglePen]).
+        // EDİTÖRDE YOK (kullanıcı isteği 2026-11-22: "alt panelde zaten kalem
+        // varsa görsel/PDF sabit panelinde kaleme ihtiyaç yok"): bölme
+        // editörün normal kalemini kullanıyorsa ([PinnedMediaPane.onPenOn])
+        // kalem alt çubuktan açılır; düğme yalnız bölmenin kendi hızlı
+        // kalemi için kalır.
+        if (_canPen && widget.onPenOn == null)
           _pinnedItem(
             'pen',
             _BarButton(
@@ -2597,8 +2646,10 @@ class _FitScroll extends ChangeNotifier {
   double offset = 0;
   double max = 0;
 
-  void by(double dy) {
-    final next = (offset + dy).clamp(0.0, max);
+  void by(double dy) => to(offset + dy);
+
+  void to(double value) {
+    final next = value.clamp(0.0, max);
     if (next == offset) return;
     offset = next;
     notifyListeners();

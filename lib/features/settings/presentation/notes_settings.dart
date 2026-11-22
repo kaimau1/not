@@ -198,6 +198,53 @@ class CalendarSwipeSetting extends ConsumerWidget {
   }
 }
 
+/// Takvimdeki "+" düğmesinin eylemi (bkz. [calendarAddActionProvider]).
+class CalendarAddActionSetting extends ConsumerWidget {
+  const CalendarAddActionSetting({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final value = ref.watch(calendarAddActionProvider);
+    return Column(
+      key: const ValueKey('calendar-add-action'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.calendarAddActionTitle),
+        const SizedBox(height: 4),
+        Text(
+          l10n.calendarAddActionInfo,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 8),
+        SegmentedButton<CalendarAddAction>(
+          showSelectedIcon: false,
+          segments: [
+            ButtonSegment(
+              value: CalendarAddAction.note,
+              icon: const Icon(Icons.note_add_outlined),
+              label: Text(l10n.calendarAddNote),
+            ),
+            ButtonSegment(
+              value: CalendarAddAction.event,
+              icon: const Icon(Icons.event_outlined),
+              label: Text(l10n.calendarAddEvent),
+            ),
+            ButtonSegment(
+              value: CalendarAddAction.task,
+              icon: const Icon(Icons.add_task_rounded),
+              label: Text(l10n.calendarAddTask),
+            ),
+          ],
+          selected: {value},
+          onSelectionChanged: (s) =>
+              ref.read(calendarAddActionProvider.notifier).set(s.first),
+        ),
+      ],
+    );
+  }
+}
+
 String swipeModeLabel(BuildContext context, SwipeMode mode) {
   final l10n = context.l10n;
   return switch (mode) {

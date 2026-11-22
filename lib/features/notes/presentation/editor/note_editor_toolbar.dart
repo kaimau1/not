@@ -28,19 +28,29 @@ extension _EditorToolbar on _NoteEditorScreenState {
     icon: Icons.more_horiz,
     label: l10n.moreActions,
     active: ids.any((id) => spec(id).$4),
-    onTap: () {
-      final anchor = _barMoreKey.currentContext;
-      if (anchor == null) return;
-      unawaited(
-        showEditorBarMore(
-          anchor: anchor,
-          menuIds: ids,
-          available: available,
-          spec: spec,
-        ),
-      );
-    },
+    onTap: () => _openBarMore(ids, available, spec),
+    // Basılı tut = alt paneli DÜZENLE (sırala, çubuğa/menüye al).
+    onLongPress: () => _openBarMore(ids, available, spec, edit: true),
   );
+
+  void _openBarMore(
+    List<String> ids,
+    List<String> available,
+    BarMoreSpec Function(String id) spec, {
+    bool edit = false,
+  }) {
+    final anchor = _barMoreKey.currentContext;
+    if (anchor == null) return;
+    unawaited(
+      showEditorBarMore(
+        anchor: anchor,
+        menuIds: ids,
+        available: available,
+        spec: spec,
+        edit: edit,
+      ),
+    );
+  }
 
   Widget _toolSegment({
     Key? key,

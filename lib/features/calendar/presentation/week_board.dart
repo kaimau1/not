@@ -35,7 +35,6 @@ class WeekBoardPage extends StatelessWidget {
     required this.onDayLongPress,
     required this.onEntryTap,
     required this.onNoteTap,
-    this.written = const {},
   });
 
   final DateTime weekStart;
@@ -44,13 +43,11 @@ class WeekBoardPage extends StatelessWidget {
   final DateTime selected;
   final ZoomTargets targets;
 
-  /// O gün yazılan/düzenlenen (güne bağlı olmayan) notlar, gün anahtarıyla.
-  final Map<String, List<Note>> written;
-
   /// Karoya dokunuş: günün ayrıntısı (levha).
   final ValueChanged<DateTime> onDayTap;
 
-  /// Karo başlığına dokunuş: o günün saat çizelgesi (gün sayfası).
+  /// Karo başlığına dokunuş ya da karoya ÇİFT dokunuş: o günün saat
+  /// çizelgesi (gün sayfası).
   final ValueChanged<DateTime> onDayOpen;
   final ValueChanged<DateTime> onDayLongPress;
   final ValueChanged<AgendaEntry> onEntryTap;
@@ -75,7 +72,6 @@ class WeekBoardPage extends StatelessWidget {
           plans++;
         }
       }
-      notes += written[k]?.length ?? 0;
     }
     return LayoutBuilder(
       builder: (context, c) {
@@ -93,7 +89,6 @@ class WeekBoardPage extends StatelessWidget {
             today: today,
             selected: selected,
             entries: agenda[k] ?? const [],
-            written: written[k] ?? const [],
             holiday: data.holidays.on(d),
             onTap: onDayTap,
             onOpen: onDayOpen,
@@ -149,13 +144,6 @@ class _EntryRow extends _Row {
   double get height => entry is ReminderEntry ? _kNoteRow : _kEntryRow;
 }
 
-class _NoteRow extends _Row {
-  const _NoteRow(this.note);
-  final Note note;
-  @override
-  double get height => _kNoteRow;
-}
-
 class _WeekDayTile extends StatelessWidget {
   const _WeekDayTile({
     super.key,
@@ -163,7 +151,6 @@ class _WeekDayTile extends StatelessWidget {
     required this.today,
     required this.selected,
     required this.entries,
-    required this.written,
     required this.holiday,
     required this.onTap,
     required this.onOpen,
@@ -176,7 +163,6 @@ class _WeekDayTile extends StatelessWidget {
   final DateTime today;
   final DateTime selected;
   final List<AgendaEntry> entries;
-  final List<Note> written;
   final Holiday? holiday;
   final ValueChanged<DateTime> onTap;
   final ValueChanged<DateTime> onOpen;
@@ -195,10 +181,27 @@ class _WeekDayTile extends StatelessWidget {
     final weekend =
         day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
     final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.4);
-    final rows = <_Row>[
-      for (final e in entries) _EntryRow(e),
-      for (final n in written) _NoteRow(n),
-    ];
+    final past = day.isBefore(today);
+    // YALNIZ GÜNE BAĞLI NOTLAR (kullanıcı isteği 2026-11-22: "hafta
+    // görünümünde notlar bağlanmamış olsa bile günlerde görülüyor, olmamalı;
+    // o gün yazılanlar alt paneldeki listede yeter"): karoda günün kayıtları
+    // ve "Bu güne not"la bağlı notlar (ajandada `ReminderEntry.isDayLink`).
+    final rows = <_Row>[for (final e in entries) _EntryRow(e)];
+    final tokens = AppTokens.fromTheme(theme);
+    // HAFTA SONU RENKLİ (2026-11-22): ay ızgarasıyla aynı dil — hafta sonu
+    // karosu ikincil tonla boyanır, numara/gün adı ikincil renkte; geçmiş
+    // günler sönük yazılır, bugün dolgulu daire + vurgulu zemin.
+    final weekendBg = Color.alphaBlend(
+      scheme.secondaryContainer.withValues(alpha: AppAlpha.soft),
+      tokens.card,
+    );
+    final dayFg = isToday
+        ? scheme.onPrimary
+        : weekend
+        ? scheme.secondary
+        : past
+        ? scheme.onSurfaceVariant
+        : scheme.onSurface;
 
     // Hafif dokunuş alanları (GestureDetector): hafta çevrilirken 7 karo
     // kurulur; InkWell/Material karo başına ~20 widget ekliyordu (S22).
@@ -227,11 +230,7 @@ class _WeekDayTile extends StatelessWidget {
                 '${day.day}',
                 style: text.sheetTitle.copyWith(
                   height: 1,
-                  color: isToday
-                      ? scheme.onPrimary
-                      : weekend
-                      ? scheme.primary
-                      : scheme.onSurface,
+                  color: dayFg,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -242,8 +241,10 @@ class _WeekDayTile extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: text.label.copyWith(
-                  color: isToday || weekend
+                  color: isToday
                       ? scheme.primary
+                      : weekend
+                      ? scheme.secondary
                       : scheme.onSurfaceVariant,
                 ),
               ),
@@ -254,19 +255,27 @@ class _WeekDayTile extends StatelessWidget {
     );
 
     return GestureDetector(
+      key: ValueKey('week-board-tile-${dayKey(day)}'),
       behavior: HitTestBehavior.opaque,
       onTap: () => onTap(day),
+      // Karoya çift dokunuş = gün sayfası (kullanıcı isteği 2026-11-22;
+      // eskiden yalnız üstteki tarih alanı açıyordu).
+      onDoubleTap: () => onOpen(day),
       onLongPress: () => onLongPress(day),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: isToday
               ? scheme.primaryContainer.withValues(alpha: AppAlpha.soft)
-              : AppTokens.fromTheme(theme).card,
+              : weekend
+              ? weekendBg
+              : tokens.card,
           borderRadius: BorderRadius.circular(AppRadius.l),
           border: Border.all(
             color: isToday || isSelected
                 ? scheme.primary
-                : AppTokens.fromTheme(theme).hairline,
+                : weekend
+                ? scheme.secondary.withValues(alpha: AppAlpha.disabled)
+                : tokens.hairline,
             width: isToday || isSelected ? 1.5 : 1,
           ),
         ),
@@ -314,11 +323,6 @@ class _WeekDayTile extends StatelessWidget {
                                 scheme,
                                 text,
                                 l10n,
-                              ),
-                              _NoteRow(:final note) => _NotePreview(
-                                note: note,
-                                accent: scheme.outline,
-                                onTap: () => onNoteTap(note, day),
                               ),
                             },
                           ),

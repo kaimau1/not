@@ -4135,7 +4135,7 @@
       }
     }
   },
-  "barMoreEdit": "Düzenle",
+  "barMoreEdit": "Alt paneli düzenle",
   "barMoreEditHint": "📌 olanlar çubukta durur (telefonda ilk 3'ü sığar), diğerleri bu menüde. Basılı tutup sürükleyerek sırala.",
   "barMoreToBar": "Çubuğa al",
   "barMoreToMenu": "Menüye al",
@@ -4284,5 +4284,16 @@
   "briefingDailyTab": "Günlük",
   "briefingWeeklyTab": "Haftalık",
   "briefingWeeklyLoading": "Haftalık özet hazırlanıyor…",
-  "briefingWeeklyEmpty": "Bu hafta için özetlenecek kayıt yok"
+  "briefingWeeklyEmpty": "Bu hafta için özetlenecek kayıt yok",
+  "calendarAddActionTitle": "Takvimde + ne eklesin",
+  "calendarAddActionInfo": "Varsayılan not; tarih seçili gündür (yoksa bugün), açılan pencerede değiştirilebilir.",
+  "calendarAddNote": "Not",
+  "calendarAddEvent": "Etkinlik",
+  "calendarAddTask": "Görev",
+  "calendarFullPage": "Tam sayfa takvim",
+  "calendarNewDayNoteTitle": "Yeni not",
+  "calendarNewDayNoteOpen": "Notu yaz",
+  "calendarSlotAddTitle": "{time} için ekle",
+  "@calendarSlotAddTitle": {"placeholders": {"time": {"type": "String"}}},
+  "eraserOn": "Silgi açık"
 }

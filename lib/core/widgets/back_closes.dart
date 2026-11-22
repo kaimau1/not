@@ -74,6 +74,13 @@ class _BackClosesState extends State<BackCloses> {
         ..add(this);
     } else if (!widget.open && old.open) {
       BackCloses._stack.remove(this);
+    } else if (widget.open && !BackCloses._stack.contains(this)) {
+      // ART ARDA GERİ ADIMLARI (kök neden 2026-11-22, takvim: "hafta → ay
+      // (tam sayfa) → panel"): geri olayı kaydı yığından düşürüp [onClose]'u
+      // çağırıyor; ekranın bir SONRAKİ geri adımı da varsa `open` true
+      // kalıyor, true→true geçişinde kayıt geri eklenmiyordu → ikinci geri
+      // sessizce yutuluyordu (PopScope canPop:false, yığında kimse yok).
+      BackCloses._stack.add(this);
     }
   }
 

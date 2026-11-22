@@ -61,6 +61,9 @@ class HomeCalendarStrip extends ConsumerWidget {
       onDayTap: (d) => unawaited(showCalendarDaySheet(context, ref, d)),
       onDayLongPress: (d) =>
           unawaited(context.push('/calendar?day=${dayKey(d)}')),
+      // Çift dokunuş = o günün HAFTA sayfası (kullanıcı isteği 2026-11-22).
+      onDayDoubleTap: (d) =>
+          unawaited(context.push('/calendar?day=${dayKey(d)}&view=week')),
       onCollapse: toggle,
     );
   }
@@ -123,6 +126,7 @@ class HomeCalendarStripView extends StatelessWidget {
     required this.data,
     required this.onDayTap,
     this.onDayLongPress,
+    this.onDayDoubleTap,
     this.onCollapse,
   });
 
@@ -130,6 +134,7 @@ class HomeCalendarStripView extends StatelessWidget {
   final CalendarData data;
   final ValueChanged<DateTime> onDayTap;
   final ValueChanged<DateTime>? onDayLongPress;
+  final ValueChanged<DateTime>? onDayDoubleTap;
   final VoidCallback? onCollapse;
 
   static const double _stripHeight = 38;
@@ -184,6 +189,9 @@ class HomeCalendarStripView extends StatelessWidget {
                           onLongPress: onDayLongPress == null
                               ? null
                               : () => onDayLongPress!(d),
+                          onDoubleTap: onDayDoubleTap == null
+                              ? null
+                              : () => onDayDoubleTap!(d),
                         );
                       },
                       childCount: kHomeStripTotalDays,
@@ -228,6 +236,7 @@ class _DayCell extends StatelessWidget {
     required this.holiday,
     required this.onTap,
     this.onLongPress,
+    this.onDoubleTap,
   });
 
   final DateTime day;
@@ -236,6 +245,7 @@ class _DayCell extends StatelessWidget {
   final Holiday? holiday;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onDoubleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -273,6 +283,7 @@ class _DayCell extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.s),
         onTap: onTap,
         onLongPress: onLongPress,
+        onDoubleTap: onDoubleTap,
         child: Container(
           height: HomeCalendarStripView._stripHeight,
           margin: const EdgeInsets.symmetric(horizontal: 1),

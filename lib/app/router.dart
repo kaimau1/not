@@ -311,8 +311,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/calendar',
             pageBuilder: (context, state) {
-              final child = CalendarScreen(
-                initialDay: parseDayKey(state.uri.queryParameters['day']),
+              final child = CalendarExitScope(
+                child: CalendarScreen(
+                  initialDay: parseDayKey(state.uri.queryParameters['day']),
+                  initialView: state.uri.queryParameters['view'],
+                ),
               );
               if (state.uri.queryParameters['from'] != 'swipe') {
                 return MaterialPage<void>(key: state.pageKey, child: child);
@@ -340,6 +343,20 @@ final routerProvider = Provider<GoRouter>((ref) {
                 },
               );
             },
+          ),
+          // Gün sayfası (saat çizelgesi) — yönlendirici rotası; eskiden
+          // sayfasız `Navigator.push` (geri yığını karışıyordu, 2026-11-22).
+          GoRoute(
+            path: '/calendar-day',
+            builder: (context, state) => CalendarDayScreen(
+              day:
+                  parseDayKey(state.uri.queryParameters['d']) ??
+                  DateTime(
+                    DateTime.now().year,
+                    DateTime.now().month,
+                    DateTime.now().day,
+                  ),
+            ),
           ),
           GoRoute(
             path: '/routines',

@@ -16139,7 +16139,7 @@ abstract class AppLocalizations {
   /// No description provided for @barMoreEdit.
   ///
   /// In tr, this message translates to:
-  /// **'Düzenle'**
+  /// **'Alt paneli düzenle'**
   String get barMoreEdit;
 
   /// No description provided for @barMoreEditHint.
@@ -16933,6 +16933,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu hafta için özetlenecek kayıt yok'**
   String get briefingWeeklyEmpty;
+
+  /// No description provided for @calendarAddActionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Takvimde + ne eklesin'**
+  String get calendarAddActionTitle;
+
+  /// No description provided for @calendarAddActionInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılan not; tarih seçili gündür (yoksa bugün), açılan pencerede değiştirilebilir.'**
+  String get calendarAddActionInfo;
+
+  /// No description provided for @calendarAddNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not'**
+  String get calendarAddNote;
+
+  /// No description provided for @calendarAddEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik'**
+  String get calendarAddEvent;
+
+  /// No description provided for @calendarAddTask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görev'**
+  String get calendarAddTask;
+
+  /// No description provided for @calendarFullPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam sayfa takvim'**
+  String get calendarFullPage;
+
+  /// No description provided for @calendarNewDayNoteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not'**
+  String get calendarNewDayNoteTitle;
+
+  /// No description provided for @calendarNewDayNoteOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu yaz'**
+  String get calendarNewDayNoteOpen;
+
+  /// No description provided for @calendarSlotAddTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'{time} için ekle'**
+  String calendarSlotAddTitle(String time);
+
+  /// No description provided for @eraserOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgi açık'**
+  String get eraserOn;
 }
 
 class _AppLocalizationsDelegate

@@ -192,8 +192,8 @@
   "S22": {
     "senaryo": "Takvim haftalık görünüm (hafta panosu, telefon, 21 etkinlik): bir hafta ileri fırlat, 40 kare",
     "hafta_sayfasi": 1,
-    "toplam_kurulum": 497,
-    "kare_kurulum": 496,
+    "toplam_kurulum": 399,
+    "kare_kurulum": 398,
     "bugun": "WeekBoardPage 1 / toplam 497 / tek karede 496 (2026-11-21: hafta görünümü büyük karolu panoya geçti — karoda InkWell yok); önceki WeekPage 1 / toplam 509 / tek karede 508 (2026-11-13, P46: hafta sayfası önbelleği — sayfa çevrilince setState giden ve gelen haftayı baştan kurmuyor); önce 3 / 979 / 978",
     "hedef": "yalnız gelen hafta sayfası kurulur (komşu önceden kurulu)",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl); tek karede ~980 kurulum — bulgu P46'ya yazıldı"

@@ -9097,7 +9097,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get barMoreEdit => 'Düzenle';
+  String get barMoreEdit => 'Alt paneli düzenle';
 
   @override
   String get barMoreEditHint =>
@@ -9549,4 +9549,37 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get briefingWeeklyEmpty => 'Bu hafta için özetlenecek kayıt yok';
+
+  @override
+  String get calendarAddActionTitle => 'Takvimde + ne eklesin';
+
+  @override
+  String get calendarAddActionInfo =>
+      'Varsayılan not; tarih seçili gündür (yoksa bugün), açılan pencerede değiştirilebilir.';
+
+  @override
+  String get calendarAddNote => 'Not';
+
+  @override
+  String get calendarAddEvent => 'Etkinlik';
+
+  @override
+  String get calendarAddTask => 'Görev';
+
+  @override
+  String get calendarFullPage => 'Tam sayfa takvim';
+
+  @override
+  String get calendarNewDayNoteTitle => 'Yeni not';
+
+  @override
+  String get calendarNewDayNoteOpen => 'Notu yaz';
+
+  @override
+  String calendarSlotAddTitle(String time) {
+    return '$time için ekle';
+  }
+
+  @override
+  String get eraserOn => 'Silgi açık';
 }

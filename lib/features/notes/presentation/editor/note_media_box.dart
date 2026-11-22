@@ -162,7 +162,14 @@ class _ImageBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ink = this.ink && img.ink.isNotEmpty;
-    if (!ink && img.bubbles.isEmpty) return _content(context);
+    // ÇİFT YAZI (kullanıcı bulgusu 2026-11-22: "metin üst üste iki tane
+    // oluyor; paylaşırken biri gidiyor, balon metinlerini gizleyince üstteki
+    // gidiyor alttaki kalıyor"): katmanları ÇAĞIRAN boyuyorsa ([ink] false —
+    // sabit bölme, görselin `contain` dikdörtgeninde kendi balon katmanı
+    // var) açık metinler burada İKİNCİ kez, üstelik kutunun tamamına göre
+    // (kaymış) çiziliyordu ve gizle düğmesi bunlara erişmiyordu.
+    final texts = this.ink && img.bubbles.isNotEmpty;
+    if (!ink && !texts) return _content(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final box = Size(constraints.maxWidth, constraints.maxHeight);
@@ -175,7 +182,7 @@ class _ImageBox extends StatelessWidget {
                   child: CustomPaint(painter: InkPainter(img.ink, 1)),
                 ),
               ),
-            ..._plainTexts(box),
+            if (texts) ..._plainTexts(box),
           ],
         );
       },

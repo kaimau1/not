@@ -594,6 +594,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: 'jest takvim saga kaydir yana cek klasor not',
           ),
           _SettingRow(
+            const CalendarAddActionSetting(),
+            title: l10n.calendarAddActionTitle,
+            keywords: 'takvim arti ekle not etkinlik gorev varsayilan',
+          ),
+          _SettingRow(
             const CalendarSwipeSetting(),
             title: l10n.calendarSwipe,
             keywords: '${l10n.calendarSwipeInfo} takvim hafta gun kaydir',

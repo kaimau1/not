@@ -1151,6 +1151,38 @@ final calendarSwipeProvider = boolPref(
   defaultValue: true,
 );
 
+/// Takvimdeki "+" düğmesi ne eklesin (kullanıcı isteği 2026-11-22: "artı
+/// varsayılan not eklesin, tarihi varsayılan bugün ama öncesinden
+/// değiştirilebilsin"). Cihaz tercihi.
+enum CalendarAddAction { note, event, task }
+
+final calendarAddActionProvider =
+    NotifierProvider<CalendarAddActionNotifier, CalendarAddAction>(
+      CalendarAddActionNotifier.new,
+    );
+
+class CalendarAddActionNotifier extends Notifier<CalendarAddAction> {
+  static const _key = 'calendar_add_action';
+
+  @override
+  CalendarAddAction build() {
+    try {
+      final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+      return CalendarAddAction.values.firstWhere(
+        (a) => a.name == stored,
+        orElse: () => CalendarAddAction.note,
+      );
+    } catch (_) {
+      return CalendarAddAction.note;
+    }
+  }
+
+  void set(CalendarAddAction value) {
+    state = value;
+    unawaited(ref.read(sharedPreferencesProvider).setString(_key, value.name));
+  }
+}
+
 /// Ana ekranın (dashboard) ZEMİNİ: **renk + desen + görsel**.
 ///
 /// Nota özel zeminden farkı: bu ayar cihaza aittir, buluta yazılmaz. Seçilen

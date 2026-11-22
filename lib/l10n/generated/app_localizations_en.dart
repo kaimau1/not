@@ -9108,7 +9108,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get barMoreEdit => 'Edit';
+  String get barMoreEdit => 'Edit bottom bar';
 
   @override
   String get barMoreEditHint =>
@@ -9561,4 +9561,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get briefingWeeklyEmpty => 'Nothing to summarize this week';
+
+  @override
+  String get calendarAddActionTitle => 'What + adds in the calendar';
+
+  @override
+  String get calendarAddActionInfo =>
+      'Default is a note; the date is the selected day (or today) and can be changed before writing.';
+
+  @override
+  String get calendarAddNote => 'Note';
+
+  @override
+  String get calendarAddEvent => 'Event';
+
+  @override
+  String get calendarAddTask => 'Task';
+
+  @override
+  String get calendarFullPage => 'Full-page calendar';
+
+  @override
+  String get calendarNewDayNoteTitle => 'New note';
+
+  @override
+  String get calendarNewDayNoteOpen => 'Write note';
+
+  @override
+  String calendarSlotAddTitle(String time) {
+    return 'Add at $time';
+  }
+
+  @override
+  String get eraserOn => 'Eraser on';
 }

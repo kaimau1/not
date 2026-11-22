@@ -241,6 +241,25 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
   final _zoom = TransformationController();
   bool _editing = false;
 
+  /// **TEPSİ GÖRSELİ SIKIŞTIRMAZ** (kullanıcı isteği 2026-11-22: "görsel
+  /// edit ekranında kalem tepsisi görseli sıkıştırmasın, şeffaf olsun, parmak
+  /// çizerek oraya yaklaşınca tepsi gizlensin"): tepsi gövdenin ÜSTÜNDE yüzer
+  /// (`extendBody`), yarı saydam; çizen parmak tepsinin bölgesine yaklaşınca
+  /// tepsi solar ve dokunuşa kapanır, parmak kalkınca geri gelir.
+  final _trayKey = GlobalKey();
+  final _trayHidden = ValueNotifier(false);
+
+  void _trackPointer(PointerEvent e) {
+    if (!_editing) return;
+    final box = _trayKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final top = box.localToGlobal(Offset.zero).dy;
+    final near = e.position.dy > top - 56;
+    if (near != _trayHidden.value) _trayHidden.value = near;
+  }
+
+  void _releasePointer(PointerEvent _) => _trayHidden.value = false;
+
   // ── Yüzen kalem düğmesi + kalem kuralı (bkz. [ViewerPen], F63.4) ──────
   @override
   InkController get penInk => _ink;
@@ -396,6 +415,7 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
 
   @override
   void dispose() {
+    _trayHidden.dispose();
     _zoom.removeListener(_syncSwipeLock);
     _bubbles.removeListener(_syncSwipeLock);
     _ink.dispose();
@@ -734,15 +754,23 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
               ),
           ],
         ),
+        extendBody: _editing,
         body: penScope(
           child: _busy
             ? const Center(child: DelayedSpinner())
             : Stack(
                 children: [
                   Positioned.fill(
-                    child: RepaintBoundary(
-                      key: _areaBoundary,
-                      child: _canvas(aspect, image),
+                    child: Listener(
+                      behavior: HitTestBehavior.translucent,
+                      onPointerDown: _trackPointer,
+                      onPointerMove: _trackPointer,
+                      onPointerUp: _releasePointer,
+                      onPointerCancel: _releasePointer,
+                      child: RepaintBoundary(
+                        key: _areaBoundary,
+                        child: _canvas(aspect, image),
+                      ),
                     ),
                   ),
                   // Yazma kartı KLAVYENİN üstünde: Scaffold klavye kadar
@@ -787,10 +815,23 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                 ),
         ),
         bottomNavigationBar: _editing
-            ? PenTray(
-                controller: _ink,
-                controls: true,
-                hint: context.l10n.inkTwoFingerHint,
+            ? ValueListenableBuilder<bool>(
+                valueListenable: _trayHidden,
+                builder: (context, hidden, tray) => IgnorePointer(
+                  ignoring: hidden,
+                  child: AnimatedOpacity(
+                    opacity: hidden ? 0 : 1,
+                    duration: AppMotion.of(context, AppMotion.short),
+                    child: tray,
+                  ),
+                ),
+                child: PenTray(
+                  key: _trayKey,
+                  controller: _ink,
+                  controls: true,
+                  translucent: true,
+                  hint: context.l10n.inkTwoFingerHint,
+                ),
               )
             : ValueListenableBuilder<bool>(
                 valueListenable: _bubbles.addingListenable,

@@ -80,7 +80,12 @@ class PenTray extends StatefulWidget {
     this.followActive = false,
     this.actions = const [],
     this.showUndo = true,
+    this.translucent = false,
   });
+
+  /// Şerit zemini yarı saydam (görsel düzenleme ekranı: tepsi görselin
+  /// ÜSTÜNDE yüzer, görseli sıkıştırmaz — kullanıcı isteği 2026-11-22).
+  final bool translucent;
 
   /// Kapsülde geri al / yinele (yalnız [dock]). Editör üst çubuğunda zaten
   /// geri al varken kapalı (kullanıcı isteği 2026-11-15: "geri butonuna gerek
@@ -199,6 +204,11 @@ class _PenTrayState extends State<PenTray>
 
   @override
   void dispose() {
+    // SİLGİ TEPSİYLE KAPANIR (kullanıcı bulgusu 2026-11-22: "en son silgi
+    // açık kaldıysa silgi hep açık kalıyor, kişi tekrar kaleme basınca
+    // yazamıyor"): araç seçimi ortak bellekte (`InkToolMemory`) yaşıyor;
+    // kalem kipi kapanınca silgi bırakılır, yeniden açılan kalem YAZAR.
+    InkToolMemory.eraser = false;
     _idle?.cancel();
     if (widget.dock) _ink.removeListener(_onInk);
     _panelCurve?.dispose();
@@ -775,6 +785,13 @@ class _PenTrayState extends State<PenTray>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // "Silgi açık" uyarısı (kullanıcı isteği 2026-11-22); yüzen
+                // kapsülün üstünde, sayfa yerleşimini değiştirmez.
+                if (_ink.eraser)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: AppSpace.s),
+                    child: EraserOnBadge(),
+                  ),
                 _panelSlot(
                   () => Padding(
                     padding: const EdgeInsets.only(bottom: AppSpace.s),
@@ -1139,8 +1156,10 @@ class _PenTrayState extends State<PenTray>
     final current = _current;
     final labels = _labels(l10n);
     // Alt şerit: zeminden bir ton, sayfa tarafında (üstte) ince çizgi.
-    return Material(
-      color: scheme.surfaceContainerLow,
+    final strip = Material(
+      color: widget.translucent
+          ? scheme.surfaceContainerLow.withValues(alpha: AppAlpha.muted)
+          : scheme.surfaceContainerLow,
       shape: Border(
         top: BorderSide(color: AppTokens.fromTheme(Theme.of(context)).hairline),
       ),
@@ -1176,6 +1195,62 @@ class _PenTrayState extends State<PenTray>
                     child: _colorButton(l10n),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    // "Silgi açık" uyarısı şeridin ÜSTÜNDE taşar (şeridin boyu değişmez:
+    // altındaki belge yeniden dizilmez).
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        strip,
+        if (_ink.eraser)
+          const Positioned(
+            top: -40,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(child: Center(child: EraserOnBadge())),
+          ),
+      ],
+    );
+  }
+}
+
+/// "Silgi açık" hapı (kullanıcı isteği 2026-11-22: silgi açıkken kalemin
+/// yazmadığı fark edilmiyordu).
+class EraserOnBadge extends StatelessWidget {
+  const EraserOnBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      key: const ValueKey('pen-eraser-on'),
+      decoration: ShapeDecoration(
+        color: scheme.secondaryContainer,
+        shape: const StadiumBorder(),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.m,
+          vertical: AppSpace.xs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: AppSpace.xs,
+          children: [
+            Icon(
+              Icons.auto_fix_normal,
+              size: AppIconSize.s,
+              color: scheme.onSecondaryContainer,
+            ),
+            Text(
+              context.l10n.eraserOn,
+              style: AppText.of(Theme.of(context)).badge.copyWith(
+                color: scheme.onSecondaryContainer,
               ),
             ),
           ],

@@ -27,12 +27,15 @@ Future<void> showEditorBarMore({
   required List<String> menuIds,
   required List<String> available,
   required BarMoreSpec Function(String id) spec,
+  bool edit = false,
 }) async {
   final box = anchor.findRenderObject()! as RenderBox;
   final overlay = Overlay.of(anchor).context.findRenderObject()! as RenderBox;
   final at = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
   final menuWidth = math.min(312.0, overlay.size.width - 2 * AppSpace.m);
-  final picked = await showMenu<String>(
+  // [edit]: ⋯'ye BASILI TUTUNCA doğrudan düzen kipi (kullanıcı isteği
+  // 2026-11-22: "alt paneli düzenleme seçeneği olmalı").
+  final picked = edit ? _kEditPick : await showMenu<String>(
     context: anchor,
     constraints: BoxConstraints(minWidth: menuWidth, maxWidth: menuWidth),
     position: RelativeRect.fromRect(

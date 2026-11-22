@@ -3282,7 +3282,7 @@
       }
     }
   },
-  "barMoreEdit": "Edit",
+  "barMoreEdit": "Edit bottom bar",
   "barMoreEditHint": "Pinned (📌) buttons stay on the bar (the first 3 fit on a phone); the rest live in this menu. Long-press and drag to reorder.",
   "barMoreToBar": "Move to bar",
   "barMoreToMenu": "Move to menu",
@@ -3428,5 +3428,16 @@
   "briefingDailyTab": "Daily",
   "briefingWeeklyTab": "Weekly",
   "briefingWeeklyLoading": "Preparing weekly summary…",
-  "briefingWeeklyEmpty": "Nothing to summarize this week"
+  "briefingWeeklyEmpty": "Nothing to summarize this week",
+  "calendarAddActionTitle": "What + adds in the calendar",
+  "calendarAddActionInfo": "Default is a note; the date is the selected day (or today) and can be changed before writing.",
+  "calendarAddNote": "Note",
+  "calendarAddEvent": "Event",
+  "calendarAddTask": "Task",
+  "calendarFullPage": "Full-page calendar",
+  "calendarNewDayNoteTitle": "New note",
+  "calendarNewDayNoteOpen": "Write note",
+  "calendarSlotAddTitle": "Add at {time}",
+  "@calendarSlotAddTitle": {"placeholders": {"time": {"type": "String"}}},
+  "eraserOn": "Eraser on"
 }

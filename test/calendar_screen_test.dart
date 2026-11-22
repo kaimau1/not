@@ -2,6 +2,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:notlar/features/calendar/data/calendar_repository.dart';
@@ -190,11 +191,27 @@ void main() {
         ),
         calendarReminderNotesProvider.overrideWithValue(reminders),
       ],
-      child: MaterialApp(
+      // Gün sayfası yönlendirici rotası (2026-11-22; eskiden sayfasız
+      // `Navigator.push`).
+      child: MaterialApp.router(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         locale: const Locale('tr'),
         supportedLocales: AppLocalizations.supportedLocales,
-        home: CalendarScreen(now: DateTime(2026, 11, 6, 12)),
+        routerConfig: GoRouter(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (_, _) => CalendarScreen(now: DateTime(2026, 11, 6, 12)),
+            ),
+            GoRoute(
+              path: '/calendar-day',
+              builder: (_, state) => CalendarDayScreen(
+                day: DateTime.parse(state.uri.queryParameters['d']!),
+                today: DateTime(2026, 11, 6),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -455,15 +472,16 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('calendar-day-panel')), findsOneWidget);
       expect(tester.getSize(find.byType(MonthPage)).height, closeTo(half, 1));
-      // Takvimi aşağı çekince yeniden uzun takvime geçer.
+      // Kullanıcı isteği 2026-11-22: tam sayfaya YALNIZ düğmeyle geçilir;
+      // aşağı çekiş paneli kapatmaz.
       await tester.fling(
         find.byKey(const ValueKey('calendar-month-drag-zone')),
         const Offset(0, 140),
         900,
       );
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('calendar-day-panel')), findsNothing);
-      expect(tester.getSize(find.byType(MonthPage)).height, closeTo(full, 1));
+      expect(find.byKey(const ValueKey('calendar-day-panel')), findsOneWidget);
+      expect(tester.getSize(find.byType(MonthPage)).height, closeTo(half, 1));
     });
 
     // Kullanıcı isteği 2026-11-07: telefonda da ileri/geri. 2026-11-21: güne
@@ -499,6 +517,8 @@ void main() {
       await tester.tap(
         find.byKey(const ValueKey('week-board-open-2026-11-12')),
       );
+      // Karoda çift dokunuş var: başlığın tek dokunuşu süre dolunca.
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
       expect(find.byType(CalendarDayScreen), findsOneWidget);
       final dayTitle = DateFormat.yMMMMEEEEd();
@@ -536,6 +556,7 @@ void main() {
       await tester.tap(
         find.byKey(const ValueKey('week-board-open-2026-09-28')),
       );
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
       expect(find.byType(CalendarDayScreen), findsOneWidget);
     });
@@ -563,6 +584,7 @@ void main() {
       tester,
     ) async {
       phone(tester);
+      await prefs.setString('calendar_add_action', 'event');
       await tester.pumpWidget(app(googleConnected: true));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('calendar-new-event')));
@@ -582,6 +604,7 @@ void main() {
       tester,
     ) async {
       phone(tester);
+      await prefs.setString('calendar_add_action', 'event');
       await tester.pumpWidget(app());
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('calendar-new-event')));
@@ -606,11 +629,12 @@ void main() {
       await tester.pumpWidget(app(events: [meeting]));
       await tester.pumpAndSettle();
 
-      // 18 Kasım'ın satırında yakınlaştır → 16–22 Kasım haftası.
+      // İçinde bulunulan ayda yakınlaşma BU HAFTAYA gider (kullanıcı isteği
+      // 2026-11-22): 18 Kasım'ın üstünde de olsa 2–8 Kasım (bugün 6 Kasım).
       await pinch(tester, tester.getCenter(find.text('18')), zoomIn: true);
       expect(find.byType(MonthPage), findsNothing);
       final week = tester.widget<WeekBoardPage>(find.byType(WeekBoardPage));
-      expect(week.weekStart, DateTime(2026, 11, 16));
+      expect(week.weekStart, DateTime(2026, 11, 2));
       expect(prefs.getString('calendar_view'), 'week');
 
       // Uzaklaştır → Kasım; bir daha → 2026 yılı.
@@ -655,14 +679,22 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('calendar-day-panel')), findsOneWidget);
-      // Geri: panel kapanır VE seçim bugüne döner (hap "6 Kas").
+      // Geri: panel KAPANMAZ (tam sayfa yalnız düğmeyle, 2026-11-22),
+      // seçim bugüne döner.
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('calendar-day-panel')), findsNothing);
+      expect(find.byKey(const ValueKey('calendar-day-panel')), findsOneWidget);
       expect(
         tester.widget<MonthPage>(find.byType(MonthPage)).selected,
         DateTime(2026, 11, 6),
       );
+      // Tam sayfadayken geri paneli geri açar.
+      await tester.tap(find.byKey(const ValueKey('day-panel-close')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('calendar-day-panel')), findsNothing);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('calendar-day-panel')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -678,9 +710,42 @@ void main() {
         DateTime(2026, 11, 2),
       );
       expect(find.text('Toplantı'), findsOneWidget);
+      // Bağlı olmayan, o hafta yazılmış notlar karoda YOK (2026-11-22).
       await tester.tap(find.text('Toplantı'));
+      // Karoda çift dokunuş var (gün sayfası): tek dokunuş süre sonunda.
+      await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
       expect(find.text('Etkinliği düzenle'), findsOneWidget);
+    });
+
+    testWidgets('hafta panosu: karoya çift dokunuş gün sayfasını açar', (
+      tester,
+    ) async {
+      await usePrefs({'calendar_view': 'week'});
+      phone(tester);
+      await tester.pumpWidget(app(events: [meeting]));
+      await tester.pumpAndSettle();
+      final tile = find.byKey(const ValueKey('week-board-tile-2026-11-04'));
+      await tester.tap(tile);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      expect(find.byType(CalendarDayScreen), findsOneWidget);
+    });
+
+    testWidgets('+ varsayılan NOT: tarih levhası açılır', (tester) async {
+      await usePrefs({'calendar_view': 'week'});
+      phone(tester);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('calendar-new-event')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('new-day-note-date')), findsOneWidget);
+      expect(
+        find.text(DateFormat.yMMMMEEEEd().format(DateTime(2026, 11, 6))),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('new-day-note-open')), findsOneWidget);
     });
 
     testWidgets('yılda aya dokunmak o ayı açar; görünüm menüsü', (

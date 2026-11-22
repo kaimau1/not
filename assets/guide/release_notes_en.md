@@ -2,6 +2,13 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 22 November 2026 {#2026-11-22}
+- **"Note for this day" opens without a title:** the note no longer takes the day's name as its title, so a note opened by mistake and left empty is not saved.
+- **Calendar + adds a note by default:** the calendar's **+** now opens a note for the day; a small sheet first shows the date (today or the selected day), tap it to change. Settings → **What + adds in the calendar** switches it to an event or a task. In the day page, tapping an empty hour offers **Note** or **Event**; the note is linked to that hour.
+- **Cleaner, colourful week board:** days show only notes linked to that day and its entries (notes written that day stay in the day panel's list); weekends are tinted and past days muted. **Double-tap** a day to open its hourly page; double-tap a day in the home calendar strip to open its week.
+- **Calendar back button and home:** back no longer lands on the full-page calendar — it is reached only with the **full page** button in the day panel; with another day selected, back first returns to today, then leaves. Coming back from a note opened from the day page could stop back from reaching the home screen — fixed; the calendar and day page have a **home** button. Pinching in on the current month opens this week.
+- **Pinned picture, pen and text fixes:** pinching out on a pinned picture shrinks the pane to give the note more room; scrolling the picture glides smoothly after you lift your finger. While editing a picture the pen tray no longer squeezes it — it floats semi-transparent and hides when your finger comes near. Closing the pen drops the eraser, and an **Eraser on** badge shows while it is active; the pinned pane's duplicate pen button is gone. Text written on a picture no longer shows twice. Long-press **⋯** in the bottom bar (or **Edit bottom bar** in its menu) to customise the bar.
+
 ## 21 November 2026 {#2026-11-21}
 - **Home calendar strip shows 7 days and scrolls 30 days ahead:** the home calendar strip now displays 7 spacious days at a time and scrolls smoothly forward through the next 30 days, with short month labels marking the first day of each month.
 - **Smoother swipe to Calendar and between folders:** swiping right to open the calendar now slides the calendar in from the left matching your finger direction; folder swiping adds progressive resistance, a refined destination pill with icon and progress bar, and cleaner note-grid motion.

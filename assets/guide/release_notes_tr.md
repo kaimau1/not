@@ -2,6 +2,13 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 22 Kasım 2026 {#2026-11-22}
+- **"Bu güne not" başlıksız açılır:** not artık günün adını başlık olarak almaz; yanlışlıkla açıp hiçbir şey yazmadan çıkarsan boş not kaydedilmez.
+- **Takvimde + varsayılan not ekler:** takvimdeki **+** artık o güne not açar; önce açılan küçük pencerede tarih (varsayılan bugün ya da seçili gün) görünür, dokunarak değiştirebilirsin. Ayarlar → **Takvimde + ne eklesin** ile etkinlik ya da göreve çevrilebilir. Gün sayfasında boş bir saate dokununca **Not** ya da **Etkinlik** seçebilirsin; not o saate bağlanır.
+- **Hafta panosu sadeleşti ve renklendi:** günlerde yalnız o güne bağlı notlar ve kayıtlar görünür (o gün yazdığın notlar gün panelindeki listede); hafta sonları renkli, geçmiş günler sönük. Bir güne **çift dokununca** o günün saat sayfası açılır; ana ekrandaki takvim şeridinde güne çift dokununca o günün haftası açılır.
+- **Takvimde geri ve ana menü:** geri tuşu artık tam sayfa takvime düşmez — tam sayfaya yalnız gün panelindeki **tam sayfa** düğmesiyle geçilir; seçili gün varsa geri önce bugüne döner, sonra ana ekrana çıkar. Gün sayfasından not açıp dönünce geri tuşu ana ekrana ulaşmıyordu, düzeltildi; takvime ve gün sayfasına **ana menü** düğmesi eklendi. İçinde bulunulan ayda iki parmakla yakınlaşınca bu hafta açılır.
+- **Sabit görsel, kalem ve yazı düzeltmeleri:** sabit görselde iki parmakla uzaklaşınca bölme küçülür, not alanına yer açılır; görsel kaydırması parmak kalkınca akıcı süzülür. Görsel düzenlemede kalem tepsisi görseli sıkıştırmaz, yarı saydam yüzer ve parmak yaklaşınca gizlenir. Kalem kapanınca silgi bırakılır, silgi açıkken **Silgi açık** uyarısı görünür; sabit bölmede alt panelle aynı olan kalem düğmesi kaldırıldı. Görsele yazılan metnin üst üste iki kez görünmesi düzeltildi. Alt paneldeki **⋯**'ye basılı tutunca (ya da menüdeki **Alt paneli düzenle** ile) panel düzenlenir.
+
 ## 21 Kasım 2026 {#2026-11-21}
 - **Ana ekrandaki takvim şeridi 7 gün ve 30 gün kaydırılabilir:** ana ekrandaki takvim şeridi artık 7 günü daha ferah gösterir ve yana kaydırarak önümüzdeki 30 güne kolayca göz atabilirsin; ay başları kısa ay adıyla vurgulanır.
 - **Takvime ve klasörler arası kaydırma yenilendi:** sağa kaydırarak takvimi açarken takvim artık parmağının yönünde soldan akıcı biçimde gelir; klasörler arası geçişte hedef simgeli ve ilerleme çubuklu yumuşak kapsül görünür, not ızgarası takılmadan kayar.
