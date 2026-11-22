@@ -79,12 +79,35 @@ void main() {
   tearDown(AiDecisionsFlag.debugReset);
 
   group('bayrak', () {
-    test('varsayılan KAPALI: alan yok / bozuk = hiçbiri', () {
-      AiDecisionsFlag.apply(null);
-      expect(AiDecisionsFlag.modeOf('f'), DecisionMode.off);
-      AiDecisionsFlag.apply({'aiDecisionsFeatures': 'f'});
-      expect(AiDecisionsFlag.modeOf('f'), DecisionMode.off);
+    test('varsayılan: alan yok / bozuk = yazım doğrulaması hariç canlı', () {
+      for (final data in <Map<String, dynamic>?>[
+        null,
+        {'aiDecisionsFeatures': 'f'},
+      ]) {
+        AiDecisionsFlag.apply(data);
+        expect(AiDecisionsFlag.modeOf('f'), DecisionMode.off);
+        for (final f in [
+          DecisionFeature.dropTarget,
+          DecisionFeature.titleOk,
+          DecisionFeature.noteTriage,
+        ]) {
+          expect(AiDecisionsFlag.modeOf(f), DecisionMode.live);
+        }
+        // Yazım doğrulaması bilerek kapalı (ECE 0,15).
+        expect(
+          AiDecisionsFlag.modeOf(DecisionFeature.spellFixOk),
+          DecisionMode.off,
+        );
+      }
       expect(AiDecisionsFlag.model, 'gemini-decision-1');
+    });
+
+    test('uzaktan kapatma: boş dizi = hepsi kapalı', () {
+      AiDecisionsFlag.apply({'aiDecisionsFeatures': <String>[]});
+      expect(
+        AiDecisionsFlag.modeOf(DecisionFeature.dropTarget),
+        DecisionMode.off,
+      );
     });
 
     test('canlı / gölge / model', () {
@@ -350,4 +373,86 @@ void main() {
       expect(meteredSeen, isFalse);
     },
   );
+
+  group('sunucu vekili (kendi anahtarı yok)', () {
+    DecisionService proxied(
+      DecisionProxy proxy, {
+      Future<String?> Function()? key,
+    }) => DecisionService(
+      key: key ?? () async => null,
+      proxy: proxy,
+      http: JsonHttp(
+        baseUrl: AiProvider.gemini.baseUrl,
+        client: MockClient((r) async {
+          fail('anahtarsız istemci doğrudan Gemini\'ye çıkmamalı');
+        }),
+      ),
+    );
+
+    test('anahtar yok → vekil; aynı gövde, yanıt ayrıştırılır', () async {
+      Map<String, Object?>? sentBody;
+      final s = proxied((body) async {
+        sentBody = body;
+        return good;
+      });
+      final r = await s.decide('f', input: 'cümle', questions: _qs);
+      expect(sentBody!['model'], 'gemini-decision-1');
+      expect((sentBody!['questions'] as Map).keys, ['evet', 'sec']);
+      expect(r!['evet']!.noul, 0.97);
+    });
+
+    test('katman kapısı (ömür boyu, anahtarsız) → yine vekil', () async {
+      var called = 0;
+      final s = proxied(
+        (_) async {
+          called++;
+          return good;
+        },
+        key: () async =>
+            throw const GeminiException.of(GeminiErrorKind.needsPro),
+      );
+      expect(await s.decide('f', input: 'x', questions: _qs), isNotNull);
+      expect(called, 1);
+    });
+
+    test('kendi anahtarı varsa vekil kullanılmaz', () async {
+      final withProxy = DecisionService(
+        key: () async => 'k',
+        proxy: (_) async => fail('vekil çağrılmamalı'),
+        http: JsonHttp(
+          baseUrl: AiProvider.gemini.baseUrl,
+          client: MockClient((r) async => ok(good)),
+        ),
+      );
+      expect(
+        await withProxy.decide('f', input: 'x', questions: _qs),
+        isNotNull,
+      );
+    });
+
+    test('hak bitti → null ve vekil bir süre susar', () async {
+      var called = 0;
+      final s = proxied((_) async {
+        called++;
+        throw const DecisionQuotaExhausted();
+      });
+      expect(await s.decide('f', input: 'a', questions: _qs), isNull);
+      expect(await s.decide('f', input: 'b', questions: _qs), isNull);
+      expect(called, 1);
+    });
+
+    test('vekil kapısı (AI kapalı) → null, günlük yok', () async {
+      final s = proxied(
+        (_) async =>
+            throw const GeminiException.of(GeminiErrorKind.aiTurnedOff),
+      );
+      expect(await s.decide('f', input: 'x', questions: _qs), isNull);
+    });
+
+    test('vekil yoksa (ücretsiz) anahtarsız = null', () async {
+      final s = service((_) => ok(good), key: () async => null);
+      expect(await s.decide('f', input: 'x', questions: _qs), isNull);
+      expect(sent, isEmpty);
+    });
+  });
 }

@@ -444,6 +444,11 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
   Nasıl: aylık bütçe + %50/%90/%100 e-posta uyarısı kur; yapay zekâ API'lerinde dakika ve kullanıcı başı sınırı düşür.
   Doğruysa: bütçe listede görünüyor.
 
+- [ ] **24b. Karar modeli anahtarını sunucuya koy (Play projesi)**
+  Nerede: AI Studio (yeni anahtar, yalnız Generative Language API) → terminalde `firebase functions:secrets:set GEMINI_DECISIONS_KEY --project <play-proje>`.
+  Nasıl: anahtarı yalnız oraya gir (uygulamaya/depoya yazma); bütçe uyarısını (madde 24) kur.
+  Doğruysa: Play sürümünde anahtarsız Pro hesapta Hızlı ekle hedef notu karar modeliyle seçiliyor; `decisionUsage/{uid}` sayacı artıyor.
+
 - [ ] **25. Sunucuda düzenli yedek**
   Nerede: Firebase konsolu → Firestore → Yedekler; Storage → nesne koruma.
   Nasıl: günlük ya da haftalık zamanlanmış yedek aç.

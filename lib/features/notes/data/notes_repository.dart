@@ -301,7 +301,7 @@ class NotesRepository {
   /// orantılıydı. Önbellek akış (dolayısıyla oturum/uid) başına birdir;
   /// ilk snapshot'ta tüm dokümanlar "added" olarak gelir ve haritayı doldurur.
   ///
-  /// [delta] (S1, `config/app.syncDeltaListen`; VARSAYILAN KAPALI): liste
+  /// [delta] (S1, `config/app.syncDeltaListen`; VARSAYILAN AÇIK, `false` kapatır): liste
   /// önbellekten, sunucudan yalnız değişenler — bkz. [NotesDeltaFeed].
   /// Kapalıyken aşağıdaki sorgu bugünkü gibi sunucudan dinlenir.
   Stream<List<Note>> watchNotes({bool delta = false, NotesDeltaFeed? feed}) {

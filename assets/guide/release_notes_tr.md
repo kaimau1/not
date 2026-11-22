@@ -3,6 +3,10 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 22 Kasım 2026 {#2026-11-22}
+- **Hızlı ekle hedef notu daha hızlı seçiliyor:** "şunu alışveriş notuna ekle" dediğinde hangi nota gideceğine artık Google'ın hızlı karar modeli (Gemini Decisions) karar veriyor; emin değilse yine sana soruyor, yanıt gelmezse eski yöntem devreye giriyor.
+- **AI başlıkları kontrol ediliyor:** AI'ın önerdiği başlık notla uyuşmuyorsa hızlıca fark edilip yenisi öneriliyor.
+- **Etiket öner daha isabetli:** "Etiket öner" çipi önce kendi etiketlerin ve klasörlerin arasından uygun olanı seçiyor; öneriler yine sen dokunmadan uygulanmaz.
+- **Açılışta daha az bekleme:** not listesi açılışta bütün notları yeniden indirmek yerine yalnız değişenleri çekiyor (bir sonraki açılıştan itibaren).
 - **Balonda hızlı renk değişimi tutuyor:** renkleri art arda hızlıca değiştirince bir önceki renge geri dönme sorunu giderildi.
 - **Defterde sayfa paneli altta, sabit:** defter kipindeki Sayfa 1/2 · yeni sayfa · sayfa sil paneli artık başlığın altında maddeleri itmiyor; alt panelin hemen üstünde sabit duruyor, kaydırmaya gerek yok.
 - **Defter, tema, renk ve zemin görselinde üst/alt alan tam uyumlu:** defter kâğıdının çizgileri, kareleri, kenar çizgisi ve cilt gölgesi artık üst çubuğun ve alt panelin arkasında da kesintisiz sürüyor; sayfa çubuğu, alt kapsüller ve onay kutuları seçilen kâğıt, tema, renk ya da arka plan fotoğrafının tonuna bürünüyor. Koyu, açık ya da karmaşık zemin fotoğraflarında üst düğmeler yumuşak koruyucu kapsüllerle her koşulda okunur kalır.

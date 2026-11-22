@@ -29,12 +29,14 @@ enum DecisionMode {
   live,
 }
 
-/// **UZAKTAN BAYRAK** (plan §4.4): `config/app` alanları, VARSAYILAN KAPALI.
+/// **UZAKTAN BAYRAK** (plan §4.4): `config/app` alanları.
 ///  - `aiDecisionsFeatures`: dizi; listedeki özellik Decisions'ı birincil yapar.
+///    Alan YOKSA [defaultLive] canlı (kullanıcı kararı 2026-11-22: yazım
+///    doğrulaması hariç hepsi); boş dizi `[]` = hepsi kapalı (uzaktan kapatma).
 ///  - `aiDecisionsShadow`: dizi; gölge kip — YALNIZ kişisel derleme
 ///    (`!PlayBuild.enabled`; çift çağrı/çift veri gönderimi Play'de yok).
 ///  - `aiDecisionsModel`: dize; model adı sürüm çıkarmadan değişsin.
-/// Alan yok / boş / bozuk = hiçbiri (bugünkü davranış). İstemci YAZMAZ;
+/// Gölge alanı yok / boş / bozuk = hiçbiri. İstemci YAZMAZ;
 /// değer [saveCadenceSyncProvider] dinleyicisinden gelir (kill switch kalıbı).
 abstract final class AiDecisionsFlag {
   static const featuresField = 'aiDecisionsFeatures';
@@ -42,7 +44,15 @@ abstract final class AiDecisionsFlag {
   static const modelField = 'aiDecisionsModel';
   static const defaultModel = 'gemini-decision-1';
 
-  static Set<String> _live = const {};
+  /// `aiDecisionsFeatures` alanı yok ya da dizi değilse canlı olanlar.
+  /// Yazım doğrulaması (`spellFixOk`) bilerek YOK: ECE 0,15 > 0,10.
+  static const Set<String> defaultLive = {
+    DecisionFeature.dropTarget,
+    DecisionFeature.noteTriage,
+    DecisionFeature.titleOk,
+  };
+
+  static Set<String> _live = defaultLive;
   static Set<String> _shadow = const {};
   static String _model = defaultModel;
 
@@ -56,7 +66,8 @@ abstract final class AiDecisionsFlag {
       : const {};
 
   static void apply(Map<String, dynamic>? data) {
-    _live = _names(data?[featuresField]);
+    final live = data?[featuresField];
+    _live = live is List ? _names(live) : defaultLive;
     _shadow = PlayBuild.enabled ? const {} : _names(data?[shadowField]);
     final m = data?[modelField];
     _model = m is String && m.trim().isNotEmpty ? m.trim() : defaultModel;
