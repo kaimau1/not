@@ -624,43 +624,74 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   void _onImageZoomStart(ScaleStartDetails _) {
     _pinch = 1;
     _pinchFrom = _imageZoom.value.getMaxScaleOnAxis();
+    _pinchStartH = _dragHeight;
+    _resizing = false;
+    _fling.stop();
   }
 
+  /// Kıstırma başındaki bölme boyu ve bölme boyunun canlı değişip
+  /// değişmediği (bkz. [_onImageZoomEnd]).
+  double _pinchStartH = 0;
+  bool _resizing = false;
+
+  /// **TEK TANIYICI** (kullanıcı bulgusu 2026-11-22, v1.2.115: "iki parmak
+  /// zoom yapamıyorum, sabit görselde zoom in/out olmuyor"): genişliğe oturan
+  /// görselde dikey kaydırma ayrı bir `onVerticalDrag` tanıyıcısıydı; İLK
+  /// parmak kaydırma eşiğini geçince arenayı o kazanıyor, ikinci parmak
+  /// gelince ölçek tanıyıcısı çoktan kaybetmiş oluyordu → kıstırma hiç
+  /// çalışmıyordu. Artık tek parmak kaydırma da `InteractiveViewer`ın ölçek
+  /// tanıyıcısından gelir (pan kapalıyken de güncelleme bildiriyor).
   void _onImageZoomUpdate(ScaleUpdateDetails d) {
-    if (d.pointerCount >= 2) _pinch = d.scale;
+    if (d.pointerCount >= 2) {
+      _pinch = d.scale;
+      final atFit = _pinchFrom <= 1.01;
+      // UZAKLAŞ = BÖLME CANLI KÜÇÜLÜR (görsel bütün hâliyle sığar);
+      // bütün kipte yakınlaşma bölmeyi büyütür.
+      if (_fitsWidth && (_wholeImage || (atFit && d.scale < 0.97))) {
+        final h = (_pinchStartH * d.scale).clamp(
+          kPinnedMinHeight,
+          math.max(kPinnedMinHeight, math.min(_dragMax, _dragNatural)),
+        ).toDouble();
+        setState(() {
+          if (!_wholeImage) {
+            _wholeImage = true;
+            _imageScroll.offset = 0;
+            _imageZoom.value = Matrix4.identity();
+          }
+          _resizing = true;
+          _live = h;
+        });
+      }
+      return;
+    }
+    if (_imageScrolls) _imageScroll.by(-d.focalPointDelta.dy);
   }
 
-  /// Kıstırma bitince basamağı seç.
-  ///
-  /// **UZAKLAŞINCA BÖLME KÜÇÜLÜR** (kullanıcı isteği 2026-11-22: "sabit
-  /// görselde çimdikle uzaklaştırıp görseli küçültüp not alanına daha çok
-  /// yer ayırabilmeliyim"): uzaklaşma görseli bütün hâliyle sığdırır VE
-  /// bölmenin boyunu parmak oranında kısaltır (kaydedilir, ayraç sürüklemeyle
-  /// aynı yol); yakınlaşma bölmeyi geri büyütür, tavana varınca genişliğe
-  /// oturmaya döner. Boy değişimi bölmenin kendi canlandırmasıyla akar.
-  void _onImageZoomEnd(ScaleEndDetails _) {
-    final atFit = _pinchFrom <= 1.01;
+  /// Kıstırma bitince: canlı boy kaydedilir (ayraç sürüklemeyle aynı yol);
+  /// tavana varan bütün görsel genişliğe oturmaya döner. Tek parmak
+  /// kaydırmada ivme.
+  void _onImageZoomEnd(ScaleEndDetails d) {
     final pinch = _pinch;
     _pinch = 1;
-    if (_wholeImage) {
-      if (pinch > 1.15) {
-        final target = _dragHeight * pinch;
-        final cap = math.min(_dragMax, _dragNatural);
-        if (target >= cap * 0.98) {
-          setState(() => _wholeImage = false);
-          _imageZoom.value = Matrix4.identity();
-          widget.onHeightChanged(_clamp(cap, _dragMax));
-        } else {
-          widget.onHeightChanged(_clamp(target, _dragMax));
-        }
-      } else if (pinch < 0.85) {
-        widget.onHeightChanged(_clamp(_dragHeight * pinch, _dragMax));
-      }
-    } else if (atFit && pinch < 0.85 && _fitsWidth) {
-      _imageScroll.offset = 0;
-      setState(() => _wholeImage = true);
-      _imageZoom.value = Matrix4.identity();
-      widget.onHeightChanged(_clamp(_dragHeight * pinch, _dragMax));
+    if (_resizing) {
+      _resizing = false;
+      final h = _live ?? _dragHeight;
+      final cap = math.min(_dragMax, _dragNatural);
+      final widen = pinch > 1 && h >= cap * 0.98;
+      setState(() {
+        _live = null;
+        if (widen) _wholeImage = false;
+      });
+      widget.onHeightChanged(_clamp(widen ? cap : h, _dragMax));
+      return;
+    }
+    final v = -d.velocity.pixelsPerSecond.dy;
+    if (_imageScrolls && d.pointerCount <= 1 && v.abs() >= 60) {
+      unawaited(
+        _fling.animateWith(
+          ClampingScrollSimulation(position: _imageScroll.offset, velocity: v),
+        ),
+      );
     }
   }
 
@@ -671,15 +702,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     vsync: this,
   )..addListener(() => _imageScroll.to(_fling.value));
 
-  void _onImageFlingEnd(DragEndDetails d) {
-    final v = -(d.primaryVelocity ?? 0);
-    if (v.abs() < 60) return;
-    unawaited(
-      _fling.animateWith(
-        ClampingScrollSimulation(position: _imageScroll.offset, velocity: v),
-      ),
-    );
-  }
 
   void _onImageZoom() {
     final zoomed = _imageZoom.value.getMaxScaleOnAxis() > 1.01;
@@ -865,6 +887,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     return WheelScrollViewer(
       controller: _imageZoom,
       panEnabled: _imageZoomed,
+      // Bütün görsel kipinde iki parmak içeriği değil BÖLMEYİ büyütür.
+      scaleEnabled: !_wholeImage,
       onInteractionStart: _onImageZoomStart,
       onInteractionUpdate: _onImageZoomUpdate,
       onInteractionEnd: _onImageZoomEnd,
@@ -1316,15 +1340,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                         onDoubleTap: isImage ? _toggleImageZoom : null,
                         // Genişliğe oturan görselde dikey kaydırma (bkz.
                         // [_fitWidthImage]).
-                        onVerticalDragDown: _imageScrolls
-                            ? (_) => _fling.stop()
-                            : null,
-                        onVerticalDragUpdate: _imageScrolls
-                            ? (d) => _imageScroll.by(-d.delta.dy)
-                            : null,
-                        onVerticalDragEnd: _imageScrolls
-                            ? _onImageFlingEnd
-                            : null,
+                        // Dikey kaydırma burada DEĞİL: ölçek tanıyıcısında
+                        // (bkz. [_onImageZoomUpdate]) — ayrı sürükleme
+                        // tanıyıcısı iki parmağı engelliyordu.
                         // BASILI TUT = METİN SEÇİMİ (kullanıcı kararı
                         // 2026-11-05: "basılı tutmak metin seçimini açsın,
                         // balon sadece butonla eklensin"): yazılabilir

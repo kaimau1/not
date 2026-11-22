@@ -37,6 +37,7 @@ void main() {
     // Bu dosyadaki ölçüler "küçülerek sığ" (contain) kipinin; varsayılan
     // genişliğe oturma ayrı testte (2026-11-21).
     bool shrinkToFit = true,
+    ValueChanged<double>? onHeight,
   }) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1;
@@ -54,7 +55,7 @@ void main() {
               media: current,
               penActive: penActive,
               shrinkToFit: shrinkToFit,
-              onHeightChanged: (_) {},
+              onHeightChanged: onHeight ?? (_) {},
               onUnpin: () {},
               onOpen: onOpen ?? () {},
               onChanged: (a) {
@@ -316,6 +317,49 @@ void main() {
     await tester.tapAt(center);
     await tester.pumpAndSettle();
     expect(tester.getSize(viewer).height, 200, reason: 'genişliğe oturdu');
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  // Kullanıcı bulgusu 2026-11-22 (v1.2.115): "iki parmak zoom yapamıyorum".
+  // Ayrı dikey sürükleme tanıyıcısı ilk parmağı kapıyordu: parmaklar dikey
+  // yaklaşınca kıstırma hiç başlamıyordu. Uzaklaşma bölmeyi küçültür; tek
+  // parmak yine kaydırır.
+  testWidgets('dikey kıstırma bölmeyi küçültür; tek parmak kaydırır', (
+    tester,
+  ) async {
+    final heights = <double>[];
+    await pump(tester, image, shrinkToFit: false, onHeight: heights.add);
+    final origin = tester.getTopLeft(find.byType(PinnedMediaPane));
+    final viewer = find.byType(InteractiveViewer);
+
+    // Tek parmak yukarı: görsel kayar (boyamada öteleme).
+    final top0 = tester.getTopLeft(viewer).dy;
+    final f = await tester.startGesture(origin + const Offset(200, 100));
+    for (var i = 0; i < 6; i++) {
+      await f.moveBy(const Offset(0, -10));
+      await tester.pump();
+    }
+    await f.up();
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(viewer).dy, lessThan(top0));
+
+    // İlk parmak önce kımıldar (gerçek kıstırma), sonra ikincisi iner;
+    // ikisi dikeyde birbirine yaklaşır.
+    final a = await tester.startGesture(origin + const Offset(200, 10));
+    await a.moveBy(const Offset(0, 20));
+    await tester.pump();
+    final b = await tester.startGesture(origin + const Offset(200, 110));
+    await tester.pump();
+    for (var i = 0; i < 8; i++) {
+      await a.moveBy(const Offset(0, 4));
+      await b.moveBy(const Offset(0, -4));
+      await tester.pump();
+    }
+    await a.up();
+    await b.up();
+    await tester.pumpAndSettle();
+    expect(heights, isNotEmpty, reason: 'kıstırma bölme boyunu kaydetti');
+    expect(heights.last, lessThan(120));
     await tester.pump(const Duration(seconds: 1));
   });
 }
