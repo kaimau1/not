@@ -3,6 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 22 November 2026 {#2026-11-22}
+- **"Today" always at hand in the calendar:** a **Today** pill sits next to the view switcher; when you move to another month/week it lights up and points towards today, tap it to jump back. The small icon in the top bar is gone, leaving room for the month title.
+- **Year · Month · Week · Agenda switcher redesigned:** a soft capsule with a coloured pill that slides to the selected view instead of outlined buttons.
+- **Day panel buttons on one row:** Event · Task · Note · Link now sit in a single row instead of two, leaving more room for the calendar and the day's entries.
+- **Calendar notes from Quick add:** say or type "call the dentist **add to tomorrow**", "party **add to Jan 1**", "bill **add in 3 days**", "gym **add to Friday**" (in Turkish: "yarına ekle", "1 Ocak'a ekle", "bir hafta sonrasına ekle") and a new note is created and linked to that day (the preview shows the day with 📅). Without a year, the next such date is used.
+- **No more stutter writing text on pictures/PDFs:** typing into a text box or dragging it used to redraw the picture and all pen strokes underneath on every letter/frame; the text now lives on its own layer.
 - **Calendar notes grouped on the home screen:** notes linked to a calendar day now sit in their own **Calendar** section under **Pinned**, with a "📅 27 Nov" pill on the card; inside the note it reads "Calendar · Friday, 27 November".
 - **Notebook lines visible from the start:** in notebook view the lines under untouched items were missing until you tapped the item; now they are all drawn when the note opens.
 - **Text and bubbles visible on dark pictures:** dropping text or a bubble on a dark part of a photo picks a colour that stands out (white text, a light bubble); a colour you chose stays. Changing bold/alignment/size/colour no longer rebuilds the note on every tap, so the stutter is gone.

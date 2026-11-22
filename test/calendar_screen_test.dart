@@ -484,6 +484,41 @@ void main() {
       expect(tester.getSize(find.byType(MonthPage)).height, closeTo(half, 1));
     });
 
+    // Kullanıcı isteği 2026-11-22: "bugüne git bulması çok zor, bugünde
+    // olmadığımı anlamıyorum" — BUGÜN hapı hep görünür; başka aydayken
+    // bugünün yönünü ok ile gösterir, dokununca bugüne döner.
+    testWidgets('BUGÜN hapı: başka ayda okla vurgulanır, dokunuş bugüne döner', (
+      tester,
+    ) async {
+      await usePrefs({});
+      phone(tester);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      final pill = find.byKey(const ValueKey('calendar-today'));
+      Finder inPill(Finder f) => find.descendant(of: pill, matching: f);
+      expect(inPill(find.text('6')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('calendar-step-right')));
+      await tester.pumpAndSettle();
+      expect(find.text('Aralık 2026'), findsOneWidget);
+      expect(inPill(find.byIcon(Icons.arrow_back_rounded)), findsOneWidget);
+      for (var i = 0; i < 2; i++) {
+        await tester.tap(find.byKey(const ValueKey('calendar-step-left')));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Ekim 2026'), findsOneWidget);
+      expect(inPill(find.byIcon(Icons.arrow_forward_rounded)), findsOneWidget);
+      await tester.tap(pill);
+      await tester.pumpAndSettle();
+      expect(find.text('Kasım 2026'), findsOneWidget);
+      expect(inPill(find.text('6')), findsOneWidget);
+      // Gün paneli eylemleri TEK satır.
+      final tops = {
+        for (final k in ['day-new-event', 'day-new-task', 'day-note'])
+          tester.getTopLeft(find.byKey(ValueKey(k))).dy,
+      };
+      expect(tops, hasLength(1));
+    });
+
     // Kullanıcı isteği 2026-11-07: telefonda da ileri/geri. 2026-11-21: güne
     // çift dokununca o günün HAFTASI (büyük karolu pano); karo başlığı gün
     // sayfasını açar.

@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/calendar_day_command.dart';
 import '../../../core/utils/firestore_size.dart' show sameFirestoreValue;
 import '../../../core/utils/spoken_datetime.dart' show parseSpokenDateTime;
 import '../../../core/widgets/delayed_spinner.dart';
@@ -21,6 +22,8 @@ import '../../ai/data/decisions/decision_models.dart';
 import '../../ai/data/decisions/decision_profiles.dart';
 import '../../ai/data/decisions/decision_service.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../calendar/data/calendar_repository.dart';
+import '../../calendar/domain/day_key.dart';
 import '../../settings/settings_providers.dart';
 import '../data/notes_repository.dart';
 import '../data/quick_entry_memory.dart';
@@ -429,6 +432,7 @@ class _Drop {
     this.ties = const [],
     this.ask = false,
     this.reminderAt,
+    this.calendarDay,
     this.multi = const [],
   });
 
@@ -437,6 +441,9 @@ class _Drop {
   final List<String> ties;
   final bool ask;
   final DateTime? reminderAt;
+
+  /// "… bugüne / 1 ocağa / bir hafta sonrasına ekle": yeni not bu güne bağlanır.
+  final DateTime? calendarDay;
   final List<({String id, String content})> multi;
 
   @override
@@ -446,6 +453,7 @@ class _Drop {
       other.content == content &&
       other.ask == ask &&
       other.reminderAt == reminderAt &&
+      other.calendarDay == calendarDay &&
       listEquals(other.ties, ties) &&
       listEquals(other.multi, multi);
 
@@ -455,6 +463,7 @@ class _Drop {
     content,
     ask,
     reminderAt,
+    calendarDay,
     Object.hashAll(ties),
     Object.hashAll(multi),
   );
@@ -609,6 +618,15 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         ready: true,
       );
     }
+    if (st.calendarDay != null) {
+      final day = DateFormat.MMMMEEEEd(
+        l10n.localeName,
+      ).format(st.calendarDay!);
+      return (
+        text: l10n.quickDropPreviewCalendar(day, content),
+        ready: true,
+      );
+    }
     if (st.reminderAt != null) {
       final when = DateFormat.MMMd(
         l10n.localeName,
@@ -737,6 +755,27 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   }
 
   void _resolve(String text) {
+    // TAKVİM KOMUTU (kullanıcı isteği 2026-11-22): "… bugüne / yarına /
+    // 1 ocağa / bir hafta sonrasına ekle" → yeni not o güne bağlanır. Elle
+    // başka bir not seçildiyse komut aranmaz (kullanıcının seçimi geçerli).
+    if (_chosenId == null || _chosenId == _kNewId) {
+      final cmd = parseCalendarDayCommand(text, languageCode: _locale);
+      if (cmd != null) {
+        _parsed = (
+          index: null,
+          content: cmd.content,
+          ties: const [],
+          command: false,
+        );
+        final next = _Drop(
+          id: _kNewId,
+          content: cmd.content,
+          calendarDay: cmd.day,
+        );
+        if (next != _state.value) _state.value = next;
+        return;
+      }
+    }
     final titles = [for (final n in _candidates) n.displayTitle];
     // HE-5: tek cümlede birden çok açık hedef ("süt markete, fatura yapılacaklara").
     final multiRaw = parseMultiDropTargets(text, titles);
@@ -1075,6 +1114,29 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         ..showMessage(
           l10n.quickDropAddedMulti(applied.length),
           action: SnackBarAction(label: l10n.undo, onPressed: undoAll),
+        );
+      return;
+    }
+    final calendarDay = st.calendarDay;
+    final calendar = ref.read(calendarRepositoryProvider);
+    if (calendarDay != null && calendar != null && st.content.trim().isNotEmpty) {
+      final body = st.content.trim();
+      final messenger = ScaffoldMessenger.of(context);
+      final l10n = context.l10n;
+      final key = dayKey(calendarDay);
+      unawaited(
+        repo.createNote(NoteType.text, body: body).then((id) {
+          calendar.linkNoteToDay(key, id);
+          ref.read(quickDropRecentProvider.notifier).remember(id);
+        }),
+      );
+      Navigator.of(context).pop();
+      messenger
+        ..hideCurrentSnackBar()
+        ..showMessage(
+          l10n.quickDropSavedCalendar(
+            DateFormat.MMMMd(l10n.localeName).format(calendarDay),
+          ),
         );
       return;
     }

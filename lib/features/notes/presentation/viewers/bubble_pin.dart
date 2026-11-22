@@ -227,79 +227,79 @@ class _BubbleReadCard extends StatelessWidget {
             // düşer, simge kalır — Sil de eklenince satır taşıyordu.
             child: LayoutBuilder(
               builder: (context, row) => Row(
-              children: [
-                // Ok yalnız VURGULU balonda var: serbest balonun bağlanacağı
-                // bir metin yok, düğme de anlamsız olurdu.
-                if (!readOnly && bubble.isHighlight)
-                  _action(
-                    icon: bubble.arrow ? Icons.north_east : Icons.block,
-                    tooltip: bubble.arrow
-                        ? l10n.bubbleArrowHide
-                        : l10n.bubbleArrowShow,
-                    color: muted,
-                    onPressed: () => controller.toggleArrow(bubble.id),
-                  ),
-                const Spacer(),
-                // KOPYALA (F13.1, 2026-10-31): balon yazısı eskiden hiçbir
-                // yoldan panoya alınamıyordu. Salt okunur belgede de var.
-                if (bubbleShareLine(bubble).isNotEmpty)
-                  _action(
-                    key: const ValueKey('bubble-read-copy'),
-                    icon: AppIcons.copy,
-                    tooltip: l10n.bubbleCopy,
-                    color: muted,
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.maybeOf(context);
-                      await Clipboard.setData(
-                        ClipboardData(text: bubbleShareLine(bubble)),
-                      );
-                      messenger
-                        ?..hideCurrentSnackBar()
-                        ..showMessage(l10n.copied);
-                    },
-                  ),
-                // SİL (kullanıcı bulgusu 2026-11-05: "balonlar silinemiyor"):
-                // eskiden yalnız yazma kartında vardı.
-                if (!readOnly)
-                  _action(
-                    key: const ValueKey('bubble-read-delete'),
-                    icon: Icons.delete_outline,
-                    tooltip: l10n.delete,
-                    color: muted,
-                    onPressed: () => controller.remove(bubble.id),
-                  ),
-                if (!readOnly && row.maxWidth < 250)
-                  _action(
-                    key: const ValueKey('bubble-read-edit'),
-                    icon: Icons.edit_outlined,
-                    tooltip: l10n.bubbleEditShort,
-                    color: scheme.primary,
-                    onPressed: controller.beginEdit,
-                  )
-                else if (!readOnly)
-                  TextButton.icon(
-                    key: const ValueKey('bubble-read-edit'),
-                    onPressed: controller.beginEdit,
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      minimumSize: const Size(0, 32),
-                      textStyle: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                children: [
+                  // Ok yalnız VURGULU balonda var: serbest balonun bağlanacağı
+                  // bir metin yok, düğme de anlamsız olurdu.
+                  if (!readOnly && bubble.isHighlight)
+                    _action(
+                      icon: bubble.arrow ? Icons.north_east : Icons.block,
+                      tooltip: bubble.arrow
+                          ? l10n.bubbleArrowHide
+                          : l10n.bubbleArrowShow,
+                      color: muted,
+                      onPressed: () => controller.toggleArrow(bubble.id),
                     ),
-                    icon: const Icon(Icons.edit_outlined, size: 16),
-                    label: Text(l10n.bubbleEditShort),
+                  const Spacer(),
+                  // KOPYALA (F13.1, 2026-10-31): balon yazısı eskiden hiçbir
+                  // yoldan panoya alınamıyordu. Salt okunur belgede de var.
+                  if (bubbleShareLine(bubble).isNotEmpty)
+                    _action(
+                      key: const ValueKey('bubble-read-copy'),
+                      icon: AppIcons.copy,
+                      tooltip: l10n.bubbleCopy,
+                      color: muted,
+                      onPressed: () async {
+                        final messenger = ScaffoldMessenger.maybeOf(context);
+                        await Clipboard.setData(
+                          ClipboardData(text: bubbleShareLine(bubble)),
+                        );
+                        messenger
+                          ?..hideCurrentSnackBar()
+                          ..showMessage(l10n.copied);
+                      },
+                    ),
+                  // SİL (kullanıcı bulgusu 2026-11-05: "balonlar silinemiyor"):
+                  // eskiden yalnız yazma kartında vardı.
+                  if (!readOnly)
+                    _action(
+                      key: const ValueKey('bubble-read-delete'),
+                      icon: Icons.delete_outline,
+                      tooltip: l10n.delete,
+                      color: muted,
+                      onPressed: () => controller.remove(bubble.id),
+                    ),
+                  if (!readOnly && row.maxWidth < 250)
+                    _action(
+                      key: const ValueKey('bubble-read-edit'),
+                      icon: Icons.edit_outlined,
+                      tooltip: l10n.bubbleEditShort,
+                      color: scheme.primary,
+                      onPressed: controller.beginEdit,
+                    )
+                  else if (!readOnly)
+                    TextButton.icon(
+                      key: const ValueKey('bubble-read-edit'),
+                      onPressed: controller.beginEdit,
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        minimumSize: const Size(0, 32),
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      icon: const Icon(Icons.edit_outlined, size: 16),
+                      label: Text(l10n.bubbleEditShort),
+                    ),
+                  _action(
+                    icon: Icons.close,
+                    tooltip: l10n.bubbleCollapse,
+                    color: muted,
+                    onPressed: controller.collapseAll,
                   ),
-                _action(
-                  icon: Icons.close,
-                  tooltip: l10n.bubbleCollapse,
-                  color: muted,
-                  onPressed: controller.collapseAll,
-                ),
-              ],
-            ),
+                ],
+              ),
             ),
           ),
         ],
@@ -750,34 +750,38 @@ class _BubblePinState extends State<_BubblePin>
         valueListenable: _drag,
         builder: (context, offset, child) =>
             Transform.translate(offset: offset, child: child),
-        child: AnimatedScale(
-          scale: (_lifted ? 1.2 : 1) * pinScale,
-          alignment: origin,
-          duration: const Duration(milliseconds: 120),
-          // Ekran okuyucu (F4.7): balonun yazısı okunur, çift dokunuş açar.
-          child: Semantics(
-            button: true,
-            label: _semanticLabel(context, bubble),
-            onTap: () => widget.controller.openOnly(bubble.id),
-            excludeSemantics: true,
-            child: BubbleDragArea(
-              enabled: !widget.readOnly,
+        // Taşırken tutamacın resmi bir kez çizilir, kare başına yalnız
+        // ötelenir (balon katmanının geri kalanı yeniden boyanmaz).
+        child: RepaintBoundary(
+          child: AnimatedScale(
+            scale: (_lifted ? 1.2 : 1) * pinScale,
+            alignment: origin,
+            duration: const Duration(milliseconds: 120),
+            // Ekran okuyucu (F4.7): balonun yazısı okunur, çift dokunuş açar.
+            child: Semantics(
+              button: true,
+              label: _semanticLabel(context, bubble),
               onTap: () => widget.controller.openOnly(bubble.id),
-              onDragStart: _dragStart,
-              onDragDelta: _dragMove,
-              onDragEnd: _dragEnd,
-              // `Tooltip` YOK: kendi uzun basış tanıyıcısını arenaya sokup
-              // taşımayla yarışıyordu ("çok zor sürükleniyor"). Notun tamamı
-              // zaten dokununca açılan okuma balonunda görünüyor.
-              child: blink == null
-                  ? child
-                  : FadeTransition(
-                      opacity: Tween<double>(
-                        begin: 1,
-                        end: 0.35,
-                      ).animate(blink),
-                      child: child,
-                    ),
+              excludeSemantics: true,
+              child: BubbleDragArea(
+                enabled: !widget.readOnly,
+                onTap: () => widget.controller.openOnly(bubble.id),
+                onDragStart: _dragStart,
+                onDragDelta: _dragMove,
+                onDragEnd: _dragEnd,
+                // `Tooltip` YOK: kendi uzun basış tanıyıcısını arenaya sokup
+                // taşımayla yarışıyordu ("çok zor sürükleniyor"). Notun tamamı
+                // zaten dokununca açılan okuma balonunda görünüyor.
+                child: blink == null
+                    ? child
+                    : FadeTransition(
+                        opacity: Tween<double>(
+                          begin: 1,
+                          end: 0.35,
+                        ).animate(blink),
+                        child: child,
+                      ),
+              ),
             ),
           ),
         ),
@@ -842,7 +846,10 @@ class _BubblePinState extends State<_BubblePin>
       ),
       boxShadow: [
         if (open)
-          BoxShadow(color: base.withValues(alpha: AppAlpha.scrim), spreadRadius: 3.5),
+          BoxShadow(
+            color: base.withValues(alpha: AppAlpha.scrim),
+            spreadRadius: 3.5,
+          ),
         BoxShadow(
           color: Colors.black.withValues(alpha: _lifted ? 0.32 : 0.18),
           offset: Offset(0, _lifted ? 3 : 1.5),

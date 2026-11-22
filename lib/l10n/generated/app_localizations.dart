@@ -16214,6 +16214,18 @@ abstract class AppLocalizations {
   /// **'Hatırlatıcılı not kaydedildi'**
   String get quickDropSavedReminder;
 
+  /// No description provided for @quickDropPreviewCalendar.
+  ///
+  /// In tr, this message translates to:
+  /// **'📅 {day} · {text}'**
+  String quickDropPreviewCalendar(String day, String text);
+
+  /// No description provided for @quickDropSavedCalendar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not takvime eklendi · {day}'**
+  String quickDropSavedCalendar(String day);
+
   /// No description provided for @quickDropPreviewMulti.
   ///
   /// In tr, this message translates to:

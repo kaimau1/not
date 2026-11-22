@@ -3,6 +3,11 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 22 Kasım 2026 {#2026-11-22}
+- **Takvimde "Bugün" hep elinin altında:** görünüm seçicinin yanında **Bugün** hapı var; başka bir aya/haftaya geçince hap renklenir ve bugünün hangi yönde kaldığını okla gösterir, dokununca bugüne dönersin. Üstteki küçük simge kalktı, ay başlığına yer açıldı.
+- **Yıl · Ay · Hafta · Ajanda seçici yenilendi:** çerçeveli düğmeler yerine yumuşak bir kapsül ve seçili görünüme kayan renkli hap.
+- **Gün panelindeki düğmeler tek satır:** Etkinlik · Görev · Not · Bağla artık iki satır yerine tek sıra; takvime ve o günün kayıtlarına daha çok yer kalıyor.
+- **Hızlı ekleden takvime not:** "dişçiyi ara **yarına ekle**", "parti **1 Ocak'a ekle**", "fatura **bir hafta sonrasına ekle**", "spor **cumaya ekle**", "rapor **takvime ekle**" gibi söyleyince ya da yazınca yeni bir not oluşur ve o güne bağlanır (önizlemede 📅 ile gün görünür). Yıl söylenmezse gelecekteki ilk o gün alınır.
+- **Görsel/PDF üstüne metin yazarken kasma giderildi:** metin kutusuna yazarken ya da yerini sürüklerken alttaki görsel ve kalem çizgileri her harfte/her karede baştan çiziliyordu; artık metin kendi katmanında, görsel yerinde kalıyor.
 - **Takvim notları ana ekranda toplanıyor:** takvimde bir güne bağlı notlar artık ana ekranda **Sabit**'in altında kendi **Takvim** bölümünde durur, kartlarında "📅 27 Kas" hapı görünür; notun içinde de "Takvim · 27 Kasım Cuma" yazar.
 - **Defter çizgileri baştan görünür:** defter görünümünde dokunulmamış maddelerin altındaki çizgiler eksikti, maddeye dokununca beliriyordu; artık hepsi açılışta çizili.
 - **Koyu görselde metin ve balon görünür:** fotoğrafın koyu bir yerine metin ya da balon bırakınca renk zemine göre seçilir (koyuda beyaz yazı, açık tonlu balon); kendi seçtiğin renk aynen kalır. Balonda kalın/hiza/boy/renk değiştirmek artık her dokunuşta notu yeniden kurmuyor, kasma gitti.

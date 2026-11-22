@@ -3298,6 +3298,8 @@
   "quickDropFindNote": "Find note",
   "quickDropPreviewReminder": "⏰ {when} · {text}",
   "quickDropSavedReminder": "Saved as note with reminder",
+  "quickDropPreviewCalendar": "📅 {day} · {text}",
+  "quickDropSavedCalendar": "Note added to calendar · {day}",
   "quickDropPreviewMulti": "→ {summary} ({count} notes)",
   "quickDropAddedMulti": "Added to {count} notes",
   "aiNeedsProTitle": "AI is part of Pro",

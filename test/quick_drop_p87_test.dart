@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:notlar/features/calendar/data/calendar_repository.dart';
+import 'package:notlar/features/calendar/domain/day_key.dart';
 import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
@@ -41,6 +44,14 @@ class _FakeRepo implements NotesRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeCalendar extends CalendarRepository {
+  _FakeCalendar() : super(FakeFirebaseFirestore(), 'u');
+  final links = <(String, String)>[];
+
+  @override
+  void linkNoteToDay(String day, String noteId) => links.add((day, noteId));
 }
 
 void main() {
@@ -181,6 +192,7 @@ void main() {
       WidgetTester tester, {
       required List<Note> notes,
       required _FakeRepo repo,
+      CalendarRepository? calendar,
     }) async {
       DeviceSpeech.debugAvailable = false;
       SharedPreferences.setMockInitialValues({
@@ -194,6 +206,8 @@ void main() {
             sharedPreferencesProvider.overrideWithValue(prefs),
             notesStreamProvider.overrideWith((_) => Stream.value(notes)),
             notesRepositoryProvider.overrideWithValue(repo),
+            if (calendar != null)
+              calendarRepositoryProvider.overrideWithValue(calendar),
           ],
           child: MaterialApp(
             locale: const Locale('tr'),
@@ -237,6 +251,34 @@ void main() {
       expect(repo.created.single.reminderAt, isNotNull);
       expect(repo.created.single.reminderAt!.hour, 9);
       expect(repo.created.single.body, "yarın 9'da dişçi");
+    });
+
+    testWidgets('"… yarına ekle": yeni not yarına (takvime) bağlanır', (
+      tester,
+    ) async {
+      final repo = _FakeRepo();
+      final calendar = _FakeCalendar();
+      await pumpSheet(
+        tester,
+        notes: [Note(id: 'n1', type: NoteType.text, title: 'Fikirler')],
+        repo: repo,
+        calendar: calendar,
+      );
+      await tester.enterText(find.byType(TextField), 'dişçiyi ara yarına ekle');
+      await tester.pump();
+      final preview = tester.widget<Text>(
+        find.byKey(const ValueKey('quick-drop-preview')),
+      );
+      expect(preview.data, startsWith('📅 '));
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      expect(repo.created.single.body, 'dişçiyi ara');
+      expect(repo.created.single.reminderAt, isNull);
+      final now = DateTime.now();
+      expect(calendar.links, [
+        (dayKey(DateTime(now.year, now.month, now.day + 1)), 'new-1'),
+      ]);
+      expect(repo.updates, isEmpty);
     });
 
     testWidgets('HE-4: birkaç market ürünü otomatik market listesine yönlenir', (

@@ -9156,6 +9156,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickDropSavedReminder => 'Saved as note with reminder';
 
   @override
+  String quickDropPreviewCalendar(String day, String text) {
+    return '📅 $day · $text';
+  }
+
+  @override
+  String quickDropSavedCalendar(String day) {
+    return 'Note added to calendar · $day';
+  }
+
+  @override
   String quickDropPreviewMulti(String summary, int count) {
     return '→ $summary ($count notes)';
   }

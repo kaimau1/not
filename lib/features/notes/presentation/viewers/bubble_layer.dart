@@ -1,16 +1,13 @@
 import '../../../../core/app_icons.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart'
-    show
-        LongPressGestureRecognizer,
-        PointerDeviceKind,
-        kTouchSlop;
+    show LongPressGestureRecognizer, PointerDeviceKind, kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart'
-    show Clipboard, ClipboardData;
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -725,7 +722,11 @@ class BubbleController extends ChangeNotifier {
     _bubbles = next;
     justAdded = id;
     final target = byId(id);
-    editMode = edit || (target != null && target.text.trim().isEmpty && target.title.trim().isEmpty);
+    editMode =
+        edit ||
+        (target != null &&
+            target.text.trim().isEmpty &&
+            target.title.trim().isEmpty);
     if (changed) {
       _dirty = true;
       save();
@@ -930,6 +931,26 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
     final readOnly = widget.readOnly;
     final scale = BubbleLook.scale.value;
     final drop = widget.longPressAdd && !readOnly && !view.adding;
+    // **KENDİ BOYAMA KATMANI** (kullanıcı bulgusu 2026-11-22: "görsel veya
+    // PDF üzerine metin notu yazarken ve yerini sürüklerken inanılmaz kasma"):
+    // katman, altındaki görsel/PDF sayfası ve ÇİZİM katmanıyla aynı
+    // `RepaintBoundary`'deydi; açık metin her tuşta yeniden dizilince ya da
+    // tutamaç kıpırdayınca görsel ve bütün kalem çizgileri her karede
+    // baştan çiziliyordu (bekçi: `bubble_paint_isolation_test`).
+    return RepaintBoundary(
+      child: _build(context, controller, view, page, readOnly, scale, drop),
+    );
+  }
+
+  Widget _build(
+    BuildContext context,
+    BubbleController controller,
+    _PageView view,
+    int page,
+    bool readOnly,
+    double scale,
+    bool drop,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);

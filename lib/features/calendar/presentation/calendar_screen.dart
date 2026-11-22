@@ -772,43 +772,74 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   /// altında hep görünen bölmeli düğme. AYNI örnek döner (görünüm/dil
   /// değişmedikçe): ajandada mini ay kaydırılırken ekran her karede kuruluyor,
   /// bölmeli düğme her seferinde ~90 widget ekliyordu (perf S34).
-  (CalendarView, AppLocalizations, PreferredSizeWidget)? _viewBarCache;
+  ///
+  /// YENİ TASARIM (kullanıcı isteği 2026-11-22: "ay, yıl, hafta, ajanda yazan
+  /// yer çok kaba duruyor"; "bugüne git bulması çok zor, bugünde olmadığımı da
+  /// anlamıyorum"): çerçeveli `SegmentedButton` yerine yumuşak kapsül + kayan
+  /// seçim hapı; yanında hep görünen BUGÜN hapı. Görünen dönem bugünü
+  /// içermiyorsa hap dolgulu vurgu rengine döner ve bugünün yönünü ok ile
+  /// gösterir (üst çubuktaki küçük simge kalktı, ay başlığına yer kaldı).
+  (CalendarView, AppLocalizations, int, PreferredSizeWidget)? _viewBarCache;
+  (CalendarView, AppLocalizations, Widget)? _switcherCache;
+
+  /// Görünen dönemin bugüne göre yönü: 0 = bugünü içeriyor, 1 = gelecekte
+  /// (bugün geride), -1 = geçmişte (bugün ileride).
+  int _awayFromToday() {
+    int cmp(DateTime a, DateTime b) => a.compareTo(b).sign;
+    return switch (_view) {
+      CalendarView.year => (_focus.year - _today.year).sign,
+      CalendarView.month => cmp(monthOf(_focus), monthOf(_today)),
+      CalendarView.week => cmp(
+        weekStartOf(_focus, _firstDow),
+        weekStartOf(_today, _firstDow),
+      ),
+      CalendarView.agenda => cmp(_selected, _today),
+    };
+  }
 
   PreferredSizeWidget _viewBar(AppLocalizations l10n) {
+    final away = _awayFromToday();
     final hit = _viewBarCache;
-    if (hit != null && hit.$1 == _view && identical(hit.$2, l10n)) {
-      return hit.$3;
+    if (hit != null &&
+        hit.$1 == _view &&
+        identical(hit.$2, l10n) &&
+        hit.$3 == away) {
+      return hit.$4;
     }
+    // Seçici yalnız görünüm/dil değişince yeniden kurulur: hafta kaydırırken
+    // bugüne göre yön değişse de AYNI örnek döner (perf S22/S34).
+    final sw = _switcherCache;
+    final switcher = sw != null && sw.$1 == _view && identical(sw.$2, l10n)
+        ? sw.$3
+        : _ViewSwitcher(
+            key: const ValueKey('calendar-view-menu'),
+            view: _view,
+            labels: {
+              for (final v in CalendarView.values) v: _viewLabel(l10n, v),
+            },
+            onPick: _pickView,
+          );
+    _switcherCache = (_view, l10n, switcher);
     final bar = PreferredSize(
       preferredSize: const Size.fromHeight(56),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(AppSpace.l, 0, AppSpace.l, AppSpace.s),
-        child: SizedBox(
-          width: double.infinity,
-          child: SegmentedButton<CalendarView>(
-            key: const ValueKey('calendar-view-menu'),
-            showSelectedIcon: false,
-            segments: [
-              for (final v in CalendarView.values)
-                ButtonSegment(
-                  value: v,
-                  tooltip: _viewLabel(l10n, v),
-                  label: Text(
-                    _viewLabel(l10n, v),
-                    key: ValueKey('calendar-view-${v.name}'),
-                    maxLines: 1,
-                    overflow: TextOverflow.fade,
-                    softWrap: false,
-                  ),
-                ),
-            ],
-            selected: {_view},
-            onSelectionChanged: (s) => _pickView(s.first),
-          ),
+        child: Row(
+          spacing: AppSpace.s,
+          children: [
+            Expanded(child: switcher),
+            _TodayPill(
+              key: const ValueKey('calendar-today'),
+              label: l10n.calendarToday,
+              day: _today.day,
+              away: away,
+              onTap: _goToday,
+            ),
+          ],
         ),
       ),
     );
-    _viewBarCache = (_view, l10n, bar);
+    _viewBarCache = (_view, l10n, away, bar);
     return bar;
   }
 
@@ -926,11 +957,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             icon: const Icon(Icons.home_outlined),
             onPressed: () => goHome(ref, GoRouter.of(context)),
           ),
-        IconButton(
-          tooltip: l10n.calendarToday,
-          icon: const Icon(Icons.today_outlined),
-          onPressed: _goToday,
-        ),
         // AY BAŞLIĞI GÖRÜNMÜYORDU (kullanıcı bulgusu 2026-11-06: "takvimde
         // hangi ay olduğu görülmüyor"): telefonda yedi simge başlığı sıfıra
         // sıkıştırıyordu. Dar ekranda görevler/hatırlatıcılar/rutinler/
@@ -2173,9 +2199,11 @@ class _DaySheet extends ConsumerWidget {
               ),
           ],
         ),
-      // 2×2 dengeli bento hızlı eylem kartları (yeni etkinlik · yeni görev /
-      // bu güne yeni not · mevcut notu bağla). "Bu güne not" her dokunuşta
-      // güne YENİ bir not ekler (birden fazla not desteklenir).
+      // TEK SATIR hızlı eylemler (kullanıcı isteği 2026-11-22: "alt alandaki
+      // butonlar çok yer kaplıyor, 2 satır kaplamasına gerek yok"): eski 2×2
+      // bento (~104 dp) yerine simge üstte, kısa etiket altta dört karo
+      // (~56 dp). Tam ad ipucu/erişilebilirlik etiketinde. "Not" her
+      // dokunuşta güne YENİ bir not ekler (birden fazla not desteklenir).
       Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpace.l,
@@ -2183,63 +2211,58 @@ class _DaySheet extends ConsumerWidget {
           AppSpace.l,
           AppSpace.m,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           spacing: AppSpace.s,
           children: [
-            Row(
-              spacing: AppSpace.s,
-              children: [
-                Expanded(
-                  child: _DayActionTile(
-                    icon: Icons.event_outlined,
-                    label: l10n.calendarNewEvent,
-                    bg: scheme.primaryContainer,
-                    fg: scheme.onPrimaryContainer,
-                    onTap: onNewEvent,
-                  ),
-                ),
-                Expanded(
-                  child: _DayActionTile(
-                    icon: Icons.add_task_rounded,
-                    label: l10n.tasksNewTask,
-                    bg: scheme.secondaryContainer,
-                    fg: scheme.onSecondaryContainer,
-                    onTap: onNewTask,
-                  ),
-                ),
-              ],
+            Expanded(
+              child: _DayActionTile(
+                key: const ValueKey('day-new-event'),
+                icon: Icons.event_outlined,
+                label: l10n.calendarAddEvent,
+                tooltip: l10n.calendarNewEvent,
+                bg: scheme.primaryContainer,
+                fg: scheme.onPrimaryContainer,
+                onTap: onNewEvent,
+              ),
             ),
-            Row(
-              spacing: AppSpace.s,
-              children: [
-                Expanded(
-                  child: _DayActionTile(
-                    key: const ValueKey('day-note'),
-                    icon: Icons.note_add_outlined,
-                    label: l10n.calendarDayNote,
-                    bg: scheme.surfaceContainerHigh,
-                    fg: scheme.onSurface,
-                    iconColor: scheme.primary,
-                    onTap: () => unawaited(
-                      openDayNote(context, ref, day, popFirst: !embedded),
-                    ),
-                  ),
+            Expanded(
+              child: _DayActionTile(
+                key: const ValueKey('day-new-task'),
+                icon: Icons.add_task_rounded,
+                label: l10n.calendarAddTask,
+                tooltip: l10n.tasksNewTask,
+                bg: scheme.secondaryContainer,
+                fg: scheme.onSecondaryContainer,
+                onTap: onNewTask,
+              ),
+            ),
+            Expanded(
+              child: _DayActionTile(
+                key: const ValueKey('day-note'),
+                icon: Icons.note_add_outlined,
+                label: l10n.calendarAddNote,
+                tooltip: l10n.calendarDayNote,
+                bg: scheme.surfaceContainerHigh,
+                fg: scheme.onSurface,
+                iconColor: scheme.primary,
+                onTap: () => unawaited(
+                  openDayNote(context, ref, day, popFirst: !embedded),
                 ),
-                Expanded(
-                  child: _DayActionTile(
-                    key: const ValueKey('day-link-note'),
-                    icon: Icons.link_rounded,
-                    label: l10n.calendarLinkExistingNote,
-                    bg: scheme.surfaceContainerHigh,
-                    fg: scheme.onSurface,
-                    iconColor: scheme.primary,
-                    onTap: () => unawaited(
-                      linkExistingNote(context, ref, dayKey: key),
-                    ),
-                  ),
+              ),
+            ),
+            Expanded(
+              child: _DayActionTile(
+                key: const ValueKey('day-link-note'),
+                icon: Icons.link_rounded,
+                label: l10n.relatedNotesLink,
+                tooltip: l10n.calendarLinkExistingNote,
+                bg: scheme.surfaceContainerHigh,
+                fg: scheme.onSurface,
+                iconColor: scheme.primary,
+                onTap: () => unawaited(
+                  linkExistingNote(context, ref, dayKey: key),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -2304,6 +2327,7 @@ class _DayActionTile extends StatelessWidget {
     super.key,
     required this.icon,
     required this.label,
+    required this.tooltip,
     required this.bg,
     required this.fg,
     this.iconColor,
@@ -2312,6 +2336,7 @@ class _DayActionTile extends StatelessWidget {
 
   final IconData icon;
   final String label;
+  final String tooltip;
   final Color bg;
   final Color fg;
   final Color? iconColor;
@@ -2320,35 +2345,39 @@ class _DayActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = AppText.of(Theme.of(context));
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(AppRadius.m),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpace.m,
-              vertical: AppSpace.s,
-            ),
-            child: Row(
-              spacing: AppSpace.s,
-              children: [
-                Icon(icon, size: AppIconSize.s, color: iconColor ?? fg),
-                Expanded(
-                  child: Text(
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        excludeSemantics: true,
+        child: Material(
+          color: bg,
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.xs,
+                vertical: AppSpace.s,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                spacing: AppSpace.xs,
+                children: [
+                  Icon(icon, size: AppIconSize.s, color: iconColor ?? fg),
+                  Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: text.label.copyWith(
+                    style: text.meta.copyWith(
                       color: fg,
                       fontWeight: AppWeight.strong,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -3129,6 +3158,189 @@ class _OpenDayPanelPill extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Takvim görünüm seçici: yumuşak kapsül içinde kayan seçim hapı.
+/// Çerçevesiz, ince; seçili görünüm dolgulu vurgu rengi (bkz. `_viewBar`).
+class _ViewSwitcher extends StatelessWidget {
+  const _ViewSwitcher({
+    super.key,
+    required this.view,
+    required this.labels,
+    required this.onPick,
+  });
+
+  final CalendarView view;
+  final Map<CalendarView, String> labels;
+  final ValueChanged<CalendarView> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = AppText.of(Theme.of(context));
+    const views = CalendarView.values;
+    final n = views.length;
+    final duration = AppMotion.of(context, AppMotion.short);
+    // Görünen kapsül 40 dp; dokunma alanları kapsülün üst/altındaki boşluğu
+    // da kapsar (48 dp, `tap_targets_test`).
+    return SizedBox(
+      height: 48,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.xs),
+                  // Kayan seçim hapı.
+                  child: AnimatedAlign(
+                    duration: duration,
+                    curve: AppMotion.standard,
+                    alignment: Alignment(-1 + 2 * view.index / (n - 1), 0),
+                    child: FractionallySizedBox(
+                      widthFactor: 1 / n,
+                      heightFactor: 1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: scheme.primary,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+            child: Row(
+              children: [
+                for (final v in views)
+                  Expanded(
+                    child: Semantics(
+                      button: true,
+                      selected: v == view,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => onPick(v),
+                        child: Center(
+                          child: AnimatedDefaultTextStyle(
+                            duration: duration,
+                            style: text.label.copyWith(
+                              color: v == view
+                                  ? scheme.onPrimary
+                                  : scheme.onSurfaceVariant,
+                              fontWeight: v == view
+                                  ? AppWeight.strong
+                                  : AppWeight.medium,
+                            ),
+                            child: Text(
+                              labels[v]!,
+                              key: ValueKey('calendar-view-${v.name}'),
+                              maxLines: 1,
+                              overflow: TextOverflow.fade,
+                              softWrap: false,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// BUGÜN hapı: görünen dönem bugünü içeriyorsa sakin (günün sayısı + "Bugün"),
+/// içermiyorsa dolgulu vurgu + bugünün yönünü gösteren ok — "bugünde
+/// olmadığımı anlamıyorum" (kullanıcı 2026-11-22).
+class _TodayPill extends StatelessWidget {
+  const _TodayPill({
+    super.key,
+    required this.label,
+    required this.day,
+    required this.away,
+    required this.onTap,
+  });
+
+  final String label;
+  final int day;
+
+  /// 0 = bugündesin, 1 = ileridesin (bugün geride), -1 = geridesin.
+  final int away;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = AppText.of(Theme.of(context));
+    final off = away != 0;
+    // `tertiary` yalnız AI kimliğinde (`color_roles_test`).
+    final fg = off ? scheme.onSecondaryContainer : scheme.primary;
+    final style = text.label.copyWith(color: fg, fontWeight: AppWeight.strong);
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: Material(
+        color: off ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            height: 40,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: AppSpace.xs,
+                children: [
+                  if (away > 0)
+                    Icon(Icons.arrow_back_rounded, size: AppIconSize.xs, color: fg)
+                  else if (away == 0)
+                    // Günün sayısı küçük bir rozet içinde (takvim yaprağı).
+                    Container(
+                      width: 22,
+                      height: 22,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$day',
+                        style: text.badge.copyWith(
+                          color: scheme.onPrimary,
+                          fontWeight: AppWeight.strong,
+                        ),
+                      ),
+                    ),
+                  Text(label, style: style),
+                  if (away < 0)
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      size: AppIconSize.xs,
+                      color: fg,
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

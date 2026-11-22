@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Takvim Bugün hapı + hızlı ekle takvim komutu + metin kasması (22 Kasım öğleden sonra, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) Takvimde Aralık'a geç → görünüm satırının sağındaki **Bugün** hapı renkleniyor ve ← ok gösteriyor mu; dokununca Kasım'a dönüyor mu. (2) Yıl/Ay/Hafta/Ajanda seçicisi kayan hapla güzel görünüyor mu. (3) Gün panelinde Etkinlik/Görev/Not/Bağla tek satır mı. (4) Hızlı ekle → "dişçiyi ara yarına ekle" (sesle de) → önizlemede 📅 yarın, Ekle → yeni not yarına bağlı mı; "1 Ocak'a ekle", "bir hafta sonrasına ekle", "cumaya ekle" de. (5) Görsel/PDF üstüne Açık metin ekle → yazarken ve basılı tutup sürüklerken kasma kalktı mı (kalem çizgili görselde de dene).
+  Yanlışsa: madde numarasını yaz.
+
 - [ ] **Takvim + sabit görsel + kalem turu (22 Kasım, ekran görüntüsü listesi, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Gün panelinde **Bu güne not** → başlık boş mu; hiçbir şey yazmadan geri → not kalmıyor mu. (2) Hafta görünümünde yalnız bağlı notlar mı; hafta sonu karoları renkli mi; karoya çift dokunuş gün sayfası mı. (3) Ay görünümünde geri: panel kapanmadan bugüne döner, sonra ana ekran mı; tam sayfa yalnız panel düğmesiyle mi. (4) Gün sayfası → **Bu güne not** → geri → geri → geri ana ekrana varıyor mu; 🏠 düğmesi çalışıyor mu. (5) Gün sayfasında boş saate dokun → Not/Etkinlik seçimi; not o saatle bağlanıyor mu. (6) Kasım açıkken iki parmakla yakınlaş → bu hafta mı. (7) Takvim **+** → tarih levhası; Ayarlar'daki "Takvimde + ne eklesin". (8) Ana ekran şeridinde güne çift dokun → o hafta. (9) Sabit görselde iki parmakla uzaklaş → bölme küçülüyor mu; görsel kaydırma akıcı mı. (10) Görsel düzenlemede tepsi görseli sıkıştırmıyor, parmak yaklaşınca gizleniyor mu. (11) Silgi seç → kalemi kapat/aç → kalem yazıyor mu; silgi açıkken "Silgi açık" hapı. (12) Görsele metin yaz → tek kez mi görünüyor; balonları gizle hepsini gizliyor mu. (13) Alt paneldeki ⋯'ye basılı tut → düzenleme açılıyor mu.
   Yanlışsa: madde numarasını yaz.
