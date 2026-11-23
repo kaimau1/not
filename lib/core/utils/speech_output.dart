@@ -278,10 +278,17 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     return available.first;
   }
 
-  Future<double> rate() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_rateKey) ?? _defaultRate;
-  }
+  static double readRateSync(SharedPreferences prefs) =>
+      prefs.getDouble(_rateKey) ?? _defaultRate;
+
+  static double readForeignRateSync(SharedPreferences prefs) =>
+      prefs.getDouble(_foreignRateKey) ?? _defaultForeignRate;
+
+  static double readPitchSync(SharedPreferences prefs) =>
+      prefs.getDouble(_pitchKey) ?? _defaultPitch;
+
+  Future<double> rate() async =>
+      readRateSync(await SharedPreferences.getInstance());
 
   /// 0.0–1.0 arası; 0.5 cihazın normal hızı.
   Future<void> setRate(double value) async {
@@ -291,10 +298,8 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
   }
 
   /// Yabancı dillerin (Türkçe dışı) okuma hızı.
-  Future<double> foreignRate() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_foreignRateKey) ?? _defaultForeignRate;
-  }
+  Future<double> foreignRate() async =>
+      readForeignRateSync(await SharedPreferences.getInstance());
 
   Future<void> setForeignRate(double value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -302,10 +307,8 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
   }
 
   /// Sesin tonu (0.5–2.0; 1.0 = sesin kendi tonu).
-  Future<double> pitch() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_pitchKey) ?? _defaultPitch;
-  }
+  Future<double> pitch() async =>
+      readPitchSync(await SharedPreferences.getInstance());
 
   Future<void> setPitch(double value) async {
     final prefs = await SharedPreferences.getInstance();

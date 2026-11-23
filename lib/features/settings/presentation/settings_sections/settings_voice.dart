@@ -27,20 +27,19 @@ class _SpeechRateSlider extends ConsumerStatefulWidget {
 }
 
 class _SpeechRateSliderState extends ConsumerState<_SpeechRateSlider> {
-  double? _rate;
+  late double _rate;
 
   @override
   void initState() {
     super.initState();
-    ref.read(speechOutputProvider.notifier).rate().then((value) {
-      if (mounted) setState(() => _rate = value);
-    });
+    _rate = SpeechOutputController.readRateSync(
+      ref.read(sharedPreferencesProvider),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final rate = _rate;
-    if (rate == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -79,20 +78,19 @@ class _ForeignSpeechRateSlider extends ConsumerStatefulWidget {
 
 class _ForeignSpeechRateSliderState
     extends ConsumerState<_ForeignSpeechRateSlider> {
-  double? _rate;
+  late double _rate;
 
   @override
   void initState() {
     super.initState();
-    ref.read(speechOutputProvider.notifier).foreignRate().then((value) {
-      if (mounted) setState(() => _rate = value);
-    });
+    _rate = SpeechOutputController.readForeignRateSync(
+      ref.read(sharedPreferencesProvider),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final rate = _rate;
-    if (rate == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -143,20 +141,19 @@ class _SpeechPitchSlider extends ConsumerStatefulWidget {
 }
 
 class _SpeechPitchSliderState extends ConsumerState<_SpeechPitchSlider> {
-  double? _pitch;
+  late double _pitch;
 
   @override
   void initState() {
     super.initState();
-    ref.read(speechOutputProvider.notifier).pitch().then((value) {
-      if (mounted) setState(() => _pitch = value);
-    });
+    _pitch = SpeechOutputController.readPitchSync(
+      ref.read(sharedPreferencesProvider),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final pitch = _pitch;
-    if (pitch == null) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
