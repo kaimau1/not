@@ -174,3 +174,9 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 
 ## Ana ekran aracı sınıf adı (KT-21, 2026-11-19)
 - `home_widget` `androidName`'i UYGULAMA KİMLİĞİYLE birleştirir (`<applicationId>.<ad>`); sınıflar hep `dev.kaimau.notlar` paketinde. Kimliği farklı derlemede (ölçüm `.olcum`, Play `NOTLAR_PLAY_APP_ID`) araçlar hiç güncellenmiyordu. Tek yol `updateHomeWidget(ad)` (`qualifiedAndroidName`); bekçi `test/home_widget_class_test.dart` (lib'de `updateWidget(androidName` yasak). "Widget güncellenemedi" / "FCM başlatılamadı" yalnız `kDebugMode`'da yazılır. Play derlemesinde araçlar cihazda doğrulanmadı.
+
+## 2026-11-23 — TUZAKLAR
+- **Flutter SDK silinmişti:** `C:\srclutter` yoktu; 3.47.9 resmî zip'ten (`storage.googleapis.com/.../windows/flutter_windows_3.47.9-stable.zip`, ~1,85 GB) aynı yere yeniden kuruldu. "command not found" görürsen önce klasöre bak.
+- **`test/p91_encrypted_backup_test.dart` Windows'ta kırmızı** (geçici klasör silinirken errno 32, dosya kilidi) — main'de de; kodla ilgisi yok, CI (Linux) etkilenmez.
+- **Paralel alt ajanlar tam takımı aynı anda koşunca** yük yüzünden zamanlamalı testler (`ai_p89_test` vb.) düşer ve günlükler karışır: tam takımı birleştirme dalında TEK başına koş.
+- **Telefon kablosuz adb:** ilk kez `adb pair <ip>:<eşleştirme portu>` (kodu kullanıcı girer), sonra `adb connect <ip>:<port>` (`adb mdns services` portları gösterir).

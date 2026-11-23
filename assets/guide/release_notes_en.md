@@ -2,6 +2,9 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 23 November 2026 {#2026-11-23}
+- **Smaller app:** 5 core fonts (Inter Tight, Roboto, Lora, Roboto Mono, Caveat) ship with the app; other fonts download once the first time you pick them (cloud icon) and then work offline. Until then, or when offline, the default font is shown.
+
 ## 22 November 2026 {#2026-11-22}
 - **Quick add picks the target note faster:** when you say "add this to my shopping note", Google's fast decision model (Gemini Decisions) now picks the note; if it isn't sure it still asks you, and if it doesn't answer the old method takes over.
 - **AI titles get a check:** if an AI-suggested title doesn't fit the note, it's caught quickly and a new one is suggested.

@@ -2,6 +2,9 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 23 Kasım 2026 {#2026-11-23}
+- **Uygulama daha küçük:** 5 temel yazı tipi (Inter Tight, Roboto, Lora, Roboto Mono, Caveat) uygulamayla geliyor; diğer yazı tipleri ilk seçtiğinde bir kez iniyor (bulut simgesi), sonra internetsiz de çalışıyor. İnene kadar ya da çevrimdışıyken varsayılan yazı tipi görünür.
+
 ## 22 Kasım 2026 {#2026-11-22}
 - **Hızlı ekle hedef notu daha hızlı seçiliyor:** "şunu alışveriş notuna ekle" dediğinde hangi nota gideceğine artık Google'ın hızlı karar modeli (Gemini Decisions) karar veriyor; emin değilse yine sana soruyor, yanıt gelmezse eski yöntem devreye giriyor.
 - **AI başlıkları kontrol ediliyor:** AI'ın önerdiği başlık notla uyuşmuyorsa hızlıca fark edilip yenisi öneriliyor.
