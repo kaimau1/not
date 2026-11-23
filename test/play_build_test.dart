@@ -139,6 +139,45 @@ void main() {
     }
   });
 
+  // PL1 ONNX: Play'de eklenti pubspec_overrides.yaml'daki kuklayla değişir
+  // (`.so` dışlaması açılışta çökerdi). Kukla eklenti OLMAMALI (flutter.plugin
+  // yok) ve Antalia'nın kullandığı yüzü taşımalı; kişisel derleme override'sız.
+  test('Play ONNX kuklası eklenti değil, Antalia yüzü tam', () {
+    final stub = File('tool/play_stub/flutter_onnxruntime/pubspec.yaml')
+        .readAsStringSync();
+    expect(stub, contains('name: flutter_onnxruntime'));
+    expect(stub, isNot(contains('plugin:')));
+    final api = File(
+      'tool/play_stub/flutter_onnxruntime/lib/flutter_onnxruntime.dart',
+    ).readAsStringSync();
+    for (final s in [
+      'class OnnxRuntime',
+      'createSession(',
+      'class OrtSessionOptions',
+      'intraOpNumThreads',
+      'class OrtSession',
+      'run(Map<String, OrtValue>',
+      'class OrtValue',
+      'fromList(',
+      'asFlattenedList()',
+      'dispose()',
+      'get shape',
+    ]) {
+      expect(api, contains(s), reason: s);
+    }
+    final script = File('tool/play_stub/play_hazirla.sh').readAsStringSync();
+    expect(script, contains('tool/play_stub/flutter_onnxruntime'));
+    expect(File('.gitignore').readAsStringSync(), contains('pubspec_overrides.yaml'));
+    expect(
+      File('.github/workflows/build.yml').readAsStringSync(),
+      contains('play_hazirla.sh'),
+    );
+    // Kişisel/genel derlemede override dosyası yok (depoya girmez).
+    if (!PlayBuild.enabled) {
+      expect(File('pubspec_overrides.yaml').existsSync(), isFalse);
+    }
+  });
+
   test('Play derlemesi kişisel Firebase projesine bağlanmaz (PL13)', () {
     if (PlayBuild.enabled) {
       expect(DefaultFirebaseOptions.play.projectId, isNot('notlar-kaimau'));

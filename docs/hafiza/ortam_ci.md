@@ -154,7 +154,9 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   `src/play/AndroidManifest.xml` konum izin/alıcılarını siler, Dart `DefaultFirebaseOptions.play` ←
   `env_play.json`. CI `play_hazir`/`play` yalnız elle + PLAY_* Secrets varsa; deploy'da Play kural
   yayını Secrets yoksa atlanır. **ONNX `.so` dışlanamaz**: eklenti `onAttachedToEngine`'de
-  `OrtEnvironment.getEnvironment()` → açılışta çöker (yanlış yol, yapma). Ayrıntı `docs/play_hazirlik.md`.
+  `OrtEnvironment.getEnvironment()` → açılışta çöker (yanlış yol, yapma). **Doğru yol (2026-11-23):** Play'de eklenti hiç
+  kayıtlı olmasın: `tool/play_stub/play_hazirla.sh` → `pubspec_overrides.yaml` (gitignore) `flutter_onnxruntime`'ı
+  `tool/play_stub/flutter_onnxruntime` kuklasına (eklenti değil, aynı Dart yüzü) yönlendirir; CI `play` işi bağlar. Ayrıntı `docs/play_hazirlik.md`.
 - **Geri bildirim (P69 PL15, 2026-11-18):** Ayarlar → Hesap → Hakkında "Geri bildirim gönder" = `mailto:`
   (`lib/core/feedback_mail.dart`; boşluk `%20` elle, `Uri(queryParameters:)` `+` yapar). Gövde YALNIZ sürüm/derleme/
   platform/OS (+ Play işareti); kişisel veri eklenmez (`test/feedback_mail_test.dart`). Destek adresi tek sabit
