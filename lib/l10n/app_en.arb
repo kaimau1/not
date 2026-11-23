@@ -2011,7 +2011,7 @@
   "guestReminderBody": "You are using the app without an account: your notes live only on this device, and built-in AI and sharing are off. If app or browser data is cleared or you change devices they cannot be recovered. Link your Google account — your notes stay as they are.",
   "guestReminderLater": "Later",
   "driveWebConnectTitle": "This attachment is in your Google Drive",
-  "driveWebConnectBody": "Files added on your phone are stored in Drive. To view them in the browser, allow access to Drive with your Google account (valid for this session).",
+  "driveWebConnectBody": "Your attachments are stored in the “Notlar” folder on your Google Drive. Connect Google Drive to download, cache offline, and upload attachments from the browser.",
   "driveWebConnectButton": "Connect Drive",
   "lockPatternSemantics": "Lock pattern: connect the dots with your finger",
   "lockDrawPattern": "Draw your pattern",
@@ -3475,5 +3475,11 @@
   "@webDriveStatusSyncing": {"placeholders": {"count": {"type": "int"}}},
   "webDriveStatusAttention": "{count} pending",
   "@webDriveStatusAttention": {"placeholders": {"count": {"type": "int"}}},
-  "webSyncCloudReady": "Cloud sync active"
+  "webSyncCloudReady": "Cloud sync active",
+  "webCacheTitle": "Browser attachment cache",
+  "webCacheInfo": "{count} files · {size} (ready offline)",
+  "@webCacheInfo": {"placeholders": {"count": {"type": "int"}, "size": {"type": "String"}}},
+  "webCacheEmpty": "No cached attachments yet",
+  "webCacheClear": "Clear",
+  "webCacheCleared": "Browser attachment cache cleared"
 }

@@ -27,6 +27,7 @@ import 'core/utils/hard_keyboard.dart';
 import 'core/utils/image_cache_budget.dart';
 import 'core/utils/local_file.dart';
 import 'core/utils/note_fonts.dart';
+import 'core/utils/web_attachment_cache.dart';
 import 'core/third_party_licenses.dart';
 import 'core/utils/prefs_footprint.dart';
 import 'core/widgets/keyboard_snap.dart';
@@ -168,7 +169,9 @@ Future<void> main() async {
   // Ek dosyalarının kök klasörü: yerel yol artık Firestore'dan okunmuyor,
   // (noteId, ekId, dosyaAdı)ndan türetiliyor — taban BURADA bir kez çözülür
   // (birkaç ms; ilk not ayrıştırılmadan hazır olmalı).
-  if (!kIsWeb) {
+  if (kIsWeb) {
+    unawaited(webAttachmentCache.init());
+  } else {
     try {
       appSupportPath = (await getApplicationSupportDirectory()).path;
       unawaited(ErrorLog.attach(appSupportPath!));

@@ -5504,7 +5504,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get driveWebConnectBody =>
-      'Telefonundan eklenen dosyalar Drive’da saklanıyor. Tarayıcıda görmek için Google hesabınla Drive’a erişim izni ver (bu oturum boyunca geçerli).';
+      'Eklerin Google Drive’ındaki “Notlar” klasöründe saklanıyor. Tarayıcıda indirip çevrimdışı önbelleğe almak ve yeni ek yüklemek için Google Drive’a bağlan.';
 
   @override
   String get driveWebConnectButton => 'Drive’a bağlan';
@@ -9683,4 +9683,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get webSyncCloudReady => 'Bulut senkronu açık';
+
+  @override
+  String get webCacheTitle => 'Tarayıcı ek önbelleği';
+
+  @override
+  String webCacheInfo(int count, String size) {
+    return '$count dosya · $size (çevrimdışı hazır)';
+  }
+
+  @override
+  String get webCacheEmpty => 'Önbellekte indirilen ek yok';
+
+  @override
+  String get webCacheClear => 'Temizle';
+
+  @override
+  String get webCacheCleared => 'Tarayıcı ek önbelleği temizlendi';
 }

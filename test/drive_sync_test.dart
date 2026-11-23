@@ -36,7 +36,7 @@ class _FakeAuth implements DriveAuth {
 
 void main() {
   group('kip ve hedef', () {
-    test('Google hesabı → Drive, misafir → yalnız metin, web → Storage', () {
+    test('Google hesabı → Drive (Android + web), misafir → yalnız metin', () {
       expect(
         attachmentSyncModeFor(web: false, googleUser: true),
         AttachmentSyncMode.drive,
@@ -47,7 +47,11 @@ void main() {
       );
       expect(
         attachmentSyncModeFor(web: true, googleUser: true),
-        AttachmentSyncMode.storage,
+        AttachmentSyncMode.drive,
+      );
+      expect(
+        attachmentSyncModeFor(web: true, googleUser: false),
+        AttachmentSyncMode.textOnly,
       );
     });
 

@@ -5523,7 +5523,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveWebConnectBody =>
-      'Files added on your phone are stored in Drive. To view them in the browser, allow access to Drive with your Google account (valid for this session).';
+      'Your attachments are stored in the “Notlar” folder on your Google Drive. Connect Google Drive to download, cache offline, and upload attachments from the browser.';
 
   @override
   String get driveWebConnectButton => 'Connect Drive';
@@ -9701,4 +9701,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webSyncCloudReady => 'Cloud sync active';
+
+  @override
+  String get webCacheTitle => 'Browser attachment cache';
+
+  @override
+  String webCacheInfo(int count, String size) {
+    return '$count files · $size (ready offline)';
+  }
+
+  @override
+  String get webCacheEmpty => 'No cached attachments yet';
+
+  @override
+  String get webCacheClear => 'Clear';
+
+  @override
+  String get webCacheCleared => 'Browser attachment cache cleared';
 }

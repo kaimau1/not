@@ -9,6 +9,7 @@ import '../../../core/error_log.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/web_attachment_cache.dart';
 import '../../../core/utils/web_blob.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../../app/theme/app_design.dart' show AppTone;
@@ -180,22 +181,23 @@ Future<bool> fetchAttachmentNow(
   return localFileExists(attachment.localPath);
 }
 
-/// Web'de Drive'dan indirilmiş eklerin `blob:` adresleri (sekme boyunca).
-/// Değişince açık [WebDriveGate]'ler yeniden bakar.
-final _webDriveUrls = ValueNotifier<Map<String, String>>(const {});
-
-void _rememberWebDriveUrl(String driveId, String url) =>
-    _webDriveUrls.value = {..._webDriveUrls.value, driveId: url};
-
-/// Bu sekmede Drive'dan inmiş ekin blob adresli kopyası; inmediyse aynı ek.
+/// Bu sekmede Drive'dan veya yerel tarayıcı önbelleğinden çözülmüş ekin blob
+/// adresli kopyası; yoksa aynı ek.
 Attachment webDriveResolved(Attachment attachment) {
-  final url = _webDriveUrls.value[attachment.driveId];
+  final url =
+      webDriveBlobUrls.value[attachment.driveId] ??
+      webLocalBlobUrls.value[attachment.id];
   return url == null ? attachment : attachment.copyWith(downloadUrl: url);
 }
 
-/// Web'de ekin içeriği Drive'da mı (dosya yok, Storage adresi de yok).
+/// Web'de ek içeriği bulutta değil, Drive'da ya da bu tarayıcının yerel
+/// önbelleğinde mi (Storage adresi yok).
 bool _waitsWebDrive(Attachment a) =>
-    kIsWeb && a.isInDrive && !a.isUploaded;
+    kIsWeb &&
+    !a.isUploaded &&
+    !a.skipsUpload &&
+    !a.isWebVideo &&
+    (a.isInDrive || webLocalCacheContains(a.id));
 
 /// **WEB: DRIVE'DAKİ EKİ NOTUN İÇİNDE GÖSTER** (kullanıcı bulgusu 2026-11-02:
 /// "web'de ekler gelmiyor"). KÖK NEDEN: Android'de Google hesabının ekleri
@@ -231,7 +233,25 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
   static int _failedAtRevision = 0;
 
   Future<void> _fetch() async {
-    final id = widget.attachment.driveId;
+    final a = widget.attachment;
+    if (webLocalCacheContains(a.id)) {
+      if (webLocalBlobUrls.value.containsKey(a.id)) return;
+      if (!_busy.add(a.id)) return;
+      try {
+        final local = await webAttachmentCache.get(webLocalCacheKey(a.id));
+        if (local != null) {
+          rememberWebLocalBlobUrl(
+            a.id,
+            createBlobUrl(local.bytes, local.mimeType),
+          );
+        }
+      } finally {
+        _busy.remove(a.id);
+      }
+      return;
+    }
+    final id = a.driveId;
+    if (id.isEmpty) return;
     // Yeniden bağlanınca (yeni jeton) eskiden düşenler YENİDEN denenir
     // (kullanıcı bulgusu 2026-11-03: "Drive ekleri webe hâlâ gelmiyor" —
     // ilk denemede düşen ek sayfa yenilenene dek bir daha istenmiyordu).
@@ -239,17 +259,28 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
       _failed.clear();
       _failedAtRevision = webDriveTokenRevision.value;
     }
-    if (_busy.contains(id) || _failed.contains(id)) return;
-    final store = ref.read(driveStoreProvider);
-    if (store == null || await ref.read(driveAuthProvider).accessToken() == null) {
-      return;
-    }
+    if (_busy.contains(id)) return;
     if (!_busy.add(id)) return;
     try {
+      final cached = await webAttachmentCache.get(webDriveCacheKey(id));
+      if (cached != null) {
+        rememberWebDriveBlobUrl(
+          id,
+          createBlobUrl(cached.bytes, a.mimeType),
+        );
+        return;
+      }
+      if (_failed.contains(id)) return;
+      final store = ref.read(driveStoreProvider);
+      if (store == null ||
+          await ref.read(driveAuthProvider).accessToken() == null) {
+        return;
+      }
       final bytes = await store.downloadBytes(id);
-      _rememberWebDriveUrl(
+      await webAttachmentCache.put(webDriveCacheKey(id), bytes, a.mimeType);
+      rememberWebDriveBlobUrl(
         id,
-        createBlobUrl(bytes, widget.attachment.mimeType),
+        createBlobUrl(bytes, a.mimeType),
       );
     } catch (e) {
       debugPrint('Drive eki inmedi ($id): $e');
@@ -270,11 +301,19 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
   Widget build(BuildContext context) {
     final a = widget.attachment;
     if (!_waitsWebDrive(a)) return widget.builder(context, a);
-    // Jeton gelince (şeritteki "Göster" ya da başka kutu) bu kutu da iner.
+    // Jeton gelince (şeritteki "Göster" ya da başka kutu) veya önbellek
+    // dolunca bu kutu da kendiliğinden güncellenir.
     return ListenableBuilder(
-      listenable: Listenable.merge([_webDriveUrls, webDriveTokenRevision]),
+      listenable: Listenable.merge([
+        webDriveBlobUrls,
+        webLocalBlobUrls,
+        webDriveTokenRevision,
+        webAttachmentCache.revision,
+      ]),
       builder: (context, _) {
-        final url = _webDriveUrls.value[a.driveId];
+        final url =
+            (a.isInDrive ? webDriveBlobUrls.value[a.driveId] : null) ??
+            webLocalBlobUrls.value[a.id];
         if (url != null) {
           return widget.builder(context, a.copyWith(downloadUrl: url));
         }
@@ -290,7 +329,7 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
           child: InkWell(
             key: ValueKey('web-drive-${a.id}'),
             onTap: () {
-              _failed.remove(a.driveId);
+              if (a.isInDrive) _failed.remove(a.driveId);
               unawaited(resolveWebDriveAttachment(context, ref, a));
             },
             child: LayoutBuilder(
@@ -327,13 +366,15 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
 }
 
 /// Web'de bu ekin içeriğine HİÇBİR yoldan ulaşılamıyor mu: Storage adresi
-/// yok, Drive kimliği yok — dosya ekleyen cihazdan (telefon) henüz çıkmamış.
+/// yok, Drive kimliği yok, bu tarayıcıda da yok — dosya ekleyen cihazdan
+/// henüz çıkmamış.
 bool webAttachmentStuckOnDevice(Attachment a) =>
     kIsWeb &&
     !a.skipsUpload &&
     !a.isWebVideo &&
     !a.isUploaded &&
-    !a.isInDrive;
+    !a.isInDrive &&
+    !webLocalCacheContains(a.id);
 
 /// **WEB: NOTUN EKLERİ İÇİN TEK ŞERİT** (kullanıcı bulgusu 2026-11-02: "ekler
 /// hâlâ webte gelmiyor"). İki ayrı durum açıkça söylenir:
@@ -390,12 +431,20 @@ class _WebAttachmentsBannerState extends ConsumerState<WebAttachmentsBanner> {
     if (!kIsWeb) return const SizedBox.shrink();
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    return ValueListenableBuilder(
-      valueListenable: _webDriveUrls,
-      builder: (context, urls, _) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        webDriveBlobUrls,
+        webLocalBlobUrls,
+        webAttachmentCache.revision,
+      ]),
+      builder: (context, _) {
+        final driveUrls = webDriveBlobUrls.value;
         final inDrive = [
           for (final a in widget.attachments)
-            if (_waitsWebDrive(a) && !urls.containsKey(a.driveId)) a,
+            if (a.isInDrive &&
+                _waitsWebDrive(a) &&
+                !driveUrls.containsKey(a.driveId))
+              a,
         ];
         final stuck = widget.attachments
             .where(webAttachmentStuckOnDevice)
@@ -444,13 +493,40 @@ Future<Attachment?> resolveWebDriveAttachment(
   WidgetRef ref,
   Attachment attachment,
 ) async {
-  final cached = _webDriveUrls.value[attachment.driveId];
-  if (cached != null) return attachment.copyWith(downloadUrl: cached);
+  final localUrl = webLocalBlobUrls.value[attachment.id];
+  if (localUrl != null) return attachment.copyWith(downloadUrl: localUrl);
+  if (webLocalCacheContains(attachment.id)) {
+    final local = await webAttachmentCache.get(webLocalCacheKey(attachment.id));
+    if (local != null) {
+      final url = createBlobUrl(local.bytes, local.mimeType);
+      rememberWebLocalBlobUrl(attachment.id, url);
+      return attachment.copyWith(downloadUrl: url);
+    }
+  }
+  final driveUrl = attachment.isInDrive
+      ? webDriveBlobUrls.value[attachment.driveId]
+      : null;
+  if (driveUrl != null) return attachment.copyWith(downloadUrl: driveUrl);
+  if (attachment.isInDrive) {
+    final idb = await webAttachmentCache.get(
+      webDriveCacheKey(attachment.driveId),
+    );
+    if (idb != null) {
+      final url = createBlobUrl(idb.bytes, attachment.mimeType);
+      rememberWebDriveBlobUrl(attachment.driveId, url);
+      return attachment.copyWith(downloadUrl: url);
+    }
+  }
+  if (!context.mounted) return null;
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   void say(String text) => messenger
     ..hideCurrentSnackBar()
     ..showMessage(text);
+  if (!attachment.isInDrive) {
+    say(l10n.driveNeededForFile);
+    return null;
+  }
   final store = ref.read(driveStoreProvider);
   if (store == null) {
     say(l10n.driveNeededForFile);
@@ -493,12 +569,20 @@ Future<Attachment?> resolveWebDriveAttachment(
       ),
     );
     if (ok != true) return null;
+    if (context.mounted) {
+      ref.read(driveConnectedProvider.notifier).set(true);
+    }
   }
   say(l10n.driveDownloading);
   try {
     final bytes = await store.downloadBytes(attachment.driveId);
+    await webAttachmentCache.put(
+      webDriveCacheKey(attachment.driveId),
+      bytes,
+      attachment.mimeType,
+    );
     final url = createBlobUrl(bytes, attachment.mimeType);
-    _rememberWebDriveUrl(attachment.driveId, url);
+    rememberWebDriveBlobUrl(attachment.driveId, url);
     messenger.hideMessage();
     return attachment.copyWith(downloadUrl: url);
   } catch (e) {
@@ -525,68 +609,149 @@ class _AttachmentSyncTileState extends ConsumerState<AttachmentSyncTile> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final mode = ref.watch(attachmentSyncModeProvider);
+    final connected = ref.watch(driveConnectedProvider);
     final store = ref.watch(driveStoreProvider);
+    late final Widget driveTile;
     switch (mode) {
       case AttachmentSyncMode.storage:
-        return ListTile(
+        driveTile = ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.cloud_outlined),
           title: Text(l10n.attachmentSyncTitle),
           subtitle: Text(l10n.storageModeInfo),
         );
       case AttachmentSyncMode.textOnly:
-        return ListTile(
+        driveTile = ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.text_snippet_outlined),
           title: Text(l10n.textOnlyTitle),
           subtitle: Text(l10n.textOnlyInfo),
         );
       case AttachmentSyncMode.drive:
-        break;
-    }
-    if (store == null) {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: const Icon(Icons.add_to_drive_outlined),
-        title: Text(l10n.driveConnectTitle),
-        subtitle: Text(l10n.driveConnectInfo),
-        isThreeLine: true,
-        trailing: FilledButton.tonal(
-          onPressed: _busy
-              ? null
-              : () async {
-                  setState(() => _busy = true);
-                  await connectDrive(context, ref);
-                  if (mounted) setState(() => _busy = false);
-                },
-          child: Text(l10n.driveConnect),
-        ),
-      );
-    }
-    _quota ??= store.quota();
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(Icons.add_to_drive, color: theme.colorScheme.primary),
-      title: Text(l10n.driveSectionTitle),
-      subtitle: FutureBuilder<({int used, int? limit})?>(
-        future: _quota,
-        builder: (context, snap) {
-          final q = snap.data;
-          return Text(
-            q == null
-                ? l10n.driveConnectedInfo
-                : '${l10n.driveConnectedInfo}\n${l10n.driveUsage(formatBytes(q.used), q.limit == null ? '∞' : formatBytes(q.limit!))}',
+        if (!connected || store == null) {
+          _quota = null;
+          driveTile = ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.add_to_drive_outlined),
+            title: Text(l10n.driveConnectTitle),
+            subtitle: Text(l10n.driveConnectInfo),
+            isThreeLine: true,
+            trailing: FilledButton.tonal(
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      setState(() => _busy = true);
+                      await connectDrive(context, ref);
+                      if (mounted) setState(() => _busy = false);
+                    },
+              child: Text(l10n.driveConnect),
+            ),
           );
-        },
-      ),
-      isThreeLine: true,
-      trailing: TextButton(
-        onPressed: () async {
-          await disconnectDrive(context, ref);
-          if (mounted) setState(() => _quota = null);
-        },
-        child: Text(l10n.driveDisconnect),
-      ),
+        } else {
+          _quota ??= store.quota();
+          driveTile = ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.add_to_drive, color: theme.colorScheme.primary),
+            title: Text(l10n.driveSectionTitle),
+            subtitle: FutureBuilder<({int used, int? limit})?>(
+              future: _quota,
+              builder: (context, snap) {
+                final q = snap.data;
+                return Text(
+                  q == null
+                      ? l10n.driveConnectedInfo
+                      : '${l10n.driveConnectedInfo}\n${l10n.driveUsage(formatBytes(q.used), q.limit == null ? '∞' : formatBytes(q.limit!))}',
+                );
+              },
+            ),
+            isThreeLine: true,
+            trailing: TextButton(
+              onPressed: () async {
+                await disconnectDrive(context, ref);
+                if (mounted) setState(() => _quota = null);
+              },
+              child: Text(l10n.driveDisconnect),
+            ),
+          );
+        }
+    }
+    if (!kIsWeb) return driveTile;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [driveTile, const _WebCacheTile()],
+    );
+  }
+}
+
+class _WebCacheTile extends StatefulWidget {
+  const _WebCacheTile();
+
+  @override
+  State<_WebCacheTile> createState() => _WebCacheTileState();
+}
+
+class _WebCacheTileState extends State<_WebCacheTile> {
+  late Future<WebCacheStats> _statsFuture;
+  bool _clearing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _statsFuture = webAttachmentCache.stats();
+    webAttachmentCache.revision.addListener(_onRevision);
+  }
+
+  @override
+  void dispose() {
+    webAttachmentCache.revision.removeListener(_onRevision);
+    super.dispose();
+  }
+
+  void _onRevision() {
+    if (!mounted) return;
+    setState(() => _statsFuture = webAttachmentCache.stats());
+  }
+
+  Future<void> _clear() async {
+    setState(() => _clearing = true);
+    await webAttachmentCache.clearDriveCache();
+    if (!mounted) return;
+    setState(() {
+      _clearing = false;
+      _statsFuture = webAttachmentCache.stats();
+    });
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(context.l10n.webCacheCleared);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FutureBuilder<WebCacheStats>(
+      future: _statsFuture,
+      builder: (context, snap) {
+        final s = snap.data;
+        final hasDriveCache = s != null && s.driveCount > 0;
+        return ListTile(
+          key: const ValueKey('web-cache-tile'),
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.offline_pin_outlined),
+          title: Text(l10n.webCacheTitle),
+          subtitle: Text(
+            hasDriveCache
+                ? l10n.webCacheInfo(s.driveCount, formatBytes(s.driveBytes))
+                : l10n.webCacheEmpty,
+          ),
+          trailing: hasDriveCache
+              ? TextButton(
+                  key: const ValueKey('web-cache-clear'),
+                  onPressed: _clearing ? null : _clear,
+                  child: Text(l10n.webCacheClear),
+                )
+              : null,
+        );
+      },
     );
   }
 }

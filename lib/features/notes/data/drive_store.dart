@@ -2,14 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'dart:math' as math;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../core/constants.dart';
 import '../../../core/utils/gms.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/web_gis_auth.dart';
 import '../../../core/utils/web_session.dart';
 import '../../auth/data/android_google_auth.dart';
 import '../../auth/data/google_scope_auth.dart';
@@ -44,13 +48,13 @@ const kDriveFolderName = 'Notlar';
 
 /// Ek senkronunun kipi — hesaba ve platforma göre.
 enum AttachmentSyncMode {
-  /// Google hesabı (Android): ekler kullanıcının Google Drive'ına.
+  /// Google hesabı (Android ve Web): ekler kullanıcının Google Drive'ına.
   drive,
 
-  /// Google'sız (misafir) hesap: yalnız METİN senkronlanır, ekler cihazda.
+  /// Google'sız (misafir) hesap: yalnız METİN senkronlanır, ekler cihazda/tarayıcıda.
   textOnly,
 
-  /// Web: dosya sistemi yok, ekler doğrudan Firebase Storage'a (eski yol).
+  /// Paylaşılan notlar veya özel hedefler: Firebase Storage.
   storage,
 }
 
@@ -60,14 +64,12 @@ bool isGoogleUser(User? user) =>
     !user.isAnonymous &&
     user.providerData.any((p) => p.providerId == 'google.com');
 
-/// Saf karar (test edilir).
+/// Saf karar (test edilir). Android ve Web eşdeğerliği: Google hesabı her
+/// platformda Drive kotasını, Google'sız/misafir hesap yalnız-metni kullanır.
 AttachmentSyncMode attachmentSyncModeFor({
   required bool web,
   required bool googleUser,
-}) {
-  if (web) return AttachmentSyncMode.storage;
-  return googleUser ? AttachmentSyncMode.drive : AttachmentSyncMode.textOnly;
-}
+}) => googleUser ? AttachmentSyncMode.drive : AttachmentSyncMode.textOnly;
 
 final attachmentSyncModeProvider = Provider<AttachmentSyncMode>((ref) {
   final user = ref.watch(authStateProvider).value;
@@ -97,13 +99,19 @@ class DriveConnectedNotifier extends Notifier<bool> {
     // bekliyor"): Google hesabının ekleri yalnız Ayarlar'da elle "Bağla"
     // denince yükleniyordu; denmeyen hesapta ekler sessizce cihazda kalıyordu.
     // İzin daha önce verildiyse (giriş, başka kurulum) pencere açmadan bağlan.
-    if (!saved && !kIsWeb && Platform.isAndroid && uid != null) {
-      if (isGoogleUser(user) && _silentTried.add(uid)) {
-        unawaited(() async {
-          final token = await ref.read(driveAuthProvider).accessToken();
-          if (token != null && ref.mounted) set(true);
-        }());
-      }
+    if (uid != null &&
+        isGoogleUser(user) &&
+        (kIsWeb || (!saved && Platform.isAndroid)) &&
+        _silentTried.add(uid)) {
+      unawaited(() async {
+        final token = await ref.read(driveAuthProvider).accessToken();
+        if (!ref.mounted) return;
+        if (token != null) {
+          if (!saved) set(true);
+        } else if (kIsWeb && saved) {
+          state = false;
+        }
+      }());
     }
     return saved;
   }
@@ -226,37 +234,70 @@ class AndroidDriveAuth implements DriveAuth {
   Future<void> disconnect() async {}
 }
 
-/// **WEB: DRIVE'DAKİ EKLERİ OKUMA** (F4.4, 2026-10-19). Windows kalkınca
-/// bilgisayardaki tek yol web oldu; Android'in Drive'a yüklediği ekler
-/// tarayıcıda hiç açılmıyordu (`NoDriveAuth`). Firebase'in Google açılır
-/// penceresi Drive kapsamıyla YENİDEN doğrulanır ve OAuth erişim jetonu
-/// alınır — aynı Cloud projesinin istemcisi olduğu için `appDataFolder`
-/// Android'inkiyle aynı klasördür.
+/// **WEB: DRIVE YETKİSİ + GIS SESSİZ YENİLEME** (F4.4).
 ///
-/// Jeton yalnız BELLEKTE (~1 saat geçerli, yenileme anahtarı yok): sayfa
-/// yenilenince ya da süre dolunca ek açılırken yeniden "Bağla" istenir.
-/// Web Drive'a YAZMAZ — web'in kendi ekleri Storage'a gider (bkz.
-/// [attachmentSyncModeFor]); burası yalnız okuma kapısı.
-class WebDriveAuth implements DriveAuth {
-  WebDriveAuth({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
+/// Aynı Cloud projesinin istemcisi olduğu için `appDataFolder` Android'inkiyle
+/// aynı klasördür. Google Identity Services
+/// (`google.accounts.oauth2.initTokenClient`) üzerinden pencere açmadan
+/// (`prompt: 'none'`) yenileme ve etkileşimli bağlanma desteklenir; GIS
+/// kullanılamıyorsa (engelli betik / istemci kimliği boş) Firebase'in Google
+/// açılır penceresiyle yedek akış çalışır. Jeton kısa ömürlü olarak
+/// `sessionStorage` + bellekte tutulur.
+typedef WebGisRequester =
+    Future<WebGisToken?> Function({
+      required String clientId,
+      required List<String> scopes,
+      String? loginHint,
+      required bool silent,
+    });
 
-  final FirebaseAuth _auth;
+class WebDriveAuth implements DriveAuth {
+  WebDriveAuth({
+    this._auth,
+    String Function()? clientId,
+    WebGisRequester? gisRequester,
+    bool Function()? gisAvailable,
+    this._popupConnect,
+    this._uidProvider,
+    this._emailProvider,
+    DateTime Function()? now,
+  }) : _clientId = clientId ?? (() => AppConstants.serverClientId),
+       _gisRequester = gisRequester ?? requestWebGisToken,
+       _gisAvailable =
+           gisAvailable ??
+           (gisRequester != null ? () => true : () => isWebGisAvailable),
+       _now = now ?? DateTime.now;
+
+  final FirebaseAuth? _auth;
+  final String Function() _clientId;
+  final WebGisRequester _gisRequester;
+  final bool Function() _gisAvailable;
+  final Future<String?> Function()? _popupConnect;
+  final String? Function()? _uidProvider;
+  final String? Function()? _emailProvider;
+  final DateTime Function() _now;
+
   String? _token;
   DateTime? _expiry;
+  Future<String?>? _silentInFlight;
+  DateTime? _lastSilentNullAt;
 
-  /// Jeton SEKMEDE saklanır (kullanıcı bulgusu 2026-11-02: "ekler hâlâ
-  /// webte gelmiyor"): yalnız bellekteyken her yenilemede bütün ekler yeniden
-  /// "Drive'a bağlan" istiyordu. `sessionStorage` sekmeyle ölür, kapsam
-  /// yalnız `drive.appdata`, süre ~55 dk; hesap değişince geçersiz.
   // _v2: kapsam değişti (2026-11-06); eski yalnız-appdata jetonu kullanılmasın.
   static const _sessionKey = 'notlar_drive_token_v2';
+
+  String? get _uid =>
+      _uidProvider != null ? _uidProvider() : (_auth ?? FirebaseAuth.instance).currentUser?.uid;
+
+  String? get _email => _emailProvider != null
+      ? _emailProvider()
+      : (_auth ?? FirebaseAuth.instance).currentUser?.email;
 
   void _restore() {
     if (_token != null) return;
     final raw = sessionRead(_sessionKey);
     if (raw == null) return;
     final parts = raw.split('|');
-    final uid = _auth.currentUser?.uid;
+    final uid = _uid;
     if (parts.length != 3 || uid == null || parts[2] != uid) return;
     final ms = int.tryParse(parts[1]);
     if (ms == null) return;
@@ -264,9 +305,26 @@ class WebDriveAuth implements DriveAuth {
     _expiry = DateTime.fromMillisecondsSinceEpoch(ms);
   }
 
+  void _save(String token, {int expiresInSeconds = 3300}) {
+    final safeSeconds = math.max(60, expiresInSeconds - 120);
+    _token = token;
+    _expiry = _now().add(Duration(seconds: safeSeconds));
+    _lastSilentNullAt = null;
+    final uid = _uid;
+    if (uid != null) {
+      sessionWrite(
+        _sessionKey,
+        '$token|${_expiry!.millisecondsSinceEpoch}|$uid',
+      );
+    }
+    webDriveTokenRevision.value++;
+  }
+
   void _clear() {
     _token = null;
     _expiry = null;
+    _silentInFlight = null;
+    _lastSilentNullAt = null;
     sessionWrite(_sessionKey, null);
   }
 
@@ -274,16 +332,44 @@ class WebDriveAuth implements DriveAuth {
   Future<String?> accessToken() async {
     _restore();
     final expiry = _expiry;
-    if (_token == null || expiry == null || DateTime.now().isAfter(expiry)) {
+    if (_token != null && expiry != null && _now().isBefore(expiry)) {
+      return _token;
+    }
+    final cid = _clientId();
+    if (cid.isEmpty || _uid == null) return null;
+    final lastNull = _lastSilentNullAt;
+    if (lastNull != null &&
+        _now().difference(lastNull) < const Duration(seconds: 60)) {
       return null;
     }
-    return _token;
+    return _silentInFlight ??= _trySilentGis(cid);
   }
 
-  @override
-  Future<bool> connect() async {
-    final user = _auth.currentUser;
-    if (user == null) return false;
+  Future<String?> _trySilentGis(String cid) async {
+    try {
+      final res = await _gisRequester(
+        clientId: cid,
+        scopes: kDriveScopes,
+        loginHint: _email,
+        silent: true,
+      );
+      if (res != null && res.token.isNotEmpty) {
+        _save(res.token, expiresInSeconds: res.expiresIn);
+        return res.token;
+      }
+      _lastSilentNullAt = _now();
+      return null;
+    } catch (_) {
+      _lastSilentNullAt = _now();
+      return null;
+    } finally {
+      _silentInFlight = null;
+    }
+  }
+
+  Future<String?> _defaultPopupConnect() async {
+    final user = (_auth ?? FirebaseAuth.instance).currentUser;
+    if (user == null) return null;
     final provider = GoogleAuthProvider();
     for (final scope in kDriveScopes) {
       provider.addScope(scope);
@@ -292,15 +378,35 @@ class WebDriveAuth implements DriveAuth {
     if (email != null) provider.setCustomParameters({'login_hint': email});
     final result = await user.reauthenticateWithPopup(provider);
     final credential = result.credential;
-    final token = credential is OAuthCredential ? credential.accessToken : null;
-    if (token == null) return false;
-    _token = token;
-    _expiry = DateTime.now().add(const Duration(minutes: 55));
-    sessionWrite(
-      _sessionKey,
-      '$token|${_expiry!.millisecondsSinceEpoch}|${user.uid}',
-    );
-    webDriveTokenRevision.value++;
+    return credential is OAuthCredential ? credential.accessToken : null;
+  }
+
+  @override
+  Future<bool> connect() async {
+    if (_uid == null) return false;
+    _lastSilentNullAt = null;
+    final cid = _clientId();
+    if (cid.isNotEmpty && _gisAvailable()) {
+      try {
+        final gis = await _gisRequester(
+          clientId: cid,
+          scopes: kDriveScopes,
+          loginHint: _email,
+          silent: false,
+        );
+        if (gis != null && gis.token.isNotEmpty) {
+          _save(gis.token, expiresInSeconds: gis.expiresIn);
+          return true;
+        }
+      } catch (_) {
+        // GIS başarısız olduysa Firebase açılır pencere yedeğine geç.
+      }
+    }
+    final popupToken = _popupConnect != null
+        ? await _popupConnect()
+        : await _defaultPopupConnect();
+    if (popupToken == null || popupToken.isEmpty) return false;
+    _save(popupToken);
     return true;
   }
 

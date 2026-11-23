@@ -9881,7 +9881,7 @@ abstract class AppLocalizations {
   /// No description provided for @driveWebConnectBody.
   ///
   /// In tr, this message translates to:
-  /// **'Telefonundan eklenen dosyalar Drive’da saklanıyor. Tarayıcıda görmek için Google hesabınla Drive’a erişim izni ver (bu oturum boyunca geçerli).'**
+  /// **'Eklerin Google Drive’ındaki “Notlar” klasöründe saklanıyor. Tarayıcıda indirip çevrimdışı önbelleğe almak ve yeni ek yüklemek için Google Drive’a bağlan.'**
   String get driveWebConnectBody;
 
   /// No description provided for @driveWebConnectButton.
@@ -17143,6 +17143,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bulut senkronu açık'**
   String get webSyncCloudReady;
+
+  /// No description provided for @webCacheTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarayıcı ek önbelleği'**
+  String get webCacheTitle;
+
+  /// No description provided for @webCacheInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} dosya · {size} (çevrimdışı hazır)'**
+  String webCacheInfo(int count, String size);
+
+  /// No description provided for @webCacheEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önbellekte indirilen ek yok'**
+  String get webCacheEmpty;
+
+  /// No description provided for @webCacheClear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizle'**
+  String get webCacheClear;
+
+  /// No description provided for @webCacheCleared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarayıcı ek önbelleği temizlendi'**
+  String get webCacheCleared;
 }
 
 class _AppLocalizationsDelegate

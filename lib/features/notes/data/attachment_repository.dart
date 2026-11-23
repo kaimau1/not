@@ -14,15 +14,20 @@ import '../../../core/constants.dart';
 import '../../../core/error_log.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/web_attachment_cache.dart';
+import '../../../core/utils/web_blob.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
+import '../../folders/data/folders_repository.dart';
 import '../domain/attachment.dart';
+import '../domain/note.dart';
 import 'attachment_thumb.dart';
 import 'drive_store.dart';
+import 'note_shares_repository.dart';
+import 'notes_repository.dart' show notesStreamProvider, storageUsedBytesProvider;
 import 'pdf/pdf_page_render.dart' show pdfFirstPageThumb;
 import 'media_transcriber.dart' show audioMimeFromName, audioMimeOf;
-import 'notes_repository.dart' show storageUsedBytesProvider;
 
 final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
   final uid = ref.watch(currentUidProvider);
@@ -43,6 +48,21 @@ final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
     uid,
     maxBytes,
     drive: ref.watch(driveStoreProvider),
+    mode: mode,
+    isDriveReady: () => ref.read(driveConnectedProvider),
+    isSharedNote: (noteId) {
+      if (ref.read(myNoteSharesProvider).value?.containsKey(noteId) ?? false) {
+        return true;
+      }
+      final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+      final folderId = [
+        for (final n in notes)
+          if (n.id == noteId) n.folderId,
+      ].firstOrNull;
+      if (folderId == null) return false;
+      final folders = ref.read(foldersStreamProvider).value ?? const [];
+      return folders.any((f) => f.id == folderId && f.isShared);
+    },
     quotaBytes: !firebaseBound
         ? 0
         : premium
@@ -183,6 +203,9 @@ class AttachmentRepository {
     this.quotaBytes = 0,
     this.usedBytes,
     this.drive,
+    this.mode = AttachmentSyncMode.drive,
+    this.isDriveReady,
+    this.isSharedNote,
   });
 
   final FirebaseStorage _storage;
@@ -190,6 +213,15 @@ class AttachmentRepository {
 
   /// Kullanıcının Google Drive'ı (bağlıysa). null = Drive yok/bağlı değil.
   final DriveStore? drive;
+
+  /// Etkin ek senkron kipi (Drive / yalnızca metin / Storage).
+  final AttachmentSyncMode mode;
+
+  /// Drive bağlantısının o an hazır olup olmadığı (web'de kullanıcı onayı).
+  final bool Function()? isDriveReady;
+
+  /// Paylaşılan not ekleri ortak çalışanlar erişebilsin diye Storage'a gider.
+  final bool Function(String noteId)? isSharedNote;
 
   /// Bu kullanıcı için izin verilen en büyük ek boyutu (premium'a göre).
   final int maxBytes;
@@ -256,6 +288,7 @@ class AttachmentRepository {
           _storage,
           ownerUid,
           maxBytes,
+          mode: AttachmentSyncMode.storage,
           quotaBytes: quotaBytes,
           usedBytes: usedBytes,
           // Başkasının notu Drive'a GİTMEZ: dosya benim Drive'ımda olursa
@@ -270,32 +303,18 @@ class AttachmentRepository {
   }
 
   /// Eki kalıcı hâle getirir. Cihazda önce YEREL kopya yazılır (çevrimdışıyken
-  /// de ek eklenebilsin; yükleme sonra [upload] ile yapılır). Tarayıcıda dosya
-  /// sistemi yok — `path_provider`'ın web karşılığı olmadığından baytlar
-  /// doğrudan Storage'a gider, yani web'de çevrimdışı-önce yoktur.
-  ///
-  /// Tüm ek türleri buradan geçer: bu ayrım her `prepare*` içinde ayrı ayrı
-  /// yazılsaydı biri unutulduğunda yalnız o tür sessizce kırılırdı.
+  /// de ek eklenebilsin; yükleme sonra [upload] ile yapılır). Tarayıcıda ise
+  /// baytlar önce IndexedDB önbelleğine yazılır ve senkron kipine göre
+  /// Drive'a ya da Firebase Storage'a gönderilir.
   Future<Attachment> _store(
     String noteId,
     Attachment meta,
     Uint8List bytes, {
     int freedBytes = 0,
   }) async {
-    // [freedBytes]: aynı çağrıda yerini alacağı eski ekin boyutu (kırpma).
-    // Sayılmasaydı tavana dayanmış kullanıcı görselini KIRPAMAZDI — kırpma
-    // yeri neredeyse her zaman boşaltır.
-    //
-    // Görüntülü not tavana girmez: buluta hiç yüklenmiyor (bkz. prepareVideo,
-    // upload). Ayrım kaynağın türünden okunuyor ki "video kopyala" gibi yeni
-    // bir yol eklendiğinde ayrıca hatırlanması gerekmesin.
     if (meta.kind != AttachmentKind.video) {
       _checkQuota(bytes.length - freedBytes);
     }
-    // basename ŞART: fileName Firestore'dan geliyor (Attachment.fromMap) ve
-    // prepare* yolları temizlese de duplicate() gibi yollar mevcut kaydı
-    // olduğu gibi taşır. "../../x" biçimli bir ad, yazmayı uygulama
-    // sandbox'ının dışına taşırdı (path traversal); tek noktada kesilir.
     final objectName = '${meta.id}_${p.basename(meta.fileName)}';
     if (!kIsWeb) {
       final dir = await _attachmentsDir(noteId);
@@ -304,48 +323,158 @@ class AttachmentRepository {
       forgetLocalFile(file.path);
       return meta.copyWith(localPath: file.path);
     }
-    final storagePath = 'users/$uid/notes/$noteId/$objectName';
-    final ref = _storage.ref(storagePath);
-    // putFile'ın bayt karşılığı; web'de dosya tutamacı olmadığından tek yol.
-    // Web'de ek DOĞRUDAN yükleniyor: ilerleme editörün "Yükleniyor" şeridine
-    // yüzde olarak yansır (bkz. [directUploadProgress]).
+
+    await webAttachmentCache.put(
+      webLocalCacheKey(meta.id),
+      bytes,
+      meta.mimeType,
+    );
+    rememberWebLocalBlobUrl(meta.id, createBlobUrl(bytes, meta.mimeType));
+
+    final shared = isSharedNote?.call(noteId) ?? false;
+    if (!shared && mode == AttachmentSyncMode.textOnly) return meta;
+    final useStorage = shared || mode == AttachmentSyncMode.storage;
+    if (!useStorage) {
+      final ready = drive != null && (isDriveReady?.call() ?? true);
+      if (!ready) return meta;
+      try {
+        return await _uploadBytesToDrive(noteId, meta, bytes);
+      } catch (e) {
+        // Ağ/jeton hatasında baytlar IndexedDB'de korunur; kuyruk sonra dener.
+        ErrorLog.record('web-drive-upload', e);
+        return meta;
+      }
+    }
+
     try {
-      await _watchProgress(
-        ref.putData(
-          bytes,
-          SettableMetadata(
-            contentType: meta.mimeType,
-            cacheControl: AppConstants.attachmentCacheControl,
-          ),
-        ),
-        (f) => directUploadProgress.value = f,
-      );
-      return meta.copyWith(
-        storagePath: storagePath,
-        downloadUrl: await ref.getDownloadURL(),
+      return await _uploadBytesToStorage(
+        noteId,
+        meta,
+        bytes,
+        onProgress: (f) => directUploadProgress.value = f,
       );
     } catch (storageError) {
-      // **WEB YEDEK YOL: DRIVE** (kullanıcı bulgusu 2026-11-09: "web'de PDF
-      // hiç eklenmiyor, üzerine not alamıyorum"). Storage reddederse
-      // (kural, kota, App Check, ağ) dosya kullanıcının Drive'ına gider;
-      // web ve telefon onu `driveId` ile okur. Drive da yoksa İKİ hata
-      // birlikte gösterilir — kök neden ekranda görünsün.
       final store = drive;
-      if (store == null) rethrow;
+      if (store == null || shared) rethrow;
       try {
-        final driveId = await store.uploadBytes(
-          bytes,
-          name: p.basename(meta.fileName),
-          mimeType: meta.mimeType,
-        );
+        final uploaded = await _uploadBytesToDrive(noteId, meta, bytes);
         ErrorLog.record('web-storage-upload', storageError);
-        return meta.copyWith(driveId: driveId);
+        return uploaded;
       } catch (driveError) {
         throw WebUploadException(storageError, driveError);
       }
     } finally {
       directUploadProgress.value = null;
     }
+  }
+
+  Future<String> _uploadWebImageThumb(Attachment meta, Uint8List bytes) async {
+    if (meta.kind != AttachmentKind.image) return '';
+    try {
+      final thumb = await compute(makeThumbnail, bytes);
+      if (thumb == null) return '';
+      final ref = _storage.ref(thumbStoragePath(uid, meta.id));
+      await ref
+          .putData(
+            thumb,
+            SettableMetadata(
+              contentType: 'image/jpeg',
+              cacheControl: AppConstants.attachmentCacheControl,
+            ),
+          )
+          .timeout(const Duration(seconds: 60));
+      return await ref.getDownloadURL().timeout(const Duration(seconds: 30));
+    } catch (e) {
+      ErrorLog.record('web-thumb-upload', e);
+      return '';
+    }
+  }
+
+  Future<Attachment> _uploadBytesToDrive(
+    String noteId,
+    Attachment meta,
+    Uint8List bytes,
+  ) async {
+    final store = drive;
+    if (store == null) throw const DriveUnavailableException('no-drive');
+    final driveId = await store.uploadBytes(
+      bytes,
+      name: driveFileName(
+        noteId: noteId,
+        attachmentId: meta.id,
+        fileName: p.basename(meta.fileName),
+      ),
+      mimeType: meta.mimeType.isEmpty
+          ? 'application/octet-stream'
+          : meta.mimeType,
+    );
+    final thumbUrl = await _uploadWebImageThumb(meta, bytes);
+    await webAttachmentCache.put(
+      webDriveCacheKey(driveId),
+      bytes,
+      meta.mimeType,
+    );
+    await webAttachmentCache.delete(webLocalCacheKey(meta.id));
+    final blob = kIsWeb
+        ? (webLocalBlobUrls.value[meta.id] ??
+              createBlobUrl(bytes, meta.mimeType))
+        : null;
+    if (blob != null) rememberWebDriveBlobUrl(driveId, blob);
+    return meta.copyWith(driveId: driveId, thumbUrl: thumbUrl);
+  }
+
+  Future<Attachment> _uploadBytesToStorage(
+    String noteId,
+    Attachment meta,
+    Uint8List bytes, {
+    void Function(double fraction)? onProgress,
+  }) async {
+    final objectName = '${meta.id}_${p.basename(meta.fileName)}';
+    final storagePath = 'users/$uid/notes/$noteId/$objectName';
+    final ref = _storage.ref(storagePath);
+    await _watchProgress(
+      ref.putData(
+        bytes,
+        SettableMetadata(
+          contentType: meta.mimeType,
+          cacheControl: AppConstants.attachmentCacheControl,
+        ),
+      ),
+      onProgress,
+    );
+    final url = await ref.getDownloadURL();
+    await webAttachmentCache.delete(webLocalCacheKey(meta.id));
+    return meta.copyWith(storagePath: storagePath, downloadUrl: url);
+  }
+
+  /// Web önbelleğinde bekleyen (`local:*`) eki Google Drive'a yükler.
+  Future<Attachment?> uploadWebCachedToDrive(
+    String noteId,
+    Attachment attachment,
+  ) async {
+    if (drive == null || attachment.skipsUpload || attachment.isInDrive) {
+      return null;
+    }
+    final cached = await webAttachmentCache.get(webLocalCacheKey(attachment.id));
+    if (cached == null) return null;
+    return _uploadBytesToDrive(noteId, attachment, cached.bytes);
+  }
+
+  /// Web önbelleğinde bekleyen (`local:*`) eki Firebase Storage'a yükler.
+  Future<Attachment?> uploadWebCachedToStorage(
+    String noteId,
+    Attachment attachment, {
+    void Function(double fraction)? onProgress,
+  }) async {
+    if (attachment.skipsUpload || attachment.isUploaded) return null;
+    final cached = await webAttachmentCache.get(webLocalCacheKey(attachment.id));
+    if (cached == null) return null;
+    return _uploadBytesToStorage(
+      noteId,
+      attachment,
+      cached.bytes,
+      onProgress: onProgress,
+    );
   }
 
   /// Görseli küçültüp yerel kopyasını oluşturur; yükleme sonradan yapılır.
@@ -709,6 +838,51 @@ class AttachmentRepository {
     );
   }
 
+  /// Tarayıcıda (ya da bellek içi kayıtta) ses baytlarını eke dönüştürür ve
+  /// önbellek/Drive/Storage hattından geçirir.
+  Future<Attachment> prepareAudioBytes({
+    required String noteId,
+    required Uint8List bytes,
+    Duration duration = Duration.zero,
+    String? fileName,
+    String? mimeTypeHint,
+  }) async {
+    if (bytes.length > maxBytes) {
+      throw const FileTooLargeException();
+    }
+    final head = bytes.length <= 16 ? bytes : bytes.sublist(0, 16);
+    final rawName = fileName?.trim() ?? '';
+    final fallbackMime = (mimeTypeHint != null && mimeTypeHint.isNotEmpty)
+        ? mimeTypeHint
+        : (rawName.isNotEmpty ? audioMimeFromName(rawName) : 'audio/webm');
+    final mime = audioMimeOf(head, fallbackMime);
+    final safeName = rawName.isNotEmpty
+        ? p.basename(rawName)
+        : 'kayit_${duration.inSeconds}s${_audioExtForMime(mime)}';
+    return _store(
+      noteId,
+      Attachment(
+        id: _uuid.v4(),
+        kind: AttachmentKind.audio,
+        fileName: safeName,
+        mimeType: mime,
+        sizeBytes: bytes.length,
+        createdAt: DateTime.now(),
+      ),
+      bytes,
+    );
+  }
+
+  static String _audioExtForMime(String mime) => switch (mime) {
+    'audio/mp4' => '.m4a',
+    'audio/aac' => '.aac',
+    'audio/amr' => '.amr',
+    'audio/ogg' => '.ogg',
+    'audio/wav' => '.wav',
+    'audio/mpeg' => '.mp3',
+    _ => '.webm',
+  };
+
   /// **SES DOSYASI EKLE** (kullanıcı isteği 2026-10-17: "sonradan eklenmiş
   /// ses dosyaları"): cihazdan seçilen MP3/M4A/WAV... nota ses eki olur.
   /// Kayıttan farkı: dosyanın ADI korunur ve türü addan/baytlardan okunur.
@@ -1030,6 +1204,12 @@ class AttachmentRepository {
   }
 
   Future<void> deleteFromStorage(Attachment attachment) async {
+    if (kIsWeb) {
+      await webAttachmentCache.delete(webLocalCacheKey(attachment.id));
+      if (attachment.isInDrive) {
+        await webAttachmentCache.delete(webDriveCacheKey(attachment.driveId));
+      }
+    }
     await deleteThumb(attachment);
     // Drive kopyası da gider (bağlı değilse dosya Drive'da kalır — yalnız
     // yer kaplar, veri riski yok).
@@ -1045,8 +1225,9 @@ class AttachmentRepository {
     }
   }
 
-  /// PDF baytlarını getirir: önce yerel kopya, yoksa Drive'dan (bağlıysa
-  /// indirip yerel kopyaya da yazarak), o da yoksa Storage'dan.
+  /// Ek baytlarını getirir: web'de önce tarayıcı IndexedDB önbelleği, yerelde
+  /// dosya kopyası, yoksa Drive'dan indirip önbelleğe yazarak, o da yoksa
+  /// Firebase Storage'dan.
   Future<Uint8List?> readBytes(Attachment attachment) async {
     // Metin eki (transkript) dosyasızdır: içerik kaydın kendisinde. Paylaşım,
     // dışa aktarma ve not paketi `.txt` baytlarını buradan alır.
@@ -1058,7 +1239,18 @@ class AttachmentRepository {
     // belleğe alıp uygulamayı düşürmesin — "dosya çok büyük" desin. Görüntü,
     // kalem ve sayfa metni dosya YOLUNDAN çalışır, buraya gelmez.
     if (attachment.localOnly) throw const FileTooLargeException();
-    if (attachment.localPath.isNotEmpty) {
+    if (kIsWeb) {
+      final localCached = await webAttachmentCache.get(
+        webLocalCacheKey(attachment.id),
+      );
+      if (localCached != null) return localCached.bytes;
+      if (attachment.isInDrive) {
+        final driveCached = await webAttachmentCache.get(
+          webDriveCacheKey(attachment.driveId),
+        );
+        if (driveCached != null) return driveCached.bytes;
+      }
+    } else if (attachment.localPath.isNotEmpty) {
       final file = File(attachment.localPath);
       if (await file.exists()) return file.readAsBytes();
     }
@@ -1068,7 +1260,15 @@ class AttachmentRepository {
         final file = File(attachment.localPath);
         if (await file.exists()) return file.readAsBytes();
       }
-      return drive!.downloadBytes(attachment.driveId);
+      final bytes = await drive!.downloadBytes(attachment.driveId);
+      if (kIsWeb) {
+        await webAttachmentCache.put(
+          webDriveCacheKey(attachment.driveId),
+          bytes,
+          attachment.mimeType,
+        );
+      }
+      return bytes;
     }
     if (attachment.storagePath.isNotEmpty) {
       return _storage

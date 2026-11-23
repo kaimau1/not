@@ -2643,7 +2643,7 @@
   "guestReminderBody": "Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama veya tarayıcı verisi silinirse ya da cihaz değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.",
   "guestReminderLater": "Sonra",
   "driveWebConnectTitle": "Bu ek Google Drive’ında",
-  "driveWebConnectBody": "Telefonundan eklenen dosyalar Drive’da saklanıyor. Tarayıcıda görmek için Google hesabınla Drive’a erişim izni ver (bu oturum boyunca geçerli).",
+  "driveWebConnectBody": "Eklerin Google Drive’ındaki “Notlar” klasöründe saklanıyor. Tarayıcıda indirip çevrimdışı önbelleğe almak ve yeni ek yüklemek için Google Drive’a bağlan.",
   "driveWebConnectButton": "Drive’a bağlan",
   "lockPatternSemantics": "Kilit deseni: noktaları parmakla birleştir",
   "lockDrawPattern": "Deseni çiz",
@@ -4333,5 +4333,11 @@
   "@webDriveStatusSyncing": {"placeholders": {"count": {"type": "int"}}},
   "webDriveStatusAttention": "{count} ek bekliyor",
   "@webDriveStatusAttention": {"placeholders": {"count": {"type": "int"}}},
-  "webSyncCloudReady": "Bulut senkronu açık"
+  "webSyncCloudReady": "Bulut senkronu açık",
+  "webCacheTitle": "Tarayıcı ek önbelleği",
+  "webCacheInfo": "{count} dosya · {size} (çevrimdışı hazır)",
+  "@webCacheInfo": {"placeholders": {"count": {"type": "int"}, "size": {"type": "String"}}},
+  "webCacheEmpty": "Önbellekte indirilen ek yok",
+  "webCacheClear": "Temizle",
+  "webCacheCleared": "Tarayıcı ek önbelleği temizlendi"
 }

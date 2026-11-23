@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/error_log.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/web_attachment_cache.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -199,8 +200,16 @@ class UploadProgressNotifier extends Notifier<Map<String, double>> {
 /// `needsDrive`: Google hesabı ama Drive henüz BAĞLANMADI — bekleyenler
 /// bağlantı bekliyor; gösterge "Bağla" der (misafir hesapta ekler zaten
 /// buluta gitmez, sayılmaz).
+bool _hasPendingBytes(Attachment a) =>
+    kIsWeb ? webLocalCacheContains(a.id) : localFileExists(a.localPath);
+
 final pendingUploadsProvider =
     Provider<({int pending, int failed, bool needsDrive})>((ref) {
+      if (kIsWeb) {
+        void onCache() => ref.invalidateSelf();
+        webAttachmentCache.revision.addListener(onCache);
+        ref.onDispose(() => webAttachmentCache.revision.removeListener(onCache));
+      }
       final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
       final failures = ref.watch(uploadFailuresProvider);
       final limitMb = ref.watch(syncLimitMbProvider);
@@ -221,7 +230,7 @@ final pendingUploadsProvider =
         for (final a in note.attachments) {
           if (a.skipsUpload || syncedTo(a, target)) continue;
           if (limitBytes != null && a.sizeBytes > limitBytes) continue;
-          if (!localFileExists(a.localPath)) continue;
+          if (!_hasPendingBytes(a)) continue;
           pending++;
           if (failures.containsKey(a.id)) failed++;
           if (target == UploadTarget.drive && !driveReady) waitingDrive = true;
@@ -233,7 +242,7 @@ final pendingUploadsProvider =
       for (final entry in ref.watch(foreignEditableNotesProvider)) {
         for (final a in entry.note.attachments) {
           if (a.skipsUpload || a.isUploaded) continue;
-          if (!localFileExists(a.localPath)) continue;
+          if (!_hasPendingBytes(a)) continue;
           pending++;
           if (failures.containsKey(a.id)) failed++;
         }
@@ -355,7 +364,9 @@ class UploadQueue {
   ProviderSubscription<int>? _limitSub;
   ProviderSubscription<String>? _sharesSub;
   ProviderSubscription<DriveStore?>? _driveSub;
+  ProviderSubscription<bool>? _driveConnectedSub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+  VoidCallback? _cacheRevListener;
 
   /// KÖK NEDEN (kasma): not akışı HER TUŞ VURUŞUNDA anlık görüntü üretiyor
   /// (dosyanın başındaki nota bak) ve [_process] her seferinde tüm notlar ×
@@ -378,6 +389,15 @@ class UploadQueue {
       if (notes != null) _scheduleProcess(notes);
     }, fireImmediately: true);
 
+    if (kIsWeb) {
+      _cacheRevListener = () {
+        final notes = _ref.read(notesStreamProvider).value;
+        if (notes != null) _scheduleProcess(notes);
+        unawaited(_processForeign(_ref.read(foreignEditableNotesProvider)));
+      };
+      webAttachmentCache.revision.addListener(_cacheRevListener!);
+    }
+
     // Sınır yükseltilince bekleyen büyük ekler hemen sıraya girsin (yoksa bir
     // sonraki not değişikliğine kadar cihazda beklerlerdi).
     _limitSub = _ref.listen(syncLimitMbProvider, (previous, next) {
@@ -390,9 +410,13 @@ class UploadQueue {
     // ekleri insin.
     _driveSub = _ref.listen(driveStoreProvider, (previous, next) {
       if (next == null) return;
-      // Yeni yetki: izinsizken düşen denemelerin beklemesi sıfırlanır
-      // (2026-11-06 cihazda: izin verildi ama ek 1 dk bekleme yüzünden
-      // atlandı ve bir sonraki not değişikliğine dek hiç denenmedi).
+      _lastFailure.clear();
+      final notes = _ref.read(notesStreamProvider).value;
+      if (notes != null) _process(notes);
+    });
+
+    _driveConnectedSub = _ref.listen(driveConnectedProvider, (previous, next) {
+      if (!next || previous == next) return;
       _lastFailure.clear();
       final notes = _ref.read(notesStreamProvider).value;
       if (notes != null) _process(notes);
@@ -441,7 +465,8 @@ class UploadQueue {
     for (final (:ownerId, :note) in entries) {
       for (final attachment in note.attachments) {
         if (attachment.skipsUpload) continue;
-        if (attachment.isUploaded || attachment.localPath.isEmpty) continue;
+        if (attachment.isUploaded) continue;
+        if (!kIsWeb && attachment.localPath.isEmpty) continue;
         final key = '${note.id}/${attachment.id}';
         final lastFailure = _lastFailure[key];
         if (lastFailure != null &&
@@ -449,19 +474,24 @@ class UploadQueue {
                 _retryDelayFor(lastFailure.attempts)) {
           continue;
         }
-        // Dosyası bu cihazda olmayan ek başkasının (onun cihazı yükler).
-        if (!localFileExists(attachment.localPath)) continue;
+        // Dosyası bu cihazda/tarayıcıda olmayan ek başkasının (onun cihazı yükler).
+        if (!_hasPendingBytes(attachment)) continue;
         if (!_inFlight.add(key)) continue;
         final progress = _ref.read(uploadProgressProvider.notifier);
         progress.set(attachment.id, 0);
         try {
-          final uploaded = await baseRepo
-              .forOwner(ownerId)
-              .upload(
-                note.id,
-                attachment,
-                onProgress: (f) => progress.set(attachment.id, f),
-              );
+          final ownerRepo = baseRepo.forOwner(ownerId);
+          final uploaded = kIsWeb
+              ? await ownerRepo.uploadWebCachedToStorage(
+                  note.id,
+                  attachment,
+                  onProgress: (f) => progress.set(attachment.id, f),
+                )
+              : await ownerRepo.upload(
+                  note.id,
+                  attachment,
+                  onProgress: (f) => progress.set(attachment.id, f),
+                );
           if (uploaded != null) {
             await NotesRepository(
               FirebaseFirestore.instance,
@@ -514,7 +544,9 @@ class UploadQueue {
     final limitMb = _ref.read(syncLimitMbProvider);
     final limitBytes = limitMb <= 0 ? null : limitMb * 1024 * 1024;
     final mode = _ref.read(attachmentSyncModeProvider);
-    final driveReady = attachmentRepo.drive != null;
+    final driveReady =
+        attachmentRepo.drive != null &&
+        (!kIsWeb || _ref.read(driveConnectedProvider));
     final shared = (
       notes: _ref.read(myNoteSharesProvider).value?.keys.toSet() ?? <String>{},
       folders: {
@@ -563,7 +595,7 @@ class UploadQueue {
       for (final attachment in note.attachments) {
         // Görüntülü not buluta hiç gitmez (yalnızca cihazda saklanır).
         if (attachment.skipsUpload) continue;
-        if (syncedTo(attachment, target) || attachment.localPath.isEmpty) {
+        if (syncedTo(attachment, target) || !_hasPendingBytes(attachment)) {
           continue;
         }
         if (limitBytes != null && attachment.sizeBytes > limitBytes) continue;
@@ -588,13 +620,24 @@ class UploadQueue {
       // Drive oran bildirmiyor: -1 = "yükleniyor, oranı bilinmiyor".
       progress.set(attachment.id, job.target == UploadTarget.drive ? -1 : 0);
       try {
-        final uploaded = job.target == UploadTarget.drive
-            ? await attachmentRepo.uploadToDrive(note.id, attachment)
-            : await attachmentRepo.upload(
-                note.id,
-                attachment,
-                onProgress: (f) => progress.set(attachment.id, f),
-              );
+        final uploaded = kIsWeb
+            ? (job.target == UploadTarget.drive
+                  ? await attachmentRepo.uploadWebCachedToDrive(
+                      note.id,
+                      attachment,
+                    )
+                  : await attachmentRepo.uploadWebCachedToStorage(
+                      note.id,
+                      attachment,
+                      onProgress: (f) => progress.set(attachment.id, f),
+                    ))
+            : (job.target == UploadTarget.drive
+                  ? await attachmentRepo.uploadToDrive(note.id, attachment)
+                  : await attachmentRepo.upload(
+                      note.id,
+                      attachment,
+                      onProgress: (f) => progress.set(attachment.id, f),
+                    ));
         if (uploaded != null) {
           await notesRepo.patchAttachment(note.id, uploaded);
         }
@@ -707,6 +750,11 @@ class UploadQueue {
     _limitSub?.close();
     _sharesSub?.close();
     _driveSub?.close();
+    _driveConnectedSub?.close();
     _connectivitySub?.cancel();
+    if (_cacheRevListener != null) {
+      webAttachmentCache.revision.removeListener(_cacheRevListener!);
+      _cacheRevListener = null;
+    }
   }
 }
