@@ -9,6 +9,7 @@ import '../features/auth/presentation/auth_providers.dart';
 import '../features/entitlement/data/billing_service.dart';
 import '../features/folders/data/shared_activity_service.dart';
 import '../features/notes/data/data_migrations.dart';
+import '../features/notes/data/lite_sync.dart';
 import '../features/notes/data/local_notes_store.dart';
 import '../features/notes/data/place_reminders.dart';
 import '../features/notes/data/push_service.dart';
@@ -67,6 +68,9 @@ class _AppServicesState extends ConsumerState<AppServices> {
     // Bir defalık veri göçleri (F3.5 defter).
     (ref) => ref.listen<void>(dataMigrationsProvider, _ignore),
     (ref) => ref.listen(uploadQueueProvider, _ignore),
+    // Lite eşitleme: çöken oturumdan buluta ulaşmamış editör içeriği varsa
+    // açılışta yazılır (günlük boşsa iş yok).
+    (ref) => ref.listen<void>(liteJournalRecoveryProvider, _ignore),
     // Kişiye ait tercihler kullanıcı belgesine (F4.5).
     (ref) => ref.listen<void>(prefsSyncProvider, _ignore),
     // Kişisel yazım sözlüğü (Y-6): açılışta tek okuma, alta atılınca yazma.

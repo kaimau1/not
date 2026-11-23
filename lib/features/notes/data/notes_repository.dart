@@ -53,6 +53,7 @@ final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
     FirebaseFirestore.instance,
     uid,
     local: LocalNotesStore.forUid(uid),
+    journal: LocalNotesStore.journalFor(uid),
   );
 });
 
@@ -230,6 +231,7 @@ class NotesRepository {
     this.uid, {
     String? editorUid,
     this.local,
+    this.journal,
   }) : editorUid = editorUid ?? uid;
 
   /// YALNIZ BU CİHAZDA tutulan notlar (bkz. [LocalNotesStore]). Doluysa her
@@ -238,6 +240,42 @@ class NotesRepository {
 
   /// [noteId] yalnız bu cihazda mı tutuluyor?
   bool isLocal(String noteId) => local?.contains(noteId) ?? false;
+
+  /// **LITE KAYIT GÜNLÜĞÜ** (bkz. `lite_sync.dart`): editörün buluta henüz
+  /// yazmadığı içeriğin diskteki kopyası. Null (web / yol yok) → editör
+  /// seyreltme yapmaz, kayıt anında gider. Her tam not yazımı ([updateNote])
+  /// notun girdisini siler: günlükte kalan = buluta ulaşmamış yazı.
+  final LocalNotesStore? journal;
+
+  /// Lite seyreltmesinin güvenli olması için günlük hazır mı.
+  bool get canJournal => journal != null;
+
+  /// Notun bulutta bekleyen hâlini diske yazar (çökmeye karşı).
+  void journalNote(Note note) => journal?.put(note.id, note.toMap());
+
+  /// Açılışta: önceki oturumda buluta ulaşmadan kalmış editör içeriğini
+  /// yazar. Bulutta artık olmayan / çöpe atılmış nota dokunulmaz (silinen
+  /// not geri gelmesin); okunamayan girdi sonraki açılışta yeniden denenir.
+  Future<int> recoverJournal() async {
+    final store = journal;
+    if (store == null) return 0;
+    var written = 0;
+    for (final e in store.rawEntries().entries.toList()) {
+      try {
+        final snap = await _notes.doc(e.key).get();
+        final data = snap.data();
+        if (data == null || data['deletedAt'] != null) {
+          store.remove(e.key);
+          continue;
+        }
+        unawaited(updateNote(Note.fromMap(e.key, e.value)));
+        written++;
+      } catch (err, st) {
+        ErrorLog.record('lite-journal', err, st);
+      }
+    }
+    return written;
+  }
 
   /// Bulut akışını yerel depoyla birleştirir: bulut ilk kez yayınlayınca ve
   /// sonra iki kaynaktan biri değiştikçe [merge] yeniden çalışır. Yerel
@@ -806,6 +844,7 @@ class NotesRepository {
       local!.merge(note.id, note.toMap());
       return Future.value();
     }
+    journal?.remove(note.id);
     _maybeVersion(note);
     _rememberWrite(note);
     final fields = {

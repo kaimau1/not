@@ -50,9 +50,26 @@ class LocalNotesStore {
     );
   }
 
+  static final Map<String, LocalNotesStore> _journals = {};
+
+  /// **LITE KAYIT GÜNLÜĞÜ** (PLAN §1.5, `instantSync` yok): buluta henüz
+  /// yazılmamış editör içeriğinin DİSKTEKİ kopyası. Aynı dosya biçimi, ayrı
+  /// dosya (`lite_pending_<uid>.json`); notlar bu depoya ASLA taşınmaz
+  /// (yerel not değildir, Firestore'dan çıkmaz). Web'de / yol çözülemezse
+  /// null → Lite seyreltmesi uygulanmaz, kayıt anında gider (veri kaybı yok).
+  static LocalNotesStore? journalFor(String uid) {
+    if (kIsWeb) return null;
+    final base = appSupportPath;
+    if (base == null) return null;
+    return _journals.putIfAbsent(
+      uid,
+      () => LocalNotesStore._(File(p.join(base, 'lite_pending_$uid.json'))),
+    );
+  }
+
   /// Bütün açık depoları diske yazar (uygulama arka plana geçerken).
   static Future<void> flushAll() async {
-    for (final store in _instances.values) {
+    for (final store in [..._instances.values, ..._journals.values]) {
       await store.flush();
     }
   }
@@ -64,6 +81,11 @@ class LocalNotesStore {
     for (final key in [..._instances.keys]) {
       if (key == uid) continue;
       final store = _instances.remove(key)!;
+      if (store._saveTimer != null) await store.flush();
+    }
+    for (final key in [..._journals.keys]) {
+      if (key == uid) continue;
+      final store = _journals.remove(key)!;
       if (store._saveTimer != null) await store.flush();
     }
   }

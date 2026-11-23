@@ -258,6 +258,8 @@
   "ok": "Tamam",
   "syncPending": "Senkron bekleniyor",
   "synced": "Senkronize",
+  "liteSyncHeld": "Değişiklikler birkaç dakikada bir buluta gider — şimdi eşitlemek için dokun",
+  "liteSyncSending": "Değişiklikler buluta gönderiliyor",
   "genericError": "Bir şeyler ters gitti: {error}",
   "@genericError": {
     "placeholders": {

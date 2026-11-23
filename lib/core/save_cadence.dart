@@ -24,15 +24,23 @@ import 'ai_kill_switch.dart';
 /// açılan editörler onları kullanır (uygulama güncellemesi beklemeden;
 /// fatura beklenmedik yükselirse). Alan yoksa varsayılan. Değerler
 /// [apply]'da sınırlanır: sessizlik 2–120 sn, üst sınır sessizlik–300 sn.
+///
+/// **LITE (ücretsiz katman, PLAN §1.5):** `instantSync` hakkı yoksa editörün
+/// otomatik kaydı buluta [liteInterval] (5 dk) aralıkla yazılır; sessizlik ve
+/// üst sınır AYNI değerdir ("5 dakikada bir"). Çıkış kapıları (kapanış, arka
+/// plan) yine hemen yazar. Uzaktan fren: `config/app.liteSaveSec` (30–900).
 abstract final class SaveCadence {
   static const defaultDelay = Duration(seconds: 2);
   static const defaultMaxWait = Duration(seconds: 20);
+  static const defaultLiteInterval = Duration(minutes: 5);
 
   static Duration _delay = defaultDelay;
   static Duration _maxWait = defaultMaxWait;
+  static Duration _lite = defaultLiteInterval;
 
   static Duration get delay => _delay;
   static Duration get maxWait => _maxWait;
+  static Duration get liteInterval => _lite;
 
   /// `config/app` verisinden sıklığı kurar (alan yoksa varsayılan).
   static void apply(Map<String, dynamic>? data) {
@@ -44,6 +52,10 @@ abstract final class SaveCadence {
         : m.clamp(delaySec, 300);
     _delay = Duration(seconds: delaySec);
     _maxWait = Duration(seconds: maxSec);
+    final l = (data?['liteSaveSec'] as num?)?.toInt();
+    _lite = l == null
+        ? defaultLiteInterval
+        : Duration(seconds: l.clamp(30, 900));
   }
 
   static int _max(int a, int b) => a > b ? a : b;
@@ -52,6 +64,7 @@ abstract final class SaveCadence {
   static void reset() {
     _delay = defaultDelay;
     _maxWait = defaultMaxWait;
+    _lite = defaultLiteInterval;
   }
 }
 

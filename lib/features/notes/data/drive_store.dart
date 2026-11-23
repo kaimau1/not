@@ -18,6 +18,8 @@ import '../../../core/utils/web_session.dart';
 import '../../auth/data/android_google_auth.dart';
 import '../../auth/data/google_scope_auth.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../entitlement/data/entitlement_service.dart';
+import '../../entitlement/domain/entitlement.dart';
 import '../../settings/settings_providers.dart';
 
 /// **EKLERİN GOOGLE DRIVE SENKRONU** (kullanıcı isteği 2026-10-15: "eklerin
@@ -66,14 +68,33 @@ bool isGoogleUser(User? user) =>
 
 /// Saf karar (test edilir). Android ve Web eşdeğerliği: Google hesabı her
 /// platformda Drive kotasını, Google'sız/misafir hesap yalnız-metni kullanır.
+///
+/// [cloudAttachments]: `ProFeature.cloudAttachments` hakkı (Pro) VE Play
+/// derlemesi — yeni ekler bizim buluta (Storage) gider. Hak yoksa (Lite)
+/// Google hesabı Drive'ına gider, Google'sız hesap yalnız cihazda tutar.
+/// Bayraksız derlemede (kişisel APK / web) HEP false: bugünkü gibi.
 AttachmentSyncMode attachmentSyncModeFor({
   required bool web,
   required bool googleUser,
-}) => googleUser ? AttachmentSyncMode.drive : AttachmentSyncMode.textOnly;
+  bool cloudAttachments = false,
+}) => cloudAttachments
+    ? AttachmentSyncMode.storage
+    : googleUser
+    ? AttachmentSyncMode.drive
+    : AttachmentSyncMode.textOnly;
 
 final attachmentSyncModeProvider = Provider<AttachmentSyncMode>((ref) {
   final user = ref.watch(authStateProvider).value;
-  return attachmentSyncModeFor(web: kIsWeb, googleUser: isGoogleUser(user));
+  // `EntitlementGate.active` şart: bayraksız derlemede kapı hep açık görünür
+  // ama ekler Storage'a GİTMEZ (kişisel APK davranışı değişmez).
+  final cloud =
+      EntitlementGate.active &&
+      ref.watch(proFeatureProvider(ProFeature.cloudAttachments));
+  return attachmentSyncModeFor(
+    web: kIsWeb,
+    googleUser: isGoogleUser(user),
+    cloudAttachments: cloud,
+  );
 });
 
 /// Kullanıcı Drive'ı BAĞLADI mı (bir kez izin verdi)? Arka plandaki
@@ -451,8 +472,14 @@ final driveAuthProvider = Provider<DriveAuth>((ref) {
 final driveStoreProvider = Provider<DriveStore?>((ref) {
   // Web'de Google hesabı Drive'daki ekleri OKUYABİLİR (bkz. [WebDriveAuth]);
   // yükleme yine Storage'a (kip `storage` kalır).
-  final webReader = kIsWeb && isGoogleUser(ref.watch(authStateProvider).value);
+  final googleUser = isGoogleUser(ref.watch(authStateProvider).value);
+  final webReader = kIsWeb && googleUser;
+  // Pro (Storage kipi): Lite iken Drive'a yüklenmiş eski ekler OKUNMAYA
+  // devam eder (Drive bağlıysa). Drive kipinde bu kol zaten açık; kişisel
+  // APK'da kip hep drive/textOnly → davranış aynı.
+  final driveReader = googleUser && ref.watch(driveConnectedProvider);
   if (!webReader &&
+      !driveReader &&
       ref.watch(attachmentSyncModeProvider) != AttachmentSyncMode.drive) {
     driveFileDeleter = null;
     return null;

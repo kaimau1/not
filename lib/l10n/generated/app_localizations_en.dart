@@ -538,6 +538,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get synced => 'Synced';
 
   @override
+  String get liteSyncHeld =>
+      'Changes go to the cloud every few minutes — tap to sync now';
+
+  @override
+  String get liteSyncSending => 'Sending changes to the cloud';
+
+  @override
   String genericError(String error) {
     return 'Something went wrong: $error';
   }
