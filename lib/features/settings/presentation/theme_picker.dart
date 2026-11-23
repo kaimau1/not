@@ -457,7 +457,7 @@ class ThemeChoiceCard extends StatelessWidget {
                         child: CircleAvatar(
                           radius: 9,
                           backgroundColor: scheme.surface,
-                          child: const ProLockBadge(size: 11),
+                          child: const ProLockBadge(),
                         ),
                       ),
                     if (selected)
