@@ -186,7 +186,7 @@ List<AddEntry> addCatalog(
     AddGroup.sound,
     AppIcons.voiceRecord,
     l10n.recordAudio,
-    attach: web ? null : 'audio',
+    attach: 'audio',
   );
   // AKILLI LİSTE (kullanıcı isteği 2026-11-16: "otomatik tek tip şablon;
   // kişinin söylediklerine göre türü belirlensin, gruplansın"): yeni tek tip

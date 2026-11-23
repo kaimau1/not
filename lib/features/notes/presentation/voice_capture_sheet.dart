@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
@@ -11,9 +12,12 @@ import 'package:record/record.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/voice_commands.dart';
+import '../../../core/utils/web_audio_record.dart';
+import '../../../core/utils/web_blob.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/device_speech.dart';
+import '../data/media_transcriber.dart' show audioMimeOf;
 import '../data/voice_listen_session.dart';
 import 'listening_visuals.dart';
 import '../../../core/widgets/app_sheet.dart';
@@ -85,6 +89,8 @@ typedef VoiceCaptureResult = ({
   String text,
   VoiceCaptureAction action,
   String? audioPath,
+  Uint8List? audioBytes,
+  String? audioMime,
   Duration audioDuration,
   String? title,
 });
@@ -209,9 +215,15 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// kararı 2026-10-31): varsayılan KAPALI, tek "Diğer" çipinin altında.
   bool _moreOpen = false;
 
-  /// Dökümü yapılamamış ama korunan ses kaydının yolu; dolu olduğunda not
-  /// SES EKİYLE oluşur (bkz. [_toAudioFallback]).
+  /// Dökümü yapılamamış ama korunan ses kaydının yolu/baytları; dolu olduğunda
+  /// not SES EKİYLE oluşur (bkz. [_toAudioFallback]).
   String? _readyAudioPath;
+  Uint8List? _readyAudioBytes;
+  String? _readyAudioMime;
+  String? _recordMime;
+
+  bool get _hasReadyAudio =>
+      _readyAudioPath != null || _readyAudioBytes != null;
 
   /// Tanıyıcının gönderdiği HAM metin; ekrandaki [_text] bunun sesli
   /// komutları uygulanmış hâli (bkz. [applyVoiceCommands]). Ham metin
@@ -344,7 +356,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     await _startListening();
   }
 
-  /// Yerleşik tanıma yoksa: dosyaya kaydet, bitince toplu döküm.
+  /// Yerleşik tanıma yoksa: dosyaya (veya web blob'una) kaydet, bitince toplu döküm.
   Future<void> _startRecording(VoiceListenSession session) async {
     final micDenied = context.l10n.micPermissionDenied;
     final recorder = AudioRecorder();
@@ -353,15 +365,22 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       _fail(micDenied);
       return;
     }
-    final dir = await getTemporaryDirectory();
-    _recordPath = p.join(
-      dir.path,
-      'dikte_${DateTime.now().millisecondsSinceEpoch}.m4a',
-    );
-    await recorder.start(
-      const RecordConfig(bitRate: 64000),
-      path: _recordPath!,
-    );
+    if (kIsWeb) {
+      final config = await pickWebRecordConfig(recorder, bitRate: 64000);
+      _recordMime = mimeHintForEncoder(config.encoder);
+      _recordPath = '';
+      await recorder.start(config, path: '');
+    } else {
+      final dir = await getTemporaryDirectory();
+      _recordPath = p.join(
+        dir.path,
+        'dikte_${DateTime.now().millisecondsSinceEpoch}.m4a',
+      );
+      await recorder.start(
+        const RecordConfig(bitRate: 64000),
+        path: _recordPath!,
+      );
+    }
     // Döküm bitişte yapıldığından konuşmanın kanıtı ses seviyesidir: -30
     // dBFS üstü konuşma sayılır (sessiz oda ~-50, konuşma -25…-10).
     _ampSub = recorder
@@ -453,23 +472,39 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     }
 
     setState(() => _phase = _Phase.processing);
-    // Kaydın yolu try DIŞINDA tutulur: döküm düşerse dosya SİLİNMEZ, nota ses
-    // eki olarak eklenmek üzere elde kalır (bkz. [_toAudioFallback]).
+    // Kaydın yolu/baytı try DIŞINDA tutulur: döküm düşerse kayıt SİLİNMEZ,
+    // nota ses eki olarak eklenmek üzere elde kalır (bkz. [_toAudioFallback]).
     String? path;
+    Uint8List? bytes;
+    String? mime;
     try {
       path = await _recorder?.stop();
-      if (path == null) throw StateError(l10n.voiceNothingHeard);
-      final bytes = await File(path).readAsBytes();
+      if (path == null || path.isEmpty) throw StateError(l10n.voiceNothingHeard);
+      if (kIsWeb) {
+        bytes = await readWebBlobBytes(path, revokeAfter: true);
+        path = null;
+        mime = audioMimeOf(bytes, _recordMime ?? 'audio/webm');
+      } else {
+        bytes = await File(path).readAsBytes();
+        mime = audioMimeOf(bytes, 'audio/mp4');
+      }
       final text = await ref
           .read(geminiServiceProvider)
-          .transcribeAudio(bytes, 'audio/mp4');
+          .transcribeAudio(bytes, mime);
       if (!mounted) return;
       if (text.trim().isEmpty) {
-        _toAudioFallback(path, l10n.voiceNothingHeard);
+        _toAudioFallback(
+          path,
+          l10n.voiceNothingHeard,
+          bytes: bytes,
+          mime: mime,
+        );
         return;
       }
       // Döküm elde: ses dosyasına artık gerek yok.
-      File(path).delete().ignore();
+      if (!kIsWeb && path != null && path.isNotEmpty) {
+        File(path).delete().ignore();
+      }
       // Kayıt yolunda komutlar dökümden SONRA uygulanır (canlı metin yok).
       var clean = _joinPrefix(text);
       if (ref.read(voiceSmartCommandsProvider)) {
@@ -479,9 +514,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       }
       _toReview(clean.trim(), l10n.voiceNothingHeard);
     } on GeminiException catch (e) {
-      _toAudioFallback(path, aiErrorText(l10n, e));
+      _toAudioFallback(path, aiErrorText(l10n, e), bytes: bytes, mime: mime);
     } catch (e) {
-      _toAudioFallback(path, e.toString());
+      _toAudioFallback(path, e.toString(), bytes: bytes, mime: mime);
     }
   }
 
@@ -507,14 +542,21 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// geçiyordu — kayıt da silinmiş olduğundan konuşulan her şey yok oluyordu.
   /// Artık kayıt korunur, levha gözden geçirme evresine geçer ve not SES EKİ
   /// ile oluşturulur; kullanıcı isterse metni kendisi yazar.
-  void _toAudioFallback(String? path, String message) {
+  void _toAudioFallback(
+    String? path,
+    String message, {
+    Uint8List? bytes,
+    String? mime,
+  }) {
     if (!mounted) return;
-    if (path == null) {
+    if (path == null && bytes == null) {
       _fail(message);
       return;
     }
     setState(() {
       _readyAudioPath = path;
+      _readyAudioBytes = bytes;
+      _readyAudioMime = mime;
       _text = '';
       _editController.text = '';
       _errorMessage = message;
@@ -578,14 +620,20 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     final text = _editController.text.trim();
     // Metin boş olsa da ses kaydı varsa not oluşur: dökümü yapılamamış bir
     // konuşma da nottur (ek olarak girer).
-    if (text.isEmpty && _readyAudioPath == null) return;
+    if (text.isEmpty && !_hasReadyAudio) return;
     final audio = _readyAudioPath;
+    final audioBytes = _readyAudioBytes;
+    final audioMime = _readyAudioMime;
     // Yol çağırana devredildi: levha artık o dosyayı SİLMEZ.
     _readyAudioPath = null;
+    _readyAudioBytes = null;
+    _readyAudioMime = null;
     Navigator.pop(context, (
       text: text,
       action: action,
       audioPath: audio,
+      audioBytes: audioBytes,
+      audioMime: audioMime,
       audioDuration: _elapsed,
       title: _titleController.text.trim().isEmpty
           ? null
@@ -696,7 +744,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     _session = null;
     try {
       final path = await _recorder?.stop();
-      if (path != null) File(path).delete().ignore();
+      if (path != null) {
+        if (kIsWeb) {
+          revokeWebBlobUrl(path);
+        } else if (path.isNotEmpty) {
+          File(path).delete().ignore();
+        }
+      }
     } catch (_) {
       // Kayıt zaten durmuş olabilir.
     }
@@ -705,7 +759,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     // Kullanılmayan (gönderilmemiş) kayıt geçici klasörde kalmasın.
     final leftover = _readyAudioPath;
     _readyAudioPath = null;
-    if (leftover != null) File(leftover).delete().ignore();
+    _readyAudioBytes = null;
+    _readyAudioMime = null;
+    if (!kIsWeb && leftover != null) File(leftover).delete().ignore();
   }
 
   void _fail(String message) {
@@ -732,7 +788,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     // Gönderilmeden kapatıldıysa kayıt geçici klasörde kalmasın (gönderildiyse
     // _submit yolu null'lar).
     final leftover = _readyAudioPath;
-    if (leftover != null) File(leftover).delete().ignore();
+    if (!kIsWeb && leftover != null) File(leftover).delete().ignore();
     super.dispose();
   }
 
@@ -745,7 +801,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   bool get _hasContent =>
       _phase == _Phase.listening && _text.trim().isNotEmpty ||
       _phase == _Phase.ready &&
-          (_editController.text.trim().isNotEmpty || _readyAudioPath != null);
+          (_editController.text.trim().isNotEmpty || _hasReadyAudio);
 
   @override
   Widget build(BuildContext context) {
@@ -926,7 +982,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
             _actions(l10n, scheme, holdMode, listening),
             // Çipler yapay zekâ ister; döküm zaten yapılamadıysa (ses eki
             // yolu) hepsi aynı hatayla düşerdi — gösterilmezler.
-            if (_readyAudioPath == null) ...[
+            if (!_hasReadyAudio) ...[
               const SizedBox(height: AppSpace.s),
               Align(
                 alignment: AlignmentDirectional.centerStart,
@@ -983,7 +1039,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   Widget _transcript(ColorScheme scheme, bool listening) {
     const style = TextStyle(fontSize: 16, height: 1.45);
     if (_phase == _Phase.ready) {
-      final audio = _readyAudioPath != null;
+      final audio = _hasReadyAudio;
       return ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 60, maxHeight: 180),
         child: SingleChildScrollView(
@@ -1196,7 +1252,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       // zaten çağrılamıyor, tek yol kaydı düz notla saklamak.
       final assistant =
           widget.target == VoiceCaptureTarget.dashboard &&
-          _readyAudioPath == null;
+          !_hasReadyAudio;
       return Row(
         children: [
           SizedBox(
@@ -1219,7 +1275,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
           ),
           const SizedBox(width: AppSpace.s),
           // Ses eki yolunda (döküm yapılamadı) sürdürülecek metin yok.
-          if (_readyAudioPath == null) ...[
+          if (!_hasReadyAudio) ...[
             SizedBox(
               width: _kReadyButton,
               height: _kReadyButton,

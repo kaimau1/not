@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -8,13 +9,16 @@ import 'package:record/record.dart';
 
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/web_audio_record.dart';
+import '../../../../core/utils/web_blob.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/app_icons.dart';
 
-/// Ses kaydı alt sayfası. Kayıt biterse (path, süre) döner; iptalde null.
-Future<({String path, Duration duration})?> showAudioRecorderSheet(
-  BuildContext context,
-) => showAppSheet<({String path, Duration duration})>(
+/// Ses kaydı alt sayfası. Kayıt biterse (path/bytes, süre) döner; iptalde null.
+Future<({String path, Uint8List? bytes, String? mimeType, Duration duration})?>
+showAudioRecorderSheet(BuildContext context) => showAppSheet<
+  ({String path, Uint8List? bytes, String? mimeType, Duration duration})
+>(
   context: context,
   isDismissible: false,
   enableDrag: false,
@@ -33,6 +37,7 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
   Timer? _ticker;
   Duration _elapsed = Duration.zero;
   String? _path;
+  String? _webMime;
   String? _error;
 
   @override
@@ -47,23 +52,30 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
         if (mounted) setState(() => _error = context.l10n.micPermissionDenied);
         return;
       }
-      final dir = await getTemporaryDirectory();
-      _path = p.join(
-        dir.path,
-        'kayit_${DateTime.now().millisecondsSinceEpoch}.m4a',
-      );
-      await _recorder.start(
-        // Konuşma için 96 kbps stereo israftı (dakikada ~720 KB). Tek kanal
-        // 32 kbps / 22.05 kHz ses notunda duyulur fark yaratmaz ama dosyayı
-        // ~6 katı küçültür — Firebase Storage kotası ve mobil veri buna
-        // gidiyordu (ölçüt: [AppConstants.audioBitRate]).
-        const RecordConfig(
-          bitRate: AppConstants.audioBitRate,
-          sampleRate: AppConstants.audioSampleRate,
-          numChannels: 1,
-        ),
-        path: _path!,
-      );
+      if (kIsWeb) {
+        final config = await pickWebRecordConfig(_recorder);
+        _webMime = mimeHintForEncoder(config.encoder);
+        _path = '';
+        await _recorder.start(config, path: '');
+      } else {
+        final dir = await getTemporaryDirectory();
+        _path = p.join(
+          dir.path,
+          'kayit_${DateTime.now().millisecondsSinceEpoch}.m4a',
+        );
+        await _recorder.start(
+          // Konuşma için 96 kbps stereo israftı (dakikada ~720 KB). Tek kanal
+          // 32 kbps / 22.05 kHz ses notunda duyulur fark yaratmaz ama dosyayı
+          // ~6 katı küçültür — Firebase Storage kotası ve mobil veri buna
+          // gidiyordu (ölçüt: [AppConstants.audioBitRate]).
+          const RecordConfig(
+            bitRate: AppConstants.audioBitRate,
+            sampleRate: AppConstants.audioSampleRate,
+            numChannels: 1,
+          ),
+          path: _path!,
+        );
+      }
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) return;
         setState(() => _elapsed += const Duration(seconds: 1));
@@ -87,11 +99,32 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
     _ticker?.cancel();
     try {
       final path = await _recorder.stop();
+      if (kIsWeb) {
+        if (save && path != null && path.isNotEmpty) {
+          final bytes = await readWebBlobBytes(path, revokeAfter: true);
+          if (!mounted) return;
+          Navigator.pop(context, (
+            path: '',
+            bytes: bytes,
+            mimeType: _webMime,
+            duration: _elapsed,
+          ));
+        } else {
+          if (path != null) revokeWebBlobUrl(path);
+          if (mounted) Navigator.pop(context);
+        }
+        return;
+      }
       if (!mounted) return;
       if (save && path != null) {
-        Navigator.pop(context, (path: path, duration: _elapsed));
+        Navigator.pop(context, (
+          path: path,
+          bytes: null,
+          mimeType: null,
+          duration: _elapsed,
+        ));
       } else {
-        if (path != null) File(path).delete().ignore();
+        if (path != null && path.isNotEmpty) File(path).delete().ignore();
         Navigator.pop(context);
       }
     } catch (_) {

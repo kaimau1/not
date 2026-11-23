@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 /// Web-dışı platformlarda derlenen gövde: hiçbir yerden çağrılmamalı
 /// (çağıran taraf zaten `kIsWeb` ile korur), ama koşullu import dalı
 /// derlenebilir olsun diye burada da bir imza olmalı.
@@ -8,3 +10,12 @@ String createBlobUrl(List<int> bytes, String mimeType) {
 void downloadBytes(List<int> bytes, String mimeType, String fileName) {
   throw UnsupportedError('downloadBytes yalnız web\'de kullanılabilir.');
 }
+
+Future<Uint8List> readWebBlobBytes(
+  String blobUrl, {
+  bool revokeAfter = false,
+}) {
+  throw UnsupportedError('readWebBlobBytes yalnız web\'de kullanılabilir.');
+}
+
+void revokeWebBlobUrl(String blobUrl) {}

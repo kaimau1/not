@@ -7,6 +7,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/utils/speech_output.dart';
+import '../../../core/utils/web_attachment_cache.dart';
+import '../../../core/utils/web_blob.dart';
 import '../../settings/settings_providers.dart';
 import 'gemini_service.dart';
 import 'pcm_wav.dart';
@@ -39,8 +41,10 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
   AudioPlayer? _player;
   int _generation = 0;
 
-  /// Üretilen geçici WAV dosyaları; okuma bitince silinir.
+  /// Üretilen geçici WAV dosyaları ve tarayıcı blob URL'leri; okuma bitince
+  /// temizlenir.
   final _temp = <File>[];
+  final _tempBlobUrls = <String>[];
 
   @override
   SpeechOutputState build() {
@@ -54,8 +58,7 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
 
   /// Yapay zekâ seslendirmesi bu kurulumda kullanılabilir mi? (Kendi Gemini
   /// anahtarı gerekir — dahili yol ses döndürmüyor.)
-  bool get isAvailable =>
-      !kIsWeb && ref.read(geminiServiceProvider).provider.id == 'gemini';
+  bool get isAvailable => ref.read(geminiServiceProvider).provider.id == 'gemini';
 
   /// Metni cümle sınırlarından [_chunkChars]'lık parçalara böler.
   ///
@@ -96,6 +99,10 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
       }
     }
     _temp.clear();
+    for (final url in _tempBlobUrls) {
+      revokeWebBlobUrl(url);
+    }
+    _tempBlobUrls.clear();
   }
 
   Future<Uint8List> _synthesize(String text) => ref
@@ -124,8 +131,31 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     final generation = _generation;
     final voice = ref.read(ttsVoiceProvider);
     final model = ref.read(ttsModelProvider) ?? 'auto';
-    final file = await _sampleFile(model: model, voice: voice, text: sample);
+    final key = '${model}_${voice}_${sample.hashCode}'.replaceAll(
+      RegExp(r'[^A-Za-z0-9_.-]'),
+      '_',
+    );
     var generated = false;
+    final player = _player ??= AudioPlayer();
+    if (kIsWeb) {
+      final cached = await webAttachmentCache.get('tts:$key');
+      final Uint8List bytes;
+      if (cached != null && cached.bytes.isNotEmpty) {
+        bytes = cached.bytes;
+      } else {
+        bytes = await _synthesize(sample);
+        await webAttachmentCache.put('tts:$key', bytes, 'audio/wav');
+        generated = true;
+      }
+      if (generation != _generation) return generated;
+      final url = createBlobUrl(bytes, 'audio/wav');
+      _tempBlobUrls.add(url);
+      await player.stop();
+      await player.setUrl(url);
+      await player.play();
+      return generated;
+    }
+    final file = await _sampleFile(key);
     if (!file.existsSync() || file.lengthSync() == 0) {
       final bytes = await _synthesize(sample);
       await file.parent.create(recursive: true);
@@ -135,7 +165,6 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     // Deneme, okuma durumunu (SpeechOutputState) DEĞİŞTİRMEZ: ayarlar ekranı
     // bir notu okumuyor; ilerleme çubuğu açılsaydı yanlış olurdu.
     if (generation != _generation) return generated;
-    final player = _player ??= AudioPlayer();
     await player.stop();
     await player.setFilePath(file.path);
     await player.play();
@@ -146,16 +175,8 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
   /// dosya, aynı ses tekrar seçilince eski dosya bulunur. Geçici klasör DEĞİL
   /// kalıcı klasör: sistem geçici dosyaları silince örnek yeniden üretilir ve
   /// kota boşuna yanardı.
-  Future<File> _sampleFile({
-    required String model,
-    required String voice,
-    required String text,
-  }) async {
+  Future<File> _sampleFile(String key) async {
     final dir = await getApplicationSupportDirectory();
-    final key = '${model}_${voice}_${text.hashCode}'.replaceAll(
-      RegExp(r'[^A-Za-z0-9_.-]'),
-      '_',
-    );
     return File('${dir.path}/tts_samples/$key.wav');
   }
 
@@ -185,9 +206,16 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
         final bytes = await next!;
         if (generation != _generation) return; // durduruldu / yeniden başladı
         next = i + 1 < chunks.length ? _synthesize(chunks[i + 1]) : null;
-        final file = await _writeTemp(bytes, i);
-        if (generation != _generation) return;
-        await player.setFilePath(file.path);
+        if (kIsWeb) {
+          final url = createBlobUrl(bytes, 'audio/wav');
+          _tempBlobUrls.add(url);
+          if (generation != _generation) return;
+          await player.setUrl(url);
+        } else {
+          final file = await _writeTemp(bytes, i);
+          if (generation != _generation) return;
+          await player.setFilePath(file.path);
+        }
         await player.play();
         // Ses BAŞLADI: bekleme göstergesi kalksın. Ön yükleme yetişemezse
         // (uzun paragraf, yavaş ağ) bir sonraki turda yeniden açılır.
@@ -257,32 +285,15 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     _cleanTemp();
   }
 
-  /// Metnin TAMAMINI seslendirip TEK bir WAV dosyası olarak yazar ve yolunu
-  /// döndürür (kullanıcı isteği 2026-08-16: podcast'i ses dosyası olarak dışa
-  /// aktarma).
-  ///
-  /// Okumadan ([speak]) iki farkı var:
-  ///  1. Hiçbir şey ÇALINMAZ — dosya üretmek için parçaların sırayla
-  ///     beklenmesi yeter, oynatıcıya hiç dokunulmaz.
-  ///  2. Parçalar sırayla ve TEK TEK istenir. Okumada sıradaki parça çalarken
-  ///     üretiliyor (bekleme duyulmasın diye); burada duyulacak bir şey yok ve
-  ///     paralel istek kullanıcının kotasına aynı anda birden çok çağrı olarak
-  ///     düşerdi.
-  ///
-  /// [onProgress] her parça bitince (üretilen, toplam) ile çağrılır — çağıran
-  /// ekran "3/12" gösterebilsin. Model hatası olduğu gibi fırlatılır.
-  ///
-  /// MALİYET UYARISI çağıranın işi: burada her parça bir model çağrısıdır ve
-  /// okuma sırasında zaten üretilmiş parçalar YENİDEN üretilir (geçici
-  /// dosyalar okuma bitince siliniyor, ayrıca kullanıcı hiç dinlemeden de
-  /// dışa aktarabilir).
-  Future<String> renderToFile(
+  /// Metnin TAMAMINI seslendirip tek bir WAV bayt dizisi üretir.
+  Future<Uint8List> renderToBytes(
     String text, {
-    required String fileName,
     void Function(int done, int total)? onProgress,
   }) async {
     final chunks = chunk(text);
-    if (chunks.isEmpty) throw const GeminiException.of(GeminiErrorKind.noSpeechText);
+    if (chunks.isEmpty) {
+      throw const GeminiException.of(GeminiErrorKind.noSpeechText);
+    }
     final parts = <Uint8List>[];
     for (var i = 0; i < chunks.length; i++) {
       parts.add(await _synthesize(chunks[i]));
@@ -292,6 +303,18 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     if (merged.isEmpty) {
       throw const GeminiException.of(GeminiErrorKind.speechFailed);
     }
+    return merged;
+  }
+
+  /// Metnin TAMAMINI seslendirip TEK bir WAV dosyası olarak yazar ve yolunu
+  /// döndürür (kullanıcı isteği 2026-08-16: podcast'i ses dosyası olarak dışa
+  /// aktarma).
+  Future<String> renderToFile(
+    String text, {
+    required String fileName,
+    void Function(int done, int total)? onProgress,
+  }) async {
+    final merged = await renderToBytes(text, onProgress: onProgress);
     // Geçici klasör: dosya paylaşıldıktan sonra sistemin temizlemesi
     // beklenir; kalıcı klasörde tutmak kullanıcının depolamasını sessizce
     // şişirirdi (bir dakikalık ses ~3 MB).

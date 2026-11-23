@@ -11,6 +11,7 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/utils/web_attachment_cache.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/pop_in.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -319,10 +320,26 @@ class _AudioTileState extends State<_AudioTile> {
       final player = _player ??= AudioPlayer();
       if (!_loaded) {
         final a = widget.attachment;
-        if (localFileExists(a.localPath)) {
-          await player.setFilePath(a.localPath);
-        } else if (a.isUploaded) {
-          await player.setUrl(a.downloadUrl);
+        ProviderContainer? container;
+        try {
+          container = ProviderScope.containerOf(context, listen: false);
+        } catch (_) {}
+        var resolved = kIsWeb ? webDriveResolved(a) : a;
+        if (kIsWeb &&
+            !resolved.isUploaded &&
+            (resolved.isInDrive || webLocalCacheContains(resolved.id))) {
+          final fetched = await resolveWebDriveAttachmentFromContainer(
+            context,
+            container,
+            resolved,
+          );
+          if (fetched != null) resolved = fetched;
+        }
+        if (!mounted) return;
+        if (!kIsWeb && localFileExists(resolved.localPath)) {
+          await player.setFilePath(resolved.localPath);
+        } else if (resolved.isUploaded) {
+          await player.setUrl(resolved.downloadUrl);
         } else {
           if (mounted) {
             showAppMessage(context, context.l10n.attachmentNotSynced);

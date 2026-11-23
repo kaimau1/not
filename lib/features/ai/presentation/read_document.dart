@@ -1,4 +1,5 @@
 import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -33,21 +34,32 @@ Future<void> pickAndReadDocument(BuildContext context) async {
   if (file == null || !context.mounted) return;
 
   final path = file.path;
-  final isPdf = DocText.extensionOf(path) == 'pdf';
-  if (!isPdf && !DocText.supports(path)) {
+  final nameOrPath = file.name.isNotEmpty ? file.name : path;
+  final ext = DocText.extensionOf(nameOrPath);
+  final isPdf = ext == 'pdf';
+  if (!isPdf && !DocText.supports(nameOrPath)) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showMessage(context.l10n.readDocUnsupported);
     return;
   }
 
+  final bytes = kIsWeb || path.isEmpty ? await file.readAsBytes() : null;
+  if (!context.mounted) return;
   await Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => ListenScreen(
         title: file.name,
-        loadText: () async => isPdf
-            ? PdfText.cleanForSpeech(await PdfText.extract(path))
-            : DocText.extract(path),
+        loadText: () async {
+          if (bytes != null) {
+            return isPdf
+                ? PdfText.cleanForSpeech(await PdfText.extractFromBytes(bytes))
+                : DocText.extractFromBytes(ext, bytes);
+          }
+          return isPdf
+              ? PdfText.cleanForSpeech(await PdfText.extract(path))
+              : DocText.extract(path);
+        },
       ),
     ),
   );

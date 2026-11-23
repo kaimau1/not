@@ -4940,11 +4940,10 @@ child: FormatBar(
                       final showDictation =
                           _dictating || on(UiItem.barDictation);
                       // SESLİ NOT (kayıt, 2026-10-28): kayıt SÜRERKEN düğme
-                      // gizlenmez — bitirme yolu kalsın. Web'de kayıt eki yok.
+                      // gizlenmez — bitirme yolu kalsın.
                       final showVoiceRecord =
-                          !kIsWeb &&
-                          (_voiceRecorder != null ||
-                              on(UiItem.barVoiceRecord));
+                          _voiceRecorder != null ||
+                          (!_readOnly && on(UiItem.barVoiceRecord));
                       // Türe özgü yuva: metin notunda ☑ (satırı maddeye
                       // çevir); liste notunda LİSTE ↔ NUMARALI (2026-11-16).
                       final listKind =
@@ -5357,8 +5356,8 @@ child: FormatBar(
                             UiItem.barRedo ||
                             UiItem.barPhoto => !_readOnly,
                             UiItem.barCamera ||
-                            UiItem.barScan ||
-                            UiItem.barVoiceRecord => !_readOnly && !kIsWeb,
+                            UiItem.barScan => !_readOnly && !kIsWeb,
+                            UiItem.barVoiceRecord => !_readOnly,
                             UiItem.barFormat ||
                             UiItem.barAdd ||
                             UiItem.barSearch ||

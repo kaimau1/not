@@ -908,17 +908,26 @@ extension _EditorAttachments on _NoteEditorScreenState {
     // Yanlışlıkla açılıp hemen kapanan kayıt (yarım saniyeden kısa) nota
     // boş bir hap bırakmasın.
     if (result.duration < const Duration(milliseconds: 600)) {
-      File(result.path).delete().ignore();
+      if (!kIsWeb && result.path.isNotEmpty) {
+        File(result.path).delete().ignore();
+      }
       return;
     }
     final repo = _attachments;
     if (repo == null) return;
     try {
-      final attachment = await repo.prepareAudio(
-        noteId: widget.noteId,
-        sourcePath: result.path,
-        duration: result.duration,
-      );
+      final attachment = kIsWeb && result.bytes != null
+          ? await repo.prepareAudioBytes(
+              noteId: widget.noteId,
+              bytes: result.bytes!,
+              duration: result.duration,
+              mimeTypeHint: result.mimeType,
+            )
+          : await repo.prepareAudio(
+              noteId: widget.noteId,
+              sourcePath: result.path,
+              duration: result.duration,
+            );
       if (!mounted) return;
       final recorded = attachment.copyWith(
         wave: result.wave,

@@ -8,6 +8,7 @@ import '../../../core/app_update.dart' show UpdateBanner;
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:flutter/material.dart';
 import '../../../core/widgets/back_closes.dart';
 import '../../../core/widgets/hold_progress_ring.dart';
@@ -1350,7 +1351,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // Ses eki yolunda (döküm yapılamadı) bu çip zaten gösterilmez; yine de
     // gelirse aşağıdaki düz akış çalışır — kayıt kaybolmasın.
     if (result.action == VoiceCaptureAction.compose &&
-        result.audioPath == null) {
+        result.audioPath == null &&
+        result.audioBytes == null) {
       await ref
           .read(voiceAssistantProvider.notifier)
           .composeFromTranscript(
@@ -1421,9 +1423,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
     // Dökümü yapılamamış konuşma: kayıt nota SES EKİ olarak girer, böylece
     // yapay zekâ hiç çalışmasa da konuşma kaybolmaz.
-    final audioPath = result.audioPath;
-    if (audioPath != null) {
-      await _attachVoiceAudio(id, audioPath, result.audioDuration);
+    if (result.audioPath != null || result.audioBytes != null) {
+      await _attachVoiceAudio(
+        id,
+        result.audioPath,
+        result.audioBytes,
+        result.audioMime,
+        result.audioDuration,
+      );
     }
     if (!mounted) return;
     _afterQuickCapture(id);
@@ -1443,26 +1450,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Sesli yakalamadan dönen ses kaydını yeni nota ek olarak bağlar.
   Future<void> _attachVoiceAudio(
     String noteId,
-    String path,
+    String? path,
+    Uint8List? bytes,
+    String? mime,
     Duration duration,
   ) async {
     final attachments = ref.read(attachmentRepositoryProvider);
     final repo = ref.read(notesRepositoryProvider);
     if (attachments == null || repo == null) {
-      File(path).delete().ignore();
+      if (!kIsWeb && path != null && path.isNotEmpty) {
+        File(path).delete().ignore();
+      }
       return;
     }
     try {
-      final attachment = await attachments.prepareAudio(
-        noteId: noteId,
-        sourcePath: path,
-        duration: duration,
-      );
+      final attachment = bytes != null
+          ? await attachments.prepareAudioBytes(
+              noteId: noteId,
+              bytes: bytes,
+              duration: duration,
+              mimeTypeHint: mime,
+            )
+          : await attachments.prepareAudio(
+              noteId: noteId,
+              sourcePath: path!,
+              duration: duration,
+            );
       repo.updateFields(noteId, {
         'attachments': [attachment.toMap()],
       });
     } catch (e) {
-      File(path).delete().ignore();
+      if (!kIsWeb && path != null && path.isNotEmpty) {
+        File(path).delete().ignore();
+      }
       if (mounted) showQuickAddSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }

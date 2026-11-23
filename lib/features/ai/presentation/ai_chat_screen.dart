@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/attachment_repository.dart';
+import '../../notes/data/media_transcriber.dart' show audioMimeOf;
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/data/notes_repository.dart' show notesStreamProvider;
@@ -296,11 +297,15 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final result = await showAudioRecorderSheet(context);
     if (result == null) return;
     try {
-      final bytes = await File(result.path).readAsBytes();
-      File(result.path).delete().ignore();
+      final bytes =
+          result.bytes ?? await File(result.path).readAsBytes();
+      if (!kIsWeb && result.path.isNotEmpty) {
+        File(result.path).delete().ignore();
+      }
+      final mime = audioMimeOf(bytes, result.mimeType ?? 'audio/mp4');
       final text = await ref
           .read(geminiServiceProvider)
-          .transcribeAudio(bytes, 'audio/mp4');
+          .transcribeAudio(bytes, mime);
       if (mounted && text.trim().isNotEmpty) await _send(text);
     } catch (e) {
       if (!mounted) return;

@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/utils/web_attachment_cache.dart';
+
 /// Üretilmiş AI çıktılarını cihazda saklar: aynı girdi ikinci kez model
 /// çağırmaz. Bir PDF'i podcast'e çevirmek tek seferde binlerce token
 /// harcıyor, ekrana her girişte yeniden harcamasının anlamı yok.
@@ -18,6 +20,8 @@ import 'package:path_provider/path_provider.dart';
 /// null geçer): dosyalar düz metin ve kilidin amacı içeriğin diskte açıkta
 /// dolaşmaması.
 abstract final class AiCache {
+  static const _webPrefix = 'aicache:';
+
   /// Üstünde tutulacak dosya sayısı. Metin küçük ama sınırsız büyüyen bir
   /// önbellek cihazda yıllar içinde birikir.
   static const maxEntries = 40;
@@ -45,6 +49,11 @@ abstract final class AiCache {
   }
 
   static Future<String?> read(String key) async {
+    if (kIsWeb && overrideDir == null) {
+      final cached = await webAttachmentCache.get('$_webPrefix$key');
+      if (cached == null) return null;
+      return utf8.decode(cached.bytes, allowMalformed: true);
+    }
     final file = File(p.join((await _dir()).path, '$key.txt'));
     try {
       if (!await file.exists()) return null;
@@ -58,6 +67,14 @@ abstract final class AiCache {
   }
 
   static Future<void> write(String key, String value) async {
+    if (kIsWeb && overrideDir == null) {
+      await webAttachmentCache.put(
+        '$_webPrefix$key',
+        Uint8List.fromList(utf8.encode(value)),
+        'text/plain',
+      );
+      return;
+    }
     final dir = await _dir();
     try {
       await File(

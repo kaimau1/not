@@ -492,7 +492,38 @@ Future<Attachment?> resolveWebDriveAttachment(
   BuildContext context,
   WidgetRef ref,
   Attachment attachment,
-) async {
+) => _resolveWebDriveAttachment(
+  context,
+  attachment,
+  readStore: () => ref.read(driveStoreProvider),
+  readAuth: () => ref.read(driveAuthProvider),
+  markConnected: () {
+    if (context.mounted) ref.read(driveConnectedProvider.notifier).set(true);
+  },
+);
+
+/// `WidgetRef` erişimi olmayan widget'lar için (`AudioCardBox`, `_AudioTile`):
+/// `ProviderContainer` varsa aynı Drive/önbellek çözme akışını çalıştırır.
+Future<Attachment?> resolveWebDriveAttachmentFromContainer(
+  BuildContext context,
+  ProviderContainer? container,
+  Attachment attachment,
+) => _resolveWebDriveAttachment(
+  context,
+  attachment,
+  readStore: () => container?.read(driveStoreProvider),
+  readAuth: () => container?.read(driveAuthProvider),
+  markConnected: () =>
+      container?.read(driveConnectedProvider.notifier).set(true),
+);
+
+Future<Attachment?> _resolveWebDriveAttachment(
+  BuildContext context,
+  Attachment attachment, {
+  required DriveStore? Function() readStore,
+  required DriveAuth? Function() readAuth,
+  required VoidCallback markConnected,
+}) async {
   final localUrl = webLocalBlobUrls.value[attachment.id];
   if (localUrl != null) return attachment.copyWith(downloadUrl: localUrl);
   if (webLocalCacheContains(attachment.id)) {
@@ -527,12 +558,12 @@ Future<Attachment?> resolveWebDriveAttachment(
     say(l10n.driveNeededForFile);
     return null;
   }
-  final store = ref.read(driveStoreProvider);
-  if (store == null) {
+  final store = readStore();
+  final auth = readAuth();
+  if (store == null || auth == null) {
     say(l10n.driveNeededForFile);
     return null;
   }
-  final auth = ref.read(driveAuthProvider);
   if (await auth.accessToken() == null) {
     if (!context.mounted) return null;
     final ok = await showDialog<bool>(
@@ -569,9 +600,7 @@ Future<Attachment?> resolveWebDriveAttachment(
       ),
     );
     if (ok != true) return null;
-    if (context.mounted) {
-      ref.read(driveConnectedProvider.notifier).set(true);
-    }
+    markConnected();
   }
   say(l10n.driveDownloading);
   try {

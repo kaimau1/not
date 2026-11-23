@@ -14,8 +14,15 @@ class PdfText {
 
   /// Tüm sayfaların metni. Taranmış (görüntü) PDF'lerde metin katmanı
   /// olmadığından BOŞ döner — çağıran OCR'a düşmeli.
-  static Future<String> extract(String path) async {
-    final document = await PdfDocument.openFile(path);
+  static Future<String> extract(String path) async =>
+      _extractDocument(await PdfDocument.openFile(path));
+
+  /// Bellek içi PDF baytlarından tüm sayfaların metnini çıkarır (web veya
+  /// Drive'dan inen ekler için dosya yolu gerekmez).
+  static Future<String> extractFromBytes(Uint8List bytes) async =>
+      _extractDocument(await PdfDocument.openData(bytes));
+
+  static Future<String> _extractDocument(PdfDocument document) async {
     try {
       final buffer = StringBuffer();
       for (var i = 0; i < document.pages.length; i++) {

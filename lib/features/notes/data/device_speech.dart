@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:record/record.dart';
 
 import '../../../core/utils/speech_text.dart';
+import '../../../core/utils/web_speech_recognition.dart';
 
 /// Cihazın YERLEŞİK konuşma tanıması (Android SpeechRecognizer) için ince
 /// köprü. Dikte ve Sesli Not Asistanı bunu kullanır: ücretsiz, anlık ve
@@ -25,11 +26,12 @@ class DeviceSpeech {
   @visibleForTesting
   static bool? debugAvailable;
 
-  /// Cihazda konuşma tanıma kullanılabilir mi. Android dışında (web)
-  /// yerleşik tanıma yoktur; çağıranlar eski ses yoluna düşer.
+  /// Cihazda konuşma tanıma kullanılabilir mi. Android dışında web'de
+  /// tarayıcının Web Speech API desteğine bakılır.
   static Future<bool> isAvailable() async {
     if (debugAvailable case final v?) return v;
-    if (kIsWeb || !Platform.isAndroid) return false;
+    if (kIsWeb) return isWebSpeechAvailable;
+    if (!Platform.isAndroid) return false;
     try {
       return await _method.invokeMethod<bool>('speechAvailable') ?? false;
     } on PlatformException {
@@ -101,24 +103,38 @@ class DeviceSpeech {
   static Stream<({String? text, double? level})> listen({
     String locale = 'tr-TR',
     bool preferOffline = false,
-  }) => _events
-      .receiveBroadcastStream(preferOffline ? '$locale|offline' : locale)
-      .map((event) {
-        final map = event as Map<Object?, Object?>;
-        final raw = map['text'] as String?;
-        final text = raw == null ? null : dedupeSpeechSegments(raw);
-        return (
-          // Boş metin olayı YOK SAYILIR: tanıyıcı bazı turlarda boş sonuç
-          // gönderiyor ve bu, o ana kadar yazılmış metnin üzerine yazıp
-          // siliyordu (ölçümle doğrulandı). Boşsa null döner, çağıran da
-          // mevcut metni korur.
-          text: (text == null || text.isEmpty) ? null : text,
-          level: (map['level'] as num?)?.toDouble(),
-        );
-      });
+  }) {
+    final rawStream = kIsWeb
+        ? listenWebSpeech(locale: locale)
+        : _events
+              .receiveBroadcastStream(preferOffline ? '$locale|offline' : locale)
+              .map((event) {
+                final map = event as Map<Object?, Object?>;
+                return (
+                  text: map['text'] as String?,
+                  level: (map['level'] as num?)?.toDouble(),
+                );
+              });
+    return rawStream.map((event) {
+      final raw = event.text;
+      final text = raw == null ? null : dedupeSpeechSegments(raw);
+      return (
+        // Boş metin olayı YOK SAYILIR: tanıyıcı bazı turlarda boş sonuç
+        // gönderiyor ve bu, o ana kadar yazılmış metnin üzerine yazıp
+        // siliyordu (ölçümle doğrulandı). Boşsa null döner, çağıran da
+        // mevcut metni korur.
+        text: (text == null || text.isEmpty) ? null : text,
+        level: event.level,
+      );
+    });
+  }
 
   /// Dinlemeyi bitirir; son (tamamlanmış) metin akıştan gelir.
   static Future<void> stop() async {
+    if (kIsWeb) {
+      await stopWebSpeech();
+      return;
+    }
     try {
       await _method.invokeMethod('stopSpeech');
     } on PlatformException {

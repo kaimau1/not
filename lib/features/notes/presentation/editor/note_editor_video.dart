@@ -300,11 +300,17 @@ extension _EditorVideo on _NoteEditorScreenState {
     try {
       final attachment = await _runBusy(
         context.l10n.attachmentUploading,
-        () => repo.prepareAudioFile(
-          noteId: widget.noteId,
-          sourcePath: picked.path,
-          fileName: picked.name,
-        ),
+        () async => kIsWeb || picked.path.isEmpty
+            ? repo.prepareAudioBytes(
+                noteId: widget.noteId,
+                bytes: await picked.readAsBytes(),
+                fileName: picked.name,
+              )
+            : repo.prepareAudioFile(
+                noteId: widget.noteId,
+                sourcePath: picked.path,
+                fileName: picked.name,
+              ),
       );
       if (!mounted) return null;
       _mutate(
@@ -367,11 +373,17 @@ extension _EditorVideo on _NoteEditorScreenState {
       final Attachment attachment;
       switch (kind) {
         case AttachmentKind.audio:
-          attachment = await repo.prepareAudioFile(
-            noteId: widget.noteId,
-            sourcePath: picked.path,
-            fileName: picked.name,
-          );
+          attachment = kIsWeb || picked.path.isEmpty
+              ? await repo.prepareAudioBytes(
+                  noteId: widget.noteId,
+                  bytes: await picked.readAsBytes(),
+                  fileName: picked.name,
+                )
+              : await repo.prepareAudioFile(
+                  noteId: widget.noteId,
+                  sourcePath: picked.path,
+                  fileName: picked.name,
+                );
         case AttachmentKind.video:
           attachment = (await repo.prepareVideo(
             noteId: widget.noteId,

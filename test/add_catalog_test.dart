@@ -70,11 +70,12 @@ void main() {
     expect(attach.values.map((e) => e.group), isNot(contains(AddGroup.template)));
   });
 
-  test('web: kamera ve ses kaydı not içinde düşer', () {
+  test('web: kamera ve video not içinde düşer, ses kaydı bulunur', () {
     final web = byId(AddContext.inNote, web: true);
-    for (final id in ['camera', 'video', 'audio']) {
+    for (final id in ['camera', 'video']) {
       expect(web.keys, isNot(contains(id)), reason: id);
     }
+    expect(web.keys, contains('audio'));
   });
 
   Widget host(Widget child) => MaterialApp(

@@ -1,5 +1,6 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
+import '../../../core/utils/local_file.dart';
 import 'attachment_repository.dart';
 import 'doc_text.dart';
 import 'pdf_text.dart';
@@ -46,13 +47,12 @@ Future<String> _documentText(
 ) async {
   try {
     if (doc.kind == AttachmentKind.pdf) {
-      // pdfrx DOSYA yolu ister; yerel kopya yoksa bulut baytları geçici bir
-      // dosyaya yazılır (ikinci cihazda not açıldığında da okunabilsin).
-      final path = doc.localPath.isNotEmpty && File(doc.localPath).existsSync()
-          ? doc.localPath
-          : await _tempCopy(doc, attachments);
-      if (path == null) return '';
-      return await PdfText.cleanForSpeech(await PdfText.extract(path));
+      if (!kIsWeb && localFileExists(doc.localPath)) {
+        return await PdfText.cleanForSpeech(await PdfText.extract(doc.localPath));
+      }
+      final bytes = await attachments?.readBytes(doc);
+      if (bytes == null) return '';
+      return await PdfText.cleanForSpeech(await PdfText.extractFromBytes(bytes));
     }
     final bytes = await attachments?.readBytes(doc);
     if (bytes == null) return '';
@@ -63,17 +63,4 @@ Future<String> _documentText(
     // Bozuk/şifreli belge okumayı düşürmesin: notun kendi metni yine okunur.
     return '';
   }
-}
-
-Future<String?> _tempCopy(
-  Attachment doc,
-  AttachmentRepository? attachments,
-) async {
-  final bytes = await attachments?.readBytes(doc);
-  if (bytes == null) return null;
-  final file = File(
-    '${Directory.systemTemp.path}/not-oku-${doc.id}.pdf',
-  );
-  await file.writeAsBytes(bytes, flush: true);
-  return file.path;
 }

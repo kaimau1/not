@@ -1,13 +1,17 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/video_time.dart';
+import '../../../../core/utils/web_attachment_cache.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../domain/attachment.dart';
+import '../drive_ui.dart';
 import 'video_hub_scope.dart';
 import 'voice_note_recorder.dart';
 import '../../../../core/haptics.dart';
@@ -81,12 +85,28 @@ class _AudioCardBoxState extends State<AudioCardBox> {
 
   Future<AudioPlayer?> _load() async {
     final a = widget.attachment;
+    ProviderContainer? container;
+    try {
+      container = ProviderScope.containerOf(context, listen: false);
+    } catch (_) {}
+    var resolved = kIsWeb ? webDriveResolved(a) : a;
+    if (kIsWeb &&
+        !resolved.isUploaded &&
+        (resolved.isInDrive || webLocalCacheContains(resolved.id))) {
+      final fetched = await resolveWebDriveAttachmentFromContainer(
+        context,
+        container,
+        resolved,
+      );
+      if (fetched != null) resolved = fetched;
+    }
+    if (!mounted) return null;
     final player = AudioPlayer();
     try {
-      if (localFileExists(a.localPath)) {
-        await player.setFilePath(a.localPath);
-      } else if (a.isUploaded) {
-        await player.setUrl(a.downloadUrl);
+      if (!kIsWeb && localFileExists(resolved.localPath)) {
+        await player.setFilePath(resolved.localPath);
+      } else if (resolved.isUploaded) {
+        await player.setUrl(resolved.downloadUrl);
       } else {
         await player.dispose();
         _loading = null;

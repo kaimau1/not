@@ -985,15 +985,25 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                           leading: const Icon(AppIcons.listen),
                           title: Text(l10n.listen),
                           onTap: () {
+                            final repo = ref.read(attachmentRepositoryProvider);
                             Navigator.pop(context);
                             Navigator.of(context).push(
                               MaterialPageRoute<void>(
                                 builder: (_) => ListenScreen(
                                   title: pdf.fileName,
                                   allowCache: !widget.note.locked,
-                                  loadText: () async => PdfText.cleanForSpeech(
-                                    await PdfText.extract(pdf.localPath),
-                                  ),
+                                  loadText: () async {
+                                    if (localFileExists(pdf.localPath)) {
+                                      return PdfText.cleanForSpeech(
+                                        await PdfText.extract(pdf.localPath),
+                                      );
+                                    }
+                                    final bytes = await repo?.readBytes(pdf);
+                                    if (bytes == null) return '';
+                                    return PdfText.cleanForSpeech(
+                                      await PdfText.extractFromBytes(bytes),
+                                    );
+                                  },
                                 ),
                               ),
                             );
@@ -1034,14 +1044,24 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                           leading: const Icon(AppIcons.listen),
                           title: Text(l10n.listen),
                           onTap: () {
+                            final repo = ref.read(attachmentRepositoryProvider);
                             Navigator.pop(context);
                             Navigator.of(context).push(
                               MaterialPageRoute<void>(
                                 builder: (_) => ListenScreen(
                                   title: slide.fileName,
                                   allowCache: !widget.note.locked,
-                                  loadText: () async =>
-                                      DocText.extract(slide.localPath),
+                                  loadText: () async {
+                                    if (localFileExists(slide.localPath)) {
+                                      return DocText.extract(slide.localPath);
+                                    }
+                                    final bytes = await repo?.readBytes(slide);
+                                    if (bytes == null) return '';
+                                    return DocText.extractFromBytes(
+                                      'pptx',
+                                      bytes,
+                                    );
+                                  },
                                 ),
                               ),
                             );

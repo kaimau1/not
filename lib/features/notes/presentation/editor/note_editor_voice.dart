@@ -377,9 +377,13 @@ extension _EditorVoice on _NoteEditorScreenState {
 
     // Dökümü yapılamamış konuşma (anahtar yok / kota / ağ): kayıt nota SES EKİ
     // olarak girer — yapay zekâ çalışmasa da konuşma kaybolmaz.
-    final audioPath = result.audioPath;
-    if (audioPath != null) {
-      await _attachVoiceAudio(audioPath, result.audioDuration);
+    if (result.audioPath != null || result.audioBytes != null) {
+      await _attachVoiceAudio(
+        result.audioPath,
+        result.audioBytes,
+        result.audioMime,
+        result.audioDuration,
+      );
       if (!mounted) return;
       if (result.text.trim().isNotEmpty) _insertTextAtCaret(result.text);
       return;
@@ -410,27 +414,45 @@ extension _EditorVoice on _NoteEditorScreenState {
 
   /// Sesli yakalama levhasından dönen (dökümü yapılamamış) kaydı nota ek olarak
   /// bağlar. Yol levhadan devralınır: burada kullanılmazsa dosya silinir.
-  Future<void> _attachVoiceAudio(String path, Duration duration) async {
+  Future<void> _attachVoiceAudio(
+    String? path,
+    Uint8List? bytes,
+    String? mime,
+    Duration duration,
+  ) async {
     final repo = _attachments;
     if (repo == null) {
-      File(path).delete().ignore();
+      if (!kIsWeb && path != null && path.isNotEmpty) {
+        File(path).delete().ignore();
+      }
       return;
     }
     try {
-      final attachment = await repo.prepareAudio(
-        noteId: widget.noteId,
-        sourcePath: path,
-        duration: duration,
-      );
+      final attachment = bytes != null
+          ? await repo.prepareAudioBytes(
+              noteId: widget.noteId,
+              bytes: bytes,
+              duration: duration,
+              mimeTypeHint: mime,
+            )
+          : await repo.prepareAudio(
+              noteId: widget.noteId,
+              sourcePath: path!,
+              duration: duration,
+            );
       _mutate(
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
         immediate: true,
       );
     } on FileTooLargeException catch (e) {
-      File(path).delete().ignore();
+      if (!kIsWeb && path != null && path.isNotEmpty) {
+        File(path).delete().ignore();
+      }
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      File(path).delete().ignore();
+      if (!kIsWeb && path != null && path.isNotEmpty) {
+        File(path).delete().ignore();
+      }
       if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
     }
   }

@@ -32,3 +32,27 @@ void downloadBytes(List<int> bytes, String mimeType, String fileName) {
   anchor.click();
   anchor.remove();
 }
+
+/// Tarayıcı `blob:` adresinden ham baytları okur. [revokeAfter] true ise
+/// okuma bitince bellek nesnesini serbest bırakır.
+Future<Uint8List> readWebBlobBytes(
+  String blobUrl, {
+  bool revokeAfter = false,
+}) async {
+  try {
+    final response = await web.window.fetch(blobUrl.toJS).toDart;
+    if (!response.ok) {
+      throw StateError('Blob okunamadı: ${response.status}');
+    }
+    final buffer = await response.arrayBuffer().toDart;
+    return buffer.toDart.asUint8List();
+  } finally {
+    if (revokeAfter) revokeWebBlobUrl(blobUrl);
+  }
+}
+
+void revokeWebBlobUrl(String blobUrl) {
+  if (blobUrl.startsWith('blob:')) {
+    web.URL.revokeObjectURL(blobUrl);
+  }
+}

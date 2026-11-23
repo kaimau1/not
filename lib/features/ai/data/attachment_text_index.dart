@@ -9,6 +9,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 import '../../../core/error_log.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/search_fold.dart';
+import '../../../core/utils/web_attachment_cache.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/data/scan/scan_ocr.dart';
@@ -77,15 +78,25 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
   /// Önbelleğin yüklendiği hesap; değişince bellekteki metin bırakılır.
   String? _uid;
   Future<void>? _loading;
+  final _webMissed = <String>{};
 
   @override
   Map<String, String> build() {
     if (!ref.watch(attachmentSearchProvider)) return const {};
+    if (kIsWeb) {
+      void onCache() {
+        _webMissed.clear();
+        ref.invalidateSelf();
+      }
+      webAttachmentCache.revision.addListener(onCache);
+      ref.onDispose(() => webAttachmentCache.revision.removeListener(onCache));
+    }
     final uid = ref.watch(currentUidProvider);
     final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
     if (uid != _uid) {
       _uid = uid;
       _texts.clear();
+      _webMissed.clear();
       _loading = uid == null ? null : _loadCache(uid);
     }
     final loading = _loading;
@@ -108,13 +119,22 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
   }
 
   Future<void> _loadCache(String uid) async {
-    final file = _cacheFile(uid);
     final prefs = ref.read(sharedPreferencesProvider);
     String? raw;
-    try {
-      if (file != null && await file.exists()) raw = await file.readAsString();
-    } catch (e) {
-      ErrorLog.record('attachment-text-cache', e);
+    if (kIsWeb && overrideDir == null) {
+      try {
+        final cached = await webAttachmentCache.get('att_text:$uid');
+        if (cached != null) raw = utf8.decode(cached.bytes, allowMalformed: true);
+      } catch (e) {
+        ErrorLog.record('attachment-text-cache', e);
+      }
+    } else {
+      final file = _cacheFile(uid);
+      try {
+        if (file != null && await file.exists()) raw = await file.readAsString();
+      } catch (e) {
+        ErrorLog.record('attachment-text-cache', e);
+      }
     }
     final legacy = prefs.getString(legacyCacheKey);
     raw ??= legacy;
@@ -131,14 +151,25 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
       }
     }
     if (legacy != null) {
-      if (file != null) await _saveCache(uid);
+      await _saveCache(uid);
       await prefs.remove(legacyCacheKey);
     }
   }
 
   Future<void> _saveCache(String uid) async {
+    if (uid != _uid) return;
+    if (kIsWeb && overrideDir == null) {
+      try {
+        await webAttachmentCache.put(
+          'att_text:$uid',
+          Uint8List.fromList(utf8.encode(jsonEncode(_texts))),
+          'application/json',
+        );
+      } catch (_) {}
+      return;
+    }
     final file = _cacheFile(uid);
-    if (file == null || uid != _uid) return;
+    if (file == null) return;
     try {
       final tmp = File('${file.path}.tmp');
       await tmp.parent.create(recursive: true);
@@ -179,6 +210,7 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
         for (final attachment in note.attachments) {
           live.add(attachment.id);
           if (_texts.containsKey(attachment.id)) continue;
+          if (kIsWeb && _webMissed.contains(attachment.id)) continue;
           if (!_readable(attachment)) continue;
           pending.add((noteId: note.id, file: attachment));
         }
@@ -196,14 +228,26 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
       // beklemesin.
       for (var i = 0; i < pending.length; i += _batch) {
         final slice = pending.skip(i).take(_batch);
+        var updated = false;
         for (final entry in slice) {
           if (uid != _uid) return;
-          // Sonuç BOŞ da olsa yazılır: "bu ekte metin yok" da bir yanıt,
-          // yoksa aynı dosya her turda yeniden taranırdı.
-          _texts[entry.file.id] = await _extract(entry.file);
+          if (kIsWeb) {
+            final extracted = await _extractWebPdf(entry.file);
+            if (extracted == null) {
+              _webMissed.add(entry.file.id);
+              continue;
+            }
+            _texts[entry.file.id] = extracted;
+            updated = true;
+          } else {
+            // Sonuç BOŞ da olsa yazılır: "bu ekte metin yok" da bir yanıt,
+            // yoksa aynı dosya her turda yeniden taranırdı.
+            _texts[entry.file.id] = await _extract(entry.file);
+            updated = true;
+          }
         }
         if (uid != _uid) return;
-        state = _byNote(notes);
+        if (updated) state = _byNote(notes);
       }
       // Tur sonunda BİR kez (eskiden her 8 ekte bir — ilk taramada karesel).
       await _saveCache(uid);
@@ -214,8 +258,13 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
     }
   }
 
-  /// Bu ekten metin çıkarılabilir mi: dosya CİHAZDA mı ve türü uygun mu.
+  /// Bu ekten metin çıkarılabilir mi: dosya CİHAZDA mı (veya web önbelleğinde
+  /// olabilir mi) ve türü uygun mu.
   static bool _readable(Attachment attachment) {
+    if (kIsWeb) {
+      return attachment.kind == AttachmentKind.pdf &&
+          (webLocalCacheContains(attachment.id) || attachment.isInDrive);
+    }
     if (attachment.localPath.isEmpty) return false;
     if (!localFileExists(attachment.localPath)) return false;
     return switch (attachment.kind) {
@@ -229,6 +278,24 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
       AttachmentKind.text ||
       AttachmentKind.unknown => false,
     };
+  }
+
+  static Future<String?> _extractWebPdf(Attachment attachment) async {
+    try {
+      final cached =
+          await webAttachmentCache.get(webLocalCacheKey(attachment.id)) ??
+          (attachment.isInDrive
+              ? await webAttachmentCache.get(webDriveCacheKey(attachment.driveId))
+              : null);
+      if (cached == null) return null;
+      final text = await compute(extractPdfText, cached.bytes);
+      return text.length > maxCharsPerFile
+          ? text.substring(0, maxCharsPerFile)
+          : text;
+    } catch (e) {
+      debugPrint('Web ek metni okunamadı (${attachment.fileName}): $e');
+      return '';
+    }
   }
 
   static Future<String> _extract(Attachment attachment) async {

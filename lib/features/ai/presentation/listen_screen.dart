@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -8,6 +9,7 @@ import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/play_build.dart';
 import '../../../core/utils/speech_output.dart';
+import '../../../core/utils/web_blob.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note_type.dart';
@@ -272,6 +274,22 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     }
 
     try {
+      if (kIsWeb) {
+        final bytes = await ref
+            .read(aiSpeechProvider.notifier)
+            .renderToBytes(text, onProgress: onProgress);
+        if (!mounted) return;
+        setState(() => _rendering = false);
+        final safe = widget.title
+            .replaceAll(RegExp(r'[^\w\s.-]'), '_')
+            .trim();
+        downloadBytes(
+          bytes,
+          'audio/wav',
+          '${safe.isEmpty ? 'podcast' : safe}.wav',
+        );
+        return;
+      }
       final path = local
           ? await ref
                 .read(antaliaSpeechProvider.notifier)

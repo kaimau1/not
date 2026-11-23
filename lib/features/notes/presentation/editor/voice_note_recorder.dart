@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -10,6 +11,8 @@ import 'package:record/record.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/error_log.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/web_audio_record.dart';
+import '../../../../core/utils/web_blob.dart';
 import '../../domain/attachment.dart';
 import '../../../../core/friendly_error.dart';
 import '../../../../core/app_icons.dart';
@@ -18,8 +21,15 @@ import '../../../../core/haptics.dart';
 /// Kaydedicinin evresi.
 enum VoiceRecordPhase { starting, recording, paused, finishing }
 
-/// Biten kaydın sonucu: dosya, süre ve [Attachment.wave] için dalga.
-typedef VoiceRecording = ({String path, Duration duration, List<int> wave});
+/// Biten kaydın sonucu: dosya (Android) veya bellek baytı (web), süre ve
+/// [Attachment.wave] için dalga.
+typedef VoiceRecording = ({
+  String path,
+  Uint8List? bytes,
+  String? mimeType,
+  Duration duration,
+  List<int> wave,
+});
 
 /// **NOTUN İÇİNDE SESLİ NOT** (kullanıcı isteği 2026-10-28: "sesli not kısmı
 /// güzel eklenebilir" — örnek uygulamada kayıt notun içinde, canlı dalgayla
@@ -49,6 +59,7 @@ class VoiceNoteRecorder extends ChangeNotifier {
   StreamSubscription<Amplitude>? _amplitude;
   Timer? _ticker;
   String? _path;
+  String? _webMime;
   bool _disposed = false;
 
   /// Tavana ulaşılınca çağrılır (editör kaydı bitirip ekler).
@@ -70,27 +81,39 @@ class VoiceNoteRecorder extends ChangeNotifier {
     final l10n = context.l10n;
     try {
       if (!await _recorder.hasPermission()) return l10n.micPermissionDenied;
-      final dir = await getTemporaryDirectory();
-      final path = p.join(
-        dir.path,
-        'kayit_${DateTime.now().millisecondsSinceEpoch}.m4a',
-      );
-      // Ayar ses kaydı levhasıyla aynı (bkz. AppConstants.audioBitRate):
-      // tek kanal 32 kbps konuşmada duyulur fark yaratmaz.
-      await _recorder.start(
-        const RecordConfig(
-          bitRate: AppConstants.audioBitRate,
-          sampleRate: AppConstants.audioSampleRate,
-          numChannels: 1,
-        ),
-        path: path,
-      );
-      if (_disposed) {
-        await _recorder.stop();
-        File(path).delete().ignore();
-        return null;
+      if (kIsWeb) {
+        final config = await pickWebRecordConfig(_recorder);
+        _webMime = mimeHintForEncoder(config.encoder);
+        await _recorder.start(config, path: '');
+        if (_disposed) {
+          final url = await _recorder.stop();
+          if (url != null) revokeWebBlobUrl(url);
+          return null;
+        }
+        _path = '';
+      } else {
+        final dir = await getTemporaryDirectory();
+        final path = p.join(
+          dir.path,
+          'kayit_${DateTime.now().millisecondsSinceEpoch}.m4a',
+        );
+        // Ayar ses kaydı levhasıyla aynı (bkz. AppConstants.audioBitRate):
+        // tek kanal 32 kbps konuşmada duyulur fark yaratmaz.
+        await _recorder.start(
+          const RecordConfig(
+            bitRate: AppConstants.audioBitRate,
+            sampleRate: AppConstants.audioSampleRate,
+            numChannels: 1,
+          ),
+          path: path,
+        );
+        if (_disposed) {
+          await _recorder.stop();
+          File(path).delete().ignore();
+          return null;
+        }
+        _path = path;
       }
-      _path = path;
       _clock.start();
       _phase = VoiceRecordPhase.recording;
       _amplitude = _recorder
@@ -158,10 +181,24 @@ class VoiceNoteRecorder extends ChangeNotifier {
     _clock.stop();
     notifyListeners();
     try {
-      final path = await _recorder.stop() ?? _path;
-      if (path == null) return null;
+      final stopped = await _recorder.stop() ?? _path;
+      if (stopped == null) return null;
+      if (kIsWeb) {
+        if (stopped.isEmpty) return null;
+        final bytes = await readWebBlobBytes(stopped, revokeAfter: true);
+        return (
+          path: '',
+          bytes: bytes,
+          mimeType: _webMime,
+          duration: _clock.elapsed,
+          wave: Attachment.compactWave(levels),
+        );
+      }
+      if (stopped.isEmpty) return null;
       return (
-        path: path,
+        path: stopped,
+        bytes: null,
+        mimeType: null,
         duration: _clock.elapsed,
         wave: Attachment.compactWave(levels),
       );
@@ -171,7 +208,7 @@ class VoiceNoteRecorder extends ChangeNotifier {
     }
   }
 
-  /// Kaydı ATAR (dosya silinir).
+  /// Kaydı ATAR (dosya/blob silinir).
   Future<void> cancel() async {
     _phase = VoiceRecordPhase.finishing;
     _ticker?.cancel();
@@ -180,7 +217,11 @@ class VoiceNoteRecorder extends ChangeNotifier {
     _clock.stop();
     try {
       final path = await _recorder.stop() ?? _path;
-      if (path != null) File(path).delete().ignore();
+      if (kIsWeb) {
+        if (path != null) revokeWebBlobUrl(path);
+      } else if (path != null && path.isNotEmpty) {
+        File(path).delete().ignore();
+      }
     } catch (e, s) {
       ErrorLog.record('voice note cancel', e, s);
     }
