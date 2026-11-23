@@ -13,6 +13,7 @@ import '../../../../core/widgets/customizable.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/utils/rich_text.dart';
 import 'auto_spell.dart';
+import 'editor_bar_more_menu.dart';
 import 'quick_row_editor.dart';
 import 'format_bar.dart' show FormatTarget;
 import 'format_menu.dart';
@@ -55,6 +56,8 @@ class EditorQuickRow extends StatefulWidget {
     this.onSpellSettings,
     this.onCamera,
     this.onDate,
+    this.onDay,
+    this.onTable,
     this.onScan,
     this.onAttach,
     this.onColor,
@@ -92,6 +95,12 @@ class EditorQuickRow extends StatefulWidget {
   final VoidCallback? onCamera;
   final VoidCallback? onDate;
   final VoidCallback? onScan;
+
+  /// GÜN EKLE: bugünün tarihi `22/11/2026` biçiminde (kullanıcı isteği
+  /// 2026-11-23: "hızlı bir tarih ekleme butonu"). TABLO: 2–4 sütunlu tablo.
+  /// İkisi de ⋯ ızgarasının başında; satıra düzenleyiciden alınır.
+  final VoidCallback? onDay;
+  final VoidCallback? onTable;
 
   /// Ara başlık: satırı alt başlık yapar (metin modu; 2026-11-08).
   final VoidCallback? onSubheading;
@@ -285,8 +294,14 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
       String tip,
       VoidCallback? on, {
       bool active = false,
-    }) =>
-        _QuickEntry(key, icon, tip, on, button(key, icon, tip, on, on: active));
+    }) => _QuickEntry(
+      key,
+      icon,
+      tip,
+      on,
+      button(key, icon, tip, on, on: active),
+      active: active,
+    );
     final m = _mark;
     final all = <_QuickEntry?>[
       if (widget.onPen != null) ...[
@@ -306,6 +321,23 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         ),
         null,
       ],
+      // GÜN EKLE + TABLO (2026-11-23): satırda varsayılan gizli (telefonda
+      // satır zaten dolu — 412 dp'de 222 dp'lik pencere), ⋯ ızgarasının
+      // BAŞINDA; "Hızlı menüyü düzenle"den satıra alınır.
+      if (widget.onDay != null)
+        plain(
+          'day',
+          Icons.edit_calendar_outlined,
+          l10n.quickRowDay,
+          widget.onDay,
+        ),
+      if (widget.onTable != null)
+        plain(
+          'table',
+          Icons.table_chart_outlined,
+          l10n.tableInsert,
+          widget.onTable,
+        ),
       plain(
         'bullet',
         Icons.format_list_bulleted_rounded,
@@ -477,75 +509,26 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
       margin: const EdgeInsets.symmetric(horizontal: 4),
       color: scheme.outlineVariant,
     );
-    Widget more(List<_QuickEntry> overflow) => PopupMenuButton<VoidCallback>(
+    // ⋯ = BENTO IZGARA (kullanıcı isteği 2026-11-23: "hızlı menünün 3
+    // noktasında da alt panelin 3 noktasındaki gibi diğer bütün butonlar aynı
+    // görsel dilde gözüksün; ayarla butonu da orada"): satırda GÖRÜNMEYEN
+    // her düğme (gizli/eklenebilir + geniş web'de sığmayan) iki sütunlu
+    // karoda, en altta "Hızlı menüyü düzenle". Liste dokununca hesaplanır —
+    // satırın kurulumuna yük yok.
+    Widget more(List<_QuickEntry> Function() overflow) => KeyedSubtree(
       key: const ValueKey('quick-row-more'),
-      tooltip: MaterialLocalizations.of(context).showMenuTooltip,
-      // ⋯ (U2): notun ⋮ menüsü hemen yanında — iki aynı simge karışıyordu.
-      icon: Icon(
-        Icons.more_horiz_rounded,
-        size: 20,
-        color: scheme.onSurfaceVariant,
-      ),
-      onSelected: (run) => run(),
-      itemBuilder: (_) => [
-        for (final e in overflow)
-          PopupMenuItem<VoidCallback>(
-            value: e.onTap,
-            enabled: e.onTap != null,
-            child: Row(
-              children: [
-                Icon(
-                  e.icon,
-                  size: AppIconSize.m,
-                  color: e.onTap != null
-                      ? scheme.primary
-                      : scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: AppSpace.m),
-                Expanded(
-                  child: Text(
-                    e.tip,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (overflow.isNotEmpty) const PopupMenuDivider(height: 1),
-        // SATIRI DÜZENLE (2026-11-09: ⋮ içinde): düzenleme modunu açar —
-        // gizli/eklenebilir düğmeler çerçeveli görünür.
-        PopupMenuItem<VoidCallback>(
-          key: const ValueKey('quick-row-customize'),
-          // Eski "aç-düzenle-kaydet" kipi yerine anında uygulanan levha
-          // (kullanıcı isteği 2026-11-13, bkz. [showQuickRowEditor]).
-          value: () => unawaited(
-            showQuickRowEditor(
-              context,
-              unavailable: {
-                for (final e in quickRowCatalog(context.l10n)) e.key,
-              }.difference({for (final e in all) ?e?.key}),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.tune_rounded,
-                size: AppIconSize.m,
-                color: scheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: AppSpace.m),
-              Expanded(
-                child: Text(
-                  l10n.quickRowCustomize,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+      child: IconButton(
+        // Menünün konumu düğmenin kendisinden (bkz. [_openMore]).
+        key: _moreKey,
+        tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+        // ⋯ (U2): notun ⋮ menüsü hemen yanında — iki aynı simge karışıyordu.
+        icon: Icon(
+          Icons.more_horiz_rounded,
+          size: 20,
+          color: scheme.onSurfaceVariant,
         ),
-      ],
+        onPressed: () => unawaited(_openMore(overflow(), all)),
+      ),
     );
     return RepaintBoundary(
       child: _HintGlow(
@@ -573,7 +556,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
                       ),
                     ),
                   ),
-                  more(const []),
+                  more(() => _hidden(entries)),
                 ],
               );
             }
@@ -591,7 +574,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     for (final e in shown.take(room)) e.widget,
-                    more(shown.skip(room).toList()),
+                    more(() => [...shown.skip(room), ..._hidden(entries)]),
                   ],
                 );
               },
@@ -599,6 +582,54 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           },
         ),
       ),
+    );
+  }
+
+  final _moreKey = GlobalKey();
+
+  /// Satırda ÇİZİLMEYEN (gizli / eklenebilir) düğmeler, satır sırasıyla.
+  /// Düzenleme kipinde hepsi satırda — boş.
+  List<_QuickEntry> _hidden(List<_QuickEntry?> entries) => Personalize.editing
+      ? const []
+      : [
+          for (final e in entries)
+            if (e != null &&
+                e.onTap != null &&
+                !Customizable.shows(UiItem.quickRow(e.key)))
+              e,
+        ];
+
+  Future<void> _openMore(
+    List<_QuickEntry> overflow,
+    List<_QuickEntry?> all,
+  ) async {
+    final anchor = _moreKey.currentContext;
+    if (anchor == null) return;
+    final byKey = {for (final e in overflow) e.key: e};
+    final picked = await showMoreGrid(
+      anchor: anchor,
+      ids: [for (final e in overflow) e.key],
+      spec: (id) {
+        final e = byKey[id]!;
+        return (e.icon, e.tip, e.onTap ?? () {}, e.active);
+      },
+      editLabel: anchor.l10n.quickRowMoreEdit,
+      keyPrefix: 'quick-row-more',
+      editKey: const ValueKey('quick-row-customize'),
+      below: true,
+    );
+    if (picked == null || !mounted) return;
+    if (picked != kMoreGridEdit) {
+      byKey[picked]?.onTap?.call();
+      return;
+    }
+    // SATIRI DÜZENLE: anında uygulanan levha (kullanıcı isteği 2026-11-13,
+    // bkz. [showQuickRowEditor]); bu notta çizilmeyenler ayrıca yazılır.
+    await showQuickRowEditor(
+      context,
+      unavailable: {
+        for (final e in quickRowCatalog(context.l10n)) e.key,
+      }.difference({for (final e in all) ?e?.key}),
     );
   }
 
@@ -685,12 +716,22 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
 /// Hızlı satırın bir düğmesi: satırdaki hâli ([widget]) ve ⋮ menüsündeki
 /// karşılığı (simge + açıklama).
 class _QuickEntry {
-  const _QuickEntry(this.key, this.icon, this.tip, this.onTap, this.widget);
+  const _QuickEntry(
+    this.key,
+    this.icon,
+    this.tip,
+    this.onTap,
+    this.widget, {
+    this.active = false,
+  });
   final String key;
   final IconData icon;
   final String tip;
   final VoidCallback? onTap;
   final Widget widget;
+
+  /// Etkin biçim (⋯ ızgarasında karo vurgulu çizilir).
+  final bool active;
 }
 
 /// Satırın İLK GÖRÜNÜŞÜNDEKİ kısa parlama ("burada yeni bir şey var").

@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Tablo + Gün ekle + hızlı menü ⋯ ızgarası (23 Kasım akşam, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) Bir notta yazarken üstteki hızlı menünün ⋯'sine bas → alt paneldeki gibi iki sütunlu karolar, başta **Gün ekle** ve **Tablo**, en altta **Hızlı menüyü düzenle** mi. (2) Gövdede imleç varken ⋯ → **Gün ekle** → `23/11/2026` imlece yazıldı mı (maddede ve tablo hücresinde de dene). (3) **Ekle** → **Tablo** → 3 sütun: tablo yazdığın satıra geldi, ilk hücre klavyeyle açıldı mı. (4) Hücreye yaz, klavyede **İleri** → sağdaki hücreye geçiyor, son hücrede yeni satır açılıyor mu; klavye kapanıp açılmıyor mu. (5) Hücre açıkken sütun arasındaki tutamaçları sürükle → genişlik değişiyor mu. (6) Tabloya basılı tutup sürükle → taşınıyor mu; alttaki boşluğa dokunup seçince köşeden boyutlanıyor mu. (7) ⚙ → satır sil, sütun 2/4, başlık satırı kapat. (8) 20+ satırlı tabloda yazarken/kaydırırken kasma var mı. (9) Notu kapatıp aç: tablo ve yazılar yerinde mi; başka cihazda (web) görünüyor mu.
+  Yanlışsa: madde numarasını yaz, ekran görüntüsü at.
+
 - [ ] **Yazı tipi: 5 çekirdek gömülü, kalanı seçilince iniyor (PL10, 23 Kasım, yazıldı, cihazda doğrulanmadı)**
   Nerede/Nasıl: (1) Ayarlar → Görünüm → Yazı tipi: Lato/Poppins/Merriweather gibi bir aile bulut simgeli mi; dokununca simge dönüp kayboluyor ve yazı o tipe geçiyor mu. (2) Uçak kipinde başka bir bulut simgeli aile seç: çökme yok, varsayılan yazı tipi görünür; interneti açıp yeniden seç → iniyor. (3) İndirdikten sonra uçak kipinde uygulamayı kapatıp aç: yazı tipi ağsız geliyor. (4) Editör biçim şeridi → yazı tipi satırı: bulut simgeli adlar, seçince iner. (5) Çekirdek aileler (Inter Tight, Roboto, Lora, Roboto Mono, Caveat) uçak kipinde ilk açılışta da doğru.
   Yanlışsa: hangi aile + uçak kipi mi belirt.

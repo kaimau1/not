@@ -292,6 +292,12 @@ abstract final class UiItem {
   static const barScan = 'editor.bar.scan';
   static const barColor = 'editor.bar.color';
 
+  /// GÜN EKLE (kullanıcı isteği 2026-11-23: "otomatik bugünün tarihini
+  /// ekler, 22/11/2026 şeklinde") ve TABLO (2–4 sütun) — varsayılan gizli,
+  /// ⋯ menüsünde durur.
+  static const barDay = 'editor.bar.day';
+  static const barTable = 'editor.bar.table';
+
   /// Sol kapsülün VARSAYILAN sırası (Biçim · Ekle · Kalem · Ara · Ekler ·
   /// ☑/Seç — türe özgü düğme en sonda, F12.3) + eklenebilenler.
   static const barLeftDefault = <String>[
@@ -310,6 +316,8 @@ abstract final class UiItem {
     barCamera,
     barScan,
     barColor,
+    barDay,
+    barTable,
     barShare,
   ];
 
@@ -382,6 +390,8 @@ abstract final class UiItem {
     barCamera,
     barScan,
     barColor,
+    barDay,
+    barTable,
     barShare,
     // SADE VARSAYILAN (kullanıcı isteği 2026-11-09: "hızlı panelin varsayılan
     // hali sadeleşmeli — kalem kipi, yazım düzeltici, paket, ek ekle, kalın +
@@ -402,6 +412,10 @@ abstract final class UiItem {
       'highlight',
       'dictation',
       'scan',
+      // Gün ekle + Tablo ⋯ ızgarasının başında (2026-11-23; telefonda satır
+      // dolu — düzenleyiciden satıra alınır).
+      'day',
+      'table',
     ])
       quickRow(k),
     // SADE "+" MENÜSÜ (kullanıcı isteği 2026-11-16: ekran görüntüsünde

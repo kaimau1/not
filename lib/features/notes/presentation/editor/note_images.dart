@@ -21,6 +21,7 @@ import '../../../../core/utils/video_time.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/video_frame.dart';
 import '../../domain/attachment.dart';
+import '../../domain/note_table.dart';
 import '../drive_ui.dart';
 import '../note_card_media.dart' show VideoPoster;
 import '../viewers/image_viewer.dart';
@@ -37,6 +38,7 @@ import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
 import '../viewers/slide_viewer_screen.dart';
 import 'slide_page_box.dart';
+import 'table_page_box.dart';
 import 'text_page_box.dart';
 import 'text_wrap.dart';
 import 'video_hub_scope.dart';
@@ -260,6 +262,7 @@ class NotePageCanvas extends StatefulWidget {
     this.hintLineHeight = 0,
     this.textTop = 0,
     this.textLeft = 0,
+    this.readOnly = false,
   });
 
   final List<Attachment> images;
@@ -283,6 +286,9 @@ class NotePageCanvas extends StatefulWidget {
   /// sarma planı ise sütun uzayında çalışıyor. Bu pay geçilmezse ipucu, metnin
   /// başladığı yerin bir kenar boşluğu KADAR sağında durur.
   final double textLeft;
+
+  /// Salt okunur not: tablo hücreleri yazılmaz (bkz. [TablePageBox]).
+  final bool readOnly;
 
   /// Boş gövdenin ipucu metni ("Not yaz…"), tuval üzerinde konumlandırılır.
   ///
@@ -1189,6 +1195,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   }
 
   void _openViewer(Attachment img, {bool startText = false}) {
+    // Tablonun ayrı ekranı yok: sayfada yazılır.
+    if (isNoteTable(img)) return;
     // Metnin "tam ekranı" okuma ekranıdır; sesin ayrı ekranı yok (kart
     // kendisi oynatıcı).
     if (img.kind == AttachmentKind.text) {
@@ -1240,6 +1248,16 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// yerinde oynayan [_VideoBox]. Videonun doğal boyutu ekte yoksa ilk
   /// çözümde kalıcılaştırılır (oran 1:1 varsayılanında kalmasın).
   Widget _boxFor(Attachment a, {BoxFit fit = BoxFit.cover}) {
+    // TABLO (2026-11-23): hücreleri sayfada yazılan kutu; büyük önizlemede
+    // salt görüntü.
+    if (isNoteTable(a)) {
+      return TablePageBox(
+        attachment: a,
+        onChanged: widget.onChanged,
+        onRemove: () => widget.onRemove(a),
+        editable: fit == BoxFit.cover && !widget.readOnly,
+      );
+    }
     // SAYFAYA GÖMÜLÜ METİN (2026-10-17): sayfası çevrilen kâğıt kutusu; ⤢
     // okuma ekranını açar (bkz. TextPageBox).
     if (a.kind == AttachmentKind.text) {
@@ -1914,7 +1932,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         // beslenseydi görsel kılavuzdan kopamazdı.
         onLongPressMoveUpdate: (d) {
           if (_moveId != img.id) return;
+          // Tablo üste sabitlenmez (sabit bölmede yazılamaz).
           _setPinZone(
+            !isNoteTable(img) &&
             _pinZoneHit(
               d.globalPosition,
               rawTop: (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy,
@@ -2188,7 +2208,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           : () => widget.onTranscribe!(img),
       // GÖRÜNÜM ANAHTARI panelin üst satırında: Sabit / Yüzen / Balonlu
       // (eskiden menüde "Üste sabitle", PDF'te "Balonlu görünüm").
-      viewSwitch: widget.onViewChange == null
+      viewSwitch: widget.onViewChange == null || availableViews(img).length < 2
           ? null
           : AttachmentViewSwitch(
               current: AttachmentView.floating,
@@ -2208,7 +2228,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           ? null
           : () => widget.onSaveAs!(img),
       onShare: widget.onShare == null ? null : () => widget.onShare!(img),
-      onFullscreen: img.kind == AttachmentKind.audio
+      onFullscreen: img.kind == AttachmentKind.audio || isNoteTable(img)
           ? null
           : () => _openViewer(img),
       // Görsele açıklama (altyazı) — yalnız görselde.

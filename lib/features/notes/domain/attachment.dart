@@ -1197,6 +1197,7 @@ class Attachment {
     String? caption,
     List<int>? wave,
     DateTime? createdAt,
+    Map<String, dynamic>? extras,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -1236,7 +1237,7 @@ class Attachment {
     wave: wave ?? this.wave,
     createdAt: createdAt ?? this.createdAt,
     rawKind: rawKind,
-    extras: extras,
+    extras: extras ?? this.extras,
   );
 
   /// [noteId] verilirse yerel yol cihazda TÜRETİLİR (bkz.

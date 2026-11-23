@@ -9732,4 +9732,59 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get webCacheCleared => 'Tarayıcı ek önbelleği temizlendi';
+
+  @override
+  String get quickRowMoreEdit => 'Hızlı menüyü düzenle';
+
+  @override
+  String get quickRowDay => 'Gün ekle';
+
+  @override
+  String get tableInsert => 'Tablo';
+
+  @override
+  String get tableInsertInfo => '2, 3 ya da 4 sütun';
+
+  @override
+  String get tableName => 'Tablo';
+
+  @override
+  String get tablePickTitle => 'Tablo ekle';
+
+  @override
+  String tableColumns(int count) {
+    return '$count sütun';
+  }
+
+  @override
+  String get tableAddRow => 'Satır ekle';
+
+  @override
+  String get tableAddRowBelow => 'Altına satır ekle';
+
+  @override
+  String get tableDeleteRow => 'Satırı sil';
+
+  @override
+  String get tableColumnCount => 'Sütun sayısı';
+
+  @override
+  String get tableHeaderRow => 'İlk satır başlık';
+
+  @override
+  String get tableEqualWidths => 'Sütunları eşitle';
+
+  @override
+  String get tableDelete => 'Tabloyu sil';
+
+  @override
+  String get tableOptions => 'Tablo seçenekleri';
+
+  @override
+  String get tableColumnsWillDrop =>
+      'Son sütundaki yazılar silinecek. Devam edilsin mi?';
+
+  @override
+  String get tableMoveHint =>
+      'Taşımak için basılı tut, boyut için köşeden sürükle';
 }

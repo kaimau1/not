@@ -36,14 +36,21 @@ extension _EditorAttachments on _NoteEditorScreenState {
     // kullanıcı her belgeyi elle büyütmek zorunda kalıyordu. Görselde 0,32
     // kalıyor — satıra üç görsel sığsın (bkz. packSlot). Metin okunacak,
     // ses kartı da düğmeleri sığacak kadar geniş başlar.
+    final pageWidth0 = _pageBox()?.size.width ?? 0;
     final width = switch (image.kind) {
+      // TABLO telefonda boydan boya; geniş sayfada okunur bir ölçekte
+      // (referans genişliğin ~1,3 katı) başlar.
+      AttachmentKind.text when isNoteTable(image) =>
+        pageWidth0 <= 0
+            ? 1.0
+            : (kTableRefWidth * 1.3 / pageWidth0).clamp(0.45, 1.0).toDouble(),
       AttachmentKind.pdf => 0.6,
       AttachmentKind.text || AttachmentKind.slide => 0.8,
       // Ses HAPI satırı boydan boya kaplar (örnek uygulamadaki sesli not).
       AttachmentKind.audio => 1.0,
       _ => 0.32,
     };
-    final pageWidth = _pageBox()?.size.width ?? 0;
+    final pageWidth = pageWidth0;
     // SAYFA HENÜZ ÖLÇÜLMEDİ: dp hesabı yapılamaz, konum YAZILMAZ. Tuval
     // genişliği bildiği ilk karede görseli boş bir yere kendisi oturtur
     // (bkz. [packSlot]).
@@ -112,6 +119,30 @@ extension _EditorAttachments on _NoteEditorScreenState {
       pageY: top,
       displayWidth: width,
       section: section,
+    );
+  }
+
+  /// TABLO EKLE (kullanıcı isteği 2026-11-23): 2 · 3 · 4 sütun seçilir,
+  /// tablo yazılan satıra yerleşir ve ilk hücresi yazmaya açılır.
+  Future<void> _insertTable() async {
+    final note = _note;
+    if (note == null || _readOnly || note.type.isPageNoteType) return;
+    _rememberCaret();
+    final columns = await showTablePicker(context);
+    if (columns == null || !mounted) return;
+    final current = _note;
+    if (current == null) return;
+    final table = newNoteTable(
+      columns: columns,
+      name: tableName(context.l10n.tableName, {
+        for (final a in current.attachments) a.fileName,
+      }),
+      height: tableHeightUnits(3),
+    );
+    NoteTableFocus.openOnMount = table.id;
+    _mutate(
+      (n) => n.copyWith(attachments: [...n.attachments, _placeNewImage(table, n)]),
+      immediate: true,
     );
   }
 
@@ -1293,6 +1324,8 @@ extension _EditorAttachments on _NoteEditorScreenState {
         _setUrgent(!(_note?.urgent ?? false));
       case 'list-item':
         _addChecklistItem();
+      case 'table':
+        await _insertTable();
       case 'text-block':
         // Metin notunda gövde ZATEN görünür; yalnız odaklanmak yeter.
         // Liste notunda gövde alanı gizliyse önce açılır.

@@ -76,6 +76,14 @@ List<AddEntry> addCatalog(
     l10n.newOrderedList,
     quick: 'ordered',
   );
+  // TABLO (kullanıcı isteği 2026-11-23): 2 · 3 · 4 sütun, sayfada yazılır.
+  row(
+    AddGroup.write,
+    Icons.table_chart_outlined,
+    l10n.tableInsert,
+    attach: 'table',
+    info: l10n.tableInsertInfo,
+  );
   // HIZLI EKLE (kullanıcı isteği 2026-11-15): yeni not açmaz, yazılanı ya
   // da söyleneni VAR OLAN nota ekler (bkz. quick_drop_sheet).
   row(

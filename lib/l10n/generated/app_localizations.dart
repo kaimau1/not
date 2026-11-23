@@ -17233,6 +17233,108 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tarayıcı ek önbelleği temizlendi'**
   String get webCacheCleared;
+
+  /// No description provided for @quickRowMoreEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı menüyü düzenle'**
+  String get quickRowMoreEdit;
+
+  /// No description provided for @quickRowDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gün ekle'**
+  String get quickRowDay;
+
+  /// No description provided for @tableInsert.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablo'**
+  String get tableInsert;
+
+  /// No description provided for @tableInsertInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'2, 3 ya da 4 sütun'**
+  String get tableInsertInfo;
+
+  /// No description provided for @tableName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablo'**
+  String get tableName;
+
+  /// No description provided for @tablePickTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablo ekle'**
+  String get tablePickTitle;
+
+  /// No description provided for @tableColumns.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sütun'**
+  String tableColumns(int count);
+
+  /// No description provided for @tableAddRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır ekle'**
+  String get tableAddRow;
+
+  /// No description provided for @tableAddRowBelow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altına satır ekle'**
+  String get tableAddRowBelow;
+
+  /// No description provided for @tableDeleteRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satırı sil'**
+  String get tableDeleteRow;
+
+  /// No description provided for @tableColumnCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütun sayısı'**
+  String get tableColumnCount;
+
+  /// No description provided for @tableHeaderRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk satır başlık'**
+  String get tableHeaderRow;
+
+  /// No description provided for @tableEqualWidths.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütunları eşitle'**
+  String get tableEqualWidths;
+
+  /// No description provided for @tableDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tabloyu sil'**
+  String get tableDelete;
+
+  /// No description provided for @tableOptions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablo seçenekleri'**
+  String get tableOptions;
+
+  /// No description provided for @tableColumnsWillDrop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son sütundaki yazılar silinecek. Devam edilsin mi?'**
+  String get tableColumnsWillDrop;
+
+  /// No description provided for @tableMoveHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşımak için basılı tut, boyut için köşeden sürükle'**
+  String get tableMoveHint;
 }
 
 class _AppLocalizationsDelegate

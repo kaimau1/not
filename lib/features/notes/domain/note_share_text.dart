@@ -1,5 +1,6 @@
 import '../../../core/utils/rich_text.dart';
 import 'attachment.dart';
+import 'note_table.dart';
 import 'note.dart';
 import 'note_item.dart';
 import 'note_type.dart';
@@ -185,6 +186,14 @@ String noteShareText(
     } else {
       blocks.add('${label(i + 1)}\n${parts.join('\n\n')}');
     }
+  }
+
+  // TABLOLAR (2026-11-23): sayfadaki tablo notun içeriğidir — satır başına
+  // `a | b | c`.
+  for (final a in note.attachments) {
+    if (!isNoteTable(a)) continue;
+    final text = NoteTable.of(a)?.toShareText() ?? '';
+    if (text.isNotEmpty) blocks.add(text);
   }
 
   if (note.type.isPageNoteType) {

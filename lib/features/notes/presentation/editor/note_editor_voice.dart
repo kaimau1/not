@@ -4,6 +4,21 @@ part of 'note_editor_screen.dart';
 ///
 /// F9.3: editör konu başına bölündü; durum (alanlar) [_NoteEditorScreenState]da kalır.
 extension _EditorVoice on _NoteEditorScreenState {
+  /// GÜN EKLE (kullanıcı isteği 2026-11-23: "otomatik bugünün tarihini
+  /// ekler, 22/11/2026 şeklinde"): imleçteki alana — açık tablo hücresi,
+  /// madde ya da gövde — bugünün tarihi `gg/aa/yyyy`.
+  void _insertDay() => _insertAtCaretOrCell(
+    DateFormat('dd/MM/yyyy').format(DateTime.now()),
+  );
+
+  /// Gövde/madde odakta değilse ve son yazılan yer bir tablo hücresiyse
+  /// metin o hücreye girer; değilse [_insertTextAtCaret].
+  void _insertAtCaretOrCell(String text) {
+    final typingNote = _formatTarget?.focusNode.hasFocus ?? false;
+    if (!typingNote && NoteTableFocus.insert(text)) return;
+    _insertTextAtCaret(text);
+  }
+
   /// Metni İMLECİN OLDUĞU YERE ekler; imleç bilinmiyorsa notun sonuna.
   ///
   /// KULLANICI BULGUSU 2026-08-30: "not içerisindeki sesli yazma butonu nota

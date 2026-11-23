@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
+import '../../domain/note_table.dart';
 import '../../../../core/haptics.dart';
 
 /// Bir ekin notta NASIL durduğu.
@@ -49,6 +50,8 @@ enum AttachmentView {
 Set<AttachmentView> availableViews(Attachment a) => switch (a.kind) {
   // Bu sürümün tanımadığı tür (F1.5): görünümü DEĞİŞTİRİLMEZ.
   AttachmentKind.unknown => const {},
+  // TABLO yalnız sayfada yazılır (sabit bölmede / şeritte düzenlenemez).
+  AttachmentKind.text when isNoteTable(a) => const {AttachmentView.floating},
   // BALONLU GÖRÜNÜM KALKTI (2026-11-05): balonlar sabit görünümde
   // ("Balon ekle") — anahtarda yalnız Sabit · Yüzen · Ek.
   AttachmentKind.image || AttachmentKind.pdf || AttachmentKind.text => const {

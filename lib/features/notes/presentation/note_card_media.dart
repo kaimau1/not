@@ -18,6 +18,7 @@ import '../../../core/utils/youtube.dart';
 import '../data/pdf/pdf_page_render.dart';
 import '../data/video_frame.dart';
 import '../domain/attachment.dart';
+import '../domain/note_table.dart';
 import 'note_card.dart' show noteCardSqueeze;
 import 'drive_ui.dart';
 import 'viewers/ink_layer.dart';
@@ -177,7 +178,10 @@ class CardMediaPlan {
           if (!identical(d, heroDocument)) d,
       ],
       audioCount: all.where((a) => a.kind == AttachmentKind.audio).length,
-      transcriptCount: all.where((a) => a.kind == AttachmentKind.text).length,
+      // Tablo (metin eki) transkript sayılmaz.
+      transcriptCount: all
+          .where((a) => a.kind == AttachmentKind.text && !isNoteTable(a))
+          .length,
       bubbleCount: bubbles,
       documentNote: documentNote,
     );

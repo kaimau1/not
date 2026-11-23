@@ -32,26 +32,18 @@ Future<void> showEditorBarMore({
   final box = anchor.findRenderObject()! as RenderBox;
   final overlay = Overlay.of(anchor).context.findRenderObject()! as RenderBox;
   final at = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
-  final menuWidth = math.min(312.0, overlay.size.width - 2 * AppSpace.m);
+  final menuWidth = _menuWidthFor(overlay);
   // [edit]: ⋯'ye BASILI TUTUNCA doğrudan düzen kipi (kullanıcı isteği
   // 2026-11-22: "alt paneli düzenleme seçeneği olmalı").
-  final picked = edit ? _kEditPick : await showMenu<String>(
-    context: anchor,
-    constraints: BoxConstraints(minWidth: menuWidth, maxWidth: menuWidth),
-    position: RelativeRect.fromRect(
-      Rect.fromLTWH(at.left, at.top - AppSpace.s, at.width, 0),
-      Offset.zero & overlay.size,
-    ),
-    items: [
-      _BarMoreEntry(
-        menuIds: menuIds,
-        available: available,
-        spec: spec,
-        menuWidth: menuWidth,
-      ),
-    ],
-  );
-  if (picked == _kEditPick) {
+  final picked = edit
+      ? kMoreGridEdit
+      : await showMoreGrid(
+          anchor: anchor,
+          ids: menuIds,
+          spec: spec,
+          editLabel: anchor.l10n.barMoreEdit,
+        );
+  if (picked == kMoreGridEdit) {
     // DÜZENLE ÇUBUĞUN ÜSTÜNDE (kullanıcı bulgusu 2026-11-19, v1.2.94:
     // "düzenleme menüsü alt paneli kapatıyor, değişikliği göremiyorum"):
     // düzen listesi boyu sınırlı, içi kayar ve ALT KENARI çubuğun üstünde
@@ -78,6 +70,7 @@ Future<void> showEditorBarMore({
           available: available,
           spec: spec,
           menuWidth: menuWidth,
+          editLabel: '',
           editHeight: height,
         ),
       ],
@@ -87,8 +80,57 @@ Future<void> showEditorBarMore({
   if (picked != null) spec(picked).$3();
 }
 
-/// "Düzenle" seçildi: menü kapanır, düzen kipi çubuğun üstünde yeniden açılır.
-const _kEditPick = '\u0000edit';
+/// ⋯ MENÜLERİNİN ORTAK IZGARASI (kullanıcı isteği 2026-11-23: "hızlı
+/// menünün 3 noktasında da alt panelin 3 noktasındaki gibi diğer bütün
+/// butonlar aynı görsel dilde gözüksün; ayarla butonu da orada"). Alt çubuk
+/// ⋯'si ve hızlı satır ⋯'si AYNI iki sütunlu bento ızgarayı açar; en altta
+/// ince çizginin altında "Düzenle" satırı ([editLabel]).
+///
+/// [below]: menü düğmenin ALTINDA açılır (üst çubuktaki hızlı satır); yoksa
+/// üstünde (alt çubuk). Dönüş: seçilen kimlik, "Düzenle" için
+/// [kMoreGridEdit], boşa dokunuşta null — işi çağıran çalıştırır (menü
+/// kapandıktan sonra). Öğe anahtarı `'$keyPrefix-<sıra>'`.
+Future<String?> showMoreGrid({
+  required BuildContext anchor,
+  required List<String> ids,
+  required BarMoreSpec Function(String id) spec,
+  required String editLabel,
+  String keyPrefix = 'editor-bar-more',
+  Key editKey = const ValueKey('editor-bar-more-edit'),
+  bool below = false,
+}) {
+  final box = anchor.findRenderObject()! as RenderBox;
+  final overlay = Overlay.of(anchor).context.findRenderObject()! as RenderBox;
+  final at = box.localToGlobal(Offset.zero, ancestor: overlay) & box.size;
+  final menuWidth = _menuWidthFor(overlay);
+  return showMenu<String>(
+    context: anchor,
+    constraints: BoxConstraints(minWidth: menuWidth, maxWidth: menuWidth),
+    position: RelativeRect.fromRect(
+      below
+          ? Rect.fromLTWH(at.left, at.bottom + AppSpace.xs, at.width, 0)
+          : Rect.fromLTWH(at.left, at.top - AppSpace.s, at.width, 0),
+      Offset.zero & overlay.size,
+    ),
+    items: [
+      _BarMoreEntry(
+        menuIds: ids,
+        available: const [],
+        spec: spec,
+        menuWidth: menuWidth,
+        editLabel: editLabel,
+        keyPrefix: keyPrefix,
+        editKey: editKey,
+      ),
+    ],
+  );
+}
+
+double _menuWidthFor(RenderBox overlay) =>
+    math.min(312.0, overlay.size.width - 2 * AppSpace.m);
+
+/// [showMoreGrid]'in "Düzenle" dönüşü.
+const kMoreGridEdit = '\u0000edit';
 
 /// Açılır menünün üst/alt iç payı (Material `PopupMenu`, 8 dp).
 const double _kMenuPad = 8;
@@ -99,6 +141,9 @@ class _BarMoreEntry extends PopupMenuEntry<String> {
     required this.available,
     required this.spec,
     required this.menuWidth,
+    required this.editLabel,
+    this.keyPrefix = 'editor-bar-more',
+    this.editKey = const ValueKey('editor-bar-more-edit'),
     this.editHeight,
   });
 
@@ -106,6 +151,11 @@ class _BarMoreEntry extends PopupMenuEntry<String> {
   final List<String> available;
   final BarMoreSpec Function(String id) spec;
   final double menuWidth;
+
+  /// Izgaranın altındaki "Düzenle" satırının adı ve anahtarı.
+  final String editLabel;
+  final String keyPrefix;
+  final Key editKey;
 
   /// Verilirse düzen kipi, bu boyda (içi kayar); yoksa 2 sütunlu bento ızgara.
   final double? editHeight;
@@ -190,7 +240,6 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
   /// uzun 12 satırlık dikey liste yerine kompakt, taraması kolay palet
   /// (kullanıcı isteği 2026-11-21).
   Widget _list(BuildContext context) {
-    final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tokens = AppTokens.fromTheme(theme);
@@ -223,7 +272,7 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
                     Expanded(
                       child: _tile(
                         context,
-                        key: ValueKey('editor-bar-more-${entry.$1}'),
+                        key: ValueKey('${widget.keyPrefix}-${entry.$1}'),
                         icon: entry.$3.$1,
                         label: entry.$3.$2,
                         active: entry.$3.$4,
@@ -240,9 +289,9 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
               const SizedBox(height: AppSpace.xs),
             ],
             InkWell(
-              key: const ValueKey('editor-bar-more-edit'),
+              key: widget.editKey,
               borderRadius: BorderRadius.circular(AppRadius.m),
-              onTap: () => Navigator.pop(context, _kEditPick),
+              onTap: () => Navigator.pop(context, kMoreGridEdit),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
                   minHeight: kMinInteractiveDimension,
@@ -259,7 +308,9 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
                       const SizedBox(width: AppSpace.s),
                       Expanded(
                         child: Text(
-                          l10n.barMoreEdit,
+                          widget.editLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: text.meta.copyWith(
                             color: scheme.onSurfaceVariant,
                             fontWeight: AppWeight.medium,

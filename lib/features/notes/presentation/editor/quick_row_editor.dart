@@ -13,6 +13,8 @@ List<({String key, IconData icon, String label})> quickRowCatalog(
   AppLocalizations l10n,
 ) => [
   (key: 'pen', icon: Icons.draw_outlined, label: l10n.quickRowShortPen),
+  (key: 'day', icon: Icons.edit_calendar_outlined, label: l10n.quickRowDay),
+  (key: 'table', icon: Icons.table_chart_outlined, label: l10n.tableInsert),
   (
     key: 'bullet',
     icon: Icons.format_list_bulleted_rounded,
@@ -61,6 +63,7 @@ List<({String key, IconData icon, String label})> quickRowCatalog(
     icon: Icons.format_color_text_rounded,
     label: l10n.quickRowShortColor,
   ),
+
   (
     key: 'photo',
     icon: Icons.add_photo_alternate_outlined,

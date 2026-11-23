@@ -222,6 +222,8 @@ import 'windowed_body.dart';
 import 'video_hub_scope.dart';
 import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
 import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
+import 'table_page_box.dart';
+import '../../domain/note_table.dart';
 import 'attachment_actions.dart';
 import 'view_mode_switch.dart';
 import 'page_swipe.dart';
@@ -2639,6 +2641,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       images: imageAttachments,
       onRemove: _removeAttachment,
       onChanged: _updateAttachment,
+      readOnly: _readOnly,
       onInkChanged: _updateAttachmentInk,
       onChangedMany: _updateAttachments,
       onCrop: _cropImage,
@@ -3012,11 +3015,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   unawaited(_takePhoto());
                 },
           onScan: kIsWeb ? null : () => unawaited(_scanDocument()),
-          onDate: () => _insertTextAtCaret(
+          onDate: () => _insertAtCaretOrCell(
             DateFormat.yMMMMd(
               Localizations.localeOf(context).toLanguageTag(),
             ).add_Hm().format(DateTime.now()),
           ),
+          onDay: _insertDay,
+          onTable: note.type.isPageNoteType
+              ? null
+              : () => unawaited(_insertTable()),
           onAttach: () => unawaited(_showAttachMenu()),
           onColor: () => _applyFormat(
             RichFormat.color,
@@ -5138,6 +5145,9 @@ child: FormatBar(
                         if (!_readOnly && !kIsWeb) UiItem.barCamera,
                         if (!_readOnly && !kIsWeb) UiItem.barScan,
                         UiItem.barColor,
+                        if (!_readOnly) UiItem.barDay,
+                        if (!_readOnly && !note.type.isPageNoteType)
+                          UiItem.barTable,
                         UiItem.barShare,
                       ].where(on).toList();
                       // İKİ KAPSÜL ARASI TAŞIMA (P50; P57'den devir): düğmenin
@@ -5350,6 +5360,18 @@ child: FormatBar(
                               () => unawaited(_showColorSheet()),
                               false,
                             ),
+                            UiItem.barDay => (
+                              Icons.edit_calendar_outlined,
+                              l10n.quickRowDay,
+                              _insertDay,
+                              false,
+                            ),
+                            UiItem.barTable => (
+                              Icons.table_chart_outlined,
+                              l10n.tableInsert,
+                              () => unawaited(_insertTable()),
+                              false,
+                            ),
                             UiItem.barAi => (
                               Icons.auto_awesome,
                               l10n.aiTitle,
@@ -5531,7 +5553,10 @@ child: FormatBar(
                             UiItem.barPhoto => !_readOnly,
                             UiItem.barCamera ||
                             UiItem.barScan => !_readOnly && !kIsWeb,
-                            UiItem.barVoiceRecord => !_readOnly,
+                            UiItem.barVoiceRecord ||
+                            UiItem.barDay => !_readOnly,
+                            UiItem.barTable =>
+                              !_readOnly && !note.type.isPageNoteType,
                             UiItem.barFormat ||
                             UiItem.barAdd ||
                             UiItem.barSearch ||

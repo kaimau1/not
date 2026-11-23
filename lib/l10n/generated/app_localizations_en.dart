@@ -9750,4 +9750,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get webCacheCleared => 'Browser attachment cache cleared';
+
+  @override
+  String get quickRowMoreEdit => 'Edit quick menu';
+
+  @override
+  String get quickRowDay => 'Insert today\'s date';
+
+  @override
+  String get tableInsert => 'Table';
+
+  @override
+  String get tableInsertInfo => '2, 3 or 4 columns';
+
+  @override
+  String get tableName => 'Table';
+
+  @override
+  String get tablePickTitle => 'Insert table';
+
+  @override
+  String tableColumns(int count) {
+    return '$count columns';
+  }
+
+  @override
+  String get tableAddRow => 'Add row';
+
+  @override
+  String get tableAddRowBelow => 'Add row below';
+
+  @override
+  String get tableDeleteRow => 'Delete row';
+
+  @override
+  String get tableColumnCount => 'Columns';
+
+  @override
+  String get tableHeaderRow => 'First row is header';
+
+  @override
+  String get tableEqualWidths => 'Equal column widths';
+
+  @override
+  String get tableDelete => 'Delete table';
+
+  @override
+  String get tableOptions => 'Table options';
+
+  @override
+  String get tableColumnsWillDrop =>
+      'Text in the last column will be deleted. Continue?';
+
+  @override
+  String get tableMoveHint => 'Long-press to move, drag the corner to resize';
 }
