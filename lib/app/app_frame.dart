@@ -27,6 +27,8 @@ import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 import 'router.dart' show kOutsideShellNotePrefix;
 import 'split_shell.dart';
+import 'web_workspace/web_workspace_frame.dart';
+import 'web_workspace/web_workspace_scope.dart';
 import '../core/utils/web_ready.dart';
 import '../core/haptics.dart';
 
@@ -123,15 +125,23 @@ class AppFrame extends ConsumerWidget {
 
     final fullscreen = ref.watch(noteFullscreenProvider);
     Widget content = child;
-    if (showRail) {
-      content = _RailFrame(
+    if (isDesktopWebWindow(size)) {
+      content = WebWorkspaceFrame(
         showListToggle: size.width >= kSplitBreakpoint,
         fullscreen: fullscreen,
         child: child,
       );
-    }
-    if (!showRail && homeBarOnNarrow) {
-      content = _NarrowHomeBar(child: content);
+    } else {
+      if (showRail) {
+        content = _RailFrame(
+          showListToggle: size.width >= kSplitBreakpoint,
+          fullscreen: fullscreen,
+          child: child,
+        );
+      }
+      if (!showRail && homeBarOnNarrow) {
+        content = _NarrowHomeBar(child: content);
+      }
     }
     return AppShortcuts(
       onToggleList: toggleList,

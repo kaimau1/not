@@ -28,6 +28,8 @@ import 'reorder_hover_gate.dart';
 import '../../../app/app_frame.dart';
 import '../../../app/router.dart';
 import '../../../app/split_shell.dart';
+import '../../../app/web_workspace/web_dashboard_header.dart';
+import '../../../app/web_workspace/web_workspace_scope.dart';
 import '../../../app/theme/note_colors.dart';
 import 'dart:math' as math;
 
@@ -1668,11 +1670,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // **KLASÖR RAFI görünür mü / şerit mi** (2026-11-07). Kural eskisiyle
     // aynı: yalnız kök süzgeçte, aramasız, sıralama dışı; gizlenebilir ama
     // bir klasörün İÇİNDEYKEN hep görünür (kullanıcı isteği 2026-11-06).
+    final desktopWeb = WebWorkspaceScope.activeOf(context);
+    final sidebarHasFolders = WebWorkspaceScope.sidebarExpandedOf(context);
+    final selectedFolderId = ref.watch(selectedFolderProvider);
     final inFolderView =
         hubActive ||
         sharedFolder != null ||
-        ref.watch(selectedFolderProvider) != null;
+        selectedFolderId != null;
+    final hideDuplicateStrip =
+        sidebarHasFolders &&
+        !inFolderView &&
+        !ref.watch(folderShelfExpandedProvider);
     final showShelf =
+        !hideDuplicateStrip &&
         !searchActive &&
         !reorderActive &&
         ref.watch(noteFilterProvider) == NoteFilter.all &&
@@ -1761,6 +1771,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           )
                         : manualColumns > 0
                         ? manualColumns
+                        : desktopWeb
+                        ? (constraints.maxWidth / 270).floor().clamp(2, 5)
                         : (constraints.maxWidth / 220).floor().clamp(2, 6);
                     // Telefon döndürülünce (F66.7'den beri yatayda da aynı
                     // örnek kalır) sütun sayısı değişir; piksel konumu başka
@@ -1789,11 +1801,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     // Masonry hücre genişliği: sürükle-sırala sırasında taşınan
                     // notun "hayalet" kopyası (feedback) bu genişlikte çizilir.
                     // Izgara payları `kGridInset` / `kGridGap`.
+                    final desktopGutter =
+                        desktopWeb && !paneMode ? AppSpace.m : 0.0;
                     final cellWidth =
                         (constraints.maxWidth -
+                            2 * desktopGutter -
                             2 * kGridInset -
                             kGridGap * (columns - 1)) /
                         columns;
+                    Widget padDesktopGutter(Widget child) => desktopGutter > 0
+                        ? Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: desktopGutter,
+                            ),
+                            child: child,
+                          )
+                        : child;
                     // Aktif segment (filtre|klasör|etiket) anahtarı: değişince
                     // AnimatedSwitcher yeni görünümü kaydırarak getirir (madde 2).
                     // Arama sorgusu anahtara DAHİL DEĞİL — her tuşta yeniden
@@ -1929,6 +1952,72 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               );
                             },
                           )
+                        else if (desktopWeb && !narrowPane)
+                          Builder(
+                            builder: (context) {
+                              final folders = ref.watch(
+                                visibleOrderedFoldersProvider,
+                              );
+                              final desktopTitle = sharedFolder != null
+                                  ? (sharedFolderRefOf(
+                                          ref,
+                                          sharedFolder,
+                                        )?.name ??
+                                        l10n.sharedHubShort)
+                                  : hubActive
+                                  ? (() {
+                                      final hub = ref.watch(
+                                        sharedHubFolderProvider,
+                                      );
+                                      return hub.name.isEmpty
+                                          ? l10n.sharedHubTitle
+                                          : hub.name;
+                                    })()
+                                  : selectedFolderId != null
+                                  ? ([
+                                          for (final f in folders)
+                                            if (f.id == selectedFolderId) f.name,
+                                        ].firstOrNull ??
+                                        l10n.foldersTitle)
+                                  : ref.watch(showAllNotesProvider)
+                                  ? l10n.allNotesChip
+                                  : l10n.navNotes;
+                              final desktopNoteCount =
+                                  (sharedFolder == null && !hubActive)
+                                  ? notesAsync.value?.length
+                                  : null;
+                              return WebDashboardHeader(
+                                title: desktopTitle,
+                                noteCount: desktopNoteCount,
+                                scrolled: _gridScrolled,
+                                searchController: _searchController,
+                                searchFocus: _searchFocus,
+                                semanticToggle: _SemanticToggle(
+                                  on: ref.watch(semanticSearchEnabledProvider),
+                                  onTap: () => ref
+                                      .read(
+                                        semanticSearchEnabledProvider.notifier,
+                                      )
+                                      .toggle(),
+                                ),
+                                filterButton: const Customizable(
+                                  id: UiItem.homeFilter,
+                                  child: HomeFilterButton(),
+                                ),
+                                showGridControls:
+                                    !selectionActive &&
+                                    !reorderActive &&
+                                    sharedFolder == null &&
+                                    !hubActive,
+                                onOpenMenu: () => unawaited(
+                                  _openHomeMenu(
+                                    hasHiddenFolders: hasHiddenFolders,
+                                    hiddenRevealed: hiddenRevealed,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
                         else
                           // KÖK NEDEN (kasma): `keyboardOpen`/`searchExpanded`
                           // ekranın ANA build'inde okunuyordu. `viewInsets`
@@ -2034,10 +2123,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // YENİ SÜRÜM ŞERİDİ (2026-11-10): kalıcı, kapatılamaz;
                         // yeni sürüm yokken sıfır yer.
                         const UpdateBanner(),
-                        Offstage(
-                          offstage: narrowPane,
-                          child: const HomeCalendarStrip(),
-                        ),
+                        if (desktopWeb && !narrowPane)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpace.xl,
+                              AppSpace.s,
+                              AppSpace.xl,
+                              AppSpace.xs,
+                            ),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AppTokens.of(context).card,
+                                borderRadius: BorderRadius.circular(AppRadius.m),
+                                border: Border.all(
+                                  color: AppTokens.of(context).hairline,
+                                ),
+                              ),
+                              child: const HomeCalendarStrip(),
+                            ),
+                          )
+                        else
+                          Offstage(
+                            offstage: narrowPane,
+                            child: const HomeCalendarStrip(),
+                          ),
                         // Zamanı gelen hatırlatıcı/görev şeridi (2026-11-08).
                         Offstage(
                           offstage: narrowPane,
@@ -2088,7 +2197,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
                           // (pointerCount kontrolü), böylece içteki yatay
                           // çekiş ve dikey kaydırma olduğu gibi çalışır.
-                          child: FolderPullIndicator(
+                          child: padDesktopGutter(
+                            FolderPullIndicator(
                           progress: _folderPull,
                           icon: switch (ref
                               .watch(homePullGestureProvider)
@@ -2410,6 +2520,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 ),
                               ),
                             ),
+                          ),
                           ),
                           ),
                         ),

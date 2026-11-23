@@ -4317,5 +4317,21 @@
   "@calendarDayReminders": {"placeholders": {"count": {"type": "int"}}},
   "calendarDayNotesCount": "{count} not",
   "@calendarDayNotesCount": {"placeholders": {"count": {"type": "int"}}},
-  "calendarDayFree": "Boş gün"
+  "calendarDayFree": "Boş gün",
+  "webWorkspaceSection": "Çalışma alanı",
+  "webOrganizeSection": "Düzenle",
+  "webViewGrid": "Izgara görünümü",
+  "webViewList": "Liste görünümü",
+  "webColumnsMenu": "Sütun yoğunluğu",
+  "webColumnsAuto": "Otomatik",
+  "webColumnsCount": "{count} sütun",
+  "@webColumnsCount": {"placeholders": {"count": {"type": "int"}}},
+  "webNoteCount": "{count} not",
+  "@webNoteCount": {"placeholders": {"count": {"type": "int"}}},
+  "webDriveStatusConnected": "Drive bağlı",
+  "webDriveStatusSyncing": "{count} ek senkronlanıyor",
+  "@webDriveStatusSyncing": {"placeholders": {"count": {"type": "int"}}},
+  "webDriveStatusAttention": "{count} ek bekliyor",
+  "@webDriveStatusAttention": {"placeholders": {"count": {"type": "int"}}},
+  "webSyncCloudReady": "Bulut senkronu açık"
 }

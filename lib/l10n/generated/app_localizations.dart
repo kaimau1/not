@@ -17071,6 +17071,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Boş gün'**
   String get calendarDayFree;
+
+  /// No description provided for @webWorkspaceSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çalışma alanı'**
+  String get webWorkspaceSection;
+
+  /// No description provided for @webOrganizeSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get webOrganizeSection;
+
+  /// No description provided for @webViewGrid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Izgara görünümü'**
+  String get webViewGrid;
+
+  /// No description provided for @webViewList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste görünümü'**
+  String get webViewList;
+
+  /// No description provided for @webColumnsMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütun yoğunluğu'**
+  String get webColumnsMenu;
+
+  /// No description provided for @webColumnsAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get webColumnsAuto;
+
+  /// No description provided for @webColumnsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sütun'**
+  String webColumnsCount(int count);
+
+  /// No description provided for @webNoteCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not'**
+  String webNoteCount(int count);
+
+  /// No description provided for @webDriveStatusConnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive bağlı'**
+  String get webDriveStatusConnected;
+
+  /// No description provided for @webDriveStatusSyncing.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek senkronlanıyor'**
+  String webDriveStatusSyncing(int count);
+
+  /// No description provided for @webDriveStatusAttention.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek bekliyor'**
+  String webDriveStatusAttention(int count);
+
+  /// No description provided for @webSyncCloudReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulut senkronu açık'**
+  String get webSyncCloudReady;
 }
 
 class _AppLocalizationsDelegate

@@ -9651,4 +9651,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarDayFree => 'Free day';
+
+  @override
+  String get webWorkspaceSection => 'Workspace';
+
+  @override
+  String get webOrganizeSection => 'Organize';
+
+  @override
+  String get webViewGrid => 'Grid view';
+
+  @override
+  String get webViewList => 'List view';
+
+  @override
+  String get webColumnsMenu => 'Column density';
+
+  @override
+  String get webColumnsAuto => 'Auto';
+
+  @override
+  String webColumnsCount(int count) {
+    return '$count columns';
+  }
+
+  @override
+  String webNoteCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes',
+      one: '1 note',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get webDriveStatusConnected => 'Drive connected';
+
+  @override
+  String webDriveStatusSyncing(int count) {
+    return '$count syncing';
+  }
+
+  @override
+  String webDriveStatusAttention(int count) {
+    return '$count pending';
+  }
+
+  @override
+  String get webSyncCloudReady => 'Cloud sync active';
 }

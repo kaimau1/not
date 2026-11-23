@@ -9639,4 +9639,48 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarDayFree => 'Boş gün';
+
+  @override
+  String get webWorkspaceSection => 'Çalışma alanı';
+
+  @override
+  String get webOrganizeSection => 'Düzenle';
+
+  @override
+  String get webViewGrid => 'Izgara görünümü';
+
+  @override
+  String get webViewList => 'Liste görünümü';
+
+  @override
+  String get webColumnsMenu => 'Sütun yoğunluğu';
+
+  @override
+  String get webColumnsAuto => 'Otomatik';
+
+  @override
+  String webColumnsCount(int count) {
+    return '$count sütun';
+  }
+
+  @override
+  String webNoteCount(int count) {
+    return '$count not';
+  }
+
+  @override
+  String get webDriveStatusConnected => 'Drive bağlı';
+
+  @override
+  String webDriveStatusSyncing(int count) {
+    return '$count ek senkronlanıyor';
+  }
+
+  @override
+  String webDriveStatusAttention(int count) {
+    return '$count ek bekliyor';
+  }
+
+  @override
+  String get webSyncCloudReady => 'Bulut senkronu açık';
 }

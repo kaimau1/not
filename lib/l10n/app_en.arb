@@ -3459,5 +3459,21 @@
   "@calendarDayReminders": {"placeholders": {"count": {"type": "int"}}},
   "calendarDayNotesCount": "{count} notes",
   "@calendarDayNotesCount": {"placeholders": {"count": {"type": "int"}}},
-  "calendarDayFree": "Free day"
+  "calendarDayFree": "Free day",
+  "webWorkspaceSection": "Workspace",
+  "webOrganizeSection": "Organize",
+  "webViewGrid": "Grid view",
+  "webViewList": "List view",
+  "webColumnsMenu": "Column density",
+  "webColumnsAuto": "Auto",
+  "webColumnsCount": "{count} columns",
+  "@webColumnsCount": {"placeholders": {"count": {"type": "int"}}},
+  "webNoteCount": "{count, plural, =1{1 note} other{{count} notes}}",
+  "@webNoteCount": {"placeholders": {"count": {"type": "int"}}},
+  "webDriveStatusConnected": "Drive connected",
+  "webDriveStatusSyncing": "{count} syncing",
+  "@webDriveStatusSyncing": {"placeholders": {"count": {"type": "int"}}},
+  "webDriveStatusAttention": "{count} pending",
+  "@webDriveStatusAttention": {"placeholders": {"count": {"type": "int"}}},
+  "webSyncCloudReady": "Cloud sync active"
 }
