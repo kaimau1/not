@@ -1,18 +1,19 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/utils/font_sources.dart';
 import 'package:notlar/core/utils/note_fonts.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 
-/// YAZI TİPİ KATALOĞU APK'ya GÖMÜLÜ (kullanıcı isteği 2026-08-07: "varsayılan
-/// yazı tipi seçimi de olsun en az 15 tane font indir göm").
+/// YAZI TİPİ KATALOĞU (kullanıcı isteği 2026-08-07: "varsayılan yazı tipi
+/// seçimi de olsun en az 15 tane font"). PL10: yalnız [kCoreFontIds] APK'ya
+/// GÖMÜLÜ; kalanı seçilince indirilir (`font_downloads.dart`).
 ///
-/// Katalog dört yerde birden yaşıyor: [kCatalogFonts] listesi, tek stil
-/// çağrıları ([googleNoteFontIds]), metin teması çağrıları ([appFontIds]) ve
-/// `assets/google_fonts/` altındaki dosyalar. Bunlardan biri ötekilerden
-/// ayrılırsa hata SESSİZ olur — seçenek listede görünür, seçilir, ama ya
-/// varsayılanla çizilir ya da (dosya eksikse) `google_fonts` ağdan indirmeye
-/// çalışıp çevrimdışı cihazda sistem fontuna düşer. Test dördünü bağlar.
+/// Katalog birkaç yerde birden yaşıyor: [kCatalogFonts] listesi, çekirdek için
+/// tek stil çağrıları ([googleNoteFontIds]) ve metin teması çağrıları,
+/// `assets/google_fonts/` altındaki dosyalar, indirilenler için
+/// [kDownloadableFontSources]. Biri ayrılırsa hata SESSİZ olur — seçenek
+/// listede görünür ama varsayılanla çizilir. Test hepsini bağlar.
 void main() {
   test('en az 15 yazı tipi katalogda', () {
     expect(kCatalogFonts.length, greaterThanOrEqualTo(15));
@@ -20,28 +21,48 @@ void main() {
 
   test('katalog · tek stil çağrıları · metin teması çağrıları örtüşüyor', () {
     final listed = kCatalogFonts.map((f) => f.id).whereType<String>().toSet();
-    expect(googleNoteFontIds, containsAll(listed));
-    expect(appFontIds, containsAll(listed));
+    expect(googleNoteFontIds, kCoreFontIds, reason: 'gömülü = çekirdek');
+    expect(listed, containsAll(kCoreFontIds));
     expect(
-      listed,
-      containsAll(appFontIds),
-      reason: 'metin teması çağrısı var ama katalogda olmayan yazı tipi',
+      listed.difference(kCoreFontIds),
+      kDownloadableFontSources.keys.toSet(),
+      reason: 'çekirdek olmayan her aile indirme kaynağına sahip olmalı',
     );
+    expect(appFontIds, listed);
   });
+
+  test(
+    'indirme kaynağı her ailede 400, varsa 500; hepsi SHA-256 biçiminde',
+    () {
+      for (final entry in kDownloadableFontSources.entries) {
+        expect(entry.value.first.weight, 400, reason: entry.key);
+        for (final s in entry.value) {
+          expect(
+            s.sha256,
+            matches(RegExp(r'^[0-9a-f]{64}$')),
+            reason: entry.key,
+          );
+          expect(s.length, greaterThan(10000), reason: entry.key);
+        }
+      }
+    },
+  );
 
   test('varsayılan yazı tipi katalogda ve çağrısı yazılmış', () {
     expect(appFontIds, contains(kAppDefaultFont));
     expect(kCatalogFonts.map((f) => f.id), contains(kAppDefaultFont));
   });
 
-  test('her yazı tipinin dosyaları gömülü', () {
+  test('çekirdek yazı tiplerinin dosyaları gömülü', () {
     // Dosya adı `google_fonts`un aradığı kalıpta olmak ZORUNDA
     // (`<Aile>-<Ağırlık>.ttf`, aile adı BOŞLUKSUZ); adı değişirse paket
     // sessizce indirmeye döner.
-    final bundled = Directory(
-      'assets/google_fonts',
-    ).listSync().whereType<File>().map((f) => f.uri.pathSegments.last).toList();
-    for (final font in kCatalogFonts) {
+    final bundled = Directory('assets/google_fonts')
+        .listSync()
+        .whereType<File>()
+        .map((f) => f.uri.pathSegments.last)
+        .toList();
+    for (final font in kCatalogFonts.where((f) => !f.downloadable)) {
       final family = font.id!.replaceAll(' ', '');
       final files = bundled.where((n) => n.startsWith('$family-'));
       expect(

@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Yazı tipi: 5 çekirdek gömülü, kalanı seçilince iniyor (PL10, 23 Kasım, yazıldı, cihazda doğrulanmadı)**
+  Nerede/Nasıl: (1) Ayarlar → Görünüm → Yazı tipi: Lato/Poppins/Merriweather gibi bir aile bulut simgeli mi; dokununca simge dönüp kayboluyor ve yazı o tipe geçiyor mu. (2) Uçak kipinde başka bir bulut simgeli aile seç: çökme yok, varsayılan yazı tipi görünür; interneti açıp yeniden seç → iniyor. (3) İndirdikten sonra uçak kipinde uygulamayı kapatıp aç: yazı tipi ağsız geliyor. (4) Editör biçim şeridi → yazı tipi satırı: bulut simgeli adlar, seçince iner. (5) Çekirdek aileler (Inter Tight, Roboto, Lora, Roboto Mono, Caveat) uçak kipinde ilk açılışta da doğru.
+  Yanlışsa: hangi aile + uçak kipi mi belirt.
+
 - [ ] **Defter sayfa çubuğu sabit + tüm temalar/renkler/zemin görselinde üst/alt alan ve çizgiler tam uyumlu (22 Kasım gece 3, bulutta yazıldı, cihazda doğrulanmadı)**
   Nerede/Nasıl: (1) Uzun defter notunda Sayfa 1/2 paneli alt panelin hemen üstünde sabit mi; yazarken gizlenip geri geliyor mu. (2) Sarı bloknot (açık + koyu), çizgili, kesik, kareli, mühendislik ve noktalı kâğıtlarda çizgiler, kırmızı kenar çizgisi ve cilt gölgesi üst çubuk ve alt panelin arkasında kesintisiz sürüyor mu, üst/alt ton dikişi kalktı mı, çizgiler üst simgelerin ortasından geçmiyor mu. (3) Sayfa çubuğu (`Sayfa 1 / 2`) ve alt kapsüller (sol araç + sağ ✨/ses) 8 not temasında, düz/özel renklerde ve sarı bloknotta kâğıdın/temanın tonuna uyuyor mu. (4) Koyu, açık ve karmaşık bir arka plan fotoğrafı koyup saydamlığı değiştir (açık ve koyu temada): üst düğmeler koruyucu kapsüllerde net okunuyor mu, alt kapsüller ve onay kutuları fotoğrafın tonuna uyup kaybolmuyor mu.
   Yanlışsa: ekran görüntüsü ile madde numarasını yaz.

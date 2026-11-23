@@ -26,6 +26,7 @@ import 'core/utils/display_rate.dart';
 import 'core/utils/hard_keyboard.dart';
 import 'core/utils/image_cache_budget.dart';
 import 'core/utils/local_file.dart';
+import 'core/utils/font_downloads.dart';
 import 'core/utils/note_fonts.dart';
 import 'core/utils/web_attachment_cache.dart';
 import 'core/third_party_licenses.dart';
@@ -181,6 +182,10 @@ Future<void> main() async {
   }
 
   await fonts.timeout(const Duration(milliseconds: 400), onTimeout: () {});
+  // PL10: seçili ama pakette olmayan yazı tipi: önbellekten yükle / arka planda
+  // indir (çekirdekte etkisiz; çevrimdışıysa varsayılan görünür, çökmez).
+  final storedFont = prefs.getString('app_font');
+  if (storedFont != null) fontDownloads.request(storedFont);
   runApp(
     ProviderScope(
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],

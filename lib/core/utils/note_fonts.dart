@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../app/theme/app_tokens.dart';
+import 'font_downloads.dart';
+import 'font_sources.dart';
 
 /// Yazı tipi katalogu: hem UYGULAMANIN genel yazı tipi (Ayarlar → Görünüm)
 /// hem de NOTUN kendi yazı tipi (biçim şeridi) buradan beslenir.
 ///
 /// İki kaynak var: sistemin GENEL aileleri (`serif`, `monospace`) ve Google
-/// Fonts katalogu. Katalogdaki her yazı tipinin dosyaları APK'ya GÖMÜLÜ
-/// (`assets/google_fonts/`), yani seçim çevrimdışı da, ilk açılışta da
-/// çalışır ve her telefonda AYNI görünür — indirme yolu tamamen kapandı
-/// (bkz. pubspec'teki gerekçe ve `test/font_catalog_test.dart`).
+/// Fonts katalogu. Katalogdan yalnız [kCoreFontIds] APK'ya GÖMÜLÜ
+/// (`assets/google_fonts/`): varsayılan görünüm çevrimdışı da, ilk açılışta
+/// da her telefonda AYNIdır. Kalan aileler (PL10, `font_downloads.dart`)
+/// kullanıcı seçince BİR KEZ indirilir ve yerelde önbelleklenir; inene dek
+/// varsayılan yazı tipi görünür. Çalışma anı indirmesi başka hiçbir yolda
+/// yok (bkz. [disableFontRuntimeFetching], `test/font_runtime_fetch_test.dart`).
 ///
 /// Liste KARAKTER OLARAK AYRIK tutuldu: her ailenin bir işi var (sistem
 /// arayüzü, kitap, ekran/başlık, daktilo, el yazısı); birbirinin kopyası iki
@@ -41,14 +46,30 @@ class NoteFontOption {
 
   /// true: Google Fonts katalogundan; false: sistemin genel ailesi.
   final bool google;
+
+  /// Pakette değil, seçilince indirilen aile (seçicide bulut simgesi).
+  bool get downloadable =>
+      id != null && kDownloadableFontSources.containsKey(id);
 }
 
-/// Gömülü katalog yazı tipleri (uygulama geneli ve not başına ORTAK).
+/// APK'da gömülü kalan çekirdek aileler: varsayılan ([kAppDefaultFont]) ve
+/// her öbekten (sade, kitap, daktilo, el yazısı) bir temsilci.
+const Set<String> kCoreFontIds = {
+  'Inter Tight',
+  'Roboto',
+  'Lora',
+  'Roboto Mono',
+  'Caveat',
+};
+
+/// Katalog yazı tipleri (uygulama geneli ve not başına ORTAK): çekirdek olanlar
+/// gömülü, kalanı [NoteFontOption.downloadable].
 ///
 /// Sıra bilinçli: önce arayüz/gövde için sade sans'lar, sonra kitap serif'i,
 /// sonra daktilo ve en sonda el yazısı. Yeni bir yazı tipi eklerken üç yer
-/// birlikte güncellenmeli — bu liste, [_googleBuilders], [_googleTextThemes]
-/// ve dosyaların kendisi (`assets/google_fonts/`); test dördünün örtüştüğünü
+/// birlikte güncellenmeli — bu liste ile ÇEKİRDEK için [_googleBuilders],
+/// [_googleTextThemes] ve dosyalar (`assets/google_fonts/`); indirilenler için
+/// `font_sources.dart` (tool/gen_font_sources.py). Test bunların örtüştüğünü
 /// doğrular.
 const List<NoteFontOption> kCatalogFonts = [
   NoteFontOption('Inter Tight', 'Inter Tight', google: true),
@@ -136,10 +157,17 @@ const List<NoteFontOption> kNoteFonts = [
 const _fontCacheLimit = 128;
 final Map<(TextStyle, String), TextStyle> _fontCache = {};
 
-TextStyle applyNoteFont(TextStyle base, String? family) {
+TextStyle applyNoteFont(TextStyle base, String? family, {bool fetch = true}) {
   if (family == null || family.isEmpty) return base;
   if (family == 'serif' || family == 'monospace') {
     return base.copyWith(fontFamily: family);
+  }
+  // PL10: pakette olmayan aile. Bilinen ad hep KENDİ adıyla istenir, yedek
+  // varsayılan yazı tipi; yüklenince motor yeniden dizer. [fetch] false:
+  // yalnız önizleme (seçici satırları) — indirmeyi TETİKLEMEZ.
+  if (kDownloadableFontSources.containsKey(family)) {
+    if (fetch) fontDownloads.request(family);
+    return _downloadedStyle(base, family);
   }
   final key = (base, family);
   final cached = _fontCache[key];
@@ -153,14 +181,32 @@ TextStyle applyNoteFont(TextStyle base, String? family) {
   final applied = builder == null
       ? base
       : weight != null && weight.value > 500
-      ? builder(
-          base.copyWith(fontWeight: AppWeight.medium),
-        ).copyWith(fontWeight: weight)
+      ? builder(base.copyWith(fontWeight: AppWeight.medium))
+            .copyWith(fontWeight: weight)
       : builder(base);
   if (_fontCache.length >= _fontCacheLimit) _fontCache.clear();
   _fontCache[key] = applied;
   return applied;
 }
+
+/// İndirilen ailenin stili: kesim kalınlığa göre seçilir (500 yoksa 400, daha
+/// kalını motor kalınlaştırır — gömülü ailelerle aynı). Yedek: varsayılan
+/// yazı tipinin aynı kesimi; indirme bitene dek ya da çevrimdışıyken o görünür.
+TextStyle _downloadedStyle(TextStyle base, String id) {
+  final w = base.fontWeight?.value ?? 400;
+  final has500 = kDownloadableFontSources[id]!.any((s) => s.weight == 500);
+  final weight = w >= 500 && has500 ? 500 : 400;
+  return base.copyWith(
+    fontFamily: downloadedFontFamily(id, weight),
+    fontFamilyFallback: _defaultFallback[weight] ??= [
+      _googleBuilders[kAppDefaultFont]!(
+        TextStyle(fontWeight: weight == 500 ? AppWeight.medium : null),
+      ).fontFamily!,
+    ],
+  );
+}
+
+final Map<int, List<String>> _defaultFallback = {};
 
 /// **ÇALIŞMA ANI İNDİRMESİ KAPALI** (T3 / K-54, 2026-11-17). `google_fonts`
 /// pakette bulamadığı kesimi fonts.gstatic.com'dan indirir; gelince motor
@@ -169,7 +215,9 @@ TextStyle applyNoteFont(TextStyle base, String? family) {
 /// Merriweather'ın 500 kesimi var ama dosyası pakette yoktu → her Merriweather
 /// başlığı (w500) ağdan iniyordu. Uygulama GoogleFonts'a yalnız 400/500 sorar
 /// ([applyNoteFont] kalını 500'e indirir; metin temaları ≤ 500), hepsi
-/// `assets/google_fonts/`ta. Bekçi: `test/font_runtime_fetch_test.dart`.
+/// `assets/google_fonts/`ta. PL10: paketten ÇIKARILAN aileler `google_fonts`
+/// ile değil [FontDownloads] ile, yalnız kullanıcı seçince iner; paketin
+/// indirmesi kapalı kalır. Bekçi: `test/font_runtime_fetch_test.dart`.
 void disableFontRuntimeFetching() {
   GoogleFonts.config.allowRuntimeFetching = false;
 }
@@ -227,23 +275,9 @@ TextStyle applyNoteOpacity(TextStyle base, double opacity, Color fallback) {
 final Map<String, TextStyle Function(TextStyle)> _googleBuilders = {
   'Inter Tight': (base) => GoogleFonts.interTight(textStyle: base),
   'Roboto': (base) => GoogleFonts.roboto(textStyle: base),
-  'Open Sans': (base) => GoogleFonts.openSans(textStyle: base),
-  'Lato': (base) => GoogleFonts.lato(textStyle: base),
-  'Source Sans 3': (base) => GoogleFonts.sourceSans3(textStyle: base),
-  'Work Sans': (base) => GoogleFonts.workSans(textStyle: base),
-  'Rubik': (base) => GoogleFonts.rubik(textStyle: base),
-  'Nunito': (base) => GoogleFonts.nunito(textStyle: base),
-  'Montserrat': (base) => GoogleFonts.montserrat(textStyle: base),
-  'Poppins': (base) => GoogleFonts.poppins(textStyle: base),
   'Lora': (base) => GoogleFonts.lora(textStyle: base),
-  'Merriweather': (base) => GoogleFonts.merriweather(textStyle: base),
-  'PT Serif': (base) => GoogleFonts.ptSerif(textStyle: base),
-  'EB Garamond': (base) => GoogleFonts.ebGaramond(textStyle: base),
-  'Playfair Display': (base) => GoogleFonts.playfairDisplay(textStyle: base),
   'Roboto Mono': (base) => GoogleFonts.robotoMono(textStyle: base),
-  'JetBrains Mono': (base) => GoogleFonts.jetBrainsMono(textStyle: base),
   'Caveat': (base) => GoogleFonts.caveat(textStyle: base),
-  'Patrick Hand': (base) => GoogleFonts.patrickHand(textStyle: base),
 };
 
 /// Aynı yazı tiplerinin TÜM METİN TEMASI çağrıları — uygulamanın genel yazı
@@ -255,41 +289,57 @@ final Map<String, TextStyle Function(TextStyle)> _googleBuilders = {
 final Map<String, TextTheme Function(TextTheme)> _googleTextThemes = {
   'Inter Tight': GoogleFonts.interTightTextTheme,
   'Roboto': GoogleFonts.robotoTextTheme,
-  'Open Sans': GoogleFonts.openSansTextTheme,
-  'Lato': GoogleFonts.latoTextTheme,
-  'Source Sans 3': GoogleFonts.sourceSans3TextTheme,
-  'Work Sans': GoogleFonts.workSansTextTheme,
-  'Rubik': GoogleFonts.rubikTextTheme,
-  'Nunito': GoogleFonts.nunitoTextTheme,
-  'Montserrat': GoogleFonts.montserratTextTheme,
-  'Poppins': GoogleFonts.poppinsTextTheme,
   'Lora': GoogleFonts.loraTextTheme,
-  'Merriweather': GoogleFonts.merriweatherTextTheme,
-  'PT Serif': GoogleFonts.ptSerifTextTheme,
-  'EB Garamond': GoogleFonts.ebGaramondTextTheme,
-  'Playfair Display': GoogleFonts.playfairDisplayTextTheme,
   'Roboto Mono': GoogleFonts.robotoMonoTextTheme,
-  'JetBrains Mono': GoogleFonts.jetBrainsMonoTextTheme,
   'Caveat': GoogleFonts.caveatTextTheme,
-  'Patrick Hand': GoogleFonts.patrickHandTextTheme,
 };
 
 /// Uygulamanın genel yazı tipi. [family] null / bilinmiyorsa varsayılan
 /// ([kAppDefaultFont]) uygulanır — kayıtta bozuk bir ad kalsa bile uygulama
-/// yazısız kalmaz.
-TextTheme appFontTextTheme(TextTheme base, String? family) =>
-    (_googleTextThemes[family] ?? _googleTextThemes[kAppDefaultFont]!)(base);
+/// yazısız kalmaz. İndirilen ailede (PL10) metin biçimlerinin her biri aynı
+/// kesim kuralıyla [_downloadedStyle]'dan geçer.
+TextTheme appFontTextTheme(TextTheme base, String? family) {
+  if (family != null && kDownloadableFontSources.containsKey(family)) {
+    fontDownloads.request(family);
+    TextStyle? m(TextStyle? s) =>
+        s == null ? null : _downloadedStyle(s, family);
+    return base.copyWith(
+      displayLarge: m(base.displayLarge),
+      displayMedium: m(base.displayMedium),
+      displaySmall: m(base.displaySmall),
+      headlineLarge: m(base.headlineLarge),
+      headlineMedium: m(base.headlineMedium),
+      headlineSmall: m(base.headlineSmall),
+      titleLarge: m(base.titleLarge),
+      titleMedium: m(base.titleMedium),
+      titleSmall: m(base.titleSmall),
+      bodyLarge: m(base.bodyLarge),
+      bodyMedium: m(base.bodyMedium),
+      bodySmall: m(base.bodySmall),
+      labelLarge: m(base.labelLarge),
+      labelMedium: m(base.labelMedium),
+      labelSmall: m(base.labelSmall),
+    );
+  }
+  return (_googleTextThemes[family] ?? _googleTextThemes[kAppDefaultFont]!)(
+    base,
+  );
+}
 
 /// Uygulamanın varsayılan yazı tipi. Ayar hiç ellenmediğinde bu geçerlidir.
 const String kAppDefaultFont = 'Inter Tight';
 
-/// Çağrısı yazılmış katalog yazı tipleri. [kNoteFonts] ile bunun ayrışması,
-/// seçeneğin listede görünüp varsayılanla çizilmesi demek olurdu; test bu iki
-/// listenin örtüştüğünü doğrular (yazı tipini YÜKLEMEDEN — ağ gerekmez).
+/// Çağrısı yazılmış GÖMÜLÜ (çekirdek) yazı tipleri. [kCoreFontIds] ile bunun
+/// ayrışması, seçeneğin listede görünüp varsayılanla çizilmesi demek olurdu;
+/// test bu iki kümenin örtüştüğünü doğrular (yazı tipini YÜKLEMEDEN).
 Set<String> get googleNoteFontIds => _googleBuilders.keys.toSet();
 
-/// Metin teması çağrısı yazılmış yazı tipleri (aynı sebeple test edilir).
-Set<String> get appFontIds => _googleTextThemes.keys.toSet();
+/// Uygulama yazı tipi olarak geçerli her ad: metin teması çağrısı yazılmış
+/// çekirdek aileler + indirilebilir aileler (aynı sebeple test edilir).
+Set<String> get appFontIds => {
+  ..._googleTextThemes.keys,
+  ...kDownloadableFontSources.keys,
+};
 
 /// Genel ailelerin etiketleri çeviriden gelir (bu katman l10n bilmez);
 /// katalog yazı tipleri kendi adlarıyla görünür.

@@ -57,6 +57,7 @@ import '../../../core/utils/doc_picker.dart';
 import '../../../core/widgets/expand_reveal.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
+import '../../../core/utils/font_downloads.dart';
 import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/speech_output.dart';

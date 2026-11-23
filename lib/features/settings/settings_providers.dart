@@ -9,6 +9,7 @@ import '../../app/theme/app_palette.dart';
 import '../../core/constants.dart';
 import '../../core/play_build.dart';
 import '../../core/crash_reporting.dart';
+import '../../core/utils/font_downloads.dart';
 import '../../core/utils/language_names.dart';
 import '../../core/utils/note_fonts.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -374,8 +375,8 @@ class FontScaleNotifier extends Notifier<double> {
 ///
 /// Notun KENDİ yazı tipinden bağımsızdır: bu ayar arayüzü ve yazı tipi
 /// seçilmemiş notları etkiler, not başına seçim onun üstüne biner.
-/// Katalogdaki bütün yazı tipleri APK'ya gömülü olduğu için seçim
-/// çevrimdışı da anında uygulanır.
+/// Çekirdek yazı tipleri APK'da gömülü: seçim çevrimdışı da anında uygulanır.
+/// Diğerleri (PL10) seçilince bir kez indirilir; inene dek varsayılan görünür.
 final appFontProvider = NotifierProvider<AppFontNotifier, String>(
   AppFontNotifier.new,
 );
@@ -395,6 +396,8 @@ class AppFontNotifier extends Notifier<String> {
   void set(String family) {
     state = family;
     ref.read(sharedPreferencesProvider).setString(_key, family);
+    // Kullanıcı seçti: paketten çıkarılmış aileyi indir (çekirdekte etkisiz).
+    unawaited(fontDownloads.ensure(family, retry: true));
   }
 }
 

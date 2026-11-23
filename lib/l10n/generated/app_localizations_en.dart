@@ -2305,7 +2305,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appFontInfo =>
-      'The font used everywhere in the app. A note\'s own font choice overrides it. All fonts ship with the app — no internet needed.';
+      'The font used everywhere in the app. A note\'s own font choice overrides it. Five core fonts ship with the app; the ones with a cloud icon download once when selected (the default font shows while offline).';
+
+  @override
+  String get fontNeedsDownload => 'Downloads once when selected';
 
   @override
   String get followSystemTextScale => 'Follow system text size';

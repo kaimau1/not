@@ -669,47 +669,88 @@ class _FontChoiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: font.label,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        child: Column(
-          children: [
-            AnimatedContainer(
-              duration: AppMotion.of(context, AppMotion.quick),
-              height: 62,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.m),
-                border: Border.all(
-                  color: selected ? scheme.primary : scheme.outlineVariant,
-                  width: selected ? 2.5 : 1,
+    final l10n = context.l10n;
+    return ListenableBuilder(
+      listenable: fontDownloads,
+      builder: (context, _) {
+        // PL10: paketten çıkarılan aile inene dek bulut simgesi (inerken
+        // dönen halka); önizleme indirmeyi TETİKLEMEZ (`fetch: false`).
+        final id = font.id!;
+        final pending = font.downloadable && !fontDownloads.isReady(id);
+        return Semantics(
+          button: true,
+          selected: selected,
+          label: pending
+              ? '${font.label}, ${l10n.fontNeedsDownload}'
+              : font.label,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            child: Column(
+              children: [
+                AnimatedContainer(
+                  duration: AppMotion.of(context, AppMotion.quick),
+                  height: 62,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    border: Border.all(
+                      color: selected ? scheme.primary : scheme.outlineVariant,
+                      width: selected ? 2.5 : 1,
+                    ),
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Text(
+                        'Aa',
+                        style: applyNoteFont(
+                          TextStyle(fontSize: 26, color: scheme.onSurface),
+                          id,
+                          fetch: false,
+                        ),
+                      ),
+                      if (pending)
+                        PositionedDirectional(
+                          top: 4,
+                          end: 4,
+                          child: fontDownloads.isFetching(id)
+                              ? const SizedBox(
+                                  key: ValueKey('font-fetching'),
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 1.5,
+                                  ),
+                                )
+                              : Tooltip(
+                                  message: l10n.fontNeedsDownload,
+                                  child: Icon(
+                                    Icons.cloud_download_outlined,
+                                    key: const ValueKey('font-cloud'),
+                                    size: AppIconSize.xs,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              child: Text(
-                'Aa',
-                style: applyNoteFont(
-                  TextStyle(fontSize: 26, color: scheme.onSurface),
-                  font.id,
+                const SizedBox(height: 6),
+                Text(
+                  font.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: selected ? AppWeight.strong : AppWeight.medium,
+                    color: selected ? scheme.primary : null,
+                  ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              font.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: selected ? AppWeight.strong : AppWeight.medium,
-                color: selected ? scheme.primary : null,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

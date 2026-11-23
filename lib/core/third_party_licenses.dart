@@ -10,6 +10,10 @@ import 'package:flutter/services.dart';
 /// `google_fonts` paketi yalnız `.ttf/.otf` adlarını taradığından `.txt`
 /// dosyaları yazı tipi aramasını etkilemez.
 ///
+/// PL10: pakette `.ttf`i kalmayan, seçilince indirilen aileler
+/// (`kDownloadableFontSources`) de BURADA kalır — kullanıcının cihazına yazı
+/// tipi dağıtılıyor, lisans metni uygulamada taşınmaya devam eder.
+///
 /// Anahtar: `.ttf` dosya adındaki aile öneki (`Lato-Regular.ttf` → `Lato`).
 /// Yeni aile eklenince buraya satır + `-OFL.txt` dosyası ŞART; bekçi
 /// `test/third_party_licenses_test.dart`.
