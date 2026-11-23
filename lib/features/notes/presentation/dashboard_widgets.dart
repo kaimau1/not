@@ -300,6 +300,7 @@ class _ReorderableNoteCell extends StatelessWidget {
 class _SearchField extends ConsumerWidget {
   const _SearchField({
     this.compact = false,
+    this.showFilterInCompact = false,
     required this.controller,
     this.focusNode,
     this.trailing = const [],
@@ -315,6 +316,10 @@ class _SearchField extends ConsumerWidget {
 
   /// Dar liste bölmesi (F67.3): AI anahtarı ve süz gizli — ikisi de ⋮'te.
   final bool compact;
+
+  /// Kenar çubuğunda hesap zaten görünürken dar liste bölmesinde Süz
+  /// düğmesini doğrudan arama kutusunda tut.
+  final bool showFilterInCompact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -440,7 +445,7 @@ class _SearchField extends ConsumerWidget {
             // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
             // kişiselleştirmede gizlenebilir.
             Offstage(
-              offstage: compact,
+              offstage: compact && !showFilterInCompact,
               child: const Customizable(
                 id: UiItem.homeFilter,
                 child: Padding(

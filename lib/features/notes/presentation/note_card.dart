@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/note_open_route.dart';
 import '../../../app/router.dart';
+import '../../../app/second_note.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/widgets/color_fade.dart';
 import '../../../app/theme/note_colors.dart';
@@ -506,6 +507,7 @@ class NoteCard extends ConsumerWidget {
     Offset position,
   ) async {
     final l10n = context.l10n;
+    final openSide = canOpenSide(context, note.id);
     final overlay =
         Overlay.of(context).context.findRenderObject()! as RenderBox;
     final action = await showMenu<String>(
@@ -546,6 +548,25 @@ class NoteCard extends ConsumerWidget {
             title: Text(note.urgent ? l10n.urgentUnmark : l10n.urgentMark),
           ),
         ),
+        if (openSide)
+          PopupMenuItem(
+            value: 'side',
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.vertical_split_outlined),
+              title: Text(l10n.noteOpenSide),
+            ),
+          ),
+        PopupMenuItem(
+          value: 'more',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.more_horiz),
+            title: Text(l10n.noteMenu),
+          ),
+        ),
         PopupMenuItem(
           value: 'delete',
           child: ListTile(
@@ -568,6 +589,16 @@ class NoteCard extends ConsumerWidget {
       case 'urgent':
         unawaited(AppHaptics.tick());
         ref.read(notesRepositoryProvider)?.setUrgent(note.id, !note.urgent);
+      case 'side':
+        if (note.locked &&
+            !await authenticateForNote(l10n.unlockAuthReason)) {
+          return;
+        }
+        if (!context.mounted) return;
+        unawaited(AppHaptics.tick());
+        ref.read(secondNoteProvider.notifier).open(SecondNote(note.id));
+      case 'more':
+        unawaited(showNoteActionsSheet(context, ref, note));
       case 'delete':
         _delete(context, ref);
     }

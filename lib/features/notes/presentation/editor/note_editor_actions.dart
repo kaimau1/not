@@ -428,10 +428,10 @@ extension _EditorActions on _NoteEditorScreenState {
         note,
         surface: NoteMenuSurface.editor,
         readOnly: _readOnly,
-        // Bu ekranda başka yerde AÇIKÇA duranlar; başlık üst çubuğa çıkınca
-        // raptiye ve görünüm çubuktan düşer, menüye gelir.
+        // Bu ekranda başka yerde AÇIKÇA duranlar (raptiye ve notta ara);
+        // kullanıcı kişiselleştirmede gizlediyse menüye geri gelir.
         visibleElsewhere: {
-          if (_barTitle == null && Customizable.shows(UiItem.topPin)) 'pin',
+          if (Customizable.shows(UiItem.topPin)) 'pin',
           // Notta ara üst çubukta (⋮'nin solunda) hep duruyor.
           'search',
         },

@@ -1228,6 +1228,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 body,
                 side: effective,
                 onCycleSide: wide ? cycle : null,
+                onSelectSide: wide ? PinnedSideMemory.setSide : null,
               );
             }
             return PinnedSideLayout(
@@ -1239,6 +1240,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 side: effective,
                 fill: true,
                 onCycleSide: cycle,
+                onSelectSide: PinnedSideMemory.setSide,
               ),
               body: body,
             );
@@ -1267,12 +1269,14 @@ extension _EditorMediaView on _NoteEditorScreenState {
     required PinnedSide side,
     bool fill = false,
     VoidCallback? onCycleSide,
+    ValueChanged<PinnedSide>? onSelectSide,
   }) {
     return PinnedMediaPane(
             media: pinned,
             fill: fill,
             side: side,
             onCycleSide: onCycleSide,
+            onSelectSide: onSelectSide,
             penActive: _pagePen,
             // NOT BAŞINA "daraltınca küçülsün" (2026-11-21; cihazda saklanır,
             // varsayılan kapalı = PDF'teki gibi genişliğe oturur).

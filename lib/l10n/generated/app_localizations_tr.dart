@@ -8588,6 +8588,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinnedSideToggle => 'Yerleşim: üstte / solda / sağda';
 
   @override
+  String get pinnedSideTitle => 'Bölme yerleşimi';
+
+  @override
+  String get pinnedSideTop => 'Üstte';
+
+  @override
+  String get pinnedSideLeft => 'Solda';
+
+  @override
+  String get pinnedSideRight => 'Sağda';
+
+  @override
   String releaseNotesToastTitle(String version) {
     return 'Yenilikler · v$version';
   }

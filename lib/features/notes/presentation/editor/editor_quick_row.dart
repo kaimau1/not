@@ -921,11 +921,11 @@ class _KeyboardSwitchState extends State<KeyboardSwitch> {
     final keyboard = KeyboardInset.openOf(context);
     final e = widget.editing;
     final win = WindowClass.of(context);
-    final tablet = e != null && win.touchFirst && !win.compactDevice;
+    final focusShows = e != null && (!win.touchFirst || !win.compactDevice);
     final on = e?.value ?? false;
     if (widget.onlyWhileEditing && e != null) {
-      return _pick(on && (keyboard || tablet));
+      return _pick(on && (keyboard || focusShows));
     }
-    return _pick(keyboard || (tablet && on));
+    return _pick(keyboard || (focusShows && on));
   }
 }

@@ -1696,6 +1696,95 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     ),
   );
 
+  late final Widget _topPinButton = Customizable(
+    id: UiItem.topPin,
+    // Dar dinleme (P20 M4): sabitle kökü kurmaz.
+    child: NoteSlice<bool>(
+      source: _noteN,
+      select: (n) => n.pinned,
+      builder: (context, pinned) {
+        final l10n = context.l10n;
+        final accent = NoteAccent.maybeOf(context)?.accent;
+        return IconButton(
+          key: const ValueKey('editor-top-pin'),
+          tooltip: pinned ? l10n.unpin : l10n.pin,
+          isSelected: pinned,
+          icon: TogglePop(
+            on: pinned,
+            child: Icon(
+              pinned ? Icons.push_pin : Icons.push_pin_outlined,
+              // Sabitli not: kartın raptiyesiyle AYNI renk (notun
+              // koyu tonu, renksizde temanın sıcak vurgusu).
+              color: pinned
+                  ? (accent ?? _themeOf(context).colorScheme.secondary)
+                  : null,
+            ),
+          ),
+          onPressed: () => _mutate(
+            (n) => n.copyWith(pinned: !n.pinned),
+            immediate: true,
+          ),
+        );
+      },
+    ),
+  );
+
+  late final Widget _topPinAndSearch = Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [_topPinButton, _topSearchButton],
+  );
+
+  // Yıldızlı göstergesi üst çubukta; dokununca yıldız kalkar (menüye
+  // gitmeden geri alınabilsin). Dar dinleme (P20 M4): yıldız kökü kurmaz;
+  // şekil sabit (kasma md. 4), tepki TogglePop (P38).
+  late final Widget _starBadge = NoteSlice<bool>(
+    source: _noteN,
+    select: (n) => n.starred,
+    builder: (context, on) => TogglePop(
+      on: on,
+      child: on
+          ? IconButton(
+              tooltip: context.l10n.unstar,
+              visualDensity: VisualDensity.compact,
+              icon: Icon(
+                Icons.star,
+                size: AppIconSize.xs,
+                color: Colors.amber.shade600,
+              ),
+              onPressed: () => _mutate(
+                (n) => n.copyWith(starred: false),
+                immediate: true,
+              ),
+            )
+          : const SizedBox.shrink(),
+    ),
+  );
+
+  // ACİL göstergesi (2026-11-16): yıldızla aynı kalıp — dar dinleme,
+  // dokununca işaret kalkar.
+  late final Widget _urgentBadge = NoteSlice<bool>(
+    source: _noteN,
+    select: (n) => n.urgent,
+    builder: (context, on) => on
+        ? IconButton(
+            key: const ValueKey('editor-urgent'),
+            tooltip: context.l10n.urgentUnmark,
+            visualDensity: VisualDensity.compact,
+            icon: Icon(
+              Icons.priority_high_rounded,
+              size: AppIconSize.xs,
+              color: _themeOf(context).colorScheme.error,
+            ),
+            onPressed: () => _setUrgent(false),
+          )
+        : const SizedBox.shrink(),
+  );
+
+  late final Widget _bareStatusBadges = Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [_starBadge, _urgentBadge],
+  );
+
   /// Biçim paneli açıkken klavye geriyle kapandı mı (bkz. [ImeHideDetector]).
   final _imeHide = ImeHideDetector();
 
@@ -2842,15 +2931,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// orada da gelir (kullanıcı isteği 2026-11-14: "sabitli notlarda üst hızlı
   /// satır oluşmuyor") ama YALNIZ gövde alanı (ör. "Not al") odaktayken —
   /// çubuktaki başlığı düzenlerken başlık alanı yerinde kalır.
-  Widget? _typingTitle(Note note, Widget? idle, {Widget? bar}) {
+  Widget? _typingTitle(
+    Note note,
+    Widget? idle, {
+    Widget? bar,
+    required double paneWidth,
+  }) {
     if (_readOnly) return bar ?? idle;
     final pen = !note.type.isPageNoteType;
     // GENİŞ WEB'DE HEP AÇIK (kullanıcı isteği 2026-11-09: "webte hızlı menü
     // yok, kalemi açamıyorum"): web'de klavye boşluğu hiç oluşmadığından
     // satır hiç görünmüyordu. Geniş alanda düğmeler tarihin yanında sürekli;
-    // sığmayanlar ⋮ menüsünde.
-    final wide =
-        kIsWeb && MediaQuery.sizeOf(context).width >= kRailBreakpoint;
+    // sığmayanlar ⋮ menüsünde. Bölünmüş pencerede pencere değil editör
+    // bölmesi ölçülür.
+    final wide = kIsWeb && paneWidth >= kRailBreakpoint;
     // Paket grubu (F60.2): satıra dokunmak açık paketi kapatmaz.
     final row = TapRegion(
       groupId: kNotePackageTapGroup,
@@ -2958,12 +3052,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         : bar;
     if (styledBar != null) {
       if (wide) {
-        return Row(
-          children: [
-            Flexible(child: styledBar),
-            const SizedBox(width: 12),
-            Expanded(flex: 2, child: Align(alignment: AlignmentDirectional.centerStart, child: styledRow)),
-          ],
+        return LayoutBuilder(
+          builder: (context, box) {
+            final quickMax = (box.maxWidth * 0.48).clamp(96.0, 440.0);
+            return Row(
+              children: [
+                Expanded(child: styledBar),
+                const SizedBox(width: AppSpace.m),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: quickMax),
+                  child: styledRow,
+                ),
+              ],
+            );
+          },
         );
       }
       return KeyboardSwitch(
@@ -4017,11 +4119,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ],
           );
     _barTitle = titleInBar
-        ? Row(
-            children: [
-              Expanded(child: titleField),
-              actionsMenu,
-            ],
+        ? _HoldOffstageWidth(
+            child: Row(
+              children: [
+                Expanded(child: titleField),
+                _starBadge,
+                _urgentBadge,
+                actionsMenu,
+              ],
+            ),
           )
         : null;
 
@@ -5725,9 +5831,9 @@ child: FormatBar(
                     child: leadingWidget,
                   )
                 : leadingWidget;
-            final Widget? idleMeta =
+            final Widget idleMeta =
                 note.updatedAt == null && note.tags.isEmpty
-                ? null
+                ? _bareStatusBadges
                 : Customizable(
                     id: UiItem.editorDate,
                     child: Row(
@@ -5773,68 +5879,27 @@ child: FormatBar(
                           ),
                         ),
                       ),
-                      // Yıldızlı göstergesi tarihin yanında; dokununca
-                      // yıldız kalkar (menüye gitmeden geri alınabilsin).
-                      // Dar dinleme (P20 M4): yıldız kökü kurmaz; şekil
-                      // sabit (kasma md. 4), tepki TogglePop (P38).
-                      NoteSlice<bool>(
-                        source: _noteN,
-                        select: (n) => n.starred,
-                        builder: (context, on) => TogglePop(
-                          on: on,
-                          child: on
-                              ? IconButton(
-                                  tooltip: l10n.unstar,
-                                  visualDensity: VisualDensity.compact,
-                                  icon: Icon(
-                                    Icons.star,
-                                    size: 16,
-                                    color: Colors.amber.shade600,
-                                  ),
-                                  onPressed: () => _mutate(
-                                    (n) => n.copyWith(starred: false),
-                                    immediate: true,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ),
-                      // ACİL göstergesi (2026-11-16): yıldızla aynı kalıp —
-                      // dar dinleme, dokununca işaret kalkar.
-                      NoteSlice<bool>(
-                        source: _noteN,
-                        select: (n) => n.urgent,
-                        builder: (context, on) => on
-                            ? IconButton(
-                                key: const ValueKey('editor-urgent'),
-                                tooltip: l10n.urgentUnmark,
-                                visualDensity: VisualDensity.compact,
-                                icon: Icon(
-                                  Icons.priority_high_rounded,
-                                  size: AppIconSize.xs,
-                                  color: _themeOf(context).colorScheme.error,
-                                ),
-                                onPressed: () => _setUrgent(false),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
+                      _starBadge,
+                      _urgentBadge,
                     ],
                   ),
                   );
-            final Widget? styledIdle = idleMeta != null && chrome.topBarPills
-                ? EditorTopPill(
+            final Widget styledIdle = !chrome.topBarPills
+                ? idleMeta
+                : EditorTopPill(
                     key: const ValueKey('editor-top-title-pill'),
                     fill: chrome.topPillFill,
                     border: chrome.topPillBorder,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpace.m,
-                        vertical: AppSpace.xs,
-                      ),
-                      child: idleMeta,
-                    ),
-                  )
-                : idleMeta;
+                    child: note.updatedAt != null || note.tags.isNotEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.m,
+                              vertical: AppSpace.xs,
+                            ),
+                            child: idleMeta,
+                          )
+                        : idleMeta,
+                  );
             final actionItems = <Widget>[
               // SIRA kullanıcının (P20 M8, [UiPrefs.topOrder]); sabit olanlar:
               // ⌨ ve ortak düzenleyen Ana sayfa yuvasının ardında, ⋮ en sonda.
@@ -6058,58 +6123,10 @@ child: FormatBar(
               ),
                 ],
                 UiItem.topPin => [
-              // ORTAK ÇALIŞAN düğmesi buradaydı; 2026-11-01'den beri
-              // başlığın yanındaki etiket/hatırlatıcı çipinde (bkz.
-              // [_collabMarker]).
-              // GÖRÜNÜM (tema şeridi) üst çubukta — örnek uygulamadaki palet
-              // düğmesi; biçim panelinden ve Ekle levhasından da açılır.
-              // Başlık üst çubuktayken görünüm ve sabitle ⋮ / biçim
-              // panelinde (başlığa yer kalsın).
-              // Görünüm (palet) 2026-11-05'te çubuktan ⋮ menüsüne indi (üst
-              // alanda sadeleşme); biçim panelinden ve Ekle levhasından da
-              // açılır.
-              if (_barTitle == null)
-              _hideWhileTyping(
-                note,
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-              Customizable(
-                id: UiItem.topPin,
-                // Dar dinleme (P20 M4): sabitle kökü kurmaz.
-                child: NoteSlice<bool>(
-                  source: _noteN,
-                  select: (n) => n.pinned,
-                  builder: (context, pinned) => IconButton(
-                    tooltip: pinned ? l10n.unpin : l10n.pin,
-                    isSelected: pinned,
-                    icon: TogglePop(
-                      on: pinned,
-                      child: Icon(
-                        pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                        // Sabitli not: kartın raptiyesiyle AYNI renk (notun
-                        // koyu tonu, renksizde temanın sıcak vurgusu).
-                        color: pinned
-                            ? (noteAccent ??
-                                  _themeOf(context).colorScheme.secondary)
-                            : null,
-                      ),
-                    ),
-                    onPressed: () => _mutate(
-                      (n) => n.copyWith(pinned: !n.pinned),
-                      immediate: true,
-                    ),
-                  ),
-                ),
-              ),
-                  // NOTTA ARA sabitlenin yanında, AYNI yazarken-gizle
-                  // anahtarında (kullanıcı isteği 2026-11-19: "hızlı panel
-                  // açıkken arama butonu görülmesin"). Ayrı anahtar klavye
-                  // kapanışında +3 dizilme yapıyordu (S45 mandalı).
-                  _topSearchButton,
-                ],
-              ),
-              ),
+              // SABİTLEME + NOTTA ARA: başlık üst çubuktayken de (sabit medya
+              // veya belge notu) aynı sırada görünür; tüm not tiplerinde yeri
+              // değişmez.
+              _hideWhileTyping(note, _topPinAndSearch),
                 ],
                 UiItem.topFullscreen => [
               // HESAP MAKİNESİ ⋮ menüsünün hızlı satırında (2026-10-11):
@@ -6134,14 +6151,6 @@ child: FormatBar(
                 ],
                 _ => const <Widget>[],
               },
-              // NOTTA ARA üst çubukta, ⋮'nin solunda (kullanıcı isteği
-              // 2026-11-16: "notta ara üst panelde sağda olsun, menüde
-              // değil"). Arama açılınca çubuğun şekli değişmez. YAZARKEN
-              // GİZLİ (kullanıcı isteği 2026-11-19: "hızlı panel açıkken çok
-              // daralmış, arama butonu görülmesin") — alt çubuğun ⋯'sinde
-              // var. Başlık üst çubukta değilken sabitlenin yuvasında (tek
-              // klavye anahtarı, bkz. UiItem.topPin).
-              if (_barTitle != null) _hideWhileTyping(note, _topSearchButton),
               // ⋮ yazarken de görünür: hızlı satırın en sağında (kullanıcı
               // isteği 2026-11-08 — "3 nokta geri gelsin").
               IconButton(
@@ -6184,7 +6193,12 @@ child: FormatBar(
                 readingColumn ? box.maxWidth : 0,
                 hasLeading: rawLeading != null || canPop,
               ),
-              title: _typingTitle(note, bar: _barTitle, styledIdle),
+              title: _typingTitle(
+                note,
+                bar: _barTitle,
+                styledIdle,
+                paneWidth: box.maxWidth,
+              ),
               actions: chrome.topBarPills
                   ? [
                       EditorTopPill(
@@ -6327,10 +6341,10 @@ child: FormatBar(
                                     ref.watch(noteFullscreenProvider),
                                 actions: [
                                   // Kalem + tam ekranda üst çubuk yok: listeye
-                                  // dönüş tepside.
-                                  if (_listHidden(context))
+                                  // dönüş tepside (yandaki bölme hariç).
+                                  if (!_secondary && _listHidden(context))
                                     _showListButton(l10n),
-                                  if (PenTray.useRail(context))
+                                  if (!_secondary && PenTray.useRail(context))
                                     _fullscreenButton(l10n),
                                   _penCloseButton(l10n),
                                 ],
@@ -6379,5 +6393,64 @@ child: FormatBar(
         ),
       ),
     );
+  }
+}
+
+/// Başlık üst çubuktayken (`_barTitle`) klavye açılınca `KeyboardSwitch` onu
+/// `Offstage` yapar; aynı karede sağdaki düğmeler gizlenince `NavigationToolbar`
+/// orta yuvayı genişletir ve gizli `titleField` (`LayoutBuilder` + `TextField`)
+/// gereksiz yere kurulurdu (S17). Gizliyken son görünür üst sınırı korur;
+/// görünür olunca güncel genişliği alır.
+class _HoldOffstageWidth extends SingleChildRenderObjectWidget {
+  const _HoldOffstageWidth({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderHoldOffstageWidth();
+}
+
+class _RenderHoldOffstageWidth extends RenderProxyBox {
+  double? _lastWidth;
+
+  bool get _isOffstage {
+    var cur = parent;
+    for (var i = 0; i < 6 && cur != null; i++) {
+      if (cur is RenderOffstage) return cur.offstage;
+      cur = cur.parent;
+    }
+    return false;
+  }
+
+  BoxConstraints _stabilize(
+    BoxConstraints constraints, {
+    required bool record,
+  }) {
+    final hidden = _isOffstage;
+    if (!hidden) {
+      if (record && constraints.hasBoundedWidth) {
+        _lastWidth = constraints.maxWidth;
+      }
+      return constraints;
+    }
+    final last = _lastWidth;
+    if (last == null || !constraints.hasBoundedWidth) return constraints;
+    final held = math.min(constraints.maxWidth, last);
+    if (held < constraints.minWidth) return constraints;
+    return constraints.copyWith(maxWidth: held);
+  }
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) =>
+      super.computeDryLayout(_stabilize(constraints, record: false));
+
+  @override
+  void performLayout() {
+    final c = _stabilize(constraints, record: true);
+    if (child != null) {
+      child!.layout(c, parentUsesSize: true);
+      size = constraints.constrain(child!.size);
+    } else {
+      size = constraints.smallest;
+    }
   }
 }

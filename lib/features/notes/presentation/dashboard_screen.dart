@@ -2053,6 +2053,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   MediaQuery.viewInsetsOf(context).bottom > 0 &&
                                   WindowClass.of(context).width ==
                                       WindowWidth.compact;
+                              final sidebarHasAccount =
+                                  desktopWeb && AppRailScope.visible(context);
                               return AppBar(
                                 // SOLDA GERİ OKU YOK (kullanıcı bulgusu
                                 // 2026-11-06: kutu bir sağa bir sola
@@ -2069,6 +2071,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   width: double.infinity,
                                   child: _SearchField(
                                     compact: narrowPane,
+                                    showFilterInCompact: sidebarHasAccount,
                                     controller: _searchController,
                                     focusNode: _searchFocus,
                                     // HESAP SİMGESİ ve ⋮ ARTIK KUTUNUN İÇİNDE
@@ -2103,10 +2106,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                             ),
                                           ]
                                         : [
-                                            const Customizable(
-                                              id: UiItem.homeAccount,
-                                              child: AccountAvatarButton(),
-                                            ),
+                                            if (!sidebarHasAccount)
+                                              const Customizable(
+                                                id: UiItem.homeAccount,
+                                                child: AccountAvatarButton(),
+                                              ),
                                             IconButton(
                                               tooltip: l10n.more,
                                               visualDensity:

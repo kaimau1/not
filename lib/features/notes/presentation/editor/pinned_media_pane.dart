@@ -148,6 +148,7 @@ class PinnedMediaPane extends StatefulWidget {
     this.fill = false,
     this.side = PinnedSide.top,
     this.onCycleSide,
+    this.onSelectSide,
   });
 
   /// Editörün kalem kipi açık: sabit PDF'in üstüne doğrudan yazılır
@@ -181,6 +182,9 @@ class PinnedMediaPane extends StatefulWidget {
 
   /// Üst → sol → sağ geçişi; null = düğme yok (dar ekran).
   final VoidCallback? onCycleSide;
+
+  /// Doğrudan yerleşim seçimi (⋮ levhasındaki Üstte / Solda / Sağda).
+  final ValueChanged<PinnedSide>? onSelectSide;
 
   /// Balon yazma kartı açıldı/kapandı: editör kendi alt çubuğunu gizler
   /// (bölme de alttaki notu gizleyip medyayı klavyeye kadar uzatır — bkz.
@@ -1788,6 +1792,19 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     return [...base.take(3), Color(current)];
   }
 
+  static String _sideLabel(AppLocalizations l10n, PinnedSide side) =>
+      switch (side) {
+        PinnedSide.top => l10n.pinnedSideTop,
+        PinnedSide.left => l10n.pinnedSideLeft,
+        PinnedSide.right => l10n.pinnedSideRight,
+      };
+
+  static IconData _sideIcon(PinnedSide side) => switch (side) {
+    PinnedSide.top => Icons.horizontal_split_outlined,
+    PinnedSide.left => Icons.vertical_split_outlined,
+    PinnedSide.right => Icons.vertical_split,
+  };
+
   Widget _barRow(BuildContext context, double width) {
     _barWidth = width;
     final scheme = Theme.of(context).colorScheme;
@@ -1817,12 +1834,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             'side',
             _BarButton(
               key: const ValueKey('pinned-side'),
-              tooltip: l10n.pinnedSideToggle,
-              icon: switch (widget.side) {
-                PinnedSide.top => Icons.vertical_split_outlined,
-                PinnedSide.left => Icons.vertical_split,
-                PinnedSide.right => Icons.horizontal_split_outlined,
-              },
+              tooltip: '${_sideLabel(l10n, widget.side)} — ${l10n.pinnedSideToggle}',
+              icon: _sideIcon(widget.side),
               onPressed: widget.onCycleSide!,
             ),
           ),
@@ -1877,37 +1890,40 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               ),
             ),
         ],
-        Expanded(
-          child: Semantics(
-            label: l10n.pinnedMediaResize,
-            onTap: _fitTarget == null ? null : _fit,
-            // TUTAMAĞA DOKUN = SIĞDIR: bölme medyanın doğal boyuna oturur
-            // (sürükleme ayrı jest, çubuğun kendisinde). Yalnız boş orta
-            // alan — düğmelerin dokunuşu gecikmez.
-            child: GestureDetector(
-              key: const ValueKey('pinned-media-fit'),
-              behavior: HitTestBehavior.opaque,
+        if (widget.fill)
+          const Spacer()
+        else
+          Expanded(
+            child: Semantics(
+              label: l10n.pinnedMediaResize,
               onTap: _fitTarget == null ? null : _fit,
-              child: Tooltip(
-                message: _fitTarget == null ? '' : l10n.pinnedMediaFit,
-                child: Center(
-                  child: Container(
-                    width: _live != null ? 48 : 38,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: _live != null
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant.withValues(
-                              alpha: AppAlpha.disabled,
-                            ),
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
+              // TUTAMAĞA DOKUN = SIĞDIR: bölme medyanın doğal boyuna oturur
+              // (sürükleme ayrı jest, çubuğun kendisinde). Yalnız boş orta
+              // alan — düğmelerin dokunuşu gecikmez.
+              child: GestureDetector(
+                key: const ValueKey('pinned-media-fit'),
+                behavior: HitTestBehavior.opaque,
+                onTap: _fitTarget == null ? null : _fit,
+                child: Tooltip(
+                  message: _fitTarget == null ? '' : l10n.pinnedMediaFit,
+                  child: Center(
+                    child: Container(
+                      width: _live != null ? 48 : 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _live != null
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant.withValues(
+                                alpha: AppAlpha.disabled,
+                              ),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
         // BİRİNCİL İŞ: "Not al". Kişiselleştirmede gizlenebilir (bkz.
         // UiItem.videoNoteAt).
         if (!tools && !tiny && widget.onNoteAt != null)
@@ -2111,10 +2127,10 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   bool get _hasSheet =>
       hasMenu ||
       widget.media.kind == AttachmentKind.pdf ||
-      (!_wideBar &&
-          (widget.viewSwitch != null ||
-              _canEditBubbles ||
-              _canEditPdfBubbles)) ||
+      widget.viewSwitch != null ||
+      widget.sheetViewSwitch != null ||
+      widget.onSelectSide != null ||
+      (!_wideBar && (_canEditBubbles || _canEditPdfBubbles)) ||
       (_tinyBar &&
           (widget.media.kind != AttachmentKind.audio ||
               widget.onNoteAt != null));
@@ -2247,9 +2263,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       _ => null,
     };
 
-    final viewSwitch = wide
-        ? null
-        : widget.sheetViewSwitch?.call(sheet) ?? widget.viewSwitch;
+    final viewSwitch = widget.sheetViewSwitch?.call(sheet) ?? widget.viewSwitch;
     final canShrink =
         widget.onShrinkToFitChanged != null &&
         !widget.fill &&
@@ -2294,7 +2308,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
           ),
     ];
     final grouped =
-        viewSwitch != null || canShrink || bubbles || document.isNotEmpty;
+        viewSwitch != null ||
+        widget.onSelectSide != null ||
+        canShrink ||
+        bubbles ||
+        document.isNotEmpty;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         AppSpace.l,
@@ -2365,6 +2383,96 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: viewSwitch,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (widget.onSelectSide != null) ...[
+            const SizedBox(height: AppSpace.s),
+            DecoratedBox(
+              key: const ValueKey('pinned-sheet-side'),
+              decoration: BoxDecoration(
+                color: tokens.card,
+                borderRadius: BorderRadius.circular(AppRadius.l),
+                border: Border.all(color: tokens.hairline),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.m),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionLabel(l10n.pinnedSideTitle),
+                    const SizedBox(height: AppSpace.s),
+                    Row(
+                      children: [
+                        for (final (i, target) in PinnedSide.values.indexed) ...[
+                          if (i > 0) const SizedBox(width: AppSpace.s),
+                          Expanded(
+                            child: Semantics(
+                              button: true,
+                              selected: target == widget.side,
+                              label: _sideLabel(l10n, target),
+                              child: Material(
+                                key: ValueKey(
+                                  'pinned-side-pick-${target.name}',
+                                ),
+                                color: target == widget.side
+                                    ? scheme.primaryContainer
+                                    : scheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.m,
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.m,
+                                  ),
+                                  onTap: () =>
+                                      pick(() => widget.onSelectSide!(target)),
+                                  child: ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      minHeight: kMinInteractiveDimension,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppSpace.xs,
+                                        vertical: AppSpace.xs,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            _sideIcon(target),
+                                            size: AppIconSize.s,
+                                            color: target == widget.side
+                                                ? scheme.onPrimaryContainer
+                                                : scheme.onSurfaceVariant,
+                                          ),
+                                          const SizedBox(width: AppSpace.xs),
+                                          Flexible(
+                                            child: Text(
+                                              _sideLabel(l10n, target),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: text.label.copyWith(
+                                                color: target == widget.side
+                                                    ? scheme.onPrimaryContainer
+                                                    : scheme.onSurface,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),

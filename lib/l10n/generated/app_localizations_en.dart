@@ -8600,6 +8600,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinnedSideToggle => 'Placement: top / left / right';
 
   @override
+  String get pinnedSideTitle => 'Pane position';
+
+  @override
+  String get pinnedSideTop => 'Top';
+
+  @override
+  String get pinnedSideLeft => 'Left';
+
+  @override
+  String get pinnedSideRight => 'Right';
+
+  @override
   String releaseNotesToastTitle(String version) {
     return 'What\'s new · v$version';
   }

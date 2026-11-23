@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 23 November 2026 {#2026-11-23}
+- **Consistent buttons in split and pinned-media views:** with YouTube, PDF, slides, or images pinned, **Pin**, **Find in note**, star, and urgent indicators now stay in their usual top-bar spot; the pinned pane's ⋮ menu always shows the labelled view switcher and direct **Top / Left / Right** placement choices. In desktop/web split view, **Filter** stays visible in the list header and right-clicking a card offers **Open to the side** and **Note menu**.
 - **Smaller app:** 5 core fonts (Inter Tight, Roboto, Lora, Roboto Mono, Caveat) ship with the app; other fonts download once the first time you pick them (cloud icon) and then work offline. Until then, or when offline, the default font is shown.
 
 ## 22 November 2026 {#2026-11-22}

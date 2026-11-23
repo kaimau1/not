@@ -15320,6 +15320,30 @@ abstract class AppLocalizations {
   /// **'Yerleşim: üstte / solda / sağda'**
   String get pinnedSideToggle;
 
+  /// No description provided for @pinnedSideTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bölme yerleşimi'**
+  String get pinnedSideTitle;
+
+  /// No description provided for @pinnedSideTop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üstte'**
+  String get pinnedSideTop;
+
+  /// No description provided for @pinnedSideLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Solda'**
+  String get pinnedSideLeft;
+
+  /// No description provided for @pinnedSideRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağda'**
+  String get pinnedSideRight;
+
   /// No description provided for @releaseNotesToastTitle.
   ///
   /// In tr, this message translates to:

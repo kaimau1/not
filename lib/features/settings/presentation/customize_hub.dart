@@ -97,6 +97,11 @@ List<CustomizeEntry> pinnedCatalog(AppLocalizations l10n) => [
     label: l10n.fullscreen,
   ),
   (
+    id: UiItem.pinned('shrink'),
+    icon: Icons.fit_screen_outlined,
+    label: l10n.pinnedShrinkToFit,
+  ),
+  (
     id: UiItem.pinned('bubble'),
     icon: Icons.chat_bubble_outline_rounded,
     label: l10n.bubbleAdd,

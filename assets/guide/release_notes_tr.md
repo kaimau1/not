@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 23 Kasım 2026 {#2026-11-23}
+- **İki bölmeli ve sabit ekli notlarda düğmeler hep aynı yerde:** YouTube, PDF, sunum ya da görsel sabitliyken **Sabitle**, **Notta ara**, yıldız ve acil göstergeleri artık üst çubukta kaybolmadan yerinde kalır; sabit bölmenin ⋮ menüsünden görünüm geçişine ve **Üstte / Solda / Sağda** konum seçimine doğrudan ulaşabilirsin. Masaüstü/web bölünmüş görünümde liste başlığında **Süz** hep görünür, kart sağ tık menüsünde **Yanda aç** ve **Not menüsü** doğrudan yer alır.
 - **Uygulama daha küçük:** 5 temel yazı tipi (Inter Tight, Roboto, Lora, Roboto Mono, Caveat) uygulamayla geliyor; diğer yazı tipleri ilk seçtiğinde bir kez iniyor (bulut simgesi), sonra internetsiz de çalışıyor. İnene kadar ya da çevrimdışıyken varsayılan yazı tipi görünür.
 
 ## 22 Kasım 2026 {#2026-11-22}
