@@ -48,8 +48,10 @@ ayrı mı. Uygulama kısayolları (`res/xml/app_shortcuts.xml`) `targetPackage="
 
 ```
 # android/app/src/release/google-services.json = Play projesinin dosyası; env_play.json dolu
+bash tool/play_stub/play_hazirla.sh && flutter pub get   # ONNX kuklası (aşağıda PL1 madde 2)
 NOTLAR_PLAY=1 NOTLAR_PLAY_APP_ID=<paket.adi> flutter build appbundle --release   --dart-define=NOTLAR_PLAY=true --dart-define-from-file=env_play.json   --obfuscate --split-debug-info=build/app/outputs/symbols   --build-name=<A.B.C> --build-number=<N>
-# bitince src/release/google-services.json'ı KALDIR (yoksa kişisel derleme durur)
+# bitince src/release/google-services.json'ı KALDIR (yoksa kişisel derleme durur) ve
+# bash tool/play_stub/play_hazirla.sh geri; git checkout pubspec.lock; flutter pub get
 ```
 
 ## Kontrol listesi
@@ -81,13 +83,19 @@ NOTLAR_PLAY=1 NOTLAR_PLAY_APP_ID=<paket.adi> flutter build appbundle --release  
    `play` iken release manifestine ekler. `play-services-location` + `PlaceReminders.kt` kalır
    (izinsiz çalışamaz; Dart kanalı Play'de çağrılmaz). Bekçi `test/play_build_test.dart`;
    CI `play` işi AAB'de `_LOCATION` arar.
-2. **[ ] ONNX (§2.6, ~11 MB) — YAPILMADI, kanıtlı:** önerilen (a) `.so` dışlaması GÜVENSİZ.
-   `flutter_onnxruntime` 1.9.0 `FlutterOnnxruntimePlugin.onAttachedToEngine` (satır 178)
-   `OrtEnvironment.getEnvironment()` çağırır → yerel kütüphane AÇILIŞTA yüklenir; `.so`
-   yoksa `UnsatisfiedLinkError` (Error; GeneratedPluginRegistrant yalnız Exception yakalar)
-   → Play uygulaması açılışta çöker. Yol (b): Antalia'yı ayrı Dart paketine/eklentiye alıp
-   Play'de bağımlılıktan çıkarmak (pubspec çeşide göre değişmez → ayrı paket + koşullu
-   içe aktarma ya da eklentiyi çatallayıp tembel yükleme). Sabah bakılacak.
+2. **[x] ONNX (§2.6, ~11 MB):** `.so` dışlaması GÜVENSİZ (kanıt: `flutter_onnxruntime` 1.9.0
+   `FlutterOnnxruntimePlugin.onAttachedToEngine` satır 178 `OrtEnvironment.getEnvironment()`
+   çağırır → yerel kütüphane AÇILIŞTA yüklenir; `.so` yoksa `UnsatisfiedLinkError` (Error;
+   GeneratedPluginRegistrant yalnız Exception yakalar) → açılışta çöker). Çözüm: Play'de eklenti
+   HİÇ kayıtlı olmaz. `tool/play_stub/play_hazirla.sh` depoya girmeyen `pubspec_overrides.yaml`
+   yazar → `flutter_onnxruntime` `tool/play_stub/flutter_onnxruntime` kuklasına (eklenti DEĞİL,
+   aynı Dart yüzü, her çağrı `UnsupportedError`) yönlenir; `flutter pub get` sonrası Android
+   eklenti listesinde yok → `GeneratedPluginRegistrant`'ta yok, `libonnxruntime.so` pakette yok.
+   Kişisel APK/web: dosya yok → gerçek paket, hiçbir şey değişmez. CI `play` işi kuklayı kendisi
+   bağlar ve AAB'de `libonnxruntime` varsa durur. Bekçi `test/play_build_test.dart`.
+   Yerelde Play derlemesinden sonra: `bash tool/play_stub/play_hazirla.sh geri` +
+   `git checkout pubspec.lock` + `flutter pub get`. Antalia kodu yeni bir ONNX çağrısı
+   kullanırsa kuklaya da eklenmeli (yoksa Play derlemesi derleme hatası verir).
 3. **[x] Gmail kapsamı (E2)**: pakette/manifestte Gmail izni yok; kapsam yalnız Gmail ekranında
    istenir, Play'de ekran yok (`PlayBuild.gmail`). Play Firebase/Cloud projesinin OAuth onay
    ekranına Gmail kapsamı EKLENMEZ (kullanıcı, konsolda).
