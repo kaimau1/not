@@ -536,6 +536,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get synced => 'Senkronize';
 
   @override
+  String get liteSyncHeld =>
+      'Değişiklikler birkaç dakikada bir buluta gider — şimdi eşitlemek için dokun';
+
+  @override
+  String get liteSyncSending => 'Değişiklikler buluta gönderiliyor';
+
+  @override
   String genericError(String error) {
     return 'Bir şeyler ters gitti: $error';
   }

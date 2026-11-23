@@ -162,6 +162,8 @@
   "ok": "OK",
   "syncPending": "Waiting to sync",
   "synced": "Synced",
+  "liteSyncHeld": "Changes go to the cloud every few minutes — tap to sync now",
+  "liteSyncSending": "Sending changes to the cloud",
   "genericError": "Something went wrong: {error}",
   "addTag": "Tag",
   "tagHint": "e.g. work, home, school",

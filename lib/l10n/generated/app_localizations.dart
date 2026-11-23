@@ -1028,6 +1028,18 @@ abstract class AppLocalizations {
   /// **'Senkronize'**
   String get synced;
 
+  /// No description provided for @liteSyncHeld.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değişiklikler birkaç dakikada bir buluta gider — şimdi eşitlemek için dokun'**
+  String get liteSyncHeld;
+
+  /// No description provided for @liteSyncSending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değişiklikler buluta gönderiliyor'**
+  String get liteSyncSending;
+
   /// No description provided for @genericError.
   ///
   /// In tr, this message translates to:

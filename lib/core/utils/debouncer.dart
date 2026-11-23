@@ -10,7 +10,9 @@ class Debouncer {
     this.maxWait = const Duration(seconds: 3),
   });
 
-  final Duration delay;
+  /// Değiştirilebilir: editör Lite katmanında bulut yazımı için aralığı
+  /// bir sonraki [call]'dan itibaren uzatır (bkz. `SaveCadence.liteInterval`).
+  Duration delay;
 
   /// KÖK NEDEN (not kaybı): her çağrı zamanlayıcıyı SIFIRDAN başlattığı için,
   /// aralıksız yazan bir kullanıcıda [delay] hiç dolmuyordu — dakikalarca
@@ -18,7 +20,7 @@ class Debouncer {
   /// kapatılınca yazılanların tamamı gidiyordu. [maxWait], bekleyen ilk
   /// çağrıdan bu kadar süre sonra eylemi daha fazla ertelemeden çalıştırır:
   /// yazma sürerken de en geç bu aralıkla kayıt olur.
-  final Duration maxWait;
+  Duration maxWait;
 
   Timer? _timer;
   Timer? _maxTimer;

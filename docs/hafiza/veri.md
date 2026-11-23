@@ -220,3 +220,20 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **Yanlış yol (test):** iki kapsayıcı aynı sahte mağazanın yayın akışını dinlerse birinin geri yüklemesi öbürüne
   de düşer → her kapsayıcıya ayrı sahte mağaza. Play koşusu `--dart-define=NOTLAR_PLAY=true`; CI bayraksız koşar.
 - **KARAR (sabah bakılacak):** deneme = Play'in 7 gün teklifi, `startTrial` bağlı değil; yalnız AI kapısı bağlı.
+
+## Lite eşitleme + ek deposu kapısı (P99, 2026-11-23; `lite_sync.dart`)
+- **Kapı:** `liteSyncProvider = !proFeature(instantSync)`; bayraksız derlemede (kişisel APK/web) hep false → editör yolu
+  AYNEN. Seyrelen YALNIZ editörün otomatik kaydı: `_mutate` Lite'ta `_debouncer.delay = maxWait =
+  SaveCadence.liteInterval` (5 dk, `config/app.liteSaveSec` 30–900 freni) kurar; kapanış / arka plan (`_saveNow`) /
+  bulut simgesine dokunuş ("şimdi eşitle") hemen yazar. Kart eylemleri (yıldız, arşiv…), okuma/dinleme değişmez.
+- **Veri kaybı güvencesi:** Firestore yerel önbelleği ağdan AYRILAMAZ (yazım = hemen ağa), bu yüzden bekleyen
+  içerik `lite_pending_<uid>.json` GÜNLÜĞÜNE (`LocalNotesStore.journalFor`, yerel-not deposu DEĞİL) eski sıklıkla
+  (2 sn / 20 sn) yazılır; her `updateNote` girdiyi siler; açılışta `liteJournalRecoveryProvider` artığı yazar
+  (çöpteki/olmayan nota dokunmaz). Web'de günlük yok → `journalReady=false` → seyreltme HİÇ yapılmaz.
+- **Anında kalanlar:** başkasının notu (`ownerId`), benim paylaştığım not/klasör (`noteSharedByMe`; paylaşım
+  bilgisi henüz yüklenmediyse "paylaşılıyor" sayılır), yalnız-cihaz not.
+- **Ek deposu:** `attachmentSyncModeFor(cloudAttachments:)` — Pro (YALNIZ Play: `EntitlementGate.active`) → Storage;
+  hak yoksa Google → Drive, misafir → yalnız cihaz. Storage'daki eski ekler okunur kalır/silinmez; Drive'a
+  yüklenmiş eskiler Pro'da da okunur (`driveStoreProvider` Google+bağlıyken kurulur). Drive bağlı değilse mevcut
+  şerit + otomatik izin sorusu + ilk giriş levhası devreye girer. Paylaşılan notun YENİ ekleri Lite'ta da
+  Storage'a gider (ortak çalışan Drive'a erişemez) — sabah bakılacak (T11 "Lite'ta Storage kapalı" ile gerilim).

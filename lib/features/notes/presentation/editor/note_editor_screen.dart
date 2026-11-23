@@ -122,6 +122,7 @@ import '../../data/voice_listen_session.dart';
 import '../../data/document_scan.dart';
 import '../../data/note_speech.dart';
 import '../../data/note_share.dart';
+import '../../data/lite_sync.dart';
 import '../../data/note_shares_repository.dart';
 import '../../data/shared_note_activity.dart';
 import '../../data/upload_queue.dart';
@@ -1253,6 +1254,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     maxWait: SaveCadence.maxWait,
   );
 
+  /// Lite: bekleyen içeriğin diskteki günlüğe yazılma tiki (bulut yazımından
+  /// SIK; bkz. [_mutate], `lite_sync.dart`).
+  final _journalDebouncer = Debouncer(
+    delay: SaveCadence.delay,
+    maxWait: SaveCadence.maxWait,
+  );
+
+  /// Lite aralığı bu editörde kuruldu mu ([_debouncer] süreleri uzatıldı).
+  bool _liteArmed = false;
+
+  /// Lite: değişiklik buluta henüz gitmedi (bulut simgesi "bekliyor" der).
+  final _liteHeldN = ValueNotifier<bool>(false);
+
   /// Otomatik kayıt istemci saatiyle yazıldı mı (F22.3): kapanışta bir kez
   /// sunucu zamanı damgalanır ki sıralama/okunmamış hesabı cihaz saatine
   /// bağlı kalmasın.
@@ -1503,6 +1517,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             !_deleted) {
           _deleted = true;
           _debouncer.cancel();
+          _liteHeldN.value = false;
           if (mounted) _closeEditor();
           return;
         }
@@ -1908,6 +1923,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _notesRepo?.releaseNote(widget.noteId);
     _loadGuard?.cancel();
     _debouncer.dispose();
+    _journalDebouncer.dispose();
+    _liteHeldN.dispose();
     // Geç geri çağrılar yazmaya devam edebilir: LateSafeValue sessiz saklar.
     _noteN.dispose();
     _undoN.dispose();
@@ -2184,6 +2201,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
 
     void save() {
+      _liteHeldN.value = false;
       final current = _note;
       if (current != null && !_deleted) {
         _clientStamped = true;
@@ -2195,8 +2213,55 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _debouncer.cancel();
       save();
     } else {
+      // LITE (PLAN §1.5): `instantSync` yoksa bulut yazımı SaveCadence
+      // .liteInterval aralıkla; bu arada içerik diskteki günlüğe düşer.
+      // Kişisel APK / web / Pro / paylaşılan not: bu dal hiç çalışmaz.
+      final lite = _liteHolds();
+      if (lite) {
+        _debouncer.delay = _debouncer.maxWait = SaveCadence.liteInterval;
+        _liteArmed = true;
+        _liteHeldN.value = true;
+        _journalDebouncer(_journalPending);
+      } else if (_liteArmed) {
+        // Paylaşıma geçildi / Pro açıldı: eski sıklığa dön, bekleyen yazı
+        // hemen (bu çağrının debounce'u) gider.
+        _liteArmed = false;
+        _debouncer.delay = SaveCadence.delay;
+        _debouncer.maxWait = SaveCadence.maxWait;
+        _journalDebouncer.cancel();
+      }
       _debouncer(save);
     }
+  }
+
+  /// Bu editörün otomatik kaydı Lite aralığıyla mı yazılmalı
+  /// ([liteHoldsCloudWrite]).
+  bool _liteHolds() {
+    final note = _note;
+    final repo = _notesRepo;
+    if (note == null || repo == null || !ref.read(liteSyncProvider)) {
+      return false;
+    }
+    return liteHoldsCloudWrite(
+      lite: true,
+      ownNote: widget.ownerId == null,
+      sharedByMe: noteSharedByMe(ref, note),
+      deviceOnly: repo.isLocal(note.id),
+      journalReady: repo.canJournal,
+    );
+  }
+
+  /// Günlük tiki: buluta henüz gitmemiş en son hâl diske (çökmeye karşı).
+  void _journalPending() {
+    final note = _note;
+    if (note == null || _deleted || !_debouncer.hasPending) return;
+    _notesRepo?.journalNote(note);
+  }
+
+  /// Lite'ta "şimdi eşitle" (editördeki bulut simgesine dokunuş).
+  void _syncNowLite() {
+    _saveNow();
+    _showSnack(context.l10n.liteSyncSending);
   }
 
   // ---- Ekler ----------------------------------------------------------
@@ -5859,6 +5924,38 @@ child: FormatBar(
                           Icons.cloud_off_outlined,
                           size: 18,
                           color: _themeOf(context).colorScheme.tertiary,
+                        ),
+                      );
+                    }
+                    // LITE: değişiklik aralıklı buluta gider; simge bunu
+                    // söyler, dokunuş "şimdi eşitle" (bkz. [_syncNowLite]).
+                    if (owner == null && ref.watch(liteSyncProvider)) {
+                      return ValueListenableBuilder<bool>(
+                        valueListenable: _liteHeldN,
+                        builder: (context, held, _) => IconButton(
+                          key: const ValueKey('editor-lite-sync'),
+                          tooltip: held
+                              ? l10n.liteSyncHeld
+                              : pending
+                              ? l10n.syncPending
+                              : l10n.synced,
+                          iconSize: AppIconSize.s,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: held ? _syncNowLite : null,
+                          disabledColor: _themeOf(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withValues(
+                                alpha: pending
+                                    ? AppAlpha.strong
+                                    : AppAlpha.muted,
+                              ),
+                          color: _themeOf(context).colorScheme.primary,
+                          icon: Icon(
+                            held || pending
+                                ? Icons.cloud_upload_outlined
+                                : Icons.cloud_done_outlined,
+                          ),
                         ),
                       );
                     }
