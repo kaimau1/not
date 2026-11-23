@@ -4259,8 +4259,14 @@ abstract class AppLocalizations {
   /// No description provided for @appFontInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.'**
+  /// **'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Beş temel yazı tipi uygulamayla birlikte gelir; bulut simgeli olanlar seçilince bir kez indirilir (internet yoksa varsayılan yazı tipi görünür).'**
   String get appFontInfo;
+
+  /// No description provided for @fontNeedsDownload.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilince bir kez indirilir'**
+  String get fontNeedsDownload;
 
   /// No description provided for @followSystemTextScale.
   ///

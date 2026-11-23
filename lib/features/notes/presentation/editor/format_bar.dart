@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/a11y/color_names.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/font_downloads.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
@@ -1535,17 +1536,45 @@ class _FontTray extends StatelessWidget {
                 return _Chip(
                   key: ValueKey('format-font-${font.id ?? 'default'}'),
                   selected: (font.id ?? '') == current,
-                  onTap: () => onFont(font.id),
-                  child: Text(
-                    noteFontLabel(
-                      font.id,
-                      defaultLabel: l10n.noteFontDefault,
-                      serifLabel: l10n.noteFontSerif,
-                      monoLabel: l10n.noteFontMono,
-                    ),
-                    style: applyNoteFont(
-                      const TextStyle(fontSize: 14.5),
-                      font.id,
+                  onTap: () {
+                    // PL10: paketten çıkarılan aileyi kullanıcı seçti → indir.
+                    if (font.downloadable) {
+                      unawaited(fontDownloads.ensure(font.id!, retry: true));
+                    }
+                    onFont(font.id);
+                  },
+                  child: ListenableBuilder(
+                    listenable: fontDownloads,
+                    builder: (context, _) => Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          noteFontLabel(
+                            font.id,
+                            defaultLabel: l10n.noteFontDefault,
+                            serifLabel: l10n.noteFontSerif,
+                            monoLabel: l10n.noteFontMono,
+                          ),
+                          style: applyNoteFont(
+                            const TextStyle(fontSize: 14.5),
+                            font.id,
+                            fetch: false,
+                          ),
+                        ),
+                        if (font.downloadable &&
+                            !fontDownloads.isReady(font.id!))
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(start: 4),
+                            child: Icon(
+                              fontDownloads.isFetching(font.id!)
+                                  ? Icons.downloading
+                                  : Icons.cloud_download_outlined,
+                              key: ValueKey('format-font-cloud-${font.id}'),
+                              size: AppIconSize.xs,
+                              semanticLabel: l10n.fontNeedsDownload,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 );

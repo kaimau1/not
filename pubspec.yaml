@@ -179,7 +179,14 @@ flutter:
     # kesimin kendi dosyası verilmezse metin düz çıkar.
     - assets/fonts/PTSans-Bold.ttf
     - assets/fonts/PTSans-Italic.ttf
-    # YAZI TİPİ KATALOĞUNUN TAMAMI APK'ya GÖMÜLÜ (bkz. `note_fonts.dart`).
+    # YALNIZ 5 ÇEKİRDEK YAZI TİPİ APK'ya GÖMÜLÜ (PL10, 2026-11-23; bkz.
+    # `kCoreFontIds` + `note_fonts.dart`): Inter Tight (varsayılan), Roboto,
+    # Lora, Roboto Mono, Caveat. Kalan 14 aile kullanıcı seçince BİR KEZ
+    # indirilir (`font_downloads.dart`, adresler `font_sources.dart`); bu
+    # klasörde yalnız LİSANS metinleri (`*-OFL.txt`) kalır — `LicenseRegistry`
+    # kaydı değişmedi. 14 aile ≈ 4,07 MiB (4 265 884 B) APK'dan çıktı.
+    # AŞAĞIDAKİ gerekçe gömülü çekirdek için geçerlidir:
+    #
     #
     # KÖK NEDEN (kullanıcı, 2026-08-07: "yazı boyutu ve fontumuz tüm
     # telefonlarda sabit olmalı"): `google_fonts` yazı tipini ÇALIŞMA ANINDA
@@ -189,7 +196,7 @@ flutter:
     # yani uygulama telefondan telefona başka görünür. Dosyalar burada
     # olduğunda paket İNDİRME YAPMADAN bunları kullanır (asset adı
     # `<Aile>-<Ağırlık>.ttf` olmak ZORUNDA, paket manifesti bu ada göre
-    # tarıyor). 19 aile × 400/500 ağırlık ≈ 5,3 MB APK; karşılığında hem
+    # tarıyor). 5 çekirdek aile × 400/500 ağırlık ≈ 1,7 MB APK; karşılığında hem
     # uygulamanın hem notların yazı tipi seçimi çevrimdışı çalışıyor ve her
     # telefonda birebir aynı görünüyor.
     #

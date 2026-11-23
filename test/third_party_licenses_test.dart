@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/third_party_licenses.dart';
+import 'package:notlar/core/utils/font_sources.dart';
 
 /// PL7 bekçisi: pakette taşınan HER yazı tipi ailesinin OFL metni hem
 /// dosya olarak var hem Lisanslar sayfasına kayıtlı; CMU BSD bildirimi de.
@@ -22,7 +23,11 @@ void main() {
   }
 
   test('her paketli yazı tipi ailesinin lisans kaydı ve OFL dosyası var', () {
-    final families = bundledFamilies();
+    // PL10: pakette .ttf'i kalmayan ama seçilince indirilen aileler de sayılır.
+    final families = {
+      ...bundledFamilies(),
+      ...kDownloadableFontSources.keys.map((k) => k.replaceAll(' ', '')),
+    };
     expect(families, isNotEmpty);
     for (final family in families) {
       expect(
