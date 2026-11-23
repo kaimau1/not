@@ -15,6 +15,8 @@ import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/note_quick_export.dart';
 import '../../domain/attachment.dart';
+import '../../domain/note_table.dart';
+import 'table_page_box.dart' show shareNoteTable;
 
 /// Uygulama içi EK panosu: "Kopyala" ile alınan ek burada bekler, başka bir
 /// notun (+) menüsündeki "Kopyalanan eki yapıştır" ile oraya kopyalanır.
@@ -156,6 +158,11 @@ Future<void> shareAttachment(
   Attachment a, {
   List<Attachment> siblings = const [],
 }) async {
+  // TABLO: görsel / PDF / Word seçilir (kullanıcı isteği 2026-11-23).
+  if (isNoteTable(a)) {
+    await shareNoteTable(context, a);
+    return;
+  }
   if (a.isWebVideo) {
     await SharePlus.instance.share(
       ShareParams(text: a.webUrl, subject: a.fileName),

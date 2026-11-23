@@ -17,6 +17,7 @@ import 'attachment_repository.dart';
 import 'image_annotations.dart';
 import 'note_pdf.dart';
 import 'pdf_edit.dart';
+import 'table_export.dart';
 import 'pdf/pdf_page_render.dart';
 
 /// Paylaşım levhasının TEK DOKUNUŞLUK dosya çıktıları (kullanıcı isteği
@@ -101,6 +102,8 @@ class NoteQuickExport {
         }
       }
     }
+    // Tablolar metnin sonunda görsel olarak (2026-11-23).
+    images.addAll(await TableExport.noteTableImages(note));
     return NotePdf.build(
       title: options.title ? note.title.trim() : '',
       content: contentOf(note, options),

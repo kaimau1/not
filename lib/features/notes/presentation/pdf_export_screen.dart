@@ -15,6 +15,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../data/image_annotations.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_docx.dart';
+import '../data/table_export.dart';
 import '../data/note_pdf.dart';
 import '../domain/attachment.dart';
 import '../../../core/utils/rich_text.dart';
@@ -253,7 +254,11 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
         title: _exported(_markedTitle, _title.text.trim()),
         content: _exportContent(),
         date: _date,
-        images: await _loadImages(),
+        // Tablolar metnin sonunda görsel olarak (2026-11-23).
+        images: [
+          ...await _loadImages(),
+          ...await TableExport.noteTableImages(widget.note),
+        ],
         palette: NoteColors.richPalette,
         style: style,
       );
@@ -274,6 +279,11 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
         content: _exportContent(),
         date: _date,
         images: await _loadImages(),
+        // Tablolar GERÇEK Word tablosu olarak (2026-11-23).
+        tablesXml: [
+          for (final t in TableExport.tablesOf(widget.note))
+            TableExport.docxTableXml(t),
+        ],
       );
     } catch (e) {
       if (mounted) _showError(e);

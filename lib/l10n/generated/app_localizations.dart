@@ -17255,7 +17255,7 @@ abstract class AppLocalizations {
   /// No description provided for @tableInsertInfo.
   ///
   /// In tr, this message translates to:
-  /// **'2, 3 ya da 4 sütun'**
+  /// **'3 satır · 2 sütun, sonra değişir'**
   String get tableInsertInfo;
 
   /// No description provided for @tableName.
@@ -17263,18 +17263,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tablo'**
   String get tableName;
-
-  /// No description provided for @tablePickTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tablo ekle'**
-  String get tablePickTitle;
-
-  /// No description provided for @tableColumns.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} sütun'**
-  String tableColumns(int count);
 
   /// No description provided for @tableAddRow.
   ///
@@ -17297,7 +17285,7 @@ abstract class AppLocalizations {
   /// No description provided for @tableColumnCount.
   ///
   /// In tr, this message translates to:
-  /// **'Sütun sayısı'**
+  /// **'Sütun'**
   String get tableColumnCount;
 
   /// No description provided for @tableHeaderRow.
@@ -17321,7 +17309,7 @@ abstract class AppLocalizations {
   /// No description provided for @tableOptions.
   ///
   /// In tr, this message translates to:
-  /// **'Tablo seçenekleri'**
+  /// **'Tablo ayarları'**
   String get tableOptions;
 
   /// No description provided for @tableColumnsWillDrop.
@@ -17335,6 +17323,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Taşımak için basılı tut, boyut için köşeden sürükle'**
   String get tableMoveHint;
+
+  /// No description provided for @tableRowCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır'**
+  String get tableRowCount;
+
+  /// No description provided for @tableRowsWillDrop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son satırlardaki yazılar silinecek. Devam edilsin mi?'**
+  String get tableRowsWillDrop;
+
+  /// No description provided for @tableEditSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get tableEditSection;
+
+  /// No description provided for @tableShareImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel'**
+  String get tableShareImage;
+
+  /// No description provided for @tableSharePdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF'**
+  String get tableSharePdf;
+
+  /// No description provided for @tableShareWord.
+  ///
+  /// In tr, this message translates to:
+  /// **'Word'**
+  String get tableShareWord;
+
+  /// No description provided for @tableShareFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablo paylaşılamadı'**
+  String get tableShareFailed;
 }
 
 class _AppLocalizationsDelegate

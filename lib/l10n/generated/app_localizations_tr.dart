@@ -9743,18 +9743,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tableInsert => 'Tablo';
 
   @override
-  String get tableInsertInfo => '2, 3 ya da 4 sütun';
+  String get tableInsertInfo => '3 satır · 2 sütun, sonra değişir';
 
   @override
   String get tableName => 'Tablo';
-
-  @override
-  String get tablePickTitle => 'Tablo ekle';
-
-  @override
-  String tableColumns(int count) {
-    return '$count sütun';
-  }
 
   @override
   String get tableAddRow => 'Satır ekle';
@@ -9766,7 +9758,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tableDeleteRow => 'Satırı sil';
 
   @override
-  String get tableColumnCount => 'Sütun sayısı';
+  String get tableColumnCount => 'Sütun';
 
   @override
   String get tableHeaderRow => 'İlk satır başlık';
@@ -9778,7 +9770,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tableDelete => 'Tabloyu sil';
 
   @override
-  String get tableOptions => 'Tablo seçenekleri';
+  String get tableOptions => 'Tablo ayarları';
 
   @override
   String get tableColumnsWillDrop =>
@@ -9787,4 +9779,26 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get tableMoveHint =>
       'Taşımak için basılı tut, boyut için köşeden sürükle';
+
+  @override
+  String get tableRowCount => 'Satır';
+
+  @override
+  String get tableRowsWillDrop =>
+      'Son satırlardaki yazılar silinecek. Devam edilsin mi?';
+
+  @override
+  String get tableEditSection => 'Düzenle';
+
+  @override
+  String get tableShareImage => 'Görsel';
+
+  @override
+  String get tableSharePdf => 'PDF';
+
+  @override
+  String get tableShareWord => 'Word';
+
+  @override
+  String get tableShareFailed => 'Tablo paylaşılamadı';
 }

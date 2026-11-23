@@ -18,8 +18,10 @@ import 'attachment.dart';
 ///   okur) aynı metni görür. Kaynak her zaman `extras.table`'dır.
 const kTableExtra = 'table';
 
-/// Seçilebilen sütun sayıları (ayrıca model 1–6 arasını kabul eder).
-const kTableColumnChoices = [2, 3, 4];
+/// İlk eklemede tablo 3 satır × 2 sütun (kullanıcı isteği 2026-11-23);
+/// sayılar tablonun kendi ayarında değişir (sütun 1–6, satır 1–300).
+const kTableDefaultRows = 3;
+const kTableDefaultColumns = 2;
 const kTableMaxColumns = 6;
 
 /// Tablonun en çok satırı (not belgesi 1 MiB sınırının çok altında kalsın).
@@ -147,6 +149,21 @@ class NoteTable {
       header: header,
     );
   }
+
+  /// Satır sayısını değiştirir: yeni satırlar sonda boş, fazlası sondan düşer.
+  NoteTable withRows(int count) {
+    final n = count.clamp(1, kTableMaxRows);
+    if (n == rows) return this;
+    return _with(
+      cells: n > rows
+          ? [...cells, ...List.filled((n - rows) * columns, '')]
+          : cells.sublist(0, n * columns),
+    );
+  }
+
+  /// [count] satıra inince silinecek dolu hücre var mı.
+  bool dropsRowText(int count) =>
+      cells.skip(count * columns).any((c) => c.trim().isNotEmpty);
 
   /// [count] sütuna inince silinecek dolu hücre var mı.
   bool dropsText(int count) {
@@ -280,10 +297,10 @@ String tableName(String base, Set<String> taken) {
 /// başlangıç tahmini (genişlik 1000 birim; kutu ilk çiziminde gerçeğini
 /// yazar).
 Attachment newNoteTable({
-  required int columns,
   required String name,
   required int height,
-  int rows = 3,
+  int columns = kTableDefaultColumns,
+  int rows = kTableDefaultRows,
 }) {
   final table = NoteTable.blank(columns, rows: rows);
   final md = table.toMarkdown();

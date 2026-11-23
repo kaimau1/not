@@ -19,6 +19,7 @@ import '../../../settings/settings_providers.dart';
 import '../../data/attachment_save.dart';
 import '../../data/upload_queue.dart';
 import '../../domain/attachment.dart';
+import '../../domain/note_table.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
@@ -565,7 +566,11 @@ class _AttachmentTile extends ConsumerWidget {
       content = _PreviewTile(
         preview: _TextPreview(text: attachment.text),
         name: attachment.fileName,
-        badge: isMarkdownFile(attachment.fileName) ? 'MD' : 'TXT',
+        badge: isNoteTable(attachment)
+            ? context.l10n.tableName
+            : isMarkdownFile(attachment.fileName)
+            ? 'MD'
+            : 'TXT',
         badgeColor: FixedColors.kindText,
       );
     } else if (attachment.kind == AttachmentKind.pdf) {

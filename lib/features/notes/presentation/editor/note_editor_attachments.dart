@@ -122,26 +122,24 @@ extension _EditorAttachments on _NoteEditorScreenState {
     );
   }
 
-  /// TABLO EKLE (kullanıcı isteği 2026-11-23): 2 · 3 · 4 sütun seçilir,
-  /// tablo yazılan satıra yerleşir ve ilk hücresi yazmaya açılır.
-  Future<void> _insertTable() async {
+  /// TABLO EKLE (kullanıcı isteği 2026-11-23: "ilk eklendiğinde 3 satır 2
+  /// sütun olur"): seçici yok — tablo yazılan satıra yerleşir, ilk hücresi
+  /// yazmaya açılır; satır/sütun sayısı tablonun ⚙ ayarında değişir.
+  void _insertTable() {
     final note = _note;
     if (note == null || _readOnly || note.type.isPageNoteType) return;
     _rememberCaret();
-    final columns = await showTablePicker(context);
-    if (columns == null || !mounted) return;
-    final current = _note;
-    if (current == null) return;
     final table = newNoteTable(
-      columns: columns,
       name: tableName(context.l10n.tableName, {
-        for (final a in current.attachments) a.fileName,
+        for (final a in note.attachments) a.fileName,
       }),
-      height: tableHeightUnits(3),
+      height: tableHeightUnits(kTableDefaultRows),
     );
     NoteTableFocus.openOnMount = table.id;
     _mutate(
-      (n) => n.copyWith(attachments: [...n.attachments, _placeNewImage(table, n)]),
+      (n) => n.copyWith(
+        attachments: [...n.attachments, _placeNewImage(table, n)],
+      ),
       immediate: true,
     );
   }
@@ -1165,7 +1163,9 @@ extension _EditorAttachments on _NoteEditorScreenState {
   /// geri-al adımı üretiyordu.
   void _updateAttachments(List<Attachment> updated) {
     if (updated.isEmpty) return;
-    final byId = {for (final a in updated) a.id: _withLiveInk(a)};
+    final byId = {
+      for (final a in updated) a.id: _withLiveTable(_withLiveInk(a)),
+    };
     _mutate(
       (n) => n.copyWith(
         attachments: [for (final a in n.attachments) byId[a.id] ?? a],
@@ -1204,8 +1204,56 @@ extension _EditorAttachments on _NoteEditorScreenState {
     );
   }
 
+  /// **BAYAT TABLO KORUMASI** ([_withLiveInk]'in tablo karşılığı): tablo
+  /// içeriği kök kurulmadan ilerlediği için tuval (taşı, boyutlandır,
+  /// görünüm) eski içerikli eki tutar; oradan gelen düzen değişikliği
+  /// hücreleri geri yazmasın. Elindeki yapı tam o bayat yapıysa güncel
+  /// içerik (yazı, yapı, oran) korunur.
+  Attachment _withLiveTable(Attachment updated) {
+    final stale = _staleTable[updated.id];
+    if (stale == null || !identical(updated.extras, stale.extras)) {
+      return updated;
+    }
+    final live = _note?.attachments
+        .where((a) => a.id == updated.id)
+        .firstOrNull;
+    return live == null
+        ? updated
+        : updated.copyWith(
+            text: live.text,
+            sizeBytes: live.sizeBytes,
+            extras: live.extras,
+            width: live.width,
+            height: live.height,
+          );
+  }
+
+  /// Tablo kutusundan gelen İÇERİK (hücreler, yapı, oran): kök kurulmaz
+  /// ([_mutate] `tableOnly`), kayıt debounce'lu; ekin düzen alanları
+  /// nottaki güncel hâlinden.
+  void _updateTableContent(Attachment fromBox) {
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id == fromBox.id)
+              a.copyWith(
+                text: fromBox.text,
+                sizeBytes: fromBox.sizeBytes,
+                extras: fromBox.extras,
+                width: fromBox.width,
+                height: fromBox.height,
+              )
+            else
+              a,
+        ],
+      ),
+      tableOnly: true,
+    );
+  }
+
   void _updateAttachment(Attachment updated) {
-    updated = _withLiveInk(updated);
+    updated = _withLiveTable(_withLiveInk(updated));
     _mutate(
       (n) => n.copyWith(
         attachments: [
@@ -1325,7 +1373,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       case 'list-item':
         _addChecklistItem();
       case 'table':
-        await _insertTable();
+        _insertTable();
       case 'text-block':
         // Metin notunda gövde ZATEN görünür; yalnız odaklanmak yeter.
         // Liste notunda gövde alanı gizliyse önce açılır.

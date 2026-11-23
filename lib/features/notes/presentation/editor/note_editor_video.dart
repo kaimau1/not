@@ -177,12 +177,45 @@ extension _EditorVideo on _NoteEditorScreenState {
   /// 2026-10-17). [target] bir metin ekiyse doğrudan okunur; ses/video/
   /// görselse kayıtlı transkripti açılır, yoksa döküm başlar ve bitince nota
   /// METİN EKİ olarak kaydedilir. Ekrandan seçilen parça nota eklenir.
+  /// TABLO TAM EKRAN ([TableScreen]): ek şeridindeki / yazıya gömülü /
+  /// sayfadaki tablo burada yazılır. Hücreler kök kurulmadan kaydedilir;
+  /// ekran kapanınca sayfadaki/bölmedeki kopya BİR KEZ tazelenir.
+  Future<void> _openTable(Attachment table) async {
+    _dismissKeyboard();
+    Attachment? latest;
+    final current = _currentAttachment(table);
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => TableScreen(
+          attachment: current,
+          readOnly: _readOnly,
+          onChanged: (a) {
+            latest = a;
+            _updateTableContent(a);
+          },
+          onRemove: _readOnly
+              ? null
+              : () => _removeAttachment(_currentAttachment(table)),
+          onClosed: () => WidgetsBinding.instance.addPostFrameCallback((_) {
+            final a = latest;
+            if (!mounted || a == null) return;
+            if (!(_note?.attachments.any((x) => x.id == a.id) ?? false)) {
+              return;
+            }
+            _updateAttachment(a);
+          }),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openTranscript(
     Attachment target, {
     bool autoInsert = false,
   }) async {
     final note = _note;
     if (note == null) return;
+    if (isNoteTable(target)) return _openTable(target);
     _dismissKeyboard();
     final Attachment? source;
     final Attachment? existing;

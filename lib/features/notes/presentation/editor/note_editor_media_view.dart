@@ -1306,6 +1306,8 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 ? null
                 : () => unawaited(_ocrImage(pinned)),
             onChanged: _updateAttachment,
+            // Salt okunur notta tablo hücreleri yazılmaz.
+            onTableChanged: _readOnly ? null : _updateTableContent,
             onInkChanged: _updateAttachmentInk,
             // Balon yazılırken editörün alt çubuğu da gizlenir: kart
             // klavyenin hemen üstünde, belge ekranın geri kalanında.

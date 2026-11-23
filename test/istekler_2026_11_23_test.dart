@@ -1,7 +1,12 @@
+import 'dart:convert';
+
+import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:notlar/core/personalize.dart';
+import 'package:notlar/features/notes/data/note_docx.dart';
+import 'package:notlar/features/notes/data/table_export.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_share_text.dart';
@@ -9,6 +14,7 @@ import 'package:notlar/features/notes/domain/note_table.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/editor_quick_row.dart';
 import 'package:notlar/features/notes/presentation/editor/table_page_box.dart';
+import 'package:notlar/features/notes/presentation/editor/table_screen.dart';
 import 'package:notlar/features/notes/presentation/editor/view_mode_switch.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
@@ -119,6 +125,49 @@ void main() {
     });
   });
 
+  group('tablo dışa aktarma', () {
+    final t = NoteTable.blank(3)
+        .withCell(0, 0, 'Ürün')
+        .withCell(0, 1, 'Adet')
+        .withCell(1, 0, 'Süt & <bal>')
+        .withCell(1, 2, 'iki\nsatır');
+
+    test('Word: gerçek tablo (w:tbl), başlık satırı, kaçışlı hücre', () {
+      final bytes = TableExport.docx(t, title: 'Alışveriş');
+      final zip = ZipDecoder().decodeBytes(bytes);
+      final doc = utf8.decode(zip.findFile('word/document.xml')!.content);
+      expect(doc, contains('<w:tbl>'));
+      expect('<w:tr>'.allMatches(doc), hasLength(3));
+      expect(doc, contains('<w:tblHeader/>'));
+      expect(doc, contains('Süt &amp; &lt;bal&gt;'));
+      expect(doc, contains('Alışveriş'));
+      // Hücredeki satır sonu ayrı paragraf.
+      expect(doc, contains('>iki</w:t>'));
+      expect(zip.findFile('[Content_Types].xml'), isNotNull);
+    });
+
+    testWidgets('PDF ve görsel üretilir', (tester) async {
+      await tester.runAsync(() async {
+        final pdf = await TableExport.pdf(t, title: 'Alışveriş');
+        expect(String.fromCharCodes(pdf.take(4)), '%PDF');
+        final png = await TableExport.png(t, title: 'Alışveriş');
+        expect(png.take(4).toList(), [0x89, 0x50, 0x4E, 0x47]);
+      });
+    });
+
+    test('not Word çıktısına tablo girer', () async {
+      final bytes = await NoteDocx.build(
+        title: 'Not',
+        content: 'yazı',
+        tablesXml: [TableExport.docxTableXml(t)],
+      );
+      final zip = ZipDecoder().decodeBytes(bytes);
+      final doc = utf8.decode(zip.findFile('word/document.xml')!.content);
+      expect(doc, contains('<w:tbl>'));
+      expect(doc, contains('Ürün'));
+    });
+  });
+
   group('TablePageBox', () {
     testWidgets('hücreye dokun = yaz; Enter sonraki hücre, sonda yeni satır', (
       tester,
@@ -164,7 +213,9 @@ void main() {
       expect(saved.height!, greaterThan(tableHeightUnits(1)));
     });
 
-    testWidgets('"Satır ekle" ve seçeneklerden sütun sayısı', (tester) async {
+    testWidgets('"Satır ekle"; ayarda satır/sütun sayısı canlı değişir', (
+      tester,
+    ) async {
       var saved = _tableAttachment(NoteTable.blank(2, rows: 2));
       await tester.pumpWidget(
         _app(
@@ -188,9 +239,61 @@ void main() {
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('note-table-options')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('note-table-cols-4')));
+      Finder step(String which, String sign) => find.descendant(
+        of: find.byKey(ValueKey('note-table-$which')),
+        matching: find.byKey(ValueKey(sign)),
+      );
+      await tester.tap(step('cols', 'plus'));
       await tester.pumpAndSettle();
-      expect(NoteTable.of(saved)!.columns, 4);
+      expect(NoteTable.of(saved)!.columns, 3, reason: 'levha açıkken canlı');
+      await tester.tap(step('rows', 'plus'));
+      await tester.pumpAndSettle();
+      expect(NoteTable.of(saved)!.rows, 4);
+      await tester.tap(step('rows', 'minus'));
+      await tester.pumpAndSettle();
+      expect(NoteTable.of(saved)!.rows, 3);
+      // Paylaş: görsel / PDF / Word karoları.
+      for (final k in ['image', 'pdf', 'word']) {
+        expect(
+          find.byKey(ValueKey('note-table-share-$k')),
+          findsOneWidget,
+          reason: k,
+        );
+      }
+    });
+
+    testWidgets('dolu satırı silen azaltma onay ister', (tester) async {
+      var saved = _tableAttachment(
+        NoteTable.blank(2, rows: 2).withCell(1, 0, 'dolu'),
+      );
+      await tester.pumpWidget(
+        _app(
+          StatefulBuilder(
+            builder: (context, setState) => SizedBox(
+              width: 360,
+              height: 400,
+              child: TablePageBox(
+                attachment: saved,
+                onChanged: (a) => setState(() => saved = a),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('note-table-options')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('note-table-rows')),
+          matching: find.byKey(const ValueKey('minus')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      await tester.tap(find.text('İptal'));
+      await tester.pumpAndSettle();
+      expect(NoteTable.of(saved)!.rows, 2);
+      expect(NoteTable.of(saved)!.cell(1, 0), 'dolu');
     });
 
     testWidgets('Gün ekle açık hücreye yazar', (tester) async {
@@ -316,12 +419,37 @@ void main() {
       await tester.ensureVisible(cell);
       await tester.tap(cell);
       await tester.pump(const Duration(milliseconds: 300));
-      tester.testTextInput.enterText('Mehmet');
-      await tester.pump(const Duration(seconds: 4));
+      // YAZARKEN EDİTÖR BAŞTAN KURULMAZ (kullanıcı isteği 2026-11-23): hücre
+      // yazısı ve kaydı kökü (NoteEditorScreen) ve tuvali kurmaz.
+      final counter = BuildCounter()..start();
+      try {
+        for (final t in ['M', 'Me', 'Meh', 'Mehm', 'Mehme', 'Mehmet']) {
+          tester.testTextInput.enterText(t);
+          await tester.pump(const Duration(milliseconds: 120));
+        }
+        await tester.pump(const Duration(seconds: 4));
+      } finally {
+        counter.stop();
+      }
+      expect(counter.of('NoteEditorScreen'), 0);
+      expect(counter.of('NotePageCanvas'), 0);
       final saved = repo.lastSaved!.attachments.single;
       expect(NoteTable.of(saved)!.cell(1, 1), 'Mehmet');
       expect(saved.text, contains('Mehmet'));
-      // Tablo üste sabitlenemez / şeride inemez: görünüm anahtarı yok.
+      // Bayat tuval kopyası (taşıma) yazıyı geri almaz.
+      final c2 = find.byKey(const ValueKey('note-table-cell-0-1'));
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pump(const Duration(milliseconds: 300));
+      final gesture = await tester.startGesture(tester.getCenter(c2));
+      await tester.pump(const Duration(milliseconds: 700));
+      await gesture.moveBy(const Offset(0, 40));
+      await tester.pump(const Duration(milliseconds: 16));
+      await gesture.up();
+      await tester.pump(const Duration(seconds: 3));
+      expect(
+        NoteTable.of(repo.lastSaved!.attachments.single)!.cell(1, 1),
+        'Mehmet',
+      );
       await endEditor(tester);
     });
   });
@@ -364,24 +492,86 @@ void main() {
     expect(find.text('Gün ekle'), findsOneWidget);
     expect(find.text('Tablo'), findsOneWidget);
     await tester.tap(find.text('Tablo'));
-    await tester.pumpAndSettle();
-    // Sütun seçici açılır; 3 sütun → tablo sayfada, ilk hücre yazılır.
-    await tester.tap(find.byKey(const ValueKey('table-pick-3')));
+    // Seçici yok: 3 satır × 2 sütun tablo sayfada, ilk hücre yazılır.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const ValueKey('note-table-field-0-0')), findsOneWidget);
     tester.testTextInput.enterText('Ad');
     await tester.pump(const Duration(seconds: 3));
     final table = repo.lastSaved!.attachments.single;
-    expect(NoteTable.of(table)!.columns, 3);
+    expect(NoteTable.of(table)!.columns, 2);
+    expect(NoteTable.of(table)!.rows, 3);
     expect(NoteTable.of(table)!.cell(0, 0), 'Ad');
     expect(table.floatsOnPage, isTrue);
     await endEditor(tester);
   });
 
-  test('tablo yalnız sayfada (sabit/ek görünümü yok)', () {
+  test('tablo görsel gibi: sabit / yüzen / ek', () {
     final a = _tableAttachment(NoteTable.blank(2));
-    expect(availableViews(a), {AttachmentView.floating});
+    expect(availableViews(a), {
+      AttachmentView.pinned,
+      AttachmentView.floating,
+      AttachmentView.attached,
+    });
+  });
+
+  testWidgets('sabit bölmede tablo çizilir ve yazılır', (tester) async {
+    final repo = CountingNotesRepository();
+    final note = Note(
+      id: 'n',
+      type: NoteType.text,
+      title: 'T',
+      body: 'yazı',
+      attachments: [
+        _tableAttachment(NoteTable.blank(2).withCell(0, 0, 'Sabit'))
+            .copyWith(pinHeight: 260, onPage: false),
+      ],
+    );
+    await pumpEditor(tester, note, repo: repo);
+    expect(find.byKey(const ValueKey('pinned-table-t1')), findsOneWidget);
+    expect(find.text('Sabit'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('note-table-cell-1-0')));
+    await tester.pump(const Duration(milliseconds: 300));
+    tester.testTextInput.enterText('bölme');
+    await tester.pump(const Duration(seconds: 4));
+    expect(
+      NoteTable.of(repo.lastSaved!.attachments.single)!.cell(1, 0),
+      'bölme',
+    );
+    await endEditor(tester);
+  });
+
+  testWidgets('ek şeridindeki tablo tam ekranda açılır ve yazılır', (
+    tester,
+  ) async {
+    final repo = CountingNotesRepository();
+    final note = Note(
+      id: 'n',
+      type: NoteType.text,
+      title: 'T',
+      body: 'yazı',
+      attachments: [
+        _tableAttachment(NoteTable.blank(2)).copyWith(onPage: false),
+      ],
+    );
+    await pumpEditor(tester, note, repo: repo);
+    expect(find.byKey(const ValueKey('note-table-cell-0-0')), findsNothing);
+    // Ek şeridindeki tabloya dokun → tam ekran.
+    await tester.tap(find.text('Tablo').first);
+    await tester.pumpAndSettle();
+    expect(find.byType(TableScreen), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('note-table-cell-0-1')));
+    await tester.pump(const Duration(milliseconds: 300));
+    tester.testTextInput.enterText('tam ekran');
+    await tester.pump(const Duration(seconds: 2));
+    Navigator.of(tester.element(find.byType(TableScreen))).pop();
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 3));
+    expect(
+      NoteTable.of(repo.lastSaved!.attachments.single)!.cell(0, 1),
+      'tam ekran',
+    );
+    await endEditor(tester);
   });
 
   test('alt çubukta Gün ekle ve Tablo eklenebilir (varsayılan gizli)', () {

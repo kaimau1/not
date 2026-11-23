@@ -263,6 +263,7 @@ class NotePageCanvas extends StatefulWidget {
     this.textTop = 0,
     this.textLeft = 0,
     this.readOnly = false,
+    this.onTableChanged,
   });
 
   final List<Attachment> images;
@@ -289,6 +290,10 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Salt okunur not: tablo hücreleri yazılmaz (bkz. [TablePageBox]).
   final bool readOnly;
+
+  /// Tablo İÇERİĞİ (hücre, yapı, oran) — kök kurulmadan kaydedilir; yoksa
+  /// [onChanged].
+  final ValueChanged<Attachment>? onTableChanged;
 
   /// Boş gövdenin ipucu metni ("Not yaz…"), tuval üzerinde konumlandırılır.
   ///
@@ -509,6 +514,17 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// köşesindeki "durdur" düğmesi oynatıcıyı kapatıp kutuyu yeniden
   /// taşınabilir yapar.
   final _playingWeb = <String>{};
+
+  /// Tablonun CANLI oranı (kutunun ölçtüğü gerçek boy): tablo uzayınca kutu
+  /// kök kurulmadan büyür (kayıt [NotePageCanvas.onTableChanged]'le gider).
+  final _tableAspect = <String, double>{};
+
+  void _setTableAspect(String id, double aspect) {
+    final old = _tableAspect[id];
+    if (old != null && (old - aspect).abs() < 0.0005) return;
+    if (!mounted) return;
+    setState(() => _tableAspect[id] = aspect);
+  }
 
   /// Parmak şu an sabitleme bölgesinde mi (bkz. [NotePageCanvas.onPinTop]).
   bool _inPinZone = false;
@@ -862,6 +878,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// PDF kutusunda GÖRÜNTÜ döndürmesi de hesaba katılır: 90°/270°'de sayfa
   /// yan yatar, kutu da onunla birlikte yatmalı (bkz. [pdfBoxAspect]).
   double _aspectOf(Attachment img) {
+    final live = _tableAspect[img.id];
+    if (live != null) return live;
     if (img.width == null ||
         img.height == null ||
         img.width! <= 0 ||
@@ -1195,8 +1213,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   }
 
   void _openViewer(Attachment img, {bool startText = false}) {
-    // Tablonun ayrı ekranı yok: sayfada yazılır.
-    if (isNoteTable(img)) return;
     // Metnin "tam ekranı" okuma ekranıdır; sesin ayrı ekranı yok (kart
     // kendisi oynatıcı).
     if (img.kind == AttachmentKind.text) {
@@ -1253,8 +1269,11 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     if (isNoteTable(a)) {
       return TablePageBox(
         attachment: a,
-        onChanged: widget.onChanged,
+        onChanged: widget.onTableChanged ?? widget.onChanged,
         onRemove: () => widget.onRemove(a),
+        onAspect: fit == BoxFit.cover
+            ? (aspect) => _setTableAspect(a.id, aspect)
+            : null,
         editable: fit == BoxFit.cover && !widget.readOnly,
       );
     }
@@ -1932,9 +1951,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         // beslenseydi görsel kılavuzdan kopamazdı.
         onLongPressMoveUpdate: (d) {
           if (_moveId != img.id) return;
-          // Tablo üste sabitlenmez (sabit bölmede yazılamaz).
           _setPinZone(
-            !isNoteTable(img) &&
             _pinZoneHit(
               d.globalPosition,
               rawTop: (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy,
@@ -2228,7 +2245,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           ? null
           : () => widget.onSaveAs!(img),
       onShare: widget.onShare == null ? null : () => widget.onShare!(img),
-      onFullscreen: img.kind == AttachmentKind.audio || isNoteTable(img)
+      onFullscreen: img.kind == AttachmentKind.audio
           ? null
           : () => _openViewer(img),
       // Görsele açıklama (altyazı) — yalnız görselde.

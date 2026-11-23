@@ -35,6 +35,7 @@ abstract final class NoteDocx {
     required String content,
     DateTime? date,
     List<ExportImage> images = const [],
+    List<String> tablesXml = const [],
   }) {
     final dateLabel = date == null
         ? null
@@ -46,6 +47,7 @@ abstract final class NoteDocx {
         content: content,
         dateLabel: dateLabel,
         images: images,
+        tablesXml: tablesXml,
       ),
     );
   }
@@ -122,6 +124,14 @@ abstract final class NoteDocx {
     }
     for (final i in trailing) {
       body.write(_imageParagraph(images[i], i + 1));
+    }
+    // TABLOLAR (2026-11-23): notun sonunda GERÇEK Word tabloları (hücreler
+    // Word'de düzenlenir); her tablodan sonra boş paragraf — Word gövdenin ya
+    // da iki tablonun yapışık bitmesini kabul etmez.
+    for (final table in r.tablesXml) {
+      body
+        ..write(table)
+        ..write(_p(''));
     }
 
     final document =
@@ -262,10 +272,12 @@ class _DocxRequest {
     required this.content,
     required this.dateLabel,
     required this.images,
+    this.tablesXml = const [],
   });
 
   final String title;
   final String content;
   final String? dateLabel;
   final List<ExportImage> images;
+  final List<String> tablesXml;
 }

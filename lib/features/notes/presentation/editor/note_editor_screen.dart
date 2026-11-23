@@ -223,6 +223,7 @@ import 'video_hub_scope.dart';
 import 'audio_card_box.dart' show kAudioBoxWidth, kAudioBoxHeight;
 import 'text_page_box.dart' show kTextBoxWidth, kTextBoxHeight;
 import 'table_page_box.dart';
+import 'table_screen.dart';
 import '../../domain/note_table.dart';
 import 'attachment_actions.dart';
 import 'view_mode_switch.dart';
@@ -2195,8 +2196,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Kök her kurulduğunda ağaç tazelenir, kayıt boşalır.
   final Map<String, List<InkStroke>> _staleInk = {};
 
+  /// Kök kurulmadan içeriği ilerleyen TABLOLARIN, ağacın elindeki (bayat)
+  /// eki — bkz. [_updateTableContent], [_withLiveTable]. Kök kurulunca
+  /// boşalır.
+  final Map<String, Attachment> _staleTable = {};
+
   /// [inkOnly]: [transform] yalnız bir ekin mürekkebini değiştirir (OTURTMA
   /// F60.1) — kök kurulmaz, kayıt debounce'lu.
+  ///
+  /// [tableOnly]: yalnız tablo hücreleri/yapısı değişti (kullanıcı isteği
+  /// 2026-11-23: "kasma, editörün baştan kurulmasını yaşatmaz"): tablo
+  /// kendi kutusunda zaten çizili — kök kurulmaz, kayıt debounce'lu.
   ///
   /// [itemsShown]: değişiklik [ItemsEditor]'dan geliyor ve maddeleri o
   /// ZATEN kendi `setState`'iyle çizdi. KÖK NEDEN (kullanıcı bulgusu
@@ -2211,6 +2221,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     bool immediate = false,
     bool inkOnly = false,
     bool itemsShown = false,
+    bool tableOnly = false,
   }) {
     final note = _note;
     if (note == null) return;
@@ -2263,12 +2274,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       itemsShown && note.items.isEmpty == next.items.isEmpty
           ? next.copyWith(items: note.items)
           : next,
-      ignoreAttachments: inkOnly,
+      ignoreAttachments: inkOnly || tableOnly,
     );
     if (pureTyping) {
       if (inkOnly) {
         for (final a in note.attachments) {
           _staleInk.putIfAbsent(a.id, () => a.ink);
+        }
+      }
+      if (tableOnly) {
+        for (final a in note.attachments) {
+          if (isNoteTable(a)) _staleTable.putIfAbsent(a.id, () => a);
         }
       }
       _note = next;
@@ -2641,6 +2657,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       images: imageAttachments,
       onRemove: _removeAttachment,
       onChanged: _updateAttachment,
+      onTableChanged: _updateTableContent,
       readOnly: _readOnly,
       onInkChanged: _updateAttachmentInk,
       onChangedMany: _updateAttachments,
@@ -3021,9 +3038,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ).add_Hm().format(DateTime.now()),
           ),
           onDay: _insertDay,
-          onTable: note.type.isPageNoteType
-              ? null
-              : () => unawaited(_insertTable()),
+          onTable: note.type.isPageNoteType ? null : _insertTable,
           onAttach: () => unawaited(_showAttachMenu()),
           onColor: () => _applyFormat(
             RichFormat.color,
@@ -3556,8 +3571,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     ref.watch(localFilesRevisionProvider);
     // dispose'un kullanacağı bağımlılıklar her karede tazelenir (bkz. yukarı).
     _cacheDeps();
-    // Ağaç bu kurulumla güncel eki alıyor: bayat mürekkep kaydı kalmaz.
+    // Ağaç bu kurulumla güncel eki alıyor: bayat mürekkep/tablo kaydı kalmaz.
     _staleInk.clear();
+    _staleTable.clear();
     // Tuval önbelleği YALNIZ bu build içindeki `LayoutBuilder` tekrarları
     // içindir (klavye animasyonunun kareleri). Editör yeniden kurulduğunda
     // bayat kalmasın diye burada, her şeyden önce düşürülür.
@@ -5369,7 +5385,7 @@ child: FormatBar(
                             UiItem.barTable => (
                               Icons.table_chart_outlined,
                               l10n.tableInsert,
-                              () => unawaited(_insertTable()),
+                              _insertTable,
                               false,
                             ),
                             UiItem.barAi => (

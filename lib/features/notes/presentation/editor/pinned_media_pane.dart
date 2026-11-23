@@ -20,6 +20,7 @@ import '../../../../core/widgets/sheet_tile.dart';
 import '../../../../core/widgets/wheel_scroll_viewer.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
+import '../../domain/note_table.dart';
 import '../drive_ui.dart';
 import '../viewers/image_luma.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
@@ -36,6 +37,7 @@ import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
 import 'pen_tray.dart' show showInkSettings;
 import 'slide_page_box.dart';
+import 'table_page_box.dart';
 import 'text_page_box.dart';
 import 'video_hub_scope.dart';
 import 'video_transport.dart';
@@ -128,6 +130,7 @@ class PinnedMediaPane extends StatefulWidget {
     this.onCopy,
     this.onExtractText,
     this.onChanged,
+    this.onTableChanged,
     this.onInkChanged,
     this.viewSwitch,
     this.sheetViewSwitch,
@@ -245,6 +248,10 @@ class PinnedMediaPane extends StatefulWidget {
   /// Sabitli PDF'in sayfa/yer imi/döndürme değişiklikleri (bkz.
   /// [PdfPageBox.onChanged]).
   final ValueChanged<Attachment>? onChanged;
+
+  /// Tablo içeriği (hücreler): kök kurulmadan kaydedilir; null = tablo salt
+  /// okunur (salt okunur not).
+  final ValueChanged<Attachment>? onTableChanged;
 
   /// Belgenin üstüne çizilen çizgi (yalnız `ink` değişir). Ayrı: editör bunu
   /// kök kurmadan, gecikmeli kaydeder. null ise [onChanged]'e düşer.
@@ -1308,7 +1315,21 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     final isAudio = widget.media.kind == AttachmentKind.audio;
     final isSlide = widget.media.kind == AttachmentKind.slide;
     final isImage = widget.media.kind == AttachmentKind.image;
-                return isText
+                return isText && isNoteTable(widget.media)
+                    // TABLO SABİT BÖLMEDE (kullanıcı isteği 2026-11-23:
+                    // "görsel gibi sabitlenebilir"): bölme genişliğinde,
+                    // dikeyde kayar, hücreleri burada da yazılır.
+                    ? SingleChildScrollView(
+                        key: ValueKey('pinned-table-${widget.media.id}'),
+                        padding: const EdgeInsets.all(AppSpace.m),
+                        child: TablePageBox(
+                          attachment: widget.media,
+                          onChanged: widget.onTableChanged ?? (_) {},
+                          onRemove: widget.onRemove,
+                          editable: widget.onTableChanged != null,
+                        ),
+                      )
+                    : isText
                     // METİN (2026-10-17): kaydırılan, seçilebilen kâğıt. Basılı
                     // tutmak metni SEÇER (görseldeki "aşağı çekip bırak"
                     // jesti yok) — bölmeden çıkış anahtardan/menüden.

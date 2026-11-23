@@ -8,7 +8,9 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/sheet_header.dart';
+import '../../../../core/widgets/undo_snackbar.dart' show showAppMessage;
 import '../../domain/attachment.dart';
+import '../../data/table_export.dart';
 import '../../domain/note_table.dart';
 
 /// Tablonun İÇİ bu referans genişlikte dizilir ve kutuya ölçeklenir
@@ -95,12 +97,20 @@ class TablePageBox extends StatefulWidget {
     required this.attachment,
     required this.onChanged,
     this.onRemove,
+    this.onAspect,
     this.editable = true,
   });
 
   final Attachment attachment;
+
+  /// Tablo İÇERİĞİ (hücreler, yapı, oran). Editörde kök KURULMADAN kaydedilir
+  /// (`_updateTableContent`): yazarken editör baştan kurulmaz.
   final ValueChanged<Attachment> onChanged;
   final VoidCallback? onRemove;
+
+  /// Gerçek boyun verdiği oran (genişlik / yükseklik) her değişince: tuval
+  /// kutuyu kök kurulmadan büyütür/küçültür.
+  final ValueChanged<double>? onAspect;
 
   /// false: salt görüntü (önizleme, salt okunur not).
   final bool editable;
@@ -119,14 +129,10 @@ class _TablePageBoxState extends State<TablePageBox> {
   TextEditingController? _ctl;
   FocusNode? _focus;
 
-  /// Yazının nota geçişi: 1 sn durunca, aralıksız yazarken en geç 8 sn.
-  /// Her geçiş editörü baştan kurar (ek değişti — görsel taşımakla aynı yol);
-  /// yazarken seyrek olsun diye uzun. Boy değişince ve hücreden çıkınca
-  /// HEMEN yazılır; editör kapanırken bekleyen yazı [dispose]'da gider.
-  final _commits = Debouncer(
-    delay: const Duration(seconds: 1),
-    maxWait: const Duration(seconds: 8),
-  );
+  /// Yazının nota geçişi (0,5 sn; aralıksız yazarken en geç 3 sn). Geçiş
+  /// editörü KURMAZ ([TablePageBox.onChanged]); boy değişince ve hücreden
+  /// çıkınca hemen yazılır, editör kapanırken bekleyen yazı [dispose]'da.
+  final _commits = Debouncer();
 
   /// Yerel değişiklik nota yazılmayı bekliyor.
   bool _pending = false;
@@ -217,7 +223,9 @@ class _TablePageBoxState extends State<TablePageBox> {
   void _onNatural(double h) {
     if ((h - _natural).abs() < 0.5) return;
     _natural = h;
-    if (!widget.editable || !mounted) return;
+    if (!mounted) return;
+    widget.onAspect?.call(kTableRefWidth / h);
+    if (!widget.editable) return;
     final local = _editing != null || _pending;
     final first = !_corrected;
     _corrected = true;
@@ -333,13 +341,46 @@ class _TablePageBoxState extends State<TablePageBox> {
     _commitNow();
   }
 
+  Future<bool> _confirmDrop(String message) async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
+  /// TABLO AYARLARI (kullanıcı isteği 2026-11-23: "satır ve sütun sayısı
+  /// kendi ayarında değiştirilebilir; görsel veya PDF olarak paylaşılabilir,
+  /// Word'e aktarılabilir"). Sayılar ve başlık levha açıkken CANLI uygulanır.
   Future<void> _openOptions() async {
     final row = (_editing ?? _last)?.$1;
-    final l10n = context.l10n;
     final action = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
-      builder: (context) => _TableOptions(table: _table, row: row),
+      isScrollControlled: true,
+      builder: (context) => _TableOptions(
+        table: _table,
+        row: row,
+        onTable: (next) {
+          if (!mounted) return;
+          _last = null;
+          _apply(next);
+        },
+        confirmDrop: _confirmDrop,
+      ),
     );
     if (!mounted || action == null) return;
     switch (action) {
@@ -348,37 +389,27 @@ class _TablePageBoxState extends State<TablePageBox> {
       case 'delete-row' when row != null:
         _last = null;
         _apply(_table.removeRow(row));
-      case 'header':
-        _apply(_table.withHeader(!_table.header));
-      case 'even':
-        _apply(_table.evenedWidths());
       case 'delete':
         widget.onRemove?.call();
-      default:
-        if (action.startsWith('cols:')) {
-          final n = int.tryParse(action.substring(5)) ?? _table.columns;
-          if (_table.dropsText(n)) {
-            final ok = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                content: Text(l10n.tableColumnsWillDrop),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text(l10n.cancel),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text(l10n.ok),
-                  ),
-                ],
-              ),
-            );
-            if (ok != true || !mounted) return;
-          }
-          _last = null;
-          _apply(_table.withColumns(n));
-        }
+      case 'share-image':
+        unawaited(_share(TableExportKind.image));
+      case 'share-pdf':
+        unawaited(_share(TableExportKind.pdf));
+      case 'share-word':
+        unawaited(_share(TableExportKind.word));
+    }
+  }
+
+  Future<void> _share(TableExportKind kind) async {
+    final failed = context.l10n.tableShareFailed;
+    try {
+      await TableExport.share(
+        _table,
+        title: widget.attachment.fileName,
+        kind: kind,
+      );
+    } catch (_) {
+      if (mounted) showAppMessage(context, failed);
     }
   }
 
@@ -605,14 +636,109 @@ class _TablePageBoxState extends State<TablePageBox> {
   }
 }
 
-/// Tablo seçenekleri levhası; seçilen işin kimliğini döner.
-class _TableOptions extends StatelessWidget {
-  const _TableOptions({required this.table, required this.row});
+/// Tabloyu PAYLAŞ (ek menüsü, sabit bölme, şerit — `shareAttachment`):
+/// Görsel · PDF · Word seçilir, dosya üretilip sistem paylaşımı açılır.
+Future<void> shareNoteTable(BuildContext context, Attachment a) async {
+  final table = NoteTable.of(a);
+  if (table == null) return;
+  final l10n = context.l10n;
+  final kind = await showAppSheet<TableExportKind>(
+    context: context,
+    showDragHandle: true,
+    builder: (context) => SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          0,
+          AppSpace.l,
+          AppSpace.l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SheetHeader(
+              title: l10n.share,
+              padding: const EdgeInsets.only(bottom: AppSpace.s),
+            ),
+            Row(
+              children: [
+                for (final (i, (kind, icon, label)) in [
+                  (
+                    TableExportKind.image,
+                    Icons.image_outlined,
+                    l10n.tableShareImage,
+                  ),
+                  (
+                    TableExportKind.pdf,
+                    Icons.picture_as_pdf_outlined,
+                    l10n.tableSharePdf,
+                  ),
+                  (
+                    TableExportKind.word,
+                    Icons.description_outlined,
+                    l10n.tableShareWord,
+                  ),
+                ].indexed) ...[
+                  if (i > 0) const SizedBox(width: AppSpace.s),
+                  Expanded(
+                    child: _OptionTile(
+                      key: ValueKey('table-share-${kind.name}'),
+                      icon: icon,
+                      label: label,
+                      vertical: true,
+                      onTap: () => Navigator.pop(context, kind),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  if (kind == null) return;
+  try {
+    await TableExport.share(table, title: a.fileName, kind: kind);
+  } catch (_) {
+    if (context.mounted) showAppMessage(context, l10n.tableShareFailed);
+  }
+}
+
+/// Tablo ayarları levhası: satır/sütun sayısı ve başlık CANLI ([onTable]);
+/// kapatan işlerin (satır ekle/sil, paylaş, sil) kimliğini döner. Karolar
+/// ⋯ ızgarasıyla aynı dilde.
+class _TableOptions extends StatefulWidget {
+  const _TableOptions({
+    required this.table,
+    required this.row,
+    required this.onTable,
+    required this.confirmDrop,
+  });
 
   final NoteTable table;
 
   /// Son yazılan hücrenin satırı (yoksa satır işleri gösterilmez).
   final int? row;
+  final ValueChanged<NoteTable> onTable;
+  final Future<bool> Function(String message) confirmDrop;
+
+  @override
+  State<_TableOptions> createState() => _TableOptionsState();
+}
+
+class _TableOptionsState extends State<_TableOptions> {
+  late NoteTable _t = widget.table;
+
+  Future<void> _set(NoteTable next, {String? drop}) async {
+    if (next == _t) return;
+    if (drop != null && !await widget.confirmDrop(drop)) return;
+    if (!mounted) return;
+    setState(() => _t = next);
+    widget.onTable(next);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -620,91 +746,307 @@ class _TableOptions extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final text = AppText.of(theme);
+    final row = widget.row;
+    Widget pair(Widget a, Widget? b) => Row(
+      children: [
+        Expanded(child: a),
+        const SizedBox(width: AppSpace.s),
+        Expanded(child: b ?? const SizedBox.shrink()),
+      ],
+    );
+    final edits = <Widget>[
+      if (row != null) ...[
+        _OptionTile(
+          key: const ValueKey('note-table-add-below'),
+          icon: Icons.playlist_add_rounded,
+          label: l10n.tableAddRowBelow,
+          onTap: () => Navigator.pop(context, 'add-below'),
+        ),
+        _OptionTile(
+          key: const ValueKey('note-table-delete-row'),
+          icon: Icons.playlist_remove_rounded,
+          label: l10n.tableDeleteRow,
+          onTap: () => Navigator.pop(context, 'delete-row'),
+        ),
+      ],
+      if (!_t.evenWidths)
+        _OptionTile(
+          key: const ValueKey('note-table-even'),
+          icon: Icons.view_week_outlined,
+          label: l10n.tableEqualWidths,
+          onTap: () => _set(_t.evenedWidths()),
+        ),
+    ];
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          0,
+          AppSpace.l,
+          AppSpace.l,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SheetHeader(title: l10n.tableOptions),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpace.l,
-                0,
-                AppSpace.l,
-                AppSpace.s,
-              ),
-              child: Text(l10n.tableMoveHint, style: text.meta),
+            SheetHeader(
+              title: l10n.tableOptions,
+              padding: const EdgeInsets.only(bottom: AppSpace.xs),
             ),
-            if (row != null) ...[
-              ListTile(
-                key: const ValueKey('note-table-add-below'),
-                leading: const Icon(Icons.playlist_add_rounded),
-                title: Text(l10n.tableAddRowBelow),
-                onTap: () => Navigator.pop(context, 'add-below'),
+            Text(l10n.tableMoveHint, style: text.meta),
+            const SizedBox(height: AppSpace.m),
+            pair(
+              _Stepper(
+                key: const ValueKey('note-table-rows'),
+                icon: Icons.table_rows_outlined,
+                label: l10n.tableRowCount,
+                value: _t.rows,
+                min: 1,
+                max: kTableMaxRows,
+                onChanged: (n) => _set(
+                  _t.withRows(n),
+                  drop: _t.dropsRowText(n) ? l10n.tableRowsWillDrop : null,
+                ),
               ),
-              ListTile(
-                key: const ValueKey('note-table-delete-row'),
-                leading: const Icon(Icons.playlist_remove_rounded),
-                title: Text(l10n.tableDeleteRow),
-                onTap: () => Navigator.pop(context, 'delete-row'),
+              _Stepper(
+                key: const ValueKey('note-table-cols'),
+                icon: Icons.view_column_outlined,
+                label: l10n.tableColumnCount,
+                value: _t.columns,
+                min: 1,
+                max: kTableMaxColumns,
+                onChanged: (n) => _set(
+                  _t.withColumns(n),
+                  drop: _t.dropsText(n) ? l10n.tableColumnsWillDrop : null,
+                ),
               ),
-            ],
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpace.l,
-                vertical: AppSpace.s,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.view_column_outlined,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpace.l),
-                  Expanded(
-                    child: Text(l10n.tableColumnCount, style: text.body),
-                  ),
-                  for (final n in {...kTableColumnChoices, table.columns})
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        start: AppSpace.xs,
-                      ),
-                      child: ChoiceChip(
-                        key: ValueKey('note-table-cols-$n'),
-                        label: Text('$n'),
-                        selected: n == table.columns,
-                        onSelected: (_) => Navigator.pop(context, 'cols:$n'),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            SwitchListTile(
-              key: const ValueKey('note-table-header'),
-              secondary: const Icon(Icons.table_rows_outlined),
-              title: Text(l10n.tableHeaderRow),
-              value: table.header,
-              onChanged: (_) => Navigator.pop(context, 'header'),
-            ),
-            if (!table.evenWidths)
-              ListTile(
-                key: const ValueKey('note-table-even'),
-                leading: const Icon(Icons.view_week_outlined),
-                title: Text(l10n.tableEqualWidths),
-                onTap: () => Navigator.pop(context, 'even'),
-              ),
-            ListTile(
-              key: const ValueKey('note-table-delete'),
-              leading: Icon(Icons.delete_outline, color: scheme.error),
-              title: Text(
-                l10n.tableDelete,
-                style: TextStyle(color: scheme.error),
-              ),
-              onTap: () => Navigator.pop(context, 'delete'),
             ),
             const SizedBox(height: AppSpace.s),
+            _OptionTile(
+              key: const ValueKey('note-table-header'),
+              icon: Icons.title_rounded,
+              label: l10n.tableHeaderRow,
+              active: _t.header,
+              trailing: Switch(
+                value: _t.header,
+                onChanged: (v) => _set(_t.withHeader(v)),
+              ),
+              onTap: () => _set(_t.withHeader(!_t.header)),
+            ),
+            if (edits.isNotEmpty) ...[
+              const SizedBox(height: AppSpace.l),
+              SectionLabel(l10n.tableEditSection),
+              const SizedBox(height: AppSpace.s),
+              for (var i = 0; i < edits.length; i += 2) ...[
+                if (i > 0) const SizedBox(height: AppSpace.s),
+                pair(edits[i], i + 1 < edits.length ? edits[i + 1] : null),
+              ],
+            ],
+            const SizedBox(height: AppSpace.l),
+            SectionLabel(l10n.share),
+            const SizedBox(height: AppSpace.s),
+            Row(
+              children: [
+                for (final (i, (kind, icon, label)) in [
+                  ('image', Icons.image_outlined, l10n.tableShareImage),
+                  ('pdf', Icons.picture_as_pdf_outlined, l10n.tableSharePdf),
+                  ('word', Icons.description_outlined, l10n.tableShareWord),
+                ].indexed) ...[
+                  if (i > 0) const SizedBox(width: AppSpace.s),
+                  Expanded(
+                    child: _OptionTile(
+                      key: ValueKey('note-table-share-$kind'),
+                      icon: icon,
+                      label: label,
+                      vertical: true,
+                      onTap: () => Navigator.pop(context, 'share-$kind'),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppSpace.l),
+            _OptionTile(
+              key: const ValueKey('note-table-delete'),
+              icon: Icons.delete_outline,
+              label: l10n.tableDelete,
+              color: scheme.error,
+              onTap: () => Navigator.pop(context, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// ⋯ ızgarasıyla aynı karo (tonlu zemin, yuvarlak köşe, vurgu renkli simge).
+class _OptionTile extends StatelessWidget {
+  const _OptionTile({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.trailing,
+    this.vertical = false,
+    this.active = false,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Widget? trailing;
+  final bool vertical;
+  final bool active;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg = theme.brightness == Brightness.dark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer;
+    final style = AppText.of(theme).meta.copyWith(
+      color: color ?? scheme.onSurface,
+      fontWeight: AppWeight.medium,
+    );
+    final iconWidget = Icon(
+      icon,
+      size: AppIconSize.m,
+      color: color ?? scheme.primary,
+    );
+    final labelWidget = Text(
+      label,
+      maxLines: vertical ? 1 : 2,
+      overflow: TextOverflow.ellipsis,
+      textAlign: vertical ? TextAlign.center : TextAlign.start,
+      style: style,
+    );
+    return Material(
+      color: active ? scheme.primaryContainer : bg,
+      borderRadius: BorderRadius.circular(AppRadius.m),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minHeight: kMinInteractiveDimension,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.s,
+              vertical: AppSpace.xs,
+            ),
+            child: vertical
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: AppSpace.xs),
+                      iconWidget,
+                      const SizedBox(height: AppSpace.xs),
+                      labelWidget,
+                      const SizedBox(height: AppSpace.xs),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      iconWidget,
+                      const SizedBox(width: AppSpace.s),
+                      Expanded(child: labelWidget),
+                      ?trailing,
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Satır/sütun sayısı: − sayı + (basılı tutmak hızlı değiştirmez; satır
+/// sayısı büyükse "+ Satır ekle" ya da İleri tuşu daha rahat).
+class _Stepper extends StatelessWidget {
+  const _Stepper({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String label;
+  final int value;
+  final int min;
+  final int max;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
+    final bg = theme.brightness == Brightness.dark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.s,
+          AppSpace.s,
+          AppSpace.s,
+          AppSpace.xs,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: AppIconSize.xs, color: scheme.primary),
+                const SizedBox(width: AppSpace.xs),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.meta.copyWith(fontWeight: AppWeight.medium),
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                IconButton(
+                  key: const ValueKey('minus'),
+                  tooltip: '−',
+                  onPressed: value > min ? () => onChanged(value - 1) : null,
+                  icon: const Icon(Icons.remove_rounded),
+                ),
+                Expanded(
+                  child: Text(
+                    '$value',
+                    textAlign: TextAlign.center,
+                    style: text.rowTitle.copyWith(fontWeight: AppWeight.strong),
+                  ),
+                ),
+                IconButton(
+                  key: const ValueKey('plus'),
+                  tooltip: '+',
+                  onPressed: value < max ? () => onChanged(value + 1) : null,
+                  icon: const Icon(Icons.add_rounded),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -743,101 +1085,4 @@ class _RenderNaturalHeight extends RenderProxyBox {
       if (attached) onHeight(h);
     });
   }
-}
-
-/// Tablo seçici: kaç sütun (2 · 3 · 4). Seçilen sütun sayısını döner.
-Future<int?> showTablePicker(BuildContext context) => showAppSheet<int>(
-  context: context,
-  showDragHandle: true,
-  builder: (context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final text = AppText.of(theme);
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpace.l,
-          0,
-          AppSpace.l,
-          AppSpace.l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SheetHeader(
-              title: l10n.tablePickTitle,
-              padding: const EdgeInsets.only(bottom: AppSpace.s),
-            ),
-            Row(
-              children: [
-                for (final (i, n) in kTableColumnChoices.indexed) ...[
-                  if (i > 0) const SizedBox(width: AppSpace.s),
-                  Expanded(
-                    child: Material(
-                      color: scheme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(AppRadius.m),
-                      child: InkWell(
-                        key: ValueKey('table-pick-$n'),
-                        borderRadius: BorderRadius.circular(AppRadius.m),
-                        onTap: () => Navigator.pop(context, n),
-                        child: Padding(
-                          padding: const EdgeInsets.all(AppSpace.m),
-                          child: Column(
-                            children: [
-                              _MiniGrid(columns: n, color: scheme.primary),
-                              const SizedBox(height: AppSpace.s),
-                              Text(
-                                l10n.tableColumns(n),
-                                style: text.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  },
-);
-
-/// Seçicideki küçük tablo resmi.
-class _MiniGrid extends StatelessWidget {
-  const _MiniGrid({required this.columns, required this.color});
-
-  final int columns;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => SizedBox(
-    height: AppSpace.xxxl + AppSpace.s,
-    child: Table(
-      border: TableBorder.all(
-        color: color.withValues(alpha: AppAlpha.muted),
-        borderRadius: BorderRadius.circular(AppRadius.xs),
-      ),
-      children: [
-        for (var r = 0; r < 3; r++)
-          TableRow(
-            decoration: r == 0
-                ? BoxDecoration(color: color.withValues(alpha: AppAlpha.soft))
-                : null,
-            children: [
-              for (var c = 0; c < columns; c++)
-                const SizedBox(height: AppSpace.m),
-            ],
-          ),
-      ],
-    ),
-  );
 }

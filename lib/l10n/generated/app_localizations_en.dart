@@ -9761,18 +9761,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tableInsert => 'Table';
 
   @override
-  String get tableInsertInfo => '2, 3 or 4 columns';
+  String get tableInsertInfo => '3 rows · 2 columns, change later';
 
   @override
   String get tableName => 'Table';
-
-  @override
-  String get tablePickTitle => 'Insert table';
-
-  @override
-  String tableColumns(int count) {
-    return '$count columns';
-  }
 
   @override
   String get tableAddRow => 'Add row';
@@ -9796,7 +9788,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tableDelete => 'Delete table';
 
   @override
-  String get tableOptions => 'Table options';
+  String get tableOptions => 'Table settings';
 
   @override
   String get tableColumnsWillDrop =>
@@ -9804,4 +9796,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tableMoveHint => 'Long-press to move, drag the corner to resize';
+
+  @override
+  String get tableRowCount => 'Rows';
+
+  @override
+  String get tableRowsWillDrop =>
+      'Text in the last rows will be deleted. Continue?';
+
+  @override
+  String get tableEditSection => 'Edit';
+
+  @override
+  String get tableShareImage => 'Image';
+
+  @override
+  String get tableSharePdf => 'PDF';
+
+  @override
+  String get tableShareWord => 'Word';
+
+  @override
+  String get tableShareFailed => 'Couldn\'t share the table';
 }
