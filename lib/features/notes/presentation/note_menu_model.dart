@@ -8,6 +8,7 @@ import '../../../core/menu_layout.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../entitlement/presentation/pro_lock.dart';
 import '../data/note_shortcut.dart';
 import '../data/user_templates.dart';
 import '../domain/note.dart';
@@ -41,6 +42,8 @@ ActionMenu noteMenuModel(
   bool canRemoveParts = false,
   // K32: tablet yatayda kart "Yanda aç" (bkz. `secondNoteProvider`).
   bool canOpenSide = false,
+  // PL6: sürüm geçmişi (`ProFeature.versionHistory`) bu hesapta kilitli.
+  bool historyLocked = false,
 }) {
   final editor = surface == NoteMenuSurface.editor;
   final archived = note.archivedAt != null;
@@ -213,7 +216,15 @@ ActionMenu noteMenuModel(
           note.locked ? l10n.unlockNote : l10n.lockNote,
           note.locked ? Icons.lock_open_outlined : Icons.lock_outline,
         ),
-        if (editor) MenuAction('history', l10n.versionHistory, Icons.history),
+        if (editor)
+          MenuAction(
+            'history',
+            l10n.versionHistory,
+            Icons.history,
+            // PL6 `versionHistory` kapısı: satır gizlenmez, kilit rozeti
+            // taşır; dokununca Pro ekranına gider (`_openHistory`).
+            badge: historyLocked ? const ProLockBadge() : null,
+          ),
         if (localOnlyAvailable)
           MenuAction(
             'localOnly',

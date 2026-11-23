@@ -23,10 +23,13 @@ enum EntitlementTier {
 ///
 /// PLAN §1.5 katman tablosundan: ömür boyu = sürüm geçmişi, parolalı yedek,
 /// ek görünüm, kendi Gemini anahtarı, anında eşitleme; Pro = bunların hepsi
-/// + dahili AI + bulut ekleri. BAĞLI kapılar (PL6, 2026-11-20): [builtInAi] ve
-/// [ownApiKey] (`aiAvailabilityProvider`, `AiAdmission`). Kalanlar henüz hiçbir
-/// ekranda okunmuyor — kimsenin elinden özellik alınmasın diye (en güvenli,
-/// sabah bakılacak: temel tema/yazı tipi setinin sınırı, eşitleme aralığı S1,
+/// + dahili AI + bulut ekleri. BAĞLI kapılar (PL6): [builtInAi] ve
+/// [ownApiKey] (`aiAvailabilityProvider`, `AiAdmission`); [versionHistory]
+/// (not ⋮ menüsü, `_openHistory`), [encryptedBackup] (parola penceresi,
+/// `showBackupExportPasswordDialog`; geri yükleme HER katmanda serbest),
+/// [extraAppearance] (tema ızgarası/levhası + yazı tipi levhası, ücretsiz set
+/// [AppearanceGate]). Kilitli öğe gizlenmez: kilit rozeti, dokunuş Pro
+/// ekranına. Kalanlar henüz okunmuyor (sabah bakılacak: eşitleme aralığı S1,
 /// bulut ekleri S4).
 enum ProFeature {
   builtInAi(EntitlementTier.pro),
@@ -41,6 +44,31 @@ enum ProFeature {
 
   /// Bu özelliği açan en düşük katman (pro ⊃ lifetime ⊃ free).
   final EntitlementTier minTier;
+}
+
+/// [ProFeature.extraAppearance] için ÜCRETSİZ TEMEL SET (PLAN §1.5 PL6).
+///
+/// KARAR: sabah bakılacak — en dar küme: bugünkü varsayılan (Adaçayı +
+/// varsayılan yazı tipi) + Sistem + Koyu (okunabilirlik/erişilebilirlik
+/// ücret duvarı arkasına girmesin). Kapsam yalnız uygulamanın genel teması ve
+/// yazı tipi; not başına renk/tema/yazı tipi ve kart gösterim anahtarları
+/// DOKUNULMADI (ayrı bir "kart görünümü" seçici yok). Kimsenin elinden
+/// alınmaz: [locked] SEÇİLİ olanı hiç kilitlemez; kayıtlı seçim her derlemede
+/// aynen uygulanır, yalnız YENİ seçim kapıdan geçer.
+abstract final class AppearanceGate {
+  /// `AppThemeChoice.name` değerleri.
+  static const freeThemes = {'system', 'sage', 'dark'};
+
+  /// Uygulama yazı tipi kimlikleri (`kAppDefaultFont`; test eşitliği korur).
+  static const freeFonts = {'Inter Tight'};
+
+  /// [id] seçeneği şimdi kilitli mi ([unlocked]: `extraAppearance` kapısı).
+  static bool locked(
+    String id, {
+    required Set<String> free,
+    required String? current,
+    required bool unlocked,
+  }) => !unlocked && id != current && !free.contains(id);
 }
 
 /// `entitlements/{uid}` belgesinin istemci görüntüsü. Belge yoksa ücretsiz.

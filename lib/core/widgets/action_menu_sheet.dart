@@ -781,24 +781,29 @@ Widget _buildGridTile(
             ),
             if (action.count > 0)
               _CountPill(count: action.count, highlight: action.highlight),
+            // Kilit rozeti (PL6 kapıları) karoda da görünür.
+            if (action.badge != null) action.badge!,
           ],
         ),
       ),
     );
   } else {
-    final top = action.count > 0
+    final top = action.count > 0 || action.badge != null
         ? Stack(
             clipBehavior: Clip.none,
             children: [
               icon,
-              Positioned(
-                right: -14,
-                top: -6,
-                child: _CountPill(
-                  count: action.count,
-                  highlight: action.highlight,
+              if (action.count > 0)
+                Positioned(
+                  right: -14,
+                  top: -6,
+                  child: _CountPill(
+                    count: action.count,
+                    highlight: action.highlight,
+                  ),
                 ),
-              ),
+              if (action.badge != null)
+                Positioned(right: -8, top: -6, child: action.badge!),
             ],
           )
         : icon;

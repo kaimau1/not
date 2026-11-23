@@ -442,6 +442,7 @@ extension _EditorActions on _NoteEditorScreenState {
         // destekleniyorsa (web'de yok).
         localOnlyAvailable: widget.ownerId == null && localOnlySupported(ref),
         localOnly: ref.read(notesRepositoryProvider)?.isLocal(note.id) ?? false,
+        historyLocked: !ref.read(proFeatureProvider(ProFeature.versionHistory)),
       ),
     );
     if (action == null || !mounted) return;
@@ -1242,6 +1243,11 @@ extension _EditorActions on _NoteEditorScreenState {
   /// Sürüm geçmişi (F4.2): seçilen sürüme dönmeden önce bugünkü hâl de
   /// sürüm olarak saklanır — dönüş de geri alınabilir.
   Future<void> _openHistory() async {
+    // PL6 kapısı: kilitliyse geçmiş yerine Pro ekranı (satır menüde kalır).
+    if (!ref.read(proFeatureProvider(ProFeature.versionHistory))) {
+      openProScreen(context);
+      return;
+    }
     final repo = _notesRepo;
     final note = _note;
     if (repo == null || note == null) return;

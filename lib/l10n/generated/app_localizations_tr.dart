@@ -9241,6 +9241,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proRowOwnKey => 'Kendi Gemini anahtarın';
 
   @override
+  String get proLockedBadge => 'Ömür boyu ve Pro katmanında';
+
+  @override
   String get proBuyTitle => 'Satın al';
 
   @override
@@ -9455,6 +9458,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupWithPassword => 'Şifreli yedekle';
+
+  @override
+  String get backupPasswordProLocked =>
+      'Parolalı yedek Ömür boyu ve Pro katmanında. Parolasız yedek ücretsiz; şifreli bir yedeği geri yüklemek her katmanda serbest.';
+
+  @override
+  String get backupSeeTiers => 'Katmanları gör';
 
   @override
   String get backupEnterPasswordTitle => 'Şifreli yedek';

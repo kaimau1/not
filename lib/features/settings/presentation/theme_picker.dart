@@ -9,9 +9,25 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
+import '../../entitlement/data/entitlement_service.dart';
+import '../../entitlement/domain/entitlement.dart';
+import '../../entitlement/presentation/pro_lock.dart';
 import '../settings_providers.dart';
 
 typedef ThemeOption = (AppThemeChoice, String, List<ThemeData>);
+
+/// PL6 `extraAppearance` kapısı: bu tema şimdi YENİ seçim için kilitli mi.
+/// Seçili tema ve ücretsiz temel set ([AppearanceGate]) hiç kilitlenmez.
+bool themeChoiceLocked(
+  AppThemeChoice option,
+  AppThemeChoice current, {
+  required bool unlocked,
+}) => AppearanceGate.locked(
+  option.name,
+  free: AppearanceGate.freeThemes,
+  current: current.name,
+  unlocked: unlocked,
+);
 
 /// **ÜÇ GRUP** (DENEYIM_PLANI F73.4, K-D9): Sakin · Kâğıt · Canlı. Aile
 /// silinmez, yalnız sıra ve grup adı. "Koyu" Sakin'in sonunda (planın
@@ -145,6 +161,7 @@ class ThemeChoiceGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final choice = ref.watch(themeChoiceProvider);
+    final unlocked = ref.watch(proFeatureProvider(ProFeature.extraAppearance));
     final groups = themeChoiceGroups(context, ref.watch(appFontProvider));
     // Dar ekranda üçlü sıralar, ortada altı, genişte dokuz sütun.
     return LayoutBuilder(
@@ -175,9 +192,22 @@ class ThemeChoiceGrid extends ConsumerWidget {
                         label: option.$2,
                         themes: option.$3,
                         selected: choice == option.$1,
-                        onTap: () => ref
-                            .read(themeChoiceProvider.notifier)
-                            .set(option.$1),
+                        locked: themeChoiceLocked(
+                          option.$1,
+                          choice,
+                          unlocked: unlocked,
+                        ),
+                        onTap: () {
+                          if (themeChoiceLocked(
+                            option.$1,
+                            choice,
+                            unlocked: unlocked,
+                          )) {
+                            openProScreen(context);
+                            return;
+                          }
+                          ref.read(themeChoiceProvider.notifier).set(option.$1);
+                        },
                       ),
                     ),
                 ],
@@ -244,6 +274,7 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final choice = ref.watch(themeChoiceProvider);
+    final unlocked = ref.watch(proFeatureProvider(ProFeature.extraAppearance));
     final options = themeChoiceOptions(context, ref.watch(appFontProvider));
     return SafeArea(
       top: false,
@@ -302,8 +333,23 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
                       label: o.$2,
                       themes: o.$3,
                       selected: o.$1 == choice,
-                      onTap: () =>
-                          ref.read(themeChoiceProvider.notifier).set(o.$1),
+                      locked: themeChoiceLocked(
+                        o.$1,
+                        choice,
+                        unlocked: unlocked,
+                      ),
+                      onTap: () {
+                        if (themeChoiceLocked(
+                          o.$1,
+                          choice,
+                          unlocked: unlocked,
+                        )) {
+                          // Levha kapanır (seçim değişmedi: "Vazgeç" gerekmez).
+                          openProScreen(context, popFirst: true);
+                          return;
+                        }
+                        ref.read(themeChoiceProvider.notifier).set(o.$1);
+                      },
                     ),
                   );
                 },
@@ -326,12 +372,16 @@ class ThemeChoiceCard extends StatelessWidget {
     required this.themes,
     required this.selected,
     required this.onTap,
+    this.locked = false,
   });
 
   final String label;
   final List<ThemeData> themes;
   final bool selected;
   final VoidCallback onTap;
+
+  /// PL6: yeni seçim için kilitli (köşede kilit; dokunuş Pro ekranına gider).
+  final bool locked;
 
   Widget _preview(ThemeData theme) {
     final c = theme.colorScheme;
@@ -400,6 +450,16 @@ class ThemeChoiceCard extends StatelessWidget {
                         for (final t in themes) Expanded(child: _preview(t)),
                       ],
                     ),
+                    if (locked && !selected)
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: CircleAvatar(
+                          radius: 9,
+                          backgroundColor: scheme.surface,
+                          child: const ProLockBadge(size: 11),
+                        ),
+                      ),
                     if (selected)
                       Positioned(
                         right: 4,

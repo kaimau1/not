@@ -206,6 +206,10 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   takılır → testte önce `container.listen`.
 - **Eski `users/{uid}.premiumUntil`**: kişisel APK'da aynen; Play'de `premiumProvider` = hak belgesindeki Pro
   (P85, 2026-11-20).
+## Katman kapıları — PL6 kalanı (2026-11-23, P98; Play'de/cihazda denenmedi)
+- Kapı okuma `proFeatureProvider(ProFeature.x)`; kilitli öğe GİZLENMEZ: `ProLockBadge` + dokununca `openProScreen` (`/premium`). `MenuAction.badge` artık karoda da çizilir.
+- `versionHistory`: not ⋮ "Sürüm geçmişi" satırı; `encryptedBackup`: parola penceresi (kilitliyken alan yok, "Parolasız yedekle" kalır; `exportFullBackup` savunma kontrolü); geri yükleme (`restoreBackup`) kapısız. `extraAppearance`: `AppearanceGate` (Sistem/Adaçayı/Koyu + `Inter Tight`; SEÇİLİ olan kilitlenmez); kapsam yalnız uygulama teması + yazı tipi — not başına tema/renk/yazı tipi ve kart gösterim anahtarları dokunulmadı (sabah bakılacak: temel set sınırı).
+- Test: `test/pl6_gates_test.dart` (kapıyı `proFeatureProvider` override eder; Play define'ı gerekmez).
 ## Satın alma — PL6 (2026-11-20, P85; Play'de denenmedi)
 - **Yazan yalnız Function:** `functions/billing.js` `verifyPurchase` (onCall, App Check) + `playRtdn` (Pub/Sub);
   `index.js` YALNIZ `PLAY_PACKAGE_NAME` varken bağlar — kişisel proje deploy'una girmez. Gizli anahtar yok (ADC +

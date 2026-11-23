@@ -9253,6 +9253,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proRowOwnKey => 'Your own Gemini key';
 
   @override
+  String get proLockedBadge => 'In the Lifetime and Pro tiers';
+
+  @override
   String get proBuyTitle => 'Buy';
 
   @override
@@ -9466,6 +9469,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupWithPassword => 'Encrypt & back up';
+
+  @override
+  String get backupPasswordProLocked =>
+      'Password-protected backup is in the Lifetime and Pro tiers. Backup without a password is free; restoring an encrypted backup is always free.';
+
+  @override
+  String get backupSeeTiers => 'See tiers';
 
   @override
   String get backupEnterPasswordTitle => 'Encrypted backup';

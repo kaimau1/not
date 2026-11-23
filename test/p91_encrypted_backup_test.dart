@@ -4,7 +4,10 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/entitlement/data/entitlement_service.dart';
+import 'package:notlar/features/entitlement/domain/entitlement.dart';
 import 'package:notlar/features/notes/data/backup_files.dart';
 import 'package:notlar/features/notes/data/backup_service.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
@@ -128,18 +131,27 @@ void main() {
       'showBackupExportPasswordDialog uyuşmazlığı yakalar ve parolalı/parolasız döner',
       (tester) async {
         ({String? password})? result;
+        // Pencere PL6 kapısını (proFeatureProvider) okur → ProviderScope; kapı
+        // açık verilir (Play derlemesinde de parola alanları görünsün).
         await tester.pumpWidget(
-          MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            locale: const Locale('tr'),
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: ElevatedButton(
-                  onPressed: () async {
-                    result = await showBackupExportPasswordDialog(context);
-                  },
-                  child: const Text('Aç'),
+          ProviderScope(
+            overrides: [
+              proFeatureProvider(
+                ProFeature.encryptedBackup,
+              ).overrideWithValue(true),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              locale: const Locale('tr'),
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () async {
+                      result = await showBackupExportPasswordDialog(context);
+                    },
+                    child: const Text('Aç'),
+                  ),
                 ),
               ),
             ),

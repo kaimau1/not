@@ -16382,6 +16382,12 @@ abstract class AppLocalizations {
   /// **'Kendi Gemini anahtarın'**
   String get proRowOwnKey;
 
+  /// No description provided for @proLockedBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ömür boyu ve Pro katmanında'**
+  String get proLockedBadge;
+
   /// No description provided for @proBuyTitle.
   ///
   /// In tr, this message translates to:
@@ -16753,6 +16759,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Şifreli yedekle'**
   String get backupWithPassword;
+
+  /// No description provided for @backupPasswordProLocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Parolalı yedek Ömür boyu ve Pro katmanında. Parolasız yedek ücretsiz; şifreli bir yedeği geri yüklemek her katmanda serbest.'**
+  String get backupPasswordProLocked;
+
+  /// No description provided for @backupSeeTiers.
+  ///
+  /// In tr, this message translates to:
+  /// **'Katmanları gör'**
+  String get backupSeeTiers;
 
   /// No description provided for @backupEnterPasswordTitle.
   ///

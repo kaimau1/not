@@ -585,6 +585,9 @@ Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
       return Consumer(
         builder: (context, ref, _) {
           final current = ref.watch(appFontProvider);
+          final unlocked = ref.watch(
+            proFeatureProvider(ProFeature.extraAppearance),
+          );
           return SafeArea(
             top: false,
             child: Padding(
@@ -635,9 +638,20 @@ Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
                           key: ValueKey('font-sheet-${kCatalogFonts[i].id}'),
                           font: kCatalogFonts[i],
                           selected: kCatalogFonts[i].id == current,
-                          onTap: () => ref
-                              .read(appFontProvider.notifier)
-                              .set(kCatalogFonts[i].id!),
+                          locked: appFontLocked(
+                            kCatalogFonts[i].id!,
+                            current,
+                            unlocked: unlocked,
+                          ),
+                          onTap: () {
+                            final id = kCatalogFonts[i].id!;
+                            if (appFontLocked(id, current, unlocked: unlocked)) {
+                              // Levha kapanır (seçim değişmedi).
+                              openProScreen(context, popFirst: true);
+                              return;
+                            }
+                            ref.read(appFontProvider.notifier).set(id);
+                          },
                         ),
                       ),
                     ),
@@ -652,6 +666,16 @@ Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
   ).whenComplete(scroll.dispose);
 }
 
+/// PL6 `extraAppearance` kapısı: bu yazı tipi şimdi YENİ seçim için kilitli mi.
+/// Seçili yazı tipi ve ücretsiz temel set ([AppearanceGate]) kilitlenmez.
+bool appFontLocked(String id, String current, {required bool unlocked}) =>
+    AppearanceGate.locked(
+      id,
+      free: AppearanceGate.freeFonts,
+      current: current,
+      unlocked: unlocked,
+    );
+
 /// Tek yazı tipi seçeneği: kendi yazı tipiyle "Aa" + ad ([ThemeChoiceCard]'ın
 /// çerçevesiyle aynı).
 class _FontChoiceCard extends StatelessWidget {
@@ -660,11 +684,15 @@ class _FontChoiceCard extends StatelessWidget {
     required this.font,
     required this.selected,
     required this.onTap,
+    this.locked = false,
   });
 
   final NoteFontOption font;
   final bool selected;
   final VoidCallback onTap;
+
+  /// PL6 `extraAppearance`: yeni seçim için kilitli (köşede kilit).
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -689,12 +717,21 @@ class _FontChoiceCard extends StatelessWidget {
                   width: selected ? 2.5 : 1,
                 ),
               ),
-              child: Text(
-                'Aa',
-                style: applyNoteFont(
-                  TextStyle(fontSize: 26, color: scheme.onSurface),
-                  font.id,
-                ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Center(
+                    child: Text(
+                      'Aa',
+                      style: applyNoteFont(
+                        TextStyle(fontSize: 26, color: scheme.onSurface),
+                        font.id,
+                      ),
+                    ),
+                  ),
+                  if (locked && !selected)
+                    const Positioned(right: 4, top: 4, child: ProLockBadge()),
+                ],
               ),
             ),
             const SizedBox(height: 6),

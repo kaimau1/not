@@ -19,6 +19,9 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../entitlement/data/entitlement_service.dart';
+import '../../entitlement/domain/entitlement.dart';
+import '../../entitlement/presentation/pro_lock.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/backup_files.dart';
@@ -106,6 +109,14 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
   final choice = await showBackupExportPasswordDialog(context);
   if (choice == null || !context.mounted) return;
   final password = choice.password;
+  // PL6 `encryptedBackup` kapısı (savunma): pencere kilitliyken parola
+  // döndürmez; yine de gelirse parolalı yedek yazılmaz. Parolasız yedek ve
+  // şifreli yedeği GERİ YÜKLEME (restoreBackup) kapısızdır.
+  if (password != null &&
+      !ref.read(proFeatureProvider(ProFeature.encryptedBackup))) {
+    openProScreen(context);
+    return;
+  }
   final folders = ref.read(foldersStreamProvider).value ?? const [];
   final name = backupFileName();
   try {
@@ -336,14 +347,15 @@ Future<String?> showBackupRestorePasswordDialog(BuildContext context) =>
       builder: (_) => const _RestorePasswordDialog(),
     );
 
-class _ExportPasswordDialog extends StatefulWidget {
+class _ExportPasswordDialog extends ConsumerStatefulWidget {
   const _ExportPasswordDialog();
 
   @override
-  State<_ExportPasswordDialog> createState() => _ExportPasswordDialogState();
+  ConsumerState<_ExportPasswordDialog> createState() =>
+      _ExportPasswordDialogState();
 }
 
-class _ExportPasswordDialogState extends State<_ExportPasswordDialog> {
+class _ExportPasswordDialogState extends ConsumerState<_ExportPasswordDialog> {
   final _pass = TextEditingController();
   final _confirm = TextEditingController();
   bool _obscure = true;
@@ -373,6 +385,9 @@ class _ExportPasswordDialogState extends State<_ExportPasswordDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    // PL6: parolalı yedek kilitliyse alanlar gizlenir, "Parolasız yedekle"
+    // kalır, şifreli düğme kilit taşıyıp Pro ekranına götürür.
+    final unlocked = ref.watch(proFeatureProvider(ProFeature.encryptedBackup));
     return AlertDialog(
       title: Text(l10n.backupPasswordTitle),
       content: Column(
@@ -380,37 +395,42 @@ class _ExportPasswordDialogState extends State<_ExportPasswordDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: AppSpace.s,
         children: [
-          Text(l10n.backupPasswordInfo, style: AppText.of(theme).meta),
-          TextField(
-            key: const ValueKey('backup-export-pass'),
-            controller: _pass,
-            obscureText: _obscure,
-            onChanged: (_) {
-              if (_error != null) setState(() => _error = null);
-            },
-            decoration: InputDecoration(
-              labelText: l10n.backupPasswordHint,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+          Text(
+            unlocked ? l10n.backupPasswordInfo : l10n.backupPasswordProLocked,
+            style: AppText.of(theme).meta,
+          ),
+          if (unlocked) ...[
+            TextField(
+              key: const ValueKey('backup-export-pass'),
+              controller: _pass,
+              obscureText: _obscure,
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
+              decoration: InputDecoration(
+                labelText: l10n.backupPasswordHint,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  ),
+                  onPressed: () => setState(() => _obscure = !_obscure),
                 ),
-                onPressed: () => setState(() => _obscure = !_obscure),
               ),
             ),
-          ),
-          TextField(
-            key: const ValueKey('backup-export-pass-confirm'),
-            controller: _confirm,
-            obscureText: _obscure,
-            onChanged: (_) {
-              if (_error != null) setState(() => _error = null);
-            },
-            onSubmitted: (_) => _submitEncrypted(),
-            decoration: InputDecoration(
-              labelText: l10n.backupPasswordConfirmHint,
-              errorText: _error,
+            TextField(
+              key: const ValueKey('backup-export-pass-confirm'),
+              controller: _confirm,
+              obscureText: _obscure,
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
+              onSubmitted: (_) => _submitEncrypted(),
+              decoration: InputDecoration(
+                labelText: l10n.backupPasswordConfirmHint,
+                errorText: _error,
+              ),
             ),
-          ),
+          ],
         ],
       ),
       actions: [
@@ -419,11 +439,19 @@ class _ExportPasswordDialogState extends State<_ExportPasswordDialog> {
           onPressed: () => Navigator.pop(context, (password: null)),
           child: Text(l10n.backupWithoutPassword),
         ),
-        FilledButton(
-          key: const ValueKey('backup-export-with-pass'),
-          onPressed: _submitEncrypted,
-          child: Text(l10n.backupWithPassword),
-        ),
+        if (unlocked)
+          FilledButton(
+            key: const ValueKey('backup-export-with-pass'),
+            onPressed: _submitEncrypted,
+            child: Text(l10n.backupWithPassword),
+          )
+        else
+          FilledButton.icon(
+            key: const ValueKey('backup-export-pro'),
+            onPressed: () => openProScreen(context, popFirst: true),
+            icon: const Icon(Icons.lock_outline, size: AppIconSize.s),
+            label: Text(l10n.backupSeeTiers),
+          ),
       ],
     );
   }
