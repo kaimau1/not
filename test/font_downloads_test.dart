@@ -186,7 +186,10 @@ void main() {
       expect(requests, isEmpty);
 
       applyNoteFont(const TextStyle(), 'Lato');
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+      // Yük altında dosya IO'su yavaşlayabilir: sabit bekleme yerine bekleyiş.
+      for (var i = 0; i < 300 && !d.isReady('Lato'); i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
       expect(d.isReady('Lato'), isTrue);
     },
   );
