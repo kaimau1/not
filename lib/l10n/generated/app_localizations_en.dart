@@ -5513,7 +5513,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guestReminderBody =>
-      'You are using the app without an account: your notes live only on this device, and built-in AI and sharing are off. If the app is removed or you change phones they cannot be recovered. Link your Google account — your notes stay as they are.';
+      'You are using the app without an account: your notes live only on this device, and built-in AI and sharing are off. If app or browser data is cleared or you change devices they cannot be recovered. Link your Google account — your notes stay as they are.';
 
   @override
   String get guestReminderLater => 'Later';

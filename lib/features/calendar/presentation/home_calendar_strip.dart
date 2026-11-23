@@ -305,44 +305,48 @@ class _DayCell extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // 1. satır: gün (bugün dolgulu hap, ay başında kısa ay adı).
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpace.xs,
-                      ),
-                      decoration: isToday
-                          ? BoxDecoration(
-                              color: scheme.primary,
-                              borderRadius: BorderRadius.circular(AppRadius.s),
-                            )
-                          : null,
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            if (wide)
-                              TextSpan(
-                                text: '$weekday ',
-                                style: text.badge.copyWith(
-                                  fontWeight: AppWeight.regular,
-                                ),
-                              ),
-                            TextSpan(text: '${day.day}'),
-                            if (monthShort != null)
-                              TextSpan(
-                                text: ' $monthShort',
-                                style: text.badge.copyWith(
-                                  fontWeight: AppWeight.medium,
-                                ),
-                              ),
-                          ],
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.xs,
                         ),
-                        maxLines: 1,
-                        style: text.label.copyWith(
-                          fontWeight: AppWeight.strong,
-                          color: numberColor,
-                          height: 1.2,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                        decoration: isToday
+                            ? BoxDecoration(
+                                color: scheme.primary,
+                                borderRadius: BorderRadius.circular(AppRadius.s),
+                              )
+                            : null,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              if (wide)
+                                TextSpan(
+                                  text: '$weekday ',
+                                  style: text.badge.copyWith(
+                                    fontWeight: AppWeight.regular,
+                                    color: numberColor,
+                                  ),
+                                ),
+                              TextSpan(text: '${day.day}'),
+                              if (monthShort != null)
+                                TextSpan(
+                                  text: ' $monthShort',
+                                  style: text.badge.copyWith(
+                                    fontWeight: AppWeight.medium,
+                                    color: numberColor,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          style: text.label.copyWith(
+                            fontWeight: AppWeight.strong,
+                            color: numberColor,
+                            height: 1.2,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
                       ),
                     ),

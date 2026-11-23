@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ import '../../../core/widgets/back_closes.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/sentence_select.dart' show lastPointerIsMouse;
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -322,7 +324,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   void _maybePinchHint() {
-    if (!mounted || _view == CalendarView.agenda) return;
+    if (!mounted ||
+        _view == CalendarView.agenda ||
+        kIsWeb ||
+        lastPointerIsMouse()) {
+      return;
+    }
     try {
       final prefs = ref.read(sharedPreferencesProvider);
       if (prefs.getBool(_kPinchHintPref) ?? false) return;

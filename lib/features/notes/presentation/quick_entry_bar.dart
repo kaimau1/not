@@ -479,6 +479,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
             style: text.rowTitle,
             decoration: InputDecoration(
               hintText: widget.hint ?? l10n.quickEntryHint,
+              filled: false,
               border: InputBorder.none,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: AppSpace.m),

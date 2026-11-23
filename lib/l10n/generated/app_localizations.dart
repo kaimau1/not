@@ -9863,7 +9863,7 @@ abstract class AppLocalizations {
   /// No description provided for @guestReminderBody.
   ///
   /// In tr, this message translates to:
-  /// **'Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama silinir ya da telefon değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.'**
+  /// **'Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama veya tarayıcı verisi silinirse ya da cihaz değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.'**
   String get guestReminderBody;
 
   /// No description provided for @guestReminderLater.

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -257,6 +259,23 @@ void main() {
       expect(feed.stats.mode, NotesFeedMode.delta);
       expect(feed.stats.countReads, 1);
     });
+
+    test('önbellek listen() senkron fırlatırsa eski yola döner ve notları verir', () async {
+      await seed(db, 'u1', 3);
+      final repo = NotesRepository(db, 'u1');
+      final feed = NotesDeltaFeed(
+        notesOf(db, 'u1'),
+        cacheNotes: _ThrowingCacheCollection(),
+      );
+      final emitted = <List<Note>>[];
+      final sub = repo.watchNotes(feed: feed).listen(emitted.add);
+      await settle();
+      expect(feed.stats.mode, NotesFeedMode.legacy);
+      expect(feed.stats.reason, startsWith('önbellek dinleyicisi hata:'));
+      expect(emitted, isNotEmpty);
+      expect(emitted.last, hasLength(3));
+      await sub.cancel();
+    });
   });
 
   group('iki cihaz (aynı hesap)', () {
@@ -340,4 +359,51 @@ void main() {
 extension on Timestamp {
   Timestamp minus(int hours) =>
       Timestamp.fromDate(toDate().subtract(Duration(hours: hours)));
+}
+
+// ignore: subtype_of_sealed_class
+class _ThrowingCacheCollection implements CollectionReference<Map<String, dynamic>> {
+  @override
+  Query<Map<String, dynamic>> where(
+    Object field, {
+    Object? isEqualTo,
+    Object? isNotEqualTo,
+    Object? isLessThan,
+    Object? isLessThanOrEqualTo,
+    Object? isGreaterThan,
+    Object? isGreaterThanOrEqualTo,
+    Object? arrayContains,
+    Iterable<Object?>? arrayContainsAny,
+    Iterable<Object?>? whereIn,
+    Iterable<Object?>? whereNotIn,
+    bool? isNull,
+  }) => _ThrowingCacheQuery();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+// ignore: subtype_of_sealed_class
+class _ThrowingCacheQuery implements Query<Map<String, dynamic>> {
+  @override
+  Stream<QuerySnapshot<Map<String, dynamic>>> snapshots({
+    bool includeMetadataChanges = false,
+    ListenSource source = ListenSource.defaultSource,
+  }) => _ThrowingListenStream();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _ThrowingListenStream
+    extends Stream<QuerySnapshot<Map<String, dynamic>>> {
+  @override
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>> listen(
+    void Function(QuerySnapshot<Map<String, dynamic>> event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    throw StateError('wasm cache boom');
+  }
 }

@@ -2008,7 +2008,7 @@
   "notebookViewOff": "Turn off notebook view",
   "inkSemantics": "Handwriting, {count} strokes",
   "guestReminderTitle": "Your notes are not backed up",
-  "guestReminderBody": "You are using the app without an account: your notes live only on this device, and built-in AI and sharing are off. If the app is removed or you change phones they cannot be recovered. Link your Google account — your notes stay as they are.",
+  "guestReminderBody": "You are using the app without an account: your notes live only on this device, and built-in AI and sharing are off. If app or browser data is cleared or you change devices they cannot be recovered. Link your Google account — your notes stay as they are.",
   "guestReminderLater": "Later",
   "driveWebConnectTitle": "This attachment is in your Google Drive",
   "driveWebConnectBody": "Files added on your phone are stored in Drive. To view them in the browser, allow access to Drive with your Google account (valid for this session).",

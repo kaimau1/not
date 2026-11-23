@@ -45,8 +45,9 @@ class _SpeechRateSliderState extends ConsumerState<_SpeechRateSlider> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Text(context.l10n.speechRate),
+          Expanded(child: Text(context.l10n.speechRate)),
           Expanded(
+            flex: 2,
             child: Slider(
               value: rate,
               min: 0.2,

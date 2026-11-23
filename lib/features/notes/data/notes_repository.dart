@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crypto/crypto.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -86,8 +86,11 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   // Her emisyonda değil, en fazla 30 saniyede bir çalışır.
   var lastCleanup = DateTime.fromMillisecondsSinceEpoch(0);
   // S1 "yalnız değişeni dinle": uzak bayrak + yerel geri alma; kapalıysa
-  // bugünkü yol AYNEN (bkz. NotesDeltaFeed).
-  return repo.watchNotes(delta: SyncDeltaFlag.enabled(prefs)).map((notes) {
+  // bugünkü yol AYNEN (bkz. NotesDeltaFeed). Web'de ListenSource.cache Wasm
+  // hatası verebildiğinden standart anlık görüntü akışı kullanılır.
+  return repo.watchNotes(delta: !kIsWeb && SyncDeltaFlag.enabled(prefs)).map((
+    notes,
+  ) {
     final now = DateTime.now();
     // ZAMANLI NOT: her yayında ucuz tarama (O(n), yazım yalnız süresi
     // dolmuş not varsa). Öne gelişte dashboard da çağırır.

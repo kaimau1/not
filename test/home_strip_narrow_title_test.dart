@@ -46,4 +46,53 @@ void main() {
     expect(find.text('Doktor'), findsOneWidget);
     expect(find.text('Doktor randevusu'), findsNothing);
   });
+
+  testWidgets(
+    'masaüstü geniş şeritte bugünün gün adı onPrimary renktedir ve taşma olmaz',
+    (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final theme = ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F5C54)),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: theme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(1.25),
+              ),
+              child: Scaffold(
+                body: HomeCalendarStripView(
+                  today: DateTime(2026, 11, 23),
+                  onDayTap: (_) {},
+                  onCollapse: () {},
+                  data: const CalendarData(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      final todayPill = find.byWidgetPredicate(
+        (w) =>
+            w is Container &&
+            w.decoration is BoxDecoration &&
+            (w.decoration! as BoxDecoration).color == theme.colorScheme.primary,
+      );
+      expect(todayPill, findsOneWidget);
+      final textWidget = tester.widget<Text>(
+        find.descendant(of: todayPill, matching: find.byType(Text)),
+      );
+      final rootSpan = textWidget.textSpan! as TextSpan;
+      final weekdaySpan = rootSpan.children!.first as TextSpan;
+      expect(weekdaySpan.style?.color, theme.colorScheme.onPrimary);
+    },
+  );
 }

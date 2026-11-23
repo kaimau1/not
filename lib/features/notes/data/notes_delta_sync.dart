@@ -222,21 +222,25 @@ class NotesDeltaFeed {
     out = StreamController<NotesFeedEvent>(
       onListen: () {
         var first = true;
-        cacheSub = _cacheNotes
-            .where('deletedAt', isNull: true)
-            .snapshots(source: cacheSource)
-            .listen(
-              (s) {
-                if (legacy) return;
-                if (!planned) {
-                  plan(s);
+        try {
+          cacheSub = _cacheNotes
+              .where('deletedAt', isNull: true)
+              .snapshots(source: cacheSource)
+              .listen(
+                (s) {
                   if (legacy) return;
-                }
-                out.add(NotesFeedEvent(s, reset: first));
-                first = false;
-              },
-              onError: (Object e) => toLegacy('önbellek dinleyicisi hata: $e'),
-            );
+                  if (!planned) {
+                    plan(s);
+                    if (legacy) return;
+                  }
+                  out.add(NotesFeedEvent(s, reset: first));
+                  first = false;
+                },
+                onError: (Object e) => toLegacy('önbellek dinleyicisi hata: $e'),
+              );
+        } catch (e) {
+          toLegacy('önbellek dinleyicisi hata: $e');
+        }
         // İlk görüntü eşzamanlı geldiyse ve eski yola dönüldüyse.
         if (legacy) unawaited(cacheSub?.cancel());
       },

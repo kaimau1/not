@@ -5494,7 +5494,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get guestReminderBody =>
-      'Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama silinir ya da telefon değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.';
+      'Hesapsız kullanıyorsun: notların yalnız bu cihazda, dahili yapay zekâ ve paylaşım kapalı. Uygulama veya tarayıcı verisi silinirse ya da cihaz değişirse notlar geri getirilemez. Google hesabını bağla — notların olduğu gibi kalır.';
 
   @override
   String get guestReminderLater => 'Sonra';
