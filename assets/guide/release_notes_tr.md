@@ -2,6 +2,13 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 24 Kasım 2026 {#2026-11-24}
+- **Tabloda biçim paneli çalışıyor, hücre hücre:** bir hücreye dokunup biçim panelini açınca kalın, italik, altı çizili, renk, vurgu, başlık ve boyut yalnız o hücreye uygulanır (eskiden başka bir maddeye gidiyordu). Panelde hücre açıkken yeni **Sola · Ortala · Sağa** düğmeleri var; her hücrenin hizası ayrı tutulur ve görsel/PDF/Word paylaşımında da korunur.
+- **Tablo maddelerin üstüne binmiyor, maddeyi bölmüyor:** sayfayı kaplayan tablo bir maddenin ortasına denk gelince madde artık ikiye bölünmüyor, bütünüyle tablonun altına iniyor; paketlenmiş maddelerin etiketi de tablonun altına geçiyor.
+- **Satır eklerken titreme giderildi:** tabloya satır eklerken kutu ve alttaki maddeler aynı anda kayıyor; maddeler aşağı-yukarı sekmiyor.
+- **Araçlar hızlı menüde:** **Hesap makinesi**, **Notta ara**, **Sesli dinle** ve **Not istatistikleri** yazarken üstteki hızlı menünün ⋯'sinde; istersen **Hızlı menüyü düzenle**'den satıra alabilirsin.
+- **Menülerde arama:** not menüsü gibi kalabalık menülerin başlığındaki 🔍 ile (hızlı menünün ⋯'sinde de üstte kutu) işlem ara. Yalnız adla değil işleviyle de bulur: "topla" → Hesap makinesi, "whatsapp" → Paylaş, "şifre" → Kilitle; İngilizce, Almanca, Fransızca, İspanyolca, İtalyanca, Portekizce, Felemenkçe, Rusça ve Arapça sözcükler de tutar, küçük yazım hataları sorun olmaz. Klavyedeki ara tuşu ilk sonucu açar.
+
 ## 23 Kasım 2026 {#2026-11-23}
 - **Tablo ekle:** **Ekle** levhasında, alt panelin ve hızlı menünün ⋯'sinde yeni **Tablo**: 3 satır × 2 sütunla gelir, yazdığın satıra yerleşir ve ilk hücre hemen yazmaya açılır. Her karenin kendi yazısı var: hücreye dokun, yaz; klavyedeki **İleri** sonraki hücreye geçer, son hücrede yeni satır açar; **+ Satır ekle** ile istediğin kadar satır. ⚙ **Tablo ayarları**'nda satır ve sütun sayısı −/+ ile anında değişir (yazılı satır/sütun silinecekse önce sorar), ilk satır başlık, altına satır ekle, satırı sil, sütunları eşitle. Hücre yazarken sütun aralarındaki tutamaçları sürükleyerek genişlik ayarlanır. Görsel gibi **Sabit** (üstte, yazarken de açık), **Yüzen** (sayfada; basılı tutup taşı, köşeden boyutlandır) ya da **Ek** (şeritte; dokununca tam ekranda açılır ve yazılır) olabilir. **Görsel**, **PDF** ya da **Word** olarak paylaşılır; notun PDF'ine ve Word çıktısına da girer (Word'de gerçek, düzenlenebilir tablo). Hücrelere yazarken editör baştan kurulmaz.
 - **Gün ekle:** bugünün tarihini **22/11/2026** biçiminde tek dokunuşla imlecin olduğu yere (gövde, madde ya da tablo hücresi) yazar. Hızlı menünün ve alt panelin ⋯'sinde; istersen **Hızlı menüyü düzenle**'den satıra alabilirsin.

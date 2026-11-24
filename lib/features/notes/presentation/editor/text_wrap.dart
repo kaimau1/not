@@ -74,7 +74,13 @@ class FloatBox {
     required this.left,
     required this.right,
     required this.height,
+    this.block = false,
   });
+
+  /// Yanında okunur yer bırakmayan kutu: liste maddesi etrafından bölünerek
+  /// akmaz, satırın tamamı altına iner (bkz. `_FloatRow`); gövde metni yine
+  /// satır satır akar.
+  final bool block;
 
   /// Gövde metninin ilk satırının tepesinden uzaklık (dp). Negatif olabilir —
   /// görsel metnin başlamasından önce başlıyorsa ilk satırları da keser.
@@ -96,7 +102,8 @@ bool sameFloatList(List<FloatBox> a, List<FloatBox> b) {
     if (a[i].top != b[i].top ||
         a[i].left != b[i].left ||
         a[i].right != b[i].right ||
-        a[i].height != b[i].height) {
+        a[i].height != b[i].height ||
+        a[i].block != b[i].block) {
       return false;
     }
   }
@@ -1128,7 +1135,10 @@ class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
           // bant zaten hiçbir satırı kesmediği için tek bir dolgu bile üretmez.
           if (f.bottom > origin.dy &&
               f.right > origin.dx &&
-              (widget.minTop == null || f.top - textOrigin >= widget.minTop!))
+              // Liste maddesinde (minTop) BLOK kutu alanın planına girmez:
+              // satırın tamamı onun altına iner (`_FloatRow`), madde bölünmez.
+              (widget.minTop == null ||
+                  (!f.block && f.top - textOrigin >= widget.minTop!)))
             FloatBox(
               top: f.top - textOrigin,
               left: (f.left - origin.dx).clamp(0.0, width).toDouble(),

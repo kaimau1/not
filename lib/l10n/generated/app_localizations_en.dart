@@ -7758,6 +7758,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get menuSearchHint => 'Search by name or function (e.g. sum, share)';
+
+  @override
+  String get menuSearchEmpty => 'No matching action';
+
+  @override
   String get menuEdit => 'Edit menu';
 
   @override

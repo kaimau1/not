@@ -58,6 +58,41 @@ class _FloatRow extends StatefulWidget {
   State<_FloatRow> createState() => _FloatRowState();
 }
 
+/// **AYNI KAREDEKİ KAYMALAR** (kullanıcı bulgusu 2026-11-23: "satır eklerken
+/// maddeler yukarı çıkarken titreme"). KÖK NEDEN: satırlar aynı kare sonunda
+/// sırayla ölçülüyor; üstteki satır kendini aşağı ittiğinde alttaki henüz
+/// ESKİ yerinden ölçüyor, o da bandın içinde sanıp kendini itiyordu — bir
+/// sonraki karede fazla itme geri alınıyor, maddeler aşağı-yukarı
+/// sekiyordu. Kare içinde verilen her dikey kayma burada birikir; alttaki
+/// satır kendi yerine onu ekleyerek ölçer.
+abstract final class _FrameShifts {
+  static Duration? _frame;
+  static final List<(double, double)> _shifts = [];
+
+  static void _sync() {
+    final now = SchedulerBinding.instance.currentFrameTimeStamp;
+    if (_frame != now) {
+      _frame = now;
+      _shifts.clear();
+    }
+  }
+
+  /// [y]'nin üstünde bu karede verilmiş kaymaların toplamı.
+  static double above(double y) {
+    _sync();
+    var sum = 0.0;
+    for (final (at, d) in _shifts) {
+      if (at < y) sum += d;
+    }
+    return sum;
+  }
+
+  static void add(double y, double delta) {
+    _sync();
+    if (delta.abs() > 0.5) _shifts.add((y, delta));
+  }
+}
+
 /// Bir madde satırının metnine bırakılacak en az genişlik (dp) — yaklaşık
 /// 8-10 karakter. Bundan darına sıkışan metin harf harf kırılır.
 const double _kMinRowTextWidth = 72;
@@ -111,7 +146,9 @@ class _FloatRowState extends State<_FloatRow> {
     if (box is! RenderBox || !box.hasSize || page == null || !page.hasSize) {
       return;
     }
-    final origin = box.localToGlobal(Offset.zero, ancestor: page);
+    final measured = box.localToGlobal(Offset.zero, ancestor: page);
+    // Üstteki satırların bu karede verdiği (henüz çizilmemiş) kaymalar.
+    final origin = measured.translate(0, _FrameShifts.above(measured.dy));
     final width = box.size.width;
     // Kesişme HER ZAMAN satırın itilmemiş bandıyla ölçülür: kutu kendi üst
     // dolgusunu da içerdiğinden `box.size.height` kullanmak, itildikçe bandı
@@ -124,7 +161,9 @@ class _FloatRowState extends State<_FloatRow> {
         ? widget.floats
         : [
             for (final f in widget.floats)
-              if (f.top < origin.dy + _top + inline) f,
+              // BLOK kutu satırın içinde başlasa da satırı bütünüyle iter
+              // (madde bölünmez; alan planı onu almaz — `WrapFieldMeasure`).
+              if (f.block || f.top < origin.dy + _top + inline) f,
           ];
     var start = 0.0;
     var end = 0.0;
@@ -152,7 +191,15 @@ class _FloatRowState extends State<_FloatRow> {
       _kMinRowTextWidth,
       (width - widget.reserved) * 0.25,
     );
-    if (widget.pushOnly || textWidth < minTextWidth) {
+    final blocked = floats.any(
+      (f) =>
+          f.block &&
+          f.bottom > origin.dy &&
+          f.top < bottom &&
+          f.right - origin.dx > 0 &&
+          f.left - origin.dx < width,
+    );
+    if (widget.pushOnly || blocked || textWidth < minTextWidth) {
       // Yana kaçacak yer yok. Gövde metninde bu durumda satır boşaltılır ve
       // metin görselin ALTINA iner (text_wrap.dart `_kMinUsableFraction`);
       // liste maddesinde karşılığı satırı aşağı itmektir. Eskiden satır pes
@@ -167,6 +214,7 @@ class _FloatRowState extends State<_FloatRow> {
       }
     }
     widget.onMeasured?.call((start: start, end: end, top: top));
+    _FrameShifts.add(measured.dy, top - _top);
     if ((start - _start).abs() > 0.5 ||
         (end - _end).abs() > 0.5 ||
         (top - _top).abs() > 0.5) {

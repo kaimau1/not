@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/utils/rich_text.dart' show stripRichMarkers;
 import 'attachment.dart';
 
 /// **TABLO** (kullanıcı isteği 2026-11-23: "2, 3, 4 sütunluk tablolar
@@ -30,6 +31,24 @@ const kTableMaxRows = 300;
 /// Sütun en az bu oranda kalır (sürükleyerek daraltırken).
 const kTableMinColumnFrac = 0.12;
 
+/// Hücre hizası (kullanıcı isteği 2026-11-23: "ortala, sağa yasla, sola
+/// yasla seçenekleri olmalı" — her hücre TEK TEK). Kayıtta harf: `l` sola,
+/// `c` orta, `r` sağa.
+enum CellAlign {
+  start('l'),
+  center('c'),
+  end('r');
+
+  const CellAlign(this.code);
+  final String code;
+
+  static CellAlign of(String code) => switch (code) {
+    'c' => CellAlign.center,
+    'r' => CellAlign.end,
+    _ => CellAlign.start,
+  };
+}
+
 bool isNoteTable(Attachment a) =>
     a.kind == AttachmentKind.text && a.extras[kTableExtra] is Map;
 
@@ -39,6 +58,7 @@ class NoteTable {
     required int columns,
     required List<String> cells,
     List<double>? widths,
+    String? aligns,
     this.header = true,
   }) : columns = columns.clamp(1, kTableMaxColumns),
        cells = List.unmodifiable(
@@ -46,6 +66,10 @@ class NoteTable {
        ),
        widths = List.unmodifiable(
          _normalize(widths, columns.clamp(1, kTableMaxColumns)),
+       ),
+       aligns = _fitAligns(
+         aligns,
+         _fit(cells, columns.clamp(1, kTableMaxColumns)).length,
        );
 
   /// [columns] sütunlu, [rows] satırlı boş tablo.
@@ -65,9 +89,42 @@ class NoteTable {
   /// İlk satır başlık mı (kalın, tonlu zemin).
   final bool header;
 
+  /// Hücre hizaları, hücre başına bir harf ([CellAlign.code]); hepsi sola
+  /// ise boş dize (kayda yazılmaz).
+  final String aligns;
+
   int get rows => cells.length ~/ columns;
 
   String cell(int row, int column) => cells[row * columns + column];
+
+  /// Hücrenin biçim işaretsiz yazısı (dışa aktarma, Markdown, paylaşım):
+  /// hücreler biçim paneliyle kalın/renkli yazılabilir (2026-11-23).
+  String plainCell(int row, int column) => stripRichMarkers(cell(row, column));
+
+  CellAlign alignOf(int row, int column) {
+    if (aligns.isEmpty) return CellAlign.start;
+    return CellAlign.of(aligns[row * columns + column]);
+  }
+
+  NoteTable withAlign(int row, int column, CellAlign align) {
+    final i = row * columns + column;
+    if (i < 0 || i >= cells.length || alignOf(row, column) == align) {
+      return this;
+    }
+    final chars = (aligns.isEmpty ? 'l' * cells.length : aligns).split('');
+    chars[i] = align.code;
+    return _with(aligns: chars.join());
+  }
+
+  /// Satır [at]'e [count] satırlık hiza harfi ekler/çıkarır (yapı işleri).
+  String _alignsWithRows(int at, int count, {bool remove = false}) {
+    if (aligns.isEmpty) return '';
+    final i = at * columns;
+    if (remove) {
+      return aligns.replaceRange(i, i + count * columns, '');
+    }
+    return aligns.replaceRange(i, i, 'l' * (count * columns));
+  }
 
   /// Sütunlar eşit genişlikte mi.
   bool get evenWidths => widths.every((w) => (w - 1 / columns).abs() < 0.005);
@@ -89,6 +146,7 @@ class NoteTable {
       widths: widths is List
           ? [for (final w in widths) w is num ? w.toDouble() : 0]
           : null,
+      aligns: raw['align'] is String ? raw['align'] as String : null,
       header: raw['header'] is bool ? raw['header'] as bool : true,
     );
   }
@@ -97,6 +155,7 @@ class NoteTable {
     'cols': columns,
     'cells': cells,
     if (!evenWidths) 'widths': [for (final w in widths) _round(w)],
+    if (aligns.isNotEmpty) 'align': aligns,
     'header': header,
   };
 
@@ -106,10 +165,12 @@ class NoteTable {
     List<double>? widths,
     bool clearWidths = false,
     bool? header,
+    String? aligns,
   }) => NoteTable(
     columns: columns ?? this.columns,
     cells: cells ?? this.cells,
     widths: clearWidths ? null : (widths ?? this.widths),
+    aligns: aligns ?? this.aligns,
     header: header ?? this.header,
   );
 
@@ -122,8 +183,12 @@ class NoteTable {
   /// [at] konumuna boş satır (sona eklemek için `rows`).
   NoteTable insertRow(int at) {
     if (rows >= kTableMaxRows) return this;
-    final i = at.clamp(0, rows) * columns;
-    return _with(cells: [...cells]..insertAll(i, List.filled(columns, '')));
+    final row = at.clamp(0, rows);
+    final i = row * columns;
+    return _with(
+      cells: [...cells]..insertAll(i, List.filled(columns, '')),
+      aligns: _alignsWithRows(row, 1),
+    );
   }
 
   /// [row]'u siler; tek satır kaldıysa yalnız yazıları temizlenir.
@@ -132,6 +197,7 @@ class NoteTable {
     if (rows == 1) return _with(cells: List.filled(columns, ''));
     return _with(
       cells: [...cells]..removeRange(row * columns, (row + 1) * columns),
+      aligns: _alignsWithRows(row, 1, remove: true),
     );
   }
 
@@ -146,6 +212,13 @@ class NoteTable {
         for (var r = 0; r < rows; r++)
           for (var c = 0; c < n; c++) c < columns ? cell(r, c) : '',
       ],
+      aligns: aligns.isEmpty
+          ? null
+          : [
+              for (var r = 0; r < rows; r++)
+                for (var c = 0; c < n; c++)
+                  c < columns ? aligns[r * columns + c] : 'l',
+            ].join(),
       header: header,
     );
   }
@@ -158,6 +231,9 @@ class NoteTable {
       cells: n > rows
           ? [...cells, ...List.filled((n - rows) * columns, '')]
           : cells.sublist(0, n * columns),
+      aligns: n > rows
+          ? _alignsWithRows(rows, n - rows)
+          : _alignsWithRows(n, rows - n, remove: true),
     );
   }
 
@@ -207,7 +283,7 @@ class NoteTable {
     for (var r = 0; r < rows; r++) {
       out.write('|');
       for (var c = 0; c < columns; c++) {
-        final v = esc(cell(r, c));
+        final v = esc(plainCell(r, c));
         out.write(v.isEmpty ? '  |' : ' $v |');
       }
       out.write('\n');
@@ -230,7 +306,7 @@ class NoteTable {
           .any((c) => c.trim().isNotEmpty))
         [
           for (var c = 0; c < columns; c++)
-            cell(r, c).replaceAll('\n', ' ').trim(),
+            plainCell(r, c).replaceAll('\n', ' ').trim(),
         ].join(' | '),
   ].join('\n');
 
@@ -251,6 +327,7 @@ class NoteTable {
       other is NoteTable &&
       other.columns == columns &&
       other.header == header &&
+      other.aligns == aligns &&
       listEquals(other.cells, cells) &&
       _sameWidths(other.widths, widths);
 
@@ -270,6 +347,18 @@ class NoteTable {
     return [
       for (var i = 0; i < rows * columns; i++) i < cells.length ? cells[i] : '',
     ];
+  }
+
+  /// Hiza dizesi hücre sayısına uydurulur; hepsi sola ise boş dize.
+  static String _fitAligns(String? aligns, int count) {
+    if (aligns == null || aligns.isEmpty) return '';
+    final out = StringBuffer();
+    for (var i = 0; i < count; i++) {
+      final ch = i < aligns.length ? aligns[i] : 'l';
+      out.write(ch == 'c' || ch == 'r' ? ch : 'l');
+    }
+    final s = out.toString();
+    return s.contains(RegExp('[cr]')) ? s : '';
   }
 
   static List<double> _normalize(List<double>? widths, int columns) {

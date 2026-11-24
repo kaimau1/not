@@ -87,6 +87,14 @@ List<({String key, IconData icon, String label})> quickRowCatalog(
   ),
   (key: 'date', icon: Icons.today_outlined, label: l10n.quickRowDate),
   (key: 'dictation', icon: AppIcons.dictation, label: l10n.quickRowDictation),
+  (
+    key: 'calculator',
+    icon: Icons.calculate_outlined,
+    label: l10n.calculatorTitle,
+  ),
+  (key: 'find', icon: AppIcons.search, label: l10n.noteSearchTitle),
+  (key: 'listen', icon: AppIcons.listen, label: l10n.listenToNote),
+  (key: 'stats', icon: Icons.insights_outlined, label: l10n.noteStatsTitle),
 ];
 
 /// **HIZLI MENÜYÜ DÜZENLE** (kullanıcı isteği 2026-11-13: "hızlı menü

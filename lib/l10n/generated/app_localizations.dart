@@ -13820,6 +13820,18 @@ abstract class AppLocalizations {
   /// **'{done}/{total} adım'**
   String routineProgress(int done, int total);
 
+  /// No description provided for @menuSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ara: ad ya da işlev (ör. topla, paylaş)'**
+  String get menuSearchHint;
+
+  /// No description provided for @menuSearchEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşen işlem yok'**
+  String get menuSearchEmpty;
+
   /// No description provided for @menuEdit.
   ///
   /// In tr, this message translates to:

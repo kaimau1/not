@@ -416,6 +416,11 @@ abstract final class UiItem {
       // dolu — düzenleyiciden satıra alınır).
       'day',
       'table',
+      // Araçlar (2026-11-23): ⋯ ızgarasında, satıra düzenleyiciden.
+      'calculator',
+      'find',
+      'listen',
+      'stats',
     ])
       quickRow(k),
     // SADE "+" MENÜSÜ (kullanıcı isteği 2026-11-16: ekran görüntüsünde

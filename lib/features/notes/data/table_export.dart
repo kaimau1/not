@@ -70,8 +70,14 @@ abstract final class TableExport {
 
   // ── Görsel ──────────────────────────────────────────────────────────
 
-  static TextPainter _painter(String text, double width, {bool bold = false}) =>
+  static TextPainter _painter(
+    String text,
+    double width, {
+    bool bold = false,
+    TextAlign align = TextAlign.left,
+  }) =>
       TextPainter(
+        textAlign: align,
         text: TextSpan(
           text: text,
           style: TextStyle(
@@ -82,7 +88,7 @@ abstract final class TableExport {
           ),
         ),
         textDirection: TextDirection.ltr,
-      )..layout(maxWidth: width < 1 ? 1 : width);
+      )..layout(minWidth: width < 1 ? 1 : width, maxWidth: width < 1 ? 1 : width);
 
   /// Tablonun PNG'si ([pixelRatio] kat çözünürlükte).
   static Future<Uint8List> png(
@@ -99,9 +105,14 @@ abstract final class TableExport {
       var h = 0.0;
       for (var c = 0; c < table.columns; c++) {
         final tp = _painter(
-          table.cell(r, c),
+          table.plainCell(r, c),
           colW[c] - 2 * _cellH,
           bold: table.header && r == 0,
+          align: switch (table.alignOf(r, c)) {
+            CellAlign.center => TextAlign.center,
+            CellAlign.end => TextAlign.right,
+            CellAlign.start => TextAlign.left,
+          },
         );
         row.add(tp);
         if (tp.height > h) h = tp.height;
@@ -265,7 +276,8 @@ abstract final class TableExport {
         grid.headers.add(1);
         final head = grid.headers[0];
         for (var c = 0; c < table.columns; c++) {
-          head.cells[c].value = table.cell(0, c);
+          head.cells[c].value = table.plainCell(0, c);
+          head.cells[c].stringFormat = _pdfAlign(table.alignOf(0, c));
           head.cells[c].style = PdfGridCellStyle(
             font: strong,
             backgroundBrush: PdfSolidBrush(PdfColor(230, 238, 234)),
@@ -278,7 +290,8 @@ abstract final class TableExport {
       for (var r = first; r < table.rows; r++) {
         final row = grid.rows.add();
         for (var c = 0; c < table.columns; c++) {
-          row.cells[c].value = table.cell(r, c);
+          row.cells[c].value = table.plainCell(r, c);
+          row.cells[c].stringFormat = _pdfAlign(table.alignOf(r, c));
           row.cells[c].style = PdfGridCellStyle(
             borders: borders,
             cellPadding: padding,
@@ -291,6 +304,14 @@ abstract final class TableExport {
       doc.dispose();
     }
   }
+
+  static PdfStringFormat _pdfAlign(CellAlign a) => PdfStringFormat(
+    alignment: switch (a) {
+      CellAlign.center => PdfTextAlignment.center,
+      CellAlign.end => PdfTextAlignment.right,
+      CellAlign.start => PdfTextAlignment.left,
+    },
+  );
 
   // ── Word ────────────────────────────────────────────────────────────
 
@@ -329,8 +350,13 @@ abstract final class TableExport {
         }
         out.write('</w:tcPr>');
         // Hücredeki her satır ayrı paragraf (Word'de Enter'la aynı).
-        for (final line in table.cell(r, c).split('\n')) {
-          out.write('<w:p><w:r>');
+        final jc = switch (table.alignOf(r, c)) {
+          CellAlign.center => '<w:pPr><w:jc w:val="center"/></w:pPr>',
+          CellAlign.end => '<w:pPr><w:jc w:val="right"/></w:pPr>',
+          CellAlign.start => '',
+        };
+        for (final line in table.plainCell(r, c).split('\n')) {
+          out.write('<w:p>$jc<w:r>');
           if (head) out.write('<w:rPr><w:b/></w:rPr>');
           out.write('<w:t xml:space="preserve">${esc(line)}</w:t></w:r></w:p>');
         }

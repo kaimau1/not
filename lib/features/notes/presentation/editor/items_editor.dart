@@ -9,6 +9,7 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart' show PointerDeviceKind, kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
+import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
@@ -1849,11 +1850,17 @@ class ItemsEditorState extends State<ItemsEditor>
       ];
       return KeyedSubtree(
         key: ValueKey('pkg-${item.id}'),
-        child: NotePackagePill(
-          text: members.map((m) => stripRichMarkers(m.text)).join('  ·  '),
-          count: members.length,
-          onTap: () => _setOpenPackage(pkg),
-          onUnpack: () => unpackGroup(pkg),
+        // Kapalı paket de yüzen kutuların ALTINA iner (kullanıcı bulgusu
+        // 2026-11-23: tablo paket etiketinin üstüne biniyordu).
+        child: _floatRow(
+          NotePackagePill(
+            text: members.map((m) => stripRichMarkers(m.text)).join('  ·  '),
+            count: members.length,
+            onTap: () => _setOpenPackage(pkg),
+            onUnpack: () => unpackGroup(pkg),
+          ),
+          id: 'pkg-${item.id}',
+          pushOnly: true,
         ),
       );
     }

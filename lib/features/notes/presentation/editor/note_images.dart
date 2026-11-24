@@ -524,6 +524,17 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     if (old != null && (old - aspect).abs() < 0.0005) return;
     if (!mounted) return;
     setState(() => _tableAspect[id] = aspect);
+    // Bantlar AYNI turda (kullanıcı bulgusu 2026-11-23: "tablo maddelerin
+    // üstüne biniyor, satır eklerken titreme"): eskiden tuval önce kendini
+    // kuruyor, bantları bir SONRAKİ karede bildiriyordu — tablo o arada
+    // maddelerin üstüne taşıyordu. Kutu ve maddeler artık aynı karede kayar.
+    final cb = widget.onFloats;
+    if (cb == null || _cw <= 0) return;
+    final next = _floatsFor(_cw);
+    if (_lastFloats != null && sameFloatList(_lastFloats!, next)) return;
+    _lastFloats = next;
+    _floatTimer?.cancel();
+    cb(next);
   }
 
   /// Parmak şu an sabitleme bölgesinde mi (bkz. [NotePageCanvas.onPinTop]).
@@ -1044,6 +1055,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           right: r.left + r.w + 12,
           // Açıklama görselin parçası: metin onun da etrafından akar.
           height: r.h + _captionBand(img, r.w) + 8,
+          // Yanında okunur yer bırakmayan kutu (tam genişlik tablo/görsel):
+          // liste maddesi onun etrafından BÖLÜNEREK akmaz, bütünüyle altına
+          // iner (kullanıcı bulgusu 2026-11-23: "tablo maddeyi bölebiliyor").
+          block: math.max(r.left, cw - r.left - r.w) < cw * 0.3,
         ),
       );
     }

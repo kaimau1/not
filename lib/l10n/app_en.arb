@@ -2829,6 +2829,8 @@
   "@routineStepCount": {"placeholders": {"count": {"type": "int"}}},
   "routineProgress": "{done}/{total} steps",
   "@routineProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "menuSearchHint": "Search by name or function (e.g. sum, share)",
+  "menuSearchEmpty": "No matching action",
   "menuEdit": "Edit menu",
   "menuSectionOther": "Other",
   "menuQuickRow": "Put in quick row",

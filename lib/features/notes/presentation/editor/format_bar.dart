@@ -883,6 +883,56 @@ class _FormatBarState extends State<FormatBar> {
                           ],
                         ),
                       ),
+                      // 3. SIRA — HİZA (yalnız hizalanabilen hedefte: tablo
+                      // hücresi, kullanıcı isteği 2026-11-23).
+                      if (widget.target?.align case final align?) ...[
+                        const SizedBox(height: AppSpace.xs),
+                        SizedBox(
+                          height: 44,
+                          child: ValueListenableBuilder<TextAlign>(
+                            valueListenable: align,
+                            builder: (context, value, _) => DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: scheme.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.m,
+                                ),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppSpace.xxs),
+                                child: Row(
+                                  children: [
+                                    for (final (a, icon, tip) in [
+                                      (
+                                        TextAlign.start,
+                                        Icons.format_align_left_rounded,
+                                        l10n.itemAlignStart,
+                                      ),
+                                      (
+                                        TextAlign.center,
+                                        Icons.format_align_center_rounded,
+                                        l10n.itemAlignCenter,
+                                      ),
+                                      (
+                                        TextAlign.end,
+                                        Icons.format_align_right_rounded,
+                                        l10n.itemAlignEnd,
+                                      ),
+                                    ])
+                                      _Btn(
+                                        key: ValueKey('format-align-${a.name}'),
+                                        icon: icon,
+                                        tooltip: tip,
+                                        active: value == a,
+                                        onTap: () => align.value = a,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1684,9 +1734,14 @@ class FormatTarget {
     required this.controller,
     required this.focusNode,
     required this.commit,
+    this.align,
   });
 
   final WrapTextController controller;
+
+  /// Hizalanabilen hedef (tablo hücresi, 2026-11-23): verilince panelde
+  /// Sola · Ortala · Sağa düğmeleri çıkar, seçim buraya yazılır.
+  final ValueNotifier<TextAlign>? align;
 
   /// Alanın odak düğümü: biçim uygulandıktan sonra odak (ve klavye) geri
   /// verilir — kullanıcı yazmaya kaldığı yerden devam eder.

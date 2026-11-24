@@ -58,6 +58,10 @@ class EditorQuickRow extends StatefulWidget {
     this.onDate,
     this.onDay,
     this.onTable,
+    this.onCalculator,
+    this.onListen,
+    this.onStats,
+    this.onFind,
     this.onScan,
     this.onAttach,
     this.onColor,
@@ -101,6 +105,14 @@ class EditorQuickRow extends StatefulWidget {
   /// İkisi de ⋯ ızgarasının başında; satıra düzenleyiciden alınır.
   final VoidCallback? onDay;
   final VoidCallback? onTable;
+
+  /// ARAÇLAR (kullanıcı isteği 2026-11-23: "hesap makinesi gibi şeyler hızlı
+  /// panelde de olmalı"): notun ⋮ menüsündeki araçlar hızlı satırda da —
+  /// varsayılan gizli, ⋯ ızgarasında; düzenleyiciden satıra alınır.
+  final VoidCallback? onCalculator;
+  final VoidCallback? onListen;
+  final VoidCallback? onStats;
+  final VoidCallback? onFind;
 
   /// Ara başlık: satırı alt başlık yapar (metin modu; 2026-11-08).
   final VoidCallback? onSubheading;
@@ -501,6 +513,24 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
           AppIcons.dictation,
           l10n.quickRowDictation,
           widget.onDictation,
+        ),
+      if (widget.onCalculator != null)
+        plain(
+          'calculator',
+          Icons.calculate_outlined,
+          l10n.calculatorTitle,
+          widget.onCalculator,
+        ),
+      if (widget.onFind != null)
+        plain('find', AppIcons.search, l10n.noteSearchTitle, widget.onFind),
+      if (widget.onListen != null)
+        plain('listen', AppIcons.listen, l10n.listenToNote, widget.onListen),
+      if (widget.onStats != null)
+        plain(
+          'stats',
+          Icons.insights_outlined,
+          l10n.noteStatsTitle,
+          widget.onStats,
         ),
     ];
     final divider = Container(

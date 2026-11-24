@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/personalize.dart';
+import '../../../../core/utils/feature_search.dart';
 import '../../../../core/widgets/note_layout_scope.dart';
 
 /// Alt çubuk düğmesinin menüdeki karşılığı: (simge, ad, iş, etkin).
@@ -121,6 +122,9 @@ Future<String?> showMoreGrid({
         editLabel: editLabel,
         keyPrefix: keyPrefix,
         editKey: editKey,
+        // İÇ ARAMA (2026-11-23) yalnız ÜSTTE açılan ızgarada: alttaki
+        // ızgarayı açılan klavye örterdi.
+        searchable: below && ids.length >= 6,
       ),
     ],
   );
@@ -145,7 +149,11 @@ class _BarMoreEntry extends PopupMenuEntry<String> {
     this.keyPrefix = 'editor-bar-more',
     this.editKey = const ValueKey('editor-bar-more-edit'),
     this.editHeight,
+    this.searchable = false,
   });
+
+  /// Izgaranın üstünde arama kutusu (ad + işlev sözlüğü).
+  final bool searchable;
 
   final List<String> menuIds;
   final List<String> available;
@@ -171,6 +179,20 @@ class _BarMoreEntry extends PopupMenuEntry<String> {
 }
 
 class _BarMoreEntryState extends State<_BarMoreEntry> {
+  final _query = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _query.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => widget.editHeight != null
       ? _editor(context, widget.editHeight!)
@@ -244,9 +266,18 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
     final scheme = theme.colorScheme;
     final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
-    final entries = <(int, String, BarMoreSpec)>[
+    var entries = <(int, String, BarMoreSpec)>[
       for (final (i, id) in widget.menuIds.indexed) (i, id, widget.spec(id)),
     ];
+    final q = _query.text.trim();
+    if (q.isNotEmpty) {
+      final scored = [
+        for (final e in entries)
+          (featureMatchScore(q, id: e.$2, label: e.$3.$2), e),
+      ]..removeWhere((x) => x.$1 == 0);
+      scored.sort((a, b) => b.$1 - a.$1);
+      entries = [for (final x in scored) x.$2];
+    }
     final rows = <List<(int, String, BarMoreSpec)>>[];
     for (var i = 0; i < entries.length; i += 2) {
       final end = i + 2;
@@ -263,6 +294,50 @@ class _BarMoreEntryState extends State<_BarMoreEntry> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (widget.searchable)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpace.xs),
+                child: SizedBox(
+                  height: 40,
+                  child: TextField(
+                    key: const ValueKey('more-grid-search'),
+                    controller: _query,
+                    style: text.meta,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) {
+                      if (entries.isNotEmpty) {
+                        Navigator.pop(context, entries.first.$2);
+                      }
+                    },
+                    decoration: InputDecoration(
+                      isDense: true,
+                      filled: true,
+                      fillColor: scheme.surfaceContainerHighest,
+                      hintText: context.l10n.menuSearchHint,
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        size: AppIconSize.s,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.s,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (q.isNotEmpty && entries.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpace.m),
+                child: Text(
+                  context.l10n.menuSearchEmpty,
+                  textAlign: TextAlign.center,
+                  style: text.meta.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
             for (final (r, row) in rows.indexed) ...[
               if (r > 0) const SizedBox(height: AppSpace.xs),
               Row(

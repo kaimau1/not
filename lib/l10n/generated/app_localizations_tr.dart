@@ -7740,6 +7740,12 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String get menuSearchHint => 'Ara: ad ya da işlev (ör. topla, paylaş)';
+
+  @override
+  String get menuSearchEmpty => 'Eşleşen işlem yok';
+
+  @override
   String get menuEdit => 'Menüyü düzenle';
 
   @override

@@ -3643,6 +3643,8 @@
   "@routineStepCount": {"placeholders": {"count": {"type": "int"}}},
   "routineProgress": "{done}/{total} adım",
   "@routineProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "menuSearchHint": "Ara: ad ya da işlev (ör. topla, paylaş)",
+  "menuSearchEmpty": "Eşleşen işlem yok",
   "menuEdit": "Menüyü düzenle",
   "menuSectionOther": "Diğer",
   "menuQuickRow": "Hızlı satıra al",

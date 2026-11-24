@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../app/theme/note_colors.dart';
+import '../../../../core/utils/rich_text.dart' show richSpans;
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/widgets/app_sheet.dart';
@@ -12,6 +14,7 @@ import '../../../../core/widgets/undo_snackbar.dart' show showAppMessage;
 import '../../domain/attachment.dart';
 import '../../data/table_export.dart';
 import '../../domain/note_table.dart';
+import 'text_wrap.dart' show RichTextTheme, WrapTextController;
 
 /// Tablonun İÇİ bu referans genişlikte dizilir ve kutuya ölçeklenir
 /// (`FittedBox`, metin kutusuyla aynı yol — bkz. `TextPageBox`): kutunun
@@ -79,7 +82,33 @@ abstract final class NoteTableFocus {
   /// [text]'i odaktaki / son tablo hücresinin imlecine yazar; hücre yoksa
   /// false (çağıran gövdeye yazar).
   static bool insert(String text) => _owner?._insert(text) ?? false;
+
+  /// **BİÇİM PANELİ HÜCREYE YAZAR** (kullanıcı bulgusu 2026-11-23: "tabloda
+  /// biçim paneli çalışmıyor, tek tek çalışmalı"): açılan hücre editörün
+  /// biçim hedefi olur ([cellFocused]: denetleyici, odak, kayıt, hiza);
+  /// hücre kapanınca [cellDisposed]. Editör kurulurken bağlar, kapanırken
+  /// (kendisiyse) çözer — sayfadaki, sabit bölmedeki kutular aynı yoldan.
+  static void Function(
+    WrapTextController controller,
+    FocusNode focus,
+    VoidCallback commit,
+    ValueNotifier<TextAlign> align,
+  )?
+  cellFocused;
+  static void Function(WrapTextController controller)? cellDisposed;
 }
+
+TextAlign _textAlign(CellAlign a) => switch (a) {
+  CellAlign.start => TextAlign.start,
+  CellAlign.center => TextAlign.center,
+  CellAlign.end => TextAlign.end,
+};
+
+CellAlign _cellAlign(TextAlign a) => switch (a) {
+  TextAlign.center => CellAlign.center,
+  TextAlign.end || TextAlign.right => CellAlign.end,
+  _ => CellAlign.start,
+};
 
 /// **SAYFADA TABLO** (kullanıcı isteği 2026-11-23). Hücreye dokun = yaz
 /// (yalnız açık hücre metin alanıdır — büyük tabloda yüzlerce alan
@@ -126,8 +155,11 @@ class _TablePageBoxState extends State<TablePageBox> {
   (int, int)? _editing;
   (int, int)? _last;
   TextSelection? _lastSelection;
-  TextEditingController? _ctl;
+  WrapTextController? _ctl;
   FocusNode? _focus;
+
+  /// Açık hücrenin hizası (biçim panelindeki Sola/Ortala/Sağa).
+  ValueNotifier<TextAlign>? _align;
 
   /// Yazının nota geçişi (0,5 sn; aralıksız yazarken en geç 3 sn). Geçiş
   /// editörü KURMAZ ([TablePageBox.onChanged]); boy değişince ve hücreden
@@ -180,8 +212,11 @@ class _TablePageBoxState extends State<TablePageBox> {
       } catch (_) {}
     }
     NoteTableFocus._release(this);
+    final ctl = _ctl;
+    if (ctl != null) NoteTableFocus.cellDisposed?.call(ctl);
     _focus?.dispose();
-    _ctl?.dispose();
+    ctl?.dispose();
+    _align?.dispose();
     super.dispose();
   }
 
@@ -237,31 +272,54 @@ class _TablePageBoxState extends State<TablePageBox> {
     if (!widget.editable) return;
     if (_editing == (row, column)) return;
     if (row >= _table.rows || column >= _table.columns) return;
-    final oldCtl = _ctl, oldFocus = _focus;
+    final oldCtl = _ctl, oldFocus = _focus, oldAlign = _align;
     final text = _table.cell(row, column);
-    final ctl = TextEditingController(text: text)
+    final ctl = WrapTextController(text: text)
       ..selection = TextSelection.collapsed(offset: text.length);
+    ctl.richTheme = _richTheme();
     ctl.addListener(() => _onText(ctl, row, column));
     final focus = FocusNode(debugLabel: 'note-table-cell');
     focus.addListener(() => _onFocusChange(focus));
+    final align = ValueNotifier(_textAlign(_table.alignOf(row, column)));
+    align.addListener(() => _onAlign(align, row, column));
     _ctl = ctl;
     _focus = focus;
+    _align = align;
     // Bağlanmamış düğüme odak isteği bağlanınca uygulanır: eski hücre
     // aynı karede kalkar, klavye kapanıp açılmaz.
     focus.requestFocus();
     NoteTableFocus._claim(this);
+    NoteTableFocus.cellFocused?.call(ctl, focus, _commitNow, align);
     setState(() => _editing = (row, column));
     if (oldCtl != null || oldFocus != null) {
+      if (oldCtl != null) NoteTableFocus.cellDisposed?.call(oldCtl);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         oldFocus?.dispose();
         oldCtl?.dispose();
+        oldAlign?.dispose();
       });
     }
   }
 
-  void _onText(TextEditingController ctl, int row, int column) {
+  RichTextTheme _richTheme() {
+    final scheme = Theme.of(context).colorScheme;
+    return RichTextTheme(
+      palette: NoteColors.richPalette,
+      markerColor: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.disabled),
+    );
+  }
+
+  void _onAlign(ValueNotifier<TextAlign> align, int row, int column) {
+    if (!identical(align, _align) || !mounted) return;
+    final next = _table.withAlign(row, column, _cellAlign(align.value));
+    if (identical(next, _table)) return;
+    setState(() => _table = next);
+    _commitNow();
+  }
+
+  void _onText(WrapTextController ctl, int row, int column) {
     if (!identical(ctl, _ctl)) return;
-    final next = _table.withCell(row, column, ctl.text);
+    final next = _table.withCell(row, column, ctl.logicalText);
     if (identical(next, _table)) return;
     _table = next;
     _scheduleCommit();
@@ -269,6 +327,10 @@ class _TablePageBoxState extends State<TablePageBox> {
 
   void _onFocusChange(FocusNode node) {
     if (!identical(node, _focus) || node.hasFocus) return;
+    // Bekleyen biçim ("kalın"a basıp yazılan koşu) odak kaybında metne
+    // yazılır — gövdedeki `_flushPending` ile aynı kural.
+    final ctl = _ctl;
+    if (ctl != null && ctl.hasPendingFormat) ctl.flushPendingFormat();
     _endEdit();
   }
 
@@ -292,6 +354,7 @@ class _TablePageBoxState extends State<TablePageBox> {
     }
     if (r + 1 >= _table.rows) {
       if (_table.rows >= kTableMaxRows) return;
+      _predictRow();
       _table = _table.insertRow(_table.rows);
       _pending = true;
     }
@@ -301,11 +364,26 @@ class _TablePageBoxState extends State<TablePageBox> {
   void _addRow({int? after}) {
     if (_table.rows >= kTableMaxRows) return;
     final at = after == null ? _table.rows : after + 1;
+    _predictRow();
     _table = _table.insertRow(at);
     _pending = true;
     _startEdit(at, 0);
     // Hücre açılamadıysa (salt okunur değil ama aynı hücre) yine kaydet.
     if (_editing == null) _commitNow();
+  }
+
+  /// Boş satırın referans genişlikteki boyu (yazı satırı + dolgu + çizgi).
+  static const double _rowHeight = _kLine + 12 + _kBorder;
+
+  /// **SATIR EKLERKEN TİTREME YOK** (kullanıcı bulgusu 2026-11-23: "satır
+  /// eklerken maddeler yukarı çıkarken titreme oluyor"). KÖK NEDEN: kutunun
+  /// boyu tablo ÇİZİLDİKTEN sonra ölçülüp bildiriliyordu — tablo bir-iki
+  /// kare maddelerin üstüne taşıyor, sonra bantlar kayıyordu. Yeni satırın
+  /// boyu bilindiği için kutu AYNI karede büyür; ölçüm sonra yalnız ince
+  /// farkı düzeltir.
+  void _predictRow() {
+    if (_natural <= 0) return;
+    widget.onAspect?.call(kTableRefWidth / (_natural + _rowHeight));
   }
 
   bool _insert(String text) {
@@ -419,7 +497,11 @@ class _TablePageBoxState extends State<TablePageBox> {
     final scheme = theme.colorScheme;
     final body = AppText.of(theme).body.copyWith(color: scheme.onSurface);
     final strong = body.copyWith(fontWeight: AppWeight.strong);
-    final strut = StrutStyle.fromTextStyle(body, forceStrutHeight: true);
+    // Taban satır boyu sabit (boy platformdan bağımsız); biçim paneliyle
+    // BÜYÜTÜLEN yazı satırı uzatabilir (zorlanmış satır boyu büyük yazıyı
+    // üst üste bindirirdi).
+    final strut = StrutStyle.fromTextStyle(body);
+    final rich = _richTheme();
     final line = scheme.outlineVariant;
     final table = _table;
 
@@ -427,6 +509,8 @@ class _TablePageBoxState extends State<TablePageBox> {
       final head = table.header && r == 0;
       final style = head ? strong : body;
       final editing = _editing == (r, c);
+      final align = _textAlign(table.alignOf(r, c));
+      final raw = table.cell(r, c);
       final Widget content = editing
           ? TextField(
               key: ValueKey('note-table-field-$r-$c'),
@@ -434,6 +518,7 @@ class _TablePageBoxState extends State<TablePageBox> {
               focusNode: _focus,
               style: style,
               strutStyle: strut,
+              textAlign: align,
               maxLines: null,
               keyboardType: TextInputType.text,
               textInputAction: TextInputAction.next,
@@ -442,10 +527,18 @@ class _TablePageBoxState extends State<TablePageBox> {
               onEditingComplete: () {},
               onSubmitted: (_) => _next(),
             )
-          : Text(
-              table.cell(r, c),
-              style: style,
+          : Text.rich(
+              TextSpan(
+                style: style,
+                children: richSpans(
+                  raw,
+                  style,
+                  palette: rich.palette,
+                  markerColor: rich.markerColor,
+                ),
+              ),
               strutStyle: strut,
+              textAlign: align,
               textScaler: TextScaler.noScaling,
             );
       final padded = Padding(padding: _kCellPad, child: content);

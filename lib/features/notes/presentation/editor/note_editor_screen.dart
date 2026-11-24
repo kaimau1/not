@@ -1171,11 +1171,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // alanın build fazındaki dispose'undan da gelebiliyor).
   }
 
+  void _tableCellFocused(
+    WrapTextController c,
+    FocusNode f,
+    VoidCallback commit,
+    ValueNotifier<TextAlign> align,
+  ) => _setFormatTarget(c, f, commit, align: align);
+
+  void _tableCellDisposed(WrapTextController c) => _clearFormatTargetFor(c);
+
   void _setFormatTarget(
     WrapTextController controller,
     FocusNode focusNode,
-    VoidCallback commit,
-  ) {
+    VoidCallback commit, {
+    ValueNotifier<TextAlign>? align,
+  }) {
     final changed = _formatTarget?.controller != controller;
     if (changed) {
       // SON DOLU SEÇİM dinleyicisi hep ETKİN alanda durur (bkz.
@@ -1191,6 +1201,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       controller: controller,
       focusNode: focusNode,
       commit: commit,
+      align: align,
     );
     // Yazım düzelt (hızlı satır): her alan; başlıkta kelime başları büyür
     // (2026-11-08).
@@ -1340,6 +1351,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     unawaited(AutoSpell.load().then((_) => _seedSpell()));
     FocusManager.instance.addListener(_onAnyFocusChange);
     HardwareKeyboard.instance.addHandler(_onHardKey);
+    // Tablo hücresi biçim panelinin hedefi olur (2026-11-23).
+    NoteTableFocus.cellFocused = _tableCellFocused;
+    NoteTableFocus.cellDisposed = _tableCellDisposed;
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
     // Not başına menü düzeni (2026-11-19): bu notun kendi düzeni geçerli.
     Personalize.enterNote(widget.noteId, this);
@@ -1932,6 +1946,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   @override
   void dispose() {
+    if (NoteTableFocus.cellFocused == _tableCellFocused) {
+      NoteTableFocus.cellFocused = null;
+      NoteTableFocus.cellDisposed = null;
+    }
     _stopFileDrops();
     _typingTimer?.cancel();
     _hideTimer?.cancel();
@@ -3039,6 +3057,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ),
           onDay: _insertDay,
           onTable: note.type.isPageNoteType ? null : _insertTable,
+          onCalculator: () => unawaited(_openCalculator()),
+          onFind: () => unawaited(_openNoteSearch()),
+          onListen: () => unawaited(_listen()),
+          onStats: () {
+            _flushPending(_bodyController);
+            unawaited(showNoteStatsSheet(context, _note ?? note));
+          },
           onAttach: () => unawaited(_showAttachMenu()),
           onColor: () => _applyFormat(
             RichFormat.color,

@@ -1,11 +1,16 @@
+import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart'
+    show BoxHitTestEntry, SemanticsConfiguration;
 
 import '../../app/theme/app_tokens.dart';
 import '../l10n_ext.dart';
+import '../utils/feature_search.dart';
 import '../menu_layout.dart';
 import 'app_sheet.dart';
 import 'expand_reveal.dart';
 import 'sheet_header.dart';
+import 'sheet_keyboard.dart';
 import 'sheet_tile.dart';
 
 /// Menü levhasındaki tek işlem.
@@ -96,14 +101,16 @@ Future<String?> showActionMenuSheet(
   ActionMenu menu, {
   bool? requestFocus,
 }) => showAppSheet<String>(
-      context: context,
-      requestFocus: requestFocus,
-      showDragHandle: true,
-      // Büyük yazı ölçeğinde levha varsayılan tavanı aşabilir; kaydırma ağı.
-      isScrollControlled: true,
-      builder: (sheetContext) =>
-          SafeArea(child: SingleChildScrollView(child: menu)),
-    );
+  context: context,
+  requestFocus: requestFocus,
+  showDragHandle: true,
+  // Büyük yazı ölçeğinde levha varsayılan tavanı aşabilir; kaydırma ağı.
+  isScrollControlled: true,
+  // İç arama kutusu klavyeyi açar: sonuçlar klavyenin üstünde kalsın.
+  builder: (sheetContext) => SafeArea(
+    child: SheetInsetPadding(child: SingleChildScrollView(child: menu)),
+  ),
+);
 
 /// Çok işlemli menülerin ORTAK levha düzeni (kart ⋮, not ⋮, not "+", ana ekran
 /// ⋮, çoklu seçim ⋮).
@@ -214,7 +221,15 @@ class ActionMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (menuId == null) return _body(context, quick, sections);
+    if (menuId == null) {
+      final count =
+          quick.length +
+          sections.fold<int>(0, (n, s) => n + s.actions.length) +
+          footer.length +
+          (danger == null ? 0 : 1);
+      if (count < searchThreshold) return _body(context, quick, sections);
+      return _SearchableMenu(menu: this);
+    }
     return _EditableMenu(menu: this);
   }
 
@@ -223,6 +238,7 @@ class ActionMenu extends StatelessWidget {
     List<MenuAction> quick,
     List<MenuSection> sections, {
     VoidCallback? onEdit,
+    _MenuSearchHost? search,
   }) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -239,9 +255,34 @@ class ActionMenu extends StatelessWidget {
       for (final section in sections)
         if (section.actions.isNotEmpty) section,
     ];
-    final inlineEdit = heading.isNotEmpty
+    // İÇ ARAMA (kullanıcı isteği 2026-11-23): kalabalık menüde başlıkta 🔍;
+    // dokununca kutu başlığın yerine geçer, yazınca gövde sonuçlarla
+    // değişir. Düğme `build`'siz tek çizim nesnesi ([_SearchGlyph]): levhanın
+    // açılış karesi ağırlaşmaz (S37).
+    final searchActions = [
+      ...quick,
+      for (final section in visibleSections) ...section.actions,
+      ...footer,
+      ?danger,
+    ];
+    final host = searchActions.length >= searchThreshold ? search : null;
+    final glyph = host == null || host.menuSearchOpen
+        ? null
+        : _SearchGlyph(
+            key: const ValueKey('menu-search-open'),
+            label: context.l10n.menuSearchHint,
+            color: scheme.onSurfaceVariant,
+            onTap: () => host.setMenuSearchOpen(true),
+          );
+    final settings = heading.isNotEmpty
         ? null
         : _settingsButton(context, scheme, compact: true, onEdit: onEdit);
+    final Widget? inlineEdit = settings == null
+        ? null
+        : glyph == null
+        ? settings
+        : Row(mainAxisSize: MainAxisSize.min, children: [glyph, settings]);
+    final query = host?.menuQuery.text.trim() ?? '';
     final cardDecoration = BoxDecoration(
       color: tokens.card,
       borderRadius: BorderRadius.circular(AppRadius.l),
@@ -258,72 +299,138 @@ class ActionMenu extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (heading.isNotEmpty)
+          if (host != null && host.menuSearchOpen)
+            _searchField(context, host, searchActions)
+          else if (heading.isNotEmpty)
             SheetHeader(
               title: heading,
-              actions: [?editButton],
+              actions: [?glyph, ?editButton],
               padding: EdgeInsets.zero,
             ),
-          if (quick.isNotEmpty) ...[
-            DecoratedBox(
-              decoration: cardDecoration,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpace.xs,
-                  vertical: AppSpace.s,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final a in quick)
-                      Expanded(
-                        child: _buildQuickButton(
-                          context,
-                          a,
-                          scheme: scheme,
-                          text: text,
-                          onLongPress: onEdit,
+          if (query.isNotEmpty)
+            _searchResults(context, searchActions, query, onLongPress: onEdit)
+          else ...[
+            if (quick.isNotEmpty) ...[
+              DecoratedBox(
+                decoration: cardDecoration,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.xs,
+                    vertical: AppSpace.s,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final a in quick)
+                        Expanded(
+                          child: _buildQuickButton(
+                            context,
+                            a,
+                            scheme: scheme,
+                            text: text,
+                            onLongPress: onEdit,
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (visibleSections.isNotEmpty) const SizedBox(height: AppSpace.s),
-          ],
-          if (collapsible && visibleSections.isNotEmpty)
-            DecoratedBox(
-              decoration: cardDecoration,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final (i, section) in visibleSections.indexed) ...[
-                    if (i > 0)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpace.m,
-                        ),
-                        child: ColoredBox(
+              if (visibleSections.isNotEmpty)
+                const SizedBox(height: AppSpace.s),
+            ],
+            if (collapsible && visibleSections.isNotEmpty)
+              DecoratedBox(
+                decoration: cardDecoration,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final (i, section) in visibleSections.indexed) ...[
+                      if (i > 0)
+                        _Hairline(
                           color: tokens.hairline,
-                          child: const SizedBox(height: 1),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.m,
+                          ),
+                        ),
+                      _FoldSection(
+                        key: ValueKey('menu-fold-${section.title}'),
+                        folds: _folds.putIfAbsent(menuId ?? '', () => {}),
+                        title: section.title,
+                        count: section.actions.length,
+                        initiallyOpen: i == 0,
+                        trailing: i == 0 ? inlineEdit : null,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpace.s,
+                            0,
+                            AppSpace.s,
+                            AppSpace.m,
+                          ),
+                          child: _buildTileGrid(
+                            section.actions,
+                            (a, {required horizontal}) => _buildGridTile(
+                              context,
+                              a,
+                              theme: theme,
+                              scheme: scheme,
+                              text: text,
+                              horizontal: horizontal,
+                              onLongPress: onEdit,
+                            ),
+                          ),
                         ),
                       ),
-                    _FoldSection(
-                      key: ValueKey('menu-fold-${section.title}'),
-                      folds: _folds.putIfAbsent(menuId ?? '', () => {}),
-                      title: section.title,
-                      count: section.actions.length,
-                      initiallyOpen: i == 0,
-                      trailing: i == 0 ? inlineEdit : null,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpace.s,
-                          0,
-                          AppSpace.s,
-                          AppSpace.m,
+                    ],
+                  ],
+                ),
+              )
+            else if (!collapsible && visibleSections.isNotEmpty)
+              DecoratedBox(
+                decoration: cardDecoration,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.s),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final (i, section) in visibleSections.indexed) ...[
+                        if (i > 0)
+                          _Hairline(
+                            color: tokens.hairline,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.xs,
+                              vertical: AppSpace.xs,
+                            ),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpace.xs,
+                            AppSpace.xxs,
+                            AppSpace.xs,
+                            AppSpace.xs,
+                          ),
+                          // Başlıksız menüde ⚙ kendi satırını kaplamasın
+                          // (kullanıcı bulgusu 2026-11-06): ilk bölüm
+                          // başlığının sağında durur.
+                          child: i == 0 && inlineEdit != null
+                              ? SizedBox(
+                                  height: AppSpace.xxxl,
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          section.title,
+                                          style: text.section,
+                                        ),
+                                      ),
+                                      inlineEdit,
+                                    ],
+                                  ),
+                                )
+                              : Text(section.title, style: text.section),
                         ),
-                        child: _buildTileGrid(
+                        _buildTileGrid(
                           section.actions,
                           (a, {required horizontal}) => _buildGridTile(
                             context,
@@ -335,93 +442,127 @@ class ActionMenu extends StatelessWidget {
                             onLongPress: onEdit,
                           ),
                         ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            )
-          else if (!collapsible && visibleSections.isNotEmpty)
-            DecoratedBox(
-              decoration: cardDecoration,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpace.s),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final (i, section) in visibleSections.indexed) ...[
-                      if (i > 0)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpace.xs,
-                            vertical: AppSpace.xs,
-                          ),
-                          child: SizedBox(
-                            height: 1,
-                            child: ColoredBox(color: tokens.hairline),
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpace.xs,
-                          AppSpace.xxs,
-                          AppSpace.xs,
-                          AppSpace.xs,
-                        ),
-                        // Başlıksız menüde ⚙ kendi satırını kaplamasın
-                        // (kullanıcı bulgusu 2026-11-06): ilk bölüm
-                        // başlığının sağında durur.
-                        child: i == 0 && inlineEdit != null
-                            ? SizedBox(
-                                height: AppSpace.xxxl,
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        section.title,
-                                        style: text.section,
-                                      ),
-                                    ),
-                                    inlineEdit,
-                                  ],
-                                ),
-                              )
-                            : Text(section.title, style: text.section),
-                      ),
-                      _buildTileGrid(
-                        section.actions,
-                        (a, {required horizontal}) => _buildGridTile(
-                          context,
-                          a,
-                          theme: theme,
-                          scheme: scheme,
-                          text: text,
-                          horizontal: horizontal,
-                          onLongPress: onEdit,
-                        ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-          // Bölüm yoksa ⚙ en altta, küçük.
-          if (visibleSections.isEmpty && inlineEdit != null)
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: inlineEdit,
-            ),
-          if (danger case final d?) ...[
-            const SizedBox(height: AppSpace.s),
-            DestructiveRow(
-              key: ValueKey('menu-tile-${d.id}'),
-              icon: d.icon,
-              label: d.label,
-              onTap: () => Navigator.pop(context, d.id),
-            ),
+            // Bölüm yoksa ⚙ en altta, küçük.
+            if (visibleSections.isEmpty && inlineEdit != null)
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: inlineEdit,
+              ),
+            if (danger case final d?) ...[
+              const SizedBox(height: AppSpace.s),
+              DestructiveRow(
+                key: ValueKey('menu-tile-${d.id}'),
+                icon: d.icon,
+                label: d.label,
+                onTap: () => Navigator.pop(context, d.id),
+              ),
+            ],
           ],
         ],
+      ),
+    );
+  }
+
+  /// İç arama yalnız kalabalık menüde (8+ madde): az maddeli menüde kutu
+  /// levhayı boşuna uzatırdı.
+  static const int searchThreshold = 8;
+
+  /// Sorguya uyan maddeler, en iyi eşleşme önce ([featureMatchScore]).
+  static List<MenuAction> searchHits(List<MenuAction> actions, String q) {
+    final seen = <String>{};
+    final scored = <(int, int, MenuAction)>[];
+    for (final (i, a) in actions.indexed) {
+      if (!seen.add(a.id)) continue;
+      final score = featureMatchScore(q, id: a.id, label: a.label);
+      if (score > 0) scored.add((score, i, a));
+    }
+    scored.sort((x, y) => x.$1 != y.$1 ? y.$1 - x.$1 : x.$2 - y.$2);
+    return [for (final e in scored) e.$3];
+  }
+
+  Widget _searchField(
+    BuildContext context,
+    _MenuSearchHost host,
+    List<MenuAction> actions,
+  ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
+      child: SizedBox(
+        height: kMinInteractiveDimension,
+        child: TextField(
+          key: const ValueKey('menu-search'),
+          controller: host.menuQuery,
+          focusNode: host.menuSearchFocus,
+          textInputAction: TextInputAction.search,
+          style: AppText.of(theme).body,
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: theme.brightness == Brightness.dark
+                ? scheme.surfaceContainerHigh
+                : scheme.surfaceContainer,
+            hintText: l10n.menuSearchHint,
+            prefixIcon: const Icon(Icons.search_rounded, size: AppIconSize.m),
+            suffixIcon: IconButton(
+              key: const ValueKey('menu-search-close'),
+              tooltip: l10n.close,
+              icon: const Icon(Icons.close_rounded, size: AppIconSize.m),
+              onPressed: () => host.setMenuSearchOpen(false),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
+          ),
+          onSubmitted: (q) {
+            final hits = searchHits(actions, q.trim());
+            if (hits.isNotEmpty) Navigator.pop(context, hits.first.id);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _searchResults(
+    BuildContext context,
+    List<MenuAction> actions,
+    String query, {
+    VoidCallback? onLongPress,
+  }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
+    final hits = searchHits(actions, query);
+    if (hits.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpace.l),
+        child: Text(
+          context.l10n.menuSearchEmpty,
+          key: const ValueKey('menu-search-empty'),
+          textAlign: TextAlign.center,
+          style: text.meta.copyWith(color: scheme.onSurfaceVariant),
+        ),
+      );
+    }
+    return _buildTileGrid(
+      hits,
+      (a, {required horizontal}) => _buildGridTile(
+        context,
+        a,
+        theme: theme,
+        scheme: scheme,
+        text: text,
+        horizontal: horizontal,
+        onLongPress: onLongPress,
       ),
     );
   }
@@ -867,7 +1008,8 @@ class _EditableMenu extends StatefulWidget {
   State<_EditableMenu> createState() => _EditableMenuState();
 }
 
-class _EditableMenuState extends State<_EditableMenu> {
+class _EditableMenuState extends State<_EditableMenu>
+    with _MenuSearchHost<_EditableMenu> {
   bool _editing = false;
 
   ActionMenu get _menu => widget.menu;
@@ -976,7 +1118,13 @@ class _EditableMenuState extends State<_EditableMenu> {
             context.l10n.menuSectionOther,
           );
           if (!_editing) {
-            return _menu._body(context, q, secs, onEdit: _startEdit);
+            return _menu._body(
+              context,
+              q,
+              secs,
+              onEdit: _startEdit,
+              search: this,
+            );
           }
           return _editBody(context, q, secs);
         },
@@ -1560,3 +1708,229 @@ Widget _dragFeedback(ColorScheme scheme, MenuAction action) => Material(
   ),
 );
 
+/// Menü içi aramanın durumu (sorgu, odak, kutu açık mı). Düzenlenebilir
+/// menünün kendi durumunda ([_EditableMenuState]) ya da [_SearchableMenu]'de
+/// durur — ayrı katman kurulmaz.
+mixin _MenuSearchHost<T extends StatefulWidget> on State<T> {
+  final TextEditingController menuQuery = TextEditingController();
+  final FocusNode menuSearchFocus = FocusNode(debugLabel: 'menu-search');
+  bool menuSearchOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    menuQuery.addListener(_onMenuQuery);
+  }
+
+  void _onMenuQuery() {
+    if (mounted) setState(() {});
+  }
+
+  void setMenuSearchOpen(bool open) {
+    if (open == menuSearchOpen) return;
+    setState(() => menuSearchOpen = open);
+    if (open) {
+      menuSearchFocus.requestFocus();
+    } else {
+      menuQuery.clear();
+    }
+  }
+
+  @override
+  void dispose() {
+    menuQuery.dispose();
+    menuSearchFocus.dispose();
+    super.dispose();
+  }
+}
+
+/// Düzen kaydı olmayan kalabalık menü: yalnız arama durumu için.
+class _SearchableMenu extends StatefulWidget {
+  const _SearchableMenu({required this.menu});
+
+  final ActionMenu menu;
+
+  @override
+  State<_SearchableMenu> createState() => _SearchableMenuState();
+}
+
+class _SearchableMenuState extends State<_SearchableMenu>
+    with _MenuSearchHost<_SearchableMenu> {
+  @override
+  Widget build(BuildContext context) => widget.menu._body(
+    context,
+    widget.menu.quick,
+    widget.menu.sections,
+    search: this,
+  );
+}
+
+/// Arama düğmesi: 48 dp, ortada 🔍 — `build`'i olmayan TEK çizim nesnesi
+/// (dokunuş ve erişilebilirlik kendi içinde).
+class _SearchGlyph extends LeafRenderObjectWidget {
+  const _SearchGlyph({
+    super.key,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderSearchGlyph(label, color, onTap, Directionality.of(context));
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderSearchGlyph renderObject,
+  ) => renderObject
+    ..label = label
+    ..color = color
+    ..onTap = onTap;
+}
+
+class _RenderSearchGlyph extends RenderBox {
+  _RenderSearchGlyph(this._label, this._color, this.onTap, this._direction) {
+    _tap = TapGestureRecognizer()..onTap = () => onTap();
+  }
+
+  late final TapGestureRecognizer _tap;
+  VoidCallback onTap;
+  final TextDirection _direction;
+  TextPainter? _painter;
+
+  String _label;
+  set label(String v) {
+    if (v == _label) return;
+    _label = v;
+    markNeedsSemanticsUpdate();
+  }
+
+  Color _color;
+  set color(Color v) {
+    if (v == _color) return;
+    _color = v;
+    _painter?.dispose();
+    _painter = null;
+    markNeedsPaint();
+  }
+
+  @override
+  void performLayout() {
+    size = constraints.constrain(const Size.square(kMinInteractiveDimension));
+  }
+
+  @override
+  bool hitTestSelf(Offset position) => true;
+
+  @override
+  void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
+    if (event is PointerDownEvent) _tap.addPointer(event);
+  }
+
+  @override
+  void describeSemanticsConfiguration(SemanticsConfiguration config) {
+    super.describeSemanticsConfiguration(config);
+    config
+      ..isSemanticBoundary = true
+      ..isButton = true
+      ..label = _label
+      ..textDirection = _direction
+      ..onTap = onTap;
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    const icon = Icons.search_rounded;
+    final p = _painter ??= TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          fontSize: AppIconSize.m,
+          fontFamily: icon.fontFamily,
+          package: icon.fontPackage,
+          color: _color,
+          height: 1,
+        ),
+      ),
+      textDirection: _direction,
+    )..layout();
+    p.paint(
+      context.canvas,
+      offset + Offset((size.width - p.width) / 2, (size.height - p.height) / 2),
+    );
+  }
+
+  @override
+  void dispose() {
+    _tap.dispose();
+    _painter?.dispose();
+    super.dispose();
+  }
+}
+
+/// Grup ayracı: [padding] içinde 1 dp çizgi — TEK katman (eski Padding +
+/// ColoredBox + SizedBox üçlüsünün aynısı; levhanın açılış karesi S37/S53
+/// bütçelerinde hafiflesin, iç arama düğmesine yer açılsın).
+class _Hairline extends LeafRenderObjectWidget {
+  const _Hairline({required this.color, required this.padding});
+
+  final Color color;
+  final EdgeInsets padding;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderHairline(color, padding);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderHairline renderObject) =>
+      renderObject
+        ..color = color
+        ..padding = padding;
+}
+
+class _RenderHairline extends RenderBox {
+  _RenderHairline(this._color, this._padding);
+
+  Color _color;
+  set color(Color v) {
+    if (v == _color) return;
+    _color = v;
+    markNeedsPaint();
+  }
+
+  EdgeInsets _padding;
+  set padding(EdgeInsets v) {
+    if (v == _padding) return;
+    _padding = v;
+    markNeedsLayout();
+  }
+
+  @override
+  void performLayout() {
+    size = constraints.constrain(
+      Size(constraints.maxWidth, _padding.vertical + 1),
+    );
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) => _padding.vertical + 1;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => _padding.vertical + 1;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final r = Rect.fromLTWH(
+      offset.dx + _padding.left,
+      offset.dy + _padding.top,
+      size.width - _padding.horizontal,
+      1,
+    );
+    if (r.width > 0) context.canvas.drawRect(r, Paint()..color = _color);
+  }
+}
