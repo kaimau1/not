@@ -4473,5 +4473,77 @@
         "type": "int"
       }
     }
-  }
+  },
+  "aiSourceModeTitle": "Yapay zekâ kaynağı",
+  "aiSourceModeShared": "Ortak havuz",
+  "aiSourceModeByok": "Kendi anahtarım",
+  "aiSharedPoolTitle": "Ortak yapay zekâ havuzu",
+  "aiSharedPoolSubtitle": "Tek Google hesabıyla hem Notlar hem Dosyalarım uygulamasında ortak kullanılır ({credits} kredi)",
+  "@aiSharedPoolSubtitle": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSharedPoolEmpty": "Ortak kredi bakiyen tükendi; kendi anahtarını girebilir veya Pro'ya geçebilirsin",
+  "aiByokExhaustedError": "Kendi anahtarının kotası veya yetkisi tükendi. Ortak havuza otomatik geçilmedi.",
+  "aiBackupKeysTitle": "Yedek API anahtarları",
+  "aiBackupKeysInfo": "Birincil anahtar dolunca sıradaki anahtar otomatik devreye girer (en fazla 5)",
+  "aiBackupKeyLabel": "Yedek anahtar {index}",
+  "@aiBackupKeyLabel": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "aiBackupKeyAdd": "Yedek anahtar ekle",
+  "ecosystemDosyalarimTitle": "Dosyalarım ile tüm belgeleri yönet",
+  "ecosystemDosyalarimSubtitle": "PDF imzala, Word ve Excel düzenle, ortak yapay zekâ kredini iki uygulamada birlikte kullan.",
+  "ecosystemOpenApp": "Dosyalarım'da aç",
+  "ecosystemGetApp": "Dosyalarım'ı keşfet",
+  "ecosystemDismiss": "Gizle",
+  "aiOtherToolsTitle": "Diğer araçlar",
+  "aiAttachmentsSection": "Ek ve belge araçları",
+  "aiSmartCategorizeAction": "Akıllı kategorize et",
+  "aiSmartCategorizeInfo": "Başlık, etiket ve klasörü yerelde kredi harcamadan düzenle",
+  "aiLocalBadge": "Yerel · %{percent}",
+  "@aiLocalBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSmartFolderSuggestion": "Klasör: {folder}",
+  "@aiSmartFolderSuggestion": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSmartFixAction": "Düzelt",
+  "aiSmartRefineWithAi": "Düşük güvenlileri yapay zekâyla incele",
+  "aiSmartFixTitle": "Doğru kategoriyi seç",
+  "aiSmartSimilarConfirmTitle": "Benzer notlar da düzeltilsin mi?",
+  "aiSmartSimilarConfirmBody": "{count} benzer not için de aynı kategoriyi uygulayabilirsin.",
+  "@aiSmartSimilarConfirmBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCatFinance": "Finans",
+  "aiCatHealth": "Sağlık",
+  "aiCatEducation": "Eğitim",
+  "aiCatWork": "İş",
+  "aiCatShopping": "Alışveriş",
+  "aiCatTravel": "Seyahat",
+  "aiCatPersonal": "Kişisel",
+  "aiCatTech": "Teknoloji",
+  "aiCatRecipes": "Tarifler",
+  "aiCatOfficial": "Resmî"
 }

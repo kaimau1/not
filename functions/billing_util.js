@@ -181,6 +181,23 @@ function parseRtdn(msg) {
   return null;
 }
 
+function parseAllowedPackages(env) {
+  const source = env || {};
+  const raw = `${source.PLAY_PACKAGE_NAMES || ""},${source.PLAY_PACKAGE_NAME || ""}`;
+  const seen = new Set();
+  for (const part of raw.split(",")) {
+    const trimmed = part.trim();
+    if (trimmed) seen.add(trimmed);
+  }
+  return [...seen];
+}
+
+function resolvePackageName(requested, allowed) {
+  if (!Array.isArray(allowed) || allowed.length === 0) return null;
+  if (!requested) return allowed[0];
+  return allowed.includes(requested) ? requested : null;
+}
+
 module.exports = {
   PRO_SUBSCRIPTION,
   LIFETIME_PRODUCT,
@@ -190,4 +207,6 @@ module.exports = {
   readProduct,
   mergeEntitlement,
   parseRtdn,
+  parseAllowedPackages,
+  resolvePackageName,
 };

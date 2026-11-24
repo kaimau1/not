@@ -79,6 +79,104 @@ class _BuiltInAiStatus extends ConsumerWidget {
   }
 }
 
+/// Ortak AI havuzu ↔ Kendi anahtarım (BYOK) açık kaynak seçici ve kredi kartı.
+class _SharedPoolModeCard extends ConsumerWidget {
+  const _SharedPoolModeCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
+    final text = AppText.of(theme);
+    final mode = ref.watch(aiSourceModeProvider);
+    final pool = ref.watch(sharedAiPoolProvider);
+    final anonymous = ref.watch(isAnonymousProvider);
+    final credits = pool.balance ?? SharedAiPoolClient.starterCredits;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(l10n.aiSourceModeTitle, style: text.rowTitle),
+              ),
+              if (mode == AiSourceMode.sharedPool && !anonymous)
+                IconButton(
+                  tooltip: l10n.retry,
+                  visualDensity: VisualDensity.compact,
+                  icon: pool.loading
+                      ? const SizedBox.square(
+                          dimension: AppIconSize.s,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          Icons.refresh,
+                          size: AppIconSize.s,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                  onPressed: pool.loading
+                      ? null
+                      : () => ref.read(sharedAiPoolProvider.notifier).refresh(),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.s),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<AiSourceMode>(
+              key: const ValueKey('settings-ai-source-mode'),
+              segments: [
+                ButtonSegment<AiSourceMode>(
+                  value: AiSourceMode.sharedPool,
+                  label: Text(l10n.aiSourceModeShared),
+                  icon: const Icon(Icons.hub_outlined, size: AppIconSize.s),
+                ),
+                ButtonSegment<AiSourceMode>(
+                  value: AiSourceMode.byok,
+                  label: Text(l10n.aiSourceModeByok),
+                  icon: const Icon(Icons.key_outlined, size: AppIconSize.s),
+                ),
+              ],
+              selected: {mode},
+              onSelectionChanged: (next) {
+                if (next.isNotEmpty) {
+                  ref.read(aiSourceModeProvider.notifier).set(next.first);
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: AppSpace.s),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: pool.knownEmpty && mode == AiSourceMode.sharedPool
+                  ? scheme.errorContainer.withValues(alpha: AppAlpha.soft)
+                  : tokens.card,
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(color: tokens.hairline),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpace.m),
+              child: Text(
+                anonymous && mode == AiSourceMode.sharedPool
+                    ? l10n.localAccountInfo
+                    : pool.knownEmpty && mode == AiSourceMode.sharedPool
+                    ? l10n.aiSharedPoolEmpty
+                    : l10n.aiSharedPoolSubtitle(credits),
+                style: text.meta.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// AI bölümündeki form alanlarının ORTAK görünümü.
 ///
 /// Genel tema alanları yalnız dolgu rengiyle çiziyor (kenarlık yok); kâğıt
@@ -200,9 +298,8 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
         const SizedBox(height: 8),
         Text(
           l10n.aiProviderInfo,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         // Sağlayıcı bloğu ile anahtar bloğu arasına ayırıcı: ikisi arka arkaya
         // duran metin yığını gibi okunuyordu.
@@ -240,9 +337,8 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
         const SizedBox(height: 8),
         Text(
           l10n.geminiApiKeyInfo,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         Align(
           alignment: AlignmentDirectional.centerStart,
@@ -269,7 +365,119 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
         ),
         const SizedBox(height: 10),
         const Divider(height: 1),
+        const _BackupKeysSection(),
+        const Divider(height: 1),
         const _AiDiagnosticsTile(),
+      ],
+    );
+  }
+}
+
+class _BackupKeysSection extends ConsumerStatefulWidget {
+  const _BackupKeysSection();
+
+  @override
+  ConsumerState<_BackupKeysSection> createState() => _BackupKeysSectionState();
+}
+
+class _BackupKeysSectionState extends ConsumerState<_BackupKeysSection> {
+  final List<TextEditingController> _controllers = [];
+  AiProvider? _loadedFor;
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _loadFor(AiProvider provider) async {
+    _loadedFor = provider;
+    final keys = await ref.read(byokKeyPoolProvider).readKeys(provider);
+    if (!mounted || _loadedFor != provider) return;
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    _controllers
+      ..clear()
+      ..addAll([
+        for (var i = 1; i < keys.length; i++)
+          TextEditingController(text: keys[i]),
+      ]);
+    setState(() {});
+  }
+
+  Future<void> _saveSlot(AiProvider provider, int index, String value) async {
+    await ref
+        .read(byokKeyPoolProvider)
+        .saveBackupKey(provider, index + 1, value);
+    ref.invalidate(byokKeysProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final provider = ref.watch(activeProviderProvider);
+    if (_loadedFor != provider) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _loadedFor != provider) unawaited(_loadFor(provider));
+      });
+    }
+    final canAdd = _controllers.length + 1 < ByokKeyPool.maxKeys;
+    return _ExpandTile(
+      leading: const Icon(Icons.vpn_key_outlined, size: AppIconSize.m),
+      title: Text(l10n.aiBackupKeysTitle),
+      subtitle: Text(
+        l10n.aiBackupKeysInfo,
+        style: AppText.of(Theme.of(context)).meta,
+      ),
+      childrenPadding: const EdgeInsets.only(
+        top: AppSpace.s,
+        bottom: AppSpace.s,
+      ),
+      children: [
+        for (var i = 0; i < _controllers.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpace.s),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controllers[i],
+                    obscureText: true,
+                    decoration: _aiFieldDecoration(
+                      context,
+                      label: l10n.aiBackupKeyLabel(i + 2),
+                      hint: provider.keyHint,
+                    ),
+                    onChanged: (v) => unawaited(_saveSlot(provider, i, v)),
+                  ),
+                ),
+                IconButton(
+                  tooltip: l10n.delete,
+                  icon: const Icon(Icons.close, size: AppIconSize.s),
+                  onPressed: () {
+                    final idx = i;
+                    final removed = _controllers.removeAt(idx);
+                    removed.dispose();
+                    setState(() {});
+                    unawaited(_saveSlot(provider, idx, ''));
+                  },
+                ),
+              ],
+            ),
+          ),
+        if (canAdd)
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: OutlinedButton.icon(
+              onPressed: () =>
+                  setState(() => _controllers.add(TextEditingController())),
+              icon: const Icon(Icons.add, size: AppIconSize.s),
+              label: Text(l10n.aiBackupKeyAdd),
+            ),
+          ),
       ],
     );
   }
@@ -529,9 +737,8 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
               ),
               child: Text(
                 widget.recommendedLabel,
-                style: AppText.of(
-                  Theme.of(context),
-                ).badge.copyWith(color: scheme.onPrimaryContainer),
+                style: AppText.of(Theme.of(context)).badge
+                    .copyWith(color: scheme.onPrimaryContainer),
               ),
             ),
           ],
@@ -659,9 +866,8 @@ class _ModelSelectors extends ConsumerWidget {
         const SizedBox(height: 4),
         Text(
           l10n.aiModelsInfo,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
     );
@@ -727,30 +933,37 @@ class _BriefingEditor extends ConsumerWidget {
           Wrap(
             spacing: 8,
             children: [
-              actionChip(ActionChip(
-                avatar: const Icon(Icons.schedule, size: AppIconSize.xs),
-                label: Text(time),
-                onPressed: () async {
-                  final picked = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay(
-                      hour: settings.minutes ~/ 60,
-                      minute: settings.minutes % 60,
-                    ),
-                  );
-                  if (picked != null) {
-                    ref
-                        .read(briefingSettingsProvider.notifier)
-                        .update(minutes: picked.hour * 60 + picked.minute);
-                  }
-                },
-              )),
+              actionChip(
+                ActionChip(
+                  avatar: const Icon(Icons.schedule, size: AppIconSize.xs),
+                  label: Text(time),
+                  onPressed: () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay(
+                        hour: settings.minutes ~/ 60,
+                        minute: settings.minutes % 60,
+                      ),
+                    );
+                    if (picked != null) {
+                      ref
+                          .read(briefingSettingsProvider.notifier)
+                          .update(minutes: picked.hour * 60 + picked.minute);
+                    }
+                  },
+                ),
+              ),
               // Ayar ile ekran birbirine bağlansın: brifing buradan da açılır.
-              actionChip(ActionChip(
-                avatar: const Icon(Icons.wb_sunny_outlined, size: AppIconSize.xs),
-                label: Text(context.l10n.openBriefing),
-                onPressed: () => context.push('/briefing'),
-              )),
+              actionChip(
+                ActionChip(
+                  avatar: const Icon(
+                    Icons.wb_sunny_outlined,
+                    size: AppIconSize.xs,
+                  ),
+                  label: Text(context.l10n.openBriefing),
+                  onPressed: () => context.push('/briefing'),
+                ),
+              ),
             ],
           ),
       ],
@@ -908,9 +1121,8 @@ class _AdvancedAiSection extends ConsumerWidget {
       title: Text(l10n.aiAdvanced),
       subtitle: Text(
         l10n.aiAdvancedInfo,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
       children: const [
         _GeminiKeyEditor(),

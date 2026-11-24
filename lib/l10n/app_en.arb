@@ -3615,5 +3615,77 @@
         "type": "int"
       }
     }
-  }
+  },
+  "aiSourceModeTitle": "AI source",
+  "aiSourceModeShared": "Shared pool",
+  "aiSourceModeByok": "Own API key",
+  "aiSharedPoolTitle": "Shared AI pool",
+  "aiSharedPoolSubtitle": "Shared across Notes and Files under one Google account ({credits} credits)",
+  "@aiSharedPoolSubtitle": {
+    "placeholders": {
+      "credits": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSharedPoolEmpty": "Shared credits depleted; enter your own key or upgrade to Pro",
+  "aiByokExhaustedError": "Your API key quota or access is exhausted. Did not fall back to shared pool.",
+  "aiBackupKeysTitle": "Backup API keys",
+  "aiBackupKeysInfo": "When primary quota fills, the next key takes over automatically (up to 5)",
+  "aiBackupKeyLabel": "Backup key {index}",
+  "@aiBackupKeyLabel": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "aiBackupKeyAdd": "Add backup key",
+  "ecosystemDosyalarimTitle": "Manage every file with Dosyalarım",
+  "ecosystemDosyalarimSubtitle": "Sign PDFs, edit Word and Excel files, and share your AI pool across both apps.",
+  "ecosystemOpenApp": "Open in Dosyalarım",
+  "ecosystemGetApp": "Explore Dosyalarım",
+  "ecosystemDismiss": "Dismiss",
+  "aiOtherToolsTitle": "Other tools",
+  "aiAttachmentsSection": "Attachment & document tools",
+  "aiSmartCategorizeAction": "Smart categorize",
+  "aiSmartCategorizeInfo": "Organize title, tags, and folder locally with zero credits",
+  "aiLocalBadge": "Local · {percent}%",
+  "@aiLocalBadge": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSmartFolderSuggestion": "Folder: {folder}",
+  "@aiSmartFolderSuggestion": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSmartFixAction": "Fix",
+  "aiSmartRefineWithAi": "Refine low confidence with AI",
+  "aiSmartFixTitle": "Choose right category",
+  "aiSmartSimilarConfirmTitle": "Fix similar notes too?",
+  "aiSmartSimilarConfirmBody": "Apply the same category to {count} similar notes.",
+  "@aiSmartSimilarConfirmBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCatFinance": "Finance",
+  "aiCatHealth": "Health",
+  "aiCatEducation": "Education",
+  "aiCatWork": "Work",
+  "aiCatShopping": "Shopping",
+  "aiCatTravel": "Travel",
+  "aiCatPersonal": "Personal",
+  "aiCatTech": "Tech",
+  "aiCatRecipes": "Recipes",
+  "aiCatOfficial": "Official"
 }

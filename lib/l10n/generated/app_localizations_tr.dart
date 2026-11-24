@@ -10042,4 +10042,130 @@ class AppLocalizationsTr extends AppLocalizations {
   String itemsFormattedCount(int count) {
     return '$count madde biçimlendi';
   }
+
+  @override
+  String get aiSourceModeTitle => 'Yapay zekâ kaynağı';
+
+  @override
+  String get aiSourceModeShared => 'Ortak havuz';
+
+  @override
+  String get aiSourceModeByok => 'Kendi anahtarım';
+
+  @override
+  String get aiSharedPoolTitle => 'Ortak yapay zekâ havuzu';
+
+  @override
+  String aiSharedPoolSubtitle(int credits) {
+    return 'Tek Google hesabıyla hem Notlar hem Dosyalarım uygulamasında ortak kullanılır ($credits kredi)';
+  }
+
+  @override
+  String get aiSharedPoolEmpty =>
+      'Ortak kredi bakiyen tükendi; kendi anahtarını girebilir veya Pro\'ya geçebilirsin';
+
+  @override
+  String get aiByokExhaustedError =>
+      'Kendi anahtarının kotası veya yetkisi tükendi. Ortak havuza otomatik geçilmedi.';
+
+  @override
+  String get aiBackupKeysTitle => 'Yedek API anahtarları';
+
+  @override
+  String get aiBackupKeysInfo =>
+      'Birincil anahtar dolunca sıradaki anahtar otomatik devreye girer (en fazla 5)';
+
+  @override
+  String aiBackupKeyLabel(int index) {
+    return 'Yedek anahtar $index';
+  }
+
+  @override
+  String get aiBackupKeyAdd => 'Yedek anahtar ekle';
+
+  @override
+  String get ecosystemDosyalarimTitle => 'Dosyalarım ile tüm belgeleri yönet';
+
+  @override
+  String get ecosystemDosyalarimSubtitle =>
+      'PDF imzala, Word ve Excel düzenle, ortak yapay zekâ kredini iki uygulamada birlikte kullan.';
+
+  @override
+  String get ecosystemOpenApp => 'Dosyalarım\'da aç';
+
+  @override
+  String get ecosystemGetApp => 'Dosyalarım\'ı keşfet';
+
+  @override
+  String get ecosystemDismiss => 'Gizle';
+
+  @override
+  String get aiOtherToolsTitle => 'Diğer araçlar';
+
+  @override
+  String get aiAttachmentsSection => 'Ek ve belge araçları';
+
+  @override
+  String get aiSmartCategorizeAction => 'Akıllı kategorize et';
+
+  @override
+  String get aiSmartCategorizeInfo =>
+      'Başlık, etiket ve klasörü yerelde kredi harcamadan düzenle';
+
+  @override
+  String aiLocalBadge(int percent) {
+    return 'Yerel · %$percent';
+  }
+
+  @override
+  String aiSmartFolderSuggestion(String folder) {
+    return 'Klasör: $folder';
+  }
+
+  @override
+  String get aiSmartFixAction => 'Düzelt';
+
+  @override
+  String get aiSmartRefineWithAi => 'Düşük güvenlileri yapay zekâyla incele';
+
+  @override
+  String get aiSmartFixTitle => 'Doğru kategoriyi seç';
+
+  @override
+  String get aiSmartSimilarConfirmTitle => 'Benzer notlar da düzeltilsin mi?';
+
+  @override
+  String aiSmartSimilarConfirmBody(int count) {
+    return '$count benzer not için de aynı kategoriyi uygulayabilirsin.';
+  }
+
+  @override
+  String get aiCatFinance => 'Finans';
+
+  @override
+  String get aiCatHealth => 'Sağlık';
+
+  @override
+  String get aiCatEducation => 'Eğitim';
+
+  @override
+  String get aiCatWork => 'İş';
+
+  @override
+  String get aiCatShopping => 'Alışveriş';
+
+  @override
+  String get aiCatTravel => 'Seyahat';
+
+  @override
+  String get aiCatPersonal => 'Kişisel';
+
+  @override
+  String get aiCatTech => 'Teknoloji';
+
+  @override
+  String get aiCatRecipes => 'Tarifler';
+
+  @override
+  String get aiCatOfficial => 'Resmî';
 }

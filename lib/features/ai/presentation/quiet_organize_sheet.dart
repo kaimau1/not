@@ -8,31 +8,45 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../auth/presentation/account_required.dart';
+import '../../folders/data/folders_repository.dart';
+import '../../folders/domain/note_folder.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../../settings/settings_providers.dart';
+import '../data/ai_gate.dart';
 import '../data/ai_history.dart';
 import '../data/gemini_service.dart';
+import '../domain/smart_categorize.dart';
 import 'ai_result_note.dart';
 
 /// Toplu "Sessiz düzen" (A8, PLAN §1.6) kapsamı.
 enum QuietOrganizeScope { titles, tags, both }
 
-/// Başlıksız ve/veya etiketsiz notları TEK istekte toplu düzenler.
+/// Başlıksız ve/veya etiketsiz notları yerelde 0 krediyle sınıflandırır ve
+/// isteğe bağlı olarak düşük güvenlileri tek istekte toplu yapay zekâya sorar.
 /// Kullanıcı önerileri kutucuklarla seçip tek dokunuşla uygular; tek "Geri al"
 /// tüm notları eski hâline döndürür.
 Future<void> showQuietOrganizeSheet(
   BuildContext context, {
   QuietOrganizeScope scope = QuietOrganizeScope.both,
+  bool preferLocalFirst = false,
 }) => showAppSheet<void>(
   context: context,
   isScrollControlled: true,
-  builder: (_) => _QuietOrganizeSheet(initialScope: scope),
+  builder: (_) => _QuietOrganizeSheet(
+    initialScope: scope,
+    preferLocalFirst: preferLocalFirst,
+  ),
 );
 
 class _QuietOrganizeSheet extends ConsumerStatefulWidget {
-  const _QuietOrganizeSheet({required this.initialScope});
+  const _QuietOrganizeSheet({
+    required this.initialScope,
+    required this.preferLocalFirst,
+  });
 
   final QuietOrganizeScope initialScope;
+  final bool preferLocalFirst;
 
   @override
   ConsumerState<_QuietOrganizeSheet> createState() =>
@@ -43,9 +57,18 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
   late QuietOrganizeScope _scope;
   bool _loading = true;
   bool _applying = false;
+  bool _aiRefined = false;
   String? _error;
   List<QuietOrganizeSuggestion> _suggestions = const [];
+  Map<String, SmartNoteClassification> _localById = const {};
+  Map<String, NoteFolder> _folderByName = const {};
   final Set<String> _selected = {};
+
+  bool get _suggestTitles =>
+      _scope == QuietOrganizeScope.titles || _scope == QuietOrganizeScope.both;
+
+  bool get _suggestTags =>
+      _scope == QuietOrganizeScope.tags || _scope == QuietOrganizeScope.both;
 
   @override
   void initState() {
@@ -56,46 +79,274 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
     });
   }
 
-  Future<void> _fetch() async {
-    if (!ensureAiReady(context, ref)) {
-      if (mounted) Navigator.pop(context);
-      return;
+  Future<void> _fetch({bool forceAi = false}) async {
+    for (
+      var i = 0;
+      i < 3 &&
+          (ref.read(notesStreamProvider).isLoading ||
+              ref.read(foldersStreamProvider).isLoading);
+      i++
+    ) {
+      await Future<void>.delayed(Duration.zero);
+      if (!mounted) return;
     }
     final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+    final folders =
+        ref.read(foldersStreamProvider).value ?? const <NoteFolder>[];
+    final folderByName = {for (final f in folders) f.name: f};
+    final folderNames = folderByName.keys.toList(growable: false);
+    final prefs = ref.read(sharedPreferencesProvider);
+    final learn = SmartNoteLearn(prefs);
+    final localList = SmartNoteCategorizer.classifyAll(
+      notes,
+      suggestTitles: _suggestTitles,
+      suggestTags: _suggestTags,
+      learn: learn,
+      existingFolders: folderNames,
+    );
+    final localMap = {for (final c in localList) c.noteId: c};
+    final localSuggestions = [
+      for (final c in localList) c.toOrganizeSuggestion(),
+    ];
+
+    final availability = ref.read(aiAvailabilityProvider);
+    final useLocalOnly =
+        !forceAi &&
+        (widget.preferLocalFirst || availability != AiAvailability.ready);
+
+    if (useLocalOnly) {
+      if (!mounted) return;
+      setState(() {
+        _localById = localMap;
+        _folderByName = folderByName;
+        _suggestions = localSuggestions;
+        _selected
+          ..clear()
+          ..addAll(localSuggestions.map((r) => r.noteId));
+        _error = null;
+        _loading = false;
+        _aiRefined = false;
+      });
+      return;
+    }
+
+    if (!ensureAiReady(context, ref)) {
+      if (forceAi) return;
+      if (!mounted) return;
+      Navigator.pop(context);
+      return;
+    }
+
+    final targetNotes = forceAi
+        ? [
+            for (final n in notes)
+              if (localMap[n.id]?.needsAiRefinement ?? false) n,
+          ]
+        : notes;
+
+    if (forceAi && targetNotes.isEmpty) {
+      if (mounted) setState(() => _aiRefined = true);
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
-      _suggestions = const [];
-      _selected.clear();
+      _localById = localMap;
+      _folderByName = folderByName;
+      if (!forceAi) {
+        _suggestions = localSuggestions;
+        _selected.clear();
+      }
     });
+
     try {
       final results = await ref
           .read(geminiServiceProvider)
           .batchQuietOrganize(
-            notes,
-            suggestTitles:
-                _scope == QuietOrganizeScope.titles ||
-                _scope == QuietOrganizeScope.both,
-            suggestTags:
-                _scope == QuietOrganizeScope.tags ||
-                _scope == QuietOrganizeScope.both,
+            targetNotes,
+            suggestTitles: _suggestTitles,
+            suggestTags: _suggestTags,
           );
       if (!mounted) return;
+      final merged = forceAi ? _mergeSuggestions(results) : results;
       setState(() {
-        _suggestions = results;
+        _suggestions = merged;
         _selected
           ..clear()
-          ..addAll(results.map((r) => r.noteId));
+          ..addAll(merged.map((r) => r.noteId));
         _loading = false;
+        _aiRefined = true;
       });
     } catch (e) {
       if (!mounted) return;
+      if (!forceAi && localSuggestions.isNotEmpty) {
+        setState(() {
+          _suggestions = localSuggestions;
+          _selected
+            ..clear()
+            ..addAll(localSuggestions.map((r) => r.noteId));
+          _loading = false;
+          _aiRefined = false;
+        });
+        return;
+      }
       setState(() {
         _error = aiErrorText(context.l10n, e);
         _loading = false;
       });
     }
   }
+
+  List<QuietOrganizeSuggestion> _mergeSuggestions(
+    List<QuietOrganizeSuggestion> aiResults,
+  ) {
+    final byId = {for (final s in _suggestions) s.noteId: s};
+    for (final s in aiResults) {
+      byId[s.noteId] = s;
+    }
+    return byId.values.toList(growable: false);
+  }
+
+  Future<void> _pickCategoryFix(
+    Note note,
+    SmartNoteClassification current,
+  ) async {
+    final l10n = context.l10n;
+    final picked = await showAppSheet<SmartNoteCategory>(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(ctx).height * 0.7,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SheetHeader(title: l10n.aiSmartFixTitle),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final cat in SmartNoteCategory.values)
+                        ListTile(
+                          key: ValueKey('smart-fix-cat-${cat.name}'),
+                          title: Text(_categoryLabel(l10n, cat)),
+                          trailing: cat == current.category
+                              ? Icon(
+                                  Icons.check,
+                                  size: AppIconSize.m,
+                                  color: Theme.of(ctx).colorScheme.primary,
+                                )
+                              : null,
+                          onTap: () => Navigator.pop(ctx, cat),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || picked == current.category || !mounted) return;
+
+    final learn = SmartNoteLearn(ref.read(sharedPreferencesProvider));
+    await learn.recordCorrection(note, current.category, picked);
+    final folders = _folderByName.keys.toList(growable: false);
+    final updated = SmartNoteCategorizer.overrideCategory(
+      note,
+      picked,
+      suggestTitle: _suggestTitles,
+      suggestTags: _suggestTags,
+      existingFolders: folders,
+    );
+
+    final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+    final similar = learn.findSimilar(
+      note,
+      current.category,
+      notes,
+      currentCategoryOf: (n) =>
+          _localById[n.id]?.category ?? SmartNoteCategory.personal,
+    );
+
+    var applySimilar = false;
+    if (similar.isNotEmpty && mounted) {
+      applySimilar =
+          await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(l10n.aiSmartSimilarConfirmTitle),
+              content: Text(l10n.aiSmartSimilarConfirmBody(similar.length)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: Text(l10n.cancel),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: Text(l10n.aiQuietOrganizeApply(similar.length)),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+    }
+
+    if (!mounted) return;
+    final nextLocal = Map<String, SmartNoteClassification>.from(_localById);
+    final suggestionMap = {for (final s in _suggestions) s.noteId: s};
+
+    void applyOverride(Note target, SmartNoteClassification next) {
+      nextLocal[target.id] = next;
+      suggestionMap[target.id] = next.toOrganizeSuggestion();
+      _selected.add(target.id);
+    }
+
+    applyOverride(note, updated);
+    if (applySimilar) {
+      for (final other in similar) {
+        final prevCat =
+            nextLocal[other.id]?.category ?? SmartNoteCategory.personal;
+        await learn.recordCorrection(other, prevCat, picked);
+        applyOverride(
+          other,
+          SmartNoteCategorizer.overrideCategory(
+            other,
+            picked,
+            suggestTitle: _suggestTitles,
+            suggestTags: _suggestTags,
+            existingFolders: folders,
+          ),
+        );
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _localById = nextLocal;
+      _suggestions = suggestionMap.values.toList(growable: false);
+    });
+  }
+
+  static String _categoryLabel(AppLocalizations l10n, SmartNoteCategory cat) =>
+      switch (cat) {
+        SmartNoteCategory.finance => l10n.aiCatFinance,
+        SmartNoteCategory.health => l10n.aiCatHealth,
+        SmartNoteCategory.education => l10n.aiCatEducation,
+        SmartNoteCategory.work => l10n.aiCatWork,
+        SmartNoteCategory.shopping => l10n.aiCatShopping,
+        SmartNoteCategory.travel => l10n.aiCatTravel,
+        SmartNoteCategory.personal => l10n.aiCatPersonal,
+        SmartNoteCategory.tech => l10n.aiCatTech,
+        SmartNoteCategory.recipes => l10n.aiCatRecipes,
+        SmartNoteCategory.official => l10n.aiCatOfficial,
+      };
 
   Future<void> _apply() async {
     if (_applying || _selected.isEmpty) return;
@@ -110,20 +361,33 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
       if (!_selected.contains(s.noteId)) continue;
       final current = byId[s.noteId];
       if (current == null || current.locked) continue;
-      final nextTitle =
-          (s.title != null && current.title.trim().isEmpty)
+      final nextTitle = (s.title != null && current.title.trim().isEmpty)
           ? s.title!
           : current.title;
       final nextTags = (s.tags.isNotEmpty && current.tags.isEmpty)
           ? s.tags
           : current.tags;
+      final localFolderName = _localById[s.noteId]?.folderSuggestion;
+      final matchedFolder = localFolderName == null
+          ? null
+          : _folderByName[localFolderName];
+      final nextFolderId =
+          ((current.folderId == null || current.folderId!.isEmpty) &&
+              matchedFolder != null)
+          ? matchedFolder.id
+          : current.folderId;
       if (nextTitle == current.title &&
-          _sameTags(nextTags, current.tags)) {
+          _sameTags(nextTags, current.tags) &&
+          nextFolderId == current.folderId) {
         continue;
       }
       updates.add((
         before: current,
-        after: current.copyWith(title: nextTitle, tags: nextTags),
+        after: current.copyWith(
+          title: nextTitle,
+          tags: nextTags,
+          folderId: nextFolderId,
+        ),
       ));
     }
     if (updates.isEmpty) {
@@ -165,6 +429,13 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
     final scheme = theme.colorScheme;
     final text = AppText.of(theme);
     final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+    ref.watch(foldersStreamProvider);
+    ref.listen(foldersStreamProvider, (prev, next) {
+      if (next.hasValue && !_aiRefined && _localById.isNotEmpty) {
+        final hasFolders = (next.value ?? const <NoteFolder>[]).isNotEmpty;
+        if (hasFolders && _folderByName.isEmpty) _fetch();
+      }
+    });
     final byId = {for (final n in notes) n.id: n};
 
     return SafeArea(
@@ -263,6 +534,7 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
                   itemBuilder: (context, index) {
                     final s = _suggestions[index];
                     final note = byId[s.noteId];
+                    final local = _localById[s.noteId];
                     final checked = _selected.contains(s.noteId);
                     final preview = (note?.toPlainText() ?? '')
                         .replaceAll(RegExp(r'\s+'), ' ')
@@ -324,6 +596,101 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
                                         style: text.meta,
                                       ),
                                     ],
+                                    if (local != null) ...[
+                                      const SizedBox(height: AppSpace.xs),
+                                      Wrap(
+                                        spacing: AppSpace.xs,
+                                        runSpacing: AppSpace.xs,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: AppSpace.s,
+                                              vertical: AppSpace.xxs,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: scheme.surface,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppRadius.s,
+                                                  ),
+                                            ),
+                                            child: Text(
+                                              '${_categoryLabel(l10n, local.category)} · ${l10n.aiLocalBadge((local.confidence * 100).round())}',
+                                              style: text.badge.copyWith(
+                                                color: scheme.onSurfaceVariant,
+                                              ),
+                                            ),
+                                          ),
+                                          if (local.folderSuggestion != null)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: AppSpace.s,
+                                                    vertical: AppSpace.xxs,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: scheme.primaryContainer,
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      AppRadius.s,
+                                                    ),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.folder_outlined,
+                                                    size: AppIconSize.s,
+                                                    color: scheme
+                                                        .onPrimaryContainer,
+                                                  ),
+                                                  const SizedBox(
+                                                    width: AppSpace.xxs,
+                                                  ),
+                                                  Text(
+                                                    l10n.aiSmartFolderSuggestion(
+                                                      local.folderSuggestion!,
+                                                    ),
+                                                    style: text.badge.copyWith(
+                                                      color: scheme
+                                                          .onPrimaryContainer,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          if (note != null)
+                                            TextButton.icon(
+                                              key: ValueKey(
+                                                'quiet-org-fix-${s.noteId}',
+                                              ),
+                                              style: TextButton.styleFrom(
+                                                visualDensity:
+                                                    VisualDensity.compact,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: AppSpace.s,
+                                                    ),
+                                                minimumSize: Size.zero,
+                                                tapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
+                                              ),
+                                              onPressed: () =>
+                                                  _pickCategoryFix(note, local),
+                                              icon: const Icon(
+                                                Icons.tune_outlined,
+                                                size: AppIconSize.s,
+                                              ),
+                                              label: Text(
+                                                l10n.aiSmartFixAction,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
                                     if (s.tags.isNotEmpty) ...[
                                       const SizedBox(height: AppSpace.s),
                                       Wrap(
@@ -367,6 +734,25 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
                   },
                 ),
               ),
+              if (!_aiRefined &&
+                  _localById.values.any((c) => c.needsAiRefinement))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.l,
+                    AppSpace.xs,
+                    AppSpace.l,
+                    0,
+                  ),
+                  child: OutlinedButton.icon(
+                    key: const ValueKey('quiet-org-refine-ai'),
+                    onPressed: _applying ? null : () => _fetch(forceAi: true),
+                    icon: const Icon(
+                      Icons.auto_awesome_outlined,
+                      size: AppIconSize.s,
+                    ),
+                    label: Text(l10n.aiSmartRefineWithAi),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
                 child: AiResultNote(

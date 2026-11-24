@@ -149,9 +149,10 @@ exports.pushNoteShared = push.pushNoteShared;
 exports.pushInboxNote = push.pushInboxNote;
 
 // Play Billing (PL6) — YALNIZ Play projesinde: `functions/.env.<play-proje>`
-// içinde `PLAY_PACKAGE_NAME` varsa bağlanır. Kişisel proje deploy'unda
-// (CI, `notlar-kaimau`) bu değişken yok → bu fonksiyonlar orada YOK.
-if (process.env.PLAY_PACKAGE_NAME) {
+// içinde `PLAY_PACKAGE_NAME` veya `PLAY_PACKAGE_NAMES` varsa bağlanır. Kişisel
+// proje deploy'unda (CI, `notlar-kaimau`) bu değişken yok → bu fonksiyonlar
+// orada YOK.
+if (process.env.PLAY_PACKAGE_NAME || process.env.PLAY_PACKAGE_NAMES) {
   const billing = require("./billing");
   exports.verifyPurchase = billing.verifyPurchase;
   exports.playRtdn = billing.playRtdn;
@@ -159,4 +160,8 @@ if (process.env.PLAY_PACKAGE_NAME) {
   // Karar vekili (PLAN U8 KARAR 2026-11-22): gizli anahtar
   // `GEMINI_DECISIONS_KEY` yalnız Play projesinde tanımlı.
   exports.decide = require("./decisions").decide;
+  // Ortak AI havuzu (Notlar + Dosyalarım tek Google hesabı).
+  const aiPool = require("./ai_pool_gateway");
+  exports.sharedAiPoolStatus = aiPool.sharedAiPoolStatus;
+  exports.sharedAiPoolGenerate = aiPool.sharedAiPoolGenerate;
 }

@@ -4,13 +4,16 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:notlar/core/net/json_http.dart';
+
 import '../../../l10n/generated/app_localizations.dart';
+
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 
 import '../../../core/constants.dart';
 import '../../../core/friendly_error.dart';
+import '../../../core/play_build.dart';
 import '../../../core/utils/markdown.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
@@ -24,6 +27,7 @@ import 'firebase_ai_client.dart';
 import 'model_catalog.dart';
 import 'pcm_wav.dart';
 import 'provider_chat.dart';
+import 'shared_ai_pool.dart';
 
 final geminiServiceProvider = Provider<GeminiService>(
   (ref) => GeminiService(
@@ -43,8 +47,13 @@ final geminiServiceProvider = Provider<GeminiService>(
     ),
     // TEK KAPI (PL2/PL3): kapalı / rıza yok → ağa çıkmadan red.
     admit: ref.read(aiAdmissionProvider).check,
-    // Play katman kapısı (PL6): anahtar okunduktan sonra (hangi yol belli).
+    // Play katman kapısı (PL6): anahtar okundtan sonra (hangi yol belli).
     admitTier: ref.read(aiAdmissionProvider).checkTier,
+    sourceMode: () => ref.read(aiSourceModeProvider),
+    sharedPool: PlayBuild.enabled ? ref.read(sharedAiPoolClientProvider) : null,
+    byokPool: ref.read(byokKeyPoolProvider),
+    onSharedCreditsUsed: (rem) =>
+        ref.read(sharedAiPoolProvider.notifier).applyRemaining(rem),
   ),
 );
 
@@ -253,9 +262,18 @@ class GeminiService {
     this._builtIn,
     this._admit,
     this._admitTier,
+    this._sourceMode,
+    this._sharedPool,
+    this._byokPool,
+    this._onSharedCreditsUsed,
   }) : _provider = provider,
        _taskModel = taskModel ?? _noModel,
        _http = http ?? JsonHttp(baseUrl: provider.baseUrl);
+
+  final AiSourceMode Function()? _sourceMode;
+  final SharedAiPoolClient? _sharedPool;
+  final ByokKeyPool? _byokPool;
+  final void Function(int remaining)? _onSharedCreditsUsed;
 
   static String? _noModel(AiTask task) => null;
 
@@ -363,9 +381,9 @@ class GeminiService {
 
   static GeminiException _mapDioError(JsonHttpException e) =>
       switch (e.response?.statusCode) {
-        400 || 401 || 403 => const GeminiException.of(
-          GeminiErrorKind.invalidKey,
-        ),
+        400 ||
+        401 ||
+        403 => const GeminiException.of(GeminiErrorKind.invalidKey),
         404 => const GeminiException.of(GeminiErrorKind.modelNotFound),
         429 => const GeminiException.of(GeminiErrorKind.rateLimited),
         _ => GeminiException.of(GeminiErrorKind.connection, detail: e.message),
@@ -548,9 +566,48 @@ class GeminiService {
     ModelChain? chain,
   }) async {
     final prefer = preferModel ?? _taskModel(task);
-    // Anahtar yoksa dahili yol: istek Firebase AI Logic üzerinden gider.
+    final mode = _sourceMode?.call();
+    if (mode == AiSourceMode.sharedPool &&
+        _sharedPool != null &&
+        _provider == AiProvider.gemini) {
+      _admit?.call();
+      _admitTier?.call(hasOwnKey: false);
+      try {
+        final poolRes = await _sharedPool.generate(
+          mode: mode!,
+          contents: contents,
+          model: prefer ?? 'gemini-2.5-flash',
+          generationConfig: jsonOutput
+              ? const {'responseMimeType': 'application/json'}
+              : null,
+        );
+        _onSharedCreditsUsed?.call(poolRes.remainingCredits);
+        if (poolRes.text.isEmpty) {
+          throw const GeminiException.of(GeminiErrorKind.emptyResponse);
+        }
+        return poolRes.text;
+      } on SharedAiPoolException catch (e) {
+        throw switch (e.kind) {
+          SharedAiPoolErrorKind.unauthenticated => const GeminiException.of(
+            GeminiErrorKind.guestLocked,
+          ),
+          SharedAiPoolErrorKind.insufficientCredits => const GeminiException.of(
+            GeminiErrorKind.quotaFree,
+          ),
+          SharedAiPoolErrorKind.rateLimited => const GeminiException.of(
+            GeminiErrorKind.rateLimited,
+          ),
+          _ => const GeminiException.of(GeminiErrorKind.unavailable),
+        };
+      }
+    }
+    // Anahtar yoksa dahili yol: istek Firebase AI Logic üzerinden gider
+    // (BYOK açıkça seçiliyse asla ortak havuza/dahiliye düşülmez).
     final stored = await _admittedKey();
     if (stored == null || stored.isEmpty) {
+      if (mode == AiSourceMode.byok) {
+        throw const GeminiException.of(GeminiErrorKind.noKey);
+      }
       final builtIn = _builtIn;
       if (builtIn == null) {
         throw const GeminiException.of(GeminiErrorKind.noKey);
@@ -563,40 +620,55 @@ class GeminiService {
       );
     }
     final useChain = chain ?? chainOf(task);
-    final key = stored;
-    // İstek gövdesi sağlayıcının tel biçimine BURADA çevrilir; çağrı yerleri
-    // (özet, OCR, sohbet...) Gemini şeklini üretmeye devam eder.
-    final JsonResponse<Map<String, dynamic>> response;
-    try {
-      response = await _withModel(
-        key,
-        (model) => _http.post<Map<String, dynamic>>(
-          chatPath(_provider, model),
-          headers: _provider.authHeaders(key),
-          timeout: timeout,
-          data: buildChatBody(
-            provider: _provider,
-            model: model,
-            contents: contents,
-            jsonOutput: jsonOutput,
+    final backupKeys = _byokPool == null
+        ? const <String>[]
+        : await _byokPool.readKeys(_provider);
+    final candidateKeys = [
+      stored,
+      for (final k in backupKeys)
+        if (k != stored) k,
+    ];
+    GeminiException? lastErr;
+    for (final key in candidateKeys) {
+      try {
+        final response = await _withModel(
+          key,
+          (model) => _http.post<Map<String, dynamic>>(
+            chatPath(_provider, model),
+            headers: _provider.authHeaders(key),
+            timeout: timeout,
+            data: buildChatBody(
+              provider: _provider,
+              model: model,
+              contents: contents,
+              jsonOutput: jsonOutput,
+            ),
           ),
-        ),
-        prefer: prefer,
-        chain: useChain,
-        allowShortOnly:
-            (useChain == ModelChain.general ||
-                useChain == ModelChain.short) &&
-            !jsonOutput &&
-            _isShortText(contents),
-      );
-    } on UnsupportedContentException catch (e) {
-      throw GeminiException.of(e.kind, detail: e.provider);
+          prefer: prefer,
+          chain: useChain,
+          allowShortOnly:
+              (useChain == ModelChain.general ||
+                  useChain == ModelChain.short) &&
+              !jsonOutput &&
+              _isShortText(contents),
+        );
+        final text = parseChatText(_provider, response.data);
+        if (text == null || text.isEmpty) {
+          throw const GeminiException.of(GeminiErrorKind.emptyResponse);
+        }
+        return text;
+      } on UnsupportedContentException catch (e) {
+        throw GeminiException.of(e.kind, detail: e.provider);
+      } on GeminiException catch (e) {
+        lastErr = e;
+        if (e.kind == GeminiErrorKind.invalidKey ||
+            e.kind == GeminiErrorKind.rateLimited) {
+          continue;
+        }
+        rethrow;
+      }
     }
-    final text = parseChatText(_provider, response.data);
-    if (text == null || text.isEmpty) {
-      throw const GeminiException.of(GeminiErrorKind.emptyResponse);
-    }
-    return text;
+    throw lastErr ?? const GeminiException.of(GeminiErrorKind.rateLimited);
   }
 
   /// Özet ve analize giden not metni: TAMAMLANMIŞ maddeler dışarıda kalır
@@ -614,7 +686,10 @@ class GeminiService {
   /// Notu Türkçe olarak özetler (A7: kısa/ayrıntılı uzunluk anahtarı).
   /// [detailed] false ise kısa ve öz madde işaretli özet; true ise önemli
   /// bölümleri, verileri ve çıkarımları atlamayan ayrıntılı özet üretir.
-  Future<String> summarizeNote(Note note, {bool detailed = false}) => _generate([
+  Future<String> summarizeNote(
+    Note note, {
+    bool detailed = false,
+  }) => _generate([
     {
       'text': detailed
           ? 'Aşağıdaki notun Türkçe olarak AYRINTILI ve düzenli bir özetini çıkar. '
@@ -904,7 +979,9 @@ class GeminiService {
     // ortada kayıt yokken "transkript" uydururdu.
     if (hasKey && _provider != AiProvider.gemini) {
       throw GeminiException.of(
-        video ? GeminiErrorKind.videoNeedsGemini : GeminiErrorKind.audioNeedsGemini,
+        video
+            ? GeminiErrorKind.videoNeedsGemini
+            : GeminiErrorKind.audioNeedsGemini,
         detail: _provider.label,
       );
     }
@@ -1144,28 +1221,31 @@ class GeminiService {
     String documentText, {
     String? title,
     bool summarize = false,
-  }) => _generate([
-    {
-      'text':
-          'Aşağıdaki belgeyi, SESLİ DİNLENMEK üzere akıcı bir Türkçe '
-          'anlatıya dönüştür.${title == null ? '' : ' Belgenin adı: $title.'}\n'
-          'Kurallar:\n'
-          '- Kısa bir giriş cümlesiyle başla (konu ne).\n'
-          '- Düz konuşma metni yaz: madde işareti, numara, başlık, '
-          'yıldız, tire KULLANMA. Hepsi sesli okunduğunda saçma durur.\n'
-          '- Tablo ve şekilleri cümleye çevir; okunamayanları atla.\n'
-          '- Dipnot, sayfa numarası, kaynakça atıflarını çıkar.\n'
-          '${summarize ? '- ÖZET anlat: yalnızca ana fikirleri ve sonuçları '
-                    'al, ayrıntıyı, örnekleri ve tekrarları at. Hedef uzunluk '
-                    'belgenin beşte biri kadar olsun.\n' : '- Belgenin kendi '
-                    'sırasını ve TÜM ana fikirlerini koru; özet değil, '
-                    'dinlenebilir tam anlatım istiyorum.\n'}'
-          '- Kısa cümleler kur; uzun cümle sesli dinlemede takip edilemiyor.\n'
-          '- Sonunda tek cümlelik kapanış yap.\n'
-          'Yalnızca anlatı metnini yaz.\n\n---\n$documentText',
-    },
-  ], preferModel: _taskModel(AiTask.podcast) ?? _taskModel(AiTask.document), task: AiTask.podcast);
-
+  }) => _generate(
+    [
+      {
+        'text':
+            'Aşağıdaki belgeyi, SESLİ DİNLENMEK üzere akıcı bir Türkçe '
+            'anlatıya dönüştür.${title == null ? '' : ' Belgenin adı: $title.'}\n'
+            'Kurallar:\n'
+            '- Kısa bir giriş cümlesiyle başla (konu ne).\n'
+            '- Düz konuşma metni yaz: madde işareti, numara, başlık, '
+            'yıldız, tire KULLANMA. Hepsi sesli okunduğunda saçma durur.\n'
+            '- Tablo ve şekilleri cümleye çevir; okunamayanları atla.\n'
+            '- Dipnot, sayfa numarası, kaynakça atıflarını çıkar.\n'
+            '${summarize ? '- ÖZET anlat: yalnızca ana fikirleri ve sonuçları '
+                      'al, ayrıntıyı, örnekleri ve tekrarları at. Hedef uzunluk '
+                      'belgenin beşte biri kadar olsun.\n' : '- Belgenin kendi '
+                      'sırasını ve TÜM ana fikirlerini koru; özet değil, '
+                      'dinlenebilir tam anlatım istiyorum.\n'}'
+            '- Kısa cümleler kur; uzun cümle sesli dinlemede takip edilemiyor.\n'
+            '- Sonunda tek cümlelik kapanış yap.\n'
+            'Yalnızca anlatı metnini yaz.\n\n---\n$documentText',
+      },
+    ],
+    preferModel: _taskModel(AiTask.podcast) ?? _taskModel(AiTask.document),
+    task: AiTask.podcast,
+  );
 
   /// Metni Gemini'nin SESLENDİRME modeliyle okur ve çalınabilir WAV baytları
   /// döndürür.
@@ -1277,8 +1357,7 @@ class GeminiService {
       // Model yanıt verdi ama ses yok: başka bir modelde şansımızı deneriz.
       lastMissing = const GeminiException.of(GeminiErrorKind.speechFailed);
     }
-    throw lastMissing ??
-        const GeminiException.of(GeminiErrorKind.speechFailed);
+    throw lastMissing ?? const GeminiException.of(GeminiErrorKind.speechFailed);
   }
 
   /// Not içi aramanın AI katmanı: soruyu notun METNİNE (ve varsa eklerden
@@ -1518,10 +1597,7 @@ class GeminiService {
       final snippet = rawText.length > 260
           ? '${rawText.substring(0, 260)}…'
           : rawText;
-      final want = [
-        if (needTitle) 'title',
-        if (needTags) 'tags',
-      ].join(',');
+      final want = [if (needTitle) 'title', if (needTags) 'tags'].join(',');
       buf
         ..writeln()
         ..writeln('<<<NOT id="${n.id}" iste="$want">>>')
@@ -1641,9 +1717,8 @@ class GeminiService {
     String text,
     List<String> titles,
   ) async {
-    final lines = [
-      for (var i = 0; i < titles.length; i++) '$i: ${titles[i]}',
-    ].join('\n');
+    final lines = [for (var i = 0; i < titles.length; i++) '$i: ${titles[i]}']
+        .join('\n');
     final raw = await _generate(task: AiTask.short, [
       {
         'text':
@@ -1729,10 +1804,7 @@ class GeminiService {
           ],
         },
     ];
-    return _generateFromContents(
-      contents,
-      task: AiTask.document,
-    );
+    return _generateFromContents(contents, task: AiTask.document);
   }
 
   /// Tek bir not üzerinde çok turlu soru-cevap: notun metni ve ekleri
@@ -1818,10 +1890,8 @@ class GeminiService {
     ], jsonOutput: true);
     final decoded = jsonDecode(raw);
     if (decoded is! List) return const [];
-    return [
-      for (final item in decoded.take(6))
-        item.toString().trim(),
-    ]..removeWhere((s) => s.isEmpty);
+    return [for (final item in decoded.take(6)) item.toString().trim()]
+      ..removeWhere((s) => s.isEmpty);
   }
 
   /// **AI İLE BERABER DÜŞÜN — sohbet.**
@@ -1853,7 +1923,7 @@ class GeminiService {
                 '4-5 cümle ya da kısa madde listesi); markdown kullanma, '
                 'düz metin yaz.'
                 '${focusHeading == null ? '' : ' Şu başlık üzerinde '
-                    'yoğunlaş: "$focusHeading".'}'
+                          'yoğunlaş: "$focusHeading".'}'
                 '\n\n---\n${text.isEmpty ? '(not henüz boş)' : text}',
           },
         ],
@@ -2369,7 +2439,10 @@ class GeminiService {
                 'MUTLAKA doldur — kullanıcı "hatırlat" demese, sadece '
                 'planını anlatsa bile.',
           },
-          'reminderRepeat': {'type': 'STRING', 'description': _kRepeatDescription},
+          'reminderRepeat': {
+            'type': 'STRING',
+            'description': _kRepeatDescription,
+          },
         },
         'required': ['type', 'title'],
       },
@@ -2432,7 +2505,10 @@ class GeminiService {
           },
           'locked': {'type': 'BOOLEAN'},
           'reminderAt': {'type': 'STRING', 'description': 'ISO 8601'},
-          'reminderRepeat': {'type': 'STRING', 'description': _kRepeatDescription},
+          'reminderRepeat': {
+            'type': 'STRING',
+            'description': _kRepeatDescription,
+          },
           'clearReminder': {'type': 'BOOLEAN'},
           'pinned': {'type': 'BOOLEAN'},
           'archived': {'type': 'BOOLEAN'},
@@ -2595,10 +2671,10 @@ StructuredOcrNote parseStructuredOcrNote(
         final lines = <String>[];
         if (rawLines is List) {
           for (final item in rawLines) {
-            final line = item
-                .toString()
-                .trim()
-                .replaceFirst(RegExp(r'^(?:[-*•]\s+|\[\s?[xX]?\s?\]\s+|\d+[.)]\s+)'), '');
+            final line = item.toString().trim().replaceFirst(
+              RegExp(r'^(?:[-*•]\s+|\[\s?[xX]?\s?\]\s+|\d+[.)]\s+)'),
+              '',
+            );
             if (line.isNotEmpty) lines.add(line);
           }
         }
@@ -2754,13 +2830,10 @@ RecordingTakeaways parseRecordingTakeaways(
         final actions = <String>[];
         if (decoded['actions'] is List) {
           for (final a in decoded['actions'] as List) {
-            final clean = a
-                .toString()
-                .trim()
-                .replaceFirst(
-                  RegExp(r'^(?:[-*•]\s+|\[\s?[xX]?\s?\]\s+|\d+[.)]\s+)'),
-                  '',
-                );
+            final clean = a.toString().trim().replaceFirst(
+              RegExp(r'^(?:[-*•]\s+|\[\s?[xX]?\s?\]\s+|\d+[.)]\s+)'),
+              '',
+            );
             if (clean.isNotEmpty) actions.add(clean);
           }
         }

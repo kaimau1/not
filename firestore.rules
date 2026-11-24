@@ -577,6 +577,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Ortak AI havuzu (Notlar + Dosyalarım): yalnız sahibi okuyabilir,
+    // yazma ve liste tüm istemcilere kapalı (yalnız Admin SDK günceller).
+    match /sharedAiPool/{uid} {
+      allow get: if signedInAs(uid);
+      allow list: if false;
+      allow write: if false;
+    }
+
     // Dahili AI kota sayacı. AYRI KÖK KOLEKSİYONDA, bilerek:
     //
     // KÖK NEDEN (iki ayrı açık, ikisi de faturayı projeye çıkarıyordu):

@@ -17809,6 +17809,228 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} madde biçimlendi'**
   String itemsFormattedCount(int count);
+
+  /// No description provided for @aiSourceModeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ kaynağı'**
+  String get aiSourceModeTitle;
+
+  /// No description provided for @aiSourceModeShared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak havuz'**
+  String get aiSourceModeShared;
+
+  /// No description provided for @aiSourceModeByok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi anahtarım'**
+  String get aiSourceModeByok;
+
+  /// No description provided for @aiSharedPoolTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak yapay zekâ havuzu'**
+  String get aiSharedPoolTitle;
+
+  /// No description provided for @aiSharedPoolSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek Google hesabıyla hem Notlar hem Dosyalarım uygulamasında ortak kullanılır ({credits} kredi)'**
+  String aiSharedPoolSubtitle(int credits);
+
+  /// No description provided for @aiSharedPoolEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak kredi bakiyen tükendi; kendi anahtarını girebilir veya Pro\'ya geçebilirsin'**
+  String get aiSharedPoolEmpty;
+
+  /// No description provided for @aiByokExhaustedError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi anahtarının kotası veya yetkisi tükendi. Ortak havuza otomatik geçilmedi.'**
+  String get aiByokExhaustedError;
+
+  /// No description provided for @aiBackupKeysTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek API anahtarları'**
+  String get aiBackupKeysTitle;
+
+  /// No description provided for @aiBackupKeysInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birincil anahtar dolunca sıradaki anahtar otomatik devreye girer (en fazla 5)'**
+  String get aiBackupKeysInfo;
+
+  /// No description provided for @aiBackupKeyLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek anahtar {index}'**
+  String aiBackupKeyLabel(int index);
+
+  /// No description provided for @aiBackupKeyAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek anahtar ekle'**
+  String get aiBackupKeyAdd;
+
+  /// No description provided for @ecosystemDosyalarimTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosyalarım ile tüm belgeleri yönet'**
+  String get ecosystemDosyalarimTitle;
+
+  /// No description provided for @ecosystemDosyalarimSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF imzala, Word ve Excel düzenle, ortak yapay zekâ kredini iki uygulamada birlikte kullan.'**
+  String get ecosystemDosyalarimSubtitle;
+
+  /// No description provided for @ecosystemOpenApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosyalarım\'da aç'**
+  String get ecosystemOpenApp;
+
+  /// No description provided for @ecosystemGetApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosyalarım\'ı keşfet'**
+  String get ecosystemGetApp;
+
+  /// No description provided for @ecosystemDismiss.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizle'**
+  String get ecosystemDismiss;
+
+  /// No description provided for @aiOtherToolsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer araçlar'**
+  String get aiOtherToolsTitle;
+
+  /// No description provided for @aiAttachmentsSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek ve belge araçları'**
+  String get aiAttachmentsSection;
+
+  /// No description provided for @aiSmartCategorizeAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı kategorize et'**
+  String get aiSmartCategorizeAction;
+
+  /// No description provided for @aiSmartCategorizeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık, etiket ve klasörü yerelde kredi harcamadan düzenle'**
+  String get aiSmartCategorizeInfo;
+
+  /// No description provided for @aiLocalBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yerel · %{percent}'**
+  String aiLocalBadge(int percent);
+
+  /// No description provided for @aiSmartFolderSuggestion.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör: {folder}'**
+  String aiSmartFolderSuggestion(String folder);
+
+  /// No description provided for @aiSmartFixAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzelt'**
+  String get aiSmartFixAction;
+
+  /// No description provided for @aiSmartRefineWithAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düşük güvenlileri yapay zekâyla incele'**
+  String get aiSmartRefineWithAi;
+
+  /// No description provided for @aiSmartFixTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğru kategoriyi seç'**
+  String get aiSmartFixTitle;
+
+  /// No description provided for @aiSmartSimilarConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Benzer notlar da düzeltilsin mi?'**
+  String get aiSmartSimilarConfirmTitle;
+
+  /// No description provided for @aiSmartSimilarConfirmBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} benzer not için de aynı kategoriyi uygulayabilirsin.'**
+  String aiSmartSimilarConfirmBody(int count);
+
+  /// No description provided for @aiCatFinance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Finans'**
+  String get aiCatFinance;
+
+  /// No description provided for @aiCatHealth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağlık'**
+  String get aiCatHealth;
+
+  /// No description provided for @aiCatEducation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eğitim'**
+  String get aiCatEducation;
+
+  /// No description provided for @aiCatWork.
+  ///
+  /// In tr, this message translates to:
+  /// **'İş'**
+  String get aiCatWork;
+
+  /// No description provided for @aiCatShopping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş'**
+  String get aiCatShopping;
+
+  /// No description provided for @aiCatTravel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seyahat'**
+  String get aiCatTravel;
+
+  /// No description provided for @aiCatPersonal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişisel'**
+  String get aiCatPersonal;
+
+  /// No description provided for @aiCatTech.
+  ///
+  /// In tr, this message translates to:
+  /// **'Teknoloji'**
+  String get aiCatTech;
+
+  /// No description provided for @aiCatRecipes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarifler'**
+  String get aiCatRecipes;
+
+  /// No description provided for @aiCatOfficial.
+  ///
+  /// In tr, this message translates to:
+  /// **'Resmî'**
+  String get aiCatOfficial;
 }
 
 class _AppLocalizationsDelegate

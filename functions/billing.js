@@ -27,11 +27,9 @@ const { getFirestore, Timestamp, FieldValue } = require("firebase-admin/firestor
 const { GoogleAuth } = require("google-auth-library");
 const u = require("./billing_util");
 
-const PACKAGE = process.env.PLAY_PACKAGE_NAME;
+const ALLOWED_PACKAGES = u.parseAllowedPackages(process.env);
+const DEFAULT_PACKAGE = ALLOWED_PACKAGES[0] || process.env.PLAY_PACKAGE_NAME || "";
 const RTDN_TOPIC = process.env.PLAY_RTDN_TOPIC || "play-rtdn";
-const API =
-  "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/" +
-  `${encodeURIComponent(PACKAGE || "")}/purchases`;
 const googleAuth = new GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/androidpublisher"],
 });
@@ -39,10 +37,17 @@ const googleAuth = new GoogleAuth({
 const db = () => getFirestore();
 const enc = encodeURIComponent;
 
-async function play(path, method = "GET") {
+function apiBase(packageName) {
+  return (
+    "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/" +
+    `${enc(packageName || DEFAULT_PACKAGE)}/purchases`
+  );
+}
+
+async function play(path, method = "GET", packageName = DEFAULT_PACKAGE) {
   const client = await googleAuth.getClient();
   const res = await client.request({
-    url: `${API}/${path}`,
+    url: `${apiBase(packageName)}/${path}`,
     method,
     ...(method === "POST" ? { data: {} } : {}),
   });
@@ -105,10 +110,16 @@ async function applyChange(uid, change) {
  * Play'den okur, belirteci uid'e bağlar ([bind]; doğrulanmamış belirteç
  * HİÇ yazılmaz), hakkı yazar, gerekirse onaylar.
  */
-async function syncPurchase(uid, productId, token, bind = false) {
+async function syncPurchase(
+  uid,
+  productId,
+  token,
+  bind = false,
+  packageName = DEFAULT_PACKAGE,
+) {
   if (productId === u.PRO_SUBSCRIPTION) {
     const s = u.readSubscription(
-      await play(`subscriptionsv2/tokens/${enc(token)}`),
+      await play(`subscriptionsv2/tokens/${enc(token)}`, "GET", packageName),
       new Date(),
     );
     if (!s) throw new HttpsError("invalid-argument", "wrong-product");
@@ -123,12 +134,13 @@ async function syncPurchase(uid, productId, token, bind = false) {
       await play(
         `subscriptions/${u.PRO_SUBSCRIPTION}/tokens/${enc(token)}:acknowledge`,
         "POST",
+        packageName,
       ).catch((e) => logger.warn("abonelik onaylanamadı", e.message));
     }
     return { ...result, pending: s.pending };
   }
   const p = u.readProduct(
-    await play(`products/${u.LIFETIME_PRODUCT}/tokens/${enc(token)}`),
+    await play(`products/${u.LIFETIME_PRODUCT}/tokens/${enc(token)}`, "GET", packageName),
   );
   if (p.accountTag && p.accountTag !== u.accountTag(uid)) {
     throw new HttpsError("permission-denied", "other-account");
@@ -144,6 +156,7 @@ async function syncPurchase(uid, productId, token, bind = false) {
     await play(
       `products/${u.LIFETIME_PRODUCT}/tokens/${enc(token)}:acknowledge`,
       "POST",
+      packageName,
     ).catch((e) => logger.warn("ömür boyu onaylanamadı", e.message));
   }
   return { ...result, pending: p.pending };
@@ -161,6 +174,11 @@ exports.verifyPurchase = onCall({ enforceAppCheck: true }, async (request) => {
   const data = request.data || {};
   const productId = data.productId;
   const token = data.purchaseToken;
+  const requestedPkg = typeof data.packageName === "string" ? data.packageName.trim() : "";
+  const packageName = u.resolvePackageName(requestedPkg, ALLOWED_PACKAGES);
+  if (!packageName) {
+    throw new HttpsError("invalid-argument", "unknown-package");
+  }
   if (
     (productId !== u.PRO_SUBSCRIPTION && productId !== u.LIFETIME_PRODUCT) ||
     typeof token !== "string" ||
@@ -175,7 +193,7 @@ exports.verifyPurchase = onCall({ enforceAppCheck: true }, async (request) => {
     throw new HttpsError("permission-denied", "other-account");
   }
   try {
-    return await syncPurchase(auth.uid, productId, token, true);
+    return await syncPurchase(auth.uid, productId, token, true, packageName);
   } catch (e) {
     if (e instanceof HttpsError) throw e;
     if (isInvalidToken(e)) {
@@ -203,7 +221,7 @@ exports.playRtdn = onMessagePublished(
       logger.warn("RTDN okunamadı", e.message);
       return;
     }
-    if (!msg || msg.packageName !== PACKAGE) return;
+    if (!msg || !ALLOWED_PACKAGES.includes(msg.packageName)) return;
     if (msg.kind === "test") {
       logger.info("RTDN deneme bildirimi geldi");
       return;
@@ -223,21 +241,27 @@ exports.playRtdn = onMessagePublished(
       if (msg.kind === "product") {
         if (msg.productId !== u.LIFETIME_PRODUCT) return;
         const uid = await ownerOf(msg.token);
-        if (uid) await syncPurchase(uid, u.LIFETIME_PRODUCT, msg.token);
+        if (uid) {
+          await syncPurchase(uid, u.LIFETIME_PRODUCT, msg.token, false, msg.packageName);
+        }
         return;
       }
       // Abonelik: plan değişimi / Play'den yeniden abonelikte belirteç yeni;
       // uid önceki belirteçten (`linkedPurchaseToken`) devralınır.
       let uid = await ownerOf(msg.token);
       if (!uid) {
-        const res = await play(`subscriptionsv2/tokens/${enc(msg.token)}`);
+        const res = await play(
+          `subscriptionsv2/tokens/${enc(msg.token)}`,
+          "GET",
+          msg.packageName,
+        );
         uid = await ownerOf(res && res.linkedPurchaseToken);
         if (!uid) {
           logger.info("RTDN: belirteç bir hesaba bağlı değil (henüz)");
           return;
         }
       }
-      await syncPurchase(uid, u.PRO_SUBSCRIPTION, msg.token, true);
+      await syncPurchase(uid, u.PRO_SUBSCRIPTION, msg.token, true, msg.packageName);
     } catch (e) {
       if (isInvalidToken(e) || e instanceof HttpsError) {
         logger.warn("RTDN atlandı", e.message);

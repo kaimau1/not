@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/app_frame.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/ecosystem_apps.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/group_card.dart';
@@ -91,6 +92,8 @@ class _ProScreenState extends ConsumerState<ProScreen> {
               _TierTable(current: tier),
               _Section(l10n.proBuyTitle),
               ..._buy(context, billing, tier, entitlement, guest),
+              const SizedBox(height: AppSpace.l),
+              const CrossAppPromoCard(),
             ],
           ),
         ),

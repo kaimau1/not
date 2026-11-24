@@ -151,3 +151,20 @@ test("hesap etiketi ve belirteç anahtarı 64 onaltılık karakter", () => {
   assert.match(u.accountTag("uid-1"), /^[0-9a-f]{64}$/);
   assert.notStrictEqual(u.tokenKey("a"), u.tokenKey("b"));
 });
+
+test("çoklu uygulama paketi çözümlemesi: Notlar + Dosyalarım izin listesi", () => {
+  const allowed = u.parseAllowedPackages({
+    PLAY_PACKAGE_NAMES: "dev.kaimau.notlar, com.dosyaokuyucu.dosya_okuyucu",
+    PLAY_PACKAGE_NAME: "dev.kaimau.notlar",
+  });
+  assert.deepStrictEqual(allowed, [
+    "dev.kaimau.notlar",
+    "com.dosyaokuyucu.dosya_okuyucu",
+  ]);
+  assert.strictEqual(u.resolvePackageName("", allowed), "dev.kaimau.notlar");
+  assert.strictEqual(
+    u.resolvePackageName("com.dosyaokuyucu.dosya_okuyucu", allowed),
+    "com.dosyaokuyucu.dosya_okuyucu",
+  );
+  assert.strictEqual(u.resolvePackageName("evil.pkg", allowed), null);
+});

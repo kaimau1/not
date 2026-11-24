@@ -19,6 +19,7 @@ import 'assistant_confirm.dart';
 import 'chat_controller.dart';
 import 'quiet_organize_sheet.dart';
 import 'read_document.dart';
+import '../../../core/ecosystem_apps.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
 import '../../../core/app_icons.dart';
@@ -237,8 +238,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
 
     // Misafir, anahtarsız (F10.5): puan yerine açıklama kartı, AI araçları
     // soluk. Kopyalar (sondaki kart) AI'sız — açık kalır.
-    final locked =
-        ref.watch(aiAvailabilityProvider) != AiAvailability.ready;
+    final locked = ref.watch(aiAvailabilityProvider) != AiAvailability.ready;
     Widget dim(Widget w) => AiStatusDim(locked: locked, child: w);
     final shownTasks = [
       for (var i = 0; i < tasks.length; i++)
@@ -249,20 +249,22 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
     ];
 
     return Scaffold(
-      appBar: HomeInBar(appBar: AppBar(
-        title: Text(l10n.aiHubTitle),
-        actions: [
-          // Ad işi söyler (F14.3): eskiden ipucu yalnız "Yapay zekâ"ydı ve
-          // Ayarlar'ın en başına düşüyordu; artık AI alanı açık gelir.
-          IconButton(
-            key: const ValueKey('ai-hub-settings'),
-            tooltip: l10n.aiSettingsTooltip,
-            icon: const Icon(Icons.tune),
-            onPressed: () => context.push('/settings?area=ai'),
-          ),
-          const SizedBox(width: 4),
-        ],
-      )),
+      appBar: HomeInBar(
+        appBar: AppBar(
+          title: Text(l10n.aiHubTitle),
+          actions: [
+            // Ad işi söyler (F14.3): eskiden ipucu yalnız "Yapay zekâ"ydı ve
+            // Ayarlar'ın en başına düşüyordu; artık AI alanı açık gelir.
+            IconButton(
+              key: const ValueKey('ai-hub-settings'),
+              tooltip: l10n.aiSettingsTooltip,
+              icon: const Icon(Icons.tune),
+              onPressed: () => context.push('/settings?area=ai'),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+      ),
       body: LayoutBuilder(
         builder: (context, box) {
           final wide = box.maxWidth >= 920;
@@ -281,7 +283,6 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
             onPoints: () => context.push('/premium'),
           );
           if (!wide) {
-            final columns = box.maxWidth >= 560 ? 2 : 1;
             return ListView(
               padding: padding,
               children: [
@@ -292,14 +293,14 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                 const SizedBox(height: 12),
                 dim(chatCard),
                 const SizedBox(height: 22),
-                _SectionLabel(l10n.aiToolsSection),
-                const SizedBox(height: 10),
-                dim(_TileGrid(columns: columns, children: tools)),
-                const SizedBox(height: 22),
                 _SectionLabel(l10n.aiOnYourNotes),
                 const SizedBox(height: 10),
                 _TileGrid(columns: 2, children: shownTasks),
+                const SizedBox(height: AppSpace.l),
+                _OtherToolsCard(title: l10n.aiOtherToolsTitle, tools: tools),
                 ...historySection,
+                const SizedBox(height: AppSpace.l),
+                const CrossAppPromoCard(),
                 footer,
               ],
             );
@@ -336,13 +337,16 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _SectionLabel(l10n.aiToolsSection),
-                              const SizedBox(height: 10),
-                              dim(_TileGrid(columns: 1, children: tools)),
-                              const SizedBox(height: 22),
                               _SectionLabel(l10n.aiOnYourNotes),
                               const SizedBox(height: 10),
                               _TileGrid(columns: 2, children: shownTasks),
+                              const SizedBox(height: AppSpace.l),
+                              _OtherToolsCard(
+                                title: l10n.aiOtherToolsTitle,
+                                tools: tools,
+                              ),
+                              const SizedBox(height: AppSpace.l),
+                              const CrossAppPromoCard(),
                             ],
                           ),
                         ),
@@ -355,6 +359,45 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _OtherToolsCard extends StatelessWidget {
+  const _OtherToolsCard({required this.title, required this.tools});
+
+  final String title;
+  final List<Widget> tools;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = AppTokens.of(context);
+    return Material(
+      color: tokens.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        side: BorderSide(color: tokens.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: const ValueKey('ai-hub-other-tools'),
+          title: Text(title, style: AppText.of(Theme.of(context)).rowTitle),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppSpace.m,
+            0,
+            AppSpace.m,
+            AppSpace.m,
+          ),
+          children: [
+            for (var i = 0; i < tools.length; i++) ...[
+              if (i > 0) const SizedBox(height: AppSpace.s),
+              tools[i],
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -802,7 +845,9 @@ class _ChatCard extends StatelessWidget {
                                 color: turn.isUser
                                     ? scheme.primaryContainer
                                     : scheme.surface,
-                                borderRadius: BorderRadius.circular(AppRadius.m),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.m,
+                                ),
                               ),
                               child: Text(
                                 turn.text,

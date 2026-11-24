@@ -117,6 +117,20 @@ test("PL14 hak belgesi: yalnız sahibi okur, kimse yazamaz, liste yok", async ()
   await assertFails(setDoc(doc(as("a"), "users/a"), { premiumUntil: 1 }));
 });
 
+test("ortak AI havuzu: yalnız sahibi get okur, list ve istemci yazması yasak", async () => {
+  await seed(async (db) => {
+    await setDoc(doc(db, "sharedAiPool/a"), { balance: 500, starterGranted: true });
+    await setDoc(doc(db, "sharedAiPool/b"), { balance: 250 });
+  });
+  await assertSucceeds(getDoc(doc(as("a"), "sharedAiPool/a")));
+  await assertFails(getDoc(doc(as("a"), "sharedAiPool/b")));
+  await assertFails(getDoc(doc(anon(), "sharedAiPool/a")));
+  await assertFails(getDocs(collection(as("a"), "sharedAiPool")));
+  await assertFails(setDoc(doc(as("a"), "sharedAiPool/a"), { balance: 99999 }));
+  await assertFails(updateDoc(doc(as("a"), "sharedAiPool/a"), { balance: 99999 }));
+  await assertFails(deleteDoc(doc(as("a"), "sharedAiPool/a")));
+});
+
 test("ayar senkronu ve itme jetonu yalnız sahibinde (F4.5, F4.6)", async () => {
   await assertSucceeds(
     setDoc(doc(as("a"), "users/a/meta/prefs"), { values: { font_scale: 1.15 } }),

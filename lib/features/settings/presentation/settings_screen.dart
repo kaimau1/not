@@ -1,6 +1,8 @@
 import 'dart:math' as math;
+
 import '../../../app/app_frame.dart';
 import '../../../core/app_icons.dart';
+import '../../../core/ecosystem_apps.dart';
 
 import 'dart:convert';
 import 'dart:async';
@@ -10,11 +12,7 @@ import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart'
-    show
-        kIsWeb,
-        listEquals,
-        ValueListenable,
-        visibleForTesting;
+    show kIsWeb, listEquals, ValueListenable, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'
     show
@@ -61,6 +59,7 @@ import '../../../core/utils/font_downloads.dart';
 import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/speech_output.dart';
+import '../../ai/data/shared_ai_pool.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/ai_policy.dart';
 import '../../ai/data/ai_speech.dart';
@@ -107,7 +106,9 @@ import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
 import 'backup_ui.dart';
+
 import 'package:intl/intl.dart' show DateFormat;
+
 import '../../../core/app_update.dart'
     show AppUpdate, AppUpdateInfo, autoUpdateProvider;
 import 'app_lock.dart';
@@ -126,7 +127,8 @@ import '../../../core/a11y/motion.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 
 import '../../notes/presentation/viewers/ink_tools.dart' show InkToolMemory;
-import '../../notes/presentation/viewers/ink_layer.dart' show InkFingerToolPicker;
+import '../../notes/presentation/viewers/ink_layer.dart'
+    show InkFingerToolPicker;
 import '../../notes/presentation/editor/auto_spell.dart' show AutoSpell;
 import '../../notes/presentation/editor/spell_settings_sheet.dart'
     show SpellModePicker, showSpellSettings;
@@ -355,6 +357,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: 'kota puan hak api anahtar premium',
           ),
           _SettingRow(
+            const _SharedPoolModeCard(),
+            title: l10n.aiSourceModeTitle,
+            keywords: 'ortak havuz byok anahtar kredi dosyalarim',
+          ),
+          _SettingRow(
             const _BriefingEditor(),
             title: l10n.briefingSetting,
             keywords: l10n.briefingSettingInfo,
@@ -387,6 +394,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.aiAdvancedInfo} gemini openai claude openrouter '
                 'api anahtar model tanilama',
             // Katlanır bölüm kendi başlığını taşıyor: etiketsiz ayrı kart.
+            group: '',
+          ),
+          _SettingRow(
+            const Padding(
+              padding: EdgeInsets.only(top: AppSpace.s),
+              child: CrossAppPromoCard(),
+            ),
+            title: l10n.ecosystemDosyalarimTitle,
+            keywords: 'dosyalarim pdf word excel',
             group: '',
           ),
         ],
@@ -950,56 +966,59 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 380 + 1 + 720),
           child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Arama kutusu sol sütunun içinde, sütunla aynı hizada (A10).
-          SizedBox(
-            width: 380,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpace.l,
-                    AppSpace.xs,
-                    AppSpace.l,
-                    AppSpace.xs,
-                  ),
-                  child: _searchBar(context),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Arama kutusu sol sütunun içinde, sütunla aynı hizada (A10).
+              SizedBox(
+                width: 380,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpace.l,
+                        AppSpace.xs,
+                        AppSpace.l,
+                        AppSpace.xs,
+                      ),
+                      child: _searchBar(context),
+                    ),
+                    Expanded(child: root()),
+                  ],
                 ),
-                Expanded(child: root()),
-              ],
-            ),
-          ),
-          VerticalDivider(width: 1, color: scheme.outlineVariant),
-          Expanded(
-            child: searching
-                ? const SizedBox.shrink()
-                : ValueListenableBuilder<String>(
-                    valueListenable: _openN,
-                    builder: (context, id, _) {
-                      final a = byId[id] ?? areas.first;
-                      // Ayrıntı listeye YASLI (KT-10; ortalıyken arada boşluk
-                      // kalıyordu — sabah bakılacak, plan §8.5). Alan değişimi
-                      // yalnız solma.
-                      return Align(
-                        alignment: AlignmentDirectional.topStart,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 720),
-                          child: AnimatedSwitcher(
-                            duration: AppMotion.of(context, AppMotion.quick),
-                            reverseDuration: AppMotion.of(
-                              context,
-                              AppMotion.exitOf(AppMotion.quick),
+              ),
+              VerticalDivider(width: 1, color: scheme.outlineVariant),
+              Expanded(
+                child: searching
+                    ? const SizedBox.shrink()
+                    : ValueListenableBuilder<String>(
+                        valueListenable: _openN,
+                        builder: (context, id, _) {
+                          final a = byId[id] ?? areas.first;
+                          // Ayrıntı listeye YASLI (KT-10; ortalıyken arada boşluk
+                          // kalıyordu — sabah bakılacak, plan §8.5). Alan değişimi
+                          // yalnız solma.
+                          return Align(
+                            alignment: AlignmentDirectional.topStart,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 720),
+                              child: AnimatedSwitcher(
+                                duration: AppMotion.of(
+                                  context,
+                                  AppMotion.quick,
+                                ),
+                                reverseDuration: AppMotion.of(
+                                  context,
+                                  AppMotion.exitOf(AppMotion.quick),
+                                ),
+                                child: areaPage(a),
+                              ),
                             ),
-                            child: areaPage(a),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
-        ],
-      ),
         ),
       );
     } else {
@@ -1172,7 +1191,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           'ai',
         ]),
       ),
-      (title: l10n.settingsGroupData, areas: pick(['sync', 'permissions', 'updates'])),
+      (
+        title: l10n.settingsGroupData,
+        areas: pick(['sync', 'permissions', 'updates']),
+      ),
     ];
     // Gruplara girmeyen yeni bir alan kaybolmasın: son gruba eklenir.
     final listed = {for (final g in groups) ...g.areas.map((a) => a.id)};

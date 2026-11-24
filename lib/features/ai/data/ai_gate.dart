@@ -12,6 +12,7 @@ import '../../settings/settings_providers.dart';
 import 'ai_policy.dart';
 import 'api_key_store.dart';
 import 'gemini_service.dart' show GeminiErrorKind, GeminiException;
+import 'shared_ai_pool.dart';
 
 /// Premium durumu: `users/{uid}` dokümanındaki `premiumUntil` alanı
 /// gelecekte bir tarihse kullanıcı premium'dur. Şimdilik alan konsoldan
@@ -96,6 +97,16 @@ final aiAvailabilityProvider = Provider<AiAvailability>((ref) {
   if (ref.watch(aiKillSwitchProvider)) return AiAvailability.paused;
   if (!ref.watch(aiConsentProvider)) return AiAvailability.consentNeeded;
   final hasKey = (ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty;
+  final explicitMode = ref
+      .watch(sharedPreferencesProvider)
+      .getString(AiSourceModeNotifier.prefsKey);
+  if (explicitMode == AiSourceMode.byok.name && !hasKey) {
+    return AiAvailability.needsKey;
+  }
+  if (explicitMode == AiSourceMode.sharedPool.name &&
+      ref.watch(sharedAiPoolProvider).knownEmpty) {
+    return AiAvailability.quotaOut;
+  }
   // Sabit dal: kişisel APK / web derlemesinde ağaçtan düşer.
   if (EntitlementGate.active &&
       !ref.watch(
@@ -329,9 +340,7 @@ class AiGate {
             final expired =
                 dayStart == null ||
                 DateTime.now().difference(dayStart) >= _quotaWindow;
-            final used = expired
-                ? 0
-                : (data?['points'] as num?)?.toInt() ?? 0;
+            final used = expired ? 0 : (data?['points'] as num?)?.toInt() ?? 0;
             final next = used + cost;
             // Tavan aşılıyorsa sayaç ARTIRILMAZ ve çağırana "reddedildi"
             // bildirilir; sayacın kendisini döndürmek, yerel yedek kontrolün

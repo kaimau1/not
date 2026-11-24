@@ -10059,4 +10059,130 @@ class AppLocalizationsEn extends AppLocalizations {
   String itemsFormattedCount(int count) {
     return '$count items formatted';
   }
+
+  @override
+  String get aiSourceModeTitle => 'AI source';
+
+  @override
+  String get aiSourceModeShared => 'Shared pool';
+
+  @override
+  String get aiSourceModeByok => 'Own API key';
+
+  @override
+  String get aiSharedPoolTitle => 'Shared AI pool';
+
+  @override
+  String aiSharedPoolSubtitle(int credits) {
+    return 'Shared across Notes and Files under one Google account ($credits credits)';
+  }
+
+  @override
+  String get aiSharedPoolEmpty =>
+      'Shared credits depleted; enter your own key or upgrade to Pro';
+
+  @override
+  String get aiByokExhaustedError =>
+      'Your API key quota or access is exhausted. Did not fall back to shared pool.';
+
+  @override
+  String get aiBackupKeysTitle => 'Backup API keys';
+
+  @override
+  String get aiBackupKeysInfo =>
+      'When primary quota fills, the next key takes over automatically (up to 5)';
+
+  @override
+  String aiBackupKeyLabel(int index) {
+    return 'Backup key $index';
+  }
+
+  @override
+  String get aiBackupKeyAdd => 'Add backup key';
+
+  @override
+  String get ecosystemDosyalarimTitle => 'Manage every file with Dosyalarım';
+
+  @override
+  String get ecosystemDosyalarimSubtitle =>
+      'Sign PDFs, edit Word and Excel files, and share your AI pool across both apps.';
+
+  @override
+  String get ecosystemOpenApp => 'Open in Dosyalarım';
+
+  @override
+  String get ecosystemGetApp => 'Explore Dosyalarım';
+
+  @override
+  String get ecosystemDismiss => 'Dismiss';
+
+  @override
+  String get aiOtherToolsTitle => 'Other tools';
+
+  @override
+  String get aiAttachmentsSection => 'Attachment & document tools';
+
+  @override
+  String get aiSmartCategorizeAction => 'Smart categorize';
+
+  @override
+  String get aiSmartCategorizeInfo =>
+      'Organize title, tags, and folder locally with zero credits';
+
+  @override
+  String aiLocalBadge(int percent) {
+    return 'Local · $percent%';
+  }
+
+  @override
+  String aiSmartFolderSuggestion(String folder) {
+    return 'Folder: $folder';
+  }
+
+  @override
+  String get aiSmartFixAction => 'Fix';
+
+  @override
+  String get aiSmartRefineWithAi => 'Refine low confidence with AI';
+
+  @override
+  String get aiSmartFixTitle => 'Choose right category';
+
+  @override
+  String get aiSmartSimilarConfirmTitle => 'Fix similar notes too?';
+
+  @override
+  String aiSmartSimilarConfirmBody(int count) {
+    return 'Apply the same category to $count similar notes.';
+  }
+
+  @override
+  String get aiCatFinance => 'Finance';
+
+  @override
+  String get aiCatHealth => 'Health';
+
+  @override
+  String get aiCatEducation => 'Education';
+
+  @override
+  String get aiCatWork => 'Work';
+
+  @override
+  String get aiCatShopping => 'Shopping';
+
+  @override
+  String get aiCatTravel => 'Travel';
+
+  @override
+  String get aiCatPersonal => 'Personal';
+
+  @override
+  String get aiCatTech => 'Tech';
+
+  @override
+  String get aiCatRecipes => 'Recipes';
+
+  @override
+  String get aiCatOfficial => 'Official';
 }

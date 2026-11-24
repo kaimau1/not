@@ -2,6 +2,7 @@ import '../../../core/app_icons.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/sheet_tile.dart';
 import '../../../app/theme/app_tokens.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +31,7 @@ import 'ai_result_note.dart';
 import 'listen_screen.dart';
 import '../data/gemini_service.dart';
 import 'ai_chat_screen.dart';
+import 'quiet_organize_sheet.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/friendly_error.dart';
 import '../../auth/presentation/account_required.dart';
@@ -40,8 +42,11 @@ import '../../../core/widgets/sheet_keyboard.dart';
 /// [keepChecked] true ise AI'a yalnız işaretsiz maddeler gönderilmiştir;
 /// işaretli (tamamlanmış) maddeler değiştirilmeden korunmalı, sonuç yalnız
 /// işaretsizlerin yerine geçer.
-typedef ReplaceTextCallback =
-    void Function(String text, {NoteType? asType, bool keepChecked});
+typedef ReplaceTextCallback = void Function(
+  String text, {
+  NoteType? asType,
+  bool keepChecked,
+});
 
 /// Editördeki "Yapay Zeka" düğmesinin açtığı alt sayfa.
 Future<void> showAiSheet(
@@ -210,9 +215,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       if (mounted) setState(() => _result = text);
     } on GeminiException catch (e) {
       if (mounted) {
-        setState(
-          () => _error = aiErrorText(context.l10n, e),
-        );
+        setState(() => _error = aiErrorText(context.l10n, e));
       }
     } catch (e) {
       if (mounted) setState(() => _error = aiErrorText(context.l10n, e));
@@ -247,7 +250,11 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       throw GeminiException(notSyncedMessage);
     }
     final text = await DocText.extractFromBytes('pptx', bytes);
-    return service.summarizeDocumentText(text, slide.fileName, detailed: detailed);
+    return service.summarizeDocumentText(
+      text,
+      slide.fileName,
+      detailed: detailed,
+    );
   }
 
   /// Özet ayrıntı düzeyini sorar: kısa mı, kaynağa bakmayı gereksiz kılan
@@ -310,7 +317,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   /// yazılıyor, maddeler düz metne dönüşüyordu (kullanıcı: "madde karışık notu
   /// düzeltince maddeler düz metine dönüşüyor"). Tipi DEĞİŞTİREN dönüşümlerde
   /// (maddeye/sıralıya çevir) tüm içerik bilerek birleştirilir.
-  String _contentForTextOp({required bool skipChecked, required bool converting}) {
+  String _contentForTextOp({
+    required bool skipChecked,
+    required bool converting,
+  }) {
     final note = widget.note;
     final mixed =
         note.type == NoteType.text &&
@@ -344,8 +354,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   /// kısıt olmadan "dengeli/detaylı" düzeltme maddeleri tek paragrafa
   /// birleştiriyor ve sıralı liste tek maddeye çöküyordu — çıktı satır sayısı
   /// girdiyle aynı kalmalı.
-  String get _listStructureConstraint =>
-      widget.note.type == NoteType.text
+  String get _listStructureConstraint => widget.note.type == NoteType.text
       ? ''
       : ' ÖNEMLİ: Bu bir listedir; girdideki HER SATIR ayrı bir maddedir. '
             'Çıktı da AYNI sayıda satır içermeli — her maddeyi kendi satırında '
@@ -737,9 +746,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     onCopy: () async {
                       await Clipboard.setData(ClipboardData(text: _result!));
                       if (context.mounted) {
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showMessage(l10n.copied);
+                        ScaffoldMessenger.of(context).showMessage(l10n.copied);
                       }
                     },
                     // Önce alt sayfayı kapat, SONRA uygula: değerler önceden
@@ -860,313 +867,386 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                  // ÜÇ BÖLÜM (PLAN §1.6 AI-S2, 2026-11-18): Yaz · Sor ·
-                  // Dönüştür. Bölüm fiile göre — kullanıcı "ne yapmak
-                  // istiyorum"dan bakar, eki/notu değil. Sesli not Yaz'ın
-                  // en üstünde kalır (kullanıcı isteği 2026-10-20).
-                  _sectionLabel(context, l10n.aiSectionWrite),
-                  if (widget.onVoiceNote != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpace.l,
-                        0,
-                        AppSpace.l,
-                        AppSpace.s,
-                      ),
-                      child: _AiRow(
-                        key: const ValueKey('ai-sheet-voice-note'),
-                        icon: AppIcons.aiVoiceNote,
-                        title: l10n.aiVoiceRowTitle,
-                        subtitle: l10n.aiVoiceRowInfoEditor,
-                        onTap: () {
-                          final open = widget.onVoiceNote!;
-                          Navigator.pop(context);
-                          open();
-                        },
-                      ),
-                    ),
-                  // Yaz (PLAN §1.6 A6): düzelt · yeniden yaz · kısalt/uzat ·
-                  // resmî/samimi · biçim · çevir — tek menü.
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-                    child: _AiRow(
-                      key: const ValueKey('ai-sheet-write-improve'),
-                      icon: Icons.auto_fix_high,
-                      title: l10n.aiWriteImprove,
-                      subtitle: l10n.aiWriteImproveInfo,
-                      onTap: widget.note.isEmpty ? null : _pickWriteImprove,
-                    ),
-                  ),
-                  // Sor (A1 notlarına sor, A4 belgeye sor).
-                  _sectionLabel(context, l10n.aiSectionAsk),
-                  // TEK SOHBET (F3.3): not, belgesi ya da tüm notlar;
-                  // soru-cevap ya da beyin fırtınası — kapsam/kip ekranda.
-                  // "Analiz et" (analyzeNote) AI-S1 kararıyla kalktı
-                  // (2026-11-17): ana nokta/yapılacak soruları burada.
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-                    child: _AiRow(
-                      key: const ValueKey('ai-sheet-chat'),
-                      icon: Icons.forum_outlined,
-                      title: l10n.aiChatRowTitle,
-                      subtitle: l10n.aiChatRowInfo,
-                      onTap: () {
-                        Navigator.pop(context);
-                        AiChatScreen.open(
-                          context,
-                          note: widget.note,
-                          onAddToNote: widget.onAppendText,
-                        );
-                      },
-                    ),
-                  ),
-                  for (final pdf in pdfs)
-                    ListTile(
-                      leading: const Icon(Icons.question_answer_outlined),
-                      title: Text(
-                        pdf.fileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(l10n.ask),
-                      onTap: () {
-                        Navigator.pop(context);
-                        AiChatScreen.open(
-                          context,
-                          note: widget.note,
-                          document: pdf,
-                          scope: ChatScope.document,
-                        );
-                      },
-                    ),
-                  // Dönüştür (A7 özet, A2 kayıttan not, A5 fotoğraftan not,
-                  // belge özeti/dinleme). Ekler: dosya adı satır başlığında
-                  // BİR kez geçer, işlemler altında açılır.
-                  _sectionLabel(context, l10n.aiSectionTransform),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-                    child: _AiRow(
-                      key: const ValueKey('ai-sheet-summarize'),
-                      icon: Icons.summarize_outlined,
-                      title: l10n.aiSummarize,
-                      subtitle: l10n.aiSummarizeInfo,
-                      onTap: widget.note.isEmpty
-                          ? null
-                          : () => _runNoteSummary(detailed: false),
-                    ),
-                  ),
-                  for (final pdf in pdfs)
-                    ExpansionTile(
-                      leading: const Icon(Icons.picture_as_pdf_outlined),
-                      title: Text(
-                        pdf.fileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.summarize_outlined),
-                          title: Text(l10n.summarize),
-                          onTap: () async {
-                            final detailed = await _pickSummaryDetail();
-                            if (detailed == null) return;
-                            await _run(
-                              (s) => _summarizePdf(s, pdf, detailed: detailed),
-                              cacheKey: AiCache.keyFor(
-                                detailed ? 'pdf_summary_detailed' : 'pdf_summary',
-                                pdf.id,
-                              ),
-                            );
-                          },
-                        ),
-                        // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
-                        // model yalnız "podcast'e dönüştür" denirse çağrılır.
-                        ListTile(
-                          leading: const Icon(AppIcons.listen),
-                          title: Text(l10n.listen),
-                          onTap: () {
-                            final repo = ref.read(attachmentRepositoryProvider);
-                            Navigator.pop(context);
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => ListenScreen(
-                                  title: pdf.fileName,
-                                  allowCache: !widget.note.locked,
-                                  loadText: () async {
-                                    if (localFileExists(pdf.localPath)) {
-                                      return PdfText.cleanForSpeech(
-                                        await PdfText.extract(pdf.localPath),
-                                      );
-                                    }
-                                    final bytes = await repo?.readBytes(pdf);
-                                    if (bytes == null) return '';
-                                    return PdfText.cleanForSpeech(
-                                      await PdfText.extractFromBytes(bytes),
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  // Sunum ekleri: PDF gibi özetlenir (kısa/detaylı) ve sesli
-                  // dinlenir. Metin cihazda PPTX'ten çıkarılıp modele gider.
-                  for (final slide in slides)
-                    ExpansionTile(
-                      leading: const Icon(Icons.slideshow_outlined),
-                      title: Text(
-                        slide.fileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.summarize_outlined),
-                          title: Text(l10n.summarize),
-                          onTap: () async {
-                            final detailed = await _pickSummaryDetail();
-                            if (detailed == null) return;
-                            await _run(
-                              (s) =>
-                                  _summarizeSlide(s, slide, detailed: detailed),
-                              cacheKey: AiCache.keyFor(
-                                detailed
-                                    ? 'slide_summary_detailed'
-                                    : 'slide_summary',
-                                slide.id,
-                              ),
-                            );
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(AppIcons.listen),
-                          title: Text(l10n.listen),
-                          onTap: () {
-                            final repo = ref.read(attachmentRepositoryProvider);
-                            Navigator.pop(context);
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => ListenScreen(
-                                  title: slide.fileName,
-                                  allowCache: !widget.note.locked,
-                                  loadText: () async {
-                                    if (localFileExists(slide.localPath)) {
-                                      return DocText.extract(slide.localPath);
-                                    }
-                                    final bytes = await repo?.readBytes(slide);
-                                    if (bytes == null) return '';
-                                    return DocText.extractFromBytes(
-                                      'pptx',
-                                      bytes,
-                                    );
-                                  },
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  // GÖRSELDE METİN + YAPILI NOT (PLAN §1.6 A5): ücretsiz cihaz
-                  // içi "Metni tanı" ve önce cihaz içi OCR + ardından yalnız
-                  // yapılandırma için AI kullanan "Yapılı nota dönüştür".
-                  for (final image in images)
-                    ExpansionTile(
-                      key: ValueKey('ai-image-tile-${image.id}'),
-                      leading: const Icon(Icons.document_scanner_outlined),
-                      title: Text(
-                        image.fileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.text_fields),
-                          title: Text(l10n.extractText),
-                          onTap: () => ScanOcr.supported
-                              ? _recognizeImageText(image)
-                              : _run((s) => _extractImageText(s, image)),
-                        ),
-                        ListTile(
-                          key: ValueKey('ai-photo-structured-${image.id}'),
-                          leading: const Icon(Icons.auto_awesome_outlined),
-                          title: Text(l10n.aiPhotoToStructuredNote),
-                          subtitle: Text(l10n.aiPhotoToStructuredNoteInfo),
-                          onTap: () => _runStructuredImage(image),
-                        ),
-                      ],
-                    ),
-                  for (final audio in audios)
-                    ListTile(
-                      leading: const Icon(AppIcons.voiceRecord),
-                      title: Text(
-                        audio.fileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(l10n.transcribe),
-                      onTap: () {
-                        final open = widget.onTranscribe;
-                        if (open == null) {
-                          _run((s) => _transcribeAudio(s, audio));
-                          return;
-                        }
-                        Navigator.pop(context);
-                        open(audio);
-                      },
-                    ),
-                  for (final video in videos)
-                    ListTile(
-                      leading: const Icon(Icons.subtitles_outlined),
-                      title: Text(
-                        video.fileName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(l10n.transcribe),
-                      onTap: () {
-                        Navigator.pop(context);
-                        widget.onTranscribe!(video);
-                      },
-                    ),
-                  if (widget.note.aiSummary != null) ...[
-                    const Divider(indent: AppSpace.xl, endIndent: AppSpace.xl),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpace.xl,
-                        AppSpace.xs,
-                        AppSpace.s,
-                        AppSpace.xs,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l10n.aiSummaryTitle,
-                              style: Theme.of(context).textTheme.labelMedium,
+                        // ÜÇ BÖLÜM (PLAN §1.6 AI-S2, 2026-11-18): Yaz · Sor ·
+                        // Dönüştür. Bölüm fiile göre — kullanıcı "ne yapmak
+                        // istiyorum"dan bakar, eki/notu değil. Sesli not Yaz'ın
+                        // en üstünde kalır (kullanıcı isteği 2026-10-20).
+                        _sectionLabel(context, l10n.aiSectionWrite),
+                        if (widget.onVoiceNote != null)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpace.l,
+                              0,
+                              AppSpace.l,
+                              AppSpace.s,
+                            ),
+                            child: _AiRow(
+                              key: const ValueKey('ai-sheet-voice-note'),
+                              icon: AppIcons.aiVoiceNote,
+                              title: l10n.aiVoiceRowTitle,
+                              subtitle: l10n.aiVoiceRowInfoEditor,
+                              onTap: () {
+                                final open = widget.onVoiceNote!;
+                                Navigator.pop(context);
+                                open();
+                              },
                             ),
                           ),
-                          // Sesli özet: özet zaten üretilmiş durumda,
-                          // seslendirme cihazda yapılıyor — ek API çağrısı yok.
-                          SpeakButton(text: widget.note.aiSummary!.text),
+                        // Yaz (PLAN §1.6 A6): düzelt · yeniden yaz · kısalt/uzat ·
+                        // resmî/samimi · biçim · çevir — tek menü.
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.l,
+                          ),
+                          child: _AiRow(
+                            key: const ValueKey('ai-sheet-write-improve'),
+                            icon: Icons.auto_fix_high,
+                            title: l10n.aiWriteImprove,
+                            subtitle: l10n.aiWriteImproveInfo,
+                            onTap: widget.note.isEmpty
+                                ? null
+                                : _pickWriteImprove,
+                          ),
+                        ),
+                        // Sor (A1 notlarına sor, A4 belgeye sor).
+                        _sectionLabel(context, l10n.aiSectionAsk),
+                        // TEK SOHBET (F3.3): not, belgesi ya da tüm notlar;
+                        // soru-cevap ya da beyin fırtınası — kapsam/kip ekranda.
+                        // "Analiz et" (analyzeNote) AI-S1 kararıyla kalktı
+                        // (2026-11-17): ana nokta/yapılacak soruları burada.
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.l,
+                          ),
+                          child: _AiRow(
+                            key: const ValueKey('ai-sheet-chat'),
+                            icon: Icons.forum_outlined,
+                            title: l10n.aiChatRowTitle,
+                            subtitle: l10n.aiChatRowInfo,
+                            onTap: () {
+                              Navigator.pop(context);
+                              AiChatScreen.open(
+                                context,
+                                note: widget.note,
+                                onAddToNote: widget.onAppendText,
+                              );
+                            },
+                          ),
+                        ),
+                        for (final pdf in pdfs)
+                          ListTile(
+                            leading: const Icon(Icons.question_answer_outlined),
+                            title: Text(
+                              pdf.fileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(l10n.ask),
+                            onTap: () {
+                              Navigator.pop(context);
+                              AiChatScreen.open(
+                                context,
+                                note: widget.note,
+                                document: pdf,
+                                scope: ChatScope.document,
+                              );
+                            },
+                          ),
+                        // Dönüştür (A7 özet, A2 kayıttan not, A5 fotoğraftan not,
+                        // belge özeti/dinleme). Ekler: dosya adı satır başlığında
+                        // BİR kez geçer, işlemler altında açılır.
+                        _sectionLabel(context, l10n.aiSectionTransform),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.l,
+                          ),
+                          child: _AiRow(
+                            key: const ValueKey('ai-sheet-summarize'),
+                            icon: Icons.summarize_outlined,
+                            title: l10n.aiSummarize,
+                            subtitle: l10n.aiSummarizeInfo,
+                            onTap: widget.note.isEmpty
+                                ? null
+                                : () => _runNoteSummary(detailed: false),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpace.s),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.l,
+                          ),
+                          child: _AiRow(
+                            key: const ValueKey('ai-sheet-smart-categorize'),
+                            icon: Icons.auto_awesome_mosaic_outlined,
+                            title: l10n.aiSmartCategorizeAction,
+                            subtitle: l10n.aiSmartCategorizeInfo,
+                            onTap: () {
+                              final nav = Navigator.of(context);
+                              final host = nav.context;
+                              nav.pop();
+                              showQuietOrganizeSheet(
+                                host,
+                                preferLocalFirst: true,
+                              );
+                            },
+                          ),
+                        ),
+                        if (pdfs.isNotEmpty ||
+                            slides.isNotEmpty ||
+                            images.isNotEmpty ||
+                            audios.isNotEmpty ||
+                            videos.isNotEmpty)
+                          _sectionLabel(context, l10n.aiAttachmentsSection),
+                        for (final pdf in pdfs)
+                          ExpansionTile(
+                            leading: const Icon(Icons.picture_as_pdf_outlined),
+                            title: Text(
+                              pdf.fileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.summarize_outlined),
+                                title: Text(l10n.summarize),
+                                onTap: () async {
+                                  final detailed = await _pickSummaryDetail();
+                                  if (detailed == null) return;
+                                  await _run(
+                                    (s) => _summarizePdf(
+                                      s,
+                                      pdf,
+                                      detailed: detailed,
+                                    ),
+                                    cacheKey: AiCache.keyFor(
+                                      detailed
+                                          ? 'pdf_summary_detailed'
+                                          : 'pdf_summary',
+                                      pdf.id,
+                                    ),
+                                  );
+                                },
+                              ),
+                              // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
+                              // model yalnız "podcast'e dönüştür" denirse çağrılır.
+                              ListTile(
+                                leading: const Icon(AppIcons.listen),
+                                title: Text(l10n.listen),
+                                onTap: () {
+                                  final repo = ref.read(
+                                    attachmentRepositoryProvider,
+                                  );
+                                  Navigator.pop(context);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => ListenScreen(
+                                        title: pdf.fileName,
+                                        allowCache: !widget.note.locked,
+                                        loadText: () async {
+                                          if (localFileExists(pdf.localPath)) {
+                                            return PdfText.cleanForSpeech(
+                                              await PdfText.extract(
+                                                pdf.localPath,
+                                              ),
+                                            );
+                                          }
+                                          final bytes = await repo?.readBytes(
+                                            pdf,
+                                          );
+                                          if (bytes == null) return '';
+                                          return PdfText.cleanForSpeech(
+                                            await PdfText.extractFromBytes(
+                                              bytes,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        // Sunum ekleri: PDF gibi özetlenir (kısa/detaylı) ve sesli
+                        // dinlenir. Metin cihazda PPTX'ten çıkarılıp modele gider.
+                        for (final slide in slides)
+                          ExpansionTile(
+                            leading: const Icon(Icons.slideshow_outlined),
+                            title: Text(
+                              slide.fileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.summarize_outlined),
+                                title: Text(l10n.summarize),
+                                onTap: () async {
+                                  final detailed = await _pickSummaryDetail();
+                                  if (detailed == null) return;
+                                  await _run(
+                                    (s) => _summarizeSlide(
+                                      s,
+                                      slide,
+                                      detailed: detailed,
+                                    ),
+                                    cacheKey: AiCache.keyFor(
+                                      detailed
+                                          ? 'slide_summary_detailed'
+                                          : 'slide_summary',
+                                      slide.id,
+                                    ),
+                                  );
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(AppIcons.listen),
+                                title: Text(l10n.listen),
+                                onTap: () {
+                                  final repo = ref.read(
+                                    attachmentRepositoryProvider,
+                                  );
+                                  Navigator.pop(context);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => ListenScreen(
+                                        title: slide.fileName,
+                                        allowCache: !widget.note.locked,
+                                        loadText: () async {
+                                          if (localFileExists(
+                                            slide.localPath,
+                                          )) {
+                                            return DocText.extract(
+                                              slide.localPath,
+                                            );
+                                          }
+                                          final bytes = await repo?.readBytes(
+                                            slide,
+                                          );
+                                          if (bytes == null) return '';
+                                          return DocText.extractFromBytes(
+                                            'pptx',
+                                            bytes,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        // GÖRSELDE METİN + YAPILI NOT (PLAN §1.6 A5): ücretsiz cihaz
+                        // içi "Metni tanı" ve önce cihaz içi OCR + ardından yalnız
+                        // yapılandırma için AI kullanan "Yapılı nota dönüştür".
+                        for (final image in images)
+                          ExpansionTile(
+                            key: ValueKey('ai-image-tile-${image.id}'),
+                            leading: const Icon(
+                              Icons.document_scanner_outlined,
+                            ),
+                            title: Text(
+                              image.fileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.text_fields),
+                                title: Text(l10n.extractText),
+                                onTap: () => ScanOcr.supported
+                                    ? _recognizeImageText(image)
+                                    : _run((s) => _extractImageText(s, image)),
+                              ),
+                              ListTile(
+                                key: ValueKey(
+                                  'ai-photo-structured-${image.id}',
+                                ),
+                                leading: const Icon(
+                                  Icons.auto_awesome_outlined,
+                                ),
+                                title: Text(l10n.aiPhotoToStructuredNote),
+                                subtitle: Text(
+                                  l10n.aiPhotoToStructuredNoteInfo,
+                                ),
+                                onTap: () => _runStructuredImage(image),
+                              ),
+                            ],
+                          ),
+                        for (final audio in audios)
+                          ListTile(
+                            leading: const Icon(AppIcons.voiceRecord),
+                            title: Text(
+                              audio.fileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(l10n.transcribe),
+                            onTap: () {
+                              final open = widget.onTranscribe;
+                              if (open == null) {
+                                _run((s) => _transcribeAudio(s, audio));
+                                return;
+                              }
+                              Navigator.pop(context);
+                              open(audio);
+                            },
+                          ),
+                        for (final video in videos)
+                          ListTile(
+                            leading: const Icon(Icons.subtitles_outlined),
+                            title: Text(
+                              video.fileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            subtitle: Text(l10n.transcribe),
+                            onTap: () {
+                              Navigator.pop(context);
+                              widget.onTranscribe!(video);
+                            },
+                          ),
+                        if (widget.note.aiSummary != null) ...[
+                          const Divider(
+                            indent: AppSpace.xl,
+                            endIndent: AppSpace.xl,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpace.xl,
+                              AppSpace.xs,
+                              AppSpace.s,
+                              AppSpace.xs,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    l10n.aiSummaryTitle,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium,
+                                  ),
+                                ),
+                                // Sesli özet: özet zaten üretilmiş durumda,
+                                // seslendirme cihazda yapılıyor — ek API çağrısı yok.
+                                SpeakButton(text: widget.note.aiSummary!.text),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpace.xl,
+                              0,
+                              AppSpace.xl,
+                              AppSpace.s,
+                            ),
+                            child: Text(
+                              widget.note.aiSummary!.text,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpace.xl,
-                        0,
-                        AppSpace.xl,
-                        AppSpace.s,
-                      ),
-                      child: Text(
-                        widget.note.aiSummary!.text,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
                       ],
                     ),
                   ),
@@ -1227,8 +1307,7 @@ Widget _sectionLabel(BuildContext context, String text) => Padding(
 );
 
 class _WriteChoice {
-  const _WriteChoice.rewrite(this.instruction, {this.asType})
-    : language = null;
+  const _WriteChoice.rewrite(this.instruction, {this.asType}) : language = null;
 
   const _WriteChoice.translate(this.language)
     : instruction = null,
@@ -1368,9 +1447,8 @@ class _ResultViewState extends State<_ResultView> {
                 children: [
                   Text(
                     l10n.aiPreviewBefore,
-                    style: AppText.of(theme).badge.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    style: AppText.of(theme).badge
+                        .copyWith(color: scheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: AppSpace.xs),
                   Text(
@@ -1401,16 +1479,12 @@ class _ResultViewState extends State<_ResultView> {
                 if (_compare && canCompare) ...[
                   Text(
                     l10n.aiPreviewAfter,
-                    style: AppText.of(theme).badge.copyWith(
-                      color: scheme.primary,
-                    ),
+                    style: AppText.of(theme).badge
+                        .copyWith(color: scheme.primary),
                   ),
                   const SizedBox(height: AppSpace.xs),
                 ],
-                SelectableText(
-                  widget.text,
-                  style: theme.textTheme.bodyMedium,
-                ),
+                SelectableText(widget.text, style: theme.textTheme.bodyMedium),
               ],
             ),
           ),
