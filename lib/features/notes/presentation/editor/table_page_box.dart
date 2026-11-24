@@ -2,9 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart'
+    show
+        Clipboard,
+        ClipboardData,
+        HardwareKeyboard,
+        KeyDownEvent,
+        KeyRepeatEvent,
+        LogicalKeyboardKey;
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/note_colors.dart';
+import '../../../../core/app_icons.dart';
 import '../../../../core/utils/rich_text.dart' show richSpans;
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/tips.dart';
@@ -15,7 +24,10 @@ import '../../../../core/widgets/undo_snackbar.dart' show showAppMessage;
 import '../../domain/attachment.dart';
 import '../../data/table_export.dart';
 import '../../domain/note_table.dart';
-import 'text_wrap.dart' show RichTextTheme, WrapTextController;
+import 'selection_toolbar.dart';
+import 'tag_tap.dart' show arrangeSelectionMenu;
+import 'text_wrap.dart'
+    show RichTextTheme, WrapTextController, cleanClipboardMenuItems;
 
 /// Tablonun İÇİ bu referans genişlikte dizilir ve kutuya ölçeklenir
 /// (`FittedBox`, metin kutusuyla aynı yol — bkz. `TextPageBox`): kutunun
@@ -173,8 +185,10 @@ class _TablePageBoxState extends State<TablePageBox> {
   /// Açılıştaki tek seferlik oran düzeltmesi yapıldı mı (bkz. [_onNatural]).
   bool _corrected = false;
 
-  /// Tablonun referans genişlikteki gerçek boyu.
+  /// Tablonun mevcut yerleşim genişliğindeki gerçek boyu ve son ölçülen eni.
   double _natural = 0;
+  double _layoutWidth = kTableRefWidth;
+  double _measuredWidth = -1;
 
   /// Sürüklenen sütun sınırı.
   int? _dragBorder;
@@ -223,10 +237,10 @@ class _TablePageBoxState extends State<TablePageBox> {
 
   Attachment _applied() {
     var a = _table.applyTo(widget.attachment);
-    if (_natural > 0) {
+    if (_natural > 0 && _layoutWidth > 0) {
       a = a.copyWith(
         width: 1000,
-        height: (1000 * _natural / kTableRefWidth).round(),
+        height: (1000 * _natural / _layoutWidth).round(),
       );
     }
     return a;
@@ -249,24 +263,31 @@ class _TablePageBoxState extends State<TablePageBox> {
   double _mismatch() {
     final w = widget.attachment.width ?? 0, h = widget.attachment.height ?? 0;
     if (w <= 0 || h <= 0 || _natural <= 0) return 1;
-    final stored = kTableRefWidth * h / w;
+    final stored = _layoutWidth * h / w;
     return (stored - _natural).abs() / _natural;
   }
 
-  /// Tablonun boyu değişti. Oran YALNIZ yerel değişiklikte (açık hücre ya da
-  /// bekleyen iş) ve açılışta bir kez yazılır: uzaktan gelen değişiklik
-  /// yüzünden yazmak, iki açık cihaz arasında oranı gidip getirebilirdi.
-  void _onNatural(double h) {
-    if ((h - _natural).abs() < 0.5) return;
+  /// Tablonun eni/boyu değişti. Oran yerel değişiklikte (açık hücre ya da
+  /// bekleyen iş) ve referans genişlikte açılışta yazılır; farklı ekran
+  /// genişliğinde canlı oran yine `onAspect` ile sayfaya bildirilir.
+  void _onNatural(Size size) {
+    final w = size.width > 0 ? size.width : _layoutWidth;
+    final h = size.height;
+    if (h <= 0) return;
+    if ((h - _natural).abs() < 0.5 && (w - _measuredWidth).abs() < 0.5) return;
     _natural = h;
+    _measuredWidth = w;
     if (!mounted) return;
-    widget.onAspect?.call(kTableRefWidth / h);
+    widget.onAspect?.call(w / h);
     if (!widget.editable) return;
     final local = _editing != null || _pending;
     final first = !_corrected;
     _corrected = true;
     final off = _mismatch();
-    if ((local && off > 0.01) || (first && off > 0.04)) _commitNow();
+    final refWidth = (w - kTableRefWidth).abs() < 1;
+    if ((local && off > 0.01) || (first && off > 0.04 && refWidth)) {
+      _commitNow();
+    }
   }
 
   void _startEdit(int row, int column) {
@@ -285,7 +306,10 @@ class _TablePageBoxState extends State<TablePageBox> {
       ..selection = TextSelection.collapsed(offset: text.length);
     ctl.richTheme = _richTheme();
     ctl.addListener(() => _onText(ctl, row, column));
-    final focus = FocusNode(debugLabel: 'note-table-cell');
+    final focus = FocusNode(
+      debugLabel: 'note-table-cell',
+      onKeyEvent: _onCellKeyEvent,
+    );
     focus.addListener(() => _onFocusChange(focus));
     final align = ValueNotifier(_textAlign(_table.alignOf(row, column)));
     align.addListener(() => _onAlign(align, row, column));
@@ -350,6 +374,51 @@ class _TablePageBoxState extends State<TablePageBox> {
     setState(() => _editing = null);
   }
 
+  KeyEventResult _onCellKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    final key = event.logicalKey;
+    final shift = HardwareKeyboard.instance.isShiftPressed;
+    if (key == LogicalKeyboardKey.tab) {
+      if (shift) {
+        _prev();
+      } else {
+        _next();
+      }
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      if (shift) {
+        _insert('\n');
+        return KeyEventResult.handled;
+      }
+      _next();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.escape && event is KeyDownEvent) {
+      _endEdit();
+      _focus?.unfocus();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  /// Shift+Tab: önceki hücre.
+  void _prev() {
+    final cell = _editing;
+    if (cell == null) return;
+    final (r, c) = cell;
+    if (c > 0) {
+      _startEdit(r, c - 1);
+      return;
+    }
+    if (r > 0) {
+      _startEdit(r - 1, _table.columns - 1);
+    }
+  }
+
   /// Enter: sonraki hücre; son hücrede yeni satır açılır.
   void _next() {
     final cell = _editing;
@@ -368,9 +437,11 @@ class _TablePageBoxState extends State<TablePageBox> {
     _startEdit(r + 1, 0);
   }
 
-  void _addRow({int? after}) {
+  void _addRow({int? after, bool above = false}) {
     if (_table.rows >= kTableMaxRows) return;
-    final at = after == null ? _table.rows : after + 1;
+    final at = after == null
+        ? _table.rows
+        : (above ? after : after + 1);
     _predictRow();
     _table = _table.insertRow(at);
     _pending = true;
@@ -379,18 +450,14 @@ class _TablePageBoxState extends State<TablePageBox> {
     if (_editing == null) _commitNow();
   }
 
-  /// Boş satırın referans genişlikteki boyu (yazı satırı + dolgu + çizgi).
+  /// Boş satırın boyu (yazı satırı + dolgu + çizgi).
   static const double _rowHeight = _kLine + 12 + _kBorder;
 
-  /// **SATIR EKLERKEN TİTREME YOK** (kullanıcı bulgusu 2026-11-23: "satır
-  /// eklerken maddeler yukarı çıkarken titreme oluyor"). KÖK NEDEN: kutunun
-  /// boyu tablo ÇİZİLDİKTEN sonra ölçülüp bildiriliyordu — tablo bir-iki
-  /// kare maddelerin üstüne taşıyor, sonra bantlar kayıyordu. Yeni satırın
-  /// boyu bilindiği için kutu AYNI karede büyür; ölçüm sonra yalnız ince
-  /// farkı düzeltir.
+  /// **SATIR EKLERKEN TİTREME YOK**: yeni satırın boyu bilindiği için kutu
+  /// aynı karede büyür; ölçüm sonra yalnız ince farkı düzeltir.
   void _predictRow() {
     if (_natural <= 0) return;
-    widget.onAspect?.call(kTableRefWidth / (_natural + _rowHeight));
+    widget.onAspect?.call(_layoutWidth / (_natural + _rowHeight));
   }
 
   bool _insert(String text) {
@@ -451,7 +518,10 @@ class _TablePageBoxState extends State<TablePageBox> {
   /// kendi ayarında değiştirilebilir; görsel veya PDF olarak paylaşılabilir,
   /// Word'e aktarılabilir"). Sayılar ve başlık levha açıkken CANLI uygulanır.
   Future<void> _openOptions() async {
-    final row = (_editing ?? _last)?.$1;
+    final l10n = context.l10n;
+    final cell = _editing ?? _last;
+    final row = cell?.$1;
+    final col = cell?.$2 ?? 0;
     final action = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
@@ -459,6 +529,7 @@ class _TablePageBoxState extends State<TablePageBox> {
       builder: (context) => _TableOptions(
         table: _table,
         row: row,
+        col: col,
         onTable: (next) {
           if (!mounted) return;
           _last = null;
@@ -469,11 +540,29 @@ class _TablePageBoxState extends State<TablePageBox> {
     );
     if (!mounted || action == null) return;
     switch (action) {
+      case 'add-above' when row != null:
+        _addRow(after: row, above: true);
       case 'add-below' when row != null:
         _addRow(after: row);
       case 'delete-row' when row != null:
         _last = null;
         _apply(_table.removeRow(row));
+      case 'sort-asc':
+        _last = null;
+        _apply(_table.sortByColumn(col));
+        showAppMessage(context, l10n.tableSorted);
+      case 'sort-desc':
+        _last = null;
+        _apply(_table.sortByColumn(col, ascending: false));
+        showAppMessage(context, l10n.tableSorted);
+      case 'copy-md':
+        await Clipboard.setData(ClipboardData(text: _table.toMarkdown()));
+        if (mounted) showAppMessage(context, l10n.copied);
+      case 'copy-csv':
+        await Clipboard.setData(ClipboardData(text: _table.toCsv()));
+        if (mounted) showAppMessage(context, l10n.copied);
+      case 'paste-data':
+        unawaited(_pasteDelimited());
       case 'delete':
         widget.onRemove?.call();
       case 'share-image':
@@ -483,6 +572,24 @@ class _TablePageBoxState extends State<TablePageBox> {
       case 'share-word':
         unawaited(_share(TableExportKind.word));
     }
+  }
+
+  Future<void> _pasteDelimited() async {
+    final l10n = context.l10n;
+    final data = await Clipboard.getData('text/plain');
+    final parsed = NoteTable.fromDelimited(data?.text ?? '');
+    if (!mounted) return;
+    if (parsed == null) {
+      showAppMessage(context, l10n.tablePasteInvalid);
+      return;
+    }
+    final hasContent = _table.cells.any((c) => c.trim().isNotEmpty);
+    if (hasContent && !await _confirmDrop(l10n.tablePasteWillReplace)) return;
+    if (!mounted) return;
+    _last = null;
+    _editing = null;
+    _apply(parsed.withStriped(_table.striped));
+    showAppMessage(context, l10n.tablePasted);
   }
 
   Future<void> _share(TableExportKind kind) async {
@@ -531,6 +638,14 @@ class _TablePageBoxState extends State<TablePageBox> {
               textInputAction: TextInputAction.next,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration.collapsed(hintText: null),
+              contextMenuBuilder: (menuContext, state) => NoteSelectionToolbar(
+                editableState: state,
+                formatController: _ctl,
+                onFormatCommit: _commitNow,
+                buttonItems: arrangeSelectionMenu(
+                  platform: cleanClipboardMenuItems(state),
+                ),
+              ),
               onEditingComplete: () {},
               onSubmitted: (_) => _next(),
             )
@@ -585,7 +700,13 @@ class _TablePageBoxState extends State<TablePageBox> {
                 ? BoxDecoration(
                     color: scheme.primary.withValues(alpha: AppAlpha.hairline),
                   )
-                : null,
+                : (table.striped && r.isOdd
+                      ? BoxDecoration(
+                          color: scheme.surfaceContainerHighest.withValues(
+                            alpha: AppAlpha.soft,
+                          ),
+                        )
+                      : null),
             children: [for (var c = 0; c < table.columns; c++) cell(r, c)],
           ),
       ],
@@ -616,20 +737,31 @@ class _TablePageBoxState extends State<TablePageBox> {
 
     return Semantics(
       label: widget.attachment.fileName,
-      child: FittedBox(
-        fit: BoxFit.fitWidth,
-        alignment: Alignment.topCenter,
-        child: SizedBox(
-          width: kTableRefWidth,
-          child: Material(
-            type: MaterialType.transparency,
-            // Sistem yazı ölçeği tabloyu büyütmez: boy (oran) cihazdan
-            // bağımsız; büyütmek için kutu köşeden boyutlanır.
-            child: MediaQuery.withNoTextScaling(
-              child: _NaturalHeight(onHeight: _onNatural, child: content),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final avail = constraints.maxWidth;
+          final wide = avail.isFinite && avail >= kTableRefWidth;
+          final layoutW = wide ? avail : kTableRefWidth;
+          _layoutWidth = layoutW;
+          // Geniş tuvalde (web/tablet) tabloyu büyütüp yazıları şişirmeyiz:
+          // doğrudan gerçek genişlikte 1:1 ölçekte dizilir; yalnız çok dar
+          // bölmelerde taşmayı önlemek için aşağı ölçeklenir.
+          final box = SizedBox(
+            width: layoutW,
+            child: Material(
+              type: MaterialType.transparency,
+              child: MediaQuery.withNoTextScaling(
+                child: _NaturalSize(onSize: _onNatural, child: content),
+              ),
             ),
-          ),
-        ),
+          );
+          if (wide) return box;
+          return FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.topCenter,
+            child: box,
+          );
+        },
       ),
     );
   }
@@ -691,9 +823,10 @@ class _TablePageBoxState extends State<TablePageBox> {
   /// Hücre yazarken sütun sınırlarında sürükleme tutamağı.
   List<Widget> _borderHandles(NoteTable table, ColorScheme scheme) {
     final handles = <Widget>[];
+    final layoutW = _layoutWidth > 0 ? _layoutWidth : kTableRefWidth;
     var x = 0.0;
     for (var b = 1; b < table.columns; b++) {
-      x += table.widths[b - 1] * kTableRefWidth;
+      x += table.widths[b - 1] * layoutW;
       final dragging = _dragBorder == b;
       handles.add(
         Positioned(
@@ -702,28 +835,31 @@ class _TablePageBoxState extends State<TablePageBox> {
           width: AppSpace.l,
           top: 0,
           bottom: 0,
-          child: GestureDetector(
-            behavior: HitTestBehavior.translucent,
-            onHorizontalDragStart: (_) => setState(() => _dragBorder = b),
-            onHorizontalDragUpdate: (d) => setState(
-              () => _table = _table.moveBorder(b, d.delta.dx / kTableRefWidth),
-            ),
-            onHorizontalDragEnd: (_) {
-              setState(() => _dragBorder = null);
-              _commitNow();
-            },
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(top: AppSpace.xs),
-                child: Container(
-                  width: AppSpace.s,
-                  height: AppSpace.l + AppSpace.s,
-                  decoration: BoxDecoration(
-                    color: dragging
-                        ? scheme.primary
-                        : scheme.primary.withValues(alpha: AppAlpha.muted),
-                    borderRadius: BorderRadius.circular(AppRadius.pill),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.resizeColumn,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragStart: (_) => setState(() => _dragBorder = b),
+              onHorizontalDragUpdate: (d) => setState(
+                () => _table = _table.moveBorder(b, d.delta.dx / layoutW),
+              ),
+              onHorizontalDragEnd: (_) {
+                setState(() => _dragBorder = null);
+                _commitNow();
+              },
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: AppSpace.xs),
+                  child: Container(
+                    width: AppSpace.s,
+                    height: AppSpace.l + AppSpace.s,
+                    decoration: BoxDecoration(
+                      color: dragging
+                          ? scheme.primary
+                          : scheme.primary.withValues(alpha: AppAlpha.muted),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
                   ),
                 ),
               ),
@@ -814,6 +950,7 @@ class _TableOptions extends StatefulWidget {
   const _TableOptions({
     required this.table,
     required this.row,
+    required this.col,
     required this.onTable,
     required this.confirmDrop,
   });
@@ -822,6 +959,9 @@ class _TableOptions extends StatefulWidget {
 
   /// Son yazılan hücrenin satırı (yoksa satır işleri gösterilmez).
   final int? row;
+
+  /// Etkin sütun (sıralama ve sütun ekle/sil hedefi).
+  final int col;
   final ValueChanged<NoteTable> onTable;
   final Future<bool> Function(String message) confirmDrop;
 
@@ -840,6 +980,14 @@ class _TableOptionsState extends State<_TableOptions> {
     widget.onTable(next);
   }
 
+  bool _colHasText(int col) {
+    if (col < 0 || col >= _t.columns) return false;
+    for (var r = 0; r < _t.rows; r++) {
+      if (_t.cell(r, col).trim().isNotEmpty) return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -847,6 +995,8 @@ class _TableOptionsState extends State<_TableOptions> {
     final scheme = theme.colorScheme;
     final text = AppText.of(theme);
     final row = widget.row;
+    final col = widget.col.clamp(0, _t.columns - 1);
+    final canSort = _t.rows - (_t.header ? 1 : 0) >= 2;
     Widget pair(Widget a, Widget? b) => Row(
       children: [
         Expanded(child: a),
@@ -856,6 +1006,12 @@ class _TableOptionsState extends State<_TableOptions> {
     );
     final edits = <Widget>[
       if (row != null) ...[
+        _OptionTile(
+          key: const ValueKey('note-table-add-above'),
+          icon: Icons.vertical_align_top_rounded,
+          label: l10n.tableAddRowAbove,
+          onTap: () => Navigator.pop(context, 'add-above'),
+        ),
         _OptionTile(
           key: const ValueKey('note-table-add-below'),
           icon: Icons.playlist_add_rounded,
@@ -867,6 +1023,37 @@ class _TableOptionsState extends State<_TableOptions> {
           icon: Icons.playlist_remove_rounded,
           label: l10n.tableDeleteRow,
           onTap: () => Navigator.pop(context, 'delete-row'),
+        ),
+      ],
+      if (_t.columns < kTableMaxColumns)
+        _OptionTile(
+          key: const ValueKey('note-table-add-col'),
+          icon: Icons.view_column_outlined,
+          label: l10n.tableInsertColumn,
+          onTap: () => _set(_t.insertColAt(col + 1)),
+        ),
+      if (_t.columns > 2)
+        _OptionTile(
+          key: const ValueKey('note-table-del-col'),
+          icon: Icons.delete_sweep_outlined,
+          label: l10n.tableDeleteColumn,
+          onTap: () => _set(
+            _t.deleteColAt(col),
+            drop: _colHasText(col) ? l10n.tableColumnsOneWillDrop : null,
+          ),
+        ),
+      if (canSort) ...[
+        _OptionTile(
+          key: const ValueKey('note-table-sort-asc'),
+          icon: Icons.arrow_upward_rounded,
+          label: l10n.tableSortAsc,
+          onTap: () => Navigator.pop(context, 'sort-asc'),
+        ),
+        _OptionTile(
+          key: const ValueKey('note-table-sort-desc'),
+          icon: Icons.arrow_downward_rounded,
+          label: l10n.tableSortDesc,
+          onTap: () => Navigator.pop(context, 'sort-desc'),
         ),
       ],
       if (!_t.evenWidths)
@@ -934,6 +1121,18 @@ class _TableOptionsState extends State<_TableOptions> {
               ),
               onTap: () => _set(_t.withHeader(!_t.header)),
             ),
+            const SizedBox(height: AppSpace.s),
+            _OptionTile(
+              key: const ValueKey('note-table-striped'),
+              icon: Icons.table_rows_rounded,
+              label: l10n.tableStripedRows,
+              active: _t.striped,
+              trailing: Switch(
+                value: _t.striped,
+                onChanged: (v) => _set(_t.withStriped(v)),
+              ),
+              onTap: () => _set(_t.withStriped(!_t.striped)),
+            ),
             if (edits.isNotEmpty) ...[
               const SizedBox(height: AppSpace.l),
               SectionLabel(l10n.tableEditSection),
@@ -943,6 +1142,42 @@ class _TableOptionsState extends State<_TableOptions> {
                 pair(edits[i], i + 1 < edits.length ? edits[i + 1] : null),
               ],
             ],
+            const SizedBox(height: AppSpace.l),
+            SectionLabel(l10n.tableDataSection),
+            const SizedBox(height: AppSpace.s),
+            Row(
+              children: [
+                Expanded(
+                  child: _OptionTile(
+                    key: const ValueKey('note-table-copy-md'),
+                    icon: AppIcons.copy,
+                    label: l10n.tableCopyMarkdown,
+                    vertical: true,
+                    onTap: () => Navigator.pop(context, 'copy-md'),
+                  ),
+                ),
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: _OptionTile(
+                    key: const ValueKey('note-table-copy-csv'),
+                    icon: Icons.grid_on_outlined,
+                    label: l10n.tableCopyCsv,
+                    vertical: true,
+                    onTap: () => Navigator.pop(context, 'copy-csv'),
+                  ),
+                ),
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: _OptionTile(
+                    key: const ValueKey('note-table-paste-data'),
+                    icon: Icons.content_paste_outlined,
+                    label: l10n.tablePasteData,
+                    vertical: true,
+                    onTap: () => Navigator.pop(context, 'paste-data'),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpace.l),
             SectionLabel(l10n.share),
             const SizedBox(height: AppSpace.s),
@@ -1154,35 +1389,38 @@ class _Stepper extends StatelessWidget {
   }
 }
 
-/// Çocuğun yerleşimden sonraki boyunu bildirir (değişince, kare sonunda).
-class _NaturalHeight extends SingleChildRenderObjectWidget {
-  const _NaturalHeight({required this.onHeight, super.child});
+/// Çocuğun yerleşimden sonraki boyunu (en ve boy) bildirir (kare sonunda).
+class _NaturalSize extends SingleChildRenderObjectWidget {
+  const _NaturalSize({required this.onSize, super.child});
 
-  final ValueChanged<double> onHeight;
+  final ValueChanged<Size> onSize;
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderNaturalHeight(onHeight);
+      _RenderNaturalSize(onSize);
 
   @override
   void updateRenderObject(BuildContext context, RenderObject renderObject) =>
-      (renderObject as _RenderNaturalHeight).onHeight = onHeight;
+      (renderObject as _RenderNaturalSize).onSize = onSize;
 }
 
-class _RenderNaturalHeight extends RenderProxyBox {
-  _RenderNaturalHeight(this.onHeight);
+class _RenderNaturalSize extends RenderProxyBox {
+  _RenderNaturalSize(this.onSize);
 
-  ValueChanged<double> onHeight;
-  double _reported = -1;
+  ValueChanged<Size> onSize;
+  Size _reported = Size.zero;
 
   @override
   void performLayout() {
     super.performLayout();
-    final h = size.height;
-    if ((h - _reported).abs() < 0.5) return;
-    _reported = h;
+    final next = size;
+    if ((next.width - _reported.width).abs() < 0.5 &&
+        (next.height - _reported.height).abs() < 0.5) {
+      return;
+    }
+    _reported = next;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (attached) onHeight(h);
+      if (attached) onSize(next);
     });
   }
 }

@@ -9882,6 +9882,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tableShareFailed => 'Couldn\'t share the table';
 
   @override
+  String get tableAddRowAbove => 'Add row above';
+
+  @override
+  String get tableInsertColumn => 'Add column right';
+
+  @override
+  String get tableDeleteColumn => 'Delete column';
+
+  @override
+  String get tableColumnsOneWillDrop =>
+      'Text in the selected column will be deleted. Continue?';
+
+  @override
+  String get tableSortAsc => 'Sort A→Z';
+
+  @override
+  String get tableSortDesc => 'Sort Z→A';
+
+  @override
+  String get tableStripedRows => 'Striped rows';
+
+  @override
+  String get tableDataSection => 'Data';
+
+  @override
+  String get tableCopyMarkdown => 'Copy Markdown';
+
+  @override
+  String get tableCopyCsv => 'Copy CSV';
+
+  @override
+  String get tablePasteData => 'Paste CSV / TSV';
+
+  @override
+  String get tablePasteWillReplace =>
+      'Existing table content will be replaced with the pasted data. Continue?';
+
+  @override
+  String get tablePasteInvalid => 'No valid table data found on clipboard';
+
+  @override
+  String get tablePasted => 'Table data pasted';
+
+  @override
+  String get tableSorted => 'Table sorted';
+
+  @override
   String get dashboardBackgroundGallery => 'Curated wallpapers';
 
   @override

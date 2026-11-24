@@ -9865,6 +9865,53 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tableShareFailed => 'Tablo paylaşılamadı';
 
   @override
+  String get tableAddRowAbove => 'Üstüne satır ekle';
+
+  @override
+  String get tableInsertColumn => 'Sağına sütun ekle';
+
+  @override
+  String get tableDeleteColumn => 'Sütunu sil';
+
+  @override
+  String get tableColumnsOneWillDrop =>
+      'Seçili sütundaki yazılar silinecek. Devam edilsin mi?';
+
+  @override
+  String get tableSortAsc => 'A→Z sırala';
+
+  @override
+  String get tableSortDesc => 'Z→A sırala';
+
+  @override
+  String get tableStripedRows => 'Şeritli satırlar';
+
+  @override
+  String get tableDataSection => 'Veri';
+
+  @override
+  String get tableCopyMarkdown => 'Markdown kopyala';
+
+  @override
+  String get tableCopyCsv => 'CSV kopyala';
+
+  @override
+  String get tablePasteData => 'CSV / TSV yapıştır';
+
+  @override
+  String get tablePasteWillReplace =>
+      'Tablodaki içerik yapıştırılan verilerle değişecek. Devam edilsin mi?';
+
+  @override
+  String get tablePasteInvalid => 'Panoda geçerli tablo verisi bulunamadı';
+
+  @override
+  String get tablePasted => 'Tablo verileri yapıştırıldı';
+
+  @override
+  String get tableSorted => 'Tablo sıralandı';
+
+  @override
   String get dashboardBackgroundGallery => 'Hazır zeminler';
 
   @override

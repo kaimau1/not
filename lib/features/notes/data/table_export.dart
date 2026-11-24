@@ -160,6 +160,18 @@ abstract final class TableExport {
         Paint()..color = _headFill,
       );
     }
+    if (table.striped) {
+      var sy = top;
+      for (var r = 0; r < table.rows; r++) {
+        if (!(table.header && r == 0) && r.isOdd) {
+          canvas.drawRect(
+            Rect.fromLTWH(_pad, sy, inner, rowH[r]),
+            Paint()..color = const Color(0xFFF4F7F5),
+          );
+        }
+        sy += rowH[r];
+      }
+    }
     final line = Paint()
       ..color = _line
       ..strokeWidth = 1;
@@ -289,10 +301,14 @@ abstract final class TableExport {
       }
       for (var r = first; r < table.rows; r++) {
         final row = grid.rows.add();
+        final zebra = table.striped && !(table.header && r == 0) && r.isOdd;
         for (var c = 0; c < table.columns; c++) {
           row.cells[c].value = table.plainCell(r, c);
           row.cells[c].stringFormat = _pdfAlign(table.alignOf(r, c));
           row.cells[c].style = PdfGridCellStyle(
+            backgroundBrush: zebra
+                ? PdfSolidBrush(PdfColor(244, 247, 245))
+                : null,
             borders: borders,
             cellPadding: padding,
           );
@@ -341,12 +357,15 @@ abstract final class TableExport {
     out.write('</w:tblGrid>');
     for (var r = 0; r < table.rows; r++) {
       final head = table.header && r == 0;
+      final zebra = table.striped && !head && r.isOdd;
       out.write('<w:tr>');
       if (head) out.write('<w:trPr><w:tblHeader/></w:trPr>');
       for (var c = 0; c < table.columns; c++) {
         out.write('<w:tc><w:tcPr><w:tcW w:w="${cols[c]}" w:type="dxa"/>');
         if (head) {
           out.write('<w:shd w:val="clear" w:color="auto" w:fill="E6EEEA"/>');
+        } else if (zebra) {
+          out.write('<w:shd w:val="clear" w:color="auto" w:fill="F4F7F5"/>');
         }
         out.write('</w:tcPr>');
         // Hücredeki her satır ayrı paragraf (Word'de Enter'la aynı).

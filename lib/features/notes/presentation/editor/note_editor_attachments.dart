@@ -39,11 +39,13 @@ extension _EditorAttachments on _NoteEditorScreenState {
     final pageWidth0 = _pageBox()?.size.width ?? 0;
     final width = switch (image.kind) {
       // TABLO telefonda boydan boya; geniş sayfada okunur bir ölçekte
-      // (referans genişliğin ~1,3 katı) başlar.
+      // (en fazla 680 dp) başlar.
       AttachmentKind.text when isNoteTable(image) =>
         pageWidth0 <= 0
             ? 1.0
-            : (kTableRefWidth * 1.3 / pageWidth0).clamp(0.45, 1.0).toDouble(),
+            : pageWidth0 > 540
+            ? (math.min(pageWidth0 * 0.88, 680.0) / pageWidth0).toDouble()
+            : 1.0,
       AttachmentKind.pdf => 0.6,
       AttachmentKind.text || AttachmentKind.slide => 0.8,
       // Ses HAPI satırı boydan boya kaplar (örnek uygulamadaki sesli not).

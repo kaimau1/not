@@ -60,6 +60,7 @@ class NoteTable {
     List<double>? widths,
     String? aligns,
     this.header = true,
+    this.striped = false,
   }) : columns = columns.clamp(1, kTableMaxColumns),
        cells = List.unmodifiable(
          _fit(cells, columns.clamp(1, kTableMaxColumns)),
@@ -88,6 +89,9 @@ class NoteTable {
 
   /// İlk satır başlık mı (kalın, tonlu zemin).
   final bool header;
+
+  /// Veri satırlarında dönüşümlü zebra zemini çizilsin mi.
+  final bool striped;
 
   /// Hücre hizaları, hücre başına bir harf ([CellAlign.code]); hepsi sola
   /// ise boş dize (kayda yazılmaz).
@@ -148,6 +152,7 @@ class NoteTable {
           : null,
       aligns: raw['align'] is String ? raw['align'] as String : null,
       header: raw['header'] is bool ? raw['header'] as bool : true,
+      striped: raw['striped'] == true,
     );
   }
 
@@ -157,6 +162,7 @@ class NoteTable {
     if (!evenWidths) 'widths': [for (final w in widths) _round(w)],
     if (aligns.isNotEmpty) 'align': aligns,
     'header': header,
+    if (striped) 'striped': true,
   };
 
   NoteTable _with({
@@ -165,6 +171,7 @@ class NoteTable {
     List<double>? widths,
     bool clearWidths = false,
     bool? header,
+    bool? striped,
     String? aligns,
   }) => NoteTable(
     columns: columns ?? this.columns,
@@ -172,6 +179,7 @@ class NoteTable {
     widths: clearWidths ? null : (widths ?? this.widths),
     aligns: aligns ?? this.aligns,
     header: header ?? this.header,
+    striped: striped ?? this.striped,
   );
 
   NoteTable withCell(int row, int column, String text) {
@@ -220,7 +228,135 @@ class NoteTable {
                   c < columns ? aligns[r * columns + c] : 'l',
             ].join(),
       header: header,
+      striped: striped,
     );
+  }
+
+  /// [index] konumuna boş sütun ekler; mevcut sütun genişliklerini orantılı
+  /// daraltır. En çok [kTableMaxColumns] sınırı korunur.
+  NoteTable insertColAt(int index) {
+    if (columns >= kTableMaxColumns) return this;
+    final at = index.clamp(0, columns);
+    final nextCols = columns + 1;
+    final avg = 1 / nextCols;
+    final nextWidths = [for (final w in widths) w * (1 - avg)]
+      ..insert(at, avg);
+    final nextCells = <String>[];
+    final hasAligns = aligns.isNotEmpty;
+    final nextAligns = hasAligns ? StringBuffer() : null;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < columns; c++) {
+        if (c == at) {
+          nextCells.add('');
+          nextAligns?.write('l');
+        }
+        nextCells.add(cell(r, c));
+        nextAligns?.write(alignOf(r, c).code);
+      }
+      if (at == columns) {
+        nextCells.add('');
+        nextAligns?.write('l');
+      }
+    }
+    return NoteTable(
+      columns: nextCols,
+      cells: nextCells,
+      widths: nextWidths,
+      aligns: nextAligns?.toString(),
+      header: header,
+      striped: striped,
+    );
+  }
+
+  /// [index] sütununu siler; en az 2 sütun kalır.
+  NoteTable deleteColAt(int index) {
+    if (columns <= 2 || index < 0 || index >= columns) return this;
+    final nextCols = columns - 1;
+    final nextWidths = <double>[
+      for (var c = 0; c < columns; c++)
+        if (c != index) widths[c],
+    ];
+    final nextCells = <String>[];
+    final hasAligns = aligns.isNotEmpty;
+    final nextAligns = hasAligns ? StringBuffer() : null;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < columns; c++) {
+        if (c == index) continue;
+        nextCells.add(cell(r, c));
+        nextAligns?.write(alignOf(r, c).code);
+      }
+    }
+    return NoteTable(
+      columns: nextCols,
+      cells: nextCells,
+      widths: nextWidths,
+      aligns: nextAligns?.toString(),
+      header: header,
+      striped: striped,
+    );
+  }
+
+  /// Satırları [col] sütununa göre sıralar; [header] açıksa ilk satır sabit
+  /// kalır. Sayısal değerler sayısal, metinler Türkçe katlamalı alfabetik
+  /// sırayla karşılaştırılır; boş hücreler her zaman sona konur.
+  NoteTable sortByColumn(int col, {bool ascending = true}) {
+    if (col < 0 || col >= columns || rows < 2) return this;
+    final startRow = header ? 1 : 0;
+    if (rows - startRow < 2) return this;
+    final fixedCells = cells.sublist(0, startRow * columns);
+    final fixedAligns = aligns.isEmpty
+        ? ''
+        : aligns.substring(0, startRow * columns);
+    final dataRows = <({List<String> cells, String aligns, String key})>[
+      for (var r = startRow; r < rows; r++)
+        (
+          cells: cells.sublist(r * columns, (r + 1) * columns),
+          aligns: aligns.isEmpty
+              ? ''
+              : aligns.substring(r * columns, (r + 1) * columns),
+          key: plainCell(r, col).trim(),
+        ),
+    ];
+    dataRows.sort((a, b) {
+      if (a.key.isEmpty && b.key.isEmpty) return 0;
+      if (a.key.isEmpty) return 1;
+      if (b.key.isEmpty) return -1;
+      final na = _parseSortNumber(a.key);
+      final nb = _parseSortNumber(b.key);
+      final cmp = na != null && nb != null
+          ? na.compareTo(nb)
+          : _foldTr(a.key).compareTo(_foldTr(b.key));
+      return ascending ? cmp : -cmp;
+    });
+    return _with(
+      cells: [...fixedCells, for (final r in dataRows) ...r.cells],
+      aligns: aligns.isEmpty
+          ? ''
+          : '$fixedAligns${dataRows.map((r) => r.aligns).join()}',
+    );
+  }
+
+  static double? _parseSortNumber(String raw) {
+    final normalized = raw.replaceAll(' ', '').replaceAll(',', '.');
+    if (!RegExp(r'^-?\d+(?:\.\d+)?$').hasMatch(normalized)) return null;
+    return double.tryParse(normalized);
+  }
+
+  static String _foldTr(String s) {
+    final out = StringBuffer();
+    for (final r in s.runes) {
+      final c = String.fromCharCode(r);
+      out.write(switch (c) {
+        'Ç' || 'ç' => 'c',
+        'Ğ' || 'ğ' => 'g',
+        'İ' || 'I' || 'ı' => 'i',
+        'Ö' || 'ö' => 'o',
+        'Ş' || 'ş' => 's',
+        'Ü' || 'ü' => 'u',
+        _ => c.toLowerCase(),
+      });
+    }
+    return out.toString();
   }
 
   /// Satır sayısını değiştirir: yeni satırlar sonda boş, fazlası sondan düşer.
@@ -269,6 +405,116 @@ class NoteTable {
   NoteTable evenedWidths() => _with(clearWidths: true);
 
   NoteTable withHeader(bool value) => _with(header: value);
+
+  NoteTable withStriped(bool value) => _with(striped: value);
+
+  /// RFC-4180 CSV çıktısı (tırnaklı alanlar ve biçim işaretsiz düz metin).
+  String toCsv() {
+    String q(String v) {
+      final cleaned = v.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+      if (cleaned.contains(',') ||
+          cleaned.contains('"') ||
+          cleaned.contains('\n')) {
+        return '"${cleaned.replaceAll('"', '""')}"';
+      }
+      return cleaned;
+    }
+
+    return [
+      for (var r = 0; r < rows; r++)
+        [for (var c = 0; c < columns; c++) q(plainCell(r, c))].join(','),
+    ].join('\n');
+  }
+
+  /// Panodan gelen CSV / TSV / noktalı virgül metnini tabloya çevirir.
+  /// En az 2 sütunlu anlamlı içerik yoksa null döner.
+  static NoteTable? fromDelimited(String raw) {
+    final clean = raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n').trim();
+    if (clean.isEmpty) return null;
+    final delimiter = clean.contains('\t')
+        ? '\t'
+        : (_countUnquoted(clean, ';') > _countUnquoted(clean, ',') ? ';' : ',');
+    final parsed = _parseDelimited(clean, delimiter);
+    if (parsed.isEmpty) return null;
+    var maxCols = 0;
+    for (final row in parsed) {
+      if (row.length > maxCols) maxCols = row.length;
+    }
+    final cols = maxCols.clamp(1, kTableMaxColumns);
+    final rows = parsed.length.clamp(1, kTableMaxRows);
+    if (cols < 2) return null;
+    final cells = <String>[
+      for (var r = 0; r < rows; r++)
+        for (var c = 0; c < cols; c++)
+          c < parsed[r].length ? parsed[r][c].trim() : '',
+    ];
+    if (!cells.any((c) => c.isNotEmpty)) return null;
+    return NoteTable(columns: cols, cells: cells);
+  }
+
+  static int _countUnquoted(String text, String ch) {
+    var inQuotes = false;
+    var count = 0;
+    for (var i = 0; i < text.length; i++) {
+      final cur = text[i];
+      if (cur == '"') {
+        inQuotes = !inQuotes;
+      } else if (!inQuotes && cur == ch) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  static List<List<String>> _parseDelimited(String text, String delim) {
+    final rows = <List<String>>[];
+    var row = <String>[];
+    final buf = StringBuffer();
+    var inQuotes = false;
+    var i = 0;
+    while (i < text.length) {
+      final ch = text[i];
+      if (inQuotes) {
+        if (ch == '"') {
+          if (i + 1 < text.length && text[i + 1] == '"') {
+            buf.write('"');
+            i += 2;
+            continue;
+          }
+          inQuotes = false;
+          i++;
+          continue;
+        }
+        buf.write(ch);
+        i++;
+        continue;
+      }
+      if (ch == '"') {
+        inQuotes = true;
+        i++;
+        continue;
+      }
+      if (ch == delim) {
+        row.add(buf.toString());
+        buf.clear();
+        i++;
+        continue;
+      }
+      if (ch == '\n') {
+        row.add(buf.toString());
+        buf.clear();
+        if (row.any((c) => c.isNotEmpty)) rows.add(row);
+        row = <String>[];
+        i++;
+        continue;
+      }
+      buf.write(ch);
+      i++;
+    }
+    row.add(buf.toString());
+    if (row.any((c) => c.isNotEmpty)) rows.add(row);
+    return rows;
+  }
 
   /// Markdown tablo (`| a | b |`); başlık kapalıysa da ilk satırın altına
   /// ayraç yazılır (Markdown'da tablo ayraçsız tanınmaz).
@@ -327,12 +573,14 @@ class NoteTable {
       other is NoteTable &&
       other.columns == columns &&
       other.header == header &&
+      other.striped == striped &&
       other.aligns == aligns &&
       listEquals(other.cells, cells) &&
       _sameWidths(other.widths, widths);
 
   @override
-  int get hashCode => Object.hash(columns, header, Object.hashAll(cells));
+  int get hashCode =>
+      Object.hash(columns, header, striped, aligns, Object.hashAll(cells));
 
   static bool _sameWidths(List<double> a, List<double> b) {
     if (a.length != b.length) return false;

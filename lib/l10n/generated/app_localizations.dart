@@ -17468,6 +17468,96 @@ abstract class AppLocalizations {
   /// **'Tablo paylaşılamadı'**
   String get tableShareFailed;
 
+  /// No description provided for @tableAddRowAbove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üstüne satır ekle'**
+  String get tableAddRowAbove;
+
+  /// No description provided for @tableInsertColumn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağına sütun ekle'**
+  String get tableInsertColumn;
+
+  /// No description provided for @tableDeleteColumn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütunu sil'**
+  String get tableDeleteColumn;
+
+  /// No description provided for @tableColumnsOneWillDrop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili sütundaki yazılar silinecek. Devam edilsin mi?'**
+  String get tableColumnsOneWillDrop;
+
+  /// No description provided for @tableSortAsc.
+  ///
+  /// In tr, this message translates to:
+  /// **'A→Z sırala'**
+  String get tableSortAsc;
+
+  /// No description provided for @tableSortDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Z→A sırala'**
+  String get tableSortDesc;
+
+  /// No description provided for @tableStripedRows.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şeritli satırlar'**
+  String get tableStripedRows;
+
+  /// No description provided for @tableDataSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Veri'**
+  String get tableDataSection;
+
+  /// No description provided for @tableCopyMarkdown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Markdown kopyala'**
+  String get tableCopyMarkdown;
+
+  /// No description provided for @tableCopyCsv.
+  ///
+  /// In tr, this message translates to:
+  /// **'CSV kopyala'**
+  String get tableCopyCsv;
+
+  /// No description provided for @tablePasteData.
+  ///
+  /// In tr, this message translates to:
+  /// **'CSV / TSV yapıştır'**
+  String get tablePasteData;
+
+  /// No description provided for @tablePasteWillReplace.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablodaki içerik yapıştırılan verilerle değişecek. Devam edilsin mi?'**
+  String get tablePasteWillReplace;
+
+  /// No description provided for @tablePasteInvalid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Panoda geçerli tablo verisi bulunamadı'**
+  String get tablePasteInvalid;
+
+  /// No description provided for @tablePasted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablo verileri yapıştırıldı'**
+  String get tablePasted;
+
+  /// No description provided for @tableSorted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablo sıralandı'**
+  String get tableSorted;
+
   /// No description provided for @dashboardBackgroundGallery.
   ///
   /// In tr, this message translates to:
