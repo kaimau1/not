@@ -301,14 +301,24 @@ extension _DashShelf on _DashboardScreenState {
     _gridTipChecked = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      TipOnce.show(
+      final prefs = ref.read(sharedPreferencesProvider);
+      final showedSwipe = TipOnce.show(
         context,
-        ref.read(sharedPreferencesProvider),
+        prefs,
         TipOnce.gridSwipe,
         mode == SwipeMode.filters
             ? context.l10n.tipGridSwipeFilters
             : context.l10n.tipGridSwipeFolders,
       );
+      if (!showedSwipe) {
+        TipOnce.show(
+          context,
+          prefs,
+          TipOnce.folderGestures,
+          context.l10n.tipFolderGestures,
+          icon: Icons.folder_outlined,
+        );
+      }
     });
   }
 }

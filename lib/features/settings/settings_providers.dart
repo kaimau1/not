@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app/theme/app_palette.dart';
 import '../../core/constants.dart';
+import '../../core/tips.dart';
 import '../../core/play_build.dart';
 import '../../core/crash_reporting.dart';
 import '../../core/utils/font_downloads.dart';
@@ -65,6 +66,9 @@ NotifierProvider<BoolPrefNotifier, bool> boolPref(
 }) => NotifierProvider<BoolPrefNotifier, bool>(
   () => BoolPrefNotifier(key, defaultValue),
 );
+
+/// Bağlamsal ipuçlarının gösterilip gösterilmeyeceği (F14.6 / Step 4).
+final tipsEnabledProvider = boolPref(TipOnce.enabledKey, defaultValue: true);
 
 /// Tema seçimi: sistem, üç tema ailesi (bkz. `ThemeFamily`) ve koyu.
 /// ThemeMode'da karşılığı olmadığından kendi enum'ımız var; aynı prefs

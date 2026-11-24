@@ -136,4 +136,99 @@ void main() {
     expect(TipOnce.show(ctx, prefs, TipOnce.mediaPin, 'İpucu C'), isFalse);
     expect(TipOnce.due(prefs, TipOnce.mediaPin), isTrue);
   });
+
+  testWidgets('tips_enabled kapalıyken hiçbir ipucu çıkmaz ve sayılmaz', (
+    tester,
+  ) async {
+    await prefs.setBool(TipOnce.enabledKey, false);
+    late BuildContext ctx;
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => AppNoticeHost(child: child!),
+        home: Builder(
+          builder: (context) {
+            ctx = context;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(TipOnce.due(prefs, TipOnce.formatScope), isFalse);
+    expect(
+      TipOnce.show(
+        ctx,
+        prefs,
+        TipOnce.formatScope,
+        'Biçim ipucu',
+        sessionLimit: false,
+      ),
+      isFalse,
+    );
+    await tester.pump();
+    expect(find.text('Biçim ipucu'), findsNothing);
+    await prefs.setBool(TipOnce.enabledKey, true);
+    expect(TipOnce.due(prefs, TipOnce.formatScope), isTrue);
+  });
+
+  testWidgets('90 sn bekleme süresi ardışık ipuçlarını yumuşatır', (
+    tester,
+  ) async {
+    late BuildContext ctx;
+    await tester.pumpWidget(
+      MaterialApp(
+        builder: (context, child) => AppNoticeHost(child: child!),
+        home: Builder(
+          builder: (context) {
+            ctx = context;
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    expect(
+      TipOnce.show(
+        ctx,
+        prefs,
+        TipOnce.formatScope,
+        'İpucu 1',
+        sessionLimit: false,
+      ),
+      isTrue,
+    );
+    await tester.pump();
+    expect(find.text('İpucu 1'), findsOneWidget);
+    // Aynı 90 sn içinde ikinci genel ipucu beklemeye alınır / çıkmaz.
+    expect(
+      TipOnce.show(
+        ctx,
+        prefs,
+        TipOnce.tableGestures,
+        'İpucu 2',
+        sessionLimit: false,
+      ),
+      isFalse,
+    );
+    expect(
+      TipOnce.due(prefs, TipOnce.tableGestures, sessionLimit: false),
+      isTrue,
+    );
+    // 90 sn geçmiş gibi işaretlendiğinde sıradaki ipucu çıkabilir.
+    TipOnce.lastShownAt = DateTime.now().subtract(
+      TipOnce.minGap + const Duration(seconds: 1),
+    );
+    await tester.pump(const Duration(seconds: 6));
+    expect(
+      TipOnce.show(
+        ctx,
+        prefs,
+        TipOnce.tableGestures,
+        'İpucu 2',
+        sessionLimit: false,
+      ),
+      isTrue,
+    );
+    await tester.pump();
+    expect(find.text('İpucu 2'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 6));
+  });
 }

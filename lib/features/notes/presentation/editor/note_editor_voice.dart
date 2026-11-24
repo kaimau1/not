@@ -85,8 +85,13 @@ extension _EditorVoice on _NoteEditorScreenState {
       return;
     }
     if (!mounted) return;
-
-    // Hedef alan + imleç konumu ŞİMDİ dondurulur. Alan odaklı değilse
+    TipOnce.show(
+      context,
+      ref.read(sharedPreferencesProvider),
+      TipOnce.voiceCommands,
+      l10n.tipVoiceCommands,
+      icon: AppIcons.dictation,
+    );
     // (kullanıcı nota hiç dokunmadan mikrofona bastı) gövdenin sonuna
     // yazılır ve odak gövdeye verilir — imleç gözle görülür bir yerde olsun.
     var target = _formatTarget;

@@ -10,6 +10,7 @@ import 'package:flutter/scheduler.dart';
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/window_class.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/tips.dart';
 import '../../../../core/personalize.dart';
 import '../../../../core/widgets/after_route_transition.dart';
 import '../../../../core/widgets/app_sheet.dart';
@@ -758,6 +759,24 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     _onStage();
     InkToolMemory.autoStylusListenable.addListener(_onStylusToggle);
     _pdfAdding.addListener(_onPdfAdding);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      TipOnce.showDeferred(
+        context,
+        TipOnce.pinnedSplitResize,
+        () => context.l10n.tipPinnedSplitResize,
+        icon: Icons.drag_indicator_rounded,
+      );
+      if (widget.media.kind == AttachmentKind.pdf ||
+          widget.media.kind == AttachmentKind.image) {
+        TipOnce.showDeferred(
+          context,
+          TipOnce.pinnedSmartActions,
+          () => context.l10n.tipPinnedSmartActions,
+          icon: Icons.auto_awesome_outlined,
+        );
+      }
+    });
   }
 
   /// Balon bırakma kipi değişince kalem katmanı kurulur/kalkar ([_penOn]).

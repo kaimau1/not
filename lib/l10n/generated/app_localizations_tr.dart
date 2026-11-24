@@ -6645,6 +6645,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tipsResetDone => 'İpuçları yeniden gösterilecek';
 
   @override
+  String get tipsEnabledTitle => 'İpuçlarını göster';
+
+  @override
+  String get tipsEnabledInfo =>
+      'Araçları ilk kez kullanırken kısa, rahatsız etmeyen ipuçları çıkar.';
+
+  @override
+  String get tipFormatScope =>
+      'İpucu: Kapsam düğmesiyle imleç, kelime, satır veya tümüne uygula; yüzdeye basınca boyut %100\'e döner.';
+
+  @override
+  String get tipTableGestures =>
+      'İpucu: Sütun çizgisini sürükle → genişlik ayarlanır; Tab ile sonraki hücreye geç.';
+
+  @override
+  String get tipItemHoldSelect =>
+      'İpucu: Maddeyi basılı tut → çoklu seç; aralık, ters çevir ve toplu biçim alttan açılır.';
+
+  @override
+  String get tipVoiceCommands =>
+      'İpucu: Diktede \"yeni satır\", \"yeni madde\", \"nokta\" veya \"son kelimeyi sil\" de.';
+
+  @override
+  String get tipFolderGestures =>
+      'İpucu: Notta veya rafta klasöre basılı tut → hızlı eylemler; notu sürükleyip klasöre bırak → taşınır.';
+
+  @override
+  String get tipPinnedSplitResize =>
+      'İpucu: Bölme kolunu sürükle → boyutu ayarla; üst çubuktan sabit eki sağa ya da sola al.';
+
+  @override
+  String get tipPinnedSmartActions =>
+      'İpucu: Sabit ek çubuğundan akıllı işlemleri aç; sayfayı özetle, metni çıkar ya da seçili alana sor.';
+
+  @override
+  String get tipCrossAppDosyalarim =>
+      'İpucu: Eklediğin PDF ve dosyaları Dosyalarım ile aç; ortak yapay zekâ havuzun iki uygulamada da çalışır.';
+
+  @override
   String get swipeModeInfo =>
       'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).';
 

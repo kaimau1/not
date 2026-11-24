@@ -18,6 +18,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/a11y/motion.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/tips.dart';
 import '../../../../core/widgets/frame_loop.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/utils/link_text.dart' show findLinks;
@@ -442,6 +443,12 @@ class ItemsEditorState extends State<ItemsEditor>
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() => _selectMode = true);
     _syncBar();
+    TipOnce.showDeferred(
+      context,
+      TipOnce.itemHoldSelect,
+      () => context.l10n.tipItemHoldSelect,
+      icon: Icons.checklist_rounded,
+    );
   }
 
   /// [target] bu editörün satırlarından biriyse metni O SATIRA, imlecin

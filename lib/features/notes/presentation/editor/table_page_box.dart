@@ -7,6 +7,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/utils/rich_text.dart' show richSpans;
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/tips.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/sheet_header.dart';
@@ -272,6 +273,12 @@ class _TablePageBoxState extends State<TablePageBox> {
     if (!widget.editable) return;
     if (_editing == (row, column)) return;
     if (row >= _table.rows || column >= _table.columns) return;
+    TipOnce.showDeferred(
+      context,
+      TipOnce.tableGestures,
+      () => context.l10n.tipTableGestures,
+      icon: Icons.table_chart_outlined,
+    );
     final oldCtl = _ctl, oldFocus = _focus, oldAlign = _align;
     final text = _table.cell(row, column);
     final ctl = WrapTextController(text: text)

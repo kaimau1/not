@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,6 +19,10 @@ import 'widgets/app_notice.dart';
 /// [TipOnce.show] `sessionLimit: false`.
 abstract final class TipOnce {
   static const prefsKey = 'tips_shown';
+  static const enabledKey = 'tips_enabled';
+
+  /// Ardışık genel ipuçları arasında en az bekleme süresi (kullanıcıyı boğmaz).
+  static const Duration minGap = Duration(seconds: 90);
 
   /// Liste notu ilk açıldı: madde jestleri.
   static const listGestures = 'list_gestures';
@@ -58,35 +64,64 @@ abstract final class TipOnce {
   /// Düzen modu ilk kez açıldı: dokun = gizle/göster, Sırala (P63 PB1).
   static const customizeMode = 'customize_mode';
 
+  /// Biçim çubuğu kapsamı (İmleç/Kelime/Satır/Tümü) ve %100 sıfırlama.
+  static const formatScope = 'format_scope';
+
+  /// Tablo sütun genişliği sürükleme ve Tab/Enter hücre geçişi.
+  static const tableGestures = 'table_gestures';
+
+  /// Maddeyi basılı tutma (metin vs çoklu seçim) ve toplu eylemler.
+  static const itemHoldSelect = 'item_hold_select';
+
+  /// Sesli dikte Türkçe komutları.
+  static const voiceCommands = 'voice_commands';
+
+  /// Klasöre not bırakma ve basılı tutma menüsü.
+  static const folderGestures = 'folder_gestures';
+
+  /// Sabit ek bölme boyutu ayarlama ve sağ/sol taşıma.
+  static const pinnedSplitResize = 'pinned_split_resize';
+
+  /// Sabit PDF/görselde akıllı işlemler.
+  static const pinnedSmartActions = 'pinned_smart_actions';
+
+  /// Dosyalarım ile aç/düzenle + Ortak AI havuzu.
+  static const crossAppDosyalarim = 'cross_app_dosyalarim';
+
   static bool _sessionUsed = false;
 
-  /// Bu ipucu gösterilmeli mi? (Gösterilmemiş ve — sınırlıysa — bu
+  @visibleForTesting
+  static DateTime? lastShownAt;
+
+  @visibleForTesting
+  static bool ignoreCooldownForTest = false;
+
+  /// Ayarlar → "İpuçlarını göster" tercihi.
+  static bool isEnabled(SharedPreferences prefs) =>
+      prefs.getBool(enabledKey) ?? true;
+
+  /// Bu ipucu gösterilmeli mi? (Etkin, gösterilmemiş ve — sınırlıysa — bu
   /// oturumda başka ipucu çıkmamış.)
   static bool due(
     SharedPreferences prefs,
     String id, {
     bool sessionLimit = true,
   }) {
+    if (!isEnabled(prefs)) return false;
     if (sessionLimit && _sessionUsed) return false;
     return !(prefs.getStringList(prefsKey) ?? const []).contains(id);
   }
 
-  /// Gösterildi say (kalıcı) ve oturum hakkını kullan.
+  /// Gösterildi say (kalıcı) ve oturum / bekleme süresi kaydını güncelle.
   static void markShown(SharedPreferences prefs, String id) {
     _sessionUsed = true;
+    lastShownAt = DateTime.now();
     final shown = {...?prefs.getStringList(prefsKey), id};
     prefs.setStringList(prefsKey, shown.toList()..sort()).ignore();
   }
 
   /// İpucunu gerekiyorsa bildirim şeridinde ([appNotice]) gösterir. true =
-  /// gösterildi. ÜSTTE, DOKUNUŞ GEÇİRGEN, ilk dokunuşta kalkar (kullanıcı
-  /// bulgusu 2026-11-08: "bazı ipuçları tıklanabilir butonları kapatıyor").
-  ///
-  /// Şerit ağaçta yoksa ipucu "gösterildi" SAYILMAZ. Şerit doluysa (başka
-  /// bildirim görünüyor — ör. kalem kipi iletisi ile iki parmak ipucu aynı
-  /// anda) false döner ve ipucu ERTELENİR: şerit boşalınca hâlâ gerekiyorsa
-  /// çıkar, o zaman sayılır (P62 PA5). Tek erteleme yeri: yenisi eskisinin
-  /// yerine geçer.
+  /// gösterildi. ÜSTTE, DOKUNUŞ GEÇİRGEN, ilk dokunuşta kalkar.
   static bool show(
     BuildContext context,
     SharedPreferences prefs,
@@ -94,17 +129,26 @@ abstract final class TipOnce {
     String text, {
     bool sessionLimit = true,
     Duration duration = const Duration(seconds: 5),
+    IconData? icon,
   }) {
     if (!due(prefs, id, sessionLimit: sessionLimit)) return false;
+    if (!ignoreCooldownForTest &&
+        lastShownAt != null &&
+        DateTime.now().difference(lastShownAt!) < minGap) {
+      return false;
+    }
     if (!appNotice.hosted) return false;
-    // KW-18: ipucu yalnız KENDİ sayfası öndeyken çıkar. Ertelenen arama
-    // ipucu, şerit boşaldığında üstüne açılmış `/privacy`'de çıkıyordu.
     bool front() =>
         context.mounted && (ModalRoute.isCurrentOf(context) ?? true);
     bool tryShow() {
       if (!front()) return false;
       final shown = appNotice.show(
-        AppNoticeData(text: text, kind: AppNoticeKind.tip, duration: duration),
+        AppNoticeData(
+          text: text,
+          kind: AppNoticeKind.tip,
+          icon: icon,
+          duration: duration,
+        ),
       );
       if (shown) markShown(prefs, id);
       return shown;
@@ -125,6 +169,33 @@ abstract final class TipOnce {
     return false;
   }
 
+  /// Sağlayıcıya erişemeyen bağımsız widget'lardan güvenli ipucu çağrısı.
+  /// [AppNoticeHost] ağaçta değilken (yalın widget testleri) hiçbir şey yapmaz.
+  static void showDeferred(
+    BuildContext context,
+    String id,
+    String Function() textBuilder, {
+    bool sessionLimit = true,
+    IconData? icon,
+  }) {
+    if (!appNotice.hosted) return;
+    unawaited(
+      SharedPreferences.getInstance()
+          .then((prefs) {
+            if (!context.mounted) return;
+            show(
+              context,
+              prefs,
+              id,
+              textBuilder(),
+              sessionLimit: sessionLimit,
+              icon: icon,
+            );
+          })
+          .catchError((_) {}),
+    );
+  }
+
   static VoidCallback? _deferred;
 
   static void _cancelDeferred() {
@@ -137,13 +208,15 @@ abstract final class TipOnce {
   /// Ayarlar → "İpuçlarını yeniden göster".
   static Future<void> resetAll(SharedPreferences prefs) async {
     _sessionUsed = false;
+    lastShownAt = null;
     await prefs.remove(prefsKey);
   }
 
-  /// Testler arası oturum sınırını sıfırlar.
+  /// Testler arası oturum sınırını ve bekleme süresini sıfırlar.
   @visibleForTesting
   static void resetSession() {
     _sessionUsed = false;
+    lastShownAt = null;
     _cancelDeferred();
   }
 }

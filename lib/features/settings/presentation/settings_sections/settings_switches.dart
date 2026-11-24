@@ -353,6 +353,25 @@ class _PrefSwitch extends ConsumerWidget {
   }
 }
 
+/// "İpuçlarını göster" (F14.6 / Step 4): bağlamsal ipuçlarını aç/kapa.
+class _TipsEnabledTile extends ConsumerWidget {
+  const _TipsEnabledTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      key: const ValueKey('settings-tips-enabled'),
+      contentPadding: EdgeInsets.zero,
+      secondary: const Icon(Icons.tips_and_updates_outlined),
+      title: Text(l10n.tipsEnabledTitle),
+      subtitle: Text(l10n.tipsEnabledInfo),
+      value: ref.watch(tipsEnabledProvider),
+      onChanged: (value) => ref.read(tipsEnabledProvider.notifier).set(value),
+    );
+  }
+}
+
 /// "İpuçlarını yeniden göster" (F14.6): cihazda tutulan gösterilmiş ipucu
 /// listesini siler.
 class _TipsResetTile extends ConsumerWidget {

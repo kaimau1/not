@@ -6663,6 +6663,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tipsResetDone => 'Tips will be shown again';
 
   @override
+  String get tipsEnabledTitle => 'Show helpful tips';
+
+  @override
+  String get tipsEnabledInfo =>
+      'Show brief, quiet hints the first time you use a feature.';
+
+  @override
+  String get tipFormatScope =>
+      'Tip: Switch scope between caret, word, line or all; tap the percentage to reset size to 100%.';
+
+  @override
+  String get tipTableGestures =>
+      'Tip: Drag a column border to resize, or press Tab to move to the next cell.';
+
+  @override
+  String get tipItemHoldSelect =>
+      'Tip: Hold an item for multi-select; use range, invert, and batch format from the bottom bar.';
+
+  @override
+  String get tipVoiceCommands =>
+      'Tip: Say \"new line\", \"new item\", \"full stop\", or \"delete last word\" while dictating.';
+
+  @override
+  String get tipFolderGestures =>
+      'Tip: Hold a folder for quick options, or drag a note onto a folder to move it.';
+
+  @override
+  String get tipPinnedSplitResize =>
+      'Tip: Drag the split handle to resize, or swap sides from the pinned bar.';
+
+  @override
+  String get tipPinnedSmartActions =>
+      'Tip: Open smart actions from the pinned bar to summarize pages, extract text, or ask AI.';
+
+  @override
+  String get tipCrossAppDosyalarim =>
+      'Tip: Open attached PDFs and files in Dosyalarım; your Shared AI Pool works across both apps.';
+
+  @override
   String get swipeModeInfo =>
       'When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).';
 

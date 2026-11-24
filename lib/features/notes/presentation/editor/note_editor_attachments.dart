@@ -298,6 +298,15 @@ extension _EditorAttachments on _NoteEditorScreenState {
         }
       case PickedFileKind.pdf:
         await handOff(same, _pickPdf);
+        if (mounted) {
+          TipOnce.show(
+            context,
+            ref.read(sharedPreferencesProvider),
+            TipOnce.crossAppDosyalarim,
+            l10n.tipCrossAppDosyalarim,
+            icon: Icons.folder_open_rounded,
+          );
+        }
       case PickedFileKind.slides:
         await handOff([same.first], _pickSlide);
       case PickedFileKind.video:

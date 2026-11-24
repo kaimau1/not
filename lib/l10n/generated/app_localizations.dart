@@ -11888,6 +11888,66 @@ abstract class AppLocalizations {
   /// **'İpuçları yeniden gösterilecek'**
   String get tipsResetDone;
 
+  /// No description provided for @tipsEnabledTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpuçlarını göster'**
+  String get tipsEnabledTitle;
+
+  /// No description provided for @tipsEnabledInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Araçları ilk kez kullanırken kısa, rahatsız etmeyen ipuçları çıkar.'**
+  String get tipsEnabledInfo;
+
+  /// No description provided for @tipFormatScope.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: Kapsam düğmesiyle imleç, kelime, satır veya tümüne uygula; yüzdeye basınca boyut %100\'e döner.'**
+  String get tipFormatScope;
+
+  /// No description provided for @tipTableGestures.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: Sütun çizgisini sürükle → genişlik ayarlanır; Tab ile sonraki hücreye geç.'**
+  String get tipTableGestures;
+
+  /// No description provided for @tipItemHoldSelect.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: Maddeyi basılı tut → çoklu seç; aralık, ters çevir ve toplu biçim alttan açılır.'**
+  String get tipItemHoldSelect;
+
+  /// No description provided for @tipVoiceCommands.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: Diktede \"yeni satır\", \"yeni madde\", \"nokta\" veya \"son kelimeyi sil\" de.'**
+  String get tipVoiceCommands;
+
+  /// No description provided for @tipFolderGestures.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: Notta veya rafta klasöre basılı tut → hızlı eylemler; notu sürükleyip klasöre bırak → taşınır.'**
+  String get tipFolderGestures;
+
+  /// No description provided for @tipPinnedSplitResize.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: Bölme kolunu sürükle → boyutu ayarla; üst çubuktan sabit eki sağa ya da sola al.'**
+  String get tipPinnedSplitResize;
+
+  /// No description provided for @tipPinnedSmartActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: Sabit ek çubuğundan akıllı işlemleri aç; sayfayı özetle, metni çıkar ya da seçili alana sor.'**
+  String get tipPinnedSmartActions;
+
+  /// No description provided for @tipCrossAppDosyalarim.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu: Eklediğin PDF ve dosyaları Dosyalarım ile aç; ortak yapay zekâ havuzun iki uygulamada da çalışır.'**
+  String get tipCrossAppDosyalarim;
+
   /// No description provided for @swipeModeInfo.
   ///
   /// In tr, this message translates to:

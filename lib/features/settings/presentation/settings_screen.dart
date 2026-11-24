@@ -553,7 +553,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.quickCaptureRowSetting,
             keywords: '${l10n.quickCaptureRowInfo} duzenleme modu',
           ),
-          // BİR KEZ ÇIKAN İPUÇLARI (F14.6) burada sıfırlanır.
+          // BİR KEZ ÇIKAN İPUÇLARI (F14.6) burada açılıp kapatılır ve sıfırlanır.
+          _SettingRow(
+            const _TipsEnabledTile(),
+            title: l10n.tipsEnabledTitle,
+            keywords: '${l10n.tipsEnabledInfo} ipucu jest yardim',
+          ),
           _SettingRow(
             const _TipsResetTile(),
             title: l10n.tipsResetTitle,

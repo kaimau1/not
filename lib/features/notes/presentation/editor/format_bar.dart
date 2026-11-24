@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/a11y/color_names.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/tips.dart';
 import '../../../../core/utils/font_downloads.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
@@ -228,6 +229,15 @@ class _FormatBarState extends State<FormatBar> {
   void initState() {
     super.initState();
     _watchTarget(null);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      TipOnce.showDeferred(
+        context,
+        TipOnce.formatScope,
+        () => context.l10n.tipFormatScope,
+        icon: Icons.text_format_rounded,
+      );
+    });
   }
 
   @override

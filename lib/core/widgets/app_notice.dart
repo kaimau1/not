@@ -385,11 +385,27 @@ class _NoticeCardState extends State<_NoticeCard> {
                   child: Row(
                     children: [
                       if (icon != null) ...[
-                        Icon(
-                          icon,
-                          size: AppIconSize.s,
-                          color: scheme.primary,
-                        ),
+                        if (_tip)
+                          Container(
+                            padding: const EdgeInsets.all(
+                              AppSpace.xs + AppSpace.xxs,
+                            ),
+                            decoration: BoxDecoration(
+                              color: scheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(AppRadius.pill),
+                            ),
+                            child: Icon(
+                              icon,
+                              size: AppIconSize.xs,
+                              color: scheme.onPrimaryContainer,
+                            ),
+                          )
+                        else
+                          Icon(
+                            icon,
+                            size: AppIconSize.s,
+                            color: scheme.primary,
+                          ),
                         const SizedBox(width: AppSpace.s),
                       ],
                       Expanded(
