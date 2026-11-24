@@ -20,7 +20,12 @@ class _FloatRow extends StatefulWidget {
     this.inlineBelow,
     this.initial,
     this.onMeasured,
+    this.registry,
   });
+
+  /// Liste geometrisi değişince satırları yeniden ölçtürmek için kayıt
+  /// (bkz. `ItemsEditorState._remeasureRows`).
+  final Set<_FloatRowState>? registry;
 
   /// Satırın tepesinden bu kadar (dp) AŞAĞIDA başlayan görsel satırı
   /// kaydırmaz — alanın kendi sarması işler (bkz. `_wrapped`). `null`:
@@ -113,11 +118,16 @@ class _FloatRowState extends State<_FloatRow> {
   void initState() {
     super.initState();
     widget.floats.addListener(_schedule);
+    widget.registry?.add(this);
   }
 
   @override
   void didUpdateWidget(_FloatRow old) {
     super.didUpdateWidget(old);
+    if (old.registry != widget.registry) {
+      old.registry?.remove(this);
+      widget.registry?.add(this);
+    }
     if (old.floats != widget.floats) {
       old.floats.removeListener(_schedule);
       widget.floats.addListener(_schedule);
@@ -127,6 +137,7 @@ class _FloatRowState extends State<_FloatRow> {
   @override
   void dispose() {
     widget.floats.removeListener(_schedule);
+    widget.registry?.remove(this);
     super.dispose();
   }
 

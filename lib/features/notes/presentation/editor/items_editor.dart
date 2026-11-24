@@ -992,10 +992,68 @@ class ItemsEditorState extends State<ItemsEditor>
       reserved: reserved,
       pushOnly: pushOnly,
       inlineBelow: inlineBelow,
+      registry: _floatRowStates,
       initial: id == null ? null : (_pads[id] ?? _padOfNeighbour(id)),
       onMeasured: id == null ? null : (pad) => _pads[id] = pad,
       child: child,
     );
+  }
+
+  /// Bant içinde ölçen satırlar (bkz. [_remeasureRows]).
+  final Set<_FloatRowState> _floatRowStates = {};
+
+  /// Son yeniden ölçümdeki liste geometrisi (yükseklik + madde sırası).
+  Object? _layoutSig;
+  bool _layoutCheckQueued = false;
+
+  /// **MADDE SİLİNİNCE YAZILAR TABLONUN ÜSTÜNE BİNİYOR** (kullanıcı bulgusu
+  /// 2026-11-24, ekran görüntüsü: "tablo varken bir madde sildiğimde tüm
+  /// yazılar üstüne biniyor, tablo yokmuş gibi"). KÖK NEDEN: satırlar
+  /// önbellekten AYNI örnekle döndüğü için ([_cachedItemRow]) silinen
+  /// maddenin altındakiler yukarı kayınca kurulmuyor, `_FloatRow` da yalnız
+  /// kurulunca ya da bant değişince ölçüyordu. Bant (tablo) yerinde durunca
+  /// kayan satırlar eski dolgularıyla kalıyor; tablonun altına itilmiş satır
+  /// silinince yerine gelenler itmesiz kalıp tablonun üstüne biniyordu.
+  /// Artık liste kurulduktan sonra geometrisi (yükseklik, madde sırası)
+  /// değiştiyse bandı olan satırlar yukarıdan aşağı yeniden ölçülür. Bant
+  /// yoksa bedel sıfır; yazarken (yükseklik aynı) ölçüm yok.
+  void _queueLayoutCheck() {
+    if (_layoutCheckQueued || widget.pageBox == null) return;
+    if (_floatsL.value.isEmpty) {
+      _layoutSig = null;
+      return;
+    }
+    _layoutCheckQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _layoutCheckQueued = false;
+      if (!mounted) return;
+      final box = context.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) return;
+      final sig = (
+        box.size.height,
+        Object.hashAll([for (final i in _items) Object.hash(i.id, i.checked)]),
+      );
+      if (sig == _layoutSig) return;
+      _layoutSig = sig;
+      _remeasureRows();
+    });
+  }
+
+  /// Satırları SAYFADAKİ sırayla (yukarıdan aşağı) ölçer: üstteki satırın
+  /// bu karedeki kayması alttakine `_FrameShifts` ile geçer.
+  void _remeasureRows() {
+    final page = widget.pageBox?.call();
+    if (page == null) return;
+    final rows = <(double, _FloatRowState)>[];
+    for (final s in _floatRowStates) {
+      final b = s.mounted ? s.context.findRenderObject() : null;
+      if (b is! RenderBox || !b.hasSize || !b.attached) continue;
+      rows.add((b.localToGlobal(Offset.zero, ancestor: page).dy, s));
+    }
+    rows.sort((a, b) => a.$1.compareTo(b.$1));
+    for (final (_, s) in rows) {
+      s._measure();
+    }
   }
 
   /// Yeni satırın başlangıç tahmini: bir üstündeki maddenin kaydırması
@@ -2185,6 +2243,7 @@ class ItemsEditorState extends State<ItemsEditor>
     _accent = NoteAccent.maybeOf(context);
     // Satır önbelleğinin liste düzeyi girdileri (bkz. [_rowCache]).
     _syncRowCache(theme, l10n);
+    _queueLayoutCheck();
     // Ek listesi değişince (ek silindi/eklendi) etiketin kırmızı çizilip
     // çizilmeyeceği değişir. Satır ÖNBELLEKTEN gelebildiği için besleme
     // `_controllerFor`a bırakılamaz: denetleyici zaten var olan satırlarda o
