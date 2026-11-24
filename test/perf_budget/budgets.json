@@ -470,14 +470,14 @@
   },
   "S50": {
     "senaryo": "40 maddeli liste (telefon): kutucuk işaretle (+1 sn, alta iniş), madde 7'de Enter (+400 ms), yeni boş maddede Geri Sil (+400 ms) — olay başına TÜM widget kurulumu ve dizilme (debugPrintLayouts); kok = üç olayda NoteEditorScreen",
-    "kutucuk_kurulum": 587,
-    "kutucuk_dizilme": 335,
+    "kutucuk_kurulum": 524,
+    "kutucuk_dizilme": 311,
     "enter_kurulum": 566,
     "enter_dizilme": 430,
-    "sil_kurulum": 569,
+    "sil_kurulum": 539,
     "sil_dizilme": 274,
     "kok": 0,
-    "bugun": "kutucuk 587 / 335 · Enter 566 / 430 · Geri Sil 569 / 273 · kök 0 (2026-11-15, oto/madde-kasma; önce 2331 / 442 · 1499 / 486 · 1450 / 300 · kök 4)",
+    "bugun": "kutucuk 524 / 311 · Enter 566 / 430 · Geri Sil 539 / 274 · kök 0 (2026-11-24, bantlar bildiriciyle: satır önbelleği bant konumuna bağlı değil; önce 587 / 335 · 566 / 430 · 569 / 273)",
     "hedef": "kök 0; tek maddedeki değişiklik yalnız o satırı kursun",
     "neden": "kullanıcı bulgusu 2026-11-15 normal madde notunda kasma — ilk ölçüm"
   },

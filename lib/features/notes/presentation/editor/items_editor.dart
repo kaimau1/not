@@ -6,6 +6,7 @@ import '../../../../core/haptics.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/gestures.dart' show PointerDeviceKind, kTouchSlop;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
@@ -155,6 +156,7 @@ class ItemsEditor extends StatefulWidget {
     this.header,
     this.footer,
     this.floats = const [],
+    this.floatsListenable,
     this.pageBox,
     this.shrinkWrap = false,
     this.contentInsertion,
@@ -230,6 +232,14 @@ class ItemsEditor extends StatefulWidget {
   /// Sayfadaki görsellerin kapladığı bantlar (sayfa uzayı): madde metni
   /// bunların etrafından akar. Boşsa satırlar sıradan davranır.
   final List<FloatBox> floats;
+
+  /// Bantların CANLI kaynağı (editör, 2026-11-24): verilince [floats] yok
+  /// sayılır; bant değişince liste ve satırlar KURULMAZ — yalnız ölçen
+  /// katmanlar (`_FloatRow`, `WrapFieldMeasure`) yeniden ölçer. KÖK NEDEN
+  /// (kullanıcı bulgusu "notlar açılıp kapanırken, klavye açılıp kapanırken
+  /// kasma/donma"): yüzen tablo olan 380 maddelik notta her bant değişimi
+  /// editörün kökünü + bütün satırları baştan kuruyordu.
+  final ValueListenable<List<FloatBox>>? floatsListenable;
 
   /// Sayfa içeriğinin kök kutusu — satırların konumu buna göre ölçülür.
   /// null ise sarma tümüyle kapalıdır.
@@ -534,6 +544,8 @@ class ItemsEditorState extends State<ItemsEditor>
   @override
   void initState() {
     super.initState();
+    _floatsL.addListener(_onFloats);
+    _inlineFloats = _hasInlineFloats(_floatsL.value);
     _adoptedFrom = widget.items;
     _items = _adopt(widget.items);
     if (_items.length > _kFirstRows) {
@@ -670,7 +682,41 @@ class ItemsEditorState extends State<ItemsEditor>
   @override
   void didUpdateWidget(covariant ItemsEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.floatsListenable != widget.floatsListenable) {
+      (oldWidget.floatsListenable ?? _ownFloats)?.removeListener(_onFloats);
+      _floatsL.addListener(_onFloats);
+    }
+    final own = _ownFloats;
+    if (widget.floatsListenable == null &&
+        own != null &&
+        !sameFloatList(own.value, widget.floats)) {
+      own.value = List.of(widget.floats);
+    }
+    _onFloats();
     _adoptIncomingItems();
+  }
+
+  /// Dış kaynak yoksa [ItemsEditor.floats]'tan beslenen yerel kaynak.
+  ValueNotifier<List<FloatBox>>? _ownFloats;
+
+  ValueListenable<List<FloatBox>> get _floatsL =>
+      widget.floatsListenable ??
+      (_ownFloats ??= ValueNotifier(List.of(widget.floats)));
+
+  /// Metnin İÇİNE sarılan (blok olmayan) kutu var mı: yalnız o zaman madde
+  /// gerçek alan olarak kurulur (sarma çapaları). Tam genişlik tablo/görsel
+  /// satırı bütünüyle iter (`_FloatRow`) — hafif çizim yeter.
+  bool _inlineFloats = false;
+
+  static bool _hasInlineFloats(List<FloatBox> floats) =>
+      floats.any((f) => !f.block);
+
+  void _onFloats() {
+    final next = _hasInlineFloats(_floatsL.value);
+    if (next == _inlineFloats || !mounted) return;
+    // Yalnız GEÇİŞTE (yok ↔ var) satırlar yeniden kurulur; konum değişimi
+    // ölçen katmanlarda kalır.
+    setState(() => _inlineFloats = next);
   }
 
   /// Sürükleme SÜRERKEN gelen listeyi benimseme, bırakılınca benimse.
@@ -743,6 +789,8 @@ class ItemsEditorState extends State<ItemsEditor>
 
   @override
   void dispose() {
+    _floatsL.removeListener(_onFloats);
+    _ownFloats?.dispose();
     _budgetTimer?.cancel();
     _autoScroll?.dispose();
     for (final c in _controllers.values) {
@@ -939,7 +987,7 @@ class ItemsEditorState extends State<ItemsEditor>
     final pageBox = widget.pageBox;
     if (pageBox == null) return child;
     return _FloatRow(
-      floats: widget.floats,
+      floats: _floatsL,
       pageBox: pageBox,
       reserved: reserved,
       pushOnly: pushOnly,
@@ -982,7 +1030,9 @@ class ItemsEditorState extends State<ItemsEditor>
     return WrapFieldMeasure(
       controller: controller,
       style: style,
-      floats: widget.floats,
+      floats: const [],
+      // Bant değişince yalnız ölçer; alan ve satır kurulmaz.
+      floatsListenable: _floatsL,
       minTop: itemLineHeight(context, style),
       pageBox: pageBox,
       child: field,
@@ -2022,7 +2072,7 @@ class ItemsEditorState extends State<ItemsEditor>
 
   /// Önbelleği tümden geçersiz kılan LİSTE DÜZEYİ girdiler.
   Object? _rowCacheEnv;
-  List<FloatBox> _rowCacheFloats = const [];
+  bool _rowCacheInline = false;
 
   /// Satır düzeyi girdiler değişmediyse önbellekten döndürür.
   ///
@@ -2104,12 +2154,12 @@ class ItemsEditorState extends State<ItemsEditor>
         for (final e in widget.tagLooks.entries) Object.hash(e.key, e.value),
       ]),
     );
-    if (env != _rowCacheEnv || !sameFloatList(_rowCacheFloats, widget.floats)) {
+    // Bantların KONUMU önbelleği düşürmez (satırlar bildiriciyle ölçer);
+    // yalnız metne sarılan kutunun var/yok geçişi (gerçek alan ↔ düz çizim).
+    if (env != _rowCacheEnv || _rowCacheInline != _inlineFloats) {
       _rowCache.clear();
       _rowCacheEnv = env;
-      // Bantlar YERİNDE değişebiliyor (görsel sürüklenirken aynı liste
-      // güncelleniyor); kopyası saklanır, yoksa karşılaştırma hep eşit çıkar.
-      _rowCacheFloats = List.of(widget.floats);
+      _rowCacheInline = _inlineFloats;
       return;
     }
     if (_rowCache.length > _items.length) {
@@ -2166,7 +2216,15 @@ class ItemsEditorState extends State<ItemsEditor>
     if (checkedHidden > 0) {
       checkedItems = checkedItems.sublist(0, _checkedShown);
     }
-    final budget = _rowBudget;
+    var budget = _rowBudget;
+    // BÜTÇE GÖRÜNENİ KARŞILADIYSA BÜYÜME BİTER (kullanıcı bulgusu
+    // 2026-11-24: "notlar açılırken kasma"). KÖK NEDEN: bütçe TÜM madde
+    // sayısına (374 işaretli dahil) doğru büyüyordu; işaretliler 10'ar
+    // gösterildiği için ekrana yeni satır gelmediği hâlde liste ~45 kare
+    // boyunca her karede baştan kuruluyordu (kare başına ~150 kurulum).
+    if (budget != null && budget >= listItems.length + checkedItems.length) {
+      _rowBudget = budget = null;
+    }
     if (budget != null) {
       if (listItems.length > budget) listItems = listItems.sublist(0, budget);
       final left = budget - listItems.length;

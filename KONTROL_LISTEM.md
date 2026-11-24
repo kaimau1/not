@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Kasma düzeltmesi: tablolu/uzun listeli not açma-kapama ve klavye (24 Kasım akşam, bulutta ölçüldü — masaüstü kıyası; cihazda doğrulanmadı)**
+  Nerede/Nasıl: (1) Ekran görüntüsündeki not (tablo + 374 işaretli): ana ekrandan aç → geçişte takılma var mı. (2) Açar açmaz bir maddeye dokun, klavye açılsın → donma var mı. (3) Klavyeyi birkaç kez aç/kapa. (4) Geri ile ana ekrana dön. (5) Tabloya satır ekle → maddeler titremeden kayıyor mu. Tablosuz eski bir uzun notta da 1–4.
+  Yanlışsa: hangi adımda takıldığını yaz (ekran kaydı en iyisi).
+
 - [ ] **Tablo biçim/hiza, çakışma, titreme, araçlar hızlı menüde, menü araması (24 Kasım, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Tablo hücresine dokun → alt çubuk **Biçim** → kalın/renk/boyut yalnız o hücrede mi; panelin altında **Sola · Ortala · Sağa** var mı, hiza o hücrede kalıyor mu (diğer hücreler sola). (2) Kalın yazılmış hücre paylaşımda (**Görsel/PDF/Word**) `**` işaretsiz, hizalı mı. (3) Liste notunda tabloyu bir maddenin ortasına sürükle → madde bölünmeden tablonun altına iniyor mu; paket etiketi tablonun altında mı. (4) **+ Satır ekle**'ye arka arkaya bas → alttaki maddeler titremeden kayıyor mu. (5) Hızlı menü ⋯ → **Hesap makinesi / Notta ara / Sesli dinle / Not istatistikleri**. (6) Not ⋮ menüsü → başlıktaki 🔍 → "topla", "whatsapp", "şifre", "rechner" yaz → doğru işlem çıkıyor mu; ara tuşu ilkini açıyor mu. (7) Hızlı menü ⋯ üstündeki arama kutusu.
   Yanlışsa: madde numarasını yaz, ekran görüntüsü at.

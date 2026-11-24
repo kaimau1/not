@@ -32,7 +32,9 @@ class _FloatRow extends StatefulWidget {
   /// yana kaydırma kararı metne kalan yere bakıyor, onlarınsa metni yok.
   final bool pushOnly;
 
-  final List<FloatBox> floats;
+  /// Bantların canlı kaynağı: değişince satır KURULMAZ, yalnız yeniden
+  /// ölçülür (ölçüm dolguyu değiştirirse bu katman kendini çizer).
+  final ValueListenable<List<FloatBox>> floats;
   final RenderBox? Function() pageBox;
 
   /// Satırın metne AYRILAMAYAN payı (tutamaç + kutucuk + sil düğmesi +
@@ -108,14 +110,41 @@ class _FloatRowState extends State<_FloatRow> {
   bool _scheduled = false;
 
   @override
+  void initState() {
+    super.initState();
+    widget.floats.addListener(_schedule);
+  }
+
+  @override
+  void didUpdateWidget(_FloatRow old) {
+    super.didUpdateWidget(old);
+    if (old.floats != widget.floats) {
+      old.floats.removeListener(_schedule);
+      widget.floats.addListener(_schedule);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.floats.removeListener(_schedule);
+    super.dispose();
+  }
+
+  void _schedule() {
+    final idle =
+        widget.floats.value.isEmpty && _start == 0 && _end == 0 && _top == 0;
+    if (_scheduled || idle) return;
+    _scheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    // Bant değişti ama hiçbir şey kurulmuyorsa kare de gelmeyebilir.
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Bant yoksa ve dolgular zaten sıfırsa ölçülecek bir şey de yok: madde
     // listelerinin ezici çoğunluğu (görselsiz notlar) buradan bedelsiz geçer.
-    final idle = widget.floats.isEmpty && _start == 0 && _end == 0 && _top == 0;
-    if (!_scheduled && !idle) {
-      _scheduled = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
-    }
+    _schedule();
     return Padding(
       // BİLEREK FİZİKSEL (Directional DEĞİL): bu boşluklar sayfaya konmuş
       // yüzen görsellerin ÖLÇÜLEN x koordinatlarından hesaplanıyor
@@ -129,8 +158,9 @@ class _FloatRowState extends State<_FloatRow> {
   void _measure() {
     _scheduled = false;
     if (!mounted) return;
+    final all = widget.floats.value;
     // Son görsel silindi: dolguları sıfırla, ölçüme hiç girme.
-    if (widget.floats.isEmpty) {
+    if (all.isEmpty) {
       if (_start != 0 || _end != 0 || _top != 0) {
         widget.onMeasured?.call((start: 0, end: 0, top: 0));
         setState(() {
@@ -158,9 +188,9 @@ class _FloatRowState extends State<_FloatRow> {
     // Satırın İÇİNDE başlayan görsel alanın işi (bkz. [_FloatRow.inlineBelow]).
     final inline = widget.pushOnly ? null : widget.inlineBelow;
     final floats = inline == null
-        ? widget.floats
+        ? all
         : [
-            for (final f in widget.floats)
+            for (final f in all)
               // BLOK kutu satırın içinde başlasa da satırı bütünüyle iter
               // (madde bölünmez; alan planı onu almaz — `WrapFieldMeasure`).
               if (f.block || f.top < origin.dy + _top + inline) f,

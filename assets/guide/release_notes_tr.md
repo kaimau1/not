@@ -3,6 +3,7 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 24 Kasım 2026 {#2026-11-24}
+- **Kasma giderildi (tablolu ve uzun listeli notlar):** notta tablo varken bütün maddeler ağır yazı alanına dönüşüyor ve tablo her yerleştiğinde not baştan kuruluyordu; işaretli maddeleri çok olan notlarda da açıldıktan sonra liste bir süre boşuna yeniden çiziliyordu. İkisi de düzeltildi: not açılırken ve klavye açılıp kapanırken takılma azaldı.
 - **Tabloda biçim paneli çalışıyor, hücre hücre:** bir hücreye dokunup biçim panelini açınca kalın, italik, altı çizili, renk, vurgu, başlık ve boyut yalnız o hücreye uygulanır (eskiden başka bir maddeye gidiyordu). Panelde hücre açıkken yeni **Sola · Ortala · Sağa** düğmeleri var; her hücrenin hizası ayrı tutulur ve görsel/PDF/Word paylaşımında da korunur.
 - **Tablo maddelerin üstüne binmiyor, maddeyi bölmüyor:** sayfayı kaplayan tablo bir maddenin ortasına denk gelince madde artık ikiye bölünmüyor, bütünüyle tablonun altına iniyor; paketlenmiş maddelerin etiketi de tablonun altına geçiyor.
 - **Satır eklerken titreme giderildi:** tabloya satır eklerken kutu ve alttaki maddeler aynı anda kayıyor; maddeler aşağı-yukarı sekmiyor.

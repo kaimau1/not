@@ -3,6 +3,7 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 24 November 2026 {#2026-11-24}
+- **Less stutter (notes with tables and long lists):** with a table in a note, every list item turned into a heavy text field and the whole note was rebuilt each time the table settled; notes with many checked items also kept redrawing the list for a while after opening. Both are fixed: opening notes and showing/hiding the keyboard stutter less.
 - **The format panel works in tables, cell by cell:** tap a cell and open the format panel: bold, italic, underline, colour, highlight, heading and size now apply only to that cell (they used to go to another item). While a cell is open the panel shows new **Left · Centre · Right** buttons; each cell keeps its own alignment, also in Image/PDF/Word exports.
 - **Tables no longer overlap or split items:** when a full-width table lands in the middle of a list item, the item is no longer cut in two; it moves below the table as a whole, and the label of packaged items moves below it too.
 - **No more jitter when adding rows:** when you add a row to a table, the box and the items below now move together instead of bouncing up and down.

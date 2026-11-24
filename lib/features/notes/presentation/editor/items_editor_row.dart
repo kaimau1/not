@@ -75,7 +75,10 @@ extension _ItemsRow on ItemsEditorState {
     final text = item.text;
     return debugEagerItemFields ||
         text.trim().isEmpty ||
-        widget.floats.isNotEmpty ||
+        // Yalnız metne SARILAN kutu gerçek alan ister; tam genişlik tablo/
+        // görsel satırı bütünüyle iter (2026-11-24: yüzen tablolu 380
+        // maddelik notta her madde gerçek alan kuruluyordu → donma).
+        _inlineFloats ||
         widget.videoTimestamps ||
         text.contains('📎') ||
         text.contains('📖') ||

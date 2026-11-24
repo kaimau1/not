@@ -943,9 +943,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     return box is RenderBox && box.hasSize ? box : null;
   }
 
+  /// [_floats]in dinlenebilir eşi: bant değişimi editörü KURMAZ.
+  final _floatsN = ValueNotifier<List<FloatBox>>(const []);
+
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-11-24: "notlar açılıp kapanırken,
+  /// klavye açılıp kapanırken kasma, donma"): burası `setState` idi — yüzen
+  /// kutulu (tablo) notta açılışta ve kutu boyu oturunca editörün tamamı ve
+  /// bütün madde satırları baştan kuruluyordu (380 maddede kare başına ~2000
+  /// kurulum, masaüstünde bile 140 ms). Bantlar artık [_floatsN] ile yalnız
+  /// ölçen katmanlara gider.
   void _applyFloats(List<FloatBox> floats) {
     if (sameFloatList(_floats, floats)) return;
-    setState(() => _floats = floats);
+    _floats = floats;
+    _floatsN.value = floats;
   }
 
   /// Metin alanını sarma ölçümüne bağlar (görsel yoksa maliyetsiz geçer).
@@ -957,7 +967,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     return WrapFieldMeasure(
       controller: controller,
       style: style,
-      floats: _floats,
+      floats: const [],
+      // Bant değişince yalnız ölçer; editör kurulmaz.
+      floatsListenable: _floatsN,
       pageBox: _pageBox,
       // Bantlar alanın KUTUSUNA göre ölçülüyor, plan ise METİN uzayında
       // çalışıyor: aradaki iç dolgu düşülmezse metin görselin altına bir
@@ -1955,6 +1967,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _hideTimer?.cancel();
     _recentKey?.cancel();
     _typingN.dispose();
+    _floatsN.dispose();
     FocusManager.instance.removeListener(_onAnyFocusChange);
     HardwareKeyboard.instance.removeHandler(_onHardKey);
     InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);
@@ -4481,7 +4494,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         expandItems: ref.watch(expandListItemsProvider),
         onChanged: (items) =>
             _mutate((n) => n.copyWith(items: items), itemsShown: true),
-        floats: _floats,
+        floatsListenable: _floatsN,
         pageBox: _pageBox,
         shrinkWrap: true,
         contentInsertion: _keyboardImagePaste,
@@ -4545,7 +4558,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         expandItems: ref.watch(expandListItemsProvider),
         onChanged: (items) =>
             _mutate((n) => n.copyWith(items: items), itemsShown: true),
-        floats: _floats,
+        floatsListenable: _floatsN,
         pageBox: _pageBox,
         shrinkWrap: true,
         contentInsertion: _keyboardImagePaste,

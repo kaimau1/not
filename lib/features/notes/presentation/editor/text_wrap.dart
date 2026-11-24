@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show mapEquals;
+import 'package:flutter/foundation.dart' show ValueListenable, mapEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -1051,7 +1051,15 @@ class WrapFieldMeasure extends StatefulWidget {
     required this.child,
     this.textTop = 0,
     this.minTop,
+    this.floatsListenable,
   });
+
+  /// Bantların canlı kaynağı (verilince [floats] yok sayılır): değişince bu
+  /// katman yalnız yeniden ölçer — ne kendisi ne alan kurulur (2026-11-24,
+  /// kök kurulumsuz bant dağıtımı).
+  final ValueListenable<List<FloatBox>>? floatsListenable;
+
+  List<FloatBox> get _floatsNow => floatsListenable?.value ?? floats;
 
   final WrapTextController controller;
   final TextStyle style;
@@ -1087,16 +1095,41 @@ class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
   bool _scheduled = false;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    widget.floatsListenable?.addListener(_schedule);
+  }
+
+  @override
+  void didUpdateWidget(WrapFieldMeasure old) {
+    super.didUpdateWidget(old);
+    if (old.floatsListenable != widget.floatsListenable) {
+      old.floatsListenable?.removeListener(_schedule);
+      widget.floatsListenable?.addListener(_schedule);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.floatsListenable?.removeListener(_schedule);
+    super.dispose();
+  }
+
+  void _schedule() {
     // Sarma yalnız görsel varken (ya da tamponda temizlenecek çapa kalmışken)
     // iş yapar; ikisi de yoksa kare-sonu geri çağrısı hiç kurulmaz. Alan
     // başına kare başına bir kapanış, uzun bir madde listesinde satır sayısı
     // kadar boş iş demekti.
-    final idle = widget.floats.isEmpty && widget.controller.isPlain;
-    if (!_scheduled && !idle) {
-      _scheduled = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
-    }
+    final idle = widget._floatsNow.isEmpty && widget.controller.isPlain;
+    if (_scheduled || idle) return;
+    _scheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _schedule();
     return widget.child;
   }
 
@@ -1105,7 +1138,8 @@ class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
     if (!mounted) return;
     // Görsel yok ve tampon zaten temiz: hiçbir şey ölçme. (Görsel silinince
     // bir kez daha ölçülür ki kalan çapalar temizlensin.)
-    if (widget.floats.isEmpty && widget.controller.isPlain) return;
+    final floatsNow = widget._floatsNow;
+    if (floatsNow.isEmpty && widget.controller.isPlain) return;
     final box = context.findRenderObject();
     final page = widget.pageBox();
     if (box is! RenderBox || !box.hasSize || page == null || !page.hasSize) {
@@ -1118,7 +1152,7 @@ class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
     final textOrigin = origin.dy + widget.textTop;
     widget.controller.updateLayout(
       floats: [
-        for (final f in widget.floats)
+        for (final f in floatsNow)
           // Alanın ÜSTÜNDE ya da SOLUNDA kalan görsel plana girmez: gereksiz
           // yeniden dizgi (ve uzun listede satır başına ölçüm) olmasın.
           //
