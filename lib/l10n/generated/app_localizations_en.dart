@@ -9929,6 +9929,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tableSorted => 'Table sorted';
 
   @override
+  String folderHeaderPinnedCount(int count) {
+    return '$count pinned';
+  }
+
+  @override
+  String get folderNewNote => 'New note';
+
+  @override
+  String get folderFilterSort => 'Filter & sort';
+
+  @override
+  String get folderLivePreview => 'Preview';
+
+  @override
   String get dashboardBackgroundGallery => 'Curated wallpapers';
 
   @override

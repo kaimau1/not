@@ -1,13 +1,17 @@
 import '../../../app/app_frame.dart';
+import '../../../app/router.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/sheet_header.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/folder_activity.dart';
 import '../data/folder_order.dart';
@@ -43,10 +47,9 @@ class FoldersScreen extends ConsumerWidget {
   /// kart dolu kartın boyunda bomboş bir kutu bırakıyordu.
   static const double emptyCardHeight = 72;
 
-  /// Izgaranın en geniş sütunu ve aralığı (eski
-  /// `SliverGridDelegateWithMaxCrossAxisExtent` ile aynı sütun sayısı).
-  static const double _maxCardWidth = 260;
-  static const double _gap = 10;
+  /// Kartın en geniş sütun genişliği (geniş tablet/webde 2–4 sütun Bento düzeni).
+  static const double _maxCardWidth = 280;
+  static const double _gap = kGridGap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -121,7 +124,10 @@ class FoldersScreen extends ConsumerWidget {
                     openFolder(context, id);
                   }
                 },
-                icon: const Icon(Icons.create_new_folder_outlined, size: 18),
+                icon: const Icon(
+                  Icons.create_new_folder_outlined,
+                  size: AppIconSize.s,
+                ),
                 label: Text(l10n.newFolder),
               ),
             ),
@@ -255,6 +261,13 @@ class _OwnFolderCard extends ConsumerWidget {
       hidden: folder.hidden,
       unread: unread,
       onTap: () => openFolder(context, folder.id),
+      onCreateNote: () async {
+        final repo = ref.read(notesRepositoryProvider);
+        if (repo == null) return;
+        final id = await repo.createNote(NoteType.text, folderId: folder.id);
+        if (!context.mounted) return;
+        await GoRouter.maybeOf(context)?.pushNote(noteRoutePath(id));
+      },
       onMenu: () => showFolderActionsSheet(context, ref, folder),
     );
   }
@@ -309,6 +322,7 @@ class FolderCard extends StatelessWidget {
     this.shared = false,
     this.hidden = false,
     this.unread = 0,
+    this.onCreateNote,
     this.onMenu,
   });
 
@@ -320,6 +334,7 @@ class FolderCard extends StatelessWidget {
   final bool hidden;
   final int unread;
   final VoidCallback onTap;
+  final VoidCallback? onCreateNote;
   final VoidCallback? onMenu;
 
   /// Kartın önizleme satırı: kilitli notun başlığı bile gösterilmez (ana
@@ -347,13 +362,19 @@ class FolderCard extends StatelessWidget {
     final empty = notes.isEmpty;
 
     final tokens = AppTokens.of(context);
+    final surface = Color.alphaBlend(
+      accent.withValues(alpha: AppAlpha.hairline),
+      tokens.card,
+    );
     return SizedBox(
       height: empty ? FoldersScreen.emptyCardHeight : FoldersScreen.cardHeight,
       child: Material(
-        color: tokens.card,
+        color: surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.l),
-          side: BorderSide(color: tokens.hairline),
+          side: BorderSide(
+            color: accent.withValues(alpha: AppAlpha.soft),
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -409,21 +430,36 @@ class FolderCard extends StatelessWidget {
                         ),
                         if (shared)
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.xxs,
+                            ),
                             child: Icon(
                               AppIcons.shared,
-                              size: 16,
+                              size: AppIconSize.xs,
                               color: scheme.onSurfaceVariant,
                             ),
                           ),
                         if (hidden)
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.xxs,
+                            ),
                             child: Icon(
                               Icons.visibility_off_outlined,
-                              size: 16,
+                              size: AppIconSize.xs,
                               color: scheme.onSurfaceVariant,
                             ),
+                          ),
+                        if (onCreateNote != null)
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            tooltip: l10n.folderNewNote,
+                            icon: Icon(
+                              Icons.note_add_outlined,
+                              size: AppIconSize.s,
+                              color: accent,
+                            ),
+                            onPressed: onCreateNote,
                           ),
                         if (onMenu != null)
                           IconButton(
@@ -431,13 +467,13 @@ class FolderCard extends StatelessWidget {
                             tooltip: l10n.editFolder,
                             icon: Icon(
                               Icons.more_vert,
-                              size: 20,
+                              size: AppIconSize.m,
                               color: scheme.onSurfaceVariant,
                             ),
                             onPressed: onMenu,
                           )
-                        else
-                          const SizedBox(width: 8),
+                        else if (onCreateNote == null)
+                          const SizedBox(width: AppSpace.s),
                       ],
                     ),
                     if (!empty) const SizedBox(height: 8),

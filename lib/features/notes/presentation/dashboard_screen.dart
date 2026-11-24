@@ -58,6 +58,7 @@ import '../../folders/data/folder_order.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/data/folder_activity.dart';
 import '../../folders/domain/note_folder.dart';
+import '../../folders/presentation/folder_header_panel.dart';
 import '../../folders/presentation/folder_nav.dart';
 import '../../folders/presentation/folder_sheets.dart';
 import '../../folders/presentation/folder_tile.dart';
@@ -2425,6 +2426,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         SharedNotesHomeSection(
                                           columns: columns,
                                           cellWidth: cellWidth,
+                                        ),
+                                      if (sharedFolder == null && !hubActive)
+                                        SliverToBoxAdapter(
+                                          child: FolderHeaderPanel(
+                                            onCreateNote: () => unawaited(
+                                              createNote(NoteType.text),
+                                            ),
+                                          ),
                                         ),
                                       if (sharedFolder != null)
                                         ...sharedFolderSlivers(

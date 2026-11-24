@@ -9912,6 +9912,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get tableSorted => 'Tablo sıralandı';
 
   @override
+  String folderHeaderPinnedCount(int count) {
+    return '$count sabit';
+  }
+
+  @override
+  String get folderNewNote => 'Yeni not';
+
+  @override
+  String get folderFilterSort => 'Süz ve sırala';
+
+  @override
+  String get folderLivePreview => 'Önizleme';
+
+  @override
   String get dashboardBackgroundGallery => 'Hazır zeminler';
 
   @override

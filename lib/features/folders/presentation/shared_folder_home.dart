@@ -177,6 +177,10 @@ class SharedFolderBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final tokens = AppTokens.of(context);
+    final text = AppText.of(theme);
+    final accent = folderAccent(folder.folderId);
     ref.listen(folderUnreadProvider(folder), (_, unread) {
       if (unread > 0) {
         ref.read(folderSeenProvider.notifier).markSeen(folder.folderId);
@@ -184,34 +188,78 @@ class SharedFolderBar extends ConsumerWidget {
     });
     return Padding(
       key: const ValueKey('shared-folder-bar'),
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 4, 0),
-      child: Row(
-        children: [
-          Icon(
-            role == FolderRole.read ? Icons.lock_outline : AppIcons.shared,
-            size: 16,
-            color: scheme.onSurfaceVariant,
+      padding: const EdgeInsets.fromLTRB(
+        kGridInset,
+        AppSpace.xs,
+        kGridInset,
+        AppSpace.xs,
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(
+            accent.withValues(alpha: AppAlpha.hairline),
+            tokens.card,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              l10n.sharedFolderBar(folderRoleLabel(l10n, role)),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          border: Border.all(color: accent.withValues(alpha: AppAlpha.soft)),
+        ),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(
+            AppSpace.m,
+            AppSpace.xs,
+            AppSpace.xs,
+            AppSpace.xs,
           ),
-          IconButton(
-            tooltip: l10n.folderChatTitle,
-            icon: const Icon(Icons.forum_outlined, size: 20),
-            onPressed: () => FolderChatScreen.open(
-              context,
-              folderId: folder.folderId,
-              folderName: name,
-            ),
+          child: Row(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: AppAlpha.pressed),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.xs + AppSpace.xxs),
+                  child: Icon(
+                    role == FolderRole.read ? Icons.lock_outline : AppIcons.shared,
+                    size: AppIconSize.xs,
+                    color: accent,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpace.s),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (name.isNotEmpty)
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.label.copyWith(fontWeight: AppWeight.strong),
+                      ),
+                    Text(
+                      l10n.sharedFolderBar(folderRoleLabel(l10n, role)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.meta.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.folderChatTitle,
+                icon: const Icon(Icons.forum_outlined, size: AppIconSize.m),
+                onPressed: () => FolderChatScreen.open(
+                  context,
+                  folderId: folder.folderId,
+                  folderName: name,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

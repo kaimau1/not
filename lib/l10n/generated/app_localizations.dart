@@ -17558,6 +17558,30 @@ abstract class AppLocalizations {
   /// **'Tablo sıralandı'**
   String get tableSorted;
 
+  /// No description provided for @folderHeaderPinnedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sabit'**
+  String folderHeaderPinnedCount(int count);
+
+  /// No description provided for @folderNewNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not'**
+  String get folderNewNote;
+
+  /// No description provided for @folderFilterSort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süz ve sırala'**
+  String get folderFilterSort;
+
+  /// No description provided for @folderLivePreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önizleme'**
+  String get folderLivePreview;
+
   /// No description provided for @dashboardBackgroundGallery.
   ///
   /// In tr, this message translates to:

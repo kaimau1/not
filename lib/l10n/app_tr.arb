@@ -4411,6 +4411,17 @@
   "tablePasteInvalid": "Panoda geçerli tablo verisi bulunamadı",
   "tablePasted": "Tablo verileri yapıştırıldı",
   "tableSorted": "Tablo sıralandı",
+  "folderHeaderPinnedCount": "{count} sabit",
+  "@folderHeaderPinnedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderNewNote": "Yeni not",
+  "folderFilterSort": "Süz ve sırala",
+  "folderLivePreview": "Önizleme",
   "dashboardBackgroundGallery": "Hazır zeminler",
   "dashboardBackgroundFromDevice": "Galeriden seç",
   "dashboardBackgroundOpacity": "Görünürlük",

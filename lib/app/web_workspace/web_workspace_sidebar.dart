@@ -16,13 +16,16 @@ import '../../features/folders/data/folders_repository.dart'
     show SharedFolderRef, sharedFolderRefsProvider;
 import '../../features/folders/domain/note_folder.dart';
 import '../../features/folders/presentation/folder_sheets.dart'
-    show showFolderEditorDialog;
+    show showFolderActionsSheet, showFolderEditorDialog;
 import '../../features/folders/presentation/shared_folder_home.dart';
 import '../../features/friends/presentation/friends_screen.dart';
+import '../../features/notes/data/notes_repository.dart';
+import '../../features/notes/domain/note_type.dart';
 import '../../features/notes/presentation/filter_sheet.dart' show resetFilters;
 import '../../features/notes/presentation/notes_providers.dart';
 import '../../features/notes/presentation/quick_add_fab.dart';
 import '../app_commands.dart';
+import '../router.dart';
 import '../split_shell.dart';
 import '../theme/app_tokens.dart';
 import 'web_drive_status_pill.dart';
@@ -132,6 +135,7 @@ class _WebWorkspaceSidebarState extends ConsumerState<WebWorkspaceSidebar> {
     final hubOnHome = ref.watch(sharedHubOnHomeProvider);
     final showAllNotes = ref.watch(showAllNotesProvider);
     final allNotesCount = ref.watch(allNotesCountProvider);
+    final folderNoteCounts = ref.watch(folderNoteCountsProvider);
     final folders = ref.watch(visibleOrderedFoldersProvider);
     final sharedFolders =
         ref.watch(sharedFolderRefsProvider).value ?? const <SharedFolderRef>[];
@@ -254,9 +258,26 @@ class _WebWorkspaceSidebarState extends ConsumerState<WebWorkspaceSidebar> {
                               icon: folder.iconData,
                               iconColor: folder.accent,
                               label: folder.name,
+                              count: (folderNoteCounts[folder.id] ?? 0) > 0
+                                  ? folderNoteCounts[folder.id]
+                                  : null,
                               selected:
                                   atNotesSection && selectedFolder == folder.id,
                               onTap: () => _openFolder(router, folder.id),
+                              onNewNote: () async {
+                                final repo = ref.read(notesRepositoryProvider);
+                                if (repo == null) return;
+                                final id = await repo.createNote(
+                                  NoteType.text,
+                                  folderId: folder.id,
+                                );
+                                if (!context.mounted) return;
+                                _openFolder(router, folder.id);
+                                await router.pushNote(noteRoutePath(id));
+                              },
+                              onMore: () => unawaited(
+                                showFolderActionsSheet(context, ref, folder),
+                              ),
                             ),
                           for (final share in sharedFolders)
                             _FolderTreeRow(
@@ -867,7 +888,7 @@ class _NavRow extends StatelessWidget {
   }
 }
 
-class _FolderTreeRow extends StatelessWidget {
+class _FolderTreeRow extends StatefulWidget {
   const _FolderTreeRow({
     super.key,
     required this.icon,
@@ -876,6 +897,8 @@ class _FolderTreeRow extends StatelessWidget {
     required this.onTap,
     this.iconColor,
     this.count,
+    this.onNewNote,
+    this.onMore,
   });
 
   final IconData icon;
@@ -884,64 +907,144 @@ class _FolderTreeRow extends StatelessWidget {
   final int? count;
   final bool selected;
   final VoidCallback onTap;
+  final VoidCallback? onNewNote;
+  final VoidCallback? onMore;
+
+  @override
+  State<_FolderTreeRow> createState() => _FolderTreeRowState();
+}
+
+class _FolderTreeRowState extends State<_FolderTreeRow> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final text = AppText.of(theme);
+    final accent = widget.iconColor;
+    final hasActions = widget.onNewNote != null || widget.onMore != null;
+    final showActions = _hovered && hasActions;
+
     return Semantics(
       button: true,
-      selected: selected,
-      label: label,
-      child: Material(
-        color: selected ? scheme.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        child: InkWell(
+      selected: widget.selected,
+      label: widget.label,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: Material(
+          color: widget.selected
+              ? scheme.primaryContainer
+              : _hovered
+              ? scheme.surfaceContainerHigh.withValues(alpha: AppAlpha.muted)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(AppRadius.m),
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 38),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpace.m,
-                vertical: AppSpace.xs,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    icon,
-                    size: AppIconSize.s,
-                    color: selected
-                        ? scheme.onPrimaryContainer
-                        : (iconColor ?? scheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(width: AppSpace.m),
-                  Expanded(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.label.copyWith(
-                        color: selected
-                            ? scheme.onPrimaryContainer
-                            : scheme.onSurface,
-                        fontWeight: selected
-                            ? AppWeight.strong
-                            : AppWeight.regular,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            onTap: widget.onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 38),
+              child: Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(
+                  AppSpace.s,
+                  AppSpace.xs,
+                  AppSpace.s,
+                  AppSpace.xs,
+                ),
+                child: Row(
+                  children: [
+                    if (accent != null && !widget.selected)
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: AppAlpha.pressed),
+                          borderRadius: BorderRadius.circular(AppRadius.s),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpace.xs),
+                          child: Icon(
+                            widget.icon,
+                            size: AppIconSize.xs,
+                            color: accent,
+                          ),
+                        ),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpace.xs),
+                        child: Icon(
+                          widget.icon,
+                          size: AppIconSize.s,
+                          color: widget.selected
+                              ? scheme.onPrimaryContainer
+                              : (accent ?? scheme.onSurfaceVariant),
+                        ),
+                      ),
+                    const SizedBox(width: AppSpace.s),
+                    Expanded(
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.label.copyWith(
+                          color: widget.selected
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSurface,
+                          fontWeight: widget.selected
+                              ? AppWeight.strong
+                              : AppWeight.regular,
+                        ),
                       ),
                     ),
-                  ),
-                  if (count != null)
-                    Text(
-                      '$count',
-                      style: text.meta.copyWith(
-                        color: selected
-                            ? scheme.onPrimaryContainer
-                            : scheme.onSurfaceVariant,
+                    if (showActions) ...[
+                      if (widget.onNewNote != null)
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 26,
+                            minHeight: 26,
+                          ),
+                          tooltip: l10n.folderNewNote,
+                          icon: Icon(
+                            Icons.add_rounded,
+                            size: AppIconSize.xs,
+                            color: widget.selected
+                                ? scheme.onPrimaryContainer
+                                : scheme.onSurfaceVariant,
+                          ),
+                          onPressed: widget.onNewNote,
+                        ),
+                      if (widget.onMore != null)
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 26,
+                            minHeight: 26,
+                          ),
+                          tooltip: l10n.more,
+                          icon: Icon(
+                            Icons.more_horiz,
+                            size: AppIconSize.xs,
+                            color: widget.selected
+                                ? scheme.onPrimaryContainer
+                                : scheme.onSurfaceVariant,
+                          ),
+                          onPressed: widget.onMore,
+                        ),
+                    ] else if (widget.count != null)
+                      Text(
+                        '${widget.count}',
+                        style: text.meta.copyWith(
+                          color: widget.selected
+                              ? scheme.onPrimaryContainer
+                              : scheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

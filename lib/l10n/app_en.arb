@@ -3553,6 +3553,17 @@
   "tablePasteInvalid": "No valid table data found on clipboard",
   "tablePasted": "Table data pasted",
   "tableSorted": "Table sorted",
+  "folderHeaderPinnedCount": "{count} pinned",
+  "@folderHeaderPinnedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderNewNote": "New note",
+  "folderFilterSort": "Filter & sort",
+  "folderLivePreview": "Preview",
   "dashboardBackgroundGallery": "Curated wallpapers",
   "dashboardBackgroundFromDevice": "From gallery",
   "dashboardBackgroundOpacity": "Visibility",

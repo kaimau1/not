@@ -1,4 +1,5 @@
 import '../../../core/app_icons.dart';
+import '../../../core/haptics.dart';
 
 import 'dart:async';
 
@@ -7,7 +8,10 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/undo_snackbar.dart';
+import '../../notes/data/notes_repository.dart';
 import '../../notes/data/shared_note_activity.dart';
+import '../../notes/domain/note.dart';
 import '../../notes/presentation/filter_sheet.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../../app/app_commands.dart';
@@ -71,6 +75,8 @@ class FolderTile extends ConsumerWidget {
       shared: folder.isShared,
       onTap: () => openFolder(context, folder.id),
       onLongPress: () => showFolderActionsSheet(context, ref, folder),
+      onDropNote: (id) =>
+          unawaited(_moveDroppedNotesToFolder(context, ref, id, folder.id)),
     );
   }
 }
@@ -121,6 +127,7 @@ class _FolderTileBody extends StatelessWidget {
     this.hidden = false,
     this.shared = false,
     this.onLongPress,
+    this.onDropNote,
   });
 
   final Color accent;
@@ -132,86 +139,103 @@ class _FolderTileBody extends StatelessWidget {
   final bool shared;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final ValueChanged<String>? onDropNote;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tokens = AppTokens.fromTheme(theme);
-    return SizedBox(
-      height: FolderTile.height,
-      child: Material(
-        color: tokens.card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.l),
-          side: BorderSide(color: tokens.hairline),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          onLongPress: onLongPress,
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    FolderIconBox(accent: accent, icon: icon),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: scheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Text(
-                                context.l10n.folderNoteCount(count),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: scheme.onSurfaceVariant,
-                                ),
+    Widget card(bool dropHover) => AnimatedScale(
+      scale: dropHover ? 1.03 : 1.0,
+      duration: AppMotion.of(context, AppMotion.instant),
+      curve: AppMotion.standard,
+      child: SizedBox(
+        height: FolderTile.height,
+        child: Material(
+          color: dropHover
+              ? Color.alphaBlend(
+                  accent.withValues(alpha: AppAlpha.pressed),
+                  tokens.card,
+                )
+              : tokens.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            side: BorderSide(
+              color: dropHover ? accent : tokens.hairline,
+              width: dropHover ? 1.5 : 1,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.m),
+                  child: Row(
+                    children: [
+                      FolderIconBox(accent: accent, icon: icon),
+                      const SizedBox(width: AppSpace.m),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.of(theme).rowTitle.copyWith(
+                                color: scheme.onSurface,
                               ),
-                              if (shared) ...[
-                                const SizedBox(width: 6),
-                                Icon(
-                                  AppIcons.shared,
-                                  size: 13,
-                                  color: scheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: AppSpace.xxs),
+                            Row(
+                              children: [
+                                Text(
+                                  context.l10n.folderNoteCount(count),
+                                  style: AppText.of(theme).meta.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
                                 ),
+                                if (shared) ...[
+                                  const SizedBox(width: AppSpace.xs),
+                                  Icon(
+                                    AppIcons.shared,
+                                    size: AppIconSize.xs,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ],
+                                if (hidden) ...[
+                                  const SizedBox(width: AppSpace.xs),
+                                  Icon(
+                                    Icons.visibility_off_outlined,
+                                    size: AppIconSize.xs,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ],
                               ],
-                              if (hidden) ...[
-                                const SizedBox(width: 6),
-                                Icon(
-                                  Icons.visibility_off_outlined,
-                                  size: 13,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              if (unread > 0) FolderUnreadBadge(count: unread),
-            ],
+                if (unread > 0) FolderUnreadBadge(count: unread),
+              ],
+            ),
           ),
         ),
       ),
+    );
+    if (onDropNote == null) return card(false);
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (_) => true,
+      onAcceptWithDetails: (d) => onDropNote!(d.data),
+      builder: (context, candidate, _) => card(candidate.isNotEmpty),
     );
   }
 }
@@ -355,6 +379,8 @@ class FolderChip extends ConsumerWidget {
       trailingIcon: folder.hidden ? Icons.visibility_off_outlined : null,
       onTap: () => openFolder(context, folder.id),
       onLongPress: () => showFolderActionsSheet(context, ref, folder),
+      onDropNote: (id) =>
+          unawaited(_moveDroppedNotesToFolder(context, ref, id, folder.id)),
     );
   }
 }
@@ -440,6 +466,8 @@ class AllNotesChip extends ConsumerWidget {
         }
       },
       onLongPress: () => unawaited(context.push('/folders')),
+      onDropNote: (id) =>
+          unawaited(_moveDroppedNotesToFolder(context, ref, id, null)),
     );
   }
 }
@@ -525,6 +553,7 @@ class _ChipShell extends StatelessWidget {
     this.onLongPress,
     this.unread = 0,
     this.dimmed = false,
+    this.onDropNote,
   });
 
   /// Okunmamış hareket: sayının yerine kırmızı rozet (bkz. [FolderUnreadBadge]).
@@ -548,6 +577,7 @@ class _ChipShell extends StatelessWidget {
   final bool subtle;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final ValueChanged<String>? onDropNote;
 
   @override
   Widget build(BuildContext context) {
@@ -558,94 +588,149 @@ class _ChipShell extends StatelessWidget {
     final accent = dimmed
         ? this.accent?.withValues(alpha: (this.accent?.a ?? 1) * 0.55)
         : this.accent;
-    final highlight = selected ? (accent ?? scheme.primary) : null;
     // SIFIR SAYI ÇİZİLMEZ (F36.6): "0" rozeti boş çipte bilgi değil gürültü
     // (ekran görüntüsünde Gelen 0, Dualar 0, Genel 0).
     final count = (this.count ?? 0) > 0 ? this.count : null;
-    return Material(
-      color: highlight != null
-          ? Color.alphaBlend(
-              highlight.withValues(alpha: AppAlpha.pressed),
-              tokens.card,
-            )
-          : subtle
-          ? Colors.transparent
-          : tokens.card,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.s + 2),
-        side: BorderSide(
-          color:
-              highlight ??
-              (subtle ? scheme.outlineVariant : tokens.hairline),
-          width: highlight != null ? 1.5 : 1,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Padding(
-          // SIKI (kullanıcı isteği 2026-10-31: "görünür alana maksimum klasör
-          // butonu sığsın"): iç boşluk ve aralıklar küçük, sayı satırda değil.
-          padding: EdgeInsetsDirectional.fromSTEB(
-            accent == null ? 8 : 3,
-            0,
-            8,
-            0,
+
+    Widget buildChip(bool dropHover) {
+      final activeHighlight = selected || dropHover;
+      final highlight = activeHighlight ? (accent ?? scheme.primary) : null;
+      return AnimatedScale(
+        scale: dropHover ? 1.06 : 1.0,
+        duration: AppMotion.of(context, AppMotion.instant),
+        curve: AppMotion.standard,
+        child: Material(
+          color: highlight != null
+              ? Color.alphaBlend(
+                  highlight.withValues(
+                    alpha: dropHover ? AppAlpha.soft : AppAlpha.pressed,
+                  ),
+                  tokens.card,
+                )
+              : subtle
+              ? Colors.transparent
+              : tokens.card,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            side: BorderSide(
+              color:
+                  highlight ??
+                  (subtle ? scheme.outlineVariant : tokens.hairline),
+              width: highlight != null ? 1.5 : 1,
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // NOT SAYISI ÜST SİMGE (kullanıcı isteği 2026-10-31: "not
-              // sayısını satırı uzatacak şekilde değil, simgesinde üssü
-              // şeklinde yaz, sağ üst köşesine"): sayı adın yanında yer
-              // kaplamaz; simgenin sağ üst köşesinde küçük kalın rakam.
-              // Okunmamış hareket varsa aynı köşede kırmızı rozet.
-              Stack(
-                clipBehavior: Clip.none,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            onLongPress: onLongPress,
+            child: Padding(
+              // SIKI (kullanıcı isteği 2026-10-31: "görünür alana maksimum klasör
+              // butonu sığsın"): iç boşluk ve aralıklar küçük, sayı satırda değil.
+              padding: EdgeInsetsDirectional.fromSTEB(
+                accent == null ? AppSpace.s : AppSpace.xs,
+                0,
+                AppSpace.s,
+                0,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (accent != null)
-                    FolderIconBox(accent: accent, icon: icon, size: 24)
-                  else
-                    Icon(icon, size: 17, color: muted),
-                  if (unread > 0 || count != null)
-                    PositionedDirectional(
-                      top: -3,
-                      end: -7,
-                      child: _CornerCount(
-                        count: unread > 0 ? unread : count!,
-                        alert: unread > 0,
-                        color: accent ?? muted,
+                  // NOT SAYISI ÜST SİMGE (kullanıcı isteği 2026-10-31: "not
+                  // sayısını satırı uzatacak şekilde değil, simgesinde üssü
+                  // şeklinde yaz, sağ üst köşesine"): sayı adın yanında yer
+                  // kaplamaz; simgenin sağ üst köşesinde küçük kalın rakam.
+                  // Okunmamış hareket varsa aynı köşede kırmızı rozet.
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      if (accent != null)
+                        FolderIconBox(accent: accent, icon: icon, size: 24)
+                      else
+                        Icon(icon, size: AppIconSize.s, color: muted),
+                      if (unread > 0 || count != null)
+                        PositionedDirectional(
+                          top: -3,
+                          end: -7,
+                          child: _CornerCount(
+                            count: unread > 0 ? unread : count!,
+                            alert: unread > 0,
+                            color: accent ?? muted,
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(
+                    width: unread > 0 || count != null
+                        ? AppSpace.s
+                        : AppSpace.xs + AppSpace.xxs,
+                  ),
+                  // Uzun klasör adları şeridi ele geçirmesin: çip en fazla
+                  // 120 px, ad taşarsa kısalır.
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 120),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.of(theme).meta.copyWith(
+                        fontWeight: selected
+                            ? AppWeight.strong
+                            : AppWeight.medium,
+                        color: subtle || dimmed ? muted : scheme.onSurface,
                       ),
                     ),
+                  ),
+                  if (trailingIcon != null) ...[
+                    const SizedBox(width: AppSpace.xs),
+                    Icon(trailingIcon, size: AppIconSize.xs, color: muted),
+                  ],
                 ],
               ),
-              SizedBox(width: unread > 0 || count != null ? 8 : 6),
-              // Uzun klasör adları şeridi ele geçirmesin: çip en fazla
-              // 120 px, ad taşarsa kısalır.
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 120),
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: selected ? AppWeight.strong : FontWeight.w500,
-                    color: subtle || dimmed ? muted : scheme.onSurface,
-                  ),
-                ),
-              ),
-              if (trailingIcon != null) ...[
-                const SizedBox(width: 4),
-                Icon(trailingIcon, size: 12, color: muted),
-              ],
-            ],
+            ),
           ),
         ),
-      ),
+      );
+    }
+
+    if (onDropNote == null) return buildChip(false);
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (_) => true,
+      onAcceptWithDetails: (d) => onDropNote!(d.data),
+      builder: (context, candidate, _) => buildChip(candidate.isNotEmpty),
     );
   }
+}
+
+Future<void> _moveDroppedNotesToFolder(
+  BuildContext context,
+  WidgetRef ref,
+  String droppedId,
+  String? targetFolderId,
+) async {
+  final repo = ref.read(notesRepositoryProvider);
+  if (repo == null) return;
+  final selected = ref.read(selectedNoteIdsProvider);
+  final ids = selected.contains(droppedId) ? {...selected} : {droppedId};
+  final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+  final previous = <String, String?>{
+    for (final n in notes)
+      if (ids.contains(n.id)) n.id: n.folderId,
+  };
+  unawaited(AppHaptics.tick());
+  await repo.batchUpdate(ids, {'folderId': targetFolderId});
+  if (selected.contains(droppedId)) {
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+  }
+  if (!context.mounted) return;
+  showUndoSnackBar(
+    context,
+    message: context.l10n.notesMovedCount(ids.length),
+    undoLabel: context.l10n.undo,
+    onUndo: () => repo.batchUpdateEach({
+      for (final entry in previous.entries)
+        entry.key: {'folderId': entry.value},
+    }),
+  );
 }
 
 /// Çip simgesinin sağ üst köşesindeki sayı: not sayısı (zemin renginde

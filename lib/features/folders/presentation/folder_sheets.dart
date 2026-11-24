@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../../core/app_icons.dart';
+import '../../../core/haptics.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -58,6 +59,82 @@ Future<String?> showFolderEditorDialog(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: nameController,
+                    builder: (context, value, _) {
+                      final theme = Theme.of(context);
+                      final scheme = theme.colorScheme;
+                      final previewAccent = color != null
+                          ? NoteFolder.accentPalette[color!]
+                          : (existing == null
+                                ? scheme.primary
+                                : folderAccent(existing.id));
+                      final title = value.text.trim().isEmpty
+                          ? l10n.folderNameHint
+                          : value.text.trim();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpace.m),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Color.alphaBlend(
+                              previewAccent.withValues(alpha: AppAlpha.hairline),
+                              AppTokens.of(context).card,
+                            ),
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                            border: Border.all(
+                              color: previewAccent.withValues(alpha: AppAlpha.soft),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.m,
+                              vertical: AppSpace.s,
+                            ),
+                            child: Row(
+                              children: [
+                                FolderIconBox(
+                                  accent: previewAccent,
+                                  icon: NoteFolder.iconChoices[icon] ??
+                                      Icons.folder_outlined,
+                                  size: 34,
+                                ),
+                                const SizedBox(width: AppSpace.m),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        l10n.folderLivePreview,
+                                        style: AppText.of(theme).meta.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                      Text(
+                                        title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppText.of(theme).label.copyWith(
+                                          fontWeight: AppWeight.strong,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (hidden)
+                                  Icon(
+                                    Icons.visibility_off_outlined,
+                                    size: AppIconSize.xs,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   TextField(
                     controller: nameController,
                     autofocus: true,
@@ -322,6 +399,9 @@ Future<void> showFolderActionsSheet(
         destructive: true,
       );
       if (confirmed) {
+        if (ref.read(selectedFolderProvider) == folder.id) {
+          ref.read(selectedFolderProvider.notifier).set(null);
+        }
         await ref
             .read(foldersRepositoryProvider)
             ?.deleteFolder(folder.id, shared: folder.isShared);
@@ -641,6 +721,7 @@ class _FolderOrderPanelState extends ConsumerState<FolderOrderPanel> {
   List<NoteFolder>? _pending;
 
   void _reorder(List<NoteFolder> visible, int from, int to) {
+    unawaited(AppHaptics.tick());
     final withHub = [...visible];
     final item = withHub.removeAt(from);
     withHub.insert(to, item);
