@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' show BoxHitTestResult, PipelineOwner, RenderProxyBox;
 import 'package:flutter/scheduler.dart';
 
 import '../../../../app/theme/app_tokens.dart';
@@ -25,18 +24,17 @@ import '../../domain/note_table.dart';
 import '../drive_ui.dart';
 import '../viewers/image_luma.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
-import '../viewers/ink_pen.dart';
 import '../viewers/pen_policy.dart';
+import 'pinned_image_surface.dart';
+import 'pinned_media_bar.dart';
 import 'pinned_side.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_read_style.dart';
 import 'note_images.dart';
-import 'page_ink_layer.dart' show InkClaim;
 import 'attachment_actions.dart';
 import 'audio_card_box.dart';
 import 'pdf_page_box.dart';
-import 'pen_tray.dart' show showInkSettings;
 import 'slide_page_box.dart';
 import 'table_page_box.dart';
 import 'text_page_box.dart';
@@ -44,17 +42,14 @@ import 'video_hub_scope.dart';
 import 'video_transport.dart';
 import '../../../../core/haptics.dart';
 
+export 'pinned_media_bar.dart' show kPinnedBarHeight;
+
 /// Sabit bölmenin yüksekliği bu sınırlar arasında kalır (dp / oran).
 const double kPinnedMinHeight = 96;
 const double kPinnedMaxFraction = 0.7;
 
 /// Ayraç bu yüksekliğin altına çekilip bırakılırsa medya sayfaya geri döner.
 const double kPinnedUnpinHeight = 72;
-
-/// Medya ile not arasındaki çubuğun (tutamaç + düğmeler) yüksekliği.
-/// 44 → 40 (kullanıcı isteği 2026-11-03: "üste sabitken PDF ve not alanı
-/// daha yukarı gelsin, genişlesin").
-const double kPinnedBarHeight = 40;
 
 /// Klavye açıkken bölmenin altında notun yazılan satırına kalan en az yer.
 const double kPinnedNoteMinHeight = 72;
@@ -147,6 +142,10 @@ class PinnedMediaPane extends StatefulWidget {
     this.onShare,
     this.onTranscribe,
     this.onPdfNote,
+    this.onInsertToNote,
+    this.onSmartSummarize,
+    this.onSmartTasks,
+    this.onSmartAreaAsk,
     this.onImmersiveChanged,
     this.penActive = false,
     this.fill = false,
@@ -205,6 +204,19 @@ class PinnedMediaPane extends StatefulWidget {
 
   /// Görseldeki yazıyı çıkarır (OCR).
   final VoidCallback? onExtractText;
+
+  /// Akıllı işlemler: alan seçimi / yapay zekâ sonucunu nota ekler.
+  final ValueChanged<String>? onInsertToNote;
+
+  /// Sabit görsel/PDF akıllı özet çıkarımı.
+  final VoidCallback? onSmartSummarize;
+
+  /// Sabit görsel/PDF içeriğinden yapılacak madde çıkarımı.
+  final VoidCallback? onSmartTasks;
+
+  /// Sabit görsel/PDF alan seçip yapay zekâya sorma; null ise PDF'te
+  /// etkin sayfa yakalama yolu kullanılır.
+  final VoidCallback? onSmartAreaAsk;
 
   /// Sabit görselin/videonun TRANSKRİPTİ (metne dök / kayıtlıysa aç).
   final VoidCallback? onTranscribe;
@@ -352,47 +364,28 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
           _inkableImage) &&
       _policy.layerActive;
 
-  /// SABİT GÖRSELE KALEM (F63.3): ölçüsü bilinen görsel (çizgi görselin
-  /// `contain` dikdörtgeninde oranlı). Balon bırakma kipinde kalem kapalı —
-  /// dokunuş balon bırakır.
+  /// Ekte kayıtlı piksel ölçüsü ya da yoklanan oran varsa görsel dikdörtgeni
+  /// hesaplanabilir (kalem/balon ölçüsüz görsellerde de çalışır).
+  bool get _hasImageBounds =>
+      ((widget.media.width ?? 0) > 0 && (widget.media.height ?? 0) > 0) ||
+      _mediaRatio != null;
+
+  /// SABİT GÖRSELE KALEM (F63.3): ölçüsü ya da yoklanan oranı bilinen görsel.
+  /// Balon bırakma kipinde kalem kapalı — dokunuş balon bırakır.
   bool get _inkableImage =>
       widget.media.kind == AttachmentKind.image &&
-      (widget.media.width ?? 0) > 0 &&
-      (widget.media.height ?? 0) > 0 &&
+      _hasImageBounds &&
       !_bubbleEdit;
 
   /// Görselin çizim katmanı (görselin dikdörtgeninde, yakınlaştırma
-  /// dönüşümünün içinde). Kalem açıksa yazılır ([InkClaim]: kalem/izinli
-  /// parmak dokunuşu görüntüleyiciyi açmaz, kaydırmaz; izinsiz parmak
-  /// alttaki jestlere gider), değilse yalnız boyanır.
-  Widget _imageInkLayer() => LayoutBuilder(
-    builder: (context, box) {
-      final rect = _imageRect(box.biggest);
-      if (rect == null) return const SizedBox.shrink();
-      final pen = _penOn ? _inkFor(widget.media) : null;
-      return Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned.fromRect(
-            rect: rect,
-            child: pen == null
-                ? IgnorePointer(
-                    child: CustomPaint(
-                      painter: InkPainter(
-                        _shownInk,
-                        1,
-                        revision: _ink?.revision ?? 0,
-                      ),
-                    ),
-                  )
-                : InkClaim(
-                    ink: pen,
-                    child: InkPageLayer(controller: pen, page: 1),
-                  ),
-          ),
-        ],
-      );
-    },
+  /// dönüşümünün içinde).
+  Widget _imageInkLayer() => PinnedImageInkSurface(
+    strokes: _shownInk,
+    revision: _ink?.revision ?? 0,
+    width: widget.media.width,
+    height: widget.media.height,
+    probedRatio: _mediaRatio,
+    activeController: _penOn ? _inkFor(widget.media) : null,
   );
 
   /// **YAZILAR KAYBOLUP GERİ GELİYORDU** (kullanıcı bulgusu 2026-11-21):
@@ -853,19 +846,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     super.dispose();
   }
 
-  /// Görselin bölmede `contain` ile çizildiği dikdörtgen (balonlar onun
-  /// oranlı uzayında). Ölçüsü bilinmeyen görselde null.
-  Rect? _imageRect(Size box) {
-    final w = (widget.media.width ?? 0).toDouble();
-    final h = (widget.media.height ?? 0).toDouble();
-    if (w <= 0 || h <= 0 || box.isEmpty) return null;
-    final scale = (box.width / w) < (box.height / h)
-        ? box.width / w
-        : box.height / h;
-    final dw = w * scale;
-    final dh = h * scale;
-    return Rect.fromLTWH((box.width - dw) / 2, (box.height - dh) / 2, dw, dh);
-  }
+  /// Görselin bölmede `contain` ile çizildiği dikdörtgen (balonlar ve mürekkep
+  /// onun oranlı uzayında). Ekte piksel ölçüsü yoksa yoklanan oran kullanılır.
+  Rect? _imageRect(Size box) => computePinnedImageRect(
+    box,
+    width: widget.media.width,
+    height: widget.media.height,
+    probedRatio: _mediaRatio,
+  );
 
   /// Görselin üstündeki balon katmanı (görselin `contain` dikdörtgeninde).
   Widget _imageBubbleLayer(BubbleController bubbles) => LayoutBuilder(
@@ -890,7 +878,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   );
 
   /// Görsel genişliğe oturma kipinde dikey kaydırma (bkz. [_fitWidthImage]).
-  final _imageScroll = _FitScroll();
+  final _imageScroll = FitScroll();
 
   /// Genişliğe oturan görsel parmakla/fareyle kayar mı: yakınken pan,
   /// kalem parmakla çizerken çizim kazanır.
@@ -913,11 +901,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   ///
   /// TEK widget (keyboard_jank_guard S17: klavye geçiş karesinde medya
   /// alt ağacı yeniden kuruluyor, bütçede pay yok): kaydırıcı widget yerine
-  /// kaydırmayı boyamada uygulayan bir kutu ([_FitWidthBox]); sürükleme
+  /// kaydırmayı boyamada uygulayan bir kutu ([FitWidthBox]); sürükleme
   /// medyanın VAR OLAN jest algılayıcısında.
   Widget _fitWidthImage(bool isImage, Widget child) {
     if (!_fitsWidth) return child;
-    return _FitWidthBox(
+    return FitWidthBox(
       key: ValueKey('pinned-image-scroll-${widget.media.id}'),
       ratio: _mediaRatio!,
       whole: _wholeImage,
@@ -1418,6 +1406,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                             fitWidth: true,
                             externalBar: _pdfBar,
                             onNoteFromSelection: widget.onPdfNote,
+                            onInsertToNote: widget.onInsertToNote,
                           ),
                           ),
                         )),
@@ -1609,7 +1598,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                               ),
                             ],
                             if (_unpinArmed)
-                              _UnpinHint(label: l10n.unpinMediaRelease),
+                              PinnedUnpinHint(label: l10n.unpinMediaRelease),
                           ],
                         ),
                         ),
@@ -1719,14 +1708,32 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   bool get _wideBar => _barWidth >= 600;
   bool get _tinyBar => _barWidth < 220;
 
-  /// Bu eke kalemle yazılabilir mi (yazılabilir not; PDF ya da ölçüsü
+  /// Bu eke kalemle yazılabilir mi (yazılabilir not; PDF ya da ölçüsü/oranı
   /// bilinen görsel).
   bool get _canPen =>
       widget.onChanged != null &&
       (widget.media.kind == AttachmentKind.pdf ||
-          (widget.media.kind == AttachmentKind.image &&
-              (widget.media.width ?? 0) > 0 &&
-              (widget.media.height ?? 0) > 0));
+          (widget.media.kind == AttachmentKind.image && _hasImageBounds));
+
+  VoidCallback? get _effectiveAreaAsk =>
+      widget.onSmartAreaAsk ??
+      (widget.media.kind == AttachmentKind.pdf
+          ? () => unawaited(_pdfBar.openAreaActions())
+          : null);
+
+  bool get _hasSmartActions =>
+      widget.onExtractText != null ||
+      widget.onSmartSummarize != null ||
+      widget.onSmartTasks != null ||
+      _effectiveAreaAsk != null;
+
+  Future<void> _openSmartActions() => showPinnedSmartActionsSheet(
+    context,
+    onOcr: widget.onExtractText,
+    onSummarize: widget.onSmartSummarize,
+    onExtractTasks: widget.onSmartTasks,
+    onAreaAsk: _effectiveAreaAsk,
+  );
 
   /// **PANELDEKİ KALEM ↔ YÜZEN DÜĞME TAM SENKRON** (P49 (b)).
   ///
@@ -1762,75 +1769,14 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
 
   /// **HIZLI KALEM** (P49 (c): "paneldeki kalem açılınca silgili hızlı kalem
   /// menüsü"). Bölmenin kendi kalemi açıkken (editörün kalem tepsisi yokken)
-  /// çubuğun solu kalem araçlarına döner: silgi · geri al · yinele · kalem
-  /// ayarları. Araç seçimi ortak (`InkToolMemory`): tepsiyle aynı silgi.
+  /// çubuğun solu kalem araçlarına döner: silgi · hızlı renkler · geri al ·
+  /// yinele · kalem ayarları. Araç seçimi ortak (`InkToolMemory`).
   bool get _penTools => _ownPen && !widget.penActive && _canPen;
 
-  Widget _penQuickTools(BuildContext context) {
-    final l10n = context.l10n;
-    final ink = _inkFor(widget.media);
-    return ListenableBuilder(
-      listenable: ink,
-      builder: (context, _) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // SİLGİ BELİRGİN (kullanıcı bulgusu 2026-11-13: "silgi aktifken
-          // neredeyse hiç belli olmuyor"): yalnız simge rengi değişiyordu;
-          // açıkken dolu daire zemin + dolu simge.
-          _BarButton(
-            key: const ValueKey('pinned-pen-eraser'),
-            tooltip: l10n.eraser,
-            icon: ink.eraser
-                ? Icons.auto_fix_normal
-                : Icons.auto_fix_normal_outlined,
-            selected: ink.eraser,
-            filled: true,
-            onPressed: () => ink.setEraser(!ink.eraser),
-          ),
-          // RENK (kullanıcı isteği 2026-11-13: "sabit PDF'te kalemle
-          // yazarken renk seçenekleri olmalı"): geniş çubukta hızlı renkler
-          // çubukta; her genişlikte renk noktası tüm paleti açar.
-          if (_wideBar)
-            for (final c in _quickInkColors(ink))
-              _InkSwatch(
-                key: ValueKey('pinned-pen-color-${c.toARGB32()}'),
-                color: c,
-                selected:
-                    !ink.eraser && c.toARGB32() == ink.color.toARGB32(),
-                onTap: () => ink.setColor(c),
-              ),
-          _InkColorMenu(ink: ink),
-          _BarButton(
-            key: const ValueKey('pinned-pen-undo'),
-            tooltip: l10n.undo,
-            icon: Icons.undo,
-            onPressed: ink.canUndo ? ink.undo : null,
-          ),
-          _BarButton(
-            key: const ValueKey('pinned-pen-redo'),
-            tooltip: l10n.redo,
-            icon: Icons.redo,
-            onPressed: ink.canRedo ? ink.redo : null,
-          ),
-          _BarButton(
-            key: const ValueKey('pinned-pen-settings'),
-            tooltip: l10n.inkSettings,
-            icon: Icons.tune,
-            onPressed: () => showInkSettings(context, ink),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Çubuktaki hızlı renkler: siyah, mavi, kırmızı, yeşil; kalemin rengi
-  /// bunlardan değilse sonuncunun yerinde o (kalem tepsisiyle aynı kural).
-  static List<Color> _quickInkColors(InkController ink) {
-    final base = [for (final i in const [0, 5, 2, 4]) kInkPalette[i]];
-    final current = ink.color.toARGB32();
-    if (base.any((c) => c.toARGB32() == current)) return base;
-    return [...base.take(3), Color(current)];
-  }
+  Widget _penQuickTools(BuildContext context) => PinnedPenQuickTools(
+    ink: _inkFor(widget.media),
+    wideBar: _wideBar,
+  );
 
   static String _sideLabel(AppLocalizations l10n, PinnedSide side) =>
       switch (side) {
@@ -1872,7 +1818,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         if (widget.onCycleSide != null)
           _pinnedItem(
             'side',
-            _BarButton(
+            PinnedBarButton(
               key: const ValueKey('pinned-side'),
               tooltip: '${_sideLabel(l10n, widget.side)} — ${l10n.pinnedSideToggle}',
               icon: _sideIcon(widget.side),
@@ -1886,7 +1832,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
           if (!isAudio && !tiny)
             _pinnedItem(
               'fullscreen',
-              _BarButton(
+              PinnedBarButton(
                 key: const ValueKey('pinned-fullscreen'),
                 tooltip: l10n.fullscreen,
                 icon: Icons.fullscreen,
@@ -1899,7 +1845,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
           if (_canShrink && !tiny)
             _pinnedItem(
               'shrink',
-              _BarButton(
+              PinnedBarButton(
                 key: const ValueKey('pinned-shrink'),
                 tooltip: l10n.pinnedShrinkToFit,
                 icon: _shrinkActive ? Icons.fit_screen : Icons.fit_screen_outlined,
@@ -2031,10 +1977,20 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             widget.media.isWebVideo)
           _pinnedItem(
             'link',
-            _BarButton(
+            PinnedBarButton(
               tooltip: l10n.copyVideoLink,
               icon: Icons.link,
               onPressed: widget.onCopyLink!,
+            ),
+          ),
+        if (!tools && wide && _hasSmartActions)
+          _pinnedItem(
+            'smart',
+            PinnedBarButton(
+              key: const ValueKey('pinned-smart-actions'),
+              tooltip: l10n.pinnedSmartActions,
+              icon: Icons.auto_awesome_outlined,
+              onPressed: () => unawaited(_openSmartActions()),
             ),
           ),
         if (widget.viewSwitch case final viewSwitch? when wide && !tools)
@@ -2045,7 +2001,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         else if (widget.viewSwitch == null && !hasMenu)
           _pinnedItem(
             'unpin',
-            _BarButton(
+            PinnedBarButton(
               tooltip: l10n.viewModeFloatingHint,
               icon: Icons.vertical_align_bottom,
               onPressed: widget.onUnpin,
@@ -2061,7 +2017,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         if (_canPen && widget.onPenOn == null)
           _pinnedItem(
             'pen',
-            _BarButton(
+            PinnedBarButton(
               key: const ValueKey('pinned-pen'),
               tooltip: l10n.pinnedPenWrite,
               icon: penSelected ? Icons.draw : Icons.draw_outlined,
@@ -2071,7 +2027,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             ),
           ),
         if (_hasSheet)
-          _BarButton(
+          PinnedBarButton(
             key: const ValueKey('pinned-media-menu'),
             tooltip: l10n.more,
             icon: Icons.more_vert,
@@ -2107,7 +2063,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   Widget _addBubbleButton(BuildContext context, {required bool active}) {
     final l10n = context.l10n;
     if (active) {
-      return _BarButton(
+      return PinnedBarButton(
         key: const ValueKey('pinned-add-bubble'),
         tooltip: l10n.bubbleAddDone,
         icon: Icons.check,
@@ -2123,7 +2079,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     // Gizle/göster balon varken yanındaki göz düğmesinde (görüntüleyici
     // balon çubuğuyla aynı).
     final toggle = _bubbleToggle();
-    // Doğrudan IconButton (ara `_BarButton` yok): klavye açılış karesinin
+    // Doğrudan IconButton (ara `PinnedBarButton` yok): klavye açılış karesinin
     // kurulum bütçesi (S17 sabit görsel/PDF) eski menü düğmesiyle aynı kalsın.
     final add = IconButton(
       key: const ValueKey('pinned-add-bubble'),
@@ -2138,7 +2094,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       mainAxisSize: MainAxisSize.min,
       children: [
         add,
-        _BarButton(
+        PinnedBarButton(
           key: const ValueKey('pinned-bubbles-toggle'),
           tooltip: toggle.hidden ? l10n.bubblesShow : l10n.bubblesHide,
           icon: toggle.hidden
@@ -2166,6 +2122,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// ⋮ levhasında gösterilecek bir şey var mı.
   bool get _hasSheet =>
       hasMenu ||
+      _hasSmartActions ||
       widget.media.kind == AttachmentKind.pdf ||
       widget.viewSwitch != null ||
       widget.sheetViewSwitch != null ||
@@ -2348,6 +2305,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
           ),
     ];
     final grouped =
+        _hasSmartActions ||
         viewSwitch != null ||
         widget.onSelectSide != null ||
         canShrink ||
@@ -2565,6 +2523,41 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               ),
             ),
           ],
+          if (_hasSmartActions) ...[
+            section(l10n.pinnedSmartActions),
+            SheetTileGrid(
+              children: [
+                if (widget.onExtractText != null)
+                  tile(
+                    'pinned-sheet-smart-ocr',
+                    Icons.document_scanner_outlined,
+                    l10n.pinnedSmartOcr,
+                    widget.onExtractText!,
+                  ),
+                if (widget.onSmartSummarize != null)
+                  tile(
+                    'pinned-sheet-smart-summarize',
+                    Icons.summarize_outlined,
+                    l10n.pinnedSmartSummarize,
+                    widget.onSmartSummarize!,
+                  ),
+                if (widget.onSmartTasks != null)
+                  tile(
+                    'pinned-sheet-smart-tasks',
+                    Icons.checklist_rtl_outlined,
+                    l10n.pinnedSmartTasks,
+                    widget.onSmartTasks!,
+                  ),
+                if (_effectiveAreaAsk != null)
+                  tile(
+                    'pinned-sheet-smart-area-ask',
+                    Icons.crop_free_outlined,
+                    l10n.pinnedSmartAreaAsk,
+                    _effectiveAreaAsk!,
+                  ),
+              ],
+            ),
+          ],
           if (bubbles) ...[
             section(l10n.bubblesOverviewTitle),
             SheetTileGrid(
@@ -2623,207 +2616,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _BarButton extends StatelessWidget {
-  const _BarButton({
-    super.key,
-    required this.tooltip,
-    required this.icon,
-    required this.onPressed,
-    this.selected = false,
-    this.filled = false,
-    this.tonal = false,
-  });
-
-  final String tooltip;
-  final IconData icon;
-
-  /// null = kapalı (ör. geri alınacak çizgi yok).
-  final VoidCallback? onPressed;
-
-  /// Açık kip (kalem, silgi, balon bırakma): simge `primary`.
-  final bool selected;
-
-  /// Açıkken dolu `primary` zemin (silgi: yalnız simge rengi fark
-  /// edilmiyordu).
-  final bool filled;
-
-  /// Açıkken yumuşak `primaryContainer` zemin (kalem, balon bırakma).
-  final bool tonal;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final strong = filled && selected;
-    final soft = !strong && tonal && selected;
-    return IconButton(
-      tooltip: tooltip,
-      visualDensity: VisualDensity.compact,
-      iconSize: AppIconSize.m,
-      isSelected: selected,
-      color: selected && !strong && !soft ? scheme.primary : null,
-      style: strong
-          ? IconButton.styleFrom(
-              backgroundColor: scheme.primary,
-              foregroundColor: scheme.onPrimary,
-            )
-          : soft
-          ? IconButton.styleFrom(
-              backgroundColor: scheme.primaryContainer,
-              foregroundColor: scheme.onPrimaryContainer,
-            )
-          : null,
-      icon: Icon(icon),
-      onPressed: onPressed,
-    );
-  }
-}
-
-/// Çubukta tek renk noktası (sabit belgenin hızlı kalemi).
-class _InkSwatch extends StatelessWidget {
-  const _InkSwatch({
-    super.key,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-  static const double size = 22;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: InkResponse(
-        radius: size,
-        onTap: onTap,
-        child: SizedBox(
-          width: size + 18,
-          height: kPinnedBarHeight,
-          child: Center(
-            child: Container(
-              width: size + 6,
-              height: size + 6,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: selected ? scheme.primary : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-              child: Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: scheme.onSurface.withValues(alpha: AppAlpha.soft),
-                    width: 0.8,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Kalemin rengini gösteren nokta; dokununca tüm palet açılır (seçince
-/// silgi kapanır, bkz. [InkController.setColor]).
-class _InkColorMenu extends StatefulWidget {
-  const _InkColorMenu({required this.ink});
-
-  final InkController ink;
-
-  @override
-  State<_InkColorMenu> createState() => _InkColorMenuState();
-}
-
-class _InkColorMenuState extends State<_InkColorMenu> {
-  final _menu = MenuController();
-
-  @override
-  Widget build(BuildContext context) {
-    final ink = widget.ink;
-    final current = ink.color.toARGB32();
-    return MenuAnchor(
-      controller: _menu,
-      menuChildren: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpace.xs,
-            vertical: AppSpace.xxs,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final c in kInkPalette)
-                _InkSwatch(
-                  key: ValueKey('pinned-pen-palette-${c.toARGB32()}'),
-                  color: c,
-                  selected: !ink.eraser && c.toARGB32() == current,
-                  onTap: () {
-                    ink.setColor(c);
-                    _menu.close();
-                  },
-                ),
-            ],
-          ),
-        ),
-      ],
-      builder: (context, menu, _) => Tooltip(
-        message: context.l10n.inkColor,
-        child: _InkSwatch(
-          key: const ValueKey('pinned-pen-color'),
-          color: Color(current),
-          selected: menu.isOpen,
-          onTap: () => menu.isOpen ? menu.close() : menu.open(),
-        ),
-      ),
-    );
-  }
-}
-
-class _UnpinHint extends StatelessWidget {
-  const _UnpinHint({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        margin: const EdgeInsets.all(AppSpace.s),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpace.m,
-          vertical: AppSpace.xs,
-        ),
-        decoration: BoxDecoration(
-          color: scheme.inverseSurface,
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-        ),
-        child: Text(
-          label,
-          style: AppText.of(theme).meta.copyWith(
-            color: scheme.onInverseSurface,
-          ),
-        ),
       ),
     );
   }
@@ -2909,144 +2701,4 @@ class _WindowClip extends CustomClipper<Rect> {
   @override
   bool shouldReclip(_WindowClip oldClipper) =>
       oldClipper.laid != laid || oldClipper.dy != dy;
-}
-
-/// [_FitWidthBox]'ın kaydırma durumu: konum ve (son yerleşimden) tavan.
-class _FitScroll extends ChangeNotifier {
-  double offset = 0;
-  double max = 0;
-
-  void by(double dy) => to(offset + dy);
-
-  void to(double value) {
-    final next = value.clamp(0.0, max);
-    if (next == offset) return;
-    offset = next;
-    notifyListeners();
-  }
-}
-
-/// Çocuğu bölmenin genişliğinde, [ratio] × genişlik boyunda dizer; bölmeyi
-/// doldurur ve çocuğu [scroll] kadar yukarı kaydırıp kırparak boyar.
-/// Kaydırma yalnız boyama + isabet testi (yeniden kurulum/yerleşim yok).
-class _FitWidthBox extends SingleChildRenderObjectWidget {
-  const _FitWidthBox({
-    super.key,
-    required this.ratio,
-    required this.scroll,
-    required super.child,
-    this.whole = false,
-  });
-
-  final double ratio;
-  final _FitScroll scroll;
-
-  /// Bütün görsel kipi: çocuk bölmenin boyunda (görsel `contain` sığar).
-  final bool whole;
-
-  @override
-  _RenderFitWidthBox createRenderObject(BuildContext context) =>
-      _RenderFitWidthBox(ratio, scroll)..whole = whole;
-
-  @override
-  void updateRenderObject(BuildContext context, _RenderFitWidthBox r) {
-    r
-      ..ratio = ratio
-      ..whole = whole
-      ..scroll = scroll;
-  }
-}
-
-class _RenderFitWidthBox extends RenderProxyBox {
-  _RenderFitWidthBox(this._ratio, this._scroll);
-
-  double _ratio;
-  set ratio(double v) {
-    if (v == _ratio) return;
-    _ratio = v;
-    markNeedsLayout();
-  }
-
-  bool _whole = false;
-  set whole(bool v) {
-    if (v == _whole) return;
-    _whole = v;
-    markNeedsLayout();
-  }
-
-  _FitScroll _scroll;
-  set scroll(_FitScroll v) {
-    if (identical(v, _scroll)) return;
-    if (attached) {
-      _scroll.removeListener(_changed);
-      v.addListener(_changed);
-    }
-    _scroll = v;
-    markNeedsPaint();
-  }
-
-  void _changed() {
-    markNeedsPaint();
-    markNeedsSemanticsUpdate();
-  }
-
-  double get _dy => _scroll.offset.clamp(0.0, _scroll.max);
-
-  @override
-  void attach(PipelineOwner owner) {
-    super.attach(owner);
-    _scroll.addListener(_changed);
-  }
-
-  @override
-  void detach() {
-    _scroll.removeListener(_changed);
-    super.detach();
-  }
-
-  @override
-  void performLayout() {
-    size = constraints.biggest;
-    final child = this.child;
-    if (child == null) return;
-    final width = size.width;
-    final height = _whole
-        ? size.height
-        : math.max(width * _ratio, size.height);
-    child.layout(BoxConstraints.tight(Size(width, height)));
-    _scroll.max = math.max(0, height - size.height);
-    if (_scroll.offset > _scroll.max) _scroll.offset = _scroll.max;
-  }
-
-  @override
-  void paint(PaintingContext context, Offset offset) {
-    final child = this.child;
-    if (child == null) return;
-    context.pushClipRect(
-      needsCompositing,
-      offset,
-      Offset.zero & size,
-      (context, offset) =>
-          context.paintChild(child, offset + Offset(0, -_dy)),
-    );
-  }
-
-  @override
-  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    final child = this.child;
-    if (child == null || !(Offset.zero & size).contains(position)) {
-      return false;
-    }
-    return result.addWithPaintOffset(
-      offset: Offset(0, -_dy),
-      position: position,
-      hitTest: (result, transformed) =>
-          child.hitTest(result, position: transformed),
-    );
-  }
-
-  @override
-  void applyPaintTransform(RenderBox child, Matrix4 transform) {
-    transform.translateByDouble(0, -_dy, 0, 1);
-  }
 }

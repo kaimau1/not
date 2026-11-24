@@ -9926,6 +9926,27 @@ class AppLocalizationsTr extends AppLocalizations {
   String get folderLivePreview => 'Önizleme';
 
   @override
+  String get pinnedSmartActions => 'Akıllı işlemler';
+
+  @override
+  String get pinnedSmartOcr => 'Metni çıkar';
+
+  @override
+  String get pinnedSmartSummarize => 'Özetle ve nota ekle';
+
+  @override
+  String get pinnedSmartTasks => 'Görevlere çevir';
+
+  @override
+  String get pinnedSmartAreaAsk => 'Alan seçip sor';
+
+  @override
+  String get areaInsertToNote => 'Nota ekle';
+
+  @override
+  String get areaInsertedToNote => 'Nota eklendi';
+
+  @override
   String get dashboardBackgroundGallery => 'Hazır zeminler';
 
   @override

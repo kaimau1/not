@@ -1353,6 +1353,23 @@ extension _EditorMediaView on _NoteEditorScreenState {
             onTranscribe: Transcripts.canTranscribe(pinned)
                 ? () => unawaited(_openTranscript(pinned))
                 : null,
+            onInsertToNote: _readOnly ? null : _appendText,
+            onSmartSummarize:
+                !_readOnly &&
+                    (pinned.kind == AttachmentKind.pdf ||
+                        pinned.kind == AttachmentKind.image)
+                ? () => unawaited(_smartSummarizePinned(pinned))
+                : null,
+            onSmartTasks:
+                !_readOnly &&
+                    (pinned.kind == AttachmentKind.pdf ||
+                        pinned.kind == AttachmentKind.image)
+                ? () => unawaited(_smartTasksPinned(pinned))
+                : null,
+            onSmartAreaAsk:
+                !_readOnly && pinned.kind == AttachmentKind.image
+                ? () => unawaited(_smartAreaAskImage(pinned))
+                : null,
             onSaveAs: pinned.isWebVideo
                 ? null
                 : () => unawaited(AttachmentSaveAs.run(context, ref, pinned)),
@@ -1375,6 +1392,81 @@ extension _EditorMediaView on _NoteEditorScreenState {
                 : null,
             child: body,
           );
+  }
+
+  /// Sabit görsel veya PDF üzerinde AI akıllı özet çıkarıp nota ekler.
+  Future<void> _smartSummarizePinned(Attachment media) =>
+      _runPinnedAi(media, (bytes, ai) async {
+        if (media.kind == AttachmentKind.pdf) {
+          if (bytes.length <= 18 * 1024 * 1024) {
+            return ai.summarizePdf(bytes, media.fileName);
+          }
+          final text = await PdfText.extractFromBytes(bytes);
+          return ai.summarizeDocumentText(text, media.fileName);
+        }
+        return ai.askAboutImage(
+          bytes,
+          media.mimeType,
+          question:
+              'Bu görselin içeriğini kısa, düzenli ve anlaşılır maddelerle özetle.',
+        );
+      });
+
+  /// Sabit görsel veya PDF içeriğinden yapılacak görev maddeleri çıkarır.
+  Future<void> _smartTasksPinned(Attachment media) =>
+      _runPinnedAi(media, (bytes, ai) async {
+        if (media.kind == AttachmentKind.pdf) {
+          final extracted = await PdfText.extractFromBytes(bytes);
+          if (extracted.trim().isNotEmpty) {
+            return ai.rewriteText(
+              extracted,
+              'Bu belgedeki yapılacak işleri, görevleri ve önemli adımları her '
+              'biri kısa bir madde olacak şekilde "- " ile listele. Belgede '
+              'olmayan bir şey uydurma.',
+            );
+          }
+          return ai.summarizePdf(bytes, media.fileName);
+        }
+        return ai.askAboutImage(
+          bytes,
+          media.mimeType,
+          question:
+              'Bu görseldeki yapılacak işleri veya adımları her biri "- " ile '
+              'başlayan kısa maddeler olarak çıkar. Görselde görev yoksa ana '
+              'noktaları listele.',
+        );
+      });
+
+  Future<void> _runPinnedAi(
+    Attachment media,
+    Future<String> Function(Uint8List bytes, GeminiService ai) action,
+  ) async {
+    final repo = _attachments;
+    if (repo == null) return;
+    final l10n = context.l10n;
+    await _runAi(l10n.aiThinking, () async {
+      final bytes = await repo.readBytes(media);
+      if (bytes == null) {
+        if (mounted) _showSnack(l10n.attachmentNotSynced);
+        return;
+      }
+      final out = await action(bytes, ref.read(geminiServiceProvider));
+      final clean = stripMarkdown(out).trim();
+      if (mounted && clean.isNotEmpty) _appendText(clean);
+    });
+  }
+
+  /// Sabit görsel üzerinde alan seçip yapay zekâya sor / panoya al.
+  Future<void> _smartAreaAskImage(Attachment image) async {
+    final repo = _attachments;
+    if (repo == null) return;
+    final bytes = await repo.readBytes(image);
+    if (!mounted) return;
+    if (bytes == null) {
+      _showSnack(context.l10n.attachmentNotSynced);
+      return;
+    }
+    await showAreaActions(context, bytes, onInsertToNote: _appendText);
   }
 
   /// "Bırak: üste sabitle" hedef şeridi (taşıma sırasında).

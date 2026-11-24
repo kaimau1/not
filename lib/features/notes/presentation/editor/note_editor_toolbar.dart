@@ -124,7 +124,12 @@ extension _EditorToolbar on _NoteEditorScreenState {
 
   /// Belge notunda sayfanın üzerine yazma kipi (alt çubuktaki Kalem, hangi
   /// kapsülde olursa olsun).
-  void _toggleAnnotate() => _update(() => _penMode = !_penMode);
+  void _toggleAnnotate() {
+    final open = !_penMode;
+    if (open && _formatBarOpen) _formatBarOpen = false;
+    _update(() => _penMode = open);
+    if (open && _dictating) unawaited(_stopDictation(offerFix: false));
+  }
 
   /// Alt çubuğun "Ekle" segmenti: TEK levhayı açar (attach_sheet.dart).
   ///

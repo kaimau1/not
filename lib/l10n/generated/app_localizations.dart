@@ -17582,6 +17582,48 @@ abstract class AppLocalizations {
   /// **'Önizleme'**
   String get folderLivePreview;
 
+  /// No description provided for @pinnedSmartActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı işlemler'**
+  String get pinnedSmartActions;
+
+  /// No description provided for @pinnedSmartOcr.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metni çıkar'**
+  String get pinnedSmartOcr;
+
+  /// No description provided for @pinnedSmartSummarize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özetle ve nota ekle'**
+  String get pinnedSmartSummarize;
+
+  /// No description provided for @pinnedSmartTasks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görevlere çevir'**
+  String get pinnedSmartTasks;
+
+  /// No description provided for @pinnedSmartAreaAsk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alan seçip sor'**
+  String get pinnedSmartAreaAsk;
+
+  /// No description provided for @areaInsertToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ekle'**
+  String get areaInsertToNote;
+
+  /// No description provided for @areaInsertedToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota eklendi'**
+  String get areaInsertedToNote;
+
   /// No description provided for @dashboardBackgroundGallery.
   ///
   /// In tr, this message translates to:

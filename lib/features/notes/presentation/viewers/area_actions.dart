@@ -1,4 +1,7 @@
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/app_icons.dart';
+import '../../../../core/friendly_error.dart';
+import '../../../../core/utils/markdown.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,25 +13,29 @@ import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../auth/presentation/account_required.dart';
-import '../../../../core/friendly_error.dart';
 
 /// Seçilen alan yakalandıktan sonra çıkan levha: **panoya kopyala** ya da
 /// **yapay zekâya sor** (kullanıcı seçimi).
 ///
 /// Levha yakalanan görüntünün önizlemesiyle açılır: yanlış yeri seçen
 /// kullanıcı, işlemi yapmadan önce görür ve kapatıp yeniden seçer.
-Future<void> showAreaActions(BuildContext context, Uint8List png) =>
-    showAppSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => _AreaActionsSheet(png: png),
-    );
+Future<void> showAreaActions(
+  BuildContext context,
+  Uint8List png, {
+  ValueChanged<String>? onInsertToNote,
+}) => showAppSheet<void>(
+  context: context,
+  showDragHandle: true,
+  isScrollControlled: true,
+  builder: (sheetContext) =>
+      _AreaActionsSheet(png: png, onInsertToNote: onInsertToNote),
+);
 
 class _AreaActionsSheet extends StatelessWidget {
-  const _AreaActionsSheet({required this.png});
+  const _AreaActionsSheet({required this.png, this.onInsertToNote});
 
   final Uint8List png;
+  final ValueChanged<String>? onInsertToNote;
 
   Future<void> _copy(BuildContext context) async {
     final l10n = context.l10n;
@@ -82,7 +89,10 @@ class _AreaActionsSheet extends StatelessWidget {
                 navigator.pop();
                 navigator.push(
                   MaterialPageRoute<void>(
-                    builder: (_) => AreaAskScreen(png: png),
+                    builder: (_) => AreaAskScreen(
+                      png: png,
+                      onInsertToNote: onInsertToNote,
+                    ),
                   ),
                 );
               },
@@ -103,9 +113,10 @@ class _AreaActionsSheet extends StatelessWidget {
 /// [GeminiService.askAboutImage]) — kullanıcının bu özellikten beklediği ilk
 /// şey tam olarak bu.
 class AreaAskScreen extends ConsumerStatefulWidget {
-  const AreaAskScreen({super.key, required this.png});
+  const AreaAskScreen({super.key, required this.png, this.onInsertToNote});
 
   final Uint8List png;
+  final ValueChanged<String>? onInsertToNote;
 
   @override
   ConsumerState<AreaAskScreen> createState() => _AreaAskScreenState();
@@ -194,14 +205,35 @@ class _AreaAskScreenState extends ConsumerState<AreaAskScreen> {
             ),
           if (_answer != null) ...[
             SelectableText(_answer!, style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 12),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton.icon(
-                onPressed: () => _copyAnswer(_answer!),
-                icon: const Icon(AppIcons.copy),
-                label: Text(l10n.copy),
-              ),
+            const SizedBox(height: AppSpace.m),
+            Wrap(
+              spacing: AppSpace.s,
+              runSpacing: AppSpace.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (widget.onInsertToNote != null)
+                  FilledButton.tonalIcon(
+                    key: const ValueKey('area-ask-insert'),
+                    onPressed: () {
+                      final clean = stripMarkdown(_answer!).trim();
+                      if (clean.isEmpty) return;
+                      widget.onInsertToNote!(clean);
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showMessage(l10n.areaInsertedToNote);
+                    },
+                    icon: const Icon(
+                      Icons.playlist_add_outlined,
+                      size: AppIconSize.s,
+                    ),
+                    label: Text(l10n.areaInsertToNote),
+                  ),
+                TextButton.icon(
+                  onPressed: () => _copyAnswer(_answer!),
+                  icon: const Icon(AppIcons.copy, size: AppIconSize.s),
+                  label: Text(l10n.copy),
+                ),
+              ],
             ),
           ],
         ],

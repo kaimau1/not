@@ -94,6 +94,9 @@ class PdfBoxBar extends ChangeNotifier {
     return box._menuActions(context, document, fullScreen: false);
   }
 
+  /// Etkin PDF sayfasının alan işlemleri levhasını açar.
+  Future<void> openAreaActions() async => _box?._captureActivePage();
+
   void _attach(_PdfPageBoxState box) {
     _box = box;
     _signature = null;
@@ -142,6 +145,7 @@ class PdfPageBox extends StatefulWidget {
     this.addingPlain,
     this.onBubbleWriting,
     this.onNoteFromSelection,
+    this.onInsertToNote,
     this.fitWidth = false,
     this.ink,
   });
@@ -157,6 +161,9 @@ class PdfPageBox extends StatefulWidget {
   /// YouTube'da dakikaya not almak gibi (bkz. `pdf_ref.dart`). Yalnız sabit
   /// bölmede: sayfadaki yüzen kutuda basılı tutmak kutuyu taşır.
   final void Function(int page, int? line, String quote)? onNoteFromSelection;
+
+  /// Alan işlemlerindeki yapay zekâ yanıtını doğrudan nota eklemek için.
+  final ValueChanged<String>? onInsertToNote;
 
   /// Sayfa kutunun GENİŞLİĞİNİ doldurur, boyu taşarsa sayfa dikeyde kayar
   /// (okuma kipi: dar bölmede A4 sayfanın yanlarında boşluk kalmaz, yazı
@@ -855,7 +862,17 @@ class _PdfPageBoxState extends State<PdfPageBox> {
       ScaffoldMessenger.of(context).showMessage(context.l10n.areaCaptureFailed);
       return;
     }
-    await showAreaActions(context, png);
+    await showAreaActions(
+      context,
+      png,
+      onInsertToNote: widget.onInsertToNote,
+    );
+  }
+
+  Future<void> _captureActivePage() async {
+    final document = _doc?.document;
+    if (document == null) return;
+    await _capturePage(document);
   }
 
   /// Sayfaya atlama levhası: kaydırıcı, ilk/son sayfa, yer imleri ve bütün

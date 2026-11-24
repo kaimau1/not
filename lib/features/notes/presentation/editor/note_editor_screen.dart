@@ -88,6 +88,7 @@ import 'stylus_toggle.dart';
 import 'pinned_side.dart';
 import '../../data/note_format_memory.dart';
 import '../../data/attachment_save.dart';
+import '../../data/pdf_text.dart';
 import '../../data/import_service.dart' show markdownAttachment;
 import '../../data/note_shortcut.dart';
 import '../../../ai/data/ai_gate.dart';
@@ -211,6 +212,7 @@ import 'pdf_pages_screen.dart';
 import 'slide_note_pane.dart';
 import '../viewers/image_crop.dart';
 import '../viewers/image_viewer.dart';
+import '../viewers/area_actions.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/ink_tools.dart';
@@ -2788,8 +2790,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   void _togglePen() {
-    _update(() => _penMode = !_penMode);
-    if (_penMode) _penModeOpened();
+    final open = !_penMode;
+    if (open && _formatBarOpen) _formatBarOpen = false;
+    _update(() => _penMode = open);
+    if (open) {
+      if (_dictating) unawaited(_stopDictation(offerFix: false));
+      _penModeOpened();
+    }
   }
 
   /// Kalem kipi açıldı (düğmeyle ya da kalem değince). Kullanıcı isteği
@@ -2875,7 +2882,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   void _openPen() {
+    if (_formatBarOpen) _formatBarOpen = false;
     _update(() => _penMode = true);
+    if (_dictating) unawaited(_stopDictation(offerFix: false));
     _penModeOpened();
   }
 
@@ -4856,9 +4865,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         ),
                 ),
                 if (_dictating)
-                  _DictationPanel(
-                    controller: _dictationCtl!,
-                    onStop: () => unawaited(_stopDictation()),
+                  SnackBarObstacle(
+                    child: _DictationPanel(
+                      controller: _dictationCtl!,
+                      onStop: () => unawaited(_stopDictation()),
+                    ),
                   ),
                 // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
                 // ayrı simge: sessiz bekleme bitti (bkz. [_busyTaskN]).
@@ -4910,7 +4921,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     listenable: _formatPanelL,
                     builder: (context, _) => !_formatBarOpen || _findOpen
                         ? const SizedBox.shrink()
-                        : RevealUp(
+                        : SnackBarObstacle(
+                          child: RevealUp(
                           child: SingleChildScrollView(
                             child: Center(
 child: ConstrainedBox(
@@ -5029,6 +5041,7 @@ child: FormatBar(
 ),
 ),
                           ),
+                        ),
                         ),
                   ),
                   ),
@@ -5279,8 +5292,15 @@ child: FormatBar(
                               () {
                                 // Önce yer değiştirme bayrağı: kapanınca
                                 // dönen çubuk RevealUp ile gelsin.
+                                final open = !_formatBarOpen;
                                 _barSwapped = true;
-                                _formatBarOpen = !_formatBarOpen;
+                                _formatBarOpen = open;
+                                if (open) {
+                                  if (_penMode) _update(() => _penMode = false);
+                                  if (_dictating) {
+                                    unawaited(_stopDictation(offerFix: false));
+                                  }
+                                }
                               },
                               _formatBarOpen,
                             ),

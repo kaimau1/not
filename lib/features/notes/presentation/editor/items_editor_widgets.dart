@@ -1058,8 +1058,9 @@ class _ItemSelectionBarState extends State<_ItemSelectionBar> {
       left: AppSpace.s,
       right: AppSpace.s,
       bottom: AppSpace.s + (keyboard > systemBar ? keyboard : systemBar),
-      child: Material(
-        key: const ValueKey('items-selection-bar'),
+      child: SnackBarObstacle(
+        child: Material(
+          key: const ValueKey('items-selection-bar'),
         color: scheme.surfaceContainerHigh,
         elevation: 6,
         shadowColor: scheme.shadow.withValues(alpha: AppAlpha.scrim),
@@ -1272,6 +1273,7 @@ class _ItemSelectionBarState extends State<_ItemSelectionBar> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

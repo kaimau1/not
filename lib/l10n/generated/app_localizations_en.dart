@@ -9943,6 +9943,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderLivePreview => 'Preview';
 
   @override
+  String get pinnedSmartActions => 'Smart actions';
+
+  @override
+  String get pinnedSmartOcr => 'Extract text';
+
+  @override
+  String get pinnedSmartSummarize => 'Summarize & add';
+
+  @override
+  String get pinnedSmartTasks => 'Turn into tasks';
+
+  @override
+  String get pinnedSmartAreaAsk => 'Select area & ask';
+
+  @override
+  String get areaInsertToNote => 'Add to note';
+
+  @override
+  String get areaInsertedToNote => 'Added to note';
+
+  @override
   String get dashboardBackgroundGallery => 'Curated wallpapers';
 
   @override
