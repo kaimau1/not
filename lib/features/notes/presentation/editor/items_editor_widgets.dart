@@ -271,6 +271,9 @@ class _FloatRowState extends State<_FloatRow> {
 /// Satır menüsünün ([ItemsEditorState._showItemMenu]) seçenekleri.
 enum _ItemAction {
   star,
+  copyItem,
+  moveUp,
+  moveDown,
   header,
   select,
   delete,
@@ -282,12 +285,13 @@ enum _ItemAction {
   alignEnd,
 }
 
-/// Madde menüsünün tek parçalık gövdesi: iş düğmeleri (alt çizgi
-/// 2026-10-30'dan beri biçim panelinde — bkz. [ItemsEditorState._showItemMenu]).
+/// Madde menüsünün Bento ızgara paneli (alt çizgi biçim panelinde).
 class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
   const _ItemMenuPanel({
     required this.starred,
     required this.canMove,
+    this.canMoveUp = true,
+    this.canMoveDown = true,
     this.canTask = false,
     this.canRemind = false,
     this.header = false,
@@ -295,6 +299,8 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
   });
 
   final bool starred;
+  final bool canMoveUp;
+  final bool canMoveDown;
 
   /// Ara başlığın şimdiki hizası (bkz. [NoteItem.align]).
   final String align;
@@ -310,7 +316,7 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
   final bool header;
 
   @override
-  double get height => header ? 132 : 84;
+  double get height => header ? 196 : 148;
 
   @override
   bool represents(_ItemAction? value) => false;
@@ -322,29 +328,59 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
 class _ItemMenuPanelState extends State<_ItemMenuPanel> {
   void _pick(_ItemAction action) => Navigator.pop(context, action);
 
-  Widget _action(_ItemAction action, IconData icon, String label) {
-    final scheme = Theme.of(context).colorScheme;
+  Widget _tile(
+    _ItemAction action,
+    IconData icon,
+    String label, {
+    bool active = false,
+    bool enabled = true,
+  }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final danger = action == _ItemAction.delete;
-    final color = danger ? scheme.error : scheme.onSurface;
+    final fg = !enabled
+        ? scheme.onSurface.withValues(alpha: AppAlpha.disabled)
+        : danger
+        ? scheme.error
+        : active
+        ? scheme.onPrimaryContainer
+        : scheme.onSurface;
+    final bg = danger
+        ? scheme.errorContainer.withValues(alpha: AppAlpha.soft)
+        : active
+        ? scheme.primaryContainer
+        : scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.muted);
+
     return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _pick(action),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 22, color: color),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall
-                    ?.copyWith(color: color),
-              ),
-            ],
+      child: Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.m),
+          onTap: enabled ? () => _pick(action) : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.xs,
+              vertical: AppSpace.s,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: AppIconSize.m, color: fg),
+                const SizedBox(height: AppSpace.xs),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: text.meta.copyWith(
+                    color: fg,
+                    fontWeight: AppWeight.medium,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -354,56 +390,96 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final row2 = <Widget>[
+      _tile(
+        _ItemAction.moveUp,
+        Icons.arrow_upward_rounded,
+        l10n.itemMoveUp,
+        enabled: widget.canMoveUp,
+      ),
+      _tile(
+        _ItemAction.moveDown,
+        Icons.arrow_downward_rounded,
+        l10n.itemMoveDown,
+        enabled: widget.canMoveDown,
+      ),
+      if (widget.canRemind)
+        _tile(
+          _ItemAction.reminder,
+          Icons.alarm_add_outlined,
+          l10n.itemMenuRemind,
+        ),
+      if (widget.canTask)
+        _tile(
+          _ItemAction.task,
+          Icons.add_task_rounded,
+          l10n.itemMenuTask,
+        ),
+      if (widget.canMove)
+        _tile(
+          _ItemAction.moveToPage,
+          AppIcons.moveToFolder,
+          l10n.itemMenuMove,
+        ),
+      _tile(
+        _ItemAction.delete,
+        Icons.delete_outline_rounded,
+        l10n.itemMenuDelete,
+      ),
+    ];
+
+    List<Widget> spaced(List<Widget> items) => [
+      for (var i = 0; i < items.length; i++) ...[
+        if (i > 0) const SizedBox(width: AppSpace.xs + AppSpace.xxs),
+        items[i],
+      ],
+    ];
+
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 248, maxWidth: 360),
+      constraints: const BoxConstraints(minWidth: 272, maxWidth: 376),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xs,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              children: [
-                _action(
+              children: spaced([
+                _tile(
+                  _ItemAction.select,
+                  Icons.checklist_rounded,
+                  l10n.select,
+                ),
+                _tile(
+                  _ItemAction.copyItem,
+                  AppIcons.copy,
+                  l10n.copy,
+                ),
+                _tile(
                   _ItemAction.star,
-                  widget.starred ? Icons.star : Icons.star_outline,
+                  widget.starred ? Icons.star_rounded : Icons.star_outline_rounded,
                   widget.starred ? l10n.itemMenuUnstar : l10n.star,
+                  active: widget.starred,
                 ),
-                _action(
+                _tile(
                   _ItemAction.header,
-                  widget.header ? Icons.format_list_bulleted : Icons.title,
+                  widget.header
+                      ? Icons.format_list_bulleted_rounded
+                      : Icons.title_rounded,
                   widget.header ? l10n.itemMenuToItem : l10n.itemMenuToHeader,
+                  active: widget.header,
                 ),
-                _action(_ItemAction.select, Icons.checklist, l10n.select),
-                if (widget.canRemind)
-                  _action(
-                    _ItemAction.reminder,
-                    Icons.alarm_add_outlined,
-                    l10n.itemMenuRemind,
-                  ),
-                if (widget.canTask)
-                  _action(
-                    _ItemAction.task,
-                    Icons.add_task,
-                    l10n.itemMenuTask,
-                  ),
-                if (widget.canMove)
-                  _action(
-                    _ItemAction.moveToPage,
-                    Icons.drive_file_move_outline,
-                    l10n.itemMenuMove,
-                  ),
-                _action(
-                  _ItemAction.delete,
-                  Icons.delete_outline,
-                  l10n.itemMenuDelete,
-                ),
-              ],
+              ]),
             ),
+            const SizedBox(height: AppSpace.xs + AppSpace.xxs),
+            Row(children: spaced(row2)),
             // ARA BAŞLIK HİZASI (kullanıcı isteği 2026-11-05): basılı tutunca
             // sola · ortaya · sağa.
             if (widget.header)
               Padding(
-                padding: const EdgeInsets.only(top: 2, bottom: 4),
+                padding: const EdgeInsets.only(top: AppSpace.s),
                 child: SegmentedButton<_ItemAction>(
                   key: const ValueKey('item-menu-align'),
                   showSelectedIcon: false,
@@ -414,17 +490,26 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
                   segments: [
                     ButtonSegment(
                       value: _ItemAction.alignStart,
-                      icon: const Icon(Icons.format_align_left, size: 20),
+                      icon: const Icon(
+                        Icons.format_align_left,
+                        size: AppIconSize.m,
+                      ),
                       tooltip: l10n.itemAlignStart,
                     ),
                     ButtonSegment(
                       value: _ItemAction.alignCenter,
-                      icon: const Icon(Icons.format_align_center, size: 20),
+                      icon: const Icon(
+                        Icons.format_align_center,
+                        size: AppIconSize.m,
+                      ),
                       tooltip: l10n.itemAlignCenter,
                     ),
                     ButtonSegment(
                       value: _ItemAction.alignEnd,
-                      icon: const Icon(Icons.format_align_right, size: 20),
+                      icon: const Icon(
+                        Icons.format_align_right,
+                        size: AppIconSize.m,
+                      ),
                       tooltip: l10n.itemAlignEnd,
                     ),
                   ],
@@ -847,8 +932,8 @@ class _HoldToSelectState extends State<_HoldToSelect>
   );
 }
 
-/// İki turlu dolum halkası: 1. tur soluk, 2. tur tam renk (1. turun izi
-/// altta kalır — kullanıcı iki aşamayı ayırt etsin).
+/// İki turlu dolum halkası: 1. tur soluk iz + yay, 2. tur tam renk + ince
+/// dolgu (1. turun izi altta kalır — kullanıcı iki aşamayı ayırt etsin).
 class _HoldRingPainter extends CustomPainter {
   _HoldRingPainter(this.state, this.color) : super(repaint: state._ring);
 
@@ -871,7 +956,9 @@ class _HoldRingPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     const start = -math.pi / 2;
     if (ms < stage1) {
-      paint.color = color.withValues(alpha: 0.45);
+      paint.color = color.withValues(alpha: AppAlpha.hairline);
+      canvas.drawCircle(state._center, _radius, paint);
+      paint.color = color.withValues(alpha: AppAlpha.muted);
       canvas.drawArc(
         rect,
         start,
@@ -881,7 +968,14 @@ class _HoldRingPainter extends CustomPainter {
       );
       return;
     }
-    paint.color = color.withValues(alpha: 0.25);
+    canvas.drawCircle(
+      state._center,
+      _radius - 2,
+      Paint()
+        ..style = PaintingStyle.fill
+        ..color = color.withValues(alpha: AppAlpha.pressed),
+    );
+    paint.color = color.withValues(alpha: AppAlpha.soft);
     canvas.drawCircle(state._center, _radius, paint);
     paint.color = color;
     canvas.drawArc(
@@ -896,6 +990,338 @@ class _HoldRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(_HoldRingPainter old) =>
       old.state != state || old.color != color;
+}
+
+/// Ekranın dibine demirlenmiş Bento madde seçim çubuğu.
+class _ItemSelectionBar extends StatefulWidget {
+  const _ItemSelectionBar({
+    required this.selectedCount,
+    required this.totalCount,
+    required this.showCheckboxes,
+    required this.allSelected,
+    required this.allChecked,
+    required this.allPackaged,
+    required this.canRangeSelect,
+    required this.onExit,
+    required this.onSelectAll,
+    required this.onRangeSelect,
+    required this.onInvert,
+    required this.onCheck,
+    required this.onCopy,
+    required this.onCopyAndCheck,
+    required this.onBatchFormat,
+    required this.onBatchHeader,
+    required this.onBatchDivider,
+    required this.onPackage,
+    required this.onDelete,
+  });
+
+  final int selectedCount;
+  final int totalCount;
+  final bool showCheckboxes;
+  final bool allSelected;
+  final bool allChecked;
+  final bool allPackaged;
+  final bool canRangeSelect;
+  final VoidCallback onExit;
+  final VoidCallback onSelectAll;
+  final VoidCallback onRangeSelect;
+  final VoidCallback onInvert;
+  final VoidCallback onCheck;
+  final VoidCallback onCopy;
+  final VoidCallback onCopyAndCheck;
+  final void Function(RichFormat format, {int? colorIndex}) onBatchFormat;
+  final VoidCallback onBatchHeader;
+  final VoidCallback onBatchDivider;
+  final VoidCallback onPackage;
+  final VoidCallback onDelete;
+
+  @override
+  State<_ItemSelectionBar> createState() => _ItemSelectionBarState();
+}
+
+class _ItemSelectionBarState extends State<_ItemSelectionBar> {
+  bool _formatOpen = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
+    final text = AppText.of(theme);
+    final l10n = context.l10n;
+    final keyboard = KeyboardInset.liveOf(context);
+    final systemBar = MediaQuery.viewPaddingOf(context).bottom;
+    final hasSelection = widget.selectedCount > 0;
+
+    return Positioned(
+      left: AppSpace.s,
+      right: AppSpace.s,
+      bottom: AppSpace.s + (keyboard > systemBar ? keyboard : systemBar),
+      child: Material(
+        key: const ValueKey('items-selection-bar'),
+        color: scheme.surfaceContainerHigh,
+        elevation: 6,
+        shadowColor: scheme.shadow.withValues(alpha: AppAlpha.scrim),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(color: tokens.accentBorder ?? tokens.hairline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_formatOpen && hasSelection) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.s,
+                  AppSpace.xs + AppSpace.xxs,
+                  AppSpace.s,
+                  AppSpace.xs,
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _BatchChip(
+                        key: const ValueKey('items-batch-bold'),
+                        icon: Icons.format_bold_rounded,
+                        label: l10n.formatBold,
+                        onTap: () => widget.onBatchFormat(RichFormat.bold),
+                        scheme: scheme,
+                        text: text,
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                      _BatchChip(
+                        key: const ValueKey('items-batch-highlight'),
+                        icon: Icons.border_color_rounded,
+                        label: l10n.formatHighlight,
+                        onTap: () => widget.onBatchFormat(
+                          RichFormat.highlight,
+                          colorIndex: 1,
+                        ),
+                        scheme: scheme,
+                        text: text,
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                      _BatchChip(
+                        key: const ValueKey('items-batch-header'),
+                        icon: Icons.title_rounded,
+                        label: l10n.formatHeading,
+                        onTap: widget.onBatchHeader,
+                        scheme: scheme,
+                        text: text,
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                      _BatchChip(
+                        key: const ValueKey('items-batch-divider'),
+                        icon: Icons.horizontal_rule_rounded,
+                        label: l10n.itemDivider,
+                        onTap: widget.onBatchDivider,
+                        scheme: scheme,
+                        text: text,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Divider(
+                height: 1,
+                color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+              ),
+            ],
+            Container(
+              color: scheme.primaryContainer.withValues(alpha: AppAlpha.muted),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.xs,
+                vertical: AppSpace.xxs,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: l10n.cancel,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.close_rounded, size: AppIconSize.m),
+                    onPressed: widget.onExit,
+                  ),
+                  Expanded(
+                    child: Text(
+                      l10n.itemsSelected(widget.selectedCount),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.label.copyWith(
+                        color: scheme.onPrimaryContainer,
+                        fontWeight: AppWeight.strong,
+                      ),
+                    ),
+                  ),
+                  if (widget.canRangeSelect)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        end: AppSpace.xs,
+                      ),
+                      child: _BatchChip(
+                        key: const ValueKey('items-range-select'),
+                        icon: Icons.linear_scale_rounded,
+                        label: l10n.itemRangeSelect,
+                        onTap: widget.onRangeSelect,
+                        scheme: scheme,
+                        text: text,
+                      ),
+                    ),
+                  IconButton(
+                    key: const ValueKey('items-invert-select'),
+                    tooltip: l10n.itemInvertSelection,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(
+                      Icons.published_with_changes_rounded,
+                      size: AppIconSize.m,
+                    ),
+                    onPressed: widget.totalCount > 0 ? widget.onInvert : null,
+                  ),
+                  IconButton(
+                    tooltip: l10n.selectAllItems,
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(
+                      widget.allSelected ? Icons.deselect : Icons.select_all,
+                      size: AppIconSize.m,
+                    ),
+                    onPressed: widget.totalCount > 0 ? widget.onSelectAll : null,
+                  ),
+                ],
+              ),
+            ),
+            IconButtonTheme(
+              data: IconButtonThemeData(
+                style: IconButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.xs,
+                  vertical: AppSpace.xxs,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (widget.showCheckboxes)
+                      IconButton(
+                        tooltip: widget.allChecked
+                            ? l10n.uncheckSelectedItems
+                            : l10n.checkSelectedItems,
+                        icon: Icon(
+                          widget.allChecked
+                              ? Icons.remove_done
+                              : Icons.done_all,
+                          size: AppIconSize.m,
+                        ),
+                        onPressed: hasSelection ? widget.onCheck : null,
+                      ),
+                    IconButton(
+                      tooltip: l10n.copy,
+                      icon: const Icon(AppIcons.copy, size: AppIconSize.m),
+                      onPressed: hasSelection ? widget.onCopy : null,
+                    ),
+                    if (widget.showCheckboxes)
+                      IconButton(
+                        key: const ValueKey('items-copy-check'),
+                        tooltip: l10n.copyAndCheckSelectedItems,
+                        icon: const Icon(
+                          Icons.library_add_check_outlined,
+                          size: AppIconSize.m,
+                        ),
+                        onPressed: hasSelection ? widget.onCopyAndCheck : null,
+                      ),
+                    IconButton(
+                      key: const ValueKey('items-batch-format'),
+                      tooltip: l10n.itemsBatchFormat,
+                      icon: Icon(
+                        Icons.text_format_rounded,
+                        size: AppIconSize.m,
+                        color: _formatOpen ? scheme.primary : null,
+                      ),
+                      onPressed: hasSelection
+                          ? () => setState(() => _formatOpen = !_formatOpen)
+                          : null,
+                    ),
+                    IconButton(
+                      key: const ValueKey('items-package'),
+                      tooltip: widget.allPackaged
+                          ? l10n.notePackageUnpack
+                          : l10n.quickRowPackage,
+                      icon: const Icon(
+                        AppIcons.notePackage,
+                        size: AppIconSize.m,
+                      ),
+                      onPressed: hasSelection ? widget.onPackage : null,
+                    ),
+                    IconButton(
+                      tooltip: l10n.delete,
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: AppIconSize.m,
+                      ),
+                      color: scheme.error,
+                      onPressed: hasSelection ? widget.onDelete : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BatchChip extends StatelessWidget {
+  const _BatchChip({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.scheme,
+    required this.text,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final ColorScheme scheme;
+  final AppText text;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    color: scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.muted),
+    borderRadius: BorderRadius.circular(AppRadius.s),
+    child: InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.s),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: AppIconSize.xs, color: scheme.primary),
+            const SizedBox(width: AppSpace.xs),
+            Text(
+              label,
+              style: text.meta.copyWith(
+                color: scheme.onSurface,
+                fontWeight: AppWeight.medium,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// Satırın listedeki yeri: önbellekli satırın DIŞINDAN verilir (P20 M1).

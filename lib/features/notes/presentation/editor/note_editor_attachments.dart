@@ -644,8 +644,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
         ),
       ],
     ];
-    return AdaptiveTextSelectionToolbar.buttonItems(
-      anchors: state.contextMenuAnchors,
+    return NoteSelectionToolbar(
+      editableState: state,
+      formatController: controller,
+      onFormatCommit: commit,
+      readOnly: _readOnly,
       buttonItems: arrangeSelectionMenu(
         // Kes/Kopyala temiz-metin sürümleri: varsayılanlar panoya biçim
         // işaretlerini (`**`, `%%1:`) ve görünmez sarma çapalarını HAM

@@ -63,8 +63,10 @@ extension _ItemsRow on ItemsEditorState {
       ],
       trailing: own,
     );
-    return AdaptiveTextSelectionToolbar.buttonItems(
-      anchors: editableState.contextMenuAnchors,
+    return NoteSelectionToolbar(
+      editableState: editableState,
+      formatController: controller,
+      onFormatCommit: commit,
       buttonItems: buttonItems,
     );
   }
@@ -361,10 +363,16 @@ extension _ItemsRow on ItemsEditorState {
         color: (_accent?.accent ?? scheme.primary).withValues(
           alpha: kItemDividerAccentAlpha,
         ),
-        child: Container(
-          color: selected
-              ? scheme.primaryContainer.withValues(alpha: 0.4)
-              : null,
+        child: DecoratedBox(
+          decoration: selected
+              ? BoxDecoration(
+                  color: scheme.primaryContainer.withValues(
+                    alpha: AppAlpha.soft,
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                )
+              : const BoxDecoration(),
+          child: Padding(
           // Tutamak hep görünürken (web/tablet) soldaki 12 dp boşluğa
           // yerleşir: yazı neredeyse yerinde kalır.
           padding: EdgeInsetsDirectional.only(
@@ -704,6 +712,7 @@ extension _ItemsRow on ItemsEditorState {
               ),
           ],
           ),
+          ),
         ),
       ),
     );
@@ -742,116 +751,35 @@ extension _ItemsRow on ItemsEditorState {
     );
   }
 
-  /// Ekranın dibine demirlenmiş seçim çubuğu (Overlay çocuğu). Klavye
-  /// açıkken onun üstüne çıkar; sistem gezinme çubuğunun altında kalmaz.
+  /// Ekranın dibine demirlenmiş Bento madde seçim çubuğu (Overlay çocuğu).
   Widget _selectionBar(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
-    // `MediaQuery.of` DEĞİL: o, MediaQuery'nin HERHANGİ bir alanı değişince
-    // (yönelim, metin ölçeği, erişilebilirlik…) çubuğu yeniden kurar. Çubuğun
-    // ihtiyacı yalnız iki ölçü.
-    final keyboard = KeyboardInset.liveOf(context);
-    final systemBar = MediaQuery.viewPaddingOf(context).bottom;
-    final allSelected = _items.isNotEmpty && _selected.length == _items.length;
-    final hasSelection = _selected.isNotEmpty;
-    // Toplu işaret: seçilenlerin hepsi işaretliyse "işareti kaldır".
     final selectedItems = [
       for (final i in _items)
         if (_selected.contains(i.id)) i,
     ];
-    final allChecked =
-        selectedItems.isNotEmpty && selectedItems.every((i) => i.checked);
-    return Positioned(
-      left: 8,
-      right: 8,
-      // Klavye yüksekliği gezinme çubuğunu ZATEN içeriyor: ikisini toplamak
-      // klavye açıkken çubuğu klavyeden ~48 dp yukarıda asılı bırakıyordu.
-      bottom: 8 + (keyboard > systemBar ? keyboard : systemBar),
-      child: Material(
-        color: scheme.primaryContainer,
-        elevation: 6,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        // Sıkı düğmeler: "Pakete al" eklenince 360 dp telefonda yedi düğme
-        // + sayaç sığsın diye (48 → 40 dp).
-        child: IconButtonTheme(
-          data: IconButtonThemeData(
-            style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
-          ),
-          child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-          child: Row(
-            children: [
-              IconButton(
-                tooltip: l10n.cancel,
-                icon: const Icon(Icons.close, size: 20),
-                onPressed: _exitSelection,
-              ),
-              Expanded(
-                child: Text(
-                  l10n.itemsSelected(_selected.length),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-              ),
-              IconButton(
-                tooltip: l10n.selectAllItems,
-                icon: Icon(
-                  allSelected ? Icons.deselect : Icons.select_all,
-                  size: 20,
-                ),
-                onPressed: _items.isEmpty ? null : _toggleSelectAll,
-              ),
-              // TOPLU İŞARET (2026-10-20, "madde seçimi mantığı"): seçili
-              // maddeleri tek dokunuşla işaretle / işareti kaldır.
-              if (widget.showCheckboxes)
-                IconButton(
-                  tooltip: allChecked
-                      ? l10n.uncheckSelectedItems
-                      : l10n.checkSelectedItems,
-                  icon: Icon(
-                    allChecked ? Icons.remove_done : Icons.done_all,
-                    size: 20,
-                  ),
-                  onPressed: hasSelection ? _checkSelected : null,
-                ),
-              IconButton(
-                tooltip: l10n.copy,
-                icon: const Icon(AppIcons.copy, size: 20),
-                onPressed: hasSelection ? _copySelected : null,
-              ),
-              // KOPYALA + İŞARETLE (kullanıcı isteği 2026-10-30): alışveriş
-              // listesinden aldıklarını panoya alıp tek dokunuşla kapatmak.
-              if (widget.showCheckboxes)
-                IconButton(
-                  key: const ValueKey('items-copy-check'),
-                  tooltip: l10n.copyAndCheckSelectedItems,
-                  icon: const Icon(Icons.library_add_check_outlined, size: 20),
-                  onPressed: hasSelection ? _copyAndCheckSelected : null,
-                ),
-              // NOT PAKETİ (kullanıcı isteği 2026-11-08): birden fazla maddeyi
-              // tek dokunuşla pakete al; hepsi zaten paketliyse paketi çözer.
-              IconButton(
-                key: const ValueKey('items-package'),
-                tooltip: selectedItems.isNotEmpty &&
-                        selectedItems.every((i) => i.package.isNotEmpty)
-                    ? l10n.notePackageUnpack
-                    : l10n.quickRowPackage,
-                icon: const Icon(AppIcons.notePackage, size: 20),
-                onPressed: hasSelection ? togglePackage : null,
-              ),
-              IconButton(
-                tooltip: l10n.delete,
-                icon: const Icon(Icons.delete_outline, size: 20),
-                color: scheme.error,
-                onPressed: hasSelection ? _deleteSelected : null,
-              ),
-            ],
-          ),
-        ),
-        ),
-      ),
+    return _ItemSelectionBar(
+      selectedCount: _selected.length,
+      totalCount: _items.length,
+      showCheckboxes: widget.showCheckboxes,
+      allSelected: _items.isNotEmpty && _selected.length == _items.length,
+      allChecked:
+          selectedItems.isNotEmpty && selectedItems.every((i) => i.checked),
+      allPackaged:
+          selectedItems.isNotEmpty &&
+          selectedItems.every((i) => i.package.isNotEmpty),
+      canRangeSelect: _canRangeSelect,
+      onExit: _exitSelection,
+      onSelectAll: _toggleSelectAll,
+      onRangeSelect: _rangeSelect,
+      onInvert: _invertSelection,
+      onCheck: _checkSelected,
+      onCopy: _copySelected,
+      onCopyAndCheck: _copyAndCheckSelected,
+      onBatchFormat: _batchApplyFormat,
+      onBatchHeader: _batchToggleHeader,
+      onBatchDivider: _batchToggleDivider,
+      onPackage: togglePackage,
+      onDelete: _deleteSelected,
     );
   }
 }

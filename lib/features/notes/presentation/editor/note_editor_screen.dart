@@ -115,6 +115,7 @@ import '../../data/quick_entry_memory.dart';
 import '../../domain/smart_list.dart';
 import '../../domain/spell_review.dart';
 import 'auto_spell.dart';
+import 'selection_toolbar.dart';
 import 'spell_review_sheet.dart';
 import 'spell_settings_sheet.dart';
 import 'spell_underline.dart';
@@ -3898,13 +3899,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         onEditingComplete: _focusAfterTitle,
         // Başlık da biçimlendirilebiliyor: Kes/Kopyala temiz-metin sürümü
         // (gövdeyle aynı gerekçe).
-        contextMenuBuilder: (menuContext, state) =>
-            AdaptiveTextSelectionToolbar.buttonItems(
-              anchors: state.contextMenuAnchors,
-              buttonItems: arrangeSelectionMenu(
-                platform: cleanClipboardMenuItems(state),
-              ),
-            ),
+        contextMenuBuilder: (menuContext, state) => NoteSelectionToolbar(
+          editableState: state,
+          formatController: _titleController,
+          readOnly: _readOnly,
+          onFormatCommit: () => _mutate(
+            (n) => n.copyWith(title: _titleController.logicalText),
+            immediate: true,
+          ),
+          buttonItems: arrangeSelectionMenu(
+            platform: cleanClipboardMenuItems(state),
+          ),
+        ),
         decoration: InputDecoration(
           hintText: l10n.titleHint,
           filled: false,

@@ -9873,4 +9873,35 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get themeGroupAll => 'Tümü';
+
+  @override
+  String get itemRangeSelect => 'Aralığı seç';
+
+  @override
+  String get itemInvertSelection => 'Seçimi tersine çevir';
+
+  @override
+  String get itemMoveUp => 'Yukarı taşı';
+
+  @override
+  String get itemMoveDown => 'Aşağı taşı';
+
+  @override
+  String get itemDivider => 'Alt çizgi';
+
+  @override
+  String get selectionToolbarMore => 'Diğer işlemler';
+
+  @override
+  String get itemsBatchFormat => 'Toplu biçim';
+
+  @override
+  String itemsDeletedUndo(int count) {
+    return '$count madde silindi';
+  }
+
+  @override
+  String itemsFormattedCount(int count) {
+    return '$count madde biçimlendi';
+  }
 }

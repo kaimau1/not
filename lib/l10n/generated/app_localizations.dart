@@ -17509,6 +17509,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tümü'**
   String get themeGroupAll;
+
+  /// No description provided for @itemRangeSelect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aralığı seç'**
+  String get itemRangeSelect;
+
+  /// No description provided for @itemInvertSelection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçimi tersine çevir'**
+  String get itemInvertSelection;
+
+  /// No description provided for @itemMoveUp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yukarı taşı'**
+  String get itemMoveUp;
+
+  /// No description provided for @itemMoveDown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aşağı taşı'**
+  String get itemMoveDown;
+
+  /// No description provided for @itemDivider.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt çizgi'**
+  String get itemDivider;
+
+  /// No description provided for @selectionToolbarMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer işlemler'**
+  String get selectionToolbarMore;
+
+  /// No description provided for @itemsBatchFormat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplu biçim'**
+  String get itemsBatchFormat;
+
+  /// No description provided for @itemsDeletedUndo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} madde silindi'**
+  String itemsDeletedUndo(int count);
+
+  /// No description provided for @itemsFormattedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} madde biçimlendi'**
+  String itemsFormattedCount(int count);
 }
 
 class _AppLocalizationsDelegate

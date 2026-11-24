@@ -12,6 +12,8 @@ import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/page_notes.dart';
 import 'pdf_notes_overview.dart';
+import 'selection_toolbar.dart';
+import 'tag_tap.dart';
 import 'text_wrap.dart';
 
 /// Üst bölmeyi kuran kapanış.
@@ -472,9 +474,13 @@ class _PageNotePaneState extends State<PageNotePane> {
                           // madde alanlarıyla aynı kural. Bu alanda eksikti
                           // — panoya `**kalın**` işaretleri ham gidiyordu.
                           contextMenuBuilder: (menuContext, state) =>
-                              AdaptiveTextSelectionToolbar.buttonItems(
-                                anchors: state.contextMenuAnchors,
-                                buttonItems: cleanClipboardMenuItems(state),
+                              NoteSelectionToolbar(
+                                editableState: state,
+                                formatController: _controller,
+                                onFormatCommit: _commit,
+                                buttonItems: arrangeSelectionMenu(
+                                  platform: cleanClipboardMenuItems(state),
+                                ),
                               ),
                           decoration: InputDecoration(
                             hintText: l10n.pdfPageNoteHint,

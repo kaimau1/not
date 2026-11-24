@@ -7,6 +7,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/spell_engine.dart';
 import 'auto_spell.dart';
+import 'selection_toolbar.dart';
 import 'text_wrap.dart' show WrapTextController;
 
 /// Altı çizili kelime: aralık denetleyicinin EKRAN metninde (sarma çapalı).
@@ -273,10 +274,10 @@ Widget? spellContextMenu(BuildContext context, EditableTextState state) {
         },
       );
   final first = options.isEmpty ? null : options.first;
-  return AdaptiveTextSelectionToolbar.buttonItems(
-    anchors: state.contextMenuAnchors,
-    buttonItems: [
-      for (final s in options) item(s, () => replace(s)),
+  return NoteSelectionToolbar.spell(
+    editableState: state,
+    suggestions: [for (final s in options) item(s, () => replace(s))],
+    actions: [
       item(l10n.spellAddToDictionary, () => AutoSpell.addToDictionary(typed)),
       if (first != null)
         item(l10n.spellAlwaysFix(first), () {

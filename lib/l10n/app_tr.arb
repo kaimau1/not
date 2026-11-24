@@ -4395,5 +4395,28 @@
   "noteThemeConfetti": "Konfeti",
   "noteThemeCobalt": "Kobalt",
   "themeActiveLabel": "Etkin tema",
-  "themeGroupAll": "Tümü"
+  "themeGroupAll": "Tümü",
+  "itemRangeSelect": "Aralığı seç",
+  "itemInvertSelection": "Seçimi tersine çevir",
+  "itemMoveUp": "Yukarı taşı",
+  "itemMoveDown": "Aşağı taşı",
+  "itemDivider": "Alt çizgi",
+  "selectionToolbarMore": "Diğer işlemler",
+  "itemsBatchFormat": "Toplu biçim",
+  "itemsDeletedUndo": "{count} madde silindi",
+  "@itemsDeletedUndo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "itemsFormattedCount": "{count} madde biçimlendi",
+  "@itemsFormattedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

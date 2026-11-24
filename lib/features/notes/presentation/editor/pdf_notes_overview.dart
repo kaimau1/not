@@ -4,6 +4,8 @@ import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/page_notes.dart';
+import 'selection_toolbar.dart';
+import 'tag_tap.dart';
 import 'text_wrap.dart';
 
 /// Sayfa notlarının TOPLU görünümü: bütün sayfa notları tek akışta, her biri
@@ -158,9 +160,16 @@ class _PdfNotesOverviewScreenState extends State<PdfNotesOverviewScreen> {
                       keyboardType: TextInputType.multiline,
                       // Temiz Kes/Kopyala (bkz. page_note_pane).
                       contextMenuBuilder: (menuContext, state) =>
-                          AdaptiveTextSelectionToolbar.buttonItems(
-                            anchors: state.contextMenuAnchors,
-                            buttonItems: cleanClipboardMenuItems(state),
+                          NoteSelectionToolbar(
+                            editableState: state,
+                            formatController: _controllers[page],
+                            onFormatCommit: () => widget.onPageNoteChanged(
+                              page,
+                              _controllers[page]!.logicalText,
+                            ),
+                            buttonItems: arrangeSelectionMenu(
+                              platform: cleanClipboardMenuItems(state),
+                            ),
                           ),
                       decoration: const InputDecoration(
                         filled: false,

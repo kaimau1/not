@@ -9890,4 +9890,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeGroupAll => 'All';
+
+  @override
+  String get itemRangeSelect => 'Select range';
+
+  @override
+  String get itemInvertSelection => 'Invert selection';
+
+  @override
+  String get itemMoveUp => 'Move up';
+
+  @override
+  String get itemMoveDown => 'Move down';
+
+  @override
+  String get itemDivider => 'Divider';
+
+  @override
+  String get selectionToolbarMore => 'More actions';
+
+  @override
+  String get itemsBatchFormat => 'Batch format';
+
+  @override
+  String itemsDeletedUndo(int count) {
+    return '$count items deleted';
+  }
+
+  @override
+  String itemsFormattedCount(int count) {
+    return '$count items formatted';
+  }
 }

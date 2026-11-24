@@ -3537,5 +3537,28 @@
   "noteThemeConfetti": "Confetti",
   "noteThemeCobalt": "Cobalt",
   "themeActiveLabel": "Active theme",
-  "themeGroupAll": "All"
+  "themeGroupAll": "All",
+  "itemRangeSelect": "Select range",
+  "itemInvertSelection": "Invert selection",
+  "itemMoveUp": "Move up",
+  "itemMoveDown": "Move down",
+  "itemDivider": "Divider",
+  "selectionToolbarMore": "More actions",
+  "itemsBatchFormat": "Batch format",
+  "itemsDeletedUndo": "{count} items deleted",
+  "@itemsDeletedUndo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "itemsFormattedCount": "{count} items formatted",
+  "@itemsFormattedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

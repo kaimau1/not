@@ -88,6 +88,8 @@ extension _ItemsActions on ItemsEditorState {
         _ItemMenuPanel(
           starred: item.starred,
           canMove: widget.onMoveToPage != null,
+          canMoveUp: _canStepItem(item, -1),
+          canMoveDown: _canStepItem(item, 1),
           canTask:
               widget.onMakeTask != null &&
               !item.header &&
@@ -108,6 +110,12 @@ extension _ItemsActions on ItemsEditorState {
     switch (choice) {
       case _ItemAction.star:
         _toggleStar(item);
+      case _ItemAction.copyItem:
+        await _copySingleItem(item);
+      case _ItemAction.moveUp:
+        _moveItemStep(item, -1);
+      case _ItemAction.moveDown:
+        _moveItemStep(item, 1);
       case _ItemAction.header:
         _toggleHeader(item);
       case _ItemAction.alignStart:
@@ -333,12 +341,195 @@ extension _ItemsActions on ItemsEditorState {
       ..showMessage(context.l10n.copiedAndChecked);
   }
 
+  Future<void> _copySingleItem(NoteItem target) async {
+    final live = _items.where((i) => i.id == target.id).firstOrNull ?? target;
+    final text = itemsCopyText([live], checkboxes: widget.showCheckboxes);
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(context.l10n.copied);
+  }
+
+  List<NoteItem> _blockFor(NoteItem target) {
+    final checkedBlock = widget.showCheckboxes && target.checked;
+    return [
+      for (final i in _items)
+        if ((widget.showCheckboxes && i.checked) == checkedBlock) i,
+    ];
+  }
+
+  bool _canStepItem(NoteItem target, int delta) {
+    final block = _blockFor(target);
+    final idx = block.indexWhere((i) => i.id == target.id);
+    if (idx < 0) return false;
+    final next = idx + delta;
+    return next >= 0 && next < block.length;
+  }
+
+  void _moveItemStep(NoteItem target, int delta) {
+    final checkedBlock = widget.showCheckboxes && target.checked;
+    final block = _blockFor(target);
+    final idx = block.indexWhere((i) => i.id == target.id);
+    if (idx < 0) return;
+    final nextIdx = idx + delta;
+    if (nextIdx < 0 || nextIdx >= block.length) return;
+    final moved = block.removeAt(idx);
+    block.insert(nextIdx, moved);
+    var cursor = 0;
+    _update(() {
+      _items = [
+        for (final i in _items)
+          if ((widget.showCheckboxes && i.checked) == checkedBlock)
+            block[cursor++]
+          else
+            i,
+      ];
+    });
+    _commit();
+  }
+
+  List<NoteItem> _displayOrderItems() => [
+    ..._visibleItems(),
+    if (widget.showCheckboxes)
+      for (final i in _items)
+        if (!_isVisibleRow(i)) i,
+  ];
+
+  bool get _canRangeSelect {
+    if (_selected.length < 2) return false;
+    final ordered = _displayOrderItems();
+    var first = -1;
+    var last = -1;
+    for (var i = 0; i < ordered.length; i++) {
+      if (_selected.contains(ordered[i].id)) {
+        if (first < 0) first = i;
+        last = i;
+      }
+    }
+    if (first < 0 || last <= first + 1) return false;
+    for (var i = first + 1; i < last; i++) {
+      if (!_selected.contains(ordered[i].id)) return true;
+    }
+    return false;
+  }
+
+  void _rangeSelect() {
+    final ordered = _displayOrderItems();
+    var first = -1;
+    var last = -1;
+    for (var i = 0; i < ordered.length; i++) {
+      if (_selected.contains(ordered[i].id)) {
+        if (first < 0) first = i;
+        last = i;
+      }
+    }
+    if (first < 0 || last <= first) return;
+    _update(() {
+      for (var i = first; i <= last; i++) {
+        _selected.add(ordered[i].id);
+      }
+    });
+    _syncBar();
+  }
+
+  void _invertSelection() {
+    if (_items.isEmpty) return;
+    _update(() {
+      for (final item in _items) {
+        if (!_selected.remove(item.id)) {
+          _selected.add(item.id);
+        }
+      }
+    });
+    _syncBar();
+  }
+
+  void _batchApplyFormat(RichFormat format, {int? colorIndex}) {
+    final targets = {
+      for (final i in _items)
+        if (_selected.contains(i.id) && i.text.trim().isNotEmpty) i.id,
+    };
+    if (targets.isEmpty) return;
+    final l10n = context.l10n;
+    var changed = 0;
+    _update(() {
+      for (var idx = 0; idx < _items.length; idx++) {
+        final item = _items[idx];
+        if (!targets.contains(item.id)) continue;
+        final res = toggleFormat(
+          item.text,
+          0,
+          item.text.length,
+          format,
+          colorIndex: colorIndex,
+        );
+        if (res.text != item.text) {
+          _items[idx] = item.copyWith(text: res.text);
+          final ctl = _controllers[item.id];
+          if (ctl != null && ctl.logicalText != res.text) {
+            ctl.setLogical(res.text, res.text.length);
+          }
+          changed++;
+        }
+      }
+    });
+    if (changed > 0) {
+      _commit();
+      showAppMessage(context, l10n.itemsFormattedCount(changed));
+    }
+  }
+
+  void _batchToggleHeader() {
+    final selected = [
+      for (final i in _items)
+        if (_selected.contains(i.id)) i,
+    ];
+    if (selected.isEmpty) return;
+    final makeHeader = selected.any((i) => !i.header);
+    _update(() {
+      for (var idx = 0; idx < _items.length; idx++) {
+        final item = _items[idx];
+        if (_selected.contains(item.id) && item.header != makeHeader) {
+          _items[idx] = item.copyWith(
+            header: makeHeader,
+            checked: makeHeader ? false : item.checked,
+          );
+        }
+      }
+      if (widget.showCheckboxes) _items = normalizeItems(_items);
+    });
+    _commit();
+    showAppMessage(context, context.l10n.itemsFormattedCount(selected.length));
+  }
+
+  void _batchToggleDivider() {
+    final selected = [
+      for (final i in _items)
+        if (_selected.contains(i.id)) i,
+    ];
+    if (selected.isEmpty) return;
+    final add = selected.any((i) => i.divider.isEmpty);
+    final fresh = ItemDividerMemory.fresh(NoteItem.dividerSolid).encode();
+    _update(() {
+      for (var idx = 0; idx < _items.length; idx++) {
+        final item = _items[idx];
+        if (!_selected.contains(item.id)) continue;
+        _items[idx] = item.copyWith(divider: add ? fresh : '');
+      }
+    });
+    _commit();
+    showAppMessage(context, context.l10n.itemsFormattedCount(selected.length));
+  }
+
   void _deleteSelected() {
+    final snapshot = List<NoteItem>.of(_items);
     final removed = [
       for (final i in _items)
         if (_selected.contains(i.id)) i,
     ];
     if (removed.isEmpty) return;
+    final l10n = context.l10n;
     _update(() {
       _items = [
         for (final i in _items)
@@ -352,6 +543,20 @@ extension _ItemsActions on ItemsEditorState {
       _disposeRowFor(item.id);
     }
     _commit();
+    showUndoSnackBar(
+      context,
+      message: l10n.itemsDeletedUndo(removed.length),
+      undoLabel: l10n.undo,
+      onUndo: () {
+        if (!mounted) return;
+        _update(() {
+          _items = widget.showCheckboxes
+              ? normalizeItems(snapshot)
+              : List.of(snapshot);
+        });
+        _commit();
+      },
+    );
   }
 
   /// Tüm not içeriğini panoya kopyalar ("Tümünü seç" seçeneği — ayrı
