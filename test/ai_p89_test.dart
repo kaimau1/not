@@ -179,84 +179,93 @@ void main() {
   });
 
   group('A7: not özeti kısa/ayrıntılı anahtarı ve içerik özeti önbelleği', () {
-    testWidgets('kısa → ayrıntılı → kısa dönüşünde ikinci kısa önbellekten gelir', (
-      tester,
-    ) async {
-      final prefs = await SharedPreferences.getInstance();
-      final fake = _FakeGemini();
-      final repo = _FakeRepo();
-      const note = Note(
-        id: 'n-sum',
-        type: NoteType.text,
-        title: 'Yıllık plan',
-        body: 'İlk çeyrekte hedef büyüme, ikinci çeyrekte yeni ürünler.',
-      );
+    testWidgets(
+      'kısa → ayrıntılı → kısa dönüşünde ikinci kısa önbellekten gelir',
+      (tester) async {
+        final prefs = await SharedPreferences.getInstance();
+        final fake = _FakeGemini();
+        final repo = _FakeRepo();
+        const note = Note(
+          id: 'n-sum',
+          type: NoteType.text,
+          title: 'Yıllık plan',
+          body: 'İlk çeyrekte hedef büyüme, ikinci çeyrekte yeni ürünler.',
+        );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefs),
-            aiAvailabilityProvider.overrideWithValue(AiAvailability.ready),
-            geminiServiceProvider.overrideWithValue(fake),
-            notesRepositoryProvider.overrideWithValue(repo),
-          ],
-          child: const MaterialApp(
-            locale: Locale('tr'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: AiSheet(note: note)),
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(prefs),
+              aiAvailabilityProvider.overrideWithValue(AiAvailability.ready),
+              geminiServiceProvider.overrideWithValue(fake),
+              notesRepositoryProvider.overrideWithValue(repo),
+            ],
+            child: const MaterialApp(
+              locale: Locale('tr'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(body: AiSheet(note: note)),
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Özetle karosunu bulup dokun (kısa özet başlar).
-      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
-      await tester.scrollUntilVisible(
-        find.text(l10n.aiSummarize),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      Future<void> flushIo() async {
-        for (var i = 0; i < 20; i++) {
-          await tester.pump(const Duration(milliseconds: 20));
-          await tester.runAsync(
-            () => Future<void>.delayed(const Duration(milliseconds: 20)),
-          );
-          await tester.pump(const Duration(milliseconds: 20));
-          if (find.byType(CircularProgressIndicator).evaluate().isEmpty) break;
+        // Özetle karosunu bulup dokun (kısa özet başlar).
+        final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+        await tester.scrollUntilVisible(
+          find.text(l10n.aiSummarize),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        Future<void> flushIo() async {
+          for (var i = 0; i < 20; i++) {
+            await tester.pump(const Duration(milliseconds: 20));
+            await tester.runAsync(
+              () => Future<void>.delayed(const Duration(milliseconds: 20)),
+            );
+            await tester.pump(const Duration(milliseconds: 20));
+            // Yük altında ilk turlarda yükleme göstergesi henüz belirmemiş olabilir:
+            // erken çıkış yalnız birkaç tur sonra geçerli.
+            if (i >= 4 &&
+                find.byType(CircularProgressIndicator).evaluate().isEmpty) {
+              break;
+            }
+          }
         }
-      }
 
-      await tester.tap(find.text(l10n.aiSummarize));
-      await flushIo();
+        await tester.tap(find.text(l10n.aiSummarize));
+        await flushIo();
 
-      expect(fake.calls, ['summary:short']);
-      expect(
-        find.text('Kısa not özeti metni', findRichText: true),
-        findsOneWidget,
-      );
-      expect(find.byKey(const ValueKey('ai-summary-short')), findsOneWidget);
-      expect(find.byKey(const ValueKey('ai-summary-detailed')), findsOneWidget);
+        expect(fake.calls, ['summary:short']);
+        expect(
+          find.text('Kısa not özeti metni', findRichText: true),
+          findsOneWidget,
+        );
+        expect(find.byKey(const ValueKey('ai-summary-short')), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('ai-summary-detailed')),
+          findsOneWidget,
+        );
 
-      // Ayrıntılıya geç → 2. çağrı.
-      await tester.tap(find.byKey(const ValueKey('ai-summary-detailed')));
-      await flushIo();
-      expect(fake.calls, ['summary:short', 'summary:detailed']);
-      expect(
-        find.text('Ayrıntılı not özeti metni', findRichText: true),
-        findsOneWidget,
-      );
+        // Ayrıntılıya geç → 2. çağrı.
+        await tester.tap(find.byKey(const ValueKey('ai-summary-detailed')));
+        await flushIo();
+        expect(fake.calls, ['summary:short', 'summary:detailed']);
+        expect(
+          find.text('Ayrıntılı not özeti metni', findRichText: true),
+          findsOneWidget,
+        );
 
-      // Kısaya geri dön → önbellekten, YENİ API çağrısı 0!
-      await tester.tap(find.byKey(const ValueKey('ai-summary-short')));
-      await flushIo();
-      expect(fake.calls, ['summary:short', 'summary:detailed']);
-      expect(
-        find.text('Kısa not özeti metni', findRichText: true),
-        findsOneWidget,
-      );
-    });
+        // Kısaya geri dön → önbellekten, YENİ API çağrısı 0!
+        await tester.tap(find.byKey(const ValueKey('ai-summary-short')));
+        await flushIo();
+        expect(fake.calls, ['summary:short', 'summary:detailed']);
+        expect(
+          find.text('Kısa not özeti metni', findRichText: true),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('A8: Sessiz düzen — toplu tek istek, ayrıştırıcı ve geri al', () {
@@ -283,93 +292,94 @@ void main() {
       expect(parsed[1].tags, ['is', 'finans']);
     });
 
-    testWidgets('tek istekte toplu uygular ve tek Geri Al ile hepsini döndürür', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(412, 915);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+    testWidgets(
+      'tek istekte toplu uygular ve tek Geri Al ile hepsini döndürür',
+      (tester) async {
+        tester.view.physicalSize = const Size(412, 915);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
 
-      final prefs = await SharedPreferences.getInstance();
-      final fake = _FakeGemini()
-        ..batchResult = const [
-          QuietOrganizeSuggestion(
-            noteId: 'n1',
-            title: 'Elektrik faturası',
-            tags: ['finans', 'ev'],
-          ),
-          QuietOrganizeSuggestion(
-            noteId: 'n2',
-            title: 'Koşu programı',
-            tags: ['spor'],
-          ),
+        final prefs = await SharedPreferences.getInstance();
+        final fake = _FakeGemini()
+          ..batchResult = const [
+            QuietOrganizeSuggestion(
+              noteId: 'n1',
+              title: 'Elektrik faturası',
+              tags: ['finans', 'ev'],
+            ),
+            QuietOrganizeSuggestion(
+              noteId: 'n2',
+              title: 'Koşu programı',
+              tags: ['spor'],
+            ),
+          ];
+        final repo = _FakeRepo();
+        const notes = [
+          Note(id: 'n1', type: NoteType.text, body: 'Elektrik faturasını öde'),
+          Note(id: 'n2', type: NoteType.text, body: 'Haftada 3 gün 5 km koşu'),
         ];
-      final repo = _FakeRepo();
-      const notes = [
-        Note(id: 'n1', type: NoteType.text, body: 'Elektrik faturasını öde'),
-        Note(id: 'n2', type: NoteType.text, body: 'Haftada 3 gün 5 km koşu'),
-      ];
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefs),
-            aiAvailabilityProvider.overrideWithValue(AiAvailability.ready),
-            geminiServiceProvider.overrideWithValue(fake),
-            notesRepositoryProvider.overrideWithValue(repo),
-            notesStreamProvider.overrideWith((_) => Stream.value(notes)),
-          ],
-          child: MaterialApp(
-            locale: const Locale('tr'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: Builder(
-                builder: (ctx) => TextButton(
-                  onPressed: () => showQuietOrganizeSheet(ctx),
-                  child: const Text('Aç'),
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(prefs),
+              aiAvailabilityProvider.overrideWithValue(AiAvailability.ready),
+              geminiServiceProvider.overrideWithValue(fake),
+              notesRepositoryProvider.overrideWithValue(repo),
+              notesStreamProvider.overrideWith((_) => Stream.value(notes)),
+            ],
+            child: MaterialApp(
+              locale: const Locale('tr'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Builder(
+                  builder: (ctx) => TextButton(
+                    onPressed: () => showQuietOrganizeSheet(ctx),
+                    child: const Text('Aç'),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Aç'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Aç'));
+        await tester.pumpAndSettle();
 
-      // Tek toplu istek.
-      expect(fake.batchCalls, 1);
-      expect(find.text('Elektrik faturası'), findsOneWidget);
-      expect(find.text('Koşu programı'), findsOneWidget);
+        // Tek toplu istek.
+        expect(fake.batchCalls, 1);
+        expect(find.text('Elektrik faturası'), findsOneWidget);
+        expect(find.text('Koşu programı'), findsOneWidget);
 
-      // İkinci notun işaretini kaldır.
-      await tester.ensureVisible(
-        find.byKey(const ValueKey('quiet-org-check-n2')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('quiet-org-check-n2')));
-      await tester.pumpAndSettle();
+        // İkinci notun işaretini kaldır.
+        await tester.ensureVisible(
+          find.byKey(const ValueKey('quiet-org-check-n2')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('quiet-org-check-n2')));
+        await tester.pumpAndSettle();
 
-      // Uygula → yalnız n1 güncellenir; 4 sn'lik geri sayım bitmeden Geri al görünür.
-      await tester.tap(find.byKey(const ValueKey('quiet-org-apply')));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
+        // Uygula → yalnız n1 güncellenir; 4 sn'lik geri sayım bitmeden Geri al görünür.
+        await tester.tap(find.byKey(const ValueKey('quiet-org-apply')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
 
-      expect(repo.updated, hasLength(1));
-      expect(repo.updated.single.id, 'n1');
-      expect(repo.updated.single.title, 'Elektrik faturası');
-      expect(repo.updated.single.tags, ['finans', 'ev']);
+        expect(repo.updated, hasLength(1));
+        expect(repo.updated.single.id, 'n1');
+        expect(repo.updated.single.title, 'Elektrik faturası');
+        expect(repo.updated.single.tags, ['finans', 'ev']);
 
-      // Tek Geri Al → önceki boş başlık ve etiketlere döner.
-      await tester.tap(find.text('Geri al'));
-      await tester.pump(const Duration(milliseconds: 300));
+        // Tek Geri Al → önceki boş başlık ve etiketlere döner.
+        await tester.tap(find.text('Geri al'));
+        await tester.pump(const Duration(milliseconds: 300));
 
-      expect(repo.updated, hasLength(2));
-      expect(repo.updated.last.id, 'n1');
-      expect(repo.updated.last.title, '');
-      expect(repo.updated.last.tags, isEmpty);
-    });
+        expect(repo.updated, hasLength(2));
+        expect(repo.updated.last.id, 'n1');
+        expect(repo.updated.last.title, '');
+        expect(repo.updated.last.tags, isEmpty);
+      },
+    );
   });
 }

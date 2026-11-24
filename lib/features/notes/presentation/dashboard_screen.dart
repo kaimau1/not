@@ -2427,7 +2427,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           columns: columns,
                                           cellWidth: cellWidth,
                                         ),
-                                      if (sharedFolder == null && !hubActive)
+                                      if (sharedFolder == null &&
+                                          !hubActive &&
+                                          selectedFolderId != null)
                                         SliverToBoxAdapter(
                                           child: FolderHeaderPanel(
                                             onCreateNote: () => unawaited(

@@ -1125,6 +1125,8 @@ class _AdvancedAiSection extends ConsumerWidget {
             ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
       children: const [
+        _SharedPoolModeCard(),
+        SizedBox(height: AppSpace.m),
         _GeminiKeyEditor(),
         SizedBox(height: 14),
         _ModelSelectors(),

@@ -94,6 +94,9 @@ class AccountService {
     // denemeyi sıfırlamasın). Hesap silinince sunucu siler (auth silme
     // tetikleyicisi, `functions/entitlements.js` taslağı).
     AppConstants.entitlementsCollection,
+    // Ortak AI havuzu (Notlar ↔ Dosyalarım): kredi bakiyesi ve hoş geldin
+    // armağanı (`functions/ai_pool_gateway.js`) istemci silmesine kapalıdır.
+    'sharedAiPool',
   ];
 
   Future<void> deleteAccountAndData() async {

@@ -428,13 +428,15 @@ class _TablePageBoxState extends State<TablePageBox> {
       _startEdit(r, c + 1);
       return;
     }
+    var addedRow = false;
     if (r + 1 >= _table.rows) {
       if (_table.rows >= kTableMaxRows) return;
       _predictRow();
       _table = _table.insertRow(_table.rows);
-      _pending = true;
+      addedRow = true;
     }
     _startEdit(r + 1, 0);
+    if (addedRow) _commitNow();
   }
 
   void _addRow({int? after, bool above = false}) {
@@ -446,8 +448,8 @@ class _TablePageBoxState extends State<TablePageBox> {
     _table = _table.insertRow(at);
     _pending = true;
     _startEdit(at, 0);
-    // Hücre açılamadıysa (salt okunur değil ama aynı hücre) yine kaydet.
-    if (_editing == null) _commitNow();
+    // Yapısal satır eklemesi hücre odaklansa da bekletilmeden kaydedilir.
+    _commitNow();
   }
 
   /// Boş satırın boyu (yazı satırı + dolgu + çizgi).

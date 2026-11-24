@@ -363,16 +363,10 @@ extension _ItemsRow on ItemsEditorState {
         color: (_accent?.accent ?? scheme.primary).withValues(
           alpha: kItemDividerAccentAlpha,
         ),
-        child: DecoratedBox(
-          decoration: selected
-              ? BoxDecoration(
-                  color: scheme.primaryContainer.withValues(
-                    alpha: AppAlpha.soft,
-                  ),
-                  borderRadius: BorderRadius.circular(AppRadius.m),
-                )
-              : const BoxDecoration(),
-          child: Padding(
+        child: _selectedBackdrop(
+          selected,
+          scheme,
+          Padding(
           // Tutamak hep görünürken (web/tablet) soldaki 12 dp boşluğa
           // yerleşir: yazı neredeyse yerinde kalır.
           padding: EdgeInsetsDirectional.only(
@@ -782,4 +776,16 @@ extension _ItemsRow on ItemsEditorState {
       onDelete: _deleteSelected,
     );
   }
+
+  /// Seçili satırın zemini; seçili değilse EK düzen nesnesi kurulmaz.
+  Widget _selectedBackdrop(bool selected, ColorScheme scheme, Widget child) =>
+      selected
+      ? DecoratedBox(
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer.withValues(alpha: AppAlpha.soft),
+            borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          child: child,
+        )
+      : child;
 }

@@ -717,7 +717,7 @@ Future<void> _moveDroppedNotesToFolder(
       if (ids.contains(n.id)) n.id: n.folderId,
   };
   unawaited(AppHaptics.tick());
-  await repo.batchUpdate(ids, {'folderId': targetFolderId});
+  unawaited(repo.batchUpdate(ids, {'folderId': targetFolderId}));
   if (selected.contains(droppedId)) {
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }

@@ -20,61 +20,52 @@ import 'package:notlar/l10n/generated/app_localizations.dart';
 /// parola penceresiyle geri yükleme; parolasız geriye dönük uyumluluk).
 void main() {
   group('Parolalı tam yedek (AES-256)', () {
-    test(
-      'MemoryBackupSink: şifreli yedek başlığı tanınır, düz metin görünmez, doğru parolayla geri yüklenir',
-      () async {
-        final dbExport = FakeFirebaseFirestore();
-        final repoExport = NotesRepository(dbExport, 'u1');
-        final serviceExport = BackupService(
-          notes: repoExport,
-          attachments: null,
-        );
-        const secretBody = 'COK_GIZLI_PAROLALI_YEDEK_METNI_2026';
-        final note = Note(
-          id: 'n1',
-          type: NoteType.text,
-          title: 'Gizli Günlük',
-          body: secretBody,
-          tags: const ['özel'],
-          createdAt: DateTime.utc(2026, 11, 21),
-        );
+    test('MemoryBackupSink: şifreli yedek başlığı tanınır, düz metin görünmez, doğru parolayla geri yüklenir', () async {
+      final dbExport = FakeFirebaseFirestore();
+      final repoExport = NotesRepository(dbExport, 'u1');
+      final serviceExport = BackupService(notes: repoExport, attachments: null);
+      const secretBody = 'COK_GIZLI_PAROLALI_YEDEK_METNI_2026';
+      final note = Note(
+        id: 'n1',
+        type: NoteType.text,
+        title: 'Gizli Günlük',
+        body: secretBody,
+        tags: const ['özel'],
+        createdAt: DateTime.utc(2026, 11, 21),
+      );
 
-        final sink = MemoryBackupSink(password: 'parola-123!');
-        await serviceExport.export(sink, allNotes: [note]);
-        final bytes = sink.bytes!;
+      final sink = MemoryBackupSink(password: 'parola-123!');
+      await serviceExport.export(sink, allNotes: [note]);
+      final bytes = sink.bytes!;
 
-        // 1. İlk 8 bayt şifreli ZIP olarak tanınır; düz metin ham baytlarda yoktur.
-        expect(isEncryptedZipHead(bytes), isTrue);
-        expect(latin1.decode(bytes, allowInvalid: true), isNot(contains(secretBody)));
+      // 1. İlk 8 bayt şifreli ZIP olarak tanınır; düz metin ham baytlarda yoktur.
+      expect(isEncryptedZipHead(bytes), isTrue);
+      expect(
+        latin1.decode(bytes, allowInvalid: true),
+        isNot(contains(secretBody)),
+      );
 
-        // 2. Yanlış parola ile çözülemez.
-        expect(
-          () {
-            final bad = ZipDecoder().decodeBytes(bytes, password: 'yanlis');
-            for (final f in bad) {
-              f.content;
-            }
-          },
-          throwsA(isA<Object>()),
-        );
+      // 2. Yanlış parola ile çözülemez.
+      expect(() {
+        final bad = ZipDecoder().decodeBytes(bytes, password: 'yanlis');
+        for (final f in bad) {
+          f.content;
+        }
+      }, throwsA(isA<Object>()));
 
-        // 3. Doğru parola ile eksiksiz geri yüklenir.
-        final dbRestore = FakeFirebaseFirestore();
-        final repoRestore = NotesRepository(dbRestore, 'u2');
-        final serviceRestore = BackupService(
-          notes: repoRestore,
-          attachments: null,
-        );
-        final archive = ZipDecoder().decodeBytes(
-          bytes,
-          password: 'parola-123!',
-        );
-        final result = await serviceRestore.restore(archive, existing: const []);
-        expect(result.restored, 1);
-        final docs = await dbRestore.collection('users/u2/notes').get();
-        expect(docs.docs.single.data()['body'], secretBody);
-      },
-    );
+      // 3. Doğru parola ile eksiksiz geri yüklenir.
+      final dbRestore = FakeFirebaseFirestore();
+      final repoRestore = NotesRepository(dbRestore, 'u2');
+      final serviceRestore = BackupService(
+        notes: repoRestore,
+        attachments: null,
+      );
+      final archive = ZipDecoder().decodeBytes(bytes, password: 'parola-123!');
+      final result = await serviceRestore.restore(archive, existing: const []);
+      expect(result.restored, 1);
+      final docs = await dbRestore.collection('users/u2/notes').get();
+      expect(docs.docs.single.data()['body'], secretBody);
+    });
 
     test('parolasız yedekte isEncryptedZipHead false döner', () async {
       final db = FakeFirebaseFirestore();
@@ -92,7 +83,15 @@ void main() {
 
     test('FileBackupSink + openBackupFile parola ile dosya gidiş-dönüşü', () async {
       final tmp = await Directory.systemTemp.createTemp('notlar_p91_');
-      addTearDown(() => tmp.delete(recursive: true));
+      addTearDown(() async {
+        // Windows'ta açık akış dosyayı kilitleyebilir; geçici klasör temizliği
+        // testin sonucunu değiştirmez.
+        try {
+          await tmp.delete(recursive: true);
+        } on FileSystemException {
+          // Bilinçli: işletim sistemi geçici klasörü sonra temizler.
+        }
+      });
       final path = '${tmp.path}/sifreli.notyedek';
 
       final dbExport = FakeFirebaseFirestore();
@@ -121,10 +120,14 @@ void main() {
         attachments: null,
       );
       final archive = openBackupFile(path, password: 'dosya-sifresi');
-      final res = await serviceRestore.restore(archive, existing: const []);
-      expect(res.restored, 1);
-      final docs = await dbRestore.collection('users/u2/notes').get();
-      expect(docs.docs.single.data()['title'], 'Dosya Notu');
+      try {
+        final res = await serviceRestore.restore(archive, existing: const []);
+        expect(res.restored, 1);
+        final docs = await dbRestore.collection('users/u2/notes').get();
+        expect(docs.docs.single.data()['title'], 'Dosya Notu');
+      } finally {
+        await archive.clear();
+      }
     });
 
     testWidgets(
@@ -136,9 +139,8 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              proFeatureProvider(
-                ProFeature.encryptedBackup,
-              ).overrideWithValue(true),
+              proFeatureProvider(ProFeature.encryptedBackup)
+                  .overrideWithValue(true),
             ],
             child: MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,

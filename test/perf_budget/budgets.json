@@ -203,17 +203,17 @@
     "ileri_kart": 30,
     "geri_kart": 30,
     "ileri_dashboard_kurulum": 1,
-    "kare_kurulum": 2282,
-    "bugun": "en ağır kare 2282 (2026-11-14, P60: main 0fe290ec de 2282 — önceki işlerden düşmüş, mandal indirildi); ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2361 (2026-11-13, P46: gelen ızgara geçiş sürerken 250 px payla kurulur, 1600 px payı 500 ms sonra boşta genişler — kalan 9 kart o karede, 413–668 kurulum); önce 2941",
+    "kare_kurulum": 2289,
+    "bugun": "en ağır kare 2289 (2026-11-24, Bento klasör şeridi/başlık paneli +7 [butce]; başlık paneli yalnız klasör seçiliyken kurulur); en ağır kare 2282 (2026-11-14, P60: main 0fe290ec de 2282 — önceki işlerden düşmüş, mandal indirildi); ileri 30 kart / geri 30 kart / pano 1 / en ağır kare 2361 (2026-11-13, P46: gelen ızgara geçiş sürerken 250 px payla kurulur, 1600 px payı 500 ms sonra boşta genişler — kalan 9 kart o karede, 413–668 kurulum); önce 2941",
     "hedef": "gelen görünümün görünür kartları kadar; tek kare ≤ ilk açılış karesi",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (bugünkü hâl). FolderSwipe komşu sayfayı BİLEREK kurmaz (dashboard_widgets.dart FolderSwipe belgesi); geçişte giden + gelen ızgara aynı karede"
   },
   "S24": {
     "senaryo": "Soğuk açılış (telefon, 30 not, AppFrame + SplitShell + DashboardScreen): ilk karede, kartlar görünene dek ve 2 sn içinde kurulan widget (tür toplamı)",
-    "ilk_kare_kurulum": 927,
+    "ilk_kare_kurulum": 929,
     "kartlara_dek_kurulum": 4015,
     "iki_sn_kurulum": 4027,
-    "bugun": "927 / 4015 / 4027 (2026-11-14, P20: Customizable tek kurulum); ilk kare 930 / kartlar (1 kare sonra) 4019 / 2 sn 4031 (2026-11-12)",
+    "bugun": "929 / 4015 / 4027 (2026-11-24, [butce] ilk kare +2: Bento klasör paneli/ipucu bağlantısı); 927 / 4015 / 4027 (2026-11-14, P20: Customizable tek kurulum); ilk kare 930 / kartlar (1 kare sonra) 4019 / 2 sn 4031 (2026-11-12)",
     "hedef": "taban + mandal",
     "neden": "HIZ_PLANI F82.1 ilk ölçüm (taban) — mandal"
   },

@@ -357,11 +357,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: 'kota puan hak api anahtar premium',
           ),
           _SettingRow(
-            const _SharedPoolModeCard(),
-            title: l10n.aiSourceModeTitle,
-            keywords: 'ortak havuz byok anahtar kredi dosyalarim',
-          ),
-          _SettingRow(
             const _BriefingEditor(),
             title: l10n.briefingSetting,
             keywords: l10n.briefingSettingInfo,
@@ -392,17 +387,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.aiAdvanced,
             keywords:
                 '${l10n.aiAdvancedInfo} gemini openai claude openrouter '
-                'api anahtar model tanilama',
+                'api anahtar model tanilama ortak havuz byok kredi dosyalarim',
             // Katlanır bölüm kendi başlığını taşıyor: etiketsiz ayrı kart.
-            group: '',
-          ),
-          _SettingRow(
-            const Padding(
-              padding: EdgeInsets.only(top: AppSpace.s),
-              child: CrossAppPromoCard(),
-            ),
-            title: l10n.ecosystemDosyalarimTitle,
-            keywords: 'dosyalarim pdf word excel',
             group: '',
           ),
         ],
@@ -769,6 +755,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 '${l10n.releaseNotesTitle} ${l10n.autoUpdateTitle} '
                 '${l10n.updateTapToCheck} versiyon',
+          ),
+          _SettingRow(
+            const Padding(
+              padding: EdgeInsets.only(top: AppSpace.s),
+              child: CrossAppPromoCard(),
+            ),
+            title: l10n.ecosystemDosyalarimTitle,
+            keywords: 'dosyalarim pdf word excel',
+            group: '',
           ),
         ],
       ),
