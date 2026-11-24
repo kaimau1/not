@@ -63,7 +63,49 @@ extension _EditorVoice on _NoteEditorScreenState {
     _mutate((n) => n.copyWith(body: result.text), immediate: true);
   }
 
-  bool get _dictating => _dictation != null;
+  bool get _dictating => _dictationCtl?.isActive ?? false;
+
+  DictationController _ensureDictationController() =>
+      _dictationCtl ??= DictationController(
+        resolveTarget: () {
+          var target = _formatTarget;
+          if (target == null) {
+            _bodyFocus.requestFocus();
+            target = _formatTarget;
+          }
+          return target;
+        },
+        fallbackController: () => _bodyController,
+        isItemTarget: _dictationIntoItem,
+        openItemAfter: (c) {
+          final next = _itemsEditorKey.currentState?.openItemAfterController(c);
+          if (next == null) return null;
+          return FormatTarget(
+            controller: next.controller,
+            focusNode: next.focus,
+            commit: next.commit,
+          );
+        },
+        onCommit: _commitDictation,
+        onRevealCaret: _revealCaretSoon,
+        smartCommands: () => ref.read(voiceSmartCommandsProvider),
+        autoStop: () => ref.read(voiceAutoStopProvider),
+        preferOffline: () => ref.read(voiceOfflineProvider),
+        silenceAfter: () => ref.read(voiceSilenceProvider).duration,
+        onError: (message) {
+          if (mounted) {
+            _update(() {});
+            _showSnack(message);
+          }
+        },
+        onUnavailable: (message) {
+          if (!mounted) return;
+          _update(() {});
+          _showSnack(message);
+          unawaited(_captureVoice());
+        },
+        onSaveNow: () => unawaited(_saveNow()),
+      );
 
   /// Sade mikrofon: dikteyi başlatır, açıksa bitirir.
   Future<void> _toggleDictation() async {
@@ -73,9 +115,6 @@ extension _EditorVoice on _NoteEditorScreenState {
     }
     if (_micBusyElsewhere()) return;
     final l10n = context.l10n;
-    // Yerleşik tanıma yoksa (web) canlı yazma mümkün değil: kullanıcı
-    // düğmeye basınca hiçbir şey olmasın diye ses levhasına düşülür —
-    // orada konuşma kaydedilip topluca yazıya dökülür.
     if (!await DeviceSpeech.isAvailable()) {
       if (mounted) await _captureVoice();
       return;
@@ -85,6 +124,9 @@ extension _EditorVoice on _NoteEditorScreenState {
       return;
     }
     if (!mounted) return;
+    // Alt paneller üst üste binmesin: dikte açılınca biçim ve kalem kapanır.
+    if (_formatBarOpen) _formatBarOpen = false;
+    final closePen = _penMode;
     TipOnce.show(
       context,
       ref.read(sharedPreferencesProvider),
@@ -92,103 +134,45 @@ extension _EditorVoice on _NoteEditorScreenState {
       l10n.tipVoiceCommands,
       icon: AppIcons.dictation,
     );
-    // (kullanıcı nota hiç dokunmadan mikrofona bastı) gövdenin sonuna
-    // yazılır ve odak gövdeye verilir — imleç gözle görülür bir yerde olsun.
-    var target = _formatTarget;
-    if (target == null) {
-      _bodyFocus.requestFocus();
-      target = _formatTarget;
-    }
-    final controller = target?.controller ?? _bodyController;
-    final selection = controller.selection;
-    _dictationTarget = target;
-    _dictationAt = selection.isValid
-        ? wrapToLogicalOffset(controller.text, selection.baseOffset)
-        : controller.logicalText.length;
-    _dictationLength = 0;
-    _dictationShown = '';
-    _dictationLine = 0;
-
-    // Dinlemenin yaşam döngüsü (sessizlikte bitiş, yerli kapanış, üst
-    // sınır) levhayla ORTAK oturumda (bkz. VoiceListenSession).
-    late final VoiceListenSession session;
-    session = VoiceListenSession(
-      autoStop: () => ref.read(voiceAutoStopProvider),
-      preferOffline: ref.read(voiceOfflineProvider),
-      gate: SilenceGate(afterSpeech: ref.read(voiceSilenceProvider).duration),
-      onText: (text) {
-        if (mounted && identical(_dictation, session)) {
-          _writeDictationAtCaret(text);
-        }
-      },
-      // Sessizlik ya da yerli kapanış bir hata değil, bitiştir: yazılan
-      // metin zaten notta.
-      onEnd: (_) => unawaited(_stopDictation()),
-      onError: (message) {
-        unawaited(_stopDictation(offerFix: false));
-        if (mounted) _showSnack(message);
-      },
-      // Canlı tanıma bu cihazda yok (GMS'siz tablet): dikte kapanır, konuşma
-      // levhada KAYDEDİLİP yazıya dökülür. Yerli taraf cihazı işaretledi;
-      // sonraki basışlar doğrudan levhaya gider (isAvailable false).
-      onUnavailable: (message) {
-        if (!identical(_dictation, session)) return;
-        unawaited(() async {
-          await _stopDictation(offerFix: false);
-          if (!mounted) return;
-          _showSnack(message);
-          await _captureVoice();
-        }());
-      },
-    );
+    final initialLocale = Localizations.localeOf(context).languageCode == 'en'
+        ? 'en-US'
+        : 'tr-TR';
+    final ctl = _ensureDictationController();
+    ctl.start(initialLocale: initialLocale);
     _update(() {
-      _dictation = session;
-      _dictationStart = DateTime.now();
+      if (closePen) _penMode = false;
     });
-    // Panel belirince görünür alan küçülür: imleç panelin altında kalmasın.
-    _revealCaretSoon();
-    session.start();
   }
 
-  /// Dikteyi bitirir: akış kapatılır, şerit iner, metin olduğu gibi kalır.
+  /// Dikteyi bitirir: ÖNCE son sonucun akıştan gelmesini bekler, ardından
+  /// şeridi kapatır ve istenirse yapay zekâyla düzeltme önerir.
   Future<void> _stopDictation({bool offerFix = true}) async {
-    final sub = _dictation;
-    if (sub == null) return;
-    if (offerFix) _offerDictationFix();
-    _dictation = null;
-    _dictationTarget = null;
-    _dictationLength = 0;
-    _dictationShown = '';
-    _dictationLine = 0;
-    await sub.cancel();
-    await DeviceSpeech.stop();
-    // Son sözler beklemede kalmasın: yazım sırasında kayıt gecikmeliydi
-    // (yukarıya bak), dikte biterken bir kez kesinleştirilir. `_saveNow`
-    // denetleyici ile not arasındaki farkı yazan hazır yol.
-    unawaited(_saveNow());
+    final ctl = _dictationCtl;
+    if (ctl == null || !ctl.isActive) return;
+    final candidate = await ctl.stop(offerFix: offerFix);
     if (mounted) _update(() {});
+    if (candidate != null) {
+      _offerDictationFix(candidate);
+    }
   }
 
-  /// Dikte bitti: yazılan aralık için tek dokunuşla "AI ile düzelt" (F42.4).
-  /// AI hazır değilse hiç önerilmez (dikte AI'sız bir kapı, K7). Talimat AI
-  /// sesli notun "düzelt"iyle aynı.
-  void _offerDictationFix() {
-    final target = _dictationTarget;
-    final controller = target?.controller ?? _bodyController;
-    final at = _dictationAt;
-    final logical = controller.logicalText;
-    final end = at + _dictationLength;
-    if (!mounted || end > logical.length) return;
-    final spoken = logical.substring(at, end);
-    if (spoken.trim().length < 12) return;
+  /// Dikte bitti: yazılan aralık için tek dokunuşla "Yapay zekâyla düzelt".
+  void _offerDictationFix(DictationFixCandidate candidate) {
+    if (!mounted) return;
     if (ref.read(aiAvailabilityProvider) != AiAvailability.ready) return;
     final l10n = context.l10n;
     ScaffoldMessenger.of(context).showMessage(
       l10n.dictationFixOffer,
       action: SnackBarAction(
         label: l10n.dictationFixAction,
-        onPressed: () =>
-            unawaited(_fixDictation(target, controller, at, spoken)),
+        onPressed: () => unawaited(
+          _fixDictation(
+            candidate.target,
+            candidate.controller,
+            candidate.at,
+            candidate.spoken,
+          ),
+        ),
       ),
     );
   }
@@ -230,7 +214,7 @@ extension _EditorVoice on _NoteEditorScreenState {
     });
   }
 
-  /// Dikte yazımını kaydeder (aşağıdaki gecikme gerekçesine bak).
+  /// Dikte yazımını kaydeder (yazım sırasındaki debouncer'dan beslenir).
   void _commitDictation(
     FormatTarget? target,
     WrapTextController controller,
@@ -245,102 +229,6 @@ extension _EditorVoice on _NoteEditorScreenState {
     }
   }
 
-  /// Tanınan TAM metni hedef alandaki dikte aralığına yazar.
-  ///
-  /// Aralığın iki yanına, ancak GEREKİYORSA, birer boşluk konur — cümlenin
-  /// ortasına konuşan kullanıcının sözü kelimeye yapışmasın ([insertAtCaret]
-  /// ile aynı kural). İmleç her zaman yazılan sözün SONUNDA kalır.
-  void _writeDictationAtCaret(String spoken) {
-    if (spoken.trim().isEmpty) return;
-    final target = _dictationTarget;
-    final controller = target?.controller ?? _bodyController;
-    final logical = controller.logicalText;
-    // Gelen metin ÖNCE yazılanla birleştirilir: satır sonları boşluğa iner ve
-    // kısalan (geri giden) sonuç yok sayılır — kullanıcı yazdığı cümlenin
-    // bölünüp yeniden birleştiğini görmesin (bkz. [dictationMerge]).
-    final merged = dictationMerge(_dictationShown, spoken);
-    if (merged == _dictationShown) return;
-    _dictationShown = merged;
-    // AKILLI KOMUTLAR: birleştirme HAM metin üstünde yapılır (geriye gitmeme
-    // kuralı silme komutunu yutmasın), komutlar sonra uygulanır — "son
-    // kelimeyi sil" söylenince aralık kısalır, yazma yine en sondan sürer.
-    var written = merged;
-    if (ref.read(voiceSmartCommandsProvider)) {
-      final outcome = applyVoiceCommands(merged);
-      written = outcome.text;
-      if (outcome.stop) {
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => unawaited(_stopDictation()),
-        );
-      }
-    }
-    // LİSTE MADDESİ tek satırdır: "yeni madde" komutunun `\n`'i alana
-    // YAZILMAZ (madde bölünürdü, her ara sonuçta bir daha — 2026-11-19
-    // bulgusu). Her yeni satır sonu bir kez yeni madde açar; dikte orada
-    // sürer, kapanan satır önceki maddede kalır.
-    if (_dictationIntoItem(target, controller)) {
-      final lines = written.split('\n');
-      if (lines.length <= _dictationLine) return;
-      var t = target;
-      var c = controller;
-      while (lines.length - 1 > _dictationLine) {
-        _replaceDictationRange(t, c, lines[_dictationLine]);
-        final next = _itemsEditorKey.currentState?.openItemAfterController(c);
-        if (next == null) break;
-        t = FormatTarget(
-          controller: next.controller,
-          focusNode: next.focus,
-          commit: next.commit,
-        );
-        c = next.controller;
-        _dictationTarget = t;
-        _dictationAt = 0;
-        _dictationLength = 0;
-        _dictationLine++;
-      }
-      // Dikteyle açılan YENİ maddenin ilk harfi büyük (sabah bakılacak,
-      // 2026-11-19): madde başı cümle başıdır.
-      final line = lines[_dictationLine];
-      _replaceDictationRange(
-        t,
-        c,
-        _dictationLine > 0 ? capitalizeTurkishFirst(line) : line,
-      );
-      _revealCaretSoon();
-      return;
-    }
-    // Yazma kuralının kendisi saf bir işlevde (sınanabilsin diye). Komutlar
-    // her şeyi sildiyse ("hepsini sil") aralık boşaltılır — dictationReplace
-    // boş parçada metne dokunmaz.
-    final start = _dictationAt.clamp(0, logical.length);
-    final result = written.trim().isEmpty
-        ? (
-            text: logical.replaceRange(
-              start,
-              (start + _dictationLength).clamp(start, logical.length),
-              '',
-            ),
-            caret: start,
-            length: 0,
-          )
-        : dictationReplace(logical, _dictationAt, _dictationLength, written);
-    final text = result.text;
-    if (text == logical) return;
-    _dictationLength = result.length;
-    controller.setLogical(text, result.caret);
-    // **KAYIT YAZMAKLA AYNI YOLDAN, GECİKMELİ.** Tanıyıcı saniyede birkaç kez
-    // olay gönderiyor; alanın kendi `commit`i (gövde/başlık) `immediate: true`
-    // ile yazdığından her olay ayrı bir Firestore yazımı olurdu — konuşurken
-    // ağı ve kotayı boşuna yakan, üstelik kasan bir yol. Klavyeden yazarken
-    // izlenen yol da bu değil: `TextField.onChanged` gecikmeli `_mutate`
-    // çağırıyor. Madde satırı ise zaten kendi gecikmeli yolundan geçer
-    // (ItemsEditor.onChanged), o yüzden orada alanın `commit`i kullanılır.
-    _commitDictation(target, controller, text);
-    // Konuşurken imleç hep görünür kalsın: dikte paneli ve klavye altı örter,
-    // uzayan metin ekranın dışına taşıyordu (cihaz bulgusu 2026-11-08).
-    _revealCaretSoon();
-  }
-
   /// Dikte bir LİSTE MADDESİNE mi yazıyor (gövde/başlık değil).
   bool _dictationIntoItem(FormatTarget? target, WrapTextController c) =>
       target != null &&
@@ -348,36 +236,7 @@ extension _EditorVoice on _NoteEditorScreenState {
       !identical(c, _titleController) &&
       _itemsEditorKey.currentState?.itemIdForController(c) != null;
 
-  /// Dikte aralığını [piece] ile değiştirir (tek satır; madde yolu).
-  void _replaceDictationRange(
-    FormatTarget? target,
-    WrapTextController controller,
-    String piece,
-  ) {
-    final logical = controller.logicalText;
-    final start = _dictationAt.clamp(0, logical.length);
-    final result = piece.trim().isEmpty
-        ? (
-            text: logical.replaceRange(
-              start,
-              (start + _dictationLength).clamp(start, logical.length),
-              '',
-            ),
-            caret: start,
-            length: 0,
-          )
-        : dictationReplace(logical, _dictationAt, _dictationLength, piece);
-    _dictationLength = result.length;
-    if (result.text == logical) return;
-    controller.setLogical(result.text, result.caret);
-    _commitDictation(target, controller, result.text);
-  }
-
   /// Sesle yakalama: ortak levhayı açar, dönen metni seçilen eyleme göre işler.
-  ///
-  /// ESKİDEN dikte doğrudan gövdeye canlı yazıyordu; kullanıcı yanlış tanınan
-  /// bir cümleyi ancak nottan silerek düzeltebiliyordu. Artık metin önce
-  /// levhada gözden geçiriliyor, nota yalnız onaylanan hâli giriyor.
   ///
   /// Dönen metin İMLECİN yerine girer (bkz. [_insertTextAtCaret]).
   Future<void> _captureVoice() async {
@@ -387,16 +246,12 @@ extension _EditorVoice on _NoteEditorScreenState {
     );
     if (result == null || !mounted) return;
 
-    // "başlık X olsun" söylendiyse notun başlığı olur (açıkça istendiği için
-    // var olan başlığın yerine geçer).
     final spokenTitle = result.title;
     if (spokenTitle != null) {
       _titleController.text = spokenTitle;
       _mutate((n) => n.copyWith(title: spokenTitle), immediate: true);
     }
 
-    // Dökümü yapılamamış konuşma (anahtar yok / kota / ağ): kayıt nota SES EKİ
-    // olarak girer — yapay zekâ çalışmasa da konuşma kaybolmaz.
     if (result.audioPath != null || result.audioBytes != null) {
       await _attachVoiceAudio(
         result.audioPath,
@@ -473,7 +328,11 @@ extension _EditorVoice on _NoteEditorScreenState {
       if (!kIsWeb && path != null && path.isNotEmpty) {
         File(path).delete().ignore();
       }
-      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
+      if (mounted) {
+        _showSnack(
+          context.l10n.attachmentFailed(friendlyError(context.l10n, e)),
+        );
+      }
     }
   }
 }

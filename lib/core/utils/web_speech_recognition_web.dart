@@ -32,11 +32,8 @@ JSAny? _itemAt(JSObject list, int index) {
   return list.getProperty<JSAny?>(index.toString().toJS);
 }
 
-String _combineWithPrefix(String prefix, String current) {
-  if (prefix.isEmpty) return current;
-  if (current.isEmpty) return prefix;
-  return '$prefix $current';
-}
+String _combineWithPrefix(String prefix, String current) =>
+    combineWebSpeechPrefixAndCurrent(prefix, current);
 
 /// Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`) üzerinden
 /// canlı dikte akışı. Desteklenmeyen veya izin reddedilen tarayıcılarda

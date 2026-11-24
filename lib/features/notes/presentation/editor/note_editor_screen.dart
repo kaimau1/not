@@ -67,7 +67,6 @@ import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/doc_picker.dart';
 import '../../../../core/utils/format_bytes.dart';
 import '../../../../core/utils/hard_keyboard.dart';
-import '../../../../core/utils/voice_commands.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/link_text.dart';
@@ -115,6 +114,7 @@ import '../../data/quick_entry_memory.dart';
 import '../../domain/smart_list.dart';
 import '../../domain/spell_review.dart';
 import 'auto_spell.dart';
+import 'dictation_controller.dart';
 import 'selection_toolbar.dart';
 import 'spell_review_sheet.dart';
 import 'spell_settings_sheet.dart';
@@ -126,7 +126,6 @@ import '../../../calendar/domain/agenda.dart' show noteDateSuggestion;
 import '../../../../core/utils/spoken_datetime.dart' show parseSpokenDateTimeNow;
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
-import '../../data/voice_listen_session.dart';
 import '../../data/document_scan.dart';
 import '../../data/note_speech.dart';
 import '../../data/note_share.dart';
@@ -1037,7 +1036,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // metni de `_mutate`'ten geçiyor; sayılınca alt çubuk (Bitir düğmesi ve
     // üstündeki ses kartıyla) her konuşma patlamasında iniyor, duraklamada
     // kalkıyordu — kart zıplıyor, gövde her seferinde yeniden diziliyordu.
-    if (_dictation != null) return;
+    if (_dictating) return;
     // ÜÇ HARF KURALI (kullanıcı isteği 2026-11-08 üçüncü tur): çubuk tek
     // harflik düzeltmede / tek dokunuşta gitmesin; ancak duraklamasız art
     // arda 3 değişiklikten sonra (gerçekten yazılıyorsa) gizlenir. Sayaç,
@@ -2003,11 +2002,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     // Dikte açıkken editörden çıkılabiliyor: mikrofon ekranla birlikte
     // kapanmazsa arka planda dinlemeye devam ederdi.
-    if (_dictation != null) {
-      _dictation!.cancel();
-      _dictation = null;
-      unawaited(DeviceSpeech.stop());
-    }
+    _dictationCtl?.cancelImmediate();
     // Kayıt sürerken ekran beklenmedik biçimde kapandıysa (geri tuşu kaydı
     // önce bitirir — bkz. PopScope) mikrofon açık kalmasın.
     final recorder = _voiceRecorder;
@@ -2063,6 +2058,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _titleController.dispose();
     _formatTargetN.dispose();
     _formatOpenN.dispose();
+    _dictationCtl?.dispose();
     _findOpenN.dispose();
     _titleFocus.dispose();
     _bodyWindow.dispose();
@@ -2899,7 +2895,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final busy = _live.any(
       (e) =>
           !identical(e, this) &&
-          (e._dictation != null || e._voiceRecorder != null),
+          (e._dictating || e._voiceRecorder != null),
     );
     if (busy) _showSnack(context.l10n.micBusySideNote);
     return busy;
@@ -3388,31 +3384,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   // [_dictationLength]) hatırlanır ve her olayda o aralık yenisiyle
   // DEĞİŞTİRİLİR. Kullanıcının dikte sırasında elle yazdığı harfler aralığın
   // dışında kaldığı için korunur.
-  VoiceListenSession? _dictation;
+  /// Canlı dikte denetleyicisi (son kelime boşaltma, duraklat/devam, TR/EN
+  /// dil değişimi ve parça geri alma — bkz. [DictationController]).
+  DictationController? _dictationCtl;
 
   /// Notun içinde süren SESLİ NOT kaydı (alt şeritteki hap; bkz.
   /// [VoiceRecordPanel], `_recordAudio`).
   VoiceNoteRecorder? _voiceRecorder;
-
-  /// Diktenin yazdığı alan (gövde, başlık ya da bir madde satırı) ve o
-  /// alandaki yazma aralığı. Hedef, dikte BAŞLARKEN en son odaklanmış olan
-  /// alandır ([_formatTarget]) — imleç oradadır.
-  FormatTarget? _dictationTarget;
-  int _dictationAt = 0;
-  int _dictationLength = 0;
-
-  /// Dikte boyunca ALANA YAZILMIŞ metin. Tanıyıcının yeni gönderdiği metin
-  /// bununla birleştirilir (bkz. [dictationMerge]): yazılan cümle geriye
-  /// gitmesin, satırı bölünmesin.
-  String _dictationShown = '';
-
-  /// Liste maddesine dikte: "yeni madde" komutuyla KAPANAN satır sayısı.
-  /// Komut metne `\n` olarak girer; her satır sonu bir kez yeni madde açar,
-  /// kapanan satırlar önceki maddelerde donar (bkz. `_writeDictationAtCaret`).
-  int _dictationLine = 0;
-
-  /// Diktenin başladığı an (şeritteki süre sayacı).
-  DateTime _dictationStart = DateTime.now();
 
   // Keep tarzı sesli not (`_startVoiceCapture`: Google'ın tanıma EKRANI,
   // metin + Google'ın kaydettiği AMR ses) 2026-10-19 sadeleştirmesinde
@@ -4879,8 +4857,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 ),
                 if (_dictating)
                   _DictationPanel(
-                    start: _dictationStart,
-                    session: _dictation!,
+                    controller: _dictationCtl!,
                     onStop: () => unawaited(_stopDictation()),
                   ),
                 // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
@@ -5074,7 +5051,7 @@ child: FormatBar(
                 // KISA PENCERE + KLAVYE (F67.4): alt çubuk gizli, hızlı satır
                 // yeter. Kayıt/dikte sürerken durdur düğmesi kalsın.
                 ShortKeyboardBarHide(
-                keep: _voiceRecorder != null || _dictation != null,
+                keep: _voiceRecorder != null || _dictating,
                 child: TapRegion(
                 groupId: kNotePackageTapGroup,
                 child: TypingBarHide(

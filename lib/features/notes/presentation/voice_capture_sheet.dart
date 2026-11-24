@@ -9,6 +9,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../../../core/a11y/min_tap_target.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/voice_commands.dart';
@@ -237,6 +238,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// "başlık X olsun" ile söylenen başlık; gözden geçirmede düzenlenebilir.
   String? _title;
   final _titleController = TextEditingController();
+  String _locale = 'tr-TR';
 
   /// Sessizlik geri sayımının oranı (0–1); arayüzde ince şerit.
   double _silence = 0;
@@ -254,6 +256,38 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   void initState() {
     super.initState();
     _prepare();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_localeInitialized) {
+      _localeInitialized = true;
+      _locale = Localizations.localeOf(context).languageCode == 'en'
+          ? 'en-US'
+          : 'tr-TR';
+    }
+  }
+
+  bool _localeInitialized = false;
+
+  Future<void> _toggleLocale() async {
+    final next = _locale.startsWith('en') ? 'tr-TR' : 'en-US';
+    final wasListening = _phase == _Phase.listening;
+    if (wasListening) {
+      await _session?.stop();
+      _session = null;
+      _ticker?.cancel();
+      _ticker = null;
+      setState(() {
+        _locale = next;
+        _prefix = _joinPrefix(_text);
+        _phase = _Phase.idle;
+      });
+      await _startListening();
+    } else {
+      setState(() => _locale = next);
+    }
   }
 
   Future<void> _prepare() async {
@@ -288,6 +322,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       }
       if (!mounted) return;
       final session = VoiceListenSession(
+        locale: _locale,
         useDevice: _useSpeech,
         // Üst sınır: levha açık unutulursa mikrofon süresiz kalmasın; o ana
         // kadarki metin/kayıt gözden geçirme evresine taşınır (varsayılanla
@@ -1026,7 +1061,40 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     ColorScheme scheme, {
     required bool ready,
   }) => [
-    if (!ready) _commandsHelp(l10n, scheme),
+    if (!ready) ...[
+      MinTapTarget(
+        child: Tooltip(
+          message: l10n.dictationLocaleTooltip(
+            _locale.startsWith('en') ? 'EN' : 'TR',
+          ),
+          child: InkWell(
+            key: const ValueKey('voice-capture-locale'),
+            borderRadius: BorderRadius.circular(AppRadius.s),
+            onTap: () => unawaited(_toggleLocale()),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.s,
+                vertical: AppSpace.xs,
+              ),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withValues(
+                  alpha: AppAlpha.muted,
+                ),
+                borderRadius: BorderRadius.circular(AppRadius.s),
+              ),
+              child: Text(
+                _locale.startsWith('en') ? 'EN' : 'TR',
+                style: AppText.of(Theme.of(context)).badge.copyWith(
+                  color: scheme.onSurface,
+                  fontWeight: AppWeight.strong,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      _commandsHelp(l10n, scheme),
+    ],
     ListeningHeaderButton(
       tooltip: l10n.cancel,
       icon: Icons.close,

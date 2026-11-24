@@ -242,26 +242,19 @@ class _NoteUploadsBanner extends ConsumerWidget {
 /// rozet ve etiket — burada döküm alanı yok, yazı notun içine akıyor.
 class _DictationPanel extends StatelessWidget {
   const _DictationPanel({
-    required this.start,
+    required this.controller,
     required this.onStop,
-    required this.session,
   });
 
-  final DateTime start;
+  final DictationController controller;
   final VoidCallback onStop;
-
-  /// Ses düzeyi ve sessizlik geri sayımı buradan (P63 PB5): düzey olayı bu
-  /// paneli KURMAZ — yalnız dalga boyanır, sayım çizgisi kendini kurar.
-  final VoiceListenSession session;
 
   @override
   Widget build(BuildContext context) {
     final theme = _themeOf(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final l10n = context.l10n;
-    // KASMA (tablet bulgusu 2026-11-13: "sesle yazma açıkken kasma"): kartın
-    // nabız rozeti ve dalgası HER KARE boyanıyor; kendi katmanı yokken boyama
-    // en yakın sınıra — editör gövdesinin tamamına — yayılıyordu, uzun not
-    // ve geniş tablet ekranında her kare bütün metin yeniden çiziliyordu.
     return RepaintBoundary(
       key: const ValueKey('dictation-panel'),
       child: Padding(
@@ -269,35 +262,89 @@ class _DictationPanel extends StatelessWidget {
           horizontal: AppSpace.s,
           vertical: AppSpace.xs,
         ),
-        // Kart İLK KAREDE TAM (kullanıcı bulgusu 2026-11-15: "önce yarım
-        // açılıyor, sonra tam"; S46). Eskiden `PopIn` sarıyordu: yuva tek
-        // adımda açılıyor ama kart saydam + %94 ölçekle başlıyordu, açılış
-        // karesi editörün kök kurulumuyla aynı (ağır) kare olduğundan cihazda
-        // ara hâl görünür kalıyordu. Çıkış geçişi de YOK: mikrofon kapandığı
-        // karede kart kalkar ("hâlâ dinliyor" görünen tek kare bile yanıltır).
-        child: ListeningCard(
-            mode: ListeningMode.dictation,
-            active: true,
-            title: l10n.voiceListening,
-            subtitle: l10n.dictationPanelHint,
-            level: session.level,
-            silence: session.silence,
-            silenceHint: l10n.voiceAutoStopSoon,
-            clock: ListeningClock(
-              start: start,
-              active: true,
-              style: AppText.of(theme).label.copyWith(
-                fontWeight: AppWeight.strong,
-                color: theme.colorScheme.error,
+        child: ListenableBuilder(
+          listenable: controller,
+          builder: (context, _) {
+            final listening = controller.isListening;
+            final paused = controller.isPaused;
+            final subtitle = controller.previewText.isNotEmpty
+                ? controller.previewText
+                : paused
+                ? l10n.dictationResume
+                : l10n.dictationPanelHint;
+            return ListeningCard(
+              mode: ListeningMode.dictation,
+              active: listening,
+              title: paused ? l10n.dictationPaused : l10n.voiceListening,
+              subtitle: subtitle,
+              level: controller.level,
+              silence: controller.silence,
+              silenceHint: l10n.voiceAutoStopSoon,
+              clock: ListeningClock(
+                start: controller.startedAt,
+                active: listening,
+                style: text.label.copyWith(
+                  fontWeight: AppWeight.strong,
+                  color: listening ? scheme.error : scheme.onSurfaceVariant,
+                ),
               ),
-            ),
-            action: ListeningActionButton(
-              key: const ValueKey('dictation-stop'),
-              listening: true,
-              label: l10n.voiceFinish,
-              onPressed: onStop,
-            ),
-          ),
+              trailing: [
+                MinTapTarget(
+                  child: Tooltip(
+                    message: l10n.dictationLocaleTooltip(
+                      controller.localeShortLabel,
+                    ),
+                    child: InkWell(
+                      key: const ValueKey('dictation-locale'),
+                      borderRadius: BorderRadius.circular(AppRadius.s),
+                      onTap: () => unawaited(controller.toggleLocale()),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.s,
+                          vertical: AppSpace.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.surfaceContainerHighest.withValues(
+                            alpha: AppAlpha.muted,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.s),
+                        ),
+                        child: Text(
+                          controller.localeShortLabel,
+                          style: text.badge.copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: AppWeight.strong,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (controller.canUndo)
+                  ListeningHeaderButton(
+                    key: const ValueKey('dictation-undo'),
+                    icon: Icons.undo_rounded,
+                    tooltip: l10n.dictationUndoChunk,
+                    onPressed: controller.undoLastChunk,
+                  ),
+                ListeningHeaderButton(
+                  key: const ValueKey('dictation-pause'),
+                  icon: paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+                  tooltip: paused ? l10n.dictationResume : l10n.dictationPause,
+                  onPressed: paused
+                      ? controller.resume
+                      : () => unawaited(controller.pause()),
+                ),
+              ],
+              action: ListeningActionButton(
+                key: const ValueKey('dictation-stop'),
+                listening: listening,
+                label: l10n.voiceFinish,
+                onPressed: onStop,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

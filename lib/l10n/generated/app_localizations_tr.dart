@@ -5270,6 +5270,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceAutoStopSoon => 'Sessizlik — birazdan biter';
 
   @override
+  String get dictationPause => 'Duraklat';
+
+  @override
+  String get dictationResume => 'Devam et';
+
+  @override
+  String get dictationPaused => 'Duraklatıldı';
+
+  @override
+  String get dictationUndoChunk => 'Son cümleyi geri al';
+
+  @override
+  String dictationLocaleTooltip(String lang) {
+    return 'Konuşma dili: $lang';
+  }
+
+  @override
   String get voiceCmdDeleted => 'Silindi';
 
   @override

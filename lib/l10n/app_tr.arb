@@ -2442,6 +2442,18 @@
   "@voiceAutoStopSoon": {
     "description": "Akıllı sesli not / video tam ekran (2026-10-19)"
   },
+  "dictationPause": "Duraklat",
+  "dictationResume": "Devam et",
+  "dictationPaused": "Duraklatıldı",
+  "dictationUndoChunk": "Son cümleyi geri al",
+  "dictationLocaleTooltip": "Konuşma dili: {lang}",
+  "@dictationLocaleTooltip": {
+    "placeholders": {
+      "lang": {
+        "type": "String"
+      }
+    }
+  },
   "voiceCmdDeleted": "Silindi",
   "@voiceCmdDeleted": {
     "description": "Akıllı sesli not / video tam ekran (2026-10-19)"

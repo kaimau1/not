@@ -9458,6 +9458,36 @@ abstract class AppLocalizations {
   /// **'Sessizlik — birazdan biter'**
   String get voiceAutoStopSoon;
 
+  /// No description provided for @dictationPause.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duraklat'**
+  String get dictationPause;
+
+  /// No description provided for @dictationResume.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam et'**
+  String get dictationResume;
+
+  /// No description provided for @dictationPaused.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duraklatıldı'**
+  String get dictationPaused;
+
+  /// No description provided for @dictationUndoChunk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son cümleyi geri al'**
+  String get dictationUndoChunk;
+
+  /// No description provided for @dictationLocaleTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşma dili: {lang}'**
+  String dictationLocaleTooltip(String lang);
+
   /// Akıllı sesli not / video tam ekran (2026-10-19)
   ///
   /// In tr, this message translates to:

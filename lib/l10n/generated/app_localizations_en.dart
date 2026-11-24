@@ -5289,6 +5289,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceAutoStopSoon => 'Silence — stopping soon';
 
   @override
+  String get dictationPause => 'Pause';
+
+  @override
+  String get dictationResume => 'Resume';
+
+  @override
+  String get dictationPaused => 'Paused';
+
+  @override
+  String get dictationUndoChunk => 'Undo last phrase';
+
+  @override
+  String dictationLocaleTooltip(String lang) {
+    return 'Speech language: $lang';
+  }
+
+  @override
   String get voiceCmdDeleted => 'Deleted';
 
   @override
