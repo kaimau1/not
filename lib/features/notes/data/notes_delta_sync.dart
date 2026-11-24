@@ -176,7 +176,10 @@ class NotesDeltaFeed {
       }, onError: out.addError);
     }
 
-    Future<void> checkCount(int cachedCount) async {
+    var latestCacheCount = 0;
+    var countScheduled = false;
+
+    Future<void> checkCount() async {
       int? server;
       try {
         server = await _serverCount(_live).timeout(kCountTimeout);
@@ -186,9 +189,20 @@ class NotesDeltaFeed {
       }
       if (closed || legacy) return;
       if (server == null) {
-        toLegacy('sayım alınamadı');
-      } else if (server != cachedCount) {
-        toLegacy('sayım tutmadı: sunucu $server, önbellek $cachedCount');
+        // P0-2: Çevrimdışıyken veya sayım geçici alınamadığında eski yola
+        // düşme (eski yol ağ gelince bütün koleksiyonu baştan okur). Besleyici
+        // dinleyicisi açık kalır; bağlantı dönünce yalnız değişenleri çeker.
+        return;
+      }
+      if (server != latestCacheCount) {
+        // Besleyici sunucu görüntüsünü önbelleğe yazarken önbellek dinleyicisi
+        // bir sonraki mikro-turda güncellenebilir: hemen düşmeden önce bir tur
+        // daha bekle.
+        await Future<void>.delayed(Duration.zero);
+        if (closed || legacy) return;
+        if (server != latestCacheCount) {
+          toLegacy('sayım tutmadı: sunucu $server, önbellek $latestCacheCount');
+        }
       }
     }
 
@@ -211,12 +225,18 @@ class NotesDeltaFeed {
           .snapshots()
           .listen((s) {
             // Veri kullanılmaz: önbelleğe yazılır, önbellek dinleyicisi
-            // gösterir. Yalnız muhasebe.
+            // gösterir. Yalnız muhasebe + ilk sunucu görüntüsü sonrası sayım.
             if (!s.metadata.isFromCache) {
               stats.docReads += s.docChanges.length;
+              if (!countScheduled) {
+                countScheduled = true;
+                // P0-2: Sayım kontrolü besleyici ilk sunucu görüntüsünü
+                // önbelleğe işledikten SONRA çalışır; başka cihazda yeni not
+                // eklendiğinde veya silindiğinde yanlışlıkla eski yola düşmez.
+                unawaited(Future<void>.delayed(Duration.zero, checkCount));
+              }
             }
           }, onError: (Object e) => toLegacy('besleyici hata: $e'));
-      unawaited(checkCount(first.size));
     }
 
     out = StreamController<NotesFeedEvent>(
@@ -229,6 +249,7 @@ class NotesDeltaFeed {
               .listen(
                 (s) {
                   if (legacy) return;
+                  latestCacheCount = s.size;
                   if (!planned) {
                     plan(s);
                     if (legacy) return;

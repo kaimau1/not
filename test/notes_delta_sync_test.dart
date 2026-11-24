@@ -240,7 +240,7 @@ void main() {
       expect(notes, hasLength(5));
     });
 
-    test('çevrimdışı (sayım alınamaz) → eski yol (bugünkü maliyet)', () async {
+    test('çevrimdışı (sayım alınamaz) → delta sürer (eski yola düşmez)', () async {
       await seed(db, 'u1', 5);
       final feed = await open(
         'u1',
@@ -249,9 +249,50 @@ void main() {
           code: 'unavailable',
         ),
       );
-      expect(feed.stats.mode, NotesFeedMode.legacy);
-      expect(feed.stats.reason, 'sayım alınamadı');
+      expect(feed.stats.mode, NotesFeedMode.delta);
     });
+
+    test(
+      'P0-2 regresyon: başka cihaz 1 not eklediğinde besleyici önbelleği '
+      'günceller, sayım tutar ve delta sürer',
+      () async {
+        // Cihaz önbelleğinde 5 eski not var; başka cihaz sunucuya 1 yeni not ekledi.
+        final cacheDb = FakeFirebaseFirestore();
+        await seed(cacheDb, 'u1', 5);
+        await seed(db, 'u1', 5);
+        final otherDevice = NotesRepository(db, 'u1');
+        final newId = await otherDevice.createNote(
+          NoteType.text,
+          title: 'diğer cihazdan yeni not',
+        );
+        await settle();
+
+        // Gerçek Firestore'da besleyici yeni belgeyi önbelleğe yazar; testte
+        // ayrı sahte cacheDb kullandığımız için sayım sorgusu çağrıldığında
+        // besleyicinin çoktan gelip önbelleği 6 nota çıkardığını doğrularız.
+        var countCalledAfterFeeder = false;
+        final feed = NotesDeltaFeed(
+          notesOf(db, 'u1'),
+          cacheNotes: notesOf(cacheDb, 'u1'),
+          serverCount: (q) async {
+            // Besleyici ilk sunucu okumasını yaptıktan SONRA çağrılmalı.
+            countCalledAfterFeeder = true;
+            // Besleyicinin önbelleğe yeni belgeyi yazdığını simüle et.
+            final serverDoc = await notesOf(db, 'u1').doc(newId).get();
+            await notesOf(cacheDb, 'u1').doc(newId).set(serverDoc.data()!);
+            final s = await q.count().get();
+            return s.count;
+          },
+        );
+        final sub = feed.events().listen((_) {});
+        addTearDown(sub.cancel);
+        await settle();
+        expect(countCalledAfterFeeder, isTrue);
+        expect(feed.stats.mode, NotesFeedMode.delta);
+        expect(feed.stats.docReads, lessThanOrEqualTo(2));
+        expect(feed.stats.countReads, 1);
+      },
+    );
 
     test('sayım tutarsa S1 sürer', () async {
       await seed(db, 'u1', 5);

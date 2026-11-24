@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_tokens.dart';
@@ -14,6 +15,8 @@ import '../../domain/note_item.dart';
 /// - Üstte kalan madde sayacı + ilerleme çubuğu, "Alınanları gizle/göster"
 ///   ve tek dokunuşla "Reyona / gruba göre sırala".
 /// - Altta hızlı ekleme çubuğu ve işaretli madde varken "Alınanları tamamla".
+/// - [liveItems] verilirse ortak alışveriş/ikinci cihaz değişiklikleri canlı
+///   olarak yansır (P1-1).
 class StoreModeScreen extends StatefulWidget {
   const StoreModeScreen({
     super.key,
@@ -23,10 +26,15 @@ class StoreModeScreen extends StatefulWidget {
     required this.onAddItem,
     required this.onSortByGroup,
     required this.onFinishChecked,
+    this.liveItems,
   });
 
   final String title;
   final List<NoteItem> initialItems;
+
+  /// Canlı madde akışı (ortak liste / başka cihaz senkronu). Null ise yalnız
+  /// yerel geri dönüş değerleri kullanılır.
+  final ValueListenable<List<NoteItem>>? liveItems;
 
   /// Tek maddeyi işaretle / kaldır; güncel liste döner.
   final List<NoteItem> Function(String itemId) onToggleItem;
@@ -45,13 +53,41 @@ class StoreModeScreen extends StatefulWidget {
 }
 
 class _StoreModeScreenState extends State<StoreModeScreen> {
-  late List<NoteItem> _items = List<NoteItem>.of(widget.initialItems);
+  late List<NoteItem> _items = List<NoteItem>.of(
+    widget.liveItems?.value ?? widget.initialItems,
+  );
   bool _hideChecked = false;
   final _addCtrl = TextEditingController();
   final _addFocus = FocusNode();
 
+  void _onLiveItemsChanged() {
+    final live = widget.liveItems;
+    if (!mounted || live == null) return;
+    setState(() => _items = List<NoteItem>.of(live.value));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.liveItems?.addListener(_onLiveItemsChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant StoreModeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.liveItems != widget.liveItems) {
+      oldWidget.liveItems?.removeListener(_onLiveItemsChanged);
+      widget.liveItems?.addListener(_onLiveItemsChanged);
+      final live = widget.liveItems;
+      if (live != null) {
+        _items = List<NoteItem>.of(live.value);
+      }
+    }
+  }
+
   @override
   void dispose() {
+    widget.liveItems?.removeListener(_onLiveItemsChanged);
     _addCtrl.dispose();
     _addFocus.dispose();
     super.dispose();

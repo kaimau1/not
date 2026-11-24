@@ -32,6 +32,20 @@ async function refundOne(ref, bucket) {
   });
 }
 
+async function recordTokens(ref, bucket, inputTokens) {
+  const db = getFirestore();
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const next = u.addTokens(
+      snap.exists ? snap.data() : null,
+      bucket,
+      inputTokens,
+      new Date(),
+    );
+    tx.set(ref, { ...next, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  });
+}
+
 exports.decide = onCall(
   {
     enforceAppCheck: true,
@@ -49,22 +63,65 @@ exports.decide = onCall(
     if (!body) throw new HttpsError("invalid-argument", "Geçersiz istek.");
 
     const db = getFirestore();
-    const usageRef = db.collection("decisionUsage").doc(auth.uid);
+    // P0-4: Sunucu tarafı acil kapatma (`config/app.aiKillSwitch === true`).
+    const cfgSnap = await db.doc("config/app").get();
+    if (u.isKillSwitchEnabled(cfgSnap.exists ? cfgSnap.data() : null)) {
+      throw new HttpsError("unavailable", "Karar servisi geçici olarak durduruldu.");
+    }
+
+    const userUsageRef = db.collection("decisionUsage").doc(auth.uid);
     const entRef = db.collection("entitlements").doc(auth.uid);
     let bucket;
     let left;
+    let leftTokens;
+    let usageTargetRef = userUsageRef;
     await db.runTransaction(async (tx) => {
-      const [ent, usage] = await Promise.all([tx.get(entRef), tx.get(usageRef)]);
+      const [entSnap, userUsageSnap] = await Promise.all([
+        tx.get(entRef),
+        tx.get(userUsageRef),
+      ]);
+      const entData = entSnap.exists ? entSnap.data() : null;
+      const ltDocId = u.lifetimeUsageDocId(entData);
+      const ltUsageRef = ltDocId ? db.collection("decisionUsage").doc(ltDocId) : null;
+      const ltUsageSnap = ltUsageRef ? await tx.get(ltUsageRef) : null;
+
       const now = new Date();
-      const r = u.reserve(ent.exists ? ent.data() : null, usage.exists ? usage.data() : null, now);
+      const merged = u.mergeLifetimeUsage(
+        userUsageSnap.exists ? userUsageSnap.data() : null,
+        ltUsageSnap && ltUsageSnap.exists ? ltUsageSnap.data() : null,
+        now,
+      );
+      const r = u.reserve(entData, merged, now);
       if (!r.ok) {
         throw new HttpsError("resource-exhausted", "Karar hakkı bitti.");
       }
       bucket = r.bucket;
-      left = u.remaining(ent.exists ? ent.data() : null, r.usage, now);
-      tx.set(usageRef, { ...r.usage, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+      left = u.remaining(entData, r.usage, now);
+      leftTokens = u.remainingTokens(entData, r.usage, now);
+      if (bucket === "once" && ltUsageRef) {
+        // P0-3: Ömür boyu hakkı satın alma belirteci özetine bağlı; hesap
+        // silip geri yükleyerek sıfırlanamaz.
+        usageTargetRef = ltUsageRef;
+        tx.set(
+          ltUsageRef,
+          {
+            onceUsed: r.usage.onceUsed,
+            onceTokensUsed: r.usage.onceTokensUsed,
+            updatedAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true },
+        );
+      } else {
+        usageTargetRef = userUsageRef;
+        tx.set(
+          userUsageRef,
+          { ...r.usage, updatedAt: FieldValue.serverTimestamp() },
+          { merge: true },
+        );
+      }
     });
 
+    const serializedBody = JSON.stringify(body);
     let res;
     try {
       res = await fetch(ENDPOINT, {
@@ -73,15 +130,15 @@ exports.decide = onCall(
           "content-type": "application/json",
           "x-goog-api-key": GEMINI_KEY.value(),
         },
-        body: JSON.stringify(body),
+        body: serializedBody,
         signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       });
     } catch (e) {
-      await refundOne(usageRef, bucket);
+      await refundOne(usageTargetRef, bucket);
       throw new HttpsError("unavailable", "Karar servisine ulaşılamadı.");
     }
     if (!res.ok) {
-      await refundOne(usageRef, bucket);
+      await refundOne(usageTargetRef, bucket);
       // İçerik günlüğe YAZILMAZ: yalnız durum kodu.
       console.warn(`decide: yukarı akış ${res.status}`);
       // `resource-exhausted` YALNIZ "hak bitti" demek (istemci uzun susar);
@@ -89,6 +146,18 @@ exports.decide = onCall(
       throw new HttpsError("unavailable", "Karar servisi şu an yanıt vermiyor.");
     }
     const data = await res.json();
-    return { response: data, remaining: left };
+    const usedTokens = u.extractInputTokens(data, serializedBody.length);
+    try {
+      await recordTokens(usageTargetRef, bucket, usedTokens);
+      if (leftTokens && typeof leftTokens[bucket] === "number") {
+        leftTokens = {
+          ...leftTokens,
+          [bucket]: Math.max(0, leftTokens[bucket] - usedTokens),
+        };
+      }
+    } catch (e) {
+      console.warn("decide: jeton sayacı güncellenemedi");
+    }
+    return { response: data, remaining: left, remainingTokens: leftTokens };
   },
 );

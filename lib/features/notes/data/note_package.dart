@@ -7,6 +7,7 @@ import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
+import 'zip_guard.dart';
 
 /// **Not paketi** — bir notu HER ŞEYİYLE başka bir Not kullanıcısına
 /// göndermenin biçimi.
@@ -236,25 +237,37 @@ Uint8List buildNotePackage(Note note, Map<String, Uint8List> files) {
 /// `.notpaket` baytlarını çözer. Dosya ZIP değilse, `not.json` içermiyorsa ya
 /// da JSON bozuksa [FormatException] atar — çağıran kullanıcıya "bu dosya bir
 /// not paketi değil" diyebilsin.
-NotePackage readNotePackage(Uint8List bytes) {
+NotePackage readNotePackage(
+  Uint8List bytes, {
+  int maxFiles = ZipGuard.maxFiles,
+  int maxUncompressedBytes = ZipGuard.maxUncompressedBytes,
+}) {
   final Archive archive;
   try {
-    archive = ZipDecoder().decodeBytes(bytes);
+    archive = ZipGuard.decodeBytes(
+      bytes,
+      maxFileCount: maxFiles,
+      maxBytes: maxUncompressedBytes,
+    );
+  } on FormatException {
+    rethrow;
   } catch (e) {
     throw FormatException('Paket açılamadı: $e');
   }
+  final budget = ZipByteBudget(maxBytes: maxUncompressedBytes);
   Map<String, dynamic>? json;
   final files = <String, Uint8List>{};
   for (final file in archive.files) {
     if (!file.isFile) continue;
     if (file.name == NotePackage._jsonEntry) {
-      final decoded = jsonDecode(utf8.decode(file.content as List<int>));
+      final raw = ZipGuard.readEntryBytes(file, budget);
+      final decoded = jsonDecode(utf8.decode(raw));
       if (decoded is Map) json = Map<String, dynamic>.from(decoded);
       continue;
     }
     if (file.name.startsWith(NotePackage._filesDir)) {
       files[file.name.substring(NotePackage._filesDir.length)] =
-          Uint8List.fromList(file.content as List<int>);
+          ZipGuard.readEntryBytes(file, budget);
     }
   }
   if (json == null) {

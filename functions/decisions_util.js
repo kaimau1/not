@@ -6,22 +6,33 @@
  * Haklar (yalnız dahili anahtar, yani kullanıcının KENDİ Gemini anahtarı
  * yokken; kendi anahtarı olan istemci sunucuya hiç gelmez):
  *  - ücretsiz: yok;
- *  - Pro abonelik (deneme dahil): takvim ayı başına [PRO_MONTHLY];
- *  - ömür boyu (tek seferlik): BİR KERELİK toplam [LIFETIME_ONCE], yenilenmez;
+ *  - Pro abonelik (deneme dahil): takvim ayı başına [PRO_MONTHLY] çağrı ve
+ *    [PRO_MONTHLY_MAX_INPUT_TOKENS] girdi jetonu;
+ *  - ömür boyu (50 TL tek seferlik): BİR KERELİK toplam [LIFETIME_ONCE] (750)
+ *    çağrı VE [LIFETIME_MAX_INPUT_TOKENS] (600.000) girdi jetonu çift kilidi
+ *    (en fazla 0,06 $ maliyet tavanı), yenilenmez;
  *  - karar paketi: `entitlements/{uid}.decisionCredits` (sunucunun yazdığı
- *    satın alınmış toplam; satın alma akışı henüz YOK, alan yoksa 0).
+ *    satın alınmış toplam; jeton tavanı `decisionTokenCredits` ya da kredi ×
+ *    [PACK_TOKENS_PER_CALL]).
  * Harcama sırası: Pro aylık → ömür boyu bir kerelik → paket.
  *
- * Sayaç `decisionUsage/{uid}` = {month, monthUsed, onceUsed, packUsed};
- * yalnız Admin SDK yazar/okur (firestore.rules'da eşleşme yok = istemciye
- * kapalı; silip sıfırlayamaz).
+ * Sayaç:
+ *  - `decisionUsage/{uid}` = aylık + paket sayacı;
+ *  - `decisionUsage/lt_{lifetimeTokenKey}` = ömür boyu sayaç (satın alma
+ *    belirteci özetine bağlı — hesap silip geri yükleyerek sıfırlanamaz).
+ * Yalnız Admin SDK yazar/okur (firestore.rules'da eşleşme yok = istemciye
+ * kapalı).
  */
 
 const PRO_MONTHLY = 500;
-const LIFETIME_ONCE = 1000;
+const PRO_MONTHLY_MAX_INPUT_TOKENS = 400000;
+const LIFETIME_ONCE = 750;
+const LIFETIME_MAX_INPUT_TOKENS = 600000;
+const PACK_TOKENS_PER_CALL = 800;
 
-/** Maliyet tavanları: bir çağrının girdi boyu ve soru sayısı. */
+/** Maliyet tavanları: bir çağrının girdi, soru ve TOPLAM JSON boyu. */
 const MAX_INPUT_CHARS = 8000;
+const MAX_TOTAL_PAYLOAD_CHARS = 8000;
 const MAX_QUESTIONS = 60;
 const ALLOWED_MODELS = new Set(["gemini-decision-1"]);
 const QUESTION_KEY = /^[a-z][a-z0-9_]{0,62}$/;
@@ -57,31 +68,97 @@ function num(v) {
   return typeof v === "number" && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
 }
 
-/** Ay değiştiyse aylık sayaç sıfır; diğerleri kalıcı. */
+/** `config/app.aiKillSwitch`: yalnız tam `true` sunucu çağrısını durdurur. */
+function isKillSwitchEnabled(configData) {
+  return !!configData && configData.aiKillSwitch === true;
+}
+
+/**
+ * Ömür boyu kullanım sayacının belge kimliği: satın alma belirteci özetine
+ * (`lifetimeTokenKey`) bağlıysa hesap silmeyle sıfırlanamaz.
+ */
+function lifetimeUsageDocId(ent) {
+  const key = ent && typeof ent.lifetimeTokenKey === "string"
+    ? ent.lifetimeTokenKey.trim()
+    : "";
+  return key ? `lt_${key}` : null;
+}
+
+/** Ay değiştiyse aylık çağrı + jeton sayaçları sıfır; diğerleri kalıcı. */
 function normalizeUsage(usage, now) {
   const month = monthKey(now);
   const u = usage || {};
+  const sameMonth = u.month === month;
   return {
     month,
-    monthUsed: u.month === month ? num(u.monthUsed) : 0,
+    monthUsed: sameMonth ? num(u.monthUsed) : 0,
+    monthTokensUsed: sameMonth ? num(u.monthTokensUsed) : 0,
     onceUsed: num(u.onceUsed),
+    onceTokensUsed: num(u.onceTokensUsed),
     packUsed: num(u.packUsed),
+    packTokensUsed: num(u.packTokensUsed),
   };
 }
 
-/** Kalan haklar (istemciye bilgi; karar sunucuda). */
-function remaining(ent, usage, now) {
+/**
+ * Kullanıcı (`uid`) ve belirteç (`lt_<lifetimeTokenKey>`) sayaçlarını birleştirir.
+ * Ömür boyu sayacı iki belgeden büyük olanı esas alır (eski kayıtlar da korunur).
+ */
+function mergeLifetimeUsage(userUsage, lifetimeUsage, now) {
+  const u = normalizeUsage(userUsage, now);
+  if (!lifetimeUsage) return u;
+  const lt = normalizeUsage(lifetimeUsage, now);
+  return {
+    ...u,
+    onceUsed: Math.max(u.onceUsed, lt.onceUsed),
+    onceTokensUsed: Math.max(u.onceTokensUsed, lt.onceTokensUsed),
+  };
+}
+
+function packTokenBudget(ent) {
+  if (!ent) return 0;
+  const explicit = num(ent.decisionTokenCredits);
+  if (explicit > 0) return explicit;
+  return num(ent.decisionCredits) * PACK_TOKENS_PER_CALL;
+}
+
+/** Kova başına kalan girdi jetonu tavanları (çift kilit). */
+function remainingTokens(ent, usage, now) {
   const u = normalizeUsage(usage, now);
   return {
-    monthly: proActive(ent, now) ? Math.max(0, PRO_MONTHLY - u.monthUsed) : 0,
-    once: lifetimeOwned(ent) ? Math.max(0, LIFETIME_ONCE - u.onceUsed) : 0,
-    pack: Math.max(0, num(ent && ent.decisionCredits) - u.packUsed),
+    monthly: proActive(ent, now)
+      ? Math.max(0, PRO_MONTHLY_MAX_INPUT_TOKENS - u.monthTokensUsed)
+      : 0,
+    once: lifetimeOwned(ent)
+      ? Math.max(0, LIFETIME_MAX_INPUT_TOKENS - u.onceTokensUsed)
+      : 0,
+    pack: Math.max(0, packTokenBudget(ent) - u.packTokensUsed),
+  };
+}
+
+/**
+ * Kalan haklar (istemciye bilgi; karar sunucuda).
+ * Çift kilit: kovanın girdi jeton tavanı dolduysa çağrı hakkı da 0 döner.
+ */
+function remaining(ent, usage, now) {
+  const u = normalizeUsage(usage, now);
+  const tok = remainingTokens(ent, u, now);
+  return {
+    monthly: proActive(ent, now) && tok.monthly > 0
+      ? Math.max(0, PRO_MONTHLY - u.monthUsed)
+      : 0,
+    once: lifetimeOwned(ent) && tok.once > 0
+      ? Math.max(0, LIFETIME_ONCE - u.onceUsed)
+      : 0,
+    pack: tok.pack > 0
+      ? Math.max(0, num(ent && ent.decisionCredits) - u.packUsed)
+      : 0,
   };
 }
 
 /**
  * Bir karar hakkı ayırır. `{ok: true, bucket, usage}` (yazılacak yeni sayaç)
- * ya da `{ok: false}` (hak yok).
+ * ya da `{ok: false}` (hak veya jeton tavanı doldu).
  */
 function reserve(ent, usage, now) {
   const u = normalizeUsage(usage, now);
@@ -106,9 +183,41 @@ function refund(usage, bucket, now) {
   return u;
 }
 
+/** Başarılı yanıttan sonra harcanan gerçek girdi jetonunu ekler. */
+function addTokens(usage, bucket, inputTokens, now) {
+  const u = normalizeUsage(usage, now);
+  const add = num(inputTokens);
+  const field = {
+    monthly: "monthTokensUsed",
+    once: "onceTokensUsed",
+    pack: "packTokensUsed",
+  }[bucket];
+  if (field && add > 0) u[field] += add;
+  return u;
+}
+
+/**
+ * Google Decisions API yanıtındaki gerçek girdi jetonu sayısını okur
+ * (`usage.total_input_tokens`). Yanıtta yoksa gövde uzunluğundan güvenli üst
+ * tahmin (`ceil(chars / 3)`) üretir ki eksik alan tavanı delemesin.
+ */
+function extractInputTokens(apiResponse, fallbackPayloadChars) {
+  const u = apiResponse && typeof apiResponse === "object" ? apiResponse.usage : null;
+  const direct = num(u && u.total_input_tokens);
+  if (direct > 0) return direct;
+  const meta = apiResponse && typeof apiResponse === "object"
+    ? apiResponse.usageMetadata
+    : null;
+  const prompt = num(meta && meta.promptTokenCount);
+  if (prompt > 0) return prompt;
+  const chars = num(fallbackPayloadChars);
+  return chars > 0 ? Math.max(1, Math.ceil(chars / 3)) : 1;
+}
+
 /**
  * İstemci gövdesini doğrular ve YALNIZ izinli alanlarla yeniden kurar
- * (vekil, bizim anahtarla keyfi istek atmak için kullanılamasın).
+ * (vekil, bizim anahtarla keyfi ya da aşırı büyük istek atmak için
+ * kullanılamasın). Toplam JSON gövdesi [MAX_TOTAL_PAYLOAD_CHARS]'ı aşamaz.
  * Geçersizse null.
  */
 function sanitizeRequest(data) {
@@ -135,20 +244,32 @@ function sanitizeRequest(data) {
     if (q.criteria !== undefined) clean.criteria = q.criteria;
     questions[k] = clean;
   }
-  return { model, input: [{ type: "text", text }], questions };
+  const cleanReq = { model, input: [{ type: "text", text }], questions };
+  if (JSON.stringify(cleanReq).length > MAX_TOTAL_PAYLOAD_CHARS) return null;
+  return cleanReq;
 }
 
 module.exports = {
   PRO_MONTHLY,
+  PRO_MONTHLY_MAX_INPUT_TOKENS,
   LIFETIME_ONCE,
+  LIFETIME_MAX_INPUT_TOKENS,
+  PACK_TOKENS_PER_CALL,
   MAX_INPUT_CHARS,
+  MAX_TOTAL_PAYLOAD_CHARS,
   MAX_QUESTIONS,
   monthKey,
   proActive,
   lifetimeOwned,
+  isKillSwitchEnabled,
+  lifetimeUsageDocId,
   normalizeUsage,
+  mergeLifetimeUsage,
+  remainingTokens,
   remaining,
   reserve,
   refund,
+  addTokens,
+  extractInputTokens,
   sanitizeRequest,
 };

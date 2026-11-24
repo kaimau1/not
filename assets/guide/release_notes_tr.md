@@ -3,6 +3,9 @@
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
 ## 24 Kasım 2026 {#2026-11-24}
+- **Mağaza Kipi artık canlı güncelleniyor:** ortak alışveriş listesinde başka biri bir ürünü işaretlediğinde ya da yeni ürün eklediğinde Mağaza Kipi'nden çıkıp girmeden ekranda anında görünür.
+- **Çok cihazlı ve çevrimdışı açılış daha kararlı:** başka cihazda yeni not eklendiğinde ya da internet yokken uygulama açıldığında bütün notları baştan indirmek yerine yalnız değişenleri çeker.
+- **Yedek/paket güvenliği ve kalıcı akıllı karar önbelleği:** yedek (`.notyedek`), not paketi (`.notpaket`) ve içe aktarılan sıkıştırılmış dosyalar aşırı büyük ya da bozuk arşivlere karşı korunur; öğrenilen akıllı sınıflandırma kararları uygulama kapanıp açılsa da hatırlanır.
 - **Yazıya bağlantı gömme ve yenilenen gömme levhası:** seçili yazıya artık web bağlantısı da gömülebiliyor (mavi zincirli çip; okurken dokununca açılır). Ek gömme levhası baştan tasarlandı: üstte gömülecek yazı, altında Bağlantı kutusu, nottaki ekler ve yeni ekleme karoları.
 - **Seçim menüsü düzenlenebilir:** ⋯ içindeki **Düzenle** ile istediğin işlemi ana satıra sabitleyebilir, Kopyala/Kes gibi düğmeleri kaldırabilirsin; menü artık dışarı dokununca kapanıyor.
 - **Yazım denetimi düzeltmeleri:** işaretli maddeler varsayılan olarak denetlenmiyor (ayardan açılır); menüde **Elle düzelt** var; "beynir → peynir" gibi ilk harf hataları ve boşluk yerine basılan b/n/m harfleri yakalanıyor; "tasarlat" artık yanlış sayılmıyor.

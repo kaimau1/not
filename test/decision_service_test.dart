@@ -15,6 +15,7 @@ import 'package:notlar/features/ai/data/decisions/decision_flag.dart';
 import 'package:notlar/features/ai/data/decisions/decision_models.dart';
 import 'package:notlar/features/ai/data/decisions/decision_service.dart';
 import 'package:notlar/features/ai/data/gemini_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _Keys extends ApiKeyStore {
   const _Keys(this.key);
@@ -454,5 +455,55 @@ void main() {
       expect(await s.decide('f', input: 'x', questions: _qs), isNull);
       expect(sent, isEmpty);
     });
+  });
+
+  group('P1-2 kalıcı yerel önbellek (shopAisle & noteTriage)', () {
+    test(
+      'uygulama yeniden açılsa da öğrenilen karar ağa gitmeden döner ve düz metin saklanmaz',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        AiDecisionsFlag.apply({
+          'aiDecisionsFeatures': [
+            DecisionFeature.noteTriage,
+            DecisionFeature.shopAisle,
+          ],
+        });
+
+        var calls = 0;
+        DecisionService make() => DecisionService(
+          key: () async => 'k',
+          prefs: prefs,
+          http: JsonHttp(
+            baseUrl: AiProvider.gemini.baseUrl,
+            client: MockClient((r) async {
+              calls++;
+              return ok(good);
+            }),
+          ),
+        );
+
+        final first = await make().decide(
+          DecisionFeature.shopAisle,
+          input: 'Torku Banada gizli ürün adı',
+          questions: _qs,
+        );
+        expect(first?['sec']?.choice, 'n00');
+        expect(calls, 1);
+
+        // Yeni servis örneği (uygulama yeniden açılışı) aynı kararı ağsız döner.
+        final second = await make().decide(
+          DecisionFeature.shopAisle,
+          input: 'Torku Banada gizli ürün adı',
+          questions: _qs,
+        );
+        expect(second?['sec']?.choice, 'n00');
+        expect(calls, 1);
+
+        // Yerel kayıtta ham girdi metni ASLA düz saklanmaz (SHA-256 anahtar).
+        final savedRaw = prefs.getString(DecisionService.persistentPrefsKey)!;
+        expect(savedRaw, isNot(contains('Torku Banada')));
+      },
+    );
   });
 }

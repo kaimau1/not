@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/error_log.dart';
 import '../../../../core/net/json_http.dart';
 import '../../../entitlement/data/entitlement_service.dart';
 import '../../../entitlement/domain/entitlement.dart';
+import '../../../settings/settings_providers.dart' show sharedPreferencesProvider;
 import '../ai_policy.dart' show AiRateLimiter, aiAdmissionProvider;
 import '../ai_provider.dart';
 import '../gemini_service.dart';
@@ -18,14 +21,15 @@ final decisionServiceProvider = Provider<DecisionService>(
   (ref) => DecisionService(
     key: ref.watch(geminiServiceProvider).admittedDecisionKey,
     proxy: _proxyFor(ref),
+    prefs: ref.watch(sharedPreferencesProvider),
   ),
 );
 
 /// Sunucu vekili (`functions/decisions.js` `decide`, PLAN U8 KARAR
 /// 2026-11-22): YALNIZ Play derlemesinde ve ücretli katmanda (Pro ya da ömür
 /// boyu); kendi anahtarı yoksa kullanılır. Kota sunucuda (Pro ayda 500, ömür
-/// boyu bir kerelik 1000); ücretsizde null → Decisions yok. Kişisel APK/web
-/// bugünkü gibi yalnız kendi anahtarıyla.
+/// boyu bir kerelik 750 / 600K jeton çift kilidi); ücretsizde null → Decisions
+/// yok. Kişisel APK/web bugünkü gibi yalnız kendi anahtarıyla.
 DecisionProxy? _proxyFor(Ref ref) {
   if (!EntitlementGate.active) return null;
   if (!ref.watch(proFeatureProvider(ProFeature.ownApiKey))) return null;
@@ -76,7 +80,8 @@ class DecisionQuotaExhausted implements Exception {
 ///     kotası), o da yoksa null;
 ///  3. kendi hız sınırı (K8: arka plan kararları elle yapılan AI isteklerinin
 ///     dakikalık hakkını yemesin); 429/5xx sonrası kısa bekleme;
-///  4. kısa önbellek (aynı girdi + sorular, [cacheTtl]);
+///  4. bellek önbelleği ([cacheTtl]) + [persistentFeatures] için kalıcı yerel
+///     önbellek ([persistentCacheTtl], SHA-256 özetli anahtar; düz metin yok);
 ///  5. zaman aşımı [timeout] (≤ 1,5 sn) → null.
 class DecisionService {
   DecisionService({
@@ -86,6 +91,7 @@ class DecisionService {
     DateTime Function()? now,
     AiRateLimiter? limiter,
     this.proxy,
+    this.prefs,
   }) : _http = http ?? JsonHttp(baseUrl: AiProvider.gemini.baseUrl),
        _now = now ?? DateTime.now,
        limiter = limiter ?? AiRateLimiter();
@@ -97,6 +103,7 @@ class DecisionService {
   final DecisionProxy? proxy;
   final JsonHttp _http;
   final DateTime Function() _now;
+  final SharedPreferences? prefs;
   final Duration timeout;
 
   final AiRateLimiter limiter;
@@ -114,11 +121,92 @@ class DecisionService {
   static const cacheSize = 32;
   static const maxQuestions = 60;
 
-  // ponytail: bellek içi LRU; kalıcı önbellek (AiCache) ölçüm gösterirse.
+  /// P1-2: Uygulama kapansa da tekrar kredi yakmaması gereken kararlar.
+  static const Set<String> persistentFeatures = {
+    DecisionFeature.noteTriage,
+    DecisionFeature.shopAisle,
+  };
+  static const persistentCacheTtl = Duration(days: 30);
+  static const persistentCacheSize = 200;
+  static const persistentPrefsKey = 'decision_persistent_cache_v1';
+
   final _cache = <String, (DateTime, Map<String, DecisionAnswer>)>{};
+  Map<String, Object?>? _persistentRaw;
   DateTime? _pausedUntil;
 
   DecisionMode modeOf(String feature) => AiDecisionsFlag.modeOf(feature);
+
+  static String _hashKey(String raw) =>
+      sha256.convert(utf8.encode(raw)).toString();
+
+  Map<String, Object?> _loadPersistent() {
+    final existing = _persistentRaw;
+    if (existing != null) return existing;
+    final prefs = this.prefs;
+    if (prefs == null) return _persistentRaw = <String, Object?>{};
+    final raw = prefs.getString(persistentPrefsKey);
+    if (raw == null || raw.isEmpty) {
+      return _persistentRaw = <String, Object?>{};
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return _persistentRaw = Map<String, Object?>.from(decoded);
+      }
+    } catch (_) {
+      // Bozuk yerel önbellek sessizce sıfırlanır.
+    }
+    return _persistentRaw = <String, Object?>{};
+  }
+
+  Map<String, DecisionAnswer>? _readPersistent(
+    String hashedKey,
+    Map<String, DecisionQuestion> questions,
+    DateTime now,
+  ) {
+    if (prefs == null) return null;
+    final store = _loadPersistent();
+    final entry = store[hashedKey];
+    if (entry is! Map) return null;
+    final tsMs = entry['ts'];
+    final answersRaw = entry['answers'];
+    if (tsMs is! num || answersRaw is! Map) {
+      store.remove(hashedKey);
+      return null;
+    }
+    final savedAt = DateTime.fromMillisecondsSinceEpoch(tsMs.toInt());
+    if (now.difference(savedAt) >= persistentCacheTtl) {
+      store.remove(hashedKey);
+      return null;
+    }
+    final parsed = parseDecisionResponse({'answers': answersRaw}, questions);
+    if (parsed.isEmpty) return null;
+    // LRU tazeleme.
+    store.remove(hashedKey);
+    store[hashedKey] = entry;
+    return parsed;
+  }
+
+  void _writePersistent(
+    String hashedKey,
+    Map<String, DecisionAnswer> answers,
+    DateTime now,
+  ) {
+    final storePrefs = prefs;
+    if (storePrefs == null || answers.isEmpty) return;
+    final store = _loadPersistent();
+    store.remove(hashedKey);
+    store[hashedKey] = <String, Object?>{
+      'ts': now.millisecondsSinceEpoch,
+      'answers': {
+        for (final e in answers.entries) e.key: e.value.toJson(),
+      },
+    };
+    while (store.length > persistentCacheSize) {
+      store.remove(store.keys.first);
+    }
+    unawaited(storePrefs.setString(persistentPrefsKey, jsonEncode(store)));
+  }
 
   /// [feature] için [input] metni üstünde [questions]'ı TEK çağrıda sorar
   /// (toplu soru: aynı girdi, N soru). Kullanılamıyorsa null. Boş harita =
@@ -143,6 +231,15 @@ class DecisionService {
     if (hit != null && now.difference(hit.$1) < cacheTtl) {
       _cache[cacheKey] = hit;
       return hit.$2;
+    }
+    final persist = persistentFeatures.contains(feature) && prefs != null;
+    final persistentHash = persist ? _hashKey(cacheKey) : null;
+    if (persistentHash != null) {
+      final saved = _readPersistent(persistentHash, questions, now);
+      if (saved != null) {
+        _cache[cacheKey] = (now, saved);
+        return saved;
+      }
     }
     final paused = _pausedUntil;
     if (paused != null && now.isBefore(paused)) return null;
@@ -186,6 +283,9 @@ class DecisionService {
       _cache[cacheKey] = (now, answers);
       while (_cache.length > cacheSize) {
         _cache.remove(_cache.keys.first);
+      }
+      if (persistentHash != null && answers.isNotEmpty) {
+        _writePersistent(persistentHash, answers, now);
       }
       return answers;
     } on JsonHttpException catch (e) {

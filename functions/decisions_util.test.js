@@ -38,13 +38,73 @@ test("deneme süresi Pro sayılır", () => {
   assert.strictEqual(u.reserve(trial, {}, now).bucket, "monthly");
 });
 
-test("ömür boyu: bir kerelik 1000, ayla yenilenmez", () => {
+test("ömür boyu: bir kerelik 750, ayla yenilenmez", () => {
+  assert.strictEqual(u.LIFETIME_ONCE, 750);
   const usage = { month: "2026-10", onceUsed: u.LIFETIME_ONCE - 1 };
   const r = u.reserve(lifetime, usage, now);
   assert.ok(r.ok);
   assert.strictEqual(r.bucket, "once");
   assert.strictEqual(u.reserve(lifetime, r.usage, now).ok, false);
   assert.strictEqual(u.reserve(lifetime, r.usage, later).ok, false);
+});
+
+test("çift kilit: 600K girdi jetonu dolunca çağrı hakkı kalsa da engellenir", () => {
+  let usage = { onceUsed: 120, onceTokensUsed: u.LIFETIME_MAX_INPUT_TOKENS - 500 };
+  const r1 = u.reserve(lifetime, usage, now);
+  assert.ok(r1.ok);
+  assert.strictEqual(r1.bucket, "once");
+  usage = u.addTokens(r1.usage, "once", 500, now);
+  assert.strictEqual(usage.onceTokensUsed, u.LIFETIME_MAX_INPUT_TOKENS);
+  assert.strictEqual(u.remaining(lifetime, usage, now).once, 0);
+  assert.strictEqual(u.reserve(lifetime, usage, now).ok, false);
+});
+
+test("Pro aylık jeton tavanı ay başında sıfırlanır", () => {
+  const maxed = {
+    month: "2026-11",
+    monthUsed: 10,
+    monthTokensUsed: u.PRO_MONTHLY_MAX_INPUT_TOKENS,
+  };
+  assert.strictEqual(u.reserve(pro, maxed, now).ok, false);
+  const dec = new Date("2026-12-01T00:00:00Z");
+  assert.ok(u.reserve(pro, maxed, dec).ok);
+});
+
+test("lifetimeTokenKey belge kimliği ve sayaç birleştirme (hesap silmede sıfırlanmaz)", () => {
+  assert.strictEqual(u.lifetimeUsageDocId({ lifetimeOwned: true }), null);
+  assert.strictEqual(
+    u.lifetimeUsageDocId({ lifetimeOwned: true, lifetimeTokenKey: "abc123" }),
+    "lt_abc123",
+  );
+  const merged = u.mergeLifetimeUsage(
+    { month: "2026-11", monthUsed: 2, onceUsed: 0, onceTokensUsed: 0 },
+    { onceUsed: 750, onceTokensUsed: 420000 },
+    now,
+  );
+  assert.strictEqual(merged.monthUsed, 2);
+  assert.strictEqual(merged.onceUsed, 750);
+  assert.strictEqual(merged.onceTokensUsed, 420000);
+  assert.strictEqual(u.reserve(lifetime, merged, now).ok, false);
+});
+
+test("sunucu aiKillSwitch: yalnız tam true kapatır", () => {
+  assert.strictEqual(u.isKillSwitchEnabled(null), false);
+  assert.strictEqual(u.isKillSwitchEnabled({}), false);
+  assert.strictEqual(u.isKillSwitchEnabled({ aiKillSwitch: "true" }), false);
+  assert.strictEqual(u.isKillSwitchEnabled({ aiKillSwitch: false }), false);
+  assert.strictEqual(u.isKillSwitchEnabled({ aiKillSwitch: true }), true);
+});
+
+test("extractInputTokens: gerçek usage.total_input_tokens veya güvenli tahmin", () => {
+  assert.strictEqual(
+    u.extractInputTokens({ usage: { total_input_tokens: 412, total_output_tokens: 0 } }, 900),
+    412,
+  );
+  assert.strictEqual(
+    u.extractInputTokens({ usageMetadata: { promptTokenCount: 250 } }, 900),
+    250,
+  );
+  assert.strictEqual(u.extractInputTokens({}, 900), 300);
 });
 
 test("sıra: Pro aylık → bir kerelik → paket; iade", () => {
@@ -63,7 +123,7 @@ test("Firestore Timestamp kabul edilir", () => {
   assert.ok(u.proActive(ts, now));
 });
 
-test("istek süzme: yalnız izinli model/alanlar, tavanlar", () => {
+test("istek süzme: yalnız izinli model/alanlar, 8000 toplam JSON tavanı", () => {
   const ok = {
     model: "gemini-decision-1",
     input: [{ type: "text", text: "süt al" }],
@@ -85,6 +145,12 @@ test("istek süzme: yalnız izinli model/alanlar, tavanlar", () => {
     u.sanitizeRequest({ ...ok, input: [{ type: "image", text: "x" }] }),
     null,
   );
+  // P0-1: Tek tek 4000 altı soruların toplamı 8000 karakteri aşarsa reddedilir.
+  const bloated = {};
+  for (let i = 0; i < 4; i++) {
+    bloated[`q${i}`] = { type: "noul", instructions: "a".repeat(2500) };
+  }
+  assert.strictEqual(u.sanitizeRequest({ ...ok, questions: bloated }), null);
   const many = {};
   for (let i = 0; i <= u.MAX_QUESTIONS; i++) many[`q${i}`] = { type: "noul", instructions: "?" };
   assert.strictEqual(u.sanitizeRequest({ ...ok, questions: many }), null);

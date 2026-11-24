@@ -47,9 +47,10 @@ exports.dropEntitlement = functionsV1.auth.user().onDelete(async (user) => {
   const batch = db.batch();
   for (const doc of tokens.docs) batch.delete(doc.ref);
   batch.delete(db.doc(`entitlements/${user.uid}`));
-  // Karar sayacı (decisions.js). Takas: silip yeni hesapla "geri yükle"
-  // bir kerelik 1000'i yeniler — maliyeti ~0,03 $, satın alma bağına
-  // bağlamak gerekirse sabah bakılacak.
+  // P0-3: Ömür boyu karar sayacı `decisionUsage/lt_{lifetimeTokenKey}` altında
+  // saklanır ve hesap silmede BİLEREK SİLİNMEZ — aynı Play satın alması yeni
+  // hesapla geri yüklense de ömür boyu 750 çağrı / 600K jeton tavanı sıfırlanmaz.
+  // Yalnız hesaba bağlı aylık/paket sayaç belgesi (`decisionUsage/{uid}`) silinir.
   batch.delete(db.doc(`decisionUsage/${user.uid}`));
   await batch.commit();
 });

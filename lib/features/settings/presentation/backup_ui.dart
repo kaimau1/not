@@ -29,6 +29,7 @@ import '../../notes/data/backup_service.dart';
 import '../../notes/data/import_service.dart';
 import '../../notes/data/markdown_export.dart';
 import '../../notes/data/notes_repository.dart';
+import '../../notes/data/zip_guard.dart';
 import '../settings_providers.dart' show sharedPreferencesProvider;
 
 /// Ayarlar → Hesap → "Tam yedek" ve "Yedekten geri yükle" akışları (F18.4).
@@ -290,7 +291,7 @@ Future<void> restoreBackup(BuildContext context, WidgetRef ref) async {
         if (!context.mounted) return;
         dialog = showBackupProgress(context, l10n.restoreInProgress, progress);
         final Archive archive = kIsWeb || file.path.isEmpty
-            ? ZipDecoder().decodeBytes(
+            ? ZipGuard.decodeBytes(
                 await file.readAsBytes(),
                 password: password,
               )
@@ -557,7 +558,7 @@ Future<void> importFromOtherApps(BuildContext context, WidgetRef ref) async {
     final head = await _head(file);
     if (sniffBackup(head) == BackupFormat.full) {
       final Archive archive = kIsWeb || file.path.isEmpty
-          ? ZipDecoder().decodeBytes(await file.readAsBytes())
+          ? ZipGuard.decodeBytes(await file.readAsBytes())
           : openBackupFile(file.path);
       items = looksLikeKeepTakeout(archive)
           ? parseKeepTakeout(archive, failed: failed)

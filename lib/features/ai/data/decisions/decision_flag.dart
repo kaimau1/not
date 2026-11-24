@@ -16,6 +16,9 @@ abstract final class DecisionFeature {
 
   /// DA-14 Hızlı ekle yazım düzeltmesi doğrulama.
   static const spellFixOk = 'spellFixOk';
+
+  /// D1 Alışveriş ürünü reyon eşleme (kalıcı önbellekli).
+  static const shopAisle = 'shopAisle';
 }
 
 enum DecisionMode {

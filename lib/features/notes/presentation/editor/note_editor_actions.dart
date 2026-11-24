@@ -984,64 +984,79 @@ extension _EditorActions on _NoteEditorScreenState {
     if (note == null || _readOnly || note.type != NoteType.checklist) return;
     FocusManager.instance.primaryFocus?.unfocus();
     final l10n = context.l10n;
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => StoreModeScreen(
-          title: note.displayTitle,
-          initialItems: note.items,
-          onToggleItem: (id) {
-            List<NoteItem> updated = _note?.items ?? const [];
-            _mutate((n) {
-              updated = [
-                for (final i in n.items)
-                  if (i.id == id) i.copyWith(checked: !i.checked) else i,
-              ];
-              return n.copyWith(items: updated);
-            }, immediate: true);
-            return updated;
-          },
-          onAddItem: (raw) {
-            final cur = _note;
-            if (cur == null) return const [];
-            final kind = detectNoteListKind(cur, locale: l10n.localeName);
-            final learned = ref.read(quickEntryMemoryProvider).itemGroups;
-            List<NoteItem> updated = cur.items;
-            _mutate((n) {
-              updated = insertItemsBySmartGroup(
-                n.items,
-                [NoteItem(id: const Uuid().v4(), text: raw)],
-                kind: kind,
-                locale: l10n.localeName,
-                learnedGroups: learned,
-              );
-              return n.copyWith(items: updated);
-            }, immediate: true);
-            return updated;
-          },
-          onSortByGroup: () {
-            final cur = _note;
-            if (cur == null) return const [];
-            final kind = detectNoteListKind(cur, locale: l10n.localeName);
-            final learned = ref.read(quickEntryMemoryProvider).itemGroups;
-            List<NoteItem> updated = cur.items;
-            _mutate((n) {
-              updated = sortItemsBySmartGroup(
-                n.items,
-                kind: kind,
-                locale: l10n.localeName,
-                learnedGroups: learned,
-              );
-              return n.copyWith(items: updated);
-            }, immediate: true);
-            return updated;
-          },
-          onFinishChecked: () {
-            _finishShoppingList();
-            return _note?.items ?? const [];
-          },
+    // P1-1: Ortak alışveriş / ikinci cihaz güncellemeleri Mağaza Kipi'ne canlı
+    // yansır (editörün _noteN dinleyicisi uzak birleştirme sonrası güncellenir).
+    final liveItems = ValueNotifier<List<NoteItem>>(note.items);
+    void syncLive() {
+      final latest = _noteN.value;
+      if (latest != null) liveItems.value = latest.items;
+    }
+
+    _noteN.addListener(syncLive);
+    try {
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => StoreModeScreen(
+            title: note.displayTitle,
+            initialItems: note.items,
+            liveItems: liveItems,
+            onToggleItem: (id) {
+              List<NoteItem> updated = _note?.items ?? const [];
+              _mutate((n) {
+                updated = [
+                  for (final i in n.items)
+                    if (i.id == id) i.copyWith(checked: !i.checked) else i,
+                ];
+                return n.copyWith(items: updated);
+              }, immediate: true);
+              return updated;
+            },
+            onAddItem: (raw) {
+              final cur = _note;
+              if (cur == null) return const [];
+              final kind = detectNoteListKind(cur, locale: l10n.localeName);
+              final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+              List<NoteItem> updated = cur.items;
+              _mutate((n) {
+                updated = insertItemsBySmartGroup(
+                  n.items,
+                  [NoteItem(id: const Uuid().v4(), text: raw)],
+                  kind: kind,
+                  locale: l10n.localeName,
+                  learnedGroups: learned,
+                );
+                return n.copyWith(items: updated);
+              }, immediate: true);
+              return updated;
+            },
+            onSortByGroup: () {
+              final cur = _note;
+              if (cur == null) return const [];
+              final kind = detectNoteListKind(cur, locale: l10n.localeName);
+              final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+              List<NoteItem> updated = cur.items;
+              _mutate((n) {
+                updated = sortItemsBySmartGroup(
+                  n.items,
+                  kind: kind,
+                  locale: l10n.localeName,
+                  learnedGroups: learned,
+                );
+                return n.copyWith(items: updated);
+              }, immediate: true);
+              return updated;
+            },
+            onFinishChecked: () {
+              _finishShoppingList();
+              return _note?.items ?? const [];
+            },
+          ),
         ),
-      ),
-    );
+      );
+    } finally {
+      _noteN.removeListener(syncLive);
+      liveItems.dispose();
+    }
   }
 
   /// **Dışa aktarma** — eski "PDF olarak dışa aktar" maddesinin yerini alır.

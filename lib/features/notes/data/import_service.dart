@@ -17,6 +17,7 @@ import 'backup_service.dart' show BackupCancelled, noteDigest;
 import 'note_package.dart';
 import 'note_share.dart';
 import 'notes_repository.dart';
+import 'zip_guard.dart';
 
 /// **İçe aktarma** (F18.15, 2026-11-02) — başka uygulamadan gelenin ilk
 /// engeli: Google Keep (Takeout zip'i), Markdown/düz metin (tek dosya ya da
@@ -87,6 +88,7 @@ bool looksLikeKeepTakeout(Archive archive) => archive.files.any(
 /// Keep Takeout zip'i → notlar. Her `.json` bir not; ekleri aynı klasörde.
 /// [failed] okunamayan kayıt sayısını toplar.
 List<ImportedNote> parseKeepTakeout(Archive archive, {List<int>? failed}) {
+  ZipGuard.validateArchive(archive);
   final out = <ImportedNote>[];
   final byName = {
     for (final f in archive.files)
@@ -339,6 +341,7 @@ Attachment markdownAttachment(String fileName, List<int> bytes) {
 
 /// Zip içindeki `.md`/`.markdown`/`.txt` dosyaları.
 List<ImportedNote> parseMarkdownArchive(Archive archive, {List<int>? failed}) {
+  ZipGuard.validateArchive(archive);
   final out = <ImportedNote>[];
   for (final f in archive.files) {
     final lower = f.name.toLowerCase();

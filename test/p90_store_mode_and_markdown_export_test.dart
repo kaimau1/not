@@ -225,5 +225,50 @@ void main() {
         expect(items.any((i) => i.id == '2'), isFalse);
       },
     );
+
+    testWidgets(
+      'P1-1: ortak listede başka cihazdan gelen değişiklik Mağaza Kipi\'nde canlı görünür',
+      (tester) async {
+        tester.view.physicalSize = const Size(412, 915);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+
+        final live = ValueNotifier<List<NoteItem>>(const [
+          NoteItem(id: '1', text: 'Ekmek'),
+          NoteItem(id: '2', text: 'Süt'),
+        ]);
+        addTearDown(live.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            locale: const Locale('tr'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: StoreModeScreen(
+              title: 'Ortak Market',
+              initialItems: live.value,
+              liveItems: live,
+              onToggleItem: (_) => live.value,
+              onAddItem: (_) => live.value,
+              onSortByGroup: () => live.value,
+              onFinishChecked: () => live.value,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('2 / 2 kaldı'), findsOneWidget);
+
+        // Başka cihazda Süt işaretlendi ve Yoğurt eklendi.
+        live.value = const [
+          NoteItem(id: '1', text: 'Ekmek'),
+          NoteItem(id: '2', text: 'Süt', checked: true),
+          NoteItem(id: '3', text: 'Yoğurt'),
+        ];
+        await tester.pumpAndSettle();
+
+        expect(find.text('2 / 3 kaldı'), findsOneWidget);
+        expect(find.text('Yoğurt'), findsOneWidget);
+      },
+    );
   });
 }

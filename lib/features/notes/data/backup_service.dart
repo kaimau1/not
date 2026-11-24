@@ -16,6 +16,7 @@ import 'attachment_repository.dart';
 import 'note_package.dart';
 import 'note_share.dart';
 import 'notes_repository.dart';
+import 'zip_guard.dart';
 
 /// **Tam yedek** (F18.4, 2026-11-02) — bütün notları HER ŞEYİYLE (ekler,
 /// çizim, balon, PDF işaretleri, sayfalar, görünüm) ve klasörleri tek bir ZIP
@@ -128,10 +129,19 @@ class BackupService {
     void Function(int done, int total)? onProgress,
     bool Function()? cancelled,
     bool allowLocalOnly = true,
+    int maxFiles = ZipGuard.maxFiles,
+    int maxUncompressedBytes = ZipGuard.maxUncompressedBytes,
   }) async {
+    ZipGuard.validateArchive(
+      archive,
+      maxFileCount: maxFiles,
+      maxBytes: maxUncompressedBytes,
+    );
+    final budget = ZipByteBudget(maxBytes: maxUncompressedBytes);
     final jsonFile = archive.find(_jsonEntry);
     if (jsonFile == null) throw const FormatException('Yedek verisi yok');
-    final decoded = jsonDecode(utf8.decode(jsonFile.content));
+    final jsonBytes = ZipGuard.readEntryBytes(jsonFile, budget);
+    final decoded = jsonDecode(utf8.decode(jsonBytes));
     if (decoded is! Map || decoded['kind'] != 'full-backup') {
       throw const FormatException('Tam yedek değil');
     }
@@ -222,7 +232,7 @@ class BackupService {
       final files = <String, Uint8List>{};
       for (final a in note.attachments) {
         final f = archive.find('$_filesDir$sourceId/${a.id}');
-        if (f != null) files[a.id] = f.content;
+        if (f != null) files[a.id] = ZipGuard.readEntryBytes(f, budget);
       }
       final id = await NoteShare.import(
         NotePackage(note: note, files: files),
@@ -391,7 +401,7 @@ class BackupService {
     required List<Note> existing,
     List<NoteFolder> existingFolders = const [],
   }) => target.restore(
-    ZipDecoder().decodeBytes(backup),
+    ZipGuard.decodeBytes(backup),
     existing: existing,
     existingFolders: existingFolders,
   );

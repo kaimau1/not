@@ -87,7 +87,17 @@ async function enforceRateLimit(uid) {
  * eşleşmesinde kelimenin başı yeterli ("mehmet" → "Ali Mehmet"); adın
  * başından eşleşenler ÖNCE gelir.
  */
-exports.searchUsers = onCall(async (request) => {
+const IS_PLAY_PROJECT = Boolean(
+  process.env.PLAY_PACKAGE_NAME || process.env.PLAY_PACKAGE_NAMES,
+);
+
+exports.searchUsers = onCall(
+  {
+    enforceAppCheck: IS_PLAY_PROJECT,
+    maxInstances: 10,
+    memory: "256MiB",
+  },
+  async (request) => {
   const auth = request.auth;
   if (!auth) {
     throw new HttpsError("unauthenticated", "Giriş yapmış olmalısınız.");

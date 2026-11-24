@@ -398,11 +398,12 @@ flowchart LR
 
 ### Faz 0 — Acil Maliyet & Güvenlik Kilidi (2–3 Gün · `origin/main` ile Sıfır Risk)
 - [ ] **Konsol (15 dk, kod yok):** Google Cloud bütçe uyarısı (\$5 / \$20 / \$50) + Firebase App Check Enforce (mevcut proje dahil).
-- [ ] [`notes_delta_sync.dart`](lib/features/notes/data/notes_delta_sync.dart): `checkCount` yarış hatasını (feeder ilk sunucu snapshot'ını işledikten sonra kontrol) ve offline `toLegacy` düşüşünü düzelt; [`notes_delta_sync_test.dart`](test/notes_delta_sync_test.dart) çevrimdışı testini yeni davranışla güncelle + çoklu cihaz 1-not-ekleme regresyon testi ekle.
-- [ ] [`functions/decisions_util.js`](functions/decisions_util.js) & [`functions/decisions.js`](functions/decisions.js): Toplam payload ≤ 8.000 karakter tavanı + `usage.total_input_tokens` 600K token çift kilidi + sunucuda `aiKillSwitch` kontrolü.
-- [ ] [`functions/entitlements.js`](functions/entitlements.js): Karar kullanım sayacını `lifetimeTokenKey` bazlı yap (hesap silmede silinmesin).
-- [ ] [`functions/index.js`](functions/index.js): `searchUsers`'a `enforceAppCheck: Boolean(process.env.PLAY_PACKAGE_NAME)` + `maxInstances: 10` ekle (Play projesinde zorunlu, yandan kurulan kişisel APK kırılmaz).
-- [ ] [`backup_service.dart`](lib/features/notes/data/backup_service.dart) & [`note_package.dart`](lib/features/notes/data/note_package.dart): Ortak Zip bombası tavanı (≤ 5.000 dosya / ≤ 250 MB açılmış boyut).
+- [x] [`notes_delta_sync.dart`](lib/features/notes/data/notes_delta_sync.dart): `checkCount` yarış hatasını (feeder ilk sunucu snapshot'ını işledikten sonra kontrol) ve offline `toLegacy` düşüşünü düzelt; [`notes_delta_sync_test.dart`](test/notes_delta_sync_test.dart) çevrimdışı testini yeni davranışla güncelle + çoklu cihaz 1-not-ekleme regresyon testi ekle.
+- [x] [`functions/decisions_util.js`](functions/decisions_util.js) & [`functions/decisions.js`](functions/decisions.js): Toplam payload ≤ 8.000 karakter tavanı + `usage.total_input_tokens` 600K token çift kilidi (750 çağrı) + sunucuda `aiKillSwitch` kontrolü.
+- [x] [`functions/entitlements.js`](functions/entitlements.js): Karar kullanım sayacını `lifetimeTokenKey` bazlı yap (`decisionUsage/lt_<tokenKey>`, hesap silmede silinmez).
+- [x] [`functions/index.js`](functions/index.js): `searchUsers`'a `enforceAppCheck: Boolean(process.env.PLAY_PACKAGE_NAME || process.env.PLAY_PACKAGE_NAMES)` + `maxInstances: 10` ekle (Play projesinde zorunlu, yandan kurulan kişisel APK kırılmaz).
+- [x] [`backup_service.dart`](lib/features/notes/data/backup_service.dart) & [`note_package.dart`](lib/features/notes/data/note_package.dart) (+ [`zip_guard.dart`](lib/features/notes/data/zip_guard.dart), `backup_files.dart`, `backup_ui.dart`, `import_service.dart`): Ortak Zip bombası tavanı (≤ 5.000 dosya / ≤ 250 MB açılmış boyut).
+- [x] **Ek acil kritik (P1-1 + P1-2):** [`store_mode_screen.dart`](lib/features/notes/presentation/editor/store_mode_screen.dart) canlı senkron dinlemesi (`liveItems`) + [`decision_service.dart`](lib/features/ai/data/decisions/decision_service.dart) `shopAisle`/`noteTriage` kalıcı yerel önbelleği (SHA-256 anahtarlı).
 - **Kabul Kriteri:** Tüm `functions` ve `notes_delta_sync` testleri yeşil; tek kullanıcı 50 TL'de asla \$0,06 üzeri AI maliyeti üretemez.
 
 ### Faz 1 — AI Budama, Ölü Kod Temizliği & 2-Katmanlı Hak Modeli (4–5 Gün)

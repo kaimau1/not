@@ -3,6 +3,9 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 24 November 2026 {#2026-11-24}
+- **Store Mode updates live:** when someone checks off or adds an item in a shared shopping list on another device, it now appears immediately in Store Mode without leaving the screen.
+- **More reliable multi-device and offline sync:** opening the app offline or after adding a note on another device now keeps delta sync active instead of re-fetching the whole note list.
+- **Safer backups/packages and persistent smart decision cache:** `.notyedek` backups, `.notpaket` note packages, and imported `.zip` files are protected against oversized or malformed archives, and learned smart decisions stay cached across app restarts.
 - **Link embedding and a redesigned embed sheet:** selected text can now link to a web address (blue chain chip; opens on tap while reading). The embed sheet was redesigned: the text being embedded on top, then a Link box, the note's attachments and new-attachment tiles.
 - **Editable selection menu:** use **Edit** inside ⋯ to pin any action to the main row or remove buttons like Copy/Cut; the menu now closes when you tap outside.
 - **Spell check fixes:** ticked items are skipped by default (can be enabled); the menu has **Fix by hand**; first-letter slips like "beynir → peynir" and b/n/m pressed instead of space are caught.

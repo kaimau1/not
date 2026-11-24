@@ -87,6 +87,15 @@ class DecisionAnswer {
   /// `choice`: kimlik → olasılık; `score`: düzey sırası ('0', '1'…) →
   /// olasılık (biçim doğrulanmadı: nesne de dizi de kabul).
   final Map<String, double> probabilities;
+
+  Map<String, Object?> toJson() => {
+    'type': type,
+    'confidence': confidence,
+    if (noul != null) 'noul': noul,
+    if (choice != null) 'choice': choice,
+    if (score != null) 'score': score,
+    if (probabilities.isNotEmpty) 'probabilities': probabilities,
+  };
 }
 
 double? _num(Object? v) {

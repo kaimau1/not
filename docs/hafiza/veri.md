@@ -241,3 +241,11 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   yüklenmiş eskiler Pro'da da okunur (`driveStoreProvider` Google+bağlıyken kurulur). Drive bağlı değilse mevcut
   şerit + otomatik izin sorusu + ilk giriş levhası devreye girer. Paylaşılan notun YENİ ekleri Lite'ta da
   Storage'a gider (ortak çalışan Drive'a erişemez) — sabah bakılacak (T11 "Lite'ta Storage kapalı" ile gerilim).
+
+## 2026-11-24 — Faz 0 kritik maliyet, güvenlik ve senkron yamaları
+- **S1 delta senkron (`notes_delta_sync.dart`):** `checkCount` artık besleyicinin (`feederSub`) ilk sunucu görüntüsünden SONRA güncel `latestCacheCount` ile çalışır; çevrimdışı/alınamayan sayımda `toLegacy`'ye düşmez (delta kalır).
+- **Decisions vekili (`functions/decisions_util.js`, `decisions.js`, `entitlements.js`):** toplam JSON gövdesi ≤ 8.000 karakter (`MAX_TOTAL_PAYLOAD_CHARS`), ömür boyu 750 çağrı + 600.000 gerçek girdi jetonu (`usage.total_input_tokens`) çift kilidi, ömür boyu sayaç `decisionUsage/lt_<lifetimeTokenKey>` (hesap silmede silinmez), sunucuda `config/app.aiKillSwitch` kontrolü.
+- **`searchUsers` (`functions/index.js`):** Play projesinde `enforceAppCheck: true`, `maxInstances: 10`.
+- **ZIP bombası koruması (`zip_guard.dart`):** `.notyedek`, `.notpaket` ve içe aktarma `.zip`'lerinde ortak tavan: ≤ 5.000 dosya ve ≤ 250 MB açılmış boyut (başlık + gerçek okunan bayt bütçesi).
+- **Canlı Mağaza Kipi & Kalıcı karar önbelleği:** `StoreModeScreen` editörün `_noteN` akışına `liveItems` ile bağlandı; `DecisionService` `noteTriage`/`shopAisle` kararlarını SHA-256 anahtarlı kalıcı önbelleğe (`SharedPreferences`, 30 gün, 200 kayıt) yazar.
+
