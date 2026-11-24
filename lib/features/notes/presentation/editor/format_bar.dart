@@ -149,8 +149,10 @@ const _kScaleMax = 2.0;
 enum FormatScope { caret, word, line, all }
 
 /// [scope]'a göre imleçten genişletilmiş seçim; değişiklik yoksa null
-/// (imleç kipi, zaten seçili metin, boş kapsam). [text] denetleyicinin
-/// görüntü metni (sarma çapaları satır sonu değil — `\n`e güvenilir).
+/// (imleç kipi, zaten seçili metin, boş kapsam).
+///
+/// Hem satır sarma çapalarını (`\uFFFC`/`\u2060`) hem de rich işaretlerini
+/// (`**`, `_`, `~`, `%%k:`, `##k:` vb.) aşarak DÜZ metin uzayında çalışır.
 TextSelection? scopeSelection(
   String text,
   TextSelection selection,
@@ -158,27 +160,26 @@ TextSelection? scopeSelection(
 ) {
   if (scope == FormatScope.caret || !selection.isValid) return null;
   if (!selection.isCollapsed || text.isEmpty) return null;
-  final caret = selection.baseOffset.clamp(0, text.length);
-  var start = caret;
-  var end = caret;
-  switch (scope) {
-    case FormatScope.caret:
-      return null;
-    case FormatScope.word:
-      while (start > 0 && isRichWordChar(text[start - 1])) {
-        start--;
-      }
-      while (end < text.length && isRichWordChar(text[end])) {
-        end++;
-      }
-    case FormatScope.line:
-      start = caret == 0 ? 0 : text.lastIndexOf('\n', caret - 1) + 1;
-      final next = text.indexOf('\n', caret);
-      end = next < 0 ? text.length : next;
-    case FormatScope.all:
-      start = 0;
-      end = text.length;
-  }
+  final kind = switch (scope) {
+    FormatScope.caret => null,
+    FormatScope.word => RichScopeKind.word,
+    FormatScope.line => RichScopeKind.line,
+    FormatScope.all => RichScopeKind.all,
+  };
+  if (kind == null) return null;
+  final logical = stripWrapAnchors(text);
+  final logicalCaret = wrapToLogicalOffset(
+    text,
+    selection.baseOffset.clamp(0, text.length),
+  );
+  final range = richScopeRange(logical, logicalCaret, kind);
+  if (range == null) return null;
+  final start = kind == RichScopeKind.all
+      ? 0
+      : wrapToDisplayOffset(text, range.start).clamp(0, text.length);
+  final end = kind == RichScopeKind.all
+      ? text.length
+      : wrapToDisplayOffset(text, range.end).clamp(start, text.length);
   if (end <= start) return null;
   return TextSelection(baseOffset: start, extentOffset: end);
 }
@@ -239,7 +240,7 @@ class _FormatBarState extends State<FormatBar> {
       // alanın değil.
       _drag.clear();
       _scopedSelection = null;
-      _scopeCaret = null;
+      _scopePlainCaret = null;
     }
   }
 
@@ -290,7 +291,7 @@ class _FormatBarState extends State<FormatBar> {
         : scopeSelection(controller.text, selection, _scope);
     controller.setScopePreview(
       range == null ? null : (range.start, range.end),
-      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.16),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: AppAlpha.soft),
     );
   }
 
@@ -330,9 +331,9 @@ class _FormatBarState extends State<FormatBar> {
   /// kelimeyi SİLİYORDU. Artık kapsam yalnız biçim UYGULANIRKEN imleçten
   /// açılır, iş bitince imleç aynı göreli yere döner: seçim hiç kalmaz.
   /// [_scopedSelection] o an açık geçici seçim (kaydırıcı sürüklenirken
-  /// sürer), [_scopeCaret] dönülecek imleç.
+  /// sürer), [_scopePlainCaret] dönülecek düz metin imleci.
   TextSelection? _scopedSelection;
-  int? _scopeCaret;
+  int? _scopePlainCaret;
 
   /// İmleç boşsa seçimi kapsama genişletir; açtığı (ya da hâlâ açık olan)
   /// geçici seçimi döndürür — elle seçimde ve İmleç kapsamında null.
@@ -344,13 +345,20 @@ class _FormatBarState extends State<FormatBar> {
       if (controller.selection == open) return open;
       // Başka bir şey seçimi değiştirdi: geçici seçim bitti.
       _scopedSelection = null;
-      _scopeCaret = null;
+      _scopePlainCaret = null;
     }
     final selection = controller.selection;
     if (!selection.isValid || !selection.isCollapsed) return null;
     final next = scopeSelection(controller.text, selection, _scope);
     if (next == null) return null;
-    _scopeCaret = selection.baseOffset;
+    final logicalCaret = wrapToLogicalOffset(
+      controller.text,
+      selection.baseOffset.clamp(0, controller.text.length),
+    );
+    _scopePlainCaret = logicalToPlainOffset(
+      controller.logicalText,
+      logicalCaret,
+    );
     _scopedSelection = next;
     // Geçici seçim çift dokunuş sanılıp cümleye büyütülmesin (bkz.
     // [withoutSentenceExpansion]).
@@ -360,28 +368,25 @@ class _FormatBarState extends State<FormatBar> {
 
   void _applyScope() => _applyScopeTracked();
 
-  /// İş bitti: geçici seçim imlece döner. Biçim işaretleri seçimi
-  /// kaydırdıysa imleç yeni aralıkta aynı göreli yere konur.
+  /// İş bitti: geçici seçim imlece döner. Biçim işaretleri ya da sarma çapaları
+  /// metin uzunluğunu değiştirse bile imleç DÜZ metindeki aynı karakterde kalır.
   void _releaseScope(TextSelection? before) {
     final controller = widget.target?.controller;
-    final caret = _scopeCaret;
+    final plainCaret = _scopePlainCaret;
     _scopedSelection = null;
-    _scopeCaret = null;
-    if (controller == null || before == null || caret == null) return;
-    final after = controller.selection;
-    var offset = caret;
-    if (after.isValid && !after.isCollapsed) {
-      final relative = (caret - before.start).clamp(
-        0,
-        before.end - before.start,
-      );
-      offset = (after.start + relative).clamp(after.start, after.end);
-    } else if (after.isValid) {
-      offset = after.baseOffset;
-    }
-    controller.selection = TextSelection.collapsed(
-      offset: offset.clamp(0, controller.text.length),
+    _scopePlainCaret = null;
+    if (controller == null || before == null || plainCaret == null) return;
+    final logicalPos = plainToLogicalOffset(
+      controller.logicalText,
+      plainCaret,
+      preferEnd: plainCaret > 0,
     );
+    final displayOffset = wrapToDisplayOffset(controller.text, logicalPos);
+    withoutSentenceExpansion(() {
+      controller.selection = TextSelection.collapsed(
+        offset: displayOffset.clamp(0, controller.text.length),
+      );
+    });
   }
 
   /// Kapsamlı biçim işi: seçim geçici olarak genişler, iş koşar, imleç
@@ -433,9 +438,52 @@ class _FormatBarState extends State<FormatBar> {
   void _toggleTray(_Tray tray) =>
       setState(() => _tray = _tray == tray ? _Tray.none : tray);
 
-  double _value(_Slide slide) =>
-      _drag[slide] ??
-      (slide == _Slide.size ? widget.fontScale : widget.textOpacity);
+  double _value(_Slide slide) {
+    final dragged = _drag[slide];
+    if (dragged != null) return dragged;
+    if (slide == _Slide.size) {
+      final inlineSize = _active.size;
+      if (inlineSize != null &&
+          (widget.hasSelection() || _scope != FormatScope.caret)) {
+        return kRichSizeSteps[(inlineSize - 1).clamp(
+          0,
+          kRichSizeSteps.length - 1,
+        )];
+      }
+      return widget.fontScale;
+    }
+    final inlineOpacity = _active.opacity;
+    if (inlineOpacity != null &&
+        (widget.hasSelection() || _scope != FormatScope.caret)) {
+      return kRichOpacitySteps[(inlineOpacity - 1).clamp(
+        0,
+        kRichOpacitySteps.length - 1,
+      )];
+    }
+    return widget.textOpacity;
+  }
+
+  void _resetScale() {
+    final scoped = _applyScopeTracked();
+    setState(() => _drag.remove(_Slide.size));
+    widget.onScaleEnd(1.0);
+    _releaseScope(scoped);
+  }
+
+  void _handleClearFormat() {
+    _scoped(() {
+      final controller = widget.target?.controller;
+      if (controller != null &&
+          controller.hasPendingFormat &&
+          !widget.hasSelection()) {
+        controller.clearPendingFormat();
+      }
+      widget.onClearFormat();
+    });
+    if (_drag.isNotEmpty) {
+      setState(_drag.clear);
+    }
+  }
 
   void _onSlide(_Slide slide, double value) {
     if (!_drag.containsKey(slide)) _applyScope();
@@ -796,39 +844,53 @@ class _FormatBarState extends State<FormatBar> {
                                         (size * 100).round(),
                                       ),
                                       excludeSemantics: true,
-                                      child: SizedBox(
-                                        width: 42,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              l10n.formatSizeLabel,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: text.badge.copyWith(
-                                                color: scheme.onSurfaceVariant,
-                                                fontWeight: AppWeight.medium,
-                                                height: 1.0,
+                                      child: InkWell(
+                                        key: const ValueKey(
+                                          'format-size-reset',
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          AppRadius.s,
+                                        ),
+                                        onTap:
+                                            (size - 1.0).abs() < 0.001 &&
+                                                _active.size == null
+                                            ? null
+                                            : _resetScale,
+                                        child: SizedBox(
+                                          width: 42,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                l10n.formatSizeLabel,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: text.badge.copyWith(
+                                                  color:
+                                                      scheme.onSurfaceVariant,
+                                                  fontWeight: AppWeight.medium,
+                                                  height: 1.0,
+                                                ),
                                               ),
-                                            ),
-                                            Text(
-                                              '%${(size * 100).round()}',
-                                              key: const ValueKey(
-                                                'format-size-value',
+                                              Text(
+                                                '%${(size * 100).round()}',
+                                                key: const ValueKey(
+                                                  'format-size-value',
+                                                ),
+                                                textAlign: TextAlign.center,
+                                                maxLines: 1,
+                                                style: text.badge.copyWith(
+                                                  color: scheme.onSurface,
+                                                  height: 1.1,
+                                                  fontFeatures: const [
+                                                    FontFeature.tabularFigures(),
+                                                  ],
+                                                ),
                                               ),
-                                              textAlign: TextAlign.center,
-                                              maxLines: 1,
-                                              style: text.badge.copyWith(
-                                                color: scheme.onSurface,
-                                                height: 1.1,
-                                                fontFeatures: const [
-                                                  FontFeature.tabularFigures(),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -852,9 +914,16 @@ class _FormatBarState extends State<FormatBar> {
                               icon: Icons.format_clear,
                               tooltip: l10n.formatClear,
                               onTap:
-                                  _active.isEmpty && _scope == FormatScope.caret
+                                  _active.isEmpty &&
+                                      _scope == FormatScope.caret &&
+                                      !widget.hasSelection() &&
+                                      !(widget
+                                              .target
+                                              ?.controller
+                                              .hasPendingFormat ??
+                                          false)
                                   ? null
-                                  : () => _scoped(widget.onClearFormat),
+                                  : _handleClearFormat,
                             ),
                             // Maddenin ALT ÇİZGİSİ (yalnız madde hedefinde).
                             if (widget.dividerKind != null)
@@ -1487,13 +1556,13 @@ class _ColorRow extends StatelessWidget {
               key: ValueKey('$keyPrefix-${i + 1}'),
               tooltip: i < names.length ? '$label: ${names[i]}' : label,
               onTap: () => onPick(i + 1),
-              fill: filled ? palette[i].withValues(alpha: 0.45) : palette[i],
+              fill: filled ? palette[i].withValues(alpha: AppAlpha.muted) : palette[i],
               border: filled ? palette[i] : null,
               borderWidth: index == i + 1 ? 3.5 : 2,
               child: index == i + 1
                   ? Icon(
                       Icons.check,
-                      size: 16,
+                      size: AppIconSize.xs,
                       color: filled ? palette[i] : Colors.white,
                     )
                   : null,
@@ -1519,7 +1588,7 @@ class _ColorRow extends StatelessWidget {
                 : FixedColors.rainbowSweep,
             child: Icon(
               custom != null ? Icons.check : AppIcons.color,
-              size: 15,
+              size: AppIconSize.xs,
               color: custom != null ? FixedColors.inkOn(custom) : Colors.white,
             ),
           ),
@@ -1535,9 +1604,9 @@ class _ColorRow extends StatelessWidget {
             borderWidth: 1.5,
             child: Icon(
               Icons.format_color_reset,
-              size: 15,
+              size: AppIconSize.xs,
               color: index == null
-                  ? scheme.onSurfaceVariant.withValues(alpha: 0.5)
+                  ? scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted)
                   : scheme.onSurfaceVariant,
             ),
           ),
@@ -1606,7 +1675,7 @@ class _FontTray extends StatelessWidget {
                             monoLabel: l10n.noteFontMono,
                           ),
                           style: applyNoteFont(
-                            const TextStyle(fontSize: 14.5),
+                            AppText.of(Theme.of(context)).body,
                             font.id,
                             fetch: false,
                           ),
@@ -1820,21 +1889,21 @@ class _ActiveFormatBadgesState extends State<ActiveFormatBadges> {
       return palette[index - 1];
     }
 
+    final appText = AppText.of(Theme.of(context));
+
     Widget letter(String text, {TextStyle? style}) => Padding(
       padding: const EdgeInsetsDirectional.only(end: 2),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
         decoration: BoxDecoration(
           color: scheme.primaryContainer,
-          borderRadius: BorderRadius.circular(5),
+          borderRadius: BorderRadius.circular(AppRadius.xs),
         ),
         child: Text(
           text,
-          style: TextStyle(
-            fontSize: 11,
-            height: 1.2,
-            color: scheme.onPrimaryContainer,
-          ).merge(style),
+          style: appText.badge
+              .copyWith(color: scheme.onPrimaryContainer)
+              .merge(style),
         ),
       ),
     );
@@ -1846,7 +1915,7 @@ class _ActiveFormatBadgesState extends State<ActiveFormatBadges> {
         height: 12,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: filled ? color.withValues(alpha: 0.6) : null,
+          color: filled ? color.withValues(alpha: AppAlpha.muted) : null,
           border: Border.all(color: color, width: 2),
         ),
       ),

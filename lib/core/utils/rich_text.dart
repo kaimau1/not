@@ -1661,3 +1661,118 @@ bool isMarkerOffset(String text, int index) {
   }
   return (text: out, caret: at);
 }
+
+/// Biçim kapsamı için metin uzayı seçimi (düz metinde sınırlar bulunur).
+enum RichScopeKind { word, line, all }
+
+int _plainToLogicalLeaves(
+  List<_Leaf> leaves,
+  int plainOffset, {
+  bool preferEnd = false,
+}) {
+  if (leaves.isEmpty) return 0;
+  final plainLen = leaves.fold<int>(0, (sum, l) => sum + l.text.length);
+  final target = plainOffset.clamp(0, plainLen);
+  var plainCursor = 0;
+  for (final leaf in leaves) {
+    final nextPlain = plainCursor + leaf.text.length;
+    if (target < plainCursor) return leaf.markedStart;
+    if (target == plainCursor && !preferEnd) return leaf.markedStart;
+    if (target < nextPlain) return leaf.markedStart + (target - plainCursor);
+    if (target == nextPlain && preferEnd) {
+      return leaf.markedStart + leaf.text.length;
+    }
+    plainCursor = nextPlain;
+  }
+  final last = leaves.last;
+  return last.markedStart + last.text.length;
+}
+
+/// [markedText] içindeki [markedOffset] konumunu DÜZ metin uzayına çevirir.
+int logicalToPlainOffset(String markedText, int markedOffset) {
+  final leaves = _parse(markedText);
+  if (leaves.isEmpty) return 0;
+  return _toPlain(leaves, markedOffset.clamp(0, markedText.length));
+}
+
+/// DÜZ metindeki [plainOffset] konumunu [markedText] içindeki işaretli konuma
+/// çevirir.
+///
+/// [preferEnd] `true` iken iki yaprak sınırında ya da bir biçim kutusunun
+/// sağ ucunda kapanış işaretinden ÖNCEKİ (biçimli metnin içindeki) konumu
+/// döndürür — seçim sonu ve biçim içi imleç koruması için kullanılır.
+int plainToLogicalOffset(
+  String markedText,
+  int plainOffset, {
+  bool preferEnd = false,
+}) => _plainToLogicalLeaves(_parse(markedText), plainOffset, preferEnd: preferEnd);
+
+/// [markedText] içindeki [markedCaret] konumunu DÜZ metne indirgeyip [kind]
+/// kapsamını ([word]/[line]/[all]) çözer ve işaretli aralığı döndürür.
+///
+/// KÖK NEDEN: eskiden kapsam seçimi ham işaretli metinde `isRichWordChar`
+/// arıyordu; `_` italik işaretiyle çarpışıyor, `%%k:` / `##k:` ise sınırı
+/// bölüyordu. Düz metin uzayı işaretlerden tamamen bağımsızdır.
+({int start, int end, int plainCaret})? richScopeRange(
+  String markedText,
+  int markedCaret,
+  RichScopeKind kind,
+) {
+  if (markedText.isEmpty) return null;
+  final leaves = _parse(markedText);
+  if (leaves.isEmpty) return null;
+  final plain = [for (final l in leaves) l.text].join();
+  if (plain.isEmpty) return null;
+  final caret = _toPlain(
+    leaves,
+    markedCaret.clamp(0, markedText.length),
+  ).clamp(0, plain.length);
+
+  var ps = caret;
+  var pe = caret;
+  switch (kind) {
+    case RichScopeKind.word:
+      final leftWord = ps > 0 && isRichWordChar(plain[ps - 1]);
+      final rightWord = pe < plain.length && isRichWordChar(plain[pe]);
+      if (!leftWord && !rightWord) return null;
+      while (ps > 0 && isRichWordChar(plain[ps - 1])) {
+        ps--;
+      }
+      while (pe < plain.length && isRichWordChar(plain[pe])) {
+        pe++;
+      }
+    case RichScopeKind.line:
+      ps = caret == 0 ? 0 : plain.lastIndexOf('\n', caret - 1) + 1;
+      final next = plain.indexOf('\n', caret);
+      pe = next < 0 ? plain.length : next;
+    case RichScopeKind.all:
+      return (start: 0, end: markedText.length, plainCaret: caret);
+  }
+  if (pe <= ps) return null;
+  var start = _plainToLogicalLeaves(leaves, ps);
+  var end = _plainToLogicalLeaves(leaves, pe, preferEnd: true);
+  // İşaretlenen aralıkta kısmen kesilen iç biçimler varsa dengeli sınırla.
+  ({int start, int end}) balance(String sub, int base, int s, int e) {
+    var rs = s;
+    var re = e;
+    for (final m in _formatPattern.allMatches(sub)) {
+      final content = _contentOf(m);
+      if (content == null || content.isEmpty) continue;
+      final ms = base + m.start;
+      final me = base + m.end;
+      if (ms >= rs && ms < re && me > re) re = me;
+      if (ms < rs && me > rs && me < re) rs = ms;
+      final format = _formatOf(m);
+      final openLen = _openLength(format, _colorOf(m));
+      final inner = balance(content, ms + openLen, rs, re);
+      rs = inner.start;
+      re = inner.end;
+    }
+    return (start: rs, end: re);
+  }
+
+  final balanced = balance(markedText, 0, start, end);
+  start = balanced.start;
+  end = balanced.end;
+  return (start: start, end: end, plainCaret: caret);
+}

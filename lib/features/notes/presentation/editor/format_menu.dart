@@ -1,3 +1,4 @@
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/app_icons.dart';
 import 'package:flutter/material.dart';
 
@@ -461,7 +462,7 @@ class _ColorRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: filled
-                      ? palette[i].withValues(alpha: 0.45)
+                      ? palette[i].withValues(alpha: AppAlpha.muted)
                       : Colors.transparent,
                   border: Border.all(color: palette[i], width: 3),
                 ),
