@@ -131,7 +131,7 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
         action();
       }
 
-      final paper = AppSurface.paper(theme);
+      final paper = AppSurface.sheetCard(theme);
 
       return SafeArea(
         child: SingleChildScrollView(

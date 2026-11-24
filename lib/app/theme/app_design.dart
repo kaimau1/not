@@ -48,6 +48,24 @@ abstract final class AppSurface {
     );
   }
 
+  /// Alt levha içindeki bölüm kartı: levha zemininden ayrışan temiz yüzey,
+  /// ince kenar çizgisi, bulanıksız (GLES uyumlu).
+  static BoxDecoration sheetCard(
+    ThemeData theme, {
+    bool highlighted = false,
+    double radius = AppRadius.l,
+  }) {
+    final t = AppTokens.fromTheme(theme);
+    final s = theme.colorScheme;
+    return BoxDecoration(
+      color: t.resolvedSheetCard(s),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: highlighted ? t.resolvedAccentBorder(s) : t.hairline,
+      ),
+    );
+  }
+
   /// Yüzen yüzey (bildirim, kalem kapsülü, dinleme kartı): [color] (yoksa
   /// `surfaceContainerHigh`), ince çizgi + [floatingShadow].
   static BoxDecoration floating(

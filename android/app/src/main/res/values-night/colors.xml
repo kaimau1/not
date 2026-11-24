@@ -5,21 +5,21 @@
      BİLMEZ (widget'ın uygulama temasını giymesi ayrı bir iş).
      Bkz. values/colors.xml (karar açıklaması orada). -->
 <resources>
-    <color name="widget_surface">#1C221E</color>
-    <color name="widget_row">#29302C</color>
-    <color name="widget_outline">#383F3B</color>
+    <color name="widget_surface">#192420</color>
+    <color name="widget_row">#2A3731</color>
+    <color name="widget_outline">#384840</color>
 
-    <color name="widget_on_surface">#E1E8E4</color>
-    <color name="widget_on_surface_muted">#B1BAB5</color>
+    <color name="widget_on_surface">#E3EFEA</color>
+    <color name="widget_on_surface_muted">#B0C2BA</color>
 
-    <color name="widget_accent">#76CDC5</color>
-    <color name="widget_on_accent">#002E2B</color>
+    <color name="widget_accent">#68DBC8</color>
+    <color name="widget_on_accent">#002B24</color>
 
-    <color name="widget_note">#0B4A46</color>
-    <color name="widget_on_note">#C8E9E5</color>
+    <color name="widget_note">#0C4E45</color>
+    <color name="widget_on_note">#C5F2EA</color>
 
-    <color name="widget_icon">#E1E8E4</color>
-    <color name="widget_icon_accent">#76CDC5</color>
+    <color name="widget_icon">#E3EFEA</color>
+    <color name="widget_icon_accent">#68DBC8</color>
     <!-- Açılış zemini (LaunchTheme + NormalTheme): AppTheme Adaçayı zemini. -->
-    <color name="launch_bg">#131916</color>
+    <color name="launch_bg">#0E1613</color>
 </resources>

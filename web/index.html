@@ -13,7 +13,7 @@
   <title>Notlar — akıllı not defteri</title>
   <meta name="description" content="Notlar: telefon, tablet, bilgisayar ve web arasında anında senkron olan akıllı not defteri. Yapay zekâ asistanı, el yazısı, PDF üstüne not, notta YouTube videosu, çok sayfalı notlar, ortak notlar ve klasörler.">
   <meta name="application-name" content="Notlar">
-  <meta name="theme-color" content="#EAF0EB">
+  <meta name="theme-color" content="#E4EFE9">
   <!--
     AÇILIŞ TEMASI = UYGULAMANIN İLK TEMASI (KW-6, web keşfi 2026-11-18):
     katman eskiden işletim sisteminin koyu kipini izliyordu, uygulama ise
@@ -31,7 +31,7 @@
         window.matchMedia('(prefers-color-scheme: dark)').matches);
       if (!dark) return;
       document.documentElement.classList.add('dark');
-      document.querySelector('meta[name="theme-color"]').content = '#131916';
+      document.querySelector('meta[name="theme-color"]').content = '#0E1613';
     })();
   </script>
 
@@ -80,8 +80,8 @@
     (TEMA_PLANI F35.2); hangisi olduğu yukarıdaki betikte (KW-6).
   -->
   <style>
-    :root { --bg: #EAF0EB; --fg: #1B2420; --muted: #4D5853; --mark: #106561; }
-    :root.dark { --bg: #131916; --fg: #E1E8E4; --muted: #B1BAB5; --mark: #76CDC5; }
+    :root { --bg: #E4EFE9; --fg: #13221D; --muted: #3F534C; --mark: #0B6B5E; }
+    :root.dark { --bg: #0E1613; --fg: #E3EFEA; --muted: #B0C2BA; --mark: #68DBC8; }
     html, body { margin: 0; height: 100%; background: var(--bg); }
     #splash {
       position: fixed; inset: 0; display: flex; flex-direction: column;

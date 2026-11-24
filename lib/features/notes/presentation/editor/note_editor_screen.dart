@@ -52,8 +52,12 @@ import '../../../../app/window_class.dart';
 
 export '../../../../app/window_class.dart' show kReadingWidth;
 import '../../../auth/presentation/auth_providers.dart';
+import '../../../../app/theme/app_design.dart';
+import '../../../../app/theme/dashboard_wallpapers.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../app/theme/note_themes.dart';
+import '../../../../core/widgets/press_scale.dart';
+import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/web_file_drop.dart';

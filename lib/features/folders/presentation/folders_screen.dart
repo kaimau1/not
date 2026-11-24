@@ -346,13 +346,14 @@ class FolderCard extends StatelessWidget {
         .toList();
     final empty = notes.isEmpty;
 
+    final tokens = AppTokens.of(context);
     return SizedBox(
       height: empty ? FoldersScreen.emptyCardHeight : FoldersScreen.cardHeight,
       child: Material(
-        color: scheme.surfaceContainerLowest,
+        color: tokens.card,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(color: tokens.hairline),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

@@ -65,9 +65,123 @@ abstract final class NoteThemes {
   static const sakura = 'sakura';
   static const waves = 'waves';
   static const meadow = 'meadow';
+  static const aurora = 'aurora';
+  static const citrus = 'citrus';
+  static const botanical = 'botanical';
+  static const terracotta = 'terracotta';
+  static const confetti = 'confetti';
+  static const cobalt = 'cobalt';
 
-  /// Seçicideki sıra.
+  /// Seçicideki sıra: yeni canlı temalarla birlikte 14 sayfa teması.
   static const List<NoteTheme> all = [
+    NoteTheme(
+      aurora,
+      NoteThemePalette(
+        top: Color(0xFFDDF6F0),
+        bottom: Color(0xFFF3ECFA),
+        art: Color(0xA64FD4B6),
+        accent: Color(0x99F28CB4),
+        ink: Color(0xFF0E574D),
+      ),
+      NoteThemePalette(
+        top: Color(0xFF0E1D2B),
+        bottom: Color(0xFF1A1830),
+        art: Color(0x664DE0C6),
+        accent: Color(0x55C48DFC),
+        ink: Color(0xFF9AF2E2),
+      ),
+      _aurora,
+    ),
+    NoteTheme(
+      citrus,
+      NoteThemePalette(
+        top: Color(0xFFFFF0CA),
+        bottom: Color(0xFFFFFBF0),
+        art: Color(0xB3FFA242),
+        accent: Color(0x9970B46B),
+        ink: Color(0xFF784608),
+      ),
+      NoteThemePalette(
+        top: Color(0xFF281F12),
+        bottom: Color(0xFF1D1810),
+        art: Color(0x88E09238),
+        accent: Color(0x706CA663),
+        ink: Color(0xFFFFD494),
+      ),
+      _citrus,
+    ),
+    NoteTheme(
+      botanical,
+      NoteThemePalette(
+        top: Color(0xFFE0F2E8),
+        bottom: Color(0xFFF6FBF7),
+        art: Color(0x993EA678),
+        accent: Color(0xCCF27B63),
+        ink: Color(0xFF15573A),
+      ),
+      NoteThemePalette(
+        top: Color(0xFF11221B),
+        bottom: Color(0xFF0F1B16),
+        art: Color(0x99357A5B),
+        accent: Color(0x99E8806B),
+        ink: Color(0xFF9EEBC5),
+      ),
+      _botanical,
+    ),
+    NoteTheme(
+      terracotta,
+      NoteThemePalette(
+        top: Color(0xFFFAE2D4),
+        bottom: Color(0xFFFDF5EF),
+        art: Color(0x99DE7A54),
+        accent: Color(0x804E8AC2),
+        ink: Color(0xFF7D3318),
+      ),
+      NoteThemePalette(
+        top: Color(0xFF291A15),
+        bottom: Color(0xFF1E1411),
+        art: Color(0x88AD5539),
+        accent: Color(0x706494C4),
+        ink: Color(0xFFFFC1A6),
+      ),
+      _terracotta,
+    ),
+    NoteTheme(
+      confetti,
+      NoteThemePalette(
+        top: Color(0xFFEEF1FF),
+        bottom: Color(0xFFFFF9F5),
+        art: Color(0xB8F07CA6),
+        accent: Color(0xB359B2E8),
+        ink: Color(0xFF4D348C),
+      ),
+      NoteThemePalette(
+        top: Color(0xFF18162B),
+        bottom: Color(0xFF1E172B),
+        art: Color(0x99F08AB2),
+        accent: Color(0x996EC9FA),
+        ink: Color(0xFFD9C7FF),
+      ),
+      _confetti,
+    ),
+    NoteTheme(
+      cobalt,
+      NoteThemePalette(
+        top: Color(0xFFDCEBFC),
+        bottom: Color(0xFFF5FAFF),
+        art: Color(0x995A9AE8),
+        accent: Color(0xA6E8B14E),
+        ink: Color(0xFF14488A),
+      ),
+      NoteThemePalette(
+        top: Color(0xFF0D192E),
+        bottom: Color(0xFF111F38),
+        art: Color(0x803C7CD6),
+        accent: Color(0x99F2C672),
+        ink: Color(0xFFA8D0FF),
+      ),
+      _cobalt,
+    ),
     NoteTheme(
       palm,
       NoteThemePalette(
@@ -89,11 +203,11 @@ abstract final class NoteThemes {
     NoteTheme(
       lagoon,
       NoteThemePalette(
-        top: Color(0xFF9FD8CB),
-        bottom: Color(0xFFC6EBE3),
+        top: Color(0xFFA6DDD0),
+        bottom: Color(0xFFCAEEE6),
         art: Color(0xA6BDE8DE),
         accent: Color(0x667FC4B4),
-        ink: Color(0xFF0E4D43),
+        ink: Color(0xFF0C4D43),
       ),
       NoteThemePalette(
         top: Color(0xFF0F3B36),
@@ -707,6 +821,260 @@ abstract final class NoteThemes {
           stops: const [0.62, 1],
         ).createShader(rect),
     );
+  }
+
+  /// Aurora: üst sol ve alt sağ köşelerden akan ışıklı şeritler + ince parıltılar.
+  static void _aurora(Canvas c, Size s, NoteThemePalette p, double u) {
+    final topRibbon = Path()
+      ..moveTo(-20 * u, 0)
+      ..lineTo(s.width * 0.72, 0)
+      ..cubicTo(
+        s.width * 0.48,
+        62 * u,
+        s.width * 0.22,
+        42 * u,
+        -20 * u,
+        155 * u,
+      )
+      ..close();
+    c.drawPath(
+      topRibbon,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [p.art, p.accent.withValues(alpha: p.accent.a * 0.55), p.art.withValues(alpha: 0)],
+        ).createShader(Rect.fromLTWH(0, 0, s.width * 0.75, 170 * u)),
+    );
+    final botRibbon = Path()
+      ..moveTo(s.width + 20 * u, s.height)
+      ..lineTo(s.width * 0.22, s.height)
+      ..cubicTo(
+        s.width * 0.52,
+        s.height - 68 * u,
+        s.width * 0.76,
+        s.height - 44 * u,
+        s.width + 20 * u,
+        s.height - 165 * u,
+      )
+      ..close();
+    c.drawPath(
+      botRibbon,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.bottomRight,
+          end: Alignment.topLeft,
+          colors: [p.accent, p.art.withValues(alpha: p.art.a * 0.55), p.accent.withValues(alpha: 0)],
+        ).createShader(
+          Rect.fromLTWH(s.width * 0.2, s.height - 175 * u, s.width * 0.8, 175 * u),
+        ),
+    );
+    final glint = Paint()..color = p.art.withValues(alpha: (p.art.a * 0.95).clamp(0, 1));
+    for (final (fx, fy, r) in const [
+      (0.18, 0.10, 5.5),
+      (0.84, 0.14, 4.2),
+      (0.80, 0.86, 5.2),
+      (0.24, 0.91, 3.8),
+    ]) {
+      _sparkle(c, Offset(s.width * fx, s.height * fy), r * u, glint);
+    }
+  }
+
+  /// Narenciye: köşelerde güneşli portakal/limon dilimleri ve taze yapraklar.
+  static void _citrus(Canvas c, Size s, NoteThemePalette p, double u) {
+    void slice(Offset center, double r, double rot) {
+      c
+        ..save()
+        ..translate(center.dx, center.dy)
+        ..rotate(rot);
+      c.drawCircle(Offset.zero, r, Paint()..color = p.art);
+      c.drawCircle(
+        Offset.zero,
+        r * 0.86,
+        Paint()..color = p.bottom.withValues(alpha: 0.75),
+      );
+      final wedge = Paint()..color = p.art.withValues(alpha: p.art.a * 0.8);
+      for (var i = 0; i < 8; i++) {
+        final a = i * math.pi / 4;
+        c.drawArc(
+          Rect.fromCircle(center: Offset.zero, radius: r * 0.76),
+          a + 0.08,
+          math.pi / 4 - 0.16,
+          true,
+          wedge,
+        );
+      }
+      c.restore();
+    }
+
+    slice(Offset(26 * u, 28 * u), 56 * u, 0.3);
+    slice(Offset(s.width - 18 * u, s.height - 24 * u), 62 * u, -0.4);
+    slice(Offset(s.width - 52 * u, 30 * u), 30 * u, 0.8);
+    final leafPaint = Paint()..color = p.accent;
+    c.drawPath(_leafPath(Offset(70 * u, 26 * u), 0.45, 58 * u), leafPaint);
+    c.drawPath(_leafPath(Offset(24 * u, 82 * u), 1.25, 48 * u), leafPaint);
+    c.drawPath(
+      _leafPath(Offset(s.width - 68 * u, s.height - 28 * u), 3.65, 56 * u),
+      leafPaint,
+    );
+    c.drawPath(
+      _leafPath(Offset(s.width - 24 * u, s.height - 84 * u), 4.35, 46 * u),
+      leafPaint,
+    );
+  }
+
+  /// Botanik: köşelerden uzanan ince okaliptüs dalları ve renkli küçük çiçekler.
+  static void _botanical(Canvas c, Size s, NoteThemePalette p, double u) {
+    final stem = Paint()
+      ..color = p.art
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0 * u
+      ..strokeCap = StrokeCap.round;
+    final leaf = Paint()..color = p.art.withValues(alpha: p.art.a * 0.78);
+    final bloom = Paint()..color = p.accent;
+
+    void sprig(Offset start, Offset end, Offset ctrl) {
+      final path = Path()
+        ..moveTo(start.dx, start.dy)
+        ..quadraticBezierTo(ctrl.dx, ctrl.dy, end.dx, end.dy);
+      c.drawPath(path, stem);
+      for (var i = 1; i <= 5; i++) {
+        final t = i / 6;
+        final pt = _quad(start, ctrl, end, t);
+        final tan = _quadTangent(start, ctrl, end, t);
+        final a = math.atan2(tan.dy, tan.dx);
+        final len = (24 - i * 1.8) * u;
+        c.drawPath(_leafPath(pt, a + 0.85, len), leaf);
+        c.drawPath(_leafPath(pt, a - 0.85, len), leaf);
+      }
+      _blossom(c, end, 9.5 * u, bloom, Paint()..color = p.bottom);
+    }
+
+    sprig(
+      Offset(-8 * u, 24 * u),
+      Offset(108 * u, 74 * u),
+      Offset(52 * u, 20 * u),
+    );
+    sprig(
+      Offset(s.width + 8 * u, s.height - 28 * u),
+      Offset(s.width - 114 * u, s.height - 82 * u),
+      Offset(s.width - 54 * u, s.height - 22 * u),
+    );
+    sprig(
+      Offset(s.width + 6 * u, 36 * u),
+      Offset(s.width - 78 * u, 88 * u),
+      Offset(s.width - 28 * u, 42 * u),
+    );
+  }
+
+  /// Terrakota: modern organik kemerler ve yumuşak terrazzo taşları.
+  static void _terracotta(Canvas c, Size s, NoteThemePalette p, double u) {
+    c.drawCircle(
+      Offset(-12 * u, 16 * u),
+      84 * u,
+      Paint()..color = p.art.withValues(alpha: p.art.a * 0.72),
+    );
+    c.drawCircle(
+      Offset(56 * u, 56 * u),
+      26 * u,
+      Paint()..color = p.accent.withValues(alpha: p.accent.a * 0.65),
+    );
+    c.drawCircle(
+      Offset(s.width + 14 * u, s.height - 12 * u),
+      96 * u,
+      Paint()..color = p.art.withValues(alpha: p.art.a * 0.68),
+    );
+    c.drawCircle(
+      Offset(s.width - 62 * u, s.height - 54 * u),
+      28 * u,
+      Paint()..color = p.accent.withValues(alpha: p.accent.a * 0.65),
+    );
+    // Köşe organik dal çizgisi.
+    final line = Paint()
+      ..color = p.bottom.withValues(alpha: 0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * u
+      ..strokeCap = StrokeCap.round;
+    c.drawLine(Offset(14 * u, 12 * u), Offset(42 * u, 52 * u), line);
+    c.drawLine(Offset(26 * u, 28 * u), Offset(40 * u, 24 * u), line);
+    c.drawLine(Offset(32 * u, 38 * u), Offset(22 * u, 44 * u), line);
+    c.drawLine(
+      Offset(s.width - 14 * u, s.height - 16 * u),
+      Offset(s.width - 46 * u, s.height - 58 * u),
+      line,
+    );
+  }
+
+  /// Konfeti: üst ve alt kenarlara serpilmiş renkli halkalar, kapsüller ve noktalar.
+  static void _confetti(Canvas c, Size s, NoteThemePalette p, double u) {
+    final rnd = math.Random(42);
+    final colors = [
+      p.art,
+      p.accent,
+      Color.lerp(p.art, p.accent, 0.5)!,
+      p.ink.withValues(alpha: 0.22),
+    ];
+    for (var i = 0; i < 24; i++) {
+      final topBand = i.isEven;
+      final x = (0.04 + rnd.nextDouble() * 0.92) * s.width;
+      final y = topBand
+          ? (8 + rnd.nextDouble() * 88) * u
+          : s.height - (12 + rnd.nextDouble() * 96) * u;
+      final color = colors[i % colors.length];
+      final kind = i % 3;
+      if (kind == 0) {
+        c.drawCircle(Offset(x, y), (3.2 + rnd.nextDouble() * 3.5) * u, Paint()..color = color);
+      } else if (kind == 1) {
+        c.drawCircle(
+          Offset(x, y),
+          (4.5 + rnd.nextDouble() * 4.5) * u,
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.8 * u,
+        );
+      } else {
+        c
+          ..save()
+          ..translate(x, y)
+          ..rotate(rnd.nextDouble() * math.pi)
+          ..drawRRect(
+            RRect.fromRectAndRadius(
+              Rect.fromCenter(center: Offset.zero, width: 14 * u, height: 4.5 * u),
+              Radius.circular(2.5 * u),
+            ),
+            Paint()..color = color,
+          )
+          ..restore();
+      }
+    }
+  }
+
+  /// Kobalt: zarif geometrik ufuk yayları ve altın pusula parıltıları.
+  static void _cobalt(Canvas c, Size s, NoteThemePalette p, double u) {
+    final arc = Paint()
+      ..color = p.art.withValues(alpha: p.art.a * 0.52)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8 * u;
+    for (var i = 0; i < 3; i++) {
+      c.drawCircle(Offset(s.width + 20 * u, -20 * u), (72 + i * 28) * u, arc);
+      c.drawCircle(Offset(-24 * u, s.height + 24 * u), (78 + i * 28) * u, arc);
+    }
+    final fillWave = Path()
+      ..moveTo(0, s.height)
+      ..lineTo(0, s.height - 54 * u)
+      ..quadraticBezierTo(s.width * 0.35, s.height - 86 * u, s.width * 0.7, s.height - 46 * u)
+      ..quadraticBezierTo(s.width * 0.88, s.height - 28 * u, s.width, s.height - 42 * u)
+      ..lineTo(s.width, s.height)
+      ..close();
+    c.drawPath(
+      fillWave,
+      Paint()..color = p.art.withValues(alpha: p.art.a * 0.38),
+    );
+    final star = Paint()..color = p.accent;
+    _sparkle(c, Offset(s.width - 36 * u, 42 * u), 7.5 * u, star);
+    _sparkle(c, Offset(s.width - 68 * u, 72 * u), 4.2 * u, star);
+    _sparkle(c, Offset(36 * u, s.height - 44 * u), 6.0 * u, star);
   }
 }
 

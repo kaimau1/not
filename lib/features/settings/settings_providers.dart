@@ -1221,13 +1221,17 @@ enum DashboardPattern {
 class DashboardBackground {
   const DashboardBackground({
     this.path,
+    this.preset,
     this.opacity = 0.25,
     this.color,
     this.pattern = DashboardPattern.none,
   });
 
-  /// Cihazdaki kopyanın yolu; null = zemin görseli yok.
+  /// Cihazdaki kopyanın yolu; null = galeriden zemin görseli yok.
   final String? path;
+
+  /// Hazır renkli zemin kimliği (`DashboardWallpapers`); null = hazır görsel yok.
+  final String? preset;
 
   /// Görünürlük (0.05–1). Varsayılan düşük: kart ızgarası okunur kalmalı.
   /// Hem görselin hem desenin görünürlüğünü ayarlar.
@@ -1239,15 +1243,25 @@ class DashboardBackground {
   /// Zemin deseni; [DashboardPattern.none] = desen yok.
   final DashboardPattern pattern;
 
+  /// Herhangi bir özelleştirme (hazır görsel, cihaz görseli, renk, desen) var mı?
+  bool get isCustomized =>
+      (preset != null && preset!.isNotEmpty) ||
+      path != null ||
+      color != null ||
+      pattern != DashboardPattern.none;
+
   DashboardBackground copyWith({
     String? path,
     bool clearPath = false,
+    String? preset,
+    bool clearPreset = false,
     double? opacity,
     int? color,
     bool clearColor = false,
     DashboardPattern? pattern,
   }) => DashboardBackground(
     path: clearPath ? null : (path ?? this.path),
+    preset: clearPreset ? null : (preset ?? this.preset),
     opacity: opacity ?? this.opacity,
     color: clearColor ? null : (color ?? this.color),
     pattern: pattern ?? this.pattern,
@@ -1261,6 +1275,7 @@ final dashboardBackgroundProvider =
 
 class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
   static const _pathKey = 'dashboard_bg_path';
+  static const _presetKey = 'dashboard_bg_preset';
   static const _opacityKey = 'dashboard_bg_opacity';
   static const _colorKey = 'dashboard_bg_color';
   static const _patternKey = 'dashboard_bg_pattern';
@@ -1270,6 +1285,7 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     final prefs = watchPrefs(ref);
     return DashboardBackground(
       path: prefs.getString(_pathKey),
+      preset: prefs.getString(_presetKey),
       opacity: prefs.getDouble(_opacityKey) ?? 0.25,
       color: prefs.getInt(_colorKey),
       pattern: DashboardPattern.fromId(prefs.getString(_patternKey)),
@@ -1277,12 +1293,48 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
   }
 
   void setPath(String? path) {
-    state = state.copyWith(path: path, clearPath: path == null);
+    final clearPreset = path != null;
+    state = state.copyWith(
+      path: path,
+      clearPath: path == null,
+      clearPreset: clearPreset,
+    );
     final prefs = ref.read(sharedPreferencesProvider);
     if (path == null) {
       prefs.remove(_pathKey);
     } else {
-      prefs.setString(_pathKey, path);
+      prefs
+        ..setString(_pathKey, path)
+        ..remove(_presetKey);
+    }
+  }
+
+  /// Hazır renkli zemin görseli seçer (veya null ile kaldırır).
+  void setPreset(String? presetId, {double? defaultOpacity}) {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final nextOpacity =
+        presetId != null &&
+            defaultOpacity != null &&
+            state.preset == null &&
+            state.path == null &&
+            (state.opacity - 0.25).abs() < 0.01
+        ? defaultOpacity
+        : null;
+    state = state.copyWith(
+      preset: presetId,
+      clearPreset: presetId == null,
+      clearPath: presetId != null,
+      opacity: nextOpacity,
+    );
+    if (presetId == null) {
+      prefs.remove(_presetKey);
+    } else {
+      prefs
+        ..setString(_presetKey, presetId)
+        ..remove(_pathKey);
+      if (nextOpacity != null) {
+        prefs.setDouble(_opacityKey, nextOpacity);
+      }
     }
   }
 
@@ -1311,6 +1363,7 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     state = const DashboardBackground();
     ref.read(sharedPreferencesProvider)
       ..remove(_pathKey)
+      ..remove(_presetKey)
       ..remove(_opacityKey)
       ..remove(_colorKey)
       ..remove(_patternKey);

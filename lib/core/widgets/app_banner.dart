@@ -95,9 +95,13 @@ class AppBanner extends StatelessWidget {
         ],
       ],
     );
+    final tokens = AppTokens.fromTheme(theme);
     return Material(
       color: c.bg,
-      borderRadius: BorderRadius.circular(AppRadius.m),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        side: BorderSide(color: tokens.hairline),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

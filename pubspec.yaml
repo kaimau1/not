@@ -169,6 +169,8 @@ flutter:
     - PRIVACY_POLICY.md
     # Uygulama içi KULLANIM KILAVUZU (dil başına; bkz. guide_screen.dart).
     - assets/guide/
+    # Hazır renkli not ve ana ekran zemin görselleri (dashboard_wallpapers.dart).
+    - assets/backgrounds/
     # Notu PDF'e aktarırken gömülen font. PDF'in hazır Helvetica'sı WinAnsi
     # kodlamalı, ı ğ ş İ harflerini İÇERMİYOR — Türkçe not bozuk çıkıyordu.
     # PT Sans (OFL) Türkçe'nin tamamını taşıyor.

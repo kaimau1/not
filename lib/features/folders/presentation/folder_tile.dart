@@ -135,14 +135,16 @@ class _FolderTileBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     return SizedBox(
       height: FolderTile.height,
       child: Material(
-        color: scheme.surfaceContainerLowest,
+        color: tokens.card,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.l),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
+          side: BorderSide(color: tokens.hairline),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -549,7 +551,9 @@ class _ChipShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final muted = scheme.onSurfaceVariant;
     final accent = dimmed
         ? this.accent?.withValues(alpha: (this.accent?.a ?? 1) * 0.55)
@@ -561,18 +565,18 @@ class _ChipShell extends StatelessWidget {
     return Material(
       color: highlight != null
           ? Color.alphaBlend(
-              highlight.withValues(alpha: 0.16),
-              scheme.surfaceContainerLowest,
+              highlight.withValues(alpha: AppAlpha.pressed),
+              tokens.card,
             )
           : subtle
           ? Colors.transparent
-          : scheme.surfaceContainerLowest,
+          : tokens.card,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.s + 2),
         side: BorderSide(
           color:
               highlight ??
-              scheme.outlineVariant.withValues(alpha: subtle ? 1 : 0.6),
+              (subtle ? scheme.outlineVariant : tokens.hairline),
           width: highlight != null ? 1.5 : 1,
         ),
       ),

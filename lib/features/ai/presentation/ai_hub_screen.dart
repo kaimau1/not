@@ -608,12 +608,14 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
+        color: tokens.card,
+        borderRadius: BorderRadius.circular(AppRadius.l),
+        border: Border.all(color: tokens.hairline),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -726,13 +728,15 @@ class _ChatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpace.l),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
+        color: tokens.card,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: tokens.hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -978,16 +982,18 @@ class _ToolCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final dark = theme.brightness == Brightness.dark;
     final enabled = onTap != null;
     return Opacity(
       opacity: enabled ? 1 : 0.5,
       child: Material(
-        color: scheme.surfaceContainerLowest,
+        color: tokens.card,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          side: BorderSide(color: tokens.hairline),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

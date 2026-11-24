@@ -312,11 +312,13 @@ extension _EditorAppearance on _NoteEditorScreenState {
     return null;
   }
 
-  /// Zemin görseli sayfası: seç / değiştir / kırp / görünürlük / kaldır.
+  /// Zemin görseli sayfası: hazır renkli zeminler + galeriden seç / kırp /
+  /// görünürlük / kaldır.
   ///
   /// Kullanıcı isteği: "not zeminini seçilen bir fotoğraf yapma seçeneği
   /// olsun; koyarken kesme, üzerine yazı yazma, şeffaflığını değiştirme
-  /// olsun ve sonradan da ayarlanabilsin."
+  /// olsun ve sonradan da ayarlanabilsin" + "nota uygun renkli canlılık katacak
+  /// yeni arka plan görselleri".
   Future<void> _showBackgroundSheet() async {
     final note = _note;
     if (note == null) return;
@@ -330,106 +332,277 @@ extension _EditorAppearance on _NoteEditorScreenState {
         builder: (sheetContext, setSheetState) {
           final current = _note;
           if (current == null) return const SizedBox.shrink();
+          final theme = Theme.of(sheetContext);
+          final scheme = theme.colorScheme;
+          final tokens = AppTokens.fromTheme(theme);
+          final text = AppText.of(theme);
           final image = current.backgroundImageId == null
               ? null
               : current.attachments
                     .where((a) => a.id == current.backgroundImageId)
                     .firstOrNull;
+          final activePresetId = image == null
+              ? null
+              : DashboardWallpapers.all
+                    .where((w) => image.fileName == 'wallpaper_${w.id}.jpg')
+                    .map((w) => w.id)
+                    .firstOrNull;
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.l,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.noteBackgroundImage,
-                    style: Theme.of(sheetContext).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  if (image != null) ...[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: SizedBox(
-                        height: 120,
-                        width: double.infinity,
-                        child: _backgroundProvider(image) == null
-                            ? const SizedBox.shrink()
-                            : Image(
-                                image: _backgroundProvider(image)!,
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.opacity,
-                          size: 18,
-                          color: Theme.of(sheetContext)
-                              .colorScheme
-                              .onSurfaceVariant,
+                  SheetHeader(
+                    title: l10n.noteBackgroundImage,
+                    padding: EdgeInsets.zero,
+                    actions: [
+                      if (image != null)
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.pop(sheetContext);
+                            _removeBackgroundImage(image);
+                          },
+                          icon: const Icon(
+                            Icons.hide_image_outlined,
+                            size: AppIconSize.s,
+                          ),
+                          label: Text(l10n.removeBackgroundImage),
                         ),
-                        Expanded(
-                          child: Slider(
-                            value: current.backgroundOpacity.clamp(0.05, 1),
-                            min: 0.05,
-                            onChanged: (value) {
-                              _mutate(
-                                (n) => n.copyWith(backgroundOpacity: value),
-                              );
-                              setSheetState(() {});
-                            },
-                            onChangeEnd: (value) => _mutate(
-                              (n) => n.copyWith(backgroundOpacity: value),
-                              immediate: true,
+                    ],
+                  ),
+                  const SizedBox(height: AppSpace.s),
+                  if (image != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(AppSpace.m),
+                      decoration: AppSurface.sheetCard(theme),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                            child: SizedBox(
+                              height: 112,
+                              width: double.infinity,
+                              child: _backgroundProvider(image) == null
+                                  ? const SizedBox.shrink()
+                                  : Image(
+                                      image: _backgroundProvider(image)!,
+                                      fit: BoxFit.cover,
+                                      opacity: AlwaysStoppedAnimation(
+                                        current.backgroundOpacity
+                                            .clamp(0.05, 1)
+                                            .toDouble(),
+                                      ),
+                                    ),
                             ),
                           ),
+                          const SizedBox(height: AppSpace.s),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.opacity,
+                                size: AppIconSize.s,
+                                color: scheme.primary,
+                              ),
+                              Expanded(
+                                child: Slider(
+                                  value: current.backgroundOpacity.clamp(
+                                    0.05,
+                                    1,
+                                  ),
+                                  min: 0.05,
+                                  onChanged: (value) {
+                                    _mutate(
+                                      (n) => n.copyWith(
+                                        backgroundOpacity: value,
+                                      ),
+                                    );
+                                    setSheetState(() {});
+                                  },
+                                  onChangeEnd: (value) => _mutate(
+                                    (n) => n.copyWith(backgroundOpacity: value),
+                                    immediate: true,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpace.s,
+                                  vertical: AppSpace.xxs,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: tokens.resolvedTintSoft(scheme),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.s,
+                                  ),
+                                ),
+                                child: Text(
+                                  '%${(current.backgroundOpacity * 100).round()}',
+                                  style: text.badge.copyWith(
+                                    color: scheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.m),
+                  ],
+                  // Hazır renkli arka plan galerisi.
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpace.m),
+                    decoration: AppSurface.sheetCard(theme),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.dashboardBackgroundGallery,
+                          style: text.section,
                         ),
+                        const SizedBox(height: AppSpace.s),
                         SizedBox(
-                          width: 44,
-                          child: Text(
-                            '%${(current.backgroundOpacity * 100).round()}',
-                            textAlign: TextAlign.end,
-                            style: Theme.of(sheetContext).textTheme.labelMedium,
+                          height: 122,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: DashboardWallpapers.all.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(width: AppSpace.s),
+                            itemBuilder: (_, i) {
+                              final w = DashboardWallpapers.all[i];
+                              final selected = activePresetId == w.id;
+                              return PressScale(
+                                child: GestureDetector(
+                                  key: ValueKey('note-wallpaper-${w.id}'),
+                                  onTap: () async {
+                                    await _applyPresetWallpaper(w);
+                                    if (sheetContext.mounted) {
+                                      setSheetState(() {});
+                                    }
+                                  },
+                                  child: SizedBox(
+                                    width: 74,
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          height: 92,
+                                          padding: const EdgeInsets.all(
+                                            AppSpace.xxs,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              AppRadius.m,
+                                            ),
+                                            border: Border.all(
+                                              color: selected
+                                                  ? scheme.primary
+                                                  : tokens.hairline,
+                                              width: selected ? 2.5 : 1,
+                                            ),
+                                          ),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              AppRadius.s,
+                                            ),
+                                            child: Stack(
+                                              fit: StackFit.expand,
+                                              children: [
+                                                Image.asset(
+                                                  w.asset,
+                                                  fit: BoxFit.cover,
+                                                  cacheWidth: 240,
+                                                ),
+                                                if (selected)
+                                                  Positioned(
+                                                    right: AppSpace.xs,
+                                                    top: AppSpace.xs,
+                                                    child: CircleAvatar(
+                                                      radius: 9,
+                                                      backgroundColor:
+                                                          scheme.primary,
+                                                      child: Icon(
+                                                        Icons.check,
+                                                        size:
+                                                            AppIconSize.xs - 3,
+                                                        color: scheme.onPrimary,
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: AppSpace.xs),
+                                        Text(
+                                          w.label(l10n),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: text.meta.copyWith(
+                                            fontWeight: selected
+                                                ? AppWeight.strong
+                                                : AppWeight.medium,
+                                            color: selected
+                                                ? scheme.primary
+                                                : scheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],
                     ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.crop),
-                      title: Text(l10n.crop),
-                      onTap: () async {
-                        Navigator.pop(sheetContext);
-                        await _cropBackground(image);
-                      },
-                    ),
-                  ],
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.image_outlined),
-                    title: Text(
-                      image == null
-                          ? l10n.chooseBackgroundImage
-                          : l10n.changeBackgroundImage,
-                    ),
-                    onTap: () async {
-                      Navigator.pop(sheetContext);
-                      await _pickBackgroundImage();
-                    },
                   ),
-                  if (image != null)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.hide_image_outlined),
-                      title: Text(l10n.removeBackgroundImage),
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        _removeBackgroundImage(image);
-                      },
-                    ),
+                  const SizedBox(height: AppSpace.m),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.tonalIcon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: scheme.primaryContainer,
+                            foregroundColor: scheme.onPrimaryContainer,
+                          ),
+                          onPressed: () async {
+                            Navigator.pop(sheetContext);
+                            await _pickBackgroundImage();
+                          },
+                          icon: const Icon(
+                            Icons.image_outlined,
+                            size: AppIconSize.s,
+                          ),
+                          label: Text(
+                            image == null
+                                ? l10n.dashboardBackgroundFromDevice
+                                : l10n.changeBackgroundImage,
+                          ),
+                        ),
+                      ),
+                      if (image != null) ...[
+                        const SizedBox(width: AppSpace.s),
+                        OutlinedButton.icon(
+                          onPressed: () async {
+                            Navigator.pop(sheetContext);
+                            await _cropBackground(image);
+                          },
+                          icon: const Icon(Icons.crop, size: AppIconSize.s),
+                          label: Text(l10n.crop),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -437,6 +610,47 @@ extension _EditorAppearance on _NoteEditorScreenState {
         },
       ),
     );
+  }
+
+  /// Hazır renkli arka planı notun zemin görseli olarak ekler.
+  Future<void> _applyPresetWallpaper(DashboardWallpaper wallpaper) async {
+    final repo = _attachments;
+    if (repo == null) return;
+    try {
+      unawaited(AppHaptics.tick());
+      final data = await rootBundle.load(wallpaper.asset);
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      final attachment = await repo.prepareImage(
+        noteId: widget.noteId,
+        bytes: bytes,
+        fileName: 'wallpaper_${wallpaper.id}.jpg',
+      );
+      if (!mounted) return;
+      final previous = _note?.backgroundImageId;
+      _mutate(
+        (n) => n.copyWith(
+          attachments: [
+            for (final a in n.attachments)
+              if (a.id != previous) a,
+            attachment,
+          ],
+          backgroundImageId: attachment.id,
+          backgroundOpacity: wallpaper.defaultOpacity,
+        ),
+        immediate: true,
+      );
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
+    } catch (e) {
+      if (mounted) {
+        _showSnack(
+          context.l10n.attachmentFailed(friendlyError(context.l10n, e)),
+        );
+      }
+    }
   }
 
   /// Zemin için görsel seçer: seçim → KIRPMA → ek olarak kaydet.

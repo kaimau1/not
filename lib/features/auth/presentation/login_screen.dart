@@ -139,7 +139,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       );
     }
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     return Scaffold(
       body: Row(
         children: [
@@ -153,10 +155,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   constraints: const BoxConstraints(maxWidth: 380),
                   child: Card(
                     elevation: 0,
-                    color: scheme.surfaceContainerLow,
+                    color: tokens.card,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppRadius.xl),
-                      side: BorderSide(color: scheme.outlineVariant),
+                      side: BorderSide(color: tokens.hairline),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
@@ -176,40 +178,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   /// birlikte tek sütun; geniş ekranda marka vitrinde olduğu için yalnız
   /// kart içeriği.
   Widget _form(BuildContext context, {required bool showBrand}) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final l10n = context.l10n;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (showBrand) ...[
-          Icon(Icons.sticky_note_2_rounded, size: 64, color: scheme.primary),
-          const SizedBox(height: 20),
+          Center(
+            child: Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer,
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+                border: Border.all(color: tokens.resolvedAccentBorder(scheme)),
+              ),
+              child: Icon(
+                Icons.sticky_note_2_rounded,
+                size: 44,
+                color: scheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpace.xl),
           Text(
             l10n.appName,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.displaySmall?.copyWith(fontWeight: AppWeight.strong),
+            style: theme.textTheme.displaySmall?.copyWith(
+              fontWeight: AppWeight.strong,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.s),
           Text(
             l10n.loginTagline,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 40),
         ] else ...[
           Text(
             l10n.appName,
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: AppWeight.strong),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: AppWeight.strong,
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpace.xxl),
         ],
         // Sessiz ilk giriş sürerken hiçbir düğme çizilmez: kullanıcı
         // bir an için görüp dokunamadığı bir giriş ekranı görmesin.

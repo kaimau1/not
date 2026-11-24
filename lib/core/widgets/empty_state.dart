@@ -34,8 +34,9 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
-    // §2.3 (F79.5): simge 32, 72 dp nötr dairede; başlık `rowTitle`,
+    // §2.3 (F79.5): simge 32, 72 dp yumuşak temalı dairede; başlık `rowTitle`,
     // açıklama `body`; dikeyde %38'de (tam ortada değil — göz biraz yukarıda
     // arar). Sınırsız yükseklikte (kaydırılan liste) `Align` çocuğa sarılır.
     return Align(
@@ -49,10 +50,11 @@ class EmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: scheme.surfaceContainerHigh,
+                color: tokens.resolvedTintSoft(scheme),
                 shape: BoxShape.circle,
+                border: Border.all(color: tokens.resolvedAccentBorder(scheme)),
               ),
-              child: Icon(icon, size: 32, color: scheme.onSurfaceVariant),
+              child: Icon(icon, size: 32, color: scheme.primary),
             ),
             const SizedBox(height: AppSpace.l),
             Text(title, textAlign: TextAlign.center, style: text.rowTitle),

@@ -477,6 +477,7 @@ class _MonthCell extends StatelessWidget {
     // köşesi yuvarlak bir kâğıt; hafta sonu hafif koyu, ay dışı günler
     // sönük, bugün vurgu kenarlı. Gölge YOK (42 hücre × her kare — akıcılık
     // bütçesi); hücre kendi `Material`ı: dokunma dalgası zeminin üstünde.
+    final card = AppTokens.of(context).card;
     final weekend = day.weekday >= DateTime.saturday;
     final off = holiday?.isOff ?? false;
     final radius = BorderRadius.circular(AppRadius.s);
@@ -490,12 +491,12 @@ class _MonthCell extends StatelessWidget {
     } else if (off) {
       fill = Color.alphaBlend(
         scheme.error.withValues(alpha: 0.07),
-        scheme.surfaceContainerLowest.withValues(alpha: AppAlpha.strong),
+        card.withValues(alpha: AppAlpha.strong),
       );
     } else if (weekend) {
       fill = scheme.surfaceContainerHigh.withValues(alpha: AppAlpha.strong);
     } else {
-      fill = scheme.surfaceContainerLowest.withValues(alpha: AppAlpha.strong);
+      fill = card.withValues(alpha: AppAlpha.strong);
     }
     final side = isToday
         ? BorderSide(color: scheme.primary, width: 1.5)
@@ -1781,7 +1782,7 @@ class _MiniMonth extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(3),
       child: Material(
-        color: scheme.surfaceContainerLowest.withValues(alpha: AppAlpha.strong),
+        color: AppTokens.of(context).card.withValues(alpha: AppAlpha.strong),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
           side: BorderSide(

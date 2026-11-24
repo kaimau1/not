@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_tokens.dart';
+import '../a11y/motion.dart';
+
 /// **MEDYA AÇILIŞI — yakınlaşarak belir** (kullanıcı isteği 2026-10-17:
 /// "premium gösteren iPhone, Mac gibi geçişler").
 ///
@@ -11,12 +14,13 @@ import 'package:flutter/material.dart';
 /// görsel arasındaki bağ kopuyordu.
 ///
 /// Yalnız dönüşüm + saydamlık: sahne yeniden yerleşmez, her kare tek bir
-/// katmanın ölçeği değişir (kare bütçesine dokunmaz).
+/// katmanın ölçeği değişir (kare bütçesine dokunmaz). Hareketi azalt açıksa
+/// yakınlaşma olmadan temiz solma oynar.
 class MediaRoute<T> extends PageRouteBuilder<T> {
   MediaRoute({required WidgetBuilder builder, super.settings})
     : super(
-        transitionDuration: const Duration(milliseconds: 320),
-        reverseTransitionDuration: const Duration(milliseconds: 240),
+        transitionDuration: AppMotion.medium,
+        reverseTransitionDuration: AppMotion.short,
         pageBuilder: (context, _, _) => builder(context),
         transitionsBuilder: _transition,
       );
@@ -27,15 +31,18 @@ class MediaRoute<T> extends PageRouteBuilder<T> {
     Animation<double> secondary,
     Widget child,
   ) {
-    final curved = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
+    if (!motionOf(context)) {
+      return FadeTransition(opacity: animation, child: child);
+    }
+    final curve = CurveTween(
+      curve: animation.status == AnimationStatus.reverse
+          ? AppMotion.exit
+          : AppMotion.enter,
     );
     return FadeTransition(
-      opacity: curved,
+      opacity: animation.drive(curve),
       child: ScaleTransition(
-        scale: Tween<double>(begin: 0.92, end: 1).animate(curved),
+        scale: Tween<double>(begin: 0.93, end: 1).chain(curve).animate(animation),
         child: child,
       ),
     );

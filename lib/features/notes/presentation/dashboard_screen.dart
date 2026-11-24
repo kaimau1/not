@@ -34,6 +34,7 @@ import '../../../app/web_workspace/web_workspace_scope.dart';
 import '../../../app/theme/note_colors.dart';
 import 'dart:math' as math;
 
+import '../../../app/theme/dashboard_wallpapers.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_design.dart' show AppSwipe, AppTone;
 import '../../../core/a11y/motion.dart';
@@ -1506,29 +1507,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
       );
     }
+    final preset = DashboardWallpapers.byId(background.preset);
     final path = background.path;
-    // Önbellekli varlık denetimi: build her tuş vuruşunda çalışıyor, senkron
-    // stat her seferinde ödenmesin. Çözünürlük ekran genişliğiyle sınırlı —
-    // sınırsız decode tam boy bitmap'i bellekte tutuyordu.
-    if (path != null && localFileExists(path)) {
+    final hasFile = preset == null && path != null && localFileExists(path);
+    final opacity = background.opacity.clamp(0.05, 1).toDouble();
+    Widget? imageLayer;
+    if (preset != null || hasFile) {
       final targetWidth =
           (MediaQuery.sizeOf(context).width *
                   MediaQuery.devicePixelRatioOf(context))
               .round();
+      final ImageProvider provider = preset != null
+          ? ResizeImage(AssetImage(preset.asset), width: targetWidth)
+          : ResizeImage(FileImage(File(path!)), width: targetWidth);
+      final key = ValueKey(preset != null ? 'preset:${preset.id}' : 'file:$path');
+      // PİL: `Opacity` widget'ı yerine görselin KENDİ opaklığı — ayrı bir
+      // birleştirme katmanı (saveLayer) açmadan, çizimde alfa uygulanır.
+      // Zemin ızgaranın arkasında ekran boyunda duruyor; ayrı katman her
+      // kaydırma karesinde GPU'ya fazladan tam ekran bir geçiş demekti.
+      imageLayer = RepaintBoundary(
+        key: key,
+        child: Image(
+          image: provider,
+          fit: BoxFit.cover,
+          opacity: AlwaysStoppedAnimation(opacity),
+        ),
+      );
+    }
+    if (imageLayer != null) {
       layers.add(
         Positioned.fill(
-          // PİL: `Opacity` widget'ı yerine görselin KENDİ opaklığı — ayrı bir
-          // birleştirme katmanı (saveLayer) açmadan, çizimde alfa uygulanır.
-          // Zemin ızgaranın arkasında ekran boyunda duruyor; ayrı katman her
-          // kaydırma karesinde GPU'ya fazladan tam ekran bir geçiş demekti.
-          child: RepaintBoundary(
-            child: Image(
-              image: ResizeImage(FileImage(File(path)), width: targetWidth),
-              fit: BoxFit.cover,
-              opacity: AlwaysStoppedAnimation(
-                background.opacity.clamp(0.05, 1).toDouble(),
-              ),
-            ),
+          child: AnimatedSwitcher(
+            duration: AppMotion.of(context, AppMotion.medium),
+            switchInCurve: AppMotion.curveOf(context, AppMotion.enter),
+            switchOutCurve: AppMotion.curveOf(context, AppMotion.exit),
+            child: imageLayer,
           ),
         ),
       );

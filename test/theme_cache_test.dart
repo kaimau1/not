@@ -43,10 +43,13 @@ void main() {
     expect(identical(light, AppTheme.light(font: 'Lora')), isFalse);
     expect(
       AppTheme.of(ThemeFamily.clay, Brightness.light).colorScheme.surface,
-      const Color(0xFFF3ECE9),
+      FamilyPalettes.of(ThemeFamily.clay, Brightness.light).ground,
     );
     // Varsayılan aile Adaçayı.
-    expect(light.colorScheme.surface, const Color(0xFFEAF0EB));
+    expect(
+      light.colorScheme.surface,
+      FamilyPalettes.of(ThemeFamily.sage, Brightness.light).ground,
+    );
   });
 
   test('zıt tema aynı aile + yazı tipinden, önbellekten gelir', () {

@@ -14909,7 +14909,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeCalendarStripInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Ana ekranın tepesinde bugünden itibaren 10 gün: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim'**
+  /// **'Ana ekranın tepesinde haftalık ya da aylık takvim: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim'**
   String get homeCalendarStripInfo;
 
   /// No description provided for @homeCalendarStripExpand.
@@ -17377,6 +17377,138 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tablo paylaşılamadı'**
   String get tableShareFailed;
+
+  /// No description provided for @dashboardBackgroundGallery.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hazır zeminler'**
+  String get dashboardBackgroundGallery;
+
+  /// No description provided for @dashboardBackgroundFromDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Galeriden seç'**
+  String get dashboardBackgroundFromDevice;
+
+  /// No description provided for @dashboardBackgroundOpacity.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünürlük'**
+  String get dashboardBackgroundOpacity;
+
+  /// No description provided for @dashboardBackgroundPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Canlı önizleme'**
+  String get dashboardBackgroundPreview;
+
+  /// No description provided for @wallpaperAuroraBloom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kuzey çiçeği'**
+  String get wallpaperAuroraBloom;
+
+  /// No description provided for @wallpaperCitrusSun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Narenciye güneşi'**
+  String get wallpaperCitrusSun;
+
+  /// No description provided for @wallpaperCoralLagoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mercan koyu'**
+  String get wallpaperCoralLagoon;
+
+  /// No description provided for @wallpaperBotanicalGarden.
+  ///
+  /// In tr, this message translates to:
+  /// **'Botanik bahçe'**
+  String get wallpaperBotanicalGarden;
+
+  /// No description provided for @wallpaperLavenderDream.
+  ///
+  /// In tr, this message translates to:
+  /// **'Lavanta rüyası'**
+  String get wallpaperLavenderDream;
+
+  /// No description provided for @wallpaperTerracottaStudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Terrakota atölye'**
+  String get wallpaperTerracottaStudio;
+
+  /// No description provided for @wallpaperPastelConfetti.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pastel konfeti'**
+  String get wallpaperPastelConfetti;
+
+  /// No description provided for @wallpaperGoldenMeadow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altın çayır'**
+  String get wallpaperGoldenMeadow;
+
+  /// No description provided for @wallpaperMidnightAurora.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gece aurorası'**
+  String get wallpaperMidnightAurora;
+
+  /// No description provided for @wallpaperVelvetCosmos.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kadife kozmos'**
+  String get wallpaperVelvetCosmos;
+
+  /// No description provided for @noteThemeAurora.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aurora'**
+  String get noteThemeAurora;
+
+  /// No description provided for @noteThemeCitrus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Narenciye'**
+  String get noteThemeCitrus;
+
+  /// No description provided for @noteThemeBotanical.
+  ///
+  /// In tr, this message translates to:
+  /// **'Botanik'**
+  String get noteThemeBotanical;
+
+  /// No description provided for @noteThemeTerracotta.
+  ///
+  /// In tr, this message translates to:
+  /// **'Terrakota'**
+  String get noteThemeTerracotta;
+
+  /// No description provided for @noteThemeConfetti.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konfeti'**
+  String get noteThemeConfetti;
+
+  /// No description provided for @noteThemeCobalt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kobalt'**
+  String get noteThemeCobalt;
+
+  /// No description provided for @themeActiveLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkin tema'**
+  String get themeActiveLabel;
+
+  /// No description provided for @themeGroupAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get themeGroupAll;
 }
 
 class _AppLocalizationsDelegate

@@ -318,8 +318,8 @@ class _QuickAddFabState extends State<QuickAddFab> {
           onPressed: _open ? _close : _openMenu,
           child: AnimatedRotation(
             turns: _open ? 0.125 : 0, // + → × dönüşü
-            duration: const Duration(milliseconds: 240),
-            curve: Curves.easeOutBack,
+            duration: AppMotion.of(context, AppMotion.short),
+            curve: AppMotion.curveOf(context, AppMotion.emphasized),
             child: const Icon(Icons.add),
           ),
         ),
@@ -349,18 +349,18 @@ class _QuickAddFabState extends State<QuickAddFab> {
 class _BlurBarrier extends StatelessWidget {
   const _BlurBarrier();
 
-  static const _dim = 0.32;
-
   @override
   Widget build(BuildContext context) {
-    final color = Colors.black.withValues(alpha: _dim);
+    final color = Theme.of(
+      context,
+    ).colorScheme.scrim.withValues(alpha: AppAlpha.scrim);
     if (MediaQuery.disableAnimationsOf(context)) {
       return ColoredBox(color: color);
     }
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 160),
-      curve: Curves.easeOut,
+      duration: AppMotion.quick,
+      curve: AppMotion.standard,
       builder: (context, t, child) => Opacity(opacity: t, child: child),
       child: ColoredBox(color: color),
     );
@@ -443,7 +443,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 280),
+    duration: AppMotion.medium,
   )..forward();
 
   @override
@@ -462,7 +462,9 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
 
   Widget _build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     // Kullanıcı sırası (bilinmeyen/yeni seçenek grubunun sonunda).
     final options = MenuLayouts.of(quickAddMenuId)
         .sorted(widget.options, (o) => o.key);
@@ -498,23 +500,29 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     );
 
     final panel = Material(
-      color: scheme.surface,
-      elevation: 8,
-      borderRadius: BorderRadius.circular(20),
+      color: tokens.card,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        side: BorderSide(color: tokens.hairline),
+      ),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
         // Büyük yazı ölçeğinde/kısa ekranda panel ekranı aşmasın: kayar.
         constraints: BoxConstraints(maxHeight: widget.fit.maxHeight),
         // Kayınca da ilk görünen ÜST: birincil satır orada (2026-11-19).
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.m - 2,
+            AppSpace.s,
+            AppSpace.m - 2,
+            AppSpace.m - 2,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // "Menüyü düzenle" (F60.S10) → düzen merkezinin "+" panosu
-              // (2026-11-15: tek tip düzenleme; eski panel içi satır
-              // düzenleyicisi kalktı, ikisi zaten aynı kayda yazıyordu).
+              // "Menüyü düzenle" (F60.S10) → düzen merkezinin "+" panosu.
               // Uygulama geneli düzenleme modunda karolar zaten düzenlenir:
               // düğme yer tutmaz.
               Align(
@@ -525,7 +533,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                         key: const ValueKey('quick-add-edit'),
                         tooltip: l10n.menuEdit,
                         visualDensity: VisualDensity.compact,
-                        iconSize: 20,
+                        iconSize: AppIconSize.m,
                         icon: Icon(Icons.tune, color: scheme.onSurfaceVariant),
                         onPressed: widget.onEdit,
                       ),
@@ -535,7 +543,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
               Row(
                 children: [
                   for (var i = 0; i < primary.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 6),
+                    if (i > 0) const SizedBox(width: AppSpace.xs + 2),
                     Expanded(
                       child: Customizable(
                         id: UiItem.quickAdd(primary[i].key),
@@ -551,10 +559,15 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                 ],
               ),
               if (sections.isNotEmpty && primary.isNotEmpty)
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpace.xs),
               for (final section in sections) ...[
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.xs,
+                    AppSpace.xs,
+                    AppSpace.xs,
+                    AppSpace.xs + 2,
+                  ),
                   // Tek bölüm başlığı (F39.6): renk yalnız simgelerde.
                   child: SectionLabel(
                     addGroupTitle(l10n, section.group),
@@ -565,7 +578,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                   count: section.options.length,
                   tile: (i, wide) => cell(section.options[i], wide: wide),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppSpace.xs + 2),
               ],
             ],
           ),
@@ -580,23 +593,23 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
   Widget _wrap(BuildContext context, Widget panel) {
     final sized = SizedBox(width: widget.fit.width, child: panel);
     if (MediaQuery.disableAnimationsOf(context)) return sized;
-    // Saydamlık hızlı ve düz gelir; ölçek ise "+" düğmesinden YAYLI
-    // açılır (hafifçe taşıp yerine oturur — iOS menülerinin açılışı).
+    // Saydamlık hızlı gelir; ölçek "+" düğmesinden taşmadan, vurgulu
+    // yavaşlamayla yumuşakça oturur.
     final fade = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0, 0.6, curve: Curves.easeOut),
+      curve: const Interval(0, 0.55, curve: AppMotion.standard),
     );
-    final spring = CurvedAnimation(
+    final settle = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutBack,
+      curve: AppMotion.enter,
     );
     return FadeTransition(
       opacity: fade,
       child: AnimatedBuilder(
-        animation: spring,
+        animation: settle,
         child: sized,
         builder: (context, inner) => Transform.scale(
-          scale: 0.86 + 0.14 * spring.value,
+          scale: 0.90 + 0.10 * settle.value,
           alignment: Alignment.bottomRight,
           child: inner,
         ),

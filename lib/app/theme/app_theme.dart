@@ -118,16 +118,20 @@ abstract final class AppTheme {
       family: family,
       font: font,
       card: t.card,
-      hairline: t.ink.withValues(alpha: isDark ? 0.10 : 0.08),
+      hairline: t.ink.withValues(alpha: isDark ? 0.11 : 0.08),
       cardShadow: [
         BoxShadow(
           color: isDark
-              ? Colors.black.withValues(alpha: 0.32)
+              ? Colors.black.withValues(alpha: 0.36)
               : t.ink.withValues(alpha: 0.07),
           offset: const Offset(0, 1),
         ),
       ],
       cardRadius: 16,
+      sheetCard: isDark ? t.field : t.card,
+      accentBorder: t.primary.withValues(alpha: isDark ? 0.44 : 0.32),
+      tintSoft: t.primary.withValues(alpha: isDark ? 0.15 : 0.09),
+      warmTint: t.secondary.withValues(alpha: isDark ? 0.17 : 0.11),
     );
 
     // Uygulamanın tipografisi: varsayılan Inter Tight, kullanıcı Ayarlar →
@@ -142,6 +146,9 @@ abstract final class AppTheme {
 
     final sheetShape = const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    );
+    final buttonShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(AppRadius.m),
     );
     final theme = ThemeData(
       useMaterial3: true,
@@ -200,12 +207,132 @@ abstract final class AppTheme {
           color: scheme.onPrimaryContainer,
         ),
       ),
+      // SEGMENTLİ DÜĞME: M3 varsayılanı ikincil sıcak kaba (şeftali) boyayıp
+      // birincil vurguyla çarpışıyordu; artık birincil kap + yumuşak kenarlık.
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return scheme.primaryContainer;
+            }
+            return isDark ? t.card : t.sheet;
+          }),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return scheme.onPrimaryContainer;
+            }
+            return scheme.onSurfaceVariant;
+          }),
+          iconColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return scheme.primary;
+            }
+            return scheme.onSurfaceVariant;
+          }),
+          side: WidgetStateProperty.resolveWith(
+            (states) => BorderSide(
+              color: states.contains(WidgetState.selected)
+                  ? tokens.resolvedAccentBorder(scheme)
+                  : tokens.hairline,
+            ),
+          ),
+          shape: WidgetStatePropertyAll(buttonShape),
+          textStyle: WidgetStatePropertyAll(
+            textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          visualDensity: VisualDensity.standard,
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return scheme.onPrimary;
+          return scheme.outline;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return scheme.primary;
+          return scheme.surfaceContainerHigh;
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.transparent;
+          return scheme.outline.withValues(alpha: 0.55);
+        }),
+        trackOutlineWidth: const WidgetStatePropertyAll(1.2),
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: scheme.primary,
+        inactiveTrackColor: scheme.primaryContainer.withValues(
+          alpha: isDark ? 0.55 : 0.85,
+        ),
+        thumbColor: scheme.primary,
+        overlayColor: scheme.primary.withValues(alpha: 0.14),
+        trackHeight: 4,
+        valueIndicatorColor: scheme.inverseSurface,
+        valueIndicatorTextStyle: textTheme.labelMedium?.copyWith(
+          color: scheme.onInverseSurface,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        side: BorderSide(color: scheme.outline, width: 1.5),
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return scheme.primary;
+          return Colors.transparent;
+        }),
+        checkColor: WidgetStatePropertyAll(scheme.onPrimary),
+      ),
+      radioTheme: RadioThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return scheme.primary;
+          return scheme.outline;
+        }),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          shape: buttonShape,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          shape: buttonShape,
+          side: BorderSide(color: scheme.outlineVariant),
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          shape: buttonShape,
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: scheme.primary,
+        unselectedLabelColor: scheme.onSurfaceVariant,
+        indicatorColor: scheme.primary,
+        dividerColor: tokens.hairline,
+        labelStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: textTheme.labelLarge,
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        radius: const Radius.circular(AppRadius.pill),
+        thickness: const WidgetStatePropertyAll(4),
+        thumbColor: WidgetStatePropertyAll(
+          scheme.onSurfaceVariant.withValues(alpha: 0.28),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isDark ? t.field : t.card,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(color: tokens.hairline),
         ),
         hintStyle: textTheme.bodyMedium?.copyWith(
           color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
@@ -230,13 +357,17 @@ abstract final class AppTheme {
         modalBackgroundColor: t.sheet,
         surfaceTintColor: Colors.transparent,
         shape: sheetShape,
-        dragHandleColor: scheme.onSurface.withValues(alpha: 0.25),
-        modalBarrierColor: scheme.scrim.withValues(alpha: 0.32),
+        dragHandleColor: scheme.onSurfaceVariant.withValues(alpha: 0.34),
+        dragHandleSize: const Size(36, 4),
+        modalBarrierColor: scheme.scrim.withValues(alpha: 0.34),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: t.card,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: tokens.hairline),
+        ),
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: t.card,
@@ -289,11 +420,33 @@ abstract final class AppTheme {
         indicatorColor: scheme.primaryContainer,
         selectedIconTheme: IconThemeData(color: scheme.onPrimaryContainer),
         unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
+        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          color: scheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: t.sheet,
         indicatorColor: scheme.primaryContainer,
         surfaceTintColor: Colors.transparent,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(color: scheme.onPrimaryContainer);
+          }
+          return IconThemeData(color: scheme.onSurfaceVariant);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return textTheme.labelSmall?.copyWith(
+              color: scheme.primary,
+              fontWeight: FontWeight.w600,
+            );
+          }
+          return textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant);
+        }),
       ),
       drawerTheme: DrawerThemeData(
         backgroundColor: t.sheet,
@@ -317,16 +470,15 @@ abstract final class AppTheme {
         linearTrackColor: scheme.outlineVariant.withValues(alpha: 0.5),
         circularTrackColor: Colors.transparent,
       ),
-      // EKRAN GEÇİŞLERİ iPhone gibi yandan kayar (bkz. page_transitions.dart).
-      // Web'de tarayıcının bildirdiği platforma göre seçilir: masaüstü
-      // tarayıcıda (Windows/Linux/Mac) solma kalır, pencere içi geçiş kaymaz.
+      // EKRAN GEÇİŞLERİ mobilde iPhone gibi yandan kayar, masaüstü/webde
+      // yönlü kısa süzülme + solma (bkz. page_transitions.dart).
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: SmoothPageTransitionsBuilder(),
           TargetPlatform.iOS: SmoothPageTransitionsBuilder(),
-          TargetPlatform.windows: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.linux: FadeForwardsPageTransitionsBuilder(),
-          TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.windows: SmoothDesktopPageTransitionsBuilder(),
+          TargetPlatform.linux: SmoothDesktopPageTransitionsBuilder(),
+          TargetPlatform.macOS: SmoothDesktopPageTransitionsBuilder(),
         },
       ),
     );

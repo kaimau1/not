@@ -8350,7 +8350,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeCalendarStripInfo =>
-      'Ana ekranın tepesinde bugünden itibaren 10 gün: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim';
+      'Ana ekranın tepesinde haftalık ya da aylık takvim: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim';
 
   @override
   String get homeCalendarStripExpand => 'Takvim şeridini aç';
@@ -9807,4 +9807,70 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tableShareFailed => 'Tablo paylaşılamadı';
+
+  @override
+  String get dashboardBackgroundGallery => 'Hazır zeminler';
+
+  @override
+  String get dashboardBackgroundFromDevice => 'Galeriden seç';
+
+  @override
+  String get dashboardBackgroundOpacity => 'Görünürlük';
+
+  @override
+  String get dashboardBackgroundPreview => 'Canlı önizleme';
+
+  @override
+  String get wallpaperAuroraBloom => 'Kuzey çiçeği';
+
+  @override
+  String get wallpaperCitrusSun => 'Narenciye güneşi';
+
+  @override
+  String get wallpaperCoralLagoon => 'Mercan koyu';
+
+  @override
+  String get wallpaperBotanicalGarden => 'Botanik bahçe';
+
+  @override
+  String get wallpaperLavenderDream => 'Lavanta rüyası';
+
+  @override
+  String get wallpaperTerracottaStudio => 'Terrakota atölye';
+
+  @override
+  String get wallpaperPastelConfetti => 'Pastel konfeti';
+
+  @override
+  String get wallpaperGoldenMeadow => 'Altın çayır';
+
+  @override
+  String get wallpaperMidnightAurora => 'Gece aurorası';
+
+  @override
+  String get wallpaperVelvetCosmos => 'Kadife kozmos';
+
+  @override
+  String get noteThemeAurora => 'Aurora';
+
+  @override
+  String get noteThemeCitrus => 'Narenciye';
+
+  @override
+  String get noteThemeBotanical => 'Botanik';
+
+  @override
+  String get noteThemeTerracotta => 'Terrakota';
+
+  @override
+  String get noteThemeConfetti => 'Konfeti';
+
+  @override
+  String get noteThemeCobalt => 'Kobalt';
+
+  @override
+  String get themeActiveLabel => 'Etkin tema';
+
+  @override
+  String get themeGroupAll => 'Tümü';
 }

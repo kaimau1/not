@@ -1,19 +1,21 @@
-import '../../../app/theme/fixed_colors.dart';
-import '../../../core/widgets/sheet_header.dart';
-import '../../../core/app_icons.dart';
-
 import 'package:flutter/material.dart';
 
+import '../../../app/theme/app_design.dart';
+import '../../../app/theme/app_tokens.dart';
+import '../../../app/theme/fixed_colors.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../app/theme/note_themes.dart';
+import '../../../core/a11y/chip_roles.dart';
+import '../../../core/app_icons.dart';
+import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/color_palette.dart';
+import '../../../core/widgets/press_scale.dart';
+import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/toggle_pop.dart';
 import '../domain/note.dart';
 import 'color_picker_sheet.dart';
-import '../../../core/a11y/chip_roles.dart';
-import '../../../app/theme/app_tokens.dart';
-import '../../../core/haptics.dart';
 
 /// Görünüm levhasının alt satırındaki seçenekler.
 enum NoteAppearanceAction { color, frame, image, paper }
@@ -137,9 +139,17 @@ class _ThemeSheetState extends State<_ThemeSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final names = <String, String>{
       '': l10n.noteThemeNone,
+      NoteThemes.aurora: l10n.noteThemeAurora,
+      NoteThemes.citrus: l10n.noteThemeCitrus,
+      NoteThemes.botanical: l10n.noteThemeBotanical,
+      NoteThemes.terracotta: l10n.noteThemeTerracotta,
+      NoteThemes.confetti: l10n.noteThemeConfetti,
+      NoteThemes.cobalt: l10n.noteThemeCobalt,
       NoteThemes.palm: l10n.noteThemePalm,
       NoteThemes.lagoon: l10n.noteThemeLagoon,
       NoteThemes.night: l10n.noteThemeNight,
@@ -152,19 +162,19 @@ class _ThemeSheetState extends State<_ThemeSheet> {
     final ids = ['', for (final t in NoteThemes.all) t.id];
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: AppSpace.m),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SheetHeader(title: l10n.noteAppearance),
             SizedBox(
-              height: 150,
+              height: 148,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
                 itemCount: ids.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                separatorBuilder: (_, _) => const SizedBox(width: AppSpace.m),
                 itemBuilder: (context, i) => _ThemeTile(
                   key: ValueKey('theme-tile-${ids[i]}'),
                   id: ids[i],
@@ -178,46 +188,68 @@ class _ThemeSheetState extends State<_ThemeSheet> {
             ),
             if (widget.onColor != null) ...[
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
-                child: Text(
-                  l10n.noteFlatColors,
-                  style: Theme.of(context).textTheme.labelMedium
-                      ?.copyWith(color: scheme.onSurfaceVariant),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.l,
+                  AppSpace.m,
+                  AppSpace.l,
+                  0,
                 ),
-              ),
-              SizedBox(
-                height: 64,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    for (final c in NoteColor.values)
-                      if (c != NoteColor.none)
-                        _FlatTile(
-                          key: ValueKey('flat-color-${c.id}'),
-                          fill: NoteColors.surface(context, c),
-                          selected:
-                              _selected.isEmpty &&
-                              _custom == null &&
-                              _color == c,
-                          onTap: () => _pickColor((color: c, custom: null)),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.m,
+                    AppSpace.s,
+                    AppSpace.m,
+                    AppSpace.m,
+                  ),
+                  decoration: AppSurface.sheetCard(theme),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.noteFlatColors,
+                        style: text.meta.copyWith(
+                          fontWeight: AppWeight.strong,
+                          color: scheme.onSurfaceVariant,
                         ),
-                    _FlatTile(
-                      key: const ValueKey('flat-color-palette'),
-                      fill: _custom == null ? null : Color(_custom!),
-                      selected: _selected.isEmpty && _custom != null,
-                      palette: true,
-                      tooltip: l10n.paletteMore,
-                      onTap: _pickPalette,
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: AppSpace.s),
+                      SizedBox(
+                        height: 60,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            for (final c in NoteColor.values)
+                              if (c != NoteColor.none)
+                                _FlatTile(
+                                  key: ValueKey('flat-color-${c.id}'),
+                                  fill: NoteColors.surface(context, c),
+                                  selected:
+                                      _selected.isEmpty &&
+                                      _custom == null &&
+                                      _color == c,
+                                  onTap: () =>
+                                      _pickColor((color: c, custom: null)),
+                                ),
+                            _FlatTile(
+                              key: const ValueKey('flat-color-palette'),
+                              fill: _custom == null ? null : Color(_custom!),
+                              selected: _selected.isEmpty && _custom != null,
+                              palette: true,
+                              tooltip: l10n.paletteMore,
+                              onTap: _pickPalette,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.m),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
               child: Row(
                 children: [
                   for (final (action, icon, label) in [
@@ -247,10 +279,16 @@ class _ThemeSheetState extends State<_ThemeSheet> {
                       ),
                   ])
                     Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 8),
+                      padding: const EdgeInsetsDirectional.only(
+                        end: AppSpace.s,
+                      ),
                       child: actionChip(
                         ActionChip(
-                          avatar: Icon(icon, size: 18, color: scheme.primary),
+                          avatar: Icon(
+                            icon,
+                            size: AppIconSize.s,
+                            color: scheme.primary,
+                          ),
                           label: Text(label),
                           shape: const StadiumBorder(),
                           onPressed: () => Navigator.pop(context, action),
@@ -268,7 +306,7 @@ class _ThemeSheetState extends State<_ThemeSheet> {
 }
 
 /// Şeritteki tek tema: küçük sayfa önizlemesi + adı. Seçiliyken vurgu
-/// çerçevesi ve hafif büyüme (yumuşak geçişle).
+/// çerçevesi ve temiz oturma geçişi (bulanık gölge yok — GLES uyumlu).
 class _ThemeTile extends StatelessWidget {
   const _ThemeTile({
     super.key,
@@ -284,33 +322,35 @@ class _ThemeTile extends StatelessWidget {
   final VoidCallback onTap;
 
   static const double _w = 78;
-  static const double _h = 112;
+  static const double _h = 110;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final theme = NoteThemes.byId(id);
+    final themeData = Theme.of(context);
+    final scheme = themeData.colorScheme;
+    final tokens = AppTokens.fromTheme(themeData);
+    final text = AppText.of(themeData);
+    final dark = themeData.brightness == Brightness.dark;
+    final noteTheme = NoteThemes.byId(id);
+    final duration = AppMotion.of(context, AppMotion.short);
+    final curve = AppMotion.curveOf(context, AppMotion.emphasized);
     return Semantics(
       button: true,
       selected: selected,
       label: label,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            AnimatedScale(
-              scale: selected ? 1.0 : 0.94,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutBack,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                width: _w + 8,
-                height: _h + 8,
-                padding: const EdgeInsets.all(3),
+      child: PressScale(
+        child: GestureDetector(
+          onTap: onTap,
+          child: Column(
+            children: [
+              AnimatedContainer(
+                duration: duration,
+                curve: curve,
+                width: _w + AppSpace.s,
+                height: _h + AppSpace.s,
+                padding: const EdgeInsets.all(AppSpace.xxs),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppRadius.l),
                   border: Border.all(
                     color: selected ? scheme.primary : Colors.transparent,
                     width: 2.5,
@@ -318,40 +358,57 @@ class _ThemeTile extends StatelessWidget {
                 ),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(13),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(
-                          alpha: selected ? 0.16 : 0.08,
-                        ),
-                        blurRadius: selected ? 10 : 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    border: Border.all(color: tokens.hairline),
+                    boxShadow: tokens.cardShadow,
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(13),
-                    child: theme == null
-                        ? _PlainPreview(scheme: scheme)
-                        : CustomPaint(
-                            painter: NoteThemePainter(theme, dark: dark),
-                            child: const SizedBox.expand(),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        noteTheme == null
+                            ? _PlainPreview(scheme: scheme)
+                            : CustomPaint(
+                                painter: NoteThemePainter(
+                                  noteTheme,
+                                  dark: dark,
+                                ),
+                                child: const SizedBox.expand(),
+                              ),
+                        if (selected)
+                          Positioned(
+                            right: AppSpace.xs,
+                            top: AppSpace.xs,
+                            child: TogglePop(
+                              on: selected,
+                              child: CircleAvatar(
+                                radius: 9,
+                                backgroundColor: scheme.primary,
+                                child: Icon(
+                                  Icons.check,
+                                  size: AppIconSize.xs - 3,
+                                  color: scheme.onPrimary,
+                                ),
+                              ),
+                            ),
                           ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? AppWeight.strong : FontWeight.w500,
-                color: selected ? scheme.primary : scheme.onSurfaceVariant,
+              const SizedBox(height: AppSpace.xs),
+              Text(
+                label,
+                maxLines: 1,
+                style: text.meta.copyWith(
+                  fontWeight: selected ? AppWeight.strong : AppWeight.medium,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -380,40 +437,52 @@ class _FlatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final fill = this.fill;
-    Widget tile = GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        width: 46,
-        height: 60,
-        margin: const EdgeInsetsDirectional.only(end: 8),
-        padding: const EdgeInsets.all(2.5),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          border: Border.all(
-            color: selected ? scheme.primary : Colors.transparent,
-            width: 2.5,
-          ),
-        ),
-        child: DecoratedBox(
+    final checkInk = fill == null
+        ? Colors.white
+        : FixedColors.inkOn(fill);
+    Widget tile = PressScale(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.short),
+          curve: AppMotion.curveOf(context, AppMotion.emphasized),
+          width: 46,
+          height: 58,
+          margin: const EdgeInsetsDirectional.only(end: AppSpace.s),
+          padding: const EdgeInsets.all(AppSpace.xxs),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.s),
-            color: fill,
-            border: Border.all(color: scheme.outlineVariant, width: 0.6),
-            gradient: palette && fill == null
-                ? FixedColors.rainbowSweep
-                : null,
+            borderRadius: BorderRadius.circular(AppRadius.m),
+            border: Border.all(
+              color: selected ? scheme.primary : Colors.transparent,
+              width: 2.5,
+            ),
           ),
-          child: palette
-              ? Icon(
-                  AppIcons.color,
-                  size: 20,
-                  color: fill == null ? Colors.white : scheme.onSurface,
-                )
-              : (selected
-                    ? Icon(Icons.check, size: 18, color: scheme.onSurface)
-                    : null),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.s),
+              color: fill,
+              border: Border.all(color: scheme.outlineVariant, width: 0.6),
+              gradient: palette && fill == null
+                  ? FixedColors.rainbowSweep
+                  : null,
+            ),
+            child: palette
+                ? Icon(
+                    AppIcons.color,
+                    size: AppIconSize.m,
+                    color: checkInk,
+                  )
+                : (selected
+                      ? TogglePop(
+                          on: selected,
+                          child: Icon(
+                            Icons.check,
+                            size: AppIconSize.s,
+                            color: checkInk,
+                          ),
+                        )
+                      : null),
+          ),
         ),
       ),
     );
@@ -432,7 +501,7 @@ class _PlainPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: scheme.surfaceContainerLow,
+      color: AppTokens.of(context).card,
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,

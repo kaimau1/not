@@ -3,12 +3,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_design.dart';
 import '../../../app/theme/app_palette.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/app_icons.dart';
+import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/press_scale.dart';
 import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/toggle_pop.dart';
 import '../../entitlement/data/entitlement_service.dart';
 import '../../entitlement/domain/entitlement.dart';
 import '../../entitlement/presentation/pro_lock.dart';
@@ -30,8 +35,7 @@ bool themeChoiceLocked(
 );
 
 /// **ÜÇ GRUP** (DENEYIM_PLANI F73.4, K-D9): Sakin · Kâğıt · Canlı. Aile
-/// silinmez, yalnız sıra ve grup adı. "Koyu" Sakin'in sonunda (planın
-/// listesinde yoktu — sabah bakılacak).
+/// silinmez, yalnız sıra ve grup adı. "Koyu" Sakin'in sonunda.
 const themeChoiceGroupOrder = <List<AppThemeChoice>>[
   [
     AppThemeChoice.system,
@@ -61,6 +65,12 @@ const themeChoiceGroupOrder = <List<AppThemeChoice>>[
     AppThemeChoice.emerald,
     AppThemeChoice.amethyst,
   ],
+];
+
+const _groupIcons = <IconData>[
+  Icons.spa_outlined,
+  Icons.description_outlined,
+  AppIcons.appearance,
 ];
 
 /// Gruplu tema seçenekleri: (grup adı, seçenekler).
@@ -152,9 +162,9 @@ List<ThemeOption> _allThemeOptions(BuildContext context, String font) {
 
 /// TEMA KARTLARI ızgarası (Ayarlar → Görünüm).
 ///
-/// Kullanıcı isteği 2026-09-26: eski seçici dört ETİKETSİZ simgeydi. Her
-/// seçenek küçük bir ÖNİZLEME (zemin, kart, yazı, vurgu) + altında adı;
-/// seçili kart birincil renkle çerçevelenir.
+/// Üstte etkin temanın canlı palet kartı, altında üç grup (Sakin · Kâğıt ·
+/// Canlı): her kart minyatür bir Notlar arayüzü + üç palet noktası çizer ki
+/// bütün 22 tema tek bakışta birbirinden ayrılsın.
 class ThemeChoiceGrid extends ConsumerWidget {
   const ThemeChoiceGrid({super.key});
 
@@ -163,27 +173,39 @@ class ThemeChoiceGrid extends ConsumerWidget {
     final choice = ref.watch(themeChoiceProvider);
     final unlocked = ref.watch(proFeatureProvider(ProFeature.extraAppearance));
     final groups = themeChoiceGroups(context, ref.watch(appFontProvider));
-    // Dar ekranda üçlü sıralar, ortada altı, genişte dokuz sütun.
+    final active = _findActiveOption(groups, choice);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         const gap = AppSpace.s;
         final w = constraints.maxWidth;
-        final perRow = w < 440 ? 3 : (w < 760 ? 6 : 9);
+        final perRow = w < 440 ? 3 : (w < 760 ? 5 : 7);
         final width = (w - gap * (perRow - 1)) / perRow;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (active != null) ...[
+              _ActiveThemeBanner(
+                groupName: active.$1,
+                option: active.$2,
+              ),
+              const SizedBox(height: AppSpace.l),
+            ],
             for (var g = 0; g < groups.length; g++) ...[
               Padding(
                 padding: EdgeInsets.only(
                   top: g == 0 ? 0 : AppSpace.l,
                   bottom: AppSpace.s,
                 ),
-                child: SectionLabel(groups[g].$1),
+                child: _ThemeGroupHeader(
+                  icon: _groupIcons[g],
+                  title: groups[g].$1,
+                  count: groups[g].$2.length,
+                ),
               ),
               Wrap(
                 spacing: gap,
-                runSpacing: gap,
+                runSpacing: AppSpace.m,
                 children: [
                   for (final option in groups[g].$2)
                     SizedBox(
@@ -206,6 +228,7 @@ class ThemeChoiceGrid extends ConsumerWidget {
                             openProScreen(context);
                             return;
                           }
+                          AppHaptics.tick();
                           ref.read(themeChoiceProvider.notifier).set(option.$1);
                         },
                       ),
@@ -216,6 +239,151 @@ class ThemeChoiceGrid extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+
+  static (String, ThemeOption)? _findActiveOption(
+    List<(String, List<ThemeOption>)> groups,
+    AppThemeChoice choice,
+  ) {
+    for (final (name, options) in groups) {
+      for (final o in options) {
+        if (o.$1 == choice) return (name, o);
+      }
+    }
+    return null;
+  }
+}
+
+/// Üstte seçili temayı ve canlı renk paletini sergileyen vitrin kartı.
+class _ActiveThemeBanner extends StatelessWidget {
+  const _ActiveThemeBanner({
+    required this.groupName,
+    required this.option,
+  });
+
+  final String groupName;
+  final ThemeOption option;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
+    final swatches = <Color>[
+      scheme.surface,
+      tokens.card,
+      scheme.primary,
+      scheme.primaryContainer,
+      scheme.secondary,
+    ];
+    return Container(
+      padding: const EdgeInsets.all(AppSpace.m),
+      decoration: AppSurface.paper(theme),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: tokens.resolvedTintSoft(scheme),
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(color: tokens.resolvedAccentBorder(scheme)),
+            ),
+            child: Icon(
+              AppIcons.appearance,
+              size: AppIconSize.m,
+              color: scheme.primary,
+            ),
+          ),
+          const SizedBox(width: AppSpace.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${l10n.themeActiveLabel}: ${option.$2}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.label.copyWith(fontWeight: AppWeight.strong),
+                ),
+                const SizedBox(height: AppSpace.xxs),
+                Text(groupName, style: text.meta),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpace.s),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < swatches.length; i++)
+                Container(
+                  width: 16,
+                  height: 16,
+                  margin: EdgeInsetsDirectional.only(
+                    start: i == 0 ? 0 : AppSpace.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: swatches[i],
+                    shape: BoxShape.circle,
+                    border: Border.all(color: tokens.hairline),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeGroupHeader extends StatelessWidget {
+  const _ThemeGroupHeader({
+    required this.icon,
+    required this.title,
+    required this.count,
+  });
+
+  final IconData icon;
+  final String title;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
+    return Row(
+      children: [
+        Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            color: tokens.resolvedTintSoft(scheme),
+            borderRadius: BorderRadius.circular(AppRadius.s),
+          ),
+          child: Icon(icon, size: AppIconSize.xs, color: scheme.primary),
+        ),
+        const SizedBox(width: AppSpace.s),
+        Expanded(child: SectionLabel(title)),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.s,
+            vertical: AppSpace.xxs,
+          ),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+          ),
+          child: Text(
+            '$count',
+            style: text.badge.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -258,9 +426,12 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
   late final ScrollController _scroll = ScrollController(
     initialScrollOffset: math.max(
       0,
-      (_themeOrder.indexOf(widget.initial) - 1) * 88.0,
+      (_themeOrder.indexOf(widget.initial) - 1) * 98.0,
     ),
   );
+
+  /// Hızlı grup süzgeci: null = Tümü, 0/1/2 = Sakin/Kâğıt/Canlı.
+  int? _groupFilter;
 
   @override
   void dispose() {
@@ -268,66 +439,127 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
     super.dispose();
   }
 
+  void _selectGroup(int? index) {
+    if (_groupFilter == index) return;
+    AppHaptics.tick();
+    setState(() => _groupFilter = index);
+    if (_scroll.hasClients) {
+      _scroll.jumpTo(0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final initial = widget.initial;
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final choice = ref.watch(themeChoiceProvider);
     final unlocked = ref.watch(proFeatureProvider(ProFeature.extraAppearance));
-    final options = themeChoiceOptions(context, ref.watch(appFontProvider));
+    final font = ref.watch(appFontProvider);
+    final groups = themeChoiceGroups(context, font);
+    final options = _groupFilter == null
+        ? themeChoiceOptions(context, font)
+        : groups[_groupFilter!].$2;
+
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.only(bottom: AppSpace.m),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 8, 4),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.xl,
+                0,
+                AppSpace.m,
+                AppSpace.s,
+              ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       l10n.themePickerTitle,
-                      style: theme.textTheme.titleMedium,
+                      style: text.sheetTitle,
                     ),
                   ),
                   if (choice != initial)
                     TextButton(
                       key: const ValueKey('theme-sheet-revert'),
                       onPressed: () {
+                        AppHaptics.tick();
                         ref.read(themeChoiceProvider.notifier).set(initial);
                         Navigator.pop(context);
                       },
                       child: Text(l10n.cancel),
                     ),
+                  const SizedBox(width: AppSpace.xs),
                   FilledButton.tonal(
                     key: const ValueKey('theme-sheet-done'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: scheme.primaryContainer,
+                      foregroundColor: scheme.onPrimaryContainer,
+                    ),
                     onPressed: () => Navigator.pop(context),
                     child: Text(l10n.ok),
                   ),
                 ],
               ),
             ),
+            // Hızlı grup süzgeci: Tümü · Sakin · Kâğıt · Canlı.
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.m,
+              ),
+              child: Row(
+                children: [
+                  _SheetGroupPill(
+                    label: l10n.themeGroupAll,
+                    selected: _groupFilter == null,
+                    tokens: tokens,
+                    scheme: scheme,
+                    text: text,
+                    onTap: () => _selectGroup(null),
+                  ),
+                  for (var i = 0; i < groups.length; i++) ...[
+                    const SizedBox(width: AppSpace.s),
+                    _SheetGroupPill(
+                      label: groups[i].$1,
+                      selected: _groupFilter == i,
+                      tokens: tokens,
+                      scheme: scheme,
+                      text: text,
+                      onTap: () => _selectGroup(i),
+                    ),
+                  ],
+                ],
+              ),
+            ),
             SizedBox(
-              height: 104,
+              height: 122,
               child: ListView.separated(
                 key: const ValueKey('theme-sheet-list'),
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
                 controller: _scroll,
                 itemCount: options.length,
-                // Alçak levhada grup adı yok: grup sınırında 12 dp boşluk
-                // (F73.4).
                 separatorBuilder: (_, i) => SizedBox(
-                  width: _groupStarts.contains(i + 1) ? AppSpace.m : AppSpace.s,
+                  width: _groupFilter == null && _groupStarts.contains(i + 1)
+                      ? AppSpace.l
+                      : AppSpace.s,
                 ),
                 itemBuilder: (context, i) {
                   final o = options[i];
                   return SizedBox(
-                    width: 80,
+                    width: 90,
                     child: ThemeChoiceCard(
                       key: ValueKey('theme-sheet-${o.$1.name}'),
                       label: o.$2,
@@ -348,6 +580,7 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
                           openProScreen(context, popFirst: true);
                           return;
                         }
+                        AppHaptics.tick();
                         ref.read(themeChoiceProvider.notifier).set(o.$1);
                       },
                     ),
@@ -362,9 +595,62 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
   }
 }
 
-/// Tek tema seçeneği: mini önizleme (zemin + kâğıt kart + yazı + vurgu) +
-/// ad. [themes] iki tane ise (Sistem) önizleme ortadan açık/koyu ikiye
-/// bölünür.
+class _SheetGroupPill extends StatelessWidget {
+  const _SheetGroupPill({
+    required this.label,
+    required this.selected,
+    required this.tokens,
+    required this.scheme,
+    required this.text,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final AppTokens tokens;
+  final ColorScheme scheme;
+  final AppText text;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return PressScale(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.quick),
+          curve: AppMotion.curveOf(context, AppMotion.emphasized),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.m,
+            vertical: AppSpace.xs + 2,
+          ),
+          decoration: BoxDecoration(
+            color: selected ? scheme.primaryContainer : scheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(
+              color: selected
+                  ? tokens.resolvedAccentBorder(scheme)
+                  : tokens.hairline,
+            ),
+          ),
+          child: Text(
+            label,
+            style: text.label.copyWith(
+              fontWeight: selected ? AppWeight.strong : AppWeight.medium,
+              color: selected
+                  ? scheme.onPrimaryContainer
+                  : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tek tema seçeneği: tek `CustomPaint` ile gerçekçi minyatür Notlar arayüzü
+/// (zemin + arama çubuğu + iki kart + sıcak etiket + vurgu FAB) + ad + üç
+/// palet noktası. [themes] iki tane ise (Sistem) açık/koyu ikiye bölünür.
 class ThemeChoiceCard extends StatelessWidget {
   const ThemeChoiceCard({
     super.key,
@@ -383,114 +669,296 @@ class ThemeChoiceCard extends StatelessWidget {
   /// PL6: yeni seçim için kilitli (köşede kilit; dokunuş Pro ekranına gider).
   final bool locked;
 
-  Widget _preview(ThemeData theme) {
-    final c = theme.colorScheme;
-    final tokens = AppTokens.fromTheme(theme);
-    return ColoredBox(
-      color: c.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: tokens.card,
-            borderRadius: BorderRadius.circular(AppRadius.s),
-            border: Border.all(color: tokens.hairline),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(5),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(width: 22, height: 4, color: c.onSurface),
-                const SizedBox(height: 4),
-                Container(
-                  width: 30,
-                  height: 3,
-                  color: c.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
-                ),
-                const SizedBox(height: 3),
-                Container(width: 18, height: 3, color: c.primary),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final hostTheme = Theme.of(context);
+    final scheme = hostTheme.colorScheme;
+    final tokens = AppTokens.fromTheme(hostTheme);
+    final text = AppText.of(hostTheme);
+    final leadScheme = themes.first.colorScheme;
+    final swatchColors = <Color>[
+      leadScheme.surface,
+      leadScheme.primary,
+      leadScheme.secondary,
+    ];
+
     return Semantics(
       button: true,
       selected: selected,
       label: label,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        child: Column(
-          children: [
-            AnimatedContainer(
-              duration: AppMotion.of(context, AppMotion.quick),
-              height: 62,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.m),
-                border: Border.all(
-                  color: selected ? scheme.primary : scheme.outlineVariant,
-                  width: selected ? 2.5 : 1,
+      child: PressScale(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.l),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: AppMotion.of(context, AppMotion.short),
+                curve: AppMotion.curveOf(context, AppMotion.emphasized),
+                height: 74,
+                padding: const EdgeInsets.all(AppSpace.xxs),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.l),
+                  border: Border.all(
+                    color: selected ? scheme.primary : tokens.hairline,
+                    width: selected ? 2.5 : 1,
+                  ),
                 ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.m),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Row(
-                      children: [
-                        for (final t in themes) Expanded(child: _preview(t)),
-                      ],
-                    ),
-                    if (locked && !selected)
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: CircleAvatar(
-                          radius: 9,
-                          backgroundColor: scheme.surface,
-                          child: const ProLockBadge(),
-                        ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CustomPaint(
+                        painter: _MiniThemePreviewPainter(themes),
                       ),
-                    if (selected)
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: CircleAvatar(
-                          radius: 8,
-                          backgroundColor: scheme.primary,
-                          child: Icon(
-                            Icons.check,
-                            size: 11,
-                            color: scheme.onPrimary,
+                      if (locked && !selected)
+                        Positioned(
+                          right: AppSpace.xs,
+                          top: AppSpace.xs,
+                          child: CircleAvatar(
+                            radius: 9,
+                            backgroundColor: scheme.surface,
+                            child: const ProLockBadge(),
                           ),
                         ),
-                      ),
-                  ],
+                      if (selected)
+                        Positioned(
+                          right: AppSpace.xs,
+                          top: AppSpace.xs,
+                          child: TogglePop(
+                            on: selected,
+                            child: CircleAvatar(
+                              radius: 9,
+                              backgroundColor: scheme.primary,
+                              child: Icon(
+                                Icons.check,
+                                size: AppIconSize.xs - 3,
+                                color: scheme.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: selected ? AppWeight.strong : AppWeight.medium,
-                color: selected ? scheme.primary : null,
+              const SizedBox(height: AppSpace.xs + 2),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: text.meta.copyWith(
+                  fontWeight: selected ? AppWeight.strong : AppWeight.medium,
+                  color: selected ? scheme.primary : scheme.onSurface,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpace.xs),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < swatchColors.length; i++)
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: EdgeInsets.symmetric(horizontal: AppSpace.xxs),
+                      decoration: BoxDecoration(
+                        color: swatchColors[i],
+                        shape: BoxShape.circle,
+                        border: Border.all(color: tokens.hairline, width: 0.6),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// Tek geçişte minyatür Notlar ekranı çizer: zemin, üst arama kapsülü, iki
+/// kâğıt not kartı (biri sıcak etiketli, biri birincil şeritli) ve sağ altta
+/// vurgu "+" düğmesi. İki tema verilirse (Sistem) ortadan ikiye bölünür.
+class _MiniThemePreviewPainter extends CustomPainter {
+  const _MiniThemePreviewPainter(this.themes);
+
+  final List<ThemeData> themes;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (themes.isEmpty || size.isEmpty) return;
+    if (themes.length == 1) {
+      _paintMiniApp(canvas, Offset.zero & size, themes.first);
+      return;
+    }
+    final half = size.width / 2;
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, half, size.height));
+    _paintMiniApp(canvas, Offset.zero & size, themes.first);
+    canvas.restore();
+
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(half, 0, size.width - half, size.height));
+    _paintMiniApp(canvas, Offset.zero & size, themes.last);
+    canvas.restore();
+
+    // Ortada ince açık/koyu ayırıcı çizgi.
+    canvas.drawLine(
+      Offset(half, 0),
+      Offset(half, size.height),
+      Paint()
+        ..color = themes.first.colorScheme.outlineVariant
+        ..strokeWidth = 1,
+    );
+  }
+
+  void _paintMiniApp(Canvas c, Rect bounds, ThemeData theme) {
+    final s = theme.colorScheme;
+    final t = AppTokens.fromTheme(theme);
+    final w = bounds.width;
+    final h = bounds.height;
+    final pad = 5.0;
+
+    // 1. Zemin (masa).
+    c.drawRect(bounds, Paint()..color = s.surface);
+
+    // 2. Üst arama hapı.
+    final searchRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(pad, pad, w - pad * 2, 11),
+      const Radius.circular(AppRadius.pill),
+    );
+    c.drawRRect(searchRect, Paint()..color = t.card);
+    c.drawRRect(
+      searchRect,
+      Paint()
+        ..color = t.hairline
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.7,
+    );
+    // Arama içi sol çizgi + sağ vurgu noktası.
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(pad + 5, pad + 4.2, (w - pad * 2) * 0.42, 2.6),
+        const Radius.circular(AppRadius.hair),
+      ),
+      Paint()..color = s.onSurfaceVariant.withValues(alpha: AppAlpha.soft),
+    );
+    c.drawCircle(
+      Offset(w - pad - 5.5, pad + 5.5),
+      2.6,
+      Paint()..color = s.primary,
+    );
+
+    // 3. İki minyatür not kartı (masa üstünde kâğıt).
+    final cardsTop = pad + 15;
+    final gap = 4.0;
+    final cardW = (w - pad * 2 - gap) / 2;
+    final leftH = h - cardsTop - pad;
+    final rightH = leftH * 0.72;
+
+    // Sol kart: başlık + metin + sıcak etiket hapı.
+    final leftRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(pad, cardsTop, cardW, leftH),
+      const Radius.circular(AppRadius.xs + 2),
+    );
+    c.drawRRect(leftRect, Paint()..color = t.card);
+    c.drawRRect(
+      leftRect,
+      Paint()
+        ..color = t.hairline
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.7,
+    );
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(pad + 4, cardsTop + 5, cardW * 0.68, 3.2),
+        const Radius.circular(AppRadius.hair),
+      ),
+      Paint()..color = s.onSurface.withValues(alpha: AppAlpha.strong),
+    );
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(pad + 4, cardsTop + 11, cardW * 0.80, 2.4),
+        const Radius.circular(AppRadius.hair),
+      ),
+      Paint()..color = s.onSurfaceVariant.withValues(alpha: AppAlpha.disabled),
+    );
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(pad + 4, cardsTop + 16, cardW * 0.56, 2.4),
+        const Radius.circular(AppRadius.hair),
+      ),
+      Paint()..color = s.onSurfaceVariant.withValues(alpha: AppAlpha.soft),
+    );
+    // Sıcak etiket hapı (secondaryContainer + secondary).
+    if (leftH >= 32) {
+      c.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(pad + 4, cardsTop + leftH - 11, cardW * 0.58, 6),
+          const Radius.circular(AppRadius.xs),
+        ),
+        Paint()..color = s.secondaryContainer,
+      );
+      c.drawCircle(
+        Offset(pad + 7.5, cardsTop + leftH - 8),
+        1.6,
+        Paint()..color = s.secondary,
+      );
+    }
+
+    // Sağ kart: yumuşak birincil vurgu şeridi + iki satır.
+    final rightX = pad + cardW + gap;
+    final rightRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(rightX, cardsTop, cardW, rightH),
+      const Radius.circular(AppRadius.xs + 2),
+    );
+    c.drawRRect(rightRect, Paint()..color = t.card);
+    c.drawRRect(
+      rightRect,
+      Paint()
+        ..color = t.hairline
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.7,
+    );
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(rightX + 4, cardsTop + 5, cardW * 0.72, 5.5),
+        const Radius.circular(AppRadius.xs),
+      ),
+      Paint()..color = s.primaryContainer,
+    );
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(rightX + 4, cardsTop + 14, cardW * 0.65, 2.6),
+        const Radius.circular(AppRadius.hair),
+      ),
+      Paint()..color = s.onSurface.withValues(alpha: AppAlpha.muted),
+    );
+
+    // 4. Sağ altta vurgu "+" düğmesi.
+    const fabSize = 13.0;
+    final fabRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(w - pad - fabSize, h - pad - fabSize, fabSize, fabSize),
+      const Radius.circular(AppRadius.xs),
+    );
+    c.drawRRect(fabRect, Paint()..color = s.primary);
+    final cx = w - pad - fabSize / 2;
+    final cy = h - pad - fabSize / 2;
+    final plusPaint = Paint()
+      ..color = s.onPrimary
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+    c.drawLine(Offset(cx - 3, cy), Offset(cx + 3, cy), plusPaint);
+    c.drawLine(Offset(cx, cy - 3), Offset(cx, cy + 3), plusPaint);
+  }
+
+  @override
+  bool shouldRepaint(_MiniThemePreviewPainter old) =>
+      old.themes.length != themes.length ||
+      old.themes.first.colorScheme != themes.first.colorScheme ||
+      old.themes.last.colorScheme != themes.last.colorScheme;
 }

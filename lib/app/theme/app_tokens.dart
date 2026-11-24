@@ -69,6 +69,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
     required this.hairline,
     required this.cardShadow,
     required this.cardRadius,
+    this.sheetCard,
+    this.accentBorder,
+    this.tintSoft,
+    this.warmTint,
   });
 
   /// Bu temanın ailesi ve yazı tipi: zıt parlaklıktaki aynı temayı
@@ -91,12 +95,41 @@ class AppTokens extends ThemeExtension<AppTokens> {
   /// Kart köşesi (eski 12 → 16).
   final double cardRadius;
 
+  /// Alt levha içindeki bölüm kartı: açıkta kâğıt ([card]), koyuda levhadan
+  /// belirgin ayrışan yüzey — bölüm kartları levha zeminine karışmaz.
+  final Color? sheetCard;
+
+  /// Seçili veya odaklı çip/kart için yumuşak vurgu kenarlığı.
+  final Color? accentBorder;
+
+  /// Simge rozeti, seçili satır ve yumuşak vurgu için birincil yıkama.
+  final Color? tintSoft;
+
+  /// Sıcak dikkat rozeti için ikincil yıkama.
+  final Color? warmTint;
+
+  /// Null-güvenli levha kartı rengi.
+  Color resolvedSheetCard(ColorScheme scheme) => sheetCard ?? card;
+
+  /// Null-güvenli yumuşak vurgu kenarlığı.
+  Color resolvedAccentBorder(ColorScheme scheme) =>
+      accentBorder ?? scheme.primary.withValues(alpha: 0.34);
+
+  /// Null-güvenli birincil yıkama.
+  Color resolvedTintSoft(ColorScheme scheme) =>
+      tintSoft ?? scheme.primary.withValues(alpha: 0.10);
+
+  /// Null-güvenli ikincil yıkama.
+  Color resolvedWarmTint(ColorScheme scheme) =>
+      warmTint ?? scheme.secondary.withValues(alpha: 0.12);
+
   static AppTokens of(BuildContext context) => fromTheme(Theme.of(context));
 
   static AppTokens fromTheme(ThemeData theme) {
     final own = theme.extension<AppTokens>();
     if (own != null) return own;
     final s = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
     return AppTokens(
       family: ThemeFamily.sage,
       font: null,
@@ -104,6 +137,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
       hairline: s.outlineVariant.withValues(alpha: 0.5),
       cardShadow: const [],
       cardRadius: 16,
+      sheetCard: dark ? s.surfaceContainerHigh : s.surfaceContainerLowest,
+      accentBorder: s.primary.withValues(alpha: dark ? 0.42 : 0.30),
+      tintSoft: s.primary.withValues(alpha: dark ? 0.16 : 0.09),
+      warmTint: s.secondary.withValues(alpha: dark ? 0.18 : 0.11),
     );
   }
 
@@ -115,6 +152,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
     Color? hairline,
     List<BoxShadow>? cardShadow,
     double? cardRadius,
+    Color? sheetCard,
+    Color? accentBorder,
+    Color? tintSoft,
+    Color? warmTint,
   }) => AppTokens(
     family: family ?? this.family,
     font: font ?? this.font,
@@ -122,6 +163,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
     hairline: hairline ?? this.hairline,
     cardShadow: cardShadow ?? this.cardShadow,
     cardRadius: cardRadius ?? this.cardRadius,
+    sheetCard: sheetCard ?? this.sheetCard,
+    accentBorder: accentBorder ?? this.accentBorder,
+    tintSoft: tintSoft ?? this.tintSoft,
+    warmTint: warmTint ?? this.warmTint,
   );
 
   @override
@@ -134,6 +179,10 @@ class AppTokens extends ThemeExtension<AppTokens> {
       hairline: Color.lerp(hairline, other.hairline, t)!,
       cardShadow: BoxShadow.lerpList(cardShadow, other.cardShadow, t) ?? [],
       cardRadius: lerpDouble(cardRadius, other.cardRadius, t)!,
+      sheetCard: Color.lerp(sheetCard, other.sheetCard, t),
+      accentBorder: Color.lerp(accentBorder, other.accentBorder, t),
+      tintSoft: Color.lerp(tintSoft, other.tintSoft, t),
+      warmTint: Color.lerp(warmTint, other.warmTint, t),
     );
   }
 }

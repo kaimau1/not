@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart'
     show BoxHitTestEntry, SemanticsConfiguration;
 
+import '../../app/theme/app_design.dart';
 import '../../app/theme/app_tokens.dart';
 import '../l10n_ext.dart';
 import '../utils/feature_search.dart';
@@ -283,11 +284,7 @@ class ActionMenu extends StatelessWidget {
         ? settings
         : Row(mainAxisSize: MainAxisSize.min, children: [glyph, settings]);
     final query = host?.menuQuery.text.trim() ?? '';
-    final cardDecoration = BoxDecoration(
-      color: tokens.card,
-      borderRadius: BorderRadius.circular(AppRadius.l),
-      border: Border.all(color: tokens.hairline),
-    );
+    final cardDecoration = AppSurface.sheetCard(theme);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpace.l,

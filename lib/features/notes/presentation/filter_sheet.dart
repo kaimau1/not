@@ -1,23 +1,26 @@
-import '../../../core/widgets/sheet_header.dart';
-import '../../../core/app_icons.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/theme/app_design.dart';
+import '../../../app/theme/app_tokens.dart';
+import '../../../core/a11y/min_tap_target.dart';
+import '../../../core/app_icons.dart';
+import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/confirm_dialog.dart';
+import '../../../core/widgets/press_scale.dart';
+import '../../../core/widgets/sheet_header.dart';
+import '../../../core/widgets/toggle_pop.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/attachment_text_index.dart';
-import '../../settings/settings_providers.dart';
 import '../../folders/data/folder_order.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
+import '../../settings/settings_providers.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'notes_providers.dart';
-import '../../../core/widgets/app_sheet.dart';
-import '../../../core/a11y/min_tap_target.dart';
-import '../../../app/theme/app_tokens.dart';
-import '../../../core/widgets/confirm_dialog.dart';
 
 /// Süz levhası — eski çip barının yerini alır.
 ///
@@ -33,9 +36,8 @@ Future<void> showFilterSheet(BuildContext context) =>
     showAppSheet<void>(
       context: context,
       isScrollControlled: true,
-      // TUTAMAK YOK (2026-11-10, kullanıcı: "üstte ölü boşluk var"): M3
-      // tutamağı başlığın üstünde ~48 dp boş şerit açıyordu; levha yine
-      // aşağı sürüklenerek ve ✕ ile kapanır.
+      // M3 tutamağı yerine üstte ince 4 dp kapsül: 48 dp ölü boşluk açmaz,
+      // levha yine aşağı sürüklenerek ve ✕ ile kapanır.
       showDragHandle: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
@@ -43,7 +45,7 @@ Future<void> showFilterSheet(BuildContext context) =>
       // Geniş ekranda ortada, en çok 560 dp (KT-2): yalnız maxHeight
       // verilince M3'ün genişlik sınırı kalkıyor, levha 1240 px'e yayılıyordu.
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.76,
+        maxHeight: MediaQuery.sizeOf(context).height * 0.80,
         maxWidth: kSheetMaxWidth,
       ),
       builder: (_) => const _FilterSheet(),
@@ -125,7 +127,9 @@ class HomeFilterButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
     final labels = appliedFilterLabels(context, ref);
     final active = labels.isNotEmpty;
     final label = !active
@@ -150,10 +154,10 @@ class HomeFilterButton extends ConsumerWidget {
               : l10n.filterSheetTitle,
           excludeSemantics: true,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
             child: AnimatedSize(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
+              duration: AppMotion.of(context, AppMotion.short),
+              curve: AppMotion.curveOf(context, AppMotion.emphasized),
               alignment: AlignmentDirectional.centerEnd,
               // Boyut geçişi AnimatedSize'ta (kırparak); kutunun kendi
               // kısıtı ANİMASYONSUZ — kısıtı canlandırmak geçiş boyunca
@@ -169,35 +173,37 @@ class HomeFilterButton extends ConsumerWidget {
                 // vurgulu hap.
                 decoration: active
                     ? BoxDecoration(
-                        color: scheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(9),
-                        border: Border.all(color: scheme.primary, width: 1.5),
+                        color: scheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(AppRadius.s),
+                        border: Border.all(
+                          color: scheme.primary,
+                          width: 1.4,
+                        ),
                       )
                     : null,
                 child: Material(
                   type: MaterialType.transparency,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(9),
+                    borderRadius: BorderRadius.circular(AppRadius.s),
                     onTap: () => showFilterSheet(context),
                     child: !active
                         ? Icon(
                             Icons.tune,
-                            size: 18,
+                            size: AppIconSize.s,
                             color: scheme.onSurfaceVariant,
                           )
                         : Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpace.s),
                               Flexible(
                                 child: Text(
                                   label,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
+                                  style: text.meta.copyWith(
                                     fontWeight: AppWeight.strong,
-                                    color: scheme.onSecondaryContainer,
+                                    color: scheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
@@ -208,13 +214,13 @@ class HomeFilterButton extends ConsumerWidget {
                                 onTap: () => resetFilters(ref),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 5,
-                                    vertical: 8,
+                                    horizontal: AppSpace.xs + 1,
+                                    vertical: AppSpace.s,
                                   ),
                                   child: Icon(
                                     Icons.close,
-                                    size: 15,
-                                    color: scheme.onSecondaryContainer,
+                                    size: AppIconSize.xs,
+                                    color: scheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
@@ -264,7 +270,7 @@ class DashboardFilterRow extends ConsumerWidget {
     ];
     if (chips.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.fromLTRB(AppSpace.m, AppSpace.s, AppSpace.m, 0),
       child: SizedBox(
         height: 36,
         child: ListView(scrollDirection: Axis.horizontal, children: chips),
@@ -276,8 +282,7 @@ class DashboardFilterRow extends ConsumerWidget {
 /// Görünüm bölümü (F11.4; SIKI YENİDEN YAZIM 2026-11-10, kullanıcı isteği:
 /// "klasör satırı, takvim satırı gizleme gösterme gibi seçenekleri görünüm ve
 /// süz ekranına koy, daha kompakt olsun"). Izgara ⇄ liste segmentli düğme;
-/// aç-kapa seçenekleri artık 48 dp'lik anahtar SATIRLARI değil, aynı çip
-/// akışında işaretli çipler — yedi satır yerine iki-üç sıra.
+/// aç-kapa seçenekleri yumuşak birincil ton + işaret halkasıyla seçili görünür.
 class _ViewModeSection extends ConsumerWidget {
   const _ViewModeSection();
 
@@ -287,13 +292,14 @@ class _ViewModeSection extends ConsumerWidget {
     final list = ref.watch(noteListViewProvider);
     void set(bool wantList) {
       if (wantList != ref.read(noteListViewProvider)) {
+        AppHaptics.tick();
         ref.read(noteListViewProvider.notifier).toggle();
       }
     }
 
     final shared = ref.watch(homeShowSharedProvider);
     return _Section(
-      icon: Icons.grid_view,
+      icon: Icons.grid_view_rounded,
       title: l10n.viewToggle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -304,83 +310,104 @@ class _ViewModeSection extends ConsumerWidget {
             segments: [
               ButtonSegment(
                 value: false,
-                icon: const Icon(Icons.grid_view, size: 18),
+                icon: const Icon(Icons.grid_view_rounded, size: AppIconSize.s),
                 label: Text(l10n.viewGrid),
               ),
               ButtonSegment(
                 value: true,
-                icon: const Icon(Icons.view_agenda_outlined, size: 18),
+                icon: const Icon(
+                  Icons.view_agenda_outlined,
+                  size: AppIconSize.s,
+                ),
                 label: Text(l10n.viewList),
               ),
             ],
             selected: {list},
             onSelectionChanged: (v) => set(v.first),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.m),
           _OptionWrap(
             children: [
               // KLASÖR SATIRI (⋮ menüsünden buraya, 2026-11-10).
               _Option(
                 key: const ValueKey('view-toggle-folder-strip'),
-                toggle: true,
+                style: _OptionStyle.toggle,
                 label: l10n.homeFolderStripShort,
                 icon: Icons.folder_outlined,
                 selected: !ref.watch(homeFolderStripHiddenProvider),
-                onTap: () =>
-                    ref.read(homeFolderStripHiddenProvider.notifier).toggle(),
+                onTap: () {
+                  AppHaptics.tick();
+                  ref.read(homeFolderStripHiddenProvider.notifier).toggle();
+                },
               ),
               // TAKVİM ŞERİDİ (Zemin levhasında da var; burası kısayol).
               _Option(
                 key: const ValueKey('view-toggle-calendar-strip'),
-                toggle: true,
+                style: _OptionStyle.toggle,
                 label: l10n.homeCalendarStripShort,
                 icon: Icons.calendar_view_week_outlined,
                 selected: ref.watch(homeCalendarStripProvider),
-                onTap: () => ref
-                    .read(homeCalendarStripProvider.notifier)
-                    .set(!ref.read(homeCalendarStripProvider)),
+                onTap: () {
+                  AppHaptics.tick();
+                  ref
+                      .read(homeCalendarStripProvider.notifier)
+                      .set(!ref.read(homeCalendarStripProvider));
+                },
               ),
               // KARTTA GÖRSEL / EK (kullanıcı isteği 2026-10-23): Ayarlar'daki
               // "Kartta görünenler"in kısayolu.
               _Option(
-                toggle: true,
+                style: _OptionStyle.toggle,
                 label: l10n.cardShowMediaShort,
                 icon: Icons.image_outlined,
                 selected: ref.watch(cardShowMediaProvider),
-                onTap: () => ref.read(cardShowMediaProvider.notifier).toggle(),
+                onTap: () {
+                  AppHaptics.tick();
+                  ref.read(cardShowMediaProvider.notifier).toggle();
+                },
               ),
               _Option(
-                toggle: true,
+                style: _OptionStyle.toggle,
                 label: l10n.cardShowFilesShort,
                 icon: Icons.attach_file,
                 selected: ref.watch(cardShowFilesProvider),
-                onTap: () => ref.read(cardShowFilesProvider.notifier).toggle(),
+                onTap: () {
+                  AppHaptics.tick();
+                  ref.read(cardShowFilesProvider.notifier).toggle();
+                },
               ),
               // "Tümü" açıkken: klasör başlıkları altında grupla (D4).
               if (ref.watch(showAllNotesProvider))
                 _Option(
-                  toggle: true,
+                  style: _OptionStyle.toggle,
                   label: l10n.groupByFolder,
                   icon: Icons.folder_copy_outlined,
                   selected: ref.watch(allNotesGroupByFolderProvider),
-                  onTap: () =>
-                      ref.read(allNotesGroupByFolderProvider.notifier).toggle(),
+                  onTap: () {
+                    AppHaptics.tick();
+                    ref.read(allNotesGroupByFolderProvider.notifier).toggle();
+                  },
                 ),
               _Option(
-                toggle: true,
+                style: _OptionStyle.toggle,
                 label: l10n.homeShowSharedShort,
                 icon: AppIcons.shared,
                 selected: shared,
-                onTap: () => ref.read(homeShowSharedProvider.notifier).toggle(),
+                onTap: () {
+                  AppHaptics.tick();
+                  ref.read(homeShowSharedProvider.notifier).toggle();
+                },
               ),
               if (shared)
                 _Option(
-                  toggle: true,
+                  style: _OptionStyle.toggle,
                   label: l10n.homeSharedAtBottomShort,
                   icon: Icons.vertical_align_bottom,
                   selected: ref.watch(homeSharedAtBottomProvider),
-                  onTap: () =>
-                      ref.read(homeSharedAtBottomProvider.notifier).toggle(),
+                  onTap: () {
+                    AppHaptics.tick();
+                    ref.read(homeSharedAtBottomProvider.notifier).toggle();
+                  },
                 ),
             ],
           ),
@@ -404,22 +431,22 @@ class _FilterSheet extends ConsumerWidget {
   /// Süzgeç türlerinin simgeleri: salt metin çipleri birbirine karışıyordu,
   /// simge göz gezdirirken tutamak veriyor ("0'dan tasarım" isteği).
   static IconData _filterIcon(NoteFilter f) => switch (f) {
-    NoteFilter.all => Icons.apps,
-    NoteFilter.text => Icons.notes,
+    NoteFilter.all => Icons.apps_rounded,
+    NoteFilter.text => Icons.notes_rounded,
     NoteFilter.checklist => Icons.check_box_outlined,
     NoteFilter.ordered => Icons.format_list_numbered_rounded,
     NoteFilter.pinned => Icons.push_pin_outlined,
-    NoteFilter.starred => Icons.star_outline,
-    NoteFilter.reminded => Icons.alarm,
-    NoteFilter.locked => Icons.lock_outline,
+    NoteFilter.starred => Icons.star_outline_rounded,
+    NoteFilter.reminded => Icons.alarm_rounded,
+    NoteFilter.locked => Icons.lock_outline_rounded,
     NoteFilter.others => Icons.folder_off_outlined,
   };
 
   static IconData _sortIcon(NoteSort s) => switch (s) {
     NoteSort.manual => Icons.pan_tool_alt_outlined,
-    NoteSort.updated => Icons.history,
+    NoteSort.updated => Icons.history_rounded,
     NoteSort.created => Icons.fiber_new_outlined,
-    NoteSort.title => Icons.sort_by_alpha,
+    NoteSort.title => Icons.sort_by_alpha_rounded,
     NoteSort.color => AppIcons.color,
     NoteSort.active => Icons.local_fire_department_outlined,
   };
@@ -427,70 +454,93 @@ class _FilterSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     final filter = ref.watch(noteFilterProvider);
     final tag = ref.watch(selectedTagProvider);
     final sort = ref.watch(noteSortProvider);
     final tags = ref.watch(allTagsProvider);
     final appliedCount = appliedFilterCount(ref);
-    void setFilter(NoteFilter f) => ref.read(noteFilterProvider.notifier).set(f);
-    void setTag(String? t) => ref.read(selectedTagProvider.notifier).set(t);
-    void reset() => resetFilters(ref);
+    void setFilter(NoteFilter f) {
+      AppHaptics.tick();
+      ref.read(noteFilterProvider.notifier).set(f);
+    }
+
+    void setTag(String? t) {
+      AppHaptics.tick();
+      ref.read(selectedTagProvider.notifier).set(t);
+    }
+
+    void reset() {
+      AppHaptics.tick();
+      resetFilters(ref);
+    }
 
     return SingleChildScrollView(
       // Alt boşluk sistem gezinme çubuğunu (geri/ana sayfa) hesaba katar:
       // useSafeArea levhanın ALTINI korumaz, son bölüm çubuğun arkasında
       // kalıyordu.
       padding: EdgeInsets.fromLTRB(
-        16,
-        0,
-        16,
-        20 + MediaQuery.viewPaddingOf(context).bottom,
+        AppSpace.l,
+        AppSpace.s,
+        AppSpace.l,
+        AppSpace.xl + MediaQuery.viewPaddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Sıkı, ölü boşluksuz sürükleme kapsülü.
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: AppSpace.xs),
+              decoration: BoxDecoration(
+                color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.soft),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              ),
+            ),
+          ),
           SheetHeader(
             title: l10n.homeViewMenu,
-            padding: const EdgeInsets.only(left: 4, top: 6),
+            padding: const EdgeInsets.only(left: AppSpace.xs),
             badge: appliedCount > 0
                 ? Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
+                      horizontal: AppSpace.s,
+                      vertical: AppSpace.xxs,
                     ),
                     decoration: BoxDecoration(
                       color: scheme.primary,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: Text(
                       '$appliedCount',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: AppWeight.strong,
-                        color: scheme.onPrimary,
-                      ),
+                      style: text.badge.copyWith(color: scheme.onPrimary),
                     ),
                   )
                 : null,
-            // ✕ levhayı kapatmanın görünür yolu (F16.2: eskiden "Kapat" hapı).
-            // Aşağı sürüklemek ya da dışarı dokunmak da kapatır ama levha
-            // ekranı doldurduğunda ikisi de akla gelmiyordu.
+            // ✕ levhayı kapatmanın görünür yolu (F16.2).
             actions: [
               if (appliedCount > 0)
                 TextButton.icon(
                   onPressed: reset,
-                  icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                  icon: const Icon(
+                    Icons.filter_alt_off_outlined,
+                    size: AppIconSize.s,
+                  ),
                   label: Text(l10n.filterReset),
                 ),
             ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpace.xs),
 
           const _ViewModeSection(),
 
           // TÜR ve DURUM AYRI SATIR (F11.4) ama TEK KARTTA (2026-11-10,
-          // sıkılaştırma): iki başlık kartı yerine satır başında küçük ad.
+          // sıkılaştırma): iki başlık kartı yerine aralarında ince ayırıcı.
           _Section(
             icon: Icons.filter_alt_outlined,
             title: l10n.filterSheetTitle,
@@ -509,7 +559,10 @@ class _FilterSheet extends ConsumerWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
+                  child: Divider(height: 1, color: tokens.hairline),
+                ),
                 _OptionWrap(
                   children: [
                     _RowLabel(l10n.filterSectionStatus),
@@ -528,26 +581,24 @@ class _FilterSheet extends ConsumerWidget {
           ),
 
           // **KLASÖR BÖLÜMÜ BURADAN KALKTI** (kullanıcı isteği 2026-08-18:
-          // "şu an etiketle klasör aynı şey"). Klasör bir süzgeç olduğu
-          // sürece etiketin ikizinden başka bir şey değildi: ikisi de listeyi
-          // daraltıyordu. Klasör artık ana ekranda karosu olan bir YER
-          // (bkz. `FolderTile` / `FolderScreen`); oluşturma, yönetme ve içine
-          // girme oradan yapılır. Etiket saf etiket olarak burada kalır.
+          // "şu an etiketle klasör aynı şey"). Klasör artık ana ekranda karosu
+          // olan bir YER (bkz. `FolderTile` / `FolderScreen`); etiket sıcak
+          // tonlu haplarla saf etiket olarak burada kalır.
           if (tags.isNotEmpty)
             _Section(
-              icon: Icons.tag,
+              icon: Icons.tag_rounded,
               title: l10n.filterSectionTag,
+              warm: true,
               child: _OptionWrap(
                 children: [
                   for (final t in tags)
                     _Option(
+                      style: _OptionStyle.tag,
                       label: t,
-                      icon: Icons.tag,
+                      icon: Icons.tag_rounded,
                       selected: tag == t,
                       onTap: () => setTag(tag == t ? null : t),
-                      // **ETİKET YÖNETİMİ**: etiketler yalnız notlardan
-                      // türetiliyordu; yazım hatasıyla açılmış bir etiketi
-                      // düzeltmenin tek yolu onu taşıyan HER notu açmaktı.
+                      // **ETİKET YÖNETİMİ**: uzun basınca yeniden adlandır / sil.
                       onLongPress: () => _manageTag(context, ref, t),
                     ),
                 ],
@@ -555,27 +606,38 @@ class _FilterSheet extends ConsumerWidget {
             ),
 
           _Section(
-            icon: Icons.swap_vert,
+            icon: Icons.swap_vert_rounded,
             title: l10n.filterSectionSort,
-            // Elle sıralama kipi sıralama bölümünün İÇİNDE: sıralamayı arayan
-            // kullanıcı zaten burada. Yalnız süzgeçsiz görünümde anlamlı
-            // (alt kümede sıra bozulur), o yüzden koşullu.
-            // ✥ simgesi yerine METİNLİ düğme (F11.4): "Notları sırala"
-            // simgesi açıklamasızdı.
+            // Elle sıralama kipi sıralama bölümünün İÇİNDE: yalnız süzgeçsiz
+            // görünümde anlamlı.
             trailing: appliedCount == 0
-                ? MinTapTarget(child: TextButton.icon(
-                    key: const ValueKey('filter-manual-reorder'),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
+                ? MinTapTarget(
+                    child: FilledButton.tonalIcon(
+                      key: const ValueKey('filter-manual-reorder'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: scheme.primaryContainer,
+                        foregroundColor: scheme.onPrimaryContainer,
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.m,
+                          vertical: AppSpace.xs,
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.open_with_rounded,
+                        size: AppIconSize.xs,
+                      ),
+                      label: Text(l10n.reorderNotesManually),
+                      onPressed: () {
+                        AppHaptics.tick();
+                        ref
+                            .read(noteSortProvider.notifier)
+                            .set(NoteSort.manual);
+                        ref.read(reorderModeProvider.notifier).set(true);
+                        Navigator.pop(context);
+                      },
                     ),
-                    icon: const Icon(Icons.open_with, size: 16),
-                    label: Text(l10n.reorderNotesManually),
-                    onPressed: () {
-                      ref.read(noteSortProvider.notifier).set(NoteSort.manual);
-                      ref.read(reorderModeProvider.notifier).set(true);
-                      Navigator.pop(context);
-                    },
-                  ))
+                  )
                 : null,
             child: _OptionWrap(
               children: [
@@ -584,22 +646,25 @@ class _FilterSheet extends ConsumerWidget {
                     label: sortLabel(l10n, s),
                     icon: _sortIcon(s),
                     selected: sort == s,
-                    onTap: () => ref.read(noteSortProvider.notifier).set(s),
+                    onTap: () {
+                      AppHaptics.tick();
+                      ref.read(noteSortProvider.notifier).set(s);
+                    },
                   ),
               ],
             ),
           ),
 
-          const SizedBox(height: 2),
-          Text(
-            l10n.filterSheetSortHint,
-            style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+          const SizedBox(height: AppSpace.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+            child: Text(l10n.filterSheetSortHint, style: text.meta),
           ),
           if (tags.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              l10n.tagLongPressHint,
-              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            const SizedBox(height: AppSpace.xs),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+              child: Text(l10n.tagLongPressHint, style: text.meta),
             ),
           ],
         ],
@@ -620,12 +685,17 @@ Future<void> _manageTag(BuildContext context, WidgetRef ref, String tag) async {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.xl,
+              0,
+              AppSpace.xl,
+              AppSpace.s,
+            ),
             child: Align(
               alignment: AlignmentDirectional.centerStart,
               child: Text(
                 '${l10n.tagManageTitle}: $tag',
-                style: Theme.of(sheetContext).textTheme.titleMedium,
+                style: AppText.of(Theme.of(sheetContext)).sheetTitle,
               ),
             ),
           ),
@@ -642,7 +712,7 @@ Future<void> _manageTag(BuildContext context, WidgetRef ref, String tag) async {
             title: Text(l10n.tagDelete),
             onTap: () => Navigator.pop(sheetContext, 'delete'),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.s),
         ],
       ),
     ),
@@ -732,53 +802,67 @@ String sortLabel(AppLocalizations l10n, NoteSort sort) => switch (sort) {
   NoteSort.active => l10n.sortActive,
 };
 
-/// Bölüm kartı: simgeli başlık + içerik, yumuşak zeminli tek blok.
-///
-/// Eski levha bölümleri yalnız minik BÜYÜK HARF etiketlerle ayırıyordu;
-/// kenarlıklı çipler ekranı çizgi kalabalığına çeviriyordu. Kart zemini
-/// bölümü tek bakışta gruplarken çiplerin kenarlıksız (tonal) kalmasına
-/// izin veriyor — uygulamanın not kartlarıyla aynı dil.
+/// Bölüm kartı: levha zemininden ayrışan temiz çerçeveli kâğıt blok + renkli
+/// simge rozeti.
 class _Section extends StatelessWidget {
   const _Section({
     required this.icon,
     required this.title,
     required this.child,
     this.trailing,
+    this.warm = false,
   });
 
   final IconData icon;
   final String title;
   final Widget child;
   final Widget? trailing;
+  final bool warm;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final badgeBg = warm
+        ? tokens.resolvedWarmTint(scheme)
+        : tokens.resolvedTintSoft(scheme);
+    final badgeFg = warm ? scheme.secondary : scheme.primary;
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.l),
+      margin: const EdgeInsets.only(bottom: AppSpace.m - 2),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.m,
+        AppSpace.m - 2,
+        AppSpace.m,
+        AppSpace.m,
       ),
+      decoration: AppSurface.sheetCard(theme),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: scheme.primary),
-              const SizedBox(width: 6),
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Icon(icon, size: AppIconSize.xs, color: badgeFg),
+              ),
+              const SizedBox(width: AppSpace.s),
               Expanded(
                 child: Text(
                   title,
-                  style: sectionLabelStyle(context),
+                  style: sectionLabelStyle(context)?.copyWith(color: badgeFg),
                 ),
               ),
               ?trailing,
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpace.s),
           child,
         ],
       ),
@@ -792,13 +876,12 @@ class _OptionWrap extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) =>
-      Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: children,
-      );
+  Widget build(BuildContext context) => Wrap(
+    spacing: AppSpace.xs + 2,
+    runSpacing: AppSpace.xs + 2,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: children,
+  );
 }
 
 /// Çip satırının başındaki küçük ad ("Tür", "Durum").
@@ -808,18 +891,26 @@ class _RowLabel extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsetsDirectional.only(start: 2, end: 2),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpace.xxs,
+        end: AppSpace.xs,
       ),
-    ),
-  );
+      child: Text(
+        text,
+        style: AppText.of(theme).meta.copyWith(fontWeight: AppWeight.strong),
+      ),
+    );
+  }
 }
+
+/// Süz levhasındaki üç seçenek rolü — her rol görsel olarak ayrışır:
+/// - [choice]: tek seçimli süzgeç/sıralama (dolu birincil vurgu)
+/// - [toggle]: görünüm aç/kapa (yumuşak birincil kap + vurgu çerçeve + ✓)
+/// - [tag]: sıcak etiket hapı (ikincil ton)
+enum _OptionStyle { choice, toggle, tag }
 
 class _Option extends StatelessWidget {
   const _Option({
@@ -829,13 +920,10 @@ class _Option extends StatelessWidget {
     required this.onTap,
     this.icon,
     this.onLongPress,
-    this.toggle = false,
+    this.style = _OptionStyle.choice,
   });
 
-  /// Aç-kapa seçeneği (görünüm): seçiliyken simgenin yerinde ✓, ekran
-  /// okuyucuya "açık/kapalı" söylenir.
-  final bool toggle;
-
+  final _OptionStyle style;
   final String label;
   final IconData? icon;
   final bool selected;
@@ -847,52 +935,97 @@ class _Option extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // Seçili çip dolgun (primary), seçilmemiş tonal — kenarlık çizgisi yok:
-    // eski tasarımda her çipin kenarlığı levhayı tel kafese çeviriyordu.
-    final background = selected ? scheme.primary : scheme.surfaceContainerHigh;
-    final foreground = selected ? scheme.onPrimary : scheme.onSurface;
-    // Görünüm 38 dp; dokunma/ekran okuyucu alanı 48 dp (F15.4). Seçili mi
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
+    final isToggle = style == _OptionStyle.toggle;
+
+    final Color background;
+    final Color foreground;
+    final Color iconColor;
+    final Color borderColor;
+    switch (style) {
+      case _OptionStyle.choice:
+        background = selected ? scheme.primary : scheme.surface;
+        foreground = selected ? scheme.onPrimary : scheme.onSurface;
+        iconColor = selected ? scheme.onPrimary : scheme.primary;
+        borderColor = selected ? scheme.primary : tokens.hairline;
+      case _OptionStyle.toggle:
+        background = selected ? scheme.primaryContainer : scheme.surface;
+        foreground = selected
+            ? scheme.onPrimaryContainer
+            : scheme.onSurfaceVariant;
+        iconColor = selected ? scheme.primary : scheme.onSurfaceVariant;
+        borderColor = selected
+            ? tokens.resolvedAccentBorder(scheme)
+            : tokens.hairline;
+      case _OptionStyle.tag:
+        background = selected
+            ? scheme.secondary
+            : tokens.resolvedWarmTint(scheme);
+        foreground = selected ? scheme.onSecondary : scheme.onSurface;
+        iconColor = selected ? scheme.onSecondary : scheme.secondary;
+        borderColor = selected ? scheme.secondary : tokens.hairline;
+    }
+
+    // Görünüm 34 dp; dokunma/ekran okuyucu alanı 48 dp (F15.4). Seçili mi
     // ekran okuyucuya da söylenir.
     return MinTapTarget(
       child: Semantics(
-        selected: toggle ? null : selected,
-        toggled: toggle ? selected : null,
-        child: Material(
-          color: background,
-          borderRadius: BorderRadius.circular(20),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: onTap,
-            onLongPress: onLongPress,
-            child: Container(
-              height: 34,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null) ...[
-                    Icon(
-                      toggle && selected ? Icons.check : icon,
-                      size: 16,
-                      color: selected ? scheme.onPrimary : scheme.primary,
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  // Büyük yazıda (F15.1) uzun ad çipi taşırmasın: kısalır.
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: foreground,
-                      ),
-                    ),
+        selected: isToggle ? null : selected,
+        toggled: isToggle ? selected : null,
+        child: PressScale(
+          child: AnimatedContainer(
+            duration: AppMotion.of(context, AppMotion.quick),
+            curve: AppMotion.curveOf(context, AppMotion.emphasized),
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              border: Border.all(color: borderColor),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                onTap: onTap,
+                onLongPress: onLongPress,
+                child: Container(
+                  height: 34,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.m - 2,
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (icon != null) ...[
+                        TogglePop(
+                          on: selected,
+                          child: Icon(
+                            isToggle && selected ? Icons.check_rounded : icon,
+                            size: AppIconSize.xs,
+                            color: iconColor,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpace.xs + 2),
+                      ],
+                      // Büyük yazıda (F15.1) uzun ad çipi taşırmasın: kısalır.
+                      Flexible(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: text.label.copyWith(
+                            fontWeight: selected
+                                ? AppWeight.strong
+                                : AppWeight.medium,
+                            color: foreground,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -915,21 +1048,25 @@ class _AttachmentScopeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     return Padding(
-      padding: const EdgeInsetsDirectional.only(end: 6),
+      padding: const EdgeInsetsDirectional.only(end: AppSpace.xs + 2),
       child: Material(
-        color: selected ? scheme.secondaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
+        color: selected ? scheme.primaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.s),
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.s),
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.m - 2),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppRadius.s),
               border: Border.all(
-                color: selected ? Colors.transparent : scheme.outlineVariant,
+                color: selected
+                    ? tokens.resolvedAccentBorder(scheme)
+                    : scheme.outlineVariant,
               ),
             ),
             child: Row(
@@ -937,14 +1074,16 @@ class _AttachmentScopeChip extends StatelessWidget {
               children: [
                 Icon(
                   selected ? Icons.image_search : Icons.image_search_outlined,
-                  size: 16,
+                  size: AppIconSize.xs,
+                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpace.xs + 2),
                 Text(
                   l10n.searchAttachments,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                  style: AppText.of(theme).label.copyWith(
+                    color: selected
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurface,
                   ),
                 ),
               ],

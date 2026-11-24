@@ -339,19 +339,20 @@ class _SearchField extends ConsumerWidget {
     // 2026-11-08: ESKİDEN tüm hap tek GestureDetector'dı; sağdaki düğmelerin
     // kenar/boşluklarına basmak da aramayı başlatıyordu. Artık yalnız sol
     // kısım (kenar + büyüteç) odak verir; TextField kendi alanını zaten alır.
+    final theme = Theme.of(context);
+    final tokens = AppTokens.fromTheme(theme);
+    final text = AppText.of(theme);
     return Container(
         height: 50,
         decoration: BoxDecoration(
-          color: AppTokens.of(context).card,
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(color: AppTokens.of(context).hairline),
-          boxShadow: [
-            BoxShadow(
-              color: scheme.shadow.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: tokens.card,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(
+            color: query.isNotEmpty
+                ? tokens.resolvedAccentBorder(scheme)
+                : tokens.hairline,
+          ),
+          boxShadow: tokens.cardShadow,
         ),
         child: Row(
           children: [
@@ -362,9 +363,15 @@ class _SearchField extends ConsumerWidget {
                 height: 50,
                 child: Row(
                   children: [
-                    const SizedBox(width: 14),
-                    Icon(Icons.search, size: 19, color: scheme.onSurfaceVariant),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpace.m + 2),
+                    Icon(
+                      Icons.search_rounded,
+                      size: AppIconSize.m,
+                      color: query.isNotEmpty
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: AppSpace.s),
                   ],
                 ),
               ),
@@ -386,16 +393,17 @@ class _SearchField extends ConsumerWidget {
                 onSubmitted: (value) =>
                     ref.read(searchHistoryProvider.notifier).remember(value),
                 textInputAction: TextInputAction.search,
-                style: const TextStyle(fontSize: 13),
+                style: text.label.copyWith(fontWeight: AppWeight.regular),
                 decoration: InputDecoration(
                   hintText: semantic
                       ? l10n.semanticSearchHint
                       : l10n.searchHint,
-                  hintStyle: TextStyle(
-                    fontSize: 13,
+                  hintStyle: text.label.copyWith(
+                    fontWeight: AppWeight.regular,
                     color: scheme.onSurfaceVariant,
                   ),
                   border: InputBorder.none,
+                  filled: false,
                   isDense: true,
                   // Dikey dolgu alanı 44 px'lik kutu boyunca dokunulur kılar.
                   contentPadding: const EdgeInsets.symmetric(vertical: 15),
@@ -406,7 +414,7 @@ class _SearchField extends ConsumerWidget {
               IconButton(
                 tooltip: l10n.close,
                 visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.close, size: 18),
+                icon: const Icon(Icons.close_rounded, size: AppIconSize.s),
                 onPressed: () {
                   controller.clear();
                   ref.read(searchQueryProvider.notifier).set('');

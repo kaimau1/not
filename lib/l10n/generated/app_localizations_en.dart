@@ -8366,7 +8366,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeCalendarStripInfo =>
-      'The next 10 days at the top of the home screen: events, tasks, holidays. Tap a day = entries (edit/delete), long-press = calendar';
+      'Weekly or monthly calendar at the top of the home screen: events, tasks, holidays. Tap a day = entries (edit/delete), long-press = calendar';
 
   @override
   String get homeCalendarStripExpand => 'Expand calendar strip';
@@ -9824,4 +9824,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tableShareFailed => 'Couldn\'t share the table';
+
+  @override
+  String get dashboardBackgroundGallery => 'Curated wallpapers';
+
+  @override
+  String get dashboardBackgroundFromDevice => 'From gallery';
+
+  @override
+  String get dashboardBackgroundOpacity => 'Visibility';
+
+  @override
+  String get dashboardBackgroundPreview => 'Live preview';
+
+  @override
+  String get wallpaperAuroraBloom => 'Aurora bloom';
+
+  @override
+  String get wallpaperCitrusSun => 'Citrus sun';
+
+  @override
+  String get wallpaperCoralLagoon => 'Coral lagoon';
+
+  @override
+  String get wallpaperBotanicalGarden => 'Botanical garden';
+
+  @override
+  String get wallpaperLavenderDream => 'Lavender dream';
+
+  @override
+  String get wallpaperTerracottaStudio => 'Terracotta studio';
+
+  @override
+  String get wallpaperPastelConfetti => 'Pastel confetti';
+
+  @override
+  String get wallpaperGoldenMeadow => 'Golden meadow';
+
+  @override
+  String get wallpaperMidnightAurora => 'Midnight aurora';
+
+  @override
+  String get wallpaperVelvetCosmos => 'Velvet cosmos';
+
+  @override
+  String get noteThemeAurora => 'Aurora';
+
+  @override
+  String get noteThemeCitrus => 'Citrus';
+
+  @override
+  String get noteThemeBotanical => 'Botanical';
+
+  @override
+  String get noteThemeTerracotta => 'Terracotta';
+
+  @override
+  String get noteThemeConfetti => 'Confetti';
+
+  @override
+  String get noteThemeCobalt => 'Cobalt';
+
+  @override
+  String get themeActiveLabel => 'Active theme';
+
+  @override
+  String get themeGroupAll => 'All';
 }

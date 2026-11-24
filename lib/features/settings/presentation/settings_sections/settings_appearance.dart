@@ -223,11 +223,26 @@ class _AppearancePreview extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.appearancePreviewNoteTitle,
-              textScaler: TextScaler.linear(step.scale),
-              style: styled(theme.textTheme.titleMedium)
-                  .copyWith(color: scheme.onSurface),
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: Text(
+                    l10n.appearancePreviewNoteTitle,
+                    textScaler: TextScaler.linear(step.scale),
+                    style: styled(theme.textTheme.titleMedium)
+                        .copyWith(color: scheme.onSurface),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpace.s),
             Text.rich(
@@ -251,9 +266,9 @@ class _AppearancePreview extends ConsumerWidget {
                 Icon(
                   Icons.check_box_outlined,
                   size: 16 * step.scale,
-                  color: scheme.onSurfaceVariant,
+                  color: scheme.primary,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpace.xs + 2),
                 Expanded(
                   child: Text(
                     l10n.appearancePreviewItem,

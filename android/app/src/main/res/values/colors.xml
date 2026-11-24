@@ -22,26 +22,26 @@
      1px kenar var. Bu yüzden eski _start/_end çiftleri tek belirtece indi. -->
 <resources>
     <!-- Yüzeyler: surface / surfaceContainerLow / outlineVariant -->
-    <color name="widget_surface">#FAFCFA</color>
-    <color name="widget_row">#EFF4F0</color>
-    <color name="widget_outline">#D1D8D2</color>
+    <color name="widget_surface">#FCFDFC</color>
+    <color name="widget_row">#EBF3EE</color>
+    <color name="widget_outline">#C4D4CB</color>
 
     <!-- Metin: onSurface / onSurfaceVariant -->
-    <color name="widget_on_surface">#1B2420</color>
-    <color name="widget_on_surface_muted">#4D5853</color>
+    <color name="widget_on_surface">#13221D</color>
+    <color name="widget_on_surface_muted">#3F534C</color>
 
     <!-- Vurgu: mikrofon / sesli not — primary + onPrimary -->
-    <color name="widget_accent">#106561</color>
+    <color name="widget_accent">#0B6B5E</color>
     <color name="widget_on_accent">#FFFFFF</color>
 
     <!-- İkincil vurgu: hızlı not — primaryContainer + onPrimaryContainer.
          Mikrofonla yan yana dururken ayırt edilsin diye daha açık tonda. -->
-    <color name="widget_note">#C8E9E6</color>
-    <color name="widget_on_note">#002E2C</color>
+    <color name="widget_note">#C2EDE4</color>
+    <color name="widget_on_note">#002C26</color>
 
     <!-- Hızlı eylemler çubuğundaki ikonlar -->
-    <color name="widget_icon">#1B2420</color>
-    <color name="widget_icon_accent">#106561</color>
+    <color name="widget_icon">#13221D</color>
+    <color name="widget_icon_accent">#0B6B5E</color>
 
     <!-- flutter_launcher_icons tarafından yazılır (adaptive_icon_background). -->
     <color name="ic_launcher_background">#3A2FC9</color>
@@ -59,29 +59,29 @@
          Değerler yukarıdaki (açık) ve values-night/ (koyu) ile birebir aynı;
          biri değişirse ikizi de değişmeli.
          ============================================================ -->
-    <color name="widget_light_surface">#FAFCFA</color>
-    <color name="widget_light_row">#EFF4F0</color>
-    <color name="widget_light_outline">#D1D8D2</color>
-    <color name="widget_light_on_surface">#1B2420</color>
-    <color name="widget_light_on_surface_muted">#4D5853</color>
-    <color name="widget_light_accent">#106561</color>
+    <color name="widget_light_surface">#FCFDFC</color>
+    <color name="widget_light_row">#EBF3EE</color>
+    <color name="widget_light_outline">#C4D4CB</color>
+    <color name="widget_light_on_surface">#13221D</color>
+    <color name="widget_light_on_surface_muted">#3F534C</color>
+    <color name="widget_light_accent">#0B6B5E</color>
     <color name="widget_light_on_accent">#FFFFFF</color>
-    <color name="widget_light_note">#C8E9E6</color>
-    <color name="widget_light_on_note">#002E2C</color>
-    <color name="widget_light_icon">#1B2420</color>
-    <color name="widget_light_icon_accent">#106561</color>
+    <color name="widget_light_note">#C2EDE4</color>
+    <color name="widget_light_on_note">#002C26</color>
+    <color name="widget_light_icon">#13221D</color>
+    <color name="widget_light_icon_accent">#0B6B5E</color>
 
-    <color name="widget_dark_surface">#1C221E</color>
-    <color name="widget_dark_row">#29302C</color>
-    <color name="widget_dark_outline">#383F3B</color>
-    <color name="widget_dark_on_surface">#E1E8E4</color>
-    <color name="widget_dark_on_surface_muted">#B1BAB5</color>
-    <color name="widget_dark_accent">#76CDC5</color>
-    <color name="widget_dark_on_accent">#002E2B</color>
-    <color name="widget_dark_note">#0B4A46</color>
-    <color name="widget_dark_on_note">#C8E9E5</color>
-    <color name="widget_dark_icon">#E1E8E4</color>
-    <color name="widget_dark_icon_accent">#76CDC5</color>
+    <color name="widget_dark_surface">#192420</color>
+    <color name="widget_dark_row">#2A3731</color>
+    <color name="widget_dark_outline">#384840</color>
+    <color name="widget_dark_on_surface">#E3EFEA</color>
+    <color name="widget_dark_on_surface_muted">#B0C2BA</color>
+    <color name="widget_dark_accent">#68DBC8</color>
+    <color name="widget_dark_on_accent">#002B24</color>
+    <color name="widget_dark_note">#0C4E45</color>
+    <color name="widget_dark_on_note">#C5F2EA</color>
+    <color name="widget_dark_icon">#E3EFEA</color>
+    <color name="widget_dark_icon_accent">#68DBC8</color>
     <!-- Açılış zemini (LaunchTheme + NormalTheme): AppTheme Adaçayı zemini. -->
-    <color name="launch_bg">#EAF0EB</color>
+    <color name="launch_bg">#E4EFE9</color>
 </resources>
