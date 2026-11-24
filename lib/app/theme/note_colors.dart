@@ -216,12 +216,9 @@ abstract final class NoteColors {
     final ink = theme.colorScheme.onSurface;
     Color blend(double a, Color over) =>
         Color.alphaBlend(solid.withValues(alpha: a), over);
-    final start = dark ? 0.35 : 0.55;
-    final first = blend(start, base);
-    if (contrast(ink, first) >= minTextContrast) return first;
     final lum = solid.computeLuminance();
     final opposite = dark ? lum > 0.45 : lum < 0.06;
-    if (opposite) {
+    Color oppositeSurface() {
       final opp = AppTheme.opposite(theme);
       final oppInk = opp.colorScheme.onSurface;
       final oppBase = AppTokens.fromTheme(opp).card;
@@ -231,6 +228,15 @@ abstract final class NoteColors {
       }
       return oppBase;
     }
+
+    // Açık temada kullanıcı bilerek çok koyu bir renk seçtiyse (lacivert,
+    // siyah) kâğıtla açılıp soluk gri-maviye dönmesin: koyu renk korunur,
+    // yazı zıt temadan gelir.
+    if (!dark && opposite) return oppositeSurface();
+    final start = dark ? 0.35 : 0.55;
+    final first = blend(start, base);
+    if (contrast(ink, first) >= minTextContrast) return first;
+    if (opposite) return oppositeSurface();
     for (var a = start - 0.05; a > 0; a -= 0.05) {
       final c = blend(a, base);
       if (contrast(ink, c) >= minTextContrast) return c;
