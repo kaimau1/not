@@ -138,6 +138,18 @@ class _SpellModePickerState extends State<SpellModePicker> {
               onSelectionChanged: (s) => AutoSpell.setMode(s.single),
             ),
           ),
+          if (mode != SpellMode.off)
+            ValueListenableBuilder<bool>(
+              valueListenable: AutoSpell.checkDone,
+              builder: (_, on, _) => SwitchListTile(
+                key: const ValueKey('spell-check-done'),
+                contentPadding: EdgeInsets.symmetric(horizontal: widget.inset),
+                title: Text(l10n.spellCheckDoneTitle),
+                subtitle: Text(l10n.spellCheckDoneSubtitle),
+                value: on,
+                onChanged: AutoSpell.setCheckDone,
+              ),
+            ),
         ],
       ),
     );

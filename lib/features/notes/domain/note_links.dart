@@ -17,6 +17,32 @@ String? linkedNoteId(NoteTagLink link) =>
     ? link.attachmentId.substring(kNoteLinkPrefix.length)
     : null;
 
+/// **Web bağlantısı gömme** (kullanıcı 2026-11-24): aynı kalıp, kimlik
+/// `url:<adres>`. Eski sürüm eki bulamadığı bağı yok sayar, yazı düz kalır.
+const String kUrlLinkPrefix = 'url:';
+
+/// Bağ bir WEB bağlantısıysa adresi.
+String? linkedUrl(NoteTagLink link) =>
+    link.attachmentId.startsWith(kUrlLinkPrefix)
+    ? link.attachmentId.substring(kUrlLinkPrefix.length)
+    : null;
+
+/// [label] etiketinin gittiği web adresi (yoksa null).
+String? urlLinkTarget(Note note, String label) {
+  for (final l in note.tagLinks) {
+    if (l.label != label) continue;
+    final u = linkedUrl(l);
+    if (u != null && u.isNotEmpty) return u;
+  }
+  return null;
+}
+
+/// Bağın gideceği yer hâlâ var mı (ek silinmişse etiket çip sayılmaz).
+bool tagLinkAlive(Note note, NoteTagLink link) =>
+    linkedNoteId(link) != null ||
+    linkedUrl(link) != null ||
+    note.attachments.any((a) => a.id == link.attachmentId);
+
 /// [label] etiketinin gittiği not (yoksa null).
 String? noteLinkTarget(Note note, String label) {
   for (final l in note.tagLinks) {

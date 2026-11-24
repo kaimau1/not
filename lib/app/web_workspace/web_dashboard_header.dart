@@ -106,10 +106,16 @@ class WebDashboardHeader extends ConsumerWidget {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
-                child: ListenableBuilder(
+                child: LayoutBuilder(
+                  builder: (context, box) => ListenableBuilder(
                   listenable: searchFocus,
                   builder: (context, _) {
                     final focused = searchFocus.hasFocus;
+                    // DAR SAYFA (kullanıcı 2026-11-24): Ctrl+K rozeti ve AI
+                    // düğmesi yazı alanını sıfıra indiriyordu, kutu
+                    // tıklanamıyordu. Önce rozet, çok darda AI düğmesi düşer.
+                    final showKbd = box.maxWidth >= 300;
+                    final showAi = box.maxWidth >= 190;
                     return Container(
                       height: 44,
                       decoration: BoxDecoration(
@@ -184,7 +190,7 @@ class WebDashboardHeader extends ConsumerWidget {
                                 ref.read(searchQueryProvider.notifier).set('');
                               },
                             )
-                          else if (!focused)
+                          else if (!focused && showKbd)
                             Padding(
                               padding: const EdgeInsetsDirectional.only(
                                 end: AppSpace.xs,
@@ -211,12 +217,15 @@ class WebDashboardHeader extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                          TextFieldTapRegion(child: semanticToggle),
-                          const SizedBox(width: AppSpace.xs),
+                          if (showAi) ...[
+                            TextFieldTapRegion(child: semanticToggle),
+                            const SizedBox(width: AppSpace.xs),
+                          ],
                         ],
                       ),
                     );
                   },
+                ),
                 ),
               ),
             ),

@@ -1256,8 +1256,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         // kapalıyken takvim gezinme çubuğunun ÜSTÜNDE biter. Açık panel
         // zemini alta kadar uzanır, kendi içeriği payı alır.
         final inset = open ? 0.0 : MediaQuery.paddingOf(context).bottom;
+        // UZUN EKRAN (kullanıcı 2026-11-24: "alt alanda çok ölü boşluk"):
+        // panel ekranın yarısını ancak içeriğin doğal boyuna (başlık + boş
+        // kart + notlar + eylem satırı ≈ 280 dp) dek alır; artan yükseklik
+        // ay ızgarasına gider (günler uzar, etkinlik adları sığar). Fazla
+        // içerik panelde kayar; tam görünüm düğmesi yine var.
+        final panelH = math.min(
+          c.maxHeight * 0.5,
+          280 + MediaQuery.paddingOf(context).bottom,
+        );
         final gridH = open
-            ? c.maxHeight * 0.5
+            ? c.maxHeight - panelH
             : math.max(0.0, c.maxHeight - inset);
         return Column(
           children: [

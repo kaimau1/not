@@ -2,8 +2,22 @@ part of 'note_editor_screen.dart';
 
 /// Ek etiketleri, gömme ve not bağlantıları (F18.23'te note_editor_attachments.dart'tan taşındı).
 extension _EditorEmbed on _NoteEditorScreenState {
+  /// Gövdede dokunulan WEB BAĞLANTISI etiketinin adresi.
+  String? _tappedUrlLink(EditableTextState? editable) {
+    final note = _note;
+    final label = _tappedTagLabel(editable);
+    return note == null || label == null ? null : urlLinkTarget(note, label);
+  }
+
   /// Gövdede dokunulan NOT BAĞLANTISI etiketinin hedefi (F18.16).
   String? _tappedNoteLink(EditableTextState? editable) {
+    final note = _note;
+    final label = _tappedTagLabel(editable);
+    return note == null || label == null ? null : noteLinkTarget(note, label);
+  }
+
+  /// Gövdede dokunulan gömülü yazının etiketi.
+  String? _tappedTagLabel(EditableTextState? editable) {
     final note = _note;
     final selection = _bodyController.selection;
     if (note == null || !selection.isValid || !selection.isCollapsed) {
@@ -21,7 +35,7 @@ extension _EditorEmbed on _NoteEditorScreenState {
       editable: editable,
       tapGlobal: _bodyTapPoint.last,
     );
-    return tag == null ? null : noteLinkTarget(note, tag.fileName);
+    return tag?.fileName;
   }
 
   /// Metne gömülü ek etiketini AÇAR.
@@ -147,6 +161,11 @@ extension _EditorEmbed on _NoteEditorScreenState {
       _openLinkedNote(linked, editing: false);
       return;
     }
+    final web = urlLinkTarget(note, name);
+    if (web != null) {
+      unawaited(openLink(web));
+      return;
+    }
     final attachment = _NoteEditorScreenState._attachmentForTag(note, name);
     if (attachment != null) _showEmbedPreviewFor(attachment, name);
   }
@@ -178,22 +197,33 @@ extension _EditorEmbed on _NoteEditorScreenState {
         return;
       }
     }
-    final chosen = await _pickEmbedTarget(label: '');
+    final chosen = (await _pickEmbedTarget(label: ''))?.attachment;
     if (chosen == null || !mounted) return;
     _startPendingEmbed(chosen);
   }
 
   /// Gömme seçicisi + gerekiyorsa YENİ eki oluşturma. Yeni ek şeride girer
   /// (gömülü dosya sayfayı kalabalıklaştırmasın); seçilen/oluşan eki döner.
-  Future<Attachment?> _pickEmbedTarget({required String label}) async {
+  /// [label] doluysa (bir yazıya gömülüyor) web BAĞLANTISI da seçilebilir:
+  /// sonuç `url` alanında döner.
+  Future<({Attachment? attachment, String? url})?> _pickEmbedTarget({
+    required String label,
+  }) async {
     final note = _note;
     if (note == null) return null;
     final pick = await showEmbedPicker(
       context,
       label: label,
       attachments: note.attachments,
+      allowLink: label.isNotEmpty,
     );
     if (pick == null || !mounted) return null;
+    if (pick.url != null) return (attachment: null, url: pick.url);
+    final made = await _createEmbedTarget(pick);
+    return made == null ? null : (attachment: made, url: null);
+  }
+
+  Future<Attachment?> _createEmbedTarget(EmbedPick pick) async {
     if (pick.attachment != null) return pick.attachment;
     switch (pick.create) {
       case 'pdf':
@@ -235,8 +265,9 @@ extension _EditorEmbed on _NoteEditorScreenState {
     final range = trimmedRange(logical, snapped.start, snapped.end);
     if (range == null) return;
     final label = logical.substring(range.start, range.end);
-    final chosen = await _pickEmbedTarget(label: label);
-    if (chosen == null || !mounted) return;
+    final picked = await _pickEmbedTarget(label: label);
+    if (picked == null || !mounted) return;
+    final chosen = picked.attachment;
     // Seçici açıkken metin değişmiş olabilir (dikte, eşitleme): aralık hâlâ
     // AYNI yazıyı gösteriyorsa gömülür, yoksa imlece dosya adıyla.
     final now = _bodyController.logicalText;
@@ -245,10 +276,11 @@ extension _EditorEmbed on _NoteEditorScreenState {
       _applyEmbed(
         label: label,
         attachment: chosen,
+        url: picked.url,
         start: range.start,
         end: range.end,
       );
-    } else {
+    } else if (chosen != null) {
       _insertTagAtCaret(chosen);
     }
   }
@@ -300,14 +332,17 @@ extension _EditorEmbed on _NoteEditorScreenState {
 
   /// Gömülü yazının bağladığı eki DEĞİŞTİRİR (yazı aynı kalır).
   Future<void> _replaceEmbed(String label) async {
-    final chosen = await _pickEmbedTarget(label: label);
-    if (chosen == null || !mounted) return;
+    final picked = await _pickEmbedTarget(label: label);
+    if (picked == null || !mounted) return;
+    final id = picked.url != null
+        ? '$kUrlLinkPrefix${picked.url}'
+        : picked.attachment!.id;
     _mutate(
       (n) => n.copyWith(
         tagLinks: [
           for (final l in n.tagLinks)
             if (l.label != label) l,
-          NoteTagLink(label: label, attachmentId: chosen.id),
+          NoteTagLink(label: label, attachmentId: id),
         ],
       ),
       immediate: true,
@@ -349,12 +384,18 @@ extension _EditorEmbed on _NoteEditorScreenState {
     required String label,
     Attachment? attachment,
     String? noteId,
+    String? url,
     required int start,
     required int end,
     FormatTarget? target,
   }) {
-    // Bağın hedefi: ek ya da (F18.16) not — `note:<kimlik>`.
-    final linkId = noteId != null ? '$kNoteLinkPrefix$noteId' : attachment!.id;
+    // Bağın hedefi: ek, (F18.16) not — `note:<kimlik>` — ya da web adresi
+    // (`url:<adres>`).
+    final linkId = url != null
+        ? '$kUrlLinkPrefix$url'
+        : noteId != null
+        ? '$kNoteLinkPrefix$noteId'
+        : attachment!.id;
     final controller = target?.controller ?? _bodyController;
     final logical = controller.logicalText;
     // Aralığın iki ucundaki boşluklar etikete girmez ve YUTULMAZ (bkz.
@@ -662,15 +703,16 @@ extension _EditorEmbed on _NoteEditorScreenState {
     final range = trimmedRange(logical, snapped.start, snapped.end);
     if (range == null) return;
     final label = logical.substring(range.start, range.end);
-    final chosen = await _pickEmbedTarget(label: label);
-    if (chosen == null || !mounted) return;
+    final picked = await _pickEmbedTarget(label: label);
+    if (picked == null || !mounted) return;
     // Seçici açıkken satırın metni değiştiyse (silindi, eşitlendi) gömülmez.
     final now = controller.logicalText;
     if (range.end <= now.length &&
         now.substring(range.start, range.end) == label) {
       _applyEmbed(
         label: label,
-        attachment: chosen,
+        attachment: picked.attachment,
+        url: picked.url,
         start: range.start,
         end: range.end,
         target: target,

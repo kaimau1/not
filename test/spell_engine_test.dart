@@ -556,4 +556,20 @@ void main() {
       expect(perWordUs, lessThan(3000), reason: 'ortalama $perWordUs µs');
     });
   });
+
+  group('2026-11-24 kullanıcı bulguları', () {
+    final m = SpellMemory();
+    test('ilk harf sesteşi: beynir → peynir önerilir', () {
+      expect(SpellEngine.suggestions('beynir', m)?.list, contains('peynir'));
+    });
+    test('tasarla/tasarlat bilinir, taşarlat önerilmez', () {
+      expect(m.known('tasarla'), isTrue);
+      expect(m.known('tasarlat'), isTrue);
+      expect(SpellEngine.suggestions('tasarlat', m), isNull);
+    });
+    test('boşluk komşusu harf kelimenin ucuna kaçtı: evb → ev', () {
+      expect(SpellEngine.strayNearSpace('evb', m), 'ev');
+      expect(SpellEngine.suggestions('evb', m)?.list, contains('ev'));
+    });
+  });
 }

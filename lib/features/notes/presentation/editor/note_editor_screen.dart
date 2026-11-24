@@ -3756,10 +3756,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _bodyController.attachmentNames = [
         // Eki silinmiş bağ etiket sayılmaz (çip görünümü kalmasın).
         for (final link in note.tagLinks)
-          if (link.label.isNotEmpty &&
-              (linkedNoteId(link) != null ||
-                  note.attachments.any((a) => a.id == link.attachmentId)))
-            link.label,
+          if (link.label.isNotEmpty && tagLinkAlive(note, link)) link.label,
         for (final a in note.attachments) a.fileName,
       ];
       // Gömülü yazının ÇİP görünümü: ekin türüne göre renk ve rozet (bkz.
@@ -4303,6 +4300,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (seconds != null) {
           editable?.hideToolbar();
           _seekVideoTo(seconds);
+          return;
+        }
+        // WEB BAĞLANTISI gömülü yazı (2026-11-24): okurken açar; yazarken
+        // imleç konur, açmak uzun basma menüsünden ("Bağlantıyı aç").
+        final web = _tappedUrlLink(editable);
+        if (web != null) {
+          if (!_bodyTapPoint.wasFocused) {
+            editable?.hideToolbar();
+            unawaited(openLink(web));
+          }
           return;
         }
         // NOT BAĞLANTISI (F18.16): okurken açar, yazarken önerir.
@@ -5067,7 +5074,13 @@ child: FormatBar(
                 keep: _voiceRecorder != null || _dictating,
                 child: TapRegion(
                 groupId: kNotePackageTapGroup,
-                child: TypingBarHide(
+                // WEB/MASAÜSTÜ (kullanıcı 2026-11-24: "tabloda biçim 1-2 sn
+                // sonra uygulanıyor"): alt çubuğa fare tıklaması metin
+                // alanının "dışarı tıklama"sı sayılıyor, tablo hücresi
+                // odağı bırakıp düzenlemeden çıkıyordu. Dokunmatikte bu
+                // kural zaten yok. YALNIZ WEBDE kurulur: telefonda ağaç aynı
+                // kalsın (S45/S50 dizilme bütçesi).
+                child: _webTextTapRegion(TypingBarHide(
                   hidden: _typingN,
                   enabled: ref.watch(hideBarWhileTypingProvider),
                   // Biçim kipi dar dinlenir (P20 M5).
@@ -5753,7 +5766,7 @@ child: FormatBar(
                       ),
                     ),
                   ),
-                ),
+                ))
                 ),
                 ),
               ],
@@ -6540,3 +6553,9 @@ class _RenderHoldOffstageWidth extends RenderProxyBox {
     }
   }
 }
+
+/// Webde alt çubuğa fare tıklaması metin alanının "dışarı tıklaması"
+/// sayılmasın (tablo hücresi düzenlemeden çıkıyordu); telefonda ağaca ek
+/// widget girmez — dokunmatikte bu kural yok.
+Widget _webTextTapRegion(Widget child) =>
+    kIsWeb ? TextFieldTapRegion(child: child) : child;

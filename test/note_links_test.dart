@@ -46,4 +46,19 @@ void main() {
       lessThan(live['Toplantı notu']!.color.a),
     );
   });
+
+  test('web bağlantısı: url: önekiyle çözülür ve çip görünümü alır', () {
+    const n = Note(
+      id: 'w',
+      body: '📎 kaynak',
+      type: NoteType.text,
+      tagLinks: [
+        NoteTagLink(label: 'kaynak', attachmentId: 'url:https://ornek.com'),
+      ],
+    );
+    expect(urlLinkTarget(n, 'kaynak'), 'https://ornek.com');
+    expect(noteLinkTarget(n, 'kaynak'), isNull);
+    expect(tagLinkAlive(n, n.tagLinks.single), isTrue);
+    expect(embedTagLooks(n).keys, contains('kaynak'));
+  });
 }

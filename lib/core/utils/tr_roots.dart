@@ -130,6 +130,7 @@ düzelt onar yenile güncelle kaldır kopyala yapıştır işaretle başlat durd
 kapan anımsa san inan güven beğen bulun yetiş koru yönet ilerle yerleş taşın
 sonlan geliş gülümse anlaş hazırlan iyileş
 sön yayıl dolan çakış tara aş kısal taş hizala
+tasarla geliştir iyileştir denetle sınıflandır
 ''');
 
 /// Arapça/Fransızca kökenli, son ünlüsü kalın olduğu hâlde İNCE ek alan kökler

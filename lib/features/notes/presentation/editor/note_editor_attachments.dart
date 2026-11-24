@@ -561,7 +561,6 @@ extension _EditorAttachments on _NoteEditorScreenState {
             selection.baseOffset,
           ).clamp(0, logical.length)
         : -1;
-    final url = caret < 0 ? null : linkAt(logical, caret);
     final tagLabel = caret < 0 || note == null
         ? null
         : attachmentTagAt(logical, caret, controller.attachmentNames);
@@ -571,6 +570,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
     final linkedNote = tagLabel == null || note == null
         ? null
         : noteLinkTarget(note, tagLabel);
+    final webTag = tagLabel == null || note == null
+        ? null
+        : urlLinkTarget(note, tagLabel);
+    final url =
+        webTag ?? (caret < 0 ? null : linkAt(logical, caret));
     void run(VoidCallback action) {
       state.hideToolbar();
       action();
@@ -604,6 +608,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
               if (!opened && mounted) _showSnack(l10n.linkOpenFailed);
             });
           }),
+        ),
+      if (webTag != null)
+        ContextMenuButtonItem(
+          label: l10n.embedRemove,
+          onPressed: () => run(() => _unlinkEmbed(tagLabel!)),
         ),
     ];
     final afterClipboard = <ContextMenuButtonItem>[

@@ -35,6 +35,9 @@ abstract final class FixedColors {
 
   /// Not bağlantısı etiketi (F18.16).
   static const kindNoteLink = Color(0xFF00796B);
+
+  /// Yazıya gömülü web bağlantısı (2026-11-24).
+  static const kindWebLink = Color(0xFF1E66D0);
   static const kindUnknown = Color(0xFF757575);
 
   /// Fotoğraf/video üstündeki koyu geçiş: altta yazı okunsun diye. Medya

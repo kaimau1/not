@@ -4496,6 +4496,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get embedSectionExisting => 'Bu nottaki ekler';
 
   @override
+  String get embedSectionLink => 'Bağlantı';
+
+  @override
+  String get embedLinkHint => 'Web adresi (örn. ornek.com)';
+
+  @override
+  String get embedLinkApply => 'Bağla';
+
+  @override
   String get embedReplace => 'Değiştir';
 
   @override
@@ -8299,6 +8308,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get spellLearnTitle => 'Öğrenen düzeltme';
 
   @override
+  String get spellCheckDoneTitle => 'İşaretli maddeleri de denetle';
+
+  @override
+  String get spellCheckDoneSubtitle =>
+      'Kapalıyken yapıldı işaretli maddelerin altı çizilmez';
+
+  @override
+  String get spellManualHint => 'Doğrusunu yaz';
+
+  @override
+  String get spellManualFix => 'Elle düzelt';
+
+  @override
   String get spellLearnSubtitle =>
       'Kendi düzelttiğin ve klavye önerisinden seçtiğin kelimeleri öğrenir (Türkçe, İngilizce, Çince). Kişisel sözlüğün hesabınla eşitlenir.';
 
@@ -10029,6 +10051,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get selectionToolbarMore => 'Diğer işlemler';
+
+  @override
+  String get selectionMenuEdit => 'Düzenle';
+
+  @override
+  String get selectionMenuEditDone => 'Bitti';
+
+  @override
+  String get selectionMenuEditHint =>
+      'Dokun: ana satıra ekle ya da oradan kaldır';
 
   @override
   String get itemsBatchFormat => 'Toplu biçim';

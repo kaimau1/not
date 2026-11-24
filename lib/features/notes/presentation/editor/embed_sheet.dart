@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import '../../domain/note_links.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../app/theme/fixed_colors.dart';
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/widgets/sheet_header.dart';
+import '../../../../core/widgets/sheet_keyboard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
@@ -34,14 +39,35 @@ import '../../../../core/widgets/app_sheet.dart';
 /// çizilir (bkz. [AttachmentTagChips]); seçici ile önizleme kartı da aynı
 /// renk/simge dilini konuşur — PDF kırmızı, görsel turkuaz, video mor…
 
-/// Seçicinin sonucu: ya var olan bir ek ya da oluşturulacak yeni ekin türü
-/// (`pdf`, `image`, `video`, `youtube`).
+/// Seçicinin sonucu: var olan bir ek, oluşturulacak yeni ekin türü (`pdf`,
+/// `image`, `video`, `youtube`) ya da yazının bağlanacağı web adresi.
 class EmbedPick {
-  const EmbedPick.existing(Attachment this.attachment) : create = null;
-  const EmbedPick.create(String this.create) : attachment = null;
+  const EmbedPick.existing(Attachment this.attachment)
+    : create = null,
+      url = null;
+  const EmbedPick.create(String this.create) : attachment = null, url = null;
+  const EmbedPick.url(String this.url) : attachment = null, create = null;
 
   final Attachment? attachment;
   final String? create;
+  final String? url;
+}
+
+/// Kullanıcının yazdığı adresi açılabilir web adresine çevirir (şemasızsa
+/// `https://`); boşluk içeren ya da alan adı olmayan yazı null.
+String? normalizeEmbedUrl(String raw) {
+  final t = raw.trim();
+  if (t.isEmpty || t.contains(RegExp(r'\s'))) return null;
+  final hasScheme = RegExp(
+    r'^[a-z][a-z0-9+.-]*:',
+    caseSensitive: false,
+  ).hasMatch(t);
+  final withScheme = hasScheme ? t : 'https://$t';
+  final uri = Uri.tryParse(withScheme);
+  if (uri == null || !uri.hasScheme) return null;
+  if (uri.scheme == 'mailto' || uri.scheme == 'tel') return withScheme;
+  if (!uri.host.contains('.')) return null;
+  return withScheme;
 }
 
 IconData embedKindIcon(Attachment a) => a.isWebVideo
@@ -82,7 +108,9 @@ Map<String, TagLook> embedTagLooks(
   Set<String>? liveNoteIds,
 }) {
   if (note.attachments.isEmpty &&
-      !note.tagLinks.any((l) => linkedNoteId(l) != null)) {
+      !note.tagLinks.any(
+        (l) => linkedNoteId(l) != null || linkedUrl(l) != null,
+      )) {
     return const {};
   }
   final byId = {for (final a in note.attachments) a.id: a};
@@ -111,26 +139,46 @@ Map<String, TagLook> embedTagLooks(
                     : FixedColors.kindNoteLink)
               : FixedColors.kindNoteLink.withValues(alpha: 0.4),
         ),
+    // Web bağlantısı (2026-11-24): bağlantı mavisi, zincir rozeti.
+    for (final link in note.tagLinks)
+      if (link.label.trim().isNotEmpty && linkedUrl(link) != null)
+        link.label.trim(): TagLook(
+          Icons.link_rounded,
+          dark
+              ? Color.lerp(FixedColors.kindWebLink, Colors.white, 0.35)!
+              : FixedColors.kindWebLink,
+        ),
   };
 }
 
 /// Gömülecek şeyi seçtirir. [label] seçili yazı (boşsa başlıkta gösterilmez).
+/// [allowLink]: seçili yazı varken web bağlantısı da gömülebilir.
+///
+/// **2026-11-24 yenilemesi** (kullanıcı: "ek gömmenin görsel butonsal
+/// tasarımlarını baştan yaz, link gömme de olsun"): başlıkta gömülecek yazı
+/// çip olarak; üç bölüm — Bağlantı (adres kutusu + Yapıştır), Bu nottaki
+/// ekler (önizlemeli kartlar), Yeni ekle (türün renginde karolar).
 Future<EmbedPick?> showEmbedPicker(
   BuildContext context, {
   required String label,
   required List<Attachment> attachments,
   bool allowCreate = true,
+  bool allowLink = false,
 }) => showAppSheet<EmbedPick>(
   context: context,
   showDragHandle: true,
   isScrollControlled: true,
   constraints: BoxConstraints(
-    maxHeight: MediaQuery.sizeOf(context).height * 0.75,
+    maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+    maxWidth: 640,
   ),
-  builder: (sheetContext) => _EmbedPicker(
-    label: label,
-    attachments: attachments,
-    allowCreate: allowCreate,
+  builder: (sheetContext) => SheetInsetPadding(
+    child: _EmbedPicker(
+      label: label,
+      attachments: attachments,
+      allowCreate: allowCreate,
+      allowLink: allowLink,
+    ),
   ),
 );
 
@@ -139,11 +187,13 @@ class _EmbedPicker extends StatelessWidget {
     required this.label,
     required this.attachments,
     required this.allowCreate,
+    required this.allowLink,
   });
 
   final String label;
   final List<Attachment> attachments;
   final bool allowCreate;
+  final bool allowLink;
 
   @override
   Widget build(BuildContext context) {
@@ -164,60 +214,82 @@ class _EmbedPicker extends StatelessWidget {
     return SafeArea(
       child: ListView(
         shrinkWrap: true,
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          0,
+          AppSpace.l,
+          AppSpace.l,
+        ),
         children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
+          Text(
+            l10n.embedPickTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (label.isNotEmpty) ...[
+            const SizedBox(height: AppSpace.s),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Container(
+                key: const ValueKey('embed-label-chip'),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.s,
+                  vertical: AppSpace.xs,
+                ),
                 decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
+                  color: scheme.primaryContainer.withValues(alpha: AppAlpha.muted),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
-                child: Icon(
-                  Icons.attach_file,
-                  color: scheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      label.isEmpty
-                          ? l10n.embedPickTitle
-                          : l10n.embedPickTitleFor(label),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    Icon(
+                      Icons.attach_file_rounded,
+                      size: AppIconSize.s,
+                      color: scheme.onPrimaryContainer,
                     ),
-                    Text(
-                      l10n.embedPickInfo,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                    const SizedBox(width: AppSpace.xs),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: scheme.onPrimaryContainer,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
+          ],
+          const SizedBox(height: AppSpace.xs),
+          Text(
+            l10n.embedPickInfo,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
           ),
+          if (allowLink) ...[
+            const SizedBox(height: AppSpace.l),
+            _SectionLabel(l10n.embedSectionLink),
+            const SizedBox(height: AppSpace.s),
+            const _LinkField(),
+          ],
           // ÖNCE nottaki ekler: en sık iş zaten eklenmiş bir dosyayı bir
-          // kelimeye bağlamak; eskiden listenin en altındaydı.
+          // kelimeye bağlamak.
           if (attachments.isNotEmpty) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: AppSpace.l),
             _SectionLabel(l10n.embedSectionExisting),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpace.s),
             SizedBox(
-              height: 112,
+              height: 124,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: attachments.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 10),
+                separatorBuilder: (_, _) => const SizedBox(width: AppSpace.s),
                 itemBuilder: (context, i) {
                   final a = attachments[i];
                   return _ExistingTile(
@@ -230,9 +302,9 @@ class _EmbedPicker extends StatelessWidget {
             ),
           ],
           if (allowCreate) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: AppSpace.l),
             _SectionLabel(l10n.embedSectionNew),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpace.s),
             AddTileGrid(
               count: creates.length,
               tile: (i, wide) {
@@ -254,6 +326,92 @@ class _EmbedPicker extends StatelessWidget {
   }
 }
 
+/// Bağlantı kutusu: adres yazılır ya da panodan yapıştırılır; geçerli
+/// adreste "Bağla" etkinleşir, Enter da bağlar.
+class _LinkField extends StatefulWidget {
+  const _LinkField();
+
+  @override
+  State<_LinkField> createState() => _LinkFieldState();
+}
+
+class _LinkFieldState extends State<_LinkField> {
+  final _c = TextEditingController();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  Future<void> _paste() async {
+    try {
+      final d = await Clipboard.getData(Clipboard.kTextPlain);
+      final t = d?.text?.trim();
+      if (t == null || t.isEmpty || !mounted) return;
+      setState(() => _c.text = t);
+    } catch (_) {
+      // Pano izni yok (web): kullanıcı Ctrl+V ile yapıştırır.
+    }
+  }
+
+  void _submit() {
+    final url = normalizeEmbedUrl(_c.text);
+    if (url == null) return;
+    Navigator.pop(context, EmbedPick.url(url));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final ok = normalizeEmbedUrl(_c.text) != null;
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            key: const ValueKey('embed-link-field'),
+            controller: _c,
+            keyboardType: TextInputType.url,
+            autocorrect: false,
+            textInputAction: TextInputAction.done,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => _submit(),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: l10n.embedLinkHint,
+              prefixIcon: const Icon(
+                Icons.link_rounded,
+                color: FixedColors.kindWebLink,
+              ),
+              suffixIcon: IconButton(
+                tooltip: MaterialLocalizations.of(context).pasteButtonLabel,
+                icon: const Icon(Icons.content_paste_rounded),
+                onPressed: () => unawaited(_paste()),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.m),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpace.s),
+        FilledButton(
+          key: const ValueKey('embed-link-ok'),
+          style: FilledButton.styleFrom(
+            backgroundColor: FixedColors.kindWebLink,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: scheme.surfaceContainerHighest,
+            minimumSize: const Size(0, 48),
+          ),
+          onPressed: ok ? _submit : null,
+          child: Text(l10n.embedLinkApply),
+        ),
+      ],
+    );
+  }
+}
+
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
 
@@ -263,8 +421,8 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) => SectionLabel(text);
 }
 
-/// Nottaki bir ek: küçük resim (görsel/video kendi karesiyle, diğerleri
-/// türün renginde simgeyle), köşede türün rozeti, altında adı.
+/// Nottaki bir ek: önizleme (görsel/video kendi karesiyle, diğerleri türün
+/// renginde simgeyle), köşede türün rozeti, altında adı — tek kart.
 class _ExistingTile extends StatelessWidget {
   const _ExistingTile({
     super.key,
@@ -282,18 +440,18 @@ class _ExistingTile extends StatelessWidget {
     final color = embedKindColor(a);
     final visual = a.kind == AttachmentKind.image || a.isWebVideo;
     return SizedBox(
-      width: 112,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                width: 112,
-                height: 76,
+      width: 124,
+      child: Material(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                height: 84,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -301,29 +459,31 @@ class _ExistingTile extends StatelessWidget {
                       IgnorePointer(child: NoteMediaBox(attachment: a))
                     else
                       ColoredBox(
-                        color: Color.alphaBlend(
-                          color.withValues(alpha: 0.12),
-                          scheme.surfaceContainerHigh,
-                        ),
-                        child: Icon(embedKindIcon(a), color: color, size: 30),
+                        color: color.withValues(alpha: AppAlpha.pressed),
+                        child: Icon(embedKindIcon(a), color: color, size: 34),
                       ),
-                    Positioned(
-                      left: 6,
-                      top: 6,
+                    PositionedDirectional(
+                      start: AppSpace.xs,
+                      top: AppSpace.xs,
                       child: _KindBadge(attachment: a, size: 22),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              a.fileName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.s,
+                  vertical: AppSpace.xs,
+                ),
+                child: Text(
+                  a.fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

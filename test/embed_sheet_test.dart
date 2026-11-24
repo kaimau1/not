@@ -94,4 +94,51 @@ void main() {
     await tester.pumpAndSettle();
     expect(unlinked, isTrue);
   });
+
+  testWidgets('bağlantı gömme: adres yazılınca Bağla web adresini döner', (
+    tester,
+  ) async {
+    EmbedPick? result;
+    await tester.pumpWidget(
+      host((context) async {
+        result = await showEmbedPicker(
+          context,
+          label: 'kelime',
+          attachments: const [],
+          allowLink: true,
+        );
+      }),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    final ok = find.byKey(const ValueKey('embed-link-ok'));
+    expect(tester.widget<FilledButton>(ok).onPressed, isNull);
+    await tester.enterText(
+      find.byKey(const ValueKey('embed-link-field')),
+      'ornek.com/a',
+    );
+    await tester.pump();
+    await tester.tap(ok);
+    await tester.pumpAndSettle();
+    expect(result?.url, 'https://ornek.com/a');
+  });
+
+  testWidgets('bağlantı bölümü yalnız yazı seçiliyken', (tester) async {
+    await tester.pumpWidget(
+      host(
+        (context) =>
+            showEmbedPicker(context, label: '', attachments: const [pdf]),
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('embed-link-field')), findsNothing);
+  });
+
+  test('adres düzeltme', () {
+    expect(normalizeEmbedUrl('ornek.com'), 'https://ornek.com');
+    expect(normalizeEmbedUrl(' http://a.org '), 'http://a.org');
+    expect(normalizeEmbedUrl('merhaba'), isNull);
+    expect(normalizeEmbedUrl('iki kelime.com'), isNull);
+  });
 }

@@ -54,7 +54,11 @@ class AttachmentTagChips extends StatefulWidget {
     required this.controller,
     required this.looks,
     required this.child,
+    this.done = false,
   });
+
+  /// İşaretli madde: yazım çizgisi ayara bağlı (bkz. [SpellMarks.done]).
+  final bool done;
 
   final TextEditingController controller;
 
@@ -70,14 +74,17 @@ class AttachmentTagChips extends StatefulWidget {
 
 class _AttachmentTagChipsState extends State<AttachmentTagChips> {
   EditableTextState? _editable;
-  late SpellMarks _spell = SpellMarks.acquire(widget.controller);
+  late SpellMarks _spell = SpellMarks.acquire(widget.controller)
+    ..setDone(widget.done);
 
   @override
   void didUpdateWidget(AttachmentTagChips oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (identical(oldWidget.controller, widget.controller)) return;
-    _spell.release();
-    _spell = SpellMarks.acquire(widget.controller);
+    if (!identical(oldWidget.controller, widget.controller)) {
+      _spell.release();
+      _spell = SpellMarks.acquire(widget.controller);
+    }
+    _spell.setDone(widget.done);
   }
 
   /// Rozet simgeleri (simge × boy × renk başına bir kez dizilir).

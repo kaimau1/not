@@ -155,6 +155,12 @@ class EditorQuickRow extends StatefulWidget {
   State<EditorQuickRow> createState() => _EditorQuickRowState();
 }
 
+TextAlign _nextAlign(TextAlign a) => switch (a) {
+  TextAlign.center => TextAlign.end,
+  TextAlign.end || TextAlign.right => TextAlign.start,
+  _ => TextAlign.center,
+};
+
 class _EditorQuickRowState extends State<EditorQuickRow> {
   // ETKİN BİÇİM BASILI (kullanıcı isteği 2026-11-13: "üst hızlı paneldeki
   // butonlar aktifken — kırmızı yazma, bold — aktif görülmeli; kendi yeri
@@ -190,11 +196,14 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
 
   void _onTarget() {
     final t = widget.target?.value;
+    // Tablo hücresine girildi/çıkıldı: satırın düğme takımı değişir.
+    final cellChanged = (t?.align == null) != (_watched?.align == null);
     if (!identical(t?.controller, _watched?.controller)) {
       _watched?.controller.removeListener(_refresh);
       t?.controller.addListener(_refresh);
     }
     _watched = t;
+    if (cellChanged && mounted) setState(() {});
     _refresh();
   }
 
@@ -315,8 +324,41 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
       active: active,
     );
     final m = _mark;
+    final cellAlign = _watched?.align;
     final all = <_QuickEntry?>[
-      if (widget.onPen != null) ...[
+      // TABLO HÜCRESİNDE (kullanıcı 2026-11-24): kalem yok; başta TEK hiza
+      // düğmesi — sıradaki hizayı gösterir (sola → ortala → sağa → sola).
+      if (cellAlign != null) ...[
+        _QuickEntry(
+          'align',
+          Icons.format_align_center_rounded,
+          l10n.itemAlignCenter,
+          () => cellAlign.value = _nextAlign(cellAlign.value),
+          ValueListenableBuilder<TextAlign>(
+            valueListenable: cellAlign,
+            builder: (context, a, _) {
+              final next = _nextAlign(a);
+              return button(
+                'align',
+                switch (next) {
+                  TextAlign.center => Icons.format_align_center_rounded,
+                  TextAlign.end ||
+                  TextAlign.right => Icons.format_align_right_rounded,
+                  _ => Icons.format_align_left_rounded,
+                },
+                switch (next) {
+                  TextAlign.center => l10n.itemAlignCenter,
+                  TextAlign.end || TextAlign.right => l10n.itemAlignEnd,
+                  _ => l10n.itemAlignStart,
+                },
+                () => cellAlign.value = next,
+              );
+            },
+          ),
+        ),
+        null,
+      ],
+      if (widget.onPen != null && cellAlign == null) ...[
         _QuickEntry(
           'pen',
           Icons.draw_outlined,

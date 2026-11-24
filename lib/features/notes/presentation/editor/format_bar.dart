@@ -795,13 +795,21 @@ class _FormatBarState extends State<FormatBar> {
                       const SizedBox(height: AppSpace.xs),
                       // 2. SIRA — KAPSAM ⇅ · Aa · [A− %100 A+] · temizle ·
                       // (çizgi) · kapat
-                      SizedBox(
+                      LayoutBuilder(
+                        builder: (context, box) {
+                        // Geniş ekranda (web/tablet) kapsam seçici satırı
+                        // doldurmasın (kullanıcı 2026-11-24): sabit en,
+                        // artan boşluk kapat düğmesinden önce.
+                        final wide = box.maxWidth > 560;
+                        Widget scopeSlot(Widget chip) => wide
+                            ? SizedBox(width: 140, child: chip)
+                            : Expanded(flex: 3, child: chip);
+                        return SizedBox(
                         height: 44,
                         child: Row(
                           children: [
-                            Expanded(
-                              flex: 3,
-                              child: _MenuChip(
+                            scopeSlot(
+                              _MenuChip(
                                 key: const ValueKey('format-scope-menu'),
                                 open: false,
                                 cycles: true,
@@ -945,6 +953,7 @@ class _FormatBarState extends State<FormatBar> {
                                 open: _tray == _Tray.divider,
                                 onTap: () => _toggleTray(_Tray.divider),
                               ),
+                            if (wide) const Spacer(),
                             SizedBox(
                               height: AppSpace.xxl,
                               child: VerticalDivider(
@@ -961,6 +970,8 @@ class _FormatBarState extends State<FormatBar> {
                             ),
                           ],
                         ),
+                      );
+                        },
                       ),
                       // 3. SIRA — HİZA (yalnız hizalanabilen hedefte: tablo
                       // hücresi, kullanıcı isteği 2026-11-23).

@@ -39,6 +39,7 @@ class SpellMarks extends ChangeNotifier {
     controller.addListener(_onText);
     AutoSpell.mode.addListener(_restart);
     AutoSpell.revision.addListener(_restart);
+    AutoSpell.checkDone.addListener(notifyListeners);
     _schedule(Duration.zero);
   }
 
@@ -77,13 +78,25 @@ class SpellMarks extends ChangeNotifier {
     controller.removeListener(_onText);
     AutoSpell.mode.removeListener(_restart);
     AutoSpell.revision.removeListener(_restart);
+    AutoSpell.checkDone.removeListener(notifyListeners);
     _timer?.cancel();
     _disposed = true;
     dispose();
   }
 
   List<SpellMark> _marks = const [];
-  List<SpellMark> get marks => _marks;
+  List<SpellMark> get marks => muted ? const [] : _marks;
+
+  /// Alan işaretli bir maddeyse (sahibi her kurulumda yazar): ayar
+  /// [AutoSpell.checkDone] kapalıyken çizgi ve öneri menüsü yok.
+  bool done = false;
+  void setDone(bool v) {
+    if (v == done) return;
+    done = v;
+    notifyListeners();
+  }
+
+  bool get muted => done && !AutoSpell.checkDone.value;
 
   String _text;
 
@@ -93,7 +106,7 @@ class SpellMarks extends ChangeNotifier {
 
   /// [offset] (ekran metni) altı çizili bir kelimenin içinde mi.
   SpellMark? at(int offset) {
-    for (final k in _marks) {
+    for (final k in marks) {
       if (offset >= k.start && offset <= k.end) return k;
     }
     return null;
@@ -274,10 +287,34 @@ Widget? spellContextMenu(BuildContext context, EditableTextState state) {
         },
       );
   final first = options.isEmpty ? null : options.first;
+  // ELLE DÜZELT (kullanıcı 2026-11-24): öneri yanlış ya da yoksa doğrusu
+  // yazılır. Levhadaki alan değil iletişim kutusu: menüdeki alana odak
+  // geçince editör seçim menüsünü kapatıyordu (mobilde de aynı).
+  Future<void> manual() async {
+    final host = state.context;
+    final to = await showDialog<String>(
+      context: host,
+      builder: (ctx) => _ManualFixDialog(initial: typed),
+    );
+    if (to == null || !state.mounted) return;
+    final now = state.textEditingValue.text;
+    final w = to.trim();
+    if (w.isEmpty || w == typed || mark.end > now.length) return;
+    if (now.substring(mark.start, mark.end) != typed) return;
+    state.userUpdateTextEditingValue(
+      TextEditingValue(
+        text: now.replaceRange(mark.start, mark.end, w),
+        selection: TextSelection.collapsed(offset: mark.start + w.length),
+      ),
+      SelectionChangedCause.toolbar,
+    );
+  }
+
   return NoteSelectionToolbar.spell(
     editableState: state,
     suggestions: [for (final s in options) item(s, () => replace(s))],
     actions: [
+      item(l10n.spellManualFix, () => unawaited(manual())),
       item(l10n.spellAddToDictionary, () => AutoSpell.addToDictionary(typed)),
       if (first != null)
         item(l10n.spellAlwaysFix(first), () {
@@ -290,4 +327,54 @@ Widget? spellContextMenu(BuildContext context, EditableTextState state) {
       ),
     ],
   );
+}
+
+class _ManualFixDialog extends StatefulWidget {
+  const _ManualFixDialog({required this.initial});
+  final String initial;
+
+  @override
+  State<_ManualFixDialog> createState() => _ManualFixDialogState();
+}
+
+class _ManualFixDialogState extends State<_ManualFixDialog> {
+  late final _c = TextEditingController(text: widget.initial)
+    ..selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.initial.length,
+    );
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    void done() => Navigator.pop(context, _c.text);
+    return AlertDialog(
+      title: Text(l10n.spellManualFix),
+      content: TextField(
+        key: const ValueKey('spell-manual-field'),
+        controller: _c,
+        autofocus: true,
+        autocorrect: false,
+        decoration: InputDecoration(hintText: l10n.spellManualHint),
+        onSubmitted: (_) => done(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+        ),
+        FilledButton(
+          key: const ValueKey('spell-manual-ok'),
+          onPressed: done,
+          child: Text(MaterialLocalizations.of(context).okButtonLabel),
+        ),
+      ],
+    );
+  }
 }

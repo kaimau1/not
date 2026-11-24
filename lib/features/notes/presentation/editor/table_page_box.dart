@@ -352,6 +352,15 @@ class _TablePageBoxState extends State<TablePageBox> {
     if (!identical(ctl, _ctl)) return;
     final next = _table.withCell(row, column, ctl.logicalText);
     if (identical(next, _table)) return;
+    if (_editing != (row, column)) {
+      // Hücre düzenlemeden çıkmışken gelen değişiklik (biçim panelinden
+      // kalın/renk/boyut): düz çizim [_table]'dan okunur — yeniden çizilip
+      // HEMEN kaydedilir. Eskiden yalnız kayıt bekletiliyor, değişiklik
+      // nota yazılana dek (1–2 sn) görünmüyordu (kullanıcı 2026-11-24).
+      setState(() => _table = next);
+      _commitNow();
+      return;
+    }
     _table = next;
     _scheduleCommit();
   }

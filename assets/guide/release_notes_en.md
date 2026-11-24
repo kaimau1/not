@@ -3,6 +3,11 @@
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
 ## 24 November 2026 {#2026-11-24}
+- **Link embedding and a redesigned embed sheet:** selected text can now link to a web address (blue chain chip; opens on tap while reading). The embed sheet was redesigned: the text being embedded on top, then a Link box, the note's attachments and new-attachment tiles.
+- **Editable selection menu:** use **Edit** inside ⋯ to pin any action to the main row or remove buttons like Copy/Cut; the menu now closes when you tap outside.
+- **Spell check fixes:** ticked items are skipped by default (can be enabled); the menu has **Fix by hand**; first-letter slips like "beynir → peynir" and b/n/m pressed instead of space are caught.
+- **Tables and format panel on the web:** format changes in a table show instantly; while typing in a table the quick row shows a single **align** button (left → center → right) instead of the pen; the scope picker no longer stretches on wide screens; the search box stays clickable in narrow windows.
+- **Calendar day panel:** on tall screens the bottom panel only takes the room its content needs; the rest goes to the month grid.
 - **Shared AI pool, 5-key backup rotation, Dosyalarım link, and 0-credit smart categorization:** signed-in Google accounts now share AI starter and Pro pool credits across **Notlar** and **Dosyalarım**; choosing **My API key** strictly rotates up to 5 backup keys × your model chain and never falls back silently to the shared pool. The ✨ sheet is streamlined with **Smart categorize** front and center: notes are organized locally with 0 AI credits first (matching existing folders), learn locally from **Fix** corrections, and optionally ask AI only for low-confidence notes.
 - **Overhauled item & text selection menus:** unified contextual Paste · Copy · Select All · Move · Delete controls, accurate word/line cursor handles, and cleaner selection feedback.
 - **Pinned PDF/image pane, smart actions, and pen fixes:** pinned PDF selections gain one-tap Smart Actions and clean Markdown-free insertion into notes; wide unmeasured images preserve pen strokes accurately, and bottom panels (**Format** / **Pen** / **Dictate**) exclude each other cleanly.

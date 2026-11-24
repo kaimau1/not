@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/note_colors.dart';
@@ -22,6 +25,61 @@ import 'text_wrap.dart';
 ///    biçim şeridi (B · I · U · Renk · Vurgu · Biçim…).
 ///  * Aynı kart içinde `⋯` ile yerinde açılan ikincil eylemler (Ek göm,
 ///    Nota bağla, Tüm notu kopyala, Paylaş…).
+/// **SEÇİM MENÜSÜ DÜZENİ** (kullanıcı 2026-11-24: "menü düzenlenebilir
+/// olmalı, ⋯ içinden istediğini ana satıra ekleyip her zaman görünür
+/// yapabilmeli"). [pinned]: ⋯ içindeki eylemlerden ana satıra sabitlenenler
+/// (etiketiyle); [hidden]: ana satırdan kaldırılan pano eylemleri
+/// (Kopyala/Kes/Yapıştır/Tümünü seç — türüyle, ⋯ içine iner). Cihazda
+/// saklanır.
+class SelectionMenuLayout {
+  SelectionMenuLayout._();
+
+  static final pinned = ValueNotifier<Set<String>>(const {});
+  static final hidden = ValueNotifier<Set<String>>(const {});
+  static const _pinKey = 'selection_menu_pinned';
+  static const _hideKey = 'selection_menu_hidden';
+  static bool _loaded = false;
+
+  static Future<void> load() async {
+    if (_loaded) return;
+    _loaded = true;
+    try {
+      final p = await SharedPreferences.getInstance();
+      pinned.value = {...?p.getStringList(_pinKey)};
+      hidden.value = {...?p.getStringList(_hideKey)};
+    } catch (_) {
+      // Tercih okunamadı: varsayılan düzen.
+    }
+  }
+
+  static void _save(String key, Set<String> v) => unawaited(
+    SharedPreferences.getInstance()
+        .then((p) => p.setStringList(key, v.toList()))
+        .catchError((_) => false),
+  );
+
+  static void togglePinned(String label) {
+    final next = {...pinned.value};
+    if (!next.remove(label)) next.add(label);
+    pinned.value = next;
+    _save(_pinKey, next);
+  }
+
+  static void toggleHidden(String type) {
+    final next = {...hidden.value};
+    if (!next.remove(type)) next.add(type);
+    hidden.value = next;
+    _save(_hideKey, next);
+  }
+
+  @visibleForTesting
+  static void debugReset() {
+    _loaded = true;
+    pinned.value = const {};
+    hidden.value = const {};
+  }
+}
+
 class NoteSelectionToolbar extends StatefulWidget {
   const NoteSelectionToolbar({
     super.key,
@@ -63,6 +121,10 @@ class NoteSelectionToolbar extends StatefulWidget {
 class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
     with SingleTickerProviderStateMixin {
   bool _moreOpen = false;
+
+  /// ⋯ içindeki "Düzenle" kipi: dokunuş eylemi çalıştırmaz, ana satıra
+  /// sabitler/kaldırır.
+  bool _editing = false;
   _ColorStrip? _colorStrip;
 
   late final AnimationController _enter = AnimationController(
@@ -74,10 +136,19 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
   void initState() {
     super.initState();
     _enter.forward();
+    SelectionMenuLayout.pinned.addListener(_relayout);
+    SelectionMenuLayout.hidden.addListener(_relayout);
+    unawaited(SelectionMenuLayout.load());
+  }
+
+  void _relayout() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    SelectionMenuLayout.pinned.removeListener(_relayout);
+    SelectionMenuLayout.hidden.removeListener(_relayout);
     _enter.dispose();
     super.dispose();
   }
@@ -103,12 +174,16 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
     final leading = <ContextMenuButtonItem>[];
     final primary = <ContextMenuButtonItem>[];
     final secondary = <ContextMenuButtonItem>[];
+    final hidden = SelectionMenuLayout.hidden.value;
+    final pinned = SelectionMenuLayout.pinned.value;
     for (var i = 0; i < items.length; i++) {
       final item = items[i];
       if (_primaryTypes.contains(item.type)) {
-        primary.add(item);
+        (hidden.contains(item.type.name) ? secondary : primary).add(item);
       } else if (i < split) {
         leading.add(item);
+      } else if (pinned.contains(item.label)) {
+        primary.add(item);
       } else {
         secondary.add(item);
       }
@@ -179,6 +254,15 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
               Offset(horizInset, topInset),
         ),
         child: TextFieldTapRegion(
+          // DIŞARI DOKUNUNCA KAPANIR (kullanıcı 2026-11-24: "açıkken başka
+          // yere tıklanınca kapanmıyor"): dokunmatikte alanın kendi "dışarı
+          // dokunma" kuralı yok; menü kendi bölgesinin dışını dinler.
+          child: TapRegion(
+            onTapOutside: (_) {
+              if (widget.editableState.mounted) {
+                widget.editableState.hideToolbar(false);
+              }
+            },
           child: FadeTransition(
             opacity: anim,
             child: ScaleTransition(
@@ -204,6 +288,7 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
                 ),
               ),
             ),
+          ),
           ),
         ),
       ),
@@ -319,9 +404,12 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
                         for (var i = 0; i < parts.primary.length; i++) ...[
                           if (i > 0) const SizedBox(width: AppSpace.xxs),
                           _PrimaryClipButton(
-                            icon: _iconForType(parts.primary[i].type),
+                            icon: _iconForItem(parts.primary[i]),
                             label: _labelFor(context, parts.primary[i]),
-                            onTap: parts.primary[i].onPressed,
+                            onTap: _editing
+                                ? () => _toggleLayout(parts.primary[i])
+                                : parts.primary[i].onPressed,
+                            editing: _editing,
                             text: text,
                             scheme: scheme,
                           ),
@@ -330,7 +418,7 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
                     ),
                   ),
                 ),
-              if (parts.secondary.isNotEmpty) ...[
+              if (parts.secondary.isNotEmpty || parts.primary.isNotEmpty) ...[
                 if (parts.primary.isNotEmpty)
                   Container(
                     width: 1,
@@ -345,7 +433,10 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
                   child: InkWell(
                     key: const ValueKey('selection-toolbar-more'),
                     borderRadius: BorderRadius.circular(AppRadius.m),
-                    onTap: () => setState(() => _moreOpen = !_moreOpen),
+                    onTap: () => setState(() {
+                      _moreOpen = !_moreOpen;
+                      if (!_moreOpen) _editing = false;
+                    }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpace.s,
@@ -411,7 +502,7 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
             ),
           ],
         ],
-        if (_moreOpen && parts.secondary.isNotEmpty) ...[
+        if (_moreOpen) ...[
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
             child: Divider(
@@ -419,23 +510,57 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
               color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
             ),
           ),
+          if (_editing)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpace.xs),
+              child: Text(
+                context.l10n.selectionMenuEditHint,
+                style: text.meta.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ),
           Wrap(
             spacing: AppSpace.xs,
             runSpacing: AppSpace.xs,
             children: [
               for (final item in parts.secondary)
                 _ActionPill(
-                  icon: _iconForItem(item),
+                  icon: _editing
+                      ? Icons.push_pin_outlined
+                      : _iconForItem(item),
                   label: _labelFor(context, item),
-                  onTap: item.onPressed,
+                  onTap: _editing
+                      ? () => _toggleLayout(item)
+                      : item.onPressed,
                   text: text,
                   scheme: scheme,
                 ),
+              _ActionPill(
+                key: const ValueKey('selection-menu-edit'),
+                icon: _editing ? Icons.check_rounded : Icons.tune_rounded,
+                label: _editing
+                    ? context.l10n.selectionMenuEditDone
+                    : context.l10n.selectionMenuEdit,
+                accent: _editing,
+                onTap: () => setState(() => _editing = !_editing),
+                text: text,
+                scheme: scheme,
+              ),
             ],
           ),
         ],
       ],
     );
+  }
+
+  /// Düzenle kipinde dokunulan eylem: pano eylemi gizlenir/geri gelir, ⋯
+  /// eylemi ana satıra sabitlenir/kaldırılır.
+  void _toggleLayout(ContextMenuButtonItem item) {
+    AppHaptics.tick();
+    if (_primaryTypes.contains(item.type)) {
+      SelectionMenuLayout.toggleHidden(item.type.name);
+    } else if (item.label != null) {
+      SelectionMenuLayout.togglePinned(item.label!);
+    }
   }
 
   String _labelFor(BuildContext context, ContextMenuButtonItem item) {
@@ -474,7 +599,11 @@ class _PrimaryClipButton extends StatelessWidget {
     required this.onTap,
     required this.text,
     required this.scheme,
+    this.editing = false,
   });
+
+  /// Düzenle kipi: dokununca ana satırdan kalkar (küçük − rozeti).
+  final bool editing;
 
   final IconData icon;
   final String label;
@@ -496,7 +625,11 @@ class _PrimaryClipButton extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: AppIconSize.s, color: scheme.primary),
+            Icon(
+              editing ? Icons.remove_circle_outline_rounded : icon,
+              size: AppIconSize.s,
+              color: editing ? scheme.error : scheme.primary,
+            ),
             const SizedBox(height: AppSpace.xxs),
             Text(
               label,
@@ -514,6 +647,7 @@ class _PrimaryClipButton extends StatelessWidget {
 
 class _ActionPill extends StatelessWidget {
   const _ActionPill({
+    super.key,
     this.icon,
     required this.label,
     required this.onTap,

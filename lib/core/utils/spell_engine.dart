@@ -318,6 +318,8 @@ class SpellEngine {
 
   /// Eşik içindeki adaylar, yakından uzağa (Y-6 ön diziniyle: yalnız komşu
   /// ilk harf + uzunluk kovaları taranır).
+  static const _voicedPair = {'b': 'p', 'p': 'b'};
+
   static List<(String, double)> _near(String w, SpellMemory m) {
     final limit = limitFor(w.length);
     if (limit <= 0) return const [];
@@ -338,7 +340,33 @@ class SpellEngine {
         }
       }
     }
+    final alt = _voicedPair[first];
+    if (out.isEmpty && alt != null && w.length >= 4) {
+      // İLK HARF SESTEŞİ ("beynir" → "peynir", kullanıcı 2026-11-24): b/p
+      // klavyede uzak ama kulakta yakın; kalan yazım TAM tutmalı. Bütün
+      // harfler denenince doğru ama sözlükte olmayan kelimeler çiziliyordu
+      // ("balon" → "salon"; düzyazı 3 → 51).
+      for (final cand in m.bucketByFirst(w.length, alt)) {
+        if (cand.substring(1) == w.substring(1)) out.add((cand, 1.0));
+      }
+    }
     return out..sort((a, b) => a.$2.compareTo(b.$2));
+  }
+
+  /// Boşluk tuşunun yanındaki harf kelimenin başına/sonuna kaçtı ("evb",
+  /// "nokul"): kalan kısım bilinen kelimeyse o.
+  static String? strayNearSpace(String w, SpellMemory m) {
+    if (w.length < 3) return null;
+    final last = w[w.length - 1];
+    if (nearSpace.contains(last)) {
+      final r = w.substring(0, w.length - 1);
+      if (m.frequency(r) >= 3) return r;
+    }
+    if (nearSpace.contains(w[0])) {
+      final r = w.substring(1);
+      if (m.frequency(r) >= 3) return r;
+    }
+    return null;
   }
 
   /// **Y-4 ALTI ÇİZİLİ DENETİM** önerileri ([w] küçük harf). null = sorun
@@ -377,6 +405,7 @@ class SpellEngine {
     }
     add(splitMissedSpace(w, m));
     nearestList(w, m).forEach(add);
+    add(strayNearSpace(w, m));
     return out.isEmpty ? null : (list: out.take(4).toList(), hint: false);
   }
 

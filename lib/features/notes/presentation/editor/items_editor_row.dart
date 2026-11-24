@@ -500,6 +500,7 @@ extension _ItemsRow on ItemsEditorState {
                               field: AttachmentTagChips(
                               controller: controller,
                               looks: widget.tagLooks,
+                              done: item.checked,
                               child: _tapPoint.wrap(
                                 TextField(
                                   controller: controller,

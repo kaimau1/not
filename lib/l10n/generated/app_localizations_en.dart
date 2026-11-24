@@ -4505,6 +4505,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get embedSectionExisting => 'Attachments in this note';
 
   @override
+  String get embedSectionLink => 'Link';
+
+  @override
+  String get embedLinkHint => 'Web address (e.g. example.com)';
+
+  @override
+  String get embedLinkApply => 'Link';
+
+  @override
   String get embedReplace => 'Replace';
 
   @override
@@ -8316,6 +8325,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get spellLearnTitle => 'Learning correction';
 
   @override
+  String get spellCheckDoneTitle => 'Check ticked items too';
+
+  @override
+  String get spellCheckDoneSubtitle =>
+      'When off, ticked items are not underlined';
+
+  @override
+  String get spellManualHint => 'Type the correct word';
+
+  @override
+  String get spellManualFix => 'Fix by hand';
+
+  @override
   String get spellLearnSubtitle =>
       'Learns the words you correct yourself or pick from keyboard suggestions (Turkish, English, Chinese). Your personal dictionary syncs with your account.';
 
@@ -10046,6 +10068,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectionToolbarMore => 'More actions';
+
+  @override
+  String get selectionMenuEdit => 'Edit';
+
+  @override
+  String get selectionMenuEditDone => 'Done';
+
+  @override
+  String get selectionMenuEditHint =>
+      'Tap to add to or remove from the main row';
 
   @override
   String get itemsBatchFormat => 'Batch format';

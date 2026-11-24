@@ -10,6 +10,7 @@ import 'package:notlar/features/notes/presentation/editor/text_wrap.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
 void main() {
+  setUp(SelectionMenuLayout.debugReset);
   Widget wrap(Widget child) => MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
@@ -75,6 +76,26 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('selection-toolbar-more')));
     await tester.pumpAndSettle();
     expect(find.text('Ek göm'), findsOneWidget);
+
+    // DÜZENLE (2026-11-24): ⋯ içindeki eylem ana satıra sabitlenir, Kes
+    // ana satırdan kalkar; dışarı dokunmak menüyü kapatır.
+    await tester.tap(find.byKey(const ValueKey('selection-menu-edit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ek göm'));
+    await tester.pumpAndSettle();
+    expect(SelectionMenuLayout.pinned.value, contains('Ek göm'));
+    await tester.tap(find.text('Kes'));
+    await tester.pumpAndSettle();
+    expect(SelectionMenuLayout.hidden.value, contains('cut'));
+    SelectionMenuLayout.debugReset();
+    await tester.pumpAndSettle();
+
+    await tester.tapAt(const Offset(5, 590));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('note-selection-toolbar')),
+      findsNothing,
+    );
   });
 
   testWidgets(

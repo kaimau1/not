@@ -57,6 +57,11 @@ class AutoSpell {
   /// Yalnız açık kurallar (tablo + öğretilenler); bulanık ve cihaz önerisi
   /// yok.
   static final rulesOnly = ValueNotifier<bool>(false);
+
+  /// İşaretli (yapıldı) maddeler de denetlensin mi — varsayılan HAYIR
+  /// (kullanıcı 2026-11-24: bitmiş maddenin yazımı önemsiz, çizgi gürültü).
+  static final checkDone = ValueNotifier<bool>(false);
+  static const _checkDoneKey = 'spell_check_done';
   static const _key = 'auto_spell_on';
   static const _modeKey = 'spell_mode';
   static const _learnKey = 'auto_spell_learn';
@@ -79,6 +84,7 @@ class AutoSpell {
       enabled.value = m == SpellMode.auto;
       learning.value = p.getBool(_learnKey) ?? true;
       rulesOnly.value = p.getBool(_rulesKey) ?? false;
+      checkDone.value = p.getBool(_checkDoneKey) ?? false;
       try {
         memory = SpellMemory.decode(await _readMemory(p));
         if (memory.fromV1) await _migrate();
@@ -173,6 +179,11 @@ class AutoSpell {
   static void setLearning(bool on) {
     learning.value = on;
     _setPref(_learnKey, on);
+  }
+
+  static void setCheckDone(bool on) {
+    checkDone.value = on;
+    _setPref(_checkDoneKey, on);
   }
 
   static void setRulesOnly(bool on) {

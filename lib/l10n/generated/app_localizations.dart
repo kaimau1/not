@@ -8108,6 +8108,24 @@ abstract class AppLocalizations {
   /// **'Bu nottaki ekler'**
   String get embedSectionExisting;
 
+  /// No description provided for @embedSectionLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı'**
+  String get embedSectionLink;
+
+  /// No description provided for @embedLinkHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Web adresi (örn. ornek.com)'**
+  String get embedLinkHint;
+
+  /// No description provided for @embedLinkApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağla'**
+  String get embedLinkApply;
+
   /// No description provided for @embedReplace.
   ///
   /// In tr, this message translates to:
@@ -14810,6 +14828,30 @@ abstract class AppLocalizations {
   /// **'Öğrenen düzeltme'**
   String get spellLearnTitle;
 
+  /// No description provided for @spellCheckDoneTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaretli maddeleri de denetle'**
+  String get spellCheckDoneTitle;
+
+  /// No description provided for @spellCheckDoneSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalıyken yapıldı işaretli maddelerin altı çizilmez'**
+  String get spellCheckDoneSubtitle;
+
+  /// No description provided for @spellManualHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrusunu yaz'**
+  String get spellManualHint;
+
+  /// No description provided for @spellManualFix.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle düzelt'**
+  String get spellManualFix;
+
   /// No description provided for @spellLearnSubtitle.
   ///
   /// In tr, this message translates to:
@@ -17791,6 +17833,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Diğer işlemler'**
   String get selectionToolbarMore;
+
+  /// No description provided for @selectionMenuEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get selectionMenuEdit;
+
+  /// No description provided for @selectionMenuEditDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitti'**
+  String get selectionMenuEditDone;
+
+  /// No description provided for @selectionMenuEditHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dokun: ana satıra ekle ya da oradan kaldır'**
+  String get selectionMenuEditHint;
 
   /// No description provided for @itemsBatchFormat.
   ///
