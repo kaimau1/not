@@ -1,296 +1,462 @@
-# PLAN — TEK PLAN (2026-11-17 akşam; P22/P53 + 15/16/17 Kasım raporları + kasma envanteri + P61 keşif turu + OTOMASYON kuyruğu + KONTROL kararları)
+# Yeni Ana Yol Haritası — Sade, Kârlı (50 TL Tek Sefer), Cloudflare Senkronlu ve Gerçekten Akıllı Alışveriş Listeli Uygulama Planı
 
-**Bu dosya tek plandır.** Ayrıntı kaynakları (yalnız okuma, iş buradan seçilir):
-`docs/rapor_2026-11-16_beyin_firtinasi.md` (16K), `docs/rapor_2026-11-17_senkron_lite_pro_yazim.md`
-(17K), `docs/perf/kasma_envanteri.md` (K-xx), `docs/rapor_2026-11-15.md` (15K), keşif turu
-`docs/kesif_turu_2026-11-14.md` (KT-xx; dal `oto/P61-kesif-turu`, bu planla main'e alındı).
-OTOMASYON.md Kuyruğu'ndaki açık satırlar (P61, K32, K34) buraya taşındı; Kuyruk yalnız yürütme durumu tutar. Bitmiş (`[x]`) maddeler burada tutulmaz (git'te).
-Kullanıcının kendi listesi: `KONTROL_LISTEM.md`. Eski planlar `docs/arsiv/planlar/`.
+> **Tarih:** 24 Kasım 2026 · **Durum:** Onay / Uygulama Öncesi Ana Plan (depo dosyalarına dokunulmadı)  
+> **Çoklu Oturum Notu:** `origin/main` üzerinde yerel kopyadan 1 commit önde yeni bir çalışma tespit edildi (`9a24cdb` — *"Tablo varken madde silinince yazılar tablonun üstüne binmiyor [apk]"*). Bu plan, başka bir oturumun `main` üzerindeki işleriyle çakışmayacak şekilde fazlandırılmıştır.
 
-## 0. 17 Kasım oturumunda BİTENLER (main'e `[apk]` ile girdi; cihazda doğrulanmadı)
 
-- KP1 levhalar (K-01…K-12): 11 levha klavye karesinde baştan kurulmuyor; S53 bütçesi (arama
-  1152→294, not seçici 4758→630, AI sonuç 1512→294 kurulum); `viewInsetsOf` bekçisi.
-- KP2 (K-38 ilk ikisi): "Geri al" çubuğu ve `CountdownBar` adımlı boyama (`SteppedCountdown`).
-- KP3 kısmi: ana ekran aracı ön planda güncellenmez, arka plana geçerken bir kez (K-24);
-  ayar eşitlemesi değişmeyen turu atlar (K-25); nabız arka planda durur (K-53: yalnız paylaşılan
-  notta başladığı doğrulandı).
-- Hatalar: akıllı liste market sözlüğü (17K §5.1), hızlı ekle H9 ("rapor yaz"), H10 (güncel nota
-  ekle + seçici geri al).
-- Senkron S2/S3 + korkuluklar: aralıksız yazımda bulut kaydı en geç 20 sn (10 idi; sessizlik 2 sn
-  kaldı), `config/app` uzaktan kayıt freni `saveDelaySec`/`saveMaxWaitSec`, sürüm budama sorgusu
-  her 5 sürümde bir, boşta yazma bekçisi testi (`test/idle_write_guard_test.dart`).
+> **Önceki plan arşivi:** `docs/arsiv/planlar/PLAN_2026-11-17.md` (17 Kasım 2026 planı ve önceki fazların tamamlanma kayıtları).
 
-## 1. SIRADAKİ İŞLER (öncelik sırasıyla)
+---
 
-### 1.0 KARAR (kullanıcı, 2026-11-17 akşam) — sormadan uygula
-- **Cihaz:** test telefonu yerine **tablet** bağlanacak. Cihazlı işler (T1, T2, T4, T8, T9, T13,
-  T16) tablette koşar; tablet + web + kalem kontrolleri (KONTROL "Tablette bak", "Bilgisayarda bak",
-  K32 yan yana, K34 parmak aracı, dolma kalem, 1 GB PDF) aynı turda biter. Ölçüm tabanı tablette
-  yeniden alınır (telefon tabanıyla karşılaştırılmaz).
-- **S1 "yalnız değişeni dinle": doğrudan yapılır** (1.4/1 ilk büyük faz). Şartlar kalkmadı: önce
-  yerel tam yedek, geri alınabilir uzaktan bayrak (varsayılan kapalı → iki cihaz testinden sonra açık),
-  `rules-test` yeşil, iki cihaz (tablet + web) eşitleme testleri.
-- **Dondurma (K-O1) KALKTI.** 1.4'teki büyük fazlar sırayla açılır; oturum = bir faz, `[apk]` başına
-  en çok 5 görünür değişiklik ve hız kapıları sürer. HE-4 ve AL-2 bu fazların içinde (1.1/7 kapandı).
-- **Keşif turu zevk kararları yürütücüde:** KT-2 masaüstünde levha ortada en çok 560 dp; KT-10 Not
-  kilidi ayrı "Güvenlik" bölümü; KT-8 masaüstü geri alma duraklamada adım (yazım grubu ~1 sn
-  sessizlik); KT-1 toast'lar kuyrukta tek tek, arama çubuğunu örtmeyecek yerde. (1.1/12 kapandı)
-- **Model: tek uygulama + Lite/Pro katmanı.** Lite senkronu açık + aralıklı; Lite ekleri kullanıcının
-  kendi Drive'ına (S4); T11 depolama tavanı bu modele göre (Lite'ta Storage kapalı). (1.1/1, /3)
-- **Play'e ÇIKILIYOR — hazırlık başlasın** (eski "çıkmıyoruz" kalktı). 1.4/5 Lite/Pro + Play yolu
-  açılır; Play'e özgü kalan kararlar (ad, hesap türü, niş, AI katmanı, fiyat, Lite cihaz sınırı)
-  o fazın BAŞINDA sorulur (cihaz sınırı kapandı: yok). Park'taki Billing/OAuth yayını/gizlilik/konum beyanı/mağaza işleri bu
-  faza girer. Kişisel APK (`NOTLAR_KISISEL=1`) yolu Play sürümü çıkana dek sürer.
-- **Yazım denetimi v3 varsayılanı "Yalnız göster"** (altı çizili, dokununca öneri; kendiliğinden
-  düzeltme yok); Y-0 ölçüm seti faz başında. (1.1/6)
-- **KONTROL küçük kararları yürütücüde:** 33 yeni el yazısı kayıt biçimi tablette ölçülür, sonra
-  karar (şimdilik kapalı); 35 tek sabit ek kalır; 36 ilk hatırlatıcıda alarm izni kapalıysa ipucu
-  EKLENİR; 37 alt arama kısayolu yok; 38 bulutta emülatör ölçümü yok; 39 en büyük yazıda sabit ek
-  çubuğu taşarsa etiketler kısalır. (1.1/13 kapandı)
+## 0. Stratejik Özet — Neden Bu Yeni Model Oyunu Değiştiriyor?
 
-**Sıra (önerim, yürütücü bunu izler):** (1) telefonsuz T3, T5, T7, T10, T12, T14, T15 + KONTROL 36/39
-→ (2) tablet bağlanınca T13 → T16 + T1 (tablet tabanı) → T2/T4/T8/T9 → (3) S1 → S4 → (4) Play
-hazırlığı (1.5 PL1–PL12) + Pro AI sadeleştirme (1.6 AI-S) + Lite/Pro → (5) yazım v3, hızlı ekle, akıllı liste, güven/büyüme.
+Önceki mimaride iki yapısal kilitlenme vardı: (1) Ağır üretken AI + Firebase Storage + Firestore okuma maliyetleri düşük fiyatla taşınamıyordu; (2) 30'a yakın AI akışı, 127 ayar ve çift katman karmaşası ürünü boğuyordu.
 
-### 1.1 Senden karar bekleyenler (karar gelmeden başlamaz)
-1. ~~Model~~ → KARAR 1.0: tek uygulama + katman.
-2. ~~Lite cihaz sınırı~~ → KARAR 1.5: sınırsız; içerik sınırı yok.
-3. ~~Lite ekleri~~ → KARAR 1.0: kullanıcının Drive'ı.
-4. ~~S1 ayrı faz mı~~ → KARAR 1.0: doğrudan yapılır.
-5. Yıllık fiyat aralığı (maliyet hesabı netleşsin). (17K §2.3)
-6. ~~Yazım~~ → KARAR 1.0: Yalnız göster.
-7. ~~HE-4 / AL-2 dondurmadan çıksın mı~~ → KARAR 1.0: dondurma kalktı.
-8. Play'e ÇIKILIYOR (KARAR 1.0); **ad, hesap türü, niş, AI katmanı, fiyat** — Play fazı başında (16K §9)
-9. İkinci test cihazı (60/120 Hz ayrımı için) — şimdilik tablet (16K §2.2, K-21)
-10. ~~Dondurma~~ → KARAR 1.0: kalktı.
-11. ~~Test telefonu~~ → KARAR 1.0: tablet.
-12. ~~Keşif turu zevk kararları~~ → KARAR 1.0 (yürütücü): masaüstü levha genişliği/yeri (KT-2), Not kilidi ayrı "Güvenlik"
-    bölümü (KT-10), masaüstü Ctrl+Z adımı kelime mi duraklama mı (KT-8), ipucu toast'ı masaüstünde
-    yeri/sıklığı (KT-1).
-13. ~~KONTROL kararları~~ → KARAR 1.0 (yürütücü): 33 yeni el yazısı kayıt biçimi (YAZMA kapalı), 35 birden çok sabit ek
-    (sekme/yan yana/tek), 36 ilk hatırlatıcıda alarm izni ipucu, 37 ana ekranda alt arama kısayolu,
-    38 bulutta emülatör hız ölçümü (CI kotası), 39 sabit ek çubuğu en büyük yazıda.
+Yeni yön — **Ağır AI'ı kaldır + Yalnız `gemini-decision-1` (sınırlı bütçeli) + 50 TL tek seferlik model + Cloudflare senkronu + Gerçekten Akıllı Alışveriş Listesi** — dört büyük sorunu **tek hamlede** çözüyor:
 
-### 1.2 Senin konsolda yapacakların (5–15 dk, kod yok)
-- **Google Cloud bütçe uyarısı 5 / 20 / 50 $** (e-posta + telefon) — maliyet korkuluğu 1, en acil.
-- **App Check zorlaması** (Play Integrity kurulu) — korkuluk 3 (KONTROL 31).
-- Acil fren gerekirse: Firestore konsolunda `config/app` belgesine `saveDelaySec: 30`,
-  `saveMaxWaitSec: 120` sayıları (yeni açılan editörlerde bulut kaydını seyreltir; silince
-  varsayılana döner). `minClient`/`inkV2Write`'a dokunma.
+1. **Maliyet Sıfıra Yaklaşır:** Üretken Gemini AI ve Firebase Storage egress (\$0,12/GB) tamamen kalkar. Cloudflare Workers + D1 ile 100.000 aktif kullanıcıda bile metin senkron maliyeti **kişi başı yılda ~\$0,004 (15 kuruş)** seviyesine iner.
+2. **50 TL Tek Seferlik Model Matematiksel Olarak Kârlı Olur:** Çift kilitli (`750 karar` + `600.000 girdi jetonu`) Decisions API bütçesiyle kullanıcı başına maksimum AI maliyeti **garantili \$0,06** olur. Ücretsiz kullanıcıların senkron yükü düşüldükten sonra bile **%45–55 net kâr marjı** kalır.
+3. **Uygulama Hafifler ve Hızlanır:** Ağır AI kodları, `firebase_ai`, `lib/features/gmail/` ve gereksiz katmanlar çıktığında ~15.000+ satır kod, ~8–12 MB paket boyutu ve ~40–60 MB RAM yükü düşer.
+4. **Rakiplerin Kopyalayamayacağı Gerçek Bir Niş Doğar:** *"Aboneliksiz, reklamsız, tek sefer 50 TL; Türkçe sesli hızlı not, gerçekten akıllı market/bütçe listesi, defter & PDF kalemi."*
 
-### 1.3 Kod işi — zincire hazır (karar gerektirmez)
-| No | İş | Kaynak | Cihaz |
+---
+
+## 1. Çoklu Oturum Güvenlik Protokolü (`main` Çakışma Koruması)
+
+Başka bir oturum `main`'de aktif çalışırken (ör. tablo/editör düzeltmeleri) bu planı uygulamaya koyarken şu 4 kural zorunlu olmalıdır:
+
+1. **Her faz taze `origin/main`'den izole dalda başlar:**  
+   `git fetch origin && git checkout -b plan/faz-N-<ad> origin/main`
+2. **Dosya sahipliği ayrımı:** Diğer oturum `note_editor_screen.dart` / `table_page_box.dart` gibi editör çekirdeğinde çalışıyorsa, önce **sıfır çakışmalı** arka uç ve bağımsız modül fazları (Faz 1: `functions/`, `notes_delta_sync.dart`, `storage.rules`; Faz 2: `cloudflare/` yeni dizin; Faz 4: yeni `shopping/` modülü) uygulanır.
+3. **Play sürümü 0 kullanıcıyla başlar:** Play uygulaması ayrı paket adı ve ayrı altyapıyla açılacağı için Cloudflare geçişi mevcut kişisel APK'nın (`dev.kaimau.notlar` / `notlar-kaimau`) canlı verisini **hiç riske atmaz**.
+4. **Tek birleştirme kuralı:** Her faz kendi testleriyle yeşillenip `origin/main` üstüne rebase edilerek tek temiz commit/merge ile alınır.
+
+---
+
+## 2. Bölüm A — AI Sadeleştirme ve 50 TL Tek Seferlik Limit Matematiği
+
+### 2.1 Kaldırılacak AI Modülleri (Üretken & Pahalı Katman)
+
+Aşağıdaki özellikler Play sürümünden (tercihen tüm kod tabanından) çıkarılarak hem fatura riski hem arayüz kalabalığı temizlenir:
+
+| Kaldırılacak Modül / Özellik | Kod Yeri | Neden Kalkıyor? |
+|---|---|---|
+| **Firebase AI Logic SDK** | `pubspec.yaml` (`firebase_ai`), [`firebase_ai_client.dart`](lib/features/ai/data/firebase_ai_client.dart) | İstemciden doğrudan çağrıldığı için sunucu kotası yok, üretken model maliyeti 50 TL modelle uyumsuz. |
+| **Tüm Notlarla / PDF ile Üretken Sohbet** | [`ai_chat_screen.dart`](lib/features/ai/presentation/ai_chat_screen.dart), [`chat_controller.dart`](lib/features/ai/presentation/chat_controller.dart), [`assistant_service.dart`](lib/features/ai/data/assistant_service.dart) | Uzun sohbet bağlamı + PDF token maliyeti çok yüksek; bakım yükü büyük. |
+| **AI Levhası & Yeniden Yaz / Özet / Çevir / Brifing** | [`ai_sheet.dart`](lib/features/ai/presentation/ai_sheet.dart), [`ai_hub_screen.dart`](lib/features/ai/presentation/ai_hub_screen.dart), [`briefing_screen.dart`](lib/features/ai/presentation/briefing_screen.dart) | 50 TL tek seferlik modelde sürdürülemez; ayrıca yazım denetimi v3 zaten cihazda ücretsiz çalışıyor. |
+| **Anlamsal Arama (Embedding) & Vektör Önbelleği** | [`semantic_search.dart`](lib/features/ai/data/semantic_search.dart) | Her not değişikliğinde embedding çağrısı + RAM/disk yükü. Yerel tam metin + ek metin araması yeterli. |
+| **AI Ses/Video Dökümü, Podcast & Gemini TTS** | [`media_transcriber.dart`](lib/features/notes/data/media_transcriber.dart), [`listen_screen.dart`](lib/features/ai/presentation/listen_screen.dart), [`ai_speech.dart`](lib/features/ai/data/ai_speech.dart) | En yüksek token maliyeti; cihazda dikte + sistem TTS ücretsiz kalır. |
+| **Çoklu Sağlayıcı (OpenAI / Anthropic / OpenRouter)** | [`provider_chat.dart`](lib/features/ai/data/provider_chat.dart), [`model_catalog.dart`](lib/features/ai/data/model_catalog.dart) | 4 sağlayıcı + 2.796 satırlık [`gemini_service.dart`](lib/features/ai/data/gemini_service.dart) karmaşasını bitirir. |
+| **Günlük Puan Sistemi & Eski Premium Ekranı** | [`ai_gate.dart`](lib/features/ai/data/ai_gate.dart), [`premium_screen.dart`](lib/features/settings/presentation/premium_screen.dart) | 30/300 günlük puan modeli kalkıyor; tek net Decisions kredi sayacı geliyor. |
+
+> [!TIP]
+> **Kalan Sıfır Maliyetli Cihaz İçi "Akıllı" Özellikler (Tüm Kullanıcılara Ücretsiz ve Çevrimdışı):**  
+> Türkçe ek çözücülü yazım denetimi v3 · Cihazda sesli dikte & Türkçe tarih/saat/tekrar ayrıştırıcısı · ML Kit ücretsiz belge tarama & aranabilir PDF OCR · Barkod tarama (`mobile_scanner`) · Cihazda kopya not ve çöp kuralları · Sistem sesiyle okuma (TTS) · Yerel akıllı alışveriş sözlüğü ve tekrar alma tahmini.
+
+### 2.2 Yalnız Google Decisions API (`gemini-decision-1`) Kullanım Noktaları
+
+`gemini-decision-1` üretken metin yazmaz; **evet/hayır (`noul`)**, **çoktan seçmeli (`choice`, 2–255 seçenek)** ve **puanlama (`score`)** yapar. **Fiyatı (Doğrulandı, Kasım 2026):** 1M girdi jetonu **\$0,10**, çıktı jetonu **\$0,00**!
+
+Uygulamada yalnızca **en yüksek fayda / en düşük jeton** oranlı 5 noktada çalışır (her zaman önce yerel kural çalışır, belirsiz kalırsa Decisions çağrılır ve sonuç kalıcı önbelleğe yazılır):
+
+| # | Karar Noktası | Nasıl Çalışır? | Ort. Jeton | Çağrı Maliyeti |
+|---|---|---|---:|---:|
+| **D1** | **Alışveriş Reyonu Öğrenme (`shopAisle`)** | Sözlüğün tanımadığı yeni/markalı ürünü (`"Torku Banada"`, `"Kedi kumu"`, `"Chia"`) 13 reyondan birine atar → **kalıcı yerel hafızaya yazar (bir daha asla sormaz!)** | ~250 | \$0,000025 |
+| **D2** | **Hızlı Ekle Hedef Notu (`dropTarget`)** | Yerel ayrıştırıcı hedefi bulamazsa cümleyi ≤30 not başlığı arasında `choice` ile doğru nota yönlendirir | ~550 | \$0,000055 |
+| **D3** | **Tek Cümle Niyet Yönlendirici (`captureRoute`)** | Konuşulan/yazılan cümleyi tek çağrıda sınıflandırır: *Alışveriş maddesi mi · Yapılacak/hatırlatıcı mı · Takvim etkinliği mi · Düz not mu · Mevcut nota ekleme mi?* | ~450 | \$0,000045 |
+| **D4** | **Sessiz Düzen (`noteTriage`)** | Tek çağrıda kullanıcının mevcut klasör/etiketleri arasından öneri + *"Bu notta hatırlatıcı olmalı mı?"* + *"Hassas bilgi (şifre/IBAN) içeriyor mu?"* | ~700 | \$0,000070 |
+| **D5** | **Akıllı Liste Türü & Çoklu Ürün Ayrımı (`listClassify`)** | Yeni listenin türünü (Market / Bavul / Eczane / Kırtasiye / Hırdavat / Kamp / Bebek / Spor) ve başlık doğruluğunu belirler | ~350 | \$0,000035 |
+
+### 2.3 50 TL Tek Seferlik Kesin Birim Ekonomi ve Çift Kilitli Limit Hesabı
+
+**Gelir Hesabı (50 TL Tek Seferlik Satış — Türkiye Google Play):**
+- Brüt fiyat: **50,00 TL** (~\$1,40 @ ~35,5 TL/\$)
+- KDV (%20 içinden): ~−8,33 TL
+- Google Play (%15 küçük geliştirici payı): ~−6,25 / −7,50 TL
+- GVK Mük. 20/B Stopajı (%15): ~−5,25 TL
+- **Elde Kalan Net Gelir:** **~29–30 TL ≈ \$0,80–\$0,85 NET**
+
+**Maliyet Bütçesi Dağılımı (1 Ücretli Kullanıcı, 5 Yıllık Ömür Boyu):**
+
+| Kalem | Hesap | Tutar (USD) |
+|---|---|---:|
+| **Net Gelir (50 TL Tek Sefer)** | Vergi + Play sonrası | **+\$0,82** |
+| **Decisions API Bütçesi (SERT TAVAN)** | **600.000 girdi jetonu** (× \$0,10 / 1M) | **−\$0,06** |
+| **Cloudflare Senkron (Kendi + 15 Ücretsiz Kullanıcı Payı)** | 16 kullanıcı × \$0,004/yıl × 5 yıl | **−\$0,32** |
+| **Kalan NET KÂR (Her Şey Çıktıktan Sonra)** | **%53 Net Kâr Marjı** | **+\$0,44** |
+
+> [!IMPORTANT]
+> **Önerilen Kesin Limit Formülü (Çift Kilit — Kötüye Kullanıma %100 Dayanıklı):**
+> - **Kullanıcıya görünen hak:** **50 TL Tek Seferlik Paket = 750 Akıllı Karar Hakkı** (kalıcı yerel önbellek sayesinde normal kullanıcıya **1,5–3 yıl** yeter; bitince tüm uygulama ve cihaz içi kurallar sınırsız çalışmaya devam eder).
+> - **Sunucudaki görünmez güvenlik tavanı:**
+>   1. İstek başı toplam payload sınırı: **≤ 8.000 karakter** (~2.500 jeton maks — mevcut `functions/decisions_util.js`'deki 248.000 karakterlik açığı tamamen kapatır!).
+>   2. Kişi başı toplam jeton tavanı: **600.000 `total_input_tokens`** (Google'ın yanıtındaki gerçek `usage.total_input_tokens` değerinden düşülür → **maksimum maliyet asla \$0,06'yı geçemez!**).
+>   3. Sayaç `uid` değil **`purchase_token_hash`** anahtarına bağlanır → hesap sil-yeniden aç-geri yükle ile sıfırlanamaz!
+> - **Hak bitince ne olur?** İsteğe bağlı tüketilebilir Play ürünü: **"+1.000 Akıllı Karar Paketi — 30 TL"** (Net ~\$0,48 gelir, maks \$0,08 maliyet → **%83 kâr marjı**; abonelik baskısı yok!). *(İstersen ayarlarda gizli/ileri seçenek olarak kendi Gemini anahtarıyla sınırsız Decisions desteği de bırakılabilir — maliyeti bize \$0.)*
+
+---
+
+## 3. Bölüm B — Lite (Ücretsiz) vs Tek Seferlik Tam Sürüm (50 TL) Katman Matrisi
+
+**Tek uygulama, 2 net katman, SIFIR reklam, SIFIR abonelik tuzağı.**  
+İlke: *"Kullanıcının günlük not ve alışveriş deneyimi ücretsizde kusursuz ve dürüst çalışır; 50 TL tek seferlik yükseltme ise hız, akıllı otomasyon, sınırsız kişiselleştirme ve uzun vadeli güven özelliklerini açar."*
+
+| Özellik | Lite (Ücretsiz — Reklamsız) | Tek Seferlik Tam Sürüm (**50 TL** — Ömür Boyu) |
+|---|---|---|
+| **Not, Liste, Defter, Tablo, PDF Üstü Kalem, Hatırlatıcı, Takvim** | ✓ Sınırsız | ✓ Sınırsız |
+| **Not / Klasör / Cihaz Sayısı** | ✓ Sınırsız | ✓ Sınırsız |
+| **Cihaz İçi Akıllı Özellikler** *(Yazım v3, Dikte, ML Kit OCR/Tarama, Barkod Okuma, Akıllı Alışveriş Reyonları, Mağaza Kipi)* | ✓ Tamamen Açık | ✓ Tamamen Açık |
+| **Bulut Metin Senkronu (Cloudflare D1)** | ✓ **Aralıklı** (5 dk + uygulama kapanış/arka plan; Android + Web) | ✓ **Anında Senkron** (2–3 sn + canlı ortak düzenleme) |
+| **Ek Dosyalar (Fotoğraf, PDF, Ses)** | ✓ Kullanıcının **Kendi Google Drive'ı** (\$0 maliyet) | ✓ Kendi Google Drive'ı **+ Ortak Not/Liste Görselleri (Cloudflare R2, 250 MB adil kullanım)** |
+| **Google Decisions API Akıllı Otomasyon** *(Bilinmeyen ürün reyonu, Hızlı Ekle hedefi, Sessiz düzen etiket/klasör, Cümle yönlendirme)* | ✗ (Cihaz içi kurallar + sözlük çalışır) | ✓ **750 Akıllı Karar dahil** *(bitince 30 TL ek +1.000 paket veya opsiyonel kendi Gemini anahtarı)* |
+| **Akıllı Alışveriş İleri Özellikleri** | Temel reyon sıralama, Mağaza Kipi, Barkod, Sık alınanlar | **+ Fiyat Hafızası & Market Karşılaştırma · Çoklu Market Profili (`@BİM`/`@Migros`/`@Pazar`) · Özel Reyon Sırası · Aile "Marketteyim" Bildirimi · Tarif/Öğün Paketleri & Bütçe Analizi** |
+| **Sürüm Geçmişi (Geri Dönüş)** | Son 3 sürüm (yerel/kısa) | ✓ **Son 30 sürüm** (bulut senkronlu) |
+| **Güvenlik & Yedekleme** | Düz `.notyedek` & Markdown `.zip` dışa aktarma | ✓ **Parolalı AES-256 Tam Yedek** + **Uçtan Uca Şifreli (E2EE) Kilitli Notlar** |
+| **Görünüm & Kişiselleştirme** | 3 çekirdek tema (Sistem, Adaçayı, Koyu) + varsayılan yazı tipi | ✓ **Tüm temalar, 19 yazı tipi, tüm kâğıt desenleri ve özel zeminler** |
+| **Ortak Çalışma** | 1 ortak alışveriş/not listesi (alıcıya kopya gönderme sınırsız) | ✓ **Sınırsız ortak not ve paylaşılan klasör** |
+
+> **Önemli Güvence:** Tam Sürüm alındıktan sonra hiçbir ek aylık ücret çıkmaz; reklam hiç yoktur. Bu teklif ("Tek sefer 50 TL, abonelik yok, reklam yok") Türkiye Google Play'de çok güçlü bir dönüşüm oranı (%5–10+) üretir!
+
+---
+
+## 4. Bölüm C — Acil Kritik Hatalar ve Yeni Yakalanan Eksikler (Önce Bunlar Kapanmalı)
+
+İlk denetimde bulduklarımıza ek olarak, bu turda yapılan derin kod taramasında **5 yeni kritik/yüksek hata** daha yakalandı. Tamamı aşağıdaki tek listededir:
+
+| Öncelik | Hata / Eksik | Kod Yeri | Somut Etki ve Çözüm |
 |---|---|---|---|
-| T1 | **[~] 2026-11-19 tablet tabanı yazıldı** (`docs/perf/tablet_taban.md`, `altin_taban_tablet.json`, A=B 17 evre aynı/iyi, RAM 4/5 durum; panel 60 Hz etkin, 120 Hz kipi + 1000/3000 not + panel kip k/c + 17 Kasım `[apk]` A/B KALAN). Cihaz ölçüm turu: panel kip k/c, 60 Hz ayrımı, RAM tabanı, ısınma, ab_hepsi kör evreleri, 1000/3000 not; 17 Kasım `[apk]`'sının A/B'si (ÖLÇÜM KAPISI bu kez yapılamadı) | K-20, K-21, K-59…K-63 | evet |
-| T2 | Not akışı yankısı: sağlayıcı sayacı senaryosu + en pahalı 3 türetilmişi dilime çevir (veri göçü yok) | K-22a, K-23 | A/B |
-| T3 | **[x] 2026-11-17 (P65)** Merriweather-Medium pakete, çalışma anı indirme kapalı, bekçi `font_runtime_fetch_test`; uçak kipinde görünüş cihazda bakılmadı. Yazı tipi çalışma anı indirmesi: doğrula, `allowRuntimeFetching=false` + kalın dosyaları pakete, bekçi | K-54 | hayır |
-| T4 | **[x] 2026-11-19/21 (P81 + P87)** H1 ("süt bitti" sessizlik süresiyle ≥ 720 ms, `done_word.dart` + `quick_entry_bar.dart`), H3 (belge), H11 (not yokken yeni not + her zaman en başta "Yeni not" çipi), S56 hızlı ekle bütçe senaryosu; cihazda doğrulanmadı | 17K §4.1, K-64…K-69 | A/B |
-| T5 | **[x] 2026-11-17 (P65)** sık eklenenler türe bölündü (`smart:market`/`smart:bavul`), "Geçen seferden" türe göre, boş liste ipucu, S49 açılış bütçesi. Akıllı liste AL-1: sık kullanılanları türe böl, ipucu satırı, açılış ilk karesi bütçesi | 17K §5.2, K-41 | hayır |
-| T6 | Klavye açıkken sayfa iskeleti: 17 ekranı ölç, kötülere T2 kalıbı | K-13…K-19 | gerekirse |
-| T7 | **[~] 2026-11-17 (P65)** sürüm geçmişi, hesap makinesi, paylaşım levhası araması; **2026-11-18 (P72): kılavuz araması — sonucu değişmeyen tuşta kart kurulumu 9 → 0**; **2026-11-19 (ccr-1122edca): şablon levhası araması — tuş başına 24 kart kurulumu → 0 (kart önbelleği + anahtarlı Wrap)**; kalan liste `docs/hafiza/akicilik.md` 2026-11-17 T7 (yeni ölçülebilir aday bulunamadı). Tembel liste + build'de hesap + onChanged setState (ekran başına) | K-47, K-48, K-57, K-58 | hayır |
-| T8 | Editörde kalanlar (ölçüm kapılı) | K-27…K-36 | A/B |
-| T9 | Kısa geçişlerdeki `TweenAnimationBuilder`'lar ve beliriş animasyonları (`PopIn`, `RevealUp`…): önce ölç, kurulum > 5 ise düzelt (bu oturumda bilerek dokunulmadı: `child` zaten yeniden kurulmuyor) | K-37, K-38 kalanı | A/B |
-| T10 | **[x] 2026-11-17 (P64)** denetleyici levhanın State'inde, bekçi `caption_sheet_dispose_test`. Görsel açıklama levhası: kapanış animasyonunda atılmış denetleyici kullanılıyor (debug uyarısı; S53 yazılırken görüldü) | `attachment_actions.dart` `showCaptionSheet` | hayır |
-| T11 | **[~] 2026-11-23 (P99)** Play ücretsiz: yeni ekler kullanıcının Drive'ına (`cloudAttachments` kapısı), buluta yazım 5 dk'da bir (`instantSync`, `lite_sync.dart` + yerel günlük); paylaşılan notun ekleri Lite'ta da Storage'a (ortak çalışan Drive'a erişemez — T11 "Lite'ta Storage kapalı" ile çelişir, sabah bakılacak); sunucu tavanı yok. Senkron korkuluk 6: depolama tavanı sunucuda (ya da Lite'ta Storage kapalı) — 1.1/3 kararına bağlı | 17K §1.4 | hayır |
+| **P0-1** | **YENİ: Decisions API 248.000 Karakterlik Maliyet Açığı** | [`functions/decisions_util.js:24-29`](functions/decisions_util.js) | `MAX_QUESTIONS (60) × MAX_QUESTION_JSON (4000) + 8000 = 248.000 karakter (~80K token = \$0,008/çağrı)`. 1 kötü niyetli kullanıcı 1.000 çağrıda **\$8 zarar** ettirir! **Çözüm:** Toplam JSON payload ≤ 8.000 karakter + gerçek `usage.total_input_tokens` (600K tavan) sayımı. |
+| **P0-2** | **S1 Delta Senkron Yarış Hatası (Race Condition)** | [`notes_delta_sync.dart:179-219`](lib/features/notes/data/notes_delta_sync.dart) | `checkCount(first.size)` feeder'ı beklemeden çalışıyor → başka cihazda 1 not eklenip silindiğinde veya çevrimdışı açılışta S1 iptal olup tüm koleksiyonu yeniden okuyor. **Çözüm:** `checkCount` yalnızca feeder ilk sunucu snapshot'ını işledikten sonra çalışsın; offline iken `toLegacy` çağırmasın. |
+| **P0-3** | **Ömür Boyu Karar Hakkının Hesap Silerek Sıfırlanması** | [`functions/entitlements.js:49`](functions/entitlements.js) | Hesap silinince `decisionUsage/{uid}` siliniyor → yeni hesapla "Satın alımları geri yükle" yapınca hak sıfırdan doluyor. **Çözüm:** Kullanım sayacını `uid` değil `lifetimeTokenKey` (`sha256(purchaseToken)`) altında sakla ve hesap silmede SİLME. |
+| **P0-4** | **Decisions Sunucuda `aiKillSwitch` Kontrolü Yok** | [`functions/decisions.js:35-66`](functions/decisions.js) | Acil kapatma bayrağı yalnız istemcide bakılıyor. **Çözüm:** Sunucu/Worker `decide` başında kill switch'i kontrol etsin. |
+| **P0-5** | **`searchUsers` 1.000 Belge Taraması & App Check Yok** | [`functions/index.js:90-142`](functions/index.js) | Her aramada 1.000 okuma, App Check yok, 1.000+ kullanıcıda isimler bulunmuyor. **Çözüm:** Cloudflare'e geçince D1 `LIKE 'prefix%'` indeksli 1 ms sorgu; o zamana kadar `enforceAppCheck: true` + prefix token. |
+| **P0-6** | **Storage Kurallarında Pro Kapısı ve Toplam Kota Yok** | [`storage.rules:108-117`](storage.rules) | Herkes 50 MB dosya yükleyebilir, egress \$0,12/GB. **Çözüm:** Play'de Storage yerine Drive + (ortak görseller için) Cloudflare R2 (\$0 egress, sunucu boyut/kota kapılı). |
+| **P0-7** | **Konsol Korkulukları Eksik** | Firebase / Cloud Konsol | Bütçe uyarısı (\$5/\$20/\$50) ve App Check Enforce hemen açılmalı (kişisel proje için de!). |
+| **P1-1** | **YENİ: `StoreModeScreen` Canlı Senkronu Dinlemiyor** | [`store_mode_screen.dart:48`](lib/features/notes/presentation/editor/store_mode_screen.dart) | `widget.initialItems` bir kez kopyalanıyor; ortak alışveriş listesinde eşin/arkadaşın işaretlediği ürünler Mağaza Kipi'nde görünmüyor! **Çözüm:** `noteByIdProvider(noteId)` dinleyen reaktif `ConsumerStatefulWidget`. |
+| **P1-2** | **YENİ: Decisions Önbelleği Yalnız Bellek İçi (5 dk / 32 kayıt)** | [`decision_service.dart:113-118`](lib/features/ai/data/decisions/decision_service.dart) | Uygulama kapanınca öğrenilen kararlar unutuluyor ve tekrar kredi yakıyor. **Çözüm:** `shopAisle` ve `noteTriage` kararları kalıcı yerel önbelleğe (SharedPrefs/SQLite) yazılsın. |
+| **P1-3** | **YENİ: `.notyedek` / `.zip` İçe Aktarmada Zip Bombası Koruması Yok** | [`backup_service.dart:123-135`](lib/features/notes/data/backup_service.dart), [`note_package.dart`](lib/features/notes/data/note_package.dart) | Açılmış boyut ve dosya sayısı tavanı olmadan belleğe açılıyor (`G-21`). **Çözüm:** Maks. 5.000 dosya / 250 MB açılmış boyut kontrolü. |
+| **P1-4** | **YENİ: Web Lite Kullanıcıları Senkron Kısıtını Atlıyor** | [`lite_sync.dart:40-48`](lib/features/notes/data/lite_sync.dart) | Web'de `journalReady == false` olduğu için Lite kullanıcılar anlık bulut yazımı yapıyor. **Çözüm:** Web'de IndexedDB pending queue ile 5 dk + `pagehide`/`visibilitychange` toplu yazım. |
+| **P1-5** | **Kilitli Notlar Bulutta Düz Metin (E2EE Yok)** | [`note.dart:1041-1161`](lib/features/notes/domain/note.dart) | Kilitli notun gövdesi bulutta okunabilir. **Çözüm:** Mevcut AES-256 şifreleyiciyi kilitli not gövdesine uygula (anahtar cihaz SecureStorage + kullanıcı kurtarma parolası). |
+| **P1-6** | **Çoklu Platform Açık Arayüz Hataları** | [`note_editor_screen.dart:3224`](lib/features/notes/presentation/editor/note_editor_screen.dart), [`app_theme.dart:180`](lib/app/theme/app_theme.dart), [`web_workspace_frame.dart:115`](lib/app/web_workspace/web_workspace_frame.dart), [`settings_account.dart:641`](lib/features/settings/presentation/settings_sections/settings_account.dart) | `KW-11` kalem `Ctrl+Z`, `KW-17` 14 px AppBar başlıkları, `WebWorkspaceFrame` `MediaQuery.of`, yüzen kalem FAB ↔ `"T Ara başlık"` çakışması, Tablet Ayarlar çift Misafir kartı + Misafir'e kırmızı "Oturumu kapat", 3 bölmeli PDF sıkışması, 1.076 token istisnası. |
+| **P1-7** | **Ölü Kod, Fazla Widget ve Doğrulama Borcu** | [`lib/features/gmail/`](lib/features/gmail/presentation/gmail_screen.dart), [`KONTROL_LISTEM.md`](KONTROL_LISTEM.md) | 2.268 satır Gmail kodunu sil, `premium_screen.dart`'ı sil, 8 Android widget'ını 3'e indir, `STORE_LISTING.md`'yi güncelle, 41 doğrulanmamış maddeyi gerçek cihazlarda erit. |
 
-| T12 | **[~] 2026-11-17 (P64)** KT-2/3/5/9/10/12 yapıldı, KT-6/7 zaten vardı; **KT-1 [x] 2026-11-18 (P72): zaten P62 PA5'te (2026-11-15) yapılmış — tek bildirim şeridi `AppNoticeController` (ipucu yalnız şerit boşken, duyuru sıra bekler), ipucu üst kromun ALTINDA; kanıt `test/app_notice_test.dart` 3 test + `notice_paths_guard_test` (ham SnackBar 0); kod değişmedi. Yenilikler 12 sn → 6 sn önerisi KARAR'da yok, yapılmadı (sabah bakılacak)**; kalan KT-4 (A/B), KT-8 (ölçüm kapısı), klasör adı 2 satır (sabah bakılacak: kart boyu sabit). Keşif turu "kendimiz yaparız" 8 maddesi: KT-7 hesap levhası 2 satır, KT-5 "Sabitten çıkar", KT-3 dar ekranda gün adı + FAB boşluğu, KT-4 hızlı ekle levhası yazı 1.3, KT-9 ortak boş durum, KT-12 arama ipucu kısalt, KT-6 çevrimdışı AI şeridi, KT-1 toast kuyruğu | KT, P61 (3) | hayır (KT-1/KT-4 A/B) |
-| T13 | **[x] 2026-11-18 (T16 oturumu, tablet)** 17 evrenin hepsi MatePad 11'de koşuyor (`tool/perf/ab_hepsi.py`; `README` "Tablet" bölümü). KÖK NEDENLER: `sablon` = l10n `fromTemplate` "Şablondan"→"Hazır şablonlar" olmuştu (regex), `duzen` = "Ekranı düzenle" not menüsü başlığındaki ⚙ içine taşınmıştı, `acilis` 2 kare = VM zaman çizelgesi tamponu (`--ez endless-trace-buffer true` ile 18-20 kare; telefonda da geçerli), `bicim` = ana ekran aramasından açılan notta not-içi arama çubuğu alt çubuğu gizliyor, ayrıca tablet: fiziksel klavye algısı (⌨ AÇ/KAPA), "Yeni sürüm var"/yedek bandı + "tepeden çekme" jesti (U1) geri tuşu/dokunuş yutuyor (ölçüm uygulamasında jest Hiçbiri), Huawei kurulum onayı, ana ekran semantiği idle'da boş. Telefon yolu korundu (cihazda sınanmadı). Ölçüm aracı onarımı: `sablon` evresi atlanıyor, `bicim/kalem/duzen` hiç koşmadı, `acilis` 2 kare; altın taban yeni veriyle (`--altin-yaz`) — T1'in ön koşulu | 15K §4 | evet |
-| T14 | **[x] 2026-11-17 (P65)** budamada canlı küme = aktif + çöp; bekçi `semantic_trash_cache_test`. Çöp kutusunda anlamca arama ↔ önbellek temizliği döngüsü | 15K §4 | hayır |
-| T15 | **[x] 2026-11-17 (P65)** `showNoteTemplateSheet` + TemplateComposer liste dalı silindi. Şablon önizlemesinin ölü liste dalını (TemplateComposer liste dalı + `showNoteTemplateSheet`) testleriyle birlikte sil | (C) son madde | hayır |
-| T16 | **[~] 2026-11-18 tablet turu yapıldı: `docs/kesif_turu_2026-11-14.md` KT-13…; düzeltmeler paketlenecek, web + kalem (M-Pencil) kontrolleri kalan. P78 (2026-11-19, dal oto/P78-tablet-bulgular): KT-13 uygulama dışı (Huawei Navigasyon yuvası), KT-14 bekçi, KT-15/16/18/23 düzeltildi; kalan TP-C (KT-17/19/20/22), TP-D (KT-21/24), TP-F. **2026-11-19 akşam (dal ccr-1122edca, cihazsız):** KT-17 (dar bölmede ↑ "+"nın solunda; yığın 122 > alt boşluk 96 dp), KT-20 (levha 560 dp kuralı `showAppSheet`'te), KT-21 (araçlar tam nitelikli sınıf adıyla — Play/ölçüm kimliğinde HİÇ güncellenmiyordu), KT-22 (çekiş yalnız tepede başlayan sürüklemede), KT-24 (kendiliğinden dinleme izin istemez) [x], her biri bekçi testli, cihazda doğrulanmadı; TP-F [~] anahtar `NOTLAR_OLCUM_YON` + ab_hepsi dikey kilit denetimi yazıldı (Gradle bulutta koşmadı; yatay evre seçicileri/taban cihazda). KT-19 YAPILMADI: bant birleştirme ya da güncelleme bandını Ayarlar'a taşıma görünüş/ürün kararı (2026-11-10 kalıcı bant kararı) — sabah bakılacak. Kalan: KT-19, KT-25, web + kalem kontrolleri.** **KT-25 (2026-11-19 gece): widget testinde üretilemedi (düğüm 44×44) — bekçi `stylus_toggle_semantics_test`, kök neden cihazda (uiautomator/TalkBack) aranacak.** P61 canlı tur — TABLETTE (adb/uiautomator, KT-13…) + web + kalem kontrolleri; bulguların düzeltilmesi; KT-1/2/8/10 KARAR 1.0'a göre | P61 (2)(3) | evet (tablet) |
+---
 
-**Bilerek yapılmayanlar:** kuralda yazma hız sınırı (17K §1.4-4) — reddedilen yazım
-çevrimdışı kuyrukta YEREL değişikliği geri alır, veri kaybı riski; S1 kararıyla birlikte
-`rules-test` ile yeniden düşünülür. Hatırlatıcı eşitlemesine imza katmanı (K-24 ikinci yarı) —
-not başına imza zaten var, kanal çağrısı yok; risk > kazanç. Geri bağlantı dizini (K-26) — seçici
-ucuz, ölçülmeden dokunulmadı.
+## 5. Bölüm D — Firebase'den Cloudflare'e (Workers + D1 + R2) Senkron Mimarisi
 
-### 1.4 Büyük fazlar (karara bağlı, sırasıyla önerim)
-1. **[~] 2026-11-17 (P67) kod + bayrak (`config/app.syncDeltaListen`, KAPALI); açmadan önce: minClient damgalı sürüme + iki cihaz testi (`docs/hafiza/veri.md` S1, KONTROL "Tablette bak").** **S1 yalnız değişeni dinle** (17K §1.3) → sonra S4 Lite ekleri Drive'a.
-2. **[x] 2026-11-20/21 (P83 + P86) Y-0…Y-6 yazıldı, cihazda doğrulanmadı** (Y-0…Y-4: ölçüm seti, ek çözücü + kök sözlüğü, harfsiz yazım, kural tablosu 356 + bağlama bağlı öneri, altı çizili denetim "Yalnız göster" varsayılan + Kapalı/Yalnız göster/Otomatik ayarı; Y-5: not ⋮ + yazım ayarları → "Yazımı denetle" toplu denetim levhası, bağlam ipuçları korunarak "Tümünü düzelt (N)", tek Geri Al; Y-6: kişisel sözlük `users/{uid}/meta/spell` 3 yollu eşitleme — açılışta tek okuma, pause'da tek yazma + boy/ilk-harf ön dizini < 1 ms/kelime; yanlış düzeltme 0/500, yakalama 273/300, düzyazı 3/9252, S57 kök 0 / satır 0; KONTROL "Telefonda bak" 20–21 Kasım; izole taraması ve büyük kök listesi sabah bakılacak). **Yazım denetimi v3** Y-0 → Y-6 (17K §3.3).
-3. **[x] 2026-11-20/21 (P84 + P87) HE-2…HE-5 yazıldı, cihazda doğrulanmadı** (HE-2/HE-3: önizleme satırı, ⚙, "Ben seçeyim", çip araması; kısayol, karo, paylaşım/seçim "Nota ekle", `notlar://ekle`, 1×1/4×1 araç; HE-4: tek giriş — tarih/saat → hatırlatıcılı yeni not, ≥ 2 market ürünü → market listesi, tek dokunuşla çipten değiştirme; HE-5: tek cümlede çok hedef + tek Geri Al, saat/gün bağlam sıralaması, `quick_drop_recent` eşitleme; S56 değişmedi; KONTROL "Telefonda bak" 20–21 Kasım). **Hızlı ekle** HE-2 → HE-5 (17K §4.2).
-4. **[x] 2026-11-21 (P88 + P90 + P97) AL-2…AL-6 yazıldı, cihazda doğrulanmadı** (AL-2: `Note.listKind` koşullu S16 +0 bayt, editörde "Reyona / gruba göre" sıralama + "Alınanları tamamla" tek Geri Al, miktar toplama `"2 süt" + "1 süt" → "3 süt"`, hızlı eklede doğru reyona yerleştirme; AL-3: 6 yeni tür ve sözlük — eczane, kırtasiye, tamirat, kamp, bebek, spor; AL-4: kişisel kategori eşlemesi `itemGroups` + yerel tekrar alma tahmini `predictDue`; AL-5: **Mağaza kipi** `StoreModeScreen` — büyük satırlar, kalan sayaç/ilerleme çubuğu, alınanları gizle, reyona sırala, hızlı ekle, toplu tamamla; AL-6: **Akıllı Liste** Android ana ekran aracı `SmartListWidgetProvider` + `smartListWidgetData` — etkin listeyi, kalan sayacı, ilk 5 işaretlenmemiş maddeyi gösterir, kilitli/gizli listeleri sızdırmaz, dokununca listeyi açar, `+` ile `notlar://ekle`; S16/S45/S49 değişmedi; KONTROL "Telefonda bak" 21 Kasım). **Akıllı liste** AL-2 → AL-6 (17K §5.2).
-5. **Lite/Pro + Play yolu** (karar 1.1/1, 1.1/8 sonrası): engeller E1–E12, evreler 2–6 (16K §4, §8).
-6. **[~] 2026-11-21 (P90 + P91) kolay dışa aktarma (Markdown `.zip`, `markdown_export.dart`) + parolalı tam yedek (AES-256 `.notyedek`, `MemoryBackupSink`/`FileBackupSink` + `isEncryptedZipHead` + parola pencereleri) yazıldı, cihazda doğrulanmadı.** Güven/büyüme: parolalı yedek + uçtan uca şifreli kilitli not, ilk 60 saniye, rızalı kullanım
-   ölçümü, kolay dışa aktarma, uygulama içi hız günlüğü (17K §6).
+### 5.1 Neden Cloudflare? (Gerçek Ölçek Maliyet Karşılaştırması)
 
-### 1.5 Beyin fırtınasından (16K) açık kalanlar — Play yolu ayrıntısı
-**KARAR (kullanıcı, 2026-11-17 akşam):** Play hesabı **kişisel** (25 $; yayından önce 12 test kullanıcısı,
-kesintisiz 14 gün kapalı test). Play derlemesinde **kapalı**: Gmail, konum hatırlatıcı, Antalia sesi (ONNX);
-Takvim/Görevler **kalır** → OAuth "hassas" doğrulamasına başvurulur. AI katmanı (kullanıcı, 2026-11-17 gece — üç katman önerisinin yerine):
-**Ücretsiz = yapay zekâ YOK** (bulut AI yok, kendi anahtar alanı da yok; cihazda çalışan OCR, belge
-tarama, dikte, sistem sesi, akıllı liste sözlüğü AI sayılmaz, kalır) · **Pro abonelik = dahili AI**
-(§1.6'daki 8 ana yetenek; günlük kota yalnız burada, sunucuda sayılır) · **Ömür boyu (tek sefer) = dahili AI
-yok, kendi Gemini anahtarını girebilir** (sınırsız, maliyet bize sıfır). Abonelik yalnız AI'ın aylık
-maliyeti için; AI ömür boyu satılmaz. 
-**Katman farkları (kullanıcı, 2026-11-17 gece):**
+| Aktif Kullanıcı | Firebase (Firestore + Storage + Functions) | **Cloudflare (Workers Paid + D1 + R2 + Kullanıcı Drive)** | Tasarruf |
+|---:|---:|---:|---:|
+| **1.000** | \$5–\$20 / ay | **\$5,00 / ay** *(tüm limitlerin %5'i bile dolmaz)* | 2–4× |
+| **10.000** | \$40–\$180 / ay | **\$5,00 / ay** *(4,5M istek / 10M dahil; 3M yazma / 50M dahil)* | **8–36×** |
+| **50.000** | \$200–\$900 / ay | **~\$16 / ay** | **12–55×** |
+| **100.000** | \$450–\$1.800+ / ay | **~\$34 / ay** *(kişi başı yılda \$0,004!)* | **15–50×** |
 
-| | Ücretsiz | Ömür boyu (tek sefer) | Pro (aylık/yıllık) |
+> **En Büyük Bonus:** Firestore'daki **33 ayrı `.snapshots()` dinleyicisi** (7 takvim + 4 klasör + 3 paylaşım + 2 arkadaş + notlar + prefs + haklar...) Cloudflare'de **TEK BİR birleşik `/v1/sync` delta ucuna** iner! 30 dakikalık kopmada tam yeniden okuma cezası **tamamen yok olur**.
+
+### 5.2 Hedef Mimari Diyagramı
+
+```mermaid
+flowchart TB
+    subgraph Client["Flutter İstemci (Android / Tablet / Web)"]
+        UI["UI & Riverpod"]
+        LocalDB["Yerel SQLite (Android) / IndexedDB (Web) — Tek Gerçek Kaynak"]
+        SyncEng["SyncEngine (Outbox + Delta Cursor + 3-Yönlü Birleştirme)"]
+        DriveC["DriveStore (Kişisel Ekler — \$0 Maliyet)"]
+    end
+
+    subgraph CF["Cloudflare Edge (Tek \$5/ay Plan)"]
+        WAF["Cloudflare WAF + Rate Limit (Ücretsiz DDoS Koruması)"]
+        Worker["Cloudflare Worker API (Hono / TypeScript)"]
+        D1[("Cloudflare D1 (SQLite) — Tüm Veriler + Entitlements + Decision Quota")]
+        R2[("Cloudflare R2 — Yalnız Ortak Not Görselleri (\$0 Egress)")]
+        DO["Durable Object (Opsiyonel: Yalnız Canlı Ortak Liste/Not WebSocket)"]
+    end
+
+    subgraph Ext["Dış Servisler"]
+        GoogleAuth["Google OAuth / ID Token JWKS"]
+        PlayAPI["Google Play Billing & RTDN"]
+        Decisions["Google Gemini Decisions API (gemini-decision-1)"]
+        DriveAPI["Kullanıcının Kendi Google Drive'ı"]
+    end
+
+    UI <--> LocalDB
+    LocalDB <--> SyncEng
+    SyncEng <-->|HTTPS Delta Push/Pull| WAF
+    WAF --> Worker
+    Worker <--> D1
+    Worker <--> R2
+    Worker <--> DO
+    Worker --> GoogleAuth
+    Worker --> PlayAPI
+    Worker --> Decisions
+    DriveC <--> DriveAPI
+```
+
+### 5.3 Kimlik Doğrulama Kararı (İki Temiz Seçenek)
+
+- **Seçenek A — Sıfır Firebase (Önerilen, En Hafif & En Bağımsız):**
+  - İstemci mevcut `google_sign_in` ile Google `idToken` alır → `POST /v1/auth/google` → Cloudflare Worker token'ı Google'ın genel anahtarlarıyla (JWKS) doğrular → kullanıcıya **HttpOnly/Secure Refresh Token (30 gün) + Access JWT (1 saat)** verir.
+  - Misafir kullanıcı için buluta hiç oturum açılmaz (**tamamen yerel SQLite/IndexedDB — sunucu maliyeti \$0!**). Google bağlayınca yerel notlar tek toplu `POST /v1/sync` ile buluta çıkar.
+  - **Büyük Kazanım:** Play sürümünden `firebase_core`, `firebase_auth`, `cloud_firestore`, `firebase_storage`, `cloud_functions`, `firebase_app_check`, `firebase_ai` **hepsi çıkabilir!** APK **~10 MB**, RAM **~40–60 MB** düşer! (Push bildirim için ya yalnızca hafif FCM/OneSignal ya da Android'de yalnızca `firebase_messaging` + `firebase_crashlytics` opsiyonel bırakılır.)
+- **Seçenek B — Hibrit (Daha Hızlı İlk Çıkış):**
+  - `firebase_auth` + `firebase_messaging` + `firebase_crashlytics` (hepsi Spark/ücretsiz) kalır; Cloudflare Worker gelen Firebase ID Token'ı doğrular. Tüm veritabanı, storage, billing ve Decisions vekili Cloudflare'de çalışır.
+  - **Öneri:** İlk geçiş hızı için **Seçenek B** ile 2 haftada canlıya çıkıp istenirse v2'de Auth'u da Worker'a taşımak en risksiz yoldur; *sıfır Firebase* isteniyorsa doğrudan **Seçenek A** da oldukça temizdir (~3–4 gün ek iş).
+
+### 5.4 Birleşik Cloudflare D1 Şeması (Tek Tablo + Yardımcı Tablolar)
+
+```sql
+-- 1. Tüm kullanıcı verisi (note, folder, event, task, task_list, routine, pref, shopping_meta)
+-- Tek tablo + tek monotonik seq = 33 Firestore dinleyicisi yerine TEK delta sorgusu!
+CREATE TABLE entities (
+  uid         TEXT NOT NULL,
+  kind        TEXT NOT NULL,     -- 'note' | 'folder' | 'event' | 'task' | 'pref' | 'shop_price' ...
+  id          TEXT NOT NULL,
+  seq         INTEGER NOT NULL,  -- kullanıcı içi artan senkron numarası
+  version     INTEGER NOT NULL DEFAULT 1,
+  updated_at  INTEGER NOT NULL,  -- sunucu epoch ms
+  deleted_at  INTEGER,           -- soft delete (30 gün sonra cron ile temizlenir)
+  encrypted   INTEGER NOT NULL DEFAULT 0, -- kilitli not E2EE bayrağı
+  payload     TEXT NOT NULL,     -- sıkıştırılabilir JSON (ya da AES-256 şifreli metin)
+  PRIMARY KEY (uid, kind, id)
+);
+CREATE INDEX idx_entities_sync ON entities (uid, seq);
+
+-- 2. Ortak not / ortak alışveriş listesi paylaşımı
+CREATE TABLE shares (
+  share_id    TEXT PRIMARY KEY,
+  owner_uid   TEXT NOT NULL,
+  entity_kind TEXT NOT NULL,     -- 'note' | 'folder'
+  entity_id   TEXT NOT NULL,
+  member_uid  TEXT NOT NULL,
+  role        TEXT NOT NULL,     -- 'read' | 'write' | 'both'
+  status      TEXT NOT NULL,     -- 'pending' | 'active'
+  updated_at  INTEGER NOT NULL
+);
+CREATE INDEX idx_shares_member ON shares (member_uid, status);
+
+-- 3. Haklar & Decisions Token Sayacı (purchase_token_hash bazlı — sıfırlanamaz!)
+CREATE TABLE entitlements (
+  uid                 TEXT PRIMARY KEY,
+  lifetime_owned      INTEGER NOT NULL DEFAULT 0,
+  lifetime_token_hash TEXT,
+  extra_decisions     INTEGER NOT NULL DEFAULT 0,
+  extra_tokens        INTEGER NOT NULL DEFAULT 0,
+  updated_at          INTEGER NOT NULL
+);
+
+CREATE TABLE decision_usage (
+  token_hash          TEXT PRIMARY KEY, -- uid DEĞİL satın alma belirteci özeti!
+  calls_used          INTEGER NOT NULL DEFAULT 0,
+  tokens_used         INTEGER NOT NULL DEFAULT 0,
+  updated_at          INTEGER NOT NULL
+);
+
+-- 4. Kullanıcı arama (indexli, 1.000 tarama yok!)
+CREATE TABLE user_directory (
+  uid         TEXT PRIMARY KEY,
+  email_lower TEXT UNIQUE NOT NULL,
+  name        TEXT NOT NULL,
+  name_lower  TEXT NOT NULL
+);
+CREATE INDEX idx_user_name ON user_directory (name_lower);
+```
+
+### 5.5 Tek Uç Noktalı Delta Senkron Protokolü (`POST /v1/sync`)
+
+1. İstemci elindeki son `cursorSeq` + yerel **Outbox**'ta biriken değişiklik listesini (`changes: [{kind, id, baseVersion, payload, deleted}]`) gönderir.
+2. Worker tek bir D1 `batch` işleminde:
+   - `baseVersion == mevcut version` ise yazar, `seq = nextSeq` atar.
+   - `baseVersion < mevcut version` ise çakışma listesine (`conflicts`) sunucu kopyasını koyar → istemci mevcut [`text_merge.dart`](lib/features/notes/domain/text_merge.dart) ile 3-yönlü birleştirip bir sonraki döngüde tekrar yazar (sıfır veri kaybı!).
+   - `SELECT ... FROM entities WHERE uid = ? AND seq > ? ORDER BY seq LIMIT 200` + paylaşılan notlardaki değişiklikleri tek JSON yanıtında döner.
+3. **Senkron Sıklığı:**
+   - **Lite:** 5 dakikada bir + uygulama açılışında + arka plana geçerken (`paused` / `visibilitychange`) + manuel "Şimdi eşitle".
+   - **50 TL Tam Sürüm:** Değişiklikten 2–3 sn sonra anında + ön planda akıllı poll / ortak alışverişte **Durable Object WebSocket** ile <200 ms canlı işaretleme!
+
+### 5.6 Sıfır Riskli Geçiş Stratejisi
+
+- Flutter'da mevcut repository sınıflarının (`NotesRepository`, `FoldersRepository`, `CalendarRepository`, `EntitlementService`, `DecisionService`) üstüne ince bir `SyncTransport` arayüzü konur.
+- Kişisel APK (`NOTLAR_PLAY=false`) mevcut Firestore'u bozmadan kullanmaya devam eder (istersen sonra `.notyedek` ile tek tıkla Cloudflare'e geçersin).
+- Yeni Play sürümü (`NOTLAR_PLAY=true`) **doğrudan Cloudflare Worker + D1 + R2** ile açılır — 0 kullanıcı, 0 migrasyon riski, 0 Firebase faturası!
+
+---
+
+## 6. Bölüm E — "Gerçekten Akıllı Alışveriş Listesi" Araştırma ve 5 Katmanlı Ürün Planı
+
+### 6.1 Rakipler Ne Yapıyor, Bizde Bugün Ne Eksik?
+
+Küresel liderler (**Bring!**, **Listonic**, **AnyList**, **OurGroceries**, **Apple Reminders Grocery**) ve **Türkiye market gerçekleri** (BİM / A101 / ŞOK / Migros / Semt Pazarı, yüksek enflasyonda bütçe ve fiyat kontrolü, tek elle market arabası iterek kullanım, ailece ortak liste) incelendiğinde mevcut [`smart_list.dart`](lib/features/notes/domain/smart_list.dart) + [`store_mode_screen.dart`](lib/features/notes/presentation/editor/store_mode_screen.dart) yapısının neden henüz "gerçekten akıllı" hissettirmediği çok net ortaya çıkıyor:
+
+| Deneyim Boyutu | Bugün Bizde ([`store_mode_screen.dart`](lib/features/notes/presentation/editor/store_mode_screen.dart)) | Rakipler (Bring / Listonic / AnyList) + TR İhtiyacı | Bizim Hedef Farkımız |
 |---|---|---|---|
-| Bütün not/liste/kalem/PDF/hatırlatıcı/takvim, cihazda OCR·dikte·sesle okuma | ✓ | ✓ | ✓ |
-| Not/klasör/ek sayısı | sınırsız | sınırsız | sınırsız |
-| Cihaz sayısı | sınırsız | sınırsız | sınırsız |
-| Eşitleme | aralıklı | anında | anında |
-| Ekler | kendi Drive'ı | kendi Drive'ı (yürütücü: tek sefer ödemeye süren depo maliyeti bağlanmaz) | bizim bulut (Storage) |
-| Sürüm geçmişi + parolalı tam yedek | ✗ | ✓ | ✓ |
-| Ek temalar / yazı tipleri / kart görünümleri | ✗ (temel set) | ✓ | ✓ |
-| Dahili AI (§1.6) | ✗ | ✗ | ✓ |
-| Kendi Gemini anahtarı | ✗ | ✓ | ✓ |
+| **Reyon Görünümü** | Düz, başlıksız tek renkli satır listesi (gruplandığı belli olmuyor!) | Renkli/simgeli reyon başlıkları + katlanabilir bölümler | 13 renkli/ikonlu Türkçe reyon başlığı + markete göre özelleştirilebilir reyon sırası |
+| **Ortak Alışveriş** | `StoreModeScreen` `initialItems` kopyası alıyor — canlı güncelleme YOK (bug!) | Anlık işaretleme + "Kim aldı?" + "Marketteyim" bildirimi | Canlı senkron + "Ayşe aldı" etiketi + tek tık **"Marketteyim, eksik var mı?"** uyarısı |
+| **Fiyat & Bütçe (TR!)** | Hiç yok | Listonic/Out of Milk bütçe çubuğu + son fiyat hatırlama | **Sepet Toplamı / Bütçe Çubuğu + Son Fiyat Hafızası + BİM/Migros/Pazar fiyat kıyaslama + Fiş OCR ile otomatik fiyat kaydı!** |
+| **Miktar & Birim** | Yalnız aynı birim toplanıyor; satırda `−/+` yok | Tek tık `−/+` adım + akıllı birim dönüşümü | Satır içi `−/+` adım + `500 gr + 1 kg = 1,5 kg`, `yarım kilo`, `çeyrek` dönüşümü |
+| **Ekleme Hızı** | Yalnız yazı alanı (Mağaza Kipi'nde mikrofon ve barkod yok!) | Sesli ekleme + barkod okuma + Bring! görsel "sık alınanlar" ızgarası | **4 yol tek ekranda:** Ses + **Barkod (`mobile_scanner` zaten pakette!)** + "Bitmek Üzere" 1-tık ızgarası + Türk Mutfağı Tarif Paketleri |
+| **Markette Kullanım** | Ekran kapanıyor; "yoktu/alınamadı" durumu yok | Keep-screen-on + tek elle kaydırma | **Ekranı açık tut** + 3 durum (*Alınacak · Sepette ✓ · Yoktu/Sonraya ⏳*) |
+| **Bilinmeyen Ürünler** | Statik sözlükte yoksa "Diğer"de kalır | Manuel sürükle | **Decisions API (`D1`)** tek seferde reyona atar + **sonsuza kadar yerel hafızada tutar!** |
+| **Keşfedilebilirlik** | Yalnız `⋮` menüsünün derininde gizli | Alışveriş listesi doğrudan alışveriş görünümünde açılır | Alışveriş türü notta üstte belirgin **"🛒 Mağaza Kipi"** ana düğmesi + ana ekranda sepet özeti |
 
-Pro = ömür boyunun hepsi + dahili AI + bulut ekleri. Temel tema/yazı tipi setinin hangi parçaları ücretsizde
-kalacağı PL6'da belirlenir (bugünkü varsayılan görünüm ücretsizde kalır; kimsenin elinden özellik alınmaz).
+---
 
-**Ek kararlar (kullanıcı, 2026-11-17 gece):** Play sürümü **yeni paket adıyla** (ad seçilince) ve **tamamen ayrı altyapıyla**
-(kullanıcı, 2026-11-17 gece): **yeni Google hesabı, yeni Firebase/Google Cloud projesi, yeni web sitesi**
-(alan adı + barındırma), yeni OAuth onay ekranı ve doğrulaması, yeni Gemini/AI Logic faturalaması, yeni
-App Check. Kişisel APK `dev.kaimau.notlar` eski proje `notlar-kaimau` + eski web'de AYNEN sürer; iki
-dünya arasında veri paylaşımı YOK (kişisel notlarını Play'e taşımak istersen dışa aktar → içe aktar). **Pro biterse** buluttaki ekler silinmez, okunur kalır; yeni ekler kendi
-Drive'ına; tek dokunuşla eskileri Drive'a taşıma; silme yok. **Satın alma yalnız Android'de** (Play Billing),
-hak hesaba bağlı (sunucuda doğrulanır, `entitlements/{uid}`), web'de "telefondan al" yazısı. **Pro'da 7 gün
-ücretsiz deneme.** Kişisel hesabın (geliştirici) hakkı sunucudan Pro.
-**Yürütücü varsayılanları (değiştirmek istersen söyle):** paylaşılan notlar her katmanda anında (ortak
-düzenleme bozulmasın); ücretsiz eşitleme aralığı 5 dk + uygulama arka plana geçerken bir kez; ömür boyudan
-Pro'ya geçen kişiye ömür boyu hakları kalır; Pro günlük AI kotası kotanın %80'inde uyarı.
-**Hâlâ açık:** fiyatlar (aylık / yıllık / ömür boyu, TL), ad + niş, Pro'nun ücretli Gemini erişimi
-(AI Studio ücretsiz kotası ticari kullanımda yetmez → Firebase AI Logic/Vertex ödemeli, Blaze bütçe tavanı).
-**Niş/vaat ve uygulama adı kullanıcı yazacak (bekliyor).** Kişisel APK'da her şey kalır.
+### 6.2 5 Katmanlı "Gerçekten Akıllı Alışveriş Listesi" Teknik Tasarımı
 
-| No | İş | Kaynak | Cihaz |
-|---|---|---|---|
-| PL1 | **[~] 2026-11-18 (P73)** Dart kapıları (P66) + konum izin/alıcıları Play manifestinden silindi, Gmail pakette yok; **ONNX**: `.so` dışlaması açılışta çökertir (eklenti motoru attach'te yükler) → Play'de eklenti `tool/play_stub` kuklasıyla (`pubspec_overrides.yaml`) hiç kayıtlı olmaz; kod yazıldı, Play APK'sı cihazda doğrulanmadı (`docs/play_hazirlik.md`). Play derleme bayrağı (`NOTLAR_PLAY`): GitHub güncelleyicisi kapalı (E1), Gmail/konum/ONNX derlemeden çıkar (E2, E3, §2.6), YouTube otomatik PiP kapalı (§4.5) | 16K §4.2 | hayır |
-| PL2 | **[~] 2026-11-18 (P70)** istemci: tek kapı `AiAdmission`, `aiKillSwitch`, yerel hız sınırı 30/dk; App Check zorlaması, Function kotası, bütçe tavanı açık — `docs/play_hazirlik.md`. AI korumaları (yalnız Pro dahili AI'ı): App Check zorlaması, kullanıcı başı hız sınırı, Pro günlük kotası sunucuda (F18.28), `config/app` acil kapatma bayrağı, bütçe tavanı (E4); ücretsiz katmanda AI girişleri gizli, kendi anahtar alanı yalnız ömür boyu + Pro'da | 16K §5.3 | hayır |
-| PL3 | **[x] 2026-11-18 (P70)** rıza (yalnız Play; kişisel APK sormuyor — sabah bakılacak), "AI yanılabilir" + Bildir, AI'ı tümden kapat. AI kullanıcı yüzü: ilk kullanımda rıza ekranı, yanıtta "Bildir" + "AI yanılabilir", Ayarlar'da "AI'ı tümden kapat" (E11, KVKK) | 16K §5.3, §4.5 | hayır |
-| PL4 | **[x] 2026-11-18 (P69)** gizlilik tek kaynak (`PRIVACY_POLICY.md` → web), `/delete-account`, KVKK TASLAĞI (hukuki onay sabah bakılacak). Gizlilik metni tek kaynak + herkese açık adres; web'den hesap silme sayfası (E5, E6); KVKK aydınlatma metni | 16K §4.2, §4.5 | hayır |
-| PL5 | **[x] 2026-11-17 (P66)** API 36 tamam, 16 KB uyumlu görünüyor (ilk AAB'de doğrula), Play'de sıkıştırılmamış .so; komut `docs/play_hazirlik.md`. Hedef API 36 kontrolü (E8), 16 KB sayfa uyumu (E9), AAB + sıkıştırılmamış yerel kütüphane + `--obfuscate` (§2.6) | 16K §4.2, §2.6 | hayır |
-| PL6 | **[~] 2026-11-20 (P85) yazıldı, Play'de/cihazda doğrulanmadı (Play hesabı yok):** `in_app_purchase` (RevenueCat yok) + `verifyPurchase`/`playRtdn` Function'ları (yalnız `PLAY_PACKAGE_NAME`'li projede bağlı, gizli anahtar yok), `purchaseTokens` hesap bağı, Pro ekranı + Ayarlar kısayolu yalnız Play, web'de "telefondan al", AI katman kapısı (dahili AI Pro, kendi anahtarı ömür boyu); KARAR (sabah bakılacak): deneme = Play'in 7 gün teklifi, `startTrial` bağlanmadı; diğer `ProFeature` kapıları bağlanmadı. **2026-11-23 (P98):** `versionHistory` (menü satırı kilit rozetli → Pro ekranı), `encryptedBackup` (parola penceresi kilitliyken alansız + "Katmanları gör"; parolasız yedek ve şifreli yedeği geri yükleme serbest), `extraAppearance` (ücretsiz set: Sistem/Adaçayı/Koyu + varsayılan yazı tipi; seçili olan hiç kilitlenmez) bağlandı, `test/pl6_gates_test.dart`; kalan: `instantSync`, `cloudAttachments`. Kurulum adımları `docs/play_hazirlik.md` "Satın alma — PL6", KONTROL "Konsol". Satın alma: Play Billing (RevenueCat ya da `in_app_purchase` + doğrulama Function'ı) — Pro aylık/yıllık abonelik + ömür boyu tek sefer; katman kapısı: ücretsiz / Pro (dahili AI) / ömür boyu (kendi anahtar) (E10, F18.27) | 16K §4.2 | hayır |
-| PL7 | **[x] 2026-11-18 (P69)** 20 yazı tipi OFL + CMU BSD LicenseRegistry'de; Antalia SHA-256 doğrulaması (kendi sunucu kalanı). Lisans açıkları: yazı tipi OFL metinleri `LicenseRegistry`'ye, CMU BSD bildirimi, Antalia dosyaları kendi sunucumuza + özet doğrulama (kişisel APK için) | 16K §4.5 | hayır |
-| PL8 | Ürünleştirme: ilk 60 saniye akışı, rızalı kullanım ölçümü (ilk not/sesli not/liste, 1./7./30. gün), mağaza görselleri — niş/ad gelince | 16K §7.3 | hayır |
-| PL9 | Kapalı test (12+ kişi, 14 gün) → açık beta → TR yayın, kademeli dağıtım, Vitals takibi | 16K §8 evre 4–5 | — |
-| PL10 | **[x] 2026-11-23 (P101)** 5 çekirdek (Inter Tight, Roboto, Lora, Roboto Mono, Caveat) pakette, 14 aile seçilince iner (`font_downloads.dart`, SHA-256 doğrulamalı, yerel önbellek); APK −4,07 MiB; cihazda/çevrimdışı doğrulanmadı. Yazı tipleri: 4–5 çekirdek aile pakette, kalanı seçilince insin (T3 ile birlikte) | 16K §2.6 | hayır |
-| PL11 | **[~] 2026-11-19** ana ekran 296 / editör 356 / PDF 375 / kalem 357 MB PSS (`docs/perf/tablet_taban.md`); YouTube durumu denenmedi (veri setinde yok). RAM tabanı: beş durumda `dumpsys meminfo` (ana ekran, editör, PDF, kalem, YouTube) → `docs/perf/` | 16K §2.5 | evet (tablet) |
-| PL13 | **[x] 2026-11-18 (P73)** kod tarafı: bayrak çeşidi (flavor değil; kişisel APK yolu/kimliği aynı), Play paket adı env'den (yoksa durur), `src/release/google-services.json` + `DefaultFirebaseOptions.play` (`env_play.json`), `AppLinks`, CI `play` işi + Play kural yayını PLAY_* Secrets yoksa atlanır. Sabah bakılacak: paket adı, 2. Firebase projesi, yükleme anahtarı, Secrets, kısayol `targetPackage`. Ayrı Play altyapısı (kod tarafı): tek kod tabanı, derleme çeşidi `kisisel`/`play`; çeşide göre Firebase yapılandırması (`google-services.json`, `firebase_options` çifti), web sitesi adresi, gizlilik/silme sayfası adresi, `env` ayrı; CI'da iki imza + iki kural yayını (`firebase deploy --project`); `rules-test` iki proje için aynı kurallar; sırlar GitHub Secrets'ta ayrı adlarla | ek kararlar | hayır |
-| PL14 | **[x] 2026-11-18 (P71)** altyapı: `entitlements/{uid}` kuralı + rules-test, `EntitlementService` (yalnız Play'de etkin), deneme tetikleyicisi TASLAĞI, PL6 sözleşmesi; Pro özellik listesi sabah bakılacak. Hak (entitlement) altyapısı: `entitlements/{uid}` sunucuda doğrulanmış satın almadan, kurallar + `rules-test`, web/Android aynı kapı, 7 gün deneme, Pro bitince ekler okunur + "Drive'a taşı" | ek kararlar | hayır |
-| PL15 | **[~] 2026-11-18 (P69)** "Geri bildirim gönder" (mailto); Crashlytics yeni Firebase projesine bağlı. Çökme takibi (Crashlytics, KONTROL 28) + destek e-postası + uygulama içi "Geri bildirim gönder" | 16K §8 | hayır |
-| PL12 | **[x] 2026-11-17 (P66)** `frame_timing_log.dart`, profil/`NOTLAR_HIZ_GUNLUGU` derlemesinde Ayarlar'da; cihazda bakılmadı. Uygulama içi hız günlüğü (profil/beta derlemesinde `FrameTiming`, Ayarlar → Hakkında) | 16K §2.7 | hayır |
+#### Katman 1 — Mağaza Kipi v2 (Tek Elle, Sıfır Sürtünmeli Market Deneyimi)
+- **Canlı Reaktif Veri:** `StoreModeScreen` statik liste kopyası yerine doğrudan `noteByIdProvider(noteId)` dinler → ortak alışverişte eş zamanlı güncellenir.
+- **Görsel Reyon Başlıkları + Hızlı Atlama Çubuğu:** Üstte yatay kayan mini reyon çipleri (`🥬 Manav (4)`, `🥛 Süt (3)`, `🥩 Kasap (2)`). Dokununca o reyona zıplar; tüm ürünleri alınan reyon otomatik soluklaşıp alta/katlanmaya iner.
+- **Ekranı Açık Tut (`FLAG_KEEP_SCREEN_ON`):** Android'de yerel bir 5 satırlık MethodChannel (`MainActivity.kt` → `window.addFlags(FLAG_KEEP_SCREEN_ON)`) ile Mağaza Kipi açıkken ekran kararmaz (yeni paket gerekmez!).
+- **Satır İçi Hızlı Kontroller:**
+  - Dokun → **Sepete At ✓** (hafif titreşim + ilerleme/sepet toplamı güncellenir).
+  - Sağda kompakt **`− 2 kg +`** adım düğmesi (klavye açmadan miktar değiştir!).
+  - Sola kaydır → **"Yoktu / Sonraya Bırak ⏳"** (alışverişi bitirince silinmez, sonraki listeye otomatik taşınır).
+  - Sağa kaydır → **"₺ Fiyat Gir"** (sayısal mini klavye; tek rakamla sepet toplamını günceller).
+  - Altta yazı alanının yanında **Mikrofon 🎤** + **Barkod 📷** düğmeleri!
+- **Alışveriş Bitiş Özeti:** *"Alışverişi Bitir"* → alınanlar harcama geçmişine kaydedilir, "Yoktu" işaretliler yeni listeye kalır, tek tıkla Geri Al sunulur.
 
-**Senin işlerin (Play):** yeni Google hesabı → yeni Firebase projesi (Blaze + bütçe tavanı) → Play geliştirici hesabı (kişisel, 25 $) → alan adı + yeni web sitesi; ayrıca mali müşavir (GVK 20/B istisnası), Syncfusion
-Community lisansını al, uygulama simgesinin haklarını teyit et, alan adı, 12 test kullanıcısı bul.
+#### Katman 2 — Türk Marketlerine Özel Bütçe, Fiyat Hafızası ve Çoklu Market (`@BİM`, `@Migros`, `@Pazar`)
+- **Geriye Uyumlu Veri Modeli ([`note_item.dart`](lib/features/notes/domain/note_item.dart)):** Mevcut `NoteItem.extras` mekanizması eski sürümleri bozmadan yeni alanları taşır:
+  - `q` (sayısal miktar), `u` (standart birim: `adet`/`kg`/`g`/`lt`/`ml`/`paket`/`demet`), `p` (tahmini/girilen birim fiyat ₺), `s` (market etiketi: `bim`/`a101`/`sok`/`migros`/`pazar`...), `st` (durum: `0` alınacak / `1` sepette / `2` yoktu-sonraya), `g` (reyon kimliği), `by` (ortak listede kimin aldığı).
+- **Market Süzgeci & Özel Reyon Sırası:**
+  - Liste üstünde market çipleri: `Tümü · BİM · Migros · Pazar`. BİM'e girince sadece BİM'e atanan + marketi belirsiz ürünler görünür!
+  - Kullanıcı "Bu marketin reyon sırasını düzenle" diyerek kendi mahallesindeki BİM veya Migros'un gerçek yürüyüş sırasını sürükleyip kaydedebilir.
+- **Canlı Sepet Bütçesi & Fiyat Hafızası (Yerel SQLite/D1):**
+  - Kullanıcı bir ürüne bir kez fiyat girdiğinde (ör. `Süt 38 ₺`) uygulama bunu **ürün + market** bazlı yerel fiyat geçmişine kaydeder.
+  - Sonraki hafta listeye `2 süt` eklediğinde otomatik **`~76 ₺`** tahmin gösterir ve üstte **`Sepet: 640 ₺ / Tahmini Toplam: 1.120 ₺ (Bütçe: 1.500 ₺)`** çubuğu çalışır!
+  - *"Geçen sefer BİM'de 35 ₺, Migros'ta 42 ₺ idi"* mini ipucu — enflasyonda kullanıcıyı her hafta uygulamaya döndüren en somut fayda!
+- **Fiş Fotoğrafından Sıfır Maliyetli Fiyat Güncelleme:** Zaten pakette olan ücretsiz **ML Kit OCR** ile market fişini çek → yerel regex/satır eşleştirici fişteki ürün-fiyat çiftlerini listedeki alınan ürünlerle eşleştirip fiyat hafızasını tek dokunuşla günceller (**\$0 AI maliyeti!**).
 
-**Faz içinde açılacak fikirler (1.4 fazlarına bağlandı):** hızlı ekle ulaşılabilirlik — başlatıcı
-kısayolu, 1×1/4×1 ana ekran aracı, hızlı ayar karosu, paylaşımda "Nota ekle", metin seçim menüsü,
-`notlar://ekle` (16K §1.4 A) → 1.4/3; akıllı liste kademe 2 (`listKind`, reyon görünümü, "Alışverişi
-bitir", miktar) ve kademe 3 (düzeltmeden öğren, AI ile sınıflandır, yeni türler, mağaza kipi, liste
-aracı) (16K §3.3) → 1.4/4; cihaz içi Gemini Nano katmanı, özet önbelleği, haftalık geri bakış
-bildirimi, akıllı gelen kutusu, hatırlatıcı önerisi (16K §5.4) → 1.4/6; "Konuş, gerisini o yapsın"
-tek giriş = HE-4.
+#### Katman 3 — Sıfır Sürtünmeli Ekleme (Barkod + "Bitmek Üzere" Izgarası + Türk Mutfağı Tarifleri)
+- **Barkod Okuma (`mobile_scanner` zaten `pubspec.yaml`'da!):**
+  - Evde biten deterjan/kahve/makarna kutusunu okut → önce yerel barkod önbelleği, yoksa ücretsiz **Open Food Facts API** (`https://world.openfoodfacts.org/api/v2/product/<ean>.json?fields=product_name_tr,product_name,brands,quantity,categories_tags`) → ürün adını + gramajını + reyonunu otomatik doldurur; ilk kez okutulan yerel bir barkodsa kullanıcı adını bir kez yazar ve cihaz sonsuza kadar hatırlar!
+- **Bring! Tarzı "Bitmek Üzere / Sık Alınanlar" Görsel Paneli:**
+  - Mevcut [`quick_entry_memory.dart`](lib/features/notes/data/quick_entry_memory.dart) içindeki `predictDue()` motoru görünür bir karta taşınır:
+    - *"Bitmiş olabilir (genelde her 4–5 günde bir): `[+ Süt]` `[+ Yumurta]` `[+ Ekmek]` `[+ Domates]`"*
+    - Tek dokunuşla listeye eklenir; 24 saat içinde eklenmezse sessizce gizlenir.
+- **Hazır Türk Mutfağı Öğün/Tarif Paketleri + Kendi Tariflerin (%100 Cihaz İçi):**
+  - Dahili 15–20 yaygın Türk öğün paketi (*Haftalık Temel Alışveriş, Pazar Kahvaltısı, Menemen, Mercimek Çorbası, Karnıyarık, Makarna/Sos, Mangal, Misafir Çayı, Hasta/Çorba Paketi*) + kullanıcının kendi sık yaptığı yemekleri kaydetmesi.
+  - Kişi sayısı kaydırıcısı (`2 / 4 / 6 kişi`) → miktarları orantılı çarpar, evde zaten olanların tikini kaldırıp tek tuşla mevcut alışveriş listesine **birim dönüştürerek birleştirir** (`500 gr kıyma + 250 gr kıyma = 750 gr kıyma`, `500 gr + 1 kg = 1,5 kg`)!
+- **Türkçe Doğal Miktar & Birim Motoru (`quick_entry.dart` Yükseltmesi):**
+  - `"yarım kilo beyaz peynir, çeyrek kangal sucuk, bir buçuk litre süt, iki demet maydanoz, 300 gram kaşar"` → tam ayrıştırma + aynı üründe `g ↔ kg` ve `ml ↔ lt` otomatik toplama!
 
-### 1.6 Pro AI sadeleştirme + iyileştirme (faz AI-S) — KARAR (kullanıcı, 2026-11-17 gece)
-"Yalnız işe yarayanlar kalsın, onlar da iyileşsin." Bugün ~30 AI yeteneği var (`gemini_service.dart`).
-**Kalan 8 ana yetenek** (her biri tek yerden açılır; ✨ levhası 3 bölüm: Yaz · Sor · Dönüştür):
+#### Katman 4 — Decisions API ile Gerçek Otomatik Öğrenme
+- Sözlüğün ve kullanıcı hafızasının tanımadığı ürün eklendiğinde (50 TL Tam Sürüm'de):
+  - Arka planda sessizce `shopAisle` (`gemini-decision-1`, ~250 jeton = \$0,000025) çağrılır.
+  - Yüksek güvende (`confidence >= 0.75`) doğru reyona yerleştirilir ve **kalıcı olarak kullanıcının `itemGroups` hafızasına kaydedilir**.
+  - Aynı kullanıcı (hatta anonim/topluluk sözlüğü genişlemesiyle tüm yeni sürümler) o ürünü bir daha hiç sormadan anında tanır!
 
-| # | Yetenek | Birleşenler (bugünkü işlevler) | İyileştirme |
-|---|---|---|---|
-| A1 | **Notlarına sor** (kaynaklı sohbet: tüm notlar / bu not / bu belge) | `assistantChat`, `chatAboutNote`, `askAboutNoteText` (notta ara), `outlineNote` + `brainstormAboutNote` → sohbet öneri çipi | Dahili kipte de anlamca getirme (bugün kelime örtüşmesi), her yanıtta kaynak çipi, "Bildir" |
-| A2 | **Kayıttan not** (ses/toplantı/ders → özet + yapılacaklar + hatırlatıcı önerisi) | `transcribeAudio`, `transcribeMedia` + özet | Tek akış: döküm → özet → maddeler → "hatırlatayım mı?"; uzun kayıt parçalı |
-| A3 | **Konuş, gerisini o yapsın** (tek cümle → doğru türde not/madde/hatırlatıcı/takvim) | `assistantVoiceNote`, hızlı ekle AI yedeği `pickDropTarget` | HE-4 tek giriş ile aynı iş; önce cihazda ayrıştır, AI yalnız gerekince |
-| A4 | **Belgeye sor** (PDF/slayt/belge) | `summarizePdf`, `summarizeDocumentText`, `chatWithPdf` | Özet = ilk önerilen soru; sayfa numaralı kaynak |
-| A5 | **Fotoğraftan yapılı not** (tahta, fiş, kartvizit, el yazısı) | `extractTextFromImage`, `askAboutImage` | Önce cihazda OCR (ücretsiz), AI yalnız yapılandırmaya (başlık + maddeler) |
-| A6 | **Yazıyı iyileştir** (düzelt · yeniden yaz · kısalt/uzat · resmî/samimi · çevir) | `rewriteText`, düzeltme seviyeleri, `translateText` | Tek menü, önce/sonra önizleme + geri al; yazım v3 ile çakışmasın |
-| A7 | **Özet** (kısa/ayrıntılı tek düğme, uzunluk anahtarı) | `summarizeNote` | Not değişmediyse önbellekten (içerik özetiyle anahtar) |
-| A8 | **Sessiz düzen** (başlık, etiket, kopya not önerisi; tek istekte toplu) | `generateTitle`, `suggestTags`, hub "etiketle / başlık öner / kopyalar" | Toplu tek istek; kopya bulma cihazda (AI'sız) |
-| + | **Çalışma kartları** | `generateStudyCards` | kalır (kullanıcı) |
-| + | **Günün/haftanın özeti** | `composeBriefing` + haftalık özet | tek ekran, tek bildirim (pazar akşamı haftalık) |
+#### Katman 5 — Canlı Aile / Ev Arkadaşı Alışveriş Koordinasyonu
+- Paylaşılan alışveriş listesinde tek dokunuş **"🛒 Marketteyim"** düğmesi → listenin diğer üyelerine tek push bildirim: *"Fatih şimdi markette — eksik varsa listeye ekle."*
+- Herkes aynı anda ekleme/işaretleme yapabilir; Cloudflare Durable Object / hızlı senkron sayesinde aynı ürünü iki kez alma sorunu biter.
 
-**Play'den kalkanlar (kişisel APK'da kalabilir):** podcast + Gemini seslendirme (`podcastScript`, `speech`;
-sistem sesiyle okuma ücretsiz kalır), video → not (`noteFromVideo`, `videoNoteExcerpt`), e-postadan not
-(`fromEmail`, Gmail zaten kapalı). **Tümden kalkanlar:** "Notu analiz et" (`analyzeNote`, belirsiz → A1'e
-devreder), çöp kutusu AI derin analizi (`analyzeTrash`; cihazdaki kurallar kalır), arşiv içgörüsü
-(`summarizeArchive`), ayar aramada AI (`matchSettings` → yerel arama), ölü kod `tidyCapture`.
+---
 
-**Durum 2026-11-21 (P96):** **Günün/haftanın özeti** [x] — `BriefingScreen` tek ekranda **Günlük | Haftalık** geçişiyle birleştirildi (`weeklyBriefingProvider`, `buildWeeklyBriefingInput` kilitli not sızdırmadan son 7 gün + gelecek 7 gün, `composeWeeklyBriefing`; `p96_weekly_briefing_test.dart`; cihazda doğrulanmadı).
-**Durum 2026-11-21 (P95):** A2 [x] **Kayıttan not** — `TranscriptScreen` üst şeridinde tek dokunuşla **Özet ve görevler** levhası (`summarizeTranscript`, uzun kayıtlarda `chunkTranscriptText` ile parçalı ara özet + `parseRecordingTakeaways`), **Özet** + **Yapılacaklar** + **"Hatırlatayım mı?"** (`parseSpokenDateTimeNow` → tek dokunuşla `showTaskEditor`), **Özeti nota ekle / Yeni not olarak** (`p95_recording_takeaways_test.dart`; cihazda doğrulanmadı).
-**Durum 2026-11-21 (P94):** A4 [x] **Belgeye sor** — PDF sohbetinde **Özetle** ilk önerilen soru (`_DocumentSuggestions`: Özetle · Ana noktalar · Tarih ve görevler), `chatWithPdf` isteminde `[s. N]` sayfa atfı zorunluluğu ve yanıtlarda `extractPdfPageCitations` + `_PageCitationChips` sayfa kaynak rozetleri (`p94_ai_document_chat_test.dart`; cihazda doğrulanmadı).
-**Durum 2026-11-21 (P93):** A5 [x] **Fotoğraftan yapılı not** (önce ücretsiz cihaz içi `ScanOcr.recognizeImageText`, metin yeterliyse görsel baytı yüklemeden `GeminiService.structureOcrText` + `parseStructuredOcrNote` ile başlık + maddeler/tür önerisi; boşsa görsel yedeği), A6 [x] **Yazıyı iyileştir** tek birleşik menü (Düzelt · Yeniden yaz · Kısalt · Uzat · Resmî · Samimi · Liste/Sıralı · Çevir çipleri) + `_ResultView`'da **Önce / sonra** karşılaştırma önizlemesi (`p93_ai_write_and_photo_note_test.dart`, S54 korundu; cihazda doğrulanmadı).
-**Durum 2026-11-21 (P89):** AI-S3 [x] eski Soru-cevap/Beyin fırtınası çipleri + `_OutlineBar` kalktı (`ai_chat_screen.dart`), A7 [x] not özetinde tek dokunuşla Kısa/Ayrıntılı anahtarı + içerik özetiyle önbellek (`gemini_service.dart`, `ai_sheet.dart`), A8 [x] tek istekte toplu **Sessiz düzen** (`batchQuietOrganize` + `quiet_organize_sheet.dart` + tek Geri Al + hub kısayolu; `ai_p89_test.dart`, S54 `{govde_kurulum: 0, levha_kurulum: 1}`; cihazda doğrulanmadı).
-**Durum 2026-11-18 (P72):** AI-S2 [x] ✨ levhası 3 bölüm — Yaz (sesli not, Düzelt, Geliştir, Çevir) · Sor (Sohbet, PDF'e sor) · Dönüştür (Özet, PDF/slayt özet+dinle, metin tanı, döküm); `PlayBuild` kapısı gerekmedi (levhada Play'den kalkan yetenek yok); bütçe S54 (gövde 0, levha kökü 1). AI-S2 ekleri **[x] 2026-11-19 (ccr-1122edca)**: notla sohbette öneri çipleri Ana hat · Fikir ver · Eksikleri bul (boş sohbette; Fikir ver beyin fırtınası kipinde; `ai_chat_suggestions_test`), Play'de tek motorlu ses seçicisi gizli (`showTtsEnginePicker`, `play_build_test`).
-**Durum 2026-11-18 (P68):** AI-S0 [x] (set `tool/ai_altin/`, taban koşusu GEMINI_API_KEY bekliyor), AI-S1 [x] (5 yetenek kalktı, Play'den kalkanlar `PlayBuild` kapısında). AI-S2'ye ek: Sohbet öneri çipleri (Ana hat / Fikir ver / Eksikleri bul), Play'de tek seçenekli ses seçicisini gizle.
+## 7. Bölüm F — Ek Yüksek Kaldıraçlı İyileştirmeler (Ürünü Zirveye Taşıyacak Ekler)
 
-**Sıra:** AI-S0 Türkçe altın örnek seti (her yetenek için 10–20 girdi + beklenen çıktı ölçütü, kalite
-puanı; değişiklikten önce/sonra) → AI-S1 kaldır/birleştir (Play bayrağıyla, kişisel APK'yı bozmadan) →
-AI-S2 ✨ levhası 3 bölüm (kasma-kontrol + bütçe senaryosu) → AI-S3…S10 yetenek başına iyileştirme, her
-biri altın setle ölçülerek. PL2 korumaları ve PL3 rıza/"Bildir" ile birlikte Play fazında.
+Planı sadece eksikleri yamayan değil, **mağazada öne çıkan** bir ürüne çevirecek 6 ek hamle:
 
-### 1.7 Kullanıcı istekleri (2026-11-18, sohbette açıkça istendi — zincire hazır)
-| No | İstek | Not | Cihaz |
-|---|---|---|---|
-| U1 | [~] Kaydırma jestleri ayarlanabilir: üstten çekme (bugün klasörler) ve soldan sağa çekme (bugün takvim) Ayarlar'dan seçilsin — klasörler / takvim / belirli bir not / belirli bir klasör / hiçbiri | varsayılan bugünkü davranış. **Durum 2026-11-18 (P74, dal oto/P74-jest-takvim-web):** yazıldı — Ayarlar → Notlar iki satır (`home_pull_gesture`, `home_swipe_right_gesture`, eşitlenen ayar); eski "sağa kaydırınca takvim" kapalıysa "hiçbiri"; "hiçbiri" = sağa çekiş klasör gezisine döner (sabah bakılacak: tümden kapatma isteniyorsa); cihazda A/B yok | A/B (ana ekran) |
-| U2 | [~] Editör üst paneli düzenlenmeli (geri · yazım · B · renk · ⋮ · geri al/yinele · ara · ⋮ kalabalık; telefonda sadeleştir, sık kullanılan öne) | `istek_tara.py` önce. **Durum (P75, 2026-11-18):** hızlı satırın taşması ⋯ (notun ⋮'siyle karışmıyor). Telefonda "sığan kadarı satırda, gerisi ⋯" denendi: `LayoutBuilder` klavye hareketinde satırı yeniden kuruyor, S17/S45/S50 bütçeleri %30–90 aştı → alınmadı; ölçüyü `MediaQuery.sizeOf`'tan alan sürüm sabah bakılacak. **2026-11-19: yapılmadı** — satır AppBar başlık yuvasında, eylem sayısı (yinele, ara, ⌨) duruma göre değişiyor; ekran genişliğinden tahmin ya kırpar ya boş bırakır, editör üst çubuğu ölçüm kapısında (cihaz A/B şart). Ara (11-16 isteği) ve yazarken geri al/yinele (11-08) yerinde | A/B (editör) |
-| U3 | [x] **Bug:** defter kipinde sayfa geçişi jestleriyle (kaydırma/seçim) karışıyor | **Durum (P75, 2026-11-18):** kök neden ham `Listener` jest yarışına girmiyor, başka işin kullandığı hareketi de çekiş sayıyordu; dokunuşta kaydırma bildirimi / odaklı alanın seçim değişimi / basılı kalem-fare imleci çekişi geçersiz kılar (`page_swipe_test` 3 yeni senaryo, eski kodda kırmızı). Cihazda doğrulanmadı | A/B |
-| U4 | [x] Zamana/güne bağlı notlar, hatırlatıcılar vb. ana ekran takvim şeridinde ve tam takvimde görünsün | **2026-11-18 (P74):** hatırlatıcılar ve tarihli maddeler (görev) zaten vardı; eksik olan ZAMANLI NOT (`expiresAt`) eklendi — arşivlenme gününde "Arşivlenir" satırı, sürükleme/silme `expiresAt`'e dokunur (yeni Firestore alanı yok) | hayır |
-| U5 | [x] **Bug:** alttaki bildirimin geri sayım çubuğu takılarak ilerliyor; kesintisiz akmalı (tek AnimationController/doğrusal, kare kaçırmadan) | **Durum (P75):** kök neden `Timer.periodic` saniyede 8 adım, vsync'e bağlı değil; şimdi tek `AnimationController`, yalnız boyama (kurulum yok; `countdown_smooth_test`). Bildirim açıkken uygulama artık her kare çizer (11-16 "bildirim varken kasma" ödünleşimi) → cihazda A/B | A/B |
-| U6 | [x] Telefonda alt paneldeki 5 düğme → 4; en sağdaki "⋮" (ya da benzeri) küçük açılır pencerede kalanları gösterir | tablette 5 kalabilir. **Durum (P75):** telefonda ilk üç + ⋯ (`kEditorBarPhoneSlots`), tablette/düzen kipinde hepsi (`editor_bar_overflow_test`) | A/B (alt çubuk) |
-| U7 | [x] Metin seçim menüsü (Kes/Kopyala/Yapıştır/Biçim…/Ek göm/⋮) düzenlensin: **Tümünü seç** yok → eklensin; en çok kullanılanlar önde (seçim sırasında) | **Durum (P75):** Kopyala · Kes · Yapıştır · Tümünü seç önde, sonra Biçim/Ek göm (Tümünü seç önceden ⋮'ye düşüyordu); başlık alanı da aynı sırada | hayır |
-| U8 | [x] **2026-11-22 (b903c122) kota da yazıldı:** `functions/decisions.js` `decide` vekili (Pro ayda 500, ömür boyu bir kerelik 1000, paket), kurulum `docs/play_hazirlik.md` + KONTROL 24b; cihazda/Play'de doğrulanmadı. Gemini Decisions API'yi geniş kullan (çıktı ücretsiz, çok hızlı): başlık önerisini doğrulat (kendi algoritmamız ya da AI başlığı "doğru mu?" → hayırsa yeni başlık), hızlı eklede yazım düzeltmesini doğrulat, şablon/hızlı ekle içi kararlar, uygulama içi evet/hayır soruları; beyin fırtınası + ek öneriler | `docs/plan_decisions_api.md` · **2026-11-18 (P76, dal oto/P76-decisions):** DA-E1 servis + bayrak, DA-1 hızlı ekle hedefi, DA-2 etiket öner çipinde sessiz düzen, DA-13 başlık doğrulama, DA-14 hızlı ekle yazım doğrulama, DA-E0 altın set + canlı ölçüm; bayraklar (`aiDecisionsFeatures`/`aiDecisionsShadow`) VARSAYILAN KAPALI → kullanıcıya görünür değişiklik yok; açma kararı gölge ölçümünden sonra (sabah bakılacak) · **2026-11-22: kullanıcı kararıyla `dropTarget`/`noteTriage`/`titleOk` varsayılan CANLI** (`AiDecisionsFlag.defaultLive`; `spellFixOk` kapalı) · **KARAR (kullanıcı, 2026-11-22) — Decisions kotası (ayrı iş, YAPILMADI):** Play ücretsiz = yok · Pro abonelik (aylık ~10 TL) = dahili anahtarla **ayda en çok 500 karar** · ömür boyu/tek seferlik (~50 TL) = **bir kerelik toplam 1000 karar** (aylık yenilenmez; bitince aboneliğe geçer ya da karar paketi satın alır — Play tüketilebilir ürün) · kendi Gemini anahtarı (ömür boyu + Pro) = sınırsız, sayaç yok · dahili anahtar YALNIZ sunucuda (Functions gizli anahtarı / Firebase; istemciye inmez), sayaç sunucuda `entitlements`/kullanım belgesinde, kota dolunca sessizce eski yol · maliyet tavanı: Blaze bütçe uyarısı + kill switch; kişisel APK/web kapısız | hayır |
-| U9 | [x] **2026-11-19 (v1.2.93)** "+" panelinde Metin notu · Liste · Sıralı liste en üste | `quick_add_fab.dart`, reverse kaydırma kalktı | A/B (ana ekran) |
-| U10 | [x] **2026-11-19 (v1.2.93)** Alt çubuk ⋯: eksik düğmeler (gizli/optIn) de menüde + menü içi **Düzenle** (📌 çubuk/menü, sürükle-sırala) | `editor_bar_more_menu.dart`, `docs/hafiza/editor.md` 2026-11-19 | A/B (alt çubuk) |
-| U11 | [x] **2026-11-19 (v1.2.93)** "Menüyü düzenle" ayrı levha yerine menü üzerinde: basılı tut-sürükle, ⊖/⊕, ☆ hızlı satır | `action_menu_sheet.dart` `_EditableMenu` | A/B (⋮ menü) |
-| U12 | [x] **2026-11-19 (v1.2.93)** Yazarken üst çubuk: Notta ara gizli, yinele yalnız geri alınmışken (S45 174 korundu) | U2'nin parçası; kalan U2 (hızlı satır `sizeOf` sığdırma) açık | A/B (üst çubuk) |
-| U13 | [x] **2026-11-19 gece (ccr-e8813ece)** Parmak için Otomatik (kalem görüldüyse kaydırır, görülmediyse çizer) | `FingerTool.auto` varsayılan, açık seçim korunur; `docs/hafiza/kalem.md` | hayır |
-| U14 | [x] **2026-11-19 gece** Hızlı menüye eklenen Onay kutusu liste notunda görünmüyordu (bug) | kök neden `onCheckbox` yalnız metin notunda; levha "bu notta görünmez" der; `editor.md` | A/B (üst çubuk) |
-| U15 | [x] **2026-11-19 gece** Alt çubukta sol ↔ sağ (renkli) grup arası taşıma | ⋯ Düzenle »/«, `withBarSide` | A/B (alt çubuk) |
-| U16 | [x] **2026-11-19 gece** Menü düzeni "Tümüne uygula / Yalnız bu nota" + sıfırla | yerel `note_ui_layout_v1`, Firestore yok; yan yana iki not sınırı sabah bakılacak | A/B (editör açılışı) |
-| U17 | [x] **2026-11-19 gece** **Bug:** kontrol listesinde dikte + "yeni madde" maddeyi çoğaltıyordu | kök neden `\n` madde alanına yazılıp her ara sonuçta bölünüyordu; `ai_ses.md` | hayır |
-| U18 | [x] **2026-11-19 akşam 2 (ccr-e8813ece)** ⋯ Düzenle alt çubuğu örtüyordu → çubuğun üstünde, boyu sınırlı, içi kayar | `editor_bar_more_menu.dart`, bekçi `editor_bar_overflow_test` 412/360 dp | A/B (alt çubuk) |
-| U19 | [x] **2026-11-19 akşam 2** Çizim sırasında akıllı kalem ↔ silgi hızlı düğmesi (saydam, çizgi bitince sol üstte, 3 sn'de solar; ayar) | `InkQuickSwapButton`, bütçe S55; `docs/hafiza/kalem.md` | A/B (kalem gecikmesi) |
-| U20 | [x] **2026-11-19 akşam 2** Hızlı ekle (ana ekran ⚡) hatası: uygun not yokken çıkmaz sokak (H11) → yeni not; H3 belge düzeltildi | 17K §4.1; T4 kalanı H1 (sessizlik zamanı), H11 "her zaman Yeni not çipi" açık | hayır |
-| U21 | [x] **2026-11-19 gece 2** Kalem ↔ silgi hızlı düğmesi "rastgele dolaşıyor, bazen çok uzakta" → yapışkan yer, tek kural (sol üst, kenara kıstır) | `inkQuickSwapPlace(previous:)`; `kalem.md` | A/B (kalem gecikmesi) |
-| U22 | [x] **2026-11-19 gece 2** Hızlı ekle açıkken klavye kasması + iyileştirme: tuşta çip şeridi kurulmaz (S56), mikrofon animasyonlardan sonra, yazınca dinleme kesilir (yazılan silinmiyordu bug'ı), "Yeni not" çipi | `editor.md` | A/B (klavye) |
-| U23 | [x] **2026-11-19 gece 2** Balon düğmesi önce "Balon mu metin mi" soruyordu (kart da soruyor) → tek dokunuş | `PinnedMediaPane._addBubbleButton` | hayır |
-| U24 | [x] **2026-11-19 gece 2** Web: kullanıcının bilgisayarında seçim hâlâ tarayıcı yazı tipinde → gizli alan fareli cihazda opacity 0 (Playwright'ta üretildi/doğrulandı) | `web.md` | hayır |
-| KW-11 | [x] Kalem kipinde Ctrl+Z çizgiyi geri almıyor (`docs/kesif_web_2026-11-18.md`) | **Durum (P75):** üç kök neden — odak rota kapsamındayken kısayol ulaşmıyordu (odaksız `HardwareKeyboard` işleyicisi), geri alınan çizgi canlı denetleyiciye eşitlenmiyordu, çizgiler 900 ms'de birleşiyordu (her çizgi ayrı adım). `editor_pen_tablet_test` | hayır |
+1. **Ayarlar ve Özelleştirme Sadeleştirmesi (127 Ayar → 25 Temel + Gelişmiş):**
+   - 56 tekil `UiItem` karmaşası yerine kullanıcıya ilk açılışta veya Ayarlar'da **3 hazır profil** sun:
+     - **Sade** *(Günlük hızlı not & alışveriş — temiz ekran)*
+     - **Standart** *(Tüm araçlar dengeli)*
+     - **Tablet & Kalem** *(Bölünmüş görünüm, kalem tepsisi ve PDF ön planda)*
+   - İleri kullanıcı isterse yine "Gelişmiş Özelleştirme" altında ince ayar yapabilsin.
+2. **8 Android Widget → 3 Kusursuz Widget:**
+   - **(1) Akıllı Alışveriş / Liste Widget'ı** *(doğrudan ana ekrandan madde tikleme + kalan sayaç + `+` / 🎤)*
+   - **(2) Hızlı Ekleme Çubuğu** *(tek satır: Yaz · Ses · Kamera/Barkod · Yeni Not)*
+   - **(3) Bugün & Sabit Notlar** *(günün hatırlatıcıları + sabitlenmiş notlar)*
+3. **İlk 60 Saniye "Vay Be" Akışı (Onboarding):**
+   - Boş ekran + "Notların yedeklenmiyor" soğuk uyarısı yerine ilk açılışta **2 hazır etkileşimli başlangıç notu**:
+     1. *"🛒 Örnek Market Listesi"* (3 reyonlu, hemen "Mağaza Kipi'ni dene" rozetiyle)
+     2. *"⚡ Hızlı Başlangıç"* (3 maddelik: sesle ekle, belge tara, defterde çiz)
+   - Misafir yedekleme uyarısı 1. not yazılmadan değil, **kullanıcı 3. notunu oluşturduğunda** kibar tek satırlık bir şerit olarak çıksın (dönüşümü ve ilk izlenimi dramatik artırır!).
+4. **RAM & Pil Diyeti (<220 MB PSS Hedefi):**
+   - Ağır `firebase_ai` + ONNX + Gmail kalkması + PDF sayfa bitmap havuzuna sıkı tavan + 4 GB RAM'li cihazlarda arka planda görsel önbellek boşaltma + `prefs_sync.dart` 20 sn polling → dirty-write.
+5. **Marka Adı & Play Konumlandırması:**
+   - Jenerik *"Notlar"* yerine akılda kalıcı, Türkçe veya evrensel kısa bir marka adı (ör. *Teke*, *Pano*, *Defterce*, *Notix*, *SepetNot*, *Kare*, *Kayıt* vb. — marka/domain müsaitliği kontrol edilerek) + tek net vaat:  
+     > **"Reklamsız, aboneliksiz akıllı defter ve market listesi — Türkçe sesle ekle, reyon ve bütçeni yönet, PDF üstüne kalemle yaz."**
+6. **Ölçülebilir Geliştirme (Rızalı, Kişisel Verisiz Kullanım Sayacı):**
+   - Kullanıcı onayıyla Cloudflare Worker'a günde en fazla 1 anonim özet (hangi özellikler tıklandı — not içeriği ASLA gitmez). 30 gün sonunda %1'in altında kullanılan özellikleri güvenle budayıp uygulamanın hızını korursun.
 
-## 2. Önceki açık işler (P22 listesi, aynen)
+---
 
-### (A) Kullanıcının yapacakları → `KONTROL_LISTEM.md`
+## 8. Uygulanabilir 6 Fazlı Ana Çalışma Planı (Sıralı & Bağımlılık Haritalı)
 
-- Cihaz turu: telefon / tablet / web (KONTROL 1–23) — F69.1, F63.7, F67.8, F19.C1, F19.C2, F19.C4–C6, YORUM F55.5, KALANLAR §2 (C–L, P22, P45)
-- Yeni cihaza geçiş + tam yedek geri yükleme (KONTROL 1) — F69.2, F19.A4, YORUM F54.4
-- Liste maddesi "Boş madde"ye dönüyor, kanıt bekliyor (KONTROL 2) — KALANLAR veri kaybı 2026-11-01, cihaz turu A4
-- Hatırlatıcı güvenilirliği cihazda (KONTROL 4) — F69.3, YORUM F56.2
-- Konsol: AI bütçe/kota (24) F19.A1 · sunucu yedeği (25) F19.A5 · Calendar/Tasks API (26) F19.B10 · masaüstü OAuth (27) KALANLAR J0 · Crashlytics (28) F19.B4, YOL_HARITASI · Drive API + Functions (29) F19.B2, F19.B3 · minClient (30) F19.B1, F61.7 · App Check (31) F19.A2, F19.D2
-- Test misafir hesabını sil — F19.C7
-- PPTX portu için depo izni — F19.B8, F18.20
-- Hız ölçüm tabanı yenilensin mi (KONTROL 40) — HIZ F81.2, F81.4 (P43/P55/P59/P20 sabah bakılacakları)
-- Kararlar (KONTROL 32–39) — K-O12/F67.6, K-O3/F61.7, K-O4/F62.6, F63.6, K-O8/F65.3, F69.3 ipucu, F66.5, HIZ F83.3
+```mermaid
+flowchart LR
+    F0["Faz 0: Konsol & Acil P0 Yamalar (2-3 Gün)"] --> F1["Faz 1: AI Budama & Decisions Çift Kilit (4-5 Gün)"]
+    F1 --> F2["Faz 2: Cloudflare Sync + Billing + Decisions Worker (1,5-2 Hafta)"]
+    F1 --> F3["Faz 3: Gerçekten Akıllı Alışveriş Listesi v2 (1,5-2 Hafta)"]
+    F2 --> F4["Faz 4: Çoklu Platform Cilası, Sadeleştirme & E2EE (1 Hafta)"]
+    F3 --> F4
+    F4 --> F5["Faz 5: Gerçek Cihaz Turu & 41 Madde Eritme (1 Hafta)"]
+    F5 --> F6["Faz 6: 12 Kişilik Kapalı Test & 50 TL Play Lansmanı (2+ Hafta)"]
+```
 
-### (B) Bekletilenler / park
+*(Not: Faz 2 [Cloudflare arka ucu] ve Faz 3 [Akıllı Alışveriş Listesi] dosya olarak neredeyse sıfır çakışmalı olduğu için paralel ya da art arda güvenle yürütülebilir.)*
 
-- Mürekkep v2 YAZMA + tembel göç + kurallar — K-O2/K-O3 kapısı (F61.0 (b)(c) cihaz ölçümü yok) — F61.0, F61.4, F61.6, F61.7, F61.8
-- Kalem raster karoları + görüntüye fırınlama — F62.0 cihaz ölçümü kapısı — F62.0, F62.3, F62.4
-- Kalem gecikmesi ölçümü (240 fps) — cihaz — F62.6 (ölçüm), YORUM F54.1
-- Açılış süresi kalanı (motor + Activity) — kod işi yok — F68.5
-- Vulkan'lı cihazda ölçüm — cihaz yok — AKICILIK F27.3, F19.F4
-- Kart dizini + gövde ayrı belge (senkron yükü) — KARAR B, veri göçü güvenlik şartlı — AKICILIK F22.4, YORUM F54.3
-- ~~Play'e çıkış~~ → 1.4/5'e taşındı (KARAR 1.0: çıkılıyor) — F18.27, F18.28, F19.D1–D7, YOL_HARITASI F4.10
-- Taşınan düğme ipucu, uygulama içi sürüm notu — tek kullanıcı, ertelendi — YORUM F57.1, F57.2
-- Önce/sonra görsel karşılaştırma dosyası — DENEYIM F80.5
-- Kare ölçümü CI işi (emülatör, sonuçsuz kaldı) — F19.B6, KULLANICI_DENEYIMI F17.1, HIZ F83.3
-- Bilinen sınırlar: web geri tuşu tam ekran, debug `RenderFollowerLayer` uyarısı, düz metinde görev çipi yok, madde jest katmanında şekil önerisi yok, görev kişi alanı serbest metin — KALANLAR §3, Yarım kalan
+### Faz 0 — Acil Maliyet & Güvenlik Kilidi (2–3 Gün · `origin/main` ile Sıfır Risk)
+- [ ] **Konsol (15 dk, kod yok):** Google Cloud bütçe uyarısı (\$5 / \$20 / \$50) + Firebase App Check Enforce (mevcut proje dahil).
+- [ ] [`notes_delta_sync.dart`](lib/features/notes/data/notes_delta_sync.dart): `checkCount` yarış hatasını (feeder ilk sunucu snapshot'ını işledikten sonra kontrol) ve offline `toLegacy` düşüşünü düzelt; [`notes_delta_sync_test.dart`](test/notes_delta_sync_test.dart) çevrimdışı testini yeni davranışla güncelle + çoklu cihaz 1-not-ekleme regresyon testi ekle.
+- [ ] [`functions/decisions_util.js`](functions/decisions_util.js) & [`functions/decisions.js`](functions/decisions.js): Toplam payload ≤ 8.000 karakter tavanı + `usage.total_input_tokens` 600K token çift kilidi + sunucuda `aiKillSwitch` kontrolü.
+- [ ] [`functions/entitlements.js`](functions/entitlements.js): Karar kullanım sayacını `lifetimeTokenKey` bazlı yap (hesap silmede silinmesin).
+- [ ] [`functions/index.js`](functions/index.js): `searchUsers`'a `enforceAppCheck: Boolean(process.env.PLAY_PACKAGE_NAME)` + `maxInstances: 10` ekle (Play projesinde zorunlu, yandan kurulan kişisel APK kırılmaz).
+- [ ] [`backup_service.dart`](lib/features/notes/data/backup_service.dart) & [`note_package.dart`](lib/features/notes/data/note_package.dart): Ortak Zip bombası tavanı (≤ 5.000 dosya / ≤ 250 MB açılmış boyut).
+- **Kabul Kriteri:** Tüm `functions` ve `notes_delta_sync` testleri yeşil; tek kullanıcı 50 TL'de asla \$0,06 üzeri AI maliyeti üretemez.
 
-### (C) Açık kod işi
+### Faz 1 — AI Budama, Ölü Kod Temizliği & 2-Katmanlı Hak Modeli (4–5 Gün)
+- [ ] Ağır üretken AI ekran/servislerini kaldır (`ai_chat_screen`, `ai_hub_screen`, `ai_sheet`, `briefing_screen`, `listen_screen`, `semantic_search`, `provider_chat`, `firebase_ai_client`, `ai_gate` 30/300 puan sistemi). `pubspec.yaml`'dan `firebase_ai`'ı çıkar. *(Kişisel APK'da korumanı istediğin özel bir şey varsa yalnız onu bayrak arkasında bırak.)*
+- [ ] [`lib/features/gmail/`](lib/features/gmail/presentation/gmail_screen.dart) (2.268 satır) + 21 dosyadaki Gmail referanslarını tamamen sil.
+- [ ] Eski [`premium_screen.dart`](lib/features/settings/presentation/premium_screen.dart)'ı sil; [`pro_screen.dart`](lib/features/entitlement/presentation/pro_screen.dart) ve [`entitlement.dart`](lib/features/entitlement/domain/entitlement.dart)'ı **Lite vs 50 TL Tek Seferlik (+ 30 TL Ek +1.000 Karar Paketi)** modeline sadeleştir.
+- [ ] [`decision_service.dart`](lib/features/ai/data/decisions/decision_service.dart): Kalıcı yerel önbellek ekle + `remainingCalls` / `remainingTokens` göstergesini Ayarlar → Tam Sürüm kartına bağla.
+- [ ] Ücretsiz katmanda her ekrandaki kilitli `✨🔒` kalabalığını temizle.
+- **Kabul Kriteri:** `flutter analyze` 0 sorun, tam test takımı yeşil, APK boyutu ve `lib/` satır sayısında ölçülebilir düşüş.
 
-- [x] **İki not yan yana (tablet yatay)** — opus — K-O12 kararı VERİLDİ (2026-11-12) — F67.6 — 2026-11-14 kod bitti (K32, dal oto/K32-yan-yana); tablette doğrulama KONTROL_LISTEM 32
-- [x] **Parmağa ayrı araç** — YAZILDI 2026-11-14 (K34, dal `oto/K34-parmak-araci`): Kaydırır/Çizer/Siler, Siler = geçici silgi yolu, avuç/iki parmak geri alma, 22 dp yarıçap süzgeci; tablette doğrulanmadı → KONTROL 41 — F63.6, YORUM F55.1
-- ~~**Kalem ucu tahmini**~~ — kullanıcı kararıyla çıkarıldı (2026-11-14: "yalnız parmak aracı olsun") — F62.6
-- **Dolma kalem** — YAZILDI (`InkPen.fountain`, F62.5; `test/ink_paint_v2_test.dart`), cihazda denenmedi — YORUM F55.4
-- **Büyük PDF (500 MB–1 GB)** — KOD YAZILDI (P08, 2026-11-11: akışla kopya, `localOnly`, rozet; `test/large_local_pdf_test.dart`); yalnız tablette 1 GB doğrulaması kaldı → KONTROL 20 — F65.9
-- **Web'de ek görünmüyor / paylaşılan notta ek** — kullanıcıdan hata metni gerek — F65.6
-- **Editör bölge çıkarma + `_mutate` kök setState** — P20 kısmi (bölge çıkarılmadı; M6 `_sameVisual` silinmedi, daraldı; M7 kural CLAUDE.md'ye yazılsın mı; Seç kipi/tablette satır 23 kalıyor; ekran okuyucu taşı eylemleri yalnız tutamaçlı kipte) — sabah bakılacak — F64.3, F64.4
-- **Kasma kökten artığı** — P55 [apk] ile bitti (2026-11-14); yalnız plan arşivindeki `[ ]` işaretleri bayat, cihazda his kontrolü KONTROL 3 — HIZ F84.1, F84.2, F68.3
-- **Kaydırma kabulü** — P43/P46 ölçtü (%2,3–3,3); resmî kabul yazılmadı — F68.4, AKICILIK Faz 21
-- **Pano gövdesini böl (ölçüm kapılı)** — boşa kurulum düzeltildi (kısmen), kalanı ölçüm kapılı — F68.2
-- [x] **Takvim haftalık ızgarada sürükle, görev elle sırala** — YAZILDI 2026-11-21 (P92): `WeekPage` + gün sayfasında tek `DragTarget` + çeyrek saat tutunma (`snapToQuarterHour`/`movedToDateTime`, Geri Al; boş haftada kurulmaz, S22 korundu); `TasksScreen`'de `SliverReorderableList` + tutamak + toplu konum yazımı (`reorderedTaskPositions`/`reorderTasks`, `p92_week_drag_and_task_reorder_test.dart`); cihazda doğrulanmadı → KONTROL_LISTEM — TAKVIM
-- **Uçtan uca akış testleri** — widget düzeyinde YAPILDI (F18.8: `user_flows_test`, `media_bubbles_share_test`, `backup_service_test`); açık kalan: `integration_test/` emülatör akışları + web ağır işler (F17.3) — F17.2, F17.3
-- **PPTX düzenleme portu** — depo izni sonrası — F18.20
-- **Şablon önizlemesinin liste dalını kaldır** — liste şablonları `QuickListScreen`e taşındı (2026-11-15); `TemplateComposer` liste dalı + `showNoteTemplateSheet` üretimde çağrılmıyor, `note_templates_test` / `template_sheet_layout_test` / bütçe S48 / ekran turu ona bağlı → birlikte taşınıp silinecek; ayrıca hızlı liste + hızlı ekle cihazda A/B ölçülmedi (KONTROL "Telefonda bak") — `docs/hafiza/editor.md` sonu
+### Faz 2 — Cloudflare Senkron Altyapısı (Workers + D1 + R2) (1,5–2 Hafta)
+- [ ] Yeni `cloudflare/` dizininde TypeScript Worker (Hono) + D1 şeması (`entities`, `shares`, `entitlements`, `decision_usage`, `user_directory`, `r2_quota`).
+- [ ] Tek Worker uç noktaları:
+  - `POST /v1/sync` (delta pull/push + çakışma bildirimi + Lite/Tam hız politikası)
+  - `POST /v1/decide` (App/Integrity + çift kilitli 750 karar / 600K token + `aiKillSwitch`)
+  - `POST /v1/billing/verify` & `POST /v1/billing/rtdn` (50 TL tek sefer `lifetime` + 30 TL tüketilebilir `decision_pack_1000` doğrulaması)
+  - `GET /v1/users/search` (D1 indeksli hızlı arama)
+  - `PUT/GET /v1/media/:key` (R2, yalnızca ortak görseller, kişi başı 250 MB kota, \$0 egress)
+- [ ] İstemci tarafında `SyncTransport` soyutlaması + yerel SQLite/IndexedDB Outbox + `lite_sync.dart` Web IndexedDB toplu yazım düzeltmesi.
+- [ ] Play derlemesini (`NOTLAR_PLAY=true`) doğrudan Cloudflare Worker'a bağla; 2 cihazlı (Android + Web) çevrimdışı/çakışma/geri yükleme entegrasyon testlerini koş.
+- **Kabul Kriteri:** 30 dk kapalı kaldıktan sonra açılışta yalnızca değişen kayıt okunur; 10.000 simüle kullanıcı yükünde Worker + D1 maliyeti \$5/ay tabanında kalır.
+
+### Faz 3 — "Gerçekten Akıllı Alışveriş Listesi" v2 (1,5–2 Hafta)
+- [ ] **Veri & Motor:** `NoteItem.extras` şeması (`q`, `u`, `p`, `s`, `st`, `g`, `by`) · `quick_entry.dart` birim dönüşümü (`g↔kg`, `ml↔lt`, `yarım`/`çeyrek`/`buçuk`) · yerel fiyat geçmişi ve market profili (`shop_memory.dart`).
+- [ ] **Mağaza Kipi v2 ([`store_mode_screen.dart`](lib/features/notes/presentation/editor/store_mode_screen.dart)):** Canlı senkron (`noteByIdProvider`), renkli/ikonlu reyon başlıkları + üst atlama çipleri, `KeepScreenOn`, satır içi `−/+`, 3 durum (*Alınacak / Sepette / Yoktu-Sonraya*), canlı **Sepet Toplamı / Bütçe Çubuğu**, altta 🎤 + 📷 barkod düğmeleri.
+- [ ] **Barkod + Fiş OCR:** `mobile_scanner` → Open Food Facts API + yerel barkod hafızası; ML Kit OCR ile fişten otomatik fiyat güncelleme.
+- [ ] **Sık Alınanlar & Türk Mutfağı Tarifleri:** `predictDue` tabanlı 1-tık "Bitmek Üzere" paneli + 15–20 hazır Türk öğün paketi (kişi çarpanlı) + kendi tarifini kaydetme.
+- [ ] **Decisions `D1` (`shopAisle`):** Bilinmeyen ürünü tek çağrıda reyona yerleştirip kalıcı yerel hafızaya yazma.
+- [ ] **Ortak Alışveriş:** "🛒 Marketteyim — eksik varsa ekle" tek tık bildirimi + kimin aldığı rozeti + alışveriş notlarında doğrudan açılan üst **"Mağaza Kipi"** düğmesi.
+- **Kabul Kriteri:** Editör/Mağaza Kipi performans bütçeleri (`perf_budget_test`) yeşil; gerçek markette tek elle 20 maddelik senaryo pürüzsüz çalışır.
+
+### Faz 4 — Çoklu Platform Cilası, Sadeleştirme ve E2EE (1 Hafta)
+- [ ] **Web:** `KW-11` (kalem `Ctrl+Z` + kısayollar), `KW-17` (AppBar 18–20 px başlık), `WebWorkspaceFrame` `MediaQuery.of` temizliği, `KW-14` popover menüler, `KW-16` tutarlı hover/focus, tam CSP (`G-12`).
+- [ ] **Tablet & Telefon:** Yüzen kalem FAB ↔ `"T Ara başlık"` çakışmasını düzelt; sabit PDF açılınca sol listeyi otomatik daralt; Tablet Ayarlar'da çift Misafir kartını ve Misafir "Oturumu kapat"ı düzelt; ana ekran üst kromunu en fazla 2–3 kompakt satıra indir.
+- [ ] **Sadeleştirme:** 8 Android widget → 3 net widget; 3 hazır arayüz profili (*Sade / Standart / Tablet & Kalem*); ilk 60 saniye 2 örnek başlangıç notu; `prefs_sync.dart` polling → dirty-write.
+- [ ] **E2EE Kilitli Notlar:** Kilitli not gövdesi istemcide AES-256-GCM ile şifrelenip senkronlanır.
+- [ ] **RAM Optimizasyonu:** PDF/görsel önbellek tavanları + düşük RAM cihaz koruması (hedef: ana ekran <180 MB, editör/PDF <240 MB PSS).
+
+### Faz 5 — Gerçek Cihaz & Tarayıcı Doğrulama Turu (1 Hafta — Yeni Özellik YASAK)
+- [ ] `KONTROL_LISTEM.md`'deki 41 doğrulanmamış maddeyi erit (hedef: <5).
+- [ ] Test matrisi: (1) Orta sınıf 4–6 GB Android telefon, (2) Yatay + Dikey Tablet (60/120 Hz + M-Pencil), (3) Chrome + Firefox + Safari Web (Faz 1–4 + Cloudflare + Drive + IndexedDB), (4) 1.000 ve 3.000 notluk ölçek testi + YouTube RAM ölçümü, (5) `K-20`/`K-21` klavye 60/120 Hz A/B testi.
+
+### Faz 6 — Play Mağaza Hazırlığı, 12 Kişilik Kapalı Test ve Lansman (2+ Hafta)
+- [ ] Özgün uygulama adı + alan adı + statik tanıtım (landing) sayfası (`/app` uygulamaya yönlenir).
+- [ ] [`STORE_LISTING.md`](STORE_LISTING.md) güncellemesi: Yeni 50 TL tek sefer / Lite katmanları + Veri Güvenliği formuna *"Satın alma geçmişi"* eklenmesi.
+- [ ] Syncfusion Community lisans kaydı + Google OAuth Takvim/Görevler hassas kapsam doğrulama başvurusu.
+- [ ] Play Console ürünleri: `lifetime` (50 TL tek sefer) + `decision_pack_1000` (30 TL tüketilebilir) → Lisans test hesaplarıyla gerçek satın alma / iade / geri yükleme / RTDN uçtan uca testi.
+- [ ] 12+ test kullanıcısıyla 14 gün kesintisiz kapalı test → Crashlytics & Play Vitals temiz → Türkiye kademeli açılış!
+
+---
+
+## 9. Hemen Başlamadan Önce Netleştirilecek 4 Kısa Karar
+
+1. **Cloudflare Auth Tercihi:** Geçişte **Seçenek B (Hibrit: Firebase Auth + Messaging ücretsiz kalsın, tüm veri/billing/decisions Cloudflare D1+R2'ye geçsin)** ile hızlı mı başlayalım, yoksa **Seçenek A (Sıfır Firebase — doğrudan Google ID Token → Cloudflare JWT)** ile Firebase'den tamamen mi çıkalım?
+2. **Kişisel APK (`dev.kaimau.notlar`) Kaderi:** Üretken AI budaması yalnız Play derlemesinde mi kapalı olsun (kişisel APK'da korunsun mu), yoksa bakım yükünü gerçekten yarıya indirmek için kod tabanından tamamen mi silinsin?
+3. **Kendi Gemini Anahtarı (BYOK):** 50 TL pakette 750 karar bitince kullanıcı yalnızca 30 TL'lik +1.000 karar paketi mi alsın, yoksa ileri kullanıcıya kendi Gemini anahtarıyla sınırsız Decisions (maliyet \$0) kapısı da kalsın mı?
+4. **Başlangıç Sırası:** Diğer oturum `main`'de işini bitirene kadar, sıfır çakışmalı **Faz 0 (Acil Maliyet/Güvenlik Yamaları)** veya **Faz 3 (Akıllı Alışveriş Listesi v2)** ile mi başlayalım?
