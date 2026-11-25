@@ -10502,7 +10502,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get lockEncryptedBadge => 'End-to-end encrypted (AES-256)';
+  String get lockEncryptedBadge => 'End-to-end encrypted';
 
   @override
   String get starterShoppingTitle => '🛒 Sample grocery list';

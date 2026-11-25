@@ -99,9 +99,9 @@ void main() {
     });
   });
 
-  group('10 hazır renkli arka plan ve 14 not teması', () {
-    test('tüm 10 duvar kâğıdı diskte mevcut, geçerli ve yerelleştirilmiş', () {
-      expect(DashboardWallpapers.all, hasLength(10));
+  group('18 hazır renkli arka plan ve 14 not teması', () {
+    test('tüm 18 duvar kâğıdı diskte mevcut, geçerli ve yerelleştirilmiş', () {
+      expect(DashboardWallpapers.all, hasLength(18));
       final ids = <String>{};
       for (final w in DashboardWallpapers.all) {
         expect(ids.add(w.id), isTrue, reason: 'çift kimlik: ${w.id}');

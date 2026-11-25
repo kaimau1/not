@@ -3795,7 +3795,7 @@
   "uiProfileTabletPenDesc": "Split view, pen and PDF tools upfront",
   "uiProfileApplied": "{name} profile applied",
   "@uiProfileApplied": {"placeholders": {"name": {"type": "String"}}},
-  "lockEncryptedBadge": "End-to-end encrypted (AES-256)",
+  "lockEncryptedBadge": "End-to-end encrypted",
   "starterShoppingTitle": "🛒 Sample grocery list",
   "starterWelcomeTitle": "⚡ Quick start"
 }

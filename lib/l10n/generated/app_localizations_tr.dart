@@ -10488,7 +10488,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get lockEncryptedBadge => 'Uçtan uca şifreli (AES-256)';
+  String get lockEncryptedBadge => 'Uçtan uca şifreli';
 
   @override
   String get starterShoppingTitle => '🛒 Örnek market listesi';

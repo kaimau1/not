@@ -4653,7 +4653,7 @@
   "uiProfileTabletPenDesc": "Bölünmüş görünüm, kalem ve PDF araçları ön planda",
   "uiProfileApplied": "{name} profili uygulandı",
   "@uiProfileApplied": {"placeholders": {"name": {"type": "String"}}},
-  "lockEncryptedBadge": "Uçtan uca şifreli (AES-256)",
+  "lockEncryptedBadge": "Uçtan uca şifreli",
   "starterShoppingTitle": "🛒 Örnek market listesi",
   "starterWelcomeTitle": "⚡ Hızlı başlangıç"
 }

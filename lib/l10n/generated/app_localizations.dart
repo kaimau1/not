@@ -18581,7 +18581,7 @@ abstract class AppLocalizations {
   /// No description provided for @lockEncryptedBadge.
   ///
   /// In tr, this message translates to:
-  /// **'Uçtan uca şifreli (AES-256)'**
+  /// **'Uçtan uca şifreli'**
   String get lockEncryptedBadge;
 
   /// No description provided for @starterShoppingTitle.
