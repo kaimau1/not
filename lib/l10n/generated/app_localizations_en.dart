@@ -10434,4 +10434,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shopDictationTooltip => 'Voice add';
+
+  @override
+  String get spellManualLearn => 'Learn this correction';
+
+  @override
+  String get spellManualLearnHint =>
+      'Suggested and corrected automatically next time.';
+
+  @override
+  String get spellNoSuggestions => 'No suggestions found';
+
+  @override
+  String get spellHintBadge => 'Hint';
+
+  @override
+  String get spellErrorBadge => 'Spelling';
+
+  @override
+  String get wallpaperSakuraBreeze => 'Sakura breeze';
+
+  @override
+  String get wallpaperOceanMist => 'Ocean mist';
+
+  @override
+  String get wallpaperAutumnMaple => 'Autumn leaves';
+
+  @override
+  String get wallpaperSageLinen => 'Sage linen';
+
+  @override
+  String get wallpaperPeachHorizon => 'Peach horizon';
+
+  @override
+  String get wallpaperNordicPaper => 'Nordic paper';
+
+  @override
+  String get wallpaperStarryPine => 'Starry pine';
+
+  @override
+  String get wallpaperObsidianGold => 'Obsidian gold';
+
+  @override
+  String get uiProfileSectionTitle => 'Ready interface profiles';
+
+  @override
+  String get uiProfileSimple => 'Simple';
+
+  @override
+  String get uiProfileSimpleDesc => 'Clean layout for quick notes and shopping';
+
+  @override
+  String get uiProfileStandard => 'Standard';
+
+  @override
+  String get uiProfileStandardDesc => 'All tools balanced';
+
+  @override
+  String get uiProfileTabletPen => 'Tablet & pen';
+
+  @override
+  String get uiProfileTabletPenDesc => 'Split view, pen and PDF tools upfront';
+
+  @override
+  String uiProfileApplied(String name) {
+    return '$name profile applied';
+  }
+
+  @override
+  String get lockEncryptedBadge => 'End-to-end encrypted (AES-256)';
+
+  @override
+  String get starterShoppingTitle => '🛒 Sample grocery list';
+
+  @override
+  String get starterWelcomeTitle => '⚡ Quick start';
 }

@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../../app/router.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/note_e2ee_session.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/note_lock.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -36,6 +37,7 @@ class NoteLockConfigNotifier extends Notifier<NoteLockConfig> {
     } else {
       prefs.setString(NoteLockConfig.prefsKey, config.toJson());
     }
+    markPrefsDirty();
   }
 }
 
@@ -156,6 +158,8 @@ class _UnlockDialogState extends State<_UnlockDialog> {
     if (!mounted) return;
     if (ok) {
       _failures = 0;
+      await NoteE2eeSession.unlockWithSecret(widget.config, secret);
+      if (!mounted) return;
       Navigator.pop(context, true);
       return;
     }
@@ -173,7 +177,10 @@ class _UnlockDialogState extends State<_UnlockDialog> {
 
   Future<void> _useBiometric() async {
     final ok = await deviceAuthenticate(widget.reason);
-    if (ok && mounted) Navigator.pop(context, true);
+    if (ok) {
+      await NoteE2eeSession.ensureDeviceKey();
+      if (mounted) Navigator.pop(context, true);
+    }
   }
 
   @override
@@ -419,7 +426,9 @@ class NoteLockSettingsTile extends ConsumerWidget {
     }
     final secret = await askNewLockSecret(context, method);
     if (secret == null) return;
-    notifier.set(createNoteLock(method, secret, biometric: current.biometric));
+    final created = createNoteLock(method, secret, biometric: current.biometric);
+    notifier.set(created);
+    await NoteE2eeSession.unlockWithSecret(created, secret);
   }
 
   @override

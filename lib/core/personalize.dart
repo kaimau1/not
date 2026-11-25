@@ -764,6 +764,49 @@ abstract final class Personalize {
     _write(const UiPrefs());
   }
 
+  static final _simpleProfileHidden = <String>{
+    ...UiModule.video.items,
+    ...UiModule.drawing.items,
+    ...UiModule.scan.items,
+    UiItem.barPen,
+    UiItem.topTheme,
+    UiItem.editorTags,
+  };
+
+  static final _tabletPenProfileHidden = <String>{
+    // Tablet & Kalem: geri al / yinele, tablo, başlık ve fosforlu vurgular açık.
+    '+${UiItem.barUndo}',
+    '+${UiItem.barRedo}',
+    '+${UiItem.barTable}',
+    '+${UiItem.quickRow('heading')}',
+    '+${UiItem.quickRow('subheading')}',
+    '+${UiItem.quickRow('highlight')}',
+  };
+
+  /// Faz 4 — **3 hazır arayüz profili** (*Sade / Standart / Tablet & Kalem*).
+  /// Tek dokunuşla uyumlu öğe kümesini ayarlar; kullanıcı sonra yine tek tek
+  /// ince ayar yapabilir.
+  static void applyProfile(UiProfile profile) {
+    final next = switch (profile) {
+      UiProfile.simple => prefs.value.copyWith(hidden: _simpleProfileHidden),
+      UiProfile.standard => const UiPrefs(),
+      UiProfile.tabletPen => prefs.value.copyWith(
+        hidden: _tabletPenProfileHidden,
+      ),
+    };
+    if (draft.value != null) draft.value = next;
+    _write(next);
+  }
+
+  /// Geçerli tercihler üç hazır profilden birine bire bir uyuyorsa onu döner.
+  static UiProfile? get activeProfile {
+    final h = prefs.value.hidden;
+    if (h.isEmpty) return UiProfile.standard;
+    if (setEquals(h, _simpleProfileHidden)) return UiProfile.simple;
+    if (setEquals(h, _tabletPenProfileHidden)) return UiProfile.tabletPen;
+    return null;
+  }
+
   /// Testler için: kayıtsız varsayılana döner.
   @visibleForTesting
   static void debugReset() {
@@ -777,3 +820,6 @@ abstract final class Personalize {
     draft.value = null;
   }
 }
+
+/// Faz 4 — Hazır arayüz profilleri (Sade / Standart / Tablet ve kalem).
+enum UiProfile { simple, standard, tabletPen }

@@ -81,3 +81,7 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **GÜN PANELİ EYLEMLERİ TEK SATIR**: `_DayActionTile` simge üstte + kısa etiket (`calendarAddEvent/Task/Note`, `relatedNotesLink`), tam ad `tooltip`/semantik. Anahtarlar `day-new-event`, `day-new-task`, `day-note`, `day-link-note`.
 - **HIZLI EKLE TAKVİM KOMUTU** `core/utils/calendar_day_command.dart` `parseCalendarDayCommand` (tr/en, saf): cümle SONUNDA gün hedefi + fiil ("yarına ekle", "1 ocağa/ocağı ekle", "bir hafta sonrasına ekle", "cumaya ekle", "takvime ekle" = bugün). Yalnız "ekle" komut DEĞİL. `QuickDropSheet._resolve` en başta bakar (elle başka not seçilmediyse) → `_Drop(id: _kNewId, calendarDay:)`; `_apply` `createNote` + `linkNoteToDay`. Önizleme "📅 …".
 - **Gün sayfası (2026-11-22):** başlık iki satır (büyük `MMMMd` + "haftanın günü · göreli gün · ISO hafta", `isoWeekNumber`), `_DaySummaryRow` sayım hapları (tatil/etkinlik/görev/hatırlatıcı/bağlı not, boşsa "Boş gün"); FAB kaldırıldı, alt satır Etkinlik · Yeni görev · Bu güne not. Takvimde **Bugün** açık gün panelini de bugüne çeker (`_goToday` → `_panelDay`). Ay başlığı `screenTitle` +2.
+
+## 2026-11-25 — Takvim & Gün ekranlarında tam ekran Zemin
+- `CalendarScreen` ve `_DayPage`, `dashboardBackgroundProvider` etkin olduğunda ortak `buildAppBackgroundLayers` + saydam `Scaffold`/`AppBar` + `statusBarOverZemin` ile sarılır (zemin yokken ağaç değişmez). Takvim ⋮ menüsüne doğrudan **Zemin** (`showDashboardBackgroundSheet`) eklendi. Bekçi: `test/calendar_background_and_wallpapers_test.dart`.
+

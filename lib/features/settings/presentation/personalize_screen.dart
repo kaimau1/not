@@ -68,6 +68,8 @@ class PersonalizeScreen extends StatelessWidget {
             children: [
               const _EditModeCard(),
               const SizedBox(height: AppSpace.m),
+              const _UiProfilesSection(),
+              const SizedBox(height: AppSpace.m),
               for (final s in const [
                 CustomizeSurface.modules,
                 CustomizeSurface.bottomBar,
@@ -440,6 +442,172 @@ class _BubblesSection extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Faz 4 — **3 hazır arayüz profili** (*Sade / Standart / Tablet & Kalem*).
+class _UiProfilesSection extends StatelessWidget {
+  const _UiProfilesSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
+    final text = AppText.of(theme);
+
+    final profiles = [
+      (
+        profile: UiProfile.simple,
+        icon: Icons.auto_awesome_mosaic_outlined,
+        title: l10n.uiProfileSimple,
+        desc: l10n.uiProfileSimpleDesc,
+      ),
+      (
+        profile: UiProfile.standard,
+        icon: Icons.dashboard_outlined,
+        title: l10n.uiProfileStandard,
+        desc: l10n.uiProfileStandardDesc,
+      ),
+      (
+        profile: UiProfile.tabletPen,
+        icon: Icons.draw_outlined,
+        title: l10n.uiProfileTabletPen,
+        desc: l10n.uiProfileTabletPenDesc,
+      ),
+    ];
+
+    return _Live((context) {
+      final active = Personalize.activeProfile;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpace.s),
+            child: SectionLabel(l10n.uiProfileSectionTitle),
+          ),
+          Column(
+            children: [
+              for (var i = 0; i < profiles.length; i++) ...[
+                if (i > 0) const SizedBox(height: AppSpace.s),
+                _ProfileTile(
+                  key: ValueKey('ui-profile-${profiles[i].profile.name}'),
+                  icon: profiles[i].icon,
+                  title: profiles[i].title,
+                  desc: profiles[i].desc,
+                  selected: active == profiles[i].profile,
+                  scheme: scheme,
+                  tokens: tokens,
+                  text: text,
+                  onTap: () {
+                    Personalize.applyProfile(profiles[i].profile);
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showMessage(l10n.uiProfileApplied(profiles[i].title));
+                  },
+                ),
+              ],
+            ],
+          ),
+        ],
+      );
+    });
+  }
+}
+
+class _ProfileTile extends StatelessWidget {
+  const _ProfileTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.desc,
+    required this.selected,
+    required this.scheme,
+    required this.tokens,
+    required this.text,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String desc;
+  final bool selected;
+  final ColorScheme scheme;
+  final AppTokens tokens;
+  final AppText text;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? scheme.primaryContainer.withValues(alpha: AppAlpha.soft)
+          : tokens.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        side: BorderSide(
+          color: selected
+              ? tokens.resolvedAccentBorder(scheme)
+              : tokens.hairline,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.m,
+            vertical: AppSpace.m,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: AppSpace.xxl + AppSpace.xs,
+                height: AppSpace.xxl + AppSpace.xs,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? scheme.primaryContainer
+                      : scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(AppRadius.m),
+                ),
+                child: Icon(
+                  icon,
+                  size: AppIconSize.m,
+                  color: selected
+                      ? scheme.onPrimaryContainer
+                      : scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: AppSpace.m),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: text.rowTitle.copyWith(color: scheme.onSurface),
+                    ),
+                    const SizedBox(height: AppSpace.xxs),
+                    Text(
+                      desc,
+                      style: text.meta.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              if (selected)
+                Icon(
+                  Icons.check_circle_rounded,
+                  size: AppIconSize.m,
+                  color: scheme.primary,
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -18451,6 +18451,150 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesle ekle'**
   String get shopDictationTooltip;
+
+  /// No description provided for @spellManualLearn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu düzeltmeyi öğren'**
+  String get spellManualLearn;
+
+  /// No description provided for @spellManualLearnHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir dahaki sefere otomatik önerilir ve düzeltilir.'**
+  String get spellManualLearnHint;
+
+  /// No description provided for @spellNoSuggestions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneri bulunamadı'**
+  String get spellNoSuggestions;
+
+  /// No description provided for @spellHintBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'İpucu'**
+  String get spellHintBadge;
+
+  /// No description provided for @spellErrorBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım'**
+  String get spellErrorBadge;
+
+  /// No description provided for @wallpaperSakuraBreeze.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sakura esintisi'**
+  String get wallpaperSakuraBreeze;
+
+  /// No description provided for @wallpaperOceanMist.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ege esintisi'**
+  String get wallpaperOceanMist;
+
+  /// No description provided for @wallpaperAutumnMaple.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonbahar yaprakları'**
+  String get wallpaperAutumnMaple;
+
+  /// No description provided for @wallpaperSageLinen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okaliptüs keten'**
+  String get wallpaperSageLinen;
+
+  /// No description provided for @wallpaperPeachHorizon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şeftali ufku'**
+  String get wallpaperPeachHorizon;
+
+  /// No description provided for @wallpaperNordicPaper.
+  ///
+  /// In tr, this message translates to:
+  /// **'İskandinav kağıt'**
+  String get wallpaperNordicPaper;
+
+  /// No description provided for @wallpaperStarryPine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızlı çam'**
+  String get wallpaperStarryPine;
+
+  /// No description provided for @wallpaperObsidianGold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Obsidyen altın'**
+  String get wallpaperObsidianGold;
+
+  /// No description provided for @uiProfileSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hazır arayüz profilleri'**
+  String get uiProfileSectionTitle;
+
+  /// No description provided for @uiProfileSimple.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sade'**
+  String get uiProfileSimple;
+
+  /// No description provided for @uiProfileSimpleDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük hızlı not ve alışveriş için temiz ekran'**
+  String get uiProfileSimpleDesc;
+
+  /// No description provided for @uiProfileStandard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Standart'**
+  String get uiProfileStandard;
+
+  /// No description provided for @uiProfileStandardDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm araçlar dengeli yerleşimde'**
+  String get uiProfileStandardDesc;
+
+  /// No description provided for @uiProfileTabletPen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tablet ve kalem'**
+  String get uiProfileTabletPen;
+
+  /// No description provided for @uiProfileTabletPenDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bölünmüş görünüm, kalem ve PDF araçları ön planda'**
+  String get uiProfileTabletPenDesc;
+
+  /// No description provided for @uiProfileApplied.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} profili uygulandı'**
+  String uiProfileApplied(String name);
+
+  /// No description provided for @lockEncryptedBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uçtan uca şifreli (AES-256)'**
+  String get lockEncryptedBadge;
+
+  /// No description provided for @starterShoppingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'🛒 Örnek market listesi'**
+  String get starterShoppingTitle;
+
+  /// No description provided for @starterWelcomeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'⚡ Hızlı başlangıç'**
+  String get starterWelcomeTitle;
 }
 
 class _AppLocalizationsDelegate

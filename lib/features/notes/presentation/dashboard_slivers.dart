@@ -145,15 +145,33 @@ extension _DashSlivers on _DashboardScreenState {
   List<Widget> _hubSlivers(
     BuildContext context,
     int columns,
-    double cellWidth,
-  ) {
+    double cellWidth, {
+    String query = '',
+  }) {
     final slivers = sharedHubSlivers(
       context,
       ref,
       columns: columns,
       cellWidth: cellWidth,
+      query: query,
+      showMarkAllRead: query.trim().isEmpty,
     );
     if (slivers.isNotEmpty) return slivers;
+    if (query.trim().isNotEmpty) {
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: HomeEmptyNotes(
+            searchActive: true,
+            onClearSearch: () {
+              _searchController.clear();
+              ref.read(searchQueryProvider.notifier).set('');
+            },
+            onNewNote: () => unawaited(createNote(NoteType.text)),
+          ),
+        ),
+      ];
+    }
     // F79.6 (3): boşken ayrı ekranla aynı yer tutucu (yükleniyor / hata +
     // Tekrar dene / gerçekten boş) — hatada "burada not yok" demez.
     return [

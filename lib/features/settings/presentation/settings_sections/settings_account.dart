@@ -601,20 +601,24 @@ class _AccountSection extends ConsumerWidget {
 
   /// Hesap sayfasının tepesi (P62 PA2, plan §4): kimlik kartı + misafirde
   /// "yalnız bu cihazda" şeridi. Kartın DIŞINDA durur (`bare` satır).
+  /// Geniş ekranda (tablet/masaüstü) sol sütunda `_ProfileCard` zaten
+  /// göründüğünden ikinci kimlik kartı gizlenir.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final wide = MediaQuery.sizeOf(context).width >= 840;
+    final anonymous = ref.watch(isAnonymousProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const AccountIdentityCard(),
+        if (!wide) const AccountIdentityCard(),
         // Yerel (anonim) hesapta yükseltme yolu HER ZAMAN görünür olmalı:
         // kullanıcı notlarının yalnız bu cihazda olduğunu bilmeden aylarca
         // kullanıp uygulamayı silince hepsini kaybedebilir. Kökte dolu
         // "Giriş yap" var; burada ikinci dolu düğme yok (metin düğmesi).
-        if (ref.watch(isAnonymousProvider)) ...[
-          const SizedBox(height: AppSpace.m),
+        if (anonymous) ...[
+          if (!wide) const SizedBox(height: AppSpace.m),
           AppBanner(
             key: const ValueKey('account-guest-banner'),
             tone: AppTone.attention,
@@ -632,23 +636,19 @@ class _AccountSection extends ConsumerWidget {
   }
 }
 
-/// "Oturumu kapat" eylem satırı; misafirde kırmızı (veri kaybı).
+/// "Oturumu kapat" eylem satırı — yalnızca oturum açmış (misafir olmayan)
+/// hesaplarda görünür; misafir için alttaki "Hesabı sil" tek yıkıcı yoldur.
 class _SignOutRow extends ConsumerWidget {
   const _SignOutRow();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final danger = ref.watch(isAnonymousProvider)
-        ? Theme.of(context).colorScheme.error
-        : null;
+    if (ref.watch(isAnonymousProvider)) return const SizedBox.shrink();
     return ListTile(
       key: const ValueKey('settings-sign-out'),
       contentPadding: EdgeInsets.zero,
-      leading: Icon(Icons.logout, color: danger),
-      title: Text(
-        context.l10n.signOut,
-        style: danger == null ? null : TextStyle(color: danger),
-      ),
+      leading: const Icon(Icons.logout),
+      title: Text(context.l10n.signOut),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => confirmAndSignOut(context),
     );

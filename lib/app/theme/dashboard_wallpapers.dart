@@ -42,8 +42,16 @@ class DashboardWallpaper {
     DashboardWallpapers.terracottaStudio => l10n.wallpaperTerracottaStudio,
     DashboardWallpapers.pastelConfetti => l10n.wallpaperPastelConfetti,
     DashboardWallpapers.goldenMeadow => l10n.wallpaperGoldenMeadow,
+    DashboardWallpapers.sakuraBreeze => l10n.wallpaperSakuraBreeze,
+    DashboardWallpapers.oceanMist => l10n.wallpaperOceanMist,
+    DashboardWallpapers.autumnMaple => l10n.wallpaperAutumnMaple,
+    DashboardWallpapers.sageLinen => l10n.wallpaperSageLinen,
+    DashboardWallpapers.peachHorizon => l10n.wallpaperPeachHorizon,
+    DashboardWallpapers.nordicPaper => l10n.wallpaperNordicPaper,
     DashboardWallpapers.midnightAurora => l10n.wallpaperMidnightAurora,
     DashboardWallpapers.velvetCosmos => l10n.wallpaperVelvetCosmos,
+    DashboardWallpapers.starryPine => l10n.wallpaperStarryPine,
+    DashboardWallpapers.obsidianGold => l10n.wallpaperObsidianGold,
     _ => id,
   };
 }
@@ -57,11 +65,19 @@ abstract final class DashboardWallpapers {
   static const terracottaStudio = 'terracotta_studio';
   static const pastelConfetti = 'pastel_confetti';
   static const goldenMeadow = 'golden_meadow';
+  static const sakuraBreeze = 'sakura_breeze';
+  static const oceanMist = 'ocean_mist';
+  static const autumnMaple = 'autumn_maple';
+  static const sageLinen = 'sage_linen';
+  static const peachHorizon = 'peach_horizon';
+  static const nordicPaper = 'nordic_paper';
   static const midnightAurora = 'midnight_aurora';
   static const velvetCosmos = 'velvet_cosmos';
+  static const starryPine = 'starry_pine';
+  static const obsidianGold = 'obsidian_gold';
 
   /// Galerideki sıra: önce aydınlık renkli suluboya/botanik/stüdyo görseller,
-  /// sonda koyu kip için gece aurorası ve kadife kozmos.
+  /// sonda koyu kip için gece aurorası, kadife kozmos, yıldızlı çam ve obsidyen altın.
   static const List<DashboardWallpaper> all = [
     DashboardWallpaper(
       id: auroraBloom,
@@ -120,6 +136,48 @@ abstract final class DashboardWallpapers {
       defaultOpacity: 0.62,
     ),
     DashboardWallpaper(
+      id: sakuraBreeze,
+      asset: 'assets/backgrounds/sakura_breeze.jpg',
+      preview: Color(0xFFE8A4B3),
+      dark: false,
+      defaultOpacity: 0.68,
+    ),
+    DashboardWallpaper(
+      id: oceanMist,
+      asset: 'assets/backgrounds/ocean_mist.jpg',
+      preview: Color(0xFF5FB6C9),
+      dark: false,
+      defaultOpacity: 0.65,
+    ),
+    DashboardWallpaper(
+      id: autumnMaple,
+      asset: 'assets/backgrounds/autumn_maple.jpg',
+      preview: Color(0xFFD17A42),
+      dark: false,
+      defaultOpacity: 0.64,
+    ),
+    DashboardWallpaper(
+      id: sageLinen,
+      asset: 'assets/backgrounds/sage_linen.jpg',
+      preview: Color(0xFF7CA382),
+      dark: false,
+      defaultOpacity: 0.68,
+    ),
+    DashboardWallpaper(
+      id: peachHorizon,
+      asset: 'assets/backgrounds/peach_horizon.jpg',
+      preview: Color(0xFFEBA082),
+      dark: false,
+      defaultOpacity: 0.65,
+    ),
+    DashboardWallpaper(
+      id: nordicPaper,
+      asset: 'assets/backgrounds/nordic_paper.jpg',
+      preview: Color(0xFFC49D6A),
+      dark: false,
+      defaultOpacity: 0.68,
+    ),
+    DashboardWallpaper(
       id: midnightAurora,
       asset: 'assets/backgrounds/midnight_aurora.jpg',
       preview: Color(0xFF1A9E8F),
@@ -132,6 +190,20 @@ abstract final class DashboardWallpapers {
       preview: Color(0xFF8B4EA8),
       dark: true,
       defaultOpacity: 0.72,
+    ),
+    DashboardWallpaper(
+      id: starryPine,
+      asset: 'assets/backgrounds/starry_pine.jpg',
+      preview: Color(0xFF284664),
+      dark: true,
+      defaultOpacity: 0.74,
+    ),
+    DashboardWallpaper(
+      id: obsidianGold,
+      asset: 'assets/backgrounds/obsidian_gold.jpg',
+      preview: Color(0xFFC8A45D),
+      dark: true,
+      defaultOpacity: 0.74,
     ),
   ];
 

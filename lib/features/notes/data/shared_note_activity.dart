@@ -118,6 +118,7 @@ final sharedNoteUnreadProvider = Provider<Set<String>>((ref) {
   final out = <String>{};
   for (final share
       in ref.watch(sharedNotesWithMeProvider).value ?? const <NoteShare>[]) {
+    if (share.ownerId == me) continue;
     final note = ref
         .watch(
           ownedNoteStreamProvider((

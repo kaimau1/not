@@ -226,6 +226,20 @@ class AutoSpell {
     changed();
   }
 
+  /// "Elle düzelt" ile girilen düzeltmeyi hemen öğrenir: hem `word → to`
+  /// eşleşmesini onaylı kaydeder hem de doğru kelimeyi sözlüğe işler.
+  static void learnManualFix(String word, String to) {
+    memory.addManualFix(word, to);
+    changed();
+  }
+
+  /// Öneri menüsünden seçilen düzeltmeyi öğrenme hafızasına işler.
+  static void recordSuggestionPick(String word, String to) {
+    if (!learning.value) return;
+    memory.learnFix(word, to);
+    changed();
+  }
+
   /// "Bu notta dokunma": geri alınan otomatik düzeltmeyle aynı yol.
   static void keepInNote(String word, String? to) {
     if (to != null) return _reject(word, to);
@@ -356,7 +370,9 @@ class AutoSpell {
 
   static void _onChange() {
     final c = _c;
-    if (c == null || _busy || !enabled.value) return;
+    final auto = enabled.value;
+    final learnShow = mode.value == SpellMode.show && learning.value;
+    if (c == null || _busy || (!auto && !learnShow)) return;
     final text = c.logicalText;
     if (text == _prev) return;
     final prev = _prev;
@@ -369,7 +385,8 @@ class AutoSpell {
     // İlke 3: düzeltmeden hemen sonra tek Backspace → özgün yazı.
     final u = _undo;
     _undo = null;
-    if (u != null &&
+    if (auto &&
+        u != null &&
         prev == u.after &&
         sel.isCollapsed &&
         caret == u.caret - 1 &&
@@ -383,7 +400,7 @@ class AutoSpell {
       final r = SpellEngine.replacedWord(prev, text, memory);
       if (r != null) {
         memory.learnFix(r.from, r.to);
-        _scheduleSave();
+        changed();
       }
     }
 
@@ -400,6 +417,14 @@ class AutoSpell {
       wordEnd = caret - 2;
     }
     final wm = _lastWord(text, wordEnd);
+    if (!auto) {
+      // Yalnız göster kipinde otomatik düzeltme YOK; biten kelime izlenir ki
+      // kullanıcı geri dönüp elle düzeltirse hafıza öğrensin.
+      if (wm != null && _wordStartOk(text, wm.start)) {
+        _remember(_Tracked(wm.start, wm.word, null));
+      }
+      return;
+    }
     var next = text;
     var nextCaret = caret;
     // Önce cümle başı büyük harf ve noktalama (kelime kuralı motorda);
@@ -582,7 +607,7 @@ class AutoSpell {
       }
     } else if (learning.value && SpellEngine.learnable(w, cur, memory)) {
       memory.learnFix(w, cur);
-      _scheduleSave();
+      changed();
     }
   }
 

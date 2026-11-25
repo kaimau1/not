@@ -438,7 +438,8 @@ Widget? spellContextMenu(BuildContext context, EditableTextState state) {
     for (final s in SpellMarks.suggestionsFor(mark.word).take(3))
       SpellEngine.matchCase(typed, s),
   ];
-  void replace(String to) {
+  void replace(String to, {bool learn = true}) {
+    if (learn) AutoSpell.recordSuggestionPick(typed, to);
     final next = text.replaceRange(mark.start, mark.end, to);
     state.userUpdateTextEditingValue(
       TextEditingValue(
@@ -458,20 +459,23 @@ Widget? spellContextMenu(BuildContext context, EditableTextState state) {
         },
       );
   final first = options.isEmpty ? null : options.first;
-  // ELLE DÜZELT (kullanıcı 2026-11-24): öneri yanlış ya da yoksa doğrusu
-  // yazılır. Levhadaki alan değil iletişim kutusu: menüdeki alana odak
-  // geçince editör seçim menüsünü kapatıyordu (mobilde de aynı).
+  // ELLE DÜZELT (kullanıcı 2026-11-24 + 2026-11-25: "Elle düzeltilen yazımlar
+  // öğrenilmeli"): öneri yanlış ya da yoksa doğrusu yazılır ve varsayılan
+  // olarak öğrenme hafızasına kaydedilir (hem `yazılan → doğru` hem sözlük).
   Future<void> manual() async {
     final host = state.context;
-    final to = await showDialog<String>(
+    final res = await showDialog<({String text, bool learn})>(
       context: host,
       builder: (ctx) => _ManualFixDialog(initial: typed),
     );
-    if (to == null || !state.mounted) return;
+    if (res == null || !state.mounted) return;
     final now = state.textEditingValue.text;
-    final w = to.trim();
+    final w = res.text.trim();
     if (w.isEmpty || w == typed || mark.end > now.length) return;
     if (now.substring(mark.start, mark.end) != typed) return;
+    if (res.learn) {
+      AutoSpell.learnManualFix(typed, w);
+    }
     state.userUpdateTextEditingValue(
       TextEditingValue(
         text: now.replaceRange(mark.start, mark.end, w),
@@ -483,6 +487,8 @@ Widget? spellContextMenu(BuildContext context, EditableTextState state) {
 
   return NoteSelectionToolbar.spell(
     editableState: state,
+    word: typed,
+    isHint: mark.hint,
     suggestions: [for (final s in options) item(s, () => replace(s))],
     actions: [
       item(l10n.spellManualFix, () => unawaited(manual())),
@@ -490,7 +496,7 @@ Widget? spellContextMenu(BuildContext context, EditableTextState state) {
       if (first != null)
         item(l10n.spellAlwaysFix(first), () {
           AutoSpell.alwaysFix(typed, first);
-          replace(first);
+          replace(first, learn: false);
         }),
       item(
         l10n.spellKeepInNote,
@@ -514,6 +520,7 @@ class _ManualFixDialogState extends State<_ManualFixDialog> {
       baseOffset: 0,
       extentOffset: widget.initial.length,
     );
+  late bool _learn = AutoSpell.learning.value;
 
   @override
   void dispose() {
@@ -524,28 +531,244 @@ class _ManualFixDialogState extends State<_ManualFixDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    void done() => Navigator.pop(context, _c.text);
-    return AlertDialog(
-      title: Text(l10n.spellManualFix),
-      content: TextField(
-        key: const ValueKey('spell-manual-field'),
-        controller: _c,
-        autofocus: true,
-        autocorrect: false,
-        decoration: InputDecoration(hintText: l10n.spellManualHint),
-        onSubmitted: (_) => done(),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
+    final text = AppText.of(theme);
+
+    void done() {
+      final value = _c.text.trim();
+      if (value.isEmpty) return;
+      Navigator.pop(context, (text: value, learn: _learn));
+    }
+
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        side: BorderSide(color: tokens.hairline),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+      backgroundColor: scheme.surfaceContainerLowest,
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.xl,
+        vertical: AppSpace.xl,
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.l),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: AppSpace.xxl + AppSpace.xs,
+                    height: AppSpace.xxl + AppSpace.xs,
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppRadius.m),
+                    ),
+                    child: Icon(
+                      Icons.spellcheck_rounded,
+                      size: AppIconSize.m,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.m),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.spellManualFix,
+                          style: text.rowTitle.copyWith(
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpace.xxs),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.s,
+                            vertical: AppSpace.xxs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: scheme.errorContainer.withValues(
+                              alpha: AppAlpha.soft,
+                            ),
+                            borderRadius: BorderRadius.circular(AppRadius.xs),
+                          ),
+                          child: Text(
+                            widget.initial,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: text.badge.copyWith(
+                              color: scheme.error,
+                              decoration: TextDecoration.lineThrough,
+                              decorationColor: scheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpace.l),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _c,
+                builder: (context, value, _) {
+                  final trimmed = value.text.trim();
+                  final changed = trimmed.isNotEmpty && trimmed != widget.initial;
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextField(
+                        key: const ValueKey('spell-manual-field'),
+                        controller: _c,
+                        autofocus: true,
+                        autocorrect: false,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          hintText: l10n.spellManualHint,
+                          filled: true,
+                          fillColor: scheme.surfaceContainerLow,
+                          prefixIcon: Icon(
+                            Icons.edit_outlined,
+                            size: AppIconSize.s,
+                            color: scheme.primary,
+                          ),
+                          suffixIcon: value.text.isEmpty
+                              ? null
+                              : IconButton(
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: AppIconSize.s,
+                                  ),
+                                  onPressed: _c.clear,
+                                ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                            borderSide: BorderSide(color: tokens.hairline),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                            borderSide: BorderSide(color: tokens.hairline),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.m),
+                            borderSide: BorderSide(
+                              color: scheme.primary,
+                              width: AppSpace.xxs,
+                            ),
+                          ),
+                        ),
+                        onSubmitted: (_) => done(),
+                      ),
+                      const SizedBox(height: AppSpace.m),
+                      Material(
+                        color: _learn
+                            ? scheme.primaryContainer.withValues(
+                                alpha: AppAlpha.soft,
+                              )
+                            : scheme.surfaceContainerLow,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.m),
+                          side: BorderSide(
+                            color: _learn
+                                ? tokens.resolvedAccentBorder(scheme)
+                                : tokens.hairline,
+                          ),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          key: const ValueKey('spell-manual-learn-toggle'),
+                          onTap: () => setState(() => _learn = !_learn),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.m,
+                              vertical: AppSpace.s,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _learn
+                                      ? Icons.auto_fix_high_rounded
+                                      : Icons.auto_fix_off_outlined,
+                                  size: AppIconSize.s,
+                                  color: _learn
+                                      ? scheme.primary
+                                      : scheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: AppSpace.s),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        l10n.spellManualLearn,
+                                        style: text.label.copyWith(
+                                          color: scheme.onSurface,
+                                          fontWeight: AppWeight.strong,
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppSpace.xxs),
+                                      Text(
+                                        changed
+                                            ? '${widget.initial} → $trimmed'
+                                            : l10n.spellManualLearnHint,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: text.meta.copyWith(
+                                          color: changed && _learn
+                                              ? scheme.primary
+                                              : scheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Switch.adaptive(
+                                  value: _learn,
+                                  onChanged: (v) => setState(() => _learn = v),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpace.l),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      MaterialLocalizations.of(context).cancelButtonLabel,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.s),
+                  FilledButton(
+                    key: const ValueKey('spell-manual-ok'),
+                    onPressed: done,
+                    child: Text(
+                      MaterialLocalizations.of(context).okButtonLabel,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        FilledButton(
-          key: const ValueKey('spell-manual-ok'),
-          onPressed: done,
-          child: Text(MaterialLocalizations.of(context).okButtonLabel),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -229,12 +229,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.account,
             keywords: 'hesap e-posta google bagla misafir',
           ),
-          _SettingRow(
-            const _SignOutRow(),
-            group: l10n.settingsGroupSession,
-            title: l10n.signOut,
-            keywords: 'cikis oturum',
-          ),
+          if (!ref.watch(isAnonymousProvider))
+            _SettingRow(
+              const _SignOutRow(),
+              group: l10n.settingsGroupSession,
+              title: l10n.signOut,
+              keywords: 'cikis oturum',
+            ),
           _SettingRow(
             const _LegalRow(licenses: false),
             group: l10n.settingsGroupAbout,

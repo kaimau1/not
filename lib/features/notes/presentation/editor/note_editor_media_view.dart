@@ -794,6 +794,14 @@ extension _EditorMediaView on _NoteEditorScreenState {
             _note?.attachments.where((x) => x.id == target.id).firstOrNull ??
             target;
         _pinMediaTop(latest);
+        // Faz 4 (tablet): sabit PDF açılınca 3 bölmeli sıkışmayı önlemek için
+        // sol not listesi bölmesini kendiliğinden daralt.
+        if (latest.kind == AttachmentKind.pdf &&
+            mounted &&
+            SplitScope.activeOf(context) &&
+            !ref.read(listPaneCollapsedProvider)) {
+          ref.read(listPaneCollapsedProvider.notifier).set(true);
+        }
         // Sabitlenen PDF okuma kipine girer: seçerek not alma bir kez
         // anlatılır (az önce olan şeyi açıkladığı için oturum sınırı yok).
         if (latest.kind == AttachmentKind.pdf && mounted) {

@@ -1,93 +1,83 @@
-# STORE_LISTING — Google Play mağaza metni (F18.30)
+# STORE_LISTING — Google Play mağaza metni (Faz 6 güncel)
 
-Taslak. **Play'e çıkış kararı hâlâ yok** (YOL_HARITASI F4.10); karar gelince
-bu metin Play Console'a yapıştırılır. Paket: `dev.kaimau.notlar`. Genel
-(kişisel köprüsüz) AAB: Actions → Derleme → Run workflow → **play** işaretli
-(F18.29), çıktı `notlar-play-aab` artifact'ı.
+Paket: `dev.kaimau.notlar`. Genel (kişisel köprüsüz) AAB: Actions → Derleme →
+Run workflow → **play** işaretli, çıktı `notlar-play-aab` artifact'ı.
 
 Sınırlar: ad ≤ 30, kısa açıklama ≤ 80, uzun açıklama ≤ 4000 karakter.
 
 ## Türkçe (tr-TR)
 
-**Ad:** Notlar — Yapay Zekâlı Not Defteri
+**Ad:** Notlar — Akıllı Defter & Liste
 
-**Kısa açıklama:** Bulutla eşitlenen, yapay zekâlı not, liste ve hatırlatıcı uygulaması.
+**Kısa açıklama:** Reklamsız, aboneliksiz akıllı defter, market listesi ve PDF kalemi.
 
 **Uzun açıklama:**
 
-Notlar; yazdığın, çizdiğin, kaydettiğin her şeyi tek yerde toplar ve telefon,
-tablet ile bilgisayar arasında kendiliğinden eşitler. İnternet yokken de yazarsın;
-bağlantı gelince notların her cihazda hazırdır.
+Reklamsız, aboneliksiz akıllı defter ve market listesi — Türkçe sesle ekle, reyon ve bütçeni yönet, PDF üstüne kalemle yaz. Telefon, tablet ve web arasında hızla eşitlenir; çevrimdışıyken de kesintisiz çalışır.
 
-NOTLAR
-• Metin, kontrol listesi ve sıralı liste notları; sürükle-bırak sıralama
-• Fotoğraf, PDF, ses kaydı ve el çizimi ekle; görsel üstüne kalemle yaz
-• Etiketler, klasörler, arşiv, 30 gün geri alınabilir çöp kutusu
+NOTLAR VE DEFTER
+• Metin, kontrol listesi, sıralı liste, tablo ve çok sayfalı defter
+• Fotoğraf, PDF, ses kaydı ve el çizimi ekle; PDF ve görsel üstüne kalemle doğrudan not al
+• Türkçe ek çözücülü çevrimdışı yazım denetimi v3 ve öğrenen kişisel sözlük
+• Klasörler, etiketler, takvim/hatırlatıcılar, arşiv ve 30 gün geri alınabilir çöp kutusu
 • `[[` ile notları birbirine bağla; geri bağlantılar ve "İlgili notlar"
-• Tekrarlayan hatırlatıcılar: her gün, hafta içi, haftalık, aylık, yıllık
 
-YAPAY ZEKÂ
-• Not özeti ve analizi, PDF ile sohbet, "Tüm notlar" sohbeti (kaynak notu gösterir)
-• Sesli komutla not ve hatırlatıcı: "her pazartesi 9'da toplantı"
-• Canlı konuşma çevirisi, fotoğraftan metin (OCR), anlama göre arama
-• Günlük brifing ve haftalık özet
-• Nottan soru-cevap kartları ve aralıklı tekrar ("Bugünün kartları")
-• Dahili yapay zekâ günlük kotalıdır; istersen kendi anahtarını (Gemini, OpenAI,
-  Anthropic, OpenRouter) girersin — anahtar yalnız cihazında kalır
+GERÇEKTEN AKILLI ALIŞVERİŞ LİSTESİ
+• Tek elle Mağaza Kipi: renkli/simgeli 13 reyon, hızlı atlama çipleri, ekranı açık tut
+• Çoklu market profili (BİM, Migros, Pazar vb.), özel reyon sırası, canlı sepet ve bütçe çubuğu
+• Barkod okuma, fiş OCR ile fiyat güncelleme, "Bitmek Üzere" önerileri ve 18 hazır Türk mutfağı tarifi
+• Aile/arkadaşlarla ortak alışveriş listesi ve tek dokunuş "Marketteyim" bildirimi
 
-PAYLAŞIM
-• Arkadaş ekle, not gönder, ortak not ve paylaşılan klasör aç
-• Ekleri istersen kendi Google Drive'ında sakla
+LİTE (ÜCRETSİZ) VE TEK SEFERLİK TAM SÜRÜM (50 TL)
+• Reklam YOK, abonelik tuzağı YOK.
+• Ücretsiz Lite: sınırsız not/klasör/cihaz, tüm cihaz içi akıllı araçlar (yazım v3, dikte, OCR, barkod, Mağaza Kipi), aralıklı bulut metin senkronu, kendi Google Drive'ında ek saklama.
+• Tek Seferlik Tam Sürüm (50 TL — ömür boyu): anında bulut senkronu, 750 Akıllı Karar hakkı (bilinmeyen ürün reyonu, hızlı ekle hedefi, sessiz düzen), ileri alışveriş bütçe/fiyat hafızası, tüm temalar/zeminler/yazı tipleri, uçtan uca şifreli (AES-256) kilitli notlar ve parolalı tam yedek.
+• İsteğe bağlı: akıllı karar hakkı bitince +1.000 Akıllı Karar paketi (30 TL, tek seferlik tüketilebilir) veya kendi Gemini anahtarınla sınırsız kullanım.
 
 GİZLİLİK VE GÜVENLİK
-• Uygulama kilidi (cihaz kilidi, şifre ya da desen) ve not kilidi
-• Tam yedek ve geri yükleme; Google Keep, Markdown ve Evernote içe aktarma
+• Uçtan uca AES-256-GCM şifreli kilitli notlar ve uygulama kilidi (parmak izi, şifre ya da desen)
+• Parolalı `.notyedek` ve Markdown `.zip` dışa aktarma; Google Keep, Markdown ve Evernote içe aktarma
 • Reklam yok; notların reklam için kullanılmaz
 
 GEREKSİNİM
-Yalnız 64 bit (arm64) Android cihazlar desteklenir. Google ile giriş önerilir;
-misafir hesap yalnız o cihaza bağlıdır.
+Yalnız 64 bit (arm64) Android cihazlar desteklenir. Google ile giriş önerilir; misafir hesap yalnız o cihaza bağlıdır.
 
 ## English (en-US)
 
-**Title:** Notes — AI Notebook
+**Title:** Notes — Smart Notebook & List
 
-**Short description:** Cloud-synced notes, lists and reminders with built-in AI help.
+**Short description:** Ad-free, no-subscription notebook, smart grocery list and PDF pen.
 
 **Full description:**
 
-Notes keeps everything you write, draw and record in one place and syncs it across
-your phone, tablet and computer on its own. Write offline; your notes are ready on
-every device once you reconnect.
+Ad-free, subscription-free smart notebook and grocery list — add items by voice, manage store aisles and budgets, and write directly over PDFs with your pen. Syncs smoothly across phone, tablet and web, and works offline anytime.
 
-NOTES
-• Text, checklist and ordered-list notes with drag-and-drop ordering
-• Attach photos, PDFs, voice recordings and hand drawings; write on top of images
-• Tags, folders, archive and a 30-day recoverable trash
-• Link notes with `[[`; backlinks and "Related notes"
-• Repeating reminders: daily, weekdays, weekly, monthly, yearly
+NOTES & NOTEBOOK
+• Text, checklists, ordered lists, tables and multi-page notebooks
+• Attach photos, PDFs, voice memos and drawings; annotate PDFs and images with a stylus
+• Offline spell-check with personal typo learning
+• Folders, tags, calendar/reminders, archive and a 30-day recoverable trash
+• Link notes with `[[`; backlinks and related notes
 
-AI
-• Note summaries and analysis, chat with a PDF, chat with all your notes (shows the source note)
-• Voice commands for notes and reminders: "team meeting every Monday at 9"
-• Live speech translation, text from photos (OCR), search by meaning
-• Daily briefing and weekly digest
-• Question-and-answer cards from a note with spaced repetition ("Today's cards")
-• Built-in AI has a daily quota; or enter your own key (Gemini, OpenAI, Anthropic,
-  OpenRouter) — the key stays on your device
+TRULY SMART SHOPPING LIST
+• One-hand Store Mode: color-coded aisles, quick-jump chips, keep-screen-on
+• Multi-store profiles, custom aisle order, live cart total and budget bar
+• Barcode scanning, receipt OCR price updates, running-low reminders and recipe packs
+• Shared family shopping lists with one-tap "At the store" notification
 
-SHARING
-• Add friends, send notes, create shared notes and shared folders
-• Optionally keep attachments in your own Google Drive
+LITE (FREE) & ONE-TIME FULL VERSION
+• Zero ads, zero subscriptions.
+• Free Lite: unlimited notes/folders/devices, all on-device smart tools (spell check, dictation, OCR, barcode, Store Mode), periodic cloud text sync, personal Google Drive attachments.
+• One-Time Full Version (lifetime): instant cloud sync, 750 Smart Decisions credits, price memory & store comparison, all themes/wallpapers/fonts, end-to-end AES-256 encrypted locked notes and password-protected backups.
+• Optional consumable +1,000 Smart Decisions top-up pack (or bring your own Gemini key).
 
 PRIVACY AND SECURITY
-• App lock (device lock, password or pattern) and per-note lock
-• Full backup and restore; import from Google Keep, Markdown and Evernote
+• Client-side AES-256-GCM encrypted locked notes and app lock (biometric, password or pattern)
+• Full backup/restore and Markdown export; import from Google Keep, Markdown and Evernote
 • No ads; your notes are never used for advertising
 
 REQUIREMENTS
-64-bit (arm64) Android devices only. Signing in with Google is recommended; a
-guest account is tied to that one device.
+64-bit (arm64) Android devices only. Signing in with Google is recommended; guest accounts remain on that device.
 
 ## Veri güvenliği formu (taslak — `PRIVACY_POLICY.md` ile tutarlı)
 
@@ -95,15 +85,15 @@ Form cevapları Play Console'da kullanıcı tarafından doğrulanmalıdır.
 
 | Soru | Cevap |
 |---|---|
-| Veri toplanıyor mu / paylaşılıyor mu | Toplanıyor; üçüncü taraflarla **satılmıyor**, reklam için paylaşılmıyor. Hizmet sağlayıcılar (Google Firebase / Drive / Gemini) işleyici sayılır. |
-| Aktarımda şifreleme | Evet (HTTPS) |
+| Veri toplanıyor mu / paylaşılıyor mu | Toplanıyor; üçüncü taraflarla **satılmıyor**, reklam için paylaşılmıyor. Hizmet sağlayıcılar (Cloudflare / Google Firebase Auth & FCM / Google Drive / Google Decisions API) işleyici sayılır. |
+| Aktarımda şifreleme | Evet (HTTPS / TLS) + kilitli notlarda istemci tarafı AES-256-GCM E2EE |
 | Silme isteği | Evet — Ayarlar → "Hesabımı ve verilerimi sil" (hesap ve tüm veriler silinir) |
 | Kişisel bilgi: ad, e-posta | Toplanır (Google girişi; kimlik doğrulama + arkadaş dizini). İsteğe bağlı değil (misafir hariç) |
 | Kullanıcı kimliği | Toplanır (Firebase UID) |
-| Fotoğraf/video, ses, dosyalar | Kullanıcı eklediği ekler; işlevsellik için; Firebase Storage ya da kullanıcının Drive'ı |
+| **Finansal bilgi: Satın alma geçmişi** | **Toplanır (Google Play satın alma belirteci özeti — ömür boyu hak ve ek karar paketi doğrulaması için; kart bilgisi toplanmaz).** |
+| Fotoğraf/video, ses, dosyalar | Kullanıcı eklediği ekler; işlevsellik için; kullanıcının kendi Google Drive'ı ve ortak not görselleri için Cloudflare R2 |
 | Uygulama içeriği (notlar) | Toplanır; işlevsellik; reklam yok |
 | Konum | Toplanmaz |
-| Finansal bilgi | Toplanmaz |
 | Çökme günlükleri / tanılama | Toplanır (Crashlytics); uygulama işlevi/analiz |
 | Cihaz kimlikleri | Bildirim jetonu (FCM); işlevsellik |
 | Çocuklar | Gizlilik politikası: 13 yaş altına yönelik değil — Console'da "çocuklara yönelik değil" seçilir |
@@ -112,7 +102,5 @@ Form cevapları Play Console'da kullanıcı tarafından doğrulanmalıdır.
 
 - Simge: `assets/icon/play_store_512.png` (512×512, hazır).
 - Öne çıkan görsel 1024×500 ve ekran görüntüleri (telefon ≥ 2, en çok 8; 16:9–9:16)
-  **cihazdan alınmalı** — F19.C1 duman testinde alınan ekranlar uygundur:
-  ana ekran ızgarası · metin notu + biçim · liste notu · yapay zekâ sohbeti ·
-  hatırlatıcılar · tablet yan yana düzen. Bulut ortamında gerçek hesapla ekran
-  üretilemediği için bu adım **F19**'dadır (bkz. `docs/arsiv/planlar/KALAN_ISLER_PLANI.md` F19.D).
+  gerçek cihaz turunda (Faz 5) alınır: ana ekran zemini · takvim zemini ·
+  Mağaza Kipi v2 · metin/liste + yazım menüsü · PDF kalem · tablet bölünmüş düzen.

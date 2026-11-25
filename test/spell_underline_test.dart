@@ -338,4 +338,74 @@ void main() {
     );
     expect(paint, paints..path(), reason: 'dalgalı çizgi çizilir');
   });
+
+  testWidgets(
+    'Elle düzeltilen yazım öğrenilir ve yenilenen menü hatalı kelime başlığını gösterir',
+    (tester) async {
+      fakeNative({
+        'yazm': ['yaz'],
+      });
+      final c = WrapTextController(text: 'denetim yazm testi');
+      addTearDown(c.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => AttachmentTagChips(
+                controller: c,
+                looks: const {},
+                child: TextField(
+                  controller: c,
+                  contextMenuBuilder: (menuContext, state) =>
+                      spellContextMenu(menuContext, state) ??
+                      AdaptiveTextSelectionToolbar.editableText(
+                        editableTextState: state,
+                      ),
+                  onTap: () => showSpellMenuAfterTap(editableTextBelow(context)),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await scan(tester);
+      expect(SpellMarks.of(c)!.marks.map((k) => k.word), ['yazm']);
+
+      final render = tester
+          .state<EditableTextState>(find.byType(EditableText))
+          .renderEditable;
+      final rect = render.getLocalRectForCaret(const TextPosition(offset: 10));
+      await tester.tapAt(render.localToGlobal(rect.center));
+      await tester.pump();
+      await tester.pump();
+
+      // Yenilenen yazım menüsünde hatalı kelime ve durum etiketi görünür.
+      expect(find.text('yazm'), findsOneWidget);
+      expect(find.text('Yazım'), findsOneWidget);
+      expect(find.text('Elle düzelt'), findsOneWidget);
+
+      await tester.tap(find.text('Elle düzelt'));
+      await tester.pumpAndSettle();
+
+      // Yenilenen iletişim kutusunda öğrenme anahtarı varsayılan açık.
+      expect(find.byKey(const ValueKey('spell-manual-learn-toggle')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const ValueKey('spell-manual-field')),
+        'yazım',
+      );
+      await tester.pump();
+      expect(find.text('yazm → yazım'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('spell-manual-ok')));
+      await tester.pumpAndSettle();
+
+      expect(c.text, 'denetim yazım testi');
+      expect(AutoSpell.memory.learned('yazm'), 'yazım');
+      expect(AutoSpell.memory.known('yazım'), isTrue);
+      await tester.pump(const Duration(seconds: 5)); // Erteli kayıt.
+    },
+  );
 }

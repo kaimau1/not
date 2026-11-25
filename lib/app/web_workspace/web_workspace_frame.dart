@@ -112,13 +112,21 @@ class _WebWorkspaceFrameState extends ConsumerState<WebWorkspaceFrame>
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, box) {
-                      final window = MediaQuery.of(context);
-                      final dx = rtl ? 0.0 : window.size.width - box.maxWidth;
+                      final windowSize = MediaQuery.sizeOf(context);
+                      final features = MediaQuery.displayFeaturesOf(context);
+                      final padding = MediaQuery.paddingOf(context);
+                      final base =
+                          context
+                              .getInheritedWidgetOfExactType<MediaQuery>()
+                              ?.data ??
+                          MediaQueryData.fromView(View.of(context));
+                      final dx = rtl ? 0.0 : windowSize.width - box.maxWidth;
                       return MediaQuery(
-                        data: window.copyWith(
+                        data: base.copyWith(
                           size: box.biggest,
+                          padding: padding,
                           displayFeatures: [
-                            for (final f in window.displayFeatures)
+                            for (final f in features)
                               DisplayFeature(
                                 bounds: f.bounds.shift(Offset(-dx, 0)),
                                 type: f.type,

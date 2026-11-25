@@ -205,7 +205,7 @@ class _PrefsSync with WidgetsBindingObserver {
       _remote = values is Map ? Map<String, Object?>.from(values) : {};
       unawaited(_run());
     }, onError: (Object e) => debugPrint('Ayar senkronu dinlenemedi: $e'));
-    _startTimer();
+    prefsDirtyTick.addListener(_scheduleDirty);
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -213,37 +213,32 @@ class _PrefsSync with WidgetsBindingObserver {
   final DocumentReference<Map<String, dynamic>> _doc;
   final VoidCallback onApplied;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _sub;
-  Timer? _timer;
+  Timer? _debounce;
   Map<String, Object?>? _remote;
   bool _running = false;
 
-  /// K-25: son başarılı turdaki yerel tercihler ve bulut belgesi. İkisi de
-  /// aynıysa tur hiçbir şey yapmadan döner (anlık görüntü `jsonDecode` +
-  /// plan çıkarma 20 sn'de bir boşuna koşuyordu).
+  /// Son başarılı turdaki yerel tercihler ve bulut belgesi.
   Map<String, Object?>? _lastLocal;
   Map<String, Object?>? _lastRemote;
 
-  /// Ayar değişikliği bir dokunuştur; kısa aralıkla yoklamak yeter (prefs
-  /// yazımları kodun her yerinde, tek kancası yok). Yalnız ÖN PLANDA (F6.4):
-  /// Dart zamanlayıcıları süreç yaşadıkça işler — arkadayken de 20 sn'de bir
-  /// uyanıp yazıyordu.
-  void _startTimer() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 20), (_) => _run());
+  void _scheduleDirty() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(seconds: 2), () {
+      _debounce = null;
+      unawaited(_run());
+    });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.paused:
-        _timer?.cancel();
-        _timer = null;
+      case AppLifecycleState.inactive:
+        _debounce?.cancel();
+        _debounce = null;
         unawaited(_run());
       case AppLifecycleState.resumed:
-        if (_timer == null) {
-          unawaited(_run());
-          _startTimer();
-        }
+        unawaited(_run());
       default:
         break;
     }
@@ -300,7 +295,8 @@ class _PrefsSync with WidgetsBindingObserver {
 
   void dispose() {
     _sub?.cancel();
-    _timer?.cancel();
+    _debounce?.cancel();
+    prefsDirtyTick.removeListener(_scheduleDirty);
     WidgetsBinding.instance.removeObserver(this);
   }
 }

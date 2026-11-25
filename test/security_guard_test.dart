@@ -44,13 +44,8 @@ void main() {
     test('dışa açık bileşen listesi sabit (F71.4)', () {
       expect(_disaAcik('android/app/src/main/AndroidManifest.xml'), {
         '.MainActivity',
-        // Ana ekran widget'ları: sistem yayınını almak için açık olmak zorunda.
-        '.NotlarWidgetProvider',
-        '.VoiceWidgetProvider',
-        '.QuickActionsWidgetProvider',
+        // Faz 4: 3 net ana ekran widget'ı (Bugün, Hızlı Ekleme Çubuğu, Akıllı Liste).
         '.TodayWidgetProvider',
-        '.QuickNoteWidgetProvider',
-        '.QuickAddWidgetProvider',
         '.QuickAddBarWidgetProvider',
         // AL-6 (P97): Akıllı liste ana ekran aracı.
         '.SmartListWidgetProvider',

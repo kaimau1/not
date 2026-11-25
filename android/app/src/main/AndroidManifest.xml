@@ -296,39 +296,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- Ana ekran widget'ı: son notlar -->
-        <receiver android:name=".NotlarWidgetProvider"
-            android:exported="true"
-            android:label="Notlar">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/notlar_widget_info" />
-        </receiver>
-
-        <!-- Sesli Not Asistanı widget'ı: tek mikrofon düğmesi -->
-        <receiver android:name=".VoiceWidgetProvider"
-            android:exported="true"
-            android:label="@string/widget_voice_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/voice_widget_info" />
-        </receiver>
-
-        <!-- Hızlı Eylemler widget'ı: yeni not / liste / sıralı liste / sesli not -->
-        <receiver android:name=".QuickActionsWidgetProvider"
-            android:exported="true"
-            android:label="@string/widget_quick_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/quick_actions_widget_info" />
-        </receiver>
-
         <!-- Gemini gibi ajanlar için işlevler (Ajan.kt; sınıfı derleyici üretir,
              Android 16+): not ekle / ara / son notlar. -->
         <service android:name=".AjanServisi"
@@ -356,7 +323,8 @@
             </intent-filter>
         </receiver>
 
-        <!-- Bugün widget'ı: bugünün hatırlatıcıları -->
+        <!-- Faz 4: 8 widget → 3 net ana ekran aracı (Bugün, Hızlı Ekleme Çubuğu, Akıllı Liste) -->
+        <!-- 1. Bugün & Sabit Notlar widget'ı -->
         <receiver android:name=".TodayWidgetProvider"
             android:exported="true"
             android:label="@string/widget_today_label">
@@ -367,16 +335,7 @@
                 android:resource="@xml/today_widget_info" />
         </receiver>
 
-        <!-- Hızlı ekle widget'ları (HE-3): 1×1 "+" ve 4×1 çubuk, notlar://ekle -->
-        <receiver android:name=".QuickAddWidgetProvider"
-            android:exported="true"
-            android:label="@string/hizli_ekle">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/quick_add_widget_info" />
-        </receiver>
+        <!-- 2. Hızlı Ekleme Çubuğu widget'ı (4×1: Yaz · Ses · Kamera · Yeni Not) -->
         <receiver android:name=".QuickAddBarWidgetProvider"
             android:exported="true"
             android:label="@string/widget_quickadd_bar_label">
@@ -387,18 +346,7 @@
                 android:resource="@xml/quick_add_bar_widget_info" />
         </receiver>
 
-        <!-- Hızlı Not widget'ı: tek dokunuşla yeni metin notu -->
-        <receiver android:name=".QuickNoteWidgetProvider"
-            android:exported="true"
-            android:label="@string/widget_quicknote_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                android:resource="@xml/quick_note_widget_info" />
-        </receiver>
-
-        <!-- Akıllı Liste widget'ı (AL-6 / P97): etkin liste maddeleri + hızlı ekle -->
+        <!-- 3. Akıllı Liste widget'ı (AL-6 / P97): etkin liste maddeleri + hızlı ekle -->
         <receiver android:name=".SmartListWidgetProvider"
             android:exported="true"
             android:label="@string/widget_smart_list_label">

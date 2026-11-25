@@ -158,6 +158,8 @@ abstract final class AppTheme {
       extensions: [tokens],
       scaffoldBackgroundColor: scheme.surface,
       canvasColor: scheme.surface,
+      hoverColor: scheme.onSurface.withValues(alpha: 0.06),
+      focusColor: scheme.primary.withValues(alpha: 0.12),
       splashFactory: InkSparkle.splashFactory,
       // METİN SEÇİMİ (kullanıcı bulgusu 2026-10-15: "metin seçim kalitesi
       // düzeltilmeli"). M3 varsayılanı seçimi birincil rengin %40'ıyla
@@ -177,8 +179,12 @@ abstract final class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
+        // KW-17: ThemeData(brightness).textTheme punto taşımadığından başlıklar
+        // 14 px düşüyordu; açık 18 px ile tutarlı ekran başlığı hiyerarşisi.
         titleTextStyle: textTheme.titleLarge?.copyWith(
           color: scheme.onSurface,
+          fontSize: 18,
+          height: 24 / 18,
           fontWeight: FontWeight.w600,
         ),
       ),

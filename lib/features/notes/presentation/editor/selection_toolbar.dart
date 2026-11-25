@@ -89,19 +89,25 @@ class NoteSelectionToolbar extends StatefulWidget {
     this.onFormatCommit,
     this.readOnly = false,
   }) : _spellSuggestions = const [],
-       _spellActions = const [];
+       _spellActions = const [],
+       _spellWord = null,
+       _spellIsHint = false;
 
   const NoteSelectionToolbar.spell({
     super.key,
     required this.editableState,
     required List<ContextMenuButtonItem> suggestions,
     required List<ContextMenuButtonItem> actions,
+    String? word,
+    bool isHint = false,
   }) : buttonItems = const [],
        formatController = null,
        onFormatCommit = null,
        readOnly = false,
        _spellSuggestions = suggestions,
-       _spellActions = actions;
+       _spellActions = actions,
+       _spellWord = word,
+       _spellIsHint = isHint;
 
   final EditableTextState editableState;
   final List<ContextMenuButtonItem> buttonItems;
@@ -111,6 +117,8 @@ class NoteSelectionToolbar extends StatefulWidget {
 
   final List<ContextMenuButtonItem> _spellSuggestions;
   final List<ContextMenuButtonItem> _spellActions;
+  final String? _spellWord;
+  final bool _spellIsHint;
 
   bool get _isSpell => _spellSuggestions.isNotEmpty || _spellActions.isNotEmpty;
 
@@ -271,18 +279,26 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
                 constraints: BoxConstraints(maxWidth: maxCardWidth),
                 child: Material(
                   key: const ValueKey('note-selection-toolbar'),
-                  color: scheme.surfaceContainerHigh,
-                  elevation: 6,
+                  color: widget._isSpell
+                      ? (theme.brightness == Brightness.dark
+                            ? scheme.surfaceContainerHigh
+                            : scheme.surfaceContainerLowest)
+                      : scheme.surfaceContainerHigh,
+                  elevation: widget._isSpell ? 8 : 6,
                   shadowColor: scheme.shadow.withValues(alpha: AppAlpha.scrim),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.l),
                     side: BorderSide(
-                      color: tokens.accentBorder ?? tokens.hairline,
+                      color: widget._isSpell
+                          ? tokens.hairline
+                          : (tokens.accentBorder ?? tokens.hairline),
                     ),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: Padding(
-                    padding: const EdgeInsets.all(AppSpace.xs + AppSpace.xxs),
+                    padding: widget._isSpell
+                        ? const EdgeInsets.all(AppSpace.m)
+                        : const EdgeInsets.all(AppSpace.xs + AppSpace.xxs),
                     child: cardBody,
                   ),
                 ),
@@ -301,10 +317,104 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
     ColorScheme scheme,
     AppText text,
   ) {
+    final l10n = context.l10n;
+    final tokens = AppTokens.of(context);
+    final isHint = widget._spellIsHint;
+    final statusColor = isHint ? scheme.secondary : scheme.error;
+    final statusBg = isHint
+        ? scheme.secondaryContainer.withValues(alpha: AppAlpha.soft)
+        : scheme.errorContainer.withValues(alpha: AppAlpha.soft);
+
+    IconData iconForSpellAction(String label) {
+      if (label == l10n.spellManualFix) return Icons.edit_outlined;
+      if (label == l10n.spellAddToDictionary) return Icons.bookmark_add_outlined;
+      if (label == l10n.spellKeepInNote) return Icons.visibility_off_outlined;
+      return Icons.auto_fix_high_outlined;
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Üst başlık: hatalı kelime, durum etiketi ve kapatma düğmesi.
+        if (widget._spellWord != null && widget._spellWord!.isNotEmpty) ...[
+          Row(
+            children: [
+              Container(
+                width: AppSpace.xl + AppSpace.xs,
+                height: AppSpace.xl + AppSpace.xs,
+                decoration: BoxDecoration(
+                  color: statusBg,
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Icon(
+                  isHint
+                      ? Icons.lightbulb_outline_rounded
+                      : Icons.spellcheck_rounded,
+                  size: AppIconSize.xs,
+                  color: statusColor,
+                ),
+              ),
+              const SizedBox(width: AppSpace.s),
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget._spellWord!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.label.copyWith(
+                          color: scheme.onSurface,
+                          fontWeight: AppWeight.strong,
+                          decoration: isHint
+                              ? null
+                              : TextDecoration.underline,
+                          decorationStyle: TextDecorationStyle.wavy,
+                          decorationColor: statusColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.s),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.s,
+                        vertical: AppSpace.xxs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusBg,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                      child: Text(
+                        isHint ? l10n.spellHintBadge : l10n.spellErrorBadge,
+                        style: text.badge.copyWith(color: statusColor),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                onTap: () {
+                  if (widget.editableState.mounted) {
+                    widget.editableState.hideToolbar(false);
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.xs),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: AppIconSize.xs,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.m),
+        ],
+
+        // Öneriler bölümü.
         if (widget._spellSuggestions.isNotEmpty)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -312,41 +422,74 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (var i = 0; i < widget._spellSuggestions.length; i++) ...[
-                  if (i > 0) const SizedBox(width: AppSpace.xs),
-                  _ActionPill(
+                  if (i > 0) const SizedBox(width: AppSpace.s),
+                  _SpellSuggestionChip(
                     label: widget._spellSuggestions[i].label ?? '',
-                    accent: i == 0,
+                    primary: i == 0,
                     onTap: widget._spellSuggestions[i].onPressed,
-                    text: text,
                     scheme: scheme,
+                    tokens: tokens,
+                    text: text,
                   ),
                 ],
               ],
             ),
-          ),
-        if (widget._spellSuggestions.isNotEmpty &&
-            widget._spellActions.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
-            child: Divider(
-              height: 1,
-              color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
+          )
+        else
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.m,
+              vertical: AppSpace.s,
+            ),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              border: Border.all(color: tokens.hairline),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.search_off_rounded,
+                  size: AppIconSize.xs,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpace.s),
+                Flexible(
+                  child: Text(
+                    l10n.spellNoSuggestions,
+                    style: text.meta.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
             ),
           ),
-        if (widget._spellActions.isNotEmpty)
+
+        if (widget._spellActions.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpace.m),
+            child: Divider(
+              height: 1,
+              color: tokens.hairline,
+            ),
+          ),
           Wrap(
-            spacing: AppSpace.xs,
-            runSpacing: AppSpace.xs,
+            spacing: AppSpace.s,
+            runSpacing: AppSpace.s,
             children: [
               for (final item in widget._spellActions)
-                _ActionPill(
+                _SpellActionChip(
+                  icon: iconForSpellAction(item.label ?? ''),
                   label: item.label ?? '',
+                  highlighted: item.label == l10n.spellManualFix,
                   onTap: item.onPressed,
-                  text: text,
                   scheme: scheme,
+                  tokens: tokens,
+                  text: text,
                 ),
             ],
           ),
+        ],
       ],
     );
   }
@@ -871,6 +1014,145 @@ class _QuickColorRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SpellSuggestionChip extends StatelessWidget {
+  const _SpellSuggestionChip({
+    required this.label,
+    required this.primary,
+    required this.onTap,
+    required this.scheme,
+    required this.tokens,
+    required this.text,
+  });
+
+  final String label;
+  final bool primary;
+  final VoidCallback? onTap;
+  final ColorScheme scheme;
+  final AppTokens tokens;
+  final AppText text;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = primary ? scheme.primaryContainer : scheme.surfaceContainerLow;
+    final fg = primary ? scheme.onPrimaryContainer : scheme.onSurface;
+    return Material(
+      color: bg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        side: BorderSide(
+          color: primary
+              ? tokens.resolvedAccentBorder(scheme)
+              : tokens.hairline,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap == null
+            ? null
+            : () {
+                AppHaptics.tick();
+                onTap!();
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.m,
+            vertical: AppSpace.s,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (primary) ...[
+                Icon(Icons.check_rounded, size: AppIconSize.xs, color: fg),
+                const SizedBox(width: AppSpace.xs),
+              ],
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: text.label.copyWith(
+                  color: fg,
+                  fontWeight: primary ? AppWeight.strong : AppWeight.regular,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SpellActionChip extends StatelessWidget {
+  const _SpellActionChip({
+    required this.icon,
+    required this.label,
+    required this.highlighted,
+    required this.onTap,
+    required this.scheme,
+    required this.tokens,
+    required this.text,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool highlighted;
+  final VoidCallback? onTap;
+  final ColorScheme scheme;
+  final AppTokens tokens;
+  final AppText text;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = highlighted
+        ? scheme.secondaryContainer.withValues(alpha: AppAlpha.soft)
+        : scheme.surfaceContainerLow;
+    final fg = highlighted ? scheme.onSecondaryContainer : scheme.onSurface;
+    final iconColor = highlighted ? scheme.secondary : scheme.onSurfaceVariant;
+    return Material(
+      color: bg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        side: BorderSide(color: tokens.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap == null
+            ? null
+            : () {
+                AppHaptics.tick();
+                onTap!();
+              },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.s + AppSpace.xs,
+            vertical: AppSpace.s,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: AppIconSize.xs, color: iconColor),
+              const SizedBox(width: AppSpace.xs),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.meta.copyWith(
+                    color: fg,
+                    fontWeight: highlighted
+                        ? AppWeight.strong
+                        : AppWeight.regular,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

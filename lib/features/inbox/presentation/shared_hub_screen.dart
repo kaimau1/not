@@ -117,7 +117,10 @@ Widget sharedHubPlaceholder(
   final error = inboxAsync.hasError
       ? inboxAsync.error!
       : (sharesAsync.hasError ? sharesAsync.error! : null);
-  if (error == null && inboxAsync.isLoading && !inboxAsync.hasValue) {
+  final loading =
+      (inboxAsync.isLoading && !inboxAsync.hasValue) ||
+      (sharesAsync.isLoading && !sharesAsync.hasValue);
+  if (error == null && loading) {
     return skeleton ? const NoteListSkeleton() : const SizedBox.shrink();
   }
   if (error != null) {
@@ -145,11 +148,34 @@ List<Widget> sharedHubSlivers(
   required int columns,
   required double cellWidth,
   double pad = 12,
+  String query = '',
+  bool showMarkAllRead = false,
 }) {
   final l10n = context.l10n;
   final scheme = Theme.of(context).colorScheme;
-  final inbox = ref.watch(inboxNotesProvider).value ?? const <InboxNote>[];
-  final entries = sharedNoteEntries(ref);
+  final q = query.trim().toLowerCase();
+  final rawInbox = ref.watch(inboxNotesProvider).value ?? const <InboxNote>[];
+  final inbox = q.isEmpty
+      ? rawInbox
+      : [
+          for (final n in rawInbox)
+            if (n.title.toLowerCase().contains(q) ||
+                n.body.toLowerCase().contains(q) ||
+                n.senderLabel.toLowerCase().contains(q) ||
+                n.items.any((i) => i.text.toLowerCase().contains(q)))
+              n,
+        ];
+  final rawEntries = sharedNoteEntries(ref);
+  final entries = q.isEmpty
+      ? rawEntries
+      : [
+          for (final e in rawEntries)
+            if (e.note.title.toLowerCase().contains(q) ||
+                e.note.body.toLowerCase().contains(q) ||
+                e.share.ownerName.toLowerCase().contains(q) ||
+                e.note.items.any((i) => i.text.toLowerCase().contains(q)))
+              e,
+        ];
   final unread = ref.watch(sharedNoteUnreadProvider);
   if (inbox.isEmpty && entries.isEmpty) return const [];
   final inboxTag = HubSourceTag(
@@ -165,6 +191,28 @@ List<Widget> sharedHubSlivers(
     color: scheme.primary,
   );
   return [
+    if (showMarkAllRead && unread.isNotEmpty)
+      SliverPadding(
+        padding: EdgeInsets.fromLTRB(pad, AppSpace.xs, pad, 0),
+        sliver: SliverToBoxAdapter(
+          child: Row(
+            children: [
+              const Spacer(),
+              TextButton.icon(
+                key: const ValueKey('hub-mark-all-read'),
+                onPressed: () {
+                  final seen = ref.read(sharedNoteSeenProvider.notifier);
+                  for (final id in unread) {
+                    seen.markSeen(id);
+                  }
+                },
+                icon: const Icon(Icons.done_all, size: AppIconSize.s),
+                label: Text(l10n.sharedMarkAllRead),
+              ),
+            ],
+          ),
+        ),
+      ),
     if (inbox.isNotEmpty)
       SliverPadding(
         padding: EdgeInsets.fromLTRB(pad, pad, pad, 0),
@@ -197,10 +245,14 @@ List<Widget> sharedHubSlivers(
 
 /// Ana ekranı "Gelen" süzgecine alır (klasör çipiyle aynı davranış — bkz.
 /// `openFolder`): öteki süzgeçler bırakılır, ana ekran
-/// dışındaysa ana ekrana dönülür. Zaten açıksa kapatır ("Tümü" gibi).
-void showSharedHubOnHome(BuildContext context) {
+/// dışındaysa ana ekrana dönülür. Zaten ana ekranda açıksa ve [toggle]
+/// doğruysa kapatır ("Tümü" gibi); başka rotadan (ör. `/folders`) çağrılırsa
+/// kapatmak yerine ana ekranda Gelen'i açar.
+void showSharedHubOnHome(BuildContext context, {bool toggle = true}) {
   final container = ProviderScope.containerOf(context, listen: false);
-  if (container.read(sharedHubOnHomeProvider)) {
+  final router = GoRouter.maybeOf(context);
+  final onHome = router == null || isSplitShellLocation(router.state.uri.path);
+  if (toggle && onHome && container.read(sharedHubOnHomeProvider)) {
     container.read(sharedHubOnHomeProvider.notifier).set(false);
     return;
   }
@@ -212,10 +264,9 @@ void showSharedHubOnHome(BuildContext context) {
     container.read(showAllNotesProvider.notifier).set(false);
   }
   container.read(sharedHubOnHomeProvider.notifier).set(true);
-  final router = GoRouter.maybeOf(context);
   if (router == null) return;
   Navigator.of(context).popUntil((route) => route.settings is Page);
-  if (!isSplitShellLocation(router.state.uri.path)) router.go('/');
+  if (!onHome) router.go('/');
 }
 
 /// Birleşik listede öğenin kaynağı: küçük renkli hap ("Gelen" /

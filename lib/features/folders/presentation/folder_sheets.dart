@@ -66,11 +66,13 @@ Future<String?> showFolderEditorDialog(
                       final scheme = theme.colorScheme;
                       final previewAccent = color != null
                           ? NoteFolder.accentPalette[color!]
-                          : (existing == null
+                          : (hub
+                                ? scheme.secondary
+                                : existing == null
                                 ? scheme.primary
                                 : folderAccent(existing.id));
                       final title = value.text.trim().isEmpty
-                          ? l10n.folderNameHint
+                          ? (hub ? l10n.sharedHubShort : l10n.folderNameHint)
                           : value.text.trim();
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppSpace.m),
@@ -94,8 +96,10 @@ Future<String?> showFolderEditorDialog(
                               children: [
                                 FolderIconBox(
                                   accent: previewAccent,
-                                  icon: NoteFolder.iconChoices[icon] ??
-                                      Icons.folder_outlined,
+                                  icon: hub && icon.isEmpty
+                                      ? AppIcons.inbox
+                                      : (NoteFolder.iconChoices[icon] ??
+                                            Icons.folder_outlined),
                                   size: 34,
                                 ),
                                 const SizedBox(width: AppSpace.m),
@@ -248,14 +252,17 @@ Future<String?> showFolderEditorDialog(
     );
 
     final name = nameController.text.trim();
-    if (!(saved ?? false) || name.isEmpty) return null;
+    if (!(saved ?? false)) return null;
     if (hub) {
+      final storedName =
+          name.isEmpty || name == l10n.sharedHubShort ? '' : name;
       ref
           .read(sharedHubFolderProvider.notifier)
-          .edit(name: name, icon: icon, color: color, hidden: hidden);
+          .edit(name: storedName, icon: icon, color: color, hidden: hidden);
       if (hidden) ref.read(sharedHubOnHomeProvider.notifier).set(false);
       return existing!.id;
     }
+    if (name.isEmpty) return null;
     final repo = ref.read(foldersRepositoryProvider);
     if (repo == null) return null;
     if (existing == null) {

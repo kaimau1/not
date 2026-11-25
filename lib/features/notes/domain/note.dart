@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/utils/note_e2ee.dart';
+import '../../../core/utils/note_e2ee_session.dart';
 import '../../../core/utils/rich_text.dart';
 import 'archive_paper.dart';
 import 'attachment.dart';
@@ -995,16 +997,30 @@ class Note {
       hasPageNotes: rawPageNotes.isNotEmpty,
       classicDocument: map['classicDocument'] == true,
     );
+    final rawEnvelope = map['e2ee'] as String?;
+    final e2eeKey = NoteE2eeSession.key;
+    final decrypted =
+        (rawEnvelope != null && NoteE2ee.isEncrypted(rawEnvelope) && e2eeKey != null)
+            ? NoteE2ee.decryptNotePayload(
+                envelope: rawEnvelope,
+                key: e2eeKey,
+                noteId: id,
+              )
+            : null;
+    final resolvedBody = decrypted?.body ?? (map['body'] as String? ?? '');
+    final resolvedItems = decrypted != null
+        ? [for (final raw in decrypted.items) NoteItem.fromMap(raw)]
+        : [
+            for (final raw in (map['items'] as List<dynamic>? ?? const []))
+              NoteItem.fromMap(Map<String, dynamic>.from(raw as Map)),
+          ];
     return Note(
       id: id,
       localOnly: localOnly,
       type: type,
       title: map['title'] as String? ?? '',
-      body: map['body'] as String? ?? '',
-      items: [
-        for (final raw in (map['items'] as List<dynamic>? ?? const []))
-          NoteItem.fromMap(Map<String, dynamic>.from(raw as Map)),
-      ],
+      body: resolvedBody,
+      items: resolvedItems,
       pageNotes: {
         for (final e
             in (map['pageNotes'] as Map<dynamic, dynamic>? ?? const {}).entries)
@@ -1110,7 +1126,9 @@ class Note {
           : null,
       extras: {
         for (final e in map.entries)
-          if (!knownKeys.contains(e.key)) e.key: e.value,
+          if (!knownKeys.contains(e.key) &&
+              !(e.key == 'e2ee' && decrypted != null))
+            e.key: e.value,
       },
     );
   }
@@ -1130,14 +1148,26 @@ class Note {
       },
   ];
 
-  Map<String, dynamic> toMap() => {
+  Map<String, dynamic> toMap() {
+    final e2eeKey = locked ? NoteE2eeSession.key : null;
+    final encryptBody =
+        e2eeKey != null && (body.isNotEmpty || items.isNotEmpty);
+    final rawItems = [for (final i in items) i.toMap()];
+    return {
     // ÖNCE tanınmayan alanlar: bilinen anahtarlar her zaman üstüne yazar.
     ...extras,
     'schema': currentSchema,
     'type': type.id,
     'title': title,
-    'body': body,
-    'items': [for (final i in items) i.toMap()],
+    'body': encryptBody ? '' : body,
+    'items': encryptBody ? const <Map<String, dynamic>>[] : rawItems,
+    if (encryptBody)
+      'e2ee': NoteE2ee.encryptNotePayload(
+        body: body,
+        items: rawItems,
+        key: e2eeKey,
+        noteId: id,
+      ),
     // Yalnız doluysa yazılır: PDF olmayan notların şemasında bu alan hiç
     // oluşmaz. Dolduğunda anahtarlar tek tek birleşir — merge derin
     // birleştirdiği için başka cihazın yazdığı BAŞKA sayfanın notu ezilmez.
@@ -1233,7 +1263,8 @@ class Note {
     // Kartlar da koşulsuz (son kart silinince alan boşalmalı).
     'cards': [for (final c in cards) c.toMap()],
     'aiSummary': aiSummary?.toMap(),
-  };
+    };
+  }
 }
 
 /// Ana ekran bölümleri, sırasıyla: ACİL → SABİT → diğerleri (2026-11-16).

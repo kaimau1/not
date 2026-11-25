@@ -10418,4 +10418,81 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get shopDictationTooltip => 'Sesle ekle';
+
+  @override
+  String get spellManualLearn => 'Bu düzeltmeyi öğren';
+
+  @override
+  String get spellManualLearnHint =>
+      'Bir dahaki sefere otomatik önerilir ve düzeltilir.';
+
+  @override
+  String get spellNoSuggestions => 'Öneri bulunamadı';
+
+  @override
+  String get spellHintBadge => 'İpucu';
+
+  @override
+  String get spellErrorBadge => 'Yazım';
+
+  @override
+  String get wallpaperSakuraBreeze => 'Sakura esintisi';
+
+  @override
+  String get wallpaperOceanMist => 'Ege esintisi';
+
+  @override
+  String get wallpaperAutumnMaple => 'Sonbahar yaprakları';
+
+  @override
+  String get wallpaperSageLinen => 'Okaliptüs keten';
+
+  @override
+  String get wallpaperPeachHorizon => 'Şeftali ufku';
+
+  @override
+  String get wallpaperNordicPaper => 'İskandinav kağıt';
+
+  @override
+  String get wallpaperStarryPine => 'Yıldızlı çam';
+
+  @override
+  String get wallpaperObsidianGold => 'Obsidyen altın';
+
+  @override
+  String get uiProfileSectionTitle => 'Hazır arayüz profilleri';
+
+  @override
+  String get uiProfileSimple => 'Sade';
+
+  @override
+  String get uiProfileSimpleDesc =>
+      'Günlük hızlı not ve alışveriş için temiz ekran';
+
+  @override
+  String get uiProfileStandard => 'Standart';
+
+  @override
+  String get uiProfileStandardDesc => 'Tüm araçlar dengeli yerleşimde';
+
+  @override
+  String get uiProfileTabletPen => 'Tablet ve kalem';
+
+  @override
+  String get uiProfileTabletPenDesc =>
+      'Bölünmüş görünüm, kalem ve PDF araçları ön planda';
+
+  @override
+  String uiProfileApplied(String name) {
+    return '$name profili uygulandı';
+  }
+
+  @override
+  String get lockEncryptedBadge => 'Uçtan uca şifreli (AES-256)';
+
+  @override
+  String get starterShoppingTitle => '🛒 Örnek market listesi';
+
+  @override
+  String get starterWelcomeTitle => '⚡ Hızlı başlangıç';
 }

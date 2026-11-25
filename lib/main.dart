@@ -35,6 +35,7 @@ import 'core/widgets/keyboard_snap.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/notes/data/local_notes_store.dart';
 import 'features/notes/data/note_format_memory.dart';
+import 'features/notes/data/starter_notes.dart' show StarterNotesConfig;
 import 'features/notes/presentation/editor/pinned_side.dart' show PinnedSideMemory;
 import 'features/notes/presentation/note_card_media.dart' show CardThumbs;
 import 'features/ai/data/antalia/antalia_engine.dart' show registerAntaliaLicense;
@@ -99,6 +100,7 @@ Future<void> main() async {
   } else {
     WidgetsFlutterBinding.ensureInitialized();
   }
+  StarterNotesConfig.allowAutoSeed = true;
   registerAntaliaLicense();
   registerThirdPartyLicenses(); // PL7: yazı tipi OFL + CMU BSD
   // Yazı tipleri yalnız paketten (T3/K-54): ağdan inen kesim bütün metni

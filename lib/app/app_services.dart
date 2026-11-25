@@ -14,6 +14,7 @@ import '../features/notes/data/place_reminders.dart';
 import '../features/notes/data/push_service.dart';
 import '../features/notes/data/reminder_service.dart';
 import '../features/notes/data/share_intake.dart';
+import '../features/notes/data/starter_notes.dart';
 import '../features/notes/data/upload_queue.dart';
 import '../features/notes/data/video_note_transcripts.dart';
 import '../features/notes/data/widget_service.dart';
@@ -24,6 +25,7 @@ import '../features/settings/data/spell_sync.dart';
 import 'router.dart';
 import '../core/play_build.dart';
 import '../core/save_cadence.dart';
+import '../core/utils/note_e2ee_session.dart';
 
 /// Oturum açıkken ayakta durması gereken arka plan servisleri (F2.4).
 ///
@@ -51,7 +53,41 @@ class AppServices extends ConsumerStatefulWidget {
 set debugAppServicesStages(List<void Function(WidgetRef ref)>? value) =>
     _AppServicesState.debugStaged = value;
 
-class _AppServicesState extends ConsumerState<AppServices> {
+class _AppServicesState extends ConsumerState<AppServices>
+    with WidgetsBindingObserver {
+  /// Faz 4 — RAM diyeti: varsayılan 1000 görsel / 100 MB yerine 80 görsel /
+  /// 48 MB tavan; düşük RAM cihazlarda bellek baskısı veya arka planda
+  /// canlı önbellek boşaltılır.
+  static const _kMaxImageCacheEntries = 80;
+  static const _kMaxImageCacheBytes = 48 << 20;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    final cache = PaintingBinding.instance.imageCache;
+    if (cache.maximumSize > _kMaxImageCacheEntries) {
+      cache.maximumSize = _kMaxImageCacheEntries;
+    }
+    if (cache.maximumSizeBytes > _kMaxImageCacheBytes) {
+      cache.maximumSizeBytes = _kMaxImageCacheBytes;
+    }
+  }
+
+  @override
+  void didHaveMemoryPressure() {
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    clearSearchBodyCache();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      PaintingBinding.instance.imageCache.clearLiveImages();
+    }
+  }
+
   /// İlk kareden sonra sırayla başlayan servisler (önemliden önemsize).
   static final List<void Function(WidgetRef ref)> _staged = [
     // Bir defalık veri göçleri (F3.5 defter).
@@ -76,6 +112,8 @@ class _AppServicesState extends ConsumerState<AppServices> {
     (ref) => ref.listen(widgetServiceProvider, _ignore),
     // Kanallarım/Harita video notlarının transkripti (arka planda).
     (ref) => ref.listen<void>(videoNoteTranscriptsProvider, _ignore),
+    // İlk 60 sn başlangıç notları (boş hesapta bir kez, Faz 4).
+    (ref) => ref.listen<void>(starterNotesSeederProvider, _ignore),
     // PL6: yarıda kalmış satın alma doğrulamasını açılışta sessizce onarır
     // (20 sn gecikmeli). Yalnız Play; kişisel APK'da kademe yok.
     if (PlayBuild.enabled)
@@ -112,6 +150,7 @@ class _AppServicesState extends ConsumerState<AppServices> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _waiting = false;
     _fallback?.cancel();
     super.dispose();
@@ -122,6 +161,7 @@ class _AppServicesState extends ConsumerState<AppServices> {
     // Hesap değişince (çıkış dahil) önceki hesabın bellekteki verisi (F5.5).
     ref.listen<String?>(currentUidProvider, (previous, next) {
       if (previous == next) return;
+      NoteE2eeSession.clear();
       clearSearchBodyCache();
       unawaited(LocalNotesStore.releaseExcept(next));
     });

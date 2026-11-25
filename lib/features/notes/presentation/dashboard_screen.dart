@@ -33,7 +33,6 @@ import '../../../app/web_workspace/web_workspace_scope.dart';
 import '../../../app/theme/note_colors.dart';
 import 'dart:math' as math;
 
-import '../../../app/theme/dashboard_wallpapers.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/app_design.dart' show AppSwipe, AppTone;
 import '../../../core/a11y/motion.dart';
@@ -44,7 +43,6 @@ import '../../../core/personalize.dart';
 import '../../../core/tips.dart';
 import '../../../core/widgets/customizable.dart';
 import '../../../core/widgets/freeze_when_hidden.dart';
-import '../../../core/utils/local_file.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/connectivity.dart';
@@ -76,8 +74,8 @@ import '../domain/note.dart';
 import '../domain/note_share_text.dart';
 import '../domain/note_type.dart';
 import 'color_picker_sheet.dart';
+import 'app_background_layers.dart';
 import 'dashboard_background_sheet.dart';
-import 'dashboard_pattern.dart';
 import 'filter_sheet.dart';
 import 'home_snapshot.dart';
 import 'folder_hold_button.dart';
@@ -85,7 +83,9 @@ import 'note_card.dart';
 import 'note_link_ui.dart' show noteLinkLabel;
 import 'note_grid.dart';
 import 'shared_notes_screen.dart';
+import '../../inbox/data/inbox_repository.dart' show inboxNotesProvider;
 import '../../inbox/presentation/shared_hub_screen.dart' show sharedHubPlaceholder, sharedHubSlivers, showSharedHubOnHome;
+import '../data/shared_note_activity.dart' show sharedNotesVisibleCountProvider;
 import 'notes_providers.dart';
 import 'quick_add_actions.dart';
 import 'quick_add_fab.dart';
@@ -192,17 +192,6 @@ class _GridScrollElement extends StatelessElement {
 /// kartının alt yarısı listenin en sonuna kaydırıldığında bile düğmelerin
 /// ARKASINDA kalıyordu; kartın altındaki metne/tarihe hiç ulaşılamıyordu.
 const double _kFabClearance = 96;
-
-/// Saydam arama çubuğunun (ana ekran zemini varken) durum çubuğu stili:
-/// simgeler temanın parlaklığına göre — opak `surface` zeminle aynı sonuç.
-SystemUiOverlayStyle _statusBarOverZemin(BuildContext context) {
-  final dark = Theme.of(context).brightness == Brightness.dark;
-  return SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
-    statusBarBrightness: dark ? Brightness.dark : Brightness.light,
-  );
-}
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -699,8 +688,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Klasör düğmesindeki ve aşağı çekişteki duraklar (ilki "Tümü").
   List<FolderStop> _folderStops(WidgetRef ref) {
     final counts = ref.watch(folderNoteCountsProvider);
-    final folders = ref.watch(visibleOrderedFoldersProvider);
+    final rawFolders = ref.watch(visibleOrderedFoldersProvider);
+    final folders = emptyFoldersLast(
+      rawFolders,
+      ref.watch(folderSortProvider),
+      counts,
+    );
     final hub = ref.watch(sharedHubFolderProvider);
+    final int inboxCount = ref.watch(
+      inboxNotesProvider.select((s) => s.value?.length ?? 0),
+    );
+    final int sharedCount = ref.watch(sharedNotesVisibleCountProvider);
+    final hubCount = inboxCount + sharedCount;
     return [
       FolderStop(
         id: null,
@@ -720,6 +719,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             color: f.color == null
                 ? Theme.of(context).colorScheme.tertiary
                 : f.accent,
+            count: hubCount,
           )
         else
           FolderStop(
@@ -992,8 +992,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
     ref.read(selectedSharedFolderProvider.notifier).set(null);
     if (stop.folderId == kSharedHubFolderId) {
-      ref.read(sharedHubOnHomeProvider.notifier).set(false);
-      showSharedHubOnHome(context);
+      showSharedHubOnHome(context, toggle: false);
       AppHaptics.tick();
       return;
     }
@@ -1008,7 +1007,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void _selectFolderFromHold(String? folderId) {
     _swipeForward = true;
     if (folderId == kSharedHubFolderId) {
-      if (!ref.read(sharedHubOnHomeProvider)) showSharedHubOnHome(context);
+      showSharedHubOnHome(context, toggle: false);
       AppHaptics.tick();
       return;
     }
@@ -1034,7 +1033,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final stop = _swipeStop(direction);
     if (stop == null) return null;
     final l10n = context.l10n;
-    if (stop.folderId == kSharedHubFolderId) return l10n.sharedHubShort;
+    if (stop.folderId == kSharedHubFolderId) {
+      final hub = ref.read(sharedHubFolderProvider);
+      return hub.name.isEmpty ? l10n.sharedHubShort : hub.name;
+    }
     final sharedStop = _sharedStopOf(stop.folderId);
     if (sharedStop != null) return sharedStop.name;
     if (ref.read(swipeModeProvider) == SwipeMode.filters) {
@@ -1065,8 +1067,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
     final stop = _swipeStop(direction);
     if (stop == null) return null;
-    if (stop.folderId == kSharedHubFolderId ||
-        _sharedStopOf(stop.folderId) != null) {
+    if (stop.folderId == kSharedHubFolderId) {
+      final hub = ref.read(sharedHubFolderProvider);
+      return hub.icon.isEmpty ? AppIcons.inbox : hub.iconData;
+    }
+    if (_sharedStopOf(stop.folderId) != null) {
       return AppIcons.shared;
     }
     if (ref.read(swipeModeProvider) == SwipeMode.filters) {
@@ -1473,70 +1478,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Ana ekran zemini: **renk → desen → görsel** (üçü de isteğe bağlı, üst
   /// üste binebilirler — bkz. `dashboard_background_sheet.dart`).
-  List<Widget> _dashboardBackground(WidgetRef ref) {
-    final background = ref.watch(dashboardBackgroundProvider);
-    final layers = <Widget>[];
-    final color = background.color;
-    if (color != null) {
-      layers.add(Positioned.fill(child: ColoredBox(color: Color(color))));
-    }
-    if (background.pattern != DashboardPattern.none) {
-      layers.add(
-        Positioned.fill(
-          child: DashboardPatternLayer(
-            pattern: background.pattern,
-            opacity: background.opacity,
-          ),
-        ),
-      );
-    }
-    final preset = DashboardWallpapers.byId(background.preset);
-    final path = background.path;
-    final hasFile = preset == null && path != null && localFileExists(path);
-    final opacity = background.opacity.clamp(0.05, 1).toDouble();
-    Widget? imageLayer;
-    if (preset != null || hasFile) {
-      final targetWidth =
-          (MediaQuery.sizeOf(context).width *
-                  MediaQuery.devicePixelRatioOf(context))
-              .round();
-      final ImageProvider provider = preset != null
-          ? ResizeImage(AssetImage(preset.asset), width: targetWidth)
-          : ResizeImage(FileImage(File(path!)), width: targetWidth);
-      final key = ValueKey(preset != null ? 'preset:${preset.id}' : 'file:$path');
-      // PİL: `Opacity` widget'ı yerine görselin KENDİ opaklığı — ayrı bir
-      // birleştirme katmanı (saveLayer) açmadan, çizimde alfa uygulanır.
-      // Zemin ızgaranın arkasında ekran boyunda duruyor; ayrı katman her
-      // kaydırma karesinde GPU'ya fazladan tam ekran bir geçiş demekti.
-      // EKRAN BOYUNDA (2026-11-25): `AnimatedSwitcher`'ın yığını çocuğa
-      // GEVŞEK kısıt veriyor; görsel kendi en-boy oranında küçülüp ortada
-      // duruyor, `BoxFit.cover` hiç devreye girmiyordu (üstte/altta boş
-      // şerit). Sonsuz en/boy kısıtı sıkılaştırır.
-      imageLayer = RepaintBoundary(
-        key: key,
-        child: Image(
-          image: provider,
-          width: double.infinity,
-          height: double.infinity,
-          fit: BoxFit.cover,
-          opacity: AlwaysStoppedAnimation(opacity),
-        ),
-      );
-    }
-    if (imageLayer != null) {
-      layers.add(
-        Positioned.fill(
-          child: AnimatedSwitcher(
-            duration: AppMotion.of(context, AppMotion.medium),
-            switchInCurve: AppMotion.curveOf(context, AppMotion.enter),
-            switchOutCurve: AppMotion.curveOf(context, AppMotion.exit),
-            child: imageLayer,
-          ),
-        ),
-      );
-    }
-    return layers;
-  }
+  List<Widget> _dashboardBackground(WidgetRef ref) =>
+      buildAppBackgroundLayers(context, ref);
 
   @override
   Widget build(BuildContext context) {
@@ -1627,6 +1570,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ref.listen(selectedFolderProvider, (_, next) {
       if (next != null) closeHub();
     });
+    ref.listen(selectedSharedFolderProvider, (_, next) {
+      if (next != null) closeHub();
+    });
     // Paylaşım kaldırıldıysa ya da klasör silindiyse süzgeç kendiliğinden
     // kalkar: ekran ulaşılamayan klasörde boş durmasın.
     ref.listen(sharedFolderRefsProvider, (_, next) {
@@ -1654,8 +1600,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final sharedAtBottom = ref.watch(homeSharedAtBottomProvider);
     final hubActive =
         ref.watch(sharedHubOnHomeProvider) &&
-        !searchActive &&
         !selectionActive &&
+        sharedFolder == null &&
         ref.watch(selectedFolderProvider) == null;
     // **KLASÖR RAFI görünür mü / şerit mi** (2026-11-07). Kural eskisiyle
     // aynı: yalnız kök süzgeçte, aramasız, sıralama dışı; gizlenebilir ama
@@ -2043,7 +1989,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     ? Colors.transparent
                                     : null,
                                 systemOverlayStyle: hasBackground
-                                    ? _statusBarOverZemin(context)
+                                    ? statusBarOverZemin(context)
                                     : null,
                                 // SOLDA GERİ OKU YOK (kullanıcı bulgusu
                                 // 2026-11-06: kutu bir sağa bir sola
@@ -2426,6 +2372,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           context,
                                           columns,
                                           cellWidth,
+                                          query: query,
                                         )
                                       else
                                       ...notesAsync.when(

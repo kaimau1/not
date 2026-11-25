@@ -40,6 +40,13 @@ SharedPreferences watchPrefs(Ref ref) {
   return ref.watch(sharedPreferencesProvider);
 }
 
+/// Faz 4: Ayar senkronu için kirli-yazım (dirty-write) tetiği.
+/// 20 sn periyodik yoklama yerine tercih yazıldığında kısa debounced senkron
+/// tetiklenir (bkz. `prefs_sync.dart`).
+final prefsDirtyTick = ValueNotifier<int>(0);
+
+void markPrefsDirty() => prefsDirtyTick.value++;
+
 /// Açık/kapalı cihaz tercihi: SharedPreferences'ta [key] anahtarıyla
 /// saklanır (anahtar adları eski sınıflarla AYNI — tercih kaybolmaz).
 class BoolPrefNotifier extends Notifier<bool> {
@@ -55,6 +62,7 @@ class BoolPrefNotifier extends Notifier<bool> {
   void set(bool value) {
     state = value;
     ref.read(sharedPreferencesProvider).setBool(key, value);
+    markPrefsDirty();
   }
 
   void toggle() => set(!state);
@@ -153,6 +161,7 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
   void set(AppThemeChoice choice) {
     state = choice;
     ref.read(sharedPreferencesProvider).setString(_key, choice.name);
+    markPrefsDirty();
   }
 }
 
@@ -370,6 +379,7 @@ class FontScaleNotifier extends Notifier<double> {
   void set(double value) {
     state = value;
     ref.read(sharedPreferencesProvider).setDouble(_key, value);
+    markPrefsDirty();
   }
 
   void setStep(FontScaleStep step) => set(step.scale);
@@ -400,6 +410,7 @@ class AppFontNotifier extends Notifier<String> {
   void set(String family) {
     state = family;
     ref.read(sharedPreferencesProvider).setString(_key, family);
+    markPrefsDirty();
     // Kullanıcı seçti: paketten çıkarılmış aileyi indir (çekirdekte etkisiz).
     unawaited(fontDownloads.ensure(family, retry: true));
   }

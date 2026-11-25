@@ -132,10 +132,7 @@ void main() {
     final delete = tester.getTopLeft(
       find.byKey(const ValueKey('settings-delete-account')),
     );
-    final signOut = tester.getTopLeft(
-      find.byKey(const ValueKey('settings-sign-out')),
-    );
-    expect(delete.dy, greaterThan(signOut.dy));
+    expect(find.byKey(const ValueKey('settings-sign-out')), findsNothing);
     // Son satır: altında başka ListTile yok.
     for (final e
         in find

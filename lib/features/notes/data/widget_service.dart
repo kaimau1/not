@@ -17,16 +17,10 @@ import '../presentation/notes_providers.dart';
 import 'notes_repository.dart';
 
 /// Ana ekran aracı sağlayıcıları (Android sınıfları `dev.kaimau.notlar`).
+/// Faz 4: 8 araç → 3 net araç (Bugün, Hızlı Ekleme Çubuğu, Akıllı Liste).
 const kHomeWidgetProviders = [
-  'NotlarWidgetProvider',
-  'QuickActionsWidgetProvider',
-  'QuickNoteWidgetProvider',
-  'VoiceWidgetProvider',
   'TodayWidgetProvider',
-  // HE-3 (P84): hızlı ekle 1×1 ve 4×1 (tema değişince yenilensin).
-  'QuickAddWidgetProvider',
   'QuickAddBarWidgetProvider',
-  // AL-6 (P97): akıllı liste ana ekran aracı.
   'SmartListWidgetProvider',
 ];
 
@@ -210,9 +204,6 @@ class WidgetService {
       _lastPayload = payload;
       await HomeWidget.saveWidgetData<String>('widget_today', today);
       await updateHomeWidget('TodayWidgetProvider');
-      await HomeWidget.saveWidgetData<String>('widget_notes', text);
-      await HomeWidget.saveWidgetData<String>('widget_count', count);
-      await updateHomeWidget('NotlarWidgetProvider');
       await HomeWidget.saveWidgetData<String>(
         'widget_list_id',
         smartList.noteId,

@@ -22,6 +22,8 @@ import '../../settings/settings_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
+import '../../notes/presentation/app_background_layers.dart';
+import '../../notes/presentation/dashboard_background_sheet.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/calendar_repository.dart';
 import '../data/holiday_source.dart';
@@ -888,6 +890,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final wide = MediaQuery.sizeOf(context).width >= _kWideCalendar;
     final paged = _view != CalendarView.agenda;
 
+    final backgroundLayers = buildAppBackgroundLayers(context, ref);
+    final hasBackground = backgroundLayers.isNotEmpty;
+
     // AY BELLİ OLSUN (kullanıcı isteği 2026-11-22: "başlık biraz daha
     // büyüsün"): üst çubuğun varsayılanı yerine ekran başlığı rolü, bir boy
     // büyük.
@@ -902,6 +907,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
     );
     final bar = AppBar(
+      backgroundColor: hasBackground ? Colors.transparent : null,
+      systemOverlayStyle: hasBackground ? statusBarOverZemin(context) : null,
       titleSpacing: wide ? null : 8,
       title: _view == CalendarView.agenda && !wide
           ? InkWell(
@@ -1020,6 +1027,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             'reminders' => context.push('/reminders'),
             'routines' => context.push('/routines'),
             'google' => showGoogleCalendarSheet(context),
+            'background' => showDashboardBackgroundSheet(context),
             'export' => exportCalendarIcs(context, ref),
             'holidays' => Future(
               () => ref.read(showHolidaysProvider.notifier).toggle(),
@@ -1041,6 +1049,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
               const PopupMenuDivider(),
             ],
+            _menuItem(
+              'background',
+              Icons.wallpaper_outlined,
+              l10n.dashboardBackground,
+            ),
             CheckedPopupMenuItem(
               key: const ValueKey('calendar-holidays-toggle'),
               value: 'holidays',
@@ -1154,7 +1167,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
     final dayPanelOpen =
         _panelDay != null && !wide && _view == CalendarView.month;
-    return Scaffold(
+    final scaffold = Scaffold(
+      backgroundColor: hasBackground ? Colors.transparent : null,
       // Takvimde yazı alanı yok; klavye yalnız üstteki levhalarda açılır.
       // Boyut değişseydi ay ızgarası/sayfalar klavyenin HER KARESİNDE yeniden
       // yerleşirdi (yeni etkinlik kasması, 2026-11-06).
@@ -1183,6 +1197,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               onClose: () => _backStep(wide)?.call(),
               child: _withDayPanel(body, data, wide),
             ),
+    );
+    if (!hasBackground) return scaffold;
+    return Stack(
+      children: [
+        ...backgroundLayers,
+        scaffold,
+      ],
     );
   }
 
@@ -3042,9 +3063,14 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
       relText,
       l10n.calendarWeekNumber(isoWeekNumber(_day)),
     ].join(' · ');
-    return Scaffold(
+    final backgroundLayers = buildAppBackgroundLayers(context, ref);
+    final hasBackground = backgroundLayers.isNotEmpty;
+    final scaffold = Scaffold(
+      backgroundColor: hasBackground ? Colors.transparent : null,
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
+        backgroundColor: hasBackground ? Colors.transparent : null,
+        systemOverlayStyle: hasBackground ? statusBarOverZemin(context) : null,
         titleSpacing: 0,
         toolbarHeight: 64,
         title: AnimatedSwitcher(
@@ -3200,6 +3226,13 @@ class _CalendarDayScreenState extends ConsumerState<CalendarDayScreen> {
           ),
         ],
       ),
+    );
+    if (!hasBackground) return scaffold;
+    return Stack(
+      children: [
+        ...backgroundLayers,
+        scaffold,
+      ],
     );
   }
 }

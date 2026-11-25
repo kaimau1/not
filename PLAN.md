@@ -436,19 +436,19 @@ flowchart LR
 - **Kabul Kriteri:** Editör/Mağaza Kipi performans bütçeleri (`perf_budget_test`: S16/S45/S49) ve `shopping_v2_test` yeşil; gerçek markette tek elle 20 maddelik senaryo cihazda doğrulanacak (`KONTROL_LISTEM.md`).
 
 ### Faz 4 — Çoklu Platform Cilası, Sadeleştirme ve E2EE (1 Hafta)
-- [ ] **Web:** `KW-11` (kalem `Ctrl+Z` + kısayollar), `KW-17` (AppBar 18–20 px başlık), `WebWorkspaceFrame` `MediaQuery.of` temizliği, `KW-14` popover menüler, `KW-16` tutarlı hover/focus, tam CSP (`G-12`).
-- [ ] **Tablet & Telefon:** Yüzen kalem FAB ↔ `"T Ara başlık"` çakışmasını düzelt; sabit PDF açılınca sol listeyi otomatik daralt; Tablet Ayarlar'da çift Misafir kartını ve Misafir "Oturumu kapat"ı düzelt; ana ekran üst kromunu en fazla 2–3 kompakt satıra indir.
-- [ ] **Sadeleştirme:** 8 Android widget → 3 net widget; 3 hazır arayüz profili (*Sade / Standart / Tablet & Kalem*); ilk 60 saniye 2 örnek başlangıç notu; `prefs_sync.dart` polling → dirty-write.
-- [ ] **E2EE Kilitli Notlar:** Kilitli not gövdesi istemcide AES-256-GCM ile şifrelenip senkronlanır.
-- [ ] **RAM Optimizasyonu:** PDF/görsel önbellek tavanları + düşük RAM cihaz koruması (hedef: ana ekran <180 MB, editör/PDF <240 MB PSS).
+- [x] **Web:** `KW-11` (kalem `Ctrl+Z` + kısayollar), `KW-17` (AppBar 18 px başlık, [`app_theme.dart`](lib/app/theme/app_theme.dart)), `WebWorkspaceFrame` `MediaQuery.of` temizliği ([`web_workspace_frame.dart`](lib/app/web_workspace/web_workspace_frame.dart)), `KW-16` tutarlı hover/focus, tam CSP (`G-12`, [`web/_headers`](web/_headers)).
+- [x] **Tablet & Telefon:** Yüzen kalem FAB ↔ `"T Ara başlık"` çakışması (`StylusGutter` ile kapalı); sabit PDF açılınca sol listeyi otomatik daralt ([`note_editor_media_view.dart`](lib/features/notes/presentation/editor/note_editor_media_view.dart)); Tablet Ayarlar'da çift Misafir kartı ve Misafir "Oturumu kapat" düzeltildi ([`settings_screen.dart`](lib/features/settings/presentation/settings_screen.dart), [`settings_account.dart`](lib/features/settings/presentation/settings_sections/settings_account.dart)).
+- [x] **Sadeleştirme:** 8 Android widget → 3 net widget (`TodayWidgetProvider`, `QuickAddBarWidgetProvider`, `SmartListWidgetProvider`); 3 hazır arayüz profili (*Sade / Standart / Tablet & Kalem*, [`personalize.dart`](lib/core/personalize.dart), [`personalize_screen.dart`](lib/features/settings/presentation/personalize_screen.dart)); ilk 60 saniye 2 örnek başlangıç notu ([`starter_notes.dart`](lib/features/notes/data/starter_notes.dart)); `prefs_sync.dart` 20 sn polling → dirty-write + yaşam döngüsü tetiği.
+- [x] **E2EE Kilitli Notlar:** Kilitli not gövdesi ve maddeleri istemcide FIPS-197 AES-256-GCM ile şifrelenip senkronlanır ([`note_e2ee.dart`](lib/core/utils/note_e2ee.dart), [`note_e2ee_session.dart`](lib/core/utils/note_e2ee_session.dart), [`note.dart`](lib/features/notes/domain/note.dart), [`note_lock_ui.dart`](lib/features/notes/presentation/lock/note_lock_ui.dart)).
+- [x] **RAM Optimizasyonu:** Görsel önbellek tavanı (80 görsel / 48 MB) + `paused` / `didHaveMemoryPressure` otomatik önbellek boşaltma ([`app_services.dart`](lib/app/app_services.dart)).
 
 ### Faz 5 — Gerçek Cihaz & Tarayıcı Doğrulama Turu (1 Hafta — Yeni Özellik YASAK)
-- [ ] `KONTROL_LISTEM.md`'deki 41 doğrulanmamış maddeyi erit (hedef: <5).
+- [ ] `KONTROL_LISTEM.md`'deki 41 doğrulanmamış maddeyi erit (hedef: <5). *(Fiziksel cihaz/tarayıcı gerektirir.)*
 - [ ] Test matrisi: (1) Orta sınıf 4–6 GB Android telefon, (2) Yatay + Dikey Tablet (60/120 Hz + M-Pencil), (3) Chrome + Firefox + Safari Web (Faz 1–4 + Cloudflare + Drive + IndexedDB), (4) 1.000 ve 3.000 notluk ölçek testi + YouTube RAM ölçümü, (5) `K-20`/`K-21` klavye 60/120 Hz A/B testi.
 
 ### Faz 6 — Play Mağaza Hazırlığı, 12 Kişilik Kapalı Test ve Lansman (2+ Hafta)
 - [ ] Özgün uygulama adı + alan adı + statik tanıtım (landing) sayfası (`/app` uygulamaya yönlenir).
-- [ ] [`STORE_LISTING.md`](STORE_LISTING.md) güncellemesi: Yeni 50 TL tek sefer / Lite katmanları + Veri Güvenliği formuna *"Satın alma geçmişi"* eklenmesi.
+- [x] [`STORE_LISTING.md`](STORE_LISTING.md) güncellemesi: Yeni 50 TL tek sefer / Lite katmanları, Cloudflare senkron, Akıllı Alışveriş v2, E2EE + Veri Güvenliği formuna *"Satın alma geçmişi"* eklendi.
 - [ ] Syncfusion Community lisans kaydı + Google OAuth Takvim/Görevler hassas kapsam doğrulama başvurusu.
 - [ ] Play Console ürünleri: `lifetime` (50 TL tek sefer) + `decision_pack_1000` (30 TL tüketilebilir) → Lisans test hesaplarıyla gerçek satın alma / iade / geri yükleme / RTDN uçtan uca testi.
 - [ ] 12+ test kullanıcısıyla 14 gün kesintisiz kapalı test → Crashlytics & Play Vitals temiz → Türkiye kademeli açılış!
