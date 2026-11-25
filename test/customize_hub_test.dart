@@ -91,9 +91,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(container.read(quickCaptureRowProvider), !capture);
     // Ana ekran öğesi karosu gizler.
-    await tester.tap(find.byKey(ValueKey('ui-chip-${UiItem.homeAi}')));
+    await tester.tap(find.byKey(ValueKey('ui-chip-${UiItem.homeFilter}')));
     await tester.pumpAndSettle();
-    expect(Personalize.prefs.value.shows(UiItem.homeAi), isFalse);
+    expect(Personalize.prefs.value.shows(UiItem.homeFilter), isFalse);
   });
 
   testWidgets('Ekle levhası: gizle + sıfırla', (tester) async {

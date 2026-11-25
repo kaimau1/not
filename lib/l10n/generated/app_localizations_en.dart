@@ -9360,7 +9360,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proDecisionsIncluded => '750 calls';
 
   @override
-  String get proRowOwnKey => 'Your own Gemini key (BYOK)';
+  String get proRowOwnKey => 'Your own Gemini key';
 
   @override
   String get proLockedBadge => 'In Full Version';

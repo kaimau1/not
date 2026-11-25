@@ -157,20 +157,20 @@ ShopAisleMeta shopAisleMetaOf(QuickAisle aisle) => kShopAisles[aisle.index];
 /// Yaygın Türkiye market profilleri (`NoteItem.extras['s']` anahtarları).
 @immutable
 class ShopStoreProfile {
-  const ShopStoreProfile({required this.id, required this.label});
+  const ShopStoreProfile(this.id, this.label);
 
   final String id;
   final String label;
 }
 
 const List<ShopStoreProfile> kDefaultShopStores = [
-  ShopStoreProfile(id: 'bim', label: 'BİM'),
-  ShopStoreProfile(id: 'a101', label: 'A101'),
-  ShopStoreProfile(id: 'sok', label: 'ŞOK'),
-  ShopStoreProfile(id: 'migros', label: 'Migros'),
-  ShopStoreProfile(id: 'carrefour', label: 'CarrefourSA'),
-  ShopStoreProfile(id: 'pazar', label: 'Pazar'),
-  ShopStoreProfile(id: 'kasap', label: 'Kasap/Manav'),
+  ShopStoreProfile('bim', 'BİM'),
+  ShopStoreProfile('a101', 'A101'),
+  ShopStoreProfile('sok', 'ŞOK'),
+  ShopStoreProfile('migros', 'Migros'),
+  ShopStoreProfile('carrefour', 'CarrefourSA'),
+  ShopStoreProfile('pazar', 'Pazar'),
+  ShopStoreProfile('kasap', 'Kasap/Manav'),
 ];
 
 String shopStoreLabel(String id) {

@@ -137,7 +137,7 @@ void main() {
     for (final p in const [
       'uploadQueueProvider',
       'reminderServiceProvider',
-      'premiumProvider',
+      'billingRecoveryProvider',
       'shareIntakeProvider',
       'deepLinkHandlerProvider',
     ]) {
@@ -145,7 +145,7 @@ void main() {
     }
     expect(
       File('lib/app/app_services.dart').readAsStringSync(),
-      contains('premiumProvider'),
+      contains('billingRecoveryProvider'),
     );
   });
 }

@@ -888,10 +888,12 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     }
   }
 
-  bool get _aiUsable =>
-      ref.read(quickDropAiProvider) &&
-      ref.read(decisionServiceProvider).modeOf(DecisionFeature.dropTarget) ==
-          DecisionMode.live;
+  bool get _aiUsable {
+    if (!ref.read(quickDropAiProvider)) return false;
+    final decisions = ref.read(decisionServiceProvider);
+    return decisions.mayHaveBackend &&
+        decisions.modeOf(DecisionFeature.dropTarget) == DecisionMode.live;
+  }
 
   Future<void> _askAi() async {
     final st = _state.value;

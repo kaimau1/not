@@ -492,9 +492,9 @@ void main() {
       of: find.byType(BottomAppBar),
       matching: find.byType(MinTapTarget),
     );
-    // Telefonda 4 yuva (U6, 2026-11-18): Biçim · Ekle · Kalem · ⋯ + AI ·
-    // ses kaydı · dikte.
-    expect(targets, findsNWidgets(7));
+    // Telefonda 4 yuva (U6, 2026-11-18): Biçim · Ekle · Kalem · ⋯ +
+    // ses kaydı · dikte (AI Faz 1'de kalktı).
+    expect(targets, findsNWidgets(6));
     for (final element in targets.evaluate()) {
       final visible = tester.getRect(find.byWidget(element.widget));
       final node = tester.getSemantics(find.byWidget(element.widget));

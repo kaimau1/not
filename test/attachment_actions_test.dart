@@ -157,7 +157,7 @@ void main() {
     expect(sound, isNot(contains(AttachmentAction.open)));
     expect(
       attachmentActionsFor(video, AttachmentSurface.strip, all),
-      contains(AttachmentAction.videoToNote),
+      isNot(contains(AttachmentAction.videoToNote)),
     );
     expect(
       attachmentActionsFor(video, AttachmentSurface.strip, all),

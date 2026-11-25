@@ -156,17 +156,20 @@ class DecisionQuotaNotifier extends Notifier<DecisionQuotaSnapshot> {
   }
 }
 
-final decisionServiceProvider = Provider<DecisionService>(
-  (ref) => DecisionService(
+final decisionServiceProvider = Provider<DecisionService>((ref) {
+  final proxy = _proxyFor(ref);
+  final savedKey = ref.watch(activeApiKeyProvider).value?.trim();
+  return DecisionService(
     key: _admittedGeminiKeyFor(ref),
-    proxy: _proxyFor(ref),
+    proxy: proxy,
+    mayHaveBackend: proxy != null || (savedKey != null && savedKey.isNotEmpty),
     prefs: ref.watch(sharedPreferencesProvider),
     onQuota: (snapshot) =>
         ref.read(decisionQuotaProvider.notifier).updateFromServer(snapshot),
     onQuotaExhausted: () =>
         ref.read(decisionQuotaProvider.notifier).markExhausted(),
-  ),
-);
+  );
+});
 
 /// Kendi Gemini anahtarı (BYOK): [AiAdmission] kapısından (AI kapalı /
 /// kill switch / rıza / katman) geçer ve anahtarı güvenli depodan okur.
@@ -273,6 +276,7 @@ class DecisionService {
     DateTime Function()? now,
     AiRateLimiter? limiter,
     this.proxy,
+    this.mayHaveBackend = true,
     this.prefs,
     this.onQuota,
     this.onQuotaExhausted,
@@ -285,6 +289,9 @@ class DecisionService {
 
   /// Kendi anahtarı yokken sunucu vekili; null = vekil yok.
   final DecisionProxy? proxy;
+
+  /// Sunucu vekili veya kayıtlı Gemini BYOK anahtarı hazır mı?
+  final bool mayHaveBackend;
   final JsonHttp _http;
   final DateTime Function() _now;
   final SharedPreferences? prefs;

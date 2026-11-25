@@ -16445,7 +16445,7 @@ abstract class AppLocalizations {
   /// No description provided for @proTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Tam Sürüm'**
+  /// **'Tam sürüm'**
   String get proTitle;
 
   /// No description provided for @proSettingsSubtitle.
@@ -16487,13 +16487,13 @@ abstract class AppLocalizations {
   /// No description provided for @proTierLifetime.
   ///
   /// In tr, this message translates to:
-  /// **'Tam Sürüm'**
+  /// **'Tam sürüm'**
   String get proTierLifetime;
 
   /// No description provided for @proTierPro.
   ///
   /// In tr, this message translates to:
-  /// **'Tam Sürüm'**
+  /// **'Tam sürüm'**
   String get proTierPro;
 
   /// No description provided for @proRowBasics.
@@ -16535,7 +16535,7 @@ abstract class AppLocalizations {
   /// No description provided for @proAttachDrive.
   ///
   /// In tr, this message translates to:
-  /// **'Kendi Drive\'ın'**
+  /// **'Kendi Drive hesabın'**
   String get proAttachDrive;
 
   /// No description provided for @proAttachCloud.
@@ -16571,13 +16571,13 @@ abstract class AppLocalizations {
   /// No description provided for @proRowOwnKey.
   ///
   /// In tr, this message translates to:
-  /// **'Kendi Gemini anahtarın (BYOK)'**
+  /// **'Kendi Gemini anahtarın'**
   String get proRowOwnKey;
 
   /// No description provided for @proLockedBadge.
   ///
   /// In tr, this message translates to:
-  /// **'Tam Sürümde'**
+  /// **'Tam sürümde'**
   String get proLockedBadge;
 
   /// No description provided for @proBuyTitle.
@@ -16589,13 +16589,13 @@ abstract class AppLocalizations {
   /// No description provided for @proPlanMonthly.
   ///
   /// In tr, this message translates to:
-  /// **'Tam Sürüm'**
+  /// **'Tam sürüm'**
   String get proPlanMonthly;
 
   /// No description provided for @proPlanYearly.
   ///
   /// In tr, this message translates to:
-  /// **'Tam Sürüm'**
+  /// **'Tam sürüm'**
   String get proPlanYearly;
 
   /// No description provided for @proPlanLifetime.
@@ -16769,7 +16769,7 @@ abstract class AppLocalizations {
   /// No description provided for @decisionsSectionTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Akıllı Kararlar'**
+  /// **'Akıllı kararlar'**
   String get decisionsSectionTitle;
 
   /// No description provided for @decisionsSectionSubtitle.
@@ -18299,7 +18299,7 @@ abstract class AppLocalizations {
   /// No description provided for @shopReceiptTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Fişten Fiyat Güncelle'**
+  /// **'Fişten fiyat güncelle'**
   String get shopReceiptTitle;
 
   /// No description provided for @shopReceiptCamera.
@@ -18359,7 +18359,7 @@ abstract class AppLocalizations {
   /// No description provided for @shopBarcodeTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Barkod Tara'**
+  /// **'Barkod tara'**
   String get shopBarcodeTitle;
 
   /// No description provided for @shopBarcodeUnknownPrompt.
@@ -18443,7 +18443,7 @@ abstract class AppLocalizations {
   /// No description provided for @shopOpenStoreMode.
   ///
   /// In tr, this message translates to:
-  /// **'Mağaza Kipi'**
+  /// **'Mağaza kipi'**
   String get shopOpenStoreMode;
 
   /// No description provided for @shopDictationTooltip.

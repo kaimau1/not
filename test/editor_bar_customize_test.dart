@@ -77,13 +77,9 @@ void main() {
       expect(p.barSides.right, UiItem.barRightDefault);
       final moved = p
           .withBarSide(UiItem.barSearch, right: true)
-          .withBarSide(UiItem.barAi, right: false);
-      expect(moved.barSides.right, [
-        UiItem.barVoiceRecord,
-        UiItem.barDictation,
-        UiItem.barSearch,
-      ]);
-      expect(moved.barSides.left.last, UiItem.barAi);
+          .withBarSide(UiItem.barDictation, right: false);
+      expect(moved.barSides.right, [UiItem.barVoiceRecord, UiItem.barSearch]);
+      expect(moved.barSides.left.last, UiItem.barDictation);
       expect(moved.barSides.left, isNot(contains(UiItem.barSearch)));
       final back = UiPrefs.fromJson(moved.toJson()).barSides;
       expect(back.left, moved.barSides.left);
@@ -137,7 +133,7 @@ void main() {
       await endEditor(tester);
     });
 
-    testWidgets('düğme öbür kapsüle taşınır (Ara sağa, yapay zekâ sola)', (
+    testWidgets('düğme öbür kapsüle taşınır (Ara sağa, dikte sola)', (
       tester,
     ) async {
       await pumpEditor(tester, note, size: _wide);
@@ -152,7 +148,7 @@ void main() {
       Personalize.update(
         (p) => p
             .withBarSide(UiItem.barSearch, right: true)
-            .withBarSide(UiItem.barAi, right: false),
+            .withBarSide(UiItem.barDictation, right: false),
       );
       await tester.pump();
       expect(
@@ -163,7 +159,10 @@ void main() {
         inCapsule('editor-tool-capsule', l10n.noteSearchTitle),
         findsNothing,
       );
-      expect(inCapsule('editor-tool-capsule', l10n.aiTitle), findsOneWidget);
+      expect(
+        inCapsule('editor-tool-capsule', l10n.liveDictation),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
       await endEditor(tester);
     });

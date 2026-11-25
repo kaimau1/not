@@ -208,9 +208,14 @@ List<Note> localRelatedNotes(String noteId, List<Note> notes) {
   final targetTokens = SmartNoteLearn.extractTokens(target);
   final targetTags = target.tags.toSet();
   if (targetTokens.isEmpty && targetTags.isEmpty) return const [];
+  final alreadyLinked = outgoingNoteLinks(target).toSet();
   final scored = <(Note, double)>[];
   for (final n in notes) {
-    if (n.id == noteId || n.locked || n.deletedAt != null || n.archivedAt != null) {
+    if (n.id == noteId ||
+        alreadyLinked.contains(n.id) ||
+        n.locked ||
+        n.deletedAt != null ||
+        n.archivedAt != null) {
       continue;
     }
     var score = SmartNoteLearn.jaccardSimilarity(

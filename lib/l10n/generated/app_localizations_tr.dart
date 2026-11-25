@@ -9281,7 +9281,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiNeedsProSee => 'Pro\'ya bak';
 
   @override
-  String get proTitle => 'Tam Sürüm';
+  String get proTitle => 'Tam sürüm';
 
   @override
   String get proSettingsSubtitle =>
@@ -9305,10 +9305,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proTierFree => 'Lite';
 
   @override
-  String get proTierLifetime => 'Tam Sürüm';
+  String get proTierLifetime => 'Tam sürüm';
 
   @override
-  String get proTierPro => 'Tam Sürüm';
+  String get proTierPro => 'Tam sürüm';
 
   @override
   String get proRowBasics =>
@@ -9330,7 +9330,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proRowAttachments => 'Eklerin yeri';
 
   @override
-  String get proAttachDrive => 'Kendi Drive\'ın';
+  String get proAttachDrive => 'Kendi Drive hesabın';
 
   @override
   String get proAttachCloud => 'Drive + Ortak';
@@ -9348,19 +9348,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proDecisionsIncluded => '750 karar';
 
   @override
-  String get proRowOwnKey => 'Kendi Gemini anahtarın (BYOK)';
+  String get proRowOwnKey => 'Kendi Gemini anahtarın';
 
   @override
-  String get proLockedBadge => 'Tam Sürümde';
+  String get proLockedBadge => 'Tam sürümde';
 
   @override
   String get proBuyTitle => 'Satın al';
 
   @override
-  String get proPlanMonthly => 'Tam Sürüm';
+  String get proPlanMonthly => 'Tam sürüm';
 
   @override
-  String get proPlanYearly => 'Tam Sürüm';
+  String get proPlanYearly => 'Tam sürüm';
 
   @override
   String get proPlanLifetime => 'Tam Sürüm · Tek Sefer (Ömür Boyu)';
@@ -9465,7 +9465,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proNotIncluded => 'Yok';
 
   @override
-  String get decisionsSectionTitle => 'Akıllı Kararlar';
+  String get decisionsSectionTitle => 'Akıllı kararlar';
 
   @override
   String get decisionsSectionSubtitle =>
@@ -10325,7 +10325,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopResetOrder => 'Varsayılana dön';
 
   @override
-  String get shopReceiptTitle => 'Fişten Fiyat Güncelle';
+  String get shopReceiptTitle => 'Fişten fiyat güncelle';
 
   @override
   String get shopReceiptCamera => 'Fiş fotoğrafı çek';
@@ -10360,7 +10360,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shopStatusUnavailableBadge => 'Yoktu';
 
   @override
-  String get shopBarcodeTitle => 'Barkod Tara';
+  String get shopBarcodeTitle => 'Barkod tara';
 
   @override
   String shopBarcodeUnknownPrompt(String ean) {
@@ -10414,7 +10414,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get shopOpenStoreMode => 'Mağaza Kipi';
+  String get shopOpenStoreMode => 'Mağaza kipi';
 
   @override
   String get shopDictationTooltip => 'Sesle ekle';

@@ -3365,7 +3365,7 @@
   "proRowLooks": "All themes, 19 fonts, paper styles",
   "proRowAi": "Smart Decisions (aisles, routing, tags)",
   "proDecisionsIncluded": "750 calls",
-  "proRowOwnKey": "Your own Gemini key (BYOK)",
+  "proRowOwnKey": "Your own Gemini key",
   "proLockedBadge": "In Full Version",
   "proBuyTitle": "Buy",
   "proPlanMonthly": "Full Version",

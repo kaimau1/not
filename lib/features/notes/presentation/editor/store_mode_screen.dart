@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/theme/app_tokens.dart';
+import '../../../../core/app_icons.dart';
 import '../../../../core/haptics.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/keep_screen_on.dart';
@@ -1140,7 +1141,7 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
                       key: const ValueKey('store-mode-mic'),
                       tooltip: l10n.shopDictationTooltip,
                       icon: Icon(
-                        _dictating ? Icons.stop_rounded : Icons.mic_rounded,
+                        _dictating ? Icons.stop_rounded : AppIcons.dictation,
                         color: _dictating ? scheme.error : null,
                       ),
                       onPressed: _toggleDictation,
