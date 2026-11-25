@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
-import '../../../../core/play_build.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../domain/attachment.dart';
 import '../../../../core/widgets/sheet_keyboard.dart';
@@ -122,9 +121,6 @@ List<AttachmentAction> attachmentActionsFor(
     if (caps.transcribe) AttachmentAction.transcribe,
     if (caps.extractText && a.kind == AttachmentKind.image)
       AttachmentAction.extractText,
-    // Play derlemesinde video → not yok (AI-S1).
-    if (PlayBuild.videoNote && caps.videoToNote && video && !web)
-      AttachmentAction.videoToNote,
     if (caps.copy && !web) AttachmentAction.copy,
     if (caps.selectMany) AttachmentAction.selectMany,
     if (caps.share) AttachmentAction.share,

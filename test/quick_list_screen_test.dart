@@ -11,7 +11,6 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:notlar/core/net/json_http.dart';
 import 'package:notlar/core/widgets/keyboard_snap.dart';
-import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/ai/data/ai_provider.dart';
 import 'package:notlar/features/ai/data/decisions/decision_flag.dart';
 import 'package:notlar/features/ai/data/decisions/decision_service.dart';
@@ -99,7 +98,6 @@ void main() {
     Map<String, Object> prefs = const {},
     Size size = const Size(412, 915),
     NotesRepository? repo,
-    AiAvailability ai = AiAvailability.needsKey,
     List<Override> extra = const [],
   }) async {
     SharedPreferences.setMockInitialValues(prefs);
@@ -112,8 +110,6 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(p),
           notesStreamProvider.overrideWith((ref) => Stream.value(notes)),
           notesRepositoryProvider.overrideWithValue(repo),
-          // Testte yapay zekâ yok: hızlı ekle "hangi not?" diye sorar.
-          aiAvailabilityProvider.overrideWithValue(ai),
           ...extra,
         ],
         child: MaterialApp(
@@ -786,7 +782,6 @@ void main() {
         notes: [shopping, todo, text],
         repo: repo,
         prefs: {'quick_drop_mic': false},
-        ai: AiAvailability.ready,
         extra: [
           decisionServiceProvider.overrideWithValue(fakeDecisions(answers)),
         ],
@@ -841,7 +836,6 @@ void main() {
         notes: [shopping, todo, text],
         repo: repo,
         prefs: {'quick_drop_mic': false},
-        ai: AiAvailability.ready,
         extra: [
           decisionServiceProvider.overrideWithValue(
             DecisionService(

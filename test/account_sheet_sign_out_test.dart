@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/account_sheet.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
@@ -56,7 +55,6 @@ void main() {
           incomingFriendRequestsProvider.overrideWith(
             (ref) => Stream.value(const []),
           ),
-          premiumProvider.overrideWith((ref) => Stream.value(false)),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

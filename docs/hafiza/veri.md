@@ -249,3 +249,8 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
 - **ZIP bombası koruması (`zip_guard.dart`):** `.notyedek`, `.notpaket` ve içe aktarma `.zip`'lerinde ortak tavan: ≤ 5.000 dosya ve ≤ 250 MB açılmış boyut (başlık + gerçek okunan bayt bütçesi).
 - **Canlı Mağaza Kipi & Kalıcı karar önbelleği:** `StoreModeScreen` editörün `_noteN` akışına `liveItems` ile bağlandı; `DecisionService` `noteTriage`/`shopAisle` kararlarını SHA-256 anahtarlı kalıcı önbelleğe (`SharedPreferences`, 30 gün, 200 kayıt) yazar.
 
+## 2026-11-25 — Faz 1: 2-katmanlı hak modeli & tek seferlik satış (`plan/faz-1-ai-budama`)
+- **2 katman (`EntitlementTier.{free, lifetime}`):** Abonelik (`pro` aylık/yıllık) tamamen kaldırıldı; mevcut Firestore'daki eski `tier: 'pro'` + etkin `proUntil` / `trialEndsAt` kayıtları geriye uyumlu olarak `lifetime` sayılır. `ProFeature` tümü `EntitlementTier.lifetime` ister (`smartDecisions`, `smartShoppingPro`, `cloudAttachments`, `versionHistory`, `ownApiKey`…).
+- **Ürünler (`BillingProducts` & `functions/billing_util.js`):** Tek seferlik tüketilmez `lifetime` (Tam Sürüm, 750 karar / 600K jeton dahil) + isteğe bağlı tüketilebilir `decision_pack_1000` (+1.000 karar / +800K jeton, `creditedPackTokens` ile eşgüçlü/idempotent, `billing.js` tarafında `:consume` çağrılır). `BillingService` tüketilebilir paket için `buyConsumable`, Tam Sürüm için `buyNonConsumable` kullanır.
+- **Tek ekran:** Eski `premium_screen.dart` silindi; `/premium` her zaman `ProScreen`'i açar (2 sütunlu Lite vs Tam Sürüm tablosu + canlı `decisionQuotaProvider` sayacı).
+

@@ -1,42 +1,49 @@
 part of '../settings_screen.dart';
 
-/// Dahili AI durumu: kendi anahtarı varsa "sınırsız", premium'sa "premium",
-/// değilse bugünkü kalan ücretsiz hak gösterilir.
+/// Tam Sürüm & Akıllı Kararlar (Decisions API) durum kartı: kalan karar
+/// sayısı ve jeton bütçesini (`remainingCalls` / `remainingTokens`) gösterir;
+/// dokununca Tam Sürüm ekranına (`/premium`) götürür.
 class _BuiltInAiStatus extends ConsumerWidget {
   const _BuiltInAiStatus();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final hasKey = (ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty;
-    final premium = ref.watch(premiumProvider).value ?? false;
-    final remaining = ref.watch(freeAiRemainingProvider);
-
-    final (icon, text) = hasKey
-        // Kendi anahtarı varsa hesap türü fark etmez: maliyet kullanıcıda,
-        // sınır yok. Yerel hesap uyarısı bu durumda yanıltıcı olurdu.
-        ? (Icons.key, l10n.aiBuiltInByok)
-        : ref.watch(isAnonymousProvider)
-        ? (Icons.phonelink_lock_outlined, l10n.localAccountInfo)
-        : premium
-        ? (Icons.workspace_premium_outlined, l10n.aiBuiltInPremium(remaining))
-        : (Icons.bolt_outlined, l10n.aiBuiltInRemaining(remaining));
-    // Yenilenme saati yalnız sayaç işleyen kullanıcıda (F18.3).
-    final renews = hasKey || ref.watch(isAnonymousProvider)
-        ? null
-        : ref.watch(aiQuotaRenewsAtProvider);
-    final line = renews == null
-        ? text
-        : '$text · ${l10n.aiQuotaRenewsAt(MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(renews), alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context)))}';
-
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final textStyle = AppText.of(theme);
+    final hasKey =
+        (ref.watch(activeApiKeyProvider).value ?? '').trim().isNotEmpty;
+    final paid =
+        !EntitlementGate.active ||
+        ref.watch(effectiveTierProvider) == EntitlementTier.lifetime;
+    final quota = ref.watch(decisionQuotaProvider);
+
+    final (icon, title, subtitle) = hasKey
+        ? (
+            Icons.key,
+            l10n.proTitle,
+            l10n.decisionsQuotaByok,
+          )
+        : paid
+        ? (
+            Icons.workspace_premium_outlined,
+            l10n.proStatusLifetime,
+            l10n.decisionsQuotaSummary(
+              quota.remainingCalls,
+              formatDecisionTokens(quota.remainingTokens),
+            ),
+          )
+        : (
+            Icons.auto_awesome_outlined,
+            l10n.proStatusFree,
+            l10n.decisionsQuotaFreeHint,
+          );
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
-      // Satır artık Premium sayfasına götürüyor: kota/puan farkının ne
-      // kazandırdığı hiçbir yerde anlatılmıyordu (premium çalışması).
       child: InkWell(
+        key: const ValueKey('settings-decisions-quota'),
         borderRadius: BorderRadius.circular(AppRadius.m),
         onTap: () => context.push('/premium'),
         child: Padding(
@@ -59,9 +66,23 @@ class _BuiltInAiStatus extends ConsumerWidget {
               ),
               const SizedBox(width: AppSpace.m),
               Expanded(
-                child: Text(
-                  line,
-                  style: textStyle.label.copyWith(color: scheme.onSurface),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: textStyle.rowTitle.copyWith(
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.xxs),
+                    Text(
+                      subtitle,
+                      style: textStyle.meta.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Icon(
@@ -79,111 +100,7 @@ class _BuiltInAiStatus extends ConsumerWidget {
   }
 }
 
-/// Ortak AI havuzu ↔ Kendi anahtarım (BYOK) açık kaynak seçici ve kredi kartı.
-class _SharedPoolModeCard extends ConsumerWidget {
-  const _SharedPoolModeCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final tokens = AppTokens.of(context);
-    final text = AppText.of(theme);
-    final mode = ref.watch(aiSourceModeProvider);
-    final pool = ref.watch(sharedAiPoolProvider);
-    final anonymous = ref.watch(isAnonymousProvider);
-    final credits = pool.balance ?? SharedAiPoolClient.starterCredits;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(l10n.aiSourceModeTitle, style: text.rowTitle),
-              ),
-              if (mode == AiSourceMode.sharedPool && !anonymous)
-                IconButton(
-                  tooltip: l10n.retry,
-                  visualDensity: VisualDensity.compact,
-                  icon: pool.loading
-                      ? const SizedBox.square(
-                          dimension: AppIconSize.s,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          Icons.refresh,
-                          size: AppIconSize.s,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                  onPressed: pool.loading
-                      ? null
-                      : () => ref.read(sharedAiPoolProvider.notifier).refresh(),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpace.s),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<AiSourceMode>(
-              key: const ValueKey('settings-ai-source-mode'),
-              segments: [
-                ButtonSegment<AiSourceMode>(
-                  value: AiSourceMode.sharedPool,
-                  label: Text(l10n.aiSourceModeShared),
-                  icon: const Icon(Icons.hub_outlined, size: AppIconSize.s),
-                ),
-                ButtonSegment<AiSourceMode>(
-                  value: AiSourceMode.byok,
-                  label: Text(l10n.aiSourceModeByok),
-                  icon: const Icon(Icons.key_outlined, size: AppIconSize.s),
-                ),
-              ],
-              selected: {mode},
-              onSelectionChanged: (next) {
-                if (next.isNotEmpty) {
-                  ref.read(aiSourceModeProvider.notifier).set(next.first);
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: AppSpace.s),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: pool.knownEmpty && mode == AiSourceMode.sharedPool
-                  ? scheme.errorContainer.withValues(alpha: AppAlpha.soft)
-                  : tokens.card,
-              borderRadius: BorderRadius.circular(AppRadius.m),
-              border: Border.all(color: tokens.hairline),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpace.m),
-              child: Text(
-                anonymous && mode == AiSourceMode.sharedPool
-                    ? l10n.localAccountInfo
-                    : pool.knownEmpty && mode == AiSourceMode.sharedPool
-                    ? l10n.aiSharedPoolEmpty
-                    : l10n.aiSharedPoolSubtitle(credits),
-                style: text.meta.copyWith(color: scheme.onSurfaceVariant),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// AI bölümündeki form alanlarının ORTAK görünümü.
-///
-/// Genel tema alanları yalnız dolgu rengiyle çiziyor (kenarlık yok); kâğıt
-/// temada o dolgu kart zeminiyle neredeyse aynı olduğundan açılır listeler ve
-/// anahtar kutusu "sayfaya dağılmış yazılar" gibi duruyordu. Burada görünür
-/// kenarlık + tek tip iç boşluk verilir, alanların nerede başlayıp bittiği
-/// belli olur.
+/// Akıllı Kararlar bölümündeki form alanlarının ortak görünümü.
 InputDecoration _aiFieldDecoration(
   BuildContext context, {
   required String label,
@@ -208,6 +125,8 @@ InputDecoration _aiFieldDecoration(
   );
 }
 
+/// İleri seçenek: kullanıcının kendi Gemini API anahtarıyla (BYOK) sınırsız
+/// `gemini-decision-1` Decisions kullanımı (maliyet \$0).
 class _GeminiKeyEditor extends ConsumerStatefulWidget {
   const _GeminiKeyEditor();
 
@@ -231,15 +150,16 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
     setState(() => _busy = true);
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final provider = ref.read(activeProviderProvider);
     try {
-      final valid = await ref.read(geminiServiceProvider).validateKey(key);
+      final valid = await ref
+          .read(decisionServiceProvider)
+          .validateGeminiKey(key);
       if (!valid) {
         messenger.showMessage(l10n.apiKeyInvalid);
         return;
       }
-      await ref.read(apiKeyStoreProvider).save(provider, key);
-      _invalidateKeys(provider);
+      await ref.read(apiKeyStoreProvider).save(AiProvider.gemini, key);
+      ref.invalidate(activeApiKeyProvider);
       _controller.clear();
       messenger.showMessage(l10n.apiKeyValid);
     } finally {
@@ -248,64 +168,19 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
   }
 
   Future<void> _removeKey() async {
-    final provider = ref.read(activeProviderProvider);
-    await ref.read(apiKeyStoreProvider).clear(provider);
-    _invalidateKeys(provider);
-  }
-
-  /// Anahtar değişince model listesi de tazelenmeli: katalog anahtarla
-  /// çekiliyor, eski liste yanlış sağlayıcıya ait kalırdı.
-  void _invalidateKeys(AiProvider provider) {
+    await ref.read(apiKeyStoreProvider).clear();
     ref.invalidate(activeApiKeyProvider);
-    ref.invalidate(providerApiKeyProvider(provider));
-    ref.invalidate(availableModelsProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final provider = ref.watch(activeProviderProvider);
     final storedKey = ref.watch(activeApiKeyProvider).value;
-    final hasKey = storedKey != null && storedKey.isNotEmpty;
+    final hasKey = storedKey != null && storedKey.trim().isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DropdownButtonFormField<AiProvider>(
-          initialValue: provider,
-          isExpanded: true,
-          decoration: _aiFieldDecoration(context, label: l10n.aiProvider),
-          items: [
-            for (final option in AiProvider.values)
-              DropdownMenuItem(
-                value: option,
-                child: Text(
-                  option.freeTier
-                      ? '${option.label} · ${l10n.freeTierBadge}'
-                      : option.label,
-                ),
-              ),
-          ],
-          onChanged: (value) {
-            if (value == null) return;
-            ref.read(activeProviderProvider.notifier).set(value);
-            // Sağlayıcı değişti: anahtar ve model listesi o sağlayıcıya ait
-            // olmalı, önceki sağlayıcının önbelleği gösterilmemeli.
-            _controller.clear();
-            _invalidateKeys(value);
-          },
-        ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.aiProviderInfo,
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-        ),
-        // Sağlayıcı bloğu ile anahtar bloğu arasına ayırıcı: ikisi arka arkaya
-        // duran metin yığını gibi okunuyordu.
-        const SizedBox(height: 14),
-        const Divider(height: 1),
-        const SizedBox(height: 14),
         if (hasKey)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -313,7 +188,9 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
               children: [
                 Chip(
                   avatar: const Icon(Icons.key, size: AppIconSize.xs),
-                  label: Text('${provider.label}: ${l10n.apiKeySavedBadge}'),
+                  label: Text(
+                    '${AiProvider.gemini.label}: ${l10n.apiKeySavedBadge}',
+                  ),
                 ),
                 const SizedBox(width: 8),
                 TextButton(
@@ -324,27 +201,27 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
             ),
           ),
         TextField(
+          key: const ValueKey('settings-gemini-key-field'),
           controller: _controller,
           obscureText: true,
           decoration: _aiFieldDecoration(
             context,
-            label: '${provider.label} · ${l10n.apiKeyFieldLabel}',
-            // İpucu sağlayıcının anahtar biçimi: yanlış sağlayıcıya
-            // yapıştırıldığında kullanıcı hatayı beklemeden görür.
-            hint: provider.keyHint,
+            label: '${AiProvider.gemini.label} · ${l10n.apiKeyFieldLabel}',
+            hint: AiProvider.gemini.keyHint,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          l10n.geminiApiKeyInfo,
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          l10n.decisionsByokInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: TextButton.icon(
             onPressed: () => launchUrl(
-              Uri.parse(provider.keyUrl),
+              Uri.parse(AiProvider.gemini.keyUrl),
               mode: LaunchMode.externalApplication,
             ),
             icon: const Icon(Icons.open_in_new, size: AppIconSize.s),
@@ -363,621 +240,11 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
               : const Icon(Icons.check_circle_outline),
           label: Text(l10n.validateAndSave),
         ),
-        const SizedBox(height: 10),
-        const Divider(height: 1),
-        const _BackupKeysSection(),
-        const Divider(height: 1),
-        const _AiDiagnosticsTile(),
       ],
     );
   }
 }
 
-class _BackupKeysSection extends ConsumerStatefulWidget {
-  const _BackupKeysSection();
-
-  @override
-  ConsumerState<_BackupKeysSection> createState() => _BackupKeysSectionState();
-}
-
-class _BackupKeysSectionState extends ConsumerState<_BackupKeysSection> {
-  final List<TextEditingController> _controllers = [];
-  AiProvider? _loadedFor;
-
-  @override
-  void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  Future<void> _loadFor(AiProvider provider) async {
-    _loadedFor = provider;
-    final keys = await ref.read(byokKeyPoolProvider).readKeys(provider);
-    if (!mounted || _loadedFor != provider) return;
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    _controllers
-      ..clear()
-      ..addAll([
-        for (var i = 1; i < keys.length; i++)
-          TextEditingController(text: keys[i]),
-      ]);
-    setState(() {});
-  }
-
-  Future<void> _saveSlot(AiProvider provider, int index, String value) async {
-    await ref
-        .read(byokKeyPoolProvider)
-        .saveBackupKey(provider, index + 1, value);
-    ref.invalidate(byokKeysProvider);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final provider = ref.watch(activeProviderProvider);
-    if (_loadedFor != provider) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _loadedFor != provider) unawaited(_loadFor(provider));
-      });
-    }
-    final canAdd = _controllers.length + 1 < ByokKeyPool.maxKeys;
-    return _ExpandTile(
-      leading: const Icon(Icons.vpn_key_outlined, size: AppIconSize.m),
-      title: Text(l10n.aiBackupKeysTitle),
-      subtitle: Text(
-        l10n.aiBackupKeysInfo,
-        style: AppText.of(Theme.of(context)).meta,
-      ),
-      childrenPadding: const EdgeInsets.only(
-        top: AppSpace.s,
-        bottom: AppSpace.s,
-      ),
-      children: [
-        for (var i = 0; i < _controllers.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpace.s),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controllers[i],
-                    obscureText: true,
-                    decoration: _aiFieldDecoration(
-                      context,
-                      label: l10n.aiBackupKeyLabel(i + 2),
-                      hint: provider.keyHint,
-                    ),
-                    onChanged: (v) => unawaited(_saveSlot(provider, i, v)),
-                  ),
-                ),
-                IconButton(
-                  tooltip: l10n.delete,
-                  icon: const Icon(Icons.close, size: AppIconSize.s),
-                  onPressed: () {
-                    final idx = i;
-                    final removed = _controllers.removeAt(idx);
-                    removed.dispose();
-                    setState(() {});
-                    unawaited(_saveSlot(provider, idx, ''));
-                  },
-                ),
-              ],
-            ),
-          ),
-        if (canAdd)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: OutlinedButton.icon(
-              onPressed: () =>
-                  setState(() => _controllers.add(TextEditingController())),
-              icon: const Icon(Icons.add, size: AppIconSize.s),
-              label: Text(l10n.aiBackupKeyAdd),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// Dahili AI'ın son ham hataları. Kullanıcıya gösterilen mesajlar sadeleştirilmiş
-/// olduğundan ("şu an yanıt veremiyor"), gerçek neden yalnız burada görünür.
-class _AiDiagnosticsTile extends StatefulWidget {
-  const _AiDiagnosticsTile();
-
-  @override
-  State<_AiDiagnosticsTile> createState() => _AiDiagnosticsTileState();
-}
-
-class _AiDiagnosticsTileState extends State<_AiDiagnosticsTile> {
-  @override
-  Widget build(BuildContext context) {
-    final entries = AiDiagnostics.entries;
-    final scheme = Theme.of(context).colorScheme;
-    return _ExpandTile(
-      title: Text(context.l10n.aiDiagnostics),
-      subtitle: Text(
-        entries.isEmpty
-            ? context.l10n.aiDiagnosticsEmpty
-            : context.l10n.aiDiagnosticsCount(entries.length),
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
-      onExpansionChanged: (_) => setState(() {}),
-      children: [
-        for (final e in entries)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: SelectableText(
-              e,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontFamily: 'monospace',
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        if (entries.isNotEmpty)
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton.icon(
-              onPressed: () => setState(AiDiagnostics.clear),
-              icon: const Icon(Icons.delete_outline, size: AppIconSize.s),
-              label: Text(context.l10n.clear),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// Model seçimi: **satır + tam boy seçim levhası**.
-///
-/// KÖK NEDEN (kullanıcı üç kez bildirdi, 2026-08-09: "ayarlarda model seçim
-/// ekranını 3. kez yazıyorum, hâlâ değişen bir şey yok"): burada beş tane
-/// `DropdownButtonFormField` alt alta duruyordu. Her biri sağlayıcının
-/// ONLARCA modelini iki satırlık (ad + gerekçe) öğelerle listeliyor; telefonda
-/// açılan menü ekranı kaplıyor, aranan model ancak uzun uzun kaydırarak
-/// bulunuyor ve beş kutu üst üste gelince bölüm bir duvara dönüşüyordu.
-///
-/// Şimdi her kullanım alanı TEK SATIR: solda işin adı, altında o an seçili
-/// model. Dokununca arama kutulu, "Önerilen" ve "Diğer" diye ayrılmış bir
-/// levha açılır — model adı yazılarak bulunur, seçilince levha kapanır.
-Widget _modelPickerTile({
-  required BuildContext context,
-  required String label,
-  required List<AiModel> models,
-  required String? value,
-  required String autoLabel,
-  required String recommendedLabel,
-  required ValueChanged<String?> onChanged,
-  bool allowShowAll = false,
-  ModelChain? chain,
-  List<AiModel>? catalog,
-}) {
-  final scheme = Theme.of(context).colorScheme;
-  // Kayıtlı model katalogda artık yoksa "Otomatik" görünür — servis de o
-  // seçimi yok sayıp zincire düşüyor (validChoice, 2026-11-15).
-  final choice = validChoice(value, catalog);
-  final items = choice != null && !models.any((m) => m.id == choice)
-      ? [AiModel(id: choice, label: choice), ...models]
-      : models;
-  final current = choice == null
-      ? autoLabel
-      : _ModelSelectors._friendlyModel(
-          items.firstWhere(
-            (m) => m.id == choice,
-            orElse: () => AiModel(id: choice, label: choice),
-          ),
-        );
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Material(
-      color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(AppRadius.m),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        onTap: () async {
-          final picked = await showAppSheet<_ModelChoice>(
-            context: context,
-            isScrollControlled: true,
-            showDragHandle: true,
-            builder: (_) => _ModelPickerSheet(
-              title: label,
-              models: items,
-              value: choice,
-              autoLabel: autoLabel,
-              recommendedLabel: recommendedLabel,
-              allowShowAll: allowShowAll,
-              chain: chain,
-            ),
-          );
-          if (picked != null) onChanged(picked.id);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.m),
-            border: Border.all(color: scheme.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: AppText.of(Theme.of(context)).meta),
-                    const SizedBox(height: AppSpace.xxs),
-                    Text(
-                      current,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.of(Theme.of(context)).rowTitle,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.expand_more, color: scheme.onSurfaceVariant),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-/// Levhadan dönen seçim. `null` DEĞERİ "Otomatik" demek olduğu için levhanın
-/// "iptal" ile "otomatik"i ayırt edebilmesi gerekiyor — sarmalayıcı tip bunu
-/// sağlar (iptalde levha null döner, "Otomatik"te `_ModelChoice(null)`).
-class _ModelChoice {
-  const _ModelChoice(this.id);
-
-  final String? id;
-}
-
-/// Model seçim levhası: arama + "Önerilen" / "Diğer" grupları.
-class _ModelPickerSheet extends ConsumerStatefulWidget {
-  const _ModelPickerSheet({
-    required this.title,
-    required this.models,
-    required this.value,
-    required this.autoLabel,
-    required this.recommendedLabel,
-    this.allowShowAll = false,
-    this.chain,
-  });
-
-  /// Görevin otomatik zinciri: verilirse "Önerilen" o sıradır ve
-  /// "Tümünü göster" kapalıyken yalnız o listelenir (bkz. [pickerModels]).
-  final ModelChain? chain;
-
-  final String title;
-  final List<AiModel> models;
-  final String? value;
-  final String autoLabel;
-  final String recommendedLabel;
-
-  /// "Tümünü göster" anahtarı çizilsin mi? Yalnız METİN seçicisinde: orada
-  /// liste uygulamanın kullandığı sohbet modelleriyle sınırlı, kullanıcı
-  /// sağlayıcısında ne varsa görmek isteyebilir (kullanıcı isteği
-  /// 2026-08-09: "tüm modeller çekilmeli"). Seslendirme seçicisi zaten
-  /// kendi türünü gösteriyor.
-  final bool allowShowAll;
-
-  @override
-  ConsumerState<_ModelPickerSheet> createState() => _ModelPickerSheetState();
-}
-
-class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
-  final _search = TextEditingController();
-  String _query = '';
-  bool _showAll = false;
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
-  bool _matches(AiModel m) {
-    if (_query.isEmpty) return true;
-    final q = _query.toLowerCase();
-    return m.id.toLowerCase().contains(q) ||
-        m.label.toLowerCase().contains(q) ||
-        _ModelSelectors._friendlyModel(m).toLowerCase().contains(q);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    // "Tümünü göster" açıksa katalogtaki HER model listelenir (aynı
-    // önbellekten gelir, ikinci bir ağ isteği yok).
-    final all = ref.watch(allModelsProvider).value;
-    final chainList = widget.chain == null || all == null
-        ? null
-        : pickerModels(widget.chain!, all, showAll: _showAll);
-    final source =
-        chainList ?? (_showAll ? (all ?? widget.models) : widget.models);
-    final shown = [
-      for (final m in source)
-        if (_matches(m)) m,
-    ];
-    final recommended = [
-      for (final m in shown)
-        if (m.recommended) m,
-    ];
-    final others = [
-      for (final m in shown)
-        if (!m.recommended) m,
-    ];
-
-    // `RadioListTile.groupValue`/`onChanged` KULLANILMAZ (kullanımdan kalktı):
-    // seçili değer ve geri çağrı dıştaki [RadioGroup]'tan gelir — dil
-    // seçicisiyle aynı desen.
-    Widget tile(AiModel m) => RadioListTile<String?>(
-      value: m.id,
-      dense: true,
-      title: Row(
-        children: [
-          Flexible(
-            child: Text(
-              _ModelSelectors._friendlyModel(m),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (m.recommended) ...[
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer,
-                borderRadius: BorderRadius.circular(AppRadius.s),
-              ),
-              child: Text(
-                widget.recommendedLabel,
-                style: AppText.of(Theme.of(context)).badge
-                    .copyWith(color: scheme.onPrimaryContainer),
-              ),
-            ),
-          ],
-        ],
-      ),
-      subtitle: m.note == null ? null : Text(m.note!),
-    );
-
-    // Uygulamanın tek bölüm başlığı (TUTARLILIK F36.7).
-    Widget header(String text) => Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-      child: SectionLabel(text),
-    );
-
-    return SheetInsetPadding(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(
-              widget.title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _search,
-              onChanged: (v) => setState(() => _query = v.trim()),
-              decoration: InputDecoration(
-                isDense: true,
-                prefixIcon: const Icon(Icons.search, size: AppIconSize.m),
-                hintText: l10n.aiModelSearch,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ),
-          if (widget.allowShowAll)
-            SwitchListTile(
-              dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-              title: Text(l10n.aiModelShowAll),
-              subtitle: Text(l10n.aiModelShowAllInfo),
-              value: _showAll,
-              onChanged: (v) => setState(() => _showAll = v),
-            ),
-          Flexible(
-            child: RadioGroup<String?>(
-              groupValue: widget.value,
-              onChanged: (v) => Navigator.pop(context, _ModelChoice(v)),
-              child: ListView(
-                shrinkWrap: true,
-                padding: const EdgeInsets.only(bottom: 12),
-                children: [
-                  RadioListTile<String?>(
-                    value: null,
-                    dense: true,
-                    title: Text(widget.autoLabel),
-                    subtitle: Text(l10n.aiModelAutoInfo),
-                  ),
-                  if (recommended.isNotEmpty) ...[
-                    header(widget.recommendedLabel),
-                    for (final m in recommended) tile(m),
-                  ],
-                  if (others.isNotEmpty) ...[
-                    header(l10n.aiModelOthers),
-                    for (final m in others) tile(m),
-                  ],
-                  if (shown.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Center(child: Text(l10n.aiModelNoMatch)),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Kullanım alanı başına Gemini model seçimi. "Otomatik" = uygulamanın
-/// kendi sıralı zinciri; belirli model seçilirse o ilk sırada denenir.
-class _ModelSelectors extends ConsumerWidget {
-  const _ModelSelectors();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    // Anahtarı olmayanlarda da gösterilir: `availableModels()` anahtar yoksa
-    // uygulamanın yerleşik tercih listesini döndürüyor ve dahili (Firebase)
-    // yol da seçilen modeli uyguluyor. Eskiden buradaki anahtar koşulu
-    // seçiciyi anahtarsız kullanıcıdan tamamen gizliyordu.
-    //
-    // Liste önbellekli sağlayıcıdan (availableModelsProvider) izlenir; inline
-    // FutureBuilder her rebuild'de yeni bir future kurup bölümü boşaltıp
-    // yeniden doldurduğu için ayarlar sayfası zıplıyordu (madde 3).
-    final models =
-        ref.watch(availableModelsProvider).value ?? const <AiModel>[];
-    if (models.isEmpty) return const SizedBox.shrink();
-    final selected = ref.watch(aiTaskModelsProvider);
-    final catalog = ref.watch(allModelsProvider).value;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final task in AiTask.values) ...[
-          _modelPickerTile(
-            context: context,
-            label: _taskLabel(l10n, task),
-            models: models,
-            value: selected[task],
-            autoLabel: l10n.aiModelAuto,
-            recommendedLabel: l10n.recommendedModel,
-            allowShowAll: true,
-            chain: GeminiService.chainOf(task),
-            catalog: catalog,
-            onChanged: (v) =>
-                ref.read(aiTaskModelsProvider.notifier).set(task, v),
-          ),
-        ],
-        const SizedBox(height: 4),
-        Text(
-          l10n.aiModelsInfo,
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-        ),
-      ],
-    );
-  }
-
-  static String _taskLabel(AppLocalizations l10n, AiTask task) =>
-      switch (task) {
-        AiTask.general => l10n.aiModelChat,
-        AiTask.short => l10n.aiModelShort,
-        AiTask.document => l10n.aiModelDocument,
-        AiTask.podcast => l10n.aiModelPodcast,
-        AiTask.translate => l10n.aiModelTranslate,
-        AiTask.voice => l10n.aiModelVoice,
-      };
-
-  /// Ham model kimliği yerine okunur ad: "gemini-3.5-flash" → "3.5 Flash".
-  /// Sağlayıcı bir görünen ad verdiyse (OpenAI/Anthropic veriyor) o kullanılır;
-  /// yalnızca Gemini gibi ham kimlik dönen sağlayıcılarda güzelleştirilir.
-  static String _friendlyModel(AiModel model) {
-    if (model.label != model.id) return model.label;
-    var name = model.id.replaceFirst('gemini-', '').replaceAll('-preview', '');
-    final lower = name.toLowerCase();
-    final hint = lower.contains('flash-lite')
-        ? 'en hızlı'
-        : lower.contains('flash')
-        ? 'hızlı'
-        : lower.contains('pro')
-        ? 'en güçlü'
-        : lower.contains('live')
-        ? 'canlı ses'
-        : null;
-    // "3.5-flash" → "3.5 Flash": tire boşluk olur, parçalar büyük harfle başlar.
-    name = name
-        .split('-')
-        .map((p) => p.isEmpty ? p : '${p[0].toUpperCase()}${p.substring(1)}')
-        .join(' ');
-    return hint == null ? name : '$name — $hint';
-  }
-}
-
-class _BriefingEditor extends ConsumerWidget {
-  const _BriefingEditor();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final settings = ref.watch(briefingSettingsProvider);
-    final time =
-        '${(settings.minutes ~/ 60).toString().padLeft(2, '0')}:${(settings.minutes % 60).toString().padLeft(2, '0')}';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.briefingSetting),
-          subtitle: Text(l10n.briefingSettingInfo),
-          value: settings.enabled,
-          onChanged: (value) => ref
-              .read(briefingSettingsProvider.notifier)
-              .update(enabled: value),
-        ),
-        if (settings.enabled)
-          Wrap(
-            spacing: 8,
-            children: [
-              actionChip(
-                ActionChip(
-                  avatar: const Icon(Icons.schedule, size: AppIconSize.xs),
-                  label: Text(time),
-                  onPressed: () async {
-                    final picked = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay(
-                        hour: settings.minutes ~/ 60,
-                        minute: settings.minutes % 60,
-                      ),
-                    );
-                    if (picked != null) {
-                      ref
-                          .read(briefingSettingsProvider.notifier)
-                          .update(minutes: picked.hour * 60 + picked.minute);
-                    }
-                  },
-                ),
-              ),
-              // Ayar ile ekran birbirine bağlansın: brifing buradan da açılır.
-              actionChip(
-                ActionChip(
-                  avatar: const Icon(
-                    Icons.wb_sunny_outlined,
-                    size: AppIconSize.xs,
-                  ),
-                  label: Text(context.l10n.openBriefing),
-                  onPressed: () => context.push('/briefing'),
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
-/// AI alanındaki anahtar satırlarının ORTAK biçimi.
-///
-/// Dördü de ayrı ayrı `SwitchListTile` kuruyordu: başlıklar gövde punto,
-/// açıklamalar aynı puntoda ve tam genişlikte olduğundan satırlar birbirine
-/// karışıyor, hangi açıklamanın hangi anahtara ait olduğu okunmuyordu
-/// (kullanıcı: "ai kısmında görünüm bozuk ve karışık"). Tek yerde: başlık
-/// vurgulu, açıklama küçük ve soluk, anahtar sağda hizalı.
 class _AiSwitchTile extends StatelessWidget {
   const _AiSwitchTile({
     super.key,
@@ -994,7 +261,6 @@ class _AiSwitchTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Satır dili (P62 PA3): başlık `rowTitle`, açıklama `meta`.
     final text = AppText.of(Theme.of(context));
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.m),
@@ -1023,7 +289,7 @@ class _AiSwitchTile extends StatelessWidget {
   }
 }
 
-/// "Yapay zekâyı tümden kapat" (PLAN §1.5 PL3 c, E11).
+/// "Akıllı kararları kapat" (PLAN §1.5 PL3 c, Faz 1).
 class _AiOffSwitch extends ConsumerWidget {
   const _AiOffSwitch();
 
@@ -1032,79 +298,15 @@ class _AiOffSwitch extends ConsumerWidget {
     final l10n = context.l10n;
     return _AiSwitchTile(
       key: const ValueKey('settings-ai-off'),
-      title: l10n.aiOffSetting,
-      info: l10n.aiOffSettingInfo,
+      title: l10n.decisionsTurnOffTitle,
+      info: l10n.decisionsTurnOffBody,
       value: ref.watch(aiTurnedOffProvider),
       onChanged: (value) => ref.read(aiTurnedOffProvider.notifier).set(value),
     );
   }
 }
 
-class _AutoTagSwitch extends ConsumerWidget {
-  const _AutoTagSwitch();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return _AiSwitchTile(
-      title: l10n.autoTagSetting,
-      info: l10n.autoTagSettingInfo,
-      value: ref.watch(autoTagProvider),
-      onChanged: (value) => ref.read(autoTagProvider.notifier).set(value),
-    );
-  }
-}
-
-class _AutoTitleSwitch extends ConsumerWidget {
-  const _AutoTitleSwitch();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return _AiSwitchTile(
-      title: l10n.autoTitleSetting,
-      info: l10n.autoTitleSettingInfo,
-      value: ref.watch(autoTitleProvider),
-      onChanged: (value) => ref.read(autoTitleProvider.notifier).set(value),
-    );
-  }
-}
-
-/// Sesli asistan yanıtını yüksek sesle okusun mu? (Asistan panelindeki
-/// "sustur" düğmesiyle aynı anahtar.)
-class _AssistantVoiceSwitch extends ConsumerWidget {
-  const _AssistantVoiceSwitch();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return _AiSwitchTile(
-      title: l10n.assistantVoiceSetting,
-      info: l10n.assistantVoiceSettingInfo,
-      value: ref.watch(assistantVoiceProvider),
-      onChanged: (value) =>
-          ref.read(assistantVoiceProvider.notifier).set(value),
-    );
-  }
-}
-
-class _AiSkipCheckedSwitch extends ConsumerWidget {
-  const _AiSkipCheckedSwitch();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return _AiSwitchTile(
-      title: l10n.aiSkipCheckedSetting,
-      info: l10n.aiSkipCheckedInfo,
-      value: ref.watch(aiSkipCheckedProvider),
-      onChanged: (value) => ref.read(aiSkipCheckedProvider.notifier).set(value),
-    );
-  }
-}
-
-/// Model seçimi ve API anahtarı, katlanır "Gelişmiş" bölümünde: çoğu
-/// kullanıcının hiç dokunmayacağı teknik ayarlar günlük ayarları boğmasın.
+/// Kendi Gemini anahtarı (BYOK), katlanır "İleri" bölümünde.
 class _AdvancedAiSection extends ConsumerWidget {
   const _AdvancedAiSection();
 
@@ -1112,25 +314,16 @@ class _AdvancedAiSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return _ExpandTile(
-      // Üstteki boşluk ŞART: içeriğin ilk çocuğu, etiketi kutunun ÜSTÜNE
-      // taşan bir form alanı (sağlayıcı açılır listesi). Boşluksuzken o
-      // etiket başlığın alt satırının üstüne biniyor ve bölüm "bozuk ve
-      // karışık" görünüyordu.
       childrenPadding: const EdgeInsets.only(top: 14, bottom: 8),
-      leading: const Icon(Icons.tune),
-      title: Text(l10n.aiAdvanced),
+      leading: const Icon(Icons.key_outlined),
+      title: Text(l10n.decisionsByokTitle),
       subtitle: Text(
-        l10n.aiAdvancedInfo,
-        style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        l10n.decisionsSectionSubtitle,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
-      children: const [
-        _SharedPoolModeCard(),
-        SizedBox(height: AppSpace.m),
-        _GeminiKeyEditor(),
-        SizedBox(height: 14),
-        _ModelSelectors(),
-      ],
+      children: const [_GeminiKeyEditor()],
     );
   }
 }

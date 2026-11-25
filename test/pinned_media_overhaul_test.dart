@@ -1,15 +1,9 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/core/widgets/app_notice.dart';
-import 'package:notlar/features/ai/data/ai_gate.dart';
-import 'package:notlar/features/ai/data/api_key_store.dart';
-import 'package:notlar/features/ai/data/gemini_service.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/notes/data/attachment_repository.dart';
@@ -24,27 +18,11 @@ import 'package:notlar/features/notes/presentation/editor/pen_tray.dart';
 import 'package:notlar/features/notes/presentation/editor/pinned_image_surface.dart';
 import 'package:notlar/features/notes/presentation/editor/pinned_media_bar.dart';
 import 'package:notlar/features/notes/presentation/editor/pinned_media_pane.dart';
-import 'package:notlar/features/notes/presentation/viewers/area_actions.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_layer.dart';
 import 'package:notlar/features/notes/presentation/viewers/ink_tools.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-final Uint8List _tinyPng = base64Decode(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-);
-
-class _FakeGeminiService extends GeminiService {
-  _FakeGeminiService() : super(const ApiKeyStore());
-
-  @override
-  Future<String> askAboutImage(
-    Uint8List bytes,
-    String mimeType, {
-    String question = '',
-  }) async => '**Alan özeti**\n- Birinci madde';
-}
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(
@@ -167,47 +145,6 @@ void main() {
     expect(tasks, 1);
     expect(ocr + summarize + area, 0);
   });
-
-  testWidgets(
-    'AreaAskScreen inserts stripped markdown text via onInsertToNote',
-    (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      var inserted = '';
-
-      await tester.pumpWidget(
-        ProviderScope(
-          retry: (_, _) => null,
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefs),
-            aiAvailabilityProvider.overrideWithValue(AiAvailability.ready),
-            geminiServiceProvider.overrideWithValue(_FakeGeminiService()),
-          ],
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('tr'),
-            home: AreaAskScreen(
-              png: _tinyPng,
-              onInsertToNote: (text) => inserted = text,
-            ),
-          ),
-        ),
-      );
-
-      await tester.tap(find.text('Sor'));
-      await tester.pumpAndSettle();
-
-      final insertBtn = find.byKey(const ValueKey('area-ask-insert'));
-      expect(insertBtn, findsOneWidget);
-
-      await tester.ensureVisible(insertBtn);
-      await tester.tap(insertBtn);
-      await tester.pumpAndSettle();
-
-      expect(inserted, 'Alan özeti\n- Birinci madde');
-    },
-  );
 
   testWidgets(
     'editor bottom panels (FormatBar and PenTray) are mutually exclusive',

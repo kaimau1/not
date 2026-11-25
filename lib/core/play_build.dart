@@ -1,14 +1,10 @@
-/// **PLAY DERLEMESİ BAYRAĞI** (PLAN §1.5 PL1, 16K rapor E1–E3, §2.6, §4.5).
+/// **PLAY DERLEMESİ BAYRAĞI** (PLAN §1.5 PL1, Faz 1).
 ///
 /// `--dart-define=NOTLAR_PLAY=true` ile derlenen sürüm Google Play'e gider;
-/// bayraksız derleme (kişisel APK, web) BUGÜNKÜ GİBİ davranır. Bütün Play
-/// kapıları YALNIZ burada; özellik dosyaları bu sabitleri okur. Değerler
-/// `const` olduğundan Play derlemesinde kapalı dallar Dart ağacından düşer.
-///
-/// Yerel (Gradle) tarafı Gradle `NOTLAR_PLAY=1` ile: konum izinleri
-/// `android/app/src/play/AndroidManifest.xml`'de silinir, paket adı/Firebase
-/// projesi ayrı (PL13). ONNX eklentisi Play'de `tool/play_stub/play_hazirla.sh`
-/// kuklasıyla pakete hiç girmez (neden: `docs/play_hazirlik.md`).
+/// bayraksız derleme (kişisel APK, web) kendi güncellemesini yapar ve kapıları
+/// açık tutar. Bütün Play kapıları YALNIZ burada; özellik dosyaları bu
+/// sabitleri okur. Değerler `const` olduğundan Play derlemesinde kapalı dallar
+/// Dart ağacından düşer.
 abstract final class PlayBuild {
   /// Play derlemesi mi.
   static const bool enabled = bool.fromEnvironment('NOTLAR_PLAY');
@@ -16,9 +12,6 @@ abstract final class PlayBuild {
   /// E1: GitHub Release'ten kendini güncelleme (Play dışı kurulum yönlendirmesi
   /// Play politikasına aykırı). Play'de güncellemeyi mağaza yapar.
   static const bool selfUpdate = !enabled;
-
-  /// E2: Gmail okuma (`gmail.readonly` "kısıtlı" kapsam → yıllık CASA denetimi).
-  static const bool gmail = !enabled;
 
   /// E3: konum hatırlatıcısı (arka plan konumu beyanı + video ister).
   static const bool placeReminders = !enabled;
@@ -30,26 +23,7 @@ abstract final class PlayBuild {
   /// Elle PiP düğmesi kalır.
   static const bool youtubeAutoPip = !enabled;
 
-  // ── PLAN §1.6 AI-S1 "Play'den kalkanlar" (KARAR kullanıcı 2026-11-17):
-  // kişisel APK'da AYNEN kalır, Play derlemesinde gizlenir. E-postadan not
-  // (`GeminiService.fromEmail`) Gmail ekranında olduğundan [gmail] kapısıyla
-  // zaten gizli.
-
-  /// Podcast (`podcastScript`): belgeyi AI ile anlatıya çevirme + ses dosyası
-  /// olarak dışa aktarma. Belgeyi cihaz sesiyle okuma ücretsiz, kalır.
-  static const bool aiPodcast = !enabled;
-
-  /// Gemini seslendirme (`TtsEngine.gemini`, `speech`). Cihaz sesi kalır.
-  static const bool aiVoice = !enabled;
-
-  /// Video → not (`noteFromVideo`) ve video not satırını AI ile toparlama
-  /// (`videoNoteExcerpt`; AI'sız altyazı/transkript kesiti kalır).
-  static const bool videoNote = !enabled;
-
-  // ── PLAN §1.5 PL3 AI kullanıcı yüzü.
-
-  /// İlk AI kullanımında rıza ekranı (ne gönderilir, nereye, "AI yanılabilir").
-  /// KARAR (en güvenli, sabah bakılacak): Play'de zorunlu; kişisel APK'da ve
-  /// web'de sorulmaz (kabul sayılır, bugünkü davranış).
+  /// İlk akıllı karar kullanımında rıza ekranı (PL3). Play'de zorunlu;
+  /// kişisel APK'da ve web'de sorulmaz.
   static const bool aiConsent = enabled;
 }

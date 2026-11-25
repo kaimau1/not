@@ -6,31 +6,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/error_log.dart';
-import '../../../core/play_build.dart';
 import '../../../core/utils/youtube.dart';
-import '../../ai/data/gemini_service.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/note.dart';
 import '../domain/transcript.dart';
 import 'timed_transcript.dart';
 
-/// **VİDEO NOTU TRANSKRİPTİ** (kullanıcı isteği 2026-10-29: "Kanallarım'dan
-/// full transkript de gelsin; alınan notlarda — Harita'dan gelenlerde de —
-/// ±10 sn'lik transkript gelsin, AI ile analiz edilsin, gerekirse birkaç sn
-/// daha alınarak cümle bütünlüğü korunsun; arka planda yapılsın").
+/// **VİDEO NOTU TRANSKRİPTİ** (yerel altyazı / Kanallarım köprüsü).
 ///
 /// Köprü (`HaritaNotlari.kt`) video notuna her satırda `ytTodo: true` ve
-/// `ytPending` (`{s: saniye, line: satır, note: metin}`) yazar; uygulama
-/// açıkken bu servis onları sessizce işler:
-///  1. zamanlı transkript: Kanallarım'ın `transcript` ekiyle yolladığı tam
-///     altyazı (köprü `ytTranscript` alanına yazar), yoksa notta kayıtlı
-///     transkript, o da yoksa Gemini videoyu bağlantıdan cümle cümle döker,
-///  2. notta yoksa TAM transkript, videonun transkript eki olarak eklenir,
-///  3. her bekleyen satırın altına ±10 sn'lik parça (AI cümleleri tamamlar;
-///     AI yoksa cümle sınırına göre kural tabanlı) yazılır.
-/// Yazım İŞLEMDE (transaction): iki cihaz aynı anda işlese de satır bir kez
-/// işlenir. Yalnız Android'de çalışır (notlar telefondaki uygulamalardan
-/// gelir; web ve telefon aynı anda AI harcamasın).
+/// `ytPending` yazar; uygulama açıkken bu servis köprüden gelen zamanlı
+/// transkripti ve cümle kesitlerini yerelde işler.
 final videoNoteTranscriptsProvider = Provider<void>((ref) {
   if (kIsWeb) return;
   final uid = ref.watch(currentUidProvider);
@@ -41,7 +27,6 @@ final videoNoteTranscriptsProvider = Provider<void>((ref) {
         .doc(uid)
         .collection(AppConstants.notesCollection),
     uid,
-    ref.read(geminiServiceProvider),
   );
   final sub = worker.notes
       .where('ytTodo', isEqualTo: true)
@@ -56,9 +41,7 @@ final videoNoteTranscriptsProvider = Provider<void>((ref) {
 /// Bekleyen satırın altına yazılan parçanın biçimi: “…”.
 String videoExcerptLine(String excerpt) => '“$excerpt”';
 
-/// [body]'de [line] satırının ALTINA [excerpt] satırını koyar. Satır
-/// bulunamazsa (kullanıcı değiştirdi) parça sona eklenir; aynı satırın
-/// altında zaten parça varsa bir sonraki eşleşmeye geçer.
+/// [body]'de [line] satırının ALTINA [excerpt] satırını koyar.
 String insertVideoExcerpt(String body, String line, String excerpt) {
   final quote = videoExcerptLine(excerpt);
   final lines = body.split('\n');
@@ -73,13 +56,10 @@ String insertVideoExcerpt(String body, String line, String excerpt) {
   return trimmed.isEmpty ? quote : '$trimmed\n$quote';
 }
 
-/// Köprünün satırın altına koyduğu ham altyazı (AI düzeltene dek görünür).
+/// Köprünün satırın altına koyduğu ham altyazı.
 String videoRawCaptionLine(String caption) => '“…$caption…”';
 
-/// Satırın parçasını gövdeye işler: eski biçimde satır + "Altyazı (…):"
-/// bloğu [line] olarak gövdede durur, satır + parça ile değişir; yeni
-/// biçimde ham altyazı satırı ([videoRawCaptionLine]) düzeltilmişiyle
-/// değişir; ikisi de yoksa parça satırın altına girer.
+/// Satırın parçasını gövdeye işler.
 String applyVideoExcerpt(
   String body,
   String line,
@@ -101,11 +81,10 @@ String applyVideoExcerpt(
 }
 
 class _Worker {
-  _Worker(this.notes, this.uid, this.ai);
+  _Worker(this.notes, this.uid);
 
   final CollectionReference<Map<String, dynamic>> notes;
   final String uid;
-  final GeminiService ai;
   bool disposed = false;
 
   final _queue = <String>{};
@@ -243,8 +222,8 @@ class _Worker {
     });
   }
 
-  /// Videonun zamanlı transkripti: notta kayıtlı tam transkript (damgalı)
-  /// varsa ondan, yoksa Gemini videoyu bağlantıdan cümle cümle döker.
+  /// Videonun zamanlı transkripti: köprüden gelen tam altyazı veya notta
+  /// kayıtlı damgalı transkript.
   Future<List<CaptionSegment>?> _segmentsFor(
     String id,
     String url,
@@ -261,25 +240,10 @@ class _Worker {
       final parsed = TimedTranscript.parseStamped(saved);
       if (parsed.length > 1) return _segments[id] = parsed;
     }
-    try {
-      final text = await ai.transcribeMedia(
-        mimeType: 'video/mp4',
-        webUrl: url,
-        video: true,
-        sentenceStamps: true,
-      );
-      final parsed = TimedTranscript.parseStamped(text);
-      if (parsed.isNotEmpty) return _segments[id] = parsed;
-    } catch (e) {
-      ErrorLog.record('video dökümü', e);
-    }
     return null;
   }
 
-  /// Satırın parçası. Kaynaklar: Kanallarım'ın ±10 sn altyazısı (kelimeler
-  /// doğru ama cümle ortasından kesik) ve varsa tam transkriptin o çevresi
-  /// (cümleyi tamamlamak için birkaç sn öte). AI ikisini birleştirir; AI
-  /// yoksa transkriptten cümle sınırına göre kesilir, o da yoksa ham altyazı.
+  /// Satırın parçası: transkriptten cümle sınırına göre kesilir, yoksa ham altyazı.
   Future<String> _excerpt(List<CaptionSegment>? segments, _Pending p) async {
     final from = p.from ?? p.at - 10;
     final to = p.to ?? p.at + 10;
@@ -288,35 +252,9 @@ class _Worker {
     final window = segments == null
         ? const <CaptionSegment>[]
         : TimedTranscript.window(segments, center, radius: radius);
-    final fallback = window.isNotEmpty
+    return window.isNotEmpty
         ? TimedTranscript.excerpt(segments!, center, radius: radius)
         : p.caption;
-    if (window.isEmpty && p.caption.isEmpty) return fallback;
-    // Play derlemesinde AI toparlama yok (AI-S1): yerel kesit.
-    if (!PlayBuild.videoNote) return fallback;
-    try {
-      final timed = window.isEmpty
-          ? null
-          : [
-              for (final s in window)
-                '[${TimedTranscript.stamp(s.start)}] ${s.text}',
-            ].join('\n');
-      final text = await ai.videoNoteExcerpt(
-        timed: timed,
-        caption: p.caption,
-        fromSeconds: from,
-        toSeconds: to,
-        note: p.note,
-      );
-      // Model kaynaklardan çok daha uzun bir şey yazdıysa uydurmuştur.
-      final source =
-          window.fold<int>(0, (n, s) => n + s.text.length + 1) +
-          p.caption.length;
-      if (text.isNotEmpty && text.length <= source * 1.3 + 40) return text;
-    } catch (e, st) {
-      ErrorLog.record('video parçası AI', e, st);
-    }
-    return fallback;
   }
 
   static List<_Pending> _pendingOf(Object? raw) => [

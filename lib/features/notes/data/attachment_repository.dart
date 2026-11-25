@@ -17,8 +17,9 @@ import '../../../core/utils/local_file.dart';
 import '../../../core/utils/web_attachment_cache.dart';
 import '../../../core/utils/web_blob.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
+import '../../entitlement/data/entitlement_service.dart';
+import '../../entitlement/domain/entitlement.dart';
 import '../../folders/data/folders_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
@@ -32,8 +33,8 @@ import 'media_transcriber.dart' show audioMimeFromName, audioMimeOf;
 final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
   final uid = ref.watch(currentUidProvider);
   if (uid == null) return null;
-  // Premium 50 MB, ücretsiz 10 MB'a kadar ek yükleyebilir.
-  final premium = ref.watch(premiumProvider).value ?? false;
+  // Tam Sürüm 50 MB, Lite 10 MB'a kadar ek yükleyebilir.
+  final premium = ref.watch(proFeatureProvider(ProFeature.cloudAttachments));
   // Ekler Firebase'e GİTMİYORSA (Drive'a ya da hiçbir yere) uygulamanın
   // Firebase tavanları anlamsız: dosya başına sınır premium tavanına çıkar,
   // toplam tavan kalkar — Drive'ın kendi kotası geçerli (kullanıcı isteği

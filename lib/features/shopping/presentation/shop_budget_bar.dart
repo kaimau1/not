@@ -71,7 +71,7 @@ class ShopBudgetBar extends StatelessWidget {
     final barColor = overBudget
         ? scheme.error
         : nearBudget
-        ? scheme.tertiary
+        ? scheme.secondary
         : scheme.primary;
     final ratio = limit != null && limit > 0
         ? (cartTotal / limit).clamp(0.0, 1.0)

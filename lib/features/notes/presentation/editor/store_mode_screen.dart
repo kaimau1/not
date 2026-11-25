@@ -1244,7 +1244,7 @@ class _StoreItemCard extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
         decoration: BoxDecoration(
-          color: scheme.tertiaryContainer,
+          color: scheme.secondaryContainer,
           borderRadius: BorderRadius.circular(AppRadius.m),
         ),
         child: Row(
@@ -1253,11 +1253,11 @@ class _StoreItemCard extends StatelessWidget {
           children: [
             Text(
               l10n.shopStatusUnavailable,
-              style: text.label.copyWith(color: scheme.onTertiaryContainer),
+              style: text.label.copyWith(color: scheme.onSecondaryContainer),
             ),
             Icon(
               Icons.hourglass_empty_rounded,
-              color: scheme.onTertiaryContainer,
+              color: scheme.onSecondaryContainer,
             ),
           ],
         ),
@@ -1267,7 +1267,7 @@ class _StoreItemCard extends StatelessWidget {
         color: checked
             ? scheme.surfaceContainerLow
             : unavailable
-            ? scheme.tertiaryContainer.withValues(alpha: AppAlpha.soft)
+            ? scheme.secondaryContainer.withValues(alpha: AppAlpha.soft)
             : scheme.surfaceContainer,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.m),
@@ -1275,7 +1275,7 @@ class _StoreItemCard extends StatelessWidget {
             color: checked
                 ? scheme.outlineVariant.withValues(alpha: AppAlpha.soft)
                 : unavailable
-                ? scheme.tertiary.withValues(alpha: AppAlpha.soft)
+                ? scheme.secondary.withValues(alpha: AppAlpha.soft)
                 : scheme.primary.withValues(alpha: AppAlpha.soft),
           ),
         ),
@@ -1300,7 +1300,7 @@ class _StoreItemCard extends StatelessWidget {
                   color: checked
                       ? scheme.primary
                       : unavailable
-                      ? scheme.tertiary
+                      ? scheme.secondary
                       : scheme.onSurfaceVariant,
                 ),
                 Expanded(
@@ -1334,7 +1334,7 @@ class _StoreItemCard extends StatelessWidget {
                               Text(
                                 l10n.shopStatusUnavailableBadge,
                                 style: text.badge.copyWith(
-                                  color: scheme.tertiary,
+                                  color: scheme.secondary,
                                 ),
                               ),
                             if (displayPrice != null)

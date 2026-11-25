@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../ai/data/semantic_search.dart' show relatedNotesProvider;
+import '../../ai/domain/smart_categorize.dart' show SmartNoteLearn;
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/search_fold.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../data/notes_repository.dart' show notesStreamProvider;
 import '../domain/note.dart';
 import '../domain/note_links.dart';
-import '../../../core/widgets/delayed_spinner.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import 'note_card.dart' show openNoteRoute;
 
@@ -195,8 +195,40 @@ class BacklinksChip extends StatelessWidget {
   }
 }
 
-/// "İlgili notlar" levhası (F18.17): öneriler, dokununca açılır; "Bağla"
-/// tek dokunuşla bağlantıya çevirir.
+/// Yerel kelime/etiket örtüşmesiyle ilgili notları bulur (sıfır AI maliyeti).
+List<Note> localRelatedNotes(String noteId, List<Note> notes) {
+  Note? target;
+  for (final n in notes) {
+    if (n.id == noteId) {
+      target = n;
+      break;
+    }
+  }
+  if (target == null || target.locked) return const [];
+  final targetTokens = SmartNoteLearn.extractTokens(target);
+  final targetTags = target.tags.toSet();
+  if (targetTokens.isEmpty && targetTags.isEmpty) return const [];
+  final scored = <(Note, double)>[];
+  for (final n in notes) {
+    if (n.id == noteId || n.locked || n.deletedAt != null || n.archivedAt != null) {
+      continue;
+    }
+    var score = SmartNoteLearn.jaccardSimilarity(
+      targetTokens,
+      SmartNoteLearn.extractTokens(n),
+    );
+    if (targetTags.isNotEmpty && n.tags.isNotEmpty) {
+      final shared = targetTags.intersection(n.tags.toSet()).length;
+      if (shared > 0) score += 0.25 * shared;
+    }
+    if (score >= 0.15) scored.add((n, score));
+  }
+  scored.sort((a, b) => b.$2.compareTo(a.$2));
+  return [for (final s in scored.take(6)) s.$1];
+}
+
+/// "İlgili notlar" levhası (F18.17): yerel benzerlik önerileri, dokununca
+/// açılır; "Bağla" tek dokunuşla bağlantıya çevirir.
 Future<void> showRelatedNotesSheet(
   BuildContext context, {
   required String noteId,
@@ -208,7 +240,8 @@ Future<void> showRelatedNotesSheet(
     child: Consumer(
       builder: (ctx, ref, _) {
         final l10n = ctx.l10n;
-        final async = ref.watch(relatedNotesProvider(noteId));
+        final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+        final list = localRelatedNotes(noteId, notes);
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -220,50 +253,33 @@ Future<void> showRelatedNotesSheet(
                 style: Theme.of(ctx).textTheme.titleMedium,
               ),
             ),
-            ...async.when(
-              loading: () => const [
-                Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: DelayedSpinner()),
+            if (list.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(l10n.relatedNotesNone),
+              )
+            else
+              for (final n in list)
+                ListTile(
+                  leading: const Icon(Icons.sticky_note_2_outlined),
+                  title: Text(
+                    noteLinkLabel(n, l10n.remindersUntitled),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    openNoteRoute(context, n);
+                  },
+                  trailing: TextButton.icon(
+                    icon: const Icon(Icons.link, size: 18),
+                    label: Text(l10n.relatedNotesLink),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      onLink(n);
+                    },
+                  ),
                 ),
-              ],
-              error: (_, _) => [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(l10n.relatedNotesNone),
-                ),
-              ],
-              data: (list) => list.isEmpty
-                  ? [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(l10n.relatedNotesNone),
-                      ),
-                    ]
-                  : [
-                      for (final n in list)
-                        ListTile(
-                          leading: const Icon(Icons.sticky_note_2_outlined),
-                          title: Text(
-                            noteLinkLabel(n, l10n.remindersUntitled),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            openNoteRoute(context, n);
-                          },
-                          trailing: TextButton.icon(
-                            icon: const Icon(Icons.link, size: 18),
-                            label: Text(l10n.relatedNotesLink),
-                            onPressed: () {
-                              Navigator.pop(ctx);
-                              onLink(n);
-                            },
-                          ),
-                        ),
-                    ],
-            ),
           ],
         );
       },

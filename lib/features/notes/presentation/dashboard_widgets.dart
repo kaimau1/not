@@ -325,20 +325,7 @@ class _SearchField extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final query = ref.watch(searchQueryProvider);
-    final semantic = ref.watch(semanticSearchEnabledProvider);
     final scheme = Theme.of(context).colorScheme;
-    // Anlamsal arama ESKİDEN alanın içindeki ✨ düğmesiydi: açık mı kapalı mı
-    // olduğu yalnız ikon renginden anlaşılıyor, "akıllı arama" diye bir şeyin
-    // varlığı hiç fark edilmiyordu. İki sekmeli segment modu okunur kılıyor.
-    //
-    // DOKUNMA ALANI (kullanıcı bulgusu 2026-10-29: "arama alanının tıklama
-    // hitbox'ı çok dar, tam ortasına basmak gerekiyor"): yoğun TextField
-    // yalnız yazı satırı kadar (~18 px) yüksekti; 44 px'lik kutunun üstü,
-    // altı ve büyüteç ölü alandı. Artık alan kutuyu dikeyde doldurur ve
-    // kutunun kalanına (büyüteç, kenarlar) dokunmak da odağı verir.
-    // 2026-11-08: ESKİDEN tüm hap tek GestureDetector'dı; sağdaki düğmelerin
-    // kenar/boşluklarına basmak da aramayı başlatıyordu. Artık yalnız sol
-    // kısım (kenar + büyüteç) odak verir; TextField kendi alanını zaten alır.
     final theme = Theme.of(context);
     final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
@@ -383,9 +370,6 @@ class _SearchField extends ConsumerWidget {
                 focusNode: focusNode,
                 onChanged: (value) =>
                     ref.read(searchQueryProvider.notifier).set(value),
-                // Alan dışına dokununca odak bırakılır; bar daralır. Sorgu da
-                // o anda "son aramalar"a düşer — kullanıcı arama yapıp bir
-                // nota geçtiğinde geçmişe yazılmasının doğal anı burası.
                 onTapOutside: (_) {
                   ref.read(searchHistoryProvider.notifier).remember(query);
                   focusNode?.unfocus();
@@ -395,9 +379,7 @@ class _SearchField extends ConsumerWidget {
                 textInputAction: TextInputAction.search,
                 style: text.label.copyWith(fontWeight: AppWeight.regular),
                 decoration: InputDecoration(
-                  hintText: semantic
-                      ? l10n.semanticSearchHint
-                      : l10n.searchHint,
+                  hintText: l10n.searchHint,
                   hintStyle: text.label.copyWith(
                     fontWeight: AppWeight.regular,
                     color: scheme.onSurfaceVariant,
@@ -405,7 +387,6 @@ class _SearchField extends ConsumerWidget {
                   border: InputBorder.none,
                   filled: false,
                   isDense: true,
-                  // Dikey dolgu alanı 44 px'lik kutu boyunca dokunulur kılar.
                   contentPadding: const EdgeInsets.symmetric(vertical: 15),
                 ),
               ),
@@ -420,36 +401,6 @@ class _SearchField extends ConsumerWidget {
                   ref.read(searchQueryProvider.notifier).set('');
                 },
               ),
-            // TEK AI ANAHTARI (kullanıcı isteği 2026-10-17: "metin/anlam
-            // yazıları çok yer kaplıyor, sadece bir AI işareti olsun, basınca
-            // açılıp kapansın — metin ve anlam arasında geçiş"): açıkken dolu
-            // vurgu rengi (anlamla arama), kapalıyken soluk çerçeve (metin).
-            //
-            // YALNIZ ARAMA SIRASINDA (F11.1): odak yokken ve kutu boşken
-            // gizli — üst çubukta yer aramaya kalsın, ipucu kesilmesin.
-            // HEP GÖRÜNÜR (kullanıcı bulgusu 2026-11-06: "boştayken AI tuşu
-            // görünmüyor"). TextFieldTapRegion: dokunuş odağı düşürmesin.
-            Offstage(
-              offstage: compact,
-              child: TextFieldTapRegion(
-                child: _SemanticToggle(
-                  on: semantic,
-                  onTap: () =>
-                      ref.read(semanticSearchEnabledProvider.notifier).toggle(),
-                ),
-              ),
-            ),
-            // AYIRAÇ: AI anahtarı ile düz simgeler (süz, hesap, ⋮) arası
-            // (kullanıcı örneği 2026-11-06).
-            Offstage(
-              offstage: compact,
-              child: Container(
-                width: 1,
-                height: 22,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                color: AppTokens.of(context).hairline,
-              ),
-            ),
             // SÜZ arama kutusunun sağında (bkz. [HomeFilterButton]);
             // kişiselleştirmede gizlenebilir.
             Offstage(
@@ -541,81 +492,6 @@ class _RecentSearches extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SemanticToggle extends ConsumerStatefulWidget {
-  const _SemanticToggle({required this.on, required this.onTap});
-
-  final bool on;
-  final VoidCallback onTap;
-
-  @override
-  ConsumerState<_SemanticToggle> createState() => _SemanticToggleState();
-}
-
-class _SemanticToggleState extends ConsumerState<_SemanticToggle> {
-  @override
-  void initState() {
-    super.initState();
-    // NE YAPAR (F14.4): anahtar ilk kez göründüğünde tek satır — "Anlam"
-    // tek başına bir şey anlatmıyordu.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      TipOnce.show(
-        context,
-        ref.read(sharedPreferencesProvider),
-        TipOnce.semanticSearch,
-        context.l10n.tipSemanticSearch,
-        sessionLimit: false,
-      );
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final on = widget.on;
-    final onTap = widget.onTap;
-    final scheme = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
-    return Tooltip(
-      message: l10n.semanticSearchToggle,
-      child: Semantics(
-        toggled: on,
-        button: true,
-        label: l10n.searchModeMeaning,
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: AnimatedContainer(
-            key: const ValueKey('search-ai-toggle'),
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOutCubic,
-            // HAP (kullanıcı örneği 2026-11-06): ince çerçeveli, alçak.
-            width: 42,
-            height: 30,
-            decoration: BoxDecoration(
-              color: on ? scheme.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: on ? scheme.primary : scheme.outlineVariant,
-              ),
-            ),
-            child: Material(
-              type: MaterialType.transparency,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(15),
-                onTap: onTap,
-                child: Icon(
-                  on ? Icons.auto_awesome : Icons.auto_awesome_outlined,
-                  size: 17,
-                  color: on ? scheme.onPrimary : scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -6,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../ai/data/ai_gate.dart';
+import '../../entitlement/data/entitlement_service.dart';
+import '../../entitlement/domain/entitlement.dart';
 import '../../inbox/presentation/shared_hub_screen.dart' show HubCountBadge;
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/friends_screen.dart';
@@ -124,7 +125,9 @@ Future<void> showAccountSheet(BuildContext context) => showAppSheet<void>(
       final anonymous = ref.watch(isAnonymousProvider);
       final requests =
           ref.watch(incomingFriendRequestsProvider).value?.length ?? 0;
-      final premium = ref.watch(premiumProvider).value ?? false;
+      final premium =
+          !EntitlementGate.active ||
+          ref.watch(effectiveTierProvider) == EntitlementTier.lifetime;
 
       void go(VoidCallback action) {
         Navigator.pop(sheetContext);

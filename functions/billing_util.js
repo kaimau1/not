@@ -13,8 +13,11 @@ const crypto = require("node:crypto");
  * `test/billing_test.dart`). Play Console'da bir kez verilen kimlik bir daha
  * kullanılamaz: değiştirme.
  */
-const PRO_SUBSCRIPTION = "pro"; // temel planlar: monthly, yearly (+7 gün deneme teklifi)
-const LIFETIME_PRODUCT = "lifetime"; // tek sefer, tüketilmez
+const PRO_SUBSCRIPTION = "pro"; // eski abonelik uyumluluğu
+const LIFETIME_PRODUCT = "lifetime"; // tek sefer, ömür boyu, tüketilmez (50 TL)
+const DECISION_PACK_1000 = "decision_pack_1000"; // +1.000 Akıllı Karar Paketi (30 TL, tüketilebilir)
+const DECISION_PACK_CALLS = 1000;
+const DECISION_PACK_TOKENS = 800000;
 
 /** Ödenmiş süresi işleyen abonelik durumları (Play `subscriptionsv2`). */
 const PAID_STATES = new Set([
@@ -138,6 +141,33 @@ function mergeEntitlement(existing, change, now) {
   }
   const grantUntil = prev.grantUntil instanceof Date ? prev.grantUntil : null;
   const proUntil = later(paidUntil, grantUntil);
+  let decisionCredits =
+    typeof prev.decisionCredits === "number" && Number.isFinite(prev.decisionCredits)
+      ? Math.max(0, Math.floor(prev.decisionCredits))
+      : 0;
+  let decisionTokenCredits =
+    typeof prev.decisionTokenCredits === "number" &&
+    Number.isFinite(prev.decisionTokenCredits)
+      ? Math.max(0, Math.floor(prev.decisionTokenCredits))
+      : 0;
+  const creditedPackTokens = Array.isArray(prev.creditedPackTokens)
+    ? [...prev.creditedPackTokens]
+    : [];
+  if (change.pack && change.pack.tokenKey) {
+    if (!creditedPackTokens.includes(change.pack.tokenKey)) {
+      const addCalls =
+        typeof change.pack.calls === "number" && change.pack.calls > 0
+          ? Math.floor(change.pack.calls)
+          : DECISION_PACK_CALLS;
+      const addTokens =
+        typeof change.pack.tokens === "number" && change.pack.tokens > 0
+          ? Math.floor(change.pack.tokens)
+          : DECISION_PACK_TOKENS;
+      decisionCredits += addCalls;
+      decisionTokenCredits += addTokens;
+      creditedPackTokens.push(change.pack.tokenKey);
+    }
+  }
   return {
     // `pro` + geçmiş `proUntil` = Pro bitti (istemci "Drive'a taşı" önerir).
     tier: proUntil ? "pro" : lifetimeOwned ? "lifetime" : "free",
@@ -146,6 +176,9 @@ function mergeEntitlement(existing, change, now) {
     subTokenKey,
     lifetimeOwned,
     lifetimeTokenKey,
+    decisionCredits,
+    decisionTokenCredits,
+    creditedPackTokens,
     source: "play",
   };
 }
@@ -201,6 +234,9 @@ function resolvePackageName(requested, allowed) {
 module.exports = {
   PRO_SUBSCRIPTION,
   LIFETIME_PRODUCT,
+  DECISION_PACK_1000,
+  DECISION_PACK_CALLS,
+  DECISION_PACK_TOKENS,
   tokenKey,
   accountTag,
   readSubscription,

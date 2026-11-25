@@ -193,14 +193,12 @@ class _SpeechPitchSliderState extends ConsumerState<_SpeechPitchSlider> {
 /// Artık seçilen motora göre TEK bir ses seçimi görünür; cihaz sesleri de tek
 /// menüde (dil seç → ses seç) toplanır.
 ///
-/// Derlemede bulunan motorlar (Play'de yalnız cihaz sesi: AI-S1, 16K §2.6).
+/// Derlemede bulunan motorlar (cihaz sesi + kişisel APK'da Antalia).
 List<TtsEngine> availableTtsEngines({
-  bool ai = PlayBuild.aiVoice,
   bool local = PlayBuild.antaliaVoice,
-}) => [TtsEngine.device, if (ai) TtsEngine.gemini, if (local) TtsEngine.antalia];
+}) => [TtsEngine.device, if (local) TtsEngine.antalia];
 
-/// Motor seçici yalnız birden çok motor varken (AI-S2 eki, 2026-11-19): Play
-/// derlemesinde tek bölmeli, seçilemeyen bir düğme kalıyordu.
+/// Motor seçici yalnız birden çok motor varken (AI-S2 eki, 2026-11-19).
 bool showTtsEnginePicker(List<TtsEngine> engines) => engines.length > 1;
 
 class _VoiceSection extends ConsumerWidget {
@@ -211,65 +209,49 @@ class _VoiceSection extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final engine = ref.watch(ttsEngineProvider);
-    final models = ref.watch(availableTtsModelsProvider).value ?? const [];
     final engines = availableTtsEngines();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Başlık artık grup etiketi ("Seslendirme", P62 PA1) — içeride
-        // ikinci kez yazılmaz.
         const SizedBox(height: AppSpace.s),
         if (showTtsEnginePicker(engines)) ...[
-        SegmentedButton<TtsEngine>(
-          segments: [
-            ButtonSegment(
-              value: TtsEngine.device,
-              icon: const Icon(Icons.smartphone, size: AppIconSize.s),
-              label: Text(
-                l10n.ttsEngineDevice,
-                maxLines: 1,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            // Play derlemesinde Gemini seslendirme yok (AI-S1).
-            if (engines.contains(TtsEngine.gemini))
+          SegmentedButton<TtsEngine>(
+            segments: [
               ButtonSegment(
-                value: TtsEngine.gemini,
-                icon: const Icon(Icons.auto_awesome, size: AppIconSize.s),
+                value: TtsEngine.device,
+                icon: const Icon(Icons.smartphone, size: AppIconSize.s),
                 label: Text(
-                  l10n.ttsEngineAi,
+                  l10n.ttsEngineDevice,
                   maxLines: 1,
                   softWrap: false,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-            // Play derlemesinde Antalia (ONNX) yok (16K §2.6).
-            if (engines.contains(TtsEngine.antalia))
-              ButtonSegment(
-                value: TtsEngine.antalia,
-                icon: const Icon(Icons.record_voice_over, size: AppIconSize.s),
-                label: Text(
-                  l10n.ttsEngineLocal,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
+              if (engines.contains(TtsEngine.antalia))
+                ButtonSegment(
+                  value: TtsEngine.antalia,
+                  icon: const Icon(
+                    Icons.record_voice_over,
+                    size: AppIconSize.s,
+                  ),
+                  label: Text(
+                    l10n.ttsEngineLocal,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-          ],
-          selected: {engine},
-          // Motor değişince süren deneme/okuma susar: eski motorun örneği
-          // yenisininkiyle üst üste çalmasın.
-          onSelectionChanged: (value) {
-            unawaited(ref.read(speechProvider.notifier).stop());
-            ref.read(ttsEngineProvider.notifier).set(value.first);
-          },
-        ),
-        const SizedBox(height: 6),
+            ],
+            selected: {engine},
+            onSelectionChanged: (value) {
+              unawaited(ref.read(speechProvider.notifier).stop());
+              ref.read(ttsEngineProvider.notifier).set(value.first);
+            },
+          ),
+          const SizedBox(height: 6),
         ],
         Text(
           switch (engine) {
-            TtsEngine.gemini => l10n.ttsEngineAiInfo,
             TtsEngine.antalia => l10n.ttsEngineLocalInfo,
             TtsEngine.device => l10n.ttsEngineDeviceInfo,
           },
@@ -277,66 +259,11 @@ class _VoiceSection extends ConsumerWidget {
             context,
           ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
-        // KULLANILABİLİR Mİ: yapay zekâ sesi kullanıcının KENDİ Gemini
-        // anahtarını ister (dahili yol ses döndürmüyor). Eskiden ayar
-        // seçilebiliyor ama okuma sessizce cihaz sesiyle yapılıyordu —
-        // kullanıcı "AI seçince çalışmıyor, hâlâ android sesiyle okuyor"
-        // dedi. Artık sebebi burada yazıyor.
-        if (engine == TtsEngine.gemini &&
-            !ref.read(aiSpeechProvider.notifier).isAvailable)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              l10n.ttsEngineAiUnavailable,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.error),
-            ),
-          ),
-        // Antalia: model indirme/silme satırı ve deneme. Model kurulu değilken
-        // okuma cihaz sesiyle sürer (sebebi satırda yazar).
         if (engine == TtsEngine.antalia) ...[
           const SizedBox(height: 10),
           const _AntaliaModelTile(),
-        ],
-        // Model ve ses YALNIZ yapay zekâ sesi seçiliyken anlamlı: cihaz
-        // sesinin modeli yok, sesi de sistemden gelir (aşağıdaki menü).
-        if (engine == TtsEngine.gemini) ...[
-          const SizedBox(height: 14),
-          _modelPickerTile(
-            context: context,
-            label: l10n.ttsModel,
-            models: models,
-            value: ref.watch(ttsModelProvider),
-            autoLabel: l10n.aiModelAuto,
-            recommendedLabel: l10n.recommendedModel,
-            chain: ModelChain.tts,
-            catalog: ref.watch(allModelsProvider).value,
-            onChanged: (value) =>
-                ref.read(ttsModelProvider.notifier).set(value),
-          ),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-            initialValue: ref.watch(ttsVoiceProvider),
-            isExpanded: true,
-            decoration: _aiFieldDecoration(context, label: l10n.ttsVoice),
-            items: [
-              for (final voice in AppConstants.geminiTtsVoices)
-                DropdownMenuItem<String>(value: voice, child: Text(voice)),
-            ],
-            onChanged: (value) {
-              if (value != null) ref.read(ttsVoiceProvider.notifier).set(value);
-            },
-          ),
-          // Ses adı ("Kore", "Puck") tek başına hiçbir şey anlatmıyor: seçimin
-          // nasıl duyulduğu ancak dinleyerek anlaşılır. Örnek AYNI ses için bir
-          // kez üretilir, sonra kayıttan çalar — deneme kota yakmaz.
-          const SizedBox(height: 6),
-          const _AiVoicePreviewButton(),
         ] else if (engine == TtsEngine.device) ...[
           const SizedBox(height: 6),
-          // CİHAZ SESLERİ TEK MENÜDE: dil başına ayrı satırlar yerine tek bir
-          // satır, dokununca dil + ses listesi açılır.
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.record_voice_over_outlined),
@@ -351,70 +278,6 @@ class _VoiceSection extends ConsumerWidget {
             ),
           ),
         ],
-      ],
-    );
-  }
-}
-
-/// Yapay zekâ sesinin deneme düğmesi (bkz. [AiSpeechController.previewVoice]).
-///
-/// Örnek cümle uygulamanın dilindedir ve model başına BİR KEZ üretilir; ikinci
-/// dokunuş kayıttan çalar. Üretim sürerken düğme beklemeye geçer: seslendirme
-/// modeli birkaç saniye sürebiliyor ve tepki vermeyen düğme "çalışmıyor" gibi
-/// görünüyordu.
-class _AiVoicePreviewButton extends ConsumerStatefulWidget {
-  const _AiVoicePreviewButton();
-
-  @override
-  ConsumerState<_AiVoicePreviewButton> createState() =>
-      _AiVoicePreviewButtonState();
-}
-
-class _AiVoicePreviewButtonState extends ConsumerState<_AiVoicePreviewButton> {
-  bool _busy = false;
-
-  Future<void> _play() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    final messenger = ScaffoldMessenger.of(context);
-    final language = Localizations.localeOf(context).languageCode;
-    final sample = SpeechOutputController.voiceSample(language);
-    try {
-      await ref
-          .read(speechProvider.notifier)
-          .preview(TtsEngine.gemini, sample);
-    } catch (error) {
-      messenger.showMessage(error.toString());
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Row(
-      children: [
-        OutlinedButton.icon(
-          onPressed: _busy ? null : _play,
-          icon: _busy
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.play_arrow, size: AppIconSize.s),
-          label: Text(l10n.voicePreview),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            l10n.voicePreviewCached,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
       ],
     );
   }

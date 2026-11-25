@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/app_frame.dart';
 import '../../../app/theme/app_tokens.dart';
@@ -14,6 +12,8 @@ import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/group_card.dart';
 import '../../../core/widgets/sheet_header.dart' show SectionLabel;
 import '../../../core/widgets/undo_snackbar.dart' show showAppMessage;
+import '../../ai/data/api_key_store.dart';
+import '../../ai/data/decisions/decision_service.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/presentation/settings_screen.dart' show linkGuestAccount;
 import '../data/billing_products.dart';
@@ -21,11 +21,11 @@ import '../data/billing_service.dart';
 import '../data/entitlement_service.dart';
 import '../domain/entitlement.dart';
 
-/// **PRO EKRANI** (PLAN §1.5 PL6) — YALNIZ Play derlemesinde (`/premium`
-/// rotası `PlayBuild.enabled` iken buna açılır; kişisel APK'da eski
-/// [PremiumScreen] aynen). Katman karşılaştırması (PLAN §1.5 tablosu),
-/// mağazadan fiyatlı satın alma satırları, geri yükleme, abonelik yönetimi.
-/// Web'de satın alma yok: "telefondan al".
+/// **TAM SÜRÜM EKRANI** (PLAN §2.3 & §3, Faz 1).
+///
+/// 2 net katman: **Lite (Ücretsiz, Reklamsız)** vs **Tam Sürüm (Tek Seferlik,
+/// Ömür Boyu — 750 Akıllı Karar dahil)** + isteğe bağlı tüketilebilir
+/// **+1.000 Akıllı Karar Paketi**. Abonelik yoktur.
 ///
 /// Hak ekranda HİÇ yazılmaz: satın alma sunucuda doğrulanır, durum kartı
 /// `entitlements/{uid}`'i izler ([effectiveTierProvider]).
@@ -44,17 +44,8 @@ class _ProScreenState extends ConsumerState<ProScreen> {
       if (!mounted) return;
       final billing = ref.read(billingProvider.notifier);
       unawaited(billing.start());
-      // Yarıda kalmış doğrulama / kaçmış bildirim varsa sessizce onar.
       unawaited(billing.recover(quiet: true));
     });
-  }
-
-  Future<void> _manage() async {
-    final info = await PackageInfo.fromPlatform();
-    await launchUrl(
-      BillingProducts.manageUrl(info.packageName),
-      mode: LaunchMode.externalApplication,
-    );
   }
 
   @override
@@ -63,13 +54,15 @@ class _ProScreenState extends ConsumerState<ProScreen> {
     ref.listen(billingProvider.select((s) => s.noticeId), (_, _) {
       final n = ref.read(billingProvider).notice;
       if (n == null) return;
-      // Bildirim hunisi (`notice_paths_guard_test`): ham SnackBar yok.
       showAppMessage(context, billingNoticeText(l10n, n));
     });
     final billing = ref.watch(billingProvider);
     final tier = ref.watch(effectiveTierProvider);
     final entitlement =
         ref.watch(entitlementProvider).value ?? Entitlement.none;
+    final quota = ref.watch(decisionQuotaProvider);
+    final hasOwnKey =
+        (ref.watch(activeApiKeyProvider).value ?? '').trim().isNotEmpty;
     final guest =
         ref.watch(isAnonymousProvider) || ref.watch(currentUidProvider) == null;
 
@@ -87,11 +80,18 @@ class _ProScreenState extends ConsumerState<ProScreen> {
               AppSpace.xxl + MediaQuery.paddingOf(context).bottom,
             ),
             children: [
-              _StatusCard(tier: tier, entitlement: entitlement),
+              _StatusCard(
+                tier: tier,
+                entitlement: entitlement,
+                quota: quota,
+                hasOwnKey: hasOwnKey,
+              ),
               _Section(l10n.proTiersTitle),
               _TierTable(current: tier),
-              _Section(l10n.proBuyTitle),
-              ..._buy(context, billing, tier, entitlement, guest),
+              if (billing.status != BillingStatus.off) ...[
+                _Section(l10n.proBuyTitle),
+                ..._buy(context, billing, entitlement, guest),
+              ],
               const SizedBox(height: AppSpace.l),
               const CrossAppPromoCard(),
             ],
@@ -104,7 +104,6 @@ class _ProScreenState extends ConsumerState<ProScreen> {
   List<Widget> _buy(
     BuildContext context,
     BillingState billing,
-    EntitlementTier tier,
     Entitlement entitlement,
     bool guest,
   ) {
@@ -150,8 +149,8 @@ class _ProScreenState extends ConsumerState<ProScreen> {
         break;
     }
     final locked = billing.busy || guest;
-    final subscribed = tier == EntitlementTier.pro;
     final lifetime = billing.offer(BillingPlan.lifetime);
+    final pack = billing.offer(BillingPlan.decisionPack1000);
     return [
       if (guest) ...[
         AppBanner(
@@ -168,23 +167,6 @@ class _ProScreenState extends ConsumerState<ProScreen> {
       GroupCard(
         children: [
           if (billing.busy) const LinearProgressIndicator(),
-          if (subscribed)
-            ListTile(
-              key: const ValueKey('pro-manage'),
-              leading: const Icon(Icons.autorenew),
-              title: Text(l10n.proManage),
-              subtitle: Text(l10n.proManageBody),
-              trailing: const Icon(Icons.open_in_new),
-              onTap: _manage,
-            )
-          else
-            for (final plan in const [BillingPlan.monthly, BillingPlan.yearly])
-              if (billing.offer(plan) case final offer?)
-                _OfferTile(
-                  offer: offer,
-                  enabled: !locked,
-                  onBuy: () => notifier.buy(offer),
-                ),
           if (lifetime != null)
             entitlement.lifetimeOwned
                 ? ListTile(
@@ -204,6 +186,12 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                     enabled: !locked,
                     onBuy: () => notifier.buy(lifetime),
                   ),
+          if (pack != null)
+            _OfferTile(
+              offer: pack,
+              enabled: !locked,
+              onBuy: () => notifier.buy(pack),
+            ),
         ],
       ),
       Align(
@@ -219,8 +207,9 @@ class _ProScreenState extends ConsumerState<ProScreen> {
         padding: const EdgeInsets.symmetric(horizontal: AppSpace.s),
         child: Text(
           l10n.proTerms,
-          style: AppText.of(Theme.of(context)).meta
-              .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: AppText.of(Theme.of(context)).meta.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     ];
@@ -240,30 +229,45 @@ String billingNoticeText(AppLocalizations l10n, BillingNotice n) => switch (n) {
   BillingNotice.nothingToRestore => l10n.proNoticeNothing,
 };
 
+/// Karar jeton sayısını kompakt biçimler (`600.000` / `120K`).
+String formatDecisionTokens(int tokens) {
+  if (tokens >= 1000) {
+    final k = (tokens / 1000).round();
+    return '${k}K';
+  }
+  return NumberFormat.decimalPattern().format(tokens);
+}
+
 class _StatusCard extends StatelessWidget {
-  const _StatusCard({required this.tier, required this.entitlement});
+  const _StatusCard({
+    required this.tier,
+    required this.entitlement,
+    required this.quota,
+    required this.hasOwnKey,
+  });
 
   final EntitlementTier tier;
   final Entitlement entitlement;
+  final DecisionQuotaSnapshot quota;
+  final bool hasOwnKey;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final paid = tier != EntitlementTier.free;
-    final now = DateTime.now();
-    // Pro'nun bittiği an: ödenmiş süre ya da deneme, hangisi ilerideyse.
-    final until = [entitlement.proUntil, entitlement.trialEndsAt]
-        .whereType<DateTime>()
-        .where((t) => t.isAfter(now))
-        .fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a);
-    final text = switch (tier) {
-      EntitlementTier.free => l10n.proStatusFree,
-      EntitlementTier.lifetime => l10n.proStatusLifetime,
-      EntitlementTier.pro => l10n.proStatusPro(
-        until == null ? '' : DateFormat('d MMMM y').format(until),
-      ),
-    };
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyle = AppText.of(theme);
+    final paid = !EntitlementGate.active || tier == EntitlementTier.lifetime;
+    final title = paid ? l10n.proStatusLifetime : l10n.proStatusFree;
+    final quotaLine = hasOwnKey
+        ? l10n.decisionsQuotaByok
+        : paid
+        ? l10n.decisionsQuotaSummary(
+            quota.remainingCalls,
+            formatDecisionTokens(quota.remainingTokens),
+          )
+        : l10n.decisionsQuotaFreeHint;
+
     return GroupCard(
       key: const ValueKey('pro-status'),
       color: paid ? scheme.primaryContainer : null,
@@ -271,6 +275,7 @@ class _StatusCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(AppSpace.l),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
                 paid
@@ -281,9 +286,26 @@ class _StatusCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpace.m),
               Expanded(
-                child: Text(
-                  text,
-                  style: AppText.of(Theme.of(context)).rowTitle,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: textStyle.rowTitle.copyWith(
+                        color: paid ? scheme.onPrimaryContainer : null,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.xs),
+                    Text(
+                      quotaLine,
+                      key: const ValueKey('pro-decision-quota'),
+                      style: textStyle.meta.copyWith(
+                        color: paid
+                            ? scheme.onPrimaryContainer
+                            : scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -294,7 +316,7 @@ class _StatusCard extends StatelessWidget {
   }
 }
 
-/// PLAN §1.5 katman tablosu. Hücre: `true` var, `false` yok, metin değer.
+/// PLAN §3 iki katman tablosu (Lite vs Tam Sürüm — abonelik yok).
 class _TierTable extends StatelessWidget {
   const _TierTable({required this.current});
 
@@ -306,23 +328,16 @@ class _TierTable extends StatelessWidget {
     final theme = Theme.of(context);
     final text = AppText.of(theme);
     final rows = <(String, List<Object>)>[
-      (l10n.proRowBasics, [true, true, true]),
-      (l10n.proRowUnlimited, [true, true, true]),
-      (
-        l10n.proRowSync,
-        [l10n.proSyncPeriodic, l10n.proSyncInstant, l10n.proSyncInstant],
-      ),
-      (
-        l10n.proRowAttachments,
-        [l10n.proAttachDrive, l10n.proAttachDrive, l10n.proAttachCloud],
-      ),
-      (l10n.proRowHistory, [false, true, true]),
-      (l10n.proRowLooks, [false, true, true]),
-      (l10n.proRowOwnKey, [false, true, true]),
-      (l10n.proRowAi, [false, false, true]),
+      (l10n.proRowBasics, [true, true]),
+      (l10n.proRowUnlimited, [true, true]),
+      (l10n.proRowSync, [l10n.proSyncPeriodic, l10n.proSyncInstant]),
+      (l10n.proRowAttachments, [l10n.proAttachDrive, l10n.proAttachCloud]),
+      (l10n.proRowAi, [false, l10n.proDecisionsIncluded]),
+      (l10n.proRowHistory, [false, true]),
+      (l10n.proRowLooks, [false, true]),
+      (l10n.proRowOwnKey, [false, true]),
     ];
-    // Sütun sırası = EntitlementTier sırası (free, lifetime, pro).
-    final tiers = [l10n.proTierFree, l10n.proTierLifetime, l10n.proTierPro];
+    final tiers = [l10n.proTierFree, l10n.proTierLifetime];
 
     Widget row(Widget label, List<Widget> cells) => Padding(
       padding: const EdgeInsets.symmetric(
@@ -331,7 +346,7 @@ class _TierTable extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(flex: 4, child: label),
+          Expanded(flex: 5, child: label),
           for (final c in cells) Expanded(flex: 2, child: Center(child: c)),
         ],
       ),
@@ -360,7 +375,6 @@ class _TierTable extends StatelessWidget {
             Text(
               tiers[i],
               textAlign: TextAlign.center,
-              // Şu anki katman DURUM rengiyle.
               style: text.label.copyWith(
                 color: i == current.index ? theme.colorScheme.primary : null,
                 fontWeight: i == current.index ? AppWeight.strong : null,
@@ -390,15 +404,11 @@ class _OfferTile extends StatelessWidget {
     final l10n = context.l10n;
     final price = offer.price;
     final (title, subtitle) = switch (offer.plan) {
-      BillingPlan.monthly => (
-        l10n.proPlanMonthly,
-        offer.trial ? l10n.proTrialMonthly(price) : l10n.proPriceMonthly(price),
-      ),
-      BillingPlan.yearly => (
-        l10n.proPlanYearly,
-        offer.trial ? l10n.proTrialYearly(price) : l10n.proPriceYearly(price),
-      ),
       BillingPlan.lifetime => (l10n.proPlanLifetime, l10n.proPriceOnce(price)),
+      BillingPlan.decisionPack1000 => (
+        l10n.proPlanDecisionPack,
+        l10n.proPriceOnce(price),
+      ),
     };
     return ListTile(
       key: ValueKey('pro-offer-${offer.plan.name}'),
@@ -406,7 +416,7 @@ class _OfferTile extends StatelessWidget {
       subtitle: Text(subtitle),
       trailing: OutlinedButton(
         onPressed: enabled ? onBuy : null,
-        child: Text(offer.trial ? l10n.proTry : l10n.proBuy),
+        child: Text(l10n.proBuy),
       ),
     );
   }

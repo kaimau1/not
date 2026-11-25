@@ -1,11 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:notlar/features/ai/data/ai_cache.dart';
-import 'package:notlar/features/ai/data/ai_gate.dart';
-import 'package:notlar/features/ai/data/gemini_service.dart';
 import 'package:notlar/features/ai/domain/smart_categorize.dart';
 import 'package:notlar/features/ai/presentation/quiet_organize_sheet.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
@@ -16,25 +11,6 @@ import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-class _RecordingGemini implements GeminiService {
-  int batchCalls = 0;
-  List<QuietOrganizeSuggestion> batchResult = const [];
-
-  @override
-  Future<List<QuietOrganizeSuggestion>> batchQuietOrganize(
-    List<Note> notes, {
-    bool suggestTitles = true,
-    bool suggestTags = true,
-    int maxNotes = 15,
-  }) async {
-    batchCalls++;
-    return batchResult;
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
 
 class _FakeNotesRepo implements NotesRepository {
   final updated = <Note>[];
@@ -49,19 +25,8 @@ class _FakeNotesRepo implements NotesRepository {
 }
 
 void main() {
-  late Directory tempDir;
-
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    tempDir = await Directory.systemTemp.createTemp('smart_cat_test_');
-    AiCache.overrideDir = tempDir;
-  });
-
-  tearDown(() async {
-    AiCache.overrideDir = null;
-    if (tempDir.existsSync()) {
-      await tempDir.delete(recursive: true);
-    }
   });
 
   group('SmartNoteCategorizer (0 kredi yerel akıllı kategorizasyon)', () {
@@ -182,7 +147,6 @@ void main() {
     addTearDown(tester.view.reset);
 
     final prefs = await SharedPreferences.getInstance();
-    final fakeGemini = _RecordingGemini();
     final repo = _FakeNotesRepo();
     const notes = [
       Note(
@@ -202,8 +166,6 @@ void main() {
       ProviderScope(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
-          aiAvailabilityProvider.overrideWithValue(AiAvailability.ready),
-          geminiServiceProvider.overrideWithValue(fakeGemini),
           notesRepositoryProvider.overrideWithValue(repo),
           notesStreamProvider.overrideWith((_) => Stream.value(notes)),
           foldersStreamProvider.overrideWith((_) => Stream.value(folders)),
@@ -230,7 +192,6 @@ void main() {
     await tester.pumpAndSettle();
 
     // İlk açılışta 0 AI çağrısı; yerel eşleştirme ve klasör önerisi görünür.
-    expect(fakeGemini.batchCalls, 0);
     expect(find.byKey(const ValueKey('quiet-org-refine-ai')), findsOneWidget);
     expect(find.text('Klasör: Finans'), findsOneWidget);
 
@@ -257,6 +218,5 @@ void main() {
     final finSaved = repo.updated.firstWhere((n) => n.id == 'n-fin');
     expect(finSaved.folderId, 'f-fin');
     expect(finSaved.tags, contains('finans'));
-    expect(fakeGemini.batchCalls, 0);
   });
 }

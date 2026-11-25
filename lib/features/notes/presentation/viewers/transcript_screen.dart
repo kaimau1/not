@@ -11,23 +11,15 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/markdown.dart';
-import '../../../../core/utils/spoken_datetime.dart';
-import '../../../../core/widgets/app_sheet.dart';
-import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
-import '../../../ai/data/gemini_service.dart';
-import '../../../ai/presentation/ai_result_note.dart';
-import '../../../calendar/presentation/task_editor.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/media_transcriber.dart';
 import '../../data/note_pdf.dart';
 import '../../domain/attachment.dart';
 import '../../domain/transcript.dart';
 import '../../../../core/friendly_error.dart';
-import '../../../auth/presentation/account_required.dart';
 
 /// Transkripti kaydeder (yoksa oluşturur, varsa içeriğini değiştirir) ve
 /// nottaki güncel eki döndürür; kaydedilemiyorsa (salt okunur not) null.
@@ -153,8 +145,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
       ? Transcripts.plainTimestamps(text)
       : Transcripts.stripTimestamps(text);
 
-  Future<void> _run({bool preferAi = false}) async {
-    if (preferAi && !ensureAiReady(context, ref)) return;
+  Future<void> _run() async {
     final source = widget.source;
     if (source == null || _busy) return;
     final l10n = context.l10n;
@@ -165,14 +156,10 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     });
     try {
       final transcriber = ref.read(mediaTranscriberProvider);
-      final text = Transcripts.clamp(
-        await transcriber.transcribe(source, preferAi: preferAi),
-      );
+      final text = Transcripts.clamp(await transcriber.transcribe(source));
       if (!mounted) return;
       final onDevice =
-          source.kind == AttachmentKind.image &&
-          !preferAi &&
-          MediaTranscriber.deviceOcr;
+          source.kind == AttachmentKind.image && MediaTranscriber.deviceOcr;
       if (text.isEmpty || text == '[Konuşma yok]') {
         setState(() {
           _busy = false;
@@ -195,14 +182,10 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
         _autoInserted = true;
         widget.onInsert?.call(_forNote(text));
       }
-    } on MediaTooLargeException catch (e) {
-      _fail(l10n.transcriptTooLarge(e.sizeBytes ~/ (1024 * 1024)));
     } on UnsupportedMediaException catch (e) {
       _fail(l10n.transcriptUnsupported(e.format));
     } on AttachmentMissingException {
       _fail(l10n.attachmentNotSynced);
-    } on GeminiException catch (e) {
-      _fail(aiErrorText(l10n, e));
     } catch (e) {
       _fail(aiErrorText(l10n, e));
     }
@@ -330,7 +313,6 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     final title =
         _saved?.fileName ?? widget.source?.fileName ?? l10n.transcriptTitle;
     final canRetry = widget.source != null && !_busy;
-    final isImage = _kind == AttachmentKind.image;
     final saved = _saved;
     final markdown =
         saved != null && isMarkdownFile(saved.fileName, mime: saved.mimeType);
@@ -377,8 +359,8 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                 switch (value) {
                   case 'edit':
                     _startEdit();
-                  case 'ai':
-                    unawaited(_run(preferAi: true));
+                  case 'retry':
+                    unawaited(_run());
                   case 'times':
                     setState(() => _showTimes = !_showTimes);
                   case 'note':
@@ -391,13 +373,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                 if (hasText && widget.onSave != null)
                   _menuItem('edit', Icons.edit_outlined, l10n.transcriptEdit),
                 if (canRetry)
-                  _menuItem(
-                    'ai',
-                    Icons.auto_awesome_outlined,
-                    isImage
-                        ? l10n.transcriptReadWithAi
-                        : l10n.transcriptRetryAi,
-                  ),
+                  _menuItem('retry', Icons.refresh, l10n.retry),
                 if (hasText && Transcripts.hasTimestamps(_text))
                   CheckedPopupMenuItem(
                     value: 'times',
@@ -468,7 +444,6 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
       );
     }
     if (!hasText && (_error != null || _empty)) {
-      final isImage = _kind == AttachmentKind.image;
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -487,27 +462,12 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
-                children: [
-                  if (widget.source != null)
-                    OutlinedButton.icon(
-                      onPressed: _run,
-                      icon: const Icon(Icons.refresh),
-                      label: Text(l10n.retry),
-                    ),
-                  // Cihaz içi okuma yazı bulamadıysa (el yazısı, eğik
-                  // fotoğraf) model çoğu zaman okur.
-                  if (isImage && _onDevice)
-                    FilledButton.icon(
-                      onPressed: () => _run(preferAi: true),
-                      icon: const AiIcon(),
-                      label: Text(l10n.transcriptReadWithAi),
-                    ),
-                ],
-              ),
+              if (widget.source != null)
+                OutlinedButton.icon(
+                  onPressed: _run,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l10n.retry),
+                ),
             ],
           ),
         ),
@@ -554,16 +514,6 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
-                  ),
-                  ActionChip(
-                    key: const ValueKey('transcript-ai-takeaways'),
-                    avatar: Icon(
-                      Icons.auto_awesome_outlined,
-                      size: AppIconSize.xs,
-                      color: scheme.primary,
-                    ),
-                    label: Text(l10n.transcriptTakeaways),
-                    onPressed: _openTakeaways,
                   ),
                 ],
               ),
@@ -615,26 +565,6 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
     );
   }
 
-  /// **KAYITTAN NOT** (PLAN §1.6 A2): döküm → özet + yapılacaklar +
-  /// "hatırlatayım mı?" tek akış levhası.
-  void _openTakeaways() {
-    if (!ensureAiReady(context, ref)) return;
-    final raw = Transcripts.stripTimestamps(_shown).trim();
-    if (raw.isEmpty) return;
-    unawaited(
-      showAppSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        showDragHandle: false,
-        builder: (_) => _TranscriptTakeawaysSheet(
-          transcript: raw,
-          onInsert: widget.onInsert == null ? null : _insert,
-          onCreateNote: widget.onCreateNote == null ? null : _newNote,
-        ),
-      ),
-    );
-  }
-
   static IconData _sourceIcon(Attachment? source) => switch (source?.kind) {
     AttachmentKind.audio => AppIcons.voiceRecord,
     AttachmentKind.video => Icons.videocam_outlined,
@@ -679,314 +609,6 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class _TranscriptTakeawaysSheet extends ConsumerStatefulWidget {
-  const _TranscriptTakeawaysSheet({
-    required this.transcript,
-    this.onInsert,
-    this.onCreateNote,
-  });
-
-  final String transcript;
-  final ValueChanged<String>? onInsert;
-  final Future<void> Function(String text)? onCreateNote;
-
-  @override
-  ConsumerState<_TranscriptTakeawaysSheet> createState() =>
-      _TranscriptTakeawaysSheetState();
-}
-
-class _TranscriptTakeawaysSheetState
-    extends ConsumerState<_TranscriptTakeawaysSheet> {
-  bool _loading = true;
-  RecordingTakeaways? _result;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final res = await ref
-          .read(geminiServiceProvider)
-          .summarizeTranscript(widget.transcript);
-      if (!mounted) return;
-      setState(() {
-        _result = res;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = aiErrorText(context.l10n, e);
-        _loading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final res = _result;
-    final noteText = res == null
-        ? ''
-        : res.toNoteText(
-            summaryHeading: l10n.transcriptTakeawaysSummary,
-            actionsHeading: l10n.transcriptTakeawaysActions,
-          );
-
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.78,
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: AppSpace.l),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SheetHeader(title: l10n.transcriptTakeaways),
-              if (_loading)
-                Padding(
-                  padding: const EdgeInsets.all(AppSpace.xxl),
-                  child: Column(
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: AppSpace.m),
-                      Text(l10n.aiThinking),
-                    ],
-                  ),
-                )
-              else if (_error != null)
-                Padding(
-                  padding: const EdgeInsets.all(AppSpace.xl),
-                  child: Column(
-                    children: [
-                      Text(_error!, style: TextStyle(color: scheme.error)),
-                      const SizedBox(height: AppSpace.m),
-                      OutlinedButton.icon(
-                        onPressed: _load,
-                        icon: const Icon(Icons.refresh),
-                        label: Text(l10n.retry),
-                      ),
-                    ],
-                  ),
-                )
-              else if (res != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.xl),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (res.summary.isNotEmpty) ...[
-                        Text(
-                          l10n.transcriptTakeawaysSummary,
-                          style: AppText.of(theme).meta.copyWith(
-                            color: scheme.primary,
-                            fontWeight: AppWeight.strong,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpace.xs),
-                        Container(
-                          padding: const EdgeInsets.all(AppSpace.m),
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(AppRadius.m),
-                          ),
-                          child: SelectableText(
-                            res.summary,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ),
-                      ],
-                      if (res.actionItems.isNotEmpty) ...[
-                        const SizedBox(height: AppSpace.l),
-                        Text(
-                          l10n.transcriptTakeawaysActions,
-                          style: AppText.of(theme).meta.copyWith(
-                            color: scheme.primary,
-                            fontWeight: AppWeight.strong,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpace.xs),
-                        for (final item in res.actionItems)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: AppSpace.xs),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.check_box_outline_blank,
-                                  size: AppIconSize.s,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: AppSpace.s),
-                                Expanded(
-                                  child: Text(
-                                    item,
-                                    style: theme.textTheme.bodyMedium,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                      if (res.reminders.isNotEmpty) ...[
-                        const SizedBox(height: AppSpace.l),
-                        Text(
-                          l10n.transcriptTakeawaysRemind,
-                          style: AppText.of(theme).meta.copyWith(
-                            color: scheme.primary,
-                            fontWeight: AppWeight.strong,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpace.xs),
-                        for (var i = 0; i < res.reminders.length; i++)
-                          _ReminderSuggestionTile(
-                            key: ValueKey('transcript-reminder-$i'),
-                            hint: res.reminders[i],
-                          ),
-                      ],
-                      AiResultNote(
-                        content: noteText,
-                        source: 'transcript_takeaways',
-                      ),
-                      const SizedBox(height: AppSpace.s),
-                      Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: AppSpace.s,
-                        runSpacing: AppSpace.s,
-                        children: [
-                          TextButton.icon(
-                            onPressed: () async {
-                              await Clipboard.setData(
-                                ClipboardData(text: noteText),
-                              );
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showMessage(l10n.copied);
-                              }
-                            },
-                            icon: const Icon(
-                              AppIcons.copy,
-                              size: AppIconSize.xs,
-                            ),
-                            label: Text(l10n.copy),
-                          ),
-                          if (widget.onCreateNote != null &&
-                              noteText.isNotEmpty)
-                            FilledButton.tonalIcon(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                unawaited(widget.onCreateNote!(noteText));
-                              },
-                              icon: const Icon(
-                                Icons.note_add_outlined,
-                                size: AppIconSize.s,
-                              ),
-                              label: Text(l10n.transcriptNewNote),
-                            ),
-                          if (widget.onInsert != null && noteText.isNotEmpty)
-                            FilledButton.icon(
-                              key: const ValueKey('transcript-takeaways-insert'),
-                              onPressed: () {
-                                Navigator.pop(context);
-                                widget.onInsert!(noteText);
-                              },
-                              icon: const Icon(
-                                Icons.playlist_add,
-                                size: AppIconSize.s,
-                              ),
-                              label: Text(l10n.transcriptTakeawaysInsert),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ReminderSuggestionTile extends StatelessWidget {
-  const _ReminderSuggestionTile({super.key, required this.hint});
-
-  final RecordingReminderHint hint;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final parsedDue = hint.whenText.isEmpty
-        ? null
-        : parseSpokenDateTimeNow(hint.whenText);
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpace.s),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpace.m,
-        vertical: AppSpace.s,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.notifications_active_outlined,
-            size: AppIconSize.s,
-            color: scheme.primary,
-          ),
-          const SizedBox(width: AppSpace.s),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(hint.title, style: AppText.of(theme).rowTitle),
-                if (hint.whenText.isNotEmpty)
-                  Text(
-                    hint.whenText,
-                    style: AppText.of(theme).meta.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () => unawaited(
-              showTaskEditor(
-                context,
-                initialTitle: hint.title,
-                due: parsedDue,
-              ),
-            ),
-            child: Text(l10n.transcriptTakeawaysAddTask),
-          ),
-        ],
       ),
     );
   }

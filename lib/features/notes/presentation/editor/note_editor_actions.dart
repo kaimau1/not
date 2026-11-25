@@ -146,25 +146,15 @@ extension _EditorActions on _NoteEditorScreenState {
               ),
           ]),
           MenuSection(l10n.menuSectionTools, [
-            if (!note.isEmpty && note.title.trim().isEmpty)
-              MenuAction('suggest-title', l10n.suggestTitle, Icons.title),
             if (!note.isEmpty)
               MenuAction('suggest-tags', l10n.suggestTags, Icons.auto_awesome),
-            // F18.19 nottan kartlar, F18.17 ilgili notlar: kilitli notta yok.
-            if (canAi) ...[
-              MenuAction(
-                'study-cards',
-                note.cards.isEmpty
-                    ? l10n.studyCardsMake
-                    : l10n.studyCardsMakeMore(note.cards.length),
-                Icons.style_outlined,
-              ),
+            // İlgili notlar (yerel, 0 kredi): kilitli notta yok.
+            if (canAi)
               MenuAction(
                 'related-notes',
                 l10n.relatedNotesTitle,
                 Icons.hub_outlined,
               ),
-            ],
           ]),
         ],
       ),
@@ -189,10 +179,6 @@ extension _EditorActions on _NoteEditorScreenState {
         await _addTag();
       case 'suggest-tags':
         await _suggestTags();
-      case 'suggest-title':
-        await _suggestTitle();
-      case 'study-cards':
-        unawaited(generateCardsForNote(context, ref, note));
       case 'related-notes':
         unawaited(
           showRelatedNotesSheet(
@@ -1277,19 +1263,16 @@ extension _EditorActions on _NoteEditorScreenState {
   Future<void> _listen() async {
     final note = _note;
     if (note == null) return;
-    final title = note.title.trim();
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ListenScreen(
-          title: title.isEmpty ? context.l10n.appName : title,
-          // Kilitli notun podcast metni de diske yazılmasın.
-          allowCache: !note.locked,
-          // toPlainText değil: başlık ve `- [x]` işaretleri okunmasın.
-          loadText: () =>
-              noteSpeechText(note, ref.read(attachmentRepositoryProvider)),
-        ),
-      ),
+    final text = await noteSpeechText(
+      note,
+      ref.read(attachmentRepositoryProvider),
     );
+    if (!mounted) return;
+    if (text.trim().isEmpty) {
+      _showSnack(context.l10n.transcriptEmpty);
+      return;
+    }
+    unawaited(ref.read(speechProvider.notifier).speak(text));
   }
 
   /// Not kilidi: kilitlemek serbest, kilidi kaldırmak kimlik doğrulaması
@@ -1320,91 +1303,6 @@ extension _EditorActions on _NoteEditorScreenState {
     if (!archived) _closeEditor(() => Navigator.of(context).pop());
   }
 
-  /// AI çıktısıyla notun içeriğini değiştirir ("Geliştir" sonuçları için).
-  /// [asType] verilirse not o çalışma moduna da geçirilir: "maddelere çevir"
-  /// sonucu yalnızca metni değil notun tipini de checklist/sıralı yapar.
-  void _replaceText(String raw, {NoteType? asType, bool keepChecked = false}) {
-    final note = _note;
-    // Model istenmese de ** / * / # üretebiliyor; not düz metin tuttuğundan
-    // temizle.
-    final text = stripMarkdown(raw);
-    if (note == null || text.trim().isEmpty) return;
-    // Değişiklik öncesi anlık görüntü: "Geri al" bununla eski hâle döner.
-    final before = note;
-    final targetType = asType ?? note.type;
-    // İşaretli maddeler AI'a hiç gönderilmemişti (ayar açık): sonuç yalnız
-    // işaretsizlerin yerine geçer, işaretli (tamamlanmış) maddeler metni ve
-    // işaretiyle AYNEN korunur — sonlarına eklenir (uygulamanın "işaretliler
-    // altta" düzeni). Kullanıcının "işaretlilere karışma" isteği.
-    if (keepChecked && targetType == NoteType.checklist) {
-      const uuid = Uuid();
-      final newUnchecked = [
-        for (final line in text.split('\n'))
-          if (line.trim().isNotEmpty)
-            NoteItem(id: uuid.v4(), text: _parseListLine(line).text),
-      ];
-      final preservedChecked = [
-        for (final item in note.items)
-          if (item.checked) item,
-      ];
-      _mutate(
-        (n) => n.copyWith(items: [...newUnchecked, ...preservedChecked]),
-        immediate: true,
-      );
-      _offerReplaceUndo(before);
-      return;
-    }
-    if (targetType == NoteType.text) {
-      _bodyController.text = text.trim();
-      _mutate(
-        (n) => n.copyWith(type: targetType, body: text.trim()),
-        immediate: true,
-      );
-    } else {
-      const uuid = Uuid();
-      final parsed = [
-        for (final line in text.split('\n'))
-          if (line.trim().isNotEmpty) _parseListLine(line),
-      ];
-      // Tip korunuyor ve öğe sayısı birebir aynıysa (düzeltme sırayı bozmaz)
-      // mevcut kimlikler ve işaretli/işaretsiz durum korunur — kullanıcının
-      // işaretlediği maddeler düzeltme sonrası işaretli kalır.
-      final keepState =
-          targetType == note.type && parsed.length == note.items.length;
-      // Sayı/sıra değişse de (kısaltma, yeniden sıralama) işaret durumu
-      // kaybolmasın: eski öğelerin normalize metni → işaret eşlemesi kurulur,
-      // yeni satır eskisiyle (yazım düzeltilmiş de olsa birebir eşleşen)
-      // bulunursa işareti devralır.
-      String norm(String s) => s.trim().toLowerCase();
-      final oldChecked = {
-        for (final item in note.items) norm(item.text): item.checked,
-      };
-      _mutate(
-        (n) => n.copyWith(
-          type: targetType,
-          // Tip değişiyorsa eski gövde temizlenir; içerik artık öğelerde.
-          body: targetType == note.type ? null : '',
-          items: [
-            for (var i = 0; i < parsed.length; i++)
-              NoteItem(
-                id: keepState ? n.items[i].id : uuid.v4(),
-                text: parsed[i].text,
-                // Sıralı listede işaret anlamsız; checklist'te korunur/okunur.
-                checked: targetType != NoteType.checklist
-                    ? false
-                    : keepState
-                    ? n.items[i].checked
-                    : (oldChecked[norm(parsed[i].text)] ?? parsed[i].checked),
-              ),
-          ],
-        ),
-        immediate: true,
-      );
-      if (targetType != note.type) _bodyController.clear();
-    }
-    _offerReplaceUndo(before);
-  }
-
   /// Sürüm geçmişi (F4.2): seçilen sürüme dönmeden önce bugünkü hâl de
   /// sürüm olarak saklanır — dönüş de geri alınabilir.
   Future<void> _openHistory() async {
@@ -1430,96 +1328,7 @@ extension _EditorActions on _NoteEditorScreenState {
     _showSnack(context.l10n.versionRestored);
   }
 
-  /// "Notu değiştir" sonrası geri alma: eski not anlık görüntüsüne (metin,
-  /// öğeler, tip, başlık) tek dokunuşla döner.
-  void _offerReplaceUndo(Note before) {
-    // AI değiştirmeden önceki hâl sürüm geçmişinde de kalır (F4.2): geri
-    // alma 4 sn sonra kaybolur, sürüm kalır.
-    unawaited(_notesRepo?.saveVersion(before, reason: 'ai'));
-    if (!mounted) return;
-    // Snackbar KÖK messenger'da yaşar ve editör kapandıktan sonra da 4 sn
-    // ekranda kalır: depo şimdiden yakalanır ki geri alma editörsüz de
-    // çalışsın; unmount SONRASI dokunuşta denetleyici/ref/setState'e
-    // dokunulmaz (dispose edilmiş controller'a yazmak çökertiyordu).
-    // AÇIK OLAN notun deposu (`_notesRepo`): paylaşılan bir notta geri alma
-    // sahibin koleksiyonuna yazmalı, benimkine değil.
-    final repo = _notesRepo;
-    showUndoSnackBar(
-      context,
-      message: context.l10n.noteUpdatedUndo,
-      undoLabel: context.l10n.undo,
-      onUndo: () {
-        repo?.updateNote(before);
-        if (!mounted) return;
-        _titleController.text = before.title;
-        _bodyController.text = before.body;
-        _update(() => _note = before);
-      },
-    );
-  }
-
-  /// AI çıktısını ORİJİNAL notu değiştirmeden YENİ bir notta açar (madde 1-2).
-  /// Böylece kullanıcıda hem "değiştirmeden" orijinal hem de "düzeltilmiş"
-  /// sürüm ayrı notlar olarak kalır. Başlık ve klasör yeni nota taşınır;
-  /// [asType] verilirse (liste dönüşümü) yeni not o tipte oluşturulur.
-  Future<void> _createNoteFromText(
-    String raw, {
-    NoteType? asType,
-    bool keepChecked = false,
-  }) async {
-    final note = _note;
-    final text = stripMarkdown(raw);
-    if (note == null || text.trim().isEmpty) return;
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final type = asType ?? note.type;
-    final id = await repo.createNote(type);
-    final fields = <String, dynamic>{};
-    if (note.title.trim().isNotEmpty) fields['title'] = note.title;
-    if (note.folderId != null) fields['folderId'] = note.folderId;
-    if (type == NoteType.text) {
-      fields['body'] = text.trim();
-      // Karışık not (metin + checklist): AI yalnız gövdeyi düzeltti; maddeler
-      // yeni notta da olduğu gibi korunur (düz metne dönüşmez).
-      final items = [
-        for (final i in note.items)
-          if (i.text.trim().isNotEmpty) i,
-      ];
-      if (items.isNotEmpty) {
-        fields['items'] = [for (final i in items) i.toMap()];
-      }
-    } else {
-      const uuid = Uuid();
-      final items = <NoteItem>[];
-      for (final line in text.split('\n')) {
-        if (line.trim().isEmpty) continue;
-        final parsed = _parseListLine(line);
-        items.add(
-          NoteItem(
-            id: uuid.v4(),
-            text: parsed.text,
-            checked: type == NoteType.checklist ? parsed.checked : false,
-          ),
-        );
-      }
-      // İşaretliler kapsam dışıydı: korunan (tamamlanmış) maddeler yeni notta
-      // da işaretli olarak sona eklenir (işaretsiz düzeltilmişlerin ardına).
-      if (keepChecked && type == NoteType.checklist) {
-        for (final item in note.items) {
-          if (item.checked) {
-            items.add(NoteItem(id: uuid.v4(), text: item.text, checked: true));
-          }
-        }
-      }
-      fields['items'] = [for (final it in items) it.toMap()];
-      // createNote liste tipini bir boş öğeyle tohumlar; gövde artık öğelerde.
-      fields['body'] = '';
-    }
-    repo.updateFields(id, fields);
-    if (mounted) unawaited(context.pushNote(noteRoutePath(id)));
-  }
-
-  /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
+  /// Metni (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
   /// Markdown işaretleri temizlenir — model istenmese de **kalın**/# üretiyor.
   void _appendText(String raw) => _appendPlainText(stripMarkdown(raw));
 

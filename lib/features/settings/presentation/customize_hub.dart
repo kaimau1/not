@@ -329,7 +329,6 @@ class CustomizeSurfacePanel extends ConsumerWidget {
       icon: Icons.account_circle_outlined,
       label: l10n.account,
     ),
-    (id: UiItem.homeAi, icon: Icons.auto_awesome, label: l10n.aiHubTitle),
     (id: UiItem.homeFilter, icon: Icons.tune, label: l10n.filterSheetTitle),
     (id: UiItem.homeMic, icon: AppIcons.dictation, label: l10n.liveDictation),
     (

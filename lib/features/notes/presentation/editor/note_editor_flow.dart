@@ -112,10 +112,7 @@ extension _EditorFlowX on _NoteEditorScreenState {
     _attachmentRepo = owner == null
         ? attachments
         : attachments?.forOwner(owner);
-    _gemini = ref.read(geminiServiceProvider);
     _decisions = ref.read(decisionServiceProvider);
-    _autoTagEnabled = ref.read(autoTagProvider);
-    _autoTitleEnabled = ref.read(autoTitleProvider);
   }
 
   /// **EŞZAMANLI DÜZENLEME** (F4.1): kullanıcı yazarken başka biri (ya da
@@ -445,7 +442,8 @@ extension _EditorFlowX on _NoteEditorScreenState {
     if (error is StorageFullException) {
       return context.l10n.storageFull(formatBytes(error.quotaBytes));
     }
-    final premium = ref.read(premiumProvider).value ?? false;
+    final premium =
+        ref.read(effectiveTierProvider) == EntitlementTier.lifetime;
     final limitMb =
         (premium
             ? AppConstants.maxPremiumAttachmentBytes

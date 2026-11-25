@@ -12,7 +12,6 @@ import 'package:notlar/app/app_frame.dart';
 import 'package:notlar/app/split_shell.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/features/calendar/presentation/home_calendar_strip.dart';
-import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
@@ -599,50 +598,6 @@ void main() {
       );
       expect(pill.left - bar.left, closeTo(12, 1));
       expect(bar.right - pill.right, closeTo(12, 1));
-      await end(tester);
-    });
-
-    // KW-13 (web keşfi 2026-11-18): kapalıyken de ✨ kalır, kilit köşe rozeti.
-    testWidgets('yapay zekâ kapalıysa rayda ✨ + kilit rozeti, açıksa ✨', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        const Size(1400, 900),
-        extra: [aiAvailabilityProvider.overrideWithValue(AiAvailability.ready)],
-      );
-      // Rayda ✨ (arama kutusundaki AI anahtarı da hep görünür — 2026-11-06).
-      expect(
-        find.descendant(
-          of: find.byType(NavigationRail),
-          matching: find.byIcon(Icons.auto_awesome_outlined),
-        ),
-        findsOneWidget,
-      );
-      expect(find.byIcon(Icons.lock_outline), findsNothing);
-      await end(tester);
-      await pump(
-        tester,
-        const Size(1400, 900),
-        extra: [
-          aiAvailabilityProvider.overrideWithValue(
-            AiAvailability.webBuiltInOff,
-          ),
-        ],
-      );
-      final badge = find.byKey(const ValueKey('rail-ai-locked'));
-      expect(badge, findsOneWidget);
-      expect(
-        find.descendant(
-          of: badge,
-          matching: find.byIcon(Icons.auto_awesome_outlined),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: badge, matching: find.byIcon(Icons.lock_outline)),
-        findsOneWidget,
-      );
       await end(tester);
     });
   });

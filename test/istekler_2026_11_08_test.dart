@@ -1,15 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/personalize.dart';
 import 'package:notlar/core/utils/spell_fix.dart';
-import 'package:notlar/features/gmail/data/gmail_api.dart';
-import 'package:notlar/features/gmail/presentation/gmail_screen.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/core/utils/spell_engine.dart';
 import 'package:notlar/features/notes/presentation/editor/note_package.dart';
 
-/// 2026-11-08 istek listesi: yazım düzelt, Gmail görsel/bağlantı, not paketi,
-/// hızlı satıra sonradan eklenen düğmeler.
+/// 2026-11-08 istek listesi: yazım düzelt, not paketi, hızlı satıra sonradan
+/// eklenen düğmeler.
 void main() {
   group('Türkçe yazım düzelt', () {
     test('sık hatalar, -yo, soru eki', () {
@@ -52,35 +49,6 @@ void main() {
       expect(SpellEngine.acceptSuggestion('kalmel', 'kalem'), isTrue);
       expect(SpellEngine.acceptSuggestion('kalem', 'Kalem'), isFalse);
       expect(SpellEngine.acceptSuggestion('kalem', 'masa'), isFalse);
-    });
-  });
-
-  group('Gmail', () {
-    test('görseller (izleme pikseli hariç) ve bağlantılar', () {
-      const html =
-          '<p>Merhaba <a href="https://x.com/a?b=1&amp;c=2">Siparişin</a></p>'
-          '<img src="https://img.com/1.png" width="300">'
-          '<img src="https://t.com/p.gif" width="1" height="1">'
-          '<img src="cid:abc">';
-      expect(htmlImageUrls(html), ['https://img.com/1.png']);
-      expect(htmlLinks(html).single.label, 'Siparişin');
-      expect(htmlLinks(html).single.url, 'https://x.com/a?b=1&c=2');
-    });
-
-    test('düz adres ve <a> yazısı tıklanır parçaya bölünür', () {
-      final spans = linkifyMail(
-        'Siparişin hazır: https://k.com/s. Bak',
-        [(label: 'Siparişin', url: 'https://x.com')],
-        linkStyle: const TextStyle(),
-        onOpen: (_) {},
-      );
-      final linked = [
-        for (final s in spans.cast<TextSpan>())
-          if (s.recognizer != null) s.text,
-      ];
-      expect(linked, ['Siparişin', 'https://k.com/s']);
-      expect(spans.cast<TextSpan>().map((s) => s.text).join(),
-          'Siparişin hazır: https://k.com/s. Bak');
     });
   });
 

@@ -1,12 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:flutter/painting.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/firestore_size.dart';
 import 'package:notlar/core/utils/image_cache_budget.dart';
 import 'package:notlar/core/utils/prefs_footprint.dart';
-import 'package:notlar/features/ai/data/semantic_search.dart';
 import 'package:notlar/features/notes/data/pdf/pdf_page_render.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note_heavy.dart';
@@ -114,18 +112,6 @@ void main() {
     expect(f.largest.first.key, 'big');
     expect(f.largest.length, 2);
     expect(f.totalChars, greaterThan(1000));
-  });
-
-  test('F7.5 silinen notların vektörleri budanır', () {
-    final provider = Provider<SemanticIndex>(SemanticIndex.new);
-    final c = ProviderContainer();
-    addTearDown(c.dispose);
-    final index = c.read(provider)
-      ..debugPut('a')
-      ..debugPut('b')
-      ..debugPut('c');
-    index.pruneTo({'a', 'c', 'z'});
-    expect(index.cachedVectorCount, 2);
   });
 
   test('F7.6 düşük RAM cihazda görsel önbellek yarıya iner', () {

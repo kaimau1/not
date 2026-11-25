@@ -33,12 +33,8 @@ extension _DashMenu on _DashboardScreenState {
       ActionMenu(
         menuId: 'home.menu',
         quick: [
-          // Rayın yanında (geniş ekran) bu beşi rayda: tekrarlanmaz.
+          // Rayın yanında (geniş ekran) bu dördü rayda: tekrarlanmaz.
           if (!rail) ...[
-            // YAPAY ZEKÂ ilk sırada (B2): ana ekrandaki ✨ yüzen düğmesi
-            // kalktı.
-            if (Personalize.current.shows(UiItem.homeAi))
-              MenuAction('ai', l10n.aiHubTitle, Icons.auto_awesome),
             MenuAction(
               'calendar',
               l10n.calendarTitle,
@@ -52,9 +48,7 @@ extension _DashMenu on _DashboardScreenState {
               count: ref.read(archivedNotesProvider).value?.length ?? 0,
             ),
             MenuAction('trash', l10n.trashTitle, Icons.delete_outline),
-            // AYARLAR hızlı satırda, GRİ (kullanıcı isteği 2026-10-17:
-            // "ayarlar butonunu üstteki 3'lü buton gibi yap ve oraya al,
-            // rengini de ayrıştır gri olsun").
+            // AYARLAR hızlı satırda, GRİ.
             MenuAction(
               'settings',
               l10n.settings,
@@ -63,7 +57,7 @@ extension _DashMenu on _DashboardScreenState {
             ),
           ],
           // Şablondan not "+" menüsünde de var; burada YALNIZ orada
-          // gizlenmişse çıkar (toparlama 2026-10-17: aynı işin iki kapısı).
+          // gizlenmişse çıkar.
           if (!Personalize.current.shows(UiItem.quickAdd('template')))
             MenuAction(
               'template',
@@ -72,38 +66,16 @@ extension _DashMenu on _DashboardScreenState {
             ),
         ],
         sections: [
-          // HESAP VE KİŞİLER avatar levhasında (F11.1–F11.2): ⋮'te yalnız
-          // avatar kişiselleştirmede gizlendiyse kapı olarak kalır.
-          // KLASÖR SIRASI klasör ekranında ("Tüm klasörler", F11.5).
-          // TEK GRUP, not menüleriyle aynı ızgara (F38.6): ikişer maddelik iki
-          // grup üç sütunda sola yığılıyordu (kullanıcı bulgusu 2026-10-20).
           MenuSection(l10n.menuSectionApp, [
-            // GÖRÜNÜM VE SÜZ (kullanıcı isteği 2026-11-06: "görünüm ayar
-            // menüsü ana menüdeki 3 nokta içinde de olsun"): arama
-            // kutusundaki ayar düğmesiyle aynı levha.
             MenuAction('view', l10n.homeViewMenu, Icons.view_quilt_outlined),
-            // DAR LİSTE BÖLMESİ (F67.3): arama hapındaki AI anahtarı burada.
-            if (_narrowPane)
-              MenuAction(
-                'semantic',
-                l10n.semanticSearchToggle,
-                Icons.manage_search,
-                selected: ref.read(semanticSearchEnabledProvider),
-              ),
-            // TEMA (kullanıcı isteği 2026-11-06): alçak levha, ana ekran
-            // üstte canlı değişir.
             MenuAction('theme', l10n.themePickerTitle, AppIcons.appearance),
-            // KLASÖR SATIRI / TAKVİM ŞERİDİ aç-kapa "Görünüm ve süz"
-            // levhasında (2026-11-10; ⋮'ten taşındı, tek kapı).
             if (!Personalize.current.shows(UiItem.homeAccount))
               MenuAction(
                 'account',
                 l10n.account,
                 Icons.account_circle_outlined,
               ),
-            // Zemin görseli AYARLARDAN BURAYA taşındı (2026-08-16).
             MenuAction('background', l10n.dashboardBackground, Icons.wallpaper),
-            // Gizli klasörler yalnız gizli klasörü OLAN kullanıcıda.
             if (hasHiddenFolders)
               MenuAction(
                 'hidden',
@@ -112,16 +84,11 @@ extension _DashMenu on _DashboardScreenState {
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
               ),
-            // KİŞİSELLEŞTİR (kullanıcı isteği 2026-10-16): hangi alan ve
-            // düğme görünsün — menüden; ekranda kalıcı ayar düğmesi yok.
             MenuAction(
               'personalize',
               l10n.personalizeTitle,
               Icons.tune_rounded,
             ),
-            // Gmail (F28.1): yalnız Google hesabında, Android + web.
-            if (ref.read(gmailAvailableProvider))
-              MenuAction('gmail', l10n.gmailTitle, Icons.mail_outline),
             MenuAction('guide', l10n.guideTitle, AppIcons.guide),
           ]),
         ],
@@ -129,12 +96,8 @@ extension _DashMenu on _DashboardScreenState {
     );
     if (action == null || !mounted) return;
     switch (action) {
-      case 'ai':
-        unawaited(context.push('/ai'));
       case 'view':
         unawaited(showFilterSheet(context));
-      case 'semantic':
-        ref.read(semanticSearchEnabledProvider.notifier).toggle();
       case 'theme':
         unawaited(showThemePickerSheet(context));
       case 'account':
@@ -157,8 +120,6 @@ extension _DashMenu on _DashboardScreenState {
         unawaited(context.push('/personalize'));
       case 'guide':
         unawaited(context.push('/guide'));
-      case 'gmail':
-        unawaited(context.push('/gmail'));
     }
   }
 

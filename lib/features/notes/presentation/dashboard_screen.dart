@@ -1,7 +1,6 @@
 import '../../../core/haptics.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../app/window_class.dart';
-import '../../gmail/data/gmail_auth.dart';
 import '../../../core/utils/web_file_drop.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/app_update.dart' show UpdateBanner;
@@ -52,8 +51,6 @@ import '../../../core/connectivity.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../ai/data/gemini_service.dart';
-import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folder_order.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/data/folder_activity.dart';
@@ -792,7 +789,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       child: const _QuickDropFab(),
     ),
   );
-  bool get _narrowPane => _narrowPaneN.value;
 
   /// Geniş ekranda sol panelin son sütun kipi (tek sütun = not açık).
   bool? _singleColumn;
@@ -1374,32 +1370,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
 
-    var text = result.text;
-    final instruction = voiceCaptureInstruction(result.action);
-    // Metin varsa ve bir dönüşüm istendiyse yapay zekâya gidilir. Metin BOŞSA
-    // (yalnız ses kaydı elde) çağrı hiç yapılmaz: gönderilecek bir şey yok.
-    if (instruction != null && text.trim().isNotEmpty) {
-      try {
-        final rewritten = await ref
-            .read(geminiServiceProvider)
-            .rewriteText(text, instruction);
-        if (rewritten.trim().isNotEmpty) text = rewritten.trim();
-      } catch (e) {
-        // Metin KAYBOLMAZ: yapay zekâ dönüşümü başarısızsa not ham dökümle
-        // kurulur, kullanıcı konuştuklarını yeniden söylemek zorunda kalmasın.
-        // HER hata yakalanır (yalnız GeminiException değil): anahtar yokken
-        // ağ/eklenti kaynaklı başka bir istisna da çıkabiliyor ve o zaman not
-        // hiç oluşmuyordu. `mounted` kontrolü de yalnız BİLDİRİMİ atlar,
-        // fonksiyondan çıkmaz — eskiden çıkıyordu ve not oluşmadan dönüyordu.
-        if (mounted) {
-          showQuickAddSnack(
-            e is GeminiException
-                ? aiErrorText(l10n, e)
-                : l10n.assistantGenericError,
-          );
-        }
-      }
-    }
+    final text = result.text;
 
     // TEK yazımda kur: createNote + ayrı updateFields arasında doküman bir an
     // boş/süzgeçsiz kalıyor ve o anki akış görüntüsünde listeden düşebiliyordu
@@ -1592,42 +1563,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     });
 
     final l10n = context.l10n;
-    // Geciktirilmiş sorgu: anlamsal arama her tuş vuruşunda ayrı bir
-    // embedding HTTP isteği atmasın (bkz. debouncedSearchQueryProvider).
     final query = ref.watch(debouncedSearchQueryProvider);
     // Paylaşılan klasör süzgeci (K8): ızgarayı o klasörün notları doldurur.
     final sharedFolder = ref.watch(selectedSharedFolderProvider);
-    final semanticActive =
-        sharedFolder == null &&
-        ref.watch(semanticSearchEnabledProvider) &&
-        query.trim().length > 2;
-    // Anlamsal sonuçlara da uygulanmış süzgeçler (klasör/etiket/durum) uygulanır:
-    // eskiden "İş" klasörü seçiliyken anlam modu TÜM klasörlerden not getiriyor,
-    // üstteki çip ise hâlâ "İş" diyordu — metin/anlam modları sessizce farklı
-    // davranıyordu.
-    // Bu üçü YALNIZ anlam modu açıkken gerekli; koşulsuz izlenince anlam modu
-    // kapalıyken bile üç sağlayıcıya abone olup ekranı yeniden kurduruyorlardı.
-    final semanticFolder = semanticActive
-        ? ref.watch(selectedFolderProvider)
-        : null;
-    final semanticTag = semanticActive ? ref.watch(selectedTagProvider) : null;
-    final semanticFilter = semanticActive
-        ? ref.watch(noteFilterProvider)
-        : NoteFilter.all;
-    final notesAsync = semanticActive
-        ? ref
-              .watch(semanticSearchProvider(query.trim()))
-              .whenData(
-                (list) => [
-                  for (final n in list)
-                    if ((semanticFolder == null ||
-                            n.folderId == semanticFolder) &&
-                        (semanticTag == null || n.tags.contains(semanticTag)) &&
-                        noteMatchesFilter(n, semanticFilter))
-                      n,
-                ],
-              )
-        : ref.watch(filteredNotesProvider);
+    final notesAsync = ref.watch(filteredNotesProvider);
     // KÖK NEDEN (kasma): burası TÜM seçim kümesini izliyordu. Küme her
     // seçim değişiminde yeni bir `Set` olduğu için tek bir nota dokunmak
     // dashboard'ın tamamını (ve önbellek payındaki bütün kartları) yeniden
@@ -2026,14 +1965,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 scrolled: _gridScrolled,
                                 searchController: _searchController,
                                 searchFocus: _searchFocus,
-                                semanticToggle: _SemanticToggle(
-                                  on: ref.watch(semanticSearchEnabledProvider),
-                                  onTap: () => ref
-                                      .read(
-                                        semanticSearchEnabledProvider.notifier,
-                                      )
-                                      .toggle(),
-                                ),
                                 filterButton: const Customizable(
                                   id: UiItem.homeFilter,
                                   child: HomeFilterButton(),

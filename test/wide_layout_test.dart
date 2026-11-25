@@ -123,13 +123,13 @@ void main() {
     expect(router.canPop(), isFalse);
   });
 
-  testWidgets('Alt+6 arşive, Ctrl+, ayarlara gider; Ctrl+/ kısayolları açar', (
+  testWidgets('Alt+5 arşive, Ctrl+, ayarlara gider; Ctrl+/ kısayolları açar', (
     tester,
   ) async {
     final router = await _pump(tester, const Size(1280, 800));
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.digit6);
+    await tester.sendKeyEvent(LogicalKeyboardKey.digit5);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/archive');
@@ -218,8 +218,6 @@ void main() {
     expect(AppSection.of('/'), AppSection.notes);
     expect(AppSection.of('/note/abc'), AppSection.notes);
     expect(AppSection.of('/notebook/abc'), AppSection.notes);
-    expect(AppSection.of('/chat'), AppSection.ai);
-    expect(AppSection.of('/briefing'), AppSection.ai);
     expect(AppSection.of('/privacy'), AppSection.settings);
     expect(AppSection.of('/reminders'), AppSection.calendar);
     expect(AppSection.of('/calendar'), AppSection.calendar);

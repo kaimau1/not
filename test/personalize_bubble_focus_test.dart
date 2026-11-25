@@ -87,7 +87,7 @@ void main() {
 
     testWidgets('ana ekran öğeleri de listede ve kapanır', (tester) async {
       await pumpPersonalize(tester);
-      final chip = find.byKey(ValueKey('ui-chip-${UiItem.homeAi}'));
+      final chip = find.byKey(const ValueKey('ui-chip-${UiItem.homeFilter}'));
       await tester.scrollUntilVisible(
         chip,
         300,
@@ -96,7 +96,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(chip);
       await tester.pumpAndSettle();
-      expect(Personalize.prefs.value.shows(UiItem.homeAi), isFalse);
+      expect(Personalize.prefs.value.shows(UiItem.homeFilter), isFalse);
     });
   });
 

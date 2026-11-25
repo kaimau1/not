@@ -5,7 +5,6 @@ import '../../../../core/utils/search_fold.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/rich_text.dart';
-import '../../../ai/data/gemini_service.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/pdf_text.dart';
 import '../../data/scan/scan_ocr.dart';
@@ -14,32 +13,18 @@ import '../../domain/note.dart';
 import '../../domain/page_notes.dart';
 import '../viewers/text_recognize_screen.dart';
 import '../../../../core/widgets/app_sheet.dart';
-import '../../../../core/friendly_error.dart';
-import '../../../auth/presentation/account_required.dart';
 import '../../../../core/widgets/sheet_keyboard.dart';
 
 /// **Not içinde arama** — gövde, maddeler, sayfa notları VE eklerin içi.
 ///
-/// Kullanıcı isteği 2026-08-16: "not içi arama ai ile görsel ve PDF ekler
-/// içinde de arama". Uygulamanın araması ana ekranda, NOTLAR ARASINDA
-/// çalışıyordu; tek bir uzun notun (ya da 200 sayfalık bir PDF ekinin)
-/// içinde bir kelime aramanın yolu yoktu.
-///
-/// Üç katman, ucuzdan pahalıya:
+/// İki katman, ucuzdan pahalıya (ikisi de yerel, kotasız):
 ///  1. **Metin** (anında, yerel): başlık, gövde, maddeler, sayfa notları.
 ///  2. **Ekler** (yerel, kotasız): PDF'in metin katmanı ([PdfText]) ve
 ///     görsellerin cihaz-içi OCR'ı ([ScanOcr]). Bu adım saniyeler sürebildiği
 ///     için AYRI ve kullanıcı isteğiyle başlar; sonuçlar geldikçe eklenir.
-///  3. **AI** (isteğe bağlı, kota harcar): kelimesi kelimesine eşleşme
-///     bulunamadığında "ne demek istediğini" sorar — eş anlamlı, yanlış
-///     yazılmış ya da başka dilde yazılmış bir şeyi bulmanın tek yolu.
 ///
 /// Ek metinleri OTURUM BOYUNCA önbelleklenir: aynı notta ikinci arama
 /// PDF'i yeniden çözümlemez.
-///
-/// 2026-09-26: not içi aramanın ASIL yolu artık sayfadaki canlı arama
-/// çubuğu (bkz. `NoteFindBar`); bu levha oradan "eklerde ve yapay zekâ ile
-/// ara" ile, çubukta yazılı sorguyla ([initialQuery]) açılır.
 Future<void> showNoteSearchSheet(
   BuildContext context,
   WidgetRef ref,
@@ -84,8 +69,6 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
 
   bool _scanning = false;
   bool _scanned = false;
-  bool _asking = false;
-  String? _aiAnswer;
 
   @override
   void dispose() {
@@ -113,7 +96,11 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     probe(l10n.noteTitleLabel, note.title, Icons.title);
     probe(l10n.noteBodyLabel, note.body, Icons.notes_outlined);
     for (var i = 0; i < note.items.length; i++) {
-      probe('${l10n.itemLabel} ${i + 1}', note.items[i].text, Icons.check_box_outlined);
+      probe(
+        '${l10n.itemLabel} ${i + 1}',
+        note.items[i].text,
+        Icons.check_box_outlined,
+      );
     }
     for (final attachment in note.attachments) {
       for (final entry in orderedPageNotes(
@@ -202,39 +189,6 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     });
   }
 
-  /// Aranan şeyi NOTUN KENDİSİNE sorar (kota harcar).
-  Future<void> _askAi() async {
-    if (!ensureAiReady(context, ref)) return;
-    final query = _query;
-    if (query.isEmpty || _asking) return;
-    setState(() {
-      _asking = true;
-      _aiAnswer = null;
-    });
-    try {
-      final answer = await ref
-          .read(geminiServiceProvider)
-          .askAboutNoteText(widget.note, query, extras: _attachmentText.values);
-      if (!mounted) return;
-      setState(() {
-        _aiAnswer = answer;
-        _asking = false;
-      });
-    } on GeminiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _aiAnswer = aiErrorText(context.l10n, e);
-        _asking = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _aiAnswer = aiErrorText(context.l10n, e);
-        _asking = false;
-      });
-    }
-  }
-
   // Bulgular yalnız sorgu ya da taranan ek sayısı değişince yeniden
   // hesaplanır (K-02: her kurulumda bütün not + ek metni taranıyordu).
   String? _hitsQuery;
@@ -279,7 +233,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
                 controller: _controller,
                 autofocus: true,
                 textInputAction: TextInputAction.search,
-                onChanged: (_) => setState(() => _aiAnswer = null),
+                onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
                   hintText: l10n.noteSearchHint,
@@ -356,37 +310,6 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
                       ),
                       subtitle: Text(hit.snippet),
                     ),
-                  if (query.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    // AI YOLU: kelime eşleşmesi bulunmadığında asıl işe
-                    // yarayan yol; bulunduğunda da "özetle" için duruyor.
-                    // Düğme — otomatik DEĞİL: her tuş vuruşunda model
-                    // çağırmak kotayı yakardı.
-                    OutlinedButton.icon(
-                      onPressed: _asking ? null : _askAi,
-                      icon: _asking
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const AiIcon(size: 18),
-                      label: Text(l10n.noteSearchAskAi),
-                    ),
-                    if (_aiAnswer != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 12),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: SelectableText(_aiAnswer!),
-                        ),
-                      ),
-                  ],
                 ],
               ),
             ),

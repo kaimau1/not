@@ -496,15 +496,10 @@ enum AiTask {
   final String prefsKey;
 }
 
-/// Podcast/belge okuma SESLENDİRMESİNİ kim yapacak?
+/// Seslendirmeyi kim yapacak?
 enum TtsEngine {
   /// Cihazın yerleşik TTS'i: bedava, çevrimdışı, anında, sınırsız uzunlukta.
   device('device'),
-
-  /// Gemini'nin seslendirme modeli: belirgin daha doğal ama her paragraf bir
-  /// model çağrısıdır (kota harcar) ve kullanıcının KENDİ Gemini anahtarını
-  /// ister — dahili (Firebase) yol ses döndürmüyor.
-  gemini('gemini'),
 
   /// Antalia-2 Mini: cihazda çalışan Türkçe seslendirme modeli. Bedava,
   /// çevrimdışı, kota yok; model (~50 MB) bir kez indirilir. Yalnız Türkçe
@@ -519,7 +514,7 @@ enum TtsEngine {
       TtsEngine.values.firstWhere((e) => e.id == id, orElse: () => device);
 }
 
-/// Seslendirmeyi cihaz mı, Gemini mi, Antalia mı yapsın (varsayılan: cihaz).
+/// Seslendirmeyi cihaz mı, Antalia mı yapsın (varsayılan: cihaz).
 final ttsEngineProvider = NotifierProvider<TtsEngineNotifier, TtsEngine>(
   TtsEngineNotifier.new,
 );
@@ -534,8 +529,6 @@ class TtsEngineNotifier extends Notifier<TtsEngine> {
     if (e == TtsEngine.antalia && !PlayBuild.antaliaVoice) {
       return TtsEngine.device;
     }
-    // Play derlemesinde Gemini seslendirme yok (AI-S1): cihaz sesine düşer.
-    if (e == TtsEngine.gemini && !PlayBuild.aiVoice) return TtsEngine.device;
     return e;
   }
 

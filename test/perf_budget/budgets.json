@@ -244,12 +244,12 @@
   },
   "S29": {
     "senaryo": "Ayar alanı açılışı: telefon 412×915, SettingsScreen(initialArea: ai) doğrudan pompalanır, 40 kare. ilk_kare = pompa karesi (MaterialApp dahil); kare_kurulum = ilk kareden SONRAKİ en ağır kare (satır yayma kareleri)",
-    "ilk_kare_kurulum": 353,
-    "kare_kurulum": 37,
-    "toplam_kurulum": 502,
-    "bugun": "353 / 37 / 502; ilk karede 2 satır (2026-11-18, P70 PL3: AI alanına 'Yapay zekâyı tümden kapat' satırı); önce 367 / 37 / 488 (2026-11-14, PA0)",
-    "hedef": "en ağır kare tabanı AŞMAZ; toplam en çok grup sarmalayıcıları kadar artar (artış neden e yazılır)",
-    "neden": "P62 PA0 ilk ölçüm 367 / 37 / 488 (taban); PA1 (2026-11-15): grup kartları sarmalayıcısız tek düzen nesnesinde (_GroupColumn), dar ekranda alan başlık satırı kalktı → 353 / 37 / 474, ilk karede yine 2 satır. [butce] P70 PL3 (2026-11-18): KVKK/Play gereği yeni görünür satır 'Yapay zekâyı tümden kapat' (_SettingRow + anahtar satırı) toplamı 474 → 502 yaptı; ilk kare (353) ve en ağır kare (37) AYNI — artış yalnız yayılan bir satır (sabah bakılacak)"
+    "ilk_kare_kurulum": 447,
+    "kare_kurulum": 0,
+    "toplam_kurulum": 447,
+    "bugun": "447 / 0 / 447; ilk karede 2 satır (2026-11-25, Faz 1 AI budaması: toplam 502→447, sonraki kare 37→0); önce 353 / 37 / 502 (2026-11-18, P70 PL3)",
+    "hedef": "toplam kurulum düşer; sonraki kareler 0",
+    "neden": "[butce] Faz 1 (2026-11-25): üretken AI satırları (model seçici, sağlayıcı, otomatik başlık/etiket) silinince AI alanı 7 satırdan 3 satıra indi — toplam kurulum 502→447'ye, sonraki kare maliyeti 37→0'a düştü. _frames ilk ölçümü (pumpWidget + ilk 16ms kare) 3. ve son satır olan _AiOffSwitch'i de (Switch) kapsadığı için ilk_kare_kurulum 353→447 oldu, toplam iş azaldı"
   },
   "S30": {
     "senaryo": "Hesap levhası: telefon ana ekran, 30 not; home-account-avatar a dokun → 30 kare → sistem geri → 30 kare",
@@ -521,14 +521,6 @@
     "bugun": "arama 294/84 · seçici 630/150 · AI sonuç 294/153 (2026-11-17, kasma envanteri KP1; önce 1152/210 · 4758/270 · 1512/249, levha kökü 6/6/6 → 0/0/0)",
     "hedef": "klavye karesinde yalnız dolgu + odaktaki alan kurulsun; levha içeriği 0",
     "neden": "K-01…K-11: levha State'i build'inde viewInsetsOf okuyordu (S52 kalıbının kalan levhaları)"
-  },
-  "S54": {
-    "senaryo": "30 maddeli not: ✨ AI levhasını (Yaz · Sor · Dönüştür) aç → sistem geri ile kapat; editör gövdesi kurulumu + AiSheet kök kurulumu",
-    "govde_kurulum": 0,
-    "levha_kurulum": 1,
-    "bugun": "gövde 0 · levha 1 (2026-11-18, P72 AI-S2 ilk ölçüm = hedef)",
-    "hedef": "gövde 0; levha kökü açılış başına 1-2",
-    "neden": "PLAN §1.6 AI-S2: levha 3 bölüme ayrıldı, HIZ SÖZLEŞMESİ bütçe senaryosu"
   },
   "S55": {
     "senaryo": "Kalem ↔ silgi hızlı düğmesi (telefon, metin notu): kalem kipinde 10 hareketli çizgi → kalkış → düğmeye dokunuş",

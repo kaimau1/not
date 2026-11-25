@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/app_icons.dart';
 import '../../core/l10n_ext.dart';
-import '../../features/ai/data/ai_gate.dart';
 import '../../features/auth/presentation/account_required.dart';
 import '../../features/auth/presentation/account_sheet.dart';
 import '../../features/auth/presentation/auth_providers.dart';
@@ -140,7 +139,6 @@ class _WebWorkspaceSidebarState extends ConsumerState<WebWorkspaceSidebar> {
     final sharedFolders =
         ref.watch(sharedFolderRefsProvider).value ?? const <SharedFolderRef>[];
     final sharedUnread = ref.watch(sharedUnreadTotalProvider);
-    final aiLocked = ref.watch(aiAvailabilityProvider).looksLocked;
     final collapsed = ref.watch(listPaneCollapsedProvider);
     final anonymous = ref.watch(isAnonymousProvider);
     final canWrite =
@@ -219,19 +217,6 @@ class _WebWorkspaceSidebarState extends ConsumerState<WebWorkspaceSidebar> {
                           onTap: () => _go(
                             () => openSection(router, AppSection.calendar),
                           ),
-                        ),
-                        _NavRow(
-                          extended: widget.extended,
-                          icon: AppSection.ai.icon,
-                          selectedIcon: AppSection.ai.selectedIcon,
-                          label: AppSection.ai.label(context),
-                          selected: section == AppSection.ai,
-                          trailingIcon: aiLocked ? Icons.lock_outline : null,
-                          trailingKey: aiLocked
-                              ? const ValueKey('rail-ai-locked')
-                              : null,
-                          onTap: () =>
-                              _go(() => openSection(router, AppSection.ai)),
                         ),
                         if (widget.extended) ...[
                           const SizedBox(height: AppSpace.m),
@@ -751,8 +736,6 @@ class _NavRow extends StatelessWidget {
     this.tooltip,
     this.badgeCount = 0,
     this.locked = false,
-    this.trailingIcon,
-    this.trailingKey,
   });
 
   final bool extended;
@@ -763,8 +746,6 @@ class _NavRow extends StatelessWidget {
   final bool selected;
   final int badgeCount;
   final bool locked;
-  final IconData? trailingIcon;
-  final Key? trailingKey;
   final VoidCallback onTap;
 
   @override
@@ -785,28 +766,16 @@ class _NavRow extends StatelessWidget {
         color: fg,
       ),
     );
-    final glyph = (locked || trailingIcon != null)
+    final glyph = locked
         ? Stack(
-            key: trailingKey,
             clipBehavior: Clip.none,
             children: [
               baseGlyph,
-              if (locked)
-                const Positioned(
-                  right: -6,
-                  top: -4,
-                  child: AccountLockBadge(size: AppIconSize.xs),
-                )
-              else if (trailingIcon != null)
-                PositionedDirectional(
-                  end: -6,
-                  top: -4,
-                  child: Icon(
-                    trailingIcon,
-                    size: AppIconSize.xs,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
+              const Positioned(
+                right: -6,
+                top: -4,
+                child: AccountLockBadge(size: AppIconSize.xs),
+              ),
             ],
           )
         : baseGlyph;

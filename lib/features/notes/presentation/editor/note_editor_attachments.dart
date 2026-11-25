@@ -441,6 +441,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     if (!mounted) return;
     _showSnack(l10n.scanPagesAdded(pageBytes.length));
 
+    if (!ScanOcr.supported) return;
     final wantsText = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -459,12 +460,10 @@ extension _EditorAttachments on _NoteEditorScreenState {
       ),
     );
     if (wantsText != true || !mounted) return;
-    await _runAi(l10n.scanRecognizing, () async {
-      final service = ref.read(geminiServiceProvider);
-      for (final bytes in pageBytes) {
-        final text = stripMarkdown(
-          await service.extractTextFromImage(bytes, 'image/jpeg'),
-        ).trim();
+    await _runBusy(l10n.scanRecognizing, () async {
+      for (final path in result.imagePaths ?? const <String>[]) {
+        final lines = await ScanOcr.recognizeImageLines(path);
+        final text = [for (final line in lines) line.text].join('\n').trim();
         if (!mounted) return;
         if (text.isNotEmpty) _appendText(text);
       }
@@ -929,7 +928,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     if (_voiceRecorder != null) return;
     if (_micBusyElsewhere()) return;
     // Tek mikrofon: dikte açıksa önce kapanır (son açan alır — bkz. HAFIZA).
-    if (_dictating) await _stopDictation(offerFix: false);
+    if (_dictating) await _stopDictation();
     if (!mounted) return;
     final recorder = VoiceNoteRecorder()
       ..onLimit = () => unawaited(_finishVoiceRecording());
@@ -1476,20 +1475,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       _appendText(inserted.trim());
       return;
     }
-    final bytes = await repo.readBytes(image);
-    if (!mounted) return;
-    if (bytes == null) {
-      _showSnack(l10n.attachmentNotSynced);
-      return;
-    }
-    await _runAi(l10n.aiThinking, () async {
-      final service = ref.read(geminiServiceProvider);
-      final text = stripMarkdown(
-        await service.extractTextFromImage(bytes, image.mimeType),
-      ).trim();
-      if (!mounted || text.isEmpty) return;
-      _appendText(text);
-    });
+    _showSnack(l10n.transcriptUnsupported('OCR'));
   }
 
   // ---- Arayüz ---------------------------------------------------------

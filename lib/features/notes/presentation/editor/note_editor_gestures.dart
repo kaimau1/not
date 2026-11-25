@@ -114,65 +114,8 @@ extension _EditorGestures on _NoteEditorScreenState {
           action: SnackBarAction(label: l10n.undo, onPressed: _undo),
         );
       case InkGesture.circle:
-        // Yapay zekâ bu oturumda kullanılamıyorsa (bir kez söylendi) jest
-        // sessiz kalır — her kazara dairede hata
-        // bildirimi çıkmasın (kullanıcı ekran görüntüsü 2026-11-04, web).
-        if (_NoteEditorScreenState._aiGestureUnavailable) return;
-        if (ref.read(aiAvailabilityProvider) != AiAvailability.ready) {
-          _NoteEditorScreenState._aiGestureUnavailable = true;
-          _showSnack(l10n.gestureFixNeedsAi);
-          return;
-        }
-        AppHaptics.tick();
-        unawaited(_fixItemSpelling(id));
       case InkGesture.none:
         break;
-    }
-  }
-
-  /// Daire içine alınan maddenin YAZIMINI düzeltir (AI, yalnız imla/
-  /// noktalama — kelimeye dokunmaz). Biçim işaretli madde düz metne iner.
-  Future<void> _fixItemSpelling(String id) async {
-    final l10n = context.l10n;
-    final items = _itemsEditorKey.currentState;
-    final original = items?.itemTextOf(id);
-    if (items == null || original == null) return;
-    final plain = stripRichMarkers(original).trim();
-    if (plain.isEmpty) return;
-    try {
-      final fixed = await _runBusy(
-        l10n.gestureFixing,
-        () => ref
-            .read(geminiServiceProvider)
-            .rewriteText(
-              plain,
-              'Yalnızca yazım, imla, noktalama ve büyük/küçük harf '
-              'hatalarını düzelt. Kelime seçimine ve sıraya DOKUNMA. Tek '
-              'satır ver; madde imi, tırnak ya da açıklama ekleme.',
-            ),
-      );
-      if (!mounted) return;
-      final line = fixed.trim().split('\n').first.trim();
-      // Madde bu arada değiştiyse (yazıldı, silindi) üstüne yazılmaz.
-      if (line.isEmpty || items.itemTextOf(id) != original) return;
-      if (line == plain) {
-        _showSnack(l10n.gestureNothingToFix);
-        return;
-      }
-      items.replaceItemText(id, line);
-      _showSnack(l10n.gestureFixed);
-    } on GeminiException catch (e) {
-      if (!mounted) return;
-      if (e.isAuthError) {
-        // Anahtar yok / dahili AI bu sürümde kapalı: jest ne yaptığını ve
-        // neden olmadığını BİR KEZ söyler (F36.5).
-        _NoteEditorScreenState._aiGestureUnavailable = true;
-        _showSnack(l10n.gestureFixNeedsAi);
-        return;
-      }
-      _showSnack(aiErrorText(l10n, e));
-    } catch (e) {
-      if (mounted) _showSnack(aiErrorText(l10n, e));
     }
   }
 

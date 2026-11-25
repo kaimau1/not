@@ -262,7 +262,8 @@ class _StorageUsage extends ConsumerWidget {
     if (ref.watch(attachmentSyncModeProvider) != AttachmentSyncMode.storage) {
       return const SizedBox.shrink();
     }
-    final premium = ref.watch(premiumProvider).value ?? false;
+    final premium =
+        ref.watch(effectiveTierProvider) == EntitlementTier.lifetime;
     final quota = premium
         ? AppConstants.maxPremiumStorageBytes
         : AppConstants.maxFreeStorageBytes;

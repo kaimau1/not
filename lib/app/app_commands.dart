@@ -46,7 +46,6 @@ enum AppSection {
   notes('/', Icons.sticky_note_2_outlined, Icons.sticky_note_2),
   folders('/folders', Icons.folder_outlined, Icons.folder),
   inbox('/inbox', AppIcons.inbox, AppIcons.inboxSelected),
-  ai('/ai', Icons.auto_awesome_outlined, Icons.auto_awesome),
   // Takvim, Hatırlatıcılar'ın yerine (TAKVIM_PLANI K5): hatırlatıcılar
   // takvimde görünür, liste takvimin çubuğundan açılır.
   calendar('/calendar', Icons.calendar_month_outlined, Icons.calendar_month),
@@ -66,7 +65,6 @@ enum AppSection {
       AppSection.notes => l10n.navNotes,
       AppSection.folders => l10n.foldersTitle,
       AppSection.inbox => l10n.sharedHubTitle,
-      AppSection.ai => l10n.aiHubTitle,
       AppSection.calendar => l10n.calendarTitle,
       AppSection.archive => l10n.archiveTitle,
       AppSection.trash => l10n.trashTitle,
@@ -74,18 +72,12 @@ enum AppSection {
     };
   }
 
-  /// Bir konumun hangi bölüme ait olduğu. Not/defter ekranları notlar
-  /// bölümünün içindedir; sohbet ve brifing yapay zekânın.
+  /// Bir konumun hangi bölüme ait olduğu.
   static AppSection? of(String location) {
     if (location == '/' ||
         location.startsWith('/note/') ||
         location.startsWith('/notebook/')) {
       return AppSection.notes;
-    }
-    if (location.startsWith('/ai') ||
-        location.startsWith('/chat') ||
-        location.startsWith('/briefing')) {
-      return AppSection.ai;
     }
     if (location.startsWith('/reminders') || location.startsWith('/tasks')) {
       return AppSection.calendar;

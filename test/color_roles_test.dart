@@ -26,7 +26,6 @@ const _allowed = <String, (int, String)>{
   'lib/features/folders/presentation/folder_tile.dart': (1, 'renksiz klasör vurgusu'),
   'lib/features/friends/presentation/friends_screen.dart': (1, 'arkadaş avatar paleti (ayırt etme)'),
   'lib/features/friends/presentation/home_invites.dart': (2, 'davet şeridi'),
-  'lib/features/gmail/presentation/gmail_screen.dart': (4, 'gönderen avatar paleti + önemli/yıldız'),
   'lib/features/inbox/presentation/shared_hub_screen.dart': (1, 'paylaşılan merkez simgesi'),
   'lib/features/notes/presentation/dashboard_screen.dart': (1, 'P19 alanı (pano gövdesi)'),
   'lib/features/notes/presentation/editor/attachment_strip.dart': (2, 'editör — P36/P20 alanı'),

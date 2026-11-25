@@ -57,7 +57,6 @@ class PersonalizeBarList extends StatelessWidget {
         UiItem.barDay => (Icons.edit_calendar_outlined, l10n.quickRowDay),
         UiItem.barTable => (Icons.table_chart_outlined, l10n.tableInsert),
         UiItem.barShare => (Icons.share_outlined, l10n.share),
-        UiItem.barAi => (Icons.auto_awesome, l10n.aiTitle),
         UiItem.barDictation => (AppIcons.dictation, l10n.liveDictation),
         UiItem.barVoiceRecord => (AppIcons.voiceRecord, l10n.recordAudio),
         UiItem.topHome => (Icons.home_outlined, l10n.goHome),

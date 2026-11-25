@@ -1047,7 +1047,6 @@ class _ExpandTile extends StatefulWidget {
     this.subtitle,
     this.leading,
     this.childrenPadding = EdgeInsets.zero,
-    this.onExpansionChanged,
   });
 
   final Widget title;
@@ -1055,7 +1054,6 @@ class _ExpandTile extends StatefulWidget {
   final Widget? leading;
   final List<Widget> children;
   final EdgeInsetsGeometry childrenPadding;
-  final ValueChanged<bool>? onExpansionChanged;
 
   @override
   State<_ExpandTile> createState() => _ExpandTileState();
@@ -1082,7 +1080,6 @@ class _ExpandTileState extends State<_ExpandTile> {
           ),
           onTap: () {
             setState(() => _open = !_open);
-            widget.onExpansionChanged?.call(_open);
           },
         ),
         ExpandReveal(

@@ -18,7 +18,7 @@ class WebDashboardHeader extends ConsumerWidget {
     required this.scrolled,
     required this.searchController,
     required this.searchFocus,
-    required this.semanticToggle,
+    this.semanticToggle,
     required this.filterButton,
     required this.onOpenMenu,
     required this.showGridControls,
@@ -29,7 +29,7 @@ class WebDashboardHeader extends ConsumerWidget {
   final ValueListenable<bool> scrolled;
   final TextEditingController searchController;
   final FocusNode searchFocus;
-  final Widget semanticToggle;
+  final Widget? semanticToggle;
   final Widget filterButton;
   final VoidCallback onOpenMenu;
   final bool showGridControls;
@@ -218,7 +218,8 @@ class WebDashboardHeader extends ConsumerWidget {
                               ),
                             ),
                           if (showAi) ...[
-                            TextFieldTapRegion(child: semanticToggle),
+                            if (semanticToggle != null)
+                              TextFieldTapRegion(child: semanticToggle!),
                             const SizedBox(width: AppSpace.xs),
                           ],
                         ],

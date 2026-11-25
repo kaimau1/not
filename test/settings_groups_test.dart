@@ -81,10 +81,13 @@ void main() {
     ]);
   });
 
-  testWidgets('AI alanı: "Kendiliğinden" grubu', (tester) async {
+  testWidgets('AI alanı: akıllı kararlar kotası ve kapatma anahtarı', (
+    tester,
+  ) async {
     await _pump(tester, const Size(412, 915), area: 'ai');
     final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
-    expect(_labels(tester, 'ai'), [l10n.settingsGroupAutomatic]);
+    expect(find.byKey(const ValueKey('settings-decisions-quota')), findsOneWidget);
+    expect(find.text(l10n.decisionsTurnOffTitle), findsOneWidget);
   });
 
   testWidgets('Görünüm alanı: grup sırası', (tester) async {

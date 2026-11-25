@@ -59,18 +59,13 @@ import '../../../core/utils/font_downloads.dart';
 import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/speech_output.dart';
-import '../../ai/data/shared_ai_pool.dart';
-import '../../ai/data/ai_gate.dart';
 import '../../ai/data/ai_policy.dart';
-import '../../ai/data/ai_speech.dart';
+import '../../ai/data/ai_provider.dart';
 import '../../ai/data/antalia/antalia_engine.dart';
 import '../../ai/data/antalia/antalia_speech.dart';
-import '../../ai/data/speech_service.dart';
-import '../../ai/data/ai_provider.dart';
 import '../../ai/data/api_key_store.dart';
-import '../../ai/data/model_catalog.dart';
-import '../../ai/data/firebase_ai_client.dart';
-import '../../ai/data/gemini_service.dart';
+import '../../ai/data/decisions/decision_service.dart';
+import '../../ai/data/speech_service.dart';
 import '../../auth/data/account_service.dart';
 import '../../auth/presentation/account_identity_card.dart';
 import '../../auth/presentation/auth_errors.dart';
@@ -79,6 +74,8 @@ import '../../auth/presentation/sign_out_actions.dart';
 import '../../entitlement/data/entitlement_service.dart';
 import '../../entitlement/domain/entitlement.dart';
 import '../../entitlement/presentation/pro_lock.dart';
+import '../../entitlement/presentation/pro_screen.dart'
+    show formatDecisionTokens;
 import '../../friends/data/friends_repository.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/inbox_screen.dart';
@@ -340,55 +337,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _Area(
         id: 'ai',
         icon: Icons.auto_awesome,
-        title: l10n.settingsAi,
+        title: l10n.decisionsSectionTitle,
         summary: _aiSummary(l10n),
-        keywords: 'brifing etiket baslik asistan model api anahtar',
+        keywords: 'akilli karar reyon hedef etiket api anahtar byok tam surum',
         rows: [
-          // PL3 (c): tek anahtar — açıkken bütün AI girişleri gizli/kilitli,
-          // çağrılar ağa çıkmadan reddedilir (ai_policy.dart).
-          _SettingRow(
-            const _AiOffSwitch(),
-            title: l10n.aiOffSetting,
-            keywords: '${l10n.aiOffSettingInfo} kapat gizlilik kvkk',
-          ),
           _SettingRow(
             const _BuiltInAiStatus(),
-            title: l10n.settingsAi,
-            keywords: 'kota puan hak api anahtar premium',
-          ),
-          _SettingRow(
-            const _BriefingEditor(),
-            title: l10n.briefingSetting,
-            keywords: l10n.briefingSettingInfo,
-            group: l10n.settingsGroupAutomatic,
-          ),
-          _SettingRow(
-            const _AutoTagSwitch(),
-            title: l10n.autoTagSetting,
-            keywords: l10n.autoTagSettingInfo,
-          ),
-          _SettingRow(
-            const _AutoTitleSwitch(),
-            title: l10n.autoTitleSetting,
-            keywords: l10n.autoTitleSettingInfo,
-          ),
-          _SettingRow(
-            const _AssistantVoiceSwitch(),
-            title: l10n.assistantVoiceSetting,
-            keywords: l10n.assistantVoiceSettingInfo,
-          ),
-          _SettingRow(
-            const _AiSkipCheckedSwitch(),
-            title: l10n.aiSkipCheckedSetting,
-            keywords: l10n.aiSkipCheckedInfo,
+            title: l10n.proTitle,
+            keywords: 'kota karar hak jeton api anahtar tam surum premium',
           ),
           _SettingRow(
             const _AdvancedAiSection(),
-            title: l10n.aiAdvanced,
-            keywords:
-                '${l10n.aiAdvancedInfo} gemini openai claude openrouter '
-                'api anahtar model tanilama ortak havuz byok kredi dosyalarim',
-            // Katlanır bölüm kendi başlığını taşıyor: etiketsiz ayrı kart.
+            title: l10n.decisionsByokTitle,
+            keywords: 'gemini api anahtar byok sinirsiz karar',
+          ),
+          _SettingRow(
+            const _AiOffSwitch(),
+            title: l10n.decisionsTurnOffTitle,
+            keywords: '${l10n.decisionsTurnOffBody} kapat gizlilik kvkk',
             group: '',
           ),
         ],
@@ -1298,17 +1264,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       '${sortLabel(l10n, ref.watch(noteSortProvider))} · '
       '${swipeModeLabel(context, ref.watch(swipeModeProvider))}';
 
-  // Sırası `_BuiltInAiStatus` ile aynı: misafire ve kendi anahtarı olana "ücretsiz
-  // puan" denmez (cihaz turu 2026-11-01: misafir özeti "kalan puan 30" diyordu).
   String _aiSummary(AppLocalizations l10n) {
-    final remaining = ref.watch(freeAiRemainingProvider);
-    if ((ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty) {
-      return l10n.aiBuiltInByok;
+    if ((ref.watch(activeApiKeyProvider).value ?? '').trim().isNotEmpty) {
+      return l10n.decisionsQuotaByok;
     }
-    if (ref.watch(isAnonymousProvider)) return l10n.guestAiTitle;
-    return (ref.watch(premiumProvider).value ?? false)
-        ? l10n.aiBuiltInPremium(remaining)
-        : l10n.aiBuiltInRemaining(remaining);
+    final paid =
+        !EntitlementGate.active ||
+        ref.watch(effectiveTierProvider) == EntitlementTier.lifetime;
+    if (!paid) return l10n.proStatusFree;
+    final quota = ref.watch(decisionQuotaProvider);
+    return l10n.decisionsQuotaSummary(
+      quota.remainingCalls,
+      formatDecisionTokens(quota.remainingTokens),
+    );
   }
 
   String _appearanceSummary(AppLocalizations l10n) {
@@ -1336,8 +1304,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppThemeChoice.ledger => l10n.themeLedger,
       AppThemeChoice.dark => l10n.themeDark,
     };
-    // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,
-    // özet satırında "%107" görmek kullanıcıya hiçbir şey anlatmıyordu.
     final size = switch (nearestFontScaleStep(ref.watch(fontScaleProvider))) {
       FontScaleStep.small => l10n.fontSizeSmall,
       FontScaleStep.medium => l10n.fontSizeMedium,
@@ -1347,14 +1313,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return '$theme · $size · ${ref.watch(appFontProvider)}';
   }
 
-  /// Okuma HIZI ozete girmiyor: hiz motordan asenkron okunuyor
-  /// (speechOutputProvider.rate()), ozet satiri ise senkron bir String
-  /// istiyor. Yaninda bekleyen bir "%100" yazmaktansa yalniz dugme modunu
-  /// gosteriyorum.
   String _soundSummary(AppLocalizations l10n) {
     final engine = switch (ref.watch(ttsEngineProvider)) {
       TtsEngine.device => l10n.ttsEngineDevice,
-      TtsEngine.gemini => l10n.ttsEngineAi,
       TtsEngine.antalia => l10n.ttsEngineLocal,
     };
     final mode = ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold

@@ -1,9 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/link_text.dart';
-import 'package:notlar/features/ai/data/assistant_service.dart';
+import 'package:notlar/features/ai/domain/smart_categorize.dart';
 import 'package:notlar/features/notes/data/reminder_service.dart';
 import 'package:notlar/features/notes/domain/due_items.dart';
 import 'package:notlar/features/notes/domain/note.dart';
@@ -211,14 +210,9 @@ void main() {
       );
     });
 
-    test('AI bağlamı: ne "tüm notlar"da ne "alakalı"da', () {
-      final c = ProviderContainer();
-      addTearDown(c.dispose);
-      final baglam = c
-          .read(assistantServiceProvider)
-          .buildNotesContext([_kilitli()], relevant: [_kilitli()]);
-      expect(baglam, isNot(contains('gizlimetin')));
-      expect(baglam, isNot(contains('Banka')));
+    test('akıllı sınıflandırma: kilitli not hiçbir zaman dahil edilmez', () {
+      final results = SmartNoteCategorizer.classifyAll([_kilitli()]);
+      expect(results, isEmpty);
     });
   });
 }

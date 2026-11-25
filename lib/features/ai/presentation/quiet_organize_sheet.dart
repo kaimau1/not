@@ -2,30 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_tokens.dart';
-import '../../../core/friendly_error.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../auth/presentation/account_required.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/presentation/notes_providers.dart' show allTagsProvider;
 import '../../settings/settings_providers.dart';
-import '../data/ai_gate.dart';
-import '../data/ai_history.dart';
-import '../data/gemini_service.dart';
+import '../data/decisions/decision_flag.dart';
+import '../data/decisions/decision_profiles.dart';
+import '../data/decisions/decision_service.dart';
 import '../domain/smart_categorize.dart';
-import 'ai_result_note.dart';
 
 /// Toplu "Sessiz düzen" (A8, PLAN §1.6) kapsamı.
 enum QuietOrganizeScope { titles, tags, both }
 
 /// Başlıksız ve/veya etiketsiz notları yerelde 0 krediyle sınıflandırır ve
-/// isteğe bağlı olarak düşük güvenlileri tek istekte toplu yapay zekâya sorar.
-/// Kullanıcı önerileri kutucuklarla seçip tek dokunuşla uygular; tek "Geri al"
-/// tüm notları eski hâline döndürür.
+/// isteğe bağlı olarak düşük güvenlileri `gemini-decision-1` (`noteTriage`)
+/// ile iyileştirir. Kullanıcı önerileri kutucuklarla seçip tek dokunuşla
+/// uygular; tek "Geri al" tüm notları eski hâline döndürür.
 Future<void> showQuietOrganizeSheet(
   BuildContext context, {
   QuietOrganizeScope scope = QuietOrganizeScope.both,
@@ -109,12 +107,7 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
       for (final c in localList) c.toOrganizeSuggestion(),
     ];
 
-    final availability = ref.read(aiAvailabilityProvider);
-    final useLocalOnly =
-        !forceAi &&
-        (widget.preferLocalFirst || availability != AiAvailability.ready);
-
-    if (useLocalOnly) {
+    if (!forceAi) {
       if (!mounted) return;
       setState(() {
         _localById = localMap;
@@ -130,21 +123,14 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
       return;
     }
 
-    if (!ensureAiReady(context, ref)) {
-      if (forceAi) return;
-      if (!mounted) return;
-      Navigator.pop(context);
-      return;
-    }
+    final decisions = ref.read(decisionServiceProvider);
+    final targetNotes = [
+      for (final n in notes)
+        if (!n.locked && (localMap[n.id]?.needsAiRefinement ?? false)) n,
+    ].take(8).toList(growable: false);
 
-    final targetNotes = forceAi
-        ? [
-            for (final n in notes)
-              if (localMap[n.id]?.needsAiRefinement ?? false) n,
-          ]
-        : notes;
-
-    if (forceAi && targetNotes.isEmpty) {
+    if (targetNotes.isEmpty ||
+        decisions.modeOf(DecisionFeature.noteTriage) != DecisionMode.live) {
       if (mounted) setState(() => _aiRefined = true);
       return;
     }
@@ -154,48 +140,45 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
       _error = null;
       _localById = localMap;
       _folderByName = folderByName;
-      if (!forceAi) {
-        _suggestions = localSuggestions;
-        _selected.clear();
-      }
     });
 
-    try {
-      final results = await ref
-          .read(geminiServiceProvider)
-          .batchQuietOrganize(
-            targetNotes,
-            suggestTitles: _suggestTitles,
-            suggestTags: _suggestTags,
-          );
-      if (!mounted) return;
-      final merged = forceAi ? _mergeSuggestions(results) : results;
-      setState(() {
-        _suggestions = merged;
-        _selected
-          ..clear()
-          ..addAll(merged.map((r) => r.noteId));
-        _loading = false;
-        _aiRefined = true;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      if (!forceAi && localSuggestions.isNotEmpty) {
-        setState(() {
-          _suggestions = localSuggestions;
-          _selected
-            ..clear()
-            ..addAll(localSuggestions.map((r) => r.noteId));
-          _loading = false;
-          _aiRefined = false;
-        });
-        return;
-      }
-      setState(() {
-        _error = aiErrorText(context.l10n, e);
-        _loading = false;
-      });
+    final ownTags = ref.read(allTagsProvider);
+    final folderMap = {
+      for (final f in folders)
+        if (!f.isShared) f.id: f.name,
+    };
+    final refined = <QuietOrganizeSuggestion>[];
+    for (final note in targetNotes) {
+      final t = await decideNoteTriage(
+        decisions,
+        title: note.title,
+        text: note.toPlainText(),
+        tags: ownTags,
+        folders: folderMap,
+      );
+      if (t == null || t.isEmpty) continue;
+      final existing = localMap[note.id];
+      refined.add(
+        QuietOrganizeSuggestion(
+          noteId: note.id,
+          title: existing?.suggestedTitle,
+          tags: _suggestTags && t.tags.isNotEmpty
+              ? t.tags
+              : (existing?.tags ?? const []),
+          folderId: t.folderId,
+        ),
+      );
     }
+    if (!mounted) return;
+    final merged = _mergeSuggestions(refined);
+    setState(() {
+      _suggestions = merged;
+      _selected
+        ..clear()
+        ..addAll(merged.map((r) => r.noteId));
+      _loading = false;
+      _aiRefined = true;
+    });
   }
 
   List<QuietOrganizeSuggestion> _mergeSuggestions(
@@ -371,10 +354,11 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
       final matchedFolder = localFolderName == null
           ? null
           : _folderByName[localFolderName];
+      final suggestedFolderId = s.folderId ?? matchedFolder?.id;
       final nextFolderId =
           ((current.folderId == null || current.folderId!.isEmpty) &&
-              matchedFolder != null)
-          ? matchedFolder.id
+              suggestedFolderId != null)
+          ? suggestedFolderId
           : current.folderId;
       if (nextTitle == current.title &&
           _sameTags(nextTags, current.tags) &&
@@ -399,7 +383,6 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
     for (final pair in updates) {
       await repo.updateNote(pair.after);
     }
-    ref.read(aiHistoryProvider.notifier).record(l10n.aiQuietOrganizeTitle);
     if (!mounted) return;
     showUndoSnackBar(
       context,
@@ -753,15 +736,6 @@ class _QuietOrganizeSheetState extends ConsumerState<_QuietOrganizeSheet> {
                     label: Text(l10n.aiSmartRefineWithAi),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-                child: AiResultNote(
-                  content: _suggestions
-                      .map((s) => '${s.title ?? ''} ${s.tags.join(",")}')
-                      .join('\n'),
-                  source: 'quiet_organize',
-                ),
-              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpace.l,

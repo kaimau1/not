@@ -128,7 +128,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
     final open = !_penMode;
     if (open && _formatBarOpen) _formatBarOpen = false;
     _update(() => _penMode = open);
-    if (open && _dictating) unawaited(_stopDictation(offerFix: false));
+    if (open && _dictating) unawaited(_stopDictation());
   }
 
   /// Alt çubuğun "Ekle" segmenti: TEK levhayı açar (attach_sheet.dart).

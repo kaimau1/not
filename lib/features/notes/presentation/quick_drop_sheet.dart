@@ -16,12 +16,10 @@ import '../../../core/utils/spoken_datetime.dart' show parseSpokenDateTime;
 import '../../../core/widgets/delayed_spinner.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../ai/data/ai_gate.dart';
 import '../../ai/data/decisions/decision_flag.dart';
 import '../../ai/data/decisions/decision_models.dart';
 import '../../ai/data/decisions/decision_profiles.dart';
 import '../../ai/data/decisions/decision_service.dart';
-import '../../ai/data/gemini_service.dart';
 import '../../calendar/data/calendar_repository.dart';
 import '../../calendar/domain/day_key.dart';
 import '../../settings/settings_providers.dart';
@@ -892,7 +890,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
 
   bool get _aiUsable =>
       ref.read(quickDropAiProvider) &&
-      ref.read(aiAvailabilityProvider) == AiAvailability.ready;
+      ref.read(decisionServiceProvider).modeOf(DecisionFeature.dropTarget) ==
+          DecisionMode.live;
 
   Future<void> _askAi() async {
     final st = _state.value;
@@ -904,86 +903,32 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
           ]
         : _candidates.take(40).toList();
     _phase.value = _Phase.thinking;
-    // DA-1 (plan_decisions_api): Decisions `choice` önce (bayrak açıksa);
-    // emin → uygula, orta → seçili gelir ama sorulur, değilse eski yol.
-    // Gölge kipte eski yol AYNEN, karar yalnız günlüğe.
+    // D2 (Decisions API): emin → uygula, orta → seçili gelir ama sorulur,
+    // değilse yerel seçim sorulur.
     final decisions = ref.read(decisionServiceProvider);
-    final mode = decisions.modeOf(DecisionFeature.dropTarget);
     final titles = [for (final n in pool) n.displayTitle];
-    final decided = mode == DecisionMode.off
-        ? null
-        : decideDropTarget(decisions, text, titles);
-    if (mode == DecisionMode.live) {
-      final d = await decided;
-      if (!mounted || _phase.value != _Phase.thinking) return;
-      final i = d?.index;
-      if (d != null && i != null && d.outcome != DecisionOutcome.no) {
-        final yes = d.outcome == DecisionOutcome.yes;
-        _phase.value = _Phase.idle;
-        _state.value = _Drop(
-          id: pool[i].id,
-          // Başa başta ad zaten ayıklandı; yalnız "ad çözülmedi"de sondaki
-          // adı çıkar.
-          content: st.ties.isEmpty
-              ? stripDropTargetWords(st.content, titles[i])
-              : st.content,
-          ask: !yes,
-        );
-        if (yes) _startCountdown();
-        return;
-      }
-    }
-    ({int index, String content})? hit;
-    try {
-      hit = await ref
-          .read(geminiServiceProvider)
-          .pickDropTarget(text, [for (final n in pool) n.displayTitle])
-          .timeout(const Duration(seconds: 5));
-    } catch (_) {
-      hit = null;
-    }
-    if (mode == DecisionMode.shadow) {
-      final old = hit?.index;
-      unawaited(
-        decided!.then(
-          (d) => DecisionService.logShadow(
-            DecisionFeature.dropTarget,
-            'old=${old ?? '-'} new=${d?.index ?? '-'} '
-            '${d?.outcome.name ?? 'none'} agree=${d?.index == old}',
-          ),
-        ),
-      );
-    }
-    // Kullanıcı bu arada çipe dokunduysa ya da yazdıysa karar onun.
+    final d = await decideDropTarget(decisions, text, titles);
     if (!mounted || _phase.value != _Phase.thinking) return;
     _phase.value = _Phase.idle;
-    if (hit == null) {
+    final i = d?.index;
+    if (d != null && i != null && d.outcome != DecisionOutcome.no) {
+      final yes = d.outcome == DecisionOutcome.yes;
       _state.value = _Drop(
-        id: st.ties.isEmpty ? st.id : null,
-        content: st.content,
-        ties: st.ties,
-        ask: true,
+        id: pool[i].id,
+        content: st.ties.isEmpty
+            ? stripDropTargetWords(st.content, titles[i])
+            : st.content,
+        ask: !yes,
       );
+      if (yes) _startCountdown();
       return;
     }
-    final note = pool[hit.index];
     _state.value = _Drop(
-      id: note.id,
-      content: _trustedContent(hit.content, text) ?? st.content,
+      id: st.ties.isEmpty ? st.id : null,
+      content: st.content,
+      ties: st.ties,
+      ask: true,
     );
-    _startCountdown();
-  }
-
-  /// Yapay zekânın içeriği ancak kullanıcının söylediği kelimelerden
-  /// oluşuyorsa kullanılır (uydurma/yeniden yazma eklenmesin).
-  static String? _trustedContent(String ai, String said) {
-    final words = quickAscii(said).split(RegExp(r'[^a-z0-9]+')).toSet();
-    final got = [
-      for (final w in quickAscii(ai).split(RegExp(r'[^a-z0-9]+')))
-        if (w.isNotEmpty) w,
-    ];
-    if (got.isEmpty || !got.every(words.contains)) return null;
-    return ai.trim();
   }
 
   void _startCountdown() {

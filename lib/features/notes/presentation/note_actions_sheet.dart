@@ -14,7 +14,7 @@ import '../../../app/split_shell.dart' show SplitScope;
 
 import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
-import '../../ai/presentation/listen_screen.dart';
+import '../../ai/data/speech_service.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
@@ -121,20 +121,13 @@ Future<void> _runNoteAction(
       // içeriği sesli de okunmasın.
       if (!await unlockIfNeeded()) return;
       if (!context.mounted) return;
-      final title = note.displayTitle.trim();
-      await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => ListenScreen(
-            title: title.isEmpty ? l10n.appName : title,
-            // Kilitli notun podcast metni de diske yazılmasın.
-            allowCache: !note.locked,
-            // BELGE notunda belgenin kendi metni de okunur (bkz.
-            // noteSpeechText) — sayfa notları boşsa okuma boş kalmasın.
-            loadText: () =>
-                noteSpeechText(note, ref.read(attachmentRepositoryProvider)),
-          ),
-        ),
+      final text = await noteSpeechText(
+        note,
+        ref.read(attachmentRepositoryProvider),
       );
+      if (text.trim().isNotEmpty) {
+        unawaited(ref.read(speechProvider.notifier).speak(text));
+      }
     case 'pdf':
       // Kilitli notun içeriği PDF'e de kimlik doğrulaması olmadan çıkmasın.
       if (!await unlockIfNeeded()) return;

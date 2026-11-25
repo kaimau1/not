@@ -91,12 +91,7 @@ List<Widget> sharedFolderSlivers(
                     (tag == null || n.tags.contains(tag)))
                   n,
             ];
-            final result = runScreenSearch(
-              ref,
-              filtered,
-              query,
-              semantic: false,
-            );
+            final result = runScreenSearch(ref, filtered, query);
             final notes = result.notes;
             if (notes.isEmpty) {
               final untouched =

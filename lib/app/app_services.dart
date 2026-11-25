@@ -4,7 +4,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/ai/data/ai_gate.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/entitlement/data/billing_service.dart';
 import '../features/folders/data/shared_activity_service.dart';
@@ -28,21 +27,13 @@ import '../core/save_cadence.dart';
 
 /// Oturum açıkken ayakta durması gereken arka plan servisleri (F2.4).
 ///
-/// Eskiden ana ekranın `build`'i bunları `ref.watch` ile tutuyordu: (a)
-/// `premiumProvider`'ın her yayını BÜTÜN ana ekranı yeniden kuruyordu; (b)
-/// Riverpod 3 görünmeyen ekranın aboneliklerini DURAKLATIR (`TickerMode`) —
-/// editör ana ekranı örttüğü sürece yükleme kuyruğu, hatırlatıcılar ve
-/// premium akışı da duraklıyordu. Kökte `ref.listen` ile tutulur: yayınlar
-/// hiçbir şeyi yeniden kurmaz, uygulama kökü hep görünür. Giriş ekranında
-/// (uid yok) hiçbiri başlamaz.
+/// Kökte `ref.listen` ile tutulur: yayınlar hiçbir şeyi yeniden kurmaz,
+/// uygulama kökü hep görünür. Giriş ekranında (uid yok) hiçbiri başlamaz.
 ///
 /// Ağaç yapısı uid'e göre DEĞİŞMEZ: [child] (gezgin) yeniden kurulmasın diye
 /// koşul yalnız dinleyicilerdedir.
 ///
-/// **KADEMELİ BAŞLANGIÇ (F25.3, AKICILIK_PLANI K8):** soğuk açılışta bu
-/// servislerin HEPSİ ilk karede birden başlıyordu — her biri platform kanalı
-/// (bildirim, widget, FCM, Firestore sorguları, tercihler) açıyor, ilk 2
-/// sn'de 313–396 ms'lik donuk kareler ölçülmüştü. Güvenlik ve gezinme
+/// **KADEMELİ BAŞLANGIÇ (F25.3, AKICILIK_PLANI K8):** güvenlik ve gezinme
 /// kapıları (not kilidi, derin bağlantı, paylaş menüsü) ilk karede kalır;
 /// gerisi ilk kareden SONRA, boş bir olay döngüsü dilimi geldikçe (ya da en
 /// geç [_kStageFallback]) kare başına BİR servis olarak başlar.
@@ -63,8 +54,6 @@ set debugAppServicesStages(List<void Function(WidgetRef ref)>? value) =>
 class _AppServicesState extends ConsumerState<AppServices> {
   /// İlk kareden sonra sırayla başlayan servisler (önemliden önemsize).
   static final List<void Function(WidgetRef ref)> _staged = [
-    // AI kapısı (AiGate.consume) premium durumunu senkron okur.
-    (ref) => ref.listen(premiumProvider, _ignore),
     // Bir defalık veri göçleri (F3.5 defter).
     (ref) => ref.listen<void>(dataMigrationsProvider, _ignore),
     (ref) => ref.listen(uploadQueueProvider, _ignore),

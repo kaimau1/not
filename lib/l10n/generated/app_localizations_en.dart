@@ -9292,47 +9292,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiNeedsProSee => 'See Pro';
 
   @override
-  String get proTitle => 'Pro';
+  String get proTitle => 'Full Version';
 
   @override
-  String get proSettingsSubtitle => 'Plans, purchases, restore';
+  String get proSettingsSubtitle =>
+      'Lite vs Full Version, decision credits, purchases';
 
   @override
-  String get proStatusFree => 'Your plan: Free';
+  String get proStatusFree => 'Your plan: Lite (Free · Ad-free)';
 
   @override
-  String get proStatusLifetime => 'Your plan: Lifetime';
+  String get proStatusLifetime => 'Your plan: Full Version (Lifetime)';
 
   @override
   String proStatusPro(String date) {
-    return 'Your plan: Pro · until $date';
+    return 'Your plan: Full Version · until $date';
   }
 
   @override
   String get proTiersTitle => 'Plans';
 
   @override
-  String get proTierFree => 'Free';
+  String get proTierFree => 'Lite';
 
   @override
-  String get proTierLifetime => 'Lifetime';
+  String get proTierLifetime => 'Full Version';
 
   @override
-  String get proTierPro => 'Pro';
+  String get proTierPro => 'Full Version';
 
   @override
   String get proRowBasics =>
-      'Notes, lists, pen, PDF, reminders, calendar; on-device OCR, dictation, read aloud';
+      'Notes, lists, pen, PDF, reminders, calendar; on-device spell check, dictation, OCR, barcode, Store Mode';
 
   @override
   String get proRowUnlimited =>
       'Unlimited notes, folders, attachments and devices';
 
   @override
-  String get proRowSync => 'Sync';
+  String get proRowSync => 'Cloud sync';
 
   @override
-  String get proSyncPeriodic => 'Periodic';
+  String get proSyncPeriodic => 'Periodic (5m)';
 
   @override
   String get proSyncInstant => 'Instant';
@@ -9344,34 +9345,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proAttachDrive => 'Your Drive';
 
   @override
-  String get proAttachCloud => 'Our cloud';
+  String get proAttachCloud => 'Drive + Shared';
 
   @override
-  String get proRowHistory => 'Version history, password-protected backup';
+  String get proRowHistory => '30-version history, password-protected backup';
 
   @override
-  String get proRowLooks => 'Extra themes, fonts, card styles';
+  String get proRowLooks => 'All themes, 19 fonts, paper styles';
 
   @override
-  String get proRowAi => 'Built-in AI';
+  String get proRowAi => 'Smart Decisions (aisles, routing, tags)';
 
   @override
-  String get proRowOwnKey => 'Your own Gemini key';
+  String get proDecisionsIncluded => '750 calls';
 
   @override
-  String get proLockedBadge => 'In the Lifetime and Pro tiers';
+  String get proRowOwnKey => 'Your own Gemini key (BYOK)';
+
+  @override
+  String get proLockedBadge => 'In Full Version';
 
   @override
   String get proBuyTitle => 'Buy';
 
   @override
-  String get proPlanMonthly => 'Pro · monthly';
+  String get proPlanMonthly => 'Full Version';
 
   @override
-  String get proPlanYearly => 'Pro · yearly';
+  String get proPlanYearly => 'Full Version';
 
   @override
-  String get proPlanLifetime => 'Lifetime · one-time';
+  String get proPlanLifetime => 'Full Version · One-Time (Lifetime)';
+
+  @override
+  String get proPlanDecisionPack => '+1,000 Smart Decisions Pack';
 
   @override
   String proPriceMonthly(String price) {
@@ -9395,7 +9402,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String proPriceOnce(String price) {
-    return '$price · pay once';
+    return '$price · pay once, no subscription';
   }
 
   @override
@@ -9408,17 +9415,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proOwned => 'Owned';
 
   @override
-  String get proManage => 'Manage subscription';
+  String get proManage => 'Manage purchases';
 
   @override
-  String get proManageBody => 'Change plan or cancel (Google Play)';
+  String get proManageBody => 'Google Play account';
 
   @override
   String get proRestore => 'Restore purchases';
 
   @override
   String get proTerms =>
-      'The subscription renews automatically each period through Google Play; you can cancel any time in Play and Pro lasts until the end of the period you paid for. If Pro ends, your cloud attachments aren\'t deleted and stay readable. If you own Lifetime, its features stay after Pro ends.';
+      'No subscriptions, no ads. Full Version is a one-time lifetime purchase including 750 Smart Decisions. When credits run out, the app and all on-device features keep working without limits; you can optionally add a +1,000 Decisions Pack or use your own Gemini key.';
 
   @override
   String get proLoading => 'Getting prices from Google Play…';
@@ -9428,7 +9435,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proElsewhere =>
-      'Purchases are made on your phone: in the Android app, Settings → Pro. What you buy unlocks here too on this account.';
+      'Purchases are made on your phone: in the Android app, Settings → Full Version. What you buy unlocks here too on this account.';
 
   @override
   String get proGuest =>
@@ -9468,6 +9475,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proNotIncluded => 'Not included';
+
+  @override
+  String get decisionsSectionTitle => 'Smart Decisions';
+
+  @override
+  String get decisionsSectionSubtitle =>
+      'Unknown grocery aisles, quick-add target, and tag suggestions';
+
+  @override
+  String get decisionsQuotaByok =>
+      'Own Gemini key active · Unlimited smart decisions';
+
+  @override
+  String decisionsQuotaSummary(int calls, String tokens) {
+    return 'Remaining smart decisions: $calls · $tokens token budget';
+  }
+
+  @override
+  String get decisionsQuotaFreeHint =>
+      'On-device smart rules are free · 750 decisions included in Full Version';
+
+  @override
+  String get decisionsTurnOffTitle => 'Turn off smart decisions';
+
+  @override
+  String get decisionsTurnOffBody =>
+      'When off, all on-device dictionaries, spell check, and shopping rules keep working for free.';
+
+  @override
+  String get decisionsByokTitle => 'Own Gemini API key (Advanced)';
+
+  @override
+  String get decisionsByokInfo =>
+      'Continue with unlimited smart decisions using your own Gemini API key. The key is stored only on this device.';
 
   @override
   String get calendarDayLinkRemoved => 'Note removed from this day';

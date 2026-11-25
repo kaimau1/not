@@ -13,7 +13,6 @@ import '../data/notes_repository.dart';
 import 'notes_providers.dart';
 import 'trash_analysis_sheet.dart';
 import 'screen_search.dart';
-import '../../ai/data/semantic_search.dart' show SemanticScope;
 import '../../../app/theme/note_colors.dart';
 import '../../../core/utils/rich_text.dart';
 import '../domain/attachment.dart';
@@ -226,13 +225,7 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
         data: (raw) => ValueListenableBuilder<TextEditingValue>(
           valueListenable: _search.controller,
           builder: (context, value, _) {
-            final result = runScreenSearch(
-              ref,
-              visible(raw),
-              value.text,
-              semantic: _search.semantic,
-              scope: SemanticScope.trash,
-            );
+            final result = runScreenSearch(ref, visible(raw), value.text);
             final notes = result.notes;
             final needle = result.needle;
             if (notes.isEmpty) {

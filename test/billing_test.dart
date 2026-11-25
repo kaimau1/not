@@ -1,11 +1,12 @@
-// SATIN ALMA BEKÇİSİ (PLAN §1.5 PL6).
+// SATIN ALMA BEKÇİSİ (PLAN §1.5 PL6 + Faz 1: abonelik yok, tek seferlik
+// Tam Sürüm + isteğe bağlı tüketilebilir +1.000 Akıllı Karar Paketi).
 //
-// Bayraksız (`flutter test`, CI) koşu: kişisel APK / web'de HİÇBİR görünür
-// değişiklik yok — Ayarlar'da Pro kartı yok, mağazaya dokunulmaz, AI katman
-// kapısı etkisiz. Play koşusu:
+// Bayraksız (`flutter test`, CI) koşu: kişisel APK / web'de mağazaya
+// dokunulmaz, katman kapısı etkisiz. Play koşusu:
 //   flutter test test/billing_test.dart --dart-define=NOTLAR_PLAY=true
 // satın al → sunucuda doğrula → onayla akışını sahte mağazayla sınar.
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_functions/cloud_functions.dart';
@@ -17,7 +18,7 @@ import 'package:in_app_purchase_android/billing_client_wrappers.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:notlar/core/play_build.dart';
 import 'package:notlar/features/ai/data/ai_policy.dart';
-import 'package:notlar/features/ai/data/gemini_service.dart';
+import 'package:notlar/features/ai/data/decisions/decision_service.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/entitlement/data/billing_products.dart';
 import 'package:notlar/features/entitlement/data/billing_service.dart';
@@ -31,73 +32,31 @@ import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-const _phase = PricingPhaseWrapper(
-  billingCycleCount: 0,
-  billingPeriod: 'P1M',
-  formattedPrice: '₺99,99',
-  priceAmountMicros: 99990000,
-  priceCurrencyCode: 'TRY',
-  recurrenceMode: RecurrenceMode.infiniteRecurring,
-);
-const _free = PricingPhaseWrapper(
-  billingCycleCount: 1,
-  billingPeriod: 'P1W',
-  formattedPrice: 'Ücretsiz',
-  priceAmountMicros: 0,
-  priceCurrencyCode: 'TRY',
-  recurrenceMode: RecurrenceMode.finiteRecurring,
-);
-
 List<ProductDetails> _storeProducts() => [
   ...GooglePlayProductDetails.fromProductDetails(
     const ProductDetailsWrapper(
       description: '',
-      name: 'Pro',
-      productId: BillingProducts.pro,
-      productType: ProductType.subs,
-      title: 'Pro',
-      subscriptionOfferDetails: [
-        SubscriptionOfferDetailsWrapper(
-          basePlanId: BillingProducts.monthlyPlan,
-          offerTags: [],
-          offerIdToken: 'm-base',
-          pricingPhases: [_phase],
-        ),
-        SubscriptionOfferDetailsWrapper(
-          basePlanId: BillingProducts.monthlyPlan,
-          offerId: 'trial-7d',
-          offerTags: [],
-          offerIdToken: 'm-trial',
-          pricingPhases: [_free, _phase],
-        ),
-        SubscriptionOfferDetailsWrapper(
-          basePlanId: BillingProducts.yearlyPlan,
-          offerTags: [],
-          offerIdToken: 'y-base',
-          pricingPhases: [
-            PricingPhaseWrapper(
-              billingCycleCount: 0,
-              billingPeriod: 'P1Y',
-              formattedPrice: '₺799,99',
-              priceAmountMicros: 799990000,
-              priceCurrencyCode: 'TRY',
-              recurrenceMode: RecurrenceMode.infiniteRecurring,
-            ),
-          ],
-        ),
-      ],
+      name: 'Tam Sürüm',
+      productId: BillingProducts.lifetime,
+      productType: ProductType.inapp,
+      title: 'Tam Sürüm',
+      oneTimePurchaseOfferDetails: OneTimePurchaseOfferDetailsWrapper(
+        formattedPrice: '₺49,99',
+        priceAmountMicros: 49990000,
+        priceCurrencyCode: 'TRY',
+      ),
     ),
   ),
   ...GooglePlayProductDetails.fromProductDetails(
     const ProductDetailsWrapper(
       description: '',
-      name: 'Ömür boyu',
-      productId: BillingProducts.lifetime,
+      name: '+1.000 Akıllı Karar Paketi',
+      productId: BillingProducts.decisionPack1000,
       productType: ProductType.inapp,
-      title: 'Ömür boyu',
+      title: '+1.000 Akıllı Karar Paketi',
       oneTimePurchaseOfferDetails: OneTimePurchaseOfferDetailsWrapper(
-        formattedPrice: '₺1.499,99',
-        priceAmountMicros: 1499990000,
+        formattedPrice: '₺29,99',
+        priceAmountMicros: 29990000,
         priceCurrencyCode: 'TRY',
       ),
     ),
@@ -108,7 +67,8 @@ class _Store extends Fake implements InAppPurchase {
   final updates = StreamController<List<PurchaseDetails>>.broadcast();
   final completed = <String>[];
   List<PurchaseDetails> owned = const [];
-  PurchaseParam? bought;
+  PurchaseParam? boughtNonConsumable;
+  PurchaseParam? boughtConsumable;
 
   @override
   Stream<List<PurchaseDetails>> get purchaseStream => updates.stream;
@@ -122,7 +82,16 @@ class _Store extends Fake implements InAppPurchase {
 
   @override
   Future<bool> buyNonConsumable({required PurchaseParam purchaseParam}) async {
-    bought = purchaseParam;
+    boughtNonConsumable = purchaseParam;
+    return true;
+  }
+
+  @override
+  Future<bool> buyConsumable({
+    required PurchaseParam purchaseParam,
+    bool autoConsume = true,
+  }) async {
+    boughtConsumable = purchaseParam;
     return true;
   }
 
@@ -149,8 +118,11 @@ PurchaseDetails _purchase(String id, PurchaseStatus status) => PurchaseDetails(
 void main() {
   test('ürün kimlikleri sunucuyla aynı (functions/billing_util.js)', () {
     final js = File('functions/billing_util.js').readAsStringSync();
-    expect(js, contains('PRO_SUBSCRIPTION = "${BillingProducts.pro}"'));
     expect(js, contains('LIFETIME_PRODUCT = "${BillingProducts.lifetime}"'));
+    expect(
+      js,
+      contains('DECISION_PACK_1000 = "${BillingProducts.decisionPack1000}"'),
+    );
     // Fiyat koda yazılmaz: mağazadan okunur.
     final dart = File('lib/features/entitlement/data/billing_products.dart')
         .readAsStringSync();
@@ -158,23 +130,21 @@ void main() {
   });
 
   test('hesap etiketi sunucuyla aynı özet (SHA-256)', () {
-    // `node -e "require('./billing_util').accountTag('uid-1')"`
     expect(
       billingAccountTag('uid-1'),
       '4a49acf8a6bd727728495d1e541a840898fcc36747cdcdb9e8e68effc62bb15c',
     );
   });
 
-  test('mağaza satırları: deneme teklifi seçilir, fiyat yinelenen fiyat', () {
+  test('mağaza satırları: Tam Sürüm + tüketilebilir Karar Paketi', () {
     final offers = billingOffers(_storeProducts());
     expect(offers.map((o) => o.plan), BillingPlan.values);
-    final monthly = offers.first;
-    expect(monthly.trial, isTrue);
-    expect(monthly.price, '₺99,99');
-    expect((monthly.details as GooglePlayProductDetails).offerToken, 'm-trial');
-    expect(offers[1].trial, isFalse);
-    expect(offers[1].price, '₺799,99');
-    expect(offers.last.price, '₺1.499,99');
+    expect(offers.first.plan, BillingPlan.lifetime);
+    expect(offers.first.plan.consumable, isFalse);
+    expect(offers.first.price, '₺49,99');
+    expect(offers.last.plan, BillingPlan.decisionPack1000);
+    expect(offers.last.plan.consumable, isTrue);
+    expect(offers.last.price, '₺29,99');
   });
 
   group('kişisel APK / web (bayraksız)', skip: PlayBuild.enabled, () {
@@ -193,13 +163,15 @@ void main() {
       await n.recover();
       expect(c.read(billingProvider).status, BillingStatus.off);
       c.read(billingRecoveryProvider);
-      // Ücretsiz katmanda bile AI serbest (bugünkü davranış).
+      // Ücretsiz katmanda bile kişisel APK'da serbest.
       c.read(aiAdmissionProvider).checkTier(hasOwnKey: false);
-      expect(c.read(proFeatureProvider(ProFeature.builtInAi)), isTrue);
+      expect(c.read(proFeatureProvider(ProFeature.smartDecisions)), isTrue);
     });
   });
 
-  testWidgets('Ayarlar\'da Pro kartı yalnız Play derlemesinde', (tester) async {
+  testWidgets('Ayarlar\'da Tam Sürüm kartı yalnız Play derlemesinde', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(412, 915);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -237,12 +209,10 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  test('/premium rotası yalnız Play\'de Pro ekranına açılır', () {
+  test('/premium rotası tek ProScreen\'e açılır (eski PremiumScreen yok)', () {
     final router = File('lib/app/router.dart').readAsStringSync();
-    expect(
-      router,
-      contains('PlayBuild.enabled ? const ProScreen() : const PremiumScreen()'),
-    );
+    expect(router, contains('const ProScreen()'));
+    expect(router, isNot(contains('PremiumScreen')));
   });
 
   group('Play akışı (NOTLAR_PLAY=true)', skip: !PlayBuild.enabled, () {
@@ -275,27 +245,50 @@ void main() {
         ],
       );
       addTearDown(c.dispose);
-      // Riverpod 3 dinleyicisiz akışı duraklatır (HAFIZA veri.md).
       c.listen(billingProvider, (_, _) {});
       c.listen(entitlementProvider, (_, _) {});
       return c;
     }
 
-    test('satın al → sunucuda doğrula → onayla; hesap etiketi gider', () async {
+    test('Tam Sürüm: buyNonConsumable → doğrula → onayla', () async {
       final c = container();
       final n = c.read(billingProvider.notifier);
       await n.start();
       expect(c.read(billingProvider).status, BillingStatus.ready);
       await n.buy(c.read(billingProvider).offers.first);
-      expect(store.bought!.applicationUserName, billingAccountTag('uid-1'));
+      expect(
+        store.boughtNonConsumable!.applicationUserName,
+        billingAccountTag('uid-1'),
+      );
       store.updates.add([
-        _purchase(BillingProducts.pro, PurchaseStatus.purchased),
+        _purchase(BillingProducts.lifetime, PurchaseStatus.purchased),
       ]);
       await pumpEventQueue();
-      expect(verified, [(BillingProducts.pro, 'token-pro')]);
-      expect(store.completed, [BillingProducts.pro]);
+      expect(verified, [(BillingProducts.lifetime, 'token-lifetime')]);
+      expect(store.completed, [BillingProducts.lifetime]);
       expect(c.read(billingProvider).notice, BillingNotice.done);
       expect(c.read(billingProvider).busy, isFalse);
+    });
+
+    test('+1.000 Karar Paketi: buyConsumable → doğrula → onayla', () async {
+      final c = container(e: Entitlement.fromMap({'tier': 'lifetime'}));
+      final n = c.read(billingProvider.notifier);
+      await n.start();
+      final pack = c.read(billingProvider).offers.last;
+      expect(pack.plan, BillingPlan.decisionPack1000);
+      await n.buy(pack);
+      expect(
+        store.boughtConsumable!.applicationUserName,
+        billingAccountTag('uid-1'),
+      );
+      store.updates.add([
+        _purchase(BillingProducts.decisionPack1000, PurchaseStatus.purchased),
+      ]);
+      await pumpEventQueue();
+      expect(verified, [
+        (BillingProducts.decisionPack1000, 'token-decision_pack_1000'),
+      ]);
+      expect(store.completed, [BillingProducts.decisionPack1000]);
     });
 
     test('başka hesaba bağlı / doğrulanamayan satın alma ONAYLANMAZ', () async {
@@ -322,11 +315,10 @@ void main() {
             BillingOffer(
               plan: BillingPlan.lifetime,
               price: '',
-              trial: false,
-              details: _storeProducts().last,
+              details: _storeProducts().first,
             ),
           );
-      expect(store.bought, isNull);
+      expect(store.boughtNonConsumable, isNull);
       expect(g.read(billingProvider).notice, BillingNotice.guest);
 
       final c = container();
@@ -345,7 +337,6 @@ void main() {
       await pumpEventQueue();
       expect(verified, isEmpty);
 
-      // Ayrı mağaza: öncekinin aboneliği bu geri yüklemeyi duymasın.
       store = _Store()..owned = [owned];
       final missing = container();
       await missing.read(entitlementProvider.future);
@@ -355,41 +346,49 @@ void main() {
       expect(missing.read(billingProvider).notice, isNull);
     });
 
-    test('AI katman kapısı: ücretsizde yok, ömür boyu kendi anahtarıyla', () {
+    test('AI katman kapısı: ücretsizde red, Tam Sürümde serbest', () {
       final free = container();
       expect(
         () => free.read(aiAdmissionProvider).checkTier(hasOwnKey: false),
         throwsA(
-          isA<GeminiException>().having(
+          isA<AiPolicyException>().having(
             (e) => e.kind,
             'kind',
-            GeminiErrorKind.needsPro,
+            AiPolicyErrorKind.needsFullVersion,
           ),
         ),
       );
       final life = container(e: Entitlement.fromMap({'tier': 'lifetime'}));
       return life.read(entitlementProvider.future).then((_) {
+        life.read(aiAdmissionProvider).checkTier(hasOwnKey: false);
         life.read(aiAdmissionProvider).checkTier(hasOwnKey: true);
-        expect(
-          () => life.read(aiAdmissionProvider).checkTier(hasOwnKey: false),
-          throwsA(isA<GeminiException>()),
-        );
       });
     });
 
-    testWidgets('Pro ekranı: katmanlar, mağaza fiyatı, geri yükle', (
+    testWidgets('ProScreen: 2 sütunlu tablo, tek seferlik Tam Sürüm + kota', (
       tester,
     ) async {
+      SharedPreferences.setMockInitialValues({
+        DecisionQuotaNotifier.prefsKey: jsonEncode(
+          const DecisionQuotaSnapshot(
+            remainingCalls: 640,
+            remainingTokens: 512000,
+            syncedFromServer: true,
+          ).toJson(),
+        ),
+      });
+      final prefs = await SharedPreferences.getInstance();
       tester.view.physicalSize = const Size(412, 2400);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
             currentUidProvider.overrideWithValue('uid-1'),
             isAnonymousProvider.overrideWithValue(false),
             entitlementProvider.overrideWith(
-              (ref) => Stream.value(Entitlement.none),
+              (ref) => Stream.value(Entitlement.fromMap({'tier': 'lifetime'})),
             ),
           ],
           child: const MaterialApp(
@@ -401,11 +400,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Şu an: Ücretsiz'), findsOneWidget);
       expect(find.byKey(const ValueKey('pro-tiers')), findsOneWidget);
-      expect(find.text('7 gün ücretsiz, sonra ₺99,99 / ay'), findsOneWidget);
-      expect(find.text('₺799,99 / yıl'), findsOneWidget);
-      expect(find.text('₺1.499,99 · bir kez öde'), findsOneWidget);
+      expect(find.byKey(const ValueKey('pro-status')), findsOneWidget);
+      expect(find.textContaining('640'), findsWidgets);
+      expect(find.textContaining('512K'), findsWidgets);
+      expect(find.textContaining('₺29,99'), findsOneWidget);
       expect(find.byKey(const ValueKey('pro-restore')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

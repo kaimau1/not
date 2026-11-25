@@ -407,12 +407,12 @@ flowchart LR
 - **Kabul Kriteri:** Tüm `functions` ve `notes_delta_sync` testleri yeşil; tek kullanıcı 50 TL'de asla \$0,06 üzeri AI maliyeti üretemez.
 
 ### Faz 1 — AI Budama, Ölü Kod Temizliği & 2-Katmanlı Hak Modeli (4–5 Gün)
-- [ ] Ağır üretken AI ekran/servislerini kaldır (`ai_chat_screen`, `ai_hub_screen`, `ai_sheet`, `briefing_screen`, `listen_screen`, `semantic_search`, `provider_chat`, `firebase_ai_client`, `ai_gate` 30/300 puan sistemi). `pubspec.yaml`'dan `firebase_ai`'ı çıkar. *(Kişisel APK'da korumanı istediğin özel bir şey varsa yalnız onu bayrak arkasında bırak.)*
-- [ ] [`lib/features/gmail/`](lib/features/gmail/presentation/gmail_screen.dart) (2.268 satır) + 21 dosyadaki Gmail referanslarını tamamen sil.
-- [ ] Eski [`premium_screen.dart`](lib/features/settings/presentation/premium_screen.dart)'ı sil; [`pro_screen.dart`](lib/features/entitlement/presentation/pro_screen.dart) ve [`entitlement.dart`](lib/features/entitlement/domain/entitlement.dart)'ı **Lite vs 50 TL Tek Seferlik (+ 30 TL Ek +1.000 Karar Paketi)** modeline sadeleştir.
-- [ ] [`decision_service.dart`](lib/features/ai/data/decisions/decision_service.dart): Kalıcı yerel önbellek ekle + `remainingCalls` / `remainingTokens` göstergesini Ayarlar → Tam Sürüm kartına bağla.
-- [ ] Ücretsiz katmanda her ekrandaki kilitli `✨🔒` kalabalığını temizle.
-- **Kabul Kriteri:** `flutter analyze` 0 sorun, tam test takımı yeşil, APK boyutu ve `lib/` satır sayısında ölçülebilir düşüş.
+- [x] Ağır üretken AI ekran/servisleri kaldırıldı (`ai_chat_screen`, `ai_hub_screen`, `ai_sheet`, `briefing_screen`, `listen_screen`, `semantic_search`, `provider_chat`, `firebase_ai_client`, `gemini_service`, `model_catalog`, `shared_ai_pool`, `ai_gate` vb. 24 dosya); `pubspec.yaml`'dan `firebase_ai` çıkarıldı. Yalnız Decisions API (`gemini-decision-1`), Gemini BYOK ve sıfır maliyetli cihaz-içi araçlar kaldı.
+- [x] `lib/features/gmail/` (5 dosya, 2.268 satır) + tüm Gmail referansları tamamen silindi.
+- [x] Eski `premium_screen.dart` silindi; [`pro_screen.dart`](lib/features/entitlement/presentation/pro_screen.dart), [`entitlement.dart`](lib/features/entitlement/domain/entitlement.dart), [`billing_products.dart`](lib/features/entitlement/data/billing_products.dart), [`billing_service.dart`](lib/features/entitlement/data/billing_service.dart) ve [`functions/billing_util.js`](functions/billing_util.js) **Lite vs 50 TL Tek Seferlik (`lifetime`) + 30 TL Tüketilebilir +1.000 Akıllı Karar Paketi (`decision_pack_1000`)** 2-katmanlı modeline sadeleştirildi (abonelik yok).
+- [x] [`decision_service.dart`](lib/features/ai/data/decisions/decision_service.dart): Kalıcı yerel önbellek + `decisionQuotaProvider` (`remainingCalls` / `remainingTokens`) Ayarlar → Akıllı Kararlar kartı ve `ProScreen` durum kartına bağlandı.
+- [x] Ücretsiz katmandaki kilitli `✨🔒` kalabalığı (`AiIcon`, `AiStatusCard`, `ensureAiReady`, `AppSection.ai`, `UiItem.barAi`, `UiItem.homeAi`) temizlendi.
+- **Kabul Kriteri:** `dart analyze --fatal-infos lib test tool` 0 gerçek sorun; `lib/` satır sayısı **252.328 → 234.443 (-17.885 satır, %-7,1)**; Play bayraklı testler (69/69), bekçi/bütçe testleri (`perf_budget_test` S29 502→447) ve `functions` testleri (37/37) yeşil.
 
 ### Faz 2 — Cloudflare Senkron Altyapısı (Workers + D1 + R2) (1,5–2 Hafta)
 - [ ] Yeni `cloudflare/` dizininde TypeScript Worker (Hono) + D1 şeması (`entities`, `shares`, `entitlements`, `decision_usage`, `user_directory`, `r2_quota`).

@@ -6,8 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/error_log.dart';
 import 'package:notlar/core/friendly_error.dart';
-import 'package:notlar/features/ai/data/firebase_ai_client.dart';
-import 'package:notlar/features/ai/data/gemini_service.dart';
+import 'package:notlar/features/ai/data/ai_policy.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
 /// F10.4: kullanıcı ham istisna metni görmez ("Unsupported operation:
@@ -39,10 +38,6 @@ void main() {
     );
     expect(classifyError(Exception('429 Too Many Requests')), ErrorKind.quota);
     expect(
-      classifyError(const GeminiException('Kota aşıldı, sonra tekrar deneyin')),
-      ErrorKind.quota,
-    );
-    expect(
       classifyError(UnsupportedError('RawReceivePort')),
       ErrorKind.unsupported,
     );
@@ -69,8 +64,8 @@ void main() {
   test('bilinmeyen hata genel metin; uygulamanın kendi iletisi korunur', () {
     expect(friendlyError(l10n, StateError('x')), l10n.errorUnknown);
     expect(
-      friendlyError(l10n, const GeminiException('API anahtarı yok')),
-      'API anahtarı yok',
+      friendlyError(l10n, const AiPolicyException(AiPolicyErrorKind.aiTurnedOff)),
+      l10n.aiOffTitle,
     );
   });
 
@@ -83,36 +78,22 @@ void main() {
     expect(errorDetailFor('Kopyalandı'), isNull);
   });
 
-  test('F42.3 hata türü metni arayüz dilinde, ham ayrıntı metne girmez', () {
+  test('F42.3 politika hata türü metni arayüz dilinde, ham ayrıntı yok', () {
     final en = lookupAppLocalizations(const Locale('en'));
     final turkish = RegExp('[çğıöşüÇĞİÖŞÜ]');
-    for (final kind in GeminiErrorKind.values) {
-      if (kind == GeminiErrorKind.other) continue;
-      final e = GeminiException.of(kind, detail: 'ham-ayrinti');
+    for (final kind in AiPolicyErrorKind.values) {
+      final e = AiPolicyException(kind, detail: 'ham-ayrinti');
       final tr = aiErrorText(l10n, e);
       final english = aiErrorText(en, e);
       expect(tr, isNotEmpty);
+      expect(tr, isNot(contains('ham-ayrinti')), reason: kind.name);
       expect(english, isNot(contains(turkish)), reason: kind.name);
-      if (kind == GeminiErrorKind.unavailable ||
-          kind == GeminiErrorKind.connection) {
-        expect(tr, isNot(contains('ham-ayrinti')), reason: kind.name);
-      }
     }
-    expect(
-      FirebaseAiClient.mapError(Exception('PERMISSION_DENIED 403')).kind,
-      GeminiErrorKind.builtInOff,
-    );
-    expect(
-      FirebaseAiClient.mapError(Exception('boom')).isAuthError,
-      isFalse,
-    );
   });
 
   test('F36.5 yapay zekâ hatası: kendi iletisi ÖNEKSİZ, ham hata kalıplı', () {
-    // Kullanıcının ekran görüntüsü (web): "Yapay zekâ isteği başarısız:
-    // Dahili yapay zeka bu sürümde etkinleştirilmemiş…" — iki başlık.
-    const own = GeminiException('Dahili yapay zekâ bu sürümde kapalı.');
-    expect(aiErrorText(l10n, own), own.message);
+    const own = AiPolicyException(AiPolicyErrorKind.aiTurnedOff);
+    expect(aiErrorText(l10n, own), l10n.aiOffTitle);
     expect(
       aiErrorText(l10n, Exception('SocketException: Failed host lookup')),
       l10n.aiError(l10n.errorOffline),

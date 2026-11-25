@@ -1,110 +1,17 @@
 part of 'note_editor_screen.dart';
 
-/// AI işleri: başlık/etiket önerisi, arka plan etiketleme, meşgul göstergesi.
+/// Editör akıllı işleri: meşgul göstergesi, Decisions D4 + yerel etiket önerisi.
 ///
 /// F9.3: editör konu başına bölündü; durum (alanlar) [_NoteEditorScreenState]da kalır.
 extension _EditorAi on _NoteEditorScreenState {
   /// Uzun süren DOSYA işlerinin ortak sarmalayıcısı: şeritteki göstergeyi
-  /// açar/kapatır. AI'nın [_runAi]'ı ile aynı desen; hata yönetimi çağırana
-  /// bırakılır (her işin kendi anlamlı mesajı var).
+  /// açar/kapatır; hata yönetimi çağırana bırakılır.
   Future<T> _runBusy<T>(String label, Future<T> Function() body) async {
     _busyTaskN.value = label;
     try {
       return await body();
     } finally {
       if (mounted) _busyTaskN.value = null;
-    }
-  }
-
-  /// Uzun süren AI işlerinin TEK giriş noktası: göstergeyi açar/kapatır,
-  /// hataları tek biçimde bildirir. Yeni bir AI özelliği eklenirken
-  /// göstergeyi ayrıca düşünmek gerekmesin diye burada toplandı.
-  Future<void> _runAi(String label, Future<void> Function() body) async {
-    if (_aiTask != null || !ensureAiReady(context, ref)) return;
-    _aiTaskN.value = label;
-    try {
-      await body();
-    } on GeminiException catch (e) {
-      if (mounted) {
-        _showSnack(
-          aiErrorText(context.l10n, e),
-        );
-      }
-    } catch (e) {
-      if (mounted) _showSnack(aiErrorText(context.l10n, e));
-    } finally {
-      if (mounted) _aiTaskN.value = null;
-    }
-  }
-
-  /// Ayarlarda açıksa, editör kapanırken etiketsiz notu arka planda
-  /// AI ile etiketler.
-  void _autoTagInBackground(Note note) {
-    if (note.toPlainText().length < 20) return;
-    if (!_autoTagEnabled) return;
-    final service = _gemini;
-    final repo = _notesRepo;
-    if (repo == null || service == null) return;
-    Future(() async {
-      try {
-        final tags = await service.suggestTags(note);
-        if (tags.isNotEmpty) repo.updateFields(note.id, {'tags': tags});
-      } catch (_) {
-        // Anahtar yoksa veya istek başarısızsa sessizce geç.
-      }
-    });
-  }
-
-  /// Editör kapanırken başlıksız kalan nota arka planda AI başlık yazar
-  /// (Ayarlar > Yapay Zeka > "Kapatırken başlık öner", varsayılan açık).
-  /// "Başlık öner" çipiyle aynı üreticiyi kullanır; akışı kesmez.
-  void _autoTitleInBackground(Note note) {
-    if (note.isEmpty || !_autoTitleEnabled) return;
-    final service = _gemini;
-    final decisions = _decisions;
-    final repo = _notesRepo;
-    if (repo == null || service == null || decisions == null) return;
-    Future(() async {
-      try {
-        // DA-13: AI başlığı doğrulanır, "yanlış/genel"se bir kez yeniden.
-        final title = await checkedTitle(
-          decisions,
-          note.toPlainText(),
-          ({avoid}) => service.generateTitle(note, avoid: avoid),
-        );
-        if (title.isNotEmpty) repo.updateFields(note.id, {'title': title});
-      } catch (_) {
-        // Kota/anahtar hatasında sessizce geç — başlıksız kalması sorun değil.
-      }
-    });
-  }
-
-  /// "Başlık öner" çipi: nota AI ile kısa bir başlık üretir ve doğrudan
-  /// başlık alanına yazar (etiket önerisi gibi bağımsız, isteğe bağlı buton;
-  /// eski "kapanırken otomatik başlık" genel ayarının yerini aldı).
-  Future<void> _suggestTitle() async {
-    if (!ensureAiReady(context, ref)) return;
-    final note = _note;
-    if (note == null || note.isEmpty || _titleGeneratingN.value) return;
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    _titleGeneratingN.value = true;
-    try {
-      final ai = ref.read(geminiServiceProvider);
-      final title = await checkedTitle(
-        ref.read(decisionServiceProvider),
-        note.toPlainText(),
-        ({avoid}) => ai.generateTitle(note, avoid: avoid),
-      );
-      if (!mounted || title.isEmpty) return;
-      _titleController.text = title;
-      _mutate((n) => n.copyWith(title: title), immediate: true);
-    } on GeminiException catch (e) {
-      messenger.showMessage(
-        aiErrorText(l10n, e),
-      );
-    } finally {
-      if (mounted) _titleGeneratingN.value = false;
     }
   }
 
@@ -118,18 +25,15 @@ extension _EditorAi on _NoteEditorScreenState {
     };
   }
 
-  /// AI'dan etiket önerisi al ve seçtir.
+  /// Etiket / klasör / hatırlatıcı önerisi al ve seçtir.
   ///
-  /// DA-2 (plan_decisions_api, bayrak `noteTriage`): tek Decisions
-  /// çağrısında kullanıcının KENDİ etiketleri (çoklu evet/hayır) + klasör +
-  /// "başlık gerekli mi" + "hatırlatıcı gerekli mi". Hepsi yalnız ÖNERİ
-  /// çipi; dokunulmadan hiçbir şey uygulanmaz. Etiket eşiği geçen yoksa
-  /// bugünkü üretken öneri; bayrak kapalı/yanıtsızsa bugünkü yol AYNEN.
+  /// DA-2 (bayrak `noteTriage`): tek Decisions çağrısında kullanıcının KENDİ
+  /// etiketleri + klasör + "hatırlatıcı gerekli mi". Decisions kapalı veya
+  /// sonuçsuzsa cihaz-içi [SmartNoteCategorizer] (0 kredi) devreye girer.
   Future<void> _suggestTags() async {
     final note = _note;
     if (note == null || note.isEmpty) return;
     final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final decisions = ref.read(decisionServiceProvider);
     // Kilitli not hiçbir karar girdisine girmez (K7).
     final mode = note.locked
@@ -138,69 +42,43 @@ extension _EditorAi on _NoteEditorScreenState {
     final folders = mode == DecisionMode.off
         ? const <String, String>{}
         : _triageFolders(note);
-    // ponytail: alfabetik ilk 30; kullanım sıklığı ölçüm gösterirse.
     final ownTags = [
       for (final t in ref.read(allTagsProvider))
         if (!note.tags.contains(t)) t,
     ];
-    // Etiket önerisi de görünür olsun: eskiden istek boyunca hiçbir belirti
-    // yoktu, kullanıcı düğmeye ikinci kez basıyordu.
     List<String> suggestions = const [];
     TriageSuggestion? triage;
-    var failed = false;
-    await _runAi(l10n.aiThinking, () async {
-      final pending = mode == DecisionMode.off
-          ? null
-          : decideNoteTriage(
-              decisions,
-              title: note.title,
-              text: note.toPlainText(),
-              tags: ownTags,
-              folders: folders,
-            );
-      if (mode == DecisionMode.live) triage = await pending;
+    await _runBusy(l10n.aiThinking, () async {
+      if (mode == DecisionMode.live) {
+        triage = await decideNoteTriage(
+          decisions,
+          title: note.title,
+          text: note.toPlainText(),
+          tags: ownTags,
+          folders: folders,
+        );
+      }
       if (triage?.tags.isNotEmpty ?? false) {
         suggestions = triage!.tags;
         return;
       }
-      try {
-        suggestions = await ref.read(geminiServiceProvider).suggestTags(note);
-      } on GeminiException catch (e) {
-        failed = true;
-        messenger.showMessage(
-          aiErrorText(l10n, e),
-        );
-      }
-      if (mode == DecisionMode.shadow) {
-        final old = suggestions;
-        unawaited(
-          pending!.then(
-            (t) => DecisionService.logShadow(
-              DecisionFeature.noteTriage,
-              t == null
-                  ? 'none'
-                  : 'tags=${t.tags.length} overlap='
-                        '${t.tags.where(old.contains).length}/${old.length} '
-                        'folder=${t.folderId != null} title=${t.needsTitle} '
-                        'reminder=${t.needsReminder}',
-            ),
-          ),
-        );
+      // Cihaz-içi kural tabanlı etiket önerisi (0 kredi).
+      final local = SmartNoteCategorizer.classify(
+        note.copyWith(tags: const []),
+      );
+      if (local.tags.isNotEmpty) {
+        suggestions = local.tags;
       }
     });
-    if (!mounted || (failed && (triage?.isEmpty ?? true))) return;
+    if (!mounted) return;
     suggestions = [
       for (final tag in suggestions)
         if (!note.tags.contains(tag)) tag,
     ];
     final t = triage;
     final folderId = t?.folderId;
-    final askTitle = (t?.needsTitle ?? false) && note.title.trim().isEmpty;
     final askReminder = (t?.needsReminder ?? false) && note.reminderAt == null;
-    if (suggestions.isEmpty &&
-        folderId == null &&
-        !askTitle &&
-        !askReminder) {
+    if (suggestions.isEmpty && folderId == null && !askReminder) {
       return;
     }
     final selected = await showAppSheet<Object>(
@@ -224,13 +102,6 @@ extension _EditorAi on _NoteEditorScreenState {
                   onPressed: () =>
                       Navigator.pop(sheetContext, _TriagePick.folder),
                 )),
-              if (askTitle)
-                actionChip(ActionChip(
-                  key: const ValueKey('triage-title'),
-                  label: Text(l10n.suggestTitle),
-                  onPressed: () =>
-                      Navigator.pop(sheetContext, _TriagePick.title),
-                )),
               if (askReminder)
                 actionChip(ActionChip(
                   key: const ValueKey('triage-reminder'),
@@ -252,8 +123,6 @@ extension _EditorAi on _NoteEditorScreenState {
         );
       case _TriagePick.folder:
         _mutate((n) => n.copyWith(folderId: folderId), immediate: true);
-      case _TriagePick.title:
-        await _suggestTitle();
       case _TriagePick.reminder:
         await _pickReminder();
     }
@@ -272,4 +141,4 @@ extension _EditorAi on _NoteEditorScreenState {
 }
 
 /// DA-2 öneri çipleri (etiket dışındakiler).
-enum _TriagePick { folder, title, reminder }
+enum _TriagePick { folder, reminder }

@@ -12,7 +12,6 @@ import 'package:notlar/core/a11y/motion.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/core/tips.dart';
 import 'package:notlar/core/widgets/color_palette.dart';
-import 'package:notlar/features/ai/presentation/ai_sheet.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/folders/data/folders_repository.dart';
 import 'package:notlar/features/folders/domain/note_folder.dart';
@@ -444,16 +443,6 @@ void main() {
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
         app(opener((context, ref) => showNoteShareSheet(context, ref, note))),
-      );
-      await openSheet(tester);
-      await meetsAll(tester);
-      semantics.dispose();
-    });
-
-    testWidgets('Yapay zekâ levhası', (tester) async {
-      final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(
-        app(opener((context, _) => showAiSheet(context, note))),
       );
       await openSheet(tester);
       await meetsAll(tester);

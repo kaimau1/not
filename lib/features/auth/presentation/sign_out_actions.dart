@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/undo_snackbar.dart';
-import '../../ai/data/semantic_search.dart' show SemanticIndex;
 import 'auth_errors.dart';
 import 'auth_providers.dart';
 
@@ -33,10 +32,7 @@ Future<bool> confirmAndSignOut(BuildContext context) async {
     danger: anonymous,
   );
   if (!confirmed) return false;
-  final uid = container.read(currentUidProvider);
   await container.read(authRepositoryProvider).signOut();
-  // Arama vektörleri notların içeriğinden türer: çıkışta cihazda kalmasın.
-  await SemanticIndex.deleteStore(uid);
   return true;
 }
 
@@ -61,9 +57,7 @@ Future<void> confirmAndSwitchAccount(BuildContext context) async {
   final auth = container.read(authRepositoryProvider);
   final messenger = rootScaffoldMessengerKey.currentState;
   final errorText = l10n;
-  final uid = container.read(currentUidProvider);
   await auth.signOut();
-  await SemanticIndex.deleteStore(uid);
   try {
     await auth.signInWithGoogle();
   } catch (e) {

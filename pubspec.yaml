@@ -91,7 +91,6 @@ dependencies:
   share_plus: ^13.2.1
   home_widget: ^0.9.3
   app_links: ^7.2.1
-  firebase_ai: ^5.1.0
   local_auth: ^3.0.2
   receive_sharing_intent: ^1.9.0
   flutter_tts: ^4.2.5

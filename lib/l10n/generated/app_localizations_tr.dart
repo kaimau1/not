@@ -9281,46 +9281,47 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiNeedsProSee => 'Pro\'ya bak';
 
   @override
-  String get proTitle => 'Pro';
+  String get proTitle => 'Tam Sürüm';
 
   @override
-  String get proSettingsSubtitle => 'Katmanlar, satın alma, geri yükleme';
+  String get proSettingsSubtitle =>
+      'Lite vs Tam Sürüm, karar hakkı, satın alma';
 
   @override
-  String get proStatusFree => 'Şu an: Ücretsiz';
+  String get proStatusFree => 'Şu an: Lite (Ücretsiz · Reklamsız)';
 
   @override
-  String get proStatusLifetime => 'Şu an: Ömür boyu';
+  String get proStatusLifetime => 'Şu an: Tam Sürüm (Ömür Boyu)';
 
   @override
   String proStatusPro(String date) {
-    return 'Şu an: Pro · $date tarihine dek';
+    return 'Şu an: Tam Sürüm · $date tarihine dek';
   }
 
   @override
   String get proTiersTitle => 'Katmanlar';
 
   @override
-  String get proTierFree => 'Ücretsiz';
+  String get proTierFree => 'Lite';
 
   @override
-  String get proTierLifetime => 'Ömür boyu';
+  String get proTierLifetime => 'Tam Sürüm';
 
   @override
-  String get proTierPro => 'Pro';
+  String get proTierPro => 'Tam Sürüm';
 
   @override
   String get proRowBasics =>
-      'Not, liste, kalem, PDF, hatırlatıcı, takvim; cihazda OCR, dikte, sesle okuma';
+      'Not, liste, kalem, PDF, hatırlatıcı, takvim; cihazda yazım v3, dikte, OCR, barkod, Mağaza Kipi';
 
   @override
   String get proRowUnlimited => 'Sınırsız not, klasör, ek ve cihaz';
 
   @override
-  String get proRowSync => 'Eşitleme';
+  String get proRowSync => 'Bulut eşitleme';
 
   @override
-  String get proSyncPeriodic => 'Aralıklı';
+  String get proSyncPeriodic => 'Aralıklı (5 dk)';
 
   @override
   String get proSyncInstant => 'Anında';
@@ -9329,37 +9330,43 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proRowAttachments => 'Eklerin yeri';
 
   @override
-  String get proAttachDrive => 'Drive\'ın';
+  String get proAttachDrive => 'Kendi Drive\'ın';
 
   @override
-  String get proAttachCloud => 'Bulut';
+  String get proAttachCloud => 'Drive + Ortak';
 
   @override
-  String get proRowHistory => 'Sürüm geçmişi, parolalı tam yedek';
+  String get proRowHistory => '30 sürüm geçmişi, parolalı tam yedek';
 
   @override
-  String get proRowLooks => 'Ek temalar, yazı tipleri, kart görünümleri';
+  String get proRowLooks => 'Tüm temalar, 19 yazı tipi, kâğıt desenleri';
 
   @override
-  String get proRowAi => 'Dahili yapay zekâ';
+  String get proRowAi => 'Akıllı Kararlar (reyon, hedef, etiket)';
 
   @override
-  String get proRowOwnKey => 'Kendi Gemini anahtarın';
+  String get proDecisionsIncluded => '750 karar';
 
   @override
-  String get proLockedBadge => 'Ömür boyu ve Pro katmanında';
+  String get proRowOwnKey => 'Kendi Gemini anahtarın (BYOK)';
+
+  @override
+  String get proLockedBadge => 'Tam Sürümde';
 
   @override
   String get proBuyTitle => 'Satın al';
 
   @override
-  String get proPlanMonthly => 'Pro · aylık';
+  String get proPlanMonthly => 'Tam Sürüm';
 
   @override
-  String get proPlanYearly => 'Pro · yıllık';
+  String get proPlanYearly => 'Tam Sürüm';
 
   @override
-  String get proPlanLifetime => 'Ömür boyu · tek sefer';
+  String get proPlanLifetime => 'Tam Sürüm · Tek Sefer (Ömür Boyu)';
+
+  @override
+  String get proPlanDecisionPack => '+1.000 Akıllı Karar Paketi';
 
   @override
   String proPriceMonthly(String price) {
@@ -9383,7 +9390,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String proPriceOnce(String price) {
-    return '$price · bir kez öde';
+    return '$price · tek sefer öde, abonelik yok';
   }
 
   @override
@@ -9396,17 +9403,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proOwned => 'Sende var';
 
   @override
-  String get proManage => 'Aboneliği yönet';
+  String get proManage => 'Satın alımları yönet';
 
   @override
-  String get proManageBody => 'Plan değiştir ya da iptal et (Google Play)';
+  String get proManageBody => 'Google Play hesabı';
 
   @override
   String get proRestore => 'Satın alımları geri yükle';
 
   @override
   String get proTerms =>
-      'Abonelik Google Play\'den her dönem kendiliğinden yenilenir; istediğin an Play\'den iptal edebilirsin, ödediğin süre sonuna dek Pro sürer. Pro biterse buluttaki eklerin silinmez, okunur kalır. Ömür boyunu aldıysan Pro bitince ömür boyu hakların sürer.';
+      'Abonelik yoktur, reklam yoktur. Tam Sürüm tek seferlik ömür boyu satın almadır ve 750 Akıllı Karar hakkı içerir. Hak bitince uygulama ve tüm cihaz içi özellikler sınırsız çalışmaya devam eder; istersen ek +1.000 Karar Paketi alabilir veya kendi Gemini anahtarını girebilirsin.';
 
   @override
   String get proLoading => 'Google Play\'den fiyatlar alınıyor…';
@@ -9416,7 +9423,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get proElsewhere =>
-      'Satın alma telefondan: Android uygulamasında Ayarlar → Pro. Aldığın hak bu hesapla burada da açılır.';
+      'Satın alma telefondan: Android uygulamasında Ayarlar → Tam Sürüm. Aldığın hak bu hesapla burada da açılır.';
 
   @override
   String get proGuest =>
@@ -9456,6 +9463,40 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get proNotIncluded => 'Yok';
+
+  @override
+  String get decisionsSectionTitle => 'Akıllı Kararlar';
+
+  @override
+  String get decisionsSectionSubtitle =>
+      'Bilinmeyen ürün reyonu, hızlı ekle hedefi ve etiket önerileri';
+
+  @override
+  String get decisionsQuotaByok =>
+      'Kendi Gemini anahtarın etkin · Sınırsız akıllı karar';
+
+  @override
+  String decisionsQuotaSummary(int calls, String tokens) {
+    return 'Kalan akıllı karar: $calls · $tokens jeton bütçesi';
+  }
+
+  @override
+  String get decisionsQuotaFreeHint =>
+      'Cihaz içi akıllı kurallar ücretsiz açık · Tam Sürümde 750 karar dahil';
+
+  @override
+  String get decisionsTurnOffTitle => 'Akıllı kararları kapat';
+
+  @override
+  String get decisionsTurnOffBody =>
+      'Kapalıyken tüm cihaz içi sözlükler, yazım denetimi ve alışveriş kuralları ücretsiz çalışmaya devam eder.';
+
+  @override
+  String get decisionsByokTitle => 'Kendi Gemini anahtarım (İleri)';
+
+  @override
+  String get decisionsByokInfo =>
+      '750 karar hakkı bittiğinde kendi Gemini API anahtarınla sınırsız devam edebilirsin. Anahtar yalnız bu cihazda saklanır.';
 
   @override
   String get calendarDayLinkRemoved => 'Not bu günden çıkarıldı';

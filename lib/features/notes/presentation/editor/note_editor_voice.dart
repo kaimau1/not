@@ -145,73 +145,12 @@ extension _EditorVoice on _NoteEditorScreenState {
   }
 
   /// Dikteyi bitirir: ÖNCE son sonucun akıştan gelmesini bekler, ardından
-  /// şeridi kapatır ve istenirse yapay zekâyla düzeltme önerir.
-  Future<void> _stopDictation({bool offerFix = true}) async {
+  /// şeridi kapatır.
+  Future<void> _stopDictation() async {
     final ctl = _dictationCtl;
     if (ctl == null || !ctl.isActive) return;
-    final candidate = await ctl.stop(offerFix: offerFix);
+    await ctl.stop(offerFix: false);
     if (mounted) _update(() {});
-    if (candidate != null) {
-      _offerDictationFix(candidate);
-    }
-  }
-
-  /// Dikte bitti: yazılan aralık için tek dokunuşla "Yapay zekâyla düzelt".
-  void _offerDictationFix(DictationFixCandidate candidate) {
-    if (!mounted) return;
-    if (ref.read(aiAvailabilityProvider) != AiAvailability.ready) return;
-    final l10n = context.l10n;
-    ScaffoldMessenger.of(context).showMessage(
-      l10n.dictationFixOffer,
-      action: SnackBarAction(
-        label: l10n.dictationFixAction,
-        onPressed: () => unawaited(
-          _fixDictation(
-            candidate.target,
-            candidate.controller,
-            candidate.at,
-            candidate.spoken,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _fixDictation(
-    FormatTarget? target,
-    WrapTextController controller,
-    int at,
-    String spoken,
-  ) async {
-    if (!mounted) return;
-    final l10n = context.l10n;
-    await _runAi(l10n.gestureFixing, () async {
-      final fixed = await ref
-          .read(geminiServiceProvider)
-          .rewriteText(spoken, voiceCaptureInstruction(VoiceCaptureAction.fix)!);
-      if (!mounted) return;
-      // Madde bu arada silindiyse denetleyici de gitmiştir.
-      if (target != null &&
-          !identical(controller, _bodyController) &&
-          !identical(controller, _titleController) &&
-          _itemsEditorKey.currentState?.itemIdForController(controller) ==
-              null) {
-        return;
-      }
-      final result = dictationFixed(
-        controller.logicalText,
-        at,
-        spoken,
-        stripMarkdown(fixed).trim(),
-      );
-      if (result == null) {
-        _showSnack(l10n.gestureNothingToFix);
-        return;
-      }
-      controller.setLogical(result.text, result.caret);
-      _commitDictation(target, controller, result.text);
-      _showSnack(l10n.gestureFixed);
-    });
   }
 
   /// Dikte yazımını kaydeder (yazım sırasındaki debouncer'dan beslenir).
@@ -236,9 +175,7 @@ extension _EditorVoice on _NoteEditorScreenState {
       !identical(c, _titleController) &&
       _itemsEditorKey.currentState?.itemIdForController(c) != null;
 
-  /// Sesle yakalama: ortak levhayı açar, dönen metni seçilen eyleme göre işler.
-  ///
-  /// Dönen metin İMLECİN yerine girer (bkz. [_insertTextAtCaret]).
+  /// Sesle yakalama: ortak levhayı açar, dönen metni imlecin yerine ekler.
   Future<void> _captureVoice() async {
     final result = await showVoiceCaptureSheet(
       context,
@@ -264,26 +201,8 @@ extension _EditorVoice on _NoteEditorScreenState {
       return;
     }
 
-    final instruction = voiceCaptureInstruction(result.action);
-    if (instruction == null) {
+    if (result.text.trim().isNotEmpty) {
       _insertTextAtCaret(result.text);
-      return;
-    }
-
-    final l10n = context.l10n;
-    _aiTaskN.value = l10n.aiThinking;
-    try {
-      final text = await ref
-          .read(geminiServiceProvider)
-          .rewriteText(result.text, instruction);
-      if (!mounted) return;
-      _insertTextAtCaret(text.trim().isEmpty ? result.text : text.trim());
-    } on GeminiException catch (e) {
-      if (mounted) _showSnack(aiErrorText(l10n, e));
-    } catch (e) {
-      if (mounted) _showSnack(aiErrorText(l10n, e));
-    } finally {
-      if (mounted) _aiTaskN.value = null;
     }
   }
 

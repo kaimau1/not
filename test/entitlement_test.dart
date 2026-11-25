@@ -1,9 +1,9 @@
-// HAK KAPISI BEKÇİSİ (PLAN §1.5 PL14).
+// HAK KAPISI BEKÇİSİ (PLAN §1.5 PL14, Faz 1 — 2 katmanlı model: Lite / Tam Sürüm).
 //
 // Bayraksız (`flutter test`) koşu: kişisel APK / web bugünkü gibi — her
 // kapı açık, Firestore'a gidilmez. Play koşusu:
 //   flutter test test/entitlement_test.dart --dart-define=NOTLAR_PLAY=true
-// aynı testte ücretsiz katmanda Pro özelliklerin kapandığını doğrular.
+// aynı testte ücretsiz katmanda Tam Sürüm özelliklerinin kapandığını doğrular.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,7 +16,7 @@ void main() {
   final past = now.subtract(const Duration(days: 1));
   final future = now.add(const Duration(days: 3));
 
-  group('model (derlemeden bağımsız)', () {
+  group('model (derlemeden bağımsız — 2 katman: free / lifetime)', () {
     test('belge yok / tanınmayan katman → ücretsiz', () {
       expect(
         Entitlement.fromMap(null).effectiveTier(now),
@@ -28,18 +28,18 @@ void main() {
       );
     });
 
-    test('Pro yalnız süresi içinde; proUntil yoksa Pro değil', () {
+    test('eski abonelik kaydı geriye uyumlu: süresi içinde Tam Sürüm, bitince ücretsiz', () {
       Entitlement pro(DateTime? until) =>
           Entitlement.fromMap({'tier': 'pro', 'proUntil': until});
-      expect(pro(future).effectiveTier(now), EntitlementTier.pro);
+      expect(pro(future).effectiveTier(now), EntitlementTier.lifetime);
       expect(pro(past).effectiveTier(now), EntitlementTier.free);
       expect(pro(null).effectiveTier(now), EntitlementTier.free);
     });
 
-    test('7 gün deneme: süresi içinde Pro, bitince ücretsiz', () {
+    test('deneme süresi: süresi içinde Tam Sürüm, bitince ücretsiz', () {
       expect(
         Entitlement.fromMap({'trialEndsAt': future}).effectiveTier(now),
-        EntitlementTier.pro,
+        EntitlementTier.lifetime,
       );
       expect(
         Entitlement.fromMap({'trialEndsAt': past}).effectiveTier(now),
@@ -47,20 +47,25 @@ void main() {
       );
     });
 
-    test('ömür boyu kalıcı; Pro bitince ömür boyu hakları kalır', () {
-      expect(
-        Entitlement.fromMap({'tier': 'lifetime'}).effectiveTier(now),
-        EntitlementTier.lifetime,
-      );
-      final e = Entitlement.fromMap({
+    test('Tam Sürüm (lifetime) kalıcı; ek karar paketi kredileri okunur', () {
+      final life = Entitlement.fromMap({
+        'tier': 'lifetime',
+        'decisionCredits': 1000,
+        'decisionTokenCredits': 800000,
+      });
+      expect(life.effectiveTier(now), EntitlementTier.lifetime);
+      expect(life.decisionCredits, 1000);
+      expect(life.decisionTokenCredits, 800000);
+
+      final legacy = Entitlement.fromMap({
         'tier': 'pro',
         'proUntil': past,
         'lifetimeOwned': true,
       });
-      expect(e.effectiveTier(now), EntitlementTier.lifetime);
+      expect(legacy.effectiveTier(now), EntitlementTier.lifetime);
     });
 
-    test('Pro bitince ekler okunur kalır, Drive önerisi bayrağı', () {
+    test('eski Pro bitince ekler okunur kalır, Drive önerisi bayrağı', () {
       expect(EntitlementGate.canReadCloudAttachments, isTrue);
       final lapsed = Entitlement.fromMap({'tier': 'pro', 'proUntil': past});
       expect(lapsed.proLapsed(now), isTrue);
@@ -87,7 +92,7 @@ void main() {
         'proUntil': Timestamp.fromDate(future),
       });
       expect(e.proUntil!.isAtSameMomentAs(future), isTrue);
-      expect(e.effectiveTier(now), EntitlementTier.pro);
+      expect(e.effectiveTier(now), EntitlementTier.lifetime);
     });
   });
 
@@ -97,7 +102,7 @@ void main() {
     });
 
     test(
-      'ücretsiz: bayraksızda her şey açık, Play\'de Pro özellikler kapalı',
+      'ücretsiz: bayraksızda her şey açık, Play\'de Tam Sürüm özellikleri kapalı',
       () {
         for (final f in ProFeature.values) {
           expect(
@@ -109,22 +114,22 @@ void main() {
       },
     );
 
-    test('Pro her şeyi açar; ömür boyu dahili AI ve bulut ekini açmaz', () {
-      final pro = Entitlement.fromMap({'tier': 'pro', 'proUntil': future});
+    test('Tam Sürüm (lifetime) bütün özellikleri açar (2-katmanlı model)', () {
       final life = Entitlement.fromMap({'tier': 'lifetime'});
       for (final f in ProFeature.values) {
-        expect(EntitlementGate.allows(f, pro, now), isTrue, reason: f.name);
-        final lifeOk = f.minTier != EntitlementTier.pro;
-        expect(
-          EntitlementGate.allows(f, life, now),
-          lifeOk || !PlayBuild.enabled,
-          reason: f.name,
-        );
+        expect(EntitlementGate.allows(f, life, now), isTrue, reason: f.name);
+        expect(f.minTier, EntitlementTier.lifetime, reason: f.name);
       }
-      // Yer tutucu listenin PLAN §1.5 tablosuyla bağı (sabah bakılacak).
-      expect(ProFeature.builtInAi.minTier, EntitlementTier.pro);
-      expect(ProFeature.cloudAttachments.minTier, EntitlementTier.pro);
-      expect(ProFeature.ownApiKey.minTier, EntitlementTier.lifetime);
+      expect(
+        ProFeature.values,
+        containsAll([
+          ProFeature.smartDecisions,
+          ProFeature.smartShoppingPro,
+          ProFeature.cloudAttachments,
+          ProFeature.versionHistory,
+          ProFeature.ownApiKey,
+        ]),
+      );
     });
   });
 
@@ -145,25 +150,22 @@ void main() {
       expect(c.read(offerMoveToDriveProvider), isFalse);
     });
 
-    test('denemedeki hesap Pro', () {
-      final c = containerWith(
-        Entitlement(trialEndsAt: DateTime.now().add(const Duration(days: 7))),
-      );
-      expect(c.read(effectiveTierProvider), EntitlementTier.pro);
-      expect(c.read(proFeatureProvider(ProFeature.builtInAi)), isTrue);
+    test('Tam Sürüm hesapta tüm özellikler açık', () {
+      final c = containerWith(Entitlement.fromMap({'tier': 'lifetime'}));
+      expect(c.read(effectiveTierProvider), EntitlementTier.lifetime);
+      expect(c.read(proFeatureProvider(ProFeature.smartDecisions)), isTrue);
+      expect(c.read(proFeatureProvider(ProFeature.cloudAttachments)), isTrue);
     });
 
     test('bayraksız derlemede sağlayıcı Firestore\'a gitmez', () async {
       if (PlayBuild.enabled) return;
       final c = ProviderContainer();
       addTearDown(c.dispose);
-      // Firebase başlatılmadığı hâlde hata yok: doğrudan Entitlement.none.
-      // (Riverpod 3 dinleyicisiz sağlayıcıyı duraklatır → dinle.)
       final sub = c.listen(entitlementProvider, (_, _) {});
       addTearDown(sub.close);
       final e = await c.read(entitlementProvider.future);
       expect(e.tier, EntitlementTier.free);
-      expect(c.read(proFeatureProvider(ProFeature.builtInAi)), isTrue);
+      expect(c.read(proFeatureProvider(ProFeature.smartDecisions)), isTrue);
     });
   });
 }

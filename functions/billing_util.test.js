@@ -168,3 +168,26 @@ test("çoklu uygulama paketi çözümlemesi: Notlar + Dosyalarım izin listesi",
   );
   assert.strictEqual(u.resolvePackageName("evil.pkg", allowed), null);
 });
+
+test("karar paketi (+1000): aynı belirteç iki kez kredi eklemez, yeni belirteç ekler", () => {
+  const first = u.mergeEntitlement(
+    { tier: "lifetime", lifetimeOwned: true },
+    { pack: { tokenKey: "P1", calls: u.DECISION_PACK_CALLS, tokens: u.DECISION_PACK_TOKENS } },
+    now,
+  );
+  assert.strictEqual(first.decisionCredits, 1000);
+  assert.strictEqual(first.decisionTokenCredits, 800000);
+  const dup = u.mergeEntitlement(
+    first,
+    { pack: { tokenKey: "P1", calls: u.DECISION_PACK_CALLS, tokens: u.DECISION_PACK_TOKENS } },
+    now,
+  );
+  assert.strictEqual(dup.decisionCredits, 1000);
+  const second = u.mergeEntitlement(
+    dup,
+    { pack: { tokenKey: "P2", calls: u.DECISION_PACK_CALLS, tokens: u.DECISION_PACK_TOKENS } },
+    now,
+  );
+  assert.strictEqual(second.decisionCredits, 2000);
+  assert.strictEqual(second.decisionTokenCredits, 1600000);
+});

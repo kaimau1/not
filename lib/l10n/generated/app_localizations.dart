@@ -16445,31 +16445,31 @@ abstract class AppLocalizations {
   /// No description provided for @proTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Pro'**
+  /// **'Tam Sürüm'**
   String get proTitle;
 
   /// No description provided for @proSettingsSubtitle.
   ///
   /// In tr, this message translates to:
-  /// **'Katmanlar, satın alma, geri yükleme'**
+  /// **'Lite vs Tam Sürüm, karar hakkı, satın alma'**
   String get proSettingsSubtitle;
 
   /// No description provided for @proStatusFree.
   ///
   /// In tr, this message translates to:
-  /// **'Şu an: Ücretsiz'**
+  /// **'Şu an: Lite (Ücretsiz · Reklamsız)'**
   String get proStatusFree;
 
   /// No description provided for @proStatusLifetime.
   ///
   /// In tr, this message translates to:
-  /// **'Şu an: Ömür boyu'**
+  /// **'Şu an: Tam Sürüm (Ömür Boyu)'**
   String get proStatusLifetime;
 
   /// No description provided for @proStatusPro.
   ///
   /// In tr, this message translates to:
-  /// **'Şu an: Pro · {date} tarihine dek'**
+  /// **'Şu an: Tam Sürüm · {date} tarihine dek'**
   String proStatusPro(String date);
 
   /// No description provided for @proTiersTitle.
@@ -16481,25 +16481,25 @@ abstract class AppLocalizations {
   /// No description provided for @proTierFree.
   ///
   /// In tr, this message translates to:
-  /// **'Ücretsiz'**
+  /// **'Lite'**
   String get proTierFree;
 
   /// No description provided for @proTierLifetime.
   ///
   /// In tr, this message translates to:
-  /// **'Ömür boyu'**
+  /// **'Tam Sürüm'**
   String get proTierLifetime;
 
   /// No description provided for @proTierPro.
   ///
   /// In tr, this message translates to:
-  /// **'Pro'**
+  /// **'Tam Sürüm'**
   String get proTierPro;
 
   /// No description provided for @proRowBasics.
   ///
   /// In tr, this message translates to:
-  /// **'Not, liste, kalem, PDF, hatırlatıcı, takvim; cihazda OCR, dikte, sesle okuma'**
+  /// **'Not, liste, kalem, PDF, hatırlatıcı, takvim; cihazda yazım v3, dikte, OCR, barkod, Mağaza Kipi'**
   String get proRowBasics;
 
   /// No description provided for @proRowUnlimited.
@@ -16511,13 +16511,13 @@ abstract class AppLocalizations {
   /// No description provided for @proRowSync.
   ///
   /// In tr, this message translates to:
-  /// **'Eşitleme'**
+  /// **'Bulut eşitleme'**
   String get proRowSync;
 
   /// No description provided for @proSyncPeriodic.
   ///
   /// In tr, this message translates to:
-  /// **'Aralıklı'**
+  /// **'Aralıklı (5 dk)'**
   String get proSyncPeriodic;
 
   /// No description provided for @proSyncInstant.
@@ -16535,43 +16535,49 @@ abstract class AppLocalizations {
   /// No description provided for @proAttachDrive.
   ///
   /// In tr, this message translates to:
-  /// **'Drive\'ın'**
+  /// **'Kendi Drive\'ın'**
   String get proAttachDrive;
 
   /// No description provided for @proAttachCloud.
   ///
   /// In tr, this message translates to:
-  /// **'Bulut'**
+  /// **'Drive + Ortak'**
   String get proAttachCloud;
 
   /// No description provided for @proRowHistory.
   ///
   /// In tr, this message translates to:
-  /// **'Sürüm geçmişi, parolalı tam yedek'**
+  /// **'30 sürüm geçmişi, parolalı tam yedek'**
   String get proRowHistory;
 
   /// No description provided for @proRowLooks.
   ///
   /// In tr, this message translates to:
-  /// **'Ek temalar, yazı tipleri, kart görünümleri'**
+  /// **'Tüm temalar, 19 yazı tipi, kâğıt desenleri'**
   String get proRowLooks;
 
   /// No description provided for @proRowAi.
   ///
   /// In tr, this message translates to:
-  /// **'Dahili yapay zekâ'**
+  /// **'Akıllı Kararlar (reyon, hedef, etiket)'**
   String get proRowAi;
+
+  /// No description provided for @proDecisionsIncluded.
+  ///
+  /// In tr, this message translates to:
+  /// **'750 karar'**
+  String get proDecisionsIncluded;
 
   /// No description provided for @proRowOwnKey.
   ///
   /// In tr, this message translates to:
-  /// **'Kendi Gemini anahtarın'**
+  /// **'Kendi Gemini anahtarın (BYOK)'**
   String get proRowOwnKey;
 
   /// No description provided for @proLockedBadge.
   ///
   /// In tr, this message translates to:
-  /// **'Ömür boyu ve Pro katmanında'**
+  /// **'Tam Sürümde'**
   String get proLockedBadge;
 
   /// No description provided for @proBuyTitle.
@@ -16583,20 +16589,26 @@ abstract class AppLocalizations {
   /// No description provided for @proPlanMonthly.
   ///
   /// In tr, this message translates to:
-  /// **'Pro · aylık'**
+  /// **'Tam Sürüm'**
   String get proPlanMonthly;
 
   /// No description provided for @proPlanYearly.
   ///
   /// In tr, this message translates to:
-  /// **'Pro · yıllık'**
+  /// **'Tam Sürüm'**
   String get proPlanYearly;
 
   /// No description provided for @proPlanLifetime.
   ///
   /// In tr, this message translates to:
-  /// **'Ömür boyu · tek sefer'**
+  /// **'Tam Sürüm · Tek Sefer (Ömür Boyu)'**
   String get proPlanLifetime;
+
+  /// No description provided for @proPlanDecisionPack.
+  ///
+  /// In tr, this message translates to:
+  /// **'+1.000 Akıllı Karar Paketi'**
+  String get proPlanDecisionPack;
 
   /// No description provided for @proPriceMonthly.
   ///
@@ -16625,7 +16637,7 @@ abstract class AppLocalizations {
   /// No description provided for @proPriceOnce.
   ///
   /// In tr, this message translates to:
-  /// **'{price} · bir kez öde'**
+  /// **'{price} · tek sefer öde, abonelik yok'**
   String proPriceOnce(String price);
 
   /// No description provided for @proBuy.
@@ -16649,13 +16661,13 @@ abstract class AppLocalizations {
   /// No description provided for @proManage.
   ///
   /// In tr, this message translates to:
-  /// **'Aboneliği yönet'**
+  /// **'Satın alımları yönet'**
   String get proManage;
 
   /// No description provided for @proManageBody.
   ///
   /// In tr, this message translates to:
-  /// **'Plan değiştir ya da iptal et (Google Play)'**
+  /// **'Google Play hesabı'**
   String get proManageBody;
 
   /// No description provided for @proRestore.
@@ -16667,7 +16679,7 @@ abstract class AppLocalizations {
   /// No description provided for @proTerms.
   ///
   /// In tr, this message translates to:
-  /// **'Abonelik Google Play\'den her dönem kendiliğinden yenilenir; istediğin an Play\'den iptal edebilirsin, ödediğin süre sonuna dek Pro sürer. Pro biterse buluttaki eklerin silinmez, okunur kalır. Ömür boyunu aldıysan Pro bitince ömür boyu hakların sürer.'**
+  /// **'Abonelik yoktur, reklam yoktur. Tam Sürüm tek seferlik ömür boyu satın almadır ve 750 Akıllı Karar hakkı içerir. Hak bitince uygulama ve tüm cihaz içi özellikler sınırsız çalışmaya devam eder; istersen ek +1.000 Karar Paketi alabilir veya kendi Gemini anahtarını girebilirsin.'**
   String get proTerms;
 
   /// No description provided for @proLoading.
@@ -16685,7 +16697,7 @@ abstract class AppLocalizations {
   /// No description provided for @proElsewhere.
   ///
   /// In tr, this message translates to:
-  /// **'Satın alma telefondan: Android uygulamasında Ayarlar → Pro. Aldığın hak bu hesapla burada da açılır.'**
+  /// **'Satın alma telefondan: Android uygulamasında Ayarlar → Tam Sürüm. Aldığın hak bu hesapla burada da açılır.'**
   String get proElsewhere;
 
   /// No description provided for @proGuest.
@@ -16753,6 +16765,60 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yok'**
   String get proNotIncluded;
+
+  /// No description provided for @decisionsSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı Kararlar'**
+  String get decisionsSectionTitle;
+
+  /// No description provided for @decisionsSectionSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilinmeyen ürün reyonu, hızlı ekle hedefi ve etiket önerileri'**
+  String get decisionsSectionSubtitle;
+
+  /// No description provided for @decisionsQuotaByok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi Gemini anahtarın etkin · Sınırsız akıllı karar'**
+  String get decisionsQuotaByok;
+
+  /// No description provided for @decisionsQuotaSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalan akıllı karar: {calls} · {tokens} jeton bütçesi'**
+  String decisionsQuotaSummary(int calls, String tokens);
+
+  /// No description provided for @decisionsQuotaFreeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihaz içi akıllı kurallar ücretsiz açık · Tam Sürümde 750 karar dahil'**
+  String get decisionsQuotaFreeHint;
+
+  /// No description provided for @decisionsTurnOffTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı kararları kapat'**
+  String get decisionsTurnOffTitle;
+
+  /// No description provided for @decisionsTurnOffBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalıyken tüm cihaz içi sözlükler, yazım denetimi ve alışveriş kuralları ücretsiz çalışmaya devam eder.'**
+  String get decisionsTurnOffBody;
+
+  /// No description provided for @decisionsByokTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi Gemini anahtarım (İleri)'**
+  String get decisionsByokTitle;
+
+  /// No description provided for @decisionsByokInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'750 karar hakkı bittiğinde kendi Gemini API anahtarınla sınırsız devam edebilirsin. Anahtar yalnız bu cihazda saklanır.'**
+  String get decisionsByokInfo;
 
   /// No description provided for @calendarDayLinkRemoved.
   ///

@@ -10,19 +10,18 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../core/a11y/min_tap_target.dart';
+import '../../../core/friendly_error.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/voice_commands.dart';
 import '../../../core/utils/web_audio_record.dart';
 import '../../../core/utils/web_blob.dart';
-import '../../ai/data/gemini_service.dart';
 import '../../settings/settings_providers.dart';
 import '../data/device_speech.dart';
 import '../data/media_transcriber.dart' show audioMimeOf;
 import '../data/voice_listen_session.dart';
 import 'listening_visuals.dart';
 import '../../../core/widgets/app_sheet.dart';
-import '../../../core/friendly_error.dart';
 import '../../../core/a11y/chip_roles.dart';
 import '../../../core/app_icons.dart';
 import '../../../app/theme/app_tokens.dart';
@@ -507,8 +506,6 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     }
 
     setState(() => _phase = _Phase.processing);
-    // Kaydın yolu/baytı try DIŞINDA tutulur: döküm düşerse kayıt SİLİNMEZ,
-    // nota ses eki olarak eklenmek üzere elde kalır (bkz. [_toAudioFallback]).
     String? path;
     Uint8List? bytes;
     String? mime;
@@ -523,33 +520,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         bytes = await File(path).readAsBytes();
         mime = audioMimeOf(bytes, 'audio/mp4');
       }
-      final text = await ref
-          .read(geminiServiceProvider)
-          .transcribeAudio(bytes, mime);
       if (!mounted) return;
-      if (text.trim().isEmpty) {
-        _toAudioFallback(
-          path,
-          l10n.voiceNothingHeard,
-          bytes: bytes,
-          mime: mime,
-        );
-        return;
-      }
-      // Döküm elde: ses dosyasına artık gerek yok.
-      if (!kIsWeb && path != null && path.isNotEmpty) {
-        File(path).delete().ignore();
-      }
-      // Kayıt yolunda komutlar dökümden SONRA uygulanır (canlı metin yok).
-      var clean = _joinPrefix(text);
-      if (ref.read(voiceSmartCommandsProvider)) {
-        final outcome = applyVoiceCommands(text, base: _prefix);
-        clean = outcome.text;
-        if (outcome.title != null) _title = outcome.title;
-      }
-      _toReview(clean.trim(), l10n.voiceNothingHeard);
-    } on GeminiException catch (e) {
-      _toAudioFallback(path, aiErrorText(l10n, e), bytes: bytes, mime: mime);
+      _toAudioFallback(
+        path,
+        l10n.voiceNothingHeard,
+        bytes: bytes,
+        mime: mime,
+      );
     } catch (e) {
       _toAudioFallback(path, e.toString(), bytes: bytes, mime: mime);
     }

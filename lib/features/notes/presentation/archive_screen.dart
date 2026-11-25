@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../ai/data/semantic_search.dart';
 import 'note_card.dart';
 import 'note_grid.dart';
 import 'note_sort_menu.dart';
@@ -58,7 +57,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
     return Scaffold(
       appBar: HomeInBar(appBar: AppBar(
         title: _search.open
-            ? ScreenSearchField(search: _search, aiHint: l10n.archiveAiSearchHint)
+            ? ScreenSearchField(search: _search)
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -109,13 +108,7 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
         data: (all) => ValueListenableBuilder<TextEditingValue>(
           valueListenable: _search.controller,
           builder: (context, value, _) {
-            final result = runScreenSearch(
-              ref,
-              all,
-              value.text,
-              semantic: _search.semantic,
-              scope: SemanticScope.archive,
-            );
+            final result = runScreenSearch(ref, all, value.text);
             final notes = result.notes;
             final needle = result.needle;
             if (notes.isEmpty) {

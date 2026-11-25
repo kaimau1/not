@@ -321,8 +321,8 @@ abstract final class UiItem {
     barShare,
   ];
 
-  /// Sağ (AI/ses) kapsülün varsayılan sırası.
-  static const barRightDefault = <String>[barAi, barVoiceRecord, barDictation];
+  /// Sağ (ses) kapsülünün varsayılan sırası.
+  static const barRightDefault = <String>[barVoiceRecord, barDictation];
 
   // ── Not ekranının üst çubuğu ──
   static const topSync = 'editor.top.sync';
@@ -515,7 +515,6 @@ class UiModule {
   static const collaboration = UiModule('collaboration', [UiItem.topCollab]);
 
   static const all = <UiModule>[
-    ai,
     voice,
     video,
     scan,

@@ -1,11 +1,10 @@
-// SATIN ALMA (Play Billing) — PLAN §1.5 PL6.
+// SATIN ALMA (Play Billing) — PLAN §2.3 & §3 (Faz 1).
 //
 // Akış: satın al → `purchaseStream` → sunucuda doğrula (`verifyPurchase`
 // Function'ı Google Play Developer API'ye sorar, `entitlements/{uid}`'i YALNIZ
 // o yazar) → `entitlementProvider` belgeyi zaten dinliyor, kapı kendiliğinden
 // açılır → satın alma onaylanır (`completePurchase`; sunucu da onaylar).
-// Doğrulanamayan satın alma ONAYLANMAZ: Play 3 günde iade eder, kullanıcı
-// boşa ödemez; açılışta sessiz geri yükleme yeniden dener ([recover]).
+// Doğrulanamayan satın alma ONAYLANMAZ: Play 3 günde iade eder.
 //
 // KİŞİSEL APK / WEB: [EntitlementGate.active] false → `InAppPurchase`'a HİÇ
 // dokunulmaz (Billing bağlantısı yok), durum [BillingStatus.off].
@@ -55,17 +54,13 @@ class BillingOffer {
   const BillingOffer({
     required this.plan,
     required this.price,
-    required this.trial,
     required this.details,
   });
 
   final BillingPlan plan;
 
-  /// Mağazanın biçimlediği YİNELENEN fiyat (denemede de deneme sonrası).
+  /// Mağazanın biçimlediği tek seferlik fiyat.
   final String price;
-
-  /// Ücretsiz deneme teklifi var mı (Play yalnız uygun kullanıcıya listeler).
-  final bool trial;
 
   final ProductDetails details;
 }
@@ -118,46 +113,21 @@ class BillingState {
 }
 
 /// Play'e satın almada verilen `obfuscatedAccountId`: uid'in SHA-256'sı
-/// (sunucu `billing_util.js` `accountTag` aynısı). Sunucu başka hesabın
-/// satın almasını bununla da reddeder.
+/// (sunucu `billing_util.js` `accountTag` aynısı).
 String billingAccountTag(String uid) =>
     sha256.convert(utf8.encode(uid)).toString();
 
-/// Mağazanın döndürdüğü ürünlerden ekrandaki satırlar. Abonelikte Play her
-/// temel plan + teklif için ayrı kayıt verir: deneme teklifi varsa o, yoksa
-/// temel plan seçilir.
+/// Mağazanın döndürdüğü ürünlerden ekrandaki satırlar (tek seferlik ürünler).
 List<BillingOffer> billingOffers(List<ProductDetails> products) {
-  BillingOffer? best(BillingPlan plan) {
-    BillingOffer? pick;
+  BillingOffer? match(BillingPlan plan) {
     for (final p in products) {
       if (p is! GooglePlayProductDetails || p.id != plan.productId) continue;
-      if (!plan.isSubscription) {
-        return BillingOffer(
-          plan: plan,
-          price: p.price,
-          trial: false,
-          details: p,
-        );
-      }
-      final i = p.subscriptionIndex;
-      final o = i == null
-          ? null
-          : p.productDetails.subscriptionOfferDetails?[i];
-      if (o == null || o.basePlanId != plan.basePlanId) continue;
-      if (o.pricingPhases.isEmpty) continue;
-      final trial = o.pricingPhases.any((ph) => ph.priceAmountMicros == 0);
-      if (pick != null && (pick.trial || !trial)) continue;
-      pick = BillingOffer(
-        plan: plan,
-        price: o.pricingPhases.last.formattedPrice,
-        trial: trial,
-        details: p,
-      );
+      return BillingOffer(plan: plan, price: p.price, details: p);
     }
-    return pick;
+    return null;
   }
 
-  return [for (final plan in BillingPlan.values) best(plan)].nonNulls.toList();
+  return [for (final plan in BillingPlan.values) match(plan)].nonNulls.toList();
 }
 
 final billingProvider = NotifierProvider<BillingNotifier, BillingState>(
@@ -236,8 +206,7 @@ class BillingNotifier extends Notifier<BillingState> {
     }
   }
 
-  /// Hesap var mı (misafire satılmaz: misafir hesap cihazla kaybolur,
-  /// sunucu da reddeder).
+  /// Hesap var mı (misafire satılmaz: misafir hesap cihazla kaybolur).
   String? _buyerUid() {
     final uid = ref.read(currentUidProvider);
     if (uid == null || ref.read(isAnonymousProvider)) return null;
@@ -251,12 +220,16 @@ class BillingNotifier extends Notifier<BillingState> {
     await start();
     state = state.copyWith(busy: true);
     try {
-      final launched = await debugStore().buyNonConsumable(
-        purchaseParam: GooglePlayPurchaseParam(
-          productDetails: offer.details,
-          applicationUserName: billingAccountTag(uid),
-        ),
+      final param = GooglePlayPurchaseParam(
+        productDetails: offer.details,
+        applicationUserName: billingAccountTag(uid),
       );
+      final launched = offer.plan.consumable
+          ? await debugStore().buyConsumable(
+              purchaseParam: param,
+              autoConsume: false,
+            )
+          : await debugStore().buyNonConsumable(purchaseParam: param);
       if (!launched) _say(BillingNotice.failed);
     } catch (_) {
       _say(BillingNotice.failed);
@@ -264,8 +237,7 @@ class BillingNotifier extends Notifier<BillingState> {
   }
 
   /// "Satın alımları geri yükle" ([quiet] false) ya da açılıştaki sessiz
-  /// onarım ([quiet] true: yalnız onaylanmamış ya da hakta görünmeyen satın
-  /// almayı doğrular, bildirim göstermez).
+  /// onarım ([quiet] true).
   Future<void> recover({bool quiet = false}) async {
     if (!_usable || (quiet && state.busy)) return;
     if (_buyerUid() == null) {
@@ -293,8 +265,6 @@ class BillingNotifier extends Notifier<BillingState> {
     for (final p in list) {
       switch (p.status) {
         case PurchaseStatus.pending:
-          // Belirteç şimdiden hesaba bağlansın: ödeme onaylanınca sunucu
-          // (RTDN) hakkı uygulama kapalıyken de açar.
           _say(BillingNotice.pending);
           unawaited(_verify(p));
         case PurchaseStatus.canceled:
@@ -322,20 +292,15 @@ class BillingNotifier extends Notifier<BillingState> {
     }
   }
 
-  /// Sessiz onarımda doğrulanmaya değer mi: onaylanmamış (3 gün içinde
-  /// onaylanmazsa Play iade eder) ya da hak belgesi bunu henüz göstermiyor
-  /// (kaçmış RTDN, yarıda kalmış doğrulama).
   bool _needsSync(PurchaseDetails p) {
     if (p.pendingCompletePurchase) return true;
     final e = ref.read(entitlementProvider).value;
     if (e == null) return true;
-    return p.productID == BillingProducts.lifetime
-        ? !e.lifetimeOwned
-        : !e.proActive(DateTime.now());
+    if (p.productID == BillingProducts.decisionPack1000) return true;
+    return !e.lifetimeOwned;
   }
 
-  /// Sunucuda doğrular, sonra onaylar. null = tamam; değilse söylenecek
-  /// neden. Doğrulanamayan satın alma ONAYLANMAZ (bkz. dosya başı).
+  /// Sunucuda doğrular, sonra onaylar. Doğrulanamayan satın alma ONAYLANMAZ.
   Future<BillingNotice?> _verify(PurchaseDetails p) async {
     try {
       await debugVerify(p.productID, p.verificationData.serverVerificationData);
@@ -359,8 +324,7 @@ class BillingNotifier extends Notifier<BillingState> {
   }
 }
 
-/// Açılışta sessiz onarım (Play + Android): ilk karelerin işine girmesin
-/// diye gecikmeli; hak belgesi o arada yüklenmiş olur.
+/// Açılışta sessiz onarım (Play + Android).
 final billingRecoveryProvider = Provider<void>((ref) {
   if (!EntitlementGate.active) return;
   if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;

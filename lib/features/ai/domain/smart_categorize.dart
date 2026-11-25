@@ -4,7 +4,21 @@ import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../notes/domain/note.dart';
-import '../data/gemini_service.dart' show QuietOrganizeSuggestion;
+
+/// Tek bir not için önerilen başlık/etiket paketi (yerel + Decisions).
+class QuietOrganizeSuggestion {
+  const QuietOrganizeSuggestion({
+    required this.noteId,
+    this.title,
+    this.tags = const [],
+    this.folderId,
+  });
+
+  final String noteId;
+  final String? title;
+  final List<String> tags;
+  final String? folderId;
+}
 
 /// Türkçe harf/aksan duyarsız katlama (`İ/I/ı/Ş/ş/Ğ/ğ/Ü/ü/Ö/ö/Ç/ç` -> ASCII).
 String foldTurkish(String input) {

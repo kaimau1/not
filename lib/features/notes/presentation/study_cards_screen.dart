@@ -3,15 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/undo_snackbar.dart';
-import '../../ai/data/gemini_service.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/study_card.dart';
-import '../../auth/presentation/account_required.dart';
-import '../../../core/friendly_error.dart';
 import 'note_link_ui.dart' show noteLinkLabel;
 
 /// Bugün tekrar edilecek kartlar (F18.19): bütün notlardan, kilitli ve
@@ -146,78 +141,4 @@ class _StudyCardsScreenState extends ConsumerState<StudyCardsScreen> {
             ),
     );
   }
-}
-
-/// Nottan kart üret (editör ⋮): AI üretir, kullanıcı onaylar, nota yazılır.
-Future<void> generateCardsForNote(
-  BuildContext context,
-  WidgetRef ref,
-  Note note,
-) async {
-  if (!ensureAiReady(context, ref)) return;
-  final l10n = context.l10n;
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.showMessage(l10n.studyCardsGenerating);
-  List<({String q, String a})> made;
-  try {
-    made = await ref.read(geminiServiceProvider).generateStudyCards(note);
-  } on GeminiException catch (e) {
-    messenger.showMessage(aiErrorText(l10n, e));
-    return;
-  } catch (e) {
-    messenger.showMessage(l10n.studyCardsFailed);
-    return;
-  }
-  if (made.isEmpty) {
-    messenger.showMessage(l10n.studyCardsFailed);
-    return;
-  }
-  if (!context.mounted) return;
-  final ok = await showAppSheet<bool>(
-    context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    builder: (ctx) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              l10n.studyCardsPreview(made.length),
-              style: Theme.of(ctx).textTheme.titleMedium,
-            ),
-          ),
-          Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (final c in made)
-                  ListTile(title: Text(c.q), subtitle: Text(c.a)),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.studyCardsSave),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-  if (ok != true) return;
-  final stamp = DateTime.now().microsecondsSinceEpoch;
-  final cards = [
-    ...note.cards,
-    for (var i = 0; i < made.length; i++)
-      StudyCard(id: 'c$stamp$i', question: made[i].q, answer: made[i].a),
-  ];
-  ref.read(notesRepositoryProvider)?.updateFields(note.id, {
-    'cards': [for (final c in cards) c.toMap()],
-  });
-  messenger.showMessage(l10n.studyCardsSaved(made.length));
 }

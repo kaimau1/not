@@ -69,7 +69,6 @@ import 'package:notlar/features/calendar/domain/calendar_event.dart';
 import 'package:notlar/features/calendar/domain/task_item.dart';
 import 'package:notlar/features/calendar/presentation/calendar_screen.dart';
 import 'package:notlar/features/folders/domain/note_folder.dart';
-import 'package:notlar/features/ai/presentation/ai_hub_screen.dart';
 import 'package:notlar/features/folders/presentation/folders_screen.dart';
 import 'package:notlar/features/inbox/data/inbox_repository.dart';
 import 'package:notlar/features/inbox/presentation/shared_hub_screen.dart';
@@ -548,7 +547,6 @@ Future<void> _pumpApp(
           ),
           for (final (path, screen) in const <(String, Widget)>[
             ('/folders', FoldersScreen()),
-            ('/ai', AiHubScreen()),
             ('/archive', ArchiveScreen()),
             ('/trash', TrashScreen()),
             ('/inbox', SharedHubScreen()),

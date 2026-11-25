@@ -139,6 +139,36 @@ async function syncPurchase(
     }
     return { ...result, pending: s.pending };
   }
+  if (productId === u.DECISION_PACK_1000) {
+    const p = u.readProduct(
+      await play(
+        `products/${u.DECISION_PACK_1000}/tokens/${enc(token)}`,
+        "GET",
+        packageName,
+      ),
+    );
+    if (p.accountTag && p.accountTag !== u.accountTag(uid)) {
+      throw new HttpsError("permission-denied", "other-account");
+    }
+    if (bind) await bindToken(token, uid, productId);
+    const result = p.owned
+      ? await applyChange(uid, {
+          pack: {
+            tokenKey: u.tokenKey(token),
+            calls: u.DECISION_PACK_CALLS,
+            tokens: u.DECISION_PACK_TOKENS,
+          },
+        })
+      : await applyChange(uid, {});
+    if (p.owned) {
+      await play(
+        `products/${u.DECISION_PACK_1000}/tokens/${enc(token)}:consume`,
+        "POST",
+        packageName,
+      ).catch((e) => logger.warn("karar paketi tüketilemedi", e.message));
+    }
+    return { ...result, pending: p.pending };
+  }
   const p = u.readProduct(
     await play(`products/${u.LIFETIME_PRODUCT}/tokens/${enc(token)}`, "GET", packageName),
   );
@@ -180,7 +210,9 @@ exports.verifyPurchase = onCall({ enforceAppCheck: true }, async (request) => {
     throw new HttpsError("invalid-argument", "unknown-package");
   }
   if (
-    (productId !== u.PRO_SUBSCRIPTION && productId !== u.LIFETIME_PRODUCT) ||
+    (productId !== u.PRO_SUBSCRIPTION &&
+      productId !== u.LIFETIME_PRODUCT &&
+      productId !== u.DECISION_PACK_1000) ||
     typeof token !== "string" ||
     token.length < 10 ||
     token.length > 4096

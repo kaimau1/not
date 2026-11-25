@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart' show immutable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,33 +11,184 @@ import '../../../../core/error_log.dart';
 import '../../../../core/net/json_http.dart';
 import '../../../entitlement/data/entitlement_service.dart';
 import '../../../entitlement/domain/entitlement.dart';
-import '../../../settings/settings_providers.dart' show sharedPreferencesProvider;
-import '../ai_policy.dart' show AiRateLimiter, aiAdmissionProvider;
+import '../../../settings/settings_providers.dart'
+    show sharedPreferencesProvider;
+import '../ai_policy.dart';
 import '../ai_provider.dart';
-import '../gemini_service.dart';
+import '../api_key_store.dart';
 import 'decision_flag.dart';
 import 'decision_models.dart';
 
+/// Decisions API çift kilitli bütçe sabitleri (50 TL Tek Seferlik Tam Sürüm).
+/// Sunucu eşi: `functions/decisions_util.js` (`LIFETIME_ONCE`,
+/// `LIFETIME_MAX_INPUT_TOKENS`, `PACK_TOKENS_PER_CALL`).
+abstract final class DecisionQuotaDefaults {
+  static const lifetimeCalls = 750;
+  static const lifetimeTokens = 600000;
+  static const packTokensPerCall = 800;
+}
+
+/// Kullanıcının sunucu tarafı Decisions API kalan hak özeti.
+@immutable
+class DecisionQuotaSnapshot {
+  const DecisionQuotaSnapshot({
+    required this.remainingCalls,
+    required this.remainingTokens,
+    this.syncedFromServer = false,
+  });
+
+  final int remainingCalls;
+  final int remainingTokens;
+
+  /// En az bir kez sunucu yanıtından güncellendi mi.
+  final bool syncedFromServer;
+
+  bool get exhausted => remainingCalls <= 0 || remainingTokens <= 0;
+
+  Map<String, Object?> toJson() => {
+    'calls': remainingCalls,
+    'tokens': remainingTokens,
+    'synced': syncedFromServer,
+  };
+
+  static DecisionQuotaSnapshot? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    final calls = raw['calls'];
+    final tokens = raw['tokens'];
+    if (calls is! num || tokens is! num) return null;
+    return DecisionQuotaSnapshot(
+      remainingCalls: calls.toInt().clamp(0, 10000000),
+      remainingTokens: tokens.toInt().clamp(0, 1000000000),
+      syncedFromServer: raw['synced'] == true,
+    );
+  }
+
+  /// Sunucu `decide` yanıtındaki `remaining` ve `remainingTokens` haritalarını
+  /// (kova toplamı: `monthly + once + pack`) tek özete çevirir.
+  static DecisionQuotaSnapshot? fromServerMaps(
+    Object? remainingRaw,
+    Object? remainingTokensRaw,
+  ) {
+    final calls = _sumMap(remainingRaw);
+    final tokens = _sumMap(remainingTokensRaw);
+    if (calls == null && tokens == null) return null;
+    return DecisionQuotaSnapshot(
+      remainingCalls: calls ?? 0,
+      remainingTokens: tokens ?? 0,
+      syncedFromServer: true,
+    );
+  }
+
+  static int? _sumMap(Object? raw) {
+    if (raw is! Map) return null;
+    var sum = 0;
+    var found = false;
+    for (final v in raw.values) {
+      if (v is num) {
+        sum += v.toInt().clamp(0, 1000000000);
+        found = true;
+      }
+    }
+    return found ? sum : null;
+  }
+}
+
+/// Ayarlar → Tam Sürüm kartı ve [ProScreen] için kalan akıllı karar sayacı.
+/// Sunucu yanıtı geldikçe güncellenir ve yerelde saklanır; henüz çağrı
+/// yapılmadıysa [Entitlement] haklarından başlangıç tavanı hesaplanır.
+final decisionQuotaProvider =
+    NotifierProvider<DecisionQuotaNotifier, DecisionQuotaSnapshot>(
+      DecisionQuotaNotifier.new,
+    );
+
+class DecisionQuotaNotifier extends Notifier<DecisionQuotaSnapshot> {
+  static const prefsKey = 'decision_quota_snapshot_v1';
+
+  @override
+  DecisionQuotaSnapshot build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final ent = ref.watch(entitlementProvider).value ?? Entitlement.none;
+    final raw = prefs.getString(prefsKey);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final parsed = DecisionQuotaSnapshot.fromJson(jsonDecode(raw));
+        if (parsed != null) return parsed;
+      } catch (_) {
+        // Bozuk önbellek varsayılana düşer.
+      }
+    }
+    return _defaultFor(ent);
+  }
+
+  static DecisionQuotaSnapshot _defaultFor(Entitlement ent) {
+    final baseCalls = ent.hasFullVersion
+        ? DecisionQuotaDefaults.lifetimeCalls
+        : 0;
+    final baseTokens = ent.hasFullVersion
+        ? DecisionQuotaDefaults.lifetimeTokens
+        : 0;
+    final extraCalls = ent.decisionCredits;
+    final extraTokens = ent.decisionTokenCredits > 0
+        ? ent.decisionTokenCredits
+        : extraCalls * DecisionQuotaDefaults.packTokensPerCall;
+    return DecisionQuotaSnapshot(
+      remainingCalls: baseCalls + extraCalls,
+      remainingTokens: baseTokens + extraTokens,
+    );
+  }
+
+  void updateFromServer(DecisionQuotaSnapshot snapshot) {
+    state = snapshot;
+    final prefs = ref.read(sharedPreferencesProvider);
+    unawaited(prefs.setString(prefsKey, jsonEncode(snapshot.toJson())));
+  }
+
+  void markExhausted() {
+    updateFromServer(
+      const DecisionQuotaSnapshot(
+        remainingCalls: 0,
+        remainingTokens: 0,
+        syncedFromServer: true,
+      ),
+    );
+  }
+}
+
 final decisionServiceProvider = Provider<DecisionService>(
   (ref) => DecisionService(
-    key: ref.watch(geminiServiceProvider).admittedDecisionKey,
+    key: _admittedGeminiKeyFor(ref),
     proxy: _proxyFor(ref),
     prefs: ref.watch(sharedPreferencesProvider),
+    onQuota: (snapshot) =>
+        ref.read(decisionQuotaProvider.notifier).updateFromServer(snapshot),
+    onQuotaExhausted: () =>
+        ref.read(decisionQuotaProvider.notifier).markExhausted(),
   ),
 );
 
-/// Sunucu vekili (`functions/decisions.js` `decide`, PLAN U8 KARAR
-/// 2026-11-22): YALNIZ Play derlemesinde ve ücretli katmanda (Pro ya da ömür
-/// boyu); kendi anahtarı yoksa kullanılır. Kota sunucuda (Pro ayda 500, ömür
-/// boyu bir kerelik 750 / 600K jeton çift kilidi); ücretsizde null → Decisions
-/// yok. Kişisel APK/web bugünkü gibi yalnız kendi anahtarıyla.
+/// Kendi Gemini anahtarı (BYOK): [AiAdmission] kapısından (AI kapalı /
+/// kill switch / rıza / katman) geçer ve anahtarı güvenli depodan okur.
+Future<String?> Function() _admittedGeminiKeyFor(Ref ref) {
+  final store = ref.watch(apiKeyStoreProvider);
+  final admission = ref.read(aiAdmissionProvider);
+  return () async {
+    final raw = (await store.read())?.trim();
+    if (raw == null || raw.isEmpty) return null;
+    admission.check(metered: false);
+    admission.checkTier(hasOwnKey: true);
+    return raw;
+  };
+}
+
+/// Sunucu vekili (`functions/decisions.js` `decide`, PLAN U8 / Faz 0+1):
+/// YALNIZ Play derlemesinde ve Tam Sürüm katmanında; kendi anahtarı yoksa
+/// kullanılır. Kota sunucuda (750 karar / 600K jeton çift kilidi + ek
+/// +1.000 karar paketi); ücretsizde null → Decisions yok.
 DecisionProxy? _proxyFor(Ref ref) {
   if (!EntitlementGate.active) return null;
-  if (!ref.watch(proFeatureProvider(ProFeature.ownApiKey))) return null;
+  if (!ref.watch(proFeatureProvider(ProFeature.smartDecisions))) return null;
   final admission = ref.read(aiAdmissionProvider);
   return (body) async {
-    // AI'ı kapat / kill switch / rıza vekilde de geçerli (hız sınırı yok:
-    // Decisions'ın kendi sayacı var).
     admission.check(metered: false);
     try {
       final r = await FirebaseFunctions.instance
@@ -48,7 +200,15 @@ DecisionProxy? _proxyFor(Ref ref) {
           )
           .call<Object?>(body);
       final data = r.data;
-      final res = data is Map ? data['response'] : null;
+      if (data is! Map) return null;
+      final snapshot = DecisionQuotaSnapshot.fromServerMaps(
+        data['remaining'],
+        data['remainingTokens'],
+      );
+      if (snapshot != null) {
+        ref.read(decisionQuotaProvider.notifier).updateFromServer(snapshot);
+      }
+      final res = data['response'];
       // Platform kanalı iç içe Map<Object?, Object?> verir → JSON'la düzle.
       return res is Map
           ? jsonDecode(jsonEncode(res)) as Map<String, dynamic>
@@ -61,25 +221,22 @@ DecisionProxy? _proxyFor(Ref ref) {
 }
 
 /// Vekil çağrısı: gövde → Decisions yanıtı (null = boş yanıt).
-typedef DecisionProxy = Future<Map<String, dynamic>?> Function(
-  Map<String, Object?> body,
-);
+typedef DecisionProxy =
+    Future<Map<String, dynamic>?> Function(Map<String, Object?> body);
 
 /// Sunucu: bu kullanıcının karar hakkı bitti.
 class DecisionQuotaExhausted implements Exception {
   const DecisionQuotaExhausted();
 }
 
-/// **TEK DECISIONS SERVİSİ** (DA-E1, plan §4.2). REST `POST /v1beta/decisions`
-/// (Dart SDK yok). Hiçbir durumda istisna atmaz: kullanılamıyorsa null döner
-/// ve çağıran BUGÜNKÜ yoluna düşer. Sıra:
+/// **TEK DECISIONS SERVİSİ** (DA-E1, plan §4.2, Faz 1). REST
+/// `POST /v1beta/decisions` (`gemini-decision-1`). Hiçbir durumda istisna
+/// atmaz: kullanılamıyorsa null döner ve çağıran yerel yoluna düşer. Sıra:
 ///  1. bayrak ([AiDecisionsFlag]) özelliği kapalıysa ağ yok;
-///  2. [key]: [GeminiService.admittedDecisionKey] — `AiAdmission` kapıları
-///     (AI'ı kapat, `aiKillSwitch`, Play rızası) ondan geçer; kendi anahtarı
-///     yoksa [proxy] (Play + ücretli katman; `decide` Function, sunucu
-///     kotası), o da yoksa null;
-///  3. kendi hız sınırı (K8: arka plan kararları elle yapılan AI isteklerinin
-///     dakikalık hakkını yemesin); 429/5xx sonrası kısa bekleme;
+///  2. [key]: kullanıcının kendi Gemini anahtarı (BYOK, `AiAdmission`
+///     kapılarından geçer); kendi anahtarı yoksa [proxy] (Play + Tam Sürüm;
+///     `decide` Function, sunucu kotası), o da yoksa null;
+///  3. kendi hız sınırı; 429/5xx sonrası kısa bekleme;
 ///  4. bellek önbelleği ([cacheTtl]) + [persistentFeatures] için kalıcı yerel
 ///     önbellek ([persistentCacheTtl], SHA-256 özetli anahtar; düz metin yok);
 ///  5. zaman aşımı [timeout] (≤ 1,5 sn) → null.
@@ -92,11 +249,13 @@ class DecisionService {
     AiRateLimiter? limiter,
     this.proxy,
     this.prefs,
+    this.onQuota,
+    this.onQuotaExhausted,
   }) : _http = http ?? JsonHttp(baseUrl: AiProvider.gemini.baseUrl),
        _now = now ?? DateTime.now,
        limiter = limiter ?? AiRateLimiter();
 
-  /// İzinli anahtar ([GeminiService.admittedDecisionKey]).
+  /// İzinli Gemini anahtarı (BYOK).
   final Future<String?> Function() key;
 
   /// Kendi anahtarı yokken sunucu vekili; null = vekil yok.
@@ -105,14 +264,15 @@ class DecisionService {
   final DateTime Function() _now;
   final SharedPreferences? prefs;
   final Duration timeout;
+  final void Function(DecisionQuotaSnapshot snapshot)? onQuota;
+  final void Function()? onQuotaExhausted;
 
   final AiRateLimiter limiter;
 
   /// ≤ 1,5 sn: kararı bekleyen akış (hızlı ekle geri sayımı) gecikmesin.
   static const defaultTimeout = Duration(seconds: 1, milliseconds: 500);
 
-  /// Vekil (Cloud Function) soğuk başlangıcı ekler: 3 sn. Zaman aşımında
-  /// sunucu hakkı yine harcayabilir (yanıt geç geldi) — kabul edilen takas.
+  /// Vekil (Cloud Function) soğuk başlangıcı ekler: 3 sn.
   static const proxyTimeout = Duration(seconds: 3);
 
   /// Hak bitince vekil bu kadar susar (her karar noktası sunucuyu yormasın).
@@ -135,6 +295,26 @@ class DecisionService {
   DateTime? _pausedUntil;
 
   DecisionMode modeOf(String feature) => AiDecisionsFlag.modeOf(feature);
+
+  /// Ayarlar → Kendi Gemini Anahtarı (BYOK) doğrulaması: `GET /models` ile
+  /// anahtarın geçerli olduğunu tek hafif istekle kontrol eder.
+  Future<bool> validateGeminiKey(String rawKey) async {
+    final trimmed = rawKey.trim();
+    if (trimmed.isEmpty) return false;
+    try {
+      await _http
+          .get<Map<String, dynamic>>(
+            '/models',
+            headers: AiProvider.gemini.authHeaders(trimmed),
+            queryParameters: const {'pageSize': '1'},
+            timeout: const Duration(seconds: 8),
+          )
+          .timeout(const Duration(seconds: 8));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   static String _hashKey(String raw) =>
       sha256.convert(utf8.encode(raw)).toString();
@@ -198,9 +378,7 @@ class DecisionService {
     store.remove(hashedKey);
     store[hashedKey] = <String, Object?>{
       'ts': now.millisecondsSinceEpoch,
-      'answers': {
-        for (final e in answers.entries) e.key: e.value.toJson(),
-      },
+      'answers': {for (final e in answers.entries) e.key: e.value.toJson()},
     };
     while (store.length > persistentCacheSize) {
       store.remove(store.keys.first);
@@ -246,10 +424,9 @@ class DecisionService {
     String? apiKey;
     try {
       apiKey = await key();
-    } on GeminiException {
-      // AI kapalı / kill switch / rıza yok — ya da Play katmanı dahili
-      // AI'a yetmiyor (ömür boyu, anahtarsız): vekil kendi kapısını yine
-      // geçer; vekil yoksa ağ yok.
+    } on AiPolicyException {
+      // AI kapalı / kill switch / rıza yok / katman yetmiyor: vekil kendi
+      // kapısını yine geçer; vekil yoksa ağ yok.
       apiKey = null;
     }
     final viaProxy = apiKey == null || apiKey.isEmpty;
@@ -296,8 +473,9 @@ class DecisionService {
       _fallback(feature, 'http ${code ?? e.message}', sw);
     } on DecisionQuotaExhausted {
       _pausedUntil = now.add(quotaPause);
+      onQuotaExhausted?.call();
       _fallback(feature, 'quota', sw);
-    } on GeminiException {
+    } on AiPolicyException {
       return null; // vekil kapısı (AI kapalı / kill switch / rıza): sessiz.
     } on TimeoutException {
       _fallback(feature, 'timeout', sw);

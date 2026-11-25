@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/app/theme/app_design.dart';
 import 'package:notlar/core/widgets/app_banner.dart';
-import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/auth/data/auth_repository.dart';
 import 'package:notlar/features/auth/presentation/account_identity_card.dart';
 import 'package:notlar/features/auth/presentation/account_sheet.dart';
@@ -204,7 +203,6 @@ void main() {
           incomingFriendRequestsProvider.overrideWith(
             (ref) => Stream.value(const []),
           ),
-          premiumProvider.overrideWith((ref) => Stream.value(false)),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

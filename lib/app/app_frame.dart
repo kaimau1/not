@@ -16,7 +16,6 @@ import 'package:go_router/go_router.dart';
 import '../core/l10n_ext.dart';
 import '../core/personalize.dart';
 import '../core/widgets/customizable.dart';
-import '../features/ai/data/ai_gate.dart';
 import '../features/folders/data/folder_activity.dart';
 import '../features/folders/domain/note_folder.dart';
 import '../features/folders/presentation/shared_folder_home.dart';
@@ -160,11 +159,7 @@ const kHomeInBarLocations = [
   '/privacy',
   '/delete-account',
   '/guide',
-  '/gmail',
   '/premium',
-  '/ai',
-  '/chat',
-  '/briefing',
   '/cards',
   '/calendar',
   '/tasks',
@@ -623,7 +618,6 @@ class _AppRail extends ConsumerWidget {
     // "yeni bir şey geldiğinde anlaşılmıyor"). Ortak notlar artık Gelen ve
     // paylaşılanlar bölümünde sayılıyor.
     final sharedUnread = ref.watch(sharedUnreadTotalProvider);
-    final aiLocked = ref.watch(aiAvailabilityProvider).looksLocked;
 
     return ColoredBox(
       color: scheme.surfaceContainerLow,
@@ -695,33 +689,7 @@ class _AppRail extends ConsumerWidget {
                                             ? '$kFolderBadgeMax+'
                                             : '$sharedUnread',
                                       ),
-                                      // Yapay zekâ kapalıysa kilit (F44.6): web'de
-                                      // dahili AI kapalıyken de görünür olsun.
-                                      // KW-13: simge kimliği (✨) KALIR, kilit
-                                      // köşede rozet — etiketsiz rayda tek
-                                      // kilit "gizli notlar" gibi okunuyordu.
-                                      child: s == AppSection.ai && aiLocked
-                                          ? Stack(
-                                              key: const ValueKey(
-                                                'rail-ai-locked',
-                                              ),
-                                              clipBehavior: Clip.none,
-                                              children: [
-                                                Icon(s.icon),
-                                                PositionedDirectional(
-                                                  end: -6,
-                                                  top: -4,
-                                                  child: Icon(
-                                                    Icons.lock_outline,
-                                                    size: AppIconSize.xs,
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurfaceVariant,
-                                                  ),
-                                                ),
-                                              ],
-                                            )
-                                          : Icon(s.icon),
+                                      child: Icon(s.icon),
                                     ),
                                   ),
                                   selectedIcon: Icon(s.selectedIcon),

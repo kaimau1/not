@@ -7,13 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/a11y/motion.dart';
-import '../core/play_build.dart';
 import 'theme/app_tokens.dart';
-import '../features/gmail/presentation/gmail_screen.dart';
 import '../features/notes/presentation/study_cards_screen.dart';
-import '../features/ai/presentation/ai_hub_screen.dart';
-import '../features/ai/presentation/briefing_screen.dart';
-import '../features/ai/presentation/ai_chat_screen.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/folders/presentation/folders_screen.dart';
@@ -32,7 +27,6 @@ import '../features/calendar/presentation/tasks_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/delete_account_screen.dart';
 import '../features/entitlement/presentation/pro_screen.dart';
-import '../features/settings/presentation/premium_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/guide_screen.dart';
 import '../features/settings/presentation/personalize_screen.dart';
@@ -278,31 +272,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               releaseNotes: state.uri.queryParameters['doc'] == 'notes',
             ),
           ),
-          // Gmail — yalnız okuma (F28.1). Play derlemesinde yok (E2): sabit
-          // bayrak → ekran Dart ağacından düşer.
-          if (PlayBuild.gmail)
-            GoRoute(
-              path: '/gmail',
-              builder: (context, state) => const GmailScreen(),
-            ),
-          // PL6: Play derlemesinde Pro ekranı (satın alma); kişisel APK'da
-          // eski bilgilendirme ekranı AYNEN (sabit dal, ağaçtan düşer).
+          // Tam Sürüm (Lite vs 50 TL Tek Seferlik + Ek Karar Paketi).
           GoRoute(
             path: '/premium',
-            builder: (context, state) =>
-                PlayBuild.enabled ? const ProScreen() : const PremiumScreen(),
-          ),
-          GoRoute(
-            path: '/ai',
-            builder: (context, state) => const AiHubScreen(),
-          ),
-          GoRoute(
-            path: '/chat',
-            builder: (context, state) => const AiChatScreen(),
-          ),
-          GoRoute(
-            path: '/briefing',
-            builder: (context, state) => const BriefingScreen(),
+            builder: (context, state) => const ProScreen(),
           ),
           GoRoute(
             path: '/cards',

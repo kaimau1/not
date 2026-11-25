@@ -23,19 +23,14 @@ void main() {
 
   test('bayrak kapalıyken (kişisel APK) bütün özellikler açık', () {
     expect(PlayBuild.selfUpdate, on);
-    expect(PlayBuild.gmail, on);
     expect(PlayBuild.placeReminders, on);
     expect(PlayBuild.antaliaVoice, on);
     expect(PlayBuild.youtubeAutoPip, on);
-    // AI-S1 (PLAN §1.6): Play'den kalkan AI yetenekleri kişisel APK'da AYNEN.
-    expect(PlayBuild.aiPodcast, on);
-    expect(PlayBuild.aiVoice, on);
-    expect(PlayBuild.videoNote, on);
     // PL3: rıza ekranı yalnız Play'de (kişisel APK'da sorulmaz).
     expect(PlayBuild.aiConsent, !on);
   });
 
-  test('video → not ek menüsünde yalnız kişisel APK\'da (AI-S1)', () {
+  test('video → not Faz 1 ile her iki derlemede de menüden kalktı', () {
     const video = Attachment(
       id: 'v',
       kind: AttachmentKind.video,
@@ -47,35 +42,7 @@ void main() {
       AttachmentSurface.strip,
       const AttachmentCaps(videoToNote: true),
     );
-    expect(actions.contains(AttachmentAction.videoToNote), on);
-  });
-
-  // AI-S1 "Play'den kalkanlar": her giriş noktası kendi kapısını okur.
-  // E-postadan not (`fromEmail`) Gmail ekranında — [PlayBuild.gmail] kapısı.
-  test('AI-S1 kapıları giriş noktalarına bağlı', () {
-    const wiring = [
-      (
-        'lib/features/ai/presentation/listen_screen.dart',
-        'PlayBuild.aiPodcast',
-      ),
-      ('lib/features/ai/data/speech_service.dart', 'PlayBuild.aiVoice'),
-      ('lib/features/settings/settings_providers.dart', 'PlayBuild.aiVoice'),
-      (
-        'lib/features/settings/presentation/settings_sections/settings_voice.dart',
-        'PlayBuild.aiVoice',
-      ),
-      (
-        'lib/features/notes/presentation/editor/attachment_actions.dart',
-        'PlayBuild.videoNote',
-      ),
-      (
-        'lib/features/notes/data/video_note_transcripts.dart',
-        'PlayBuild.videoNote',
-      ),
-    ];
-    for (final (file, gate) in wiring) {
-      expect(File(file).readAsStringSync(), contains(gate), reason: file);
-    }
+    expect(actions.contains(AttachmentAction.videoToNote), isFalse);
   });
 
   test('Android derlemesinde güncelleyici ve Antalia kapıya bağlı', () {
@@ -90,8 +57,6 @@ void main() {
   test('her kapı giriş noktasına bağlı', () {
     const wiring = {
       'lib/core/app_update.dart': 'PlayBuild.selfUpdate',
-      'lib/features/gmail/data/gmail_auth.dart': 'PlayBuild.gmail',
-      'lib/app/router.dart': 'PlayBuild.gmail',
       'lib/features/notes/data/place_reminders.dart':
           'PlayBuild.placeReminders',
       'lib/features/ai/data/antalia/antalia_engine.dart':
@@ -190,14 +155,13 @@ void main() {
     expect(AppLinks.deleteAccount, endsWith('/hesap-silme.html'));
   });
 
-  // AI-S2 eki (2026-11-19): Play'de tek motor (cihaz sesi) kalınca seçici
-  // tek bölmeli, seçilemeyen düğmeydi → gizlenir.
+  // AI-S2 eki: Play'de tek motor (cihaz sesi) kalınca seçici gizlenir.
   test('ses motoru seçici yalnız birden çok motor varken', () {
-    final play = availableTtsEngines(ai: false, local: false);
+    final play = availableTtsEngines(local: false);
     expect(play, [TtsEngine.device]);
     expect(showTtsEnginePicker(play), isFalse);
     expect(
-      showTtsEnginePicker(const [TtsEngine.device, TtsEngine.gemini]),
+      showTtsEnginePicker(const [TtsEngine.device, TtsEngine.antalia]),
       isTrue,
     );
     expect(showTtsEnginePicker(availableTtsEngines()), on);

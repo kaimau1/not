@@ -1,30 +1,26 @@
-// DA-E1 (docs/plan_decisions_api.md §4.2): tek DecisionService — bayrak,
-// kapı, savunmacı ayrıştırma, zaman aşımı/429/5xx → null (geri düşüş),
-// önbellek, toplu soru. Sahte HTTP; canlı çağrı YOK.
+// DA-E1 (docs/plan_decisions_api.md §4.2 + Faz 1): tek DecisionService —
+// bayrak, kapı, savunmacı ayrıştırma, zaman aşımı/429/5xx → null (geri düşüş),
+// önbellek, kalıcı yerel önbellek, kota takibi ve BYOK anahtar doğrulama.
+// Sahte HTTP; canlı çağrı YOK.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:notlar/core/net/json_http.dart';
+import 'package:notlar/core/play_build.dart';
+import 'package:notlar/features/ai/data/ai_policy.dart';
 import 'package:notlar/features/ai/data/ai_provider.dart';
-import 'package:notlar/features/ai/data/api_key_store.dart';
 import 'package:notlar/features/ai/data/decisions/decision_flag.dart';
 import 'package:notlar/features/ai/data/decisions/decision_models.dart';
 import 'package:notlar/features/ai/data/decisions/decision_service.dart';
-import 'package:notlar/features/ai/data/gemini_service.dart';
+import 'package:notlar/features/entitlement/presentation/pro_screen.dart'
+    show formatDecisionTokens;
+import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-class _Keys extends ApiKeyStore {
-  const _Keys(this.key);
-
-  final String? key;
-
-  @override
-  Future<String?> read(AiProvider provider) async => key;
-}
 
 const _qs = <String, DecisionQuestion>{
   'evet': NoulQuestion('Evet mi?'),
@@ -119,8 +115,10 @@ void main() {
         'aiDecisionsModel': 'gemini-decision-2',
       });
       expect(AiDecisionsFlag.modeOf('a'), DecisionMode.live);
-      // Gölge yalnız kişisel derlemede (testler kişisel derlemedir).
-      expect(AiDecisionsFlag.modeOf('b'), DecisionMode.shadow);
+      expect(
+        AiDecisionsFlag.modeOf('b'),
+        PlayBuild.enabled ? DecisionMode.off : DecisionMode.shadow,
+      );
       expect(AiDecisionsFlag.modeOf('c'), DecisionMode.off);
       expect(AiDecisionsFlag.model, 'gemini-decision-2');
     });
@@ -176,8 +174,7 @@ void main() {
     test('kapı reddi (AI kapalı / kill switch / rıza) → ağ yok', () async {
       final s = service(
         (_) => ok(good),
-        key: () async =>
-            throw const GeminiException.of(GeminiErrorKind.aiPaused),
+        key: () async => throw const AiPolicyException(AiPolicyErrorKind.aiPaused),
       );
       expect(await s.decide('f', input: 'x', questions: _qs), isNull);
       expect(sent, isEmpty);
@@ -257,7 +254,6 @@ void main() {
         expect(r['n']!.noul, closeTo(0.961, 1e-3));
         expect(r['c']!.choice, 'b_alisveris');
         expect(r['c']!.probabilities['a_yok'], closeTo(0.0034, 1e-4));
-        // score: olasılık ve legend NESNE, anahtar düzey sırası ('0','1','2').
         expect(r['s']!.score, closeTo(1.053, 1e-3));
         expect(r['s']!.probabilities.keys.toSet(), {'0', '1', '2'});
         expect(r['s']!.confidence, closeTo(0.459, 1e-3));
@@ -274,10 +270,8 @@ void main() {
           'baska': {'type': 'noul', 'noul': 0.5},
         },
       }, _qs);
-      // Tür yoksa sorudan; güven yoksa max(p, 1-p).
       expect(r['evet']!.noul, 0.8);
       expect(r['evet']!.confidence, closeTo(0.8, 1e-9));
-      // Seçim var ama ne güven ne olasılık: karar yok.
       expect(r.containsKey('sec'), isFalse);
       expect(r.containsKey('baska'), isFalse);
     });
@@ -339,42 +333,13 @@ void main() {
     });
   });
 
-  test(
-    'tek kapı: Decisions anahtarı GeminiService izin yardımcısından',
-    () async {
-      final src = File('lib/features/ai/data/decisions/decision_service.dart')
-          .readAsStringSync();
-      expect(src, isNot(contains('keyStore')));
-      expect(src, contains('admittedDecisionKey'));
-      // Başka sağlayıcıda Decisions yok; Gemini'de saklı anahtar döner.
-      expect(
-        await GeminiService(
-          const _Keys('k'),
-          provider: AiProvider.openai,
-        ).admittedDecisionKey(),
-        isNull,
-      );
-      expect(await GeminiService(const _Keys('k')).admittedDecisionKey(), 'k');
-      expect(
-        await GeminiService(const _Keys('')).admittedDecisionKey(),
-        isNull,
-      );
-      // AiAdmission kapısı ilk satır; hız sınırı Decisions'ın kendi sayacında.
-      bool? meteredSeen;
-      final gated = GeminiService(
-        const _Keys('k'),
-        admit: ({bool metered = true}) {
-          meteredSeen = metered;
-          throw const GeminiException.of(GeminiErrorKind.aiTurnedOff);
-        },
-      );
-      await expectLater(
-        gated.admittedDecisionKey(),
-        throwsA(isA<GeminiException>()),
-      );
-      expect(meteredSeen, isFalse);
-    },
-  );
+  test('tek kapı: Decisions doğrudan AiAdmission + ApiKeyStore kullanır', () {
+    final src = File('lib/features/ai/data/decisions/decision_service.dart')
+        .readAsStringSync();
+    expect(src, contains('aiAdmissionProvider'));
+    expect(src, contains('apiKeyStoreProvider'));
+    expect(src, isNot(contains('gemini_service')));
+  });
 
   group('sunucu vekili (kendi anahtarı yok)', () {
     DecisionService proxied(
@@ -403,7 +368,7 @@ void main() {
       expect(r!['evet']!.noul, 0.97);
     });
 
-    test('katman kapısı (ömür boyu, anahtarsız) → yine vekil', () async {
+    test('katman kapısı (BYOK reddi) → yine vekil', () async {
       var called = 0;
       final s = proxied(
         (_) async {
@@ -411,7 +376,7 @@ void main() {
           return good;
         },
         key: () async =>
-            throw const GeminiException.of(GeminiErrorKind.needsPro),
+            throw const AiPolicyException(AiPolicyErrorKind.needsFullVersion),
       );
       expect(await s.decide('f', input: 'x', questions: _qs), isNotNull);
       expect(called, 1);
@@ -446,7 +411,7 @@ void main() {
     test('vekil kapısı (AI kapalı) → null, günlük yok', () async {
       final s = proxied(
         (_) async =>
-            throw const GeminiException.of(GeminiErrorKind.aiTurnedOff),
+            throw const AiPolicyException(AiPolicyErrorKind.aiTurnedOff),
       );
       expect(await s.decide('f', input: 'x', questions: _qs), isNull);
     });
@@ -455,6 +420,59 @@ void main() {
       final s = service((_) => ok(good), key: () async => null);
       expect(await s.decide('f', input: 'x', questions: _qs), isNull);
       expect(sent, isEmpty);
+    });
+  });
+
+  group('Faz 1 kota anlık görüntüsü (decisionQuotaProvider) & BYOK', () {
+    test('kalan çağrı/jeton kaydedilir, yeniden okunur ve tükenince sıfırlanır', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final c = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(c.dispose);
+
+      expect(c.read(decisionQuotaProvider).syncedFromServer, isFalse);
+      c.read(decisionQuotaProvider.notifier).updateFromServer(
+        const DecisionQuotaSnapshot(
+          remainingCalls: 712,
+          remainingTokens: 540000,
+          syncedFromServer: true,
+        ),
+      );
+      final snap = c.read(decisionQuotaProvider);
+      expect(snap.syncedFromServer, isTrue);
+      expect(snap.remainingCalls, 712);
+      expect(snap.remainingTokens, 540000);
+      expect(snap.exhausted, isFalse);
+      expect(formatDecisionTokens(540000), '540K');
+      expect(formatDecisionTokens(1250000), '1250K');
+
+      // Yeniden açılışta SharedPreferences'tan gelir.
+      final c2 = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(c2.dispose);
+      expect(c2.read(decisionQuotaProvider).remainingCalls, 712);
+      expect(c2.read(decisionQuotaProvider).remainingTokens, 540000);
+
+      // Tükenme işareti.
+      c2.read(decisionQuotaProvider.notifier).markExhausted();
+      expect(c2.read(decisionQuotaProvider).exhausted, isTrue);
+      expect(c2.read(decisionQuotaProvider).remainingCalls, 0);
+    });
+
+    test('validateGeminiKey: boş anahtar ağsız false, 200 true, 401 false', () async {
+      final okService = service((r) {
+        expect(r.headers['x-goog-api-key'], 'AIza-valid');
+        return http.Response('{"models":[]}', 200);
+      });
+      expect(await okService.validateGeminiKey('  '), isFalse);
+      expect(sent, isEmpty);
+      expect(await okService.validateGeminiKey('AIza-valid'), isTrue);
+
+      final badService = service((_) => http.Response('denied', 401));
+      expect(await badService.validateGeminiKey('AIza-bad'), isFalse);
     });
   });
 

@@ -6,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/folders/presentation/folder_tile.dart';
 import 'package:notlar/core/widgets/action_menu_sheet.dart';
 import 'package:notlar/core/widgets/undo_snackbar.dart';
-import 'package:notlar/features/ai/data/ai_gate.dart';
 import 'package:notlar/features/auth/presentation/account_sheet.dart';
 import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/friends/data/friends_repository.dart';
@@ -291,7 +290,6 @@ void main() {
             incomingFriendRequestsProvider.overrideWith(
               (ref) => Stream.value(const <FriendRequest>[]),
             ),
-            premiumProvider.overrideWith((ref) => Stream.value(false)),
           ],
           child: _app(
             const Scaffold(

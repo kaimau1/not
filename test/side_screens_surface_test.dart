@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 // P62 PA4 (plan_tasarim_A §2.2 "yan ekranlar", bulgu A12): yan ekranlarda ham
 // `Card` yok — grup yüzeyi (`GroupCard` / `AppSurface.group`) kullanılır.
 const _files = [
-  'lib/features/settings/presentation/premium_screen.dart',
   'lib/features/settings/presentation/privacy_screen.dart',
   'lib/features/settings/presentation/guide_screen.dart',
   'lib/features/settings/presentation/backup_ui.dart',

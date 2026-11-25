@@ -5,7 +5,6 @@ import 'ime_hide_detector.dart';
 import 'store_mode_screen.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
-import '../study_cards_screen.dart' show generateCardsForNote;
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
 import '../reminder_repeat_ui.dart';
@@ -89,10 +88,8 @@ import 'stylus_toggle.dart';
 import 'pinned_side.dart';
 import '../../data/note_format_memory.dart';
 import '../../data/attachment_save.dart';
-import '../../data/pdf_text.dart';
 import '../../data/import_service.dart' show markdownAttachment;
 import '../../data/note_shortcut.dart';
-import '../../../ai/data/ai_gate.dart';
 import '../../../auth/presentation/account_required.dart';
 import '../../../entitlement/data/entitlement_service.dart';
 import '../../../entitlement/domain/entitlement.dart';
@@ -100,9 +97,8 @@ import '../../../entitlement/presentation/pro_lock.dart';
 import '../../../ai/data/decisions/decision_flag.dart';
 import '../../../ai/data/decisions/decision_profiles.dart';
 import '../../../ai/data/decisions/decision_service.dart';
-import '../../../ai/data/gemini_service.dart';
-import '../../../ai/presentation/ai_sheet.dart';
-import '../../../ai/presentation/listen_screen.dart';
+import '../../../ai/data/speech_service.dart';
+import '../../../ai/domain/smart_categorize.dart';
 import '../../../folders/data/folder_chat_repository.dart';
 import '../../../folders/data/folders_repository.dart';
 import '../../../folders/domain/note_folder.dart';
@@ -170,7 +166,6 @@ import '../scan_review_screen.dart';
 import '../share_sheet.dart';
 import '../listening_visuals.dart';
 import '../voice_capture_sheet.dart';
-import 'ai_result_sheet.dart';
 import 'attach_sheet.dart';
 import 'attachment_clipboard.dart';
 import 'attachment_strip.dart';
@@ -773,24 +768,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// build'de alanlara alınır; `dispose` yalnız bu alanları kullanır.
   NotesRepository? _notesRepo;
   AttachmentRepository? _attachmentRepo;
-  GeminiService? _gemini;
   DecisionService? _decisions;
-  bool _autoTagEnabled = true;
-  bool _autoTitleEnabled = true;
 
-  /// Süren AI işinin adı (null = çalışan yok). Uzun AI işleri (OCR, videodan
-  /// not) tek bir SnackBar gösterip sessizleşiyordu: kullanıcı çalışıp
-  /// çalışmadığını anlamıyor, dakikalar sonra gelen hatayı da bağlayamıyordu.
-  /// Bu alan, editörün altındaki şeritte iş bitene kadar duran canlı bir
-  /// gösterge sürer ve aynı işin ikinci kez başlatılmasını engeller.
-  ///
-  /// `ValueNotifier` (F2.7): gösterge açılıp kapanınca yalnız şerit yeniden
-  /// kurulur, 1.500 satırlık editör build'i değil.
-  final _aiTaskN = ValueNotifier<String?>(null);
-  String? get _aiTask => _aiTaskN.value;
-
-  /// Süren DOSYA işinin adı (kopyalama, yapıştırma, ek hazırlama). AI'dan
-  /// ayrı bir alan: ikisi aynı anda koşabilir ve biri ötekini susturmamalı.
+  /// Süren DOSYA işinin adı (kopyalama, yapıştırma, ek hazırlama).
   ///
   /// KÖK NEDEN (kullanıcı bulgusu 2026-08-10: "görüntü kopyalanırken veya
   /// başka bir şey yüklenirken sessizlik var, yüklenme dönencesi lazım"):
@@ -2040,18 +2020,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // [NotesRepository.lastCreatedId]): ana ekrana dönünce kartı görünür
       // alana gelip kısa süre yanıp söner. Boş atılan notta (üst dal) yok.
       _focusNote.focusCreated(note.id);
-      // İçerik denetimi isEmpty'den AYRI: yalnız hatırlatıcısı olan metinsiz
-      // not artık "boş" sayılmıyor (silinmesin diye) ama AI'ya gönderilecek
-      // içeriği de yok — boş içerikle model çağırmak puan yakar ve
-      // halüsinasyon başlık üretebilirdi.
-      final hasContent =
-          note.body.trim().isNotEmpty ||
-          note.items.any((i) => i.text.trim().isNotEmpty) ||
-          note.attachments.isNotEmpty;
-      if (hasContent) {
-        if (note.tags.isEmpty) _autoTagInBackground(note);
-        if (note.title.trim().isEmpty) _autoTitleInBackground(note);
-      }
     }
     // Kapanıştaki son kayıttan SONRA: depodaki oturum kayıtları (F6.2).
     _notesRepo?.releaseNote(widget.noteId);
@@ -2076,7 +2044,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _find.dispose();
     _attachPulse.dispose();
     _videoHub.dispose();
-    _aiTaskN.dispose();
     _busyTaskN.dispose();
     _bodyTopN.dispose();
     _titleGeneratingN.dispose();
@@ -2154,11 +2121,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ink.replaceAll(restored.pageInk);
     }
   }
-
-  /// Daire jestinin yapay zekâsı bu OTURUMDA kullanılamıyor mu (TUTARLILIK
-  /// F36.5 — web'de dahili AI kapalıyken her kazara daire aynı hatayı
-  /// basıyordu). İlk yetki hatasında bir kez söylenir, sonra jest sessiz.
-  static bool _aiGestureUnavailable = false;
 
   /// Metin DIŞINDA görünür hiçbir şey değişmedi mi? (saf yazım tespiti)
   ///
@@ -2706,7 +2668,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onExtractText: _ocrImage,
       onCopy: _copyAttachment,
       onCopyMany: _copyAttachments,
-      onVideoToNote: _videoToNote,
       onTranscribe: _openTranscript,
       onSaveAs: (a) => unawaited(AttachmentSaveAs.run(context, ref, a)),
       onShare: (a) => unawaited(shareAttachment(
@@ -2800,7 +2761,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (open && _formatBarOpen) _formatBarOpen = false;
     _update(() => _penMode = open);
     if (open) {
-      if (_dictating) unawaited(_stopDictation(offerFix: false));
+      if (_dictating) unawaited(_stopDictation());
       _penModeOpened();
     }
   }
@@ -2890,7 +2851,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _openPen() {
     if (_formatBarOpen) _formatBarOpen = false;
     _update(() => _penMode = true);
-    if (_dictating) unawaited(_stopDictation(offerFix: false));
+    if (_dictating) unawaited(_stopDictation());
     _penModeOpened();
   }
 
@@ -4850,7 +4811,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   onSetView: _readOnly
                       ? null
                       : (a, view) => unawaited(_setAttachmentView(a, view)),
-                  onVideoToNote: _videoToNote,
                   onTranscribe: _openTranscript,
                   foreign: widget.ownerId != null,
                   expanded: ref.watch(attachmentsExpandedProvider),
@@ -4890,15 +4850,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       setState(() => _pendingEmbed = null);
                     },
                   ),
-                // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
-                // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
-                // açık kalabiliyordu.
-                ValueListenableBuilder<String?>(
-                  valueListenable: _aiTaskN,
-                  builder: (context, task, _) => task == null
-                      ? const SizedBox.shrink()
-                      : _AiBanner(label: task),
-                ),
                 // CANLI DİKTE şeridi: mikrofon açıkken kaçırılamayacak bir
                 // gösterge (aynı gerekçe — açık kalmış mikrofon fark
                 // edilmiyordu). Dokunmak dikteyi bitirir.
@@ -5224,13 +5175,6 @@ child: FormatBar(
                       final showEraser =
                           eraserInk != null &&
                           (editingUi || eraserInk.ink.isNotEmpty);
-                      final showAi = on(UiItem.barAi);
-                      // "AI ile sesli not" ÇUBUKTAN KALKTI (kullanıcı isteği
-                      // 2026-10-20: "AI sesli notu AI menüsünün üzerine
-                      // alalım, ana çubukta doğrudan yazma olsun"): yapay
-                      // zekâ levhasının en üst satırında. Çubukta iki
-                      // mikrofon (parıltılı + düz) yan yana neyin ne
-                      // olduğunu karıştırıyordu.
                       // Dikte SÜRERKEN düğme gizlenmez — durdurma yolu kalsın.
                       final showDictation =
                           _dictating || on(UiItem.barDictation);
@@ -5283,7 +5227,6 @@ child: FormatBar(
                         if (showSelect) UiItem.barSelect,
                         if (showEraser) UiItem.barEraser,
                         ...extras,
-                        if (showAi) UiItem.barAi,
                         if (showVoiceRecord) UiItem.barVoiceRecord,
                         if (showDictation) UiItem.barDictation,
                       };
@@ -5358,7 +5301,7 @@ child: FormatBar(
                                 if (open) {
                                   if (_penMode) _update(() => _penMode = false);
                                   if (_dictating) {
-                                    unawaited(_stopDictation(offerFix: false));
+                                    unawaited(_stopDictation());
                                   }
                                 }
                               },
@@ -5493,20 +5436,6 @@ child: FormatBar(
                               _insertTable,
                               false,
                             ),
-                            UiItem.barAi => (
-                              Icons.auto_awesome,
-                              l10n.aiTitle,
-                              () => showAiSheet(
-                                context,
-                                note,
-                                onAppendText: _appendText,
-                                onReplaceText: _replaceText,
-                                onCreateNote: _createNoteFromText,
-                                onTranscribe: _openTranscript,
-                                onVoiceNote: _captureVoice,
-                              ),
-                              false,
-                            ),
                             UiItem.barVoiceRecord => (
                               AppIcons.voiceRecord,
                               _voiceRecorder == null
@@ -5581,41 +5510,8 @@ child: FormatBar(
                         };
                       }
 
-                      // SAĞ kapsüldeki kılık: AI düğmesi durum rozetiyle,
-                      // kalanı düz vurgu düğmesi.
+                      // SAĞ kapsüldeki kılık: vurgu düğmesi.
                       Widget rightOf(String id) {
-                        if (id == UiItem.barAi) {
-                          return Customizable(
-                                    id: UiItem.barAi,
-                                    child: Consumer(
-                                      builder: (context, ref, _) => _voiceButton(
-                                      size: plan.button,
-                                      gap: plan.gap,
-                                      // Rozet görünmeyen için de durum.
-                                      tooltip: aiStatusTitle(
-                                        l10n,
-                                        ref.watch(aiAvailabilityProvider),
-                                      ),
-                                      icon: Icons.auto_awesome,
-                                      badge:
-                                          ref
-                                              .watch(aiAvailabilityProvider)
-                                              .looksLocked
-                                          ? Icons.lock_outline
-                                          : null,
-                                      onTap: () => showAiSheet(
-                                        context,
-                                        note,
-                                        onAppendText: _appendText,
-                                        onReplaceText: _replaceText,
-                                        onCreateNote: _createNoteFromText,
-                                        onTranscribe: _openTranscript,
-                                        onVoiceNote: _captureVoice,
-                                      ),
-                                    ),
-                                    ),
-                                  );
-                        }
                         final (icon, label, onTap, active) = spec(id);
                         if (id == UiItem.barEraser) {
                           return eraserGate(
@@ -5684,7 +5580,6 @@ child: FormatBar(
                             UiItem.barReminder ||
                             UiItem.barColor ||
                             UiItem.barShare ||
-                            UiItem.barAi ||
                             UiItem.barDictation => true,
                             // Silgi yalnız mürekkep varken anlamlı (çubukta
                             // kendi kapısı var); menüye girmez.

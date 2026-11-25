@@ -1,44 +1,33 @@
-// PLAY BILLING ÜRÜNLERİ — PLAN §1.5 PL6. Ürün kimliklerinin TEK yeri
+// PLAY BILLING ÜRÜNLERİ — PLAN §2.3 & §3 (Faz 1). Ürün kimliklerinin TEK yeri
 // (sunucu eşi `functions/billing_util.js`; bekçi `test/billing_test.dart`).
 // Play Console'da bir kez verilen kimlik bir daha kullanılamaz: değiştirme.
 //
 // FİYAT KODDA YOK: mağazadan okunur (`ProductDetails`), kullanıcının
-// ülkesine/para birimine göre Play biçimler. Fiyat kararı açık (PLAN §1.5).
+// ülkesine/para birimine göre Play biçimler.
 
-/// Satın alınabilen planlar (ekrandaki sırayla).
+/// Satın alınabilen ürünler (ekrandaki sırayla). Abonelik YOKTUR.
 enum BillingPlan {
-  monthly(BillingProducts.pro, BillingProducts.monthlyPlan),
-  yearly(BillingProducts.pro, BillingProducts.yearlyPlan),
-  lifetime(BillingProducts.lifetime, null);
+  /// Tam Sürüm — 50 TL tek seferlik, ömür boyu (tüketilmez).
+  lifetime(BillingProducts.lifetime, consumable: false),
 
-  const BillingPlan(this.productId, this.basePlanId);
+  /// +1.000 Akıllı Karar Paketi — 30 TL, tüketilebilir.
+  decisionPack1000(BillingProducts.decisionPack1000, consumable: true);
+
+  const BillingPlan(this.productId, {required this.consumable});
 
   /// Play ürün kimliği.
   final String productId;
 
-  /// Abonelikte temel plan kimliği; tek seferde null.
-  final String? basePlanId;
-
-  bool get isSubscription => basePlanId != null;
+  /// Tüketilebilir ek paket mi (tekrar alınabilir).
+  final bool consumable;
 }
 
 abstract final class BillingProducts {
-  /// Pro aboneliği (dahili AI + bulut ekleri + ömür boyunun hepsi). İki temel
-  /// plan; her birinde 7 gün ücretsiz deneme TEKLİFİ (Play Console'da, "yeni
-  /// müşteri" uygunluğuyla — Play denemeyi yalnız uygun olana listeler).
-  static const pro = 'pro';
-  static const monthlyPlan = 'monthly';
-  static const yearlyPlan = 'yearly';
-
-  /// Ömür boyu: tek sefer, tüketilmez (kendi Gemini anahtarı, yedek, görünüm).
+  /// Tam Sürüm: tek sefer, ömür boyu, tüketilmez (750 akıllı karar dahil).
   static const lifetime = 'lifetime';
 
-  static const all = {pro, lifetime};
+  /// +1.000 Akıllı Karar Paketi: isteğe bağlı tüketilebilir ek kredi paketi.
+  static const decisionPack1000 = 'decision_pack_1000';
 
-  /// Play'in abonelik yönetimi sayfası (plan değiştir / iptal).
-  static Uri manageUrl(String packageName) => Uri.https(
-    'play.google.com',
-    '/store/account/subscriptions',
-    {'sku': pro, 'package': packageName},
-  );
+  static const all = {lifetime, decisionPack1000};
 }
