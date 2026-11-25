@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/spell_engine.dart';
+import '../../../../core/utils/spell_learn.dart';
 import 'auto_spell.dart';
 import 'selection_toolbar.dart';
 import 'text_wrap.dart' show WrapTextController;
@@ -34,12 +37,21 @@ typedef SpellMark = ({int start, int end, String word, bool hint});
 ///   notta yetmezse izole taraması sabah bakılacak.
 /// * Hafıza ya da "bu notta dokunma" değişince ([AutoSpell.revision])
 ///   önbellek boşalır, alan yeniden denetlenir.
+/// * **CİHAZ DENETÇİSİ (2026-11-25, kullanıcı: "altı çizilmeli Word'deki
+///   gibi"):** yerleşik motor yalnız ÖNERİ bulabildiği kelimenin altını
+///   çiziyordu; sözlüğü küçük olduğundan "petnr", "nabr", "nasılsn" gibi
+///   açık yanlışların çoğunda öneri yok → çizgi de yoktu (KÖK NEDEN). Öneri
+///   bulunamayan bilinmeyen kelimeler Android'in yazım denetçisine (Gboard)
+///   TOPLU sorulur ([_judge], [_pumpNative]); yanlış derse altı çizilir,
+///   önerileri menüye gelir. Kişisel sözlük/sık kelime/“sözlüğe ekle” hep
+///   önce gelir (sorulmaz). Web'de ve denetçisiz cihazda eski davranış.
 class SpellMarks extends ChangeNotifier {
   SpellMarks._(this.controller) : _text = controller.text {
     controller.addListener(_onText);
     AutoSpell.mode.addListener(_restart);
     AutoSpell.revision.addListener(_restart);
     AutoSpell.checkDone.addListener(notifyListeners);
+    _nativeTick.addListener(_onNative);
     _schedule(Duration.zero);
   }
 
@@ -79,6 +91,7 @@ class SpellMarks extends ChangeNotifier {
     AutoSpell.mode.removeListener(_restart);
     AutoSpell.revision.removeListener(_restart);
     AutoSpell.checkDone.removeListener(notifyListeners);
+    _nativeTick.removeListener(_onNative);
     _timer?.cancel();
     _disposed = true;
     dispose();
@@ -120,6 +133,13 @@ class SpellMarks extends ChangeNotifier {
   void _schedule(Duration d) {
     _timer?.cancel();
     _timer = Timer(d, _scan);
+  }
+
+  /// Cihaz denetçisinden yanıt geldi: yazım sürmüyorsa yeniden denetle
+  /// (yazım sürüyorsa duraklamadaki denetim zaten gelecek).
+  void _onNative() {
+    if (_timer?.isActive ?? false) return;
+    _schedule(Duration.zero);
   }
 
   void _restart() {
@@ -204,7 +224,7 @@ class SpellMarks extends ChangeNotifier {
             return;
           }
           if (_words.length > 20000) _words.clear();
-          _words[t.word] = SpellEngine.suggestions(t.word, memory);
+          _words[t.word] = _judge(t.word, memory);
         }
         marks = [
           for (final t in tokens)
@@ -230,9 +250,160 @@ class SpellMarks extends ChangeNotifier {
       }
       base += para.length + 1;
     }
+    _pumpNative();
     if (_marks.isEmpty && out.isEmpty) return;
     _marks = out;
     notifyListeners();
+  }
+
+  // ---- Cihaz yazım denetçisi (Android: Gboard) ---------------------------
+
+  /// Testte cihaz denetçisinin yerine geçer (null = platform).
+  @visibleForTesting
+  static Future<List<SuggestionSpan>?> Function(String text)? nativeCheck;
+
+  /// Kelime → cihazın önerileri (null = cihaz doğru buldu). Hafızadan
+  /// bağımsız: [AutoSpell.revision]'da boşalmaz.
+  static final Map<String, List<String>?> _native = {};
+  static final Set<String> _nativeQueue = {};
+
+  /// Yanıtı beklenen kelimeler (önbellek o arada boşalırsa yeniden
+  /// sıraya girmesin).
+  static final Set<String> _nativeAsking = {};
+  static final _nativeTick = ValueNotifier<int>(0);
+  static bool _nativeBusy = false;
+  static int _nativeFails = 0;
+  static const _nativeBatch = 40;
+  static final _service = DefaultSpellCheckService();
+
+  /// Flutter'ın kendi yazım denetimiyle aynı kapı: Android'de Gboard'un
+  /// denetçisi açıksa (`nativeSpellCheckServiceDefined`; yoksa oturum
+  /// açılamaz). Art arda hatada oturum boyu kapanır.
+  static bool get _nativeOn =>
+      _nativeFails < 5 &&
+      (nativeCheck != null ||
+          (!kIsWeb &&
+              defaultTargetPlatform == TargetPlatform.android &&
+              WidgetsBinding
+                  .instance
+                  .platformDispatcher
+                  .nativeSpellCheckServiceDefined));
+
+  /// Kelimenin işareti: önce yerleşik motor; önerisi yoksa ve kelime
+  /// bilinmiyorsa cihaz denetçisinin yanıtı (henüz yoksa sıraya girer,
+  /// yanıt gelince yeniden denetlenir).
+  static ({List<String> list, bool hint})? _judge(String w, SpellMemory m) {
+    final s = SpellEngine.suggestions(w, m);
+    if (s != null ||
+        w.length < 3 ||
+        isCjk(w) ||
+        m.keep.contains(w) ||
+        m.known(w) ||
+        !_nativeOn) {
+      return s;
+    }
+    if (!_native.containsKey(w)) {
+      if (!_nativeAsking.contains(w)) _nativeQueue.add(w);
+      return null;
+    }
+    final list = _native[w];
+    if (list == null) return null;
+    return (
+      list: [
+        for (final x in list)
+          if (!m.isRejected(w, x)) x,
+      ].take(4).toList(),
+      hint: false,
+    );
+  }
+
+  /// Sıradaki kelimeleri tek istekte (boşlukla dizilmiş) sorar; denetçi
+  /// aynı anda tek istek kabul eder.
+  static void _pumpNative() {
+    if (_nativeBusy || _nativeQueue.isEmpty || !_nativeOn) return;
+    final batch = _nativeQueue.take(_nativeBatch).toList();
+    _nativeQueue.removeAll(batch);
+    _nativeAsking.addAll(batch);
+    _nativeBusy = true;
+    unawaited(_askNative(batch));
+  }
+
+  static Future<List<SuggestionSpan>?> _platformCheck(String text) =>
+      _service.fetchSpellCheckSuggestions(const Locale('tr', 'TR'), text);
+
+  static Future<void> _askNative(List<String> batch) async {
+    final starts = <int>[];
+    final text = StringBuffer();
+    for (final w in batch) {
+      if (text.isNotEmpty) text.write(' ');
+      starts.add(text.length);
+      text.write(w);
+    }
+    List<SuggestionSpan>? spans;
+    try {
+      spans = await (nativeCheck ?? _platformCheck)(text.toString());
+    } catch (_) {
+      spans = null;
+    }
+    _nativeBusy = false;
+    _nativeAsking.removeAll(batch);
+    if (spans == null) {
+      // Meşgul (yazım düzeltmenin sorusu sürüyor) ya da hata: kelimeler
+      // sıraya döner, sonraki denetimde yeniden sorulur.
+      _nativeFails++;
+      _nativeQueue.addAll(batch);
+      return;
+    }
+    _nativeFails = 0;
+    if (_native.length > 20000) _native.clear();
+    final flagged = <String>[];
+    for (var i = 0; i < batch.length; i++) {
+      final w = batch[i];
+      final start = starts[i];
+      final span = spans
+          .where(
+            (s) => s.range.start == start && s.range.end == start + w.length,
+          )
+          .firstOrNull;
+      final list = span == null
+          ? null
+          : <String>{
+              for (final x in span.suggestions)
+                if (x.trim().isNotEmpty && trLower(x) != w) trLower(x),
+            }.toList();
+      // Yalnız büyük harf istiyorsa ("ahmet" → "Ahmet": özel ad, cümle
+      // başı) yanlış sayılmaz.
+      final caseOnly =
+          span != null && span.suggestions.any((x) => trLower(x) == w);
+      if (list == null || caseOnly) {
+        _native[w] = null;
+        continue;
+      }
+      _native[w] = list;
+      flagged.add(w);
+    }
+    if (flagged.isNotEmpty) {
+      // Önbellekte "işaretsiz" duruyorlardı: yeniden karar verilsin.
+      for (final w in flagged) {
+        _words.remove(w);
+      }
+      _paras.clear();
+      _nativeTick.value++;
+    }
+    _pumpNative();
+  }
+
+  /// Testler arası durağan önbellekleri boşaltır.
+  @visibleForTesting
+  static void debugReset() {
+    _words.clear();
+    _paras.clear();
+    _native.clear();
+    _nativeQueue.clear();
+    _nativeAsking.clear();
+    _nativeBusy = false;
+    _nativeFails = 0;
+    nativeCheck = null;
   }
 }
 

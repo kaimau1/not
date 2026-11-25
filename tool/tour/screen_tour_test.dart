@@ -18,6 +18,8 @@ import 'package:notlar/features/notes/data/upload_queue.dart'
 //   TOUR_OFFLINE=1  çevrimdışı hâller (F79.6): bekleyen yazım/ek, AI, hata
 //   TOUR_KEYBOARD=300  klavyeli hâl (viewInsets.bottom dp; ada `-klavye`)
 //   TOUR_FONT=1.3  büyük yazı (F80.2): uygulama yazı ölçeği; ada `-yazi130`
+//   TOUR_BG=aurora_bloom  ana ekran zemin görseli (hazır görsel kimliği)
+//   TOUR_BARS=1  sistem çubukları: durum 24 dp + gezinme 48 dp (kenardan kenara)
 //   TOUR_COMPARE=<eski klasör>  önce/sonra: her PNG için değişen piksel yüzdesi
 //   basılır (`TOUR_FARK ad %x`), özet `<çıktı>/_fark.txt`.
 //
@@ -491,6 +493,8 @@ Future<void> _pumpApp(
     ],
     // TOUR_COLUMNS=3|4: dar sütunlu ana ekran (kart sıkışması).
     'grid_columns': ?int.tryParse(Platform.environment['TOUR_COLUMNS'] ?? ''),
+    // TOUR_BG=<hazır görsel>: ana ekran zemini (tam ekran zemin, 2026-11-25).
+    'dashboard_bg_preset': ?Platform.environment['TOUR_BG'],
     // Takvim sahneleri ajanda görünümünde, sıkıştırma ipucu gösterilmiş.
     if (scene.startsWith('takvim')) ...{
       'calendar_view': switch (scene) {
@@ -510,6 +514,12 @@ Future<void> _pumpApp(
   );
   if (keyboard != null) {
     tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
+  }
+  // TOUR_BARS=1: telefonun sistem çubukları (durum + üç tuşlu gezinme).
+  if (Platform.environment['TOUR_BARS'] == '1') {
+    const bars = FakeViewPadding(top: 24, bottom: 48);
+    tester.view.padding = bars;
+    tester.view.viewPadding = bars;
   }
   addTearDown(tester.view.reset);
   final router = GoRouter(

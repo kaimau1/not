@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/spell_learn.dart';
+import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
+import 'package:notlar/features/notes/presentation/editor/items_editor.dart';
 import 'package:notlar/features/notes/presentation/editor/spell_underline.dart';
 import 'package:notlar/features/notes/presentation/editor/tag_chips.dart';
 import 'package:notlar/features/notes/presentation/editor/tag_tap.dart';
@@ -16,8 +19,13 @@ void main() {
     AutoSpell.memory = SpellMemory();
     AutoSpell.mode.value = SpellMode.show;
     AutoSpell.beginNote();
+    SpellMarks.debugReset();
   });
-  tearDown(() => AutoSpell.mode.value = SpellMode.off);
+  tearDown(() {
+    AutoSpell.mode.value = SpellMode.off;
+    AutoSpell.enabled.value = false;
+    SpellMarks.debugReset();
+  });
 
   /// Tarama 4 ms'lik dilimlere bölünür (soğuk başlangıçta birkaç dilim).
   Future<void> scan(
@@ -177,5 +185,157 @@ void main() {
     expect(c.text, 'bir kalem daha');
     expect(AutoSpell.memory.learned('kalwm'), 'kalem');
     await tester.pump(const Duration(seconds: 5)); // Erteli kayıt.
+  });
+
+  /// Cihaz denetçisi taklidi: [wrong] kelimelerini (önerileriyle) yanlış
+  /// sayar; gelen metinler [asked]e yazılır.
+  List<String> fakeNative(Map<String, List<String>> wrong) {
+    final asked = <String>[];
+    SpellMarks.nativeCheck = (text) async {
+      asked.add(text);
+      final out = <SuggestionSpan>[];
+      for (final m in RegExp(r'\S+').allMatches(text)) {
+        final s = wrong[m[0]];
+        if (s != null) {
+          out.add(SuggestionSpan(TextRange(start: m.start, end: m.end), s));
+        }
+      }
+      return out;
+    };
+    return asked;
+  }
+
+  testWidgets(
+    'öneri bulunamayan bilinmeyen kelime cihaz denetçisine sorulur, '
+    'yanlışsa altı çizilir (kullanıcı 2026-11-25: "petnr", "nabr")',
+    (tester) async {
+      final asked = fakeNative({
+        'petnr': ['peynir', 'Petrol'],
+        'nabr': ['naber'],
+      });
+      final c = TextEditingController(text: 'petnr ekmek ama nabr geldi');
+      final m = SpellMarks.acquire(c);
+      addTearDown(m.release);
+      await scan(tester);
+      expect(marksOf(m), [(0, 5, 'petnr'), (16, 20, 'nabr')]);
+      // Bilinen kelimeler ("ekmek", "ama", "geldi") sorulmaz; tek istek.
+      expect(asked, ['petnr nabr']);
+      expect(SpellMarks.suggestionsFor('petnr'), ['peynir', 'petrol']);
+
+      // Sözlüğe eklenen kelime bir daha çizilmez (cihaz yanlış dese de).
+      AutoSpell.addToDictionary('petnr');
+      await scan(tester);
+      expect(marksOf(m), [(16, 20, 'nabr')]);
+      expect(asked, hasLength(1), reason: 'yanıt önbellekte');
+      await tester.pump(const Duration(seconds: 5)); // Erteli kayıt.
+    },
+  );
+
+  testWidgets(
+    'yalnız büyük harf isteyen (özel ad) çizilmez; denetçi meşgulse '
+    'kelime sonraki denetimde yeniden sorulur',
+    (tester) async {
+      var busy = true;
+      final asked = <String>[];
+      SpellMarks.nativeCheck = (text) async {
+        asked.add(text);
+        if (busy) return null;
+        return [
+          const SuggestionSpan(TextRange(start: 0, end: 5), ['Zeyno']),
+          const SuggestionSpan(TextRange(start: 6, end: 10), ['naber']),
+        ];
+      };
+      final c = TextEditingController(text: 'zeyno nabr');
+      final m = SpellMarks.acquire(c);
+      addTearDown(m.release);
+      await scan(tester);
+      expect(m.marks, isEmpty);
+      expect(asked, ['zeyno nabr']);
+
+      busy = false;
+      c.text = 'zeyno nabr ';
+      await scan(tester, SpellMarks.pause);
+      expect(asked, hasLength(2));
+      expect(marksOf(m), [(6, 10, 'nabr')]);
+    },
+  );
+
+  testWidgets(
+    'klavyenin otomatik düzeltmesi kipe bağlı: yalnız "Otomatik"te açık '
+    '(kullanıcı 2026-11-25: "otomatik düzelt kapalı ama düzeliyor")',
+    (tester) async {
+      AutoSpell.enabled.value = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ItemsEditor(
+                items: const [NoteItem(id: 'a', text: 'bir madde')],
+                onChanged: (_) {},
+                showCheckboxes: true,
+                shrinkWrap: true,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final field = find.byType(TextField);
+      expect(field, findsWidgets);
+      final state = tester.state(field.first);
+      expect(tester.widget<TextField>(field.first).autocorrect, isFalse);
+
+      AutoSpell.enabled.value = true;
+      await tester.pump();
+      expect(tester.widget<TextField>(field.first).autocorrect, isTrue);
+      expect(
+        identical(tester.state(field.first), state),
+        isTrue,
+        reason: 'alan yeniden kurulmaz (klavye düşmez)',
+      );
+    },
+  );
+
+  testWidgets('madde satırında (odaklı) dalgalı çizgi çizilir', (
+    tester,
+  ) async {
+    fakeNative({
+      'petnr': ['peynir'],
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('tr'),
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ItemsEditor(
+              items: const [NoteItem(id: 'a', text: 'petnr ekmek geldi')],
+              onChanged: (_) {},
+              showCheckboxes: true,
+              shrinkWrap: true,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+    await scan(tester, SpellMarks.pause);
+    final c = tester.widget<TextField>(find.byType(TextField).first).controller!;
+    expect(SpellMarks.of(c)!.marks.map((k) => k.word), ['petnr']);
+    final paint = tester.renderObject(
+      find
+          .descendant(
+            of: find.byType(AttachmentTagChips),
+            matching: find.byType(CustomPaint),
+          )
+          .first,
+    );
+    expect(paint, paints..path(), reason: 'dalgalı çizgi çizilir');
   });
 }

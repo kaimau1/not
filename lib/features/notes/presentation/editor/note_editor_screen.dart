@@ -3822,10 +3822,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               textScaler: MediaQuery.textScalerOf(context),
               textDirection: Directionality.of(context),
             );
-            return TextField(
+            return ValueListenableBuilder<bool>(
+              valueListenable: AutoSpell.enabled,
+              builder: (_, autoFix, _) => TextField(
         controller: _titleController,
         focusNode: _titleFocus,
         readOnly: _readOnly,
+        autocorrect: autoFix,
         onChanged: (_) =>
             _mutate((n) => n.copyWith(title: _titleController.logicalText)),
         style: titleBaseStyle.copyWith(fontSize: fitted),
@@ -3867,7 +3870,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           filled: false,
           border: InputBorder.none,
         ),
-      );
+      ),
+            );
           },
         ),
       ),
@@ -4320,10 +4324,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         controller: _bodyField,
         looks: _tagLooks,
         child: _bodyTapPoint.wrap(
-        TextField(
+        // KLAVYENİN OTOMATİK DÜZELTMESİ uygulamanın kipine bağlı (kullanıcı
+        // 2026-11-25: "otomatik düzelt kapalı ama otomatik düzeliyor"):
+        // `autocorrect` varsayılanı true, klavye (Gboard) kendi düzeltmesini
+        // yapıyordu. Kip seyrek değişir; dinleyici ağaçta hep var (şekil sabit).
+        ValueListenableBuilder<bool>(
+        valueListenable: AutoSpell.enabled,
+        builder: (_, autoFix, _) => TextField(
           controller: _bodyField,
           focusNode: _bodyFocus,
           readOnly: _readOnly,
+          autocorrect: autoFix,
           // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
           // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
           style: noteBodyStyle,
@@ -4380,6 +4391,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               bottom: bottom ? _kBodyTextTop : 0,
             ),
           ),
+        ),
         ),
         // Damgaya/etikete dokunmak klavyeyi AÇMAZ (bkz. TapPointTracker.wrap).
         focusNode: _bodyFocus,

@@ -2,6 +2,11 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 25 Kasım 2026 {#2026-11-25}
+- **Ana ekran zemini artık tüm ekranı kaplıyor:** seçtiğin zemin görseli durum çubuğunun ve alttaki gezinme tuşlarının arkasına kadar uzanıyor; arama çubuğunun çevresi de zeminle kesintisiz. Görsel eskiden ekrana tam oturmayıp üstte ve altta düz renkli şerit bırakıyordu; düzeltildi. Notlar listesi de en alta kadar kayıyor.
+- **Yazım denetimi yanlış kelimelerin altını çiziyor (Word'deki gibi):** "Yalnız göster" kipinde "petnr", "nabr", "nasılsn" gibi öneri bulunamayan yanlışların da altı kırmızı dalgalı çiziliyor; telefonun yazım denetçisinin (Gboard) önerileri dokununca açılan menüye geliyor. Sözlüğe eklediğin ve notlarında sık geçen kelimeler çizilmez.
+- **Otomatik düzelt kapalıyken klavye de düzeltmiyor:** yazım kipi "Kapalı" ya da "Yalnız göster" iken klavyeden otomatik düzeltme istenmiyor; yalnız "Otomatik" kipinde açık. Klavyen yine düzeltirse klavye ayarlarındaki "Otomatik düzeltme"yi kapatman gerekebilir.
+
 ## 24 Kasım 2026 {#2026-11-24}
 - **Mağaza Kipi artık canlı güncelleniyor:** ortak alışveriş listesinde başka biri bir ürünü işaretlediğinde ya da yeni ürün eklediğinde Mağaza Kipi'nden çıkıp girmeden ekranda anında görünür.
 - **Çok cihazlı ve çevrimdışı açılış daha kararlı:** başka cihazda yeni not eklendiğinde ya da internet yokken uygulama açıldığında bütün notları baştan indirmek yerine yalnız değişenleri çeker.

@@ -2,6 +2,11 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 25 November 2026 {#2026-11-25}
+- **Home screen background now fills the whole screen:** your background image reaches behind the status bar and the navigation buttons, and flows seamlessly around the search bar. Previously the image didn't fit the screen and left plain strips at the top and bottom; fixed. The note list also scrolls all the way to the bottom.
+- **Spell check underlines misspelled words (like Word):** in "Show only" mode, typos with no suggestion of our own (like "petnr", "nabr") now get a red wavy underline too; your phone's spell checker (Gboard) supplies suggestions in the tap menu. Words you added to the dictionary or use often in your notes aren't underlined.
+- **Keyboard stops auto-correcting when auto-correct is off:** with spelling set to "Off" or "Show only", the app no longer asks the keyboard to auto-correct; only "Auto" turns it on. If your keyboard still corrects, you may need to turn off "Auto-correction" in its own settings.
+
 ## 24 November 2026 {#2026-11-24}
 - **Store Mode updates live:** when someone checks off or adds an item in a shared shopping list on another device, it now appears immediately in Store Mode without leaving the screen.
 - **More reliable multi-device and offline sync:** opening the app offline or after adding a note on another device now keeps delta sync active instead of re-fetching the whole note list.

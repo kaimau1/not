@@ -91,7 +91,10 @@ class HomeEmptyNotes extends ConsumerWidget {
     // KT-3 (keşif turu 2026-11-14): kısa/dar pencerede eylem düğmesi sağ
     // alttaki mikrofon + "+" satırının altında kalıyordu; boş hâl o
     // satırın ÜSTÜNDEKİ alanda ortalanır (ızgaranın alt payıyla aynı).
-    padding: const EdgeInsets.only(bottom: _kFabClearance),
+    // Izgara gezinme çubuğunun altına uzanır (tam ekran zemin, 2026-11-25).
+    padding: EdgeInsets.only(
+      bottom: _kFabClearance + MediaQuery.viewPaddingOf(context).bottom,
+    ),
     child: _content(context, ref),
   );
 

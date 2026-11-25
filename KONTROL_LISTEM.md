@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Tam ekran ana ekran zemini + yazım altı çizgisi + klavye otomatik düzeltmesi (25 Kasım akşam, bulutta yazıldı — cihazda doğrulanmadı; A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) Ana ekranda bir zemin görseli seçili iken görsel durum çubuğunun ve alttaki üç tuşun arkasına uzanıyor mu, arama çubuğunun çevresi zeminle kesintisiz mi, üstte/altta düz şerit kaldı mı; durum çubuğu simgeleri okunuyor mu (açık + koyu tema). (2) Listeyi en alta kaydır: son kart gezinme tuşlarının üstüne çıkabiliyor mu; ⚡/🎤/+ düğmeleri tuşların üstünde mi. (3) Yazım kipi **Yalnız göster**: bir maddeye "petnr ekmek ama nabr nasılsn" yaz, boşluk bırak, biraz bekle → "petnr", "nabr" (ve son kelimeden çıkınca "nasılsn") kırmızı dalgalı çizili mi; dokununca Gboard önerileri menüde mi. (4) Aynı kipte yazarken klavye kelimeleri kendiliğinden değiştiriyor mu (değiştirmemeli; değiştiriyorsa Gboard → Metin düzeltme → Otomatik düzeltme ayarını yaz). (5) Hızlı satırdaki yazım düğmesiyle **Otomatik**'e geç → düzeltme geri geliyor mu.
+  Yanlışsa: madde numarasını yaz, ekran görüntüsü at.
+
 - [ ] **Faz 3 Akıllı Alışveriş Listesi v2 (25 Kasım, bulutta yazıldı — cihazda doğrulanmadı)**
   Nerede/Nasıl: (1) Alışveriş listesi notunda üstteki **Mağaza Kipi** düğmesine dokun → ekran kararmadan açık kalıyor mu (`KeepScreenOn`). (2) Reyon başlıkları, market süzgeci (`BİM`/`Migros`), üst atlama çipleri ve satır içi `−/+` miktar adımlama akıcı mı. (3) Sağa kaydırıp fiyat + market gir, sola kaydırıp **Yoktu / Sonraya** işaretle → **Alışverişi Bitir** deyince "Yoktu" maddeleri listede kalıyor mu. (4) Alt çubuktaki **📷 Barkod** ve **🎤 Sesle ekle** ("bir buçuk litre süt, yarım kilo peynir") + üst çubuktaki **🧾 Fiş tara** (ML Kit OCR) ve **🍲 Tarif paketleri** gerçek cihazda sorunsuz çalışıyor mu.
   Yanlışsa: hangi adımda sorun çıktığını yaz.

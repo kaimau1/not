@@ -193,6 +193,17 @@ class _GridScrollElement extends StatelessElement {
 /// ARKASINDA kalıyordu; kartın altındaki metne/tarihe hiç ulaşılamıyordu.
 const double _kFabClearance = 96;
 
+/// Saydam arama çubuğunun (ana ekran zemini varken) durum çubuğu stili:
+/// simgeler temanın parlaklığına göre — opak `surface` zeminle aynı sonuç.
+SystemUiOverlayStyle _statusBarOverZemin(BuildContext context) {
+  final dark = Theme.of(context).brightness == Brightness.dark;
+  return SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+    statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+  );
+}
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -1497,10 +1508,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       // birleştirme katmanı (saveLayer) açmadan, çizimde alfa uygulanır.
       // Zemin ızgaranın arkasında ekran boyunda duruyor; ayrı katman her
       // kaydırma karesinde GPU'ya fazladan tam ekran bir geçiş demekti.
+      // EKRAN BOYUNDA (2026-11-25): `AnimatedSwitcher`'ın yığını çocuğa
+      // GEVŞEK kısıt veriyor; görsel kendi en-boy oranında küçülüp ortada
+      // duruyor, `BoxFit.cover` hiç devreye girmiyordu (üstte/altta boş
+      // şerit). Sonsuz en/boy kısıtı sıkılaştırır.
       imageLayer = RepaintBoundary(
         key: key,
         child: Image(
           image: provider,
+          width: double.infinity,
+          height: double.infinity,
           fit: BoxFit.cover,
           opacity: AlwaysStoppedAnimation(opacity),
         ),
@@ -1685,6 +1702,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
     final hiddenRevealed = ref.watch(hiddenFoldersRevealedProvider);
 
+    // Zemin katmanları (renk/desen/görsel) ve gezinme çubuğu payı. Pay
+    // `viewPadding`'den: klavye açılınca DEĞİŞMEZ (yalnız döndürmede) — ana
+    // ekran klavye karelerinde yeniden kurulmaz.
+    final backgroundLayers = _dashboardBackground(ref);
+    final hasBackground = backgroundLayers.isNotEmpty;
+    final navInset = MediaQuery.viewPaddingOf(context).bottom;
     final page = CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.keyN, control: true): () {
@@ -1718,13 +1741,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           // zaten gerek yok; klavye yalnız yüzen düğmelerin üstünü örter,
           // onlar da yazarken kullanılmıyor.
           resizeToAvoidBottomInset: false,
-          body: SafeArea(
-            child: Stack(
+          body: Stack(
+            children: [
+              // Ana ekran ZEMİN görseli (Ayarlar → Görünüm). Kart
+              // ızgarasının arkasında durur; görünürlük ayarı okunurluğu
+              // korumak için varsayılan olarak düşüktür.
+              // TAM EKRAN (kullanıcı 2026-11-25: "arka plan zemini tüm ekranı
+              // kaplamıyor, üst ve alt alan kaplanmalı"): zemin eskiden
+              // `SafeArea`nın İÇİNDEYDİ — durum çubuğu ve alttaki gezinme
+              // çubuğu şeridi düz renk kalıyordu, arama çubuğu da (AppBar)
+              // üstüne kendi zeminini boyuyordu. Zemin artık ekranın tamamında;
+              // arama çubuğu zemin varken saydam, ızgara gezinme çubuğunun
+              // altına kadar uzanır (son kart [navInset] kadar yukarı kayabilir).
+              ...backgroundLayers,
+              SafeArea(
+                bottom: false,
+                child: Stack(
               children: [
-                // Ana ekran ZEMİN görseli (Ayarlar → Görünüm). Kart
-                // ızgarasının arkasında durur; görünürlük ayarı okunurluğu
-                // korumak için varsayılan olarak düşüktür.
-                ..._dashboardBackground(ref),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun
@@ -2001,6 +2034,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                               final sidebarHasAccount =
                                   desktopWeb && AppRailScope.visible(context);
                               return AppBar(
+                                // ZEMİN VARKEN SAYDAM (2026-11-25): görsel
+                                // durum çubuğundan tarih şeridine kesintisiz;
+                                // arama hapı zaten kendi zeminini taşıyor.
+                                // Durum çubuğu simgesi temanın parlaklığından
+                                // (saydam zeminden tahmin edilirse beyaz olur).
+                                backgroundColor: hasBackground
+                                    ? Colors.transparent
+                                    : null,
+                                systemOverlayStyle: hasBackground
+                                    ? _statusBarOverZemin(context)
+                                    : null,
                                 // SOLDA GERİ OKU YOK (kullanıcı bulgusu
                                 // 2026-11-06: kutu bir sağa bir sola
                                 // kayıyordu). Sol kenar sabit; aramayı
@@ -2489,9 +2533,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       // Listenin sonu düğme sütununun
                                       // ÜSTÜNE çıkabilsin (bkz.
                                       // [_kFabClearance]).
-                                      const SliverToBoxAdapter(
+                                      SliverToBoxAdapter(
                                         child: SizedBox(
-                                          height: _kFabClearance,
+                                          height: _kFabClearance + navInset,
                                         ),
                                       ),
                                     ],
@@ -2514,11 +2558,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // Asistan paneli, "not silindi" bildirimiyle aynı yerleşimi
                 // kullanır: düğmelerin ÜSTÜnde değil SOLUNDA, ekranın dibinde.
                 // Sağda düğme sütunu kadar boşluk bırakılır.
-                const PositionedDirectional(
+                PositionedDirectional(
                   start: 8,
                   end: 144,
-                  bottom: 16,
-                  child: VoiceAssistantPanel(),
+                  bottom: 16 + navInset,
+                  child: const VoiceAssistantPanel(),
                 ),
                 // SÜRÜKLERKEN ÇÖP KUTUSU (F60.S9): HEP ağaçta, yalnız
                 // boyamada belirir — sürükleme başlayınca ağaç şekli
@@ -2526,7 +2570,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 16,
+                  bottom: 16 + navInset,
                   child: Center(
                     child: DragTrashTarget(
                       active: _dragNoteId != null,
@@ -2551,7 +2595,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // tepedeyken aşağı çekişle ve yan çubuktan açılır.
                 PositionedDirectional(
                   end: 16,
-                  bottom: 16,
+                  bottom: 16 + navInset,
                   // DAR LİSTE BÖLMESİNDE ↑ "+"nın SOLUNDA (KT-17, tablet turu
                   // 2026-11-18): üstte dururken yığın 16 + 56 + 10 + 40 =
                   // 122 dp, listenin alt boşluğu ([_kFabClearance]) 96 dp —
@@ -2664,6 +2708,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ),
               ],
             ),
+              ),
+            ],
           ),
         ),
       ),

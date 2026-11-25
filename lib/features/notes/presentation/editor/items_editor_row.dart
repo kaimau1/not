@@ -502,9 +502,14 @@ extension _ItemsRow on ItemsEditorState {
                               looks: widget.tagLooks,
                               done: item.checked,
                               child: _tapPoint.wrap(
-                                TextField(
+                                // Klavyenin otomatik düzeltmesi uygulamanın
+                                // kipine bağlı (gövdeyle aynı, 2026-11-25).
+                                ValueListenableBuilder<bool>(
+                                valueListenable: AutoSpell.enabled,
+                                builder: (_, autoFix, _) => TextField(
                                   controller: controller,
                                   focusNode: _focusFor(item),
+                                  autocorrect: autoFix,
                                   onChanged: (_) =>
                                       _updateText(item, controller.logicalText),
                                   contextMenuBuilder:
@@ -562,6 +567,7 @@ extension _ItemsRow on ItemsEditorState {
                                       vertical: fieldPad,
                                     ),
                                   ),
+                                ),
                                 ),
                                 // Damgaya/etikete dokunmak klavyeyi açmaz.
                                 focusNode: _focusFor(item),
