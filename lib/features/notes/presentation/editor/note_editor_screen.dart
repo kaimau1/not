@@ -41,6 +41,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_update.dart';
@@ -102,9 +103,12 @@ import '../../../ai/data/decisions/decision_service.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
 import '../../../ai/presentation/listen_screen.dart';
+import '../../../folders/data/folder_chat_repository.dart';
 import '../../../folders/data/folders_repository.dart';
 import '../../../folders/domain/note_folder.dart';
 import '../../../folders/presentation/folder_sheets.dart';
+import '../../../shopping/data/shop_memory.dart';
+import '../../../shopping/domain/shop_item_meta.dart';
 import '../../../settings/data/permissions_service.dart';
 import '../../../settings/settings_providers.dart';
 import '../../../calendar/data/task_note_sync.dart';
@@ -150,6 +154,7 @@ import '../../domain/list_convert.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import '../../domain/page_notes.dart';
+import '../../domain/quick_entry.dart';
 import '../../domain/bubble_view_retire.dart';
 import '../collaborators_sheet.dart';
 import '../../../../core/widgets/action_menu_sheet.dart';
@@ -320,6 +325,7 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
         x.align != y.align ||
         // Paket satırları özet hapına toplar (bkz. NoteItem.package).
         x.package != y.package ||
+        !sameNoteItemExtras(x.extras, y.extras) ||
         isBlankText(x.text) != isBlankText(y.text)) {
       return false;
     }
@@ -4603,18 +4609,59 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         wholeNoteText: () => _note == null
             ? ''
             : noteShareText(_note!, pageLabel: context.l10n.pageLabel),
-        header: (note.body.trim().isNotEmpty || _listBodyOpen)
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  keyedHeader,
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: _kGutter),
-                    child: _wrapped(_bodyController, bodyField),
+        header: () {
+          final showStoreModePill =
+              note.type == NoteType.checklist &&
+              !_readOnly &&
+              (note.listKind == 'shopping' ||
+                  smartKindFromPhrase(note.title) == SmartListKind.shopping);
+          final showBody = note.body.trim().isNotEmpty || _listBodyOpen;
+          if (!showStoreModePill && !showBody) return keyedHeader;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              keyedHeader,
+              if (showStoreModePill)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    _kGutter,
+                    0,
+                    _kGutter,
+                    AppSpace.s,
                   ),
-                ],
-              )
-            : keyedHeader,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: FilledButton.tonalIcon(
+                      key: const ValueKey('editor-open-store-mode'),
+                      icon: const Icon(
+                        Icons.shopping_cart_outlined,
+                        size: AppIconSize.s,
+                      ),
+                      label: Text(() {
+                        final rem = note.items
+                            .where(
+                              (i) =>
+                                  !i.header &&
+                                  !i.checked &&
+                                  i.text.trim().isNotEmpty,
+                            )
+                            .length;
+                        return rem > 0
+                            ? context.l10n.shopOpenStoreModeCount(rem)
+                            : context.l10n.shopOpenStoreMode;
+                      }()),
+                      onPressed: _openStoreMode,
+                    ),
+                  ),
+                ),
+              if (showBody)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: _kGutter),
+                  child: _wrapped(_bodyController, bodyField),
+                ),
+            ],
+          );
+        }(),
       );
     }
 

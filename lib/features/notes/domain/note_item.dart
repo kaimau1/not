@@ -116,6 +116,7 @@ class NoteItem {
     bool? header,
     String? align,
     String? package,
+    Map<String, dynamic>? extras,
   }) => NoteItem(
     id: id,
     text: text ?? this.text,
@@ -128,7 +129,7 @@ class NoteItem {
     header: header ?? this.header,
     align: align ?? this.align,
     package: package ?? this.package,
-    extras: extras,
+    extras: extras ?? this.extras,
   );
 
   factory NoteItem.fromMap(Map<String, dynamic> map) => NoteItem(
@@ -254,4 +255,15 @@ class ItemDivider {
     color: clearColor ? null : (color ?? this.color),
     weight: weight ?? this.weight,
   );
+}
+
+/// İki madde `extras` haritasının sığ eşitliği (hızlı yol: ikisi de boşsa
+/// ya da aynı nesneyse anında true). HAFIZA kural 5 için üç noktada ortak.
+bool sameNoteItemExtras(Map<String, dynamic> a, Map<String, dynamic> b) {
+  if (identical(a, b) || (a.isEmpty && b.isEmpty)) return true;
+  if (a.length != b.length) return false;
+  for (final e in a.entries) {
+    if (!b.containsKey(e.key) || b[e.key] != e.value) return false;
+  }
+  return true;
 }

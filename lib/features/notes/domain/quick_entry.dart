@@ -84,26 +84,98 @@ String quickQtyOf(String text) {
   return m == null ? '' : m.group(2)!.trim();
 }
 
-/// AL-2 miktar toplama: "2" + "1" → "3", "1 kg" + "2 kg" → "3 kg",
-/// "500 g" + "250 g" → "750 g". Birimler uyuşmazsa yeni [addedQty] döner.
+/// Sayıyı kısa Türkçe biçimde yazar (tam sayısa ondalık atılır, küsuratlıysa virgül).
+String formatQuickNumber(double v) {
+  final rounded = v.roundToDouble();
+  if ((v - rounded).abs() < 1e-6) return '${rounded.round()}';
+  final s = v.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+  return s.replaceAll('.', ',');
+}
+
+/// Birim dönüşümü destekli miktar ayrıştırıcısı (kamusal yardımcı).
+({double value, String unit, String rawUnit})? parseQuickQty(String raw) =>
+    _parseQtyParts(raw);
+
+/// AL-2 + Faz 3 miktar toplama:
+/// - Aynı birim: `"2" + "1" → "3"`, `"500 g" + "250 g" → "750 g"`, `"1,5 L" + "0,5 L" → "2 L"`.
+/// - Kesirler: `"½ kg" + "500 g" → "1 kg"`, `"¼ kg" + "250 g" → "500 g"`.
+/// - Çapraz birim (`g ↔ kg`, `ml ↔ lt`): `"500 g" + "1 kg" → "1,5 kg"`,
+///   `"500 g" + "500 g" → "1 kg"`, `"500 ml" + "1 lt" → "1,5 lt"`, `"500 ml" + "500 ml" → "1 lt"`.
+/// - Birimler uyuşmazsa yeni [addedQty] döner.
 String combineQuickQuantities(String existingQty, String addedQty) {
   final a = _parseQtyParts(existingQty);
   final b = _parseQtyParts(addedQty);
   if (a == null || b == null) return addedQty;
-  if (a.unit != b.unit) return addedQty;
-  final sum = a.value + b.value;
-  final numStr = sum == sum.roundToDouble()
-      ? '${sum.round()}'
-      : sum.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
-  return a.unit.isEmpty ? numStr : '$numStr ${a.rawUnit}';
+  final fa = _unitFamilyOf(a.unit);
+  final fb = _unitFamilyOf(b.unit);
+  if (a.unit == b.unit) {
+    final sum = a.value + b.value;
+    if (fa != null && fa.factor == 1 && sum >= 1000) {
+      return '${formatQuickNumber(sum / 1000)} ${fa.largeUnit}';
+    }
+    final numStr = formatQuickNumber(sum);
+    return a.unit.isEmpty ? numStr : '$numStr ${a.rawUnit}';
+  }
+  if (fa != null && fb != null && fa.family == fb.family) {
+    final totalBase = a.value * fa.factor + b.value * fb.factor;
+    if (totalBase >= 1000 || fa.factor > 1 || fb.factor > 1) {
+      return '${formatQuickNumber(totalBase / 1000)} ${fa.largeUnit}';
+    }
+    return '${formatQuickNumber(totalBase)} ${fa.smallUnit}';
+  }
+  return addedQty;
 }
+
+({String family, double factor, String smallUnit, String largeUnit})?
+_unitFamilyOf(String unit) => switch (unit) {
+  'g' || 'gr' || 'gram' => (
+    family: 'mass',
+    factor: 1.0,
+    smallUnit: 'g',
+    largeUnit: 'kg',
+  ),
+  'kg' || 'kilo' || 'kilogram' => (
+    family: 'mass',
+    factor: 1000.0,
+    smallUnit: 'g',
+    largeUnit: 'kg',
+  ),
+  'ml' => (family: 'vol', factor: 1.0, smallUnit: 'ml', largeUnit: 'lt'),
+  'lt' || 'l' || 'litre' || 'liter' => (
+    family: 'vol',
+    factor: 1000.0,
+    smallUnit: 'ml',
+    largeUnit: 'lt',
+  ),
+  _ => null,
+};
 
 ({double value, String unit, String rawUnit})? _parseQtyParts(String raw) {
   final t = raw.trim();
   if (t.isEmpty) return null;
-  final m = RegExp(r'^(\d+(?:[.,]\d+)?)\s*(.*)$').firstMatch(t);
+  final m = RegExp(
+    r'^(½|¼|¾|yarım|yarim|çeyrek|ceyrek|\d+(?:[.,/]\d+)?)\s*(.*)$',
+    caseSensitive: false,
+  ).firstMatch(t);
   if (m == null) return null;
-  final v = double.tryParse(m.group(1)!.replaceAll(',', '.'));
+  final numToken = quickFold(m.group(1)!);
+  final double? v;
+  if (numToken == '½' || numToken == 'yarım' || numToken == 'yarim') {
+    v = 0.5;
+  } else if (numToken == '¼' ||
+      numToken == 'çeyrek' ||
+      numToken == 'ceyrek') {
+    v = 0.25;
+  } else if (numToken == '¾') {
+    v = 0.75;
+  } else if (numToken.contains('/')) {
+    final parts = numToken.split('/');
+    final num = double.tryParse(parts[0]);
+    final den = parts.length == 2 ? double.tryParse(parts[1]) : null;
+    v = (num != null && den != null && den != 0) ? num / den : null;
+  } else {
+    v = double.tryParse(numToken.replaceAll(',', '.'));
+  }
   if (v == null) return null;
   final rawUnit = m.group(2)!.trim();
   return (value: v, unit: quickAscii(rawUnit), rawUnit: rawUnit);
@@ -747,6 +819,8 @@ class QuickParser {
           } else {
             final next = quickFold(_clean(toks[i + 1].word));
             if (_units.containsKey(next) ||
+                next == 'buçuk' ||
+                next == 'bucuk' ||
                 lexicon.exact(next) != null ||
                 lexicon.isHead(next)) {
               number = _numberWords[fold];
@@ -763,7 +837,34 @@ class QuickParser {
                 restStart = pendingStart(tok.start);
                 break;
               }
-              if (_units.containsKey(next) && lexicon.exact(next) == null) {
+              if ((next == 'buçuk' || next == 'bucuk') &&
+                  !number.contains(',') &&
+                  !number.contains('.') &&
+                  !number.contains('/') &&
+                  number != '½' &&
+                  number != '¼') {
+                number = '$number,5';
+                used = 2;
+                if (!nt.hardAfter) {
+                  if (i + 2 < toks.length) {
+                    final nt2 = toks[i + 2];
+                    final next2 = quickFold(_clean(nt2.word));
+                    if (!nt2.complete) {
+                      restStart = pendingStart(tok.start);
+                      break;
+                    }
+                    if (_units.containsKey(next2) &&
+                        lexicon.exact(next2) == null) {
+                      unit = _units[next2];
+                      used = 3;
+                    }
+                  } else if (!flush) {
+                    restStart = pendingStart(tok.start);
+                    break;
+                  }
+                }
+              } else if (_units.containsKey(next) &&
+                  lexicon.exact(next) == null) {
                 unit = _units[next];
                 used = 2;
               }

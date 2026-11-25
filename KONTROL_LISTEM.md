@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Faz 3 Akıllı Alışveriş Listesi v2 (25 Kasım, bulutta yazıldı — cihazda doğrulanmadı)**
+  Nerede/Nasıl: (1) Alışveriş listesi notunda üstteki **Mağaza Kipi** düğmesine dokun → ekran kararmadan açık kalıyor mu (`KeepScreenOn`). (2) Reyon başlıkları, market süzgeci (`BİM`/`Migros`), üst atlama çipleri ve satır içi `−/+` miktar adımlama akıcı mı. (3) Sağa kaydırıp fiyat + market gir, sola kaydırıp **Yoktu / Sonraya** işaretle → **Alışverişi Bitir** deyince "Yoktu" maddeleri listede kalıyor mu. (4) Alt çubuktaki **📷 Barkod** ve **🎤 Sesle ekle** ("bir buçuk litre süt, yarım kilo peynir") + üst çubuktaki **🧾 Fiş tara** (ML Kit OCR) ve **🍲 Tarif paketleri** gerçek cihazda sorunsuz çalışıyor mu.
+  Yanlışsa: hangi adımda sorun çıktığını yaz.
+
 - [ ] **Kasma düzeltmesi: tablolu/uzun listeli not açma-kapama ve klavye (24 Kasım akşam, bulutta ölçüldü — masaüstü kıyası; cihazda doğrulanmadı)**
   Nerede/Nasıl: (1) Ekran görüntüsündeki not (tablo + 374 işaretli): ana ekrandan aç → geçişte takılma var mı. (2) Açar açmaz bir maddeye dokun, klavye açılsın → donma var mı. (3) Klavyeyi birkaç kez aç/kapa. (4) Geri ile ana ekrana dön. (5) Tabloya satır ekle → maddeler titremeden kayıyor mu. Tablosuz eski bir uzun notta da 1–4.
   Yanlışsa: hangi adımda takıldığını yaz (ekran kaydı en iyisi).

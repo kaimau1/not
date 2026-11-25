@@ -10217,4 +10217,180 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiCatOfficial => 'Official';
+
+  @override
+  String shopBudgetCart(String amount) {
+    return 'Cart: $amount ₺';
+  }
+
+  @override
+  String shopBudgetEstimated(String amount) {
+    return 'Est: $amount ₺';
+  }
+
+  @override
+  String shopBudgetLimit(String amount) {
+    return 'Budget: $amount ₺';
+  }
+
+  @override
+  String get shopBudgetSet => 'Set budget';
+
+  @override
+  String get shopBudgetHint => 'e.g. 1500';
+
+  @override
+  String get shopAllStores => 'All';
+
+  @override
+  String shopPriceTitle(String item) {
+    return 'Price & Aisle · $item';
+  }
+
+  @override
+  String get shopUnitPriceLabel => 'Price (₺)';
+
+  @override
+  String get shopStoreLabel => 'Store';
+
+  @override
+  String get shopAisleLabel => 'Aisle';
+
+  @override
+  String get shopOtherAisle => 'Other';
+
+  @override
+  String get shopPriceCompareHeader => 'Store price history';
+
+  @override
+  String get shopClearPrice => 'Clear price';
+
+  @override
+  String get shopRecipesTitle => 'Meal & Recipe Packs';
+
+  @override
+  String get shopRecipesSearchHint => 'Search recipes…';
+
+  @override
+  String shopServingsCount(int count) {
+    return '$count servings';
+  }
+
+  @override
+  String get shopAddToList => 'Add to list';
+
+  @override
+  String get shopNewCustomRecipe => 'Save custom recipe';
+
+  @override
+  String get shopRecipeNameHint => 'Recipe name';
+
+  @override
+  String get shopIngredientsHint =>
+      'Ingredients (comma separated: 500 g beef, 2 tomatoes)';
+
+  @override
+  String get shopCustomBadge => 'Custom';
+
+  @override
+  String shopAisleOrderTitle(String store) {
+    return 'Aisle Order · $store';
+  }
+
+  @override
+  String get shopResetOrder => 'Reset default';
+
+  @override
+  String get shopReceiptTitle => 'Update Prices from Receipt';
+
+  @override
+  String get shopReceiptCamera => 'Take receipt photo';
+
+  @override
+  String get shopReceiptGallery => 'Pick receipt from gallery';
+
+  @override
+  String shopReceiptMatched(int count) {
+    return '$count items matched';
+  }
+
+  @override
+  String get shopReceiptNoMatches => 'No matching list items found on receipt.';
+
+  @override
+  String get shopReceiptApply => 'Apply prices';
+
+  @override
+  String get shopDueHeader => 'Running low';
+
+  @override
+  String shopDueEveryDays(int days) {
+    return '${days}d';
+  }
+
+  @override
+  String get shopStatusUnavailable => 'Out of stock';
+
+  @override
+  String get shopStatusUnavailableBadge => 'Unavailable';
+
+  @override
+  String get shopBarcodeTitle => 'Scan Barcode';
+
+  @override
+  String shopBarcodeUnknownPrompt(String ean) {
+    return 'New barcode ($ean)';
+  }
+
+  @override
+  String get shopBarcodeNameHint => 'Product name (e.g. Turkish coffee 100 g)';
+
+  @override
+  String get shopKeepScreenOn => 'Keep screen on';
+
+  @override
+  String get shopAtStoreButton => 'I’m at the store';
+
+  @override
+  String shopAtStoreMessage(String name) {
+    return '🛒 $name is at the store now — add anything missing!';
+  }
+
+  @override
+  String get shopAtStoreSent => 'Notified collaborators';
+
+  @override
+  String get shopScanReceiptTooltip => 'Scan receipt (OCR)';
+
+  @override
+  String get shopRecipesTooltip => 'Recipe packs';
+
+  @override
+  String get shopAisleOrderTooltip => 'Customize aisle order';
+
+  @override
+  String shopTakenBy(String name) {
+    return 'Picked by $name';
+  }
+
+  @override
+  String shopEstimatedPrefix(String amount) {
+    return '~$amount ₺';
+  }
+
+  @override
+  String shopActualPrice(String amount) {
+    return '$amount ₺';
+  }
+
+  @override
+  String shopOpenStoreModeCount(int remaining) {
+    return 'Store Mode ($remaining)';
+  }
+
+  @override
+  String get shopOpenStoreMode => 'Store Mode';
+
+  @override
+  String get shopDictationTooltip => 'Voice add';
 }

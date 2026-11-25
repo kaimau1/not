@@ -18091,6 +18091,300 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Resmî'**
   String get aiCatOfficial;
+
+  /// No description provided for @shopBudgetCart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sepet: {amount} ₺'**
+  String shopBudgetCart(String amount);
+
+  /// No description provided for @shopBudgetEstimated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tahmini: {amount} ₺'**
+  String shopBudgetEstimated(String amount);
+
+  /// No description provided for @shopBudgetLimit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe: {amount} ₺'**
+  String shopBudgetLimit(String amount);
+
+  /// No description provided for @shopBudgetSet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe belirle'**
+  String get shopBudgetSet;
+
+  /// No description provided for @shopBudgetHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örn. 1500'**
+  String get shopBudgetHint;
+
+  /// No description provided for @shopAllStores.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get shopAllStores;
+
+  /// No description provided for @shopPriceTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyat & Reyon · {item}'**
+  String shopPriceTitle(String item);
+
+  /// No description provided for @shopUnitPriceLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyat (₺)'**
+  String get shopUnitPriceLabel;
+
+  /// No description provided for @shopStoreLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Market'**
+  String get shopStoreLabel;
+
+  /// No description provided for @shopAisleLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Reyon'**
+  String get shopAisleLabel;
+
+  /// No description provided for @shopOtherAisle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get shopOtherAisle;
+
+  /// No description provided for @shopPriceCompareHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Market fiyat geçmişi'**
+  String get shopPriceCompareHeader;
+
+  /// No description provided for @shopClearPrice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyatı temizle'**
+  String get shopClearPrice;
+
+  /// No description provided for @shopRecipesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğün & Tarif Paketleri'**
+  String get shopRecipesTitle;
+
+  /// No description provided for @shopRecipesSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarif ara…'**
+  String get shopRecipesSearchHint;
+
+  /// No description provided for @shopServingsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kişi'**
+  String shopServingsCount(int count);
+
+  /// No description provided for @shopAddToList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeye ekle'**
+  String get shopAddToList;
+
+  /// No description provided for @shopNewCustomRecipe.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni tarif kaydet'**
+  String get shopNewCustomRecipe;
+
+  /// No description provided for @shopRecipeNameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarif adı'**
+  String get shopRecipeNameHint;
+
+  /// No description provided for @shopIngredientsHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Malzemeler (virgülle ayır: 500 g kıyma, 2 domates)'**
+  String get shopIngredientsHint;
+
+  /// No description provided for @shopCustomBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel'**
+  String get shopCustomBadge;
+
+  /// No description provided for @shopAisleOrderTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Reyon Sırası · {store}'**
+  String shopAisleOrderTitle(String store);
+
+  /// No description provided for @shopResetOrder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılana dön'**
+  String get shopResetOrder;
+
+  /// No description provided for @shopReceiptTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fişten Fiyat Güncelle'**
+  String get shopReceiptTitle;
+
+  /// No description provided for @shopReceiptCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiş fotoğrafı çek'**
+  String get shopReceiptCamera;
+
+  /// No description provided for @shopReceiptGallery.
+  ///
+  /// In tr, this message translates to:
+  /// **'Galeriden fiş seç'**
+  String get shopReceiptGallery;
+
+  /// No description provided for @shopReceiptMatched.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ürün eşleşti'**
+  String shopReceiptMatched(int count);
+
+  /// No description provided for @shopReceiptNoMatches.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listedeki ürünlerle eşleşen satır bulunamadı.'**
+  String get shopReceiptNoMatches;
+
+  /// No description provided for @shopReceiptApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyatları uygula'**
+  String get shopReceiptApply;
+
+  /// No description provided for @shopDueHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitmiş olabilir'**
+  String get shopDueHeader;
+
+  /// No description provided for @shopDueEveryDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days}g'**
+  String shopDueEveryDays(int days);
+
+  /// No description provided for @shopStatusUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yoktu / Sonraya'**
+  String get shopStatusUnavailable;
+
+  /// No description provided for @shopStatusUnavailableBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yoktu'**
+  String get shopStatusUnavailableBadge;
+
+  /// No description provided for @shopBarcodeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Barkod Tara'**
+  String get shopBarcodeTitle;
+
+  /// No description provided for @shopBarcodeUnknownPrompt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni barkod ({ean})'**
+  String shopBarcodeUnknownPrompt(String ean);
+
+  /// No description provided for @shopBarcodeNameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ürün adı (ör. Türk kahvesi 100 g)'**
+  String get shopBarcodeNameHint;
+
+  /// No description provided for @shopKeepScreenOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekranı açık tut'**
+  String get shopKeepScreenOn;
+
+  /// No description provided for @shopAtStoreButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Marketteyim'**
+  String get shopAtStoreButton;
+
+  /// No description provided for @shopAtStoreMessage.
+  ///
+  /// In tr, this message translates to:
+  /// **'🛒 {name} şimdi markette — eksik varsa listeye ekle!'**
+  String shopAtStoreMessage(String name);
+
+  /// No description provided for @shopAtStoreSent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak arkadaşlara bildirim gönderildi'**
+  String get shopAtStoreSent;
+
+  /// No description provided for @shopScanReceiptTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiş tara (OCR)'**
+  String get shopScanReceiptTooltip;
+
+  /// No description provided for @shopRecipesTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarif paketleri'**
+  String get shopRecipesTooltip;
+
+  /// No description provided for @shopAisleOrderTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Reyon sırasını düzenle'**
+  String get shopAisleOrderTooltip;
+
+  /// No description provided for @shopTakenBy.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} aldı'**
+  String shopTakenBy(String name);
+
+  /// No description provided for @shopEstimatedPrefix.
+  ///
+  /// In tr, this message translates to:
+  /// **'~{amount} ₺'**
+  String shopEstimatedPrefix(String amount);
+
+  /// No description provided for @shopActualPrice.
+  ///
+  /// In tr, this message translates to:
+  /// **'{amount} ₺'**
+  String shopActualPrice(String amount);
+
+  /// No description provided for @shopOpenStoreModeCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mağaza Kipi ({remaining})'**
+  String shopOpenStoreModeCount(int remaining);
+
+  /// No description provided for @shopOpenStoreMode.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mağaza Kipi'**
+  String get shopOpenStoreMode;
+
+  /// No description provided for @shopDictationTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesle ekle'**
+  String get shopDictationTooltip;
 }
 
 class _AppLocalizationsDelegate

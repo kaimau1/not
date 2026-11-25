@@ -427,13 +427,13 @@ flowchart LR
 - **Kabul Kriteri:** 30 dk kapalı kaldıktan sonra açılışta yalnızca değişen kayıt okunur; 10.000 simüle kullanıcı yükünde Worker + D1 maliyeti \$5/ay tabanında kalır.
 
 ### Faz 3 — "Gerçekten Akıllı Alışveriş Listesi" v2 (1,5–2 Hafta)
-- [ ] **Veri & Motor:** `NoteItem.extras` şeması (`q`, `u`, `p`, `s`, `st`, `g`, `by`) · `quick_entry.dart` birim dönüşümü (`g↔kg`, `ml↔lt`, `yarım`/`çeyrek`/`buçuk`) · yerel fiyat geçmişi ve market profili (`shop_memory.dart`).
-- [ ] **Mağaza Kipi v2 ([`store_mode_screen.dart`](lib/features/notes/presentation/editor/store_mode_screen.dart)):** Canlı senkron (`noteByIdProvider`), renkli/ikonlu reyon başlıkları + üst atlama çipleri, `KeepScreenOn`, satır içi `−/+`, 3 durum (*Alınacak / Sepette / Yoktu-Sonraya*), canlı **Sepet Toplamı / Bütçe Çubuğu**, altta 🎤 + 📷 barkod düğmeleri.
-- [ ] **Barkod + Fiş OCR:** `mobile_scanner` → Open Food Facts API + yerel barkod hafızası; ML Kit OCR ile fişten otomatik fiyat güncelleme.
-- [ ] **Sık Alınanlar & Türk Mutfağı Tarifleri:** `predictDue` tabanlı 1-tık "Bitmek Üzere" paneli + 15–20 hazır Türk öğün paketi (kişi çarpanlı) + kendi tarifini kaydetme.
-- [ ] **Decisions `D1` (`shopAisle`):** Bilinmeyen ürünü tek çağrıda reyona yerleştirip kalıcı yerel hafızaya yazma.
-- [ ] **Ortak Alışveriş:** "🛒 Marketteyim — eksik varsa ekle" tek tık bildirimi + kimin aldığı rozeti + alışveriş notlarında doğrudan açılan üst **"Mağaza Kipi"** düğmesi.
-- **Kabul Kriteri:** Editör/Mağaza Kipi performans bütçeleri (`perf_budget_test`) yeşil; gerçek markette tek elle 20 maddelik senaryo pürüzsüz çalışır.
+- [x] **Veri & Motor:** `NoteItem.extras` şeması (`q`, `u`, `p`, `s`, `st`, `g`, `by`) + HAFIZA kural 5 (`sameNoteItemExtras`) · `quick_entry.dart` birim dönüşümü (`g↔kg`, `ml↔lt`, `yarım`/`çeyrek`/`buçuk`) · yerel fiyat geçmişi ve market profili (`shop_memory.dart`, `shop_aisles.dart`, `shop_item_meta.dart`).
+- [x] **Mağaza Kipi v2 ([`store_mode_screen.dart`](lib/features/notes/presentation/editor/store_mode_screen.dart)):** Canlı senkron (`liveItems`), renkli/ikonlu reyon başlıkları + üst atlama çipleri, market profili süzgeci & özel reyon sırası, `KeepScreenOn`, satır içi `−/+`, 3 durum (*Alınacak / Sepette / Yoktu-Sonraya*), canlı **Sepet Toplamı / Bütçe Çubuğu**, altta 🎤 + 📷 barkod düğmeleri.
+- [x] **Barkod + Fiş OCR:** `mobile_scanner` → Open Food Facts API + yerel barkod hafızası (`barcode_lookup.dart`); ML Kit OCR ile fişten otomatik fiyat güncelleme (`receipt_ocr_parser.dart`, `shop_receipt_sheet.dart`).
+- [x] **Sık Alınanlar & Türk Mutfağı Tarifleri:** `predictDue` tabanlı 1-tık "Bitmek Üzere" şeridi (`shop_due_strip.dart`) + 18 hazır Türk öğün paketi (kişi çarpanlı) + kendi tarifini kaydetme (`shop_recipes.dart`, `shop_recipes_sheet.dart`).
+- [x] **Decisions `D1` (`shopAisle`):** Bilinmeyen ürünü tek çağrıda reyona yerleştirip (`ShopAisleProfile` / `decideShopAisle`, `defaultLive`) kalıcı yerel hafızaya yazma.
+- [x] **Ortak Alışveriş:** "🛒 Marketteyim — eksik varsa ekle" tek tık bildirimi + kimin aldığı (`by`) rozeti + alışveriş notlarında doğrudan açılan üst **"Mağaza Kipi"** düğmesi (`editor-open-store-mode`).
+- **Kabul Kriteri:** Editör/Mağaza Kipi performans bütçeleri (`perf_budget_test`: S16/S45/S49) ve `shopping_v2_test` yeşil; gerçek markette tek elle 20 maddelik senaryo cihazda doğrulanacak (`KONTROL_LISTEM.md`).
 
 ### Faz 4 — Çoklu Platform Cilası, Sadeleştirme ve E2EE (1 Hafta)
 - [ ] **Web:** `KW-11` (kalem `Ctrl+Z` + kısayollar), `KW-17` (AppBar 18–20 px başlık), `WebWorkspaceFrame` `MediaQuery.of` temizliği, `KW-14` popover menüler, `KW-16` tutarlı hover/focus, tam CSP (`G-12`).
@@ -455,9 +455,9 @@ flowchart LR
 
 ---
 
-## 9. Hemen Başlamadan Önce Netleştirilecek 4 Kısa Karar
+## 9. Netleştirilen 4 Karar (2026-11-25)
 
-1. **Cloudflare Auth Tercihi:** Geçişte **Seçenek B (Hibrit: Firebase Auth + Messaging ücretsiz kalsın, tüm veri/billing/decisions Cloudflare D1+R2'ye geçsin)** ile hızlı mı başlayalım, yoksa **Seçenek A (Sıfır Firebase — doğrudan Google ID Token → Cloudflare JWT)** ile Firebase'den tamamen mi çıkalım?
-2. **Kişisel APK (`dev.kaimau.notlar`) Kaderi:** Üretken AI budaması yalnız Play derlemesinde mi kapalı olsun (kişisel APK'da korunsun mu), yoksa bakım yükünü gerçekten yarıya indirmek için kod tabanından tamamen mi silinsin?
-3. **Kendi Gemini Anahtarı (BYOK):** 50 TL pakette 750 karar bitince kullanıcı yalnızca 30 TL'lik +1.000 karar paketi mi alsın, yoksa ileri kullanıcıya kendi Gemini anahtarıyla sınırsız Decisions (maliyet \$0) kapısı da kalsın mı?
-4. **Başlangıç Sırası:** Diğer oturum `main`'de işini bitirene kadar, sıfır çakışmalı **Faz 0 (Acil Maliyet/Güvenlik Yamaları)** veya **Faz 3 (Akıllı Alışveriş Listesi v2)** ile mi başlayalım?
+1. **Cloudflare Auth Tercihi (KARAR):** **Seçenek B — Hibrit** (Firebase Auth + Messaging ücretsiz kalır; tüm veri/billing/decisions Cloudflare D1+R2'ye geçer).
+2. **Kişisel APK (`dev.kaimau.notlar`) Kaderi (KARAR):** Faz 1'de üretken AI modülleri ve Gmail **kod tabanından tamamen silinecek** (yalnız Decisions + cihaz içi araçlar kalır).
+3. **Kendi Gemini Anahtarı / BYOK (KARAR):** **Kalsın** (ileri kullanıcı 750 karar bitince kendi Gemini anahtarıyla sınırsız Decisions kullanabilir, maliyet \$0).
+4. **Başlangıç Sırası (KARAR):** **Önce Faz 3** başlatıldı ve kodlandı; sıradaki faz **Faz 1** (AI/Gmail budama + 50 TL 2-katmanlı hak modeli) → **Faz 2** (Cloudflare Workers + D1 + R2).

@@ -53,6 +53,7 @@ abstract final class AiDecisionsFlag {
     DecisionFeature.dropTarget,
     DecisionFeature.noteTriage,
     DecisionFeature.titleOk,
+    DecisionFeature.shopAisle,
   };
 
   static Set<String> _live = defaultLive;

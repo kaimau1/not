@@ -10200,4 +10200,181 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get aiCatOfficial => 'Resmî';
+
+  @override
+  String shopBudgetCart(String amount) {
+    return 'Sepet: $amount ₺';
+  }
+
+  @override
+  String shopBudgetEstimated(String amount) {
+    return 'Tahmini: $amount ₺';
+  }
+
+  @override
+  String shopBudgetLimit(String amount) {
+    return 'Bütçe: $amount ₺';
+  }
+
+  @override
+  String get shopBudgetSet => 'Bütçe belirle';
+
+  @override
+  String get shopBudgetHint => 'Örn. 1500';
+
+  @override
+  String get shopAllStores => 'Tümü';
+
+  @override
+  String shopPriceTitle(String item) {
+    return 'Fiyat & Reyon · $item';
+  }
+
+  @override
+  String get shopUnitPriceLabel => 'Fiyat (₺)';
+
+  @override
+  String get shopStoreLabel => 'Market';
+
+  @override
+  String get shopAisleLabel => 'Reyon';
+
+  @override
+  String get shopOtherAisle => 'Diğer';
+
+  @override
+  String get shopPriceCompareHeader => 'Market fiyat geçmişi';
+
+  @override
+  String get shopClearPrice => 'Fiyatı temizle';
+
+  @override
+  String get shopRecipesTitle => 'Öğün & Tarif Paketleri';
+
+  @override
+  String get shopRecipesSearchHint => 'Tarif ara…';
+
+  @override
+  String shopServingsCount(int count) {
+    return '$count kişi';
+  }
+
+  @override
+  String get shopAddToList => 'Listeye ekle';
+
+  @override
+  String get shopNewCustomRecipe => 'Yeni tarif kaydet';
+
+  @override
+  String get shopRecipeNameHint => 'Tarif adı';
+
+  @override
+  String get shopIngredientsHint =>
+      'Malzemeler (virgülle ayır: 500 g kıyma, 2 domates)';
+
+  @override
+  String get shopCustomBadge => 'Özel';
+
+  @override
+  String shopAisleOrderTitle(String store) {
+    return 'Reyon Sırası · $store';
+  }
+
+  @override
+  String get shopResetOrder => 'Varsayılana dön';
+
+  @override
+  String get shopReceiptTitle => 'Fişten Fiyat Güncelle';
+
+  @override
+  String get shopReceiptCamera => 'Fiş fotoğrafı çek';
+
+  @override
+  String get shopReceiptGallery => 'Galeriden fiş seç';
+
+  @override
+  String shopReceiptMatched(int count) {
+    return '$count ürün eşleşti';
+  }
+
+  @override
+  String get shopReceiptNoMatches =>
+      'Listedeki ürünlerle eşleşen satır bulunamadı.';
+
+  @override
+  String get shopReceiptApply => 'Fiyatları uygula';
+
+  @override
+  String get shopDueHeader => 'Bitmiş olabilir';
+
+  @override
+  String shopDueEveryDays(int days) {
+    return '${days}g';
+  }
+
+  @override
+  String get shopStatusUnavailable => 'Yoktu / Sonraya';
+
+  @override
+  String get shopStatusUnavailableBadge => 'Yoktu';
+
+  @override
+  String get shopBarcodeTitle => 'Barkod Tara';
+
+  @override
+  String shopBarcodeUnknownPrompt(String ean) {
+    return 'Yeni barkod ($ean)';
+  }
+
+  @override
+  String get shopBarcodeNameHint => 'Ürün adı (ör. Türk kahvesi 100 g)';
+
+  @override
+  String get shopKeepScreenOn => 'Ekranı açık tut';
+
+  @override
+  String get shopAtStoreButton => 'Marketteyim';
+
+  @override
+  String shopAtStoreMessage(String name) {
+    return '🛒 $name şimdi markette — eksik varsa listeye ekle!';
+  }
+
+  @override
+  String get shopAtStoreSent => 'Ortak arkadaşlara bildirim gönderildi';
+
+  @override
+  String get shopScanReceiptTooltip => 'Fiş tara (OCR)';
+
+  @override
+  String get shopRecipesTooltip => 'Tarif paketleri';
+
+  @override
+  String get shopAisleOrderTooltip => 'Reyon sırasını düzenle';
+
+  @override
+  String shopTakenBy(String name) {
+    return '$name aldı';
+  }
+
+  @override
+  String shopEstimatedPrefix(String amount) {
+    return '~$amount ₺';
+  }
+
+  @override
+  String shopActualPrice(String amount) {
+    return '$amount ₺';
+  }
+
+  @override
+  String shopOpenStoreModeCount(int remaining) {
+    return 'Mağaza Kipi ($remaining)';
+  }
+
+  @override
+  String get shopOpenStoreMode => 'Mağaza Kipi';
+
+  @override
+  String get shopDictationTooltip => 'Sesle ekle';
 }

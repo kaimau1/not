@@ -788,7 +788,8 @@ class ItemsEditorState extends State<ItemsEditor>
           a[i].divider != b[i].divider ||
           a[i].header != b[i].header ||
           a[i].align != b[i].align ||
-          a[i].package != b[i].package) {
+          a[i].package != b[i].package ||
+          !sameNoteItemExtras(a[i].extras, b[i].extras)) {
         return false;
       }
     }

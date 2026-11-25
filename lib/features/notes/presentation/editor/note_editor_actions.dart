@@ -946,7 +946,8 @@ extension _EditorActions on _NoteEditorScreenState {
   }
 
   /// AL-2 "Alınanları tamamla": işaretli maddeleri sıklık + tarih hafızasına
-  /// (AL-4 tahmin) işleyip listeden kaldırır; kalanlar durur, tek Geri Al.
+  /// (AL-4 tahmin) işleyip listeden kaldırır; "Yoktu/Sonraya" işaretliler dahil
+  /// kalanlar durur, tek Geri Al.
   void _finishShoppingList() {
     final note = _note;
     if (note == null || _readOnly) return;
@@ -966,6 +967,18 @@ extension _EditorActions on _NoteEditorScreenState {
     ref.read(quickEntryMemoryProvider.notifier).record(memKind, [
       for (final i in checked) i.text,
     ]);
+    final shopMem = ref.read(shopMemoryProvider.notifier);
+    for (final item in checked) {
+      final meta = ShopItemMeta.fromItem(item);
+      if (meta.unitPrice != null && meta.unitPrice! > 0) {
+        shopMem.recordPrice(
+          item.text,
+          meta.unitPrice!,
+          store: meta.store,
+          unit: meta.unit,
+        );
+      }
+    }
     _mutate(
       (n) => n.copyWith(
         items: [
@@ -978,15 +991,32 @@ extension _EditorActions on _NoteEditorScreenState {
     _showUndoSnack(l10n.finishShoppingDone(checked.length));
   }
 
-  /// AL-5 Mağaza kipi: tek elle rahat işaretleme, reyon sırası, hızlı ekle.
+  /// AL-5 + Faz 3 Mağaza kipi: tek elle rahat işaretleme, reyon/bütçe/market
+  /// profili, barkod, fiş OCR, tarif paketleri, canlı ortak senkron.
   Future<void> _openStoreMode() async {
     final note = _note;
     if (note == null || _readOnly || note.type != NoteType.checklist) return;
     FocusManager.instance.primaryFocus?.unfocus();
     final l10n = context.l10n;
+    final kind = detectNoteListKind(note, locale: l10n.localeName);
+    final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+    final dueItems = ref
+        .read(quickEntryMemoryProvider)
+        .predictDue('smart:market');
+    final user = ref.read(authStateProvider).value;
+    final rawDisplayName = user?.displayName?.trim();
+    final userName = (rawDisplayName != null && rawDisplayName.isNotEmpty)
+        ? rawDisplayName.split(' ').first
+        : '';
+    final isShared =
+        widget.ownerId != null ||
+        noteSharedByMe(ref, note) ||
+        (note.folderId?.isNotEmpty ?? false);
+
     // P1-1: Ortak alışveriş / ikinci cihaz güncellemeleri Mağaza Kipi'ne canlı
     // yansır (editörün _noteN dinleyicisi uzak birleştirme sonrası güncellenir).
     final liveItems = ValueNotifier<List<NoteItem>>(note.items);
+    final memoryN = ValueNotifier<ShopMemory>(ref.read(shopMemoryProvider));
     void syncLive() {
       final latest = _noteN.value;
       if (latest != null) liveItems.value = latest.items;
@@ -1000,6 +1030,13 @@ extension _EditorActions on _NoteEditorScreenState {
             title: note.displayTitle,
             initialItems: note.items,
             liveItems: liveItems,
+            noteId: note.id,
+            listKind: kind,
+            isShared: isShared,
+            currentUserName: userName,
+            learnedGroups: learned,
+            shopMemoryListenable: memoryN,
+            dueItems: dueItems,
             onToggleItem: (id) {
               List<NoteItem> updated = _note?.items ?? const [];
               _mutate((n) {
@@ -1011,20 +1048,69 @@ extension _EditorActions on _NoteEditorScreenState {
               }, immediate: true);
               return updated;
             },
+            onUpdateItem: (item) {
+              List<NoteItem> updated = _note?.items ?? const [];
+              _mutate((n) {
+                updated = [
+                  for (final i in n.items)
+                    if (i.id == item.id) item else i,
+                ];
+                return n.copyWith(items: updated);
+              }, immediate: true);
+              return updated;
+            },
+            onReplaceItems: (items) {
+              _mutate((n) => n.copyWith(items: items), immediate: true);
+              return items;
+            },
             onAddItem: (raw) {
               final cur = _note;
               if (cur == null) return const [];
-              final kind = detectNoteListKind(cur, locale: l10n.localeName);
-              final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+              final curKind = detectNoteListKind(cur, locale: l10n.localeName);
+              final curLearned = ref.read(quickEntryMemoryProvider).itemGroups;
               List<NoteItem> updated = cur.items;
+              final key = quickItemKey(raw);
+              final addedQty = quickQtyOf(raw);
               _mutate((n) {
-                updated = insertItemsBySmartGroup(
-                  n.items,
-                  [NoteItem(id: const Uuid().v4(), text: raw)],
-                  kind: kind,
-                  locale: l10n.localeName,
-                  learnedGroups: learned,
+                final existingIdx = n.items.indexWhere(
+                  (i) => !i.header && quickItemKey(i.text) == key,
                 );
+                if (existingIdx >= 0 && curKind == SmartListKind.shopping) {
+                  final existing = n.items[existingIdx];
+                  final oldQty = quickQtyOf(existing.text);
+                  final nextQty = existing.checked
+                      ? addedQty
+                      : (oldQty.isEmpty
+                            ? addedQty
+                            : (addedQty.isEmpty
+                                  ? oldQty
+                                  : combineQuickQuantities(oldQty, addedQty)));
+                  final nextText = quickCompose(
+                    quickBaseName(existing.text),
+                    nextQty,
+                  );
+                  final parsed = parseQuickQty(nextQty);
+                  final nextItem = ShopItemMeta.fromItem(existing)
+                      .copyWith(
+                        qty: parsed?.value,
+                        clearQty: parsed == null,
+                        unit: parsed?.rawUnit ?? '',
+                        status: ShopItemStatus.todo,
+                      )
+                      .applyToItem(existing.copyWith(text: nextText));
+                  updated = [
+                    for (var idx = 0; idx < n.items.length; idx++)
+                      if (idx == existingIdx) nextItem else n.items[idx],
+                  ];
+                } else {
+                  updated = insertItemsBySmartGroup(
+                    n.items,
+                    [NoteItem(id: const Uuid().v4(), text: raw)],
+                    kind: curKind,
+                    locale: l10n.localeName,
+                    learnedGroups: curLearned,
+                  );
+                }
                 return n.copyWith(items: updated);
               }, immediate: true);
               return updated;
@@ -1032,15 +1118,15 @@ extension _EditorActions on _NoteEditorScreenState {
             onSortByGroup: () {
               final cur = _note;
               if (cur == null) return const [];
-              final kind = detectNoteListKind(cur, locale: l10n.localeName);
-              final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+              final curKind = detectNoteListKind(cur, locale: l10n.localeName);
+              final curLearned = ref.read(quickEntryMemoryProvider).itemGroups;
               List<NoteItem> updated = cur.items;
               _mutate((n) {
                 updated = sortItemsBySmartGroup(
                   n.items,
-                  kind: kind,
+                  kind: curKind,
                   locale: l10n.localeName,
-                  learnedGroups: learned,
+                  learnedGroups: curLearned,
                 );
                 return n.copyWith(items: updated);
               }, immediate: true);
@@ -1050,12 +1136,76 @@ extension _EditorActions on _NoteEditorScreenState {
               _finishShoppingList();
               return _note?.items ?? const [];
             },
+            onRecordPrice: (itemText, price, {store = '', unit = ''}) {
+              ref
+                  .read(shopMemoryProvider.notifier)
+                  .recordPrice(itemText, price, store: store, unit: unit);
+              memoryN.value = ref.read(shopMemoryProvider);
+            },
+            onSetBudget: (budget) {
+              ref.read(shopMemoryProvider.notifier).setBudget(note.id, budget);
+              memoryN.value = ref.read(shopMemoryProvider);
+            },
+            onSaveAisleOrder: (storeId, order) {
+              ref
+                  .read(shopMemoryProvider.notifier)
+                  .saveStoreAisleOrder(storeId, order);
+              memoryN.value = ref.read(shopMemoryProvider);
+            },
+            onSaveBarcode: (product) {
+              ref.read(shopMemoryProvider.notifier).saveBarcode(product);
+              memoryN.value = ref.read(shopMemoryProvider);
+            },
+            onSaveCustomRecipe: (recipe) {
+              ref.read(shopMemoryProvider.notifier).saveCustomRecipe(recipe);
+              memoryN.value = ref.read(shopMemoryProvider);
+            },
+            onDeleteCustomRecipe: (id) {
+              ref.read(shopMemoryProvider.notifier).deleteCustomRecipe(id);
+              memoryN.value = ref.read(shopMemoryProvider);
+            },
+            onLearnAisle: (itemText, aisle) {
+              ref
+                  .read(quickEntryMemoryProvider.notifier)
+                  .learnGroup(itemText, aisle);
+            },
+            onClassifyUnknownItem: (itemId, itemName) async {
+              final DecisionService? svc =
+                  _decisions ?? ref.read(decisionServiceProvider);
+              if (svc == null) return null;
+              final aisle = await decideShopAisle(svc, itemName);
+              return aisle?.index;
+            },
+            onDismissDue: (name) {
+              ref.read(quickEntryMemoryProvider);
+              ref.read(shopMemoryProvider.notifier).dismissDueItem(name);
+              memoryN.value = ref.read(shopMemoryProvider);
+            },
+            onRecordTrip: (trip) {
+              ref.read(shopMemoryProvider.notifier).recordTrip(trip);
+              memoryN.value = ref.read(shopMemoryProvider);
+            },
+            onNotifyAtStore: () async {
+              final who = userName.isNotEmpty ? userName : l10n.appName;
+              final msg = l10n.shopAtStoreMessage(who);
+              final cur = _note ?? note;
+              final chatRepo = ref.read(folderChatRepositoryProvider);
+              final folderId = cur.folderId;
+              if (folderId != null && folderId.isNotEmpty && chatRepo != null) {
+                await chatRepo.send(folderId, msg);
+              } else {
+                await SharePlus.instance.share(
+                  ShareParams(text: '$msg (${cur.displayTitle})'),
+                );
+              }
+            },
           ),
         ),
       );
     } finally {
       _noteN.removeListener(syncLive);
       liveItems.dispose();
+      memoryN.dispose();
     }
   }
 

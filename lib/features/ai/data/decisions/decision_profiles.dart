@@ -2,6 +2,7 @@
 // (build) + iki eşikli yorum (interpret). Saf Dart, ağsız test edilir.
 // EŞİKLER BAŞLANGIÇ DEĞERİ (plan §3B); Türkçe altın set ölçülmeden
 // (DA-E0, `tool/ai_altin/decisions_kos_test.dart`) bayrak açılmamalı.
+import '../../../notes/domain/quick_lexicon_data.dart';
 import 'decision_flag.dart';
 import 'decision_models.dart';
 import 'decision_service.dart';
@@ -313,4 +314,71 @@ Future<Set<int>?> decideSpellFixes(
     questions: SpellFixProfile.questions(fixes.length),
   );
   return r == null ? null : SpellFixProfile.interpret(r, fixes.length);
+}
+
+// ── D1 Alışveriş ürünü reyon öğrenme ──────────────────────────────────────
+
+abstract final class ShopAisleProfile {
+  static const minConfidence = 0.75;
+
+  static const Map<QuickAisle, String> _labels = {
+    QuickAisle.produce: 'Manav (meyve, sebze, yeşillik)',
+    QuickAisle.bakery: 'Fırın ve unlu mamuller (ekmek, poğaça, yufka)',
+    QuickAisle.breakfast: 'Süt, yumurta, peynir, kahvaltılık, şarküteri',
+    QuickAisle.meat: 'Kasap, tavuk, balık, et ürünleri',
+    QuickAisle.pantry: 'Bakliyat, un, yağ, baharat, sos, kuru gıda',
+    QuickAisle.drinks: 'İçecek, su, çay, kahve',
+    QuickAisle.snacks: 'Atıştırmalık, çikolata, bisküvi, cips, tatlı',
+    QuickAisle.frozen: 'Dondurulmuş gıda, dondurma, hazır mantı/pizza',
+    QuickAisle.cleaning: 'Temizlik, deterjan, kağıt havlu, tuvalet kağıdı',
+    QuickAisle.home: 'Ev gereçleri, pil, ampul, mutfak/tamir gereci',
+    QuickAisle.personal: 'Kişisel bakım, şampuan, kozmetik, eczane/sağlık',
+    QuickAisle.baby: 'Bebek ürünleri, bez, mama',
+    QuickAisle.pet: 'Evcil hayvan mama ve kumu',
+  };
+
+  static String input(String itemName) => 'Market ürünü: "${_cut(itemName, 60)}"';
+
+  static Map<String, DecisionQuestion> get questions => {
+    'reyon': ChoiceQuestion(
+      'Bu market ürünü bir süpermarkette hangi reyona aittir? '
+      'Emin değilsen "${ChoiceQuestion.none}" seç.',
+      {
+        ChoiceQuestion.none: 'Emin değilim / diğer',
+        for (final a in QuickAisle.values)
+          'r${_key(a.index)}': _labels[a] ?? a.name,
+      },
+    ),
+  };
+
+  static QuickAisle? interpret(Map<String, DecisionAnswer> answers) {
+    final ans = answers['reyon'];
+    if (ans == null || ans.confidence < minConfidence) return null;
+    final choice = ans.choice;
+    if (choice == null ||
+        choice == ChoiceQuestion.none ||
+        !RegExp(r'^r\d\d$').hasMatch(choice)) {
+      return null;
+    }
+    final idx = int.parse(choice.substring(1));
+    if (idx < 0 || idx >= QuickAisle.values.length) return null;
+    return QuickAisle.values[idx];
+  }
+}
+
+/// Sözlükte bulunmayan ürünü `gemini-decision-1` ile 13 reyondan birine atar
+/// (güven >= 0.75). Kalıcı önbellek `DecisionService` ve `QuickEntryMemory`
+/// katmanlarındadır.
+Future<QuickAisle?> decideShopAisle(
+  DecisionService service,
+  String itemName,
+) async {
+  final clean = itemName.trim();
+  if (clean.length < 2) return null;
+  final r = await service.decide(
+    DecisionFeature.shopAisle,
+    input: ShopAisleProfile.input(clean),
+    questions: ShopAisleProfile.questions,
+  );
+  return r == null ? null : ShopAisleProfile.interpret(r);
 }

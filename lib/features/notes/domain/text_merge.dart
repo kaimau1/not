@@ -155,4 +155,5 @@ bool _sameItem(NoteItem a, NoteItem b) =>
     // ekleyince kendi kendine iptal oluyor"): yoksa paketleme "yerelde
     // değişmedi" sayılıp uzaktaki paketsiz kopya üstüne yazıyordu.
     a.package == b.package &&
-    a.starred == b.starred;
+    a.starred == b.starred &&
+    sameNoteItemExtras(a.extras, b.extras);

@@ -91,6 +91,7 @@ void main() {
           DecisionFeature.dropTarget,
           DecisionFeature.titleOk,
           DecisionFeature.noteTriage,
+          DecisionFeature.shopAisle,
         ]) {
           expect(AiDecisionsFlag.modeOf(f), DecisionMode.live);
         }

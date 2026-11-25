@@ -404,6 +404,14 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                         }
                         result.success(true)
                     }
+                    "setKeepScreenOn" -> {
+                        if (call.argument<Boolean>("enabled") == true) {
+                            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        } else {
+                            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        }
+                        result.success(true)
+                    }
                     // Oynatıcı hemen küçük pencereye alınır (PiP düğmesi).
                     "enterPip" -> {
                         pipRatio = clampedRatio(
