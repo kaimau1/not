@@ -10,16 +10,28 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/sync/cloudflare_sync_transport.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/entitlement.dart';
 
 /// Oturumdaki kullanıcının hak belgesi. Play derlemesinde belge yoksa ya da
 /// okunamazsa (çevrimdışı ilk açılış, izin hatası) ücretsiz sayılır — hak
 /// vermemek, yanlışlıkla Pro vermekten güvenli (okuyanlar `.value ?? none`).
+/// Cloudflare Worker (`CLOUDFLARE_API_BASE`) etkinse hak `GET /v1/entitlement`
+/// uç noktasından okunur; değilse mevcut Firestore yolu sürer.
 final entitlementProvider = StreamProvider<Entitlement>((ref) {
   if (!EntitlementGate.active) return Stream.value(Entitlement.none);
   final uid = ref.watch(currentUidProvider);
   if (uid == null) return Stream.value(Entitlement.none);
+  final transport = ref.watch(cloudflareSyncTransportProvider);
+  if (transport != null) {
+    return Stream.fromFuture(
+      transport
+          .fetchEntitlement()
+          .then((r) => r.entitlement)
+          .catchError((Object _) => Entitlement.none),
+    );
+  }
   return FirebaseFirestore.instance
       .collection(AppConstants.entitlementsCollection)
       .doc(uid)

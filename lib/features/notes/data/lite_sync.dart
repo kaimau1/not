@@ -37,8 +37,8 @@ final liteSyncProvider = Provider<bool>(
 ///   değil kendi koleksiyonuma yazılıyor.
 /// * [sharedByMe]: ben başkalarıyla paylaşıyorum (ortak düzenleme anında).
 /// * [deviceOnly]: yalnız bu cihazdaki not — buluta zaten gitmez.
-/// * [journalReady]: diskteki günlük kullanılabilir (web'de yok → ertelenmez,
-///   çünkü çökmeye karşı güvencesiz erteleme veri kaybıdır).
+/// * [journalReady]: yerel günlük (mobilde dosya, Web'de [WebLiteJournal])
+///   kullanılabilir — hazır değilse güvencesiz erteleme yapılmaz.
 bool liteHoldsCloudWrite({
   required bool lite,
   required bool ownNote,

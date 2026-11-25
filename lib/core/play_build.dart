@@ -1,3 +1,5 @@
+import 'sync/cloudflare_config.dart';
+
 /// **PLAY DERLEMESİ BAYRAĞI** (PLAN §1.5 PL1, Faz 1).
 ///
 /// `--dart-define=NOTLAR_PLAY=true` ile derlenen sürüm Google Play'e gider;
@@ -26,4 +28,9 @@ abstract final class PlayBuild {
   /// İlk akıllı karar kullanımında rıza ekranı (PL3). Play'de zorunlu;
   /// kişisel APK'da ve web'de sorulmaz.
   static const bool aiConsent = enabled;
+
+  /// Faz 2: Cloudflare Worker + D1 + R2 senkron arka ucu etkin mi
+  /// (`--dart-define=CLOUDFLARE_API_BASE=https://...`). Kişisel APK'da boş
+  /// bırakıldığından Firestore bozulmadan çalışır.
+  static bool get cloudflareSync => CloudflareConfig.enabled;
 }

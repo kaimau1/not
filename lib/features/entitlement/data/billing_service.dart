@@ -18,6 +18,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 
+import '../../../core/sync/cloudflare_sync_transport.dart';
+import '../../../core/sync/sync_transport.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/entitlement.dart';
 import 'billing_products.dart';
@@ -303,11 +305,29 @@ class BillingNotifier extends Notifier<BillingState> {
   /// Sunucuda doğrular, sonra onaylar. Doğrulanamayan satın alma ONAYLANMAZ.
   Future<BillingNotice?> _verify(PurchaseDetails p) async {
     try {
-      await debugVerify(p.productID, p.verificationData.serverVerificationData);
+      final cfTransport = ref.read(cloudflareSyncTransportProvider);
+      if (cfTransport != null && identical(debugVerify, _verifyOnServer)) {
+        await cfTransport.verifyPurchase(
+          productId: p.productID,
+          purchaseToken: p.verificationData.serverVerificationData,
+        );
+        ref.invalidate(entitlementProvider);
+      } else {
+        await debugVerify(
+          p.productID,
+          p.verificationData.serverVerificationData,
+        );
+      }
       if (p.pendingCompletePurchase && p.status != PurchaseStatus.pending) {
         await debugStore().completePurchase(p);
       }
       return null;
+    } on SyncTransportException catch (e) {
+      return switch (e.code) {
+        'other_account' => BillingNotice.otherAccount,
+        'anonymous_not_allowed' => BillingNotice.guest,
+        _ => BillingNotice.verifyFailed,
+      };
     } on FirebaseFunctionsException catch (e) {
       return switch (e.message) {
         'other-account' => BillingNotice.otherAccount,

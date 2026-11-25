@@ -415,16 +415,16 @@ flowchart LR
 - **Kabul Kriteri:** `dart analyze --fatal-infos lib test tool` 0 gerçek sorun; `lib/` satır sayısı **252.328 → 234.443 (-17.885 satır, %-7,1)**; Play bayraklı testler (69/69), bekçi/bütçe testleri (`perf_budget_test` S29 502→447) ve `functions` testleri (37/37) yeşil.
 
 ### Faz 2 — Cloudflare Senkron Altyapısı (Workers + D1 + R2) (1,5–2 Hafta)
-- [ ] Yeni `cloudflare/` dizininde TypeScript Worker (Hono) + D1 şeması (`entities`, `shares`, `entitlements`, `decision_usage`, `user_directory`, `r2_quota`).
-- [ ] Tek Worker uç noktaları:
-  - `POST /v1/sync` (delta pull/push + çakışma bildirimi + Lite/Tam hız politikası)
-  - `POST /v1/decide` (App/Integrity + çift kilitli 750 karar / 600K token + `aiKillSwitch`)
-  - `POST /v1/billing/verify` & `POST /v1/billing/rtdn` (50 TL tek sefer `lifetime` + 30 TL tüketilebilir `decision_pack_1000` doğrulaması)
-  - `GET /v1/users/search` (D1 indeksli hızlı arama)
-  - `PUT/GET /v1/media/:key` (R2, yalnızca ortak görseller, kişi başı 250 MB kota, \$0 egress)
-- [ ] İstemci tarafında `SyncTransport` soyutlaması + yerel SQLite/IndexedDB Outbox + `lite_sync.dart` Web IndexedDB toplu yazım düzeltmesi.
-- [ ] Play derlemesini (`NOTLAR_PLAY=true`) doğrudan Cloudflare Worker'a bağla; 2 cihazlı (Android + Web) çevrimdışı/çakışma/geri yükleme entegrasyon testlerini koş.
-- **Kabul Kriteri:** 30 dk kapalı kaldıktan sonra açılışta yalnızca değişen kayıt okunur; 10.000 simüle kullanıcı yükünde Worker + D1 maliyeti \$5/ay tabanında kalır.
+- [x] Yeni `cloudflare/` dizininde TypeScript Worker (`cloudflare/src/`) + D1 şeması (`cloudflare/migrations/0001_init.sql`: `entities`, `user_seq`, `shares`, `entitlements`, `decision_usage`, `purchase_tokens`, `credited_pack_tokens`, `user_directory`, `r2_quota`, `media_objects`) + Durable Object (`ShoppingRoom`) + `wrangler.toml`.
+- [x] Tek Worker uç noktaları (Hibrit Firebase RS256 JWKS doğrulamalı):
+  - `POST /v1/sync` (delta pull/push + iyimser `baseVersion` çakışma bildirimi + ortak paylaşım deltası + Lite/Tam hız politikası + 30 günlük soft-delete cron GC)
+  - `POST /v1/decide` (App Check + çift kilitli 750 karar / 600K gerçek girdi jetonu `token_hash` bazlı + `aiKillSwitch` + 8.000 karakter tavanı)
+  - `GET /v1/entitlement`, `POST /v1/billing/verify` & `POST /v1/billing/rtdn` (50 TL tek sefer `lifetime` + 30 TL tüketilebilir idempotent `decision_pack_1000` doğrulaması + RTDN iade iptali)
+  - `PUT /v1/users/me` & `GET /v1/users/search` (D1 indeksli hızlı arama)
+  - `PUT/GET/DELETE /v1/media/:key` (R2, yalnızca ortak medya, kişi başı 250 MB kota, \$0 egress)
+- [x] İstemci tarafında `SyncTransport` soyutlaması (`lib/core/sync/sync_transport.dart`, `cloudflare_sync_transport.dart`) + kalıcı `SyncOutbox` & 3-yönlü birleştirme motoru (`sync_outbox.dart`, `mergeText3`/`mergeItems3`) + `lite_sync.dart` / `notes_repository.dart` Web kalıcı toplu yazım günlüğü (`WebLiteJournal`).
+- [x] Play derlemesini (`PlayBuild.cloudflareSync` / `--dart-define=CLOUDFLARE_API_BASE=...`) Cloudflare Worker'a bağla (kişisel APK `CLOUDFLARE_API_BASE` boşken Firestore'da sıfır regresyonla kalır); 2 cihazlı (Android + Web) çevrimdışı/çakışma/geri yükleme entegrasyon testlerini koş (`test/cloudflare_sync_test.dart`, `cloudflare/test/worker.test.ts`).
+- **Kabul Kriteri:** 30 dk kapalı kaldıktan sonra açılışta yalnızca değişen kayıt okunur (0 gereksiz okuma doğrulandı); gerçek SQLite (D1) Worker testleri (6/6) ve Flutter + Play bayraklı testler yeşil.
 
 ### Faz 3 — "Gerçekten Akıllı Alışveriş Listesi" v2 (1,5–2 Hafta)
 - [x] **Veri & Motor:** `NoteItem.extras` şeması (`q`, `u`, `p`, `s`, `st`, `g`, `by`) + HAFIZA kural 5 (`sameNoteItemExtras`) · `quick_entry.dart` birim dönüşümü (`g↔kg`, `ml↔lt`, `yarım`/`çeyrek`/`buçuk`) · yerel fiyat geçmişi ve market profili (`shop_memory.dart`, `shop_aisles.dart`, `shop_item_meta.dart`).

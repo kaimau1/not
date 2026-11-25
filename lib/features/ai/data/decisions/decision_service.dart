@@ -9,6 +9,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/error_log.dart';
 import '../../../../core/net/json_http.dart';
+import '../../../../core/sync/cloudflare_sync_transport.dart';
+import '../../../../core/sync/sync_transport.dart';
 import '../../../entitlement/data/entitlement_service.dart';
 import '../../../entitlement/domain/entitlement.dart';
 import '../../../settings/settings_providers.dart'
@@ -188,8 +190,31 @@ DecisionProxy? _proxyFor(Ref ref) {
   if (!EntitlementGate.active) return null;
   if (!ref.watch(proFeatureProvider(ProFeature.smartDecisions))) return null;
   final admission = ref.read(aiAdmissionProvider);
+  final cfTransport = ref.watch(cloudflareSyncTransportProvider);
   return (body) async {
     admission.check(metered: false);
+    if (cfTransport != null) {
+      try {
+        final data = await cfTransport.decide(
+          body,
+          timeout: DecisionService.proxyTimeout,
+        );
+        if (data == null) return null;
+        final snapshot = DecisionQuotaSnapshot.fromServerMaps(
+          data['remaining'],
+          data['remainingTokens'],
+        );
+        if (snapshot != null) {
+          ref.read(decisionQuotaProvider.notifier).updateFromServer(snapshot);
+        }
+        final res = data['response'];
+        return res is Map<String, dynamic>
+            ? res
+            : (res is Map ? Map<String, dynamic>.from(res) : null);
+      } on SyncQuotaException {
+        throw const DecisionQuotaExhausted();
+      }
+    }
     try {
       final r = await FirebaseFunctions.instance
           .httpsCallable(

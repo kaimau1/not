@@ -15,6 +15,7 @@ import '../../../core/constants.dart';
 import '../../../core/crash_reporting.dart';
 import '../../../core/error_log.dart';
 import '../../../core/personalize.dart';
+import '../../../core/sync/sync_outbox.dart';
 import '../../../core/utils/diagnostics.dart';
 import '../../../core/utils/firestore_size.dart';
 import '../../../core/utils/local_file.dart';
@@ -49,11 +50,16 @@ final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
   if (uid == null) return null;
   // Yalnız KENDİ notlarımın deposu yerel notları bilir (bkz.
   // LocalNotesStore); başkasının koleksiyonuna açılan depolar bilmez.
+  final fileJournal = LocalNotesStore.journalFor(uid);
+  final webJournal = kIsWeb && fileJournal == null
+      ? WebLiteJournal(ref.watch(sharedPreferencesProvider), uid: uid)
+      : null;
   return NotesRepository(
     FirebaseFirestore.instance,
     uid,
     local: LocalNotesStore.forUid(uid),
-    journal: LocalNotesStore.journalFor(uid),
+    journal: fileJournal,
+    webJournal: webJournal,
   );
 });
 
@@ -232,6 +238,7 @@ class NotesRepository {
     String? editorUid,
     this.local,
     this.journal,
+    this.webJournal,
   }) : editorUid = editorUid ?? uid;
 
   /// YALNIZ BU CİHAZDA tutulan notlar (bkz. [LocalNotesStore]). Doluysa her
@@ -242,30 +249,42 @@ class NotesRepository {
   bool isLocal(String noteId) => local?.contains(noteId) ?? false;
 
   /// **LITE KAYIT GÜNLÜĞÜ** (bkz. `lite_sync.dart`): editörün buluta henüz
-  /// yazmadığı içeriğin diskteki kopyası. Null (web / yol yok) → editör
-  /// seyreltme yapmaz, kayıt anında gider. Her tam not yazımı ([updateNote])
-  /// notun girdisini siler: günlükte kalan = buluta ulaşmamış yazı.
+  /// yazmadığı içeriğin diskteki kopyası. Mobilde [journal] (`LocalNotesStore`),
+  /// Web'de [webJournal] (`WebLiteJournal` — tarayıcı kalıcı deposu) kullanılır.
+  /// Her tam not yazımı ([updateNote]) notun girdisini siler: günlükte kalan =
+  /// buluta ulaşmamış yazı.
   final LocalNotesStore? journal;
+  final WebLiteJournal? webJournal;
 
-  /// Lite seyreltmesinin güvenli olması için günlük hazır mı.
-  bool get canJournal => journal != null;
+  /// Lite seyreltmesinin güvenli olması için günlük hazır mı (mobil dosya
+  /// günlüğü ya da Web kalıcı toplu yazım günlüğü).
+  bool get canJournal => journal != null || webJournal != null;
 
-  /// Notun bulutta bekleyen hâlini diske yazar (çökmeye karşı).
-  void journalNote(Note note) => journal?.put(note.id, note.toMap());
+  /// Notun bulutta bekleyen hâlini diske / Web günlüğüne yazar (çökmeye karşı).
+  void journalNote(Note note) {
+    final map = note.toMap();
+    if (journal != null) {
+      journal!.put(note.id, map);
+    } else {
+      webJournal?.put(note.id, map);
+    }
+  }
 
   /// Açılışta: önceki oturumda buluta ulaşmadan kalmış editör içeriğini
   /// yazar. Bulutta artık olmayan / çöpe atılmış nota dokunulmaz (silinen
   /// not geri gelmesin); okunamayan girdi sonraki açılışta yeniden denenir.
   Future<int> recoverJournal() async {
-    final store = journal;
-    if (store == null) return 0;
+    final entries =
+        journal?.rawEntries() ?? webJournal?.rawEntries() ?? const {};
+    if (entries.isEmpty) return 0;
     var written = 0;
-    for (final e in store.rawEntries().entries.toList()) {
+    for (final e in entries.entries.toList()) {
       try {
         final snap = await _notes.doc(e.key).get();
         final data = snap.data();
         if (data == null || data['deletedAt'] != null) {
-          store.remove(e.key);
+          journal?.remove(e.key);
+          webJournal?.remove(e.key);
           continue;
         }
         unawaited(updateNote(Note.fromMap(e.key, e.value)));
@@ -845,6 +864,7 @@ class NotesRepository {
       return Future.value();
     }
     journal?.remove(note.id);
+    webJournal?.remove(note.id);
     _maybeVersion(note);
     _rememberWrite(note);
     final fields = {

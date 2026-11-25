@@ -5,6 +5,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/sync/cloudflare_sync_transport.dart';
+import '../../../core/sync/sync_transport.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/friend.dart';
 
@@ -36,6 +38,7 @@ final friendsRepositoryProvider = Provider<FriendsRepository?>((ref) {
     name: (user.displayName?.trim().isNotEmpty ?? false)
         ? user.displayName!.trim()
         : (user.email ?? ''),
+    syncTransport: ref.watch(cloudflareSyncTransportProvider),
   );
 });
 
@@ -73,12 +76,14 @@ class FriendsRepository {
     required this.uid,
     required this.email,
     required this.name,
+    this.syncTransport,
   });
 
   final FirebaseFirestore _firestore;
   final String uid;
   final String email;
   final String name;
+  final SyncTransport? syncTransport;
 
   static String _normalizeEmail(String email) => email.trim().toLowerCase();
 
@@ -105,6 +110,15 @@ class FriendsRepository {
   /// `userDirectory` araması yine çalışır.
   Future<void> syncOwnDirectoryEntry({required bool discoverable}) async {
     if (email.isEmpty) return;
+    final transport = syncTransport;
+    if (transport != null) {
+      await transport.upsertUserDirectory(
+        name: name,
+        email: email,
+        discoverable: discoverable,
+      );
+      return;
+    }
     await _directory.doc(_normalizeEmail(email)).set({
       'uid': uid,
     }, SetOptions(merge: true));
@@ -127,13 +141,17 @@ class FriendsRepository {
   /// harfli ad öneki.
   static bool isSearchableQuery(String query) => query.trim().length >= 3;
 
-  /// Ad önekiyle ya da TAM e-postayla KULLANICI ARAR (Cloud Function
-  /// üzerinden — istemci `userSearch`i doğrudan okuyamaz). Sunucu anonim
-  /// oturumu reddeder ve uid başına dakikada 10 aramayla sınırlar; en fazla
-  /// 15 sonuç döner.
+  /// Ad önekiyle ya da TAM e-postayla KULLANICI ARAR (Cloudflare D1 indeksli
+  /// `/v1/users/search` ya da Cloud Function üzerinden). Sunucu anonim
+  /// oturumu reddeder; en fazla 15 sonuç döner.
   Future<List<UserSearchResult>> searchUsers(String query) async {
     final q = query.trim();
     if (!isSearchableQuery(q)) return const [];
+    final transport = syncTransport;
+    if (transport != null) {
+      final raw = await transport.searchUsers(q);
+      return [for (final r in raw) UserSearchResult.fromMap(r)];
+    }
     final callable = FirebaseFunctions.instance.httpsCallable('searchUsers');
     final result = await callable.call<Map<String, dynamic>>({'query': q});
     final raw = (result.data['results'] as List?) ?? const [];

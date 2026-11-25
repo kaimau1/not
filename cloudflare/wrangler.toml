@@ -1,0 +1,36 @@
+name = "notlar-sync"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+
+[vars]
+FIREBASE_PROJECT_ID = "notlar-play"
+PLAY_PACKAGE_NAME = "dev.kaimau.notlar.play"
+AI_KILL_SWITCH = "false"
+ENFORCE_APP_CHECK = "true"
+CORS_ORIGIN = "*"
+
+# D1 veritabanı: `wrangler d1 create notlar-db` sonrası database_id doldurulur.
+[[d1_databases]]
+binding = "DB"
+database_name = "notlar-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+# R2 ortak medya kovası (kişi başı 250 MB kota, $0 egress):
+# `wrangler r2 bucket create notlar-media`
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "notlar-media"
+
+# Ortak alışveriş listesi canlı WebSocket odası (<200 ms işaretleme):
+[[durable_objects.bindings]]
+name = "SHOPPING_ROOM"
+class_name = "ShoppingRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ShoppingRoom"]
+
+# 30 günü aşan soft-delete kayıtlarını her gece 03:00 UTC'de temizler.
+[triggers]
+crons = ["0 3 * * *"]
