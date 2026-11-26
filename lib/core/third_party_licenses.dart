@@ -81,8 +81,8 @@ const String cmuDictLicense =
     'NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS '
     'SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.';
 
-/// Ayarlar → Lisanslar sayfasına yazı tipi OFL metinlerini ve CMU BSD
-/// bildirimini ekler. Metinler sayfa AÇILINCA okunur (açılışa yük yok).
+/// Ayarlar → Lisanslar sayfasına yazı tipi OFL metinlerini, CMU BSD
+/// bildirimini ve yazım sözlüğünün Apache-2.0 bildirimini ekler. Metinler sayfa AÇILINCA okunur (açılışa yük yok).
 void registerThirdPartyLicenses() {
   LicenseRegistry.addLicense(() async* {
     for (final MapEntry(key: family, value: name)
@@ -98,5 +98,14 @@ void registerThirdPartyLicenses() {
     yield const LicenseEntryWithLineBreaks([
       'CMU Pronouncing Dictionary',
     ], cmuDictLicense);
+    // Yazım denetiminin kök sözlüğü (Zemberek-NLP, Apache-2.0; 2026-11-26).
+    try {
+      yield LicenseEntryWithLineBreaks([
+        'Zemberek-NLP (Türkçe sözlük)',
+      ], await rootBundle.loadString(spellLexiconNotice));
+    } catch (_) {}
   });
 }
+
+/// Yazım sözlüğünün lisans/kaynak bildirimi (Apache-2.0 tam metniyle).
+const spellLexiconNotice = 'assets/spell/NOTICE.txt';

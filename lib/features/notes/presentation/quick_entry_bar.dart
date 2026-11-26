@@ -14,6 +14,7 @@ import '../../settings/settings_providers.dart';
 import '../data/device_speech.dart';
 import '../data/voice_listen_session.dart';
 import '../domain/done_word.dart';
+import '../domain/quick_drop.dart' show endsWithAddCommand;
 import '../domain/quick_entry.dart';
 import 'voice_level_wave.dart';
 
@@ -44,6 +45,7 @@ class QuickEntryBar extends ConsumerStatefulWidget {
     this.onRawSubmitted,
     this.onSpeechEnd,
     this.onDoneWord,
+    this.onAddWord,
     this.initialText = '',
   });
 
@@ -94,6 +96,13 @@ class QuickEntryBar extends ConsumerStatefulWidget {
   /// işi bitirir (notu oluşturur). Verilmezse söz sıradan metin sayılır.
   final VoidCallback? onDoneWord;
 
+  /// Yalnız HAM KİPTE: konuşma "… ekle" ile bitti ve ardından
+  /// [QuickEntryBarState.addWordPause] boyunca yeni söz gelmedi (kullanıcı
+  /// isteği 2026-11-26: "ekle dediğim zaman çok kısa bir beklemeden sonra
+  /// direkt eklemeli"). Dinleme İPTAL edilir (söz alanda kalır, hedef ondan
+  /// çözülür), çağıran ekler. Verilmezse "ekle" sıradan metindir.
+  final VoidCallback? onAddWord;
+
   @override
   ConsumerState<QuickEntryBar> createState() => QuickEntryBarState();
 }
@@ -133,6 +142,13 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   /// Yazmayı bırakınca devamı beklenen öbek başı ("süt" → "süt tozu"
   /// olabilirdi) maddeye döner.
   static final idleDelay = AppMotion.long + AppMotion.medium;
+
+  /// "… ekle" duyulduktan sonra beklenen sessizlik: tanıyıcı konuşurken
+  /// 200–400 ms'de bir sonuç verir; bu kadar yeni söz gelmezse kullanıcı
+  /// bitirmiştir ("ekle" bir sonraki sonuçta "eklemeyi unutma" olabilirdi).
+  static final addWordPause = AppMotion.long + AppMotion.short; // 620 ms
+  Timer? _addTimer;
+  String _addHeard = '';
 
   @override
   void initState() {
@@ -177,6 +193,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   void dispose() {
     _idle?.cancel();
     _autoTimer?.cancel();
+    _addTimer?.cancel();
     unawaited(_session?.cancel());
     _c.dispose();
     _listening.dispose();
@@ -388,6 +405,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     if (widget.raw) {
       final text = _rawPrefix.isEmpty ? full : '$_rawPrefix $full';
       _setFromSpeech(text);
+      _watchAddWord(full);
       return;
     }
     final r = widget.parser.parse(full);
@@ -396,6 +414,40 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
       _spokenCount = r.items.length;
     }
     _heard.value = r.rest.trim();
+  }
+
+  /// Sonda "ekle" varsa kısa sessizlik bekler; yeni (farklı) söz gelirse
+  /// bekleme baştan başlar ya da (söz "ekle" ile bitmiyorsa) düşer. Aynı
+  /// sonucun tekrarı bekleme süresini uzatmaz.
+  void _watchAddWord(String full) {
+    if (widget.onAddWord == null) return;
+    final heard = full.trim();
+    if (!endsWithAddCommand(heard)) {
+      _addTimer?.cancel();
+      _addTimer = null;
+      _addHeard = '';
+      return;
+    }
+    if (heard == _addHeard && _addTimer != null) return;
+    _addHeard = heard;
+    _addTimer?.cancel();
+    _addTimer = Timer(addWordPause, _onAddWord);
+  }
+
+  /// "Ekle" sessizlikle onaylandı: oturum İPTAL edilir (durdurmak son
+  /// sonucu bekletirdi), alan olduğu gibi kalır, çağıran ekler.
+  void _onAddWord() {
+    _addTimer = null;
+    _addHeard = '';
+    final session = _session;
+    if (!mounted || session == null) return;
+    _session = null;
+    _lastSpeechAt = null;
+    unawaited(session.cancel());
+    _spoken = '';
+    _rawPrefix = '';
+    _listening.value = false;
+    widget.onAddWord?.call();
   }
 
   /// "Bitti" duyuldu: söz atılmış metinle son kez işlenir, oturum İPTAL
@@ -446,6 +498,8 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   }
 
   Future<void> _stopListening() async {
+    _addTimer?.cancel();
+    _addTimer = null;
     final session = _session;
     if (session == null) return;
     // Önce bitiş metni gelsin (stop son sonucu getirir), sonra kalan dökülür.

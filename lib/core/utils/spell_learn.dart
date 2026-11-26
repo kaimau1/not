@@ -19,6 +19,7 @@ library;
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'tr_lexicon.dart';
 import 'tr_morph.dart';
 import 'tr_roots.dart';
 
@@ -111,6 +112,8 @@ class SpellMemory {
     isNoun: (r) =>
         kTrNounRoots.contains(r) || (words[r] ?? 0) + (seeded[r] ?? 0) >= 3,
     isVerb: kTrVerbRoots.contains,
+    // Büyük sözlük yüklüyse "kitapı" (doğrusu kitabı) çekim sayılmaz.
+    mustVoice: _mustVoice,
   );
   final Map<String, bool> _morphCache = {};
 
@@ -118,10 +121,81 @@ class SpellMemory {
   bool morphKnown(String w) {
     final l = trLower(w);
     if (l.length < 3 || isCjk(l)) return false;
+    _syncLexicon();
     final hit = _morphCache[l];
     if (hit != null) return hit;
     if (_morphCache.length > 4000) _morphCache.clear();
     return _morphCache[l] = _morph.parses(l);
+  }
+
+  /// **BÜYÜK SÖZLÜKLE GEÇERLİ** (kullanıcı isteği 2026-11-26; Zemberek,
+  /// [TrLexicon]): [known] ya da büyük sözlükteki bir sözcük / kökü
+  /// büyük sözlükte olan kurallı çekim ("böbrek", "şehit", "karısı").
+  ///
+  /// [known]'dan AYRI tutulur: [known] "dokunma + aday doğrulama" kararıdır
+  /// ve sık kelimeyle sınırlı kalır; bu ise yalnız BULANIK düzeltmeyi ve
+  /// cihaz denetçisine sormayı keser. Ölçüm (sık 10 bin Türkçe harfli
+  /// kelime): eski motor ~100 doğru kelimeyi bulanıkla değiştiriyordu
+  /// ("sakın→sakin", "böbrek→börek", "uşak→uçak"), bu kapıyla ~5.
+  /// Sözlük yüklenmemişse [known] ile aynı.
+  bool lexicalKnown(String w) {
+    if (known(w)) return true;
+    final lex = TrLexicon.instance;
+    if (lex == null) return false;
+    final l = trLower(w);
+    if (l.length < 2 || isCjk(l)) return false;
+    _syncLexicon();
+    final hit = _lexCache[l];
+    if (hit != null) return hit;
+    if (_lexCache.length > 4000) _lexCache.clear();
+    return _lexCache[l] = lex.has(l) || (l.length >= 3 && _lexMorph.parses(l));
+  }
+
+  late final _lexMorph = TrMorph(
+    isNoun: (r) =>
+        kTrNounRoots.contains(r) ||
+        (TrLexicon.instance?.noun(r) ?? false) ||
+        (words[r] ?? 0) + (seeded[r] ?? 0) >= 3,
+    isVerb: (r) =>
+        kTrVerbRoots.contains(r) || (TrLexicon.instance?.verb(r) ?? false),
+    softMono: (r) =>
+        kTrSoftMono.contains(r) || (TrLexicon.instance?.softMono(r) ?? false),
+    noVoicing: (r) => TrLexicon.instance?.noVoicing(r) ?? false,
+    doubling: (r) =>
+        kTrDoubling.contains(r) || (TrLexicon.instance?.doubling(r) ?? false),
+    front: (s) =>
+        kTrFrontLoans.contains(s) || (TrLexicon.instance?.front(s) ?? false),
+    // Yalnız büyük sözlükteki kökte işaret aranır; elle/kişisel kökte eski
+    // genel kural.
+    dropsVowel: (r) {
+      final lex = TrLexicon.instance;
+      return lex == null || !lex.has(r) || lex.dropsVowel(r);
+    },
+    mustVoice: _mustVoice,
+  );
+  final Map<String, bool> _lexCache = {};
+
+  /// Büyük sözlükteki ad kökü p/ç/t/k ile bitiyor ve yumuşuyor: çok heceli
+  /// (yumuşamaz işareti yoksa) ya da tek heceli yumuşayan ("kap" → "kabı").
+  /// Sözlük yoksa ya da kök sözlükte değilse sorulmaz (eski gevşek kural).
+  static bool _mustVoice(String r) {
+    final lex = TrLexicon.instance;
+    if (lex == null || r.length < 2 || !'pçtk'.contains(r[r.length - 1])) {
+      return false;
+    }
+    if (!lex.noun(r)) return false;
+    final vowels = RegExp('[aeıioöuüâîû]').allMatches(r).length;
+    return vowels > 1 ? !lex.noVoicing(r) : lex.softMono(r);
+  }
+
+  int _lexRevision = TrLexicon.revision;
+
+  /// Sözlük yüklendi/değişti: iki çözücünün önbelleği bayat.
+  void _syncLexicon() {
+    if (_lexRevision == TrLexicon.revision) return;
+    _lexRevision = TrLexicon.revision;
+    _morphCache.clear();
+    _lexCache.clear();
   }
 
   void addWord(String w, [int by = 1]) {
@@ -132,7 +206,10 @@ class SpellMemory {
     words[l] = before + by;
     if (!had || (before < 3 && before + by >= 3)) _invalidateBuckets();
     // Yeni kök bilindi: ek çözücünün eski "bilinmez" yanıtları bayat.
-    if (before < 3 && before + by >= 3) _morphCache.clear();
+    if (before < 3 && before + by >= 3) {
+      _morphCache.clear();
+      _lexCache.clear();
+    }
     if (words.length > maxWords) _pruneWords();
   }
 
@@ -152,6 +229,7 @@ class SpellMemory {
       ..addAll(counts);
     _invalidateBuckets();
     _morphCache.clear();
+    _lexCache.clear();
   }
 
   /// Uzunluğu [len] olan bütün sözlük kelimeleri (bulanık arama kovası).
@@ -332,6 +410,7 @@ class SpellMemory {
       ..addAll(nextFixes);
     _invalidateBuckets();
     _morphCache.clear();
+    _lexCache.clear();
     return true;
   }
 

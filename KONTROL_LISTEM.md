@@ -5,9 +5,13 @@ işaretle (`[x]`) ya da bana "3. madde tamam / bozuk" de. Bozuksa: ekran görün
 ekran kaydı alıp gönder, hangi notta olduğunu söyle. Yapamadığını silme, "denemedim" yaz.
 
 (Her maddenin adım adım uzun hâli geliştirici belgelerindeki "cihaz turu" listesinde; gerekmedikçe
-oraya bakman gerekmez. Son güncelleme: 16 Kasım 2026.)
+oraya bakman gerekmez. Son güncelleme: 26 Kasım 2026.)
 
 ## Telefonda bak
+
+- [ ] **Hızlı ekle "ekle" + liste diktesi + otomatik noktalama + büyük yazım sözlüğü (26 Kasım, bulutta yazıldı — cihazda doğrulanmadı; A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) ⚡ Hızlı ekle → "süt ekmek ekle" de, sus → ~1 sn içinde seçili nota ekleniyor mu; "yeni fikir hatalar notuna ekle" (böyle not yokken) → soruyor mu; "ekle"den sonra konuşmaya devam edince eklemiyor mu. (2) Kontrol listesi notunu aç, hiçbir maddeye dokunmadan 🎤 Dikte → "ekmek yeni madde yumurta" → listenin SONUNA iki madde mi (üstte düz metin YOK). (3) Metin notunda dikte: virgül/nokta/soru işareti kendiliğinden geliyor mu (Android 13+); "ııı eee" atılıyor mu; "yarın geliyor musun" sonuna "?" geliyor mu; cümle iki kez yazılmıyor mu (klon). (4) Yazım "Yalnız göster": "böbrek, şehit, uşak, karısı, düzgün" çizilmiyor mu; "kitapı", "petnr" çiziliyor mu; not açıldıktan ~2 sn sonra gereksiz çizgiler kayboluyor mu. (5) Ayarlar → Lisanslar → "Zemberek-NLP (Türkçe sözlük)" var mı.
+  Yanlışsa: madde numarasını yaz, ekran kaydı at.
 
 - [ ] **Tam ekran ana ekran zemini + yazım altı çizgisi + klavye otomatik düzeltmesi (25 Kasım akşam, bulutta yazıldı — cihazda doğrulanmadı; A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Ana ekranda bir zemin görseli seçili iken görsel durum çubuğunun ve alttaki üç tuşun arkasına uzanıyor mu, arama çubuğunun çevresi zeminle kesintisiz mi, üstte/altta düz şerit kaldı mı; durum çubuğu simgeleri okunuyor mu (açık + koyu tema). (2) Listeyi en alta kaydır: son kart gezinme tuşlarının üstüne çıkabiliyor mu; ⚡/🎤/+ düğmeleri tuşların üstünde mi. (3) Yazım kipi **Yalnız göster**: bir maddeye "petnr ekmek ama nabr nasılsn" yaz, boşluk bırak, biraz bekle → "petnr", "nabr" (ve son kelimeden çıkınca "nasılsn") kırmızı dalgalı çizili mi; dokununca Gboard önerileri menüde mi. (4) Aynı kipte yazarken klavye kelimeleri kendiliğinden değiştiriyor mu (değiştirmemeli; değiştiriyorsa Gboard → Metin düzeltme → Otomatik düzeltme ayarını yaz). (5) Hızlı satırdaki yazım düğmesiyle **Otomatik**'e geç → düzeltme geri geliyor mu.

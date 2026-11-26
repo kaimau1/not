@@ -100,21 +100,29 @@ class DeviceSpeech {
   /// [preferOffline]: cihazda dil paketi varsa ağa gidilmez (Ayarlar →
   /// İnternetsiz tanıma). Paket yoksa yerli taraf kendiliğinden çevrimiçi
   /// tanımaya döner. Argüman geriye uyumlu tek dize: "tr-TR|offline".
+  ///
+  /// [punctuate]: Android 13+ tanıyıcı söylenmeyen noktalamayı ve büyük
+  /// harfi kendisi koyar ("|format"; desteklemeyen tanıyıcı yok sayar, metin
+  /// gelmeden hata verirse yerli taraf onsuz yeniden dener).
   static Stream<({String? text, double? level})> listen({
     String locale = 'tr-TR',
     bool preferOffline = false,
+    bool punctuate = false,
   }) {
+    final arg = [
+      locale,
+      if (preferOffline) 'offline',
+      if (punctuate) 'format',
+    ].join('|');
     final rawStream = kIsWeb
         ? listenWebSpeech(locale: locale)
-        : _events
-              .receiveBroadcastStream(preferOffline ? '$locale|offline' : locale)
-              .map((event) {
-                final map = event as Map<Object?, Object?>;
-                return (
-                  text: map['text'] as String?,
-                  level: (map['level'] as num?)?.toDouble(),
-                );
-              });
+        : _events.receiveBroadcastStream(arg).map((event) {
+            final map = event as Map<Object?, Object?>;
+            return (
+              text: map['text'] as String?,
+              level: (map['level'] as num?)?.toDouble(),
+            );
+          });
     return rawStream.map((event) {
       final raw = event.text;
       final text = raw == null ? null : dedupeSpeechSegments(raw);

@@ -2,6 +2,12 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 26 November 2026 {#2026-11-26}
+- **Quick add acts as soon as you say "add":** ending your sentence with "… ekle" (add) now stops listening after ~0.6 s of silence and adds the note after a short ~0.7 s countdown, instead of waiting for silence plus a 2 s countdown. If you don't name a note ("süt ekle") it goes to the selected note; if you name one that can't be found it still asks. You can tap **Wait** during the countdown or undo afterwards.
+- **Dictating into a list note creates items:** in a checklist or numbered list, dictating without tapping an item now writes a new item at the end of the list (it used to create plain text above the list). Saying "new item" moves to the next item; no automatic full stop is added at the end of an item.
+- **Cleaner dictated text:** on Android 13+, if your phone's recognizer supports it, commas, full stops, question marks and capitals are added automatically. The app also drops fillers like "ııı", "eee", "hmm", adds a question mark to sentences ending with a Turkish question particle, capitalises sentence starts and fixes spacing around punctuation (while smart dictation is on in Settings).
+- **A large Turkish dictionary for spell check:** about 27 thousand roots from the open-source Zemberek lexicon, with inflected forms recognised by the suffix analyser (recognition of the 20k most common words: 57% → 89%). Correct words are far less often "corrected" into wrong ones (e.g. "böbrek → börek", "uşak → uçak") and needless underlines are mostly gone; rule-based fixes like "herşey → her şey" still apply. Works offline; the licence is under Settings → Licenses.
+
 ## 25 November 2026 {#2026-11-25}
 - **Redesigned spell check that learns manual fixes:** the tap suggestion card and **Fix by hand** dialog were redesigned from scratch (error/hint badge, wavy preview, crisp suggestion chips, and icon actions). Words you correct via **Fix by hand** or directly in the text are learned in your personal spell memory and suggested next time.
 - **Backgrounds now apply to Calendar + 8 new wallpapers (18 total):** your chosen wallpaper, colour, or pattern now flows edge-to-edge behind the status bar on Calendar and Day screens too, with **Background** directly in Calendar's ⋮ menu. Added 8 new wallpapers (Sakura breeze, Ocean mist, Autumn maple, Sage linen, Peach horizon, Nordic paper, Starry pine, Obsidian gold).

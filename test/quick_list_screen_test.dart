@@ -731,6 +731,36 @@ void main() {
       );
     });
 
+    // Kullanıcı isteği 2026-11-26: "ekle dediğim zaman çok kısa bir
+    // beklemeden sonra direkt eklemeli" — ad söylenmediyse seçili nota.
+    testWidgets('"… ekle" ile biten konuşma: çok kısa geri sayımla eklenir', (
+      tester,
+    ) async {
+      final repo = await openSheet(tester, [shopping, todo, text]);
+      await say(tester, 'kargoyu sor ekle');
+      expect(find.byKey(const ValueKey('quick-drop-counting')), findsOneWidget);
+      expect(find.text('“Yapılacaklar” notuna ekleniyor…'), findsOneWidget);
+      expect(repo.writes, isEmpty, reason: 'Bekle\'ye yetişilsin');
+      await tester.pump(QuickDropSheet.commandCountdown);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pumpAndSettle();
+      final items = repo.writes['b']!['items'] as List;
+      expect([
+        for (final i in items) (i as Map)['text'],
+      ], contains('Kargoyu sor'));
+
+      // Komutsuz konuşma aynı sürede eklenmez (2 sn).
+      final before = repo.writes['b'];
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await say(tester, 'faturayı yatır');
+      await tester.pump(QuickDropSheet.commandCountdown);
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(identical(repo.writes['b'], before), isTrue);
+      await tester.pump(QuickDropSheet.countdown);
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('"… ekle" dendi, ad bulunamadı: sorulur, eklenmez', (
       tester,
     ) async {

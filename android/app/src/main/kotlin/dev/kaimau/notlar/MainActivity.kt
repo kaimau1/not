@@ -130,6 +130,11 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
     // (dil desteklenmiyor / kullanılamıyor) ile düşer; o zaman tercih bu
     // oturum için bırakılır ve çevrimiçi tanımayla sürülür.
     private var preferOffline = false
+    // Android 13+ otomatik noktalama/büyük harf (EXTRA_ENABLE_FORMATTING).
+    // Dart "|format" ile ister (yalnız editör diktesi); desteklemeyen
+    // tanıyıcı yok sayar. Metin gelmeden ölümcül hata alınırsa bir kez
+    // KAPATILIP aynı tanıyıcıyla yeniden denenir (aday değiştirilmeden).
+    private var formatting = false
 
     // Tanı için: yalnızca uzunluk ve olay tipi yazılır, konuşma METNİ asla
     // loglanmaz (döküm kişisel veridir, logcat'e sızmamalı).
@@ -1423,6 +1428,7 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                     // tercihi — bkz. DeviceSpeech.listen).
                     val parts = (arguments as? String ?: "tr-TR").split('|')
                     preferOffline = parts.contains("offline")
+                    formatting = parts.contains("format")
                     startRecognizer(parts.first().ifBlank { "tr-TR" })
                 }
 
@@ -1676,6 +1682,17 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             // İnternetsiz tanıma: cihazda dil paketi varsa ağa gidilmez.
             if (preferOffline) putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            // OTOMATİK NOKTALAMA (kullanıcı isteği 2026-11-26: "yazıyı güzel
+            // düzeltsin"): tanıyıcı söylenmeyen virgül/nokta/soru işaretini
+            // ve büyük harfi kendisi koyar; ilk sonuç biçimli metindir. Ara
+            // sonucun sonuna nokta konmaz (yazarken titremesin).
+            if (formatting && Build.VERSION.SDK_INT >= 33) {
+                putExtra(
+                    RecognizerIntent.EXTRA_ENABLE_FORMATTING,
+                    RecognizerIntent.FORMATTING_OPTIMIZE_QUALITY
+                )
+                putExtra(RecognizerIntent.EXTRA_HIDE_PARTIAL_TRAILING_PUNCTUATION, true)
+            }
             // Düşünmek için duraksayan kullanıcıda tanıyıcı erken kapanmasın.
             putExtra(
                 RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,
@@ -1799,6 +1816,13 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                 error == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ||
                 error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS
             if (listening && !hadText && !transient) {
+                // Biçimlendirme bu tanıyıcıyı bozmuş olabilir: önce onsuz dene.
+                if (formatting && Build.VERSION.SDK_INT >= 33) {
+                    Log.d(logTag, "error=$error bicimlendirme kapatildi, yeniden")
+                    formatting = false
+                    restartRecognizer(locale)
+                    return
+                }
                 tryNextCandidate(locale)
                 return
             }
@@ -1846,8 +1870,13 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
         // Tersi de olur: duraklamadan sonra tanıyıcı aynı cümleyi yeniden
         // döküp KISA keser (2026-11-10 "cümle iki kez yazılıyor"). Önceki
         // satırın baş kısmının tekrarı eklenmez.
-        if (lastLine.isNotEmpty() && lastLine.startsWith(part)) return
-        if (lastLine.isNotEmpty() && part.startsWith(lastLine)) {
+        // Noktalamasız/küçük harfle karşılaştırılır (otomatik noktalama
+        // aynı parçayı "Süt, ekmek." diye yeniden verebilir); eşitse yeni
+        // (biçimli) hâl eskisinin yerine geçer.
+        val pl = plain(lastLine)
+        val pp = plain(part)
+        if (lastLine.isNotEmpty() && pl.startsWith(pp) && pl != pp) return
+        if (lastLine.isNotEmpty() && pp.startsWith(pl)) {
             accumulated.setLength(accumulated.length - lastLine.length)
         } else {
             accumulated.append('\n')
@@ -1864,9 +1893,19 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
         if (old.isEmpty()) return true
         if (segmentEnded) return false
         if (new.startsWith(old) || old.startsWith(new)) return true
+        // Otomatik noktalama ara sonuçta virgül ekleyip büyük harf
+        // değiştirebilir ("süt ekmek" → "Süt, ekmek ve"): karşılaştırma
+        // noktalamasız ve küçük harfle de yapılır, yoksa aynı segment yeni
+        // sanılıp cümle iki kez yazılırdı.
+        val n = plain(new)
+        val o = plain(old)
+        if (n.startsWith(o) || o.startsWith(n)) return true
         // Kuyruk düzeltmesi baştaki kelimeyi korur; yeni segment korumaz.
-        return new.substringBefore(' ') == old.substringBefore(' ')
+        return n.substringBefore(' ') == o.substringBefore(' ')
     }
+
+    private fun plain(s: String): String =
+        s.lowercase().replace(Regex("[\\p{P}]"), "").replace(Regex("\\s+"), " ").trim()
 
     // Tanıyıcı metin üretti: cihaz canlı tanımayla çalışıyor.
     private fun markWorking() {

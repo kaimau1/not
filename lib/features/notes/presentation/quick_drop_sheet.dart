@@ -416,6 +416,15 @@ class QuickDropSheet extends ConsumerStatefulWidget {
   /// kipte alanı baştan yazar, metin silinirdi).
   final String initialText;
 
+  /// Bekleme süresi (hareket değil): komutsuz konuşma bitince tepki için
+  /// iki saniye — kullanıcı hedefi söylememiş olabilir.
+  static const countdown = Duration(seconds: 2);
+
+  /// "… ekle" / "ad: içerik" gibi AÇIK komutla biten konuşmada (kullanıcı
+  /// isteği 2026-11-26: "ekle dediğim zaman çok kısa bir beklemeden sonra
+  /// direkt eklemeli"): önizleme satırı görünsün, Bekle'ye yetişilsin.
+  static final commandCountdown = AppMotion.long + AppMotion.medium; // 720 ms
+
   @override
   ConsumerState<QuickDropSheet> createState() => _QuickDropSheetState();
 }
@@ -511,8 +520,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
   /// Konuşma sonrası geri sayım (bitince eklenir).
   late final AnimationController _count = AnimationController(
     vsync: this,
-    // Bekleme süresi (hareket değil): tepki için iki saniye.
-    duration: const Duration(seconds: 2),
+    duration: QuickDropSheet.countdown,
   )..addStatusListener(_onCountStatus);
 
   @override
@@ -811,7 +819,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         ask: chosen == null,
       );
     } else if (_chosenId == null &&
-        !parsed.command &&
+        !dropNamesUnknownTarget(text) &&
         parsed.content.trim().isNotEmpty) {
       // HE-4 tek giriş: tarih/saat varsa hatırlatıcılı yeni not; birkaç
       // market maddesi varsa market listesi; değilse son hedef.
@@ -858,17 +866,25 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
 
   /// [now]: kullanıcı "bitti" dedi — hedef belliyse geri sayım yok.
   void _onSpeechEnd({bool now = false}) {
-    _resolve(_bar.currentState?.text ?? '');
+    final said = _bar.currentState?.text ?? '';
+    _resolve(said);
     final st = _state.value;
     final parsed = _parsed;
     if (st.content.trim().isEmpty || parsed == null) return;
+    // Açık komutla bitti ("… ekle", "yarına ekle", "ad: içerik"): kısa bekleme.
+    final quick = parsed.command || endsWithAddCommand(said);
     if (_toNewNote) {
-      now ? _apply(resolve: false) : _startCountdown();
+      now ? _apply(resolve: false) : _startCountdown(quick: quick);
       return;
     }
     // "… ekle" dendi ama ad çözülmedi ya da başa baş: kullanıcı bir not
-    // adlandırdı, tahminle başka nota eklenmez.
-    final named = st.ask || (parsed.command && parsed.index == null);
+    // adlandırdı ("… hatalar notuna ekle"), tahminle başka nota eklenmez.
+    // Ad söylenmediyse ("süt ekle") seçili nota gider (2026-11-26).
+    final named =
+        st.ask ||
+        (parsed.command &&
+            parsed.index == null &&
+            dropNamesUnknownTarget(said));
     if (named && _chosenId == null) {
       if (_aiUsable) {
         unawaited(_askAi());
@@ -884,7 +900,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     if (now) {
       _apply(resolve: false);
     } else {
-      _startCountdown();
+      _startCountdown(quick: quick);
     }
   }
 
@@ -922,7 +938,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
             : st.content,
         ask: !yes,
       );
-      if (yes) _startCountdown();
+      if (yes) _startCountdown(quick: true);
       return;
     }
     _state.value = _Drop(
@@ -933,8 +949,12 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     );
   }
 
-  void _startCountdown() {
+  /// [quick]: açık komutla bitti ([commandCountdown]).
+  void _startCountdown({bool quick = false}) {
     _phase.value = _Phase.counting;
+    _count.duration = quick
+        ? QuickDropSheet.commandCountdown
+        : QuickDropSheet.countdown;
     unawaited(_count.forward(from: 0));
     _checkFixes();
   }
@@ -1266,6 +1286,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               onSpeechEnd: _onSpeechEnd,
               // "… bitti" dendi: geri sayım beklemeden hemen eklenir.
               onDoneWord: () => _onSpeechEnd(now: true),
+              // "… ekle" + kısa sessizlik: çok kısa geri sayımla eklenir.
+              onAddWord: _onSpeechEnd,
               onItems: (_) {},
             ),
             // DURUM SATIRI, boyu SABİT (levha zıplamasın): nereye / hangi

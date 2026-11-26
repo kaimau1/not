@@ -170,6 +170,39 @@ bool _endsDative(String token) {
   return false;
 }
 
+/// **SESLE "EKLE"** (kullanıcı isteği 2026-11-26: "sonunda ekle dediğim
+/// zaman o notu çok kısa bir beklemeden sonra direkt eklemeli"): konuşma
+/// "ekle" ailesiyle ([_addCommand]) bitiyor mu. Hızlı ekle levhası bunu
+/// bitiş sözü sayar; kısa sessizlikten sonra dinlemeyi bitirip ekler.
+bool endsWithAddCommand(String text) => _addCommand.hasMatch(text);
+
+/// "… ekle" dendi, hedef çözülemedi: kullanıcı bir not ADLANDIRDI mı?
+///
+/// Yalnız açık işaret sayılır — komuttan hemen önceki kelime "notuna /
+/// listesine" gibi bir işaret, kesmeli yönelme eki ("Market'e") ya da
+/// iyelik/kaynaştırmalı yönelme eki ("defterine", "kanallarıma",
+/// "siteye"). Yalın -a/-e kanıt DEĞİL: "elma ekle", "çikolata ekle" de a/e
+/// ile biter. Adlandırılmamışsa içerik seçili (son kullanılan) nota gider;
+/// önizleme satırı ve geri al bunu gösterir.
+bool dropNamesUnknownTarget(String text) {
+  final raw = text.trim();
+  if (!_addCommand.hasMatch(raw)) return false;
+  final body = raw.replaceFirst(_addCommand, '').trim();
+  if (body.isEmpty) return false;
+  final last = body.split(RegExp(r'\s+')).last;
+  if (RegExp("['’](y?[ae]|n[ae])\$", caseSensitive: false).hasMatch(last)) {
+    return true;
+  }
+  final words = _words(last);
+  if (words.isEmpty) return false;
+  final w = words.last;
+  return _markers.contains(w) || (w.length >= 5 && _namedDative.hasMatch(w));
+}
+
+/// İyelikli ya da kaynaştırmalı yönelme (ASCII): "-(s)ine", "-ima",
+/// "-imize", "-(y)e".
+final _namedDative = RegExp(r'([iu][nm]|miz|muz|niz|nuz|[aeiou]y)[ae]$');
+
 /// [text]'i hedef + içerik olarak ayırır. [titles]: aday notların başlıkları
 /// (dönen `index` ve `ties` bu listeye göre).
 ///

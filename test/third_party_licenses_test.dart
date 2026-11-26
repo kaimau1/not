@@ -63,6 +63,10 @@ void main() {
       }
       expect(packages, contains('CMU Pronouncing Dictionary'));
       expect(texts['CMU Pronouncing Dictionary'], contains('Carnegie Mellon'));
+      const zemberek = 'Zemberek-NLP (Türkçe sözlük)';
+      expect(packages, contains(zemberek));
+      expect(texts[zemberek], contains('Apache License'));
+      expect(texts[zemberek], contains('Ahmet A. Akın'));
     },
   );
 }

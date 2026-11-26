@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../core/haptics.dart';
+import '../../../../core/utils/dictation_tidy.dart';
 import '../../../../core/utils/voice_commands.dart';
 import '../../data/device_speech.dart';
 import '../../data/voice_listen_session.dart';
@@ -103,6 +104,8 @@ class DictationController extends ChangeNotifier {
     locale: locale,
     autoStop: autoStop,
     preferOffline: preferOffline,
+    // Editör diktesi: Android 13+ otomatik noktalama + büyük harf.
+    punctuate: true,
     gate: gate,
     onText: onText,
     onEnd: onEnd,
@@ -236,7 +239,8 @@ class DictationController extends ChangeNotifier {
     _shown = merged;
 
     var written = merged;
-    if (smartCommands()) {
+    final smart = smartCommands();
+    if (smart) {
       final outcome = applyVoiceCommands(merged);
       written = outcome.text;
       if (outcome.commands > _commandCount) {
@@ -257,7 +261,7 @@ class DictationController extends ChangeNotifier {
       var t = target;
       var c = controller;
       while (lines.length - 1 > _line) {
-        _replaceRange(t, c, lines[_line]);
+        _replaceRange(t, c, _tidyLine(c, lines[_line], smart));
         final next = openItemAfter(c);
         if (next == null) break;
         t = next;
@@ -268,13 +272,24 @@ class DictationController extends ChangeNotifier {
         _line++;
       }
       final line = lines[_line];
-      _replaceRange(t, c, _line > 0 ? capitalizeTurkishFirst(line) : line);
+      _replaceRange(
+        t,
+        c,
+        smart
+            ? _tidyLine(c, line, smart)
+            : (_line > 0 ? capitalizeTurkishFirst(line) : line),
+      );
       _updatePreview(written);
       onRevealCaret();
       return;
     }
 
     final start = _at.clamp(0, logical.length);
+    // Cihaz içi temizlik (dolgu sesi, noktalama, soru eki, cümle başı):
+    // akıllı sesli not açıkken; her olayda ham metinden baştan.
+    if (smart) {
+      written = tidyDictation(written, before: logical.substring(0, start));
+    }
     final result = written.trim().isEmpty
         ? (
             text: logical.replaceRange(
@@ -294,6 +309,15 @@ class DictationController extends ChangeNotifier {
     onCommit(target, controller, text);
     _updatePreview(written);
     onRevealCaret();
+  }
+
+  /// Liste maddesine yazılacak satırın temizliği: madde başıysa büyür,
+  /// sondaki tek nokta atılır ([tidyDictation] `item`).
+  String _tidyLine(WrapTextController c, String line, bool smart) {
+    if (!smart) return line;
+    final logical = c.logicalText;
+    final at = _at.clamp(0, logical.length);
+    return tidyDictation(line, before: logical.substring(0, at), item: true);
   }
 
   void _replaceRange(

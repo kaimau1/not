@@ -170,6 +170,9 @@ flutter:
     - assets/guide/
     # Hazır renkli not ve ana ekran zemin görselleri (dashboard_wallpapers.dart).
     - assets/backgrounds/
+    # Türkçe yazım denetiminin büyük kök sözlüğü (Zemberek, Apache-2.0;
+    # NOTICE.txt Lisanslar sayfasında). ~330 KB ham, APK'da ~100 KB.
+    - assets/spell/
     # Notu PDF'e aktarırken gömülen font. PDF'in hazır Helvetica'sı WinAnsi
     # kodlamalı, ı ğ ş İ harflerini İÇERMİYOR — Türkçe not bozuk çıkıyordu.
     # PT Sans (OFL) Türkçe'nin tamamını taşıyor.

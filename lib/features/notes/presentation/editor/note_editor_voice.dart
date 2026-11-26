@@ -44,6 +44,14 @@ extension _EditorVoice on _NoteEditorScreenState {
             false)) {
       return;
     }
+    // Liste notunda hedef gövde değilse (madde seçilmedi) metin MADDE olur
+    // (kullanıcı bulgusu 2026-11-26) — gövdede eski bir imleç kalsa bile.
+    final listNote =
+        note.type == NoteType.checklist || note.type == NoteType.ordered;
+    if (listNote && !identical(target, _bodyController)) {
+      _appendPlainText(text);
+      return;
+    }
     // Gövde alanı yoksa (saf liste notu) ya da imleç hiç konmamışsa eski
     // davranış: metin nota eklenir.
     final hasBody = note.type == NoteType.text || note.body.trim().isNotEmpty;
@@ -69,6 +77,8 @@ extension _EditorVoice on _NoteEditorScreenState {
       _dictationCtl ??= DictationController(
         resolveTarget: () {
           var target = _formatTarget;
+          final item = _listDictationTarget(target);
+          if (item != null) return item;
           if (target == null) {
             _bodyFocus.requestFocus();
             target = _formatTarget;
@@ -166,6 +176,38 @@ extension _EditorVoice on _NoteEditorScreenState {
     } else {
       target?.commit();
     }
+  }
+
+  /// **LİSTE NOTUNDA MADDE SEÇİLMEDEN DİKTE** (kullanıcı bulgusu
+  /// 2026-11-26: "sesle yazarken maddeye tıklamazsam madde liste olanlarda
+  /// normal metin ekliyor, normal madde olarak eklemesi lazım"). Hedef
+  /// bilinmiyor ya da başlık/gövdeye düşmüşse eskiden metin GÖVDEYE
+  /// yazılıyordu (liste notunda gizli gövde açılıp düz metin oluyordu).
+  /// Artık işaretsizlerin sonundaki boş maddeye (yoksa yeni maddeye) yazılır;
+  /// "yeni madde" komutu oradan sürer. Seçili madde, tablo hücresi ve İMLECİ
+  /// O AN gövdede olan kullanıcı (liste notunun açıklaması) dokunulmaz.
+  FormatTarget? _listDictationTarget(FormatTarget? target) {
+    final note = _note;
+    if (note == null ||
+        (note.type != NoteType.checklist && note.type != NoteType.ordered)) {
+      return null;
+    }
+    final items = _itemsEditorKey.currentState;
+    if (items == null) return null;
+    if (target != null) {
+      final c = target.controller;
+      if (items.itemIdForController(c) != null) return null;
+      final body = identical(c, _bodyController);
+      if (!body && !identical(c, _titleController)) return null;
+      if (body && target.focusNode.hasFocus) return null;
+    }
+    final opened = items.openItemAtEnd();
+    if (opened == null) return null;
+    return FormatTarget(
+      controller: opened.controller,
+      focusNode: opened.focus,
+      commit: opened.commit,
+    );
   }
 
   /// Dikte bir LİSTE MADDESİNE mi yazıyor (gövde/başlık değil).

@@ -143,8 +143,14 @@ class SpellEngine {
           ? pick(hit.single, SpellReason.ascii)
           : SpellDecision.none;
     }
-    final pattern = patternFix(w, m);
+    // Büyük sözlükte geçerli sözcük ("böbrek", "şehit", "karısı"): kural ve
+    // harfsiz yazım yukarıda uygulandı; bitişik soru eki bölmesi ("anlamı"
+    // → "anla mı") ve BULANIK/cihaz tahmini geçerli kelimeyi bozmasın
+    // (2026-11-26, bkz. [SpellMemory.lexicalKnown]).
+    final lexical = m.lexicalKnown(w);
+    final pattern = patternFix(w, m, question: !lexical);
     if (pattern != null) return pick(pattern, SpellReason.rule);
+    if (lexical) return SpellDecision.none;
     // Sonda yinelenen harf ("kitapp"): bulanık eşleşme kök/uzantı ilişkisini
     // atladığı için burada; yazılan bilinmiyor, bir harf eksiği biliniyor.
     final n = w.length;
@@ -219,7 +225,7 @@ class SpellEngine {
   /// bilinmiyor): ağız "-yom/-yosun/-yoz" ("geliyom" → "geliyorum"),
   /// gelecek zaman ağzı ("yapıcam" → "yapacağım"), "-mIyAcAk" ("gelmiyecek"
   /// → "gelmeyecek"), bitişik soru eki ("geldinmi" → "geldin mi").
-  static String? patternFix(String w, SpellMemory m) {
+  static String? patternFix(String w, SpellMemory m, {bool question = true}) {
     String? ok(String c) => c != w && c.split(' ').every(m.known) ? c : null;
     final yo = _yo.firstMatch(w);
     if (yo != null) {
@@ -245,7 +251,7 @@ class SpellEngine {
       final r = ok(w.replaceFirstMapped(_negFuture, (x) => 'm${x[1]}y${x[1]}'));
       if (r != null) return r;
     }
-    final q = _question.firstMatch(w);
+    final q = question ? _question.firstMatch(w) : null;
     if (q != null) {
       final head = q[1]!;
       final lv = RegExp('[aeıioöuü]').allMatches(head).lastOrNull?[0];
@@ -397,8 +403,13 @@ class SpellEngine {
     final ctx = contextualFix(w);
     if (ctx != null && !m.isRejected(w, ctx)) return (list: [ctx], hint: true);
     if (m.known(w)) return null;
+    final lexical = m.lexicalKnown(w);
     asciiRestore(w, m).forEach(add);
-    add(patternFix(w, m));
+    add(patternFix(w, m, question: !lexical));
+    // Büyük sözlükte geçerli: yalnız kesin öneriler (yukarıdakiler) çizer.
+    if (lexical) {
+      return out.isEmpty ? null : (list: out.take(4).toList(), hint: false);
+    }
     final n = w.length;
     if (n >= 4 && w[n - 1] == w[n - 2] && m.known(w.substring(0, n - 1))) {
       add(w.substring(0, n - 1));

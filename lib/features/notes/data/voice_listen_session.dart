@@ -49,6 +49,7 @@ class VoiceListenSession {
     this.maxDuration = const Duration(minutes: 10),
     this.locale = 'tr-TR',
     this.preferOffline = false,
+    this.punctuate = false,
     SilenceGate? gate,
   }) : _gate = gate ?? SilenceGate();
 
@@ -85,6 +86,11 @@ class VoiceListenSession {
   /// İnternetsiz tanıma tercihi (bkz. [DeviceSpeech.listen]).
   final bool preferOffline;
 
+  /// Android 13+ otomatik noktalama (bkz. [DeviceSpeech.listen]). Yalnız
+  /// editör diktesi ister: hızlı ekle/liste maddeye böler, virgül/nokta
+  /// orada ayırıcıdır.
+  final bool punctuate;
+
   final SilenceGate _gate;
   StreamSubscription<({String? text, double? level})>? _sub;
   Timer? _timer;
@@ -116,8 +122,12 @@ class VoiceListenSession {
     _startedAt = now;
     _gate.start(now);
     if (useDevice) {
-      _sub = DeviceSpeech.listen(locale: locale, preferOffline: preferOffline)
-          .listen(
+      _sub =
+          DeviceSpeech.listen(
+            locale: locale,
+            preferOffline: preferOffline,
+            punctuate: punctuate,
+          ).listen(
             (event) {
               final lv = event.level;
               if (lv != null) reportLevel(lv);

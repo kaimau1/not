@@ -244,10 +244,48 @@ bool trSuffixesOk(String head, String tail) {
 /// Kök sözlüğüne bakarak kelimenin kurallı bir kök + ek zinciri olup
 /// olmadığını söyler. Örnek başına önbellek yok; çağıran önbellekler.
 class TrMorph {
-  TrMorph({required this.isNoun, required this.isVerb});
+  TrMorph({
+    required this.isNoun,
+    required this.isVerb,
+    bool Function(String root)? softMono,
+    bool Function(String root)? noVoicing,
+    bool Function(String root)? doubling,
+    bool Function(String stem)? front,
+    bool Function(String root)? dropsVowel,
+    bool Function(String root)? mustVoice,
+  }) : softMono = softMono ?? kTrSoftMono.contains,
+       mustVoice = mustVoice ?? _never,
+       noVoicing = noVoicing ?? _never,
+       doubling = doubling ?? kTrDoubling.contains,
+       front = front ?? kTrFrontLoans.contains,
+       dropsVowel = dropsVowel ?? _always;
+
+  static bool _never(String _) => false;
+  static bool _always(String _) => true;
 
   final bool Function(String root) isNoun;
   final bool Function(String root) isVerb;
+
+  /// Tek heceli ve yumuşayan kök ("kap" → "kabı").
+  final bool Function(String root) softMono;
+
+  /// Çok heceli ama YUMUŞAMAYAN kök ("adalet" → "adaleti").
+  final bool Function(String root) noVoicing;
+
+  /// İkizleşen kök ("hak" → "hakkı").
+  final bool Function(String root) doubling;
+
+  /// İnce ünlüyle ek alan gövde ("saat" → "saati").
+  final bool Function(String stem) front;
+
+  /// Son ünlüsü düşebilen kök ("ağız" → "ağzı"). Büyük sözlük yüklüyken
+  /// yalnız işaretli kökler (her C-ünlü-C kök düşürseydi yazım hataları
+  /// "bilinir" sayılırdı).
+  final bool Function(String root) dropsVowel;
+
+  /// Ünlüyle başlayan ekten önce sonu MUTLAKA yumuşayan ad kökü ("kitap" →
+  /// "kitabı"; "kitapı" yanlış). Varsayılan hiçbiri (eski gevşek davranış).
+  final bool Function(String root) mustVoice;
 
   String _w = '';
   final _memo = <int, bool>{};
@@ -277,9 +315,13 @@ class TrMorph {
     final stem = _w.substring(0, end);
     final noun = (allowed & _n0) != 0;
     final verb = (allowed & _v0) != 0;
-    bool any(String r) => (noun && isNoun(r)) || (verb && isVerb(r));
-    if (any(stem)) return true;
     final next = end < _w.length ? _w[end] : '';
+    if (verb && isVerb(stem)) return true;
+    if (noun &&
+        isNoun(stem) &&
+        !(next.isNotEmpty && _isV(next) && mustVoice(stem))) {
+      return true;
+    }
     final last = stem[stem.length - 1];
     if (next.isNotEmpty && _isV(next)) {
       final head = stem.substring(0, stem.length - 1);
@@ -294,7 +336,7 @@ class TrMorph {
         final r = '$head$hard';
         if (noun &&
             isNoun(r) &&
-            (_syllables(r) > 1 || kTrSoftMono.contains(r))) {
+            ((_syllables(r) > 1 && !noVoicing(r)) || softMono(r))) {
           return true;
         }
         // Fiilde yalnız "git, et, tat, güt" ve "-et"li birleşikler ("kaydet").
@@ -309,12 +351,13 @@ class TrMorph {
         final before = stem[stem.length - 2];
         if (!_isV(before)) {
           // hakk-ı
-          if (before == last && kTrDoubling.contains(head)) return true;
+          if (before == last && doubling(head)) return true;
           final h = head.substring(0, head.length - 1);
           final tail = [last, ?_hard[last]];
           for (final v in const ['ı', 'i', 'u', 'ü']) {
             for (final t in tail) {
-              if (isNoun('$h$before$v$t')) return true; // ağz-ı, kayd-ı
+              final r = '$h$before$v$t';
+              if (isNoun(r) && dropsVowel(r)) return true; // ağz-ı, kayd-ı
             }
           }
         }
@@ -348,7 +391,7 @@ class TrMorph {
         // "-yor" önünde a/e daralır: "arayor" değil "arıyor".
         if ((m.flags & _yor) != 0 && (last == 'a' || last == 'e')) continue;
         final stem = _w.substring(0, stemEnd);
-        var exp = _realize(m.form, stem, kTrFrontLoans.contains(stem));
+        var exp = _realize(m.form, stem, front(stem));
         if ((m.flags & _soft) != 0 &&
             end < _w.length &&
             _isV(_w[end]) &&

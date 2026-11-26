@@ -81,4 +81,78 @@ void main() {
     expect(texts, [first, 'Birleştirme yani tek menüde']);
     await endEditor(tester);
   });
+
+  // KULLANICI BULGUSU 2026-11-26: "sesle yazarken maddeye tıklamazsam madde
+  // liste olanlarda normal metin ekliyor, normal madde olarak eklemesi
+  // lazım" — madde seçilmeden başlayan dikte gövdeye (düz metin) yazıyordu.
+  for (final type in const [NoteType.checklist, NoteType.ordered]) {
+    for (final trailingEmpty in const [false, true]) {
+      testWidgets('madde seçilmeden dikte → madde (${type.name}, '
+          'sonda boş madde: $trailingEmpty)', (tester) async {
+        const events = EventChannel('dev.kaimau.notlar/speech');
+        const system = MethodChannel('dev.kaimau.notlar/system');
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        MockStreamHandlerEventSink? sink;
+        messenger
+          ..setMockStreamHandler(
+            events,
+            MockStreamHandler.inline(
+              onListen: (_, s) {
+                sink = s;
+              },
+            ),
+          )
+          ..setMockMethodCallHandler(system, (_) async => null);
+        DeviceSpeech.debugAvailable = true;
+        addTearDown(() {
+          DeviceSpeech.debugAvailable = null;
+          messenger
+            ..setMockStreamHandler(events, null)
+            ..setMockMethodCallHandler(system, null);
+        });
+        final note = Note(
+          id: 'd2',
+          type: type,
+          title: 'Market',
+          items: [
+            const NoteItem(id: 'a', text: 'süt'),
+            if (trailingEmpty) const NoteItem(id: 'b', text: ''),
+          ],
+        );
+        final repo = CountingNotesRepository();
+        await pumpEditor(tester, note, repo: repo, size: const Size(1200, 800));
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.tap(find.byTooltip('Dikte').first);
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(sink, isNotNull, reason: 'dikte başlamadı');
+        for (final t in const [
+          'ekmek',
+          'ekmek yeni madde',
+          'ekmek yeni madde yumurta',
+        ]) {
+          sink!.success({'text': t});
+          await tester.pump(const Duration(milliseconds: 120));
+        }
+        await tester.tap(find.byKey(const ValueKey('dictation-stop')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        await tester.pump(const Duration(seconds: 3));
+
+        final saved = repo.lastSaved!;
+        expect(saved.body.trim(), isEmpty, reason: 'gövdeye düz metin yok');
+        expect(
+          [for (final i in saved.items) i.text],
+          ['süt', 'Ekmek', 'Yumurta'],
+        );
+        if (trailingEmpty) expect(saved.items[1].id, 'b');
+        await endEditor(tester);
+      });
+    }
+  }
 }

@@ -12,6 +12,7 @@ import '../../../../core/utils/local_file.dart' show appSupportPath;
 import '../../../../core/utils/spell_engine.dart';
 import '../../../../core/utils/spell_fix.dart';
 import '../../../../core/utils/spell_learn.dart';
+import '../../../../core/utils/tr_lexicon.dart';
 import 'text_wrap.dart';
 
 /// **YAZIM DÜZELT v2 — alan bağlama** (Faz 70). Karar [SpellEngine.decide]'da;
@@ -91,6 +92,37 @@ class AutoSpell {
       } catch (_) {}
       mode.value = m;
     } catch (_) {}
+    unawaited(ensureLexicon());
+  }
+
+  /// **BÜYÜK KÖK SÖZLÜĞÜ** (Zemberek, 2026-11-26; bkz. [TrLexicon]): ilk
+  /// editör açılışından [lexiconDelay] sonra bir kez, arka planda yüklenir
+  /// (metin çözme ve satır dizini ayrı isolate'te; açılış geçişiyle aynı
+  /// karelere binmesin). Yüklenince altı çizili denetim yeniden taranır.
+  static Future<void> ensureLexicon() => _lexicon ??= _loadLexicon();
+  static Future<void>? _lexicon;
+  static const lexiconAsset = 'assets/spell/tr_lexicon.txt';
+  static const lexiconDelay = Duration(seconds: 2);
+
+  /// Testte kapalı (sözlük ortasında yüklenip sonuçları değiştirmesin;
+  /// sözlüklü ölçüm `spell_corpus_test` "büyük sözlük yüklü").
+  @visibleForTesting
+  static bool lexiconEnabled =
+      kIsWeb || !Platform.environment.containsKey('FLUTTER_TEST');
+
+  static Future<void> _loadLexicon() async {
+    if (!lexiconEnabled || TrLexicon.instance != null) return;
+    try {
+      await Future<void>.delayed(lexiconDelay);
+      final text = await rootBundle.loadString(lexiconAsset, cache: false);
+      final lex = kIsWeb
+          ? TrLexicon.parse(text)
+          : await compute(TrLexicon.parse, text);
+      TrLexicon.install(lex);
+      _bump();
+    } catch (_) {
+      _lexicon = null; // sonraki açılışta yeniden denenir
+    }
   }
 
   /// Kayıtlı kip; yoksa (Y-4 öncesi kurulum) eski otomatik düzelt anahtarı

@@ -116,15 +116,15 @@ void main() {
 
       dc.start(initialLocale: 'tr-TR');
       dc.handleRecognizedText('merhaba bugün test');
-      expect(ctl.logicalText, 'merhaba bugün test');
+      expect(ctl.logicalText, 'Merhaba bugün test');
 
       final stopFuture = dc.stop();
       await tester.pump(const Duration(milliseconds: 25));
       final candidate = await stopFuture;
       expect(latest?.stopped, isTrue);
-      expect(ctl.logicalText, 'merhaba bugün test son kelime');
+      expect(ctl.logicalText, 'Merhaba bugün test son kelime');
       expect(candidate, isNotNull);
-      expect(candidate!.spoken, 'merhaba bugün test son kelime');
+      expect(candidate!.spoken, 'Merhaba bugün test son kelime');
       expect(dc.isActive, isFalse);
     },
   );
@@ -188,12 +188,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 25));
       await pauseFuture;
       expect(dc.isPaused, isTrue);
-      expect(ctl.logicalText, 'birinci cümle.');
+      expect(ctl.logicalText, 'Birinci cümle.');
 
       dc.resume();
       expect(dc.isListening, isTrue);
       dc.handleRecognizedText('ikinci cümle');
-      expect(ctl.logicalText, 'birinci cümle. ikinci cümle');
+      expect(ctl.logicalText, 'Birinci cümle. İkinci cümle');
 
       final localeFuture = dc.toggleLocale();
       await tester.pump(const Duration(milliseconds: 25));
@@ -204,7 +204,7 @@ void main() {
 
       // Etkin/dolu parça yokken undo bir önceki öbeği (" ikinci cümle") kaldırır.
       expect(dc.undoLastChunk(), isTrue);
-      expect(ctl.logicalText, 'birinci cümle.');
+      expect(ctl.logicalText, 'Birinci cümle.');
     },
   );
 }

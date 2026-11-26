@@ -298,7 +298,7 @@ class SpellMarks extends ChangeNotifier {
         w.length < 3 ||
         isCjk(w) ||
         m.keep.contains(w) ||
-        m.known(w) ||
+        m.lexicalKnown(w) ||
         !_nativeOn) {
       return s;
     }

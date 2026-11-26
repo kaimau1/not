@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/spell_engine.dart';
 import 'package:notlar/core/utils/spell_learn.dart';
+import 'package:notlar/core/utils/tr_lexicon.dart';
 
 /// **YAZIM v3 Y-0 ÖLÇÜM SETİ** (17K §3.3). İki sayı:
 /// * YANLIŞ DÜZELTME: doğru kelimelerden (test/spell_corpus/dogru.txt)
@@ -27,6 +28,18 @@ const _mandalOneri = 277;
 /// "kısım" → "kışım"); kök eklenip harfsiz yazım Türkçe harfli kelimede
 /// kapatılınca 3 ("yunurta" bilerek yazılmış örnek). Yalnız düşer.
 const _mandalDuzyazi = 3;
+
+/// BÜYÜK SÖZLÜK YÜKLÜ (Zemberek kökleri, 2026-11-26) ölçümleri — uygulamada
+/// sözlük editör açılınca yüklenir. Yakalama sözlüksüzden 2 düşük: "kalen"
+/// ve "salaya" geçerli kelime (kale-n, sala-ya), bulanık düzeltme sözlükte
+/// geçerli kelimeye bilerek yapılmaz (karşılığında "böbrek → börek" gibi
+/// ~100 yanlış düzeltme gitti; bkz. sozluk_gecerli.txt). Yalnız artar/düşer.
+const _lexMandalYakalama = 271;
+const _lexMandalYanlis = 0;
+const _lexMandalCizgi = 0;
+const _lexMandalOneri = 275;
+const _lexMandalDuzyazi = 1;
+const _lexMandalGecerli = 0;
 
 List<String> _lines(String path) => [
   for (final l in File(path).readAsLinesSync())
@@ -192,5 +205,149 @@ void main() {
     // ignore: avoid_print
     print('DÜZYAZI: ${flagged.length}/$words çizili $flagged');
     expect(flagged.length, lessThanOrEqualTo(_mandalDuzyazi));
+  });
+
+  group('büyük sözlük yüklü', () {
+    setUpAll(() {
+      TrLexicon.install(
+        TrLexicon.parse(File('assets/spell/tr_lexicon.txt').readAsStringSync()),
+      );
+    });
+    tearDownAll(() => TrLexicon.install(null));
+
+    test('sözlük sıralı, tekrarsız, bayraklı', () {
+      final lex = TrLexicon.instance!;
+      expect(lex.length, greaterThan(25000));
+      for (var i = 1; i < lex.length; i++) {
+        expect(
+          lex.wordAt(i - 1).compareTo(lex.wordAt(i)),
+          lessThan(0),
+          reason: '${lex.wordAt(i - 1)} / ${lex.wordAt(i)}',
+        );
+      }
+      expect(lex.noun('kitap'), isTrue);
+      expect(lex.verb('gel'), isTrue);
+      expect(lex.doubling('hak'), isTrue);
+      expect(lex.front('saat'), isTrue);
+      expect(lex.dropsVowel('ağız'), isTrue);
+      expect(lex.noun('yine'), isFalse, reason: 'zarf ek almaz');
+      expect(lex.has('yine'), isTrue);
+      expect(lex.has('herşey'), isFalse, reason: 'TDK dışı yazım yok');
+    });
+
+    test('kabul ve aşırı kabul bekçisi', () {
+      final m = SpellMemory();
+      for (final w in correct) {
+        expect(m.knownToken(w), isTrue, reason: w);
+      }
+      for (final w in [
+        'böbrek',
+        'şehit',
+        'karısı',
+        'tasarımını',
+        'mantığı',
+        'herhangi',
+        'saatleri',
+        'kitabı',
+      ]) {
+        expect(m.lexicalKnown(w), isTrue, reason: w);
+      }
+      for (final w in [
+        'yinede',
+        'hemde',
+        'iyiki',
+        'geldimi',
+        'bittimi',
+        'arayor',
+        'icin',
+        'ekmegi',
+        'temizligi',
+        'tamma',
+        'kalin',
+        'kitapı',
+        'adaledi',
+        'saatı',
+        'petnr',
+        'nasılsn',
+        'gelyorum',
+      ]) {
+        expect(m.lexicalKnown(w), isFalse, reason: w);
+      }
+    });
+
+    test('geçerli kelimelere dokunulmaz (sözlüksüz motor bozuyordu)', () {
+      final valid = _lines('test/spell_corpus/sozluk_gecerli.txt');
+      expect(valid.length, greaterThanOrEqualTo(70));
+      final touched = <String>[];
+      for (final w in valid) {
+        final d = _decide(w);
+        if (!d.isNone) touched.add('$w → ${d.to}');
+        final s = SpellEngine.suggestions(w, SpellMemory());
+        if (s != null && !s.hint) touched.add('$w ~ ${s.list.first}');
+      }
+      expect(
+        touched.length,
+        lessThanOrEqualTo(_lexMandalGecerli),
+        reason: touched.join(', '),
+      );
+    });
+
+    test('doğrulara dokunma ve yakalama', () {
+      final touched = <String>[];
+      for (final w in correct) {
+        final d = _decide(_lastRun(w));
+        if (!d.isNone) touched.add('$w → ${d.to}');
+      }
+      expect(
+        touched.length,
+        lessThanOrEqualTo(_lexMandalYanlis),
+        reason: touched.join(', '),
+      );
+      var caught = 0;
+      final missed = <String>[];
+      for (final p in pairs) {
+        final d = _decide(p[0]);
+        if (d.to != null && trLower(d.to!) == p[1]) {
+          caught++;
+        } else {
+          missed.add('${p[0]}→${d.to ?? '-'}');
+        }
+      }
+      // ignore: avoid_print
+      print('SÖZLÜKLÜ YAKALAMA: $caught/${pairs.length} KAÇAN: $missed');
+      expect(caught, greaterThanOrEqualTo(_lexMandalYakalama));
+    });
+
+    test('altı çizili denetim ve düzyazı', () {
+      final m = SpellMemory();
+      final flagged = <String>[];
+      for (final w in correct) {
+        for (final k in SpellEngine.tokens(w)) {
+          final s = SpellEngine.suggestions(k.word, m);
+          if (s != null && !s.hint) flagged.add('$w → ${s.list.first}');
+        }
+      }
+      var inList = 0;
+      for (final p in pairs) {
+        final s = SpellEngine.suggestions(trLower(p[0]), m);
+        if (s != null && s.list.map(trLower).contains(p[1])) inList++;
+      }
+      final text = File('test/spell_corpus/duzyazi.txt').readAsStringSync();
+      final prose = <String>[];
+      for (final para in text.split('\n')) {
+        for (final t in SpellEngine.tokens(para)) {
+          final s = SpellEngine.suggestions(t.word, m);
+          if (s != null && !s.hint) prose.add('${t.word}→${s.list.first}');
+        }
+      }
+      // ignore: avoid_print
+      print(
+        'SÖZLÜKLÜ ÇİZGİ: doğruda ${flagged.length}, öneride '
+        '$inList/${pairs.length}, düzyazıda ${prose.length} $prose',
+      );
+      expect(flagged.length, lessThanOrEqualTo(_lexMandalCizgi));
+      expect(inList, greaterThanOrEqualTo(_lexMandalOneri));
+      expect(prose.length, lessThanOrEqualTo(_lexMandalDuzyazi));
+    });
   });
 }

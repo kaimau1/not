@@ -1458,6 +1458,43 @@ class ItemsEditorState extends State<ItemsEditor>
     );
   }
 
+  /// **LİSTEDE MADDE SEÇİLMEDEN DİKTE** (kullanıcı bulgusu 2026-11-26:
+  /// "maddeye tıklamazsam liste notunda normal metin ekliyor, madde olarak
+  /// eklemesi lazım"): işaretsizlerin sonundaki boş madde (ara başlık
+  /// değil) varsa o, yoksa sona yeni madde açılır; alanı döner ve odaklanır.
+  /// Seçim kipinde null (dokunuşlar seçime gider).
+  ({WrapTextController controller, FocusNode focus, VoidCallback commit})?
+  openItemAtEnd() {
+    if (_selectionMode) return null;
+    final open = [
+      for (final i in _items)
+        if (!widget.showCheckboxes || !i.checked) i,
+    ];
+    NoteItem item;
+    if (open.isNotEmpty && open.last.text.trim().isEmpty && !open.last.header) {
+      item = open.last;
+    } else {
+      // "+ Yeni öğe" ([_addItem]) ile aynı: paketsiz, işaretsizlerin sonu.
+      item = NoteItem(id: _uuid.v4(), text: '');
+      setState(
+        () => _items.insert(_uncheckedInsertIndex(_uncheckedCount), item),
+      );
+      _commit();
+    }
+    final c = _controllerFor(item);
+    final focus = _focusFor(item);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      focus.requestFocus();
+      c.selection = TextSelection.collapsed(offset: c.text.length);
+    });
+    return (
+      controller: c,
+      focus: focus,
+      commit: () => _updateText(item, c.logicalText),
+    );
+  }
+
   NoteItem? _insertAfter(NoteItem after) {
     final index = _items.indexWhere((i) => i.id == after.id);
     if (index < 0) return null;
