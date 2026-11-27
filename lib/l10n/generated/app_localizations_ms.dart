@@ -8934,4 +8934,488 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get starterWelcomeTitle => '⚡ Mula pantas';
+
+  @override
+  String get smartListMoving => 'Perancang berpindah';
+
+  @override
+  String get smartListCleaning => 'Pembersihan rumah';
+
+  @override
+  String get smartListHabits => 'Penjejak tabiat';
+
+  @override
+  String get smartListWorkout => 'Perancang senaman';
+
+  @override
+  String get smartListGifts => 'Perancang hadiah';
+
+  @override
+  String get smartListWatchlist => 'Senarai tontonan';
+
+  @override
+  String get smartListEvent => 'Acara & parti';
+
+  @override
+  String get smartListExpense => 'Bajet & perbelanjaan';
+
+  @override
+  String get smartListKindSelect => 'Pilih jenis senarai';
+
+  @override
+  String get smartListCatalog => 'Pakej & katalog';
+
+  @override
+  String get smartListSearchCatalog => 'Cari item atau kumpulan…';
+
+  @override
+  String get smartListStarterPacks => 'Pakej permulaan';
+
+  @override
+  String get smartListOpenWorkspace => 'Buka dalam ruang kerja';
+
+  @override
+  String get smartListTripWizard => 'Wizard perjalanan';
+
+  @override
+  String get smartListEventWizard => 'Wizard acara';
+
+  @override
+  String get smartListWizardDays => 'Berapa hari?';
+
+  @override
+  String get smartListWizardWeather => 'Cuaca';
+
+  @override
+  String get smartListWeatherHot => 'Panas';
+
+  @override
+  String get smartListWeatherMild => 'Sederhana';
+
+  @override
+  String get smartListWeatherCold => 'Sejuk';
+
+  @override
+  String get smartListWeatherRainy => 'Hujan';
+
+  @override
+  String get smartListWizardStyle => 'Gaya perjalanan';
+
+  @override
+  String get smartListStyleBeach => 'Pantai';
+
+  @override
+  String get smartListStyleCity => 'Bandar';
+
+  @override
+  String get smartListStyleBusiness => 'Perniagaan';
+
+  @override
+  String get smartListStyleIntl => 'Antarabangsa';
+
+  @override
+  String get smartListStyleCamp => 'Berkhemah';
+
+  @override
+  String get smartListWizardGuests => 'Berapa ramai tetamu?';
+
+  @override
+  String get smartListEventStyle => 'Jenis acara';
+
+  @override
+  String get smartListEventBirthday => 'Hari jadi';
+
+  @override
+  String get smartListEventDinner => 'Majlis makan malam';
+
+  @override
+  String get smartListEventPicnic => 'Berkelah';
+
+  @override
+  String smartListApplyPlan(int count) {
+    return 'Tambah ke senarai ($count item)';
+  }
+
+  @override
+  String smartListPackAdded(String name) {
+    return 'Pakej “$name” ditambah';
+  }
+
+  @override
+  String get smartListEditItem => 'Sunting item';
+
+  @override
+  String get smartListItemNameHint => 'Nama item';
+
+  @override
+  String get smartListItemQty => 'Kuantiti';
+
+  @override
+  String get smartListItemUnit => 'Unit';
+
+  @override
+  String get smartListAll => 'Semua';
+
+  @override
+  String get smartListResetDone => 'Senarai diset semula';
+
+  @override
+  String get smartListWorkspaceEmpty =>
+      'Belum ada item; tambah di bawah atau pilih pakej permulaan.';
+
+  @override
+  String get smartWorkspaceOpen => 'Buka ruang kerja';
+
+  @override
+  String smartPillHabit(int done, int total) {
+    return 'Tabiat · $done/$total hari ini';
+  }
+
+  @override
+  String smartPillMoving(int done, int total) {
+    return 'Berpindah · $done/$total sedia';
+  }
+
+  @override
+  String smartPillPacking(int done, int total) {
+    return 'Barang bawaan · $done/$total dikemas';
+  }
+
+  @override
+  String smartPillWorkout(int done, int total) {
+    return 'Senaman · $done/$total selesai';
+  }
+
+  @override
+  String smartPillCleaning(int done, int total) {
+    return 'Pembersihan · $done/$total selesai';
+  }
+
+  @override
+  String smartPillGifts(int done, int total) {
+    return 'Hadiah · $done/$total sedia';
+  }
+
+  @override
+  String smartPillWatchlist(int count) {
+    return 'Senarai tontonan · $count menunggu';
+  }
+
+  @override
+  String smartPillExpense(String total) {
+    return 'Bajet · RM $total';
+  }
+
+  @override
+  String smartPillDefault(int count) {
+    return 'Ruang kerja pintar ($count lagi)';
+  }
+
+  @override
+  String habitDoneToday(int done, int total) {
+    return '$done/$total hari ini';
+  }
+
+  @override
+  String habitBestStreak(int days) {
+    return 'Rentetan terbaik: $days hari';
+  }
+
+  @override
+  String habitStreakDays(int days) {
+    return 'Rentetan $days h';
+  }
+
+  @override
+  String get habitWeeklyGoal => 'Sasaran mingguan';
+
+  @override
+  String habitWeeklyProgress(int done, int goal) {
+    return '$done/$goal minggu ini';
+  }
+
+  @override
+  String get habitTimeMorning => 'Pagi';
+
+  @override
+  String get habitTimeAfternoon => 'Petang';
+
+  @override
+  String get habitTimeEvening => 'Malam';
+
+  @override
+  String get habitFilterRemaining => 'Perlu hari ini';
+
+  @override
+  String get habitLast30Days => '30 hari lepas';
+
+  @override
+  String get habitAddHint => 'Tambah tabiat baharu…';
+
+  @override
+  String get habitPrevWeek => 'Minggu sebelumnya';
+
+  @override
+  String get habitNextWeek => 'Minggu seterusnya';
+
+  @override
+  String get movingViewTimeline => 'Garis masa';
+
+  @override
+  String get movingViewRooms => 'Bilik & kotak';
+
+  @override
+  String get movingPhaseMonth => '1 bulan sebelum';
+
+  @override
+  String get movingPhaseWeek => '1 minggu sebelum';
+
+  @override
+  String get movingPhaseDay => 'Hari berpindah';
+
+  @override
+  String get movingPhaseNewHome => 'Rumah baharu';
+
+  @override
+  String get movingRoomKitchen => 'Dapur';
+
+  @override
+  String get movingRoomLiving => 'Ruang tamu';
+
+  @override
+  String get movingRoomBedroom => 'Bilik tidur';
+
+  @override
+  String get movingRoomBath => 'Bilik air';
+
+  @override
+  String get movingRoomStudy => 'Bilik belajar';
+
+  @override
+  String get movingRoomGeneral => 'Umum';
+
+  @override
+  String movingBoxesCount(int count) {
+    return '$count kotak';
+  }
+
+  @override
+  String movingFragileCount(int count) {
+    return '$count mudah pecah';
+  }
+
+  @override
+  String get movingFragile => 'Mudah pecah';
+
+  @override
+  String get movingOpenFirst => 'Buka dahulu';
+
+  @override
+  String get movingBoxNumber => 'No. kotak (cth. #1)';
+
+  @override
+  String get movingAddHint => 'Tambah tugasan berpindah atau kotak…';
+
+  @override
+  String get packingBagChecked => 'Bagasi daftar masuk';
+
+  @override
+  String get packingBagCabin => 'Kabin';
+
+  @override
+  String get packingBagWear => 'Dipakai';
+
+  @override
+  String get packingReset => 'Set semula kemasan';
+
+  @override
+  String get packingAddHint => 'Tambah item (cth. 3 baju-T)…';
+
+  @override
+  String workoutSetsCount(int done, int total) {
+    return '$done/$total set';
+  }
+
+  @override
+  String get workoutRestTimer => 'Pemasa rehat';
+
+  @override
+  String workoutRestSeconds(int sec) {
+    return '$sec s';
+  }
+
+  @override
+  String get workoutAutoTimer => 'Mula automatik selepas set';
+
+  @override
+  String get workoutSetsLabel => 'Set';
+
+  @override
+  String get workoutRepsLabel => 'Ulangan / masa';
+
+  @override
+  String get workoutWeightLabel => 'Berat (cth. 20 kg)';
+
+  @override
+  String get workoutZoneWarmup => 'Memanaskan badan';
+
+  @override
+  String get workoutZoneUpper => 'Atas';
+
+  @override
+  String get workoutZoneLower => 'Bawah';
+
+  @override
+  String get workoutZoneCore => 'Teras';
+
+  @override
+  String get workoutZoneCardio => 'Kardio';
+
+  @override
+  String get workoutZoneStretch => 'Regangan';
+
+  @override
+  String get workoutReset => 'Set semula senaman';
+
+  @override
+  String get workoutAddHint => 'Tambah senaman…';
+
+  @override
+  String get cleaningFreqDaily => 'Harian';
+
+  @override
+  String get cleaningFreqWeekly => 'Mingguan';
+
+  @override
+  String get cleaningFreqMonthly => 'Bulanan';
+
+  @override
+  String get cleaningReset => 'Set semula kitaran';
+
+  @override
+  String get cleaningAddHint => 'Tambah tugasan pembersihan…';
+
+  @override
+  String get giftStageIdea => 'Idea';
+
+  @override
+  String get giftStageBought => 'Dibeli';
+
+  @override
+  String get giftStageWrapped => 'Dibalut';
+
+  @override
+  String get giftStageGiven => 'Diberikan';
+
+  @override
+  String get giftRecipient => 'Penerima';
+
+  @override
+  String get giftPrice => 'Bajet (RM)';
+
+  @override
+  String giftSummaryPlanned(String total, String bought) {
+    return 'Jumlah: RM $total · Dibeli: RM $bought';
+  }
+
+  @override
+  String get giftAddHint => 'Tambah hadiah atau penerima…';
+
+  @override
+  String get watchTypeMovie => 'Filem';
+
+  @override
+  String get watchTypeSeries => 'Siri';
+
+  @override
+  String get watchTypeBook => 'Buku';
+
+  @override
+  String get watchTypeDoc => 'Dokumentari';
+
+  @override
+  String get watchTypePodcast => 'Podcast';
+
+  @override
+  String get watchStatusQueued => 'Menunggu';
+
+  @override
+  String get watchStatusWatching => 'Sedang berjalan';
+
+  @override
+  String get watchStatusDone => 'Selesai';
+
+  @override
+  String get watchPlatform => 'Platform atau pengarang';
+
+  @override
+  String get watchRating => 'Penilaian anda';
+
+  @override
+  String get watchAddHint => 'Tambah filem, siri atau buku…';
+
+  @override
+  String get expenseCatMarket => 'Barang dapur';
+
+  @override
+  String get expenseCatBills => 'Bil';
+
+  @override
+  String get expenseCatTransport => 'Pengangkutan';
+
+  @override
+  String get expenseCatFood => 'Makan di luar';
+
+  @override
+  String get expenseCatHome => 'Rumah';
+
+  @override
+  String get expenseCatHealth => 'Kesihatan';
+
+  @override
+  String get expenseCatFun => 'Hiburan';
+
+  @override
+  String get expenseCatOther => 'Lain-lain';
+
+  @override
+  String expenseSummaryBar(String total, String paid, String left) {
+    return 'Jumlah: RM $total · Dibayar: RM $paid · Baki: RM $left';
+  }
+
+  @override
+  String get expenseAmountHint => 'Jumlah (RM)';
+
+  @override
+  String get expenseAddHint => 'Tambah item (cth. Elektrik 85)…';
+
+  @override
+  String get domainGearReset => 'Set semula senarai';
+
+  @override
+  String get domainAddHint => 'Tambah item baharu…';
+
+  @override
+  String get quickDropKeepOpen => 'Kekal terbuka (input berturut-turut)';
+
+  @override
+  String get quickDropSmartListChip => 'Senarai pintar';
+
+  @override
+  String quickDropPreviewSmartList(String kind, String items) {
+    return '✨ $kind baharu: $items';
+  }
+
+  @override
+  String quickDropSavedSmartList(String title) {
+    return 'Senarai pintar “$title” dicipta';
+  }
+
+  @override
+  String quickDropAddedSerial(String title) {
+    return 'Ditambah ke “$title”';
+  }
+
+  @override
+  String get quickDropUrgentBadge => 'Segera';
 }

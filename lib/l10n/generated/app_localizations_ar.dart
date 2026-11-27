@@ -8833,4 +8833,488 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get starterWelcomeTitle => '⚡ بداية سريعة';
+
+  @override
+  String get smartListMoving => 'مخطط الانتقال';
+
+  @override
+  String get smartListCleaning => 'تنظيف المنزل';
+
+  @override
+  String get smartListHabits => 'متتبع العادات';
+
+  @override
+  String get smartListWorkout => 'مخطط التمارين';
+
+  @override
+  String get smartListGifts => 'مخطط الهدايا';
+
+  @override
+  String get smartListWatchlist => 'قائمة المشاهدة';
+
+  @override
+  String get smartListEvent => 'مناسبة وحفلة';
+
+  @override
+  String get smartListExpense => 'الميزانية والمصروفات';
+
+  @override
+  String get smartListKindSelect => 'اختر نوع القائمة';
+
+  @override
+  String get smartListCatalog => 'الحزم والكتالوج';
+
+  @override
+  String get smartListSearchCatalog => 'ابحث عن عناصر أو مجموعات…';
+
+  @override
+  String get smartListStarterPacks => 'حزم البداية';
+
+  @override
+  String get smartListOpenWorkspace => 'فتح في مساحة العمل';
+
+  @override
+  String get smartListTripWizard => 'معالج الرحلة';
+
+  @override
+  String get smartListEventWizard => 'معالج المناسبة';
+
+  @override
+  String get smartListWizardDays => 'كم يومًا؟';
+
+  @override
+  String get smartListWizardWeather => 'الطقس';
+
+  @override
+  String get smartListWeatherHot => 'حار';
+
+  @override
+  String get smartListWeatherMild => 'معتدل';
+
+  @override
+  String get smartListWeatherCold => 'بارد';
+
+  @override
+  String get smartListWeatherRainy => 'ممطر';
+
+  @override
+  String get smartListWizardStyle => 'نوع الرحلة';
+
+  @override
+  String get smartListStyleBeach => 'شاطئ';
+
+  @override
+  String get smartListStyleCity => 'مدينة';
+
+  @override
+  String get smartListStyleBusiness => 'عمل';
+
+  @override
+  String get smartListStyleIntl => 'دولية';
+
+  @override
+  String get smartListStyleCamp => 'تخييم';
+
+  @override
+  String get smartListWizardGuests => 'كم عدد الضيوف؟';
+
+  @override
+  String get smartListEventStyle => 'نوع المناسبة';
+
+  @override
+  String get smartListEventBirthday => 'عيد ميلاد';
+
+  @override
+  String get smartListEventDinner => 'حفلة عشاء';
+
+  @override
+  String get smartListEventPicnic => 'نزهة';
+
+  @override
+  String smartListApplyPlan(int count) {
+    return 'إضافة إلى القائمة ($count عناصر)';
+  }
+
+  @override
+  String smartListPackAdded(String name) {
+    return 'أُضيفت حزمة «$name»';
+  }
+
+  @override
+  String get smartListEditItem => 'تعديل العنصر';
+
+  @override
+  String get smartListItemNameHint => 'اسم العنصر';
+
+  @override
+  String get smartListItemQty => 'الكمية';
+
+  @override
+  String get smartListItemUnit => 'الوحدة';
+
+  @override
+  String get smartListAll => 'الكل';
+
+  @override
+  String get smartListResetDone => 'أُعيد تعيين القائمة';
+
+  @override
+  String get smartListWorkspaceEmpty =>
+      'لا توجد عناصر بعد؛ أضف أدناه أو اختر حزمة بداية.';
+
+  @override
+  String get smartWorkspaceOpen => 'فتح مساحة العمل';
+
+  @override
+  String smartPillHabit(int done, int total) {
+    return 'العادات · $done/$total اليوم';
+  }
+
+  @override
+  String smartPillMoving(int done, int total) {
+    return 'الانتقال · $done/$total جاهز';
+  }
+
+  @override
+  String smartPillPacking(int done, int total) {
+    return 'الأمتعة · $done/$total محزوم';
+  }
+
+  @override
+  String smartPillWorkout(int done, int total) {
+    return 'التمرين · $done/$total منجز';
+  }
+
+  @override
+  String smartPillCleaning(int done, int total) {
+    return 'التنظيف · $done/$total منجز';
+  }
+
+  @override
+  String smartPillGifts(int done, int total) {
+    return 'الهدايا · $done/$total جاهز';
+  }
+
+  @override
+  String smartPillWatchlist(int count) {
+    return 'قائمة المشاهدة · $count بالانتظار';
+  }
+
+  @override
+  String smartPillExpense(String total) {
+    return 'الميزانية · $total';
+  }
+
+  @override
+  String smartPillDefault(int count) {
+    return 'مساحة عمل ذكية (تبقّى $count)';
+  }
+
+  @override
+  String habitDoneToday(int done, int total) {
+    return '$done/$total اليوم';
+  }
+
+  @override
+  String habitBestStreak(int days) {
+    return 'أفضل سلسلة: $days أيام';
+  }
+
+  @override
+  String habitStreakDays(int days) {
+    return 'سلسلة $days ي';
+  }
+
+  @override
+  String get habitWeeklyGoal => 'الهدف الأسبوعي';
+
+  @override
+  String habitWeeklyProgress(int done, int goal) {
+    return '$done/$goal هذا الأسبوع';
+  }
+
+  @override
+  String get habitTimeMorning => 'الصباح';
+
+  @override
+  String get habitTimeAfternoon => 'الظهر';
+
+  @override
+  String get habitTimeEvening => 'المساء';
+
+  @override
+  String get habitFilterRemaining => 'المستحقة اليوم';
+
+  @override
+  String get habitLast30Days => 'آخر 30 يومًا';
+
+  @override
+  String get habitAddHint => 'أضف عادة جديدة…';
+
+  @override
+  String get habitPrevWeek => 'الأسبوع السابق';
+
+  @override
+  String get habitNextWeek => 'الأسبوع التالي';
+
+  @override
+  String get movingViewTimeline => 'الجدول الزمني';
+
+  @override
+  String get movingViewRooms => 'الغرف والصناديق';
+
+  @override
+  String get movingPhaseMonth => 'قبل شهر';
+
+  @override
+  String get movingPhaseWeek => 'قبل أسبوع';
+
+  @override
+  String get movingPhaseDay => 'يوم الانتقال';
+
+  @override
+  String get movingPhaseNewHome => 'المنزل الجديد';
+
+  @override
+  String get movingRoomKitchen => 'المطبخ';
+
+  @override
+  String get movingRoomLiving => 'غرفة المعيشة';
+
+  @override
+  String get movingRoomBedroom => 'غرفة النوم';
+
+  @override
+  String get movingRoomBath => 'الحمام';
+
+  @override
+  String get movingRoomStudy => 'المكتب';
+
+  @override
+  String get movingRoomGeneral => 'عام';
+
+  @override
+  String movingBoxesCount(int count) {
+    return '$count صناديق';
+  }
+
+  @override
+  String movingFragileCount(int count) {
+    return '$count قابلة للكسر';
+  }
+
+  @override
+  String get movingFragile => 'قابل للكسر';
+
+  @override
+  String get movingOpenFirst => 'افتحه أولًا';
+
+  @override
+  String get movingBoxNumber => 'رقم الصندوق (مثل #1)';
+
+  @override
+  String get movingAddHint => 'أضف مهمة انتقال أو صندوقًا…';
+
+  @override
+  String get packingBagChecked => 'مشحونة';
+
+  @override
+  String get packingBagCabin => 'حقيبة اليد';
+
+  @override
+  String get packingBagWear => 'ملبوس';
+
+  @override
+  String get packingReset => 'إعادة تعيين الحزم';
+
+  @override
+  String get packingAddHint => 'أضف عنصرًا (مثل 3 قمصان)…';
+
+  @override
+  String workoutSetsCount(int done, int total) {
+    return '$done/$total مجموعات';
+  }
+
+  @override
+  String get workoutRestTimer => 'مؤقت الراحة';
+
+  @override
+  String workoutRestSeconds(int sec) {
+    return '$sec ث';
+  }
+
+  @override
+  String get workoutAutoTimer => 'البدء تلقائيًا بعد المجموعة';
+
+  @override
+  String get workoutSetsLabel => 'المجموعات';
+
+  @override
+  String get workoutRepsLabel => 'التكرارات / الوقت';
+
+  @override
+  String get workoutWeightLabel => 'الوزن (مثل 20 كغ)';
+
+  @override
+  String get workoutZoneWarmup => 'الإحماء';
+
+  @override
+  String get workoutZoneUpper => 'العلوي';
+
+  @override
+  String get workoutZoneLower => 'السفلي';
+
+  @override
+  String get workoutZoneCore => 'الجذع';
+
+  @override
+  String get workoutZoneCardio => 'الكارديو';
+
+  @override
+  String get workoutZoneStretch => 'الإطالة';
+
+  @override
+  String get workoutReset => 'إعادة تعيين التمرين';
+
+  @override
+  String get workoutAddHint => 'أضف تمرينًا…';
+
+  @override
+  String get cleaningFreqDaily => 'يومي';
+
+  @override
+  String get cleaningFreqWeekly => 'أسبوعي';
+
+  @override
+  String get cleaningFreqMonthly => 'شهري';
+
+  @override
+  String get cleaningReset => 'إعادة تعيين الدورة';
+
+  @override
+  String get cleaningAddHint => 'أضف مهمة تنظيف…';
+
+  @override
+  String get giftStageIdea => 'فكرة';
+
+  @override
+  String get giftStageBought => 'مُشترى';
+
+  @override
+  String get giftStageWrapped => 'مغلّف';
+
+  @override
+  String get giftStageGiven => 'مُهدى';
+
+  @override
+  String get giftRecipient => 'المستلم';
+
+  @override
+  String get giftPrice => 'الميزانية';
+
+  @override
+  String giftSummaryPlanned(String total, String bought) {
+    return 'الإجمالي: $total · المُشترى: $bought';
+  }
+
+  @override
+  String get giftAddHint => 'أضف هدية أو مستلمًا…';
+
+  @override
+  String get watchTypeMovie => 'فيلم';
+
+  @override
+  String get watchTypeSeries => 'مسلسل';
+
+  @override
+  String get watchTypeBook => 'كتاب';
+
+  @override
+  String get watchTypeDoc => 'وثائقي';
+
+  @override
+  String get watchTypePodcast => 'بودكاست';
+
+  @override
+  String get watchStatusQueued => 'بالانتظار';
+
+  @override
+  String get watchStatusWatching => 'قيد المتابعة';
+
+  @override
+  String get watchStatusDone => 'انتهى';
+
+  @override
+  String get watchPlatform => 'المنصة أو المؤلف';
+
+  @override
+  String get watchRating => 'تقييمك';
+
+  @override
+  String get watchAddHint => 'أضف فيلمًا أو مسلسلًا أو كتابًا…';
+
+  @override
+  String get expenseCatMarket => 'البقالة';
+
+  @override
+  String get expenseCatBills => 'الفواتير';
+
+  @override
+  String get expenseCatTransport => 'المواصلات';
+
+  @override
+  String get expenseCatFood => 'المطاعم';
+
+  @override
+  String get expenseCatHome => 'المنزل';
+
+  @override
+  String get expenseCatHealth => 'الصحة';
+
+  @override
+  String get expenseCatFun => 'الترفيه';
+
+  @override
+  String get expenseCatOther => 'أخرى';
+
+  @override
+  String expenseSummaryBar(String total, String paid, String left) {
+    return 'الإجمالي: $total · المدفوع: $paid · المتبقي: $left';
+  }
+
+  @override
+  String get expenseAmountHint => 'المبلغ';
+
+  @override
+  String get expenseAddHint => 'أضف بندًا (مثل كهرباء 850)…';
+
+  @override
+  String get domainGearReset => 'إعادة تعيين القائمة';
+
+  @override
+  String get domainAddHint => 'أضف عنصرًا جديدًا…';
+
+  @override
+  String get quickDropKeepOpen => 'إبقاء مفتوح (إدخال متتالٍ)';
+
+  @override
+  String get quickDropSmartListChip => 'قائمة ذكية';
+
+  @override
+  String quickDropPreviewSmartList(String kind, String items) {
+    return '✨ $kind جديدة: $items';
+  }
+
+  @override
+  String quickDropSavedSmartList(String title) {
+    return 'أُنشئت القائمة الذكية «$title»';
+  }
+
+  @override
+  String quickDropAddedSerial(String title) {
+    return 'أُضيف إلى «$title»';
+  }
+
+  @override
+  String get quickDropUrgentBadge => 'عاجل';
 }
