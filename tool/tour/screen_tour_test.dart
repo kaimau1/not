@@ -1084,7 +1084,13 @@ void main() {
       .where((s) => s.isNotEmpty)
       .toSet();
   final kb = Platform.environment['TOUR_KEYBOARD'];
-  for (final size in _sizes) {
+  // TOUR_SIZES=telefon-tam: uzun sayfanın tamamı tek görüntüde (ayar
+  // denetimi, 2026-11-27); varsayılan turda yok.
+  for (final size in [
+    ..._sizes,
+    if (sizesWanted.contains('telefon-tam'))
+      const _Size('telefon-tam', 412, 3200),
+  ]) {
     if (sizesWanted.isNotEmpty && !sizesWanted.contains(size.name)) continue;
     for (final (id, location, tap) in scenes) {
       if (!wanted(id)) continue;

@@ -605,7 +605,7 @@ abstract class AppLocalizations {
   /// No description provided for @expandListItemsInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Uzun liste/işaret maddeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.'**
+  /// **'Uzun maddeler sarılıp tamamen görünür; kapalıyken tek satır.'**
   String get expandListItemsInfo;
 
   /// No description provided for @quickCaptureRowSetting.
@@ -617,7 +617,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickCaptureRowInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Ana ekranın üstünde tek satırlık \"Yeni not...\" alanı görünür. Kapalıyken yeni not \"+\" düğmesinden açılır.'**
+  /// **'Ana ekranın üstünde tek satırlık “Yeni not…” alanı.'**
   String get quickCaptureRowInfo;
 
   /// No description provided for @emptyTrash.
@@ -1361,13 +1361,13 @@ abstract class AppLocalizations {
   /// No description provided for @voiceModeTap.
   ///
   /// In tr, this message translates to:
-  /// **'Bas-başlat / bas-bitir'**
+  /// **'Dokun-başlat'**
   String get voiceModeTap;
 
   /// No description provided for @voiceModeInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.'**
+  /// **'Basılı tut: bırakınca biter. Bas-başlat: ikinci dokunuşla biter.'**
   String get voiceModeInfo;
 
   /// No description provided for @voiceCaptureReady.
@@ -1499,7 +1499,7 @@ abstract class AppLocalizations {
   /// No description provided for @permExactAlarmInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir. Notlar için izni aç'**
+  /// **'Kapalıyken hatırlatıcılar birkaç dakika geç çalabilir. Notlar için izni aç'**
   String get permExactAlarmInfo;
 
   /// No description provided for @permBattery.
@@ -1511,7 +1511,7 @@ abstract class AppLocalizations {
   /// No description provided for @permBatteryInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut'**
+  /// **'Hatırlatıcılar gecikmesin diye pil kısıtlamasından muaf tut'**
   String get permBatteryInfo;
 
   /// No description provided for @permAutoStart.
@@ -1523,7 +1523,7 @@ abstract class AppLocalizations {
   /// No description provided for @permAutoStartInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Telefon yeniden başlayınca hatırlatıcılar uygulamayı açmadan da kurulsun: Notlar için “Otomatik başlatma”yı aç'**
+  /// **'Telefon yeniden başlayınca hatırlatıcılar kurulsun: “Otomatik başlatma”yı aç'**
   String get permAutoStartInfo;
 
   /// No description provided for @autoStartHint.
@@ -1733,7 +1733,7 @@ abstract class AppLocalizations {
   /// No description provided for @speechRate.
   ///
   /// In tr, this message translates to:
-  /// **'Okuma hizi'**
+  /// **'Okuma hızı'**
   String get speechRate;
 
   /// No description provided for @speechNoVoices.
@@ -1919,7 +1919,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncLimitInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Bu boyuttan büyük ekler cihazda kalır, buluta yüklenmez. Not metni her zaman senkronlanır.'**
+  /// **'Bundan büyük ekler cihazda kalır; not metni her zaman eşitlenir.'**
   String get syncLimitInfo;
 
   /// No description provided for @syncLimitUnlimited.
@@ -3101,7 +3101,7 @@ abstract class AppLocalizations {
   /// No description provided for @cardRichPreviewInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.'**
+  /// **'Kartlarda renk, vurgu, kalın ve altı çizili yazı görünür.'**
   String get cardRichPreviewInfo;
 
   /// No description provided for @cardHideSensitive.
@@ -3113,7 +3113,7 @@ abstract class AppLocalizations {
   /// No description provided for @cardHideSensitiveInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Parola geçen notların içeriği kartta görünmez; IBAN ve kart numaralarının yalnız son dört hanesi görünür. Not içinde her şey olduğu gibi kalır.'**
+  /// **'Parolalı notun içeriği ve kart/IBAN numaraları kartta gizlenir.'**
   String get cardHideSensitiveInfo;
 
   /// No description provided for @sensitiveHiddenOnCard.
@@ -3275,7 +3275,7 @@ abstract class AppLocalizations {
   /// No description provided for @appFontInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Beş temel yazı tipi uygulamayla birlikte gelir; bulut simgeli olanlar seçilince bir kez indirilir (internet yoksa varsayılan yazı tipi görünür).'**
+  /// **'Uygulamanın yazı tipi; bazıları seçilince internetten iner.'**
   String get appFontInfo;
 
   /// No description provided for @fontNeedsDownload.
@@ -3293,7 +3293,7 @@ abstract class AppLocalizations {
   /// No description provided for @followSystemTextScaleInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Telefonun yazı boyutu ve kalın metin ayarı uygulamaya da geçer; yukarıdaki boyut onunla çarpılır.'**
+  /// **'Telefonun yazı boyutu da uygulamaya geçer.'**
   String get followSystemTextScaleInfo;
 
   /// No description provided for @pdfSelectOcrRunning.
@@ -4805,7 +4805,7 @@ abstract class AppLocalizations {
   /// No description provided for @sharedNotificationsInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Karşı taraf not eklediğinde/değiştirdiğinde ya da sohbete yazdığında telefona bildirim gelsin. Kapalıyken ana ekrandaki sayaç yine çalışır.'**
+  /// **'Ortak notta ekleme, değişiklik ya da mesaj olunca bildirim gelir.'**
   String get sharedNotificationsInfo;
 
   /// No description provided for @copyAsText.
@@ -4823,7 +4823,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchAttachmentsInfo.
   ///
   /// In tr, this message translates to:
-  /// **'PDF\'lerin metnini ve görsellerdeki yazıyı (OCR) da tarar. Açıldığında cihazdaki ekler bir kez taranır; sonrası önbellekten gelir.'**
+  /// **'PDF metnini ve görsellerdeki yazıyı da arar.'**
   String get searchAttachmentsInfo;
 
   /// No description provided for @selectAll.
@@ -5819,7 +5819,7 @@ abstract class AppLocalizations {
   /// No description provided for @deviceStorageInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Önbelleği temizlemek notları ve ekleri silmez; görseller gerektikçe yeniden iner. Eski geçici dosyalar zaten her açılışta temizlenir.'**
+  /// **'Önbelleği temizlemek notları ve ekleri silmez.'**
   String get deviceStorageInfo;
 
   /// No description provided for @deviceStorageClear.
@@ -6055,6 +6055,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesle yazma'**
   String get settingsGroupDictation;
+
+  /// No description provided for @settingsGroupGestures.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hareketler'**
+  String get settingsGroupGestures;
+
+  /// No description provided for @settingsGroupSortView.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıralama ve görünüm'**
+  String get settingsGroupSortView;
+
+  /// No description provided for @settingsGroupShared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan notlar'**
+  String get settingsGroupShared;
 
   /// No description provided for @settingsGroupAttachments.
   ///
@@ -7325,7 +7343,7 @@ abstract class AppLocalizations {
   /// No description provided for @customizeStartInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Değişiklik anında uygulanır; bitince üstteki şeritten Bitti\'ye bas.'**
+  /// **'Düğme ve alanlara dokunarak gizle ya da göster; bitince Bitti\'ye bas.'**
   String get customizeStartInfo;
 
   /// No description provided for @customizeStart.
@@ -7865,7 +7883,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileAppPickerInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Dosya eklerken doğrudan Dosya Okuyucu açılır ve yalnız istenen türün dosyaları (en yenisi üstte) listelenir. Kapalıyken uygulama seçimi sorulur.'**
+  /// **'Dosya eklerken doğrudan Dosya Okuyucu açılır; kapalıyken uygulama sorulur.'**
   String get fileAppPickerInfo;
 
   /// No description provided for @viewModeAttached.
@@ -7961,7 +7979,7 @@ abstract class AppLocalizations {
   /// Akıllı sesli not / video tam ekran (2026-10-19)
   ///
   /// In tr, this message translates to:
-  /// **'Konuşman bitince birkaç saniyelik sessizlikten sonra dinleme kendiliğinden biter.'**
+  /// **'Konuşma bitince kısa bir sessizlikten sonra dinleme biter.'**
   String get voiceAutoStopInfo;
 
   /// Akıllı sesli not / video tam ekran (2026-10-19)
@@ -7973,7 +7991,7 @@ abstract class AppLocalizations {
   /// Akıllı sesli not / video tam ekran (2026-10-19)
   ///
   /// In tr, this message translates to:
-  /// **'Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “yeni madde”, “nokta koy”, “virgül koy”, “soru işareti”, “başlık X olsun”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.'**
+  /// **'“son kelimeyi sil”, “X yerine Y yaz”, “yeni satır”, “geri al” gibi komutları anlar; tam liste Kullanım kılavuzunda.'**
   String get voiceSmartCommandsInfo;
 
   /// Akıllı sesli not / video tam ekran (2026-10-19)
@@ -8099,7 +8117,7 @@ abstract class AppLocalizations {
   /// İnternetsiz sesli tanıma ayarı (2026-10-19)
   ///
   /// In tr, this message translates to:
-  /// **'Telefonda dil paketi indirilmişse sesin internete gitmeden yazıya döker. Paket yoksa kendiliğinden çevrimiçi tanımaya döner.'**
+  /// **'Dil paketi varsa ses internete gitmeden yazıya dökülür.'**
   String get voiceOfflineInfo;
 
   /// Faz 1 (2026-10-19)
@@ -8267,7 +8285,7 @@ abstract class AppLocalizations {
   /// No description provided for @captureModeSettingInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Fotoğraf, tarama, PDF, sunum ve görselden not alırken. İlk seçimin varsayılan olur.'**
+  /// **'Fotoğraf, tarama, PDF ve görselden not alırken; ilk seçimin kalır.'**
   String get captureModeSettingInfo;
 
   /// No description provided for @captureModeAsk.
@@ -8891,7 +8909,7 @@ abstract class AppLocalizations {
   /// No description provided for @cardShowProgressInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Yapılacaklar listesinde kaç maddenin işaretlendiğini çubuk ve sayıyla gösterir.'**
+  /// **'İşaretli madde sayısı çubuk ve sayıyla görünür.'**
   String get cardShowProgressInfo;
 
   /// No description provided for @cardShowChecked.
@@ -8903,7 +8921,7 @@ abstract class AppLocalizations {
   /// No description provided for @cardShowCheckedInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Kapalıyken işaretli maddeler kartta tek satır özet olur: ✓ 3 tamamlandı.'**
+  /// **'Kapalıyken işaretliler tek satır özet olur: ✓ 3 tamamlandı.'**
   String get cardShowCheckedInfo;
 
   /// No description provided for @cardItemsDone.
@@ -9149,7 +9167,7 @@ abstract class AppLocalizations {
   /// No description provided for @inkStylusTips.
   ///
   /// In tr, this message translates to:
-  /// **'Kalemin yan düğmesini basılı tutarak ya da silgi ucuyla dokunarak sil. Geri al / yinele üst satırda.'**
+  /// **'Kalemin yan düğmesini basılı tut ya da silgi ucuyla dokun: siler.'**
   String get inkStylusTips;
 
   /// No description provided for @inkZoomReset.
@@ -9191,7 +9209,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeShowSharedInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Seninle paylaşılan ortak notlar ana ekranda ayrı bir bölümde de görünsün'**
+  /// **'Ortak notlar ana ekranda ayrı bölümde de görünür.'**
   String get homeShowSharedInfo;
 
   /// No description provided for @homeShowSharedShort.
@@ -9209,7 +9227,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeSharedAtBottomInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Kapalıyken paylaşılan notlar ana ekranın en üstünde, açıkken kendi notlarımın altında görünür'**
+  /// **'Açıkken paylaşılan notlar kendi notlarının altında durur.'**
   String get homeSharedAtBottomInfo;
 
   /// No description provided for @homeSharedAtBottomShort.
@@ -9545,7 +9563,7 @@ abstract class AppLocalizations {
   /// No description provided for @inkShapeSnapInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Çizginin sonunda kalemi kısa süre kıpırdatmadan tut: düz çizgi, daire ya da dikdörtgen olur.'**
+  /// **'Çizgi sonunda kalemi bekletince düz çizgi, daire ya da kare olur.'**
   String get inkShapeSnapInfo;
 
   /// No description provided for @inkQuickSwapTitle.
@@ -9557,7 +9575,7 @@ abstract class AppLocalizations {
   /// No description provided for @inkQuickSwapInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Çizgi bitince yanında saydam küçük düğme belirir: dokununca silgiye, silgideyken kaleme geçer. Kullanılmazsa birkaç saniyede kaybolur.'**
+  /// **'Çizgi bitince kalem ile silgi arasında geçiş düğmesi belirir.'**
   String get inkQuickSwapInfo;
 
   /// No description provided for @inkQuickSwapToEraser.
@@ -9593,7 +9611,7 @@ abstract class AppLocalizations {
   /// No description provided for @inkAutoStylusInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Kalem nota değince yazma kipi kendiliğinden açılır: PDF ve sunumda kalem, metin notunda el yazısı.'**
+  /// **'Kalem nota değince yazma kipi kendiliğinden açılır.'**
   String get inkAutoStylusInfo;
 
   /// No description provided for @inkStylusDetected.
@@ -9881,7 +9899,7 @@ abstract class AppLocalizations {
   /// No description provided for @itemGesturesSettingInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Maddenin üstüne çiz: üstünü çiz ya da ✓ işaretler. Kalemle karalamak siler, daire yazımı düzeltir.'**
+  /// **'Maddeye çiz: üstünü çizer ya da ✓ koyar; karalama siler.'**
   String get itemGesturesSettingInfo;
 
   /// No description provided for @pdfEditWorking.
@@ -10289,13 +10307,13 @@ abstract class AppLocalizations {
   /// No description provided for @swipeModeInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).'**
+  /// **'Izgarada ekranı yana kaydırınca ne olsun; listede satır kaydırma sabitler ya da arşivler.'**
   String get swipeModeInfo;
 
   /// No description provided for @backupInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.'**
+  /// **'Bütün notlar ekleri ve klasörleriyle tek dosyada; iki kez yüklemek çoğaltmaz.'**
   String get backupInfo;
 
   /// No description provided for @backupInProgress.
@@ -10667,7 +10685,7 @@ abstract class AppLocalizations {
   /// No description provided for @itemGesturesFingerAllInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.'**
+  /// **'Kapalıyken parmak yalnız işaretler; karalama ve daire kalemle.'**
   String get itemGesturesFingerAllInfo;
 
   /// No description provided for @itemAddHeader.
@@ -11483,7 +11501,7 @@ abstract class AppLocalizations {
   /// No description provided for @calendarSwipeInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.'**
+  /// **'Kapalıyken yalnız ok düğmeleri ay ya da hafta değiştirir.'**
   String get calendarSwipeInfo;
 
   /// No description provided for @calendarMoved.
@@ -12137,7 +12155,7 @@ abstract class AppLocalizations {
   /// No description provided for @inkShapeSuggestInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Kabaca daire, dikdörtgen, üçgen, çizgi ya da ok çizince sağ altta küçük düğme çıkar; dokununca düzgün olur, geri al eski hâline döndürür.'**
+  /// **'Kaba daire, kare, çizgi ya da ok çizince düzeltme düğmesi çıkar.'**
   String get inkShapeSuggestInfo;
 
   /// No description provided for @inkMarkFixTitle.
@@ -12605,7 +12623,7 @@ abstract class AppLocalizations {
   /// No description provided for @spellModeInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Yalnız göster: olası yanlışların altı çizilir, dokununca öneriler çıkar; hiçbir şey kendiliğinden değişmez. Otomatik düzelt: ayrıca emin olunca düzeltir.'**
+  /// **'Yalnız göster: yanlışın altı çizilir. Otomatik: emin olunca düzeltir.'**
   String get spellModeInfo;
 
   /// No description provided for @spellModeOff.
@@ -12623,7 +12641,7 @@ abstract class AppLocalizations {
   /// No description provided for @spellModeAuto.
   ///
   /// In tr, this message translates to:
-  /// **'Otomatik düzelt'**
+  /// **'Otomatik'**
   String get spellModeAuto;
 
   /// No description provided for @spellAddToDictionary.
@@ -12761,7 +12779,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeCalendarStripInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Ana ekranın tepesinde haftalık ya da aylık takvim: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim'**
+  /// **'Ana ekranın tepesinde etkinlik, görev ve tatilleriyle takvim.'**
   String get homeCalendarStripInfo;
 
   /// No description provided for @homeCalendarStripExpand.
@@ -13109,7 +13127,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsShowAllNotesInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Tümü açıkken klasöre konmuş notlar da ana ekranda görünür (arşiv ve gizli klasörler hariç).'**
+  /// **'Klasördeki notlar da ana ekranda görünür (arşiv ve gizli hariç).'**
   String get settingsShowAllNotesInfo;
 
   /// No description provided for @settingsAttachmentsExpanded.
@@ -13127,7 +13145,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsListPaneCollapsedInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Tablet ve web\'de not açıkken soldaki liste kapalı başlar; ☰ ile açılır.'**
+  /// **'Tablet ve web\'de not açıkken liste kapalı başlar.'**
   String get settingsListPaneCollapsedInfo;
 
   /// No description provided for @pinnedSideToggle.
@@ -14375,7 +14393,7 @@ abstract class AppLocalizations {
   /// No description provided for @decisionsByokInfo.
   ///
   /// In tr, this message translates to:
-  /// **'750 karar hakkı bittiğinde kendi Gemini API anahtarınla sınırsız devam edebilirsin. Anahtar yalnız bu cihazda saklanır.'**
+  /// **'Karar hakkı bitince kendi Gemini anahtarınla sürdür; anahtar bu cihazda kalır.'**
   String get decisionsByokInfo;
 
   /// No description provided for @calendarDayLinkRemoved.
@@ -14561,7 +14579,7 @@ abstract class AppLocalizations {
   /// No description provided for @calendarAddActionInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Varsayılan not; tarih seçili gündür (yoksa bugün), açılan pencerede değiştirilebilir.'**
+  /// **'Seçili güne (yoksa bugüne) eklenir; pencerede değiştirilebilir.'**
   String get calendarAddActionInfo;
 
   /// No description provided for @calendarAddNote.

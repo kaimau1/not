@@ -139,6 +139,7 @@ Three jobs, three names:
 - **Dictate** (plain microphone in a note; tapping the home microphone): text appears at the cursor as you speak, with automatic punctuation — uses no quota.
 - **Audio recording** (wave button in a note, or + Add → Voice recording): play it directly from the attachment strip. An MP3/M4A/WAV file from your phone comes in through **+ Add → Add file**.
 - **Listen** (top row of the note ⋮ menu): reads the note aloud using the device voice; voice, speed and how the dictate microphone works are in Settings → **Listening & dictation**.
+- **Voice commands while dictating** (Settings → Listening & dictation → Smart commands): “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening”. Writing then continues from the end.
 
 ## Text extraction (OCR) {#transcript}
 - Use the text action on an image tile or full-screen viewer (⋮ → **Extract text**) to recognise text on the device without an internet connection and insert it into the note.
@@ -204,7 +205,7 @@ At the top are two cards: **User guide** and **Personalise** (which buttons and 
 - **Appearance:** sample text, theme (system, Sage, Porcelain, Clay, dark), font and size, **Language** (Turkish, English or the system language), long items, item gestures, **Shown on cards** (with a live sample card: counter, tag, date, image, attachments, folder, paper…), dark theme schedule.
 - **Modules & quick note:** turn the AI, voice, video, scan, drawing, templates… modules on or off; the quick note row on the home screen; **Show tips again**.
 - **Notes and folders:** sideways swipe, folder order, sorting, grid/list and columns (also by pinching on the home screen), shared notes on the home screen, notes from content (Bubbles/Classic), searching inside attachments.
-- **Listening & dictation:** device voice, Turkish voice or AI voice; reading speed and pitch; how the dictate microphone works.
+- **Listening & dictation:** device voice with a voice per language (Turkish, English, Arabic, Indonesian, Malay); reading speed and pitch; how the dictate microphone works.
 
 - **Permissions:** microphone, camera, notifications, location — status and system settings.
 - **Sync:** Google Drive connection and Drive usage, the automatic upload limit, the cache on this device, backups.

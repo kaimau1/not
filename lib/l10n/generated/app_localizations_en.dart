@@ -287,14 +287,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expandListItemsInfo =>
-      'Long list items wrap over several lines and stay fully visible. When off, a row stays on one line and expands when tapped.';
+      'Long items wrap and show in full; when off, one line.';
 
   @override
   String get quickCaptureRowSetting => 'Quick note bar';
 
   @override
   String get quickCaptureRowInfo =>
-      'Shows a one-line \"New note...\" field at the top of the home screen. When off, use the + button.';
+      'A one-line “New note…” field at the top of home.';
 
   @override
   String get emptyTrash => 'Empty bin';
@@ -714,11 +714,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceModeHold => 'Hold to talk';
 
   @override
-  String get voiceModeTap => 'Tap to start / tap to stop';
+  String get voiceModeTap => 'Tap to start';
 
   @override
   String get voiceModeInfo =>
-      'Hold to talk: it listens while you hold the button and creates the note when you let go. Tap to start: one tap begins recording, a second tap ends it.';
+      'Hold: stops when you let go. Tap: a second tap stops it.';
 
   @override
   String get voiceCaptureReady => 'Speech ready';
@@ -789,21 +789,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permExactAlarmInfo =>
-      'Off: reminders may fire a few minutes late instead of on the minute. Allow it for Notlar';
+      'When off, reminders can be a few minutes late. Allow it for Notes';
 
   @override
   String get permBattery => 'Battery optimisation';
 
   @override
   String get permBatteryInfo =>
-      'Exempt the app from battery restrictions so reminders arrive on time';
+      'Exempt the app from battery limits so reminders aren\'t late';
 
   @override
   String get permAutoStart => 'Autostart (Xiaomi)';
 
   @override
   String get permAutoStartInfo =>
-      'So reminders are set again after a reboot without opening the app: turn on “Autostart” for Notlar';
+      'Restore reminders after a restart: turn on “Auto start”';
 
   @override
   String get autoStartHint =>
@@ -1025,7 +1025,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncLimitInfo =>
-      'Attachments larger than this stay on the device and aren\'t uploaded. Note text always syncs.';
+      'Larger attachments stay on the device; note text always syncs.';
 
   @override
   String get syncLimitUnlimited => 'No limit';
@@ -1657,14 +1657,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardRichPreviewInfo =>
-      'Colors, highlights, bold and underline from your notes also show on the home screen cards. When off, cards show plain text.';
+      'Cards show colour, highlights, bold and underline.';
 
   @override
   String get cardHideSensitive => 'Hide sensitive content on cards';
 
   @override
   String get cardHideSensitiveInfo =>
-      'Notes that mention a password don\'t show their content on the card; IBAN and card numbers show only their last four digits. Inside the note everything stays as is.';
+      'Password notes and card/IBAN numbers are hidden on cards.';
 
   @override
   String get sensitiveHiddenOnCard => 'Sensitive content — hidden on card';
@@ -1759,7 +1759,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appFontInfo =>
-      'The font used everywhere in the app. A note\'s own font choice overrides it. Five core fonts ship with the app; the ones with a cloud icon download once when selected (the default font shows while offline).';
+      'The app\'s typeface; some download when you pick them.';
 
   @override
   String get fontNeedsDownload => 'Downloads once when selected';
@@ -1769,7 +1769,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get followSystemTextScaleInfo =>
-      'Your phone\'s text size and bold text apply here too; the size above is multiplied by it.';
+      'The phone\'s text size also applies to the app.';
 
   @override
   String get pdfSelectOcrRunning => 'Recognising text…';
@@ -2603,7 +2603,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharedNotificationsInfo =>
-      'Get a phone notification when someone adds or edits a note or writes in the chat. The home screen counter keeps working when this is off.';
+      'Get notified when a shared note is added to, changed or messaged.';
 
   @override
   String get copyAsText => 'Copy text';
@@ -2613,7 +2613,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchAttachmentsInfo =>
-      'Also scans PDF text and text in images (OCR). Turning this on indexes the files stored on this device once; later searches use the cache.';
+      'Also searches PDF text and text inside images.';
 
   @override
   String get selectAll => 'Select all';
@@ -3245,7 +3245,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceStorageInfo =>
-      'Clearing the cache does not delete notes or attachments; images download again when needed. Old temporary files are also cleaned up on every launch.';
+      'Clearing the cache doesn\'t delete notes or attachments.';
 
   @override
   String get deviceStorageClear => 'Clear cache';
@@ -3371,6 +3371,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsGroupDictation => 'Voice typing';
+
+  @override
+  String get settingsGroupGestures => 'Gestures';
+
+  @override
+  String get settingsGroupSortView => 'Sorting and layout';
+
+  @override
+  String get settingsGroupShared => 'Shared notes';
 
   @override
   String get settingsGroupAttachments => 'Attachments';
@@ -4096,7 +4105,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customizeStartInfo =>
-      'Turn on edit mode, then tap buttons and areas on any screen to hide or show them. Changes apply instantly; when you\'re done, tap Done in the strip at the top.';
+      'Tap buttons and areas to hide or show them; tap Done when finished.';
 
   @override
   String get customizeStart => 'Start edit mode';
@@ -4397,7 +4406,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fileAppPickerInfo =>
-      'Adding a file opens Dosya Okuyucu directly, listing only files of the requested type (newest first). When off, you\'re asked which app to use.';
+      'Adding a file opens the file reader directly; when off, you pick an app.';
 
   @override
   String get viewModeAttached => 'Attached';
@@ -4454,14 +4463,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceAutoStopInfo =>
-      'When you finish speaking, listening stops by itself after a few seconds of silence.';
+      'Listening stops after a short silence when you finish.';
 
   @override
   String get voiceSmartCommands => 'Smart commands';
 
   @override
   String get voiceSmartCommandsInfo =>
-      'While speaking you can say: “delete last word”, “delete last sentence”, “replace X with Y”, “change the last word to Y”, “new line”, “new item”, “question mark”, “full stop”, “insert comma”, “set the title to X”, “undo”, “clear all”, “stop listening”. Writing then continues from the end.';
+      'Understands commands like “delete last word”, “replace X with Y”, “new line”, “undo”; full list in the User guide.';
 
   @override
   String get voiceAutoStopSoon => 'Silence — stopping soon';
@@ -4527,7 +4536,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceOfflineInfo =>
-      'If the language pack is downloaded on your phone, speech is transcribed without going online. Without it, online recognition is used automatically.';
+      'With a language pack, speech is transcribed without the internet.';
 
   @override
   String get discoverable => 'Let people find me by name';
@@ -4627,7 +4636,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get captureModeSettingInfo =>
-      'When taking a note from a photo, scan, PDF, slides or image. Your first choice becomes the default.';
+      'When taking notes from photos, scans, PDFs and images; your first choice sticks.';
 
   @override
   String get captureModeAsk => 'Ask every time';
@@ -5013,14 +5022,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cardShowProgressInfo =>
-      'Shows how many to-do items are checked, with a bar and a count.';
+      'Shows ticked items with a bar and a count.';
 
   @override
   String get cardShowChecked => 'Completed items';
 
   @override
   String get cardShowCheckedInfo =>
-      'When off, checked items collapse into one line on the card: ✓ 3 done.';
+      'When off, ticked items collapse to a summary: ✓ 3 done.';
 
   @override
   String cardItemsDone(int count) {
@@ -5155,7 +5164,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkStylusTips =>
-      'Hold the pen\'s side button or touch with the eraser end to erase. Undo / redo are in the top row.';
+      'Hold the pen\'s side button or touch with the eraser end to erase.';
 
   @override
   String get inkZoomReset => 'Fit to screen';
@@ -5178,7 +5187,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeShowSharedInfo =>
-      'Also show notes shared with you in a separate section on the home screen';
+      'Shared notes also appear in their own section on home.';
 
   @override
   String get homeShowSharedShort => 'Show shared notes';
@@ -5188,7 +5197,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeSharedAtBottomInfo =>
-      'Off: shared notes sit at the top of the home screen. On: below my own notes';
+      'When on, shared notes sit below your own notes.';
 
   @override
   String get homeSharedAtBottomShort => 'Shared notes at bottom';
@@ -5361,14 +5370,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkShapeSnapInfo =>
-      'Hold the pen still at the end of a stroke: it becomes a straight line, circle or rectangle.';
+      'Hold the pen still at the end of a stroke to get a line, circle or box.';
 
   @override
   String get inkQuickSwapTitle => 'Quick pen ↔ eraser button';
 
   @override
   String get inkQuickSwapInfo =>
-      'When a stroke ends a small translucent button appears next to it: tap to switch to the eraser, or back to the pen. It fades after a few idle seconds.';
+      'After a stroke, a button appears to switch between pen and eraser.';
 
   @override
   String get inkQuickSwapToEraser => 'Switch to eraser';
@@ -5388,7 +5397,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkAutoStylusInfo =>
-      'Touching the note with a pen turns on writing: pen mode on PDFs and slides, handwriting on text notes.';
+      'Writing mode turns on when the pen touches the note.';
 
   @override
   String get inkStylusDetected => 'Pen detected — writing mode on';
@@ -5547,7 +5556,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemGesturesSettingInfo =>
-      'Draw over an item: strike or ✓ checks. With a pen, scribble deletes and circle fixes spelling.';
+      'Draw on an item: strike through or tick it; scribbling deletes.';
 
   @override
   String get pdfEditWorking => 'Processing PDF…';
@@ -5782,11 +5791,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get swipeModeInfo =>
-      'When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).';
+      'What a sideways swipe does in grid view; in list view, swiping a row pins or archives.';
 
   @override
   String get backupInfo =>
-      'All notes with attachments, drawings, bubbles and folders in one file. Restoring twice doesn\'t duplicate notes.';
+      'All notes with attachments and folders in one file; importing twice won\'t duplicate.';
 
   @override
   String get backupInProgress => 'Preparing backup';
@@ -6001,7 +6010,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemGesturesFingerAllInfo =>
-      'When off, a finger only checks; scribble (deletes) and circle (fixes spelling) need a pen.';
+      'When off, a finger only ticks; scribble and circle need the pen.';
 
   @override
   String get itemAddHeader => 'Subheading';
@@ -6446,7 +6455,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarSwipeInfo =>
-      'When off, horizontal swiping changes nothing; the arrow buttons keep working.';
+      'When off, only the arrow buttons change month or week.';
 
   @override
   String calendarMoved(String day) {
@@ -6822,7 +6831,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkShapeSuggestInfo =>
-      'After a rough circle, rectangle, triangle, line or arrow a small button appears; tap it to tidy the shape (undo restores it).';
+      'Draw a rough circle, box, line or arrow to get a tidy-up button.';
 
   @override
   String get inkMarkFixTitle => 'Tidy ticks and crosses';
@@ -7083,7 +7092,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spellModeInfo =>
-      'Show only: likely mistakes are underlined, tap for suggestions; nothing changes by itself. Auto-correct: also fixes sure mistakes.';
+      'Show only: mistakes are underlined. Auto: fixes when certain.';
 
   @override
   String get spellModeOff => 'Off';
@@ -7170,7 +7179,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeCalendarStripInfo =>
-      'Weekly or monthly calendar at the top of the home screen: events, tasks, holidays. Tap a day = entries (edit/delete), long-press = calendar';
+      'A calendar with events, tasks and holidays at the top of home.';
 
   @override
   String get homeCalendarStripExpand => 'Expand calendar strip';
@@ -7368,7 +7377,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsShowAllNotesInfo =>
-      'With All on, notes filed in folders also show on home (except archive and hidden folders).';
+      'Notes in folders also show on home (except archive and hidden).';
 
   @override
   String get settingsAttachmentsExpanded => 'Attachment strip open in notes';
@@ -7379,7 +7388,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsListPaneCollapsedInfo =>
-      'On tablets and web the list starts closed while a note is open; ☰ opens it.';
+      'On tablet and web the list starts closed while a note is open.';
 
   @override
   String get pinnedSideToggle => 'Placement: top / left / right';
@@ -8138,7 +8147,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get decisionsByokInfo =>
-      'Continue with unlimited smart decisions using your own Gemini API key. The key is stored only on this device.';
+      'When decisions run out, continue with your own Gemini key; it stays on this device.';
 
   @override
   String get calendarDayLinkRemoved => 'Note removed from this day';
@@ -8242,7 +8251,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarAddActionInfo =>
-      'Default is a note; the date is the selected day (or today) and can be changed before writing.';
+      'Added to the selected day (or today); you can change it in the dialog.';
 
   @override
   String get calendarAddNote => 'Note';
