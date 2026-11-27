@@ -131,6 +131,12 @@ void main() {
       now = now.add(const Duration(minutes: 10));
       expect(await auth.accessToken(), 'gis-silent-tok');
       expect(gisCalls, 1);
+
+      // Süresi dolan bellek jetonu bırakılır, yeniden istenir (2026-11-27:
+      // başka sekmenin yenilediği kayıt okunabilsin diye).
+      now = now.add(const Duration(hours: 2));
+      expect(await auth.accessToken(), 'gis-silent-tok');
+      expect(gisCalls, 2);
     });
 
     test('sessiz yenileme boş dönerse 60s bekleme uygular; connect etkileşimli alır', () async {

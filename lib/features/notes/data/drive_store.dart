@@ -306,6 +306,16 @@ class WebDriveAuth implements DriveAuth {
   // _v2: kapsam değişti (2026-11-06); eski yalnız-appdata jetonu kullanılmasın.
   static const _sessionKey = 'notlar_drive_token_v2';
 
+  /// SEKMELER ARASI KALICI (kullanıcı bulgusu 2026-11-27: "web'de Drive'a her
+  /// seferinde baştan bağlanmam gerekiyor"). KÖK NEDEN: jeton yalnız
+  /// `sessionStorage`'daydı — yeni sekme, sayfayı kapatıp açma, bağlantıdan
+  /// açılan not her seferinde "Bağla" istiyordu; sessiz yenileme de açılır
+  /// pencere gerektirdiğinden tarayıcı engelliyor, hiç tutmuyordu. Artık
+  /// `localStorage`'da (uid'e bağlı, süresi yazılı, ≤ ~55 dk; başka hesapta
+  /// ya da süresi geçince silinir). Süresi dolan jeton için yine tek dokunuş
+  /// gerekir (Google tarayıcıda yenileme anahtarı vermiyor).
+  static const _localKey = 'notlar_drive_token_v3';
+
   String? get _uid =>
       _uidProvider != null ? _uidProvider() : (_auth ?? FirebaseAuth.instance).currentUser?.uid;
 
@@ -315,15 +325,24 @@ class WebDriveAuth implements DriveAuth {
 
   void _restore() {
     if (_token != null) return;
-    final raw = sessionRead(_sessionKey);
+    final raw = localRead(_localKey) ?? sessionRead(_sessionKey);
     if (raw == null) return;
     final parts = raw.split('|');
     final uid = _uid;
-    if (parts.length != 3 || uid == null || parts[2] != uid) return;
-    final ms = int.tryParse(parts[1]);
-    if (ms == null) return;
+    if (uid == null) return;
+    final ms = parts.length == 3 ? int.tryParse(parts[1]) : null;
+    if (ms == null || parts[2] != uid) {
+      // Başka hesabın ya da bozuk kayıt: bırakılmaz.
+      localWrite(_localKey, null);
+      return;
+    }
+    final expiry = DateTime.fromMillisecondsSinceEpoch(ms);
+    if (!_now().isBefore(expiry)) {
+      localWrite(_localKey, null);
+      return;
+    }
     _token = parts[0];
-    _expiry = DateTime.fromMillisecondsSinceEpoch(ms);
+    _expiry = expiry;
   }
 
   void _save(String token, {int expiresInSeconds = 3300}) {
@@ -333,10 +352,7 @@ class WebDriveAuth implements DriveAuth {
     _lastSilentNullAt = null;
     final uid = _uid;
     if (uid != null) {
-      sessionWrite(
-        _sessionKey,
-        '$token|${_expiry!.millisecondsSinceEpoch}|$uid',
-      );
+      localWrite(_localKey, '$token|${_expiry!.millisecondsSinceEpoch}|$uid');
     }
     webDriveTokenRevision.value++;
   }
@@ -347,10 +363,17 @@ class WebDriveAuth implements DriveAuth {
     _silentInFlight = null;
     _lastSilentNullAt = null;
     sessionWrite(_sessionKey, null);
+    localWrite(_localKey, null);
   }
 
   @override
   Future<String?> accessToken() async {
+    final stale = _expiry;
+    if (_token != null && stale != null && !_now().isBefore(stale)) {
+      // Süresi dolmuş: başka sekme yenilemiş olabilir, kayıttan yeniden oku.
+      _token = null;
+      _expiry = null;
+    }
     _restore();
     final expiry = _expiry;
     if (_token != null && expiry != null && _now().isBefore(expiry)) {

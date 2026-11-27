@@ -229,8 +229,22 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
   /// Aynı ek birkaç kutuda açıkken bir kez iner; başarısız olan kendiliğinden
   /// yeniden denenmez (izin yok, ek başkasının Drive'ında) — dokunuş dener.
   static final _busy = <String>{};
-  static final _failed = <String>{};
+
+  /// Düşen ek → düştüğü an. GEÇİCİ hata (ağ, zaman aşımı, 5xx) [_retryAfter]
+  /// sonra kendiliğinden yeniden denenir (kullanıcı bulgusu 2026-11-27:
+  /// "ekleri bazen indiriyor bazen indirmiyor" — bir kez düşen ek yeni jeton
+  /// gelene dek hiç istenmiyordu); izin/bulunamadı (403/404) yalnız dokunuş
+  /// ya da yeni jetonla.
+  static final _failed = <String, ({DateTime at, bool permanent})>{};
   static int _failedAtRevision = 0;
+  static const _retryAfter = Duration(seconds: 20);
+
+  static bool _blocked(String id) {
+    final f = _failed[id];
+    if (f == null) return false;
+    if (f.permanent) return true;
+    return DateTime.now().difference(f.at) < _retryAfter;
+  }
 
   Future<void> _fetch() async {
     final a = widget.attachment;
@@ -270,7 +284,7 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
         );
         return;
       }
-      if (_failed.contains(id)) return;
+      if (_blocked(id)) return;
       final store = ref.read(driveStoreProvider);
       if (store == null ||
           await ref.read(driveAuthProvider).accessToken() == null) {
@@ -278,6 +292,7 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
       }
       final bytes = await store.downloadBytes(id);
       await webAttachmentCache.put(webDriveCacheKey(id), bytes, a.mimeType);
+      _failed.remove(id);
       rememberWebDriveBlobUrl(
         id,
         createBlobUrl(bytes, a.mimeType),
@@ -285,8 +300,21 @@ class _WebDriveGateState extends ConsumerState<WebDriveGate> {
     } catch (e) {
       debugPrint('Drive eki inmedi ($id): $e');
       ErrorLog.record('web-drive-fetch', e);
-      _failed.add(id);
-      if (mounted) {
+      final msg = '$e';
+      // 404 ve izin 403'ü kalıcı; kota 403'ü (rateLimit) geçici.
+      final permanent =
+          msg.contains('Drive 404') ||
+          (msg.contains('Drive 403') && !msg.contains('ateLimit'));
+      final again = _failed.containsKey(id);
+      _failed[id] = (at: DateTime.now(), permanent: permanent);
+      if (!permanent) {
+        // Kutu açık kaldıysa süre dolunca kendisi yeniden dener.
+        Timer(_retryAfter, () {
+          if (mounted) setState(() {});
+        });
+      }
+      // Aynı ek için uyarı bir kez (yeniden denemeler sessiz).
+      if (mounted && !again) {
         final l10n = context.l10n;
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()

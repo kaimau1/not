@@ -8,6 +8,7 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Spell check settings no longer hide under the phone's buttons:** the settings opened by long-pressing the spell-fix button now scroll when they don't fit and end above the navigation buttons; **Off** turns checking (including underlines) off completely.
 - **Ctrl + mouse wheel changes text size on the web:** holding Ctrl and scrolling up makes text larger, scrolling down makes it smaller (same setting as Settings → Appearance → Text size).
 - **The top quick menu is back on the web:** in wide windows the quick menu buttons (pen, spelling, bold…) didn't fit and all fell into "•••", which also overlapped the date; they now show next to the time again.
+- **Drive connection on the web lasts longer:** the Drive permission is now kept in the browser, not just the tab, so opening a new tab or reloading no longer asks you to reconnect (Google's permission lasts about an hour; after that one tap renews it). An attachment that failed to download is now retried automatically.
 - **Web dictation no longer stops silently:** when the browser's recognizer gives up, the dictation card now closes instead of staying grey as if still listening; long thinking pauses after you've started speaking no longer end listening early.
 
 ## 26 November 2026 {#2026-11-26}

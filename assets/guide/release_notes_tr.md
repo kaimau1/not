@@ -8,6 +8,7 @@ Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarla
 - **Yazım denetimi ayarları telefon tuşlarının altında kalmıyor:** yazım düzelt düğmesine basılı tutunca açılan ayarlar artık ekrana sığmazsa kayıyor ve alttaki gezinme tuşlarının üstünde bitiyor; **Kapalı** seçeneğiyle denetim (altı çizgiler dahil) tamamen kapatılabiliyor.
 - **Webde Ctrl + fare tekerleğiyle yazı boyutu:** Ctrl basılıyken tekerleği yukarı çevirince yazılar büyüyor, aşağı çevirince küçülüyor (Ayarlar → Görünüm → Yazı boyutu ile aynı ayar).
 - **Webde üst hızlı menü yeniden görünüyor:** geniş pencerede üst çubuktaki hızlı menü düğmeleri (kalem, yazım, kalın…) sığmayıp hepsi "•••" içine düşüyor, "•••" de tarihin üstüne biniyordu; artık düğmeler saatin yanında sırayla görünüyor.
+- **Webde Drive bağlantısı daha kalıcı:** Drive izni artık yalnız o sekmede değil, tarayıcıda tutuluyor; yeni sekme açınca ya da sayfayı yenileyince yeniden bağlanman gerekmiyor (Google izni yaklaşık bir saat geçerli; süresi dolunca tek dokunuşla yenilenir). Bir kez inemeyen ek artık kendiliğinden yeniden deneniyor.
 - **Webde sesle yazma sessizce kesilmiyor:** tarayıcının tanıyıcısı kapanınca dikte kartı artık "dinliyormuş gibi" gri kalmıyor, kapanıyor; konuşmaya başladıktan sonraki uzun düşünme aralarında da dinleme hemen bırakılmıyor.
 
 ## 26 Kasım 2026 {#2026-11-26}
