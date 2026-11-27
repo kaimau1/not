@@ -1,6 +1,7 @@
 import '../../../../app/theme/app_tokens.dart';
 import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/app_icons.dart';
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -56,7 +57,6 @@ part 'note_image_caption.dart';
 part 'note_media_box.dart';
 part 'note_image_canvas_items.dart';
 
-
 class NotePageCanvas extends StatefulWidget {
   const NotePageCanvas({
     super.key,
@@ -76,6 +76,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onTranscribe,
     this.onSaveAs,
     this.onShare,
+    this.onRename,
     this.onPinTop,
     this.onPinHover,
     this.onPinDrag,
@@ -184,6 +185,9 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Eki paylaş (gömülü ek menüsü).
   final ValueChanged<Attachment>? onShare;
+
+  /// Ek adını düzenle (yüzen menü / sağ tık).
+  final ValueChanged<Attachment>? onRename;
 
   /// **ÜSTE SABİTLE** (kullanıcı isteği 2026-10-11: "üstte video/resim, altta
   /// not — görseli sürükleyerek"): basılı tutup sürüklenen görsel ekranın
@@ -1049,9 +1053,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                                 child: Icon(
                                   Icons.close,
                                   size: AppIconSize.xs,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onInverseSurface,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onInverseSurface,
                                 ),
                               ),
                             ),
@@ -1074,9 +1078,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                           child: Center(
                             child: Material(
                               key: ValueKey('web-video-controls-${img.id}'),
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHigh,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHigh,
                               elevation: 2,
                               borderRadius: BorderRadius.circular(20),
                               child: Padding(
@@ -1280,6 +1284,18 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           ? null
           : () => widget.onSaveAs!(img),
       onShare: widget.onShare == null ? null : () => widget.onShare!(img),
+      onRename: widget.onRename == null ? null : () => widget.onRename!(img),
+      onAlign: () {
+        final curX = img.x ?? 0.0;
+        final center = ((1.0 - wFrac) / 2).clamp(0.0, 1.0);
+        final right = (1.0 - wFrac).clamp(0.0, 1.0);
+        final nextX = curX < 0.12
+            ? center
+            : curX < right - 0.08
+            ? right
+            : 0.0;
+        widget.onChanged(img.copyWith(x: nextX));
+      },
       onFullscreen: img.kind == AttachmentKind.audio
           ? null
           : () => _openViewer(img),

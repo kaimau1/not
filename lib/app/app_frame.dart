@@ -2,6 +2,7 @@ import '../app/theme/app_design.dart' show AppSwipe;
 import '../app/theme/app_tokens.dart';
 import '../features/auth/presentation/account_required.dart';
 import '../features/auth/presentation/auth_providers.dart';
+
 import 'dart:async';
 import 'dart:ui' show DisplayFeature;
 
@@ -86,14 +87,11 @@ class AppRailScope extends InheritedWidget {
   final bool docked;
 
   static bool visible(BuildContext context) =>
-      context
-          .dependOnInheritedWidgetOfExactType<AppRailScope>()
-          ?.docked ??
+      context.dependOnInheritedWidgetOfExactType<AppRailScope>()?.docked ??
       false;
 
   @override
-  bool updateShouldNotify(AppRailScope oldWidget) =>
-      docked != oldWidget.docked;
+  bool updateShouldNotify(AppRailScope oldWidget) => docked != oldWidget.docked;
 }
 
 /// **GENİŞ EKRAN ÇERÇEVESİ** — kullanıcı isteği 2026-09-22: "not
@@ -189,7 +187,9 @@ class HomeInBar extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!homeBarOnNarrow || _railFits(MediaQuery.sizeOf(context))) return appBar;
+    if (!homeBarOnNarrow || _railFits(MediaQuery.sizeOf(context))) {
+      return appBar;
+    }
     // Saydam: üst çubuğun zemini iskeleyle aynı (not rengi dahil).
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -719,14 +719,51 @@ class _AppRail extends ConsumerWidget {
                           ),
                           // Dokunmatik Android'de kalabalık (tablet 2026-11-07);
                           // fiziksel klavyede Ctrl+/ yine açar.
-                          if (kIsWeb)
-                          _RailAction(
-                            extended: extended,
-                            icon: Icons.keyboard_outlined,
-                            label: l10n.keyboardShortcuts,
-                            shortcut: 'Ctrl+/',
-                            onPressed: () => showShortcutsHelp(context),
-                          ),
+                          if (kIsWeb) ...[
+                            Builder(
+                              builder: (context) {
+                                final mode = ref.watch(
+                                  themeBrightnessModeProvider,
+                                );
+                                final (icon, modeLabel) = switch (mode) {
+                                  AppBrightnessMode.dark => (
+                                    Icons.dark_mode_outlined,
+                                    l10n.brightnessModeDark,
+                                  ),
+                                  AppBrightnessMode.light => (
+                                    Icons.light_mode_outlined,
+                                    l10n.brightnessModeLight,
+                                  ),
+                                  AppBrightnessMode.system => (
+                                    Icons.brightness_auto_outlined,
+                                    l10n.brightnessModeAuto,
+                                  ),
+                                };
+                                return _RailAction(
+                                  key: const ValueKey('rail-theme-toggle'),
+                                  extended: extended,
+                                  icon: icon,
+                                  label: modeLabel,
+                                  selected: mode == AppBrightnessMode.dark,
+                                  onPressed: () {
+                                    AppHaptics.tick();
+                                    ref
+                                        .read(
+                                          themeBrightnessModeProvider.notifier,
+                                        )
+                                        .cycle();
+                                  },
+                                );
+                              },
+                            ),
+                            _RailAction(
+                              extended: extended,
+                              icon: Icons.keyboard_outlined,
+                              label: l10n.keyboardShortcuts,
+                              shortcut: 'Ctrl+/',
+                              onPressed: () => showShortcutsHelp(context),
+                            ),
+                          ],
                           if (showListToggle || !forceExtended)
                             SizedBox(
                               width: extended ? 200 : kRailWidth,
@@ -947,6 +984,7 @@ class _RailDoorsState extends ConsumerState<_RailDoors> {
 /// geniş rayda simge + etiket — yukarıdaki bölümlerle aynı hizada.
 class _RailAction extends StatelessWidget {
   const _RailAction({
+    super.key,
     required this.extended,
     required this.icon,
     required this.label,

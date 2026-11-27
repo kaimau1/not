@@ -7289,7 +7289,7 @@ abstract class AppLocalizations {
   /// No description provided for @personalizeTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Kişiselleştir'**
+  /// **'Arayüz düzeni'**
   String get personalizeTitle;
 
   /// No description provided for @personalizeInfo.
@@ -16669,6 +16669,198 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'!acil'**
   String get quickDropUrgentHint;
+
+  /// No description provided for @brightnessModeAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get brightnessModeAuto;
+
+  /// No description provided for @brightnessModeLight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık'**
+  String get brightnessModeLight;
+
+  /// No description provided for @brightnessModeDark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koyu'**
+  String get brightnessModeDark;
+
+  /// No description provided for @brightnessModeToggleTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm kipi: {mode}'**
+  String brightnessModeToggleTooltip(String mode);
+
+  /// No description provided for @appearanceTabTheme.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tema'**
+  String get appearanceTabTheme;
+
+  /// No description provided for @appearanceTabBackground.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zemin'**
+  String get appearanceTabBackground;
+
+  /// No description provided for @appearanceTabLayout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzen'**
+  String get appearanceTabLayout;
+
+  /// No description provided for @appearanceOpenStudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zeminler ve görünüm'**
+  String get appearanceOpenStudio;
+
+  /// No description provided for @applyHomeBackgroundToNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlara da uygula'**
+  String get applyHomeBackgroundToNotes;
+
+  /// No description provided for @applyHomeBackgroundToNotesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel zemini olmayan notlar bu zemini kullanır.'**
+  String get applyHomeBackgroundToNotesInfo;
+
+  /// No description provided for @noteUseHomeBackground.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekran zemini'**
+  String get noteUseHomeBackground;
+
+  /// No description provided for @bgSubTabWallpapers.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseller'**
+  String get bgSubTabWallpapers;
+
+  /// No description provided for @bgSubTabIllustrated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizimli'**
+  String get bgSubTabIllustrated;
+
+  /// No description provided for @bgSubTabColors.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renkler'**
+  String get bgSubTabColors;
+
+  /// No description provided for @bgSubTabPatterns.
+  ///
+  /// In tr, this message translates to:
+  /// **'Desenler'**
+  String get bgSubTabPatterns;
+
+  /// No description provided for @bgSubTabFrame.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çerçeve'**
+  String get bgSubTabFrame;
+
+  /// No description provided for @bgSubTabPaper.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defter'**
+  String get bgSubTabPaper;
+
+  /// No description provided for @personalizeGroupEditor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not editörü çubukları'**
+  String get personalizeGroupEditor;
+
+  /// No description provided for @personalizeGroupAddAttach.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekleme ve ekler'**
+  String get personalizeGroupAddAttach;
+
+  /// No description provided for @personalizeEditBars.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not çubuklarını düzenle'**
+  String get personalizeEditBars;
+
+  /// No description provided for @attachmentRename.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeniden adlandır'**
+  String get attachmentRename;
+
+  /// No description provided for @attachmentRenameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek adı'**
+  String get attachmentRenameHint;
+
+  /// No description provided for @attachmentsAllTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm ekler ({count})'**
+  String attachmentsAllTitle(int count);
+
+  /// No description provided for @attachmentsAllButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get attachmentsAllButton;
+
+  /// No description provided for @attachmentRetryUpload.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeniden dene'**
+  String get attachmentRetryUpload;
+
+  /// No description provided for @pinnedCollapse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Küçült'**
+  String get pinnedCollapse;
+
+  /// No description provided for @pinnedExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genişlet'**
+  String get pinnedExpand;
+
+  /// No description provided for @pinnedHideKeyboard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klavyeyi gizle'**
+  String get pinnedHideKeyboard;
+
+  /// No description provided for @floatingSizeSmall.
+  ///
+  /// In tr, this message translates to:
+  /// **'Küçük'**
+  String get floatingSizeSmall;
+
+  /// No description provided for @floatingSizeMedium.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orta'**
+  String get floatingSizeMedium;
+
+  /// No description provided for @floatingSizeLarge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam'**
+  String get floatingSizeLarge;
+
+  /// No description provided for @floatingAlignCycle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatay hiza'**
+  String get floatingAlignCycle;
 }
 
 class _AppLocalizationsDelegate

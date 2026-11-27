@@ -11,6 +11,7 @@ import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/color_palette.dart';
+import '../../../core/widgets/horizontal_wheel_strip.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/toggle_pop.dart';
@@ -170,19 +171,22 @@ class _ThemeSheetState extends State<_ThemeSheet> {
             SheetHeader(title: l10n.noteAppearance),
             SizedBox(
               height: 148,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-                itemCount: ids.length,
-                separatorBuilder: (_, _) => const SizedBox(width: AppSpace.m),
-                itemBuilder: (context, i) => _ThemeTile(
-                  key: ValueKey('theme-tile-${ids[i]}'),
-                  id: ids[i],
-                  label: names[ids[i]] ?? ids[i],
-                  selected: ids[i].isEmpty && widget.onColor != null
-                      ? _plain
-                      : _selected == ids[i],
-                  onTap: () => _pick(ids[i]),
+              child: HorizontalScrollStrip(
+                builder: (_, controller) => ListView.separated(
+                  controller: controller,
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                  itemCount: ids.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: AppSpace.m),
+                  itemBuilder: (context, i) => _ThemeTile(
+                    key: ValueKey('theme-tile-${ids[i]}'),
+                    id: ids[i],
+                    label: names[ids[i]] ?? ids[i],
+                    selected: ids[i].isEmpty && widget.onColor != null
+                        ? _plain
+                        : _selected == ids[i],
+                    onTap: () => _pick(ids[i]),
+                  ),
                 ),
               ),
             ),
@@ -437,9 +441,7 @@ class _FlatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final fill = this.fill;
-    final checkInk = fill == null
-        ? Colors.white
-        : FixedColors.inkOn(fill);
+    final checkInk = fill == null ? Colors.white : FixedColors.inkOn(fill);
     Widget tile = PressScale(
       child: GestureDetector(
         onTap: onTap,
@@ -467,11 +469,7 @@ class _FlatTile extends StatelessWidget {
                   : null,
             ),
             child: palette
-                ? Icon(
-                    AppIcons.color,
-                    size: AppIconSize.m,
-                    color: checkInk,
-                  )
+                ? Icon(AppIcons.color, size: AppIconSize.m, color: checkInk)
                 : (selected
                       ? TogglePop(
                           on: selected,

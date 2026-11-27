@@ -4088,7 +4088,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get personalizeTitle => 'Personalisasi';
+  String get personalizeTitle => 'Tata letak antarmuka';
 
   @override
   String get personalizeInfo => 'Pilih area dan tombol yang terlihat, plugin';
@@ -9455,4 +9455,105 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get quickDropUrgentHint => '!mendesak';
+
+  @override
+  String get brightnessModeAuto => 'Otomatis';
+
+  @override
+  String get brightnessModeLight => 'Terang';
+
+  @override
+  String get brightnessModeDark => 'Gelap';
+
+  @override
+  String brightnessModeToggleTooltip(String mode) {
+    return 'Mode tampilan: $mode';
+  }
+
+  @override
+  String get appearanceTabTheme => 'Tema';
+
+  @override
+  String get appearanceTabBackground => 'Latar';
+
+  @override
+  String get appearanceTabLayout => 'Tata letak';
+
+  @override
+  String get appearanceOpenStudio => 'Latar & tampilan';
+
+  @override
+  String get applyHomeBackgroundToNotes => 'Terapkan ke catatan juga';
+
+  @override
+  String get applyHomeBackgroundToNotesInfo =>
+      'Catatan tanpa latar khusus akan memakai latar ini.';
+
+  @override
+  String get noteUseHomeBackground => 'Latar beranda';
+
+  @override
+  String get bgSubTabWallpapers => 'Gambar';
+
+  @override
+  String get bgSubTabIllustrated => 'Ilustrasi';
+
+  @override
+  String get bgSubTabColors => 'Warna';
+
+  @override
+  String get bgSubTabPatterns => 'Pola';
+
+  @override
+  String get bgSubTabFrame => 'Bingkai';
+
+  @override
+  String get bgSubTabPaper => 'Kertas';
+
+  @override
+  String get personalizeGroupEditor => 'Bilah editor catatan';
+
+  @override
+  String get personalizeGroupAddAttach => 'Tambah & lampiran';
+
+  @override
+  String get personalizeEditBars => 'Sesuaikan bilah editor';
+
+  @override
+  String get attachmentRename => 'Ubah nama';
+
+  @override
+  String get attachmentRenameHint => 'Nama lampiran';
+
+  @override
+  String attachmentsAllTitle(int count) {
+    return 'Semua lampiran ($count)';
+  }
+
+  @override
+  String get attachmentsAllButton => 'Semua';
+
+  @override
+  String get attachmentRetryUpload => 'Coba lagi';
+
+  @override
+  String get pinnedCollapse => 'Perkecil';
+
+  @override
+  String get pinnedExpand => 'Perluas';
+
+  @override
+  String get pinnedHideKeyboard => 'Sembunyikan papan ketik';
+
+  @override
+  String get floatingSizeSmall => 'Kecil';
+
+  @override
+  String get floatingSizeMedium => 'Sedang';
+
+  @override
+  String get floatingSizeLarge => 'Penuh';
+
+  @override
+  String get floatingAlignCycle => 'Perataan horizontal';
 }

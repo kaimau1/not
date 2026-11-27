@@ -3,6 +3,7 @@ import 'dart:io';
 
 import '../../calendar/data/calendar_repository.dart';
 import '../../calendar/domain/agenda.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart'
     show AppLifecycleListener, AppLifecycleState, ThemeMode, WidgetsBinding;
@@ -121,10 +122,13 @@ class WidgetService {
     // Temayı ETKİLEYEN iki ayar. `effectiveThemeModeProvider` autoDispose
     // olduğundan buradan izlenemez (autoDispose olmayan sağlayıcı onu
     // dinleyemez); kaynaklarını dinleyip değeri okuma anında hesaplıyoruz.
-    for (final provider in [themeChoiceProvider, darkScheduleProvider]) {
-      _themeSubs.add(
-        _ref.listen<Object?>(provider, (_, _) => _pushTheme()),
-      );
+    for (final provider in [
+      themeChoiceProvider,
+      themeFamilyProvider,
+      themeBrightnessModeProvider,
+      darkScheduleProvider,
+    ]) {
+      _themeSubs.add(_ref.listen<Object?>(provider, (_, _) => _pushTheme()));
     }
     _pushTheme();
   }
@@ -151,7 +155,9 @@ class WidgetService {
       await HomeWidget.saveWidgetData<String>('widget_theme', theme);
       await _updateAllWidgets();
       try {
-        unawaited(_ref.read(sharedPreferencesProvider).setString(_themeCacheKey, theme));
+        unawaited(
+          _ref.read(sharedPreferencesProvider).setString(_themeCacheKey, theme),
+        );
       } catch (_) {}
     } catch (e) {
       debugPrint('Widget teması yazılamadı: $e');
@@ -216,7 +222,9 @@ class WidgetService {
       await updateHomeWidget('SmartListWidgetProvider');
       try {
         unawaited(
-          _ref.read(sharedPreferencesProvider).setString(_payloadCacheKey, payload),
+          _ref
+              .read(sharedPreferencesProvider)
+              .setString(_payloadCacheKey, payload),
         );
       } catch (_) {}
     } catch (e) {
@@ -241,11 +249,11 @@ class WidgetService {
       for (final day in agenda.values)
         for (final e in day)
           if (switch (e) {
-            EventOccurrence(:final event) => '📅 ${event.title.trim()}',
-            TaskEntry(:final task) => '☐ ${task.title.trim()}',
-            RoutineEntry(:final routine) => '🔁 ${routine.title.trim()}',
-            ReminderEntry() => null,
-          }
+                EventOccurrence(:final event) => '📅 ${event.title.trim()}',
+                TaskEntry(:final task) => '☐ ${task.title.trim()}',
+                RoutineEntry(:final routine) => '🔁 ${routine.title.trim()}',
+                ReminderEntry() => null,
+              }
               case final title?)
             (at: e.at, title: title),
     ];
@@ -306,9 +314,8 @@ String todayWidgetPayload(
     items.add((at: c.at, title: title));
   }
   items.sort((a, b) => a.at.compareTo(b.at));
-  return [
-    for (final i in items) '${i.at.millisecondsSinceEpoch}\t${i.title}',
-  ].join('\n');
+  return [for (final i in items) '${i.at.millisecondsSinceEpoch}\t${i.title}']
+      .join('\n');
 }
 
 /// Akıllı liste ana ekran aracı (AL-6 / P97) için seçilen özet veri.
@@ -334,13 +341,16 @@ SmartListWidgetSnapshot smartListWidgetData(
   Set<String> hiddenFolders = const {},
   int maxItems = 5,
 }) {
-  final candidates = <({
-    Note note,
-    List<String> unchecked,
-    int total,
-    bool hasKind,
-    DateTime stamp,
-  })>[];
+  final candidates =
+      <
+        ({
+          Note note,
+          List<String> unchecked,
+          int total,
+          bool hasKind,
+          DateTime stamp,
+        })
+      >[];
 
   for (final n in notes) {
     if (n.type != NoteType.checklist) continue;
@@ -355,9 +365,7 @@ SmartListWidgetSnapshot smartListWidgetData(
       if (clean.isEmpty) continue;
       total++;
       if (!item.checked) {
-        unchecked.add(
-          clean.length > 48 ? '${clean.substring(0, 48)}…' : clean,
-        );
+        unchecked.add(clean.length > 48 ? '${clean.substring(0, 48)}…' : clean);
       }
     }
 
@@ -410,4 +418,3 @@ SmartListWidgetSnapshot smartListWidgetData(
     items: best.unchecked.take(maxItems).toList(),
   );
 }
-

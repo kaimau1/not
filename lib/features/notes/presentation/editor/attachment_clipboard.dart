@@ -80,7 +80,9 @@ class _CopyAttachmentButtonState extends ConsumerState<CopyAttachmentButton> {
       return File(a.localPath).readAsBytes();
     }
     if (a.isUploaded) {
-      final response = await http.get(Uri.parse(a.downloadUrl));
+      final response = await http
+          .get(Uri.parse(a.downloadUrl))
+          .timeout(const Duration(seconds: 20));
       if (response.statusCode == 200) return response.bodyBytes;
     }
     return null;

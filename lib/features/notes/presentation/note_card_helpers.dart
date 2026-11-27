@@ -300,6 +300,7 @@ typedef _CardEnv = ({
   bool allView,
   String? focused,
   String? open,
+  DashboardBackground dashBg,
 });
 
 final _cardEnvProvider = Provider<_CardEnv>(
@@ -320,9 +321,9 @@ final _cardEnvProvider = Provider<_CardEnv>(
     open: ref.watch(
       openNoteIdsProvider.select((ids) => ids.isEmpty ? null : ids.last),
     ),
+    dashBg: ref.watch(dashboardBackgroundProvider),
   ),
 );
-
 
 /// Kartın üstünde fare var mı (F44.5): ⋮ fareyle yalnız üstüne gelince. Durum
 /// burada, kart yeniden kurulmaz; dokunmatikte ⋮ hep görünür, davranış aynı.
@@ -414,11 +415,7 @@ class _FolderBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.folder_outlined,
-            size: 13,
-            color: ink,
-          ),
+          Icon(Icons.folder_outlined, size: 13, color: ink),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
@@ -458,9 +455,8 @@ class _SensitiveHidden extends StatelessWidget {
             l10n.sensitiveHiddenOnCard,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: _cardThemeOf(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: _cardThemeOf(context).textTheme.bodySmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ),
         if (onLock != null)
@@ -564,25 +560,27 @@ class _CardItemRow extends StatelessWidget {
                     _ => AlignmentDirectional.centerStart,
                   },
             child: noteBodyText(
-            context,
-            // Ham biçim işaretleri (**kalın**, %%2:renk%%) HİÇBİR durumda
-            // görünmez: ayar kapalıyken sökülür, açıkken görünmez çizilip
-            // yerine biçim uygulanır.
-            text,
-            query,
-            // Üstü çizili stil satır içi biçimin üstünde kalmalı: biçimli
-            // çizim yalnız işaretsiz maddede.
-            rich: rich && !struck,
-            maxLines: 1,
-            style: item.header
-                ? style.copyWith(fontWeight: FontWeight.w700)
-                : struck
-                ? style.copyWith(
-                    decoration: TextDecoration.lineThrough,
-                    color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
-                  )
-                : style,
-          ),
+              context,
+              // Ham biçim işaretleri (**kalın**, %%2:renk%%) HİÇBİR durumda
+              // görünmez: ayar kapalıyken sökülür, açıkken görünmez çizilip
+              // yerine biçim uygulanır.
+              text,
+              query,
+              // Üstü çizili stil satır içi biçimin üstünde kalmalı: biçimli
+              // çizim yalnız işaretsiz maddede.
+              rich: rich && !struck,
+              maxLines: 1,
+              style: item.header
+                  ? style.copyWith(fontWeight: FontWeight.w700)
+                  : struck
+                  ? style.copyWith(
+                      decoration: TextDecoration.lineThrough,
+                      color: scheme.onSurfaceVariant.withValues(
+                        alpha: AppAlpha.muted,
+                      ),
+                    )
+                  : style,
+            ),
           ),
         ),
       ],
@@ -646,9 +644,8 @@ class _CardDoneLine extends StatelessWidget {
         allDone ? l10n.cardItemsAllDone(done) : l10n.cardItemsDone(done),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: AppText.of(theme).meta.copyWith(
-          color: accent ?? theme.colorScheme.onSurfaceVariant,
-        ),
+        style: AppText.of(theme).meta
+            .copyWith(color: accent ?? theme.colorScheme.onSurfaceVariant),
       ),
     );
   }
@@ -679,9 +676,12 @@ class _ChecklistProgress extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: done / total,
                 minHeight: 3,
-                backgroundColor:
-                    (accent ?? scheme.outlineVariant).withValues(alpha: 0.18),
-                color: (accent ?? scheme.primary).withValues(alpha: AppAlpha.strong),
+                backgroundColor: (accent ?? scheme.outlineVariant).withValues(
+                  alpha: 0.18,
+                ),
+                color: (accent ?? scheme.primary).withValues(
+                  alpha: AppAlpha.strong,
+                ),
               ),
             ),
           ),
@@ -785,7 +785,6 @@ class _SearchExcerptBodyState extends State<_SearchExcerptBody> {
   }
 }
 
-
 /// Liste görünümündeki not satırı.
 ///
 /// Izgaradaki [NoteCard]'ın "tek sütuna sıkıştırılmış" hâli DEĞİL: kart
@@ -830,7 +829,11 @@ class NoteListRow extends ConsumerWidget {
         : CardMediaPlan.of(note, showFiles: false);
     final visual = media?.hero ?? media?.strip.firstOrNull;
     if (visual == null) {
-      return Icon(_icon, size: AppIconSize.m, color: accent ?? scheme.onSurfaceVariant);
+      return Icon(
+        _icon,
+        size: AppIconSize.m,
+        color: accent ?? scheme.onSurfaceVariant,
+      );
     }
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
@@ -1091,9 +1094,8 @@ class CardCalendarPill extends StatelessWidget {
                 formatCalendarPillDate(day),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppText.of(_cardThemeOf(context)).badge.copyWith(
-                  color: fg,
-                ),
+                style: AppText.of(_cardThemeOf(context)).badge
+                    .copyWith(color: fg),
               ),
             ),
           ],

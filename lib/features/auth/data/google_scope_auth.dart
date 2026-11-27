@@ -190,7 +190,7 @@ class _AndroidScopeAuth implements GoogleScopeAuth {
     try {
       return await _authorize(false);
     } catch (e) {
-      debugPrint('Google jetonu alınamadı: $e');
+      if (kDebugMode) debugPrint('Google jetonu alınamadı: $e');
       return null;
     }
   }
@@ -256,9 +256,9 @@ GoogleScopeAuth googleScopeAuth(
 
 /// Android'in hesap seçicisi (içinde "Hesap ekle" var): seçilen e-posta, iptal
 /// null.
-Future<String?> chooseGoogleAccount() => const MethodChannel(
-  'dev.kaimau.notlar/system',
-).invokeMethod<String>('chooseGoogleAccount');
+Future<String?> chooseGoogleAccount() =>
+    const MethodChannel('dev.kaimau.notlar/system')
+        .invokeMethod<String>('chooseGoogleAccount');
 
 /// Kapsam jetonunun önbelleği: süresi [refreshMargin] içinde dolacaksa
 /// [silentRefresh] ile pencere açmadan yenilenir; eşzamanlı istekler tek

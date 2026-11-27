@@ -55,8 +55,7 @@ class BoolPrefNotifier extends Notifier<bool> {
   final bool defaultValue;
 
   @override
-  bool build() =>
-      watchPrefs(ref).getBool(key) ?? defaultValue;
+  bool build() => watchPrefs(ref).getBool(key) ?? defaultValue;
 
   void set(bool value) {
     state = value;
@@ -145,6 +144,81 @@ enum AppThemeChoice {
   };
 }
 
+/// Tema parlaklık kipi: her tema ailesi Açık, Koyu ve Sistem (Otomatik)
+/// modlarında çalışır. Cihaz yerelidir (Web ↔ Android senkronize olmaz).
+enum AppBrightnessMode { system, light, dark }
+
+final themeBrightnessModeProvider =
+    NotifierProvider<ThemeBrightnessModeNotifier, AppBrightnessMode>(
+      ThemeBrightnessModeNotifier.new,
+    );
+
+class ThemeBrightnessModeNotifier extends Notifier<AppBrightnessMode> {
+  static const _key = 'theme_brightness';
+
+  @override
+  AppBrightnessMode build() {
+    final prefs = watchPrefs(ref);
+    final stored = prefs.getString(_key);
+    if (stored != null) {
+      return AppBrightnessMode.values.firstWhere(
+        (m) => m.name == stored,
+        orElse: () => AppBrightnessMode.light,
+      );
+    }
+    return switch (AppThemeChoice.fromStored(prefs.getString('theme_mode'))) {
+      AppThemeChoice.dark => AppBrightnessMode.dark,
+      AppThemeChoice.system => AppBrightnessMode.system,
+      _ => AppBrightnessMode.light,
+    };
+  }
+
+  void set(AppBrightnessMode mode) {
+    state = mode;
+    ref.read(sharedPreferencesProvider).setString(_key, mode.name);
+  }
+
+  /// Kolay tek dokunuş döngüsü (özellikle web sol menüsü): Açık → Koyu → Otomatik.
+  void cycle() {
+    final next = switch (state) {
+      AppBrightnessMode.light => AppBrightnessMode.dark,
+      AppBrightnessMode.dark => AppBrightnessMode.system,
+      AppBrightnessMode.system => AppBrightnessMode.light,
+    };
+    set(next);
+  }
+}
+
+final themeFamilyProvider = NotifierProvider<ThemeFamilyNotifier, ThemeFamily>(
+  ThemeFamilyNotifier.new,
+);
+
+class ThemeFamilyNotifier extends Notifier<ThemeFamily> {
+  static const _key = 'theme_family';
+
+  @override
+  ThemeFamily build() {
+    final prefs = watchPrefs(ref);
+    final stored = prefs.getString(_key);
+    if (stored != null) {
+      return ThemeFamily.values.firstWhere(
+        (f) => f.name == stored,
+        orElse: () => ThemeFamily.sage,
+      );
+    }
+    return AppThemeChoice.fromStored(prefs.getString('theme_mode')).family;
+  }
+
+  void set(ThemeFamily family) {
+    state = family;
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setString(_key, family.name);
+    // Geriye dönük okuyan bileşenler için seçili aileyi theme_mode'a da yaz.
+    prefs.setString('theme_mode', family.name);
+    ref.invalidate(themeChoiceProvider);
+  }
+}
+
 final themeChoiceProvider =
     NotifierProvider<ThemeChoiceNotifier, AppThemeChoice>(
       ThemeChoiceNotifier.new,
@@ -159,8 +233,25 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
 
   void set(AppThemeChoice choice) {
     state = choice;
-    ref.read(sharedPreferencesProvider).setString(_key, choice.name);
-    markPrefsDirty();
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setString(_key, choice.name);
+    if (choice == AppThemeChoice.dark) {
+      ref
+          .read(themeBrightnessModeProvider.notifier)
+          .set(AppBrightnessMode.dark);
+    } else if (choice == AppThemeChoice.system) {
+      ref
+          .read(themeBrightnessModeProvider.notifier)
+          .set(AppBrightnessMode.system);
+    } else {
+      prefs.setString('theme_family', choice.family.name);
+      ref.invalidate(themeFamilyProvider);
+      if (!prefs.containsKey('theme_brightness')) {
+        ref
+            .read(themeBrightnessModeProvider.notifier)
+            .set(AppBrightnessMode.light);
+      }
+    }
   }
 }
 
@@ -506,8 +597,7 @@ class TtsVoiceNotifier extends Notifier<String> {
 
   @override
   String build() =>
-      watchPrefs(ref).getString(_key) ??
-      AppConstants.geminiTtsVoices.first;
+      watchPrefs(ref).getString(_key) ?? AppConstants.geminiTtsVoices.first;
 
   void set(String value) {
     state = value;
@@ -531,7 +621,10 @@ final autoTitleProvider = boolPref('auto_title', defaultValue: true);
 ///
 /// Varsayılan AÇIK: paylaşılan klasör zaten "haberim olsun" diye kurulan
 /// bir şey.
-final sharedNotificationsProvider = boolPref('shared_notifications', defaultValue: true);
+final sharedNotificationsProvider = boolPref(
+  'shared_notifications',
+  defaultValue: true,
+);
 
 /// **ADIMLA/E-POSTAMLA BULUNABİLİRİM** (F1.1, 2026-10-19). Açıkken
 /// `userSearch/{uid}` yazılır ve başkaları beni ad önekiyle ya da tam
@@ -574,7 +667,10 @@ final aiSkipCheckedProvider = boolPref('ai_skip_checked', defaultValue: true);
 /// Liste/checklist öğelerindeki uzun satırlar tam mı gösterilsin?
 /// true (varsayılan): satır kaç satıra gerekirse sarılır, hepsi görünür.
 /// false: satır tek satırda kalır, dokununca (odaklanınca) açılır.
-final expandListItemsProvider = boolPref('expand_list_items', defaultValue: true);
+final expandListItemsProvider = boolPref(
+  'expand_list_items',
+  defaultValue: true,
+);
 
 /// BÖLÜNMÜŞ GÖRÜNÜMDE LİSTE SAĞDA (F67.9, kullanıcı: "not menüsü sağa
 /// alınabilsin (tablette)" — en olası anlam). Cihaz tercihi; ayraçta uzun
@@ -597,7 +693,10 @@ final itemGesturesFingerAllProvider = boolPref(
 /// Ana ekranın üstündeki tek satırlık "Yeni not..." hızlı yakalama alanı
 /// görünsün mü? Varsayılan GİZLİ (kullanıcı isteği 2026-08-06): satır dikey
 /// yer kaplıyor ve "+" menüsü aynı işi görüyor; isteyen Ayarlar'dan açar.
-final quickCaptureRowProvider = boolPref('quick_capture_row', defaultValue: false);
+final quickCaptureRowProvider = boolPref(
+  'quick_capture_row',
+  defaultValue: false,
+);
 
 /// Ana ekrandaki kartlarda satır içi biçimlendirme (renk, vurgu, kalın,
 /// altı çizili, boyut) ÇİZİLSİN Mİ?
@@ -610,7 +709,10 @@ final quickCaptureRowProvider = boolPref('quick_capture_row', defaultValue: fals
 ///
 /// Ayar yalnız GÖSTERİMİ etkiler: metin her iki durumda da aynı, işaretli
 /// hâliyle saklanır.
-final cardRichPreviewProvider = boolPref('card_rich_preview', defaultValue: true);
+final cardRichPreviewProvider = boolPref(
+  'card_rich_preview',
+  defaultValue: true,
+);
 
 /// Kartta hassas içerik gizlensin mi (B1, 2026-10-20)? Açıkken parola
 /// notunun içeriği kartta çizilmez, IBAN/kart numarası son dört hane
@@ -686,10 +788,7 @@ final homeSharedAtBottomProvider = boolPref(
 );
 
 /// Arama sonucunda ve "Tümü" görünümünde notun klasör rozeti.
-final cardShowFolderProvider = boolPref(
-  'card_show_folder',
-  defaultValue: true,
-);
+final cardShowFolderProvider = boolPref('card_show_folder', defaultValue: true);
 
 /// Defter kâğıdı deseni (çizgili, kareli…) kartta da çizilsin mi.
 final cardShowPaperProvider = boolPref('card_show_paper', defaultValue: true);
@@ -796,9 +895,10 @@ enum VoiceSilence {
   final Duration duration;
 }
 
-final voiceSilenceProvider = NotifierProvider<VoiceSilenceNotifier, VoiceSilence>(
-  VoiceSilenceNotifier.new,
-);
+final voiceSilenceProvider =
+    NotifierProvider<VoiceSilenceNotifier, VoiceSilence>(
+      VoiceSilenceNotifier.new,
+    );
 
 class VoiceSilenceNotifier extends Notifier<VoiceSilence> {
   static const _key = 'voice_silence';
@@ -827,7 +927,10 @@ final voiceOfflineProvider = boolPref('voice_offline', defaultValue: false);
 /// AKILLI KOMUTLAR: dikte sırasında "son kelimeyi sil", "X yerine Y yaz"
 /// gibi düzeltmeler uygulansın mı (bkz. `applyVoiceCommands`). Varsayılan
 /// AÇIK; bu sözleri gerçekten not olarak yazdırmak isteyen kapatabilir.
-final voiceSmartCommandsProvider = boolPref('voice_smart_commands', defaultValue: true);
+final voiceSmartCommandsProvider = boolPref(
+  'voice_smart_commands',
+  defaultValue: true,
+);
 
 /// Günlük brifing bildirimi ayarları.
 /// Zamanlamalı tema geçişi için "şimdi" akışı.
@@ -888,29 +991,10 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
     final now = ref.watch(_clockProvider).value ?? DateTime.now();
     return schedule.isDarkAt(now) ? ThemeMode.dark : ThemeMode.light;
   }
-  return switch (ref.watch(themeChoiceProvider)) {
-    AppThemeChoice.system => ThemeMode.system,
-    AppThemeChoice.sage ||
-    AppThemeChoice.porcelain ||
-    AppThemeChoice.clay ||
-    AppThemeChoice.lavender ||
-    AppThemeChoice.olive ||
-    AppThemeChoice.white ||
-    AppThemeChoice.straw ||
-    AppThemeChoice.cream ||
-    AppThemeChoice.peach ||
-    AppThemeChoice.mint ||
-    AppThemeChoice.ocean ||
-    AppThemeChoice.rose ||
-    AppThemeChoice.tangerine ||
-    AppThemeChoice.emerald ||
-    AppThemeChoice.amethyst ||
-    AppThemeChoice.classic ||
-    AppThemeChoice.newsprint ||
-    AppThemeChoice.notebook ||
-    AppThemeChoice.graphite ||
-    AppThemeChoice.ledger => ThemeMode.light,
-    AppThemeChoice.dark => ThemeMode.dark,
+  return switch (ref.watch(themeBrightnessModeProvider)) {
+    AppBrightnessMode.system => ThemeMode.system,
+    AppBrightnessMode.light => ThemeMode.light,
+    AppBrightnessMode.dark => ThemeMode.dark,
   };
 });
 
@@ -946,7 +1030,8 @@ HomeGestureTarget parseHomeGesture(String? raw, HomeGestureTarget fallback) {
   final id = i < 0 ? null : raw.substring(i + 1);
   final kind = HomeGestureKind.values.where((k) => k.name == name).firstOrNull;
   if (kind == null) return fallback;
-  final needsId = kind == HomeGestureKind.note || kind == HomeGestureKind.folder;
+  final needsId =
+      kind == HomeGestureKind.note || kind == HomeGestureKind.folder;
   if (needsId && (id == null || id.isEmpty)) return fallback;
   return (kind: kind, id: needsId ? id : null);
 }
@@ -968,7 +1053,9 @@ class HomeGestureNotifier extends Notifier<HomeGestureTarget> {
 
   void set(HomeGestureTarget value) {
     state = value;
-    ref.read(sharedPreferencesProvider).setString(key, encodeHomeGesture(value));
+    ref
+        .read(sharedPreferencesProvider)
+        .setString(key, encodeHomeGesture(value));
   }
 }
 
@@ -1001,10 +1088,7 @@ final homeSwipeRightGestureProvider =
 
 /// Takvimde yatay kaydırmayla hafta/gün/ay değiştirme (F60.S13, kullanıcı
 /// isteği 2026-11-12). Kapalıyken yatay jest kurulmaz; düğmeler çalışır.
-final calendarSwipeProvider = boolPref(
-  'calendar_swipe',
-  defaultValue: true,
-);
+final calendarSwipeProvider = boolPref('calendar_swipe', defaultValue: true);
 
 /// Takvimdeki "+" düğmesi ne eklesin (kullanıcı isteği 2026-11-22: "artı
 /// varsayılan not eklesin, tarihi varsayılan bugün ama öncesinden
@@ -1074,9 +1158,11 @@ class DashboardBackground {
   const DashboardBackground({
     this.path,
     this.preset,
+    this.noteTheme,
     this.opacity = 0.25,
     this.color,
     this.pattern = DashboardPattern.none,
+    this.applyToNotes = false,
   });
 
   /// Cihazdaki kopyanın yolu; null = galeriden zemin görseli yok.
@@ -1084,6 +1170,9 @@ class DashboardBackground {
 
   /// Hazır renkli zemin kimliği (`DashboardWallpapers`); null = hazır görsel yok.
   final String? preset;
+
+  /// Çizimli not teması kimliği (`NoteThemes`); not ve ana ekran aynı seçkiyi paylaşır.
+  final String? noteTheme;
 
   /// Görünürlük (0.05–1). Varsayılan düşük: kart ızgarası okunur kalmalı.
   /// Hem görselin hem desenin görünürlüğünü ayarlar.
@@ -1095,9 +1184,13 @@ class DashboardBackground {
   /// Zemin deseni; [DashboardPattern.none] = desen yok.
   final DashboardPattern pattern;
 
-  /// Herhangi bir özelleştirme (hazır görsel, cihaz görseli, renk, desen) var mı?
+  /// Aksi seçilmedikçe bu zemin tüm notlara da uygulansın mı.
+  final bool applyToNotes;
+
+  /// Herhangi bir özelleştirme (hazır görsel, çizimli tema, cihaz görseli, renk, desen) var mı?
   bool get isCustomized =>
       (preset != null && preset!.isNotEmpty) ||
+      (noteTheme != null && noteTheme!.isNotEmpty) ||
       path != null ||
       color != null ||
       pattern != DashboardPattern.none;
@@ -1107,16 +1200,21 @@ class DashboardBackground {
     bool clearPath = false,
     String? preset,
     bool clearPreset = false,
+    String? noteTheme,
+    bool clearNoteTheme = false,
     double? opacity,
     int? color,
     bool clearColor = false,
     DashboardPattern? pattern,
+    bool? applyToNotes,
   }) => DashboardBackground(
     path: clearPath ? null : (path ?? this.path),
     preset: clearPreset ? null : (preset ?? this.preset),
+    noteTheme: clearNoteTheme ? null : (noteTheme ?? this.noteTheme),
     opacity: opacity ?? this.opacity,
     color: clearColor ? null : (color ?? this.color),
     pattern: pattern ?? this.pattern,
+    applyToNotes: applyToNotes ?? this.applyToNotes,
   );
 }
 
@@ -1128,9 +1226,11 @@ final dashboardBackgroundProvider =
 class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
   static const _pathKey = 'dashboard_bg_path';
   static const _presetKey = 'dashboard_bg_preset';
+  static const _noteThemeKey = 'dashboard_bg_note_theme';
   static const _opacityKey = 'dashboard_bg_opacity';
   static const _colorKey = 'dashboard_bg_color';
   static const _patternKey = 'dashboard_bg_pattern';
+  static const _applyToNotesKey = 'dashboard_bg_apply_notes';
 
   @override
   DashboardBackground build() {
@@ -1138,18 +1238,21 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     return DashboardBackground(
       path: prefs.getString(_pathKey),
       preset: prefs.getString(_presetKey),
+      noteTheme: prefs.getString(_noteThemeKey),
       opacity: prefs.getDouble(_opacityKey) ?? 0.25,
       color: prefs.getInt(_colorKey),
       pattern: DashboardPattern.fromId(prefs.getString(_patternKey)),
+      applyToNotes: prefs.getBool(_applyToNotesKey) ?? false,
     );
   }
 
   void setPath(String? path) {
-    final clearPreset = path != null;
+    final clearOther = path != null;
     state = state.copyWith(
       path: path,
       clearPath: path == null,
-      clearPreset: clearPreset,
+      clearPreset: clearOther,
+      clearNoteTheme: clearOther,
     );
     final prefs = ref.read(sharedPreferencesProvider);
     if (path == null) {
@@ -1157,7 +1260,8 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     } else {
       prefs
         ..setString(_pathKey, path)
-        ..remove(_presetKey);
+        ..remove(_presetKey)
+        ..remove(_noteThemeKey);
     }
   }
 
@@ -1176,6 +1280,7 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
       preset: presetId,
       clearPreset: presetId == null,
       clearPath: presetId != null,
+      clearNoteTheme: presetId != null,
       opacity: nextOpacity,
     );
     if (presetId == null) {
@@ -1183,11 +1288,37 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     } else {
       prefs
         ..setString(_presetKey, presetId)
-        ..remove(_pathKey);
+        ..remove(_pathKey)
+        ..remove(_noteThemeKey);
       if (nextOpacity != null) {
         prefs.setDouble(_opacityKey, nextOpacity);
       }
     }
+  }
+
+  /// Çizimli not temasını ana ekrana (ve istenirse notlara) uygular.
+  void setNoteTheme(String? id) {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final clean = id == null || id.isEmpty ? null : id;
+    state = state.copyWith(
+      noteTheme: clean,
+      clearNoteTheme: clean == null,
+      clearPreset: clean != null,
+      clearPath: clean != null,
+    );
+    if (clean == null) {
+      prefs.remove(_noteThemeKey);
+    } else {
+      prefs
+        ..setString(_noteThemeKey, clean)
+        ..remove(_presetKey)
+        ..remove(_pathKey);
+    }
+  }
+
+  void setApplyToNotes(bool value) {
+    state = state.copyWith(applyToNotes: value);
+    ref.read(sharedPreferencesProvider).setBool(_applyToNotesKey, value);
   }
 
   void setOpacity(double value) {
@@ -1216,8 +1347,10 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     ref.read(sharedPreferencesProvider)
       ..remove(_pathKey)
       ..remove(_presetKey)
+      ..remove(_noteThemeKey)
       ..remove(_opacityKey)
       ..remove(_colorKey)
-      ..remove(_patternKey);
+      ..remove(_patternKey)
+      ..remove(_applyToNotesKey);
   }
 }

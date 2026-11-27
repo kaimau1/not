@@ -1,9 +1,13 @@
 import '../../../app/app_frame.dart';
+import '../../../app/theme/app_design.dart';
 import '../../../core/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
+import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
+import '../../../core/widgets/horizontal_wheel_strip.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
@@ -31,17 +35,19 @@ class PersonalizeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: HomeInBar(appBar: AppBar(
-        title: Text(l10n.personalizeTitle),
-        actions: [
-          IconButton(
-            key: const ValueKey('personalize-reset'),
-            tooltip: l10n.personalizeReset,
-            icon: const Icon(Icons.restart_alt_rounded),
-            onPressed: () => _confirmReset(context),
-          ),
-        ],
-      )),
+      appBar: HomeInBar(
+        appBar: AppBar(
+          title: Text(l10n.personalizeTitle),
+          actions: [
+            IconButton(
+              key: const ValueKey('personalize-reset'),
+              tooltip: l10n.personalizeReset,
+              icon: const Icon(Icons.restart_alt_rounded),
+              onPressed: () => _confirmReset(context),
+            ),
+          ],
+        ),
+      ),
       // KÖK NEDEN (kullanıcı bulgusu 2026-10-16: "kişiselleştirme ayarlar
       // kısmında aç kapa yapılamıyor"; "kapatıyorum, girip çıkınca başka
       // şeyler kapanmış oluyor"): bölümler burada `const` idi ve kaydı
@@ -70,20 +76,53 @@ class PersonalizeScreen extends StatelessWidget {
               const SizedBox(height: AppSpace.m),
               const _UiProfilesSection(),
               const SizedBox(height: AppSpace.m),
-              for (final s in const [
-                CustomizeSurface.modules,
-                CustomizeSurface.bottomBar,
-                CustomizeSurface.topBar,
-                CustomizeSurface.quickRow,
-                CustomizeSurface.addPanel,
-                CustomizeSurface.attach,
-                CustomizeSurface.video,
-                CustomizeSurface.pinned,
-                CustomizeSurface.pen,
-                CustomizeSurface.home,
-              ])
-                _SurfaceSection(s),
-              const _BubblesSection(),
+              _PersonalizeCategoryCard(
+                key: const ValueKey('personalize-group-modules'),
+                title: l10n.personalizeModules,
+                icon: Icons.extension_outlined,
+                initiallyExpanded: true,
+                child: const PersonalizeModuleSwitches(),
+              ),
+              const SizedBox(height: AppSpace.m),
+              _PersonalizeCategoryCard(
+                key: const ValueKey('personalize-group-editor'),
+                title: l10n.personalizeGroupEditor,
+                icon: Icons.edit_note_outlined,
+                initiallyExpanded: true,
+                child: const _SurfaceSwitcherGroup(
+                  surfaces: [
+                    CustomizeSurface.bottomBar,
+                    CustomizeSurface.topBar,
+                    CustomizeSurface.quickRow,
+                    CustomizeSurface.pen,
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpace.m),
+              _PersonalizeCategoryCard(
+                key: const ValueKey('personalize-group-add'),
+                title: l10n.personalizeGroupAddAttach,
+                icon: Icons.attach_file_rounded,
+                child: const _SurfaceSwitcherGroup(
+                  surfaces: [
+                    CustomizeSurface.addPanel,
+                    CustomizeSurface.attach,
+                    CustomizeSurface.pinned,
+                    CustomizeSurface.video,
+                  ],
+                  includeBubbles: true,
+                ),
+              ),
+              const SizedBox(height: AppSpace.m),
+              _PersonalizeCategoryCard(
+                key: const ValueKey('personalize-group-home'),
+                title: surfaceLabel(l10n, CustomizeSurface.home).$1,
+                icon: Icons.home_outlined,
+                initiallyExpanded: true,
+                child: const CustomizeSurfacePanel(
+                  surface: CustomizeSurface.home,
+                ),
+              ),
             ],
           ),
         ),
@@ -288,19 +327,137 @@ class _Section extends StatelessWidget {
   }
 }
 
-/// Bir yüzeyin bölümü (düzen merkeziyle aynı pano).
-class _SurfaceSection extends StatelessWidget {
-  const _SurfaceSection(this.surface);
+class _PersonalizeCategoryCard extends StatelessWidget {
+  const _PersonalizeCategoryCard({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.initiallyExpanded = false,
+  });
 
-  final CustomizeSurface surface;
+  final String title;
+  final IconData icon;
+  final Widget child;
+  final bool initiallyExpanded;
 
   @override
   Widget build(BuildContext context) {
-    final (title, icon) = surfaceLabel(context.l10n, surface);
-    return _Section(
-      title: title,
-      icon: icon,
-      child: CustomizeSurfacePanel(surface: surface),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = AppTokens.of(context);
+    final text = AppText.of(theme);
+    return Container(
+      decoration: AppSurface.sheetCard(theme),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        type: MaterialType.transparency,
+        child: Theme(
+          data: theme.copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: initiallyExpanded,
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: AppSpace.l,
+              vertical: AppSpace.xs,
+            ),
+            childrenPadding: const EdgeInsets.fromLTRB(
+              AppSpace.l,
+              0,
+              AppSpace.l,
+              AppSpace.l,
+            ),
+            leading: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: tokens.resolvedTintSoft(scheme),
+                borderRadius: BorderRadius.circular(AppRadius.s),
+              ),
+              child: Icon(icon, size: AppIconSize.s, color: scheme.primary),
+            ),
+            title: Text(title, style: text.section),
+            children: [child],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SurfaceSwitcherGroup extends StatefulWidget {
+  const _SurfaceSwitcherGroup({
+    required this.surfaces,
+    this.includeBubbles = false,
+  });
+
+  final List<CustomizeSurface> surfaces;
+  final bool includeBubbles;
+
+  @override
+  State<_SurfaceSwitcherGroup> createState() => _SurfaceSwitcherGroupState();
+}
+
+class _SurfaceSwitcherGroupState extends State<_SurfaceSwitcherGroup> {
+  late CustomizeSurface? _selected = widget.surfaces.first;
+  bool _showBubbles = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        HorizontalScrollStrip(
+          builder: (_, controller) => SingleChildScrollView(
+            controller: controller,
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final s in widget.surfaces) ...[
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: AppSpace.s),
+                    child: Builder(
+                      builder: (context) {
+                        final (label, icon) = surfaceLabel(l10n, s);
+                        return ChoiceChip(
+                          avatar: Icon(icon, size: AppIconSize.s),
+                          label: Text(label),
+                          selected: !_showBubbles && _selected == s,
+                          onSelected: (_) {
+                            AppHaptics.tick();
+                            setState(() {
+                              _showBubbles = false;
+                              _selected = s;
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                if (widget.includeBubbles)
+                  ChoiceChip(
+                    avatar: const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: AppIconSize.s,
+                    ),
+                    label: Text(l10n.personalizeBubbles),
+                    selected: _showBubbles,
+                    onSelected: (_) {
+                      AppHaptics.tick();
+                      setState(() => _showBubbles = true);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpace.m),
+        if (_showBubbles)
+          const _BubblesSection()
+        else if (_selected != null)
+          CustomizeSurfacePanel(surface: _selected!),
+      ],
     );
   }
 }

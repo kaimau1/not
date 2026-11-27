@@ -15,49 +15,110 @@ extension _EditorAppearance on _NoteEditorScreenState {
     final note = _note;
     if (note == null) return;
     _dismissKeyboard();
-    // ÖNCE TEMA ŞERİDİ (2026-10-28): palete basınca altta küçük sayfa
-    // önizlemeleri kayar, dokunulan tema ANINDA sayfaya uygulanır (örnek
-    // uygulamadaki gibi). Renk/çerçeve/zemin görseli şeridin altındaki
-    // satırdan açılır.
-    final action = await showNoteThemeSheet(
+    await showAppearanceStudio(
       context,
-      current: note.theme,
-      paper: note.paged,
-      onTheme: (id) {
-        if (!mounted) return;
-        _mutate((n) => n.copyWith(theme: id), immediate: true);
-      },
-      color: note.color,
-      customColor: note.customColor,
-      onColor: (picked) {
-        if (!mounted) return;
-        _mutate(
-          (n) => n.copyWith(
-            color: picked.color,
-            customColor: picked.custom,
-            clearCustomColor: picked.custom == null,
-            theme: '',
-          ),
-          immediate: true,
-        );
-      },
+      contextMode: AppearanceContext.note,
+      initialTab: AppearanceTab.background,
+      noteBridge: NoteAppearanceBridge(
+        readNote: () => _note ?? note,
+        onTheme: (id) {
+          if (!mounted) return;
+          _mutate(
+            (n) => n.copyWith(
+              theme: id,
+              color: id.isNotEmpty ? NoteColor.none : null,
+              clearCustomColor: id.isNotEmpty,
+            ),
+            immediate: true,
+          );
+        },
+        onColor: (picked) {
+          if (!mounted) return;
+          _mutate(
+            (n) => n.copyWith(
+              color: picked.color,
+              customColor: picked.custom,
+              clearCustomColor: picked.custom == null,
+              theme: '',
+            ),
+            immediate: true,
+          );
+        },
+        onFrame: (picked) {
+          if (!mounted) return;
+          _mutate(
+            (n) => n.copyWith(
+              frameColor: picked.color,
+              customFrameColor: picked.custom,
+              clearCustomFrameColor: picked.custom == null,
+            ),
+            immediate: true,
+          );
+        },
+        onPresetWallpaper: _applyPresetWallpaper,
+        onPickImage: _pickBackgroundImage,
+        onRemoveImage: () async {
+          final current = _note;
+          final bgId = current?.backgroundImageId;
+          if (current == null || bgId == null) return;
+          final bg = current.attachments.where((a) => a.id == bgId).firstOrNull;
+          if (bg != null) {
+            _removeBackgroundImage(bg);
+          } else {
+            _mutate(
+              (n) => n.copyWith(clearBackgroundImage: true),
+              immediate: true,
+            );
+          }
+        },
+        onCropImage: () async {
+          final current = _note;
+          final bgId = current?.backgroundImageId;
+          if (current == null || bgId == null) return;
+          final bg = current.attachments.where((a) => a.id == bgId).firstOrNull;
+          if (bg != null) await _cropBackground(bg);
+        },
+        onBgOpacity: (value) {
+          if (!mounted) return;
+          _mutate((n) => n.copyWith(backgroundOpacity: value), immediate: true);
+        },
+        onPaper: (paper) {
+          if (!mounted) return;
+          _mutate((n) => n.copyWith(archivePaper: paper), immediate: true);
+        },
+        onLineSpacing: (spacing) {
+          if (!mounted) return;
+          _mutate((n) => n.copyWith(lineSpacing: spacing), immediate: true);
+        },
+        onPaged: (paged) {
+          if (!mounted) return;
+          _mutate((n) => n.copyWith(paged: paged), immediate: true);
+        },
+        onUseHomeBackground: () {
+          if (!mounted) return;
+          final current = _note;
+          final bgId = current?.backgroundImageId;
+          final bg = current != null && bgId != null
+              ? current.attachments.where((a) => a.id == bgId).firstOrNull
+              : null;
+          _mutate(
+            (n) => n.copyWith(
+              theme: '',
+              color: NoteColor.none,
+              clearCustomColor: true,
+              clearBackgroundImage: true,
+              attachments: bg == null
+                  ? null
+                  : [
+                      for (final a in n.attachments)
+                        if (a.id != bg.id) a,
+                    ],
+            ),
+            immediate: true,
+          );
+        },
+      ),
     );
-    if (action == null || !mounted) return;
-    final target = switch (action) {
-      NoteAppearanceAction.color => 'bg',
-      NoteAppearanceAction.frame => 'frame',
-      NoteAppearanceAction.image => 'image',
-      NoteAppearanceAction.paper => 'paper',
-    };
-    if (target == 'paper') {
-      await _pickPaper();
-      return;
-    }
-    if (target == 'image') {
-      await _showBackgroundSheet();
-      return;
-    }
-    await _pickNoteColor(frame: target == 'frame');
   }
 
   /// Zemin ya da çerçeve rengi seçici. Not ⋮ → Çerçeve de buraya gelir.
@@ -224,9 +285,8 @@ extension _EditorAppearance on _NoteEditorScreenState {
                           children: [
                             Text(
                               l10n.lineSpacing,
-                              style: AppText.of(theme).label.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
+                              style: AppText.of(theme).label
+                                  .copyWith(color: scheme.onSurfaceVariant),
                             ),
                             const SizedBox(height: AppSpace.s),
                             SegmentedButton<double>(
@@ -312,306 +372,6 @@ extension _EditorAppearance on _NoteEditorScreenState {
     return null;
   }
 
-  /// Zemin görseli sayfası: hazır renkli zeminler + galeriden seç / kırp /
-  /// görünürlük / kaldır.
-  ///
-  /// Kullanıcı isteği: "not zeminini seçilen bir fotoğraf yapma seçeneği
-  /// olsun; koyarken kesme, üzerine yazı yazma, şeffaflığını değiştirme
-  /// olsun ve sonradan da ayarlanabilsin" + "nota uygun renkli canlılık katacak
-  /// yeni arka plan görselleri".
-  Future<void> _showBackgroundSheet() async {
-    final note = _note;
-    if (note == null) return;
-    _dismissKeyboard();
-    final l10n = context.l10n;
-    await showAppSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, setSheetState) {
-          final current = _note;
-          if (current == null) return const SizedBox.shrink();
-          final theme = Theme.of(sheetContext);
-          final scheme = theme.colorScheme;
-          final tokens = AppTokens.fromTheme(theme);
-          final text = AppText.of(theme);
-          final image = current.backgroundImageId == null
-              ? null
-              : current.attachments
-                    .where((a) => a.id == current.backgroundImageId)
-                    .firstOrNull;
-          final activePresetId = image == null
-              ? null
-              : DashboardWallpapers.all
-                    .where((w) => image.fileName == 'wallpaper_${w.id}.jpg')
-                    .map((w) => w.id)
-                    .firstOrNull;
-          return SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpace.l,
-                0,
-                AppSpace.l,
-                AppSpace.l,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SheetHeader(
-                    title: l10n.noteBackgroundImage,
-                    padding: EdgeInsets.zero,
-                    actions: [
-                      if (image != null)
-                        TextButton.icon(
-                          onPressed: () {
-                            Navigator.pop(sheetContext);
-                            _removeBackgroundImage(image);
-                          },
-                          icon: const Icon(
-                            Icons.hide_image_outlined,
-                            size: AppIconSize.s,
-                          ),
-                          label: Text(l10n.removeBackgroundImage),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpace.s),
-                  if (image != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(AppSpace.m),
-                      decoration: AppSurface.sheetCard(theme),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(AppRadius.m),
-                            child: SizedBox(
-                              height: 112,
-                              width: double.infinity,
-                              child: _backgroundProvider(image) == null
-                                  ? const SizedBox.shrink()
-                                  : Image(
-                                      image: _backgroundProvider(image)!,
-                                      fit: BoxFit.cover,
-                                      opacity: AlwaysStoppedAnimation(
-                                        current.backgroundOpacity
-                                            .clamp(0.05, 1)
-                                            .toDouble(),
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpace.s),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.opacity,
-                                size: AppIconSize.s,
-                                color: scheme.primary,
-                              ),
-                              Expanded(
-                                child: Slider(
-                                  value: current.backgroundOpacity.clamp(
-                                    0.05,
-                                    1,
-                                  ),
-                                  min: 0.05,
-                                  onChanged: (value) {
-                                    _mutate(
-                                      (n) => n.copyWith(
-                                        backgroundOpacity: value,
-                                      ),
-                                    );
-                                    setSheetState(() {});
-                                  },
-                                  onChangeEnd: (value) => _mutate(
-                                    (n) => n.copyWith(backgroundOpacity: value),
-                                    immediate: true,
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpace.s,
-                                  vertical: AppSpace.xxs,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: tokens.resolvedTintSoft(scheme),
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.s,
-                                  ),
-                                ),
-                                child: Text(
-                                  '%${(current.backgroundOpacity * 100).round()}',
-                                  style: text.badge.copyWith(
-                                    color: scheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpace.m),
-                  ],
-                  // Hazır renkli arka plan galerisi.
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSpace.m),
-                    decoration: AppSurface.sheetCard(theme),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.dashboardBackgroundGallery,
-                          style: text.section,
-                        ),
-                        const SizedBox(height: AppSpace.s),
-                        SizedBox(
-                          height: 122,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: DashboardWallpapers.all.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(width: AppSpace.s),
-                            itemBuilder: (_, i) {
-                              final w = DashboardWallpapers.all[i];
-                              final selected = activePresetId == w.id;
-                              return PressScale(
-                                child: GestureDetector(
-                                  key: ValueKey('note-wallpaper-${w.id}'),
-                                  onTap: () async {
-                                    await _applyPresetWallpaper(w);
-                                    if (sheetContext.mounted) {
-                                      setSheetState(() {});
-                                    }
-                                  },
-                                  child: SizedBox(
-                                    width: 74,
-                                    child: Column(
-                                      children: [
-                                        Container(
-                                          height: 92,
-                                          padding: const EdgeInsets.all(
-                                            AppSpace.xxs,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              AppRadius.m,
-                                            ),
-                                            border: Border.all(
-                                              color: selected
-                                                  ? scheme.primary
-                                                  : tokens.hairline,
-                                              width: selected ? 2.5 : 1,
-                                            ),
-                                          ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              AppRadius.s,
-                                            ),
-                                            child: Stack(
-                                              fit: StackFit.expand,
-                                              children: [
-                                                Image.asset(
-                                                  w.asset,
-                                                  fit: BoxFit.cover,
-                                                  cacheWidth: 240,
-                                                ),
-                                                if (selected)
-                                                  Positioned(
-                                                    right: AppSpace.xs,
-                                                    top: AppSpace.xs,
-                                                    child: CircleAvatar(
-                                                      radius: 9,
-                                                      backgroundColor:
-                                                          scheme.primary,
-                                                      child: Icon(
-                                                        Icons.check,
-                                                        size:
-                                                            AppIconSize.xs - 3,
-                                                        color: scheme.onPrimary,
-                                                      ),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: AppSpace.xs),
-                                        Text(
-                                          w.label(l10n),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: text.meta.copyWith(
-                                            fontWeight: selected
-                                                ? AppWeight.strong
-                                                : AppWeight.medium,
-                                            color: selected
-                                                ? scheme.primary
-                                                : scheme.onSurfaceVariant,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpace.m),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.tonalIcon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: scheme.primaryContainer,
-                            foregroundColor: scheme.onPrimaryContainer,
-                          ),
-                          onPressed: () async {
-                            Navigator.pop(sheetContext);
-                            await _pickBackgroundImage();
-                          },
-                          icon: const Icon(
-                            Icons.image_outlined,
-                            size: AppIconSize.s,
-                          ),
-                          label: Text(
-                            image == null
-                                ? l10n.dashboardBackgroundFromDevice
-                                : l10n.changeBackgroundImage,
-                          ),
-                        ),
-                      ),
-                      if (image != null) ...[
-                        const SizedBox(width: AppSpace.s),
-                        OutlinedButton.icon(
-                          onPressed: () async {
-                            Navigator.pop(sheetContext);
-                            await _cropBackground(image);
-                          },
-                          icon: const Icon(Icons.crop, size: AppIconSize.s),
-                          label: Text(l10n.crop),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   /// Hazır renkli arka planı notun zemin görseli olarak ekler.
   Future<void> _applyPresetWallpaper(DashboardWallpaper wallpaper) async {
     final repo = _attachments;
@@ -691,7 +451,11 @@ extension _EditorAppearance on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
+      if (mounted) {
+        _showSnack(
+          context.l10n.attachmentFailed(friendlyError(context.l10n, e)),
+        );
+      }
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/app_sheet.dart';
@@ -25,6 +26,7 @@ enum AttachmentAction {
   addText,
   rotate,
   caption,
+  rename,
   transcribe,
   extractText,
   videoToNote,
@@ -51,6 +53,7 @@ class AttachmentCaps {
     this.addText = false,
     this.rotate = false,
     this.caption = false,
+    this.rename = false,
     this.transcribe = false,
     this.extractText = false,
     this.videoToNote = false,
@@ -77,6 +80,7 @@ class AttachmentCaps {
 
   /// Görsele açıklama (yüzende çubukta ayrı düğme).
   final bool caption;
+  final bool rename;
   final bool transcribe;
   final bool extractText;
   final bool videoToNote;
@@ -118,6 +122,7 @@ List<AttachmentAction> attachmentActionsFor(
         a.kind == AttachmentKind.image &&
         surface != AttachmentSurface.floating)
       AttachmentAction.caption,
+    if (caps.rename) AttachmentAction.rename,
     if (caps.transcribe) AttachmentAction.transcribe,
     if (caps.extractText && a.kind == AttachmentKind.image)
       AttachmentAction.extractText,
@@ -160,6 +165,10 @@ List<AttachmentAction> attachmentActionsFor(
     AttachmentAction.caption => (
       label: l10n.imageCaptionAdd,
       icon: Icons.short_text_rounded,
+    ),
+    AttachmentAction.rename => (
+      label: l10n.attachmentRename,
+      icon: Icons.drive_file_rename_outline,
     ),
     AttachmentAction.transcribe => (
       label: l10n.transcriptAction,
@@ -361,4 +370,113 @@ class AttachmentCaptionBand extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Dosya uzantısını (ör. `.pdf`, `.png`) kullanıcı yeni bir uzantı yazmadığı
+/// sürece koruyarak yeni ek adını üretir.
+String resolveRenamedAttachmentName(String input, String currentName) {
+  final trimmed = input.trim();
+  if (trimmed.isEmpty) return '';
+  final dot = currentName.lastIndexOf('.');
+  final hasExt = dot > 0 && dot < currentName.length - 1;
+  if (!trimmed.contains('.') && hasExt) {
+    final ext = currentName.substring(dot);
+    if (ext.length <= 8 && !ext.contains(' ')) {
+      return '$trimmed$ext';
+    }
+  }
+  return trimmed;
+}
+
+/// Ek dosyasının adını düzenler; uzantıyı (örn. `.pdf`) korur.
+Future<String?> showRenameAttachmentSheet(
+  BuildContext context, {
+  required String currentName,
+}) {
+  final dot = currentName.lastIndexOf('.');
+  final hasExt =
+      dot > 0 &&
+      dot < currentName.length - 1 &&
+      currentName.length - dot <= 8 &&
+      !currentName.substring(dot).contains(' ');
+  final base = hasExt ? currentName.substring(0, dot) : currentName;
+  final ext = hasExt ? currentName.substring(dot) : '';
+  return showDialog<String>(
+    context: context,
+    builder: (_) => _RenameAttachmentDialog(
+      initialBase: base,
+      ext: ext,
+      currentName: currentName,
+    ),
+  );
+}
+
+class _RenameAttachmentDialog extends StatefulWidget {
+  const _RenameAttachmentDialog({
+    required this.initialBase,
+    required this.ext,
+    required this.currentName,
+  });
+
+  final String initialBase;
+  final String ext;
+  final String currentName;
+
+  @override
+  State<_RenameAttachmentDialog> createState() =>
+      _RenameAttachmentDialogState();
+}
+
+class _RenameAttachmentDialogState extends State<_RenameAttachmentDialog> {
+  late final TextEditingController _ctl =
+      TextEditingController(text: widget.initialBase)
+        ..selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: widget.initialBase.length,
+        );
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final next = resolveRenamedAttachmentName(_ctl.text, widget.currentName);
+    if (next.isEmpty) return;
+    Navigator.pop(context, next);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.attachmentRename),
+      content: TextField(
+        key: const ValueKey('attachment-rename-input'),
+        controller: _ctl,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+        decoration: InputDecoration(
+          labelText: l10n.attachmentRenameHint,
+          suffixText: widget.ext.isEmpty ? null : widget.ext,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          key: const ValueKey('attachment-rename-save'),
+          onPressed: _submit,
+          child: Text(l10n.ok),
+        ),
+      ],
+    );
+  }
 }

@@ -1,6 +1,9 @@
+import 'dart:async' show unawaited;
+import 'dart:io';
+
+import '../../../../app/theme/app_design.dart';
 import '../../../../app/theme/fixed_colors.dart';
 import '../../../../core/utils/markdown.dart';
-import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
@@ -34,6 +37,9 @@ import '../note_card_media.dart' show CardMediaTile, PdfFirstPageThumb;
 import '../../../../core/widgets/smooth_routes.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/friendly_error.dart';
+import '../../../../core/utils/format_bytes.dart';
+import '../../../../core/widgets/horizontal_wheel_strip.dart';
+import '../../../../core/widgets/sheet_header.dart';
 import 'attachment_clipboard.dart' show shareAttachment;
 import '../../../../core/haptics.dart';
 import '../../../../app/theme/app_tokens.dart';
@@ -53,6 +59,7 @@ class AttachmentStrip extends StatelessWidget {
     required this.expanded,
     required this.onToggle,
     this.onChanged,
+    this.onRename,
     this.onCopy,
     this.onInsertTag,
     this.viewOf,
@@ -114,6 +121,9 @@ class AttachmentStrip extends StatelessWidget {
   /// görüntülenir.
   final ValueChanged<Attachment>? onChanged;
 
+  /// Ek adını düzenler; null ise yeniden adlandırma gösterilmez.
+  final ValueChanged<Attachment>? onRename;
+
   Widget _stripTile(int index) => _AttachmentTile(
     key: ValueKey('strip-${attachments[index].id}'),
     attachment: attachments[index],
@@ -125,6 +135,7 @@ class AttachmentStrip extends StatelessWidget {
     ],
     onRemove: () => onRemove(attachments[index]),
     onChanged: onChanged,
+    onRename: onRename,
     onCopy: onCopy,
     onInsertTag: onInsertTag,
     view: viewOf?.call(attachments[index]),
@@ -155,19 +166,49 @@ class AttachmentStrip extends StatelessWidget {
         Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.5)),
         SizedBox(
           height: _AttachmentTile.height + 12,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsetsDirectional.fromSTEB(6, 6, 16, 6),
-            itemCount: attachments.length + 1,
-            separatorBuilder: (_, index) =>
-                SizedBox(width: index == 0 ? 6 : 10),
-            // İLK öğe GİZLE tutamağı (kullanıcı bulgusu 2026-10-17: "alttaki
-            // ek alanı göster gizle yapılamıyor"): şeridi kapatmanın yolu
-            // yalnız alt çubuktaki ataç düğmesiydi; o düğme dar ekranda
-            // kaydırma dışında kalınca ya da gizlenince şerit kapanmıyordu.
-            itemBuilder: (context, i) => i == 0
-                ? _CollapseHandle(count: attachments.length, onTap: onToggle)
-                : _stripTile(i - 1),
+          child: HorizontalScrollStrip(
+            builder: (context, controller) => ListView.separated(
+              controller: controller,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsetsDirectional.fromSTEB(6, 6, 16, 6),
+              itemCount: attachments.length + 1,
+              separatorBuilder: (_, index) =>
+                  SizedBox(width: index == 0 ? 6 : 10),
+              // İLK öğe GİZLE tutamağı (kullanıcı bulgusu 2026-10-17: "alttaki
+              // ek alanı göster gizle yapılamıyor") + >=2 ekte "Tümü" listesi.
+              itemBuilder: (context, i) => i == 0
+                  ? (attachments.length < 2
+                        ? _CollapseHandle(
+                            count: attachments.length,
+                            onTap: onToggle,
+                          )
+                        : Column(
+                            children: [
+                              Expanded(
+                                child: _CollapseHandle(
+                                  count: attachments.length,
+                                  onTap: onToggle,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpace.xs),
+                              _AllAttachmentsChip(
+                                onTap: () => unawaited(
+                                  showAllAttachmentsSheet(
+                                    context,
+                                    attachments: attachments,
+                                    onRename: onRename,
+                                    onRemove: onRemove,
+                                    onSetView: onSetView,
+                                    onCopy: onCopy,
+                                    onChanged: onChanged,
+                                    onTranscribe: onTranscribe,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ))
+                  : _stripTile(i - 1),
+            ),
           ),
         ),
       ],
@@ -363,7 +404,10 @@ class _AudioTileState extends State<_AudioTile> {
       }
     } catch (e) {
       if (mounted) {
-        showAppMessage(context, context.l10n.genericError(friendlyError(context.l10n, e)));
+        showAppMessage(
+          context,
+          context.l10n.genericError(friendlyError(context.l10n, e)),
+        );
       }
     }
   }
@@ -412,9 +456,8 @@ class _AudioTileState extends State<_AudioTile> {
             widget.attachment.fileName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -429,6 +472,7 @@ class _AttachmentTile extends ConsumerWidget {
     required this.onRemove,
     this.gallery = const [],
     this.onChanged,
+    this.onRename,
     this.onCopy,
     this.onInsertTag,
     this.view,
@@ -457,6 +501,7 @@ class _AttachmentTile extends ConsumerWidget {
   final List<Attachment> gallery;
   final VoidCallback onRemove;
   final ValueChanged<Attachment>? onChanged;
+  final ValueChanged<Attachment>? onRename;
   final ValueChanged<Attachment>? onCopy;
   final ValueChanged<Attachment>? onInsertTag;
   final Future<void> Function(Attachment)? onVideoToNote;
@@ -486,7 +531,9 @@ class _AttachmentTile extends ConsumerWidget {
       return;
     }
     // Paylaşılan notta henüz buluta çıkmamış ek: ekleyenin cihazı yükleyecek.
-    if (foreign && !_hasLocal && !attachment.isUploaded &&
+    if (foreign &&
+        !_hasLocal &&
+        !attachment.isUploaded &&
         !attachment.isWebVideo) {
       showAppMessage(context, context.l10n.attachmentWaitingOwner);
       return;
@@ -505,9 +552,8 @@ class _AttachmentTile extends ConsumerWidget {
       return;
     }
     if (!_hasLocal && !attachment.isUploaded && !attachment.isWebVideo) {
-      ScaffoldMessenger.of(
-        context,
-      ).showMessage(context.l10n.attachmentNotSynced);
+      ScaffoldMessenger.of(context)
+          .showMessage(context.l10n.attachmentNotSynced);
       return;
     }
     Navigator.of(context).push(
@@ -858,9 +904,9 @@ class _AttachmentTile extends ConsumerWidget {
                           child: AttachmentViewSwitch(
                             current: current,
                             available: views,
-                            onChanged: (v) => Navigator.of(
-                              sheetContext,
-                            ).pop('view:${v.name}'),
+                            onChanged: (v) =>
+                                Navigator.of(sheetContext)
+                                    .pop('view:${v.name}'),
                             // Yazıya göm: "Metne ekle" ile aynı iş, görünüm
                             // satırında tek dokunuşla (2026-11-01).
                             onEmbed: onInsertTag == null
@@ -879,6 +925,7 @@ class _AttachmentTile extends ConsumerWidget {
                     AttachmentSurface.strip,
                     AttachmentCaps(
                       addText: onChanged != null,
+                      rename: onRename != null,
                       transcribe: onTranscribe != null && _canTranscribe,
                       videoToNote: onVideoToNote != null,
                       copy: onCopy != null,
@@ -912,6 +959,8 @@ class _AttachmentTile extends ConsumerWidget {
         _open(context, ref);
       case AttachmentAction.addText:
         _open(context, ref, null, true);
+      case AttachmentAction.rename:
+        onRename?.call(attachment);
       case AttachmentAction.copy || AttachmentAction.copyLink:
         onCopy?.call(attachment);
       case AttachmentAction.share:
@@ -1128,4 +1177,197 @@ String formatUploadPercent(BuildContext context, double fraction) {
   } catch (_) {
     return '${(whole * 100).round()}%';
   }
+}
+
+class _AllAttachmentsChip extends StatelessWidget {
+  const _AllAttachmentsChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final text = AppText.of(theme);
+    return Material(
+      key: const ValueKey('strip-all-attachments'),
+      color: scheme.primaryContainer,
+      borderRadius: BorderRadius.circular(AppRadius.m),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.m),
+        onTap: () {
+          AppHaptics.tick();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.xs,
+            vertical: AppSpace.xxs,
+          ),
+          child: Text(
+            context.l10n.attachmentsAllButton,
+            maxLines: 1,
+            style: text.badge.copyWith(color: scheme.onPrimaryContainer),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Nottaki tüm ekleri tek listede yönetme levhası (aç, yeniden adlandır, paylaş, sil).
+Future<void> showAllAttachmentsSheet(
+  BuildContext context, {
+  required List<Attachment> attachments,
+  ValueChanged<Attachment>? onRename,
+  ValueChanged<Attachment>? onRemove,
+  void Function(Attachment, AttachmentView)? onSetView,
+  ValueChanged<Attachment>? onCopy,
+  ValueChanged<Attachment>? onChanged,
+  ValueChanged<Attachment>? onTranscribe,
+}) {
+  return showAppSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (sheetContext) {
+      final l10n = sheetContext.l10n;
+      final theme = Theme.of(sheetContext);
+      final scheme = theme.colorScheme;
+      final text = AppText.of(theme);
+      return Consumer(
+        builder: (context, ref, _) => SafeArea(
+          top: false,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.72,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SheetHeader(
+                  title: l10n.attachmentsAllTitle(attachments.length),
+                ),
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.l,
+                      0,
+                      AppSpace.l,
+                      AppSpace.l,
+                    ),
+                    itemCount: attachments.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpace.s),
+                    itemBuilder: (_, i) {
+                      final a = attachments[i];
+                      final icon = switch (a.kind) {
+                        AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
+                        AttachmentKind.image => Icons.image_outlined,
+                        AttachmentKind.video => Icons.play_circle_outline,
+                        AttachmentKind.audio => Icons.audiotrack_outlined,
+                        AttachmentKind.slide => Icons.slideshow_outlined,
+                        AttachmentKind.text => Icons.description_outlined,
+                        AttachmentKind.unknown => Icons.attach_file_outlined,
+                      };
+                      final sub = a.sizeBytes > 0
+                          ? formatBytes(a.sizeBytes)
+                          : a.mimeType;
+                      return Container(
+                        decoration: AppSurface.sheetCard(theme),
+                        clipBehavior: Clip.antiAlias,
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: ListTile(
+                            key: ValueKey('all-attachments-item-${a.id}'),
+                            leading: Icon(
+                              icon,
+                              size: AppIconSize.m,
+                              color: scheme.primary,
+                            ),
+                            title: Text(
+                              a.fileName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.rowTitle,
+                            ),
+                            subtitle: sub.isEmpty
+                                ? null
+                                : Text(sub, style: text.meta),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (onRename != null)
+                                  IconButton(
+                                    key: ValueKey(
+                                      'all-attachments-rename-${a.id}',
+                                    ),
+                                    tooltip: l10n.attachmentRename,
+                                    icon: const Icon(
+                                      Icons.drive_file_rename_outline,
+                                      size: AppIconSize.s,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(sheetContext);
+                                      onRename(a);
+                                    },
+                                  ),
+                                IconButton(
+                                  key: ValueKey(
+                                    'all-attachments-share-${a.id}',
+                                  ),
+                                  tooltip: l10n.share,
+                                  icon: const Icon(
+                                    Icons.share_outlined,
+                                    size: AppIconSize.s,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(sheetContext);
+                                    unawaited(shareAttachment(context, ref, a));
+                                  },
+                                ),
+                                if (onRemove != null)
+                                  IconButton(
+                                    key: ValueKey(
+                                      'all-attachments-delete-${a.id}',
+                                    ),
+                                    tooltip: l10n.removeAttachment,
+                                    icon: Icon(
+                                      Icons.delete_outline,
+                                      size: AppIconSize.s,
+                                      color: scheme.error,
+                                    ),
+                                    onPressed: () {
+                                      Navigator.pop(sheetContext);
+                                      onRemove(a);
+                                    },
+                                  ),
+                              ],
+                            ),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              _AttachmentTile(
+                                attachment: a,
+                                onRemove: () => onRemove?.call(a),
+                                onChanged: onChanged,
+                                onCopy: onCopy,
+                                onRename: onRename,
+                                onSetView: onSetView,
+                                onTranscribe: onTranscribe,
+                              )._open(context, ref);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

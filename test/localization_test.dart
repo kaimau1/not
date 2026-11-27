@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/language_names.dart';
-import 'package:notlar/core/utils/speech_output.dart' show SpeechOutputController;
+import 'package:notlar/core/utils/speech_output.dart'
+    show SpeechOutputController;
 import 'package:notlar/app/app.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -24,10 +25,9 @@ void main() {
 
   test('en.arb tr.arb ile aynı anahtarları taşır', () {
     Set<String> keys(String lang) => {
-      for (final k
-          in (jsonDecode(File('lib/l10n/app_$lang.arb').readAsStringSync())
-                  as Map<String, dynamic>)
-              .keys)
+      for (final k in (jsonDecode(
+        File('lib/l10n/app_$lang.arb').readAsStringSync(),
+      ) as Map<String, dynamic>).keys)
         if (!k.startsWith('@')) k,
     };
     expect(keys('en'), keys('tr'));
@@ -84,6 +84,17 @@ void main() {
       expect(l.settings, word);
       expect(l.selectedCount(3), contains('3'));
       expect(l.notesDuplicatedCount(2), contains('2'));
+    }
+  });
+
+  test('Android Gradle beş pazar dilinin tamamını tutar', () {
+    final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+    for (final code in ['"tr"', '"en"', '"ar"', '"id"', '"ms"']) {
+      expect(
+        gradle,
+        contains(code),
+        reason: 'resourceConfigurations $code içermeli',
+      );
     }
   });
 }

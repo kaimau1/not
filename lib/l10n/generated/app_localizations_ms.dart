@@ -4084,7 +4084,7 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
-  String get personalizeTitle => 'Peribadikan';
+  String get personalizeTitle => 'Susun atur antara muka';
 
   @override
   String get personalizeInfo =>
@@ -9463,4 +9463,105 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get quickDropUrgentHint => '!segera';
+
+  @override
+  String get brightnessModeAuto => 'Automatik';
+
+  @override
+  String get brightnessModeLight => 'Cerah';
+
+  @override
+  String get brightnessModeDark => 'Gelap';
+
+  @override
+  String brightnessModeToggleTooltip(String mode) {
+    return 'Mod penampilan: $mode';
+  }
+
+  @override
+  String get appearanceTabTheme => 'Tema';
+
+  @override
+  String get appearanceTabBackground => 'Latar';
+
+  @override
+  String get appearanceTabLayout => 'Susun atur';
+
+  @override
+  String get appearanceOpenStudio => 'Latar & penampilan';
+
+  @override
+  String get applyHomeBackgroundToNotes => 'Guna pada nota juga';
+
+  @override
+  String get applyHomeBackgroundToNotesInfo =>
+      'Nota tanpa latar tersuai akan menggunakan latar ini.';
+
+  @override
+  String get noteUseHomeBackground => 'Latar utama';
+
+  @override
+  String get bgSubTabWallpapers => 'Gambar';
+
+  @override
+  String get bgSubTabIllustrated => 'Ilustrasi';
+
+  @override
+  String get bgSubTabColors => 'Warna';
+
+  @override
+  String get bgSubTabPatterns => 'Corak';
+
+  @override
+  String get bgSubTabFrame => 'Bingkai';
+
+  @override
+  String get bgSubTabPaper => 'Kertas';
+
+  @override
+  String get personalizeGroupEditor => 'Bar editor nota';
+
+  @override
+  String get personalizeGroupAddAttach => 'Tambah & lampiran';
+
+  @override
+  String get personalizeEditBars => 'Sesuaikan bar editor';
+
+  @override
+  String get attachmentRename => 'Namakan semula';
+
+  @override
+  String get attachmentRenameHint => 'Nama lampiran';
+
+  @override
+  String attachmentsAllTitle(int count) {
+    return 'Semua lampiran ($count)';
+  }
+
+  @override
+  String get attachmentsAllButton => 'Semua';
+
+  @override
+  String get attachmentRetryUpload => 'Cuba lagi';
+
+  @override
+  String get pinnedCollapse => 'Kecilkan';
+
+  @override
+  String get pinnedExpand => 'Besarkan';
+
+  @override
+  String get pinnedHideKeyboard => 'Sembunyikan papan kekunci';
+
+  @override
+  String get floatingSizeSmall => 'Kecil';
+
+  @override
+  String get floatingSizeMedium => 'Sederhana';
+
+  @override
+  String get floatingSizeLarge => 'Penuh';
+
+  @override
+  String get floatingAlignCycle => 'Penjajaran mendatar';
 }

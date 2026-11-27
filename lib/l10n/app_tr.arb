@@ -1871,7 +1871,7 @@
       }
     }
   },
-  "personalizeTitle": "Kişiselleştir",
+  "personalizeTitle": "Arayüz düzeni",
   "personalizeInfo": "Hangi alan ve düğmeler görünsün, eklentiler",
   "customizeStartTitle": "Ekranda düzenle",
   "customizeStartInfo": "Düğme ve alanlara dokunarak gizle ya da göster; bitince Bitti'ye bas.",
@@ -4881,5 +4881,51 @@
   "quickListGenericHint": "Madde yaz ya da söyle…",
   "quickDropKeepOpenShort": "Açık tut",
   "quickDropTagHint": "#etiket",
-  "quickDropUrgentHint": "!acil"
+  "quickDropUrgentHint": "!acil",
+  "brightnessModeAuto": "Otomatik",
+  "brightnessModeLight": "Açık",
+  "brightnessModeDark": "Koyu",
+  "brightnessModeToggleTooltip": "Görünüm kipi: {mode}",
+  "@brightnessModeToggleTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "appearanceTabTheme": "Tema",
+  "appearanceTabBackground": "Zemin",
+  "appearanceTabLayout": "Düzen",
+  "appearanceOpenStudio": "Zeminler ve görünüm",
+  "applyHomeBackgroundToNotes": "Notlara da uygula",
+  "applyHomeBackgroundToNotesInfo": "Özel zemini olmayan notlar bu zemini kullanır.",
+  "noteUseHomeBackground": "Ana ekran zemini",
+  "bgSubTabWallpapers": "Görseller",
+  "bgSubTabIllustrated": "Çizimli",
+  "bgSubTabColors": "Renkler",
+  "bgSubTabPatterns": "Desenler",
+  "bgSubTabFrame": "Çerçeve",
+  "bgSubTabPaper": "Defter",
+  "personalizeGroupEditor": "Not editörü çubukları",
+  "personalizeGroupAddAttach": "Ekleme ve ekler",
+  "personalizeEditBars": "Not çubuklarını düzenle",
+  "attachmentRename": "Yeniden adlandır",
+  "attachmentRenameHint": "Ek adı",
+  "attachmentsAllTitle": "Tüm ekler ({count})",
+  "@attachmentsAllTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "attachmentsAllButton": "Tümü",
+  "attachmentRetryUpload": "Yeniden dene",
+  "pinnedCollapse": "Küçült",
+  "pinnedExpand": "Genişlet",
+  "pinnedHideKeyboard": "Klavyeyi gizle",
+  "floatingSizeSmall": "Küçük",
+  "floatingSizeMedium": "Orta",
+  "floatingSizeLarge": "Tam",
+  "floatingAlignCycle": "Yatay hiza"
 }

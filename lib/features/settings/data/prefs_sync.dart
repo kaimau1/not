@@ -28,13 +28,11 @@ import '../settings_providers.dart';
 /// yazılır. Cihazın İLK eşitlemesinde bulut kazanır — yeni kurulan web'in
 /// varsayılanları telefonun ayarlarını ezmesin.
 const kSyncedPrefKeys = <String>[
-  'theme_mode',
+  // Tema, koyu kip, zamanlama ve ana ekran zemini bilerek CİHAZA ÖZGÜ kalır:
+  // Web ve Android birbirinin temasını/zeminini ezmez.
   'app_locale',
   'font_scale',
   'app_font',
-  'dark_schedule_enabled',
-  'dark_schedule_start',
-  'dark_schedule_end',
   'model_tts',
   'tts_gemini_voice',
   'auto_title',

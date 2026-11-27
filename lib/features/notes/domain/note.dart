@@ -86,11 +86,7 @@ class NoteTagLink {
 /// Notun bir SAYFASI (bkz. [Note.textPages]). Etkin sayfanın girdisi boştur;
 /// içeriği notun kendi gövdesinde/maddelerindedir.
 class NoteTextPage {
-  const NoteTextPage({
-    required this.id,
-    this.body = '',
-    this.items = const [],
-  });
+  const NoteTextPage({required this.id, this.body = '', this.items = const []});
 
   /// '' = ilk sayfa (eski, bölümsüz görseller ona aittir).
   final String id;
@@ -256,12 +252,23 @@ class Note {
     'pinned', 'starred', 'urgent', 'cardMediaHidden', 'locked',
     'fontFamily', 'fontScale', 'textOpacity', 'titleFontFamily',
     'titleFontScale', 'titleTextOpacity', 'backgroundImageId',
-    'backgroundOpacity', 'theme', 'listColumns', 'listKind', 'classicDocument', 'archivePages',
+    'backgroundOpacity',
+    'theme',
+    'listColumns',
+    'listKind',
+    'classicDocument',
+    'archivePages',
     'archivePaper', 'lineSpacing', 'archiveGeneralName', 'paged', 'heavyRef',
     'tagLinks',
     'textPages',
     'activePage', 'orderIndex', 'createdAt', 'updatedAt', 'deletedAt',
-    'archivedAt', 'expiresAt', 'reminderAt', 'reminderRepeat', 'reminderLevel', 'cards', 'aiSummary',
+    'archivedAt',
+    'expiresAt',
+    'reminderAt',
+    'reminderRepeat',
+    'reminderLevel',
+    'cards',
+    'aiSummary',
     'schema',
     // Eşitleme damgası (S1): her yazımda yeniden konur, extras'la eski
     // değeri geri yazılmasın.
@@ -604,12 +611,25 @@ class Note {
       // Diğer sayfalarda yazı varsa not boş değil (etkin sayfa boş olsa da).
       textPages.every(
         (p) =>
-            p.body.trim().isEmpty && p.items.every((i) => i.text.trim().isEmpty),
+            p.body.trim().isEmpty &&
+            p.items.every((i) => i.text.trim().isEmpty),
       ) &&
       attachments.isEmpty &&
       pageInk.isEmpty &&
       !hasPageInk &&
       reminderAt == null;
+
+  static const String plainThemeSentinel = 'plain';
+
+  /// Kullanıcının kendi notuna açıkça zemin/renk/tema seçip seçmediği.
+  bool get hasExplicitBackground =>
+      backgroundImageId != null ||
+      customColor != null ||
+      color != NoteColor.none ||
+      theme.isNotEmpty;
+
+  /// Kullanıcı ana ekran zeminini devralmak yerine notu bilerek düz bıraktı.
+  bool get isExplicitlyPlain => theme == plainThemeSentinel;
 
   /// Kullanıcının EK saydığı dosyalar: zemin görseli ek DEĞİL (notun arkasında
   /// duvar kâğıdı olarak durur). Kart, dışa aktarma ve PDF zaten böyle
@@ -891,75 +911,75 @@ class Note {
           }
         : baseExtras;
     return Note(
-    id: id,
-    type: type ?? this.type,
-    title: title ?? this.title,
-    body: body ?? this.body,
-    items: items ?? this.items,
-    pageNotes: pageNotes ?? this.pageNotes,
-    attachments: attachments ?? this.attachments,
-    pageInk: pageInk ?? this.pageInk,
-    hasPageInk: pageInk == null ? hasPageInk : pageInk.isNotEmpty,
-    tags: tags ?? this.tags,
-    folderId: clearFolderId ? null : (folderId ?? this.folderId),
-    color: color ?? this.color,
-    frameColor: frameColor ?? this.frameColor,
-    customColor: clearCustomColor ? null : (customColor ?? this.customColor),
-    customFrameColor: clearCustomFrameColor
-        ? null
-        : (customFrameColor ?? this.customFrameColor),
-    pinned: pinned ?? this.pinned,
-    starred: starred ?? this.starred,
-    urgent: urgent ?? this.urgent,
-    cardMediaHidden: cardMediaHidden ?? this.cardMediaHidden,
-    locked: locked ?? this.locked,
-    fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
-    fontScale: fontScale ?? this.fontScale,
-    textOpacity: textOpacity ?? this.textOpacity,
-    titleFontFamily: clearTitleFontFamily
-        ? null
-        : (titleFontFamily ?? this.titleFontFamily),
-    titleFontScale: titleFontScale ?? this.titleFontScale,
-    titleTextOpacity: titleTextOpacity ?? this.titleTextOpacity,
-    backgroundImageId: clearBackgroundImage
-        ? null
-        : (backgroundImageId ?? this.backgroundImageId),
-    backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
-    theme: theme ?? this.theme,
-    listColumns: listColumns ?? this.listColumns,
-    listKind: clearListKind ? null : (listKind ?? this.listKind),
-    classicDocument: classicDocument ?? this.classicDocument,
-    archivePages: archivePages ?? this.archivePages,
-    archivePaper: archivePaper ?? this.archivePaper,
-    lineSpacing: lineSpacing ?? this.lineSpacing,
-    archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
-    paged: paged ?? this.paged,
-    heavyRef: heavyRef ?? this.heavyRef,
-    heavyLoaded: heavyLoaded ?? this.heavyLoaded,
-    tagLinks: tagLinks ?? this.tagLinks,
-    textPages: textPages ?? this.textPages,
-    activePage: activePage ?? this.activePage,
-    orderIndex: orderIndex ?? this.orderIndex,
-    createdAt: createdAt,
-    updatedAt: updatedAt,
-    deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
-    archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
-    expiresAt: clearExpiresAt ? null : (expiresAt ?? this.expiresAt),
-    reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
-    reminderRepeat: clearReminderAt
-        ? ''
-        : (reminderRepeat ?? this.reminderRepeat),
-    reminderLevel: clearReminderAt
-        ? ''
-        : (reminderLevel ?? this.reminderLevel),
-    cards: cards ?? this.cards,
-    aiSummary: aiSummary ?? this.aiSummary,
-    localOnly: localOnly ?? this.localOnly,
-    // Parametresi YOK: "kim yazdı" kaydın bir olgusu, çağıranın seçimi
-    // değil — kopyada da olduğu gibi taşınır (bkz. [updatedBy]).
-    updatedBy: updatedBy,
-    extras: resolvedExtras,
-  );
+      id: id,
+      type: type ?? this.type,
+      title: title ?? this.title,
+      body: body ?? this.body,
+      items: items ?? this.items,
+      pageNotes: pageNotes ?? this.pageNotes,
+      attachments: attachments ?? this.attachments,
+      pageInk: pageInk ?? this.pageInk,
+      hasPageInk: pageInk == null ? hasPageInk : pageInk.isNotEmpty,
+      tags: tags ?? this.tags,
+      folderId: clearFolderId ? null : (folderId ?? this.folderId),
+      color: color ?? this.color,
+      frameColor: frameColor ?? this.frameColor,
+      customColor: clearCustomColor ? null : (customColor ?? this.customColor),
+      customFrameColor: clearCustomFrameColor
+          ? null
+          : (customFrameColor ?? this.customFrameColor),
+      pinned: pinned ?? this.pinned,
+      starred: starred ?? this.starred,
+      urgent: urgent ?? this.urgent,
+      cardMediaHidden: cardMediaHidden ?? this.cardMediaHidden,
+      locked: locked ?? this.locked,
+      fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
+      fontScale: fontScale ?? this.fontScale,
+      textOpacity: textOpacity ?? this.textOpacity,
+      titleFontFamily: clearTitleFontFamily
+          ? null
+          : (titleFontFamily ?? this.titleFontFamily),
+      titleFontScale: titleFontScale ?? this.titleFontScale,
+      titleTextOpacity: titleTextOpacity ?? this.titleTextOpacity,
+      backgroundImageId: clearBackgroundImage
+          ? null
+          : (backgroundImageId ?? this.backgroundImageId),
+      backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
+      theme: theme ?? this.theme,
+      listColumns: listColumns ?? this.listColumns,
+      listKind: clearListKind ? null : (listKind ?? this.listKind),
+      classicDocument: classicDocument ?? this.classicDocument,
+      archivePages: archivePages ?? this.archivePages,
+      archivePaper: archivePaper ?? this.archivePaper,
+      lineSpacing: lineSpacing ?? this.lineSpacing,
+      archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
+      paged: paged ?? this.paged,
+      heavyRef: heavyRef ?? this.heavyRef,
+      heavyLoaded: heavyLoaded ?? this.heavyLoaded,
+      tagLinks: tagLinks ?? this.tagLinks,
+      textPages: textPages ?? this.textPages,
+      activePage: activePage ?? this.activePage,
+      orderIndex: orderIndex ?? this.orderIndex,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
+      archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
+      expiresAt: clearExpiresAt ? null : (expiresAt ?? this.expiresAt),
+      reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
+      reminderRepeat: clearReminderAt
+          ? ''
+          : (reminderRepeat ?? this.reminderRepeat),
+      reminderLevel: clearReminderAt
+          ? ''
+          : (reminderLevel ?? this.reminderLevel),
+      cards: cards ?? this.cards,
+      aiSummary: aiSummary ?? this.aiSummary,
+      localOnly: localOnly ?? this.localOnly,
+      // Parametresi YOK: "kim yazdı" kaydın bir olgusu, çağıranın seçimi
+      // değil — kopyada da olduğu gibi taşınır (bkz. [updatedBy]).
+      updatedBy: updatedBy,
+      extras: resolvedExtras,
+    );
   }
 
   /// Oturumda belleğe yüklenmiş E2EE anahtarıyla (varsa) notun şifreli
@@ -967,7 +987,9 @@ class Note {
   /// yoksa `this` döner.
   Note decryptWithKey(Uint8List? key) {
     final rawEnvelope = extras['e2ee'] as String?;
-    if (rawEnvelope == null || !NoteE2ee.isEncrypted(rawEnvelope) || key == null) {
+    if (rawEnvelope == null ||
+        !NoteE2ee.isEncrypted(rawEnvelope) ||
+        key == null) {
       return this;
     }
     final decrypted = NoteE2ee.decryptNotePayload(
@@ -1025,9 +1047,11 @@ class Note {
     // aslında bir belge notudur; tipi geri yükseltiliyor.
     final storedType = NoteType.fromId(map['type'] as String?);
     final allAttachments = (map['attachments'] as List<dynamic>? ?? const []);
-    final rawPageInk = allAttachments
-        .where((raw) => (raw as Map)['id'] == kPageInkId)
-        .firstOrNull as Map?;
+    final rawPageInk =
+        allAttachments
+                .where((raw) => (raw as Map)['id'] == kPageInkId)
+                .firstOrNull
+            as Map?;
     final rawAttachments = [
       for (final raw in allAttachments)
         if ((raw as Map)['id'] != kPageInkId) raw,
@@ -1048,15 +1072,15 @@ class Note {
     final shouldDecrypt = isLocked || !hasPlainContent;
     final decrypted =
         (shouldDecrypt &&
-                rawEnvelope != null &&
-                NoteE2ee.isEncrypted(rawEnvelope) &&
-                e2eeKey != null)
-            ? NoteE2ee.decryptNotePayload(
-                envelope: rawEnvelope,
-                key: e2eeKey,
-                noteId: id,
-              )
-            : null;
+            rawEnvelope != null &&
+            NoteE2ee.isEncrypted(rawEnvelope) &&
+            e2eeKey != null)
+        ? NoteE2ee.decryptNotePayload(
+            envelope: rawEnvelope,
+            key: e2eeKey,
+            noteId: id,
+          )
+        : null;
     final type = repairNoteType(
       storedType,
       attachmentKinds: [
@@ -1096,10 +1120,7 @@ class Note {
       attachments: [
         for (final raw in rawAttachments)
           // noteId ile: ekin yerel yolu cihazda türetilir, belgeden okunmaz.
-          Attachment.fromMap(
-            Map<String, dynamic>.from(raw),
-            noteId: id,
-          ),
+          Attachment.fromMap(Map<String, dynamic>.from(raw), noteId: id),
       ],
       tags: [
         for (final tag in (map['tags'] as List<dynamic>? ?? const []))
@@ -1163,9 +1184,7 @@ class Note {
           NoteTagLink.fromMap(Map<String, dynamic>.from(raw as Map)),
       ],
       textPages: decrypted != null && decrypted.textPages.isNotEmpty
-          ? [
-              for (final raw in decrypted.textPages) NoteTextPage.fromMap(raw),
-            ]
+          ? [for (final raw in decrypted.textPages) NoteTextPage.fromMap(raw)]
           : [
               for (final raw in rawTextPagesList)
                 NoteTextPage.fromMap(Map<String, dynamic>.from(raw as Map)),
@@ -1232,117 +1251,117 @@ class Note {
           }
         : extras;
     return {
-    // ÖNCE tanınmayan alanlar: bilinen anahtarlar her zaman üstüne yazar.
-    ...cleanExtras,
-    'schema': currentSchema,
-    'type': type.id,
-    'title': title,
-    'body': encryptBody ? '' : body,
-    'items': encryptBody ? const <Map<String, dynamic>>[] : rawItems,
-    if (encryptBody)
-      'e2ee': NoteE2ee.encryptNotePayload(
-        body: body,
-        items: rawItems,
-        key: e2eeKey,
-        noteId: id,
-        textPages: rawTextPages,
-        pageNotes: pageNotes,
-      ),
-    // Yalnız doluysa yazılır: PDF olmayan notların şemasında bu alan hiç
-    // oluşmaz. Dolduğunda anahtarlar tek tek birleşir — merge derin
-    // birleştirdiği için başka cihazın yazdığı BAŞKA sayfanın notu ezilmez.
-    if (pageNotes.isNotEmpty && !encryptBody) 'pageNotes': pageNotes,
-    'attachments': attachmentsField(),
-    'tags': tags,
-    'folderId': folderId,
-    'color': color.id,
-    'frameColor': frameColor.id,
-    // KOŞULSUZ (merge yazımı): hazır renge dönülünce null eski özel rengi
-    // silmeli.
-    'customColor': customColor,
-    'customFrameColor': customFrameColor,
-    'pinned': pinned,
-    'starred': starred,
-    // KOŞULLU (S16 bayt bütçesi): kapatma `NotesRepository.setUrgent`
-    // ile açıkça false yazar — merge yazımı eksik alanı silmez.
-    if (urgent) 'urgent': true,
-    // KOŞULSUZ (merge tuzağı): gizleme geri alınabilmeli.
-    'cardMediaHidden': cardMediaHidden,
-    'locked': locked,
-    // Varsayılandan farklıysa yazılır (S16 bayt bütçesi). MERGE TUZAĞI
-    // (2026-11-22): "Varsayılan"a dönüşte alan haritadan düşer, kayıttaki eski
-    // tip kalırdı — dönüşü `NotesRepository.clearFontFamily` açıkça null yazar.
-    if (fontFamily != null) 'fontFamily': fontFamily,
-    // TUZAK — bu ikisi KOŞULSUZ yazılır. Belgeler `set(..., merge: true)` ile
-    // güncelleniyor: alan haritada yoksa Firestore'daki ESKİ değer olduğu gibi
-    // kalır. Koşullu yazıldıklarında kullanıcı şeffaflığı %100'e (ya da boyutu
-    // %100'e) geri çektiğinde alan haritadan düşüyor, kayıtta eski değer
-    // duruyor ve not yeniden açıldığında ayar geri geliyordu.
-    'fontScale': fontScale,
-    'textOpacity': textOpacity,
-    // Başlık alanları da KOŞULSUZ yazılır (yukarıdaki merge tuzağının aynısı).
-    // Yazı tipi null da yazılır: başlık, gövde başka bir yazı tipindeyken
-    // varsayılana dönebilmeli — koşullu yazılsa eski değer kayıtta kalırdı.
-    'titleFontFamily': titleFontFamily,
-    'titleFontScale': titleFontScale,
-    'titleTextOpacity': titleTextOpacity,
-    // Zemin görseli KALDIRILABİLİR olmalı: merge yazımında alan haritada
-    // yoksa eski değer kalır, bu yüzden null da açıkça yazılır.
-    'backgroundImageId': backgroundImageId,
-    'backgroundOpacity': backgroundOpacity,
-    // KOŞULSUZ (merge tuzağı): temayı kaldırmak '' yazarak kayda geçer.
-    'theme': theme,
-    // HER ZAMAN yazılır (koşullu değil): notlar `set(merge: true)` ile
-    // kaydediliyor, yani atlanmış bir anahtar SİLİNMEZ — koşullu yazılsaydı
-    // iki sütundan tek sütuna dönmek kayda hiç yansımaz ve not her açılışta
-    // yine iki sütunlu gelirdi.
-    'listColumns': listColumns,
-    // KOŞULLU (AL-2, S16 bayt bütçesi): sıradan notlarda hiç yazılmaz.
-    if (listKind != null && listKind!.isNotEmpty) 'listKind': listKind,
-    // HER ZAMAN yazılır (merge tuzağı): balonluya geri dönüş bayrağı
-    // indirebilmeli.
-    'classicDocument': classicDocument,
-    // HER ZAMAN yazılır: son özel sayfayı silmek `set(merge: true)` ile
-    // ancak boş dizi yazılarak kayda geçer.
-    'archivePages': archivePages,
-    // HER ZAMAN yazılır (yukarıdaki merge tuzağı): desen varsayılana
-    // (çizgili) DÖNDÜRÜLEBİLMELİ; koşullu yazılsaydı kayıtta eski desen
-    // kalır ve defter her açılışta yine kareli gelirdi.
-    'archivePaper': archivePaper.id,
-    // KOŞULSUZ (merge yazımı): normale dönünce eski değer kalmasın.
-    'lineSpacing': lineSpacing,
-    // HER ZAMAN yazılır (merge tuzağı): ad SİLİNEBİLMELİ — boş dize
-    // "Genel"e dönmek demek.
-    'archiveGeneralName': archiveGeneralName,
-    'paged': paged,
-    'heavyRef': heavyRef,
-    // HER ZAMAN yazılır (`archivePages` ile aynı gerekçe: merge yazımda
-    // atlanan anahtar silinmez, son bağı kaldırmak kayda yansımazdı).
-    'tagLinks': [for (final l in tagLinks) l.toMap()],
-    // HER ZAMAN yazılır (merge yazımda eksik alan "değişmedi" sayılır —
-    // son sayfa silinince liste boşalmalı).
-    'textPages': encryptBody ? const <Map<String, dynamic>>[] : rawTextPages,
-    'activePage': activePage,
-    'orderIndex': orderIndex,
-    'createdAt': createdAt != null
-        ? Timestamp.fromDate(createdAt!)
-        : FieldValue.serverTimestamp(),
-    'updatedAt': FieldValue.serverTimestamp(),
-    kSyncAtField: FieldValue.serverTimestamp(),
-    'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
-    'archivedAt': archivedAt != null ? Timestamp.fromDate(archivedAt!) : null,
-    // YALNIZ DOLUYKEN (S16 bayt bütçesi): kaldırma merge'de "değişmedi"
-    // sayılacağından açık `{'expiresAt': null}` yazımıyla yapılır
-    // (`setExpiry`, editörde `_clearExpiryField`, arşivleme yolları).
-    'expiresAt': ?(expiresAt == null ? null : Timestamp.fromDate(expiresAt!)),
-    'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt!) : null,
-    // KOŞULSUZ (kaldırılabilir alan, merge tuzağı): tekrar kapatılınca ''
-    // yazılmalı, yoksa sunucudaki eski tekrar kalırdı.
-    'reminderRepeat': reminderRepeat,
-    'reminderLevel': reminderLevel,
-    // Kartlar da koşulsuz (son kart silinince alan boşalmalı).
-    'cards': [for (final c in cards) c.toMap()],
-    'aiSummary': aiSummary?.toMap(),
+      // ÖNCE tanınmayan alanlar: bilinen anahtarlar her zaman üstüne yazar.
+      ...cleanExtras,
+      'schema': currentSchema,
+      'type': type.id,
+      'title': title,
+      'body': encryptBody ? '' : body,
+      'items': encryptBody ? const <Map<String, dynamic>>[] : rawItems,
+      if (encryptBody)
+        'e2ee': NoteE2ee.encryptNotePayload(
+          body: body,
+          items: rawItems,
+          key: e2eeKey,
+          noteId: id,
+          textPages: rawTextPages,
+          pageNotes: pageNotes,
+        ),
+      // Yalnız doluysa yazılır: PDF olmayan notların şemasında bu alan hiç
+      // oluşmaz. Dolduğunda anahtarlar tek tek birleşir — merge derin
+      // birleştirdiği için başka cihazın yazdığı BAŞKA sayfanın notu ezilmez.
+      if (pageNotes.isNotEmpty && !encryptBody) 'pageNotes': pageNotes,
+      'attachments': attachmentsField(),
+      'tags': tags,
+      'folderId': folderId,
+      'color': color.id,
+      'frameColor': frameColor.id,
+      // KOŞULSUZ (merge yazımı): hazır renge dönülünce null eski özel rengi
+      // silmeli.
+      'customColor': customColor,
+      'customFrameColor': customFrameColor,
+      'pinned': pinned,
+      'starred': starred,
+      // KOŞULLU (S16 bayt bütçesi): kapatma `NotesRepository.setUrgent`
+      // ile açıkça false yazar — merge yazımı eksik alanı silmez.
+      if (urgent) 'urgent': true,
+      // KOŞULSUZ (merge tuzağı): gizleme geri alınabilmeli.
+      'cardMediaHidden': cardMediaHidden,
+      'locked': locked,
+      // Varsayılandan farklıysa yazılır (S16 bayt bütçesi). MERGE TUZAĞI
+      // (2026-11-22): "Varsayılan"a dönüşte alan haritadan düşer, kayıttaki eski
+      // tip kalırdı — dönüşü `NotesRepository.clearFontFamily` açıkça null yazar.
+      if (fontFamily != null) 'fontFamily': fontFamily,
+      // TUZAK — bu ikisi KOŞULSUZ yazılır. Belgeler `set(..., merge: true)` ile
+      // güncelleniyor: alan haritada yoksa Firestore'daki ESKİ değer olduğu gibi
+      // kalır. Koşullu yazıldıklarında kullanıcı şeffaflığı %100'e (ya da boyutu
+      // %100'e) geri çektiğinde alan haritadan düşüyor, kayıtta eski değer
+      // duruyor ve not yeniden açıldığında ayar geri geliyordu.
+      'fontScale': fontScale,
+      'textOpacity': textOpacity,
+      // Başlık alanları da KOŞULSUZ yazılır (yukarıdaki merge tuzağının aynısı).
+      // Yazı tipi null da yazılır: başlık, gövde başka bir yazı tipindeyken
+      // varsayılana dönebilmeli — koşullu yazılsa eski değer kayıtta kalırdı.
+      'titleFontFamily': titleFontFamily,
+      'titleFontScale': titleFontScale,
+      'titleTextOpacity': titleTextOpacity,
+      // Zemin görseli KALDIRILABİLİR olmalı: merge yazımında alan haritada
+      // yoksa eski değer kalır, bu yüzden null da açıkça yazılır.
+      'backgroundImageId': backgroundImageId,
+      'backgroundOpacity': backgroundOpacity,
+      // KOŞULSUZ (merge tuzağı): temayı kaldırmak '' yazarak kayda geçer.
+      'theme': theme,
+      // HER ZAMAN yazılır (koşullu değil): notlar `set(merge: true)` ile
+      // kaydediliyor, yani atlanmış bir anahtar SİLİNMEZ — koşullu yazılsaydı
+      // iki sütundan tek sütuna dönmek kayda hiç yansımaz ve not her açılışta
+      // yine iki sütunlu gelirdi.
+      'listColumns': listColumns,
+      // KOŞULLU (AL-2, S16 bayt bütçesi): sıradan notlarda hiç yazılmaz.
+      if (listKind != null && listKind!.isNotEmpty) 'listKind': listKind,
+      // HER ZAMAN yazılır (merge tuzağı): balonluya geri dönüş bayrağı
+      // indirebilmeli.
+      'classicDocument': classicDocument,
+      // HER ZAMAN yazılır: son özel sayfayı silmek `set(merge: true)` ile
+      // ancak boş dizi yazılarak kayda geçer.
+      'archivePages': archivePages,
+      // HER ZAMAN yazılır (yukarıdaki merge tuzağı): desen varsayılana
+      // (çizgili) DÖNDÜRÜLEBİLMELİ; koşullu yazılsaydı kayıtta eski desen
+      // kalır ve defter her açılışta yine kareli gelirdi.
+      'archivePaper': archivePaper.id,
+      // KOŞULSUZ (merge yazımı): normale dönünce eski değer kalmasın.
+      'lineSpacing': lineSpacing,
+      // HER ZAMAN yazılır (merge tuzağı): ad SİLİNEBİLMELİ — boş dize
+      // "Genel"e dönmek demek.
+      'archiveGeneralName': archiveGeneralName,
+      'paged': paged,
+      'heavyRef': heavyRef,
+      // HER ZAMAN yazılır (`archivePages` ile aynı gerekçe: merge yazımda
+      // atlanan anahtar silinmez, son bağı kaldırmak kayda yansımazdı).
+      'tagLinks': [for (final l in tagLinks) l.toMap()],
+      // HER ZAMAN yazılır (merge yazımda eksik alan "değişmedi" sayılır —
+      // son sayfa silinince liste boşalmalı).
+      'textPages': encryptBody ? const <Map<String, dynamic>>[] : rawTextPages,
+      'activePage': activePage,
+      'orderIndex': orderIndex,
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      kSyncAtField: FieldValue.serverTimestamp(),
+      'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
+      'archivedAt': archivedAt != null ? Timestamp.fromDate(archivedAt!) : null,
+      // YALNIZ DOLUYKEN (S16 bayt bütçesi): kaldırma merge'de "değişmedi"
+      // sayılacağından açık `{'expiresAt': null}` yazımıyla yapılır
+      // (`setExpiry`, editörde `_clearExpiryField`, arşivleme yolları).
+      'expiresAt': ?(expiresAt == null ? null : Timestamp.fromDate(expiresAt!)),
+      'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt!) : null,
+      // KOŞULSUZ (kaldırılabilir alan, merge tuzağı): tekrar kapatılınca ''
+      // yazılmalı, yoksa sunucudaki eski tekrar kalırdı.
+      'reminderRepeat': reminderRepeat,
+      'reminderLevel': reminderLevel,
+      // Kartlar da koşulsuz (son kart silinince alan boşalmalı).
+      'cards': [for (final c in cards) c.toMap()],
+      'aiSummary': aiSummary?.toMap(),
     };
   }
 }

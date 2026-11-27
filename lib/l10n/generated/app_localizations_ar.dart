@@ -4042,7 +4042,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get personalizeTitle => 'التخصيص';
+  String get personalizeTitle => 'تخطيط الواجهة';
 
   @override
   String get personalizeInfo => 'اختر المناطق والأزرار الظاهرة والإضافات';
@@ -9362,4 +9362,105 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quickDropUrgentHint => '!عاجل';
+
+  @override
+  String get brightnessModeAuto => 'تلقائي';
+
+  @override
+  String get brightnessModeLight => 'فاتح';
+
+  @override
+  String get brightnessModeDark => 'داكن';
+
+  @override
+  String brightnessModeToggleTooltip(String mode) {
+    return 'وضع المظهر: $mode';
+  }
+
+  @override
+  String get appearanceTabTheme => 'السمة';
+
+  @override
+  String get appearanceTabBackground => 'الخلفية';
+
+  @override
+  String get appearanceTabLayout => 'التخطيط';
+
+  @override
+  String get appearanceOpenStudio => 'الخلفيات والمظهر';
+
+  @override
+  String get applyHomeBackgroundToNotes => 'التطبيق على الملاحظات أيضًا';
+
+  @override
+  String get applyHomeBackgroundToNotesInfo =>
+      'الملاحظات التي بلا خلفية مخصصة تستخدم هذه الخلفية.';
+
+  @override
+  String get noteUseHomeBackground => 'خلفية الرئيسية';
+
+  @override
+  String get bgSubTabWallpapers => 'صور';
+
+  @override
+  String get bgSubTabIllustrated => 'مرسومة';
+
+  @override
+  String get bgSubTabColors => 'ألوان';
+
+  @override
+  String get bgSubTabPatterns => 'أنماط';
+
+  @override
+  String get bgSubTabFrame => 'الإطار';
+
+  @override
+  String get bgSubTabPaper => 'الورق';
+
+  @override
+  String get personalizeGroupEditor => 'أشرطة المحرر';
+
+  @override
+  String get personalizeGroupAddAttach => 'الإضافة والمرفقات';
+
+  @override
+  String get personalizeEditBars => 'تخصيص أشرطة المحرر';
+
+  @override
+  String get attachmentRename => 'إعادة التسمية';
+
+  @override
+  String get attachmentRenameHint => 'اسم المرفق';
+
+  @override
+  String attachmentsAllTitle(int count) {
+    return 'كل المرفقات ($count)';
+  }
+
+  @override
+  String get attachmentsAllButton => 'الكل';
+
+  @override
+  String get attachmentRetryUpload => 'إعادة المحاولة';
+
+  @override
+  String get pinnedCollapse => 'تصغير';
+
+  @override
+  String get pinnedExpand => 'توسيع';
+
+  @override
+  String get pinnedHideKeyboard => 'إخفاء لوحة المفاتيح';
+
+  @override
+  String get floatingSizeSmall => 'صغير';
+
+  @override
+  String get floatingSizeMedium => 'متوسط';
+
+  @override
+  String get floatingSizeLarge => 'كامل';
+
+  @override
+  String get floatingAlignCycle => 'محاذاة أفقية';
 }

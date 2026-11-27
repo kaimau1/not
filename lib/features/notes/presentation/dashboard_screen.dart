@@ -4,14 +4,17 @@ import '../../../app/window_class.dart';
 import '../../../core/utils/web_file_drop.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/app_update.dart' show UpdateBanner;
+
 import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:flutter/material.dart';
+
 import '../../../core/widgets/back_closes.dart';
 import '../../../core/widgets/hold_progress_ring.dart';
 import '../../../core/widgets/sheet_header.dart';
+
 // ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
 import 'package:flutter/rendering.dart';
 import 'package:flutter/gestures.dart';
@@ -31,6 +34,7 @@ import '../../../app/split_shell.dart';
 import '../../../app/web_workspace/web_dashboard_header.dart';
 import '../../../app/web_workspace/web_workspace_scope.dart';
 import '../../../app/theme/note_colors.dart';
+
 import 'dart:math' as math;
 
 import '../../../app/theme/app_tokens.dart';
@@ -63,7 +67,9 @@ import '../../auth/presentation/guest_backup_card.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/home_invites.dart';
 import '../../settings/settings_providers.dart';
-import '../../settings/presentation/theme_picker.dart' show showThemePickerSheet;
+import '../../settings/presentation/appearance_studio_sheet.dart';
+import '../../settings/presentation/theme_picker.dart'
+    show showThemePickerSheet;
 import '../../calendar/data/calendar_repository.dart'
     show noteCalendarDayProvider;
 import '../../calendar/presentation/home_calendar_strip.dart';
@@ -84,7 +90,8 @@ import 'note_link_ui.dart' show noteLinkLabel;
 import 'note_grid.dart';
 import 'shared_notes_screen.dart';
 import '../../inbox/data/inbox_repository.dart' show inboxNotesProvider;
-import '../../inbox/presentation/shared_hub_screen.dart' show sharedHubPlaceholder, sharedHubSlivers, showSharedHubOnHome;
+import '../../inbox/presentation/shared_hub_screen.dart'
+    show sharedHubPlaceholder, sharedHubSlivers, showSharedHubOnHome;
 import '../data/shared_note_activity.dart' show sharedNotesVisibleCountProvider;
 import 'notes_providers.dart';
 import 'quick_add_actions.dart';
@@ -169,7 +176,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   @override
   void selectAllVisible() => ref
       .read(selectedNoteIdsProvider.notifier)
-      .selectAll(ref.read(filteredNotesProvider).value?.map((n) => n.id) ?? const []);
+      .selectAll(
+        ref.read(filteredNotesProvider).value?.map((n) => n.id) ?? const [],
+      );
 
   @override
   void deleteSelection() {
@@ -218,7 +227,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Kartların izlediği canlı arama sorgusu (F21.6).
   final _liveQuery = ValueNotifier<String>('');
-
 
   /// Kullanıcı bu kadar aşağıdaysa "başa dön" düğmesi görünür. Bir ekran
   /// yüksekliğinden fazlası: kısa bir kaydırmada düğme çıkıp kaybolmasın.
@@ -288,7 +296,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Veri dalı kurulduktan sonraki karede bayrağı indirir (liste öğesi üretmez).
   Iterable<Widget> _afterSkeleton() {
     if (_skeletonShown) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _skeletonShown = false);
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _skeletonShown = false,
+      );
     }
     return const [];
   }
@@ -387,7 +397,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
   }
 
-
   /// Not ızgarası kaydırıldı mı — başlık bloğunun (arama çubuğu + süzgeç
   /// çipleri) altındaki AYIRICI bunu izler.
   ///
@@ -466,9 +475,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ),
       // GELEN de menüde (kullanıcı bulgusu 2026-11-06: "Gelen klasörü üst
       // alanda görülmüyor") — şeritteki yerinde, gizliyse yok.
-      for (final f in hub.hidden
-          ? folders
-          : withSharedHub(folders, hub, hub.order ?? 0))
+      for (final f
+          in hub.hidden ? folders : withSharedHub(folders, hub, hub.order ?? 0))
         if (f.id == kSharedHubFolderId)
           FolderStop(
             id: kSharedHubFolderId,
@@ -494,7 +502,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   String? _currentStopId(WidgetRef ref) => ref.watch(sharedHubOnHomeProvider)
       ? kSharedHubFolderId
       : ref.watch(selectedFolderProvider);
-
 
   /// Izgaranın son genişliği ve sütun sayısı (döndürmede oran geri yüklemesi).
   (double, int)? _gridColumnsAt;
@@ -539,7 +546,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
     _singleColumn = single;
   }
-
 
   @override
   void dispose() {
@@ -813,9 +819,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final sidebarHasFolders = WebWorkspaceScope.sidebarExpandedOf(context);
     final selectedFolderId = ref.watch(selectedFolderProvider);
     final inFolderView =
-        hubActive ||
-        sharedFolder != null ||
-        selectedFolderId != null;
+        hubActive || sharedFolder != null || selectedFolderId != null;
     final hideDuplicateStrip =
         sidebarHasFolders &&
         !inFolderView &&
@@ -836,8 +840,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // hareket). Artık şerit yerinde durur; yalnız vurgu değişir ve çip
     // görünür alanda değilse en kısa yoldan kaydırılır.
     final shelfAsStrip =
-        showShelf &&
-        (inFolderView || !ref.watch(folderShelfExpandedProvider));
+        showShelf && (inFolderView || !ref.watch(folderShelfExpandedProvider));
     // Dar ekranda arama odaklıyken sağdaki butonlar gizlenir; arama alanı
     // tüm genişliği kullanır. Klavye kapatılınca (sistem geri tuşu dahil)
     // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
@@ -906,405 +909,456 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               SafeArea(
                 bottom: false,
                 child: Stack(
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun
-                    // seçimi (1–4), yoksa ekran genişliğinden otomatik.
-                    final manualColumns = ref.watch(gridColumnsProvider);
-                    // Not açıkken solda dar liste: TEK sütun (kullanıcı
-                    // isteği 2026-11-02, bkz. kNoteSplitBreakpoint); ayraç
-                    // sürüklenip genişletilince 2–3 sütun (tablet isteği
-                    // 2026-11-09).
-                    // Mini pano (P59): kıstırma/Ctrl+tekerlek ölçeği kartları
-                    // büyütür, sütun genişliğe göre 1–4.
-                    final paneMode = DashboardPaneScope.singleColumnOf(context);
-                    final columns = paneMode
-                        ? paneColumnsFor(
-                            constraints.maxWidth,
-                            ref.watch(paneCardScaleProvider),
-                          )
-                        : manualColumns > 0
-                        ? manualColumns
-                        : desktopWeb
-                        ? (constraints.maxWidth / 270).floor().clamp(2, 5)
-                        : (constraints.maxWidth / 220).floor().clamp(2, 6);
-                    // Telefon döndürülünce (F66.7'den beri yatayda da aynı
-                    // örnek kalır) sütun sayısı değişir; piksel konumu başka
-                    // kartlara denk gelir → ORAN yeniden uygulanır (F18.11).
-                    // DAR LİSTE BÖLMESİ (F67.3, B15): bölünmüş görünümde
-                    // liste < 420 dp iken şeritler çizilmez, arama hapı
-                    // kısalır (AI ve süz ⋮'e iner), mikrofon gizlenir.
-                    // Ağaç şekli sabit: Offstage (State korunur).
-                    final narrowPane =
-                        DashboardPaneScope.singleColumnOf(context) &&
-                        constraints.maxWidth < kNarrowListPane;
-                    if (narrowPane != _narrowPaneN.value) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) _narrowPaneN.value = narrowPane;
-                      });
-                    }
-                    final lastCols = _gridColumnsAt;
-                    _gridColumnsAt = (constraints.maxWidth, columns);
-                    if (lastCols != null &&
-                        lastCols.$1 != constraints.maxWidth &&
-                        lastCols.$2 != columns) {
-                      WidgetsBinding.instance.addPostFrameCallback(
-                        (_) => _restoreScroll(),
-                      );
-                    }
-                    // Masonry hücre genişliği: sürükle-sırala sırasında taşınan
-                    // notun "hayalet" kopyası (feedback) bu genişlikte çizilir.
-                    // Izgara payları `kGridInset` / `kGridGap`.
-                    final desktopGutter =
-                        desktopWeb && !paneMode ? AppSpace.m : 0.0;
-                    final cellWidth =
-                        (constraints.maxWidth -
-                            2 * desktopGutter -
-                            2 * kGridInset -
-                            kGridGap * (columns - 1)) /
-                        columns;
-                    Widget padDesktopGutter(Widget child) => desktopGutter > 0
-                        ? Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: desktopGutter,
-                            ),
-                            child: child,
-                          )
-                        : child;
-                    // Aktif segment (filtre|klasör|etiket) anahtarı: değişince
-                    // AnimatedSwitcher yeni görünümü kaydırarak getirir (madde 2).
-                    // Arama sorgusu anahtara DAHİL DEĞİL — her tuşta yeniden
-                    // animasyon tetiklenmez.
-                    final segmentKey =
-                        '${ref.watch(noteFilterProvider)}'
-                        '|${ref.watch(selectedFolderProvider) ?? ''}'
-                        '|${sharedFolder?.folderId ?? ''}'
-                        '|${ref.watch(selectedTagProvider) ?? ''}'
-                        '|${hubActive ? 'hub' : ''}';
-                    if (segmentKey != _segmentKey && _segmentKey.isNotEmpty) {
-                      _holdNarrowCache(segmentKey);
-                    }
-                    _segmentKey = segmentKey;
-                    // Başlık (arama/seçim barı + filtre çipleri) kaydırma
-                    // görünümünün DIŞINDA sabit durur: liste kayarken çipler
-                    // yerinde kalır; filtre değişim animasyonu yalnız not
-                    // listesine uygulanır (arama barı artık birlikte kaymaz).
-                    // Dar sütunda kart kompakt (bkz. [NoteCardWidth]).
-                    return NoteCardWidth(
-                      width: cellWidth,
-                      child: Column(
-                      children: [
-                        _buildDashboardAppBar(
-                          l10n,
-                          reorderActive: reorderActive,
-                          selectionActive: selectionActive,
-                          visibleIds: visibleIds,
-                          notesAsync: notesAsync,
-                          desktopWeb: desktopWeb,
-                          narrowPane: narrowPane,
-                          sharedFolder: sharedFolder,
-                          hubActive: hubActive,
-                          selectedFolderId: selectedFolderId,
-                          hasHiddenFolders: hasHiddenFolders,
-                          hiddenRevealed: hiddenRevealed,
-                          hasBackground: hasBackground,
-                        ),
-                        // "Süz" düğmesi + yalnız UYGULANMIŞ süzgeçler. Eski
-                        // dokuz artı çipli bar (dashboard_chips.dart) ve ona
-                        // bağlı "hangi çip görünsün" ayarları kaldırıldı;
-                        // süzme tek yoldan, Süz levhasından yapılıyor.
-                        // **BEKLEYEN DAVETLER** (kullanıcı isteği 2026-08-18:
-                        // "arkadaşlık isteği geldiğinde ana sayfada görülsün",
-                        // "klasör paylaşıldığında kabul et veya reddet
-                        // seçeneği olsun"). Bir şey beklemiyorsa hiç
-                        // çizilmez — boşken sıfır yer kaplar.
-                        // TAKVİM ŞERİDİ (2026-11-08, takvim zemininin yerine):
-                        // bugünden itibaren 10 gün; kapalıyken tek ince satır.
-                        // YENİ SÜRÜM ŞERİDİ (2026-11-10): kalıcı, kapatılamaz;
-                        // yeni sürüm yokken sıfır yer.
-                        const UpdateBanner(),
-                        if (desktopWeb && !narrowPane)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppSpace.xl,
-                              AppSpace.s,
-                              AppSpace.xl,
-                              AppSpace.xs,
-                            ),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: AppTokens.of(context).card,
-                                borderRadius: BorderRadius.circular(AppRadius.m),
-                                border: Border.all(
-                                  color: AppTokens.of(context).hairline,
+                  children: [
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun
+                        // seçimi (1–4), yoksa ekran genişliğinden otomatik.
+                        final manualColumns = ref.watch(gridColumnsProvider);
+                        // Not açıkken solda dar liste: TEK sütun (kullanıcı
+                        // isteği 2026-11-02, bkz. kNoteSplitBreakpoint); ayraç
+                        // sürüklenip genişletilince 2–3 sütun (tablet isteği
+                        // 2026-11-09).
+                        // Mini pano (P59): kıstırma/Ctrl+tekerlek ölçeği kartları
+                        // büyütür, sütun genişliğe göre 1–4.
+                        final paneMode = DashboardPaneScope.singleColumnOf(
+                          context,
+                        );
+                        final columns = paneMode
+                            ? paneColumnsFor(
+                                constraints.maxWidth,
+                                ref.watch(paneCardScaleProvider),
+                              )
+                            : manualColumns > 0
+                            ? manualColumns
+                            : desktopWeb
+                            ? (constraints.maxWidth / 270).floor().clamp(2, 5)
+                            : (constraints.maxWidth / 220).floor().clamp(2, 6);
+                        // Telefon döndürülünce (F66.7'den beri yatayda da aynı
+                        // örnek kalır) sütun sayısı değişir; piksel konumu başka
+                        // kartlara denk gelir → ORAN yeniden uygulanır (F18.11).
+                        // DAR LİSTE BÖLMESİ (F67.3, B15): bölünmüş görünümde
+                        // liste < 420 dp iken şeritler çizilmez, arama hapı
+                        // kısalır (AI ve süz ⋮'e iner), mikrofon gizlenir.
+                        // Ağaç şekli sabit: Offstage (State korunur).
+                        final narrowPane =
+                            DashboardPaneScope.singleColumnOf(context) &&
+                            constraints.maxWidth < kNarrowListPane;
+                        if (narrowPane != _narrowPaneN.value) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) _narrowPaneN.value = narrowPane;
+                          });
+                        }
+                        final lastCols = _gridColumnsAt;
+                        _gridColumnsAt = (constraints.maxWidth, columns);
+                        if (lastCols != null &&
+                            lastCols.$1 != constraints.maxWidth &&
+                            lastCols.$2 != columns) {
+                          WidgetsBinding.instance.addPostFrameCallback(
+                            (_) => _restoreScroll(),
+                          );
+                        }
+                        // Masonry hücre genişliği: sürükle-sırala sırasında taşınan
+                        // notun "hayalet" kopyası (feedback) bu genişlikte çizilir.
+                        // Izgara payları `kGridInset` / `kGridGap`.
+                        final desktopGutter = desktopWeb && !paneMode
+                            ? AppSpace.m
+                            : 0.0;
+                        final cellWidth =
+                            (constraints.maxWidth -
+                                2 * desktopGutter -
+                                2 * kGridInset -
+                                kGridGap * (columns - 1)) /
+                            columns;
+                        Widget padDesktopGutter(Widget child) =>
+                            desktopGutter > 0
+                            ? Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: desktopGutter,
                                 ),
+                                child: child,
+                              )
+                            : child;
+                        // Aktif segment (filtre|klasör|etiket) anahtarı: değişince
+                        // AnimatedSwitcher yeni görünümü kaydırarak getirir (madde 2).
+                        // Arama sorgusu anahtara DAHİL DEĞİL — her tuşta yeniden
+                        // animasyon tetiklenmez.
+                        final segmentKey =
+                            '${ref.watch(noteFilterProvider)}'
+                            '|${ref.watch(selectedFolderProvider) ?? ''}'
+                            '|${sharedFolder?.folderId ?? ''}'
+                            '|${ref.watch(selectedTagProvider) ?? ''}'
+                            '|${hubActive ? 'hub' : ''}';
+                        if (segmentKey != _segmentKey &&
+                            _segmentKey.isNotEmpty) {
+                          _holdNarrowCache(segmentKey);
+                        }
+                        _segmentKey = segmentKey;
+                        // Başlık (arama/seçim barı + filtre çipleri) kaydırma
+                        // görünümünün DIŞINDA sabit durur: liste kayarken çipler
+                        // yerinde kalır; filtre değişim animasyonu yalnız not
+                        // listesine uygulanır (arama barı artık birlikte kaymaz).
+                        // Dar sütunda kart kompakt (bkz. [NoteCardWidth]).
+                        return NoteCardWidth(
+                          width: cellWidth,
+                          child: Column(
+                            children: [
+                              _buildDashboardAppBar(
+                                l10n,
+                                reorderActive: reorderActive,
+                                selectionActive: selectionActive,
+                                visibleIds: visibleIds,
+                                notesAsync: notesAsync,
+                                desktopWeb: desktopWeb,
+                                narrowPane: narrowPane,
+                                sharedFolder: sharedFolder,
+                                hubActive: hubActive,
+                                selectedFolderId: selectedFolderId,
+                                hasHiddenFolders: hasHiddenFolders,
+                                hiddenRevealed: hiddenRevealed,
+                                hasBackground: hasBackground,
                               ),
-                              child: const HomeCalendarStrip(),
-                            ),
-                          )
-                        else
-                          Offstage(
-                            offstage: narrowPane,
-                            child: const HomeCalendarStrip(),
-                          ),
-                        // Zamanı gelen hatırlatıcı/görev şeridi (2026-11-08).
-                        Offstage(
-                          offstage: narrowPane,
-                          child: const DueBanner(),
-                        ),
-                        const HomeInvites(),
-                        const DashboardFilterRow(),
-                        // Buluta yüklenmeyi bekleyen ekler — yoksa sıfır yer.
-                        const _PendingUploadsBar(),
-                        // **SON ARAMALAR** — yalnız arama kutusu odaklıyken
-                        // ve kutu BOŞKEN. Yazmaya başlayınca kaybolur:
-                        // sonuçların üstünde bir çip şeridi durmasın.
-                        ListenableBuilder(
-                          listenable: _searchFocus,
-                          builder: (context, _) => _RecentSearches(
-                            visible: _searchFocus.hasFocus,
-                            onPick: (q) {
-                              _searchController.text = q;
-                              _searchController.selection =
-                                  TextSelection.collapsed(offset: q.length);
-                              ref.read(searchQueryProvider.notifier).set(q);
-                            },
-                          ),
-                        ),
-                        // Hızlı yakala: "+" → editör → yaz → geri yolunu tek
-                        // satıra indirir. Tasarım bunu kaydırma akışının
-                        // içine koyuyordu; sabit satırda tutuyorum ki liste
-                        // aşağıdayken yukarı kaydırmadan da yazılabilsin.
-                        // Varsayılan GİZLİ (Ayarlar > "Hızlı not satırı"):
-                        // satır yer kaplıyordu, aynı iş "+" menüsünde de var.
-                        if (ref.watch(quickCaptureRowProvider))
-                          _QuickCaptureRow(
-                            onCreateChecklist: () =>
-                                createNote(NoteType.checklist),
-                            onSaved: _afterQuickCapture,
-                          ),
-                        // Sabit başlık ile kayan ızgara arasındaki SINIR
-                        // (bkz. [_gridScrolled]).
-                        if (shelfAsStrip)
-                          _folderStrip(
-                            ref.watch(visibleOrderedFoldersProvider),
-                            selectedFolderId: ref.watch(selectedFolderProvider),
-                            sharedFolder: sharedFolder,
-                          ),
-                        _HeaderSeparator(scrolled: _gridScrolled),
-                        Expanded(
-                          // İki parmakla zoom: 1 → 2 → 3 → 4 sütun arasında
-                          // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
-                          // (pointerCount kontrolü), böylece içteki yatay
-                          // çekiş ve dikey kaydırma olduğu gibi çalışır.
-                          child: padDesktopGutter(
-                            FolderPullIndicator(
-                          progress: _folderPull,
-                          icon: switch (ref
-                              .watch(homePullGestureProvider)
-                              .kind) {
-                            HomeGestureKind.calendar => Icons.calendar_month_outlined,
-                            HomeGestureKind.note => Icons.description_outlined,
-                            _ => Icons.folder_outlined,
-                          },
-                          distance: _kFolderPullDistance,
-                          child: PinchColumns(
-                            columns: columns,
-                            onCommit: paneMode
-                                ? (c) => ref
-                                      .read(paneCardScaleProvider.notifier)
-                                      .setColumns(c, constraints.maxWidth)
-                                : ref.read(gridColumnsProvider.notifier).set,
-                            child: NotificationListener<ScrollNotification>(
-                              onNotification: _onGridScroll,
-                              child: FolderSwipe(
-                                // Yatay çekişle filtreler/klasörler arasında
-                                // gezin. Dikey kaydırma CustomScrollView'de
-                                // kalır; eksenler farklı olduğundan çakışmaz.
-                                //
-                                // Çekiş YOK SAYILIR: seçim modunda (görünüm
-                                // değişince seçili notlar ekrandan kaybolur
-                                // ama seçili kalır — "Sil" görünmeyen notları
-                                // da silerdi), sıralama modunda ve bir kart
-                                // sürüklenirken (sıralama yalnız süzgeçsiz
-                                // görünümde geçerli; çekiş modu sessizce
-                                // kapatıyordu).
-                                enabled:
-                                    !selectionActive &&
-                                    !reorderActive &&
-                                    _dragNoteId == null &&
-                                    (ref.watch(swipeModeProvider) !=
-                                            SwipeMode.off ||
-                                        ref
-                                                .watch(
-                                                  homeSwipeRightGestureProvider,
-                                                )
-                                                .kind !=
-                                            HomeGestureKind.none),
-                                nextLabel: _swipeStopLabel,
-                                nextIcon: _swipeStopIcon,
-                                onCommit: _cycleFilterFolder,
-                                continuesInPlace: _continueSwipe,
-                                child: AnimatedSwitcher(
-                                  duration: AppMotion.of(
-                                    context,
-                                    AppMotion.medium,
+                              // "Süz" düğmesi + yalnız UYGULANMIŞ süzgeçler. Eski
+                              // dokuz artı çipli bar (dashboard_chips.dart) ve ona
+                              // bağlı "hangi çip görünsün" ayarları kaldırıldı;
+                              // süzme tek yoldan, Süz levhasından yapılıyor.
+                              // **BEKLEYEN DAVETLER** (kullanıcı isteği 2026-08-18:
+                              // "arkadaşlık isteği geldiğinde ana sayfada görülsün",
+                              // "klasör paylaşıldığında kabul et veya reddet
+                              // seçeneği olsun"). Bir şey beklemiyorsa hiç
+                              // çizilmez — boşken sıfır yer kaplar.
+                              // TAKVİM ŞERİDİ (2026-11-08, takvim zemininin yerine):
+                              // bugünden itibaren 10 gün; kapalıyken tek ince satır.
+                              // YENİ SÜRÜM ŞERİDİ (2026-11-10): kalıcı, kapatılamaz;
+                              // yeni sürüm yokken sıfır yer.
+                              const UpdateBanner(),
+                              if (desktopWeb && !narrowPane)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    AppSpace.xl,
+                                    AppSpace.s,
+                                    AppSpace.xl,
+                                    AppSpace.xs,
                                   ),
-                                  switchInCurve: AppMotion.curveOf(
-                                    context,
-                                    AppMotion.enter,
-                                  ),
-                                  switchOutCurve: AppMotion.curveOf(
-                                    context,
-                                    AppMotion.exit,
-                                  ),
-                                  transitionBuilder: (child, animation) {
-                                    // Çekiş yönüne göre yumuşak kaydır + soldur.
-                                    final incoming =
-                                        child.key == ValueKey(segmentKey);
-                                    // Hareketi azalt: yalnız solma (F34.7).
-                                    final dir = !motionOf(context)
-                                        ? 0.0
-                                        : _swipeForward
-                                        ? 1.0
-                                        : -1.0;
-                                    final rtl =
-                                        Directionality.of(context) ==
-                                        TextDirection.rtl;
-                                    // Ekranda hareket yönü (sola = -1).
-                                    final move = -dir * (rtl ? -1 : 1);
-                                    // Çekişle ayrılan görünüm parmağın
-                                    // bıraktığı yerden ekran dışına doğru
-                                    // akar; gelen diğer kenardan çakışmadan
-                                    // girer.
-                                    final from =
-                                        !incoming &&
-                                            child.key == ValueKey(_leavingKey)
-                                        ? _leavingFrom
-                                        : null;
-                                    final Offset begin;
-                                    final Offset end;
-                                    if (from != null) {
-                                      begin = Offset(from + move * 0.55, 0);
-                                      end = Offset(from, 0);
-                                    } else {
-                                      final swiped =
-                                          incoming && _leavingKey != null;
-                                      begin = Offset(
-                                        (incoming ? -move : move) *
-                                            (swiped ? 0.52 : 0.14),
-                                        0,
-                                      );
-                                      end = Offset.zero;
-                                    }
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: SlideTransition(
-                                        position: Tween(
-                                          begin: begin,
-                                          end: end,
-                                        ).animate(animation),
-                                        // F26.4: ayrılan ızgara donmuş
-                                        // görüntü (her karede rasterleşmez).
-                                        child: SnapshotWhenLeaving(
-                                          leaving: !incoming,
-                                          child: child,
-                                        ),
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: AppTokens.of(context).card,
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.m,
                                       ),
-                                    );
+                                      border: Border.all(
+                                        color: AppTokens.of(context).hairline,
+                                      ),
+                                    ),
+                                    child: const HomeCalendarStrip(),
+                                  ),
+                                )
+                              else
+                                Offstage(
+                                  offstage: narrowPane,
+                                  child: const HomeCalendarStrip(),
+                                ),
+                              // Zamanı gelen hatırlatıcı/görev şeridi (2026-11-08).
+                              Offstage(
+                                offstage: narrowPane,
+                                child: const DueBanner(),
+                              ),
+                              const HomeInvites(),
+                              const DashboardFilterRow(),
+                              // Buluta yüklenmeyi bekleyen ekler — yoksa sıfır yer.
+                              const _PendingUploadsBar(),
+                              // **SON ARAMALAR** — yalnız arama kutusu odaklıyken
+                              // ve kutu BOŞKEN. Yazmaya başlayınca kaybolur:
+                              // sonuçların üstünde bir çip şeridi durmasın.
+                              ListenableBuilder(
+                                listenable: _searchFocus,
+                                builder: (context, _) => _RecentSearches(
+                                  visible: _searchFocus.hasFocus,
+                                  onPick: (q) {
+                                    _searchController.text = q;
+                                    _searchController.selection =
+                                        TextSelection.collapsed(
+                                          offset: q.length,
+                                        );
+                                    ref
+                                        .read(searchQueryProvider.notifier)
+                                        .set(q);
                                   },
-                                  layoutBuilder:
-                                      (currentChild, previousChildren) => Stack(
-                                        alignment: Alignment.topCenter,
-                                        children: [
-                                          ...previousChildren,
-                                          ?currentChild,
-                                        ],
-                                      ),
-                                  child: _GridScrollView(
-                                    key: ValueKey(segmentKey),
-                                    // Az notta da tepeden aşağı çekilebilsin
-                                    // (klasör menüsü — [_trackFolderPull]).
-                                    physics:
-                                        const AlwaysScrollableScrollPhysics(),
-                                    // "Başa dön" düğmesi buradan tepeye döner.
-                                    controller: _gridScroll,
-                                    tick: _cacheTick,
-                                    // Her sorguda sonuç ızgarası baştan kurulur,
-                                    // açılışın ilk içerik karesi ve yeni gelen bölüm
-                                    // de: ekran dışı kart bekletmesin.
-                                    narrow: () =>
-                                        searchActive ||
-                                        notesAsync.isLoading ||
-                                        _freshSegment == segmentKey,
-                                    slivers: [
-                                      // Misafir hesap hatırlatması (F4.3).
-                                      if (!searchActive && !reorderActive)
-                                        const SliverToBoxAdapter(
-                                          child: GuestBackupCard(),
-                                        ),
-                                      // **KLASÖR RAFI**: ana ekranın tepesinde,
-                                      // notlarla aynı ızgarada. Yalnız kök
-                                      // görünümde çizilir — arama/süzgeç/etiket
-                                      // sonuçlarının arasında klasör karosu
-                                      // görmek kafa karıştırırdı.
-                                      //
-                                      // Yana çekişle bir KLASÖRE gelinince
-                                      // şerit (karo değil) yine çizilir ve
-                                      // o klasörün çipi vurgulanır: kullanıcı
-                                      // klasörler arasında nerede olduğunu
-                                      // görsün (2026-09-26).
-                                      //
-                                      // 2026-11-07: ŞERİT hâli artık burada
-                                      // DEĞİL, ızgaranın üstünde sabit (bkz.
-                                      // [shelfAsStrip]); burada yalnız kök
-                                      // görünümün KARO rafı kalır.
-                                      if (showShelf && !shelfAsStrip)
-                                        _folderShelf(
-                                          columns,
-                                          selectedFolderId: ref.watch(
-                                            selectedFolderProvider,
+                                ),
+                              ),
+                              // Hızlı yakala: "+" → editör → yaz → geri yolunu tek
+                              // satıra indirir. Tasarım bunu kaydırma akışının
+                              // içine koyuyordu; sabit satırda tutuyorum ki liste
+                              // aşağıdayken yukarı kaydırmadan da yazılabilsin.
+                              // Varsayılan GİZLİ (Ayarlar > "Hızlı not satırı"):
+                              // satır yer kaplıyordu, aynı iş "+" menüsünde de var.
+                              if (ref.watch(quickCaptureRowProvider))
+                                _QuickCaptureRow(
+                                  onCreateChecklist: () =>
+                                      createNote(NoteType.checklist),
+                                  onSaved: _afterQuickCapture,
+                                ),
+                              // Sabit başlık ile kayan ızgara arasındaki SINIR
+                              // (bkz. [_gridScrolled]).
+                              if (shelfAsStrip)
+                                _folderStrip(
+                                  ref.watch(visibleOrderedFoldersProvider),
+                                  selectedFolderId: ref.watch(
+                                    selectedFolderProvider,
+                                  ),
+                                  sharedFolder: sharedFolder,
+                                ),
+                              _HeaderSeparator(scrolled: _gridScrolled),
+                              Expanded(
+                                // İki parmakla zoom: 1 → 2 → 3 → 4 sütun arasında
+                                // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
+                                // (pointerCount kontrolü), böylece içteki yatay
+                                // çekiş ve dikey kaydırma olduğu gibi çalışır.
+                                child: padDesktopGutter(
+                                  FolderPullIndicator(
+                                    progress: _folderPull,
+                                    icon: switch (ref
+                                        .watch(homePullGestureProvider)
+                                        .kind) {
+                                      HomeGestureKind.calendar =>
+                                        Icons.calendar_month_outlined,
+                                      HomeGestureKind.note =>
+                                        Icons.description_outlined,
+                                      _ => Icons.folder_outlined,
+                                    },
+                                    distance: _kFolderPullDistance,
+                                    child: PinchColumns(
+                                      columns: columns,
+                                      onCommit: paneMode
+                                          ? (c) => ref
+                                                .read(
+                                                  paneCardScaleProvider
+                                                      .notifier,
+                                                )
+                                                .setColumns(
+                                                  c,
+                                                  constraints.maxWidth,
+                                                )
+                                          : ref
+                                                .read(
+                                                  gridColumnsProvider.notifier,
+                                                )
+                                                .set,
+                                      child: NotificationListener<ScrollNotification>(
+                                        onNotification: _onGridScroll,
+                                        child: FolderSwipe(
+                                          // Yatay çekişle filtreler/klasörler arasında
+                                          // gezin. Dikey kaydırma CustomScrollView'de
+                                          // kalır; eksenler farklı olduğundan çakışmaz.
+                                          //
+                                          // Çekiş YOK SAYILIR: seçim modunda (görünüm
+                                          // değişince seçili notlar ekrandan kaybolur
+                                          // ama seçili kalır — "Sil" görünmeyen notları
+                                          // da silerdi), sıralama modunda ve bir kart
+                                          // sürüklenirken (sıralama yalnız süzgeçsiz
+                                          // görünümde geçerli; çekiş modu sessizce
+                                          // kapatıyordu).
+                                          enabled:
+                                              !selectionActive &&
+                                              !reorderActive &&
+                                              _dragNoteId == null &&
+                                              (ref.watch(swipeModeProvider) !=
+                                                      SwipeMode.off ||
+                                                  ref
+                                                          .watch(
+                                                            homeSwipeRightGestureProvider,
+                                                          )
+                                                          .kind !=
+                                                      HomeGestureKind.none),
+                                          nextLabel: _swipeStopLabel,
+                                          nextIcon: _swipeStopIcon,
+                                          onCommit: _cycleFilterFolder,
+                                          continuesInPlace: _continueSwipe,
+                                          child: AnimatedSwitcher(
+                                            duration: AppMotion.of(
+                                              context,
+                                              AppMotion.medium,
+                                            ),
+                                            switchInCurve: AppMotion.curveOf(
+                                              context,
+                                              AppMotion.enter,
+                                            ),
+                                            switchOutCurve: AppMotion.curveOf(
+                                              context,
+                                              AppMotion.exit,
+                                            ),
+                                            transitionBuilder:
+                                                (child, animation) {
+                                                  // Çekiş yönüne göre yumuşak kaydır + soldur.
+                                                  final incoming =
+                                                      child.key ==
+                                                      ValueKey(segmentKey);
+                                                  // Hareketi azalt: yalnız solma (F34.7).
+                                                  final dir = !motionOf(context)
+                                                      ? 0.0
+                                                      : _swipeForward
+                                                      ? 1.0
+                                                      : -1.0;
+                                                  final rtl =
+                                                      Directionality.of(
+                                                        context,
+                                                      ) ==
+                                                      TextDirection.rtl;
+                                                  // Ekranda hareket yönü (sola = -1).
+                                                  final move =
+                                                      -dir * (rtl ? -1 : 1);
+                                                  // Çekişle ayrılan görünüm parmağın
+                                                  // bıraktığı yerden ekran dışına doğru
+                                                  // akar; gelen diğer kenardan çakışmadan
+                                                  // girer.
+                                                  final from =
+                                                      !incoming &&
+                                                          child.key ==
+                                                              ValueKey(
+                                                                _leavingKey,
+                                                              )
+                                                      ? _leavingFrom
+                                                      : null;
+                                                  final Offset begin;
+                                                  final Offset end;
+                                                  if (from != null) {
+                                                    begin = Offset(
+                                                      from + move * 0.55,
+                                                      0,
+                                                    );
+                                                    end = Offset(from, 0);
+                                                  } else {
+                                                    final swiped =
+                                                        incoming &&
+                                                        _leavingKey != null;
+                                                    begin = Offset(
+                                                      (incoming
+                                                              ? -move
+                                                              : move) *
+                                                          (swiped
+                                                              ? 0.52
+                                                              : 0.14),
+                                                      0,
+                                                    );
+                                                    end = Offset.zero;
+                                                  }
+                                                  return FadeTransition(
+                                                    opacity: animation,
+                                                    child: SlideTransition(
+                                                      position: Tween(
+                                                        begin: begin,
+                                                        end: end,
+                                                      ).animate(animation),
+                                                      // F26.4: ayrılan ızgara donmuş
+                                                      // görüntü (her karede rasterleşmez).
+                                                      child:
+                                                          SnapshotWhenLeaving(
+                                                            leaving: !incoming,
+                                                            child: child,
+                                                          ),
+                                                    ),
+                                                  );
+                                                },
+                                            layoutBuilder:
+                                                (
+                                                  currentChild,
+                                                  previousChildren,
+                                                ) => Stack(
+                                                  alignment:
+                                                      Alignment.topCenter,
+                                                  children: [
+                                                    ...previousChildren,
+                                                    ?currentChild,
+                                                  ],
+                                                ),
+                                            child: _GridScrollView(
+                                              key: ValueKey(segmentKey),
+                                              // Az notta da tepeden aşağı çekilebilsin
+                                              // (klasör menüsü — [_trackFolderPull]).
+                                              physics:
+                                                  const AlwaysScrollableScrollPhysics(),
+                                              // "Başa dön" düğmesi buradan tepeye döner.
+                                              controller: _gridScroll,
+                                              tick: _cacheTick,
+                                              // Her sorguda sonuç ızgarası baştan kurulur,
+                                              // açılışın ilk içerik karesi ve yeni gelen bölüm
+                                              // de: ekran dışı kart bekletmesin.
+                                              narrow: () =>
+                                                  searchActive ||
+                                                  notesAsync.isLoading ||
+                                                  _freshSegment == segmentKey,
+                                              slivers: [
+                                                // Misafir hesap hatırlatması (F4.3).
+                                                if (!searchActive &&
+                                                    !reorderActive)
+                                                  const SliverToBoxAdapter(
+                                                    child: GuestBackupCard(),
+                                                  ),
+                                                // **KLASÖR RAFI**: ana ekranın tepesinde,
+                                                // notlarla aynı ızgarada. Yalnız kök
+                                                // görünümde çizilir — arama/süzgeç/etiket
+                                                // sonuçlarının arasında klasör karosu
+                                                // görmek kafa karıştırırdı.
+                                                //
+                                                // Yana çekişle bir KLASÖRE gelinince
+                                                // şerit (karo değil) yine çizilir ve
+                                                // o klasörün çipi vurgulanır: kullanıcı
+                                                // klasörler arasında nerede olduğunu
+                                                // görsün (2026-09-26).
+                                                //
+                                                // 2026-11-07: ŞERİT hâli artık burada
+                                                // DEĞİL, ızgaranın üstünde sabit (bkz.
+                                                // [shelfAsStrip]); burada yalnız kök
+                                                // görünümün KARO rafı kalır.
+                                                if (showShelf && !shelfAsStrip)
+                                                  _folderShelf(
+                                                    columns,
+                                                    selectedFolderId: ref.watch(
+                                                      selectedFolderProvider,
+                                                    ),
+                                                    hubSelected: hubActive,
+                                                    sharedFolder: sharedFolder,
+                                                  ),
+                                                ..._buildDashboardGridSlivers(
+                                                  context,
+                                                  searchActive: searchActive,
+                                                  reorderActive: reorderActive,
+                                                  selectionActive:
+                                                      selectionActive,
+                                                  hubActive: hubActive,
+                                                  sharedFolder: sharedFolder,
+                                                  sharedAtBottom:
+                                                      sharedAtBottom,
+                                                  columns: columns,
+                                                  cellWidth: cellWidth,
+                                                  selectedFolderId:
+                                                      selectedFolderId,
+                                                  query: query,
+                                                  notesAsync: notesAsync,
+                                                  navInset: navInset,
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                          hubSelected: hubActive,
-                                          sharedFolder: sharedFolder,
                                         ),
-                                      ..._buildDashboardGridSlivers(
-                                        context,
-                                        searchActive: searchActive,
-                                        reorderActive: reorderActive,
-                                        selectionActive: selectionActive,
-                                        hubActive: hubActive,
-                                        sharedFolder: sharedFolder,
-                                        sharedAtBottom: sharedAtBottom,
-                                        columns: columns,
-                                        cellWidth: cellWidth,
-                                        selectedFolderId: selectedFolderId,
-                                        query: query,
-                                        notesAsync: notesAsync,
-                                        navInset: navInset,
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                          ),
-                          ),
-                        ),
-                      ],
-                    ));
-                  },
+                        );
+                      },
+                    ),
+                    ..._buildDashboardFloatingOverlays(
+                      l10n,
+                      navInset: navInset,
+                      selectionActive: selectionActive,
+                      sharedFolder: sharedFolder,
+                    ),
+                  ],
                 ),
-                ..._buildDashboardFloatingOverlays(
-                  l10n,
-                  navInset: navInset,
-                  selectionActive: selectionActive,
-                  sharedFolder: sharedFolder,
-                ),
-              ],
-            ),
               ),
             ],
           ),
@@ -1356,5 +1410,4 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       child: FreezeWhenHidden(child: page),
     );
   }
-
 }

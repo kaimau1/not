@@ -172,10 +172,7 @@ extension _EditorMediaView on _NoteEditorScreenState {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  l10n.pageOf(
-                    textPagePosition(note).index + 1,
-                    pages.length,
-                  ),
+                  l10n.pageOf(textPagePosition(note).index + 1, pages.length),
                   style: text.sheetTitle,
                 ),
                 const SizedBox(height: AppSpace.m),
@@ -383,8 +380,9 @@ extension _EditorMediaView on _NoteEditorScreenState {
                   color: iconColor,
                   disabledColor: disabledColor,
                   icon: const Icon(Icons.chevron_right_rounded),
-                  onPressed:
-                      pos.index < pos.count - 1 ? () => _stepPage(1) : null,
+                  onPressed: pos.index < pos.count - 1
+                      ? () => _stepPage(1)
+                      : null,
                 ),
                 const Spacer(),
                 if (note.paged && !_readOnly)
@@ -667,8 +665,11 @@ extension _EditorMediaView on _NoteEditorScreenState {
   Future<void> _editCaption(Attachment a) async {
     final text = await showCaptionSheet(context, a.caption);
     if (text == null || !mounted) return;
-    final latest = _note?.attachments.where((x) => x.id == a.id).firstOrNull ?? a;
-    if (latest.caption != text) _updateAttachment(latest.copyWith(caption: text));
+    final latest =
+        _note?.attachments.where((x) => x.id == a.id).firstOrNull ?? a;
+    if (latest.caption != text) {
+      _updateAttachment(latest.copyWith(caption: text));
+    }
   }
 
   /// Sabit bölmenin ⋮ levhasının başındaki anahtar (dar çubuk, K-O6): aynı
@@ -890,7 +891,6 @@ extension _EditorMediaView on _NoteEditorScreenState {
     );
   }
 
-
   String? get _pinnedShrinkKey {
     final id = _note?.id;
     return id == null || id.isEmpty ? null : 'pinned_shrink_$id';
@@ -912,114 +912,111 @@ extension _EditorMediaView on _NoteEditorScreenState {
     ValueChanged<PinnedSide>? onSelectSide,
   }) {
     return PinnedMediaPane(
-            media: pinned,
-            fill: fill,
-            side: side,
-            onCycleSide: onCycleSide,
-            onSelectSide: onSelectSide,
-            penActive: _pagePen,
-            // NOT BAŞINA "daraltınca küçülsün" (2026-11-21; cihazda saklanır,
-            // varsayılan kapalı = PDF'teki gibi genişliğe oturur).
-            shrinkToFit: _pinnedShrink,
-            onShrinkToFitChanged: _note == null
-                ? null
-                : (v) {
-                    final key = _pinnedShrinkKey;
-                    if (key == null) return;
-                    unawaited(ref.read(sharedPreferencesProvider).setBool(key, v));
-                    _update(() {});
-                  },
-            onHeightChanged: (h) =>
-                _updateAttachment(pinned.copyWith(pinHeight: h)),
-            // Bölmeden çıkış (ayracı tepeye çekmek, ⋮ → Sayfaya göm) eki
-            // SAYFAYA koyar — şeritten sabitlenmiş belge/metin/ses de dahil.
-            onUnpin: () =>
-                unawaited(_setAttachmentView(pinned, AttachmentView.floating)),
-            onOpen: pinned.kind == AttachmentKind.video
-                ? () => unawaited(_openPinnedVideoFullscreen(pinned))
-                : () => _openAttachmentTag(pinned, editing: true),
-            onCopyLink: () => _copyAttachment(pinned),
-            onCopy: pinned.kind == AttachmentKind.video
-                ? null
-                : () => _copyAttachment(pinned),
-            onExtractText: _readOnly || pinned.kind != AttachmentKind.image
-                ? null
-                : () => unawaited(_ocrImage(pinned)),
-            onChanged: _updateAttachment,
-            // Salt okunur notta tablo hücreleri yazılmaz.
-            onTableChanged: _readOnly ? null : _updateTableContent,
-            onInkChanged: _updateAttachmentInk,
-            // Balon yazılırken editörün alt çubuğu da gizlenir: kart
-            // klavyenin hemen üstünde, belge ekranın geri kalanında.
-            onImmersiveChanged: _setImmersiveBubble,
-            viewSwitch: _viewSwitchFor(note, pinned, dense: true),
-            sheetViewSwitch: (sheet) => _sheetViewSwitch(pinned, sheet),
-            // Paneldeki kalem kapatıldı: editörün kalem kipi de kapanır.
-            onPenOff: () => _update(() => _penMode = false),
-            onPenOn: _openPen,
-            onCaption: _readOnly || pinned.kind != AttachmentKind.image
-                ? null
-                : () => unawaited(_editCaption(pinned)),
-            onNoteAt: _readOnly
-                ? null
-                : (pinned.kind == AttachmentKind.video ||
-                      pinned.kind == AttachmentKind.audio)
-                ? () => _noteAtPinned(pinned)
-                // PDF: o anki sayfanın referansı (seçimsiz "Not al").
-                : pinned.kind == AttachmentKind.pdf
-                ? () => _noteAtPdf(page: pinned.pdfPage)
-                : null,
-            // Seçilen yazıdan not (basılı tut → seç → "Not al").
-            onPdfNote: _readOnly
-                ? null
-                : (page, line, quote) =>
-                      _noteAtPdf(page: page, line: line, quote: quote),
-            // Sabit bölmenin ⋮ menüsü (kullanıcı bulgusu 2026-10-16: "video
-            // sabitken kaldırmak yok, gömülü hale getirmek gerekiyor").
-            onRemove: _readOnly
-                ? null
-                : () {
-                    _removeAttachment(pinned);
-                    final l10n = context.l10n;
-                    ScaffoldMessenger.of(context).showMessage(
-                      l10n.attachmentRemoved,
-                      action: SnackBarAction(
-                        label: l10n.undo,
-                        onPressed: _undo,
-                      ),
-                    );
-                  },
-            // PDF'in seçilebilir metni var; transkript ses/video/görselde.
-            onTranscribe: Transcripts.canTranscribe(pinned)
-                ? () => unawaited(_openTranscript(pinned))
-                : null,
-            onInsertToNote: _readOnly ? null : _appendText,
-            onSmartAreaAsk:
-                !_readOnly && pinned.kind == AttachmentKind.image
-                ? () => unawaited(_smartAreaAskImage(pinned))
-                : null,
-            onSaveAs: pinned.isWebVideo
-                ? null
-                : () => unawaited(AttachmentSaveAs.run(context, ref, pinned)),
-            onShare: () => unawaited(shareAttachment(
-                context,
-                ref,
-                pinned,
-                siblings: _note?.attachments ?? const [],
-              )),
-            // Görsel balonlu görünümden sabite alındıysa balonları onun
-            // türetilmiş belgesinde (bkz. Attachment.sourceId).
-            bubbleDoc: pinned.kind == AttachmentKind.image
-                ? note.attachments
-                      .where(
-                        (a) =>
-                            a.sourceId == pinned.id &&
-                            a.kind == AttachmentKind.pdf,
-                      )
-                      .firstOrNull
-                : null,
-            child: body,
-          );
+      media: pinned,
+      fill: fill,
+      side: side,
+      onCycleSide: onCycleSide,
+      onSelectSide: onSelectSide,
+      penActive: _pagePen,
+      // NOT BAŞINA "daraltınca küçülsün" (2026-11-21; cihazda saklanır,
+      // varsayılan kapalı = PDF'teki gibi genişliğe oturur).
+      shrinkToFit: _pinnedShrink,
+      onShrinkToFitChanged: _note == null
+          ? null
+          : (v) {
+              final key = _pinnedShrinkKey;
+              if (key == null) return;
+              unawaited(ref.read(sharedPreferencesProvider).setBool(key, v));
+              _update(() {});
+            },
+      onHeightChanged: (h) => _updateAttachment(pinned.copyWith(pinHeight: h)),
+      // Bölmeden çıkış (ayracı tepeye çekmek, ⋮ → Sayfaya göm) eki
+      // SAYFAYA koyar — şeritten sabitlenmiş belge/metin/ses de dahil.
+      onUnpin: () =>
+          unawaited(_setAttachmentView(pinned, AttachmentView.floating)),
+      onOpen: pinned.kind == AttachmentKind.video
+          ? () => unawaited(_openPinnedVideoFullscreen(pinned))
+          : () => _openAttachmentTag(pinned, editing: true),
+      onCopyLink: () => _copyAttachment(pinned),
+      onCopy: pinned.kind == AttachmentKind.video
+          ? null
+          : () => _copyAttachment(pinned),
+      onExtractText: _readOnly || pinned.kind != AttachmentKind.image
+          ? null
+          : () => unawaited(_ocrImage(pinned)),
+      onChanged: _updateAttachment,
+      // Salt okunur notta tablo hücreleri yazılmaz.
+      onTableChanged: _readOnly ? null : _updateTableContent,
+      onInkChanged: _updateAttachmentInk,
+      // Balon yazılırken editörün alt çubuğu da gizlenir: kart
+      // klavyenin hemen üstünde, belge ekranın geri kalanında.
+      onImmersiveChanged: _setImmersiveBubble,
+      viewSwitch: _viewSwitchFor(note, pinned, dense: true),
+      sheetViewSwitch: (sheet) => _sheetViewSwitch(pinned, sheet),
+      // Paneldeki kalem kapatıldı: editörün kalem kipi de kapanır.
+      onPenOff: () => _update(() => _penMode = false),
+      onPenOn: _openPen,
+      onCaption: _readOnly || pinned.kind != AttachmentKind.image
+          ? null
+          : () => unawaited(_editCaption(pinned)),
+      onRename: _readOnly ? null : () => unawaited(_renameAttachment(pinned)),
+      onNoteAt: _readOnly
+          ? null
+          : (pinned.kind == AttachmentKind.video ||
+                pinned.kind == AttachmentKind.audio)
+          ? () => _noteAtPinned(pinned)
+          // PDF: o anki sayfanın referansı (seçimsiz "Not al").
+          : pinned.kind == AttachmentKind.pdf
+          ? () => _noteAtPdf(page: pinned.pdfPage)
+          : null,
+      // Seçilen yazıdan not (basılı tut → seç → "Not al").
+      onPdfNote: _readOnly
+          ? null
+          : (page, line, quote) =>
+                _noteAtPdf(page: page, line: line, quote: quote),
+      // Sabit bölmenin ⋮ menüsü (kullanıcı bulgusu 2026-10-16: "video
+      // sabitken kaldırmak yok, gömülü hale getirmek gerekiyor").
+      onRemove: _readOnly
+          ? null
+          : () {
+              _removeAttachment(pinned);
+              final l10n = context.l10n;
+              ScaffoldMessenger.of(context).showMessage(
+                l10n.attachmentRemoved,
+                action: SnackBarAction(label: l10n.undo, onPressed: _undo),
+              );
+            },
+      // PDF'in seçilebilir metni var; transkript ses/video/görselde.
+      onTranscribe: Transcripts.canTranscribe(pinned)
+          ? () => unawaited(_openTranscript(pinned))
+          : null,
+      onInsertToNote: _readOnly ? null : _appendText,
+      onSmartAreaAsk: !_readOnly && pinned.kind == AttachmentKind.image
+          ? () => unawaited(_smartAreaAskImage(pinned))
+          : null,
+      onSaveAs: pinned.isWebVideo
+          ? null
+          : () => unawaited(AttachmentSaveAs.run(context, ref, pinned)),
+      onShare: () => unawaited(
+        shareAttachment(
+          context,
+          ref,
+          pinned,
+          siblings: _note?.attachments ?? const [],
+        ),
+      ),
+      // Görsel balonlu görünümden sabite alındıysa balonları onun
+      // türetilmiş belgesinde (bkz. Attachment.sourceId).
+      bubbleDoc: pinned.kind == AttachmentKind.image
+          ? note.attachments
+                .where(
+                  (a) =>
+                      a.sourceId == pinned.id && a.kind == AttachmentKind.pdf,
+                )
+                .firstOrNull
+          : null,
+      child: body,
+    );
   }
 
   /// Sabit görsel üzerinde alan seçip kırp / panoya al.
@@ -1066,14 +1063,20 @@ extension _EditorMediaView on _NoteEditorScreenState {
                     decoration: BoxDecoration(
                       color: _pinHover
                           ? scheme.primary
-                          : scheme.primaryContainer.withValues(alpha: AppAlpha.strong),
+                          : scheme.primaryContainer.withValues(
+                              alpha: AppAlpha.strong,
+                            ),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: scheme.primary, width: 1.5),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.vertical_align_top, size: AppIconSize.s, color: fg),
+                        Icon(
+                          Icons.vertical_align_top,
+                          size: AppIconSize.s,
+                          color: fg,
+                        ),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(

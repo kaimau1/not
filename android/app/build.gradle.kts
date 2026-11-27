@@ -100,7 +100,7 @@ android {
         versionName = flutter.versionName
         // Uygulama adı (F20.2): profil derlemesi "Notlar Ölçüm" adıyla yan yana.
         manifestPlaceholders["appLabel"] = "Notlar"
-        resourceConfigurations += listOf("tr", "en")
+        resourceConfigurations += listOf("tr", "en", "ar", "id", "ms")
 
         // YALNIZ 64 BİT — 1. savunma hattı (kullanıcı isteği 2026-08-16:
         // "32 bit derlenmesin boşuna kota harcamasın").
