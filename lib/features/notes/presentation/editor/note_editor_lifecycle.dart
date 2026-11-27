@@ -92,7 +92,9 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
     // Görünür: duraklama sayacı sıfırlar (ve bekleyen gizlemeyi iptal eder).
     _typingTimer = Timer(_NoteEditorScreenState._kTypingPause, _showBarNow);
     if (_typedBurst < 3) return;
-    final delay = _NoteEditorScreenState._tenths(ref.read(typingBarHideDelayProvider));
+    final delay = _NoteEditorScreenState._tenths(
+      ref.read(typingBarHideDelayProvider),
+    );
     if (delay == Duration.zero) {
       _hideBarNow();
     } else {
@@ -184,11 +186,7 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
     );
     // Yazım düzelt (hızlı satır): her alan; başlıkta kelime başları büyür
     // (2026-11-08).
-    AutoSpell.attach(
-      controller,
-      commit,
-      title: controller == _titleController,
-    );
+    AutoSpell.attach(controller, commit, title: controller == _titleController);
     if (changed) {
       _formatTargetN.value = _formatTarget;
       // Yeni maddeye/alana geçildi: gizlenmiş alt çubuk hemen gelir. Bildirim
@@ -289,10 +287,7 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
   void _suggestCalendar(bool readOnly) {
     final note = _note;
     // `_readOnly` değil: ref atılırken okunamaz.
-    if (note == null ||
-        readOnly ||
-        note.locked ||
-        note.reminderAt != null) {
+    if (note == null || readOnly || note.locked || note.reminderAt != null) {
       return;
     }
     final edited = note.updatedAt;
@@ -305,7 +300,10 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
       text.length > 2000 ? text.substring(text.length - 2000) : text,
       parseSpokenDateTimeNow,
     );
-    if (hit == null || !_NoteEditorScreenState._suggested.add('${note.id}|${hit.at}')) return;
+    if (hit == null ||
+        !_NoteEditorScreenState._suggested.add('${note.id}|${hit.at}')) {
+      return;
+    }
     final messenger = rootScaffoldMessengerKey.currentState;
     final navigator = _rootNavigator;
     if (messenger == null || navigator == null || !navigator.mounted) return;
@@ -465,7 +463,12 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
   /// verilecek `requestFocus`tur.
   bool? _dismissKeyboardAfterSheet() {
     final keyboardUp =
-        WidgetsBinding.instance.platformDispatcher.views.first.viewInsets
+        WidgetsBinding
+            .instance
+            .platformDispatcher
+            .views
+            .first
+            .viewInsets
             .bottom >
         0;
     if (!keyboardUp) {
@@ -513,7 +516,8 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
   bool _handleHardKey(KeyEvent event) {
     if (event is! KeyDownEvent || !mounted || _secondary) return false;
     final scope = _routeScope;
-    if (scope == null || !identical(FocusManager.instance.primaryFocus, scope)) {
+    if (scope == null ||
+        !identical(FocusManager.instance.primaryFocus, scope)) {
       return false;
     }
     final keys = HardwareKeyboard.instance;
@@ -662,6 +666,7 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
     _pendingAudioFile = widget.startAudioFile;
     _pendingRevealItem = widget.revealItemId;
     _pendingFind = widget.initialFind;
+    _pendingWorkspace = widget.startWorkspace;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
   }
 
@@ -670,166 +675,164 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
     required String? owner,
     required void Function(Note loaded) onFirstLoad,
   }) {
-      // Paylaşılan notu açık tutmak = bakıyorum: gelen her değişiklik
-      // okunmuş sayılır (bkz. sharedNoteUnreadProvider — ana ekran rozeti
-      // ve bildirim bu damgaya bakar).
-      if (owner != null) {
-        ref
-            .read(sharedNoteSeenProvider.notifier)
-            .markSeen(sharedNoteKey(owner, widget.noteId));
+    // Paylaşılan notu açık tutmak = bakıyorum: gelen her değişiklik
+    // okunmuş sayılır (bkz. sharedNoteUnreadProvider — ana ekran rozeti
+    // ve bildirim bu damgaya bakar).
+    if (owner != null) {
+      ref
+          .read(sharedNoteSeenProvider.notifier)
+          .markSeen(sharedNoteKey(owner, widget.noteId));
+    }
+    if (_note == null) {
+      // ESKİ DEFTER (F3.5): açılışta sayfalı nota çevrilir ve yazılır.
+      final loaded = incoming.type == NoteType.archive
+          ? notebookToPagedNote(incoming, pageId: (_) => const Uuid().v4())
+          : _repairOrphanDocumentMode(incoming);
+      onFirstLoad(loaded);
+      // Açıldığı hâl ilk değişiklikte sürüm olur (F4.2).
+      if (!_readOnly) _notesRepo?.rememberVersionBase(loaded);
+      _setBase(incoming);
+      if (!identical(loaded, incoming) && !_readOnly) {
+        unawaited(_notesRepo?.updateNote(loaded));
       }
-      if (_note == null) {
-        // ESKİ DEFTER (F3.5): açılışta sayfalı nota çevrilir ve yazılır.
-        final loaded = incoming.type == NoteType.archive
-            ? notebookToPagedNote(incoming, pageId: (_) => const Uuid().v4())
-            : _repairOrphanDocumentMode(incoming);
-        onFirstLoad(loaded);
-        // Açıldığı hâl ilk değişiklikte sürüm olur (F4.2).
-        if (!_readOnly) _notesRepo?.rememberVersionBase(loaded);
-        _setBase(incoming);
-        if (!identical(loaded, incoming) && !_readOnly) {
-          unawaited(_notesRepo?.updateNote(loaded));
-        }
-        // Not eline geçti: bekleyen sesli not/çizim niyeti şimdi çalışır.
-        _runPendingIntents();
-      } else {
-        // Not BAŞKA yerden çöpe atıldı (geniş ekranda soldaki kartın menüsü
-        // ya da ikinci cihaz). Editör tam dokümanı `deletedAt: null` ile
-        // yazdığından, kalan tek harflik bir yazım bile notu çöpten sessizce
-        // DİRİLTİYORDU. Kayıt durdurulur ve editör kapatılır — kart menüsünün
-        // "Geri al" snackbar'ı zaten ekranda.
-        // `!_deleted` ŞART: editörün KENDİ silmesi de (softDelete + pop)
-        // gecikme telafisiyle buraya bir snapshot düşürür; bayrak olmadan
-        // dal ikinci kez tetiklenir ve context.pop() yığının tepesindeki
-        // ALTTAKİ rotayı (örn. Arşiv ekranını) düşürürdü.
-        if (incoming.deletedAt != null &&
-            _note!.deletedAt == null &&
-            !_deleted) {
-          _deleted = true;
-          _debouncer.cancel();
-          _liteHeldN.value = false;
-          if (mounted) _closeEditor();
-          return;
-        }
-        if (_deleted) return;
-        // Editör açıkken YAZILAN alanlar (başlık/gövde/maddeler) yerel esastır;
-        // gerisi uzaktan benimsenir:
-        //  - ekler: yükleme/AI alanları düzen korunarak birleştirilir,
-        //  - meta (sabit/yıldız/kilit/arşiv/klasör/etiket/renk/hatırlatıcı):
-        //    karttan ya da ikinci cihazdan yapılan değişiklik, editörün
-        //    tam-doküman kaydıyla sessizce GERİ ALINMASIN. Yereldeki meta
-        //    değişikliği kaybolmaz: Firestore gecikme telafisi yerel yazımı
-        //    akışa anında yansıtır, bayat snapshot gelmez.
-        final localTitle = _titleController.logicalText;
-        final localBody = _bodyController.logicalText;
-        // Kullanıcı bu oturumda HİÇ yazmadıysa içerik de benimsenir: notu
-        // yalnızca açıp bakan tarafta ikinci cihazın düzenlemesi canlı akar
-        // ve bayat taban tam-doküman kaydıyla onu ezemez.
-        final pristine =
-            !_undoStack.canUndo &&
-            !_debouncer.hasPending &&
-            localTitle == _note!.title &&
-            localBody == _note!.body;
-        // KÖK NEDEN (kasma): burada KOŞULSUZ `setState` vardı. Firestore
-        // gecikme telafisi yüzünden editörün KENDİ kaydı da anında bir
-        // anlık görüntü olarak geri düşer; yani yazarken (debounce 0,5 sn,
-        // en geç 3 sn) düzenli aralıklarla 4000 satırlık editör build'i —
-        // sayfa tuvali, sarma ölçümü, bütün madde satırları — boşuna
-        // yeniden koşuyordu. Oysa o yankıda çizimi değiştiren HİÇBİR ŞEY
-        // yok: alanlar zaten yerelden geldiği gibi. Artık yeni not nesnesi
-        // kurulur, çizimi etkileyen bir fark yoksa `setState` ATLANIR
-        // (denetleyiciler ve `_note` yine güncel kalır).
-        final previous = _note!;
-        // AĞIR BELGE İLK KEZ GELDİ (F3.13): ekler olduğu gibi benimsenir —
-        // yereldeki hafif kopyanın düzen alanları (PDF işaretleri dahil)
-        // boş; birleştirme onları ağır veriye tercih ederdi. Kaydedilmemiş yerel
-        // ek değişikliği varsa liste yerel kalır (F5.6, `hydrateAttachments`).
-        final hydrating = incoming.heavyLoaded && !previous.heavyLoaded;
-        Note merged;
-        {
-          merged = previous.copyWith(
-            heavyRef: incoming.heavyRef,
-            heavyLoaded: previous.heavyLoaded || incoming.heavyLoaded,
-            // Bizim çizgilerimiz henüz yazılmadıysa onlar kalır; yoksa gelen
-            // (başka cihaz ya da ağır belgenin geç gelen çizimi).
-            pageInk: _debouncer.hasPending || incoming.heavyMissing
-                ? null
-                : incoming.pageInk,
-            attachments: hydrating
-                ? hydrateAttachments(
-                    local: previous.attachments,
-                    incoming: incoming.attachments,
-                    localPending: _debouncer.hasPending,
-                  )
-                : mergeAttachmentLayout(
-                    local: _note!.attachments,
-                    incoming: incoming.attachments,
-                  ),
-            aiSummary: incoming.aiSummary,
-            pinned: incoming.pinned,
-            starred: incoming.starred,
-            urgent: incoming.urgent,
-            locked: incoming.locked,
-            tags: incoming.tags,
-            color: incoming.color,
-            frameColor: incoming.frameColor,
-            customColor: incoming.customColor,
-            clearCustomColor: incoming.customColor == null,
-            customFrameColor: incoming.customFrameColor,
-            clearCustomFrameColor: incoming.customFrameColor == null,
-            folderId: incoming.folderId,
-            clearFolderId: incoming.folderId == null,
-            archivedAt: incoming.archivedAt,
-            clearArchivedAt: incoming.archivedAt == null,
-            expiresAt: incoming.expiresAt,
-            clearExpiresAt: incoming.expiresAt == null,
-            reminderAt: incoming.reminderAt,
-            clearReminderAt: incoming.reminderAt == null,
-            // Sıra ve görünüm ayarları da uzaktan benimsenir: geniş ekranda
-            // solda sürükle-sırala yapıldığında editörün tam-doküman kaydı
-            // orderIndex'i geri almasın.
-            orderIndex: incoming.orderIndex,
-            fontFamily: incoming.fontFamily,
-            clearFontFamily: incoming.fontFamily == null,
-            fontScale: incoming.fontScale,
-            textOpacity: incoming.textOpacity,
-            titleFontFamily: incoming.titleFontFamily,
-            clearTitleFontFamily: incoming.titleFontFamily == null,
-            titleFontScale: incoming.titleFontScale,
-            titleTextOpacity: incoming.titleTextOpacity,
-            backgroundImageId: incoming.backgroundImageId,
-            clearBackgroundImage: incoming.backgroundImageId == null,
-            backgroundOpacity: incoming.backgroundOpacity,
-            paged: incoming.paged,
-            archivePaper: incoming.archivePaper,
-            lineSpacing: incoming.lineSpacing,
-            extras: incoming.extras,
+      // Not eline geçti: bekleyen sesli not/çizim niyeti şimdi çalışır.
+      _runPendingIntents();
+    } else {
+      // Not BAŞKA yerden çöpe atıldı (geniş ekranda soldaki kartın menüsü
+      // ya da ikinci cihaz). Editör tam dokümanı `deletedAt: null` ile
+      // yazdığından, kalan tek harflik bir yazım bile notu çöpten sessizce
+      // DİRİLTİYORDU. Kayıt durdurulur ve editör kapatılır — kart menüsünün
+      // "Geri al" snackbar'ı zaten ekranda.
+      // `!_deleted` ŞART: editörün KENDİ silmesi de (softDelete + pop)
+      // gecikme telafisiyle buraya bir snapshot düşürür; bayrak olmadan
+      // dal ikinci kez tetiklenir ve context.pop() yığının tepesindeki
+      // ALTTAKİ rotayı (örn. Arşiv ekranını) düşürürdü.
+      if (incoming.deletedAt != null && _note!.deletedAt == null && !_deleted) {
+        _deleted = true;
+        _debouncer.cancel();
+        _liteHeldN.value = false;
+        if (mounted) _closeEditor();
+        return;
+      }
+      if (_deleted) return;
+      // Editör açıkken YAZILAN alanlar (başlık/gövde/maddeler) yerel esastır;
+      // gerisi uzaktan benimsenir:
+      //  - ekler: yükleme/AI alanları düzen korunarak birleştirilir,
+      //  - meta (sabit/yıldız/kilit/arşiv/klasör/etiket/renk/hatırlatıcı):
+      //    karttan ya da ikinci cihazdan yapılan değişiklik, editörün
+      //    tam-doküman kaydıyla sessizce GERİ ALINMASIN. Yereldeki meta
+      //    değişikliği kaybolmaz: Firestore gecikme telafisi yerel yazımı
+      //    akışa anında yansıtır, bayat snapshot gelmez.
+      final localTitle = _titleController.logicalText;
+      final localBody = _bodyController.logicalText;
+      // Kullanıcı bu oturumda HİÇ yazmadıysa içerik de benimsenir: notu
+      // yalnızca açıp bakan tarafta ikinci cihazın düzenlemesi canlı akar
+      // ve bayat taban tam-doküman kaydıyla onu ezemez.
+      final pristine =
+          !_undoStack.canUndo &&
+          !_debouncer.hasPending &&
+          localTitle == _note!.title &&
+          localBody == _note!.body;
+      // KÖK NEDEN (kasma): burada KOŞULSUZ `setState` vardı. Firestore
+      // gecikme telafisi yüzünden editörün KENDİ kaydı da anında bir
+      // anlık görüntü olarak geri düşer; yani yazarken (debounce 0,5 sn,
+      // en geç 3 sn) düzenli aralıklarla 4000 satırlık editör build'i —
+      // sayfa tuvali, sarma ölçümü, bütün madde satırları — boşuna
+      // yeniden koşuyordu. Oysa o yankıda çizimi değiştiren HİÇBİR ŞEY
+      // yok: alanlar zaten yerelden geldiği gibi. Artık yeni not nesnesi
+      // kurulur, çizimi etkileyen bir fark yoksa `setState` ATLANIR
+      // (denetleyiciler ve `_note` yine güncel kalır).
+      final previous = _note!;
+      // AĞIR BELGE İLK KEZ GELDİ (F3.13): ekler olduğu gibi benimsenir —
+      // yereldeki hafif kopyanın düzen alanları (PDF işaretleri dahil)
+      // boş; birleştirme onları ağır veriye tercih ederdi. Kaydedilmemiş yerel
+      // ek değişikliği varsa liste yerel kalır (F5.6, `hydrateAttachments`).
+      final hydrating = incoming.heavyLoaded && !previous.heavyLoaded;
+      Note merged;
+      {
+        merged = previous.copyWith(
+          heavyRef: incoming.heavyRef,
+          heavyLoaded: previous.heavyLoaded || incoming.heavyLoaded,
+          // Bizim çizgilerimiz henüz yazılmadıysa onlar kalır; yoksa gelen
+          // (başka cihaz ya da ağır belgenin geç gelen çizimi).
+          pageInk: _debouncer.hasPending || incoming.heavyMissing
+              ? null
+              : incoming.pageInk,
+          attachments: hydrating
+              ? hydrateAttachments(
+                  local: previous.attachments,
+                  incoming: incoming.attachments,
+                  localPending: _debouncer.hasPending,
+                )
+              : mergeAttachmentLayout(
+                  local: _note!.attachments,
+                  incoming: incoming.attachments,
+                ),
+          aiSummary: incoming.aiSummary,
+          pinned: incoming.pinned,
+          starred: incoming.starred,
+          urgent: incoming.urgent,
+          locked: incoming.locked,
+          tags: incoming.tags,
+          color: incoming.color,
+          frameColor: incoming.frameColor,
+          customColor: incoming.customColor,
+          clearCustomColor: incoming.customColor == null,
+          customFrameColor: incoming.customFrameColor,
+          clearCustomFrameColor: incoming.customFrameColor == null,
+          folderId: incoming.folderId,
+          clearFolderId: incoming.folderId == null,
+          archivedAt: incoming.archivedAt,
+          clearArchivedAt: incoming.archivedAt == null,
+          expiresAt: incoming.expiresAt,
+          clearExpiresAt: incoming.expiresAt == null,
+          reminderAt: incoming.reminderAt,
+          clearReminderAt: incoming.reminderAt == null,
+          // Sıra ve görünüm ayarları da uzaktan benimsenir: geniş ekranda
+          // solda sürükle-sırala yapıldığında editörün tam-doküman kaydı
+          // orderIndex'i geri almasın.
+          orderIndex: incoming.orderIndex,
+          fontFamily: incoming.fontFamily,
+          clearFontFamily: incoming.fontFamily == null,
+          fontScale: incoming.fontScale,
+          textOpacity: incoming.textOpacity,
+          titleFontFamily: incoming.titleFontFamily,
+          clearTitleFontFamily: incoming.titleFontFamily == null,
+          titleFontScale: incoming.titleFontScale,
+          titleTextOpacity: incoming.titleTextOpacity,
+          backgroundImageId: incoming.backgroundImageId,
+          clearBackgroundImage: incoming.backgroundImageId == null,
+          backgroundOpacity: incoming.backgroundOpacity,
+          paged: incoming.paged,
+          archivePaper: incoming.archivePaper,
+          lineSpacing: incoming.lineSpacing,
+          extras: incoming.extras,
+        );
+        if (pristine) {
+          merged = merged.copyWith(
+            title: incoming.title,
+            body: incoming.body,
+            items: incoming.items,
+            // Sayfa notları da içerik: bu oturumda hiç yazılmadıysa ikinci
+            // cihazın yazdığı sayfa notu canlı görünür. Yazılmışsa YEREL
+            // esastır (pristine false) — yankı gelen bayat harita, henüz
+            // kaydedilmemiş tuş vuruşlarını geri almasın.
+            pageNotes: incoming.pageNotes,
           );
-          if (pristine) {
-            merged = merged.copyWith(
-              title: incoming.title,
-              body: incoming.body,
-              items: incoming.items,
-              // Sayfa notları da içerik: bu oturumda hiç yazılmadıysa ikinci
-              // cihazın yazdığı sayfa notu canlı görünür. Yazılmışsa YEREL
-              // esastır (pristine false) — yankı gelen bayat harita, henüz
-              // kaydedilmemiş tuş vuruşlarını geri almasın.
-              pageNotes: incoming.pageNotes,
-            );
-            if (incoming.title != localTitle) {
-              _titleController.text = incoming.title;
-            }
-            if (incoming.body != localBody) {
-              _bodyController.text = incoming.body;
-            }
-            _setBase(incoming);
-          } else {
-            merged = _mergeConcurrent(merged, incoming, localTitle, localBody);
+          if (incoming.title != localTitle) {
+            _titleController.text = incoming.title;
           }
+          if (incoming.body != localBody) {
+            _bodyController.text = incoming.body;
+          }
+          _setBase(incoming);
+        } else {
+          merged = _mergeConcurrent(merged, incoming, localTitle, localBody);
         }
-        _note = merged;
-        if (!sameRenderedNote(previous, merged)) _setStateAfterOpening();
       }
+      _note = merged;
+      if (!sameRenderedNote(previous, merged)) _setStateAfterOpening();
+    }
   }
 
   void _handleMetricsChanged() {

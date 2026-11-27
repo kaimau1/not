@@ -8868,4 +8868,488 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get starterWelcomeTitle => '⚡ Hızlı başlangıç';
+
+  @override
+  String get smartListMoving => 'Taşınma planı';
+
+  @override
+  String get smartListCleaning => 'Ev temizliği';
+
+  @override
+  String get smartListHabits => 'Alışkanlık takibi';
+
+  @override
+  String get smartListWorkout => 'Antrenman programı';
+
+  @override
+  String get smartListGifts => 'Hediye planlayıcı';
+
+  @override
+  String get smartListWatchlist => 'İzlenecekler';
+
+  @override
+  String get smartListEvent => 'Etkinlik ve davet';
+
+  @override
+  String get smartListExpense => 'Bütçe ve harcama';
+
+  @override
+  String get smartListKindSelect => 'Liste türünü seç';
+
+  @override
+  String get smartListCatalog => 'Paketler ve katalog';
+
+  @override
+  String get smartListSearchCatalog => 'Madde veya grup ara…';
+
+  @override
+  String get smartListStarterPacks => 'Hazır başlangıç paketleri';
+
+  @override
+  String get smartListOpenWorkspace => 'Çalışma alanında aç';
+
+  @override
+  String get smartListTripWizard => 'Seyahat sihirbazı';
+
+  @override
+  String get smartListEventWizard => 'Davet sihirbazı';
+
+  @override
+  String get smartListWizardDays => 'Kaç gün?';
+
+  @override
+  String get smartListWizardWeather => 'Hava durumu';
+
+  @override
+  String get smartListWeatherHot => 'Sıcak';
+
+  @override
+  String get smartListWeatherMild => 'Ilık';
+
+  @override
+  String get smartListWeatherCold => 'Soğuk';
+
+  @override
+  String get smartListWeatherRainy => 'Yağmurlu';
+
+  @override
+  String get smartListWizardStyle => 'Seyahat türü';
+
+  @override
+  String get smartListStyleBeach => 'Deniz ve plaj';
+
+  @override
+  String get smartListStyleCity => 'Şehir gezisi';
+
+  @override
+  String get smartListStyleBusiness => 'İş seyahati';
+
+  @override
+  String get smartListStyleIntl => 'Yurt dışı';
+
+  @override
+  String get smartListStyleCamp => 'Kamp';
+
+  @override
+  String get smartListWizardGuests => 'Kaç kişi?';
+
+  @override
+  String get smartListEventStyle => 'Etkinlik türü';
+
+  @override
+  String get smartListEventBirthday => 'Doğum günü';
+
+  @override
+  String get smartListEventDinner => 'Akşam yemeği';
+
+  @override
+  String get smartListEventPicnic => 'Piknik';
+
+  @override
+  String smartListApplyPlan(int count) {
+    return 'Listeye ekle ($count madde)';
+  }
+
+  @override
+  String smartListPackAdded(String name) {
+    return '“$name” paketi eklendi';
+  }
+
+  @override
+  String get smartListEditItem => 'Maddeyi düzenle';
+
+  @override
+  String get smartListItemNameHint => 'Madde adı';
+
+  @override
+  String get smartListItemQty => 'Miktar';
+
+  @override
+  String get smartListItemUnit => 'Birim';
+
+  @override
+  String get smartListAll => 'Tümü';
+
+  @override
+  String get smartListResetDone => 'Liste sıfırlandı';
+
+  @override
+  String get smartListWorkspaceEmpty =>
+      'Henüz madde yok; aşağıdan ekle veya hazır paket seç.';
+
+  @override
+  String get smartWorkspaceOpen => 'Çalışma alanını aç';
+
+  @override
+  String smartPillHabit(int done, int total) {
+    return 'Alışkanlık · $done/$total bugün';
+  }
+
+  @override
+  String smartPillMoving(int done, int total) {
+    return 'Taşınma · $done/$total hazır';
+  }
+
+  @override
+  String smartPillPacking(int done, int total) {
+    return 'Bavul · $done/$total hazır';
+  }
+
+  @override
+  String smartPillWorkout(int done, int total) {
+    return 'Antrenman · $done/$total egzersiz';
+  }
+
+  @override
+  String smartPillCleaning(int done, int total) {
+    return 'Temizlik · $done/$total tamam';
+  }
+
+  @override
+  String smartPillGifts(int done, int total) {
+    return 'Hediyeler · $done/$total hazır';
+  }
+
+  @override
+  String smartPillWatchlist(int count) {
+    return 'İzlenecekler · $count bekliyor';
+  }
+
+  @override
+  String smartPillExpense(String total) {
+    return 'Bütçe · $total ₺';
+  }
+
+  @override
+  String smartPillDefault(int count) {
+    return 'Akıllı çalışma alanı ($count kalan)';
+  }
+
+  @override
+  String habitDoneToday(int done, int total) {
+    return '$done/$total bugün';
+  }
+
+  @override
+  String habitBestStreak(int days) {
+    return 'En iyi seri: $days gün';
+  }
+
+  @override
+  String habitStreakDays(int days) {
+    return '$days gün seri';
+  }
+
+  @override
+  String get habitWeeklyGoal => 'Haftalık hedef';
+
+  @override
+  String habitWeeklyProgress(int done, int goal) {
+    return '$done/$goal bu hafta';
+  }
+
+  @override
+  String get habitTimeMorning => 'Sabah';
+
+  @override
+  String get habitTimeAfternoon => 'Öğle';
+
+  @override
+  String get habitTimeEvening => 'Akşam';
+
+  @override
+  String get habitFilterRemaining => 'Bugün kalan';
+
+  @override
+  String get habitLast30Days => 'Son 30 gün';
+
+  @override
+  String get habitAddHint => 'Yeni alışkanlık ekle…';
+
+  @override
+  String get habitPrevWeek => 'Önceki hafta';
+
+  @override
+  String get habitNextWeek => 'Sonraki hafta';
+
+  @override
+  String get movingViewTimeline => 'Zaman çizelgesi';
+
+  @override
+  String get movingViewRooms => 'Oda ve koliler';
+
+  @override
+  String get movingPhaseMonth => '1 ay önce';
+
+  @override
+  String get movingPhaseWeek => '1 hafta önce';
+
+  @override
+  String get movingPhaseDay => 'Taşınma günü';
+
+  @override
+  String get movingPhaseNewHome => 'Yeni evde';
+
+  @override
+  String get movingRoomKitchen => 'Mutfak';
+
+  @override
+  String get movingRoomLiving => 'Salon';
+
+  @override
+  String get movingRoomBedroom => 'Yatak odası';
+
+  @override
+  String get movingRoomBath => 'Banyo';
+
+  @override
+  String get movingRoomStudy => 'Çalışma';
+
+  @override
+  String get movingRoomGeneral => 'Genel';
+
+  @override
+  String movingBoxesCount(int count) {
+    return '$count koli';
+  }
+
+  @override
+  String movingFragileCount(int count) {
+    return '$count kırılacak';
+  }
+
+  @override
+  String get movingFragile => 'Kırılacak';
+
+  @override
+  String get movingOpenFirst => 'Önce aç';
+
+  @override
+  String get movingBoxNumber => 'Koli no (ör. #1)';
+
+  @override
+  String get movingAddHint => 'Taşınma adımı veya koli ekle…';
+
+  @override
+  String get packingBagChecked => 'Valiz';
+
+  @override
+  String get packingBagCabin => 'El bagajı';
+
+  @override
+  String get packingBagWear => 'Üstümde';
+
+  @override
+  String get packingReset => 'Bavulu sıfırla';
+
+  @override
+  String get packingAddHint => 'Eşya ekle (ör. 3 tişört)…';
+
+  @override
+  String workoutSetsCount(int done, int total) {
+    return '$done/$total set';
+  }
+
+  @override
+  String get workoutRestTimer => 'Dinlenme sayacı';
+
+  @override
+  String workoutRestSeconds(int sec) {
+    return '$sec sn';
+  }
+
+  @override
+  String get workoutAutoTimer => 'Set sonrası otomatik başlat';
+
+  @override
+  String get workoutSetsLabel => 'Set';
+
+  @override
+  String get workoutRepsLabel => 'Tekrar / süre';
+
+  @override
+  String get workoutWeightLabel => 'Ağırlık (ör. 20 kg)';
+
+  @override
+  String get workoutZoneWarmup => 'Isınma';
+
+  @override
+  String get workoutZoneUpper => 'Üst';
+
+  @override
+  String get workoutZoneLower => 'Alt';
+
+  @override
+  String get workoutZoneCore => 'Merkez';
+
+  @override
+  String get workoutZoneCardio => 'Kardiyo';
+
+  @override
+  String get workoutZoneStretch => 'Esneme';
+
+  @override
+  String get workoutReset => 'Antrenmanı sıfırla';
+
+  @override
+  String get workoutAddHint => 'Egzersiz ekle…';
+
+  @override
+  String get cleaningFreqDaily => 'Günlük';
+
+  @override
+  String get cleaningFreqWeekly => 'Haftalık';
+
+  @override
+  String get cleaningFreqMonthly => 'Aylık';
+
+  @override
+  String get cleaningReset => 'Döngüyü sıfırla';
+
+  @override
+  String get cleaningAddHint => 'Temizlik adımı ekle…';
+
+  @override
+  String get giftStageIdea => 'Fikir';
+
+  @override
+  String get giftStageBought => 'Alındı';
+
+  @override
+  String get giftStageWrapped => 'Paketlendi';
+
+  @override
+  String get giftStageGiven => 'Verildi';
+
+  @override
+  String get giftRecipient => 'Kime';
+
+  @override
+  String get giftPrice => 'Bütçe (₺)';
+
+  @override
+  String giftSummaryPlanned(String total, String bought) {
+    return 'Toplam: $total ₺ · Alınan: $bought ₺';
+  }
+
+  @override
+  String get giftAddHint => 'Hediye veya kişi ekle…';
+
+  @override
+  String get watchTypeMovie => 'Film';
+
+  @override
+  String get watchTypeSeries => 'Dizi';
+
+  @override
+  String get watchTypeBook => 'Kitap';
+
+  @override
+  String get watchTypeDoc => 'Belgesel';
+
+  @override
+  String get watchTypePodcast => 'Podcast';
+
+  @override
+  String get watchStatusQueued => 'Sırada';
+
+  @override
+  String get watchStatusWatching => 'Devam ediyor';
+
+  @override
+  String get watchStatusDone => 'Bitti';
+
+  @override
+  String get watchPlatform => 'Platform veya yazar';
+
+  @override
+  String get watchRating => 'Puanın';
+
+  @override
+  String get watchAddHint => 'Film, dizi veya kitap ekle…';
+
+  @override
+  String get expenseCatMarket => 'Market';
+
+  @override
+  String get expenseCatBills => 'Fatura';
+
+  @override
+  String get expenseCatTransport => 'Ulaşım';
+
+  @override
+  String get expenseCatFood => 'Yemek';
+
+  @override
+  String get expenseCatHome => 'Ev';
+
+  @override
+  String get expenseCatHealth => 'Sağlık';
+
+  @override
+  String get expenseCatFun => 'Keyif';
+
+  @override
+  String get expenseCatOther => 'Diğer';
+
+  @override
+  String expenseSummaryBar(String total, String paid, String left) {
+    return 'Toplam: $total ₺ · Ödenen: $paid ₺ · Kalan: $left ₺';
+  }
+
+  @override
+  String get expenseAmountHint => 'Tutar (₺)';
+
+  @override
+  String get expenseAddHint => 'Kalem ekle (ör. Elektrik 850)…';
+
+  @override
+  String get domainGearReset => 'Listeyi sıfırla';
+
+  @override
+  String get domainAddHint => 'Yeni madde ekle…';
+
+  @override
+  String get quickDropKeepOpen => 'Seri ekle (ekledikten sonra açık kal)';
+
+  @override
+  String get quickDropSmartListChip => 'Akıllı liste';
+
+  @override
+  String quickDropPreviewSmartList(String kind, String items) {
+    return '✨ Yeni $kind: $items';
+  }
+
+  @override
+  String quickDropSavedSmartList(String title) {
+    return '“$title” akıllı listesi oluşturuldu';
+  }
+
+  @override
+  String quickDropAddedSerial(String title) {
+    return 'Eklendi: “$title”';
+  }
+
+  @override
+  String get quickDropUrgentBadge => 'Acil';
 }

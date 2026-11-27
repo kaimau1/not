@@ -302,16 +302,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                     return FadeTransition(opacity: animation, child: page);
                   }
                   final rtl = Directionality.of(context) == TextDirection.rtl;
-                  final slide = Tween<Offset>(
-                    begin: Offset(rtl ? 1.0 : -1.0, 0),
-                    end: Offset.zero,
-                  ).animate(
-                    CurvedAnimation(
-                      parent: animation,
-                      curve: AppMotion.enter,
-                      reverseCurve: AppMotion.exit,
-                    ),
-                  );
+                  final slide =
+                      Tween<Offset>(
+                        begin: Offset(rtl ? 1.0 : -1.0, 0),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: AppMotion.enter,
+                          reverseCurve: AppMotion.exit,
+                        ),
+                      );
                   return SlideTransition(position: slide, child: page);
                 },
               );
@@ -540,4 +541,6 @@ Widget _noteBuilder(BuildContext context, GoRouterState state) =>
       // ?find=<sorgu>: aramadan açıldı — not içi arama o kelimeyle açılır
       // (F56.1).
       initialFind: state.uri.queryParameters['find'],
+      // ?workspace=1: akıllı liste / mağaza kipi çalışma alanıyla açılır.
+      startWorkspace: state.uri.queryParameters['workspace'] == '1',
     );

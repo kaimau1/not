@@ -31,7 +31,9 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
       note,
       // Üst çubukta 48 dp'ye sığan boy (bkz. [_titleInBar]).
       fontSize:
-          (titleInBar ? 18.0 : (theme.textTheme.headlineSmall?.fontSize ?? 24)) *
+          (titleInBar
+              ? 18.0
+              : (theme.textTheme.headlineSmall?.fontSize ?? 24)) *
           note.titleFontScale,
     );
     // BAŞLIK ÜST ÇUBUKTA (kullanıcı isteği 2026-11-03: "üste sabitlemede
@@ -47,90 +49,93 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
           : const EdgeInsetsDirectional.fromSTEB(16, 2, 4, 0),
       // Başlığın yazı ölçeği değişince yumuşak oturur (bkz. ScaleSettle).
       child: ScaleSettle(
-      value: note.titleFontScale,
-      // UZUN BAŞLIK KÜÇÜLEREK SIĞAR (kullanıcı isteği 2026-11-01, bkz.
-      // [fitTitleFontSize]): yazı değiştikçe yalnız bu parça yeniden
-      // kurulur. Satır yüksekliği taban boyda SABİT (strut) — yazı
-      // küçülürken alttaki sayfa harf harf yukarı kaymasın.
-      child: ValueListenableBuilder<TextEditingValue>(
-        valueListenable: _titleController,
-        builder: (context, _, _) => LayoutBuilder(
-          builder: (context, box) {
-            // ÖLÇÜM ALANIN ÇİZDİĞİ STİLLE (kullanıcı bulgusu 2026-11-04:
-            // "uzun başlık sağdaki çipin altına giriyor"). KÖK NEDEN:
-            // TextField stili temanın `bodyLarge`ının ÜSTÜNE birleştirir;
-            // başlık stili harf aralığı vermediği için alan `bodyLarge`ın
-            // 0,5 aralığını miras alıyor, ölçüm ise aralıksız yapılıyordu —
-            // 34 harflik başlık ~17 px dar ölçülüp "sığdı" sayılıyordu.
-            final fieldStyle = fieldMergedStyle(
-              Theme.of(context).textTheme.bodyLarge,
-              titleBaseStyle,
-            );
-            final fitted = fitTitleFontSize(
-              spanFor: (size) => _titleController.buildTextSpan(
-                context: context,
-                style: fieldStyle.copyWith(fontSize: size),
-                withComposing: false,
-              ),
-              // İmleç ve iç dolgu payı.
-              maxWidth: box.maxWidth - 8,
-              baseSize: titleBaseSize,
-              textScaler: MediaQuery.textScalerOf(context),
-              textDirection: Directionality.of(context),
-            );
-            return ValueListenableBuilder<bool>(
-              valueListenable: AutoSpell.enabled,
-              builder: (_, autoFix, _) => TextField(
-        controller: _titleController,
-        focusNode: _titleFocus,
-        readOnly: _readOnly,
-        autocorrect: autoFix,
-        onChanged: (_) =>
-            _mutate((n) => n.copyWith(title: _titleController.logicalText)),
-        style: titleBaseStyle.copyWith(fontSize: fitted),
-        strutStyle: StrutStyle(
-          fontSize: titleBaseSize,
-          height: titleBaseStyle.height,
-          forceStrutHeight: true,
-        ),
-        // TEK SATIR (kullanıcı isteği 2026-08-08: "başlık tek satırdan
-        // taşmasın"): sığmayan başlık önce küçülür (yukarıda), en küçük
-        // boyda da sığmazsa alanın içinde yatay kayar.
-        // ignore: avoid_redundant_argument_values
-        maxLines: 1,
-        // Başlıkta kelime başları büyük (kullanıcı isteği 2026-11-08): sanal
-        // klavye kendisi büyütür; fiziksel klavye/web için yazım düzelt
-        // açıkken [AutoSpell] (title kipi) aynı kuralı uygular.
-        textCapitalization: TextCapitalization.words,
-        textInputAction: TextInputAction.next,
-        // Varsayılan `next` odak sırasındaki bir SONRAKİ öğeye gider — metin
-        // olmayan bir öğeye düşerse klavye kapanıyordu. "İleri" doğrudan
-        // gövdeye (liste notunda ilk maddeye) atlar.
-        onEditingComplete: _focusAfterTitle,
-        // Başlık da biçimlendirilebiliyor: Kes/Kopyala temiz-metin sürümü
-        // (gövdeyle aynı gerekçe).
-        contextMenuBuilder: (menuContext, state) => NoteSelectionToolbar(
-          editableState: state,
-          formatController: _titleController,
-          readOnly: _readOnly,
-          onFormatCommit: () => _mutate(
-            (n) => n.copyWith(title: _titleController.logicalText),
-            immediate: true,
+        value: note.titleFontScale,
+        // UZUN BAŞLIK KÜÇÜLEREK SIĞAR (kullanıcı isteği 2026-11-01, bkz.
+        // [fitTitleFontSize]): yazı değiştikçe yalnız bu parça yeniden
+        // kurulur. Satır yüksekliği taban boyda SABİT (strut) — yazı
+        // küçülürken alttaki sayfa harf harf yukarı kaymasın.
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _titleController,
+          builder: (context, _, _) => LayoutBuilder(
+            builder: (context, box) {
+              // ÖLÇÜM ALANIN ÇİZDİĞİ STİLLE (kullanıcı bulgusu 2026-11-04:
+              // "uzun başlık sağdaki çipin altına giriyor"). KÖK NEDEN:
+              // TextField stili temanın `bodyLarge`ının ÜSTÜNE birleştirir;
+              // başlık stili harf aralığı vermediği için alan `bodyLarge`ın
+              // 0,5 aralığını miras alıyor, ölçüm ise aralıksız yapılıyordu —
+              // 34 harflik başlık ~17 px dar ölçülüp "sığdı" sayılıyordu.
+              final fieldStyle = fieldMergedStyle(
+                Theme.of(context).textTheme.bodyLarge,
+                titleBaseStyle,
+              );
+              final fitted = fitTitleFontSize(
+                spanFor: (size) => _titleController.buildTextSpan(
+                  context: context,
+                  style: fieldStyle.copyWith(fontSize: size),
+                  withComposing: false,
+                ),
+                // İmleç ve iç dolgu payı.
+                maxWidth: box.maxWidth - 8,
+                baseSize: titleBaseSize,
+                textScaler: MediaQuery.textScalerOf(context),
+                textDirection: Directionality.of(context),
+              );
+              return ValueListenableBuilder<bool>(
+                valueListenable: AutoSpell.enabled,
+                builder: (_, autoFix, _) => TextField(
+                  controller: _titleController,
+                  focusNode: _titleFocus,
+                  readOnly: _readOnly,
+                  autocorrect: autoFix,
+                  onChanged: (_) => _mutate(
+                    (n) => n.copyWith(title: _titleController.logicalText),
+                  ),
+                  style: titleBaseStyle.copyWith(fontSize: fitted),
+                  strutStyle: StrutStyle(
+                    fontSize: titleBaseSize,
+                    height: titleBaseStyle.height,
+                    forceStrutHeight: true,
+                  ),
+                  // TEK SATIR (kullanıcı isteği 2026-08-08: "başlık tek satırdan
+                  // taşmasın"): sığmayan başlık önce küçülür (yukarıda), en küçük
+                  // boyda da sığmazsa alanın içinde yatay kayar.
+                  // ignore: avoid_redundant_argument_values
+                  maxLines: 1,
+                  // Başlıkta kelime başları büyük (kullanıcı isteği 2026-11-08): sanal
+                  // klavye kendisi büyütür; fiziksel klavye/web için yazım düzelt
+                  // açıkken [AutoSpell] (title kipi) aynı kuralı uygular.
+                  textCapitalization: TextCapitalization.words,
+                  textInputAction: TextInputAction.next,
+                  // Varsayılan `next` odak sırasındaki bir SONRAKİ öğeye gider — metin
+                  // olmayan bir öğeye düşerse klavye kapanıyordu. "İleri" doğrudan
+                  // gövdeye (liste notunda ilk maddeye) atlar.
+                  onEditingComplete: _focusAfterTitle,
+                  // Başlık da biçimlendirilebiliyor: Kes/Kopyala temiz-metin sürümü
+                  // (gövdeyle aynı gerekçe).
+                  contextMenuBuilder: (menuContext, state) =>
+                      NoteSelectionToolbar(
+                        editableState: state,
+                        formatController: _titleController,
+                        readOnly: _readOnly,
+                        onFormatCommit: () => _mutate(
+                          (n) =>
+                              n.copyWith(title: _titleController.logicalText),
+                          immediate: true,
+                        ),
+                        buttonItems: arrangeSelectionMenu(
+                          platform: cleanClipboardMenuItems(state),
+                        ),
+                      ),
+                  decoration: InputDecoration(
+                    hintText: l10n.titleHint,
+                    filled: false,
+                    border: InputBorder.none,
+                  ),
+                ),
+              );
+            },
           ),
-          buttonItems: arrangeSelectionMenu(
-            platform: cleanClipboardMenuItems(state),
-          ),
         ),
-        decoration: InputDecoration(
-          hintText: l10n.titleHint,
-          filled: false,
-          border: InputBorder.none,
-        ),
-      ),
-            );
-          },
-        ),
-      ),
       ),
     );
 
@@ -297,16 +302,16 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
       // Etiketler üst çubukta, tarihin solunda (kullanıcı isteği
       // 2026-11-05); başlık çubuktayken tarih yok — o zaman burada.
       if (titleInBar)
-      for (final tag in note.tags)
-        InputChip(
-          label: Text('#$tag', maxLines: 1, overflow: TextOverflow.ellipsis),
-          labelStyle: chipLabelStyle,
-          padding: _NoteEditorScreenState._kChipPadding,
-          visualDensity: _NoteEditorScreenState._kChipDensity,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          deleteIconBoxConstraints: _NoteEditorScreenState._kChipDeleteBox,
-          onDeleted: () => _removeTag(tag),
-        ),
+        for (final tag in note.tags)
+          InputChip(
+            label: Text('#$tag', maxLines: 1, overflow: TextOverflow.ellipsis),
+            labelStyle: chipLabelStyle,
+            padding: _NoteEditorScreenState._kChipPadding,
+            visualDensity: _NoteEditorScreenState._kChipDensity,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            deleteIconBoxConstraints: _NoteEditorScreenState._kChipDeleteBox,
+            onDeleted: () => _removeTag(tag),
+          ),
     ];
 
     // **Çip alanı yeniden yazıldı** (kullanıcı bulgusu 2026-08-09: "etiket ve
@@ -347,16 +352,17 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
                       iconTheme: IconThemeData(color: noteAccent, size: 14),
                     ),
               child: SizedBox(
-              height: 36,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: _NoteEditorScreenState._kGutter),
-                itemCount: metaChildren.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
-                itemBuilder: (context, i) =>
-                    Align(child: metaChildren[i]),
+                height: 36,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _NoteEditorScreenState._kGutter,
+                  ),
+                  itemCount: metaChildren.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 6),
+                  itemBuilder: (context, i) => Align(child: metaChildren[i]),
+                ),
               ),
-            ),
             ),
           );
 
@@ -536,188 +542,191 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
       value: note.fontScale,
       enabled: _floats.isEmpty,
       child: Builder(
-      builder: (fieldContext) {
-        void onBodyTap() {
-        final editable = editableTextBelow(fieldContext);
-        // PDF REFERANSI (📖 s.12): belge o sayfaya döner.
-        final pdfRef = _tappedPdfRef(editable);
-        if (pdfRef != null) {
-          editable?.hideToolbar();
-          _goToPdfPage(pdfRef.page);
-          return;
-        }
-        final seconds = _tappedTimestamp(editable);
-        if (seconds != null) {
-          editable?.hideToolbar();
-          _seekVideoTo(seconds);
-          return;
-        }
-        // WEB BAĞLANTISI gömülü yazı (2026-11-24): okurken açar; yazarken
-        // imleç konur, açmak uzun basma menüsünden ("Bağlantıyı aç").
-        final web = _tappedUrlLink(editable);
-        if (web != null) {
-          if (!_bodyTapPoint.wasFocused) {
-            editable?.hideToolbar();
-            unawaited(openLink(web));
-          }
-          return;
-        }
-        // NOT BAĞLANTISI (F18.16): okurken açar, yazarken önerir.
-        final linked = _tappedNoteLink(editable);
-        if (linked != null) {
-          editable?.hideToolbar();
-          _openLinkedNote(linked, editing: _bodyTapPoint.wasFocused);
-          return;
-        }
-        final tapped = _tappedEmbed(editable);
-        if (tapped != null) {
-          // Dokunuşun açtığı Yapıştır menüsü önizlemenin altında kalmasın.
-          editable?.hideToolbar();
-          _showEmbedPreviewFor(tapped.attachment, tapped.label);
-          return;
-        }
-        // BAĞLANTIYA DOKUNUŞ (2026-10-28): okurken açar, yazarken önerir.
-        final link = tappedLink(
-          displayText: _bodyField.text,
-          editable: editable,
-          tapGlobal: _bodyTapPoint.last,
-        );
-        if (link != null) {
-          editable?.hideToolbar();
-          handleLinkTap(
-            context,
-            link,
-            editing: _bodyTapPoint.wasFocused,
-            onEmbedVideo: _readOnly || note.type.isPageNoteType
-                ? null
-                : _embedLinkedVideo,
-          );
-          return;
-        }
-        // Altı çizili kelimeye dokunuş: öneri menüsü (Y-4).
-        showSpellMenuAfterTap(editable);
-        }
-
-        Widget fieldOf(bool top, bool bottom) => AttachmentTagChips(
-        key: _bodyFieldKey,
-        controller: _bodyField,
-        looks: _tagLooks,
-        child: _bodyTapPoint.wrap(
-        // KLAVYENİN OTOMATİK DÜZELTMESİ uygulamanın kipine bağlı (kullanıcı
-        // 2026-11-25: "otomatik düzelt kapalı ama otomatik düzeliyor"):
-        // `autocorrect` varsayılanı true, klavye (Gboard) kendi düzeltmesini
-        // yapıyordu. Kip seyrek değişir; dinleyici ağaçta hep var (şekil sabit).
-        ValueListenableBuilder<bool>(
-        valueListenable: AutoSpell.enabled,
-        builder: (_, autoFix, _) => TextField(
-          controller: _bodyField,
-          focusNode: _bodyFocus,
-          readOnly: _readOnly,
-          autocorrect: autoFix,
-          // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
-          // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
-          style: noteBodyStyle,
-          // SATIR YÜKSEKLİĞİ ÇIPASI AÇIKÇA VERİLİR: alan zaten `forceStrutHeight`
-          // ile çiziyor, sarma ölçümü de aynı çıpayı kullanıyor (bkz.
-          // [wrapStrutStyle]). Açıkça vermek eşleşmeyi `EditableText`in
-          // varsayılanına bırakmaz — kaymanın kök nedeni buydu.
-          strutStyle: wrapStrutStyle(noteBodyStyle),
-          onChanged: (value) {
-            final before = _note?.body ?? '';
-            final after = _bodyController.logicalText;
-            _mutate((n) => n.copyWith(body: after));
-            // Yapıştırılan YouTube bağlantısı videoyu gömer.
-            _maybeEmbedPastedVideo(before, after);
-            // `[[` yazınca not seçici (F18.16): iki parantez silinir, seçilen
-            // notun başlığı bağlantı olarak imlece yazılır.
-            _maybeLinkTrigger(before, after);
-            if (_windowAllowed(note)) _bodyWindow.enter();
-          },
-          maxLines: null,
-          minLines: _bodyWindow.active
-              ? 1
-              : note.items.isEmpty
-              ? 8
-              : 2,
-          keyboardType: TextInputType.multiline,
-          // EK ETİKETİNE DOKUNUNCA ÖNİZLEME (kullanıcı isteği 2026-08-16).
-          //
-          // Span'in kendisine `TapGestureRecognizer` bağlanamıyor: düzenlenebilir
-          // bir alanda dokunuş imleci taşımak için EditableText'e gidiyor ve
-          // span tanıyıcıları hiç ateşlenmiyor. `onTap` ise dokunuş imleci
-          // TAŞIDIKTAN SONRA çalışır — imlecin nereye düştüğüne bakmak, "etikete
-          // dokunuldu mu" sorusunun bu alandaki tek doğru cevabı.
-          // YENİ (gömme yeniden tasarımı): tam ekran yerine YERİNDE önizleme
-          // kartı; yalnız dokunuş etiketin İÇİNE düşünce (yanına imleç koymak
-          // yazmaya devam etmektir, önizleme açmaz).
-          onTap: onBodyTap,
-          // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
-          // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
-          // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
-          contextMenuBuilder: _bodyContextMenu,
-          contentInsertionConfiguration: _keyboardImagePaste,
-          decoration: InputDecoration(
-            // Görsel ipucunun üstüne gelebiliyorsa ipucu tuvale devredilir.
-            hintText: useCanvasHint ? null : l10n.bodyHint,
-            filled: false,
-            border: InputBorder.none,
-            // İÇ DOLGU AÇIKÇA: ilk metin satırının alanın tepesinden ne kadar
-            // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
-            // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük
-            // varsayılanına bırakılırsa üç yer sessizce ayrışır.
-            contentPadding: EdgeInsets.only(
-              top: top ? _NoteEditorScreenState._kBodyTextTop : 0,
-              bottom: bottom ? _NoteEditorScreenState._kBodyTextTop : 0,
-            ),
-          ),
-        ),
-        ),
-        // Damgaya/etikete dokunmak klavyeyi AÇMAZ (bkz. TapPointTracker.wrap).
-        focusNode: _bodyFocus,
-        keepsKeyboardClosed: (global) => linkAtPoint(
-          editable: editableTextBelow(fieldContext),
-          displayText: _bodyField.text,
-          global: global,
-          timestamps: _note != null && _NoteEditorScreenState._hasVideo(_note!),
-          pdfRefs: _note != null && _pdfForRefs(_note!) != null,
-          tagNames: _bodyController.attachmentNames,
-        ),
-        ),
-        );
-
-        // Uzun notta yazarken (F24.2): alan aynı State'le ([_bodyFieldKey])
-        // pencere parçalarının arasına taşınır, klavye kapanmaz.
-        if (_bodyWindow.active && !_windowAllowed(note) && !noteRouteClosing.value) {
-          _bodyWindow.exit(notify: false);
-        }
-        if (!_bodyWindow.active) return fieldOf(true, true);
-        return WindowedBodyField(
-          window: _bodyWindow,
-          style: windowedFieldStyle(context, noteBodyStyle),
-          strut: wrapStrutStyle(noteBodyStyle),
-          linkColor: _themeOf(context).colorScheme.primary,
-          topPadding: _NoteEditorScreenState._kBodyTextTop,
-          field: fieldOf,
-          onTileTap: (offset, global) {
-            _bodyWindow.moveCaretTo(offset);
-            _bodyTapPoint
-              ..last = global
-              ..wasFocused = true;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) onBodyTap();
-            });
-          },
-          onTileLongPress: (offset, global) {
-            _bodyWindow.moveCaretTo(offset);
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                selectWordAt(editableTextBelow(fieldContext), global);
+        builder: (fieldContext) {
+          void onBodyTap() {
+            final editable = editableTextBelow(fieldContext);
+            // PDF REFERANSI (📖 s.12): belge o sayfaya döner.
+            final pdfRef = _tappedPdfRef(editable);
+            if (pdfRef != null) {
+              editable?.hideToolbar();
+              _goToPdfPage(pdfRef.page);
+              return;
+            }
+            final seconds = _tappedTimestamp(editable);
+            if (seconds != null) {
+              editable?.hideToolbar();
+              _seekVideoTo(seconds);
+              return;
+            }
+            // WEB BAĞLANTISI gömülü yazı (2026-11-24): okurken açar; yazarken
+            // imleç konur, açmak uzun basma menüsünden ("Bağlantıyı aç").
+            final web = _tappedUrlLink(editable);
+            if (web != null) {
+              if (!_bodyTapPoint.wasFocused) {
+                editable?.hideToolbar();
+                unawaited(openLink(web));
               }
-            });
-          },
-        );
-      },
-    ),
+              return;
+            }
+            // NOT BAĞLANTISI (F18.16): okurken açar, yazarken önerir.
+            final linked = _tappedNoteLink(editable);
+            if (linked != null) {
+              editable?.hideToolbar();
+              _openLinkedNote(linked, editing: _bodyTapPoint.wasFocused);
+              return;
+            }
+            final tapped = _tappedEmbed(editable);
+            if (tapped != null) {
+              // Dokunuşun açtığı Yapıştır menüsü önizlemenin altında kalmasın.
+              editable?.hideToolbar();
+              _showEmbedPreviewFor(tapped.attachment, tapped.label);
+              return;
+            }
+            // BAĞLANTIYA DOKUNUŞ (2026-10-28): okurken açar, yazarken önerir.
+            final link = tappedLink(
+              displayText: _bodyField.text,
+              editable: editable,
+              tapGlobal: _bodyTapPoint.last,
+            );
+            if (link != null) {
+              editable?.hideToolbar();
+              handleLinkTap(
+                context,
+                link,
+                editing: _bodyTapPoint.wasFocused,
+                onEmbedVideo: _readOnly || note.type.isPageNoteType
+                    ? null
+                    : _embedLinkedVideo,
+              );
+              return;
+            }
+            // Altı çizili kelimeye dokunuş: öneri menüsü (Y-4).
+            showSpellMenuAfterTap(editable);
+          }
+
+          Widget fieldOf(bool top, bool bottom) => AttachmentTagChips(
+            key: _bodyFieldKey,
+            controller: _bodyField,
+            looks: _tagLooks,
+            child: _bodyTapPoint.wrap(
+              // KLAVYENİN OTOMATİK DÜZELTMESİ uygulamanın kipine bağlı (kullanıcı
+              // 2026-11-25: "otomatik düzelt kapalı ama otomatik düzeliyor"):
+              // `autocorrect` varsayılanı true, klavye (Gboard) kendi düzeltmesini
+              // yapıyordu. Kip seyrek değişir; dinleyici ağaçta hep var (şekil sabit).
+              ValueListenableBuilder<bool>(
+                valueListenable: AutoSpell.enabled,
+                builder: (_, autoFix, _) => TextField(
+                  controller: _bodyField,
+                  focusNode: _bodyFocus,
+                  readOnly: _readOnly,
+                  autocorrect: autoFix,
+                  // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
+                  // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
+                  style: noteBodyStyle,
+                  // SATIR YÜKSEKLİĞİ ÇIPASI AÇIKÇA VERİLİR: alan zaten `forceStrutHeight`
+                  // ile çiziyor, sarma ölçümü de aynı çıpayı kullanıyor (bkz.
+                  // [wrapStrutStyle]). Açıkça vermek eşleşmeyi `EditableText`in
+                  // varsayılanına bırakmaz — kaymanın kök nedeni buydu.
+                  strutStyle: wrapStrutStyle(noteBodyStyle),
+                  onChanged: (value) {
+                    final before = _note?.body ?? '';
+                    final after = _bodyController.logicalText;
+                    _mutate((n) => n.copyWith(body: after));
+                    // Yapıştırılan YouTube bağlantısı videoyu gömer.
+                    _maybeEmbedPastedVideo(before, after);
+                    // `[[` yazınca not seçici (F18.16): iki parantez silinir, seçilen
+                    // notun başlığı bağlantı olarak imlece yazılır.
+                    _maybeLinkTrigger(before, after);
+                    if (_windowAllowed(note)) _bodyWindow.enter();
+                  },
+                  maxLines: null,
+                  minLines: _bodyWindow.active
+                      ? 1
+                      : note.items.isEmpty
+                      ? 8
+                      : 2,
+                  keyboardType: TextInputType.multiline,
+                  // EK ETİKETİNE DOKUNUNCA ÖNİZLEME (kullanıcı isteği 2026-08-16).
+                  //
+                  // Span'in kendisine `TapGestureRecognizer` bağlanamıyor: düzenlenebilir
+                  // bir alanda dokunuş imleci taşımak için EditableText'e gidiyor ve
+                  // span tanıyıcıları hiç ateşlenmiyor. `onTap` ise dokunuş imleci
+                  // TAŞIDIKTAN SONRA çalışır — imlecin nereye düştüğüne bakmak, "etikete
+                  // dokunuldu mu" sorusunun bu alandaki tek doğru cevabı.
+                  // YENİ (gömme yeniden tasarımı): tam ekran yerine YERİNDE önizleme
+                  // kartı; yalnız dokunuş etiketin İÇİNE düşünce (yanına imleç koymak
+                  // yazmaya devam etmektir, önizleme açmaz).
+                  onTap: onBodyTap,
+                  // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
+                  // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
+                  // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
+                  contextMenuBuilder: _bodyContextMenu,
+                  contentInsertionConfiguration: _keyboardImagePaste,
+                  decoration: InputDecoration(
+                    // Görsel ipucunun üstüne gelebiliyorsa ipucu tuvale devredilir.
+                    hintText: useCanvasHint ? null : l10n.bodyHint,
+                    filled: false,
+                    border: InputBorder.none,
+                    // İÇ DOLGU AÇIKÇA: ilk metin satırının alanın tepesinden ne kadar
+                    // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
+                    // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük
+                    // varsayılanına bırakılırsa üç yer sessizce ayrışır.
+                    contentPadding: EdgeInsets.only(
+                      top: top ? _NoteEditorScreenState._kBodyTextTop : 0,
+                      bottom: bottom ? _NoteEditorScreenState._kBodyTextTop : 0,
+                    ),
+                  ),
+                ),
+              ),
+              // Damgaya/etikete dokunmak klavyeyi AÇMAZ (bkz. TapPointTracker.wrap).
+              focusNode: _bodyFocus,
+              keepsKeyboardClosed: (global) => linkAtPoint(
+                editable: editableTextBelow(fieldContext),
+                displayText: _bodyField.text,
+                global: global,
+                timestamps:
+                    _note != null && _NoteEditorScreenState._hasVideo(_note!),
+                pdfRefs: _note != null && _pdfForRefs(_note!) != null,
+                tagNames: _bodyController.attachmentNames,
+              ),
+            ),
+          );
+
+          // Uzun notta yazarken (F24.2): alan aynı State'le ([_bodyFieldKey])
+          // pencere parçalarının arasına taşınır, klavye kapanmaz.
+          if (_bodyWindow.active &&
+              !_windowAllowed(note) &&
+              !noteRouteClosing.value) {
+            _bodyWindow.exit(notify: false);
+          }
+          if (!_bodyWindow.active) return fieldOf(true, true);
+          return WindowedBodyField(
+            window: _bodyWindow,
+            style: windowedFieldStyle(context, noteBodyStyle),
+            strut: wrapStrutStyle(noteBodyStyle),
+            linkColor: _themeOf(context).colorScheme.primary,
+            topPadding: _NoteEditorScreenState._kBodyTextTop,
+            field: fieldOf,
+            onTileTap: (offset, global) {
+              _bodyWindow.moveCaretTo(offset);
+              _bodyTapPoint
+                ..last = global
+                ..wasFocused = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) onBodyTap();
+              });
+            },
+            onTileLongPress: (offset, global) {
+              _bodyWindow.moveCaretTo(offset);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  selectWordAt(editableTextBelow(fieldContext), global);
+                }
+              });
+            },
+          );
+        },
+      ),
     );
 
     // Başlık + çipler: yüksekliği görsellerin üst sınırıdır.
@@ -739,7 +748,9 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
         children: [
           keyedHeader,
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _NoteEditorScreenState._kGutter),
+            padding: const EdgeInsets.symmetric(
+              horizontal: _NoteEditorScreenState._kGutter,
+            ),
             child: _wrapped(_bodyController, bodyField),
           ),
         ],
@@ -775,9 +786,7 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
         onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
         addRowTrailing: _partsMenu(note),
         paperLines: note.paged && note.archivePaper.ruled,
-        onMoveToPage: textPagePosition(note).count > 1
-            ? _moveItemToPage
-            : null,
+        onMoveToPage: textPagePosition(note).count > 1 ? _moveItemToPage : null,
         onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
         onLineReminder: _readOnly
             ? null
@@ -802,7 +811,9 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
           children: [
             keyedHeader,
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: _NoteEditorScreenState._kGutter),
+              padding: const EdgeInsets.symmetric(
+                horizontal: _NoteEditorScreenState._kGutter,
+              ),
               child: _wrapped(_bodyController, bodyField),
             ),
           ],
@@ -839,9 +850,7 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
         onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
         addRowTrailing: _partsMenu(note),
         paperLines: note.paged && note.archivePaper.ruled,
-        onMoveToPage: textPagePosition(note).count > 1
-            ? _moveItemToPage
-            : null,
+        onMoveToPage: textPagePosition(note).count > 1 ? _moveItemToPage : null,
         onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
         onLineReminder: _readOnly
             ? null
@@ -862,13 +871,23 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
             ? ''
             : noteShareText(_note!, pageLabel: context.l10n.pageLabel),
         header: () {
+          final explicitKind = smartListKindFromId(note.listKind);
+          final resolvedKind = explicitKind != SmartListKind.generic
+              ? explicitKind
+              : (smartKindFromPhrase(note.title) ?? SmartListKind.generic);
           final showStoreModePill =
               note.type == NoteType.checklist &&
               !_readOnly &&
-              (note.listKind == 'shopping' ||
-                  smartKindFromPhrase(note.title) == SmartListKind.shopping);
+              resolvedKind == SmartListKind.shopping;
+          final showSmartWorkspacePill =
+              note.type == NoteType.checklist &&
+              !_readOnly &&
+              resolvedKind != SmartListKind.generic &&
+              resolvedKind != SmartListKind.shopping;
           final showBody = note.body.trim().isNotEmpty || _listBodyOpen;
-          if (!showStoreModePill && !showBody) return keyedHeader;
+          if (!showStoreModePill && !showSmartWorkspacePill && !showBody) {
+            return keyedHeader;
+          }
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -906,9 +925,39 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
                     ),
                   ),
                 ),
+              if (showSmartWorkspacePill)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    _NoteEditorScreenState._kGutter,
+                    0,
+                    _NoteEditorScreenState._kGutter,
+                    AppSpace.s,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: FilledButton.tonalIcon(
+                      key: const ValueKey('editor-open-smart-workspace'),
+                      icon: Icon(
+                        smartWorkspaceIcon(resolvedKind),
+                        size: AppIconSize.s,
+                      ),
+                      label: Text(
+                        smartWorkspacePillLabel(
+                          note,
+                          resolvedKind,
+                          context.l10n,
+                        ),
+                      ),
+                      onPressed: () =>
+                          unawaited(_openSmartWorkspace(resolvedKind)),
+                    ),
+                  ),
+                ),
               if (showBody)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: _NoteEditorScreenState._kGutter),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: _NoteEditorScreenState._kGutter,
+                  ),
                   child: _wrapped(_bodyController, bodyField),
                 ),
             ],
@@ -1004,8 +1053,7 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
     final readingColumn = !note.type.isPageNoteType && !_titleInBar(note);
     // KISA PENCERE (F66.7/F67.4: yatay telefon, < 480 dp): üst çubuk 40 dp.
     // `sizeOf` klavyeyle değişmez — klavye kareleri kök kurulumu görmez.
-    final toolbarHeight =
-        WindowClass.of(context).height == WindowHeight.short
+    final toolbarHeight = WindowClass.of(context).height == WindowHeight.short
         ? 40.0
         : _NoteEditorScreenState._kEditorToolbarHeight;
     return (

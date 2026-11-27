@@ -152,7 +152,23 @@ List<Note> quickDropCandidates(
     );
   }
   final kind = detectNoteListKind(note, locale: locale);
-  final parsed = _parseIntoList(note, text, locale, memory);
+  final priceByKey = <String, double>{};
+  var parseInput = text;
+  if (kind == SmartListKind.shopping || kind == SmartListKind.expense) {
+    final segments = text.split(',');
+    final rebuilt = <String>[];
+    for (final rawSeg in segments) {
+      final priced = extractInlinePrice(rawSeg.trim());
+      if (priced.price != null && priced.text.isNotEmpty) {
+        priceByKey[quickItemKey(priced.text)] = priced.price!;
+        rebuilt.add(priced.text);
+      } else if (rawSeg.trim().isNotEmpty) {
+        rebuilt.add(rawSeg.trim());
+      }
+    }
+    if (priceByKey.isNotEmpty) parseInput = rebuilt.join(', ');
+  }
+  final parsed = _parseIntoList(note, parseInput, locale, memory);
   final plan = planDropIntoList(
     [for (final i in note.items) (text: i.text, checked: i.checked)],
     parsed.items,
@@ -171,7 +187,26 @@ List<Note> quickDropCandidates(
           checked: plan.uncheck.contains(i) ? false : null,
         ),
   ];
-  final fresh = [for (final t in plan.texts) NoteItem(id: id(), text: t)];
+  final fresh = <NoteItem>[
+    for (final t in plan.texts)
+      () {
+        var item = NoteItem(id: id(), text: t);
+        if (kind == SmartListKind.shopping || kind == SmartListKind.expense) {
+          final priced = extractInlinePrice(t);
+          final foundPrice = priced.price ?? priceByKey[quickItemKey(t)];
+          if (foundPrice != null) {
+            final clean = priced.price != null && priced.text.isNotEmpty
+                ? quickCapitalize(priced.text)
+                : t;
+            item = item.copyWith(text: clean);
+            item = kind == SmartListKind.shopping
+                ? ShopItemMeta(unitPrice: foundPrice).applyToItem(item)
+                : ExpenseItemMeta(amount: foundPrice).applyToItem(item);
+          }
+        }
+        return item;
+      }(),
+  ];
   final items = insertItemsBySmartGroup(
     existing,
     fresh,
@@ -280,7 +315,8 @@ QuickEntryMemory quickDropVetoed(
         kinds: memory.kinds,
         rejected: {
           ...memory.rejected,
-          for (final v in vetoed) '${quickAscii(v.typed)}>${quickAscii(v.fixed)}',
+          for (final v in vetoed)
+            '${quickAscii(v.typed)}>${quickAscii(v.fixed)}',
         },
       );
 
@@ -352,4 +388,3 @@ Future<void> showQuickDropSheet(BuildContext context, {String text = ''}) {
     child: sheet,
   );
 }
-

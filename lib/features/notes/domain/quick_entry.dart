@@ -128,12 +128,9 @@ String combineQuickQuantities(String existingQty, String addedQty) {
 
 ({String family, double factor, String smallUnit, String largeUnit})?
 _unitFamilyOf(String unit) => switch (unit) {
-  'g' || 'gr' || 'gram' => (
-    family: 'mass',
-    factor: 1.0,
-    smallUnit: 'g',
-    largeUnit: 'kg',
-  ),
+  'g' ||
+  'gr' ||
+  'gram' => (family: 'mass', factor: 1.0, smallUnit: 'g', largeUnit: 'kg'),
   'kg' || 'kilo' || 'kilogram' => (
     family: 'mass',
     factor: 1000.0,
@@ -141,12 +138,10 @@ _unitFamilyOf(String unit) => switch (unit) {
     largeUnit: 'kg',
   ),
   'ml' => (family: 'vol', factor: 1.0, smallUnit: 'ml', largeUnit: 'lt'),
-  'lt' || 'l' || 'litre' || 'liter' => (
-    family: 'vol',
-    factor: 1000.0,
-    smallUnit: 'ml',
-    largeUnit: 'lt',
-  ),
+  'lt' ||
+  'l' ||
+  'litre' ||
+  'liter' => (family: 'vol', factor: 1000.0, smallUnit: 'ml', largeUnit: 'lt'),
   _ => null,
 };
 
@@ -162,9 +157,7 @@ _unitFamilyOf(String unit) => switch (unit) {
   final double? v;
   if (numToken == '½' || numToken == 'yarım' || numToken == 'yarim') {
     v = 0.5;
-  } else if (numToken == '¼' ||
-      numToken == 'çeyrek' ||
-      numToken == 'ceyrek') {
+  } else if (numToken == '¼' || numToken == 'çeyrek' || numToken == 'ceyrek') {
     v = 0.25;
   } else if (numToken == '¾') {
     v = 0.75;
@@ -243,9 +236,30 @@ class QuickLexicon {
     }
   }
 
-  /// Birebir eşleşme (önce Türkçe harfleriyle, sonra düzleştirilmiş).
-  QuickLexEntry? exact(String phrase) =>
-      _exact[quickFold(phrase)] ?? _ascii[quickAscii(phrase)];
+  /// Birebir eşleşme (önce Türkçe harfleriyle, sonra düzleştirilmiş,
+  /// ardından İngilizce tekil/çoğul yedek eşlemesi).
+  QuickLexEntry? exact(String phrase) {
+    final direct = _exact[quickFold(phrase)] ?? _ascii[quickAscii(phrase)];
+    if (direct != null) return direct;
+    final a = quickAscii(phrase);
+    if (a.length < 4 || a.contains(' ')) return null;
+    if (a.endsWith('ies') && a.length > 4) {
+      final hit = _ascii['${a.substring(0, a.length - 3)}y'];
+      if (hit != null) return hit;
+    }
+    if (a.endsWith('oes') && a.length > 4) {
+      final hit = _ascii[a.substring(0, a.length - 2)];
+      if (hit != null) return hit;
+    }
+    if (a.endsWith('s') &&
+        !a.endsWith('ss') &&
+        !a.endsWith('us') &&
+        !a.endsWith('is')) {
+      final hit = _ascii[a.substring(0, a.length - 1)];
+      if (hit != null) return hit;
+    }
+    return null;
+  }
 
   /// [phrase] daha uzun bir öbeğin başı mı ("tavuk" → "tavuk göğsü").
   bool isHead(String phrase) => _heads.contains(quickAscii(phrase));
@@ -462,6 +476,8 @@ const _numberWords = {
   'nine': '9',
   'ten': '10',
   'half': '½',
+  'quarter': '¼',
+  'dozen': '12',
 };
 
 /// Birim → yazılacak hâli.
@@ -582,6 +598,44 @@ const _modifiers = {
 
 final _numberRe = RegExp(r'^\d+(?:[.,/]\d+)?$');
 final _numberUnitRe = RegExp(r'^(\d+(?:[.,/]\d+)?)([a-zçğıöşü]+)$');
+final _multiplierRe = RegExp(r'^(?:(\d+)[x×]|[x×](\d+))$');
+
+/// Satır içi fiyat çıkarımı: `"Süt 45₺"`, `"Kahve 120 tl"`, `"Bread $4.50"`,
+/// `"Tea €3"`. Normal miktarlara (`3 kg`, `2 adet`) dokunmaz.
+({String text, double? price}) extractInlinePrice(String raw) {
+  final trimmed = raw.trim();
+  if (trimmed.isEmpty) return (text: '', price: null);
+  final patterns = [
+    RegExp(
+      r'(?:^|\s)(?:₺|tl|try)\s*(\d+(?:[.,]\d{1,2})?)(?=\s|$)',
+      caseSensitive: false,
+    ),
+    RegExp(
+      r'(?:^|\s)(\d+(?:[.,]\d{1,2})?)\s*(?:₺|tl|try)(?=\s|$)',
+      caseSensitive: false,
+    ),
+    RegExp(
+      r'(?:^|\s)(?:\$|usd|€|eur|£|gbp)\s*(\d+(?:[.,]\d{1,2})?)(?=\s|$)',
+      caseSensitive: false,
+    ),
+    RegExp(
+      r'(?:^|\s)(\d+(?:[.,]\d{1,2})?)\s*(?:\$|usd|€|eur|£|gbp)(?=\s|$)',
+      caseSensitive: false,
+    ),
+  ];
+  for (final re in patterns) {
+    final m = re.firstMatch(trimmed);
+    if (m == null) continue;
+    final val = double.tryParse(m.group(1)!.replaceAll(',', '.'));
+    if (val == null || val <= 0) continue;
+    final clean = (trimmed.substring(0, m.start) + trimmed.substring(m.end))
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (clean.isEmpty) return (text: trimmed, price: val);
+    return (text: clean, price: val);
+  }
+  return (text: trimmed, price: null);
+}
 
 class _Tok {
   _Tok(this.word, this.start, this.complete, this.hardAfter);
@@ -798,17 +852,27 @@ class QuickParser {
         break;
       }
 
-      // 2) Miktar: sayı, sayı+birim ya da sayı kelimesi.
+      // 2) Miktar: sayı, sayı+birim, çarpım (2x) ya da sayı kelimesi.
       if (hit == null) {
         String? number;
         String? unit;
         var used = 1;
         final glued = _numberUnitRe.firstMatch(fold);
+        final mult = _multiplierRe.firstMatch(fold);
         if (_numberRe.hasMatch(fold)) {
           number = fold;
+        } else if (mult != null) {
+          number = mult.group(1) ?? mult.group(2);
         } else if (glued != null && _units.containsKey(glued.group(2))) {
           number = glued.group(1);
           unit = _units[glued.group(2)];
+        } else if (fold == 'a' &&
+            !tok.hardAfter &&
+            i + 1 < toks.length &&
+            toks[i + 1].complete &&
+            quickFold(_clean(toks[i + 1].word)) == 'dozen') {
+          number = '12';
+          used = 2;
         } else if (_numberWords.containsKey(fold) && !tok.hardAfter) {
           // Sayı kelimesi yalnız ardından birim ya da madde geliyorsa sayıdır.
           if (i + 1 >= toks.length || !toks[i + 1].complete) {
@@ -821,6 +885,8 @@ class QuickParser {
             if (_units.containsKey(next) ||
                 next == 'buçuk' ||
                 next == 'bucuk' ||
+                next == 'and' ||
+                (fold == 'half' && next == 'a') ||
                 lexicon.exact(next) != null ||
                 lexicon.isHead(next)) {
               number = _numberWords[fold];
@@ -828,7 +894,7 @@ class QuickParser {
           }
         }
         if (number != null) {
-          if (unit == null && !tok.hardAfter) {
+          if (unit == null && !tok.hardAfter && used == 1) {
             if (i + 1 < toks.length) {
               final nt = toks[i + 1];
               final next = quickFold(_clean(nt.word));
@@ -837,7 +903,61 @@ class QuickParser {
                 restStart = pendingStart(tok.start);
                 break;
               }
-              if ((next == 'buçuk' || next == 'bucuk') &&
+              if (fold == 'half' && next == 'a' && !nt.hardAfter) {
+                used = 2;
+                if (i + 2 < toks.length) {
+                  final nt2 = toks[i + 2];
+                  final next2 = quickFold(_clean(nt2.word));
+                  if (!nt2.complete) {
+                    restStart = pendingStart(tok.start);
+                    break;
+                  }
+                  if (next2 == 'dozen') {
+                    number = '6';
+                    used = 3;
+                  } else if (_units.containsKey(next2) &&
+                      lexicon.exact(next2) == null) {
+                    unit = _units[next2];
+                    used = 3;
+                  }
+                } else if (!flush) {
+                  restStart = pendingStart(tok.start);
+                  break;
+                }
+              } else if (next == 'and' &&
+                  !nt.hardAfter &&
+                  !number.contains(',') &&
+                  !number.contains('.') &&
+                  !number.contains('/') &&
+                  number != '½' &&
+                  number != '¼' &&
+                  i + 3 < toks.length &&
+                  toks[i + 2].complete &&
+                  toks[i + 3].complete &&
+                  quickFold(_clean(toks[i + 2].word)) == 'a' &&
+                  quickFold(_clean(toks[i + 3].word)) == 'half') {
+                number = '$number,5';
+                used = 4;
+                final ntHalf = toks[i + 3];
+                if (!ntHalf.hardAfter) {
+                  if (i + 4 < toks.length) {
+                    final nt4 = toks[i + 4];
+                    final next4 = quickFold(_clean(nt4.word));
+                    if (!nt4.complete) {
+                      restStart = pendingStart(tok.start);
+                      break;
+                    }
+                    if (_units.containsKey(next4) &&
+                        lexicon.exact(next4) == null) {
+                      unit = _units[next4];
+                      used = 5;
+                    }
+                  } else if (!flush) {
+                    restStart = pendingStart(tok.start);
+                    break;
+                  }
+                }
+              } else if ((next == 'buçuk' || next == 'bucuk') &&
                   !number.contains(',') &&
                   !number.contains('.') &&
                   !number.contains('/') &&

@@ -147,7 +147,7 @@ void main() {
       final q = ListClassifyProfile.questions['liste_turu']! as ChoiceQuestion;
       final keys = q.options.keys.toList()..sort();
       expect(keys.first, ChoiceQuestion.none);
-      expect(q.options.length, 9);
+      expect(q.options.length, 17);
       expect(q.options.keys.every(decisionKeyPattern.hasMatch), isTrue);
 
       expect(

@@ -5,6 +5,8 @@ import '../../../core/utils/rich_text.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'archive_template.dart';
 import 'note_type.dart';
+import 'smart_lexicon_v2.dart';
+import 'smart_list.dart';
 
 /// **HAZIR NOT MODLARI / ŞABLONLARI** (kullanıcı isteği 2026-09-26: "modlar,
 /// alışveriş listesi gibi sen düşün ekle").
@@ -58,6 +60,21 @@ extension NoteTemplateInfo on NoteTemplate {
   /// Kalıcı kimlik (son kullanılanlar listesinde saklanır). Enum adı:
   /// sıralama değişse de bozulmaz.
   String get key => name;
+
+  /// Akıllı liste / çalışma alanı karşılığı; düz yazı veya genel şablonda
+  /// [SmartListKind.generic].
+  SmartListKind get smartKind => switch (this) {
+    NoteTemplate.shopping => SmartListKind.shopping,
+    NoteTemplate.travel => SmartListKind.packing,
+    NoteTemplate.habits => SmartListKind.habits,
+    NoteTemplate.cleaning => SmartListKind.cleaning,
+    NoteTemplate.moving => SmartListKind.moving,
+    NoteTemplate.gifts => SmartListKind.gifts,
+    NoteTemplate.watchlist => SmartListKind.watchlist,
+    NoteTemplate.workout => SmartListKind.workout,
+    NoteTemplate.expense => SmartListKind.expense,
+    _ => SmartListKind.generic,
+  };
 
   TemplateCategory get category => switch (this) {
     NoteTemplate.shopping ||
@@ -195,36 +212,24 @@ List<TemplateSuggestionGroup> templateSuggestions(
       g(l10n.tplTravelHealth, l10n.tplTravelHealthItems),
       g(l10n.tplTravelBeforeGo, l10n.tplTravelBeforeGoItems),
     ],
-    NoteTemplate.cleaning => [
-      g(l10n.tplCleanKitchen, l10n.tplCleanKitchenItems),
-      g(l10n.tplCleanBath, l10n.tplCleanBathItems),
-      g(l10n.tplCleanRooms, l10n.tplCleanRoomsItems),
-      g(l10n.tplCleanMonthly, l10n.tplCleanMonthlyItems),
-    ],
-    NoteTemplate.moving => [
-      g(l10n.tplMoveBefore, l10n.tplMoveBeforeItems),
-      g(l10n.tplMoveDay, l10n.tplMoveDayItems),
-      g(l10n.tplMoveAfter, l10n.tplMoveAfterItems),
-    ],
-    NoteTemplate.habits => [
-      g(l10n.tplHabitHealth, l10n.tplHabitHealthItems),
-      g(l10n.tplHabitMind, l10n.tplHabitMindItems),
-      g(l10n.tplHabitHome, l10n.tplHabitHomeItems),
-    ],
-    NoteTemplate.workout => [
-      g(l10n.tplWorkoutUpper, l10n.tplWorkoutUpperItems),
-      g(l10n.tplWorkoutLower, l10n.tplWorkoutLowerItems),
-      g(l10n.tplWorkoutCardio, l10n.tplWorkoutCardioItems),
-    ],
-    NoteTemplate.gifts => [
-      g(l10n.tplGiftPeople, l10n.tplGiftPeopleItems),
-      g(l10n.tplGiftIdeas, l10n.tplGiftIdeasItems),
-    ],
     NoteTemplate.todo => [
       g(l10n.tplTodoHome, l10n.tplTodoHomeItems),
       g(l10n.tplTodoErrands, l10n.tplTodoErrandsItems),
     ],
-    _ => const [],
+    _ => () {
+      final spec = kSmartKindSpecs[template.smartKind];
+      if (spec != null && spec.groups.isNotEmpty) {
+        final isTr = l10n.localeName.startsWith('tr');
+        return [
+          for (final grp in spec.groups)
+            (
+              label: grp.label(isTr: isTr),
+              items: sortedForLocale(grp.items(isTr: isTr), l10n.localeName),
+            ),
+        ];
+      }
+      return const <TemplateSuggestionGroup>[];
+    }(),
   };
 }
 
@@ -295,7 +300,10 @@ NoteTemplateContent buildNoteTemplate(
       l10n.tplShoppingName,
       _split(l10n.tplShoppingItems),
     ),
-    NoteTemplate.todo => list('${l10n.archiveTemplateTodo} · $shortDate', const []),
+    NoteTemplate.todo => list(
+      '${l10n.archiveTemplateTodo} · $shortDate',
+      const [],
+    ),
     NoteTemplate.travel => list(
       l10n.tplTravelName,
       _split(l10n.tplTravelItems),
@@ -328,16 +336,19 @@ NoteTemplateContent buildNoteTemplate(
       h(l10n.tplGoalsWhy),
       p(''),
     ]),
-    NoteTemplate.meeting => text('${l10n.archiveTemplateMeeting} · $shortDate', [
-      h(l10n.tplMeetingAttendees),
-      p('• '),
-      h(l10n.tplMeetingAgenda),
-      p('1. '),
-      h(l10n.tplMeetingDecisions),
-      p('• '),
-      h(l10n.tplMeetingActions),
-      p('☐ '),
-    ]),
+    NoteTemplate.meeting => text(
+      '${l10n.archiveTemplateMeeting} · $shortDate',
+      [
+        h(l10n.tplMeetingAttendees),
+        p('• '),
+        h(l10n.tplMeetingAgenda),
+        p('1. '),
+        h(l10n.tplMeetingDecisions),
+        p('• '),
+        h(l10n.tplMeetingActions),
+        p('☐ '),
+      ],
+    ),
     NoteTemplate.journal => text(date, [
       h(l10n.tplJournalHow),
       p(''),
@@ -364,22 +375,19 @@ NoteTemplateContent buildNoteTemplate(
       ).subtract(Duration(days: today.weekday - DateTime.monday));
       final day = DateFormat.EEEE(locale);
       final dm = DateFormat.MMMd(locale);
-      return text(
-        '${l10n.tplWeeklyName} · ${dm.format(monday)}',
-        [
-          for (var i = 0; i < 7; i++) ...[
-            h(
-              '${day.format(monday.add(Duration(days: i)))} · '
-              '${dm.format(monday.add(Duration(days: i)))}',
-            ),
-            p('• '),
-          ],
+      return text('${l10n.tplWeeklyName} · ${dm.format(monday)}', [
+        for (var i = 0; i < 7; i++) ...[
+          h(
+            '${day.format(monday.add(Duration(days: i)))} · '
+            '${dm.format(monday.add(Duration(days: i)))}',
+          ),
+          p('• '),
         ],
-      );
+      ]);
     }(),
-    NoteTemplate.expense => text(
+    NoteTemplate.expense => list(
       '${l10n.archiveTemplateExpense} · ${DateFormat.yMMMM(locale).format(today)}',
-      [p(l10n.tplExpenseColumns), p(''), p(''), h(l10n.tplExpenseTotal)],
+      const [],
     ),
     NoteTemplate.reading => text(l10n.archiveTemplateReading, [
       h(l10n.tplReadingSource),

@@ -127,6 +127,8 @@ mixin _NoteEditorFields on ConsumerState<NoteEditorScreen> {
 
   bool _pendingAudioFile = false;
 
+  bool _pendingWorkspace = false;
+
   /// Yeni ek hazırlarken kullanılacak depo: paylaşılan notta SAHİBİN yolu.
   ///
   /// KÖK NEDEN (kullanıcı bulgusu 2026-10-17: "eklerin paylaşımında sorun",

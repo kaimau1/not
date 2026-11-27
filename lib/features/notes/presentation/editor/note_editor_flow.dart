@@ -66,6 +66,21 @@ extension _EditorFlowX on _NoteEditorScreenState {
       _pendingSlides = false;
       _pickSlide();
     }
+    if (_pendingWorkspace) {
+      _pendingWorkspace = false;
+      final note = _note;
+      if (note != null && !_readOnly && note.type == NoteType.checklist) {
+        final explicitKind = smartListKindFromId(note.listKind);
+        final kind = explicitKind != SmartListKind.generic
+            ? explicitKind
+            : (smartKindFromPhrase(note.title) ?? SmartListKind.generic);
+        if (kind == SmartListKind.shopping) {
+          _afterOpenTransition(() => unawaited(_openStoreMode()));
+        } else if (kind != SmartListKind.generic) {
+          _afterOpenTransition(() => unawaited(_openSmartWorkspace(kind)));
+        }
+      }
+    }
     // Videodan doğan not "üstte video, altta not" düzeniyle açılır: video
     // sabit bölmede oynarken not altında yazılır (kullanıcının kendi
     // kurduğu düzen; elle sürükleyip sabitlemek gerekmesin).
@@ -442,8 +457,7 @@ extension _EditorFlowX on _NoteEditorScreenState {
     if (error is StorageFullException) {
       return context.l10n.storageFull(formatBytes(error.quotaBytes));
     }
-    final premium =
-        ref.read(effectiveTierProvider) == EntitlementTier.lifetime;
+    final premium = ref.read(effectiveTierProvider) == EntitlementTier.lifetime;
     final limitMb =
         (premium
             ? AppConstants.maxPremiumAttachmentBytes

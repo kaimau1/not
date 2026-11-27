@@ -28,8 +28,7 @@ extension _EditorActions on _NoteEditorScreenState {
                       s.value
                           ?.where(
                             (e) =>
-                                e.ownerId == owner &&
-                                e.noteId == widget.noteId,
+                                e.ownerId == owner && e.noteId == widget.noteId,
                           )
                           .firstOrNull
                           ?.sharedWith
@@ -877,11 +876,7 @@ extension _EditorActions on _NoteEditorScreenState {
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final (sort, label, icon) in <(ItemSort, String, IconData)>[
-              (
-                ItemSort.byGroup,
-                l10n.sortByGroup,
-                Icons.category_outlined,
-              ),
+              (ItemSort.byGroup, l10n.sortByGroup, Icons.category_outlined),
               (ItemSort.starredFirst, l10n.sortStarredFirst, Icons.star),
               (
                 ItemSort.uncheckedFirst,
@@ -975,6 +970,37 @@ extension _EditorActions on _NoteEditorScreenState {
       immediate: true,
     );
     _showUndoSnack(l10n.finishShoppingDone(checked.length));
+  }
+
+  /// Türüne özel akıllı liste çalışma alanını açar (alışkanlık, taşınma,
+  /// bavul, antrenman, bütçe, temizlik, hediye, izleme...).
+  Future<void> _openSmartWorkspace(SmartListKind kind) async {
+    final note = _note;
+    if (note == null || _readOnly || note.type != NoteType.checklist) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    final liveItems = ValueNotifier<List<NoteItem>>(note.items);
+    void syncLive() {
+      final latest = _noteN.value;
+      if (latest != null) liveItems.value = latest.items;
+    }
+
+    _noteN.addListener(syncLive);
+    try {
+      await openSmartWorkspace(
+        context,
+        kind: kind,
+        title: note.displayTitle,
+        initialItems: note.items,
+        liveItems: liveItems,
+        onReplaceItems: (items) {
+          _mutate((n) => n.copyWith(items: items), immediate: true);
+          return items;
+        },
+      );
+    } finally {
+      _noteN.removeListener(syncLive);
+      liveItems.dispose();
+    }
   }
 
   /// AL-5 + Faz 3 Mağaza kipi: tek elle rahat işaretleme, reyon/bütçe/market
@@ -1226,5 +1252,4 @@ extension _EditorActions on _NoteEditorScreenState {
     }
     await runNoteShare(context, ref, current, 'pdf');
   }
-
 }

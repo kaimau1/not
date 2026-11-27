@@ -3532,5 +3532,357 @@
   "lockForgotConfirmBody": "Locked notes encrypted with your current secret cannot be decrypted again without that secret. Reset the lock anyway?",
   "lockForgotConfirmAction": "Reset",
   "starterShoppingTitle": "🛒 Sample grocery list",
-  "starterWelcomeTitle": "⚡ Quick start"
+  "starterWelcomeTitle": "⚡ Quick start",
+  "smartListMoving": "Moving planner",
+  "smartListCleaning": "Home cleaning",
+  "smartListHabits": "Habit tracker",
+  "smartListWorkout": "Workout planner",
+  "smartListGifts": "Gift planner",
+  "smartListWatchlist": "Watchlist",
+  "smartListEvent": "Event & party",
+  "smartListExpense": "Budget & expenses",
+  "smartListKindSelect": "Choose list type",
+  "smartListCatalog": "Packs & catalog",
+  "smartListSearchCatalog": "Search items or groups…",
+  "smartListStarterPacks": "Starter packs",
+  "smartListOpenWorkspace": "Open in workspace",
+  "smartListTripWizard": "Trip wizard",
+  "smartListEventWizard": "Event wizard",
+  "smartListWizardDays": "How many days?",
+  "smartListWizardWeather": "Weather",
+  "smartListWeatherHot": "Hot",
+  "smartListWeatherMild": "Mild",
+  "smartListWeatherCold": "Cold",
+  "smartListWeatherRainy": "Rainy",
+  "smartListWizardStyle": "Trip style",
+  "smartListStyleBeach": "Beach",
+  "smartListStyleCity": "City",
+  "smartListStyleBusiness": "Business",
+  "smartListStyleIntl": "International",
+  "smartListStyleCamp": "Camping",
+  "smartListWizardGuests": "How many guests?",
+  "smartListEventStyle": "Event style",
+  "smartListEventBirthday": "Birthday",
+  "smartListEventDinner": "Dinner party",
+  "smartListEventPicnic": "Picnic",
+  "smartListApplyPlan": "Add to list ({count} items)",
+  "@smartListApplyPlan": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "smartListPackAdded": "Added “{name}” pack",
+  "@smartListPackAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "smartListEditItem": "Edit item",
+  "smartListItemNameHint": "Item name",
+  "smartListItemQty": "Quantity",
+  "smartListItemUnit": "Unit",
+  "smartListAll": "All",
+  "smartListResetDone": "List reset",
+  "smartListWorkspaceEmpty": "No items yet; add below or pick a starter pack.",
+  "smartWorkspaceOpen": "Open workspace",
+  "smartPillHabit": "Habits · {done}/{total} today",
+  "@smartPillHabit": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillMoving": "Moving · {done}/{total} ready",
+  "@smartPillMoving": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillPacking": "Packing · {done}/{total} packed",
+  "@smartPillPacking": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillWorkout": "Workout · {done}/{total} done",
+  "@smartPillWorkout": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillCleaning": "Cleaning · {done}/{total} done",
+  "@smartPillCleaning": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillGifts": "Gifts · {done}/{total} ready",
+  "@smartPillGifts": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillWatchlist": "Watchlist · {count} queued",
+  "@smartPillWatchlist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillExpense": "Budget · {total} ₺",
+  "@smartPillExpense": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "smartPillDefault": "Smart workspace ({count} left)",
+  "@smartPillDefault": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "habitDoneToday": "{done}/{total} today",
+  "@habitDoneToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "habitBestStreak": "Best streak: {days} days",
+  "@habitBestStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitStreakDays": "{days}d streak",
+  "@habitStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitWeeklyGoal": "Weekly target",
+  "habitWeeklyProgress": "{done}/{goal} this week",
+  "@habitWeeklyProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "habitTimeMorning": "Morning",
+  "habitTimeAfternoon": "Afternoon",
+  "habitTimeEvening": "Evening",
+  "habitFilterRemaining": "Due today",
+  "habitLast30Days": "Last 30 days",
+  "habitAddHint": "Add a new habit…",
+  "habitPrevWeek": "Previous week",
+  "habitNextWeek": "Next week",
+  "movingViewTimeline": "Timeline",
+  "movingViewRooms": "Rooms & boxes",
+  "movingPhaseMonth": "1 month out",
+  "movingPhaseWeek": "1 week out",
+  "movingPhaseDay": "Moving day",
+  "movingPhaseNewHome": "New home",
+  "movingRoomKitchen": "Kitchen",
+  "movingRoomLiving": "Living room",
+  "movingRoomBedroom": "Bedroom",
+  "movingRoomBath": "Bathroom",
+  "movingRoomStudy": "Study",
+  "movingRoomGeneral": "General",
+  "movingBoxesCount": "{count} boxes",
+  "@movingBoxesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "movingFragileCount": "{count} fragile",
+  "@movingFragileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "movingFragile": "Fragile",
+  "movingOpenFirst": "Open first",
+  "movingBoxNumber": "Box # (e.g. #1)",
+  "movingAddHint": "Add moving task or box…",
+  "packingBagChecked": "Checked",
+  "packingBagCabin": "Carry-on",
+  "packingBagWear": "Wearing",
+  "packingReset": "Reset packing",
+  "packingAddHint": "Add item (e.g. 3 t-shirts)…",
+  "workoutSetsCount": "{done}/{total} sets",
+  "@workoutSetsCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutRestTimer": "Rest timer",
+  "workoutRestSeconds": "{sec}s",
+  "@workoutRestSeconds": {
+    "placeholders": {
+      "sec": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutAutoTimer": "Auto-start after set",
+  "workoutSetsLabel": "Sets",
+  "workoutRepsLabel": "Reps / time",
+  "workoutWeightLabel": "Weight (e.g. 20 kg)",
+  "workoutZoneWarmup": "Warm-up",
+  "workoutZoneUpper": "Upper",
+  "workoutZoneLower": "Lower",
+  "workoutZoneCore": "Core",
+  "workoutZoneCardio": "Cardio",
+  "workoutZoneStretch": "Stretch",
+  "workoutReset": "Reset workout",
+  "workoutAddHint": "Add exercise…",
+  "cleaningFreqDaily": "Daily",
+  "cleaningFreqWeekly": "Weekly",
+  "cleaningFreqMonthly": "Monthly",
+  "cleaningReset": "Reset cycle",
+  "cleaningAddHint": "Add cleaning task…",
+  "giftStageIdea": "Idea",
+  "giftStageBought": "Bought",
+  "giftStageWrapped": "Wrapped",
+  "giftStageGiven": "Given",
+  "giftRecipient": "Recipient",
+  "giftPrice": "Budget (₺)",
+  "giftSummaryPlanned": "Total: {total} ₺ · Bought: {bought} ₺",
+  "@giftSummaryPlanned": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "bought": {
+        "type": "String"
+      }
+    }
+  },
+  "giftAddHint": "Add gift or recipient…",
+  "watchTypeMovie": "Movie",
+  "watchTypeSeries": "Series",
+  "watchTypeBook": "Book",
+  "watchTypeDoc": "Documentary",
+  "watchTypePodcast": "Podcast",
+  "watchStatusQueued": "Queued",
+  "watchStatusWatching": "In progress",
+  "watchStatusDone": "Finished",
+  "watchPlatform": "Platform or author",
+  "watchRating": "Your rating",
+  "watchAddHint": "Add movie, series or book…",
+  "expenseCatMarket": "Groceries",
+  "expenseCatBills": "Bills",
+  "expenseCatTransport": "Transport",
+  "expenseCatFood": "Dining",
+  "expenseCatHome": "Home",
+  "expenseCatHealth": "Health",
+  "expenseCatFun": "Fun",
+  "expenseCatOther": "Other",
+  "expenseSummaryBar": "Total: {total} ₺ · Paid: {paid} ₺ · Left: {left} ₺",
+  "@expenseSummaryBar": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "paid": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseAmountHint": "Amount (₺)",
+  "expenseAddHint": "Add item (e.g. Electric 850)…",
+  "domainGearReset": "Reset list",
+  "domainAddHint": "Add new item…",
+  "quickDropKeepOpen": "Keep open (rapid-fire)",
+  "quickDropSmartListChip": "Smart list",
+  "quickDropPreviewSmartList": "✨ New {kind}: {items}",
+  "@quickDropPreviewSmartList": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "items": {
+        "type": "String"
+      }
+    }
+  },
+  "quickDropSavedSmartList": "Created “{title}” smart list",
+  "@quickDropSavedSmartList": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "quickDropAddedSerial": "Added to “{title}”",
+  "@quickDropAddedSerial": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "quickDropUrgentBadge": "Urgent"
 }

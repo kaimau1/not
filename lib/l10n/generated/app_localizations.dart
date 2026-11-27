@@ -15709,6 +15709,876 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'⚡ Hızlı başlangıç'**
   String get starterWelcomeTitle;
+
+  /// No description provided for @smartListMoving.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınma planı'**
+  String get smartListMoving;
+
+  /// No description provided for @smartListCleaning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ev temizliği'**
+  String get smartListCleaning;
+
+  /// No description provided for @smartListHabits.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışkanlık takibi'**
+  String get smartListHabits;
+
+  /// No description provided for @smartListWorkout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Antrenman programı'**
+  String get smartListWorkout;
+
+  /// No description provided for @smartListGifts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hediye planlayıcı'**
+  String get smartListGifts;
+
+  /// No description provided for @smartListWatchlist.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzlenecekler'**
+  String get smartListWatchlist;
+
+  /// No description provided for @smartListEvent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik ve davet'**
+  String get smartListEvent;
+
+  /// No description provided for @smartListExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe ve harcama'**
+  String get smartListExpense;
+
+  /// No description provided for @smartListKindSelect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste türünü seç'**
+  String get smartListKindSelect;
+
+  /// No description provided for @smartListCatalog.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paketler ve katalog'**
+  String get smartListCatalog;
+
+  /// No description provided for @smartListSearchCatalog.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde veya grup ara…'**
+  String get smartListSearchCatalog;
+
+  /// No description provided for @smartListStarterPacks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hazır başlangıç paketleri'**
+  String get smartListStarterPacks;
+
+  /// No description provided for @smartListOpenWorkspace.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çalışma alanında aç'**
+  String get smartListOpenWorkspace;
+
+  /// No description provided for @smartListTripWizard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seyahat sihirbazı'**
+  String get smartListTripWizard;
+
+  /// No description provided for @smartListEventWizard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Davet sihirbazı'**
+  String get smartListEventWizard;
+
+  /// No description provided for @smartListWizardDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaç gün?'**
+  String get smartListWizardDays;
+
+  /// No description provided for @smartListWizardWeather.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hava durumu'**
+  String get smartListWizardWeather;
+
+  /// No description provided for @smartListWeatherHot.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıcak'**
+  String get smartListWeatherHot;
+
+  /// No description provided for @smartListWeatherMild.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ilık'**
+  String get smartListWeatherMild;
+
+  /// No description provided for @smartListWeatherCold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Soğuk'**
+  String get smartListWeatherCold;
+
+  /// No description provided for @smartListWeatherRainy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yağmurlu'**
+  String get smartListWeatherRainy;
+
+  /// No description provided for @smartListWizardStyle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seyahat türü'**
+  String get smartListWizardStyle;
+
+  /// No description provided for @smartListStyleBeach.
+  ///
+  /// In tr, this message translates to:
+  /// **'Deniz ve plaj'**
+  String get smartListStyleBeach;
+
+  /// No description provided for @smartListStyleCity.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şehir gezisi'**
+  String get smartListStyleCity;
+
+  /// No description provided for @smartListStyleBusiness.
+  ///
+  /// In tr, this message translates to:
+  /// **'İş seyahati'**
+  String get smartListStyleBusiness;
+
+  /// No description provided for @smartListStyleIntl.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yurt dışı'**
+  String get smartListStyleIntl;
+
+  /// No description provided for @smartListStyleCamp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamp'**
+  String get smartListStyleCamp;
+
+  /// No description provided for @smartListWizardGuests.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaç kişi?'**
+  String get smartListWizardGuests;
+
+  /// No description provided for @smartListEventStyle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etkinlik türü'**
+  String get smartListEventStyle;
+
+  /// No description provided for @smartListEventBirthday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğum günü'**
+  String get smartListEventBirthday;
+
+  /// No description provided for @smartListEventDinner.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akşam yemeği'**
+  String get smartListEventDinner;
+
+  /// No description provided for @smartListEventPicnic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Piknik'**
+  String get smartListEventPicnic;
+
+  /// No description provided for @smartListApplyPlan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeye ekle ({count} madde)'**
+  String smartListApplyPlan(int count);
+
+  /// No description provided for @smartListPackAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{name}” paketi eklendi'**
+  String smartListPackAdded(String name);
+
+  /// No description provided for @smartListEditItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maddeyi düzenle'**
+  String get smartListEditItem;
+
+  /// No description provided for @smartListItemNameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde adı'**
+  String get smartListItemNameHint;
+
+  /// No description provided for @smartListItemQty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Miktar'**
+  String get smartListItemQty;
+
+  /// No description provided for @smartListItemUnit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birim'**
+  String get smartListItemUnit;
+
+  /// No description provided for @smartListAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get smartListAll;
+
+  /// No description provided for @smartListResetDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste sıfırlandı'**
+  String get smartListResetDone;
+
+  /// No description provided for @smartListWorkspaceEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz madde yok; aşağıdan ekle veya hazır paket seç.'**
+  String get smartListWorkspaceEmpty;
+
+  /// No description provided for @smartWorkspaceOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çalışma alanını aç'**
+  String get smartWorkspaceOpen;
+
+  /// No description provided for @smartPillHabit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışkanlık · {done}/{total} bugün'**
+  String smartPillHabit(int done, int total);
+
+  /// No description provided for @smartPillMoving.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınma · {done}/{total} hazır'**
+  String smartPillMoving(int done, int total);
+
+  /// No description provided for @smartPillPacking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavul · {done}/{total} hazır'**
+  String smartPillPacking(int done, int total);
+
+  /// No description provided for @smartPillWorkout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Antrenman · {done}/{total} egzersiz'**
+  String smartPillWorkout(int done, int total);
+
+  /// No description provided for @smartPillCleaning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizlik · {done}/{total} tamam'**
+  String smartPillCleaning(int done, int total);
+
+  /// No description provided for @smartPillGifts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hediyeler · {done}/{total} hazır'**
+  String smartPillGifts(int done, int total);
+
+  /// No description provided for @smartPillWatchlist.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzlenecekler · {count} bekliyor'**
+  String smartPillWatchlist(int count);
+
+  /// No description provided for @smartPillExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe · {total} ₺'**
+  String smartPillExpense(String total);
+
+  /// No description provided for @smartPillDefault.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı çalışma alanı ({count} kalan)'**
+  String smartPillDefault(int count);
+
+  /// No description provided for @habitDoneToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'{done}/{total} bugün'**
+  String habitDoneToday(int done, int total);
+
+  /// No description provided for @habitBestStreak.
+  ///
+  /// In tr, this message translates to:
+  /// **'En iyi seri: {days} gün'**
+  String habitBestStreak(int days);
+
+  /// No description provided for @habitStreakDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{days} gün seri'**
+  String habitStreakDays(int days);
+
+  /// No description provided for @habitWeeklyGoal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık hedef'**
+  String get habitWeeklyGoal;
+
+  /// No description provided for @habitWeeklyProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'{done}/{goal} bu hafta'**
+  String habitWeeklyProgress(int done, int goal);
+
+  /// No description provided for @habitTimeMorning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabah'**
+  String get habitTimeMorning;
+
+  /// No description provided for @habitTimeAfternoon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğle'**
+  String get habitTimeAfternoon;
+
+  /// No description provided for @habitTimeEvening.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akşam'**
+  String get habitTimeEvening;
+
+  /// No description provided for @habitFilterRemaining.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün kalan'**
+  String get habitFilterRemaining;
+
+  /// No description provided for @habitLast30Days.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 30 gün'**
+  String get habitLast30Days;
+
+  /// No description provided for @habitAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni alışkanlık ekle…'**
+  String get habitAddHint;
+
+  /// No description provided for @habitPrevWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki hafta'**
+  String get habitPrevWeek;
+
+  /// No description provided for @habitNextWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki hafta'**
+  String get habitNextWeek;
+
+  /// No description provided for @movingViewTimeline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zaman çizelgesi'**
+  String get movingViewTimeline;
+
+  /// No description provided for @movingViewRooms.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oda ve koliler'**
+  String get movingViewRooms;
+
+  /// No description provided for @movingPhaseMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'1 ay önce'**
+  String get movingPhaseMonth;
+
+  /// No description provided for @movingPhaseWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'1 hafta önce'**
+  String get movingPhaseWeek;
+
+  /// No description provided for @movingPhaseDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınma günü'**
+  String get movingPhaseDay;
+
+  /// No description provided for @movingPhaseNewHome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni evde'**
+  String get movingPhaseNewHome;
+
+  /// No description provided for @movingRoomKitchen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mutfak'**
+  String get movingRoomKitchen;
+
+  /// No description provided for @movingRoomLiving.
+  ///
+  /// In tr, this message translates to:
+  /// **'Salon'**
+  String get movingRoomLiving;
+
+  /// No description provided for @movingRoomBedroom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yatak odası'**
+  String get movingRoomBedroom;
+
+  /// No description provided for @movingRoomBath.
+  ///
+  /// In tr, this message translates to:
+  /// **'Banyo'**
+  String get movingRoomBath;
+
+  /// No description provided for @movingRoomStudy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çalışma'**
+  String get movingRoomStudy;
+
+  /// No description provided for @movingRoomGeneral.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genel'**
+  String get movingRoomGeneral;
+
+  /// No description provided for @movingBoxesCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} koli'**
+  String movingBoxesCount(int count);
+
+  /// No description provided for @movingFragileCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kırılacak'**
+  String movingFragileCount(int count);
+
+  /// No description provided for @movingFragile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kırılacak'**
+  String get movingFragile;
+
+  /// No description provided for @movingOpenFirst.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce aç'**
+  String get movingOpenFirst;
+
+  /// No description provided for @movingBoxNumber.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koli no (ör. #1)'**
+  String get movingBoxNumber;
+
+  /// No description provided for @movingAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınma adımı veya koli ekle…'**
+  String get movingAddHint;
+
+  /// No description provided for @packingBagChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Valiz'**
+  String get packingBagChecked;
+
+  /// No description provided for @packingBagCabin.
+  ///
+  /// In tr, this message translates to:
+  /// **'El bagajı'**
+  String get packingBagCabin;
+
+  /// No description provided for @packingBagWear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üstümde'**
+  String get packingBagWear;
+
+  /// No description provided for @packingReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bavulu sıfırla'**
+  String get packingReset;
+
+  /// No description provided for @packingAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşya ekle (ör. 3 tişört)…'**
+  String get packingAddHint;
+
+  /// No description provided for @workoutSetsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{done}/{total} set'**
+  String workoutSetsCount(int done, int total);
+
+  /// No description provided for @workoutRestTimer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dinlenme sayacı'**
+  String get workoutRestTimer;
+
+  /// No description provided for @workoutRestSeconds.
+  ///
+  /// In tr, this message translates to:
+  /// **'{sec} sn'**
+  String workoutRestSeconds(int sec);
+
+  /// No description provided for @workoutAutoTimer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Set sonrası otomatik başlat'**
+  String get workoutAutoTimer;
+
+  /// No description provided for @workoutSetsLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Set'**
+  String get workoutSetsLabel;
+
+  /// No description provided for @workoutRepsLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar / süre'**
+  String get workoutRepsLabel;
+
+  /// No description provided for @workoutWeightLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ağırlık (ör. 20 kg)'**
+  String get workoutWeightLabel;
+
+  /// No description provided for @workoutZoneWarmup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Isınma'**
+  String get workoutZoneWarmup;
+
+  /// No description provided for @workoutZoneUpper.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üst'**
+  String get workoutZoneUpper;
+
+  /// No description provided for @workoutZoneLower.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt'**
+  String get workoutZoneLower;
+
+  /// No description provided for @workoutZoneCore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Merkez'**
+  String get workoutZoneCore;
+
+  /// No description provided for @workoutZoneCardio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kardiyo'**
+  String get workoutZoneCardio;
+
+  /// No description provided for @workoutZoneStretch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Esneme'**
+  String get workoutZoneStretch;
+
+  /// No description provided for @workoutReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Antrenmanı sıfırla'**
+  String get workoutReset;
+
+  /// No description provided for @workoutAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Egzersiz ekle…'**
+  String get workoutAddHint;
+
+  /// No description provided for @cleaningFreqDaily.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük'**
+  String get cleaningFreqDaily;
+
+  /// No description provided for @cleaningFreqWeekly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık'**
+  String get cleaningFreqWeekly;
+
+  /// No description provided for @cleaningFreqMonthly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aylık'**
+  String get cleaningFreqMonthly;
+
+  /// No description provided for @cleaningReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Döngüyü sıfırla'**
+  String get cleaningReset;
+
+  /// No description provided for @cleaningAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizlik adımı ekle…'**
+  String get cleaningAddHint;
+
+  /// No description provided for @giftStageIdea.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fikir'**
+  String get giftStageIdea;
+
+  /// No description provided for @giftStageBought.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alındı'**
+  String get giftStageBought;
+
+  /// No description provided for @giftStageWrapped.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paketlendi'**
+  String get giftStageWrapped;
+
+  /// No description provided for @giftStageGiven.
+  ///
+  /// In tr, this message translates to:
+  /// **'Verildi'**
+  String get giftStageGiven;
+
+  /// No description provided for @giftRecipient.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kime'**
+  String get giftRecipient;
+
+  /// No description provided for @giftPrice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe (₺)'**
+  String get giftPrice;
+
+  /// No description provided for @giftSummaryPlanned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam: {total} ₺ · Alınan: {bought} ₺'**
+  String giftSummaryPlanned(String total, String bought);
+
+  /// No description provided for @giftAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hediye veya kişi ekle…'**
+  String get giftAddHint;
+
+  /// No description provided for @watchTypeMovie.
+  ///
+  /// In tr, this message translates to:
+  /// **'Film'**
+  String get watchTypeMovie;
+
+  /// No description provided for @watchTypeSeries.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dizi'**
+  String get watchTypeSeries;
+
+  /// No description provided for @watchTypeBook.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kitap'**
+  String get watchTypeBook;
+
+  /// No description provided for @watchTypeDoc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belgesel'**
+  String get watchTypeDoc;
+
+  /// No description provided for @watchTypePodcast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Podcast'**
+  String get watchTypePodcast;
+
+  /// No description provided for @watchStatusQueued.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sırada'**
+  String get watchStatusQueued;
+
+  /// No description provided for @watchStatusWatching.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam ediyor'**
+  String get watchStatusWatching;
+
+  /// No description provided for @watchStatusDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitti'**
+  String get watchStatusDone;
+
+  /// No description provided for @watchPlatform.
+  ///
+  /// In tr, this message translates to:
+  /// **'Platform veya yazar'**
+  String get watchPlatform;
+
+  /// No description provided for @watchRating.
+  ///
+  /// In tr, this message translates to:
+  /// **'Puanın'**
+  String get watchRating;
+
+  /// No description provided for @watchAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Film, dizi veya kitap ekle…'**
+  String get watchAddHint;
+
+  /// No description provided for @expenseCatMarket.
+  ///
+  /// In tr, this message translates to:
+  /// **'Market'**
+  String get expenseCatMarket;
+
+  /// No description provided for @expenseCatBills.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fatura'**
+  String get expenseCatBills;
+
+  /// No description provided for @expenseCatTransport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ulaşım'**
+  String get expenseCatTransport;
+
+  /// No description provided for @expenseCatFood.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yemek'**
+  String get expenseCatFood;
+
+  /// No description provided for @expenseCatHome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ev'**
+  String get expenseCatHome;
+
+  /// No description provided for @expenseCatHealth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağlık'**
+  String get expenseCatHealth;
+
+  /// No description provided for @expenseCatFun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Keyif'**
+  String get expenseCatFun;
+
+  /// No description provided for @expenseCatOther.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get expenseCatOther;
+
+  /// No description provided for @expenseSummaryBar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam: {total} ₺ · Ödenen: {paid} ₺ · Kalan: {left} ₺'**
+  String expenseSummaryBar(String total, String paid, String left);
+
+  /// No description provided for @expenseAmountHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutar (₺)'**
+  String get expenseAmountHint;
+
+  /// No description provided for @expenseAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem ekle (ör. Elektrik 850)…'**
+  String get expenseAddHint;
+
+  /// No description provided for @domainGearReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi sıfırla'**
+  String get domainGearReset;
+
+  /// No description provided for @domainAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni madde ekle…'**
+  String get domainAddHint;
+
+  /// No description provided for @quickDropKeepOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seri ekle (ekledikten sonra açık kal)'**
+  String get quickDropKeepOpen;
+
+  /// No description provided for @quickDropSmartListChip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akıllı liste'**
+  String get quickDropSmartListChip;
+
+  /// No description provided for @quickDropPreviewSmartList.
+  ///
+  /// In tr, this message translates to:
+  /// **'✨ Yeni {kind}: {items}'**
+  String quickDropPreviewSmartList(String kind, String items);
+
+  /// No description provided for @quickDropSavedSmartList.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{title}” akıllı listesi oluşturuldu'**
+  String quickDropSavedSmartList(String title);
+
+  /// No description provided for @quickDropAddedSerial.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklendi: “{title}”'**
+  String quickDropAddedSerial(String title);
+
+  /// No description provided for @quickDropUrgentBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil'**
+  String get quickDropUrgentBadge;
 }
 
 class _AppLocalizationsDelegate
