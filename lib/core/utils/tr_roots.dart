@@ -87,6 +87,12 @@ tabi dem merkez bilgi haber yardım kayıt dert güç isim ad hak hepsi soyad
 ihtimal hal hayal kabul rol alkol seyahat
 ek uç kip veri sabit odak palet desen hiza koyu acil gerçek şablon sütun kısım
 aynen elektronik kullanım
+web mod avatar gmail öğe bkz internet wifi pdf email eposta blog online
+bluetooth widget selfie story youtube instagram whatsapp telegram google
+android iphone ios windows excel word powerpoint zoom router url qr link
+ibuprofen yoğunbakım hemogram trigliserit tiroid kolonoskopi ekg eeg emar
+folik omega antidepresan antikoagülan metformin gluten vegan smoothie avm
+metrobüs marmaray hostel bitcoin kdv iban eft
 ''');
 
 /// Ek almayan kapalı sınıf (bağlaç, edat, ünlem, soru eki): YALNIZ yazıldığı

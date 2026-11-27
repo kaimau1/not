@@ -17,6 +17,7 @@ import '../core/widgets/undo_snackbar.dart';
 import '../features/settings/presentation/customize_hub.dart';
 import '../features/settings/presentation/app_lock.dart';
 import '../features/notes/presentation/note_write_issues.dart';
+import '../features/notes/presentation/editor/auto_spell.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_services.dart';
 import 'router.dart';
@@ -251,6 +252,13 @@ class NotlarApp extends ConsumerWidget {
         // dilin tarih sembollerini zaten yüklüyor, ayrıca bir başlatma
         // (initializeDateFormatting) gerekmiyor.
         Intl.defaultLocale = Localizations.localeOf(context).toLanguageTag();
+        // Yazım dili (2026-11-27): seçilen uygulama dili, yoksa CİHAZ dili —
+        // çevirisi olmayan cihaz dilinde arayüz Türkçe açılsa da kişi o
+        // dilde yazar (bkz. [AutoSpell.writingLanguage]).
+        AutoSpell.setWritingLanguage(
+          ref.read(localeProvider)?.languageCode ??
+              WidgetsBinding.instance.platformDispatcher.locale.languageCode,
+        );
         // **SİSTEM GEZİNME ÇUBUĞU** (kullanıcı bulgusu 2026-09-23, ekran
         // görüntüsü: editörün alt çubuğunun altında beyaz bir şerit).
         // KÖK NEDEN: uygulama ekranı kenardan kenara çiziyor ama gezinme

@@ -231,6 +231,28 @@ void main() {
     },
   );
 
+  // 2026-11-27 (beş pazar dili): Endonezce/Malayca/Arapça yazan kişide
+  // Türkçe motor DOĞRU kelimeyi işaretliyordu ("saya" harfsiz yazım,
+  // "makan"…). Bu dillerde yalnız cihaz denetçisi, o dilde sorulur.
+  testWidgets('Endonezce yazım dilinde Türkçe motor çizmez, cihaz o dilde '
+      'sorulur', (tester) async {
+    final asked = fakeNative({
+      'makn': ['makan'],
+    });
+    AutoSpell.setWritingLanguage('id');
+    addTearDown(() => AutoSpell.setWritingLanguage('tr'));
+    await tester.pump();
+    expect(AutoSpell.ownEngine, isFalse);
+    final c = TextEditingController(text: 'saya mau makn nasi kalwm');
+    final m = SpellMarks.acquire(c);
+    addTearDown(m.release);
+    await scan(tester);
+    // "kalwm" Türkçe motorda "kalem" olurdu; Endonezcede cihaza kalır.
+    expect(marksOf(m), [(9, 13, 'makn')]);
+    expect(asked.single, contains('makn'));
+    expect(SpellMarks.suggestionsFor('makn'), ['makan']);
+  });
+
   testWidgets(
     'yalnız büyük harf isteyen (özel ad) çizilmez; denetçi meşgulse '
     'kelime sonraki denetimde yeniden sorulur',

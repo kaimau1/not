@@ -82,7 +82,11 @@ List<SpellFinding> scanNoteSpellFindings({
         for (final t in SpellEngine.tokens(para)) {
           if (noteKeep.contains(t.word)) continue;
           if (tags.any((g) => g.start < t.end && t.start < g.end)) continue;
-          final res = SpellEngine.suggestions(t.word, memory);
+          final res = SpellEngine.suggestions(
+            t.word,
+            memory,
+            lexiconEdits: true,
+          );
           if (res == null) continue;
           final typed = para.substring(t.start, t.end);
           final opts = [
