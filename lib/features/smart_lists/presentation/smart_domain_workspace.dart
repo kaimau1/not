@@ -18,6 +18,7 @@ import '../../notes/domain/smart_list.dart';
 import '../../shopping/presentation/shop_budget_bar.dart';
 import '../domain/smart_item_meta.dart';
 import 'smart_wizards.dart';
+import 'workspace_empty_packs.dart';
 
 /// Temizlik, Hediye, İzlenecekler, Bütçe, Etkinlik, Eczane, Kırtasiye,
 /// Tamirat, Kamp, Bebek ve Spor için türe özel etkileşimli çalışma alanı.
@@ -180,25 +181,17 @@ class _SmartDomainWorkspaceState extends State<SmartDomainWorkspace> {
   }
 
   Future<void> _addStarterPack() async {
-    final isTr = context.l10n.localeName.startsWith('tr');
     final spec = kSmartKindSpecs[widget.kind];
     if (spec == null || spec.starterPacks.isEmpty) return;
-    final pack = spec.starterPacks.first;
-    final names = pack.items(isTr: isTr);
-    final have = {for (final i in _items) i.text.trim().toLowerCase()};
-    final fresh = <NoteItem>[];
-    for (var i = 0; i < names.length; i++) {
-      final t = names[i];
-      if (have.contains(t.toLowerCase())) continue;
-      final ex = pack.extrasByIndex[i];
-      fresh.add(
-        NoteItem(
-          id: const Uuid().v4(),
-          text: t,
-          extras: ex == null ? const {} : Map<String, dynamic>.from(ex),
-        ),
-      );
-    }
+    _applyPack(spec.starterPacks.first);
+  }
+
+  void _applyPack(SmartStarterPack pack) {
+    final fresh = buildStarterPackItems(
+      pack,
+      _items,
+      isTr: context.l10n.localeName.startsWith('tr'),
+    );
     if (fresh.isNotEmpty) {
       unawaited(AppHaptics.thud());
       _commit([..._items, ...fresh]);
@@ -594,26 +587,14 @@ class _SmartDomainWorkspaceState extends State<SmartDomainWorkspace> {
             ),
           Expanded(
             child: visible.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.smartListWorkspaceEmpty,
-                          style: text.body.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                        if (spec != null && spec.starterPacks.isNotEmpty) ...[
-                          const SizedBox(height: AppSpace.m),
-                          FilledButton.tonalIcon(
-                            onPressed: _addStarterPack,
-                            icon: const Icon(Icons.auto_awesome_outlined),
-                            label: Text(l10n.smartListStarterPacks),
-                          ),
-                        ],
-                      ],
-                    ),
+                ? WorkspaceEmptyPacks(
+                    kind: widget.kind,
+                    onApplyPack: _applyPack,
+                    onWizard: widget.kind == SmartListKind.event
+                        ? _openEventWizard
+                        : null,
+                    wizardLabel: l10n.smartListEventWizard,
+                    wizardIcon: Icons.celebration_outlined,
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(

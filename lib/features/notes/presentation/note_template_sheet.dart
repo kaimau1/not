@@ -17,6 +17,7 @@ import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
+import '../domain/smart_lexicon_v2.dart';
 import '../domain/smart_list.dart';
 import 'template_editor_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
@@ -111,16 +112,74 @@ QuickListArgs? quickListArgsFor(
   return null;
 }
 
-/// **ŞABLONDAN NOT — TEK KAPI** (kullanıcı isteği 2026-11-15). Liste
-/// şablonu levhadaki önizleme yerine HIZLI LİSTE sayfasında kurulur
-/// ([QuickListScreen]); yazı şablonu eskisi gibi levhada önizlenir.
-/// [initial]/[initialUser] liste ise galeri hiç açılmaz.
+/// Bu liste şablonları kendi etkileşimli çalışma alanını doğrudan açar (v2).
+bool _opensDirectWorkspace(NoteTemplate t) => switch (t) {
+  NoteTemplate.habits ||
+  NoteTemplate.moving ||
+  NoteTemplate.travel ||
+  NoteTemplate.workout ||
+  NoteTemplate.cleaning ||
+  NoteTemplate.gifts ||
+  NoteTemplate.watchlist ||
+  NoteTemplate.expense => true,
+  _ => false,
+};
+
+TemplatePreviewStyle _previewStyleFor(NoteTemplate t) => switch (t) {
+  NoteTemplate.shopping => TemplatePreviewStyle.shopping,
+  NoteTemplate.habits => TemplatePreviewStyle.habits,
+  NoteTemplate.moving => TemplatePreviewStyle.moving,
+  NoteTemplate.travel => TemplatePreviewStyle.packing,
+  NoteTemplate.workout => TemplatePreviewStyle.workout,
+  NoteTemplate.cleaning => TemplatePreviewStyle.cleaning,
+  NoteTemplate.gifts => TemplatePreviewStyle.gifts,
+  NoteTemplate.watchlist => TemplatePreviewStyle.watchlist,
+  NoteTemplate.expense => TemplatePreviewStyle.expense,
+  _ => TemplatePreviewStyle.lines,
+};
+
+@immutable
+class _DirectWorkspacePick {
+  const _DirectWorkspacePick({
+    required this.title,
+    required this.kind,
+    this.recentKey,
+  });
+
+  final String title;
+  final SmartListKind kind;
+  final String? recentKey;
+}
+
+/// **ŞABLONDAN NOT — TEK KAPI** (kullanıcı isteği 2026-11-15). Uzmanlaşmış v2
+/// şablonları (alışkanlık, taşınma, bavul, antrenman, temizlik, hediye,
+/// izleme, harcama) tek dokunuşla doğrudan kendi çalışma alanına açılır;
+/// alışveriş/yapılacaklar/kişisel listeler hızlı listeye, yazı şablonları
+/// önizlemeye gider.
 Future<TemplateOutcome?> pickTemplate(
   BuildContext context,
   WidgetRef ref, {
   NoteTemplate? initial,
   UserTemplate? initialUser,
 }) async {
+  if (initial != null && _opensDirectWorkspace(initial)) {
+    final c = buildNoteTemplate(initial, context.l10n);
+    ref.read(recentTemplatesProvider.notifier).remember('b:${initial.key}');
+    return (
+      content: (
+        type: NoteType.checklist,
+        title: c.title,
+        body: '',
+        items: const <String>[],
+        columns: 1,
+      ),
+      open: true,
+      quick: false,
+      listKind: smartListKindId(initial.smartKind),
+      richItems: null,
+      openWorkspace: true,
+    );
+  }
   var args = quickListArgsFor(context, builtin: initial, user: initialUser);
   if (args == null) {
     // TEK ÖRNEK (kullanıcı bulgusu 2026-11-15 "şablon oluştururken aşırı
@@ -136,6 +195,25 @@ Future<TemplateOutcome?> pickTemplate(
         listKind: null,
         richItems: null,
         openWorkspace: false,
+      );
+    }
+    if (picked is _DirectWorkspacePick) {
+      if (picked.recentKey != null) {
+        ref.read(recentTemplatesProvider.notifier).remember(picked.recentKey!);
+      }
+      return (
+        content: (
+          type: NoteType.checklist,
+          title: picked.title,
+          body: '',
+          items: const <String>[],
+          columns: 1,
+        ),
+        open: true,
+        quick: false,
+        listKind: smartListKindId(picked.kind),
+        richItems: null,
+        openWorkspace: true,
       );
     }
     if (picked is! QuickListArgs || !context.mounted) return null;
@@ -207,13 +285,23 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     super.dispose();
   }
 
-  /// Seçim: liste şablonu hızlı liste sayfasına gider, gerisi önizlemeye.
+  /// Seçim: v2 uzmanlaşmış şablon doğrudan çalışma alanına, diğer listeler
+  /// hızlı listeye, yazı şablonları önizlemeye gider.
   void _pick(_Pick pick) {
-    final args = quickListArgsFor(
-      context,
-      builtin: pick.builtin,
-      user: pick.user,
-    );
+    final builtin = pick.builtin;
+    if (builtin != null && _opensDirectWorkspace(builtin)) {
+      final c = buildNoteTemplate(builtin, context.l10n);
+      Navigator.pop<Object>(
+        context,
+        _DirectWorkspacePick(
+          title: c.title,
+          kind: builtin.smartKind,
+          recentKey: pick.key,
+        ),
+      );
+      return;
+    }
+    final args = quickListArgsFor(context, builtin: builtin, user: pick.user);
     if (args != null) {
       Navigator.pop<Object>(context, args);
       return;
@@ -463,6 +551,10 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
           for (final t in NoteTemplate.values)
             if (t.category == c) _Pick.builtin(t),
         ]);
+        if (c == TemplateCategory.lists &&
+            _category == TemplateCategory.lists) {
+          sections.add(_moreSmartListsStrip(context, l10n));
+        }
       }
       if (_category == null && userTemplates.isNotEmpty) {
         addSection(l10n.templatesMine, [
@@ -612,9 +704,13 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
 
   Widget _grid(BuildContext context, List<_Pick> picks) => LayoutBuilder(
     builder: (context, constraints) {
-      // KÜÇÜK KARTLAR (kullanıcı isteği 2026-11-05: "şablonların kart boyutu
-      // küçültülür"): telefonda 3, genişte 4 sütun, kart dikey ve kısa.
-      final columns = constraints.maxWidth > 480 ? 4 : 3;
+      // Ferah okunabilir v2 kartlar: telefonda 2 sütun (adlar kesilmez),
+      // orta ekranda 3, genişte 4 sütun.
+      final columns = constraints.maxWidth >= 680
+          ? 4
+          : constraints.maxWidth >= 480
+          ? 3
+          : 2;
       final width =
           (constraints.maxWidth - AppSpace.s * (columns - 1)) / columns;
       return Wrap(
@@ -633,6 +729,82 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       );
     },
   );
+
+  static const _extraSmartKinds = [
+    SmartListKind.pharmacy,
+    SmartListKind.camping,
+    SmartListKind.event,
+    SmartListKind.stationery,
+    SmartListKind.hardware,
+    SmartListKind.baby,
+    SmartListKind.sport,
+  ];
+
+  Widget _moreSmartListsStrip(BuildContext context, AppLocalizations l10n) {
+    final isTr = l10n.localeName.startsWith('tr');
+    final text = AppText.of(Theme.of(context));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionLabel(l10n.templatesMoreSmartLists),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final kind in _extraSmartKinds)
+                if (kSmartKindSpecs[kind] case final spec?)
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppSpace.s),
+                    child: Material(
+                      color: spec.accent.withValues(alpha: AppAlpha.pressed),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        side: BorderSide(
+                          color: spec.accent.withValues(alpha: AppAlpha.muted),
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        key: ValueKey('tpl-extra-kind-${kind.name}'),
+                        onTap: () => Navigator.pop<Object>(
+                          context,
+                          _DirectWorkspacePick(
+                            title: spec.name(isTr: isTr),
+                            kind: kind,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.m,
+                            vertical: AppSpace.s,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                spec.icon,
+                                size: AppIconSize.xs,
+                                color: spec.accent,
+                              ),
+                              const SizedBox(width: AppSpace.xs),
+                              Text(
+                                spec.name(isTr: isTr),
+                                style: text.label.copyWith(
+                                  fontWeight: AppWeight.strong,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   /// Kart önbelleği (T7, K-47/48): arama her tuşta kök `setState` ile
   /// galeriyi kurar; girdisi (şablon nesnesi, yıldız, vurgu rengi, dil)
@@ -682,6 +854,9 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       child: TemplatePreviewCard(
         key: ValueKey('tpl-card-${pick.key}'),
         lines: _linesOf(pick, l10n),
+        previewStyle: builtin != null
+            ? _previewStyleFor(builtin)
+            : TemplatePreviewStyle.lines,
         icon: builtin?.icon ?? _userIcon(user!.type),
         accent: builtin?.accent ?? scheme.primary,
         name: label,

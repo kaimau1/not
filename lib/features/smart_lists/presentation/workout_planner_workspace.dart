@@ -15,6 +15,7 @@ import '../../notes/domain/note_item.dart';
 import '../../notes/domain/smart_lexicon_v2.dart';
 import '../../notes/domain/smart_list.dart';
 import '../domain/smart_item_meta.dart';
+import 'workspace_empty_packs.dart';
 
 /// **ANTRENMAN ÇALIŞMA ALANI**: Etkileşimli set balonları, ağırlık/tekrar
 /// düzenleyici, kas grubu süzgeci ve dahili dinlenme sayacı.
@@ -165,21 +166,15 @@ class _WorkoutPlannerWorkspaceState extends State<WorkoutPlannerWorkspace> {
       ),
     );
     if (pack == null || !mounted) return;
-    final names = pack.items(isTr: isTr);
-    final have = {for (final i in _items) i.text.trim().toLowerCase()};
-    final fresh = <NoteItem>[];
-    for (var i = 0; i < names.length; i++) {
-      final t = names[i];
-      if (have.contains(t.toLowerCase())) continue;
-      final ex = pack.extrasByIndex[i];
-      fresh.add(
-        NoteItem(
-          id: const Uuid().v4(),
-          text: t,
-          extras: ex == null ? const {} : Map<String, dynamic>.from(ex),
-        ),
-      );
-    }
+    _applyPack(pack);
+  }
+
+  void _applyPack(SmartStarterPack pack) {
+    final fresh = buildStarterPackItems(
+      pack,
+      _items,
+      isTr: context.l10n.localeName.startsWith('tr'),
+    );
     if (fresh.isNotEmpty) {
       unawaited(AppHaptics.thud());
       _commit([..._items, ...fresh]);
@@ -520,12 +515,9 @@ class _WorkoutPlannerWorkspaceState extends State<WorkoutPlannerWorkspace> {
           ),
           Expanded(
             child: visible.isEmpty
-                ? Center(
-                    child: FilledButton.tonalIcon(
-                      onPressed: _openStarterPacks,
-                      icon: const Icon(Icons.auto_awesome_outlined),
-                      label: Text(l10n.smartListStarterPacks),
-                    ),
+                ? WorkspaceEmptyPacks(
+                    kind: SmartListKind.workout,
+                    onApplyPack: _applyPack,
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(

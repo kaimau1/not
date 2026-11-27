@@ -9418,4 +9418,49 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get quickDropUrgentBadge => 'Segera';
+
+  @override
+  String get tplBadgeShopping => 'Lorong · 2 lajur';
+
+  @override
+  String get tplBadgeHabits => '7 hari · berturut';
+
+  @override
+  String get tplBadgeMoving => 'Fasa · kotak';
+
+  @override
+  String get tplBadgeTravel => 'Kabin · bagasi · bestari';
+
+  @override
+  String get tplBadgeWorkout => 'Set · pemasa rehat';
+
+  @override
+  String get tplBadgeCleaning => 'Bilik · kekerapan';
+
+  @override
+  String get tplBadgeGifts => 'Idea · bajet';
+
+  @override
+  String get tplBadgeWatchlist => '5 bintang · jenis';
+
+  @override
+  String get tplBadgeExpense => 'Bajet · jumlah';
+
+  @override
+  String get templatesMoreSmartLists => 'Senarai pintar lain';
+
+  @override
+  String get smartListEntryHint => 'Taip atau sebut: pasport, 2 susu…';
+
+  @override
+  String get quickListGenericHint => 'Taip atau sebut item…';
+
+  @override
+  String get quickDropKeepOpenShort => 'Kekal buka';
+
+  @override
+  String get quickDropTagHint => '#tag';
+
+  @override
+  String get quickDropUrgentHint => '!segera';
 }

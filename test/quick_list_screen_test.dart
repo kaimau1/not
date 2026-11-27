@@ -307,17 +307,57 @@ void main() {
     expect(calls, 1);
     expect(outcome, isNull);
 
+    // Akıllı listede market dışı ipucu ve boşken bile çalışma alanına geçiş.
+    await pumpHost(
+      tester,
+      onTap: (context, ref) async =>
+          outcome = await showQuickList(context, smartListArgs(context)).then(
+            (r) => r == null
+                ? null
+                : (
+                    content: r.content,
+                    open: r.open,
+                    quick: true,
+                    listKind: r.listKind,
+                    richItems: null,
+                    openWorkspace: r.openWorkspace,
+                  ),
+          ),
+    );
     await tester.tap(find.text('aç'));
     await tester.pumpAndSettle();
-    // Yazılıp bırakılan (ayırıcısız) kelime de listeye girer.
-    await tester.enterText(
+    final smartField = tester.widget<TextField>(
       find.byKey(const ValueKey('quick-entry-field')),
-      'muz',
     );
-    await tester.pump();
-    await tester.tap(find.byTooltip('Geri'));
+    expect(smartField.decoration?.hintText, isNot(contains('muz elma')));
+    await tester.tap(find.byKey(const ValueKey('quick-list-menu')));
     await tester.pumpAndSettle();
-    expect(outcome!.content.items, ['Muz']);
+    await tester.tap(find.text('Vazgeç'));
+    await tester.pumpAndSettle();
+    expect(outcome, isNull);
+  });
+
+  testWidgets('boşken çalışma alanını aç seçilirse yine sonuç döner', (
+    tester,
+  ) async {
+    QuickListResult? res;
+    await pumpHost(
+      tester,
+      onTap: (context, ref) async => res = await showQuickList(
+        context,
+        quickListArgsFor(context, builtin: NoteTemplate.moving)!,
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    expect(find.byType(QuickListScreen), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('quick-list-menu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Çalışma alanında aç').last);
+    await tester.pumpAndSettle();
+    expect(res, isNotNull);
+    expect(res!.openWorkspace, isTrue);
+    expect(res!.listKind, 'moving');
   });
 
   testWidgets(
@@ -332,16 +372,30 @@ void main() {
       );
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Seyahat çantası').last);
+      await tester.tap(find.text('Alışveriş listesi').last);
       await tester.pumpAndSettle();
       expect(find.byType(QuickListScreen), findsOneWidget);
-      // Seyahat: kendi öneri grupları sekme olarak.
+      final titleField = tester.widget<TextField>(
+        find.byKey(const ValueKey('quick-list-title')),
+      );
+      expect(titleField.decoration?.filled, isFalse);
+      // Alışveriş: kendi reyon öneri grupları sekme olarak.
       expect(find.byKey(const ValueKey('quick-list-tabs')), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('quick-list-menu')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Vazgeç'));
       await tester.pumpAndSettle();
       expect(outcome, isNull);
+
+      // Uzmanlaşmış v2 şablonu (alışkanlık, taşınma, bavul...) doğrudan çalışma alanına açılır.
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Alışkanlık takibi').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(QuickListScreen), findsNothing);
+      expect(outcome?.open, isTrue);
+      expect(outcome?.openWorkspace, isTrue);
+      expect(outcome?.listKind, 'habits');
 
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
@@ -696,18 +750,21 @@ void main() {
       expect(repo.writes.keys, ['a']);
     });
 
-    test('HE-3: dışarıdan istek tek seferlik, metin 2000 karakterle sınırlı', () {
-      final c = ProviderContainer();
-      addTearDown(c.dispose);
-      final n = c.read(quickDropRequestProvider.notifier);
-      expect(n.take(), isNull);
-      n.request('a' * 2500);
-      expect(c.read(quickDropRequestProvider)!.length, 2000);
-      expect(n.take()!.length, 2000);
-      expect(n.take(), isNull);
-      n.request('');
-      expect(n.take(), '', reason: 'boş istek de levhayı açar');
-    });
+    test(
+      'HE-3: dışarıdan istek tek seferlik, metin 2000 karakterle sınırlı',
+      () {
+        final c = ProviderContainer();
+        addTearDown(c.dispose);
+        final n = c.read(quickDropRequestProvider.notifier);
+        expect(n.take(), isNull);
+        n.request('a' * 2500);
+        expect(c.read(quickDropRequestProvider)!.length, 2000);
+        expect(n.take()!.length, 2000);
+        expect(n.take(), isNull);
+        n.request('');
+        expect(n.take(), '', reason: 'boş istek de levhayı açar');
+      },
+    );
 
     testWidgets('konuşma sonu: geri sayım, sonra eklenir; Bekle durdurur', (
       tester,
@@ -1063,9 +1120,9 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('quick-entry-clear')));
       await tester.pump();
       expect(
-        tester.widget<FilledButton>(
-          find.byKey(const ValueKey('quick-drop-add')),
-        ).onPressed,
+        tester
+            .widget<FilledButton>(find.byKey(const ValueKey('quick-drop-add')))
+            .onPressed,
         isNull,
       );
 
@@ -1076,7 +1133,11 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 3));
       expect(listens, 1);
-      expect(repo.writes, isEmpty, reason: 'mikrofon açılınca geri sayım durur');
+      expect(
+        repo.writes,
+        isEmpty,
+        reason: 'mikrofon açılınca geri sayım durur',
+      );
       await tester.pumpWidget(const SizedBox());
     });
 

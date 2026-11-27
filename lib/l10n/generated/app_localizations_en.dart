@@ -9369,4 +9369,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickDropUrgentBadge => 'Urgent';
+
+  @override
+  String get tplBadgeShopping => 'Aisles · 2 columns';
+
+  @override
+  String get tplBadgeHabits => '7-day · streak';
+
+  @override
+  String get tplBadgeMoving => 'Phases · boxes';
+
+  @override
+  String get tplBadgeTravel => 'Cabin · bag · wizard';
+
+  @override
+  String get tplBadgeWorkout => 'Sets · rest timer';
+
+  @override
+  String get tplBadgeCleaning => 'Rooms · cadence';
+
+  @override
+  String get tplBadgeGifts => 'Ideas · budget';
+
+  @override
+  String get tplBadgeWatchlist => '5 stars · type';
+
+  @override
+  String get tplBadgeExpense => 'Budget · total';
+
+  @override
+  String get templatesMoreSmartLists => 'More smart lists';
+
+  @override
+  String get smartListEntryHint =>
+      'Type or speak: passport, 2 milk, coffee \$12…';
+
+  @override
+  String get quickListGenericHint => 'Type or speak items…';
+
+  @override
+  String get quickDropKeepOpenShort => 'Keep open';
+
+  @override
+  String get quickDropTagHint => '#tag';
+
+  @override
+  String get quickDropUrgentHint => '!urgent';
 }

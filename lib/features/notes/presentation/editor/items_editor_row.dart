@@ -591,6 +591,8 @@ extension _ItemsRow on ItemsEditorState {
                                                     filled: false,
                                                     border: InputBorder.none,
                                                     isDense: true,
+                                                    visualDensity:
+                                                        VisualDensity.standard,
                                                     contentPadding:
                                                         EdgeInsets.symmetric(
                                                           vertical: fieldPad,

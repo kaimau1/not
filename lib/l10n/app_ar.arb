@@ -2745,5 +2745,20 @@
   "quickDropPreviewSmartList": "✨ {kind} جديدة: {items}",
   "quickDropSavedSmartList": "أُنشئت القائمة الذكية «{title}»",
   "quickDropAddedSerial": "أُضيف إلى «{title}»",
-  "quickDropUrgentBadge": "عاجل"
+  "quickDropUrgentBadge": "عاجل",
+  "tplBadgeShopping": "الأقسام · عمودان",
+  "tplBadgeHabits": "٧ أيام · سلسلة",
+  "tplBadgeMoving": "المراحل · الصناديق",
+  "tplBadgeTravel": "حقيبة · شحن · معالج",
+  "tplBadgeWorkout": "مجموعات · مؤقت",
+  "tplBadgeCleaning": "غرف · تكرار",
+  "tplBadgeGifts": "أفكار · ميزانية",
+  "tplBadgeWatchlist": "٥ نجوم · نوع",
+  "tplBadgeExpense": "ميزانية · إجمالي",
+  "templatesMoreSmartLists": "قوائم ذكية أخرى",
+  "smartListEntryHint": "اكتب أو تحدث: جواز سفر، حليب 2…",
+  "quickListGenericHint": "اكتب العناصر أو تحدث بها…",
+  "quickDropKeepOpenShort": "إبقاء مفتوح",
+  "quickDropTagHint": "#وسم",
+  "quickDropUrgentHint": "!عاجل"
 }

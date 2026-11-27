@@ -2745,5 +2745,20 @@
   "quickDropPreviewSmartList": "✨ {kind} baru: {items}",
   "quickDropSavedSmartList": "Daftar cerdas “{title}” dibuat",
   "quickDropAddedSerial": "Ditambahkan ke “{title}”",
-  "quickDropUrgentBadge": "Mendesak"
+  "quickDropUrgentBadge": "Mendesak",
+  "tplBadgeShopping": "Lorong · 2 kolom",
+  "tplBadgeHabits": "7 hari · beruntun",
+  "tplBadgeMoving": "Tahap · kardus",
+  "tplBadgeTravel": "Kabin · koper · asisten",
+  "tplBadgeWorkout": "Set · pengatur jeda",
+  "tplBadgeCleaning": "Ruang · jadwal",
+  "tplBadgeGifts": "Ide · anggaran",
+  "tplBadgeWatchlist": "5 bintang · jenis",
+  "tplBadgeExpense": "Anggaran · total",
+  "templatesMoreSmartLists": "Daftar cerdas lainnya",
+  "smartListEntryHint": "Ketik atau ucapkan: paspor, 2 susu…",
+  "quickListGenericHint": "Ketik atau ucapkan item…",
+  "quickDropKeepOpenShort": "Tetap buka",
+  "quickDropTagHint": "#tag",
+  "quickDropUrgentHint": "!mendesak"
 }

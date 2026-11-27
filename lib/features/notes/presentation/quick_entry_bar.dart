@@ -217,6 +217,15 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   /// Alandaki ham metin (hedef seçimi gibi işler için).
   String get text => _c.text;
 
+  /// Alana dışarıdan metin yazar (ör. hızlı ekle belirteç çipleri).
+  void setText(String value) {
+    _typed = true;
+    _c.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
+  }
+
   bool get isListening => _listening.value;
 
   /// Dinlemeyi dışarıdan başlatır (ör. ⚙ menüsünden "Açılınca dinle" açılınca).

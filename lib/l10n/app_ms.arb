@@ -2745,5 +2745,20 @@
   "quickDropPreviewSmartList": "✨ {kind} baharu: {items}",
   "quickDropSavedSmartList": "Senarai pintar “{title}” dicipta",
   "quickDropAddedSerial": "Ditambah ke “{title}”",
-  "quickDropUrgentBadge": "Segera"
+  "quickDropUrgentBadge": "Segera",
+  "tplBadgeShopping": "Lorong · 2 lajur",
+  "tplBadgeHabits": "7 hari · berturut",
+  "tplBadgeMoving": "Fasa · kotak",
+  "tplBadgeTravel": "Kabin · bagasi · bestari",
+  "tplBadgeWorkout": "Set · pemasa rehat",
+  "tplBadgeCleaning": "Bilik · kekerapan",
+  "tplBadgeGifts": "Idea · bajet",
+  "tplBadgeWatchlist": "5 bintang · jenis",
+  "tplBadgeExpense": "Bajet · jumlah",
+  "templatesMoreSmartLists": "Senarai pintar lain",
+  "smartListEntryHint": "Taip atau sebut: pasport, 2 susu…",
+  "quickListGenericHint": "Taip atau sebut item…",
+  "quickDropKeepOpenShort": "Kekal buka",
+  "quickDropTagHint": "#tag",
+  "quickDropUrgentHint": "!segera"
 }

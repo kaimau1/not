@@ -3884,5 +3884,20 @@
       }
     }
   },
-  "quickDropUrgentBadge": "Urgent"
+  "quickDropUrgentBadge": "Urgent",
+  "tplBadgeShopping": "Aisles · 2 columns",
+  "tplBadgeHabits": "7-day · streak",
+  "tplBadgeMoving": "Phases · boxes",
+  "tplBadgeTravel": "Cabin · bag · wizard",
+  "tplBadgeWorkout": "Sets · rest timer",
+  "tplBadgeCleaning": "Rooms · cadence",
+  "tplBadgeGifts": "Ideas · budget",
+  "tplBadgeWatchlist": "5 stars · type",
+  "tplBadgeExpense": "Budget · total",
+  "templatesMoreSmartLists": "More smart lists",
+  "smartListEntryHint": "Type or speak: passport, 2 milk, coffee $12…",
+  "quickListGenericHint": "Type or speak items…",
+  "quickDropKeepOpenShort": "Keep open",
+  "quickDropTagHint": "#tag",
+  "quickDropUrgentHint": "!urgent"
 }
