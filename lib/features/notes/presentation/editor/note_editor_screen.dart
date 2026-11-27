@@ -6231,6 +6231,17 @@ child: FormatBar(
                 onPressed: _openNoteMenu,
               ),
             ];
+            final titleSpacing = editorTitleSpacing(
+              readingColumn ? box.maxWidth : 0,
+              hasLeading: rawLeading != null || canPop,
+            );
+            final titleInset = titleSpacing > 16;
+            final title = _typingTitle(
+              note,
+              bar: _barTitle,
+              styledIdle,
+              paneWidth: box.maxWidth,
+            );
             return AppBar(
               // SIKI ÜST ÇUBUK (kullanıcı isteği 2026-11-03): 56 → 48 dp —
               // durum çubuğu ile düğmeler arasındaki boşluk yer harcıyordu;
@@ -6266,19 +6277,11 @@ child: FormatBar(
               // iki kez düşülünce başlığa 0 dp kalıyor, hızlı satırın bütün
               // düğmeleri ⋯'ye düşüyor, ⋯ tarihin üstüne biniyordu. Pay artık
               // başlığın içinde, yalnız başta; sonda en çok 16 dp.
-              titleSpacing: 0,
-              title: _titleWithSpacing(
-                editorTitleSpacing(
-                  readingColumn ? box.maxWidth : 0,
-                  hasLeading: rawLeading != null || canPop,
-                ),
-                _typingTitle(
-                  note,
-                  bar: _barTitle,
-                  styledIdle,
-                  paneWidth: box.maxWidth,
-                ),
-              ),
+              // Telefonda (pay yok) eski yol: sarmalayıcı eklenmez (bütçe S45/S50).
+              titleSpacing: titleInset ? 0 : titleSpacing,
+              title: titleInset
+                  ? _titleWithSpacing(titleSpacing, title)
+                  : title,
               actions: chrome.topBarPills
                   ? [
                       EditorTopPill(
