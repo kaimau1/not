@@ -7,6 +7,7 @@ What changed in each update, newest first. The version number is at the bottom o
 - **Correct spelling in the selection menu:** when you long-press and select an underlined word, the menu (Copy, Select all…) now starts with the correct spelling; tap it to fix the word.
 - **Spell check settings no longer hide under the phone's buttons:** the settings opened by long-pressing the spell-fix button now scroll when they don't fit and end above the navigation buttons; **Off** turns checking (including underlines) off completely.
 - **Ctrl + mouse wheel changes text size on the web:** holding Ctrl and scrolling up makes text larger, scrolling down makes it smaller (same setting as Settings → Appearance → Text size).
+- **The top quick menu is back on the web:** in wide windows the quick menu buttons (pen, spelling, bold…) didn't fit and all fell into "•••", which also overlapped the date; they now show next to the time again.
 - **Web dictation no longer stops silently:** when the browser's recognizer gives up, the dictation card now closes instead of staying grey as if still listening; long thinking pauses after you've started speaking no longer end listening early.
 
 ## 26 November 2026 {#2026-11-26}

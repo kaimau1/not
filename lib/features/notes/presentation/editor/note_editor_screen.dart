@@ -530,6 +530,10 @@ double editorTitleSpacing(double paneWidth, {required bool hasLeading}) {
 double readingMargin(double paneWidth) =>
     paneWidth > kReadingWidth ? (paneWidth - kReadingWidth) / 2 : 0.0;
 
+/// Testte geniş web hızlı satır yolunu açar (`kIsWeb` testte hep false).
+@visibleForTesting
+bool debugWideWebQuickRow = false;
+
 class NoteEditorScreen extends ConsumerStatefulWidget {
   const NoteEditorScreen({
     super.key,
@@ -2952,6 +2956,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
+  /// [title]'ı yalnız başta [spacing] (sonda en çok 16 dp) payla sarar; bkz.
+  /// AppBar'daki `titleSpacing: 0` notu.
+  static Widget? _titleWithSpacing(double spacing, Widget? title) =>
+      title == null
+      ? null
+      : Padding(
+          padding: EdgeInsetsDirectional.only(
+            start: spacing,
+            end: math.min(spacing, 16),
+          ),
+          child: title,
+        );
+
   /// Klavye açıkken üst çubuğun başlık yuvası: hızlı işlev satırı
   /// (2026-11-08); kapalıyken [idle] (tarih + etiketler).
   ///
@@ -2972,7 +2989,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // satır hiç görünmüyordu. Geniş alanda düğmeler tarihin yanında sürekli;
     // sığmayanlar ⋮ menüsünde. Bölünmüş pencerede pencere değil editör
     // bölmesi ölçülür.
-    final wide = kIsWeb && paneWidth >= kRailBreakpoint;
+    final wide =
+        (kIsWeb || debugWideWebQuickRow) && paneWidth >= kRailBreakpoint;
     // Paket grubu (F60.2): satıra dokunmak açık paketi kapatmaz.
     final row = TapRegion(
       groupId: kNotePackageTapGroup,
@@ -6242,15 +6260,24 @@ child: FormatBar(
               // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
               // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
               // menüsüne taşındığı için durum bir yerde görünmeliydi.
-              titleSpacing: editorTitleSpacing(
-                readingColumn ? box.maxWidth : 0,
-                hasLeading: rawLeading != null || canPop,
-              ),
-              title: _typingTitle(
-                note,
-                bar: _barTitle,
-                styledIdle,
-                paneWidth: box.maxWidth,
+              // BAŞLIK BOŞLUĞU YALNIZ SOLDA (kullanıcı bulgusu 2026-11-27:
+              // "webte üst hızlı menü yok"): `titleSpacing` NavigationToolbar'da
+              // başlığın İKİ yanına sayılır; geniş bölmede okuma payı (~500 dp)
+              // iki kez düşülünce başlığa 0 dp kalıyor, hızlı satırın bütün
+              // düğmeleri ⋯'ye düşüyor, ⋯ tarihin üstüne biniyordu. Pay artık
+              // başlığın içinde, yalnız başta; sonda en çok 16 dp.
+              titleSpacing: 0,
+              title: _titleWithSpacing(
+                editorTitleSpacing(
+                  readingColumn ? box.maxWidth : 0,
+                  hasLeading: rawLeading != null || canPop,
+                ),
+                _typingTitle(
+                  note,
+                  bar: _barTitle,
+                  styledIdle,
+                  paneWidth: box.maxWidth,
+                ),
               ),
               actions: chrome.topBarPills
                   ? [
