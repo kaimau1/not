@@ -255,6 +255,9 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
         'This is the selected voice. Your notes will be read aloud like this.',
     'de': 'Das ist die ausgewählte Stimme. Deine Notizen werden so vorgelesen.',
     'es': 'Esta es la voz seleccionada. Tus notas se leerán en voz alta así.',
+    'ar': 'هذا هو الصوت المختار. ستُقرأ ملاحظاتك بصوت عالٍ هكذا.',
+    'id': 'Ini suara yang dipilih. Catatanmu akan dibacakan seperti ini.',
+    'ms': 'Ini suara yang dipilih. Nota anda akan dibacakan seperti ini.',
   };
 
   /// [language] için örnek cümle (bilinmeyen dilde İngilizce).

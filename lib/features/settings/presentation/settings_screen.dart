@@ -153,14 +153,14 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 /// Ses secicisinin gosterdigi diller: uygulamanin o anki dili + tr/en.
-List<String> _voiceLanguages(BuildContext context) {
-  final supported = supportedLanguages.keys.toSet();
-  return <String>{
-    Localizations.localeOf(context).toLanguageTag(),
-    'tr',
-    'en',
-  }.where(supported.contains).toList();
-}
+/// Ses seçicide sunulan diller: uygulamanın dili + beş pazar dili
+/// (kullanıcı 2026-11-27: Türkçe, İngilizce, Arapça, Endonezce, Malayca).
+/// Arayüz çevirisinden bağımsız: Arapça notu okutmak için arayüzün Arapça
+/// olması gerekmez.
+List<String> _voiceLanguages(BuildContext context) => <String>{
+  Localizations.localeOf(context).languageCode,
+  ...kMarketLanguages,
+}.toList();
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Acik olan alan. Tek seferde biri acik: dokuz kart alt alta dururken
