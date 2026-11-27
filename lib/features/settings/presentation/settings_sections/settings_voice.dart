@@ -12,7 +12,6 @@ void _previewDeviceVoice(BuildContext context, WidgetRef ref) {
     ref
         .read(speechProvider.notifier)
         .preview(
-          TtsEngine.device,
           SpeechOutputController.voiceSample(language),
           languageCode: language,
         ),
@@ -115,7 +114,6 @@ class _ForeignSpeechRateSliderState
                   ref
                       .read(speechProvider.notifier)
                       .preview(
-                        TtsEngine.device,
                         SpeechOutputController.voiceSample('en'),
                         languageCode: 'en',
                       ),
@@ -192,15 +190,6 @@ class _SpeechPitchSliderState extends ConsumerState<_SpeechPitchSlider> {
 /// kullanıcı hangi kutunun hangi motorun sesini seçtiğini ayırt edemiyordu.
 /// Artık seçilen motora göre TEK bir ses seçimi görünür; cihaz sesleri de tek
 /// menüde (dil seç → ses seç) toplanır.
-///
-/// Derlemede bulunan motorlar (cihaz sesi + kişisel APK'da Antalia).
-List<TtsEngine> availableTtsEngines({
-  bool local = PlayBuild.antaliaVoice,
-}) => [TtsEngine.device, if (local) TtsEngine.antalia];
-
-/// Motor seçici yalnız birden çok motor varken (AI-S2 eki, 2026-11-19).
-bool showTtsEnginePicker(List<TtsEngine> engines) => engines.length > 1;
-
 class _VoiceSection extends ConsumerWidget {
   const _VoiceSection();
 
@@ -208,63 +197,18 @@ class _VoiceSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final engine = ref.watch(ttsEngineProvider);
-    final engines = availableTtsEngines();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSpace.s),
-        if (showTtsEnginePicker(engines)) ...[
-          SegmentedButton<TtsEngine>(
-            segments: [
-              ButtonSegment(
-                value: TtsEngine.device,
-                icon: const Icon(Icons.smartphone, size: AppIconSize.s),
-                label: Text(
-                  l10n.ttsEngineDevice,
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (engines.contains(TtsEngine.antalia))
-                ButtonSegment(
-                  value: TtsEngine.antalia,
-                  icon: const Icon(
-                    Icons.record_voice_over,
-                    size: AppIconSize.s,
-                  ),
-                  label: Text(
-                    l10n.ttsEngineLocal,
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-            ],
-            selected: {engine},
-            onSelectionChanged: (value) {
-              unawaited(ref.read(speechProvider.notifier).stop());
-              ref.read(ttsEngineProvider.notifier).set(value.first);
-            },
-          ),
-          const SizedBox(height: 6),
-        ],
         Text(
-          switch (engine) {
-            TtsEngine.antalia => l10n.ttsEngineLocalInfo,
-            TtsEngine.device => l10n.ttsEngineDeviceInfo,
-          },
+          l10n.ttsEngineDeviceInfo,
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
-        if (engine == TtsEngine.antalia) ...[
-          const SizedBox(height: 10),
-          const _AntaliaModelTile(),
-        ] else if (engine == TtsEngine.device) ...[
-          const SizedBox(height: 6),
-          ListTile(
+        const SizedBox(height: 6),
+        ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.record_voice_over_outlined),
             title: Text(l10n.speechVoicePickerTitle),
@@ -276,154 +220,9 @@ class _VoiceSection extends ConsumerWidget {
               showDragHandle: true,
               builder: (_) => const _VoicePickerSheet(),
             ),
-          ),
-        ],
+        ),
       ],
     );
-  }
-}
-
-/// Antalia Türkçe ses modelinin kurulum satırı: indir (ilerlemeyle) / iptal /
-/// dene / sil. Model ~50 MB ve APK'ya gömülmüyor (bkz. [AntaliaModelFiles]);
-/// kullanıcı motoru seçince indirmeyi buradan kendisi başlatır — mobil
-/// veride sessizce 50 MB çekmek kabul edilemezdi.
-class _AntaliaModelTile extends ConsumerStatefulWidget {
-  const _AntaliaModelTile();
-
-  @override
-  ConsumerState<_AntaliaModelTile> createState() => _AntaliaModelTileState();
-}
-
-class _AntaliaModelTileState extends ConsumerState<_AntaliaModelTile> {
-  bool _previewing = false;
-
-  Future<void> _preview() async {
-    if (_previewing) return;
-    setState(() => _previewing = true);
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      await ref
-          .read(speechProvider.notifier)
-          .preview(
-            TtsEngine.antalia,
-            SpeechOutputController.voiceSample('tr'),
-          );
-    } catch (error) {
-      messenger.showMessage(error.toString());
-    } finally {
-      if (mounted) setState(() => _previewing = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final model = ref.watch(antaliaModelProvider);
-    final controller = ref.read(antaliaModelProvider.notifier);
-    final small = theme.textTheme.bodySmall;
-
-    switch (model.status) {
-      case AntaliaInstall.unsupported:
-        return Text(
-          l10n.ttsLocalUnsupported,
-          style: small?.copyWith(color: scheme.error),
-        );
-      case AntaliaInstall.checking:
-        return const LinearProgressIndicator();
-      case AntaliaInstall.missing:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              model.error != null
-                  ? l10n.ttsLocalFailed(model.error!)
-                  : l10n.ttsLocalMissing,
-              style: small?.copyWith(
-                color: model.error != null
-                    ? scheme.error
-                    : scheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            FilledButton.tonalIcon(
-              onPressed: controller.download,
-              icon: const Icon(Icons.download, size: AppIconSize.s),
-              label: Text(l10n.ttsLocalDownload),
-            ),
-          ],
-        );
-      case AntaliaInstall.downloading:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LinearProgressIndicator(value: model.progress),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.ttsLocalDownloading(
-                      model.total > 0
-                          ? '${formatBytes(model.received)} / ${formatBytes(model.total)}'
-                          : formatBytes(model.received),
-                    ),
-                    style: small?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                ),
-                TextButton(
-                  onPressed: controller.cancel,
-                  child: Text(l10n.cancel),
-                ),
-              ],
-            ),
-          ],
-        );
-      case AntaliaInstall.ready:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.check_circle, size: AppIconSize.xs, color: scheme.primary),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    l10n.ttsLocalReady,
-                    style: small?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _previewing ? null : _preview,
-                  icon: _previewing
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.play_arrow, size: AppIconSize.s),
-                  label: Text(l10n.voicePreview),
-                ),
-                TextButton.icon(
-                  onPressed: () async {
-                    await ref.read(antaliaSpeechProvider.notifier).stop();
-                    await controller.delete();
-                  },
-                  icon: const Icon(Icons.delete_outline, size: AppIconSize.s),
-                  label: Text(l10n.ttsLocalDelete),
-                ),
-              ],
-            ),
-          ],
-        );
-    }
   }
 }
 
@@ -476,7 +275,6 @@ class _VoicePickerSheetState extends ConsumerState<_VoicePickerSheet> {
     await ref
         .read(speechProvider.notifier)
         .preview(
-          TtsEngine.device,
           SpeechOutputController.voiceSample(language),
           languageCode: language,
         );

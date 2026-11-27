@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/theme/app_palette.dart';
 import '../../core/constants.dart';
 import '../../core/tips.dart';
-import '../../core/play_build.dart';
 import '../../core/crash_reporting.dart';
 import '../../core/utils/font_downloads.dart';
 import '../../core/utils/language_names.dart';
@@ -470,48 +469,6 @@ class DarkScheduleNotifier extends Notifier<DarkSchedule> {
     prefs.setBool(_enabledKey, next.enabled);
     prefs.setInt(_startKey, next.startMinutes);
     prefs.setInt(_endKey, next.endMinutes);
-  }
-}
-
-/// Seslendirmeyi kim yapacak?
-enum TtsEngine {
-  /// Cihazın yerleşik TTS'i: bedava, çevrimdışı, anında, sınırsız uzunlukta.
-  device('device'),
-
-  /// Antalia-2 Mini: cihazda çalışan Türkçe seslendirme modeli. Bedava,
-  /// çevrimdışı, kota yok; model (~50 MB) bir kez indirilir. Yalnız Türkçe
-  /// ve yalnız Android (bkz. `features/ai/data/antalia/`).
-  antalia('antalia');
-
-  const TtsEngine(this.id);
-
-  final String id;
-
-  static TtsEngine fromId(String? id) =>
-      TtsEngine.values.firstWhere((e) => e.id == id, orElse: () => device);
-}
-
-/// Seslendirmeyi cihaz mı, Antalia mı yapsın (varsayılan: cihaz).
-final ttsEngineProvider = NotifierProvider<TtsEngineNotifier, TtsEngine>(
-  TtsEngineNotifier.new,
-);
-
-class TtsEngineNotifier extends Notifier<TtsEngine> {
-  static const _key = 'tts_engine';
-
-  @override
-  TtsEngine build() {
-    final e = TtsEngine.fromId(watchPrefs(ref).getString(_key));
-    // Play derlemesinde Antalia yok: yedekten gelen seçim cihaz sesine düşer.
-    if (e == TtsEngine.antalia && !PlayBuild.antaliaVoice) {
-      return TtsEngine.device;
-    }
-    return e;
-  }
-
-  void set(TtsEngine value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setString(_key, value.id);
   }
 }
 

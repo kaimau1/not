@@ -1808,13 +1808,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The built-in device voice reads: free, offline and unlimited in length.';
 
   @override
-  String get ttsEngineLocal => 'Turkish voice';
-
-  @override
-  String get ttsEngineLocalInfo =>
-      'Antalia: a Turkish speech model that runs on the phone. Free, offline and quota-free; the model is downloaded once (~50 MB). It reads Turkish only — text in other languages is read with the device voice. The voice is synthetic and does not belong to a real person.';
-
-  @override
   String get ttsLocalUnsupported =>
       'The Turkish voice only works in the Android app. Here the device voice reads.';
 

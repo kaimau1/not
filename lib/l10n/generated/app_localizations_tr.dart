@@ -1804,13 +1804,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.';
 
   @override
-  String get ttsEngineLocal => 'Türkçe ses';
-
-  @override
-  String get ttsEngineLocalInfo =>
-      'Antalia: telefonda çalışan Türkçe ses modeli. Bedava, çevrimdışı ve kotasız; model bir kez indirilir (~50 MB). Yalnız Türkçe okur — başka dildeki metinler cihaz sesiyle okunur. Ses yapaydır, gerçek bir kişiye ait değildir.';
-
-  @override
   String get ttsLocalUnsupported =>
       'Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.';
 

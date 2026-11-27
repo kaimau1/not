@@ -46,10 +46,9 @@ ayrı mı. *(Uygulama kısayolları `android/app/src/main/kisayol/app_shortcuts.
 
 ```
 # android/app/src/release/google-services.json = Play projesinin dosyası; env_play.json dolu
-bash tool/play_stub/play_hazirla.sh && flutter pub get   # ONNX kuklası (aşağıda PL1 madde 2)
+flutter pub get
 NOTLAR_PLAY=1 NOTLAR_PLAY_APP_ID=<paket.adi> flutter build appbundle --release   --dart-define=NOTLAR_PLAY=true --dart-define-from-file=env_play.json   --obfuscate --split-debug-info=build/app/outputs/symbols   --build-name=<A.B.C> --build-number=<N>
 # bitince src/release/google-services.json'ı KALDIR (yoksa kişisel derleme durur) ve
-# bash tool/play_stub/play_hazirla.sh geri; git checkout pubspec.lock; flutter pub get
 ```
 
 ## Kontrol listesi
@@ -76,7 +75,8 @@ NOTLAR_PLAY=1 NOTLAR_PLAY_APP_ID=<paket.adi> flutter build appbundle --release  
    `FlutterOnnxruntimePlugin.onAttachedToEngine` satır 178 `OrtEnvironment.getEnvironment()`
    çağırır → yerel kütüphane AÇILIŞTA yüklenir; `.so` yoksa `UnsatisfiedLinkError` (Error;
    GeneratedPluginRegistrant yalnız Exception yakalar) → açılışta çöker). Çözüm: Play'de eklenti
-   HİÇ kayıtlı olmaz. `tool/play_stub/play_hazirla.sh` depoya girmeyen `pubspec_overrides.yaml`
+   HİÇ kayıtlı olmaz. **2026-11-27: Antalia ve ONNX tamamen kaldırıldı; kukla da silindi —
+   aşağısı tarihçe.** `tool/play_stub/play_hazirla.sh` depoya girmeyen `pubspec_overrides.yaml`
    yazar → `flutter_onnxruntime` `tool/play_stub/flutter_onnxruntime` kuklasına (eklenti DEĞİL,
    aynı Dart yüzü, her çağrı `UnsupportedError`) yönlenir; `flutter pub get` sonrası Android
    eklenti listesinde yok → `GeneratedPluginRegistrant`'ta yok, `libonnxruntime.so` pakette yok.

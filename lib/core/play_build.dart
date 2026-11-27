@@ -18,9 +18,6 @@ abstract final class PlayBuild {
   /// E3: konum hatırlatıcısı (arka plan konumu beyanı + video ister).
   static const bool placeReminders = !enabled;
 
-  /// §2.6: Antalia cihaz içi Türkçe ses (ONNX, ~11 MB yerel kütüphane + model).
-  static const bool antaliaVoice = !enabled;
-
   /// §4.5: YouTube oynatıcısından çıkınca kendiliğinden küçük pencere (PiP).
   /// Elle PiP düğmesi kalır.
   static const bool youtubeAutoPip = !enabled;

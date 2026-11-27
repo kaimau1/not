@@ -842,8 +842,6 @@
   "ttsSectionTitle": "Seslendirme",
   "ttsEngineDevice": "Cihaz sesi",
   "ttsEngineDeviceInfo": "Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.",
-  "ttsEngineLocal": "Türkçe ses",
-  "ttsEngineLocalInfo": "Antalia: telefonda çalışan Türkçe ses modeli. Bedava, çevrimdışı ve kotasız; model bir kez indirilir (~50 MB). Yalnız Türkçe okur — başka dildeki metinler cihaz sesiyle okunur. Ses yapaydır, gerçek bir kişiye ait değildir.",
   "ttsLocalUnsupported": "Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.",
   "ttsLocalMissing": "Model indirilene kadar okuma cihaz sesiyle yapılır.",
   "ttsLocalDownload": "Modeli indir (~50 MB)",

@@ -3362,18 +3362,6 @@ abstract class AppLocalizations {
   /// **'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.'**
   String get ttsEngineDeviceInfo;
 
-  /// No description provided for @ttsEngineLocal.
-  ///
-  /// In tr, this message translates to:
-  /// **'Türkçe ses'**
-  String get ttsEngineLocal;
-
-  /// No description provided for @ttsEngineLocalInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Antalia: telefonda çalışan Türkçe ses modeli. Bedava, çevrimdışı ve kotasız; model bir kez indirilir (~50 MB). Yalnız Türkçe okur — başka dildeki metinler cihaz sesiyle okunur. Ses yapaydır, gerçek bir kişiye ait değildir.'**
-  String get ttsEngineLocalInfo;
-
   /// No description provided for @ttsLocalUnsupported.
   ///
   /// In tr, this message translates to:

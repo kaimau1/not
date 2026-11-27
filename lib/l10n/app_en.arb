@@ -623,8 +623,6 @@
   "ttsSectionTitle": "Narration",
   "ttsEngineDevice": "Device voice",
   "ttsEngineDeviceInfo": "The built-in device voice reads: free, offline and unlimited in length.",
-  "ttsEngineLocal": "Turkish voice",
-  "ttsEngineLocalInfo": "Antalia: a Turkish speech model that runs on the phone. Free, offline and quota-free; the model is downloaded once (~50 MB). It reads Turkish only — text in other languages is read with the device voice. The voice is synthetic and does not belong to a real person.",
   "ttsLocalUnsupported": "The Turkish voice only works in the Android app. Here the device voice reads.",
   "ttsLocalMissing": "Until the model is downloaded, the device voice reads.",
   "ttsLocalDownload": "Download model (~50 MB)",

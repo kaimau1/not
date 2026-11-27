@@ -62,8 +62,6 @@ import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_policy.dart';
 import '../../ai/presentation/ai_consent_sheet.dart';
 import '../../ai/data/ai_provider.dart';
-import '../../ai/data/antalia/antalia_engine.dart';
-import '../../ai/data/antalia/antalia_speech.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/decisions/decision_service.dart';
 import '../../ai/data/speech_service.dart';
@@ -1323,10 +1321,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String _soundSummary(AppLocalizations l10n) {
-    final engine = switch (ref.watch(ttsEngineProvider)) {
-      TtsEngine.device => l10n.ttsEngineDevice,
-      TtsEngine.antalia => l10n.ttsEngineLocal,
-    };
+    final engine = l10n.ttsEngineDevice;
     final mode = ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold
         ? l10n.voiceModeHold
         : l10n.voiceModeTap;
