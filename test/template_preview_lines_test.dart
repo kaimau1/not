@@ -185,5 +185,26 @@ void main() {
       expect(text.maxLines, 1);
       expect(text.overflow, TextOverflow.ellipsis);
     });
+
+    testWidgets('özgün v2 önizleme biçimi + özellik etiketi hatasız çizilir', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        host(
+          TemplatePreviewCard(
+            lines: const [],
+            previewStyle: TemplatePreviewStyle.watchlist,
+            badge: '5 yıldız · tür',
+            accent: Colors.indigo,
+            icon: Icons.movie_outlined,
+            name: 'İzlenecekler',
+            onTap: () {},
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.text('İzlenecekler'), findsOneWidget);
+      expect(find.text('5 yıldız · tür'), findsOneWidget);
+    });
   });
 }

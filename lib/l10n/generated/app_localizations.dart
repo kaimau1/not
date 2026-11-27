@@ -16579,6 +16579,96 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Acil'**
   String get quickDropUrgentBadge;
+
+  /// No description provided for @tplBadgeShopping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Reyon · 2 sütun'**
+  String get tplBadgeShopping;
+
+  /// No description provided for @tplBadgeHabits.
+  ///
+  /// In tr, this message translates to:
+  /// **'7 gün · seri'**
+  String get tplBadgeHabits;
+
+  /// No description provided for @tplBadgeMoving.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aşama · koli'**
+  String get tplBadgeMoving;
+
+  /// No description provided for @tplBadgeTravel.
+  ///
+  /// In tr, this message translates to:
+  /// **'El · valiz · sihirbaz'**
+  String get tplBadgeTravel;
+
+  /// No description provided for @tplBadgeWorkout.
+  ///
+  /// In tr, this message translates to:
+  /// **'Set · dinlenme'**
+  String get tplBadgeWorkout;
+
+  /// No description provided for @tplBadgeCleaning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oda · sıklık'**
+  String get tplBadgeCleaning;
+
+  /// No description provided for @tplBadgeGifts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fikir · bütçe'**
+  String get tplBadgeGifts;
+
+  /// No description provided for @tplBadgeWatchlist.
+  ///
+  /// In tr, this message translates to:
+  /// **'5 yıldız · tür'**
+  String get tplBadgeWatchlist;
+
+  /// No description provided for @tplBadgeExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütçe · toplam'**
+  String get tplBadgeExpense;
+
+  /// No description provided for @templatesMoreSmartLists.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer akıllı listeler'**
+  String get templatesMoreSmartLists;
+
+  /// No description provided for @smartListEntryHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaz ya da söyle: pasaport, 2 süt, kahve 50 ₺…'**
+  String get smartListEntryHint;
+
+  /// No description provided for @quickListGenericHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde yaz ya da söyle…'**
+  String get quickListGenericHint;
+
+  /// No description provided for @quickDropKeepOpenShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık tut'**
+  String get quickDropKeepOpenShort;
+
+  /// No description provided for @quickDropTagHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'#etiket'**
+  String get quickDropTagHint;
+
+  /// No description provided for @quickDropUrgentHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'!acil'**
+  String get quickDropUrgentHint;
 }
 
 class _AppLocalizationsDelegate

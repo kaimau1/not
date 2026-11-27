@@ -197,20 +197,27 @@ class _LazyItemFieldState extends State<_LazyItemField> {
                     : double.infinity,
                 // Defter çizgisi bu satırın altına da gelsin (bkz.
                 // [RuledAnchor]).
-                child: RuledAnchor(child: RichText(
-                key: _paragraph,
-                textAlign: widget.textAlign,
-                text: widget.controller.buildTextSpan(
-                  context: context,
-                  style: merged,
-                  withComposing: false,
+                child: RuledAnchor(
+                  child: RichText(
+                    key: _paragraph,
+                    textAlign: widget.textAlign,
+                    text: widget.controller.buildTextSpan(
+                      context: context,
+                      style: merged,
+                      withComposing: false,
+                    ),
+                    strutStyle: widget.strut,
+                    textHeightBehavior: DefaultTextHeightBehavior.maybeOf(
+                      context,
+                    ),
+                    maxLines: widget.maxLines,
+                    softWrap: !oneLine,
+                    overflow: oneLine
+                        ? TextOverflow.clip
+                        : TextOverflow.visible,
+                    textScaler: MediaQuery.textScalerOf(context),
+                  ),
                 ),
-                strutStyle: widget.strut,
-                maxLines: widget.maxLines,
-                softWrap: !oneLine,
-                overflow: oneLine ? TextOverflow.clip : TextOverflow.visible,
-                textScaler: MediaQuery.textScalerOf(context),
-              )),
               ),
             ),
           ),

@@ -9410,4 +9410,49 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get quickDropUrgentBadge => 'Mendesak';
+
+  @override
+  String get tplBadgeShopping => 'Lorong · 2 kolom';
+
+  @override
+  String get tplBadgeHabits => '7 hari · beruntun';
+
+  @override
+  String get tplBadgeMoving => 'Tahap · kardus';
+
+  @override
+  String get tplBadgeTravel => 'Kabin · koper · asisten';
+
+  @override
+  String get tplBadgeWorkout => 'Set · pengatur jeda';
+
+  @override
+  String get tplBadgeCleaning => 'Ruang · jadwal';
+
+  @override
+  String get tplBadgeGifts => 'Ide · anggaran';
+
+  @override
+  String get tplBadgeWatchlist => '5 bintang · jenis';
+
+  @override
+  String get tplBadgeExpense => 'Anggaran · total';
+
+  @override
+  String get templatesMoreSmartLists => 'Daftar cerdas lainnya';
+
+  @override
+  String get smartListEntryHint => 'Ketik atau ucapkan: paspor, 2 susu…';
+
+  @override
+  String get quickListGenericHint => 'Ketik atau ucapkan item…';
+
+  @override
+  String get quickDropKeepOpenShort => 'Tetap buka';
+
+  @override
+  String get quickDropTagHint => '#tag';
+
+  @override
+  String get quickDropUrgentHint => '!mendesak';
 }

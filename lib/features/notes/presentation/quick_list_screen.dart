@@ -807,7 +807,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
   }) async {
     if (_done) return;
     _entry.currentState?.flush();
-    if (discard || _rows.isEmpty) {
+    if (discard || (_rows.isEmpty && !openWorkspace)) {
       _done = true;
       Navigator.of(context).pop();
       return;
@@ -977,6 +977,149 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     return widget.args.groups;
   }
 
+  String _entryHint(AppLocalizations l10n, SmartListKind kind) {
+    if (kind == SmartListKind.shopping ||
+        (!widget.args.smart && widget.args.grocery)) {
+      return l10n.quickEntryHint;
+    }
+    if (widget.args.smart && kind == SmartListKind.generic) {
+      return l10n.smartListEntryHint;
+    }
+    return l10n.quickListGenericHint;
+  }
+
+  Widget _emptyPill({
+    Key? key,
+    required IconData icon,
+    required String label,
+    required Color tint,
+    required Color fg,
+    required VoidCallback onTap,
+  }) => GestureDetector(
+    key: key,
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: tint,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.m,
+          vertical: AppSpace.s,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: AppIconSize.xs, color: fg),
+            const SizedBox(width: AppSpace.xs),
+            Text(
+              label,
+              style: AppText.of(Theme.of(context)).label
+                  .copyWith(color: fg, fontWeight: AppWeight.strong),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Widget _buildEmptyState(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme scheme,
+    AppText text,
+  ) {
+    final kind = _effectiveKind;
+    final spec = kSmartKindSpecs[kind];
+    final accent = spec?.accent ?? widget.args.accent;
+    final icon = widget.args.smart ? _kindIcon(kind) : widget.args.icon;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpace.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: AppAlpha.pressed),
+                shape: BoxShape.circle,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.m),
+                child: Icon(icon, size: AppIconSize.l, color: accent),
+              ),
+            ),
+            const SizedBox(height: AppSpace.m),
+            Text(
+              // Akıllı listede türün söylenebildiği de anlatılır (AL-1).
+              widget.args.smart ? l10n.smartListHint : l10n.quickListEmpty,
+              textAlign: TextAlign.center,
+              style: text.body.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: AppSpace.l),
+            Wrap(
+              spacing: AppSpace.s,
+              runSpacing: AppSpace.s,
+              alignment: WrapAlignment.center,
+              children: [
+                if (widget.args.smart && kind == SmartListKind.generic)
+                  for (final k in const [
+                    SmartListKind.shopping,
+                    SmartListKind.packing,
+                  ])
+                    _emptyPill(
+                      icon: _kindIcon(k),
+                      label: _kindTitle(l10n, k),
+                      tint: (kSmartKindSpecs[k]?.accent ?? scheme.primary)
+                          .withValues(alpha: AppAlpha.pressed),
+                      fg: scheme.onSurface,
+                      onTap: () {
+                        _kindSaid = k;
+                        _applyKind(k);
+                      },
+                    ),
+                if (kind != SmartListKind.generic)
+                  _emptyPill(
+                    icon: Icons.apps_rounded,
+                    label: l10n.smartListCatalog,
+                    tint: scheme.surfaceContainerHigh,
+                    fg: scheme.onSurface,
+                    onTap: () => unawaited(_openCatalog()),
+                  ),
+                if (kind == SmartListKind.packing)
+                  _emptyPill(
+                    icon: Icons.auto_fix_high_outlined,
+                    label: l10n.smartListTripWizard,
+                    tint: scheme.primaryContainer,
+                    fg: scheme.onPrimaryContainer,
+                    onTap: () => unawaited(_openTripWizard()),
+                  ),
+                if (kind == SmartListKind.event)
+                  _emptyPill(
+                    icon: Icons.celebration_outlined,
+                    label: l10n.smartListEventWizard,
+                    tint: scheme.primaryContainer,
+                    fg: scheme.onPrimaryContainer,
+                    onTap: () => unawaited(_openEventWizard()),
+                  ),
+                if (kind != SmartListKind.generic)
+                  _emptyPill(
+                    icon: Icons.dashboard_customize_outlined,
+                    label: l10n.smartListOpenWorkspace,
+                    tint: accent.withValues(alpha: AppAlpha.pressed),
+                    fg: scheme.onSurface,
+                    onTap: () => unawaited(_finish(openWorkspace: true)),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -987,6 +1130,17 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     final fade = ReverseAnimation(_closing);
     // Gövdenin parçaları BİR KEZ kurulur: klavye oturunca [KeyboardSnap]
     // yalnız dolguyu yeniler, aynı örnekler yeniden kurulmaz.
+    Widget buildEntryBar(SmartListKind kind) => QuickEntryBar(
+      key: _entry,
+      parser: _parser!,
+      hint: _entryHint(l10n, kind),
+      focusNode: _focus,
+      onItems: _add,
+      onTrailingQty: _attachQty,
+      // "Bitti" / "bu kadar" söylenince dinleme biter ve liste
+      // nota çevrilir (Bitti düğmesiyle aynı yol).
+      onDoneWord: () => unawaited(_finish()),
+    );
     final entry = FadeTransition(
       opacity: fade,
       child: Padding(
@@ -998,34 +1152,25 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         ),
         child: _parser == null
             ? const SizedBox.shrink()
-            : QuickEntryBar(
-                key: _entry,
-                parser: _parser!,
-                focusNode: _focus,
-                onItems: _add,
-                onTrailingQty: _attachQty,
-                // "Bitti" / "bu kadar" söylenince dinleme biter ve liste
-                // nota çevrilir (Bitti düğmesiyle aynı yol).
-                onDoneWord: () => unawaited(_finish()),
-              ),
+            : widget.args.smart
+            ? ValueListenableBuilder<SmartListKind>(
+                valueListenable: _kind,
+                builder: (context, kind, _) => buildEntryBar(kind),
+              )
+            : buildEntryBar(_effectiveKind),
       ),
     );
     final list = ListenableBuilder(
-      listenable: Listenable.merge([_rev, _twoColumns, _aisle]),
+      listenable: Listenable.merge([
+        _rev,
+        _twoColumns,
+        _aisle,
+        if (widget.args.smart) _kind,
+      ]),
       builder: (context, _) {
         final rows = _ordered();
         if (rows.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpace.xxl),
-              child: Text(
-                // Akıllı listede türün söylenebildiği de anlatılır (AL-1).
-                widget.args.smart ? l10n.smartListHint : l10n.quickListEmpty,
-                textAlign: TextAlign.center,
-                style: text.body.copyWith(color: scheme.onSurfaceVariant),
-              ),
-            ),
-          );
+          return _buildEmptyState(context, l10n, scheme, text);
         }
         // İKİ SÜTUN notla AYNI düzen (ItemsEditor): ilk yarı
         // solda, ikinci yarı sağda.
@@ -1136,19 +1281,56 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                     onPointerUp: (_) => unawaited(_pickKind()),
                     child: ValueListenableBuilder<SmartListKind>(
                       valueListenable: _kind,
-                      builder: (context, kind, _) => Icon(
-                        _kindIcon(kind),
-                        color:
-                            kSmartKindSpecs[kind]?.accent ?? widget.args.accent,
-                        size: AppIconSize.m,
-                      ),
+                      builder: (context, kind, _) {
+                        final accent =
+                            kSmartKindSpecs[kind]?.accent ?? widget.args.accent;
+                        return DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: AppAlpha.pressed),
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpace.s,
+                              vertical: AppSpace.xs,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _kindIcon(kind),
+                                  color: accent,
+                                  size: AppIconSize.s,
+                                ),
+                                const SizedBox(width: AppSpace.xxs),
+                                Icon(
+                                  Icons.expand_more_rounded,
+                                  color: accent,
+                                  size: AppIconSize.xs,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   )
                 else
-                  Icon(
-                    widget.args.icon,
-                    color: widget.args.accent,
-                    size: AppIconSize.m,
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: widget.args.accent.withValues(
+                        alpha: AppAlpha.pressed,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.s),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpace.xs),
+                      child: Icon(
+                        widget.args.icon,
+                        color: widget.args.accent,
+                        size: AppIconSize.s,
+                      ),
+                    ),
                   ),
                 Expanded(
                   child: TextField(
@@ -1158,6 +1340,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
                       hintText: l10n.titleHint,
+                      filled: false,
                       contentPadding: const EdgeInsetsDirectional.only(
                         start: AppSpace.s,
                       ),
@@ -1174,7 +1357,25 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                   key: const ValueKey('quick-list-catalog'),
                   behavior: HitTestBehavior.opaque,
                   onPointerUp: (_) => unawaited(_openCatalog()),
-                  child: const Icon(Icons.apps_rounded, size: AppIconSize.l),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.xs,
+                    ),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(AppRadius.m),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpace.s),
+                        child: Icon(
+                          Icons.apps_rounded,
+                          size: AppIconSize.m,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ValueListenableBuilder<bool>(
                 valueListenable: _twoColumns,
@@ -1249,6 +1450,10 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
               ),
               FilledButton(
                 key: const ValueKey('quick-list-done'),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  shape: const StadiumBorder(),
+                ),
                 onPressed: _finish,
                 child: Text(l10n.quickListDone),
               ),
@@ -1495,10 +1700,12 @@ class _ChipPanel extends StatelessWidget {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
     return DecoratedBox(
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: scheme.outlineVariant)),
+        color: scheme.surfaceContainerLow,
+        border: Border(top: BorderSide(color: tokens.hairline)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1521,33 +1728,40 @@ class _ChipPanel extends StatelessWidget {
                       key: ValueKey('quick-tab-$i'),
                       borderRadius: BorderRadius.circular(AppRadius.pill),
                       onTap: () => tab.value = i,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpace.s,
-                          vertical: AppSpace.xs,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: on ? scheme.primaryContainer : null,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (t.icon != null) ...[
-                              Icon(
-                                t.icon,
-                                size: AppIconSize.xs,
-                                color: on
-                                    ? scheme.primary
-                                    : scheme.onSurfaceVariant,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpace.m,
+                            vertical: AppSpace.xs,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (t.icon != null) ...[
+                                Icon(
+                                  t.icon,
+                                  size: AppIconSize.xs,
+                                  color: on
+                                      ? scheme.onPrimaryContainer
+                                      : scheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: AppSpace.xs),
+                              ],
+                              Text(
+                                t.label,
+                                style: (on ? text.section : text.label)
+                                    .copyWith(
+                                      color: on
+                                          ? scheme.onPrimaryContainer
+                                          : scheme.onSurfaceVariant,
+                                    ),
                               ),
-                              const SizedBox(width: AppSpace.xs),
                             ],
-                            Text(
-                              t.label,
-                              style: (on ? text.section : text.label).copyWith(
-                                color: on
-                                    ? scheme.primary
-                                    : scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),

@@ -9317,4 +9317,49 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quickDropUrgentBadge => 'عاجل';
+
+  @override
+  String get tplBadgeShopping => 'الأقسام · عمودان';
+
+  @override
+  String get tplBadgeHabits => '٧ أيام · سلسلة';
+
+  @override
+  String get tplBadgeMoving => 'المراحل · الصناديق';
+
+  @override
+  String get tplBadgeTravel => 'حقيبة · شحن · معالج';
+
+  @override
+  String get tplBadgeWorkout => 'مجموعات · مؤقت';
+
+  @override
+  String get tplBadgeCleaning => 'غرف · تكرار';
+
+  @override
+  String get tplBadgeGifts => 'أفكار · ميزانية';
+
+  @override
+  String get tplBadgeWatchlist => '٥ نجوم · نوع';
+
+  @override
+  String get tplBadgeExpense => 'ميزانية · إجمالي';
+
+  @override
+  String get templatesMoreSmartLists => 'قوائم ذكية أخرى';
+
+  @override
+  String get smartListEntryHint => 'اكتب أو تحدث: جواز سفر، حليب 2…';
+
+  @override
+  String get quickListGenericHint => 'اكتب العناصر أو تحدث بها…';
+
+  @override
+  String get quickDropKeepOpenShort => 'إبقاء مفتوح';
+
+  @override
+  String get quickDropTagHint => '#وسم';
+
+  @override
+  String get quickDropUrgentHint => '!عاجل';
 }

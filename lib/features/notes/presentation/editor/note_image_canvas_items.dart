@@ -16,9 +16,7 @@ void openImageViewer(
   // Web: Drive'dan inmiş görsel kutuda görünüyor, görüntüleyici de açabilsin.
   final shown = webDriveResolved(img);
   if (!hasLocal && !shown.isUploaded) {
-    ScaffoldMessenger.of(
-      context,
-    ).showMessage(context.l10n.attachmentNotSynced);
+    ScaffoldMessenger.of(context).showMessage(context.l10n.attachmentNotSynced);
     return;
   }
   Navigator.of(context).push(
@@ -156,23 +154,40 @@ double hintTopFor(List<FloatBox> floats, double bodyTop, double lineHeight) {
   double bodyTop,
   double lineHeight,
   double columnWidth, {
+  TextDirection direction = TextDirection.ltr,
   double textScaleFactor = 1.0,
 }) {
   if (floats.isEmpty || columnWidth <= 0) return (top: bodyTop, left: 0);
-  // İlk satırın dolgusu: metnin ilk satırı da tam olarak bundan etkileniyor.
-  final indents = wrapLineIndents(
-    floats: floats,
-    columnWidth: columnWidth,
-    top: bodyTop,
-    bottom: bodyTop + lineHeight,
-    textScaleFactor: textScaleFactor,
-  );
-  if (indents.start >= columnWidth) {
-    // Satırın tamamı dolgu: metin de bu satıra sığmıyor, ikisi birlikte
-    // görselin altına iner.
-    return (top: hintTopFor(floats, bodyTop, lineHeight), left: 0);
+  if (lineHeight <= 0) {
+    final indents = wrapLineIndents(
+      floats: floats,
+      columnWidth: columnWidth,
+      top: bodyTop,
+      bottom: bodyTop,
+      direction: direction,
+      textScaleFactor: textScaleFactor,
+    );
+    if (indents.start >= columnWidth) {
+      return (top: hintTopFor(floats, bodyTop, lineHeight), left: 0);
+    }
+    return (top: bodyTop, left: indents.start);
   }
-  return (top: bodyTop, left: indents.start);
+  var y = bodyTop;
+  for (var i = 0; i < 256; i++) {
+    final indents = wrapLineIndents(
+      floats: floats,
+      columnWidth: columnWidth,
+      top: y,
+      bottom: y + lineHeight,
+      direction: direction,
+      textScaleFactor: textScaleFactor,
+    );
+    if (indents.start < columnWidth) {
+      return (top: y, left: indents.start);
+    }
+    y += lineHeight;
+  }
+  return (top: y, left: 0);
 }
 
 extension _NotePageCanvasItems on _NotePageCanvasState {
@@ -253,6 +268,8 @@ extension _NotePageCanvasItems on _NotePageCanvasState {
       return switch (img.kind) {
         AttachmentKind.text => kTextBoxWidth / kTextBoxHeight,
         AttachmentKind.audio => kAudioBoxWidth / kAudioBoxHeight,
+        AttachmentKind.pdf => pdfBoxAspect(1, 1.414, img.pdfTurns),
+        AttachmentKind.slide || AttachmentKind.video => 16 / 9,
         _ => 1.0,
       };
     }
@@ -399,19 +416,29 @@ extension _NotePageCanvasItems on _NotePageCanvasState {
   /// 8 dp pay bırakılır.
   List<FloatBox> _floatsFor(double cw) {
     final boxes = <FloatBox>[];
+    final textCol = (cw - widget.textLeft * 2).clamp(0.0, cw);
+    final minSide = math.max(textCol * 0.35, 72.0);
     for (final img in widget.images) {
       final r = _resolve(img, cw);
+      final webControls = (_playingWeb.contains(img.id) && r.w >= 150)
+          ? 48.0
+          : 0.0;
+      final fLeft = r.left - 12;
+      final fRight = r.left + r.w + 12;
+      final leftSpace = (fLeft - widget.textLeft).clamp(0.0, textCol);
+      final rightSpace = ((cw - widget.textLeft) - fRight).clamp(0.0, textCol);
       boxes.add(
         FloatBox(
           top: r.top,
-          left: r.left - 12,
-          right: r.left + r.w + 12,
-          // Açıklama görselin parçası: metin onun da etrafından akar.
-          height: r.h + _captionBand(img, r.w) + 8,
+          left: fLeft,
+          right: fRight,
+          // Açıklama ve yerinde YouTube denetimleri görselin parçası: metin
+          // onların da etrafından akar.
+          height: r.h + _captionBand(img, r.w) + webControls + 8,
           // Yanında okunur yer bırakmayan kutu (tam genişlik tablo/görsel):
           // liste maddesi onun etrafından BÖLÜNEREK akmaz, bütünüyle altına
           // iner (kullanıcı bulgusu 2026-11-23: "tablo maddeyi bölebiliyor").
-          block: math.max(r.left, cw - r.left - r.w) < cw * 0.3,
+          block: math.max(leftSpace, rightSpace) < minSide,
         ),
       );
     }
@@ -444,6 +471,7 @@ extension _NotePageCanvasItems on _NotePageCanvasState {
       // ölçeği kullanıyor (bkz. WrapFieldMeasure), yoksa büyük yazıda ipucu
       // ile metin yine ayrışır.
       textScaleFactor: MediaQuery.textScalerOf(context).scale(1),
+      direction: Directionality.of(context),
     );
     return (top: place.top, left: inset + place.left);
   }
@@ -505,7 +533,10 @@ extension _NotePageCanvasItems on _NotePageCanvasState {
               PopupMenuButton<int>(
                 tooltip: l10n.imagesFitRow,
                 enabled: chosen.length >= 2,
-                icon: const Icon(Icons.view_column_outlined, size: AppIconSize.m),
+                icon: const Icon(
+                  Icons.view_column_outlined,
+                  size: AppIconSize.m,
+                ),
                 onSelected: _fitRow,
                 itemBuilder: (context) => [
                   PopupMenuItem(
@@ -727,222 +758,222 @@ extension _NotePageCanvasItems on _NotePageCanvasState {
         img,
         editing,
         GestureDetector(
-        // Eke sağ tık (masaüstü, F40.8): tek ek menüsü, imlecin yanında.
-        onSecondaryTapUp: (d) =>
-            unawaited(_contextMenu(img, d.globalPosition)),
-        onTap: () => _multiMode ? _toggleMulti(img.id) : _select(img.id),
-        // ÇİFT DOKUNUŞ = büyük önizleme, ama YALNIZ görsel SEÇİLİYKEN.
-        //
-        // KÖK NEDEN (kullanıcı 2026-09-05: "görselleri seçerken gecikme
-        // var"): çift dokunuş tanıyıcısı kayıtlıyken tek dokunuşun kararı
-        // ikinci dokunuş penceresi (~300 ms) dolmadan VERİLEMEZ — her seçim,
-        // her işaretleme o kadar bekliyordu. Tanıyıcı artık yalnız seçili
-        // görselde kurulur: seçme ve çoklu seçimde işaretleme ANINDA olur,
-        // önizleme de seçtikten sonra çift dokunuşla (ya da her zaman olduğu
-        // gibi sağ-alt köşedeki tutamağa dokunarak) hâlâ açılır.
-        onDoubleTap: editing && !_multiMode
-            ? () => _togglePreview(img.id)
-            : null,
-        // Taşıma TEK jestte: basılı tut, parmağını kaldırmadan sürükle.
-        // (Önce seçip sonra sürüklemek gerekiyordu — kullanımı zordu.)
-        // Uzun basma dikey kaydırmayla çakışmaz: sayfa kaydırma anlık
-        // sürüklemeyle başlar, taşıma ise basılı tutmayı bekler.
-        onLongPressStart: (d) {
-          // Çoklu seçim açıkken taşıma kapalı: parmak işaretlemek için
-          // geziyor, kazara görsel sürüklenmesin.
-          if (_multiMode) {
-            _toggleMulti(img.id);
-            return;
-          }
-          AppHaptics.tick();
-          if (widget.onPinTop != null) widget.onPinDrag?.call(true);
-          _redraw(() {
-            _selectedId = img.id;
-            _moveId = img.id;
-            // Sürükleme başlangıcı ayrı tutulur: _resolve taşıma sırasında
-            // canlı değeri döndürdüğü için onu baz almak kaymayı katlardı.
-            _moveOriginLeft = r.left;
-            _moveOriginTop = r.top;
-            _moveLeft = r.left;
-            _moveTop = r.top;
-          });
-        },
-        // KENAR ÇARPIŞMASI + KILAVUZ (kullanıcı isteği 2026-09-05): parmağın
-        // istediği ham kutu [snapMove]'a verilir; kenarlar sayfaya ve komşulara
-        // yapışır, hafif temasta çarpışıp durur, parmak komşunun derinine
-        // girmeye devam ederse engel kalkar. Ham konum SAKLANMAZ, her karede
-        // sürüklemenin başlangıcından yeniden hesaplanır: yapışmış değer geri
-        // beslenseydi görsel kılavuzdan kopamazdı.
-        onLongPressMoveUpdate: (d) {
-          if (_moveId != img.id) return;
-          _setPinZone(
-            _pinZoneHit(
-              d.globalPosition,
-              rawTop: (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy,
-            ),
-          );
-          final snapped = snapMove(
-            rect: Rect.fromLTWH(
-              (_moveOriginLeft ?? r.left) + d.offsetFromOrigin.dx,
-              (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy,
-              r.w,
-              r.h,
-            ),
-            others: _othersOf(img, cw),
-            columnWidth: cw,
-            topLimit: widget.topLimit,
-          );
-          if (_guides.isEmpty && snapped.guides.isNotEmpty) {
+          // Eke sağ tık (masaüstü, F40.8): tek ek menüsü, imlecin yanında.
+          onSecondaryTapUp: (d) =>
+              unawaited(_contextMenu(img, d.globalPosition)),
+          onTap: () => _multiMode ? _toggleMulti(img.id) : _select(img.id),
+          // ÇİFT DOKUNUŞ = büyük önizleme, ama YALNIZ görsel SEÇİLİYKEN.
+          //
+          // KÖK NEDEN (kullanıcı 2026-09-05: "görselleri seçerken gecikme
+          // var"): çift dokunuş tanıyıcısı kayıtlıyken tek dokunuşun kararı
+          // ikinci dokunuş penceresi (~300 ms) dolmadan VERİLEMEZ — her seçim,
+          // her işaretleme o kadar bekliyordu. Tanıyıcı artık yalnız seçili
+          // görselde kurulur: seçme ve çoklu seçimde işaretleme ANINDA olur,
+          // önizleme de seçtikten sonra çift dokunuşla (ya da her zaman olduğu
+          // gibi sağ-alt köşedeki tutamağa dokunarak) hâlâ açılır.
+          onDoubleTap: editing && !_multiMode
+              ? () => _togglePreview(img.id)
+              : null,
+          // Taşıma TEK jestte: basılı tut, parmağını kaldırmadan sürükle.
+          // (Önce seçip sonra sürüklemek gerekiyordu — kullanımı zordu.)
+          // Uzun basma dikey kaydırmayla çakışmaz: sayfa kaydırma anlık
+          // sürüklemeyle başlar, taşıma ise basılı tutmayı bekler.
+          onLongPressStart: (d) {
+            // Çoklu seçim açıkken taşıma kapalı: parmak işaretlemek için
+            // geziyor, kazara görsel sürüklenmesin.
+            if (_multiMode) {
+              _toggleMulti(img.id);
+              return;
+            }
             AppHaptics.tick();
-          }
-          _redraw(() {
-            _moveLeft = snapped.left;
-            _moveTop = snapped.top;
-            _guides = snapped.guides;
-          });
-        },
-        onLongPressEnd: (_) => _commitMove(img, cw),
-        onLongPressCancel: () {
-          // İptal (ör. jest başka bir tanıyıcıya geçti) sabitleme SAYILMAZ.
-          _setPinZone(false);
-          _commitMove(img, cw);
-        },
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: radius,
-                  border: editing || checked
-                      ? Border.all(color: scheme.primary, width: 2)
-                      : pill
-                      ? null
-                      : Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.5),
-                        ),
-                ),
-                // RepaintBoundary: görsel kendi katmanına çizilir. Sayfada
-                // yazarken/kaydırırken imleç ve satırlar sık sık yeniden
-                // çiziliyor; sınır olmadan her seferinde görselin rasterı da
-                // yeniden çiziliyordu (birkaç görselli notta kare bütçesinin
-                // görünür bir dilimi).
-                // SÜRÜKLERKEN YARI SAYDAM (kullanıcı bulgusu 2026-08-10: "notu
-                // sürüklediğinde metin notu resmin altında kalıyor"): görseller
-                // metnin ÜSTÜNE çizilir, metin de onların etrafından akar —
-                // ama akış ancak yeni bantlar ölçülüp uygulandıktan sonra
-                // yerine oturur (ölçüm kare sonunda yapılır). Parmak hızlıysa
-                // görsel arada metnin üstünde duruyor ve altındaki satırlar
-                // tümüyle kayboluyordu. Saydamlık yalnız TAŞIMA sürerken: metin
-                // her an okunur kalır, bırakınca görsel tam opak olur ve sarma
-                // zaten kesin konuma göre hesaplanmıştır.
-                child: Opacity(
-                  opacity: moving ? 0.55 : 1,
-                  child: RepaintBoundary(
-                    child: ClipRRect(
-                      borderRadius: radius,
-                      child: _boxFor(img),
+            if (widget.onPinTop != null) widget.onPinDrag?.call(true);
+            _redraw(() {
+              _selectedId = img.id;
+              _moveId = img.id;
+              // Sürükleme başlangıcı ayrı tutulur: _resolve taşıma sırasında
+              // canlı değeri döndürdüğü için onu baz almak kaymayı katlardı.
+              _moveOriginLeft = r.left;
+              _moveOriginTop = r.top;
+              _moveLeft = r.left;
+              _moveTop = r.top;
+            });
+          },
+          // KENAR ÇARPIŞMASI + KILAVUZ (kullanıcı isteği 2026-09-05): parmağın
+          // istediği ham kutu [snapMove]'a verilir; kenarlar sayfaya ve komşulara
+          // yapışır, hafif temasta çarpışıp durur, parmak komşunun derinine
+          // girmeye devam ederse engel kalkar. Ham konum SAKLANMAZ, her karede
+          // sürüklemenin başlangıcından yeniden hesaplanır: yapışmış değer geri
+          // beslenseydi görsel kılavuzdan kopamazdı.
+          onLongPressMoveUpdate: (d) {
+            if (_moveId != img.id) return;
+            _setPinZone(
+              _pinZoneHit(
+                d.globalPosition,
+                rawTop: (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy,
+              ),
+            );
+            final snapped = snapMove(
+              rect: Rect.fromLTWH(
+                (_moveOriginLeft ?? r.left) + d.offsetFromOrigin.dx,
+                (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy,
+                r.w,
+                r.h,
+              ),
+              others: _othersOf(img, cw),
+              columnWidth: cw,
+              topLimit: widget.topLimit,
+            );
+            if (_guides.isEmpty && snapped.guides.isNotEmpty) {
+              AppHaptics.tick();
+            }
+            _redraw(() {
+              _moveLeft = snapped.left;
+              _moveTop = snapped.top;
+              _guides = snapped.guides;
+            });
+          },
+          onLongPressEnd: (_) => _commitMove(img, cw),
+          onLongPressCancel: () {
+            // İptal (ör. jest başka bir tanıyıcıya geçti) sabitleme SAYILMAZ.
+            _setPinZone(false);
+            _commitMove(img, cw);
+          },
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: radius,
+                    border: editing || checked
+                        ? Border.all(color: scheme.primary, width: 2)
+                        : pill
+                        ? null
+                        : Border.all(
+                            color: scheme.outlineVariant.withValues(alpha: 0.5),
+                          ),
+                  ),
+                  // RepaintBoundary: görsel kendi katmanına çizilir. Sayfada
+                  // yazarken/kaydırırken imleç ve satırlar sık sık yeniden
+                  // çiziliyor; sınır olmadan her seferinde görselin rasterı da
+                  // yeniden çiziliyordu (birkaç görselli notta kare bütçesinin
+                  // görünür bir dilimi).
+                  // SÜRÜKLERKEN YARI SAYDAM (kullanıcı bulgusu 2026-08-10: "notu
+                  // sürüklediğinde metin notu resmin altında kalıyor"): görseller
+                  // metnin ÜSTÜNE çizilir, metin de onların etrafından akar —
+                  // ama akış ancak yeni bantlar ölçülüp uygulandıktan sonra
+                  // yerine oturur (ölçüm kare sonunda yapılır). Parmak hızlıysa
+                  // görsel arada metnin üstünde duruyor ve altındaki satırlar
+                  // tümüyle kayboluyordu. Saydamlık yalnız TAŞIMA sürerken: metin
+                  // her an okunur kalır, bırakınca görsel tam opak olur ve sarma
+                  // zaten kesin konuma göre hesaplanmıştır.
+                  child: Opacity(
+                    opacity: moving ? 0.55 : 1,
+                    child: RepaintBoundary(
+                      child: ClipRRect(
+                        borderRadius: radius,
+                        child: _boxFor(img),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            // Çoklu seçim rozeti: işaretliyse dolu tik, değilse boş halka.
-            if (_multiMode)
-              Positioned(
-                left: 4,
-                top: 4,
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: checked ? scheme.primary : Colors.black45,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 1.5),
+              // Çoklu seçim rozeti: işaretliyse dolu tik, değilse boş halka.
+              if (_multiMode)
+                Positioned(
+                  left: 4,
+                  top: 4,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: checked ? scheme.primary : Colors.black45,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 1.5),
+                    ),
+                    child: checked
+                        ? Icon(Icons.check, size: 14, color: scheme.onPrimary)
+                        : null,
                   ),
-                  child: checked
-                      ? Icon(Icons.check, size: 14, color: scheme.onPrimary)
-                      : null,
                 ),
-              ),
-            // Sağ-alt köşe tutamağı: serbest boyutlandırma (yalnız seçiliyken).
-            if (editing && !_multiMode)
-              Positioned(
-                right: 2,
-                bottom: 2,
-                child: GestureDetector(
-                  // Köşe tutamağı SÜRÜKLENİYOR ama dokunmak hiçbir şey
-                  // yapmıyordu; küçültülmüş bir görseli okumak için ya tam
-                  // ekrana gitmek ya da büyütüp sonra geri küçültmek
-                  // gerekiyordu. Dokunuş artık BÜYÜK ÖNİZLEME açar: görsel
-                  // sayfanın üstünde büyük çizilir, düzen (ve metnin akışı)
-                  // hiç değişmez — kapanınca her şey yerli yerinde kalır.
-                  onTap: () => _togglePreview(img.id),
-                  onPanStart: (_) => _redraw(() {
-                    _resizeId = img.id;
-                    _resizeWFrac = (img.displayWidth ?? _defaultWFrac(cw))
-                        .clamp(_NotePageCanvasState._minWidthFrac, 1.0)
-                        .toDouble();
-                    _resizeRawFrac = _resizeWFrac;
-                  }),
-                  // Boyutlandırırken de kılavuz çıkar: sağ kenar sayfanın
-                  // kenarına/ortasına, komşunun kenarına ya da komşuyla EŞİT
-                  // genişliğe yapışır.
-                  onPanUpdate: (d) {
-                    final base =
-                        _resizeRawFrac ??
-                        (img.displayWidth ?? _defaultWFrac(cw));
-                    final raw = (base + d.delta.dx / cw)
-                        .clamp(_NotePageCanvasState._minWidthFrac, 1.0)
-                        .toDouble();
-                    final snapped = snapWidth(
-                      left: r.left,
-                      width: raw * cw,
-                      others: _othersOf(img, cw),
-                      columnWidth: cw,
-                    );
-                    if (_guides.isEmpty && snapped.guides.isNotEmpty) {
-                      AppHaptics.tick();
-                    }
-                    _redraw(() {
-                      _resizeRawFrac = raw;
-                      _resizeWFrac = (snapped.width / cw)
+              // Sağ-alt köşe tutamağı: serbest boyutlandırma (yalnız seçiliyken).
+              if (editing && !_multiMode)
+                Positioned(
+                  right: 2,
+                  bottom: 2,
+                  child: GestureDetector(
+                    // Köşe tutamağı SÜRÜKLENİYOR ama dokunmak hiçbir şey
+                    // yapmıyordu; küçültülmüş bir görseli okumak için ya tam
+                    // ekrana gitmek ya da büyütüp sonra geri küçültmek
+                    // gerekiyordu. Dokunuş artık BÜYÜK ÖNİZLEME açar: görsel
+                    // sayfanın üstünde büyük çizilir, düzen (ve metnin akışı)
+                    // hiç değişmez — kapanınca her şey yerli yerinde kalır.
+                    onTap: () => _togglePreview(img.id),
+                    onPanStart: (_) => _redraw(() {
+                      _resizeId = img.id;
+                      _resizeWFrac = (img.displayWidth ?? _defaultWFrac(cw))
                           .clamp(_NotePageCanvasState._minWidthFrac, 1.0)
                           .toDouble();
-                      _guides = snapped.guides;
-                    });
-                  },
-                  onPanEnd: (_) {
-                    final f = _resizeWFrac;
-                    if (f != null) {
-                      widget.onChanged(img.copyWith(displayWidth: f));
-                    }
-                    _redraw(() {
-                      _resizeId = null;
-                      _resizeWFrac = null;
-                      _resizeRawFrac = null;
-                      _guides = const [];
-                    });
-                  },
-                  child: Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: scheme.onPrimary, width: 2),
-                    ),
-                    child: Icon(
-                      Icons.open_in_full,
-                      size: 13,
-                      color: scheme.onPrimary,
+                      _resizeRawFrac = _resizeWFrac;
+                    }),
+                    // Boyutlandırırken de kılavuz çıkar: sağ kenar sayfanın
+                    // kenarına/ortasına, komşunun kenarına ya da komşuyla EŞİT
+                    // genişliğe yapışır.
+                    onPanUpdate: (d) {
+                      final base =
+                          _resizeRawFrac ??
+                          (img.displayWidth ?? _defaultWFrac(cw));
+                      final raw = (base + d.delta.dx / cw)
+                          .clamp(_NotePageCanvasState._minWidthFrac, 1.0)
+                          .toDouble();
+                      final snapped = snapWidth(
+                        left: r.left,
+                        width: raw * cw,
+                        others: _othersOf(img, cw),
+                        columnWidth: cw,
+                      );
+                      if (_guides.isEmpty && snapped.guides.isNotEmpty) {
+                        AppHaptics.tick();
+                      }
+                      _redraw(() {
+                        _resizeRawFrac = raw;
+                        _resizeWFrac = (snapped.width / cw)
+                            .clamp(_NotePageCanvasState._minWidthFrac, 1.0)
+                            .toDouble();
+                        _guides = snapped.guides;
+                      });
+                    },
+                    onPanEnd: (_) {
+                      final f = _resizeWFrac;
+                      if (f != null) {
+                        widget.onChanged(img.copyWith(displayWidth: f));
+                      }
+                      _redraw(() {
+                        _resizeId = null;
+                        _resizeWFrac = null;
+                        _resizeRawFrac = null;
+                        _guides = const [];
+                      });
+                    },
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: scheme.onPrimary, width: 2),
+                      ),
+                      child: Icon(
+                        Icons.open_in_full,
+                        size: 13,
+                        color: scheme.onPrimary,
+                      ),
                     ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -986,5 +1017,4 @@ extension _NotePageCanvasItems on _NotePageCanvasState {
       ),
     );
   }
-
 }

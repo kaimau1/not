@@ -37,6 +37,7 @@ import '../domain/quick_entry.dart';
 import '../domain/smart_lexicon_v2.dart';
 import '../domain/smart_list.dart';
 import 'note_link_ui.dart' show showNotePicker;
+import 'notes_providers.dart' show focusedNoteProvider;
 import 'quick_entry_bar.dart';
 
 part 'quick_drop_parser.dart';
@@ -916,6 +917,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     final st = _state.value;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
+    final focusNotifier = ref.read(focusedNoteProvider.notifier);
+    final recentNotifier = ref.read(quickDropRecentProvider.notifier);
     final keepOpen = ref.read(quickDropKeepOpenProvider);
     // V2 Akıllı liste oluşturma: "yeni bavul listesi: pasaport, şarj"
     if (_toSmartList && st.newSmartListKind != null) {
@@ -958,7 +961,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               listKind: listId,
             )
             .then((id) {
-              ref.read(quickDropRecentProvider.notifier).remember(id);
+              recentNotifier.remember(id);
+              focusNotifier.focus(id);
             }),
       );
       _finishAfterApply(keepOpen: keepOpen);
@@ -990,8 +994,11 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         if (st.urgent) fields['urgent'] = true;
         if (fields.isEmpty) continue;
         repo.updateFields(target.id, fields);
-        ref.read(quickDropRecentProvider.notifier).remember(target.id);
+        recentNotifier.remember(target.id);
         applied.add((before: target, written: fields));
+      }
+      if (applied.isNotEmpty) {
+        focusNotifier.focus(applied.first.before.id);
       }
       _finishAfterApply(keepOpen: keepOpen);
       if (applied.isEmpty) return;
@@ -1040,7 +1047,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                 : repo.createNote(NoteType.text, body: body))
             .then((id) {
               calendar.linkNoteToDay(key, id);
-              ref.read(quickDropRecentProvider.notifier).remember(id);
+              recentNotifier.remember(id);
+              focusNotifier.focus(id);
             }),
       );
       _finishAfterApply(keepOpen: keepOpen);
@@ -1073,7 +1081,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                     reminderAt: reminderAt,
                   ))
             .then((id) {
-              ref.read(quickDropRecentProvider.notifier).remember(id);
+              recentNotifier.remember(id);
+              focusNotifier.focus(id);
             }),
       );
       _finishAfterApply(keepOpen: keepOpen);
@@ -1111,7 +1120,8 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     final messenger = ScaffoldMessenger.of(context);
     if (fields.isNotEmpty) {
       repo.updateFields(note.id, fields);
-      ref.read(quickDropRecentProvider.notifier).remember(note.id);
+      recentNotifier.remember(note.id);
+      focusNotifier.focus(note.id);
     }
     final container = ProviderScope.containerOf(context, listen: false);
     _finishAfterApply(keepOpen: keepOpen);
@@ -1144,11 +1154,46 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       );
   }
 
+  void _insertModifier(String token) {
+    final cur = _bar.currentState?.text ?? '';
+    final sep = cur.isEmpty || cur.endsWith(' ') ? '' : ' ';
+    final next = '$cur$sep$token';
+    _bar.currentState?.setText(next);
+    _focus.requestFocus();
+  }
+
+  Widget _modHintPill(
+    String label,
+    ColorScheme scheme,
+    AppText text,
+    VoidCallback onTap,
+  ) => GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onTap: onTap,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.s,
+          vertical: AppSpace.xxs,
+        ),
+        child: Text(
+          label,
+          style: text.badge.copyWith(color: scheme.onSurfaceVariant),
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
     final autoMic = ref.watch(quickDropMicProvider);
     final keyboard = ref.watch(quickDropKeyboardProvider);
@@ -1162,10 +1207,74 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         children: [
           Row(
             children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpace.xs),
+                  child: Icon(
+                    Icons.bolt_rounded,
+                    size: AppIconSize.s,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpace.s),
               Expanded(
                 child: Text(l10n.quickDropTitle, style: text.sheetTitle),
               ),
-              // HE-2 (17K §4.2): üç anahtar (yapay zekâ / klavye / dinle)
+              Semantics(
+                button: true,
+                toggled: keepOpen,
+                label: l10n.quickDropKeepOpen,
+                child: GestureDetector(
+                  key: const ValueKey('quick-drop-keep-open-pill'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () =>
+                      ref.read(quickDropKeepOpenProvider.notifier).toggle(),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: keepOpen
+                          ? scheme.primaryContainer
+                          : scheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(
+                        color: keepOpen ? scheme.primary : tokens.hairline,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.s,
+                        vertical: AppSpace.xs,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            keepOpen ? Icons.push_pin : Icons.push_pin_outlined,
+                            size: AppIconSize.xs,
+                            color: keepOpen
+                                ? scheme.onPrimaryContainer
+                                : scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: AppSpace.xs),
+                          Text(
+                            l10n.quickDropKeepOpenShort,
+                            style: text.badge.copyWith(
+                              color: keepOpen
+                                  ? scheme.onPrimaryContainer
+                                  : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // HE-2 (17K §4.2): gelişmiş anahtarlar (yapay zekâ / klavye / dinle)
               // başlıkta yer kaplamasın — ⚙ arkasında, işaretli menü.
               PopupMenuButton<NotifierProvider<BoolPrefNotifier, bool>>(
                 key: const ValueKey('quick-drop-settings'),
@@ -1351,7 +1460,38 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                           );
                         }
                         final preview = _previewInfo(l10n, st);
-                        // HE-2 önizleme: tuşta yalnız bu Text kurulur.
+                        // HE-2 önizleme: tuşta hafif satır (S56 bütçesi).
+                        if (!preview.ready && st.content.trim().isEmpty) {
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  preview.text,
+                                  key: const ValueKey('quick-drop-preview'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: text.meta,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpace.xs),
+                              _modHintPill(
+                                l10n.quickDropTagHint,
+                                scheme,
+                                text,
+                                () => _insertModifier('#'),
+                              ),
+                              const SizedBox(width: AppSpace.xs),
+                              _modHintPill(
+                                l10n.quickDropUrgentHint,
+                                scheme,
+                                text,
+                                () => _insertModifier(
+                                  '${l10n.quickDropUrgentHint} ',
+                                ),
+                              ),
+                            ],
+                          );
+                        }
                         return Text(
                           preview.text,
                           key: const ValueKey('quick-drop-preview'),
@@ -1446,14 +1586,27 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                       }
                       final n = shown[i - extra - smartSlot];
                       final tie = st.ties.contains(n.id);
+                      var kind = smartListKindFromId(n.listKind);
+                      if (kind == SmartListKind.generic &&
+                          n.type != NoteType.text) {
+                        kind =
+                            smartKindFromPhrase(n.displayTitle) ??
+                            SmartListKind.generic;
+                      }
+                      final spec = kind != SmartListKind.generic
+                          ? kSmartKindSpecs[kind]
+                          : null;
                       return Center(
                         child: ChoiceChip(
                           key: ValueKey('quick-drop-target-${n.id}'),
                           avatar: Icon(
                             n.type == NoteType.text
                                 ? Icons.notes
-                                : Icons.check_box_outlined,
+                                : (spec?.icon ?? Icons.check_box_outlined),
                             size: AppIconSize.xs,
+                            color: n.id == st.id
+                                ? scheme.onPrimaryContainer
+                                : spec?.accent,
                           ),
                           label: Text(
                             n.displayTitle.trim(),
@@ -1478,6 +1631,10 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
               valueListenable: _addLabel,
               builder: (context, add, _) => FilledButton.icon(
                 key: const ValueKey('quick-drop-add'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(kMinInteractiveDimension),
+                  shape: const StadiumBorder(),
+                ),
                 onPressed: add.$1
                     ? () => _apply(resolve: !_state.value.ask)
                     : null,

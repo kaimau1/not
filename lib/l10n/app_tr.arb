@@ -4866,5 +4866,20 @@
       }
     }
   },
-  "quickDropUrgentBadge": "Acil"
+  "quickDropUrgentBadge": "Acil",
+  "tplBadgeShopping": "Reyon · 2 sütun",
+  "tplBadgeHabits": "7 gün · seri",
+  "tplBadgeMoving": "Aşama · koli",
+  "tplBadgeTravel": "El · valiz · sihirbaz",
+  "tplBadgeWorkout": "Set · dinlenme",
+  "tplBadgeCleaning": "Oda · sıklık",
+  "tplBadgeGifts": "Fikir · bütçe",
+  "tplBadgeWatchlist": "5 yıldız · tür",
+  "tplBadgeExpense": "Bütçe · toplam",
+  "templatesMoreSmartLists": "Diğer akıllı listeler",
+  "smartListEntryHint": "Yaz ya da söyle: pasaport, 2 süt, kahve 50 ₺…",
+  "quickListGenericHint": "Madde yaz ya da söyle…",
+  "quickDropKeepOpenShort": "Açık tut",
+  "quickDropTagHint": "#etiket",
+  "quickDropUrgentHint": "!acil"
 }

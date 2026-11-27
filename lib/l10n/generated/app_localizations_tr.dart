@@ -9352,4 +9352,50 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickDropUrgentBadge => 'Acil';
+
+  @override
+  String get tplBadgeShopping => 'Reyon · 2 sütun';
+
+  @override
+  String get tplBadgeHabits => '7 gün · seri';
+
+  @override
+  String get tplBadgeMoving => 'Aşama · koli';
+
+  @override
+  String get tplBadgeTravel => 'El · valiz · sihirbaz';
+
+  @override
+  String get tplBadgeWorkout => 'Set · dinlenme';
+
+  @override
+  String get tplBadgeCleaning => 'Oda · sıklık';
+
+  @override
+  String get tplBadgeGifts => 'Fikir · bütçe';
+
+  @override
+  String get tplBadgeWatchlist => '5 yıldız · tür';
+
+  @override
+  String get tplBadgeExpense => 'Bütçe · toplam';
+
+  @override
+  String get templatesMoreSmartLists => 'Diğer akıllı listeler';
+
+  @override
+  String get smartListEntryHint =>
+      'Yaz ya da söyle: pasaport, 2 süt, kahve 50 ₺…';
+
+  @override
+  String get quickListGenericHint => 'Madde yaz ya da söyle…';
+
+  @override
+  String get quickDropKeepOpenShort => 'Açık tut';
+
+  @override
+  String get quickDropTagHint => '#etiket';
+
+  @override
+  String get quickDropUrgentHint => '!acil';
 }

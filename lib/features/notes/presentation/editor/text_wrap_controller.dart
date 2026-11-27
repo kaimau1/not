@@ -172,6 +172,11 @@ class WrapTextController extends TextEditingController {
   /// da okur (metinden gelen biçimlerin YANINDA).
   Map<RichFormat, int?> get pendingFormats => Map.unmodifiable(_pending);
 
+  int _logicalOffsetOf(int displayOffset) {
+    final safe = displayOffset < 0 ? text.length : displayOffset;
+    return _floats.isEmpty ? safe : wrapToLogicalOffset(text, safe);
+  }
+
   /// Biçmi bekleyenlere ekler, zaten bekliyorsa KALDIRIR (aç/kapa).
   ///
   /// İmleç yer değiştirmişse önceki bekleyenler düşer: bekleme "buradan
@@ -194,7 +199,7 @@ class WrapTextController extends TextEditingController {
     if (pendingRange != null) {
       flushPendingFormat(caretOutside: true);
     }
-    final caret = selection.baseOffset;
+    final caret = _logicalOffsetOf(selection.baseOffset);
     _pending
       ..clear()
       ..addAll(carry);
@@ -217,8 +222,9 @@ class WrapTextController extends TextEditingController {
       _pendingAt = null;
       _pendingEnd = null;
     } else {
-      _pendingAt = selection.baseOffset;
-      _pendingEnd = selection.baseOffset;
+      final caret = _logicalOffsetOf(selection.baseOffset);
+      _pendingAt = caret;
+      _pendingEnd = caret;
     }
     notifyListeners();
   }
@@ -230,30 +236,35 @@ class WrapTextController extends TextEditingController {
     _pendingEnd = null;
   }
 
-  /// Koşunun O ANA KADAR yazılmış son ucu ([_pendingAt] başı, bu sonu).
+  /// Koşunun O ANA KADAR yazılmış son ucu ([_pendingAt] başı, bu sonu — her
+  /// zaman mantıksal konum).
   ///
   /// İmleç koşunun dışına taşındığında (kullanıcı metnin başka bir yerine
   /// dokundu) sarılacak aralık buradan okunur; yoksa o ana kadar yazılmış
   /// metin biçimsiz kalırdı.
   int? _pendingEnd;
 
-  /// Bekleyen biçimin CANLI aralığı: `[başlangıç, imleç)`. Bu aralık tamponda
-  /// İŞARETSİZ durur ama EKRANDA biçimli çizilir (bkz. [buildTextSpan]).
-  ///
-  /// KULLANICI İSTEĞİ ("kalın butonuna basıp kalın yazamıyorum... Word'deki
-  /// gibi olmalı"): eskiden yazılan harfler işaretler tampona girene kadar DÜZ
-  /// görünüyor, biçim ancak kelime bitince beliriyordu. Artık biçim basılır
-  /// basılmaz ekranda: tampona hiç dokunulmadan, yalnız çizim stiliyle.
+  /// Bekleyen biçimin CANLI aralığı: `[başlangıç, imleç)` (görüntü metni
+  /// uzayında). Bu aralık tamponda İŞARETSİZ durur ama EKRANDA biçimli
+  /// çizilir (bkz. [buildTextSpan]).
   (int, int)? get pendingRange {
     final at = _pendingAt;
     if (_pending.isEmpty || at == null) return null;
     final sel = selection;
     if (!sel.isValid || !sel.isCollapsed) return null;
-    final caret = sel.baseOffset;
-    if (at < 0 || caret <= at || at > text.length || caret > text.length) {
-      return null;
+    if (_floats.isEmpty) {
+      final caret = sel.baseOffset;
+      if (at < 0 || caret <= at || at > text.length || caret > text.length) {
+        return null;
+      }
+      return (at, caret);
     }
-    return (at, caret);
+    final logicalCaret = wrapToLogicalOffset(text, sel.baseOffset);
+    if (at < 0 || logicalCaret <= at) return null;
+    final dispAt = wrapToDisplayOffset(text, at);
+    final dispEnd = sel.baseOffset;
+    if (dispAt < 0 || dispEnd <= dispAt || dispEnd > text.length) return null;
+    return (dispAt, dispEnd);
   }
 
   /// Bekleyen biçimlerin birikmiş hâli (canlı önizlemenin stili).
@@ -274,13 +285,34 @@ class WrapTextController extends TextEditingController {
   /// Biçmi KAPATAN kullanıcı bunu ister: "kalın yaz, kalını kapat, düz devam
   /// et"te imleç kutunun içinde kalsaydı sonraki metin de kalın olurdu.
   void flushPendingFormat({bool caretOutside = false}) {
-    final wrapped = _wrapRun(value, caretOutside: caretOutside);
+    if (_floats.isEmpty) {
+      final wrapped = _wrapRun(value, caretOutside: caretOutside);
+      if (wrapped != null) {
+        super.value = _snapped(wrapped);
+        clearPendingFormat();
+        notifyListeners();
+      } else {
+        clearPendingFormat();
+      }
+      return;
+    }
+    final logical = logicalText;
+    final sel = selection;
+    final logicalSel = TextSelection(
+      baseOffset: sel.baseOffset < 0
+          ? logical.length
+          : wrapToLogicalOffset(text, sel.baseOffset),
+      extentOffset: sel.extentOffset < 0
+          ? logical.length
+          : wrapToLogicalOffset(text, sel.extentOffset),
+    );
+    final wrapped = _wrapRun(
+      TextEditingValue(text: logical, selection: logicalSel),
+      caretOutside: caretOutside,
+    );
+    clearPendingFormat();
     if (wrapped != null) {
-      super.value = _snapped(wrapped);
-      clearPendingFormat();
-      notifyListeners();
-    } else {
-      clearPendingFormat();
+      _reflow(wrapped.text, wrapped.selection.baseOffset);
     }
   }
 
@@ -480,11 +512,51 @@ class WrapTextController extends TextEditingController {
     return wrapped;
   }
 
+  /// Mantıksal uzayda bekleyen koşuyu günceller (sarma açıkken çapa
+  /// kaymalarından bağımsız). Koşu bittiyse sarılmış metni ve yeni imleci
+  /// döndürür, değilse null.
+  ({String text, int caret})? _trackPendingLogical(
+    String oldLogical,
+    String nextLogical,
+    int logicalCaret,
+    bool isCollapsed,
+  ) {
+    final at = _pendingAt;
+    if (_pending.isEmpty || at == null) return null;
+    final end = _pendingEnd ?? at;
+    final lengthDelta = nextLogical.length - oldLogical.length;
+    final caretDelta = logicalCaret - end;
+    final isEdit =
+        isCollapsed &&
+        logicalCaret >= 0 &&
+        logicalCaret <= nextLogical.length &&
+        lengthDelta == caretDelta;
+    if (isEdit) {
+      if (logicalCaret < at) _pendingAt = logicalCaret;
+      _pendingEnd = logicalCaret;
+      return null;
+    }
+    if (end <= at || end > oldLogical.length || nextLogical != oldLogical) {
+      clearPendingFormat();
+      return null;
+    }
+    final wrapped = _wrapRun(
+      TextEditingValue(
+        text: oldLogical,
+        selection: TextSelection.collapsed(offset: logicalCaret),
+      ),
+      endOverride: end,
+    );
+    clearPendingFormat();
+    if (wrapped == null) return null;
+    return (text: wrapped.text, caret: wrapped.selection.baseOffset);
+  }
+
   @override
   set value(TextEditingValue newValue) {
-    final wrapped = _trackPendingRun(newValue);
-    if (wrapped != null) newValue = wrapped;
     if (_floats.isEmpty) {
+      final wrapped = _trackPendingRun(newValue);
+      if (wrapped != null) newValue = wrapped;
       // Sarma yokken tampon kullanıcının metnidir; IME dokunulmadan geçer —
       // yalnız imleç görünmez işaretin ortasına düşerse kenara çekilir ve
       // işareti silen geri-silme gerçek karaktere yönlendirilir.
@@ -497,6 +569,8 @@ class WrapTextController extends TextEditingController {
       super.value = _snapped(_collapsed(text, newValue));
       return;
     }
+    final oldLogical = logicalText;
+    final oldRawBase = selection.baseOffset;
     var logical = stripWrapAnchors(newValue.text);
     final rawBase = newValue.selection.baseOffset < 0
         ? newValue.text.length
@@ -510,18 +584,32 @@ class WrapTextController extends TextEditingController {
     int? extent = rawExtent == rawBase
         ? null
         : wrapToLogicalOffset(newValue.text, rawExtent);
-    // SATIR BAŞINDA GERİ SİLME: imleç satır başı dolgusunun hemen ardındadır,
-    // dolayısıyla geri silme gerçek metni değil DOLGUYU siler. Eski hâlinde
-    // dolgu bir sonraki dizgide yeniden konuyor, kullanıcıya "silme satır
-    // başında duruyor, üst satıra geçmiyor" gibi görünüyordu. Mantıksal metin
-    // hiç değişmeden tampon kısaldıysa niyet açıktır: ÖNCEKİ karakteri sil
-    // (satır başındaki karakter satır sonu ise satırlar birleşir).
-    if (logical == logicalText &&
-        newValue.text.length < text.length &&
-        caret > 0) {
-      logical = logical.replaceRange(caret - 1, caret, '');
-      caret--;
-      extent = null;
+    // SATIR BAŞINDA GERİ SİLME / İLERİ SİLME: imleç dolgu çapasının yanında
+    // olduğu için Backspace/Delete mantıksal metin yerine çapayı silebilir.
+    // Tampon kısaldı ama mantıksal metin aynı kaldıysa niyeti uygula:
+    // imleç yerinde kaldıysa İLERİ silme (sağdaki karakter), sola kaydıysa
+    // GERİ silme (soldaki karakter).
+    if (logical == oldLogical && newValue.text.length < text.length) {
+      if (oldRawBase >= 0 && rawBase == oldRawBase) {
+        if (caret < logical.length) {
+          logical = logical.replaceRange(caret, caret + 1, '');
+          extent = null;
+        }
+      } else if (caret > 0) {
+        logical = logical.replaceRange(caret - 1, caret, '');
+        caret--;
+        extent = null;
+      }
+    }
+    final tracked = _trackPendingLogical(
+      oldLogical,
+      logical,
+      caret,
+      extent == null,
+    );
+    if (tracked != null) {
+      logical = tracked.text;
+      caret = tracked.caret;
     }
     // GÖRÜNMEZ BİÇİM İŞARETLERİ: imleç işaretin ortasına düşerse kullanıcıya
     // "imleç kıpırdamıyor / geri silme çalışmıyor" gibi görünür (silinen şey
@@ -530,7 +618,6 @@ class WrapTextController extends TextEditingController {
     if (extent == null) {
       // Görünmez işareti silen geri-silme, metnin kendisine yönlendirilir
       // (sarmasız yoldaki [_markerDelete] ile aynı gerekçe).
-      final oldLogical = logicalText;
       if (logical.length == oldLogical.length - 1 &&
           isMarkerOffset(oldLogical, caret)) {
         final fixed = deleteThroughMarkers(oldLogical, caret + 1);
@@ -1087,13 +1174,12 @@ class WrapTextController extends TextEditingController {
       span,
       range.$1,
       range.$2,
-      (current) =>
-          markStyle(
-            current ?? style ?? const TextStyle(),
-            mark,
-            palette,
-            background: _rich?.background,
-          ),
+      (current) => markStyle(
+        current ?? style ?? const TextStyle(),
+        mark,
+        palette,
+        background: _rich?.background,
+      ),
     );
     return restyled is TextSpan ? restyled : span;
   }

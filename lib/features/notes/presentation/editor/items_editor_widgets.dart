@@ -20,6 +20,7 @@ class _FloatRow extends StatefulWidget {
     this.inlineBelow,
     this.initial,
     this.onMeasured,
+    this.onPadChanged,
     this.registry,
   });
 
@@ -59,6 +60,9 @@ class _FloatRow extends StatefulWidget {
   /// Ölçüm sonucu — çağıran, sonraki satırlara tahmin olarak verir.
   final ValueChanged<({double start, double end, double top})>? onMeasured;
 
+  /// Dolgu değişince satır içi [WrapFieldMeasure]'a bildirir.
+  final VoidCallback? onPadChanged;
+
   final Widget child;
 
   @override
@@ -70,11 +74,11 @@ class _FloatRow extends StatefulWidget {
 /// sırayla ölçülüyor; üstteki satır kendini aşağı ittiğinde alttaki henüz
 /// ESKİ yerinden ölçüyor, o da bandın içinde sanıp kendini itiyordu — bir
 /// sonraki karede fazla itme geri alınıyor, maddeler aşağı-yukarı
-/// sekiyordu. Kare içinde verilen her dikey kayma burada birikir; alttaki
-/// satır kendi yerine onu ekleyerek ölçer.
+/// sekiyordu. İki sütunlu listede sütunlar birbirini etkilemesin diye her
+/// kayıt sütun kovasıyla ([col]) tutulur.
 abstract final class _FrameShifts {
   static Duration? _frame;
-  static final List<(double, double)> _shifts = [];
+  static final List<(int, double, double)> _shifts = [];
 
   static void _sync() {
     final now = SchedulerBinding.instance.currentFrameTimeStamp;
@@ -84,19 +88,20 @@ abstract final class _FrameShifts {
     }
   }
 
-  /// [y]'nin üstünde bu karede verilmiş kaymaların toplamı.
-  static double above(double y) {
+  /// Aynı sütunda [y]'nin üstünde bu karede verilmiş kaymaların toplamı.
+  static double above(double dx, double y) {
     _sync();
+    final col = (dx / 20).round();
     var sum = 0.0;
-    for (final (at, d) in _shifts) {
-      if (at < y) sum += d;
+    for (final (c, at, d) in _shifts) {
+      if (c == col && at < y) sum += d;
     }
     return sum;
   }
 
-  static void add(double y, double delta) {
+  static void add(double dx, double y, double delta) {
     _sync();
-    if (delta.abs() > 0.5) _shifts.add((y, delta));
+    if (delta.abs() > 0.5) _shifts.add(((dx / 20).round(), y, delta));
   }
 }
 
@@ -189,73 +194,75 @@ class _FloatRowState extends State<_FloatRow> {
     }
     final measured = box.localToGlobal(Offset.zero, ancestor: page);
     // Üstteki satırların bu karede verdiği (henüz çizilmemiş) kaymalar.
-    final origin = measured.translate(0, _FrameShifts.above(measured.dy));
+    final origin = measured.translate(
+      0,
+      _FrameShifts.above(measured.dx, measured.dy),
+    );
     final width = box.size.width;
-    // Kesişme HER ZAMAN satırın itilmemiş bandıyla ölçülür: kutu kendi üst
-    // dolgusunu da içerdiğinden `box.size.height` kullanmak, itildikçe bandı
-    // büyütür, büyüyen bant daha çok görsele değer ve satır sonsuza dek
-    // aşağı kaçardı. `_top` çıkarılınca ölçüm itmeden bağımsız ve kararlı.
-    final bottom = origin.dy + box.size.height - _top;
-    // Satırın İÇİNDE başlayan görsel alanın işi (bkz. [_FloatRow.inlineBelow]).
+    // Kesişme HER ZAMAN satırın itilmemiş bandıyla ölçülür: `_top` çıkarılınca
+    // ölçüm itmeden bağımsız ve kararlı. Art arda dizili görsellerde tek
+    // görseli atlamak yetmeyebilir — itilen konum bir alttaki görselle yeniden
+    // denetlenir.
+    final rowHeight = math.max(0.0, box.size.height - _top);
     final inline = widget.pushOnly ? null : widget.inlineBelow;
-    final floats = inline == null
+    final sorted = all.length <= 1
         ? all
-        : [
-            for (final f in all)
-              // BLOK kutu satırın içinde başlasa da satırı bütünüyle iter
-              // (madde bölünmez; alan planı onu almaz — `WrapFieldMeasure`).
-              if (f.block || f.top < origin.dy + _top + inline) f,
-          ];
-    var start = 0.0;
-    var end = 0.0;
-    if (!widget.pushOnly) {
-      for (final f in floats) {
-        if (f.bottom <= origin.dy || f.top >= bottom) continue;
-        final left = f.left - origin.dx;
-        final right = f.right - origin.dx;
-        if (right <= 0 || left >= width) continue;
-        // Satır görselin GENİŞ tarafına geçer (metin sarmasıyla aynı kural).
-        if (width - right >= left) {
-          if (right > start) start = right;
-        } else {
-          final pad = width - left;
-          if (pad > end) end = pad;
-        }
-      }
-    }
-    var top = 0.0;
-    // Metne kalan yer: satırın sabit kontrolleri (tutamaç/kutucuk/sil) düşülür.
-    // Eşik, gövde metnindeki kuralın (sütunun dörtte biri) metin payına
-    // uygulanmış hâli; çok dar sütunlarda da okunur bir taban bırakılır.
-    final textWidth = width - start - end - widget.reserved;
+        : ([...all]..sort((a, b) => a.top.compareTo(b.top)));
     final minTextWidth = math.max(
       _kMinRowTextWidth,
       (width - widget.reserved) * 0.25,
     );
-    final blocked = floats.any(
-      (f) =>
-          f.block &&
-          f.bottom > origin.dy &&
-          f.top < bottom &&
-          f.right - origin.dx > 0 &&
-          f.left - origin.dx < width,
-    );
-    if (widget.pushOnly || blocked || textWidth < minTextWidth) {
-      // Yana kaçacak yer yok. Gövde metninde bu durumda satır boşaltılır ve
-      // metin görselin ALTINA iner (text_wrap.dart `_kMinUsableFraction`);
-      // liste maddesinde karşılığı satırı aşağı itmektir. Eskiden satır pes
-      // edip görselin altında kalıyordu.
-      start = 0;
-      end = 0;
-      for (final f in floats) {
-        if (f.bottom <= origin.dy || f.top >= bottom) continue;
-        if (f.right - origin.dx <= 0 || f.left - origin.dx >= width) continue;
-        final push = f.bottom - origin.dy;
-        if (push > top) top = push;
+    var start = 0.0;
+    var end = 0.0;
+    var top = 0.0;
+    for (var pass = 0; pass < 32; pass++) {
+      final y = origin.dy + top;
+      final b = y + rowHeight;
+      var passStart = 0.0;
+      var passEnd = 0.0;
+      var blocked = false;
+      var pushBottom = top;
+      for (final f in sorted) {
+        if (f.bottom <= y || f.top >= b) continue;
+        final left = f.left - origin.dx;
+        final right = f.right - origin.dx;
+        if (right <= 0 || left >= width) continue;
+        if (inline != null && !f.block && f.top >= y + inline) continue;
+        final nextTop = f.bottom - origin.dy;
+        if (nextTop > pushBottom) pushBottom = nextTop;
+        if (f.block) {
+          blocked = true;
+          continue;
+        }
+        if (widget.pushOnly) continue;
+        if (width - right >= left) {
+          final pad = right.clamp(0.0, width).toDouble();
+          if (pad > passStart) passStart = pad;
+        } else {
+          final pad = (width - left).clamp(0.0, width).toDouble();
+          if (pad > passEnd) passEnd = pad;
+        }
       }
+      final textWidth = width - passStart - passEnd - widget.reserved;
+      final needsPush =
+          widget.pushOnly ||
+          blocked ||
+          (passStart + passEnd > 0 && textWidth < minTextWidth);
+      if (needsPush) {
+        if (pushBottom > top + 0.5) {
+          top = pushBottom;
+          continue;
+        }
+        start = 0;
+        end = 0;
+        break;
+      }
+      start = passStart;
+      end = passEnd;
+      break;
     }
     widget.onMeasured?.call((start: start, end: end, top: top));
-    _FrameShifts.add(measured.dy, top - _top);
+    _FrameShifts.add(measured.dx, measured.dy, top - _top);
     if ((start - _start).abs() > 0.5 ||
         (end - _end).abs() > 0.5 ||
         (top - _top).abs() > 0.5) {
@@ -264,6 +271,11 @@ class _FloatRowState extends State<_FloatRow> {
         _end = end;
         _top = top;
       });
+      if (widget.onPadChanged != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) widget.onPadChanged!();
+        });
+      }
     }
   }
 }
@@ -428,17 +440,9 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
           l10n.itemMenuRemind,
         ),
       if (widget.canTask)
-        _tile(
-          _ItemAction.task,
-          Icons.add_task_rounded,
-          l10n.itemMenuTask,
-        ),
+        _tile(_ItemAction.task, Icons.add_task_rounded, l10n.itemMenuTask),
       if (widget.canMove)
-        _tile(
-          _ItemAction.moveToPage,
-          AppIcons.moveToFolder,
-          l10n.itemMenuMove,
-        ),
+        _tile(_ItemAction.moveToPage, AppIcons.moveToFolder, l10n.itemMenuMove),
       _tile(
         _ItemAction.delete,
         Icons.delete_outline_rounded,
@@ -1072,219 +1076,228 @@ class _ItemSelectionBarState extends State<_ItemSelectionBar> {
       child: SnackBarObstacle(
         child: Material(
           key: const ValueKey('items-selection-bar'),
-        color: scheme.surfaceContainerHigh,
-        elevation: 6,
-        shadowColor: scheme.shadow.withValues(alpha: AppAlpha.scrim),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.l),
-          side: BorderSide(color: tokens.accentBorder ?? tokens.hairline),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_formatOpen && hasSelection) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpace.s,
-                  AppSpace.xs + AppSpace.xxs,
-                  AppSpace.s,
-                  AppSpace.xs,
-                ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _BatchChip(
-                        key: const ValueKey('items-batch-bold'),
-                        icon: Icons.format_bold_rounded,
-                        label: l10n.formatBold,
-                        onTap: () => widget.onBatchFormat(RichFormat.bold),
-                        scheme: scheme,
-                        text: text,
-                      ),
-                      const SizedBox(width: AppSpace.xs),
-                      _BatchChip(
-                        key: const ValueKey('items-batch-highlight'),
-                        icon: Icons.border_color_rounded,
-                        label: l10n.formatHighlight,
-                        onTap: () => widget.onBatchFormat(
-                          RichFormat.highlight,
-                          colorIndex: 1,
+          color: scheme.surfaceContainerHigh,
+          elevation: 6,
+          shadowColor: scheme.shadow.withValues(alpha: AppAlpha.scrim),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.l),
+            side: BorderSide(color: tokens.accentBorder ?? tokens.hairline),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_formatOpen && hasSelection) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpace.s,
+                    AppSpace.xs + AppSpace.xxs,
+                    AppSpace.s,
+                    AppSpace.xs,
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _BatchChip(
+                          key: const ValueKey('items-batch-bold'),
+                          icon: Icons.format_bold_rounded,
+                          label: l10n.formatBold,
+                          onTap: () => widget.onBatchFormat(RichFormat.bold),
+                          scheme: scheme,
+                          text: text,
                         ),
-                        scheme: scheme,
-                        text: text,
-                      ),
-                      const SizedBox(width: AppSpace.xs),
-                      _BatchChip(
-                        key: const ValueKey('items-batch-header'),
-                        icon: Icons.title_rounded,
-                        label: l10n.formatHeading,
-                        onTap: widget.onBatchHeader,
-                        scheme: scheme,
-                        text: text,
-                      ),
-                      const SizedBox(width: AppSpace.xs),
-                      _BatchChip(
-                        key: const ValueKey('items-batch-divider'),
-                        icon: Icons.horizontal_rule_rounded,
-                        label: l10n.itemDivider,
-                        onTap: widget.onBatchDivider,
-                        scheme: scheme,
-                        text: text,
-                      ),
-                    ],
+                        const SizedBox(width: AppSpace.xs),
+                        _BatchChip(
+                          key: const ValueKey('items-batch-highlight'),
+                          icon: Icons.border_color_rounded,
+                          label: l10n.formatHighlight,
+                          onTap: () => widget.onBatchFormat(
+                            RichFormat.highlight,
+                            colorIndex: 1,
+                          ),
+                          scheme: scheme,
+                          text: text,
+                        ),
+                        const SizedBox(width: AppSpace.xs),
+                        _BatchChip(
+                          key: const ValueKey('items-batch-header'),
+                          icon: Icons.title_rounded,
+                          label: l10n.formatHeading,
+                          onTap: widget.onBatchHeader,
+                          scheme: scheme,
+                          text: text,
+                        ),
+                        const SizedBox(width: AppSpace.xs),
+                        _BatchChip(
+                          key: const ValueKey('items-batch-divider'),
+                          icon: Icons.horizontal_rule_rounded,
+                          label: l10n.itemDivider,
+                          onTap: widget.onBatchDivider,
+                          scheme: scheme,
+                          text: text,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Divider(
-                height: 1,
-                color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
-              ),
-            ],
-            Container(
-              color: scheme.primaryContainer.withValues(alpha: AppAlpha.muted),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpace.xs,
-                vertical: AppSpace.xxs,
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: l10n.cancel,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.close_rounded, size: AppIconSize.m),
-                    onPressed: widget.onExit,
-                  ),
-                  Expanded(
-                    child: Text(
-                      l10n.itemsSelected(widget.selectedCount),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.label.copyWith(
-                        color: scheme.onPrimaryContainer,
-                        fontWeight: AppWeight.strong,
-                      ),
-                    ),
-                  ),
-                  if (widget.canRangeSelect)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        end: AppSpace.xs,
-                      ),
-                      child: _BatchChip(
-                        key: const ValueKey('items-range-select'),
-                        icon: Icons.linear_scale_rounded,
-                        label: l10n.itemRangeSelect,
-                        onTap: widget.onRangeSelect,
-                        scheme: scheme,
-                        text: text,
-                      ),
-                    ),
-                  IconButton(
-                    key: const ValueKey('items-invert-select'),
-                    tooltip: l10n.itemInvertSelection,
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(
-                      Icons.published_with_changes_rounded,
-                      size: AppIconSize.m,
-                    ),
-                    onPressed: widget.totalCount > 0 ? widget.onInvert : null,
-                  ),
-                  IconButton(
-                    tooltip: l10n.selectAllItems,
-                    visualDensity: VisualDensity.compact,
-                    icon: Icon(
-                      widget.allSelected ? Icons.deselect : Icons.select_all,
-                      size: AppIconSize.m,
-                    ),
-                    onPressed: widget.totalCount > 0 ? widget.onSelectAll : null,
-                  ),
-                ],
-              ),
-            ),
-            IconButtonTheme(
-              data: IconButtonThemeData(
-                style: IconButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
+                Divider(
+                  height: 1,
+                  color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
                 ),
-              ),
-              child: Padding(
+              ],
+              Container(
+                color: scheme.primaryContainer.withValues(
+                  alpha: AppAlpha.muted,
+                ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpace.xs,
                   vertical: AppSpace.xxs,
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    if (widget.showCheckboxes)
-                      IconButton(
-                        tooltip: widget.allChecked
-                            ? l10n.uncheckSelectedItems
-                            : l10n.checkSelectedItems,
-                        icon: Icon(
-                          widget.allChecked
-                              ? Icons.remove_done
-                              : Icons.done_all,
-                          size: AppIconSize.m,
-                        ),
-                        onPressed: hasSelection ? widget.onCheck : null,
-                      ),
                     IconButton(
-                      tooltip: l10n.copy,
-                      icon: const Icon(AppIcons.copy, size: AppIconSize.m),
-                      onPressed: hasSelection ? widget.onCopy : null,
+                      tooltip: l10n.cancel,
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: AppIconSize.m,
+                      ),
+                      onPressed: widget.onExit,
                     ),
-                    if (widget.showCheckboxes)
-                      IconButton(
-                        key: const ValueKey('items-copy-check'),
-                        tooltip: l10n.copyAndCheckSelectedItems,
-                        icon: const Icon(
-                          Icons.library_add_check_outlined,
-                          size: AppIconSize.m,
+                    Expanded(
+                      child: Text(
+                        l10n.itemsSelected(widget.selectedCount),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.label.copyWith(
+                          color: scheme.onPrimaryContainer,
+                          fontWeight: AppWeight.strong,
                         ),
-                        onPressed: hasSelection ? widget.onCopyAndCheck : null,
+                      ),
+                    ),
+                    if (widget.canRangeSelect)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          end: AppSpace.xs,
+                        ),
+                        child: _BatchChip(
+                          key: const ValueKey('items-range-select'),
+                          icon: Icons.linear_scale_rounded,
+                          label: l10n.itemRangeSelect,
+                          onTap: widget.onRangeSelect,
+                          scheme: scheme,
+                          text: text,
+                        ),
                       ),
                     IconButton(
-                      key: const ValueKey('items-batch-format'),
-                      tooltip: l10n.itemsBatchFormat,
+                      key: const ValueKey('items-invert-select'),
+                      tooltip: l10n.itemInvertSelection,
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(
+                        Icons.published_with_changes_rounded,
+                        size: AppIconSize.m,
+                      ),
+                      onPressed: widget.totalCount > 0 ? widget.onInvert : null,
+                    ),
+                    IconButton(
+                      tooltip: l10n.selectAllItems,
+                      visualDensity: VisualDensity.compact,
                       icon: Icon(
-                        Icons.text_format_rounded,
+                        widget.allSelected ? Icons.deselect : Icons.select_all,
                         size: AppIconSize.m,
-                        color: _formatOpen ? scheme.primary : null,
                       ),
-                      onPressed: hasSelection
-                          ? () => setState(() => _formatOpen = !_formatOpen)
+                      onPressed: widget.totalCount > 0
+                          ? widget.onSelectAll
                           : null,
-                    ),
-                    IconButton(
-                      key: const ValueKey('items-package'),
-                      tooltip: widget.allPackaged
-                          ? l10n.notePackageUnpack
-                          : l10n.quickRowPackage,
-                      icon: const Icon(
-                        AppIcons.notePackage,
-                        size: AppIconSize.m,
-                      ),
-                      onPressed: hasSelection ? widget.onPackage : null,
-                    ),
-                    IconButton(
-                      tooltip: l10n.delete,
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        size: AppIconSize.m,
-                      ),
-                      color: scheme.error,
-                      onPressed: hasSelection ? widget.onDelete : null,
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+              IconButtonTheme(
+                data: IconButtonThemeData(
+                  style: IconButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.xs,
+                    vertical: AppSpace.xxs,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      if (widget.showCheckboxes)
+                        IconButton(
+                          tooltip: widget.allChecked
+                              ? l10n.uncheckSelectedItems
+                              : l10n.checkSelectedItems,
+                          icon: Icon(
+                            widget.allChecked
+                                ? Icons.remove_done
+                                : Icons.done_all,
+                            size: AppIconSize.m,
+                          ),
+                          onPressed: hasSelection ? widget.onCheck : null,
+                        ),
+                      IconButton(
+                        tooltip: l10n.copy,
+                        icon: const Icon(AppIcons.copy, size: AppIconSize.m),
+                        onPressed: hasSelection ? widget.onCopy : null,
+                      ),
+                      if (widget.showCheckboxes)
+                        IconButton(
+                          key: const ValueKey('items-copy-check'),
+                          tooltip: l10n.copyAndCheckSelectedItems,
+                          icon: const Icon(
+                            Icons.library_add_check_outlined,
+                            size: AppIconSize.m,
+                          ),
+                          onPressed: hasSelection
+                              ? widget.onCopyAndCheck
+                              : null,
+                        ),
+                      IconButton(
+                        key: const ValueKey('items-batch-format'),
+                        tooltip: l10n.itemsBatchFormat,
+                        icon: Icon(
+                          Icons.text_format_rounded,
+                          size: AppIconSize.m,
+                          color: _formatOpen ? scheme.primary : null,
+                        ),
+                        onPressed: hasSelection
+                            ? () => setState(() => _formatOpen = !_formatOpen)
+                            : null,
+                      ),
+                      IconButton(
+                        key: const ValueKey('items-package'),
+                        tooltip: widget.allPackaged
+                            ? l10n.notePackageUnpack
+                            : l10n.quickRowPackage,
+                        icon: const Icon(
+                          AppIcons.notePackage,
+                          size: AppIconSize.m,
+                        ),
+                        onPressed: hasSelection ? widget.onPackage : null,
+                      ),
+                      IconButton(
+                        tooltip: l10n.delete,
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          size: AppIconSize.m,
+                        ),
+                        color: scheme.error,
+                        onPressed: hasSelection ? widget.onDelete : null,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

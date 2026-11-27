@@ -168,4 +168,50 @@ void main() {
     await tester.pump();
     expect(find.text('yeni', findRichText: true), findsOneWidget);
   });
+
+  testWidgets('web compact density: dokununca madde metni yukarı zıplamaz', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(visualDensity: VisualDensity.compact),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(
+          body: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 360,
+              child: ItemsEditor(
+                items: [NoteItem(id: 'a', text: 'Web madde hizası')],
+                onChanged: _noopChanged,
+                showCheckboxes: true,
+                shrinkWrap: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    expect(fields(), 0);
+    final beforeEditorH = tester.getSize(find.byType(ItemsEditor)).height;
+    final lazyTop = tester
+        .getRect(find.text('Web madde hizası', findRichText: true))
+        .top;
+
+    await tester.tapAt(
+      tester.getCenter(find.text('Web madde hizası', findRichText: true)),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(fields(), 1);
+    final afterEditorH = tester.getSize(find.byType(ItemsEditor)).height;
+    final editableTop = tester.getRect(find.byType(EditableText)).top;
+    expect(afterEditorH, closeTo(beforeEditorH, 0.5));
+    expect(editableTop, closeTo(lazyTop, 0.5));
+  });
 }
+
+void _noopChanged(List<NoteItem> _) {}

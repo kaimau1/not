@@ -14,6 +14,7 @@ import '../../notes/domain/note_item.dart';
 import '../../notes/domain/smart_lexicon_v2.dart';
 import '../../notes/domain/smart_list.dart';
 import '../domain/smart_item_meta.dart';
+import 'workspace_empty_packs.dart';
 
 /// **TAŞINMA PLANI ÇALIŞMA ALANI**: Zaman çizelgesi (1 ay önce → yeni ev) veya
 /// oda & koli görünümü; kırılacak & önce açılacak etiketleri.
@@ -100,24 +101,15 @@ class _MovingPlannerWorkspaceState extends State<MovingPlannerWorkspace> {
   }
 
   Future<void> _addStarterPack() async {
-    final l10n = context.l10n;
-    final isTr = l10n.localeName.startsWith('tr');
-    final pack = kSmartKindSpecs[SmartListKind.moving]!.starterPacks.first;
-    final names = pack.items(isTr: isTr);
-    final have = {for (final i in _items) i.text.trim().toLowerCase()};
-    final fresh = <NoteItem>[];
-    for (var i = 0; i < names.length; i++) {
-      final t = names[i];
-      if (have.contains(t.toLowerCase())) continue;
-      final ex = pack.extrasByIndex[i];
-      fresh.add(
-        NoteItem(
-          id: const Uuid().v4(),
-          text: t,
-          extras: ex == null ? const {} : Map<String, dynamic>.from(ex),
-        ),
-      );
-    }
+    _applyPack(kSmartKindSpecs[SmartListKind.moving]!.starterPacks.first);
+  }
+
+  void _applyPack(SmartStarterPack pack) {
+    final fresh = buildStarterPackItems(
+      pack,
+      _items,
+      isTr: context.l10n.localeName.startsWith('tr'),
+    );
     if (fresh.isNotEmpty) {
       unawaited(AppHaptics.thud());
       _commit([..._items, ...fresh]);
@@ -426,12 +418,9 @@ class _MovingPlannerWorkspaceState extends State<MovingPlannerWorkspace> {
           ),
           Expanded(
             child: visible.isEmpty
-                ? Center(
-                    child: FilledButton.tonalIcon(
-                      onPressed: _addStarterPack,
-                      icon: const Icon(Icons.auto_awesome_outlined),
-                      label: Text(l10n.smartListStarterPacks),
-                    ),
+                ? WorkspaceEmptyPacks(
+                    kind: SmartListKind.moving,
+                    onApplyPack: _applyPack,
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(

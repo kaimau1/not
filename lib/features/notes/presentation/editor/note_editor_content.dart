@@ -667,6 +667,7 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
                     hintText: useCanvasHint ? null : l10n.bodyHint,
                     filled: false,
                     border: InputBorder.none,
+                    visualDensity: VisualDensity.standard,
                     // İÇ DOLGU AÇIKÇA: ilk metin satırının alanın tepesinden ne kadar
                     // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
                     // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük

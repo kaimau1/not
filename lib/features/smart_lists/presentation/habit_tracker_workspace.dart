@@ -15,6 +15,7 @@ import '../../notes/domain/note_item.dart';
 import '../../notes/domain/smart_lexicon_v2.dart';
 import '../../notes/domain/smart_list.dart';
 import '../domain/smart_item_meta.dart';
+import 'workspace_empty_packs.dart';
 
 /// **ALIŞKANLIK TAKİBİ ÇALIŞMA ALANI**: 7 günlük dokunulabilir daireler,
 /// seri sayacı, zaman dilimi süzgeci ve 30 günlük ısı haritası.
@@ -150,21 +151,15 @@ class _HabitTrackerWorkspaceState extends State<HabitTrackerWorkspace> {
       ),
     );
     if (pack == null || !mounted) return;
-    final names = pack.items(isTr: isTr);
-    final existingKeys = {for (final i in _items) i.text.trim().toLowerCase()};
-    final added = <NoteItem>[];
-    for (var i = 0; i < names.length; i++) {
-      final t = names[i].trim();
-      if (t.isEmpty || existingKeys.contains(t.toLowerCase())) continue;
-      final ex = pack.extrasByIndex[i];
-      added.add(
-        NoteItem(
-          id: const Uuid().v4(),
-          text: t,
-          extras: ex == null ? const {} : Map<String, dynamic>.from(ex),
-        ),
-      );
-    }
+    _applyPack(pack);
+  }
+
+  void _applyPack(SmartStarterPack pack) {
+    final added = buildStarterPackItems(
+      pack,
+      _items,
+      isTr: context.l10n.localeName.startsWith('tr'),
+    );
     if (added.isNotEmpty) {
       unawaited(AppHaptics.thud());
       _commit([..._items, ...added]);
@@ -477,28 +472,9 @@ class _HabitTrackerWorkspaceState extends State<HabitTrackerWorkspace> {
           ),
           Expanded(
             child: visible.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpace.xxl),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            l10n.smartListWorkspaceEmpty,
-                            textAlign: TextAlign.center,
-                            style: text.body.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpace.m),
-                          FilledButton.tonalIcon(
-                            onPressed: _openStarterPacks,
-                            icon: const Icon(Icons.auto_awesome_outlined),
-                            label: Text(l10n.smartListStarterPacks),
-                          ),
-                        ],
-                      ),
-                    ),
+                ? WorkspaceEmptyPacks(
+                    kind: SmartListKind.habits,
+                    onApplyPack: _applyPack,
                   )
                 : ListView.separated(
                     padding: const EdgeInsets.fromLTRB(

@@ -10,6 +10,8 @@ import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/domain/quick_drop.dart';
 import 'package:notlar/features/notes/domain/smart_list.dart';
 import 'package:notlar/features/notes/presentation/editor/auto_spell.dart';
+import 'package:notlar/features/notes/presentation/notes_providers.dart'
+    show focusedNoteProvider;
 import 'package:notlar/features/notes/presentation/quick_drop_sheet.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/features/shopping/domain/shop_item_meta.dart';
@@ -219,8 +221,29 @@ void main() {
         expect(created.urgent, isTrue);
         expect(created.tags, ['tatil']);
 
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(Scaffold)),
+        );
+        expect(container.read(focusedNoteProvider), 'rich-1');
+
         // Sheet remains open because Keep Open was enabled!
         expect(find.byKey(const ValueKey('quick-entry-field')), findsOneWidget);
+
+        // Toggle keep-open off via header pill and add to existing note -> focusedNoteProvider updates.
+        await tester.tap(
+          find.byKey(const ValueKey('quick-drop-keep-open-pill')),
+        );
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('quick-entry-field')),
+          'yeni fikir',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+        await tester.pump();
+        expect(repo.updates, hasLength(1));
+        expect(container.read(focusedNoteProvider), 'n1');
+        await tester.pumpAndSettle();
       },
     );
   });

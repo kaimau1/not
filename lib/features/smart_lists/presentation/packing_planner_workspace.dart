@@ -14,6 +14,7 @@ import '../../notes/domain/smart_lexicon_v2.dart';
 import '../../notes/domain/smart_list.dart';
 import '../domain/smart_item_meta.dart';
 import 'smart_wizards.dart';
+import 'workspace_empty_packs.dart';
 
 /// **BAVUL VE SEYAHAT ÇALIŞMA ALANI**: Seyahat sihirbazı (gün × hava × stil),
 /// El bagajı / Valiz / Üstümde süzgeci, miktar adımlama ve tek dokunuş sıfırlama.
@@ -151,6 +152,18 @@ class _PackingPlannerWorkspaceState extends State<PackingPlannerWorkspace> {
         ),
       );
     }
+    if (fresh.isNotEmpty) {
+      unawaited(AppHaptics.thud());
+      _commit([..._items, ...fresh]);
+    }
+  }
+
+  void _applyPack(SmartStarterPack pack) {
+    final fresh = buildStarterPackItems(
+      pack,
+      _items,
+      isTr: context.l10n.localeName.startsWith('tr'),
+    );
     if (fresh.isNotEmpty) {
       unawaited(AppHaptics.thud());
       _commit([..._items, ...fresh]);
@@ -304,12 +317,12 @@ class _PackingPlannerWorkspaceState extends State<PackingPlannerWorkspace> {
           ),
           Expanded(
             child: visible.isEmpty
-                ? Center(
-                    child: FilledButton.tonalIcon(
-                      onPressed: _openTripWizard,
-                      icon: const Icon(Icons.auto_awesome_outlined),
-                      label: Text(l10n.smartListTripWizard),
-                    ),
+                ? WorkspaceEmptyPacks(
+                    kind: SmartListKind.packing,
+                    onApplyPack: _applyPack,
+                    onWizard: _openTripWizard,
+                    wizardLabel: l10n.smartListTripWizard,
+                    wizardIcon: Icons.luggage_outlined,
                   )
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(
