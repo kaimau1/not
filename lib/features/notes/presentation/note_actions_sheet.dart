@@ -15,6 +15,7 @@ import '../../../app/split_shell.dart' show SplitScope;
 import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../ai/data/speech_service.dart';
+import '../../../core/utils/note_e2ee_session.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
@@ -93,7 +94,10 @@ Future<void> _runNoteAction(
 
   Future<bool> unlockIfNeeded() async {
     if (!note.locked) return true;
-    return authenticateForNote(l10n.unlockAuthReason);
+    final ok = await authenticateForNote(l10n.unlockAuthReason);
+    if (!ok) return false;
+    note = note.decryptWithKey(NoteE2eeSession.key);
+    return true;
   }
 
   switch (action) {
@@ -203,11 +207,15 @@ Future<void> _runNoteAction(
         );
       }
     case 'lock':
-      // Kilidi kaldırmak kimlik doğrulaması ister; kilitlemek serbest.
-      if (note.locked && !await authenticateForNote(l10n.unlockAuthReason)) {
-        return;
+      // Kilidi kaldırmak kimlik doğrulaması ister; kilitlemede E2EE anahtarı
+      // hazırlanıp tam not şifreli kaydedilir.
+      if (note.locked) {
+        if (!await unlockIfNeeded()) return;
+        await repo.setLocked(note, false);
+      } else {
+        if (!await ensureNoteE2eeKeyForLock(l10n.unlockAuthReason)) return;
+        await repo.setLocked(note, true);
       }
-      repo.updateFields(note.id, {'locked': !note.locked});
     case 'calendar':
       await showLinkNoteToCalendarSheet(context, note);
     case 'folder':

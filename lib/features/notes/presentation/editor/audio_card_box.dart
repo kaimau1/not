@@ -15,6 +15,7 @@ import '../drive_ui.dart';
 import 'video_hub_scope.dart';
 import 'voice_note_recorder.dart';
 import '../../../../core/haptics.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Sayfaya gömülen SES kartının ekte saklanan oranı (bkz. `kTextBoxWidth`):
 /// geniş, alçak bir oynatıcı HAPI (2026-10-28: 280 → 190; sayfada boy ayrıca
@@ -241,7 +242,7 @@ class _AudioCardBoxState extends State<AudioCardBox> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppWeight.strong,
                             color: scheme.onSurfaceVariant,
                           ),
                         ),
@@ -263,7 +264,7 @@ class _AudioCardBoxState extends State<AudioCardBox> {
                     icon: Icon(
                       Icons.more_time_rounded,
                       color: scheme.onSurfaceVariant,
-                      size: 20,
+                      size: AppIconSize.m,
                     ),
                   ),
               ],
@@ -311,7 +312,7 @@ class _PlayButton extends StatelessWidget {
       radius: size * 0.62,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.emphasized,
         width: size,
         height: size,
         decoration: BoxDecoration(
@@ -364,7 +365,7 @@ class _PlayButton extends StatelessWidget {
 }
 
 /// Süre yazısı: dururken toplam süre, çalarken geçen süre (`00:04`).
-class _TimeLabel extends StatelessWidget {
+class _TimeLabel extends StatefulWidget {
   const _TimeLabel({
     required this.player,
     required this.total,
@@ -376,26 +377,49 @@ class _TimeLabel extends StatelessWidget {
   final Color color;
 
   @override
+  State<_TimeLabel> createState() => _TimeLabelState();
+}
+
+class _TimeLabelState extends State<_TimeLabel> {
+  Stream<Duration>? _posStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncStream();
+  }
+
+  @override
+  void didUpdateWidget(_TimeLabel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.player != widget.player) _syncStream();
+  }
+
+  void _syncStream() {
+    _posStream = widget.player?.createPositionStream(
+      maxPeriod: const Duration(milliseconds: 400),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     Widget label(Duration d) => Text(
       formatClock(d),
       style: TextStyle(
         fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: color,
+        fontWeight: AppWeight.medium,
+        color: widget.color,
         fontFeatures: const [FontFeature.tabularFigures()],
       ),
     );
-    final p = player;
-    if (p == null) return label(total ?? Duration.zero);
+    final p = widget.player;
+    if (p == null) return label(widget.total ?? Duration.zero);
     return StreamBuilder<Duration>(
-      stream: p.createPositionStream(
-        maxPeriod: const Duration(milliseconds: 400),
-      ),
+      stream: _posStream,
       initialData: p.position,
       builder: (context, snap) {
         final position = snap.data ?? Duration.zero;
-        final whole = p.duration ?? total ?? Duration.zero;
+        final whole = p.duration ?? widget.total ?? Duration.zero;
         final idle =
             !p.playing &&
             (position == Duration.zero ||
@@ -408,7 +432,7 @@ class _TimeLabel extends StatelessWidget {
 
 /// Dalga + sarma: dokununca o noktaya, sürükleyince parmakla sarar. Yalnız
 /// bu parça konumla tazelenir (kartın geri kalanı değil).
-class _WaveSeek extends StatelessWidget {
+class _WaveSeek extends StatefulWidget {
   const _WaveSeek({
     required this.player,
     required this.wave,
@@ -428,6 +452,31 @@ class _WaveSeek extends StatelessWidget {
   final ValueChanged<double> onDragEnd;
 
   @override
+  State<_WaveSeek> createState() => _WaveSeekState();
+}
+
+class _WaveSeekState extends State<_WaveSeek> {
+  Stream<Duration>? _posStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncStream();
+  }
+
+  @override
+  void didUpdateWidget(_WaveSeek oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.player != widget.player) _syncStream();
+  }
+
+  void _syncStream() {
+    _posStream = widget.player?.createPositionStream(
+      maxPeriod: const Duration(milliseconds: 120),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     Widget bars(double progress) => LayoutBuilder(
       builder: (context, box) {
@@ -435,29 +484,28 @@ class _WaveSeek extends StatelessWidget {
             (local.dx / box.maxWidth).clamp(0.0, 1.0).toDouble();
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTapUp: (d) => onDragEnd(at(d.localPosition)),
-          onHorizontalDragUpdate: (d) => onDrag(at(d.localPosition)),
-          onHorizontalDragEnd: (_) => onDragEnd(drag ?? progress),
+          onTapUp: (d) => widget.onDragEnd(at(d.localPosition)),
+          onHorizontalDragUpdate: (d) => widget.onDrag(at(d.localPosition)),
+          onHorizontalDragEnd: (_) =>
+              widget.onDragEnd(widget.drag ?? progress),
           child: RepaintBoundary(
             child: CustomPaint(
               size: Size(box.maxWidth, box.maxHeight),
               painter: WaveformBarsPainter(
-                wave: wave,
-                progress: drag ?? progress,
-                active: active,
-                inactive: inactive,
+                wave: widget.wave,
+                progress: widget.drag ?? progress,
+                active: widget.active,
+                inactive: widget.inactive,
               ),
             ),
           ),
         );
       },
     );
-    final p = player;
+    final p = widget.player;
     if (p == null) return bars(0);
     return StreamBuilder<Duration>(
-      stream: p.createPositionStream(
-        maxPeriod: const Duration(milliseconds: 120),
-      ),
+      stream: _posStream,
       initialData: p.position,
       builder: (context, snap) {
         final total = p.duration;

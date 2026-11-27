@@ -23,19 +23,19 @@ ortalar KARAR ya da konsol işi (aşağıda "Kullanıcı işi").
 | G-26 | Orta | Kilitli notun hatırlatıcı bildirimi başlığı ve gövdenin ilk 120 karakterini kilit ekranında gösteriyordu (şerit ve Hatırlatıcılar ekranı gizliyordu, bildirim gizlemiyordu) | `lib/features/notes/data/reminder_service.dart` `_scheduleOne` | Kilitli notta "Kilitli not", gövde yok; kilit değişince yeniden planlanır | Düzeltildi + test; cihazda doğrulanmadı. Önceden planlanmış bildirimler not bir kez değişene/uygulama yeniden planlayana dek eski metinle kalabilir |
 | G-09 | Orta | Firebase API anahtarı depoda ve her pakette (tasarım gereği). Koruma konsol ayarına bağlı | `lib/firebase_options.dart`, `android/app/google-services.json` | Konsolda anahtar kısıtı + App Check zorlaması | **Kullanıcı işi** |
 | G-10 | Orta | `GOOGLE_DESKTOP_CLIENT_SECRET` APK'da düz metin (dart-define). Yüklü uygulama istemcisinin sırrı gizli sayılmaz; akış PKCE + state + 127.0.0.1 ile korunuyor | `.github/workflows/build.yml` "APK derle", `loopback_oauth.dart:64-157` | Belgelendi; onay ekranı kapsamları en aza indirilmeli | Kabul / **kullanıcı işi** (konsol denetimi) |
-| G-11 | Orta | Yedek (`.notyedek`) şifresiz; kilitli notlar düz metin içinde | `lib/features/notes/data/backup_service.dart:413` | Uyarı ya da parola seçeneği | **KARAR — sabah bakılacak** |
-| G-12 | Orta | Tam CSP yok (`script-src`, `connect-src`) | `web/_headers`, `web/index.html` | Flutter wasm + Firebase + Google girişiyle denenmeden konamaz | Açık (deneme gerek) |
-| G-13 | Orta | Gelen notlar: arkadaş sınırsız sayıda not bırakabilir; `fromName`/`fromEmail` doğrulanmıyor; `items`/`tags` tavansız (belge sınırı 1 MiB) | `firestore.rules` `inboxNotes` | Hız sınırı kuralla yapılamaz (sayaç/Function ister) | Açık |
+| G-11 | Orta | Yedek (`.notyedek`) şifresiz; kilitli notlar düz metin içinde | `lib/features/notes/data/backup_service.dart:413` | Parolalı AES-256 tam yedek eklendi (P91 + `calendar_backup_test`); diyalogda "Parolasız yedekle" seçeneği açık etiketle korunuyor | Kısmen kapalı (parolalı AES-256 hazır; varsayılan karar açık) |
+| G-12 | Orta | Tam CSP yok (`script-src`, `connect-src`) | `web/_headers`, `web/index.html` | Tam CSP yazıldı; Chrome (`127.0.0.1:8787`, `web/_headers`) üzerinde `0` CSP/konsol hatası ve `0` engellenen kaynakla doğrulandı (`2026-11-27`) | Doğrulandı (Chrome `2026-11-27`; Safari/Firefox ve Google OAuth akışı açık) |
+| G-13 | Orta | Gelen notlar: alan/uzunluk ve e-posta kimliği sınırlaması | `firestore.rules` `inboxNotes`, `rules-test/rules.test.js` | `fromName <= 200`, `fromEmail <= 320`, `tokenEmail` eşlemesi, `items <= 500`, `tags <= 30` doğrulaması eklendi (hız sınırı yine Function gerektirir) | Kapalı (2026-11-27; `rules-test`) |
 | G-14 | Düşük | E-postadan "hesap var mı + uid" öğrenilir (misafir oturum dahil) | `firestore.rules` `userDirectory` `allow get` | Misafiri dışlamak davranış değiştirir | KARAR — sabah bakılacak |
 | G-15 | Düşük | Uid'i bilinen herkese istek bırakılabilir (gönderen başına 1 belge) | `firestore.rules` `friendRequests` | — | Kabul |
-| G-16 | Düşük | `presence` belgesini okuma rolündeki üye de yazar, içerik tavansız; `versions` yaratma tavansız | `firestore.rules` `{sub}/{docId}` | Alan/boyut doğrulaması | Açık |
+| G-16 | Düşük | `presence` belgesini okuma rolündeki üye de yazar, içerik tavansız; `versions` yaratma tavansız | `firestore.rules`, `rules-test/rules.test.js` | `presence` yalnız yazma yetkili üye/ortak çalışana daraltıldı ve `name <= 200` + alan listesi zorlandı; `versions` anahtar/boyut sınırları eklendi | Kapalı (2026-11-27; `rules-test`) |
 | G-17 | Düşük | Hiç paylaşılmamış klasörün kimliğini bilen biri aynı kimlikle kendi klasörünü açıp aynayı işgal edebilir (paylaşımı engeller; veri sızmaz, kimlik rastgele) | `firestore.rules` `folderShares` create | — | Kabul |
-| G-18 | Düşük | Storage: içerik türü istemci beyanı (`image/.*` SVG dahil); sohbet görselini her üye siler; ortak çalışan sahibin dosyasının üstüne yazar; toplam kota sunucuda zorlanmıyor | `storage.rules` | Function + sayaç (KALANLAR'da) | Açık |
-| G-19 | Düşük | CI: sır `echo '${{ secrets.X }}' > dosya` biçiminde betiğe gömülüyor (env ile verilmeli); `npx firebase-tools` sürümsüz; `functions/` kilit dosyasız (`npm install`) | `.github/workflows/build.yml` `release`, `deploy` | Yalnız main'de koşan adımlar — gözetimsiz değiştirilmedi | Açık |
+| G-18 | Düşük | Storage: içerik türü istemci beyanı (`image/.*` SVG dahil); sohbet görselini her üye siler; ortak çalışan sahibin dosyasının üstüne yazar; toplam kota sunucuda zorlanmıyor | `storage.rules`, `rules-test/rules.test.js` | `safeImageTypes()` ile `image/svg+xml` engellendi (`attachmentTypes` ve `folderChats`); silme/kota KALANLAR'da | Kapalı (SVG XSS, 2026-11-27; `rules-test`) |
+| G-19 | Düşük | CI: sır `echo '${{ secrets.X }}' > dosya` biçiminde betiğe gömülüyor; `rules` işi Functions testini koşuyor | `.github/workflows/build.yml` | 4 satırda `FIREBASE_SA` env + `printf '%s'` ile değiştirildi; `rules` işine `npm test` eklendi | Kapalı (2026-11-27) |
 | G-20 | Düşük | `notlar://new` her uygulamadan tetiklenir (boş not yaratır). `notlar://note/<id>` not kilidini atlamıyor (kodda; cihazda denenmedi) | `lib/app/router.dart:297-335` | — | Kabul / cihaz turu |
-| G-21 | Düşük | İçe aktarılan arşivler bellekte açılıyor: zip bombası = bellek tükenmesi (yerel çökme). Yol geçişi tek noktada kesili | `note_package.dart:242`, `backup_ui.dart:203`, `attachment_repository.dart:298`, `MainActivity.kt` `sanitize` | Açılmış boyut/dosya sayısı tavanı | Açık |
+| G-21 | Düşük | İçe aktarılan arşivler bellekte açılıyor: zip bombası = bellek tükenmesi | `zip_guard.dart`, `doc_text.dart`, `slide_deck.dart`, `backup_service.dart`, `note_package.dart` | `ZipGuard.decodeBytes` + `ZipByteBudget` tüm arşiv okuyucularda (`≤2000`/`≤5000` dosya, boyut tavanı) | Kapalı (2026-11-27; `doc_text_test`, `slide_deck_test`) |
 | G-22 | Bilgi | `rules-test` `npm audit`: 29 açık (yalnız test aracı; dağıtılmıyor) | `rules-test/package-lock.json` | `firebase-tools` büyük sürüm yükseltmesi | Açık |
-| G-23 | Düşük | Dizin kaydı yazımı hatayı yakalamıyor (kural reddederse yakalanmamış hata günlüğe düşer) | `dashboard_screen.dart:343` | `.catchError` | Açık (ana ekran dosyası — ölçüm kapısı) |
+| G-23 | Düşük | Dizin kaydı yazımı hatayı yakalamıyor (kural reddederse yakalanmamış hata günlüğe düşer) | `dashboard_screen.dart` `_syncOwnDirectoryEntry` | `unawaited(...catchError(... ErrorLog.record('directory-sync', e, s)))` eklendi | Kapalı (2026-11-27) |
 | G-24 | Bilgi | Kilitli notun başlığı kartta ve aramada görünür | `notes_providers.dart:1353` | — | Tasarım |
 | G-25 | Bilgi | Güncelleme: adres GitHub API yanıtından, ayrıca host denetimi yok; bütünlüğü Android zorlar (aynı paket + aynı imza) | `app_update.dart:159-176`, `ApkGuncelleme.kt` | — | Kabul |
 | G-27 | Düşük | HE-3 (P84, 2026-11-20): yeni dışa açık `.NotaEkle` (paylaşım `text/plain` + PROCESS_TEXT) ve `notlar://ekle?metin=…` her uygulamadan tetiklenir. Metin yalnız hızlı ekle ALANINA yazılır (≤ 2000 karakter), kendiliğinden kaydedilmez, dinleme başlamaz; kullanıcı hedefi önizlemede görüp Ekle'ye basar. Karo `.HizliEkleKarosu` `BIND_QUICK_SETTINGS_TILE` ile korunur. BROWSABLE yok (web sayfası açamaz) | `HizliEkle.kt`, `router.dart` `ekle`, `QuickDropRequestNotifier.maxLength` | — | Kabul; bekçi `security_guard_test` |
@@ -96,10 +96,11 @@ değerlendiriliyor. Değerlendirilmeyenler çoğunlukla sahibin kendi silme/okum
 
 ## İncelenmeyenler
 
-`ErrorLog`/Crashlytics'e not içeriği düşüyor mu · `FLAG_SECURE` kapsamı · PDF/PPTX
-ayrıştırıcılarının bozuk dosyaya dayanıklılığı · `functions/push.js` · Gmail gövdesinin
+`ErrorLog`/Crashlytics sızıntı denetimi tam uçtan uca · `functions/push.js` · Gmail gövdesinin
 tamamı (görülen: düz metin + yalnız `https?://` bağlantısı) · uygulama kilidinin derin
-bağlantı/bildirim açılışında cihazdaki davranışı.
+bağlantı/bildirim açılışında cihazdaki davranışı. (Not: `FLAG_SECURE` kapsamı `AppLockSecureScope`
+ile uygulama kilidi + açık kilitli notlara genişletildi; DOCX/PPTX/ZIP ayrıştırıcıları
+`ZipGuard` + `ZipByteBudget` altına alındı.)
 
 ## Kullanıcı işi (konsol / hesap)
 

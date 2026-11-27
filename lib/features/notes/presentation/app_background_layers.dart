@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../app/theme/dashboard_wallpapers.dart';
+import '../../../core/utils/image_cache_budget.dart';
 import '../../../core/utils/local_file.dart' show localFileExists;
 import '../../settings/settings_providers.dart';
 import 'dashboard_pattern.dart';
@@ -49,7 +50,8 @@ List<Widget> buildAppBackgroundLayers(BuildContext context, WidgetRef ref) {
     final targetWidth =
         (MediaQuery.sizeOf(context).width *
                 MediaQuery.devicePixelRatioOf(context))
-            .round();
+            .round()
+            .clamp(64, ImageCacheBudget.maxWallpaperWidth);
     final ImageProvider provider = preset != null
         ? ResizeImage(AssetImage(preset.asset), width: targetWidth)
         : ResizeImage(FileImage(File(path!)), width: targetWidth);

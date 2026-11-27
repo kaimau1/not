@@ -11,9 +11,11 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/note_e2ee_session.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/note_lock.dart';
+import '../../../../core/utils/run_heavy.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../auth/data/android_google_auth.dart';
 import '../../../settings/settings_providers.dart';
+import '../../data/notes_repository.dart';
 import 'pattern_pad.dart';
 
 /// Not kilidinin yapılandırması (F4.8) — SharedPreferences'ta, ayar
@@ -52,7 +54,30 @@ final noteLockBinderProvider = Provider<void>((ref) {
     reason: reason,
     config: NoteLockGate.config,
     onForgot: () async {
+      final ctx = NoteLockGate.context?.call();
+      if (ctx != null && ctx.mounted) {
+        final l10n = ctx.l10n;
+        final confirmed = await showDialog<bool>(
+          context: ctx,
+          builder: (dCtx) => AlertDialog(
+            title: Text(l10n.lockForgotConfirmTitle),
+            content: Text(l10n.lockForgotConfirmBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dCtx, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dCtx, true),
+                child: Text(l10n.lockForgotConfirmAction),
+              ),
+            ],
+          ),
+        );
+        if (confirmed != true) return false;
+      }
       if (!await reauthenticateWithGoogle()) return false;
+      await NoteE2eeSession.clearPersistedKey();
       ref.read(noteLockConfigProvider.notifier).set(const NoteLockConfig());
       return true;
     },
@@ -152,9 +177,10 @@ class _UnlockDialogState extends State<_UnlockDialog> {
   Future<void> _check(String secret) async {
     if (_locked || _checking || secret.isEmpty) return;
     setState(() => _checking = true);
-    // Özet hesaplama ~20 bin tur: bir kare bekleyip çark görünsün.
+    // Özet hesaplama ~20 bin tur: arka plan izolatında çalıştır.
+    final config = widget.config;
     await Future<void>.delayed(const Duration(milliseconds: 16));
-    final ok = verifyNoteLock(widget.config, secret);
+    final ok = await runHeavy(() => verifyNoteLock(config, secret));
     if (!mounted) return;
     if (ok) {
       _failures = 0;
@@ -177,10 +203,19 @@ class _UnlockDialogState extends State<_UnlockDialog> {
 
   Future<void> _useBiometric() async {
     final ok = await deviceAuthenticate(widget.reason);
-    if (ok) {
-      await NoteE2eeSession.ensureDeviceKey();
-      if (mounted) Navigator.pop(context, true);
+    if (!ok) return;
+    final cached = await NoteE2eeSession.loadCachedKey();
+    if (!mounted) return;
+    if (cached != null) {
+      Navigator.pop(context, true);
+      return;
     }
+    // Şifre/desen kilidinde biyometrik seçildiğinde başka cihazda veya temiz
+    // kurulumda E2EE anahtarını türetebilmek için sırrın bir kez girilmesi şart.
+    setState(() => _error = true);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showMessage(context.l10n.lockNeedSecretOnce);
   }
 
   @override
@@ -412,6 +447,10 @@ class NoteLockSettingsTile extends ConsumerWidget {
     NoteLockMethod method,
   ) async {
     final current = ref.read(noteLockConfigProvider);
+    if (method == NoteLockMethod.device &&
+        current.method == NoteLockMethod.device) {
+      return;
+    }
     // Yöntemi değiştirmek (ya da sırrı yenilemek) önce mevcut kilidi ister.
     if (current.usesSecret || method != NoteLockMethod.device) {
       if (!await authenticateForNote(context.l10n.lockChangeAuthReason)) {
@@ -419,16 +458,40 @@ class NoteLockSettingsTile extends ConsumerWidget {
       }
     }
     if (!context.mounted) return;
+    final oldKey =
+        NoteE2eeSession.key ?? await NoteE2eeSession.loadCachedKey();
+    if (!context.mounted) return;
+    String? secret;
+    if (method != NoteLockMethod.device) {
+      secret = await askNewLockSecret(context, method);
+      if (secret == null) return;
+    }
+    final allNotes = ref.read(notesStreamProvider).value ?? const [];
+    final decryptedLocked = [
+      for (final n in allNotes)
+        if (n.locked) n.decryptWithKey(oldKey),
+    ];
     final notifier = ref.read(noteLockConfigProvider.notifier);
     if (method == NoteLockMethod.device) {
       notifier.set(const NoteLockConfig());
-      return;
+      await NoteE2eeSession.clearPersistedKey();
+      await NoteE2eeSession.ensureDeviceKey();
+    } else {
+      final created = createNoteLock(
+        method,
+        secret!,
+        biometric: current.biometric,
+      );
+      notifier.set(created);
+      await NoteE2eeSession.unlockWithSecret(created, secret);
     }
-    final secret = await askNewLockSecret(context, method);
-    if (secret == null) return;
-    final created = createNoteLock(method, secret, biometric: current.biometric);
-    notifier.set(created);
-    await NoteE2eeSession.unlockWithSecret(created, secret);
+    // Mevcut kilitli notları yeni etkin E2EE anahtarıyla yeniden şifrele.
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo != null) {
+      for (final note in decryptedLocked) {
+        await repo.updateNote(note);
+      }
+    }
   }
 
   @override

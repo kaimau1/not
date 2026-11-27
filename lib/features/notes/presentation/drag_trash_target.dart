@@ -67,13 +67,13 @@ class _DragTrashTargetState extends State<DragTrashTarget>
   /// Kart hedef bölgesinde (bırakılırsa çöpe gider).
   late final AnimationController _hover = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 150),
+    duration: AppMotion.quick,
   );
 
   // Bir kez kurulur (her build'de yeni CurvedAnimation dinleyici bırakır).
   late final Animation<double> _curved = CurvedAnimation(
     parent: _show,
-    curve: Curves.easeOutCubic,
+    curve: AppMotion.emphasized,
   );
 
   /// Bırakınca kara delik: kart dönerek merkeze çekilir.

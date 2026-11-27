@@ -88,6 +88,8 @@ void main() {
           DecisionFeature.titleOk,
           DecisionFeature.noteTriage,
           DecisionFeature.shopAisle,
+          DecisionFeature.captureRoute,
+          DecisionFeature.listClassify,
         ]) {
           expect(AiDecisionsFlag.modeOf(f), DecisionMode.live);
         }

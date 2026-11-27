@@ -8,6 +8,7 @@ import '../../../../core/utils/calc.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../../core/widgets/sheet_keyboard.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Not yazarken hızlı hesap için dahili hesap makinesi alt sayfası.
 /// "Nota ekle" ile kapatılırsa eklenecek metni ("12,5×3 = 37,5" ya da
@@ -170,7 +171,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
                       : '= ${formatCalcResult(value)}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: value == null ? scheme.error : scheme.primary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppWeight.strong,
                   ),
                 ),
               )
@@ -187,7 +188,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
     return Row(
       children: [
         TextButton.icon(
-          icon: const Icon(AppIcons.copy, size: 18),
+          icon: const Icon(AppIcons.copy, size: AppIconSize.s),
           label: Text(l10n.copy),
           onPressed: value == null
               ? null
@@ -204,7 +205,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
         ),
         const Spacer(),
         FilledButton.icon(
-          icon: const Icon(Icons.playlist_add, size: 18),
+          icon: const Icon(Icons.playlist_add, size: AppIconSize.s),
           label: Text(l10n.addToNote),
           onPressed: value == null
               ? null
@@ -222,7 +223,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
     final Widget child = Text(
       key,
       style: Theme.of(context).textTheme.titleMedium
-          ?.copyWith(fontWeight: FontWeight.w600),
+          ?.copyWith(fontWeight: AppWeight.strong),
     );
     final style = ButtonStyle(
       minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),

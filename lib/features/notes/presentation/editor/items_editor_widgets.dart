@@ -726,7 +726,7 @@ class _CheckMoveState extends State<_CheckMove>
   }
 
   void _arrive() {
-    _size = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _size = CurvedAnimation(parent: _controller, curve: AppMotion.emphasized);
     _controller.duration = _CheckMove.arriveDuration;
     _controller.forward(from: 0);
   }
@@ -832,7 +832,7 @@ const _kHoldTextStage = Duration(milliseconds: 650);
 const _kHoldSelectDelay = Duration(milliseconds: 1250);
 
 /// Kısa dokunuşta halka yanıp sönmesin: bu kadar basılı kalmadan çizilmez.
-const _kHoldRingShow = Duration(milliseconds: 150);
+const _kHoldRingShow = AppMotion.quick;
 
 class _HoldToSelect extends StatefulWidget {
   const _HoldToSelect({

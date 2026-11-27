@@ -21,6 +21,7 @@ import 'zoom_box.dart';
 import '../editor/attachment_clipboard.dart';
 import '../editor/pen_tray.dart';
 import '../../../../core/widgets/delayed_spinner.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Sunum (.pptx) ekini gerçek tasarımıyla slayt slayt gösterir. PDF'teki gibi
 /// üzerine elle yazılabilir: çizim slayt oranlı vektör olarak ekin `ink`
@@ -169,7 +170,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen>
           position.maxScrollExtent,
         ),
         duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.emphasized,
       );
     },
     centerUnbuilt: (top, height) {
@@ -187,7 +188,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen>
       _scroll.animateTo(
         target.clamp(0.0, math.max(0.0, max)),
         duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.emphasized,
       );
     },
   );

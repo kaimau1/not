@@ -14,6 +14,7 @@ import '../../domain/page_notes.dart';
 import '../viewers/text_recognize_screen.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/sheet_keyboard.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// **Not içinde arama** — gövde, maddeler, sayfa notları VE eklerin içi.
 ///
@@ -59,6 +60,8 @@ class _NoteSearchSheet extends ConsumerStatefulWidget {
 class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
   late final _controller = TextEditingController(text: widget.initialQuery);
 
+  final _hasQuery = ValueNotifier<bool>(false);
+
   /// Ek kimliği → o ekten çıkarılan düz metin. Bir kez çıkarılır.
   /// Transkriptler (metin ekleri) baştan dolu: içerikleri kayıtta, çıkarmak
   /// bedava — ek taraması beklemeden aranırlar.
@@ -71,12 +74,24 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
   bool _scanned = false;
 
   @override
+  void initState() {
+    super.initState();
+    _hasQuery.value = _controller.text.trim().isNotEmpty;
+    _controller.addListener(_syncHasQuery);
+  }
+
+  void _syncHasQuery() {
+    final nonEmpty = _controller.text.trim().isNotEmpty;
+    if (nonEmpty != _hasQuery.value) _hasQuery.value = nonEmpty;
+  }
+
+  @override
   void dispose() {
+    _controller.removeListener(_syncHasQuery);
+    _hasQuery.dispose();
     _controller.dispose();
     super.dispose();
   }
-
-  String get _query => _controller.text.trim();
 
   /// Notun kendi metninde (başlık, gövde, madde, sayfa notu) arar.
   ///
@@ -85,10 +100,11 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
   List<_Hit> _textHits(String query) {
     final l10n = context.l10n;
     final note = widget.note;
+    final needle = foldForSearch(query);
     final hits = <_Hit>[];
     void probe(String where, String raw, IconData icon) {
       final text = stripRichMarkers(raw);
-      final index = foldForSearch(text).indexOf(foldForSearch(query));
+      final index = foldForSearch(text).indexOf(needle);
       if (index < 0) return;
       hits.add(_Hit(where: where, snippet: _snippet(text, index), icon: icon));
     }
@@ -119,11 +135,12 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
 
   /// Eklerin İÇİNDE arar (önce metinleri çıkarılmışsa).
   List<_Hit> _attachmentHits(String query) {
+    final needle = foldForSearch(query);
     final hits = <_Hit>[];
     for (final attachment in widget.note.attachments) {
       final text = _attachmentText[attachment.id];
       if (text == null || text.isEmpty) continue;
-      final index = foldForSearch(text).indexOf(foldForSearch(query));
+      final index = foldForSearch(text).indexOf(needle);
       if (index < 0) continue;
       hits.add(
         _Hit(
@@ -140,9 +157,11 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     return hits;
   }
 
+  static final _wsRe = RegExp(r'\s+');
+
   /// Eşleşmenin çevresinden okunabilir bir parça (tek satıra indirilmiş).
   static String _snippet(String text, int index) {
-    final flat = text.replaceAll(RegExp(r'\s+'), ' ');
+    final flat = text.replaceAll(_wsRe, ' ');
     // Düzleştirme konumu kaydırabilir; parçayı yeniden hizalamak yerine
     // yaklaşık pencere yeterli — amaç bağlam göstermek, imleç koymak değil.
     final start = (index - 40).clamp(0, flat.length);
@@ -211,8 +230,6 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final query = _query;
-    final hits = _hitsFor(query);
     final searchableAttachments = widget.note.attachments
         .where(
           (a) =>
@@ -229,22 +246,24 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: TextField(
-                controller: _controller,
-                autofocus: true,
-                textInputAction: TextInputAction.search,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.search),
-                  hintText: l10n.noteSearchHint,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: query.isEmpty
-                      ? null
-                      : IconButton(
-                          tooltip: l10n.clearSearch,
-                          icon: const Icon(Icons.close),
-                          onPressed: () => setState(_controller.clear),
-                        ),
+              child: ValueListenableBuilder<bool>(
+                valueListenable: _hasQuery,
+                builder: (context, hasQuery, _) => TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    hintText: l10n.noteSearchHint,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: !hasQuery
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.clearSearch,
+                            icon: const Icon(Icons.close),
+                            onPressed: _controller.clear,
+                          ),
+                  ),
                 ),
               ),
             ),
@@ -283,34 +302,57 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
               ),
             const Divider(height: 16),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                children: [
-                  if (query.isEmpty)
-                    Text(
-                      l10n.noteSearchEmptyHint,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    )
-                  else if (hits.isEmpty)
-                    Text(
-                      l10n.noteSearchNoHit,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  for (final hit in hits)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(hit.icon ?? Icons.search, size: 20),
-                      title: Text(
-                        hit.where,
-                        style: theme.textTheme.labelMedium,
-                      ),
-                      subtitle: Text(hit.snippet),
-                    ),
-                ],
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _controller,
+                builder: (context, value, _) {
+                  final query = value.text.trim();
+                  final hits = _hitsFor(query);
+                  if (query.isEmpty) {
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      children: [
+                        Text(
+                          l10n.noteSearchEmptyHint,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  if (hits.isEmpty) {
+                    return ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      children: [
+                        Text(
+                          l10n.noteSearchNoHit,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    itemCount: hits.length,
+                    itemBuilder: (context, index) {
+                      final hit = hits[index];
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          hit.icon ?? Icons.search,
+                          size: AppIconSize.m,
+                        ),
+                        title: Text(
+                          hit.where,
+                          style: theme.textTheme.labelMedium,
+                        ),
+                        subtitle: Text(hit.snippet),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],

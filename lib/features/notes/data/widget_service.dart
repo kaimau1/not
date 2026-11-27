@@ -52,17 +52,18 @@ class WidgetService {
   /// temada kaldı" demek olurdu.
   final _themeSubs = <ProviderSubscription<Object?>>[];
 
-  /// Son yazılan tema; aynıysa widget uyandırılmaz.
+  /// Son yazılan tema ve içerik; aynıysa widget uyandırılmaz (soğuk açılış
+  /// dahil SharedPreferences'ta tutulur).
+  static const _themeCacheKey = 'widget_last_theme_v1';
+  static const _payloadCacheKey = 'widget_last_payload_v1';
   String? _lastTheme;
+  String? _lastPayload;
+  List<Note>? _lastNotes;
 
   /// Yazarken her tuş vuruşu bir snapshot üretir; widget'ı her seferinde
   /// yenilemek boşuna işlem (ve pil) harcar. Art arda değişiklikler
   /// toplanıp tek güncellemeye iner.
   final _debouncer = Debouncer(delay: const Duration(seconds: 2));
-
-  /// Son yazılan içerik; aynıysa widget hiç uyandırılmaz (pil tasarrufu).
-  String? _lastPayload;
-  List<Note>? _lastNotes;
 
   /// K-24 (kasma envanteri 2026-11-17): uygulama ÖNDEYKEN araç güncellenmez.
   /// Otomatik kayıt da 2 sn'de bir yayın yapıyor; güncelleme 5 platform
@@ -96,6 +97,11 @@ class WidgetService {
 
   void start() {
     if (kIsWeb || !Platform.isAndroid) return;
+    try {
+      final prefs = _ref.read(sharedPreferencesProvider);
+      _lastTheme = prefs.getString(_themeCacheKey);
+      _lastPayload = prefs.getString(_payloadCacheKey);
+    } catch (_) {}
     _life = AppLifecycleListener(onHide: _flush, onPause: _flush);
     _sub = _ref.listen(notesStreamProvider, (previous, next) {
       final notes = next.value;
@@ -144,13 +150,15 @@ class WidgetService {
       _lastTheme = theme;
       await HomeWidget.saveWidgetData<String>('widget_theme', theme);
       await _updateAllWidgets();
+      try {
+        unawaited(_ref.read(sharedPreferencesProvider).setString(_themeCacheKey, theme));
+      } catch (_) {}
     } catch (e) {
       debugPrint('Widget teması yazılamadı: $e');
     }
   }
 
-  /// Dört widget sağlayıcısının hepsi yenilenir: tema hepsini ilgilendiriyor
-  /// (not listesi yalnız NotlarWidgetProvider'ı).
+  /// Dört widget sağlayıcısının hepsi yenilenir: tema hepsini ilgilendiriyor.
   Future<void> _updateAllWidgets() async {
     for (final name in kHomeWidgetProviders) {
       await updateHomeWidget(name);
@@ -165,28 +173,6 @@ class WidgetService {
       // GİZLİ klasördeki notlar da çıkmaz: uygulama içinde doğrulamasız
       // görünmeyen notun başlığı ana ekranda okunuyordu.
       final hidden = _ref.read(hiddenFolderIdsProvider);
-      final active = [
-        for (final n in notes)
-          if (n.archivedAt == null &&
-              !n.locked &&
-              !hidden.contains(n.folderId))
-            n,
-      ];
-      // Başlıklar SADE gönderilir: madde imi ("• ") ve "not yok" metni artık
-      // Android tarafının işi — her başlık kendi kart görünümüne düşüyor
-      // (bkz. NotlarWidgetProvider). Widget dört satır gösteriyor.
-      final lines = <String>[];
-      for (final note in active.take(4)) {
-        // displayTitle: renkli/biçimli başlığın işaretleri (kodlar) widget'ta
-        // görünmesin (kullanıcı bildirimi 2026-11-08).
-        final title = note.displayTitle.trim().isNotEmpty
-            ? note.displayTitle.trim()
-            : note.toPlainText().split('\n').first;
-        if (title.trim().isEmpty) continue;
-        lines.add(title.length > 40 ? '${title.substring(0, 40)}…' : title);
-      }
-      final text = lines.join('\n');
-      final count = '${active.length} not';
       final now = DateTime.now();
       final today = todayWidgetPayload(
         notes,
@@ -197,10 +183,13 @@ class WidgetService {
       final smartList = smartListWidgetData(notes, hiddenFolders: hidden);
       final smartListItemsText = smartList.items.join('\n');
       final payload =
-          '$count\n$text\n\u0000$today\n\u0000'
+          '$today\n\u0000'
           '${smartList.noteId}\t${smartList.title}\t'
           '${smartList.remaining}\t${smartList.total}\t$smartListItemsText';
       if (payload == _lastPayload) return;
+      if (_lastPayload == null && today.isEmpty && smartList.noteId.isEmpty) {
+        return;
+      }
       _lastPayload = payload;
       await HomeWidget.saveWidgetData<String>('widget_today', today);
       await updateHomeWidget('TodayWidgetProvider');
@@ -225,6 +214,11 @@ class WidgetService {
         smartListItemsText,
       );
       await updateHomeWidget('SmartListWidgetProvider');
+      try {
+        unawaited(
+          _ref.read(sharedPreferencesProvider).setString(_payloadCacheKey, payload),
+        );
+      } catch (_) {}
     } catch (e) {
       // Yalnız geliştirmede: sürüm günlüğünü kirletmesin (KT-21).
       if (kDebugMode) debugPrint('Widget güncellenemedi: $e');

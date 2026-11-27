@@ -241,7 +241,7 @@ class _NarrowHomeBar extends ConsumerWidget {
                   child: TextButton.icon(
                     key: const ValueKey('narrow-home'),
                     onPressed: () => goHome(ref, router),
-                    icon: const Icon(Icons.home_outlined, size: 18),
+                    icon: const Icon(Icons.home_outlined, size: AppIconSize.s),
                     label: Text(context.l10n.goHome),
                     style: TextButton.styleFrom(
                       minimumSize: const Size(48, 36),

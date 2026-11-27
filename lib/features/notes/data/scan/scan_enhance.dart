@@ -6,6 +6,7 @@ import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/utils/decode_image.dart';
 import 'doc_edges.dart' show DocEdges;
 
 /// Taranan sayfaya uygulanacak **belge filtresi**.
@@ -97,7 +98,7 @@ abstract final class ScanEnhance {
   /// Kodlanmış görsele filtre uygular, **JPEG** baytları döndürür.
   static Uint8List applyToBytes(Uint8List bytes, ScanFilter filter) {
     if (filter == ScanFilter.original) return bytes;
-    final decoded = img.decodeImage(bytes);
+    final decoded = decodeCommonImage(bytes);
     if (decoded == null) return bytes;
     return img.encodeJpg(applyToImage(decoded, filter), quality: jpegQuality);
   }

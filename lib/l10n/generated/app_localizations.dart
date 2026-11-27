@@ -386,12 +386,6 @@ abstract class AppLocalizations {
   /// **'Kalemi kapat'**
   String get penModeDone;
 
-  /// No description provided for @tipPagePen.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kalemle sayfanın her yerine yazabilirsin; parmakla dokunup klavyeyle aynı notta devam et.'**
-  String get tipPagePen;
-
   /// No description provided for @pageInkOnCard.
   ///
   /// In tr, this message translates to:
@@ -452,71 +446,11 @@ abstract class AppLocalizations {
   /// **'Renk'**
   String get color;
 
-  /// No description provided for @aiTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ'**
-  String get aiTitle;
-
-  /// No description provided for @aiSummarize.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notu özetle'**
-  String get aiSummarize;
-
-  /// No description provided for @aiSectionWrite.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yaz'**
-  String get aiSectionWrite;
-
-  /// No description provided for @aiSectionAsk.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sor'**
-  String get aiSectionAsk;
-
-  /// No description provided for @aiSectionTransform.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dönüştür'**
-  String get aiSectionTransform;
-
   /// No description provided for @summarize.
   ///
   /// In tr, this message translates to:
   /// **'Özetle'**
   String get summarize;
-
-  /// No description provided for @summaryDetailTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özet türü'**
-  String get summaryDetailTitle;
-
-  /// No description provided for @summaryShort.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kısa özet'**
-  String get summaryShort;
-
-  /// No description provided for @summaryShortInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Birkaç cümlelik genel bakış ve ana maddeler'**
-  String get summaryShortInfo;
-
-  /// No description provided for @summaryDetailed.
-  ///
-  /// In tr, this message translates to:
-  /// **'Detaylı özet'**
-  String get summaryDetailed;
-
-  /// No description provided for @summaryDetailedInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kaynağa bakmayı gereksiz kılan kapsamlı özet'**
-  String get summaryDetailedInfo;
 
   /// No description provided for @listen.
   ///
@@ -548,23 +482,11 @@ abstract class AppLocalizations {
   /// **'Sesli dinle'**
   String get listenToNote;
 
-  /// No description provided for @aiNoApiKey.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önce Ayarlar\'dan Gemini API anahtarını gir'**
-  String get aiNoApiKey;
-
   /// No description provided for @aiError.
   ///
   /// In tr, this message translates to:
   /// **'Yapay zekâ isteği başarısız: {error}'**
   String aiError(String error);
-
-  /// No description provided for @aiSummaryTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI özeti'**
-  String get aiSummaryTitle;
 
   /// No description provided for @aiThinking.
   ///
@@ -587,7 +509,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSearchHint.
   ///
   /// In tr, this message translates to:
-  /// **'Ayar ara — “brifing”, “mikrofon”'**
+  /// **'Ayar ara — “kilit”, “mikrofon”'**
   String get settingsSearchHint;
 
   /// No description provided for @settingsSearchEmpty.
@@ -637,48 +559,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Koyu'**
   String get themeDark;
-
-  /// No description provided for @settingsAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ'**
-  String get settingsAi;
-
-  /// No description provided for @geminiApiKeyInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Anahtar girmek isteğe bağlıdır: girmezsen yapay zekâ istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.'**
-  String get geminiApiKeyInfo;
-
-  /// No description provided for @aiBuiltInPremium.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dahili AI: Premium — bugün kalan puan {count}'**
-  String aiBuiltInPremium(int count);
-
-  /// No description provided for @aiBuiltInRemaining.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dahili AI: bugün kalan ücretsiz puan {count}'**
-  String aiBuiltInRemaining(int count);
-
-  /// No description provided for @aiBuiltInByok.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kendi anahtarın kullanılıyor — sınırsız'**
-  String get aiBuiltInByok;
-
-  /// No description provided for @aiReport.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yanıtı bildir'**
-  String get aiReport;
-
-  /// No description provided for @aiReportThanks.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bildirimin alındı, teşekkürler'**
-  String get aiReportThanks;
 
   /// No description provided for @privacyPolicyTitle.
   ///
@@ -770,24 +650,6 @@ abstract class AppLocalizations {
   /// **'Temizle'**
   String get clear;
 
-  /// No description provided for @aiDiagnostics.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI tanılama'**
-  String get aiDiagnostics;
-
-  /// No description provided for @aiDiagnosticsEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kayıtlı hata yok'**
-  String get aiDiagnosticsEmpty;
-
-  /// No description provided for @aiDiagnosticsCount.
-  ///
-  /// In tr, this message translates to:
-  /// **'Son {count} hata kaydı'**
-  String aiDiagnosticsCount(int count);
-
   /// No description provided for @apiKeyValid.
   ///
   /// In tr, this message translates to:
@@ -853,12 +715,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kalem tepsisini aç'**
   String get penTrayShow;
-
-  /// No description provided for @penTrayHide.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kalem tepsisini indir'**
-  String get penTrayHide;
 
   /// No description provided for @addDrawingSubtitle.
   ///
@@ -1256,12 +1112,6 @@ abstract class AppLocalizations {
   /// **'Bu not kalıcı olarak silinecek. Emin misin?'**
   String get deleteForeverConfirm;
 
-  /// No description provided for @assistantDeleteConfirm.
-  ///
-  /// In tr, this message translates to:
-  /// **'Asistan \"{title}\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?'**
-  String assistantDeleteConfirm(String title);
-
   /// No description provided for @recordAudio.
   ///
   /// In tr, this message translates to:
@@ -1292,35 +1142,11 @@ abstract class AppLocalizations {
   /// **'Çizim ekle'**
   String get addDrawing;
 
-  /// No description provided for @drawingTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çizim'**
-  String get drawingTitle;
-
   /// No description provided for @addToNote.
   ///
   /// In tr, this message translates to:
   /// **'Nota ekle'**
   String get addToNote;
-
-  /// No description provided for @chatTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not asistanı'**
-  String get chatTitle;
-
-  /// No description provided for @chatHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notların hakkında soru sor: \"geçen hafta yazdığım tarif neydi?\", \"alışveriş listemde ne eksik?\"'**
-  String get chatHint;
-
-  /// No description provided for @chatInputHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bir soru yaz...'**
-  String get chatInputHint;
 
   /// No description provided for @fontSize.
   ///
@@ -1346,71 +1172,11 @@ abstract class AppLocalizations {
   /// **'Belirlediğin saatler arasında koyu temaya geçilir'**
   String get darkScheduleInfo;
 
-  /// No description provided for @aiTranslate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çevir'**
-  String get aiTranslate;
-
   /// No description provided for @voiceCommand.
   ///
   /// In tr, this message translates to:
   /// **'Sesli komut'**
   String get voiceCommand;
-
-  /// No description provided for @semanticSearchToggle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ ile anlamsal arama'**
-  String get semanticSearchToggle;
-
-  /// No description provided for @semanticSearchHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Anlamıyla ara: \"araba masrafları\"...'**
-  String get semanticSearchHint;
-
-  /// No description provided for @briefingTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Günlük brifing'**
-  String get briefingTitle;
-
-  /// No description provided for @briefingLoading.
-  ///
-  /// In tr, this message translates to:
-  /// **'Brifing hazırlanıyor...'**
-  String get briefingLoading;
-
-  /// No description provided for @briefingEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bugün için içerik yok'**
-  String get briefingEmpty;
-
-  /// No description provided for @briefingSetting.
-  ///
-  /// In tr, this message translates to:
-  /// **'Günlük brifing bildirimi'**
-  String get briefingSetting;
-
-  /// No description provided for @briefingSettingInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Her sabah seçtiğin saatte günün özeti için bildirim al'**
-  String get briefingSettingInfo;
-
-  /// No description provided for @autoTagSetting.
-  ///
-  /// In tr, this message translates to:
-  /// **'Otomatik etiketle'**
-  String get autoTagSetting;
-
-  /// No description provided for @autoTagSettingInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not kapanırken etiketi yoksa yapay zekâ uygun etiketi kendisi ekler'**
-  String get autoTagSettingInfo;
 
   /// No description provided for @suggestTags.
   ///
@@ -1418,131 +1184,11 @@ abstract class AppLocalizations {
   /// **'Etiket öner'**
   String get suggestTags;
 
-  /// No description provided for @aiFixNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notu düzelt'**
-  String get aiFixNote;
-
-  /// No description provided for @fixLevelTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ne kadar düzeltilsin?'**
-  String get fixLevelTitle;
-
-  /// No description provided for @fixSimple.
-  ///
-  /// In tr, this message translates to:
-  /// **'Basit'**
-  String get fixSimple;
-
-  /// No description provided for @fixSimpleInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yalnız imla ve yazım hataları'**
-  String get fixSimpleInfo;
-
-  /// No description provided for @fixBalanced.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dengeli'**
-  String get fixBalanced;
-
-  /// No description provided for @fixBalancedInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Cümle yapısı da düzeltilir, daha düzgün yazı'**
-  String get fixBalancedInfo;
-
-  /// No description provided for @fixDetailed.
-  ///
-  /// In tr, this message translates to:
-  /// **'Detaylı'**
-  String get fixDetailed;
-
-  /// No description provided for @fixDetailedInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yazıyı baştan aşağı yeniden düzenler'**
-  String get fixDetailedInfo;
-
   /// No description provided for @existingTagsLabel.
   ///
   /// In tr, this message translates to:
   /// **'Önceki etiketler'**
   String get existingTagsLabel;
-
-  /// No description provided for @aiSkipCheckedSetting.
-  ///
-  /// In tr, this message translates to:
-  /// **'İşaretlileri AI düzenlemesi dışında tut'**
-  String get aiSkipCheckedSetting;
-
-  /// No description provided for @aiSkipCheckedInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Liste notunu yapay zekâyla düzeltir ya da çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.'**
-  String get aiSkipCheckedInfo;
-
-  /// No description provided for @noteUpdatedUndo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not güncellendi'**
-  String get noteUpdatedUndo;
-
-  /// No description provided for @aiImprove.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notu geliştir'**
-  String get aiImprove;
-
-  /// No description provided for @improveFormal.
-  ///
-  /// In tr, this message translates to:
-  /// **'Daha resmî yap'**
-  String get improveFormal;
-
-  /// No description provided for @improveShorten.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kısalt'**
-  String get improveShorten;
-
-  /// No description provided for @improveBullets.
-  ///
-  /// In tr, this message translates to:
-  /// **'Madde listesine çevir'**
-  String get improveBullets;
-
-  /// No description provided for @improveNumbered.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sıralı (numaralı) listeye çevir'**
-  String get improveNumbered;
-
-  /// No description provided for @replaceNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notu değiştir'**
-  String get replaceNote;
-
-  /// No description provided for @openAsNewNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeni not olarak'**
-  String get openAsNewNote;
-
-  /// No description provided for @pdfChatHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"'**
-  String get pdfChatHint;
-
-  /// No description provided for @pdfChatInputHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'PDF hakkında bir soru yaz...'**
-  String get pdfChatInputHint;
 
   /// No description provided for @voiceFinish.
   ///
@@ -1634,48 +1280,6 @@ abstract class AppLocalizations {
   /// **'Hatırlatıcıyı kaldır'**
   String get remindersRemove;
 
-  /// No description provided for @aiModelChat.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özet ve sohbet'**
-  String get aiModelChat;
-
-  /// No description provided for @aiModelShort.
-  ///
-  /// In tr, this message translates to:
-  /// **'Başlık ve etiket'**
-  String get aiModelShort;
-
-  /// No description provided for @aiModelDocument.
-  ///
-  /// In tr, this message translates to:
-  /// **'Belge sohbeti ve PDF özeti'**
-  String get aiModelDocument;
-
-  /// No description provided for @aiModelTranslate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çeviri'**
-  String get aiModelTranslate;
-
-  /// No description provided for @aiModelVoice.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI sesli not asistanı'**
-  String get aiModelVoice;
-
-  /// No description provided for @aiModelAuto.
-  ///
-  /// In tr, this message translates to:
-  /// **'Otomatik (önerilen)'**
-  String get aiModelAuto;
-
-  /// No description provided for @aiModelsInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Her iş için ayrı model seçebilirsin: kısa metin işleri hızlı modelle yeter, uzun belge işi yetenekli model ister. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.'**
-  String get aiModelsInfo;
-
   /// No description provided for @clearNote.
   ///
   /// In tr, this message translates to:
@@ -1724,47 +1328,11 @@ abstract class AppLocalizations {
   /// **'{count} madde seçildi'**
   String itemsSelected(int count);
 
-  /// No description provided for @noteChatHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu not hakkında bir şey sor'**
-  String get noteChatHint;
-
-  /// No description provided for @noteChatIntro.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notun içeriği ve ekleri (PDF/görsel) okunur, sorunu ona göre yanıtlar.'**
-  String get noteChatIntro;
-
   /// No description provided for @dictationProcessing.
   ///
   /// In tr, this message translates to:
   /// **'Yazıya dökülüyor...'**
   String get dictationProcessing;
-
-  /// No description provided for @aiDailyManualInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ücretsiz planda bu içerik günlük hakkını boşa harcamamak için otomatik oluşturulmaz. Günde bir kez, aşağıdaki düğmeyle oluşturabilirsin.'**
-  String get aiDailyManualInfo;
-
-  /// No description provided for @aiGenerate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Oluştur'**
-  String get aiGenerate;
-
-  /// No description provided for @aiGeneratedTodayInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.'**
-  String get aiGeneratedTodayInfo;
-
-  /// No description provided for @voiceAssistantTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli not asistanı'**
-  String get voiceAssistantTitle;
 
   /// No description provided for @voiceListening.
   ///
@@ -1982,12 +1550,6 @@ abstract class AppLocalizations {
   /// **'İzni aç'**
   String get exactAlarmHintAction;
 
-  /// No description provided for @videoTooBigForAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Video yapay zekâya göndermek için çok büyük ({mb} MB). Daha kısa çek.'**
-  String videoTooBigForAi(int mb);
-
   /// No description provided for @permCamera.
   ///
   /// In tr, this message translates to:
@@ -2017,12 +1579,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Videodan not çıkar'**
   String get videoToNote;
-
-  /// No description provided for @videoToNoteRunning.
-  ///
-  /// In tr, this message translates to:
-  /// **'Video inceleniyor…'**
-  String get videoToNoteRunning;
 
   /// No description provided for @permGranted.
   ///
@@ -2138,18 +1694,6 @@ abstract class AppLocalizations {
   /// **'{count} ek bekliyor — bağlantı gelince yüklenecek'**
   String pendingUploadsOffline(int count);
 
-  /// No description provided for @aiOfflineTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bağlantı yok'**
-  String get aiOfflineTitle;
-
-  /// No description provided for @aiOfflineBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.'**
-  String get aiOfflineBody;
-
   /// No description provided for @pendingUploadsInfo.
   ///
   /// In tr, this message translates to:
@@ -2186,30 +1730,6 @@ abstract class AppLocalizations {
   /// **'Tüm not panoya kopyalandı'**
   String get allCopied;
 
-  /// No description provided for @speechPlay.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli dinle'**
-  String get speechPlay;
-
-  /// No description provided for @speechPause.
-  ///
-  /// In tr, this message translates to:
-  /// **'Duraklat'**
-  String get speechPause;
-
-  /// No description provided for @speechResume.
-  ///
-  /// In tr, this message translates to:
-  /// **'Devam et'**
-  String get speechResume;
-
-  /// No description provided for @speechStop.
-  ///
-  /// In tr, this message translates to:
-  /// **'Durdur'**
-  String get speechStop;
-
   /// No description provided for @speechRate.
   ///
   /// In tr, this message translates to:
@@ -2233,78 +1753,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dinleniyor...'**
   String get listening;
-
-  /// No description provided for @listenPlay.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli dinle'**
-  String get listenPlay;
-
-  /// No description provided for @listenReadingPdf.
-  ///
-  /// In tr, this message translates to:
-  /// **'Belge okunuyor...'**
-  String get listenReadingPdf;
-
-  /// No description provided for @listenConvertWithAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ ile dönüştür'**
-  String get listenConvertWithAi;
-
-  /// No description provided for @listenMakePodcast.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tam podcast'**
-  String get listenMakePodcast;
-
-  /// No description provided for @listenMakePodcastSummary.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özet podcast'**
-  String get listenMakePodcastSummary;
-
-  /// No description provided for @listenOriginalText.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özgün metin'**
-  String get listenOriginalText;
-
-  /// No description provided for @listenPodcastReady.
-  ///
-  /// In tr, this message translates to:
-  /// **'Podcast anlatımı hazır'**
-  String get listenPodcastReady;
-
-  /// No description provided for @listenPodcastCached.
-  ///
-  /// In tr, this message translates to:
-  /// **'Daha önce üretilmişti — token harcanmadı'**
-  String get listenPodcastCached;
-
-  /// No description provided for @listenRegenerate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeniden üret'**
-  String get listenRegenerate;
-
-  /// No description provided for @listenNoText.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.'**
-  String get listenNoText;
-
-  /// No description provided for @readDocument.
-  ///
-  /// In tr, this message translates to:
-  /// **'Belge oku (Word, PDF, sunum)'**
-  String get readDocument;
-
-  /// No description provided for @readDocUnsupported.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu dosya türü okunamıyor.'**
-  String get readDocUnsupported;
 
   /// No description provided for @exportPdf.
   ///
@@ -2456,30 +1904,6 @@ abstract class AppLocalizations {
   /// **'Sistem dili'**
   String get languageSystem;
 
-  /// No description provided for @settingsSpeech.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli okuma'**
-  String get settingsSpeech;
-
-  /// No description provided for @aiAdvanced.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gelişmiş: model ve API anahtarı'**
-  String get aiAdvanced;
-
-  /// No description provided for @aiAdvancedInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Model seçimi ve kendi Gemini anahtarın. Çoğu kullanıcı için gerekli değildir.'**
-  String get aiAdvancedInfo;
-
-  /// No description provided for @openBriefing.
-  ///
-  /// In tr, this message translates to:
-  /// **'Brifingi aç'**
-  String get openBriefing;
-
   /// No description provided for @syncTitle.
   ///
   /// In tr, this message translates to:
@@ -2510,47 +1934,11 @@ abstract class AppLocalizations {
   /// **'Yedekten geri yükle'**
   String get importBackup;
 
-  /// No description provided for @importBackupDone.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} not geri yüklendi'**
-  String importBackupDone(int count);
-
   /// No description provided for @importBackupInvalid.
   ///
   /// In tr, this message translates to:
   /// **'Geçersiz yedek dosyası'**
   String get importBackupInvalid;
-
-  /// No description provided for @aiHubTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ'**
-  String get aiHubTitle;
-
-  /// No description provided for @aiSummarizeInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kısa bir özet çıkarır'**
-  String get aiSummarizeInfo;
-
-  /// No description provided for @aiImproveInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Üslubu değiştirir: resmî, kısa ya da liste'**
-  String get aiImproveInfo;
-
-  /// No description provided for @aiTranslateInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notu seçtiğin dile çevirir'**
-  String get aiTranslateInfo;
-
-  /// No description provided for @aiFixNoteInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yazım ve noktalamayı düzeltir'**
-  String get aiFixNoteInfo;
 
   /// No description provided for @moveToFolder.
   ///
@@ -2569,30 +1957,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yeni not — tip seç'**
   String get quickAddTooltip;
-
-  /// No description provided for @autoTitleSetting.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kapatırken başlık öner'**
-  String get autoTitleSetting;
-
-  /// No description provided for @autoTitleSettingInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Editörden çıkarken başlıksız kalan nota içeriğinden otomatik kısa bir başlık yazılır.'**
-  String get autoTitleSettingInfo;
-
-  /// No description provided for @hubBriefingInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Güne bakış: hatırlatıcılar ve son notlar'**
-  String get hubBriefingInfo;
-
-  /// No description provided for @hubReadInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'PDF/Word belgesini sesli dinle'**
-  String get hubReadInfo;
 
   /// No description provided for @annotate.
   ///
@@ -3152,179 +2516,11 @@ abstract class AppLocalizations {
   /// **'Klasörsüz ve etiketsiz'**
   String get filterOthers;
 
-  /// No description provided for @chatSuggestion1.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alışveriş listemde ne eksik?'**
-  String get chatSuggestion1;
-
-  /// No description provided for @chatSuggestion2.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu haftaki iş notlarımı özetle'**
-  String get chatSuggestion2;
-
-  /// No description provided for @chatSuggestion3.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yarın için hatırlatıcım var mı?'**
-  String get chatSuggestion3;
-
-  /// No description provided for @aiPointsToday.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bugünkü puan'**
-  String get aiPointsToday;
-
-  /// No description provided for @aiPointsOf.
-  ///
-  /// In tr, this message translates to:
-  /// **'{used} / {total}'**
-  String aiPointsOf(int used, int total);
-
-  /// No description provided for @aiPointsRenew.
-  ///
-  /// In tr, this message translates to:
-  /// **'gece yarısı yenilenir'**
-  String get aiPointsRenew;
-
-  /// No description provided for @aiChatWithNotes.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not asistanı'**
-  String get aiChatWithNotes;
-
-  /// No description provided for @aiChatInputHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notlarına bir şey sor…'**
-  String get aiChatInputHint;
-
-  /// No description provided for @aiChatLooking.
-  ///
-  /// In tr, this message translates to:
-  /// **'notlarına bakıyor…'**
-  String get aiChatLooking;
-
-  /// No description provided for @aiChatFullScreen.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tam ekran'**
-  String get aiChatFullScreen;
-
-  /// No description provided for @aiOnYourNotes.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notların üzerinde'**
-  String get aiOnYourNotes;
-
-  /// No description provided for @aiTaskDuplicates.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kopyaları temizle'**
-  String get aiTaskDuplicates;
-
-  /// No description provided for @aiTaskDuplicatesInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} kopya not var'**
-  String aiTaskDuplicatesInfo(int count);
-
-  /// No description provided for @duplicatesTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kopya notlar'**
-  String get duplicatesTitle;
-
-  /// No description provided for @duplicatesHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Her kümede en eski not korunur, kalanlar çöp kutusuna taşınır.'**
-  String get duplicatesHint;
-
-  /// No description provided for @duplicatesKeepBadge.
-  ///
-  /// In tr, this message translates to:
-  /// **'korunur'**
-  String get duplicatesKeepBadge;
-
-  /// No description provided for @duplicatesDeleteAll.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kopyaları çöpe taşı'**
-  String get duplicatesDeleteAll;
-
-  /// No description provided for @duplicatesDone.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} kopya çöp kutusuna taşındı'**
-  String duplicatesDone(int count);
-
-  /// No description provided for @aiRecentActions.
-  ///
-  /// In tr, this message translates to:
-  /// **'Son işlemler'**
-  String get aiRecentActions;
-
-  /// No description provided for @aiHistoryClear.
-  ///
-  /// In tr, this message translates to:
-  /// **'Temizle'**
-  String get aiHistoryClear;
-
-  /// No description provided for @aiHistoryQuestion.
-  ///
-  /// In tr, this message translates to:
-  /// **'Soru'**
-  String get aiHistoryQuestion;
-
-  /// No description provided for @aiHistoryNoteAction.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not işlemi'**
-  String get aiHistoryNoteAction;
-
   /// No description provided for @aiHistoryVoiceNote.
   ///
   /// In tr, this message translates to:
   /// **'AI sesli not'**
   String get aiHistoryVoiceNote;
-
-  /// No description provided for @aiTaskWeekSummary.
-  ///
-  /// In tr, this message translates to:
-  /// **'Haftayı özetle'**
-  String get aiTaskWeekSummary;
-
-  /// No description provided for @aiTaskWeekSummaryInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Son 7 günün notlarından tek özet'**
-  String get aiTaskWeekSummaryInfo;
-
-  /// No description provided for @aiTaskTagUntagged.
-  ///
-  /// In tr, this message translates to:
-  /// **'Etiketsizleri etiketle'**
-  String get aiTaskTagUntagged;
-
-  /// No description provided for @aiTaskTagUntaggedInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} not etiket bekliyor'**
-  String aiTaskTagUntaggedInfo(int count);
-
-  /// No description provided for @aiTaskSuggestTitles.
-  ///
-  /// In tr, this message translates to:
-  /// **'Başlık öner'**
-  String get aiTaskSuggestTitles;
-
-  /// No description provided for @aiTaskSuggestTitlesInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} başlıksız not var'**
-  String aiTaskSuggestTitlesInfo(int count);
 
   /// No description provided for @sectionPinnedShort.
   ///
@@ -3410,12 +2606,6 @@ abstract class AppLocalizations {
   /// **'Liste'**
   String get viewList;
 
-  /// No description provided for @searchModeMeaning.
-  ///
-  /// In tr, this message translates to:
-  /// **'Anlam'**
-  String get searchModeMeaning;
-
   /// No description provided for @filterReminded.
   ///
   /// In tr, this message translates to:
@@ -3445,12 +2635,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesi dene'**
   String get voicePreview;
-
-  /// No description provided for @voicePreviewCached.
-  ///
-  /// In tr, this message translates to:
-  /// **'Örnek bir kez üretilir, sonra kayıttan çalınır'**
-  String get voicePreviewCached;
 
   /// No description provided for @reorderHint.
   ///
@@ -3548,12 +2732,6 @@ abstract class AppLocalizations {
   /// **'Biçim…'**
   String get formatMenu;
 
-  /// No description provided for @noteFont.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yazı tipi'**
-  String get noteFont;
-
   /// No description provided for @noteFontDefault.
   ///
   /// In tr, this message translates to:
@@ -3590,41 +2768,11 @@ abstract class AppLocalizations {
   /// **'Başlık'**
   String get formatHeading;
 
-  /// No description provided for @formatHeading1.
-  ///
-  /// In tr, this message translates to:
-  /// **'Büyük başlık'**
-  String get formatHeading1;
-
-  /// No description provided for @formatHeading2.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alt başlık'**
-  String get formatHeading2;
-
-  /// No description provided for @formatNormalText.
-  ///
-  /// In tr, this message translates to:
-  /// **'Normal metin'**
-  String get formatNormalText;
-
   /// No description provided for @noteTextOpacity.
   ///
   /// In tr, this message translates to:
   /// **'Şeffaflık'**
   String get noteTextOpacity;
-
-  /// No description provided for @assistantVoiceSetting.
-  ///
-  /// In tr, this message translates to:
-  /// **'Asistan sesli yanıtlasın'**
-  String get assistantVoiceSetting;
-
-  /// No description provided for @assistantVoiceSettingInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli asistan yanıtını yüksek sesle okur (yalnız telefonda).'**
-  String get assistantVoiceSettingInfo;
 
   /// No description provided for @assistantMute.
   ///
@@ -3674,12 +2822,6 @@ abstract class AppLocalizations {
   /// **'Zemin görseli'**
   String get noteBackgroundImage;
 
-  /// No description provided for @chooseBackgroundImage.
-  ///
-  /// In tr, this message translates to:
-  /// **'Görsel seç'**
-  String get chooseBackgroundImage;
-
   /// No description provided for @changeBackgroundImage.
   ///
   /// In tr, this message translates to:
@@ -3704,18 +2846,6 @@ abstract class AppLocalizations {
   /// **'Not ızgarasının arkasında duran görsel (yalnız bu cihazda).'**
   String get dashboardBackgroundInfo;
 
-  /// No description provided for @aiProvider.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ sağlayıcısı'**
-  String get aiProvider;
-
-  /// No description provided for @aiProviderInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kendi anahtarınla çalışan sağlayıcıyı seç. Her sağlayıcının anahtarı ayrı saklanır; aralarında geçiş yapınca yeniden girmen gerekmez.'**
-  String get aiProviderInfo;
-
   /// No description provided for @apiKeyFieldLabel.
   ///
   /// In tr, this message translates to:
@@ -3727,18 +2857,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Anahtarı nereden alırım?'**
   String get getApiKey;
-
-  /// No description provided for @recommendedModel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önerilen'**
-  String get recommendedModel;
-
-  /// No description provided for @freeTierBadge.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ücretsiz kademe var'**
-  String get freeTierBadge;
 
   /// No description provided for @continueWithoutAccount.
   ///
@@ -3944,119 +3062,11 @@ abstract class AppLocalizations {
   /// **'Premium'**
   String get premiumTitle;
 
-  /// No description provided for @premiumStatusActive.
-  ///
-  /// In tr, this message translates to:
-  /// **'Premium etkin — {date} tarihine kadar'**
-  String premiumStatusActive(String date);
-
   /// No description provided for @premiumStatusFree.
   ///
   /// In tr, this message translates to:
   /// **'Ücretsiz sürümü kullanıyorsun'**
   String get premiumStatusFree;
-
-  /// No description provided for @premiumPerksTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Premium ile ne değişir?'**
-  String get premiumPerksTitle;
-
-  /// No description provided for @premiumPerkAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Günlük yapay zekâ puanı'**
-  String get premiumPerkAi;
-
-  /// No description provided for @premiumPerkAttach.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ek dosya boyutu'**
-  String get premiumPerkAttach;
-
-  /// No description provided for @premiumPerkStorage.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bulut depolama alanı'**
-  String get premiumPerkStorage;
-
-  /// No description provided for @premiumPerkAuto.
-  ///
-  /// In tr, this message translates to:
-  /// **'Otomatik günlük içerik'**
-  String get premiumPerkAuto;
-
-  /// No description provided for @premiumPerkAutoBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Günlük brifing ve öneriler her gün kendiliğinden hazırlanır; ücretsizde yalnız düğmeyle üretilir.'**
-  String get premiumPerkAutoBody;
-
-  /// No description provided for @premiumHowTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nasıl edinilir?'**
-  String get premiumHowTitle;
-
-  /// No description provided for @premiumHowBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Premium yakında Play Store üzerinden satın alınabilecek. Şu an erken erişim dönemindeyiz.'**
-  String get premiumHowBody;
-
-  /// No description provided for @premiumByokHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kendi Gemini API anahtarınla yapay zekâ kotasız çalışır'**
-  String get premiumByokHint;
-
-  /// No description provided for @premiumByokWhere.
-  ///
-  /// In tr, this message translates to:
-  /// **'Premium\'dan bağımsız · Ayarlar → Yapay zekâ'**
-  String get premiumByokWhere;
-
-  /// No description provided for @premiumDiscoverTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gözden kaçan özellikler'**
-  String get premiumDiscoverTitle;
-
-  /// No description provided for @discoverScanBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla aranabilir PDF olur — metin katmanı cihazda, ücretsiz üretilir.'**
-  String get discoverScanBody;
-
-  /// No description provided for @discoverSemanticBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Arama kutusundaki \"Akıllı\" sekmesi kelime değil anlam arar: \"uçak saatleri\" yazınca seyahat notun çıkar.'**
-  String get discoverSemanticBody;
-
-  /// No description provided for @discoverAssistantBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9\'da diş randevusu\" demen yeter.'**
-  String get discoverAssistantBody;
-
-  /// No description provided for @discoverLockBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve yapay zekâya hiç sızmaz.'**
-  String get discoverLockBody;
-
-  /// No description provided for @discoverHiddenBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.'**
-  String get discoverHiddenBody;
-
-  /// No description provided for @discoverExportBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).'**
-  String get discoverExportBody;
 
   /// No description provided for @guestSignInUnavailable.
   ///
@@ -4159,12 +3169,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Madde {page}. sayfaya taşındı'**
   String itemMovedToPage(int page);
-
-  /// No description provided for @screenAiSearchHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Anlamca ara…'**
-  String get screenAiSearchHint;
 
   /// No description provided for @archiveInsights.
   ///
@@ -4292,36 +3296,6 @@ abstract class AppLocalizations {
   /// **'Telefonun yazı boyutu ve kalın metin ayarı uygulamaya da geçer; yukarıdaki boyut onunla çarpılır.'**
   String get followSystemTextScaleInfo;
 
-  /// No description provided for @fontGroupSans.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sade'**
-  String get fontGroupSans;
-
-  /// No description provided for @fontGroupSerif.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kitap'**
-  String get fontGroupSerif;
-
-  /// No description provided for @fontGroupMono.
-  ///
-  /// In tr, this message translates to:
-  /// **'Daktilo'**
-  String get fontGroupMono;
-
-  /// No description provided for @fontGroupHand.
-  ///
-  /// In tr, this message translates to:
-  /// **'El yazısı'**
-  String get fontGroupHand;
-
-  /// No description provided for @appFontDefaultSuffix.
-  ///
-  /// In tr, this message translates to:
-  /// **'varsayılan'**
-  String get appFontDefaultSuffix;
-
   /// No description provided for @pdfSelectOcrRunning.
   ///
   /// In tr, this message translates to:
@@ -4370,24 +3344,6 @@ abstract class AppLocalizations {
   /// **'Sayfada balonu bırakmak istediğin yere dokun'**
   String get bubbleTapToPlace;
 
-  /// No description provided for @aiModelPodcast.
-  ///
-  /// In tr, this message translates to:
-  /// **'Podcast anlatısı'**
-  String get aiModelPodcast;
-
-  /// No description provided for @listenAiVoice.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ sesiyle dinle'**
-  String get listenAiVoice;
-
-  /// No description provided for @listenAiVoiceFailed.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ seslendirmesi başarısız oldu ({error}). Cihaz sesiyle okunuyor.'**
-  String listenAiVoiceFailed(String error);
-
   /// No description provided for @ttsSectionTitle.
   ///
   /// In tr, this message translates to:
@@ -4400,41 +3356,11 @@ abstract class AppLocalizations {
   /// **'Cihaz sesi'**
   String get ttsEngineDevice;
 
-  /// No description provided for @ttsEngineAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ'**
-  String get ttsEngineAi;
-
   /// No description provided for @ttsEngineDeviceInfo.
   ///
   /// In tr, this message translates to:
   /// **'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.'**
   String get ttsEngineDeviceInfo;
-
-  /// No description provided for @ttsEngineAiInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.'**
-  String get ttsEngineAiInfo;
-
-  /// No description provided for @ttsEngineAiUnavailable.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ sesi kendi Gemini anahtarını ister. Anahtar eklenene kadar okuma cihaz sesiyle yapılır.'**
-  String get ttsEngineAiUnavailable;
-
-  /// No description provided for @ttsModel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seslendirme modeli'**
-  String get ttsModel;
-
-  /// No description provided for @ttsVoice.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ sesi'**
-  String get ttsVoice;
 
   /// No description provided for @ttsEngineLocal.
   ///
@@ -4489,12 +3415,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'İndirme başarısız: {error}'**
   String ttsLocalFailed(String error);
-
-  /// No description provided for @listenLocalVoice.
-  ///
-  /// In tr, this message translates to:
-  /// **'Türkçe sesle (Antalia) dinle'**
-  String get listenLocalVoice;
 
   /// No description provided for @shareAsNotePreparing.
   ///
@@ -4730,12 +3650,6 @@ abstract class AppLocalizations {
   /// **'Kaldır'**
   String get formatRemove;
 
-  /// No description provided for @exportTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dışa aktar'**
-  String get exportTitle;
-
   /// No description provided for @exportNotesOption.
   ///
   /// In tr, this message translates to:
@@ -4856,30 +3770,6 @@ abstract class AppLocalizations {
   /// **'Konum'**
   String get exportImageLine;
 
-  /// No description provided for @aiModelSearch.
-  ///
-  /// In tr, this message translates to:
-  /// **'Model ara'**
-  String get aiModelSearch;
-
-  /// No description provided for @aiModelOthers.
-  ///
-  /// In tr, this message translates to:
-  /// **'Diğer modeller'**
-  String get aiModelOthers;
-
-  /// No description provided for @aiModelNoMatch.
-  ///
-  /// In tr, this message translates to:
-  /// **'Eşleşen model yok.'**
-  String get aiModelNoMatch;
-
-  /// No description provided for @aiModelAutoInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Uygulama sırayla en uygun modeli dener.'**
-  String get aiModelAutoInfo;
-
   /// No description provided for @imageOcrCharsSelected.
   ///
   /// In tr, this message translates to:
@@ -4904,77 +3794,17 @@ abstract class AppLocalizations {
   /// **'/ {count} satır'**
   String exportImageLineOf(int count);
 
-  /// No description provided for @aiModelShowAll.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tümünü göster'**
-  String get aiModelShowAll;
-
-  /// No description provided for @aiModelShowAllInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Uygulamanın kullanmadığı modeller de listelenir.'**
-  String get aiModelShowAllInfo;
-
   /// No description provided for @rotateFailed.
   ///
   /// In tr, this message translates to:
   /// **'Görsel döndürülemedi.'**
   String get rotateFailed;
 
-  /// No description provided for @dashboardBackgroundPick.
-  ///
-  /// In tr, this message translates to:
-  /// **'Zemin görseli seç'**
-  String get dashboardBackgroundPick;
-
   /// No description provided for @dashboardBackgroundChange.
   ///
   /// In tr, this message translates to:
   /// **'Zemin görselini değiştir'**
   String get dashboardBackgroundChange;
-
-  /// No description provided for @podcastRenderingAudio.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ses hazırlanıyor: {done}/{total} parça'**
-  String podcastRenderingAudio(int done, int total);
-
-  /// No description provided for @podcastExportAudio.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ses dosyası olarak dışa aktar'**
-  String get podcastExportAudio;
-
-  /// No description provided for @podcastExportAudioCost.
-  ///
-  /// In tr, this message translates to:
-  /// **'Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.'**
-  String get podcastExportAudioCost;
-
-  /// No description provided for @podcastShareText.
-  ///
-  /// In tr, this message translates to:
-  /// **'Metni paylaş'**
-  String get podcastShareText;
-
-  /// No description provided for @podcastSaveAsNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeni not olarak kaydet'**
-  String get podcastSaveAsNote;
-
-  /// No description provided for @podcastSavedAsNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Podcast metni not olarak kaydedildi.'**
-  String get podcastSavedAsNote;
-
-  /// No description provided for @listenPreparingVoice.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ses hazırlanıyor…'**
-  String get listenPreparingVoice;
 
   /// No description provided for @appearancePreviewTitle.
   ///
@@ -5143,12 +3973,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ekleri tara'**
   String get noteSearchScanAttachments;
-
-  /// No description provided for @noteSearchAskAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâya sor'**
-  String get noteSearchAskAi;
 
   /// No description provided for @noteTitleLabel.
   ///
@@ -5438,12 +4262,6 @@ abstract class AppLocalizations {
   /// **'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır'**
   String get attachmentTagEmbedInfo;
 
-  /// No description provided for @attachmentTagPickText.
-  ///
-  /// In tr, this message translates to:
-  /// **'Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.'**
-  String get attachmentTagPickText;
-
   /// No description provided for @attachmentTagLinkHere.
   ///
   /// In tr, this message translates to:
@@ -5486,12 +4304,6 @@ abstract class AppLocalizations {
   /// **'Görüntü notları'**
   String get docNameVideo;
 
-  /// No description provided for @folderManage.
-  ///
-  /// In tr, this message translates to:
-  /// **'Klasörü yönet'**
-  String get folderManage;
-
   /// No description provided for @folderEmpty.
   ///
   /// In tr, this message translates to:
@@ -5515,36 +4327,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.'**
   String get folderEmptyHint;
-
-  /// No description provided for @brainstormIntro.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.'**
-  String get brainstormIntro;
-
-  /// No description provided for @brainstormOutlineTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ana hat'**
-  String get brainstormOutlineTitle;
-
-  /// No description provided for @brainstormInputHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bir fikir yaz ya da soru sor…'**
-  String get brainstormInputHint;
-
-  /// No description provided for @brainstormAddIdea.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota ekle'**
-  String get brainstormAddIdea;
-
-  /// No description provided for @brainstormAdded.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota eklendi'**
-  String get brainstormAdded;
 
   /// No description provided for @folderShared.
   ///
@@ -5581,12 +4363,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Arkadaşlarım'**
   String get friendsListTitle;
-
-  /// No description provided for @friendsAddEmailHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'arkadas@eposta.com'**
-  String get friendsAddEmailHint;
 
   /// No description provided for @friendsSendRequest.
   ///
@@ -5648,29 +4424,11 @@ abstract class AppLocalizations {
   /// **'{name} arkadaş listenden kaldırılsın mı? Onunla paylaştığın klasörler artık görünmez.'**
   String friendsRemoveConfirmBody(Object name);
 
-  /// No description provided for @friendsNeedsAccount.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.'**
-  String get friendsNeedsAccount;
-
   /// No description provided for @friendsSearchHint.
   ///
   /// In tr, this message translates to:
   /// **'Ad (en az 3 harf) ya da tam e-posta'**
   String get friendsSearchHint;
-
-  /// No description provided for @friendsSearchTab.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ara'**
-  String get friendsSearchTab;
-
-  /// No description provided for @friendsSearchEmailTab.
-  ///
-  /// In tr, this message translates to:
-  /// **'E-posta ile'**
-  String get friendsSearchEmailTab;
 
   /// No description provided for @friendsSearchEmpty.
   ///
@@ -5894,12 +4652,6 @@ abstract class AppLocalizations {
   /// **'Not notlarına eklendi'**
   String get inboxAccepted;
 
-  /// No description provided for @folderShelfExpand.
-  ///
-  /// In tr, this message translates to:
-  /// **'Klasörleri büyüt'**
-  String get folderShelfExpand;
-
   /// No description provided for @folderShelfCollapse.
   ///
   /// In tr, this message translates to:
@@ -5954,29 +4706,11 @@ abstract class AppLocalizations {
   /// **'Seçilen alan panoya kopyalandı.'**
   String get areaCopied;
 
-  /// No description provided for @areaAskAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâya sor'**
-  String get areaAskAi;
-
   /// No description provided for @areaAskTitle.
   ///
   /// In tr, this message translates to:
   /// **'Seçilen alan'**
   String get areaAskTitle;
-
-  /// No description provided for @areaAskHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'İstersen bir soru yaz (boş bırakırsan formülü/metni çıkarıp açıklar).'**
-  String get areaAskHint;
-
-  /// No description provided for @areaAskRun.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sor'**
-  String get areaAskRun;
 
   /// No description provided for @areaCaptureFailed.
   ///
@@ -6031,12 +4765,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Zemin rengi'**
   String get dashboardBackgroundColor;
-
-  /// No description provided for @dashboardBackgroundImageSection.
-  ///
-  /// In tr, this message translates to:
-  /// **'Zemin görseli'**
-  String get dashboardBackgroundImageSection;
 
   /// No description provided for @dashboardBackgroundReset.
   ///
@@ -6254,18 +4982,6 @@ abstract class AppLocalizations {
   /// **'Gelecek hafta'**
   String get reminderQuickNextWeek;
 
-  /// No description provided for @reminderQuickCustom.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tarih seç…'**
-  String get reminderQuickCustom;
-
-  /// No description provided for @reminderQuickTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ne zaman hatırlatılsın?'**
-  String get reminderQuickTitle;
-
   /// No description provided for @reminderSnooze.
   ///
   /// In tr, this message translates to:
@@ -6464,18 +5180,6 @@ abstract class AppLocalizations {
   /// **'Tek satıra sığdır'**
   String get imagesFitSingleRow;
 
-  /// No description provided for @briefingNotificationTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Günaydın! ☀️'**
-  String get briefingNotificationTitle;
-
-  /// No description provided for @briefingNotificationBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bugünün brifingi hazır — hatırlatıcıların, notların ve önemli e-postaların özeti için dokun.'**
-  String get briefingNotificationBody;
-
   /// No description provided for @reminderDone.
   ///
   /// In tr, this message translates to:
@@ -6620,12 +5324,6 @@ abstract class AppLocalizations {
   /// **'Paylaşım güncellendi'**
   String get collaboratorsSaved;
 
-  /// No description provided for @collaboratorsCount.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} kişiyle paylaşıldı'**
-  String collaboratorsCount(int count);
-
   /// No description provided for @collaboratorsOnlyOwner.
   ///
   /// In tr, this message translates to:
@@ -6661,12 +5359,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yeni not'**
   String get newNoteShort;
-
-  /// No description provided for @newChecklistShort.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeni liste'**
-  String get newChecklistShort;
 
   /// No description provided for @listPaneHide.
   ///
@@ -6809,13 +5501,13 @@ abstract class AppLocalizations {
   /// No description provided for @loginFeatureAiTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Yapay zekâ yanında'**
+  /// **'Akıllı yardımcılar'**
   String get loginFeatureAiTitle;
 
   /// No description provided for @loginFeatureAiBody.
   ///
   /// In tr, this message translates to:
-  /// **'Özetle, sor, sesle yaz; belgelerinle konuş.'**
+  /// **'Sesle hızlı not al, yazım hatalarını düzelt, market reyonlarını ve etiketleri düzenle.'**
   String get loginFeatureAiBody;
 
   /// No description provided for @loginFeatureShareTitle.
@@ -6913,18 +5605,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Diğer silinenler'**
   String get trashRestSection;
-
-  /// No description provided for @aiHubTagline.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notlarına sor, özetlet, düzenlet.'**
-  String get aiHubTagline;
-
-  /// No description provided for @aiToolsSection.
-  ///
-  /// In tr, this message translates to:
-  /// **'Araçlar'**
-  String get aiToolsSection;
 
   /// No description provided for @folderOrderTitle.
   ///
@@ -7376,12 +6056,6 @@ abstract class AppLocalizations {
   /// **'Gizlilik ve bildirim'**
   String get settingsGroupPrivacyNotify;
 
-  /// No description provided for @settingsGroupAutomatic.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kendiliğinden'**
-  String get settingsGroupAutomatic;
-
   /// No description provided for @settingsGroupText.
   ///
   /// In tr, this message translates to:
@@ -7411,12 +6085,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Oturum'**
   String get settingsGroupSession;
-
-  /// No description provided for @settingsGroupLock.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kilit'**
-  String get settingsGroupLock;
 
   /// No description provided for @settingsSecurityTitle.
   ///
@@ -7616,12 +6284,6 @@ abstract class AppLocalizations {
   /// **'Oluştur'**
   String get templateCreate;
 
-  /// No description provided for @templateCreateWithCount.
-  ///
-  /// In tr, this message translates to:
-  /// **'Oluştur · {count} madde'**
-  String templateCreateWithCount(int count);
-
   /// No description provided for @templateListChecks.
   ///
   /// In tr, this message translates to:
@@ -7634,23 +6296,11 @@ abstract class AppLocalizations {
   /// **'Numaralı'**
   String get templateListNumbers;
 
-  /// No description provided for @templateItems.
-  ///
-  /// In tr, this message translates to:
-  /// **'Maddeler'**
-  String get templateItems;
-
   /// No description provided for @templateAddItem.
   ///
   /// In tr, this message translates to:
   /// **'Madde ekle'**
   String get templateAddItem;
-
-  /// No description provided for @templateSuggestionsInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Öneriye dokununca listeye girer, yine dokununca çıkar.'**
-  String get templateSuggestionsInfo;
 
   /// No description provided for @tplShopProduce.
   ///
@@ -8084,12 +6734,6 @@ abstract class AppLocalizations {
   /// **'Ne gömülsün?'**
   String get embedPickTitle;
 
-  /// No description provided for @embedPickTitleFor.
-  ///
-  /// In tr, this message translates to:
-  /// **'“{label}” yazısına göm'**
-  String embedPickTitleFor(String label);
-
   /// No description provided for @embedPickInfo.
   ///
   /// In tr, this message translates to:
@@ -8162,12 +6806,6 @@ abstract class AppLocalizations {
   /// **'Kılavuzda ara — “sayfa”, “YouTube”'**
   String get guideSearchHint;
 
-  /// No description provided for @guideContents.
-  ///
-  /// In tr, this message translates to:
-  /// **'İçindekiler'**
-  String get guideContents;
-
   /// No description provided for @guideOpenScreen.
   ///
   /// In tr, this message translates to:
@@ -8215,18 +6853,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Koruma ve depolama'**
   String get menuSectionProtect;
-
-  /// No description provided for @menuSectionContent.
-  ///
-  /// In tr, this message translates to:
-  /// **'İçerik'**
-  String get menuSectionContent;
-
-  /// No description provided for @menuSectionPeople.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hesap ve kişiler'**
-  String get menuSectionPeople;
 
   /// No description provided for @menuSectionApp.
   ///
@@ -8666,12 +7292,6 @@ abstract class AppLocalizations {
   /// **'Düzen'**
   String get customizeModeTitleShort;
 
-  /// No description provided for @customizeModeHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dokun: gizle ya da göster · anında uygulanır'**
-  String get customizeModeHint;
-
   /// No description provided for @customizeHiddenCount.
   ///
   /// In tr, this message translates to:
@@ -8708,12 +7328,6 @@ abstract class AppLocalizations {
   /// **'Hangi alan ve düğmeler görünsün, eklentiler'**
   String get personalizeInfo;
 
-  /// No description provided for @personalizeOpen.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kişiselleştirmeyi aç'**
-  String get personalizeOpen;
-
   /// No description provided for @customizeStartTitle.
   ///
   /// In tr, this message translates to:
@@ -8737,12 +7351,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Düzenleme modu açık'**
   String get customizeActive;
-
-  /// No description provided for @customizeModeShort.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ekranlarda dokunarak gizle/göster'**
-  String get customizeModeShort;
 
   /// No description provided for @customizeHint.
   ///
@@ -8797,12 +7405,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Eklentiler'**
   String get personalizeModules;
-
-  /// No description provided for @personalizeModulesInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bir eklentiyi kapatınca ona ait düğmeler her yerden kalkar.'**
-  String get personalizeModulesInfo;
 
   /// No description provided for @moduleAi.
   ///
@@ -8912,18 +7514,6 @@ abstract class AppLocalizations {
   /// **'kısmen açık'**
   String get moduleMixed;
 
-  /// No description provided for @personalizeEditorBar.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not ekranı · alt çubuk'**
-  String get personalizeEditorBar;
-
-  /// No description provided for @personalizeBarInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar, okla öbür kapsüle taşı. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.'**
-  String get personalizeBarInfo;
-
   /// No description provided for @personalizeBarLeft.
   ///
   /// In tr, this message translates to:
@@ -8966,24 +7556,6 @@ abstract class AppLocalizations {
   /// **'Sırala'**
   String get reorderHandle;
 
-  /// No description provided for @personalizeEditorTop.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not ekranı · üst çubuk ve alanlar'**
-  String get personalizeEditorTop;
-
-  /// No description provided for @personalizeQuickAdd.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeni not menüsü (+)'**
-  String get personalizeQuickAdd;
-
-  /// No description provided for @personalizeAttachSheet.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ekle levhası (notun içinde +)'**
-  String get personalizeAttachSheet;
-
   /// No description provided for @personalizeVideo.
   ///
   /// In tr, this message translates to:
@@ -8996,23 +7568,11 @@ abstract class AppLocalizations {
   /// **'Ana ekran'**
   String get personalizeHome;
 
-  /// No description provided for @personalizeHomeItemsInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seçili olanlar ana ekranda görünür; düzenleme modunda ana ekrandaki düğmelere dokunarak da gizleyebilirsin.'**
-  String get personalizeHomeItemsInfo;
-
   /// No description provided for @personalizeBubbles.
   ///
   /// In tr, this message translates to:
   /// **'Balonlar'**
   String get personalizeBubbles;
-
-  /// No description provided for @personalizeChipsInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seçili olanlar görünür; dokunarak aç ya da kapat.'**
-  String get personalizeChipsInfo;
 
   /// No description provided for @personalizeReset.
   ///
@@ -9085,12 +7645,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{seconds} sn'**
   String secondsShort(int seconds);
-
-  /// No description provided for @personalizeHiddenSummary.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} gizli'**
-  String personalizeHiddenSummary(int count);
 
   /// No description provided for @uiItemVideoBadge.
   ///
@@ -9200,18 +7754,6 @@ abstract class AppLocalizations {
   /// **'Yeni not'**
   String get transcriptNewNote;
 
-  /// No description provided for @transcriptRetryAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI ile yeniden dök'**
-  String get transcriptRetryAi;
-
-  /// No description provided for @transcriptReadWithAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI ile oku (el yazısı)'**
-  String get transcriptReadWithAi;
-
   /// No description provided for @transcriptShowTimes.
   ///
   /// In tr, this message translates to:
@@ -9235,12 +7777,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Metin bulunamadı.'**
   String get transcriptEmpty;
-
-  /// No description provided for @transcriptTooLarge.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kayıt {mb} MB; dahili yapay zekâ en çok 15 MB alabiliyor. Ayarlar\'dan kendi Gemini anahtarını girersen büyük kayıtlar da dökülür.'**
-  String transcriptTooLarge(int mb);
 
   /// No description provided for @transcriptUnsupported.
   ///
@@ -9332,12 +7868,6 @@ abstract class AppLocalizations {
   /// **'Görsel seç'**
   String get pickImagesTitle;
 
-  /// No description provided for @pickDocumentTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Belge seç'**
-  String get pickDocumentTitle;
-
   /// No description provided for @fileAppPickerTitle.
   ///
   /// In tr, this message translates to:
@@ -9373,12 +7903,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ek işlemleri'**
   String get attachmentActions;
-
-  /// No description provided for @attachmentOpen.
-  ///
-  /// In tr, this message translates to:
-  /// **'Aç'**
-  String get attachmentOpen;
 
   /// No description provided for @attachmentUploadQueued.
   ///
@@ -9439,12 +7963,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gelen ve paylaşılanlar'**
   String get sharedHubTitle;
-
-  /// No description provided for @sharedHubInbox.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gelen'**
-  String get sharedHubInbox;
 
   /// Akıllı sesli not / video tam ekran (2026-10-19)
   ///
@@ -9806,84 +8324,6 @@ abstract class AppLocalizations {
   /// **'Bu dosya türü desteklenmiyor'**
   String get quickAddFileUnsupported;
 
-  /// No description provided for @chatScopeAll.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tüm notlar'**
-  String get chatScopeAll;
-
-  /// No description provided for @chatScopeNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu not'**
-  String get chatScopeNote;
-
-  /// No description provided for @chatScopeDoc.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu belge'**
-  String get chatScopeDoc;
-
-  /// No description provided for @chatModeQa.
-  ///
-  /// In tr, this message translates to:
-  /// **'Soru-cevap'**
-  String get chatModeQa;
-
-  /// No description provided for @chatModeBrainstorm.
-  ///
-  /// In tr, this message translates to:
-  /// **'Beyin fırtınası'**
-  String get chatModeBrainstorm;
-
-  /// No description provided for @chatSuggestOutline.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ana hat'**
-  String get chatSuggestOutline;
-
-  /// No description provided for @chatSuggestIdeas.
-  ///
-  /// In tr, this message translates to:
-  /// **'Fikir ver'**
-  String get chatSuggestIdeas;
-
-  /// No description provided for @chatSuggestGaps.
-  ///
-  /// In tr, this message translates to:
-  /// **'Eksikleri bul'**
-  String get chatSuggestGaps;
-
-  /// No description provided for @chatPromptOutline.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu notun ana hatlarını kısa maddelerle çıkar.'**
-  String get chatPromptOutline;
-
-  /// No description provided for @chatPromptIdeas.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu not için yeni fikirler ve açılar öner.'**
-  String get chatPromptIdeas;
-
-  /// No description provided for @chatPromptGaps.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu notta eksik kalan, belirsiz ya da çelişen yerler neler?'**
-  String get chatPromptGaps;
-
-  /// No description provided for @aiChatRowTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sohbet'**
-  String get aiChatRowTitle;
-
-  /// No description provided for @aiChatRowInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası'**
-  String get aiChatRowInfo;
-
   /// No description provided for @shareFolderTogether.
   ///
   /// In tr, this message translates to:
@@ -10115,7 +8555,7 @@ abstract class AppLocalizations {
   /// No description provided for @lockNotEncryption.
   ///
   /// In tr, this message translates to:
-  /// **'Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller.'**
+  /// **'Kilitli notun gövdesi, maddeleri ve sayfa notları cihazda AES-256-GCM ile şifrelenip eşitlenir; parmak izi kilidinde anahtar yalnız bu cihazın güvenli deposundadır. Şifre veya desen kilidinde anahtar sırrından türetilir — unutursan eski kilitli içerik geri çözülemez.'**
   String get lockNotEncryption;
 
   /// No description provided for @versionHistory.
@@ -10298,47 +8738,11 @@ abstract class AppLocalizations {
   /// **'Başla'**
   String get voiceStartShort;
 
-  /// No description provided for @aiVoiceRowTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI sesli not'**
-  String get aiVoiceRowTitle;
-
-  /// No description provided for @aiVoiceRowInfoEditor.
-  ///
-  /// In tr, this message translates to:
-  /// **'Konuş; yapay zekâ düzenleyip bu nota eklesin'**
-  String get aiVoiceRowInfoEditor;
-
-  /// No description provided for @aiVoiceRowInfoHub.
-  ///
-  /// In tr, this message translates to:
-  /// **'Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun'**
-  String get aiVoiceRowInfoHub;
-
   /// No description provided for @archivePaperDashed.
   ///
   /// In tr, this message translates to:
   /// **'Kesikli çizgili'**
   String get archivePaperDashed;
-
-  /// No description provided for @itemDividerSolid.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alta çizgi çek'**
-  String get itemDividerSolid;
-
-  /// No description provided for @itemDividerDashed.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alta kesikli çizgi'**
-  String get itemDividerDashed;
-
-  /// No description provided for @itemDividerDotted.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alta noktalı çizgi'**
-  String get itemDividerDotted;
 
   /// No description provided for @itemDividerRemove.
   ///
@@ -10357,18 +8761,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tümü'**
   String get allNotesChip;
-
-  /// No description provided for @archiveAiSearch.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI ile ara (anlamca)'**
-  String get archiveAiSearch;
-
-  /// No description provided for @archiveAiSearchHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Arşivde anlamca ara…'**
-  String get archiveAiSearchHint;
 
   /// No description provided for @untitledNote.
   ///
@@ -10640,18 +9032,6 @@ abstract class AppLocalizations {
   /// **'Yazı tipi ve boyut'**
   String get formatFontPanel;
 
-  /// No description provided for @formatColorsPanel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Renkler'**
-  String get formatColorsPanel;
-
-  /// No description provided for @formatPageColor.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sayfa rengi'**
-  String get formatPageColor;
-
   /// No description provided for @inkShapes.
   ///
   /// In tr, this message translates to:
@@ -10724,12 +9104,6 @@ abstract class AppLocalizations {
   /// **'Yalnız kalemle yaz'**
   String get inkPenOnlyTitle;
 
-  /// No description provided for @inkPenOnlyInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.'**
-  String get inkPenOnlyInfo;
-
   /// No description provided for @inkFingerToolTitle.
   ///
   /// In tr, this message translates to:
@@ -10795,12 +9169,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tam görünüme dön'**
   String get inkZoomReset;
-
-  /// No description provided for @inkZoomHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'İki parmakla yakınlaştır ve kaydır'**
-  String get inkZoomHint;
 
   /// No description provided for @cardShowFiles.
   ///
@@ -11516,30 +9884,6 @@ abstract class AppLocalizations {
   /// **'Madde silindi'**
   String get gestureItemDeleted;
 
-  /// No description provided for @gestureFixing.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yazım düzeltiliyor…'**
-  String get gestureFixing;
-
-  /// No description provided for @gestureNothingToFix.
-  ///
-  /// In tr, this message translates to:
-  /// **'Düzeltilecek yazım hatası yok'**
-  String get gestureNothingToFix;
-
-  /// No description provided for @gestureFixed.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yazım düzeltildi'**
-  String get gestureFixed;
-
-  /// No description provided for @gestureFixNeedsAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Daire jesti yazımı yapay zekâyla düzeltir; yapay zekâ şu an kullanılamıyor (Ayarlar → Yapay zekâ).'**
-  String get gestureFixNeedsAi;
-
   /// No description provided for @itemGesturesSetting.
   ///
   /// In tr, this message translates to:
@@ -11647,24 +9991,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Google hesabı gerekir'**
   String get accountRequiredBadge;
-
-  /// No description provided for @guestAiTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ için Google hesabı ya da kendi anahtarın'**
-  String get guestAiTitle;
-
-  /// No description provided for @guestAiBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dahili yapay zekâ Google hesabıyla açılır. Hesapsız da Ayarlar\'dan kendi Gemini API anahtarını ekleyerek bütün yapay zekâ araçlarını kullanabilirsin.'**
-  String get guestAiBody;
-
-  /// No description provided for @guestAiAddKey.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kendi anahtarımı ekle'**
-  String get guestAiAddKey;
 
   /// No description provided for @deletingAccount.
   ///
@@ -11870,35 +10196,11 @@ abstract class AppLocalizations {
   /// **'ev'**
   String get cardElementsSampleTag;
 
-  /// No description provided for @aiTaskIdle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Şu an iş yok'**
-  String get aiTaskIdle;
-
-  /// No description provided for @aiSettingsTooltip.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ ayarları'**
-  String get aiSettingsTooltip;
-
-  /// No description provided for @tipSemanticSearch.
-  ///
-  /// In tr, this message translates to:
-  /// **'Anlam açıkken kelimeyi değil anlamı arar: “araba masrafları” benzin fişini de bulur.'**
-  String get tipSemanticSearch;
-
   /// No description provided for @tipListGestures.
   ///
   /// In tr, this message translates to:
   /// **'İpucu: maddenin üstünü parmakla çiz → işaretlenir.'**
   String get tipListGestures;
-
-  /// No description provided for @tipPdfBubble.
-  ///
-  /// In tr, this message translates to:
-  /// **'İpucu: sayfaya basılı tut → oraya balon bırak.'**
-  String get tipPdfBubble;
 
   /// No description provided for @tipMediaPin.
   ///
@@ -12001,12 +10303,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).'**
   String get swipeModeInfo;
-
-  /// Dahili AI puanlarının yenileneceği saat (yuvarlanan 24 saat).
-  ///
-  /// In tr, this message translates to:
-  /// **'{time} itibarıyla yenilenir'**
-  String aiQuotaRenewsAt(String time);
 
   /// No description provided for @backupInfo.
   ///
@@ -12272,12 +10568,6 @@ abstract class AppLocalizations {
   /// **'Bugünün kartları'**
   String get studyCardsTitle;
 
-  /// No description provided for @studyCardsHubInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Aralıklı tekrar: bugün {count} kart'**
-  String studyCardsHubInfo(int count);
-
   /// No description provided for @studyCardsEmpty.
   ///
   /// In tr, this message translates to:
@@ -12332,59 +10622,11 @@ abstract class AppLocalizations {
   /// **'Kolay'**
   String get studyGradeEasy;
 
-  /// No description provided for @studyCardsMake.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kart üret'**
-  String get studyCardsMake;
-
-  /// No description provided for @studyCardsMakeMore.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kart üret ({count} kart var)'**
-  String studyCardsMakeMore(int count);
-
-  /// No description provided for @studyCardsGenerating.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kartlar hazırlanıyor…'**
-  String get studyCardsGenerating;
-
-  /// No description provided for @studyCardsFailed.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kart üretilemedi'**
-  String get studyCardsFailed;
-
-  /// No description provided for @studyCardsPreview.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} kart üretildi'**
-  String studyCardsPreview(int count);
-
-  /// No description provided for @studyCardsSave.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota kaydet'**
-  String get studyCardsSave;
-
-  /// No description provided for @studyCardsSaved.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} kart kaydedildi'**
-  String studyCardsSaved(int count);
-
   /// No description provided for @updateAvailable.
   ///
   /// In tr, this message translates to:
   /// **'Yeni sürüm var: {name}'**
   String updateAvailable(String name);
-
-  /// No description provided for @updateDownload.
-  ///
-  /// In tr, this message translates to:
-  /// **'GitHub\'dan indir'**
-  String get updateDownload;
 
   /// No description provided for @pdfNoteFromSelection.
   ///
@@ -12416,263 +10658,11 @@ abstract class AppLocalizations {
   /// **'İşaretlileri daralt'**
   String get hideMoreChecked;
 
-  /// No description provided for @gmailTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gmail'**
-  String get gmailTitle;
-
-  /// No description provided for @gmailConnect.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gmail\'e bağlan'**
-  String get gmailConnect;
-
-  /// No description provided for @gmailReadOnlyHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yalnız okuma: e-postalarını görür, nota kaydedersin. Gmail\'de hiçbir şey değiştirilmez.'**
-  String get gmailReadOnlyHint;
-
   /// No description provided for @gmailGoogleOnly.
   ///
   /// In tr, this message translates to:
   /// **'Gmail için Google hesabıyla giriş yap.'**
   String get gmailGoogleOnly;
-
-  /// No description provided for @gmailSearchHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'E-postalarda ara (Gmail arama sözdizimi)'**
-  String get gmailSearchHint;
-
-  /// No description provided for @gmailEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Burada e-posta yok'**
-  String get gmailEmpty;
-
-  /// No description provided for @gmailLoadMore.
-  ///
-  /// In tr, this message translates to:
-  /// **'Daha fazla'**
-  String get gmailLoadMore;
-
-  /// No description provided for @gmailError.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gmail\'e ulaşılamadı'**
-  String get gmailError;
-
-  /// No description provided for @gmailSaveNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota kaydet'**
-  String get gmailSaveNote;
-
-  /// No description provided for @gmailAiSummary.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI özetiyle not'**
-  String get gmailAiSummary;
-
-  /// No description provided for @gmailAiTasks.
-  ///
-  /// In tr, this message translates to:
-  /// **'Görev listesi çıkar'**
-  String get gmailAiTasks;
-
-  /// No description provided for @gmailWithAttachments.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ekleri de al'**
-  String get gmailWithAttachments;
-
-  /// No description provided for @gmailNoteCreated.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not oluşturuldu'**
-  String get gmailNoteCreated;
-
-  /// No description provided for @aiErrInvalidKey.
-  ///
-  /// In tr, this message translates to:
-  /// **'API anahtarı geçersiz. Ayarlar → Yapay zekâ\'dan denetle.'**
-  String get aiErrInvalidKey;
-
-  /// No description provided for @aiErrModelNotFound.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ modeli bulunamadı. Uygulamanın güncel sürümünü kur; sorun sürerse geliştiriciye bildir.'**
-  String get aiErrModelNotFound;
-
-  /// No description provided for @aiErrRateLimited.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çok fazla istek gitti; biraz sonra yeniden dene.'**
-  String get aiErrRateLimited;
-
-  /// No description provided for @aiErrConnection.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâya bağlanılamadı. Bağlantını denetleyip yeniden dene.'**
-  String get aiErrConnection;
-
-  /// No description provided for @aiErrEmptyResponse.
-  ///
-  /// In tr, this message translates to:
-  /// **'Model boş yanıt döndü; yeniden dene.'**
-  String get aiErrEmptyResponse;
-
-  /// No description provided for @aiErrUnexpected.
-  ///
-  /// In tr, this message translates to:
-  /// **'Modelden beklenmeyen bir yanıt geldi; yeniden dene.'**
-  String get aiErrUnexpected;
-
-  /// No description provided for @aiErrNotCompleted.
-  ///
-  /// In tr, this message translates to:
-  /// **'İşlem tamamlanamadı; yeniden dene.'**
-  String get aiErrNotCompleted;
-
-  /// No description provided for @aiErrBuiltInOff.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dahili yapay zekâ şu an kullanılamıyor. Kendi Gemini anahtarını Ayarlar\'dan girersen hemen kullanabilirsin.'**
-  String get aiErrBuiltInOff;
-
-  /// No description provided for @aiErrQuotaFree.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ücretsiz yapay zekâ puanın doldu. 24 saat içinde yenilenir; dilersen Ayarlar\'dan kendi anahtarını girebilir ya da Premium\'a geçebilirsin.'**
-  String get aiErrQuotaFree;
-
-  /// No description provided for @aiErrQuotaPremium.
-  ///
-  /// In tr, this message translates to:
-  /// **'Premium yapay zekâ puanın ({limit}) doldu. 24 saat içinde yenilenir; dilersen Ayarlar\'dan kendi anahtarını girerek sınırsız kullanabilirsin.'**
-  String aiErrQuotaPremium(Object limit);
-
-  /// No description provided for @aiErrUnavailable.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ şu an yanıt veremiyor; biraz sonra yeniden dene.'**
-  String get aiErrUnavailable;
-
-  /// No description provided for @aiErrModelList.
-  ///
-  /// In tr, this message translates to:
-  /// **'{provider} model listesi alınamadı. Ayarlar → Yapay zekâ → Model\'den modeli elle seçebilirsin.'**
-  String aiErrModelList(Object provider);
-
-  /// No description provided for @aiErrNeedsGemini.
-  ///
-  /// In tr, this message translates to:
-  /// **'{feature} şu an yalnız Google Gemini ile çalışıyor. Ayarlar → Yapay zekâ\'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.'**
-  String aiErrNeedsGemini(Object feature);
-
-  /// No description provided for @aiErrKindNeedsGemini.
-  ///
-  /// In tr, this message translates to:
-  /// **'{kind} {provider} ile gönderilemiyor. Ayarlar → Yapay zekâ\'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.'**
-  String aiErrKindNeedsGemini(Object kind, Object provider);
-
-  /// No description provided for @aiErrFeatureTts.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ seslendirmesi'**
-  String get aiErrFeatureTts;
-
-  /// No description provided for @aiErrFeatureSemantic.
-  ///
-  /// In tr, this message translates to:
-  /// **'Anlamsal arama'**
-  String get aiErrFeatureSemantic;
-
-  /// No description provided for @aiErrKindAudio.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ses dosyası'**
-  String get aiErrKindAudio;
-
-  /// No description provided for @aiErrKindVideo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Video'**
-  String get aiErrKindVideo;
-
-  /// No description provided for @aiErrKindFile.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu dosya türü'**
-  String get aiErrKindFile;
-
-  /// No description provided for @aiErrUpload.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kayıt yüklenemedi; yeniden dene.'**
-  String get aiErrUpload;
-
-  /// No description provided for @aiErrSpeech.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seslendirme modeli ses döndürmedi; yeniden dene.'**
-  String get aiErrSpeech;
-
-  /// No description provided for @aiErrNoSpeechText.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seslendirilecek metin yok.'**
-  String get aiErrNoSpeechText;
-
-  /// No description provided for @aiErrNoContent.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli not için içerik yok.'**
-  String get aiErrNoContent;
-
-  /// No description provided for @aiStatusBuiltInOffTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dahili yapay zekâ şu an kapalı'**
-  String get aiStatusBuiltInOffTitle;
-
-  /// No description provided for @aiStatusWebOffTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Web\'de dahili yapay zekâ kapalı'**
-  String get aiStatusWebOffTitle;
-
-  /// No description provided for @aiStatusWebOffBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Telefondaki uygulamada çalışır. Burada kendi Gemini anahtarınla bütün araçları kullanabilirsin.'**
-  String get aiStatusWebOffBody;
-
-  /// No description provided for @aiStatusQuotaTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ puanın doldu'**
-  String get aiStatusQuotaTitle;
-
-  /// No description provided for @aiStatusQuotaBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Puanların {time} civarında yenilenir. Kendi Gemini anahtarınla beklemeden kullanabilirsin.'**
-  String aiStatusQuotaBody(Object time);
-
-  /// No description provided for @dictationFixOffer.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dikte bitti'**
-  String get dictationFixOffer;
-
-  /// No description provided for @dictationFixAction.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI ile düzelt'**
-  String get dictationFixAction;
 
   /// No description provided for @tipHomeMicHold.
   ///
@@ -12691,24 +10681,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.'**
   String get itemGesturesFingerAllInfo;
-
-  /// No description provided for @bubbleAddNoteHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tutamaçlı not; dokununca açılır'**
-  String get bubbleAddNoteHint;
-
-  /// No description provided for @bubbleAddPlainHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sayfanın üstüne doğrudan yazı'**
-  String get bubbleAddPlainHint;
-
-  /// No description provided for @bubbleAddPlainTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Açık metin'**
-  String get bubbleAddPlainTitle;
 
   /// No description provided for @itemAddHeader.
   ///
@@ -13075,12 +11047,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bankaya uğra, Kargo gönder, Eczane, Kuru temizleme, Postane'**
   String get tplTodoErrandsItems;
-
-  /// No description provided for @templateTwoColumns.
-  ///
-  /// In tr, this message translates to:
-  /// **'İki sütun'**
-  String get templateTwoColumns;
 
   /// No description provided for @templateFavorite.
   ///
@@ -13490,12 +11456,6 @@ abstract class AppLocalizations {
   /// **'Hafta'**
   String get calendarViewWeek;
 
-  /// No description provided for @calendarView.
-  ///
-  /// In tr, this message translates to:
-  /// **'Görünüm'**
-  String get calendarView;
-
   /// No description provided for @calendarPinchHint.
   ///
   /// In tr, this message translates to:
@@ -13525,18 +11485,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Saman'**
   String get themeStraw;
-
-  /// No description provided for @dashboardBackgroundCalendar.
-  ///
-  /// In tr, this message translates to:
-  /// **'Takvim zemini'**
-  String get dashboardBackgroundCalendar;
-
-  /// No description provided for @dashboardBackgroundCalendarInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam'**
-  String get dashboardBackgroundCalendarInfo;
 
   /// No description provided for @calendarSwipe.
   ///
@@ -13958,23 +11906,11 @@ abstract class AppLocalizations {
   /// **'Hızlı satıra al'**
   String get menuQuickRow;
 
-  /// No description provided for @menuShowHide.
-  ///
-  /// In tr, this message translates to:
-  /// **'Göster/gizle'**
-  String get menuShowHide;
-
   /// No description provided for @menuReset.
   ///
   /// In tr, this message translates to:
   /// **'Varsayılan'**
   String get menuReset;
-
-  /// No description provided for @menuEditHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sürükleyerek sırala, göz ile gizle; yıldızlı işlemler üstteki hızlı satırda durur (en çok {count}).'**
-  String menuEditHint(int count);
 
   /// No description provided for @themeCream.
   ///
@@ -14054,35 +11990,17 @@ abstract class AppLocalizations {
   /// **'Kaydet'**
   String get reminderSheetSave;
 
-  /// No description provided for @folderHoldHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Basılı tutup sağa sola kaydırarak klasör değiştir'**
-  String get folderHoldHint;
-
   /// No description provided for @homeFolderStripHide.
   ///
   /// In tr, this message translates to:
   /// **'Klasör satırını gizle'**
   String get homeFolderStripHide;
 
-  /// No description provided for @homeFolderStripShow.
-  ///
-  /// In tr, this message translates to:
-  /// **'Klasör satırını göster'**
-  String get homeFolderStripShow;
-
   /// No description provided for @homeViewMenu.
   ///
   /// In tr, this message translates to:
   /// **'Görünüm ve süz'**
   String get homeViewMenu;
-
-  /// No description provided for @folderRadialCancel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bırak = vazgeç'**
-  String get folderRadialCancel;
 
   /// No description provided for @googleApiDisabled.
   ///
@@ -14101,102 +12019,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{api} izni verilmedi. Bağlanırken izin kutusunu işaretleyin.'**
   String googleScopeMissing(String api);
-
-  /// No description provided for @gmailRefresh.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yenile'**
-  String get gmailRefresh;
-
-  /// No description provided for @gmailNoResults.
-  ///
-  /// In tr, this message translates to:
-  /// **'Burada aramana uyan e-posta yok'**
-  String get gmailNoResults;
-
-  /// No description provided for @gmailFilterInbox.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gelen kutusu'**
-  String get gmailFilterInbox;
-
-  /// No description provided for @gmailFilterUnread.
-  ///
-  /// In tr, this message translates to:
-  /// **'Okunmamış'**
-  String get gmailFilterUnread;
-
-  /// No description provided for @gmailFilterStarred.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yıldızlı'**
-  String get gmailFilterStarred;
-
-  /// No description provided for @gmailFilterAttachments.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ekli'**
-  String get gmailFilterAttachments;
-
-  /// No description provided for @gmailFilterToday.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bugün'**
-  String get gmailFilterToday;
-
-  /// No description provided for @gmailDayToday.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bugün'**
-  String get gmailDayToday;
-
-  /// No description provided for @gmailDayYesterday.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dün'**
-  String get gmailDayYesterday;
-
-  /// No description provided for @gmailDayThisWeek.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu hafta'**
-  String get gmailDayThisWeek;
-
-  /// No description provided for @gmailDayOlder.
-  ///
-  /// In tr, this message translates to:
-  /// **'Daha eski'**
-  String get gmailDayOlder;
-
-  /// No description provided for @gmailNoSubject.
-  ///
-  /// In tr, this message translates to:
-  /// **'(konu yok)'**
-  String get gmailNoSubject;
-
-  /// No description provided for @gmailConnectTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'E-postalarını nota çevir'**
-  String get gmailConnectTitle;
-
-  /// No description provided for @gmailConnectPointRead.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gelen kutunu gör, Gmail arama sözdizimiyle ara.'**
-  String get gmailConnectPointRead;
-
-  /// No description provided for @gmailConnectPointNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bir e-postayı tek dokunuşla not, yapay zekâ özeti ya da görev listesi yap.'**
-  String get gmailConnectPointNote;
-
-  /// No description provided for @gmailOpenInGmail.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gmail\'de aç'**
-  String get gmailOpenInGmail;
 
   /// No description provided for @friendsEmptyTitle.
   ///
@@ -14377,12 +12199,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sabit kalem · basılı tut: kaldır'**
   String get inkPinnedPen;
-
-  /// No description provided for @penModeFinish.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bitir'**
-  String get penModeFinish;
 
   /// No description provided for @reminderLevelTitle.
   ///
@@ -14618,66 +12434,6 @@ abstract class AppLocalizations {
   /// **'Henüz başka not yok'**
   String get addToNoteEmpty;
 
-  /// No description provided for @gmailAddSelectionToNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota ekle'**
-  String get gmailAddSelectionToNote;
-
-  /// No description provided for @gmailTagPromotions.
-  ///
-  /// In tr, this message translates to:
-  /// **'Promosyon'**
-  String get gmailTagPromotions;
-
-  /// No description provided for @gmailTagSocial.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sosyal'**
-  String get gmailTagSocial;
-
-  /// No description provided for @gmailTagUpdates.
-  ///
-  /// In tr, this message translates to:
-  /// **'Güncelleme'**
-  String get gmailTagUpdates;
-
-  /// No description provided for @gmailTagForums.
-  ///
-  /// In tr, this message translates to:
-  /// **'Forum'**
-  String get gmailTagForums;
-
-  /// No description provided for @gmailTagImportant.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önemli'**
-  String get gmailTagImportant;
-
-  /// No description provided for @gmailSmartAddToCalendar.
-  ///
-  /// In tr, this message translates to:
-  /// **'Takvime ekle: {when}'**
-  String gmailSmartAddToCalendar(String when);
-
-  /// No description provided for @gmailSmartLinkPerson.
-  ///
-  /// In tr, this message translates to:
-  /// **'{name} → nota bağla'**
-  String gmailSmartLinkPerson(String name);
-
-  /// No description provided for @gmailSmartRelatedNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'İlgili not: {title}'**
-  String gmailSmartRelatedNote(String title);
-
-  /// No description provided for @gmailAddedToNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seçili metin nota eklendi'**
-  String get gmailAddedToNote;
-
   /// No description provided for @calendarLinkExistingNote.
   ///
   /// In tr, this message translates to:
@@ -14689,18 +12445,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Nottan rutin oluştur'**
   String get routineFromNote;
-
-  /// No description provided for @gmailAddAccount.
-  ///
-  /// In tr, this message translates to:
-  /// **'Başka hesap ekle'**
-  String get gmailAddAccount;
-
-  /// No description provided for @gmailRemoveAccount.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hesabı kaldır'**
-  String get gmailRemoveAccount;
 
   /// No description provided for @quickRowSubheading.
   ///
@@ -14756,12 +12500,6 @@ abstract class AppLocalizations {
   /// **'Sesle yaz'**
   String get quickRowDictation;
 
-  /// No description provided for @quickRowCustomize.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hızlı menüyü düzenle (düğme ekle/çıkar)'**
-  String get quickRowCustomize;
-
   /// No description provided for @notePackageSelectFirst.
   ///
   /// In tr, this message translates to:
@@ -14815,12 +12553,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Otomatik düzelt'**
   String get spellAutoTitle;
-
-  /// No description provided for @spellAutoSubtitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Biten kelime yalnız emin olunca düzeltilir; hemen ardından Backspace geri alır. Başlıkta kelime başları büyür.'**
-  String get spellAutoSubtitle;
 
   /// No description provided for @spellLearnTitle.
   ///
@@ -15056,24 +12788,6 @@ abstract class AppLocalizations {
   /// **'Takvim şeridini daralt'**
   String get homeCalendarStripCollapse;
 
-  /// No description provided for @gmailTranslate.
-  ///
-  /// In tr, this message translates to:
-  /// **'İletiyi çevir'**
-  String get gmailTranslate;
-
-  /// No description provided for @gmailShowOriginal.
-  ///
-  /// In tr, this message translates to:
-  /// **'Orijinali göster'**
-  String get gmailShowOriginal;
-
-  /// No description provided for @gmailTranslated.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çevrildi'**
-  String get gmailTranslated;
-
   /// No description provided for @folderMenuEdit.
   ///
   /// In tr, this message translates to:
@@ -15212,12 +12926,6 @@ abstract class AppLocalizations {
   /// **'Kaleme dön'**
   String get inkPenOffer;
 
-  /// No description provided for @tipPenToggle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.'**
-  String get tipPenToggle;
-
   /// No description provided for @tipPenShapeHold.
   ///
   /// In tr, this message translates to:
@@ -15332,23 +13040,11 @@ abstract class AppLocalizations {
   /// **'Güncelle'**
   String get updateInstall;
 
-  /// No description provided for @updateDownloading.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yeni sürüm indiriliyor…'**
-  String get updateDownloading;
-
   /// No description provided for @updateNeedsPermission.
   ///
   /// In tr, this message translates to:
   /// **'Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle\'ye dokun'**
   String get updateNeedsPermission;
-
-  /// No description provided for @updateFailed.
-  ///
-  /// In tr, this message translates to:
-  /// **'İndirilemedi; GitHub sayfası açılıyor'**
-  String get updateFailed;
 
   /// No description provided for @updateTapToCheck.
   ///
@@ -15380,23 +13076,11 @@ abstract class AppLocalizations {
   /// **'En son sürüm kullanılıyor'**
   String get updateUpToDate;
 
-  /// No description provided for @updateCheckFailed.
-  ///
-  /// In tr, this message translates to:
-  /// **'Denetlenemedi — bağlantıyı kontrol et'**
-  String get updateCheckFailed;
-
   /// No description provided for @releaseNotesTitle.
   ///
   /// In tr, this message translates to:
   /// **'Sürüm notları'**
   String get releaseNotesTitle;
-
-  /// No description provided for @releaseNotesInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapılan güncellemeler madde madde'**
-  String get releaseNotesInfo;
 
   /// No description provided for @settingsWritingTitle.
   ///
@@ -16094,35 +13778,11 @@ abstract class AppLocalizations {
   /// **'Emin olunamazsa yapay zekâya sor'**
   String get quickDropAiToggle;
 
-  /// No description provided for @aiOffSetting.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâyı tümden kapat'**
-  String get aiOffSetting;
-
-  /// No description provided for @aiOffSettingInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Açıkken hiçbir not, metin ya da ek yapay zekâya gönderilmez; düğmeleri gizlenir.'**
-  String get aiOffSettingInfo;
-
   /// No description provided for @aiOffTitle.
   ///
   /// In tr, this message translates to:
   /// **'Yapay zekâ kapalı'**
   String get aiOffTitle;
-
-  /// No description provided for @aiOffBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâyı Ayarlar\'da tümden kapattın; hiçbir şey gönderilmiyor. Açınca düğmeleri geri gelir.'**
-  String get aiOffBody;
-
-  /// No description provided for @aiOffTurnOn.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâyı aç'**
-  String get aiOffTurnOn;
 
   /// No description provided for @aiConsentTitle.
   ///
@@ -16166,23 +13826,11 @@ abstract class AppLocalizations {
   /// **'Vazgeç'**
   String get aiConsentDecline;
 
-  /// No description provided for @aiMayBeWrong.
-  ///
-  /// In tr, this message translates to:
-  /// **'AI yanılabilir; önemli bilgiyi doğrula.'**
-  String get aiMayBeWrong;
-
   /// No description provided for @aiPausedTitle.
   ///
   /// In tr, this message translates to:
   /// **'Yapay zekâ geçici olarak kapalı'**
   String get aiPausedTitle;
-
-  /// No description provided for @aiPausedBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.'**
-  String get aiPausedBody;
 
   /// No description provided for @homePullGestureTitle.
   ///
@@ -16430,18 +14078,6 @@ abstract class AppLocalizations {
   /// **'Yapay zekâ Pro\'da'**
   String get aiNeedsProTitle;
 
-  /// No description provided for @aiNeedsProBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dahili yapay zekâ Pro aboneliğinde. Ömür boyu sürümde kendi Gemini anahtarını girip sınırsız kullanabilirsin.'**
-  String get aiNeedsProBody;
-
-  /// No description provided for @aiNeedsProSee.
-  ///
-  /// In tr, this message translates to:
-  /// **'Pro\'ya bak'**
-  String get aiNeedsProSee;
-
   /// No description provided for @proTitle.
   ///
   /// In tr, this message translates to:
@@ -16466,12 +14102,6 @@ abstract class AppLocalizations {
   /// **'Şu an: Tam Sürüm (Ömür Boyu)'**
   String get proStatusLifetime;
 
-  /// No description provided for @proStatusPro.
-  ///
-  /// In tr, this message translates to:
-  /// **'Şu an: Tam Sürüm · {date} tarihine dek'**
-  String proStatusPro(String date);
-
   /// No description provided for @proTiersTitle.
   ///
   /// In tr, this message translates to:
@@ -16489,12 +14119,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tam sürüm'**
   String get proTierLifetime;
-
-  /// No description provided for @proTierPro.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tam sürüm'**
-  String get proTierPro;
 
   /// No description provided for @proRowBasics.
   ///
@@ -16586,18 +14210,6 @@ abstract class AppLocalizations {
   /// **'Satın al'**
   String get proBuyTitle;
 
-  /// No description provided for @proPlanMonthly.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tam sürüm'**
-  String get proPlanMonthly;
-
-  /// No description provided for @proPlanYearly.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tam sürüm'**
-  String get proPlanYearly;
-
   /// No description provided for @proPlanLifetime.
   ///
   /// In tr, this message translates to:
@@ -16609,30 +14221,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'+1.000 Akıllı Karar Paketi'**
   String get proPlanDecisionPack;
-
-  /// No description provided for @proPriceMonthly.
-  ///
-  /// In tr, this message translates to:
-  /// **'{price} / ay'**
-  String proPriceMonthly(String price);
-
-  /// No description provided for @proPriceYearly.
-  ///
-  /// In tr, this message translates to:
-  /// **'{price} / yıl'**
-  String proPriceYearly(String price);
-
-  /// No description provided for @proTrialMonthly.
-  ///
-  /// In tr, this message translates to:
-  /// **'7 gün ücretsiz, sonra {price} / ay'**
-  String proTrialMonthly(String price);
-
-  /// No description provided for @proTrialYearly.
-  ///
-  /// In tr, this message translates to:
-  /// **'7 gün ücretsiz, sonra {price} / yıl'**
-  String proTrialYearly(String price);
 
   /// No description provided for @proPriceOnce.
   ///
@@ -16646,29 +14234,11 @@ abstract class AppLocalizations {
   /// **'Satın al'**
   String get proBuy;
 
-  /// No description provided for @proTry.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ücretsiz dene'**
-  String get proTry;
-
   /// No description provided for @proOwned.
   ///
   /// In tr, this message translates to:
   /// **'Sende var'**
   String get proOwned;
-
-  /// No description provided for @proManage.
-  ///
-  /// In tr, this message translates to:
-  /// **'Satın alımları yönet'**
-  String get proManage;
-
-  /// No description provided for @proManageBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'Google Play hesabı'**
-  String get proManageBody;
 
   /// No description provided for @proRestore.
   ///
@@ -16838,24 +14408,6 @@ abstract class AppLocalizations {
   /// **'Tüm gün'**
   String get calendarLinkAllDay;
 
-  /// No description provided for @calendarCollapseMonth.
-  ///
-  /// In tr, this message translates to:
-  /// **'Takvimi daralt'**
-  String get calendarCollapseMonth;
-
-  /// No description provided for @calendarExpandMonth.
-  ///
-  /// In tr, this message translates to:
-  /// **'Takvimi genişlet'**
-  String get calendarExpandMonth;
-
-  /// No description provided for @calendarDayPanelClose.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gün panelini kapat'**
-  String get calendarDayPanelClose;
-
   /// No description provided for @driveOnboardTitle.
   ///
   /// In tr, this message translates to:
@@ -16879,36 +14431,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sonra'**
   String get driveOnboardLater;
-
-  /// No description provided for @aiQuietOrganizeTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sessiz düzen'**
-  String get aiQuietOrganizeTitle;
-
-  /// No description provided for @aiQuietOrganizeEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Öneri üretilecek eksik başlık veya etiket bulunamadı.'**
-  String get aiQuietOrganizeEmpty;
-
-  /// No description provided for @aiQuietOrganizeApply.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} öneriyi uygula'**
-  String aiQuietOrganizeApply(int count);
-
-  /// No description provided for @aiQuietOrganizeApplied.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} not güncellendi'**
-  String aiQuietOrganizeApplied(int count);
-
-  /// No description provided for @aiQuietOrganizeBoth.
-  ///
-  /// In tr, this message translates to:
-  /// **'Başlık + etiket birlikte'**
-  String get aiQuietOrganizeBoth;
 
   /// No description provided for @exportMarkdownZip.
   ///
@@ -17041,180 +14563,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Parola yanlış veya yedek çözülemedi'**
   String get backupWrongPassword;
-
-  /// No description provided for @aiWriteImprove.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yazıyı iyileştir'**
-  String get aiWriteImprove;
-
-  /// No description provided for @aiWriteImproveInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Düzelt, kısalt, uzat, tonu değiştir veya çevir'**
-  String get aiWriteImproveInfo;
-
-  /// No description provided for @improveExpand.
-  ///
-  /// In tr, this message translates to:
-  /// **'Uzat ve ayrıntılandır'**
-  String get improveExpand;
-
-  /// No description provided for @improveCasual.
-  ///
-  /// In tr, this message translates to:
-  /// **'Samimi ve doğal'**
-  String get improveCasual;
-
-  /// No description provided for @aiWriteGroupFix.
-  ///
-  /// In tr, this message translates to:
-  /// **'Düzelt ve yeniden yaz'**
-  String get aiWriteGroupFix;
-
-  /// No description provided for @aiWriteGroupTone.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ton ve uzunluk'**
-  String get aiWriteGroupTone;
-
-  /// No description provided for @aiWriteGroupFormat.
-  ///
-  /// In tr, this message translates to:
-  /// **'Biçime dönüştür'**
-  String get aiWriteGroupFormat;
-
-  /// No description provided for @aiPreviewBefore.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önce'**
-  String get aiPreviewBefore;
-
-  /// No description provided for @aiPreviewAfter.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sonra'**
-  String get aiPreviewAfter;
-
-  /// No description provided for @aiPreviewCompare.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önce / sonra'**
-  String get aiPreviewCompare;
-
-  /// No description provided for @aiPhotoToStructuredNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapılı nota dönüştür'**
-  String get aiPhotoToStructuredNote;
-
-  /// No description provided for @aiPhotoToStructuredNoteInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önce cihazda okur, başlık ve maddelere ayırır'**
-  String get aiPhotoToStructuredNoteInfo;
-
-  /// No description provided for @docSuggestSummary.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özetle'**
-  String get docSuggestSummary;
-
-  /// No description provided for @docPromptSummary.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu belgeyi kısa ve anlaşılır biçimde özetle; önemli bilgilerin sayfa numaralarını [s. N] olarak belirt.'**
-  String get docPromptSummary;
-
-  /// No description provided for @docSuggestKeyPoints.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ana noktalar'**
-  String get docSuggestKeyPoints;
-
-  /// No description provided for @docPromptKeyPoints.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu belgedeki en önemli 5 noktayı sayfa numaralarıyla [s. N] listele.'**
-  String get docPromptKeyPoints;
-
-  /// No description provided for @docSuggestActions.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tarih ve görevler'**
-  String get docSuggestActions;
-
-  /// No description provided for @docPromptActions.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu belgede geçen önemli tarihleri, kararları ve yapılacakları sayfa numaralarıyla [s. N] çıkar.'**
-  String get docPromptActions;
-
-  /// No description provided for @docPageCitation.
-  ///
-  /// In tr, this message translates to:
-  /// **'s. {page}'**
-  String docPageCitation(int page);
-
-  /// No description provided for @transcriptTakeaways.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özet ve görevler'**
-  String get transcriptTakeaways;
-
-  /// No description provided for @transcriptTakeawaysSummary.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özet'**
-  String get transcriptTakeawaysSummary;
-
-  /// No description provided for @transcriptTakeawaysActions.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapılacaklar'**
-  String get transcriptTakeawaysActions;
-
-  /// No description provided for @transcriptTakeawaysRemind.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hatırlatayım mı?'**
-  String get transcriptTakeawaysRemind;
-
-  /// No description provided for @transcriptTakeawaysAddTask.
-  ///
-  /// In tr, this message translates to:
-  /// **'Görev ekle'**
-  String get transcriptTakeawaysAddTask;
-
-  /// No description provided for @transcriptTakeawaysInsert.
-  ///
-  /// In tr, this message translates to:
-  /// **'Özeti nota ekle'**
-  String get transcriptTakeawaysInsert;
-
-  /// No description provided for @briefingDailyTab.
-  ///
-  /// In tr, this message translates to:
-  /// **'Günlük'**
-  String get briefingDailyTab;
-
-  /// No description provided for @briefingWeeklyTab.
-  ///
-  /// In tr, this message translates to:
-  /// **'Haftalık'**
-  String get briefingWeeklyTab;
-
-  /// No description provided for @briefingWeeklyLoading.
-  ///
-  /// In tr, this message translates to:
-  /// **'Haftalık özet hazırlanıyor…'**
-  String get briefingWeeklyLoading;
-
-  /// No description provided for @briefingWeeklyEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bu hafta için özetlenecek kayıt yok'**
-  String get briefingWeeklyEmpty;
 
   /// No description provided for @calendarAddActionTitle.
   ///
@@ -17720,18 +15068,6 @@ abstract class AppLocalizations {
   /// **'Alan seçip sor'**
   String get pinnedSmartAreaAsk;
 
-  /// No description provided for @areaInsertToNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota ekle'**
-  String get areaInsertToNote;
-
-  /// No description provided for @areaInsertedToNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota eklendi'**
-  String get areaInsertedToNote;
-
   /// No description provided for @dashboardBackgroundGallery.
   ///
   /// In tr, this message translates to:
@@ -17749,12 +15085,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Görünürlük'**
   String get dashboardBackgroundOpacity;
-
-  /// No description provided for @dashboardBackgroundPreview.
-  ///
-  /// In tr, this message translates to:
-  /// **'Canlı önizleme'**
-  String get dashboardBackgroundPreview;
 
   /// No description provided for @wallpaperAuroraBloom.
   ///
@@ -17936,72 +15266,6 @@ abstract class AppLocalizations {
   /// **'{count} madde biçimlendi'**
   String itemsFormattedCount(int count);
 
-  /// No description provided for @aiSourceModeTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ kaynağı'**
-  String get aiSourceModeTitle;
-
-  /// No description provided for @aiSourceModeShared.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ortak havuz'**
-  String get aiSourceModeShared;
-
-  /// No description provided for @aiSourceModeByok.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kendi anahtarım'**
-  String get aiSourceModeByok;
-
-  /// No description provided for @aiSharedPoolTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ortak yapay zekâ havuzu'**
-  String get aiSharedPoolTitle;
-
-  /// No description provided for @aiSharedPoolSubtitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tek Google hesabıyla hem Notlar hem Dosyalarım uygulamasında ortak kullanılır ({credits} kredi)'**
-  String aiSharedPoolSubtitle(int credits);
-
-  /// No description provided for @aiSharedPoolEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ortak kredi bakiyen tükendi; kendi anahtarını girebilir veya Pro\'ya geçebilirsin'**
-  String get aiSharedPoolEmpty;
-
-  /// No description provided for @aiByokExhaustedError.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kendi anahtarının kotası veya yetkisi tükendi. Ortak havuza otomatik geçilmedi.'**
-  String get aiByokExhaustedError;
-
-  /// No description provided for @aiBackupKeysTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yedek API anahtarları'**
-  String get aiBackupKeysTitle;
-
-  /// No description provided for @aiBackupKeysInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Birincil anahtar dolunca sıradaki anahtar otomatik devreye girer (en fazla 5)'**
-  String get aiBackupKeysInfo;
-
-  /// No description provided for @aiBackupKeyLabel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yedek anahtar {index}'**
-  String aiBackupKeyLabel(int index);
-
-  /// No description provided for @aiBackupKeyAdd.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yedek anahtar ekle'**
-  String get aiBackupKeyAdd;
-
   /// No description provided for @ecosystemDosyalarimTitle.
   ///
   /// In tr, this message translates to:
@@ -18011,14 +15275,8 @@ abstract class AppLocalizations {
   /// No description provided for @ecosystemDosyalarimSubtitle.
   ///
   /// In tr, this message translates to:
-  /// **'PDF imzala, Word ve Excel düzenle, ortak yapay zekâ kredini iki uygulamada birlikte kullan.'**
+  /// **'PDF imzala, Word ve Excel belgelerini düzenle ve notlarınla kolayca paylaş.'**
   String get ecosystemDosyalarimSubtitle;
-
-  /// No description provided for @ecosystemOpenApp.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dosyalarım\'da aç'**
-  String get ecosystemOpenApp;
 
   /// No description provided for @ecosystemGetApp.
   ///
@@ -18031,132 +15289,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gizle'**
   String get ecosystemDismiss;
-
-  /// No description provided for @aiOtherToolsTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Diğer araçlar'**
-  String get aiOtherToolsTitle;
-
-  /// No description provided for @aiAttachmentsSection.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ek ve belge araçları'**
-  String get aiAttachmentsSection;
-
-  /// No description provided for @aiSmartCategorizeAction.
-  ///
-  /// In tr, this message translates to:
-  /// **'Akıllı kategorize et'**
-  String get aiSmartCategorizeAction;
-
-  /// No description provided for @aiSmartCategorizeInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Başlık, etiket ve klasörü yerelde kredi harcamadan düzenle'**
-  String get aiSmartCategorizeInfo;
-
-  /// No description provided for @aiLocalBadge.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yerel · %{percent}'**
-  String aiLocalBadge(int percent);
-
-  /// No description provided for @aiSmartFolderSuggestion.
-  ///
-  /// In tr, this message translates to:
-  /// **'Klasör: {folder}'**
-  String aiSmartFolderSuggestion(String folder);
-
-  /// No description provided for @aiSmartFixAction.
-  ///
-  /// In tr, this message translates to:
-  /// **'Düzelt'**
-  String get aiSmartFixAction;
-
-  /// No description provided for @aiSmartRefineWithAi.
-  ///
-  /// In tr, this message translates to:
-  /// **'Düşük güvenlileri yapay zekâyla incele'**
-  String get aiSmartRefineWithAi;
-
-  /// No description provided for @aiSmartFixTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Doğru kategoriyi seç'**
-  String get aiSmartFixTitle;
-
-  /// No description provided for @aiSmartSimilarConfirmTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Benzer notlar da düzeltilsin mi?'**
-  String get aiSmartSimilarConfirmTitle;
-
-  /// No description provided for @aiSmartSimilarConfirmBody.
-  ///
-  /// In tr, this message translates to:
-  /// **'{count} benzer not için de aynı kategoriyi uygulayabilirsin.'**
-  String aiSmartSimilarConfirmBody(int count);
-
-  /// No description provided for @aiCatFinance.
-  ///
-  /// In tr, this message translates to:
-  /// **'Finans'**
-  String get aiCatFinance;
-
-  /// No description provided for @aiCatHealth.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sağlık'**
-  String get aiCatHealth;
-
-  /// No description provided for @aiCatEducation.
-  ///
-  /// In tr, this message translates to:
-  /// **'Eğitim'**
-  String get aiCatEducation;
-
-  /// No description provided for @aiCatWork.
-  ///
-  /// In tr, this message translates to:
-  /// **'İş'**
-  String get aiCatWork;
-
-  /// No description provided for @aiCatShopping.
-  ///
-  /// In tr, this message translates to:
-  /// **'Alışveriş'**
-  String get aiCatShopping;
-
-  /// No description provided for @aiCatTravel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Seyahat'**
-  String get aiCatTravel;
-
-  /// No description provided for @aiCatPersonal.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kişisel'**
-  String get aiCatPersonal;
-
-  /// No description provided for @aiCatTech.
-  ///
-  /// In tr, this message translates to:
-  /// **'Teknoloji'**
-  String get aiCatTech;
-
-  /// No description provided for @aiCatRecipes.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tarifler'**
-  String get aiCatRecipes;
-
-  /// No description provided for @aiCatOfficial.
-  ///
-  /// In tr, this message translates to:
-  /// **'Resmî'**
-  String get aiCatOfficial;
 
   /// No description provided for @shopBudgetCart.
   ///
@@ -18217,12 +15349,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Reyon'**
   String get shopAisleLabel;
-
-  /// No description provided for @shopOtherAisle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Diğer'**
-  String get shopOtherAisle;
 
   /// No description provided for @shopPriceCompareHeader.
   ///
@@ -18578,11 +15704,29 @@ abstract class AppLocalizations {
   /// **'{name} profili uygulandı'**
   String uiProfileApplied(String name);
 
-  /// No description provided for @lockEncryptedBadge.
+  /// No description provided for @lockNeedSecretOnce.
   ///
   /// In tr, this message translates to:
-  /// **'Uçtan uca şifreli'**
-  String get lockEncryptedBadge;
+  /// **'Bu cihazda ilk kez açmak için kilit şifreni veya desenini bir kez gir.'**
+  String get lockNeedSecretOnce;
+
+  /// No description provided for @lockForgotConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilit sıfırlansın mı?'**
+  String get lockForgotConfirmTitle;
+
+  /// No description provided for @lockForgotConfirmBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mevcut şifrenle şifrelenmiş eski kilitli notların metni eski şifre olmadan bir daha çözülemez. Yine de kilit sıfırlansın mı?'**
+  String get lockForgotConfirmBody;
+
+  /// No description provided for @lockForgotConfirmAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırla'**
+  String get lockForgotConfirmAction;
 
   /// No description provided for @starterShoppingTitle.
   ///

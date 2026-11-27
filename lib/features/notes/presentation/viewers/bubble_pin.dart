@@ -198,7 +198,7 @@ class _BubbleReadCard extends StatelessWidget {
                     padding: const EdgeInsets.only(left: 4),
                     child: Icon(
                       Icons.priority_high_rounded,
-                      size: 16,
+                      size: AppIconSize.xs,
                       color: scheme.error,
                     ),
                   ),
@@ -286,10 +286,10 @@ class _BubbleReadCard extends StatelessWidget {
                         minimumSize: const Size(0, 32),
                         textStyle: const TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppWeight.strong,
                         ),
                       ),
-                      icon: const Icon(Icons.edit_outlined, size: 16),
+                      icon: const Icon(Icons.edit_outlined, size: AppIconSize.xs),
                       label: Text(l10n.bubbleEditShort),
                     ),
                   _action(
@@ -612,8 +612,8 @@ class _BubblePinState extends State<_BubblePin>
   AnimationController? _blink;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _syncBlink();
   }
 
@@ -631,7 +631,8 @@ class _BubblePinState extends State<_BubblePin>
   }
 
   void _syncBlink() {
-    final wanted = widget.bubble.urgent;
+    final wanted = widget.bubble.urgent &&
+        !MediaQuery.disableAnimationsOf(context);
     if (wanted && _blink == null) {
       _blink = AnimationController(
         vsync: this,
@@ -903,7 +904,7 @@ class _BubblePinState extends State<_BubblePin>
               style: TextStyle(
                 fontSize: 12,
                 height: 1.15,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppWeight.strong,
                 letterSpacing: 0.1,
                 color: ink,
               ),

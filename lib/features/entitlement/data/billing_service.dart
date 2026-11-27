@@ -153,6 +153,7 @@ class BillingNotifier extends Notifier<BillingState> {
 
   StreamSubscription<List<PurchaseDetails>>? _sub;
   Future<void>? _starting;
+  Timer? _restoreTimer;
 
   /// Sıradaki `restorePurchases` listesi kimin: sessiz (açılış) mı, elle mi.
   bool? _restoreQuiet;
@@ -165,7 +166,10 @@ class BillingNotifier extends Notifier<BillingState> {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return const BillingState(status: BillingStatus.elsewhere);
     }
-    ref.onDispose(() => _sub?.cancel());
+    ref.onDispose(() {
+      _restoreTimer?.cancel();
+      _sub?.cancel();
+    });
     return const BillingState();
   }
 
@@ -247,17 +251,27 @@ class BillingNotifier extends Notifier<BillingState> {
       return;
     }
     await start();
-    if (!quiet) state = state.copyWith(busy: true);
+    if (!quiet) {
+      state = state.copyWith(busy: true);
+      _restoreTimer?.cancel();
+      _restoreTimer = Timer(const Duration(seconds: 12), () {
+        if (!ref.mounted || !state.busy || _restoreQuiet != false) return;
+        _restoreQuiet = null;
+        _say(BillingNotice.nothingToRestore);
+      });
+    }
     _restoreQuiet = quiet;
     try {
       await debugStore().restorePurchases();
     } catch (_) {
+      _restoreTimer?.cancel();
       _restoreQuiet = null;
       if (!quiet) _say(BillingNotice.failed);
     }
   }
 
   Future<void> _onPurchases(List<PurchaseDetails> list) async {
+    _restoreTimer?.cancel();
     final quiet = _restoreQuiet;
     final fromRestore =
         list.isEmpty || list.every((p) => p.status == PurchaseStatus.restored);
@@ -268,7 +282,6 @@ class BillingNotifier extends Notifier<BillingState> {
       switch (p.status) {
         case PurchaseStatus.pending:
           _say(BillingNotice.pending);
-          unawaited(_verify(p));
         case PurchaseStatus.canceled:
           _say(BillingNotice.canceled);
         case PurchaseStatus.error:
@@ -319,7 +332,13 @@ class BillingNotifier extends Notifier<BillingState> {
         );
       }
       if (p.pendingCompletePurchase && p.status != PurchaseStatus.pending) {
-        await debugStore().completePurchase(p);
+        // Doğrulama ve kredi tanımlama sunucuda tamamlandı; Billing onay
+        // istisnası kullanıcıya yanıltıcı "verifyFailed" hatası göstermesin.
+        try {
+          await debugStore().completePurchase(p);
+        } catch (_) {
+          // Sonraki açılışta sessiz onarım yeniden onaylar.
+        }
       }
       return null;
     } on SyncTransportException catch (e) {

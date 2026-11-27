@@ -169,7 +169,7 @@ final shareIntakeProvider = Provider<void>((ref) {
         // nota dönüşmüş gelir — başlık, maddeler, onay kutuları korunur.
         if (isMarkdownFile(f.path, mime: f.mimeType) &&
             safeToRead(f.path) &&
-            file.existsSync()) {
+            await file.exists()) {
           final draft = markdownNoteDraft(
             p.basename(f.path),
             utf8.decode(await file.readAsBytes(), allowMalformed: true),
@@ -185,7 +185,7 @@ final shareIntakeProvider = Provider<void>((ref) {
         // içerikse not hiç oluşmuyordu. allowMalformed geçersiz baytları
         // U+FFFD ile değiştirir — metnin okunur kısmı kurtulur.
         bodyParts.add(
-          safeToRead(f.path) && file.existsSync()
+          safeToRead(f.path) && await file.exists()
               ? utf8.decode(await file.readAsBytes(), allowMalformed: true)
               : f.path,
         );

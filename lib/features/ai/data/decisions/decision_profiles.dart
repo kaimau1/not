@@ -3,6 +3,7 @@
 // EŞİKLER BAŞLANGIÇ DEĞERİ (plan §3B); Türkçe altın set ölçülmeden
 // (DA-E0, `tool/ai_altin/decisions_kos_test.dart`) bayrak açılmamalı.
 import '../../../notes/domain/quick_lexicon_data.dart';
+import '../../../notes/domain/smart_list.dart';
 import 'decision_flag.dart';
 import 'decision_models.dart';
 import 'decision_service.dart';
@@ -381,4 +382,136 @@ Future<QuickAisle?> decideShopAisle(
     questions: ShopAisleProfile.questions,
   );
   return r == null ? null : ShopAisleProfile.interpret(r);
+}
+
+// ── D3 Tek cümle niyet yönlendirici ────────────────────────────────────────
+
+enum CaptureRouteIntent { shopping, todo, event, note, append, unknown }
+
+abstract final class CaptureRouteProfile {
+  static const hi = 0.75;
+  static const inputChars = 400;
+
+  static const _keyToIntent = {
+    'b_alisveris': CaptureRouteIntent.shopping,
+    'c_gorev': CaptureRouteIntent.todo,
+    'd_etkinlik': CaptureRouteIntent.event,
+    'e_yeni_not': CaptureRouteIntent.note,
+    'f_nota_ekle': CaptureRouteIntent.append,
+  };
+
+  static String input(String text) => 'Cümle: "${_cut(text, inputChars)}"';
+
+  static const questions = <String, DecisionQuestion>{
+    'niyet': ChoiceQuestion(
+      'Kullanıcı bu cümleyle not uygulamasında ne yapmak istiyor?',
+      {
+        ChoiceQuestion.none: 'Anlaşılamadı / belirsiz',
+        'b_alisveris': 'Alışveriş ya da market listesi öğesi eklemek',
+        'c_gorev': 'Yapılacak işi veya hatırlatıcıyı kaydetmek',
+        'd_etkinlik': 'Belirli gün/saatte takvim etkinliği eklemek',
+        'e_yeni_not': 'Yeni düz metin notu oluşturmak',
+        'f_nota_ekle': 'Var olan bir nota içerik eklemek',
+      },
+    ),
+  };
+
+  static CaptureRouteIntent interpret(Map<String, DecisionAnswer> answers) {
+    final ans = answers['niyet'];
+    if (ans == null || ans.confidence < hi) {
+      return CaptureRouteIntent.unknown;
+    }
+    return _keyToIntent[ans.choice] ?? CaptureRouteIntent.unknown;
+  }
+}
+
+/// Tek cümlelik sesli/yazılı niyeti (`D3`, PLAN §2.2) yerel kural belirsizken
+/// `gemini-decision-1` ile sınıflandırır.
+Future<CaptureRouteIntent> decideCaptureRoute(
+  DecisionService service,
+  String text,
+) async {
+  final clean = text.trim();
+  if (clean.length < 3) return CaptureRouteIntent.unknown;
+  final r = await service.decide(
+    DecisionFeature.captureRoute,
+    input: CaptureRouteProfile.input(clean),
+    questions: CaptureRouteProfile.questions,
+  );
+  return r == null
+      ? CaptureRouteIntent.unknown
+      : CaptureRouteProfile.interpret(r);
+}
+
+// ── D5 Akıllı liste türü sınıflama ─────────────────────────────────────────
+
+abstract final class ListClassifyProfile {
+  static const minConfidence = 0.75;
+  static const maxItems = 25;
+
+  static const Map<SmartListKind, String> _labels = {
+    SmartListKind.shopping: 'Market / alışveriş listesi',
+    SmartListKind.packing: 'Bavul / seyahat hazırlık listesi',
+    SmartListKind.pharmacy: 'Eczane / ilaç ve sağlık listesi',
+    SmartListKind.stationery: 'Kırtasiye / okul listesi',
+    SmartListKind.hardware: 'Tamirat / hırdavat listesi',
+    SmartListKind.camping: 'Kamp / doğa hazırlık listesi',
+    SmartListKind.baby: 'Bebek bakım / çantası listesi',
+    SmartListKind.sport: 'Spor çantası / antrenman listesi',
+  };
+
+  static final List<SmartListKind> _kinds = [
+    for (final k in SmartListKind.values)
+      if (k != SmartListKind.generic) k,
+  ];
+
+  static String input(List<String> items) =>
+      'Liste maddeleri: '
+      '${items.take(maxItems).map((s) => _cut(s, 40)).join(', ')}';
+
+  static Map<String, DecisionQuestion> get questions => {
+    'liste_turu': ChoiceQuestion(
+      'Bu maddeler hangi tür liste (market, bavul, eczane, kırtasiye, '
+      'tamirat, kamp, bebek, spor) için hazırlanmış? Emin değilsen '
+      '"${ChoiceQuestion.none}" seç.',
+      {
+        ChoiceQuestion.none: 'Genel / belirsiz liste',
+        for (var i = 0; i < _kinds.length; i++)
+          'k${_key(i)}': _labels[_kinds[i]] ?? _kinds[i].name,
+      },
+    ),
+  };
+
+  static SmartListKind? interpret(Map<String, DecisionAnswer> answers) {
+    final ans = answers['liste_turu'];
+    if (ans == null || ans.confidence < minConfidence) return null;
+    final choice = ans.choice;
+    if (choice == null ||
+        choice == ChoiceQuestion.none ||
+        !RegExp(r'^k\d\d$').hasMatch(choice)) {
+      return null;
+    }
+    final idx = int.parse(choice.substring(1));
+    if (idx < 0 || idx >= _kinds.length) return null;
+    return _kinds[idx];
+  }
+}
+
+/// Sözlüklerin `generic` bıraktığı yeni listeyi (`>=3` madde, D5)
+/// `gemini-decision-1` ile sınıflandırır ve kalıcı önbellekte saklar.
+Future<SmartListKind?> decideListClassify(
+  DecisionService service,
+  List<String> items,
+) async {
+  final clean = [
+    for (final s in items)
+      if (s.trim().isNotEmpty) s.trim(),
+  ];
+  if (clean.length < 3) return null;
+  final r = await service.decide(
+    DecisionFeature.listClassify,
+    input: ListClassifyProfile.input(clean),
+    questions: ListClassifyProfile.questions,
+  );
+  return r == null ? null : ListClassifyProfile.interpret(r);
 }

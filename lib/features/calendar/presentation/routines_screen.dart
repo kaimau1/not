@@ -492,7 +492,7 @@ class _RoutineEditorState extends ConsumerState<_RoutineEditor> {
                   for (var i = 0; i < _steps.length; i++)
                     Row(
                       children: [
-                        const Icon(Icons.check_box_outline_blank, size: 18),
+                        const Icon(Icons.check_box_outline_blank, size: AppIconSize.s),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
@@ -504,7 +504,7 @@ class _RoutineEditorState extends ConsumerState<_RoutineEditor> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, size: 18),
+                          icon: const Icon(Icons.close, size: AppIconSize.s),
                           onPressed: () => setState(() {
                             _steps.removeAt(i).dispose();
                             _stepIds = [..._stepIds]..removeAt(i);

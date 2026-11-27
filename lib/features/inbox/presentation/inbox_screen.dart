@@ -186,7 +186,7 @@ class InboxCard extends ConsumerWidget {
                   note.type == NoteType.text
                       ? Icons.sticky_note_2_outlined
                       : Icons.checklist_outlined,
-                  size: 16,
+                  size: AppIconSize.xs,
                   color: scheme.primary,
                 ),
                 const SizedBox(width: 6),
@@ -242,7 +242,7 @@ class InboxCard extends ConsumerWidget {
                 ),
                 FilledButton.tonalIcon(
                   onPressed: () => _accept(context, ref),
-                  icon: const Icon(Icons.download_outlined, size: 18),
+                  icon: const Icon(Icons.download_outlined, size: AppIconSize.s),
                   label: Text(l10n.inboxAccept),
                 ),
               ],

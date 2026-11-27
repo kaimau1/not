@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'pen_tray.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Kalem tepsisi araçları: yumuşak silindir gölgeli, ince hatlı vektör
 /// çizimler. 44 × 96'lık kutuda, ucu yukarıda; gövde alt kenardan taşar.
@@ -24,7 +25,7 @@ class PenToolPainter extends CustomPainter {
   Color get _shade => dark ? const Color(0xFF28282D) : const Color(0xFFCBC5BB);
   Color get _line => dark
       ? Colors.white.withValues(alpha: 0.16)
-      : Colors.black.withValues(alpha: 0.24);
+      : Colors.black.withValues(alpha: AppAlpha.soft);
   Color get _opaque => ink.withAlpha(255);
 
   /// Çok açık (açık temada) ya da çok koyu (koyu temada) renkler zeminle
@@ -100,7 +101,7 @@ class PenToolPainter extends CustomPainter {
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(cx - 12, 32, 24, size.height),
-          const Radius.circular(8),
+          const Radius.circular(AppRadius.s),
         ),
         Paint()
           ..color = Colors.black.withValues(alpha: dark ? 0.22 : 0.08),
@@ -313,10 +314,10 @@ class PenToolPainter extends CustomPainter {
     final top = Rect.fromLTRB(cx - half, 12, cx + half, 46);
     final rr = RRect.fromRectAndCorners(
       top,
-      topLeft: const Radius.circular(8),
-      topRight: const Radius.circular(8),
-      bottomLeft: const Radius.circular(2),
-      bottomRight: const Radius.circular(2),
+      topLeft: const Radius.circular(AppRadius.s),
+      topRight: const Radius.circular(AppRadius.s),
+      bottomLeft: const Radius.circular(AppRadius.hair),
+      bottomRight: const Radius.circular(AppRadius.hair),
     );
     c.drawRRect(rr, _grad(top, rubber));
     c.drawRRect(rr, _stroke);
@@ -331,8 +332,8 @@ class PenToolPainter extends CustomPainter {
     final sleeveBase = dark ? const Color(0xFF5C5C64) : const Color(0xFFE4E0D8);
     final sr = RRect.fromRectAndCorners(
       sleeve,
-      topLeft: const Radius.circular(2),
-      topRight: const Radius.circular(2),
+      topLeft: const Radius.circular(AppRadius.hair),
+      topRight: const Radius.circular(AppRadius.hair),
     );
     c.drawRRect(sr, _grad(sleeve, sleeveBase));
     c.drawRRect(sr, _stroke);
@@ -378,7 +379,7 @@ class PenToolPainter extends CustomPainter {
     c.drawPath(
       hole,
       Paint()
-        ..color = edge.withValues(alpha: 0.6)
+        ..color = edge.withValues(alpha: AppAlpha.muted)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.9
         ..strokeJoin = StrokeJoin.round,
@@ -394,7 +395,7 @@ class PenToolPainter extends CustomPainter {
     c.drawCircle(
       Offset(cx - 5, 22),
       4.2,
-      Paint()..color = Colors.white.withValues(alpha: 0.85),
+      Paint()..color = Colors.white.withValues(alpha: AppAlpha.strong),
     );
     c.drawCircle(Offset(cx - 5, 22), 3, Paint()..color = _opaque);
     c.drawCircle(

@@ -186,7 +186,7 @@ class _ProScreenState extends ConsumerState<ProScreen> {
                     enabled: !locked,
                     onBuy: () => notifier.buy(lifetime),
                   ),
-          if (pack != null)
+          if (pack != null && entitlement.lifetimeOwned)
             _OfferTile(
               offer: pack,
               enabled: !locked,
@@ -258,10 +258,11 @@ class _StatusCard extends StatelessWidget {
     final scheme = theme.colorScheme;
     final textStyle = AppText.of(theme);
     final paid = !EntitlementGate.active || tier == EntitlementTier.lifetime;
+    final hasCredits = paid || entitlement.decisionCredits > 0;
     final title = paid ? l10n.proStatusLifetime : l10n.proStatusFree;
     final quotaLine = hasOwnKey
         ? l10n.decisionsQuotaByok
-        : paid
+        : hasCredits
         ? l10n.decisionsQuotaSummary(
             quota.remainingCalls,
             formatDecisionTokens(quota.remainingTokens),

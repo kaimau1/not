@@ -16,6 +16,7 @@ import '../../../app/theme/fixed_colors.dart';
 import '../../../core/a11y/min_tap_target.dart';
 import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/local_file.dart' show localFileExists;
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/color_palette.dart';
 import '../../../core/widgets/press_scale.dart';
@@ -88,7 +89,7 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
     final hasDeviceImage =
         preset == null &&
         background.path != null &&
-        File(background.path!).existsSync();
+        localFileExists(background.path!);
     final hasAnyImage = preset != null || hasDeviceImage;
     final showOpacity = hasAnyImage || background.pattern != DashboardPattern.none;
 

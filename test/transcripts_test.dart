@@ -23,17 +23,22 @@ void main() {
   );
 
   group('Transcripts', () {
-    test('yalnız ses, video ve görsel metne dökülür', () {
-      expect(Transcripts.canTranscribe(audio), isTrue);
-      for (final kind in [AttachmentKind.video, AttachmentKind.image]) {
-        expect(
-          Transcripts.canTranscribe(
-            Attachment(id: 'x', kind: kind, fileName: 'f', mimeType: ''),
+    test('yalnız görsel cihaz içi OCR ile metne dökülür', () {
+      expect(Transcripts.canTranscribe(audio), isFalse);
+      expect(
+        Transcripts.canTranscribe(
+          const Attachment(
+            id: 'i1',
+            kind: AttachmentKind.image,
+            fileName: 'sayfa.jpg',
+            mimeType: 'image/jpeg',
           ),
-          isTrue,
-        );
-      }
+        ),
+        isTrue,
+      );
       for (final kind in [
+        AttachmentKind.audio,
+        AttachmentKind.video,
         AttachmentKind.pdf,
         AttachmentKind.slide,
         AttachmentKind.text,

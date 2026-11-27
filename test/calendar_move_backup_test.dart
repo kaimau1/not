@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/calendar/data/calendar_backup.dart';
 import 'package:notlar/features/calendar/domain/agenda.dart';
 import 'package:notlar/features/calendar/domain/calendar_event.dart';
+import 'package:notlar/features/calendar/domain/routine.dart';
 import 'package:notlar/features/calendar/domain/task_item.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -108,6 +109,30 @@ void main() {
         dayLinks: const {
           '2026-11-06': ['eski1', 'kayip'],
         },
+        routines: [
+          Routine(
+            id: 'r1',
+            title: 'Sabah rutini',
+            steps: const [RoutineStep(id: 's1', text: 'Su iç')],
+            startDay: '2026-11-01',
+            time: '08:00',
+            remind: true,
+            createdAt: DateTime(2026, 11, 1, 7),
+          ),
+          Routine(
+            id: 'r-sil',
+            title: 'Silinen rutin',
+            deletedAt: DateTime(2026, 11, 2),
+          ),
+        ],
+        routineLogs: const [
+          RoutineLog(
+            routineId: 'r1',
+            day: '2026-11-06',
+            done: {'s1'},
+            completed: true,
+          ),
+        ],
       );
       // Gerçek yedekteki gibi JSON metnine yazılıp okunur.
       final json = jsonDecode(
@@ -130,6 +155,28 @@ void main() {
       expect(back.dayLinks, {
         '2026-11-06': ['yeni1'],
       });
+      expect(back.routines.map((r) => r.id), ['r1']);
+      expect(back.routines.single.title, 'Sabah rutini');
+      expect(back.routines.single.steps.single.text, 'Su iç');
+      expect(back.routines.single.time, '08:00');
+      expect(back.routines.single.remind, isTrue);
+      expect(back.routineLogs, hasLength(1));
+      expect(back.routineLogs.single.routineId, 'r1');
+      expect(back.routineLogs.single.day, '2026-11-06');
+      expect(back.routineLogs.single.done, {'s1'});
+      expect(back.routineLogs.single.completed, isTrue);
+    });
+
+    test('routines/routineLogs olmayan eski takvim yedeği sorunsuz açılır', () {
+      final back = decodeCalendarBackup(const {
+        'events': [],
+        'tasks': [],
+        'lists': [],
+        'dayLinks': {},
+      }, const {});
+      expect(back.routines, isEmpty);
+      expect(back.routineLogs, isEmpty);
+      expect(back.isEmpty, isTrue);
     });
 
     test('boş takvim yedeğe alan açmaz', () {

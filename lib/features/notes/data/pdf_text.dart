@@ -45,7 +45,7 @@ class PdfText {
   /// söyler; OCR yolu tam ekran görüntüleyicide.
   static Future<String> pageText(String path, int pageNumber) async {
     final file = File(path);
-    if (!file.existsSync()) return '';
+    if (!await file.exists()) return '';
     final document = await PdfDocument.openFile(path);
     try {
       if (pageNumber < 1 || pageNumber > document.pages.length) return '';
@@ -69,7 +69,7 @@ class PdfText {
 
   static Future<bool> hasTextLayer(String path) async {
     final file = File(path);
-    if (!file.existsSync()) return false;
+    if (!await file.exists()) return false;
     final document = await PdfDocument.openFile(path);
     try {
       var seen = 0;

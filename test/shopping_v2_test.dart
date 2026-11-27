@@ -92,6 +92,16 @@ void main() {
       const kgItem = NoteItem(id: 'b', text: 'Elma (1 kg)');
       expect(stepShopItemQty(kgItem, increase: true).text, 'Elma (1,5 kg)');
 
+      const gramPromo = NoteItem(id: 'gp', text: 'Peynir (750 g)');
+      final promotedKg = stepShopItemQty(gramPromo, increase: true);
+      expect(promotedKg.text, 'Peynir (1 kg)');
+      expect(ShopItemMeta.fromItem(promotedKg).unit, 'kg');
+
+      const mlPromo = NoteItem(id: 'mp', text: 'Zeytinyağı (750 ml)');
+      final promotedLt = stepShopItemQty(mlPromo, increase: true);
+      expect(promotedLt.text, 'Zeytinyağı (1 lt)');
+      expect(ShopItemMeta.fromItem(promotedLt).unit, 'lt');
+
       final pricedCount = const ShopItemMeta(
         qty: 3,
         unit: 'adet',
@@ -172,6 +182,18 @@ void main() {
         newId: () => 'new-1',
       );
       expect(merged.single.text, 'Domates (2 kg)');
+
+      const bottleRecipe = ShopRecipe(
+        id: 'r_bottle',
+        titleTr: 'Limonata',
+        titleEn: 'Lemonade',
+        baseServings: 4,
+        ingredients: [
+          ShopIngredient(name: 'Maden suyu', qty: 1, unit: 'şişe', aisle: 5),
+        ],
+      );
+      final bottleScaled = scaleShopRecipe(bottleRecipe, 5);
+      expect(bottleScaled.single.qty, '2 şişe');
     });
   });
 
@@ -253,6 +275,32 @@ KREDI KARTI *128,40
         expect(matches.map((m) => m.itemId), ['1', '2']);
         expect(matches[0].receiptLine.price, 38.50);
         expect(matches[1].receiptLine.price, 69.90);
+
+        final wordBoundary = parseTurkishReceipt('''
+TOPKEK VISNELI *15,50
+KARTOF CIPS *32,00
+KART *47,50
+''');
+        expect(wordBoundary.lines.map((l) => l.rawName), [
+          'TOPKEK VISNELI',
+          'KARTOF CIPS',
+        ]);
+
+        const breadLine = ReceiptLine(rawName: 'EKMEK', price: 20, qty: 2);
+        expect(
+          receiptUnitPriceForItem(
+            breadLine,
+            const ShopItemMeta(qty: 2, unit: 'adet'),
+          ),
+          10,
+        );
+        expect(
+          receiptUnitPriceForItem(
+            breadLine,
+            const ShopItemMeta(qty: 500, unit: 'g'),
+          ),
+          20,
+        );
       },
     );
 

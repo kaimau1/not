@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../a11y/motion.dart';
+import '../../app/theme/app_tokens.dart';
 
 /// Açılır bölümün içeriğini AŞAĞI DOĞRU kayarak açan/kapatan sarmalayıcı —
 /// ayarların akordeon alanları ve "Gelişmiş" gibi iç bölümler hep bununla
@@ -54,7 +55,7 @@ class _ExpandRevealState extends State<ExpandReveal>
     );
     _curve = CurvedAnimation(
       parent: _controller,
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.emphasized,
       reverseCurve: Curves.easeInCubic,
     );
   }

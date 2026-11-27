@@ -18,13 +18,23 @@ library;
 import 'dart:typed_data';
 
 class TrLexicon {
-  TrLexicon._(this._text, this._starts, this._tabs);
+  TrLexicon._(this._text, this._starts, this._tabs, this._flags);
+
+  static const flagPresent = 1 << 7;
+  static const flagNoun = 1 << 0;
+  static const flagVerb = 1 << 1;
+  static const flagSoftMono = 1 << 2;
+  static const flagNoVoicing = 1 << 3;
+  static const flagDoubling = 1 << 4;
+  static const flagFront = 1 << 5;
+  static const flagDropsVowel = 1 << 6;
 
   /// `kelime<TAB>bayraklar` satırları; sıralı olmalı (üretici sıralar,
   /// bekçi test doğrular).
   factory TrLexicon.parse(String text) {
     final starts = <int>[];
     final tabs = <int>[];
+    final flags = <int>[];
     var pos = 0;
     final n = text.length;
     while (pos < n) {
@@ -32,8 +42,23 @@ class TrLexicon {
       final end = nl < 0 ? n : nl;
       final tab = text.indexOf('\t', pos);
       if (end > pos) {
+        final sep = tab < 0 || tab > end ? end : tab;
         starts.add(pos);
-        tabs.add(tab < 0 || tab > end ? end : tab);
+        tabs.add(sep);
+        var mask = flagPresent;
+        for (var k = sep + 1; k < end; k++) {
+          mask |= switch (text.codeUnitAt(k)) {
+            0x6E => flagNoun,
+            0x76 => flagVerb,
+            0x73 => flagSoftMono,
+            0x68 => flagNoVoicing,
+            0x64 => flagDoubling,
+            0x66 => flagFront,
+            0x6C => flagDropsVowel,
+            _ => 0,
+          };
+        }
+        flags.add(mask);
       }
       pos = end + 1;
     }
@@ -41,12 +66,14 @@ class TrLexicon {
       text,
       Int32List.fromList(starts),
       Int32List.fromList(tabs),
+      Uint8List.fromList(flags),
     );
   }
 
   final String _text;
   final Int32List _starts;
   final Int32List _tabs;
+  final Uint8List _flags;
 
   static TrLexicon? _instance;
 
@@ -93,37 +120,33 @@ class TrLexicon {
     return -1;
   }
 
-  bool _flag(String w, int flag) {
+  /// Sözcüğün tüm bayrakları tek ikili aramada (yoksa `0`, varsa bit 7 = 1).
+  int flagsOf(String w) {
     final i = _find(w);
-    if (i < 0) return false;
-    final end = i + 1 < _starts.length ? _starts[i + 1] - 1 : _text.length;
-    for (var k = _tabs[i] + 1; k < end; k++) {
-      if (_text.codeUnitAt(k) == flag) return true;
-    }
-    return false;
+    return i < 0 ? 0 : _flags[i];
   }
 
   /// Sözlükte var mı (her türden).
   bool has(String w) => _find(w) >= 0;
 
   /// Fiil dışı kök (ad, sıfat, zarf, adıl, bağlaç, ünlem…).
-  bool noun(String w) => _flag(w, 0x6E); // n
+  bool noun(String w) => (flagsOf(w) & flagNoun) != 0;
 
   /// Fiil kökü ("gel", "boya").
-  bool verb(String w) => _flag(w, 0x76); // v
+  bool verb(String w) => (flagsOf(w) & flagVerb) != 0;
 
   /// Tek heceli ve sonu yumuşar ("kap" → "kabı").
-  bool softMono(String w) => _flag(w, 0x73); // s
+  bool softMono(String w) => (flagsOf(w) & flagSoftMono) != 0;
 
   /// Yumuşamaz ("adalet" → "adaleti", "adaledi" değil).
-  bool noVoicing(String w) => _flag(w, 0x68); // h
+  bool noVoicing(String w) => (flagsOf(w) & flagNoVoicing) != 0;
 
   /// İkizleşir ("hak" → "hakkı").
-  bool doubling(String w) => _flag(w, 0x64); // d
+  bool doubling(String w) => (flagsOf(w) & flagDoubling) != 0;
 
   /// İnce ünlüyle ek alır ("saat" → "saati").
-  bool front(String w) => _flag(w, 0x66); // f
+  bool front(String w) => (flagsOf(w) & flagFront) != 0;
 
   /// Son ünlüsü düşer ("ağız" → "ağzı").
-  bool dropsVowel(String w) => _flag(w, 0x6C); // l
+  bool dropsVowel(String w) => (flagsOf(w) & flagDropsVowel) != 0;
 }

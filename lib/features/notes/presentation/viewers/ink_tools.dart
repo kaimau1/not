@@ -166,6 +166,12 @@ bool inkPointInPolygon(double x, double y, List<double> polygon) {
 /// çizer; kalem ilk kez değince kendiliğinden kaydırmaya geçer.
 enum FingerTool { auto, scroll, draw, erase }
 
+/// Editör/bölme [penOnly] bayrağı ve [InkToolMemory.fingerErases] durumundan
+/// parmağın etkin aracını verir (K34 ipucu/bildirim tutarlılığı).
+FingerTool effectivePenModeFingerTool({required bool penOnly}) => penOnly
+    ? FingerTool.scroll
+    : (InkToolMemory.fingerErases ? FingerTool.erase : FingerTool.draw);
+
 /// **KALEM TERCİHLERİNİN HAFIZASI** (kullanıcı isteği 2026-10-23: "pratiklik
 /// şart"): son seçilen kalem türü, renk, kalınlık, şeffaflık, "yalnız kalemle
 /// yaz" ve son kullanılan renkler. Her çizim ekranı (el yazısı, PDF, slayt,
@@ -470,7 +476,7 @@ class InkToolMemory {
   /// "yalnız kalem açık/kapalı" ipucu yalnız durum değişince
   /// ([lastPenOnlyHint]). Kalıcı değil (uygulama açılışında sıfır).
   static final Set<bool> stylusHintsTold = {};
-  static bool? lastPenOnlyHint;
+  static FingerTool? lastPenOnlyHint;
 
   /// Testler için: hafızayı varsayılana döndürür.
   @visibleForTesting

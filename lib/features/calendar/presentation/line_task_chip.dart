@@ -247,7 +247,7 @@ class LineTaskChip extends ConsumerWidget {
                     label,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: fg,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppWeight.strong,
                       decoration: task.completed
                           ? TextDecoration.lineThrough
                           : null,

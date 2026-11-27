@@ -58,7 +58,15 @@ class _AreaActionsSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 220),
-                child: Image.memory(png, fit: BoxFit.contain),
+                child: Image.memory(
+                  png,
+                  fit: BoxFit.contain,
+                  cacheWidth:
+                      (MediaQuery.sizeOf(context).width *
+                              MediaQuery.devicePixelRatioOf(context))
+                          .round()
+                          .clamp(360, 1280),
+                ),
               ),
             ),
             const SizedBox(height: 12),

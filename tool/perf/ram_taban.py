@@ -85,9 +85,10 @@ def cleanup_kalem():
 
 def state_youtube(q):
     W, H, h = fresh()
-    tap(*h["search"]); time.sleep(1.0)
-    text(q.replace(" ", "%s")); time.sleep(1.6)
-    tap(*h["hit"]); time.sleep(8.0)
+    hit = find_note(q, "^" + q, W, H, h)
+    if not hit:
+        raise RuntimeError(f"YouTube notu yok: {q}")
+    tap(*hit); time.sleep(8.0)
 
 
 def main():

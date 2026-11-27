@@ -3,6 +3,7 @@ import 'due_state.dart';
 import '../domain/reminder_repeat.dart';
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'dart:ui' show Locale, PlatformDispatcher;
@@ -22,6 +23,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../../../app/router.dart';
 import '../../../core/error_log.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
 import '../../../core/utils/run_heavy.dart';
@@ -50,6 +52,21 @@ const _monthsTr = [
   'Ara',
 ];
 
+const _monthsEn = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
 /// Bildirim gövdesinin başına konan mutlak zaman.
 ///
 /// Not metni çoğu zaman ham konuşma dökümüdür ve içinde "yarın saat 9'da"
@@ -76,7 +93,10 @@ String reminderTimePrefix(
     case 1:
       return '${l10n?.dateTomorrow ?? 'Yarın'} $clock';
     default:
-      return '${when.day} ${_monthsTr[when.month - 1]} $clock';
+      final months = l10n?.localeName.startsWith('en') == true
+          ? _monthsEn
+          : _monthsTr;
+      return '${when.day} ${months[when.month - 1]} $clock';
   }
 }
 
@@ -125,10 +145,11 @@ void handleNotificationResponse(Ref ref, NotificationResponse response) {
     }
     return;
   }
-  // Brifing bildirimine dokununca ilgili ekranı aç.
+  // Eski sürümlerden kalan günlük brifing bildirimine dokunulursa ana
+  // ekrana yönlendirilir (`/briefing` rotası kaldırıldı).
   if (payload == 'briefing') {
     try {
-      ref.read(routerProvider).push('/briefing');
+      ref.read(routerProvider).go('/');
     } catch (e) {
       ErrorLog.record('notification-tap', e);
     }
@@ -333,7 +354,68 @@ class ReminderService {
   final Ref _ref;
   final _plugin = FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+  Future<void>? _initFuture;
+  bool _sigLoaded = false;
+  static const _noteSigPrefix = 'reminder_sig_cache_v1_';
+  static const _calSigPrefix = 'cal_sig_cache_v1_';
   ProviderSubscription<AsyncValue<List<Note>>>? _sub;
+
+  String _sigCacheKey(String prefix) {
+    final uid = _ref.read(currentUidProvider) ?? 'guest';
+    return '$prefix$uid';
+  }
+
+  void _ensureSigLoaded() {
+    if (_sigLoaded) return;
+    _sigLoaded = true;
+    try {
+      final prefs = _ref.read(sharedPreferencesProvider);
+      final rawNotes = prefs.getString(_sigCacheKey(_noteSigPrefix));
+      if (rawNotes != null && rawNotes.isNotEmpty) {
+        final decoded = jsonDecode(rawNotes);
+        if (decoded is Map) {
+          for (final e in decoded.entries) {
+            if (e.value is String) _scheduled['${e.key}'] = e.value as String;
+          }
+        }
+      }
+      final rawCal = prefs.getString(_sigCacheKey(_calSigPrefix));
+      if (rawCal != null && rawCal.isNotEmpty) {
+        final decoded = jsonDecode(rawCal);
+        if (decoded is Map) {
+          for (final e in decoded.entries) {
+            final k = int.tryParse('${e.key}');
+            if (k != null && e.value is String) {
+              _calScheduled[k] = e.value as String;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _persistNoteSigs() {
+    try {
+      final prefs = _ref.read(sharedPreferencesProvider);
+      unawaited(
+        prefs.setString(_sigCacheKey(_noteSigPrefix), jsonEncode(_scheduled)),
+      );
+    } catch (_) {}
+  }
+
+  void _persistCalSigs() {
+    try {
+      final prefs = _ref.read(sharedPreferencesProvider);
+      unawaited(
+        prefs.setString(
+          _sigCacheKey(_calSigPrefix),
+          jsonEncode({
+            for (final e in _calScheduled.entries) '${e.key}': e.value,
+          }),
+        ),
+      );
+    } catch (_) {}
+  }
 
   /// Planlanan bildirimlerin not bazında takibi (id → zaman|tekrar imzası).
   final Map<String, String> _scheduled = {};
@@ -375,27 +457,34 @@ class ReminderService {
     }
   }
 
-  Future<void> _ensureInitialized() async {
-    if (_initialized) return;
-    tz_data.initializeTimeZones();
-    try {
-      final localTz = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(localTz.identifier));
-    } catch (_) {
-      // Bilinmeyen dilim: UTC ile devam et.
-    }
+  Future<void> _ensureInitialized() {
+    if (_initialized) return Future<void>.value();
+    return _initFuture ??= () async {
+      try {
+        tz_data.initializeTimeZones();
+        try {
+          final localTz = await FlutterTimezone.getLocalTimezone();
+          tz.setLocalLocation(tz.getLocation(localTz.identifier));
+        } catch (_) {
+          // Bilinmeyen dilim: UTC ile devam et.
+        }
 
-    // Bildirim küçük simgesi tek renk siluet olmalı (bkz. ic_stat_notlar.xml).
-    const androidInit = AndroidInitializationSettings(
-      '@drawable/ic_stat_notlar',
-    );
-    await _plugin.initialize(
-      settings: const InitializationSettings(android: androidInit),
-      onDidReceiveNotificationResponse: (response) =>
-          handleNotificationResponse(_ref, response),
-    );
+        // Bildirim küçük simgesi tek renk siluet olmalı (bkz. ic_stat_notlar.xml).
+        const androidInit = AndroidInitializationSettings(
+          '@drawable/ic_stat_notlar',
+        );
+        await _plugin.initialize(
+          settings: const InitializationSettings(android: androidInit),
+          onDidReceiveNotificationResponse: (response) =>
+              handleNotificationResponse(_ref, response),
+        );
 
-    _initialized = true;
+        _initialized = true;
+      } catch (_) {
+        _initFuture = null;
+        rethrow;
+      }
+    }();
   }
 
   bool _permissionAsked = false;
@@ -542,15 +631,23 @@ class ReminderService {
           () => unawaited(_syncBadge(n)),
         );
       }, fireImmediately: true);
+      unawaited(_cancelLegacyBriefingOnce());
     }
-
-    // Günlük brifing ayarını izle ve bildirimi buna göre planla/iptal et.
-    _briefingSub = _ref.listen(briefingSettingsProvider, (previous, next) {
-      _syncBriefing(next);
-    }, fireImmediately: true);
   }
 
-  ProviderSubscription<BriefingSettings>? _briefingSub;
+  static const _legacyBriefingCancelledKey = 'legacy_briefing_cancelled_v1';
+
+  Future<void> _cancelLegacyBriefingOnce() async {
+    final prefs = _ref.read(sharedPreferencesProvider);
+    if (prefs.getBool(_legacyBriefingCancelledKey) == true) return;
+    try {
+      await _ensureInitialized();
+      await _plugin.cancel(id: _briefingNotificationId);
+      await prefs.setBool(_legacyBriefingCancelledKey, true);
+    } catch (_) {
+      // Bir sonraki açılışta yeniden denenir.
+    }
+  }
 
   AppLifecycleListener? _lifecycle;
   ProviderSubscription<({int pending, int failed, bool needsDrive})>?
@@ -686,6 +783,7 @@ class ReminderService {
   ]) async {
     try {
       await _ensureInitialized();
+      _ensureSigLoaded();
       final alarms = calendarAlarms(
         events: events,
         tasks: tasks,
@@ -694,34 +792,49 @@ class ReminderService {
       );
       final wanted = {for (final a in alarms) a.notificationId: a};
       if (wanted.isNotEmpty) await _askPermissionOnce();
-      // Uygulama kapalıyken silinen/değişen kayıtların eski bildirimleri.
+      var dirty = false;
+      // Uygulama kapalıyken silinen/değişen kayıtların eski bildirimleri
+      // (ve OS yeniden başlatma sonrası düşen alarmlar).
       if (!_calReconciled) {
         _calReconciled = true;
         final pending = await _plugin.pendingNotificationRequests();
+        final activeCalIds = <int>{};
         for (final r in pending) {
-          if ((r.payload ?? '').startsWith(kCalendarPayloadPrefix) &&
-              !wanted.containsKey(r.id)) {
-            await _plugin.cancel(id: r.id);
+          if ((r.payload ?? '').startsWith(kCalendarPayloadPrefix)) {
+            if (!wanted.containsKey(r.id)) {
+              await _plugin.cancel(id: r.id);
+            } else {
+              activeCalIds.add(r.id);
+            }
           }
         }
+        _calScheduled.removeWhere((id, _) {
+          final missing = !activeCalIds.contains(id);
+          if (missing) dirty = true;
+          return missing;
+        });
       }
       for (final id in _calScheduled.keys.toList()) {
         if (!wanted.containsKey(id)) {
           await _plugin.cancel(id: id);
           _calScheduled.remove(id);
+          dirty = true;
         }
       }
-      if (wanted.isEmpty) return;
-      final l10n = await loadNotificationL10n(_ref.read(localeProvider));
-      for (final a in wanted.values) {
-        if (_calScheduled[a.notificationId] == a.signature) continue;
-        try {
-          await _scheduleCalendarAlarm(a, l10n);
-          _calScheduled[a.notificationId] = a.signature;
-        } catch (e) {
-          debugPrint('Takvim bildirimi kurulamadı: $e');
+      if (wanted.isNotEmpty) {
+        final l10n = await loadNotificationL10n(_ref.read(localeProvider));
+        for (final a in wanted.values) {
+          if (_calScheduled[a.notificationId] == a.signature) continue;
+          try {
+            await _scheduleCalendarAlarm(a, l10n);
+            _calScheduled[a.notificationId] = a.signature;
+            dirty = true;
+          } catch (e) {
+            debugPrint('Takvim bildirimi kurulamadı: $e');
+          }
         }
       }
+      if (dirty) _persistCalSigs();
     } catch (e) {
       debugPrint('Takvim bildirimleri planlanamadı: $e');
     }
@@ -782,51 +895,6 @@ class ReminderService {
     }
   }
 
-  Future<void> _syncBriefing(BriefingSettings settings) async {
-    try {
-      await _ensureInitialized();
-      await _plugin.cancel(id: _briefingNotificationId);
-      if (!settings.enabled) return;
-      await _askPermissionOnce();
-
-      final now = tz.TZDateTime.now(tz.local);
-      var next = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        settings.minutes ~/ 60,
-        settings.minutes % 60,
-      );
-      if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
-
-      final l10n = await loadNotificationL10n(_ref.read(localeProvider));
-      await _plugin.zonedSchedule(
-        id: _briefingNotificationId,
-        title: l10n.briefingNotificationTitle,
-        body: l10n.briefingNotificationBody,
-        scheduledDate: next,
-        notificationDetails: NotificationDetails(
-          android: AndroidNotificationDetails(
-            'briefing',
-            l10n.briefingTitle,
-            channelDescription: l10n.briefingSettingInfo,
-          ),
-        ),
-        // BİLEREK inexact (hatırlatıcılardan farklı): sabah brifingi birkaç
-        // dakika kaysa kimse fark etmez; exact alarm hem her sabah Doze'u
-        // kırıp pil yakıyor hem de USE_EXACT_ALARM'ın Play politikası
-        // (yalnız alarm/takvim uygulamaları) riskini büyütüyordu. Dakikası
-        // dakikasına çalması gereken NOT hatırlatıcıları exact kalır.
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time,
-        payload: 'briefing',
-      );
-    } catch (e) {
-      debugPrint('Brifing bildirimi planlanamadı: $e');
-    }
-  }
-
   static int _notificationId(String noteId) => noteId.hashCode & 0x7fffffff;
 
   /// Bu süreçte AlarmManager'daki planlı bildirimlerle mutabakat yapıldı mı
@@ -838,6 +906,7 @@ class ReminderService {
     _reconciled = true;
     try {
       final pending = await _plugin.pendingNotificationRequests();
+      final pendingIds = {for (final r in pending) r.id};
       final orphans = orphanReminderIds(
         [for (final r in pending) (id: r.id, payload: r.payload)],
         {for (final id in wanted) id: _idsFor(id)},
@@ -845,6 +914,8 @@ class ReminderService {
       for (final id in orphans) {
         await _plugin.cancel(id: id);
       }
+      // OS'ten düşmüş imzaları sil ki yeniden kurulsun.
+      _scheduled.removeWhere((id, _) => !pendingIds.contains(_notificationId(id)));
     } catch (e) {
       debugPrint('Planlı hatırlatıcılar okunamadı: $e');
     }
@@ -853,6 +924,7 @@ class ReminderService {
   Future<void> _syncReminders(List<Note> notes) async {
     try {
       await _ensureInitialized();
+      _ensureSigLoaded();
       final now = DateTime.now();
       final wanted = <String, Note>{
         for (final note in notes)
@@ -870,15 +942,19 @@ class ReminderService {
 
       if (wanted.isNotEmpty) await _askPermissionOnce();
 
+      var dirty = false;
+      final sigBefore = _scheduled.length;
       // Uygulama kapalıyken (başka cihazda) kaldırılan/silinen notların
-      // eski bildirimleri: `_scheduled` yalnız bellekte, onları bilmez.
+      // eski bildirimleri: `_scheduled` kalıcı önbellekten de ayıklanır.
       await _reconcilePending(wanted.keys.toSet());
+      if (_scheduled.length != sigBefore) dirty = true;
 
       // Kaldırılan veya geçmişte kalanları iptal et.
       for (final id in _scheduled.keys.toList()) {
         if (!wanted.containsKey(id)) {
           await _cancelAll(id);
           _scheduled.remove(id);
+          dirty = true;
         }
       }
 
@@ -902,10 +978,12 @@ class ReminderService {
             );
           }
           _scheduled[entry.key] = _signature(note);
+          dirty = true;
         } catch (e) {
           debugPrint('Hatırlatıcı planlanamadı (${entry.key}): $e');
         }
       }
+      if (dirty) _persistNoteSigs();
     } catch (e) {
       // Bildirim altyapısı olmayan ortamlarda uygulamayı düşürme.
       debugPrint('Hatırlatıcı planlanamadı: $e');
@@ -986,7 +1064,6 @@ class ReminderService {
     _trashDebounce?.cancel();
     _sub?.close();
     _trashSub?.close();
-    _briefingSub?.close();
     _calDebounce?.cancel();
     _calEventsSub?.close();
     _calTasksSub?.close();

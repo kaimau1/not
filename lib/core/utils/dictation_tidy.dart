@@ -68,7 +68,7 @@ String _spacePunctuation(String line) {
   // kısaltmaları korunur: yalnız virgül/noktalı virgül/ünlem/soru ve
   // sözcükten sonra gelen iki nokta).
   s = s.replaceAllMapped(
-    RegExp(r'([,;!?])(\p{L})', unicode: true),
+    RegExp(r'([,;!?]|(?<=\p{L}):)(\p{L})', unicode: true),
     (m) => '${m[1]} ${m[2]}',
   );
   s = s.replaceAll(RegExp(r',{2,}'), ',');
@@ -84,9 +84,9 @@ String _dropTrailingPeriod(String line) {
   return line;
 }
 
-/// Soru eki (+ kişi eki) kelimesi.
+/// Soru eki (+ kişi/zaman ekleri) kelimesi.
 final _questionParticle = RegExp(
-  r'^(m[ıiuü])(y[ıiuü]m|s[ıiuü]n|y[ıiuü]z|s[ıiuü]n[ıiuü]z|d[ıiuü]r|yd[ıiuü]|ym[ıiuü]ş)?$',
+  r'^(m[ıiuü])(y[ıiuü]m|s[ıiuü]n|y[ıiuü]z|s[ıiuü]n[ıiuü]z|d[ıiuü]r|yd[ıiuü][mk]?|yd[ıiuü]n([ıiuü]z)?|yd[ıiuü]l[ae]r|ym[ıiuü]ş(s[ıiuü]n|s[ıiuü]n[ıiuü]z|l[ae]r|[ıiuü]m|[ıiuü]z)?)?$',
 );
 
 String _questionMark(String line) {

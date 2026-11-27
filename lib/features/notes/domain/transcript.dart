@@ -14,11 +14,10 @@ import 'attachment.dart';
 abstract final class Transcripts {
   static const _uuid = Uuid();
 
-  /// [media] metne dökülebilir mi? Ses, video (yerel ya da YouTube) ve
-  /// görsel. PDF/sunumun zaten seçilebilir metni (ve taranmışsa OCR'ı) var.
+  /// [media] metne dökülebilir mi? Yalnız görseller cihaz içi OCR ile
+  /// metne dökülür (PDF/sunumun zaten seçilebilir metni vardır; ses/video
+  /// metne dökme girişleri kaldırıldı).
   static bool canTranscribe(Attachment media) =>
-      media.kind == AttachmentKind.audio ||
-      media.kind == AttachmentKind.video ||
       media.kind == AttachmentKind.image;
 
   /// [media]'nın notta KAYITLI transkripti (yoksa null). Birden çoksa (eski

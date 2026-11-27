@@ -596,7 +596,7 @@ class _EditorQuickRowState extends State<EditorQuickRow> {
         // ⋯ (U2): notun ⋮ menüsü hemen yanında — iki aynı simge karışıyordu.
         icon: Icon(
           Icons.more_horiz_rounded,
-          size: 20,
+          size: AppIconSize.m,
           color: scheme.onSurfaceVariant,
         ),
         onPressed: () => unawaited(_openMore(overflow(), all)),

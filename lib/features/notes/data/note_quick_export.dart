@@ -201,7 +201,7 @@ class NoteQuickExport {
           derived == null &&
           !annotated &&
           a.localPath.isNotEmpty &&
-          File(a.localPath).existsSync()) {
+          await File(a.localPath).exists()) {
         // UZANTISIZ DOSYA (kullanıcı bulgusu 2026-11-21: "scaled_1273…490"
         // diye tanınmayan dosya gidiyordu): görsel seçicinin verdiği ad
         // uzantısız olabiliyor; alıcı türü tanımasın diye kopya MIME'den

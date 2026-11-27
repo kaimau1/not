@@ -133,11 +133,13 @@ class PdfPageOcr {
               );
               unawaited(_writeDisk(page, rendered.scale, lines));
             } finally {
-              try {
-                File(rendered.path).deleteSync();
-              } catch (_) {
-                // Geçici PNG; açılıştaki temizlik toplar.
-              }
+              unawaited(() async {
+                try {
+                  await File(rendered.path).delete();
+                } catch (_) {
+                  // Geçici PNG; açılıştaki temizlik toplar.
+                }
+              }());
             }
           }
         }
@@ -172,7 +174,7 @@ class PdfPageOcr {
     try {
       final base = await getApplicationSupportDirectory();
       final dir = Directory('${base.path}/pdf_ocr');
-      if (!dir.existsSync()) dir.createSync(recursive: true);
+      if (!await dir.exists()) await dir.create(recursive: true);
       return _dir = dir;
     } catch (_) {
       return null;
@@ -201,8 +203,8 @@ class PdfPageOcr {
     var stamp = '';
     try {
       final file = File(source);
-      if (file.existsSync()) {
-        final stat = file.statSync();
+      if (await file.exists()) {
+        final stat = await file.stat();
         // Yalnız BOY (2026-11-03): değişme zamanı, ek eşitlemede/yeniden
         // indirmede dosya aynı kalsa da değişiyordu → her açılışta önbellek
         // ıskalanıp sayfa baştan tanınıyordu. Sayfa düzenleme boyu değiştirir.
@@ -219,7 +221,7 @@ class PdfPageOcr {
   static Future<({OcrPageText? text})?> _readDisk(PdfPage page) async {
     try {
       final file = await _diskFile(page);
-      if (file == null || !file.existsSync()) return null;
+      if (file == null || !await file.exists()) return null;
       final data = jsonDecode(await file.readAsString());
       if (data is! Map) return null;
       final lines = decodeWordLines(data['lines']);

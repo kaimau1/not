@@ -265,7 +265,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
                             minimumSize: const Size.fromHeight(48),
                           ),
                           onPressed: _pickDate,
-                          icon: const Icon(Icons.event_outlined, size: 18),
+                          icon: const Icon(Icons.event_outlined, size: AppIconSize.s),
                           label: Text(
                             DateFormat('d MMM EEE', locale).format(_at),
                             maxLines: 1,
@@ -281,7 +281,7 @@ class _ReminderSheetState extends State<ReminderSheet> {
                             minimumSize: const Size.fromHeight(48),
                           ),
                           onPressed: _pickTime,
-                          icon: const Icon(Icons.schedule, size: 18),
+                          icon: const Icon(Icons.schedule, size: AppIconSize.s),
                           label: Text(timeLabel),
                         ),
                       ),

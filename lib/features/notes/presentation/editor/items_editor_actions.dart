@@ -64,7 +64,7 @@ extension _ItemsActions on ItemsEditorState {
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.10),
                 border: Border.all(color: color.withValues(alpha: 0.45)),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.s),
               ),
             ),
           ),

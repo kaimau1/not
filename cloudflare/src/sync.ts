@@ -390,6 +390,13 @@ export async function handleUpsertShare(
   env: Env,
   user: AuthUser,
 ): Promise<Response> {
+  if (user.isAnonymous) {
+    return errorResponse(
+      "anonymous_not_allowed",
+      "Anonim hesap paylaşım yapamaz",
+      403,
+    );
+  }
   let body: {
     entityKind?: string;
     entityId?: string;
@@ -413,6 +420,27 @@ export async function handleUpsertShare(
 
   if (!ENTITY_ID_RE.test(entityId) || !memberUid || memberUid === user.uid) {
     return errorResponse("invalid_share", "Geçersiz paylaşım parametreleri", 400);
+  }
+
+  const ownedEntity = await env.DB.prepare(
+    "SELECT 1 FROM entities WHERE uid = ? AND kind = ? AND id = ? LIMIT 1",
+  )
+    .bind(user.uid, kind, entityId)
+    .first();
+  const ownedMedia =
+    !ownedEntity && kind === "note"
+      ? await env.DB.prepare(
+          "SELECT 1 FROM media_objects WHERE owner_uid = ? AND note_id = ? LIMIT 1",
+        )
+          .bind(user.uid, entityId)
+          .first()
+      : null;
+  if (!ownedEntity && !ownedMedia) {
+    return errorResponse(
+      "forbidden",
+      "Paylaşılacak öğe size ait değil",
+      403,
+    );
   }
 
   const shareId = `${user.uid}:${kind}:${entityId}:${memberUid}`;

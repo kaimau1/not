@@ -185,10 +185,12 @@ void main() {
         FileUse.classic,
         FileUse.transcribe,
       ]);
-      // Ses artık sorulmadan metne dökülmüyor: ek olarak eklenebilir.
+      // Ses/video yalnız eklenir (metne dökme yalnız görsel OCR içindir).
       expect(fileUsesFor(PickedFileKind.audio, web: false), [
         FileUse.audio,
-        FileUse.transcribe,
+      ]);
+      expect(fileUsesFor(PickedFileKind.video, web: false), [
+        FileUse.video,
       ]);
       expect(fileUsesFor(PickedFileKind.video, web: true), [FileUse.video]);
     });

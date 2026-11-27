@@ -1,6 +1,6 @@
 # Notlar — Gizlilik Politikası
 
-Son güncelleme: 17 Kasım 2026
+Son güncelleme: 26 Kasım 2026
 
 Bu politika, "Notlar" uygulamasının (Android ve web) hangi
 verileri işlediğini, neden işlediğini ve haklarınızı açıklar. Uygulamayı
@@ -17,13 +17,17 @@ kullanarak bu politikayı kabul etmiş olursunuz.
 2. Not içerikleri — Notlarınız, listeleriniz, etiketleriniz,
    hatırlatıcılarınız ve ekleriniz (fotoğraf, PDF, ses kaydı, çizim, belge)
    cihazlar arası eşitleme için Google Firebase (Firestore ve Cloud
-   Storage) üzerinde, hesabınıza bağlı olarak saklanır. Google hesabıyla
-   giriş yapıp "Ekleri Google Drive'ında sakla" seçeneğini bağladığınızda
-   ekleriniz bunun yerine KENDİ Google Drive'ınızda, uygulamaya özel gizli
-   klasörde (drive.appdata izni — uygulama Drive'ınızdaki başka hiçbir
-   dosyayı göremez) saklanır. "Yalnız bu cihazda" seçtiğiniz notlar ve
-   videolar buluta yüklenmez. Misafir hesapta ekler buluta yüklenmez.
-   Not içerikleri reklam amacıyla kullanılmaz.
+   Storage) veya etkinse Cloudflare (Workers, D1 ve ortak medya için R2)
+   üzerinde hesabınıza bağlı olarak saklanır. Kilitlediğiniz notların gövdesi,
+   kontrol listesi maddeleri, ek metin sayfaları ve PDF sayfa notları
+   buluta gönderilmeden önce cihazınızda AES-256-GCM ile uçtan uca
+   şifrelenir. Google hesabıyla giriş yapıp "Ekleri Google Drive'ında
+   sakla" seçeneğini bağladığınızda kişisel ekleriniz KENDİ Google
+   Drive'ınızda, uygulamaya özel gizli klasörde (`drive.appdata` izni —
+   uygulama Drive'ınızdaki başka hiçbir dosyayı göremez) saklanır.
+   "Yalnız bu cihazda" seçtiğiniz notlar ve videolar buluta yüklenmez.
+   Misafir hesapta notlar ve ekler yalnız cihazda tutulur. Not içerikleri
+   reklam amacıyla kullanılmaz.
 
 3. Kişiler ve paylaşım — Uygulama bir kişiler (arkadaşlar) özelliği
    içerir:
@@ -43,49 +47,58 @@ kullanarak bu politikayı kabul etmiş olursunuz.
      kopyası alıcıda kalır.
    Bunların dışında verileriniz başka kullanıcılarla paylaşılmaz.
 
-4. Yapay zeka işlemleri — Özetleme, sesli not düzenleme, OCR, çeviri,
-   sohbet, PDF sohbeti, semantik arama, günlük brifing gibi AI
-   özelliklerini kullandığınızda ilgili not metni, ses kaydı, görsel veya
-   belge işlenmek üzere bir yapay zeka sağlayıcısına gönderilir:
-   - Varsayılan olarak Google Gemini (Firebase AI Logic üzerinden).
-   - Kendi API anahtarınızı girerseniz, seçtiğiniz sağlayıcıya: Google
-     Gemini, OpenAI, Anthropic ya da OpenRouter (OpenRouter isteği
-     seçtiğiniz modelin sağlayıcısına iletir). Bu durumda o sağlayıcının
-     gizlilik politikası geçerlidir.
-   İçerik yalnızca isteğinizi yerine getirmek için gönderilir; uygulama
-   bu içerikleri ayrıca bir sunucuya kaydetmez (sonucu notunuza siz
-   eklerseniz notla birlikte saklanır). API anahtarınız yalnızca
-   cihazınızdaki güvenli depoda tutulur ve hiçbir sunucuya yazılmaz.
-   Dahili AI kullanımında günlük kota için hesabınıza bağlı bir sayaç
-   (yalnız sayı ve zaman) tutulur.
+4. Akıllı kararlar ve cihaz içi işleme — Yazım denetimi v3, sözlü dikte
+   düzenleme, belge/fiş tarama OCR ve market reyonu eşleştirme öncelikle
+   cihaz içinde çevrimdışı çalışır. Tam Sürüm (veya +1.000 paket ya da
+   kendi Gemini API anahtarınız) ile Akıllı Kararlar açıkken ve rıza
+   verdiğinizde, yalnızca seçili görev için gereken kısa metin (ör. ürün
+   adı, hızlı ekle hedef not başlıkları veya etiket önerisi bağlamı;
+   kilitli notlar hariç) Google Gemini Decisions API'ye gönderilir:
+   - Tam Sürüm ve ek paket kullanımlarında istek güvenli sunucu vekili
+     üzerinden Google Gemini Decisions API'ye iletilir ve yalnız hak/kota
+     doğrulaması için kullanım sayacı (çağrı ve girdi jetonu sayısı)
+     tutulur.
+   - Kendi Gemini API anahtarınızı girerseniz istek doğrudan Google
+     Gemini Decisions API'ye gider; API anahtarınız yalnızca cihazınızdaki
+     güvenli depoda tutulur ve sunucuya yazılmaz.
+   Uygulama bu isteklerin içeriğini reklam veya model eğitimi için
+   saklamaz. İstediğiniz an Ayarlar → Akıllı Kararlar'dan özelliği
+   kapatabilir veya rızanızı geri çekebilirsiniz.
 
-5. Ses tanıma — Sesli notta konuşmanız cihazınızın ses tanıma hizmetiyle
+5. Barkod ürün bilgisi — Alışveriş listesinde ürün barkodu taradığınızda
+   yalnızca okunan barkod numarası (EAN/UPC) ürün adını ve miktarını
+   bulmak amacıyla herkese açık Open Food Facts API'ye gönderilir;
+   hesap veya not bilginiz iletilmez.
+
+6. Ses tanıma — Diktede konuşmanız cihazınızın ses tanıma hizmetiyle
    (Android'de genellikle Google) yazıya dökülür. "İnternetsiz tanıma"
    açıksa ve dil paketi yüklüyse ses cihazdan çıkmaz.
 
-6. Konum (yalnız konum hatırlatıcısı kullanırsanız) — Bir nota "şu yere
-   varınca/ayrılınca hatırlat" eklediğinizde seçtiğiniz yerin koordinatı
-   notla birlikte saklanır. Konumunuzu uygulama değil, Android'in
-   geofence hizmeti cihazda izler; uygulama kapalıyken de tetiklenmesi için
-   "her zaman" konum izni istenir. Konum geçmişiniz toplanmaz, sunucuya
-   gönderilmez. Konum hatırlatıcısı kullanmıyorsanız konum izni
-   gerekmez.
+7. Konum (yalnız Play dışı sürümlerde konum hatırlatıcısı kullanılırsa) —
+   Google Play sürümünde konum hatırlatıcısı ve arka plan konum erişimi
+   bulunmaz; Play dışı kişisel kurulumda "yere varınca hatırlat"
+   seçilirse seçilen koordinat cihazın geofence servisi tarafından yerel
+   izlenir, konum geçmişi sunucuya gönderilmez.
 
-7. Bildirimler — Hatırlatıcı ve günlük brifing bildirimleri cihazınızda
-   yerel olarak planlanır; bildirim içerikleri sunucuya gönderilmez.
+8. Bildirimler — Not, takvim ve görev hatırlatıcıları cihazınızda yerel
+   olarak planlanır; içerikleri sunucuya gönderilmez.
 
-8. Çökme raporları ve hata günlüğü — Android'de uygulama çöktüğünde ya
-   da beklenmeyen bir hata oluştuğunda teknik bir rapor (hata mesajı,
-   kod satırları, cihaz modeli, Android ve uygulama sürümü) Firebase
-   Crashlytics'e gönderilir. Rapor not içeriğinizi, adınızı ya da
-   e-postanızı İÇERMEZ; hesabınızla eşleştirilmez. Ayarlar → Hakkında →
-   "Çökme raporlarını gönder" ile kapatabilirsiniz. Ayrıca son hatalar
-   cihazınızda küçük bir günlükte tutulur; bu günlük yalnız siz
-   "Hata günlüğünü paylaş" dediğinizde ve seçtiğiniz yere gönderilir.
+9. Satın alma bilgileri — Google Play üzerinden Tam Sürüm veya +1.000
+   Akıllı Karar paketi aldığınızda hak doğrulaması ve iade iptali için
+   satın alma belirteci (purchaseToken) sunucuda doğrulanır ve tek yönlü
+   özeti (SHA-256) saklanır; kredi kartı veya ödeme bilginiz toplanmaz.
 
-9. Gömülü içerik — Bir nota YouTube bağlantısı eklediğinizde video
-   YouTube'un gömülü oynatıcısıyla açılır; bu sırada YouTube'un kendi
-   politikası geçerlidir.
+10. Çökme raporları ve hata günlüğü — Android'de uygulama çöktüğünde ya
+    da beklenmeyen bir hata oluştuğunda teknik bir rapor (hata mesajı,
+    kod satırları, cihaz modeli, Android ve uygulama sürümü) Firebase
+    Crashlytics'e gönderilir. Rapor not içeriğinizi, adınızı ya da
+    e-postanızı İÇERMEZ; hesabınızla eşleştirilmez. Ayarlar → Hesap ve
+    tanılama altından kapatabilirsiniz. Küçük yerel hata günlüğü yalnız
+    siz "Hata günlüğünü paylaş" dediğinizde ve seçtiğiniz yere gönderilir.
+
+11. Gömülü içerik — Bir nota YouTube bağlantısı eklediğinizde video
+    YouTube'un gömülü oynatıcısıyla açılır; bu sırada YouTube'un kendi
+    politikası geçerlidir.
 
 ## Google hesabından istenen izinler
 
@@ -101,10 +114,6 @@ izni vermeden uygulamanın geri kalanını kullanabilirsiniz.
   (tasks): etkinliklerinizi ve görevlerinizi uygulamada göstermek, notlarla
   eşleştirmek ve yalnız sizin istediğiniz etkinlik/görevleri oluşturmak ya
   da güncellemek için.
-- Gmail (gmail.readonly, yalnız okuma; bu özellik her sürümde bulunmaz):
-  e-postalarınızı uygulamada göstermek ve sizin seçtiğiniz e-postayı nota
-  çevirmek için. E-postalar sunucularımıza kopyalanmaz; yalnız nota
-  çevirdiğiniz içerik notunuz olarak saklanır.
 
 Google API'lerinden alınan veriler Google API Hizmetleri Kullanıcı Verisi
 Politikası'na (Sınırlı Kullanım şartları dahil) uygun kullanılır: yalnız
@@ -122,7 +131,7 @@ https://myaccount.google.com/permissions adresinden geri alabilirsiniz.
 
 ## Veri saklama ve silme
 
-- Verileriniz siz silene kadar Firebase'de (ekleriniz Drive'ı
+- Verileriniz siz silene kadar bulut hesabınızda (ekleriniz Drive'ı
   bağladıysanız Google Drive'ınızda) saklanır. Drive'daki uygulama
   klasörünü Google Drive → Ayarlar → Uygulamaları yönet'ten de
   silebilirsiniz.
@@ -133,12 +142,13 @@ https://myaccount.google.com/permissions adresinden geri alabilirsiniz.
   silme" sayfasından (hesap-silme.html) giriş yaparak yapabilirsiniz;
   hesabınıza giremiyorsanız İletişim bölümündeki adrese yazın, talebiniz
   30 gün içinde sonuçlandırılır. Silinenler: notlar,
-  klasörler, ekler (Storage ve bağlıysa Drive), kişiler ve istekler,
+  klasörler, ekler (Storage/R2 ve bağlıysa Drive), kişiler ve istekler,
   gelen notlar, paylaştığınız klasörler (sohbet mesajları ve görselleri
   dahil), ortak not kayıtları, kullanıcı dizini ve arama kaydınız, hesap
-  kaydı. Bu işlem geri alınamaz. Yalnız AI kota ve arama hız sınırı
-  sayaçları (kişisel içerik taşımayan, sayı + zaman) kötüye kullanımı
-  önlemek için silinmez.
+  kaydı. Bu işlem geri alınamaz. Yalnız satın alma belirteci özeti ve
+  karar kotası / hız sınırı sayaçları (kişisel içerik taşımayan, sayı +
+  zaman) kötüye kullanımı önlemek ve satın alma haklarını korumak için
+  saklanır.
 - Başkasına gönderdiğiniz notların kopyaları ve başkalarının ortak
   klasörüne yazdığınız notlar o kişilerin verisi olduğundan sizin
   hesabınızla silinmez.
@@ -146,22 +156,25 @@ https://myaccount.google.com/permissions adresinden geri alabilirsiniz.
 
 ## Veri güvenliği
 
-Veriler aktarımda TLS ile şifrelenir. Firebase erişim kuralları her
+Veriler aktarımda HTTPS / TLS ile şifrelenir. Kilitli notların gövdesi,
+kontrol listesi maddeleri, ek metin sayfaları ve sayfa notları buluta
+yazılmadan önce istemcide AES-256-GCM ile uçtan uca şifrelenir (E2EE):
+parmak izi kilidinde anahtar cihazın güvenli deposunda (Keystore), şifre
+veya desen kilidinde ise sırrınızdan türetilerek korunur (şifre
+unutulursa eski şifreli içerik çözülemez). Erişim kuralları her
 kullanıcının yalnızca kendi verisine ve kendisiyle paylaşılan içeriğe
-erişmesine izin verir. Notlar sunucuda Google'ın standart disk
-şifrelemesiyle saklanır; uygulamaya özel uçtan uca şifreleme YOKTUR —
-"not kilidi" yalnız cihazda açılışı parmak izi/yüz/ekran kilidiyle
-korur, içeriği şifrelemez. API anahtarınız (girdiyseniz) Android
-Keystore ile korunan güvenli depoda (web'de tarayıcının yerel deposunda) saklanır.
+erişmesine izin verir. API anahtarınız (girdiyseniz) Android Keystore ile
+korunan güvenli depoda (web'de tarayıcının yerel deposunda) saklanır.
 
 ## Üçüncü taraf hizmetler
 
 Uygulama şu hizmetleri kullanır: Firebase Authentication, Cloud
-Firestore, Cloud Storage, Cloud Functions (kişi araması), Firebase App
-Check, Firebase AI Logic, Firebase Crashlytics, Google Drive API
-(bağlarsanız), Gemini API ve — kendi anahtarınızla seçerseniz — OpenAI,
-Anthropic, OpenRouter. Google hizmetleri için Google'ın gizlilik
-politikası geçerlidir: https://policies.google.com/privacy
+Firestore, Cloud Storage, Cloud Functions, Firebase App Check, Firebase
+Crashlytics, Cloudflare Workers / D1 / R2 (senkron arka ucu etkinse),
+Google Drive API (bağlarsanız), Google Takvim ve Görevler API (bağlarsanız),
+Google Play Billing (Play satın alımları), Google Gemini Decisions API ve
+Open Food Facts API (barkod ürün sorgusu). Google hizmetleri için Google'ın
+gizlilik politikası geçerlidir: https://policies.google.com/privacy
 
 ## Çocukların gizliliği
 

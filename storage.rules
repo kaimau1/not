@@ -7,8 +7,13 @@ service firebase.storage {
     // web'den eklenen sunum Storage'a HİÇ yüklenemiyor (kural reddi), kuyruk
     // onu 6 saate kadar tırmanan aralıklarla boşuna yeniden deniyordu.
     // Görüntülü not ve metin eki (transkript) hiç yüklenmez.
+    function safeImageTypes() {
+      return 'image/(jpeg|png|webp|gif|heic|heif|bmp|avif)';
+    }
+
     function attachmentTypes() {
-      return 'image/.*|application/pdf|audio/.*'
+      return safeImageTypes()
+        + '|application/pdf|audio/.*'
         + '|application/vnd[.]openxmlformats-officedocument[.]presentationml[.]presentation';
     }
 
@@ -48,7 +53,7 @@ service firebase.storage {
       // uyguluyor, bkz. FolderChatRepository.maxImageBytes) ve yalnız görsel.
       allow create, update: if member()
         && request.resource.size < 8 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        && request.resource.contentType.matches(safeImageTypes());
       // Silme üyede: mesajı silen kişi dosyayı da siler (mesaj silme yetkisi
       // Firestore tarafında yazarında ve klasör sahibinde).
       allow delete: if member();

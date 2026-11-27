@@ -9,6 +9,7 @@ import '../../../../core/widgets/toggle_pop.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note_share_text.dart';
 import '../viewers/bubble_layer.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Belgedeki BÜTÜN not balonlarının tek listesi: arama, yıldız süzgeci,
 /// "balona git", düzenleme ve silme.
@@ -232,7 +233,7 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
                             bubble.isHighlight
                                 ? Icons.format_color_text
                                 : Icons.chat_bubble_outline,
-                            size: 16,
+                            size: AppIconSize.xs,
                             // Koyu (premium) palette beyaz, fosforlu vurguda
                             // koyu simge.
                             color:

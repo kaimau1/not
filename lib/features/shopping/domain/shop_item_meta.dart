@@ -168,7 +168,8 @@ NoteItem stepShopItemQty(NoteItem item, {required bool increase}) {
   final u = quickAscii(meta.unit);
   final cur = meta.qty ?? 1.0;
 
-  double next;
+  double next = cur;
+  var nextUnit = meta.unit;
   if (u == 'kg' ||
       u == 'kilo' ||
       u == 'kilogram' ||
@@ -180,10 +181,17 @@ NoteItem stepShopItemQty(NoteItem item, {required bool increase}) {
   } else if (u == 'g' || u == 'gr' || u == 'gram' || u == 'ml') {
     final step = cur < 500 ? 100.0 : 250.0;
     next = increase ? cur + step : (cur - step).clamp(50.0, 99999.0);
+    if (next >= 1000) {
+      next = next / 1000;
+      nextUnit = u == 'ml' ? 'lt' : 'kg';
+    }
   } else {
     next = increase ? cur + 1.0 : (cur - 1.0).clamp(1.0, 9999.0);
   }
-  return meta.copyWith(qty: next).applyToItem(item, syncTextQty: true);
+  return meta.copyWith(qty: next, unit: nextUnit).applyToItem(
+    item,
+    syncTextQty: true,
+  );
 }
 
 /// Satır tutarını (₺) hesaplar.

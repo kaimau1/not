@@ -8,6 +8,7 @@ import '../viewers/ink_layer.dart';
 import '../viewers/ink_tools.dart' show InkToolMemory;
 import '../viewers/pen_policy.dart';
 import 'page_ink_layer.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// **NOT PAKETİ** (kullanıcı isteği 2026-11-08): uzun yazı nota açık hâlde
 /// yer kaplamasın — pakete alınır, satırda çerçeveli küçük bir etiket olarak
@@ -111,7 +112,7 @@ class NotePackagePill extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
             child: Row(
               children: [
-                Icon(Icons.view_agenda_outlined, size: 18, color: scheme.primary),
+                Icon(Icons.view_agenda_outlined, size: AppIconSize.s, color: scheme.primary),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -151,7 +152,7 @@ class NotePackageUnpackButton extends StatelessWidget {
     key: const ValueKey('note-package-unpack'),
     tooltip: context.l10n.notePackageUnpack,
     visualDensity: VisualDensity.compact,
-    iconSize: 18,
+    iconSize: AppIconSize.s,
     constraints: const BoxConstraints.tightFor(width: 32, height: 32),
     padding: EdgeInsets.zero,
     icon: const Icon(Icons.close_rounded),

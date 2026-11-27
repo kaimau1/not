@@ -175,6 +175,8 @@ class SpellMemory {
   );
   final Map<String, bool> _lexCache = {};
 
+  static final _lexVowel = RegExp('[aeıioöuüâîû]');
+
   /// Büyük sözlükteki ad kökü p/ç/t/k ile bitiyor ve yumuşuyor: çok heceli
   /// (yumuşamaz işareti yoksa) ya da tek heceli yumuşayan ("kap" → "kabı").
   /// Sözlük yoksa ya da kök sözlükte değilse sorulmaz (eski gevşek kural).
@@ -183,9 +185,12 @@ class SpellMemory {
     if (lex == null || r.length < 2 || !'pçtk'.contains(r[r.length - 1])) {
       return false;
     }
-    if (!lex.noun(r)) return false;
-    final vowels = RegExp('[aeıioöuüâîû]').allMatches(r).length;
-    return vowels > 1 ? !lex.noVoicing(r) : lex.softMono(r);
+    final flags = lex.flagsOf(r);
+    if ((flags & TrLexicon.flagNoun) == 0) return false;
+    final vowels = _lexVowel.allMatches(r).length;
+    return vowels > 1
+        ? (flags & TrLexicon.flagNoVoicing) == 0
+        : (flags & TrLexicon.flagSoftMono) != 0;
   }
 
   int _lexRevision = TrLexicon.revision;

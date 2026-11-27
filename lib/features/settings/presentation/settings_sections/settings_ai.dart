@@ -14,9 +14,11 @@ class _BuiltInAiStatus extends ConsumerWidget {
     final textStyle = AppText.of(theme);
     final hasKey =
         (ref.watch(activeApiKeyProvider).value ?? '').trim().isNotEmpty;
+    final ent = ref.watch(entitlementProvider).value ?? Entitlement.none;
     final paid =
         !EntitlementGate.active ||
         ref.watch(effectiveTierProvider) == EntitlementTier.lifetime;
+    final hasCredits = paid || ent.decisionCredits > 0;
     final quota = ref.watch(decisionQuotaProvider);
 
     final (icon, title, subtitle) = hasKey
@@ -25,10 +27,12 @@ class _BuiltInAiStatus extends ConsumerWidget {
             l10n.proTitle,
             l10n.decisionsQuotaByok,
           )
-        : paid
+        : hasCredits
         ? (
-            Icons.workspace_premium_outlined,
-            l10n.proStatusLifetime,
+            paid
+                ? Icons.workspace_premium_outlined
+                : Icons.auto_awesome_outlined,
+            paid ? l10n.proStatusLifetime : l10n.proStatusFree,
             l10n.decisionsQuotaSummary(
               quota.remainingCalls,
               formatDecisionTokens(quota.remainingTokens),
@@ -145,6 +149,12 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
   }
 
   Future<void> _validateAndSave() async {
+    if (!ref.read(proFeatureProvider(ProFeature.ownApiKey))) {
+      openProScreen(context);
+      return;
+    }
+    if (!await ensureAiConsent(context, ref)) return;
+    if (!mounted) return;
     final key = _controller.text.trim();
     if (key.isEmpty) return;
     setState(() => _busy = true);
@@ -175,6 +185,7 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final allowed = ref.watch(proFeatureProvider(ProFeature.ownApiKey));
     final storedKey = ref.watch(activeApiKeyProvider).value;
     final hasKey = storedKey != null && storedKey.trim().isNotEmpty;
 
@@ -200,46 +211,59 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
               ],
             ),
           ),
-        TextField(
-          key: const ValueKey('settings-gemini-key-field'),
-          controller: _controller,
-          obscureText: true,
-          decoration: _aiFieldDecoration(
-            context,
-            label: '${AiProvider.gemini.label} · ${l10n.apiKeyFieldLabel}',
-            hint: AiProvider.gemini.keyHint,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          l10n.decisionsByokInfo,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton.icon(
-            onPressed: () => launchUrl(
-              Uri.parse(AiProvider.gemini.keyUrl),
-              mode: LaunchMode.externalApplication,
+        if (!allowed) ...[
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const ProLockBadge(size: AppIconSize.m),
+            title: Text(l10n.proRowOwnKey),
+            subtitle: Text(l10n.proLockedBadge),
+            trailing: OutlinedButton(
+              onPressed: () => openProScreen(context),
+              child: Text(l10n.proTitle),
             ),
-            icon: const Icon(Icons.open_in_new, size: AppIconSize.s),
-            label: Text(l10n.getApiKey),
           ),
-        ),
-        const SizedBox(height: 4),
-        FilledButton.tonalIcon(
-          onPressed: _busy ? null : _validateAndSave,
-          icon: _busy
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.check_circle_outline),
-          label: Text(l10n.validateAndSave),
-        ),
+        ] else ...[
+          TextField(
+            key: const ValueKey('settings-gemini-key-field'),
+            controller: _controller,
+            obscureText: true,
+            decoration: _aiFieldDecoration(
+              context,
+              label: '${AiProvider.gemini.label} · ${l10n.apiKeyFieldLabel}',
+              hint: AiProvider.gemini.keyHint,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.decisionsByokInfo,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: () => launchUrl(
+                Uri.parse(AiProvider.gemini.keyUrl),
+                mode: LaunchMode.externalApplication,
+              ),
+              icon: const Icon(Icons.open_in_new, size: AppIconSize.s),
+              label: Text(l10n.getApiKey),
+            ),
+          ),
+          const SizedBox(height: 4),
+          FilledButton.tonalIcon(
+            onPressed: _busy ? null : _validateAndSave,
+            icon: _busy
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.check_circle_outline),
+            label: Text(l10n.validateAndSave),
+          ),
+        ],
       ],
     );
   }
@@ -302,6 +326,30 @@ class _AiOffSwitch extends ConsumerWidget {
       info: l10n.decisionsTurnOffBody,
       value: ref.watch(aiTurnedOffProvider),
       onChanged: (value) => ref.read(aiTurnedOffProvider.notifier).set(value),
+    );
+  }
+}
+
+/// Play derlemesinde AI rızasını Ayarlar'dan açıp kapatma anahtarı.
+class _AiConsentSwitch extends ConsumerWidget {
+  const _AiConsentSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return _AiSwitchTile(
+      key: const ValueKey('settings-ai-consent'),
+      title: l10n.aiConsentTitle,
+      info: l10n.aiConsentWhere,
+      value: ref.watch(aiConsentProvider),
+      onChanged: (value) {
+        final n = ref.read(aiConsentProvider.notifier);
+        if (value) {
+          n.accept();
+        } else {
+          n.revoke();
+        }
+      },
     );
   }
 }

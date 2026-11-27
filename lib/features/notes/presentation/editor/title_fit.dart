@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/note_fonts.dart';
 import '../../domain/note.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// **NOT BAŞLIĞI TEK STİL** (K9, F37.1): editör, kart ve satır aynı aile, ağırlık
 /// (w500: kalın w800 başlıkta ayırt edilsin, bkz. `markStyle`) ve harf aralığı;
@@ -17,7 +18,7 @@ TextStyle noteTitleStyle(
   return applyNoteOpacity(
     applyNoteFont(
       headline.copyWith(
-        fontWeight: FontWeight.w500,
+        fontWeight: AppWeight.medium,
         fontSize: fontSize,
         // TUZAK: zıt okunurluk teması `Theme.of`tan geçmemiş ham temadır, M3
         // ölçüleri (aralık, satır yüksekliği) onda null; değerler sabit yedekli.

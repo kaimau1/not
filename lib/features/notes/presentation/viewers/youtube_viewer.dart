@@ -317,9 +317,8 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
   /// Gerçek tam ekran (bkz. [ImmersiveVideo]).
   bool _immersive = false;
 
-  /// Konum saniyede bir okunur: kapanışta (dispose, eşzamanlı) WebView'a
-  /// soru sorulamaz, çağırana son bilinen konum verilir.
-  Timer? _positionPoll;
+  /// `NotlarBridge` üstünden anlık konum pushes'ları alır (1 Hz JS sorgusu yok).
+  _WebViewTimeSource? _source;
   Duration? _lastPosition;
 
   Future<void> _setImmersive(bool value) async {
@@ -340,17 +339,18 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     final controller = createYouTubeController(
       _url,
       start: widget.start?.inSeconds,
+      onState: (raw) {
+        final src = _source;
+        if (src == null) return;
+        src.onState(raw);
+        final pos = src.lastPosition;
+        if (pos != null) _lastPosition = pos;
+      },
     );
     if (controller == null) return;
     _controller = controller;
     _lastPosition = widget.start;
-    if (widget.onClose != null) {
-      final source = _WebViewTimeSource(widget.attachment.id, controller);
-      _positionPoll = Timer.periodic(const Duration(seconds: 1), (_) async {
-        final position = await source.position();
-        if (position != null) _lastPosition = position;
-      });
-    }
+    _source = _WebViewTimeSource(widget.attachment.id, controller);
     if (widget.fullscreen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _setImmersive(true);
@@ -368,9 +368,10 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     // Oynatıcı kapanınca otomatik geçiş KAPANMALI: yoksa not listesinde ana
     // ekrana çıkmak da uygulamayı küçük pencereye alırdı.
     PictureInPicture.setAuto(false);
-    _positionPoll?.cancel();
+    final pos = _source?.lastPosition ?? _lastPosition;
+    _source?.dispose();
     if (_immersive) unawaited(ImmersiveVideo.exit());
-    widget.onClose?.call(_lastPosition);
+    widget.onClose?.call(pos);
     super.dispose();
   }
 
@@ -382,10 +383,9 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     final controller = _controller;
     final callback = widget.onNoteAt;
     if (controller == null || callback == null) return;
-    final position = await _WebViewTimeSource(
-      widget.attachment.id,
-      controller,
-    ).position();
+    final src =
+        _source ?? _WebViewTimeSource(widget.attachment.id, controller);
+    final position = src.lastPosition ?? await src.position();
     if (!mounted) return;
     if (position == null) {
       ScaffoldMessenger.of(

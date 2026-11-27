@@ -193,33 +193,53 @@ class SpellMarks extends ChangeNotifier {
 
   static final _letter = RegExp(r'\p{L}', unicode: true);
 
+  String? _resumeText;
+  List<String>? _resumeParas;
+  int _resumeIndex = 0;
+  int _resumeBase = 0;
+  final List<SpellMark> _resumeOut = <SpellMark>[];
+
+  void _resetScanProgress() {
+    _resumeText = null;
+    _resumeParas = null;
+    _resumeIndex = 0;
+    _resumeBase = 0;
+    _resumeOut.clear();
+  }
+
   void _scan() {
     if (_disposed || AutoSpell.mode.value == SpellMode.off) return;
     if (_cacheRev != AutoSpell.revision.value) {
       _cacheRev = AutoSpell.revision.value;
       _words.clear();
       _paras.clear();
+      _resetScanProgress();
     }
     final text = controller.text;
+    if (_resumeText != text || _resumeParas == null) {
+      _resumeText = text;
+      _resumeParas = text.split('\n');
+      _resumeIndex = 0;
+      _resumeBase = 0;
+      _resumeOut.clear();
+    }
+    final paras = _resumeParas!;
     final memory = AutoSpell.memory;
     final keep = AutoSpell.noteKeep;
     final c = controller;
     final names = c is WrapTextController
         ? c.attachmentNames
         : const <String>[];
-    final out = <SpellMark>[];
     final watch = Stopwatch()..start();
-    var base = 0;
-    for (final para in text.split('\n')) {
+    while (_resumeIndex < paras.length) {
+      final para = paras[_resumeIndex];
       var marks = _paras[para];
       if (marks == null) {
         final tokens = SpellEngine.tokens(para);
         for (final t in tokens) {
           if (_words.containsKey(t.word)) continue;
           if (watch.elapsedMicroseconds > _sliceUs) {
-            // Dilim doldu: kare çizilsin; kalan sonraki turda (yapılan
-            // kelimeler önbellekte). Kendi zamanlayıcımız: alan kapanınca
-            // iptal edilir.
+            // Dilim doldu: kaldığı paragraf dizininden sonraki turda sürer.
             _schedule(Duration.zero);
             return;
           }
@@ -241,15 +261,18 @@ class SpellMarks extends ChangeNotifier {
           : const <({int start, int end, String fileName})>[];
       for (final k in marks) {
         if (tags.any((t) => t.start < k.end && k.start < t.end)) continue;
-        out.add((
-          start: k.start + base,
-          end: k.end + base,
+        _resumeOut.add((
+          start: k.start + _resumeBase,
+          end: k.end + _resumeBase,
           word: k.word,
           hint: k.hint,
         ));
       }
-      base += para.length + 1;
+      _resumeBase += para.length + 1;
+      _resumeIndex++;
     }
+    final out = List<SpellMark>.of(_resumeOut);
+    _resetScanProgress();
     _pumpNative();
     if (_marks.isEmpty && out.isEmpty) return;
     _marks = out;
@@ -275,6 +298,18 @@ class SpellMarks extends ChangeNotifier {
   static int _nativeFails = 0;
   static const _nativeBatch = 40;
   static final _service = DefaultSpellCheckService();
+  static Future<void> _platformTail = Future<void>.value();
+
+  @visibleForTesting
+  static Locale? debugLocale;
+
+  static Locale _platformLocale() {
+    final override = debugLocale;
+    if (override != null) return override;
+    final code =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return code == 'en' ? const Locale('en', 'US') : const Locale('tr', 'TR');
+  }
 
   /// Flutter'ın kendi yazım denetimiyle aynı kapı: Android'de Gboard'un
   /// denetçisi açıksa (`nativeSpellCheckServiceDefined`; yoksa oturum
@@ -328,8 +363,14 @@ class SpellMarks extends ChangeNotifier {
     unawaited(_askNative(batch));
   }
 
-  static Future<List<SuggestionSpan>?> _platformCheck(String text) =>
-      _service.fetchSpellCheckSuggestions(const Locale('tr', 'TR'), text);
+  static Future<List<SuggestionSpan>?> _platformCheck(String text) {
+    final prev = _platformTail;
+    final next = prev.catchError((_) {}).then(
+      (_) => _service.fetchSpellCheckSuggestions(_platformLocale(), text),
+    );
+    _platformTail = next.then((_) {}, onError: (_) {});
+    return next;
+  }
 
   static Future<void> _askNative(List<String> batch) async {
     final starts = <int>[];
@@ -404,6 +445,15 @@ class SpellMarks extends ChangeNotifier {
     _nativeBusy = false;
     _nativeFails = 0;
     nativeCheck = null;
+    debugLocale = null;
+    _platformTail = Future<void>.value();
+  }
+
+  /// Bellek baskısında durağan yazım önbelleklerini küçültür.
+  static void trimCaches() {
+    _paras.clear();
+    if (_words.length > 256) _words.clear();
+    if (_native.length > 512) _native.clear();
   }
 }
 

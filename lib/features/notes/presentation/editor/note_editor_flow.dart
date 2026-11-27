@@ -281,7 +281,7 @@ extension _EditorFlowX on _NoteEditorScreenState {
     position.animateTo(
       target,
       duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.emphasized,
     );
   }
 

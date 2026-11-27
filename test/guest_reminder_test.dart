@@ -18,27 +18,27 @@ void main() {
     );
   });
 
-  test('"Sonra"dan sonra şerit; 5 ve 20 notu geçince bir kez tam kart', () {
+  test('"Sonra"dan sonra şerit; 3, 12 ve 25 notu geçince bir kez tam kart', () {
     expect(
       guestReminderMode(anonymous: true, noteCount: 2, laterAtCount: 1),
       GuestReminderMode.strip,
     );
     expect(
-      guestReminderMode(anonymous: true, noteCount: 5, laterAtCount: 1),
+      guestReminderMode(anonymous: true, noteCount: 3, laterAtCount: 1),
       GuestReminderMode.full,
     );
-    // 5'te yeniden "Sonra" → 20'ye kadar şerit.
+    // 3'te yeniden "Sonra" → 12'ye kadar şerit.
     expect(
-      guestReminderMode(anonymous: true, noteCount: 12, laterAtCount: 5),
+      guestReminderMode(anonymous: true, noteCount: 8, laterAtCount: 3),
       GuestReminderMode.strip,
     );
     expect(
-      guestReminderMode(anonymous: true, noteCount: 20, laterAtCount: 5),
+      guestReminderMode(anonymous: true, noteCount: 12, laterAtCount: 3),
       GuestReminderMode.full,
     );
-    // 20'den sonra hep şerit.
+    // 25'ten sonra hep şerit.
     expect(
-      guestReminderMode(anonymous: true, noteCount: 300, laterAtCount: 21),
+      guestReminderMode(anonymous: true, noteCount: 300, laterAtCount: 25),
       GuestReminderMode.strip,
     );
   });

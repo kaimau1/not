@@ -80,7 +80,7 @@ Future<void> showSendNoteToFriendSheet(
                           },
                           icon: const Icon(
                             Icons.person_add_alt_outlined,
-                            size: 18,
+                            size: AppIconSize.s,
                           ),
                           label: Text(l10n.friendsAdd),
                         ),

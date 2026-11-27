@@ -5,6 +5,7 @@ import '../domain/note.dart';
 import '../domain/note_stats.dart';
 import 'note_card.dart' show formatNoteDate;
 import '../../../core/widgets/app_sheet.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Notun sayısal özeti (kelime, karakter, madde, ek, okuma süresi) ve
 /// oluşturma/güncelleme tarihleri.
@@ -25,7 +26,7 @@ Future<void> showNoteStatsSheet(BuildContext context, Note note) {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: scheme.onSurfaceVariant),
+            Icon(icon, size: AppIconSize.s, color: scheme.onSurfaceVariant),
             const SizedBox(width: 12),
             Expanded(child: Text(label, style: textTheme.bodyMedium)),
           ],

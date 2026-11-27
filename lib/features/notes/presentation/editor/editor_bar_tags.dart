@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/tag_pill.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Üst çubukta, düzenleme tarihinin SOLUNDA duran etiketler (kullanıcı
 /// isteği 2026-11-05: "etiketlerin üst satırdaki tarih saatin solunda
@@ -39,7 +40,7 @@ class EditorBarTags extends StatelessWidget {
           value: true,
           child: Row(
             children: [
-              const Icon(Icons.close, size: 18),
+              const Icon(Icons.close, size: AppIconSize.s),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(

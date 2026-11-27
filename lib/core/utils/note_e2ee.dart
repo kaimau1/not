@@ -90,19 +90,33 @@ abstract final class NoteE2ee {
     }
   }
 
-  /// Notun gövdesini ve madde metinlerini tek JSON yükü hâlinde şifreler.
+  /// Notun gövdesini, madde metinlerini ve isteğe bağlı ek metin sayfaları /
+  /// sayfa notlarını tek JSON yükü hâlinde şifreler.
   static String encryptNotePayload({
     required String body,
     required List<Map<String, dynamic>> items,
     required Uint8List key,
     String noteId = '',
+    List<Map<String, dynamic>>? textPages,
+    Map<String, String>? pageNotes,
   }) {
-    final json = jsonEncode({'b': body, 'i': items});
+    final json = jsonEncode({
+      'b': body,
+      'i': items,
+      if (textPages != null && textPages.isNotEmpty) 'tp': textPages,
+      if (pageNotes != null && pageNotes.isNotEmpty) 'pn': pageNotes,
+    });
     return encryptText(json, key, aad: noteId);
   }
 
   /// Şifreli not yükünü geri çözer; başarısızsa `null`.
-  static ({String body, List<Map<String, dynamic>> items})? decryptNotePayload({
+  static ({
+    String body,
+    List<Map<String, dynamic>> items,
+    List<Map<String, dynamic>> textPages,
+    Map<String, String> pageNotes,
+  })?
+  decryptNotePayload({
     required String envelope,
     required Uint8List key,
     String noteId = '',
@@ -114,12 +128,24 @@ abstract final class NoteE2ee {
       if (decoded is! Map) return null;
       final b = decoded['b'] as String? ?? '';
       final rawItems = decoded['i'] as List? ?? const [];
+      final rawTextPages = decoded['tp'] as List? ?? const [];
+      final rawPageNotes = decoded['pn'] as Map?;
       return (
         body: b,
         items: [
           for (final e in rawItems)
             if (e is Map) Map<String, dynamic>.from(e),
         ],
+        textPages: [
+          for (final e in rawTextPages)
+            if (e is Map) Map<String, dynamic>.from(e),
+        ],
+        pageNotes: rawPageNotes == null
+            ? const <String, String>{}
+            : {
+                for (final e in rawPageNotes.entries)
+                  e.key.toString(): e.value?.toString() ?? '',
+              },
       );
     } catch (_) {
       return null;

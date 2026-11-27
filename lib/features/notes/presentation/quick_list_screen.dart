@@ -9,6 +9,8 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/keyboard_snap.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../ai/data/decisions/decision_profiles.dart';
+import '../../ai/data/decisions/decision_service.dart';
 import '../data/notes_repository.dart';
 import '../data/quick_entry_memory.dart';
 import '../domain/note.dart';
@@ -197,12 +199,16 @@ class QuickListScreen extends ConsumerStatefulWidget {
 
 class _QuickListScreenState extends ConsumerState<QuickListScreen>
     with SingleTickerProviderStateMixin {
+  static final _outerParensRe = RegExp(r'^\(|\)$');
+
   late final _title = TextEditingController(text: widget.args.title);
   final _focus = FocusNode();
   final _entry = GlobalKey<QuickEntryBarState>();
   final _scroll = ScrollController();
 
   final _rows = <_Row>[];
+  final _rowKeys = <String>{};
+  int _rowKeysRev = -1;
   int _seq = 0;
   int? _lastId;
 
@@ -323,21 +329,12 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
   /// Son kendiliğinden konan başlık: kullanıcı başlığı elle değiştirdiyse
   /// tür değişse de dokunulmaz.
   late String _autoTitle = widget.args.title;
+  String _lastClassifySig = '';
 
   int _packingGroupOf(QuickItem i) => _packing?.groupOf(i.name) ?? -1;
   int _groceryGroupOf(QuickItem i) => _grocery?.groupOf(i.name) ?? -1;
 
-  void _updateKind() {
-    if (!widget.args.smart) return;
-    final kind =
-        _kindSaid ??
-        smartKindOf([
-          for (final r in _rows)
-            (
-              grocery: _groceryGroupOf(r.item) >= 0,
-              packing: _packingGroupOf(r.item) >= 0,
-            ),
-        ]);
+  void _applyKind(SmartListKind kind) {
     if (kind == _kind.value) return;
     _kind.value = kind;
     _tab.value = 0;
@@ -357,6 +354,47 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     _autoTitle = title;
     // Sıra türe bağlı (bavulda bakım grubu, markette kişisel bakım reyonu).
     _rev.value++;
+  }
+
+  void _updateKind() {
+    if (!widget.args.smart) return;
+    final kind =
+        _kindSaid ??
+        smartKindOf([
+          for (final r in _rows)
+            (
+              grocery: _groceryGroupOf(r.item) >= 0,
+              packing: _packingGroupOf(r.item) >= 0,
+            ),
+        ]);
+    _applyKind(kind);
+    if (_kindSaid == null && kind == SmartListKind.generic && _rows.length >= 3) {
+      unawaited(_maybeClassifyList());
+    }
+  }
+
+  Future<void> _maybeClassifyList() async {
+    if (!widget.args.smart ||
+        _kindSaid != null ||
+        _kind.value != SmartListKind.generic ||
+        _rows.length < 3) {
+      return;
+    }
+    final service = ref.read(decisionServiceProvider);
+    if (!service.mayHaveBackend) return;
+    final names = [for (final r in _rows) r.item.name];
+    final sig = names.join('|');
+    if (sig == _lastClassifySig) return;
+    _lastClassifySig = sig;
+    final predicted = await decideListClassify(service, names);
+    if (!mounted ||
+        predicted == null ||
+        predicted == SmartListKind.generic ||
+        _kindSaid != null ||
+        _kind.value != SmartListKind.generic) {
+      return;
+    }
+    _applyKind(predicted);
   }
 
   @override
@@ -427,6 +465,17 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
   }
 
   // ── Liste işlemleri ───────────────────────────────────────────────────
+
+  bool _hasRow(String text) {
+    final rev = _rev.value;
+    if (_rowKeysRev != rev) {
+      _rowKeys
+        ..clear()
+        ..addAll(_rows.map((r) => quickItemKey(r.item.text)));
+      _rowKeysRev = rev;
+    }
+    return _rowKeys.contains(quickItemKey(text));
+  }
 
   _Row? _find(String text) {
     final key = quickItemKey(text);
@@ -766,22 +815,25 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
               tabs: tabs,
               tab: _tab,
               rev: _rev,
-              has: (t) => _find(t) != null,
+              has: _hasRow,
               onAdd: _addChip,
               onAddAll: (items) => _add([
                 for (final t in items)
-                  QuickItem(
-                    name: quickBaseName(t),
-                    qty: t == quickBaseName(t)
-                        ? ''
-                        : t
-                              .substring(quickBaseName(t).length)
-                              .trim()
-                              .replaceAll(RegExp(r'^\(|\)$'), ''),
-                    group: _lexicon?.groupOf(t) ?? -1,
-                    how: QuickHow.exact,
-                    typed: t,
-                  ),
+                  () {
+                    final base = quickBaseName(t);
+                    return QuickItem(
+                      name: base,
+                      qty: t == base
+                          ? ''
+                          : t
+                                .substring(base.length)
+                                .trim()
+                                .replaceAll(_outerParensRe, ''),
+                      group: _lexicon?.groupOf(t) ?? -1,
+                      how: QuickHow.exact,
+                      typed: t,
+                    );
+                  }(),
               ]),
             ),
           );

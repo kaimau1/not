@@ -168,10 +168,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get penModeDone => 'Close pen';
 
   @override
-  String get tipPagePen =>
-      'Write anywhere on the page with the pen; tap with a finger to keep typing in the same note.';
-
-  @override
   String get pageInkOnCard => 'Has handwriting';
 
   @override
@@ -208,39 +204,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get color => 'Colour';
 
   @override
-  String get aiTitle => 'AI';
-
-  @override
-  String get aiSummarize => 'Summarise note';
-
-  @override
-  String get aiSectionWrite => 'Write';
-
-  @override
-  String get aiSectionAsk => 'Ask';
-
-  @override
-  String get aiSectionTransform => 'Transform';
-
-  @override
   String get summarize => 'Summarise';
-
-  @override
-  String get summaryDetailTitle => 'Summary type';
-
-  @override
-  String get summaryShort => 'Short summary';
-
-  @override
-  String get summaryShortInfo =>
-      'A few sentences of overview plus the key points';
-
-  @override
-  String get summaryDetailed => 'Detailed summary';
-
-  @override
-  String get summaryDetailedInfo =>
-      'Thorough enough that you needn\'t open the original';
 
   @override
   String get listen => 'Listen';
@@ -258,15 +222,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listenToNote => 'Listen';
 
   @override
-  String get aiNoApiKey => 'Enter your Gemini API key in Settings first';
-
-  @override
   String aiError(String error) {
     return 'AI request failed: $error';
   }
-
-  @override
-  String get aiSummaryTitle => 'AI summary';
 
   @override
   String get aiThinking => 'Thinking...';
@@ -278,7 +236,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copied => 'Copied';
 
   @override
-  String get settingsSearchHint => 'Search settings — “briefing”, “microphone”';
+  String get settingsSearchHint => 'Search settings — “lock”, “microphone”';
 
   @override
   String settingsSearchEmpty(String query) {
@@ -305,32 +263,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeDark => 'Dark';
-
-  @override
-  String get settingsAi => 'AI';
-
-  @override
-  String get geminiApiKeyInfo =>
-      'A key is optional: without one, AI requests go through the app\'s built-in service (a free daily allowance, higher with Premium). For unlimited use with your own key, get a free one at aistudio.google.com; the key is stored only on this device, in secure storage.';
-
-  @override
-  String aiBuiltInPremium(int count) {
-    return 'Built-in AI: Premium — $count points left today';
-  }
-
-  @override
-  String aiBuiltInRemaining(int count) {
-    return 'Built-in AI: $count free points left today';
-  }
-
-  @override
-  String get aiBuiltInByok => 'Using your own key — unlimited';
-
-  @override
-  String get aiReport => 'Report this answer';
-
-  @override
-  String get aiReportThanks => 'Report received, thank you';
 
   @override
   String get privacyPolicyTitle => 'Privacy policy';
@@ -382,17 +314,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clear => 'Clear';
 
   @override
-  String get aiDiagnostics => 'AI diagnostics';
-
-  @override
-  String get aiDiagnosticsEmpty => 'No errors recorded';
-
-  @override
-  String aiDiagnosticsCount(int count) {
-    return 'Last $count error records';
-  }
-
-  @override
   String get apiKeyValid => 'API key verified and saved';
 
   @override
@@ -426,9 +347,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get penTrayShow => 'Show pen tray';
-
-  @override
-  String get penTrayHide => 'Tuck pen tray away';
 
   @override
   String get addDrawingSubtitle =>
@@ -666,11 +584,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This note will be permanently deleted. Are you sure?';
 
   @override
-  String assistantDeleteConfirm(String title) {
-    return 'The assistant wants to move the note \"$title\" to the trash. Do you approve?';
-  }
-
-  @override
   String get recordAudio => 'Voice recording';
 
   @override
@@ -686,20 +599,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addDrawing => 'Add drawing';
 
   @override
-  String get drawingTitle => 'Drawing';
-
-  @override
   String get addToNote => 'Add to note';
-
-  @override
-  String get chatTitle => 'Note assistant';
-
-  @override
-  String get chatHint =>
-      'Ask about your notes: \"what was that recipe I wrote last week?\", \"what\'s missing from my shopping list?\"';
-
-  @override
-  String get chatInputHint => 'Type a question...';
 
   @override
   String get fontSize => 'Text size';
@@ -715,107 +615,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Switches to the dark theme between the hours you set';
 
   @override
-  String get aiTranslate => 'Translate';
-
-  @override
   String get voiceCommand => 'Voice command';
-
-  @override
-  String get semanticSearchToggle => 'Semantic search with AI';
-
-  @override
-  String get semanticSearchHint => 'Search by meaning: \"car expenses\"...';
-
-  @override
-  String get briefingTitle => 'Daily briefing';
-
-  @override
-  String get briefingLoading => 'Preparing your briefing...';
-
-  @override
-  String get briefingEmpty => 'Nothing for today';
-
-  @override
-  String get briefingSetting => 'Daily briefing notification';
-
-  @override
-  String get briefingSettingInfo =>
-      'Get a notification with the day\'s summary each morning at the time you choose';
-
-  @override
-  String get autoTagSetting => 'Tag automatically';
-
-  @override
-  String get autoTagSettingInfo =>
-      'When a note is closed without tags, AI adds a fitting one';
 
   @override
   String get suggestTags => 'Suggest tags';
 
   @override
-  String get aiFixNote => 'Fix up the note';
-
-  @override
-  String get fixLevelTitle => 'How much should be fixed?';
-
-  @override
-  String get fixSimple => 'Light';
-
-  @override
-  String get fixSimpleInfo => 'Spelling and typos only';
-
-  @override
-  String get fixBalanced => 'Balanced';
-
-  @override
-  String get fixBalancedInfo => 'Sentence structure too, for cleaner writing';
-
-  @override
-  String get fixDetailed => 'Thorough';
-
-  @override
-  String get fixDetailedInfo => 'Rewrites the whole text from top to bottom';
-
-  @override
   String get existingTagsLabel => 'Previous tags';
-
-  @override
-  String get aiSkipCheckedSetting => 'Leave ticked items out of AI edits';
-
-  @override
-  String get aiSkipCheckedInfo =>
-      'When AI fixes or translates a checklist, completed (ticked) items are kept exactly as they are; only unticked items are edited.';
-
-  @override
-  String get noteUpdatedUndo => 'Note updated';
-
-  @override
-  String get aiImprove => 'Improve the note';
-
-  @override
-  String get improveFormal => 'Make it more formal';
-
-  @override
-  String get improveShorten => 'Shorten';
-
-  @override
-  String get improveBullets => 'Turn into a bullet list';
-
-  @override
-  String get improveNumbered => 'Turn into a numbered list';
-
-  @override
-  String get replaceNote => 'Replace the note';
-
-  @override
-  String get openAsNewNote => 'As a new note';
-
-  @override
-  String get pdfChatHint =>
-      'Ask about this PDF: \"summarise it\", \"is there a penalty clause?\", \"what\'s the deadline?\"';
-
-  @override
-  String get pdfChatInputHint => 'Type a question about the PDF...';
 
   @override
   String get voiceFinish => 'Finish';
@@ -865,28 +671,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remindersRemove => 'Remove reminder';
 
   @override
-  String get aiModelChat => 'Summaries and chat';
-
-  @override
-  String get aiModelShort => 'Titles and tags';
-
-  @override
-  String get aiModelDocument => 'Document chat and PDF summary';
-
-  @override
-  String get aiModelTranslate => 'Translation';
-
-  @override
-  String get aiModelVoice => 'AI voice note assistant';
-
-  @override
-  String get aiModelAuto => 'Automatic (recommended)';
-
-  @override
-  String get aiModelsInfo =>
-      'You can pick a separate model per job: short text work is fine on a fast model, long documents want a capable one. If your chosen model hits its quota or is withdrawn, the next one is tried automatically.';
-
-  @override
   String get clearNote => 'Clear content';
 
   @override
@@ -915,28 +699,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get noteChatHint => 'Ask something about this note';
-
-  @override
-  String get noteChatIntro =>
-      'The note\'s contents and attachments (PDF/image) are read, and your question is answered from them.';
-
-  @override
   String get dictationProcessing => 'Transcribing...';
-
-  @override
-  String get aiDailyManualInfo =>
-      'On the free plan this isn\'t generated automatically, so it doesn\'t eat your daily allowance. You can generate it once a day with the button below.';
-
-  @override
-  String get aiGenerate => 'Generate';
-
-  @override
-  String get aiGeneratedTodayInfo =>
-      'This was generated today. On the free plan it refreshes once a day; you can generate it again tomorrow.';
-
-  @override
-  String get voiceAssistantTitle => 'Voice note assistant';
 
   @override
   String get voiceListening => 'Listening...';
@@ -1057,11 +820,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exactAlarmHintAction => 'Allow';
 
   @override
-  String videoTooBigForAi(int mb) {
-    return 'The video is too large to send to AI ($mb MB). Record a shorter one.';
-  }
-
-  @override
   String get permCamera => 'Camera';
 
   @override
@@ -1076,9 +834,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoToNote => 'Make a note from the video';
-
-  @override
-  String get videoToNoteRunning => 'Reviewing the video…';
 
   @override
   String get permGranted => 'Granted';
@@ -1146,13 +901,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aiOfflineTitle => 'No connection';
-
-  @override
-  String get aiOfflineBody =>
-      'AI features need the internet. The buttons turn on when you are back online.';
-
-  @override
   String get pendingUploadsInfo =>
       'Attachments are safe on this device. They upload automatically when you are online; until then they do not appear on your other devices.';
 
@@ -1176,18 +924,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allCopied => 'The whole note was copied to the clipboard';
 
   @override
-  String get speechPlay => 'Listen';
-
-  @override
-  String get speechPause => 'Pause';
-
-  @override
-  String get speechResume => 'Resume';
-
-  @override
-  String get speechStop => 'Stop';
-
-  @override
   String get speechRate => 'Reading speed';
 
   @override
@@ -1199,43 +935,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listening => 'Listening...';
-
-  @override
-  String get listenPlay => 'Listen';
-
-  @override
-  String get listenReadingPdf => 'Reading the document...';
-
-  @override
-  String get listenConvertWithAi => 'Convert with AI';
-
-  @override
-  String get listenMakePodcast => 'Full podcast';
-
-  @override
-  String get listenMakePodcastSummary => 'Summary podcast';
-
-  @override
-  String get listenOriginalText => 'Original text';
-
-  @override
-  String get listenPodcastReady => 'Podcast narration is ready';
-
-  @override
-  String get listenPodcastCached => 'Generated earlier — no tokens spent';
-
-  @override
-  String get listenRegenerate => 'Generate again';
-
-  @override
-  String get listenNoText =>
-      'No readable text came out of this document. A scanned PDF has no text layer, and a presentation may contain images only.';
-
-  @override
-  String get readDocument => 'Read a document (Word, PDF, slides)';
-
-  @override
-  String get readDocUnsupported => 'This file type can\'t be read.';
 
   @override
   String get exportPdf => 'Export as PDF';
@@ -1319,19 +1018,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSystem => 'System language';
 
   @override
-  String get settingsSpeech => 'Read aloud';
-
-  @override
-  String get aiAdvanced => 'Advanced: model and API key';
-
-  @override
-  String get aiAdvancedInfo =>
-      'Model choice and your own Gemini key. Most people don\'t need this.';
-
-  @override
-  String get openBriefing => 'Open the briefing';
-
-  @override
   String get syncTitle => 'Sync';
 
   @override
@@ -1348,27 +1034,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importBackup => 'Restore from backup';
 
   @override
-  String importBackupDone(int count) {
-    return '$count notes restored';
-  }
-
-  @override
   String get importBackupInvalid => 'Invalid backup file';
-
-  @override
-  String get aiHubTitle => 'AI';
-
-  @override
-  String get aiSummarizeInfo => 'Produces a short summary';
-
-  @override
-  String get aiImproveInfo => 'Changes the tone: formal, shorter or a list';
-
-  @override
-  String get aiTranslateInfo => 'Translates the note into a language you pick';
-
-  @override
-  String get aiFixNoteInfo => 'Fixes spelling and punctuation';
 
   @override
   String get moveToFolder => 'Move to folder';
@@ -1379,20 +1045,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAddTooltip => 'New note — pick a type';
-
-  @override
-  String get autoTitleSetting => 'Suggest a title on close';
-
-  @override
-  String get autoTitleSettingInfo =>
-      'When you leave the editor, a note left without a title gets a short one written from its contents.';
-
-  @override
-  String get hubBriefingInfo =>
-      'Your day at a glance: reminders and recent notes';
-
-  @override
-  String get hubReadInfo => 'Listen to a PDF or Word document';
 
   @override
   String get annotate => 'Annotate';
@@ -1697,102 +1349,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterOthers => 'No folder or tag';
 
   @override
-  String get chatSuggestion1 => 'What is missing from my shopping list?';
-
-  @override
-  String get chatSuggestion2 => 'Summarise this week\'s work notes';
-
-  @override
-  String get chatSuggestion3 => 'Do I have a reminder for tomorrow?';
-
-  @override
-  String get aiPointsToday => 'Today\'s points';
-
-  @override
-  String aiPointsOf(int used, int total) {
-    return '$used / $total';
-  }
-
-  @override
-  String get aiPointsRenew => 'renews at midnight';
-
-  @override
-  String get aiChatWithNotes => 'Note assistant';
-
-  @override
-  String get aiChatInputHint => 'Ask something about your notes…';
-
-  @override
-  String get aiChatLooking => 'looking through your notes…';
-
-  @override
-  String get aiChatFullScreen => 'Full screen';
-
-  @override
-  String get aiOnYourNotes => 'On your notes';
-
-  @override
-  String get aiTaskDuplicates => 'Clean up duplicates';
-
-  @override
-  String aiTaskDuplicatesInfo(int count) {
-    return '$count duplicate notes';
-  }
-
-  @override
-  String get duplicatesTitle => 'Duplicate notes';
-
-  @override
-  String get duplicatesHint =>
-      'The oldest note in each group is kept, the rest go to the trash.';
-
-  @override
-  String get duplicatesKeepBadge => 'kept';
-
-  @override
-  String get duplicatesDeleteAll => 'Move duplicates to trash';
-
-  @override
-  String duplicatesDone(int count) {
-    return '$count duplicates moved to trash';
-  }
-
-  @override
-  String get aiRecentActions => 'Recent actions';
-
-  @override
-  String get aiHistoryClear => 'Clear';
-
-  @override
-  String get aiHistoryQuestion => 'Question';
-
-  @override
-  String get aiHistoryNoteAction => 'Note action';
-
-  @override
   String get aiHistoryVoiceNote => 'AI voice note';
-
-  @override
-  String get aiTaskWeekSummary => 'Summarise the week';
-
-  @override
-  String get aiTaskWeekSummaryInfo => 'One summary from the last 7 days';
-
-  @override
-  String get aiTaskTagUntagged => 'Tag the untagged';
-
-  @override
-  String aiTaskTagUntaggedInfo(int count) {
-    return '$count notes waiting for tags';
-  }
-
-  @override
-  String get aiTaskSuggestTitles => 'Suggest titles';
-
-  @override
-  String aiTaskSuggestTitlesInfo(int count) {
-    return '$count notes have no title';
-  }
 
   @override
   String get sectionPinnedShort => 'Pinned';
@@ -1839,9 +1396,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewList => 'List';
 
   @override
-  String get searchModeMeaning => 'Meaning';
-
-  @override
   String get filterReminded => 'With reminder';
 
   @override
@@ -1855,10 +1409,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voicePreview => 'Try the voice';
-
-  @override
-  String get voicePreviewCached =>
-      'The sample is generated once, then played from storage';
 
   @override
   String get reorderHint =>
@@ -1912,9 +1462,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatMenu => 'Format…';
 
   @override
-  String get noteFont => 'Font';
-
-  @override
   String get noteFontDefault => 'Default';
 
   @override
@@ -1933,23 +1480,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatHeading => 'Heading';
 
   @override
-  String get formatHeading1 => 'Heading';
-
-  @override
-  String get formatHeading2 => 'Subheading';
-
-  @override
-  String get formatNormalText => 'Normal text';
-
-  @override
   String get noteTextOpacity => 'Opacity';
-
-  @override
-  String get assistantVoiceSetting => 'Assistant speaks replies';
-
-  @override
-  String get assistantVoiceSettingInfo =>
-      'The voice assistant reads its reply out loud (phone only).';
 
   @override
   String get assistantMute => 'Mute';
@@ -1976,9 +1507,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noteBackgroundImage => 'Background image';
 
   @override
-  String get chooseBackgroundImage => 'Choose image';
-
-  @override
   String get changeBackgroundImage => 'Change image';
 
   @override
@@ -1992,23 +1520,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Image shown behind the note grid (this device only).';
 
   @override
-  String get aiProvider => 'AI provider';
-
-  @override
-  String get aiProviderInfo =>
-      'Choose the provider your own key belongs to. Each provider’s key is stored separately, so switching back does not require typing it again.';
-
-  @override
   String get apiKeyFieldLabel => 'API key';
 
   @override
   String get getApiKey => 'Where do I get a key?';
-
-  @override
-  String get recommendedModel => 'Recommended';
-
-  @override
-  String get freeTierBadge => 'Has a free tier';
 
   @override
   String get continueWithoutAccount => 'Continue without an account';
@@ -2120,72 +1635,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get premiumTitle => 'Premium';
 
   @override
-  String premiumStatusActive(String date) {
-    return 'Premium active — until $date';
-  }
-
-  @override
   String get premiumStatusFree => 'You are using the free version';
-
-  @override
-  String get premiumPerksTitle => 'What changes with Premium?';
-
-  @override
-  String get premiumPerkAi => 'Daily AI points';
-
-  @override
-  String get premiumPerkAttach => 'Attachment size';
-
-  @override
-  String get premiumPerkStorage => 'Cloud storage';
-
-  @override
-  String get premiumPerkAuto => 'Automatic daily content';
-
-  @override
-  String get premiumPerkAutoBody =>
-      'The daily briefing and suggestions are prepared automatically every day; on free they only run on demand.';
-
-  @override
-  String get premiumHowTitle => 'How to get it?';
-
-  @override
-  String get premiumHowBody =>
-      'Premium will soon be available through the Play Store. We are currently in early access.';
-
-  @override
-  String get premiumByokHint =>
-      'With your own Gemini API key, AI runs without quota';
-
-  @override
-  String get premiumByokWhere => 'Independent of Premium · Settings → AI';
-
-  @override
-  String get premiumDiscoverTitle => 'Features you may have missed';
-
-  @override
-  String get discoverScanBody =>
-      'Scanned pages are straightened and enhanced, then turned into a searchable PDF with one tap — the text layer is produced on device, for free.';
-
-  @override
-  String get discoverSemanticBody =>
-      'The \"Smart\" tab in the search box searches by meaning, not words: type \"flight times\" and your travel note shows up.';
-
-  @override
-  String get discoverAssistantBody =>
-      'The microphone on the home screen turns your speech into notes, lists and reminders by itself — just say \"dentist tomorrow at 9\".';
-
-  @override
-  String get discoverLockBody =>
-      'You can lock a note with fingerprint/face: its content never leaks into search, widgets or AI.';
-
-  @override
-  String get discoverHiddenBody =>
-      'Notes in a hidden folder never appear on the home screen or in search; revealing the folder requires authentication.';
-
-  @override
-  String get discoverExportBody =>
-      'Every note can be exported as PDF or Word, images included (in the share menu).';
 
   @override
   String get guestSignInUnavailable =>
@@ -2244,9 +1694,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String itemMovedToPage(int page) {
     return 'Item moved to page $page';
   }
-
-  @override
-  String get screenAiSearchHint => 'Search by meaning…';
 
   @override
   String get archiveInsights => 'What\'s in my archive?';
@@ -2325,21 +1772,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your phone\'s text size and bold text apply here too; the size above is multiplied by it.';
 
   @override
-  String get fontGroupSans => 'Sans';
-
-  @override
-  String get fontGroupSerif => 'Serif';
-
-  @override
-  String get fontGroupMono => 'Monospace';
-
-  @override
-  String get fontGroupHand => 'Handwriting';
-
-  @override
-  String get appFontDefaultSuffix => 'default';
-
-  @override
   String get pdfSelectOcrRunning => 'Recognising text…';
 
   @override
@@ -2366,42 +1798,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bubbleTapToPlace => 'Tap the page where you want the bubble';
 
   @override
-  String get aiModelPodcast => 'Podcast narration';
-
-  @override
-  String get listenAiVoice => 'Listen with AI voice';
-
-  @override
-  String listenAiVoiceFailed(String error) {
-    return 'AI narration failed ($error). Reading with the device voice.';
-  }
-
-  @override
   String get ttsSectionTitle => 'Narration';
 
   @override
   String get ttsEngineDevice => 'Device voice';
 
   @override
-  String get ttsEngineAi => 'AI';
-
-  @override
   String get ttsEngineDeviceInfo =>
       'The built-in device voice reads: free, offline and unlimited in length.';
-
-  @override
-  String get ttsEngineAiInfo =>
-      'Gemini\'s speech model reads: noticeably more natural, but each paragraph is a model call and it needs your own Gemini key.';
-
-  @override
-  String get ttsEngineAiUnavailable =>
-      'The AI voice needs your own Gemini key. Until you add one, reading uses the device voice.';
-
-  @override
-  String get ttsModel => 'Speech model';
-
-  @override
-  String get ttsVoice => 'AI voice';
 
   @override
   String get ttsEngineLocal => 'Turkish voice';
@@ -2436,9 +1840,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String ttsLocalFailed(String error) {
     return 'Download failed: $error';
   }
-
-  @override
-  String get listenLocalVoice => 'Listen with Turkish voice (Antalia)';
 
   @override
   String get shareAsNotePreparing => 'Preparing note package…';
@@ -2564,9 +1965,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatRemove => 'Remove';
 
   @override
-  String get exportTitle => 'Export';
-
-  @override
   String get exportNotesOption => 'Custom PDF / Word…';
 
   @override
@@ -2630,19 +2028,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportImageLine => 'Position';
 
   @override
-  String get aiModelSearch => 'Search models';
-
-  @override
-  String get aiModelOthers => 'Other models';
-
-  @override
-  String get aiModelNoMatch => 'No matching model.';
-
-  @override
-  String get aiModelAutoInfo =>
-      'The app tries the most suitable models in order.';
-
-  @override
   String imageOcrCharsSelected(int count) {
     return '$count characters selected';
   }
@@ -2663,43 +2048,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aiModelShowAll => 'Show all';
-
-  @override
-  String get aiModelShowAllInfo => 'Also lists models the app does not use.';
-
-  @override
   String get rotateFailed => 'Couldn\'t rotate the image.';
 
   @override
-  String get dashboardBackgroundPick => 'Choose background image';
-
-  @override
   String get dashboardBackgroundChange => 'Change background image';
-
-  @override
-  String podcastRenderingAudio(int done, int total) {
-    return 'Preparing audio: $done/$total parts';
-  }
-
-  @override
-  String get podcastExportAudio => 'Export as audio file';
-
-  @override
-  String get podcastExportAudioCost =>
-      'The whole script is re-synthesised with the AI voice and saved as a single WAV file. This uses your Gemini quota and can take a few minutes for long texts.';
-
-  @override
-  String get podcastShareText => 'Share the script';
-
-  @override
-  String get podcastSaveAsNote => 'Save as a new note';
-
-  @override
-  String get podcastSavedAsNote => 'The podcast script was saved as a note.';
-
-  @override
-  String get listenPreparingVoice => 'Preparing audio…';
 
   @override
   String get appearancePreviewTitle => 'Sample text';
@@ -2788,9 +2140,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteSearchScanAttachments => 'Scan attachments';
-
-  @override
-  String get noteSearchAskAi => 'Ask the AI';
 
   @override
   String get noteTitleLabel => 'Title';
@@ -2948,10 +2297,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Links to your selected text, or at the cursor if nothing is selected';
 
   @override
-  String get attachmentTagPickText =>
-      'Now select the text to link, then tap \"Link here\".';
-
-  @override
   String get attachmentTagLinkHere => 'Link here';
 
   @override
@@ -2975,9 +2320,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get docNameVideo => 'Video notes';
 
   @override
-  String get folderManage => 'Manage folder';
-
-  @override
   String get folderEmpty => 'No notes here yet';
 
   @override
@@ -2991,22 +2333,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get folderEmptyHint =>
       'Add a note with + below, or move a note here while editing it.';
-
-  @override
-  String get brainstormIntro =>
-      'Tap one of the headings above or just type — let\'s start thinking together.';
-
-  @override
-  String get brainstormOutlineTitle => 'Outline';
-
-  @override
-  String get brainstormInputHint => 'Write an idea or ask a question…';
-
-  @override
-  String get brainstormAddIdea => 'Add to note';
-
-  @override
-  String get brainstormAdded => 'Added to note';
 
   @override
   String get folderShared => 'This folder is shared with a friend';
@@ -3026,9 +2352,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friendsListTitle => 'My friends';
-
-  @override
-  String get friendsAddEmailHint => 'friend@email.com';
 
   @override
   String get friendsSendRequest => 'Send request';
@@ -3064,17 +2387,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get friendsNeedsAccount =>
-      'Contacts and folder sharing require a linked Google account.';
-
-  @override
   String get friendsSearchHint => 'Name (3+ letters) or full email';
-
-  @override
-  String get friendsSearchTab => 'Search';
-
-  @override
-  String get friendsSearchEmailTab => 'By email';
 
   @override
   String get friendsSearchEmpty => 'No results';
@@ -3213,9 +2526,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inboxAccepted => 'Note added to your notes';
 
   @override
-  String get folderShelfExpand => 'Expand folders';
-
-  @override
   String get folderShelfCollapse => 'Collapse folders';
 
   @override
@@ -3245,17 +2555,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get areaCopied => 'Selected area copied to the clipboard.';
 
   @override
-  String get areaAskAi => 'Ask the AI';
-
-  @override
   String get areaAskTitle => 'Selected area';
-
-  @override
-  String get areaAskHint =>
-      'Add a question if you like (leave it empty to transcribe and explain).';
-
-  @override
-  String get areaAskRun => 'Ask';
 
   @override
   String get areaCaptureFailed => 'Couldn\'t capture the selected area.';
@@ -3283,9 +2583,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardBackgroundColor => 'Background color';
-
-  @override
-  String get dashboardBackgroundImageSection => 'Background image';
 
   @override
   String get dashboardBackgroundReset => 'Reset to default';
@@ -3464,12 +2761,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderQuickNextWeek => 'Next week';
 
   @override
-  String get reminderQuickCustom => 'Pick a date…';
-
-  @override
-  String get reminderQuickTitle => 'When should we remind you?';
-
-  @override
   String get reminderSnooze => 'Snooze 1 hour';
 
   @override
@@ -3609,13 +2900,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imagesFitSingleRow => 'Fit in one row';
 
   @override
-  String get briefingNotificationTitle => 'Good morning! ☀️';
-
-  @override
-  String get briefingNotificationBody =>
-      'Today\'s briefing is ready — tap for a summary of your reminders, notes and important emails.';
-
-  @override
   String get reminderDone => 'Done';
 
   @override
@@ -3692,11 +2976,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collaboratorsSaved => 'Sharing updated';
 
   @override
-  String collaboratorsCount(int count) {
-    return 'Shared with $count people';
-  }
-
-  @override
   String get collaboratorsOnlyOwner =>
       'Only the note\'s owner can change collaborators.';
 
@@ -3716,9 +2995,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newNoteShort => 'New note';
-
-  @override
-  String get newChecklistShort => 'New list';
 
   @override
   String get listPaneHide => 'Hide note list';
@@ -3793,11 +3069,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Instant sync across phone, tablet, computer and web.';
 
   @override
-  String get loginFeatureAiTitle => 'AI at your side';
+  String get loginFeatureAiTitle => 'Smart organization';
 
   @override
   String get loginFeatureAiBody =>
-      'Summarize, ask, dictate; chat with your documents.';
+      'Quick voice dictation, offline spell check, smart grocery aisles and tags.';
 
   @override
   String get loginFeatureShareTitle => 'Write together';
@@ -3851,12 +3127,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trashRestSection => 'Other deleted notes';
-
-  @override
-  String get aiHubTagline => 'Ask, summarize and tidy up your notes.';
-
-  @override
-  String get aiToolsSection => 'Tools';
 
   @override
   String get folderOrderTitle => 'Folder order';
@@ -4104,9 +3374,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGroupPrivacyNotify => 'Privacy and notifications';
 
   @override
-  String get settingsGroupAutomatic => 'Automatic';
-
-  @override
   String get settingsGroupText => 'Text';
 
   @override
@@ -4120,9 +3387,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsGroupSession => 'Session';
-
-  @override
-  String get settingsGroupLock => 'Lock';
 
   @override
   String get settingsSecurityTitle => 'Security';
@@ -4229,25 +3493,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get templateCreate => 'Create';
 
   @override
-  String templateCreateWithCount(int count) {
-    return 'Create · $count items';
-  }
-
-  @override
   String get templateListChecks => 'Checkboxes';
 
   @override
   String get templateListNumbers => 'Numbered';
 
   @override
-  String get templateItems => 'Items';
-
-  @override
   String get templateAddItem => 'Add item';
-
-  @override
-  String get templateSuggestionsInfo =>
-      'Tap a suggestion to add it to the list; tap again to remove it.';
 
   @override
   String get tplShopProduce => 'Fruit and vegetables';
@@ -4490,11 +3742,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get embedPickTitle => 'What to embed?';
 
   @override
-  String embedPickTitleFor(String label) {
-    return 'Embed into “$label”';
-  }
-
-  @override
   String get embedPickInfo =>
       'Tap the text to open the embedded item in place.';
 
@@ -4532,9 +3779,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guideSearchHint => 'Search the guide — “page”, “YouTube”';
 
   @override
-  String get guideContents => 'Contents';
-
-  @override
   String get guideOpenScreen => 'Show me';
 
   @override
@@ -4559,12 +3803,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuSectionProtect => 'Protection and storage';
-
-  @override
-  String get menuSectionContent => 'Content';
-
-  @override
-  String get menuSectionPeople => 'Account and people';
 
   @override
   String get menuSectionApp => 'App';
@@ -4837,9 +4075,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customizeModeTitleShort => 'Edit';
 
   @override
-  String get customizeModeHint => 'Tap to hide or show · applied instantly';
-
-  @override
   String customizeHiddenCount(int count) {
     return '$count hidden · tap to change';
   }
@@ -4864,9 +4099,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get personalizeInfo => 'Choose visible areas and buttons, plug-ins';
 
   @override
-  String get personalizeOpen => 'Open personalization';
-
-  @override
   String get customizeStartTitle => 'Edit on screen';
 
   @override
@@ -4878,9 +4110,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customizeActive => 'Edit mode is on';
-
-  @override
-  String get customizeModeShort => 'Hide or show by tapping on screens';
 
   @override
   String get customizeHint => 'Tap: hide/show · Reorder: move it';
@@ -4908,10 +4137,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get personalizeModules => 'Plug-ins';
-
-  @override
-  String get personalizeModulesInfo =>
-      'Turning a plug-in off removes its buttons everywhere.';
 
   @override
   String get moduleAi => 'AI';
@@ -4970,13 +4195,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleMixed => 'partly on';
 
   @override
-  String get personalizeEditorBar => 'Note screen · bottom bar';
-
-  @override
-  String get personalizeBarInfo =>
-      'Drag the handle to reorder buttons; use the switch to add or remove them from the bar, and the arrow to move one to the other capsule. Buttons that are off (undo, reminder, camera…) can be added any time.';
-
-  @override
   String get personalizeBarLeft => 'Left capsule · tools';
 
   @override
@@ -4998,30 +4216,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reorderHandle => 'Reorder';
 
   @override
-  String get personalizeEditorTop => 'Note screen · top bar and areas';
-
-  @override
-  String get personalizeQuickAdd => 'New note menu (+)';
-
-  @override
-  String get personalizeAttachSheet => 'Add sheet (+ inside a note)';
-
-  @override
   String get personalizeVideo => 'Video';
 
   @override
   String get personalizeHome => 'Home screen';
 
   @override
-  String get personalizeHomeItemsInfo =>
-      'Selected items appear on the home screen; in edit mode you can also tap them on the home screen to hide.';
-
-  @override
   String get personalizeBubbles => 'Bubbles';
-
-  @override
-  String get personalizeChipsInfo =>
-      'Selected items are visible; tap to toggle.';
 
   @override
   String get personalizeReset => 'Reset to default';
@@ -5060,11 +4261,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String secondsShort(int seconds) {
     return '$seconds s';
-  }
-
-  @override
-  String personalizeHiddenSummary(int count) {
-    return '$count hidden';
   }
 
   @override
@@ -5123,12 +4319,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transcriptNewNote => 'New note';
 
   @override
-  String get transcriptRetryAi => 'Re-transcribe with AI';
-
-  @override
-  String get transcriptReadWithAi => 'Read with AI (handwriting)';
-
-  @override
   String get transcriptShowTimes => 'Timestamps';
 
   @override
@@ -5140,11 +4330,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transcriptEmpty => 'No text found.';
-
-  @override
-  String transcriptTooLarge(int mb) {
-    return 'The recording is $mb MB; the built-in AI accepts up to 15 MB. Add your own Gemini key in Settings to transcribe larger recordings.';
-  }
 
   @override
   String transcriptUnsupported(String format) {
@@ -5215,9 +4400,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickImagesTitle => 'Choose images';
 
   @override
-  String get pickDocumentTitle => 'Choose a document';
-
-  @override
   String get fileAppPickerTitle => 'Pick files with Dosya Okuyucu';
 
   @override
@@ -5236,9 +4418,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentActions => 'Attachment actions';
-
-  @override
-  String get attachmentOpen => 'Open';
 
   @override
   String get attachmentUploadQueued => 'Waiting to upload';
@@ -5276,9 +4455,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharedHubTitle => 'Inbox & shared';
-
-  @override
-  String get sharedHubInbox => 'Received';
 
   @override
   String get voiceAutoStop => 'Stop on silence';
@@ -5482,47 +4658,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickAddFileUnsupported => 'This file type is not supported';
 
   @override
-  String get chatScopeAll => 'All notes';
-
-  @override
-  String get chatScopeNote => 'This note';
-
-  @override
-  String get chatScopeDoc => 'This document';
-
-  @override
-  String get chatModeQa => 'Q&A';
-
-  @override
-  String get chatModeBrainstorm => 'Brainstorm';
-
-  @override
-  String get chatSuggestOutline => 'Outline';
-
-  @override
-  String get chatSuggestIdeas => 'Give ideas';
-
-  @override
-  String get chatSuggestGaps => 'Find gaps';
-
-  @override
-  String get chatPromptOutline => 'Outline this note in short bullet points.';
-
-  @override
-  String get chatPromptIdeas => 'Suggest new ideas and angles for this note.';
-
-  @override
-  String get chatPromptGaps =>
-      'What is missing, unclear or contradictory in this note?';
-
-  @override
-  String get aiChatRowTitle => 'Chat';
-
-  @override
-  String get aiChatRowInfo =>
-      'With this note, its document or all notes; Q&A or brainstorm';
-
-  @override
   String get shareFolderTogether => 'Edit folder together';
 
   @override
@@ -5653,7 +4788,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockNotEncryption =>
-      'The lock is not encryption: the note content is stored as plain text on the server and in the device cache. The lock only stops this app from showing the note.';
+      'Locked note bodies, checklist items and page notes are encrypted on-device with AES-256-GCM before syncing. Fingerprint lock keeps the key in this device\'s secure keystore; password or pattern lock derives it from your secret — if forgotten, previously locked content cannot be decrypted.';
 
   @override
   String get versionHistory => 'Version history';
@@ -5760,27 +4895,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceStartShort => 'Start';
 
   @override
-  String get aiVoiceRowTitle => 'AI voice note';
-
-  @override
-  String get aiVoiceRowInfoEditor =>
-      'Speak; AI tidies it up and adds it to this note';
-
-  @override
-  String get aiVoiceRowInfoHub =>
-      'Speak; AI builds the note — title, items and reminders';
-
-  @override
   String get archivePaperDashed => 'Dashed lines';
-
-  @override
-  String get itemDividerSolid => 'Line below';
-
-  @override
-  String get itemDividerDashed => 'Dashed line below';
-
-  @override
-  String get itemDividerDotted => 'Dotted line below';
 
   @override
   String get itemDividerRemove => 'Remove line';
@@ -5790,12 +4905,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allNotesChip => 'All';
-
-  @override
-  String get archiveAiSearch => 'AI search (by meaning)';
-
-  @override
-  String get archiveAiSearchHint => 'Search the archive by meaning…';
 
   @override
   String get untitledNote => 'Untitled note';
@@ -5986,12 +5095,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatFontPanel => 'Font and size';
 
   @override
-  String get formatColorsPanel => 'Colors';
-
-  @override
-  String get formatPageColor => 'Page color';
-
-  @override
   String get inkShapes => 'Shapes';
 
   @override
@@ -6029,10 +5132,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inkPenOnlyTitle => 'Draw with pen only';
 
   @override
-  String get inkPenOnlyInfo =>
-      'Fingers don\'t draw; one finger scrolls, two fingers zoom. Your palm leaves no marks. Turns on automatically the first time a pen touches the screen.';
-
-  @override
   String get inkFingerToolTitle => 'Finger';
 
   @override
@@ -6067,9 +5166,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkZoomReset => 'Fit to screen';
-
-  @override
-  String get inkZoomHint => 'Pinch with two fingers to zoom and pan';
 
   @override
   String get cardShowFiles => 'File attachments';
@@ -6454,19 +5550,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gestureItemDeleted => 'Item deleted';
 
   @override
-  String get gestureFixing => 'Fixing spelling…';
-
-  @override
-  String get gestureNothingToFix => 'No spelling mistakes to fix';
-
-  @override
-  String get gestureFixed => 'Spelling fixed';
-
-  @override
-  String get gestureFixNeedsAi =>
-      'Circling an item fixes its spelling with AI; AI isn\'t available right now (Settings → AI).';
-
-  @override
   String get itemGesturesSetting => 'Item gestures';
 
   @override
@@ -6524,16 +5607,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountRequiredBadge => 'Needs a Google account';
-
-  @override
-  String get guestAiTitle => 'AI needs a Google account or your own key';
-
-  @override
-  String get guestAiBody =>
-      'Built-in AI turns on with a Google account. Without one, add your own Gemini API key in Settings to use every AI tool.';
-
-  @override
-  String get guestAiAddKey => 'Add my own key';
 
   @override
   String get deletingAccount => 'Deleting your account and data…';
@@ -6650,21 +5723,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cardElementsSampleTag => 'home';
 
   @override
-  String get aiTaskIdle => 'Nothing to do right now';
-
-  @override
-  String get aiSettingsTooltip => 'AI settings';
-
-  @override
-  String get tipSemanticSearch =>
-      'With Meaning on, search matches meaning, not words: “car expenses” also finds the fuel receipt.';
-
-  @override
   String get tipListGestures =>
       'Tip: strike an item through with your finger → it is checked.';
-
-  @override
-  String get tipPdfBubble => 'Tip: long-press the page → drop a bubble there.';
 
   @override
   String get tipMediaPin =>
@@ -6730,11 +5790,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get swipeModeInfo =>
       'When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).';
-
-  @override
-  String aiQuotaRenewsAt(String time) {
-    return 'Renews at $time';
-  }
 
   @override
   String get backupInfo =>
@@ -6888,11 +5943,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get studyCardsTitle => 'Today\'s cards';
 
   @override
-  String studyCardsHubInfo(int count) {
-    return 'Spaced repetition: $count cards today';
-  }
-
-  @override
   String get studyCardsEmpty => 'No cards due here today';
 
   @override
@@ -6923,39 +5973,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get studyGradeEasy => 'Easy';
 
   @override
-  String get studyCardsMake => 'Make cards';
-
-  @override
-  String studyCardsMakeMore(int count) {
-    return 'Make cards ($count so far)';
-  }
-
-  @override
-  String get studyCardsGenerating => 'Making cards…';
-
-  @override
-  String get studyCardsFailed => 'Couldn\'t make cards';
-
-  @override
-  String studyCardsPreview(int count) {
-    return '$count cards made';
-  }
-
-  @override
-  String get studyCardsSave => 'Save to note';
-
-  @override
-  String studyCardsSaved(int count) {
-    return '$count cards saved';
-  }
-
-  @override
   String updateAvailable(String name) {
     return 'New version available: $name';
   }
-
-  @override
-  String get updateDownload => 'Download from GitHub';
 
   @override
   String get pdfNoteFromSelection => 'Take note';
@@ -6976,153 +5996,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hideMoreChecked => 'Collapse checked';
 
   @override
-  String get gmailTitle => 'Gmail';
-
-  @override
-  String get gmailConnect => 'Connect Gmail';
-
-  @override
-  String get gmailReadOnlyHint =>
-      'Read-only: see your emails and save them as notes. Nothing in Gmail is changed.';
-
-  @override
   String get gmailGoogleOnly => 'Sign in with Google to use Gmail.';
-
-  @override
-  String get gmailSearchHint => 'Search mail (Gmail search syntax)';
-
-  @override
-  String get gmailEmpty => 'No emails here';
-
-  @override
-  String get gmailLoadMore => 'Load more';
-
-  @override
-  String get gmailError => 'Couldn\'t reach Gmail';
-
-  @override
-  String get gmailSaveNote => 'Save as note';
-
-  @override
-  String get gmailAiSummary => 'Note with AI summary';
-
-  @override
-  String get gmailAiTasks => 'Extract task list';
-
-  @override
-  String get gmailWithAttachments => 'Include attachments';
-
-  @override
-  String get gmailNoteCreated => 'Note created';
-
-  @override
-  String get aiErrInvalidKey =>
-      'That API key is not valid. Check it in Settings → AI.';
-
-  @override
-  String get aiErrModelNotFound =>
-      'AI model not found. Update the app; if it persists, tell the developer.';
-
-  @override
-  String get aiErrRateLimited => 'Too many requests; try again in a moment.';
-
-  @override
-  String get aiErrConnection =>
-      'Couldn\'t reach the AI. Check your connection and try again.';
-
-  @override
-  String get aiErrEmptyResponse =>
-      'The model returned an empty reply; try again.';
-
-  @override
-  String get aiErrUnexpected =>
-      'The model sent an unexpected reply; try again.';
-
-  @override
-  String get aiErrNotCompleted => 'Couldn\'t finish that; try again.';
-
-  @override
-  String get aiErrBuiltInOff =>
-      'Built-in AI isn\'t available right now. Enter your own Gemini key in Settings to use it straight away.';
-
-  @override
-  String get aiErrQuotaFree =>
-      'Your free AI points are used up. They renew within 24 hours; you can also enter your own key in Settings or go Premium.';
-
-  @override
-  String aiErrQuotaPremium(Object limit) {
-    return 'Your Premium AI points ($limit) are used up. They renew within 24 hours; with your own key in Settings you have no limit.';
-  }
-
-  @override
-  String get aiErrUnavailable =>
-      'The AI can\'t answer right now; try again in a moment.';
-
-  @override
-  String aiErrModelList(Object provider) {
-    return 'Couldn\'t load the $provider model list. You can pick a model by hand in Settings → AI → Model.';
-  }
-
-  @override
-  String aiErrNeedsGemini(Object feature) {
-    return '$feature only works with Google Gemini for now. Switch the provider to Gemini in Settings → AI, or remove the key to use built-in AI.';
-  }
-
-  @override
-  String aiErrKindNeedsGemini(Object kind, Object provider) {
-    return '$kind can\'t be sent with $provider. Switch the provider to Gemini in Settings → AI, or remove the key to use built-in AI.';
-  }
-
-  @override
-  String get aiErrFeatureTts => 'AI narration';
-
-  @override
-  String get aiErrFeatureSemantic => 'Semantic search';
-
-  @override
-  String get aiErrKindAudio => 'An audio file';
-
-  @override
-  String get aiErrKindVideo => 'A video';
-
-  @override
-  String get aiErrKindFile => 'This file type';
-
-  @override
-  String get aiErrUpload => 'Couldn\'t upload the recording; try again.';
-
-  @override
-  String get aiErrSpeech => 'The narration model returned no audio; try again.';
-
-  @override
-  String get aiErrNoSpeechText => 'There is no text to narrate.';
-
-  @override
-  String get aiErrNoContent => 'There is nothing to make a voice note from.';
-
-  @override
-  String get aiStatusBuiltInOffTitle => 'Built-in AI is off right now';
-
-  @override
-  String get aiStatusWebOffTitle => 'Built-in AI is off on the web';
-
-  @override
-  String get aiStatusWebOffBody =>
-      'It works in the phone app. Here, your own Gemini key unlocks every tool.';
-
-  @override
-  String get aiStatusQuotaTitle => 'Your AI points are used up';
-
-  @override
-  String aiStatusQuotaBody(Object time) {
-    return 'Points renew around $time. With your own Gemini key you can carry on without waiting.';
-  }
-
-  @override
-  String get dictationFixOffer => 'Dictation finished';
-
-  @override
-  String get dictationFixAction => 'Fix with AI';
 
   @override
   String get tipHomeMicHold =>
@@ -7135,15 +6009,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get itemGesturesFingerAllInfo =>
       'When off, a finger only checks; scribble (deletes) and circle (fixes spelling) need a pen.';
-
-  @override
-  String get bubbleAddNoteHint => 'A pinned note that opens on tap';
-
-  @override
-  String get bubbleAddPlainHint => 'Text written straight on the page';
-
-  @override
-  String get bubbleAddPlainTitle => 'Plain text';
 
   @override
   String get itemAddHeader => 'Subheading';
@@ -7352,9 +6217,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tplTodoErrandsItems =>
       'Go to the bank, Send a parcel, Pharmacy, Dry cleaning, Post office';
-
-  @override
-  String get templateTwoColumns => 'Two columns';
 
   @override
   String get templateFavorite => 'Add to favourites';
@@ -7571,9 +6433,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarViewWeek => 'Week';
 
   @override
-  String get calendarView => 'View';
-
-  @override
   String get calendarPinchHint =>
       'Pinch with two fingers to move between year, month and week';
 
@@ -7588,13 +6447,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeStraw => 'Straw';
-
-  @override
-  String get dashboardBackgroundCalendar => 'Calendar background';
-
-  @override
-  String get dashboardBackgroundCalendarInfo =>
-      'This month’s calendar behind your notes; card titles stay clear, the rest turns see-through';
 
   @override
   String get calendarSwipe => 'Swipe to change week/day in calendar';
@@ -7838,15 +6690,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuQuickRow => 'Put in quick row';
 
   @override
-  String get menuShowHide => 'Show/hide';
-
-  @override
   String get menuReset => 'Default';
-
-  @override
-  String menuEditHint(int count) {
-    return 'Drag to reorder, tap the eye to hide; starred actions sit in the quick row on top (up to $count).';
-  }
 
   @override
   String get themeCream => 'Cream';
@@ -7888,19 +6732,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderSheetSave => 'Save';
 
   @override
-  String get folderHoldHint => 'Hold and slide left or right to switch folders';
-
-  @override
   String get homeFolderStripHide => 'Hide folder row';
 
   @override
-  String get homeFolderStripShow => 'Show folder row';
-
-  @override
   String get homeViewMenu => 'View & filter';
-
-  @override
-  String get folderRadialCancel => 'Release = cancel';
 
   @override
   String googleApiDisabled(String api) {
@@ -7914,56 +6749,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String googleScopeMissing(String api) {
     return '$api permission wasn\'t granted. Tick the permission box when connecting.';
   }
-
-  @override
-  String get gmailRefresh => 'Refresh';
-
-  @override
-  String get gmailNoResults => 'No emails here match your search';
-
-  @override
-  String get gmailFilterInbox => 'Inbox';
-
-  @override
-  String get gmailFilterUnread => 'Unread';
-
-  @override
-  String get gmailFilterStarred => 'Starred';
-
-  @override
-  String get gmailFilterAttachments => 'With attachments';
-
-  @override
-  String get gmailFilterToday => 'Today';
-
-  @override
-  String get gmailDayToday => 'Today';
-
-  @override
-  String get gmailDayYesterday => 'Yesterday';
-
-  @override
-  String get gmailDayThisWeek => 'This week';
-
-  @override
-  String get gmailDayOlder => 'Older';
-
-  @override
-  String get gmailNoSubject => '(no subject)';
-
-  @override
-  String get gmailConnectTitle => 'Turn your emails into notes';
-
-  @override
-  String get gmailConnectPointRead =>
-      'See your inbox and search with Gmail search syntax.';
-
-  @override
-  String get gmailConnectPointNote =>
-      'Turn an email into a note, an AI summary or a task list in one tap.';
-
-  @override
-  String get gmailOpenInGmail => 'Open in Gmail';
 
   @override
   String get friendsEmptyTitle => 'No contacts here yet';
@@ -8071,9 +6856,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkPinnedPen => 'Pinned pen · hold to remove';
-
-  @override
-  String get penModeFinish => 'Done';
 
   @override
   String get reminderLevelTitle => 'Notification';
@@ -8209,52 +6991,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addToNoteEmpty => 'No other notes yet';
 
   @override
-  String get gmailAddSelectionToNote => 'Add to note';
-
-  @override
-  String get gmailTagPromotions => 'Promotions';
-
-  @override
-  String get gmailTagSocial => 'Social';
-
-  @override
-  String get gmailTagUpdates => 'Updates';
-
-  @override
-  String get gmailTagForums => 'Forums';
-
-  @override
-  String get gmailTagImportant => 'Important';
-
-  @override
-  String gmailSmartAddToCalendar(String when) {
-    return 'Add to calendar: $when';
-  }
-
-  @override
-  String gmailSmartLinkPerson(String name) {
-    return 'Link $name to a note';
-  }
-
-  @override
-  String gmailSmartRelatedNote(String title) {
-    return 'Related note: $title';
-  }
-
-  @override
-  String get gmailAddedToNote => 'Selected text added to the note';
-
-  @override
   String get calendarLinkExistingNote => 'Link an existing note';
 
   @override
   String get routineFromNote => 'Create routine from a note';
-
-  @override
-  String get gmailAddAccount => 'Add another account';
-
-  @override
-  String get gmailRemoveAccount => 'Remove account';
 
   @override
   String get quickRowSubheading => 'Subheading';
@@ -8285,9 +7025,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickRowDictation => 'Dictate';
 
   @override
-  String get quickRowCustomize => 'Edit quick menu (add/remove buttons)';
-
-  @override
   String get notePackageSelectFirst =>
       'Select text to pack (or tap a long paragraph)';
 
@@ -8316,10 +7053,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get spellAutoTitle => 'Auto-correct';
-
-  @override
-  String get spellAutoSubtitle =>
-      'A finished word is corrected only when it is a sure fix; Backspace right after undoes it. Title words are capitalized.';
 
   @override
   String get spellLearnTitle => 'Learning correction';
@@ -8453,15 +7186,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCalendarStripCollapse => 'Collapse calendar strip';
 
   @override
-  String get gmailTranslate => 'Translate message';
-
-  @override
-  String get gmailShowOriginal => 'Show original';
-
-  @override
-  String get gmailTranslated => 'Translated';
-
-  @override
   String get folderMenuEdit => 'Reorder · delete';
 
   @override
@@ -8534,10 +7258,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inkPenOffer => 'Back to pen';
-
-  @override
-  String get tipPenToggle =>
-      'Pen mode is on. Tap the pen button again (or back) to turn it off. Long-press = pen settings.';
 
   @override
   String get tipPenShapeHold =>
@@ -8614,14 +7334,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateInstall => 'Update';
 
   @override
-  String get updateDownloading => 'Downloading the new version…';
-
-  @override
   String get updateNeedsPermission =>
       'Allow this app to install unknown apps, then tap Update again';
-
-  @override
-  String get updateFailed => 'Download failed; opening the GitHub page';
 
   @override
   String get updateTapToCheck => 'Tap to check for updates';
@@ -8639,13 +7353,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateUpToDate => 'You\'re on the latest version';
 
   @override
-  String get updateCheckFailed => 'Couldn\'t check — check your connection';
-
-  @override
   String get releaseNotesTitle => 'Release notes';
-
-  @override
-  String get releaseNotesInfo => 'What changed, item by item';
 
   @override
   String get settingsWritingTitle => 'Pen, writing and screen';
@@ -9086,21 +7794,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickDropAiToggle => 'Ask AI when unsure';
 
   @override
-  String get aiOffSetting => 'Turn off AI completely';
-
-  @override
-  String get aiOffSettingInfo =>
-      'While on, no note, text or attachment is sent to AI and AI buttons are hidden.';
-
-  @override
   String get aiOffTitle => 'AI is turned off';
-
-  @override
-  String get aiOffBody =>
-      'You turned AI off in Settings; nothing is sent. Turn it back on to bring the AI buttons back.';
-
-  @override
-  String get aiOffTurnOn => 'Turn AI on';
 
   @override
   String get aiConsentTitle => 'Using AI';
@@ -9128,14 +7822,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiConsentDecline => 'Not now';
 
   @override
-  String get aiMayBeWrong => 'AI can make mistakes; check important info.';
-
-  @override
   String get aiPausedTitle => 'AI is temporarily unavailable';
-
-  @override
-  String get aiPausedBody =>
-      'AI features are switched off for a short while. Your notes aren\'t affected; try again later.';
 
   @override
   String get homePullGestureTitle => 'Pulling down at the top of the list';
@@ -9285,13 +7972,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiNeedsProTitle => 'AI is part of Pro';
 
   @override
-  String get aiNeedsProBody =>
-      'Built-in AI comes with a Pro subscription. With Lifetime you can add your own Gemini key and use it without limits.';
-
-  @override
-  String get aiNeedsProSee => 'See Pro';
-
-  @override
   String get proTitle => 'Full Version';
 
   @override
@@ -9305,11 +7985,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proStatusLifetime => 'Your plan: Full Version (Lifetime)';
 
   @override
-  String proStatusPro(String date) {
-    return 'Your plan: Full Version · until $date';
-  }
-
-  @override
   String get proTiersTitle => 'Plans';
 
   @override
@@ -9317,9 +7992,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get proTierLifetime => 'Full Version';
-
-  @override
-  String get proTierPro => 'Full Version';
 
   @override
   String get proRowBasics =>
@@ -9369,36 +8041,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proBuyTitle => 'Buy';
 
   @override
-  String get proPlanMonthly => 'Full Version';
-
-  @override
-  String get proPlanYearly => 'Full Version';
-
-  @override
   String get proPlanLifetime => 'Full Version · One-Time (Lifetime)';
 
   @override
   String get proPlanDecisionPack => '+1,000 Smart Decisions Pack';
-
-  @override
-  String proPriceMonthly(String price) {
-    return '$price / month';
-  }
-
-  @override
-  String proPriceYearly(String price) {
-    return '$price / year';
-  }
-
-  @override
-  String proTrialMonthly(String price) {
-    return '7 days free, then $price / month';
-  }
-
-  @override
-  String proTrialYearly(String price) {
-    return '7 days free, then $price / year';
-  }
 
   @override
   String proPriceOnce(String price) {
@@ -9409,16 +8055,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get proBuy => 'Buy';
 
   @override
-  String get proTry => 'Try free';
-
-  @override
   String get proOwned => 'Owned';
-
-  @override
-  String get proManage => 'Manage purchases';
-
-  @override
-  String get proManageBody => 'Google Play account';
 
   @override
   String get proRestore => 'Restore purchases';
@@ -9520,15 +8157,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarLinkAllDay => 'All day';
 
   @override
-  String get calendarCollapseMonth => 'Collapse calendar';
-
-  @override
-  String get calendarExpandMonth => 'Expand calendar';
-
-  @override
-  String get calendarDayPanelClose => 'Close day panel';
-
-  @override
   String get driveOnboardTitle => 'Keep attachments on every device';
 
   @override
@@ -9540,25 +8168,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get driveOnboardLater => 'Later';
-
-  @override
-  String get aiQuietOrganizeTitle => 'Quiet organize';
-
-  @override
-  String get aiQuietOrganizeEmpty => 'No missing titles or tags to suggest.';
-
-  @override
-  String aiQuietOrganizeApply(int count) {
-    return 'Apply $count suggestions';
-  }
-
-  @override
-  String aiQuietOrganizeApplied(int count) {
-    return '$count notes updated';
-  }
-
-  @override
-  String get aiQuietOrganizeBoth => 'Titles + tags together';
 
   @override
   String get exportMarkdownZip => 'Export Markdown (.zip)';
@@ -9634,100 +8243,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupWrongPassword =>
       'Wrong password or unable to decrypt backup';
-
-  @override
-  String get aiWriteImprove => 'Improve writing';
-
-  @override
-  String get aiWriteImproveInfo =>
-      'Fix, shorten, expand, change tone, or translate';
-
-  @override
-  String get improveExpand => 'Expand with more detail';
-
-  @override
-  String get improveCasual => 'Casual and natural';
-
-  @override
-  String get aiWriteGroupFix => 'Fix and rewrite';
-
-  @override
-  String get aiWriteGroupTone => 'Tone and length';
-
-  @override
-  String get aiWriteGroupFormat => 'Convert format';
-
-  @override
-  String get aiPreviewBefore => 'Before';
-
-  @override
-  String get aiPreviewAfter => 'After';
-
-  @override
-  String get aiPreviewCompare => 'Before / after';
-
-  @override
-  String get aiPhotoToStructuredNote => 'Turn into structured note';
-
-  @override
-  String get aiPhotoToStructuredNoteInfo =>
-      'Reads on device first, then organizes title and items';
-
-  @override
-  String get docSuggestSummary => 'Summarize';
-
-  @override
-  String get docPromptSummary =>
-      'Summarize this document clearly and concisely, citing page numbers as [p. N].';
-
-  @override
-  String get docSuggestKeyPoints => 'Key points';
-
-  @override
-  String get docPromptKeyPoints =>
-      'List the 5 most important points in this document with page citations [p. N].';
-
-  @override
-  String get docSuggestActions => 'Dates & tasks';
-
-  @override
-  String get docPromptActions =>
-      'Extract important dates, decisions, and action items from this document with page citations [p. N].';
-
-  @override
-  String docPageCitation(int page) {
-    return 'p. $page';
-  }
-
-  @override
-  String get transcriptTakeaways => 'Summary & actions';
-
-  @override
-  String get transcriptTakeawaysSummary => 'Summary';
-
-  @override
-  String get transcriptTakeawaysActions => 'Action items';
-
-  @override
-  String get transcriptTakeawaysRemind => 'Want a reminder?';
-
-  @override
-  String get transcriptTakeawaysAddTask => 'Add task';
-
-  @override
-  String get transcriptTakeawaysInsert => 'Add summary to note';
-
-  @override
-  String get briefingDailyTab => 'Daily';
-
-  @override
-  String get briefingWeeklyTab => 'Weekly';
-
-  @override
-  String get briefingWeeklyLoading => 'Preparing weekly summary…';
-
-  @override
-  String get briefingWeeklyEmpty => 'Nothing to summarize this week';
 
   @override
   String get calendarAddActionTitle => 'What + adds in the calendar';
@@ -10021,12 +8536,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinnedSmartAreaAsk => 'Select area & ask';
 
   @override
-  String get areaInsertToNote => 'Add to note';
-
-  @override
-  String get areaInsertedToNote => 'Added to note';
-
-  @override
   String get dashboardBackgroundGallery => 'Curated wallpapers';
 
   @override
@@ -10034,9 +8543,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardBackgroundOpacity => 'Visibility';
-
-  @override
-  String get dashboardBackgroundPreview => 'Live preview';
 
   @override
   String get wallpaperAuroraBloom => 'Aurora bloom';
@@ -10134,130 +8640,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aiSourceModeTitle => 'AI source';
-
-  @override
-  String get aiSourceModeShared => 'Shared pool';
-
-  @override
-  String get aiSourceModeByok => 'Own API key';
-
-  @override
-  String get aiSharedPoolTitle => 'Shared AI pool';
-
-  @override
-  String aiSharedPoolSubtitle(int credits) {
-    return 'Shared across Notes and Files under one Google account ($credits credits)';
-  }
-
-  @override
-  String get aiSharedPoolEmpty =>
-      'Shared credits depleted; enter your own key or upgrade to Pro';
-
-  @override
-  String get aiByokExhaustedError =>
-      'Your API key quota or access is exhausted. Did not fall back to shared pool.';
-
-  @override
-  String get aiBackupKeysTitle => 'Backup API keys';
-
-  @override
-  String get aiBackupKeysInfo =>
-      'When primary quota fills, the next key takes over automatically (up to 5)';
-
-  @override
-  String aiBackupKeyLabel(int index) {
-    return 'Backup key $index';
-  }
-
-  @override
-  String get aiBackupKeyAdd => 'Add backup key';
-
-  @override
   String get ecosystemDosyalarimTitle => 'Manage every file with Dosyalarım';
 
   @override
   String get ecosystemDosyalarimSubtitle =>
-      'Sign PDFs, edit Word and Excel files, and share your AI pool across both apps.';
-
-  @override
-  String get ecosystemOpenApp => 'Open in Dosyalarım';
+      'Sign PDFs, edit Word and Excel files, and share easily with your notes.';
 
   @override
   String get ecosystemGetApp => 'Explore Dosyalarım';
 
   @override
   String get ecosystemDismiss => 'Dismiss';
-
-  @override
-  String get aiOtherToolsTitle => 'Other tools';
-
-  @override
-  String get aiAttachmentsSection => 'Attachment & document tools';
-
-  @override
-  String get aiSmartCategorizeAction => 'Smart categorize';
-
-  @override
-  String get aiSmartCategorizeInfo =>
-      'Organize title, tags, and folder locally with zero credits';
-
-  @override
-  String aiLocalBadge(int percent) {
-    return 'Local · $percent%';
-  }
-
-  @override
-  String aiSmartFolderSuggestion(String folder) {
-    return 'Folder: $folder';
-  }
-
-  @override
-  String get aiSmartFixAction => 'Fix';
-
-  @override
-  String get aiSmartRefineWithAi => 'Refine low confidence with AI';
-
-  @override
-  String get aiSmartFixTitle => 'Choose right category';
-
-  @override
-  String get aiSmartSimilarConfirmTitle => 'Fix similar notes too?';
-
-  @override
-  String aiSmartSimilarConfirmBody(int count) {
-    return 'Apply the same category to $count similar notes.';
-  }
-
-  @override
-  String get aiCatFinance => 'Finance';
-
-  @override
-  String get aiCatHealth => 'Health';
-
-  @override
-  String get aiCatEducation => 'Education';
-
-  @override
-  String get aiCatWork => 'Work';
-
-  @override
-  String get aiCatShopping => 'Shopping';
-
-  @override
-  String get aiCatTravel => 'Travel';
-
-  @override
-  String get aiCatPersonal => 'Personal';
-
-  @override
-  String get aiCatTech => 'Tech';
-
-  @override
-  String get aiCatRecipes => 'Recipes';
-
-  @override
-  String get aiCatOfficial => 'Official';
 
   @override
   String shopBudgetCart(String amount) {
@@ -10296,9 +8689,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shopAisleLabel => 'Aisle';
-
-  @override
-  String get shopOtherAisle => 'Other';
 
   @override
   String get shopPriceCompareHeader => 'Store price history';
@@ -10502,7 +8892,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get lockEncryptedBadge => 'End-to-end encrypted';
+  String get lockNeedSecretOnce =>
+      'Enter your lock password or pattern once to enable fingerprint unlock on this device.';
+
+  @override
+  String get lockForgotConfirmTitle => 'Reset note lock?';
+
+  @override
+  String get lockForgotConfirmBody =>
+      'Locked notes encrypted with your current secret cannot be decrypted again without that secret. Reset the lock anyway?';
+
+  @override
+  String get lockForgotConfirmAction => 'Reset';
 
   @override
   String get starterShoppingTitle => '🛒 Sample grocery list';

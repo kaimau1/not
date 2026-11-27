@@ -153,7 +153,7 @@ extension _ItemsRow on ItemsEditorState {
                         child: Icon(
                           Icons.drag_indicator,
                           size: ItemsEditorState._kHandleIcon,
-                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
                         ),
                       ),
                     ),
@@ -202,9 +202,9 @@ extension _ItemsRow on ItemsEditorState {
             height: 18,
             child: Icon(
               Icons.segment,
-              size: 18,
+              size: AppIconSize.s,
               color: (_accent?.accent ?? scheme.onSurfaceVariant)
-                  .withValues(alpha: 0.6),
+                  .withValues(alpha: AppAlpha.muted),
             ),
           )
         else if (widget.showCheckboxes)
@@ -459,7 +459,7 @@ extension _ItemsRow on ItemsEditorState {
                         TweenAnimationBuilder<double>(
                           tween: Tween<double>(end: checked ? 1 : 0),
                           duration: _kStrikeDuration,
-                          curve: Curves.easeOutCubic,
+                          curve: AppMotion.emphasized,
                           builder: (context, strike, _) {
                             // Solma AnimatedOpacity'e bırakıldı (aşağıya bak);
                             // burada alfa verilirse iki kez soluyor.
@@ -662,7 +662,7 @@ extension _ItemsRow on ItemsEditorState {
                 if (!_selectionMode && item.starred)
                   IconButton(
                     tooltip: l10n.unstar,
-                    icon: const Icon(Icons.star, size: 18),
+                    icon: const Icon(Icons.star, size: AppIconSize.s),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints.tightFor(
                       width: 26,
@@ -697,7 +697,7 @@ extension _ItemsRow on ItemsEditorState {
                 child: IconButton(
                   key: ValueKey('item-remove-${item.id}'),
                   tooltip: l10n.removeItem,
-                  icon: const Icon(Icons.close, size: 18),
+                  icon: const Icon(Icons.close, size: AppIconSize.s),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints.tightFor(
                     width: ItemsEditorState._kTrailingWidth - 4,

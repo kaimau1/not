@@ -262,7 +262,7 @@ class AddTile extends StatelessWidget {
     final color = accent ?? scheme.primary;
     final style = Theme.of(context).textTheme.labelMedium?.copyWith(
       color: scheme.onSurface,
-      fontWeight: FontWeight.w600,
+      fontWeight: AppWeight.strong,
       height: 1.15,
     );
     final circle = Container(

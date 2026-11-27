@@ -16,6 +16,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../app/theme/note_themes.dart';
 import '../../../core/utils/color_contrast.dart';
+import '../../../core/utils/decode_image.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/web_blob.dart';
 import '../domain/note.dart';
@@ -423,7 +424,7 @@ class _PdfWriter {
     try {
       bitmap = PdfBitmap(image.bytes);
     } catch (_) {
-      final decoded = img.decodeImage(image.bytes);
+      final decoded = decodeCommonImage(image.bytes);
       if (decoded == null) return;
       bitmap = PdfBitmap(img.encodePng(decoded));
     }

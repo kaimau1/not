@@ -543,7 +543,7 @@ Future<void> showFolderShareSheet(
                           },
                           icon: const Icon(
                             Icons.person_add_alt_outlined,
-                            size: 18,
+                            size: AppIconSize.s,
                           ),
                           label: Text(l10n.friendsAdd),
                         ),
@@ -688,9 +688,9 @@ class _ColorDot extends StatelessWidget {
           ),
         ),
         child: icon != null
-            ? Icon(icon, size: 16, color: color)
+            ? Icon(icon, size: AppIconSize.xs, color: color)
             : (selected
-                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  ? const Icon(Icons.check, size: AppIconSize.xs, color: Colors.white)
                   : null),
       ),
     );

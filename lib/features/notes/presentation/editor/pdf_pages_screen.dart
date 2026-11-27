@@ -6,6 +6,7 @@ import '../../../../core/widgets/undo_snackbar.dart';
 import '../../data/pdf_edit.dart';
 import '../../domain/attachment.dart';
 import '../viewers/pdf_page_image.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// PDF sayfa yöneticisi: sayfaları seç, sil, döndür, sırala.
 ///
@@ -293,7 +294,7 @@ class _PageTile extends StatelessWidget {
                   color: selected ? scheme.primary : scheme.outlineVariant,
                   width: selected ? 2.5 : 1,
                 ),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.s),
                 color: Colors.white,
               ),
               clipBehavior: Clip.antiAlias,
@@ -330,7 +331,7 @@ class _PageTile extends StatelessWidget {
                       right: 4,
                       child: Icon(
                         Icons.check_circle,
-                        size: 20,
+                        size: AppIconSize.m,
                         color: scheme.primary,
                       ),
                     ),
@@ -349,7 +350,7 @@ class _PageTile extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                   onPressed: onLeft,
-                  icon: const Icon(Icons.chevron_left, size: 18),
+                  icon: const Icon(Icons.chevron_left, size: AppIconSize.s),
                 ),
                 Text(label, style: Theme.of(context).textTheme.labelSmall),
                 IconButton(
@@ -358,7 +359,7 @@ class _PageTile extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                   onPressed: onRight,
-                  icon: const Icon(Icons.chevron_right, size: 18),
+                  icon: const Icon(Icons.chevron_right, size: AppIconSize.s),
                 ),
               ],
             ),

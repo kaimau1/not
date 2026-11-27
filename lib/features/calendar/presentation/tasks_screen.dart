@@ -36,13 +36,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   String _listId = TaskList.defaultId;
   bool _showCompleted = false;
 
-  /// Ekran açıkken Google Görevler 15 dk'da bir eşlenir (F50.4, K8).
+  /// Ekran açıkken Google Görevler 15 dk'da bir eşlenir (F50.4, K8). Arka planda durur.
   Timer? _googleTimer;
+  AppLifecycleListener? _googleLife;
+  DateTime? _lastGoogleSyncAt;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncGoogle());
+  void _startGoogleTimer() {
+    _googleTimer?.cancel();
     _googleTimer = Timer.periodic(
       GoogleTasksController.refreshEvery,
       (_) => _syncGoogle(),
@@ -50,13 +50,44 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncGoogle());
+    _startGoogleTimer();
+    _googleLife = AppLifecycleListener(
+      onHide: () {
+        _googleTimer?.cancel();
+        _googleTimer = null;
+      },
+      onPause: () {
+        _googleTimer?.cancel();
+        _googleTimer = null;
+      },
+      onShow: _onGoogleResume,
+      onResume: _onGoogleResume,
+    );
+  }
+
+  void _onGoogleResume() {
+    if (!mounted) return;
+    if (_googleTimer == null) _startGoogleTimer();
+    final last = _lastGoogleSyncAt;
+    if (last == null ||
+        DateTime.now().difference(last) >= GoogleTasksController.refreshEvery) {
+      _syncGoogle();
+    }
+  }
+
+  @override
   void dispose() {
+    _googleLife?.dispose();
     _googleTimer?.cancel();
     super.dispose();
   }
 
   void _syncGoogle() {
     if (!mounted) return;
+    _lastGoogleSyncAt = DateTime.now();
     unawaited(ref.read(googleTasksProvider.notifier).sync());
   }
 
@@ -238,20 +269,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       ref.read(calendarRepositoryProvider)?.reorderTasks(changed);
     }
 
-    final completedRows = <Widget>[
-      if (completed.isNotEmpty)
-        ListTile(
-          key: const ValueKey('tasks-completed-toggle'),
-          title: Text(l10n.tasksCompleted(completed.length)),
-          trailing: Icon(
-            _showCompleted ? Icons.expand_less : Icons.expand_more,
-          ),
-          onTap: () => setState(() => _showCompleted = !_showCompleted),
-        ),
-      if (_showCompleted)
-        for (final t in completed) _TaskRow(task: t, now: now, listId: _listId),
-    ];
-
     final google = ref.watch(googleTasksProvider);
     final bar = AppBar(
       title: Text(l10n.tasksTitle),
@@ -325,7 +342,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     ),
                   ),
                 ActionChip(
-                  avatar: const Icon(Icons.add, size: 18),
+                  avatar: const Icon(Icons.add, size: AppIconSize.s),
                   label: Text(l10n.tasksNewList),
                   onPressed: () => _newList(lists),
                 ),
@@ -379,8 +396,30 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                             );
                           },
                         ),
-                      if (completedRows.isNotEmpty)
-                        SliverList.list(children: completedRows),
+                      if (completed.isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: ListTile(
+                            key: const ValueKey('tasks-completed-toggle'),
+                            title: Text(l10n.tasksCompleted(completed.length)),
+                            trailing: Icon(
+                              _showCompleted
+                                  ? Icons.expand_less
+                                  : Icons.expand_more,
+                            ),
+                            onTap: () => setState(
+                              () => _showCompleted = !_showCompleted,
+                            ),
+                          ),
+                        ),
+                      if (_showCompleted && completed.isNotEmpty)
+                        SliverList.builder(
+                          itemCount: completed.length,
+                          itemBuilder: (context, index) => _TaskRow(
+                            task: completed[index],
+                            now: now,
+                            listId: _listId,
+                          ),
+                        ),
                       SliverToBoxAdapter(
                         child: SizedBox(
                           height: 96 + MediaQuery.paddingOf(context).bottom,

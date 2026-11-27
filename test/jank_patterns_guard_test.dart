@@ -58,11 +58,10 @@ const _viewInsetsAllow = {
 };
 
 /// md. 6 — editör kökünde `AnimatedSize` / `AnimatedContainer` (gövdeyle aynı
-/// Column'da boy animasyonu gövdeyi her karede dizer). Bugünkü 2: ses kaydı
-/// hapı (cihazsız kanıt üretilemedi — testte kayıt eklentisi yok; dokunulmadı),
-/// sabitleme bırakma şeridi (Stack'te, zararsız). Biçim paneli ↔ alt çubuk
-/// takasındaki ikisi P46'da kalktı (2026-11-13; bütçe S9 `govde_boy_karesi`).
-const _animatedSizeLatch = 2;
+/// Column'da boy animasyonu gövdeyi her karede dizer). Kalan 1: sabitleme
+/// bırakma şeridi (`Stack` içinde, zararsız). Ses kaydı hapı tek adımlı `RevealUp`a,
+/// biçim paneli takasındaki ikisi P46'da kalktı (`govde_boy_karesi`).
+const _animatedSizeLatch = 1;
 
 /// md. 6 — ana ekran / takvim şeritlerinde `AnimatedSize(` (P62 plan_tasarim_A
 /// §7.5). Bugün 2 (2026-11-14, PA0): bekleyen ek şeridi

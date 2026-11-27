@@ -526,7 +526,7 @@ class _SharePreviewState extends State<_SharePreview> {
     final scrollable = _moreAbove || _moreBelow || _expanded;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.emphasized,
       constraints: BoxConstraints(maxHeight: maxHeight),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.muted),
@@ -580,7 +580,7 @@ class _SharePreviewState extends State<_SharePreview> {
               right: 2,
               child: IconButton(
                 visualDensity: VisualDensity.compact,
-                iconSize: 18,
+                iconSize: AppIconSize.s,
                 tooltip: _expanded
                     ? l10n.sharePreviewCollapse
                     : l10n.sharePreviewExpand,

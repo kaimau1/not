@@ -42,6 +42,7 @@ import {
   nowMs,
 } from "./types.ts";
 import {
+  handleDeleteUser,
   handleSearchUsers,
   handleUpsertUserDirectory,
 } from "./users.ts";
@@ -119,6 +120,9 @@ async function route(request: Request, env: Env): Promise<Response> {
   }
   if (method === "PUT" && path === "/v1/users/me") {
     return handleUpsertUserDirectory(request, env, user);
+  }
+  if (method === "DELETE" && path === "/v1/users/me") {
+    return handleDeleteUser(env, user);
   }
   if (method === "GET" && path === "/v1/users/search") {
     return handleSearchUsers(request, env, user);

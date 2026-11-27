@@ -200,7 +200,7 @@ jobs:
         run: npm ci --no-audit --no-fund && npm test
       - name: Functions saf testleri
         working-directory: functions
-        run: node --test push.test.js search_match.test.js entitlement_util.test.js billing_util.test.js
+        run: npm test
 
   # GÜVENLİK TARAMASI (F71.8): depo geçmişinde sır (gitleaks) ve bilinen
   # açıklı bağımlılık (osv-scanner). KIRMIZI = UYARI, ENGEL DEĞİL: bulgu işi
@@ -676,8 +676,9 @@ jobs:
         continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          printf '%s' "$FIREBASE_SA" > "$GOOGLE_APPLICATION_CREDENTIALS"
           npm install --prefix functions --omit=dev --no-audit --no-fund
           node tool/set_latest_build.js "${{ github.run_number }}" "${{ needs.android.outputs.version }}"
           rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
@@ -750,8 +751,9 @@ jobs:
       - name: Firebase kurallarını yayınla
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          printf '%s' "$FIREBASE_SA" > "$GOOGLE_APPLICATION_CREDENTIALS"
           npx firebase-tools deploy --only firestore,storage --non-interactive
           rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 
@@ -782,8 +784,9 @@ jobs:
         continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          printf '%s' "$FIREBASE_SA" > "$GOOGLE_APPLICATION_CREDENTIALS"
           node tool/set_holidays.js
           rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 
@@ -798,8 +801,9 @@ jobs:
         continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          printf '%s' "$FIREBASE_SA" > "$GOOGLE_APPLICATION_CREDENTIALS"
           npx firebase-tools deploy --only functions --non-interactive
           rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 

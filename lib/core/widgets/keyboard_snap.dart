@@ -1102,7 +1102,7 @@ class KeyboardClipWindow extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(end: target),
       duration: animate ? const Duration(milliseconds: 260) : Duration.zero,
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.emphasized,
       child: child,
       builder: (context, shown, child) {
         final scale = full > 0 ? (shown / full).clamp(0.0, 1.0) : 1.0;

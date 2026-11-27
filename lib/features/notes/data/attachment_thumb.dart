@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 
+import '../../../core/utils/decode_image.dart';
 import '../domain/attachment.dart';
 
 /// Önizleme tavanı (bayt) — `storage.rules` `users/{uid}/thumbs/` ile aynı.
@@ -26,9 +27,9 @@ bool wantsCloudThumb(AttachmentKind kind) =>
 Uint8List? makeThumbnail(Uint8List source, {int maxSide = 320}) {
   img.Image? decoded;
   try {
-    decoded = img.decodeImage(source);
+    decoded = decodeCommonImage(source);
   } catch (_) {
-    return null; // tanınmayan biçim: decodeImage fırlatabiliyor
+    return null; // tanınmayan biçim: çözücü fırlatabiliyor
   }
   if (decoded == null) return null;
   var side = maxSide;

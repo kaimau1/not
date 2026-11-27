@@ -24,6 +24,7 @@ import 'text_wrap.dart';
 import '../../../../core/widgets/smooth_routes.dart';
 import 'pen_tray.dart';
 import '../../../../core/widgets/delayed_spinner.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// "Sunum ekle not al" notunun gövdesi: ÜSTTE slayt, ALTTA o slaydın notu.
 ///
@@ -374,7 +375,7 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
           position.maxScrollExtent,
         ),
         duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.emphasized,
       );
     },
     centerUnbuilt: (top, height) {
@@ -392,7 +393,7 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
       _scroll.animateTo(
         target.clamp(0.0, math.max(0.0, max)),
         duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.emphasized,
       );
     },
   );

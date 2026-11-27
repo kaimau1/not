@@ -332,7 +332,7 @@ extension _EditorToolbar on _NoteEditorScreenState {
                   dimension: segment * 0.72,
                   child: Icon(
                     Icons.add_rounded,
-                    size: 20,
+                    size: AppIconSize.m,
                     weight: 700,
                     color: ink ?? scheme.onPrimaryContainer,
                   ),

@@ -85,16 +85,16 @@ Form cevapları Play Console'da kullanıcı tarafından doğrulanmalıdır.
 
 | Soru | Cevap |
 |---|---|
-| Veri toplanıyor mu / paylaşılıyor mu | Toplanıyor; üçüncü taraflarla **satılmıyor**, reklam için paylaşılmıyor. Hizmet sağlayıcılar (Cloudflare / Google Firebase Auth & FCM / Google Drive / Google Decisions API) işleyici sayılır. |
+| Veri toplanıyor mu / paylaşılıyor mu | Toplanıyor; üçüncü taraflarla **satılmıyor**, reklam için paylaşılmıyor. Hizmet sağlayıcılar (Google Firebase Auth/Firestore/Storage/Functions/App Check/FCM, Google Drive, Google Gemini Decisions API, Google Play Billing, Open Food Facts API ve etkinse Cloudflare Workers/D1/R2) işleyici sayılır. |
 | Aktarımda şifreleme | Evet (HTTPS / TLS) + kilitli notlarda istemci tarafı AES-256-GCM E2EE |
-| Silme isteği | Evet — Ayarlar → "Hesabımı ve verilerimi sil" (hesap ve tüm veriler silinir) |
+| Silme isteği | Evet — Ayarlar → "Hesabımı ve verilerimi sil" ve web `hesap-silme.html` (hesap ve tüm veriler silinir) |
 | Kişisel bilgi: ad, e-posta | Toplanır (Google girişi; kimlik doğrulama + arkadaş dizini). İsteğe bağlı değil (misafir hariç) |
 | Kullanıcı kimliği | Toplanır (Firebase UID) |
 | **Finansal bilgi: Satın alma geçmişi** | **Toplanır (Google Play satın alma belirteci özeti — ömür boyu hak ve ek karar paketi doğrulaması için; kart bilgisi toplanmaz).** |
-| Fotoğraf/video, ses, dosyalar | Kullanıcı eklediği ekler; işlevsellik için; kullanıcının kendi Google Drive'ı ve ortak not görselleri için Cloudflare R2 |
+| Fotoğraf/video, ses, dosyalar | Kullanıcı eklediği ekler; işlevsellik için; kullanıcının kendi Google Drive'ı ile Storage / Cloudflare R2 (ortak notlar) |
 | Uygulama içeriği (notlar) | Toplanır; işlevsellik; reklam yok |
-| Konum | Toplanmaz |
-| Çökme günlükleri / tanılama | Toplanır (Crashlytics); uygulama işlevi/analiz |
+| Konum | Play derlemesinde toplanmaz |
+| Çökme günlükleri / tanılama | Toplanır (Crashlytics); uygulama işlevi/analiz (isteğe bağlı kapatılabilir) |
 | Cihaz kimlikleri | Bildirim jetonu (FCM); işlevsellik |
 | Çocuklar | Gizlilik politikası: 13 yaş altına yönelik değil — Console'da "çocuklara yönelik değil" seçilir |
 

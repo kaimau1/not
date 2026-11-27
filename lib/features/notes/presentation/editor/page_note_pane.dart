@@ -15,6 +15,7 @@ import 'pdf_notes_overview.dart';
 import 'selection_toolbar.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Üst bölmeyi kuran kapanış.
 ///
@@ -652,7 +653,7 @@ class _PageNotePaneState extends State<PageNotePane> {
       enabled: enabled,
       child: Row(
         children: [
-          Icon(icon, size: 20),
+          Icon(icon, size: AppIconSize.m),
           const SizedBox(width: 12),
           Flexible(child: Text(label)),
         ],
@@ -707,7 +708,7 @@ class _SplitHandle extends StatelessWidget {
               height: 4,
               decoration: BoxDecoration(
                 color: scheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppRadius.hair),
               ),
             ),
           ),

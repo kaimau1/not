@@ -253,7 +253,7 @@ void preloadRemainingNoteFonts() {
   try {
     for (final builder in _googleBuilders.values) {
       builder(const TextStyle());
-      builder(const TextStyle(fontWeight: FontWeight.w500));
+      builder(const TextStyle(fontWeight: AppWeight.medium));
     }
   } catch (_) {}
 }

@@ -60,6 +60,7 @@ import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_policy.dart';
+import '../../ai/presentation/ai_consent_sheet.dart';
 import '../../ai/data/ai_provider.dart';
 import '../../ai/data/antalia/antalia_engine.dart';
 import '../../ai/data/antalia/antalia_speech.dart';
@@ -358,6 +359,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: '${l10n.decisionsTurnOffBody} kapat gizlilik kvkk',
             group: '',
           ),
+          if (AiConsentNotifier.required)
+            _SettingRow(
+              const _AiConsentSwitch(),
+              title: l10n.aiConsentTitle,
+              keywords: 'riza onay yapay zeka gizlilik kvkk',
+              group: '',
+            ),
         ],
       ),
       _Area(

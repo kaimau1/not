@@ -48,7 +48,6 @@
   "noteFullscreen": "Full screen",
   "noteFullscreenExit": "Exit full screen",
   "penModeDone": "Close pen",
-  "tipPagePen": "Write anywhere on the page with the pen; tap with a finger to keep typing in the same note.",
   "pageInkOnCard": "Has handwriting",
   "attachmentTooLarge": "File is too large ({limit} MB max)",
   "storageFull": "Storage is full ({limit}). Delete old attachments to free up space.",
@@ -59,29 +58,17 @@
   "unpin": "Unpin",
   "delete": "Delete",
   "color": "Colour",
-  "aiTitle": "AI",
-  "aiSummarize": "Summarise note",
-  "aiSectionWrite": "Write",
-  "aiSectionAsk": "Ask",
-  "aiSectionTransform": "Transform",
   "summarize": "Summarise",
-  "summaryDetailTitle": "Summary type",
-  "summaryShort": "Short summary",
-  "summaryShortInfo": "A few sentences of overview plus the key points",
-  "summaryDetailed": "Detailed summary",
-  "summaryDetailedInfo": "Thorough enough that you needn't open the original",
   "listen": "Listen",
   "ask": "Ask a question",
   "extractText": "Extract text",
   "transcribe": "Transcribe",
   "listenToNote": "Listen",
-  "aiNoApiKey": "Enter your Gemini API key in Settings first",
   "aiError": "AI request failed: {error}",
-  "aiSummaryTitle": "AI summary",
   "aiThinking": "Thinking...",
   "copy": "Copy",
   "copied": "Copied",
-  "settingsSearchHint": "Search settings — “briefing”, “microphone”",
+  "settingsSearchHint": "Search settings — “lock”, “microphone”",
   "settingsSearchEmpty": "No setting matches «{query}»",
   "@settingsSearchEmpty": {
     "placeholders": {
@@ -97,13 +84,6 @@
   "themePorcelain": "Porcelain",
   "themeClay": "Clay",
   "themeDark": "Dark",
-  "settingsAi": "AI",
-  "geminiApiKeyInfo": "A key is optional: without one, AI requests go through the app's built-in service (a free daily allowance, higher with Premium). For unlimited use with your own key, get a free one at aistudio.google.com; the key is stored only on this device, in secure storage.",
-  "aiBuiltInPremium": "Built-in AI: Premium — {count} points left today",
-  "aiBuiltInRemaining": "Built-in AI: {count} free points left today",
-  "aiBuiltInByok": "Using your own key — unlimited",
-  "aiReport": "Report this answer",
-  "aiReportThanks": "Report received, thank you",
   "privacyPolicyTitle": "Privacy policy",
   "lockNote": "Lock",
   "unlockNote": "Unlock",
@@ -119,9 +99,6 @@
   "trashEmptied": "Bin emptied",
   "validateAndSave": "Verify and save",
   "clear": "Clear",
-  "aiDiagnostics": "AI diagnostics",
-  "aiDiagnosticsEmpty": "No errors recorded",
-  "aiDiagnosticsCount": "Last {count} error records",
   "apiKeyValid": "API key verified and saved",
   "apiKeyInvalid": "API key is not valid",
   "apiKeySavedBadge": "Saved",
@@ -133,7 +110,6 @@
   "switchAccountConfirm": "You'll be signed out of this account and the Google account picker will open. Your notes stay in this account and will be here when you come back.",
   "switchAccountGuestWarning": "You're using a guest account: if you switch, you'll lose access to the notes on this device. Link a Google account or make a full backup first.",
   "penTrayShow": "Show pen tray",
-  "penTrayHide": "Tuck pen tray away",
   "addDrawingSubtitle": "Draw on a separate canvas, embedded as an image",
   "addGroupWrite": "Write",
   "addGroupPen": "Pen",
@@ -200,61 +176,19 @@
   "restore": "Restore",
   "deleteForever": "Delete permanently",
   "deleteForeverConfirm": "This note will be permanently deleted. Are you sure?",
-  "assistantDeleteConfirm": "The assistant wants to move the note \"{title}\" to the trash. Do you approve?",
-  "@assistantDeleteConfirm": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "recordAudio": "Voice recording",
   "recording": "Recording...",
   "stopAndSave": "Finish and add",
   "micPermissionDenied": "Microphone permission was denied",
   "addDrawing": "Add drawing",
-  "drawingTitle": "Drawing",
   "addToNote": "Add to note",
-  "chatTitle": "Note assistant",
-  "chatHint": "Ask about your notes: \"what was that recipe I wrote last week?\", \"what's missing from my shopping list?\"",
-  "chatInputHint": "Type a question...",
   "fontSize": "Text size",
   "fontSizePreview": "Your notes will look like this",
   "darkSchedule": "Dark theme schedule",
   "darkScheduleInfo": "Switches to the dark theme between the hours you set",
-  "aiTranslate": "Translate",
   "voiceCommand": "Voice command",
-  "semanticSearchToggle": "Semantic search with AI",
-  "semanticSearchHint": "Search by meaning: \"car expenses\"...",
-  "briefingTitle": "Daily briefing",
-  "briefingLoading": "Preparing your briefing...",
-  "briefingEmpty": "Nothing for today",
-  "briefingSetting": "Daily briefing notification",
-  "briefingSettingInfo": "Get a notification with the day's summary each morning at the time you choose",
-  "autoTagSetting": "Tag automatically",
-  "autoTagSettingInfo": "When a note is closed without tags, AI adds a fitting one",
   "suggestTags": "Suggest tags",
-  "aiFixNote": "Fix up the note",
-  "fixLevelTitle": "How much should be fixed?",
-  "fixSimple": "Light",
-  "fixSimpleInfo": "Spelling and typos only",
-  "fixBalanced": "Balanced",
-  "fixBalancedInfo": "Sentence structure too, for cleaner writing",
-  "fixDetailed": "Thorough",
-  "fixDetailedInfo": "Rewrites the whole text from top to bottom",
   "existingTagsLabel": "Previous tags",
-  "aiSkipCheckedSetting": "Leave ticked items out of AI edits",
-  "aiSkipCheckedInfo": "When AI fixes or translates a checklist, completed (ticked) items are kept exactly as they are; only unticked items are edited.",
-  "noteUpdatedUndo": "Note updated",
-  "aiImprove": "Improve the note",
-  "improveFormal": "Make it more formal",
-  "improveShorten": "Shorten",
-  "improveBullets": "Turn into a bullet list",
-  "improveNumbered": "Turn into a numbered list",
-  "replaceNote": "Replace the note",
-  "openAsNewNote": "As a new note",
-  "pdfChatHint": "Ask about this PDF: \"summarise it\", \"is there a penalty clause?\", \"what's the deadline?\"",
-  "pdfChatInputHint": "Type a question about the PDF...",
   "voiceFinish": "Finish",
   "voiceProcessing": "Applying what you said...",
   "voiceNothingHeard": "No speech detected in the recording",
@@ -270,13 +204,6 @@
   "remindersUntitled": "Untitled note",
   "remindersEdit": "Change the time",
   "remindersRemove": "Remove reminder",
-  "aiModelChat": "Summaries and chat",
-  "aiModelShort": "Titles and tags",
-  "aiModelDocument": "Document chat and PDF summary",
-  "aiModelTranslate": "Translation",
-  "aiModelVoice": "AI voice note assistant",
-  "aiModelAuto": "Automatic (recommended)",
-  "aiModelsInfo": "You can pick a separate model per job: short text work is fine on a fast model, long documents want a capable one. If your chosen model hits its quota or is withdrawn, the next one is tried automatically.",
   "clearNote": "Clear content",
   "clearNoteConfirm": "The note's contents (text and list items) will be deleted. Are you sure?",
   "calculatorTitle": "Calculator",
@@ -285,13 +212,7 @@
   "liveDictation": "Dictate",
   "dictationHoldHint": "Hold the microphone and speak; text is written when you let go",
   "itemsSelected": "{count} items selected",
-  "noteChatHint": "Ask something about this note",
-  "noteChatIntro": "The note's contents and attachments (PDF/image) are read, and your question is answered from them.",
   "dictationProcessing": "Transcribing...",
-  "aiDailyManualInfo": "On the free plan this isn't generated automatically, so it doesn't eat your daily allowance. You can generate it once a day with the button below.",
-  "aiGenerate": "Generate",
-  "aiGeneratedTodayInfo": "This was generated today. On the free plan it refreshes once a day; you can generate it again tomorrow.",
-  "voiceAssistantTitle": "Voice note assistant",
   "voiceListening": "Listening...",
   "voiceTapHint": "Tap and speak; tap again to finish",
   "voiceModeSetting": "How it works",
@@ -335,13 +256,11 @@
   "autoStartHintAction": "Open",
   "exactAlarmHint": "Alarm permission is off: reminders may fire a few minutes late",
   "exactAlarmHintAction": "Allow",
-  "videoTooBigForAi": "The video is too large to send to AI ({mb} MB). Record a shorter one.",
   "permCamera": "Camera",
   "permCameraInfo": "Needed for video notes and taking photos",
   "newVideoNote": "Record a video",
   "videoLocalOnly": "This video is stored only on this device (not uploaded to the cloud)",
   "videoToNote": "Make a note from the video",
-  "videoToNoteRunning": "Reviewing the video…",
   "permGranted": "Granted",
   "permGrant": "Grant",
   "permOpenSettings": "Open settings",
@@ -361,8 +280,6 @@
   "pendingUploads": "{count} attachments uploading",
   "pendingUploadsFailed": "{count} attachments failed, will retry",
   "pendingUploadsOffline": "{count} attachments waiting — will upload when you are online",
-  "aiOfflineTitle": "No connection",
-  "aiOfflineBody": "AI features need the internet. The buttons turn on when you are back online.",
   "pendingUploadsInfo": "Attachments are safe on this device. They upload automatically when you are online; until then they do not appear on your other devices.",
   "checkedHeader": "Checked ({count})",
   "@checkedHeader": {
@@ -376,26 +293,10 @@
   "removeItem": "Delete item",
   "copyWholeNote": "Copy the whole note",
   "allCopied": "The whole note was copied to the clipboard",
-  "speechPlay": "Listen",
-  "speechPause": "Pause",
-  "speechResume": "Resume",
-  "speechStop": "Stop",
   "speechRate": "Reading speed",
   "speechNoVoices": "No voices are installed on this device",
   "speechVoiceAutoInfo": "Other languages are read with a male voice automatically",
   "listening": "Listening...",
-  "listenPlay": "Listen",
-  "listenReadingPdf": "Reading the document...",
-  "listenConvertWithAi": "Convert with AI",
-  "listenMakePodcast": "Full podcast",
-  "listenMakePodcastSummary": "Summary podcast",
-  "listenOriginalText": "Original text",
-  "listenPodcastReady": "Podcast narration is ready",
-  "listenPodcastCached": "Generated earlier — no tokens spent",
-  "listenRegenerate": "Generate again",
-  "listenNoText": "No readable text came out of this document. A scanned PDF has no text layer, and a presentation may contain images only.",
-  "readDocument": "Read a document (Word, PDF, slides)",
-  "readDocUnsupported": "This file type can't be read.",
   "exportPdf": "Export as PDF",
   "pdfTitleField": "Title",
   "pdfContentField": "Content",
@@ -421,29 +322,15 @@
   "sortTitle": "By title (A–Z)",
   "settingsLanguage": "Language",
   "languageSystem": "System language",
-  "settingsSpeech": "Read aloud",
-  "aiAdvanced": "Advanced: model and API key",
-  "aiAdvancedInfo": "Model choice and your own Gemini key. Most people don't need this.",
-  "openBriefing": "Open the briefing",
   "syncTitle": "Sync",
   "syncLimitTitle": "Automatic upload limit",
   "syncLimitInfo": "Attachments larger than this stay on the device and aren't uploaded. Note text always syncs.",
   "syncLimitUnlimited": "No limit",
   "importBackup": "Restore from backup",
-  "importBackupDone": "{count} notes restored",
   "importBackupInvalid": "Invalid backup file",
-  "aiHubTitle": "AI",
-  "aiSummarizeInfo": "Produces a short summary",
-  "aiImproveInfo": "Changes the tone: formal, shorter or a list",
-  "aiTranslateInfo": "Translates the note into a language you pick",
-  "aiFixNoteInfo": "Fixes spelling and punctuation",
   "moveToFolder": "Move to folder",
   "assistantGenericError": "Something went wrong — could you try again?",
   "quickAddTooltip": "New note — pick a type",
-  "autoTitleSetting": "Suggest a title on close",
-  "autoTitleSettingInfo": "When you leave the editor, a note left without a title gets a short one written from its contents.",
-  "hubBriefingInfo": "Your day at a glance: reminders and recent notes",
-  "hubReadInfo": "Listen to a PDF or Word document",
   "annotate": "Annotate",
   "annotateDone": "Finish annotating",
   "newPdfNote": "Note from PDF",
@@ -561,59 +448,7 @@
   "more": "More",
   "undone": "Undone",
   "filterOthers": "No folder or tag",
-  "chatSuggestion1": "What is missing from my shopping list?",
-  "chatSuggestion2": "Summarise this week's work notes",
-  "chatSuggestion3": "Do I have a reminder for tomorrow?",
-  "aiPointsToday": "Today's points",
-  "aiPointsOf": "{used} / {total}",
-  "@aiPointsOf": {
-    "placeholders": {
-      "used": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "aiPointsRenew": "renews at midnight",
-  "aiChatWithNotes": "Note assistant",
-  "aiChatInputHint": "Ask something about your notes…",
-  "aiChatLooking": "looking through your notes…",
-  "aiChatFullScreen": "Full screen",
-  "aiOnYourNotes": "On your notes",
-  "aiTaskDuplicates": "Clean up duplicates",
-  "aiTaskDuplicatesInfo": "{count} duplicate notes",
-  "duplicatesTitle": "Duplicate notes",
-  "duplicatesHint": "The oldest note in each group is kept, the rest go to the trash.",
-  "duplicatesKeepBadge": "kept",
-  "duplicatesDeleteAll": "Move duplicates to trash",
-  "duplicatesDone": "{count} duplicates moved to trash",
-  "aiRecentActions": "Recent actions",
-  "aiHistoryClear": "Clear",
-  "aiHistoryQuestion": "Question",
-  "aiHistoryNoteAction": "Note action",
   "aiHistoryVoiceNote": "AI voice note",
-  "aiTaskWeekSummary": "Summarise the week",
-  "aiTaskWeekSummaryInfo": "One summary from the last 7 days",
-  "aiTaskTagUntagged": "Tag the untagged",
-  "aiTaskTagUntaggedInfo": "{count} notes waiting for tags",
-  "@aiTaskTagUntaggedInfo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "aiTaskSuggestTitles": "Suggest titles",
-  "aiTaskSuggestTitlesInfo": "{count} notes have no title",
-  "@aiTaskSuggestTitlesInfo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "sectionPinnedShort": "Pinned",
   "sectionUrgent": "Urgent",
   "urgentMark": "Mark urgent",
@@ -635,13 +470,11 @@
   "viewToggle": "View",
   "viewGrid": "Grid",
   "viewList": "List",
-  "searchModeMeaning": "Meaning",
   "filterReminded": "With reminder",
   "filterLocked": "Locked",
   "sortColor": "Colour",
   "sortActive": "Most worked on",
   "voicePreview": "Try the voice",
-  "voicePreviewCached": "The sample is generated once, then played from storage",
   "reorderHint": "Press and hold a card, then drag it where you want",
   "filterSheetTitle": "Filter",
   "filterReset": "Reset",
@@ -658,19 +491,13 @@
   "formatHighlight": "Highlight",
   "formatInfo": "Formatting travels inside the text as markers (like **bold**); markers stay hidden in exports and read-aloud.",
   "formatMenu": "Format…",
-  "noteFont": "Font",
   "noteFontDefault": "Default",
   "noteFontSerif": "Book (serif)",
   "noteFontMono": "Typewriter",
   "noteTextSize": "Text size",
   "formatClear": "Clear formatting",
   "formatHeading": "Heading",
-  "formatHeading1": "Heading",
-  "formatHeading2": "Subheading",
-  "formatNormalText": "Normal text",
   "noteTextOpacity": "Opacity",
-  "assistantVoiceSetting": "Assistant speaks replies",
-  "assistantVoiceSettingInfo": "The voice assistant reads its reply out loud (phone only).",
   "assistantMute": "Mute",
   "assistantUnmute": "Unmute",
   "assistantMakeNote": "Turn into a note anyway",
@@ -679,17 +506,12 @@
   "back": "Back",
   "addTextBlock": "Add text",
   "noteBackgroundImage": "Background image",
-  "chooseBackgroundImage": "Choose image",
   "changeBackgroundImage": "Change image",
   "removeBackgroundImage": "Remove background",
   "dashboardBackground": "Home screen background",
   "dashboardBackgroundInfo": "Image shown behind the note grid (this device only).",
-  "aiProvider": "AI provider",
-  "aiProviderInfo": "Choose the provider your own key belongs to. Each provider’s key is stored separately, so switching back does not require typing it again.",
   "apiKeyFieldLabel": "API key",
   "getApiKey": "Where do I get a key?",
-  "recommendedModel": "Recommended",
-  "freeTierBadge": "Has a free tier",
   "continueWithoutAccount": "Continue without an account",
   "localAccountInfo": "Your notes stay on this device only: they cannot be opened elsewhere and are gone if you uninstall the app. Built-in AI, contacts and sharing need a Google account; you can still use AI with your own API key. You can link a Google account at any time — your notes carry over.",
   "localAccountBadge": "Local account",
@@ -744,32 +566,7 @@
   "scanWorking": "Straightening…",
   "scanPdfAdded": "Scan added to the note as a PDF attachment",
   "premiumTitle": "Premium",
-  "premiumStatusActive": "Premium active — until {date}",
-  "@premiumStatusActive": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
   "premiumStatusFree": "You are using the free version",
-  "premiumPerksTitle": "What changes with Premium?",
-  "premiumPerkAi": "Daily AI points",
-  "premiumPerkAttach": "Attachment size",
-  "premiumPerkStorage": "Cloud storage",
-  "premiumPerkAuto": "Automatic daily content",
-  "premiumPerkAutoBody": "The daily briefing and suggestions are prepared automatically every day; on free they only run on demand.",
-  "premiumHowTitle": "How to get it?",
-  "premiumHowBody": "Premium will soon be available through the Play Store. We are currently in early access.",
-  "premiumByokHint": "With your own Gemini API key, AI runs without quota",
-  "premiumByokWhere": "Independent of Premium · Settings → AI",
-  "premiumDiscoverTitle": "Features you may have missed",
-  "discoverScanBody": "Scanned pages are straightened and enhanced, then turned into a searchable PDF with one tap — the text layer is produced on device, for free.",
-  "discoverSemanticBody": "The \"Smart\" tab in the search box searches by meaning, not words: type \"flight times\" and your travel note shows up.",
-  "discoverAssistantBody": "The microphone on the home screen turns your speech into notes, lists and reminders by itself — just say \"dentist tomorrow at 9\".",
-  "discoverLockBody": "You can lock a note with fingerprint/face: its content never leaks into search, widgets or AI.",
-  "discoverHiddenBody": "Notes in a hidden folder never appear on the home screen or in search; revealing the folder requires authentication.",
-  "discoverExportBody": "Every note can be exported as PDF or Word, images included (in the share menu).",
   "guestSignInUnavailable": "Signing in without Google is currently off: Anonymous sign-in is not enabled in the Firebase console (Authentication → Sign-in method). Sign in with Google, or try again once an admin enables it.",
   "googleSignInUnavailable": "Google sign-in is currently off: the Google provider is not enabled in the Firebase console.",
   "signInNetworkError": "Couldn't reach the internet. Check your connection and try again.",
@@ -787,7 +584,6 @@
   "paletteLightness": "Lightness",
   "itemMoveToPage": "Move to another page",
   "itemMovedToPage": "Item moved to page {page}",
-  "screenAiSearchHint": "Search by meaning…",
   "archiveInsights": "What's in my archive?",
   "archiveInsightsStats": "{count} notes · {files} attachments · {stale} untouched for a year",
   "archiveByFolder": "By folder",
@@ -809,11 +605,6 @@
   "fontNeedsDownload": "Downloads once when selected",
   "followSystemTextScale": "Follow system text size",
   "followSystemTextScaleInfo": "Your phone's text size and bold text apply here too; the size above is multiplied by it.",
-  "fontGroupSans": "Sans",
-  "fontGroupSerif": "Serif",
-  "fontGroupMono": "Monospace",
-  "fontGroupHand": "Handwriting",
-  "appFontDefaultSuffix": "default",
   "pdfSelectOcrRunning": "Recognising text…",
   "pdfSelectOcrNone": "No text found on this page",
   "pdfSelectCopied": "{n} characters copied",
@@ -829,24 +620,9 @@
   "bubbleCollapse": "Collapse bubble",
   "bubbleHint": "Write your note here…",
   "bubbleTapToPlace": "Tap the page where you want the bubble",
-  "aiModelPodcast": "Podcast narration",
-  "listenAiVoice": "Listen with AI voice",
-  "listenAiVoiceFailed": "AI narration failed ({error}). Reading with the device voice.",
-  "@listenAiVoiceFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "ttsSectionTitle": "Narration",
   "ttsEngineDevice": "Device voice",
-  "ttsEngineAi": "AI",
   "ttsEngineDeviceInfo": "The built-in device voice reads: free, offline and unlimited in length.",
-  "ttsEngineAiInfo": "Gemini's speech model reads: noticeably more natural, but each paragraph is a model call and it needs your own Gemini key.",
-  "ttsEngineAiUnavailable": "The AI voice needs your own Gemini key. Until you add one, reading uses the device voice.",
-  "ttsModel": "Speech model",
-  "ttsVoice": "AI voice",
   "ttsEngineLocal": "Turkish voice",
   "ttsEngineLocalInfo": "Antalia: a Turkish speech model that runs on the phone. Free, offline and quota-free; the model is downloaded once (~50 MB). It reads Turkish only — text in other languages is read with the device voice. The voice is synthetic and does not belong to a real person.",
   "ttsLocalUnsupported": "The Turkish voice only works in the Android app. Here the device voice reads.",
@@ -870,7 +646,6 @@
       }
     }
   },
-  "listenLocalVoice": "Listen with Turkish voice (Antalia)",
   "shareAsNotePreparing": "Preparing note package…",
   "shareAsTextEmpty": "This note has no text to share.",
   "sharePdfWithBubbles": "As PDF with bubbles",
@@ -910,7 +685,6 @@
   "speechPitch": "Voice pitch",
   "speechVoicePickerTitle": "Voice selection",
   "formatRemove": "Remove",
-  "exportTitle": "Export",
   "exportNotesOption": "Custom PDF / Word…",
   "exportNotesOptionInfo": "The note's text and images as PDF or Word, layout adjustable; bubbles not included",
   "captureNoteTitle": "Note title (optional)",
@@ -931,36 +705,12 @@
   "exportAlignRight": "Right",
   "exportImageWidth": "Width",
   "exportImageLine": "Position",
-  "aiModelSearch": "Search models",
-  "aiModelOthers": "Other models",
-  "aiModelNoMatch": "No matching model.",
-  "aiModelAutoInfo": "The app tries the most suitable models in order.",
   "imageOcrCharsSelected": "{count} characters selected",
   "imagesSelectedCount": "{count} images selected",
   "attachmentsCopiedCount": "{count} attachments",
   "exportImageLineOf": "/ {count} lines",
-  "aiModelShowAll": "Show all",
-  "aiModelShowAllInfo": "Also lists models the app does not use.",
   "rotateFailed": "Couldn't rotate the image.",
-  "dashboardBackgroundPick": "Choose background image",
   "dashboardBackgroundChange": "Change background image",
-  "podcastRenderingAudio": "Preparing audio: {done}/{total} parts",
-  "@podcastRenderingAudio": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "podcastExportAudio": "Export as audio file",
-  "podcastExportAudioCost": "The whole script is re-synthesised with the AI voice and saved as a single WAV file. This uses your Gemini quota and can take a few minutes for long texts.",
-  "podcastShareText": "Share the script",
-  "podcastSaveAsNote": "Save as a new note",
-  "podcastSavedAsNote": "The podcast script was saved as a note.",
-  "listenPreparingVoice": "Preparing audio…",
   "appearancePreviewTitle": "Sample text",
   "appearancePreviewNoteTitle": "Sample note title",
   "appearancePreviewBody": "Your notes will look like this. Inline **bold**, ~underlined~ and ==2:highlighted== text appears like so.",
@@ -996,7 +746,6 @@
   "noteSearchEmptyHint": "Searches the note text, items and page notes instantly. Start the scan below to look inside image and PDF attachments.",
   "noteSearchNoHit": "No matches found.",
   "noteSearchScanAttachments": "Scan attachments",
-  "noteSearchAskAi": "Ask the AI",
   "noteTitleLabel": "Title",
   "noteBodyLabel": "Note text",
   "itemLabel": "Item",
@@ -1083,7 +832,6 @@
   "attachmentTagEmbed": "Embed in text",
   "bubbleModeBubble": "Bubble",
   "attachmentTagEmbedInfo": "Links to your selected text, or at the cursor if nothing is selected",
-  "attachmentTagPickText": "Now select the text to link, then tap \"Link here\".",
   "attachmentTagLinkHere": "Link here",
   "attachmentTagPendingBanner": "{name} will be linked — select the text",
   "@attachmentTagPendingBanner": {
@@ -1098,7 +846,6 @@
   "docNameScan": "Scan notes",
   "docNameImage": "Image notes",
   "docNameVideo": "Video notes",
-  "folderManage": "Manage folder",
   "folderEmpty": "No notes here yet",
   "folderNoteCount": "{count} notes",
   "folderCardEmpty": "Empty",
@@ -1110,18 +857,12 @@
     }
   },
   "folderEmptyHint": "Add a note with + below, or move a note here while editing it.",
-  "brainstormIntro": "Tap one of the headings above or just type — let's start thinking together.",
-  "brainstormOutlineTitle": "Outline",
-  "brainstormInputHint": "Write an idea or ask a question…",
-  "brainstormAddIdea": "Add to note",
-  "brainstormAdded": "Added to note",
   "folderShared": "This folder is shared with a friend",
   "friendsTitle": "Contacts",
   "friendsAdd": "Add friend",
   "friendsEmpty": "Add a friend by email to share folders with them.",
   "friendsRequestsTitle": "Requests",
   "friendsListTitle": "My friends",
-  "friendsAddEmailHint": "friend@email.com",
   "friendsSendRequest": "Send request",
   "friendsRequestSent": "Request sent",
   "friendsNotFound": "No user is registered with this email. They need to have opened the app with a Google account at least once.",
@@ -1132,10 +873,7 @@
   "friendsRemove": "Remove",
   "friendsRemoveConfirmTitle": "Remove friend",
   "friendsRemoveConfirmBody": "Remove {name} from your friends? Folders you shared with them will no longer be visible.",
-  "friendsNeedsAccount": "Contacts and folder sharing require a linked Google account.",
   "friendsSearchHint": "Name (3+ letters) or full email",
-  "friendsSearchTab": "Search",
-  "friendsSearchEmailTab": "By email",
   "friendsSearchEmpty": "No results",
   "friendsSearchTooShort": "Type at least 3 letters or a full email to search",
   "friendsSearchAdd": "Add",
@@ -1173,7 +911,6 @@
   "inboxFrom": "Sent by {name}",
   "inboxAccept": "Add to my notes",
   "inboxAccepted": "Note added to your notes",
-  "folderShelfExpand": "Expand folders",
   "folderShelfCollapse": "Collapse folders",
   "accountSheetLocalInfo": "Your notes are only on this device. Link a Google account to back them up and add friends.",
   "accountSettings": "Account settings",
@@ -1183,10 +920,7 @@
   "areaSelectHint": "Drag a box around what you want to copy or ask the AI about.",
   "areaCopyImage": "Copy as image",
   "areaCopied": "Selected area copied to the clipboard.",
-  "areaAskAi": "Ask the AI",
   "areaAskTitle": "Selected area",
-  "areaAskHint": "Add a question if you like (leave it empty to transcribe and explain).",
-  "areaAskRun": "Ask",
   "areaCaptureFailed": "Couldn't capture the selected area.",
   "areaTooSmall": "The selected area is too small.",
   "bubbleTextFill": "Text background",
@@ -1196,7 +930,6 @@
   "bubbleTextAlignRight": "Align right",
   "dashboardBackgroundPattern": "Pattern",
   "dashboardBackgroundColor": "Background color",
-  "dashboardBackgroundImageSection": "Background image",
   "dashboardBackgroundReset": "Reset to default",
   "patternNone": "Plain",
   "patternDots": "Dots",
@@ -1296,8 +1029,6 @@
   "reminderQuickTonight": "Tonight 6:00 PM",
   "reminderQuickTomorrow": "Tomorrow 9:00 AM",
   "reminderQuickNextWeek": "Next week",
-  "reminderQuickCustom": "Pick a date…",
-  "reminderQuickTitle": "When should we remind you?",
   "reminderSnooze": "Snooze 1 hour",
   "reminderSnoozed": "Reminder snoozed",
   "reminderCountLabel": "{count, plural, one{1 reminder} other{{count} reminders}}",
@@ -1408,8 +1139,6 @@
     }
   },
   "imagesFitSingleRow": "Fit in one row",
-  "briefingNotificationTitle": "Good morning! ☀️",
-  "briefingNotificationBody": "Today's briefing is ready — tap for a summary of your reminders, notes and important emails.",
   "reminderDone": "Done",
   "dateToday": "Today",
   "dateTomorrow": "Tomorrow",
@@ -1434,14 +1163,12 @@
   "collaboratorsLeave": "Leave shared note",
   "collaboratorsLeaveConfirm": "This note will no longer appear on your home screen. Leave?",
   "collaboratorsSaved": "Sharing updated",
-  "collaboratorsCount": "Shared with {count} people",
   "collaboratorsOnlyOwner": "Only the note's owner can change collaborators.",
   "sharedByName": "Shared by {name}",
   "navNotes": "Notes",
   "railExpand": "Expand menu",
   "railCollapse": "Collapse menu",
   "newNoteShort": "New note",
-  "newChecklistShort": "New list",
   "listPaneHide": "Hide note list",
   "listPaneShow": "Show note list",
   "keyboardShortcuts": "Keyboard shortcuts",
@@ -1465,8 +1192,8 @@
   "goHome": "Back to home",
   "loginFeatureSyncTitle": "Same notes on every device",
   "loginFeatureSyncBody": "Instant sync across phone, tablet, computer and web.",
-  "loginFeatureAiTitle": "AI at your side",
-  "loginFeatureAiBody": "Summarize, ask, dictate; chat with your documents.",
+  "loginFeatureAiTitle": "Smart organization",
+  "loginFeatureAiBody": "Quick voice dictation, offline spell check, smart grocery aisles and tags.",
   "loginFeatureShareTitle": "Write together",
   "loginFeatureShareBody": "Share notes and folders live with friends.",
   "loginFeatureInkTitle": "Pen and PDF",
@@ -1483,8 +1210,6 @@
   "trashTodayShort": "Today",
   "trashSoonSection": "Deleted permanently soon",
   "trashRestSection": "Other deleted notes",
-  "aiHubTagline": "Ask, summarize and tidy up your notes.",
-  "aiToolsSection": "Tools",
   "folderOrderTitle": "Folder order",
   "folderReorder": "Reorder folders",
   "folderOrderManual": "Custom",
@@ -1560,13 +1285,11 @@
   "tplReadingDesc": "Source, summary, quotes",
   "settingsThemeHeader": "Theme",
   "settingsGroupPrivacyNotify": "Privacy and notifications",
-  "settingsGroupAutomatic": "Automatic",
   "settingsGroupText": "Text",
   "settingsGroupDictation": "Voice typing",
   "settingsGroupAttachments": "Attachments",
   "settingsGroupBackup": "Backup",
   "settingsGroupSession": "Session",
-  "settingsGroupLock": "Lock",
   "settingsSecurityTitle": "Security",
   "settingsSecuritySummary": "Note lock, app lock",
   "settingsGroupAbout": "About",
@@ -1614,19 +1337,9 @@
   },
   "saveAsTemplate": "Save as template",
   "templateCreate": "Create",
-  "templateCreateWithCount": "Create · {count} items",
-  "@templateCreateWithCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "templateListChecks": "Checkboxes",
   "templateListNumbers": "Numbered",
-  "templateItems": "Items",
   "templateAddItem": "Add item",
-  "templateSuggestionsInfo": "Tap a suggestion to add it to the list; tap again to remove it.",
   "tplShopProduce": "Fruit and vegetables",
   "tplShopProduceItems": "Tomatoes, Cucumbers, Onions, Potatoes, Lemons, Bananas, Apples, Parsley",
   "tplShopBreakfast": "Breakfast",
@@ -1699,7 +1412,6 @@
   "embedNewVideo": "Video",
   "embedNewYouTube": "YouTube",
   "embedPickTitle": "What to embed?",
-  "embedPickTitleFor": "Embed into “{label}”",
   "embedPickInfo": "Tap the text to open the embedded item in place.",
   "embedSectionNew": "Add new",
   "embedSectionExisting": "Attachments in this note",
@@ -1712,7 +1424,6 @@
   "guideTitle": "User guide",
   "guideMenuInfo": "Every feature, step by step",
   "guideSearchHint": "Search the guide — “page”, “YouTube”",
-  "guideContents": "Contents",
   "guideOpenScreen": "Show me",
   "guideNoResults": "No results for “{query}”",
   "copyVideoLink": "Copy link",
@@ -1721,8 +1432,6 @@
   "menuSectionCopy": "Copy",
   "menuSectionTools": "Tools",
   "menuSectionProtect": "Protection and storage",
-  "menuSectionContent": "Content",
-  "menuSectionPeople": "Account and people",
   "menuSectionApp": "App",
   "cardMoreFiles": "+{count} more files",
   "cardAudioCount": "{count, plural, =1{Voice recording} other{{count} voice recordings}}",
@@ -1763,8 +1472,12 @@
   "viewModeChanged": "{from} → {to}",
   "@viewModeChanged": {
     "placeholders": {
-      "from": {"type": "String"},
-      "to": {"type": "String"}
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
     }
   },
   "videoRotate": "Rotate picture",
@@ -1809,19 +1522,16 @@
   "customizeShowItem": "Show",
   "customizeModeTitle": "Edit mode",
   "customizeModeTitleShort": "Edit",
-  "customizeModeHint": "Tap to hide or show · applied instantly",
   "customizeHiddenCount": "{count} hidden · tap to change",
   "customizeDone": "Done",
   "videoBackSeconds": "Back {seconds} s",
   "videoForwardSeconds": "Forward {seconds} s",
   "personalizeTitle": "Personalize",
   "personalizeInfo": "Choose visible areas and buttons, plug-ins",
-  "personalizeOpen": "Open personalization",
   "customizeStartTitle": "Edit on screen",
   "customizeStartInfo": "Turn on edit mode, then tap buttons and areas on any screen to hide or show them. Changes apply instantly; when you're done, tap Done in the strip at the top.",
   "customizeStart": "Start edit mode",
   "customizeActive": "Edit mode is on",
-  "customizeModeShort": "Hide or show by tapping on screens",
   "customizeHint": "Tap: hide/show · Reorder: move it",
   "customizeShown": "Shown",
   "customizeSurfaceBottomBar": "Bottom bar",
@@ -1831,7 +1541,6 @@
   "customizeSurfacePinned": "Pinned attachment",
   "customizeSurfacePen": "Pens",
   "personalizeModules": "Plug-ins",
-  "personalizeModulesInfo": "Turning a plug-in off removes its buttons everywhere.",
   "moduleAi": "AI",
   "moduleAiInfo": "AI buttons on the home and note screens",
   "moduleVoice": "Voice",
@@ -1850,8 +1559,6 @@
   "moduleCollaboration": "Collaboration",
   "moduleCollaborationInfo": "The add-person button in the note screen",
   "moduleMixed": "partly on",
-  "personalizeEditorBar": "Note screen · bottom bar",
-  "personalizeBarInfo": "Drag the handle to reorder buttons; use the switch to add or remove them from the bar, and the arrow to move one to the other capsule. Buttons that are off (undo, reminder, camera…) can be added any time.",
   "personalizeBarLeft": "Left capsule · tools",
   "personalizeBarRight": "Right capsule · AI and voice",
   "personalizeBarReset": "Reset bottom bar",
@@ -1859,14 +1566,9 @@
   "personalizeBarMoveRight": "Move to right capsule",
   "personalizeBarMoveLeft": "Move to left capsule",
   "reorderHandle": "Reorder",
-  "personalizeEditorTop": "Note screen · top bar and areas",
-  "personalizeQuickAdd": "New note menu (+)",
-  "personalizeAttachSheet": "Add sheet (+ inside a note)",
   "personalizeVideo": "Video",
   "personalizeHome": "Home screen",
-  "personalizeHomeItemsInfo": "Selected items appear on the home screen; in edit mode you can also tap them on the home screen to hide.",
   "personalizeBubbles": "Bubbles",
-  "personalizeChipsInfo": "Selected items are visible; tap to toggle.",
   "personalizeReset": "Reset to default",
   "personalizeResetConfirm": "Reset all visibility and seek settings to default?",
   "personalizeResetDone": "Defaults restored",
@@ -1879,7 +1581,6 @@
   "bubbleSizeSetting": "Bubble size",
   "noteMenuCustomize": "Customize screen",
   "secondsShort": "{seconds} s",
-  "personalizeHiddenSummary": "{count} hidden",
   "uiItemVideoBadge": "VIDEO",
   "listPartRemoved": "List removed",
   "textPartRemoved": "Text removed",
@@ -1898,13 +1599,10 @@
   "transcriptInsertAll": "Add all to note",
   "transcriptInserted": "Added to note",
   "transcriptNewNote": "New note",
-  "transcriptRetryAi": "Re-transcribe with AI",
-  "transcriptReadWithAi": "Read with AI (handwriting)",
   "transcriptShowTimes": "Timestamps",
   "transcriptDelete": "Delete transcript",
   "transcriptDeleteConfirm": "Delete the transcript? The source file stays in the note.",
   "transcriptEmpty": "No text found.",
-  "transcriptTooLarge": "The recording is {mb} MB; the built-in AI accepts up to 15 MB. Add your own Gemini key in Settings to transcribe larger recordings.",
   "transcriptUnsupported": "This recording format ({format}) can't be transcribed.",
   "transcriptEdit": "Edit",
   "transcriptSave": "Save",
@@ -1920,14 +1618,12 @@
   "pickPdfTitle": "Choose a PDF",
   "pickSlidesTitle": "Choose a presentation",
   "pickImagesTitle": "Choose images",
-  "pickDocumentTitle": "Choose a document",
   "fileAppPickerTitle": "Pick files with Dosya Okuyucu",
   "fileAppPickerInfo": "Adding a file opens Dosya Okuyucu directly, listing only files of the requested type (newest first). When off, you're asked which app to use.",
   "viewModeAttached": "Attached",
   "viewModeAttachedHint": "As attachment — stays in the strip at the bottom",
   "textToBubblesPreparing": "Laying out the text as a document…",
   "attachmentActions": "Attachment actions",
-  "attachmentOpen": "Open",
   "attachmentUploadQueued": "Waiting to upload",
   "attachmentWaitingOwner": "Waiting for the person who added it to upload it",
   "attachmentsUploadingCount": "Uploading {count} attachments",
@@ -1938,7 +1634,6 @@
   "attachmentSavedAs": "{name} saved",
   "attachmentSaveAsFailed": "Couldn't save the file",
   "sharedHubTitle": "Inbox & shared",
-  "sharedHubInbox": "Received",
   "voiceAutoStop": "Stop on silence",
   "voiceAutoStopInfo": "When you finish speaking, listening stops by itself after a few seconds of silence.",
   "voiceSmartCommands": "Smart commands",
@@ -2006,19 +1701,6 @@
   "quickAddFromDevice": "Choose a file",
   "quickAddFileWhat": "What should we do with this file?",
   "quickAddFileUnsupported": "This file type is not supported",
-  "chatScopeAll": "All notes",
-  "chatScopeNote": "This note",
-  "chatScopeDoc": "This document",
-  "chatModeQa": "Q&A",
-  "chatModeBrainstorm": "Brainstorm",
-  "chatSuggestOutline": "Outline",
-  "chatSuggestIdeas": "Give ideas",
-  "chatSuggestGaps": "Find gaps",
-  "chatPromptOutline": "Outline this note in short bullet points.",
-  "chatPromptIdeas": "Suggest new ideas and angles for this note.",
-  "chatPromptGaps": "What is missing, unclear or contradictory in this note?",
-  "aiChatRowTitle": "Chat",
-  "aiChatRowInfo": "With this note, its document or all notes; Q&A or brainstorm",
   "shareFolderTogether": "Edit folder together",
   "shareTogetherInfo": "You both see and change the same note or folder",
   "shareCopyInfo": "An independent copy goes to your friend's inbox",
@@ -2057,7 +1739,7 @@
   "lockChangePassword": "Change password",
   "lockChangePattern": "Change pattern",
   "lockWebDeviceInfo": "Browsers have no fingerprint: choose a password or pattern to protect locked notes on the web too.",
-  "lockNotEncryption": "The lock is not encryption: the note content is stored as plain text on the server and in the device cache. The lock only stops this app from showing the note.",
+  "lockNotEncryption": "Locked note bodies, checklist items and page notes are encrypted on-device with AES-256-GCM before syncing. Fingerprint lock keeps the key in this device's secure keystore; password or pattern lock derives it from your secret — if forgotten, previously locked content cannot be decrypted.",
   "versionHistory": "Version history",
   "versionHistoryInfo": "The note text is saved when opened, every half hour during long edits and before AI changes it. Attachments are not versioned.",
   "versionHistoryEmpty": "No versions yet. They collect here as you edit the note.",
@@ -2095,18 +1777,10 @@
   "listeningModeDictation": "Live typing",
   "dictationPanelHint": "Text appears at the cursor as you speak",
   "voiceStartShort": "Start",
-  "aiVoiceRowTitle": "AI voice note",
-  "aiVoiceRowInfoEditor": "Speak; AI tidies it up and adds it to this note",
-  "aiVoiceRowInfoHub": "Speak; AI builds the note — title, items and reminders",
   "archivePaperDashed": "Dashed lines",
-  "itemDividerSolid": "Line below",
-  "itemDividerDashed": "Dashed line below",
-  "itemDividerDotted": "Dotted line below",
   "itemDividerRemove": "Remove line",
   "fileUseAttachInfo": "Added to the note as a playable attachment",
   "allNotesChip": "All",
-  "archiveAiSearch": "AI search (by meaning)",
-  "archiveAiSearchHint": "Search the archive by meaning…",
   "untitledNote": "Untitled note",
   "trashAnalysis": "Trash analysis",
   "trashAnalyze": "Smart analysis",
@@ -2215,8 +1889,6 @@
   "cardShowFolderInfo": "The note's folder in search results and in the All view.",
   "cardShowPaper": "Notebook paper pattern",
   "formatFontPanel": "Font and size",
-  "formatColorsPanel": "Colors",
-  "formatPageColor": "Page color",
   "inkShapes": "Shapes",
   "inkShapeLine": "Straight line",
   "inkShapeRectangle": "Rectangle",
@@ -2229,7 +1901,6 @@
   "inkOpacity": "Opacity",
   "inkRecentColors": "Recent colors",
   "inkPenOnlyTitle": "Draw with pen only",
-  "inkPenOnlyInfo": "Fingers don't draw; one finger scrolls, two fingers zoom. Your palm leaves no marks. Turns on automatically the first time a pen touches the screen.",
   "inkFingerToolTitle": "Finger",
   "inkFingerToolInfo": "Auto: a finger scrolls once a pen has been seen, otherwise it draws. Scrolls: only the pen writes, a finger scrolls. Draws: a finger writes with the pen tool too. Erases: a finger erases, two fingers zoom.",
   "inkFingerScroll": "Scrolls",
@@ -2241,7 +1912,6 @@
   "inkStylusTipsTitle": "Pen shortcuts",
   "inkStylusTips": "Hold the pen's side button or touch with the eraser end to erase. Undo / redo are in the top row.",
   "inkZoomReset": "Fit to screen",
-  "inkZoomHint": "Pinch with two fingers to zoom and pan",
   "cardShowFiles": "File attachments",
   "cardShowFilesInfo": "Show PDF, slide, audio and text attachments on cards",
   "cardShowMediaShort": "Images on cards",
@@ -2412,10 +2082,6 @@
   "embedSelectMode": "Link by selecting",
   "embedLassoMissed": "No text inside the circle — draw around the text",
   "gestureItemDeleted": "Item deleted",
-  "gestureFixing": "Fixing spelling…",
-  "gestureNothingToFix": "No spelling mistakes to fix",
-  "gestureFixed": "Spelling fixed",
-  "gestureFixNeedsAi": "Circling an item fixes its spelling with AI; AI isn't available right now (Settings → AI).",
   "itemGesturesSetting": "Item gestures",
   "itemGesturesSettingInfo": "Draw over an item: strike or ✓ checks. With a pen, scribble deletes and circle fixes spelling.",
   "pdfEditWorking": "Processing PDF…",
@@ -2434,9 +2100,6 @@
   "accountRequiredTitle": "Google account needed",
   "accountRequiredBody": "Contacts, collaboration and sending copies work through your email address; without an account nobody can find you. Link your Google account — your notes stay as they are.",
   "accountRequiredBadge": "Needs a Google account",
-  "guestAiTitle": "AI needs a Google account or your own key",
-  "guestAiBody": "Built-in AI turns on with a Google account. Without one, add your own Gemini API key in Settings to use every AI tool.",
-  "guestAiAddKey": "Add my own key",
   "deletingAccount": "Deleting your account and data…",
   "sharedHubShort": "Inbox",
   "itemEmptyHint": "Write an item",
@@ -2446,7 +2109,13 @@
   "reorderNotesManually": "Reorder manually",
   "shareIncludeBubbles": "Bubbles",
   "sharedFolderBar": "Shared folder · {role}",
-  "@sharedFolderBar": {"placeholders": {"role": {"type": "String"}}},
+  "@sharedFolderBar": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "shareSendSection": "Send out",
   "shareInAppSection": "With people",
   "shareTextHint": "Sends the note's text to an app (WhatsApp, email…)",
@@ -2499,11 +2168,7 @@
     }
   },
   "cardElementsSampleTag": "home",
-  "aiTaskIdle": "Nothing to do right now",
-  "aiSettingsTooltip": "AI settings",
-  "tipSemanticSearch": "With Meaning on, search matches meaning, not words: “car expenses” also finds the fuel receipt.",
   "tipListGestures": "Tip: strike an item through with your finger → it is checked.",
-  "tipPdfBubble": "Tip: long-press the page → drop a bubble there.",
   "tipMediaPin": "Tip: long-press an image and drag it to the top → it is pinned above the note.",
   "tipGridSwipeFolders": "Tip: swipe the screen sideways → move between folders.",
   "tipGridSwipeFilters": "Tip: swipe the screen sideways → move between filters.",
@@ -2521,7 +2186,6 @@
   "tipPinnedSmartActions": "Tip: Open smart actions from the pinned bar to summarize pages, extract text, or ask AI.",
   "tipCrossAppDosyalarim": "Tip: Open attached PDFs and files in Dosyalarım; your Shared AI Pool works across both apps.",
   "swipeModeInfo": "When you swipe the screen sideways in grid view. In list view, swiping a row pins it (right) or archives it (left).",
-  "aiQuotaRenewsAt": "Renews at {time}",
   "backupInfo": "All notes with attachments, drawings, bubbles and folders in one file. Restoring twice doesn't duplicate notes.",
   "backupInProgress": "Preparing backup",
   "restoreInProgress": "Restoring",
@@ -2566,7 +2230,6 @@
   "relatedNotesNone": "No related notes found",
   "relatedNotesLink": "Link",
   "studyCardsTitle": "Today's cards",
-  "studyCardsHubInfo": "Spaced repetition: {count} cards today",
   "studyCardsEmpty": "No cards due here today",
   "studyCardsDone": "All done for today!",
   "studyCardsEmptyInfo": "Use \"Make cards\" in a note's ⋮ menu and AI turns the note into question–answer cards.",
@@ -2576,69 +2239,16 @@
   "studyGradeHard": "Hard",
   "studyGradeGood": "Good",
   "studyGradeEasy": "Easy",
-  "studyCardsMake": "Make cards",
-  "studyCardsMakeMore": "Make cards ({count} so far)",
-  "studyCardsGenerating": "Making cards…",
-  "studyCardsFailed": "Couldn't make cards",
-  "studyCardsPreview": "{count} cards made",
-  "studyCardsSave": "Save to note",
-  "studyCardsSaved": "{count} cards saved",
   "updateAvailable": "New version available: {name}",
-  "updateDownload": "Download from GitHub",
   "pdfNoteFromSelection": "Take note",
   "pdfNoteAtPage": "Note this page",
   "tipPdfReadNote": "Tip: long-press text, select → \"Take note\": the page and line go into your note, tap to jump back.",
   "showMoreChecked": "Show checked ({n} hidden)",
   "hideMoreChecked": "Collapse checked",
-  "gmailTitle": "Gmail",
-  "gmailConnect": "Connect Gmail",
-  "gmailReadOnlyHint": "Read-only: see your emails and save them as notes. Nothing in Gmail is changed.",
   "gmailGoogleOnly": "Sign in with Google to use Gmail.",
-  "gmailSearchHint": "Search mail (Gmail search syntax)",
-  "gmailEmpty": "No emails here",
-  "gmailLoadMore": "Load more",
-  "gmailError": "Couldn't reach Gmail",
-  "gmailSaveNote": "Save as note",
-  "gmailAiSummary": "Note with AI summary",
-  "gmailAiTasks": "Extract task list",
-  "gmailWithAttachments": "Include attachments",
-  "gmailNoteCreated": "Note created",
-  "aiErrInvalidKey": "That API key is not valid. Check it in Settings → AI.",
-  "aiErrModelNotFound": "AI model not found. Update the app; if it persists, tell the developer.",
-  "aiErrRateLimited": "Too many requests; try again in a moment.",
-  "aiErrConnection": "Couldn't reach the AI. Check your connection and try again.",
-  "aiErrEmptyResponse": "The model returned an empty reply; try again.",
-  "aiErrUnexpected": "The model sent an unexpected reply; try again.",
-  "aiErrNotCompleted": "Couldn't finish that; try again.",
-  "aiErrBuiltInOff": "Built-in AI isn't available right now. Enter your own Gemini key in Settings to use it straight away.",
-  "aiErrQuotaFree": "Your free AI points are used up. They renew within 24 hours; you can also enter your own key in Settings or go Premium.",
-  "aiErrQuotaPremium": "Your Premium AI points ({limit}) are used up. They renew within 24 hours; with your own key in Settings you have no limit.",
-  "aiErrUnavailable": "The AI can't answer right now; try again in a moment.",
-  "aiErrModelList": "Couldn't load the {provider} model list. You can pick a model by hand in Settings → AI → Model.",
-  "aiErrNeedsGemini": "{feature} only works with Google Gemini for now. Switch the provider to Gemini in Settings → AI, or remove the key to use built-in AI.",
-  "aiErrKindNeedsGemini": "{kind} can't be sent with {provider}. Switch the provider to Gemini in Settings → AI, or remove the key to use built-in AI.",
-  "aiErrFeatureTts": "AI narration",
-  "aiErrFeatureSemantic": "Semantic search",
-  "aiErrKindAudio": "An audio file",
-  "aiErrKindVideo": "A video",
-  "aiErrKindFile": "This file type",
-  "aiErrUpload": "Couldn't upload the recording; try again.",
-  "aiErrSpeech": "The narration model returned no audio; try again.",
-  "aiErrNoSpeechText": "There is no text to narrate.",
-  "aiErrNoContent": "There is nothing to make a voice note from.",
-  "aiStatusBuiltInOffTitle": "Built-in AI is off right now",
-  "aiStatusWebOffTitle": "Built-in AI is off on the web",
-  "aiStatusWebOffBody": "It works in the phone app. Here, your own Gemini key unlocks every tool.",
-  "aiStatusQuotaTitle": "Your AI points are used up",
-  "aiStatusQuotaBody": "Points renew around {time}. With your own Gemini key you can carry on without waiting.",
-  "dictationFixOffer": "Dictation finished",
-  "dictationFixAction": "Fix with AI",
   "tipHomeMicHold": "Tip: long-press the microphone for an AI voice note.",
   "itemGesturesFingerAll": "Delete and fix gestures with a finger too",
   "itemGesturesFingerAllInfo": "When off, a finger only checks; scribble (deletes) and circle (fixes spelling) need a pen.",
-  "bubbleAddNoteHint": "A pinned note that opens on tap",
-  "bubbleAddPlainHint": "Text written straight on the page",
-  "bubbleAddPlainTitle": "Plain text",
   "itemAddHeader": "Subheading",
   "itemHeaderHint": "Write a subheading",
   "itemMenuToHeader": "Make heading",
@@ -2700,7 +2310,6 @@
   "tplTodoHomeItems": "Pay bills, Laundry, Groceries, Repairs, Book an appointment",
   "tplTodoErrands": "Errands",
   "tplTodoErrandsItems": "Go to the bank, Send a parcel, Pharmacy, Dry cleaning, Post office",
-  "templateTwoColumns": "Two columns",
   "templateFavorite": "Add to favourites",
   "templateUnfavorite": "Remove from favourites",
   "templatesFavorites": "Favourites",
@@ -2769,18 +2378,21 @@
   "taskOverdue": "Overdue",
   "calendarViewYear": "Year",
   "calendarViewWeek": "Week",
-  "calendarView": "View",
   "calendarPinchHint": "Pinch with two fingers to move between year, month and week",
   "calendarPrevious": "Previous",
   "calendarNext": "Next",
   "themeWhite": "White",
   "themeStraw": "Straw",
-  "dashboardBackgroundCalendar": "Calendar background",
-  "dashboardBackgroundCalendarInfo": "This month\u2019s calendar behind your notes; card titles stay clear, the rest turns see-through",
   "calendarSwipe": "Swipe to change week/day in calendar",
   "calendarSwipeInfo": "When off, horizontal swiping changes nothing; the arrow buttons keep working.",
   "calendarMoved": "Moved to {day}",
-  "@calendarMoved": {"placeholders": {"day": {"type": "String"}}},
+  "@calendarMoved": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "gcalTitle": "Google Calendar",
   "gcalInfo": "Events from your Google Calendar show up here (read-only). You can link notes to them; nothing is written to Google.",
   "gcalConnect": "Connect Google Calendar",
@@ -2795,7 +2407,13 @@
   "calendarLinkedNotes": "Linked notes",
   "calendarUnlinkNote": "Unlink",
   "gcalSyncedAt": "Last synced {time}",
-  "@gcalSyncedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@gcalSyncedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "calendarLinked": "Linked to calendar",
   "calendarLinkNote": "Link to calendar",
   "calendarLinkToDay": "Link to a day",
@@ -2805,14 +2423,38 @@
   "calendarHolidayEstimated": "estimated",
   "calendarDayNote": "Note for this day",
   "calendarDayWrittenNotes": "Notes written that day ({count})",
-  "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayWrittenNotes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarMoreCount": "+{count} more",
-  "@calendarMoreCount": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekSummaryTitle": "This week",
   "calendarWeekSummaryPlans": "{count} plans",
-  "@calendarWeekSummaryPlans": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarWeekSummaryPlans": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekSummaryNotes": "{count} notes",
-  "@calendarWeekSummaryNotes": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarWeekSummaryNotes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "itemMenuTask": "Make task",
   "gtasksTitle": "Google Tasks",
   "gtasksConnected": "Google Tasks connected and synced",
@@ -2824,15 +2466,36 @@
   "gcalDeleteConfirm": "Delete this event from Google Calendar? This can't be undone.",
   "gcalEdit": "Edit",
   "gcalPending": "{count} changes waiting to be sent to Google",
-  "@gcalPending": {"placeholders": {"count": {"type": "int"}}},
+  "@gcalPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ocrToEvent": "Add to calendar as an event",
   "calendarSuggestAction": "Add to calendar",
   "calendarSuggest": "Your note mentions {when}",
-  "@calendarSuggest": {"placeholders": {"when": {"type": "String"}}},
+  "@calendarSuggest": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "calendarIcsExport": "Export calendar (.ics)",
   "calendarIcsImport": "Import calendar file (.ics)",
   "calendarIcsImported": "{count} events added, {skipped} already existed",
-  "@calendarIcsImported": {"placeholders": {"count": {"type": "int"}, "skipped": {"type": "int"}}},
+  "@calendarIcsImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
   "routinesTitle": "Routines",
   "routineNew": "New routine",
   "routineEdit": "Edit routine",
@@ -2849,20 +2512,38 @@
   "routineAddStep": "Add step",
   "routineDeleted": "Routine deleted",
   "routineStreak": "🔥 {count} days",
-  "@routineStreak": {"placeholders": {"count": {"type": "int"}}},
+  "@routineStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "routineStepCount": "{count} steps",
-  "@routineStepCount": {"placeholders": {"count": {"type": "int"}}},
+  "@routineStepCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "routineProgress": "{done}/{total} steps",
-  "@routineProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "@routineProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "menuSearchHint": "Search by name or function (e.g. sum, share)",
   "menuSearchEmpty": "No matching action",
   "menuEdit": "Edit menu",
   "menuSectionOther": "Other",
   "menuQuickRow": "Put in quick row",
-  "menuShowHide": "Show/hide",
   "menuReset": "Default",
-  "menuEditHint": "Drag to reorder, tap the eye to hide; starred actions sit in the quick row on top (up to {count}).",
-  "@menuEditHint": {"placeholders": {"count": {"type": "int"}}},
   "themeCream": "Cream",
   "themePeach": "Peach",
   "themeMint": "Mint",
@@ -2876,37 +2557,24 @@
   "reminderSheetTitle": "Reminder",
   "reminderSheetRemove": "Remove",
   "reminderSheetSave": "Save",
-  "folderHoldHint": "Hold and slide left or right to switch folders",
   "homeFolderStripHide": "Hide folder row",
-  "homeFolderStripShow": "Show folder row",
   "homeViewMenu": "View & filter",
-  "folderRadialCancel": "Release = cancel",
   "googleApiDisabled": "{api} is disabled in this app's Google Cloud project. Enable it in the console and connect again.",
   "googleApiEnable": "Enable",
   "googleScopeMissing": "{api} permission wasn't granted. Tick the permission box when connecting.",
-  "gmailRefresh": "Refresh",
-  "gmailNoResults": "No emails here match your search",
-  "gmailFilterInbox": "Inbox",
-  "gmailFilterUnread": "Unread",
-  "gmailFilterStarred": "Starred",
-  "gmailFilterAttachments": "With attachments",
-  "gmailFilterToday": "Today",
-  "gmailDayToday": "Today",
-  "gmailDayYesterday": "Yesterday",
-  "gmailDayThisWeek": "This week",
-  "gmailDayOlder": "Older",
-  "gmailNoSubject": "(no subject)",
-  "gmailConnectTitle": "Turn your emails into notes",
-  "gmailConnectPointRead": "See your inbox and search with Gmail search syntax.",
-  "gmailConnectPointNote": "Turn an email into a note, an AI summary or a task list in one tap.",
-  "gmailOpenInGmail": "Open in Gmail",
   "friendsEmptyTitle": "No contacts here yet",
   "friendsFilterHint": "Search contacts",
   "friendsNoName": "No name",
   "friendsSharedFolders": "Shared folders",
   "friendsNoSharedFolders": "You haven't shared a folder with this person yet.",
   "friendsSince": "In your contacts since {date}",
-  "@friendsSince": {"placeholders": {"date": {"type": "String"}}},
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsCopyEmail": "Copy email",
   "friendsEmailCopied": "Email copied",
   "friendsWantsToConnect": "Wants to add you as a contact",
@@ -2919,9 +2587,21 @@
   "settingsGroupData": "Data and privacy",
   "settingsGroupOther": "Other",
   "friendsCountSummary": "{count, plural, =0{No contacts yet} =1{1 contact} other{{count} contacts}}",
-  "@friendsCountSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@friendsCountSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "friendsRequestsSummary": "{count} pending",
-  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@friendsRequestsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inkFixApply": "Tidy up shape",
   "inkShapeSuggestTitle": "Recognize shapes",
   "inkShapeSuggestInfo": "After a rough circle, rectangle, triangle, line or arrow a small button appears; tap it to tidy the shape (undo restores it).",
@@ -2933,7 +2613,6 @@
   "inkMarkFixAskNo": "No",
   "inkPinPen": "Pin this pen",
   "inkPinnedPen": "Pinned pen · hold to remove",
-  "penModeFinish": "Done",
   "reminderLevelTitle": "Notification",
   "reminderLevelLow": "Low",
   "reminderLevelNormal": "Normal",
@@ -2973,23 +2652,8 @@
   "addToNoteTitle": "Add to note",
   "addToNewNote": "New note",
   "addToNoteEmpty": "No other notes yet",
-  "gmailAddSelectionToNote": "Add to note",
-  "gmailTagPromotions": "Promotions",
-  "gmailTagSocial": "Social",
-  "gmailTagUpdates": "Updates",
-  "gmailTagForums": "Forums",
-  "gmailTagImportant": "Important",
-  "gmailSmartAddToCalendar": "Add to calendar: {when}",
-  "@gmailSmartAddToCalendar": {"placeholders": {"when": {"type": "String"}}},
-  "gmailSmartLinkPerson": "Link {name} to a note",
-  "@gmailSmartLinkPerson": {"placeholders": {"name": {"type": "String"}}},
-  "gmailSmartRelatedNote": "Related note: {title}",
-  "@gmailSmartRelatedNote": {"placeholders": {"title": {"type": "String"}}},
-  "gmailAddedToNote": "Selected text added to the note",
   "calendarLinkExistingNote": "Link an existing note",
   "routineFromNote": "Create routine from a note",
-  "gmailAddAccount": "Add another account",
-  "gmailRemoveAccount": "Remove account",
   "quickRowSubheading": "Subheading",
   "quickRowItalic": "Italic",
   "quickRowUnderline": "Underline",
@@ -2999,10 +2663,15 @@
   "quickRowPackage": "Pack",
   "notePackageHint": "Long text — pack it to tidy up",
   "quickRowDictation": "Dictate",
-  "quickRowCustomize": "Edit quick menu (add/remove buttons)",
   "notePackageSelectFirst": "Select text to pack (or tap a long paragraph)",
   "notePackageCount": "{count} items",
-  "@notePackageCount": {"placeholders": {"count": {"type": "int"}}},
+  "@notePackageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "notePackageUnpack": "Unpack (put back into the note)",
   "pinnedPenWrite": "Write on it with the pen",
   "pinnedShrinkToFit": "Shrink when narrowed",
@@ -3010,7 +2679,6 @@
   "quickRowScan": "Scan document",
   "quickRowDate": "Insert date and time",
   "spellAutoTitle": "Auto-correct",
-  "spellAutoSubtitle": "A finished word is corrected only when it is a sure fix; Backspace right after undoes it. Title words are capitalized.",
   "spellLearnTitle": "Learning correction",
   "spellCheckDoneTitle": "Check ticked items too",
   "spellCheckDoneSubtitle": "When off, ticked items are not underlined",
@@ -3050,9 +2718,6 @@
   "homeCalendarStripInfo": "Weekly or monthly calendar at the top of the home screen: events, tasks, holidays. Tap a day = entries (edit/delete), long-press = calendar",
   "homeCalendarStripExpand": "Expand calendar strip",
   "homeCalendarStripCollapse": "Collapse calendar strip",
-  "gmailTranslate": "Translate message",
-  "gmailShowOriginal": "Show original",
-  "gmailTranslated": "Translated",
   "folderMenuEdit": "Reorder · delete",
   "themeClassic": "Classic",
   "themeNewsprint": "Newsprint",
@@ -3076,7 +2741,6 @@
   "spellRejectedTitle": "Fixes that won't be made again (you undid or changed them)",
   "inkEraserOffer": "Pick eraser",
   "inkPenOffer": "Back to pen",
-  "tipPenToggle": "Pen mode is on. Tap the pen button again (or back) to turn it off. Long-press = pen settings.",
   "tipPenShapeHold": "Hold still at the end of a stroke: lines, squares and circles snap to clean shapes.",
   "tipPenEraserHold": "To erase, long-press a stroke → tap the eraser button. Two fingers = scroll/zoom.",
   "backupStatusCloud": "Cloud: {count} notes in your Google account, changes sync automatically",
@@ -3113,17 +2777,13 @@
   "autoUpdateTitle": "Update automatically",
   "autoUpdateInfo": "New versions download in the background and install the next time you open the app",
   "updateInstall": "Update",
-  "updateDownloading": "Downloading the new version…",
   "updateNeedsPermission": "Allow this app to install unknown apps, then tap Update again",
-  "updateFailed": "Download failed; opening the GitHub page",
   "updateTapToCheck": "Tap to check for updates",
   "updateReopenOn": "Reopens by itself after updating",
   "updateReopenOff": "Reopen after updating: allow",
   "updateChecking": "Checking for updates…",
   "updateUpToDate": "You're on the latest version",
-  "updateCheckFailed": "Couldn't check — check your connection",
   "releaseNotesTitle": "Release notes",
-  "releaseNotesInfo": "What changed, item by item",
   "settingsWritingTitle": "Pen, writing and screen",
   "settingsWritingSummary": "Pen · Spell fix · Home strips",
   "settingsPenSection": "Pen",
@@ -3275,11 +2935,7 @@
   "quickDropAddingTo": "Adding to “{title}”…",
   "quickDropWait": "Wait",
   "quickDropAiToggle": "Ask AI when unsure",
-  "aiOffSetting": "Turn off AI completely",
-  "aiOffSettingInfo": "While on, no note, text or attachment is sent to AI and AI buttons are hidden.",
   "aiOffTitle": "AI is turned off",
-  "aiOffBody": "You turned AI off in Settings; nothing is sent. Turn it back on to bring the AI buttons back.",
-  "aiOffTurnOn": "Turn AI on",
   "aiConsentTitle": "Using AI",
   "aiConsentWhat": "What is sent: only the text, note or attachment (image, audio, PDF) you choose for that task.",
   "aiConsentWhere": "Where: to Google's Gemini service (via Firebase); if you entered your own key, to the provider you chose.",
@@ -3287,9 +2943,7 @@
   "aiConsentTurnOff": "You can turn AI off completely at any time in Settings → AI.",
   "aiConsentAccept": "I agree",
   "aiConsentDecline": "Not now",
-  "aiMayBeWrong": "AI can make mistakes; check important info.",
   "aiPausedTitle": "AI is temporarily unavailable",
-  "aiPausedBody": "AI features are switched off for a short while. Your notes aren't affected; try again later.",
   "homePullGestureTitle": "Pulling down at the top of the list",
   "homeSwipeRightGestureTitle": "Swiping right in All",
   "homeGestureInfo": "Pick a note or folder and the gesture opens it directly",
@@ -3325,13 +2979,40 @@
   "barMoreToBar": "Move to bar",
   "barMoreToMenu": "Move to menu",
   "menuEditInlineHint": "Long-press and drag to reorder · ⊖ hide · ☆ quick row (up to {count})",
-  "@menuEditInlineHint": {"placeholders": {"count": {"type": "int"}}},
+  "@menuEditInlineHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "menuHiddenGroup": "Hidden",
   "quickDropSettings": "Quick add settings",
   "quickDropPreviewText": "→ {title} · {text}",
-  "@quickDropPreviewText": {"placeholders": {"title": {"type": "String"}, "text": {"type": "String"}}},
+  "@quickDropPreviewText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropPreviewItems": "→ {title} · {items} ({count} new)",
-  "@quickDropPreviewItems": {"placeholders": {"title": {"type": "String"}, "items": {"type": "String"}, "count": {"type": "int"}}},
+  "@quickDropPreviewItems": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "items": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quickDropPickMyself": "I'll pick",
   "quickDropFindNote": "Find note",
   "quickDropPreviewReminder": "⏰ {when} · {text}",
@@ -3341,18 +3022,13 @@
   "quickDropPreviewMulti": "→ {summary} ({count} notes)",
   "quickDropAddedMulti": "Added to {count} notes",
   "aiNeedsProTitle": "AI is part of Pro",
-  "aiNeedsProBody": "Built-in AI comes with a Pro subscription. With Lifetime you can add your own Gemini key and use it without limits.",
-  "aiNeedsProSee": "See Pro",
   "proTitle": "Full Version",
   "proSettingsSubtitle": "Lite vs Full Version, decision credits, purchases",
   "proStatusFree": "Your plan: Lite (Free · Ad-free)",
   "proStatusLifetime": "Your plan: Full Version (Lifetime)",
-  "proStatusPro": "Your plan: Full Version · until {date}",
-  "@proStatusPro": {"placeholders": {"date": {"type": "String"}}},
   "proTiersTitle": "Plans",
   "proTierFree": "Lite",
   "proTierLifetime": "Full Version",
-  "proTierPro": "Full Version",
   "proRowBasics": "Notes, lists, pen, PDF, reminders, calendar; on-device spell check, dictation, OCR, barcode, Store Mode",
   "proRowUnlimited": "Unlimited notes, folders, attachments and devices",
   "proRowSync": "Cloud sync",
@@ -3368,25 +3044,18 @@
   "proRowOwnKey": "Your own Gemini key",
   "proLockedBadge": "In Full Version",
   "proBuyTitle": "Buy",
-  "proPlanMonthly": "Full Version",
-  "proPlanYearly": "Full Version",
   "proPlanLifetime": "Full Version · One-Time (Lifetime)",
   "proPlanDecisionPack": "+1,000 Smart Decisions Pack",
-  "proPriceMonthly": "{price} / month",
-  "@proPriceMonthly": {"placeholders": {"price": {"type": "String"}}},
-  "proPriceYearly": "{price} / year",
-  "@proPriceYearly": {"placeholders": {"price": {"type": "String"}}},
-  "proTrialMonthly": "7 days free, then {price} / month",
-  "@proTrialMonthly": {"placeholders": {"price": {"type": "String"}}},
-  "proTrialYearly": "7 days free, then {price} / year",
-  "@proTrialYearly": {"placeholders": {"price": {"type": "String"}}},
   "proPriceOnce": "{price} · pay once, no subscription",
-  "@proPriceOnce": {"placeholders": {"price": {"type": "String"}}},
+  "@proPriceOnce": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "proBuy": "Buy",
-  "proTry": "Try free",
   "proOwned": "Owned",
-  "proManage": "Manage purchases",
-  "proManageBody": "Google Play account",
   "proRestore": "Restore purchases",
   "proTerms": "No subscriptions, no ads. Full Version is a one-time lifetime purchase including 750 Smart Decisions. When credits run out, the app and all on-device features keep working without limits; you can optionally add a +1,000 Decisions Pack or use your own Gemini key.",
   "proLoading": "Getting prices from Google Play…",
@@ -3407,7 +3076,16 @@
   "decisionsSectionSubtitle": "Unknown grocery aisles, quick-add target, and tag suggestions",
   "decisionsQuotaByok": "Own Gemini key active · Unlimited smart decisions",
   "decisionsQuotaSummary": "Remaining smart decisions: {calls} · {tokens} token budget",
-  "@decisionsQuotaSummary": {"placeholders": {"calls": {"type": "int"}, "tokens": {"type": "String"}}},
+  "@decisionsQuotaSummary": {
+    "placeholders": {
+      "calls": {
+        "type": "int"
+      },
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
   "decisionsQuotaFreeHint": "On-device smart rules are free · 750 decisions included in Full Version",
   "decisionsTurnOffTitle": "Turn off smart decisions",
   "decisionsTurnOffBody": "When off, all on-device dictionaries, spell check, and shopping rules keep working for free.",
@@ -3416,30 +3094,35 @@
   "calendarDayLinkRemoved": "Note removed from this day",
   "calendarLinkTime": "Time",
   "calendarLinkAllDay": "All day",
-  "calendarCollapseMonth": "Collapse calendar",
-  "calendarExpandMonth": "Expand calendar",
-  "calendarDayPanelClose": "Close day panel",
   "driveOnboardTitle": "Keep attachments on every device",
   "driveOnboardBody": "Your photo, PDF and audio attachments are backed up to the \"Notlar\" folder in your Google Drive, so you see the same attachments on phone, tablet and web.",
   "driveOnboardConnect": "Connect Drive",
   "driveOnboardLater": "Later",
-  "aiQuietOrganizeTitle": "Quiet organize",
-  "aiQuietOrganizeEmpty": "No missing titles or tags to suggest.",
-  "aiQuietOrganizeApply": "Apply {count} suggestions",
-  "@aiQuietOrganizeApply": {"placeholders": {"count": {"type": "int"}}},
-  "aiQuietOrganizeApplied": "{count} notes updated",
-  "@aiQuietOrganizeApplied": {"placeholders": {"count": {"type": "int"}}},
-  "aiQuietOrganizeBoth": "Titles + tags together",
   "exportMarkdownZip": "Export Markdown (.zip)",
   "exportMarkdownZipInfo": "Exports notes as portable .md files organized by folder",
   "exportMarkdownZipEmpty": "No notes to export",
   "exportMarkdownZipDone": "Exported {count} notes as Markdown (.zip)",
-  "@exportMarkdownZipDone": {"placeholders": {"count": {"type": "int"}}},
+  "@exportMarkdownZipDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "storeMode": "Store mode",
   "storeModeHideChecked": "Hide checked",
   "storeModeShowChecked": "Show checked",
   "storeModeRemaining": "{remaining} of {total} left",
-  "@storeModeRemaining": {"placeholders": {"remaining": {"type": "int"}, "total": {"type": "int"}}},
+  "@storeModeRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "storeModeAllDone": "All done!",
   "storeModeAddHint": "Quickly add an item…",
   "backupPasswordTitle": "Backup password (optional)",
@@ -3454,36 +3137,6 @@
   "backupEnterPasswordTitle": "Encrypted backup",
   "backupEnterPasswordBody": "This backup is password-protected. Enter the password to restore.",
   "backupWrongPassword": "Wrong password or unable to decrypt backup",
-  "aiWriteImprove": "Improve writing",
-  "aiWriteImproveInfo": "Fix, shorten, expand, change tone, or translate",
-  "improveExpand": "Expand with more detail",
-  "improveCasual": "Casual and natural",
-  "aiWriteGroupFix": "Fix and rewrite",
-  "aiWriteGroupTone": "Tone and length",
-  "aiWriteGroupFormat": "Convert format",
-  "aiPreviewBefore": "Before",
-  "aiPreviewAfter": "After",
-  "aiPreviewCompare": "Before / after",
-  "aiPhotoToStructuredNote": "Turn into structured note",
-  "aiPhotoToStructuredNoteInfo": "Reads on device first, then organizes title and items",
-  "docSuggestSummary": "Summarize",
-  "docPromptSummary": "Summarize this document clearly and concisely, citing page numbers as [p. N].",
-  "docSuggestKeyPoints": "Key points",
-  "docPromptKeyPoints": "List the 5 most important points in this document with page citations [p. N].",
-  "docSuggestActions": "Dates & tasks",
-  "docPromptActions": "Extract important dates, decisions, and action items from this document with page citations [p. N].",
-  "docPageCitation": "p. {page}",
-  "@docPageCitation": {"placeholders": {"page": {"type": "int"}}},
-  "transcriptTakeaways": "Summary & actions",
-  "transcriptTakeawaysSummary": "Summary",
-  "transcriptTakeawaysActions": "Action items",
-  "transcriptTakeawaysRemind": "Want a reminder?",
-  "transcriptTakeawaysAddTask": "Add task",
-  "transcriptTakeawaysInsert": "Add summary to note",
-  "briefingDailyTab": "Daily",
-  "briefingWeeklyTab": "Weekly",
-  "briefingWeeklyLoading": "Preparing weekly summary…",
-  "briefingWeeklyEmpty": "Nothing to summarize this week",
   "calendarAddActionTitle": "What + adds in the calendar",
   "calendarAddActionInfo": "Default is a note; the date is the selected day (or today) and can be changed before writing.",
   "calendarAddNote": "Note",
@@ -3493,25 +3146,73 @@
   "calendarNewDayNoteTitle": "New note",
   "calendarNewDayNoteOpen": "Write note",
   "calendarSlotAddTitle": "Add at {time}",
-  "@calendarSlotAddTitle": {"placeholders": {"time": {"type": "String"}}},
+  "@calendarSlotAddTitle": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "eraserOn": "Eraser on",
   "calendarRelToday": "Today",
   "calendarRelTomorrow": "Tomorrow",
   "calendarRelYesterday": "Yesterday",
   "calendarRelInDays": "in {count} days",
-  "@calendarRelInDays": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarRelInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarRelDaysAgo": "{count} days ago",
-  "@calendarRelDaysAgo": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarRelDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekNumber": "week {count}",
-  "@calendarWeekNumber": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarWeekNumber": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayEvents": "{count} events",
-  "@calendarDayEvents": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayEvents": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayTasks": "{count} tasks",
-  "@calendarDayTasks": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayReminders": "{count} reminders",
-  "@calendarDayReminders": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayReminders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayNotesCount": "{count} notes",
-  "@calendarDayNotesCount": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayNotesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayFree": "Free day",
   "webWorkspaceSection": "Workspace",
   "webOrganizeSection": "Organize",
@@ -3520,18 +3221,51 @@
   "webColumnsMenu": "Column density",
   "webColumnsAuto": "Auto",
   "webColumnsCount": "{count} columns",
-  "@webColumnsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@webColumnsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webNoteCount": "{count, plural, =1{1 note} other{{count} notes}}",
-  "@webNoteCount": {"placeholders": {"count": {"type": "int"}}},
+  "@webNoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webDriveStatusConnected": "Drive connected",
   "webDriveStatusSyncing": "{count} syncing",
-  "@webDriveStatusSyncing": {"placeholders": {"count": {"type": "int"}}},
+  "@webDriveStatusSyncing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webDriveStatusAttention": "{count} pending",
-  "@webDriveStatusAttention": {"placeholders": {"count": {"type": "int"}}},
+  "@webDriveStatusAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webSyncCloudReady": "Cloud sync active",
   "webCacheTitle": "Browser attachment cache",
   "webCacheInfo": "{count} files · {size} (ready offline)",
-  "@webCacheInfo": {"placeholders": {"count": {"type": "int"}, "size": {"type": "String"}}},
+  "@webCacheInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "webCacheEmpty": "No cached attachments yet",
   "webCacheClear": "Clear",
   "webCacheCleared": "Browser attachment cache cleared",
@@ -3588,12 +3322,9 @@
   "pinnedSmartSummarize": "Summarize & add",
   "pinnedSmartTasks": "Turn into tasks",
   "pinnedSmartAreaAsk": "Select area & ask",
-  "areaInsertToNote": "Add to note",
-  "areaInsertedToNote": "Added to note",
   "dashboardBackgroundGallery": "Curated wallpapers",
   "dashboardBackgroundFromDevice": "From gallery",
   "dashboardBackgroundOpacity": "Visibility",
-  "dashboardBackgroundPreview": "Live preview",
   "wallpaperAuroraBloom": "Aurora bloom",
   "wallpaperCitrusSun": "Citrus sun",
   "wallpaperCoralLagoon": "Coral lagoon",
@@ -3638,139 +3369,154 @@
       }
     }
   },
-  "aiSourceModeTitle": "AI source",
-  "aiSourceModeShared": "Shared pool",
-  "aiSourceModeByok": "Own API key",
-  "aiSharedPoolTitle": "Shared AI pool",
-  "aiSharedPoolSubtitle": "Shared across Notes and Files under one Google account ({credits} credits)",
-  "@aiSharedPoolSubtitle": {
-    "placeholders": {
-      "credits": {
-        "type": "int"
-      }
-    }
-  },
-  "aiSharedPoolEmpty": "Shared credits depleted; enter your own key or upgrade to Pro",
-  "aiByokExhaustedError": "Your API key quota or access is exhausted. Did not fall back to shared pool.",
-  "aiBackupKeysTitle": "Backup API keys",
-  "aiBackupKeysInfo": "When primary quota fills, the next key takes over automatically (up to 5)",
-  "aiBackupKeyLabel": "Backup key {index}",
-  "@aiBackupKeyLabel": {
-    "placeholders": {
-      "index": {
-        "type": "int"
-      }
-    }
-  },
-  "aiBackupKeyAdd": "Add backup key",
   "ecosystemDosyalarimTitle": "Manage every file with Dosyalarım",
-  "ecosystemDosyalarimSubtitle": "Sign PDFs, edit Word and Excel files, and share your AI pool across both apps.",
-  "ecosystemOpenApp": "Open in Dosyalarım",
+  "ecosystemDosyalarimSubtitle": "Sign PDFs, edit Word and Excel files, and share easily with your notes.",
   "ecosystemGetApp": "Explore Dosyalarım",
   "ecosystemDismiss": "Dismiss",
-  "aiOtherToolsTitle": "Other tools",
-  "aiAttachmentsSection": "Attachment & document tools",
-  "aiSmartCategorizeAction": "Smart categorize",
-  "aiSmartCategorizeInfo": "Organize title, tags, and folder locally with zero credits",
-  "aiLocalBadge": "Local · {percent}%",
-  "@aiLocalBadge": {
+  "shopBudgetCart": "Cart: {amount} ₺",
+  "@shopBudgetCart": {
     "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "aiSmartFolderSuggestion": "Folder: {folder}",
-  "@aiSmartFolderSuggestion": {
-    "placeholders": {
-      "folder": {
+      "amount": {
         "type": "String"
       }
     }
   },
-  "aiSmartFixAction": "Fix",
-  "aiSmartRefineWithAi": "Refine low confidence with AI",
-  "aiSmartFixTitle": "Choose right category",
-  "aiSmartSimilarConfirmTitle": "Fix similar notes too?",
-  "aiSmartSimilarConfirmBody": "Apply the same category to {count} similar notes.",
-  "@aiSmartSimilarConfirmBody": {
+  "shopBudgetEstimated": "Est: {amount} ₺",
+  "@shopBudgetEstimated": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBudgetLimit": "Budget: {amount} ₺",
+  "@shopBudgetLimit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBudgetSet": "Set budget",
+  "shopBudgetHint": "e.g. 1500",
+  "shopAllStores": "All",
+  "shopPriceTitle": "Price & Aisle · {item}",
+  "@shopPriceTitle": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "shopUnitPriceLabel": "Price (₺)",
+  "shopStoreLabel": "Store",
+  "shopAisleLabel": "Aisle",
+  "shopPriceCompareHeader": "Store price history",
+  "shopClearPrice": "Clear price",
+  "shopRecipesTitle": "Meal & Recipe Packs",
+  "shopRecipesSearchHint": "Search recipes…",
+  "shopServingsCount": "{count} servings",
+  "@shopServingsCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "aiCatFinance": "Finance",
-  "aiCatHealth": "Health",
-  "aiCatEducation": "Education",
-  "aiCatWork": "Work",
-  "aiCatShopping": "Shopping",
-  "aiCatTravel": "Travel",
-  "aiCatPersonal": "Personal",
-  "aiCatTech": "Tech",
-  "aiCatRecipes": "Recipes",
-  "aiCatOfficial": "Official",
-  "shopBudgetCart": "Cart: {amount} ₺",
-  "@shopBudgetCart": {"placeholders": {"amount": {"type": "String"}}},
-  "shopBudgetEstimated": "Est: {amount} ₺",
-  "@shopBudgetEstimated": {"placeholders": {"amount": {"type": "String"}}},
-  "shopBudgetLimit": "Budget: {amount} ₺",
-  "@shopBudgetLimit": {"placeholders": {"amount": {"type": "String"}}},
-  "shopBudgetSet": "Set budget",
-  "shopBudgetHint": "e.g. 1500",
-  "shopAllStores": "All",
-  "shopPriceTitle": "Price & Aisle · {item}",
-  "@shopPriceTitle": {"placeholders": {"item": {"type": "String"}}},
-  "shopUnitPriceLabel": "Price (₺)",
-  "shopStoreLabel": "Store",
-  "shopAisleLabel": "Aisle",
-  "shopOtherAisle": "Other",
-  "shopPriceCompareHeader": "Store price history",
-  "shopClearPrice": "Clear price",
-  "shopRecipesTitle": "Meal & Recipe Packs",
-  "shopRecipesSearchHint": "Search recipes…",
-  "shopServingsCount": "{count} servings",
-  "@shopServingsCount": {"placeholders": {"count": {"type": "int"}}},
   "shopAddToList": "Add to list",
   "shopNewCustomRecipe": "Save custom recipe",
   "shopRecipeNameHint": "Recipe name",
   "shopIngredientsHint": "Ingredients (comma separated: 500 g beef, 2 tomatoes)",
   "shopCustomBadge": "Custom",
   "shopAisleOrderTitle": "Aisle Order · {store}",
-  "@shopAisleOrderTitle": {"placeholders": {"store": {"type": "String"}}},
+  "@shopAisleOrderTitle": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
   "shopResetOrder": "Reset default",
   "shopReceiptTitle": "Update Prices from Receipt",
   "shopReceiptCamera": "Take receipt photo",
   "shopReceiptGallery": "Pick receipt from gallery",
   "shopReceiptMatched": "{count} items matched",
-  "@shopReceiptMatched": {"placeholders": {"count": {"type": "int"}}},
+  "@shopReceiptMatched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "shopReceiptNoMatches": "No matching list items found on receipt.",
   "shopReceiptApply": "Apply prices",
   "shopDueHeader": "Running low",
   "shopDueEveryDays": "{days}d",
-  "@shopDueEveryDays": {"placeholders": {"days": {"type": "int"}}},
+  "@shopDueEveryDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "shopStatusUnavailable": "Out of stock",
   "shopStatusUnavailableBadge": "Unavailable",
   "shopBarcodeTitle": "Scan Barcode",
   "shopBarcodeUnknownPrompt": "New barcode ({ean})",
-  "@shopBarcodeUnknownPrompt": {"placeholders": {"ean": {"type": "String"}}},
+  "@shopBarcodeUnknownPrompt": {
+    "placeholders": {
+      "ean": {
+        "type": "String"
+      }
+    }
+  },
   "shopBarcodeNameHint": "Product name (e.g. Turkish coffee 100 g)",
   "shopKeepScreenOn": "Keep screen on",
   "shopAtStoreButton": "I’m at the store",
   "shopAtStoreMessage": "🛒 {name} is at the store now — add anything missing!",
-  "@shopAtStoreMessage": {"placeholders": {"name": {"type": "String"}}},
+  "@shopAtStoreMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "shopAtStoreSent": "Notified collaborators",
   "shopScanReceiptTooltip": "Scan receipt (OCR)",
   "shopRecipesTooltip": "Recipe packs",
   "shopAisleOrderTooltip": "Customize aisle order",
   "shopTakenBy": "Picked by {name}",
-  "@shopTakenBy": {"placeholders": {"name": {"type": "String"}}},
+  "@shopTakenBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "shopEstimatedPrefix": "~{amount} ₺",
-  "@shopEstimatedPrefix": {"placeholders": {"amount": {"type": "String"}}},
+  "@shopEstimatedPrefix": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopActualPrice": "{amount} ₺",
-  "@shopActualPrice": {"placeholders": {"amount": {"type": "String"}}},
+  "@shopActualPrice": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopOpenStoreModeCount": "Store Mode ({remaining})",
-  "@shopOpenStoreModeCount": {"placeholders": {"remaining": {"type": "int"}}},
+  "@shopOpenStoreModeCount": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "shopOpenStoreMode": "Store Mode",
   "shopDictationTooltip": "Voice add",
   "spellManualLearn": "Learn this correction",
@@ -3794,8 +3540,17 @@
   "uiProfileTabletPen": "Tablet & pen",
   "uiProfileTabletPenDesc": "Split view, pen and PDF tools upfront",
   "uiProfileApplied": "{name} profile applied",
-  "@uiProfileApplied": {"placeholders": {"name": {"type": "String"}}},
-  "lockEncryptedBadge": "End-to-end encrypted",
+  "@uiProfileApplied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lockNeedSecretOnce": "Enter your lock password or pattern once to enable fingerprint unlock on this device.",
+  "lockForgotConfirmTitle": "Reset note lock?",
+  "lockForgotConfirmBody": "Locked notes encrypted with your current secret cannot be decrypted again without that secret. Reset the lock anyway?",
+  "lockForgotConfirmAction": "Reset",
   "starterShoppingTitle": "🛒 Sample grocery list",
   "starterWelcomeTitle": "⚡ Quick start"
 }

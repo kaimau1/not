@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:xml/xml.dart';
+
+import 'zip_guard.dart';
 
 /// Word, PowerPoint ve düz metin dosyalarından okunabilir metin çıkarır.
 ///
@@ -52,7 +53,7 @@ String _extract((String, Uint8List) input) {
       'pptx' => _fromSlides(bytes),
       _ => throw DocTextException(ext),
     };
-  } on ArchiveException {
+  } on FormatException {
     throw DocTextException(ext);
   } on XmlException {
     throw DocTextException(ext);
@@ -98,10 +99,24 @@ String decodeDocText(Uint8List bytes) {
   }
 }
 
+const _kDocZipMaxFiles = 2000;
+const _kDocZipMaxBytes = 120 * 1024 * 1024;
+
 String _fromEntry(Uint8List bytes, String entry) {
-  for (final file in ZipDecoder().decodeBytes(bytes).files) {
+  final archive = ZipGuard.decodeBytes(
+    bytes,
+    maxFileCount: _kDocZipMaxFiles,
+    maxBytes: _kDocZipMaxBytes,
+  );
+  final budget = ZipByteBudget(maxBytes: _kDocZipMaxBytes);
+  for (final file in archive.files) {
     if (file.isFile && file.name == entry) {
-      return _paragraphs(utf8.decode(file.readBytes() ?? [], allowMalformed: true));
+      return _paragraphs(
+        utf8.decode(
+          ZipGuard.readEntryBytes(file, budget),
+          allowMalformed: true,
+        ),
+      );
     }
   }
   throw const DocTextException('docx');
@@ -110,19 +125,26 @@ String _fromEntry(Uint8List bytes, String entry) {
 final _slideEntry = RegExp(r'^ppt/slides/slide(\d+)\.xml$');
 
 String _fromSlides(Uint8List bytes) {
-  final slides = ZipDecoder()
-      .decodeBytes(bytes)
-      .files
+  final archive = ZipGuard.decodeBytes(
+    bytes,
+    maxFileCount: _kDocZipMaxFiles,
+    maxBytes: _kDocZipMaxBytes,
+  );
+  final slides = archive.files
       .where((f) => f.isFile && _slideEntry.hasMatch(f.name))
       .toList();
   if (slides.isEmpty) throw const DocTextException('pptx');
   // slide10, dizgi sıralamasında slide2'nin ÖNÜNE geçer — sunum baştan sona
   // karışık okunurdu. Sıralama slayt numarasına göre sayısal yapılır.
   slides.sort((a, b) => _slideNo(a.name).compareTo(_slideNo(b.name)));
+  final budget = ZipByteBudget(maxBytes: _kDocZipMaxBytes);
   return slides
       .map(
         (f) => _paragraphs(
-          utf8.decode(f.readBytes() ?? [], allowMalformed: true),
+          utf8.decode(
+            ZipGuard.readEntryBytes(f, budget),
+            allowMalformed: true,
+          ),
         ).trim(),
       )
       .where((text) => text.isNotEmpty)

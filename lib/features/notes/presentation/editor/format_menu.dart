@@ -417,7 +417,7 @@ class _FormatButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => OutlinedButton.icon(
     onPressed: onPressed,
-    icon: Icon(icon, size: 20),
+    icon: Icon(icon, size: AppIconSize.m),
     label: Text(label),
   );
 }

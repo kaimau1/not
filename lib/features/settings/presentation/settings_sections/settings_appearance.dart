@@ -92,22 +92,32 @@ class _LanguageSheet extends StatefulWidget {
 
 class _LanguageSheetState extends State<_LanguageSheet> {
   final _controller = TextEditingController();
-  String _query = '';
+  late List<({String code, String label, String fCode, String fLabel})>
+      _entries = _buildEntries(widget.languages);
+
+  static List<({String code, String label, String fCode, String fLabel})>
+  _buildEntries(Map<String, String> languages) => [
+    for (final e in languages.entries)
+      (
+        code: e.key,
+        label: e.value,
+        fCode: foldForSearch(e.key),
+        fLabel: foldForSearch(e.value),
+      ),
+  ];
+
+  @override
+  void didUpdateWidget(covariant _LanguageSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.languages != widget.languages) {
+      _entries = _buildEntries(widget.languages);
+    }
+  }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  /// Arama hem dilin KENDİ adında hem de kodunda yapılır: kullanıcı
-  /// "日本語" yazamıyorsa "ja" yazabilmeli. Büyük/küçük harf ve Türkçe
-  /// ı/I/aksan farkı yok sayılır (F1.8: "turkce" → "Türkçe").
-  bool _matches(MapEntry<String, String> entry) {
-    if (_query.isEmpty) return true;
-    final q = foldForSearch(_query);
-    return foldForSearch(entry.value).contains(q) ||
-        foldForSearch(entry.key).contains(q);
   }
 
   @override
@@ -116,7 +126,6 @@ class _LanguageSheetState extends State<_LanguageSheet> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tokens = AppTokens.fromTheme(theme);
-    final matches = widget.languages.entries.where(_matches).toList();
     // Klavye açılınca liste kısalsın, arama kutusu klavyenin altında kalmasın.
     return SheetInsetPadding(
       child: SizedBox(
@@ -133,7 +142,6 @@ class _LanguageSheetState extends State<_LanguageSheet> {
               child: TextField(
                 controller: _controller,
                 autofocus: true,
-                onChanged: (value) => setState(() => _query = value.trim()),
                 decoration: InputDecoration(
                   prefixIcon: const Icon(
                     Icons.search_rounded,
@@ -154,26 +162,46 @@ class _LanguageSheetState extends State<_LanguageSheet> {
               ),
             ),
             Expanded(
-              child: ListView(
-                children: [
-                  if (_query.isEmpty)
-                    ListTile(
-                      title: Text(l10n.languageSystem),
-                      trailing: widget.selected == null
-                          ? Icon(Icons.check_rounded, color: scheme.primary)
-                          : null,
-                      onTap: () => Navigator.pop(context, 'system'),
-                    ),
-                  for (final entry in matches)
-                    ListTile(
-                      title: Text(entry.value),
-                      subtitle: Text(entry.key),
-                      trailing: entry.key == widget.selected
-                          ? Icon(Icons.check_rounded, color: scheme.primary)
-                          : null,
-                      onTap: () => Navigator.pop(context, entry.key),
-                    ),
-                ],
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _controller,
+                builder: (context, value, _) {
+                  final rawQuery = value.text.trim();
+                  // Arama hem dilin KENDİ adında hem de kodunda yapılır:
+                  // büyük/küçük harf ve Türkçe ı/I/aksan farkı yok sayılır.
+                  final fq = rawQuery.isEmpty ? '' : foldForSearch(rawQuery);
+                  final matches = fq.isEmpty
+                      ? _entries
+                      : [
+                          for (final e in _entries)
+                            if (e.fLabel.contains(fq) || e.fCode.contains(fq))
+                              e,
+                        ];
+                  final includeSystem = fq.isEmpty;
+                  final count = matches.length + (includeSystem ? 1 : 0);
+                  return ListView.builder(
+                    itemCount: count,
+                    itemBuilder: (context, index) {
+                      if (includeSystem && index == 0) {
+                        return ListTile(
+                          title: Text(l10n.languageSystem),
+                          trailing: widget.selected == null
+                              ? Icon(Icons.check_rounded, color: scheme.primary)
+                              : null,
+                          onTap: () => Navigator.pop(context, 'system'),
+                        );
+                      }
+                      final entry = matches[index - (includeSystem ? 1 : 0)];
+                      return ListTile(
+                        title: Text(entry.label),
+                        subtitle: Text(entry.code),
+                        trailing: entry.code == widget.selected
+                            ? Icon(Icons.check_rounded, color: scheme.primary)
+                            : null,
+                        onTap: () => Navigator.pop(context, entry.code),
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],

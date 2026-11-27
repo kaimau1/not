@@ -209,13 +209,13 @@ class _ColorDot extends StatelessWidget {
             child: isNone
                 ? Icon(
                     Icons.format_color_reset_outlined,
-                    size: 20,
+                    size: AppIconSize.m,
                     color: scheme.onSurfaceVariant,
                   )
                 : (selected
                       ? Icon(
                           Icons.check,
-                          size: 18,
+                          size: AppIconSize.s,
                           color: frame ? swatch : FixedColors.inkOn(swatch),
                         )
                       : null),
@@ -272,7 +272,7 @@ class _PaletteDot extends StatelessWidget {
             ),
             child: Icon(
               selected ? Icons.check : AppIcons.color,
-              size: 18,
+              size: AppIconSize.s,
               color: Colors.white,
             ),
           ),

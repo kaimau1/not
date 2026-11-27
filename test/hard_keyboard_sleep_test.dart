@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, debugDefaultTargetPlatformOverride;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/hard_keyboard.dart';
@@ -7,6 +10,70 @@ import 'package:notlar/core/utils/hard_keyboard.dart';
 void main() {
   setUp(HardKeyboard.resetForTest);
   tearDown(HardKeyboard.resetForTest);
+
+  testWidgets('init() açılışta klavye varsa kapatma izleyicisini kurar', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetViewInsets);
+    const ch = MethodChannel('dev.kaimau.notlar/keyboard');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(ch, (call) async {
+          if (call.method == 'present') return true;
+          return null;
+        });
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    try {
+      await HardKeyboard.init();
+      expect(HardKeyboard.present.value, isTrue);
+
+      HardKeyboard.toggleSoft();
+      expect(HardKeyboard.softWanted.value, isTrue);
+
+      tester.view.viewInsets = const FakeViewPadding(bottom: 600);
+      await tester.pump();
+      expect(HardKeyboard.softWanted.value, isTrue);
+
+      tester.view.viewInsets = FakeViewPadding.zero;
+      await tester.pump();
+      expect(HardKeyboard.softWanted.value, isFalse);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(ch, null);
+    }
+  });
+
+  testWidgets('toggleSoft odakli alanin odagini korur', (tester) async {
+    final f1 = FocusNode();
+    final f2 = FocusNode();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              TextField(focusNode: f1),
+              TextField(focusNode: f2),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    HardKeyboard.report(true);
+    f1.requestFocus();
+    await tester.pump();
+    expect(f1.hasFocus, isTrue);
+
+    HardKeyboard.toggleSoft();
+    await tester.pump();
+    expect(f1.hasFocus, isTrue);
+    expect(f2.hasFocus, isFalse);
+
+    await tester.pumpWidget(const SizedBox());
+    f1.dispose();
+    f2.dispose();
+  });
 
   testWidgets('son tuştan hemen sonra gelen "çıktı" yok sayılır', (
     tester,

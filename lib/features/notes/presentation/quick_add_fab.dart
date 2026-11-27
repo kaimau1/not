@@ -346,8 +346,42 @@ class _QuickAddFabState extends State<QuickAddFab> {
 /// sigma her karede değiştiği için önbelleğe de alınamıyordu. Düşük uçlu
 /// cihazda menü açılırken takılma buradandı. Karartma (saydamlık) aynı
 /// odaklamayı neredeyse bedavaya verir.
-class _BlurBarrier extends StatelessWidget {
+class _BlurBarrier extends StatefulWidget {
   const _BlurBarrier();
+
+  @override
+  State<_BlurBarrier> createState() => _BlurBarrierState();
+}
+
+class _BlurBarrierState extends State<_BlurBarrier>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: AppMotion.quick,
+  );
+  late final Animation<double> _curved = CurvedAnimation(
+    parent: _c,
+    curve: AppMotion.standard,
+  );
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _c.value = 1;
+    } else {
+      _c.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -357,11 +391,8 @@ class _BlurBarrier extends StatelessWidget {
     if (MediaQuery.disableAnimationsOf(context)) {
       return ColoredBox(color: color);
     }
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: 1),
-      duration: AppMotion.quick,
-      curve: AppMotion.standard,
-      builder: (context, t, child) => Opacity(opacity: t, child: child),
+    return FadeTransition(
+      opacity: _curved,
       child: ColoredBox(color: color),
     );
   }
@@ -642,7 +673,7 @@ class _PrimaryButton extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(option.icon, size: 24, color: scheme.onPrimaryContainer),
+                Icon(option.icon, size: AppIconSize.l, color: scheme.onPrimaryContainer),
                 const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),

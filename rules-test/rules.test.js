@@ -218,9 +218,13 @@ test("ortak not alt belgeleri: ağır belge, sürüm, düzenliyor nabzı (F3.13,
   // Sürüm değiştirilemez / ortak çalışan silemez.
   await assertFails(updateDoc(doc(b, "users/a/notes/n1/versions/v1"), { body: "sahte" }));
   await assertFails(deleteDoc(doc(b, "users/a/notes/n1/versions/v1")));
-  // Nabız: yalnız kendi belgesi.
+  // Nabız: yalnız kendi belgesi (G-16: alan/boyut + yazma yetkisi).
   await assertSucceeds(setDoc(doc(b, "users/a/notes/n1/presence/b"), { name: "B" }));
+  await assertFails(setDoc(doc(b, "users/a/notes/n1/presence/b"), { name: "B", ek: 1 }));
+  await assertFails(setDoc(doc(b, "users/a/notes/n1/presence/b"), { name: "x".repeat(201) }));
+  await assertSucceeds(deleteDoc(doc(b, "users/a/notes/n1/presence/b")));
   await assertFails(setDoc(doc(b, "users/a/notes/n1/presence/a"), { name: "A" }));
+  await assertFails(setDoc(doc(b, "users/a/notes/n1/versions/v2"), { body: "x", fazla: 1 }));
   // Bilinmeyen alt koleksiyon kapalı.
   await assertFails(setDoc(doc(b, "users/a/notes/n1/other/x"), { v: 1 }));
   // Yabancı hiçbirine erişemez.
@@ -407,6 +411,10 @@ test("F71.2 gelen notlar: yalnız arkadaş, gönderen sahte olamaz, tavan", asyn
   await assertFails(setDoc(doc(as("b"), "users/a/inboxNotes/i2"), not({ fromUid: "c" })));
   await assertFails(setDoc(doc(as("b"), "users/a/inboxNotes/i3"), not({ body: "x".repeat(100001) })));
   await assertFails(setDoc(doc(as("b"), "users/a/inboxNotes/i4"), not({ ek: 1 })));
+  // G-13: fromName/fromEmail/items/tags doğrulaması + sahte e-posta reddi.
+  await assertFails(setDoc(doc(asEmail("b", "b@x.com"), "users/a/inboxNotes/i6"), not({ fromEmail: "patron@x.com" })));
+  await assertFails(setDoc(doc(as("b"), "users/a/inboxNotes/i7"), not({ fromName: "x".repeat(201) })));
+  await assertFails(setDoc(doc(as("b"), "users/a/inboxNotes/i8"), not({ tags: Array(31).fill("t") })));
   // Arkadaş olmayan gönderemez; gönderen yolladığını okuyamaz/değiştiremez.
   await assertFails(setDoc(doc(as("c"), "users/a/inboxNotes/i5"), not({ fromUid: "c" })));
   await assertFails(getDoc(doc(as("b"), "users/a/inboxNotes/i1")));
@@ -443,6 +451,10 @@ test("F71.2 Storage: klasör sohbeti görseli yalnız üyede, yalnız görsel", 
   await assertFails(
     uploadString(ref(store("b"), "folderChats/f1/b.pdf"), "veri", "raw", { contentType: "application/pdf" }),
   );
+  // G-18: SVG (XSS riski) hem sohbet hem not eklerinde reddedilir.
+  await assertFails(
+    uploadString(ref(store("b"), "folderChats/f1/x.svg"), "<svg/>", "raw", { contentType: "image/svg+xml" }),
+  );
 });
 
 test("F71.2 Storage: paylaşılan klasörde rol — read yükleyemez, yabancı okuyamaz", async () => {
@@ -470,6 +482,11 @@ test("Storage: izinsiz dosya türü reddedilir", async () => {
   await assertFails(
     uploadString(ref(store("a"), "users/a/notes/n1/x.exe"), "x", "raw", {
       contentType: "application/x-msdownload",
+    }),
+  );
+  await assertFails(
+    uploadString(ref(store("a"), "users/a/notes/n1/x.svg"), "<svg/>", "raw", {
+      contentType: "image/svg+xml",
     }),
   );
 });

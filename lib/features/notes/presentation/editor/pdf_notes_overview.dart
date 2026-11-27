@@ -7,6 +7,7 @@ import '../../domain/page_notes.dart';
 import 'selection_toolbar.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Sayfa notlarının TOPLU görünümü: bütün sayfa notları tek akışta, her biri
 /// "Sayfa N" başlığı altında.
@@ -127,7 +128,7 @@ class _PdfNotesOverviewScreenState extends State<PdfNotesOverviewScreen> {
                     // "sayfanın kendisini gör" oluyor.
                     InkWell(
                       onTap: () => Navigator.of(context).pop(page),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppRadius.s),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
@@ -142,7 +143,7 @@ class _PdfNotesOverviewScreenState extends State<PdfNotesOverviewScreen> {
                             const SizedBox(width: 4),
                             Icon(
                               Icons.chevron_right,
-                              size: 16,
+                              size: AppIconSize.xs,
                               color: theme.colorScheme.primary,
                             ),
                           ],

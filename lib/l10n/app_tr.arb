@@ -83,7 +83,6 @@
   "noteFullscreen": "Tam ekran",
   "noteFullscreenExit": "Tam ekrandan çık",
   "penModeDone": "Kalemi kapat",
-  "tipPagePen": "Kalemle sayfanın her yerine yazabilirsin; parmakla dokunup klavyeyle aynı notta devam et.",
   "pageInkOnCard": "El yazısı var",
   "attachmentTooLarge": "Dosya çok büyük (en fazla {limit} MB)",
   "@attachmentTooLarge": {
@@ -118,23 +117,12 @@
   "unpin": "Sabitten çıkar",
   "delete": "Sil",
   "color": "Renk",
-  "aiTitle": "Yapay zekâ",
-  "aiSummarize": "Notu özetle",
-  "aiSectionWrite": "Yaz",
-  "aiSectionAsk": "Sor",
-  "aiSectionTransform": "Dönüştür",
   "summarize": "Özetle",
-  "summaryDetailTitle": "Özet türü",
-  "summaryShort": "Kısa özet",
-  "summaryShortInfo": "Birkaç cümlelik genel bakış ve ana maddeler",
-  "summaryDetailed": "Detaylı özet",
-  "summaryDetailedInfo": "Kaynağa bakmayı gereksiz kılan kapsamlı özet",
   "listen": "Sesli dinle",
   "ask": "Soru sor",
   "extractText": "Metni çıkar",
   "transcribe": "Yazıya dök",
   "listenToNote": "Sesli dinle",
-  "aiNoApiKey": "Önce Ayarlar'dan Gemini API anahtarını gir",
   "aiError": "Yapay zekâ isteği başarısız: {error}",
   "@aiError": {
     "placeholders": {
@@ -143,11 +131,10 @@
       }
     }
   },
-  "aiSummaryTitle": "AI özeti",
   "aiThinking": "Düşünüyor...",
   "copy": "Kopyala",
   "copied": "Kopyalandı",
-  "settingsSearchHint": "Ayar ara — “brifing”, “mikrofon”",
+  "settingsSearchHint": "Ayar ara — “kilit”, “mikrofon”",
   "settingsSearchEmpty": "«{query}» için ayar yok",
   "@settingsSearchEmpty": {
     "placeholders": {
@@ -163,27 +150,6 @@
   "themePorcelain": "Porselen",
   "themeClay": "Kil",
   "themeDark": "Koyu",
-  "settingsAi": "Yapay zekâ",
-  "geminiApiKeyInfo": "Anahtar girmek isteğe bağlıdır: girmezsen yapay zekâ istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.",
-  "aiBuiltInPremium": "Dahili AI: Premium — bugün kalan puan {count}",
-  "@aiBuiltInPremium": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "aiBuiltInRemaining": "Dahili AI: bugün kalan ücretsiz puan {count}",
-  "@aiBuiltInRemaining": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "aiBuiltInByok": "Kendi anahtarın kullanılıyor — sınırsız",
-  "aiReport": "Yanıtı bildir",
-  "aiReportThanks": "Bildirimin alındı, teşekkürler",
   "privacyPolicyTitle": "Gizlilik politikası",
   "lockNote": "Kilitle",
   "unlockNote": "Kilidi kaldır",
@@ -206,16 +172,6 @@
   "trashEmptied": "Çöp kutusu boşaltıldı",
   "validateAndSave": "Doğrula ve Kaydet",
   "clear": "Temizle",
-  "aiDiagnostics": "AI tanılama",
-  "aiDiagnosticsEmpty": "Kayıtlı hata yok",
-  "aiDiagnosticsCount": "Son {count} hata kaydı",
-  "@aiDiagnosticsCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "apiKeyValid": "API anahtarı doğrulandı ve kaydedildi",
   "apiKeyInvalid": "API anahtarı geçersiz",
   "apiKeySavedBadge": "Kayıtlı",
@@ -227,7 +183,6 @@
   "switchAccountConfirm": "Bu hesaptan çıkılıp Google hesap seçici açılacak. Notların bu hesapta kalır, geri döndüğünde yine burada olur.",
   "switchAccountGuestWarning": "Misafir hesaptasın: hesap değiştirirsen bu cihazdaki notlara bir daha ulaşamazsın. Önce Google hesabına bağla ya da tam yedek al.",
   "penTrayShow": "Kalem tepsisini aç",
-  "penTrayHide": "Kalem tepsisini indir",
   "addDrawingSubtitle": "Ayrı tuvalde çiz, görsel olarak nota gömülsün",
   "addGroupWrite": "Yaz",
   "addGroupPen": "Kalem",
@@ -238,10 +193,22 @@
   "addHandwriting": "Sayfaya yaz (kalem)",
   "addHandwritingSubtitle": "Kalem kipi: notun sayfasına doğrudan yaz",
   "webDriveBanner": "{count, plural, =1{1 ek Google Drive’ında — görmek için izin ver} other{{count} ek Google Drive’ında — görmek için izin ver}}",
-  "@webDriveBanner": {"placeholders": {"count": {"type": "int"}}},
+  "@webDriveBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webDriveShow": "Göster",
   "webAttachmentsOnPhone": "{count, plural, =1{1 ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.} other{{count} ek henüz eklendiği telefondan buluta çıkmadı. Telefonda Ayarlar → Senkron → Drive’ı bağla.}}",
-  "@webAttachmentsOnPhone": {"placeholders": {"count": {"type": "int"}}},
+  "@webAttachmentsOnPhone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fullscreenPullHint": "Tam ekran için çek",
   "fullscreenPullRelease": "Bırak: tam ekran",
   "signOutConfirm": "Çıkış yapmak istediğine emin misin?",
@@ -317,61 +284,19 @@
   "restore": "Geri al",
   "deleteForever": "Kalıcı olarak sil",
   "deleteForeverConfirm": "Bu not kalıcı olarak silinecek. Emin misin?",
-  "assistantDeleteConfirm": "Asistan \"{title}\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?",
-  "@assistantDeleteConfirm": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
   "recordAudio": "Ses kaydı",
   "recording": "Kaydediliyor...",
   "stopAndSave": "Bitir ve ekle",
   "micPermissionDenied": "Mikrofon izni verilmedi",
   "addDrawing": "Çizim ekle",
-  "drawingTitle": "Çizim",
   "addToNote": "Nota ekle",
-  "chatTitle": "Not asistanı",
-  "chatHint": "Notların hakkında soru sor: \"geçen hafta yazdığım tarif neydi?\", \"alışveriş listemde ne eksik?\"",
-  "chatInputHint": "Bir soru yaz...",
   "fontSize": "Yazı boyutu",
   "fontSizePreview": "Notların bu boyutta görünecek",
   "darkSchedule": "Koyu tema zamanlaması",
   "darkScheduleInfo": "Belirlediğin saatler arasında koyu temaya geçilir",
-  "aiTranslate": "Çevir",
   "voiceCommand": "Sesli komut",
-  "semanticSearchToggle": "Yapay zekâ ile anlamsal arama",
-  "semanticSearchHint": "Anlamıyla ara: \"araba masrafları\"...",
-  "briefingTitle": "Günlük brifing",
-  "briefingLoading": "Brifing hazırlanıyor...",
-  "briefingEmpty": "Bugün için içerik yok",
-  "briefingSetting": "Günlük brifing bildirimi",
-  "briefingSettingInfo": "Her sabah seçtiğin saatte günün özeti için bildirim al",
-  "autoTagSetting": "Otomatik etiketle",
-  "autoTagSettingInfo": "Not kapanırken etiketi yoksa yapay zekâ uygun etiketi kendisi ekler",
   "suggestTags": "Etiket öner",
-  "aiFixNote": "Notu düzelt",
-  "fixLevelTitle": "Ne kadar düzeltilsin?",
-  "fixSimple": "Basit",
-  "fixSimpleInfo": "Yalnız imla ve yazım hataları",
-  "fixBalanced": "Dengeli",
-  "fixBalancedInfo": "Cümle yapısı da düzeltilir, daha düzgün yazı",
-  "fixDetailed": "Detaylı",
-  "fixDetailedInfo": "Yazıyı baştan aşağı yeniden düzenler",
   "existingTagsLabel": "Önceki etiketler",
-  "aiSkipCheckedSetting": "İşaretlileri AI düzenlemesi dışında tut",
-  "aiSkipCheckedInfo": "Liste notunu yapay zekâyla düzeltir ya da çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.",
-  "noteUpdatedUndo": "Not güncellendi",
-  "aiImprove": "Notu geliştir",
-  "improveFormal": "Daha resmî yap",
-  "improveShorten": "Kısalt",
-  "improveBullets": "Madde listesine çevir",
-  "improveNumbered": "Sıralı (numaralı) listeye çevir",
-  "replaceNote": "Notu değiştir",
-  "openAsNewNote": "Yeni not olarak",
-  "pdfChatHint": "Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"",
-  "pdfChatInputHint": "PDF hakkında bir soru yaz...",
   "voiceFinish": "Bitir",
   "voiceProcessing": "Söylediklerin uygulanıyor...",
   "voiceNothingHeard": "Kayıtta konuşma algılanamadı",
@@ -387,13 +312,6 @@
   "remindersUntitled": "Adsız not",
   "remindersEdit": "Zamanı değiştir",
   "remindersRemove": "Hatırlatıcıyı kaldır",
-  "aiModelChat": "Özet ve sohbet",
-  "aiModelShort": "Başlık ve etiket",
-  "aiModelDocument": "Belge sohbeti ve PDF özeti",
-  "aiModelTranslate": "Çeviri",
-  "aiModelVoice": "AI sesli not asistanı",
-  "aiModelAuto": "Otomatik (önerilen)",
-  "aiModelsInfo": "Her iş için ayrı model seçebilirsin: kısa metin işleri hızlı modelle yeter, uzun belge işi yetenekli model ister. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.",
   "clearNote": "İçeriği temizle",
   "clearNoteConfirm": "Notun içeriği (metin ve liste maddeleri) silinecek. Emin misin?",
   "calculatorTitle": "Hesap makinesi",
@@ -409,13 +327,7 @@
       }
     }
   },
-  "noteChatHint": "Bu not hakkında bir şey sor",
-  "noteChatIntro": "Notun içeriği ve ekleri (PDF/görsel) okunur, sorunu ona göre yanıtlar.",
   "dictationProcessing": "Yazıya dökülüyor...",
-  "aiDailyManualInfo": "Ücretsiz planda bu içerik günlük hakkını boşa harcamamak için otomatik oluşturulmaz. Günde bir kez, aşağıdaki düğmeyle oluşturabilirsin.",
-  "aiGenerate": "Oluştur",
-  "aiGeneratedTodayInfo": "Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.",
-  "voiceAssistantTitle": "Sesli not asistanı",
   "voiceListening": "Dinliyorum...",
   "voiceTapHint": "Dokun ve konuş; bitirmek için tekrar dokun",
   "voiceModeSetting": "Kullanım şekli",
@@ -459,20 +371,11 @@
   "autoStartHintAction": "Aç",
   "exactAlarmHint": "Alarm izni kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir",
   "exactAlarmHintAction": "İzni aç",
-  "videoTooBigForAi": "Video yapay zekâya göndermek için çok büyük ({mb} MB). Daha kısa çek.",
-  "@videoTooBigForAi": {
-    "placeholders": {
-      "mb": {
-        "type": "int"
-      }
-    }
-  },
   "permCamera": "Kamera",
   "permCameraInfo": "Görüntülü not ve fotoğraf çekimi için gerekli",
   "newVideoNote": "Video çek",
   "videoLocalOnly": "Bu video yalnızca bu cihazda saklanır (buluta yüklenmez)",
   "videoToNote": "Videodan not çıkar",
-  "videoToNoteRunning": "Video inceleniyor…",
   "permGranted": "İzin verildi",
   "permGrant": "İzin ver",
   "permOpenSettings": "Ayarları aç",
@@ -520,8 +423,6 @@
       }
     }
   },
-  "aiOfflineTitle": "Bağlantı yok",
-  "aiOfflineBody": "Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.",
   "pendingUploadsInfo": "Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.",
   "checkedHeader": "İşaretliler ({count})",
   "@checkedHeader": {
@@ -542,26 +443,10 @@
   "removeItem": "Maddeyi sil",
   "copyWholeNote": "Tüm notu kopyala",
   "allCopied": "Tüm not panoya kopyalandı",
-  "speechPlay": "Sesli dinle",
-  "speechPause": "Duraklat",
-  "speechResume": "Devam et",
-  "speechStop": "Durdur",
   "speechRate": "Okuma hizi",
   "speechNoVoices": "Bu cihazda yuklu ses bulunamadi",
   "speechVoiceAutoInfo": "Diğer diller otomatik olarak erkek sesiyle okunur",
   "listening": "Dinleniyor...",
-  "listenPlay": "Sesli dinle",
-  "listenReadingPdf": "Belge okunuyor...",
-  "listenConvertWithAi": "Yapay zekâ ile dönüştür",
-  "listenMakePodcast": "Tam podcast",
-  "listenMakePodcastSummary": "Özet podcast",
-  "listenOriginalText": "Özgün metin",
-  "listenPodcastReady": "Podcast anlatımı hazır",
-  "listenPodcastCached": "Daha önce üretilmişti — token harcanmadı",
-  "listenRegenerate": "Yeniden üret",
-  "listenNoText": "Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.",
-  "readDocument": "Belge oku (Word, PDF, sunum)",
-  "readDocUnsupported": "Bu dosya türü okunamıyor.",
   "exportPdf": "PDF olarak dışa aktar",
   "pdfTitleField": "Başlık",
   "pdfContentField": "İçerik",
@@ -601,36 +486,15 @@
   },
   "settingsLanguage": "Dil",
   "languageSystem": "Sistem dili",
-  "settingsSpeech": "Sesli okuma",
-  "aiAdvanced": "Gelişmiş: model ve API anahtarı",
-  "aiAdvancedInfo": "Model seçimi ve kendi Gemini anahtarın. Çoğu kullanıcı için gerekli değildir.",
-  "openBriefing": "Brifingi aç",
   "syncTitle": "Senkronizasyon",
   "syncLimitTitle": "Otomatik yükleme sınırı",
   "syncLimitInfo": "Bu boyuttan büyük ekler cihazda kalır, buluta yüklenmez. Not metni her zaman senkronlanır.",
   "syncLimitUnlimited": "Sınırsız",
   "importBackup": "Yedekten geri yükle",
-  "importBackupDone": "{count} not geri yüklendi",
-  "@importBackupDone": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "importBackupInvalid": "Geçersiz yedek dosyası",
-  "aiHubTitle": "Yapay zekâ",
-  "aiSummarizeInfo": "Kısa bir özet çıkarır",
-  "aiImproveInfo": "Üslubu değiştirir: resmî, kısa ya da liste",
-  "aiTranslateInfo": "Notu seçtiğin dile çevirir",
-  "aiFixNoteInfo": "Yazım ve noktalamayı düzeltir",
   "moveToFolder": "Klasöre taşı",
   "assistantGenericError": "Bir sorun oluştu, tekrar dener misin?",
   "quickAddTooltip": "Yeni not — tip seç",
-  "autoTitleSetting": "Kapatırken başlık öner",
-  "autoTitleSettingInfo": "Editörden çıkarken başlıksız kalan nota içeriğinden otomatik kısa bir başlık yazılır.",
-  "hubBriefingInfo": "Güne bakış: hatırlatıcılar ve son notlar",
-  "hubReadInfo": "PDF/Word belgesini sesli dinle",
   "annotate": "Üzerine yaz",
   "annotateDone": "Yazmayı bitir",
   "newPdfNote": "PDF'ten not",
@@ -776,73 +640,7 @@
   "more": "Diğer",
   "undone": "Geri alındı",
   "filterOthers": "Klasörsüz ve etiketsiz",
-  "chatSuggestion1": "Alışveriş listemde ne eksik?",
-  "chatSuggestion2": "Bu haftaki iş notlarımı özetle",
-  "chatSuggestion3": "Yarın için hatırlatıcım var mı?",
-  "aiPointsToday": "Bugünkü puan",
-  "aiPointsOf": "{used} / {total}",
-  "@aiPointsOf": {
-    "placeholders": {
-      "used": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "aiPointsRenew": "gece yarısı yenilenir",
-  "aiChatWithNotes": "Not asistanı",
-  "aiChatInputHint": "Notlarına bir şey sor…",
-  "aiChatLooking": "notlarına bakıyor…",
-  "aiChatFullScreen": "Tam ekran",
-  "aiOnYourNotes": "Notların üzerinde",
-  "aiTaskDuplicates": "Kopyaları temizle",
-  "aiTaskDuplicatesInfo": "{count} kopya not var",
-  "@aiTaskDuplicatesInfo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "duplicatesTitle": "Kopya notlar",
-  "duplicatesHint": "Her kümede en eski not korunur, kalanlar çöp kutusuna taşınır.",
-  "duplicatesKeepBadge": "korunur",
-  "duplicatesDeleteAll": "Kopyaları çöpe taşı",
-  "duplicatesDone": "{count} kopya çöp kutusuna taşındı",
-  "@duplicatesDone": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "aiRecentActions": "Son işlemler",
-  "aiHistoryClear": "Temizle",
-  "aiHistoryQuestion": "Soru",
-  "aiHistoryNoteAction": "Not işlemi",
   "aiHistoryVoiceNote": "AI sesli not",
-  "aiTaskWeekSummary": "Haftayı özetle",
-  "aiTaskWeekSummaryInfo": "Son 7 günün notlarından tek özet",
-  "aiTaskTagUntagged": "Etiketsizleri etiketle",
-  "aiTaskTagUntaggedInfo": "{count} not etiket bekliyor",
-  "@aiTaskTagUntaggedInfo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "aiTaskSuggestTitles": "Başlık öner",
-  "aiTaskSuggestTitlesInfo": "{count} başlıksız not var",
-  "@aiTaskSuggestTitlesInfo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "sectionPinnedShort": "Sabit",
   "sectionUrgent": "Acil",
   "urgentMark": "Acil işaretle",
@@ -864,13 +662,11 @@
   "viewToggle": "Görünüm",
   "viewGrid": "Izgara",
   "viewList": "Liste",
-  "searchModeMeaning": "Anlam",
   "filterReminded": "Alarmlı",
   "filterLocked": "Kilitli",
   "sortColor": "Renk",
   "sortActive": "En çok çalışılan",
   "voicePreview": "Sesi dene",
-  "voicePreviewCached": "Örnek bir kez üretilir, sonra kayıttan çalınır",
   "reorderHint": "Kartı basılı tutup istediğin yere sürükle",
   "filterSheetTitle": "Süz",
   "filterReset": "Sıfırla",
@@ -887,19 +683,13 @@
   "formatHighlight": "Renkli vurgu",
   "formatInfo": "Biçim, metnin içinde işaretle taşınır (**kalın** gibi); dışa aktarmada ve okumada işaretler görünmez.",
   "formatMenu": "Biçim…",
-  "noteFont": "Yazı tipi",
   "noteFontDefault": "Varsayılan",
   "noteFontSerif": "Kitap (serif)",
   "noteFontMono": "Daktilo",
   "noteTextSize": "Yazı boyutu",
   "formatClear": "Biçimi temizle",
   "formatHeading": "Başlık",
-  "formatHeading1": "Büyük başlık",
-  "formatHeading2": "Alt başlık",
-  "formatNormalText": "Normal metin",
   "noteTextOpacity": "Şeffaflık",
-  "assistantVoiceSetting": "Asistan sesli yanıtlasın",
-  "assistantVoiceSettingInfo": "Sesli asistan yanıtını yüksek sesle okur (yalnız telefonda).",
   "assistantMute": "Sesi kapat",
   "assistantUnmute": "Sesi aç",
   "assistantMakeNote": "Yine de nota dönüştür",
@@ -908,17 +698,12 @@
   "back": "Geri",
   "addTextBlock": "Metin ekle",
   "noteBackgroundImage": "Zemin görseli",
-  "chooseBackgroundImage": "Görsel seç",
   "changeBackgroundImage": "Görseli değiştir",
   "removeBackgroundImage": "Zemini kaldır",
   "dashboardBackground": "Ana ekran zemini",
   "dashboardBackgroundInfo": "Not ızgarasının arkasında duran görsel (yalnız bu cihazda).",
-  "aiProvider": "Yapay zekâ sağlayıcısı",
-  "aiProviderInfo": "Kendi anahtarınla çalışan sağlayıcıyı seç. Her sağlayıcının anahtarı ayrı saklanır; aralarında geçiş yapınca yeniden girmen gerekmez.",
   "apiKeyFieldLabel": "API anahtarı",
   "getApiKey": "Anahtarı nereden alırım?",
-  "recommendedModel": "Önerilen",
-  "freeTierBadge": "Ücretsiz kademe var",
   "continueWithoutAccount": "Hesapsız devam et",
   "localAccountInfo": "Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez. Dahili yapay zekâ, kişiler ve paylaşım Google hesabı ister; yapay zekâyı kendi API anahtarınla kullanabilirsin. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.",
   "localAccountBadge": "Yerel hesap",
@@ -973,32 +758,7 @@
   "scanWorking": "Düzeltiliyor…",
   "scanPdfAdded": "Tarama, PDF eki olarak nota eklendi",
   "premiumTitle": "Premium",
-  "premiumStatusActive": "Premium etkin — {date} tarihine kadar",
-  "@premiumStatusActive": {
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
   "premiumStatusFree": "Ücretsiz sürümü kullanıyorsun",
-  "premiumPerksTitle": "Premium ile ne değişir?",
-  "premiumPerkAi": "Günlük yapay zekâ puanı",
-  "premiumPerkAttach": "Ek dosya boyutu",
-  "premiumPerkStorage": "Bulut depolama alanı",
-  "premiumPerkAuto": "Otomatik günlük içerik",
-  "premiumPerkAutoBody": "Günlük brifing ve öneriler her gün kendiliğinden hazırlanır; ücretsizde yalnız düğmeyle üretilir.",
-  "premiumHowTitle": "Nasıl edinilir?",
-  "premiumHowBody": "Premium yakında Play Store üzerinden satın alınabilecek. Şu an erken erişim dönemindeyiz.",
-  "premiumByokHint": "Kendi Gemini API anahtarınla yapay zekâ kotasız çalışır",
-  "premiumByokWhere": "Premium'dan bağımsız · Ayarlar → Yapay zekâ",
-  "premiumDiscoverTitle": "Gözden kaçan özellikler",
-  "discoverScanBody": "Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla aranabilir PDF olur — metin katmanı cihazda, ücretsiz üretilir.",
-  "discoverSemanticBody": "Arama kutusundaki \"Akıllı\" sekmesi kelime değil anlam arar: \"uçak saatleri\" yazınca seyahat notun çıkar.",
-  "discoverAssistantBody": "Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9'da diş randevusu\" demen yeter.",
-  "discoverLockBody": "Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget'a ve yapay zekâya hiç sızmaz.",
-  "discoverHiddenBody": "Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.",
-  "discoverExportBody": "Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).",
   "guestSignInUnavailable": "Hesapsız giriş şu an kapalı: Firebase konsolunda Authentication → Sign-in method → Anonymous açık değil. Google ile giriş yapabilir ya da yönetici bu yöntemi açtıktan sonra yeniden deneyebilirsin.",
   "googleSignInUnavailable": "Google ile giriş şu an kapalı: Firebase konsolunda Google oturum açma yöntemi etkin değil.",
   "signInNetworkError": "İnternete ulaşılamadı. Bağlantını kontrol edip yeniden dene.",
@@ -1023,7 +783,6 @@
       }
     }
   },
-  "screenAiSearchHint": "Anlamca ara…",
   "archiveInsights": "Arşivimde neler var?",
   "archiveInsightsStats": "{count} not · {files} ek · {stale} not bir yıldır açılmadı",
   "@archiveInsightsStats": {
@@ -1065,11 +824,6 @@
   "fontNeedsDownload": "Seçilince bir kez indirilir",
   "followSystemTextScale": "Sistem yazı boyutunu izle",
   "followSystemTextScaleInfo": "Telefonun yazı boyutu ve kalın metin ayarı uygulamaya da geçer; yukarıdaki boyut onunla çarpılır.",
-  "fontGroupSans": "Sade",
-  "fontGroupSerif": "Kitap",
-  "fontGroupMono": "Daktilo",
-  "fontGroupHand": "El yazısı",
-  "appFontDefaultSuffix": "varsayılan",
   "pdfSelectOcrRunning": "Metin tanınıyor…",
   "pdfSelectOcrNone": "Bu sayfada metin bulunamadı",
   "pdfSelectCopied": "{n} karakter kopyalandı",
@@ -1085,24 +839,9 @@
   "bubbleCollapse": "Balonu küçült",
   "bubbleHint": "Buraya notunu yaz…",
   "bubbleTapToPlace": "Sayfada balonu bırakmak istediğin yere dokun",
-  "aiModelPodcast": "Podcast anlatısı",
-  "listenAiVoice": "Yapay zekâ sesiyle dinle",
-  "listenAiVoiceFailed": "Yapay zekâ seslendirmesi başarısız oldu ({error}). Cihaz sesiyle okunuyor.",
-  "@listenAiVoiceFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
   "ttsSectionTitle": "Seslendirme",
   "ttsEngineDevice": "Cihaz sesi",
-  "ttsEngineAi": "Yapay zekâ",
   "ttsEngineDeviceInfo": "Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.",
-  "ttsEngineAiInfo": "Gemini'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.",
-  "ttsEngineAiUnavailable": "Yapay zekâ sesi kendi Gemini anahtarını ister. Anahtar eklenene kadar okuma cihaz sesiyle yapılır.",
-  "ttsModel": "Seslendirme modeli",
-  "ttsVoice": "Yapay zekâ sesi",
   "ttsEngineLocal": "Türkçe ses",
   "ttsEngineLocalInfo": "Antalia: telefonda çalışan Türkçe ses modeli. Bedava, çevrimdışı ve kotasız; model bir kez indirilir (~50 MB). Yalnız Türkçe okur — başka dildeki metinler cihaz sesiyle okunur. Ses yapaydır, gerçek bir kişiye ait değildir.",
   "ttsLocalUnsupported": "Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.",
@@ -1126,7 +865,6 @@
       }
     }
   },
-  "listenLocalVoice": "Türkçe sesle (Antalia) dinle",
   "shareAsNotePreparing": "Not paketi hazırlanıyor…",
   "shareAsTextEmpty": "Bu notta paylaşılacak yazı yok.",
   "sharePdfWithBubbles": "Balonlu PDF olarak",
@@ -1166,7 +904,6 @@
   "speechPitch": "Ses tonu",
   "speechVoicePickerTitle": "Ses seçimi",
   "formatRemove": "Kaldır",
-  "exportTitle": "Dışa aktar",
   "exportNotesOption": "Ayarlı PDF / Word…",
   "exportNotesOptionInfo": "Notun yazısı ve görselleri PDF ya da Word olarak, düzeni ayarlanır; balonlar dahil değil",
   "captureNoteTitle": "Not başlığı (isteğe bağlı)",
@@ -1187,10 +924,6 @@
   "exportAlignRight": "Sağ",
   "exportImageWidth": "Genişlik",
   "exportImageLine": "Konum",
-  "aiModelSearch": "Model ara",
-  "aiModelOthers": "Diğer modeller",
-  "aiModelNoMatch": "Eşleşen model yok.",
-  "aiModelAutoInfo": "Uygulama sırayla en uygun modeli dener.",
   "imageOcrCharsSelected": "{count} karakter seçildi",
   "@imageOcrCharsSelected": {
     "placeholders": {
@@ -1223,28 +956,8 @@
       }
     }
   },
-  "aiModelShowAll": "Tümünü göster",
-  "aiModelShowAllInfo": "Uygulamanın kullanmadığı modeller de listelenir.",
   "rotateFailed": "Görsel döndürülemedi.",
-  "dashboardBackgroundPick": "Zemin görseli seç",
   "dashboardBackgroundChange": "Zemin görselini değiştir",
-  "podcastRenderingAudio": "Ses hazırlanıyor: {done}/{total} parça",
-  "@podcastRenderingAudio": {
-    "placeholders": {
-      "done": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "podcastExportAudio": "Ses dosyası olarak dışa aktar",
-  "podcastExportAudioCost": "Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.",
-  "podcastShareText": "Metni paylaş",
-  "podcastSaveAsNote": "Yeni not olarak kaydet",
-  "podcastSavedAsNote": "Podcast metni not olarak kaydedildi.",
-  "listenPreparingVoice": "Ses hazırlanıyor…",
   "appearancePreviewTitle": "Örnek metin",
   "appearancePreviewNoteTitle": "Örnek not başlığı",
   "appearancePreviewBody": "Notların bu yazı tipi ve boyutta görünecek. Satır içi **kalın**, ~altı çizili~ ve ==2:vurgulu== metinler de böyle durur.",
@@ -1280,7 +993,6 @@
   "noteSearchEmptyHint": "Notun metninde, maddelerinde ve sayfa notlarında anında arar. Ek görsellerin ve PDF'lerin içi için aşağıdaki taramayı başlat.",
   "noteSearchNoHit": "Eşleşme bulunamadı.",
   "noteSearchScanAttachments": "Ekleri tara",
-  "noteSearchAskAi": "Yapay zekâya sor",
   "noteTitleLabel": "Başlık",
   "noteBodyLabel": "Not metni",
   "itemLabel": "Madde",
@@ -1367,7 +1079,6 @@
   "attachmentTagEmbed": "Yazıya göm",
   "bubbleModeBubble": "Balon",
   "attachmentTagEmbedInfo": "Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır",
-  "attachmentTagPickText": "Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.",
   "attachmentTagLinkHere": "Buraya bağla",
   "attachmentTagPendingBanner": "{name} bağlanacak — yazıyı seç",
   "@attachmentTagPendingBanner": {
@@ -1382,7 +1093,6 @@
   "docNameScan": "Tarama notları",
   "docNameImage": "Görsel notları",
   "docNameVideo": "Görüntü notları",
-  "folderManage": "Klasörü yönet",
   "folderEmpty": "Burada henüz not yok",
   "folderNoteCount": "{count} not",
   "folderCardEmpty": "Boş",
@@ -1394,18 +1104,12 @@
     }
   },
   "folderEmptyHint": "Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.",
-  "brainstormIntro": "Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.",
-  "brainstormOutlineTitle": "Ana hat",
-  "brainstormInputHint": "Bir fikir yaz ya da soru sor…",
-  "brainstormAddIdea": "Nota ekle",
-  "brainstormAdded": "Nota eklendi",
   "folderShared": "Bu klasör bir arkadaşınla ortak",
   "friendsTitle": "Kişiler",
   "friendsAdd": "Arkadaş ekle",
   "friendsEmpty": "E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.",
   "friendsRequestsTitle": "İstekler",
   "friendsListTitle": "Arkadaşlarım",
-  "friendsAddEmailHint": "arkadas@eposta.com",
   "friendsSendRequest": "İstek gönder",
   "friendsRequestSent": "İstek gönderildi",
   "friendsNotFound": "Bu e-postayla kayıtlı bir kullanıcı bulunamadı. Kişinin uygulamayı Google hesabıyla en az bir kez açmış olması gerekir.",
@@ -1416,10 +1120,7 @@
   "friendsRemove": "Kaldır",
   "friendsRemoveConfirmTitle": "Arkadaşlıktan çıkar",
   "friendsRemoveConfirmBody": "{name} arkadaş listenden kaldırılsın mı? Onunla paylaştığın klasörler artık görünmez.",
-  "friendsNeedsAccount": "Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.",
   "friendsSearchHint": "Ad (en az 3 harf) ya da tam e-posta",
-  "friendsSearchTab": "Ara",
-  "friendsSearchEmailTab": "E-posta ile",
   "friendsSearchEmpty": "Sonuç yok",
   "friendsSearchTooShort": "Aramak için en az 3 harf ya da tam bir e-posta yaz",
   "friendsSearchAdd": "Ekle",
@@ -1457,7 +1158,6 @@
   "inboxFrom": "{name} gönderdi",
   "inboxAccept": "Notlarıma ekle",
   "inboxAccepted": "Not notlarına eklendi",
-  "folderShelfExpand": "Klasörleri büyüt",
   "folderShelfCollapse": "Klasörleri daralt",
   "accountSheetLocalInfo": "Notların yalnız bu cihazda. Google hesabı bağlarsan yedeklenir ve arkadaş ekleyebilirsin.",
   "accountSettings": "Hesap ayarları",
@@ -1467,10 +1167,7 @@
   "areaSelectHint": "Kopyalamak ya da yapay zekâya sormak istediğin alanı parmağınla çiz.",
   "areaCopyImage": "Görsel olarak kopyala",
   "areaCopied": "Seçilen alan panoya kopyalandı.",
-  "areaAskAi": "Yapay zekâya sor",
   "areaAskTitle": "Seçilen alan",
-  "areaAskHint": "İstersen bir soru yaz (boş bırakırsan formülü/metni çıkarıp açıklar).",
-  "areaAskRun": "Sor",
   "areaCaptureFailed": "Seçilen alanın görüntüsü alınamadı.",
   "areaTooSmall": "Seçilen alan çok küçük.",
   "bubbleTextFill": "Yazı zemini",
@@ -1480,7 +1177,6 @@
   "bubbleTextAlignRight": "Sağa hizala",
   "dashboardBackgroundPattern": "Desen",
   "dashboardBackgroundColor": "Zemin rengi",
-  "dashboardBackgroundImageSection": "Zemin görseli",
   "dashboardBackgroundReset": "Varsayılana dön",
   "patternNone": "Düz",
   "patternDots": "Noktalı",
@@ -1580,8 +1276,6 @@
   "reminderQuickTonight": "Bu akşam 18:00",
   "reminderQuickTomorrow": "Yarın 09:00",
   "reminderQuickNextWeek": "Gelecek hafta",
-  "reminderQuickCustom": "Tarih seç…",
-  "reminderQuickTitle": "Ne zaman hatırlatılsın?",
   "reminderSnooze": "1 saat ertele",
   "reminderSnoozed": "Hatırlatıcı ertelendi",
   "reminderCountLabel": "{count, plural, one{1 hatırlatıcı} other{{count} hatırlatıcı}}",
@@ -1692,8 +1386,6 @@
     }
   },
   "imagesFitSingleRow": "Tek satıra sığdır",
-  "briefingNotificationTitle": "Günaydın! ☀️",
-  "briefingNotificationBody": "Bugünün brifingi hazır — hatırlatıcıların, notların ve önemli e-postaların özeti için dokun.",
   "reminderDone": "Tamamlandı",
   "dateToday": "Bugün",
   "dateTomorrow": "Yarın",
@@ -1718,21 +1410,12 @@
   "collaboratorsLeave": "Paylaşımdan ayrıl",
   "collaboratorsLeaveConfirm": "Bu not artık ana ekranında görünmeyecek. Ayrılmak istiyor musun?",
   "collaboratorsSaved": "Paylaşım güncellendi",
-  "collaboratorsCount": "{count} kişiyle paylaşıldı",
-  "@collaboratorsCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "collaboratorsOnlyOwner": "Ortak çalışanları yalnız notun sahibi değiştirebilir.",
   "sharedByName": "{name} paylaştı",
   "navNotes": "Notlar",
   "railExpand": "Menüyü genişlet",
   "railCollapse": "Menüyü daralt",
   "newNoteShort": "Yeni not",
-  "newChecklistShort": "Yeni liste",
   "listPaneHide": "Not listesini gizle",
   "listPaneShow": "Not listesini göster",
   "keyboardShortcuts": "Klavye kısayolları",
@@ -1756,8 +1439,8 @@
   "goHome": "Ana sayfaya dön",
   "loginFeatureSyncTitle": "Her cihazda aynı notlar",
   "loginFeatureSyncBody": "Telefon, tablet, bilgisayar ve web arasında anında senkron.",
-  "loginFeatureAiTitle": "Yapay zekâ yanında",
-  "loginFeatureAiBody": "Özetle, sor, sesle yaz; belgelerinle konuş.",
+  "loginFeatureAiTitle": "Akıllı yardımcılar",
+  "loginFeatureAiBody": "Sesle hızlı not al, yazım hatalarını düzelt, market reyonlarını ve etiketleri düzenle.",
   "loginFeatureShareTitle": "Birlikte yaz",
   "loginFeatureShareBody": "Notları ve klasörleri arkadaşlarınla canlı paylaş.",
   "loginFeatureInkTitle": "Kalem ve PDF",
@@ -1781,8 +1464,6 @@
   },
   "trashSoonSection": "Yakında kalıcı silinecek",
   "trashRestSection": "Diğer silinenler",
-  "aiHubTagline": "Notlarına sor, özetlet, düzenlet.",
-  "aiToolsSection": "Araçlar",
   "folderOrderTitle": "Klasör sırası",
   "folderReorder": "Klasörleri sırala",
   "folderOrderManual": "Elle",
@@ -1872,13 +1553,11 @@
   "tplReadingDesc": "Kaynak, özet, alıntılar",
   "settingsThemeHeader": "Tema",
   "settingsGroupPrivacyNotify": "Gizlilik ve bildirim",
-  "settingsGroupAutomatic": "Kendiliğinden",
   "settingsGroupText": "Yazı",
   "settingsGroupDictation": "Sesle yazma",
   "settingsGroupAttachments": "Ekler",
   "settingsGroupBackup": "Yedek",
   "settingsGroupSession": "Oturum",
-  "settingsGroupLock": "Kilit",
   "settingsSecurityTitle": "Güvenlik",
   "settingsSecuritySummary": "Not kilidi, uygulama kilidi",
   "settingsGroupAbout": "Hakkında",
@@ -1926,19 +1605,9 @@
   },
   "saveAsTemplate": "Şablon olarak kaydet",
   "templateCreate": "Oluştur",
-  "templateCreateWithCount": "Oluştur · {count} madde",
-  "@templateCreateWithCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "templateListChecks": "Onay kutulu",
   "templateListNumbers": "Numaralı",
-  "templateItems": "Maddeler",
   "templateAddItem": "Madde ekle",
-  "templateSuggestionsInfo": "Öneriye dokununca listeye girer, yine dokununca çıkar.",
   "tplShopProduce": "Meyve ve sebze",
   "tplShopProduceItems": "Domates, Salatalık, Soğan, Patates, Limon, Muz, Elma, Maydanoz",
   "tplShopBreakfast": "Kahvaltılık",
@@ -2035,14 +1704,6 @@
   "embedNewVideo": "Video",
   "embedNewYouTube": "YouTube",
   "embedPickTitle": "Ne gömülsün?",
-  "embedPickTitleFor": "“{label}” yazısına göm",
-  "@embedPickTitleFor": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
   "embedPickInfo": "Gömülen ek yazıya dokununca yerinde açılır.",
   "embedSectionNew": "Yeni ekle",
   "embedSectionExisting": "Bu nottaki ekler",
@@ -2055,7 +1716,6 @@
   "guideTitle": "Kullanım kılavuzu",
   "guideMenuInfo": "Bütün özellikler, adım adım",
   "guideSearchHint": "Kılavuzda ara — “sayfa”, “YouTube”",
-  "guideContents": "İçindekiler",
   "guideOpenScreen": "Göster",
   "guideNoResults": "«{query}» için sonuç yok",
   "@guideNoResults": {
@@ -2071,8 +1731,6 @@
   "menuSectionCopy": "Kopyala",
   "menuSectionTools": "Araçlar",
   "menuSectionProtect": "Koruma ve depolama",
-  "menuSectionContent": "İçerik",
-  "menuSectionPeople": "Hesap ve kişiler",
   "menuSectionApp": "Uygulama",
   "cardMoreFiles": "+{count} dosya daha",
   "@cardMoreFiles": {
@@ -2158,8 +1816,12 @@
   "viewModeChanged": "{from} → {to}",
   "@viewModeChanged": {
     "placeholders": {
-      "from": {"type": "String"},
-      "to": {"type": "String"}
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
     }
   },
   "videoRotate": "Görüntüyü döndür",
@@ -2204,7 +1866,6 @@
   "customizeShowItem": "Göster",
   "customizeModeTitle": "Düzenleme modu",
   "customizeModeTitleShort": "Düzen",
-  "customizeModeHint": "Dokun: gizle ya da göster · anında uygulanır",
   "customizeHiddenCount": "{count} düğme gizli · dokunarak değiştir",
   "@customizeHiddenCount": {
     "placeholders": {
@@ -2232,12 +1893,10 @@
   },
   "personalizeTitle": "Kişiselleştir",
   "personalizeInfo": "Hangi alan ve düğmeler görünsün, eklentiler",
-  "personalizeOpen": "Kişiselleştirmeyi aç",
   "customizeStartTitle": "Ekranda düzenle",
   "customizeStartInfo": "Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Değişiklik anında uygulanır; bitince üstteki şeritten Bitti'ye bas.",
   "customizeStart": "Düzenleme modunu başlat",
   "customizeActive": "Düzenleme modu açık",
-  "customizeModeShort": "Ekranlarda dokunarak gizle/göster",
   "customizeHint": "Dokun: gizle/göster · Sırala: yerini değiştir",
   "customizeShown": "Görünenler",
   "customizeSurfaceBottomBar": "Alt çubuk",
@@ -2247,7 +1906,6 @@
   "customizeSurfacePinned": "Sabit ek",
   "customizeSurfacePen": "Kalemler",
   "personalizeModules": "Eklentiler",
-  "personalizeModulesInfo": "Bir eklentiyi kapatınca ona ait düğmeler her yerden kalkar.",
   "moduleAi": "Yapay zekâ",
   "moduleAiInfo": "Ana ekran ve not ekranındaki yapay zekâ düğmeleri",
   "moduleVoice": "Ses",
@@ -2266,8 +1924,6 @@
   "moduleCollaboration": "Ortak çalışma",
   "moduleCollaborationInfo": "Not ekranındaki kişi ekle düğmesi",
   "moduleMixed": "kısmen açık",
-  "personalizeEditorBar": "Not ekranı · alt çubuk",
-  "personalizeBarInfo": "Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar, okla öbür kapsüle taşı. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.",
   "personalizeBarLeft": "Sol kapsül · araçlar",
   "personalizeBarRight": "Sağ kapsül · yapay zekâ ve ses",
   "personalizeBarReset": "Alt çubuğu varsayılana döndür",
@@ -2275,14 +1931,9 @@
   "personalizeBarMoveRight": "Sağ kapsüle taşı",
   "personalizeBarMoveLeft": "Sol kapsüle taşı",
   "reorderHandle": "Sırala",
-  "personalizeEditorTop": "Not ekranı · üst çubuk ve alanlar",
-  "personalizeQuickAdd": "Yeni not menüsü (+)",
-  "personalizeAttachSheet": "Ekle levhası (notun içinde +)",
   "personalizeVideo": "Video",
   "personalizeHome": "Ana ekran",
-  "personalizeHomeItemsInfo": "Seçili olanlar ana ekranda görünür; düzenleme modunda ana ekrandaki düğmelere dokunarak da gizleyebilirsin.",
   "personalizeBubbles": "Balonlar",
-  "personalizeChipsInfo": "Seçili olanlar görünür; dokunarak aç ya da kapat.",
   "personalizeReset": "Varsayılana dön",
   "personalizeResetConfirm": "Bütün görünürlük ve sarma ayarları varsayılana dönsün mü?",
   "personalizeResetDone": "Varsayılana dönüldü",
@@ -2298,14 +1949,6 @@
   "@secondsShort": {
     "placeholders": {
       "seconds": {
-        "type": "int"
-      }
-    }
-  },
-  "personalizeHiddenSummary": "{count} gizli",
-  "@personalizeHiddenSummary": {
-    "placeholders": {
-      "count": {
         "type": "int"
       }
     }
@@ -2328,20 +1971,10 @@
   "transcriptInsertAll": "Tümünü nota ekle",
   "transcriptInserted": "Nota eklendi",
   "transcriptNewNote": "Yeni not",
-  "transcriptRetryAi": "AI ile yeniden dök",
-  "transcriptReadWithAi": "AI ile oku (el yazısı)",
   "transcriptShowTimes": "Zaman damgaları",
   "transcriptDelete": "Transkripti sil",
   "transcriptDeleteConfirm": "Transkript silinsin mi? Kaynak dosya notta kalır.",
   "transcriptEmpty": "Metin bulunamadı.",
-  "transcriptTooLarge": "Kayıt {mb} MB; dahili yapay zekâ en çok 15 MB alabiliyor. Ayarlar'dan kendi Gemini anahtarını girersen büyük kayıtlar da dökülür.",
-  "@transcriptTooLarge": {
-    "placeholders": {
-      "mb": {
-        "type": "int"
-      }
-    }
-  },
   "transcriptUnsupported": "Bu kayıt biçimi ({format}) metne dökülemiyor.",
   "@transcriptUnsupported": {
     "placeholders": {
@@ -2385,14 +2018,12 @@
   "pickPdfTitle": "PDF seç",
   "pickSlidesTitle": "Sunum seç",
   "pickImagesTitle": "Görsel seç",
-  "pickDocumentTitle": "Belge seç",
   "fileAppPickerTitle": "Dosyaları Dosya Okuyucu ile seç",
   "fileAppPickerInfo": "Dosya eklerken doğrudan Dosya Okuyucu açılır ve yalnız istenen türün dosyaları (en yenisi üstte) listelenir. Kapalıyken uygulama seçimi sorulur.",
   "viewModeAttached": "Ek",
   "viewModeAttachedHint": "Ek olarak — alttaki ek şeridinde durur",
   "textToBubblesPreparing": "Metin belgeye diziliyor…",
   "attachmentActions": "Ek işlemleri",
-  "attachmentOpen": "Aç",
   "attachmentUploadQueued": "Yüklenmeyi bekliyor",
   "attachmentWaitingOwner": "Ekleyenin cihazından yüklenmesi bekleniyor",
   "attachmentsUploadingCount": "{count} ek yükleniyor",
@@ -2417,7 +2048,6 @@
   "attachmentSavedAs": "{name} kaydedildi",
   "attachmentSaveAsFailed": "Dosya kaydedilemedi",
   "sharedHubTitle": "Gelen ve paylaşılanlar",
-  "sharedHubInbox": "Gelen",
   "@attachmentSavedAs": {
     "placeholders": {
       "name": {
@@ -2631,19 +2261,6 @@
   "quickAddFromDevice": "Cihazdan dosya seç",
   "quickAddFileWhat": "Bu dosyayla ne yapalım?",
   "quickAddFileUnsupported": "Bu dosya türü desteklenmiyor",
-  "chatScopeAll": "Tüm notlar",
-  "chatScopeNote": "Bu not",
-  "chatScopeDoc": "Bu belge",
-  "chatModeQa": "Soru-cevap",
-  "chatModeBrainstorm": "Beyin fırtınası",
-  "chatSuggestOutline": "Ana hat",
-  "chatSuggestIdeas": "Fikir ver",
-  "chatSuggestGaps": "Eksikleri bul",
-  "chatPromptOutline": "Bu notun ana hatlarını kısa maddelerle çıkar.",
-  "chatPromptIdeas": "Bu not için yeni fikirler ve açılar öner.",
-  "chatPromptGaps": "Bu notta eksik kalan, belirsiz ya da çelişen yerler neler?",
-  "aiChatRowTitle": "Sohbet",
-  "aiChatRowInfo": "Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası",
   "shareFolderTogether": "Klasörü birlikte düzenle",
   "shareTogetherInfo": "Aynı notu/klasörü ikiniz de görür ve değiştirirsiniz",
   "shareCopyInfo": "Arkadaşının gelen kutusuna bağımsız bir kopya gider",
@@ -2710,7 +2327,7 @@
   "lockChangePassword": "Şifreyi değiştir",
   "lockChangePattern": "Deseni değiştir",
   "lockWebDeviceInfo": "Tarayıcıda parmak izi yok: kilitli notları web’de de korumak için şifre ya da desen seç.",
-  "lockNotEncryption": "Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller.",
+  "lockNotEncryption": "Kilitli notun gövdesi, maddeleri ve sayfa notları cihazda AES-256-GCM ile şifrelenip eşitlenir; parmak izi kilidinde anahtar yalnız bu cihazın güvenli deposundadır. Şifre veya desen kilidinde anahtar sırrından türetilir — unutursan eski kilitli içerik geri çözülemez.",
   "versionHistory": "Sürüm geçmişi",
   "versionHistoryInfo": "Notun metni açıldığında, uzun düzenlemede yarım saatte bir ve yapay zekâ değiştirmeden önce saklanır. Ekler sürümlenmez.",
   "versionHistoryEmpty": "Henüz sürüm yok. Notu düzenledikçe burada birikir.",
@@ -2755,18 +2372,10 @@
   "listeningModeDictation": "Doğrudan yazım",
   "dictationPanelHint": "Konuştukça imlecin olduğu yere yazılır",
   "voiceStartShort": "Başla",
-  "aiVoiceRowTitle": "AI sesli not",
-  "aiVoiceRowInfoEditor": "Konuş; yapay zekâ düzenleyip bu nota eklesin",
-  "aiVoiceRowInfoHub": "Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun",
   "archivePaperDashed": "Kesikli çizgili",
-  "itemDividerSolid": "Alta çizgi çek",
-  "itemDividerDashed": "Alta kesikli çizgi",
-  "itemDividerDotted": "Alta noktalı çizgi",
   "itemDividerRemove": "Çizgiyi kaldır",
   "fileUseAttachInfo": "Nota ek olarak girer; oynatılabilir",
   "allNotesChip": "Tümü",
-  "archiveAiSearch": "AI ile ara (anlamca)",
-  "archiveAiSearchHint": "Arşivde anlamca ara…",
   "untitledNote": "Başlıksız not",
   "trashAnalysis": "Çöp analizi",
   "trashAnalyze": "Akıllı analiz",
@@ -2889,8 +2498,6 @@
   "cardShowFolderInfo": "Arama sonucunda ve Tümü görünümünde notun klasörü.",
   "cardShowPaper": "Defter kâğıdı deseni",
   "formatFontPanel": "Yazı tipi ve boyut",
-  "formatColorsPanel": "Renkler",
-  "formatPageColor": "Sayfa rengi",
   "inkShapes": "Şekiller",
   "inkShapeLine": "Düz çizgi",
   "inkShapeRectangle": "Dikdörtgen",
@@ -2903,7 +2510,6 @@
   "inkOpacity": "Şeffaflık",
   "inkRecentColors": "Son kullanılan renkler",
   "inkPenOnlyTitle": "Yalnız kalemle yaz",
-  "inkPenOnlyInfo": "Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.",
   "inkFingerToolTitle": "Parmak",
   "inkFingerToolInfo": "Otomatik: kalem görüldüyse parmak kaydırır, görülmediyse çizer. Kaydırır: yalnız kalem yazar, parmak kaydırır. Çizer: parmak da kalemin aracıyla yazar. Siler: parmak siler, iki parmak yakınlaştırır.",
   "inkFingerScroll": "Kaydırır",
@@ -2915,7 +2521,6 @@
   "inkStylusTipsTitle": "Kalem kısayolları",
   "inkStylusTips": "Kalemin yan düğmesini basılı tutarak ya da silgi ucuyla dokunarak sil. Geri al / yinele üst satırda.",
   "inkZoomReset": "Tam görünüme dön",
-  "inkZoomHint": "İki parmakla yakınlaştır ve kaydır",
   "cardShowFiles": "Dosya ekleri",
   "cardShowFilesInfo": "PDF, sunum, ses ve metin ekleri kartta görünsün",
   "cardShowMediaShort": "Kartta görseller",
@@ -3086,10 +2691,6 @@
   "embedSelectMode": "Seçerek bağla",
   "embedLassoMissed": "Dairenin içinde yazı bulunamadı — yazının çevresine çiz",
   "gestureItemDeleted": "Madde silindi",
-  "gestureFixing": "Yazım düzeltiliyor…",
-  "gestureNothingToFix": "Düzeltilecek yazım hatası yok",
-  "gestureFixed": "Yazım düzeltildi",
-  "gestureFixNeedsAi": "Daire jesti yazımı yapay zekâyla düzeltir; yapay zekâ şu an kullanılamıyor (Ayarlar → Yapay zekâ).",
   "itemGesturesSetting": "Madde jestleri",
   "itemGesturesSettingInfo": "Maddenin üstüne çiz: üstünü çiz ya da ✓ işaretler. Kalemle karalamak siler, daire yazımı düzeltir.",
   "pdfEditWorking": "PDF işleniyor…",
@@ -3108,9 +2709,6 @@
   "accountRequiredTitle": "Google hesabı gerekir",
   "accountRequiredBody": "Kişiler, ortak çalışma ve kopya gönderme e-posta adresiyle çalışır; hesapsız kullanımda seni kimse bulamaz. Google hesabını bağla — notların olduğu gibi kalır.",
   "accountRequiredBadge": "Google hesabı gerekir",
-  "guestAiTitle": "Yapay zekâ için Google hesabı ya da kendi anahtarın",
-  "guestAiBody": "Dahili yapay zekâ Google hesabıyla açılır. Hesapsız da Ayarlar'dan kendi Gemini API anahtarını ekleyerek bütün yapay zekâ araçlarını kullanabilirsin.",
-  "guestAiAddKey": "Kendi anahtarımı ekle",
   "deletingAccount": "Hesabın ve verilerin siliniyor…",
   "sharedHubShort": "Gelen",
   "itemEmptyHint": "Madde yaz",
@@ -3120,7 +2718,13 @@
   "reorderNotesManually": "Elle sırala",
   "shareIncludeBubbles": "Balonlar",
   "sharedFolderBar": "Paylaşılan klasör · {role}",
-  "@sharedFolderBar": {"placeholders": {"role": {"type": "String"}}},
+  "@sharedFolderBar": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "shareSendSection": "Dışarı gönder",
   "shareInAppSection": "Kişilerle",
   "shareTextHint": "Notun yazısını bir uygulamaya gönderir (WhatsApp, e-posta…)",
@@ -3173,11 +2777,7 @@
     }
   },
   "cardElementsSampleTag": "ev",
-  "aiTaskIdle": "Şu an iş yok",
-  "aiSettingsTooltip": "Yapay zekâ ayarları",
-  "tipSemanticSearch": "Anlam açıkken kelimeyi değil anlamı arar: “araba masrafları” benzin fişini de bulur.",
   "tipListGestures": "İpucu: maddenin üstünü parmakla çiz → işaretlenir.",
-  "tipPdfBubble": "İpucu: sayfaya basılı tut → oraya balon bırak.",
   "tipMediaPin": "İpucu: görsele basılı tut, en üste sürükle → notun tepesine sabitlenir.",
   "tipGridSwipeFolders": "İpucu: ekranı yana kaydır → klasörler arasında geç.",
   "tipGridSwipeFilters": "İpucu: ekranı yana kaydır → süzgeçler arasında geç.",
@@ -3195,15 +2795,6 @@
   "tipPinnedSmartActions": "İpucu: Sabit ek çubuğundan akıllı işlemleri aç; sayfayı özetle, metni çıkar ya da seçili alana sor.",
   "tipCrossAppDosyalarim": "İpucu: Eklediğin PDF ve dosyaları Dosyalarım ile aç; ortak yapay zekâ havuzun iki uygulamada da çalışır.",
   "swipeModeInfo": "Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).",
-  "aiQuotaRenewsAt": "{time} itibarıyla yenilenir",
-  "@aiQuotaRenewsAt": {
-    "description": "Dahili AI puanlarının yenileneceği saat (yuvarlanan 24 saat).",
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
   "backupInfo": "Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.",
   "backupInProgress": "Yedek hazırlanıyor",
   "restoreInProgress": "Geri yükleniyor",
@@ -3309,14 +2900,6 @@
   "relatedNotesNone": "İlgili not bulunamadı",
   "relatedNotesLink": "Bağla",
   "studyCardsTitle": "Bugünün kartları",
-  "studyCardsHubInfo": "Aralıklı tekrar: bugün {count} kart",
-  "@studyCardsHubInfo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "studyCardsEmpty": "Burada bugün tekrar edilecek kart yok",
   "studyCardsDone": "Bugünlük bitti!",
   "studyCardsEmptyInfo": "Bir notun ⋮ menüsünden \"Kart üret\" ile yapay zekâ nottan soru–cevap kartları çıkarır.",
@@ -3333,34 +2916,6 @@
   "studyGradeHard": "Zor",
   "studyGradeGood": "İyi",
   "studyGradeEasy": "Kolay",
-  "studyCardsMake": "Kart üret",
-  "studyCardsMakeMore": "Kart üret ({count} kart var)",
-  "@studyCardsMakeMore": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "studyCardsGenerating": "Kartlar hazırlanıyor…",
-  "studyCardsFailed": "Kart üretilemedi",
-  "studyCardsPreview": "{count} kart üretildi",
-  "@studyCardsPreview": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "studyCardsSave": "Nota kaydet",
-  "studyCardsSaved": "{count} kart kaydedildi",
-  "@studyCardsSaved": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "updateAvailable": "Yeni sürüm var: {name}",
   "@updateAvailable": {
     "placeholders": {
@@ -3369,62 +2924,22 @@
       }
     }
   },
-  "updateDownload": "GitHub'dan indir",
   "pdfNoteFromSelection": "Not al",
   "pdfNoteAtPage": "Bu sayfaya not al",
   "tipPdfReadNote": "İpucu: yazıya basılı tut, seç → \"Not al\": sayfa ve satır nota yazılır, dokununca oraya döner.",
   "showMoreChecked": "İşaretlileri göster ({n} gizli)",
   "hideMoreChecked": "İşaretlileri daralt",
-  "@showMoreChecked": {"placeholders": {"n": {"type": "int"}}},
-  "gmailTitle": "Gmail",
-  "gmailConnect": "Gmail'e bağlan",
-  "gmailReadOnlyHint": "Yalnız okuma: e-postalarını görür, nota kaydedersin. Gmail'de hiçbir şey değiştirilmez.",
+  "@showMoreChecked": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "gmailGoogleOnly": "Gmail için Google hesabıyla giriş yap.",
-  "gmailSearchHint": "E-postalarda ara (Gmail arama sözdizimi)",
-  "gmailEmpty": "Burada e-posta yok",
-  "gmailLoadMore": "Daha fazla",
-  "gmailError": "Gmail'e ulaşılamadı",
-  "gmailSaveNote": "Nota kaydet",
-  "gmailAiSummary": "AI özetiyle not",
-  "gmailAiTasks": "Görev listesi çıkar",
-  "gmailWithAttachments": "Ekleri de al",
-  "gmailNoteCreated": "Not oluşturuldu",
-  "aiErrInvalidKey": "API anahtarı geçersiz. Ayarlar → Yapay zekâ'dan denetle.",
-  "aiErrModelNotFound": "Yapay zekâ modeli bulunamadı. Uygulamanın güncel sürümünü kur; sorun sürerse geliştiriciye bildir.",
-  "aiErrRateLimited": "Çok fazla istek gitti; biraz sonra yeniden dene.",
-  "aiErrConnection": "Yapay zekâya bağlanılamadı. Bağlantını denetleyip yeniden dene.",
-  "aiErrEmptyResponse": "Model boş yanıt döndü; yeniden dene.",
-  "aiErrUnexpected": "Modelden beklenmeyen bir yanıt geldi; yeniden dene.",
-  "aiErrNotCompleted": "İşlem tamamlanamadı; yeniden dene.",
-  "aiErrBuiltInOff": "Dahili yapay zekâ şu an kullanılamıyor. Kendi Gemini anahtarını Ayarlar'dan girersen hemen kullanabilirsin.",
-  "aiErrQuotaFree": "Ücretsiz yapay zekâ puanın doldu. 24 saat içinde yenilenir; dilersen Ayarlar'dan kendi anahtarını girebilir ya da Premium'a geçebilirsin.",
-  "aiErrQuotaPremium": "Premium yapay zekâ puanın ({limit}) doldu. 24 saat içinde yenilenir; dilersen Ayarlar'dan kendi anahtarını girerek sınırsız kullanabilirsin.",
-  "aiErrUnavailable": "Yapay zekâ şu an yanıt veremiyor; biraz sonra yeniden dene.",
-  "aiErrModelList": "{provider} model listesi alınamadı. Ayarlar → Yapay zekâ → Model'den modeli elle seçebilirsin.",
-  "aiErrNeedsGemini": "{feature} şu an yalnız Google Gemini ile çalışıyor. Ayarlar → Yapay zekâ'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.",
-  "aiErrKindNeedsGemini": "{kind} {provider} ile gönderilemiyor. Ayarlar → Yapay zekâ'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.",
-  "aiErrFeatureTts": "Yapay zekâ seslendirmesi",
-  "aiErrFeatureSemantic": "Anlamsal arama",
-  "aiErrKindAudio": "Ses dosyası",
-  "aiErrKindVideo": "Video",
-  "aiErrKindFile": "Bu dosya türü",
-  "aiErrUpload": "Kayıt yüklenemedi; yeniden dene.",
-  "aiErrSpeech": "Seslendirme modeli ses döndürmedi; yeniden dene.",
-  "aiErrNoSpeechText": "Seslendirilecek metin yok.",
-  "aiErrNoContent": "Sesli not için içerik yok.",
-  "aiStatusBuiltInOffTitle": "Dahili yapay zekâ şu an kapalı",
-  "aiStatusWebOffTitle": "Web'de dahili yapay zekâ kapalı",
-  "aiStatusWebOffBody": "Telefondaki uygulamada çalışır. Burada kendi Gemini anahtarınla bütün araçları kullanabilirsin.",
-  "aiStatusQuotaTitle": "Yapay zekâ puanın doldu",
-  "aiStatusQuotaBody": "Puanların {time} civarında yenilenir. Kendi Gemini anahtarınla beklemeden kullanabilirsin.",
-  "dictationFixOffer": "Dikte bitti",
-  "dictationFixAction": "AI ile düzelt",
   "tipHomeMicHold": "İpucu: mikrofona basılı tutarsan AI sesli not açılır.",
   "itemGesturesFingerAll": "Sil ve düzelt jestleri parmakla da",
   "itemGesturesFingerAllInfo": "Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.",
-  "bubbleAddNoteHint": "Tutamaçlı not; dokununca açılır",
-  "bubbleAddPlainHint": "Sayfanın üstüne doğrudan yazı",
-  "bubbleAddPlainTitle": "Açık metin",
   "itemAddHeader": "Ara başlık",
   "itemHeaderHint": "Ara başlık yaz",
   "itemMenuToHeader": "Başlık yap",
@@ -3486,7 +3001,6 @@
   "tplTodoHomeItems": "Faturaları öde, Çamaşır, Market, Tamir işleri, Randevu al",
   "tplTodoErrands": "Dışarıda",
   "tplTodoErrandsItems": "Bankaya uğra, Kargo gönder, Eczane, Kuru temizleme, Postane",
-  "templateTwoColumns": "İki sütun",
   "templateFavorite": "Favorilere ekle",
   "templateUnfavorite": "Favorilerden çıkar",
   "templatesFavorites": "Favoriler",
@@ -3583,18 +3097,21 @@
   "taskOverdue": "Gecikti",
   "calendarViewYear": "Yıl",
   "calendarViewWeek": "Hafta",
-  "calendarView": "Görünüm",
   "calendarPinchHint": "İki parmakla yıl, ay ve hafta arasında geçebilirsin",
   "calendarPrevious": "Önceki",
   "calendarNext": "Sonraki",
   "themeWhite": "Beyaz",
   "themeStraw": "Saman",
-  "dashboardBackgroundCalendar": "Takvim zemini",
-  "dashboardBackgroundCalendarInfo": "Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam",
   "calendarSwipe": "Takvimde kaydırarak hafta/gün değiştir",
   "calendarSwipeInfo": "Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.",
   "calendarMoved": "{day} gününe taşındı",
-  "@calendarMoved": {"placeholders": {"day": {"type": "String"}}},
+  "@calendarMoved": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "gcalTitle": "Google Takvim",
   "gcalInfo": "Google Takvim'indeki etkinlikler takvimde görünür (yalnız okunur). Etkinliğe not bağlayabilirsin; Google'a bir şey yazılmaz.",
   "gcalConnect": "Google Takvim'i bağla",
@@ -3609,7 +3126,13 @@
   "calendarLinkedNotes": "Bağlı notlar",
   "calendarUnlinkNote": "Bağı kaldır",
   "gcalSyncedAt": "Son eşitleme {time}",
-  "@gcalSyncedAt": {"placeholders": {"time": {"type": "String"}}},
+  "@gcalSyncedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "calendarLinked": "Takvime bağlandı",
   "calendarLinkNote": "Takvime bağla",
   "calendarLinkToDay": "Bir güne bağla",
@@ -3619,14 +3142,38 @@
   "calendarHolidayEstimated": "tahmini",
   "calendarDayNote": "Bu güne not",
   "calendarDayWrittenNotes": "O gün yazılan notlar ({count})",
-  "@calendarDayWrittenNotes": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayWrittenNotes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarMoreCount": "+{count} daha",
-  "@calendarMoreCount": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekSummaryTitle": "Bu hafta",
   "calendarWeekSummaryPlans": "{count} plan",
-  "@calendarWeekSummaryPlans": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarWeekSummaryPlans": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekSummaryNotes": "{count} not",
-  "@calendarWeekSummaryNotes": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarWeekSummaryNotes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "itemMenuTask": "Görev yap",
   "gtasksTitle": "Google Görevler",
   "gtasksConnected": "Google Görevler bağlandı, görevler eşlendi",
@@ -3638,15 +3185,36 @@
   "gcalDeleteConfirm": "Etkinlik Google Takvim'den silinsin mi? Bu geri alınamaz.",
   "gcalEdit": "Düzenle",
   "gcalPending": "Google'a gönderilmeyi bekleyen {count} değişiklik",
-  "@gcalPending": {"placeholders": {"count": {"type": "int"}}},
+  "@gcalPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "ocrToEvent": "Takvime etkinlik olarak ekle",
   "calendarSuggestAction": "Takvime ekle",
   "calendarSuggest": "Notta {when} geçiyor",
-  "@calendarSuggest": {"placeholders": {"when": {"type": "String"}}},
+  "@calendarSuggest": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
   "calendarIcsExport": "Takvimi dışa aktar (.ics)",
   "calendarIcsImport": "Takvim dosyası içe aktar (.ics)",
   "calendarIcsImported": "{count} etkinlik eklendi, {skipped} zaten vardı",
-  "@calendarIcsImported": {"placeholders": {"count": {"type": "int"}, "skipped": {"type": "int"}}},
+  "@calendarIcsImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
   "routinesTitle": "Rutinler",
   "routineNew": "Yeni rutin",
   "routineEdit": "Rutini düzenle",
@@ -3663,20 +3231,38 @@
   "routineAddStep": "Adım ekle",
   "routineDeleted": "Rutin silindi",
   "routineStreak": "🔥 {count} gün",
-  "@routineStreak": {"placeholders": {"count": {"type": "int"}}},
+  "@routineStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "routineStepCount": "{count} adım",
-  "@routineStepCount": {"placeholders": {"count": {"type": "int"}}},
+  "@routineStepCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "routineProgress": "{done}/{total} adım",
-  "@routineProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "@routineProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "menuSearchHint": "Ara: ad ya da işlev (ör. topla, paylaş)",
   "menuSearchEmpty": "Eşleşen işlem yok",
   "menuEdit": "Menüyü düzenle",
   "menuSectionOther": "Diğer",
   "menuQuickRow": "Hızlı satıra al",
-  "menuShowHide": "Göster/gizle",
   "menuReset": "Varsayılan",
-  "menuEditHint": "Sürükleyerek sırala, göz ile gizle; yıldızlı işlemler üstteki hızlı satırda durur (en çok {count}).",
-  "@menuEditHint": {"placeholders": {"count": {"type": "int"}}},
   "themeCream": "Krem",
   "themePeach": "Şeftali",
   "themeMint": "Nane",
@@ -3690,39 +3276,38 @@
   "reminderSheetTitle": "Hatırlatıcı",
   "reminderSheetRemove": "Kaldır",
   "reminderSheetSave": "Kaydet",
-  "folderHoldHint": "Basılı tutup sağa sola kaydırarak klasör değiştir",
   "homeFolderStripHide": "Klasör satırını gizle",
-  "homeFolderStripShow": "Klasör satırını göster",
   "homeViewMenu": "Görünüm ve süz",
-  "folderRadialCancel": "Bırak = vazgeç",
   "googleApiDisabled": "{api} bu uygulamanın Google Cloud projesinde kapalı. Konsolda etkinleştirip yeniden bağlanın.",
-  "@googleApiDisabled": {"placeholders": {"api": {"type": "String"}}},
+  "@googleApiDisabled": {
+    "placeholders": {
+      "api": {
+        "type": "String"
+      }
+    }
+  },
   "googleApiEnable": "Etkinleştir",
   "googleScopeMissing": "{api} izni verilmedi. Bağlanırken izin kutusunu işaretleyin.",
-  "@googleScopeMissing": {"placeholders": {"api": {"type": "String"}}},
-  "gmailRefresh": "Yenile",
-  "gmailNoResults": "Burada aramana uyan e-posta yok",
-  "gmailFilterInbox": "Gelen kutusu",
-  "gmailFilterUnread": "Okunmamış",
-  "gmailFilterStarred": "Yıldızlı",
-  "gmailFilterAttachments": "Ekli",
-  "gmailFilterToday": "Bugün",
-  "gmailDayToday": "Bugün",
-  "gmailDayYesterday": "Dün",
-  "gmailDayThisWeek": "Bu hafta",
-  "gmailDayOlder": "Daha eski",
-  "gmailNoSubject": "(konu yok)",
-  "gmailConnectTitle": "E-postalarını nota çevir",
-  "gmailConnectPointRead": "Gelen kutunu gör, Gmail arama sözdizimiyle ara.",
-  "gmailConnectPointNote": "Bir e-postayı tek dokunuşla not, yapay zekâ özeti ya da görev listesi yap.",
-  "gmailOpenInGmail": "Gmail'de aç",
+  "@googleScopeMissing": {
+    "placeholders": {
+      "api": {
+        "type": "String"
+      }
+    }
+  },
   "friendsEmptyTitle": "Burada henüz kişi yok",
   "friendsFilterHint": "Kişilerde ara",
   "friendsNoName": "Ad yok",
   "friendsSharedFolders": "Paylaşılan klasörler",
   "friendsNoSharedFolders": "Bu kişiyle henüz klasör paylaşmadın.",
   "friendsSince": "{date} tarihinden beri kişilerinde",
-  "@friendsSince": {"placeholders": {"date": {"type": "String"}}},
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "friendsCopyEmail": "E-postayı kopyala",
   "friendsEmailCopied": "E-posta kopyalandı",
   "friendsWantsToConnect": "Seni kişilerine eklemek istiyor",
@@ -3735,9 +3320,21 @@
   "settingsGroupData": "Veri ve gizlilik",
   "settingsGroupOther": "Diğer",
   "friendsCountSummary": "{count, plural, =0{Henüz kişi yok} other{{count} kişi}}",
-  "@friendsCountSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@friendsCountSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "friendsRequestsSummary": "{count} istek bekliyor",
-  "@friendsRequestsSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@friendsRequestsSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "inkFixApply": "Düzgün şekle getir",
   "inkShapeSuggestTitle": "Şekli tanı ve düzeltmeyi öner",
   "inkShapeSuggestInfo": "Kabaca daire, dikdörtgen, üçgen, çizgi ya da ok çizince sağ altta küçük düğme çıkar; dokununca düzgün olur, geri al eski hâline döndürür.",
@@ -3749,7 +3346,6 @@
   "inkMarkFixAskNo": "Hayır",
   "inkPinPen": "Bu kalemi sabitle",
   "inkPinnedPen": "Sabit kalem · basılı tut: kaldır",
-  "penModeFinish": "Bitir",
   "reminderLevelTitle": "Bildirim",
   "reminderLevelLow": "Az",
   "reminderLevelNormal": "Orta",
@@ -3763,7 +3359,13 @@
   "taskContactHint": "Kişi (kime / kimden)",
   "taskGmailHint": "Gmail bağlantısı",
   "dueBadgeTitle": "{count, plural, =1{1 hatırlatıcı/görev bekliyor} other{{count} hatırlatıcı/görev bekliyor}}",
-  "@dueBadgeTitle": {"placeholders": {"count": {"type": "int"}}},
+  "@dueBadgeTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "dueBadgeBody": "Zamanı gelenler ve bugünün görevleri — ana ekranda",
   "dueBadgeChannel": "Bekleyenler (simge rozeti)",
   "quickRowAttach": "Ekle",
@@ -3797,23 +3399,8 @@
   "addToNoteTitle": "Nota ekle",
   "addToNewNote": "Yeni not",
   "addToNoteEmpty": "Henüz başka not yok",
-  "gmailAddSelectionToNote": "Nota ekle",
-  "gmailTagPromotions": "Promosyon",
-  "gmailTagSocial": "Sosyal",
-  "gmailTagUpdates": "Güncelleme",
-  "gmailTagForums": "Forum",
-  "gmailTagImportant": "Önemli",
-  "gmailSmartAddToCalendar": "Takvime ekle: {when}",
-  "@gmailSmartAddToCalendar": {"placeholders": {"when": {"type": "String"}}},
-  "gmailSmartLinkPerson": "{name} → nota bağla",
-  "@gmailSmartLinkPerson": {"placeholders": {"name": {"type": "String"}}},
-  "gmailSmartRelatedNote": "İlgili not: {title}",
-  "@gmailSmartRelatedNote": {"placeholders": {"title": {"type": "String"}}},
-  "gmailAddedToNote": "Seçili metin nota eklendi",
   "calendarLinkExistingNote": "Mevcut notu bağla",
   "routineFromNote": "Nottan rutin oluştur",
-  "gmailAddAccount": "Başka hesap ekle",
-  "gmailRemoveAccount": "Hesabı kaldır",
   "quickRowSubheading": "Ara başlık",
   "quickRowItalic": "İtalik",
   "quickRowUnderline": "Altı çizili",
@@ -3823,10 +3410,15 @@
   "quickRowPackage": "Pakete al",
   "notePackageHint": "Uzun yazı — pakete alıp sadeleştir",
   "quickRowDictation": "Sesle yaz",
-  "quickRowCustomize": "Hızlı menüyü düzenle (düğme ekle/çıkar)",
   "notePackageSelectFirst": "Pakete almak için yazıyı seç (ya da uzun bir paragrafa dokun)",
   "notePackageCount": "{count} madde",
-  "@notePackageCount": {"placeholders": {"count": {"type": "int"}}},
+  "@notePackageCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "notePackageUnpack": "Paketi çöz (nota geri koy)",
   "pinnedPenWrite": "Üzerine kalemle yaz",
   "pinnedShrinkToFit": "Daraltınca küçülsün",
@@ -3834,7 +3426,6 @@
   "quickRowScan": "Belge tara",
   "quickRowDate": "Tarih ve saat ekle",
   "spellAutoTitle": "Otomatik düzelt",
-  "spellAutoSubtitle": "Biten kelime yalnız emin olunca düzeltilir; hemen ardından Backspace geri alır. Başlıkta kelime başları büyür.",
   "spellLearnTitle": "Öğrenen düzeltme",
   "spellCheckDoneTitle": "İşaretli maddeleri de denetle",
   "spellCheckDoneSubtitle": "Kapalıyken yapıldı işaretli maddelerin altı çizilmez",
@@ -3842,7 +3433,13 @@
   "spellManualFix": "Elle düzelt",
   "spellLearnSubtitle": "Kendi düzelttiğin ve klavye önerisinden seçtiğin kelimeleri öğrenir (Türkçe, İngilizce, Çince). Kişisel sözlüğün hesabınla eşitlenir.",
   "spellLearnedCount": "{count} öğrenilmiş düzeltme",
-  "@spellLearnedCount": {"placeholders": {"count": {"type": "int"}}},
+  "@spellLearnedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "spellForget": "Öğrenilenleri sil",
   "spellForgotten": "Öğrenilenler silindi",
   "spellModeTitle": "Yazım denetimi",
@@ -3852,20 +3449,44 @@
   "spellModeAuto": "Otomatik düzelt",
   "spellAddToDictionary": "Sözlüğe ekle",
   "spellAlwaysFix": "Hep böyle düzelt: {word}",
-  "@spellAlwaysFix": {"placeholders": {"word": {"type": "String"}}},
+  "@spellAlwaysFix": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
   "spellKeepInNote": "Bu notta dokunma",
   "spellReviewAction": "Yazımı denetle",
   "spellReviewNoteOption": "Bu notu toplu denetle",
   "spellReviewClean": "Yazım hatası bulunamadı",
   "spellReviewCleanHint": "Bu nottaki kelimeler sözlükle uyumlu görünüyor.",
   "spellReviewFixAll": "Tümünü düzelt ({count})",
-  "@spellReviewFixAll": {"placeholders": {"count": {"type": "int"}}},
+  "@spellReviewFixAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "spellReviewApply": "Uygula ({count})",
-  "@spellReviewApply": {"placeholders": {"count": {"type": "int"}}},
+  "@spellReviewApply": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "spellReviewSkip": "Atla",
   "spellReviewHintBadge": "Bağlam ipucu",
   "spellReviewFixed": "{count} yazım düzeltildi",
-  "@spellReviewFixed": {"placeholders": {"count": {"type": "int"}}},
+  "@spellReviewFixed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "lineTaskRetime": "Zamanı değiştir",
   "lineTaskDone": "Tamamlandı",
   "lineTaskUndone": "Tamamlanmadı yap",
@@ -3879,9 +3500,6 @@
   "homeCalendarStripInfo": "Ana ekranın tepesinde haftalık ya da aylık takvim: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim",
   "homeCalendarStripExpand": "Takvim şeridini aç",
   "homeCalendarStripCollapse": "Takvim şeridini daralt",
-  "gmailTranslate": "İletiyi çevir",
-  "gmailShowOriginal": "Orijinali göster",
-  "gmailTranslated": "Çevrildi",
   "folderMenuEdit": "Sırala · sil",
   "themeClassic": "Klasik",
   "themeNewsprint": "Gazete",
@@ -3899,14 +3517,19 @@
   "spellLearnedAdd": "Ekle",
   "spellLearnedEmpty": "Henüz öğrenilen düzeltme yok.",
   "spellLearnedSeen": "{count} kez",
-  "@spellLearnedSeen": {"placeholders": {"count": {"type": "int"}}},
+  "@spellLearnedSeen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "spellLearnedKept": "Dokunulmayan kelimeler (düzeltmeyi geri aldıkların)",
   "spellRulesOnlyTitle": "Yalnız kurallar",
   "spellRulesOnlySubtitle": "Yalnız bilinen yazım hataları (herşey → her şey) ve senin öğrettiklerin düzeltilir; tahmin yok.",
   "spellRejectedTitle": "Bir daha yapılmayacak düzeltmeler (geri aldıkların ya da değiştirdiklerin)",
   "inkEraserOffer": "Silgiyi seç",
   "inkPenOffer": "Kaleme dön",
-  "tipPenToggle": "Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.",
   "tipPenShapeHold": "Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.",
   "tipPenEraserHold": "Silmek için bir çizginin üstüne basılı tut → çıkan silgi düğmesine dokun. İki parmak = kaydır/yakınlaştır.",
   "backupStatusCloud": "Bulut: {count} not Google hesabında, değişiklikler kendiliğinden eşitleniyor",
@@ -3934,30 +3557,53 @@
   "stylusTogglesOn": "Kalem yazar",
   "stylusTogglesOff": "Kalem dokunur (yazmaz)",
   "updateBanner": "Yeni sürüm var: v{version} — dokun, indir ve kur",
-  "@updateBanner": {"placeholders": {"version": {"type": "String"}}},
+  "@updateBanner": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateBannerReady": "v{version} indirildi — dokun, şimdi kur",
-  "@updateBannerReady": {"placeholders": {"version": {"type": "String"}}},
+  "@updateBannerReady": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateBannerDownloading": "v{version} indiriliyor… %{percent}",
-  "@updateBannerDownloading": {"placeholders": {"version": {"type": "String"}, "percent": {"type": "int"}}},
+  "@updateBannerDownloading": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "updateReadyToInstall": "v{version} indirildi; uygulamayı bir sonraki açışında kurulacak",
-  "@updateReadyToInstall": {"placeholders": {"version": {"type": "String"}}},
+  "@updateReadyToInstall": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateInstallNow": "Şimdi kur",
   "updateDownloadFailed": "Yeni sürüm indirilemedi — bağlantıyı kontrol edip yeniden dokun",
   "updateInstallFailed": "Kurulum tamamlanamadı — yeniden dene",
   "autoUpdateTitle": "Otomatik güncelle",
   "autoUpdateInfo": "Yeni sürüm arka planda iner, uygulamayı bir sonraki açışında kurulur",
   "updateInstall": "Güncelle",
-  "updateDownloading": "Yeni sürüm indiriliyor…",
   "updateNeedsPermission": "Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle'ye dokun",
-  "updateFailed": "İndirilemedi; GitHub sayfası açılıyor",
   "updateTapToCheck": "Dokun: güncellemeyi denetle",
   "updateReopenOn": "Güncellemeden sonra kendiliğinden açılır",
   "updateReopenOff": "Güncellemeden sonra kendiliğinden açılsın: izin ver",
   "updateChecking": "Güncelleme denetleniyor…",
   "updateUpToDate": "En son sürüm kullanılıyor",
-  "updateCheckFailed": "Denetlenemedi — bağlantıyı kontrol et",
   "releaseNotesTitle": "Sürüm notları",
-  "releaseNotesInfo": "Yapılan güncellemeler madde madde",
   "settingsWritingTitle": "Kalem, yazım ve ekran",
   "settingsWritingSummary": "Kalem · Yazım düzelt · Ana ekran şeritleri",
   "settingsPenSection": "Kalem",
@@ -3974,9 +3620,21 @@
   "pinnedSideLeft": "Solda",
   "pinnedSideRight": "Sağda",
   "releaseNotesToastTitle": "Yenilikler · v{version}",
-  "@releaseNotesToastTitle": {"placeholders": {"version": {"type": "String"}}},
+  "@releaseNotesToastTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "releaseNotesToastMore": "+{count} yenilik daha",
-  "@releaseNotesToastMore": {"placeholders": {"count": {"type": "int"}}},
+  "@releaseNotesToastMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "releaseNotesToastAll": "Tümünü gör",
   "updateInstalling": "İndirildi — kuruluyor; uygulama kapanıp yeniden açılacak",
   "updateAborted": "Kurulum iptal edildi — yeniden denemek için dokun",
@@ -4024,11 +3682,23 @@
   "quickAddKeepOne": "En az bir seçenek görünür kalmalı",
   "attachmentUploadNow": "Şimdi dene",
   "uploadPendingTitle": "{count, plural, =1{1 ek yüklenmeyi bekliyor} other{{count} ek yüklenmeyi bekliyor}}",
-  "@uploadPendingTitle": {"placeholders": {"count": {"type": "int"}}},
+  "@uploadPendingTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "uploadPendingBody": "Uygulamayı açınca yüklenir.",
   "uploadPendingChannel": "Bekleyen ek yüklemeleri",
   "placementHintShort": "{view} olarak eklendi · değiştirmek için anahtara dokun",
-  "@placementHintShort": {"placeholders": {"view": {"type": "String"}}},
+  "@placementHintShort": {
+    "placeholders": {
+      "view": {
+        "type": "String"
+      }
+    }
+  },
   "listPaneRight": "Not listesi sağda",
   "listPaneRightInfo": "Bölünmüş görünümde (tablet, geniş pencere) liste notun sağında durur",
   "listPaneMoveRight": "Listeyi sağa al",
@@ -4063,13 +3733,31 @@
   "quickListLeftovers": "Geçen seferden",
   "quickListAddAll": "Hepsini ekle",
   "quickListSaved": "“{title}” kaydedildi",
-  "@quickListSaved": {"placeholders": {"title": {"type": "String"}}},
+  "@quickListSaved": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "quickListOpen": "Aç",
   "quickListRemove": "Çıkar",
   "quickListCorrected": "“{typed}” yazmıştın; geri almak için dokun",
-  "@quickListCorrected": {"placeholders": {"typed": {"type": "String"}}},
+  "@quickListCorrected": {
+    "placeholders": {
+      "typed": {
+        "type": "String"
+      }
+    }
+  },
   "quickListRestored": "“{typed}” olarak bırakıldı; bir daha düzeltilmeyecek",
-  "@quickListRestored": {"placeholders": {"typed": {"type": "String"}}},
+  "@quickListRestored": {
+    "placeholders": {
+      "typed": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropTitle": "Hızlı ekle",
   "quickDropInfo": "Yaz ya da söyle, seçtiğin nota eklensin",
   "quickDropHint": "süt, ekmek… ya da “alışveriş listesine süt ekle”",
@@ -4079,11 +3767,32 @@
   "quickDropSavedNew": "Yeni not olarak kaydedildi",
   "quickDropAdd": "Ekle",
   "quickDropAdded": "{count} madde “{title}” notuna eklendi",
-  "@quickDropAdded": {"placeholders": {"count": {"type": "int"}, "title": {"type": "String"}}},
+  "@quickDropAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropAddedText": "“{title}” notuna eklendi",
-  "@quickDropAddedText": {"placeholders": {"title": {"type": "String"}}},
+  "@quickDropAddedText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropNothingNew": "Hepsi zaten “{title}” notunda",
-  "@quickDropNothingNew": {"placeholders": {"title": {"type": "String"}}},
+  "@quickDropNothingNew": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropKeyboard": "Açılınca klavye",
   "quickDropMicAuto": "Açılınca dinle",
   "noteExpiry": "Şu zamanda arşivle",
@@ -4094,13 +3803,37 @@
   "noteExpiryPick": "Tarih ve saat seç",
   "noteExpiryRemove": "Süreyi kaldır",
   "noteExpiryChip": "{date} arşivlenir",
-  "@noteExpiryChip": {"placeholders": {"date": {"type": "String"}}},
+  "@noteExpiryChip": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "noteExpiryLeftDays": "{n} g",
-  "@noteExpiryLeftDays": {"placeholders": {"n": {"type": "int"}}},
+  "@noteExpiryLeftDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "noteExpiryLeftHours": "{n} sa",
-  "@noteExpiryLeftHours": {"placeholders": {"n": {"type": "int"}}},
+  "@noteExpiryLeftHours": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "noteExpiryLeftMinutes": "{n} dk",
-  "@noteExpiryLeftMinutes": {"placeholders": {"n": {"type": "int"}}},
+  "@noteExpiryLeftMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "smartList": "Akıllı liste",
   "smartListInfo": "Yaz ya da söyle; alışveriş mi bavul mu kendisi anlar, maddeleri reyon reyon dizer",
   "smartListGeneric": "Liste",
@@ -4114,7 +3847,13 @@
   "sortByGroup": "Reyona / gruba göre",
   "finishShopping": "Alınanları tamamla",
   "finishShoppingDone": "{count} alınan madde temizlendi",
-  "@finishShoppingDone": {"placeholders": {"count": {"type": "int"}}},
+  "@finishShoppingDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "scanAny": "Tara",
   "scanAnyInfo": "Belge ya da QR kod — QR kendiliğinden tanınır",
   "scanAnyHint": "QR kod kendiliğinden tanınır. Belge için “Belge tara”ya dokun.",
@@ -4125,14 +3864,16 @@
   "quickDropWhich": "Hangi nota eklensin?",
   "quickDropAsking": "Hangi not olduğunu soruyorum…",
   "quickDropAddingTo": "“{title}” notuna ekleniyor…",
-  "@quickDropAddingTo": {"placeholders": {"title": {"type": "String"}}},
+  "@quickDropAddingTo": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropWait": "Bekle",
   "quickDropAiToggle": "Emin olunamazsa yapay zekâya sor",
-  "aiOffSetting": "Yapay zekâyı tümden kapat",
-  "aiOffSettingInfo": "Açıkken hiçbir not, metin ya da ek yapay zekâya gönderilmez; düğmeleri gizlenir.",
   "aiOffTitle": "Yapay zekâ kapalı",
-  "aiOffBody": "Yapay zekâyı Ayarlar'da tümden kapattın; hiçbir şey gönderilmiyor. Açınca düğmeleri geri gelir.",
-  "aiOffTurnOn": "Yapay zekâyı aç",
   "aiConsentTitle": "Yapay zekâ kullanımı",
   "aiConsentWhat": "Ne gönderilir: yalnız o iş için seçtiğin metin, not ya da ek (görsel, ses, PDF).",
   "aiConsentWhere": "Nereye: Google'ın Gemini hizmetine (Firebase üzerinden); kendi anahtarını girdiysen seçtiğin sağlayıcıya.",
@@ -4140,9 +3881,7 @@
   "aiConsentTurnOff": "İstediğin an Ayarlar → Yapay zekâ'dan tümden kapatabilirsin.",
   "aiConsentAccept": "Kabul ediyorum",
   "aiConsentDecline": "Vazgeç",
-  "aiMayBeWrong": "AI yanılabilir; önemli bilgiyi doğrula.",
   "aiPausedTitle": "Yapay zekâ geçici olarak kapalı",
-  "aiPausedBody": "Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.",
   "homePullGestureTitle": "Listeyi tepeden aşağı çekince",
   "homeSwipeRightGestureTitle": "Tümü'de sağa kaydırınca",
   "homeGestureInfo": "Bir not ya da klasör seçersen jest doğrudan onu açar",
@@ -4178,39 +3917,100 @@
   "barMoreToBar": "Çubuğa al",
   "barMoreToMenu": "Menüye al",
   "menuEditInlineHint": "Basılı tutup sürükle: sırala · ⊖ gizle · ☆ hızlı satır (en çok {count})",
-  "@menuEditInlineHint": {"placeholders": {"count": {"type": "int"}}},
+  "@menuEditInlineHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "menuHiddenGroup": "Gizlenenler",
   "quickDropSettings": "Hızlı ekle ayarları",
   "quickDropPreviewText": "→ {title} · {text}",
-  "@quickDropPreviewText": {"placeholders": {"title": {"type": "String"}, "text": {"type": "String"}}},
+  "@quickDropPreviewText": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropPreviewItems": "→ {title} · {items} ({count} madde)",
-  "@quickDropPreviewItems": {"placeholders": {"title": {"type": "String"}, "items": {"type": "String"}, "count": {"type": "int"}}},
+  "@quickDropPreviewItems": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "items": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quickDropPickMyself": "Ben seçeyim",
   "quickDropFindNote": "Not bul",
   "quickDropPreviewReminder": "⏰ {when} · {text}",
-  "@quickDropPreviewReminder": {"placeholders": {"when": {"type": "String"}, "text": {"type": "String"}}},
+  "@quickDropPreviewReminder": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropSavedReminder": "Hatırlatıcılı not kaydedildi",
   "quickDropPreviewCalendar": "📅 {day} · {text}",
-  "@quickDropPreviewCalendar": {"placeholders": {"day": {"type": "String"}, "text": {"type": "String"}}},
+  "@quickDropPreviewCalendar": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "text": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropSavedCalendar": "Not takvime eklendi · {day}",
-  "@quickDropSavedCalendar": {"placeholders": {"day": {"type": "String"}}},
+  "@quickDropSavedCalendar": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "quickDropPreviewMulti": "→ {summary} ({count} not)",
-  "@quickDropPreviewMulti": {"placeholders": {"summary": {"type": "String"}, "count": {"type": "int"}}},
+  "@quickDropPreviewMulti": {
+    "placeholders": {
+      "summary": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quickDropAddedMulti": "{count} nota eklendi",
-  "@quickDropAddedMulti": {"placeholders": {"count": {"type": "int"}}},
+  "@quickDropAddedMulti": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "aiNeedsProTitle": "Yapay zekâ Pro'da",
-  "aiNeedsProBody": "Dahili yapay zekâ Pro aboneliğinde. Ömür boyu sürümde kendi Gemini anahtarını girip sınırsız kullanabilirsin.",
-  "aiNeedsProSee": "Pro'ya bak",
   "proTitle": "Tam sürüm",
   "proSettingsSubtitle": "Lite vs Tam Sürüm, karar hakkı, satın alma",
   "proStatusFree": "Şu an: Lite (Ücretsiz · Reklamsız)",
   "proStatusLifetime": "Şu an: Tam Sürüm (Ömür Boyu)",
-  "proStatusPro": "Şu an: Tam Sürüm · {date} tarihine dek",
-  "@proStatusPro": {"placeholders": {"date": {"type": "String"}}},
   "proTiersTitle": "Katmanlar",
   "proTierFree": "Lite",
   "proTierLifetime": "Tam sürüm",
-  "proTierPro": "Tam sürüm",
   "proRowBasics": "Not, liste, kalem, PDF, hatırlatıcı, takvim; cihazda yazım v3, dikte, OCR, barkod, Mağaza Kipi",
   "proRowUnlimited": "Sınırsız not, klasör, ek ve cihaz",
   "proRowSync": "Bulut eşitleme",
@@ -4226,25 +4026,18 @@
   "proRowOwnKey": "Kendi Gemini anahtarın",
   "proLockedBadge": "Tam sürümde",
   "proBuyTitle": "Satın al",
-  "proPlanMonthly": "Tam sürüm",
-  "proPlanYearly": "Tam sürüm",
   "proPlanLifetime": "Tam Sürüm · Tek Sefer (Ömür Boyu)",
   "proPlanDecisionPack": "+1.000 Akıllı Karar Paketi",
-  "proPriceMonthly": "{price} / ay",
-  "@proPriceMonthly": {"placeholders": {"price": {"type": "String"}}},
-  "proPriceYearly": "{price} / yıl",
-  "@proPriceYearly": {"placeholders": {"price": {"type": "String"}}},
-  "proTrialMonthly": "7 gün ücretsiz, sonra {price} / ay",
-  "@proTrialMonthly": {"placeholders": {"price": {"type": "String"}}},
-  "proTrialYearly": "7 gün ücretsiz, sonra {price} / yıl",
-  "@proTrialYearly": {"placeholders": {"price": {"type": "String"}}},
   "proPriceOnce": "{price} · tek sefer öde, abonelik yok",
-  "@proPriceOnce": {"placeholders": {"price": {"type": "String"}}},
+  "@proPriceOnce": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "proBuy": "Satın al",
-  "proTry": "Ücretsiz dene",
   "proOwned": "Sende var",
-  "proManage": "Satın alımları yönet",
-  "proManageBody": "Google Play hesabı",
   "proRestore": "Satın alımları geri yükle",
   "proTerms": "Abonelik yoktur, reklam yoktur. Tam Sürüm tek seferlik ömür boyu satın almadır ve 750 Akıllı Karar hakkı içerir. Hak bitince uygulama ve tüm cihaz içi özellikler sınırsız çalışmaya devam eder; istersen ek +1.000 Karar Paketi alabilir veya kendi Gemini anahtarını girebilirsin.",
   "proLoading": "Google Play'den fiyatlar alınıyor…",
@@ -4265,7 +4058,16 @@
   "decisionsSectionSubtitle": "Bilinmeyen ürün reyonu, hızlı ekle hedefi ve etiket önerileri",
   "decisionsQuotaByok": "Kendi Gemini anahtarın etkin · Sınırsız akıllı karar",
   "decisionsQuotaSummary": "Kalan akıllı karar: {calls} · {tokens} jeton bütçesi",
-  "@decisionsQuotaSummary": {"placeholders": {"calls": {"type": "int"}, "tokens": {"type": "String"}}},
+  "@decisionsQuotaSummary": {
+    "placeholders": {
+      "calls": {
+        "type": "int"
+      },
+      "tokens": {
+        "type": "String"
+      }
+    }
+  },
   "decisionsQuotaFreeHint": "Cihaz içi akıllı kurallar ücretsiz açık · Tam Sürümde 750 karar dahil",
   "decisionsTurnOffTitle": "Akıllı kararları kapat",
   "decisionsTurnOffBody": "Kapalıyken tüm cihaz içi sözlükler, yazım denetimi ve alışveriş kuralları ücretsiz çalışmaya devam eder.",
@@ -4274,30 +4076,35 @@
   "calendarDayLinkRemoved": "Not bu günden çıkarıldı",
   "calendarLinkTime": "Saat",
   "calendarLinkAllDay": "Tüm gün",
-  "calendarCollapseMonth": "Takvimi daralt",
-  "calendarExpandMonth": "Takvimi genişlet",
-  "calendarDayPanelClose": "Gün panelini kapat",
   "driveOnboardTitle": "Eklerin her cihazda olsun",
   "driveOnboardBody": "Fotoğraf, PDF ve ses eklerin Google Drive'ındaki \"Notlar\" klasörüne yedeklenir; telefon, tablet ve web'de aynı ekleri görürsün.",
   "driveOnboardConnect": "Drive'ı bağla",
   "driveOnboardLater": "Sonra",
-  "aiQuietOrganizeTitle": "Sessiz düzen",
-  "aiQuietOrganizeEmpty": "Öneri üretilecek eksik başlık veya etiket bulunamadı.",
-  "aiQuietOrganizeApply": "{count} öneriyi uygula",
-  "@aiQuietOrganizeApply": {"placeholders": {"count": {"type": "int"}}},
-  "aiQuietOrganizeApplied": "{count} not güncellendi",
-  "@aiQuietOrganizeApplied": {"placeholders": {"count": {"type": "int"}}},
-  "aiQuietOrganizeBoth": "Başlık + etiket birlikte",
   "exportMarkdownZip": "Markdown (.zip) dışa aktar",
   "exportMarkdownZipInfo": "Notlarını klasör düzeninde açık .md dosyaları olarak dışa aktarır",
   "exportMarkdownZipEmpty": "Dışa aktarılacak not yok",
   "exportMarkdownZipDone": "{count} not Markdown (.zip) olarak dışa aktarıldı",
-  "@exportMarkdownZipDone": {"placeholders": {"count": {"type": "int"}}},
+  "@exportMarkdownZipDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "storeMode": "Mağaza kipi",
   "storeModeHideChecked": "Alınanları gizle",
   "storeModeShowChecked": "Alınanları göster",
   "storeModeRemaining": "{remaining} / {total} kaldı",
-  "@storeModeRemaining": {"placeholders": {"remaining": {"type": "int"}, "total": {"type": "int"}}},
+  "@storeModeRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "storeModeAllDone": "Hepsi tamam!",
   "storeModeAddHint": "Aklına geleni hızlı ekle…",
   "backupPasswordTitle": "Yedek parolası (isteğe bağlı)",
@@ -4312,36 +4119,6 @@
   "backupEnterPasswordTitle": "Şifreli yedek",
   "backupEnterPasswordBody": "Bu yedek parola ile korunuyor. Geri yüklemek için parolayı gir.",
   "backupWrongPassword": "Parola yanlış veya yedek çözülemedi",
-  "aiWriteImprove": "Yazıyı iyileştir",
-  "aiWriteImproveInfo": "Düzelt, kısalt, uzat, tonu değiştir veya çevir",
-  "improveExpand": "Uzat ve ayrıntılandır",
-  "improveCasual": "Samimi ve doğal",
-  "aiWriteGroupFix": "Düzelt ve yeniden yaz",
-  "aiWriteGroupTone": "Ton ve uzunluk",
-  "aiWriteGroupFormat": "Biçime dönüştür",
-  "aiPreviewBefore": "Önce",
-  "aiPreviewAfter": "Sonra",
-  "aiPreviewCompare": "Önce / sonra",
-  "aiPhotoToStructuredNote": "Yapılı nota dönüştür",
-  "aiPhotoToStructuredNoteInfo": "Önce cihazda okur, başlık ve maddelere ayırır",
-  "docSuggestSummary": "Özetle",
-  "docPromptSummary": "Bu belgeyi kısa ve anlaşılır biçimde özetle; önemli bilgilerin sayfa numaralarını [s. N] olarak belirt.",
-  "docSuggestKeyPoints": "Ana noktalar",
-  "docPromptKeyPoints": "Bu belgedeki en önemli 5 noktayı sayfa numaralarıyla [s. N] listele.",
-  "docSuggestActions": "Tarih ve görevler",
-  "docPromptActions": "Bu belgede geçen önemli tarihleri, kararları ve yapılacakları sayfa numaralarıyla [s. N] çıkar.",
-  "docPageCitation": "s. {page}",
-  "@docPageCitation": {"placeholders": {"page": {"type": "int"}}},
-  "transcriptTakeaways": "Özet ve görevler",
-  "transcriptTakeawaysSummary": "Özet",
-  "transcriptTakeawaysActions": "Yapılacaklar",
-  "transcriptTakeawaysRemind": "Hatırlatayım mı?",
-  "transcriptTakeawaysAddTask": "Görev ekle",
-  "transcriptTakeawaysInsert": "Özeti nota ekle",
-  "briefingDailyTab": "Günlük",
-  "briefingWeeklyTab": "Haftalık",
-  "briefingWeeklyLoading": "Haftalık özet hazırlanıyor…",
-  "briefingWeeklyEmpty": "Bu hafta için özetlenecek kayıt yok",
   "calendarAddActionTitle": "Takvimde + ne eklesin",
   "calendarAddActionInfo": "Varsayılan not; tarih seçili gündür (yoksa bugün), açılan pencerede değiştirilebilir.",
   "calendarAddNote": "Not",
@@ -4351,25 +4128,73 @@
   "calendarNewDayNoteTitle": "Yeni not",
   "calendarNewDayNoteOpen": "Notu yaz",
   "calendarSlotAddTitle": "{time} için ekle",
-  "@calendarSlotAddTitle": {"placeholders": {"time": {"type": "String"}}},
+  "@calendarSlotAddTitle": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "eraserOn": "Silgi açık",
   "calendarRelToday": "Bugün",
   "calendarRelTomorrow": "Yarın",
   "calendarRelYesterday": "Dün",
   "calendarRelInDays": "{count} gün sonra",
-  "@calendarRelInDays": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarRelInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarRelDaysAgo": "{count} gün önce",
-  "@calendarRelDaysAgo": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarRelDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekNumber": "{count}. hafta",
-  "@calendarWeekNumber": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarWeekNumber": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayEvents": "{count} etkinlik",
-  "@calendarDayEvents": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayEvents": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayTasks": "{count} görev",
-  "@calendarDayTasks": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayReminders": "{count} hatırlatıcı",
-  "@calendarDayReminders": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayReminders": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayNotesCount": "{count} not",
-  "@calendarDayNotesCount": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarDayNotesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarDayFree": "Boş gün",
   "webWorkspaceSection": "Çalışma alanı",
   "webOrganizeSection": "Düzenle",
@@ -4378,18 +4203,51 @@
   "webColumnsMenu": "Sütun yoğunluğu",
   "webColumnsAuto": "Otomatik",
   "webColumnsCount": "{count} sütun",
-  "@webColumnsCount": {"placeholders": {"count": {"type": "int"}}},
+  "@webColumnsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webNoteCount": "{count} not",
-  "@webNoteCount": {"placeholders": {"count": {"type": "int"}}},
+  "@webNoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webDriveStatusConnected": "Drive bağlı",
   "webDriveStatusSyncing": "{count} ek senkronlanıyor",
-  "@webDriveStatusSyncing": {"placeholders": {"count": {"type": "int"}}},
+  "@webDriveStatusSyncing": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webDriveStatusAttention": "{count} ek bekliyor",
-  "@webDriveStatusAttention": {"placeholders": {"count": {"type": "int"}}},
+  "@webDriveStatusAttention": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "webSyncCloudReady": "Bulut senkronu açık",
   "webCacheTitle": "Tarayıcı ek önbelleği",
   "webCacheInfo": "{count} dosya · {size} (çevrimdışı hazır)",
-  "@webCacheInfo": {"placeholders": {"count": {"type": "int"}, "size": {"type": "String"}}},
+  "@webCacheInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "webCacheEmpty": "Önbellekte indirilen ek yok",
   "webCacheClear": "Temizle",
   "webCacheCleared": "Tarayıcı ek önbelleği temizlendi",
@@ -4446,12 +4304,9 @@
   "pinnedSmartSummarize": "Özetle ve nota ekle",
   "pinnedSmartTasks": "Görevlere çevir",
   "pinnedSmartAreaAsk": "Alan seçip sor",
-  "areaInsertToNote": "Nota ekle",
-  "areaInsertedToNote": "Nota eklendi",
   "dashboardBackgroundGallery": "Hazır zeminler",
   "dashboardBackgroundFromDevice": "Galeriden seç",
   "dashboardBackgroundOpacity": "Görünürlük",
-  "dashboardBackgroundPreview": "Canlı önizleme",
   "wallpaperAuroraBloom": "Kuzey çiçeği",
   "wallpaperCitrusSun": "Narenciye güneşi",
   "wallpaperCoralLagoon": "Mercan koyu",
@@ -4496,139 +4351,154 @@
       }
     }
   },
-  "aiSourceModeTitle": "Yapay zekâ kaynağı",
-  "aiSourceModeShared": "Ortak havuz",
-  "aiSourceModeByok": "Kendi anahtarım",
-  "aiSharedPoolTitle": "Ortak yapay zekâ havuzu",
-  "aiSharedPoolSubtitle": "Tek Google hesabıyla hem Notlar hem Dosyalarım uygulamasında ortak kullanılır ({credits} kredi)",
-  "@aiSharedPoolSubtitle": {
-    "placeholders": {
-      "credits": {
-        "type": "int"
-      }
-    }
-  },
-  "aiSharedPoolEmpty": "Ortak kredi bakiyen tükendi; kendi anahtarını girebilir veya Pro'ya geçebilirsin",
-  "aiByokExhaustedError": "Kendi anahtarının kotası veya yetkisi tükendi. Ortak havuza otomatik geçilmedi.",
-  "aiBackupKeysTitle": "Yedek API anahtarları",
-  "aiBackupKeysInfo": "Birincil anahtar dolunca sıradaki anahtar otomatik devreye girer (en fazla 5)",
-  "aiBackupKeyLabel": "Yedek anahtar {index}",
-  "@aiBackupKeyLabel": {
-    "placeholders": {
-      "index": {
-        "type": "int"
-      }
-    }
-  },
-  "aiBackupKeyAdd": "Yedek anahtar ekle",
   "ecosystemDosyalarimTitle": "Dosyalarım ile tüm belgeleri yönet",
-  "ecosystemDosyalarimSubtitle": "PDF imzala, Word ve Excel düzenle, ortak yapay zekâ kredini iki uygulamada birlikte kullan.",
-  "ecosystemOpenApp": "Dosyalarım'da aç",
+  "ecosystemDosyalarimSubtitle": "PDF imzala, Word ve Excel belgelerini düzenle ve notlarınla kolayca paylaş.",
   "ecosystemGetApp": "Dosyalarım'ı keşfet",
   "ecosystemDismiss": "Gizle",
-  "aiOtherToolsTitle": "Diğer araçlar",
-  "aiAttachmentsSection": "Ek ve belge araçları",
-  "aiSmartCategorizeAction": "Akıllı kategorize et",
-  "aiSmartCategorizeInfo": "Başlık, etiket ve klasörü yerelde kredi harcamadan düzenle",
-  "aiLocalBadge": "Yerel · %{percent}",
-  "@aiLocalBadge": {
+  "shopBudgetCart": "Sepet: {amount} ₺",
+  "@shopBudgetCart": {
     "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "aiSmartFolderSuggestion": "Klasör: {folder}",
-  "@aiSmartFolderSuggestion": {
-    "placeholders": {
-      "folder": {
+      "amount": {
         "type": "String"
       }
     }
   },
-  "aiSmartFixAction": "Düzelt",
-  "aiSmartRefineWithAi": "Düşük güvenlileri yapay zekâyla incele",
-  "aiSmartFixTitle": "Doğru kategoriyi seç",
-  "aiSmartSimilarConfirmTitle": "Benzer notlar da düzeltilsin mi?",
-  "aiSmartSimilarConfirmBody": "{count} benzer not için de aynı kategoriyi uygulayabilirsin.",
-  "@aiSmartSimilarConfirmBody": {
+  "shopBudgetEstimated": "Tahmini: {amount} ₺",
+  "@shopBudgetEstimated": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBudgetLimit": "Bütçe: {amount} ₺",
+  "@shopBudgetLimit": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shopBudgetSet": "Bütçe belirle",
+  "shopBudgetHint": "Örn. 1500",
+  "shopAllStores": "Tümü",
+  "shopPriceTitle": "Fiyat & Reyon · {item}",
+  "@shopPriceTitle": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
+  "shopUnitPriceLabel": "Fiyat (₺)",
+  "shopStoreLabel": "Market",
+  "shopAisleLabel": "Reyon",
+  "shopPriceCompareHeader": "Market fiyat geçmişi",
+  "shopClearPrice": "Fiyatı temizle",
+  "shopRecipesTitle": "Öğün & Tarif Paketleri",
+  "shopRecipesSearchHint": "Tarif ara…",
+  "shopServingsCount": "{count} kişi",
+  "@shopServingsCount": {
     "placeholders": {
       "count": {
         "type": "int"
       }
     }
   },
-  "aiCatFinance": "Finans",
-  "aiCatHealth": "Sağlık",
-  "aiCatEducation": "Eğitim",
-  "aiCatWork": "İş",
-  "aiCatShopping": "Alışveriş",
-  "aiCatTravel": "Seyahat",
-  "aiCatPersonal": "Kişisel",
-  "aiCatTech": "Teknoloji",
-  "aiCatRecipes": "Tarifler",
-  "aiCatOfficial": "Resmî",
-  "shopBudgetCart": "Sepet: {amount} ₺",
-  "@shopBudgetCart": {"placeholders": {"amount": {"type": "String"}}},
-  "shopBudgetEstimated": "Tahmini: {amount} ₺",
-  "@shopBudgetEstimated": {"placeholders": {"amount": {"type": "String"}}},
-  "shopBudgetLimit": "Bütçe: {amount} ₺",
-  "@shopBudgetLimit": {"placeholders": {"amount": {"type": "String"}}},
-  "shopBudgetSet": "Bütçe belirle",
-  "shopBudgetHint": "Örn. 1500",
-  "shopAllStores": "Tümü",
-  "shopPriceTitle": "Fiyat & Reyon · {item}",
-  "@shopPriceTitle": {"placeholders": {"item": {"type": "String"}}},
-  "shopUnitPriceLabel": "Fiyat (₺)",
-  "shopStoreLabel": "Market",
-  "shopAisleLabel": "Reyon",
-  "shopOtherAisle": "Diğer",
-  "shopPriceCompareHeader": "Market fiyat geçmişi",
-  "shopClearPrice": "Fiyatı temizle",
-  "shopRecipesTitle": "Öğün & Tarif Paketleri",
-  "shopRecipesSearchHint": "Tarif ara…",
-  "shopServingsCount": "{count} kişi",
-  "@shopServingsCount": {"placeholders": {"count": {"type": "int"}}},
   "shopAddToList": "Listeye ekle",
   "shopNewCustomRecipe": "Yeni tarif kaydet",
   "shopRecipeNameHint": "Tarif adı",
   "shopIngredientsHint": "Malzemeler (virgülle ayır: 500 g kıyma, 2 domates)",
   "shopCustomBadge": "Özel",
   "shopAisleOrderTitle": "Reyon Sırası · {store}",
-  "@shopAisleOrderTitle": {"placeholders": {"store": {"type": "String"}}},
+  "@shopAisleOrderTitle": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      }
+    }
+  },
   "shopResetOrder": "Varsayılana dön",
   "shopReceiptTitle": "Fişten fiyat güncelle",
   "shopReceiptCamera": "Fiş fotoğrafı çek",
   "shopReceiptGallery": "Galeriden fiş seç",
   "shopReceiptMatched": "{count} ürün eşleşti",
-  "@shopReceiptMatched": {"placeholders": {"count": {"type": "int"}}},
+  "@shopReceiptMatched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "shopReceiptNoMatches": "Listedeki ürünlerle eşleşen satır bulunamadı.",
   "shopReceiptApply": "Fiyatları uygula",
   "shopDueHeader": "Bitmiş olabilir",
   "shopDueEveryDays": "{days}g",
-  "@shopDueEveryDays": {"placeholders": {"days": {"type": "int"}}},
+  "@shopDueEveryDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "shopStatusUnavailable": "Yoktu / Sonraya",
   "shopStatusUnavailableBadge": "Yoktu",
   "shopBarcodeTitle": "Barkod tara",
   "shopBarcodeUnknownPrompt": "Yeni barkod ({ean})",
-  "@shopBarcodeUnknownPrompt": {"placeholders": {"ean": {"type": "String"}}},
+  "@shopBarcodeUnknownPrompt": {
+    "placeholders": {
+      "ean": {
+        "type": "String"
+      }
+    }
+  },
   "shopBarcodeNameHint": "Ürün adı (ör. Türk kahvesi 100 g)",
   "shopKeepScreenOn": "Ekranı açık tut",
   "shopAtStoreButton": "Marketteyim",
   "shopAtStoreMessage": "🛒 {name} şimdi markette — eksik varsa listeye ekle!",
-  "@shopAtStoreMessage": {"placeholders": {"name": {"type": "String"}}},
+  "@shopAtStoreMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "shopAtStoreSent": "Ortak arkadaşlara bildirim gönderildi",
   "shopScanReceiptTooltip": "Fiş tara (OCR)",
   "shopRecipesTooltip": "Tarif paketleri",
   "shopAisleOrderTooltip": "Reyon sırasını düzenle",
   "shopTakenBy": "{name} aldı",
-  "@shopTakenBy": {"placeholders": {"name": {"type": "String"}}},
+  "@shopTakenBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "shopEstimatedPrefix": "~{amount} ₺",
-  "@shopEstimatedPrefix": {"placeholders": {"amount": {"type": "String"}}},
+  "@shopEstimatedPrefix": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopActualPrice": "{amount} ₺",
-  "@shopActualPrice": {"placeholders": {"amount": {"type": "String"}}},
+  "@shopActualPrice": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "shopOpenStoreModeCount": "Mağaza Kipi ({remaining})",
-  "@shopOpenStoreModeCount": {"placeholders": {"remaining": {"type": "int"}}},
+  "@shopOpenStoreModeCount": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "shopOpenStoreMode": "Mağaza kipi",
   "shopDictationTooltip": "Sesle ekle",
   "spellManualLearn": "Bu düzeltmeyi öğren",
@@ -4652,8 +4522,17 @@
   "uiProfileTabletPen": "Tablet ve kalem",
   "uiProfileTabletPenDesc": "Bölünmüş görünüm, kalem ve PDF araçları ön planda",
   "uiProfileApplied": "{name} profili uygulandı",
-  "@uiProfileApplied": {"placeholders": {"name": {"type": "String"}}},
-  "lockEncryptedBadge": "Uçtan uca şifreli",
+  "@uiProfileApplied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lockNeedSecretOnce": "Bu cihazda ilk kez açmak için kilit şifreni veya desenini bir kez gir.",
+  "lockForgotConfirmTitle": "Kilit sıfırlansın mı?",
+  "lockForgotConfirmBody": "Mevcut şifrenle şifrelenmiş eski kilitli notların metni eski şifre olmadan bir daha çözülemez. Yine de kilit sıfırlansın mı?",
+  "lockForgotConfirmAction": "Sıfırla",
   "starterShoppingTitle": "🛒 Örnek market listesi",
   "starterWelcomeTitle": "⚡ Hızlı başlangıç"
 }

@@ -123,7 +123,7 @@ class _ImageTools extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
-        Icon(Icons.photo_size_select_large, size: 18, color: scheme.primary),
+        Icon(Icons.photo_size_select_large, size: AppIconSize.s, color: scheme.primary),
         if (wide)
           SizedBox(width: wideSliderWidth, child: slider)
         else
@@ -133,27 +133,27 @@ class _ImageTools extends StatelessWidget {
             key: const ValueKey('floating-add-text'),
             tooltip: l10n.attachmentAddText,
             visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.title, size: 20),
+            icon: const Icon(Icons.title, size: AppIconSize.m),
             onPressed: onAddText,
           ),
         if (onCaption != null)
           IconButton(
             tooltip: hasCaption ? l10n.imageCaptionEdit : l10n.imageCaptionAdd,
             visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.short_text_rounded, size: 20),
+            icon: const Icon(Icons.short_text_rounded, size: AppIconSize.m),
             onPressed: onCaption,
           ),
         if (onFullscreen != null)
           IconButton(
             tooltip: l10n.fullscreen,
             visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.fullscreen, size: 20),
+            icon: const Icon(Icons.fullscreen, size: AppIconSize.m),
             onPressed: onFullscreen,
           ),
         IconButton(
           tooltip: l10n.removeAttachment,
           visualDensity: VisualDensity.compact,
-          icon: const Icon(Icons.delete_outline, size: 20),
+          icon: const Icon(Icons.delete_outline, size: AppIconSize.m),
           color: scheme.error,
           onPressed: onRemove,
         ),
@@ -163,7 +163,7 @@ class _ImageTools extends StatelessWidget {
         if (menuActions.isNotEmpty)
           PopupMenuButton<AttachmentAction>(
             tooltip: l10n.more,
-            icon: const Icon(Icons.more_vert, size: 20),
+            icon: const Icon(Icons.more_vert, size: AppIconSize.m),
             onSelected: (action) {
               switch (action) {
                 case AttachmentAction.extractText:
@@ -194,7 +194,7 @@ class _ImageTools extends StatelessWidget {
     return Material(
       color: scheme.surfaceContainerHighest,
       elevation: 3,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.l),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(4, 6, 4, 2),
         child: Column(
@@ -218,7 +218,7 @@ class _ImageTools extends StatelessWidget {
                     if (constraints.maxWidth >= 380) ...[
                       Icon(
                         Icons.layers_outlined,
-                        size: 16,
+                        size: AppIconSize.xs,
                         color: scheme.onSurfaceVariant,
                       ),
                       const SizedBox(width: 6),
@@ -287,7 +287,7 @@ class _PlacementHintLineState extends State<_PlacementHintLine> {
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
       child: Row(
         children: [
-          Icon(Icons.lightbulb_outline, size: 16, color: scheme.primary),
+          Icon(Icons.lightbulb_outline, size: AppIconSize.xs, color: scheme.primary),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -354,7 +354,7 @@ class _PlacementPulseState extends State<_PlacementPulse>
         final t = Curves.easeInOut.transform(_pulse.value);
         return DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppRadius.xl),
             border: Border.all(color: scheme.primary, width: 2),
             boxShadow: [
               BoxShadow(

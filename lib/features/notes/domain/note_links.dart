@@ -72,3 +72,17 @@ List<Note> backlinksTo(String noteId, Iterable<Note> notes) => [
         n.tagLinks.any((l) => linkedNoteId(l) == noteId))
       n,
 ];
+
+/// Tüm notların geri bağlantı dizini: hedef not id → ona bağlanan notlar.
+/// Liste anlık görüntüsü başına BİR kez O(N) kurulur; okuma O(1).
+Map<String, List<Note>> buildBacklinksIndex(Iterable<Note> notes) {
+  final index = <String, List<Note>>{};
+  for (final n in notes) {
+    if (n.deletedAt != null || n.tagLinks.isEmpty) continue;
+    for (final targetId in outgoingNoteLinks(n)) {
+      if (targetId == n.id) continue;
+      (index[targetId] ??= <Note>[]).add(n);
+    }
+  }
+  return index;
+}

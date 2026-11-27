@@ -11,6 +11,7 @@ import '../domain/note.dart';
 import '../domain/note_links.dart';
 import '../../../core/widgets/sheet_keyboard.dart';
 import 'note_card.dart' show openNoteRoute;
+import '../../../app/theme/app_tokens.dart';
 
 /// Bağlantı etiketinin yazısı: hedefin başlığı (kilitliyse de başlık —
 /// içerik değil), başlıksızsa ilk satır, o da yoksa [fallback].
@@ -139,17 +140,19 @@ class BacklinksChip extends StatelessWidget {
   const BacklinksChip({
     super.key,
     required this.noteId,
-    required this.notes,
+    this.notes,
+    this.backlinks,
     this.labelStyle,
   });
 
   final String noteId;
-  final List<Note> notes;
+  final List<Note>? notes;
+  final List<Note>? backlinks;
   final TextStyle? labelStyle;
 
   @override
   Widget build(BuildContext context) {
-    final back = backlinksTo(noteId, notes);
+    final back = backlinks ?? backlinksTo(noteId, notes ?? const <Note>[]);
     if (back.isEmpty) return const SizedBox.shrink();
     final l10n = context.l10n;
     return ActionChip(
@@ -277,7 +280,7 @@ Future<void> showRelatedNotesSheet(
                     openNoteRoute(context, n);
                   },
                   trailing: TextButton.icon(
-                    icon: const Icon(Icons.link, size: 18),
+                    icon: const Icon(Icons.link, size: AppIconSize.s),
                     label: Text(l10n.relatedNotesLink),
                     onPressed: () {
                       Navigator.pop(ctx);

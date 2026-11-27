@@ -14,7 +14,7 @@ void main() {
     'cardKindSlides',
     'uiItemVideoBadge',
   };
-  const acronyms = {'API', 'PDF', 'WAV', 'OCR', 'IBAN', 'CSV', 'TSV'};
+  const acronyms = {'API', 'PDF', 'WAV', 'OCR', 'IBAN', 'CSV', 'TSV', 'AES', 'GCM'};
   // Özel ad ve virgüllü örnek listeleri (tek tek düşünülmüş).
   const titleCaseOk = {
     'tplShoppingItems',

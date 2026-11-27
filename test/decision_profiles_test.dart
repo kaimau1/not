@@ -117,4 +117,51 @@ void main() {
       );
     });
   });
+
+  group('D3 captureRoute & D5 listClassify', () {
+    test('D3: niyet şeması ve yüksek/düşük güven eşikleri', () {
+      final q = CaptureRouteProfile.questions['niyet']! as ChoiceQuestion;
+      final keys = q.options.keys.toList()..sort();
+      expect(keys.first, ChoiceQuestion.none);
+      expect(q.options.keys.every(decisionKeyPattern.hasMatch), isTrue);
+
+      expect(
+        CaptureRouteProfile.interpret({'niyet': _choice('b_alisveris', 0.9)}),
+        CaptureRouteIntent.shopping,
+      );
+      expect(
+        CaptureRouteProfile.interpret({'niyet': _choice('d_etkinlik', 0.8)}),
+        CaptureRouteIntent.event,
+      );
+      expect(
+        CaptureRouteProfile.interpret({'niyet': _choice('c_gorev', 0.5)}),
+        CaptureRouteIntent.unknown,
+      );
+      expect(
+        CaptureRouteProfile.interpret({'niyet': _choice('a_yok', 0.99)}),
+        CaptureRouteIntent.unknown,
+      );
+    });
+
+    test('D5: akıllı liste tür şeması ve eşik yorumlama', () {
+      final q = ListClassifyProfile.questions['liste_turu']! as ChoiceQuestion;
+      final keys = q.options.keys.toList()..sort();
+      expect(keys.first, ChoiceQuestion.none);
+      expect(q.options.length, 9);
+      expect(q.options.keys.every(decisionKeyPattern.hasMatch), isTrue);
+
+      expect(
+        ListClassifyProfile.interpret({'liste_turu': _choice('k04', 0.85)}),
+        isNotNull,
+      );
+      expect(
+        ListClassifyProfile.interpret({'liste_turu': _choice('k00', 0.5)}),
+        isNull,
+      );
+      expect(
+        ListClassifyProfile.interpret({'liste_turu': _choice('a_yok', 0.95)}),
+        isNull,
+      );
+    });
+  });
 }

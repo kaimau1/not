@@ -14,6 +14,7 @@ import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/widgets/sheet_keyboard.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../shopping/data/barcode_lookup.dart';
+import '../../../shopping/data/receipt_ocr_parser.dart' show receiptUnitPriceForItem;
 import '../../../shopping/data/shop_memory.dart';
 import '../../../shopping/domain/shop_aisles.dart';
 import '../../../shopping/domain/shop_item_meta.dart';
@@ -31,6 +32,8 @@ import '../../domain/note_item.dart';
 import '../../domain/quick_entry.dart';
 import '../../domain/smart_list.dart';
 import '../qr_scan_screen.dart';
+
+part 'store_mode_cards.dart';
 
 sealed class _StoreRow {
   const _StoreRow();
@@ -167,6 +170,7 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
 
   bool _speechAvailable = false;
   bool _dictating = false;
+  bool _lookingUpBarcode = false;
   StreamSubscription<({String? text, double? level})>? _speechSub;
 
   void _onLiveItemsChanged() {
@@ -365,9 +369,15 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
 
   void _finishChecked() {
     unawaited(AppHaptics.tick());
+    final storeFiltered = _activeStore.isNotEmpty;
     final checkedItems = [
       for (final i in _items)
-        if (!i.header && i.checked) i,
+        if (!i.header &&
+            i.checked &&
+            (!storeFiltered ||
+                ShopItemMeta.fromItem(i).store.isEmpty ||
+                ShopItemMeta.fromItem(i).store == _activeStore))
+          i,
     ];
     if (checkedItems.isNotEmpty) {
       var cartSum = 0.0;
@@ -389,6 +399,16 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
           itemCount: checkedItems.length,
         ),
       );
+    }
+    if (storeFiltered && widget.onReplaceItems != null) {
+      final removeIds = {for (final i in checkedItems) i.id};
+      setState(
+        () => _items = widget.onReplaceItems!([
+          for (final i in _items)
+            if (!removeIds.contains(i.id)) i,
+        ]),
+      );
+      return;
     }
     setState(() => _items = widget.onFinishChecked());
   }
@@ -479,13 +499,20 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
   }
 
   Future<void> _scanBarcode() async {
+    if (_lookingUpBarcode) return;
     final scanner = widget.barcodeScanner ?? openQrScanner;
     final code = await scanner(context);
     if (code == null || code.trim().isEmpty || !mounted) return;
     final lookup =
         widget.barcodeLookup ??
         (c, mem) => lookupBarcodeProduct(c, memory: mem);
-    var product = await lookup(code, _memory);
+    setState(() => _lookingUpBarcode = true);
+    ShopBarcodeProduct? product;
+    try {
+      product = await lookup(code, _memory);
+    } finally {
+      if (mounted) setState(() => _lookingUpBarcode = false);
+    }
     if (!mounted) return;
 
     if (product == null) {
@@ -503,7 +530,19 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
     if (widget.shopMemoryListenable == null) {
       _memory = _memory.withBarcode(product);
     }
-    _addParsedText(product.displayText);
+    final beforeIds = {for (final i in _items) i.id};
+    var updated = widget.onAddItem(product.displayText);
+    if (product.aisle >= 0 && widget.onUpdateItem != null) {
+      final added = updated.where((i) => !beforeIds.contains(i.id)).firstOrNull;
+      if (added != null) {
+        updated = widget.onUpdateItem!(
+          ShopItemMeta.fromItem(added)
+              .copyWith(aisle: product.aisle)
+              .applyToItem(added),
+        );
+      }
+    }
+    setState(() => _items = updated);
   }
 
   Future<String?> _askUnknownBarcodeName(String ean) => showAppSheet<String>(
@@ -559,14 +598,15 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
           () {
             final line = byId[item.id]!;
             final oldMeta = ShopItemMeta.fromItem(item);
+            final unitPrice = receiptUnitPriceForItem(line, oldMeta);
             widget.onRecordPrice?.call(
               item.text,
-              line.price,
+              unitPrice,
               store: store,
               unit: oldMeta.unit,
             );
             return oldMeta
-                .copyWith(unitPrice: line.price, store: store)
+                .copyWith(unitPrice: unitPrice, store: store)
                 .applyToItem(item);
           }()
         else
@@ -728,19 +768,23 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
                 ShopItemMeta.fromItem(i).store == _activeStore))
           i,
     ];
+    final storeRealItems = [
+      for (final i in storeFilteredItems)
+        if (!i.header && i.text.trim().isNotEmpty) i,
+    ];
     final visibleItems = [
       for (final i in storeFilteredItems)
         if (i.header || !_hideChecked || !i.checked) i,
     ];
 
-    final total = realItems.length;
-    final checkedCount = realItems.where((i) => i.checked).length;
+    final total = storeRealItems.length;
+    final checkedCount = storeRealItems.where((i) => i.checked).length;
     final remaining = total - checkedCount;
     final progress = total == 0 ? 1.0 : checkedCount / total;
 
     var cartTotal = 0.0;
     var estimatedTotal = 0.0;
-    for (final item in realItems) {
+    for (final item in storeRealItems) {
       final meta = ShopItemMeta.fromItem(item);
       if (meta.status == ShopItemStatus.unavailable) continue;
       final fallback = _memory
@@ -999,12 +1043,19 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
                         spacing: AppSpace.s,
                         children: [
                           Icon(
-                            Icons.check_circle_outline_rounded,
+                            total == 0
+                                ? Icons.shopping_cart_outlined
+                                : Icons.check_circle_outline_rounded,
                             size: AppIconSize.l,
-                            color: scheme.primary,
+                            color: total == 0
+                                ? scheme.onSurfaceVariant
+                                : scheme.primary,
                           ),
                           Text(
-                            l10n.storeModeAllDone,
+                            total == 0
+                                ? l10n.quickListEmpty
+                                : l10n.storeModeAllDone,
+                            textAlign: TextAlign.center,
                             style: text.sheetTitle,
                           ),
                         ],
@@ -1151,8 +1202,13 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
                     IconButton.filledTonal(
                       key: const ValueKey('store-mode-barcode'),
                       tooltip: l10n.shopBarcodeTitle,
-                      icon: const Icon(Icons.qr_code_scanner_rounded),
-                      onPressed: _scanBarcode,
+                      icon: _lookingUpBarcode
+                          ? const SizedBox.square(
+                              dimension: AppIconSize.s,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.qr_code_scanner_rounded),
+                      onPressed: _lookingUpBarcode ? null : _scanBarcode,
                     ),
                   IconButton.filled(
                     key: const ValueKey('store-mode-add-submit'),
@@ -1170,357 +1226,3 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
   }
 }
 
-class _StoreItemCard extends StatelessWidget {
-  const _StoreItemCard({
-    required this.item,
-    required this.aisleIndex,
-    required this.memory,
-    required this.activeStore,
-    required this.isShopping,
-    required this.onToggle,
-    required this.onToggleUnavailable,
-    required this.onEditPrice,
-    required this.onStepQty,
-  });
-
-  final NoteItem item;
-  final int aisleIndex;
-  final ShopMemory memory;
-  final String activeStore;
-  final bool isShopping;
-  final VoidCallback onToggle;
-  final VoidCallback onToggleUnavailable;
-  final VoidCallback onEditPrice;
-  final ValueChanged<bool> onStepQty;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final text = AppText.of(theme);
-
-    final meta = ShopItemMeta.fromItem(item);
-    final checked = item.checked;
-    final unavailable = meta.isUnavailable;
-
-    final histEntry = memory.lastPrice(
-      item.text,
-      store: meta.store.isNotEmpty
-          ? meta.store
-          : (activeStore.isEmpty ? null : activeStore),
-    );
-    final displayPrice = meta.unitPrice ?? histEntry?.price;
-    final isEstimated = meta.unitPrice == null && histEntry != null;
-    final qtyLabel = formatShopQty(meta.qty, meta.unit);
-
-    final baseName = quickBaseName(item.text);
-
-    return Dismissible(
-      key: ValueKey('store-dismiss-${item.id}'),
-      direction: isShopping
-          ? DismissDirection.horizontal
-          : DismissDirection.none,
-      confirmDismiss: (dir) async {
-        if (dir == DismissDirection.startToEnd) {
-          onEditPrice();
-        } else if (dir == DismissDirection.endToStart) {
-          onToggleUnavailable();
-        }
-        return false;
-      },
-      background: Container(
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-        decoration: BoxDecoration(
-          color: scheme.primaryContainer,
-          borderRadius: BorderRadius.circular(AppRadius.m),
-        ),
-        child: Icon(
-          Icons.payments_outlined,
-          color: scheme.onPrimaryContainer,
-        ),
-      ),
-      secondaryBackground: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-        decoration: BoxDecoration(
-          color: scheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(AppRadius.m),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          spacing: AppSpace.xs,
-          children: [
-            Text(
-              l10n.shopStatusUnavailable,
-              style: text.label.copyWith(color: scheme.onSecondaryContainer),
-            ),
-            Icon(
-              Icons.hourglass_empty_rounded,
-              color: scheme.onSecondaryContainer,
-            ),
-          ],
-        ),
-      ),
-      child: Material(
-        key: ValueKey('store-item-${item.id}'),
-        color: checked
-            ? scheme.surfaceContainerLow
-            : unavailable
-            ? scheme.secondaryContainer.withValues(alpha: AppAlpha.soft)
-            : scheme.surfaceContainer,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.m),
-          side: BorderSide(
-            color: checked
-                ? scheme.outlineVariant.withValues(alpha: AppAlpha.soft)
-                : unavailable
-                ? scheme.secondary.withValues(alpha: AppAlpha.soft)
-                : scheme.primary.withValues(alpha: AppAlpha.soft),
-          ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onToggle,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpace.m,
-              vertical: AppSpace.m,
-            ),
-            child: Row(
-              spacing: AppSpace.s,
-              children: [
-                Icon(
-                  checked
-                      ? Icons.check_circle_rounded
-                      : unavailable
-                      ? Icons.hourglass_bottom_rounded
-                      : Icons.radio_button_unchecked_rounded,
-                  size: AppIconSize.l,
-                  color: checked
-                      ? scheme.primary
-                      : unavailable
-                      ? scheme.secondary
-                      : scheme.onSurfaceVariant,
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: AppSpace.xxs,
-                    children: [
-                      Text(
-                        item.text.trim(),
-                        style: text.sheetTitle.copyWith(
-                          color: checked
-                              ? scheme.onSurfaceVariant
-                              : scheme.onSurface,
-                          decoration: checked
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                      ),
-                      if (isShopping &&
-                          (displayPrice != null ||
-                              meta.store.isNotEmpty ||
-                              unavailable ||
-                              meta.takenBy.isNotEmpty))
-                        Wrap(
-                          spacing: AppSpace.s,
-                          runSpacing: AppSpace.xxs,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            if (unavailable)
-                              Text(
-                                l10n.shopStatusUnavailableBadge,
-                                style: text.badge.copyWith(
-                                  color: scheme.secondary,
-                                ),
-                              ),
-                            if (displayPrice != null)
-                              InkWell(
-                                key: ValueKey('store-price-${item.id}'),
-                                borderRadius: BorderRadius.circular(AppRadius.xs),
-                                onTap: onEditPrice,
-                                child: Text(
-                                  isEstimated
-                                      ? l10n.shopEstimatedPrefix(
-                                          ShopBudgetBar.formatTl(displayPrice),
-                                        )
-                                      : l10n.shopActualPrice(
-                                          ShopBudgetBar.formatTl(displayPrice),
-                                        ),
-                                  style: text.meta.copyWith(
-                                    color: isEstimated
-                                        ? scheme.onSurfaceVariant
-                                        : scheme.primary,
-                                    fontWeight: isEstimated
-                                        ? AppWeight.regular
-                                        : AppWeight.strong,
-                                  ),
-                                ),
-                              ),
-                            if (meta.store.isNotEmpty)
-                              Text(
-                                shopStoreLabel(meta.store),
-                                style: text.badge.copyWith(
-                                  color: scheme.secondary,
-                                ),
-                              ),
-                            if (meta.takenBy.isNotEmpty && checked)
-                              Text(
-                                l10n.shopTakenBy(meta.takenBy),
-                                style: text.badge.copyWith(
-                                  color: scheme.primary,
-                                ),
-                              ),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-                if (isShopping && !checked) ...[
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        key: ValueKey('store-qty-minus-${item.id}'),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
-                        style: const ButtonStyle(
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        tooltip: baseName,
-                        icon: const Icon(
-                          Icons.remove_circle_outline_rounded,
-                          size: AppIconSize.m,
-                        ),
-                        onPressed: () => onStepQty(false),
-                      ),
-                      if (qtyLabel.isNotEmpty)
-                        Text(qtyLabel, style: text.label),
-                      IconButton(
-                        key: ValueKey('store-qty-plus-${item.id}'),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
-                        style: const ButtonStyle(
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        tooltip: baseName,
-                        icon: const Icon(
-                          Icons.add_circle_outline_rounded,
-                          size: AppIconSize.m,
-                        ),
-                        onPressed: () => onStepQty(true),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    key: ValueKey('store-price-btn-${item.id}'),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 36,
-                      minHeight: 36,
-                    ),
-                    style: const ButtonStyle(
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    tooltip: l10n.shopUnitPriceLabel,
-                    icon: Icon(
-                      displayPrice != null
-                          ? Icons.sell_rounded
-                          : Icons.sell_outlined,
-                      size: AppIconSize.s,
-                      color: displayPrice != null
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant,
-                    ),
-                    onPressed: onEditPrice,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _UnknownBarcodeSheet extends StatefulWidget {
-  const _UnknownBarcodeSheet({required this.ean});
-
-  final String ean;
-
-  @override
-  State<_UnknownBarcodeSheet> createState() => _UnknownBarcodeSheetState();
-}
-
-class _UnknownBarcodeSheetState extends State<_UnknownBarcodeSheet> {
-  final _ctrl = TextEditingController();
-  final _focus = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    focusAfterRouteOpens(this, _focus);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    _focus.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    final t = _ctrl.text.trim();
-    if (t.isEmpty) return;
-    Navigator.pop(context, t);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return SheetInsetPadding(
-      extra: AppSpace.l,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SheetHeader(title: l10n.shopBarcodeUnknownPrompt(widget.ean)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
-            child: Row(
-              spacing: AppSpace.s,
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _ctrl,
-                    focusNode: _focus,
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _save(),
-                    decoration: InputDecoration(
-                      hintText: l10n.shopBarcodeNameHint,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.m),
-                      ),
-                    ),
-                  ),
-                ),
-                FilledButton(onPressed: _save, child: Text(l10n.eventSave)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

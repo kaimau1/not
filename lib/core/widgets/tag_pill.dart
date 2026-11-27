@@ -51,7 +51,7 @@ class TagPill extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: fontSize,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppWeight.strong,
             color: colors.foreground,
           ),
         ),

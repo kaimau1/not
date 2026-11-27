@@ -20,6 +20,7 @@ import '../../data/attachment_save.dart';
 import '../../data/upload_queue.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note_table.dart';
+import '../../domain/transcript.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
@@ -35,6 +36,7 @@ import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/friendly_error.dart';
 import 'attachment_clipboard.dart' show shareAttachment;
 import '../../../../core/haptics.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
 ///
@@ -216,10 +218,10 @@ class _CollapseHandle extends StatelessWidget {
       message: context.l10n.hideAttachments,
       child: Material(
         key: const ValueKey('strip-collapse'),
-        color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(12),
+        color: scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.muted),
+        borderRadius: BorderRadius.circular(AppRadius.m),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           onTap: onTap,
           child: SizedBox(
             width: 30,
@@ -228,7 +230,7 @@ class _CollapseHandle extends StatelessWidget {
               children: [
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
-                  size: 20,
+                  size: AppIconSize.m,
                   color: scheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 2),
@@ -288,7 +290,7 @@ class _CollapsedHandle extends StatelessWidget {
             ),
             Icon(
               Icons.keyboard_arrow_up_rounded,
-              size: 18,
+              size: AppIconSize.s,
               color: scheme.onSurfaceVariant,
             ),
           ],
@@ -466,10 +468,7 @@ class _AttachmentTile extends ConsumerWidget {
   bool get _hasLocal => localFileExists(attachment.localPath);
 
   /// Metne dökülebilen ek mi (bkz. `Transcripts.canTranscribe`).
-  bool get _canTranscribe =>
-      attachment.kind == AttachmentKind.audio ||
-      attachment.kind == AttachmentKind.video ||
-      attachment.kind == AttachmentKind.image;
+  bool get _canTranscribe => Transcripts.canTranscribe(attachment);
 
   void _open(
     BuildContext context,
@@ -599,7 +598,7 @@ class _AttachmentTile extends ConsumerWidget {
     } else if (attachment.kind == AttachmentKind.slide) {
       content = _PreviewTile(
         preview: ColoredBox(
-          color: scheme.tertiaryContainer.withValues(alpha: 0.6),
+          color: scheme.tertiaryContainer.withValues(alpha: AppAlpha.muted),
           child: Center(
             child: Icon(
               Icons.slideshow_outlined,
@@ -690,7 +689,7 @@ class _AttachmentTile extends ConsumerWidget {
       children: [
         Material(
           color: scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => _open(context, ref),
@@ -730,7 +729,7 @@ class _AttachmentTile extends ConsumerWidget {
           child: IconButton(
             tooltip: context.l10n.removeAttachment,
             visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.cancel, size: 18),
+            icon: const Icon(Icons.cancel, size: AppIconSize.s),
             color: Colors.white,
             style: IconButton.styleFrom(backgroundColor: Colors.black38),
             onPressed: onRemove,
@@ -775,7 +774,7 @@ class _AttachmentTile extends ConsumerWidget {
           DateTime.now().difference(created) < const Duration(seconds: 4),
       from: 0.86,
       alignment: Alignment.bottomCenter,
-      duration: const Duration(milliseconds: 300),
+      duration: AppMotion.medium,
       child: SizedBox(
         width: 140,
         height: height,
@@ -951,7 +950,7 @@ class _MoreButton extends StatelessWidget {
           height: 26,
           child: Icon(
             Icons.more_horiz_rounded,
-            size: 20,
+            size: AppIconSize.m,
             color: scheme.onSurfaceVariant,
           ),
         ),
@@ -1006,7 +1005,7 @@ class _PreviewTile extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: badgeColor,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
                     ),
                     child: Text(
                       badge,
@@ -1027,7 +1026,7 @@ class _PreviewTile extends StatelessWidget {
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppWeight.strong,
                       ),
                     ),
                   ),

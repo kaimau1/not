@@ -808,6 +808,31 @@ class MainActivity : FlutterFragmentActivity(), FlutterUiDisplayListener {
                             )
                         }
                     }
+                    // 3 kademeli RAM/çekirdek bütçesi (düşük/orta/yüksek cihaz).
+                    "deviceMemoryInfo" -> {
+                        val am = getSystemService(ACTIVITY_SERVICE) as? ActivityManager
+                        val cores = Runtime.getRuntime().availableProcessors()
+                        if (am == null) {
+                            result.success(
+                                mapOf(
+                                    "totalRamMb" to 0,
+                                    "lowRam" to false,
+                                    "cores" to cores,
+                                )
+                            )
+                        } else {
+                            val info = ActivityManager.MemoryInfo()
+                            am.getMemoryInfo(info)
+                            val totalMb = (info.totalMem / (1024L * 1024L)).toInt()
+                            result.success(
+                                mapOf(
+                                    "totalRamMb" to totalMb,
+                                    "lowRam" to am.isLowRamDevice,
+                                    "cores" to cores,
+                                )
+                            )
+                        }
+                    }
                     // MIUI (Xiaomi/Redmi/POCO): "Otomatik başlatma" izni yoksa
                     // telefon yeniden başlayınca hatırlatıcılar uygulama açılana
                     // dek kurulmaz (2026-11-06 kullanıcı kararı: ipucu ver).

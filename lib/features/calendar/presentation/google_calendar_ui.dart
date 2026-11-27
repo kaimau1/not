@@ -1173,7 +1173,7 @@ class _GoogleEventSheet extends ConsumerWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.place_outlined, size: 16),
+                const Icon(Icons.place_outlined, size: AppIconSize.xs),
                 const SizedBox(width: 4),
                 Expanded(child: Text(event.location)),
               ],

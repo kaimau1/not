@@ -114,12 +114,27 @@ void main() {
     expect(f.totalChars, greaterThan(1000));
   });
 
-  test('F7.6 düşük RAM cihazda görsel önbellek yarıya iner', () {
+  test('F7.6 cihaz RAM sınıfına göre 3 kademeli görsel önbellek uygular', () {
     final cache = ImageCache();
     ImageCacheBudget.applyTo(cache, lowMemory: false);
-    expect(cache.maximumSizeBytes, 100 << 20);
+    expect(cache.maximumSizeBytes, ImageCacheBudget.highMemoryBytes);
+    expect(cache.maximumSize, ImageCacheBudget.highMemoryCount);
+
+    ImageCacheBudget.applyTier(cache, DeviceRamTier.mid);
+    expect(cache.maximumSizeBytes, ImageCacheBudget.midMemoryBytes);
+    expect(cache.maximumSize, ImageCacheBudget.midMemoryCount);
+
     ImageCacheBudget.applyTo(cache, lowMemory: true);
-    expect(cache.maximumSizeBytes, 50 << 20);
-    expect(cache.maximumSize, 500);
+    expect(cache.maximumSizeBytes, ImageCacheBudget.lowMemoryBytes);
+    expect(cache.maximumSize, ImageCacheBudget.lowMemoryCount);
+    expect(
+      classifyDeviceRam(totalRamMb: 2048, cores: 4),
+      DeviceRamTier.low,
+    );
+    expect(
+      classifyDeviceRam(totalRamMb: 8192, cores: 8),
+      DeviceRamTier.high,
+    );
+    ImageCacheBudget.setTierForTest(DeviceRamTier.mid);
   });
 }

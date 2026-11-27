@@ -7,6 +7,7 @@ import 'package:image/image.dart' as img;
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// **ALAN SEÇİMİ** — sayfanın üzerinde bir dikdörtgen çizip o parçayı görüntü
 /// olarak almak (kullanıcı isteği: "PDF içerisinden formül yazı seç — alan
@@ -153,7 +154,7 @@ class _AreaSelectLayerState extends State<AreaSelectLayer> {
                     ),
                     IconButton(
                       tooltip: l10n.areaSelectOff,
-                      icon: const Icon(Icons.close, size: 18),
+                      icon: const Icon(Icons.close, size: AppIconSize.s),
                       color: scheme.onInverseSurface,
                       onPressed: widget.onCancel,
                     ),
@@ -269,7 +270,7 @@ class _CropRequest {
 /// Arka planda kırpar: tam ekran bir PNG'yi çözmek UI izolatında birkaç yüz
 /// milisaniye tutuyor.
 Uint8List? _cropPng(_CropRequest request) {
-  final decoded = img.decodeImage(request.png);
+  final decoded = img.decodePng(request.png);
   if (decoded == null) return null;
   final left = request.left.round().clamp(0, decoded.width - 1);
   final top = request.top.round().clamp(0, decoded.height - 1);

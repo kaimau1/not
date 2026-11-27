@@ -324,7 +324,7 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
   /// olunduğunu kaybettirir.
   void _animateZoomTo(Matrix4 target) {
     _zoomTween = Matrix4Tween(begin: _zoom.value, end: target).animate(
-      CurvedAnimation(parent: _zoomAnim, curve: Curves.easeOutCubic),
+      CurvedAnimation(parent: _zoomAnim, curve: AppMotion.emphasized),
     );
     _zoomAnim.forward(from: 0);
   }

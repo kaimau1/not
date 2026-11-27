@@ -17,6 +17,7 @@ import '../../domain/attachment.dart';
 import '../../../../core/friendly_error.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../core/haptics.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Kaydedicinin evresi.
 enum VoiceRecordPhase { starting, recording, paused, finishing }
@@ -314,7 +315,7 @@ class VoiceRecordPanel extends StatelessWidget {
                                 height: 16,
                                 decoration: BoxDecoration(
                                   color: red,
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(AppRadius.xs),
                                 ),
                               ),
                       ),
@@ -327,7 +328,7 @@ class VoiceRecordPanel extends StatelessWidget {
                     formatClock(recorder.elapsed),
                     style: TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppWeight.medium,
                       color: paused
                           ? scheme.onSurfaceVariant
                           : scheme.onSurface,

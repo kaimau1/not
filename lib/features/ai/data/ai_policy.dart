@@ -110,6 +110,11 @@ class AiConsentNotifier extends Notifier<bool> {
     state = true;
     unawaited(ref.read(sharedPreferencesProvider).setBool(key, true));
   }
+
+  void revoke() {
+    state = !required;
+    unawaited(ref.read(sharedPreferencesProvider).setBool(key, false));
+  }
 }
 
 /// İstemcide basit kayan pencere hız sınırı (PL2). Sunucu sınırının yerini

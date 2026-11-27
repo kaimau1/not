@@ -18,7 +18,6 @@ class WebDashboardHeader extends ConsumerWidget {
     required this.scrolled,
     required this.searchController,
     required this.searchFocus,
-    this.semanticToggle,
     required this.filterButton,
     required this.onOpenMenu,
     required this.showGridControls,
@@ -29,7 +28,6 @@ class WebDashboardHeader extends ConsumerWidget {
   final ValueListenable<bool> scrolled;
   final TextEditingController searchController;
   final FocusNode searchFocus;
-  final Widget? semanticToggle;
   final Widget filterButton;
   final VoidCallback onOpenMenu;
   final bool showGridControls;
@@ -42,7 +40,6 @@ class WebDashboardHeader extends ConsumerWidget {
     final tokens = AppTokens.of(context);
     final text = AppText.of(theme);
     final query = ref.watch(searchQueryProvider);
-    final semantic = ref.watch(semanticSearchEnabledProvider);
     final isList = ref.watch(noteListViewProvider);
     final manualColumns = ref.watch(gridColumnsProvider);
 
@@ -111,11 +108,9 @@ class WebDashboardHeader extends ConsumerWidget {
                   listenable: searchFocus,
                   builder: (context, _) {
                     final focused = searchFocus.hasFocus;
-                    // DAR SAYFA (kullanıcı 2026-11-24): Ctrl+K rozeti ve AI
-                    // düğmesi yazı alanını sıfıra indiriyordu, kutu
-                    // tıklanamıyordu. Önce rozet, çok darda AI düğmesi düşer.
+                    // DAR SAYFA (kullanıcı 2026-11-24): Ctrl+K rozeti dar
+                    // alanda yazı alanını sıfıra indirmesin.
                     final showKbd = box.maxWidth >= 300;
-                    final showAi = box.maxWidth >= 190;
                     return Container(
                       height: 44,
                       decoration: BoxDecoration(
@@ -163,9 +158,7 @@ class WebDashboardHeader extends ConsumerWidget {
                                   .remember(value),
                               decoration: InputDecoration(
                                 filled: false,
-                                hintText: semantic
-                                    ? l10n.semanticSearchHint
-                                    : l10n.searchHint,
+                                hintText: l10n.searchHint,
                                 hintStyle: text.label.copyWith(
                                   color: scheme.onSurfaceVariant,
                                 ),
@@ -217,11 +210,6 @@ class WebDashboardHeader extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                          if (showAi) ...[
-                            if (semanticToggle != null)
-                              TextFieldTapRegion(child: semanticToggle!),
-                            const SizedBox(width: AppSpace.xs),
-                          ],
                         ],
                       ),
                     );

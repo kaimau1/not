@@ -220,8 +220,10 @@ class SpellEngine {
   static final _future = RegExp(r'^(.+?)[ıiuü]?c(am|em|az|ez|ak|ek|an|en)$');
   static final _negFuture = RegExp(r'm[ıiuü]y([ae])');
   static final _question = RegExp(r'^(.{2,})m([ıiuü])$');
+  static final _backVowelTail = RegExp(r'[aıou][^aeıioöuü]*$');
+  static final _lastVowel = RegExp('[aeıioöuü]');
 
-  /// **Y-3 GENEL KALIPLAR** — yalnız SONUÇ bilinen kelimeyse (yazılan zaten
+  /// Y-3 genel kalıplar (tabloda olmayan ama Türkçede çok sık ve kökü
   /// bilinmiyor): ağız "-yom/-yosun/-yoz" ("geliyom" → "geliyorum"),
   /// gelecek zaman ağzı ("yapıcam" → "yapacağım"), "-mIyAcAk" ("gelmiyecek"
   /// → "gelmeyecek"), bitişik soru eki ("geldinmi" → "geldin mi").
@@ -235,7 +237,7 @@ class SpellEngine {
     final f = _future.firstMatch(w);
     if (f != null) {
       final stem = f[1]!;
-      final back = RegExp('[aıou][^aeıioöuü]*\$').hasMatch(stem);
+      final back = _backVowelTail.hasMatch(stem);
       final r = ok(
         stem +
             switch (f[2]) {
@@ -254,7 +256,7 @@ class SpellEngine {
     final q = question ? _question.firstMatch(w) : null;
     if (q != null) {
       final head = q[1]!;
-      final lv = RegExp('[aeıioöuü]').allMatches(head).lastOrNull?[0];
+      final lv = _lastVowel.allMatches(head).lastOrNull?[0];
       final want = switch (lv) {
         'a' || 'ı' => 'ı',
         'o' || 'u' => 'u',
@@ -547,22 +549,30 @@ class SpellEngine {
     return learnable(from, to, m) ? (from: from, to: to) : null;
   }
 
+  static final List<double> _distScratch0 = List<double>.filled(64, 0);
+  static final List<double> _distScratch1 = List<double>.filled(64, 0);
+  static final List<double> _distScratch2 = List<double>.filled(64, 0);
+
   /// **TANINMAZ DÜZELTME KAPISI**: otomatik (bulanık / cihaz) düzeltme
   /// harflerin üçte birinden fazlasını değiştiremez.
   static bool changesTooMuch(String a, String b) {
     final x = trLower(a), y = trLower(b);
-    var prev = List<int>.generate(y.length + 1, (i) => i);
+    final m = y.length;
+    var prev = List<int>.generate(m + 1, (i) => i);
+    var cur = List<int>.filled(m + 1, 0);
     for (var i = 1; i <= x.length; i++) {
-      final cur = List<int>.filled(y.length + 1, 0)..[0] = i;
-      for (var j = 1; j <= y.length; j++) {
+      cur[0] = i;
+      for (var j = 1; j <= m; j++) {
         cur[j] = math.min(
           math.min(prev[j] + 1, cur[j - 1] + 1),
           prev[j - 1] + (x[i - 1] == y[j - 1] ? 0 : 1),
         );
       }
+      final tmp = prev;
       prev = cur;
+      cur = tmp;
     }
-    return prev[y.length] > math.max(1, x.length ~/ 3);
+    return prev[m] > math.max(1, x.length ~/ 3);
   }
 
   /// Uzunluğa göre izin verilen en büyük mesafe.
@@ -583,42 +593,50 @@ class SpellEngine {
     // Fazladan basılan tuş: komşusuna yakınsa ucuz.
     double ins(int i) {
       final c = a[i];
-      final prev = i > 0 ? a[i - 1] : null;
-      final next = i + 1 < a.length ? a[i + 1] : null;
       var best = 0.95;
-      for (final o in [?prev, ?next]) {
+      if (i > 0) {
+        final o = a[i - 1];
+        if (o == c) best = math.min(best, 0.5);
+        if (keyCost(c, o) <= 0.45) best = math.min(best, 0.6);
+      }
+      if (i + 1 < a.length) {
+        final o = a[i + 1];
         if (o == c) best = math.min(best, 0.5);
         if (keyCost(c, o) <= 0.45) best = math.min(best, 0.6);
       }
       return best;
     }
 
-    var prev2 = <double>[];
-    var prev = List<double>.generate(b.length + 1, (j) => j.toDouble());
+    final n = b.length;
+    final useScratch = n + 1 <= _distScratch0.length;
+    var prev2 = useScratch ? _distScratch0 : List<double>.filled(n + 1, 0);
+    var prev = useScratch ? _distScratch1 : List<double>.filled(n + 1, 0);
+    var cur = useScratch ? _distScratch2 : List<double>.filled(n + 1, 0);
+    for (var j = 0; j <= n; j++) {
+      prev[j] = j.toDouble();
+    }
     for (var i = 1; i <= a.length; i++) {
-      final cur = List<double>.filled(b.length + 1, 0);
-      cur[0] = prev[0] + ins(i - 1);
+      final insCost = ins(i - 1);
+      cur[0] = prev[0] + insCost;
       var rowMin = cur[0];
-      for (var j = 1; j <= b.length; j++) {
-        final ca = a[i - 1];
+      final ca = a[i - 1];
+      for (var j = 1; j <= n; j++) {
         final cb = b[j - 1];
-        var v = math.min(prev[j] + ins(i - 1), cur[j - 1] + 0.9);
+        var v = math.min(prev[j] + insCost, cur[j - 1] + 0.9);
         v = math.min(v, prev[j - 1] + (ca == cb ? 0 : keyCost(ca, cb)));
-        if (i > 1 &&
-            j > 1 &&
-            ca == b[j - 2] &&
-            a[i - 2] == cb &&
-            prev2.isNotEmpty) {
+        if (i > 1 && j > 1 && ca == b[j - 2] && a[i - 2] == cb) {
           v = math.min(v, prev2[j - 2] + 0.55); // yer değiştirmiş iki harf
         }
         cur[j] = v;
         if (v < rowMin) rowMin = v;
       }
       if (rowMin > limit) return limit + 1;
+      final tmp = prev2;
       prev2 = prev;
       prev = cur;
+      cur = tmp;
     }
-    return prev[b.length];
+    return prev[n];
   }
 }
 

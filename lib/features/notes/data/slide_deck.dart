@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
 
 import 'pptx_render.dart';
+import 'zip_guard.dart';
 
 /// Bir .pptx dosyasını, gerçek tasarımıyla çizilebilir slayt modellerine
 /// (`SlideVM`) çevirir — salt görüntüleme için. Düzenleme yok; çizim/animasyon
@@ -18,15 +19,35 @@ abstract final class SlideDeck {
       compute(_render, bytes);
 }
 
+const _kSlideZipMaxFiles = 2000;
+const _kSlideZipMaxBytes = 120 * 1024 * 1024;
+
 List<SlideVM> _render(Uint8List bytes) {
-  final archive = ZipDecoder().decodeBytes(bytes);
+  final Archive archive;
+  try {
+    archive = ZipGuard.decodeBytes(
+      bytes,
+      maxFileCount: _kSlideZipMaxFiles,
+      maxBytes: _kSlideZipMaxBytes,
+    );
+  } on ArchiveException {
+    return const [];
+  } on FormatException {
+    return const [];
+  }
+  final budget = ZipByteBudget(maxBytes: _kSlideZipMaxBytes);
   final render = PptxRender(archive);
-  final presentation = _tryParse(archive, 'ppt/presentation.xml');
-  final presRels = _tryParse(archive, 'ppt/_rels/presentation.xml.rels');
+  final presentation = _tryParse(archive, 'ppt/presentation.xml', budget);
+  final presRels = _tryParse(archive, 'ppt/_rels/presentation.xml.rels', budget);
 
   final out = <SlideVM>[];
   for (final name in _orderedSlideFiles(archive, presentation, presRels)) {
-    final content = _fileByName(archive, name);
+    final Uint8List? content;
+    try {
+      content = _fileByName(archive, name, budget);
+    } on FormatException {
+      return const [];
+    }
     if (content == null) continue;
     try {
       final doc = XmlDocument.parse(utf8.decode(content, allowMalformed: true));
@@ -96,8 +117,13 @@ String _normTarget(String t) {
   return '$base$s';
 }
 
-XmlDocument? _tryParse(Archive archive, String name) {
-  final content = _fileByName(archive, name);
+XmlDocument? _tryParse(Archive archive, String name, ZipByteBudget budget) {
+  final Uint8List? content;
+  try {
+    content = _fileByName(archive, name, budget);
+  } on FormatException {
+    return null;
+  }
   if (content == null) return null;
   try {
     return XmlDocument.parse(utf8.decode(content, allowMalformed: true));
@@ -106,9 +132,9 @@ XmlDocument? _tryParse(Archive archive, String name) {
   }
 }
 
-List<int>? _fileByName(Archive archive, String name) {
+Uint8List? _fileByName(Archive archive, String name, ZipByteBudget budget) {
   for (final f in archive.files) {
-    if (f.name == name) return f.readBytes();
+    if (f.name == name) return ZipGuard.readEntryBytes(f, budget);
   }
   return null;
 }

@@ -130,20 +130,18 @@ class _AttachmentTagChipsState extends State<AttachmentTagChips> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return RepaintBoundary(
-      child: CustomPaint(
-        painter: _SpellPainter(
-          this,
-          widget.controller,
-          _spell,
-          scheme.error.withValues(alpha: AppAlpha.strong),
-          scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
-        ),
-        foregroundPainter: widget.looks.isEmpty
-            ? null
-            : _TagChipPainter(this, widget.controller, widget.looks),
-        child: widget.child,
+    return CustomPaint(
+      painter: _SpellPainter(
+        this,
+        widget.controller,
+        _spell,
+        scheme.error.withValues(alpha: AppAlpha.strong),
+        scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
       ),
+      foregroundPainter: widget.looks.isEmpty
+          ? null
+          : _TagChipPainter(this, widget.controller, widget.looks),
+      child: widget.child,
     );
   }
 }
@@ -177,21 +175,15 @@ class _SpellPainter extends CustomPainter {
     final caret = sel.isValid && sel.isCollapsed ? sel.baseOffset : -2;
     final comp = value.composing;
     final transform = render.getTransformTo(self);
-    final wave = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..color = color;
-    final dots = Paint()
-      ..strokeWidth = 1.4
-      ..color = hint;
+    final clip = MatrixUtils.transformRect(
+      transform,
+      Offset.zero & render.size,
+    ).inflate(3);
     canvas
       ..save()
-      ..clipRect(
-        MatrixUtils.transformRect(
-          transform,
-          Offset.zero & render.size,
-        ).inflate(3),
-      );
+      ..clipRect(clip);
+    Path? wavePath;
+    Path? dotsPath;
     var drawn = 0;
     for (final k in marks) {
       if (k.end > value.text.length) continue;
@@ -208,21 +200,42 @@ class _SpellPainter extends CustomPainter {
       );
       for (final box in boxes) {
         final r = MatrixUtils.transformRect(transform, box.toRect());
+        if (r.bottom < clip.top - 4 || r.top > clip.bottom + 4) continue;
         final y = r.bottom - 1.5;
         if (k.hint) {
+          final p = dotsPath ??= Path();
           for (var x = r.left; x < r.right; x += 3) {
-            canvas.drawLine(Offset(x, y), Offset(x + 1.2, y), dots);
+            p
+              ..moveTo(x, y)
+              ..lineTo(x + 1.2, y);
           }
           continue;
         }
-        final path = Path()..moveTo(r.left, y);
+        final p = (wavePath ??= Path())..moveTo(r.left, y);
         var up = true;
         for (var x = r.left + 2; x < r.right + 2; x += 2) {
-          path.lineTo(math.min(x, r.right), up ? y - 1.2 : y + 0.6);
+          p.lineTo(math.min(x, r.right), up ? y - 1.2 : y + 0.6);
           up = !up;
         }
-        canvas.drawPath(path, wave);
       }
+    }
+    if (wavePath != null) {
+      canvas.drawPath(
+        wavePath,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2
+          ..color = color,
+      );
+    }
+    if (dotsPath != null) {
+      canvas.drawPath(
+        dotsPath,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4
+          ..color = hint,
+      );
     }
     canvas.restore();
   }

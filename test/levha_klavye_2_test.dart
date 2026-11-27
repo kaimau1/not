@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
-import 'package:notlar/features/notes/presentation/editor/ai_result_sheet.dart';
 import 'package:notlar/features/notes/presentation/editor/note_search_sheet.dart';
 import 'package:notlar/features/notes/presentation/note_link_ui.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
@@ -109,31 +108,18 @@ void main() {
       () => showNotePicker(ctx, notes: notes),
       '_NotePicker',
     );
-    final result = await keyboard(
-      () => showAiResultSheet(
-        ctx,
-        title: 'Özet',
-        text: 'satır bir\nsatır iki',
-        onInsert: (_) {},
-        onCreateNote: (_, {asType}) {},
-      ),
-      '_AiResultSheet',
-    );
     final measured = {
       'arama_kurulum': search.$1,
       'arama_dizilme': search.$2,
       'secici_kurulum': picker.$1,
       'secici_dizilme': picker.$2,
-      'ai_sonuc_kurulum': result.$1,
-      'ai_sonuc_dizilme': result.$2,
     };
     // ignore: avoid_print
     print(
-      'S53: $measured · levha kökü: ${search.$3}/${picker.$3}/${result.$3}',
+      'S53: $measured · levha kökü: ${search.$3}/${picker.$3}',
     );
     expect(search.$3, 0, reason: 'arama levhası klavye karesinde kuruldu');
     expect(picker.$3, 0, reason: 'not seçici klavye karesinde kuruldu');
-    expect(result.$3, 0, reason: 'AI sonuç levhası klavye karesinde kuruldu');
     for (final e in measured.entries) {
       expect(
         e.value,

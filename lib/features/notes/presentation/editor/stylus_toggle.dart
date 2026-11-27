@@ -75,7 +75,7 @@ class _StylusToggleOverlayState extends State<StylusToggleOverlay> {
                     duration: _dragAt == null
                         ? const Duration(milliseconds: 220)
                         : Duration.zero,
-                    curve: Curves.easeOutCubic,
+                    curve: AppMotion.emphasized,
                     left: at.dx,
                     top: at.dy,
                     child: GestureDetector(

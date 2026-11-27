@@ -67,7 +67,7 @@ class PdfPageColumnState extends State<PdfPageColumn> {
       c.animateTo(
         target,
         duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.emphasized,
       );
     } else {
       c.jumpTo(target);
@@ -199,7 +199,7 @@ class PdfPagePill extends StatelessWidget {
       valueListenable: lit,
       builder: (context, on, _) => TweenAnimationBuilder<double>(
         tween: Tween(end: on ? 1 : 0.4),
-        duration: const Duration(milliseconds: 300),
+        duration: AppMotion.medium,
         builder: (context, t, _) => GestureDetector(
           key: const ValueKey('pdf-page-pill'),
           behavior: HitTestBehavior.opaque,
@@ -207,7 +207,7 @@ class PdfPagePill extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: tokens.card.withValues(alpha: tokens.card.a * 0.92 * t),
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
               border: Border.all(
                 color: tokens.hairline.withValues(alpha: tokens.hairline.a * t),
               ),
@@ -221,7 +221,7 @@ class PdfPagePill extends StatelessWidget {
                   maxLines: 1,
                   style: style?.copyWith(
                     fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppWeight.strong,
                     fontFeatures: const [FontFeature.tabularFigures()],
                     color: scheme.onSurfaceVariant.withValues(
                       alpha: scheme.onSurfaceVariant.a * t,

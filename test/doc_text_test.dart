@@ -128,4 +128,31 @@ void main() {
       throwsA(isA<DocTextException>()),
     );
   });
+
+  group('ZipGuard ve bozuk arşiv dayanıklılığı', () {
+    test('bozuk docx ve pptx baytları kontrollü DocTextException atar', () async {
+      final junk = Uint8List.fromList([0x50, 0x4B, 0x03, 0x04, 0xFF, 0x00]);
+      await expectLater(
+        () => DocText.extractFromBytes('docx', junk),
+        throwsA(isA<DocTextException>()),
+      );
+      await expectLater(
+        () => DocText.extractFromBytes('pptx', junk),
+        throwsA(isA<DocTextException>()),
+      );
+    });
+
+    test('dosya sayısı tavanını aşan zip arşivini reddeder', () async {
+      final archive = Archive();
+      for (var i = 0; i < 2001; i++) {
+        archive.add(ArchiveFile.string('d/f$i.txt', 'a'));
+      }
+      archive.add(ArchiveFile.string('word/document.xml', _docx('<w:p><w:r><w:t>x</w:t></w:r></w:p>')));
+      final bytes = Uint8List.fromList(ZipEncoder().encodeBytes(archive));
+      await expectLater(
+        () => DocText.extractFromBytes('docx', bytes),
+        throwsA(isA<DocTextException>()),
+      );
+    });
+  });
 }

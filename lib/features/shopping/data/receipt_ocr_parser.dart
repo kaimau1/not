@@ -2,6 +2,22 @@ import 'package:flutter/foundation.dart';
 
 import '../../notes/domain/note_item.dart';
 import '../../notes/domain/quick_entry.dart';
+import '../domain/shop_item_meta.dart';
+
+/// Fiş satırındaki fiyat, `g`/`ml` dışındaki çoklu alımlarda (`2 adet ekmek 20 ₺`)
+/// birim fiyata bölünerek madde başına unitPrice üretir.
+double receiptUnitPriceForItem(ReceiptLine line, ShopItemMeta itemMeta) {
+  final unitAscii = quickAscii(itemMeta.unit);
+  final isPack =
+      unitAscii == 'g' ||
+      unitAscii == 'gr' ||
+      unitAscii == 'gram' ||
+      unitAscii == 'ml';
+  if (!isPack && line.qty > 1) {
+    return line.price / line.qty;
+  }
+  return line.price;
+}
 
 @immutable
 class ReceiptLine {
@@ -159,9 +175,14 @@ String _detectStoreId(Iterable<String> topLines) {
   return '';
 }
 
+final _ignoredReceiptPatterns = [
+  for (final w in _ignoredReceiptWords)
+    RegExp(r'\b' + RegExp.escape(w) + r'\b'),
+];
+
 bool _isIgnoredReceiptLine(String folded) {
-  for (final w in _ignoredReceiptWords) {
-    if (folded.contains(w)) return true;
+  for (final re in _ignoredReceiptPatterns) {
+    if (re.hasMatch(folded)) return true;
   }
   return false;
 }

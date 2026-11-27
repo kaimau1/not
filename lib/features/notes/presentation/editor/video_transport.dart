@@ -6,6 +6,7 @@ import '../../../../core/widgets/customizable.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
 import 'video_hub_scope.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// VİDEONUN ALTINDAKİ DENETİM: ⏪ 10 sn · ▶/⏸ · 10 sn ⏩ (+ "1:23 / 4:56").
 ///
@@ -169,7 +170,7 @@ class VideoTransportControls extends StatelessWidget {
               message: l10n.videoSpeed,
               child: InkWell(
                 key: const ValueKey('video-speed'),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.m),
                 onTap: () {
                   hub.touch(source);
                   source.setSpeed(nextVideoSpeed(source.speed));
@@ -222,7 +223,7 @@ class VideoTransportControls extends StatelessWidget {
                 maxLines: 1,
                 style: TextStyle(
                   fontSize: 12,
-                  color: color.withValues(alpha: 0.85),
+                  color: color.withValues(alpha: AppAlpha.strong),
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),

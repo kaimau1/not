@@ -54,17 +54,23 @@ def nav_height():
     return int(m.group(2)) - int(m.group(1)) if m else 0
 
 
-def record(label, fx, fy, repeat):
-    secs = min(180, int(repeat * 2.6 + 4))
+def record(label, fx, fy, repeat, kb_x=None, kb_y=None):
+    use_kb_btn = kb_x is not None and kb_y is not None
+    secs = min(180, int(repeat * 2.6 + (5.5 if use_kb_btn else 4)))
     remote = "/sdcard/panel_kayit.mp4"
     proc = subprocess.Popen([ADB, "shell", "screenrecord", "--bit-rate", "20000000",
                              "--time-limit", str(secs), remote])
     t0 = time.time()
     marks = []
-    time.sleep(1.5)
+    time.sleep(0.8)
+    if use_kb_btn:
+        tap(fx, fy)
+        time.sleep(0.8)
+    else:
+        time.sleep(0.7)
     for _ in range(repeat):
         marks.append(("ac", time.time() - t0))
-        tap(fx, fy)
+        tap(kb_x, kb_y) if use_kb_btn else tap(fx, fy)
         time.sleep(1.3)
         marks.append(("kapa", time.time() - t0))
         key("KEYCODE_BACK")
@@ -176,6 +182,8 @@ def main():
     ap.add_argument("--panel-y", type=int, required=True)
     ap.add_argument("--panel-boy", type=int)
     ap.add_argument("--tekrar", type=int, default=10)
+    ap.add_argument("--kb-x", type=int, default=None, help="fiziksel klavyeli tablette ⌨ düğmesi x")
+    ap.add_argument("--kb-y", type=int, default=None, help="fiziksel klavyeli tablette ⌨ düğmesi y")
     ap.add_argument("--bant", type=int, default=8, help="şablon bandı (1/4 ölçekte satır)")
     ap.add_argument("--video", help="kayıt yerine var olan video (yeniden çözümleme)")
     a = ap.parse_args()
@@ -188,7 +196,7 @@ def main():
             t += 2.6
     else:
         wake()
-        video, marks = record(a.label, a.fx, a.fy, a.tekrar)
+        video, marks = record(a.label, a.fx, a.fy, a.tekrar, kb_x=a.kb_x, kb_y=a.kb_y)
         sh("input keyevent KEYCODE_SLEEP")
     panel_h = a.panel_boy
     if panel_h is None:

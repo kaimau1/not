@@ -11,6 +11,7 @@ import '../../../../core/error_log.dart';
 import '../../../../core/net/json_http.dart';
 import '../../../../core/sync/cloudflare_sync_transport.dart';
 import '../../../../core/sync/sync_transport.dart';
+import '../../../auth/presentation/auth_providers.dart';
 import '../../../entitlement/data/entitlement_service.dart';
 import '../../../entitlement/domain/entitlement.dart';
 import '../../../settings/settings_providers.dart'
@@ -105,16 +106,54 @@ final decisionQuotaProvider =
 
 class DecisionQuotaNotifier extends Notifier<DecisionQuotaSnapshot> {
   static const prefsKey = 'decision_quota_snapshot_v1';
+  static const _uidMarkerKey = 'decision_quota_uid_v1';
+  static const _lastCreditsKey = 'decision_quota_credits_v1';
+
+  static String prefsKeyForUid(String? uid) =>
+      (uid == null || uid.isEmpty) ? prefsKey : '${prefsKey}_$uid';
+
+  static String _creditsKeyForUid(String? uid) =>
+      (uid == null || uid.isEmpty)
+      ? _lastCreditsKey
+      : '${_lastCreditsKey}_$uid';
 
   @override
   DecisionQuotaSnapshot build() {
     final prefs = ref.watch(sharedPreferencesProvider);
+    final uid = ref.watch(currentUidProvider);
     final ent = ref.watch(entitlementProvider).value ?? Entitlement.none;
-    final raw = prefs.getString(prefsKey);
+    final scopedKey = prefsKeyForUid(uid);
+    final creditsKey = _creditsKeyForUid(uid);
+    final lastUid = prefs.getString(_uidMarkerKey);
+    var raw = prefs.getString(scopedKey);
+    if (raw == null && (lastUid == null || lastUid == uid)) {
+      raw = prefs.getString(prefsKey);
+    }
+    final prevCredits = prefs.getInt(creditsKey);
+    final deltaCredits =
+        prevCredits != null && ent.decisionCredits > prevCredits
+        ? ent.decisionCredits - prevCredits
+        : 0;
+    if (prevCredits == null || ent.decisionCredits != prevCredits) {
+      unawaited(prefs.setInt(creditsKey, ent.decisionCredits));
+    }
     if (raw != null && raw.isNotEmpty) {
       try {
         final parsed = DecisionQuotaSnapshot.fromJson(jsonDecode(raw));
-        if (parsed != null) return parsed;
+        if (parsed != null) {
+          if (deltaCredits > 0) {
+            return DecisionQuotaSnapshot(
+              remainingCalls: parsed.remainingCalls + deltaCredits,
+              remainingTokens:
+                  parsed.remainingTokens +
+                  deltaCredits * DecisionQuotaDefaults.packTokensPerCall,
+            );
+          }
+          if (!parsed.syncedFromServer) {
+            return _defaultFor(ent);
+          }
+          return parsed;
+        }
       } catch (_) {
         // Bozuk önbellek varsayılana düşer.
       }
@@ -142,7 +181,15 @@ class DecisionQuotaNotifier extends Notifier<DecisionQuotaSnapshot> {
   void updateFromServer(DecisionQuotaSnapshot snapshot) {
     state = snapshot;
     final prefs = ref.read(sharedPreferencesProvider);
-    unawaited(prefs.setString(prefsKey, jsonEncode(snapshot.toJson())));
+    final uid = ref.read(currentUidProvider);
+    final ent = ref.read(entitlementProvider).value ?? Entitlement.none;
+    if (uid != null && uid.isNotEmpty) {
+      unawaited(prefs.setString(_uidMarkerKey, uid));
+    }
+    unawaited(prefs.setInt(_creditsKeyForUid(uid), ent.decisionCredits));
+    unawaited(
+      prefs.setString(prefsKeyForUid(uid), jsonEncode(snapshot.toJson())),
+    );
   }
 
   void markExhausted() {
@@ -159,6 +206,12 @@ class DecisionQuotaNotifier extends Notifier<DecisionQuotaSnapshot> {
 final decisionServiceProvider = Provider<DecisionService>((ref) {
   final proxy = _proxyFor(ref);
   final savedKey = ref.watch(activeApiKeyProvider).value?.trim();
+  // Hak veya ek kredi paketi değiştiğinde 6 saatlik kota beklemesini temizle.
+  ref.watch(
+    entitlementProvider.select(
+      (v) => (v.value?.decisionCredits ?? 0, v.value?.lifetimeOwned ?? false),
+    ),
+  );
   return DecisionService(
     key: _admittedGeminiKeyFor(ref),
     proxy: proxy,
@@ -317,6 +370,7 @@ class DecisionService {
   static const Set<String> persistentFeatures = {
     DecisionFeature.noteTriage,
     DecisionFeature.shopAisle,
+    DecisionFeature.listClassify,
   };
   static const persistentCacheTtl = Duration(days: 30);
   static const persistentCacheSize = 200;
@@ -325,6 +379,11 @@ class DecisionService {
   final _cache = <String, (DateTime, Map<String, DecisionAnswer>)>{};
   Map<String, Object?>? _persistentRaw;
   DateTime? _pausedUntil;
+
+  /// Kota bittikten sonra yeni paket satın alındığında bekleme süresini temizler.
+  void clearPause() {
+    _pausedUntil = null;
+  }
 
   DecisionMode modeOf(String feature) => AiDecisionsFlag.modeOf(feature);
 

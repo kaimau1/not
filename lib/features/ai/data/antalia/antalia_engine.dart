@@ -87,11 +87,12 @@ class AntaliaModelFiles {
   static Future<bool> installed() async {
     if (!supported) return false;
     final d = await dir();
-    if (!File('${d.path}/$_marker').existsSync()) return false;
-    return all.every((f) {
+    if (!await File('${d.path}/$_marker').exists()) return false;
+    for (final f in all) {
       final file = File('${d.path}/$f');
-      return file.existsSync() && file.lengthSync() > 0;
-    });
+      if (!await file.exists() || await file.length() <= 0) return false;
+    }
+    return true;
   }
 
   /// Dosyaları indirir. [onProgress] (inen, toplam bayt) ile çağrılır;
@@ -107,7 +108,7 @@ class AntaliaModelFiles {
       final d = await dir();
       await d.create(recursive: true);
       final marker = File('${d.path}/$_marker');
-      if (marker.existsSync()) marker.deleteSync();
+      if (await marker.exists()) await marker.delete();
 
       // Toplam boyut önceden: ilerleme çubuğu dosya sayısıyla değil baytla
       // ilerlesin (sözlükler KB, modeller onlarca MB).
@@ -150,11 +151,11 @@ class AntaliaModelFiles {
         hasher.close();
         final expected = response.contentLength;
         if (got == 0 || (expected != null && expected != got)) {
-          part.deleteSync();
+          await part.delete();
           throw HttpException('$f: eksik indirildi ($got/$expected)');
         }
         if (digest.value.toString() != sha256s[f]) {
-          part.deleteSync();
+          await part.delete();
           throw HttpException('$f: özet (SHA-256) tutmuyor');
         }
         await part.rename('${d.path}/$f');
@@ -168,7 +169,7 @@ class AntaliaModelFiles {
 
   static Future<void> delete() async {
     final d = await dir();
-    if (d.existsSync()) await d.delete(recursive: true);
+    if (await d.exists()) await d.delete(recursive: true);
   }
 }
 

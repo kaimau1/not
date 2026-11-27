@@ -748,3 +748,113 @@ test("D1 indeksli kullanıcı arama (GET /v1/users/search) ve R2 250 MB medya ko
   assert.equal(delRes.json.deleted, true);
   assert.equal(delRes.json.bytesUsed, MAX_USER_QUOTA_BYTES - 12);
 });
+
+test("POST /v1/decide dizi input, sahip dışı POST /v1/shares 403, paket RTDN iadesi ve DELETE /v1/users/me", async () => {
+  const uid = "u-owner";
+  const tag = await sha256Hex(uid);
+  const { env, raw } = createTestEnv({
+    __playVerifier: {
+      async verifyOneTimeProduct() {
+        return { owned: true, pending: false, needsAck: false, accountTag: tag };
+      },
+    },
+    __fetch: async () =>
+      new Response(
+        JSON.stringify({
+          answers: { aisle: { value: "sut" } },
+          usage: { total_input_tokens: 100 },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+  });
+
+  // 1. +1.000 paket doğrula ve Dart DecisionService biçimiyle (dizi input) /v1/decide çağır.
+  const buyPack = await reqJson(
+    env,
+    "POST",
+    "/v1/billing/verify",
+    { productId: "decision_pack_1000", purchaseToken: "tok-pack-rtdn-1" },
+    { "x-test-uid": uid },
+  );
+  assert.equal(buyPack.status, 200);
+
+  const arrayCall = await reqJson(
+    env,
+    "POST",
+    "/v1/decide",
+    {
+      model: "gemini-decision-1",
+      input: [{ type: "text", text: "Tam yağlı süt 1 lt" }],
+      questions: {
+        aisle: { type: "choice", choices: ["sut", "manav", "diger"] },
+      },
+    },
+    { "x-test-uid": uid, "x-firebase-appcheck": "valid-appcheck" },
+  );
+  assert.equal(arrayCall.status, 200);
+
+  // 2. Paket iadesi (RTDN) ek karar kredisini idempotent biçimde düşer.
+  const packRtdn = {
+    message: {
+      data: btoa(
+        JSON.stringify({
+          oneTimeProductNotification: {
+            notificationType: 2,
+            purchaseToken: "tok-pack-rtdn-1",
+            sku: "decision_pack_1000",
+          },
+        }),
+      ),
+    },
+  };
+  const rtdn1 = await reqJson(env, "POST", "/v1/billing/rtdn", packRtdn, {
+    "x-rtdn-secret": "super-secret-rtdn",
+  });
+  assert.equal(rtdn1.status, 200);
+  assert.equal(rtdn1.json.revoked, true);
+
+  const rtdnRepeat = await reqJson(env, "POST", "/v1/billing/rtdn", packRtdn, {
+    "x-rtdn-secret": "super-secret-rtdn",
+  });
+  assert.equal(rtdnRepeat.status, 200);
+  assert.equal(rtdnRepeat.json.revoked, false);
+
+  const entAfterRefund = await reqJson(env, "GET", "/v1/entitlement", undefined, {
+    "x-test-uid": uid,
+  });
+  assert.equal((entAfterRefund.json.decisionCredits as number), 0);
+
+  // 3. Sahip olunmayan not için /v1/shares 403 döner.
+  const deniedShare = await reqJson(
+    env,
+    "POST",
+    "/v1/shares",
+    { entityKind: "note", entityId: "not-owned", memberUid: "u-other" },
+    { "x-test-uid": uid },
+  );
+  assert.equal(deniedShare.status, 403);
+
+  // 4. Kullanıcı not ekler ve DELETE /v1/users/me sonrası entities boşalır, decision_usage korunur.
+  await reqJson(
+    env,
+    "POST",
+    "/v1/sync",
+    {
+      cursorSeq: 0,
+      changes: [{ kind: "note", id: "n-del", baseVersion: 0, payload: { title: "Sil" } }],
+    },
+    { "x-test-uid": uid },
+  );
+  const delUser = await reqJson(env, "DELETE", "/v1/users/me", undefined, {
+    "x-test-uid": uid,
+  });
+  assert.equal(delUser.status, 200);
+  const remainingEntities = raw
+    .prepare("SELECT COUNT(*) AS c FROM entities WHERE uid = ?")
+    .get(uid) as { c: number };
+  assert.equal(remainingEntities.c, 0);
+  const keptUsage = raw
+    .prepare("SELECT COUNT(*) AS c FROM decision_usage")
+    .get() as { c: number };
+  assert.ok(keptUsage.c >= 1);
+});

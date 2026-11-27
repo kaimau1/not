@@ -308,17 +308,31 @@ service cloud.firestore {
       }
       allow read: if sub in ['heavy', 'versions'] && request.auth != null
         && (sharedFolderOk(false) || isNoteCollaborator(noteOwnerUid, noteId));
-      allow create: if sub in ['heavy', 'versions'] && request.auth != null
+      allow create: if sub == 'heavy' && request.auth != null
         && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId));
+      allow create: if sub == 'versions' && request.auth != null
+        && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId))
+        && request.resource.data.keys().hasOnly(
+            ['title', 'body', 'items', 'textPages', 'reason', 'by', 'at'])
+        && request.resource.data.get('title', '') is string
+        && request.resource.data.get('title', '').size() <= 500
+        && request.resource.data.get('body', '') is string
+        && request.resource.data.get('body', '').size() <= 200000;
       allow update: if sub == 'heavy' && request.auth != null
         && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId));
-      // **"DÜZENLİYOR" NABZI** (F4.1): herkes yalnız KENDİ belgesini
-      // yazar/siler; okuma ana notla aynı.
+      // **"DÜZENLİYOR" NABZI** (F4.1): yalnız yazma yetkisi olanlar KENDİ
+      // nabzını yazar/siler; okuma ana notla aynı (G-16).
       allow read: if sub == 'presence' && request.auth != null
         && (sharedFolderOk(false) || isNoteCollaborator(noteOwnerUid, noteId));
-      allow write: if sub == 'presence' && request.auth != null
+      allow create, update: if sub == 'presence' && request.auth != null
         && docId == request.auth.uid
-        && (sharedFolderOk(false) || isNoteCollaborator(noteOwnerUid, noteId));
+        && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId))
+        && request.resource.data.keys().hasOnly(['name', 'at'])
+        && request.resource.data.get('name', '') is string
+        && request.resource.data.get('name', '').size() <= 200;
+      allow delete: if sub == 'presence' && request.auth != null
+        && docId == request.auth.uid
+        && (sharedFolderOk(true) || isNoteCollaborator(noteOwnerUid, noteId));
     }
 
     // **KLASÖR PAYLAŞIM AYNASI** — `folderShares/{folderId}`, kimliği
@@ -488,6 +502,18 @@ service cloud.firestore {
              'title', 'body', 'items', 'type', 'tags', 'color'])
         && request.resource.data.title is string
         && request.resource.data.body is string
+        && request.resource.data.fromName is string
+        && request.resource.data.fromName.size() <= 200
+        && request.resource.data.fromEmail is string
+        && request.resource.data.fromEmail.size() <= 320
+        && (tokenEmail() == ''
+            || request.resource.data.fromEmail.lower() == tokenEmail())
+        && (!('items' in request.resource.data)
+            || (request.resource.data.items is list
+                && request.resource.data.items.size() <= 500))
+        && (!('tags' in request.resource.data)
+            || (request.resource.data.tags is list
+                && request.resource.data.tags.size() <= 30))
         // Tavan: gelen kutusu başkasının deposu olmasın (alıcı kotasına
         // yazılıyor). Firestore doküman sınırı zaten ~1 MiB.
         && request.resource.data.title.size() <= 500

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -102,7 +103,9 @@ class _NotePresenceIndicatorState extends ConsumerState<NotePresenceIndicator> {
             (doc.data()['name'] as String?)?.trim() ?? '',
       ];
       if (!mounted) return;
-      setState(() => _others = others);
+      if (!listEquals(_others, others)) {
+        setState(() => _others = others);
+      }
       if (others.isNotEmpty && _announced != others.first) {
         _announced = others.first;
         ScaffoldMessenger.of(context)

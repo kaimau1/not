@@ -158,7 +158,7 @@ class _PendingEmbedBanner extends StatelessWidget {
                 children: [
                   Icon(
                     lasso ? Icons.gesture : Icons.link,
-                    size: 18,
+                    size: AppIconSize.s,
                     color: scheme.onTertiaryContainer,
                   ),
                   const SizedBox(width: 8),
@@ -178,7 +178,7 @@ class _PendingEmbedBanner extends StatelessWidget {
                     tooltip: lasso ? l10n.embedSelectMode : l10n.embedLasso,
                     icon: Icon(
                       lasso ? Icons.text_fields : Icons.gesture,
-                      size: 20,
+                      size: AppIconSize.m,
                     ),
                     color: scheme.onTertiaryContainer,
                     onPressed: onToggleLasso,
@@ -191,7 +191,7 @@ class _PendingEmbedBanner extends StatelessWidget {
                   IconButton(
                     key: const ValueKey('embed-cancel'),
                     tooltip: l10n.cancel,
-                    icon: const Icon(Icons.close, size: 18),
+                    icon: const Icon(Icons.close, size: AppIconSize.s),
                     color: scheme.onTertiaryContainer,
                     onPressed: onCancel,
                   ),
@@ -384,7 +384,7 @@ class _AiBanner extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
-                  Icon(icon, size: 18, color: scheme.onSecondaryContainer),
+                  Icon(icon, size: AppIconSize.s, color: scheme.onSecondaryContainer),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -449,9 +449,10 @@ class ShortKeyboardBarHide extends StatelessWidget {
 /// hızlı gidip gelmesi yazarken dikkat dağıtıyordu (kullanıcı bildirimi
 /// 2026-11-08). Görünen şeride dokunmak çubuğu hemen geri getirir. Yalnız bu
 /// ağaç ValueListenableBuilder ile kurulur (ekran setState görmez).
-class TypingBarHide extends StatelessWidget {
+class TypingBarHide extends StatefulWidget {
   @visibleForTesting
   const TypingBarHide({
+    super.key,
     required this.hidden,
     required this.enabled,
     required this.child,
@@ -466,51 +467,108 @@ class TypingBarHide extends StatelessWidget {
   static const _peekOpacity = 0.45;
 
   @override
+  State<TypingBarHide> createState() => _TypingBarHideState();
+}
+
+class _TypingBarHideState extends State<TypingBarHide>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    value: widget.hidden.value ? 0.0 : 1.0,
+    duration: const Duration(milliseconds: 320),
+    reverseDuration: AppMotion.long,
+  );
+  late final CurvedAnimation _curved = CurvedAnimation(
+    parent: _c,
+    curve: Curves.easeInOutCubic,
+  );
+  late final Animation<double> _fade = Tween<double>(
+    begin: TypingBarHide._peekOpacity,
+    end: 1.0,
+  ).animate(_curved);
+  bool _collapsed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _collapsed = widget.hidden.value;
+    widget.hidden.addListener(_onHiddenChanged);
+    _c.addStatusListener(_onStatus);
+  }
+
+  @override
+  void didUpdateWidget(TypingBarHide old) {
+    super.didUpdateWidget(old);
+    if (old.hidden != widget.hidden) {
+      old.hidden.removeListener(_onHiddenChanged);
+      widget.hidden.addListener(_onHiddenChanged);
+      _sync(animate: false);
+    }
+  }
+
+  void _onStatus(AnimationStatus s) {
+    final nextCollapsed = widget.hidden.value && s == AnimationStatus.dismissed;
+    if (nextCollapsed != _collapsed && mounted) {
+      setState(() => _collapsed = nextCollapsed);
+    }
+  }
+
+  void _onHiddenChanged() => _sync(animate: true);
+
+  void _sync({required bool animate}) {
+    if (!widget.enabled) return;
+    final hide = widget.hidden.value;
+    final reduce = mounted && MediaQuery.disableAnimationsOf(context);
+    if (!hide && _collapsed) setState(() => _collapsed = false);
+    if (!animate || reduce) {
+      _c.value = hide ? 0.0 : 1.0;
+      _onStatus(_c.status);
+      return;
+    }
+    if (hide) {
+      _c.reverse();
+    } else {
+      _c.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.hidden.removeListener(_onHiddenChanged);
+    _curved.dispose();
+    _c
+      ..removeStatusListener(_onStatus)
+      ..dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!enabled) return child;
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    return ValueListenableBuilder<bool>(
-      valueListenable: hidden,
-      child: child,
-      builder: (context, hide, child) => TweenAnimationBuilder<double>(
-        tween: Tween(end: hide ? 0.0 : 1.0),
-        duration: reduceMotion
-            ? Duration.zero
-            : Duration(milliseconds: hide ? 420 : 320),
-        curve: Curves.easeInOutCubic,
-        child: child,
-        // **YERLEŞİM TEK ADIMDA, HAREKET YALNIZ BOYAMADA** (ölçüm
-        // 2026-11-10, "klavye açılıp kapanırken titriyor, genel yavaşlık"):
-        // çubuk gövdeyle aynı Column'da; yükseklik her karede değişince
-        // BÜTÜN not gövdesi her yazma başlangıcında/duraksamasında ~25 kare
-        // boyunca yeniden diziliyordu, `t == 1` dalı da ağaç şeklini
-        // değiştirip çubuğu her seferinde sıfırdan kuruyordu. Artık ağaç hep
-        // aynı; yükseklik yalnız gizleme BİTİNCE pay boyuna iner, gösterme
-        // BAŞLARKEN tam boya çıkar (2 yerleşim); arada çubuk kayar ve solar.
-        builder: (context, t, child) {
-          final collapsed = hide && t == 0;
-          return Listener(
-            behavior: HitTestBehavior.translucent,
-            onPointerDown: (_) {
-              if (hidden.value) hidden.value = false;
-            },
-            child: ClipRect(
-              child: Align(
-                alignment: Alignment.topCenter,
-                heightFactor: collapsed ? _peek : 1,
-                child: FractionalTranslation(
-                  translation: Offset(0, collapsed ? 0 : (1 - t) * (1 - _peek)),
-                  child: Opacity(
-                    opacity: _peekOpacity + (1 - _peekOpacity) * t,
-                    // Çubuğun içi her karede yeniden BOYANMAZ: yalnız
-                    // katmanın yeri ve saydamlığı değişir.
-                    child: RepaintBoundary(child: child),
-                  ),
-                ),
+    if (!widget.enabled) return widget.child;
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) {
+        if (widget.hidden.value) widget.hidden.value = false;
+      },
+      child: ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: _collapsed ? TypingBarHide._peek : 1,
+          child: AnimatedBuilder(
+            animation: _curved,
+            builder: (context, child) => FractionalTranslation(
+              translation: Offset(
+                0,
+                _collapsed ? 0 : (1 - _curved.value) * (1 - TypingBarHide._peek),
               ),
+              child: child,
             ),
-          );
-        },
+            child: FadeTransition(
+              opacity: _fade,
+              child: RepaintBoundary(child: widget.child),
+            ),
+          ),
+        ),
       ),
     );
   }

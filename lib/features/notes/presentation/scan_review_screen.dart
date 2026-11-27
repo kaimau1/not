@@ -16,6 +16,7 @@ import 'editor/note_images.dart';
 import 'scan_edit_screen.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/a11y/chip_roles.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// İnceleme ekranının sonucu: sayfalar ya tek (aranabilir) PDF'e dönüştü
 /// ya da düzeltilmiş görseller olarak eklenecek.
@@ -501,7 +502,7 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: actionChip(ActionChip(
-                avatar: const Icon(Icons.done_all, size: 18),
+                avatar: const Icon(Icons.done_all, size: AppIconSize.s),
                 label: Text(l10n.scanApplyAll),
                 onPressed: locked ? null : _applyToAll,
               )),

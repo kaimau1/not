@@ -64,7 +64,7 @@ extension _DashShelf on _DashboardScreenState {
               TextButton.icon(
                 onPressed: () =>
                     ref.read(folderShelfExpandedProvider.notifier).toggle(),
-                icon: const Icon(Icons.unfold_less, size: 18),
+                icon: const Icon(Icons.unfold_less, size: AppIconSize.s),
                 label: Text(context.l10n.folderShelfCollapse),
               ),
             ],
@@ -195,7 +195,7 @@ extension _DashShelf on _DashboardScreenState {
                   ? IconButton.filledTonal(
                       key: const ValueKey('home-strip-go-home'),
                       tooltip: context.l10n.goHome,
-                      icon: const Icon(Icons.home_outlined, size: 20),
+                      icon: const Icon(Icons.home_outlined, size: AppIconSize.m),
                       onPressed: () {
                         ref.read(selectedFolderProvider.notifier).set(null);
                         ref

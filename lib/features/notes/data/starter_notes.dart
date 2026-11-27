@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../l10n/generated/app_localizations_en.dart';
 import '../../../l10n/generated/app_localizations_tr.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../folders/data/folders_repository.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
@@ -17,9 +19,14 @@ import 'notes_repository.dart';
 ///  1. `🛒 Örnek Market Listesi` (3 reyonlu, hemen Mağaza Kipi'ni denetir)
 ///  2. `⚡ Hızlı Başlangıç` (sesle ekle, belge tara, defterde çiz)
 ///
-/// Yalnızca cihazda bir kez (`kStarterNotesSeededKey`) ve not listesi gerçekten
-/// boşken üretilir; mevcut kullanıcıların verisine asla dokunmaz.
+/// Yalnızca hesap başına bir kez (`starterNotesSeededKeyFor`) ve not/klasör
+/// listesi gerçekten boşken üretilir; mevcut kullanıcıların verisine dokunmaz.
 const kStarterNotesSeededKey = 'starter_notes_seeded_v1';
+
+String starterNotesSeededKeyFor(String? uid) =>
+    (uid == null || uid.isEmpty)
+    ? kStarterNotesSeededKey
+    : '${kStarterNotesSeededKey}_$uid';
 
 /// Yalnızca gerçek uygulama başlangıcında (`main.dart`) açılır; birim/widget
 /// testlerinde boş hesap varsayımı bozulmasın diye varsayılan kapalıdır.
@@ -35,29 +42,30 @@ List<Note> buildStarterNotes({bool english = false}) {
       Note(
         id: 'starter_shopping',
         type: NoteType.checklist,
+        listKind: 'shopping',
         title: l10n.starterShoppingTitle,
         tags: const ['shopping'],
         orderIndex: -now.millisecondsSinceEpoch.toDouble(),
         items: const [
           NoteItem(
             id: 's1',
-            text: '2 L milk',
-            extras: {'q': 2, 'u': 'lt', 'g': 'dairy'},
+            text: 'Milk (2 lt)',
+            extras: {'q': 2, 'u': 'lt', 'g': 2},
           ),
           NoteItem(
             id: 's2',
-            text: '1 kg tomatoes',
-            extras: {'q': 1, 'u': 'kg', 'g': 'produce'},
+            text: 'Tomatoes (1 kg)',
+            extras: {'q': 1, 'u': 'kg', 'g': 0},
           ),
           NoteItem(
             id: 's3',
-            text: 'Sourdough bread',
-            extras: {'q': 1, 'u': 'adet', 'g': 'bakery'},
+            text: 'Sourdough bread (1 adet)',
+            extras: {'q': 1, 'u': 'adet', 'g': 1},
           ),
           NoteItem(
             id: 's4',
-            text: '12 eggs',
-            extras: {'q': 12, 'u': 'adet', 'g': 'dairy'},
+            text: 'Eggs (12 adet)',
+            extras: {'q': 12, 'u': 'adet', 'g': 2},
           ),
         ],
       ),
@@ -87,29 +95,30 @@ List<Note> buildStarterNotes({bool english = false}) {
     Note(
       id: 'starter_shopping',
       type: NoteType.checklist,
+      listKind: 'shopping',
       title: l10n.starterShoppingTitle,
       tags: const ['alışveriş'],
       orderIndex: -now.millisecondsSinceEpoch.toDouble(),
       items: const [
         NoteItem(
           id: 's1',
-          text: '2 lt süt',
-          extras: {'q': 2, 'u': 'lt', 'g': 'sut'},
+          text: 'Süt (2 lt)',
+          extras: {'q': 2, 'u': 'lt', 'g': 2},
         ),
         NoteItem(
           id: 's2',
-          text: '1 kg domates',
-          extras: {'q': 1, 'u': 'kg', 'g': 'manav'},
+          text: 'Domates (1 kg)',
+          extras: {'q': 1, 'u': 'kg', 'g': 0},
         ),
         NoteItem(
           id: 's3',
-          text: '1 adet ekşi maya ekmek',
-          extras: {'q': 1, 'u': 'adet', 'g': 'firin'},
+          text: 'Ekşi maya ekmek (1 adet)',
+          extras: {'q': 1, 'u': 'adet', 'g': 1},
         ),
         NoteItem(
           id: 's4',
-          text: '15 adet yumurta',
-          extras: {'q': 15, 'u': 'adet', 'g': 'sut'},
+          text: 'Yumurta (15 adet)',
+          extras: {'q': 15, 'u': 'adet', 'g': 2},
         ),
       ],
     ),
@@ -142,9 +151,10 @@ Future<bool> seedStarterNotesIfNeeded({
   required bool hasExistingNotes,
   required Future<void> Function(Note note) saveNote,
   bool english = false,
+  String key = kStarterNotesSeededKey,
 }) async {
-  if (prefs.getBool(kStarterNotesSeededKey) ?? false) return false;
-  await prefs.setBool(kStarterNotesSeededKey, true);
+  if (prefs.getBool(key) ?? false) return false;
+  await prefs.setBool(key, true);
   if (hasExistingNotes) return false;
   for (final note in buildStarterNotes(english: english)) {
     await saveNote(note);
@@ -157,21 +167,24 @@ Future<bool> seedStarterNotesIfNeeded({
 final starterNotesSeederProvider = Provider<void>((ref) {
   if (!StarterNotesConfig.allowAutoSeed) return;
   final prefs = ref.read(sharedPreferencesProvider);
-  if (prefs.getBool(kStarterNotesSeededKey) ?? false) return;
+  final uid = ref.watch(currentUidProvider);
+  final seedKey = starterNotesSeededKeyFor(uid);
+  if (prefs.getBool(seedKey) ?? false) return;
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return;
-  final notesAsync = ref.watch(notesStreamProvider);
-  final notes = notesAsync.value;
-  if (notes == null) return;
+  final notes = ref.watch(notesStreamProvider).value;
+  final folders = ref.watch(foldersStreamProvider).value;
+  if (notes == null || folders == null) return;
   final locale = ref.read(localeProvider);
   final lang =
       locale?.languageCode ?? PlatformDispatcher.instance.locale.languageCode;
   unawaited(
     seedStarterNotesIfNeeded(
       prefs: prefs,
-      hasExistingNotes: notes.isNotEmpty,
+      hasExistingNotes: notes.isNotEmpty || folders.isNotEmpty,
       saveNote: repo.updateNote,
       english: lang != 'tr',
+      key: seedKey,
     ),
   );
 });

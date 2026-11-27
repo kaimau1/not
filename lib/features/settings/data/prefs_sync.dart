@@ -61,8 +61,6 @@ const kSyncedPrefKeys = <String>[
   'voice_auto_stop',
   'voice_silence',
   'voice_smart_commands',
-  'briefing_enabled',
-  'briefing_minutes',
   'assistant_voice',
   // Ana ekran jest hedefleri (U1): not/klasör kimliği hesaba ait.
   kHomePullGestureKey,
@@ -77,11 +75,7 @@ const kSyncedPrefKeys = <String>[
   NoteLockConfig.prefsKey,
 ];
 
-/// AI görev modeli anahtarları da eşitlenir (bkz. [AiTask]).
-List<String> get syncedPrefKeys => [
-  ...kSyncedPrefKeys,
-  for (final task in AiTask.values) task.prefsKey,
-];
+List<String> get syncedPrefKeys => kSyncedPrefKeys;
 
 /// Eşitlenen tercihlerden ondalık olanlar (bkz. [writeLocalPref]).
 const kDoublePrefKeys = {'font_scale'};
@@ -220,6 +214,7 @@ class _PrefsSync with WidgetsBindingObserver {
   /// Son başarılı turdaki yerel tercihler ve bulut belgesi.
   Map<String, Object?>? _lastLocal;
   Map<String, Object?>? _lastRemote;
+  bool _backgroundFlushed = false;
 
   void _scheduleDirty() {
     _debounce?.cancel();
@@ -232,12 +227,15 @@ class _PrefsSync with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
+      case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
+        if (_backgroundFlushed) return;
+        _backgroundFlushed = true;
         _debounce?.cancel();
         _debounce = null;
         unawaited(_run());
       case AppLifecycleState.resumed:
+        _backgroundFlushed = false;
         unawaited(_run());
       default:
         break;

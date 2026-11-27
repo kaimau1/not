@@ -69,21 +69,13 @@ oraya bakman gerekmez. Son güncelleme: 26 Kasım 2026.)
   Nerede/Nasıl: Android ana ekranda widget ekle → Notlar → **Akıllı liste** (3×3) ekle → etkin alışveriş/kontrol listesinin başlığı, kalan sayısı ve ilk 5 işaretlenmemiş maddesi görünüyor mu; kilitli/gizli klasördeki liste sızmıyor mu; karta dokununca liste notu doğrudan açılıyor, sağ üst `+` düğmesi **Hızlı ekle** levhasını açıyor mu; tema (Açık/Koyu) değişince widget da uyum sağlıyor mu.
   Yanlışsa: madde numarasını yaz.
 
-- [ ] **Günün ve haftanın özeti tek ekranda (Günlük | Haftalık brifing) (21 Kasım, P96, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
-  Nerede/Nasıl: AI merkezi → **Günlük brifing** → üstteki **Günlük | Haftalık** çipleriyle geçiş yap → **Haftalık** seçilince son 7 günün notları, tamamlanan/açık görevleri ve gelecek 7 günün takvimi özetlenip ayrı önbelleğe alınıyor mu.
-  Yanlışsa: madde numarasını yaz.
+- [~] ~~**Günün ve haftanın özeti tek ekranda (Günlük | Haftalık brifing)**~~ — *Faz 1 ile kaldırıldı (2 katmanlı Lite / 50 TL Tam Sürüm)*
 
-- [ ] **Pro AI A2: Kayıttan not — dökümden tek akışta Özet, Yapılacaklar ve Hatırlatayım mı? (21 Kasım, P95, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
-  Nerede/Nasıl: ses veya video kaydının döküm (transkript) ekranında üstteki **Özet ve görevler** çipine dokun → tek levhada **Özet**, **Yapılacaklar** ve tarihli ifadeler için **Hatırlatayım mı?** kartı geliyor mu; **Görev ekle** görev düzenleyiciyi başlık ve tarihle açıyor, **Özeti nota ekle** metni nota ekliyor mu.
-  Yanlışsa: madde numarasını yaz.
+- [~] ~~**Pro AI A2: Kayıttan not — dökümden tek akışta Özet, Yapılacaklar ve Hatırlatayım mı?**~~ — *Faz 1 ile kaldırıldı*
 
-- [ ] **Pro AI A4: Belgeye sor'da Özetle ilk önerisi ve sayfa numaralı kaynaklar (21 Kasım, P94, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
-  Nerede/Nasıl: PDF ekli bir notta ✨ → PDF → **Sor** → boş sohbette ilk öneri düğmesi **Özetle** (yanında Ana noktalar · Tarih ve görevler) görünüyor mu; dokununca gelen yanıtta `[s. N]` sayfa atıfları ve balonun altında `s. N` sayfa kaynak rozetleri çıkıyor mu.
-  Yanlışsa: madde numarasını yaz.
+- [~] ~~**Pro AI A4: Belgeye sor'da Özetle ilk önerisi ve sayfa numaralı kaynaklar**~~ — *Faz 1 ile kaldırıldı*
 
-- [ ] **Pro AI A5 + A6: Tek "Yazıyı iyileştir" menüsü + Önce/sonra önizleme ve Fotoğraftan yapılı not (21 Kasım, P93, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
-  Nerede/Nasıl: (1) herhangi bir notta ✨ → **Yazıyı iyileştir** → tek menüde Düzelt · Kısalt · Uzat · Resmî · Samimi · Liste/Sıralı ve altta Çevir çipleri görünüyor mu; birini seçince sonuç ekranında **Önce / sonra** çipiyle eski ve yeni metin karşılaştırılıp **Notu değiştir** + Geri Al temiz çalışıyor mu; (2) görselli bir notta ✨ → görselin altından **Yapılı nota dönüştür** → önce cihazda okuyup başlık + madde/liste olarak önizliyor, **Yeni not olarak aç** önerilen liste türünde açıyor mu.
-  Yanlışsa: madde numarasını yaz.
+- [~] ~~**Pro AI A5 + A6: Tek "Yazıyı iyileştir" menüsü + Önce/sonra önizleme ve Fotoğraftan yapılı not**~~ — *Faz 1 ile kaldırıldı*
 
 - [ ] **Takvim hafta/gün ızgarasında gün+saat sürükle-bırak ve görevlerde elle sıralama (21 Kasım, P92, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Takvim → **Hafta** (veya bir güne çift dokunup **Gün** sayfası) → saatli bir etkinliğe/göreve/bağlı nota uzun basıp başka gün ve çeyrek saate sürükle → hedef saat önizleme kutusu görünüyor mu, bırakınca yeni saatine taşınıp **Geri al** çalışıyor mu; tüm gün kaydını saat ızgarasına indirince 1 saatlik kayda dönüşüyor mu; (2) **Görevler** ekranında 2+ açık görev varken sağdaki ☰ tutamaktan (ya da satıra uzun basıp) sürükle → yeni sıra kaydedilip ekranı kapatıp açınca da korunuyor mu.
@@ -97,9 +89,7 @@ oraya bakman gerekmez. Son güncelleme: 26 Kasım 2026.)
   Nerede/Nasıl: (1) herhangi bir onay kutulu liste notunda ⋮ → **Mağaza kipi** → büyük satırlara tek elle dokununca klavye açılmadan işaretleniyor mu, üstte kalan sayı + ilerleme çubuğu güncelleniyor mu, **Alınanları gizle** / **Reyona göre sırala** / alttan hızlı ekle / **Alınanları tamamla** düzgün çalışıyor mu; (2) Ayarlar → Yedekle → **Markdown (.zip) dışa aktar** → kilitli not varsa kimlik sorup klasör yapısında `.md` dosyaları içeren `.zip` kaydediyor mu.
   Yanlışsa: madde numarasını yaz.
 
-- [ ] **Pro AI sadeleştirme: sohbet, kısa/ayrıntılı özet ve toplu Sessiz düzen (21 Kasım, P89, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
-  Nerede/Nasıl: (1) bir notta ✨ → **Sohbet** → üstteki eski Soru-cevap / Beyin fırtınası kip çipleri ve üst ana hat çubuğu kalkmış mı; öneri çipleri (Ana hat · Fikir ver · Eksikleri bul) temiz çalışıyor mu; (2) bir notta ✨ → **Özet** → sonuç levhasında **Kısa / Ayrıntılı** anahtarı görünüyor mu, kısa → ayrıntılı → kısa dönünce ikinci kısa anında önbellekten geliyor mu; (3) AI merkezinde **Sessiz düzen** → başlıksız veya etiketsiz notlar için tek istekte başlık+etiket önerileri listelenip seçilerek uygulanıyor mu, **Geri al** hepsini geri alıyor mu.
-  Yanlışsa: madde numarasını yaz.
+- [~] ~~**Pro AI sadeleştirme: sohbet, kısa/ayrıntılı özet ve toplu Sessiz düzen**~~ — *Faz 1 ile kaldırıldı*
 
 - [ ] **Takvim yeni varsayılan düzen (sağ üst gün sayıları + kutuda not/etiket + önizleme levhası + çoklu not + kasma düzeltmesi) (21 Kasım 6. tur, bulutta yazıldı, cihazda doğrulanmadı — A/B yapılamadı, cihaz yoktu)**
   Nerede/Nasıl: (1) Takvim'i aç → doğrudan üstte ay ızgarası + altta gün paneliyle mi açılıyor; takvimi ya da tutamağı aşağı çekince uzun ay görünümüne geçip altta küçük yukarı çekme hapı görünüyor mu; (2) her gün kutusunda sayı sağ üstte mi, alt boşlukta not başlıkları, etkinlikler ve `#etiket`ler okunur biçimde yazıyor mu; (3) hücredeki bir not şeridine veya alt paneldeki bir not önizleme kartına dokun → başlık, etiket, içerik/liste ve **Notu aç** düğmeli hızlı önizleme levhası açılıyor mu; (4) bağlı notu olan günde "Bu gün için plan yok" yazmıyor mu, **Bu güne not** ile aynı güne 2–3 farklı not eklenebiliyor mu, `+` düğmesi alt panelin üstüne binmiyor mu; (5) ana ekran kaydırma (özellikle çizimli görsel kartlarında) ve takvimde gün değiştirme/kaydırma akıcı mı.
@@ -373,13 +363,13 @@ oraya bakman gerekmez. Son güncelleme: 26 Kasım 2026.)
 > - **19 Tablette sesle yazma:** ⚡/Hızlı ekle ilk dokunuşta mikrofon izni istedi (REDDET verildi, KT-24); konuşma denenmedi.
 > - **S1 iki cihaz turu:** denenmedi (ikinci cihaz/web yok).
 
-- [ ] **KT-17/20 tablet düzeni (19 Kasım akşam, bulutta yazıldı, cihazda doğrulanmadı)**
+- [ ] **KT-17/20 tablet düzeni (19 Kasım akşam, bulutta yazıldı, cihazda doğrulanmadı)** *(Tablet `9005` `2026-11-27`: (a) `p03_suz`/`p04_diger`/`p07_kart_menu` ortalı levhalar, (b) `l33_pdf`/`kt17b_9005` daralmış sol liste + `↑` `+` solunda aynı satırda [en alt kartın tarih sonu haricinde kart tarihleri `9 Kas` doğrulandı], (c) dikey APK ile `ab_hepsi --yon yatay` duruşu `KT17C_NEG_EXIT=1` ve yatay APK `17/17` evre doğrulandı.)*
   Nerede/Nasıl: (a) dikey tablette ana ekran ⋮ ("Uygulama" levhası), bir kartın ⋮'si ve "Görünüm ve süz" → levha ortada, kenarlarda boşluk (en çok 560 dp), tam genişlik değil; (b) yatayda bir not aç (liste solda daralır) → listeyi aşağı kaydır → "Başa dön" ↑ düğmesi "+"nın SOLUNDA, aynı satırda; listenin sonunda son kartın tarihi görünür; (c) ölçüm için yatay APK: `NOTLAR_OLCUM_YON=landscape` ile profil derle, `ab_hepsi.py --yon yatay` (dikey kilitli APK'da durmalı).
   Doğruysa: üçü de böyle.
 
-- [ ] **P78 tablet bulguları (2026-11-19, dal oto/P78-tablet-bulgular — A/B ölçümü yapılmadı)** — yazıldı; tablette dikeyde (a)(b)(d) görüldü, (c) ve yatay doğrulanmadı
+- [x] **P78 tablet bulguları (2026-11-19, dal oto/P78-tablet-bulgular — tablet `9005` dikey+yatay doğrulandı 2026-11-27)**
   Nerede: tablet, liste notu (yatay bölünmüş) + Takvim ay (dikey) + fiziksel klavye.
-  Nasıl: (a) yatayda liste notu aç → sağdaki yuvarlak kalem düğmesi "Ara başlık" ve "İşaretliler · Sil"in üstünde değil; (b) dikeyde not → alt çubuk Kalem → "Kalem kipi · …" bildirimi kalem tepsisinin ÜSTÜNDE; (c) fiziksel klavye takılı, alana dokunmadan ⌨ → klavye açılır; GERİ ile kapat → ⌨ simgesi "aç"a döner, bir dokunuş yine açar; (d) dikey Takvim ay → şerit yazısı okunur (11 pt), gün 13 pt. KT-13: yatayda ilk kartın ortası = Huawei Navigasyon yuvasının (yüzen gezinme düğmesi) yeri; yuva açıkken ona dokunmak GERİ'dir, uygulama hatası değil (yuvayı taşı ya da kapat).
+  Nasıl: (a) yatayda liste notu aç (`l30_editor_liste`, `yanda_ac_9005`) → sağdaki yuvarlak kalem düğmesi "Ara başlık" ve "İşaretliler · Sil"in üstünde değil; (b) dikeyde not (`p35_kalem_kipi` & `l35_kalem_kipi`) → alt çubuk Kalem → "Kalem kipi · …" bildirimi kalem tepsisinin ÜSTÜNDE; (c) fiziksel klavye takılı, alana dokunmadan ⌨ (`ensure_ime[0]`, `ed_9005_closed` → `open`) → klavye açılır; GERİ ile kapat → ⌨ simgesi "aç"a döner, bir dokunuş yine açar; (d) dikey Takvim ay (`p12_takvim`) → şerit yazısı okunur (11 pt), gün 13 pt. KT-13: yatayda ilk kartın ortası = Huawei Navigasyon yuvasının (yüzen gezinme düğmesi) yeri; yuva açıkken ona dokunmak GERİ'dir, uygulama hatası değil (yuvayı taşı ya da kapat).
   Doğruysa: dört madde de böyle.
 
 - [ ] **P74 jest hedefleri (U1) + ana ekran A/B** — yazıldı, cihazda doğrulanmadı
@@ -438,7 +428,7 @@ oraya bakman gerekmez. Son güncelleme: 26 Kasım 2026.)
   Doğruysa: açılıyor (boyut engeli yok), "yalnız bu cihazda" yazıyor, yazdıkların yerinde.
   Yanlışsa: hangi mesajı gördüğünü yaz.
 
-- [ ] **32. İki not yan yana** (yazıldı, tablette doğrulanmadı)
+- [ ] **32. İki not yan yana** *(Tablet `9005` yatay `2026-11-27`: `yanda_ac_9005.png` ile `"Yanda aç"`, otomatik sol liste çekilmesi, `☰` listeyi aç-kapa [`3` kart] ve `✕` ikincil not kapatma doğrulandı; iki notta yazı/ayraç sürükleme, dikey↔yatay döndürme ve iki mikrofon kilitlenmesi elle bakılacak)*
   Nerede: tablet YATAY, bir not açıkken soldaki listede başka bir kartın ⋮ menüsü → "Yanda aç".
   Nasıl: iki notta da yaz (klavye ve kalem); ortadaki ayracı sürükle, çift dokun; ☰ ile listeyi aç-kapa; tabletı dikeye çevir, geri yatay; tam ekrana gir-çık; yandakini ✕ ile kapat; iki not açıkken geri tuşuna bas; birinde dikte sürerken öbüründe mikrofona bas.
   Doğruysa: iki not yan yana, liste kendiliğinden çekilir; yazdığın bölme yazar, öbürü kıpırdamaz; ☰ açınca yandaki gizlenir, kapatınca döner; dikeyde yandaki kaybolur, yatayda geri gelir; geri tuşu ikisini de kapatıp listeye döner; ikinci mikrofon "Mikrofon yandaki notta kullanılıyor" der. Telefonda ve dikey tablette menüde "Yanda aç" YOK.
@@ -446,19 +436,19 @@ oraya bakman gerekmez. Son güncelleme: 26 Kasım 2026.)
 
 ## Bilgisayarda (web) bak
 
-- [ ] **P77 web bulguları** — yazıldı, tarayıcıda doğrulanmadı
+- [ ] **P77 web bulguları** — yazıldı, tarayıcıda doğrulanmadı *(Chrome misafir doğrulaması `2026-11-27`: `1440x900` şeftali misafir afişi, not içinde ince şerit, çoğaltma bildirimi sağ altta rayı örtmeden, `Ayarlar`/`Gizlilik` 640 px ortalı, `360x800` taşmasız; OS koyu tema / yeni profil yazı boyutu + Firefox/Safari açık)*
   Nerede: web, geniş pencere (1440+) ve 360 dar pencere.
   Nasıl: "Yenilikler" / "Silindi" bildirimi sağ altta mı (sol rayı örtmüyor); misafir hesapta afiş mor değil, geniş ekranda düğmeler metnin yanında, not açıkken ince şerit; Premium ve Ayarlar ortada; Gizlilik başlıklı ve dar ekranda düzgün; işletim sistemi koyuyken açılış açık (uygulama Koyu seçili değilse); yeni tarayıcı profilinde yazı boyu "Büyük".
   Doğruysa: hiçbir bildirim rayı örtmüyor, satırlar yarım kalmıyor, açılışta beyaz/koyu sıçrama yok.
 
-- [ ] **Masaüstünde "Görünüm ve süz" levhası ortada, en çok 560 dp (KT-2); dar pencerede takvim şeridinde tek harf gün adı yok (KT-3); `/delete-account` sayfası (oturumsuz açınca giriş sonrası oraya döner) (P64/P69)**
+- [ ] **Masaüstünde "Görünüm ve süz" levhası ortada, en çok 560 dp (KT-2); dar pencerede takvim şeridinde tek harf gün adı yok (KT-3); `/delete-account` sayfası (oturumsuz açınca giriş sonrası oraya döner) (P64/P69)** *(Chrome `2026-11-27`: `KT-2` 560 px ortalı, `KT-3` `27 Cum/28 Cmt...` 3 harfli adlar, `#/delete-account` sayfası ve `0` CSP hatası doğrulandı; Google girişiyle `/delete-account` dönüşü kullanıcı hesabıyla açık)*
 
-- [ ] **21. Web temel tur**
+- [ ] **21. Web temel tur** *(Chrome `2026-11-27`: IndexedDB yenilemede `"IndexedDB Kalici Test"` korundu ve Mağaza Kipi v2 çalıştı; Google girişiyle telefona senkron kullanıcı hesabıyla açık)*
   Nerede: tarayıcıda uygulama.
   Nasıl: aç, giriş yap, not yaz → telefonda görünüyor mu; pencereyi daralt-genişlet; yedek kaydet/geri yükle.
   Doğruysa: not 20 sn içinde telefonda; liste ve açık not yerinde kalıyor.
 
-- [ ] **22. Klavye ve fare**
+- [ ] **22. Klavye ve fare** *(Chrome `2026-11-27`: `Tab` ile erişilebilirlik düğümlerine geçiş + sol ray `Klavye kısayolları` penceresi doğrulandı; `Ctrl+/` Türkçe Q `Ctrl+Shift+/` + `Ctrl+NumpadDivide` yedekleri `AppShortcuts`'a eklendi; `Ctrl+tekerlek` ve madde metni seçimi elle bakılacak)*
   Nerede: web.
   Nasıl: Ctrl+/ ile kısayol penceresini aç, listedeki tuşları dene; Tab ile gez; Ctrl+tekerlek; madde metnini fareyle seç.
   Doğruysa: kısayollar çalışıyor, odak halkası görünüyor, Ctrl+tekerlek sayfayı değil sütunları büyütüyor; seçim yalnız açık yeşil.

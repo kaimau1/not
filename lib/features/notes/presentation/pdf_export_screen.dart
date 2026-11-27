@@ -397,7 +397,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                           )
                         : ColoredBox(
                             color: scheme.surfaceContainerHighest,
-                            child: const Icon(Icons.image_outlined, size: 20),
+                            child: const Icon(Icons.image_outlined, size: AppIconSize.m),
                           ),
                   ),
                 ),
@@ -426,17 +426,17 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                 segments: [
                   ButtonSegment(
                     value: ExportAlign.left,
-                    icon: const Icon(Icons.format_align_left, size: 18),
+                    icon: const Icon(Icons.format_align_left, size: AppIconSize.s),
                     label: Text(l10n.exportAlignLeft),
                   ),
                   ButtonSegment(
                     value: ExportAlign.center,
-                    icon: const Icon(Icons.format_align_center, size: 18),
+                    icon: const Icon(Icons.format_align_center, size: AppIconSize.s),
                     label: Text(l10n.exportAlignCenter),
                   ),
                   ButtonSegment(
                     value: ExportAlign.right,
-                    icon: const Icon(Icons.format_align_right, size: 18),
+                    icon: const Icon(Icons.format_align_right, size: AppIconSize.s),
                     label: Text(l10n.exportAlignRight),
                   ),
                 ],
@@ -483,7 +483,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                   IconButton(
                     tooltip: l10n.decrease,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.remove, size: 18),
+                    icon: const Icon(Icons.remove, size: AppIconSize.s),
                     onPressed: (option.line ?? 0) <= 0
                         ? null
                         : () => setState(() => option.line = option.line! - 1),
@@ -495,7 +495,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                   IconButton(
                     tooltip: l10n.increase,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.add, size: 18),
+                    icon: const Icon(Icons.add, size: AppIconSize.s),
                     onPressed: (option.line ?? _lineCount) >= _lineCount
                         ? null
                         : () => setState(

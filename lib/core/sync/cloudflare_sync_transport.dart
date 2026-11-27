@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -19,19 +20,36 @@ typedef IdTokenProvider = Future<String?> Function();
 /// Auth ID Token `Authorization: Bearer <jwt>` olarak gönderilir; isteğe
 /// bağlı `X-Firebase-AppCheck` başlığı Decisions çağrılarına eklenir.
 class CloudflareSyncTransport implements SyncTransport {
-  CloudflareSyncTransport({
+  factory CloudflareSyncTransport({
+    required String baseUrl,
+    required Future<String?> Function() getIdToken,
+    Future<String?> Function()? getAppCheckToken,
+    http.Client? client,
+    Duration timeout = const Duration(seconds: 15),
+  }) {
+    final resolvedClient = client ?? http.Client();
+    return CloudflareSyncTransport._(
+      baseUrl: baseUrl,
+      getIdToken: getIdToken,
+      getAppCheckToken: getAppCheckToken,
+      resolvedClient: resolvedClient,
+      timeout: timeout,
+    );
+  }
+
+  CloudflareSyncTransport._({
     required this.baseUrl,
     required this.getIdToken,
     this.getAppCheckToken,
-    http.Client? client,
+    required http.Client resolvedClient,
     Duration timeout = const Duration(seconds: 15),
-  }) : _client = client ?? http.Client(),
+  }) : _client = resolvedClient,
        _timeout = timeout,
        _http = JsonHttp(
          baseUrl: baseUrl.endsWith('/')
              ? baseUrl.substring(0, baseUrl.length - 1)
              : baseUrl,
-         client: client,
+         client: resolvedClient,
          receiveTimeout: timeout,
        );
 
@@ -183,40 +201,34 @@ class CloudflareSyncTransport implements SyncTransport {
     required String email,
     required bool discoverable,
   }) async {
-    try {
-      await _http.post<Map<String, dynamic>>(
-        '/v1/users/me',
-        data: {'name': name, 'email': email, 'discoverable': discoverable},
-        headers: await _authHeaders(),
-      );
-    } on JsonHttpException catch (e) {
-      // PUT metodunu kullan.
-      if (e.response?.statusCode == 404 || e.response?.statusCode == 405) {
-        final uri = Uri.parse('$_cleanBase/v1/users/me');
-        final headers = await _authHeaders(
-          extra: {'content-type': 'application/json'},
+    final uri = Uri.parse('$_cleanBase/v1/users/me');
+    final headers = await _authHeaders(
+      extra: {'content-type': 'application/json'},
+    );
+    final res = await _client
+        .put(
+          uri,
+          headers: headers,
+          body: jsonEncode({
+            'name': name,
+            'email': email,
+            'discoverable': discoverable,
+          }),
+        )
+        .timeout(_timeout);
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      if (res.statusCode == 401) {
+        throw SyncAuthException(
+          'http_401',
+          res.body,
+          statusCode: res.statusCode,
         );
-        final res = await _client
-            .put(
-              uri,
-              headers: headers,
-              body: jsonEncode({
-                'name': name,
-                'email': email,
-                'discoverable': discoverable,
-              }),
-            )
-            .timeout(_timeout);
-        if (res.statusCode < 200 || res.statusCode >= 300) {
-          throw SyncTransportException(
-            'http_${res.statusCode}',
-            res.body,
-            statusCode: res.statusCode,
-          );
-        }
-        return;
       }
-      _rethrowHttp(e);
+      throw SyncTransportException(
+        'http_${res.statusCode}',
+        res.body,
+        statusCode: res.statusCode,
+      );
     }
   }
 
@@ -312,6 +324,18 @@ class CloudflareSyncTransport implements SyncTransport {
       _rethrowHttp(e);
     }
   }
+
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      await _http.delete<Map<String, dynamic>>(
+        '/v1/users/me',
+        headers: await _authHeaders(),
+      );
+    } on JsonHttpException catch (e) {
+      _rethrowHttp(e);
+    }
+  }
 }
 
 /// Yapılandırılmışsa etkin [SyncTransport], aksi halde `null` (Firestore yolu).
@@ -320,5 +344,12 @@ final cloudflareSyncTransportProvider = Provider<SyncTransport?>((ref) {
   return CloudflareSyncTransport(
     baseUrl: CloudflareConfig.apiBase,
     getIdToken: () async => FirebaseAuth.instance.currentUser?.getIdToken(),
+    getAppCheckToken: () async {
+      try {
+        return await FirebaseAppCheck.instance.getToken();
+      } catch (_) {
+        return null;
+      }
+    },
   );
 });

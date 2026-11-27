@@ -647,64 +647,76 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
               child: _searching ? const LinearProgressIndicator() : null,
             ),
             Expanded(
-              child: ListView(
-                children: [
+              child: CustomScrollView(
+                slivers: [
                   if (email != null)
-                    ListTile(
-                      key: const ValueKey('friends-send-email'),
-                      leading: CircleAvatar(
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        child: Icon(
-                          Icons.alternate_email,
-                          color: theme.colorScheme.onPrimaryContainer,
+                    SliverToBoxAdapter(
+                      child: ListTile(
+                        key: const ValueKey('friends-send-email'),
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer,
+                          child: Icon(
+                            Icons.alternate_email,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
                         ),
+                        title: Text(l10n.friendsSendToEmail),
+                        subtitle: Text(email),
+                        trailing: _sentEmail == email.toLowerCase()
+                            ? _SentBadge(label: l10n.friendsSent)
+                            : FilledButton.tonal(
+                                onPressed: () => _sendToEmail(email),
+                                child: Text(l10n.friendsSendRequest),
+                              ),
                       ),
-                      title: Text(l10n.friendsSendToEmail),
-                      subtitle: Text(email),
-                      trailing: _sentEmail == email.toLowerCase()
-                          ? _SentBadge(label: l10n.friendsSent)
-                          : FilledButton.tonal(
-                              onPressed: () => _sendToEmail(email),
-                              child: Text(l10n.friendsSendRequest),
-                            ),
                     ),
                   if (results == null && email == null)
-                    Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        l10n.friendsSearchTooShort,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall,
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          l10n.friendsSearchTooShort,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ),
                     )
                   else if (results != null &&
                       results.isEmpty &&
                       !_searching &&
                       email == null)
-                    Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Text(
-                        l10n.friendsSearchEmpty,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall,
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Text(
+                          l10n.friendsSearchEmpty,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ),
                     ),
-                  for (final r in results ?? const <UserSearchResult>[])
-                    ListTile(
-                      key: ValueKey('friends-result-${r.uid}'),
-                      leading: PersonAvatar(
-                        label: friendLabel(r.name, r.email),
-                      ),
-                      title: Text(friendLabel(r.name, r.email)),
-                      subtitle: Text(r.email),
-                      trailing: friendUids.contains(r.uid)
-                          ? _SentBadge(label: l10n.friendsAlreadyShort)
-                          : _sent.contains(r.uid)
-                          ? _SentBadge(label: l10n.friendsSent)
-                          : FilledButton.tonal(
-                              onPressed: () => _sendToUid(r.uid),
-                              child: Text(l10n.friendsSearchAdd),
-                            ),
+                  if (results != null && results.isNotEmpty)
+                    SliverList.builder(
+                      itemCount: results.length,
+                      itemBuilder: (context, index) {
+                        final r = results[index];
+                        return ListTile(
+                          key: ValueKey('friends-result-${r.uid}'),
+                          leading: PersonAvatar(
+                            label: friendLabel(r.name, r.email),
+                          ),
+                          title: Text(friendLabel(r.name, r.email)),
+                          subtitle: Text(r.email),
+                          trailing: friendUids.contains(r.uid)
+                              ? _SentBadge(label: l10n.friendsAlreadyShort)
+                              : _sent.contains(r.uid)
+                              ? _SentBadge(label: l10n.friendsSent)
+                              : FilledButton.tonal(
+                                  onPressed: () => _sendToUid(r.uid),
+                                  child: Text(l10n.friendsSearchAdd),
+                                ),
+                        );
+                      },
                     ),
                 ],
               ),

@@ -367,7 +367,7 @@ List<({String name, String qty, int aisle})> scaleShopRecipe(
             u == 'kutu' ||
             u == 'kavanoz' ||
             u == 'demet' ||
-            u == 'şişe') {
+            u == 'sise') {
           scaled = scaled.ceilToDouble();
         }
         return (

@@ -17,6 +17,7 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
+import '../../../core/utils/note_e2ee_session.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../entitlement/data/entitlement_service.dart';
@@ -49,12 +50,18 @@ BackupService? backupServiceOf(WidgetRef ref) {
   );
 }
 
-/// Takvim/görev/gün bağlarının o anki hâli (yedeğe girer, F46.5).
+/// Takvim/görev/rutin/gün bağlarının o anki hâli (yedeğe girer, F46.5).
 CalendarSnapshot calendarSnapshotOf(WidgetRef ref) => CalendarSnapshot(
   events: ref.read(eventsStreamProvider).value ?? const [],
   tasks: ref.read(tasksStreamProvider).value ?? const [],
   lists: ref.read(taskListsStreamProvider).value ?? const [],
   dayLinks: ref.read(dayLinksStreamProvider).value ?? const {},
+  routines: ref.read(routinesStreamProvider).value ?? const [],
+  routineLogs: [
+    for (final byDay
+        in (ref.read(routineLogsStreamProvider).value ?? const {}).values)
+      ...byDay.values,
+  ],
 );
 
 String backupFileName([DateTime? now]) {
@@ -119,6 +126,10 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
     return;
   }
   final folders = ref.read(foldersStreamProvider).value ?? const [];
+  final exportNotes = [
+    for (final n in notes)
+      n.locked ? n.decryptWithKey(NoteE2eeSession.key) : n,
+  ];
   final name = backupFileName();
   try {
     final XFile file;
@@ -129,7 +140,7 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
         final sink = MemoryBackupSink(password: password);
         await service.export(
           sink,
-          allNotes: notes,
+          allNotes: exportNotes,
           folderList: folders,
           calendarData: calendarSnapshotOf(ref),
           onProgress: progress.update,
@@ -145,7 +156,7 @@ Future<void> exportFullBackup(BuildContext context, WidgetRef ref) async {
         final path = '${dir.path}/$name';
         await service.export(
           FileBackupSink(path, password: password),
-          allNotes: notes,
+          allNotes: exportNotes,
           folderList: folders,
           calendarData: calendarSnapshotOf(ref),
           onProgress: progress.update,
@@ -208,12 +219,16 @@ Future<void> exportMarkdownZip(BuildContext context, WidgetRef ref) async {
     return;
   }
   if (!context.mounted) return;
+  final decryptedActive = [
+    for (final n in active)
+      n.locked ? n.decryptWithKey(NoteE2eeSession.key) : n,
+  ];
   final folders = ref.read(foldersStreamProvider).value ?? const [];
   final name = markdownExportFileName();
   try {
     final isEn = l10n.localeName.startsWith('en');
     final result = buildMarkdownZip(
-      active,
+      decryptedActive,
       folders: folders,
       archiveFolderName: l10n.archive,
       untitled: l10n.untitledNote,

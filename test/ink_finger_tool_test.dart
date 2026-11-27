@@ -289,5 +289,27 @@ void main() {
         expect(find.textContaining('kalem görülmedi'), findsOneWidget);
       },
     );
+
+    test('K34: kalem kipi ipucu Siler / Kaydırır / Çizer ayrımını doğru verir', () async {
+      final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+      InkToolMemory.fingerErases = false;
+      expect(
+        penModeHintText(l10n, effectivePenModeFingerTool(penOnly: true)),
+        l10n.penModePenOnlyOn,
+      );
+      expect(
+        penModeHintText(l10n, effectivePenModeFingerTool(penOnly: false)),
+        l10n.penModePenOnlyOff,
+      );
+      InkToolMemory.fingerErases = true;
+      expect(
+        penModeHintText(l10n, effectivePenModeFingerTool(penOnly: false)),
+        l10n.inkFingerEraseOn,
+      );
+      expect(
+        penModeHintText(l10n, effectivePenModeFingerTool(penOnly: true)),
+        l10n.penModePenOnlyOn,
+      );
+    });
   });
 }

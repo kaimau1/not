@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 
 import '../a11y/motion.dart';
+import '../../app/theme/app_tokens.dart';
 
 /// **YUMUŞAK YAZI BOYUTU GEÇİŞİ** (kullanıcı isteği 2026-10-28: "yazı boyutu
 /// geçişleri daha yumuşak"). [value] (ör. notun yazı ölçeği) değişince metin
@@ -62,7 +63,7 @@ class _ScaleSettleState extends State<ScaleSettle>
     return AnimatedBuilder(
       animation: _c,
       builder: (context, child) {
-        final t = Curves.easeOutCubic.transform(_c.value);
+        final t = AppMotion.emphasized.transform(_c.value);
         // Hareketi azalt (F15.5): yeni boya anında oturur.
         final scale = widget.enabled && motionOf(context)
             ? lerpDouble(_from, 1, t)!
@@ -79,8 +80,8 @@ class _ScaleSettleState extends State<ScaleSettle>
 }
 
 /// Açılan panelin içeriği yerinde süzülerek belirir (hafif yukarı kayma +
-/// solma). Her yeni kurulumda bir kez oynar.
-class RevealUp extends StatelessWidget {
+/// solma). Her yeni kurulumda bir kez oynar (`FadeTransition`, saveLayer yok).
+class RevealUp extends StatefulWidget {
   const RevealUp({
     super.key,
     required this.child,
@@ -93,21 +94,60 @@ class RevealUp extends StatelessWidget {
   final double offset;
 
   @override
+  State<RevealUp> createState() => _RevealUpState();
+}
+
+class _RevealUpState extends State<RevealUp>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+  );
+  late final CurvedAnimation _curved = CurvedAnimation(
+    parent: _c,
+    curve: AppMotion.emphasized,
+  );
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (!motionOf(context)) {
+      _c.value = 1;
+    } else {
+      _c.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(RevealUp old) {
+    super.didUpdateWidget(old);
+    if (old.duration != widget.duration) _c.duration = widget.duration;
+  }
+
+  @override
+  void dispose() {
+    _curved.dispose();
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Hareketi azalt (F15.5): içerik anında yerinde.
-    if (!motionOf(context)) return child;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: duration,
-      curve: Curves.easeOutCubic,
-      builder: (context, t, child) => Opacity(
-        opacity: t,
-        child: Transform.translate(
-          offset: Offset(0, offset * (1 - t)),
+    if (!motionOf(context)) return widget.child;
+    return FadeTransition(
+      opacity: _curved,
+      child: AnimatedBuilder(
+        animation: _curved,
+        builder: (context, child) => Transform.translate(
+          offset: Offset(0, widget.offset * (1 - _curved.value)),
           child: child,
         ),
+        child: widget.child,
       ),
-      child: child,
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/rich_text.dart';
+import '../../../core/utils/search_fold.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
@@ -78,8 +79,7 @@ List<Note> shareCandidates(
   return out;
 }
 
-String _fold(String s) =>
-    s.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase();
+String _fold(String s) => foldForSearch(s);
 
 /// **PAYLAŞIM HEDEFİ LEVHASI** (kullanıcı isteği 2026-09-29: "PDF açmak
 /// istediğimde Notlar ana sayfası açılıp, ister eski bir notuma ekleme
@@ -232,8 +232,8 @@ class _ShareTargetSheetState extends State<ShareTargetSheet> {
             ),
             const SizedBox(height: 14),
             AnimatedSize(
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutCubic,
+              duration: AppMotion.short,
+              curve: AppMotion.emphasized,
               alignment: Alignment.topCenter,
               child: _existing
                   ? _existingPane(context, height)
@@ -438,7 +438,7 @@ class _IncomingSummary extends StatelessWidget {
                     constraints: const BoxConstraints(maxWidth: 260),
                     child: Chip(
                       visualDensity: VisualDensity.compact,
-                      avatar: Icon(_icon(f.kind), size: 18),
+                      avatar: Icon(_icon(f.kind), size: AppIconSize.s),
                       label: Text(
                         f.name,
                         maxLines: 1,
@@ -501,7 +501,7 @@ class _PickableCard extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
-                  child: Icon(Icons.add, size: 18, color: scheme.onPrimary),
+                  child: Icon(Icons.add, size: AppIconSize.s, color: scheme.onPrimary),
                 ),
               ),
             ),
@@ -572,7 +572,7 @@ class _NoteRow extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(_icon, size: 20, color: scheme.onPrimaryContainer),
+                child: Icon(_icon, size: AppIconSize.m, color: scheme.onPrimaryContainer),
               ),
               const SizedBox(width: 12),
               Expanded(

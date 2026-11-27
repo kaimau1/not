@@ -95,11 +95,15 @@ import 'voice_assistant_widgets.dart';
 import 'voice_capture_sheet.dart';
 import 'drive_ui.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../../core/error_log.dart';
 import '../../../core/friendly_error.dart';
 
 import 'dashboard_scroll_memory.dart';
 
 part 'dashboard_widgets.dart';
+part 'dashboard_gestures.dart';
+part 'dashboard_ops.dart';
+part 'dashboard_build.dart';
 part 'dashboard_selection.dart';
 part 'dashboard_menu.dart';
 part 'dashboard_shelf.dart';
@@ -127,70 +131,6 @@ const double _kGridCacheExtent = 1600;
 /// Araya dinleyen bir widget koymak yerine öğenin kendisi dinler: ağaca katman
 /// eklenmez (bütçe S24 ilk kare, mandal).
 ///
-/// KÖK NEDEN (aşağı kaydırırken liste yukarı sıçraması, tarihçe): masonry
-/// toplam uzunluğu yerleşmiş kartların ortalamasından TAHMİN ediyordu.
-/// 2026-10-16: masonry kalktı (tembel deterministik sütunlar) — pay artık
-/// yalnız hızlı kaydırma için.
-class _GridScrollView extends CustomScrollView {
-  const _GridScrollView({
-    super.key,
-    super.controller,
-    super.physics,
-    required super.slivers,
-    required this.tick,
-    required this.narrow,
-  });
-
-  final Listenable tick;
-  final bool Function() narrow;
-
-  @override
-  StatelessElement createElement() => _GridScrollElement(this);
-
-  @override
-  Widget buildViewport(
-    BuildContext context,
-    ViewportOffset offset,
-    AxisDirection axisDirection,
-    List<Widget> slivers,
-  ) => Viewport(
-    axisDirection: axisDirection,
-    offset: offset,
-    slivers: slivers,
-    scrollCacheExtent: ScrollCacheExtent.pixels(
-      narrow() ? 250 : _kGridCacheExtent,
-    ),
-  );
-}
-
-class _GridScrollElement extends StatelessElement {
-  _GridScrollElement(_GridScrollView super.widget);
-
-  // [tick] ekranın ömrü boyunca aynı nesne: güncellemede yeniden bağlanmaz.
-  Listenable get _tick => (widget as _GridScrollView).tick;
-
-  @override
-  void mount(Element? parent, Object? newSlot) {
-    super.mount(parent, newSlot);
-    _tick.addListener(markNeedsBuild);
-  }
-
-  @override
-  void unmount() {
-    _tick.removeListener(markNeedsBuild);
-    super.unmount();
-  }
-}
-
-/// Izgaranın altında bırakılan boşluk: sağ alttaki düğme satırı
-/// (mikrofon + "+" yan yana, 56 + alt pay 16 = 72, + 24 nefes payı)
-/// ızgaranın ÜSTÜNDE yüzüyor. 2026-10-20 (B2): üç düğmeli sütun tek satıra
-/// indi, pay 200 → 96.
-///
-/// KÖK NEDEN (ana sayfa düzeni, 2026-09-23): boşluk 88 px idi — sütun tek bir
-/// FAB'ken yazılmış bir değer. Sütun üç düğmeye çıkınca sağ sütunun son
-/// kartının alt yarısı listenin en sonuna kaydırıldığında bile düğmelerin
-/// ARKASINDA kalıyordu; kartın altındaki metne/tarihe hiç ulaşılamıyordu.
 const double _kFabClearance = 96;
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -237,6 +177,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (ids.isNotEmpty) unawaited(_deleteSelected(ids));
   }
 
+  /// Yeni gelen bölümün (süzgeç|klasör|etiket) anahtarı: geçiş sürerken
+  /// ızgarası dar kaydırma payıyla kurulur (P46, bütçe S23). Eskiden gelen
+  /// ızgara ilk karesinde görünen kartlara ek 1600 px'lik payı da kuruyordu
+  /// (geçişin en ağır karesi); pay artık geçiş bitince, boşta genişler.
+  String? _freshSegment;
+  Timer? _cacheWiden;
+  final _cacheTick = ValueNotifier<int>(0);
+
   /// Kart ızgarasının kaydırma denetleyicisi — "başa dön" düğmesi buradan
   /// tepeye döner.
   ///
@@ -271,60 +219,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Kartların izlediği canlı arama sorgusu (F21.6).
   final _liveQuery = ValueNotifier<String>('');
 
-  /// [searching] ızgaranın GECİKTİRİLMİŞ arama durumudur (hücre sarmalayıcısı
-  /// da onunla değişir): anlık sorguyla kurulunca ilk harfte kartlar iki kez
-  /// kuruluyordu — önce tuşta, sonra gecikme dolup sarmalayıcı değişince
-  /// (P46, bütçe S21: harf başına 114 → 57).
-  Widget _cachedCard(
-    Note note, {
-    required bool searching,
-    DateTime? calendarDay,
-  }) {
-    final hit = _cardCache[note.id];
-    if (hit != null &&
-        identical(hit.$1, note) &&
-        hit.$2 == searching &&
-        hit.$3 == calendarDay) {
-      return hit.$4;
-    }
-    final card = NoteCard(
-      note: note,
-      calendarDay: calendarDay,
-      liveQuery: searching ? _liveQuery : null,
-      frame: (child, {required focused, required open}) => _FocusHalo(
-        focused: focused,
-        open: open,
-        noteId: note.id,
-        child: child,
-      ),
-    );
-    _cardCache[note.id] = (note, searching, calendarDay, card);
-    return card;
-  }
-
-  /// Yeni gelen bölümün (süzgeç|klasör|etiket) anahtarı: geçiş sürerken
-  /// ızgarası dar kaydırma payıyla kurulur (P46, bütçe S23). Eskiden gelen
-  /// ızgara ilk karesinde görünen kartlara ek 1600 px'lik payı da kuruyordu
-  /// (geçişin en ağır karesi); pay artık geçiş bitince, boşta genişler.
-  String? _freshSegment;
-  Timer? _cacheWiden;
-  final _cacheTick = ValueNotifier<int>(0);
-
-  void _holdNarrowCache(String segmentKey) {
-    _freshSegment = segmentKey;
-    _cacheWiden?.cancel();
-    _cacheWiden = Timer(AppMotion.medium + AppMotion.short, () {
-      _freshSegment = null;
-      _cacheTick.value++;
-    });
-  }
-
-  /// Silinmiş/ekrandan çıkmış notların kartlarını önbellekten düşürür.
-  void _pruneCardCache(List<Note> visible) {
-    if (_cardCache.length <= visible.length + 32) return;
-    final ids = {for (final n in visible) n.id};
-    _cardCache.removeWhere((id, _) => !ids.contains(id));
-  }
 
   /// Kullanıcı bu kadar aşağıdaysa "başa dön" düğmesi görünür. Bir ekran
   /// yüksekliğinden fazlası: kısa bir kaydırmada düğme çıkıp kaybolmasın.
@@ -445,9 +339,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _syncOwnDirectoryEntry();
   }
 
-  void _syncOwnDirectoryEntry() => ref
-      .read(friendsRepositoryProvider)
-      ?.syncOwnDirectoryEntry(discoverable: ref.read(discoverableProvider));
+  void _syncOwnDirectoryEntry() {
+    final repo = ref.read(friendsRepositoryProvider);
+    if (repo == null) return;
+    unawaited(
+      repo
+          .syncOwnDirectoryEntry(discoverable: ref.read(discoverableProvider))
+          .catchError((Object e, StackTrace s) {
+            ErrorLog.record('directory-sync', e, s);
+          }),
+    );
+  }
 
   /// **KÖK NEDEN (kullanıcı bulgusu 2026-08-18: "böyle bir hesap var ama
   /// bulamıyor").** Dizin kaydı yalnız `initState`te, yani State ilk
@@ -485,32 +387,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     }
   }
 
-  /// Ana ekranın süzgeçsiz hâli mi: özet yalnız bu görünümün karşılığı (F25.2).
-  bool _isDefaultHome({required bool searchActive}) =>
-      !searchActive &&
-      ref.read(noteFilterProvider) == NoteFilter.all &&
-      ref.read(selectedTagProvider) == null &&
-      ref.read(selectedFolderProvider) == null &&
-      ref.read(selectedSharedFolderProvider) == null;
-
-  /// Ana ekran mikrofon widget'ının isteği varsa sesli not levhasını açar
-  /// (tek seferlik — bayrak take ile tüketilir).
-  void _maybeAutostartVoice() {
-    if (!mounted) return;
-    // Widget/kısayol da ana ekran mikrofonuyla AYNI levhayı açar (eskiden
-    // ayrı bir asistan kaydı başlatıyordu — sadeleştirme 2026-10-19).
-    if (ref.read(voiceAutostartProvider.notifier).take()) {
-      unawaited(_captureVoiceNote());
-    }
-  }
-
-  /// HE-3: uygulama dışından (`notlar://ekle`) gelen hızlı ekle isteği —
-  /// levha gelen metinle açılır (tek seferlik, [quickDropRequestProvider]).
-  void _maybeOpenQuickDrop() {
-    if (!mounted) return;
-    final text = ref.read(quickDropRequestProvider.notifier).take();
-    if (text != null) unawaited(showQuickDropSheet(context, text: text));
-  }
 
   /// Not ızgarası kaydırıldı mı — başlık bloğunun (arama çubuğu + süzgeç
   /// çipleri) altındaki AYIRICI bunu izler.
@@ -566,124 +442,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Aşağı çekişi izler: Android'de (sıkıştırma fiziği) tepede çekiş
   /// `OverscrollNotification`, iOS'ta (yaylı) eksi konum olarak gelir.
   /// Yalnız PARMAKLA çekiş sayılır (fırlatmanın tepeye çarpması değil).
-  ///
-  /// YALNIZ TEPEDE BAŞLAYAN SÜRÜKLEME (KT-22, tablet turu 2026-11-18):
-  /// aşağıdan başlayıp tepeye çarpan uzun bir kaydırmanın kalan aşırı
-  /// kaydırması da çekiş sayılıyor, listeyi başa alan kullanıcıya klasör
-  /// menüsü açılıp sonraki dokunuşu yutuyordu. Yenile-çek gibi: parmak
-  /// liste ZATEN tepedeyken değdiyse çekiş kurulur ([_pullArmed]).
-  void _trackFolderPull(ScrollNotification n) {
-    final m = n.metrics;
-    if (n is ScrollStartNotification) {
-      _pullArmed = m.pixels <= m.minScrollExtent + 1;
-    }
-    var pull = _folderPull.value;
-    if (n is OverscrollNotification) {
-      if (n.dragDetails != null &&
-          n.overscroll < 0 &&
-          _pullArmed &&
-          _pullGestureAllowed()) {
-        pull -= n.overscroll;
-      }
-    } else if (n is ScrollUpdateNotification) {
-      if (n.dragDetails == null) {
-        pull = 0;
-      } else if (m.pixels < m.minScrollExtent) {
-        pull = _pullArmed && _pullGestureAllowed()
-            ? m.minScrollExtent - m.pixels
-            : 0;
-      } else if (pull > 0) {
-        // Çekip geri itti: mesafe azalır.
-        pull = (pull - (n.scrollDelta ?? 0)).clamp(0, double.infinity);
-      }
-    } else if (n is ScrollEndNotification) {
-      final open = pull >= _kFolderPullDistance;
-      _setFolderPull(0);
-      if (open) _runHomeGesture(ref.read(homePullGestureProvider));
-      return;
-    }
-    _setFolderPull(pull);
-  }
-
-  void _setFolderPull(double pull) {
-    final before = _folderPull.value >= _kFolderPullDistance;
-    final after = pull >= _kFolderPullDistance;
-    if (after && !before) unawaited(AppHaptics.tick());
-    if (_folderPull.value != pull) _folderPull.value = pull;
-  }
-
-  /// Klasör düğmesinin görünmediği kiplerde (seçim, paylaşılan klasör,
-  /// arama, sıralama, kart sürükleme) çekiş menü açmaz.
-  bool _folderPullAllowed() =>
-      ref.read(selectedNoteIdsProvider).isEmpty &&
-      !ref.read(reorderModeProvider) &&
-      _dragNoteId == null &&
-      ref.read(selectedSharedFolderProvider) == null &&
-      ref.read(searchQueryProvider).trim().isEmpty;
-
-  /// Aşağı çekiş göstergesi yalnız jestin bir hedefi varken (U1).
-  bool _pullGestureAllowed() =>
-      _folderPullAllowed() &&
-      ref.read(homePullGestureProvider).kind != HomeGestureKind.none;
-
-  /// **JEST HEDEFİ** (U1, kullanıcı isteği 2026-11-18): üstten çekiş ve
-  /// Tümü'de sağa çekiş Ayarlar → Notlar'da seçilen yere gider. Hedef not ya
-  /// da klasör silinmişse kısa bir uyarı (sessiz kalmaz).
-  void _runHomeGesture(HomeGestureTarget target, {bool fromSwipe = false}) {
-    if (!mounted) return;
-    switch (target.kind) {
-      case HomeGestureKind.none:
-        return;
-      case HomeGestureKind.folders:
-        _openFolderMenu();
-      case HomeGestureKind.calendar:
-        AppHaptics.tick();
-        unawaited(
-          context.push(fromSwipe ? '/calendar?from=swipe' : '/calendar'),
-        );
-      case HomeGestureKind.note:
-        final note = _gestureNote(target.id);
-        if (note == null) {
-          showQuickAddSnack(context.l10n.homeGestureMissing);
-          return;
-        }
-        AppHaptics.tick();
-        unawaited(openNoteRoute(context, note));
-      case HomeGestureKind.folder:
-        final name = _gestureFolderName(target.id);
-        if (name == null) {
-          showQuickAddSnack(context.l10n.homeGestureMissing);
-          return;
-        }
-        _selectFolderFromHold(target.id);
-    }
-  }
-
-  Note? _gestureNote(String? id) =>
-      (ref.read(notesStreamProvider).value ?? const <Note>[])
-          .where((n) => n.id == id && n.deletedAt == null)
-          .firstOrNull;
-
-  String? _gestureFolderName(String? id) => ref
-      .read(visibleOrderedFoldersProvider)
-      .where((f) => f.id == id)
-      .firstOrNull
-      ?.name;
-
-  /// Çekiş kenarında görünen hedef adı (F39.3 etiketiyle aynı yer).
-  String? _gestureLabel(HomeGestureTarget target) {
-    final l10n = context.l10n;
-    return switch (target.kind) {
-      HomeGestureKind.none => null,
-      HomeGestureKind.folders => l10n.homeGestureFolders,
-      HomeGestureKind.calendar => l10n.calendarTitle,
-      HomeGestureKind.note => switch (_gestureNote(target.id)) {
-        final n? => noteLinkLabel(n, l10n.remindersUntitled),
-        null => null,
-      },
-      HomeGestureKind.folder => _gestureFolderName(target.id),
-    };
-  }
 
   /// Klasör düğmesindeki ve aşağı çekişteki duraklar (ilki "Tümü").
   List<FolderStop> _folderStops(WidgetRef ref) {
@@ -737,49 +495,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ? kSharedHubFolderId
       : ref.watch(selectedFolderProvider);
 
-  void _openFolderMenu() {
-    if (!mounted || !_folderPullAllowed()) return;
-    unawaited(
-      openFolderMenu(
-        context,
-        stops: _folderStops(ref),
-        currentId: _currentStopId(ref),
-        onOpen: () => unawaited(context.push('/folders')),
-        onSelect: _selectFolderFromHold,
-        // Ekle / sırala · sil menünün içinden; iş bitince menü yeniden açılır
-        // (kullanıcı o ekranda kalır, yeni sıra/klasör hemen görünür).
-        onNewFolder: () => unawaited(
-          showFolderEditorDialog(context, ref).then((_) => _openFolderMenu()),
-        ),
-        onEditFolders: () => unawaited(
-          showFolderOrderSheet(context).then((_) => _openFolderMenu()),
-        ),
-      ),
-    );
-  }
-
-  /// Telefon ↔ geniş ekran geçişinde (F18.11) önceki örneğin kaldığı yere
-  /// döner — yalnız AYNI bölümdeyse. İçerik henüz ölçülmediyse bir kare daha
-  /// beklenir (en çok birkaç kez).
-  void _restoreScroll([int tries = 0, double? lastExtent]) {
-    if (!mounted || !_gridScroll.hasClients) return;
-    final positions = _gridScroll.positions.toList();
-    if (positions.length != 1) return;
-    final p = positions.single;
-    final extent = p.maxScrollExtent;
-    final target = DashboardScrollMemory.restoreOffset(_segmentKey, extent);
-    if (target == null) return;
-    p.jumpTo(target.clamp(0.0, extent));
-    // KÖK NEDEN (cihaz turu 2026-11-05, telefonu çevirince liste tepeye
-    // atlıyordu): tembel listede maxScrollExtent ilk karelerde yalnız kurulan
-    // kartlardan TAHMİN; oran o küçük tahmine uygulanınca liste başa yakın
-    // kalıyordu. Tahmin oturana dek aynı oran yeniden uygulanır.
-    if (tries < 8 && extent != lastExtent) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _restoreScroll(tries + 1, extent),
-      );
-    }
-  }
 
   /// Izgaranın son genişliği ve sütun sayısı (döndürmede oran geri yüklemesi).
   (double, int)? _gridColumnsAt;
@@ -825,80 +540,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _singleColumn = single;
   }
 
-  /// [noteId]'nin kartı kuruluysa (kaydırma önbelleğinde) görünür alana
-  /// kaydırır. Kartlar `ValueKey(note.id)` ile sarılı (dashboard_slivers).
-  Element? _cardElement(String noteId) {
-    final key = ValueKey(noteId);
-    Element? found;
-    void visit(Element e) {
-      if (found != null) return;
-      if (e.widget.key == key) {
-        found = e;
-        return;
-      }
-      e.visitChildren(visit);
-    }
-
-    context.visitChildElements(visit);
-    return found;
-  }
-
-  /// Odaklanan notun kartı TEMBEL listede henüz kurulmadıysa (kaydırma
-  /// payının dışında) `_FocusHalo` kendini kaydıramaz: liste, notun görünür
-  /// sıradaki yerine ORANLA atlatılır; kart kurulunca hale kendini ortalar.
-  /// Not görünümde yoksa (başka klasör/süzgeç dışı) sessizce hiçbir şey.
-  void _revealFocused(String noteId, [int tries = 0]) {
-    if (!mounted || !_gridScroll.hasClients || tries > 6) return;
-    if (ref.read(focusedNoteProvider) != noteId) return;
-    if (_cardElement(noteId) != null) return;
-    final notes = ref.read(filteredNotesProvider).value ?? const <Note>[];
-    final i = notes.indexWhere((n) => n.id == noteId);
-    final positions = _gridScroll.positions.toList();
-    if (i < 0 || positions.length != 1) return;
-    final p = positions.single;
-    // ponytail: oran tahmini (bölüm/sütun dağılımı yok sayılır); tembel
-    // uzunluk tahmini oturdukça birkaç karede düzelir.
-    p.jumpTo(
-      (p.maxScrollExtent * i / math.max(1, notes.length - 1)).clamp(
-        0.0,
-        p.maxScrollExtent,
-      ),
-    );
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _revealFocused(noteId, tries + 1),
-    );
-  }
-
-  void _revealCard(String noteId) {
-    if (!mounted) return;
-    final card = _cardElement(noteId);
-    if (card == null) return;
-    Scrollable.ensureVisible(
-      card,
-      alignment: 0.3,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  /// Izgarayı tepeye döndürür. `animateTo` birden çok konumla çalışır
-  /// (bkz. [_gridScroll]).
-  /// Geniş ekranda sağda açık not varsa kapatıp `/`'a döner (🏠 şeridi).
-  bool _closeOpenNote() {
-    final router = GoRouter.of(context);
-    if (!isNoteLocation(currentLocation(router))) return false;
-    goHome(ref, router);
-    return true;
-  }
-
-  void _backToTop() {
-    if (!_gridScroll.hasClients) return;
-    _gridScroll.animateTo(
-      0,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-    );
-  }
 
   @override
   void dispose() {
@@ -924,226 +565,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// (cihazda kilit yoksa engel çıkarılmaz — bkz. authenticateForNote);
   /// saklamak serbesttir. Açık hâl kalıcı değildir: uygulama yeniden
   /// açıldığında klasörler yine gizlidir.
-  Future<void> _toggleHiddenFolders() async {
-    final l10n = context.l10n;
-    final revealed = ref.read(hiddenFoldersRevealedProvider);
-    if (revealed) {
-      ref.read(hiddenFoldersRevealedProvider.notifier).set(false);
-      // Gizli bir klasör o an seçiliyse süzgeç bırakılır; aksi hâlde ekran
-      // artık ulaşılamayan bir klasörde boş kalırdı.
-      final selected = ref.read(selectedFolderProvider);
-      if (selected != null &&
-          ref.read(hiddenFolderIdsProvider).contains(selected)) {
-        ref.read(selectedFolderProvider.notifier).set(null);
-      }
-      if (!mounted) return;
-      showQuickAddSnack(l10n.hiddenFoldersHiddenAgain);
-      return;
-    }
-    if (!await authenticateForNote(l10n.hiddenFolderAuthReason)) return;
-    ref.read(hiddenFoldersRevealedProvider.notifier).set(true);
-    if (!mounted) return;
-    showQuickAddSnack(l10n.hiddenFoldersShown);
-  }
-  // Sıralama seçici alt sayfası (_pickSort) kaldırıldı: sıralama artık Süz
-  // levhasının SIRALAMA bölümünde, süzgeçlerle aynı yerde.
-
-  /// Ana ekranı yatay çekince (madde 1) aktif görünümü sonraki/önceki
-  /// durağa taşır: Tümü → notu olan durum süzgeçleri → etiketler. [direction]
-  /// +1 sonraki, -1 önceki. Durakların kuralı saf bir işlevde ve ölçülüyor
-  /// (bkz. [nextSwipeStop]).
-  ///
-  /// **KLASÖRLER GEZİDE** (kullanıcı isteği 2026-09-26: "sağ sol
-  /// kaydırmada klasörler arası geçiş"). 2026-08-18'de çıkarılmışlardı;
-  /// neyin gezileceği artık Ayarlar → Notlar'da seçiliyor (bkz. [SwipeMode],
-  /// varsayılan: klasörler). Sıra, kullanıcının klasör sırasıdır (bkz.
-  /// `visibleOrderedFoldersProvider`).
-  /// Tümü görünümünde sağa çekiş (geri yön) takvimi açar (2026-11-06).
-  bool _swipeOpensCalendar(int direction) => swipeOpensCalendar(
-    enabled:
-        ref.read(homeSwipeRightGestureProvider).kind != HomeGestureKind.none,
-    direction: direction,
-    atAllNotes:
-        ref.read(selectedFolderProvider) == null &&
-        ref.read(selectedSharedFolderProvider) == null &&
-        !ref.read(sharedHubOnHomeProvider) &&
-        ref.read(selectedTagProvider) == null &&
-        ref.read(noteFilterProvider) == NoteFilter.all,
-  );
-
-  void _cycleFilterFolder(int direction) {
-    if (_swipeOpensCalendar(direction)) {
-      _runHomeGesture(
-        ref.read(homeSwipeRightGestureProvider),
-        fromSwipe: true,
-      );
-      return;
-    }
-    final stop = _swipeStop(direction);
-    if (stop == null) return;
-    // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
-    _swipeForward = direction > 0;
-    // Paylaşılan klasör de bir durak (K8), kendi klasör gibi.
-    final sharedStop = _sharedStopOf(stop.folderId);
-    if (sharedStop != null) {
-      openFolder(context, sharedStop.folderId, ownerId: sharedStop.ownerId);
-      AppHaptics.tick();
-      return;
-    }
-    ref.read(selectedSharedFolderProvider.notifier).set(null);
-    if (stop.folderId == kSharedHubFolderId) {
-      showSharedHubOnHome(context, toggle: false);
-      AppHaptics.tick();
-      return;
-    }
-    ref.read(sharedHubOnHomeProvider.notifier).set(false);
-    ref.read(selectedFolderProvider.notifier).set(stop.folderId);
-    ref.read(noteFilterProvider.notifier).set(stop.filter);
-    ref.read(selectedTagProvider.notifier).set(stop.tag);
-    AppHaptics.tick();
-  }
-
-  /// Klasör düğmesinden seçim: süzgeçsiz o klasör (Tümü = null).
-  void _selectFolderFromHold(String? folderId) {
-    _swipeForward = true;
-    if (folderId == kSharedHubFolderId) {
-      showSharedHubOnHome(context, toggle: false);
-      AppHaptics.tick();
-      return;
-    }
-    ref.read(selectedSharedFolderProvider.notifier).set(null);
-    ref.read(sharedHubOnHomeProvider.notifier).set(false);
-    ref.read(selectedFolderProvider.notifier).set(folderId);
-    ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
-    ref.read(selectedTagProvider.notifier).set(null);
-    AppHaptics.tick();
-  }
-
-  SharedFolderRef? _sharedStopOf(String? stopId) => stopId == null
-      ? null
-      : (ref.read(sharedFolderRefsProvider).value ?? const <SharedFolderRef>[])
-            .where((s) => sharedFolderStopId(s) == stopId)
-            .firstOrNull;
-
-  /// Çekişin kenarında görünen sonraki durağın adı (F39.3); durak yoksa null.
-  String? _swipeStopLabel(int direction) {
-    if (_swipeOpensCalendar(direction)) {
-      return _gestureLabel(ref.read(homeSwipeRightGestureProvider));
-    }
-    final stop = _swipeStop(direction);
-    if (stop == null) return null;
-    final l10n = context.l10n;
-    if (stop.folderId == kSharedHubFolderId) {
-      final hub = ref.read(sharedHubFolderProvider);
-      return hub.name.isEmpty ? l10n.sharedHubShort : hub.name;
-    }
-    final sharedStop = _sharedStopOf(stop.folderId);
-    if (sharedStop != null) return sharedStop.name;
-    if (ref.read(swipeModeProvider) == SwipeMode.filters) {
-      return stop.tag != null
-          ? '#${stop.tag}'
-          : stop.filter == NoteFilter.all
-          ? l10n.allNotesChip
-          : filterLabel(l10n, stop.filter);
-    }
-    final id = stop.folderId;
-    if (id == null) return l10n.allNotesChip;
-    for (final f in ref.read(visibleOrderedFoldersProvider)) {
-      if (f.id == id) return f.name;
-    }
-    return null;
-  }
-
-  /// Çekiş kenarında hedefin simgesi (takvim, klasör, paylaşılan, süzgeç).
-  IconData? _swipeStopIcon(int direction) {
-    if (_swipeOpensCalendar(direction)) {
-      return switch (ref.read(homeSwipeRightGestureProvider).kind) {
-        HomeGestureKind.calendar => Icons.calendar_month_outlined,
-        HomeGestureKind.folders => Icons.folder_outlined,
-        HomeGestureKind.folder => Icons.folder_outlined,
-        HomeGestureKind.note => Icons.sticky_note_2_outlined,
-        HomeGestureKind.none => null,
-      };
-    }
-    final stop = _swipeStop(direction);
-    if (stop == null) return null;
-    if (stop.folderId == kSharedHubFolderId) {
-      final hub = ref.read(sharedHubFolderProvider);
-      return hub.icon.isEmpty ? AppIcons.inbox : hub.iconData;
-    }
-    if (_sharedStopOf(stop.folderId) != null) {
-      return AppIcons.shared;
-    }
-    if (ref.read(swipeModeProvider) == SwipeMode.filters) {
-      if (stop.tag != null) return Icons.label_outline;
-      return stop.filter == NoteFilter.all
-          ? Icons.notes_rounded
-          : Icons.filter_list_rounded;
-    }
-    return stop.folderId == null
-        ? Icons.notes_rounded
-        : Icons.folder_outlined;
-  }
-
-  HomeSwipeStop? _swipeStop(int direction) {
-    final suppressed = ref.read(suppressedFolderIdsProvider);
-    final notes = [
-      for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
-        if (n.archivedAt == null &&
-            !n.isEmpty &&
-            !suppressed.contains(n.folderId))
-          n,
-    ];
-    final mode = ref.read(swipeModeProvider);
-    final hub = ref.read(sharedHubFolderProvider);
-    final folderIds = [
-      // Şeritle AYNI sıra: boş klasörler sonda (B3).
-      for (final f in emptyFoldersLast(
-        ref.read(visibleOrderedFoldersProvider),
-        ref.read(folderSortProvider),
-        ref.read(folderNoteCountsProvider),
-      ))
-        f.id,
-    ];
-    // Paylaşılanlar şeritteki sırayla: okunmamışı olan başta, kalanı sonda.
-    final shares =
-        ref.read(sharedFolderRefsProvider).value ?? const <SharedFolderRef>[];
-    bool hot(SharedFolderRef s) =>
-        ref.read(
-          folderUnreadProvider((ownerId: s.ownerId, folderId: s.folderId)),
-        ) >
-        0;
-    final selectedShared = ref.read(selectedSharedFolderProvider);
-    return nextHomeSwipeStop(
-      mode: mode,
-      notes: notes,
-      // GELEN de bir durak (2026-11-02), gizli değilse şeritteki yerinde.
-      folderIds: [
-        for (final s in shares)
-          if (hot(s)) sharedFolderStopId(s),
-        ...hub.hidden
-            ? folderIds
-            : withSharedHub(folderIds, kSharedHubFolderId, hub.order ?? 0),
-        for (final s in shares)
-          if (!hot(s)) sharedFolderStopId(s),
-      ],
-      folderId: mode == SwipeMode.filters
-          ? ref.read(selectedFolderProvider)
-          : selectedShared != null
-          ? '${selectedShared.ownerId}/${selectedShared.folderId}'
-          : ref.read(sharedHubOnHomeProvider)
-          ? kSharedHubFolderId
-          : ref.read(selectedFolderProvider),
-      filter: ref.read(noteFilterProvider),
-      tag: ref.read(selectedTagProvider),
-      direction: direction,
-    );
-  }
-
-  /// Bir bölümde (sabitliler / diğerleri) notu basılı tutup sürükleyince
-  /// (madde 1) çağrılır: [draggedId] notunu [toIndex] konumuna taşır ve yeni
-  /// sırayı kalıcılaştırır. Elle sıra görünsün diye sıralama ölçütü manuel'e
-  /// alınır.
   // ── SÜRÜKLEYEREK SIRALAMA: CANLI ÖNİZLEME ───────────────────────────────
   // KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "notları sıralada doğru
   // çalışmıyor, istediğim yere koyamıyorum; elimle gezdirirken notun nasıl
@@ -1260,226 +681,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     AppHaptics.heavy();
   }
 
-  /// Sürüklenen not "silmeye hazır" çöp hedefine bırakıldı (F60.S9).
-  ///
-  /// Bırakma kartın `onDragEnd`'inden ÖNCE gelir: önizlenen sıra burada
-  /// atılır ki [_endCardDrag] çöpe giden notun sürükleme yolunu "yeni sıra"
-  /// diye kaydetmesin. Silme olağan yoldan: kilitli not doğrulama ister,
-  /// kart küçülüp solar ([leavingNotesProvider]), geri al çubuğu çıkar.
-  Future<void> _trashDraggedNote(String id) async {
-    _hoverRetry?.cancel();
-    _dragOrder = null;
-    _dragOriginal = null;
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final l10n = context.l10n;
-    final note = _selectedNotes({id}).firstOrNull;
-    if (note == null) return;
-    if (note.locked && !await authenticateForNote(l10n.unlockAuthReason)) {
-      return;
-    }
-    if (!mounted) return;
-    if (ref.read(selectedNoteIdsProvider).contains(id)) {
-      ref.read(selectedNoteIdsProvider.notifier).toggle(id);
-    }
-    await ref.read(leavingNotesProvider.notifier).leave([id], () {
-      repo.softDelete(id);
-    });
-    if (!mounted) return;
-    showUndoSnackBar(
-      context,
-      message: l10n.noteDeleted,
-      undoLabel: l10n.undo,
-      onUndo: () => repo.restore(id),
-    );
-  }
-
-  /// Yeni notu açar. DÖNÜŞTEKİ vurgu artık burada değil, editörün
-  /// kapanışında (bkz. [NotesRepository.lastCreatedId]): hangi yoldan doğarsa
-  /// doğsun yeni not odaklanır, boş atılan notta vurgu olmaz.
-  Future<void> _openNew(String id, {String query = '', NoteType? type}) async {
-    if (!mounted) return;
-    await context.pushNote(noteRoutePath(id, query: query));
-  }
-
-  /// Ana ekranda (hızlı yakalama satırı ya da sesli yakalama) not oluşturuldu:
-  /// kullanıcı GÖRSÜN.
-  ///
-  /// KÖK NEDEN (kullanıcı: "kaydet dememe rağmen not oluşturmuyor"): not
-  /// gerçekte oluşuyordu ama ekranda HİÇBİR ŞEY değişmiyordu — yeni not
-  /// sabitlenmiş notların altındaki bölüme, çoğu zaman görünür alanın dışına
-  /// düşüyor, satır da sessizce temizleniyordu; kullanıcı kaydın kaybolduğunu
-  /// sanıyordu. Artık kart vurgulanıp görünür alana kaydırılır ve tek dokunuşla
-  /// açılabilen bir bildirim çıkar.
-  /// İKİNCİ KÖK NEDEN (kullanıcı: "bazen oluşuyor bazen oluşmuyor"): açık bir
-  /// SÜZGEÇ ya da arama, yeni notu listeden eliyordu. Yeni not sade bir metin
-  /// notudur: "Yıldızlı" süzgeci, bir etiket seçimi ya da yazılı bir arama
-  /// varken hiçbirine uymaz ve ekranda hiç belirmez — kullanıcı için bu,
-  /// notun oluşmamasıyla aynı şey. Notu gizleyecek süzgeçler kaydın hemen
-  /// ardından temizlenir (klasör süzgeci KALIR: not zaten o klasöre doğuyor).
-  void _afterQuickCapture(String id) {
-    if (!mounted) return;
-    final l10n = context.l10n;
-    if (ref.read(noteFilterProvider) != NoteFilter.all) {
-      ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
-    }
-    if (ref.read(selectedTagProvider) != null) {
-      ref.read(selectedTagProvider.notifier).set(null);
-    }
-    if (ref.read(searchQueryProvider).trim().isNotEmpty) {
-      _searchController.clear();
-      ref.read(searchQueryProvider.notifier).set('');
-    }
-    ref.read(focusedNoteProvider.notifier).focus(id);
-    // Geri sayımla kendiliğinden kapanır (bildirim şeridi).
-    ScaffoldMessenger.of(context).showMessage(
-      l10n.assistantNoteCreated,
-      action: SnackBarAction(
-        label: l10n.openNote,
-        onPressed: () => _openNew(id),
-      ),
-    );
-  }
-
-  /// Sağ alttaki asistan düğmesi: ortak dinleme levhasını açar ve seçilen
-  /// eyleme göre notu kurar.
-  ///
-  /// Levha, Ayarlar'daki "basılı tut / bas-başlat" tercihine kendi içinde
-  /// uyar; bu yüzden düğme TEK DOKUNUŞLA açılıyor. Tasarım "basılı tutunca
-  /// açılsın" diyordu ama o zaman bas-başlat'ı seçmiş kullanıcı ana ekranda
-  /// yine basılı tutmak zorunda kalırdı — ayar anlamsızlaşırdı.
-  Future<void> _captureVoiceNote() async {
-    final l10n = context.l10n;
-    final result = await showVoiceCaptureSheet(
-      context,
-      target: VoiceCaptureTarget.dashboard,
-    );
-    if (result == null || !mounted) return;
-    if (result.action == VoiceCaptureAction.dictate) {
-      await _dictateNote();
-      return;
-    }
-
-    // "Asistan oluştursun": notu döküme bakarak asistan kurar — başlık,
-    // maddeler ve HATIRLATICI çıkarır (bkz. voice_assistant.dart).
-    // Ses eki yolunda (döküm yapılamadı) bu çip zaten gösterilmez; yine de
-    // gelirse aşağıdaki düz akış çalışır — kayıt kaybolmasın.
-    if (result.action == VoiceCaptureAction.compose &&
-        result.audioPath == null &&
-        result.audioBytes == null) {
-      await ref
-          .read(voiceAssistantProvider.notifier)
-          .composeFromTranscript(
-            // Söylenen başlık asistana metnin başında verilir; notu o kurar.
-            result.title == null
-                ? result.text
-                : '${l10n.noteTitleLabel}: ${result.title}\n${result.text}',
-            nothingHeardText: l10n.voiceNothingHeard,
-            savedText: l10n.voiceNoteSaved,
-            describeError: (e) => aiErrorText(l10n, e),
-            genericErrorText: l10n.assistantGenericError,
-            historyLabel: l10n.aiHistoryVoiceNote,
-          );
-      return;
-    }
-
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-
-    final text = result.text;
-
-    // TEK yazımda kur: createNote + ayrı updateFields arasında doküman bir an
-    // boş/süzgeçsiz kalıyor ve o anki akış görüntüsünde listeden düşebiliyordu
-    // (hızlı yakalama satırında çözülen kök neden burada açık kalmıştı).
-    final asList = result.action == VoiceCaptureAction.asList;
-    final folderId = ref.read(selectedFolderProvider);
-    final id = await repo.createNote(
-      asList ? NoteType.checklist : NoteType.text,
-      title: result.title ?? '',
-      body: asList ? '' : (text.trim().isNotEmpty ? text : ''),
-      folderId: folderId,
-    );
-    if (asList) {
-      repo.updateFields(id, {
-        'items': [
-          for (final line in text.split('\n'))
-            if (line.trim().isNotEmpty)
-              // Şemanın anahtarı 'checked' ('done' yabancı alan olarak
-              // kalıyordu; fromMap onu hiç okumuyor).
-              {'id': const Uuid().v4(), 'text': line.trim(), 'checked': false},
-        ],
-      });
-    }
-    // Dökümü yapılamamış konuşma: kayıt nota SES EKİ olarak girer, böylece
-    // yapay zekâ hiç çalışmasa da konuşma kaybolmaz.
-    if (result.audioPath != null || result.audioBytes != null) {
-      await _attachVoiceAudio(
-        id,
-        result.audioPath,
-        result.audioBytes,
-        result.audioMime,
-        result.audioDuration,
-      );
-    }
-    if (!mounted) return;
-    _afterQuickCapture(id);
-  }
-
-  /// Ana ekran mikrofonunun dokunuşu: doğrudan yazdır (boş not, söz nota).
-  Future<void> _dictateNote() {
-    TipOnce.show(
-      context,
-      ref.read(sharedPreferencesProvider),
-      TipOnce.homeMicHold,
-      context.l10n.tipHomeMicHold,
-    );
-    return createDictationNote();
-  }
-
-  /// Sesli yakalamadan dönen ses kaydını yeni nota ek olarak bağlar.
-  Future<void> _attachVoiceAudio(
-    String noteId,
-    String? path,
-    Uint8List? bytes,
-    String? mime,
-    Duration duration,
-  ) async {
-    final attachments = ref.read(attachmentRepositoryProvider);
-    final repo = ref.read(notesRepositoryProvider);
-    if (attachments == null || repo == null) {
-      if (!kIsWeb && path != null && path.isNotEmpty) {
-        File(path).delete().ignore();
-      }
-      return;
-    }
-    try {
-      final attachment = bytes != null
-          ? await attachments.prepareAudioBytes(
-              noteId: noteId,
-              bytes: bytes,
-              duration: duration,
-              mimeTypeHint: mime,
-            )
-          : await attachments.prepareAudio(
-              noteId: noteId,
-              sourcePath: path!,
-              duration: duration,
-            );
-      repo.updateFields(noteId, {
-        'attachments': [attachment.toMap()],
-      });
-    } catch (e) {
-      if (!kIsWeb && path != null && path.isNotEmpty) {
-        File(path).delete().ignore();
-      }
-      if (mounted) showQuickAddSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
-    }
-  }
-
-  /// Ana ekran zemini: **renk → desen → görsel** (üçü de isteğe bağlı, üst
-  /// üste binebilirler — bkz. `dashboard_background_sheet.dart`).
-  List<Widget> _dashboardBackground(WidgetRef ref) =>
-      buildAppBackgroundLayers(context, ref);
+  bool _hasSoftKeyboardInset(BuildContext context) =>
+      MediaQuery.viewInsetsOf(context).bottom > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -1792,282 +995,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       width: cellWidth,
                       child: Column(
                       children: [
-                        // Sıralama modu: kartlar sürüklenebilir. Moddan
-                        // çıkmadan başka iş yapılamayacağı için üstte kalıcı
-                        // ve tek düğmeli bir bar durur.
-                        if (reorderActive)
-                          AppBar(
-                            leading: IconButton(
-                              tooltip: l10n.reorderDone,
-                              icon: const Icon(Icons.close),
-                              onPressed: () => ref
-                                  .read(reorderModeProvider.notifier)
-                                  .set(false),
-                            ),
-                            title: Text(l10n.reorderModeActive),
-                            actions: [
-                              TextButton(
-                                onPressed: () => ref
-                                    .read(reorderModeProvider.notifier)
-                                    .set(false),
-                                child: Text(l10n.reorderDone),
-                              ),
-                              const SizedBox(width: 4),
-                            ],
-                            // Modun ne beklediği yazılı: kartın kendisi
-                            // dokununca AÇILMIYOR, uzun basış gerekiyor —
-                            // yazmadan bunu ancak deneyerek anlamak gerekiyordu.
-                            bottom: PreferredSize(
-                              preferredSize: const Size.fromHeight(22),
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: Text(
-                                  l10n.reorderHint,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          )
-                        else if (selectionActive)
-                          // Seçim kümesinin KENDİSİ yalnız burada gerekiyor;
-                          // abonelik bu çubuğa hapsedilir (bkz. yukarıdaki
-                          // `selectionActive` kök nedeni).
-                          Consumer(
-                            builder: (context, ref, _) {
-                              final selectedIds = ref.watch(
-                                selectedNoteIdsProvider,
-                              );
-                              return AppBar(
-                                leading: IconButton(
-                                  tooltip: l10n.cancel,
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () => ref
-                                      .read(selectedNoteIdsProvider.notifier)
-                                      .clear(),
-                                ),
-                                title: Text(
-                                  l10n.selectedCount(selectedIds.length),
-                                ),
-                                // Kopyala/arşivle/sil ve diğer tüm not işlemleri
-                                // seçim yapılınca BURADA toplanır (madde 3): sık
-                                // kullanılanlar simge, gerisi taşma menüsünde.
-                                actions: [
-                                  // **TÜMÜNÜ SEÇ** — "hepsini arşivle" gibi
-                                  // en olağan toplu iş için notları tek tek
-                                  // işaretlemek gerekiyordu. Kapsam ekranda
-                                  // GÖRÜNEN notlarla sınırlı: süzgeç/arama
-                                  // açıkken ekran dışındakiler seçilmez.
-                                  IconButton(
-                                    tooltip:
-                                        selectedIds.length == visibleIds.length
-                                        ? l10n.selectNone
-                                        : l10n.selectAll,
-                                    icon: Icon(
-                                      selectedIds.length == visibleIds.length
-                                          ? Icons.deselect
-                                          : Icons.select_all,
-                                    ),
-                                    onPressed: () => ref
-                                        .read(selectedNoteIdsProvider.notifier)
-                                        .selectAll(visibleIds),
-                                  ),
-                                  IconButton(
-                                    tooltip: l10n.archive,
-                                    icon: const Icon(AppIcons.archive),
-                                    onPressed: () =>
-                                        _archiveSelected(selectedIds),
-                                  ),
-                                  IconButton(
-                                    tooltip: l10n.copy,
-                                    icon: const Icon(AppIcons.copy),
-                                    onPressed: () => _copySelected(selectedIds),
-                                  ),
-                                  IconButton(
-                                    tooltip: l10n.deleteSelected,
-                                    icon: const Icon(Icons.delete_outline),
-                                    onPressed: () =>
-                                        _deleteSelected(selectedIds),
-                                  ),
-                                  IconButton(
-                                    tooltip: l10n.moreActions,
-                                    icon: const Icon(Icons.more_vert),
-                                    onPressed: () =>
-                                        _openSelectionMenu(selectedIds),
-                                  ),
-                                  const SizedBox(width: 4),
-                                ],
-                              );
-                            },
-                          )
-                        else if (desktopWeb && !narrowPane)
-                          Builder(
-                            builder: (context) {
-                              final folders = ref.watch(
-                                visibleOrderedFoldersProvider,
-                              );
-                              final desktopTitle = sharedFolder != null
-                                  ? (sharedFolderRefOf(
-                                          ref,
-                                          sharedFolder,
-                                        )?.name ??
-                                        l10n.sharedHubShort)
-                                  : hubActive
-                                  ? (() {
-                                      final hub = ref.watch(
-                                        sharedHubFolderProvider,
-                                      );
-                                      return hub.name.isEmpty
-                                          ? l10n.sharedHubTitle
-                                          : hub.name;
-                                    })()
-                                  : selectedFolderId != null
-                                  ? ([
-                                          for (final f in folders)
-                                            if (f.id == selectedFolderId) f.name,
-                                        ].firstOrNull ??
-                                        l10n.foldersTitle)
-                                  : ref.watch(showAllNotesProvider)
-                                  ? l10n.allNotesChip
-                                  : l10n.navNotes;
-                              final desktopNoteCount =
-                                  (sharedFolder == null && !hubActive)
-                                  ? notesAsync.value?.length
-                                  : null;
-                              return WebDashboardHeader(
-                                title: desktopTitle,
-                                noteCount: desktopNoteCount,
-                                scrolled: _gridScrolled,
-                                searchController: _searchController,
-                                searchFocus: _searchFocus,
-                                filterButton: const Customizable(
-                                  id: UiItem.homeFilter,
-                                  child: HomeFilterButton(),
-                                ),
-                                showGridControls:
-                                    !selectionActive &&
-                                    !reorderActive &&
-                                    sharedFolder == null &&
-                                    !hubActive,
-                                onOpenMenu: () => unawaited(
-                                  _openHomeMenu(
-                                    hasHiddenFolders: hasHiddenFolders,
-                                    hiddenRevealed: hiddenRevealed,
-                                  ),
-                                ),
-                              );
-                            },
-                          )
-                        else
-                          // KÖK NEDEN (kasma): `keyboardOpen`/`searchExpanded`
-                          // ekranın ANA build'inde okunuyordu. `viewInsets`
-                          // klavye animasyonunun HER KARESİNDE değişiyor, yani
-                          // arama kutusuna dokunmak 250 ms boyunca ızgaranın
-                          // tamamını 15–30 kez yeniden kurduruyordu. Okuma
-                          // artık yalnız bu çubuğu kapsıyor.
-                          ListenableBuilder(
-                            listenable: _searchFocus,
-                            builder: (context, _) {
-                              final searchExpanded =
-                                  _searchFocus.hasFocus &&
-                                  MediaQuery.viewInsetsOf(context).bottom > 0 &&
-                                  WindowClass.of(context).width ==
-                                      WindowWidth.compact;
-                              final sidebarHasAccount =
-                                  desktopWeb && AppRailScope.visible(context);
-                              return AppBar(
-                                // ZEMİN VARKEN SAYDAM (2026-11-25): görsel
-                                // durum çubuğundan tarih şeridine kesintisiz;
-                                // arama hapı zaten kendi zeminini taşıyor.
-                                // Durum çubuğu simgesi temanın parlaklığından
-                                // (saydam zeminden tahmin edilirse beyaz olur).
-                                backgroundColor: hasBackground
-                                    ? Colors.transparent
-                                    : null,
-                                systemOverlayStyle: hasBackground
-                                    ? statusBarOverZemin(context)
-                                    : null,
-                                // SOLDA GERİ OKU YOK (kullanıcı bulgusu
-                                // 2026-11-06: kutu bir sağa bir sola
-                                // kayıyordu). Sol kenar sabit; aramayı
-                                // bırakma düğmesi sağda, hesap + ⋮'nin yerinde.
-                                titleSpacing: 12,
-                                automaticallyImplyLeading: false,
-                                // Satırı UÇTAN UCA doldurur (kullanıcı bulgusu
-                                // 2026-11-09: "webte arama alanının sağında
-                                // ölü boşluk"): F44.4'ün 720 dp tavanı ve
-                                // sağdaki fazladan 12 dp kaldırıldı — iki
-                                // kenar da titleSpacing (12).
-                                title: SizedBox(
-                                  width: double.infinity,
-                                  child: _SearchField(
-                                    compact: narrowPane,
-                                    showFilterInCompact: sidebarHasAccount,
-                                    controller: _searchController,
-                                    focusNode: _searchFocus,
-                                    // HESAP SİMGESİ ve ⋮ ARTIK KUTUNUN İÇİNDE
-                                    // (kullanıcı isteği 2026-11-06: "üst
-                                    // arama çubuğu profil ve 3 noktayı da
-                                    // kapsasın"). Hesap kişiselleştirmede
-                                    // gizlenebilir (Customizable); ⋮ alt
-                                    // levhayı açar (bkz. [ActionMenu]).
-                                    // Gelen/paylaşılan sayısı avatar
-                                    // rozetinde (F11.1).
-                                    trailing: searchExpanded
-                                        ? [
-                                            // TextFieldTapRegion: basış
-                                            // "alan dışı" sayılırsa odak
-                                            // pointer-down'da düşer, düğme
-                                            // kaybolur, dokunuş kutuya geçip
-                                            // klavyeyi GERİ açardı (bulgu
-                                            // 2026-11-06).
-                                            TextFieldTapRegion(
-                                            child: IconButton(
-                                              key: const ValueKey(
-                                                'search-done',
-                                              ),
-                                              tooltip: l10n.close,
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              icon: const Icon(
-                                                Icons.keyboard_hide_outlined,
-                                              ),
-                                              onPressed: _searchFocus.unfocus,
-                                            ),
-                                            ),
-                                          ]
-                                        : [
-                                            if (!sidebarHasAccount)
-                                              const Customizable(
-                                                id: UiItem.homeAccount,
-                                                child: AccountAvatarButton(),
-                                              ),
-                                            IconButton(
-                                              tooltip: l10n.more,
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              icon: const Icon(
-                                                Icons.more_vert,
-                                              ),
-                                              onPressed: () => unawaited(
-                                                _openHomeMenu(
-                                                  hasHiddenFolders:
-                                                      hasHiddenFolders,
-                                                  hiddenRevealed:
-                                                      hiddenRevealed,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
+                        _buildDashboardAppBar(
+                          l10n,
+                          reorderActive: reorderActive,
+                          selectionActive: selectionActive,
+                          visibleIds: visibleIds,
+                          notesAsync: notesAsync,
+                          desktopWeb: desktopWeb,
+                          narrowPane: narrowPane,
+                          sharedFolder: sharedFolder,
+                          hubActive: hubActive,
+                          selectedFolderId: selectedFolderId,
+                          hasHiddenFolders: hasHiddenFolders,
+                          hiddenRevealed: hiddenRevealed,
+                          hasBackground: hasBackground,
+                        ),
                         // "Süz" düğmesi + yalnız UYGULANMIŞ süzgeçler. Eski
                         // dokuz artı çipli bar (dashboard_chips.dart) ve ona
                         // bağlı "hangi çip görünsün" ayarları kaldırıldı;
@@ -2327,163 +1269,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           hubSelected: hubActive,
                                           sharedFolder: sharedFolder,
                                         ),
-                                      // BENİMLE PAYLAŞILANLAR (seçenek,
-                                      // varsayılan kapalı — bkz.
-                                      // homeShowSharedProvider): kök
-                                      // görünümde, kendi notlarımın üstünde.
-                                      if (!searchActive &&
-                                          !reorderActive &&
-                                          !selectionActive &&
-                                          !hubActive &&
-                                          sharedFolder == null &&
-                                          !sharedAtBottom &&
-                                          ref.watch(homeShowSharedProvider) &&
-                                          ref.watch(noteFilterProvider) ==
-                                              NoteFilter.all &&
-                                          ref.watch(selectedTagProvider) ==
-                                              null &&
-                                          ref.watch(selectedFolderProvider) ==
-                                              null)
-                                        SharedNotesHomeSection(
-                                          columns: columns,
-                                          cellWidth: cellWidth,
-                                        ),
-                                      if (sharedFolder == null &&
-                                          !hubActive &&
-                                          selectedFolderId != null)
-                                        SliverToBoxAdapter(
-                                          child: FolderHeaderPanel(
-                                            onCreateNote: () => unawaited(
-                                              createNote(NoteType.text),
-                                            ),
-                                          ),
-                                        ),
-                                      if (sharedFolder != null)
-                                        ...sharedFolderSlivers(
-                                          context,
-                                          ref,
-                                          folder: sharedFolder,
-                                          columns: columns,
-                                          cellWidth: cellWidth,
-                                          query: query,
-                                        )
-                                      else if (hubActive)
-                                        ..._hubSlivers(
-                                          context,
-                                          columns,
-                                          cellWidth,
-                                          query: query,
-                                        )
-                                      else
-                                      ...notesAsync.when(
-                                        data: (notes) => [
-                                          ..._afterSkeleton(),
-                                          // Aynı sarmalayıcı (ve anahtar)
-                                          // özette de var: kartlar yeniden
-                                          // kurulmaz (F25.2). Anahtarda arama
-                                          // durumu (P60, bütçe S21): arama
-                                          // başlayınca kart yapısı değişir;
-                                          // eski liste yeniden KURULMAZ, atılır
-                                          // — yoksa 1600 px paydaki canlı
-                                          // kartların hepsi kurulup aynı
-                                          // karede dar payla çöpe gidiyordu.
-                                          for (final (i, sliver)
-                                              in _buildNoteSlivers(
-                                                context,
-                                                notes,
-                                                columns,
-                                                cellWidth: cellWidth,
-                                                selectionActive:
-                                                    selectionActive,
-                                                searchActive: searchActive,
-                                                reorderEnabled: reorderActive,
-                                              ).indexed)
-                                            SliverIgnorePointer(
-                                              key: ValueKey(
-                                                ('notlar', i, searchActive),
-                                              ),
-                                              ignoring: false,
-                                              sliver: SliverRevealFade(
-                                                play: _skeletonShown,
-                                                sliver: sliver,
-                                              ),
-                                            ),
-                                        ],
-                                        // Yüklenirken diskteki özet, dokunuşa
-                                        // kapalı (F25.2, home_snapshot.dart);
-                                        // yoksa kart İSKELETİ (skeleton.dart).
-                                        loading: () {
-                                          final snapshot =
-                                              _isDefaultHome(
-                                                searchActive: searchActive,
-                                              )
-                                              ? ref.watch(homeSnapshotProvider)
-                                              : const <Note>[];
-                                          if (snapshot.isEmpty) {
-                                            _skeletonShown = true;
-                                            return [
-                                              SliverToBoxAdapter(
-                                                child: NoteGridSkeleton(
-                                                  columns: columns,
-                                                ),
-                                              ),
-                                            ];
-                                          }
-                                          return [
-                                            for (final (i, sliver)
-                                                in _buildNoteSlivers(
-                                                  context,
-                                                  snapshot,
-                                                  columns,
-                                                  cellWidth: cellWidth,
-                                                  selectionActive: false,
-                                                  searchActive: false,
-                                                  reorderEnabled: false,
-                                                ).indexed)
-                                              SliverIgnorePointer(
-                                                key: ValueKey(
-                                                  ('notlar', i, false),
-                                                ),
-                                                sliver: SliverRevealFade(
-                                                  play: false,
-                                                  sliver: sliver,
-                                                ),
-                                              ),
-                                          ];
-                                        },
-                                        error: (e, _) => [
-                                          SliverFillRemaining(
-                                            hasScrollBody: false,
-                                            child: ErrorState(error: e),
-                                          ),
-                                        ],
-                                      ),
-                                      // Paylaşılanlar ALTTA seçildiyse
-                                      // (bkz. homeSharedAtBottomProvider).
-                                      if (!searchActive &&
-                                          !reorderActive &&
-                                          !selectionActive &&
-                                          !hubActive &&
-                                          sharedFolder == null &&
-                                          sharedAtBottom &&
-                                          ref.watch(homeShowSharedProvider) &&
-                                          ref.watch(noteFilterProvider) ==
-                                              NoteFilter.all &&
-                                          ref.watch(selectedTagProvider) ==
-                                              null &&
-                                          ref.watch(selectedFolderProvider) ==
-                                              null)
-                                        SharedNotesHomeSection(
-                                          columns: columns,
-                                          cellWidth: cellWidth,
-                                        ),
-                                      // Listenin sonu düğme sütununun
-                                      // ÜSTÜNE çıkabilsin (bkz.
-                                      // [_kFabClearance]).
-                                      SliverToBoxAdapter(
-                                        child: SizedBox(
-                                          height: _kFabClearance + navInset,
-                                        ),
+                                      ..._buildDashboardGridSlivers(
+                                        context,
+                                        searchActive: searchActive,
+                                        reorderActive: reorderActive,
+                                        selectionActive: selectionActive,
+                                        hubActive: hubActive,
+                                        sharedFolder: sharedFolder,
+                                        sharedAtBottom: sharedAtBottom,
+                                        columns: columns,
+                                        cellWidth: cellWidth,
+                                        selectedFolderId: selectedFolderId,
+                                        query: query,
+                                        notesAsync: notesAsync,
+                                        navInset: navInset,
                                       ),
                                     ],
                                   ),
@@ -2498,160 +1297,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ));
                   },
                 ),
-                // Sesli asistan paneli düğmelerin ÜSTÜnde sabit konumda yüzer.
-                // Düğmeler floatingActionButton'da kaldığından panel açılıp
-                // kapanırken yerinden oynamaz (stabil); yalnız kayıt/işleme/
-                // sonuç sırasında görünür, ana sayfanın ortasına yakın.
-                // Asistan paneli, "not silindi" bildirimiyle aynı yerleşimi
-                // kullanır: düğmelerin ÜSTÜnde değil SOLUNDA, ekranın dibinde.
-                // Sağda düğme sütunu kadar boşluk bırakılır.
-                PositionedDirectional(
-                  start: 8,
-                  end: 144,
-                  bottom: 16 + navInset,
-                  child: const VoiceAssistantPanel(),
-                ),
-                // SÜRÜKLERKEN ÇÖP KUTUSU (F60.S9): HEP ağaçta, yalnız
-                // boyamada belirir — sürükleme başlayınca ağaç şekli
-                // değişmez (kasma listesi 4, 6).
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 16 + navInset,
-                  child: Center(
-                    child: DragTrashTarget(
-                      active: _dragNoteId != null,
-                      onTrash: _trashDraggedNote,
-                    ),
-                  ),
-                ),
-                // ✨ YAPAY ZEKÂ DÜĞMESİ KALKTI (geliştirme raporu B2,
-                // 2026-10-20): mikrofon + ✨ + "+" üç ayrı yüzen düğme sağ
-                // alttaki kartın yarısını örtüyordu. Yapay Zekâ ⋮ menüsünün
-                // hızlı satırında ilk sırada; AI ile sesli not mikrofona basılı
-                // tutunca açılır (değişmedi).
-                // Düğmeler Scaffold.floatingActionButton yerine BURADA durur:
-                // Scaffold bir FAB tanıdığında yüzen bildirimleri ("not
-                // silindi") onun ÜSTÜne iter. Düğmeler Stack'te olunca
-                // bildirim ekranın dibinde, düğmelerin solunda kalır.
-                // YÖNE BAĞLI: sabit `right` sağdan sola dillerde düğmeleri
-                // sağda bırakıyor, asistan paneli ise (end: 88) SOLDA yer
-                // ayırıyordu — panel düğmelerin üstüne biniyordu.
-                // KLASÖR DÜĞMESİ KALKTI (kullanıcı isteği 2026-11-09: "sol
-                // alttaki klasörler butonunu kaldır"). Klasör menüsü liste
-                // tepedeyken aşağı çekişle ve yan çubuktan açılır.
-                PositionedDirectional(
-                  end: 16,
-                  bottom: 16 + navInset,
-                  // DAR LİSTE BÖLMESİNDE ↑ "+"nın SOLUNDA (KT-17, tablet turu
-                  // 2026-11-18): üstte dururken yığın 16 + 56 + 10 + 40 =
-                  // 122 dp, listenin alt boşluğu ([_kFabClearance]) 96 dp —
-                  // listenin sonunda bile son kartın tarih satırı ↑'nın
-                  // arkasında kalıyordu. Dar bölmede mikrofon ve ⚡ gizli,
-                  // satırda yer var. Aynı `Flex`, yalnız yön değişir: alt
-                  // ağaç (FAB'lar, "+" menüsü) yeniden kurulmaz.
-                  // Ray durumunu da bu kurucu okur (eskiden ayrı `Builder`):
-                  // kurulum sayısı aynı kalır (bütçe S23/S24).
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: _narrowPaneN,
-                    builder: (context, narrow, _) => Flex(
-                    direction: narrow ? Axis.horizontal : Axis.vertical,
-                    mainAxisSize: MainAxisSize.min,
-                    // "Başa dön" "+"nın tam üstünde: sağa dayalı, küçük
-                    // düğme (40) "+"nın (56) ortasına 8 dp payla oturur.
-                    // Dar bölmede satırda, ortalı.
-                    crossAxisAlignment: narrow
-                        ? CrossAxisAlignment.center
-                        : CrossAxisAlignment.end,
-                    spacing: narrow ? 8 : 10,
-                    children: [
-                      // **BAŞA DÖN** — yüz notluk bir kitaplıkta en alta
-                      // inen kullanıcının tepeye (ve arama kutusuna)
-                      // dönmesinin tek yolu aynı yolu geri kaydırmaktı.
-                      // Yalnız gerçekten aşağıdayken çıkar; seçim/sıralama
-                      // kipinde çıkmaz (o çubuklar zaten sayfayı yönetir).
-                      AnimatedSlide(
-                        offset: _showBackToTop && !selectionActive
-                            ? Offset.zero
-                            : const Offset(0, 0.6),
-                        duration: const Duration(milliseconds: 180),
-                        child: AnimatedOpacity(
-                          opacity: _showBackToTop && !selectionActive ? 1 : 0,
-                          duration: const Duration(milliseconds: 180),
-                          child: IgnorePointer(
-                            ignoring: !_showBackToTop || selectionActive,
-                            child: Padding(
-                              padding: EdgeInsetsDirectional.only(
-                                end: narrow ? 0 : 8,
-                              ),
-                              child: FloatingActionButton.small(
-                                heroTag: 'backToTop',
-                                tooltip: l10n.scrollToTop,
-                                onPressed: _backToTop,
-                                child: const Icon(Icons.arrow_upward),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // MİKROFON "+"nın SOLUNDA, aynı satırda (B2): sütun
-                      // eskiden iki düğme boyu yükseliyor ve sağ sütunun
-                      // son kartını örtüyordu; tek satır 56 dp.
-                      //
-                      // Ray görünürken kapılar rayda (K3, F44.1).
-                      AppRailScope.visible(context)
-                            ? const SizedBox.shrink()
-                            : sharedFolder != null
-                            ? SharedFolderFab(folder: sharedFolder)
-                            : Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // ⚡ HIZLI EKLE (kullanıcı isteği 2026-11-16) —
-                          // TEK ÖRNEK: ana ekran kurulsa da kurulmaz.
-                          _quickDropFab,
-                          // TEK MİKROFON (F3.1) = DOĞRUDAN YAZDIR (kullanıcı
-                          // isteği 2026-10-20: "AI sesli notu AI menüsüne
-                          // alalım, ana ekrandaki doğrudan yazma olsun").
-                          // Eskiden dokunuş SON kullanılan kipi açıyordu; aynı
-                          // düğmenin bir gün AI levhası, bir gün dikte açması
-                          // tahmin edilemezdi. AI ile sesli not Yapay Zekâ
-                          // ekranının en üstünde; basılı tutmak kısayol olarak
-                          // onu açar.
-                          ValueListenableBuilder<bool>(
-                            valueListenable: _narrowPaneN,
-                            builder: (_, narrow, mic) =>
-                                Offstage(offstage: narrow, child: mic),
-                            child: Customizable(
-                            id: UiItem.homeMic,
-                            child: Padding(
-                              padding: const EdgeInsetsDirectional.only(end: 12),
-                              child: _DashVoiceButton(
-                                key: const ValueKey('home-mic'),
-                                tooltip: l10n.voiceMicTooltipDictate,
-                                icon: AppIcons.dictation,
-                                onTap: _dictateNote,
-                                onLongPress: _captureVoiceNote,
-                              ),
-                            ),
-                          ),
-                          ),
-                          // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
-                          // Dört kapılı "+" (F3.2). Sesli not menüde YOK:
-                          // ana ekranın kendi tek mikrofonu var (F3.1).
-                          // "+" menüsü YALNIZ "+"ya demirlenir: mikrofon
-                          // yanında, menü onun üstüne inmez.
-                          CompositedTransformTarget(
-                            link: _fabColumnLink,
-                            child: QuickAddFab(
-                              anchor: _fabColumnLink,
-                              actions: () => this,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  ),
+                ..._buildDashboardFloatingOverlays(
+                  l10n,
+                  navInset: navInset,
+                  selectionActive: selectionActive,
+                  sharedFolder: sharedFolder,
                 ),
               ],
             ),

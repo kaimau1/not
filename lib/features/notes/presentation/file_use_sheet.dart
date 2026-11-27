@@ -139,8 +139,8 @@ List<FileUse> fileUsesFor(
     return switch (kind) {
       PickedFileKind.image => const [FileUse.classic, FileUse.imageFile],
       PickedFileKind.pdf || PickedFileKind.slides => const [FileUse.classic],
-      PickedFileKind.video => const [FileUse.video, FileUse.transcribe],
-      PickedFileKind.audio => const [FileUse.audio, FileUse.transcribe],
+      PickedFileKind.video => const [FileUse.video],
+      PickedFileKind.audio => const [FileUse.audio],
     };
   }
   // BALONLU/KLASİK SEÇİMİ KALKTI (kullanıcı isteği 2026-11-03: "not
@@ -151,10 +151,9 @@ List<FileUse> fileUsesFor(
   return switch (kind) {
     PickedFileKind.image => [...modes(), if (!web) FileUse.transcribe],
     PickedFileKind.pdf || PickedFileKind.slides => modes(),
-    PickedFileKind.video => [FileUse.video, if (!web) FileUse.transcribe],
+    PickedFileKind.video => const [FileUse.video],
     PickedFileKind.audio => [
       if (!web) FileUse.audio,
-      if (!web) FileUse.transcribe,
     ],
   };
 }
@@ -359,7 +358,7 @@ class _FileUseSheetState extends State<_FileUseSheet> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppWeight.strong,
                           ),
                         ),
                         if (more > 0)

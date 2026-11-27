@@ -473,40 +473,6 @@ class DarkScheduleNotifier extends Notifier<DarkSchedule> {
   }
 }
 
-/// Ayarlarda ayrı model seçilebilen iş grupları.
-///
-/// Hepsi tek dropdown'a bağlıyken "özetleme hızlı model, podcast güçlü model"
-/// gibi bir tercih kurulamıyordu. Gruplar görev tipine göre ayrıldı: kısa
-/// metin işleri ucuz modelle yeter, uzun belge işi yetenekli model ister.
-enum AiTask {
-  /// Özet, iyileştirme, brifing, sohbet.
-  general('model_chat'),
-
-  /// Başlık, etiket, ayar arama — kısa işler (Gemma önce; 2026-11-15).
-  short('model_short'),
-
-  /// PDF/not sohbeti — uzun bağlam.
-  document('model_document'),
-
-  /// Podcast anlatısı. Belge sohbetinden AYRI: podcast tek seferde uzun ve
-  /// akıcı bir anlatı üretir (kullanıcı isteği — "podcast kısmında Gemini
-  /// modelini seçme ayarı ayrı olsun"), sohbet ise kısa turlarla ilerler;
-  /// biri için doğru olan model öbürü için pahalı ya da yetersiz kalıyor.
-  podcast('model_podcast'),
-
-  /// Metin ve konuşma çevirisi.
-  translate('model_translate'),
-
-  /// Sesli not asistanı (araç çağrılı).
-  voice('model_voice');
-
-  const AiTask(this.prefsKey);
-
-  /// SharedPreferences anahtarı. `general` ve `voice` eski tekil ayarların
-  /// anahtarlarını KORUYOR — güncelleyen kullanıcının seçimi kaybolmasın.
-  final String prefsKey;
-}
-
 /// Seslendirmeyi kim yapacak?
 enum TtsEngine {
   /// Cihazın yerleşik TTS'i: bedava, çevrimdışı, anında, sınırsız uzunlukta.
@@ -589,46 +555,6 @@ class TtsVoiceNotifier extends Notifier<String> {
   void set(String value) {
     state = value;
     ref.read(sharedPreferencesProvider).setString(_key, value);
-  }
-}
-
-/// Kullanıcının seçtiği Gemini modelleri (null = otomatik zincir).
-/// Seçilen model ilgili akışta ilk sırada denenir; 404/429'da zincir sürer.
-final aiTaskModelsProvider =
-    NotifierProvider<AiTaskModelsNotifier, Map<AiTask, String?>>(
-      AiTaskModelsNotifier.new,
-    );
-
-class AiTaskModelsNotifier extends Notifier<Map<AiTask, String?>> {
-  static const _shortMigratedKey = 'model_short_migrated';
-
-  @override
-  Map<AiTask, String?> build() {
-    final prefs = watchPrefs(ref);
-    // GÖÇ (2026-11-15): başlık/etiket eskiden "model_chat" seçimini
-    // kullanıyordu. Elle model seçmiş kullanıcıda yeni görev de onu bir kez
-    // devralır; Otomatik'te (anahtar yok) Otomatik kalır. Bayrak, kullanıcı
-    // sonra kısa işleri Otomatik'e alırsa göçün tekrarlanmasını önler.
-    if (!prefs.containsKey(_shortMigratedKey)) {
-      final old = prefs.getString(AiTask.general.prefsKey);
-      if (old != null && !prefs.containsKey(AiTask.short.prefsKey)) {
-        prefs.setString(AiTask.short.prefsKey, old);
-      }
-      prefs.setBool(_shortMigratedKey, true);
-    }
-    return {
-      for (final task in AiTask.values) task: prefs.getString(task.prefsKey),
-    };
-  }
-
-  void set(AiTask task, String? value) {
-    state = {...state, task: value};
-    final prefs = ref.read(sharedPreferencesProvider);
-    if (value == null) {
-      prefs.remove(task.prefsKey);
-    } else {
-      prefs.setString(task.prefsKey, value);
-    }
   }
 }
 
@@ -947,45 +873,6 @@ final voiceOfflineProvider = boolPref('voice_offline', defaultValue: false);
 final voiceSmartCommandsProvider = boolPref('voice_smart_commands', defaultValue: true);
 
 /// Günlük brifing bildirimi ayarları.
-class BriefingSettings {
-  const BriefingSettings({required this.enabled, required this.minutes});
-
-  final bool enabled;
-
-  /// Gün içi dakika (ör. 08:30 → 510).
-  final int minutes;
-}
-
-final briefingSettingsProvider =
-    NotifierProvider<BriefingSettingsNotifier, BriefingSettings>(
-      BriefingSettingsNotifier.new,
-    );
-
-class BriefingSettingsNotifier extends Notifier<BriefingSettings> {
-  static const _enabledKey = 'briefing_enabled';
-  static const _minutesKey = 'briefing_minutes';
-
-  @override
-  BriefingSettings build() {
-    final prefs = watchPrefs(ref);
-    return BriefingSettings(
-      enabled: prefs.getBool(_enabledKey) ?? false,
-      minutes: prefs.getInt(_minutesKey) ?? 8 * 60 + 30,
-    );
-  }
-
-  void update({bool? enabled, int? minutes}) {
-    final next = BriefingSettings(
-      enabled: enabled ?? state.enabled,
-      minutes: minutes ?? state.minutes,
-    );
-    state = next;
-    final prefs = ref.read(sharedPreferencesProvider);
-    prefs.setBool(_enabledKey, next.enabled);
-    prefs.setInt(_minutesKey, next.minutes);
-  }
-}
-
 /// Zamanlamalı tema geçişi için "şimdi" akışı.
 /// autoDispose: zamanlama KAPALIYKEN kimse izlemez ve zamanlayıcı tümüyle
 /// durur — sürekli çalışan gereksiz bir uyandırma kaynağıydı (pil).

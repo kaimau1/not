@@ -54,7 +54,7 @@ class HomeSectionHeader extends StatelessWidget {
                 semanticsLabel: context.l10n.sectionNoteCount(count),
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppWeight.strong,
                   color: scheme.onSurfaceVariant,
                 ),
               ),

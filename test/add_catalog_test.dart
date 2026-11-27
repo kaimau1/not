@@ -156,7 +156,6 @@ void main() {
     ]);
     expect(fileUsesFor(PickedFileKind.audio, inNote: true, web: true), [
       FileUse.audio,
-      FileUse.transcribe,
     ]);
     expect(fileUsesFor(PickedFileKind.audio, web: true), isEmpty);
   });

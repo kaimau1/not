@@ -26,12 +26,18 @@ void main() {
       'saat 10:30 da 3,5 kilo',
     );
     expect(tidyDictation('tamam,sonra', before: 'x '), 'tamam, sonra');
+    expect(tidyDictation('not:merhaba'), 'Not: merhaba');
+    expect(tidyDictation('saat 10:30'), 'Saat 10:30');
   });
 
   test('soru eki ile biten satıra soru işareti', () {
     expect(tidyDictation('yarın geliyor musun'), 'Yarın geliyor musun?');
     expect(tidyDictation('bunu yaptın mı'), 'Bunu yaptın mı?');
     expect(tidyDictation('hazır mıyız'), 'Hazır mıyız?');
+    expect(tidyDictation('hazır mıydın'), 'Hazır mıydın?');
+    expect(tidyDictation('hazır mıydık'), 'Hazır mıydık?');
+    expect(tidyDictation('onlar geldi miydi'), 'Onlar geldi miydi?');
+    expect(tidyDictation('hazır mıymışsınız'), 'Hazır mıymışsınız?');
     expect(
       tidyDictation('bunu yaptın mı bilmiyorum'),
       'Bunu yaptın mı bilmiyorum',

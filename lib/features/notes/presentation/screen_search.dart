@@ -5,6 +5,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/search_fold.dart';
 import '../domain/note.dart';
 import 'notes_providers.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **ORTAK ARAMA YÜZEYİ** — arşiv, çöp ve klasör ekranlarının ortak arama
 /// çubuğu. Yerel tam metin araması ([noteMatchesQuery]).
@@ -51,7 +52,7 @@ class ScreenSearchField extends StatelessWidget {
               ? const SizedBox.shrink()
               : IconButton(
                   tooltip: l10n.clearSearch,
-                  icon: const Icon(Icons.close, size: 18),
+                  icon: const Icon(Icons.close, size: AppIconSize.s),
                   onPressed: search.controller.clear,
                 ),
         ),

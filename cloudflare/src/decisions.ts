@@ -65,10 +65,31 @@ export function validateDecisionPayload(
   if (typeof body.model !== "string" || !ALLOWED_MODELS.has(body.model)) {
     return { ok: false, reason: "unsupported_model" };
   }
+  let normalizedInputText = "";
+  if (typeof body.input === "string") {
+    normalizedInputText = body.input;
+  } else if (Array.isArray(body.input) && body.input.length > 0) {
+    const parts: string[] = [];
+    for (const part of body.input) {
+      if (!part || typeof part !== "object" || Array.isArray(part)) {
+        return { ok: false, reason: "invalid_input" };
+      }
+      const p = part as Record<string, unknown>;
+      if (p.type !== undefined && p.type !== "text") {
+        return { ok: false, reason: "invalid_input" };
+      }
+      if (typeof p.text !== "string") {
+        return { ok: false, reason: "invalid_input" };
+      }
+      parts.push(p.text);
+    }
+    normalizedInputText = parts.join("\n");
+  } else {
+    return { ok: false, reason: "invalid_input" };
+  }
   if (
-    typeof body.input !== "string" ||
-    !body.input.trim() ||
-    body.input.length > MAX_INPUT_CHARS
+    !normalizedInputText.trim() ||
+    normalizedInputText.length > MAX_INPUT_CHARS
   ) {
     return { ok: false, reason: "invalid_input" };
   }
@@ -104,7 +125,7 @@ export function validateDecisionPayload(
 
   const sanitized: Record<string, unknown> = {
     model: body.model,
-    input: body.input,
+    input: [{ type: "text", text: normalizedInputText }],
     questions: cleanQuestions,
   };
   if (typeof body.system_instruction === "string" && body.system_instruction.length <= 2000) {

@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'note_e2ee.dart';
 import 'note_lock.dart';
+import 'run_heavy.dart';
 
 /// Faz 4 — **Kilitli Not E2EE Anahtar Oturumu**.
 ///
@@ -45,19 +46,20 @@ abstract final class NoteE2eeSession {
     NoteLockConfig config,
     String secret,
   ) async {
-    final derived = NoteE2ee.deriveKey(
-      secret,
-      'e2ee:${config.salt}',
-      iterations: config.iterations,
+    final salt = 'e2ee:${config.salt}';
+    final iterations = config.iterations;
+    final derived = await runHeavy(
+      () => NoteE2ee.deriveKey(secret, salt, iterations: iterations),
     );
     _key = derived;
     await _persist(derived);
     return derived;
   }
 
-  /// Cihazın güvenli deposundan mevcut anahtarı yükler; yoksa cihaz kilidi
-  /// için yeni 256-bit anahtar üretir.
-  static Future<Uint8List?> ensureDeviceKey() async {
+  /// Cihazın güvenli deposundaki mevcut anahtarı YALNIZ okur; yoksa yeni
+  /// anahtar üretmez (`null` döner). Şifre/desen kilidinde biyometrik açılış
+  /// bu metodu kullanmalıdır.
+  static Future<Uint8List?> loadCachedKey() async {
     if (_key != null) return _key;
     try {
       final raw = await _storage.read(key: _storageKey);
@@ -68,12 +70,34 @@ abstract final class NoteE2eeSession {
           return _key;
         }
       }
+    } catch (_) {
+      // Depoya erişilemezse null döner.
+    }
+    return null;
+  }
+
+  /// Cihazın güvenli deposundan mevcut anahtarı yükler; yoksa cihaz kilidi
+  /// için yeni 256-bit anahtar üretir.
+  static Future<Uint8List?> ensureDeviceKey() async {
+    final cached = await loadCachedKey();
+    if (cached != null) return cached;
+    try {
       final fresh = NoteE2ee.generateKey();
       _key = fresh;
       await _persist(fresh);
       return fresh;
     } catch (_) {
       return _key;
+    }
+  }
+
+  /// Güvenli depodaki anahtarı ve bellek kopyasını siler (sıfırlama/çıkış).
+  static Future<void> clearPersistedKey() async {
+    clear();
+    try {
+      await _storage.delete(key: _storageKey);
+    } catch (_) {
+      // Test veya desteklenmeyen ortamda sessizce geçer.
     }
   }
 

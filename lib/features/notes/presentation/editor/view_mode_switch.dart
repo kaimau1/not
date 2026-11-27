@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../../../../core/haptics.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Bir ekin notta NASIL durduğu.
 ///
@@ -212,7 +213,7 @@ class AttachmentViewSwitch extends StatelessWidget {
           color: scheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(radius),
           border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.6),
+            color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
           ),
         ),
         // Eşit dilimler: IntrinsicWidth, Row'daki Expanded çocukları EN
@@ -224,7 +225,7 @@ class AttachmentViewSwitch extends StatelessWidget {
                 Positioned.fill(
                   child: AnimatedAlign(
                     duration: slideDuration,
-                    curve: Curves.easeOutCubic,
+                    curve: AppMotion.emphasized,
                     alignment: Alignment(
                       n == 1 ? 0 : -1 + 2 * index / (n - 1),
                       0,
@@ -323,7 +324,7 @@ class _Segment extends StatelessWidget {
               child: TweenAnimationBuilder<Color?>(
                 tween: ColorTween(end: fg),
                 duration: AttachmentViewSwitch.slideDuration,
-                curve: Curves.easeOutCubic,
+                curve: AppMotion.emphasized,
                 builder: (context, color, _) => Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -339,7 +340,7 @@ class _Segment extends StatelessWidget {
                           fontSize: 12.5,
                           fontWeight: selected
                               ? FontWeight.w700
-                              : FontWeight.w500,
+                              : AppWeight.medium,
                         ),
                       ),
                     ],
@@ -377,7 +378,7 @@ class _EmbedButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(compact ? 13 : 20),
             side: BorderSide(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
+              color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
             ),
           ),
           child: InkWell(

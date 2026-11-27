@@ -316,7 +316,7 @@ class NewFolderTile extends ConsumerWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppWeight.strong,
                       color: scheme.onSurfaceVariant,
                     ),
                   ),

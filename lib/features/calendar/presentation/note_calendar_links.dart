@@ -14,6 +14,7 @@ import '../data/google_calendar_sync.dart';
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
 import 'event_editor.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **NOT ↔ TAKVİM BAĞI** (TAKVIM_PLANI Faz 49).
 ///
@@ -103,7 +104,7 @@ class NoteCalendarPills extends ConsumerWidget {
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               avatar: Icon(
                 Icons.event_outlined,
-                size: 16,
+                size: AppIconSize.xs,
                 color: scheme.primary,
               ),
               // "Takvim · 27 Kasım Cuma" (kullanıcı isteği 2026-11-22:

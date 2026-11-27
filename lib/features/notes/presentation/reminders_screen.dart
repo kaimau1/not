@@ -401,17 +401,17 @@ class _ReminderTile extends ConsumerWidget {
             if (overdue)
               IconButton(
                 tooltip: l10n.reminderSnooze,
-                icon: const Icon(Icons.snooze_outlined, size: 20),
+                icon: const Icon(Icons.snooze_outlined, size: AppIconSize.m),
                 onPressed: () => _snooze(context, ref),
               ),
             IconButton(
               tooltip: l10n.remindersEdit,
-              icon: const Icon(Icons.edit_outlined, size: 20),
+              icon: const Icon(Icons.edit_outlined, size: AppIconSize.m),
               onPressed: onEdit,
             ),
             IconButton(
               tooltip: l10n.remindersRemove,
-              icon: const Icon(Icons.alarm_off_outlined, size: 20),
+              icon: const Icon(Icons.alarm_off_outlined, size: AppIconSize.m),
               onPressed: () => _remove(context, ref),
             ),
           ],

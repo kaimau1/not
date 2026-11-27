@@ -26,6 +26,7 @@ import 'core/utils/display_rate.dart';
 import 'core/utils/hard_keyboard.dart';
 import 'core/utils/image_cache_budget.dart';
 import 'core/utils/local_file.dart';
+import 'core/utils/memory_pressure.dart';
 import 'core/utils/font_downloads.dart';
 import 'core/utils/note_fonts.dart';
 import 'core/utils/web_attachment_cache.dart';
@@ -37,7 +38,9 @@ import 'features/notes/data/local_notes_store.dart';
 import 'features/notes/data/note_format_memory.dart';
 import 'features/notes/data/starter_notes.dart' show StarterNotesConfig;
 import 'features/notes/presentation/editor/pinned_side.dart' show PinnedSideMemory;
+import 'features/notes/presentation/editor/spell_underline.dart' show SpellMarks;
 import 'features/notes/presentation/note_card_media.dart' show CardThumbs;
+import 'features/notes/presentation/notes_providers.dart' show clearSearchBodyCache;
 import 'features/ai/data/antalia/antalia_engine.dart' show registerAntaliaLicense;
 import 'features/settings/settings_providers.dart';
 import 'core/menu_layout.dart';
@@ -221,6 +224,7 @@ Future<void> main() async {
   unawaited(
     Future<void>.delayed(const Duration(seconds: 8), pruneTempFiles),
   );
+  MemoryPressure.register(_onMemoryPressure);
   WidgetsBinding.instance.addObserver(_MemoryPressure());
   _lifecycle = AppLifecycleListener(
     // Pil tasarrufu kipi uygulama arkadayken açılıp kapanabilir: yenileme
@@ -267,13 +271,19 @@ Future<void> _staggerAfterFirstFrame(List<Future<void> Function()> tasks) async 
   }
 }
 
+void _onMemoryPressure(bool critical) {
+  if (critical) {
+    PaintingBinding.instance.imageCache.clear();
+    CardThumbs.clearMemory();
+    clearSearchBodyCache();
+    SpellMarks.trimCaches();
+  }
+}
+
 class _MemoryPressure with WidgetsBindingObserver {
   @override
   void didHaveMemoryPressure() {
-    // Flutter çözülmüş görsel önbelleğini kendisi de boşaltıyor; açıkça
-    // yazmak F26.2 sonrası tek boşaltma yolunun burası olduğunu belgeler.
-    PaintingBinding.instance.imageCache.clear();
-    CardThumbs.clearMemory();
+    MemoryPressure.dispatch(critical: true);
   }
 }
 

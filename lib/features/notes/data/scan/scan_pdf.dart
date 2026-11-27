@@ -8,6 +8,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:image/image.dart' as img;
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
+import '../../../../core/utils/decode_image.dart';
 import '../../domain/attachment.dart' show PageBubbleRect;
 import '../note_pdf.dart' show NotePdf;
 import 'scan_ocr.dart';
@@ -102,7 +103,7 @@ abstract final class ScanPdf {
         bitmap = PdfBitmap(bytes);
       } catch (_) {
         // PdfBitmap yalnız JPEG/PNG okur; diğerleri PNG'ye çevrilir.
-        final decoded = img.decodeImage(bytes);
+        final decoded = decodeCommonImage(bytes);
         if (decoded == null) {
           throw const FormatException('Bu görsel biçimi çözülemedi.');
         }

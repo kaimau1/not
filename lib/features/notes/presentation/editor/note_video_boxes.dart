@@ -177,7 +177,7 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppWeight.strong,
                     height: 1.25,
                   ),
                 ),
@@ -520,7 +520,7 @@ class _VideoBoxState extends State<_VideoBox> with WidgetsBindingObserver {
               onTap: _toggle,
               child: AnimatedOpacity(
                 opacity: _playing ? 0.35 : 1,
-                duration: const Duration(milliseconds: 200),
+                duration: AppMotion.short,
                 child: Container(
                   width: 44,
                   height: 44,
@@ -556,7 +556,7 @@ class _VideoBoxState extends State<_VideoBox> with WidgetsBindingObserver {
               child: VideoTransportControls(
                 video: widget.video,
                 onDark: true,
-                iconSize: 20,
+                iconSize: AppIconSize.m,
                 showTime: boxWidth >= 270,
                 showSpeed: boxWidth >= 320,
               ),
@@ -606,7 +606,7 @@ class _NoteAtChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
         decoration: BoxDecoration(
           color: Colors.black54,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.m),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -618,7 +618,7 @@ class _NoteAtChip extends StatelessWidget {
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppWeight.strong,
               ),
             ),
           ],

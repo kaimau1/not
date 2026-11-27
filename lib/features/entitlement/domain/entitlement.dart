@@ -156,6 +156,9 @@ abstract final class EntitlementGate {
 
   static bool allows(ProFeature feature, Entitlement e, DateTime now) {
     if (!active) return true;
+    if (feature == ProFeature.smartDecisions && e.decisionCredits > 0) {
+      return true;
+    }
     return e.effectiveTier(now).index >= feature.minTier.index;
   }
 

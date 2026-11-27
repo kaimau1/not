@@ -166,7 +166,7 @@ function createGooglePlayVerifier(env: Env): PlayPurchaseVerifier {
       const url =
         `${base}/${encodeURIComponent(packageName)}/purchases/products/` +
         `${encodeURIComponent(productId)}/tokens/${encodeURIComponent(purchaseToken)}:acknowledge`;
-      await fetchFn(url, {
+      const res = await fetchFn(url, {
         method: "POST",
         headers: {
           authorization: `Bearer ${accessToken}`,
@@ -174,6 +174,9 @@ function createGooglePlayVerifier(env: Env): PlayPurchaseVerifier {
         },
         body: "{}",
       });
+      if (!res.ok) {
+        throw new Error(`play_ack_failed_${res.status}`);
+      }
     },
 
     async consumeProduct(
@@ -185,10 +188,13 @@ function createGooglePlayVerifier(env: Env): PlayPurchaseVerifier {
       const url =
         `${base}/${encodeURIComponent(packageName)}/purchases/products/` +
         `${encodeURIComponent(productId)}/tokens/${encodeURIComponent(purchaseToken)}:consume`;
-      await fetchFn(url, {
+      const res = await fetchFn(url, {
         method: "POST",
         headers: { authorization: `Bearer ${accessToken}` },
       });
+      if (!res.ok) {
+        throw new Error(`play_consume_failed_${res.status}`);
+      }
     },
   };
 }
@@ -276,7 +282,7 @@ export async function handleBillingVerify(
   if (
     (productId !== LIFETIME_PRODUCT && productId !== DECISION_PACK_1000) ||
     purchaseToken.length < 8 ||
-    purchaseToken.length > 1024
+    purchaseToken.length > 4096
   ) {
     return errorResponse(
       "invalid_argument",
@@ -464,14 +470,24 @@ export async function handleBillingRtdn(
   }
 
   const tokenHash = await sha256Hex(revokedToken);
+  const existingToken = await env.DB.prepare(
+    "SELECT uid, product_id, status FROM purchase_tokens WHERE token_hash = ?",
+  )
+    .bind(tokenHash)
+    .first<{ uid: string; product_id: string; status: string }>();
+
+  if (existingToken?.status === "revoked") {
+    return jsonResponse({ ok: true, revoked: false, ignored: "already_revoked" });
+  }
+
   await env.DB.prepare(
     "UPDATE purchase_tokens SET status = 'revoked', updated_at = ? WHERE token_hash = ?",
   )
     .bind(now, tokenHash)
     .run();
 
-  // Yalnız bu belirteçle verilen ömür boyu hakkı kaldırılır.
-  const res = await env.DB.prepare(
+  // Ömür boyu hakkını kaldır.
+  const ltRes = await env.DB.prepare(
     `UPDATE entitlements
      SET lifetime_owned = 0, updated_at = ?
      WHERE lifetime_token_hash = ?`,
@@ -479,8 +495,32 @@ export async function handleBillingRtdn(
     .bind(now, tokenHash)
     .run();
 
+  let packChanges = 0;
+  if (
+    existingToken?.product_id === DECISION_PACK_1000 ||
+    otp?.sku === DECISION_PACK_1000
+  ) {
+    const credited = await env.DB.prepare(
+      "SELECT uid, calls_added, tokens_added FROM credited_pack_tokens WHERE token_hash = ?",
+    )
+      .bind(tokenHash)
+      .first<{ uid: string; calls_added: number; tokens_added: number }>();
+    if (credited) {
+      const packRes = await env.DB.prepare(
+        `UPDATE entitlements
+         SET extra_decisions = MAX(0, extra_decisions - ?),
+             extra_tokens = MAX(0, extra_tokens - ?),
+             updated_at = ?
+         WHERE uid = ?`,
+      )
+        .bind(credited.calls_added, credited.tokens_added, now, credited.uid)
+        .run();
+      packChanges = Number(packRes.meta?.changes ?? 0);
+    }
+  }
+
   return jsonResponse({
     ok: true,
-    revoked: Number(res.meta?.changes ?? 0) > 0,
+    revoked: Number(ltRes.meta?.changes ?? 0) + packChanges > 0,
   });
 }

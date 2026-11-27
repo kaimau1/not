@@ -7,6 +7,7 @@ import '../../folders/data/folders_repository.dart';
 import '../data/friends_repository.dart';
 import '../domain/friend.dart';
 import '../../../core/friendly_error.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// **ANA EKRANIN DAVET ŞERİDİ** — kullanıcı isteği 2026-08-18: "arkadaşlık
 /// isteği geldiğinde ana sayfada görülsün" ve "klasör paylaşıldığında kabul
@@ -70,7 +71,7 @@ class _InviteCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: scheme.onTertiaryContainer),
+          Icon(icon, size: AppIconSize.m, color: scheme.onTertiaryContainer),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -82,7 +83,7 @@ class _InviteCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppWeight.strong,
                     color: scheme.onTertiaryContainer,
                   ),
                 ),

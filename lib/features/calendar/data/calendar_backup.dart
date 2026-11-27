@@ -2,11 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../domain/calendar_event.dart';
 import '../domain/day_key.dart';
+import '../domain/routine.dart';
 import '../domain/task_item.dart';
 import 'calendar_repository.dart';
 
-/// **TAKVİM YEDEĞİ** (TAKVIM_PLANI F46.5): etkinlik, görev, görev listesi ve
-/// gün bağları tam yedeğin (`yedek.json`) `calendar` alanında taşınır.
+/// **TAKVİM YEDEĞİ** (TAKVIM_PLANI F46.5): etkinlik, görev, görev listesi,
+/// rutin, rutin kaydı ve gün bağları tam yedeğin (`yedek.json`) `calendar`
+/// alanında taşınır.
 ///
 /// Kayıtların Firestore biçimi ([CalendarEvent.toMap] vb.) JSON'a çevrilir:
 /// `Timestamp` → `{"$ts": ISO}`. Geri yüklemede NOT KİMLİKLERİ yeniden
@@ -19,6 +21,8 @@ class CalendarSnapshot {
     this.tasks = const [],
     this.lists = const [],
     this.dayLinks = const {},
+    this.routines = const [],
+    this.routineLogs = const [],
   });
 
   final List<CalendarEvent> events;
@@ -27,9 +31,16 @@ class CalendarSnapshot {
 
   /// Gün anahtarı → not kimlikleri.
   final Map<String, List<String>> dayLinks;
+  final List<Routine> routines;
+  final List<RoutineLog> routineLogs;
 
   bool get isEmpty =>
-      events.isEmpty && tasks.isEmpty && lists.isEmpty && dayLinks.isEmpty;
+      events.isEmpty &&
+      tasks.isEmpty &&
+      lists.isEmpty &&
+      dayLinks.isEmpty &&
+      routines.isEmpty &&
+      routineLogs.isEmpty;
 }
 
 const _tsKey = r'$ts';
@@ -75,6 +86,15 @@ Map<String, dynamic> encodeCalendarBackup(CalendarSnapshot s) => {
     for (final e in s.dayLinks.entries)
       if (e.value.isNotEmpty) e.key: e.value,
   },
+  'routines': [
+    for (final r in s.routines)
+      if (r.deletedAt == null) _record(r.id, r.toMap()),
+  ],
+  'routineLogs': [
+    for (final l in s.routineLogs)
+      if (l.routineId.isNotEmpty && l.day.isNotEmpty)
+        _record(RoutineLog.docId(l.routineId, l.day), l.toMap()),
+  ],
 };
 
 /// [raw] yedekten okunan `calendar` alanı; [noteIds] eski → yeni not
@@ -125,16 +145,24 @@ CalendarSnapshot decodeCalendarBackup(
       if (mapped.isNotEmpty) links[day] = mapped;
     }
   }
+  final routines = [
+    for (final (id, data) in records('routines')) Routine.fromMap(id, data),
+  ];
+  final routineLogs = [
+    for (final (_, data) in records('routineLogs')) RoutineLog.fromMap(data),
+  ].where((l) => l.routineId.isNotEmpty && l.day.isNotEmpty).toList();
   return CalendarSnapshot(
     events: events,
     tasks: tasks,
     lists: lists,
     dayLinks: links,
+    routines: routines,
+    routineLogs: routineLogs,
   );
 }
 
 /// [snapshot]ı [repo]ya yazar; [existing]'de aynı kimlikli kayıt atlanır.
-/// Yazılan kayıt sayısını döner (etkinlik + görev).
+/// Yazılan kayıt sayısını döner (etkinlik + görev + rutin).
 int restoreCalendarSnapshot(
   CalendarRepository repo,
   CalendarSnapshot snapshot, {
@@ -143,6 +171,10 @@ int restoreCalendarSnapshot(
   final eventIds = {for (final e in existing.events) e.id};
   final taskIds = {for (final t in existing.tasks) t.id};
   final listIds = {for (final l in existing.lists) l.id};
+  final routineIds = {for (final r in existing.routines) r.id};
+  final logIds = {
+    for (final l in existing.routineLogs) RoutineLog.docId(l.routineId, l.day),
+  };
   var written = 0;
   for (final l in snapshot.lists) {
     if (listIds.contains(l.id)) continue;
@@ -157,6 +189,16 @@ int restoreCalendarSnapshot(
     if (taskIds.contains(t.id)) continue;
     repo.saveTask(t);
     written++;
+  }
+  for (final r in snapshot.routines) {
+    if (routineIds.contains(r.id)) continue;
+    repo.saveRoutine(r);
+    written++;
+  }
+  for (final l in snapshot.routineLogs) {
+    if (l.routineId.isEmpty || l.day.isEmpty) continue;
+    if (logIds.contains(RoutineLog.docId(l.routineId, l.day))) continue;
+    repo.setRoutineLog(l);
   }
   for (final e in snapshot.dayLinks.entries) {
     final have = existing.dayLinks[e.key] ?? const <String>[];

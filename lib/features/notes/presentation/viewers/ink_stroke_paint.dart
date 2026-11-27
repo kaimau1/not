@@ -60,6 +60,11 @@ void paintInkStroke(
     );
     return;
   }
+  if (!cache && fill && s.points.length >= 6) {
+    final p = _activeVariablePath(s, size, fountain);
+    canvas.drawPath(p, Paint()..color = color);
+    return;
+  }
   var g = cache ? _geom[s] : null;
   if (g == null || g.size != size) {
     g = _StrokeGeom(
@@ -72,6 +77,63 @@ void paintInkStroke(
     g.path,
     fill ? (Paint()..color = color) : inkPaint(color, base),
   );
+}
+
+class _ActiveVarCache {
+  InkStroke? stroke;
+  Size size = Size.zero;
+  bool fountain = false;
+  int committedCaps = 0;
+  final Path prefix = Path();
+}
+
+final _activeVarCache = _ActiveVarCache();
+
+/// Büyüyen dolma/basınçlı çizginin sabit kapsüllerini artımlı önbellekte tutar:
+/// kare başına yalnızca yeni eklenen son 1–2 kapsül hesaplanır (O(1)).
+Path _activeVariablePath(InkStroke s, Size size, bool fountain) {
+  final p = s.points;
+  final n = p.length ~/ 2;
+  final totalCaps = n - 1;
+  final c = _activeVarCache;
+  if (!identical(c.stroke, s) ||
+      c.size != size ||
+      c.fountain != fountain ||
+      totalCaps - 2 < c.committedCaps) {
+    c
+      ..stroke = s
+      ..size = size
+      ..fountain = fountain
+      ..committedCaps = 0
+      ..prefix.reset();
+  }
+  final w = size.width, h = size.height;
+  final r = fountain ? fountainRadii(s, size) : _pressureRadii(s, size);
+  final safeCommitted = math.max(0, totalCaps - 2);
+  while (c.committedCaps < safeCommitted) {
+    final cap = c.committedCaps;
+    final i = (cap + 1) * 2;
+    _capsule(
+      c.prefix,
+      Offset(p[i - 2] * w, p[i - 1] * h),
+      r[cap],
+      Offset(p[i] * w, p[i + 1] * h),
+      r[cap + 1],
+    );
+    c.committedCaps++;
+  }
+  final path = Path.from(c.prefix);
+  for (var cap = c.committedCaps; cap < totalCaps; cap++) {
+    final i = (cap + 1) * 2;
+    _capsule(
+      path,
+      Offset(p[i - 2] * w, p[i - 1] * h),
+      r[cap],
+      Offset(p[i] * w, p[i + 1] * h),
+      r[cap + 1],
+    );
+  }
+  return path;
 }
 
 class _StrokeGeom {

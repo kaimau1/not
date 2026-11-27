@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:local_auth/local_auth.dart';
 
+import 'note_e2ee_session.dart';
 import 'note_lock.dart';
 
 /// Kilitli notlar için kapı yapılandırması (F4.8). Uygulama kökü bağlar
@@ -33,7 +34,25 @@ Future<bool> authenticateForNote(String reason) async {
     // Soru gösterilemiyor (gezgin yok): kapı KAPALI kalır.
     return false;
   }
-  return deviceAuthenticate(reason);
+  final ok = await deviceAuthenticate(reason);
+  if (ok) {
+    await NoteE2eeSession.ensureDeviceKey();
+  }
+  return ok;
+}
+
+/// Bir notu kilitlemeden hemen önce E2EE anahtarının bellekte hazır olmasını
+/// sağlar. Cihaz kilidinde anahtar yoksa üretir/yükler; şifre/desen kilidinde
+/// önce önbellekten okur, yine yoksa kimlik doğrulaması ister.
+Future<bool> ensureNoteE2eeKeyForLock(String reason) async {
+  if (NoteE2eeSession.key != null) return true;
+  if (!NoteLockGate.config.usesSecret) {
+    await NoteE2eeSession.ensureDeviceKey();
+    return NoteE2eeSession.key != null;
+  }
+  final cached = await NoteE2eeSession.loadCachedKey();
+  if (cached != null) return true;
+  return authenticateForNote(reason);
 }
 
 /// Cihazın biyometrik / ekran kilidi. Cihazda hiçbir kilit yoksa engel

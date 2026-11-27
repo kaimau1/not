@@ -25,6 +25,7 @@ import '../features/settings/data/spell_sync.dart';
 import 'router.dart';
 import '../core/play_build.dart';
 import '../core/save_cadence.dart';
+import '../core/utils/memory_pressure.dart';
 import '../core/utils/note_e2ee_session.dart';
 
 /// Oturum açıkken ayakta durması gereken arka plan servisleri (F2.4).
@@ -55,36 +56,19 @@ set debugAppServicesStages(List<void Function(WidgetRef ref)>? value) =>
 
 class _AppServicesState extends ConsumerState<AppServices>
     with WidgetsBindingObserver {
-  /// Faz 4 — RAM diyeti: varsayılan 1000 görsel / 100 MB yerine 80 görsel /
-  /// 48 MB tavan; düşük RAM cihazlarda bellek baskısı veya arka planda
-  /// canlı önbellek boşaltılır.
-  static const _kMaxImageCacheEntries = 80;
-  static const _kMaxImageCacheBytes = 48 << 20;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    final cache = PaintingBinding.instance.imageCache;
-    if (cache.maximumSize > _kMaxImageCacheEntries) {
-      cache.maximumSize = _kMaxImageCacheEntries;
-    }
-    if (cache.maximumSizeBytes > _kMaxImageCacheBytes) {
-      cache.maximumSizeBytes = _kMaxImageCacheBytes;
-    }
-  }
-
-  @override
-  void didHaveMemoryPressure() {
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
-    clearSearchBodyCache();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused) {
-      PaintingBinding.instance.imageCache.clearLiveImages();
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      // Yalnız arka plan hafif temizliği: ekrandaki görseller F26 gereği
+      // canlı kalır (dönüşte kare/kapak titremesin).
+      MemoryPressure.dispatch(critical: false);
     }
   }
 

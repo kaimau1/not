@@ -7,6 +7,7 @@ import '../../../../core/personalize.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../add_catalog.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Not editörünün "Ekle" levhası: tek dokunuş → tek levha → her seçenek görünür.
 ///
@@ -26,7 +27,7 @@ Future<String?> showAttachSheet(
   isScrollControlled: true,
   showDragHandle: true,
   shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
   ),
   // Geniş ekranda karolar yayılmasın (paylaşım hedefi levhasıyla aynı genişlik).
   constraints: BoxConstraints(

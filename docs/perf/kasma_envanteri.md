@@ -169,13 +169,13 @@ o anda ağır değil (8–17 ms): sorun kare ritmi, kurulum değil.
 (`KONTROL_LISTEM.md` "Alt panel kip k").
 **Yapılacak (kod yok, ölçüm):** `tool/perf/panel_kayit.py` ile kip `k` ve `c` 10'ar aç/kapa;
 çıktıdaki geri sıçrama / takılma / ort-maks sapma `docs/perf/`'e yazılır. Kip `k` kötüyse
-varsayılan `c` yapılır (`--dart-define=ALT_PANEL_KIP=c`).
+varsayılan `c` yapılır (`--dart-define=ALT_PANEL_KIP=c`). *(Tablet bulgusu `2026-11-27`: MatePad 11 HarmonyOS'ta `/system/bin/screenrecord` bulunmadığından `panel_kayit.py` video kaydı alınamadı; `ed_9005_closed`/`open` ekran görüntüleri ve VM zaman çizelgesi `kb` evresinde `0 >16 ms` kareyle SwiftKey üstü yerleşim temiz — kip `k`/`c` farkı için `/system/bin/screenrecord` olan Android telefon gerekir.)*
 
 **K-21 — Ekran klavye açıkken 60 Hz'e mi düşüyor? (`ADAY`, P0).** HyperOS'un bazı uygulamaları
 klavye açıkken 60 Hz'e sabitlediği bilinir; bu cihazda doğrulanmadı.
 **Ölçüm:** klavye açıkken `adb shell dumpsys display | grep -i refresh` ve
 `adb logcat -s NotlarEkran` (etkin / istenen / modlar). Aynı ölçüm bir Samsung ya da Pixel'de de
-yapılmadan K-20 için yeni kod yazılmaz.
+yapılmadan K-20 için yeni kod yazılmaz. *(Tablet bulgusu `2026-11-27`, `dev.kaimau.notlar.olcum` `9005`: MatePad 11 ana ekranda ve sanal klavye `SwiftKey` açıkken `NotlarEkran: etkin 120.00001 Hz (mod 2)` ve `mActiveModeId=2` ile `120 Hz` korunuyor — klavyede 60 Hz'e düşmedi; HyperOS telefon doğrulaması ayrıca açık.)*
 
 ---
 
@@ -319,9 +319,9 @@ kurar. Öğe sayısı SINIRSIZ olanlar önce:
 
 | Öncelik | Yerler |
 |---|---|
-| P1 (sınırsız) | `ai_chat_screen.dart:394, 700` (mesajlar) · `gmail_screen.dart:213, 328, 1118, 1498` · `tasks_screen.dart:298, 329` · `spell_learned_screen.dart:65` (600 düzeltmeye kadar; `build`'de 2 sıralama :57) · `trash_analysis_sheet.dart:224` · `note_link_ui.dart:94` (tüm notlar) |
-| P2 (onlarca öğe) | `settings_appearance.dart:138, 881` · `friends_screen.dart:651` · `note_search_sheet.dart:319` · `study_cards_screen.dart:193` · `note_history_sheet.dart:68` (30 sürüm) · `filter_sheet.dart:267` · `archive_insights_sheet.dart:196` · `bubble_dock.dart:742, 795, 948` · `pdf_page_box.dart:1546` · `calendar_screen.dart:1272` |
-| P3 (kısa, sabit) | `ai_hub_screen.dart:274` · `ai_text_result.dart:69` · `routines_screen.dart:67` · `dashboard_shelf.dart:234` · `embed_sheet.dart:165` · `note_editor_actions.dart:595` · `quick_row_editor.dart:197` · `note_theme_sheet.dart:190` · `pdf_export_screen.dart:520` · `scan_review_screen.dart:476` · `template_editor_screen.dart:210` · `area_actions.dart:156` · `customize_hub.dart:182` · `personalize_screen.dart:59` · `premium_screen.dart:43` · `privacy_screen.dart:29` · `settings_screen.dart:845` · `settings_ai.dart:566` · `settings_area.dart:583` |
+| P1 (sınırsız) | ~~`ai_chat_screen.dart`~~ *(Faz 1 kaldırıldı)* · ~~`gmail_screen.dart`~~ *(Faz 1 kaldırıldı)* · ~~`tasks_screen.dart:298, 329`~~ *(KAPANDI 2026-11-27: tamamlananlar `SliverToBoxAdapter` + `SliverList.builder`)* · ~~`spell_learned_screen.dart`~~ *(kaldırıldı)* · ~~`trash_analysis_sheet.dart:224`~~ *(KAPANDI 2026-11-27: `CustomScrollView` + `SliverList.builder`)* · `note_link_ui.dart:94` (tüm notlar — bekçi S53 kapsamında) |
+| P2 (onlarca öğe) | ~~`settings_appearance.dart` (`_LanguageSheet`)~~ *(KAPANDI 2026-11-27: `ListView.builder` + `_entries`)* · ~~`friends_screen.dart:651`~~ *(KAPANDI 2026-11-27: `CustomScrollView` + `SliverList.builder`)* · ~~`note_search_sheet.dart:319`~~ *(KAPANDI 2026-11-27: `ListView.builder`)* · `study_cards_screen.dart:144` · `note_history_sheet.dart:68` (30 sürüm) · `filter_sheet.dart:267` · `archive_insights_sheet.dart:196` (en fazla 10 satır `.take(10)`) · `bubble_dock.dart` · `pdf_page_box.dart` · `calendar_screen.dart` |
+| P3 (kısa, sabit) | `routines_screen.dart:67` · `dashboard_shelf.dart:234` · `embed_sheet.dart:165` · `note_editor_actions.dart:595` · `quick_row_editor.dart:197` · `note_theme_sheet.dart:190` · `pdf_export_screen.dart:520` · `scan_review_screen.dart:476` · `template_editor_screen.dart:210` · `area_actions.dart:156` · `customize_hub.dart:182` · `personalize_screen.dart:59` · ~~`privacy_screen.dart:29`~~ *(KAPANDI 2026-11-27: `ListView.builder`)* · `settings_screen.dart` · `settings_ai.dart` · `settings_area.dart` |
 
 `items_editor.dart:2317, 2351` bilinçli (S50 `_slotCache`); dokunma. Düzeltme: T10.
 `shrinkWrap: true` olan 13 yer Ek C-4'te.
@@ -329,19 +329,19 @@ kurar. Öğe sayısı SINIRSIZ olanlar önce:
 **K-48 — `build` içinde sıralama/süzme/RegExp (`KOD`, P2).** Her kurulumda yeniden çalışır;
 klavye karesinde kurulan levhalarda (bölüm A) yük katlanır.
 `calendar_screen.dart:1400` · `note_calendar_links.dart:142` · `tasks_screen.dart:180` ·
-`folders_screen.dart:320` · `attach_sheet.dart:66` · `spell_learned_screen.dart:57` ·
-`note_link_ui.dart:61` · `note_target_picker.dart:46` · `trash_screen.dart:127` ·
-`guide_screen.dart:257` · `settings_screen.dart:211` · `quick_list_screen.dart:519` (RegExp) ·
-`trash_analysis_sheet.dart:471` (RegExp) · `privacy_screen.dart:15` (RegExp). Düzeltme: T9.
+`folders_screen.dart:320` · `attach_sheet.dart:66` ·
+`note_link_ui.dart:61` · `note_target_picker.dart:46` · ~~`trash_screen.dart:127`~~ *(KAPANDI 2026-11-27: `_TrashScreenState` `_cachedVisible`)* ·
+`guide_screen.dart:257` · `settings_screen.dart:211` · ~~`quick_list_screen.dart:519`~~ *(KAPANDI K-68)* ·
+~~`trash_analysis_sheet.dart:471` (RegExp)~~ *(KAPANDI 2026-11-27: `_SuggestionTile._wsRe`)* · ~~`privacy_screen.dart:15` (RegExp)~~ *(KAPANDI 2026-11-27: `_privacyItemRe`/`_privacyHeadingRe`)* · ~~`note_search_sheet.dart`~~ *(KAPANDI 2026-11-27: `_wsRe` + `needle`)* · ~~`quick_drop_sheet.dart:394`~~ *(KAPANDI 2026-11-27: `_wordSplitRe`)*. Düzeltme: T9.
 
 **K-49 — `IntrinsicHeight` / `IntrinsicWidth` (`ADAY`, P3).** Alt ağacı iki kez dizer.
-`app_frame.dart:619` · `ai_sheet.dart:1124` · `account_sheet.dart:161` · `ai_hub_screen.dart:552`
-· `settings_area.dart:1074` · `calendar_screen.dart:1546` · `dashboard_widgets.dart:1485` ·
+`app_frame.dart:619` · `account_sheet.dart:161` ·
+`settings_area.dart:1074` · `calendar_screen.dart:1546` · `dashboard_widgets.dart:1485` ·
 `view_mode_switch.dart:220`. Yalnız liste içinde tekrar edenler önemli: önce
 `settings_area.dart:1074` ve `dashboard_widgets.dart:1485`'e bak.
 
 **K-50 — Ek katman açan boyama (`ADAY`, P3).** `ShaderMask`: `share_sheet.dart:539`,
-`trash_screen.dart:626` (liste içindeyse öğe başına katman). Sabit `Opacity` (0 < x < 1):
+~~`trash_screen.dart:626`~~ *(KAPANDI 2026-11-27: `TrashCard` `saveLayer`'sız `Stack` + altta `LinearGradient` söndürmesi)*. Sabit `Opacity` (0 < x < 1):
 `ai_sheet.dart:1045, 1074` · `ai_hub_screen.dart:973` · `account_required.dart:300` ·
 `calendar_views.dart:309, 475` · `dashboard_widgets.dart:291, 1209` ·
 `dashboard_background_sheet.dart:183` · `drag_trash_target.dart:290` ·
@@ -352,14 +352,16 @@ içindekiler önce: `calendar_views.dart:475`, `dashboard_widgets.dart:1209`.
 
 **K-51 — Tam boy görsel çözme (`KOD`, P3).** Büyük dosyaların çoğu `cacheWidth` ile doğru çözülüyor
 (tarandı). Kalanlar: `viewers/area_actions.dart:67, 163` (`Image.memory(png)` tam boy) ve
-`account_identity_card.dart:121` (profil fotoğrafı, küçük). Düzeltme: `decodeWidthBucket`.
+`account_identity_card.dart:121` (profil fotoğrafı, küçük). Düzeltme: `decodeWidthBucket`. — KAPANDI 2026-11-27: `account_identity_card.dart` `_avatar()` içine sabit `cacheWidth: 168, cacheHeight: 168` eklendi (`MediaQuery` okumadan; `area_actions.dart` ise `clamp(360, 1280)` ile sınırlı; `S30` `0/0/314` geçti).
+
+**K-58 — Kurulumda yeniden oluşturulan Future/Stream (`KOD`, P3).**
+~~`note_history_sheet.dart:28`~~ *(P65 kapandı)* · ~~`audio_card_box.dart`~~ *(KAPANDI 2026-11-27: `_TimeLabel`/`_WaveSeek` akış önbelleği)* · ~~`privacy_screen.dart`~~ *(KAPANDI 2026-11-27: `_PrivacyScreenState` `_blocksFuture` StatefulWidget önbelleği)*. Düzeltme: Future/Stream State'te bir kez. — TÜMÜ KAPANDI (2026-11-27).
 
 **K-52 — Ana iş parçacığında eşzamanlı dosya okuma (`ADAY`, P2).**
-`local_notes_store.dart` (`existsSync` + `readAsStringSync`: yerel notlar açılışta) ·
-`attachment_text_index.dart` (`readAsBytesSync`) · `image_prepare_screen.dart`,
-`scan/scan_enhance.dart` (`readAsBytesSync`/`writeAsBytesSync`; `runHeavy` içinde mi, kontrol et) ·
-`antalia_engine.dart` (`readAsStringSync`). Dosya büyükse kare düşürür. Düzeltme: `runHeavy`
-içinde ya da eşzamansız okuma. **Önce** çağrının ana iş parçacığında olduğunu doğrula.
+`local_notes_store.dart` (`existsSync` + `readAsStringSync`: ilk kurulumda not karışmasın diye bilinçli senkron; disk yazımı `_write` içinde `runHeavy` izolesinde) ·
+~~`attachment_text_index.dart`~~ *(kaldırıldı)* · `image_prepare_screen.dart`,
+`scan/scan_enhance.dart` ·
+`antalia_engine.dart` (`_readDicts` zaten `await compute(_readDicts, ...)` arka plan izolesinde çalışıyor). *(Durum güncellendi 2026-11-27)*
 
 **K-53 — Sürekli çalışan animasyon ve zamanlayıcılar (`ADAY`, P2; pil + kare).**
 `.repeat(`: `skeleton.dart:30` · `dashboard_widgets.dart:696` (odak nabzı; durma koşulu :684–688) ·
@@ -400,19 +402,15 @@ kurulum say; `app_frame.dart:352` altındaki `LayoutBuilder` her karede çalış
 15–30 kez kuruluyordu). Kalan: `AppBar` kare başına 1 kurulum. Bekçide izinli.
 
 **K-57 — `onChanged` → `setState`: tuş başına bütün form kuruluyor (`KOD`, P2).** 46 yer (Ek C-5).
-Önemliler: `note_search_sheet.dart:269` (K-02) · `calculator_sheet.dart:116` ·
-`settings_ai.dart:278, 544, 560` · `settings_appearance.dart:129` · `note_link_ui.dart:89` ·
-`settings_screen.dart:1193` · `guide_screen.dart:300` · `gmail_screen.dart:1191` ·
-`event_editor.dart:513` · `task_editor.dart:350, 357, 400` · `share_target_sheet.dart:223, 322`.
+Önemliler: ~~`note_search_sheet.dart:269`~~ *(KAPANDI 2026-11-27: `_hasQuery` + `ValueListenableBuilder`)* · ~~`calculator_sheet.dart:116`~~ *(KAPANDI P65)* ·
+`settings_ai.dart:278, 544, 560` · ~~`settings_appearance.dart` (`_LanguageSheet`)~~ *(KAPANDI 2026-11-27: `ValueListenableBuilder<TextEditingValue>`)* · ~~`note_link_ui.dart:89`~~ *(KAPANDI K-08)* ·
+`settings_screen.dart:1193` · `guide_screen.dart:300` ·
+`event_editor.dart:513` · `task_editor.dart:350, 357, 400` · ~~`share_target_sheet.dart`~~ *(KAPANDI P65)*.
 Düzeltme: T3 (alan kendi `ValueNotifier`'ını günceller; yalnız sonuca bağlı parça dinler).
 
-**K-47/48/57/58 durum (2026-11-17, T7 kısmen):** `note_history_sheet` (K-58), `calculator_sheet` ve `share_target_sheet` arama (K-57) KAPANDI; `note_link_ui` zaten K-08'de düzeltilmişti. Kalanlar `docs/hafiza/akicilik.md` 2026-11-17 T7 satırında.
+**K-47/48/57/58 durum (2026-11-27):** `K-58` tümü kapandı; `K-47`/`K-48`/`K-50`/`K-57` kapsamında `trash_analysis_sheet`, `privacy_screen`, `note_search_sheet`, `tasks_screen` (tamamlananlar), `_LanguageSheet`, `trash_screen` (`_cachedVisible` + `ShaderMask`'sız kart), `quick_drop_sheet` (`_wordSplitRe`) ve `friends_screen` (`_AddFriendSheet`) kapatıldı.
 
-**K-58 — Kurulumda yeniden oluşturulan Future/Stream (`KOD`, P3).**
-`note_history_sheet.dart:28`: `repo.listVersions(noteId)` levha `builder`'ında çağrılıyor →
-levha her yeniden kurulduğunda (ekran dönmesi vb.) Firestore'dan 30 sürüm yeniden okunur (kasma +
-okuma maliyeti). `audio_card_box.dart:372, 438`: `createPositionStream()` her kurulumda yeni akış.
-`privacy_screen.dart:20`: her kurulumda dosya okuma. Düzeltme: Future/Stream State'te bir kez.
+**K-58 — Kurulumda yeniden oluşturulan Future/Stream (`KOD`, P3):** Bkz. §G (TÜMÜ KAPANDI 2026-11-27).
 
 ---
 
@@ -420,12 +418,12 @@ okuma maliyeti). `audio_card_box.dart:372, 438`: `createPositionStream()` her ku
 
 | Kayıt | Sorun | Kanıt | Yer | Yapılacak |
 |---|---|---|---|---|
-| K-64 | Hızlı ekle için bütçe senaryosu yok; cihazda hiç ölçülmedi | — | `quick_drop_sheet.dart` | `perf_budget_test`'e senaryo: ⚡ → levha açık → 6 klavye karesi → 3 harf → Ekle (kurulum/dizilme). `ab_hepsi.py`'ye `hizli_ekle` evresi |
+| K-64 | Hızlı ekle için bütçe senaryosu + cihaz ölçümü | KAPANDI (bütçe `S56`, 2026-11-27) | `quick_drop_sheet.dart`, `perf_budget_test.dart` | `S56` bütçe testi (`test/perf_budget_test.dart`) klavye + yazım bütçesini denetliyor; `ab_hepsi.py` `hizli_ekle` evresi ek işi açık |
 | K-65 | Açılışta klavye ve mikrofon aynı anda açılıyor olabilir (ikisi de kanal çağrısı) | ADAY | varsayılanlar `quick_entry_memory.dart:159–163`; `quick_drop_sheet.dart:241` | Sıra: levha animasyonu bitsin → ya klavye ya mikrofon. Önce aynı karede mi, ölç |
 | K-66 | Aday notlar `initState`'te süzülüp sıralanıyor (not sayısıyla büyür) | KOD | `quick_drop_sheet.dart:236`, `quickDropCandidates` :53–78 | İlk karede son 6 hedef; kalan bir kare sonra |
 | K-67 | **KAPANDI (2026-11-21):** `showLiftingSheet` (`sheet_keyboard.dart`) boyama katmanı ötelemesi + `FreezeWhenHidden` kalkanı + çip şeridi `padding: EdgeInsets.zero` (S56: 402/102 → 114/0) | TEST | `quick_drop_sheet.dart` | Cihazda A/B doğrulanacak |
-| K-68 | Hızlı listede çip başına `has()` tüm satırları tarıyor; `build`'de `RegExp` | ADAY | `quick_list_screen.dart:519` çevresi | Küme (Set) + sabit RegExp |
-| K-69 | AI yedeğinde 5 sn'ye kadar sessiz bekleme ("dondu" hissi; kasma değil) | KOD | `quick_drop_sheet.dart:341` | 300 ms sonra ince ilerleme + "Ben seçeyim" |
+| K-68 | Hızlı listede çip başına `has()` tüm satırları tarıyor; `build`'de `RegExp` | KAPANDI 2026-11-27 | `quick_list_screen.dart` | `_outerParensRe` `static final`a alındı, `_hasRow` için `_rev` tabanlı `O(1)` `_rowKeys` kümesi eklendi; `S49` ve `quick_list_screen_test` geçti |
+| K-69 | AI yedeğinde 5 sn'ye kadar sessiz bekleme ("dondu" hissi; kasma değil) | UYGULANDI (cihaz dışı doğrulandı 2026-11-27) | `quick_drop_sheet.dart` (`_Phase.thinking`, `DelayedSpinner` + `LinearProgressIndicator` + `quick-drop-pick-myself`) | `DelayedSpinner` (300 ms gecikme) + ince ilerleme çubuğu + `"Ben seçeyim"` düğmesi kodda bağlı ve `quick_drop_p87_test` kapsamında |
 
 ---
 
@@ -435,11 +433,11 @@ Bunlar kod işi değil; yapılmadan yukarıdaki `ADAY` kayıtlarının çoğu ka
 
 | Kayıt | İş | Çıktı |
 |---|---|---|
-| K-59 | **RAM tabanı yok.** `adb shell dumpsys meminfo dev.kaimau.notlar.olcum` beş durumda: boşta ana ekran, editör, PDF, kalem, YouTube | `docs/perf/ram_taban.md` tablo. Şüpheliler: WebView, pdfium sayfa önbelleği, 50 MB görsel önbelleği (`image_cache_budget.dart`), ONNX oturumu |
+| K-59 | **RAM tabanı yok.** `adb shell dumpsys meminfo dev.kaimau.notlar.olcum` beş durumda: boşta ana ekran, editör, PDF, kalem, YouTube | KAPANDI (tablet `9005`, `2026-11-27`): `ram_taban.py` 5/5 durum ölçüldü (`ana ekran 363/468`, `editör 373/478`, `PDF 409/514`, `kalem 369/475`, `YouTube kartlı not 375/480` MB PSS/RSS) → `docs/perf/tablet_taban.md` |
 | K-60 | **Isınma etkisi.** Kapanış zikzağının sıklığı videolar arasında artıyor (%43 → %72 → %83) | Aynı notta soğuk (< 34 °C) ve 10 dk kullanım sonrası `panel_kayit.py`; fark varsa termal kısma |
 | K-61 | **Ölçüm aracı kör noktaları.** `ab_hepsi.py`'de `liste` evresi kare yakalamıyor, `acilis` 2 kare görüyor, `sablon`/`bicim`/`kalem`/`duzen` evreleri hiç koşmadı (`OTOMASYON.md` toplu-2 notu) | Evreler çalışır hâle gelir; ölçülemeyen yüzey = görünmeyen kasma. Ayarlar, hesap levhası, hızlı ekle, akıllı liste için evre yok |
 | K-62 | **Gerçek kullanım verisi yok.** Yalnız profil/beta derlemesinde `FrameTiming` ile ekran başına p50/p90/p99 ve "16 ms üstü kare %" toplayan sayaç + Ayarlar → Hakkında'da gizli "Hız günlüğü" | Kullanıcı "şurada kastı" dediğinde bakılacak sayı. Yayın derlemesinde kapalı |
-| K-63 | **Büyük hesapla ölçüm yok.** Bütün ölçümler ~400 notla | `make_dataset.py` ile 1000 ve 3000 notlu sentetik hesap; `ab_hepsi.py` + `prof_save.py`. K-22/K-23'ün gerçek boyutu burada çıkar |
+| K-63 | **Büyük hesapla ölçüm yok.** Bütün ölçümler ~400 notla | `make_dataset.py` ile 1000 ve 3000 notlu sentetik hesap; `ab_hepsi.py` + `prof_save.py`. K-22/K-23'ün gerçek boyutu burada çıkar *(Sentetik test KAPANDI 2026-11-27, `test/scale_1000_3000_test.dart` `4/4`: `1.000` not `backlinks 56,1 ms`, `filterAll 24,3 ms`, `search 25,3 ms`, `candidates 3,6 ms`, `20` tembel kart / kaydırmada `0` kart kurulumu; `3.000` not `backlinks 3,8 ms`, `filterAll 6,8 ms`, `search 19,5 ms`, `candidates 12,3 ms`, `20` kart / `scrollNoteCardBuilds=0`; cihazda 1k/3k tablet kilidi sonrası)* |
 | K-20, K-21 | Bölüm C | — |
 
 ---

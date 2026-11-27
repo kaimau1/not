@@ -443,8 +443,8 @@ flowchart LR
 - [x] **RAM Optimizasyonu:** Görsel önbellek tavanı (80 görsel / 48 MB) + `paused` / `didHaveMemoryPressure` otomatik önbellek boşaltma ([`app_services.dart`](lib/app/app_services.dart)).
 
 ### Faz 5 — Gerçek Cihaz & Tarayıcı Doğrulama Turu (1 Hafta — Yeni Özellik YASAK)
-- [ ] `KONTROL_LISTEM.md`'deki 41 doğrulanmamış maddeyi erit (hedef: <5). *(Fiziksel cihaz/tarayıcı gerektirir.)*
-- [ ] Test matrisi: (1) Orta sınıf 4–6 GB Android telefon, (2) Yatay + Dikey Tablet (60/120 Hz + M-Pencil), (3) Chrome + Firefox + Safari Web (Faz 1–4 + Cloudflare + Drive + IndexedDB), (4) 1.000 ve 3.000 notluk ölçek testi + YouTube RAM ölçümü, (5) `K-20`/`K-21` klavye 60/120 Hz A/B testi.
+- [ ] `KONTROL_LISTEM.md`'deki doğrulanmamış maddeleri erit (hedef: <5). *(2026-11-27: Chrome Web alt maddeleri + Tablet `9005` `P78` tam ve `KT-17`/`32`/`Mağaza Kipi v2` alt maddeleri doğrulandı; telefon, M-Pencil ve Google girişli çok cihaz turu kaldı.)*
+- [ ] Test matrisi: (1) Orta sınıf 4–6 GB Android telefon, (2) Yatay + Dikey Tablet `9005` doğrulandı (60/120 Hz, `ab_hepsi` dikey `--kosu 3` [`A 26 / B 27 ms`], `tur_gez dikey/yatay`, `KT-17`, `P78`, `Mağaza Kipi v2`, `32 İki not yan yana`, `ab_hepsi --yon yatay`; M-Pencil avuç/silme açık), (3) Chrome Web (`flutter build web --release` + `web/_headers` tam CSP: `0` CSP/konsol hatası, `1440x900`/`360x800`, Mağaza Kipi, `#/delete-account`, IndexedDB kalıcılığı doğrulandı; Firefox + Safari + Google Drive/Cloudflare canlı hesap açık), (4) Sentetik 1.000 & 3.000 not ölçek testi [`scale_1000_3000_test.dart`](test/scale_1000_3000_test.dart) yeşil (`4/4`, 20 tembel kart / kaydırmada `0` kart kurulumu) + tablet `ram_taban.py` 5/5 durum (`YouTube` `375/480` MB dahil; cihazda 1k/3k not seti açık), (5) `K-21` tablet `120 Hz` doğrulandı (`K-20` `panel_kayit.py` MatePad 11 HarmonyOS'ta `/system/bin/screenrecord` eksikliği nedeniyle Android telefon bekliyor).
 
 ### Faz 6 — Play Mağaza Hazırlığı, 12 Kişilik Kapalı Test ve Lansman (2+ Hafta)
 - [ ] Özgün uygulama adı + alan adı + statik tanıtım (landing) sayfası (`/app` uygulamaya yönlenir).

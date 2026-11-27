@@ -216,6 +216,9 @@ class _InMemoryWorkerTransport implements SyncTransport {
   Future<void> deleteMedia(String key) async {
     _media.remove(key);
   }
+
+  @override
+  Future<void> deleteAccount() async {}
 }
 
 void main() {

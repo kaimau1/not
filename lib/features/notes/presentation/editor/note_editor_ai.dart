@@ -36,9 +36,17 @@ extension _EditorAi on _NoteEditorScreenState {
     final l10n = context.l10n;
     final decisions = ref.read(decisionServiceProvider);
     // Kilitli not hiçbir karar girdisine girmez (K7).
-    final mode = note.locked
+    var mode = note.locked
         ? DecisionMode.off
         : decisions.modeOf(DecisionFeature.noteTriage);
+    if (mode == DecisionMode.live &&
+        !ref.read(aiTurnedOffProvider) &&
+        ref.read(proFeatureProvider(ProFeature.smartDecisions)) &&
+        !ref.read(aiConsentProvider)) {
+      final consented = await ensureAiConsent(context, ref);
+      if (!mounted) return;
+      if (!consented) mode = DecisionMode.off;
+    }
     final folders = mode == DecisionMode.off
         ? const <String, String>{}
         : _triageFolders(note);

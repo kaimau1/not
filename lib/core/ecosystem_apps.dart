@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../app/theme/app_tokens.dart';
 import 'l10n_ext.dart';
+import 'play_build.dart';
 import '../features/settings/settings_providers.dart';
 
 /// Kardeş uygulama **Dosyalarım** ile iki yönlü paylaşım, belge açma ve ortak
@@ -61,7 +62,7 @@ abstract final class EcosystemApps {
   }) async {
     if (filePath != null &&
         filePath.isNotEmpty &&
-        File(filePath).existsSync()) {
+        await File(filePath).exists()) {
       await SharePlus.instance.share(
         ShareParams(files: [XFile(filePath)], text: text, subject: subject),
       );
@@ -93,7 +94,7 @@ class _CrossAppPromoCardState extends ConsumerState<CrossAppPromoCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (_hidden) return const SizedBox.shrink();
+    if (PlayBuild.enabled || _hidden) return const SizedBox.shrink();
     final prefs = ref.watch(sharedPreferencesProvider);
     if (!EcosystemApps.shouldShowPromo(prefs)) {
       return const SizedBox.shrink();

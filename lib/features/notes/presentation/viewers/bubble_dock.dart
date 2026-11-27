@@ -342,7 +342,7 @@ class _BubbleDockState extends State<BubbleDock> {
                               minimumSize: const Size(0, 28),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            icon: const Icon(Icons.check_rounded, size: 16),
+                            icon: const Icon(Icons.check_rounded, size: AppIconSize.xs),
                             label: Text(l10n.bubbleDone),
                           ),
                         ),
@@ -369,9 +369,7 @@ class _BubbleDockState extends State<BubbleDock> {
                           },
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: scheme.surfaceContainerHighest.withValues(
-                                alpha: 0.6,
-                              ),
+                              color: scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.muted),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Padding(
@@ -599,7 +597,7 @@ class _BubbleDockState extends State<BubbleDock> {
                   bubble.starred
                       ? Icons.star_rounded
                       : Icons.star_border_rounded,
-                  size: 18,
+                  size: AppIconSize.s,
                   color: bubble.starred ? Colors.amber[800] : null,
                 ),
                 showCheckmark: false,
@@ -614,7 +612,7 @@ class _BubbleDockState extends State<BubbleDock> {
                 key: const ValueKey('bubble-mark-urgent'),
                 avatar: Icon(
                   Icons.priority_high_rounded,
-                  size: 18,
+                  size: AppIconSize.s,
                   color: bubble.urgent ? scheme.error : null,
                 ),
                 showCheckmark: false,
@@ -703,7 +701,7 @@ class _BubbleDockState extends State<BubbleDock> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppWeight.strong,
                   color: scheme.onSurfaceVariant,
                 ),
               ),
@@ -887,7 +885,7 @@ class BubbleToolbar extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.touch_app_outlined,
-                          size: 18,
+                          size: AppIconSize.s,
                           color: scheme.primary,
                         ),
                         const SizedBox(width: 8),
@@ -899,7 +897,7 @@ class BubbleToolbar extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                                ?.copyWith(fontWeight: AppWeight.strong),
                           ),
                         ),
                         TextButton(
@@ -925,13 +923,13 @@ class BubbleToolbar extends StatelessWidget {
                               value: false,
                               icon: const Icon(
                                 Icons.chat_bubble_outline,
-                                size: 16,
+                                size: AppIconSize.xs,
                               ),
                               label: Text(l10n.bubbleModeBubble),
                             ),
                             ButtonSegment(
                               value: true,
-                              icon: const Icon(Icons.text_fields, size: 16),
+                              icon: const Icon(Icons.text_fields, size: AppIconSize.xs),
                               label: Text(l10n.bubblePlainModeShort),
                             ),
                           ],
@@ -1035,7 +1033,7 @@ class _GlobalSizeButtons extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(minWidth: 30, minHeight: 32),
-              iconSize: 18,
+              iconSize: AppIconSize.s,
               onPressed:
                   (delta < 0
                       ? scale <= BubbleLook.min
@@ -1057,7 +1055,7 @@ class _GlobalSizeButtons extends StatelessWidget {
               '${(scale * 100).round()}%',
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppWeight.strong,
                 color: scheme.onSurfaceVariant,
               ),
             ),
@@ -1115,7 +1113,7 @@ class BubbleBarActions extends StatelessWidget {
         );
         final icon = Icon(
           adding ? Icons.check : Icons.add_comment_outlined,
-          size: 18,
+          size: AppIconSize.s,
         );
         void toggle() => controller.setAdding(!adding);
         final Widget add = compact
@@ -1296,11 +1294,11 @@ class _DockEntranceState extends State<_DockEntrance>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 200),
+    duration: AppMotion.short,
   );
   late final Animation<double> _curve = CurvedAnimation(
     parent: _controller,
-    curve: Curves.easeOutCubic,
+    curve: AppMotion.emphasized,
   );
 
   @override

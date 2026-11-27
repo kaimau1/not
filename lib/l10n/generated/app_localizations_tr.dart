@@ -168,10 +168,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get penModeDone => 'Kalemi kapat';
 
   @override
-  String get tipPagePen =>
-      'Kalemle sayfanın her yerine yazabilirsin; parmakla dokunup klavyeyle aynı notta devam et.';
-
-  @override
   String get pageInkOnCard => 'El yazısı var';
 
   @override
@@ -208,38 +204,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get color => 'Renk';
 
   @override
-  String get aiTitle => 'Yapay zekâ';
-
-  @override
-  String get aiSummarize => 'Notu özetle';
-
-  @override
-  String get aiSectionWrite => 'Yaz';
-
-  @override
-  String get aiSectionAsk => 'Sor';
-
-  @override
-  String get aiSectionTransform => 'Dönüştür';
-
-  @override
   String get summarize => 'Özetle';
-
-  @override
-  String get summaryDetailTitle => 'Özet türü';
-
-  @override
-  String get summaryShort => 'Kısa özet';
-
-  @override
-  String get summaryShortInfo => 'Birkaç cümlelik genel bakış ve ana maddeler';
-
-  @override
-  String get summaryDetailed => 'Detaylı özet';
-
-  @override
-  String get summaryDetailedInfo =>
-      'Kaynağa bakmayı gereksiz kılan kapsamlı özet';
 
   @override
   String get listen => 'Sesli dinle';
@@ -257,15 +222,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get listenToNote => 'Sesli dinle';
 
   @override
-  String get aiNoApiKey => 'Önce Ayarlar\'dan Gemini API anahtarını gir';
-
-  @override
   String aiError(String error) {
     return 'Yapay zekâ isteği başarısız: $error';
   }
-
-  @override
-  String get aiSummaryTitle => 'AI özeti';
 
   @override
   String get aiThinking => 'Düşünüyor...';
@@ -277,7 +236,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get copied => 'Kopyalandı';
 
   @override
-  String get settingsSearchHint => 'Ayar ara — “brifing”, “mikrofon”';
+  String get settingsSearchHint => 'Ayar ara — “kilit”, “mikrofon”';
 
   @override
   String settingsSearchEmpty(String query) {
@@ -304,32 +263,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get themeDark => 'Koyu';
-
-  @override
-  String get settingsAi => 'Yapay zekâ';
-
-  @override
-  String get geminiApiKeyInfo =>
-      'Anahtar girmek isteğe bağlıdır: girmezsen yapay zekâ istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.';
-
-  @override
-  String aiBuiltInPremium(int count) {
-    return 'Dahili AI: Premium — bugün kalan puan $count';
-  }
-
-  @override
-  String aiBuiltInRemaining(int count) {
-    return 'Dahili AI: bugün kalan ücretsiz puan $count';
-  }
-
-  @override
-  String get aiBuiltInByok => 'Kendi anahtarın kullanılıyor — sınırsız';
-
-  @override
-  String get aiReport => 'Yanıtı bildir';
-
-  @override
-  String get aiReportThanks => 'Bildirimin alındı, teşekkürler';
 
   @override
   String get privacyPolicyTitle => 'Gizlilik politikası';
@@ -381,17 +314,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get clear => 'Temizle';
 
   @override
-  String get aiDiagnostics => 'AI tanılama';
-
-  @override
-  String get aiDiagnosticsEmpty => 'Kayıtlı hata yok';
-
-  @override
-  String aiDiagnosticsCount(int count) {
-    return 'Son $count hata kaydı';
-  }
-
-  @override
   String get apiKeyValid => 'API anahtarı doğrulandı ve kaydedildi';
 
   @override
@@ -425,9 +347,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get penTrayShow => 'Kalem tepsisini aç';
-
-  @override
-  String get penTrayHide => 'Kalem tepsisini indir';
 
   @override
   String get addDrawingSubtitle =>
@@ -664,11 +583,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu not kalıcı olarak silinecek. Emin misin?';
 
   @override
-  String assistantDeleteConfirm(String title) {
-    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
-  }
-
-  @override
   String get recordAudio => 'Ses kaydı';
 
   @override
@@ -684,20 +598,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addDrawing => 'Çizim ekle';
 
   @override
-  String get drawingTitle => 'Çizim';
-
-  @override
   String get addToNote => 'Nota ekle';
-
-  @override
-  String get chatTitle => 'Not asistanı';
-
-  @override
-  String get chatHint =>
-      'Notların hakkında soru sor: \"geçen hafta yazdığım tarif neydi?\", \"alışveriş listemde ne eksik?\"';
-
-  @override
-  String get chatInputHint => 'Bir soru yaz...';
 
   @override
   String get fontSize => 'Yazı boyutu';
@@ -713,107 +614,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Belirlediğin saatler arasında koyu temaya geçilir';
 
   @override
-  String get aiTranslate => 'Çevir';
-
-  @override
   String get voiceCommand => 'Sesli komut';
-
-  @override
-  String get semanticSearchToggle => 'Yapay zekâ ile anlamsal arama';
-
-  @override
-  String get semanticSearchHint => 'Anlamıyla ara: \"araba masrafları\"...';
-
-  @override
-  String get briefingTitle => 'Günlük brifing';
-
-  @override
-  String get briefingLoading => 'Brifing hazırlanıyor...';
-
-  @override
-  String get briefingEmpty => 'Bugün için içerik yok';
-
-  @override
-  String get briefingSetting => 'Günlük brifing bildirimi';
-
-  @override
-  String get briefingSettingInfo =>
-      'Her sabah seçtiğin saatte günün özeti için bildirim al';
-
-  @override
-  String get autoTagSetting => 'Otomatik etiketle';
-
-  @override
-  String get autoTagSettingInfo =>
-      'Not kapanırken etiketi yoksa yapay zekâ uygun etiketi kendisi ekler';
 
   @override
   String get suggestTags => 'Etiket öner';
 
   @override
-  String get aiFixNote => 'Notu düzelt';
-
-  @override
-  String get fixLevelTitle => 'Ne kadar düzeltilsin?';
-
-  @override
-  String get fixSimple => 'Basit';
-
-  @override
-  String get fixSimpleInfo => 'Yalnız imla ve yazım hataları';
-
-  @override
-  String get fixBalanced => 'Dengeli';
-
-  @override
-  String get fixBalancedInfo => 'Cümle yapısı da düzeltilir, daha düzgün yazı';
-
-  @override
-  String get fixDetailed => 'Detaylı';
-
-  @override
-  String get fixDetailedInfo => 'Yazıyı baştan aşağı yeniden düzenler';
-
-  @override
   String get existingTagsLabel => 'Önceki etiketler';
-
-  @override
-  String get aiSkipCheckedSetting => 'İşaretlileri AI düzenlemesi dışında tut';
-
-  @override
-  String get aiSkipCheckedInfo =>
-      'Liste notunu yapay zekâyla düzeltir ya da çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.';
-
-  @override
-  String get noteUpdatedUndo => 'Not güncellendi';
-
-  @override
-  String get aiImprove => 'Notu geliştir';
-
-  @override
-  String get improveFormal => 'Daha resmî yap';
-
-  @override
-  String get improveShorten => 'Kısalt';
-
-  @override
-  String get improveBullets => 'Madde listesine çevir';
-
-  @override
-  String get improveNumbered => 'Sıralı (numaralı) listeye çevir';
-
-  @override
-  String get replaceNote => 'Notu değiştir';
-
-  @override
-  String get openAsNewNote => 'Yeni not olarak';
-
-  @override
-  String get pdfChatHint =>
-      'Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"';
-
-  @override
-  String get pdfChatInputHint => 'PDF hakkında bir soru yaz...';
 
   @override
   String get voiceFinish => 'Bitir';
@@ -863,28 +670,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get remindersRemove => 'Hatırlatıcıyı kaldır';
 
   @override
-  String get aiModelChat => 'Özet ve sohbet';
-
-  @override
-  String get aiModelShort => 'Başlık ve etiket';
-
-  @override
-  String get aiModelDocument => 'Belge sohbeti ve PDF özeti';
-
-  @override
-  String get aiModelTranslate => 'Çeviri';
-
-  @override
-  String get aiModelVoice => 'AI sesli not asistanı';
-
-  @override
-  String get aiModelAuto => 'Otomatik (önerilen)';
-
-  @override
-  String get aiModelsInfo =>
-      'Her iş için ayrı model seçebilirsin: kısa metin işleri hızlı modelle yeter, uzun belge işi yetenekli model ister. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.';
-
-  @override
   String get clearNote => 'İçeriği temizle';
 
   @override
@@ -913,28 +698,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get noteChatHint => 'Bu not hakkında bir şey sor';
-
-  @override
-  String get noteChatIntro =>
-      'Notun içeriği ve ekleri (PDF/görsel) okunur, sorunu ona göre yanıtlar.';
-
-  @override
   String get dictationProcessing => 'Yazıya dökülüyor...';
-
-  @override
-  String get aiDailyManualInfo =>
-      'Ücretsiz planda bu içerik günlük hakkını boşa harcamamak için otomatik oluşturulmaz. Günde bir kez, aşağıdaki düğmeyle oluşturabilirsin.';
-
-  @override
-  String get aiGenerate => 'Oluştur';
-
-  @override
-  String get aiGeneratedTodayInfo =>
-      'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.';
-
-  @override
-  String get voiceAssistantTitle => 'Sesli not asistanı';
 
   @override
   String get voiceListening => 'Dinliyorum...';
@@ -1054,11 +818,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get exactAlarmHintAction => 'İzni aç';
 
   @override
-  String videoTooBigForAi(int mb) {
-    return 'Video yapay zekâya göndermek için çok büyük ($mb MB). Daha kısa çek.';
-  }
-
-  @override
   String get permCamera => 'Kamera';
 
   @override
@@ -1073,9 +832,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get videoToNote => 'Videodan not çıkar';
-
-  @override
-  String get videoToNoteRunning => 'Video inceleniyor…';
 
   @override
   String get permGranted => 'İzin verildi';
@@ -1143,13 +899,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get aiOfflineTitle => 'Bağlantı yok';
-
-  @override
-  String get aiOfflineBody =>
-      'Yapay zekâ işleri internet ister. Bağlantı gelince düğmeler açılır.';
-
-  @override
   String get pendingUploadsInfo =>
       'Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.';
 
@@ -1173,18 +922,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get allCopied => 'Tüm not panoya kopyalandı';
 
   @override
-  String get speechPlay => 'Sesli dinle';
-
-  @override
-  String get speechPause => 'Duraklat';
-
-  @override
-  String get speechResume => 'Devam et';
-
-  @override
-  String get speechStop => 'Durdur';
-
-  @override
   String get speechRate => 'Okuma hizi';
 
   @override
@@ -1196,43 +933,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get listening => 'Dinleniyor...';
-
-  @override
-  String get listenPlay => 'Sesli dinle';
-
-  @override
-  String get listenReadingPdf => 'Belge okunuyor...';
-
-  @override
-  String get listenConvertWithAi => 'Yapay zekâ ile dönüştür';
-
-  @override
-  String get listenMakePodcast => 'Tam podcast';
-
-  @override
-  String get listenMakePodcastSummary => 'Özet podcast';
-
-  @override
-  String get listenOriginalText => 'Özgün metin';
-
-  @override
-  String get listenPodcastReady => 'Podcast anlatımı hazır';
-
-  @override
-  String get listenPodcastCached => 'Daha önce üretilmişti — token harcanmadı';
-
-  @override
-  String get listenRegenerate => 'Yeniden üret';
-
-  @override
-  String get listenNoText =>
-      'Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.';
-
-  @override
-  String get readDocument => 'Belge oku (Word, PDF, sunum)';
-
-  @override
-  String get readDocUnsupported => 'Bu dosya türü okunamıyor.';
 
   @override
   String get exportPdf => 'PDF olarak dışa aktar';
@@ -1316,19 +1016,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get languageSystem => 'Sistem dili';
 
   @override
-  String get settingsSpeech => 'Sesli okuma';
-
-  @override
-  String get aiAdvanced => 'Gelişmiş: model ve API anahtarı';
-
-  @override
-  String get aiAdvancedInfo =>
-      'Model seçimi ve kendi Gemini anahtarın. Çoğu kullanıcı için gerekli değildir.';
-
-  @override
-  String get openBriefing => 'Brifingi aç';
-
-  @override
   String get syncTitle => 'Senkronizasyon';
 
   @override
@@ -1345,27 +1032,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get importBackup => 'Yedekten geri yükle';
 
   @override
-  String importBackupDone(int count) {
-    return '$count not geri yüklendi';
-  }
-
-  @override
   String get importBackupInvalid => 'Geçersiz yedek dosyası';
-
-  @override
-  String get aiHubTitle => 'Yapay zekâ';
-
-  @override
-  String get aiSummarizeInfo => 'Kısa bir özet çıkarır';
-
-  @override
-  String get aiImproveInfo => 'Üslubu değiştirir: resmî, kısa ya da liste';
-
-  @override
-  String get aiTranslateInfo => 'Notu seçtiğin dile çevirir';
-
-  @override
-  String get aiFixNoteInfo => 'Yazım ve noktalamayı düzeltir';
 
   @override
   String get moveToFolder => 'Klasöre taşı';
@@ -1375,19 +1042,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickAddTooltip => 'Yeni not — tip seç';
-
-  @override
-  String get autoTitleSetting => 'Kapatırken başlık öner';
-
-  @override
-  String get autoTitleSettingInfo =>
-      'Editörden çıkarken başlıksız kalan nota içeriğinden otomatik kısa bir başlık yazılır.';
-
-  @override
-  String get hubBriefingInfo => 'Güne bakış: hatırlatıcılar ve son notlar';
-
-  @override
-  String get hubReadInfo => 'PDF/Word belgesini sesli dinle';
 
   @override
   String get annotate => 'Üzerine yaz';
@@ -1692,102 +1346,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get filterOthers => 'Klasörsüz ve etiketsiz';
 
   @override
-  String get chatSuggestion1 => 'Alışveriş listemde ne eksik?';
-
-  @override
-  String get chatSuggestion2 => 'Bu haftaki iş notlarımı özetle';
-
-  @override
-  String get chatSuggestion3 => 'Yarın için hatırlatıcım var mı?';
-
-  @override
-  String get aiPointsToday => 'Bugünkü puan';
-
-  @override
-  String aiPointsOf(int used, int total) {
-    return '$used / $total';
-  }
-
-  @override
-  String get aiPointsRenew => 'gece yarısı yenilenir';
-
-  @override
-  String get aiChatWithNotes => 'Not asistanı';
-
-  @override
-  String get aiChatInputHint => 'Notlarına bir şey sor…';
-
-  @override
-  String get aiChatLooking => 'notlarına bakıyor…';
-
-  @override
-  String get aiChatFullScreen => 'Tam ekran';
-
-  @override
-  String get aiOnYourNotes => 'Notların üzerinde';
-
-  @override
-  String get aiTaskDuplicates => 'Kopyaları temizle';
-
-  @override
-  String aiTaskDuplicatesInfo(int count) {
-    return '$count kopya not var';
-  }
-
-  @override
-  String get duplicatesTitle => 'Kopya notlar';
-
-  @override
-  String get duplicatesHint =>
-      'Her kümede en eski not korunur, kalanlar çöp kutusuna taşınır.';
-
-  @override
-  String get duplicatesKeepBadge => 'korunur';
-
-  @override
-  String get duplicatesDeleteAll => 'Kopyaları çöpe taşı';
-
-  @override
-  String duplicatesDone(int count) {
-    return '$count kopya çöp kutusuna taşındı';
-  }
-
-  @override
-  String get aiRecentActions => 'Son işlemler';
-
-  @override
-  String get aiHistoryClear => 'Temizle';
-
-  @override
-  String get aiHistoryQuestion => 'Soru';
-
-  @override
-  String get aiHistoryNoteAction => 'Not işlemi';
-
-  @override
   String get aiHistoryVoiceNote => 'AI sesli not';
-
-  @override
-  String get aiTaskWeekSummary => 'Haftayı özetle';
-
-  @override
-  String get aiTaskWeekSummaryInfo => 'Son 7 günün notlarından tek özet';
-
-  @override
-  String get aiTaskTagUntagged => 'Etiketsizleri etiketle';
-
-  @override
-  String aiTaskTagUntaggedInfo(int count) {
-    return '$count not etiket bekliyor';
-  }
-
-  @override
-  String get aiTaskSuggestTitles => 'Başlık öner';
-
-  @override
-  String aiTaskSuggestTitlesInfo(int count) {
-    return '$count başlıksız not var';
-  }
 
   @override
   String get sectionPinnedShort => 'Sabit';
@@ -1834,9 +1393,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get viewList => 'Liste';
 
   @override
-  String get searchModeMeaning => 'Anlam';
-
-  @override
   String get filterReminded => 'Alarmlı';
 
   @override
@@ -1850,10 +1406,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voicePreview => 'Sesi dene';
-
-  @override
-  String get voicePreviewCached =>
-      'Örnek bir kez üretilir, sonra kayıttan çalınır';
 
   @override
   String get reorderHint => 'Kartı basılı tutup istediğin yere sürükle';
@@ -1906,9 +1458,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get formatMenu => 'Biçim…';
 
   @override
-  String get noteFont => 'Yazı tipi';
-
-  @override
   String get noteFontDefault => 'Varsayılan';
 
   @override
@@ -1927,23 +1476,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get formatHeading => 'Başlık';
 
   @override
-  String get formatHeading1 => 'Büyük başlık';
-
-  @override
-  String get formatHeading2 => 'Alt başlık';
-
-  @override
-  String get formatNormalText => 'Normal metin';
-
-  @override
   String get noteTextOpacity => 'Şeffaflık';
-
-  @override
-  String get assistantVoiceSetting => 'Asistan sesli yanıtlasın';
-
-  @override
-  String get assistantVoiceSettingInfo =>
-      'Sesli asistan yanıtını yüksek sesle okur (yalnız telefonda).';
 
   @override
   String get assistantMute => 'Sesi kapat';
@@ -1970,9 +1503,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noteBackgroundImage => 'Zemin görseli';
 
   @override
-  String get chooseBackgroundImage => 'Görsel seç';
-
-  @override
   String get changeBackgroundImage => 'Görseli değiştir';
 
   @override
@@ -1986,23 +1516,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Not ızgarasının arkasında duran görsel (yalnız bu cihazda).';
 
   @override
-  String get aiProvider => 'Yapay zekâ sağlayıcısı';
-
-  @override
-  String get aiProviderInfo =>
-      'Kendi anahtarınla çalışan sağlayıcıyı seç. Her sağlayıcının anahtarı ayrı saklanır; aralarında geçiş yapınca yeniden girmen gerekmez.';
-
-  @override
   String get apiKeyFieldLabel => 'API anahtarı';
 
   @override
   String get getApiKey => 'Anahtarı nereden alırım?';
-
-  @override
-  String get recommendedModel => 'Önerilen';
-
-  @override
-  String get freeTierBadge => 'Ücretsiz kademe var';
 
   @override
   String get continueWithoutAccount => 'Hesapsız devam et';
@@ -2115,72 +1632,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get premiumTitle => 'Premium';
 
   @override
-  String premiumStatusActive(String date) {
-    return 'Premium etkin — $date tarihine kadar';
-  }
-
-  @override
   String get premiumStatusFree => 'Ücretsiz sürümü kullanıyorsun';
-
-  @override
-  String get premiumPerksTitle => 'Premium ile ne değişir?';
-
-  @override
-  String get premiumPerkAi => 'Günlük yapay zekâ puanı';
-
-  @override
-  String get premiumPerkAttach => 'Ek dosya boyutu';
-
-  @override
-  String get premiumPerkStorage => 'Bulut depolama alanı';
-
-  @override
-  String get premiumPerkAuto => 'Otomatik günlük içerik';
-
-  @override
-  String get premiumPerkAutoBody =>
-      'Günlük brifing ve öneriler her gün kendiliğinden hazırlanır; ücretsizde yalnız düğmeyle üretilir.';
-
-  @override
-  String get premiumHowTitle => 'Nasıl edinilir?';
-
-  @override
-  String get premiumHowBody =>
-      'Premium yakında Play Store üzerinden satın alınabilecek. Şu an erken erişim dönemindeyiz.';
-
-  @override
-  String get premiumByokHint =>
-      'Kendi Gemini API anahtarınla yapay zekâ kotasız çalışır';
-
-  @override
-  String get premiumByokWhere => 'Premium\'dan bağımsız · Ayarlar → Yapay zekâ';
-
-  @override
-  String get premiumDiscoverTitle => 'Gözden kaçan özellikler';
-
-  @override
-  String get discoverScanBody =>
-      'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla aranabilir PDF olur — metin katmanı cihazda, ücretsiz üretilir.';
-
-  @override
-  String get discoverSemanticBody =>
-      'Arama kutusundaki \"Akıllı\" sekmesi kelime değil anlam arar: \"uçak saatleri\" yazınca seyahat notun çıkar.';
-
-  @override
-  String get discoverAssistantBody =>
-      'Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9\'da diş randevusu\" demen yeter.';
-
-  @override
-  String get discoverLockBody =>
-      'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve yapay zekâya hiç sızmaz.';
-
-  @override
-  String get discoverHiddenBody =>
-      'Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.';
-
-  @override
-  String get discoverExportBody =>
-      'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
 
   @override
   String get guestSignInUnavailable =>
@@ -2239,9 +1691,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String itemMovedToPage(int page) {
     return 'Madde $page. sayfaya taşındı';
   }
-
-  @override
-  String get screenAiSearchHint => 'Anlamca ara…';
 
   @override
   String get archiveInsights => 'Arşivimde neler var?';
@@ -2319,21 +1768,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Telefonun yazı boyutu ve kalın metin ayarı uygulamaya da geçer; yukarıdaki boyut onunla çarpılır.';
 
   @override
-  String get fontGroupSans => 'Sade';
-
-  @override
-  String get fontGroupSerif => 'Kitap';
-
-  @override
-  String get fontGroupMono => 'Daktilo';
-
-  @override
-  String get fontGroupHand => 'El yazısı';
-
-  @override
-  String get appFontDefaultSuffix => 'varsayılan';
-
-  @override
   String get pdfSelectOcrRunning => 'Metin tanınıyor…';
 
   @override
@@ -2360,42 +1794,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get bubbleTapToPlace => 'Sayfada balonu bırakmak istediğin yere dokun';
 
   @override
-  String get aiModelPodcast => 'Podcast anlatısı';
-
-  @override
-  String get listenAiVoice => 'Yapay zekâ sesiyle dinle';
-
-  @override
-  String listenAiVoiceFailed(String error) {
-    return 'Yapay zekâ seslendirmesi başarısız oldu ($error). Cihaz sesiyle okunuyor.';
-  }
-
-  @override
   String get ttsSectionTitle => 'Seslendirme';
 
   @override
   String get ttsEngineDevice => 'Cihaz sesi';
 
   @override
-  String get ttsEngineAi => 'Yapay zekâ';
-
-  @override
   String get ttsEngineDeviceInfo =>
       'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.';
-
-  @override
-  String get ttsEngineAiInfo =>
-      'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
-
-  @override
-  String get ttsEngineAiUnavailable =>
-      'Yapay zekâ sesi kendi Gemini anahtarını ister. Anahtar eklenene kadar okuma cihaz sesiyle yapılır.';
-
-  @override
-  String get ttsModel => 'Seslendirme modeli';
-
-  @override
-  String get ttsVoice => 'Yapay zekâ sesi';
 
   @override
   String get ttsEngineLocal => 'Türkçe ses';
@@ -2430,9 +1836,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String ttsLocalFailed(String error) {
     return 'İndirme başarısız: $error';
   }
-
-  @override
-  String get listenLocalVoice => 'Türkçe sesle (Antalia) dinle';
 
   @override
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
@@ -2557,9 +1960,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get formatRemove => 'Kaldır';
 
   @override
-  String get exportTitle => 'Dışa aktar';
-
-  @override
   String get exportNotesOption => 'Ayarlı PDF / Word…';
 
   @override
@@ -2623,18 +2023,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get exportImageLine => 'Konum';
 
   @override
-  String get aiModelSearch => 'Model ara';
-
-  @override
-  String get aiModelOthers => 'Diğer modeller';
-
-  @override
-  String get aiModelNoMatch => 'Eşleşen model yok.';
-
-  @override
-  String get aiModelAutoInfo => 'Uygulama sırayla en uygun modeli dener.';
-
-  @override
   String imageOcrCharsSelected(int count) {
     return '$count karakter seçildi';
   }
@@ -2655,44 +2043,10 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get aiModelShowAll => 'Tümünü göster';
-
-  @override
-  String get aiModelShowAllInfo =>
-      'Uygulamanın kullanmadığı modeller de listelenir.';
-
-  @override
   String get rotateFailed => 'Görsel döndürülemedi.';
 
   @override
-  String get dashboardBackgroundPick => 'Zemin görseli seç';
-
-  @override
   String get dashboardBackgroundChange => 'Zemin görselini değiştir';
-
-  @override
-  String podcastRenderingAudio(int done, int total) {
-    return 'Ses hazırlanıyor: $done/$total parça';
-  }
-
-  @override
-  String get podcastExportAudio => 'Ses dosyası olarak dışa aktar';
-
-  @override
-  String get podcastExportAudioCost =>
-      'Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.';
-
-  @override
-  String get podcastShareText => 'Metni paylaş';
-
-  @override
-  String get podcastSaveAsNote => 'Yeni not olarak kaydet';
-
-  @override
-  String get podcastSavedAsNote => 'Podcast metni not olarak kaydedildi.';
-
-  @override
-  String get listenPreparingVoice => 'Ses hazırlanıyor…';
 
   @override
   String get appearancePreviewTitle => 'Örnek metin';
@@ -2781,9 +2135,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noteSearchScanAttachments => 'Ekleri tara';
-
-  @override
-  String get noteSearchAskAi => 'Yapay zekâya sor';
 
   @override
   String get noteTitleLabel => 'Başlık';
@@ -2941,10 +2292,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır';
 
   @override
-  String get attachmentTagPickText =>
-      'Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.';
-
-  @override
   String get attachmentTagLinkHere => 'Buraya bağla';
 
   @override
@@ -2968,9 +2315,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get docNameVideo => 'Görüntü notları';
 
   @override
-  String get folderManage => 'Klasörü yönet';
-
-  @override
   String get folderEmpty => 'Burada henüz not yok';
 
   @override
@@ -2984,22 +2328,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get folderEmptyHint =>
       'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.';
-
-  @override
-  String get brainstormIntro =>
-      'Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.';
-
-  @override
-  String get brainstormOutlineTitle => 'Ana hat';
-
-  @override
-  String get brainstormInputHint => 'Bir fikir yaz ya da soru sor…';
-
-  @override
-  String get brainstormAddIdea => 'Nota ekle';
-
-  @override
-  String get brainstormAdded => 'Nota eklendi';
 
   @override
   String get folderShared => 'Bu klasör bir arkadaşınla ortak';
@@ -3019,9 +2347,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get friendsListTitle => 'Arkadaşlarım';
-
-  @override
-  String get friendsAddEmailHint => 'arkadas@eposta.com';
 
   @override
   String get friendsSendRequest => 'İstek gönder';
@@ -3057,17 +2382,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get friendsNeedsAccount =>
-      'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
-
-  @override
   String get friendsSearchHint => 'Ad (en az 3 harf) ya da tam e-posta';
-
-  @override
-  String get friendsSearchTab => 'Ara';
-
-  @override
-  String get friendsSearchEmailTab => 'E-posta ile';
 
   @override
   String get friendsSearchEmpty => 'Sonuç yok';
@@ -3208,9 +2523,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inboxAccepted => 'Not notlarına eklendi';
 
   @override
-  String get folderShelfExpand => 'Klasörleri büyüt';
-
-  @override
   String get folderShelfCollapse => 'Klasörleri daralt';
 
   @override
@@ -3240,17 +2552,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get areaCopied => 'Seçilen alan panoya kopyalandı.';
 
   @override
-  String get areaAskAi => 'Yapay zekâya sor';
-
-  @override
   String get areaAskTitle => 'Seçilen alan';
-
-  @override
-  String get areaAskHint =>
-      'İstersen bir soru yaz (boş bırakırsan formülü/metni çıkarıp açıklar).';
-
-  @override
-  String get areaAskRun => 'Sor';
 
   @override
   String get areaCaptureFailed => 'Seçilen alanın görüntüsü alınamadı.';
@@ -3278,9 +2580,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dashboardBackgroundColor => 'Zemin rengi';
-
-  @override
-  String get dashboardBackgroundImageSection => 'Zemin görseli';
 
   @override
   String get dashboardBackgroundReset => 'Varsayılana dön';
@@ -3459,12 +2758,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reminderQuickNextWeek => 'Gelecek hafta';
 
   @override
-  String get reminderQuickCustom => 'Tarih seç…';
-
-  @override
-  String get reminderQuickTitle => 'Ne zaman hatırlatılsın?';
-
-  @override
   String get reminderSnooze => '1 saat ertele';
 
   @override
@@ -3605,13 +2898,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get imagesFitSingleRow => 'Tek satıra sığdır';
 
   @override
-  String get briefingNotificationTitle => 'Günaydın! ☀️';
-
-  @override
-  String get briefingNotificationBody =>
-      'Bugünün brifingi hazır — hatırlatıcıların, notların ve önemli e-postaların özeti için dokun.';
-
-  @override
   String get reminderDone => 'Tamamlandı';
 
   @override
@@ -3688,11 +2974,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get collaboratorsSaved => 'Paylaşım güncellendi';
 
   @override
-  String collaboratorsCount(int count) {
-    return '$count kişiyle paylaşıldı';
-  }
-
-  @override
   String get collaboratorsOnlyOwner =>
       'Ortak çalışanları yalnız notun sahibi değiştirebilir.';
 
@@ -3712,9 +2993,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get newNoteShort => 'Yeni not';
-
-  @override
-  String get newChecklistShort => 'Yeni liste';
 
   @override
   String get listPaneHide => 'Not listesini gizle';
@@ -3788,11 +3066,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Telefon, tablet, bilgisayar ve web arasında anında senkron.';
 
   @override
-  String get loginFeatureAiTitle => 'Yapay zekâ yanında';
+  String get loginFeatureAiTitle => 'Akıllı yardımcılar';
 
   @override
   String get loginFeatureAiBody =>
-      'Özetle, sor, sesle yaz; belgelerinle konuş.';
+      'Sesle hızlı not al, yazım hatalarını düzelt, market reyonlarını ve etiketleri düzenle.';
 
   @override
   String get loginFeatureShareTitle => 'Birlikte yaz';
@@ -3846,12 +3124,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get trashRestSection => 'Diğer silinenler';
-
-  @override
-  String get aiHubTagline => 'Notlarına sor, özetlet, düzenlet.';
-
-  @override
-  String get aiToolsSection => 'Araçlar';
 
   @override
   String get folderOrderTitle => 'Klasör sırası';
@@ -4097,9 +3369,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsGroupPrivacyNotify => 'Gizlilik ve bildirim';
 
   @override
-  String get settingsGroupAutomatic => 'Kendiliğinden';
-
-  @override
   String get settingsGroupText => 'Yazı';
 
   @override
@@ -4113,9 +3382,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsGroupSession => 'Oturum';
-
-  @override
-  String get settingsGroupLock => 'Kilit';
 
   @override
   String get settingsSecurityTitle => 'Güvenlik';
@@ -4222,25 +3488,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get templateCreate => 'Oluştur';
 
   @override
-  String templateCreateWithCount(int count) {
-    return 'Oluştur · $count madde';
-  }
-
-  @override
   String get templateListChecks => 'Onay kutulu';
 
   @override
   String get templateListNumbers => 'Numaralı';
 
   @override
-  String get templateItems => 'Maddeler';
-
-  @override
   String get templateAddItem => 'Madde ekle';
-
-  @override
-  String get templateSuggestionsInfo =>
-      'Öneriye dokununca listeye girer, yine dokununca çıkar.';
 
   @override
   String get tplShopProduce => 'Meyve ve sebze';
@@ -4482,11 +3736,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get embedPickTitle => 'Ne gömülsün?';
 
   @override
-  String embedPickTitleFor(String label) {
-    return '“$label” yazısına göm';
-  }
-
-  @override
   String get embedPickInfo => 'Gömülen ek yazıya dokununca yerinde açılır.';
 
   @override
@@ -4523,9 +3772,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get guideSearchHint => 'Kılavuzda ara — “sayfa”, “YouTube”';
 
   @override
-  String get guideContents => 'İçindekiler';
-
-  @override
   String get guideOpenScreen => 'Göster';
 
   @override
@@ -4550,12 +3796,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get menuSectionProtect => 'Koruma ve depolama';
-
-  @override
-  String get menuSectionContent => 'İçerik';
-
-  @override
-  String get menuSectionPeople => 'Hesap ve kişiler';
 
   @override
   String get menuSectionApp => 'Uygulama';
@@ -4818,10 +4058,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get customizeModeTitleShort => 'Düzen';
 
   @override
-  String get customizeModeHint =>
-      'Dokun: gizle ya da göster · anında uygulanır';
-
-  @override
   String customizeHiddenCount(int count) {
     return '$count düğme gizli · dokunarak değiştir';
   }
@@ -4846,9 +4082,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get personalizeInfo => 'Hangi alan ve düğmeler görünsün, eklentiler';
 
   @override
-  String get personalizeOpen => 'Kişiselleştirmeyi aç';
-
-  @override
   String get customizeStartTitle => 'Ekranda düzenle';
 
   @override
@@ -4860,9 +4093,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get customizeActive => 'Düzenleme modu açık';
-
-  @override
-  String get customizeModeShort => 'Ekranlarda dokunarak gizle/göster';
 
   @override
   String get customizeHint => 'Dokun: gizle/göster · Sırala: yerini değiştir';
@@ -4890,10 +4120,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get personalizeModules => 'Eklentiler';
-
-  @override
-  String get personalizeModulesInfo =>
-      'Bir eklentiyi kapatınca ona ait düğmeler her yerden kalkar.';
 
   @override
   String get moduleAi => 'Yapay zekâ';
@@ -4952,13 +4178,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get moduleMixed => 'kısmen açık';
 
   @override
-  String get personalizeEditorBar => 'Not ekranı · alt çubuk';
-
-  @override
-  String get personalizeBarInfo =>
-      'Düğmeleri tutamaçtan sürükleyerek sırala, anahtarla çubuğa ekle ya da çıkar, okla öbür kapsüle taşı. Kapalı olanlar (geri al, hatırlatıcı, kamera…) istersen eklenebilir.';
-
-  @override
   String get personalizeBarLeft => 'Sol kapsül · araçlar';
 
   @override
@@ -4980,30 +4199,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reorderHandle => 'Sırala';
 
   @override
-  String get personalizeEditorTop => 'Not ekranı · üst çubuk ve alanlar';
-
-  @override
-  String get personalizeQuickAdd => 'Yeni not menüsü (+)';
-
-  @override
-  String get personalizeAttachSheet => 'Ekle levhası (notun içinde +)';
-
-  @override
   String get personalizeVideo => 'Video';
 
   @override
   String get personalizeHome => 'Ana ekran';
 
   @override
-  String get personalizeHomeItemsInfo =>
-      'Seçili olanlar ana ekranda görünür; düzenleme modunda ana ekrandaki düğmelere dokunarak da gizleyebilirsin.';
-
-  @override
   String get personalizeBubbles => 'Balonlar';
-
-  @override
-  String get personalizeChipsInfo =>
-      'Seçili olanlar görünür; dokunarak aç ya da kapat.';
 
   @override
   String get personalizeReset => 'Varsayılana dön';
@@ -5042,11 +4244,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String secondsShort(int seconds) {
     return '$seconds sn';
-  }
-
-  @override
-  String personalizeHiddenSummary(int count) {
-    return '$count gizli';
   }
 
   @override
@@ -5105,12 +4302,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transcriptNewNote => 'Yeni not';
 
   @override
-  String get transcriptRetryAi => 'AI ile yeniden dök';
-
-  @override
-  String get transcriptReadWithAi => 'AI ile oku (el yazısı)';
-
-  @override
   String get transcriptShowTimes => 'Zaman damgaları';
 
   @override
@@ -5122,11 +4313,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get transcriptEmpty => 'Metin bulunamadı.';
-
-  @override
-  String transcriptTooLarge(int mb) {
-    return 'Kayıt $mb MB; dahili yapay zekâ en çok 15 MB alabiliyor. Ayarlar\'dan kendi Gemini anahtarını girersen büyük kayıtlar da dökülür.';
-  }
 
   @override
   String transcriptUnsupported(String format) {
@@ -5197,9 +4383,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pickImagesTitle => 'Görsel seç';
 
   @override
-  String get pickDocumentTitle => 'Belge seç';
-
-  @override
   String get fileAppPickerTitle => 'Dosyaları Dosya Okuyucu ile seç';
 
   @override
@@ -5217,9 +4400,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get attachmentActions => 'Ek işlemleri';
-
-  @override
-  String get attachmentOpen => 'Aç';
 
   @override
   String get attachmentUploadQueued => 'Yüklenmeyi bekliyor';
@@ -5257,9 +4437,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sharedHubTitle => 'Gelen ve paylaşılanlar';
-
-  @override
-  String get sharedHubInbox => 'Gelen';
 
   @override
   String get voiceAutoStop => 'Sessizlikte bitir';
@@ -5462,48 +4639,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickAddFileUnsupported => 'Bu dosya türü desteklenmiyor';
 
   @override
-  String get chatScopeAll => 'Tüm notlar';
-
-  @override
-  String get chatScopeNote => 'Bu not';
-
-  @override
-  String get chatScopeDoc => 'Bu belge';
-
-  @override
-  String get chatModeQa => 'Soru-cevap';
-
-  @override
-  String get chatModeBrainstorm => 'Beyin fırtınası';
-
-  @override
-  String get chatSuggestOutline => 'Ana hat';
-
-  @override
-  String get chatSuggestIdeas => 'Fikir ver';
-
-  @override
-  String get chatSuggestGaps => 'Eksikleri bul';
-
-  @override
-  String get chatPromptOutline =>
-      'Bu notun ana hatlarını kısa maddelerle çıkar.';
-
-  @override
-  String get chatPromptIdeas => 'Bu not için yeni fikirler ve açılar öner.';
-
-  @override
-  String get chatPromptGaps =>
-      'Bu notta eksik kalan, belirsiz ya da çelişen yerler neler?';
-
-  @override
-  String get aiChatRowTitle => 'Sohbet';
-
-  @override
-  String get aiChatRowInfo =>
-      'Bu notla, belgesiyle ya da tüm notlarla; soru-cevap ya da beyin fırtınası';
-
-  @override
   String get shareFolderTogether => 'Klasörü birlikte düzenle';
 
   @override
@@ -5634,7 +4769,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lockNotEncryption =>
-      'Kilit şifreleme değildir: notun içeriği sunucuda ve cihaz önbelleğinde düz metin olarak durur. Kilit yalnız bu uygulamanın notu göstermesini engeller.';
+      'Kilitli notun gövdesi, maddeleri ve sayfa notları cihazda AES-256-GCM ile şifrelenip eşitlenir; parmak izi kilidinde anahtar yalnız bu cihazın güvenli deposundadır. Şifre veya desen kilidinde anahtar sırrından türetilir — unutursan eski kilitli içerik geri çözülemez.';
 
   @override
   String get versionHistory => 'Sürüm geçmişi';
@@ -5740,27 +4875,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceStartShort => 'Başla';
 
   @override
-  String get aiVoiceRowTitle => 'AI sesli not';
-
-  @override
-  String get aiVoiceRowInfoEditor =>
-      'Konuş; yapay zekâ düzenleyip bu nota eklesin';
-
-  @override
-  String get aiVoiceRowInfoHub =>
-      'Konuş; yapay zekâ başlığı, maddeleri ve hatırlatıcıyı çıkarıp notu kursun';
-
-  @override
   String get archivePaperDashed => 'Kesikli çizgili';
-
-  @override
-  String get itemDividerSolid => 'Alta çizgi çek';
-
-  @override
-  String get itemDividerDashed => 'Alta kesikli çizgi';
-
-  @override
-  String get itemDividerDotted => 'Alta noktalı çizgi';
 
   @override
   String get itemDividerRemove => 'Çizgiyi kaldır';
@@ -5770,12 +4885,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get allNotesChip => 'Tümü';
-
-  @override
-  String get archiveAiSearch => 'AI ile ara (anlamca)';
-
-  @override
-  String get archiveAiSearchHint => 'Arşivde anlamca ara…';
 
   @override
   String get untitledNote => 'Başlıksız not';
@@ -5966,12 +5075,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get formatFontPanel => 'Yazı tipi ve boyut';
 
   @override
-  String get formatColorsPanel => 'Renkler';
-
-  @override
-  String get formatPageColor => 'Sayfa rengi';
-
-  @override
   String get inkShapes => 'Şekiller';
 
   @override
@@ -6009,10 +5112,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inkPenOnlyTitle => 'Yalnız kalemle yaz';
 
   @override
-  String get inkPenOnlyInfo =>
-      'Parmak çizmez; tek parmakla kaydırır, iki parmakla yakınlaştırır. Avuç içi de iz bırakmaz. Kalem ilk kez değince kendiliğinden açılır.';
-
-  @override
   String get inkFingerToolTitle => 'Parmak';
 
   @override
@@ -6047,9 +5146,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkZoomReset => 'Tam görünüme dön';
-
-  @override
-  String get inkZoomHint => 'İki parmakla yakınlaştır ve kaydır';
 
   @override
   String get cardShowFiles => 'Dosya ekleri';
@@ -6433,19 +5529,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get gestureItemDeleted => 'Madde silindi';
 
   @override
-  String get gestureFixing => 'Yazım düzeltiliyor…';
-
-  @override
-  String get gestureNothingToFix => 'Düzeltilecek yazım hatası yok';
-
-  @override
-  String get gestureFixed => 'Yazım düzeltildi';
-
-  @override
-  String get gestureFixNeedsAi =>
-      'Daire jesti yazımı yapay zekâyla düzeltir; yapay zekâ şu an kullanılamıyor (Ayarlar → Yapay zekâ).';
-
-  @override
   String get itemGesturesSetting => 'Madde jestleri';
 
   @override
@@ -6504,17 +5587,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get accountRequiredBadge => 'Google hesabı gerekir';
-
-  @override
-  String get guestAiTitle =>
-      'Yapay zekâ için Google hesabı ya da kendi anahtarın';
-
-  @override
-  String get guestAiBody =>
-      'Dahili yapay zekâ Google hesabıyla açılır. Hesapsız da Ayarlar\'dan kendi Gemini API anahtarını ekleyerek bütün yapay zekâ araçlarını kullanabilirsin.';
-
-  @override
-  String get guestAiAddKey => 'Kendi anahtarımı ekle';
 
   @override
   String get deletingAccount => 'Hesabın ve verilerin siliniyor…';
@@ -6632,21 +5704,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get cardElementsSampleTag => 'ev';
 
   @override
-  String get aiTaskIdle => 'Şu an iş yok';
-
-  @override
-  String get aiSettingsTooltip => 'Yapay zekâ ayarları';
-
-  @override
-  String get tipSemanticSearch =>
-      'Anlam açıkken kelimeyi değil anlamı arar: “araba masrafları” benzin fişini de bulur.';
-
-  @override
   String get tipListGestures =>
       'İpucu: maddenin üstünü parmakla çiz → işaretlenir.';
-
-  @override
-  String get tipPdfBubble => 'İpucu: sayfaya basılı tut → oraya balon bırak.';
 
   @override
   String get tipMediaPin =>
@@ -6712,11 +5771,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get swipeModeInfo =>
       'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).';
-
-  @override
-  String aiQuotaRenewsAt(String time) {
-    return '$time itibarıyla yenilenir';
-  }
 
   @override
   String get backupInfo =>
@@ -6870,11 +5924,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get studyCardsTitle => 'Bugünün kartları';
 
   @override
-  String studyCardsHubInfo(int count) {
-    return 'Aralıklı tekrar: bugün $count kart';
-  }
-
-  @override
   String get studyCardsEmpty => 'Burada bugün tekrar edilecek kart yok';
 
   @override
@@ -6905,39 +5954,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get studyGradeEasy => 'Kolay';
 
   @override
-  String get studyCardsMake => 'Kart üret';
-
-  @override
-  String studyCardsMakeMore(int count) {
-    return 'Kart üret ($count kart var)';
-  }
-
-  @override
-  String get studyCardsGenerating => 'Kartlar hazırlanıyor…';
-
-  @override
-  String get studyCardsFailed => 'Kart üretilemedi';
-
-  @override
-  String studyCardsPreview(int count) {
-    return '$count kart üretildi';
-  }
-
-  @override
-  String get studyCardsSave => 'Nota kaydet';
-
-  @override
-  String studyCardsSaved(int count) {
-    return '$count kart kaydedildi';
-  }
-
-  @override
   String updateAvailable(String name) {
     return 'Yeni sürüm var: $name';
   }
-
-  @override
-  String get updateDownload => 'GitHub\'dan indir';
 
   @override
   String get pdfNoteFromSelection => 'Not al';
@@ -6958,153 +5977,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get hideMoreChecked => 'İşaretlileri daralt';
 
   @override
-  String get gmailTitle => 'Gmail';
-
-  @override
-  String get gmailConnect => 'Gmail\'e bağlan';
-
-  @override
-  String get gmailReadOnlyHint =>
-      'Yalnız okuma: e-postalarını görür, nota kaydedersin. Gmail\'de hiçbir şey değiştirilmez.';
-
-  @override
   String get gmailGoogleOnly => 'Gmail için Google hesabıyla giriş yap.';
-
-  @override
-  String get gmailSearchHint => 'E-postalarda ara (Gmail arama sözdizimi)';
-
-  @override
-  String get gmailEmpty => 'Burada e-posta yok';
-
-  @override
-  String get gmailLoadMore => 'Daha fazla';
-
-  @override
-  String get gmailError => 'Gmail\'e ulaşılamadı';
-
-  @override
-  String get gmailSaveNote => 'Nota kaydet';
-
-  @override
-  String get gmailAiSummary => 'AI özetiyle not';
-
-  @override
-  String get gmailAiTasks => 'Görev listesi çıkar';
-
-  @override
-  String get gmailWithAttachments => 'Ekleri de al';
-
-  @override
-  String get gmailNoteCreated => 'Not oluşturuldu';
-
-  @override
-  String get aiErrInvalidKey =>
-      'API anahtarı geçersiz. Ayarlar → Yapay zekâ\'dan denetle.';
-
-  @override
-  String get aiErrModelNotFound =>
-      'Yapay zekâ modeli bulunamadı. Uygulamanın güncel sürümünü kur; sorun sürerse geliştiriciye bildir.';
-
-  @override
-  String get aiErrRateLimited =>
-      'Çok fazla istek gitti; biraz sonra yeniden dene.';
-
-  @override
-  String get aiErrConnection =>
-      'Yapay zekâya bağlanılamadı. Bağlantını denetleyip yeniden dene.';
-
-  @override
-  String get aiErrEmptyResponse => 'Model boş yanıt döndü; yeniden dene.';
-
-  @override
-  String get aiErrUnexpected =>
-      'Modelden beklenmeyen bir yanıt geldi; yeniden dene.';
-
-  @override
-  String get aiErrNotCompleted => 'İşlem tamamlanamadı; yeniden dene.';
-
-  @override
-  String get aiErrBuiltInOff =>
-      'Dahili yapay zekâ şu an kullanılamıyor. Kendi Gemini anahtarını Ayarlar\'dan girersen hemen kullanabilirsin.';
-
-  @override
-  String get aiErrQuotaFree =>
-      'Ücretsiz yapay zekâ puanın doldu. 24 saat içinde yenilenir; dilersen Ayarlar\'dan kendi anahtarını girebilir ya da Premium\'a geçebilirsin.';
-
-  @override
-  String aiErrQuotaPremium(Object limit) {
-    return 'Premium yapay zekâ puanın ($limit) doldu. 24 saat içinde yenilenir; dilersen Ayarlar\'dan kendi anahtarını girerek sınırsız kullanabilirsin.';
-  }
-
-  @override
-  String get aiErrUnavailable =>
-      'Yapay zekâ şu an yanıt veremiyor; biraz sonra yeniden dene.';
-
-  @override
-  String aiErrModelList(Object provider) {
-    return '$provider model listesi alınamadı. Ayarlar → Yapay zekâ → Model\'den modeli elle seçebilirsin.';
-  }
-
-  @override
-  String aiErrNeedsGemini(Object feature) {
-    return '$feature şu an yalnız Google Gemini ile çalışıyor. Ayarlar → Yapay zekâ\'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.';
-  }
-
-  @override
-  String aiErrKindNeedsGemini(Object kind, Object provider) {
-    return '$kind $provider ile gönderilemiyor. Ayarlar → Yapay zekâ\'dan sağlayıcıyı Gemini yapabilir ya da anahtarı kaldırıp dahili yapay zekâyı kullanabilirsin.';
-  }
-
-  @override
-  String get aiErrFeatureTts => 'Yapay zekâ seslendirmesi';
-
-  @override
-  String get aiErrFeatureSemantic => 'Anlamsal arama';
-
-  @override
-  String get aiErrKindAudio => 'Ses dosyası';
-
-  @override
-  String get aiErrKindVideo => 'Video';
-
-  @override
-  String get aiErrKindFile => 'Bu dosya türü';
-
-  @override
-  String get aiErrUpload => 'Kayıt yüklenemedi; yeniden dene.';
-
-  @override
-  String get aiErrSpeech => 'Seslendirme modeli ses döndürmedi; yeniden dene.';
-
-  @override
-  String get aiErrNoSpeechText => 'Seslendirilecek metin yok.';
-
-  @override
-  String get aiErrNoContent => 'Sesli not için içerik yok.';
-
-  @override
-  String get aiStatusBuiltInOffTitle => 'Dahili yapay zekâ şu an kapalı';
-
-  @override
-  String get aiStatusWebOffTitle => 'Web\'de dahili yapay zekâ kapalı';
-
-  @override
-  String get aiStatusWebOffBody =>
-      'Telefondaki uygulamada çalışır. Burada kendi Gemini anahtarınla bütün araçları kullanabilirsin.';
-
-  @override
-  String get aiStatusQuotaTitle => 'Yapay zekâ puanın doldu';
-
-  @override
-  String aiStatusQuotaBody(Object time) {
-    return 'Puanların $time civarında yenilenir. Kendi Gemini anahtarınla beklemeden kullanabilirsin.';
-  }
-
-  @override
-  String get dictationFixOffer => 'Dikte bitti';
-
-  @override
-  String get dictationFixAction => 'AI ile düzelt';
 
   @override
   String get tipHomeMicHold =>
@@ -7116,15 +5989,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get itemGesturesFingerAllInfo =>
       'Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.';
-
-  @override
-  String get bubbleAddNoteHint => 'Tutamaçlı not; dokununca açılır';
-
-  @override
-  String get bubbleAddPlainHint => 'Sayfanın üstüne doğrudan yazı';
-
-  @override
-  String get bubbleAddPlainTitle => 'Açık metin';
 
   @override
   String get itemAddHeader => 'Ara başlık';
@@ -7333,9 +6197,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get tplTodoErrandsItems =>
       'Bankaya uğra, Kargo gönder, Eczane, Kuru temizleme, Postane';
-
-  @override
-  String get templateTwoColumns => 'İki sütun';
 
   @override
   String get templateFavorite => 'Favorilere ekle';
@@ -7554,9 +6415,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get calendarViewWeek => 'Hafta';
 
   @override
-  String get calendarView => 'Görünüm';
-
-  @override
   String get calendarPinchHint =>
       'İki parmakla yıl, ay ve hafta arasında geçebilirsin';
 
@@ -7571,13 +6429,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get themeStraw => 'Saman';
-
-  @override
-  String get dashboardBackgroundCalendar => 'Takvim zemini';
-
-  @override
-  String get dashboardBackgroundCalendarInfo =>
-      'Zeminde bu ayın takvimi; kartlarda başlık net, gerisi saydam';
 
   @override
   String get calendarSwipe => 'Takvimde kaydırarak hafta/gün değiştir';
@@ -7820,15 +6671,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get menuQuickRow => 'Hızlı satıra al';
 
   @override
-  String get menuShowHide => 'Göster/gizle';
-
-  @override
   String get menuReset => 'Varsayılan';
-
-  @override
-  String menuEditHint(int count) {
-    return 'Sürükleyerek sırala, göz ile gizle; yıldızlı işlemler üstteki hızlı satırda durur (en çok $count).';
-  }
 
   @override
   String get themeCream => 'Krem';
@@ -7870,20 +6713,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get reminderSheetSave => 'Kaydet';
 
   @override
-  String get folderHoldHint =>
-      'Basılı tutup sağa sola kaydırarak klasör değiştir';
-
-  @override
   String get homeFolderStripHide => 'Klasör satırını gizle';
 
   @override
-  String get homeFolderStripShow => 'Klasör satırını göster';
-
-  @override
   String get homeViewMenu => 'Görünüm ve süz';
-
-  @override
-  String get folderRadialCancel => 'Bırak = vazgeç';
 
   @override
   String googleApiDisabled(String api) {
@@ -7897,56 +6730,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String googleScopeMissing(String api) {
     return '$api izni verilmedi. Bağlanırken izin kutusunu işaretleyin.';
   }
-
-  @override
-  String get gmailRefresh => 'Yenile';
-
-  @override
-  String get gmailNoResults => 'Burada aramana uyan e-posta yok';
-
-  @override
-  String get gmailFilterInbox => 'Gelen kutusu';
-
-  @override
-  String get gmailFilterUnread => 'Okunmamış';
-
-  @override
-  String get gmailFilterStarred => 'Yıldızlı';
-
-  @override
-  String get gmailFilterAttachments => 'Ekli';
-
-  @override
-  String get gmailFilterToday => 'Bugün';
-
-  @override
-  String get gmailDayToday => 'Bugün';
-
-  @override
-  String get gmailDayYesterday => 'Dün';
-
-  @override
-  String get gmailDayThisWeek => 'Bu hafta';
-
-  @override
-  String get gmailDayOlder => 'Daha eski';
-
-  @override
-  String get gmailNoSubject => '(konu yok)';
-
-  @override
-  String get gmailConnectTitle => 'E-postalarını nota çevir';
-
-  @override
-  String get gmailConnectPointRead =>
-      'Gelen kutunu gör, Gmail arama sözdizimiyle ara.';
-
-  @override
-  String get gmailConnectPointNote =>
-      'Bir e-postayı tek dokunuşla not, yapay zekâ özeti ya da görev listesi yap.';
-
-  @override
-  String get gmailOpenInGmail => 'Gmail\'de aç';
 
   @override
   String get friendsEmptyTitle => 'Burada henüz kişi yok';
@@ -8052,9 +6835,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkPinnedPen => 'Sabit kalem · basılı tut: kaldır';
-
-  @override
-  String get penModeFinish => 'Bitir';
 
   @override
   String get reminderLevelTitle => 'Bildirim';
@@ -8192,52 +6972,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addToNoteEmpty => 'Henüz başka not yok';
 
   @override
-  String get gmailAddSelectionToNote => 'Nota ekle';
-
-  @override
-  String get gmailTagPromotions => 'Promosyon';
-
-  @override
-  String get gmailTagSocial => 'Sosyal';
-
-  @override
-  String get gmailTagUpdates => 'Güncelleme';
-
-  @override
-  String get gmailTagForums => 'Forum';
-
-  @override
-  String get gmailTagImportant => 'Önemli';
-
-  @override
-  String gmailSmartAddToCalendar(String when) {
-    return 'Takvime ekle: $when';
-  }
-
-  @override
-  String gmailSmartLinkPerson(String name) {
-    return '$name → nota bağla';
-  }
-
-  @override
-  String gmailSmartRelatedNote(String title) {
-    return 'İlgili not: $title';
-  }
-
-  @override
-  String get gmailAddedToNote => 'Seçili metin nota eklendi';
-
-  @override
   String get calendarLinkExistingNote => 'Mevcut notu bağla';
 
   @override
   String get routineFromNote => 'Nottan rutin oluştur';
-
-  @override
-  String get gmailAddAccount => 'Başka hesap ekle';
-
-  @override
-  String get gmailRemoveAccount => 'Hesabı kaldır';
 
   @override
   String get quickRowSubheading => 'Ara başlık';
@@ -8268,9 +7006,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickRowDictation => 'Sesle yaz';
 
   @override
-  String get quickRowCustomize => 'Hızlı menüyü düzenle (düğme ekle/çıkar)';
-
-  @override
   String get notePackageSelectFirst =>
       'Pakete almak için yazıyı seç (ya da uzun bir paragrafa dokun)';
 
@@ -8299,10 +7034,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get spellAutoTitle => 'Otomatik düzelt';
-
-  @override
-  String get spellAutoSubtitle =>
-      'Biten kelime yalnız emin olunca düzeltilir; hemen ardından Backspace geri alır. Başlıkta kelime başları büyür.';
 
   @override
   String get spellLearnTitle => 'Öğrenen düzeltme';
@@ -8437,15 +7168,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get homeCalendarStripCollapse => 'Takvim şeridini daralt';
 
   @override
-  String get gmailTranslate => 'İletiyi çevir';
-
-  @override
-  String get gmailShowOriginal => 'Orijinali göster';
-
-  @override
-  String get gmailTranslated => 'Çevrildi';
-
-  @override
   String get folderMenuEdit => 'Sırala · sil';
 
   @override
@@ -8522,10 +7244,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get inkPenOffer => 'Kaleme dön';
 
   @override
-  String get tipPenToggle =>
-      'Kalem kipi açık. Kapatmak için kalem düğmesine tekrar bas (ya da geri). Basılı tut = kalem ayarları.';
-
-  @override
   String get tipPenShapeHold =>
       'Çizginin sonunda parmağını/kalemini bir an beklet: çizgi, kare, daire düzgün şekle oturur.';
 
@@ -8600,14 +7318,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get updateInstall => 'Güncelle';
 
   @override
-  String get updateDownloading => 'Yeni sürüm indiriliyor…';
-
-  @override
   String get updateNeedsPermission =>
       'Bu uygulamaya \"bilinmeyen uygulama yükleme\" izni ver, sonra yeniden Güncelle\'ye dokun';
-
-  @override
-  String get updateFailed => 'İndirilemedi; GitHub sayfası açılıyor';
 
   @override
   String get updateTapToCheck => 'Dokun: güncellemeyi denetle';
@@ -8626,13 +7338,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get updateUpToDate => 'En son sürüm kullanılıyor';
 
   @override
-  String get updateCheckFailed => 'Denetlenemedi — bağlantıyı kontrol et';
-
-  @override
   String get releaseNotesTitle => 'Sürüm notları';
-
-  @override
-  String get releaseNotesInfo => 'Yapılan güncellemeler madde madde';
 
   @override
   String get settingsWritingTitle => 'Kalem, yazım ve ekran';
@@ -9075,21 +7781,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickDropAiToggle => 'Emin olunamazsa yapay zekâya sor';
 
   @override
-  String get aiOffSetting => 'Yapay zekâyı tümden kapat';
-
-  @override
-  String get aiOffSettingInfo =>
-      'Açıkken hiçbir not, metin ya da ek yapay zekâya gönderilmez; düğmeleri gizlenir.';
-
-  @override
   String get aiOffTitle => 'Yapay zekâ kapalı';
-
-  @override
-  String get aiOffBody =>
-      'Yapay zekâyı Ayarlar\'da tümden kapattın; hiçbir şey gönderilmiyor. Açınca düğmeleri geri gelir.';
-
-  @override
-  String get aiOffTurnOn => 'Yapay zekâyı aç';
 
   @override
   String get aiConsentTitle => 'Yapay zekâ kullanımı';
@@ -9117,14 +7809,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiConsentDecline => 'Vazgeç';
 
   @override
-  String get aiMayBeWrong => 'AI yanılabilir; önemli bilgiyi doğrula.';
-
-  @override
   String get aiPausedTitle => 'Yapay zekâ geçici olarak kapalı';
-
-  @override
-  String get aiPausedBody =>
-      'Yapay zekâ özellikleri kısa bir süreliğine kapatıldı. Notların etkilenmez; biraz sonra yeniden dene.';
 
   @override
   String get homePullGestureTitle => 'Listeyi tepeden aşağı çekince';
@@ -9274,13 +7959,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiNeedsProTitle => 'Yapay zekâ Pro\'da';
 
   @override
-  String get aiNeedsProBody =>
-      'Dahili yapay zekâ Pro aboneliğinde. Ömür boyu sürümde kendi Gemini anahtarını girip sınırsız kullanabilirsin.';
-
-  @override
-  String get aiNeedsProSee => 'Pro\'ya bak';
-
-  @override
   String get proTitle => 'Tam sürüm';
 
   @override
@@ -9294,11 +7972,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proStatusLifetime => 'Şu an: Tam Sürüm (Ömür Boyu)';
 
   @override
-  String proStatusPro(String date) {
-    return 'Şu an: Tam Sürüm · $date tarihine dek';
-  }
-
-  @override
   String get proTiersTitle => 'Katmanlar';
 
   @override
@@ -9306,9 +7979,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get proTierLifetime => 'Tam sürüm';
-
-  @override
-  String get proTierPro => 'Tam sürüm';
 
   @override
   String get proRowBasics =>
@@ -9357,36 +8027,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proBuyTitle => 'Satın al';
 
   @override
-  String get proPlanMonthly => 'Tam sürüm';
-
-  @override
-  String get proPlanYearly => 'Tam sürüm';
-
-  @override
   String get proPlanLifetime => 'Tam Sürüm · Tek Sefer (Ömür Boyu)';
 
   @override
   String get proPlanDecisionPack => '+1.000 Akıllı Karar Paketi';
-
-  @override
-  String proPriceMonthly(String price) {
-    return '$price / ay';
-  }
-
-  @override
-  String proPriceYearly(String price) {
-    return '$price / yıl';
-  }
-
-  @override
-  String proTrialMonthly(String price) {
-    return '7 gün ücretsiz, sonra $price / ay';
-  }
-
-  @override
-  String proTrialYearly(String price) {
-    return '7 gün ücretsiz, sonra $price / yıl';
-  }
 
   @override
   String proPriceOnce(String price) {
@@ -9397,16 +8041,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get proBuy => 'Satın al';
 
   @override
-  String get proTry => 'Ücretsiz dene';
-
-  @override
   String get proOwned => 'Sende var';
-
-  @override
-  String get proManage => 'Satın alımları yönet';
-
-  @override
-  String get proManageBody => 'Google Play hesabı';
 
   @override
   String get proRestore => 'Satın alımları geri yükle';
@@ -9508,15 +8143,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get calendarLinkAllDay => 'Tüm gün';
 
   @override
-  String get calendarCollapseMonth => 'Takvimi daralt';
-
-  @override
-  String get calendarExpandMonth => 'Takvimi genişlet';
-
-  @override
-  String get calendarDayPanelClose => 'Gün panelini kapat';
-
-  @override
   String get driveOnboardTitle => 'Eklerin her cihazda olsun';
 
   @override
@@ -9528,26 +8154,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get driveOnboardLater => 'Sonra';
-
-  @override
-  String get aiQuietOrganizeTitle => 'Sessiz düzen';
-
-  @override
-  String get aiQuietOrganizeEmpty =>
-      'Öneri üretilecek eksik başlık veya etiket bulunamadı.';
-
-  @override
-  String aiQuietOrganizeApply(int count) {
-    return '$count öneriyi uygula';
-  }
-
-  @override
-  String aiQuietOrganizeApplied(int count) {
-    return '$count not güncellendi';
-  }
-
-  @override
-  String get aiQuietOrganizeBoth => 'Başlık + etiket birlikte';
 
   @override
   String get exportMarkdownZip => 'Markdown (.zip) dışa aktar';
@@ -9622,100 +8228,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get backupWrongPassword => 'Parola yanlış veya yedek çözülemedi';
-
-  @override
-  String get aiWriteImprove => 'Yazıyı iyileştir';
-
-  @override
-  String get aiWriteImproveInfo =>
-      'Düzelt, kısalt, uzat, tonu değiştir veya çevir';
-
-  @override
-  String get improveExpand => 'Uzat ve ayrıntılandır';
-
-  @override
-  String get improveCasual => 'Samimi ve doğal';
-
-  @override
-  String get aiWriteGroupFix => 'Düzelt ve yeniden yaz';
-
-  @override
-  String get aiWriteGroupTone => 'Ton ve uzunluk';
-
-  @override
-  String get aiWriteGroupFormat => 'Biçime dönüştür';
-
-  @override
-  String get aiPreviewBefore => 'Önce';
-
-  @override
-  String get aiPreviewAfter => 'Sonra';
-
-  @override
-  String get aiPreviewCompare => 'Önce / sonra';
-
-  @override
-  String get aiPhotoToStructuredNote => 'Yapılı nota dönüştür';
-
-  @override
-  String get aiPhotoToStructuredNoteInfo =>
-      'Önce cihazda okur, başlık ve maddelere ayırır';
-
-  @override
-  String get docSuggestSummary => 'Özetle';
-
-  @override
-  String get docPromptSummary =>
-      'Bu belgeyi kısa ve anlaşılır biçimde özetle; önemli bilgilerin sayfa numaralarını [s. N] olarak belirt.';
-
-  @override
-  String get docSuggestKeyPoints => 'Ana noktalar';
-
-  @override
-  String get docPromptKeyPoints =>
-      'Bu belgedeki en önemli 5 noktayı sayfa numaralarıyla [s. N] listele.';
-
-  @override
-  String get docSuggestActions => 'Tarih ve görevler';
-
-  @override
-  String get docPromptActions =>
-      'Bu belgede geçen önemli tarihleri, kararları ve yapılacakları sayfa numaralarıyla [s. N] çıkar.';
-
-  @override
-  String docPageCitation(int page) {
-    return 's. $page';
-  }
-
-  @override
-  String get transcriptTakeaways => 'Özet ve görevler';
-
-  @override
-  String get transcriptTakeawaysSummary => 'Özet';
-
-  @override
-  String get transcriptTakeawaysActions => 'Yapılacaklar';
-
-  @override
-  String get transcriptTakeawaysRemind => 'Hatırlatayım mı?';
-
-  @override
-  String get transcriptTakeawaysAddTask => 'Görev ekle';
-
-  @override
-  String get transcriptTakeawaysInsert => 'Özeti nota ekle';
-
-  @override
-  String get briefingDailyTab => 'Günlük';
-
-  @override
-  String get briefingWeeklyTab => 'Haftalık';
-
-  @override
-  String get briefingWeeklyLoading => 'Haftalık özet hazırlanıyor…';
-
-  @override
-  String get briefingWeeklyEmpty => 'Bu hafta için özetlenecek kayıt yok';
 
   @override
   String get calendarAddActionTitle => 'Takvimde + ne eklesin';
@@ -10004,12 +8516,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pinnedSmartAreaAsk => 'Alan seçip sor';
 
   @override
-  String get areaInsertToNote => 'Nota ekle';
-
-  @override
-  String get areaInsertedToNote => 'Nota eklendi';
-
-  @override
   String get dashboardBackgroundGallery => 'Hazır zeminler';
 
   @override
@@ -10017,9 +8523,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dashboardBackgroundOpacity => 'Görünürlük';
-
-  @override
-  String get dashboardBackgroundPreview => 'Canlı önizleme';
 
   @override
   String get wallpaperAuroraBloom => 'Kuzey çiçeği';
@@ -10117,130 +8620,17 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get aiSourceModeTitle => 'Yapay zekâ kaynağı';
-
-  @override
-  String get aiSourceModeShared => 'Ortak havuz';
-
-  @override
-  String get aiSourceModeByok => 'Kendi anahtarım';
-
-  @override
-  String get aiSharedPoolTitle => 'Ortak yapay zekâ havuzu';
-
-  @override
-  String aiSharedPoolSubtitle(int credits) {
-    return 'Tek Google hesabıyla hem Notlar hem Dosyalarım uygulamasında ortak kullanılır ($credits kredi)';
-  }
-
-  @override
-  String get aiSharedPoolEmpty =>
-      'Ortak kredi bakiyen tükendi; kendi anahtarını girebilir veya Pro\'ya geçebilirsin';
-
-  @override
-  String get aiByokExhaustedError =>
-      'Kendi anahtarının kotası veya yetkisi tükendi. Ortak havuza otomatik geçilmedi.';
-
-  @override
-  String get aiBackupKeysTitle => 'Yedek API anahtarları';
-
-  @override
-  String get aiBackupKeysInfo =>
-      'Birincil anahtar dolunca sıradaki anahtar otomatik devreye girer (en fazla 5)';
-
-  @override
-  String aiBackupKeyLabel(int index) {
-    return 'Yedek anahtar $index';
-  }
-
-  @override
-  String get aiBackupKeyAdd => 'Yedek anahtar ekle';
-
-  @override
   String get ecosystemDosyalarimTitle => 'Dosyalarım ile tüm belgeleri yönet';
 
   @override
   String get ecosystemDosyalarimSubtitle =>
-      'PDF imzala, Word ve Excel düzenle, ortak yapay zekâ kredini iki uygulamada birlikte kullan.';
-
-  @override
-  String get ecosystemOpenApp => 'Dosyalarım\'da aç';
+      'PDF imzala, Word ve Excel belgelerini düzenle ve notlarınla kolayca paylaş.';
 
   @override
   String get ecosystemGetApp => 'Dosyalarım\'ı keşfet';
 
   @override
   String get ecosystemDismiss => 'Gizle';
-
-  @override
-  String get aiOtherToolsTitle => 'Diğer araçlar';
-
-  @override
-  String get aiAttachmentsSection => 'Ek ve belge araçları';
-
-  @override
-  String get aiSmartCategorizeAction => 'Akıllı kategorize et';
-
-  @override
-  String get aiSmartCategorizeInfo =>
-      'Başlık, etiket ve klasörü yerelde kredi harcamadan düzenle';
-
-  @override
-  String aiLocalBadge(int percent) {
-    return 'Yerel · %$percent';
-  }
-
-  @override
-  String aiSmartFolderSuggestion(String folder) {
-    return 'Klasör: $folder';
-  }
-
-  @override
-  String get aiSmartFixAction => 'Düzelt';
-
-  @override
-  String get aiSmartRefineWithAi => 'Düşük güvenlileri yapay zekâyla incele';
-
-  @override
-  String get aiSmartFixTitle => 'Doğru kategoriyi seç';
-
-  @override
-  String get aiSmartSimilarConfirmTitle => 'Benzer notlar da düzeltilsin mi?';
-
-  @override
-  String aiSmartSimilarConfirmBody(int count) {
-    return '$count benzer not için de aynı kategoriyi uygulayabilirsin.';
-  }
-
-  @override
-  String get aiCatFinance => 'Finans';
-
-  @override
-  String get aiCatHealth => 'Sağlık';
-
-  @override
-  String get aiCatEducation => 'Eğitim';
-
-  @override
-  String get aiCatWork => 'İş';
-
-  @override
-  String get aiCatShopping => 'Alışveriş';
-
-  @override
-  String get aiCatTravel => 'Seyahat';
-
-  @override
-  String get aiCatPersonal => 'Kişisel';
-
-  @override
-  String get aiCatTech => 'Teknoloji';
-
-  @override
-  String get aiCatRecipes => 'Tarifler';
-
-  @override
-  String get aiCatOfficial => 'Resmî';
 
   @override
   String shopBudgetCart(String amount) {
@@ -10279,9 +8669,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get shopAisleLabel => 'Reyon';
-
-  @override
-  String get shopOtherAisle => 'Diğer';
 
   @override
   String get shopPriceCompareHeader => 'Market fiyat geçmişi';
@@ -10488,7 +8875,18 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get lockEncryptedBadge => 'Uçtan uca şifreli';
+  String get lockNeedSecretOnce =>
+      'Bu cihazda ilk kez açmak için kilit şifreni veya desenini bir kez gir.';
+
+  @override
+  String get lockForgotConfirmTitle => 'Kilit sıfırlansın mı?';
+
+  @override
+  String get lockForgotConfirmBody =>
+      'Mevcut şifrenle şifrelenmiş eski kilitli notların metni eski şifre olmadan bir daha çözülemez. Yine de kilit sıfırlansın mı?';
+
+  @override
+  String get lockForgotConfirmAction => 'Sıfırla';
 
   @override
   String get starterShoppingTitle => '🛒 Örnek market listesi';

@@ -80,18 +80,17 @@ def main():
         step("arti", lambda: (tap_label(r"^Yeni not . tip seç"), snap(f"{p}02_arti_paneli"), back()))
         step("suz", lambda: (tap_label(r"^Süz$"), snap(f"{p}03_suz"), back()))
         step("diger", lambda: (tap_label(r"^Diğer$"), snap(f"{p}04_diger"), back()))
-        step("anlam", lambda: (tap_label(r"^Anlam$"), snap(f"{p}05_anlam"), back()))
         step("hesap", lambda: (tap_label(r"^(Yerel hesap|Hesap)$"), snap(f"{p}06_hesap"), back()))
-        step("kart_menu", lambda: (tap_label(r"^Not menüsü$", region=lambda n: n[2] > 500), snap(f"{p}07_kart_menu"), back()))
+        step("kart_menu", lambda: (tap_label(r"^Not menüsü$", region=lambda n: n[2] > int(H * 0.22)), snap(f"{p}07_kart_menu"), back()))
         # (mikrofon izni isteyen "Hızlı ekle"/"Dikte" adımları kaldırıldı: izin pencereleri kullanıcı işi)
         step("takvim_serit", lambda: (tap_label(r"^Takvim şeridini (daralt|genişlet)"), snap(f"{p}09_serit"), tap_label(r"^Takvim şeridini (daralt|genişlet)"), time.sleep(0.8)))
-        for lab, nm in [("Klasörler", "10_klasorler"), ("Yapay zekâ", "11_yz"), ("Takvim", "12_takvim"),
+        for lab, nm in [("Klasörler", "10_klasorler"), ("Takvim", "12_takvim"),
                         ("Arşiv", "13_arsiv"), ("Çöp kutusu", "14_cop"), ("Ayarlar", "15_ayarlar")]:
             step(nm, lambda lab=lab, nm=nm: rail(lab, p + nm))
         # ayar alt sayfaları
         for sub, nm in [("Görünüm", "16_gorunum"), ("Güvenlik", "17_guvenlik"), ("Kalem, yazım", "18_kalem"),
                         ("Notlar ve klasörler", "19_notlar_klasorler"), ("Kişiselleştir", "20_kisisel"),
-                        ("Yapay zekâ", "21_ayar_yz"), ("Sesli dinle", "22_ses")]:
+                        ("Sesli dinle", "22_ses")]:
             def f(sub=sub, nm=nm):
                 tap_label(r"^" + sub, wait=2.2)
                 snap(p + nm)

@@ -1,6 +1,7 @@
 import '../../../app/theme/app_tokens.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/decode_image.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import 'editor/note_images.dart';
 import 'viewers/image_crop.dart';
@@ -123,13 +125,22 @@ class _ImagePrepareScreenState extends State<ImagePrepareScreen> {
     );
   }
 
-  /// Kırpma katmanı görselin KUTUSUYLA birebir aynı olmalı; oranı bilmek için
-  /// tek karelik bir çözümleme yeter (bitmap hemen bırakılır).
+  /// Kırpma katmanı görselin KUTUSUYLA birebir aynı olmalı; tüm pikselleri
+  /// RAM'e açmadan yalnızca başlık boyutunu okur (`ImageDescriptor.encoded`).
   Future<Size?> _decodeSize(Uint8List bytes) async {
-    final decoded = await decodeImageFromList(bytes);
-    final size = Size(decoded.width.toDouble(), decoded.height.toDouble());
-    decoded.dispose();
-    return size.isEmpty ? null : size;
+    final buf = await ui.ImmutableBuffer.fromUint8List(bytes);
+    try {
+      final desc = await ui.ImageDescriptor.encoded(buf);
+      try {
+        final w = desc.width.toDouble();
+        final h = desc.height.toDouble();
+        return (w <= 0 || h <= 0) ? null : Size(w, h);
+      } finally {
+        desc.dispose();
+      }
+    } finally {
+      buf.dispose();
+    }
   }
 
   Future<String> _nextPath() async {
@@ -278,7 +289,7 @@ class _ImageEditRequest {
 /// çözmek arayüzü saniyelerce dondurur (madde 9 — kasma olmamalı).
 String? _transformImage(_ImageEditRequest request) {
   final bytes = File(request.sourcePath).readAsBytesSync();
-  var picture = img.decodeImage(bytes);
+  var picture = decodeCommonImage(bytes);
   if (picture == null) return null;
   final crop = request.crop;
   if (crop != null) {

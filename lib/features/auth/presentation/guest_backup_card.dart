@@ -24,7 +24,7 @@ import '../../../app/theme/app_tokens.dart';
 /// getirmez; kart TEK SATIRLIK şeride iner (giriş yolu yine görünür, notlara
 /// yer kalır). Not sayısı [kGuestReminderFullAt] eşiklerinden birini "Sonra"
 /// denildiği andaki sayıdan sonra geçince tam kart BİR KEZ geri gelir.
-const kGuestReminderFullAt = [5, 20];
+const kGuestReminderFullAt = [3, 12, 25];
 const _laterCountKey = 'guest_reminder_later_count';
 // Eski (≤ Faz 10) "Sonra" kaydı: süreli erteleme. Varsa "0 notta Sonra
 // denmiş" sayılır.

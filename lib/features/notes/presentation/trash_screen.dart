@@ -50,6 +50,15 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
   bool _emptying = false;
   int _emptyDone = 0;
   int _emptyTotal = 0;
+  List<Note>? _lastRawTrash;
+  Set<String>? _lastSuppressed;
+  List<Note> _cachedVisible = const [];
+
+  static bool _sameSet(Set<String>? a, Set<String> b) {
+    if (identical(a, b)) return true;
+    if (a == null || a.length != b.length) return false;
+    return a.containsAll(b);
+  }
 
   @override
   void initState() {
@@ -132,15 +141,22 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
     final suppressed = ref.watch(suppressedFolderIdsProvider);
     // SİLİNME ZAMANINA GÖRE, en son silinen en üstte: kullanıcı çöpe
     // neredeyse her zaman "az önce sildiğim şey" için girer.
-    List<Note> visible(List<Note> list) =>
-        [
-          for (final n in list)
-            if (n.folderId == null || !suppressed.contains(n.folderId)) n,
-        ]..sort((a, b) {
-          final at = a.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final bt = b.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          return bt.compareTo(at);
-        });
+    List<Note> visible(List<Note> list) {
+      if (identical(list, _lastRawTrash) &&
+          _sameSet(_lastSuppressed, suppressed)) {
+        return _cachedVisible;
+      }
+      _lastRawTrash = list;
+      _lastSuppressed = Set<String>.of(suppressed);
+      return _cachedVisible = [
+        for (final n in list)
+          if (n.folderId == null || !suppressed.contains(n.folderId)) n,
+      ]..sort((a, b) {
+        final at = a.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bt = b.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return bt.compareTo(at);
+      });
+    }
 
     return Scaffold(
       appBar: HomeInBar(appBar: AppBar(
@@ -489,7 +505,7 @@ class _TrashCard extends ConsumerWidget {
     if (note.locked) {
       return Row(
         children: [
-          Icon(Icons.lock_outline, size: 16, color: muted),
+          Icon(Icons.lock_outline, size: AppIconSize.xs, color: muted),
           const SizedBox(width: 6),
           Text(context.l10n.lockedNote, style: small),
         ],
@@ -615,22 +631,35 @@ class _TrashCard extends ConsumerWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
-                // Taşan içerik ALTTA SOLAR, sert kesilmez.
-                child: ShaderMask(
-                  blendMode: BlendMode.dstIn,
-                  shaderCallback: (rect) => const LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.black, Colors.black, Colors.transparent],
-                    stops: [0, 0.75, 1],
-                  ).createShader(rect),
-                  child: ClipRect(
-                    child: OverflowBox(
-                      alignment: Alignment.topLeft,
-                      maxHeight: double.infinity,
-                      child: _preview(context),
+                // Taşan içerik ALTTA SOLAR, sert kesilmez (saveLayer'sız).
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRect(
+                      child: OverflowBox(
+                        alignment: Alignment.topLeft,
+                        maxHeight: double.infinity,
+                        child: _preview(context),
+                      ),
                     ),
-                  ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: 28,
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [surface.withAlpha(0), surface],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -673,7 +702,7 @@ class _TrashCard extends ConsumerWidget {
                           fontSize: 12,
                           fontWeight: urgent
                               ? AppWeight.strong
-                              : FontWeight.w500,
+                              : AppWeight.medium,
                           color: urgent
                               ? scheme.error
                               : scheme.onSurfaceVariant,

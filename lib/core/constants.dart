@@ -109,7 +109,7 @@ abstract final class AppConstants {
   /// katalog gelmezse bu liste gösterilir.
   ///
   /// TTS ayrı bir model ailesidir: metin modelleri ses ÜRETEMEZ, bu yüzden
-  /// podcast modeliyle aynı seçiciye konamaz (bkz. AiTask, ttsModelProvider).
+  /// podcast modeliyle aynı seçiciye konamaz (bkz. ttsModelProvider).
   static const List<String> geminiTtsModelPreference = [
     'gemini-2.5-flash-preview-tts',
     // 2.5 Pro TTS çıkarıldı (2026-11-15): ücretsiz katmanda kotası 0.

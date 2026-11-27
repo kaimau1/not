@@ -165,12 +165,12 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
               children: [
                 TextButton.icon(
                   onPressed: () => Navigator.pop(sheetContext, true),
-                  icon: const Icon(Icons.brush_outlined, size: 18),
+                  icon: const Icon(Icons.brush_outlined, size: AppIconSize.s),
                   label: Text(l10n.addDrawing),
                 ),
                 FilledButton.icon(
                   onPressed: () => Navigator.pop(sheetContext, false),
-                  icon: const Icon(Icons.send, size: 18),
+                  icon: const Icon(Icons.send, size: AppIconSize.s),
                   label: Text(l10n.folderChatSend),
                 ),
               ],
@@ -382,7 +382,7 @@ class _Composer extends StatelessWidget {
           IconButton.filled(
             tooltip: l10n.folderChatSend,
             onPressed: onSend,
-            icon: const Icon(Icons.send, size: 20),
+            icon: const Icon(Icons.send, size: AppIconSize.m),
           ),
         ],
       ),

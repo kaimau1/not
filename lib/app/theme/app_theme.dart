@@ -145,7 +145,7 @@ abstract final class AppTheme {
     ).apply(bodyColor: t.ink, displayColor: t.ink);
 
     final sheetShape = const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
     );
     final buttonShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppRadius.m),
@@ -159,7 +159,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: scheme.surface,
       canvasColor: scheme.surface,
       hoverColor: scheme.onSurface.withValues(alpha: 0.06),
-      focusColor: scheme.primary.withValues(alpha: 0.12),
+      focusColor: scheme.primary.withValues(alpha: AppAlpha.pressed),
       splashFactory: InkSparkle.splashFactory,
       // METİN SEÇİMİ (kullanıcı bulgusu 2026-10-15: "metin seçim kalitesi
       // düzeltilmeli"). M3 varsayılanı seçimi birincil rengin %40'ıyla
@@ -185,7 +185,7 @@ abstract final class AppTheme {
           color: scheme.onSurface,
           fontSize: 18,
           height: 24 / 18,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppWeight.strong,
         ),
       ),
       cardTheme: CardThemeData(
@@ -193,7 +193,7 @@ abstract final class AppTheme {
         color: t.card,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.l),
           side: BorderSide(color: tokens.hairline),
         ),
         margin: EdgeInsets.zero,
@@ -244,7 +244,7 @@ abstract final class AppTheme {
           ),
           shape: WidgetStatePropertyAll(buttonShape),
           textStyle: WidgetStatePropertyAll(
-            textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+            textTheme.labelLarge?.copyWith(fontWeight: AppWeight.strong),
           ),
           visualDensity: VisualDensity.standard,
         ),
@@ -275,7 +275,7 @@ abstract final class AppTheme {
         valueIndicatorColor: scheme.inverseSurface,
         valueIndicatorTextStyle: textTheme.labelMedium?.copyWith(
           color: scheme.onInverseSurface,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppWeight.strong,
         ),
       ),
       checkboxTheme: CheckboxThemeData(
@@ -297,7 +297,7 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           shape: buttonShape,
           textStyle: textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppWeight.strong,
           ),
         ),
       ),
@@ -306,7 +306,7 @@ abstract final class AppTheme {
           shape: buttonShape,
           side: BorderSide(color: scheme.outlineVariant),
           textStyle: textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppWeight.strong,
           ),
         ),
       ),
@@ -314,7 +314,7 @@ abstract final class AppTheme {
         style: TextButton.styleFrom(
           shape: buttonShape,
           textStyle: textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppWeight.strong,
           ),
         ),
       ),
@@ -323,7 +323,7 @@ abstract final class AppTheme {
         unselectedLabelColor: scheme.onSurfaceVariant,
         indicatorColor: scheme.primary,
         dividerColor: tokens.hairline,
-        labelStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+        labelStyle: textTheme.labelLarge?.copyWith(fontWeight: AppWeight.strong),
         unselectedLabelStyle: textTheme.labelLarge,
       ),
       scrollbarTheme: ScrollbarThemeData(
@@ -341,7 +341,7 @@ abstract final class AppTheme {
           borderSide: BorderSide(color: tokens.hairline),
         ),
         hintStyle: textTheme.bodyMedium?.copyWith(
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.85),
+          color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.strong),
         ),
       ),
       searchBarTheme: SearchBarThemeData(
@@ -371,7 +371,7 @@ abstract final class AppTheme {
         backgroundColor: t.card,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppRadius.xl),
           side: BorderSide(color: tokens.hairline),
         ),
       ),
@@ -415,7 +415,7 @@ abstract final class AppTheme {
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: scheme.inverseSurface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppRadius.s),
         ),
         textStyle: textTheme.bodySmall?.copyWith(
           color: scheme.onInverseSurface,
@@ -428,7 +428,7 @@ abstract final class AppTheme {
         unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
         selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
           color: scheme.primary,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppWeight.strong,
         ),
         unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(
           color: scheme.onSurfaceVariant,
@@ -448,7 +448,7 @@ abstract final class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return textTheme.labelSmall?.copyWith(
               color: scheme.primary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppWeight.strong,
             );
           }
           return textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant);
@@ -459,17 +459,17 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
       ),
       dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant.withValues(alpha: 0.6),
+        color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
         space: 1,
         thickness: 1,
       ),
       listTileTheme: ListTileThemeData(
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.all(Radius.circular(AppRadius.m)),
         ),
         iconColor: scheme.onSurfaceVariant,
         selectedColor: scheme.onPrimaryContainer,
-        selectedTileColor: scheme.primaryContainer.withValues(alpha: 0.6),
+        selectedTileColor: scheme.primaryContainer.withValues(alpha: AppAlpha.muted),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: scheme.primary,

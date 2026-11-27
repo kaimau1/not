@@ -14,6 +14,7 @@ import '../viewers/slide_canvas.dart';
 import '../viewers/slide_scroll.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../../../../core/widgets/delayed_spinner.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Sunumun yüklenmiş slaytları — aynı dosya sayfada, bölmede ve büyük
 /// önizlemede aynı anda çizilebiliyor; .pptx her kutuda yeniden
@@ -158,7 +159,7 @@ class _SlidePageBoxState extends ConsumerState<SlidePageBox> {
     pager.animateToPage(
       target - 1,
       duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.emphasized,
     );
   }
 
@@ -261,7 +262,7 @@ class _SlideBar extends StatelessWidget {
       child: IconButton(
         tooltip: tip,
         padding: EdgeInsets.zero,
-        iconSize: 18,
+        iconSize: AppIconSize.s,
         color: ink,
         disabledColor: ink.withValues(alpha: 0.3),
         onPressed: onTap,
@@ -270,7 +271,7 @@ class _SlideBar extends StatelessWidget {
     );
     return Container(
       height: 28,
-      color: Colors.black.withValues(alpha: 0.85),
+      color: Colors.black.withValues(alpha: AppAlpha.strong),
       child: Row(
         children: [
           button(Icons.chevron_left, l10n.pdfPreviousPage, onPrev),
@@ -282,7 +283,7 @@ class _SlideBar extends StatelessWidget {
               style: const TextStyle(
                 color: ink,
                 fontSize: 11.5,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppWeight.strong,
               ),
             ),
           ),

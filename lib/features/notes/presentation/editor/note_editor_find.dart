@@ -128,7 +128,7 @@ extension _EditorFind on _NoteEditorScreenState {
           fieldContext,
           alignment: 0.3,
           duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.emphasized,
         );
         return;
       }
@@ -141,7 +141,7 @@ extension _EditorFind on _NoteEditorScreenState {
           fieldContext,
           alignment: 0.3,
           duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
+          curve: AppMotion.emphasized,
         );
         return;
       }
@@ -165,7 +165,7 @@ extension _EditorFind on _NoteEditorScreenState {
       position.animateTo(
         target,
         duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOutCubic,
+        curve: AppMotion.emphasized,
       );
     });
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 export '../../../../app/window_class.dart' show kPinnedSideMinWidth;
 
@@ -131,7 +132,7 @@ class _PinnedSideLayoutState extends State<PinnedSideLayout> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(AppRadius.hair),
                   ),
                 ),
               ),

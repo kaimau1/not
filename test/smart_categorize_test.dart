@@ -1,28 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/ai/domain/smart_categorize.dart';
-import 'package:notlar/features/ai/presentation/quiet_organize_sheet.dart';
-import 'package:notlar/features/folders/data/folders_repository.dart';
-import 'package:notlar/features/folders/domain/note_folder.dart';
-import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
-import 'package:notlar/features/settings/settings_providers.dart';
-import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-class _FakeNotesRepo implements NotesRepository {
-  final updated = <Note>[];
-
-  @override
-  Future<void> updateNote(Note note, {bool clientTime = false}) async {
-    updated.add(note);
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
 
 void main() {
   setUp(() async {
@@ -137,86 +117,5 @@ void main() {
       ], currentCategoryOf: (_) => SmartNoteCategory.personal);
       expect(sims.map((n) => n.id), ['a2']);
     });
-  });
-
-  testWidgets('preferLocalFirst: 0 AI çağrısı ile çalışır ve Düzelt öğrenir', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(412, 915);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-
-    final prefs = await SharedPreferences.getInstance();
-    final repo = _FakeNotesRepo();
-    const notes = [
-      Note(
-        id: 'n-fin',
-        type: NoteType.text,
-        body: 'Elektrik fatura ve IBAN dekontu',
-      ),
-      Note(
-        id: 'n-amb',
-        type: NoteType.text,
-        body: 'Özel kulüp aidat çizelgesi',
-      ),
-    ];
-    const folders = [NoteFolder(id: 'f-fin', name: 'Finans', ownerId: 'u1')];
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-          notesRepositoryProvider.overrideWithValue(repo),
-          notesStreamProvider.overrideWith((_) => Stream.value(notes)),
-          foldersStreamProvider.overrideWith((_) => Stream.value(folders)),
-        ],
-        child: MaterialApp(
-          locale: const Locale('tr'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: Builder(
-              builder: (ctx) => TextButton(
-                onPressed: () =>
-                    showQuietOrganizeSheet(ctx, preferLocalFirst: true),
-                child: const Text('Aç'),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Aç'));
-    await tester.pumpAndSettle();
-
-    // İlk açılışta 0 AI çağrısı; yerel eşleştirme ve klasör önerisi görünür.
-    expect(find.byKey(const ValueKey('quiet-org-refine-ai')), findsOneWidget);
-    expect(find.text('Klasör: Finans'), findsOneWidget);
-
-    // Düşük güvenli n-amb için Düzelt -> Resmî seç.
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('quiet-org-fix-n-amb')),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('quiet-org-fix-n-amb')));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(
-      find.byKey(const ValueKey('smart-fix-cat-official')),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('smart-fix-cat-official')));
-    await tester.pumpAndSettle();
-
-    // Öğrenme diske yazıldı; artık #resmi etiketi önerilir ve Uygula klasörü de yazar.
-    expect(find.text('#resmi'), findsOneWidget);
-    await tester.tap(find.byKey(const ValueKey('quiet-org-apply')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    final finSaved = repo.updated.firstWhere((n) => n.id == 'n-fin');
-    expect(finSaved.folderId, 'f-fin');
-    expect(finSaved.tags, contains('finans'));
   });
 }

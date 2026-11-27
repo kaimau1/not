@@ -132,3 +132,43 @@ export async function handleSearchUsers(
     })),
   });
 }
+
+/**
+ * Kullanıcı verisinin kalıcı silinmesi (`DELETE /v1/users/me`).
+ * R2 eklerini, D1 varlık/paylaşım/dizin/yetki satırlarını siler;
+ * kötüye kullanımı engellemek için kota/token sayaçlarını korur.
+ */
+export async function handleDeleteUser(
+  env: Env,
+  user: AuthUser,
+): Promise<Response> {
+  const mediaRows = await env.DB.prepare(
+    "SELECT object_key FROM media_objects WHERE owner_uid = ?",
+  )
+    .bind(user.uid)
+    .all<{ object_key: string }>();
+
+  if (env.MEDIA && mediaRows.results.length > 0) {
+    await Promise.all(
+      mediaRows.results.map((r) =>
+        env.MEDIA!.delete(r.object_key).catch(() => {}),
+      ),
+    );
+  }
+
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM media_objects WHERE owner_uid = ?").bind(
+      user.uid,
+    ),
+    env.DB.prepare("DELETE FROM r2_quota WHERE uid = ?").bind(user.uid),
+    env.DB.prepare("DELETE FROM entities WHERE uid = ?").bind(user.uid),
+    env.DB.prepare("DELETE FROM user_seq WHERE uid = ?").bind(user.uid),
+    env.DB.prepare(
+      "DELETE FROM shares WHERE owner_uid = ? OR member_uid = ?",
+    ).bind(user.uid, user.uid),
+    env.DB.prepare("DELETE FROM user_directory WHERE uid = ?").bind(user.uid),
+    env.DB.prepare("DELETE FROM entitlements WHERE uid = ?").bind(user.uid),
+  ]);
+
+  return jsonResponse({ ok: true, deletedUid: user.uid });
+}

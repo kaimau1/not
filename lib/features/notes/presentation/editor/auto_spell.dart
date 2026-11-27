@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert' show utf8;
 import 'dart:io' show File, Platform;
 
 import 'package:flutter/foundation.dart';
@@ -110,14 +111,21 @@ class AutoSpell {
   static bool lexiconEnabled =
       kIsWeb || !Platform.environment.containsKey('FLUTTER_TEST');
 
+  static TrLexicon _parseLexiconBytes(Uint8List bytes) =>
+      TrLexicon.parse(utf8.decode(bytes));
+
   static Future<void> _loadLexicon() async {
     if (!lexiconEnabled || TrLexicon.instance != null) return;
     try {
       await Future<void>.delayed(lexiconDelay);
-      final text = await rootBundle.loadString(lexiconAsset, cache: false);
+      final data = await rootBundle.load(lexiconAsset);
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
       final lex = kIsWeb
-          ? TrLexicon.parse(text)
-          : await compute(TrLexicon.parse, text);
+          ? _parseLexiconBytes(bytes)
+          : await compute(_parseLexiconBytes, Uint8List.fromList(bytes));
       TrLexicon.install(lex);
       _bump();
     } catch (_) {
@@ -166,16 +174,48 @@ class AutoSpell {
     _saveTimer = Timer(const Duration(seconds: 4), () => unawaited(_save()));
   }
 
+  @visibleForTesting
+  static String trimMemoryForWeb(
+    SpellMemory mem, {
+    int maxBytes = 120000,
+  }) {
+    final raw = mem.encode();
+    if (raw.length <= maxBytes || mem.words.isEmpty) return raw;
+    // Web localStorage şişmesin diye en düşük sıklıklı kelime sayımlarını at,
+    // kişisel düzeltme (`fixes`), `keep` ve `rejected` kararlarını koru.
+    final kept = SpellMemory()
+      ..fixes.addAll(mem.fixes)
+      ..keep.addAll(mem.keep)
+      ..rejected.addAll(mem.rejected);
+    final entries = mem.words.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    var lo = 0;
+    var hi = entries.length;
+    var best = kept.encode();
+    while (lo <= hi) {
+      final mid = (lo + hi) >> 1;
+      kept.words
+        ..clear()
+        ..addEntries(entries.take(mid));
+      final encoded = kept.encode();
+      if (encoded.length <= maxBytes) {
+        best = encoded;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return best;
+  }
+
   static Future<void> _save() async {
     try {
-      final raw = memory.encode();
       final base = appSupportPath;
       if (kIsWeb || base == null) {
         final p = await SharedPreferences.getInstance();
-        // Web'de tercih dosyası şişmesin: sözlük kısılır.
-        await p.setString(_memoryPref, raw.length > 120000 ? '' : raw);
+        await p.setString(_memoryPref, trimMemoryForWeb(memory));
       } else {
-        await File('$base/$_memoryFile').writeAsString(raw);
+        await File('$base/$_memoryFile').writeAsString(memory.encode());
       }
     } catch (_) {}
   }
@@ -289,12 +329,14 @@ class AutoSpell {
     if (_seeding || memory.seeded.isNotEmpty || mode.value == SpellMode.off) {
       return;
     }
+    final sample = texts();
+    if (sample.isEmpty) return;
     _seeding = true;
     try {
-      final counts = await compute(seedCounts, texts());
+      final counts = await compute(seedCounts, sample);
       memory.seed(counts);
       _bump();
-    } catch (_) {
+    } finally {
       _seeding = false;
     }
   }

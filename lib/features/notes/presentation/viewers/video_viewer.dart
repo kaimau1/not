@@ -100,7 +100,7 @@ class NoteAtTimeButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
       ),
       onPressed: onPressed,
-      icon: const Icon(Icons.more_time, size: 18),
+      icon: const Icon(Icons.more_time, size: AppIconSize.s),
       label: Text(context.l10n.videoNoteAtTime),
     ),
   );

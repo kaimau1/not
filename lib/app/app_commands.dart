@@ -458,6 +458,20 @@ class AppShortcuts extends ConsumerWidget {
           if (!row.elsewhere)
             for (final (i, key) in row.keys.indexed)
               key: ?_actionFor(row.id, i, actions, router),
+        const SingleActivator(
+          LogicalKeyboardKey.slash,
+          control: true,
+          shift: true,
+        ): () => showShortcutsHelp(context),
+        const SingleActivator(LogicalKeyboardKey.numpadDivide, control: true):
+            () => showShortcutsHelp(context),
+        const SingleActivator(LogicalKeyboardKey.question, control: true): () =>
+            showShortcutsHelp(context),
+        const SingleActivator(
+          LogicalKeyboardKey.question,
+          control: true,
+          shift: true,
+        ): () => showShortcutsHelp(context),
       },
       child: Focus(
         canRequestFocus: false,

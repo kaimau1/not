@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/utils/rich_text.dart' show stripRichMarkers;
+import '../../../core/utils/search_fold.dart';
 import 'attachment.dart';
 
 /// **TABLO** (kullanıcı isteği 2026-11-23: "2, 3, 4 sütunluk tablolar
@@ -342,22 +343,7 @@ class NoteTable {
     return double.tryParse(normalized);
   }
 
-  static String _foldTr(String s) {
-    final out = StringBuffer();
-    for (final r in s.runes) {
-      final c = String.fromCharCode(r);
-      out.write(switch (c) {
-        'Ç' || 'ç' => 'c',
-        'Ğ' || 'ğ' => 'g',
-        'İ' || 'I' || 'ı' => 'i',
-        'Ö' || 'ö' => 'o',
-        'Ş' || 'ş' => 's',
-        'Ü' || 'ü' => 'u',
-        _ => c.toLowerCase(),
-      });
-    }
-    return out.toString();
-  }
+  static String _foldTr(String s) => foldForSearch(s);
 
   /// Satır sayısını değiştirir: yeni satırlar sonda boş, fazlası sondan düşer.
   NoteTable withRows(int count) {

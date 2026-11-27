@@ -11,6 +11,7 @@ import '../viewers/ink_tools.dart' show InkToolMemory;
 import 'note_images.dart';
 import 'pen_tray.dart';
 import '../../../../core/friendly_error.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// El yazısı notu: beyaz bir tuvale çizilir, kaydedilirse PNG baytları döner
 /// ve nota görsel eki olarak girer.
@@ -312,7 +313,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
+                        color: Colors.black.withValues(alpha: AppAlpha.hairline),
                         blurRadius: 14,
                         offset: const Offset(0, 4),
                       ),

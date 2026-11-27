@@ -122,6 +122,8 @@ Widget _avatar(ColorScheme scheme, String? photo, bool anonymous) {
                   photo,
                   width: _avatarRadius * 2,
                   height: _avatarRadius * 2,
+                  cacheWidth: 168,
+                  cacheHeight: 168,
                   fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => const SizedBox.shrink(),
                   frameBuilder: (context, child, frame, sync) => sync

@@ -84,4 +84,8 @@ abstract class SyncTransport {
 
   /// R2 ortak medya silme (`DELETE /v1/media/:key`).
   Future<void> deleteMedia(String key);
+
+  /// Bulut senkronundaki tüm kullanıcı verilerini kalıcı siler
+  /// (`DELETE /v1/users/me`).
+  Future<void> deleteAccount();
 }

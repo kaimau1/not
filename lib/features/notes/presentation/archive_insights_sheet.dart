@@ -9,6 +9,7 @@ import '../../folders/data/folders_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'note_card.dart' show formatNoteDate, openNoteRoute;
+import '../../../app/theme/app_tokens.dart';
 
 /// **ARŞİV ÖZETİ** (geliştirme raporu D5, 2026-10-20: "Arşivimde neler
 /// var?" — çöp analizinin arşiv karşılığı).
@@ -164,7 +165,7 @@ class _ArchiveInsightsSheetState extends ConsumerState<_ArchiveInsightsSheet> {
                     f.folderId == null
                         ? Icons.notes_outlined
                         : Icons.folder_outlined,
-                    size: 16,
+                    size: AppIconSize.xs,
                   ),
                   label: Text(
                     '${f.folderId == null ? l10n.archiveNoFolder : (folderNames[f.folderId] ?? l10n.filterSectionFolder)} · ${f.count}',

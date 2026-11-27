@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/constants.dart';
 import '../../../core/error_log.dart';
 import '../../../core/friendly_error.dart';
+import '../../../core/utils/decode_image.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/web_attachment_cache.dart';
 import '../../../core/utils/web_blob.dart';
@@ -93,7 +94,7 @@ class _CompressResult {
 }
 
 _CompressResult _compressImage(_CompressRequest request) {
-  final decoded = img.decodeImage(request.bytes);
+  final decoded = decodeCommonImage(request.bytes);
   if (decoded == null) {
     return _CompressResult(request.bytes, 0, 0, false);
   }
@@ -147,7 +148,7 @@ class _RotateRequest {
 /// Görseli 90°'nin katlarıyla döndürür. Kırpmayla aynı gerekçeyle JPEG
 /// üretir (bkz. [_cropImage] yorumu).
 _CompressResult _rotateImage(_RotateRequest request) {
-  final decoded = img.decodeImage(request.bytes);
+  final decoded = decodeCommonImage(request.bytes);
   if (decoded == null) return _CompressResult(request.bytes, 0, 0, false);
   final turned = img.copyRotate(decoded, angle: request.quarterTurns * 90);
   final encoded = Uint8List.fromList(
@@ -161,7 +162,7 @@ _CompressResult _rotateImage(_RotateRequest request) {
 /// kırpılınca dosya büyüdü" ve "webp kırpılamıyor" dallarının ikisini birden
 /// siliyor. Saydamlık düzleşir; girişte de düzleştiği için yeni bir kayıp yok.
 _CompressResult _cropImage(_CropRequest request) {
-  final decoded = img.decodeImage(request.bytes);
+  final decoded = decodeCommonImage(request.bytes);
   if (decoded == null) return _CompressResult(request.bytes, 0, 0, false);
   final x = (request.left * decoded.width).round().clamp(0, decoded.width - 1);
   final y = (request.top * decoded.height).round().clamp(0, decoded.height - 1);

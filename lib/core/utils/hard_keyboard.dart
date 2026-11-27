@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -22,9 +21,11 @@ abstract final class HardKeyboard {
   static final softWanted = ValueNotifier<bool>(false);
 
   static final _hidden = _NoSoftKeyboard();
+  static final _softWatch = _SoftClosedWatch();
 
   static Future<void> init() async {
-    if (kIsWeb || !Platform.isAndroid) return;
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    _ensureHooked();
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'changed') report(call.arguments == true);
       return null;
@@ -36,6 +37,13 @@ abstract final class HardKeyboard {
     } on MissingPluginException {
       // Test/eski kabuk.
     }
+  }
+
+  static void _ensureHooked() {
+    if (_hooked) return;
+    _hooked = true;
+    HardwareKeyboard.instance.addHandler(_onKey);
+    WidgetsBinding.instance.addObserver(_softWatch);
   }
 
   /// Takılıyken gelen son tuş (sanal klavye kapalıyken tuş = fiziksel).
@@ -64,11 +72,7 @@ abstract final class HardKeyboard {
   /// durum yeniden sorulur.
   @visibleForTesting
   static void report(bool value) {
-    if (!_hooked) {
-      _hooked = true;
-      HardwareKeyboard.instance.addHandler(_onKey);
-      WidgetsBinding.instance.addObserver(_SoftClosedWatch());
-    }
+    _ensureHooked();
     _recheck?.cancel();
     final last = _lastKey;
     if (!value && present.value && last != null) {
@@ -111,6 +115,11 @@ abstract final class HardKeyboard {
     present.value = false;
     softWanted.value = false;
     clock = DateTime.now;
+    if (_hooked) {
+      HardwareKeyboard.instance.removeHandler(_onKey);
+      WidgetsBinding.instance.removeObserver(_softWatch);
+      _hooked = false;
+    }
   }
 
   static void _set(bool value) {

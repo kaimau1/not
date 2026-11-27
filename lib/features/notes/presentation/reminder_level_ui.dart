@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../domain/reminder_level.dart';
+import '../../../app/theme/app_tokens.dart';
 
 /// Düzeyin simgesi (çipte ve seçicide aynı).
 IconData reminderLevelIcon(ReminderLevel level) => switch (level) {
@@ -61,7 +62,7 @@ class ReminderLevelPicker extends StatelessWidget {
             for (final level in ReminderLevel.values)
               ChoiceChip(
                 key: ValueKey('reminder-level-${level.name}'),
-                avatar: Icon(reminderLevelIcon(level), size: 18),
+                avatar: Icon(reminderLevelIcon(level), size: AppIconSize.s),
                 label: Text(reminderLevelLabel(context, level)),
                 selected: selected == level,
                 onSelected: (_) => onChanged(level.id),

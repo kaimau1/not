@@ -359,38 +359,18 @@ extension _EditorVideo on _NoteEditorScreenState {
     return null;
   }
 
-  /// **DOSYAYI METNE DÖK** — ses, video ya da görsel seçilir, nota ek olarak
-  /// girer ve transkript ekranı açılır; metin bitince nota da yazılır
-  /// ("onları nota dönüştürme"). Görsel sayfaya değil şeride konur: gövdeye
-  /// gelen metin görselin etrafından akmasın.
+  /// **GÖRSELİ METNE DÖK (OCR)** — görsel seçilir, nota ek olarak girer ve
+  /// transkript ekranı açılır; metin bitince nota da yazılır. Görsel sayfaya
+  /// değil şeride konur: gövdeye gelen metin görselin etrafından akmasın.
   Future<void> _transcribeFile() async {
     final repo = _attachments;
     if (repo == null) return;
     final l10n = context.l10n;
     final picked = await DocPicker.pickOne(
       const XTypeGroup(
-        label: 'media',
-        mimeTypes: ['audio/*', 'video/*', 'image/*'],
-        extensions: [
-          'mp3',
-          'm4a',
-          'aac',
-          'wav',
-          'ogg',
-          'opus',
-          'flac',
-          'amr',
-          'webm',
-          'mp4',
-          'mov',
-          'mkv',
-          '3gp',
-          'jpg',
-          'jpeg',
-          'png',
-          'webp',
-          'heic',
-        ],
+        label: 'images',
+        mimeTypes: ['image/*'],
+        extensions: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
       ),
       chooserTitle: l10n.transcriptPickTitle,
     );
@@ -398,38 +378,16 @@ extension _EditorVideo on _NoteEditorScreenState {
     final kind = _NoteEditorScreenState._mediaKindOf(
       picked.name.isEmpty ? picked.path : picked.name,
     );
-    if (kind == null) {
+    if (kind != AttachmentKind.image) {
       _showSnack(l10n.transcriptUnsupportedFile);
       return;
     }
     try {
-      final Attachment attachment;
-      switch (kind) {
-        case AttachmentKind.audio:
-          attachment = kIsWeb || picked.path.isEmpty
-              ? await repo.prepareAudioBytes(
-                  noteId: widget.noteId,
-                  bytes: await picked.readAsBytes(),
-                  fileName: picked.name,
-                )
-              : await repo.prepareAudioFile(
-                  noteId: widget.noteId,
-                  sourcePath: picked.path,
-                  fileName: picked.name,
-                );
-        case AttachmentKind.video:
-          attachment = (await repo.prepareVideo(
-            noteId: widget.noteId,
-            sourcePath: picked.path,
-            duration: await VideoFrame.duration(picked.path),
-          )).copyWith(asFile: true);
-        default:
-          attachment = (await repo.prepareImage(
-            noteId: widget.noteId,
-            bytes: await picked.readAsBytes(),
-            fileName: picked.name.isEmpty ? 'gorsel.jpg' : picked.name,
-          )).copyWith(asFile: true);
-      }
+      final attachment = (await repo.prepareImage(
+        noteId: widget.noteId,
+        bytes: await picked.readAsBytes(),
+        fileName: picked.name.isEmpty ? 'gorsel.jpg' : picked.name,
+      )).copyWith(asFile: true);
       if (!mounted) return;
       _mutate(
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),

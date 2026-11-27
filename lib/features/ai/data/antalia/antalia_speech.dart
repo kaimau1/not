@@ -82,11 +82,13 @@ class AntaliaSpeechController extends Notifier<SpeechOutputState> {
 
   void _cleanTemp() {
     for (final file in _temp) {
-      try {
-        if (file.existsSync()) file.deleteSync();
-      } catch (_) {
-        // Silinemeyen geçici ses dosyasını sistem toplar.
-      }
+      unawaited(() async {
+        try {
+          if (await file.exists()) await file.delete();
+        } catch (_) {
+          // Silinemeyen geçici ses dosyasını sistem toplar.
+        }
+      }());
     }
     _temp.clear();
   }

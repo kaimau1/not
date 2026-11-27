@@ -5,32 +5,105 @@
 // KİŞİSEL APK / WEB: [EntitlementGate.active] false → Firestore'a HİÇ
 // gidilmez (ek okuma yok), herkes her şeye erişir.
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/sync/cloudflare_sync_transport.dart';
+import '../../../core/sync/sync_transport.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../settings/settings_providers.dart'
+    show sharedPreferencesProvider;
 import '../domain/entitlement.dart';
+
+const _cfEntitlementCachePrefix = 'cf_entitlement_v1_';
+
+Entitlement? _readCachedEntitlement(SharedPreferences? prefs, String uid) {
+  final raw = prefs?.getString('$_cfEntitlementCachePrefix$uid');
+  if (raw == null || raw.isEmpty) return null;
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) return null;
+    final map = Map<String, dynamic>.from(decoded);
+    DateTime? parseMs(String key) {
+      final v = map[key];
+      return v is num ? DateTime.fromMillisecondsSinceEpoch(v.toInt()) : null;
+    }
+
+    return Entitlement.fromMap({
+      'tier': map['tier'],
+      'lifetimeOwned': map['lifetimeOwned'],
+      'decisionCredits': map['decisionCredits'],
+      'decisionTokenCredits': map['decisionTokenCredits'],
+      'proUntil': parseMs('proUntilMs'),
+      'trialEndsAt': parseMs('trialEndsAtMs'),
+    });
+  } catch (_) {
+    return null;
+  }
+}
+
+void _writeCachedEntitlement(
+  SharedPreferences? prefs,
+  String uid,
+  Entitlement e,
+) {
+  if (prefs == null) return;
+  unawaited(
+    prefs.setString(
+      '$_cfEntitlementCachePrefix$uid',
+      jsonEncode({
+        'tier': e.tier.name,
+        'lifetimeOwned': e.lifetimeOwned,
+        'decisionCredits': e.decisionCredits,
+        'decisionTokenCredits': e.decisionTokenCredits,
+        'proUntilMs': e.proUntil?.millisecondsSinceEpoch,
+        'trialEndsAtMs': e.trialEndsAt?.millisecondsSinceEpoch,
+      }),
+    ),
+  );
+}
+
+@visibleForTesting
+Stream<Entitlement> cloudflareEntitlementStream(
+  SyncTransport transport,
+  String uid,
+  SharedPreferences? prefs,
+) async* {
+  final cached = _readCachedEntitlement(prefs, uid);
+  if (cached != null) yield cached;
+  try {
+    final remote = await transport.fetchEntitlement();
+    _writeCachedEntitlement(prefs, uid, remote.entitlement);
+    yield remote.entitlement;
+  } catch (_) {
+    if (cached == null) yield Entitlement.none;
+  }
+}
 
 /// Oturumdaki kullanıcının hak belgesi. Play derlemesinde belge yoksa ya da
 /// okunamazsa (çevrimdışı ilk açılış, izin hatası) ücretsiz sayılır — hak
 /// vermemek, yanlışlıkla Pro vermekten güvenli (okuyanlar `.value ?? none`).
 /// Cloudflare Worker (`CLOUDFLARE_API_BASE`) etkinse hak `GET /v1/entitlement`
-/// uç noktasından okunur; değilse mevcut Firestore yolu sürer.
+/// uç noktasından okunur ve çevrimdışı açılışlar için UID bazlı önbelleğe
+/// alınır; değilse mevcut Firestore yolu sürer.
 final entitlementProvider = StreamProvider<Entitlement>((ref) {
   if (!EntitlementGate.active) return Stream.value(Entitlement.none);
   final uid = ref.watch(currentUidProvider);
   if (uid == null) return Stream.value(Entitlement.none);
   final transport = ref.watch(cloudflareSyncTransportProvider);
   if (transport != null) {
-    return Stream.fromFuture(
-      transport
-          .fetchEntitlement()
-          .then((r) => r.entitlement)
-          .catchError((Object _) => Entitlement.none),
-    );
+    SharedPreferences? prefs;
+    try {
+      prefs = ref.watch(sharedPreferencesProvider);
+    } catch (_) {
+      prefs = null;
+    }
+    return cloudflareEntitlementStream(transport, uid, prefs);
   }
   return FirebaseFirestore.instance
       .collection(AppConstants.entitlementsCollection)

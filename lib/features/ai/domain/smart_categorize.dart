@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/utils/search_fold.dart';
 import '../../notes/domain/note.dart';
 
 /// Tek bir not için önerilen başlık/etiket paketi (yerel + Decisions).
@@ -21,22 +22,7 @@ class QuietOrganizeSuggestion {
 }
 
 /// Türkçe harf/aksan duyarsız katlama (`İ/I/ı/Ş/ş/Ğ/ğ/Ü/ü/Ö/ö/Ç/ç` -> ASCII).
-String foldTurkish(String input) {
-  final out = StringBuffer();
-  for (final rune in input.runes) {
-    final mapped = switch (rune) {
-      0x0130 || 0x0131 || 0x0049 => 0x0069, // İ, ı, I -> i
-      0x015E || 0x015F => 0x0073, // Ş, ş -> s
-      0x011E || 0x011F => 0x0067, // Ğ, ğ -> g
-      0x00DC || 0x00FC => 0x0075, // Ü, ü -> u
-      0x00D6 || 0x00F6 => 0x006F, // Ö, ö -> o
-      0x00C7 || 0x00E7 => 0x0063, // Ç, ç -> c
-      _ => rune,
-    };
-    out.writeCharCode(mapped);
-  }
-  return out.toString().toLowerCase();
-}
+String foldTurkish(String input) => foldForSearch(input);
 
 enum SmartNoteCategory {
   finance,

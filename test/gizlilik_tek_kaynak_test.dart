@@ -39,17 +39,20 @@ void main() {
 
   test('politika Google izinlerini ve web silme sayfasını anlatır', () {
     // Eskiden yalnız web/gizlilik.html anlatıyordu (E5 tutarsızlığı).
-    for (final scope in [
+    for (final token in [
       'drive.appdata',
       'drive.file',
       'calendar.readonly',
       'calendar.events',
       'tasks',
-      'gmail.readonly',
+      'AES-256-GCM',
+      'Open Food Facts',
+      'Google Play Billing',
     ]) {
-      expect(md, contains(scope));
+      expect(md, contains(token));
     }
     expect(md, contains('Sınırlı Kullanım'));
     expect(md, contains('hesap-silme.html'));
+    expect(md.contains('gmail.readonly'), isFalse);
   });
 }

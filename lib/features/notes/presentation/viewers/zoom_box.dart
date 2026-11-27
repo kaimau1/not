@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'zoom_math.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// İçeriği **çift dokunuşla** yakınlaştıran, sonra iki parmakla serbestçe
 /// yakınlaştırıp uzaklaştırılabilen kutu.
@@ -81,7 +82,7 @@ class _ZoomBoxState extends State<ZoomBox> with SingleTickerProviderStateMixin {
 
   void _animateTo(Matrix4 target) {
     _tween = Matrix4Tween(begin: _controller.value, end: target).animate(
-      CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic),
+      CurvedAnimation(parent: _anim, curve: AppMotion.emphasized),
     );
     _anim.forward(from: 0);
   }

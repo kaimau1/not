@@ -9,6 +9,7 @@ import '../../ai/data/speech_service.dart';
 import '../../../core/widgets/countdown_bar.dart';
 import '../../settings/settings_providers.dart';
 import 'voice_assistant.dart';
+import '../../../app/theme/app_tokens.dart';
 
 // Sağ alttaki 68 px'lik "Asistan" düğmesi (VoiceAssistantButton) kaldırıldı:
 // ana ekranda yerini 48×48 mikrofon aldı ve o düğme ortak dinleme levhasını
@@ -33,7 +34,7 @@ class _AssistantMuteButton extends ConsumerWidget {
     return IconButton(
       tooltip: on ? l10n.assistantMute : l10n.assistantUnmute,
       visualDensity: VisualDensity.compact,
-      icon: Icon(on ? Icons.volume_up_outlined : Icons.volume_off, size: 20),
+      icon: Icon(on ? Icons.volume_up_outlined : Icons.volume_off, size: AppIconSize.m),
       onPressed: () {
         ref.read(assistantVoiceProvider.notifier).toggle();
         if (on) ref.read(speechProvider.notifier).stop();
@@ -78,7 +79,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.check_circle_outline, size: 20, color: scheme.primary),
+              Icon(Icons.check_circle_outline, size: AppIconSize.m, color: scheme.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -100,7 +101,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
               IconButton(
                 tooltip: l10n.close,
                 visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.close, size: 20),
+                icon: const Icon(Icons.close, size: AppIconSize.m),
                 onPressed: notifier.dismiss,
               ),
             ],
@@ -119,7 +120,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
                   notifier.dismiss();
                   unawaited(context.pushNote(noteRoutePath(id)));
                 },
-                icon: const Icon(Icons.note_add_outlined, size: 18),
+                icon: const Icon(Icons.note_add_outlined, size: AppIconSize.s),
                 label: Text(l10n.assistantMakeNote),
               ),
             ),
@@ -128,7 +129,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
       VoiceAssistantPhase.error => Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.error_outline, size: 20, color: scheme.error),
+          Icon(Icons.error_outline, size: AppIconSize.m, color: scheme.error),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -139,7 +140,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
           IconButton(
             tooltip: l10n.close,
             visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.close, size: 20),
+            icon: const Icon(Icons.close, size: AppIconSize.m),
             onPressed: notifier.dismiss,
           ),
         ],

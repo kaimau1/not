@@ -153,12 +153,12 @@ class PdfSelectionBar extends StatelessWidget {
       ? IconButton(
           tooltip: label,
           onPressed: onPressed,
-          icon: Icon(icon, color: Colors.white, size: 20),
+          icon: Icon(icon, color: Colors.white, size: AppIconSize.m),
           visualDensity: VisualDensity.compact,
         )
       : TextButton.icon(
           onPressed: onPressed,
-          icon: Icon(icon, color: Colors.white, size: 18),
+          icon: Icon(icon, color: Colors.white, size: AppIconSize.s),
           label: Text(label, style: const TextStyle(color: Colors.white)),
         );
 }

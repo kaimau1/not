@@ -66,7 +66,7 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     await writeLocalPref(prefs, 'font_scale', 1);
     expect(prefs.getDouble('font_scale'), 1.0);
-    await writeLocalPref(prefs, 'briefing_minutes', 480);
-    expect(prefs.getInt('briefing_minutes'), 480);
+    await writeLocalPref(prefs, 'dark_schedule_start', 480);
+    expect(prefs.getInt('dark_schedule_start'), 480);
   });
 }

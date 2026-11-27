@@ -101,6 +101,52 @@ Future<void> _applySecure(bool on) async {
   }
 }
 
+/// Uygulama kilidi (`hideInRecents`) ile açık kilitli notların (`FLAG_SECURE`)
+/// ekran görüntüsü/son uygulamalar korumasını ref-sayacıyla eşgüdümler.
+abstract final class AppLockSecureScope {
+  static bool _appLockSecure = false;
+  static int _noteHolds = 0;
+  static bool _active = false;
+
+  @visibleForTesting
+  static Future<void> Function(bool)? debugApply;
+
+  @visibleForTesting
+  static bool get isActive => _active;
+
+  static void setAppLockSecure(bool on) {
+    if (_appLockSecure == on) return;
+    _appLockSecure = on;
+    _sync();
+  }
+
+  static void acquireNote() {
+    _noteHolds++;
+    _sync();
+  }
+
+  static void releaseNote() {
+    if (_noteHolds > 0) _noteHolds--;
+    _sync();
+  }
+
+  static void _sync() {
+    final next = _appLockSecure || _noteHolds > 0;
+    if (next == _active) return;
+    _active = next;
+    final fn = debugApply ?? _applySecure;
+    unawaited(fn(next));
+  }
+
+  @visibleForTesting
+  static void reset() {
+    _appLockSecure = false;
+    _noteHolds = 0;
+    _active = false;
+    debugApply = null;
+  }
+}
+
 /// Kilit cihazda gerçekten bir şey koruyor mu: web'de cihaz kilidi yok
 /// (`deviceAuthenticate` hep açar) → web'de yalnız şifre/desenle.
 bool appLockAvailable({required bool isWeb, required bool usesSecret}) =>
@@ -127,7 +173,9 @@ class _AppLockGateState extends ConsumerState<AppLockGate> {
     super.initState();
     final settings = ref.read(appLockSettingsProvider);
     _locked = settings.enabled && _available();
-    unawaited(_applySecure(settings.enabled && settings.hideInRecents));
+    AppLockSecureScope.setAppLockSecure(
+      settings.enabled && settings.hideInRecents,
+    );
     _lifecycle = AppLifecycleListener(onStateChange: _onState);
   }
 
@@ -180,13 +228,14 @@ class _AppLockGateState extends ConsumerState<AppLockGate> {
   @override
   void dispose() {
     _lifecycle?.dispose();
+    AppLockSecureScope.setAppLockSecure(false);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen(appLockSettingsProvider, (prev, next) {
-      unawaited(_applySecure(next.enabled && next.hideInRecents));
+      AppLockSecureScope.setAppLockSecure(next.enabled && next.hideInRecents);
       // Ayar kapatılırsa açık kapak da kalkar.
       if (!next.enabled && _locked) setState(() => _locked = false);
     });

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/app_sheet.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// **NOT İÇİ CANLI ARAMA ÇUBUĞU** (kullanıcı isteği 2026-09-26: "not içi
 /// aramada sayfada canlı aranmalı, ayrı bir alanda değil; altta çıksın
@@ -72,13 +73,13 @@ class NoteFindBar extends StatelessWidget {
                   decoration: InputDecoration(
                     isDense: true,
                     hintText: l10n.noteSearchHint,
-                    prefixIcon: const Icon(Icons.search, size: 20),
+                    prefixIcon: const Icon(Icons.search, size: AppIconSize.m),
                     filled: true,
                     fillColor: none
                         ? scheme.errorContainer.withValues(alpha: 0.5)
                         : scheme.surfaceContainerHighest,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                       borderSide: BorderSide.none,
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -89,7 +90,7 @@ class NoteFindBar extends StatelessWidget {
                               count == 0 ? '0' : '${index + 1}/$count',
                               style: TextStyle(
                                 fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppWeight.strong,
                                 color: none ? scheme.error : scheme.onSurfaceVariant,
                               ),
                             ),
@@ -181,7 +182,7 @@ Future<int?> showFindHitsSheet(
                     TextButton.icon(
                       onPressed: () =>
                           Navigator.pop(sheetContext, kFindDeepSearch),
-                      icon: const Icon(Icons.manage_search, size: 18),
+                      icon: const Icon(Icons.manage_search, size: AppIconSize.s),
                       label: Text(l10n.findDeepSearch),
                     ),
                 ],
@@ -209,7 +210,7 @@ Future<int?> showFindHitsSheet(
                         final hit = hits[i];
                         return ListTile(
                           selected: i == current,
-                          leading: Icon(hit.icon, size: 20),
+                          leading: Icon(hit.icon, size: AppIconSize.m),
                           title: Text(
                             hit.where,
                             style: theme.textTheme.labelMedium,

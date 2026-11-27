@@ -42,20 +42,33 @@ class _ImageCaption extends StatefulWidget {
   State<_ImageCaption> createState() => _ImageCaptionState();
 }
 
-class _ImageCaptionState extends State<_ImageCaption> {
+class _ImageCaptionState extends State<_ImageCaption>
+    with SingleTickerProviderStateMixin {
   TextEditingController? _controller;
   FocusNode? _focus;
   bool _committed = false;
+  late final AnimationController _fadeCtrl = AnimationController(
+    vsync: this,
+    duration: AppMotion.short,
+  );
+  late final CurvedAnimation _fade = CurvedAnimation(
+    parent: _fadeCtrl,
+    curve: AppMotion.emphasized,
+  );
 
   @override
   void initState() {
     super.initState();
+    _fadeCtrl.forward();
     if (widget.editing) _startEditing();
   }
 
   @override
   void didUpdateWidget(_ImageCaption old) {
     super.didUpdateWidget(old);
+    if (widget.editing != old.editing) {
+      _fadeCtrl.forward(from: 0);
+    }
     if (widget.editing && !old.editing) _startEditing();
     if (!widget.editing && old.editing) _stopEditing();
   }
@@ -101,6 +114,8 @@ class _ImageCaptionState extends State<_ImageCaption> {
 
   @override
   void dispose() {
+    _fade.dispose();
+    _fadeCtrl.dispose();
     _stopEditing(now: true);
     super.dispose();
   }
@@ -148,16 +163,9 @@ class _ImageCaptionState extends State<_ImageCaption> {
         ),
       );
     }
-    // Düzenlemeye geçiş yumuşak: alan (ya da kaydedilen yazı) yerinde
-    // belirir. Anahtar kipe bağlı — her geçişte solma baştan oynar.
-    return TweenAnimationBuilder<double>(
-      key: ValueKey(widget.editing),
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeOutCubic,
-      builder: (context, t, child) => Opacity(opacity: t, child: child),
-      child: child,
-    );
+    // Düzenlemeye geçiş yumuşak: alan (ya da kaydedilen yazı) yerinde belirir
+    // (`FadeTransition`: kare başına saveLayer açmaz).
+    return FadeTransition(opacity: _fade, child: child);
   }
 }
 

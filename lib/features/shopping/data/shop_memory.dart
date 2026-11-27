@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/presentation/auth_providers.dart';
 import '../../notes/domain/quick_entry.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/shop_aisles.dart';
@@ -411,13 +412,21 @@ final shopMemoryProvider = NotifierProvider<ShopMemoryNotifier, ShopMemory>(
 class ShopMemoryNotifier extends Notifier<ShopMemory> {
   static const _key = 'shop_memory_v1';
 
+  String _storageKeyFor(String? uid) =>
+      (uid == null || uid.isEmpty) ? _key : '${_key}_$uid';
+
   @override
-  ShopMemory build() =>
-      ShopMemory.decode(ref.watch(sharedPreferencesProvider).getString(_key));
+  ShopMemory build() {
+    final uid = ref.watch(currentUidProvider);
+    return ShopMemory.decode(
+      ref.watch(sharedPreferencesProvider).getString(_storageKeyFor(uid)),
+    );
+  }
 
   void _save(ShopMemory next) {
     state = next;
-    ref.read(sharedPreferencesProvider).setString(_key, next.encode());
+    final key = _storageKeyFor(ref.read(currentUidProvider));
+    ref.read(sharedPreferencesProvider).setString(key, next.encode());
   }
 
   void recordPrice(

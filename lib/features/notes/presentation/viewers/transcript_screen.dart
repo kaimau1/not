@@ -20,6 +20,7 @@ import '../../data/note_pdf.dart';
 import '../../domain/attachment.dart';
 import '../../domain/transcript.dart';
 import '../../../../core/friendly_error.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Transkripti kaydeder (yoksa oluşturur, varsa içeriğini değiştirir) ve
 /// nottaki güncel eki döndürür; kaydedilemiyorsa (salt okunur not) null.
@@ -500,7 +501,7 @@ class _TranscriptScreenState extends ConsumerState<TranscriptScreen> {
                 children: [
                   Icon(
                     _sourceIcon(widget.source),
-                    size: 16,
+                    size: AppIconSize.xs,
                     color: scheme.primary,
                   ),
                   const SizedBox(width: 6),

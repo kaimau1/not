@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/rich_text.dart';
+import '../../../core/utils/search_fold.dart';
 import '../data/quick_entry_memory.dart';
 import '../data/user_templates.dart';
 import '../domain/note.dart';
@@ -771,8 +772,7 @@ String _userSummary(UserTemplate t, AppLocalizations l10n) {
   return l10n.templatesMineInfo;
 }
 
-String _fold(String s) =>
-    s.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase();
+String _fold(String s) => foldForSearch(s);
 
 /// **ŞABLON OLARAK KAYDET** — kart ve editör menülerinin ortak gövdesi.
 /// Ad sorulur (varsayılan: notun başlığı), şablon "Şablonlarım"a girer.

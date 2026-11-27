@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/image_cache_budget.dart';
 import '../../data/pdf/pdf_page_render.dart';
 
 /// Tek bir PDF sayfasının görüntüsü — pdfrx'in `PdfPageView`'ının YERİNE.
@@ -96,7 +97,7 @@ class _PdfPageImageState extends State<PdfPageImage> {
           pageHeight: page.height,
           boxWidth: bucket(constraints.maxWidth * dpr),
           boxHeight: bucket(constraints.maxHeight * dpr),
-          maximumDpi: widget.maximumDpi,
+          maximumDpi: math.min(widget.maximumDpi, ImageCacheBudget.maxPdfDpi),
         );
         if (target != null) {
           final key = pdfRenderKey(

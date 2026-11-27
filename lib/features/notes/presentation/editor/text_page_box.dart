@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../../../../core/haptics.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// Sayfaya gömülen METİN kutusunun ekte saklanan oranı (genişlik × yükseklik;
 /// birimsiz). Görseldeki `width`/`height` alanlarıyla aynı yerde durur ki
@@ -155,7 +156,7 @@ class _TextPageBoxState extends State<TextPageBox> {
     pager.animateToPage(
       target,
       duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
+      curve: AppMotion.emphasized,
     );
   }
 
@@ -238,7 +239,7 @@ class _TextPageBoxState extends State<TextPageBox> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontSize: 8.5,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppWeight.strong,
                 color: _kBarInk,
               ),
             ),

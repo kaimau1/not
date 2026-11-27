@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import 'auto_spell.dart';
+import '../../../../app/theme/app_tokens.dart';
 
 /// **ÖĞRENİLEN YAZIMLAR** (kullanıcı isteği 2026-11-08: "öğrenilenler
 /// ayarlarda bir menüde görülebilmeli, kişi oraya elle `yanlış → doğru`
@@ -112,7 +113,7 @@ class _SpellLearnedScreenState extends State<SpellLearnedScreen> {
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 6),
-                  child: Icon(Icons.arrow_forward, size: 18),
+                  child: Icon(Icons.arrow_forward, size: AppIconSize.s),
                 ),
                 Expanded(
                   child: TextField(
@@ -160,7 +161,7 @@ class _SpellLearnedScreenState extends State<SpellLearnedScreen> {
                     const TextSpan(text: '  →  '),
                     TextSpan(
                       text: f.to,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(fontWeight: AppWeight.strong),
                     ),
                   ],
                 ),

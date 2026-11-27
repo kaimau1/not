@@ -19,6 +19,12 @@ abstract final class DecisionFeature {
 
   /// D1 Alışveriş ürünü reyon eşleme (kalıcı önbellekli).
   static const shopAisle = 'shopAisle';
+
+  /// D3 Tek cümle niyet yönlendirici (alışveriş / görev / etkinlik / not).
+  static const captureRoute = 'captureRoute';
+
+  /// D5 Akıllı liste türü sınıflama (kalıcı önbellekli).
+  static const listClassify = 'listClassify';
 }
 
 enum DecisionMode {
@@ -54,6 +60,8 @@ abstract final class AiDecisionsFlag {
     DecisionFeature.noteTriage,
     DecisionFeature.titleOk,
     DecisionFeature.shopAisle,
+    DecisionFeature.captureRoute,
+    DecisionFeature.listClassify,
   };
 
   static Set<String> _live = defaultLive;

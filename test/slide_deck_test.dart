@@ -63,4 +63,9 @@ void main() {
     final bytes = Uint8List.fromList(ZipEncoder().encode(Archive()));
     expect(await SlideDeck.fromBytes(bytes), isEmpty);
   });
+
+  test('corrupt bytes yield empty slide list instead of crashing', () async {
+    final junk = Uint8List.fromList([0x50, 0x4B, 0x03, 0x04, 0xFF, 0x00, 0x11]);
+    expect(await SlideDeck.fromBytes(junk), isEmpty);
+  });
 }

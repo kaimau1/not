@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:notlar/app/app_commands.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
@@ -80,4 +82,68 @@ void main() {
       expect(r.keys, isNotEmpty);
     }
   });
+
+  testWidgets(
+    'AppShortcuts Ctrl+/, Ctrl+Shift+/ ve Ctrl+NumpadDivide ile yardım açar',
+    (tester) async {
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => AppShortcuts(
+              onToggleList: () {},
+              child: const Scaffold(
+                body: Center(
+                  child: Focus(autofocus: true, child: Text('host')),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp.router(
+            routerConfig: router,
+            locale: const Locale('tr'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Future<void> triggerAndClose(
+        List<LogicalKeyboardKey> mods,
+        LogicalKeyboardKey key,
+      ) async {
+        for (final m in mods) {
+          await tester.sendKeyDownEvent(m);
+        }
+        await tester.sendKeyEvent(key);
+        for (final m in mods.reversed) {
+          await tester.sendKeyUpEvent(m);
+        }
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsOneWidget);
+        await tester.tap(find.byType(TextButton));
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsNothing);
+      }
+
+      await triggerAndClose(const [
+        LogicalKeyboardKey.controlLeft,
+      ], LogicalKeyboardKey.slash);
+      await triggerAndClose(const [
+        LogicalKeyboardKey.controlLeft,
+        LogicalKeyboardKey.shiftLeft,
+      ], LogicalKeyboardKey.slash);
+      await triggerAndClose(const [
+        LogicalKeyboardKey.controlLeft,
+      ], LogicalKeyboardKey.numpadDivide);
+    },
+  );
 }

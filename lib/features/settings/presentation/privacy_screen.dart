@@ -11,13 +11,15 @@ import '../../../core/widgets/delayed_spinner.dart';
 /// kademesi, `bullet` = `-` maddesi) ya da paragraf (`level` 0).
 typedef PrivacyBlock = ({String kind, int level, String text});
 
+final _privacyItemRe = RegExp(r'^(\s*)(-|\d+\.)\s+');
+final _privacyHeadingRe = RegExp(r'^(#{1,2})\s+(.*)$');
+
 /// `PRIVACY_POLICY.md`'yi okunur bloklara böler (KW-7): sert satır sonları
 /// birleşir (dar ekranda yarım satır kalmaz), `#`/`##` başlık, `1.` ve `-`
 /// maddeler ayrı blok. Yalnız bu dosyanın kullandığı Markdown — web sayfaları
 /// aynı kaynaktan `tool/gizlilik_sayfalari.dart` ile üretilir.
 List<PrivacyBlock> privacyBlocks(String md) {
   final blocks = <PrivacyBlock>[];
-  final item = RegExp(r'^(\s*)(-|\d+\.)\s+');
   String? kind;
   var level = 0;
   final buf = <String>[];
@@ -35,13 +37,13 @@ List<PrivacyBlock> privacyBlocks(String md) {
       flush();
       continue;
     }
-    final h = RegExp(r'^(#{1,2})\s+(.*)$').firstMatch(line);
+    final h = _privacyHeadingRe.firstMatch(line);
     if (h != null) {
       flush();
       blocks.add((kind: 'heading', level: h[1]!.length, text: h[2]!.trim()));
       continue;
     }
-    final m = item.firstMatch(line);
+    final m = _privacyItemRe.firstMatch(line);
     if (m != null) {
       flush();
       kind = m[2] == '-' ? 'bullet' : 'item';
@@ -62,19 +64,29 @@ List<PrivacyBlock> privacyBlocks(String md) {
 /// `gizlilik.html` ve `hesap-silme.html` ondan üretilir —
 /// `tool/gizlilik_sayfalari.dart`, PL4). Play'in Veri Güvenliği formu ve
 /// KVKK bilgilendirmesi bu metne dayanır.
-class PrivacyScreen extends StatelessWidget {
+class PrivacyScreen extends StatefulWidget {
   const PrivacyScreen({super.key});
+
+  @override
+  State<PrivacyScreen> createState() => _PrivacyScreenState();
+}
+
+class _PrivacyScreenState extends State<PrivacyScreen> {
+  // Dosya ve ayrıştırılmış bloklar state ömrü boyunca bir kez yüklenir (K-58/K-48).
+  late final Future<List<PrivacyBlock>> _blocksFuture = rootBundle
+      .loadString('PRIVACY_POLICY.md')
+      .then(privacyBlocks);
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
       appBar: HomeInBar(appBar: AppBar(title: Text(l10n.privacyPolicyTitle))),
-      body: FutureBuilder<String>(
-        future: rootBundle.loadString('PRIVACY_POLICY.md'),
+      body: FutureBuilder<List<PrivacyBlock>>(
+        future: _blocksFuture,
         builder: (context, snapshot) {
-          final text = snapshot.data;
-          if (text == null) {
+          final blocks = snapshot.data;
+          if (blocks == null) {
             return const Center(child: DelayedSpinner());
           }
           final style = AppText.of(Theme.of(context));
@@ -82,44 +94,45 @@ class PrivacyScreen extends StatelessWidget {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 640),
-                child: ListView(
+                child: ListView.builder(
                   padding: EdgeInsets.fromLTRB(
                     20,
                     12,
                     20,
                     24 + MediaQuery.paddingOf(context).bottom,
                   ),
-                  children: [
-                    for (final b in privacyBlocks(text))
-                      switch (b.kind) {
-                        'heading' => Padding(
-                          padding: EdgeInsets.only(
-                            top: b.level == 1 ? 0 : AppSpace.xl,
-                            bottom: AppSpace.s,
-                          ),
-                          child: Text(
-                            b.text,
-                            style: b.level == 1
-                                ? style.screenTitle
-                                : style.sheetTitle,
-                          ),
+                  itemCount: blocks.length,
+                  itemBuilder: (context, index) {
+                    final b = blocks[index];
+                    return switch (b.kind) {
+                      'heading' => Padding(
+                        padding: EdgeInsets.only(
+                          top: b.level == 1 ? 0 : AppSpace.xl,
+                          bottom: AppSpace.s,
                         ),
-                        'bullet' || 'item' => Padding(
-                          padding: EdgeInsetsDirectional.only(
-                            start: AppSpace.l * (b.level - 1),
-                            bottom: AppSpace.s,
-                          ),
-                          child: Text(
-                            b.kind == 'bullet' ? '•  ${b.text}' : b.text,
-                            style: style.body,
-                          ),
+                        child: Text(
+                          b.text,
+                          style: b.level == 1
+                              ? style.screenTitle
+                              : style.sheetTitle,
                         ),
-                        _ => Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpace.m),
-                          child: Text(b.text, style: style.body),
+                      ),
+                      'bullet' || 'item' => Padding(
+                        padding: EdgeInsetsDirectional.only(
+                          start: AppSpace.l * (b.level - 1),
+                          bottom: AppSpace.s,
                         ),
-                      },
-                  ],
+                        child: Text(
+                          b.kind == 'bullet' ? '•  ${b.text}' : b.text,
+                          style: style.body,
+                        ),
+                      ),
+                      _ => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpace.m),
+                        child: Text(b.text, style: style.body),
+                      ),
+                    };
+                  },
                 ),
               ),
             ),

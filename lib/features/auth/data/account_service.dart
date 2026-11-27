@@ -4,6 +4,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/sync/cloudflare_sync_transport.dart';
+import '../../../core/sync/sync_transport.dart';
 import '../../notes/data/drive_store.dart';
 import '../../notes/data/local_notes_store.dart';
 import '../../notes/domain/ink_plan.dart';
@@ -16,6 +18,7 @@ final accountServiceProvider = Provider<AccountService>(
   (ref) => AccountService(
     ref.watch(authRepositoryProvider),
     drive: () => ref.read(driveStoreProvider),
+    syncTransport: () => ref.read(cloudflareSyncTransportProvider),
   ),
 );
 
@@ -25,12 +28,16 @@ final accountServiceProvider = Provider<AccountService>(
 /// notları + paylaşım aynaları + arama kaydı + Auth hesabını sırayla ve geri
 /// dönüşsüz siler.
 class AccountService {
-  AccountService(this._auth, {DriveStore? Function()? drive})
-    // ignore: prefer_initializing_formals
-    : _drive = drive;
+  AccountService(
+    this._auth, {
+    DriveStore? Function()? drive,
+    SyncTransport? Function()? syncTransport,
+  }) : _drive = drive, // ignore: prefer_initializing_formals
+       _syncTransport = syncTransport; // ignore: prefer_initializing_formals
 
   final AuthRepository _auth;
   final DriveStore? Function()? _drive;
+  final SyncTransport? Function()? _syncTransport;
 
   /// `users/{uid}` altında boşaltılan alt koleksiyonlar. TEK KAYNAK (F1.2):
   /// `account_service_test` kod tabanındaki her `collection(...)` adının ya
@@ -190,6 +197,7 @@ class AccountService {
     }
 
     await userDoc.delete();
+    await _syncTransport?.call()?.deleteAccount();
 
     // 3) Auth hesabı. Firebase güvenlik gereği taze oturum ister; oturum
     // eskiyse yeniden Google girişi yaptırılıp tekrar denenir.

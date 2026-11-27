@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/utils/note_e2ee.dart';
@@ -587,6 +589,8 @@ class Note {
   /// Hatırlatıcısı olan not boş SAYILMAZ: "sadece alarm" için metinsiz not
   /// bırakmak meşru bir kullanım — silinirse kurulu hatırlatıcı da kaybolur.
   bool get isEmpty =>
+      !locked &&
+      !extras.containsKey('e2ee') &&
       title.trim().isEmpty &&
       body.trim().isEmpty &&
       items.every((i) => i.text.trim().isEmpty) &&
@@ -876,7 +880,17 @@ class Note {
     List<StudyCard>? cards,
     AiSummary? aiSummary,
     bool? localOnly,
-  }) => Note(
+    Map<String, dynamic>? extras,
+  }) {
+    final nextLocked = locked ?? this.locked;
+    final baseExtras = extras ?? this.extras;
+    final resolvedExtras = (!nextLocked && baseExtras.containsKey('e2ee'))
+        ? <String, dynamic>{
+            for (final e in baseExtras.entries)
+              if (e.key != 'e2ee') e.key: e.value,
+          }
+        : baseExtras;
+    return Note(
     id: id,
     type: type ?? this.type,
     title: title ?? this.title,
@@ -944,8 +958,38 @@ class Note {
     // Parametresi YOK: "kim yazdı" kaydın bir olgusu, çağıranın seçimi
     // değil — kopyada da olduğu gibi taşınır (bkz. [updatedBy]).
     updatedBy: updatedBy,
-    extras: extras,
+    extras: resolvedExtras,
   );
+  }
+
+  /// Oturumda belleğe yüklenmiş E2EE anahtarıyla (varsa) notun şifreli
+  /// zarfını çözer ve `e2ee` alanını temizler. Zaten çözülmüş veya anahtar
+  /// yoksa `this` döner.
+  Note decryptWithKey(Uint8List? key) {
+    final rawEnvelope = extras['e2ee'] as String?;
+    if (rawEnvelope == null || !NoteE2ee.isEncrypted(rawEnvelope) || key == null) {
+      return this;
+    }
+    final decrypted = NoteE2ee.decryptNotePayload(
+      envelope: rawEnvelope,
+      key: key,
+      noteId: id,
+    );
+    if (decrypted == null) return this;
+    final cleanedExtras = <String, dynamic>{
+      for (final e in extras.entries)
+        if (e.key != 'e2ee') e.key: e.value,
+    };
+    return copyWith(
+      body: decrypted.body,
+      items: [for (final raw in decrypted.items) NoteItem.fromMap(raw)],
+      textPages: decrypted.textPages.isNotEmpty
+          ? [for (final raw in decrypted.textPages) NoteTextPage.fromMap(raw)]
+          : null,
+      pageNotes: decrypted.pageNotes.isNotEmpty ? decrypted.pageNotes : null,
+      extras: cleanedExtras,
+    );
+  }
 
   factory Note.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) =>
       Note.fromMap(
@@ -972,6 +1016,7 @@ class Note {
     // zaman ŞİMDİ kabul edilir — sunucu damgası geldiğinde gerçek değerle
     // değişir. (Yalnız bekleyen yazımda: eski kayıtların tarihi uydurulmaz.)
     final localNow = pending ? DateTime.now() : null;
+    DateTime? parseTs(Object? v) => v is Timestamp ? v.toDate() : null;
     // GERİYE DÖNÜK ONARIM: eski sürüm `type` alanını KOŞULSUZ yazıyor ve
     // tanımadığı `pdf`/`slides` kimliğini `text`e düşürüp öyle geri
     // kaydediyor. O andan sonra not yeni sürümde de düz metin notu olarak
@@ -989,31 +1034,52 @@ class Note {
     ];
     final rawPageNotes =
         (map['pageNotes'] as Map<dynamic, dynamic>? ?? const {});
-    final type = repairNoteType(
-      storedType,
-      attachmentKinds: [
-        for (final raw in rawAttachments) raw['kind']?.toString(),
-      ],
-      hasPageNotes: rawPageNotes.isNotEmpty,
-      classicDocument: map['classicDocument'] == true,
-    );
+    final isLocked = map['locked'] as bool? ?? false;
+    final rawBody = map['body'] as String? ?? '';
+    final rawItemsList = map['items'] as List<dynamic>? ?? const [];
+    final rawTextPagesList = map['textPages'] as List<dynamic>? ?? const [];
+    final hasPlainContent =
+        rawBody.isNotEmpty ||
+        rawItemsList.isNotEmpty ||
+        rawTextPagesList.isNotEmpty ||
+        rawPageNotes.isNotEmpty;
     final rawEnvelope = map['e2ee'] as String?;
     final e2eeKey = NoteE2eeSession.key;
+    final shouldDecrypt = isLocked || !hasPlainContent;
     final decrypted =
-        (rawEnvelope != null && NoteE2ee.isEncrypted(rawEnvelope) && e2eeKey != null)
+        (shouldDecrypt &&
+                rawEnvelope != null &&
+                NoteE2ee.isEncrypted(rawEnvelope) &&
+                e2eeKey != null)
             ? NoteE2ee.decryptNotePayload(
                 envelope: rawEnvelope,
                 key: e2eeKey,
                 noteId: id,
               )
             : null;
-    final resolvedBody = decrypted?.body ?? (map['body'] as String? ?? '');
+    final type = repairNoteType(
+      storedType,
+      attachmentKinds: [
+        for (final raw in rawAttachments) raw['kind']?.toString(),
+      ],
+      hasPageNotes:
+          rawPageNotes.isNotEmpty || (decrypted?.pageNotes.isNotEmpty ?? false),
+      classicDocument: map['classicDocument'] == true,
+    );
+    final resolvedBody = decrypted?.body ?? rawBody;
     final resolvedItems = decrypted != null
         ? [for (final raw in decrypted.items) NoteItem.fromMap(raw)]
         : [
-            for (final raw in (map['items'] as List<dynamic>? ?? const []))
+            for (final raw in rawItemsList)
               NoteItem.fromMap(Map<String, dynamic>.from(raw as Map)),
           ];
+    final resolvedPageNotes =
+        decrypted != null && decrypted.pageNotes.isNotEmpty
+        ? decrypted.pageNotes
+        : {
+            for (final e in rawPageNotes.entries)
+              e.key.toString(): e.value?.toString() ?? '',
+          };
     return Note(
       id: id,
       localOnly: localOnly,
@@ -1021,11 +1087,7 @@ class Note {
       title: map['title'] as String? ?? '',
       body: resolvedBody,
       items: resolvedItems,
-      pageNotes: {
-        for (final e
-            in (map['pageNotes'] as Map<dynamic, dynamic>? ?? const {}).entries)
-          e.key.toString(): e.value?.toString() ?? '',
-      },
+      pageNotes: resolvedPageNotes,
       pageInk: [
         for (final raw in (rawPageInk?['ink'] as List<dynamic>? ?? const []))
           InkStroke.parse(raw),
@@ -1100,19 +1162,23 @@ class Note {
         for (final raw in (map['tagLinks'] as List<dynamic>? ?? const []))
           NoteTagLink.fromMap(Map<String, dynamic>.from(raw as Map)),
       ],
-      textPages: [
-        for (final raw in (map['textPages'] as List<dynamic>? ?? const []))
-          NoteTextPage.fromMap(Map<String, dynamic>.from(raw as Map)),
-      ],
+      textPages: decrypted != null && decrypted.textPages.isNotEmpty
+          ? [
+              for (final raw in decrypted.textPages) NoteTextPage.fromMap(raw),
+            ]
+          : [
+              for (final raw in rawTextPagesList)
+                NoteTextPage.fromMap(Map<String, dynamic>.from(raw as Map)),
+            ],
       activePage: map['activePage'] as String? ?? '',
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? localNow,
-      updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? localNow,
+      createdAt: parseTs(map['createdAt']) ?? localNow,
+      updatedAt: parseTs(map['updatedAt']) ?? localNow,
       updatedBy: map['updatedBy'] as String? ?? '',
-      deletedAt: (map['deletedAt'] as Timestamp?)?.toDate(),
-      archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
-      expiresAt: (map['expiresAt'] as Timestamp?)?.toDate(),
-      reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
+      deletedAt: parseTs(map['deletedAt']),
+      archivedAt: parseTs(map['archivedAt']),
+      expiresAt: parseTs(map['expiresAt']),
+      reminderAt: parseTs(map['reminderAt']),
       reminderRepeat: map['reminderRepeat'] as String? ?? '',
       reminderLevel: map['reminderLevel'] as String? ?? '',
       cards: [
@@ -1127,7 +1193,8 @@ class Note {
       extras: {
         for (final e in map.entries)
           if (!knownKeys.contains(e.key) &&
-              !(e.key == 'e2ee' && decrypted != null))
+              !(e.key == 'e2ee' &&
+                  ((!isLocked && hasPlainContent) || decrypted != null)))
             e.key: e.value,
       },
     );
@@ -1151,11 +1218,22 @@ class Note {
   Map<String, dynamic> toMap() {
     final e2eeKey = locked ? NoteE2eeSession.key : null;
     final encryptBody =
-        e2eeKey != null && (body.isNotEmpty || items.isNotEmpty);
+        e2eeKey != null &&
+        (body.isNotEmpty ||
+            items.isNotEmpty ||
+            textPages.isNotEmpty ||
+            pageNotes.isNotEmpty);
     final rawItems = [for (final i in items) i.toMap()];
+    final rawTextPages = [for (final p in textPages) p.toMap()];
+    final cleanExtras = (!locked && extras.containsKey('e2ee'))
+        ? <String, dynamic>{
+            for (final e in extras.entries)
+              if (e.key != 'e2ee') e.key: e.value,
+          }
+        : extras;
     return {
     // ÖNCE tanınmayan alanlar: bilinen anahtarlar her zaman üstüne yazar.
-    ...extras,
+    ...cleanExtras,
     'schema': currentSchema,
     'type': type.id,
     'title': title,
@@ -1167,11 +1245,13 @@ class Note {
         items: rawItems,
         key: e2eeKey,
         noteId: id,
+        textPages: rawTextPages,
+        pageNotes: pageNotes,
       ),
     // Yalnız doluysa yazılır: PDF olmayan notların şemasında bu alan hiç
     // oluşmaz. Dolduğunda anahtarlar tek tek birleşir — merge derin
     // birleştirdiği için başka cihazın yazdığı BAŞKA sayfanın notu ezilmez.
-    if (pageNotes.isNotEmpty) 'pageNotes': pageNotes,
+    if (pageNotes.isNotEmpty && !encryptBody) 'pageNotes': pageNotes,
     'attachments': attachmentsField(),
     'tags': tags,
     'folderId': folderId,
@@ -1241,7 +1321,7 @@ class Note {
     'tagLinks': [for (final l in tagLinks) l.toMap()],
     // HER ZAMAN yazılır (merge yazımda eksik alan "değişmedi" sayılır —
     // son sayfa silinince liste boşalmalı).
-    'textPages': [for (final p in textPages) p.toMap()],
+    'textPages': encryptBody ? const <Map<String, dynamic>>[] : rawTextPages,
     'activePage': activePage,
     'orderIndex': orderIndex,
     'createdAt': createdAt != null

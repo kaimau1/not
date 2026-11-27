@@ -200,36 +200,89 @@ def ime_shown():
     return "mInputShown=true" in sh("dumpsys input_method | grep mInputShown")
 
 
-def kb_button(xml):
-    """Fiziksel klavye algılanan cihazda (tablet) sanal klavyeyi açan ⌨ düğmesi (editör üst çubuğu);
-    telefonda yok → None (alana dokunmak yeter)."""
-    n = nodes(xml, "^Sanal klavyeyi aç")
+def _in_editor(xml):
+    """Editör içi mi (ana ekranda yalnız 1 EditText = arama kutusu var)."""
+    return len(edit_boxes(xml)) >= 2 or bool(nodes(xml, r"^(Notta ara|Search in note)$"))
+
+
+def kb_show_button(xml):
+    """Fiziksel klavye algılanan cihazda (tablet) sanal klavyeyi açan ⌨ düğmesi."""
+    n = nodes(xml, r"^(Sanal klavyeyi aç|Show on-screen keyboard)")
     return (n[0][1], n[0][2]) if n else None
 
 
+def kb_hide_button(xml):
+    """Sanal klavye açık/istenir iken görünen kapatma ⌨ düğmesi."""
+    n = nodes(xml, r"^(Sanal klavyeyi kapat|Hide on-screen keyboard)")
+    return (n[0][1], n[0][2]) if n else None
+
+
+def kb_button(xml):
+    """Fiziksel klavye algılanan cihazda (tablet) sanal klavye ⌨ düğmesi (aç ya da kapat);
+    telefonda yok → None (alana dokunmak yeter)."""
+    return kb_show_button(xml) or kb_hide_button(xml)
+
+
+def _wait_ime(checks=5):
+    for _ in range(checks):
+        time.sleep(0.5)
+        if ime_shown():
+            time.sleep(0.8)
+            return True
+    return False
+
+
 def ensure_ime(kb_xy, field=None):
-    """Klavyeyi AÇIK getir (ölçüm penceresi dışında). ⌨ düğmesi AÇ/KAPA anahtarı (uygulama içi durum
-    önceki not/koşudan kalmış olabilir; açıkken dokunmak KAPATIR) ve bir kez açıldıktan sonra alana
-    dokunmak da klavyeyi açar → ⌨ (koordinat her denemede dökümden TAZE) ile alana dokunmayı
-    dönüşümlü dener (en çok 6). Telefonda (kb_xy yok) çağrı etkisiz."""
+    """Klavyeyi AÇIK getir (ölçüm penceresi dışında). Bayat `kb_xy` hiçbir zaman
+    tıklanmaz; düğme adı (`aç` / `kapat`) taze dökümden okunur. Editör kapalıysa
+    hemen açık hata verir. Telefonda (`kb_xy` yok) çağrı etkisiz."""
     if not kb_xy:
         return
-    for attempt in range(6):
+    for attempt in range(4):
         if ime_shown():
             return
-        if attempt % 2 == 0:
-            cur = kb_button(dump()) or kb_xy
-            tap(*cur)
+        xml = dump(allow_empty=True)
+        in_ed = _in_editor(xml)
+        show_xy = kb_show_button(xml)
+        hide_xy = kb_hide_button(xml)
+        print(f"  ensure_ime[{attempt}]: ime={ime_shown()} in_ed={in_ed} show={show_xy} hide={hide_xy}", flush=True)
+        if not in_ed:
+            top = [(n[0][:24], n[1], n[2]) for n in nodes(xml) if n[0]][:8]
+            print(f"  ensure_ime düğümler: {top}", flush=True)
+            shot("ime_acilmadi", 0.3)
+            raise RuntimeError(
+                "sanal klavye açılmadı: editör kapalı / ana ekrana dönülmüş "
+                "(ekran: PERF_OUT/ime_acilmadi.png)")
+        if show_xy:
+            tap(*show_xy)
+            if _wait_ime(5):
+                return
+            if field:
+                tap(*field)
+                if _wait_ime(4):
+                    return
+        elif hide_xy:
+            if field:
+                tap(*field)
+                if _wait_ime(4):
+                    return
+            tap(*hide_xy); time.sleep(0.6)
+            show_xy = kb_show_button(dump(allow_empty=True))
+            if show_xy:
+                tap(*show_xy); time.sleep(0.6)
+                if _wait_ime(4):
+                    return
+            if field:
+                tap(*field)
+                if _wait_ime(4):
+                    return
         elif field:
             tap(*field)
-        for _ in range(8):   # klavye 4 sn'ye dek geç gelebilir
-            time.sleep(0.5)
-            if ime_shown():
-                time.sleep(0.8)
+            if _wait_ime(4):
                 return
     if not ime_shown():
         shot("ime_acilmadi", 0.3)
-        raise RuntimeError("sanal klavye açılmadı (⌨ + alan dokunuşu ×6; ekran: PERF_OUT/ime_acilmadi.png)")
+        raise RuntimeError("sanal klavye açılmadı (⌨ + alan dokunuşu ×4; ekran: PERF_OUT/ime_acilmadi.png)")
 
 
 def back_note():
@@ -247,7 +300,7 @@ def back_note():
 # tablosundan gelir; arayüz değişince yeniden ölçülür. Her tablo noktası ARDINDAN dolu semantiğe sahip bir
 # ekranla (levha/editör) doğrulanır; tutmazsa evre/koşu açık hata verir. Varsayım: "Notların
 # yedeklenmiyor" bandı küçültülmüş ("Sonra", kalıcı) ve ilk kart sabit not.
-GEO_1600 = {"search": (360, 132), "clear": (1063, 132), "plus": (84, 628), "menu": (793, 748),
+GEO_1600 = {"search": (360, 132), "clear": (1063, 132), "plus": (84, 600), "menu": (814, 658),
             "hit": (533, 750)}
 
 
@@ -257,11 +310,11 @@ def home_locate(W, H):
     xml = dump(allow_empty=True)
     boxes = edit_boxes(xml)
     if boxes:
-        menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > 600]
+        menus = [n for n in nodes(xml, "^Not menüsü$") if n[2] > int(H * 0.22)]
         plus = nodes(xml, "^Yeni not . tip seç") or nodes(xml, "^Yeni not")
         m, title = pick_card(xml, menus)
         b = boxes[0]
-        tumu = [n for n in nodes(xml, r"(^|\| )T[üu]m[üu]$") if n[2] < 900]
+        tumu = [n for n in nodes(xml, r"(^|\| )T[üu]m[üu]$") if n[2] < int(H * 0.40)]
         return {"search": ((b[0] + b[2]) // 2, (b[1] + b[3]) // 2), "clear": None, "plus": plus,
                 "card_menu": m, "title": title, "geo": False, "hit": None,
                 "tumu": (tumu[0][1], tumu[0][2]) if tumu else None}
@@ -273,13 +326,19 @@ def home_locate(W, H):
         return (int(GEO_1600[key_][0] * k), int(GEO_1600[key_][1] * k))
 
     pl, mn = pt("plus"), pt("menu")
-    # doğrulama: ⋮ levhası dolu semantikle açılmalı
+    # doğrulama: ⋮ levhası dolu semantikle açılmalı (editör değil)
     tap(*mn); time.sleep(1.5)
-    n = [x for x in nodes(dump()) if x[0]]
+    xml_m = dump()
+    n = [x for x in nodes(xml_m) if x[0]]
+    is_editor = bool(edit_boxes(xml_m))
     key("KEYCODE_BACK"); time.sleep(1.0)
-    if len(n) < 4:
-        raise RuntimeError("tablet geometrisi tutmadı: kart ⋮ levhası açılmadı "
-                           "(yedek bandı büyük mü? 'Sonra'ya dokun; ilk kart sabit not mu?)")
+    if len(n) < 4 or is_editor:
+        raise RuntimeError(
+            "tablet geometrisi tutmadı: kart ⋮ levhası yerine editör açıldı "
+            "(menü düğmesi koordinatı kaymış olabilir)"
+            if is_editor else
+            "tablet geometrisi tutmadı: kart ⋮ levhası açılmadı "
+            "(yedek bandı büyük mü? 'Sonra'ya dokun; ilk kart sabit not mu?)")
     return {"search": pt("search"), "clear": pt("clear"), "plus": [("+", pl[0], pl[1], (*pl, *pl))],
             "card_menu": ("geo", mn[0], mn[1], (*mn, *mn)), "title": "tablet ilk kart", "geo": True,
             "hit": pt("hit"), "tumu": None}
@@ -451,17 +510,23 @@ def run_once(label):
     body = boxes[1]
     fx, fy = (body[0] + body[2]) // 2, min(body[1] + 60, (body[1] + body[3]) // 2)
     kb_xy = kb_button(dump())
-    open_kb = lambda: tap(fx, fy)   # ⌨ bir kez açıldıktan sonra alana dokunmak yeter (⌨ AÇ/KAPA anahtarı)
     ready()
     tap(fx, fy); time.sleep(2.0)
+    print(f"  after tap(fx,fy): in_ed={_in_editor(dump(allow_empty=True))}", flush=True)
     trim_typed(fx, fy)
-    ensure_ime(kb_xy, (fx, fy))
+    xml_after = dump(allow_empty=True)
+    kb_closed = kb_button(xml_after) or kb_xy
+    print(f"  not_ac/trim: boxes={len(boxes)} in_ed={_in_editor(xml_after)} kb={kb_xy} kb_closed={kb_closed} field=({fx},{fy})", flush=True)
+    ensure_ime(kb_closed or kb_xy, (fx, fy))
+    open_kb = (lambda: tap(*kb_closed)) if kb_closed else (lambda: tap(fx, fy))
     s.window([("kb", (lambda: key("KEYCODE_BACK")) if i % 2 == 0 else open_kb,
                1.4 if i % 2 == 0 else 1.6) for i in range(6)])
     key("KEYCODE_MOVE_END")
     s.window([("yaz", lambda: text(" deneme yazisi"), 1.4) for _ in range(4)])
     s.window([("not_kapa", lambda: key("KEYCODE_BACK"), 1.3),
               ("not_kapa", lambda: key("KEYCODE_BACK"), 1.8)])
+    if _in_editor(dump(allow_empty=True)):
+        key("KEYCODE_BACK")
     time.sleep(0.8)
     ready()
 
@@ -487,12 +552,16 @@ def run_once(label):
               for _ in range(3)])
     bx, by = (body[0] + body[2]) // 2, min(body[1] + 60, (body[1] + body[3]) // 2)
     kb2 = kb_button(xml)
-    open_kb2 = lambda: tap(bx, by)
     tap(bx, by); time.sleep(2.0)
-    ensure_ime(kb2, (bx, by))
+    xml2_after = dump(allow_empty=True)
+    kb2_closed = kb_button(xml2_after) or kb2
+    ensure_ime(kb2_closed or kb2, (bx, by))
+    open_kb2 = (lambda: tap(*kb2_closed)) if kb2_closed else (lambda: tap(bx, by))
     s.window([("sabit_kb", (lambda: key("KEYCODE_BACK")) if i % 2 == 0 else open_kb2,
                1.4 if i % 2 == 0 else 1.6) for i in range(4)])
     back_note(); time.sleep(1.0)
+    if _in_editor(dump(allow_empty=True)):
+        key("KEYCODE_BACK"); time.sleep(0.8)
     ready()
     clear_search(h)
     list_top(W, H)  # sonraki koşu aynı yerden başlasın
@@ -543,15 +612,23 @@ def trim_typed(fx, fy):
     gelir ve sarılan maddede MOVE_END yalnız ilk satır sonuna gider (ek ortaya
     girer): maddenin SON satırına basılır, 'deneme'den sonrası silinir; rapor
     edilen metin kısa (kesik) gelirse tur tekrarlanır. Madde boş kalırsa 'Kitap'."""
+    W_cur, H_cur = screen_size()
     deleted = False
     for _ in range(6):
+        xml = ui_dump()
+        if not _in_editor(xml):
+            break
         best = None
-        for m in re.finditer(r'<node [^>]*>', ui_dump()):
+        for m in re.finditer(r'<node [^>]*>', xml):
             nd = m.group(0)
             b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', nd)
             if not b:
                 continue
             x0, y0, x1, y1 = map(int, b.groups())
+            if y0 < 200:
+                continue
+            if (x1 - x0) > W_cur * 0.92 or (y1 - y0) > H_cur * 0.55:
+                continue
             if not (x0 <= fx <= x1 and y0 <= fy <= y1):
                 continue
             for attr in ("text", "content-desc"):
@@ -562,18 +639,21 @@ def trim_typed(fx, fy):
         if not junk:
             break
         t, (x0, y0, x1, y1) = best
+        print(f"  trim_typed: best={(t[:40], (x0, y0, x1, y1))}", flush=True)
         keep = t[:junk.start()].rstrip()
         n = len(t) - len(keep)
-        tap(x1 - 20, y1 - 20); time.sleep(0.6)
+        tap((x0 + x1) // 2, max(y0 + 10, y1 - 20)); time.sleep(0.6)
         key("KEYCODE_MOVE_END")
         for i in range(0, n, 50):
             sh("input keyevent " + " ".join(["67"] * min(50, n - i)))
         deleted = True
         time.sleep(1.0)
-    if deleted and (not best or not best[0].strip()):
+        if not _in_editor(dump(allow_empty=True)):
+            break
+    if deleted and (not best or not best[0].strip()) and _in_editor(dump(allow_empty=True)):
         tap(fx, fy); time.sleep(0.6)
         key("KEYCODE_MOVE_END"); text("Kitap"); time.sleep(0.6)
-    if deleted:
+    if deleted and _in_editor(dump(allow_empty=True)):
         tap(fx, fy)
         time.sleep(3.5)  # kEditorSaveDelay 2 sn: kayıt kb penceresine taşmasın
 
