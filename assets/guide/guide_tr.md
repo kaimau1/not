@@ -139,6 +139,7 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 - **Dikte** (not ekranında düz mikrofon; ana ekran mikrofonuna dokunmak): konuştukça yazı imlecin olduğu yere düşer, Türkçe noktalama ve yazım kuralları otomatik toparlanır — kota harcamaz.
 - **Ses kaydı** (not ekranında dalgalı düğme ya da + Ekle → Ses kaydı): kayıt ek şeridinde oynatılır. Telefondaki MP3/M4A/WAV kaydı **+ Ekle → Dosya ekle** ile gelir.
 - **Sesli dinle** (not ⋮ menüsünün üst satırı): notu cihaz sesiyle okur; ses, hız ve dikte kullanım şekli Ayarlar → **Sesli dinle ve dikte**.
+- **Diktede sesli komutlar** (Ayarlar → Sesli dinle ve dikte → Akıllı komutlar): “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “yeni madde”, “nokta koy”, “virgül koy”, “soru işareti”, “başlık X olsun”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.
 
 ## Metin çıkarma (OCR) {#transcript}
 - Görselin ek döşemesindeki simgeden (ya da tam ekran görselin/PDF'in **Metni çıkar** seçeneğinden) yazı cihaz içinde çevrimdışı tanınır ve nota eklenebilir.
@@ -203,7 +204,7 @@ En üstte iki kart: **Kullanım kılavuzu** ve **Kişiselleştir** (hangi düğm
 - **Görünüm:** örnek metin, tema (sistem, Adaçayı, Porselen, Kil, koyu), yazı tipi ve boyutu, **Dil** (Türkçe, İngilizce ya da sistem dili), uzun maddeler, madde jestleri, **Kartta görünenler** (canlı kart örneğiyle: sayaç, etiket, tarih, görsel, ekler, klasör, kâğıt…), koyu tema zamanlaması.
 - **Eklentiler ve hızlı not:** yapay zekâ, ses, video, tarama, çizim, şablon… eklentilerini aç/kapa; ana ekrandaki hızlı not satırı; **İpuçlarını yeniden göster**.
 - **Notlar ve klasörler:** yana kaydırma, klasör sırası, sıralama, ızgara/liste ve sütun sayısı (ana ekranda iki parmakla da değişir), paylaşılan notlar ana ekranda (üstte ya da notlarının altında), içerikten not açılışı (Balonlu/Klasik), eklerin içinde arama.
-- **Sesli dinle ve dikte:** cihaz sesi, Türkçe ses ya da yapay zekâ sesi; okuma hızı ve tonu; dikte mikrofonunun kullanım şekli.
+- **Sesli dinle ve dikte:** cihaz sesi ve dile göre ses seçimi (Türkçe, İngilizce, Arapça, Endonezce, Malayca); okuma hızı ve tonu; dikte mikrofonunun kullanım şekli.
 - **İzinler:** mikrofon, kamera, bildirim, konum — durumu ve ayar ekranları.
 - **Senkron:** Google Drive bağlantısı ve Drive kullanımı, otomatik yükleme sınırı, bu cihazdaki önbellek, yedekleme.
 - **Güvenlik:** not kilidi ve **uygulama kilidi** (açılışta ve arka plandan dönüşte sorar; isteğe bağlı "son uygulamalarda gizle").

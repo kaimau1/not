@@ -76,6 +76,12 @@ class SpellMemory {
 
   int get learnedCount => fixes.length;
 
+  /// Öneri önbelleklerinin anahtarı: hafıza ya da büyük sözlük değişince
+  /// değişir.
+  String get revisionKey =>
+      '${identityHashCode(this)}:${TrLexicon.revision}:${words.length}:'
+      '${keep.length}:${fixes.length}';
+
   /// Kelimenin toplam sıklığı (yazılan + notlardaki + yerleşik).
   int frequency(String w) {
     final l = trLower(w);
@@ -140,6 +146,13 @@ class SpellMemory {
   /// Sözlük yüklenmemişse [known] ile aynı.
   bool lexicalKnown(String w) {
     if (known(w)) return true;
+    // Şapkalı yazım ("zekâyı", "hâlâ", "kâğıt") sözlükte şapkasız da
+    // durabilir: ikisi de doğrudur (2026-11-27 düzyazı ölçümü).
+    if (_circumflex.hasMatch(w)) {
+      return lexicalKnown(
+        w.replaceAllMapped(_circumflex, (m) => _plain[m[0]]!),
+      );
+    }
     final lex = TrLexicon.instance;
     if (lex == null) return false;
     final l = trLower(w);
@@ -150,6 +163,81 @@ class SpellMemory {
     if (_lexCache.length > 4000) _lexCache.clear();
     return _lexCache[l] = lex.has(l) || (l.length >= 3 && _lexMorph.parses(l));
   }
+
+  /// **SÖZLÜKTEN ÖNERİ** (kullanıcı bulgusu 2026-11-27: "yazım denetimi tam
+  /// çalışmıyor, sözlüğü yeterli değil"). KÖK NEDEN: öneri adayları yalnız
+  /// sık kelime kovasından geliyordu; büyük sözlük (27 bin kök + ek çözücü)
+  /// yalnız "geçerli mi" kapısıydı. Ölçüm setinde "lütfn", "önmli",
+  /// "geliyr", "bugn", "hseap", "mseaj", "akşma" gibi bariz yanlışlarda HİÇ
+  /// öneri yoktu. Burada yazılanın TEK düzenleme komşuları (harf eksik,
+  /// fazla, değişik, yan yana yer değiştirmiş) üretilir ve büyük sözlükle
+  /// doğrulanır: çekimli biçimler ("geliyor", "kitabı") de bulunur.
+  ///
+  /// Önbelleğe YAZMAZ (yüzlerce aday [lexicalKnown] önbelleğini silerdi).
+  /// Sözlük yüklü değilse boş.
+  /// Dönen: (aday, düzenleme maliyeti) — maliyet düzenlemenin türünden
+  /// ([editCost]): yan yana harf yer değiştirmesi ve eksik ünlü en ucuz.
+  List<(String, double)> lexiconEdits(
+    String w, {
+    double Function(String from, String to)? subCost,
+  }) {
+    final lex = TrLexicon.instance;
+    if (lex == null) return const [];
+    final l = trLower(w);
+    final n = l.length;
+    if (n < 3 || n > 16 || !_trWord.hasMatch(l)) return const [];
+    _syncLexicon();
+    final best = <String, double>{};
+    final checked = <String, bool>{};
+    void tryAdd(String c, double cost) {
+      if (c.length < 2 || c == l) return;
+      final prev = best[c];
+      if (prev != null) {
+        if (cost < prev) best[c] = cost;
+        return;
+      }
+      final ok = checked[c] ??=
+          _lexCache[c] ??
+          (lex.has(c) || (c.length >= 3 && _lexMorph.parses(c)));
+      if (ok) best[c] = cost;
+    }
+
+    for (var i = 0; i + 1 < n; i++) {
+      if (l[i] == l[i + 1]) continue;
+      // Yan yana yer değiştirme: en sık parmak hatası ("hseap" → "hesap").
+      tryAdd(l.substring(0, i) + l[i + 1] + l[i] + l.substring(i + 2), 0.5);
+    }
+    for (var i = 0; i <= n; i++) {
+      for (final ch in _trAlphabet) {
+        // Eksik harf; eksik ÜNLÜ en sık ("önmli" → "önemli").
+        tryAdd(
+          l.substring(0, i) + ch + l.substring(i),
+          _trVowels.contains(ch) ? 0.55 : 0.8,
+        );
+      }
+    }
+    for (var i = 0; i < n; i++) {
+      // Fazla harf; komşusunun tekrarıysa ucuz ("tamm" → "tam").
+      final dup =
+          (i > 0 && l[i - 1] == l[i]) || (i + 1 < n && l[i + 1] == l[i]);
+      tryAdd(l.substring(0, i) + l.substring(i + 1), dup ? 0.45 : 0.75);
+      for (final ch in _trAlphabet) {
+        if (ch == l[i]) continue;
+        final c = subCost?.call(l[i], ch) ?? 1.0;
+        tryAdd(l.substring(0, i) + ch + l.substring(i + 1), c);
+      }
+    }
+    return [for (final e in best.entries) (e.key, e.value)];
+  }
+
+  static const _trVowels = {'a', 'e', 'ı', 'i', 'o', 'ö', 'u', 'ü'};
+  static const _trAlphabet = [
+    'a', 'b', 'c', 'ç', 'd', 'e', 'f', 'g', 'ğ', 'h', 'ı', 'i', 'j', 'k', //
+    'l', 'm', 'n', 'o', 'ö', 'p', 'r', 's', 'ş', 't', 'u', 'ü', 'v', 'y', 'z',
+  ];
+  static final _trWord = RegExp(r'^[a-zçğıöşüâîû]+$');
+  static final _circumflex = RegExp('[âîû]');
+  static const _plain = {'â': 'a', 'î': 'i', 'û': 'u'};
 
   late final _lexMorph = TrMorph(
     isNoun: (r) =>
@@ -421,11 +509,7 @@ class SpellMemory {
 
   /// Üç yönlü eşitleme birleştirmesi ([local], [remote], son ortak [snapshot]):
   /// silmeler de (bir tarafta kaldırılan kelime/düzeltme) öbür cihaza yayılır.
-  static ({
-    Map<String, Object?> merged,
-    bool localChanged,
-    bool remoteChanged,
-  })
+  static ({Map<String, Object?> merged, bool localChanged, bool remoteChanged})
   mergeSync({
     required Map<String, Object?> local,
     required Map<String, Object?> remote,

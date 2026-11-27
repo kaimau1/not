@@ -10,12 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/app_links.dart';
 import 'package:notlar/core/app_update.dart';
 import 'package:notlar/core/play_build.dart';
-import 'package:notlar/features/ai/data/antalia/antalia_engine.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/presentation/editor/attachment_actions.dart';
-import 'package:notlar/features/settings/presentation/settings_screen.dart';
-import 'package:notlar/features/settings/settings_providers.dart'
-    show TtsEngine;
 import 'package:notlar/firebase_options.dart';
 
 void main() {
@@ -24,7 +20,6 @@ void main() {
   test('bayrak kapalıyken (kişisel APK) bütün özellikler açık', () {
     expect(PlayBuild.selfUpdate, on);
     expect(PlayBuild.placeReminders, on);
-    expect(PlayBuild.antaliaVoice, on);
     expect(PlayBuild.youtubeAutoPip, on);
     // PL3: rıza ekranı yalnız Play'de (kişisel APK'da sorulmaz).
     expect(PlayBuild.aiConsent, !on);
@@ -45,11 +40,10 @@ void main() {
     expect(actions.contains(AttachmentAction.videoToNote), isFalse);
   });
 
-  test('Android derlemesinde güncelleyici ve Antalia kapıya bağlı', () {
+  test('Android derlemesinde güncelleyici kapıya bağlı', () {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
     expect(AppUpdate.supported, on);
-    expect(AntaliaModelFiles.supported, on);
   });
 
   // Kapı bir dosyadan kaldırılırsa Play derlemesine o özellik sızar: her
@@ -59,11 +53,6 @@ void main() {
       'lib/core/app_update.dart': 'PlayBuild.selfUpdate',
       'lib/features/notes/data/place_reminders.dart':
           'PlayBuild.placeReminders',
-      'lib/features/ai/data/antalia/antalia_engine.dart':
-          'PlayBuild.antaliaVoice',
-      'lib/features/settings/presentation/settings_sections/settings_voice.dart':
-          'PlayBuild.antaliaVoice',
-      'lib/features/settings/settings_providers.dart': 'PlayBuild.antaliaVoice',
       'lib/features/notes/presentation/viewers/youtube_viewer.dart':
           'PlayBuild.youtubeAutoPip',
     };
@@ -104,43 +93,11 @@ void main() {
     }
   });
 
-  // PL1 ONNX: Play'de eklenti pubspec_overrides.yaml'daki kuklayla değişir
-  // (`.so` dışlaması açılışta çökerdi). Kukla eklenti OLMAMALI (flutter.plugin
-  // yok) ve Antalia'nın kullandığı yüzü taşımalı; kişisel derleme override'sız.
-  test('Play ONNX kuklası eklenti değil, Antalia yüzü tam', () {
-    final stub = File('tool/play_stub/flutter_onnxruntime/pubspec.yaml')
-        .readAsStringSync();
-    expect(stub, contains('name: flutter_onnxruntime'));
-    expect(stub, isNot(contains('plugin:')));
-    final api = File(
-      'tool/play_stub/flutter_onnxruntime/lib/flutter_onnxruntime.dart',
-    ).readAsStringSync();
-    for (final s in [
-      'class OnnxRuntime',
-      'createSession(',
-      'class OrtSessionOptions',
-      'intraOpNumThreads',
-      'class OrtSession',
-      'run(Map<String, OrtValue>',
-      'class OrtValue',
-      'fromList(',
-      'asFlattenedList()',
-      'dispose()',
-      'get shape',
-    ]) {
-      expect(api, contains(s), reason: s);
-    }
-    final script = File('tool/play_stub/play_hazirla.sh').readAsStringSync();
-    expect(script, contains('tool/play_stub/flutter_onnxruntime'));
-    expect(File('.gitignore').readAsStringSync(), contains('pubspec_overrides.yaml'));
-    expect(
-      File('.github/workflows/build.yml').readAsStringSync(),
-      contains('play_hazirla.sh'),
-    );
-    // Kişisel/genel derlemede override dosyası yok (depoya girmez).
-    if (!PlayBuild.enabled) {
-      expect(File('pubspec_overrides.yaml').existsSync(), isFalse);
-    }
+  // Antalia (ONNX) 2026-11-27'de kalktı: Play kuklası ve ses motoru
+  // seçicisi de gitti. Eklenti bir daha sızmasın.
+  test('ONNX eklentisi bağımlılıklarda yok', () {
+    expect(File('pubspec.yaml').readAsStringSync(), isNot(contains('onnx')));
+    expect(Directory('lib/features/ai/data/antalia').existsSync(), isFalse);
   });
 
   test('Play derlemesi kişisel Firebase projesine bağlanmaz (PL13)', () {
@@ -153,17 +110,5 @@ void main() {
     }
     expect(AppLinks.privacy, endsWith('/gizlilik.html'));
     expect(AppLinks.deleteAccount, endsWith('/hesap-silme.html'));
-  });
-
-  // AI-S2 eki: Play'de tek motor (cihaz sesi) kalınca seçici gizlenir.
-  test('ses motoru seçici yalnız birden çok motor varken', () {
-    final play = availableTtsEngines(local: false);
-    expect(play, [TtsEngine.device]);
-    expect(showTtsEnginePicker(play), isFalse);
-    expect(
-      showTtsEnginePicker(const [TtsEngine.device, TtsEngine.antalia]),
-      isTrue,
-    );
-    expect(showTtsEnginePicker(availableTtsEngines()), on);
   });
 }

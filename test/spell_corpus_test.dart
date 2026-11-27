@@ -215,6 +215,59 @@ void main() {
     });
     tearDownAll(() => TrLexicon.install(null));
 
+    // 2026-11-27 (kullanıcı: "sözlüğü yeterli değil"): bariz yanlışlarda
+    // öneri YOKTU; büyük sözlüğün tek düzenleme komşuları artık öneri.
+    test('sözlükten öneri: bariz yanlışın ilk önerisi doğru', () {
+      final m = SpellMemory();
+      const cases = {
+        'lütfn': 'lütfen', 'önmli': 'önemli', 'geliyr': 'geliyor',
+        'bugn': 'bugün', 'yarn': 'yarın', 'kitp': 'kitap', 'hseap': 'hesap',
+        'dsoya': 'dosya', 'blege': 'belge', 'porje': 'proje',
+        'mseaj': 'mesaj', 'yemke': 'yemek', 'akşma': 'akşam',
+        'sabha': 'sabah', 'güzle': 'güzel', 'tamma': 'tamam',
+        'fatra': 'fatura', 'belg': 'belge',
+      };
+      final miss = <String>[];
+      for (final e in cases.entries) {
+        final s = SpellEngine.lexiconSuggestions(e.key, m);
+        if (s.isEmpty || s.first != e.value) miss.add('${e.key}→$s');
+      }
+      expect(miss, isEmpty);
+    });
+
+    // Ek çözücü açıkları (düzyazıda doğru kelimeler "bilinmiyordu").
+    test('ettirgen -t, edilgende ünlü düşmesi, şapka, alıntı kelime', () {
+      final m = SpellMemory();
+      for (final w in [
+        'çoğalt', 'kısaltmaları', 'daraltmaz', 'küçültebilirsin',
+        'çevrilir', 'ayrıldı', 'zekâyı', 'hâlâ', 'avatar', 'webde',
+        'modu', 'öğe',
+      ]) {
+        expect(m.lexicalKnown(w), isTrue, reason: w);
+      }
+      // Aşırı kabul bekçisi: yazım hataları hâlâ bilinmez.
+      for (final w in ['çoğaltt', 'çevrlir', 'kısaltmları']) {
+        expect(m.lexicalKnown(w), isFalse, reason: w);
+      }
+    });
+
+    // Sözlük önerisi AÇIKKEN bile doğru düzyazıda çizgi az (mandal yalnız
+    // düşer; toplu denetim bu kipte çalışır).
+    test('toplu denetim kipinde düzyazıda yanlış çizgi', () {
+      final m = SpellMemory();
+      final text = File('test/spell_corpus/duzyazi.txt').readAsStringSync();
+      final bad = <String>[];
+      for (final para in text.split('\n')) {
+        for (final t in SpellEngine.tokens(para)) {
+          final s = SpellEngine.suggestions(t.word, m, lexiconEdits: true);
+          if (s != null && !s.hint) bad.add('${t.word}→${s.list.first}');
+        }
+      }
+      // ignore: avoid_print
+      print('TOPLU DENETİM DÜZYAZI: ${bad.length} $bad');
+      expect(bad.length, lessThanOrEqualTo(10));
+    });
+
     test('sözlük sıralı, tekrarsız, bayraklı', () {
       final lex = TrLexicon.instance!;
       expect(lex.length, greaterThan(25000));

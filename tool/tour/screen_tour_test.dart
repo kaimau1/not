@@ -13,6 +13,7 @@ import 'package:notlar/features/notes/data/upload_queue.dart'
 //   (çıktı: build/tour/*.png — TOUR_OUT ile değiştirilebilir)
 //   TOUR_ONLY=ana,n1  süz · TOUR_DARK=1  koyu · TOUR_WEB=1  dar web
 //   TOUR_COLUMNS=3  ana ekran sütun sayısı
+//   TOUR_LOCALE=ar  arayüz dili (ar sağdan sola)
 //   TOUR_SIZES=telefon-yatay,matepad-yatay  yalnız bu boyutlar
 //   TOUR_EMPTY=1  boş hâller (F79.5): ana, klasör, arşiv, çöp, Gelen, arama
 //   TOUR_OFFLINE=1  çevrimdışı hâller (F79.6): bekleyen yazım/ek, AI, hata
@@ -659,7 +660,8 @@ Future<void> _pumpApp(
           themeMode: brightness == Brightness.dark
               ? ThemeMode.dark
               : ThemeMode.light,
-          locale: const Locale('tr'),
+          // TOUR_LOCALE=ar|id|ms|en: arayüz dili (2026-11-27, beş dil).
+          locale: Locale(Platform.environment['TOUR_LOCALE'] ?? 'tr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) {
@@ -1025,6 +1027,13 @@ void main() {
     ('ana-menu', '/', () => find.byTooltip('Diğer').first),
     ('ana-kart-menu', '/', () => find.byIcon(Icons.more_vert).at(1)),
     ('ana-hizli', '/', () => find.byTooltip('Yeni not — tip seç')),
+    ('ana-suz', '/', () => find.byKey(const ValueKey('home-filter-button'))),
+    // 2026-11-27 menü denetimi: alt çubuk ⋯ ve hızlı satır ⋯.
+    ('n4-alt-diger', '/note/n4', () {
+      final f = find.byTooltip('Diğer işlemler');
+      return f.evaluate().isEmpty ? f : f.last;
+    }),
+    ('n4-satir-diger', '/note/n4', () => find.byKey(const ValueKey('quick-row-more'))),
     ('paylasilan', '/', () => find.byKey(const ValueKey('shared-chip-sf1'))),
     // Dar telefonda (360) Paylaş üst çubukta değil, ⋮ menüsünde: `.first`
     // boş bulucuda atar, sahne "dokunulacak öğe yok" diye geçilsin (F66.4).
@@ -1083,7 +1092,13 @@ void main() {
       .where((s) => s.isNotEmpty)
       .toSet();
   final kb = Platform.environment['TOUR_KEYBOARD'];
-  for (final size in _sizes) {
+  // TOUR_SIZES=telefon-tam: uzun sayfanın tamamı tek görüntüde (ayar
+  // denetimi, 2026-11-27); varsayılan turda yok.
+  for (final size in [
+    ..._sizes,
+    if (sizesWanted.contains('telefon-tam'))
+      const _Size('telefon-tam', 412, 3200),
+  ]) {
     if (sizesWanted.isNotEmpty && !sizesWanted.contains(size.name)) continue;
     for (final (id, location, tap) in scenes) {
       if (!wanted(id)) continue;

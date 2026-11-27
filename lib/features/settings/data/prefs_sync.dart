@@ -35,7 +35,6 @@ const kSyncedPrefKeys = <String>[
   'dark_schedule_enabled',
   'dark_schedule_start',
   'dark_schedule_end',
-  'tts_engine',
   'model_tts',
   'tts_gemini_voice',
   'auto_title',

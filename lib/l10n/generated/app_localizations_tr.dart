@@ -287,14 +287,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get expandListItemsInfo =>
-      'Uzun liste/işaret maddeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.';
+      'Uzun maddeler sarılıp tamamen görünür; kapalıyken tek satır.';
 
   @override
   String get quickCaptureRowSetting => 'Hızlı not satırı';
 
   @override
   String get quickCaptureRowInfo =>
-      'Ana ekranın üstünde tek satırlık \"Yeni not...\" alanı görünür. Kapalıyken yeni not \"+\" düğmesinden açılır.';
+      'Ana ekranın üstünde tek satırlık “Yeni not…” alanı.';
 
   @override
   String get emptyTrash => 'Çöpü boşalt';
@@ -713,11 +713,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceModeHold => 'Basılı tut';
 
   @override
-  String get voiceModeTap => 'Bas-başlat / bas-bitir';
+  String get voiceModeTap => 'Dokun-başlat';
 
   @override
   String get voiceModeInfo =>
-      'Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.';
+      'Basılı tut: bırakınca biter. Bas-başlat: ikinci dokunuşla biter.';
 
   @override
   String get voiceCaptureReady => 'Konuşma hazır';
@@ -787,21 +787,21 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get permExactAlarmInfo =>
-      'Kapalı: hatırlatıcılar dakikasında değil, birkaç dakika geç çalabilir. Notlar için izni aç';
+      'Kapalıyken hatırlatıcılar birkaç dakika geç çalabilir. Notlar için izni aç';
 
   @override
   String get permBattery => 'Pil optimizasyonu';
 
   @override
   String get permBatteryInfo =>
-      'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut';
+      'Hatırlatıcılar gecikmesin diye pil kısıtlamasından muaf tut';
 
   @override
   String get permAutoStart => 'Otomatik başlatma (Xiaomi)';
 
   @override
   String get permAutoStartInfo =>
-      'Telefon yeniden başlayınca hatırlatıcılar uygulamayı açmadan da kurulsun: Notlar için “Otomatik başlatma”yı aç';
+      'Telefon yeniden başlayınca hatırlatıcılar kurulsun: “Otomatik başlatma”yı aç';
 
   @override
   String get autoStartHint =>
@@ -922,7 +922,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get allCopied => 'Tüm not panoya kopyalandı';
 
   @override
-  String get speechRate => 'Okuma hizi';
+  String get speechRate => 'Okuma hızı';
 
   @override
   String get speechNoVoices => 'Bu cihazda yuklu ses bulunamadi';
@@ -1023,7 +1023,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get syncLimitInfo =>
-      'Bu boyuttan büyük ekler cihazda kalır, buluta yüklenmez. Not metni her zaman senkronlanır.';
+      'Bundan büyük ekler cihazda kalır; not metni her zaman eşitlenir.';
 
   @override
   String get syncLimitUnlimited => 'Sınırsız';
@@ -1654,14 +1654,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cardRichPreviewInfo =>
-      'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.';
+      'Kartlarda renk, vurgu, kalın ve altı çizili yazı görünür.';
 
   @override
   String get cardHideSensitive => 'Kartlarda hassas içeriği gizle';
 
   @override
   String get cardHideSensitiveInfo =>
-      'Parola geçen notların içeriği kartta görünmez; IBAN ve kart numaralarının yalnız son dört hanesi görünür. Not içinde her şey olduğu gibi kalır.';
+      'Parolalı notun içeriği ve kart/IBAN numaraları kartta gizlenir.';
 
   @override
   String get sensitiveHiddenOnCard => 'Hassas içerik — kartta gizlendi';
@@ -1755,7 +1755,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get appFontInfo =>
-      'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Beş temel yazı tipi uygulamayla birlikte gelir; bulut simgeli olanlar seçilince bir kez indirilir (internet yoksa varsayılan yazı tipi görünür).';
+      'Uygulamanın yazı tipi; bazıları seçilince internetten iner.';
 
   @override
   String get fontNeedsDownload => 'Seçilince bir kez indirilir';
@@ -1765,7 +1765,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get followSystemTextScaleInfo =>
-      'Telefonun yazı boyutu ve kalın metin ayarı uygulamaya da geçer; yukarıdaki boyut onunla çarpılır.';
+      'Telefonun yazı boyutu da uygulamaya geçer.';
 
   @override
   String get pdfSelectOcrRunning => 'Metin tanınıyor…';
@@ -1802,40 +1802,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get ttsEngineDeviceInfo =>
       'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.';
-
-  @override
-  String get ttsEngineLocal => 'Türkçe ses';
-
-  @override
-  String get ttsEngineLocalInfo =>
-      'Antalia: telefonda çalışan Türkçe ses modeli. Bedava, çevrimdışı ve kotasız; model bir kez indirilir (~50 MB). Yalnız Türkçe okur — başka dildeki metinler cihaz sesiyle okunur. Ses yapaydır, gerçek bir kişiye ait değildir.';
-
-  @override
-  String get ttsLocalUnsupported =>
-      'Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.';
-
-  @override
-  String get ttsLocalMissing =>
-      'Model indirilene kadar okuma cihaz sesiyle yapılır.';
-
-  @override
-  String get ttsLocalDownload => 'Modeli indir (~50 MB)';
-
-  @override
-  String ttsLocalDownloading(String done) {
-    return 'İndiriliyor… $done';
-  }
-
-  @override
-  String get ttsLocalReady => 'Model kurulu — internetsiz çalışır';
-
-  @override
-  String get ttsLocalDelete => 'Modeli sil';
-
-  @override
-  String ttsLocalFailed(String error) {
-    return 'İndirme başarısız: $error';
-  }
 
   @override
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
@@ -2607,7 +2573,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sharedNotificationsInfo =>
-      'Karşı taraf not eklediğinde/değiştirdiğinde ya da sohbete yazdığında telefona bildirim gelsin. Kapalıyken ana ekrandaki sayaç yine çalışır.';
+      'Ortak notta ekleme, değişiklik ya da mesaj olunca bildirim gelir.';
 
   @override
   String get copyAsText => 'Metni kopyala';
@@ -2617,7 +2583,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get searchAttachmentsInfo =>
-      'PDF\'lerin metnini ve görsellerdeki yazıyı (OCR) da tarar. Açıldığında cihazdaki ekler bir kez taranır; sonrası önbellekten gelir.';
+      'PDF metnini ve görsellerdeki yazıyı da arar.';
 
   @override
   String get selectAll => 'Tümünü seç';
@@ -3248,7 +3214,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deviceStorageInfo =>
-      'Önbelleği temizlemek notları ve ekleri silmez; görseller gerektikçe yeniden iner. Eski geçici dosyalar zaten her açılışta temizlenir.';
+      'Önbelleği temizlemek notları ve ekleri silmez.';
 
   @override
   String get deviceStorageClear => 'Önbelleği temizle';
@@ -3373,6 +3339,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsGroupDictation => 'Sesle yazma';
+
+  @override
+  String get settingsGroupGestures => 'Hareketler';
+
+  @override
+  String get settingsGroupSortView => 'Sıralama ve görünüm';
+
+  @override
+  String get settingsGroupShared => 'Paylaşılan notlar';
 
   @override
   String get settingsGroupAttachments => 'Ekler';
@@ -4086,7 +4061,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get customizeStartInfo =>
-      'Düzenleme modunu aç; ekranlardaki düğme ve alanlara dokunarak gizle ya da göster. Değişiklik anında uygulanır; bitince üstteki şeritten Bitti\'ye bas.';
+      'Düğme ve alanlara dokunarak gizle ya da göster; bitince Bitti\'ye bas.';
 
   @override
   String get customizeStart => 'Düzenleme modunu başlat';
@@ -4387,7 +4362,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get fileAppPickerInfo =>
-      'Dosya eklerken doğrudan Dosya Okuyucu açılır ve yalnız istenen türün dosyaları (en yenisi üstte) listelenir. Kapalıyken uygulama seçimi sorulur.';
+      'Dosya eklerken doğrudan Dosya Okuyucu açılır; kapalıyken uygulama sorulur.';
 
   @override
   String get viewModeAttached => 'Ek';
@@ -4443,14 +4418,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceAutoStopInfo =>
-      'Konuşman bitince birkaç saniyelik sessizlikten sonra dinleme kendiliğinden biter.';
+      'Konuşma bitince kısa bir sessizlikten sonra dinleme biter.';
 
   @override
   String get voiceSmartCommands => 'Akıllı komutlar';
 
   @override
   String get voiceSmartCommandsInfo =>
-      'Konuşurken şunları diyebilirsin: “son kelimeyi sil”, “son iki kelimeyi sil”, “son cümleyi sil”, “X yerine Y yaz”, “son kelime Y olacak”, “yeni satır”, “yeni madde”, “nokta koy”, “virgül koy”, “soru işareti”, “başlık X olsun”, “geri al”, “hepsini sil”, “dinlemeyi bitir”. Yazmaya kaldığın yerden, en sondan devam eder.';
+      '“son kelimeyi sil”, “X yerine Y yaz”, “yeni satır”, “geri al” gibi komutları anlar; tam liste Kullanım kılavuzunda.';
 
   @override
   String get voiceAutoStopSoon => 'Sessizlik — birazdan biter';
@@ -4516,7 +4491,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceOfflineInfo =>
-      'Telefonda dil paketi indirilmişse sesin internete gitmeden yazıya döker. Paket yoksa kendiliğinden çevrimiçi tanımaya döner.';
+      'Dil paketi varsa ses internete gitmeden yazıya dökülür.';
 
   @override
   String get discoverable => 'Adımla bulunabilirim';
@@ -4615,7 +4590,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get captureModeSettingInfo =>
-      'Fotoğraf, tarama, PDF, sunum ve görselden not alırken. İlk seçimin varsayılan olur.';
+      'Fotoğraf, tarama, PDF ve görselden not alırken; ilk seçimin kalır.';
 
   @override
   String get captureModeAsk => 'Her seferinde sor';
@@ -4999,14 +4974,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get cardShowProgressInfo =>
-      'Yapılacaklar listesinde kaç maddenin işaretlendiğini çubuk ve sayıyla gösterir.';
+      'İşaretli madde sayısı çubuk ve sayıyla görünür.';
 
   @override
   String get cardShowChecked => 'Tamamlanan maddeler';
 
   @override
   String get cardShowCheckedInfo =>
-      'Kapalıyken işaretli maddeler kartta tek satır özet olur: ✓ 3 tamamlandı.';
+      'Kapalıyken işaretliler tek satır özet olur: ✓ 3 tamamlandı.';
 
   @override
   String cardItemsDone(int count) {
@@ -5142,7 +5117,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkStylusTips =>
-      'Kalemin yan düğmesini basılı tutarak ya da silgi ucuyla dokunarak sil. Geri al / yinele üst satırda.';
+      'Kalemin yan düğmesini basılı tut ya da silgi ucuyla dokun: siler.';
 
   @override
   String get inkZoomReset => 'Tam görünüme dön';
@@ -5165,7 +5140,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeShowSharedInfo =>
-      'Seninle paylaşılan ortak notlar ana ekranda ayrı bir bölümde de görünsün';
+      'Ortak notlar ana ekranda ayrı bölümde de görünür.';
 
   @override
   String get homeShowSharedShort => 'Paylaşılan notları göster';
@@ -5175,7 +5150,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeSharedAtBottomInfo =>
-      'Kapalıyken paylaşılan notlar ana ekranın en üstünde, açıkken kendi notlarımın altında görünür';
+      'Açıkken paylaşılan notlar kendi notlarının altında durur.';
 
   @override
   String get homeSharedAtBottomShort => 'Paylaşılanlar altta';
@@ -5347,14 +5322,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkShapeSnapInfo =>
-      'Çizginin sonunda kalemi kısa süre kıpırdatmadan tut: düz çizgi, daire ya da dikdörtgen olur.';
+      'Çizgi sonunda kalemi bekletince düz çizgi, daire ya da kare olur.';
 
   @override
   String get inkQuickSwapTitle => 'Kalem ↔ silgi hızlı düğmesi';
 
   @override
   String get inkQuickSwapInfo =>
-      'Çizgi bitince yanında saydam küçük düğme belirir: dokununca silgiye, silgideyken kaleme geçer. Kullanılmazsa birkaç saniyede kaybolur.';
+      'Çizgi bitince kalem ile silgi arasında geçiş düğmesi belirir.';
 
   @override
   String get inkQuickSwapToEraser => 'Silgiye geç';
@@ -5374,7 +5349,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkAutoStylusInfo =>
-      'Kalem nota değince yazma kipi kendiliğinden açılır: PDF ve sunumda kalem, metin notunda el yazısı.';
+      'Kalem nota değince yazma kipi kendiliğinden açılır.';
 
   @override
   String get inkStylusDetected => 'Kalem algılandı — yazma kipi açıldı';
@@ -5533,7 +5508,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get itemGesturesSettingInfo =>
-      'Maddenin üstüne çiz: üstünü çiz ya da ✓ işaretler. Kalemle karalamak siler, daire yazımı düzeltir.';
+      'Maddeye çiz: üstünü çizer ya da ✓ koyar; karalama siler.';
 
   @override
   String get pdfEditWorking => 'PDF işleniyor…';
@@ -5770,11 +5745,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get swipeModeInfo =>
-      'Izgara görünümünde ekranı yana kaydırınca. Liste görünümünde satırı kaydırmak ise sabitler (sağa) ya da arşivler (sola).';
+      'Izgarada ekranı yana kaydırınca ne olsun; listede satır kaydırma sabitler ya da arşivler.';
 
   @override
   String get backupInfo =>
-      'Bütün notlar ekleri, çizimleri, balonları ve klasörleriyle tek dosyada. İki kez yüklense de not çoğalmaz.';
+      'Bütün notlar ekleri ve klasörleriyle tek dosyada; iki kez yüklemek çoğaltmaz.';
 
   @override
   String get backupInProgress => 'Yedek hazırlanıyor';
@@ -5988,7 +5963,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get itemGesturesFingerAllInfo =>
-      'Kapalıyken parmak yalnız işaretler; karalama (siler) ve daire (yazımı düzeltir) kalemle çalışır.';
+      'Kapalıyken parmak yalnız işaretler; karalama ve daire kalemle.';
 
   @override
   String get itemAddHeader => 'Ara başlık';
@@ -6435,7 +6410,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarSwipeInfo =>
-      'Kapalıyken yatay kaydırma hiçbir şey değiştirmez; ok düğmeleri çalışmaya devam eder.';
+      'Kapalıyken yalnız ok düğmeleri ay ya da hafta değiştirir.';
 
   @override
   String calendarMoved(String day) {
@@ -6808,7 +6783,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get inkShapeSuggestInfo =>
-      'Kabaca daire, dikdörtgen, üçgen, çizgi ya da ok çizince sağ altta küçük düğme çıkar; dokununca düzgün olur, geri al eski hâline döndürür.';
+      'Kaba daire, kare, çizgi ya da ok çizince düzeltme düğmesi çıkar.';
 
   @override
   String get inkMarkFixTitle => 'Tik ve çarpıyı düzelt';
@@ -7071,7 +7046,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get spellModeInfo =>
-      'Yalnız göster: olası yanlışların altı çizilir, dokununca öneriler çıkar; hiçbir şey kendiliğinden değişmez. Otomatik düzelt: ayrıca emin olunca düzeltir.';
+      'Yalnız göster: yanlışın altı çizilir. Otomatik: emin olunca düzeltir.';
 
   @override
   String get spellModeOff => 'Kapalı';
@@ -7080,7 +7055,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get spellModeShow => 'Yalnız göster';
 
   @override
-  String get spellModeAuto => 'Otomatik düzelt';
+  String get spellModeAuto => 'Otomatik';
 
   @override
   String get spellAddToDictionary => 'Sözlüğe ekle';
@@ -7159,7 +7134,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeCalendarStripInfo =>
-      'Ana ekranın tepesinde haftalık ya da aylık takvim: etkinlik, görev, tatil. Güne dokun = kayıtlar (düzenle/sil), basılı tut = takvim';
+      'Ana ekranın tepesinde etkinlik, görev ve tatilleriyle takvim.';
 
   @override
   String get homeCalendarStripExpand => 'Takvim şeridini aç';
@@ -7361,7 +7336,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsShowAllNotesInfo =>
-      'Tümü açıkken klasöre konmuş notlar da ana ekranda görünür (arşiv ve gizli klasörler hariç).';
+      'Klasördeki notlar da ana ekranda görünür (arşiv ve gizli hariç).';
 
   @override
   String get settingsAttachmentsExpanded => 'Not ekranında ek şeridi açık';
@@ -7372,7 +7347,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsListPaneCollapsedInfo =>
-      'Tablet ve web\'de not açıkken soldaki liste kapalı başlar; ☰ ile açılır.';
+      'Tablet ve web\'de not açıkken liste kapalı başlar.';
 
   @override
   String get pinnedSideToggle => 'Yerleşim: üstte / solda / sağda';
@@ -8131,7 +8106,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get decisionsByokInfo =>
-      '750 karar hakkı bittiğinde kendi Gemini API anahtarınla sınırsız devam edebilirsin. Anahtar yalnız bu cihazda saklanır.';
+      'Karar hakkı bitince kendi Gemini anahtarınla sürdür; anahtar bu cihazda kalır.';
 
   @override
   String get calendarDayLinkRemoved => 'Not bu günden çıkarıldı';
@@ -8234,7 +8209,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get calendarAddActionInfo =>
-      'Varsayılan not; tarih seçili gündür (yoksa bugün), açılan pencerede değiştirilebilir.';
+      'Seçili güne (yoksa bugüne) eklenir; pencerede değiştirilebilir.';
 
   @override
   String get calendarAddNote => 'Not';

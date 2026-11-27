@@ -96,8 +96,26 @@ void main() {
     expect(_labels(tester, 'appearance'), [
       l10n.settingsThemeHeader,
       l10n.settingsGroupText,
+      // 2026-11-27: dil kendi başlıklı kartında.
+      l10n.settingsLanguage,
       l10n.settingsCardsHeader,
     ]);
+  });
+
+  // 2026-11-27 (kullanıcı: "ayarlardaki aşırı yığılma"): Notlar ve
+  // klasörler 15 ayarı başlıksız tek kartta taşıyordu.
+  testWidgets('Notlar alanı: başlıklı gruplar', (tester) async {
+    final l10n = await AppLocalizations.delegate.load(const Locale('tr'));
+    await _pump(tester, const Size(412, 3200), area: 'notes');
+    expect(
+      _labels(tester, 'notes'),
+      containsAllInOrder([
+        l10n.settingsGroupGestures,
+        l10n.calendarTitle,
+        l10n.settingsGroupSortView,
+        l10n.settingsGroupShared,
+      ]),
+    );
   });
 
   testWidgets('Ses alanı: grup sırası, "Seslendirme" bir kez', (tester) async {

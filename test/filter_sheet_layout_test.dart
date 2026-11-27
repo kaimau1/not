@@ -113,4 +113,47 @@ void main() {
     expect(sheet.width, lessThanOrEqualTo(560));
     expect(sheet.center.dx, closeTo(720, 1));
   });
+
+  // Kullanıcı bulgusu 2026-11-27: "üstteki tutamacından tutup aşağı çekip
+  // kapatamıyorum, sadece geri tuşuyla kapanıyor". KÖK NEDEN: kapsül
+  // kaydırma alanının İÇİNDEYDİ; sürükleme levhaya değil kaydırmaya gidiyordu.
+  testWidgets('tutamaktan aşağı çekince levha kapanır', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          notesStreamProvider.overrideWith((ref) => Stream.value(const <Note>[])),
+          foldersStreamProvider.overrideWith(
+            (ref) => Stream.value(const <NoteFolder>[]),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          locale: const Locale('tr'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => showFilterSheet(context),
+                child: const Text('aç'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    expect(find.text('Görünüm ve süz'), findsOneWidget);
+    // Öbür menüler gibi M3 tutamağı var.
+    expect(
+      tester.widget<BottomSheet>(find.byType(BottomSheet)).showDragHandle,
+      isTrue,
+    );
+    await tester.drag(find.text('Görünüm ve süz'), const Offset(0, 600));
+    await tester.pumpAndSettle();
+    expect(find.text('Görünüm ve süz'), findsNothing);
+  });
 }

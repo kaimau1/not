@@ -6,7 +6,7 @@ import 'package:notlar/core/third_party_licenses.dart';
 import 'package:notlar/core/utils/font_sources.dart';
 
 /// PL7 bekçisi: pakette taşınan HER yazı tipi ailesinin OFL metni hem
-/// dosya olarak var hem Lisanslar sayfasına kayıtlı; CMU BSD bildirimi de.
+/// dosya olarak var hem Lisanslar sayfasına kayıtlı; Zemberek bildirimi de.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -46,7 +46,7 @@ void main() {
   });
 
   test(
-    'Lisanslar sayfası yazı tiplerini ve CMU bildirimini listeler',
+    'Lisanslar sayfası yazı tiplerini ve Zemberek bildirimini listeler',
     () async {
       registerThirdPartyLicenses();
       final packages = <String>{};
@@ -61,8 +61,8 @@ void main() {
         expect(packages, contains('$name (font)'));
         expect(texts['$name (font)'], contains('SIL OPEN FONT LICENSE'));
       }
-      expect(packages, contains('CMU Pronouncing Dictionary'));
-      expect(texts['CMU Pronouncing Dictionary'], contains('Carnegie Mellon'));
+      // CMU sözlüğü yalnız Antalia sesindeydi; ses 2026-11-27'de kalktı.
+      expect(packages, isNot(contains('CMU Pronouncing Dictionary')));
       const zemberek = 'Zemberek-NLP (Türkçe sözlük)';
       expect(packages, contains(zemberek));
       expect(texts[zemberek], contains('Apache License'));

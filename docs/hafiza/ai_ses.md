@@ -3,8 +3,11 @@
 HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski hâl: `HAFIZA_ARSIV_3.md`.
 
 ## Ses ve yapay zekâ
-- Seslendirme tek kapı `SpeechService`; Antalia ONNX isteğe bağlı, yalnız
-  Android + tr.
+- Seslendirme tek kapı `SpeechService`; yalnız cihaz TTS'i. **Antalia + ONNX KALDIRILDI
+  (kullanıcı kararı 2026-11-27):** yalnız Türkçe okuyordu, ~50 MB model + ~28 MB `.so`;
+  eski model klasörü (`<appSupport>/antalia_mini`) açılıştan 10 sn sonra silinir
+  (`removeLegacyVoiceModel`). Kokoro değerlendirildi: hedef 5 dilden (tr, en, ar, id, ms)
+  yalnız İngilizceyi okuyor → eklenmedi. Yeni yerel TTS önerisi gelirse önce bu 5 dili sor.
 - Sohbet tek ekran `AiChatScreen` (Tüm notlar / Bu not / Bu belge).
   **"Tüm notlar" getirmeli** (F18.18): soruyla alakalı en çok 12 not
   (anlamsal arama; dahili modda gömme yok → kelime örtüşmesi

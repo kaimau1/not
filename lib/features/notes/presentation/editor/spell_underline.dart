@@ -126,9 +126,27 @@ class SpellMarks extends ChangeNotifier {
   }
 
   /// Öneriler (küçük harf; önbellek o arada boşaldıysa yeniden).
-  static List<String> suggestionsFor(String word) =>
-      (_words[word] ?? SpellEngine.suggestions(word, AutoSpell.memory))?.list ??
-      const [];
+  ///
+  /// Cihaz denetçisi YANLIŞ dediği kelimede kendi önerileri azsa (çoğu kez
+  /// boş) büyük sözlüğün tek düzenleme komşuları da eklenir (2026-11-27:
+  /// "lütfn", "geliyr", "hseap" → öneri yoktu). Hesap yalnız menü açılırken:
+  /// yazarken denetim dilimine binmez.
+  static List<String> suggestionsFor(String word) {
+    final m = AutoSpell.memory;
+    final list =
+        (_words[word] ??
+                (AutoSpell.ownEngine ? SpellEngine.suggestions(word, m) : null))
+            ?.list ??
+        const [];
+    if (list.length >= 3 || _native[word] == null || !AutoSpell.ownEngine) {
+      return list;
+    }
+    return <String>{
+      ...list,
+      for (final x in SpellEngine.lexiconSuggestions(word, m))
+        if (!m.isRejected(word, x)) x,
+    }.take(4).toList();
+  }
 
   void _schedule(Duration d) {
     _timer?.cancel();
@@ -288,6 +306,7 @@ class SpellMarks extends ChangeNotifier {
   /// Kelime → cihazın önerileri (null = cihaz doğru buldu). Hafızadan
   /// bağımsız: [AutoSpell.revision]'da boşalmaz.
   static final Map<String, List<String>?> _native = {};
+  static String _nativeLang = AutoSpell.writingLanguage;
   static final Set<String> _nativeQueue = {};
 
   /// Yanıtı beklenen kelimeler (önbellek o arada boşalırsa yeniden
@@ -306,9 +325,13 @@ class SpellMarks extends ChangeNotifier {
   static Locale _platformLocale() {
     final override = debugLocale;
     if (override != null) return override;
-    final code =
-        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
-    return code == 'en' ? const Locale('en', 'US') : const Locale('tr', 'TR');
+    return switch (AutoSpell.writingLanguage) {
+      'en' => const Locale('en', 'US'),
+      'ar' => const Locale('ar'),
+      'id' => const Locale('id', 'ID'),
+      'ms' => const Locale('ms', 'MY'),
+      _ => const Locale('tr', 'TR'),
+    };
   }
 
   /// Flutter'ın kendi yazım denetimiyle aynı kapı: Android'de Gboard'un
@@ -328,12 +351,18 @@ class SpellMarks extends ChangeNotifier {
   /// bilinmiyorsa cihaz denetçisinin yanıtı (henüz yoksa sıraya girer,
   /// yanıt gelince yeniden denetlenir).
   static ({List<String> list, bool hint})? _judge(String w, SpellMemory m) {
-    final s = SpellEngine.suggestions(w, m);
+    // Yazım dili değişti: cihazın eski dildeki yanıtları geçersiz.
+    if (_nativeLang != AutoSpell.writingLanguage) {
+      _nativeLang = AutoSpell.writingLanguage;
+      _native.clear();
+    }
+    // Arapça/Endonezce/Malayca: Türkçe motor sorulmaz, yalnız cihaz.
+    final s = AutoSpell.ownEngine ? SpellEngine.suggestions(w, m) : null;
     if (s != null ||
         w.length < 3 ||
         isCjk(w) ||
         m.keep.contains(w) ||
-        m.lexicalKnown(w) ||
+        (AutoSpell.ownEngine && m.lexicalKnown(w)) ||
         !_nativeOn) {
       return s;
     }

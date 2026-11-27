@@ -577,13 +577,8 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
-      # ONNX (Antalia) Play'de kapalı: eklenti motoru attach'te libonnxruntime.so'yu
-      # yüklediğinden `.so` dışlaması açılışı çökertir → eklentiyi kuklayla değiştir
-      # (pubspec_overrides.yaml, depoya girmez; PLAN §1.5 PL1).
-      - name: ONNX eklentisini kuklayla değiştir ve bağımlılıkları indir
-        run: |
-          bash tool/play_stub/play_hazirla.sh
-          flutter pub get
+      - name: Bağımlılıkları indir
+        run: flutter pub get
 
       # Dosyalar yalnız runner'da (depoda .gitignore). Kişisel
       # `android/app/google-services.json`a dokunulmaz: google-services eklentisi
@@ -630,7 +625,7 @@ jobs:
           fi
           echo "$m" | grep -qF "$PLAY_APP_ID" || { echo "::error::Play paket adı manifestte yok."; exit 1; }
           if unzip -l "$aab" | grep -q 'libonnxruntime'; then
-            echo "::error::Play paketinde ONNX kitaplığı var (kukla bağlanmamış)."
+            echo "::error::Play paketinde ONNX kitaplığı var (2026-11-27 kaldırılan bağımlılık geri gelmiş)."
             exit 1
           fi
           echo "--- yerel kitaplıklar ---"

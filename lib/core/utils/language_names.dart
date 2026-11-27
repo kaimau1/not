@@ -114,3 +114,7 @@ String baseLanguage(String code) =>
 /// satır göstermez).
 String languageLabel(String code) =>
     languageNames[code] ?? languageNames[baseLanguage(code)] ?? code;
+
+/// Uygulamanın beş pazar dili (kullanıcı kararı 2026-11-27): ses seçici,
+/// yazım denetimi ve çeviri kapsamı bu listeye bakar.
+const kMarketLanguages = <String>['tr', 'en', 'ar', 'id', 'ms'];

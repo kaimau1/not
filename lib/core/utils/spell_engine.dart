@@ -381,10 +381,17 @@ class SpellEngine {
   /// yok. [hint]: bağlama bağlı ("bende" → "ben de") — yanlış olmayabilir,
   /// yumuşak çizilir. Otomatik düzeltmeden farkı: güven payı aranmaz,
   /// birden çok aday listelenir; hiçbiri UYGULANMAZ.
+  ///
+  /// [lexiconEdits]: hiçbir öneri bulunmazsa büyük sözlükten tek düzenleme
+  /// komşuları da denenir ([lexiconSuggestions]). Yalnız kelimenin YANLIŞ
+  /// olduğu başka yoldan biliniyorsa (toplu denetim, cihaz denetçisi) açılır:
+  /// sözlükte olmayan DOĞRU kelimeye ("avatar", yeni terim) komşu bulup
+  /// çizgi çekmesin.
   static ({List<String> list, bool hint})? suggestions(
     String w,
     SpellMemory m, {
     Set<String> noteKeep = const {},
+    bool lexiconEdits = false,
   }) {
     if (w.length < 2 ||
         isCjk(w) ||
@@ -419,8 +426,40 @@ class SpellEngine {
     add(splitMissedSpace(w, m));
     nearestList(w, m).forEach(add);
     add(strayNearSpace(w, m));
+    if (out.isEmpty && lexiconEdits) lexiconSuggestions(w, m).forEach(add);
     return out.isEmpty ? null : (list: out.take(4).toList(), hint: false);
   }
+
+  /// Büyük sözlükten tek düzenleme uzaklığındaki geçerli kelimeler
+  /// ([SpellMemory.lexiconEdits]), düzenleme türü + klavye uzaklığına göre
+  /// sıralı; sık kelime (kişisel ya da yerleşik) öne geçer, kısa aday
+  /// (≤ 2 harf) ve yazılandan çok kısa olan geride kalır. Yalnız ÖNERİDİR:
+  /// otomatik düzeltme bunları kendi başına uygulamaz. Kelime başına bir
+  /// kez hesaplanır (~10–20 ms): yalnız yanlış olduğu bilinen kelimede
+  /// (cihaz denetçisi, toplu denetim) ve menü açılırken çağrılır.
+  static List<String> lexiconSuggestions(String w, SpellMemory m, {int k = 3}) {
+    final key = '${m.revisionKey}|$w';
+    final hit = _lexSuggest[key];
+    if (hit != null) return hit;
+    final scored = [
+      for (final (c, cost) in m.lexiconEdits(w, subCost: keyCost))
+        (
+          c,
+          cost -
+              (m.frequency(c) >= 3 ? 0.3 : 0) +
+              (c.length <= 2 ? 0.5 : 0) +
+              (c.length < w.length - 1 ? 0.3 : 0),
+        ),
+    ]..sort((a, b) => a.$2.compareTo(b.$2));
+    final out = [
+      for (final c in scored)
+        if (c.$2 <= 1.2) c.$1,
+    ].take(k).toList();
+    if (_lexSuggest.length > 256) _lexSuggest.clear();
+    return _lexSuggest[key] = out;
+  }
+
+  static final Map<String, List<String>> _lexSuggest = {};
 
   static final _chunk = RegExp(r'\S+');
 

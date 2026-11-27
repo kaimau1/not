@@ -32,24 +32,20 @@ import 'notes_providers.dart';
 ///
 /// ŞİMDİ: tek "Süz" düğmesi, tek levha, dört bölüm. Ana ekranda yalnız
 /// UYGULANMIŞ süzgeçler kaldırılabilir çip olarak görünür.
-Future<void> showFilterSheet(BuildContext context) =>
-    showAppSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      // M3 tutamağı yerine üstte ince 4 dp kapsül: 48 dp ölü boşluk açmaz,
-      // levha yine aşağı sürüklenerek ve ✕ ile kapanır.
-      showDragHandle: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
-      ),
-      // Geniş ekranda ortada, en çok 560 dp (KT-2): yalnız maxHeight
-      // verilince M3'ün genişlik sınırı kalkıyor, levha 1240 px'e yayılıyordu.
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.80,
-        maxWidth: kSheetMaxWidth,
-      ),
-      builder: (_) => const _FilterSheet(),
-    );
+Future<void> showFilterSheet(BuildContext context) => showAppSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  // ÖBÜR MENÜLER GİBİ M3 TUTAMAĞI (kullanıcı bulgusu 2026-11-27): tutamaktan
+  // aşağı çekince kapanır; ✕ ve geri de kapatır.
+  showDragHandle: true,
+  // Geniş ekranda ortada, en çok 560 dp (KT-2): yalnız maxHeight
+  // verilince M3'ün genişlik sınırı kalkıyor, levha 1240 px'e yayılıyordu.
+  constraints: BoxConstraints(
+    maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+    maxWidth: kSheetMaxWidth,
+  ),
+  builder: (_) => const _FilterSheet(),
+);
 
 /// Ana ekranda bir süzgeç uygulanmış mı? "Süz" düğmesinin vurgusu ve
 /// levhadaki "Sıfırla" bunun üstünden karar verir.
@@ -90,8 +86,7 @@ List<String> appliedFilterLabels(BuildContext context, WidgetRef ref) {
   final folderName = hubOn
       ? (hubName == null || hubName.isEmpty ? l10n.sharedHubShort : hubName)
       : shared != null
-      ? (ref.watch(sharedFolderRefsProvider).value ??
-                const <SharedFolderRef>[])
+      ? (ref.watch(sharedFolderRefsProvider).value ?? const <SharedFolderRef>[])
             .where((s) => s.folderId == shared.folderId)
             .map((s) => s.name)
             .firstOrNull
@@ -175,10 +170,7 @@ class HomeFilterButton extends ConsumerWidget {
                     ? BoxDecoration(
                         color: scheme.primaryContainer,
                         borderRadius: BorderRadius.circular(AppRadius.s),
-                        border: Border.all(
-                          color: scheme.primary,
-                          width: 1.4,
-                        ),
+                        border: Border.all(color: scheme.primary, width: 1.4),
                       )
                     : null,
                 child: Material(
@@ -279,10 +271,11 @@ class DashboardFilterRow extends ConsumerWidget {
   }
 }
 
-/// Görünüm bölümü (F11.4; SIKI YENİDEN YAZIM 2026-11-10, kullanıcı isteği:
-/// "klasör satırı, takvim satırı gizleme gösterme gibi seçenekleri görünüm ve
-/// süz ekranına koy, daha kompakt olsun"). Izgara ⇄ liste segmentli düğme;
-/// aç-kapa seçenekleri yumuşak birincil ton + işaret halkasıyla seçili görünür.
+/// Görünüm kartı (F11.4 → 2026-11-27 YENİDEN TASARIM, kullanıcı isteği:
+/// "süz ve sıraların tasarımı diğer menülere benzemiyor, güzel değil").
+/// Not ⋮ menüsüyle aynı dil: beyaz grup kartı, yeşil bölüm adı, dolgulu
+/// karolar. Izgara ⇄ liste iki yatay karo (seçili = dolu birincil); aç-kapa
+/// seçenekleri iki sütunlu karolar (açık = yumuşak birincil + ✓).
 class _ViewModeSection extends ConsumerWidget {
   const _ViewModeSection();
 
@@ -298,121 +291,124 @@ class _ViewModeSection extends ConsumerWidget {
     }
 
     final shared = ref.watch(homeShowSharedProvider);
-    return _Section(
-      icon: Icons.grid_view_rounded,
-      title: l10n.viewToggle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SegmentedButton<bool>(
-            key: const ValueKey('filter-view-mode'),
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(
-                value: false,
-                icon: const Icon(Icons.grid_view_rounded, size: AppIconSize.s),
-                label: Text(l10n.viewGrid),
-              ),
-              ButtonSegment(
-                value: true,
-                icon: const Icon(
-                  Icons.view_agenda_outlined,
-                  size: AppIconSize.s,
-                ),
-                label: Text(l10n.viewList),
-              ),
-            ],
-            selected: {list},
-            onSelectionChanged: (v) => set(v.first),
-          ),
-          const SizedBox(height: AppSpace.m),
-          _OptionWrap(
-            children: [
-              // KLASÖR SATIRI (⋮ menüsünden buraya, 2026-11-10).
-              _Option(
-                key: const ValueKey('view-toggle-folder-strip'),
-                style: _OptionStyle.toggle,
-                label: l10n.homeFolderStripShort,
-                icon: Icons.folder_outlined,
-                selected: !ref.watch(homeFolderStripHiddenProvider),
-                onTap: () {
-                  AppHaptics.tick();
-                  ref.read(homeFolderStripHiddenProvider.notifier).toggle();
-                },
-              ),
-              // TAKVİM ŞERİDİ (Zemin levhasında da var; burası kısayol).
-              _Option(
-                key: const ValueKey('view-toggle-calendar-strip'),
-                style: _OptionStyle.toggle,
-                label: l10n.homeCalendarStripShort,
-                icon: Icons.calendar_view_week_outlined,
-                selected: ref.watch(homeCalendarStripProvider),
-                onTap: () {
-                  AppHaptics.tick();
-                  ref
-                      .read(homeCalendarStripProvider.notifier)
-                      .set(!ref.read(homeCalendarStripProvider));
-                },
-              ),
-              // KARTTA GÖRSEL / EK (kullanıcı isteği 2026-10-23): Ayarlar'daki
-              // "Kartta görünenler"in kısayolu.
-              _Option(
-                style: _OptionStyle.toggle,
-                label: l10n.cardShowMediaShort,
-                icon: Icons.image_outlined,
-                selected: ref.watch(cardShowMediaProvider),
-                onTap: () {
-                  AppHaptics.tick();
-                  ref.read(cardShowMediaProvider.notifier).toggle();
-                },
-              ),
-              _Option(
-                style: _OptionStyle.toggle,
-                label: l10n.cardShowFilesShort,
-                icon: Icons.attach_file,
-                selected: ref.watch(cardShowFilesProvider),
-                onTap: () {
-                  AppHaptics.tick();
-                  ref.read(cardShowFilesProvider.notifier).toggle();
-                },
-              ),
-              // "Tümü" açıkken: klasör başlıkları altında grupla (D4).
-              if (ref.watch(showAllNotesProvider))
-                _Option(
-                  style: _OptionStyle.toggle,
-                  label: l10n.groupByFolder,
-                  icon: Icons.folder_copy_outlined,
-                  selected: ref.watch(allNotesGroupByFolderProvider),
-                  onTap: () {
-                    AppHaptics.tick();
-                    ref.read(allNotesGroupByFolderProvider.notifier).toggle();
-                  },
-                ),
-              _Option(
-                style: _OptionStyle.toggle,
-                label: l10n.homeShowSharedShort,
-                icon: AppIcons.shared,
-                selected: shared,
-                onTap: () {
-                  AppHaptics.tick();
-                  ref.read(homeShowSharedProvider.notifier).toggle();
-                },
-              ),
-              if (shared)
-                _Option(
-                  style: _OptionStyle.toggle,
-                  label: l10n.homeSharedAtBottomShort,
-                  icon: Icons.vertical_align_bottom,
-                  selected: ref.watch(homeSharedAtBottomProvider),
-                  onTap: () {
-                    AppHaptics.tick();
-                    ref.read(homeSharedAtBottomProvider.notifier).toggle();
-                  },
-                ),
-            ],
-          ),
-        ],
+    final toggles = <Widget>[
+      // KLASÖR SATIRI (⋮ menüsünden buraya, 2026-11-10).
+      _FilterTile(
+        key: const ValueKey('view-toggle-folder-strip'),
+        kind: _TileKind.toggle,
+        label: l10n.homeFolderStripShort,
+        icon: Icons.folder_outlined,
+        selected: !ref.watch(homeFolderStripHiddenProvider),
+        onTap: () {
+          AppHaptics.tick();
+          ref.read(homeFolderStripHiddenProvider.notifier).toggle();
+        },
       ),
+      // TAKVİM ŞERİDİ (Zemin levhasında da var; burası kısayol).
+      _FilterTile(
+        key: const ValueKey('view-toggle-calendar-strip'),
+        kind: _TileKind.toggle,
+        label: l10n.homeCalendarStripShort,
+        icon: Icons.calendar_view_week_outlined,
+        selected: ref.watch(homeCalendarStripProvider),
+        onTap: () {
+          AppHaptics.tick();
+          ref
+              .read(homeCalendarStripProvider.notifier)
+              .set(!ref.read(homeCalendarStripProvider));
+        },
+      ),
+      // KARTTA GÖRSEL / EK (kullanıcı isteği 2026-10-23): Ayarlar'daki
+      // "Kartta görünenler"in kısayolu.
+      _FilterTile(
+        kind: _TileKind.toggle,
+        label: l10n.cardShowMediaShort,
+        icon: Icons.image_outlined,
+        selected: ref.watch(cardShowMediaProvider),
+        onTap: () {
+          AppHaptics.tick();
+          ref.read(cardShowMediaProvider.notifier).toggle();
+        },
+      ),
+      _FilterTile(
+        kind: _TileKind.toggle,
+        label: l10n.cardShowFilesShort,
+        icon: Icons.attach_file,
+        selected: ref.watch(cardShowFilesProvider),
+        onTap: () {
+          AppHaptics.tick();
+          ref.read(cardShowFilesProvider.notifier).toggle();
+        },
+      ),
+      // "Tümü" açıkken: klasör başlıkları altında grupla (D4).
+      if (ref.watch(showAllNotesProvider))
+        _FilterTile(
+          kind: _TileKind.toggle,
+          label: l10n.groupByFolder,
+          icon: Icons.folder_copy_outlined,
+          selected: ref.watch(allNotesGroupByFolderProvider),
+          onTap: () {
+            AppHaptics.tick();
+            ref.read(allNotesGroupByFolderProvider.notifier).toggle();
+          },
+        ),
+      _FilterTile(
+        kind: _TileKind.toggle,
+        label: l10n.homeShowSharedShort,
+        icon: AppIcons.shared,
+        selected: shared,
+        onTap: () {
+          AppHaptics.tick();
+          ref.read(homeShowSharedProvider.notifier).toggle();
+        },
+      ),
+      if (shared)
+        _FilterTile(
+          kind: _TileKind.toggle,
+          label: l10n.homeSharedAtBottomShort,
+          icon: Icons.vertical_align_bottom,
+          selected: ref.watch(homeSharedAtBottomProvider),
+          onTap: () {
+            AppHaptics.tick();
+            ref.read(homeSharedAtBottomProvider.notifier).toggle();
+          },
+        ),
+    ];
+    return _Card(
+      children: [
+        _Title(l10n.viewToggle),
+        Semantics(
+          container: true,
+          child: Row(
+            key: const ValueKey('filter-view-mode'),
+            spacing: AppSpace.s,
+            children: [
+              Expanded(
+                child: _FilterTile(
+                  key: const ValueKey('filter-view-grid'),
+                  label: l10n.viewGrid,
+                  icon: Icons.grid_view_rounded,
+                  selected: !list,
+                  horizontal: true,
+                  onTap: () => set(false),
+                ),
+              ),
+              Expanded(
+                child: _FilterTile(
+                  key: const ValueKey('filter-view-list'),
+                  label: l10n.viewList,
+                  icon: Icons.view_agenda_outlined,
+                  selected: list,
+                  horizontal: true,
+                  onTap: () => set(true),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpace.s),
+        _TileGrid(columns: 2, horizontal: true, children: toggles),
+      ],
     );
   }
 }
@@ -478,34 +474,35 @@ class _FilterSheet extends ConsumerWidget {
       resetFilters(ref);
     }
 
-    return SingleChildScrollView(
-      // Alt boşluk sistem gezinme çubuğunu (geri/ana sayfa) hesaba katar:
-      // useSafeArea levhanın ALTINI korumaz, son bölüm çubuğun arkasında
-      // kalıyordu.
-      padding: EdgeInsets.fromLTRB(
-        AppSpace.l,
-        AppSpace.s,
-        AppSpace.l,
-        AppSpace.xl + MediaQuery.viewPaddingOf(context).bottom,
-      ),
+    Widget filterTile(NoteFilter f) => _FilterTile(
+      label: filterLabel(l10n, f),
+      icon: _filterIcon(f),
+      selected: filter == f,
+      onTap: () => setFilter(f),
+    );
+
+    Widget hairline() => Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
+      child: Divider(height: 1, color: tokens.hairline),
+    );
+
+    // TUTAMAK LEVHANIN KENDİSİNDE (kullanıcı bulgusu 2026-11-27: "üstteki
+    // tutamacından tutup aşağı çekip kapatamıyorum, sadece geri tuşuyla
+    // kapanıyor"). KÖK NEDEN: eski kapsül `SingleChildScrollView`un İÇİNDE
+    // çiziliyordu; sürükleme levhaya değil kaydırmaya gidiyordu. Artık öbür
+    // menüler gibi M3 tutamağı ([showAppSheet] `showDragHandle`) + kaydırma
+    // dışında sabit başlık: tutamaktan ya da başlıktan aşağı çekince kapanır.
+    return SafeArea(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Sıkı, ölü boşluksuz sürükleme kapsülü.
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: AppSpace.xs),
-              decoration: BoxDecoration(
-                color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.soft),
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-              ),
-            ),
-          ),
           SheetHeader(
             title: l10n.homeViewMenu,
-            padding: const EdgeInsets.only(left: AppSpace.xs),
+            padding: const EdgeInsetsDirectional.only(
+              start: AppSpace.l,
+              end: AppSpace.s,
+            ),
             badge: appliedCount > 0
                 ? Container(
                     padding: const EdgeInsets.symmetric(
@@ -522,7 +519,6 @@ class _FilterSheet extends ConsumerWidget {
                     ),
                   )
                 : null,
-            // ✕ levhayı kapatmanın görünür yolu (F16.2).
             actions: [
               if (appliedCount > 0)
                 TextButton.icon(
@@ -535,138 +531,127 @@ class _FilterSheet extends ConsumerWidget {
                 ),
             ],
           ),
-          const SizedBox(height: AppSpace.xs),
-
-          const _ViewModeSection(),
-
-          // TÜR ve DURUM AYRI SATIR (F11.4) ama TEK KARTTA (2026-11-10,
-          // sıkılaştırma): iki başlık kartı yerine aralarında ince ayırıcı.
-          _Section(
-            icon: Icons.filter_alt_outlined,
-            title: l10n.filterSheetTitle,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _OptionWrap(
-                  children: [
-                    _RowLabel(l10n.filterSectionType),
-                    for (final f in _typeFilters)
-                      _Option(
-                        label: filterLabel(l10n, f),
-                        icon: _filterIcon(f),
-                        selected: filter == f,
-                        onTap: () => setFilter(f),
-                      ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
-                  child: Divider(height: 1, color: tokens.hairline),
-                ),
-                _OptionWrap(
-                  children: [
-                    _RowLabel(l10n.filterSectionStatus),
-                    for (final f in NoteFilter.values)
-                      if (!_typeFilters.contains(f))
-                        _Option(
-                          label: filterLabel(l10n, f),
-                          icon: _filterIcon(f),
-                          selected: filter == f,
-                          onTap: () => setFilter(f),
-                        ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // **KLASÖR BÖLÜMÜ BURADAN KALKTI** (kullanıcı isteği 2026-08-18:
-          // "şu an etiketle klasör aynı şey"). Klasör artık ana ekranda karosu
-          // olan bir YER (bkz. `FolderTile` / `FolderScreen`); etiket sıcak
-          // tonlu haplarla saf etiket olarak burada kalır.
-          if (tags.isNotEmpty)
-            _Section(
-              icon: Icons.tag_rounded,
-              title: l10n.filterSectionTag,
-              warm: true,
-              child: _OptionWrap(
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.m,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (final t in tags)
-                    _Option(
-                      style: _OptionStyle.tag,
-                      label: t,
-                      icon: Icons.tag_rounded,
-                      selected: tag == t,
-                      onTap: () => setTag(tag == t ? null : t),
-                      // **ETİKET YÖNETİMİ**: uzun basınca yeniden adlandır / sil.
-                      onLongPress: () => _manageTag(context, ref, t),
+                  const _ViewModeSection(),
+                  const SizedBox(height: AppSpace.s),
+                  // TÜR, DURUM, ETİKET, SIRALAMA TEK KARTTA (not ⋮ menüsü
+                  // gibi): gruplar arasında ince ayırıcı.
+                  _Card(
+                    children: [
+                      _Title(l10n.filterSheetTitle),
+                      _SubLabel(l10n.filterSectionType),
+                      _TileGrid(
+                        columns: 4,
+                        children: [for (final f in _typeFilters) filterTile(f)],
+                      ),
+                      const SizedBox(height: AppSpace.s),
+                      _SubLabel(l10n.filterSectionStatus),
+                      _TileGrid(
+                        columns: 3,
+                        children: [
+                          for (final f in NoteFilter.values)
+                            if (!_typeFilters.contains(f)) filterTile(f),
+                        ],
+                      ),
+                      // **KLASÖR BÖLÜMÜ BURADA YOK** (kullanıcı isteği
+                      // 2026-08-18: "şu an etiketle klasör aynı şey"). Klasör
+                      // ana ekranda karosu olan bir YER; etiket sıcak tonlu
+                      // haplarla saf etiket olarak burada kalır (Y5).
+                      if (tags.isNotEmpty) ...[
+                        hairline(),
+                        _Title(l10n.filterSectionTag),
+                        Wrap(
+                          spacing: AppSpace.s,
+                          runSpacing: AppSpace.s,
+                          children: [
+                            for (final t in tags)
+                              _FilterTile(
+                                kind: _TileKind.tag,
+                                label: t,
+                                icon: Icons.tag_rounded,
+                                selected: tag == t,
+                                horizontal: true,
+                                onTap: () => setTag(tag == t ? null : t),
+                                // **ETİKET YÖNETİMİ**: uzun basınca yeniden
+                                // adlandır / sil.
+                                onLongPress: () => _manageTag(context, ref, t),
+                              ),
+                          ],
+                        ),
+                      ],
+                      hairline(),
+                      _Title(
+                        l10n.filterSectionSort,
+                        // Elle sıralama kipi sıralama bölümünün İÇİNDE: yalnız
+                        // süzgeçsiz görünümde anlamlı.
+                        trailing: appliedCount == 0
+                            ? TextButton.icon(
+                                key: const ValueKey('filter-manual-reorder'),
+                                style: TextButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                icon: const Icon(
+                                  Icons.open_with_rounded,
+                                  size: AppIconSize.xs,
+                                ),
+                                label: Text(l10n.reorderNotesManually),
+                                onPressed: () {
+                                  AppHaptics.tick();
+                                  ref
+                                      .read(noteSortProvider.notifier)
+                                      .set(NoteSort.manual);
+                                  ref
+                                      .read(reorderModeProvider.notifier)
+                                      .set(true);
+                                  Navigator.pop(context);
+                                },
+                              )
+                            : null,
+                      ),
+                      _TileGrid(
+                        columns: 3,
+                        children: [
+                          for (final s in NoteSort.values)
+                            _FilterTile(
+                              label: sortLabel(l10n, s),
+                              icon: _sortIcon(s),
+                              selected: sort == s,
+                              onTap: () {
+                                AppHaptics.tick();
+                                ref.read(noteSortProvider.notifier).set(s);
+                              },
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpace.s),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpace.xs,
                     ),
+                    child: Text(
+                      tags.isEmpty
+                          ? l10n.filterSheetSortHint
+                          : '${l10n.filterSheetSortHint} '
+                                '${l10n.tagLongPressHint}',
+                      style: text.meta,
+                    ),
+                  ),
                 ],
               ),
             ),
-
-          _Section(
-            icon: Icons.swap_vert_rounded,
-            title: l10n.filterSectionSort,
-            // Elle sıralama kipi sıralama bölümünün İÇİNDE: yalnız süzgeçsiz
-            // görünümde anlamlı.
-            trailing: appliedCount == 0
-                ? MinTapTarget(
-                    child: FilledButton.tonalIcon(
-                      key: const ValueKey('filter-manual-reorder'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: scheme.primaryContainer,
-                        foregroundColor: scheme.onPrimaryContainer,
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpace.m,
-                          vertical: AppSpace.xs,
-                        ),
-                      ),
-                      icon: const Icon(
-                        Icons.open_with_rounded,
-                        size: AppIconSize.xs,
-                      ),
-                      label: Text(l10n.reorderNotesManually),
-                      onPressed: () {
-                        AppHaptics.tick();
-                        ref
-                            .read(noteSortProvider.notifier)
-                            .set(NoteSort.manual);
-                        ref.read(reorderModeProvider.notifier).set(true);
-                        Navigator.pop(context);
-                      },
-                    ),
-                  )
-                : null,
-            child: _OptionWrap(
-              children: [
-                for (final s in NoteSort.values)
-                  _Option(
-                    label: sortLabel(l10n, s),
-                    icon: _sortIcon(s),
-                    selected: sort == s,
-                    onTap: () {
-                      AppHaptics.tick();
-                      ref.read(noteSortProvider.notifier).set(s);
-                    },
-                  ),
-              ],
-            ),
           ),
-
-          const SizedBox(height: AppSpace.xs),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
-            child: Text(l10n.filterSheetSortHint, style: text.meta),
-          ),
-          if (tags.isNotEmpty) ...[
-            const SizedBox(height: AppSpace.xs),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
-              child: Text(l10n.tagLongPressHint, style: text.meta),
-            ),
-          ],
         ],
       ),
     );
@@ -802,136 +787,171 @@ String sortLabel(AppLocalizations l10n, NoteSort sort) => switch (sort) {
   NoteSort.active => l10n.sortActive,
 };
 
-/// Bölüm kartı: levha zemininden ayrışan temiz çerçeveli kâğıt blok + renkli
-/// simge rozeti.
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.icon,
-    required this.title,
-    required this.child,
-    this.trailing,
-    this.warm = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final Widget child;
-  final Widget? trailing;
-  final bool warm;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final tokens = AppTokens.fromTheme(theme);
-    final badgeBg = warm
-        ? tokens.resolvedWarmTint(scheme)
-        : tokens.resolvedTintSoft(scheme);
-    final badgeFg = warm ? scheme.secondary : scheme.primary;
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: AppSpace.m - 2),
-      padding: const EdgeInsets.fromLTRB(
-        AppSpace.m,
-        AppSpace.m - 2,
-        AppSpace.m,
-        AppSpace.m,
-      ),
-      decoration: AppSurface.sheetCard(theme),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: BorderRadius.circular(AppRadius.s),
-                ),
-                child: Icon(icon, size: AppIconSize.xs, color: badgeFg),
-              ),
-              const SizedBox(width: AppSpace.s),
-              Expanded(
-                child: Text(
-                  title,
-                  style: sectionLabelStyle(context)?.copyWith(color: badgeFg),
-                ),
-              ),
-              ?trailing,
-            ],
-          ),
-          const SizedBox(height: AppSpace.s),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _OptionWrap extends StatelessWidget {
-  const _OptionWrap({required this.children});
+/// Grup kartı — not ⋮ menüsündeki kartın aynısı ([AppSurface.sheetCard]).
+class _Card extends StatelessWidget {
+  const _Card({required this.children});
 
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: AppSpace.xs + 2,
-    runSpacing: AppSpace.xs + 2,
-    crossAxisAlignment: WrapCrossAlignment.center,
-    children: children,
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: AppSurface.sheetCard(Theme.of(context)),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.s,
+        AppSpace.xxs,
+        AppSpace.s,
+        AppSpace.s,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: children,
+      ),
+    ),
   );
 }
 
-/// Çip satırının başındaki küçük ad ("Tür", "Durum").
-class _RowLabel extends StatelessWidget {
-  const _RowLabel(this.text);
+/// Bölüm adı — not menüsünün grup başlığıyla aynı (`AppText.section`).
+class _Title extends StatelessWidget {
+  const _Title(this.text, {this.trailing});
+
+  final String text;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpace.xs,
+      AppSpace.xxs,
+      AppSpace.xs,
+      AppSpace.xs,
+    ),
+    child: SizedBox(
+      height: trailing == null ? null : AppSpace.xxxl,
+      child: Row(
+        children: [
+          Expanded(child: SectionLabel(text)),
+          ?trailing,
+        ],
+      ),
+    ),
+  );
+}
+
+/// Kartın içindeki küçük alt ad ("Tür", "Durum").
+class _SubLabel extends StatelessWidget {
+  const _SubLabel(this.text);
 
   final String text;
 
   @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpace.xs,
+      0,
+      AppSpace.xs,
+      AppSpace.xs,
+    ),
+    child: Text(
+      text,
+      style: AppText.of(Theme.of(context)).meta
+          .copyWith(fontWeight: AppWeight.strong),
+    ),
+  );
+}
+
+/// Boş hücre bırakmayan karo ızgarası (not menüsünün `_buildTileGrid`
+/// kuralı): tam satırlar [columns] sütun dikey karo; son satır 1–2 öğeyse
+/// yatay karolar tam genişliğe yayılır.
+class _TileGrid extends StatelessWidget {
+  const _TileGrid({
+    required this.columns,
+    required this.children,
+    this.horizontal = false,
+  });
+
+  final int columns;
+  final List<Widget> children;
+
+  /// Bütün karolar yatay (simge solda, ad yanında).
+  final bool horizontal;
+
+  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(
-        start: AppSpace.xxs,
-        end: AppSpace.xs,
-      ),
-      child: Text(
-        text,
-        style: AppText.of(theme).meta.copyWith(fontWeight: AppWeight.strong),
-      ),
+    final rows = <List<Widget>>[];
+    for (var i = 0; i < children.length; i += columns) {
+      final end = i + columns;
+      rows.add(
+        children.sublist(i, end > children.length ? children.length : end),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpace.s,
+      children: [
+        for (final r in rows)
+          Row(
+            spacing: AppSpace.s,
+            children: [
+              for (final c in r)
+                Expanded(
+                  child: _TileShape(
+                    horizontal: horizontal || r.length <= 2,
+                    child: c,
+                  ),
+                ),
+            ],
+          ),
+      ],
     );
   }
 }
 
-/// Süz levhasındaki üç seçenek rolü — her rol görsel olarak ayrışır:
-/// - [choice]: tek seçimli süzgeç/sıralama (dolu birincil vurgu)
-/// - [toggle]: görünüm aç/kapa (yumuşak birincil kap + vurgu çerçeve + ✓)
-/// - [tag]: sıcak etiket hapı (ikincil ton)
-enum _OptionStyle { choice, toggle, tag }
+/// Izgaradaki karoya "dikey mi yatay mı" bilgisini taşır.
+class _TileShape extends InheritedWidget {
+  const _TileShape({required this.horizontal, required super.child});
 
-class _Option extends StatelessWidget {
-  const _Option({
+  final bool horizontal;
+
+  static bool? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_TileShape>()?.horizontal;
+
+  @override
+  bool updateShouldNotify(_TileShape old) => old.horizontal != horizontal;
+}
+
+/// Karo rolleri:
+/// - [choice]: tek seçimli süzgeç/sıralama — seçili = dolu birincil (not
+///   menüsündeki "açık" karo gibi)
+/// - [toggle]: görünüm aç/kapa — açık = yumuşak birincil + ✓
+/// - [tag]: sıcak tonlu etiket (Y5: etiket renkli kalır)
+enum _TileKind { choice, toggle, tag }
+
+class _FilterTile extends StatelessWidget {
+  const _FilterTile({
     super.key,
     required this.label,
+    required this.icon,
     required this.selected,
     required this.onTap,
-    this.icon,
     this.onLongPress,
-    this.style = _OptionStyle.choice,
+    this.kind = _TileKind.choice,
+    this.horizontal,
   });
 
-  final _OptionStyle style;
   final String label;
-  final IconData? icon;
+  final IconData icon;
   final bool selected;
   final VoidCallback onTap;
 
-  /// Etiket çipinde "yönet" menüsünü açar (yeniden adlandır / sil); diğer
-  /// seçeneklerde null.
+  /// Etiket karosunda "yönet" menüsünü açar (yeniden adlandır / sil).
   final VoidCallback? onLongPress;
+  final _TileKind kind;
+
+  /// null = ızgaranın verdiği biçim (yoksa dikey).
+  final bool? horizontal;
 
   @override
   Widget build(BuildContext context) {
@@ -939,94 +959,116 @@ class _Option extends StatelessWidget {
     final scheme = theme.colorScheme;
     final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
-    final isToggle = style == _OptionStyle.toggle;
+    final isHorizontal = horizontal ?? _TileShape.of(context) ?? false;
+    final idle = theme.brightness == Brightness.dark
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer;
 
     final Color background;
     final Color foreground;
     final Color iconColor;
-    final Color borderColor;
-    switch (style) {
-      case _OptionStyle.choice:
-        background = selected ? scheme.primary : scheme.surface;
+    switch (kind) {
+      case _TileKind.choice:
+        background = selected ? scheme.primary : idle;
         foreground = selected ? scheme.onPrimary : scheme.onSurface;
         iconColor = selected ? scheme.onPrimary : scheme.primary;
-        borderColor = selected ? scheme.primary : tokens.hairline;
-      case _OptionStyle.toggle:
-        background = selected ? scheme.primaryContainer : scheme.surface;
-        foreground = selected
-            ? scheme.onPrimaryContainer
-            : scheme.onSurfaceVariant;
+      case _TileKind.toggle:
+        background = selected ? scheme.primaryContainer : idle;
+        foreground = selected ? scheme.onPrimaryContainer : scheme.onSurface;
         iconColor = selected ? scheme.primary : scheme.onSurfaceVariant;
-        borderColor = selected
-            ? tokens.resolvedAccentBorder(scheme)
-            : tokens.hairline;
-      case _OptionStyle.tag:
+      case _TileKind.tag:
         background = selected
             ? scheme.secondary
             : tokens.resolvedWarmTint(scheme);
         foreground = selected ? scheme.onSecondary : scheme.onSurface;
         iconColor = selected ? scheme.onSecondary : scheme.secondary;
-        borderColor = selected ? scheme.secondary : tokens.hairline;
     }
-
-    // Görünüm 34 dp; dokunma/ekran okuyucu alanı 48 dp (F15.4). Seçili mi
-    // ekran okuyucuya da söylenir.
-    return MinTapTarget(
-      child: Semantics(
-        selected: isToggle ? null : selected,
-        toggled: isToggle ? selected : null,
-        child: PressScale(
-          child: AnimatedContainer(
-            duration: AppMotion.of(context, AppMotion.quick),
-            curve: AppMotion.curveOf(context, AppMotion.emphasized),
-            decoration: BoxDecoration(
-              color: background,
-              borderRadius: BorderRadius.circular(AppRadius.pill),
-              border: Border.all(color: borderColor),
-            ),
-            child: Material(
-              type: MaterialType.transparency,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(AppRadius.pill),
-                onTap: onTap,
-                onLongPress: onLongPress,
-                child: Container(
-                  height: 34,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpace.m - 2,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (icon != null) ...[
-                        TogglePop(
-                          on: selected,
-                          child: Icon(
-                            isToggle && selected ? Icons.check_rounded : icon,
-                            size: AppIconSize.xs,
-                            color: iconColor,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpace.xs + 2),
-                      ],
-                      // Büyük yazıda (F15.1) uzun ad çipi taşırmasın: kısalır.
-                      Flexible(
-                        child: Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: text.label.copyWith(
-                            fontWeight: selected
-                                ? AppWeight.strong
-                                : AppWeight.medium,
-                            color: foreground,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+    final labelStyle = text.meta.copyWith(
+      color: foreground,
+      fontWeight: selected ? AppWeight.strong : AppWeight.medium,
+    );
+    final glyph = Icon(icon, size: AppIconSize.m, color: iconColor);
+    final Widget body;
+    if (isHorizontal) {
+      body = ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpace.m,
+            vertical: AppSpace.xs,
+          ),
+          child: Row(
+            mainAxisSize: kind == _TileKind.tag
+                ? MainAxisSize.min
+                : MainAxisSize.max,
+            spacing: AppSpace.s,
+            children: [
+              TogglePop(on: selected, child: glyph),
+              Flexible(
+                fit: kind == _TileKind.tag ? FlexFit.loose : FlexFit.tight,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: labelStyle,
                 ),
               ),
+              if (kind == _TileKind.toggle)
+                Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: AppIconSize.s,
+                  color: selected ? scheme.primary : tokens.hairline,
+                ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      body = ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 58),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.xs),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            spacing: AppSpace.xs,
+            children: [
+              TogglePop(on: selected, child: glyph),
+              Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: labelStyle,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    final isToggle = kind == _TileKind.toggle;
+    // Seçili mi ekran okuyucuya da söylenir; dokunma alanı ≥ 48 dp.
+    return Semantics(
+      button: true,
+      selected: isToggle ? null : selected,
+      toggled: isToggle ? selected : null,
+      child: PressScale(
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.quick),
+          curve: AppMotion.curveOf(context, AppMotion.emphasized),
+          decoration: BoxDecoration(
+            color: background,
+            borderRadius: BorderRadius.circular(AppRadius.m),
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.m),
+              onTap: onTap,
+              onLongPress: onLongPress,
+              child: body,
             ),
           ),
         ),

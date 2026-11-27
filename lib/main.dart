@@ -41,7 +41,7 @@ import 'features/notes/presentation/editor/pinned_side.dart' show PinnedSideMemo
 import 'features/notes/presentation/editor/spell_underline.dart' show SpellMarks;
 import 'features/notes/presentation/note_card_media.dart' show CardThumbs;
 import 'features/notes/presentation/notes_providers.dart' show clearSearchBodyCache;
-import 'features/ai/data/antalia/antalia_engine.dart' show registerAntaliaLicense;
+import 'features/ai/data/speech_service.dart' show removeLegacyVoiceModel;
 import 'features/settings/settings_providers.dart';
 import 'core/menu_layout.dart';
 import 'core/personalize.dart';
@@ -104,7 +104,6 @@ Future<void> main() async {
     WidgetsFlutterBinding.ensureInitialized();
   }
   StarterNotesConfig.allowAutoSeed = true;
-  registerAntaliaLicense();
   registerThirdPartyLicenses(); // PL7: yazı tipi OFL + CMU BSD
   // Yazı tipleri yalnız paketten (T3/K-54): ağdan inen kesim bütün metni
   // yeniden dizdirir, çevrimdışı sistem yazı tipine düşer.
@@ -223,6 +222,10 @@ Future<void> main() async {
   // yavaşlatmasın diye birkaç saniye sonra, arka planda (bkz. DeviceStorage).
   unawaited(
     Future<void>.delayed(const Duration(seconds: 8), pruneTempFiles),
+  );
+  // Kaldırılan Antalia sesinin (2026-11-27) cihazda kalan ~50 MB modeli.
+  unawaited(
+    Future<void>.delayed(const Duration(seconds: 10), removeLegacyVoiceModel),
   );
   MemoryPressure.register(_onMemoryPressure);
   WidgetsBinding.instance.addObserver(_MemoryPressure());

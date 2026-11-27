@@ -9,6 +9,8 @@ import '../../../../core/app_icons.dart';
 import '../../../../core/haptics.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/keep_screen_on.dart';
+import '../../../../core/utils/speech_output.dart' show SpeechOutputController;
+import 'auto_spell.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/widgets/sheet_keyboard.dart';
@@ -474,8 +476,9 @@ class _StoreModeScreenState extends State<StoreModeScreen> {
     }
     final granted = await DeviceSpeech.ensureMicPermission();
     if (!granted || !mounted) return;
-    final l10n = context.l10n;
-    final speechLocale = l10n.localeName.startsWith('tr') ? 'tr-TR' : 'en-US';
+    final speechLocale = SpeechOutputController.speechLocale(
+      AutoSpell.writingLanguage,
+    );
     setState(() => _dictating = true);
     _speechSub = DeviceSpeech.listen(locale: speechLocale).listen(
       (ev) {

@@ -25,6 +25,7 @@ const _hard = {'b': 'p', 'c': 'ç', 'd': 't', 'g': 'k', 'ğ': 'k'};
 int _syllables(String s) => s.split('').where(_isV).length;
 
 bool _isV(String c) => _vowels.contains(c);
+bool _isHigh(String c) => c == 'ı' || c == 'i' || c == 'u' || c == 'ü';
 
 String? _lastVowel(String s) {
   for (var i = s.length - 1; i >= 0; i--) {
@@ -43,7 +44,7 @@ const _vStem = _v0 | _vn | _vb;
 const _end = 2047 & ~_vny;
 
 // Bayraklar.
-const _afterC = 1, _afterV = 2, _soft = 4, _yor = 8;
+const _afterC = 1, _afterV = 2, _soft = 4, _yor = 8, _afterLR = 16;
 
 class _M {
   const _M(this.form, this.from, this.to, [this.flags = 0]);
@@ -96,6 +97,9 @@ const _morphs = <_M>[
   _M('n', _v0, _v0, _afterV),
   _M('DIr', _v0, _v0),
   _M('t', _v0, _v0, _afterV),
+  // Çok heceli l/r gövdesinde de ettirgen -t ("çoğal-t", "kısal-t",
+  // "küçül-t", "otur-t"; 2026-11-27 düzyazı ölçümü).
+  _M('t', _v0, _v0, _afterLR),
   _M('Ir', _v0, _v0, _afterC),
   _M('Iş', _v0, _v0, _afterC),
   _M('ş', _v0, _v0, _afterV),
@@ -372,6 +376,20 @@ class TrMorph {
         if (isVerb('$stem$t')) return true; // söyl-üyor
       }
     }
+    // Edilgende ünlü düşmesi: "çevir-il" → "çevril", "ayır-ıl" → "ayrıl",
+    // "devir-il" → "devril" (yalnız -Il önünde, r/l ile biten gövde).
+    if (verb &&
+        stem.length >= 3 &&
+        (last == 'r' || last == 'l') &&
+        !_isV(stem[stem.length - 2]) &&
+        end + 1 < _w.length &&
+        _isHigh(_w[end]) &&
+        _w[end + 1] == 'l') {
+      final head = stem.substring(0, stem.length - 1);
+      for (final v in const ['ı', 'i', 'u', 'ü']) {
+        if (isVerb('$head$v$last')) return true;
+      }
+    }
     if (verb && next == 'y' && (stem == 'di' || stem == 'yi')) {
       return isVerb('${stem[0]}e'); // di-yecek
     }
@@ -388,6 +406,11 @@ class TrMorph {
         final last = _w[stemEnd - 1];
         if ((m.flags & _afterC) != 0 && _isV(last)) continue;
         if ((m.flags & _afterV) != 0 && !_isV(last)) continue;
+        if ((m.flags & _afterLR) != 0 &&
+            ((last != 'l' && last != 'r') ||
+                _syllables(_w.substring(0, stemEnd)) < 2)) {
+          continue;
+        }
         // "-yor" önünde a/e daralır: "arayor" değil "arıyor".
         if ((m.flags & _yor) != 0 && (last == 'a' || last == 'e')) continue;
         final stem = _w.substring(0, stemEnd);

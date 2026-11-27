@@ -62,8 +62,6 @@ import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_policy.dart';
 import '../../ai/presentation/ai_consent_sheet.dart';
 import '../../ai/data/ai_provider.dart';
-import '../../ai/data/antalia/antalia_engine.dart';
-import '../../ai/data/antalia/antalia_speech.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/decisions/decision_service.dart';
 import '../../ai/data/speech_service.dart';
@@ -81,7 +79,6 @@ import '../../friends/data/friends_repository.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/inbox_screen.dart';
 import '../../friends/presentation/friends_screen.dart';
-import '../../notes/presentation/editor/spell_learned_screen.dart';
 import '../../notes/presentation/lock/note_lock_ui.dart';
 import '../../notes/presentation/note_card_media.dart' show CardThumbs;
 import '../../notes/data/notes_repository.dart';
@@ -155,14 +152,14 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 /// Ses secicisinin gosterdigi diller: uygulamanin o anki dili + tr/en.
-List<String> _voiceLanguages(BuildContext context) {
-  final supported = supportedLanguages.keys.toSet();
-  return <String>{
-    Localizations.localeOf(context).toLanguageTag(),
-    'tr',
-    'en',
-  }.where(supported.contains).toList();
-}
+/// Ses seçicide sunulan diller: uygulamanın dili + beş pazar dili
+/// (kullanıcı 2026-11-27: Türkçe, İngilizce, Arapça, Endonezce, Malayca).
+/// Arayüz çevirisinden bağımsız: Arapça notu okutmak için arayüzün Arapça
+/// olması gerekmez.
+List<String> _voiceLanguages(BuildContext context) => <String>{
+  Localizations.localeOf(context).languageCode,
+  ...kMarketLanguages,
+}.toList();
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Acik olan alan. Tek seferde biri acik: dokuz kart alt alta dururken
@@ -419,22 +416,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.fontSizeLarge} ${l10n.fontSizeXLarge} '
                 '${l10n.followSystemTextScale} kalin metin erisilebilirlik',
           ),
+          // DİL BAŞLIKLI KENDİ KARTINDA (2026-11-27 denetimi: başlıksızdı,
+          // "Not listesi sağda" da onun kartına düşmüştü).
           _SettingRow(
             const _LanguageSelector(),
-            group: '',
+            group: l10n.settingsLanguage,
             title: l10n.settingsLanguage,
             keywords: 'dil language uygulama dili',
-          ),
-          _SettingRow(
-            const _ListPaneRightSwitch(),
-            title: l10n.listPaneRight,
-            keywords: '${l10n.listPaneRightInfo} liste sag sol tablet bolunmus',
           ),
           _SettingRow(
             const _ExpandListItemsSwitch(),
             group: l10n.settingsCardsHeader,
             title: l10n.expandListItems,
             keywords: l10n.expandListItemsInfo,
+          ),
+          _SettingRow(
+            const _ListPaneRightSwitch(),
+            title: l10n.listPaneRight,
+            keywords: '${l10n.listPaneRightInfo} liste sag sol tablet bolunmus',
           ),
           _SettingRow(
             const TypingBarSettings(),
@@ -444,18 +443,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.typingBarHideDelay} ${l10n.typingBarShowDelay} '
                 'gecikme sure saniye panel',
           ),
-          _SettingRow(
-            ListTile(
-              key: const ValueKey('settings-spell-learned'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.spellLearnedTitle),
-              subtitle: Text(l10n.spellLearnedSettingInfo),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => SpellLearnedScreen.open(context),
-            ),
-            title: l10n.spellLearnedTitle,
-            keywords: 'yazım düzelt öğren otomatik kelime sözlük',
-          ),
+          // "Öğrenilen yazımlar" BURADAN KALKTI (2026-11-27): Kalem, yazım ve
+          // ekran → Yazım düzelt'te aynısı var; iki kapı yığılmaydı.
           _SettingRow(
             const _ItemGesturesSwitch(),
             title: l10n.itemGesturesSetting,
@@ -562,6 +551,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 '${l10n.swipeModeFolders} ${l10n.swipeModeFilters} kaydir '
                 'yana cek',
+            // GRUPLAR (2026-11-27, kullanıcı: "ayarlardaki aşırı yığılma"):
+            // 15 ayar başlıksız tek karttaydı.
+            group: l10n.settingsGroupGestures,
           ),
           _SettingRow(
             HomeGestureSetting(
@@ -583,6 +575,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const CalendarAddActionSetting(),
             title: l10n.calendarAddActionTitle,
             keywords: 'takvim arti ekle not etkinlik gorev varsayilan',
+            group: l10n.calendarTitle,
           ),
           _SettingRow(
             const CalendarSwipeSetting(),
@@ -595,6 +588,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords:
                 '${l10n.folderReorder} ${l10n.folderOrderName} '
                 '${l10n.folderOrderNewest} klasor sira',
+            group: l10n.settingsGroupSortView,
           ),
           _SettingRow(
             const NoteSortSetting(),
@@ -618,6 +612,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.homeShowShared,
             keywords:
                 '${l10n.homeShowSharedInfo} paylasilan ortak not ana ekran',
+            group: l10n.settingsGroupShared,
           ),
           _SettingRow(
             _PrefSwitch(
@@ -640,6 +635,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _FileAppSwitch(),
             title: l10n.fileAppPickerTitle,
             keywords: 'dosya okuyucu secici dosya yoneticisi pdf ses ekle',
+            group: l10n.settingsGroupAttachments,
           ),
           _SettingRow(
             const _AttachmentSearchSwitch(),
@@ -1323,10 +1319,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String _soundSummary(AppLocalizations l10n) {
-    final engine = switch (ref.watch(ttsEngineProvider)) {
-      TtsEngine.device => l10n.ttsEngineDevice,
-      TtsEngine.antalia => l10n.ttsEngineLocal,
-    };
+    final engine = l10n.ttsEngineDevice;
     final mode = ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold
         ? l10n.voiceModeHold
         : l10n.voiceModeTap;

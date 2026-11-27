@@ -42,6 +42,28 @@ enum SpellMode { off, show, auto }
 class AutoSpell {
   AutoSpell._();
 
+  /// **YAZIM DİLİ** (kullanıcı 2026-11-27: beş pazar dili tr, en, ar, id,
+  /// ms). Uygulamanın kendi motoru (kurallar, harfsiz yazım, ek çözücü,
+  /// öğrenme önerileri) Türkçe + İngilizce için yazıldı; Arapça, Endonezce
+  /// ve Malayca'da Türkçe kurallar DOĞRU kelimeyi bozardı ("saya" → "şaya").
+  /// Bu dillerde yalnız cihazın denetçisi (Gboard, o dilde) çizer; otomatik
+  /// düzeltmeyi klavye yapar. Dil: Ayarlar'da seçilen uygulama dili, yoksa
+  /// cihaz dili.
+  static String writingLanguage = 'tr';
+
+  /// Uygulamanın kendi yazım motoru bu dilde çalışır mı.
+  static bool get ownEngine => !_foreignOnly.contains(writingLanguage);
+  static const _foreignOnly = {'ar', 'id', 'ms'};
+
+  /// Yazım dilini ayarlar; değişirse altı çizili denetim yenilenir.
+  static void setWritingLanguage(String code) {
+    if (code == writingLanguage) return;
+    writingLanguage = code;
+    // Uygulama kökünün build'inden çağrılır: dinleyiciler build sırasında
+    // uyarılmasın.
+    scheduleMicrotask(_bump);
+  }
+
   /// Otomatik düzelt açık mı (= [mode] otomatik). Eski dinleyiciler için.
   static final enabled = ValueNotifier<bool>(false);
 
@@ -444,7 +466,7 @@ class AutoSpell {
 
   static void _onChange() {
     final c = _c;
-    final auto = enabled.value;
+    final auto = enabled.value && ownEngine;
     final learnShow = mode.value == SpellMode.show && learning.value;
     if (c == null || _busy || (!auto && !learnShow)) return;
     final text = c.logicalText;
@@ -714,7 +736,7 @@ class AutoSpell {
     int start,
     String word,
   ) async {
-    if (!_nativeAvailable || word.length < 4) return;
+    if (!_nativeAvailable || word.length < 4 || !ownEngine) return;
     if (memory.known(word) || isCjk(word)) return;
     final locale = looksEnglish(word)
         ? const Locale('en', 'US')

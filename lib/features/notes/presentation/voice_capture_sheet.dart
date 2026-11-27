@@ -13,6 +13,8 @@ import '../../../core/a11y/min_tap_target.dart';
 import '../../../core/friendly_error.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/language_names.dart';
+import '../../../core/utils/speech_output.dart' show SpeechOutputController;
+import 'editor/auto_spell.dart';
 import '../../../core/utils/voice_commands.dart';
 import '../../../core/utils/web_audio_record.dart';
 import '../../../core/utils/web_blob.dart';
@@ -264,16 +266,21 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     super.didChangeDependencies();
     if (!_localeInitialized) {
       _localeInitialized = true;
-      _locale = Localizations.localeOf(context).languageCode == 'en'
-          ? 'en-US'
-          : 'tr-TR';
+      _locale = SpeechOutputController.speechLocale(
+        AutoSpell.writingLanguage,
+      );
+      _primaryLocale = _locale;
     }
   }
 
   bool _localeInitialized = false;
+  String _primaryLocale = 'tr-TR';
 
   Future<void> _toggleLocale() async {
-    final next = _locale.startsWith('en') ? 'tr-TR' : 'en-US';
+    final next = SpeechOutputController.alternateSpeechLocale(
+      _locale,
+      _primaryLocale,
+    );
     final wasListening = _phase == _Phase.listening;
     if (wasListening) {
       await _session?.stop();
