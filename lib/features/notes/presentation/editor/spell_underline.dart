@@ -422,6 +422,54 @@ bool showSpellMenuAfterTap(EditableTextState? editable) {
   return true;
 }
 
+/// **SEÇİM MENÜSÜNDE DOĞRUSU** (kullanıcı 2026-11-27: "basılı tutunca çıkan
+/// Tümünü seç menüsünde düzgünü yaz olmalı"): basılı tutunca kelime SEÇİLİR,
+/// imleç düşmez → [spellContextMenu] devreye girmiyor, olağan menüde öneri
+/// yoktu. Seçim tek bir altı çizili kelimenin içindeyse en çok 2 öneri
+/// olağan menünün başına konur; dokununca kelime düzelir (öğrenme hafızası
+/// aynı yol). Değilse boş.
+List<ContextMenuButtonItem> spellFixItems(EditableTextState state) {
+  if (state.widget.readOnly) return const [];
+  final sel = state.textEditingValue.selection;
+  if (!sel.isValid || sel.isCollapsed) return const [];
+  final marks = SpellMarks.of(state.widget.controller);
+  if (marks == null) return const [];
+  final mark = marks.at(sel.start);
+  if (mark == null || sel.end > mark.end) return const [];
+  final text = state.textEditingValue.text;
+  if (mark.end > text.length) return const [];
+  final typed = text.substring(mark.start, mark.end);
+  final options = [
+    for (final s in SpellMarks.suggestionsFor(mark.word).take(2))
+      SpellEngine.matchCase(typed, s),
+  ];
+  return [
+    for (final to in options)
+      if (to != typed)
+        ContextMenuButtonItem(
+          label: to,
+          onPressed: () {
+            state.hideToolbar();
+            final now = state.textEditingValue.text;
+            if (mark.end > now.length ||
+                now.substring(mark.start, mark.end) != typed) {
+              return;
+            }
+            AutoSpell.recordSuggestionPick(typed, to);
+            state.userUpdateTextEditingValue(
+              TextEditingValue(
+                text: now.replaceRange(mark.start, mark.end, to),
+                selection: TextSelection.collapsed(
+                  offset: mark.start + to.length,
+                ),
+              ),
+              SelectionChangedCause.toolbar,
+            );
+          },
+        ),
+  ];
+}
+
 /// Seçim menüsü kurucusunun başında: imleç altı çizili bir kelimedeyse
 /// yalnız yazım menüsü — öneriler · Sözlüğe ekle · Hep böyle düzelt · Bu
 /// notta dokunma. Değilse null (olağan menü).

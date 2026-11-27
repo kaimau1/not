@@ -108,6 +108,9 @@ class VoiceListenSession {
   final ValueNotifier<double> silence = ValueNotifier<double>(0);
   bool _active = false;
 
+  /// [stop]/[cancel] istendi: akışın kapanışı "tanıyıcı vazgeçti" değil.
+  bool _closing = false;
+
   bool get isActive => _active;
 
   /// En az bir kez konuşma algılandı mı.
@@ -116,6 +119,7 @@ class VoiceListenSession {
   void start() {
     if (_active) return;
     _active = true;
+    _closing = false;
     _ended = false;
     _last = '';
     final now = DateTime.now();
@@ -156,6 +160,17 @@ class VoiceListenSession {
               onError?.call(
                 e is PlatformException ? (e.message ?? e.code) : e.toString(),
               );
+            },
+            // AKIŞ KAPANDI = DİNLEME BİTTİ (kullanıcı bulgusu 2026-11-27:
+            // "web'de sesle yazma kesiliyor, kesildiği belli olmuyor; kart
+            // grileşiyor ama hâlâ dinliyormuş gibi"). KÖK NEDEN: tarayıcı
+            // tanıyıcısı vazgeçince akış hatasız kapanıyordu; oturum bunu
+            // dinlemediğinden "dinliyor" kalıyor, kart sessizce donuyordu.
+            // Artık oturum biter, dikte kartı kapanır.
+            // Kendi [stop]/[cancel] isteğimizle kapanış sayılmaz (duraklat
+            // tam durdurmaya dönmesin).
+            onDone: () {
+              if (_active && !_closing) _end(VoiceListenEnd.closed);
             },
           );
     }
@@ -206,6 +221,7 @@ class VoiceListenSession {
   /// bekleme: son sonuç durdurma isteğinden biraz sonra düşer).
   Future<void> stop() async {
     if (!_active) return;
+    _closing = true;
     _timer?.cancel();
     _timer = null;
     if (useDevice) {
@@ -225,6 +241,7 @@ class VoiceListenSession {
 
   /// Dinlemeyi bekletmeden bırakır (iptal, ekran kapanışı).
   Future<void> cancel() async {
+    _closing = true;
     _timer?.cancel();
     _timer = null;
     final sub = _sub;

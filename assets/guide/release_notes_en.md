@@ -2,6 +2,13 @@
 
 What changed in each update, newest first. The version number is at the bottom of Settings; tap it to check for updates.
 
+## 27 November 2026 {#2026-11-27}
+- **Item menu labels are no longer cut off:** the long-press item menu is now a 4-column grid, so labels like "Move up", "Move down", "Make task" read in full instead of being truncated.
+- **Correct spelling in the selection menu:** when you long-press and select an underlined word, the menu (Copy, Select all…) now starts with the correct spelling; tap it to fix the word.
+- **Spell check settings no longer hide under the phone's buttons:** the settings opened by long-pressing the spell-fix button now scroll when they don't fit and end above the navigation buttons; **Off** turns checking (including underlines) off completely.
+- **Ctrl + mouse wheel changes text size on the web:** holding Ctrl and scrolling up makes text larger, scrolling down makes it smaller (same setting as Settings → Appearance → Text size).
+- **Web dictation no longer stops silently:** when the browser's recognizer gives up, the dictation card now closes instead of staying grey as if still listening; long thinking pauses after you've started speaking no longer end listening early.
+
 ## 26 November 2026 {#2026-11-26}
 - **Quick add acts as soon as you say "add":** ending your sentence with "… ekle" (add) now stops listening after ~0.6 s of silence and adds the note after a short ~0.7 s countdown, instead of waiting for silence plus a 2 s countdown. If you don't name a note ("süt ekle") it goes to the selected note; if you name one that can't be found it still asks. You can tap **Wait** during the countdown or undo afterwards.
 - **Dictating into a list note creates items:** in a checklist or numbered list, dictating without tapping an item now writes a new item at the end of the list (it used to create plain text above the list). Saying "new item" moves to the next item; no automatic full stop is added at the end of an item.

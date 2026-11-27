@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/widgets/ctrl_wheel_zoom.dart';
 import '../core/widgets/focus_ring.dart';
 import '../core/app_update.dart';
 import 'release_notes_toast.dart';
@@ -109,6 +110,21 @@ class _FixedTypography extends StatelessWidget {
       child: child,
     );
   }
+}
+
+/// Web'de Ctrl + tekerlek yazı boyutunu 0,1 adımla değiştirir (bkz.
+/// [CtrlWheelZoom]); Ayarlar'daki kademe en yakınını gösterir. Telefonda
+/// sarmalayıcı yok.
+Widget _webZoom(WidgetRef ref, Widget child) {
+  if (!kIsWeb) return child;
+  return CtrlWheelZoom(
+    onZoom: (dir) {
+      final now = ref.read(fontScaleProvider);
+      final next = ((now + dir * 0.1) * 100).round() / 100;
+      ref.read(fontScaleProvider.notifier).set(next.clamp(0.7, 2.0));
+    },
+    child: child,
+  );
 }
 
 /// "Sistem yazı boyutunu izle" açıkken toplam yazı ölçeğinin üst sınırı.
@@ -266,7 +282,9 @@ class NotlarApp extends ConsumerWidget {
             // Uygulama kilidi (F18.6, varsayılan kapalı) her şeyin üstünde.
             // Klavye odak halkası (F80.3) gezginin, levhaların ve
             // pencerelerin ÜSTÜNDE boyanır; dokunmatikte çizilmez.
-            KeyboardFocusRing(
+            _webZoom(
+              ref,
+              KeyboardFocusRing(
               child: AppLockGate(
               child: CustomizeModeHost(
               // Şeritteki "Sırala": düzen merkezi levhası, o anki ekranın
@@ -302,6 +320,7 @@ class NotlarApp extends ConsumerWidget {
                 ),
                 ),
               ),
+            ),
             ),
             ),
             ),

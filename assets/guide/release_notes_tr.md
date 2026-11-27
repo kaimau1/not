@@ -2,6 +2,13 @@
 
 Her güncellemede neyin değiştiği, en yenisi üstte. Sürüm numarası Ayarlar'ın en altında; dokununca güncelleme denetlenir.
 
+## 27 Kasım 2026 {#2026-11-27}
+- **Madde menüsünde yazılar kesilmiyor:** maddeye basılı tutunca açılan menü 4 sütunlu ızgaraya geçti; "Yukarı taşı", "Aşağı taşı", "Görev yap", "Başlık yap" gibi etiketler artık "Yuka…", "Göre…" diye kesilmeden okunuyor.
+- **Seçim menüsünde doğru yazım:** altı çizili bir kelimeye basılı tutup seçince açılan menünün (Kopyala, Tümünü seç…) başında artık kelimenin doğrusu da var; dokununca düzeltir.
+- **Yazım denetimi ayarları telefon tuşlarının altında kalmıyor:** yazım düzelt düğmesine basılı tutunca açılan ayarlar artık ekrana sığmazsa kayıyor ve alttaki gezinme tuşlarının üstünde bitiyor; **Kapalı** seçeneğiyle denetim (altı çizgiler dahil) tamamen kapatılabiliyor.
+- **Webde Ctrl + fare tekerleğiyle yazı boyutu:** Ctrl basılıyken tekerleği yukarı çevirince yazılar büyüyor, aşağı çevirince küçülüyor (Ayarlar → Görünüm → Yazı boyutu ile aynı ayar).
+- **Webde sesle yazma sessizce kesilmiyor:** tarayıcının tanıyıcısı kapanınca dikte kartı artık "dinliyormuş gibi" gri kalmıyor, kapanıyor; konuşmaya başladıktan sonraki uzun düşünme aralarında da dinleme hemen bırakılmıyor.
+
 ## 26 Kasım 2026 {#2026-11-26}
 - **Hızlı ekle'de "ekle" deyince hemen ekliyor:** konuşmanın sonunda "… ekle" dersen dinleme ~0,6 sn sessizlikten sonra kapanır ve not kısa bir geri sayımla (~0,7 sn) eklenir; eskiden sessizliği ve 2 saniyelik geri sayımı bekliyordu. Not adı söylemezsen ("süt ekle") seçili nota gider; "… hatalar notuna ekle" gibi bulunamayan bir ad söylersen yine sorar. Geri sayımda **Bekle**'ye basabilir, ekledikten sonra geri alabilirsin.
 - **Liste notunda sesle yazınca madde oluyor:** kontrol listesi ya da numaralı listede bir maddeye dokunmadan dikteye başlayınca söylediğin artık liste sonunda yeni madde olarak yazılıyor (eskiden listenin üstünde düz metin oluşuyordu). "Yeni madde" deyince sonraki maddeye geçer; maddenin sonuna otomatik nokta konmaz.

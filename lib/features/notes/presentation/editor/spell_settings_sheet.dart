@@ -17,11 +17,19 @@ Future<void> showSpellSettings(
 }) => showModalBottomSheet<void>(
   context: context,
   showDragHandle: true,
+  // TELEFON TUŞLARININ ALTINDA KALIYORDU (kullanıcı 2026-11-27): içerik
+  // levhanın varsayılan 9/16 tavanını aşınca son satırlar sistem gezinme
+  // çubuğunun altına düşüyordu. Yüksekliği içerik belirler, sığmazsa kayar;
+  // alt boşluk gezinme çubuğu kadar elle eklenir (kenardan kenara çizimde
+  // SafeArea levhada padding'i görmeyebiliyor).
+  isScrollControlled: true,
+  useSafeArea: true,
   builder: (sheet) {
     final l10n = sheet.l10n;
-    return SafeArea(
+    final navBar = MediaQuery.viewPaddingOf(sheet).bottom;
+    return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.only(bottom: AppSpace.m),
+        padding: EdgeInsets.only(bottom: AppSpace.m + navBar),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

@@ -166,7 +166,13 @@ Stream<({String? text, double? level})> listenWebSpeech({
           }
           if (sessionText.isEmpty) {
             emptyRestarts++;
-            if (emptyRestarts >= 3) {
+            // Konuşma DUYULDUKTAN sonra düşünme arası uzun olabilir: tarayıcı
+            // birkaç saniyelik sessizlikte tanıyıcıyı kapatıyor, 3 boş
+            // yeniden başlatmada (~20 sn) dikte sessizce bitiyordu
+            // (2026-11-27). Duyulduysa çok daha uzun sabredilir; bitişi
+            // sessizlikte otomatik durdurma ve en uzun süre belirler.
+            final limit = latestFull.isEmpty ? 3 : 40;
+            if (emptyRestarts >= limit) {
               if (latestFull.isEmpty) {
                 controller.addError(
                   PlatformException(

@@ -369,9 +369,11 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
               children: [
                 Icon(icon, size: AppIconSize.m, color: fg),
                 const SizedBox(height: AppSpace.xs),
+                // İki satıra kadar sarar: "Yukarı taşı", "Görev yap" gibi
+                // etiketler tek satırda "Yuka…" diye kesiliyordu (2026-11-27).
                 Text(
                   label,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: text.meta.copyWith(
@@ -390,7 +392,23 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final row2 = <Widget>[
+    final tiles = <Widget>[
+      _tile(_ItemAction.select, Icons.checklist_rounded, l10n.select),
+      _tile(_ItemAction.copyItem, AppIcons.copy, l10n.copy),
+      _tile(
+        _ItemAction.star,
+        widget.starred ? Icons.star_rounded : Icons.star_outline_rounded,
+        widget.starred ? l10n.itemMenuUnstar : l10n.star,
+        active: widget.starred,
+      ),
+      _tile(
+        _ItemAction.header,
+        widget.header
+            ? Icons.format_list_bulleted_rounded
+            : Icons.title_rounded,
+        widget.header ? l10n.itemMenuToItem : l10n.itemMenuToHeader,
+        active: widget.header,
+      ),
       _tile(
         _ItemAction.moveUp,
         Icons.arrow_upward_rounded,
@@ -428,15 +446,37 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
       ),
     ];
 
-    List<Widget> spaced(List<Widget> items) => [
-      for (var i = 0; i < items.length; i++) ...[
-        if (i > 0) const SizedBox(width: AppSpace.xs + AppSpace.xxs),
-        items[i],
-      ],
-    ];
+    // Izgara: satır başına en çok 4 kutu, eksik satır boş yer tutucuyla
+    // dolar (kutular aynı genişlikte kalır). Önceden ikinci satıra 6 kutu
+    // sığdırılıyor, etiketler "Yuka…", "Göre…" diye kesiliyordu (2026-11-27).
+    const perRow = 4;
+    const gap = AppSpace.xs + AppSpace.xxs;
+    final rows = <Widget>[];
+    for (var i = 0; i < tiles.length; i += perRow) {
+      final chunk = tiles.sublist(i, (i + perRow).clamp(0, tiles.length));
+      final cells = <Widget>[
+        ...chunk,
+        for (var k = chunk.length; k < perRow; k++)
+          const Expanded(child: SizedBox.shrink()),
+      ];
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: gap));
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var j = 0; j < cells.length; j++) ...[
+                if (j > 0) const SizedBox(width: gap),
+                cells[j],
+              ],
+            ],
+          ),
+        ),
+      );
+    }
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 272, maxWidth: 376),
+      constraints: const BoxConstraints(minWidth: 296, maxWidth: 376),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpace.s,
@@ -445,36 +485,7 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: spaced([
-                _tile(
-                  _ItemAction.select,
-                  Icons.checklist_rounded,
-                  l10n.select,
-                ),
-                _tile(
-                  _ItemAction.copyItem,
-                  AppIcons.copy,
-                  l10n.copy,
-                ),
-                _tile(
-                  _ItemAction.star,
-                  widget.starred ? Icons.star_rounded : Icons.star_outline_rounded,
-                  widget.starred ? l10n.itemMenuUnstar : l10n.star,
-                  active: widget.starred,
-                ),
-                _tile(
-                  _ItemAction.header,
-                  widget.header
-                      ? Icons.format_list_bulleted_rounded
-                      : Icons.title_rounded,
-                  widget.header ? l10n.itemMenuToItem : l10n.itemMenuToHeader,
-                  active: widget.header,
-                ),
-              ]),
-            ),
-            const SizedBox(height: AppSpace.xs + AppSpace.xxs),
-            Row(children: spaced(row2)),
+            ...rows,
             // ARA BAŞLIK HİZASI (kullanıcı isteği 2026-11-05): basılı tutunca
             // sola · ortaya · sağa.
             if (widget.header)

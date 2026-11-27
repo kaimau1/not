@@ -14,6 +14,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import 'format_menu.dart';
+import 'spell_underline.dart' show spellFixItems;
 import 'text_wrap.dart';
 
 /// Metin seçimi ve yazım önerisi için yeniden tasarlanmış Bento araç çubuğu.
@@ -196,8 +197,16 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
         secondary.add(item);
       }
     }
+    // Seçili kelime altı çizili ise doğrusu en başta (bkz. [spellFixItems]).
+    if (!widget.readOnly) {
+      final fixes = spellFixItems(widget.editableState);
+      _spellFixes = Set.identity()..addAll(fixes);
+      leading.insertAll(0, fixes);
+    }
     return (leading: leading, primary: primary, secondary: secondary);
   }
+
+  Set<ContextMenuButtonItem> _spellFixes = const {};
 
   void _toggleFormat(RichFormat format, {int? colorIndex}) {
     final ctl = widget.formatController;
@@ -729,6 +738,7 @@ class _NoteSelectionToolbarState extends State<NoteSelectionToolbar>
     if (item.type != ContextMenuButtonType.custom) {
       return _iconForType(item.type);
     }
+    if (_spellFixes.contains(item)) return Icons.spellcheck_rounded;
     return Icons.auto_awesome_outlined;
   }
 }
