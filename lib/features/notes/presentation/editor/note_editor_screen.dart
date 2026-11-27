@@ -119,6 +119,7 @@ import '../../data/quick_entry_memory.dart';
 import '../../domain/smart_list.dart';
 import '../../domain/spell_review.dart';
 import 'auto_spell.dart';
+import '../../../../core/utils/speech_output.dart' show SpeechOutputController;
 import 'dictation_controller.dart';
 import 'selection_toolbar.dart';
 import 'spell_review_sheet.dart';

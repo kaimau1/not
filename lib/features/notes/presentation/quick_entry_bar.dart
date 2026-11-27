@@ -9,6 +9,8 @@ import '../../../app/theme/app_tokens.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/voice_commands.dart' show SilenceGate;
+import '../../../core/utils/speech_output.dart' show SpeechOutputController;
+import 'editor/auto_spell.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../settings/settings_providers.dart';
 import '../data/device_speech.dart';
@@ -356,7 +358,7 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
     _rawPrefix = _c.text.trim();
     late final VoiceListenSession session;
     session = VoiceListenSession(
-      locale: l10n.localeName.startsWith('tr') ? 'tr-TR' : 'en-US',
+      locale: SpeechOutputController.speechLocale(AutoSpell.writingLanguage),
       autoStop: () => ref.read(voiceAutoStopProvider),
       preferOffline: ref.read(voiceOfflineProvider),
       gate: SilenceGate(afterSpeech: ref.read(voiceSilenceProvider).duration),

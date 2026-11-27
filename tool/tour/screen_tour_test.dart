@@ -13,6 +13,7 @@ import 'package:notlar/features/notes/data/upload_queue.dart'
 //   (çıktı: build/tour/*.png — TOUR_OUT ile değiştirilebilir)
 //   TOUR_ONLY=ana,n1  süz · TOUR_DARK=1  koyu · TOUR_WEB=1  dar web
 //   TOUR_COLUMNS=3  ana ekran sütun sayısı
+//   TOUR_LOCALE=ar  arayüz dili (ar sağdan sola)
 //   TOUR_SIZES=telefon-yatay,matepad-yatay  yalnız bu boyutlar
 //   TOUR_EMPTY=1  boş hâller (F79.5): ana, klasör, arşiv, çöp, Gelen, arama
 //   TOUR_OFFLINE=1  çevrimdışı hâller (F79.6): bekleyen yazım/ek, AI, hata
@@ -659,7 +660,8 @@ Future<void> _pumpApp(
           themeMode: brightness == Brightness.dark
               ? ThemeMode.dark
               : ThemeMode.light,
-          locale: const Locale('tr'),
+          // TOUR_LOCALE=ar|id|ms|en: arayüz dili (2026-11-27, beş dil).
+          locale: Locale(Platform.environment['TOUR_LOCALE'] ?? 'tr'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) {

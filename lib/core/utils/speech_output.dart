@@ -122,6 +122,8 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     'es': 'es-ES',
     'it': 'it-IT',
     'ar': 'ar-SA',
+    'id': 'id-ID',
+    'ms': 'ms-MY',
     'ru': 'ru-RU',
     'fa': 'fa-IR',
     'nl': 'nl-NL',
@@ -137,6 +139,22 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
   /// (SpeechRecognizer 'tr' değil 'tr-TR' bekler), bu yüzden dışarı açık.
   static String localeFor(String code) =>
       _ttsLocales[code.toLowerCase()] ?? code;
+
+  /// **DİKTE DİLİ** (2026-11-27, beş pazar dili): yazım diliyle aynı dil
+  /// ([languageCode]: seçilen uygulama dili, yoksa cihaz dili). Eskiden
+  /// her yer "Türkçe değilse İngilizce" diyordu: Arapça, Endonezce, Malayca
+  /// konuşan kişinin sözü Türkçe tanıyıcıya gidiyordu.
+  static String speechLocale(String languageCode) {
+    final l = localeFor(languageCode);
+    return l.contains('-') ? l : 'en-US';
+  }
+
+  /// Dikte dil düğmesinin sıradaki dili: ana dil ↔ İngilizce (ana dil
+  /// İngilizceyse Türkçe).
+  static String alternateSpeechLocale(String current, String primary) {
+    if (current != primary) return primary;
+    return primary.startsWith('en') ? 'tr-TR' : 'en-US';
+  }
 
   Future<FlutterTts> _engine() async {
     final existing = _tts;

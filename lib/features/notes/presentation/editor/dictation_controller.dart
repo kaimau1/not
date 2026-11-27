@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/haptics.dart';
 import '../../../../core/utils/dictation_tidy.dart';
+import '../../../../core/utils/speech_output.dart' show SpeechOutputController;
 import '../../../../core/utils/voice_commands.dart';
 import '../../data/device_speech.dart';
 import '../../data/voice_listen_session.dart';
@@ -119,6 +120,10 @@ class DictationController extends ChangeNotifier {
   VoiceListenSession? _session;
   DictationPhase _phase = DictationPhase.idle;
   String _locale = 'tr-TR';
+
+  /// Dikte başladığı dil (yazım dili); dil düğmesi bununla İngilizce
+  /// arasında gidip gelir.
+  String _primaryLocale = 'tr-TR';
   DateTime _startedAt = DateTime.now();
 
   FormatTarget? _target;
@@ -157,6 +162,7 @@ class DictationController extends ChangeNotifier {
     if (_disposed || isActive) return;
     if (initialLocale != null && initialLocale.isNotEmpty) {
       _locale = initialLocale;
+      _primaryLocale = initialLocale;
     }
     _startedAt = DateTime.now();
     _undoStack.clear();
@@ -402,10 +408,13 @@ class DictationController extends ChangeNotifier {
     _openSessionAtCurrentTarget();
   }
 
-  /// Türkçe (`tr-TR`) ↔ İngilizce (`en-US`) konuşma dilini değiştirir.
+  /// Ana dil (yazım dili) ↔ İngilizce konuşma dilini değiştirir.
   Future<void> toggleLocale() async {
     if (_disposed || !isActive) return;
-    final nextLocale = _locale.startsWith('en') ? 'tr-TR' : 'en-US';
+    final nextLocale = SpeechOutputController.alternateSpeechLocale(
+      _locale,
+      _primaryLocale,
+    );
     final wasListening = _phase == DictationPhase.listening;
     if (wasListening) {
       await pause();

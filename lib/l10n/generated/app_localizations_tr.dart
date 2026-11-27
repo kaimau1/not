@@ -1804,33 +1804,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.';
 
   @override
-  String get ttsLocalUnsupported =>
-      'Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.';
-
-  @override
-  String get ttsLocalMissing =>
-      'Model indirilene kadar okuma cihaz sesiyle yapılır.';
-
-  @override
-  String get ttsLocalDownload => 'Modeli indir (~50 MB)';
-
-  @override
-  String ttsLocalDownloading(String done) {
-    return 'İndiriliyor… $done';
-  }
-
-  @override
-  String get ttsLocalReady => 'Model kurulu — internetsiz çalışır';
-
-  @override
-  String get ttsLocalDelete => 'Modeli sil';
-
-  @override
-  String ttsLocalFailed(String error) {
-    return 'İndirme başarısız: $error';
-  }
-
-  @override
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override

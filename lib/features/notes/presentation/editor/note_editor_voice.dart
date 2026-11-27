@@ -144,9 +144,9 @@ extension _EditorVoice on _NoteEditorScreenState {
       l10n.tipVoiceCommands,
       icon: AppIcons.dictation,
     );
-    final initialLocale = Localizations.localeOf(context).languageCode == 'en'
-        ? 'en-US'
-        : 'tr-TR';
+    final initialLocale = SpeechOutputController.speechLocale(
+      AutoSpell.writingLanguage,
+    );
     final ctl = _ensureDictationController();
     ctl.start(initialLocale: initialLocale);
     _update(() {

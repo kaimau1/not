@@ -5,7 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_ar.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_id.dart';
+import 'app_localizations_ms.dart';
 import 'app_localizations_tr.dart';
 
 // ignore_for_file: type=lint
@@ -94,7 +97,10 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('ar'),
     Locale('en'),
+    Locale('id'),
+    Locale('ms'),
     Locale('tr'),
   ];
 
@@ -3361,48 +3367,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.'**
   String get ttsEngineDeviceInfo;
-
-  /// No description provided for @ttsLocalUnsupported.
-  ///
-  /// In tr, this message translates to:
-  /// **'Türkçe ses yalnız Android uygulamasında çalışır. Burada okuma cihaz sesiyle yapılır.'**
-  String get ttsLocalUnsupported;
-
-  /// No description provided for @ttsLocalMissing.
-  ///
-  /// In tr, this message translates to:
-  /// **'Model indirilene kadar okuma cihaz sesiyle yapılır.'**
-  String get ttsLocalMissing;
-
-  /// No description provided for @ttsLocalDownload.
-  ///
-  /// In tr, this message translates to:
-  /// **'Modeli indir (~50 MB)'**
-  String get ttsLocalDownload;
-
-  /// No description provided for @ttsLocalDownloading.
-  ///
-  /// In tr, this message translates to:
-  /// **'İndiriliyor… {done}'**
-  String ttsLocalDownloading(String done);
-
-  /// No description provided for @ttsLocalReady.
-  ///
-  /// In tr, this message translates to:
-  /// **'Model kurulu — internetsiz çalışır'**
-  String get ttsLocalReady;
-
-  /// No description provided for @ttsLocalDelete.
-  ///
-  /// In tr, this message translates to:
-  /// **'Modeli sil'**
-  String get ttsLocalDelete;
-
-  /// No description provided for @ttsLocalFailed.
-  ///
-  /// In tr, this message translates to:
-  /// **'İndirme başarısız: {error}'**
-  String ttsLocalFailed(String error);
 
   /// No description provided for @shareAsNotePreparing.
   ///
@@ -15758,7 +15722,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'tr'].contains(locale.languageCode);
+      <String>['ar', 'en', 'id', 'ms', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -15767,8 +15731,14 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'ar':
+      return AppLocalizationsAr();
     case 'en':
       return AppLocalizationsEn();
+    case 'id':
+      return AppLocalizationsId();
+    case 'ms':
+      return AppLocalizationsMs();
     case 'tr':
       return AppLocalizationsTr();
   }
